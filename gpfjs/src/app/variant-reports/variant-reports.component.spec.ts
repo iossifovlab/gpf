@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { PeopleCounterRowPipe, VariantReportsComponent } from './variant-reports.component';
 import { FormsModule } from '@angular/forms';
 import { VariantReportsService } from './variant-reports.service';
-import { Observable, of } from 'rxjs';
+import { Observable, lastValueFrom, of } from 'rxjs';
 import { ActivatedRoute, Router } from '@angular/router';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { PerfectlyDrawablePedigreeService } from 'app/perfectly-drawable-pedigree/perfectly-drawable-pedigree.service';
@@ -10,6 +10,8 @@ import { ResizeService } from 'app/table/resize.service';
 import { DenovoReport, PedigreeCounter } from './variant-reports';
 import { PedigreeData } from 'app/genotype-preview-model/genotype-preview';
 import { HttpResponse } from '@angular/common/http';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import * as lodash from 'lodash';
 
 class MockDatasetsService {
   public getSelectedDataset(): object {
@@ -280,8 +282,8 @@ class VariantReportsServiceMock {
     return '';
   }
 
-  public getTags(): Observable<string> {
-    return undefined;
+  public getTags(): Observable<string[]> {
+    return of(['tag1', 'tag2', 'tag3', 'tag4', 'tag5', 'tag6', 'tag7', 'tag8', 'tag9', 'tag10']);
   }
 
   public downloadFamilies(): Observable<HttpResponse<Blob>> {
@@ -306,7 +308,8 @@ describe('VariantReportsComponent', () => {
         { provide: Router, useValue: {} },
         { provide: DatasetsService, useValue: datasetsServiceMock },
         { provide: PerfectlyDrawablePedigreeService },
-        { provide: ResizeService, useClass: ResizeServiceMock }
+        { provide: ResizeService, useClass: ResizeServiceMock },
+        NgbModal
       ]
     }).compileComponents();
 
@@ -315,8 +318,6 @@ describe('VariantReportsComponent', () => {
 
     //Stubbing the function to reduce mock test data
     component['chunkPedigrees'] = function(a, b) { return null; };
-
-    component.ngOnInit();
   });
 
   it('should create', () => {
@@ -328,50 +329,77 @@ describe('VariantReportsComponent', () => {
     expect(component.currentDenovoReport).toBeUndefined();
   });
 
-  xit('should test download', () => {
-    // TODO
-  });
-});
+  it.todo('should test download');
 
-describe('VariantReportsComponent Denovo', () => {
-  let component: VariantReportsComponent;
-  let fixture: ComponentFixture<VariantReportsComponent>;
-
-  beforeEach(() => {
-    const variantReportsServiceMock = new VariantReportsServiceMock('Denovo');
-    const activatedRouteMock = new MockActivatedRoute('Denovo');
-    const datasetsServiceMock = new MockDatasetsDenovoService();
-    TestBed.configureTestingModule({
-      declarations: [VariantReportsComponent, PeopleCounterRowPipe],
-      imports: [FormsModule],
-      providers: [
-        { provide: VariantReportsService, useValue: variantReportsServiceMock },
-        { provide: ActivatedRoute, useValue: activatedRouteMock },
-        { provide: Router, useValue: {} },
-        { provide: DatasetsService, useValue: datasetsServiceMock },
-        { provide: PerfectlyDrawablePedigreeService },
-        { provide: ResizeService, useClass: ResizeServiceMock }
-      ]
-    }).compileComponents();
-
-    fixture = TestBed.createComponent(VariantReportsComponent);
-    component = fixture.componentInstance;
-
-    //Stubbing the function to reduce mock test data
-    component['chunkPedigrees'] = function(a, b): null { return null; };
-
+  it('should initialize pedigree tags', async() => {
     component.ngOnInit();
+    const tags = await lastValueFrom(variantReportsServiceMock.getTags());
+    expect(component.tags).toStrictEqual(tags);
+    expect(component.orderedTagList).toStrictEqual(tags);
+    expect(component.tagsModalsNumberOfCols).toBe(2);
+    expect(component.tagsModalsNumberOfRows).toBe(5);
   });
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
+  it('should update selected pedigree tags', () => {
+    component.selectedItems = ['tag1', 'tag2', 'tag3', 'tag4', 'tag5'];
+    const updatePedigreesTable = jest.spyOn(component, 'updateTagFilters')
+      .mockImplementation(() => null);
+
+    component.updateSelectedTags('tag6');
+    expect(component.selectedItems).toStrictEqual(['tag1', 'tag2', 'tag3', 'tag4', 'tag5', 'tag6']);
+    expect(component.selectedTagsHeader).toBe('tag1,tag2,tag3,tag4,tag5,tag6');
+    expect(updatePedigreesTable).toHaveBeenCalledWith();
+
+    component.updateSelectedTags('tag3');
+    expect(component.selectedItems).toStrictEqual(['tag1', 'tag2', 'tag4', 'tag5', 'tag6']);
+    expect(component.selectedTagsHeader).toBe('tag1,tag2,tag4,tag5,tag6');
+    expect(updatePedigreesTable).toHaveBeenCalledWith();
   });
 
-  it.skip('should have denovo', (done) => {
-    expect(component).toBeTruthy();
-    setTimeout(() => {
-      expect(component.currentDenovoReport).toBeDefined();
-      done();
-    }, 0);
+  it('should open modal with pedigree tags', () => {
+    const openModalSpy = jest.spyOn(component.modalService, 'open')
+      .mockImplementation(() => null);
+
+    component.openModal();
+    expect(openModalSpy).toHaveBeenCalledWith(
+      component.tagsModal,
+      {animation: false, centered: true, windowClass: 'tags-modal'}
+    );
+  });
+
+  it('should search in modal with pedigree tags', () => {
+    const tagsArr = ['ABC', 'BCA', 'CAB'];
+    component.tags = lodash.cloneDeep(tagsArr);
+    component.search(' ab   ');
+    expect(component.searchValue).toBe('ab');
+    expect(component.tags).toStrictEqual(tagsArr);
+    expect(component.orderedTagList).toStrictEqual(['ABC', 'CAB', 'BCA']);
+
+    component.search(' bc   ');
+    expect(component.searchValue).toBe('bc');
+    expect(component.tags).toStrictEqual(tagsArr);
+    expect(component.orderedTagList).toStrictEqual(['ABC', 'BCA', 'CAB']);
+
+    component.search(' ca   ');
+    expect(component.searchValue).toBe('ca');
+    expect(component.tags).toStrictEqual(tagsArr);
+    expect(component.orderedTagList).toStrictEqual(['BCA', 'CAB', 'ABC']);
+
+    component.search('    ');
+    expect(component.searchValue).toBe('');
+    expect(component.tags).toStrictEqual(tagsArr);
+    expect(component.orderedTagList).toStrictEqual(['ABC', 'BCA', 'CAB']);
+  });
+
+  it('should uncheck all checked tags in modal with pedigree tags', () => {
+    const updatePedigreesTable = jest.spyOn(component, 'updateTagFilters')
+      .mockImplementation(() => null);
+    component.selectedItems = ['tag1', 'tag2', 'tag3'];
+    component.selectedTagsHeader = 'tag1,tag2,tag3';
+    component.uncheckAll();
+
+    expect(component.selectedItems).toHaveLength(0);
+    expect(component.selectedTagsHeader).toBe('');
+    expect(updatePedigreesTable).toHaveBeenCalledWith();
   });
 });
