@@ -178,7 +178,6 @@ h5 {
 
 ::ng-deep .modal-content {
   width: fit-content;
-  overflow: auto;
 }
 
 #selected-tags-list {
