@@ -8,7 +8,7 @@ import { UsersService } from 'app/users/users.service';
 import { RouterTestingModule } from '@angular/router/testing';
 import { NgxsModule } from '@ngxs/store';
 import { Dataset } from './datasets';
-import { of, take } from 'rxjs';
+import { lastValueFrom, of, take } from 'rxjs';
 import { APP_BASE_HREF } from '@angular/common';
 
 describe('DatasetService', () => {
@@ -33,26 +33,26 @@ describe('DatasetService', () => {
     expect(service).toBeTruthy();
   });
 
-  it('should fetch datasets', () => {
+  it('should fetch datasets', async() => {
     const httpGetSpy = jest.spyOn(HttpClient.prototype, 'get');
     httpGetSpy.mockReturnValue(of('fakeResponse'));
 
-    service.getDatasets().subscribe(() => {
-      expect(httpGetSpy.mock.calls).toEqual([['testUrl/datasets', {withCredentials: true}]]);
-    });
+    await lastValueFrom(service.getDatasets());
+    // eslint-disable-next-line jest/prefer-strict-equal
+    expect(httpGetSpy.mock.calls).toEqual([['testUrl/datasets', {withCredentials: true}]]);
   });
 
-  it('should get dataset', () => {
+  it('should get dataset', async() => {
     const datasetFromJsonSpy = jest.spyOn(Dataset, 'fromDatasetAndDetailsJson');
     datasetFromJsonSpy.mockReturnValue('fakeDataset' as any);
     const httpGetSpy = jest.spyOn(HttpClient.prototype, 'get');
     httpGetSpy.mockReturnValue(of('fakeResponse'));
 
-    service.getDataset('geneSymbol').pipe(take(1)).subscribe((response) => {
-      expect(response).toBe('fakeDataset' as any);
-      expect(httpGetSpy.mock.calls[0][0]).toBe('testUrl/datasets/geneSymbol');
-      expect(httpGetSpy.mock.calls[1][0]).toBe('testUrl/datasets/details/geneSymbol');
-      expect(datasetFromJsonSpy.mock.calls).toEqual([[undefined, 'fakeResponse' as any]]);
-    });
+    const response = await lastValueFrom(service.getDataset('geneSymbol').pipe(take(1)));
+    expect(response).toBe('fakeDataset' as any);
+    expect(httpGetSpy.mock.calls[0][0]).toBe('testUrl/datasets/geneSymbol');
+    expect(httpGetSpy.mock.calls[1][0]).toBe('testUrl/datasets/details/geneSymbol');
+    // eslint-disable-next-line jest/prefer-strict-equal
+    expect(datasetFromJsonSpy.mock.calls).toEqual([[undefined, 'fakeResponse' as any]]);
   });
 });
