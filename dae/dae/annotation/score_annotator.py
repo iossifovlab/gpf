@@ -15,9 +15,9 @@ from dae.genomic_resources.aggregators import AGGREGATOR_SCHEMA
 from dae.genomic_resources.repository import GenomicResource
 
 from .annotatable import Annotatable, VCFAllele
-from .annotator_base import Annotator, ATTRIBUTES_SCHEMA
+from .annotator_base import Annotator, ATTRIBUTES_SCHEMA, AnnotatorConfigValidator
 from .annotation_pipeline import AnnotationPipeline
-
+from cerberus.validator import Validator
 
 logger = logging.getLogger(__name__)
 
@@ -171,7 +171,7 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
         schema["annotator_type"]["allowed"] = ["position_score"]
         schema["attributes"]["schema"] = attributes_schema
 
-        validator = cls.ConfigValidator(schema)
+        validator = AnnotatorConfigValidator(schema)
         logger.debug("validating position score config: %s", config)
         if not validator.validate(config):
             logger.error(
@@ -180,6 +180,7 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
             raise ValueError(f"wrong position score config {validator.errors}")
 
         result = validator.document
+
         if result.get("attributes") and any(
                 "nucleotide_aggregator" in attr
                 for attr in result.get("attributes")):
@@ -196,7 +197,7 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
                 result)
             raise ValueError(
                 "allele_aggregator is not allowed in position score")
-        return cast(dict, validator.document)
+        return cast(dict, result)
 
     def _collect_score_queries(self) -> list[ScoreQuery]:
         result: list[ScoreQuery] = []
@@ -286,7 +287,7 @@ class NPScoreAnnotator(PositionScoreAnnotator):
         schema["annotator_type"]["allowed"] = ["np_score"]
         schema["attributes"]["schema"] = attributes_schema
 
-        validator = cls.ConfigValidator(schema)
+        validator = AnnotatorConfigValidator(schema)
         logger.debug("validating NP score config: %s", config)
         if not validator.validate(config):
             logger.error(
@@ -353,7 +354,7 @@ class AlleleScoreAnnotator(VariantScoreAnnotatorBase):
         schema["annotator_type"]["allowed"] = ["allele_score", ]
         schema["attributes"]["schema"] = attributes_schema
 
-        validator = cls.ConfigValidator(schema)
+        validator = AnnotatorConfigValidator(schema)
         logger.debug("validating allele score config: %s", config)
         if not validator.validate(config):
             logger.error(

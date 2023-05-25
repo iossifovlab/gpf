@@ -19,7 +19,7 @@ from dae.genomic_resources.repository import GenomicResource
 
 from .annotatable import Annotatable, CNVAllele, VCFAllele
 
-from .annotator_base import AnnotatorBase, ATTRIBUTES_SCHEMA
+from .annotator_base import AnnotatorBase, ATTRIBUTES_SCHEMA, AnnotatorConfigValidator
 
 logger = logging.getLogger(__name__)
 
@@ -221,7 +221,7 @@ class EffectAnnotatorAdapter(AnnotatorBase):
             }
         }
 
-        validator = cls.ConfigValidator(schema)
+        validator = AnnotatorConfigValidator(schema)
         validator.allow_unknown = True
 
         logger.debug("validating effect annotator config: %s", config)

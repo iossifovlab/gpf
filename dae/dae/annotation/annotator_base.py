@@ -91,37 +91,9 @@ class AnnotatorInfo:
 class Annotator(abc.ABC):
     """Annotator provides a set of attrubutes for a given Annotatable."""
 
-    class ConfigValidator(Validator):
-        """Cerberus validation for annotators configuration."""
-
-        def _normalize_coerce_attributes(self, value):
-            if isinstance(value, str):
-                return {
-                    "source": value,
-                    "destination": value,
-                }
-            if isinstance(value, dict):
-                if "source" in value and "destination" not in value:
-                    value["destination"] = value["source"]
-                return value
-            return value
-
     def __init__(self, config: dict):
-        self.config = self.validate_config(config)
+        self.config = config
         self.input_annotatable = self.config.get("input_annotatable")
-        self._annotation_schema: Optional[Schema] = None
-
-    @classmethod
-    @abc.abstractmethod
-    def validate_config(cls, config: dict) -> dict:
-        """Normalize and validate the annotation configuration.
-
-        When validation passes returns the normalized and validated
-        annotator configuration dict.
-
-        When validation fails, raises ValueError.
-        """
-        return config
 
     @abc.abstractmethod
     def get_all_annotation_attributes(self) -> list[dict]:
@@ -222,7 +194,7 @@ class Annotator(abc.ABC):
         return ret
 
     def get_info(self) -> AnnotatorInfo:
-        return AnnotatorInfo(self.annotator_type(), {}, 
+        return AnnotatorInfo(self.annotator_type(), {},
                              self.resources, self.attributes)
 
     def _empty_result(self) -> dict[str, Any]:
@@ -230,25 +202,6 @@ class Annotator(abc.ABC):
         for attr in self.get_annotation_config():
             result[attr["destination"]] = None
         return result
-
-    def _remap_annotation_attributes(
-            self, attributes: dict[str, Any]) -> dict[str, Any]:
-        """Remap the annotation attributes from source to destination.
-
-        The method uses the annotation configuration and renames
-        annotation attributes from their source name to destination.
-
-        This implementation is suitable for most annotators and is used in
-        the `AnnotatorBase` implementation.
-        """
-        attributes_config = self.get_annotation_config()
-        for attr in attributes_config:
-            destination = attr.get("destination", attr["source"])
-            if destination == attr["source"]:
-                continue
-            attributes[attr["destination"]] = attributes[attr["source"]]
-            del attributes[attr["source"]]
-        return attributes
 
     def _get_annotatable_override(
             self, annotatable: Annotatable,
@@ -284,6 +237,7 @@ class Annotator(abc.ABC):
         return override
 
 
+
 class AnnotatorBase(Annotator):
     """Base implementation of the `Annotator` class."""
 
@@ -297,6 +251,25 @@ class AnnotatorBase(Annotator):
         all source attributes defined for annotator.
         """
 
+    def _remap_annotation_attributes(
+            self, attributes: dict[str, Any]) -> dict[str, Any]:
+        """Remap the annotation attributes from source to destination.
+
+        The method uses the annotation configuration and renames
+        annotation attributes from their source name to destination.
+
+        This implementation is suitable for most annotators and is used in
+        the `AnnotatorBase` implementation.
+        """
+        attributes_config = self.get_annotation_config()
+        for attr in attributes_config:
+            destination = attr.get("destination", attr["source"])
+            if destination == attr["source"]:
+                continue
+            attributes[attr["destination"]] = attributes[attr["source"]]
+            del attributes[attr["source"]]
+        return attributes
+
     def annotate(self, annotatable: Annotatable,
                  context: dict[str, Any]) -> dict[str, Any]:
         """Annotate and relabel attributes as configured.
@@ -309,3 +282,19 @@ class AnnotatorBase(Annotator):
             return self._empty_result()
         attributes = self._do_annotate(annotatable_override, context)
         return self._remap_annotation_attributes(attributes)
+
+
+class AnnotatorConfigValidator(Validator):
+    """Cerberus validation for annotators configuration."""
+
+    def _normalize_coerce_attributes(self, value):
+        if isinstance(value, str):
+            return {
+                "source": value,
+                "destination": value,
+            }
+        if isinstance(value, dict):
+            if "source" in value and "destination" not in value:
+                value["destination"] = value["source"]
+            return value
+        return value

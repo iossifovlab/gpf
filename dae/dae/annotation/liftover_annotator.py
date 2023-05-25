@@ -13,7 +13,7 @@ from dae.genomic_resources.repository import GenomicResource
 from dae.utils.variant_utils import trim_str_left, reverse_complement
 
 from .annotatable import Annotatable, VCFAllele, Region, Position, CNVAllele
-from .annotator_base import AnnotatorBase, ATTRIBUTES_SCHEMA
+from .annotator_base import AnnotatorBase, ATTRIBUTES_SCHEMA, AnnotatorConfigValidator
 
 
 logger = logging.getLogger(__name__)
@@ -129,7 +129,7 @@ class LiftOverAnnotator(AnnotatorBase):
             }
         }
 
-        validator = cls.ConfigValidator(schema)
+        validator = AnnotatorConfigValidator(schema)
         validator.allow_unknown = True
 
         logger.debug("validating liftover annotator config: %s", config)

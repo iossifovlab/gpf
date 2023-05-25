@@ -9,7 +9,7 @@ from dae.genomic_resources import GenomicResource
 from dae.genomic_resources.aggregators import AGGREGATOR_SCHEMA
 from dae.genomic_resources.aggregators import build_aggregator
 
-from .annotator_base import AnnotatorBase, ATTRIBUTES_SCHEMA
+from .annotator_base import AnnotatorBase, ATTRIBUTES_SCHEMA, AnnotatorConfigValidator
 from .annotatable import Annotatable
 
 logger = logging.getLogger(__name__)
@@ -91,7 +91,7 @@ class GeneScoreAnnotator(AnnotatorBase):
             }
         }
 
-        validator = cls.ConfigValidator(schema)
+        validator = AnnotatorConfigValidator(schema)
         validator.allow_unknown = True
 
         logger.debug("validating gene score annotator config: %s", config)

@@ -3,7 +3,7 @@ import copy
 from typing import Optional, cast, Tuple, Set
 from dae.annotation.annotatable import Annotatable
 
-from dae.annotation.annotator_base import ATTRIBUTES_SCHEMA, AnnotatorBase
+from dae.annotation.annotator_base import ATTRIBUTES_SCHEMA, AnnotatorBase, AnnotatorConfigValidator
 from dae.genomic_resources.gene_models import GeneModels, \
     build_gene_models_from_resource
 
@@ -71,7 +71,7 @@ class SimpleEffectAnnotator(AnnotatorBase):
             }
         }
 
-        validator = cls.ConfigValidator(schema)
+        validator = AnnotatorConfigValidator(schema)
         validator.allow_unknown = True
 
         logger.debug("validating effect annotator config: %s", config)
