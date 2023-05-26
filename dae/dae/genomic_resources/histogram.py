@@ -18,6 +18,8 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class NumberHistogramConfig:
+    """Configuration class for number histograms."""
+
     view_range: tuple[int, int]
     number_of_bins: int = 30
     x_log_scale: bool = False
