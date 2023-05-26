@@ -320,7 +320,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
       uniqueFamilyVariants: this.uniqueFamilyVariants,
     };
     this.genotypePreviewVariantsArray = this.queryService.getGenotypePreviewVariantsByFilter(
-      this.selectedDataset, params, this.maxFamilyVariants, () => {
+      this.selectedDataset, params, this.maxFamilyVariants + 1, () => {
         this.variantsCountDisplay = this.genotypePreviewVariantsArray.getVariantsCount(this.maxFamilyVariants);
       }
     );
