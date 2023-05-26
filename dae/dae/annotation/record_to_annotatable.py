@@ -124,7 +124,7 @@ class CSHLAlleleRecordToAnnotatable(RecordToAnnotable):
             self.reference_genome))
 
 
-RECORD_TO_ANNOTABALE_CONFIGUATION: Dict[tuple, Type[RecordToAnnotable]] = {
+RECORD_TO_ANNOTATABLE_CONFIGURATION: Dict[tuple, Type[RecordToAnnotable]] = {
     ("chrom", "pos_beg", "pos_end", "cnv_type"): RecordToCNVAllele,
     ("chrom", "pos_beg", "pos_end"): RecordToRegion,
     ("chrom", "pos", "ref", "alt"): RecordToVcfAllele,
@@ -136,7 +136,7 @@ RECORD_TO_ANNOTABALE_CONFIGUATION: Dict[tuple, Type[RecordToAnnotable]] = {
 
 def add_record_to_annotable_arguments(parser: argparse.ArgumentParser):
     all_columns = {
-        col for cols in RECORD_TO_ANNOTABALE_CONFIGUATION
+        col for cols in RECORD_TO_ANNOTATABLE_CONFIGURATION
         for col in cols}
     for col in all_columns:
         parser.add_argument(f"--col_{col}", default=col,
@@ -147,13 +147,15 @@ def build_record_to_annotatable(
         parameters: dict[str, str],
         available_columns: set[str],
         context: Optional[GenomicContext] = None) -> RecordToAnnotable:
-    """Transform a variant record into an annotable."""
-    for columns, record_to_annotabale_class in \
-            RECORD_TO_ANNOTABALE_CONFIGUATION.items():
-        renamed_columns = [parameters.get(
-            f"col_{col}", col) for col in columns]
+    """Transform a variant record into an annotatable."""
+    for columns, record_to_annotatable_class in \
+            RECORD_TO_ANNOTATABLE_CONFIGURATION.items():
+        renamed_columns = [
+            parameters.get(f"col_{col}", col) for col in columns
+        ]
         all_available = len(
-            [cn for cn in renamed_columns if cn not in available_columns]) == 0
+            [cn for cn in renamed_columns if cn not in available_columns]
+        ) == 0
         if all_available:
-            return record_to_annotabale_class(tuple(renamed_columns), context)
+            return record_to_annotatable_class(tuple(renamed_columns), context)
     raise ValueError("no record to annotatable could be found.")
