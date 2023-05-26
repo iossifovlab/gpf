@@ -58,7 +58,7 @@
       <div *ngIf="selectedGene">
         <button
           class="btn btn-md btn-primary btn-right"
-          [disabled]="this.variantsArray?.totalSummaryAllelesCount === 0"
+          [disabled]="!this.variantsArray?.totalSummaryAllelesCount"
           id="download-summary-variants-button"
           (click)="onDownload()"
           title="Download summary variants">
