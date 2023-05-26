@@ -128,14 +128,14 @@ table {
   margin-right: -10px;
 }
 
-#total-number-of-families {
-  position: absolute;
-  right: 0;
-  padding: 16px;
+#download-total-families {
+  float: right;
+  margin-bottom: 10px;
 }
 
 #families-by-number {
   padding-bottom: 55px;
+  margin-top: 10px;
 }
 
 #families-by-pedigree {
@@ -198,6 +198,10 @@ h5 {
   column-gap: 20px;
   align-items: baseline;
   margin-bottom: 10px;
+}
+
+.search-input {
+  padding-right: 5px;
 }
 
 #uncheck-button {

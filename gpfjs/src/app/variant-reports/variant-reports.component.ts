@@ -30,7 +30,6 @@ export class VariantReportsComponent implements OnInit {
   public currentPeopleCounter: PeopleCounter;
   public currentPedigreeTable: PedigreeTable;
   public currentDenovoReport: EffectTypeTable;
-  public isFamiliesByNumberVisible = false;
   public selectedTagsHeader = '';
 
   public modal: NgbModalRef;
@@ -96,7 +95,6 @@ export class VariantReportsComponent implements OnInit {
         this.tagsModalsNumberOfRows = Math.ceil(this.tags.length / this.tagsModalsNumberOfCols);
       });
     }
-    this.isFamiliesByNumberVisible = true;
   }
 
   private copyOriginalPedigreeCounters(): Record<string, PedigreeCounter[]> {

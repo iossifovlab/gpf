@@ -4,17 +4,17 @@
       ngbNav
       #nav="ngbNav"
       class="navbar bg-light nav-pills nav"
-      style="justify-content: flex-start; margin-bottom: 16px"
+      style="justify-content: flex-start; margin-bottom: 10px"
       [destroyOnHide]="false">
       <li ngbNavItem>
-        <a ngbNavLink (click)="isFamiliesByNumberVisible = true">Families by number</a>
+        <a ngbNavLink>Families by number</a>
         <ng-template ngbNavContent>
           <ng-container *ngTemplateOutlet="familiesByNumber"></ng-container>
         </ng-template>
       </li>
 
       <li ngbNavItem>
-        <a ngbNavLink (click)="isFamiliesByNumberVisible = false">Families by pedigree</a>
+        <a ngbNavLink>Families by pedigree</a>
         <ng-template ngbNavContent>
           <ng-container *ngTemplateOutlet="familiesByPedigree"></ng-container>
         </ng-template>
@@ -28,14 +28,15 @@
       </li>
     </ul>
     <div [ngbNavOutlet]="nav" class="card-block"></div>
-
-    <h5 *ngIf="isFamiliesByNumberVisible" id="total-number-of-families">
-      <span>Total number of families: {{ variantReport.familyReport.familiesTotal }}</span>
-      <span style="padding-left: 5px">(<a class="download-link" [href]="getDownloadLink()" download>Download</a>)</span>
-    </h5>
   </div>
 
   <ng-template #familiesByNumber>
+    <div id="download-total-families">
+      <a class="download-link" [href]="getDownloadLink()" download
+        >Download all families ({{ variantReport.familyReport.familiesTotal }})</a
+      >
+    </div>
+    <br />
     <div id="families-by-number">
       <div *ngIf="variantReport.peopleReport.peopleCounters.length > 1" class="variants-report-selector">
         <div class="select-wrapper">
