@@ -72,6 +72,7 @@ setuptools.setup(
     normalize_allele_annotator=dae.annotation.normalize_allele_annotator:build_normalize_allele_annotator
     gene_score_annotator=dae.annotation.gene_score_annotator:build_gene_score_annotator
     simple_effect_annotator=dae.annotation.simple_effect_annotator:build_simple_effect_annotator
+    debug_annotator=dae.annotation.debug_annotator:build_annotator
 
     [dae.genotype_storage.factories]
     impala=dae.impala_storage.schema1.impala_genotype_storage:ImpalaGenotypeStorage

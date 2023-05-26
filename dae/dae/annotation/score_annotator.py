@@ -4,7 +4,7 @@ import logging
 import copy
 
 from typing import cast, Any
-from dae.annotation.annotator_base import AttributeInfo
+from dae.annotation.annotation_pipeline import Annotator, AttributeInfo
 
 from dae.genomic_resources.genomic_scores import \
     GenomicScore, build_allele_score_from_resource, \
@@ -15,7 +15,7 @@ from dae.genomic_resources.aggregators import AGGREGATOR_SCHEMA
 from dae.genomic_resources.repository import GenomicResource
 
 from .annotatable import Annotatable, VCFAllele
-from .annotator_base import Annotator, ATTRIBUTES_SCHEMA, AnnotatorConfigValidator
+from .annotator_base import ATTRIBUTES_SCHEMA, AnnotatorConfigValidator
 from .annotation_pipeline import AnnotationPipeline
 from cerberus.validator import Validator
 
@@ -222,31 +222,29 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
         )
         return [sagg.get_final() for sagg in scores_agg]
 
-    def annotate(
-            self, annotatable: Annotatable, context):
-        annotatable_override = self._get_annotatable_override(
-            annotatable, context)
+    def annotate(self, annotatable: Annotatable, _: dict[str, Any]) \
+            -> dict[str, Any]:
         attributes: dict = {}
 
-        if annotatable_override is None:
+        if annotatable is None:
             self._scores_not_found(attributes)
             return attributes
 
-        if annotatable_override.chromosome not in \
+        if annotatable.chromosome not in \
                 self.score.get_all_chromosomes():
             self._scores_not_found(attributes)
             return attributes
 
-        length = len(annotatable_override)
-        if annotatable_override.type == Annotatable.Type.SUBSTITUTION:
-            scores = self._fetch_substitution_scores(annotatable_override)
+        length = len(annotatable)
+        if annotatable.type == Annotatable.Type.SUBSTITUTION:
+            scores = self._fetch_substitution_scores(annotatable)
         else:
             if length > self._region_length_cutoff:
                 scores = None
             else:
                 scores = self._fetch_aggregated_scores(
-                    annotatable_override.chrom,
-                    annotatable_override.pos, annotatable_override.pos_end)
+                    annotatable.chrom,
+                    annotatable.pos, annotatable.pos_end)
         if not scores:
             self._scores_not_found(attributes)
             return attributes
@@ -397,40 +395,38 @@ class AlleleScoreAnnotator(VariantScoreAnnotatorBase):
     def annotate(
             self, annotatable: Annotatable, context: dict):
         attributes: dict = {}
-        annotatable_override = self._get_annotatable_override(
-            annotatable, context)
 
-        if annotatable_override is None:
+        if annotatable is None:
             logger.info("annotatable_override is None")
             self._scores_not_found(attributes)
             return attributes
 
-        if annotatable_override.chromosome not in \
+        if annotatable.chromosome not in \
                 self.score.get_all_chromosomes():
             self._scores_not_found(attributes)
             return attributes
 
-        if isinstance(annotatable_override, VCFAllele):
+        if isinstance(annotatable, VCFAllele):
             scores = self.score.fetch_scores(
-                annotatable_override.chromosome,
-                annotatable_override.position,
-                annotatable_override.reference,
-                annotatable_override.alternative,
+                annotatable.chromosome,
+                annotatable.position,
+                annotatable.reference,
+                annotatable.alternative,
                 self.get_scores()
             )
         else:
-            length = len(annotatable_override)
+            length = len(annotatable)
             if length > self._region_length_cutoff:
                 scores = None
             else:
                 scores = self._fetch_aggregated_scores(
-                    annotatable_override.chrom,
-                    annotatable_override.pos,
-                    annotatable_override.pos_end)
+                    annotatable.chrom,
+                    annotatable.pos,
+                    annotatable.pos_end)
 
         logger.debug(
             "allele score found for annotatable_override %s: %s",
-            annotatable_override, scores)
+            annotatable, scores)
 
         if scores is None:
             self._scores_not_found(attributes)
@@ -445,7 +441,7 @@ class AlleleScoreAnnotator(VariantScoreAnnotatorBase):
             except ValueError as ex:
                 logger.error(
                     "problem with: %s: %s - %s",
-                    attr, annotatable_override, value, exc_info=True)
+                    attr, annotatable, value, exc_info=True)
                 raise ex
 
         return attributes

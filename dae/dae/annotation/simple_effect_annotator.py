@@ -1,124 +1,75 @@
 import logging
-import copy
-from typing import Optional, cast, Tuple, Set
+from typing import Optional, Tuple, Set
 from dae.annotation.annotatable import Annotatable
-
-from dae.annotation.annotator_base import ATTRIBUTES_SCHEMA, AnnotatorBase, AnnotatorConfigValidator
+from dae.annotation.annotation_factory import AnnotationConfigParser
+from dae.annotation.annotation_pipeline import AnnotationPipeline
+from dae.annotation.annotation_pipeline import Annotator
+from dae.annotation.annotation_pipeline import AnnotatorInfo
+from dae.annotation.annotator_base import AnnotatorBase
 from dae.genomic_resources.gene_models import GeneModels, \
     build_gene_models_from_resource
 
 from dae.genomic_resources.genomic_context import get_genomic_context
-from dae.genomic_resources.repository import GenomicResource
 from dae.utils.regions import Region
 
 logger = logging.getLogger(__name__)
 
 
-def build_simple_effect_annotator(pipeline, config):
-    """Build a simple effect annotator based on pipeline and configuration."""
-    config = SimpleEffectAnnotator.validate_config(config)
-
-    if config.get("annotator_type") != SimpleEffectAnnotator.ANNOTATOR_TYPE:
-        logger.error(
-            "wrong usage of build_simple_effect_annotator with an "
-            "annotator config: %s", config)
-        raise ValueError(f"wrong annotator type: {config}")
-
-    if config.get("gene_models") is None:
-        gene_models = get_genomic_context().get_gene_models()
-        if gene_models is None:
-            raise ValueError(
-                "can't create effect annotator: "
-                "gene models are missing in config and context")
-    else:
-        gene_models_id = config.get("gene_models")
-        resource = pipeline.repository.get_resource(gene_models_id)
-        gene_models = build_gene_models_from_resource(resource).load()
-
-    return SimpleEffectAnnotator(config, gene_models)
+def build_simple_effect_annotator(pipeline: AnnotationPipeline,
+                                  info: AnnotatorInfo) -> Annotator:
+    return SimpleEffectAnnotator(pipeline, info)
 
 
 class SimpleEffectAnnotator(AnnotatorBase):
-    """Defines simple variant effect annotator."""
 
-    ANNOTATOR_TYPE = "simple_effect_annotator"
+    def __init__(self, pipeline: AnnotationPipeline, info: AnnotatorInfo):
 
-    DEFAULT_ANNOTATION = {
-        "attributes": [
-            {"source": "effect"},
-            {"source": "genes"},
-        ]
-    }
-
-    @classmethod
-    def validate_config(cls, config: dict) -> dict:
-        schema = {
-            "annotator_type": {
-                "type": "string",
-                "required": True,
-                "allowed": [SimpleEffectAnnotator.ANNOTATOR_TYPE]
-            },
-            "gene_models": {
-                "type": "string",
-                "nullable": True,
-                "default": None,
-            },
-            "attributes": {
-                "type": "list",
-                "nullable": True,
-                "default": None,
-                "schema": ATTRIBUTES_SCHEMA
-            }
-        }
-
-        validator = AnnotatorConfigValidator(schema)
-        validator.allow_unknown = True
-
-        logger.debug("validating effect annotator config: %s", config)
-        if not validator.validate(config):
-            logger.error(
-                "wrong config format for effect annotator: %s",
-                validator.errors)
-            raise ValueError(
-                f"wrong effect annotator config {validator.errors}")
-        return cast(dict, validator.document)
-
-    def __init__(
-            self, config, gene_models: GeneModels):
-        super().__init__(config)
-
+        gene_models_resrouce_id = info.parameters.get("gene_models")
+        if gene_models_resrouce_id is None:
+            gene_models = get_genomic_context().get_gene_models()
+            if gene_models is None:
+                raise ValueError(f"Can't create {info.type}: "
+                                 "gene model resource are missing in config "
+                                 "and context")
+        else:
+            resource = pipeline.repository.get_resource(
+                gene_models_resrouce_id)
+            gene_models = build_gene_models_from_resource(resource)
         assert isinstance(gene_models, GeneModels)
+
+        info.resources.append(gene_models.resource)
+        if not info.attributes:
+            info.attributes = AnnotationConfigParser.parse_raw_attributes(
+                ["effect", "genes"])
+        super().__init__(pipeline, info, {
+            "effect": ("str", "The worst effect."),
+            "genes": ("str", "The affected genes."),
+            "gene_list": ("objects", "List of all genes.")
+        })
 
         self.gene_models = gene_models
 
-        self._annotation_schema = None
-        self._annotation_config: Optional[list[dict[str, str]]] = None
+    def open(self):
+        self.gene_models.load()
+        return super().open()
 
-        self._open = False
+    def _do_annotate(
+        self, annotatable: Annotatable, _: dict
+    ) -> dict:
+        if annotatable is None:
+            return self._empty_result()
 
-    def get_all_annotation_attributes(self) -> list[dict]:
-        result = [
-            {
-                "name": "effect",
-                "type": "str",
-                "desc": "The worst effect.",
-            },
-            {
-                "name": "genes",
-                "type": "str",
-                "desc": "Genes."
-            },
-            {
-                "name": "gene_list",
-                "type": "object",
-                "desc": "List of all genes"
-            },
-        ]
-        return result
+        effect, gene_list = self.run_annotate(
+            annotatable.chrom,
+            annotatable.position,
+            annotatable.end_position)
+        genes = ",".join(gene_list)
 
-    def _not_found(self, attributes):
-        for attr in self.get_annotation_config():
-            attributes[attr["destination"]] = ""
+        return {
+            "effect": effect,
+            "genes": genes,
+            "gene_list": gene_list
+        }
 
     def cds_intron_regions(self, transcript):
         """Return whether region is CDS intron."""
@@ -236,54 +187,3 @@ class SimpleEffectAnnotator(AnnotatorBase):
                     return result
 
         return "intergenic", set()
-
-    def _do_annotate(
-        self, annotatable: Annotatable, context: dict
-    ) -> dict:
-        result: dict = {}
-
-        if annotatable is None:
-            self._not_found(result)
-            return result
-
-        effect, gene_list = self.run_annotate(
-            annotatable.chrom,
-            annotatable.position,
-            annotatable.end_position)
-        genes = ",".join(gene_list)
-
-        result = {
-            "effect": effect,
-            "genes": genes,
-            "gene_list": gene_list
-        }
-
-        return result
-
-    def annotator_type(self) -> str:
-        return SimpleEffectAnnotator.ANNOTATOR_TYPE
-
-    def get_annotation_config(self):
-        if self._annotation_config is None:
-            if self.config.get("attributes"):
-                self._annotation_config = copy.deepcopy(
-                    self.config.get("attributes"))
-            else:
-                self._annotation_config = copy.deepcopy(
-                    self.DEFAULT_ANNOTATION["attributes"])
-        return self._annotation_config
-
-    def close(self):
-        self._open = False
-
-    def open(self):
-        self._open = True
-        self.gene_models.load()
-        return self
-
-    def is_open(self):
-        return self._open
-
-    @property
-    def resources(self) -> list[GenomicResource]:
-        return [self.gene_models.resource]

@@ -1,19 +1,48 @@
 """Provides base class for annotators."""
 from __future__ import annotations
-from dataclasses import dataclass
 
-import logging
 import abc
 
-from typing import Any, Optional
-from cerberus.validator import Validator
-from dae.genomic_resources.repository import GenomicResource  # type: ignore
+from typing import Any
 
+from .annotation_pipeline import AnnotationPipeline, Annotator, AnnotatorInfo
 from .annotatable import Annotatable
-from .schema import Schema
+
+from cerberus.validator import Validator
 
 
-logger = logging.getLogger(__name__)
+class AnnotatorBase(Annotator):
+    """Base implementation of the `Annotator` class."""
+
+    def __init__(self, pipeline: AnnotationPipeline, info: AnnotatorInfo, 
+                 source_type_desc: dict[str, tuple[str, str]]):
+        for attribute_config in info.attributes:
+            if attribute_config.source not in source_type_desc:
+                raise ValueError(f"The source {attribute_config.source} "
+                                 " is not supported for the annotator "
+                                 f"{info.type}")
+            att_type, att_desc = source_type_desc[attribute_config.source]
+            attribute_config.type = att_type
+            attribute_config.description = att_desc
+        super().__init__(pipeline, info)
+        
+    @abc.abstractmethod
+    def _do_annotate(self, annotatable: Annotatable, context: dict[str, Any]) \
+            -> dict:
+        """Annotate the annotatable.
+
+        Internal abstract method used for annotation. It should produce
+        all source attributes defined for annotator.
+        """
+
+    def annotate(
+        self, annotatable: Annotatable, context: dict[str, Any]
+    ) -> dict[str, Any]:
+        if annotatable is None:
+            return self._empty_result()
+        source_values = self._do_annotate(annotatable, context)
+        return {attribute_config.name: source_values[attribute_config.source]
+                for attribute_config in self._info.attributes}
 
 
 ATTRIBUTES_SCHEMA = {
@@ -26,262 +55,9 @@ ATTRIBUTES_SCHEMA = {
         "internal": {
             "type": "boolean",
             "default": False,
-        }
-    }
+        },
+    },
 }
-
-
-def parse_raw_attribute_config(raw_attribute_config: dict[str, Any]) \
-                                -> AttributeInfo:
-    name = raw_attribute_config.get("destination")
-    source = raw_attribute_config.get("source")
-
-    if name is None and source is None:
-        message = f"The raw attribute configuraion {raw_attribute_config} " + \
-                  "has neigther destination nor source."
-        raise Exception(message)
-
-    name = name if name else source
-    source = source if source else name
-    internal = bool(raw_attribute_config.get("internal", False))
-
-    assert source is not None
-    if not isinstance(name, str):
-        message = "The destination for in an attribute " + \
-                  f"config {raw_attribute_config} should be a string"
-        raise Exception(message)
-
-    parameters = {k: v for k, v in raw_attribute_config.items()
-                  if k not in ["destination", "source", "internal"]}
-    return AttributeInfo(name, source, internal, parameters)
-
-
-def parse_raw_attributes(raw_attributes_config: Any) -> list[AttributeInfo]:
-    if not isinstance(raw_attributes_config, list):
-        message = "The attributes parameters should be a list."
-        raise Exception(message)
-    
-    attribute_config = []
-    for raw_attribute_config in raw_attributes_config:
-        if isinstance(raw_attribute_config, str):
-            raw_attribute_config = {"destination": raw_attribute_config}
-        attribute_config.append(
-            parse_raw_attribute_config(raw_attribute_config))
-    return attribute_config
-
-
-@dataclass
-class AttributeInfo:
-    name: str
-    source: str
-    internal: bool
-    parameters: dict[str, Any]
-    type: str = "str"        # str, int, float, or object
-    description: str = ""   # interpreted as md
-
-
-@dataclass
-class AnnotatorInfo:
-    type: str
-    parameters: dict[str, Any]
-    resrouces: list[GenomicResource]
-    attributes: list[AttributeInfo]
-
-
-class Annotator(abc.ABC):
-    """Annotator provides a set of attrubutes for a given Annotatable."""
-
-    def __init__(self, config: dict):
-        self.config = config
-        self.input_annotatable = self.config.get("input_annotatable")
-
-    @abc.abstractmethod
-    def get_all_annotation_attributes(self) -> list[dict]:
-        """Return list of all available attributes provided by the annotator.
-
-        The result is a list of dicts. Each dict contains following
-        attributes:
-
-        * source: the name of the attribute
-        * type: type of the attribute
-        * desc: descripion of the attribute
-        """
-        return []
-
-    def get_annotation_attribute(self, attribute_name) -> dict[str, str]:
-        """Return configuration of an attribute."""
-        for attribute in self.get_all_annotation_attributes():
-            if attribute_name == attribute["name"]:
-                return attribute
-        message = f"can't find attribute {attribute_name} in annotator " \
-            f"{self.annotator_type()}: {self.config}"
-        logger.error(message)
-        raise ValueError(message)
-
-    @property
-    def annotation_schema(self) -> Schema:
-        """Return annotation schema."""
-        if self._annotation_schema is None:
-            schema = Schema()
-            for attribute in self.get_annotation_config():
-                if "destination" not in attribute:
-                    attribute["destination"] = attribute["source"]
-
-                annotation_attribute = self.get_annotation_attribute(
-                    attribute["source"])
-
-                source = Schema.Source(
-                    self.annotator_type(),
-                    annotator_config=self.config,
-                    attribute_config=attribute)
-
-                schema.create_field(
-                    attribute["destination"],
-                    py_type=annotation_attribute["type"],
-                    internal=attribute.get("internal", False),
-                    description=annotation_attribute["desc"],
-                    source=source)
-
-            self._annotation_schema = schema
-        return self._annotation_schema
-
-    @abc.abstractmethod
-    def annotator_type(self) -> str:
-        """Return annotator type."""
-
-    @abc.abstractmethod
-    def get_annotation_config(self) -> list[dict]:
-        """Return annotation config."""
-
-    @abc.abstractmethod
-    def annotate(self, annotatable: Annotatable,
-                 context: dict[str, Any]) -> dict[str, Any]:
-        """Produce annotation attributes for an annotatable."""
-
-    @abc.abstractmethod
-    def close(self):
-        """Close all resources used by the annotator."""
-
-    @abc.abstractmethod
-    def open(self) -> Annotator:
-        """Prepare all resources needed by the annotator."""
-
-    @abc.abstractmethod
-    def is_open(self) -> bool:
-        """Check if an annotator is open and ready."""
-
-    @property
-    @abc.abstractmethod
-    def resources(self) -> list[GenomicResource]:
-        """Genomic resources used by the annotator."""
-
-    @property
-    # @abc.abstractmethod
-    def attributes(self) -> list[AttributeInfo]:
-        """Genomic resources used by the annotator."""
-        schema = self.annotation_schema
-
-        ret = []
-        for name, field in schema.fields.items():
-            source = "breh"
-            params = {}
-            if field.source:
-                params = field.source.attribute_config
-                source = params['source']
-            ret.append(AttributeInfo(name, source, field.internal, 
-                                     params, field.type,
-                                     field.description))
-        return ret
-
-    def get_info(self) -> AnnotatorInfo:
-        return AnnotatorInfo(self.annotator_type(), {},
-                             self.resources, self.attributes)
-
-    def _empty_result(self) -> dict[str, Any]:
-        result: dict[str, Any] = {}
-        for attr in self.get_annotation_config():
-            result[attr["destination"]] = None
-        return result
-
-    def _get_annotatable_override(
-            self, annotatable: Annotatable,
-            context: dict[str, Any]) -> Optional[Annotatable]:
-        """Find and return an annotatable override if configured.
-
-        Otherwise returns the default annotatable.
-        """
-        if self.input_annotatable is None:
-            return annotatable
-
-        if self.input_annotatable not in context:
-            raise ValueError(
-                f"can't find input annotatable {self.input_annotatable} "
-                f"in annotation context: {context}")
-        override = context[self.input_annotatable]
-        logger.debug(
-            "input annotatable %s found %s.",
-            self.input_annotatable, override)
-
-        if override is None:
-            logger.warning(
-                "can't find input annotatable %s "
-                "in annotation context: %s",
-                self.input_annotatable, context)
-            return None
-
-        if not isinstance(override, Annotatable):
-            raise ValueError(
-                f"The object with a key {self.input_annotatable} in the "
-                f"annotation context {context} is not an Annotabable.")
-
-        return override
-
-
-
-class AnnotatorBase(Annotator):
-    """Base implementation of the `Annotator` class."""
-
-    @abc.abstractmethod
-    def _do_annotate(
-        self, annotatable: Annotatable, context: dict
-    ) -> dict:
-        """Annotate the annotatable.
-
-        Internal abstract method used for annotation. It should produce
-        all source attributes defined for annotator.
-        """
-
-    def _remap_annotation_attributes(
-            self, attributes: dict[str, Any]) -> dict[str, Any]:
-        """Remap the annotation attributes from source to destination.
-
-        The method uses the annotation configuration and renames
-        annotation attributes from their source name to destination.
-
-        This implementation is suitable for most annotators and is used in
-        the `AnnotatorBase` implementation.
-        """
-        attributes_config = self.get_annotation_config()
-        for attr in attributes_config:
-            destination = attr.get("destination", attr["source"])
-            if destination == attr["source"]:
-                continue
-            attributes[attr["destination"]] = attributes[attr["source"]]
-            del attributes[attr["source"]]
-        return attributes
-
-    def annotate(self, annotatable: Annotatable,
-                 context: dict[str, Any]) -> dict[str, Any]:
-        """Annotate and relabel attributes as configured.
-
-        Uses `_do_annotate` to produce the annotation attributes.
-        """
-        annotatable_override = self._get_annotatable_override(
-            annotatable, context)
-        if annotatable_override is None:
-            return self._empty_result()
-        attributes = self._do_annotate(annotatable_override, context)
-        return self._remap_annotation_attributes(attributes)
 
 
 class AnnotatorConfigValidator(Validator):

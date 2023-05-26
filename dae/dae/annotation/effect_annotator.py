@@ -1,9 +1,11 @@
 """Defines variant effect annotator."""
 
-import copy
 import logging
 
-from typing import cast, Optional
+from dae.annotation.annotation_factory import AnnotationConfigParser
+from dae.annotation.annotation_pipeline import AnnotationPipeline
+from dae.annotation.annotation_pipeline import Annotator
+from dae.annotation.annotation_pipeline import AnnotatorInfo
 
 from dae.effect_annotation.annotator import EffectAnnotator
 from dae.effect_annotation.effect import AlleleEffects, AnnotationEffect
@@ -15,109 +17,87 @@ from dae.genomic_resources.gene_models import GeneModels
 from dae.genomic_resources.genomic_context import get_genomic_context
 from dae.genomic_resources.gene_models import \
     build_gene_models_from_resource
-from dae.genomic_resources.repository import GenomicResource
 
-from .annotatable import Annotatable, CNVAllele, VCFAllele
-
-from .annotator_base import AnnotatorBase, ATTRIBUTES_SCHEMA, AnnotatorConfigValidator
+from dae.annotation.annotatable import Annotatable, CNVAllele, VCFAllele
+from dae.annotation.annotator_base import AnnotatorBase
 
 logger = logging.getLogger(__name__)
 
 
-def build_effect_annotator(pipeline, config):
-    """Build a variant effect annotator based on pipeline and configuration."""
-    config = EffectAnnotatorAdapter.validate_config(config)
-
-    if config.get("annotator_type") != "effect_annotator":
-        logger.error(
-            "wrong usage of build_effect_annotator with an "
-            "annotator config: %s", config)
-        raise ValueError(f"wrong annotator type: {config}")
-
-    if config.get("genome") is None:
-        genome = get_genomic_context().get_reference_genome()
-        if genome is None:
-            logger.error(
-                "can't create effect annotator: config has no "
-                "reference genome specified and genome is missing "
-                "in the context")
-            raise ValueError(
-                "can't create effect annotator: "
-                "genome is missing in config and context")
-    else:
-        genome_id = config.get("genome")
-        resource = pipeline.repository.get_resource(genome_id)
-        genome = build_reference_genome_from_resource(resource)
-
-    if config.get("gene_models") is None:
-        gene_models = get_genomic_context().get_gene_models()
-        if gene_models is None:
-            raise ValueError(
-                "can't create effect annotator: "
-                "gene models are missing in config and context")
-    else:
-        gene_models_id = config.get("gene_models")
-        resource = pipeline.repository.get_resource(gene_models_id)
-        gene_models = build_gene_models_from_resource(resource).load()
-
-    return EffectAnnotatorAdapter(config, genome, gene_models)
+def build_effect_annotator(pipeline: AnnotationPipeline,
+                           info: AnnotatorInfo) -> Annotator:
+    return EffectAnnotatorAdapter(pipeline, info)
 
 
 class EffectAnnotatorAdapter(AnnotatorBase):
-    """Defines variant effect annotator."""
+    def __init__(self, pipeline: AnnotationPipeline, info: AnnotatorInfo):
 
-    DEFAULT_ANNOTATION = {
-        "attributes": [
-            {
-                "source": "worst_effect",
-                "destination": "worst_effect"
-            },
-
-            {
-                "source": "gene_effects",
-                "destination": "gene_effects"
-            },
-
-            {
-                "source": "effect_details",
-                "destination": "effect_details"
-            },
-        ]
-    }
-
-    def __init__(
-            self, config, genome: ReferenceGenome, gene_models: GeneModels):
-        super().__init__(config)
-
+        genome_resrouce_id = info.parameters.get("genome")
+        if genome_resrouce_id is None:
+            genome = get_genomic_context().get_reference_genome()
+            if genome is None:
+                message = "Can't {info.type}: config has no " + \
+                    "reference genome specified and genome is missing " + \
+                    "in the context."
+                logger.error(message)
+                raise ValueError(message)
+        else:
+            resource = pipeline.repository.get_resource(genome_resrouce_id)
+            genome = build_reference_genome_from_resource(resource)
         assert isinstance(genome, ReferenceGenome)
+
+        gene_models_resrouce_id = info.parameters.get("gene_models")
+        if gene_models_resrouce_id is None:
+            gene_models = get_genomic_context().get_gene_models()
+            if gene_models is None:
+                raise ValueError(f"Can't create {info.type}: "
+                                 "gene model resource are missing in config "
+                                 "and context")
+        else:
+            resource = pipeline.repository.get_resource(
+                gene_models_resrouce_id)
+            gene_models = build_gene_models_from_resource(resource)
         assert isinstance(gene_models, GeneModels)
+
+        info.resources += [genome.resource, gene_models.resource]
+        if not info.attributes:
+            info.attributes = AnnotationConfigParser.parse_raw_attributes(
+                ["worst_effect", "gene_effects", "effect_details",
+                 "gene_list"])
+        super().__init__(pipeline, info, {
+            "worst_effect": ("str", "Worst effect accross all transcripts."),
+            "gene_effects": ("str", "Effects types for genes. Format: "
+                                    "`<gene_1>:<effect_1>|...` A gene can "
+                                    "be repeated."),
+            "effect_details": ("str", "Effect details for each affected "
+                                      "transcript. Format: `< transcript 1 >:"
+                                      "<gene 1>:<effect 1>:<details 1>|...`"),
+            "allele_effects": ("object", "The a list of a python objects with "
+                                         "details of the effects for each "
+                                         "affected transcript."),
+            "gene_list": ("str", "List of all genes"),
+            "LGD_gene_list": ("object", "List of all LGD genes")
+        })
 
         self.genome = genome
         self.gene_models = gene_models
-
-        self._annotation_schema = None
-        self._annotation_config: Optional[list[dict[str, str]]] = None
-
-        promoter_len = self.config.get("promoter_len", 0)
-        self._region_length_cutoff = self.config.get(
+        self._promoter_len = info.parameters.get("promoter_len", 0)
+        self._region_length_cutoff = info.parameters.get(
             "region_length_cutoff", 500_000)
         self.effect_annotator = EffectAnnotator(
             self.genome,
             self.gene_models,
-            promoter_len=promoter_len
+            promoter_len=self._promoter_len
         )
 
     def close(self):
         self.genome.close()
+        super().close()
 
-    def open(self):  # FIXME:
+    def open(self):
         self.genome.open()
         self.gene_models.load()
-
-        return self
-
-    def is_open(self):  # FIXME:
-        return self.genome.is_open()
+        return super().open()
 
     def _not_found(self, attributes):
         effect_type = "unknown"
@@ -143,7 +123,6 @@ class EffectAnnotatorAdapter(AnnotatorBase):
         else:
             effect_type = "unknown"
         effect = AnnotationEffect(effect_type)
-        effect.length = len(annotatable)
         full_desc = AnnotationEffect.effects_description([effect])
         attributes.update({
             "worst_effect": full_desc[0],
@@ -155,106 +134,8 @@ class EffectAnnotatorAdapter(AnnotatorBase):
         })
         return attributes
 
-    def get_all_annotation_attributes(self) -> list[dict]:
-        result = [
-            {
-                "name": "worst_effect",
-                "type": "str",
-                "desc": "Worst effect accross all transcripts.",
-            },
-            {
-                "name": "gene_effects",
-                "type": "str",
-                "desc": "Effects types for genes. "
-                        "Format: `<gene_1>:<effect_1>|...`"
-                "A gene can be repeated."
-            },
-            {
-                "name": "effect_details",
-                "type": "str",
-                "desc": "Effect details for each affected transcript. "
-                "Format: `<transcript 1>:<gene 1>:<effect 1>:"
-                "<details 1>|...`"
-            },
-            {
-                "name": "allele_effects",
-                "type": "object",
-                "desc": "The a list of a python objects with details of the "
-                        "effects for each affected transcript. "
-            },
-            {
-                "name": "gene_list",
-                "type": "object",
-                "desc": "List of all genes"
-            },
-            {
-                "name": "LGD_gene_list",
-                "type": "object",
-                "desc": "List of all LGD genes"
-            },
-        ]
-        return result
-
-    @classmethod
-    def validate_config(cls, config: dict) -> dict:
-        schema = {
-            "annotator_type": {
-                "type": "string",
-                "required": True,
-                "allowed": ["effect_annotator"]
-            },
-            "gene_models": {
-                "type": "string",
-                "nullable": True,
-                "default": None,
-            },
-            "genome": {
-                "type": "string",
-                "nullable": True,
-                "default": None,
-            },
-            "attributes": {
-                "type": "list",
-                "nullable": True,
-                "default": None,
-                "schema": ATTRIBUTES_SCHEMA
-            }
-        }
-
-        validator = AnnotatorConfigValidator(schema)
-        validator.allow_unknown = True
-
-        logger.debug("validating effect annotator config: %s", config)
-        if not validator.validate(config):
-            logger.error(
-                "wrong config format for effect annotator: %s",
-                validator.errors)
-            raise ValueError(
-                f"wrong effect annotator config {validator.errors}")
-        return cast(dict, validator.document)
-
-    def annotator_type(self) -> str:
-        return "effect_annotator"
-
-    def get_annotation_config(self):
-        if self._annotation_config is None:
-            if self.config.get("attributes"):
-                self._annotation_config = copy.deepcopy(
-                    self.config.get("attributes"))
-            else:
-                self._annotation_config = copy.deepcopy(
-                    self.DEFAULT_ANNOTATION["attributes"])
-        return self._annotation_config
-
-    @property
-    def resources(self) -> list[GenomicResource]:
-        return [
-            self.gene_models.resource,
-            self.genome.resource
-        ]
-
     def _do_annotate(
-            self, annotatable: Annotatable, _context: dict):
+            self, annotatable: Annotatable, _: dict):
 
         result: dict = {}
         if annotatable is None:
