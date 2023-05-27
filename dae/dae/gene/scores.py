@@ -49,7 +49,7 @@ class GenomicScoresDb:
     @staticmethod
     def _build_score_desc(resource, selected_score_id):
         score = build_score_from_resource(resource)
-        default_annotation = score.get_default_annotation()
+        default_annotation = score.get_default_annotation_attributes()
         attributes_mapping = {
             attr.get("destination")
             if attr.get("destination") else attr["source"]: attr["source"]

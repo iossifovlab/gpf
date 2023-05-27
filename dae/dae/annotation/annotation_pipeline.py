@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 import abc
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import logging
 
@@ -24,6 +24,7 @@ class AttributeInfo:
     parameters: dict[str, Any]
     type: str = "str"           # str, int, float, or object
     description: str = ""       # interpreted as md
+    documentation: Optional[str] = None
 
 
 @dataclass
@@ -31,7 +32,7 @@ class AnnotatorInfo:
     type: str
     attributes: list[AttributeInfo]
     parameters: dict[str, Any]
-    resources: list[GenomicResource]
+    resources: list[GenomicResource] = field(default_factory=list)
 
 
 class Annotator(abc.ABC):

@@ -36,13 +36,12 @@ def position_score_repo():
                   desc: "test score 2"
                   name: t2
                 default_annotation:
-                    attributes:
-                    - source: test100way
-                      destination: test100
-                    - source: t1
-                      destination: t1
-                    - source: t2
-                      destination: t2
+                  - source: test100way
+                    destination: test100
+                  - source: t1
+                    destination: t1
+                  - source: t2
+                    destination: t2
                 """,
                 "data.mem": """
                     chrom  pos_begin  pos_end  100way   t1   t2
@@ -66,10 +65,9 @@ def test_position_resource_default_annotation(position_score_repo):
     assert res is not None
     score = build_position_score_from_resource(res)
 
-    default_annotation = score.get_default_annotation()
-    print(default_annotation)
+    default_annotation = score.get_default_annotation_attributes()
 
-    assert "attributes" in default_annotation
+    assert len(default_annotation) == 3
 
 
 def test_position_score_annotator_all_attributes(position_score_repo):
@@ -88,14 +86,13 @@ def test_position_score_annotator_all_attributes(position_score_repo):
         grr_repository=position_score_repo)
 
     annotator = pipeline.annotators[0]
-    attributes = annotator.get_all_annotation_attributes()
-    assert len(attributes) == 3
+    assert len(annotator.attributes) == 1
 
-    assert annotator.get_all_annotation_attributes() == [
-        {"desc": "test values", "name": "test100way", "type": "float"},
-        {"desc": "test score 1", "name": "t1", "type": "float"},
-        {"desc": "test score 2", "name": "t2", "type": "float"},
-    ]
+    attribute = annotator.attributes[0]
+
+    assert attribute.name == "test100"
+    assert attribute.type == "float"
+    assert attribute.description == "test values"
 
 
 #  hg19
@@ -157,7 +154,7 @@ def test_position_score_annotator(
         assert result.get("test100") == expected
 
 
-def test_position_annotator_schema(position_score_repo):
+def test_position_annotator_info(position_score_repo):
     pipeline_config = textwrap.dedent("""
             - position_score:
                 resource_id: position_score1
@@ -169,16 +166,23 @@ def test_position_annotator_schema(position_score_repo):
     pipeline = build_annotation_pipeline(
         pipeline_config_str=pipeline_config,
         grr_repository=position_score_repo)
-    schema = pipeline.annotation_schema
 
-    assert len(schema) == 1
-    assert schema.names == ["test100"]
-    field = schema["test100"]
-    assert field.name == "test100"
-    assert field.type == "float"
-    assert field.source.annotator_type == "position_score"
-    assert field.source.annotator_config["resource_id"] == "position_score1"
-    assert field.source.attribute_config["source"] == "test100way"
+    pipeline_info = pipeline.get_info()
+    assert len(pipeline_info) == 1
+    annotator_info = pipeline_info[0]
+    assert len(annotator_info.attributes) == 1
+    attribute_info = annotator_info.attributes[0]
+
+    assert annotator_info.type == "position_score"
+    assert annotator_info.parameters["resource_id"] == "position_score1"
+
+    assert attribute_info.name == "test100"
+    assert attribute_info.type == "float"
+    assert attribute_info.source == "test100way"
+
+    attributes2 = pipeline.get_attributes()
+    assert len(attributes2) == 1
+    assert attributes2[0] == attribute_info
 
 
 def test_position_default_annotator_schema(position_score_repo):
@@ -190,17 +194,9 @@ def test_position_default_annotator_schema(position_score_repo):
     pipeline = build_annotation_pipeline(
         pipeline_config_str=pipeline_config,
         grr_repository=position_score_repo)
-    assert len(pipeline.annotation_schema) == 3
-    schema = pipeline.annotation_schema
 
-    assert schema.names == ["test100", "t1", "t2"]
-
-    field = schema["t1"]
-    assert field.name == "t1"
-    assert field.type == "float"
-    assert field.source.annotator_type == "position_score"
-    assert field.source.annotator_config["resource_id"] == "position_score1"
-    assert field.source.attribute_config["source"] == "t1"
+    attributes = pipeline.get_attributes()
+    assert [att.name for att in attributes] == ["test100", "t1", "t2"]
 
 
 def test_position_annotator_schema_one_source_two_dest_schema(
@@ -219,24 +215,24 @@ def test_position_annotator_schema_one_source_two_dest_schema(
     pipeline = build_annotation_pipeline(
         pipeline_config_str=pipeline_config,
         grr_repository=position_score_repo)
-    schema = pipeline.annotation_schema
 
-    assert len(schema) == 2
-    assert schema.names == ["test100", "test100max"]
+    assert len(pipeline.get_info()) == 1
+    annotator_info = pipeline.get_info()[0]
+    assert annotator_info.type == "position_score"
+    assert annotator_info.parameters["resource_id"] == "position_score1"
 
-    field = schema["test100"]
-    assert field.name == "test100"
-    assert field.type == "float"
-    assert field.source.annotator_type == "position_score"
-    assert field.source.annotator_config["resource_id"] == "position_score1"
-    assert field.source.attribute_config["source"] == "test100way"
+    attributes = pipeline.get_attributes()
+    assert len(attributes) == 2
 
-    field = schema["test100max"]
-    assert field.name == "test100max"
-    assert field.type == "float"
-    assert field.source.annotator_type == "position_score"
-    assert field.source.annotator_config["resource_id"] == "position_score1"
-    assert field.source.attribute_config["source"] == "test100way"
+    assert attributes[0].name == "test100"
+    assert attributes[0].source == "test100way"
+    assert attributes[0].type == "float"
+    assert attributes[0].description == "test values"
+
+    assert attributes[1].name == "test100max"
+    assert attributes[1].source == "test100way"
+    assert attributes[1].type == "float"
+    assert attributes[1].description == "test values"
 
 
 def test_position_annotator_join_aggregation(position_score_repo):

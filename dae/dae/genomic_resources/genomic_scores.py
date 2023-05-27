@@ -328,34 +328,79 @@ class GenomicScore(
     def score_id(self):
         return self.get_config().get("id")
 
-    def get_default_annotation(self) -> dict[str, Any]:
-        if "default_annotation" in self.get_config():
-            return cast(
-                dict[str, Any], self.get_config()["default_annotation"])
-        return {
-            "attributes": [
-                {"source": score, "destination": score}
-                for score in self.score_definitions]
-        }
+    def get_default_annotation_attributes(self) -> list[Any]:
+        default_annotation = self.get_config().get("default_annotation")
+        if not default_annotation:
+            return list(self.score_definitions)
 
-    def _get_default_annotation_attribute(self, score: str) -> Optional[str]:
+        # TODO: to remove when all the default_annotation in the main GRR have
+        # their "attributes" level removed.
+        if isinstance(default_annotation, dict) and \
+            len(default_annotation) == 1 and \
+                "attributes" in default_annotation:
+            logger.warning(f"The resrouce {self.resource_id} has 'attributes' "
+                           "in it's default_annotation section. These are "
+                           "depricated and should be removed")
+            default_annotation = default_annotation["attributes"]
+
+        if not isinstance(default_annotation, list):
+            raise ValueError("The default_annotation in the "
+                             f"{self.resource_id} resource is not a list.")
+        return default_annotation
+
+    @dataclass
+    class DefaultAnnotationAttributeInfo:
+        name: str
+        score: str
+        parameters: dict[str, Any]
+
+    @staticmethod
+    def _parser_att_conf(att_conf: Any) \
+            -> GenomicScore.DefaultAnnotationAttributeInfo:
+        '''This function closely matches from the corresponding function in
+        in dae.annotation.annotation_factory.AnnotationConfigParser.
+        parse_raw_attribute_config. It is reimplemented here to avoid circular 
+        dependency, but it should be maintained to match the 
+        parse_raw_attribute_config implementation.'''
+        if isinstance(att_conf, "str"):
+            return GenomicScore.DefaultAnnotationAttributeInfo(
+                att_conf, att_conf, {})
+        if not isinstance(att_conf, dict):
+            raise ValueError("The default_annotation attribute must be a "
+                             "str or a dict and {att_conf} is neigther.")
+        name = att_conf.get("destination")
+        score = att_conf.get("source")
+
+        if not (name or score):
+            raise ValueError("The default_annotation attribute must have at "
+                             "lease one of destination or source. "
+                             f"{att_conf} has neigther.")
+
+        name = name if name else score
+        score = score if score else name
+        assert name and score
+        params = {k: v for k, v in att_conf.items()
+                  if k not in ["destination", "source"]}
+        return GenomicScore.DefaultAnnotationAttributeInfo(name, score, params)
+
+    def _get_default_annotation_attributes(self, score: str) -> list[str]:
         """Return default annotation attribute for a score.
-
-        Returns None if the score is not included in the default annotation.
-        Returns the destination attribute if present or the score if not.
+        Re
         """
-        default_annotation = self.get_default_annotation()
-        atts = []
-        for att_conf in default_annotation.get("attributes", []):
-            if att_conf["source"] != score:
+        attributes = self.get_default_annotation_attributes()
+        def_atts_desc = []
+        for att_conf_raw in attributes:
+            att_conf = self._parser_att_conf(att_conf_raw)
+            if att_conf.score != score:
                 continue
-            dst = score
-            if "destination" in att_conf:
-                dst = att_conf["destination"]
-            atts.append(dst)
-        if atts:
-            return ",".join(atts)
-        return None
+            desc = att_conf.name
+            if att_conf.parameters:
+                params_str = \
+                    "; ".join([f"{k}: {v}"
+                               for k, v in att_conf.parameters.items()])
+                desc += f"{desc} [{params_str}]"
+            def_atts_desc.append(desc)
+        return def_atts_desc
 
     def get_score_config(self, score_id):
         return self.score_definitions.get(score_id)
@@ -503,8 +548,12 @@ class GenomicScore(
 
         <td>{{ score.type }}</td>
 
-        {% set attr = scores._get_default_annotation_attribute(score_id) %}
-        <td>{{ attr if attr else "" }}</td>
+        {% set d_atts = scores._get_default_annotation_attributes(score_id) %}
+        <td>
+            {%- for def_att_desc in d_atts -%}
+            <p>{{ def_att_desc }}</p>
+            {%- endfor %}
+        </td>
 
         <td>{{ score.desc }}</td>
 
@@ -604,7 +653,8 @@ class GenomicScore(
                     "y_scale": {"type": "string"},
                 }
             }},
-            "default_annotation": {"type": "dict", "allow_unknown": True}
+            "default_annotation": {"type": ["dict", "list"],
+                                   "allow_unknown": True}
         }
 
     def add_statistics_build_tasks(self, task_graph: TaskGraph, **kwargs):

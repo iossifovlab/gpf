@@ -10,7 +10,7 @@ from dae.genomic_resources.repository import GenomicResourceProtocolRepo
 
 from dae.annotation.annotation_factory import build_annotation_pipeline
 from dae.annotation.annotatable import VCFAllele
-from dae.annotation.score_annotator import VariantScoreAnnotatorBase
+from dae.annotation.score_annotator import GenomicScoreAnnotatorBase
 
 
 @pytest.fixture
@@ -60,7 +60,7 @@ def test_vcf_info_annotator_all_attributes(score1_repo):
         pipeline_config_str=pipeline_config,
         grr_repository=score1_repo)
 
-    annotator = cast(VariantScoreAnnotatorBase, pipeline.annotators[0])
+    annotator = cast(GenomicScoreAnnotatorBase, pipeline.annotators[0])
     annotator.score.open()
     attributes = annotator.get_all_annotation_attributes()
     assert len(attributes) == 4
@@ -91,7 +91,7 @@ def test_vcf_info_default_annotation(score1_repo):
         pipeline_config_str=pipeline_config,
         grr_repository=score1_repo)
 
-    annotator = cast(VariantScoreAnnotatorBase, pipeline.annotators[0])
+    annotator = cast(GenomicScoreAnnotatorBase, pipeline.annotators[0])
     annotator.score.open()
     attributes = annotator.get_annotation_config()
     assert len(attributes) == 4

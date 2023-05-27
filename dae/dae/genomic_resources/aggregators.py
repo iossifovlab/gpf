@@ -29,7 +29,7 @@ class Aggregator:
     def _clear_internal(self):
         raise NotImplementedError()
 
-    def get_final(self):
+    def get_final(self) -> Any:
         raise NotImplementedError()
 
     def get_total_count(self):
