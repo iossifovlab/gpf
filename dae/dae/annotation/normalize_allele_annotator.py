@@ -18,46 +18,6 @@ from dae.annotation.annotator_base import AnnotatorBase
 logger = logging.getLogger(__name__)
 
 
-def normalize_allele(allele: VCFAllele, genome: ReferenceGenome) -> VCFAllele:
-    """Normalize an allele.
-
-    Using algorithm defined in
-    following https://genome.sph.umich.edu/wiki/Variant_Normalization
-    """
-    while True:
-        changed = False
-        logger.debug("normalizing allele: %s", allele)
-
-        if len(allele.ref) > 0 and len(allele.alt) > 0 \
-                and allele.ref[-1] == allele.alt[-1]:
-            logger.debug("shrink from right: %s", allele)
-            if allele.ref == allele.alt and len(allele.ref) == 1:
-                logger.warning("no variant: %s", allele)
-            else:
-                allele = VCFAllele(
-                    allele.chrom, allele.pos, allele.ref[:-1], allele.alt[:-1])
-                changed = True
-
-        if len(allele.ref) == 0 or len(allele.alt) == 0:
-            logger.debug("moving left allele: %s", allele)
-            left = genome.get_sequence(
-                allele.chrom, allele.pos - 1, allele.pos - 1)
-            allele = VCFAllele(
-                allele.chrom, allele.pos - 1,
-                f"{left}{allele.ref}", f"{left}{allele.alt}")
-            changed = True
-
-        if not changed:
-            break
-
-    while len(allele.ref) >= 2 and len(allele.alt) >= 2 \
-            and allele.ref[0] == allele.alt[0]:
-        allele = VCFAllele(
-            allele.chrom, allele.pos + 1, allele.ref[1:], allele.alt[1:])
-
-    return allele
-
-
 def build_normalize_allele_annotator(pipeline: AnnotationPipeline,
                                      info: AnnotatorInfo) -> Annotator:
     return NormalizeAlleleAnnotator(pipeline, info)
@@ -105,3 +65,43 @@ class NormalizeAlleleAnnotator(AnnotatorBase):
 
         normalized_allele = normalize_allele(annotatable, self.genome)
         return {"normalized_allele": normalized_allele}
+
+
+def normalize_allele(allele: VCFAllele, genome: ReferenceGenome) -> VCFAllele:
+    """Normalize an allele.
+
+    Using algorithm defined in
+    following https://genome.sph.umich.edu/wiki/Variant_Normalization
+    """
+    while True:
+        changed = False
+        logger.debug("normalizing allele: %s", allele)
+
+        if len(allele.ref) > 0 and len(allele.alt) > 0 \
+                and allele.ref[-1] == allele.alt[-1]:
+            logger.debug("shrink from right: %s", allele)
+            if allele.ref == allele.alt and len(allele.ref) == 1:
+                logger.warning("no variant: %s", allele)
+            else:
+                allele = VCFAllele(
+                    allele.chrom, allele.pos, allele.ref[:-1], allele.alt[:-1])
+                changed = True
+
+        if len(allele.ref) == 0 or len(allele.alt) == 0:
+            logger.debug("moving left allele: %s", allele)
+            left = genome.get_sequence(
+                allele.chrom, allele.pos - 1, allele.pos - 1)
+            allele = VCFAllele(
+                allele.chrom, allele.pos - 1,
+                f"{left}{allele.ref}", f"{left}{allele.alt}")
+            changed = True
+
+        if not changed:
+            break
+
+    while len(allele.ref) >= 2 and len(allele.alt) >= 2 \
+            and allele.ref[0] == allele.alt[0]:
+        allele = VCFAllele(
+            allele.chrom, allele.pos + 1, allele.ref[1:], allele.alt[1:])
+
+    return allele

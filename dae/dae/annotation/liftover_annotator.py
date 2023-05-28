@@ -3,7 +3,8 @@
 import logging
 import copy
 
-from typing import Optional, cast
+from typing import Any, Optional, cast
+from dae.annotation.annotation_pipeline import AnnotationPipeline, Annotator, AnnotatorInfo, AttributeInfo
 from dae.genomic_resources.reference_genome import \
     ReferenceGenome, build_reference_genome_from_resource
 from dae.genomic_resources.liftover_resource import \
@@ -19,134 +20,76 @@ from .annotator_base import AnnotatorBase, ATTRIBUTES_SCHEMA, AnnotatorConfigVal
 logger = logging.getLogger(__name__)
 
 
-def build_liftover_annotator(pipeline, config):
-    """Construct a liftover annotator."""
-    config = LiftOverAnnotator.validate_config(config)
-
-    assert config["annotator_type"] == "liftover_annotator"
-
-    chain_resource = pipeline.repository.get_resource(config["chain"])
+def build_liftover_annotator(pipeline: AnnotationPipeline,
+                             info: AnnotatorInfo) -> Annotator:
+    chain_resource_id = info.parameters.get("chain")
+    if chain_resource_id is None:
+        raise ValueError("The {into} requires a 'chain' parameter.")
+    chain_resource = pipeline.repository.get_resource(chain_resource_id)
     if chain_resource is None:
-        raise ValueError(
-            f"can't create liftover annotator; "
-            f"can't find liftover chain {config.chain}")
+        raise ValueError(f"The {info} points to a resource "
+                         f"{chain_resource_id} that is unavailable.")
+    chain = build_liftover_chain_from_resource(chain_resource)
 
-    resource = pipeline.repository.get_resource(
-        config["target_genome"])
-    if resource is None:
+    target_genome_resrouce_id = info.parameters.get("target_genome")
+    if target_genome_resrouce_id is None:
         raise ValueError(
-            f"can't create liftover annotator; "
-            f"can't find liftover target genome: "
-            f"{config.target_genome}")
-    target_genome: ReferenceGenome = \
-        build_reference_genome_from_resource(resource)
-    liftover_chain: LiftoverChain = \
-        build_liftover_chain_from_resource(chain_resource)
-    return LiftOverAnnotator(config, liftover_chain, target_genome)
+            "The {into} requires a 'target_genome' parameter.")
+    resource = pipeline.repository.get_resource(target_genome_resrouce_id)
+    if resource is None:
+        raise ValueError(f"The {info} points to a resource "
+                         f"{target_genome_resrouce_id} that is "
+                         "unavailable.")
+    target_genome = build_reference_genome_from_resource(resource)
+
+    return LiftOverAnnotator(pipeline, info, chain, target_genome)
 
 
 class LiftOverAnnotator(AnnotatorBase):
-    """Defines a Lift Over annotator."""
+    def __init__(self, pipeline: Optional[AnnotationPipeline], 
+                 info: AnnotatorInfo,
+                 chain: LiftoverChain, target_genome: ReferenceGenome):
 
-    def __init__(
-            self, config: dict,
-            chain: LiftoverChain, target_genome: ReferenceGenome):
-        super().__init__(config)
-
-        self.chain: LiftoverChain = chain
-        self.target_genome: ReferenceGenome = target_genome
-        self._annotation_schema = None
-
-    def annotator_type(self) -> str:
-        return "liftover_annotator"
+        info.resources += [chain.resource, target_genome.resource]
+        if not info.attributes:
+            info.attributes = [AttributeInfo("liftover_annotatable",
+                                             "liftover_annotatable", True, {})]
+        super().__init__(pipeline, info, {
+            "liftover_annotatable": ("object", "Lifted over allele.")
+        })
+        self.chain = chain
+        self.target_genome = target_genome
 
     def close(self):
-        # FIXME: consider using weekrefs
-        # self.target_genome.close()
-        # self.chain.close()
-        pass
+        self.target_genome.close()
+        self.chain.close()
+        super().close()
 
     def open(self):
         self.target_genome.open()
         self.chain.open()
-        return self
+        return super().open()
 
-    def is_open(self):
-        return self.target_genome.is_open() and self.chain.is_open()
+    def _do_annotate(self, annotatable: Annotatable, _: dict[str, Any]) \
+            -> dict[str, Any]:
+        assert annotatable is not None
 
-    DEFAULT_ANNOTATION = {
-        "attributes": [
-            {
-                "source": "liftover_annotatable",
-                "destination": "liftover_annotatable",
-                "internal": True,
-            },
-        ]
-    }
+        if annotatable.type == Annotatable.Type.POSITION:
+            value = self.liftover_position(annotatable)
+        elif annotatable.type == Annotatable.Type.REGION:
+            value = self.liftover_region(annotatable)
+        elif annotatable.type in {
+                Annotatable.Type.LARGE_DELETION,
+                Annotatable.Type.LARGE_DUPLICATION}:
+            value = self.liftover_cnv(annotatable)
+        else:
+            assert isinstance(annotatable, VCFAllele)
+            value = self.liftover_allele(annotatable)
 
-    def get_all_annotation_attributes(self) -> list[dict]:
-        return [
-            {
-                "name": "liftover_annotatable",
-                "type": "object",
-                "desc": "liftover allele",
-            }
-        ]
+        if value is None:
+            logger.debug("unable to liftover allele: %s", annotatable)
 
-    @property
-    def resources(self) -> list[GenomicResource]:
-        return [
-            self.chain.resource,
-            self.target_genome.resource
-        ]
-
-    @classmethod
-    def validate_config(cls, config: dict) -> dict:
-        schema = {
-            "annotator_type": {
-                "type": "string",
-                "required": True,
-                "allowed": ["liftover_annotator"]
-            },
-            "input_annotatable": {
-                "type": "string",
-                "nullable": True,
-                "default": None,
-            },
-            "chain": {
-                "type": "string",
-                "required": True,
-            },
-            "target_genome": {
-                "type": "string",
-                "required": True,
-            },
-            "attributes": {
-                "type": "list",
-                "nullable": True,
-                "default": None,
-                "schema": ATTRIBUTES_SCHEMA
-            }
-        }
-
-        validator = AnnotatorConfigValidator(schema)
-        validator.allow_unknown = True
-
-        logger.debug("validating liftover annotator config: %s", config)
-        if not validator.validate(config):
-            logger.error(
-                "wrong config format for liftover annotator: %s",
-                validator.errors)
-            raise ValueError(
-                f"wrong liftover annotator config {validator.errors}")
-        return cast(dict, validator.document)
-
-    def get_annotation_config(self) -> list[dict]:
-        attributes: Optional[list[dict]] = self.config.get("attributes")
-        if attributes:
-            return attributes
-        attributes = copy.deepcopy(self.DEFAULT_ANNOTATION["attributes"])
-        return attributes
+        return {"liftover_annotatable": value}
 
     def liftover_allele(self, allele: VCFAllele):
         """Liftover an allele."""
@@ -249,27 +192,3 @@ class LiftOverAnnotator(AnnotatorBase):
             return None
         return CNVAllele(
             region.chrom, region.pos, region.pos_end, cnv_allele.type)
-
-    def _do_annotate(self, annotatable: Annotatable, _context: dict):
-        assert annotatable is not None
-        if annotatable.type == Annotatable.Type.POSITION:
-            return {
-                "liftover_annotatable": self.liftover_position(annotatable)
-            }
-        if annotatable.type == Annotatable.Type.REGION:
-            return {
-                "liftover_annotatable": self.liftover_region(annotatable)
-            }
-        if annotatable.type in {
-                Annotatable.Type.LARGE_DELETION,
-                Annotatable.Type.LARGE_DUPLICATION}:
-            return {
-                "liftover_annotatable": self.liftover_cnv(annotatable)}
-
-        lo_allele = self.liftover_allele(cast(VCFAllele, annotatable))
-        if lo_allele is None:
-            logger.debug(
-                "unable to liftover allele: %s", annotatable)
-            return {"liftover_annotatable": None}
-
-        return {"liftover_annotatable": lo_allele}

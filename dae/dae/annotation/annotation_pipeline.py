@@ -38,7 +38,7 @@ class AnnotatorInfo:
 class Annotator(abc.ABC):
     """Annotator provides a set of attrubutes for a given Annotatable."""
 
-    def __init__(self, pipeline: AnnotationPipeline, info: AnnotatorInfo):
+    def __init__(self, pipeline: Optional[AnnotationPipeline], info: AnnotatorInfo):
         self.pipeline = pipeline
         self._info = info
         self._is_open = False
@@ -65,6 +65,7 @@ class Annotator(abc.ABC):
     def resources(self) -> list[GenomicResource]:
         return self._info.resources
 
+    @property
     def resource_ids(self) -> set[str]:
         return {resource.get_id() for resource in self._info.resources}
 
@@ -100,6 +101,12 @@ class AnnotationPipeline:
                 if attribute_info.name == attribute_name:
                     return attribute_info
         return None
+
+    def get_resource_ids(self) -> set[str]:
+        r = set([])
+        for annotator in self.annotators:
+            r |= annotator.resource_ids
+        return r
 
     def add_annotator(self, annotator: Annotator) -> None:
         assert isinstance(annotator, Annotator)

@@ -1,5 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+import textwrap
 from typing import cast
+from dae.annotation.annotation_pipeline import AnnotatorInfo
 
 import pytest
 
@@ -53,16 +55,8 @@ def test_liftover(
     target_genome.get_sequence = mock_get_sequence
     target_genome.open = lambda: target_genome
 
-    config = {
-        "annotator_type": "liftover_annotator",
-        "chain": "test_lifover_chain",
-        "target_genome": "test_target_genome",
-        "id": "liftover_test",
-        "attributes": None
-    }
-
-    annotator = LiftOverAnnotator(
-        config, chain, target_genome)
+    annotator = LiftOverAnnotator(None, AnnotatorInfo("gosho", [], {}),
+                                  chain, target_genome)
     assert annotator is not None
 
     allele = Allele.build_vcf_allele(chrom, pos, "A", "T")
@@ -98,65 +92,37 @@ def test_pipeline_liftover(
 def test_liftover_annotator_denovo_db_examples(
         gpf_instance_2013, chrom, pos, ref, alt):
 
-    config = {
-        "annotator_type": "liftover_annotator",
-        "chain": "liftover/hg19ToHg38",
-        "target_genome": "hg38/genomes/GRCh38-hg38",
-    }
+    pipeline_config = textwrap.dedent("""
+        - liftover_annotator:
+            chain: liftover/hg19ToHg38
+            target_genome: hg38/genomes/GRCh38-hg38
+        """)
 
-    grr = gpf_instance_2013.grr
-
-    target_genome_resource = grr.get_resource("hg38/genomes/GRCh38-hg38")
-    assert target_genome_resource is not None
-    target_genome = build_reference_genome_from_resource(
-        target_genome_resource)
-    target_genome.open()
-
-    lifover_chain_resource = grr.get_resource("liftover/hg19ToHg38")
-    assert lifover_chain_resource is not None
-    lifover_chain = build_liftover_chain_from_resource(lifover_chain_resource)
-    assert lifover_chain is not None
-
-    liftover_annotator = LiftOverAnnotator(
-        config, lifover_chain, target_genome)
-    liftover_annotator.open()
+    pipeline = build_annotation_pipeline(
+        pipeline_config_str=pipeline_config,
+        grr_repository=gpf_instance_2013.grr)
 
     allele = VCFAllele(chrom, pos, ref, alt)
 
-    result = liftover_annotator.annotate(allele, {})
-    print(result)
+    result = pipeline.annotate(allele)
 
     liftover_allele = cast(VCFAllele, result.get("liftover_annotatable"))
     assert liftover_allele is None
 
 
 def test_liftover_annotator_resources(grr_fixture):
-    config = {
-        "annotator_type": "liftover_annotator",
-        "chain": "hg38/hg38tohg19",
-        "target_genome":
-            "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/genome",
-    }
 
-    grr = grr_fixture
+    pipeline_config = textwrap.dedent("""
+      - liftover_annotator:
+          chain: hg38/hg38tohg19
+          target_genome: hg19/GATK_ResourceBundle_5777_b37_phiX174_short/genome
+      """)
 
-    target_genome_resource = grr.get_resource(
-        "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/genome"
-    )
-    assert target_genome_resource is not None
-    target_genome = build_reference_genome_from_resource(
-        target_genome_resource)
-    target_genome.open()
+    pipeline = build_annotation_pipeline(
+        pipeline_config_str=pipeline_config,
+        grr_repository=grr_fixture)
 
-    lifover_chain_resource = grr.get_resource("hg38/hg38tohg19")
-    assert lifover_chain_resource is not None
-    lifover_chain = build_liftover_chain_from_resource(lifover_chain_resource)
-    assert lifover_chain is not None
-
-    liftover_annotator = LiftOverAnnotator(
-        config, lifover_chain, target_genome)
-
-    assert {res.get_id() for res in liftover_annotator.resources} == {
+    assert pipeline.get_resource_ids() == {
         "hg38/hg38tohg19",
         "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/genome"
     }
