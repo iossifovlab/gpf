@@ -1,6 +1,7 @@
 """Defines variant effect annotator."""
 
 import logging
+from typing import Any
 
 from dae.annotation.annotation_factory import AnnotationConfigParser
 from dae.annotation.annotation_pipeline import AnnotationPipeline
@@ -36,11 +37,9 @@ class EffectAnnotatorAdapter(AnnotatorBase):
         if genome_resrouce_id is None:
             genome = get_genomic_context().get_reference_genome()
             if genome is None:
-                message = "Can't {info.type}: config has no " + \
-                    "reference genome specified and genome is missing " + \
-                    "in the context."
-                logger.error(message)
-                raise ValueError(message)
+                raise ValueError("The {info}  has no reference genome "
+                                 "specified and a genome is missing in "
+                                 "the context.")
         else:
             resource = pipeline.repository.get_resource(genome_resrouce_id)
             genome = build_reference_genome_from_resource(resource)
@@ -134,9 +133,8 @@ class EffectAnnotatorAdapter(AnnotatorBase):
         })
         return attributes
 
-    def _do_annotate(
-            self, annotatable: Annotatable, _: dict):
-
+    def _do_annotate(self, annotatable: Annotatable, _: dict[str, Any]) \
+            -> dict[str, Any]:
         result: dict = {}
         if annotatable is None:
             return self._not_found(result)

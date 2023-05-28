@@ -1,5 +1,5 @@
 import logging
-from typing import Optional, Tuple, Set
+from typing import Any, Optional, Tuple, Set
 from dae.annotation.annotatable import Annotatable
 from dae.annotation.annotation_factory import AnnotationConfigParser
 from dae.annotation.annotation_pipeline import AnnotationPipeline
@@ -53,9 +53,8 @@ class SimpleEffectAnnotator(AnnotatorBase):
         self.gene_models.load()
         return super().open()
 
-    def _do_annotate(
-        self, annotatable: Annotatable, _: dict
-    ) -> dict:
+    def _do_annotate(self, annotatable: Annotatable, _: dict[str, Any]) \
+            -> dict[str, Any]:
         if annotatable is None:
             return self._empty_result()
 

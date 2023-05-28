@@ -1,15 +1,19 @@
 """Provides normalize allele annotator and helpers."""
 import logging
+from typing import Any
 
-from typing import Optional, cast
+from dae.annotation.annotation_pipeline import AnnotationPipeline
+from dae.annotation.annotation_pipeline import Annotator
+from dae.annotation.annotation_pipeline import AnnotatorInfo
+from dae.annotation.annotation_pipeline import AttributeInfo
+from dae.genomic_resources.genomic_context import get_genomic_context
 
 from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.genomic_resources.reference_genome import \
     build_reference_genome_from_resource
-from dae.genomic_resources.repository import GenomicResource
 
-from .annotatable import Annotatable, VCFAllele
-from .annotator_base import AnnotatorBase, ATTRIBUTES_SCHEMA, AnnotatorConfigValidator
+from dae.annotation.annotatable import Annotatable, VCFAllele
+from dae.annotation.annotator_base import AnnotatorBase
 
 logger = logging.getLogger(__name__)
 
@@ -54,116 +58,46 @@ def normalize_allele(allele: VCFAllele, genome: ReferenceGenome) -> VCFAllele:
     return allele
 
 
-def build_normalize_allele_annotator(pipeline, config):
-    """Construct a normalize allele annotator."""
-    config = NormalizeAlleleAnnotator.validate_config(config)
-
-    assert config["annotator_type"] == "normalize_allele_annotator"
-
-    genome_resource = pipeline.repository.get_resource(config["genome"])
-    if genome_resource is None:
-        raise ValueError(
-            f"can't create normalize allele annotator; "
-            f"can't find reference genome: "
-            f"{config['genome']}"
-        )
-    genome = build_reference_genome_from_resource(genome_resource)
-    return NormalizeAlleleAnnotator(config, genome)
+def build_normalize_allele_annotator(pipeline: AnnotationPipeline,
+                                     info: AnnotatorInfo) -> Annotator:
+    return NormalizeAlleleAnnotator(pipeline, info)
 
 
 class NormalizeAlleleAnnotator(AnnotatorBase):
-    """Provides annotator for normalizing alleles."""
+    def __init__(self, pipeline: AnnotationPipeline, info: AnnotatorInfo):
 
-    def __init__(self, config, genome: ReferenceGenome):
-        super().__init__(config)
+        genome_resrouce_id = info.parameters.get("genome")
+        if genome_resrouce_id is None:
+            genome = get_genomic_context().get_reference_genome()
+            if genome is None:
+                raise ValueError("The {info}  has no reference genome "
+                                 "specified and a genome is missing in "
+                                 "the context.")
+        else:
+            resource = pipeline.repository.get_resource(genome_resrouce_id)
+            genome = build_reference_genome_from_resource(resource)
+        assert isinstance(genome, ReferenceGenome)
+
+        info.resources += [genome.resource]
+        if not info.attributes:
+            info.attributes = [AttributeInfo("normalized_allele",
+                                             "normalized_allele", True, {})]
+        super().__init__(pipeline, info, {
+            "normalized_allele": ("object", "Normalized allele.")
+        })
 
         self.genome = genome
-        self._annotation_schema = None
-
-    def annotator_type(self) -> str:
-        return "normalize_allele_annotator"
 
     def close(self):
         self.genome.close()
+        super().close()
 
-    def open(self):  # FIXME:
+    def open(self):
         self.genome.open()
-        return self
+        return super().open()
 
-    def is_open(self):  # FIXME:
-        return True
-
-    @property
-    def resources(self) -> list[GenomicResource]:
-        return [self.genome.resource]
-
-    @classmethod
-    def validate_config(cls, config: dict) -> dict:
-        schema = {
-            "annotator_type": {
-                "type": "string",
-                "required": True,
-                "allowed": ["normalize_allele_annotator"]
-            },
-            "input_annotatable": {
-                "type": "string",
-                "nullable": True,
-                "default": None,
-            },
-            "genome": {
-                "type": "string",
-                "required": True,
-            },
-            "attributes": {
-                "type": "list",
-                "nullable": True,
-                "default": None,
-                "schema": ATTRIBUTES_SCHEMA
-            }
-        }
-
-        validator = AnnotatorConfigValidator(schema)
-        validator.allow_unknown = True
-
-        logger.debug(
-            "validating normalize allele annotator config: %s", config)
-        if not validator.validate(config):
-            logger.error(
-                "wrong config format for normalize allele annotator: %s",
-                validator.errors)
-            raise ValueError(
-                f"wrong liftover annotator config {validator.errors}")
-        return cast(dict, validator.document)
-
-    def get_all_annotation_attributes(self) -> list[dict]:
-        return [
-            {
-                "name": "normalized_allele",
-                "type": "object",
-                "desc": "normalized allele",
-            }
-        ]
-
-    def get_annotation_config(self) -> list[dict]:
-        attributes: Optional[list[dict]] = self.config.get("attributes")
-        if attributes:
-            return attributes
-        attributes = [
-            {
-                "source": "normalized_allele",
-                "destination": "normalized_allele",
-                "internal": True,
-            }
-        ]
-        return attributes
-
-    def _do_annotate(
-            self, annotatable: Annotatable, _context: dict) -> dict:
-        """Normalize VCF alleles.
-
-        If the passed annotatable is not a VCFAllele it is returned without
-        any change.
-        """
+    def _do_annotate(self, annotatable: Annotatable, _: dict[str, Any]) \
+            -> dict[str, Any]:
         if not isinstance(annotatable, VCFAllele):
             return {"normalized_allele": annotatable}
 

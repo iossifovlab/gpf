@@ -124,17 +124,16 @@ def test_example_2_normalize(example_2_genome, pos, ref, alt):
 
 
 def test_normalize_allele_annotator_config():
-    pipeline_config = AnnotationConfigParser.parse(
+    pipeline_config = AnnotationConfigParser.parse_str(
         textwrap.dedent("""
         - normalize_allele_annotator:
             genome: hg19/GATK_ResourceBundle_5777_b37_phiX174_short/genome
         """)
     )
 
-    config = NormalizeAlleleAnnotator.validate_config(pipeline_config[0])
-    assert config["annotator_type"] == "normalize_allele_annotator"
+    assert pipeline_config[0].type == "normalize_allele_annotator"
 
-    assert config["genome"] == \
+    assert pipeline_config[0].parameters["genome"] == \
         "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/genome"
 
 
@@ -162,7 +161,7 @@ def test_normalize_allele_annotator_pipeline(grr_fixture, pos, ref, alt):
         assert len(pipeline.annotators) == 1
         annotator = pipeline.annotators[0]
 
-        assert annotator.annotator_type() == "normalize_allele_annotator"
+        assert annotator.get_info().type == "normalize_allele_annotator"
         assert isinstance(annotator, NormalizeAlleleAnnotator)
 
         assert annotator.genome.get_sequence("1", 20_001, 20_010) ==  \
@@ -203,7 +202,7 @@ def test_normalize_tandem_repeats(pos, ref, alt, npos, nref, nalt):
         assert len(pipeline.annotators) == 1
         annotator = pipeline.annotators[0]
 
-        assert annotator.annotator_type() == "normalize_allele_annotator"
+        assert annotator.get_info().type == "normalize_allele_annotator"
         assert isinstance(annotator, NormalizeAlleleAnnotator)
 
         assert annotator.genome.get_sequence(
@@ -228,12 +227,10 @@ def test_normalize_allele_annotator_pipeline_schema(grr_fixture):
     pipeline = build_annotation_pipeline(
         pipeline_config_str=config, grr_repository=grr_fixture)
 
-    schema = pipeline.annotation_schema
-    print(schema)
-
-    assert "normalized_allele" in schema
-    assert "normalized_allele" not in schema.public_fields
-    assert "normalized_allele" in schema.internal_fields
+    attributes = pipeline.get_attributes()
+    assert len(attributes) == 1
+    assert attributes[0].name == "normalized_allele"
+    assert attributes[0].internal == True
 
 
 @pytest.mark.parametrize("pos,ref,alt,npos, nref, nalt", [
