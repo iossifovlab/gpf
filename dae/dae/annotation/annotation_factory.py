@@ -8,15 +8,18 @@ import yaml
 from dae.genomic_resources import build_genomic_resource_repository
 from dae.genomic_resources.repository import GenomicResourceRepo
 
-from dae.annotation.annotation_pipeline import AnnotationPipeline, InputAnnotableAnnotatorDecorator, ValueTransormAnnotatorDecorator
+from dae.annotation.annotation_pipeline import AnnotationPipeline
 from dae.annotation.annotation_pipeline import AnnotatorInfo, AttributeInfo
 from dae.annotation.annotation_pipeline import Annotator
+from dae.annotation.annotation_pipeline import ValueTransormAnnotatorDecorator
+from dae.annotation.annotation_pipeline import \
+    InputAnnotableAnnotatorDecorator
 
 logger = logging.getLogger(__name__)
 
 
 _ANNOTATOR_FACTORY_REGISTRY: dict[
-    str, Callable[[AnnotationPipeline, dict[str, Any]], Annotator]] = {}
+    str, Callable[[AnnotationPipeline, AnnotatorInfo], Annotator]] = {}
 _EXTENTIONS_LOADED = False
 
 
@@ -64,7 +67,7 @@ def get_available_annotator_types() -> List[str]:
 
 def register_annotator_factory(
     annotator_type: str,
-    factory: Callable[[AnnotationPipeline, dict[str, Any]], Annotator]
+    factory: Callable[[AnnotationPipeline, AnnotatorInfo], Annotator]
 ) -> None:
     """Register additional annotator factory.
 
@@ -84,7 +87,7 @@ class AnnotationConfigParser:
     """Parser for annotation configuration."""
 
     @staticmethod
-    def normalize(pipeline_config: List[Dict]) -> List[Dict]:
+    def normalize(pipeline_config: List[Any]) -> List[Dict]:
         """Return a normalized annotation pipeline configuration."""
         result = []
 
@@ -150,9 +153,9 @@ class AnnotationConfigParser:
         source = raw_attribute_config.get("source")
 
         if name is None and source is None:
-            message = f"The raw attribute configuraion {raw_attribute_config} " + \
-                "has neigther destination nor source."
-            raise Exception(message)
+            raise ValueError(f"The raw attribute configuraion "
+                             f"{raw_attribute_config} has neigther "
+                             "destination nor source.")
 
         name = name if name else source
         source = source if source else name

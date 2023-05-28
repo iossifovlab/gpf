@@ -6,12 +6,6 @@ from dae.annotation.annotation_pipeline import AnnotatorInfo
 import pytest
 
 from dae.annotation.annotatable import VCFAllele
-
-from dae.genomic_resources.reference_genome import \
-    build_reference_genome_from_resource
-from dae.genomic_resources.liftover_resource import \
-    build_liftover_chain_from_resource
-
 from dae.annotation.annotation_factory import build_annotation_pipeline
 from dae.variants.core import Allele
 from dae.annotation.liftover_annotator import LiftOverAnnotator

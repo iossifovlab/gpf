@@ -38,7 +38,8 @@ class AnnotatorInfo:
 class Annotator(abc.ABC):
     """Annotator provides a set of attrubutes for a given Annotatable."""
 
-    def __init__(self, pipeline: Optional[AnnotationPipeline], info: AnnotatorInfo):
+    def __init__(self, pipeline: Optional[AnnotationPipeline],
+                 info: AnnotatorInfo):
         self.pipeline = pipeline
         self._info = info
         self._is_open = False
@@ -103,10 +104,8 @@ class AnnotationPipeline:
         return None
 
     def get_resource_ids(self) -> set[str]:
-        r = set([])
-        for annotator in self.annotators:
-            r |= annotator.resource_ids
-        return r
+        return {r_id for annotator in self.annotators
+                for r_id in annotator.resource_ids}
 
     def add_annotator(self, annotator: Annotator) -> None:
         assert isinstance(annotator, Annotator)
@@ -187,16 +186,19 @@ class InputAnnotableAnnotatorDecorator(AnnotatorDecorator):
         self.input_annotatable_name = \
             self._info.parameters["input_annotatable"]
 
+        if not self.pipeline:
+            raise Exception("InputAnnotableAnnotatorDecorator can only work "
+                            " within a pipeline")
         att_info = self.pipeline.get_attribute_info(
             self.input_annotatable_name)
         if att_info is None:
-            raise Exception(f"The attribute {self.input_annotatable_name} "
-                            "has not been defined before its use in "
-                            f"{self._info}")
+            raise ValueError(f"The attribute {self.input_annotatable_name} "
+                             "has not been defined before its use in "
+                             f"{self._info}")
         if att_info.type != "object":
-            raise Exception(f"The attribute {self.input_annotatable_name} "
-                            "is expected to be of type object in "
-                            f"{self._info}")
+            raise ValueError(f"The attribute {self.input_annotatable_name} "
+                             "is expected to be of type object in "
+                             f"{self._info}")
 
     def annotate(self, _: Annotatable, context: dict[str, Any]) \
             -> dict[str, Any]:
