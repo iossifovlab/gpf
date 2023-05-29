@@ -48,7 +48,7 @@ def test_normalize_allele_annotator(
             genome: genome
             attributes:
             - source: normalized_allele
-              dest: normalized_allele
+              destination: normalized_allele
               internal: False
     """)
 

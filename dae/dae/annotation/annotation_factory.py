@@ -1,5 +1,6 @@
 """Factory for creation of annotation pipeline."""
 
+import collections
 import logging
 from typing import List, Dict, Optional, Callable, Any
 
@@ -224,9 +225,65 @@ def build_annotation_pipeline(
 
     for annotator_config in pipeline_config:
         builder = get_annotator_factory(annotator_config.type)
+
+        annotator_config = set_parameter_usage_monitors(annotator_config)
         annotator = builder(pipeline, annotator_config)
         annotator = InputAnnotableAnnotatorDecorator.decorate(annotator)
         annotator = ValueTransormAnnotatorDecorator.decorate(annotator)
+        check_for_unused_parameters(annotator_config)
         pipeline.add_annotator(annotator)
 
     return pipeline
+
+
+def set_parameter_usage_monitors(info: AnnotatorInfo) -> AnnotatorInfo:
+    info.parameters = ParamsUsageMonitor(info.parameters)
+    for att in info.attributes:
+        att.parameters = ParamsUsageMonitor(att.parameters)
+    return info
+
+
+def check_for_unused_parameters(info: AnnotatorInfo):
+    unused_annotator_parameters, params = get_unused_params(info.parameters)
+    if unused_annotator_parameters:
+        raise ValueError("The are unused annotator parameters: "
+                         f"{unused_annotator_parameters}")
+    info.parameters = params
+
+    for att in info.attributes:
+        unused_attribute_parameters, params = get_unused_params(att.parameters)
+        if unused_attribute_parameters:
+            raise ValueError("The are unused annotator attribute parameters: "
+                             f"{unused_attribute_parameters}")
+        att.parameters = params
+    return info
+
+
+def get_unused_params(d: dict) -> tuple[set[Any], dict]:
+    if isinstance(d, ParamsUsageMonitor):
+        return d.get_unused_keys(), d._data
+    else:
+        return set([]), d
+
+
+class ParamsUsageMonitor(collections.abc.Mapping):
+
+    def __init__(self, data):
+        self._data = data
+        self._used_keys = set([])
+
+    def __getitem__(self, key):
+        self._used_keys.add(key)
+        return self._data[key]
+
+    def __len__(self):
+        return len(self._data)
+
+    def __iter__(self):
+        raise Exception("Should not iterate a parameter dictionary.")
+
+    def get_used_keys(self) -> set[Any]:
+        return self._used_keys
+
+    def get_unused_keys(self) -> set[Any]:
+        return set(self._data.keys()) - self._used_keys
