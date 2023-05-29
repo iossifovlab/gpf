@@ -11,7 +11,7 @@ from dae.variants.core import Allele
 from dae.annotation.liftover_annotator import LiftOverAnnotator
 
 
-def mock_get_sequence(chrom, start, stop):
+def mock_get_sequence(_, start, stop):
     return "G" * (stop - start + 1)
 
 

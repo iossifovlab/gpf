@@ -3,6 +3,27 @@
 from dae.genomic_resources.testing import build_inmemory_test_repository
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME
 from dae.annotation.annotation_factory import build_annotation_pipeline
+from dae.annotation.annotatable import Position
+
+
+def test_recreate_pipeline():
+    grr_repo = build_inmemory_test_repository({})
+
+    annotation_cofiguration = """
+    - debug_annotator
+    """
+    pipeline = build_annotation_pipeline(
+        pipeline_config_str=annotation_cofiguration,
+        grr_repository=grr_repo)
+
+    copy_pipeline = build_annotation_pipeline(
+        pipeline_config=pipeline.get_info(),
+        grr_repository=grr_repo
+    )
+
+    ann = Position("chrBla", 1002)
+
+    assert pipeline.annotate(ann) == copy_pipeline.annotate(ann)
 
 
 def test_basic(tmp_path):

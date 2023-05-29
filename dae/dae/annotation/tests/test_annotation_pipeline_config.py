@@ -11,7 +11,7 @@ from dae.annotation.liftover_annotator import LiftOverAnnotator
 
 
 def test_np_score_annotator_simple():
-    pipeline_config = AnnotationConfigParser.parse(
+    pipeline_config = AnnotationConfigParser.parse_str(
         textwrap.dedent("""
             - np_score:
                 resource_id: np_score1

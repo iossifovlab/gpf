@@ -74,7 +74,7 @@ class EffectAnnotatorAdapter(AnnotatorBase):
             "allele_effects": ("object", "The a list of a python objects with "
                                          "details of the effects for each "
                                          "affected transcript."),
-            "gene_list": ("str", "List of all genes"),
+            "gene_list": ("object", "List of all genes"),
             "LGD_gene_list": ("object", "List of all LGD genes")
         })
 
@@ -122,6 +122,8 @@ class EffectAnnotatorAdapter(AnnotatorBase):
         else:
             effect_type = "unknown"
         effect = AnnotationEffect(effect_type)
+        # TODO: Ask, why is this expected in the test_regions_effect_annotations
+        effect.length = len(annotatable)
         full_desc = AnnotationEffect.effects_description([effect])
         attributes.update({
             "worst_effect": full_desc[0],

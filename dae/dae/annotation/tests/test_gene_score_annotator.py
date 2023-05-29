@@ -1,9 +1,9 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 
 import textwrap
+from dae.annotation.annotation_pipeline import AnnotatorInfo, AttributeInfo
 import pytest
 
-from dae.annotation.annotatable import VCFAllele
 from dae.genomic_resources.testing import build_inmemory_test_repository
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME
 from dae.annotation.gene_score_annotator import GeneScoreAnnotator
@@ -46,61 +46,33 @@ def scores_repo(tmp_path):
 
 def test_gene_score_annotator(scores_repo):
     resource = scores_repo.get_resource("LGD_rank")
-    config = {
-        "annotator_type": "gene_score_annotator",
-        "resource_id": "LGD_rank",
-        "input_gene_list": "gene_list",
-        "attributes": [
-            {
-                "source": "LGD_rank",
-                "destination": "LGD_rank",
-                "gene_aggregator": "dict"
-            },
-        ]
-    }
+    annotator = GeneScoreAnnotator(
+        None, AnnotatorInfo("gosho",
+                            [AttributeInfo("LGD_rank", "LGD_rank", False,
+                                           {"gene_aggregator": "min"})],
+                            {}),
+        resource, "gene_list")
 
-    annotator = GeneScoreAnnotator(config, resource)
-    annotatable = VCFAllele("1", 1, "T", "G")
-    context = {"gene_list": ["LRP1", "TRRAP"]}
-    result = annotator._do_annotate(annotatable, context)
-    assert result == {"LGD_rank": {"LRP1": 1, "TRRAP": 3}}
+    result = annotator.annotate(None, {"gene_list": ["LRP1", "TRRAP"]})
+
+    assert result == {"LGD_rank": 1}
 
 
 def test_gene_score_annotator_default_aggregator(scores_repo):
     resource = scores_repo.get_resource("LGD_rank")
-    config = {
-        "annotator_type": "gene_score_annotator",
-        "resource_id": "LGD_rank",
-        "input_gene_list": "gene_list",
-        "attributes": [
-            {
-                "source": "LGD_rank",
-                "destination": "LGD_rank",
-            },
-        ]
-    }
+    annotator = GeneScoreAnnotator(None,
+                                   AnnotatorInfo("gosho", [], {}),
+                                   resource, "gene_list")
 
-    annotator = GeneScoreAnnotator(config, resource)
-    annotatable = VCFAllele("1", 1, "T", "G")
-    context = {"gene_list": ["LRP1", "TRRAP"]}
-    result = annotator._do_annotate(annotatable, context)
+    result = annotator.annotate(None, {"gene_list": ["LRP1", "TRRAP"]})
+
     assert result == {"LGD_rank": {"LRP1": 1, "TRRAP": 3}}
 
 
 def test_gene_score_annotator_resources(scores_repo):
     resource = scores_repo.get_resource("LGD_rank")
-    config = {
-        "annotator_type": "gene_score_annotator",
-        "resource_id": "LGD_rank",
-        "input_gene_list": "gene_list",
-        "attributes": [
-            {
-                "source": "LGD_rank",
-                "destination": "LGD_rank",
-                "gene_aggregator": "dict"
-            },
-        ]
-    }
+    annotator = GeneScoreAnnotator(None,
+                                   AnnotatorInfo("gosho", [], {}),
+                                   resource, "gene_list")
 
-    annotator = GeneScoreAnnotator(config, resource)
-    assert {res.get_id() for res in annotator.resources} == {"LGD_rank"}
+    assert annotator.resource_ids == {"LGD_rank"}

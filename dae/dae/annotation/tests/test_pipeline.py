@@ -19,17 +19,10 @@ def test_build_pipeline_schema(
         pipeline_config_file=annotation_config,
         grr_repository=grr_fixture)
 
-    schema = pipeline.annotation_schema
-    assert schema is not None
+    attribute = pipeline.get_attribute_info("gene_effects")
+    assert attribute is not None
+    assert attribute.type == "str", attribute
 
-    # assert len(schema) == 10
-
-    assert "gene_effects" in schema.names
-    field = schema["gene_effects"]
-    print(field, dir(field))
-
-    assert field.type == "str", field
-
-    assert "cadd_raw" in schema.names
-    field = schema["cadd_raw"]
-    assert field.type == "float"
+    attribute = pipeline.get_attribute_info("cadd_raw")
+    assert attribute is not None
+    assert attribute.type == "float", attribute

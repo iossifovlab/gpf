@@ -72,7 +72,7 @@ def cli(raw_args: Optional[list[str]] = None) -> None:
 
     context = get_genomic_context()
     pipeline = CLIAnnotationContext.get_pipeline(context)
-    annotation_attributes = pipeline.annotation_schema.public_fields
+    annotation_attributes = [att.name for att in pipeline.get_attributes()]
 
     in_file = _handle_input(args.input)
     out_file = _handle_output(args.output)

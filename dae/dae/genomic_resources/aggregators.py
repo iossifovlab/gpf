@@ -318,3 +318,7 @@ def create_aggregator(aggregator_def) -> Aggregator:
 def build_aggregator(aggregator_type) -> Aggregator:
     aggregator_def = create_aggregator_definition(aggregator_type)
     return create_aggregator(aggregator_def)
+
+
+def verify_aggregator(aggregator_type):
+    build_aggregator(aggregator_type)

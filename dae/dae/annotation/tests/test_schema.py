@@ -89,8 +89,8 @@ def genomic_resources_repo():
 
 
 def test_annotation_pipeline_schema_basics(genomic_resources_repo):
-
-    pipeline_config = textwrap.dedent("""
+    pipeline = build_annotation_pipeline(
+        pipeline_config_str="""
         - np_score:
             resource_id: np_score1
             attributes:
@@ -98,118 +98,82 @@ def test_annotation_pipeline_schema_basics(genomic_resources_repo):
               destination: test
         - position_score:
             resource_id: position_score1
-        """)
-
-    pipeline = build_annotation_pipeline(
-        pipeline_config_str=pipeline_config,
-        grr_repository=genomic_resources_repo)
-
-    assert pipeline is not None
+        """, grr_repository=genomic_resources_repo)
 
     assert len(pipeline.annotators) == 2
-
-    schema = pipeline.annotation_schema
-    assert len(schema) == 4
-
-    assert "test100" in schema
+    assert len(pipeline.get_attributes()) == 4
+    assert pipeline.get_attribute_info("test100") is not None
 
 
 def test_annotation_pipeline_schema_with_internal(genomic_resources_repo):
 
-    pipeline_config = textwrap.dedent("""
+    pipeline = build_annotation_pipeline(
+        pipeline_config_str="""
         - np_score:
             resource_id: np_score1
             attributes:
-            - source: test_raw
-              destination: test
+            - destination: test
+              source: test_raw
         - position_score:
             resource_id: position_score1
             attributes:
-            - source: test100way
-              destination: test100way
-            - source: t1
+            - test100way
+            - destination: t1
               internal: True
-        """)
-
-    pipeline = build_annotation_pipeline(
-        pipeline_config_str=pipeline_config,
-        grr_repository=genomic_resources_repo)
-
-    assert pipeline is not None
+        """, grr_repository=genomic_resources_repo)
 
     assert len(pipeline.annotators) == 2
 
-    schema = pipeline.annotation_schema
-    assert len(schema) == 3, schema
+    assert len(pipeline.get_attributes()) == 3
 
-    assert len(schema.public_fields) == 2
-    assert "t1" in schema
-    assert "t1" not in schema.public_fields
-    assert "t1" in schema.internal_fields
+    att = pipeline.get_attribute_info("t1")
+    assert att is not None
+    assert att.internal
 
-    assert "test100way" in schema
-    assert "test100way" in schema.public_fields
-    assert "test100way" not in schema.internal_fields
+    att = pipeline.get_attribute_info("test100way")
+    assert att is not None
+    assert not att.internal
 
 
 def test_annotation_pipeline_liftover_annotator_schema(grr_fixture):
 
-    pipeline_config = textwrap.dedent("""
+    pipeline = build_annotation_pipeline(
+        pipeline_config_str="""
     - liftover_annotator:
         chain: hg38/hg38tohg19
         target_genome: hg19/GATK_ResourceBundle_5777_b37_phiX174_short/genome
-    """)
-
-    pipeline = build_annotation_pipeline(
-        pipeline_config_str=pipeline_config,
-        grr_repository=grr_fixture)
-
-    assert pipeline is not None
+    """, grr_repository=grr_fixture)
 
     assert len(pipeline.annotators) == 1
-    print(pipeline.annotation_schema)
 
-    schema = pipeline.annotation_schema
-    assert len(schema) == 1
-    assert "liftover_annotatable" in schema
-
-    assert schema["liftover_annotatable"].internal is True
-    assert schema["liftover_annotatable"].type == "object"
-
-    assert "liftover_annotatable" not in schema.public_fields
-    assert "liftover_annotatable" in schema.internal_fields
+    assert len(pipeline.get_attributes()) == 1
+    att = pipeline.get_attribute_info("liftover_annotatable")
+    assert att is not None
+    assert att.internal
+    assert att.type == "object"
 
 
 def test_annotation_pipeline_effect_annotator_schema(grr_fixture):
 
-    pipeline_config = textwrap.dedent("""
-    - effect_annotator:
-        genome: hg38/GRCh38-hg38/genome
-        gene_models: hg38/GRCh38-hg38/gene_models/refSeq_20200330
-        attributes:
-            - source: worst_effect
-              destination: worst_effect
-            - source: allele_effects
-              destination: allele_effects
-              internal: true
-    """)
-
     pipeline = build_annotation_pipeline(
-        pipeline_config_str=pipeline_config,
-        grr_repository=grr_fixture)
-
-    assert pipeline is not None
+        pipeline_config_str="""
+            - effect_annotator:
+                genome: hg38/GRCh38-hg38/genome
+                gene_models: hg38/GRCh38-hg38/gene_models/refSeq_20200330
+                attributes:
+                - worst_effect
+                - destination: allele_effects
+                  internal: true
+        """, grr_repository=grr_fixture)
 
     assert len(pipeline.annotators) == 1
-    print(pipeline.annotation_schema)
 
-    schema = pipeline.annotation_schema
-    assert len(schema) == 2, schema
+    assert len(pipeline.get_attributes()) == 2
 
-    assert "allele_effects" in schema
-    assert "allele_effects" in schema.internal_fields
-    assert "allele_effects" not in schema.public_fields
+    att = pipeline.get_attribute_info("allele_effects")
+    assert att is not None
+    assert att.internal
 
-    assert "worst_effect" in schema
-    assert "worst_effect" in schema.public_fields
-    assert "worst_effect" not in schema.internal_fields
+    att = pipeline.get_attribute_info("worst_effect")
+    assert att is not None
+    assert not att.internal

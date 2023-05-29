@@ -59,10 +59,10 @@ def update_header(variant_file, pipeline):
     header = variant_file.header
     header.add_meta("pipeline_annotation_tool", "GPF variant annotation.")
     header.add_meta("pipeline_annotation_tool", f"{' '.join(sys.argv)}")
-    for attribute in pipeline.annotation_schema.names:
-        description = pipeline.annotation_schema[attribute].description
+    for attribute in pipeline.get_attributes():
+        description = attribute.description
         description = description.replace("\n", " ")
-        header.info.add(attribute, "A", "String", description)
+        header.info.add(attribute.name, "A", "String", description)
 
 
 def annotate(
@@ -85,7 +85,7 @@ def annotate(
         with pipeline.open(), closing(VariantFile(
             out_file_path, "w", header=in_file.header
         )) as out_file:
-            annotation_attributes = pipeline.annotation_schema.names
+            annotation_attributes = pipeline.get_attributes()
             for vcf_var in in_file.fetch(*region):
                 # pylint: disable=use-list-literal
                 buffers: List[List] = [list() for _ in annotation_attributes]
@@ -103,10 +103,10 @@ def annotate(
                     )
                     for buff, attribute in zip(buffers, annotation_attributes):
                         # TODO Ask what value to use for missing attr
-                        buff.append(str(annotation.get(attribute, "-")))
+                        buff.append(str(annotation.get(attribute.name, "-")))
 
                 for attribute, buff in zip(annotation_attributes, buffers):
-                    vcf_var.info[attribute] = buff
+                    vcf_var.info[attribute.name] = buff
                 out_file.write(vcf_var)
 
 
@@ -228,7 +228,7 @@ def cli(raw_args: Optional[list[str]] = None) -> None:
                 f"part-{index}",
                 annotate,
                 [args.input, region,
-                 pipeline.config, grr.definition, file_path],
+                 pipeline.get_info(), grr.definition, file_path],
                 []
             ))
 
@@ -236,7 +236,7 @@ def cli(raw_args: Optional[list[str]] = None) -> None:
         task_graph.create_task(
             "combine",
             combine,
-            [args.input, pipeline.config, grr.definition, file_paths, output],
+            [args.input, pipeline.get_info(), grr.definition, file_paths, output],
             region_tasks
         )
 
@@ -247,7 +247,8 @@ def cli(raw_args: Optional[list[str]] = None) -> None:
 
     def run_sequentially():
         assert grr is not None
-        annotate(args.input, tuple(), pipeline.config, grr.definition, output)
+        annotate(args.input, tuple(), pipeline.get_info(),
+                 grr.definition, output)
 
     if tabix_index_filename(args.input):
         run_parallelized()

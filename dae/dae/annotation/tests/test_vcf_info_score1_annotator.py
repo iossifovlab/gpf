@@ -51,79 +51,39 @@ chrA   3   .  A   T   .    .       A=3;B=31;C=c21;D=d31,d32
 
 
 def test_vcf_info_annotator_all_attributes(score1_repo):
-    pipeline_config = textwrap.dedent("""
-            - allele_score:
-                resource_id: score1
-            """)
 
     pipeline = build_annotation_pipeline(
-        pipeline_config_str=pipeline_config,
-        grr_repository=score1_repo)
+        pipeline_config_str="""
+            - allele_score: score1
+        """, grr_repository=score1_repo)
 
-    annotator = cast(GenomicScoreAnnotatorBase, pipeline.annotators[0])
-    annotator.score.open()
-    attributes = annotator.get_all_annotation_attributes()
-    assert len(attributes) == 4
-
-    assert annotator.get_all_annotation_attributes() == [
-        {"desc": "Score A", "name": "A", "type": "int"},
-        {"desc": "Score B", "name": "B", "type": "int"},
-        {"desc": "Score C", "name": "C", "type": "str"},
-        {"desc": "Score D", "name": "D", "type": "str"},
+    expected_name_scr_type_desc = [
+        ("A", "A", "int", "Score A"),
+        ("B", "B", "int", "Score B"),
+        ("C", "C", "str", "Score C"),
+        ("D", "D", "str", "Score D")
     ]
+    observed_name_src_type_desc = \
+        [(at.name, at.source, at.type, at.description)
+         for at in pipeline.get_attributes()]
 
-    annotator.open()
-    assert annotator.get_all_annotation_attributes() == [
-        {"desc": "Score A", "name": "A", "type": "int"},
-        {"desc": "Score B", "name": "B", "type": "int"},
-        {"desc": "Score C", "name": "C", "type": "str"},
-        {"desc": "Score D", "name": "D", "type": "str"},
-    ]
-
-
-def test_vcf_info_default_annotation(score1_repo):
-    pipeline_config = textwrap.dedent("""
-            - allele_score:
-                resource_id: score1
-            """)
-
-    pipeline = build_annotation_pipeline(
-        pipeline_config_str=pipeline_config,
-        grr_repository=score1_repo)
-
-    annotator = cast(GenomicScoreAnnotatorBase, pipeline.annotators[0])
-    annotator.score.open()
-    attributes = annotator.get_annotation_config()
-    assert len(attributes) == 4
-
-    assert attributes == [
-        {"source": "A", "destination": "A"},
-        {"source": "B", "destination": "B"},
-        {"source": "C", "destination": "C"},
-        {"source": "D", "destination": "D"}
-    ]
-
+    assert observed_name_src_type_desc == expected_name_scr_type_desc
 
 def test_vcf_info_config_annotation(score1_repo):
-    pipeline_config = textwrap.dedent("""
+
+    pipeline = build_annotation_pipeline(
+        pipeline_config_str="""
             - allele_score:
                 resource_id: score1
                 attributes:
                 - source: C
                   destination: score1_c
-            """)
+        """, grr_repository=score1_repo)
 
-    pipeline = build_annotation_pipeline(
-        pipeline_config_str=pipeline_config,
-        grr_repository=score1_repo)
+    assert len(pipeline.get_attributes()) == 1
+    att = pipeline.get_attributes()[0]
 
-    annotator = pipeline.annotators[0]
-    attributes = annotator.get_annotation_config()
-    assert len(attributes) == 1
-
-    assert attributes == [
-        {"source": "C", "destination": "score1_c", "internal": False},
-    ]
+    assert (att.name, att.source, att.internal) == ("score1_c", "C", False)
 
 
 @pytest.mark.parametrize("vcf_allele,expected", [

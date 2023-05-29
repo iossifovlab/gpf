@@ -1,5 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 
+from dae.annotation.annotation_pipeline import AnnotatorInfo, AttributeInfo
+from dae.annotation.annotator_base import AnnotatorConfigValidator
 import pytest
 from dae.genomic_resources import build_genomic_resource_repository
 from dae.genomic_resources.repository import GenomicResourceRepo
@@ -50,16 +52,11 @@ def annotation_pipeline1(grr_np_score1):
 
 
 def test_annotation_factory_np_score(annotation_pipeline1):
-    config = {
-        "annotator_type": "np_score",
-        "resource_id": "np_score1",
-        "attributes": [
-            {
-                "source": "raw",
-                "destination": "np_score1",
-            },
-        ],
-    }
-
-    annotator = get_annotator_factory("np_score")(annotation_pipeline1, config)
+    annotator_info = AnnotatorInfo(
+        "np_score",
+        [AttributeInfo("np_score1", "test_raw", False, {})],
+        {"resource_id": "np_score1"}
+    )
+    annotator = get_annotator_factory(annotator_info.type)(
+        annotation_pipeline1, annotator_info)
     assert annotator is not None

@@ -1,20 +1,23 @@
 """Provides a lift over annotator and helpers."""
 
 import logging
-import copy
 
-from typing import Any, Optional, cast
-from dae.annotation.annotation_pipeline import AnnotationPipeline, Annotator, AnnotatorInfo, AttributeInfo
+from typing import Any, Optional
+from dae.annotation.annotation_pipeline import AnnotationPipeline
+from dae.annotation.annotation_pipeline import Annotator
+from dae.annotation.annotation_pipeline import AnnotatorInfo
+from dae.annotation.annotation_pipeline import AttributeInfo
+
 from dae.genomic_resources.reference_genome import \
     ReferenceGenome, build_reference_genome_from_resource
 from dae.genomic_resources.liftover_resource import \
     LiftoverChain, build_liftover_chain_from_resource
-from dae.genomic_resources.repository import GenomicResource
 
-from dae.utils.variant_utils import trim_str_left, reverse_complement
+from dae.utils.variant_utils import trim_str_left
+from dae.utils.variant_utils import reverse_complement
 
 from .annotatable import Annotatable, VCFAllele, Region, Position, CNVAllele
-from .annotator_base import AnnotatorBase, ATTRIBUTES_SCHEMA, AnnotatorConfigValidator
+from .annotator_base import AnnotatorBase
 
 
 logger = logging.getLogger(__name__)
@@ -46,7 +49,7 @@ def build_liftover_annotator(pipeline: AnnotationPipeline,
 
 
 class LiftOverAnnotator(AnnotatorBase):
-    def __init__(self, pipeline: Optional[AnnotationPipeline], 
+    def __init__(self, pipeline: Optional[AnnotationPipeline],
                  info: AnnotatorInfo,
                  chain: LiftoverChain, target_genome: ReferenceGenome):
 

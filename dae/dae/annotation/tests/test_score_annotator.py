@@ -1,4 +1,5 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+from dae.annotation.annotation_factory import build_annotation_pipeline
 import pytest
 
 from dae.genomic_resources.genomic_scores import \
@@ -15,17 +16,10 @@ from dae.annotation.score_annotator import (
 def test_position_score_annotator(
         phastcons100way_variants_expected,
         grr_fixture):
-    resource = grr_fixture.get_resource("hg38/TESTphastCons100way")
-    config = {
-        "annotator_type": "position_score",
-        "resource_id": "hg38/TESTphastCons100way"
-    }
-    score = build_position_score_from_resource(resource)
-    score.open()
-
-    annotator = PositionScoreAnnotator(config, score)
-    pipeline = AnnotationPipeline([], grr_fixture)
-    pipeline.add_annotator(annotator)
+    pipeline = build_annotation_pipeline(
+        pipeline_config_str="""
+            - position_score: hg38/TESTphastCons100way
+        """, grr_repository=grr_fixture)
 
     for sv, expect in phastcons100way_variants_expected:
         for sa in sv.alt_alleles:
@@ -34,34 +28,19 @@ def test_position_score_annotator(
 
 
 def test_position_score_annotator_schema(grr_fixture):
-    resource = grr_fixture.get_resource("hg38/TESTphastCons100way")
-    config = {
-        "annotator_type": "position_score",
-        "resource_id": "hg38/TESTphastCons100way"
-    }
-    score = build_position_score_from_resource(resource)
-    score.open()
+    pipeline = build_annotation_pipeline(
+        pipeline_config_str="""
+            - position_score: hg38/TESTphastCons100way
+        """, grr_repository=grr_fixture)
 
-    annotator = PositionScoreAnnotator(
-        config,
-        score)
-    assert annotator is not None
-
-    schema = annotator.annotation_schema
-    assert schema is not None
+    assert len(pipeline.annotators[0].attributes) > 0
 
 
 def test_np_score_annotator(cadd_variants_expected, grr_fixture):
-    resource = grr_fixture.get_resource("hg38/TESTCADD")
-    config = {
-        "annotator_type": "np_score",
-        "resource_id": "hg38/TESTCADD"
-    }
-    score = build_np_score_from_resource(resource)
-    score.open()
-    annotator = NPScoreAnnotator(config, score)
-    pipeline = AnnotationPipeline([], grr_fixture)
-    pipeline.add_annotator(annotator)
+    pipeline = build_annotation_pipeline(
+        pipeline_config_str="""
+            - np_score: hg38/TESTCADD
+        """, grr_repository=grr_fixture)
 
     for sv, expect in cadd_variants_expected:
         for sa in sv.alt_alleles:
@@ -71,51 +50,34 @@ def test_np_score_annotator(cadd_variants_expected, grr_fixture):
 
 
 def test_np_score_annotator_schema(grr_fixture):
-    resource = grr_fixture.get_resource("hg38/TESTCADD")
-    config = {
-        "annotator_type": "np_score",
-        "resource_id": "hg38/TESTCADD"
-    }
-    score = build_np_score_from_resource(resource)
-    score.open()
-    annotator = NPScoreAnnotator(config, score)
+    pipeline = build_annotation_pipeline(
+        pipeline_config_str="""
+            - np_score: hg38/TESTCADD
+        """, grr_repository=grr_fixture)
 
-    schema = annotator.annotation_schema
-    assert schema is not None
-    assert isinstance(schema, Schema)
-    assert "cadd_raw" in schema.names
-    assert "cadd_phred" in schema.names
+    assert len(pipeline.get_attributes()) == 2
 
-    field = schema["cadd_raw"]
-    assert field.type == "float"
+    attribute = pipeline.get_attribute_info("cadd_raw")
+    assert attribute is not None
+    assert attribute.type == "float"
 
-    field = schema["cadd_phred"]
-    assert field.type == "float"
-
-    assert len(schema) == 2
-    print(dir(schema))
+    attribute = pipeline.get_attribute_info("cadd_phred")
+    assert attribute is not None
+    assert attribute.type == "float"
 
 
 def test_position_score_annotator_indels(
         phastcons100way_indel_variants_expected,
         grr_fixture):
-    resource = grr_fixture.get_resource("hg38/TESTphastCons100way")
-
-    config = {
-        "annotator_type": "position_score",
-        "resource_id": "hg38/TESTphastCons100way",
-        "attributes": [{
-            "source": "phastCons100way",
-            "destination": "phastCons100way",
-            "position_aggregator": "mean"
-        }]
-    }
-    score = build_position_score_from_resource(resource)
-    score.open()
-
-    annotator = PositionScoreAnnotator(config, score)
-    pipeline = AnnotationPipeline([], grr_fixture)
-    pipeline.add_annotator(annotator)
+    pipeline = build_annotation_pipeline(
+        pipeline_config_str="""
+            - position_score:
+                resource_id: hg38/TESTphastCons100way
+                attributes:
+                - destination: phastCons100way
+                  source: phastCons100way
+                  position_aggregator: mean
+        """, grr_repository=grr_fixture)
 
     for sv, expect in phastcons100way_indel_variants_expected:
         for sa in sv.alt_alleles:
@@ -128,17 +90,10 @@ def test_position_score_annotator_indels(
 def test_position_score_annotator_mean_aggregate(
     position_agg_mean_variants_expected, grr_fixture
 ):
-    resource = grr_fixture.get_resource("hg38/TESTPosAgg")
-    config = {
-        "annotator_type": "position_score",
-        "resource_id": "hg38/TESTPosAgg"
-    }
-    score = build_position_score_from_resource(resource)
-    score.open()
-
-    annotator = PositionScoreAnnotator(config, score)
-    pipeline = AnnotationPipeline([], grr_fixture)
-    pipeline.add_annotator(annotator)
+    pipeline = build_annotation_pipeline(
+        pipeline_config_str="""
+            - position_score: hg38/TESTPosAgg
+        """, grr_repository=grr_fixture)
 
     for sv, expect in position_agg_mean_variants_expected:
         for sa in sv.alt_alleles:
@@ -150,28 +105,16 @@ def test_position_score_annotator_mean_aggregate(
 def test_np_score_annotator_indels(
         cadd_indel_variants_expected,
         grr_fixture):
-    resource = grr_fixture.get_resource("hg38/TESTCADD")
-    config = {
-        "annotator_type": "np_score",
-        "resource_id": "hg38/TESTCADD",
-        "attributes": [
-            {
-                "source": "cadd_raw",
-                "destination": "cadd_raw",
-            },
-            {
-                "source": "cadd_phred",
-                "destination": "cadd_phred",
-            }
-        ]
-    }
-    score = build_np_score_from_resource(resource)
-    score.open()
-    annotator = NPScoreAnnotator(config, score)
-
-    pipeline = AnnotationPipeline([], grr_fixture)
-    pipeline.add_annotator(annotator)
-
+    
+    pipeline = build_annotation_pipeline(
+        pipeline_config_str="""
+            - np_score:
+                resource_id: hg38/TESTCADD
+                attributes:
+                - cadd_raw
+                - cadd_phred
+        """, grr_repository=grr_fixture)
+    
     for sv, expect in cadd_indel_variants_expected:
         for sa in sv.alt_alleles:
             result = pipeline.annotate(sa.get_annotatable())
@@ -181,15 +124,9 @@ def test_np_score_annotator_indels(
 
 
 def test_score_annotator_resources(grr_fixture):
-    resource = grr_fixture.get_resource("hg38/TESTphastCons100way")
-    config = {
-        "annotator_type": "position_score",
-        "resource_id": "hg38/TESTphastCons100way"
-    }
-    score = build_position_score_from_resource(resource)
-    score.open()
+    pipeline = build_annotation_pipeline(
+        pipeline_config_str="""
+            - position_score: hg38/TESTphastCons100way
+        """, grr_repository=grr_fixture)
 
-    annotator = PositionScoreAnnotator(config, score)
-    assert {res.get_id() for res in annotator.resources} == {
-        "hg38/TESTphastCons100way"
-    }
+    assert pipeline.get_resource_ids() == {"hg38/TESTphastCons100way"}

@@ -46,8 +46,8 @@ class GenomicScoreAnnotatorBase(Annotator):
         for attribute_config in info.attributes:
             score_config = score.get_score_config(attribute_config.source)
             if score_config is None:
-                message = f"The score {attribute_config.source} is " + \
-                          f"unknown in {self.score.resource.get_id()} " + \
+                message = f"The score '{attribute_config.source}' is " + \
+                          f"unknown in '{score.resource.get_id()}' " + \
                           "resource!"
                 raise ValueError(message)
             attribute_config.type = score_config.type
@@ -121,12 +121,13 @@ class PositionScoreAnnotator(PositionScoreAnnotatorBase):
 
         resource = get_genomic_resource(pipeline, info, "position_score")
         self.position_score = build_position_score_from_resource(resource)
+        super().__init__(pipeline, info, self.position_score)
+
         self.position_score_queries = \
             [PositionScoreQuery(att_info.source,
                                 att_info.parameters.get(
                                     "position_aggregator"))
                 for att_info in info.attributes]
-        super().__init__(pipeline, info, self.position_score)
 
     def _fetch_substitution_scores(self, allele: VCFAllele) \
             -> Optional[list[Any]]:
@@ -149,12 +150,12 @@ class NPScoreAnnotator(PositionScoreAnnotatorBase):
     def __init__(self, pipeline: AnnotationPipeline, info: AnnotatorInfo):
         resource = get_genomic_resource(pipeline, info, "np_score")
         self.np_score = build_np_score_from_resource(resource)
+        super().__init__(pipeline, info, self.np_score)
         self.np_score_queries = \
             [NPScoreQuery(att_info.source,
                           att_info.parameters.get("position_aggregator"),
                           att_info.parameters.get("nucleotide_aggregator"))
                 for att_info in info.attributes]
-        super().__init__(pipeline, info, self.np_score)
 
     def _fetch_substitution_scores(self, allele: VCFAllele):
         return self.np_score.fetch_scores(allele.chromosome, allele.position,
@@ -176,12 +177,12 @@ class AlleleScoreAnnotator(GenomicScoreAnnotatorBase):
     def __init__(self, pipeline: AnnotationPipeline, info: AnnotatorInfo):
         resource = get_genomic_resource(pipeline, info, "allele_score")
         self.allele_score = build_allele_score_from_resource(resource)
+        super().__init__(pipeline, info, self.allele_score)
         self.allele_score_queries = \
             [AlleleScoreQuery(att_info.source,
                               att_info.parameters.get("position_aggregator"),
                               att_info.parameters.get("allele_aggregator"))
                 for att_info in info.attributes]
-        super().__init__(pipeline, info, self.allele_score)
 
     def _fetch_vcf_allele_score(self, allele: VCFAllele) \
             -> Optional[list[Any]]:
