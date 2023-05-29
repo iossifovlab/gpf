@@ -6,8 +6,8 @@ import { Gene } from 'app/gene-browser/gene';
 import { SummaryAllelesArray, SummaryAllelesFilter } from 'app/gene-browser/summary-variants';
 import { GenotypePreviewVariantsArray } from 'app/genotype-preview-model/genotype-preview';
 import { QueryService } from 'app/query/query.service';
-import { first, debounceTime, distinctUntilChanged, take } from 'rxjs/operators';
-import { Subject, Subscription } from 'rxjs';
+import { first, debounceTime, distinctUntilChanged, take, takeUntil } from 'rxjs/operators';
+import { Observable, Subject, Subscription } from 'rxjs';
 import { Dataset, GeneBrowser, PersonSet } from 'app/datasets/datasets';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { FullscreenLoadingService } from 'app/fullscreen-loading/fullscreen-loading.service';
@@ -58,6 +58,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
   private subscriptions: Subscription[] = [];
   private selectedDatasetId: string;
   private variantUpdate$: Subject<void> = new Subject();
+  private interruptSummaryVariants$ = new Subject();
 
   public constructor(
     public readonly configService: ConfigService,
@@ -113,8 +114,8 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
       this.queryService.cancelSummaryStreamPost();
       this.loadingService.setLoadingStop();
       this.location.replaceState(`datasets/${this.selectedDatasetId}/gene-browser`);
+      this.interruptSummaryVariants$.next(true);
     });
-
     if (this.selectedDataset.studies?.length > 1) {
       this.isUniqueFamilyFilterEnabled = true;
     }
@@ -180,7 +181,8 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
     this.genotypePreviewVariantsArray = null;
 
     this.summaryVariantsArray = new SummaryAllelesArray();
-    this.queryService.getSummaryVariants(this.requestParamsSummary).pipe(take(1)).subscribe(res => {
+    this.queryService.getSummaryVariants(this.requestParamsSummary).pipe(take(1),
+      takeUntil(this.interruptSummaryVariants$)).subscribe(res => {
       (res as object[]).forEach(row => this.summaryVariantsArray.addSummaryRow(row));
       // reset summary variants filter, without the coding only field
       this.summaryVariantsFilter = new SummaryAllelesFilter(true, true, this.summaryVariantsFilter.codingOnly);
@@ -321,7 +323,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
     };
     this.genotypePreviewVariantsArray = this.queryService.getGenotypePreviewVariantsByFilter(
       this.selectedDataset, params, this.maxFamilyVariants + 1, () => {
-        this.variantsCountDisplay = this.genotypePreviewVariantsArray.getVariantsCount(this.maxFamilyVariants);
+        this.variantsCountDisplay = this.genotypePreviewVariantsArray?.getVariantsCount(this.maxFamilyVariants);
       }
     );
   }

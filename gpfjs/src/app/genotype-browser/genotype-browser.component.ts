@@ -139,7 +139,7 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy {
         ? this.selectedDataset?.genotypeBrowserConfig?.maxVariantsCount + 1
         : undefined,
       () => {
-        this.variantsCountDisplay = this.genotypePreviewVariantsArray.getVariantsCount(
+        this.variantsCountDisplay = this.genotypePreviewVariantsArray?.getVariantsCount(
           this.selectedDataset?.genotypeBrowserConfig?.maxVariantsCount
         );
       }
