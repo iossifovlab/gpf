@@ -743,7 +743,17 @@ class GenomicScore(ResourceConfigValidationMixin):
                     "name": {"type": "string", "excludes": "index"},
                     "type": {"type": "string"},
                     "desc": {"type": "string"},
-                    "na_values": {"type": ["string", "list"]}
+                    "na_values": {"type": ["string", "list"]},
+                    "number_hist": {"type": "dict", "schema": {
+                        "number_of_bins": {"type": "number"},
+                        "view_range": {"type": "dict", "schema": {
+                            "min": {"type": "number"},
+                            "max": {"type": "number"},
+                        }},
+                        "x_log_scale": {"type": "boolean"},
+                        "y_log_scale": {"type": "boolean"},
+                        "x_min_log": {"type": "number"},
+                    }}
                 }
             }
         }
