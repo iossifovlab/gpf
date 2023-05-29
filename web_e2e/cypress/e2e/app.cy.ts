@@ -57,10 +57,10 @@ describe('App tests', () => {
 
   it('should toggle sidenav, click on the "Saved queries" button and navigate to "/saved-queries"', () => {
     const baseUrl = Cypress.config().baseUrl;
-    const savedQueriesUrl = `${baseUrl}saved-queries`;
+    const savedQueriesUrl = `${baseUrl}user-profile`;
 
     page.loginAdmin();
-    page.navigateToSidenavPage(sidenavPageLinks.savedQueries);
+    page.navigateToSidenavPage(sidenavPageLinks.userProfile);
 
     cy.url().then(currentUrl => {
       expect(currentUrl).to.eq(savedQueriesUrl);

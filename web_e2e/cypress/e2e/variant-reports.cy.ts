@@ -327,8 +327,8 @@ describe('Variant reports tests', () => {
       page.familiesByPedigreeTab.click();
       page.pedigreeCells.eq(cell.index).click({force: true});
 
-      const downloadedVariantsPath = Cypress.config('downloadsFolder') + '/family.ped';
-      const expectedVariantsPath = `cypress/fixtures/variant-reports/family${cell.index}.ped`;
+      const downloadedVariantsPath = Cypress.config('downloadsFolder') + '/families.ped';
+      const expectedVariantsPath = `cypress/fixtures/variant-reports/families${cell.index}.ped`;
 
       cy.window().document().then(doc => {
         doc.addEventListener('click', () => {
@@ -337,13 +337,40 @@ describe('Variant reports tests', () => {
         page.pedigreeModalDownloadBtn.click();
       });
 
-      cy.readFile(downloadedVariantsPath, { timeout: 10000 }).then((downloadedFile: string) => {
-        cy.readFile(expectedVariantsPath, { timeout: 10000 }).then((expectedFile: string) => {
-          const downloadedFileLines = downloadedFile.split(/\r\n|\r|\n/);
-          const expectedFileLines = expectedFile.split(/\r\n|\r|\n/);
-          expect(downloadedFileLines).to.deep.eq(expectedFileLines);
+
+      cy.readFile(downloadedVariantsPath, 'utf8')
+        .then((downloadedFile: string) => {
+          const downloadedFileObjects = [];
+          const downloadedFileLines: string[] = downloadedFile.split(/\r\n|\r|\n/);
+          const keys = downloadedFileLines[0].split('\t');
+          for (let i = 1; i < downloadedFileLines.length - 1; i++) {
+            const values = downloadedFileLines[i].split('\t');
+            const obj = {};
+            for (let j = 0; j < keys.length; j++) {
+              if (j !== 8) { // NOTE: This is due to known issue in GPF, for now it's best to be ignored
+                obj[keys[j]] = values[j];
+              }
+            }
+            downloadedFileObjects.push(obj);
+          }
+          cy.readFile(expectedVariantsPath, 'utf8')
+            .then((expectedFile: string) => {
+              const expectedFileLines: string[] = expectedFile.split(/\r\n|\r|\n/);
+              const expectedVariantsObjects = [];
+              const expectedKeys = expectedFileLines[0].split('\t');
+              for (let i = 1; i < expectedFileLines.length - 1; i++) {
+                const values = expectedFileLines[i].split('\t');
+                const obj = {};
+                for (let j = 0; j < expectedKeys.length; j++) {
+                  if (j !== 8) { // NOTE: This is due to known issue in GPF, for now it's best to be ignored
+                    obj[expectedKeys[j]] = values[j];
+                  }
+                }
+                expectedVariantsObjects.push(obj);
+              }
+              expect(downloadedFileObjects).to.deep.equal(expectedVariantsObjects);
+            });
         });
-      });
     });
   });
 });

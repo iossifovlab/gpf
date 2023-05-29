@@ -351,9 +351,9 @@ describe('Genes block denovo gene set gene symbols tests', () => {
       const downloadedGeneSetFilePath = Cypress.config('downloadsFolder') + '/geneset.csv';
 
       genotypeBrowserController.setStudy(datasetIds.iossifov2014);
-      page.geneSetsButton.click();
 
       for (let i = 0; i < data.expectedConditions.effectTypesSearchQueries.length; i++) {
+        page.geneSetsButton.click();
         page.geneSetsCollectionSelectorDropdownMenu.select('Denovo', {force: true});
         cy.wait(500); // fake loading spinner on frontend requires this wait, remove after fixing frontend
         if (data.peopleGroup === 'unaffected') {
