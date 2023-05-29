@@ -286,3 +286,18 @@ def test_position_annotator_schema_one_source_two_dest_annotate(
 
     assert result["test100min"] == 0.1
     assert result["test100max"] == 0.2
+
+
+def test_position_score_annotator_attributes_with_aggr_fails(
+        position_score_repo):
+    # TODO: Implement the mechanism for testing unused parameters!
+    with pytest.raises(ValueError):
+        build_annotation_pipeline(pipeline_config_str="""
+            - position_score:
+                resource_id: position_score1
+                attributes:
+                - source: test100way
+                  destination: test100min
+                  position_aggregator: min
+                  nucleotide_aggregator: mean
+        """, grr_repository=position_score_repo)
