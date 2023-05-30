@@ -113,7 +113,7 @@ export class VariantReportsComponent implements OnInit {
       this.selectedItems.splice(index, 1);
     }
     if (this.selectedItems.length > 0) {
-      this.selectedTagsHeader = this.selectedItems.join(',');
+      this.selectedTagsHeader = this.selectedItems.join(', ');
     } else {
       this.selectedTagsHeader = '';
     }
@@ -136,8 +136,7 @@ export class VariantReportsComponent implements OnInit {
     this.searchValue = searchValue.trim();
     this.orderedTagList = [
       ...new Set(
-        this.tags.filter(el => el.toLocaleLowerCase().includes(this.searchValue.toLocaleLowerCase()))
-          .concat(this.tags)
+        this.tags.filter(el => el.toLocaleLowerCase().includes(this.searchValue.toLocaleLowerCase())).concat(this.tags)
       )
     ];
   }

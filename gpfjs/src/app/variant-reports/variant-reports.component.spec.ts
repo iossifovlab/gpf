@@ -347,12 +347,12 @@ describe('VariantReportsComponent', () => {
 
     component.updateSelectedTags('tag6');
     expect(component.selectedItems).toStrictEqual(['tag1', 'tag2', 'tag3', 'tag4', 'tag5', 'tag6']);
-    expect(component.selectedTagsHeader).toBe('tag1,tag2,tag3,tag4,tag5,tag6');
+    expect(component.selectedTagsHeader).toBe('tag1, tag2, tag3, tag4, tag5, tag6');
     expect(updatePedigreesTable).toHaveBeenCalledWith();
 
     component.updateSelectedTags('tag3');
     expect(component.selectedItems).toStrictEqual(['tag1', 'tag2', 'tag4', 'tag5', 'tag6']);
-    expect(component.selectedTagsHeader).toBe('tag1,tag2,tag4,tag5,tag6');
+    expect(component.selectedTagsHeader).toBe('tag1, tag2, tag4, tag5, tag6');
     expect(updatePedigreesTable).toHaveBeenCalledWith();
   });
 
@@ -395,7 +395,7 @@ describe('VariantReportsComponent', () => {
     const updatePedigreesTable = jest.spyOn(component, 'updateTagFilters')
       .mockImplementation(() => null);
     component.selectedItems = ['tag1', 'tag2', 'tag3'];
-    component.selectedTagsHeader = 'tag1,tag2,tag3';
+    component.selectedTagsHeader = 'tag1, tag2, tag3';
     component.uncheckAll();
 
     expect(component.selectedItems).toHaveLength(0);

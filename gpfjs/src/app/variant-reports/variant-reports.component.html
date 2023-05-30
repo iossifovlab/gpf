@@ -93,7 +93,7 @@
 
       <div id="pedigree-toolbar">
         <button (click)="openModal()" id="open-modal-button">Select tags</button>
-        <span [hidden]="!selectedTagsHeader" id="selected-tags-list" [title]="selectedTagsHeader">{{
+        <span *ngIf="!selectedTagsHeader" id="selected-tags-list" [title]="selectedTagsHeader">{{
           selectedTagsHeader
         }}</span>
         <button
