@@ -2,7 +2,7 @@ import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { ConfigService } from 'app/config/config.service';
 // eslint-disable-next-line no-restricted-imports
-import { of } from 'rxjs';
+import { lastValueFrom, of } from 'rxjs';
 import { take } from 'rxjs/operators';
 import { AgpTableConfig } from './autism-gene-profiles-table';
 import { AgpTableService } from './autism-gene-profiles-table.service';
@@ -22,17 +22,16 @@ describe('AgpTableService', () => {
     expect(service).toBeTruthy();
   });
 
-  it('should get config', () => {
+  it('should get config', async() => {
     const getConfigSpy = jest.spyOn(service['http'], 'get');
     getConfigSpy.mockReturnValue(of({ mockConfigProperty: 'mockConfigValue' }));
 
     const resultConfig = service.getConfig();
 
     expect(getConfigSpy).toHaveBeenCalledWith(service['config'].baseUrl + service['configUrl']);
-    resultConfig.pipe(take(1)).subscribe(res => {
-      expect(res['mockConfigProperty']).toBe('mockConfigValue');
-      expect(res).toBeInstanceOf(AgpTableConfig);
-    });
+    const res = await lastValueFrom(resultConfig.pipe(take(1)));
+    expect(res['mockConfigProperty']).toBe('mockConfigValue');
+    expect(res).toBeInstanceOf(AgpTableConfig);
   });
 
   it('should get genes', () => {

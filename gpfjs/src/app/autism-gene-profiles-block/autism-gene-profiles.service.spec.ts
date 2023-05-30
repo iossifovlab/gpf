@@ -2,7 +2,7 @@ import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { ConfigService } from 'app/config/config.service';
 // eslint-disable-next-line no-restricted-imports
-import { of } from 'rxjs';
+import { lastValueFrom, of } from 'rxjs';
 import { AutismGeneProfilesService } from './autism-gene-profiles.service';
 import { AgpSingleViewConfig, AgpGene } from 'app/autism-gene-profiles-single-view/autism-gene-profile-single-view';
 import { take } from 'rxjs/operators';
@@ -22,29 +22,27 @@ describe('AutismGeneProfilesService', () => {
     expect(service).toBeTruthy();
   });
 
-  it('should get config', () => {
+  it('should get config', async() => {
     const getConfigSpy = jest.spyOn(service['http'], 'get');
     getConfigSpy.mockReturnValue(of({ mockConfigProperty: 'mockConfigValue' }));
 
     const resultConfig = service.getConfig();
 
     expect(getConfigSpy).toHaveBeenCalledWith(service['config'].baseUrl + service['configUrl']);
-    resultConfig.pipe(take(1)).subscribe(res => {
-      expect(res['mockConfigProperty']).toBe('mockConfigValue');
-      expect(res).toBeInstanceOf(AgpSingleViewConfig);
-    });
+    const res = await lastValueFrom(resultConfig.pipe(take(1)));
+    expect(res['mockConfigProperty']).toBe('mockConfigValue');
+    expect(res).toBeInstanceOf(AgpSingleViewConfig);
   });
 
-  it('should get single gene', () => {
+  it('should get single gene', async() => {
     const getGeneSpy = jest.spyOn(service['http'], 'get');
     getGeneSpy.mockReturnValue(of({ mockGeneProperty: 'mockGeneValue' }));
 
     const resultGene = service.getGene('geneMock1');
 
     expect(getGeneSpy).toHaveBeenCalledWith(service['config'].baseUrl + service['genesUrl'] + 'geneMock1');
-    resultGene.pipe(take(1)).subscribe(res => {
-      expect(res['mockGeneProperty']).toBe('mockGeneValue');
-      expect(res).toBeInstanceOf(AgpGene);
-    });
+    const res = await lastValueFrom(resultGene.pipe(take(1)));
+    expect(res['mockGeneProperty']).toBe('mockGeneValue');
+    expect(res).toBeInstanceOf(AgpGene);
   });
 });
