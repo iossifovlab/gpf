@@ -4,7 +4,7 @@
       ngbNav
       #nav="ngbNav"
       class="navbar bg-light nav-pills nav"
-      style="justify-content: flex-start; margin-bottom: 16px"
+      style="justify-content: flex-start; margin-bottom: 10px"
       [destroyOnHide]="false">
       <li ngbNavItem>
         <a ngbNavLink>Families by number</a>
@@ -28,14 +28,15 @@
       </li>
     </ul>
     <div [ngbNavOutlet]="nav" class="card-block"></div>
-
-    <h5 id="total-number-of-families">
-      <span>Total number of families: {{ variantReport.familyReport.familiesTotal }}</span>
-      <span style="padding-left: 5px">(<a class="download-link" [href]="getDownloadLink()" download>Download</a>)</span>
-    </h5>
   </div>
 
   <ng-template #familiesByNumber>
+    <div id="download-total-families">
+      <a class="download-link" [href]="getDownloadLink()" download
+        >Download all families ({{ variantReport.familyReport.familiesTotal }})</a
+      >
+    </div>
+    <br />
     <div id="families-by-number">
       <div *ngIf="variantReport.peopleReport.peopleCounters.length > 1" class="variants-report-selector">
         <div class="select-wrapper">
@@ -89,18 +90,12 @@
           <span class="select-dropdown-icon" [style.content]="'url(' + imgPathPrefix + 'dropdown_icon.png)'"></span>
         </div>
       </div>
-      <div *ngIf="dropdownList.length !== 0 && currentPedigreeTable" id="tags-selector">
-        <div id="tags-dropdown-wrapper">
-          <ng-multiselect-dropdown
-            [placeholder]="'Select tags'"
-            [settings]="dropdownSettings"
-            [data]="dropdownList"
-            [(ngModel)]="selectedItems"
-            (onSelect)="updateTagFilters()"
-            (onDeSelect)="updateTagFilters()">
-          </ng-multiselect-dropdown>
-          <span class="select-dropdown-icon" [style.content]="'url(' + imgPathPrefix + 'dropdown_icon.png)'"></span>
-        </div>
+
+      <div id="pedigree-toolbar">
+        <button (click)="openModal()" id="open-modal-button">Select tags</button>
+        <span *ngIf="!selectedTagsHeader" id="selected-tags-list" [title]="selectedTagsHeader">{{
+          selectedTagsHeader
+        }}</span>
         <button
           [disabled]="currentPedigreeTable.pedigrees.length === 0"
           id="download-button"
@@ -109,30 +104,70 @@
           >Download</button
         >
       </div>
+      <ng-template #tagsModal class="tags-modal">
+        <div id="tags-modal-content">
+          <div id="tags-modal-header">
+            <input
+              #searchTag
+              (search)="search(searchTag.value)"
+              (keyup)="search(searchTag.value)"
+              id="search-tags"
+              class="search-input form-control my-0 py-1"
+              type="search"
+              placeholder="Search tags"
+              autocomplete="off" />
+            <a (click)="uncheckAll()" id="uncheck-button">Uncheck all</a>
+          </div>
 
-      <div *ngIf="currentPedigreeTable" id="families-by-pedigree-div" class="row">
-        <div class="col-12">
-          <table class="gpf-basic-table">
-            <colgroup *ngIf="currentPedigreeTable.pedigrees.length !== 0">
-              <col />
-              <col />
-              <col />
-              <col />
-            </colgroup>
-            <tbody *ngIf="currentPedigreeTable.pedigrees.length !== 0">
-              <ng-template ngFor let-pedigreeGroup [ngForOf]="currentPedigreeTable.pedigrees">
-                <tr gpf-common-reports-row [pedigreeGroup]="pedigreeGroup"></tr>
-              </ng-template>
-            </tbody>
-            <th *ngIf="currentPedigreeTable.pedigrees.length === 0" id="nothing-found" class="table-row table-body-row">
-              <span>Nothing found</span>
-            </th>
-          </table>
+          <div
+            id="tag-list"
+            [ngStyle]="{
+              display: 'grid',
+              'grid-template-columns': 'repeat(' + tagsModalsNumberOfCols + ', max-content)',
+              'grid-template-rows': 'repeat(' + tagsModalsNumberOfRows + ', 30px)',
+              'column-gap': '16px'
+            }">
+            <div *ngFor="let tag of orderedTagList">
+              <input
+                [disabled]="!tag.toLocaleLowerCase().includes(searchValue.toLocaleLowerCase())"
+                type="checkbox"
+                [id]="tag + '-tag'"
+                [checked]="selectedItems.includes(tag)"
+                (change)="updateSelectedTags(tag)" />
+              <label
+                [attr.for]="tag + '-tag'"
+                id="tag-label"
+                [ngStyle]="!tag.toLocaleLowerCase().includes(searchValue.toLocaleLowerCase()) && { opacity: '30%' }"
+                >{{ tag }}</label
+              >
+            </div>
+          </div>
         </div>
+      </ng-template>
+    </div>
+
+    <div *ngIf="currentPedigreeTable" id="families-by-pedigree-div" class="row">
+      <div class="col-12">
+        <table class="gpf-basic-table">
+          <colgroup *ngIf="currentPedigreeTable.pedigrees.length !== 0">
+            <col />
+            <col />
+            <col />
+            <col />
+          </colgroup>
+          <tbody *ngIf="currentPedigreeTable.pedigrees.length !== 0">
+            <ng-template ngFor let-pedigreeGroup [ngForOf]="currentPedigreeTable.pedigrees">
+              <tr gpf-common-reports-row [pedigreeGroup]="pedigreeGroup"></tr>
+            </ng-template>
+          </tbody>
+          <th *ngIf="currentPedigreeTable.pedigrees.length === 0" id="nothing-found" class="table-row table-body-row">
+            <span>Nothing found</span>
+          </th>
+        </table>
       </div>
-      <div *ngIf="currentPedigreeTable" id="legend-wrapper">
-        <gpf-legend [legendItems]="currentPedigreeTable.legend.legendItems"></gpf-legend>
-      </div>
+    </div>
+    <div *ngIf="currentPedigreeTable" id="legend-wrapper">
+      <gpf-legend [legendItems]="currentPedigreeTable.legend.legendItems"></gpf-legend>
     </div>
   </ng-template>
 

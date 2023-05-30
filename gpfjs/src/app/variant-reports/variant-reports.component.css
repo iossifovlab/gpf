@@ -128,18 +128,18 @@ table {
   margin-right: -10px;
 }
 
-#total-number-of-families {
-  position: absolute;
-  right: 0;
-  padding: 16px;
+#download-total-families {
+  float: right;
+  margin-bottom: 10px;
 }
 
 #families-by-number {
   padding-bottom: 55px;
+  margin-top: 10px;
 }
 
 #families-by-pedigree {
-  padding-bottom: 102px;
+  padding-bottom: 20px;
 }
 
 h5 {
@@ -150,17 +150,6 @@ h5 {
   padding-bottom: 16px;
 }
 
-ng-multiselect-dropdown > span.selected-item {
-  display: block;
-  padding: 3px 26px 3px 5px;
-  width: auto;
-  border: 0;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  overflow: hidden;
-  max-width: 100%;
-}
-
 #tags-selector {
   padding-bottom: 16px;
   display: flex;
@@ -168,101 +157,65 @@ ng-multiselect-dropdown > span.selected-item {
   align-items: center;
 }
 
-#nothing-found {
-  height: 43px;
+#pedigree-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 15px;
 }
 
-#nothing-found span {
-  line-height: 43px;
-  font-style: italic;
-  padding-left: 12px;
-  opacity: 75%;
-  font-weight: normal;
+#open-modal-button {
+  background-color: #eee;
+  border: 1px solid #ddd;
+  border-radius: 0.375rem;
+  padding: 6px 12px;
+  flex-shrink: 0;
 }
 
-/* stylelint-disable-next-line selector-class-pattern */
-:host::ng-deep.dropdown-multiselect__caret {
-  display: none !important;
+::ng-deep .modal-dialog-centered {
+  justify-content: center;
 }
 
-:host::ng-deep.selected-item {
-  color: black !important;
-  background-color: #eee !important;
-  border: 1px solid #ddd !important;
-  box-shadow: none !important;
-  max-width: unset !important;
-  margin: 2px !important;
-  text-align: center;
-  width: 200px;
-  text-overflow: ellipsis;
+::ng-deep .modal-content {
+  width: fit-content;
+}
+
+#selected-tags-list {
+  font-weight: 500;
   white-space: nowrap;
   overflow: hidden;
-  height: 28px;
+  text-overflow: ellipsis;
+}
+
+#tags-modal-content {
+  padding: 20px;
+  height: fit-content;
+  width: fit-content;
+}
+
+#tags-modal-header {
   display: flex;
+  column-gap: 20px;
+  align-items: baseline;
+  margin-bottom: 10px;
 }
 
-:host::ng-deep.selected-item a {
-  color: black !important;
-  opacity: 50% !important;
-  float: right;
+.search-input {
+  padding-right: 5px;
 }
 
-:host::ng-deep.dropdown-btn {
-  min-height: 44px !important;
-  padding: 5px 12px !important;
-  display: flex !important;
-  flex-wrap: wrap !important;
-  align-content: center !important;
-  border: 1px solid #ced4da !important;
-  width: 447px !important;
+#uncheck-button {
+  white-space: nowrap;
+  color: #2a6395;
 }
 
-:host::ng-deep.multiselect-item-checkbox div::before {
-  border: 1px solid black !important;
-  animation: none !important;
-  transition: none !important;
+#uncheck-button:hover {
+  cursor: pointer;
+  color: #163d5f;
 }
 
-:host::ng-deep.item1 {
-  border-top: 1px solid #ccc !important;
-}
-
-:host::ng-deep.dropdown-list {
-  display: flex;
-  flex-direction: column-reverse !important;
-  top: -211px !important;
-  box-shadow: none !important;
-  border-bottom: 0 !important;
-  width: 447px !important;
-  height: 198px;
-}
-
-:host::ng-deep.item1 .multiselect-item-checkbox {
-  display: none;
-}
-
-:host::ng-deep input[aria-label="multiselect-search"] {
-  padding: 0 !important;
-}
-
-:host::ng-deep.filter-textbox {
-  padding: 7px 10px !important;
-}
-
-:host::ng-deep.no-filtered-data h5 {
-  visibility: hidden;
-  margin-bottom: 0;
-}
-
-:host::ng-deep.no-filtered-data h5::after {
-  content: "Nothing found";
-  visibility: visible;
-  font-size: 16px;
-  font-weight: normal;
-  font-style: italic;
-  opacity: 75%;
-  float: left;
-  margin-bottom: 0;
+#tag-label {
+  margin-left: 5px;
 }
 
 .download-link {
@@ -275,16 +228,11 @@ ng-multiselect-dropdown > span.selected-item {
   justify-content: center;
 }
 
-#tags-dropdown-wrapper {
-  position: relative;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-}
-
-#tags-dropdown-wrapper .select-dropdown-icon {
-  position: absolute;
-  right: 10px;
-  transform: rotate(180deg);
-  pointer-events: none;
+#nothing-found {
+  height: 43px;
+  line-height: 43px;
+  font-style: italic;
+  padding-left: 12px;
+  opacity: 75%;
+  font-weight: normal;
 }

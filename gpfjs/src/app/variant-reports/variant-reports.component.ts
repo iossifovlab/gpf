@@ -1,4 +1,4 @@
-import { Component, OnInit, HostListener, Pipe, PipeTransform } from '@angular/core';
+import { Component, OnInit, HostListener, Pipe, PipeTransform, ViewChild, ElementRef } from '@angular/core';
 import { VariantReportsService } from './variant-reports.service';
 import {
   VariantReport, FamilyCounter, PedigreeCounter, EffectTypeTable, DeNovoData, PedigreeTable, PeopleCounter
@@ -9,7 +9,7 @@ import { take } from 'rxjs/operators';
 import { environment } from 'environments/environment';
 import { Dictionary } from 'lodash';
 import * as _ from 'lodash';
-import { IDropdownSettings } from 'ng-multiselect-dropdown';
+import { NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
 
 @Pipe({ name: 'getPeopleCounterRow' })
 export class PeopleCounterRowPipe implements PipeTransform {
@@ -30,6 +30,16 @@ export class VariantReportsComponent implements OnInit {
   public currentPeopleCounter: PeopleCounter;
   public currentPedigreeTable: PedigreeTable;
   public currentDenovoReport: EffectTypeTable;
+  public selectedTagsHeader = '';
+
+  public modal: NgbModalRef;
+  @ViewChild('tagsModal') public tagsModal: ElementRef;
+
+  @ViewChild('searchTag') private searchTag: ElementRef;
+  public searchValue = '';
+
+  public tagsModalsNumberOfRows = 9;
+  public tagsModalsNumberOfCols = 2;
 
   public variantReport: VariantReport;
   public familiesCounters: FamilyCounter[];
@@ -38,14 +48,14 @@ export class VariantReportsComponent implements OnInit {
   public selectedDataset: Dataset;
 
   public imgPathPrefix = environment.imgPathPrefix;
-  public dropdownList = [];
-  public selectedItems = [];
-  public dropdownSettings: IDropdownSettings = {};
+  public orderedTagList = [];
+  public selectedItems: string[] = [];
 
   public denovoVariantsTableWidth: number;
   private denovoVariantsTableColumnWidth = 140;
 
   public constructor(
+    public modalService: NgbModal,
     private variantReportsService: VariantReportsService,
     private datasetsService: DatasetsService
   ) { }
@@ -76,22 +86,15 @@ export class VariantReportsComponent implements OnInit {
     });
     if (this.variantReportsService.getTags() !== undefined) {
       this.variantReportsService.getTags().subscribe(data => {
-        Object.values(data).forEach(tag => {
+        Object.values(data).forEach((tag: string) => {
           this.tags.push(tag);
-          this.dropdownList.push(tag);
+          this.orderedTagList.push(tag);
         });
+        // Calculate square looking grid for the tags (1 column width === ~5 tags height)
+        this.tagsModalsNumberOfCols = Math.ceil(Math.sqrt(Math.ceil(this.tags.length / 5)));
+        this.tagsModalsNumberOfRows = Math.ceil(this.tags.length / this.tagsModalsNumberOfCols);
       });
     }
-
-    this.dropdownSettings = {
-      singleSelection: false,
-      idField: 'item_id',
-      textField: 'item_text',
-      selectAllText: 'Select All',
-      unSelectAllText: 'UnSelect All',
-      allowSearchFilter: true,
-      maxHeight: 150
-    };
   }
 
   private copyOriginalPedigreeCounters(): Record<string, PedigreeCounter[]> {
@@ -102,8 +105,46 @@ export class VariantReportsComponent implements OnInit {
     );
   }
 
-  private getSelectedTags(): string[] {
-    return this.tags.filter(x => this.selectedItems.includes(x));
+  public updateSelectedTags(tag: string): void {
+    if (!this.selectedItems.includes(tag)) {
+      this.selectedItems.push(tag);
+    } else {
+      const index = this.selectedItems.indexOf(tag);
+      this.selectedItems.splice(index, 1);
+    }
+    if (this.selectedItems.length > 0) {
+      this.selectedTagsHeader = this.selectedItems.join(', ');
+    } else {
+      this.selectedTagsHeader = '';
+    }
+    this.updateTagFilters();
+  }
+
+  public openModal(): void {
+    this.orderedTagList = this.tags;
+    this.searchValue = '';
+    if (this.modalService.hasOpenModals()) {
+      return;
+    }
+    this.modal = this.modalService.open(
+      this.tagsModal,
+      {animation: false, centered: true, windowClass: 'tags-modal'}
+    );
+  }
+
+  public search(searchValue: string): void {
+    this.searchValue = searchValue.trim();
+    this.orderedTagList = [
+      ...new Set(
+        this.tags.filter(el => el.toLocaleLowerCase().includes(this.searchValue.toLocaleLowerCase())).concat(this.tags)
+      )
+    ];
+  }
+
+  public uncheckAll(): void {
+    this.selectedItems = [];
+    this.selectedTagsHeader = '';
+    this.updateTagFilters();
   }
 
   public updatePedigrees(newCounters: Dictionary<PedigreeCounter[]>): void {
@@ -113,11 +154,10 @@ export class VariantReportsComponent implements OnInit {
   }
 
   public updateTagFilters(): void {
-    const tags = this.getSelectedTags();
     const copiedCounters = this.copyOriginalPedigreeCounters();
     const filteredCounters = {};
     for (const [groupName, counters] of Object.entries(copiedCounters)) {
-      filteredCounters[groupName] = counters.filter(x => _.difference(tags, x.tags).length === 0);
+      filteredCounters[groupName] = counters.filter(x => _.difference(this.selectedItems, x.tags).length === 0);
     }
     this.updatePedigrees(filteredCounters);
   }
@@ -165,7 +205,7 @@ export class VariantReportsComponent implements OnInit {
   }
 
   public downloadTags(): void {
-    const tags = this.getSelectedTags().join(',');
+    const tags = this.selectedItems.join(',');
     location.href = this.variantReportsService.getDownloadLinkTags(tags);
   }
 
