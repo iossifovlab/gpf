@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { DatasetsComponent } from './datasets.component';
 
-describe.skip('DatasetComponent', () => {
+describe('DatasetComponent', () => {
   let component: DatasetsComponent;
   let fixture: ComponentFixture<DatasetsComponent>;
 
@@ -15,11 +15,7 @@ describe.skip('DatasetComponent', () => {
     fixture.detectChanges();
   });
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
-  });
+  it.todo('should create');
 
-  it('check for selectedDataset', () => {
-    expect(component.selectedDataset.id).toBe('VIP');
-  });
+  it.todo('check for selectedDataset');
 });

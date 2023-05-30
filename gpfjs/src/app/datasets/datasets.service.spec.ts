@@ -25,6 +25,7 @@ describe('DatasetService', () => {
       ],
       declarations: [],
     }).compileComponents();
+    jest.clearAllMocks();
 
     service = TestBed.inject(DatasetsService);
   }));

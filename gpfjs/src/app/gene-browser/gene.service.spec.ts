@@ -18,6 +18,7 @@ describe('GeneService', () => {
         HttpClientTestingModule,
       ]
     });
+    jest.clearAllMocks();
     service = TestBed.inject(GeneService);
   });
 
