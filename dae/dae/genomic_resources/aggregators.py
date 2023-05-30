@@ -320,5 +320,5 @@ def build_aggregator(aggregator_type) -> Aggregator:
     return create_aggregator(aggregator_def)
 
 
-def verify_aggregator(aggregator_type):
+def validate_aggregator(aggregator_type):
     build_aggregator(aggregator_type)

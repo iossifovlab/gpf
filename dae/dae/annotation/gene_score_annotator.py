@@ -12,7 +12,7 @@ from dae.annotation.annotation_pipeline import AnnotatorInfo
 from dae.gene.gene_scores import GeneScore
 from dae.genomic_resources import GenomicResource
 from dae.genomic_resources.aggregators import build_aggregator
-from dae.genomic_resources.aggregators import verify_aggregator
+from dae.genomic_resources.aggregators import validate_aggregator
 
 
 logger = logging.getLogger(__name__)
@@ -79,7 +79,7 @@ class GeneScoreAnnotator(Annotator):
             if aggregator_type is None:
                 aggregator_type = self.DEFAULT_AGGREGATOR_TYPE
             else:
-                verify_aggregator(aggregator_type)
+                validate_aggregator(aggregator_type)
 
             self.aggregators.append(aggregator_type)
 

@@ -6,6 +6,7 @@ from dae.annotation.annotation_pipeline import Annotator
 from dae.annotation.annotation_pipeline import AnnotationPipeline
 from dae.annotation.annotation_pipeline import AnnotatorInfo
 from dae.annotation.annotation_factory import AnnotationConfigParser
+from dae.genomic_resources.aggregators import validate_aggregator
 
 from dae.genomic_resources.repository import GenomicResource
 
@@ -123,11 +124,13 @@ class PositionScoreAnnotator(PositionScoreAnnotatorBase):
         self.position_score = build_position_score_from_resource(resource)
         super().__init__(pipeline, info, self.position_score)
 
-        self.position_score_queries = \
-            [PositionScoreQuery(att_info.source,
-                                att_info.parameters.get(
-                                    "position_aggregator"))
-                for att_info in info.attributes]
+        self.position_score_queries = []
+        for att_info in info.attributes:
+            pos_aggregator = att_info.parameters.get("position_aggregator")
+            if pos_aggregator:
+                validate_aggregator(pos_aggregator)
+            self.position_score_queries.append(
+                PositionScoreQuery(att_info.source, pos_aggregator))
 
     def _fetch_substitution_scores(self, allele: VCFAllele) \
             -> Optional[list[Any]]:
@@ -151,11 +154,17 @@ class NPScoreAnnotator(PositionScoreAnnotatorBase):
         resource = get_genomic_resource(pipeline, info, "np_score")
         self.np_score = build_np_score_from_resource(resource)
         super().__init__(pipeline, info, self.np_score)
-        self.np_score_queries = \
-            [NPScoreQuery(att_info.source,
-                          att_info.parameters.get("position_aggregator"),
-                          att_info.parameters.get("nucleotide_aggregator"))
-                for att_info in info.attributes]
+
+        self.np_score_queries = []
+        for att_info in info.attributes:
+            pos_agg = att_info.parameters.get("position_aggregator")
+            nuc_agg = att_info.parameters.get("nucleotide_aggregator")
+
+            for agg in [pos_agg, nuc_agg]:
+                if agg:
+                    validate_aggregator(agg)
+            self.np_score_queries.append(
+                NPScoreQuery(att_info.source, pos_agg, nuc_agg))
 
     def _fetch_substitution_scores(self, allele: VCFAllele):
         return self.np_score.fetch_scores(allele.chromosome, allele.position,
@@ -178,11 +187,16 @@ class AlleleScoreAnnotator(GenomicScoreAnnotatorBase):
         resource = get_genomic_resource(pipeline, info, "allele_score")
         self.allele_score = build_allele_score_from_resource(resource)
         super().__init__(pipeline, info, self.allele_score)
-        self.allele_score_queries = \
-            [AlleleScoreQuery(att_info.source,
-                              att_info.parameters.get("position_aggregator"),
-                              att_info.parameters.get("allele_aggregator"))
-                for att_info in info.attributes]
+        self.allele_score_queries = []
+        for att_info in info.attributes:
+            pos_agg = att_info.parameters.get("position_aggregator")
+            all_agg = att_info.parameters.get("allele_aggregator")
+
+            for agg in [pos_agg, all_agg]:
+                if agg:
+                    validate_aggregator(agg)
+            self.allele_score_queries.append(
+                AlleleScoreQuery(att_info.source, pos_agg, all_agg))
 
     def _fetch_vcf_allele_score(self, allele: VCFAllele) \
             -> Optional[list[Any]]:
