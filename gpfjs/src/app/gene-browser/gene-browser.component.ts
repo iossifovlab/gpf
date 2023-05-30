@@ -1,13 +1,13 @@
 import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
-import { ActivatedRoute, Params } from '@angular/router';
+import { ActivatedRoute, NavigationStart, Params, Router } from '@angular/router';
 import { Location } from '@angular/common';
 import { GeneService } from 'app/gene-browser/gene.service';
 import { Gene } from 'app/gene-browser/gene';
 import { SummaryAllelesArray, SummaryAllelesFilter } from 'app/gene-browser/summary-variants';
 import { GenotypePreviewVariantsArray } from 'app/genotype-preview-model/genotype-preview';
 import { QueryService } from 'app/query/query.service';
-import { first, debounceTime, distinctUntilChanged, take, takeUntil } from 'rxjs/operators';
-import { Observable, Subject, Subscription } from 'rxjs';
+import { first, debounceTime, distinctUntilChanged, take, takeUntil, filter } from 'rxjs/operators';
+import { Subject, Subscription } from 'rxjs';
 import { Dataset, GeneBrowser, PersonSet } from 'app/datasets/datasets';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { FullscreenLoadingService } from 'app/fullscreen-loading/fullscreen-loading.service';
@@ -68,7 +68,15 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
     private geneService: GeneService,
     private datasetsService: DatasetsService,
     private loadingService: FullscreenLoadingService,
-  ) { }
+    private router: Router
+  ) {
+    this.router.events.pipe(
+      filter(event => event instanceof NavigationStart)
+    ).subscribe(() => {
+      this.queryService.cancelStreamPost();
+      this.loadingService.setLoadingStop();
+    });
+  }
 
   public variantsCountDisplay: string;
 
