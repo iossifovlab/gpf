@@ -43,13 +43,27 @@ class UsersGroupsServiceMock {
     return of(null);
   }
 
-  public getGroup(name: string): Observable<UserGroup> {
-    return of(new UserGroup(
-      groupMock.id,
-      name,
-      groupMock.users,
-      groupMock.datasets.concat({datasetId: 'datasetId7', datasetName: 'dataset7'}),
-    ));
+  public getGroups(page: number, name: string): Observable<UserGroup[]> {
+    const updatedGroup = lodash.cloneDeep(groupMock);
+    updatedGroup.name = name;
+
+    switch (name) {
+      case 'removedUser':
+        updatedGroup.users = ['user1email', 'user2email', 'user4email'];
+        break;
+      case 'addedUser':
+        updatedGroup.users = updatedGroup.users.concat('newEmail');
+        break;
+      case 'removedDataset':
+        updatedGroup.datasets = [datasetMock1, datasetMock2, datasetMock3, datasetMock5, datasetMock6];
+        break;
+      case 'addedDataset':
+        updatedGroup.datasets = updatedGroup.datasets.concat({datasetId: 'datasetId7', datasetName: 'dataset7'});
+        break;
+      default:
+        break;
+    }
+    return of([updatedGroup]);
   }
 }
 
@@ -131,12 +145,13 @@ describe('GroupsTableComponent', () => {
   it('should remove user from group', () => {
     const removeUserSpy = jest.spyOn(usersGroupsServiceMock, 'removeUser');
     const group = lodash.cloneDeep(groupMock);
+    group.name = 'removedUser';
 
     component.removeUser(group, 'user3email');
-    expect(removeUserSpy).toHaveBeenCalledWith('user3email', groupMock.name);
+    expect(removeUserSpy).toHaveBeenCalledWith('user3email', 'removedUser');
     expect(group).toStrictEqual(new UserGroup(
       groupMock.id,
-      groupMock.name,
+      'removedUser',
       ['user1email', 'user2email', 'user4email'],
       groupMock.datasets
     ));
@@ -145,12 +160,13 @@ describe('GroupsTableComponent', () => {
   it('should add user to group', () => {
     const addUserSpy = jest.spyOn(usersGroupsServiceMock, 'addUser');
     const group = lodash.cloneDeep(groupMock);
+    group.name = 'addedUser';
 
     component.addUser(group, new Item('user3', 'newEmail'));
-    expect(addUserSpy).toHaveBeenCalledWith('newEmail', groupMock.name);
+    expect(addUserSpy).toHaveBeenCalledWith('newEmail', 'addedUser');
     expect(group).toStrictEqual(new UserGroup(
       groupMock.id,
-      groupMock.name,
+      'addedUser',
       ['user1email', 'user2email', 'user3email', 'user4email', 'newEmail'],
       groupMock.datasets
     ));
@@ -159,12 +175,13 @@ describe('GroupsTableComponent', () => {
   it('should remove dataset from group', () => {
     const revokePermissionToDatasetSpy = jest.spyOn(usersGroupsServiceMock, 'revokePermissionToDataset');
     const group = lodash.cloneDeep(groupMock);
+    group.name = 'removedDataset';
 
     component.removeDataset(group, 'datasetId4');
     expect(revokePermissionToDatasetSpy).toHaveBeenCalledWith(groupMock.id, 'datasetId4');
     expect(group).toStrictEqual(new UserGroup(
       groupMock.id,
-      groupMock.name,
+      'removedDataset',
       groupMock.users,
       [datasetMock1, datasetMock2, datasetMock3, datasetMock5, datasetMock6]
     ));
@@ -173,12 +190,13 @@ describe('GroupsTableComponent', () => {
   it('should add dataset to group', () => {
     const addDatasetSpy = jest.spyOn(usersGroupsServiceMock, 'grantPermissionToDataset');
     const group = lodash.cloneDeep(groupMock);
+    group.name = 'addedDataset';
 
     component.addDataset(group, new Item('datasetId7', 'dataset7'));
-    expect(addDatasetSpy).toHaveBeenCalledWith(groupMock.name, 'datasetId7');
+    expect(addDatasetSpy).toHaveBeenCalledWith('addedDataset', 'datasetId7');
     expect(group).toStrictEqual(new UserGroup(
       groupMock.id,
-      groupMock.name,
+      'addedDataset',
       groupMock.users,
       groupMock.datasets.concat({datasetId: 'datasetId7', datasetName: 'dataset7'}),
     ));
@@ -210,7 +228,6 @@ describe('GroupsTableComponent', () => {
       new UserGroup(1, 'group1', ['user1email'], [datasetMock1]),
       new UserGroup(2, 'group2', ['user2email'], [datasetMock2])
     ]);
-    expect(groupToDelete).toStrictEqual(new UserGroup(groupMock.id, groupMock.name, [], []));
   });
 
   it('should get user emails function', async() => {

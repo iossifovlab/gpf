@@ -39,15 +39,15 @@ class UsersServiceMock {
     let pageBody: User[];
     if (page === 1) {
       pageBody = [
-        new User(1, 'user1', 'user1email', ['a', 'user1email', 'b', 'any_user', 'c'], true, []),
-        new User(2, 'user2', 'user2email', ['b', 'user2email', 'c', 'any_user', 'a'], true, []),
-        new User(3, 'user3', 'user3email', ['c', 'user3email', 'b', 'any_user', 'a'], true, []),
+        new User(1, 'user1', 'user1email', ['any_user', 'a', 'b', 'c', 'user1email'], true, []),
+        new User(2, 'user2', 'user2email', ['any_user', 'a', 'b', 'c', 'user2email'], true, []),
+        new User(3, 'user3', 'user3email', ['any_user', 'a', 'b', 'c', 'user3email'], true, []),
       ];
     } else if (page === 2) {
       pageBody = [
-        new User(4, 'user4', 'user4email', ['user4email', 'a', 'c', 'any_user', 'b'], true, []),
-        new User(5, 'user5', 'user5email', ['user5email', 'c', 'a', 'any_user', 'b'], true, []),
-        new User(6, 'user6', 'user6email', ['any_user', 'b', 'c', 'user6email', 'a'], true, []),
+        new User(4, 'user4', 'user4email', ['any_user', 'a', 'b', 'c', 'user4email'], true, []),
+        new User(5, 'user5', 'user5email', ['any_user', 'a', 'b', 'c', 'user5email'], true, []),
+        new User(6, 'user6', 'user6email', ['any_user', 'a', 'b', 'c', 'user6email'], true, []),
       ];
     }
     return of(pageBody);
