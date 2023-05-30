@@ -26,29 +26,35 @@ export class GroupsTableComponent {
   ) { }
 
   public removeUser(group: UserGroup, userEmail: string): void {
-    this.usersGroupsService.removeUser(userEmail, group.name).subscribe(() => {
-      group.users = group.users.filter(user => user !== userEmail);
+    this.usersGroupsService.removeUser(userEmail, group.name).pipe(
+      mergeMap(() => this.usersGroupsService.getGroups(1, group.name))
+    ).subscribe(updatedGroups => {
+      group.users = updatedGroups.find(g => g.name === group.name).users;
     });
   }
 
   public addUser(group: UserGroup, userEvent: Item): void {
-    this.usersGroupsService.addUser(userEvent.name, group.name).subscribe(() => {
-      group.users.push(userEvent.name);
+    this.usersGroupsService.addUser(userEvent.name, group.name).pipe(
+      mergeMap(() => this.usersGroupsService.getGroups(1, group.name))
+    ).subscribe(updatedGroups => {
+      group.users = updatedGroups.find(g => g.name === group.name).users;
     });
   }
 
   public removeDataset(group: UserGroup, datasetId: string): void {
-    this.usersGroupsService.revokePermissionToDataset(group.id, datasetId).subscribe(() => {
-      group.datasets = group.datasets.filter(dataset => dataset.datasetId !== datasetId);
+    this.usersGroupsService.revokePermissionToDataset(group.id, datasetId).pipe(
+      mergeMap(() => this.usersGroupsService.getGroups(1, group.name))
+    ).subscribe(updatedGroups => {
+      group.datasets = updatedGroups.find(g => g.name === group.name).datasets;
     });
   }
 
   public addDataset(group: UserGroup, datasetEvent: Item): void {
     this.usersGroupsService.grantPermissionToDataset(group.name, datasetEvent.id).pipe(
-      mergeMap(() => this.usersGroupsService.getGroup(group.name))
-    ).subscribe(updatedGroup => {
+      mergeMap(() => this.usersGroupsService.getGroups(1, group.name))
+    ).subscribe(updatedGroups => {
+      const updatedGroup = updatedGroups.find(g => g.name === group.name);
       group.datasets = updatedGroup.datasets;
-      // Helps with dataset deletion if the id is not yet set
       group.id = updatedGroup.id;
     });
   }

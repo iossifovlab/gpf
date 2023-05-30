@@ -40,8 +40,9 @@ export class UsersTableComponent {
 
   public removeGroup(user: User, group: string): void {
     this.usersGroupsService.removeUser(user.email, group).pipe(
-      mergeMap(() => this.usersService.getUser(user.id))
-    ).subscribe(updatedUser => {
+      mergeMap(() => this.usersService.getUsers(1, user.email))
+    ).subscribe(updatedUsers => {
+      const updatedUser = updatedUsers.find(u => u.email === user.email);
       user.groups = updatedUser.groups;
       user.allowedDatasets = updatedUser.allowedDatasets;
     });
@@ -49,8 +50,9 @@ export class UsersTableComponent {
 
   public addGroup(user: User, event$: Item): void {
     this.usersGroupsService.addUser(user.email, event$.name).pipe(
-      mergeMap(() => this.usersService.getUser(user.id))
-    ).subscribe(updatedUser => {
+      mergeMap(() => this.usersService.getUsers(1, user.email))
+    ).subscribe(updatedUsers => {
+      const updatedUser = updatedUsers.find(u => u.email === user.email);
       user.groups = updatedUser.groups;
       user.allowedDatasets = updatedUser.allowedDatasets;
     });

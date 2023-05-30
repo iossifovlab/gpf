@@ -69,8 +69,8 @@ class UsersGroupsServiceMock {
 }
 
 class UsersServiceMock {
-  public getUser(id: number): Observable<User> {
-    return of(
+  public getUsers(page: number, email: string): Observable<User[]> {
+    return of([
       new User(
         userMock.id,
         userMock.name,
@@ -78,7 +78,7 @@ class UsersServiceMock {
         ['groupAfterUpdate'],
         userMock.hasPassword,
         [{datasetId: 'datasetIdAfterUpdate', datasetName: 'datasetNameAfterUpdate'}]
-      ));
+      )]);
   }
 
   public updateUser(user: User): Observable<object> {
@@ -147,12 +147,12 @@ describe('UsersTableComponent', () => {
 
   it('should remove group from user', () => {
     const removeUserSpy = jest.spyOn(usersGroupsServiceMock, 'removeUser');
-    const getUserSpy = jest.spyOn(usersServiceMock, 'getUser');
+    const getUsersSpy = jest.spyOn(usersServiceMock, 'getUsers');
     const user = new User(...userMockConstructorArgs);
 
     component.removeGroup(user, 'groupToRemove');
     expect(removeUserSpy).toHaveBeenCalledWith(userMockConstructorArgs[2], 'groupToRemove');
-    expect(getUserSpy).toHaveBeenCalledWith(userMockConstructorArgs[0]);
+    expect(getUsersSpy).toHaveBeenCalledWith(1, 'fakeEmail');
     expect(user).toStrictEqual(new User(
       userMockConstructorArgs[0],
       userMockConstructorArgs[1],
@@ -165,12 +165,12 @@ describe('UsersTableComponent', () => {
 
   it('should add group to user', () => {
     const removeUserSpy = jest.spyOn(usersGroupsServiceMock, 'addUser');
-    const getUserSpy = jest.spyOn(usersServiceMock, 'getUser');
+    const getUsersSpy = jest.spyOn(usersServiceMock, 'getUsers');
     const user = new User(...userMockConstructorArgs);
 
     component.addGroup(user, {id: 'groupToAddId', name: 'groupToAdd'});
     expect(removeUserSpy).toHaveBeenCalledWith(userMockConstructorArgs[2], 'groupToAdd');
-    expect(getUserSpy).toHaveBeenCalledWith(userMockConstructorArgs[0]);
+    expect(getUsersSpy).toHaveBeenCalledWith(1, 'fakeEmail');
     expect(user).toStrictEqual(new User(
       userMockConstructorArgs[0],
       userMockConstructorArgs[1],

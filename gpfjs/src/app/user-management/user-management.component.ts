@@ -187,7 +187,6 @@ export class UserManagementComponent implements OnInit {
 
       res.forEach(r => {
         if (r instanceof User) {
-          r.sortGroups();
           this.users.push(r);
         } else if (r instanceof UserGroup) {
           this.groups.push(r);
