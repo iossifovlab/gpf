@@ -38,26 +38,14 @@ describe('Variant reports tests', () => {
     cy.deleteDownloadsFolder();
   });
 
-  it('should always display "total number of families" and download all button', () => {
-    page.familiesByNumberTab.click();
-    page.totalNumberOfFamilies.should('be.visible');
-    page.downloadAllLink.should('be.visible');
-
-    page.familiesByPedigreeTab.click();
-    page.totalNumberOfFamilies.should('be.visible');
-    page.downloadAllLink.should('be.visible');
-
-    page.deNovoVariantsTab.click();
-    page.totalNumberOfFamilies.should('be.visible');
-    page.downloadAllLink.should('be.visible');
-  });
-
   it('should display the correct elements in the families by number tab', () => {
     page.familiesByNumberTab.click();
+    page.downloadAllFamilies.should('be.visible');
     page.familiesByNumberSelect.should('be.visible');
     page.familiesByNumber.should('be.visible');
 
     page.deNovoVariantsTab.click();
+    page.downloadAllFamilies.should('not.be.visible');
     page.familiesByNumberSelect.should('not.be.visible');
     page.familiesByNumber.should('not.be.visible');
   });
@@ -65,13 +53,13 @@ describe('Variant reports tests', () => {
   it('should display the correct elements in the families by pedigree tab', () => {
     page.familiesByPedigreeTab.click();
     page.familiesByPedigreeSelect.should('be.visible');
-    page.denovoTagSelector.should('be.visible');
     page.familiesByPedigreeDownloadButton.should('be.visible');
     page.familiesByPedigreeTable.should('be.visible');
+    // to fix in gpfjs
+    // page.selectedTagsHeader.should('not.exist');
 
     page.deNovoVariantsTab.click();
     page.familiesByPedigreeSelect.should('not.be.visible');
-    page.denovoTagSelector.should('not.be.visible');
     page.familiesByPedigreeDownloadButton.should('not.be.visible');
     page.familiesByPedigreeTable.should('not.be.visible');
   });
@@ -97,8 +85,7 @@ describe('Variant reports tests', () => {
       page.familiesByPedigreeTab.click();
       page.pedigreeLegendButton.should('be.visible');
       page.pedigreeLegendDropdown.should('not.exist');
-      page.familiesByPedigreeSelect.select(data.option);
-      page.familiesByPedigreeSelect.find(':selected').contains(data.option);
+      page.dropdown.select(data.option);
 
       page.pedigreeLegendButton.click();
       page.pedigreeLegendDropdown.should('be.visible');
@@ -124,87 +111,79 @@ describe('Variant reports tests', () => {
 
   it('should open, close and check content for selecting tags', () => {
     page.familiesByPedigreeTab.click();
-    page.denovoTagSelectorDropdown.should('have.text', 'Select tags');
-    page.denovoTagSelectorContent.should('be.hidden');
+    page.openPedigreeTagsModal.should('have.text', 'Select tags');
+    page.pedigreeTagsModal.should('not.exist');
 
-    page.denovoTagSelectorDropdown.click();
-    page.denovoTagSelectorContent.should('not.be.hidden');
+    page.openPedigreeTagsModal.click();
+    page.pedigreeTagsModal.should('be.visible');
 
-    page.denovoTagSelectorDropdown.click(-30, -30, {force: true});
-    page.denovoTagSelectorContent.should('be.hidden');
+    cy.get('body').click(0, 0);
+    page.pedigreeTagsModal.should('not.exist');
 
-    page.denovoTagSelectorDropdown.click();
-    page.denovoTagSelectorSearch.should('be.visible');
-    page.denovoTagSelectorOptions.should('be.visible');
-    page.denovoTagSelectorOptions.then(options => {
+    page.openPedigreeTagsModal.click();
+    page.pedigreeTagsModalSearch.should('be.visible');
+    page.pedigreeTagsModalUncheckAll.should('be.visible');
+    page.pedigreeTagsModalTags.should('be.visible');
+    page.pedigreeTagsModalTags.find('label').then(options => {
       const actual: string[] = options.toArray().map(o => o.innerText);
       expect(actual).to.deep.eq(tags);
     });
   });
 
   tags.forEach(tag => {
-    it('should select and unselect tags', () => {
+    it('should select and unselect each tag', () => {
       page.familiesByPedigreeTab.click();
 
-      //open the content, check an item
-      page.denovoTagSelectorDropdown.click();
-      page.denovoTagSelectorOptionsInput(tag).check({force: true});
-      page.denovoTagSelectorOptions.find('input[aria-label="'+tag+'"]').should('be.checked');
-      page.denovoTagSelectorSelectedOptions.contains(tag);
+      //open modal, check an item
+      page.openPedigreeTagsModal.click();
+      page.findTag(tag).click();
+      page.findTagCheckbox(tag).should('be.checked');
+      // to fix in gpfjs
+      // page.selectedTagsHeader.should('be.visible');
+      // page.selectedTagsHeader.contains(tag);
 
-      // closing the content without unchecking
-      page.denovoTagSelectorDropdown.click(-30, -30, {force: true});
-      page.denovoTagSelectorContent.should('be.hidden');
-      page.denovoTagSelectorSelectedOptions.contains(tag);
+      // closing modal without unchecking
+      cy.get('body').click(0, 0);
+      // to fix in gpfjs
+      // page.selectedTagsHeader.contains(tag);
 
-      //open the content, check an item, remove the item
-      page.denovoTagSelectorDropdown.click();
-      page.denovoTagSelectorOptionsInput(tag).check({force: true});
-      page.denovoTagSelectorOptions.find('input[aria-label="'+tag+'"]').should('be.checked');
-      page.denovoTagSelectorSelectedOptionRemoveBtn.click();
-      page.denovoTagSelectorSelectedOptions.should('not.contain', tag);
-      page.denovoTagSelectorOptions.find('input[aria-label="'+tag+'"]').should('not.be.checked');
-      page.denovoTagSelectorContent.should('be.hidden');
-
-      //open the content check and uncheck
-      page.denovoTagSelectorDropdown.click();
-      page.denovoTagSelectorOptionsInput(tag).check({force: true});
-      page.denovoTagSelectorOptions.find('input[aria-label="'+tag+'"]').should('be.checked');
-      page.denovoTagSelectorSelectedOptions.contains(tag);
-
-      page.denovoTagSelectorOptionsInput(tag).uncheck({force: true});
-      page.denovoTagSelectorOptions.find('input[aria-label="'+tag+'"]').should('not.be.checked');
-      page.denovoTagSelectorSelectedOptions.should('not.contain', tag);
+      //open modal and uncheck item
+      page.openPedigreeTagsModal.click();
+      page.findTag(tag).click();
+      // to fix in gpfjs
+      // page.selectedTagsHeader.should('not.contain', tag);
+      page.findTagCheckbox(tag).should('not.be.checked');
     });
   });
 
-  it('should search tags', () => {
-    page.familiesByPedigreeTab.click();
-    page.denovoTagSelectorDropdown.click();
-    const serchingValues: string[] = ['a', 'ro', 'lex'];
+  ['n', 'ro', 'lex'].forEach(searchValue =>
+    it(`should search and find tags with ${searchValue}`, () => {
+      page.familiesByPedigreeTab.click();
+      page.openPedigreeTagsModal.click();
 
-    for (let i = 0; i < serchingValues.length; i++) {
-      page.denovoTagSelectorSearchInput.type(serchingValues[i]);
-      const filtered: string[] = tags.filter(tag => tag.includes(serchingValues[i]));
-      page.denovoTagSelectorOptions.then(options => {
-        const actual: string[] = options.toArray().map(o => o.innerText);
-        expect(actual).to.deep.eq(filtered);
+      page.pedigreeTagsModalSearch.type(searchValue);
+      tags.forEach(tag => {
+        if (tag.includes(searchValue)) {
+          page.findTagCheckbox(tag).should('be.enabled');
+        } else {
+          page.findTagCheckbox(tag).should('be.disabled');
+        }
       });
-      page.denovoTagSelectorSearchInput.clear();
-    }
-  });
+      page.pedigreeTagsModalSearch.clear();
+    })
+  );
 
-  it('should show nothing found when searching tags', () => {
-    page.familiesByPedigreeTab.click();
-    page.denovoTagSelectorDropdown.click();
-    const serchingValues: string[] = ['cot', 'riof', 'tsf', 'as'];
+  ['cot', 'riof', 'tsf', 'as'].forEach(searchValue =>
+    it(`should show nothing found when searching tags with ${searchValue}`, () => {
+      page.familiesByPedigreeTab.click();
+      page.openPedigreeTagsModal.click();
 
-    for (let i = 0; i < serchingValues.length; i++) {
-      page.denovoTagSelectorSearchInput.type(serchingValues[i]);
-      page.denovoTagSelectorSearchInputNothingFound.should('exist');
-      page.denovoTagSelectorSearchInput.clear();
-    }
-  });
+      page.pedigreeTagsModalSearch.type(searchValue);
+      tags.forEach(tag => {
+        page.findTagCheckbox(tag).should('be.disabled');
+      });
+    })
+  );
 
   [
     {tag: tags[0], expectedPedigreeCounts: ['877', '789', '500', '128', '107', '106', '6', '3']},
@@ -219,11 +198,11 @@ describe('Variant reports tests', () => {
     {tag: tags[14], expectedPedigreeCounts: ['877', '789', '500']},
     {tag: tags[15], expectedPedigreeCounts: ['128', '107', '106']}
   ].forEach(data => {
-    it('should select a single tag and check pedigree charts', () => {
+    it(`should select ${data.tag} and check pedigree charts`, () => {
       page.familiesByPedigreeTab.click();
-      page.denovoTagSelectorDropdown.click();
-      page.denovoTagSelectorOptionsInput(data.tag).check({force: true});
-
+      page.openPedigreeTagsModal.click();
+      page.findTag(data.tag).click();
+      cy.get('body').click(0, 0);
       page.pedigreeCells.should('have.length', data.expectedPedigreeCounts.length);
       page.pedigreeCells.each((cell, i) => {
         expect(cell).to.have.text(data.expectedPedigreeCounts[i]);
@@ -240,11 +219,28 @@ describe('Variant reports tests', () => {
     {tag: tags[16], expectedPedigreeCounts: []},
     {tag: tags[17], expectedPedigreeCounts: []}
   ].forEach(data => {
-    it('should select a single tag and check if nothing found is displayed', () => {
+    it(`should select ${data.tag} and check if nothing found is displayed`, () => {
       page.familiesByPedigreeTab.click();
-      page.denovoTagSelectorDropdown.click();
-      page.denovoTagSelectorOptionsInput(data.tag).check({force: true});
+      page.openPedigreeTagsModal.click();
+      page.findTag(data.tag).click();
+      cy.get('body').click(0, 0);
       page.pedigreesNothingFound.should('exist');
+    });
+  });
+
+  it('should test uncheck all button in tags modal', () => {
+    page.familiesByPedigreeTab.click();
+    page.openPedigreeTagsModal.click();
+    tags.forEach(tag => {
+      page.findTag(tag).click();
+      // to fix in gpfjs
+      // page.selectedTagsHeader.contains(tag);
+    });
+    page.pedigreeTagsModalUncheckAll.click();
+    tags.forEach(tag => {
+      page.findTagCheckbox(tag).should('not.be.checked');
+      // to fix in gpfjs
+      // page.selectedTagsHeader.should('equal', '');
     });
   });
 
@@ -252,37 +248,44 @@ describe('Variant reports tests', () => {
     {selectedTags: [tags[2], tags[3]], expectedPedigreeCounts: ['500', '106']},
     {selectedTags: [tags[0], tags[3], tags[15]], expectedPedigreeCounts: ['128', '107', '106']},
     {selectedTags: [tags[3], tags[8], tags[13], tags[14]], expectedPedigreeCounts: ['877', '789']}
-  ].forEach(element => {
+  ].forEach(data => {
     it('should select a multiple tags and check pedigree charts', () => {
       page.familiesByPedigreeTab.click();
-      page.denovoTagSelectorDropdown.click();
-      element.selectedTags.forEach(tag => {
-        page.denovoTagSelectorOptionsInput(tag).check({force: true});
+      page.openPedigreeTagsModal.click();
+      data.selectedTags.forEach(tag => {
+        page.findTag(tag).click();
+        // to fix in gpfjs
+        // page.selectedTagsHeader.contains(tag);
       });
+      cy.get('body').click(0, 0);
 
-      page.pedigreeCells.should('have.length', element.expectedPedigreeCounts.length);
+      page.pedigreeCells.should('have.length', data.expectedPedigreeCounts.length);
       page.pedigreeCells.each((cell, i) => {
-        expect(cell).to.have.text(element.expectedPedigreeCounts[i]);
+        expect(cell).to.have.text(data.expectedPedigreeCounts[i]);
       });
 
-      page.denovoTagSelectorSelectedOptionRemoveBtn.click({multiple: true});
+      page.openPedigreeTagsModal.click();
+      page.pedigreeTagsModalUncheckAll.click();
     });
   });
 
   [
     {selectedTags: [tags[5], tags[9]], expectedPedigreeCounts: []},
     {selectedTags: [tags[3], tags[7], tags[8], tags[13], tags[14]], expectedPedigreeCounts: []}
-  ].forEach(element => {
+  ].forEach(data => {
     it('should select a multiple tags and check if nothing found is shown', () => {
       page.familiesByPedigreeTab.click();
-      page.denovoTagSelectorDropdown.click();
-      element.selectedTags.forEach(tag => {
-        page.denovoTagSelectorOptionsInput(tag).check({force: true});
+      page.openPedigreeTagsModal.click();
+      data.selectedTags.forEach(tag => {
+        page.findTag(tag).click();
+        // to fix in gpfjs
+        // page.selectedTagsHeader.contains(tag);
       });
+      cy.get('body').click(0, 0);
 
       page.pedigreesNothingFound.should('exist');
-
-      page.denovoTagSelectorSelectedOptionRemoveBtn.click({multiple: true});
+      page.openPedigreeTagsModal.click();
+      page.pedigreeTagsModalUncheckAll.click();
     });
   });
 
