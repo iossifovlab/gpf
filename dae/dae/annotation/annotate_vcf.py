@@ -25,7 +25,7 @@ from dae.task_graph.graph import TaskGraph
 logger = logging.getLogger("annotate_vcf")
 
 
-PART_FILENAME = "{in_file}_annotation_{chrom}_{pos_beg}_{pos_end}.vcf.gz"
+PART_FILENAME = "{in_file}_annotation_{chrom}_{pos_beg}_{pos_end}.gz"
 
 
 def configure_argument_parser() -> argparse.ArgumentParser:

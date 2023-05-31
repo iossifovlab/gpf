@@ -14,6 +14,8 @@ from dae.annotation.record_to_annotatable import build_record_to_annotatable
 from dae.annotation.record_to_annotatable import \
     add_record_to_annotable_arguments
 from dae.annotation.annotate_vcf import produce_regions, produce_partfile_paths
+from dae.annotation.annotation_factory import build_annotation_pipeline
+from dae.genomic_resources import build_genomic_resource_repository
 from dae.genomic_resources.cli import VerbosityConfiguration
 from dae.genomic_resources.genomic_context import get_genomic_context
 from dae.genomic_resources.cached_repository import cache_resources
@@ -57,8 +59,6 @@ def configure_argument_parser() -> argparse.ArgumentParser:
 
 
 def _handle_output(outfile: str):
-    # if outfile == "-":
-    #     return sys.stdout
     if outfile.endswith(".gz"):
         # pylint: disable=consider-using-with
         return gzip.open(outfile, "wt")
@@ -66,13 +66,16 @@ def _handle_output(outfile: str):
     return open(outfile, "wt")
 
 
-def annotate(args, region, out_file_path):
-    CLIAnnotationContext.register(args)
-    context = get_genomic_context()
-    grr = CLIAnnotationContext.get_genomic_resources_repository(context)
-    pipeline = CLIAnnotationContext.get_pipeline(context)
+def annotate(
+    args, region, pipeline_config,
+    grr_definition, ref_genome_id, out_file_path
+):
+    grr = build_genomic_resource_repository(definition=grr_definition)
+    pipeline = build_annotation_pipeline(
+        pipeline_config=pipeline_config,
+        grr_repository=grr)
+    ref_genome = grr.get_resource(ref_genome_id)
     errors = []
-    # TODO Is getting the context and pipeline in this way acceptable?
 
     # cache pipeline
     resources: set[str] = set()
@@ -83,15 +86,12 @@ def annotate(args, region, out_file_path):
     with gzip.open(args.input, "rt") as in_file_raw:
         hcs = in_file_raw.readline().strip("\r\n").split(args.input_separator)
     record_to_annotatable = build_record_to_annotatable(
-        vars(args), set(hcs), context=context)
+        vars(args), set(hcs), ref_genome=ref_genome)
     annotation_attributes = pipeline.annotation_schema.public_fields
 
     pipeline.open()
-    print(out_file_path)
     in_file = TabixFile(args.input)
     with _handle_output(out_file_path) as out_file:
-        print(*(hcs + annotation_attributes),
-              sep=args.output_separator, file=out_file)
         for lnum, line in enumerate(in_file.fetch(*region)):
             try:
                 columns = line.strip("\n\r").split(args.input_separator)
@@ -99,10 +99,12 @@ def annotate(args, region, out_file_path):
                 annotation = pipeline.annotate(
                     record_to_annotatable.build(record)
                 )
-                print(*(columns + [
+                result = columns + [
                     str(annotation[attrib])
-                    for attrib in annotation_attributes]),
-                    sep=args.output_separator, file=out_file)
+                    for attrib in annotation_attributes
+                ]
+                out_file.write(args.output_separator.join(result))
+                out_file.write("\n")
             except Exception as ex:  # pylint: disable=broad-except
                 logger.warning(
                     "unexpected input data format at line %s: %s",
@@ -126,8 +128,9 @@ def combine(args, partfile_paths, out_file_path):
         with gzip.open(args.input, "rt") as in_file_raw:
             hcs = in_file_raw.readline().strip("\r\n").split(
                 args.input_separator)
-            print(*(hcs + annotation_attributes),
-                  sep=args.output_separator, file=out_file)
+            header = hcs + annotation_attributes
+            out_file.write(args.output_separator.join(header))
+            out_file.write("\n")
             for partfile_path in partfile_paths:
                 with gzip.open(partfile_path, "rt") as partfile:
                     out_file.write(partfile.read())
@@ -147,8 +150,12 @@ def cli(raw_args: Optional[list[str]] = None) -> None:
     VerbosityConfiguration.set(args)
     CLIAnnotationContext.register(args)
 
-    # TODO Get context here and from it the resource id for the
-    # reference genome and then pass it to annotate, then get it from grr
+    context = get_genomic_context()
+    pipeline = CLIAnnotationContext.get_pipeline(context)
+    grr = CLIAnnotationContext.get_genomic_resources_repository(context)
+    ref_genome = context.get_reference_genome()
+    if ref_genome is None:
+        raise ValueError("No reference genome available in context")
 
     if args.output:
         output = args.output
@@ -169,7 +176,8 @@ def cli(raw_args: Optional[list[str]] = None) -> None:
             region_tasks.append(task_graph.create_task(
                 f"part-{index}",
                 annotate,
-                [args, region, file_path],  # FIXME part filepaths have .vcf
+                [args, region, pipeline.config, grr.definition,
+                 ref_genome.resource_id, file_path],
                 []
             ))
 
@@ -186,7 +194,7 @@ def cli(raw_args: Optional[list[str]] = None) -> None:
         TaskGraphCli.process_graph(task_graph, **vars(args))
 
     def run_sequentially():
-        print("Tabixless annotation currently not supported. WIP")
+        print("Tabixless annotation currently not supported. WIP")  # TODO
         return 0
 
     if tabix_index_filename(args.input):
