@@ -55,8 +55,7 @@ describe('Variant reports tests', () => {
     page.familiesByPedigreeSelect.should('be.visible');
     page.familiesByPedigreeDownloadButton.should('be.visible');
     page.familiesByPedigreeTable.should('be.visible');
-    // to fix in gpfjs
-    // page.selectedTagsHeader.should('not.exist');
+    page.selectedTagsHeader.should('not.exist');
 
     page.deNovoVariantsTab.click();
     page.familiesByPedigreeSelect.should('not.be.visible');
@@ -138,20 +137,17 @@ describe('Variant reports tests', () => {
       page.openPedigreeTagsModal.click();
       page.findTag(tag).click();
       page.findTagCheckbox(tag).should('be.checked');
-      // to fix in gpfjs
-      // page.selectedTagsHeader.should('be.visible');
-      // page.selectedTagsHeader.contains(tag);
+      page.selectedTagsHeader.should('be.visible');
+      page.selectedTagsHeader.contains(tag);
 
       // closing modal without unchecking
       cy.get('body').click(0, 0);
-      // to fix in gpfjs
-      // page.selectedTagsHeader.contains(tag);
+      page.selectedTagsHeader.contains(tag);
 
       //open modal and uncheck item
       page.openPedigreeTagsModal.click();
       page.findTag(tag).click();
-      // to fix in gpfjs
-      // page.selectedTagsHeader.should('not.contain', tag);
+      page.selectedTagsHeader.should('not.exist');
       page.findTagCheckbox(tag).should('not.be.checked');
     });
   });
@@ -233,14 +229,12 @@ describe('Variant reports tests', () => {
     page.openPedigreeTagsModal.click();
     tags.forEach(tag => {
       page.findTag(tag).click();
-      // to fix in gpfjs
-      // page.selectedTagsHeader.contains(tag);
+      page.selectedTagsHeader.contains(tag);
     });
     page.pedigreeTagsModalUncheckAll.click();
     tags.forEach(tag => {
       page.findTagCheckbox(tag).should('not.be.checked');
-      // to fix in gpfjs
-      // page.selectedTagsHeader.should('equal', '');
+      page.selectedTagsHeader.should('not.exist');
     });
   });
 
@@ -254,8 +248,7 @@ describe('Variant reports tests', () => {
       page.openPedigreeTagsModal.click();
       data.selectedTags.forEach(tag => {
         page.findTag(tag).click();
-        // to fix in gpfjs
-        // page.selectedTagsHeader.contains(tag);
+        page.selectedTagsHeader.contains(tag);
       });
       cy.get('body').click(0, 0);
 
@@ -278,8 +271,7 @@ describe('Variant reports tests', () => {
       page.openPedigreeTagsModal.click();
       data.selectedTags.forEach(tag => {
         page.findTag(tag).click();
-        // to fix in gpfjs
-        // page.selectedTagsHeader.contains(tag);
+        page.selectedTagsHeader.contains(tag);
       });
       cy.get('body').click(0, 0);
 
