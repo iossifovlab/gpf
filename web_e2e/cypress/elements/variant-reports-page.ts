@@ -13,12 +13,8 @@ export class VariantReportsPage extends BasePage {
     return cy.get('a').contains('De Novo variants');
   }
 
-  public get totalNumberOfFamilies(): element {
-    return cy.get('#total-number-of-families');
-  }
-
-  public get downloadAllLink(): element {
-    return cy.get('.download-link');
+  public get downloadAllFamilies(): element {
+    return cy.get('#download-total-families');
   }
 
   public get familiesByNumberSelect(): element {
@@ -65,10 +61,6 @@ export class VariantReportsPage extends BasePage {
     return cy.get('div#denovo-variants-div th').contains(rowName).parent().find('div');
   }
 
-  public get denovoTagSelector(): element {
-    return cy.get('#tags-selector');
-  }
-
   public get denovoLegend(): element {
     return cy.get('#de-novo-variants-legend-report');
   }
@@ -85,44 +77,44 @@ export class VariantReportsPage extends BasePage {
     return cy.get('#legend-items-wrapper').children('.legend-item');
   }
 
-  public get denovoTagSelectorDropdown(): element {
-    return cy.get('span.dropdown-btn');
+  public get dropdown(): element {
+    return cy.get('#families-by-pedigree-select');
   }
 
-  public get denovoTagSelectorContent(): element {
-    return cy.get('.dropdown-list');
+  public get openPedigreeTagsModal(): element {
+    return cy.get('#open-modal-button');
   }
 
-  public get denovoTagSelectorSearch(): element {
-    return cy.get('ul.item1');
+  public get pedigreeTagsModal(): element {
+    return cy.get('#tags-modal-content');
   }
 
-  public get denovoTagSelectorOptions(): element {
-    return cy.get('ul.item2').children('li');
+  public get pedigreeTagsModalSearch(): element {
+    return cy.get('#search-tags');
   }
 
-  public denovoTagSelectorOptionsInput(label: string): element {
-    return cy.get('input[aria-label="'+label+'"]');
+  public get pedigreeTagsModalUncheckAll(): element {
+    return cy.get('#uncheck-button');
   }
 
-  public get denovoTagSelectorSelectedOptions(): element {
-    return cy.get('span.dropdown-btn');
+  public get pedigreeTagsModalTags(): element {
+    return cy.get('#tag-list');
   }
 
-  public get denovoTagSelectorSelectedOptionRemoveBtn(): element {
-    return cy.get('.selected-item a');
+  public findTag(tag: string): element {
+    return cy.get('label').contains(tag);
+  }
+
+  public findTagCheckbox(tag: string): element {
+    return cy.get(`#${tag}-tag`);
+  }
+
+  public get selectedTagsHeader(): element {
+    return cy.get('#selected-tags-list');
   }
 
   public get pedigreeCells(): element {
     return cy.get('.pedigree-cell');
-  }
-
-  public get denovoTagSelectorSearchInput(): element {
-    return cy.get('input[aria-label="multiselect-search"]');
-  }
-
-  public get denovoTagSelectorSearchInputNothingFound(): element {
-    return cy.get('.no-filtered-data');
   }
 
   public get pedigreesNothingFound(): element {
