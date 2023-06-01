@@ -1,6 +1,6 @@
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, NavigationStart, Router, RouterEvent } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
 import { NgxsModule } from '@ngxs/store';
 import { Observable, of, Subject } from 'rxjs';
@@ -75,6 +75,10 @@ class MockQueryService {
     this.streamingFinishedSubject.next([]);
     this.summaryStreamingFinishedSubject.next([]);
   }
+
+  public cancelStreamPost(): void {
+    return null;
+  }
 }
 
 describe('GeneBrowserComponent', () => {
@@ -82,6 +86,7 @@ describe('GeneBrowserComponent', () => {
   let fixture: ComponentFixture<GeneBrowserComponent>;
   const mockDatasetsService = new MockDatasetsService();
   const mockQueryService = new MockQueryService();
+  let loadingService: FullscreenLoadingService;
 
   beforeEach(async() => {
     await TestBed.configureTestingModule({
@@ -104,8 +109,10 @@ describe('GeneBrowserComponent', () => {
       ],
     }).compileComponents();
 
+    jest.clearAllMocks();
     fixture = TestBed.createComponent(GeneBrowserComponent);
     component = fixture.componentInstance;
+    loadingService = TestBed.inject(FullscreenLoadingService);
     component.summaryVariantsArray = new SummaryAllelesArray();
     jest.spyOn<any, any>(component['queryService'], 'getSummaryVariants');
     fixture.detectChanges();
@@ -280,5 +287,26 @@ describe('GeneBrowserComponent', () => {
       download: true
     }));
     expect(mockEvent.target.submit).toHaveBeenCalledTimes(1);
+  });
+  it('should cancel queries on router change', () => {
+    const stopSpy = jest.spyOn(loadingService, 'setLoadingStop');
+    const cancelSpy = jest.spyOn(mockQueryService, 'cancelStreamPost');
+    const router = TestBed.inject(Router);
+
+    (router.events as Subject<RouterEvent>).next(new NavigationStart(1, 'start'));
+
+    expect(stopSpy).toHaveBeenCalledTimes(1);
+    expect(cancelSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('should cancel request on loading component', () => {
+    const spyOnSummaryVariants = jest.spyOn(mockQueryService, 'getSummaryVariants')
+      .mockReturnValue(of([]));
+    const spyOnCancelSummaryPost = jest.spyOn(mockQueryService, 'cancelStreamPost');
+    component.submitGeneRequest('CHD8');
+    expect(spyOnSummaryVariants).toHaveBeenCalledTimes(1);
+    loadingService.interruptEvent.emit(true);
+    expect(spyOnSummaryVariants).toHaveBeenCalledTimes(1);
+    expect(spyOnCancelSummaryPost).toHaveBeenCalledTimes(1);
   });
 });
