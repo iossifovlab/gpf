@@ -2,8 +2,7 @@
 
 from dae.genomic_resources import GenomicResource
 from dae.genomic_resources.genomic_scores import \
-    build_np_score_from_resource, \
-    NPScoreQuery
+    NPScoreQuery, NPScore
 from dae.genomic_resources.testing import \
     build_inmemory_test_resource
 from dae.testing import convert_to_tab_separated
@@ -37,7 +36,7 @@ def test_the_simplest_np_score(tmp_path):
         """
     })
     assert res.get_type() == "np_score"
-    score = build_np_score_from_resource(res)
+    score = NPScore(res)
     score.open()
 
     assert score.get_all_scores() == ["cadd_raw"]
@@ -83,7 +82,7 @@ def test_np_score_aggregation():
     })
 
     assert res.get_type() == "np_score"
-    score = build_np_score_from_resource(res)
+    score = NPScore(res)
     score.open()
 
     assert score.table.chrom_key == "chrom"
@@ -148,7 +147,7 @@ def test_np_score_fetch_region():
             2      16         19       C          G            0.05  4
         """)
     })
-    score = build_np_score_from_resource(res).open()
+    score = NPScore(res).open()
 
     # The in-mem table will sort the records. In this example it will sort
     # the alternatives column (previous columns are the same). That is why

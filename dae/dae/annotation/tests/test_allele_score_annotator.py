@@ -1,7 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 
 from dae.genomic_resources.genomic_scores import \
-    build_allele_score_from_resource
+    AlleleScore
 from dae.annotation.score_annotator import AlleleScoreAnnotator
 from dae.annotation.annotation_pipeline import AnnotationPipeline
 
@@ -11,7 +11,7 @@ def test_allele_score_annotator(
 
     pipeline = AnnotationPipeline([], grr_fixture)
     resource = grr_fixture.get_resource("hg38/TESTFreq")
-    score = build_allele_score_from_resource(resource)
+    score = AlleleScore(resource)
 
     annotator = AlleleScoreAnnotator({
         "annotator_type": "allele_score",
@@ -36,7 +36,7 @@ def test_allele_score_annotator_attributes(
 
     pipeline = AnnotationPipeline([], grr_fixture)
     resource = grr_fixture.get_resource("hg38/TESTFreq")
-    score = build_allele_score_from_resource(resource)
+    score = AlleleScore(resource)
 
     annotator = AlleleScoreAnnotator({
         "annotator_type": "allele_score",

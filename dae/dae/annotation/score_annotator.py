@@ -6,9 +6,8 @@ import copy
 from typing import cast, Any
 
 from dae.genomic_resources.genomic_scores import \
-    build_allele_score_from_resource, build_position_score_from_resource, \
-    build_np_score_from_resource, \
-    PositionScoreQuery, NPScoreQuery, AlleleScoreQuery, ScoreQuery
+    PositionScoreQuery, NPScoreQuery, AlleleScoreQuery, ScoreQuery, \
+    PositionScore, NPScore, AlleleScore
 
 from dae.genomic_resources.aggregators import AGGREGATOR_SCHEMA
 
@@ -72,7 +71,7 @@ class VariantScoreAnnotatorBase(Annotator):
         for score_id, score in self.score.score_definitions.items():
             result.append({
                 "name": score_id,
-                "type": score.type,
+                "type": score.value_type,
                 "desc": score.desc
             })
         return result
@@ -125,7 +124,7 @@ def build_position_score_annotator(pipeline: AnnotationPipeline, config: dict):
     resource_id = config["resource_id"]
     resource = pipeline.repository.get_resource(resource_id)
 
-    score = build_position_score_from_resource(resource)
+    score = PositionScore(resource)
     return PositionScoreAnnotator(config, score)
 
 
@@ -242,7 +241,7 @@ def build_np_score_annotator(pipeline: AnnotationPipeline, config: dict):
     resource_id = config["resource_id"]
     resource = pipeline.repository.get_resource(resource_id)
 
-    score = build_np_score_from_resource(resource)
+    score = NPScore(resource)
     return NPScoreAnnotator(config, score)
 
 
@@ -312,7 +311,7 @@ def build_allele_score_annotator(pipeline: AnnotationPipeline, config: dict):
     resource_id = config["resource_id"]
     resource = pipeline.repository.get_resource(resource_id)
 
-    score = build_allele_score_from_resource(resource)
+    score = AlleleScore(resource)
     return AlleleScoreAnnotator(config, score)
 
 

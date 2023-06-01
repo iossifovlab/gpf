@@ -7,7 +7,7 @@ import textwrap
 import copy
 import json
 
-from typing import Iterator, Optional, cast, Type, Any, Union
+from typing import Iterator, Optional, cast, Any, Union
 
 from dataclasses import dataclass
 from functools import lru_cache
@@ -26,7 +26,8 @@ from .resource_implementation import GenomicResourceImplementation, \
 from .genomic_position_table import build_genomic_position_table, Line, \
     TabixGenomicPositionTable, VCFGenomicPositionTable, VCFLine
 from .genomic_position_table.table_inmemory import InmemoryGenomicPositionTable
-from .histogram import Histogram, HistogramStatisticMixin
+from .histogram import NumberHistogram, NumberHistogramConfig, \
+    CategoricalHistogramConfig, HistogramStatisticMixin
 from .statistics.min_max import MinMaxValue, MinMaxValueStatisticMixin
 
 from .aggregators import build_aggregator, AGGREGATOR_SCHEMA, Aggregator
@@ -55,14 +56,94 @@ class ScoreDef:
     """Score configuration definition."""
 
     # pylint: disable=too-many-instance-attributes
-    col_key: str
-    desc: str
-    type: str
-    value_parser: Any
-    na_values: Any
-    pos_aggregator: Any
-    nuc_aggregator: Any
-    allele_aggregator: Any
+    score_id: str
+    desc: str  # string that will be interpretted as md
+    value_type: str  # "str", "int", "float"
+    pos_aggregator: Optional[str]     # a valid aggregatory type
+    nuc_aggregator: Optional[str]     # a valid aggregatory type
+    allele_aggregator: Optional[str]  # a valid aggregatory type
+
+    small_values_desc: Optional[str]
+    large_values_desc: Optional[str]
+
+    # no more than one of these
+    hist_number_conf: Optional[NumberHistogramConfig]
+    hist_categorical_conf: Optional[CategoricalHistogramConfig]
+
+
+@dataclass
+class _ScoreDef:
+    """Private score configuration definition. Includes internals."""
+
+    # pylint: disable=too-many-instance-attributes
+    score_id: str
+    desc: str  # string that will be interpretted as md
+    value_type: str  # "str", "int", "float"
+    pos_aggregator: Optional[str]     # a valid aggregatory type
+    nuc_aggregator: Optional[str]     # a valid aggregatory type
+    allele_aggregator: Optional[str]  # a valid aggregatory type
+
+    small_values_desc: Optional[str]
+    large_values_desc: Optional[str]
+
+    # no more than one of these
+    hist_number_conf: Optional[NumberHistogramConfig]
+    hist_categorical_conf: Optional[CategoricalHistogramConfig]
+
+    col_key: str                                  # internal
+    value_parser: Any                             # internal
+    na_values: Any                                # internal
+
+    def to_public(self):
+        return ScoreDef(
+            self.score_id,
+            self.desc,
+            self.value_type,
+            self.pos_aggregator,
+            self.nuc_aggregator,
+            self.allele_aggregator,
+            self.small_values_desc,
+            self.large_values_desc,
+            self.hist_number_conf,
+            self.hist_categorical_conf
+        )
+
+    def __post_init__(self):
+        if self.value_type is None:
+            return
+        default_na_values = {
+            "str": {},
+            "float": {"", "nan", ".", "NA"},
+            "int": {"", "nan", ".", "NA"},
+            "bool": {}
+        }
+        default_pos_aggregators = {
+            "float": "mean",
+            "int": "mean",
+            "str": "concatenate",
+            "bool": None
+        }
+        default_nuc_aggregators = {
+            "float": "max",
+            "int": "max",
+            "str": "concatenate",
+            "bool": None
+        }
+        default_allele_aggregators = {
+            "float": "max",
+            "int": "max",
+            "str": "concatenate",
+            "bool": None
+        }
+        if self.pos_aggregator is None:
+            self.pos_aggregator = default_pos_aggregators[self.value_type]
+        if self.nuc_aggregator is None:
+            self.nuc_aggregator = default_nuc_aggregators[self.value_type]
+        if self.allele_aggregator is None:
+            self.allele_aggregator = \
+                default_allele_aggregators[self.value_type]
+        if self.na_values is None:
+            self.na_values = default_na_values[self.value_type]
 
 
 class ScoreLine:
@@ -131,7 +212,8 @@ class GenomicScoreStatistics(
 
     @staticmethod
     def build_statistics(genomic_resource):
-        genomic_score = build_score_from_resource(genomic_resource)
+        genomic_score = build_score_implementation_from_resource(
+            genomic_resource)
         min_maxes = {}
         histograms = {}
         for score_id in genomic_score.get_config_histograms():
@@ -148,7 +230,8 @@ class GenomicScoreStatistics(
                 logger.warning(
                     "unable to load min/max statistics file: %s",
                     min_max_filepath)
-        for hist_config in genomic_score.get_config_histograms().values():
+        for hist_config in genomic_score\
+                .get_config_histograms().values():
             score_id = hist_config["score"]
 
             histogram_filepath = os.path.join(
@@ -158,7 +241,7 @@ class GenomicScoreStatistics(
             try:
                 with genomic_resource.open_raw_file(
                         histogram_filepath, mode="r") as infile:
-                    histogram = Histogram.deserialize(infile.read())
+                    histogram = NumberHistogram.deserialize(infile.read())
                     histograms[score_id] = histogram
             except FileNotFoundError:
                 logger.warning(
@@ -168,9 +251,8 @@ class GenomicScoreStatistics(
         return GenomicScoreStatistics(genomic_resource, min_maxes, histograms)
 
 
-class GenomicScore(
+class GenomicScoreImplementation(
     GenomicResourceImplementation,
-    ResourceConfigValidationMixin,
     InfoImplementationMixin
 ):
     # pylint: disable=too-many-public-methods
@@ -178,15 +260,7 @@ class GenomicScore(
 
     def __init__(self, resource):
         super().__init__(resource)
-        self.config = self.validate_and_normalize_schema(
-            self.config, resource
-        )
-        self.config["id"] = resource.resource_id
-        self.table_loaded = False
-        self.table = build_genomic_position_table(
-            self.resource, self.config["table"]
-        )
-        self.score_definitions = self._generate_scoredefs()
+        self.score: GenomicScore = build_score_from_resource(resource)
 
     def get_score_histogram_image_file(self, score_id: str):
         statistics = self.get_statistics()
@@ -200,6 +274,535 @@ class GenomicScore(
     def get_statistics(self):
         return GenomicScoreStatistics.build_statistics(self.resource)
 
+    def get_config_histograms(self):
+        """Collect all configurations of histograms for the genomic score."""
+        result = {}
+        for score_id, score in self.score.score_definitions.items():
+            if score.value_type in {"int", "float"}:
+                result[score_id] = NumberHistogram.default_config(score_id)
+        hist_config_overwrite = self.get_config().get("histograms", {})
+        for hist_config in hist_config_overwrite:
+            result[hist_config["score"]] = copy.deepcopy(hist_config)
+        return result
+
+    def get_resource_id(self):
+        return self.config["id"]
+
+    def get_template(self):
+        return Template(textwrap.dedent("""
+        {% extends base %}
+        {% block content %}
+
+        {% set impl = data.genomic_scores %}
+        {% set scores = impl.score %}
+
+        <h1>Scores</h1>
+
+        <table border="1">
+        <tr>
+        <th>id</th>
+        <th>type</th>
+        <th>default annotation</th>
+        <th>description</th>
+        <th>histogram</th>
+        <th>range</th>
+        </tr>
+
+        {%- for score_id, score in scores.score_definitions.items() -%}
+
+        <tr class="score-definition">
+
+        <td>{{ score_id }}</td>
+
+        <td>{{ score.value_type }}</td>
+
+        {% set attr = scores._get_default_annotation_attribute(score_id) %}
+        <td>{{ attr if attr else "" }}</td>
+
+        <td>{{ score.desc }}</td>
+
+        <td>
+        {% set hist_image_file =
+            impl.get_score_histogram_image_file(score_id) %}
+        {%- if hist_image_file %}
+        <img src="{{ hist_image_file }}"
+            alt="{{ "HISTOGRAM FOR " + score_id }}"
+            title={{ score_id }}
+            width="200">
+        {%- else -%}
+        NO HISTOGRAM
+        {%- endif -%}
+        </td>
+
+        <td>
+        {% set statistics = impl.get_statistics() %}
+        {% set min_max = statistics.score_min_maxes.get(score_id) %}
+        {%- if min_max is not none and
+                min_max.min is not none and min_max.max is not none -%}
+        ({{"%0.3f" % min_max.min}}, {{"%0.3f" % min_max.max}})
+        {%- else -%}
+        NO RANGE
+        {%- endif -%}
+        </td>
+
+        </tr>
+        {%- endfor %}
+
+        </table>
+
+        {% endblock %}
+        """))
+
+    def _get_template_data(self):
+        return {"genomic_scores": self}
+
+    def get_info(self):
+        return InfoImplementationMixin.get_info(self)
+
+    def add_statistics_build_tasks(self, task_graph: TaskGraph, **kwargs):
+        with self.score.open():
+            region_size = kwargs.get("region_size", 1_000_000)
+            grr = kwargs.get("grr")
+            _, _, save_task = self._add_min_max_tasks(
+                task_graph, region_size, grr
+            )
+
+            _, _, save_task = self._add_histogram_tasks(
+                task_graph, save_task, region_size, grr
+            )
+
+            return [save_task]
+
+    _REF_GENOME_CACHE: dict[str, Any] = {}
+
+    @staticmethod
+    def _get_reference_genome_cached(grr, genome_id):
+        if genome_id is None or grr is None:
+            return None
+        if genome_id in GenomicScoreImplementation._REF_GENOME_CACHE:
+            return GenomicScoreImplementation._REF_GENOME_CACHE[genome_id]
+        try:
+            ref_genome = build_reference_genome_from_resource(
+                grr.get_resource(genome_id)
+            )
+            logger.info(
+                "Using reference genome label <%s> ",
+                genome_id,
+            )
+        except FileNotFoundError:
+            logger.warning(
+                "Couldn't find reference genome %s",
+                genome_id,
+            )
+            return None
+        ref_genome.open()
+        GenomicScoreImplementation._REF_GENOME_CACHE[genome_id] = ref_genome
+        return ref_genome
+
+    def _get_chrom_regions(self, region_size, grr=None):
+        regions = []
+        ref_genome_id = self.resource.get_labels().get("reference_genome")
+        ref_genome = self._get_reference_genome_cached(grr, ref_genome_id)
+        for chrom in self.score.get_all_chromosomes():
+            if ref_genome is not None:
+                chrom_length = ref_genome.get_chrom_length(chrom)
+            else:
+                if isinstance(self.score.table, InmemoryGenomicPositionTable):
+                    raise ValueError("In memory tables are not supported")
+                chrom_length = get_chromosome_length_tabix(
+                    self.score.table.pysam_file, chrom
+                )
+            regions.extend(
+                split_into_regions(chrom, chrom_length, region_size)
+            )
+        return regions
+
+    @property
+    def score_id(self):
+        return self.score.score_id
+
+    def _add_min_max_tasks(self, graph, region_size, grr=None):
+        """
+        Add and return calculation, merging and saving tasks for min max.
+
+        The tasks are returned in a triple containing a list of calculation
+        tasks, the merge task and the save task.
+        """
+        min_max_tasks = []
+        regions = self._get_chrom_regions(region_size, grr)
+        for region in regions:
+            chrom = region.chrom
+            start = region.start
+            end = region.stop
+            min_max_tasks.append(graph.create_task(
+                f"{self.score_id}_calculate_min_max_{chrom}_{start}_{end}",
+                GenomicScoreImplementation._do_min_max,
+                [self.resource, chrom, start, end],
+                []
+            ))
+        score_ids = list(self.get_config_histograms().keys())
+        merge_task = graph.create_task(
+            f"{self.score_id}_merge_min_max",
+            GenomicScoreImplementation._merge_min_max,
+            [score_ids, *min_max_tasks],
+            min_max_tasks
+        )
+        save_task = graph.create_task(
+            f"{self.score_id}_save_min_max",
+            GenomicScoreImplementation._save_min_max,
+            [self.resource, merge_task],
+            [merge_task]
+        )
+        return min_max_tasks, merge_task, save_task
+
+    @staticmethod
+    def _do_min_max(resource, chrom, start, end):
+        impl = build_score_implementation_from_resource(resource)
+        score_ids = list(impl.get_config_histograms())
+        res = {
+            scr_id: MinMaxValue(scr_id, None, None)
+            for scr_id in score_ids
+        }
+        with impl.score.open():
+            for rec in impl.score.fetch_region(chrom, start, end, score_ids):
+                for scr_id in score_ids:
+                    res[scr_id].add_record(rec)
+        return res
+
+    @staticmethod
+    def _merge_min_max(score_ids, *calculate_tasks):
+
+        res: dict[str, Optional[MinMaxValue]] = {
+            score_id: None for score_id in score_ids}
+        for score_id in score_ids:
+            for min_max_region in calculate_tasks:
+                if res[score_id] is None:
+                    res[score_id] = min_max_region[score_id]
+                else:
+                    assert res[score_id] is not None
+                    res[score_id].merge(  # type: ignore
+                        min_max_region[score_id])
+        return res
+
+    @staticmethod
+    def _save_min_max(resource, merged_min_max):
+        proto = resource.proto
+        for score_id, score_min_max in merged_min_max.items():
+            if score_min_max is None:
+                logger.warning("Min max for %s is None", score_id)
+                continue
+            with proto.open_raw_file(
+                resource,
+                f"{GenomicScoreStatistics.get_statistics_folder()}"
+                f"/{GenomicScoreStatistics.get_min_max_file(score_id)}",
+                mode="wt"
+            ) as outfile:
+                outfile.write(score_min_max.serialize())
+        return merged_min_max
+
+    def _add_histogram_tasks(
+        self, graph, save_minmax_task, region_size, grr=None
+    ):
+        """
+        Add histogram tasks for specific score id.
+
+        The histogram tasks are dependant on the provided minmax task.
+        """
+        histogram_tasks = []
+        regions = self._get_chrom_regions(region_size, grr)
+        for region in regions:
+            chrom = region.chrom
+            start = region.start
+            end = region.stop
+            histogram_tasks.append(graph.create_task(
+                f"{self.score_id}_calculate_histogram_{chrom}_{start}_{end}",
+                GenomicScoreImplementation._do_histogram,
+                [self.resource, chrom, start, end, save_minmax_task],
+                [save_minmax_task]
+            ))
+        merge_task = graph.create_task(
+            f"{self.score_id}_merge_histograms",
+            GenomicScoreImplementation._merge_histograms,
+            [self.resource, *histogram_tasks],
+            histogram_tasks
+        )
+        save_task = graph.create_task(
+            f"{self.score_id}_save_histograms",
+            GenomicScoreImplementation._save_histograms,
+            [self.resource, merge_task],
+            [merge_task]
+        )
+        return histogram_tasks, merge_task, save_task
+
+    @staticmethod
+    def _do_histogram(resource, chrom, start, end, save_minmax_task):
+        impl = build_score_implementation_from_resource(resource)
+        hist_configs = list(impl.get_config_histograms().values())
+        if not hist_configs:
+            return {}
+        res = {}
+        for hist_config in hist_configs:
+            score_id = hist_config["score"]
+            if hist_config.get("min") is None:
+                hist_config["min"] = save_minmax_task[score_id].min
+            if hist_config.get("max") is None:
+                hist_config["max"] = save_minmax_task[score_id].max
+            hist_config = NumberHistogramConfig.convert_legacy_config(
+                hist_config
+            )
+            try:
+                res[score_id] = NumberHistogram(hist_config)
+            except ValueError:
+                logger.warning("skipping histogram for %s", score_id)
+        score_ids = list(res.keys())
+        with impl.score.open():
+            for rec in impl.score.fetch_region(chrom, start, end, score_ids):
+                for scr_id in score_ids:
+                    res[scr_id].add_value(rec[scr_id])
+        return res
+
+    @staticmethod
+    def _merge_histograms(resource, *calculated_histograms):
+        impl = build_score_implementation_from_resource(resource)
+        hist_configs = list(impl.get_config_histograms().values())
+        if not hist_configs:
+            return {}
+        res: dict = {}
+        for hist_config in hist_configs:
+            res[hist_config["score"]] = None
+        score_ids = list(res.keys())
+
+        skipped_score_histograms = set()
+        for score_id in score_ids:
+            for histogram_region in calculated_histograms:
+                if score_id not in histogram_region:
+                    skipped_score_histograms.add(score_id)
+                    continue
+                if res[score_id] is None:
+                    res[score_id] = histogram_region[score_id]
+                else:
+                    res[score_id].merge(histogram_region[score_id])
+        if skipped_score_histograms:
+            logger.warning(
+                "skipped merging histograms: %s", skipped_score_histograms)
+        return res
+
+    @staticmethod
+    def _save_histograms(resource, merged_histograms):
+        proto = resource.proto
+        for score_id, score_histogram in merged_histograms.items():
+            if score_histogram is None:
+                logger.warning("Histogram for %s is None", score_id)
+                continue
+            with proto.open_raw_file(
+                resource,
+                f"{GenomicScoreStatistics.get_statistics_folder()}"
+                f"/{GenomicScoreStatistics.get_histogram_file(score_id)}",
+                mode="wt"
+            ) as outfile:
+                outfile.write(score_histogram.serialize())
+
+            with proto.open_raw_file(
+                resource,
+                f"{GenomicScoreStatistics.get_statistics_folder()}/"
+                f"{GenomicScoreStatistics.get_histogram_image_file(score_id)}",
+                mode="wb"
+            ) as outfile:
+                score_histogram.plot(outfile, score_id)
+        return merged_histograms
+
+    def _split_into_regions(self, region_size, reference_genome=None):
+        chromosomes = self.score.get_all_chromosomes()
+        for chrom in chromosomes:
+            if reference_genome is not None \
+                    and chrom in reference_genome.chromosomes:
+                chrom_len = reference_genome.get_chrom_length(chrom)
+            else:
+                if reference_genome is not None:
+                    logger.info(
+                        "chromosome %s of %s not found in reference genome %s",
+                        chrom, self.resource.resource_id,
+                        reference_genome.resource_id
+                    )
+                else:
+                    logger.info(
+                        "chromosome %s of %s using table, no reference genome",
+                        chrom, self.resource.resource_id
+                    )
+                chrom_len = self.score.table.get_chromosome_length(chrom)
+            logger.debug(
+                "Chromosome '%s' has length %s",
+                chrom, chrom_len)
+            i = 1
+            while i < chrom_len - region_size:
+                yield chrom, i, i + region_size - 1
+                i += region_size
+            yield chrom, i, None
+
+    def calc_info_hash(self):
+        """Compute and return the info hash."""
+        return "infohash"
+
+    def calc_statistics_hash(self) -> bytes:
+        """
+        Compute the statistics hash.
+
+        This hash is used to decide whether the resource statistics should be
+        recomputed.
+        """
+        manifest = self.resource.get_manifest()
+        config = self.get_config()
+        score_filename = config["table"]["filename"]
+        return json.dumps({
+            "config": {
+                "scores": config.get("scores", {}),
+                "histograms": list(self.get_config_histograms().values()),
+                "table": config["table"]
+            },
+            "score_file": manifest[score_filename].md5
+        }, sort_keys=True, indent=2).encode()
+
+
+@dataclass
+class PositionScoreQuery:
+    score: str
+    position_aggregator: Optional[str] = None
+
+
+@dataclass
+class NPScoreQuery:
+    score: str
+    position_aggregator: Optional[str] = None
+    nucleotide_aggregator: Optional[str] = None
+
+
+@dataclass
+class AlleleScoreQuery:
+    score: str
+    position_aggregator: Optional[str] = None
+    allele_aggregator: Optional[str] = None
+
+
+@dataclass
+class PositionScoreAggr:
+    score: str
+    position_aggregator: Aggregator
+
+
+@dataclass
+class NPScoreAggr:
+    score: str
+    position_aggregator: Aggregator
+    nucleotide_aggregator: Aggregator
+
+
+@dataclass
+class AlleleScoreAggr:
+    score: str
+    position_aggregator: Aggregator
+    allele_aggregator: Aggregator
+
+
+ScoreQuery = Union[PositionScoreQuery, NPScoreQuery, AlleleScoreQuery]
+# ScoreQueryList = Union[
+#     list[PositionScoreQuery],
+#     list[NPScoreQuery],
+#     list[AlleleScoreQuery]
+# ]
+
+
+class GenomicScore(ResourceConfigValidationMixin):
+    """Genomic scores base class.
+
+    PositionScore, NPScore and AlleleScore inherit from this class.
+    Statistics builder implementation uses only GenomicScore interface
+    to build all defined statistics.
+    """
+
+    def __init__(self, resource):
+        self.resource = resource
+        self.config: dict = self.resource.config
+        self.config = self.validate_and_normalize_schema(
+            self.config, resource
+        )
+        self.config["id"] = resource.resource_id
+        self.table_loaded = False
+        self.table = build_genomic_position_table(
+            self.resource, self.config["table"]
+        )
+        self.score_definitions = self._generate_scoredefs()
+
+    @staticmethod
+    def get_schema():
+        scores_schema = {
+            "type": "list", "schema": {
+                "type": "dict",
+                "schema": {
+                    "id": {"type": "string"},
+                    "index": {"type": "integer"},
+                    "name": {"type": "string", "excludes": "index"},
+                    "type": {"type": "string"},
+                    "desc": {"type": "string"},
+                    "na_values": {"type": ["string", "list"]},
+                    "number_hist": {"type": "dict", "schema": {
+                        "number_of_bins": {"type": "number"},
+                        "view_range": {"type": "dict", "schema": {
+                            "min": {"type": "number"},
+                            "max": {"type": "number"},
+                        }},
+                        "x_log_scale": {"type": "boolean"},
+                        "y_log_scale": {"type": "boolean"},
+                        "x_min_log": {"type": "number"},
+                    }}
+                }
+            }
+        }
+        return {
+            **get_base_resource_schema(),
+            "table": {"type": "dict", "schema": {
+                "filename": {"type": "string"},
+                "index_filename": {"type": "string"},
+                "desc": {"type": "string"},
+                "format": {"type": "string"},
+                "header_mode": {"type": "string"},
+                "header": {"type": ["string", "list"]},
+                "chrom": {"type": "dict", "schema": {
+                    "index": {"type": "integer"},
+                    "name": {"type": "string", "excludes": "index"}
+                }},
+                "pos_begin": {"type": "dict", "schema": {
+                    "index": {"type": "integer"},
+                    "name": {"type": "string", "excludes": "index"}
+                }},
+                "pos_end": {"type": "dict", "schema": {
+                    "index": {"type": "integer"},
+                    "name": {"type": "string", "excludes": "index"}
+                }},
+                "chrom_mapping": {"type": "dict", "schema": {
+                    "filename": {
+                        "type": "string",
+                        "excludes": ["add_prefix", "del_prefix"]
+                    },
+                    "add_prefix": {"type": "string"},
+                    "del_prefix": {"type": "string", "excludes": "add_prefix"}
+                }}
+            }},
+            "scores": scores_schema,
+            "histograms": {"type": "list", "schema": {
+                "type": "dict",
+                "schema": {
+                    "score": {"type": "string"},
+                    "bins": {"type": "integer"},
+                    "min": {"type": "number"},
+                    "max": {"type": "number"},
+                    "x_min_log": {"type": "number"},
+                    "x_scale": {"type": "string"},
+                    "y_scale": {"type": "string"},
+                }
+            }},
+            "default_annotation": {"type": "dict", "allow_unknown": True}
+        }
+
     @property
     def files(self):
         files = set()
@@ -212,59 +815,39 @@ class GenomicScore(
     def _parse_scoredef_config(config):
         """Parse ScoreDef configuration."""
         scores = {}
-        default_na_values = {
-            "str": {},
-            "float": {"", "nan", ".", "NA"},
-            "int": {"", "nan", ".", "NA"}
-        }
-        default_type_pos_aggregators = {
-            "float": "mean",
-            "int": "mean",
-            "str": "concatenate"
-        }
-        default_type_nuc_aggregators = {
-            "float": "max",
-            "int": "max",
-            "str": "concatenate"
-        }
-        default_type_allele_aggregators = {
-            "float": "max",
-            "int": "max",
-            "str": "concatenate"
-        }
+
         for score_conf in config["scores"]:
-            col_type = score_conf.get(
-                "type", config.get("default.score.type", "float"))
+            number_hist_conf = None
+            categorical_hist_conf = None
+            if score_conf.get("number_hist"):
+                number_hist_conf = NumberHistogramConfig(
+                    **score_conf.get("number_hist")
+                )
+            if score_conf.get("categorical_hist"):
+                categorical_hist_conf = CategoricalHistogramConfig(
+                    **score_conf.get("categorical_hist")
+                )
+            value_parser = SCORE_TYPE_PARSERS[score_conf.get("type", "float")]
 
-            col_key = score_conf.get("name") or score_conf["index"]
+            col_key = score_conf.get("name") or score_conf.get("index")
 
-            col_def = ScoreDef(
-                col_key,
-                score_conf.get("desc", ""),
-                col_type,
-                SCORE_TYPE_PARSERS[col_type],
-                score_conf.get(
-                    "na_values",
-                    config.get(
-                        f"default_na_values.{col_type}",
-                        default_na_values[col_type])),
-                score_conf.get(
-                    "position_aggregator",
-                    config.get(
-                        f"{col_type}.aggregator",
-                        default_type_pos_aggregators[col_type])),
-                score_conf.get(
-                    "nucleotide_aggregator",
-                    config.get(
-                        f"{col_type}.aggregator",
-                        default_type_nuc_aggregators[col_type])),
-                score_conf.get(
-                    "allele_aggregator",
-                    config.get(
-                        f"{col_type}.aggregator",
-                        default_type_allele_aggregators[col_type])),
+            score_def = _ScoreDef(
+                score_id=score_conf["id"],
+                desc=score_conf.get("desc", ""),
+                value_type=score_conf.get("type"),
+                pos_aggregator=score_conf.get("position_aggregator"),
+                nuc_aggregator=score_conf.get("nucleotide_aggregator"),
+                allele_aggregator=score_conf.get("allele_aggregator"),
+                small_values_desc=score_conf.get("small_values_desc"),
+                large_values_desc=score_conf.get("large_values_desc"),
+                hist_number_conf=number_hist_conf,
+                hist_categorical_conf=categorical_hist_conf,
+                col_key=col_key,
+                value_parser=value_parser,
+                na_values=score_conf.get("na_values")
             )
-            scores[score_conf["id"]] = col_def
+
+            scores[score_conf["id"]] = score_def
         return scores
 
     @staticmethod
@@ -274,15 +857,31 @@ class GenomicScore(
                 return ",".join(map(str, val))
             except TypeError:
                 return val
-        return {
-            key: ScoreDef(
-                key,
-                value.description or "",
-                VCF_TYPE_CONVERSION_MAP[value.type],  # type: ignore
-                converter if value.number not in (1, "A", "R") else None,
-                tuple(), None, None, None
-            ) for key, value in vcf_header_info.items()
-        }
+
+        scoredefs = {}
+
+        for key, value in vcf_header_info.items():
+            value_parser = converter
+            if value.number in (1, "A", "R"):
+                value_parser = None
+
+            scoredefs[key] = _ScoreDef(
+                score_id=key,
+                col_key=key,
+                desc=value.description or "",
+                value_type=VCF_TYPE_CONVERSION_MAP[value.type],  # type: ignore
+                value_parser=value_parser,
+                na_values=tuple(),
+                pos_aggregator=None,
+                nuc_aggregator=None,
+                allele_aggregator=None,
+                small_values_desc=None,
+                large_values_desc=None,
+                hist_number_conf=None,
+                hist_categorical_conf=None
+            )
+
+        return scoredefs
 
     def _validate_scoredefs(self):
         assert "scores" in self.config
@@ -303,23 +902,36 @@ class GenomicScore(
                                          " be configured for scores!")
 
     def _generate_scoredefs(self):
+        config_scoredefs = None
+        if "scores" in self.config:
+            config_scoredefs = GenomicScore._parse_scoredef_config(self.config)
+
         if isinstance(self.table, VCFGenomicPositionTable):
             vcf_scoredefs = GenomicScore._get_vcf_scoredefs(self.table.header)
-            scoredefs = {}
-            if "scores" in self.config:
+            if config_scoredefs is not None:
                 # allow overriding of vcf-generated scoredefs
-                for over in self.config["scores"]:
-                    score = vcf_scoredefs[over["id"]]
-                    score.desc = over.get("desc", score.desc)
-                    score.type = over.get("type", score.type)
-                    score.value_parser = SCORE_TYPE_PARSERS[score.type]
-                    score.na_values = over.get("na_values", score.na_values)
-                    scoredefs[over["id"]] = score
+                scoredefs = {}
+                for score, config_scoredef in config_scoredefs.items():
+                    vcf_scoredef = vcf_scoredefs[score]
+
+                    if config_scoredef.desc:
+                        vcf_scoredef.desc = config_scoredef.desc
+                    if config_scoredef.value_type:
+                        vcf_scoredef.value_type = config_scoredef.value_type
+                    vcf_scoredef.value_parser = config_scoredef.value_parser
+                    vcf_scoredef.na_values = config_scoredef.na_values
+                    vcf_scoredef.hist_number_conf = \
+                        config_scoredef.hist_number_conf
+                    vcf_scoredef.hist_categorical_conf = \
+                        config_scoredef.hist_categorical_conf
+                    scoredefs[score] = vcf_scoredef
                 return scoredefs
             return vcf_scoredefs
-        if "scores" in self.config:
-            return GenomicScore._parse_scoredef_config(self.config)
-        raise ValueError("No scores configured and not using a VCF")
+
+        if config_scoredefs is None:
+            raise ValueError("No scores configured and not using a VCF")
+
+        return config_scoredefs
 
     def get_config(self):
         return self.config
@@ -403,20 +1015,6 @@ class GenomicScore(
         assert self.table is not None
         return self.table.header
 
-    def get_config_histograms(self):
-        """Collect all configurations of histograms for the genomic score."""
-        result = {}
-        for score_id, score in self.score_definitions.items():
-            if score.type in {"int", "float"}:
-                result[score_id] = Histogram.default_config(score_id)
-        hist_config_overwrite = self.get_config().get("histograms", {})
-        for hist_config in hist_config_overwrite:
-            result[hist_config["score"]] = copy.deepcopy(hist_config)
-        return result
-
-    def get_resource_id(self):
-        return self.config["id"]
-
     def _fetch_lines(
         self, chrom: str,
         pos_begin: Optional[int], pos_end: Optional[int]
@@ -476,453 +1074,11 @@ class GenomicScore(
             for _ in range(left, right + 1):
                 yield val
 
-    def get_template(self):
-        return Template(textwrap.dedent("""
-        {% extends base %}
-        {% block content %}
-
-        {% set scores = data.genomic_scores %}
-
-        <h1>Scores</h1>
-
-        <table border="1">
-        <tr>
-        <th>id</th>
-        <th>type</th>
-        <th>default annotation</th>
-        <th>description</th>
-        <th>histogram</th>
-        <th>range</th>
-        </tr>
-
-        {%- for score_id, score in scores.score_definitions.items() -%}
-
-        <tr class="score-definition">
-
-        <td>{{ score_id }}</td>
-
-        <td>{{ score.type }}</td>
-
-        {% set attr = scores._get_default_annotation_attribute(score_id) %}
-        <td>{{ attr if attr else "" }}</td>
-
-        <td>{{ score.desc }}</td>
-
-        <td>
-        {% set hist_image_file =
-            scores.get_score_histogram_image_file(score_id) %}
-        {%- if hist_image_file %}
-        <img src="{{ hist_image_file }}"
-            alt="{{ "HISTOGRAM FOR " + score_id }}"
-            title={{ score_id }}
-            width="200">
-        {%- else -%}
-        NO HISTOGRAM
-        {%- endif -%}
-        </td>
-
-        <td>
-        {% set statistics = scores.get_statistics() %}
-        {% set min_max = statistics.score_min_maxes.get(score_id) %}
-        {%- if min_max is not none and
-                min_max.min is not none and min_max.max is not none -%}
-        ({{"%0.3f" % min_max.min}}, {{"%0.3f" % min_max.max}})
-        {%- else -%}
-        NO RANGE
-        {%- endif -%}
-        </td>
-
-        </tr>
-        {%- endfor %}
-
-        </table>
-
-        {% endblock %}
-        """))
-
-    def _get_template_data(self):
-        return {"genomic_scores": self}
-
-    def get_info(self):
-        return InfoImplementationMixin.get_info(self)
-
-    @ staticmethod
-    def get_schema():
-        scores_schema = {
-            "type": "list", "schema": {
-                "type": "dict",
-                "schema": {
-                    "id": {"type": "string"},
-                    "index": {"type": "integer"},
-                    "name": {"type": "string", "excludes": "index"},
-                    "type": {"type": "string"},
-                    "desc": {"type": "string"},
-                    "na_values": {"type": ["string", "list"]}
-                }
-            }
-        }
-        return {
-            **get_base_resource_schema(),
-            "table": {"type": "dict", "schema": {
-                "filename": {"type": "string"},
-                "index_filename": {"type": "string"},
-                "desc": {"type": "string"},
-                "format": {"type": "string"},
-                "header_mode": {"type": "string"},
-                "header": {"type": ["string", "list"]},
-                "chrom": {"type": "dict", "schema": {
-                    "index": {"type": "integer"},
-                    "name": {"type": "string", "excludes": "index"}
-                }},
-                "pos_begin": {"type": "dict", "schema": {
-                    "index": {"type": "integer"},
-                    "name": {"type": "string", "excludes": "index"}
-                }},
-                "pos_end": {"type": "dict", "schema": {
-                    "index": {"type": "integer"},
-                    "name": {"type": "string", "excludes": "index"}
-                }},
-                "chrom_mapping": {"type": "dict", "schema": {
-                    "filename": {
-                        "type": "string",
-                        "excludes": ["add_prefix", "del_prefix"]
-                    },
-                    "add_prefix": {"type": "string"},
-                    "del_prefix": {"type": "string", "excludes": "add_prefix"}
-                }}
-            }},
-            "scores": scores_schema,
-            "histograms": {"type": "list", "schema": {
-                "type": "dict",
-                "schema": {
-                    "score": {"type": "string"},
-                    "bins": {"type": "integer"},
-                    "min": {"type": "number"},
-                    "max": {"type": "number"},
-                    "x_min_log": {"type": "number"},
-                    "x_scale": {"type": "string"},
-                    "y_scale": {"type": "string"},
-                }
-            }},
-            "default_annotation": {"type": "dict", "allow_unknown": True}
-        }
-
-    def add_statistics_build_tasks(self, task_graph: TaskGraph, **kwargs):
-        with self.open():
-            region_size = kwargs.get("region_size", 1_000_000)
-            grr = kwargs.get("grr")
-            _, _, save_task = self._add_min_max_tasks(
-                task_graph, region_size, grr
-            )
-
-            _, _, save_task = self._add_histogram_tasks(
-                task_graph, save_task, region_size, grr
-            )
-
-            return [save_task]
-
-    _REF_GENOME_CACHE: dict[str, Any] = {}
-
-    @ staticmethod
-    def _get_reference_genome_cached(grr, genome_id):
-        if genome_id is None or grr is None:
-            return None
-        if genome_id in GenomicScore._REF_GENOME_CACHE:
-            return GenomicScore._REF_GENOME_CACHE[genome_id]
-        try:
-            ref_genome = build_reference_genome_from_resource(
-                grr.get_resource(genome_id)
-            )
-            logger.info(
-                "Using reference genome label <%s> ",
-                genome_id,
-            )
-        except FileNotFoundError:
-            logger.warning(
-                "Couldn't find reference genome %s",
-                genome_id,
-            )
-            return None
-        ref_genome.open()
-        GenomicScore._REF_GENOME_CACHE[genome_id] = ref_genome
-        return ref_genome
-
-    def _get_chrom_regions(self, region_size, grr=None):
-        regions = []
-        ref_genome_id = self.resource.get_labels().get("reference_genome")
-        ref_genome = self._get_reference_genome_cached(grr, ref_genome_id)
-        for chrom in self.get_all_chromosomes():
-            if ref_genome is not None:
-                chrom_length = ref_genome.get_chrom_length(chrom)
-            else:
-                if isinstance(self.table, InmemoryGenomicPositionTable):
-                    raise ValueError("In memory tables are not supported")
-                chrom_length = get_chromosome_length_tabix(
-                    self.table.pysam_file, chrom
-                )
-            regions.extend(
-                split_into_regions(chrom, chrom_length, region_size)
-            )
-        return regions
-
-    def _add_min_max_tasks(self, graph, region_size, grr=None):
-        """
-        Add and return calculation, merging and saving tasks for min max.
-
-        The tasks are returned in a triple containing a list of calculation
-        tasks, the merge task and the save task.
-        """
-        min_max_tasks = []
-        regions = self._get_chrom_regions(region_size, grr)
-        for region in regions:
-            chrom = region.chrom
-            start = region.start
-            end = region.stop
-            min_max_tasks.append(graph.create_task(
-                f"{self.score_id}_calculate_min_max_{chrom}_{start}_{end}",
-                GenomicScore._do_min_max,
-                [self.resource, chrom, start, end],
-                []
-            ))
-        score_ids = list(self.get_config_histograms().keys())
-        merge_task = graph.create_task(
-            f"{self.score_id}_merge_min_max",
-            GenomicScore._merge_min_max,
-            [score_ids, *min_max_tasks],
-            min_max_tasks
-        )
-        save_task = graph.create_task(
-            f"{self.score_id}_save_min_max",
-            GenomicScore._save_min_max,
-            [self.resource, merge_task],
-            [merge_task]
-        )
-        return min_max_tasks, merge_task, save_task
-
-    @ staticmethod
-    def _do_min_max(resource, chrom, start, end):
-        impl = build_score_from_resource(resource)
-        score_ids = list(impl.get_config_histograms())
-        res = {
-            scr_id: MinMaxValue(scr_id, None, None)
-            for scr_id in score_ids
-        }
-        with impl.open():
-            for record in impl.fetch_region(chrom, start, end, score_ids):
-                for scr_id in score_ids:
-                    res[scr_id].add_record(record)
-        return res
-
-    @ staticmethod
-    def _merge_min_max(score_ids, *calculate_tasks):
-
-        res: dict[str, Optional[MinMaxValue]] = {
-            score_id: None for score_id in score_ids}
-        for score_id in score_ids:
-            for min_max_region in calculate_tasks:
-                if res[score_id] is None:
-                    res[score_id] = min_max_region[score_id]
-                else:
-                    assert res[score_id] is not None
-                    res[score_id].merge(  # type: ignore
-                        min_max_region[score_id])
-        return res
-
-    @ staticmethod
-    def _save_min_max(resource, merged_min_max):
-        proto = resource.proto
-        for score_id, score_min_max in merged_min_max.items():
-            if score_min_max is None:
-                logger.warning("Min max for %s is None", score_id)
-                continue
-            with proto.open_raw_file(
-                resource,
-                f"{GenomicScoreStatistics.get_statistics_folder()}"
-                f"/{GenomicScoreStatistics.get_min_max_file(score_id)}",
-                mode="wt"
-            ) as outfile:
-                outfile.write(score_min_max.serialize())
-        return merged_min_max
-
-    def _add_histogram_tasks(
-        self, graph, save_minmax_task, region_size, grr=None
-    ):
-        """
-        Add histogram tasks for specific score id.
-
-        The histogram tasks are dependant on the provided minmax task.
-        """
-        histogram_tasks = []
-        regions = self._get_chrom_regions(region_size, grr)
-        for region in regions:
-            chrom = region.chrom
-            start = region.start
-            end = region.stop
-            histogram_tasks.append(graph.create_task(
-                f"{self.score_id}_calculate_histogram_{chrom}_{start}_{end}",
-                GenomicScore._do_histogram,
-                [self.resource, chrom, start, end, save_minmax_task],
-                [save_minmax_task]
-            ))
-        merge_task = graph.create_task(
-            f"{self.score_id}_merge_histograms",
-            GenomicScore._merge_histograms,
-            [self.resource, *histogram_tasks],
-            histogram_tasks
-        )
-        save_task = graph.create_task(
-            f"{self.score_id}_save_histograms",
-            GenomicScore._save_histograms,
-            [self.resource, merge_task],
-            [merge_task]
-        )
-        return histogram_tasks, merge_task, save_task
-
-    @ staticmethod
-    def _do_histogram(resource, chrom, start, end, save_minmax_task):
-        impl = build_score_from_resource(resource)
-        hist_configs = list(impl.get_config_histograms().values())
-        if not hist_configs:
-            return {}
-        res = {}
-        for hist_config in hist_configs:
-            score_id = hist_config["score"]
-            if hist_config.get("min") is None:
-                hist_config["min"] = save_minmax_task[score_id].min
-            if hist_config.get("max") is None:
-                hist_config["max"] = save_minmax_task[score_id].max
-            try:
-                res[score_id] = Histogram(hist_config)
-            except ValueError:
-                logger.warning("skipping histogram for %s", score_id)
-        score_ids = list(res.keys())
-        with impl.open():
-            for record in impl.fetch_region(chrom, start, end, score_ids):
-                for scr_id in score_ids:
-                    res[scr_id].add_record(record)
-        return res
-
-    @ staticmethod
-    def _merge_histograms(resource, *calculated_histograms):
-        impl = build_score_from_resource(resource)
-        hist_configs = list(impl.get_config_histograms().values())
-        if not hist_configs:
-            return {}
-        res: dict = {}
-        for hist_config in hist_configs:
-            res[hist_config["score"]] = None
-        score_ids = list(res.keys())
-
-        skipped_score_histograms = set()
-        for score_id in score_ids:
-            for histogram_region in calculated_histograms:
-                if score_id not in histogram_region:
-                    skipped_score_histograms.add(score_id)
-                    continue
-                if res[score_id] is None:
-                    res[score_id] = histogram_region[score_id]
-                else:
-                    res[score_id].merge(histogram_region[score_id])
-        if skipped_score_histograms:
-            logger.warning(
-                "skipped merging histograms: %s", skipped_score_histograms)
-        return res
-
-    @ staticmethod
-    def _save_histograms(resource, merged_histograms):
-        proto = resource.proto
-        for score_id, score_histogram in merged_histograms.items():
-            if score_histogram is None:
-                logger.warning("Histogram for %s is None", score_id)
-                continue
-            with proto.open_raw_file(
-                resource,
-                f"{GenomicScoreStatistics.get_statistics_folder()}"
-                f"/{GenomicScoreStatistics.get_histogram_file(score_id)}",
-                mode="wt"
-            ) as outfile:
-                outfile.write(score_histogram.serialize())
-
-            with proto.open_raw_file(
-                resource,
-                f"{GenomicScoreStatistics.get_statistics_folder()}/"
-                f"{GenomicScoreStatistics.get_histogram_image_file(score_id)}",
-                mode="wb"
-            ) as outfile:
-                score_histogram.plot(outfile)
-        return merged_histograms
-
-    def calc_info_hash(self):
-        """Compute and return the info hash."""
-        return "infohash"
-
-    def calc_statistics_hash(self) -> bytes:
-        """
-        Compute the statistics hash.
-
-        This hash is used to decide whether the resource statistics should be
-        recomputed.
-        """
-        manifest = self.resource.get_manifest()
-        config = self.get_config()
-        score_filename = config["table"]["filename"]
-        return json.dumps({
-            "config": {
-                "scores": config.get("scores", {}),
-                "histograms": list(self.get_config_histograms().values()),
-                "table": config["table"]
-            },
-            "score_file": manifest[score_filename].md5
-        }, sort_keys=True, indent=2).encode()
-
-
-@dataclass
-class PositionScoreQuery:
-    score: str
-    position_aggregator: Optional[str] = None
-
-
-@dataclass
-class NPScoreQuery:
-    score: str
-    position_aggregator: Optional[str] = None
-    nucleotide_aggregator: Optional[str] = None
-
-
-@dataclass
-class AlleleScoreQuery:
-    score: str
-    position_aggregator: Optional[str] = None
-    allele_aggregator: Optional[str] = None
-
-
-@dataclass
-class PositionScoreAggr:
-    score: str
-    position_aggregator: Aggregator
-
-
-@dataclass
-class NPScoreAggr:
-    score: str
-    position_aggregator: Aggregator
-    nucleotide_aggregator: Aggregator
-
-
-@dataclass
-class AlleleScoreAggr:
-    score: str
-    position_aggregator: Aggregator
-    allele_aggregator: Aggregator
-
-
-ScoreQuery = Union[PositionScoreQuery, NPScoreQuery, AlleleScoreQuery]
-
 
 class PositionScore(GenomicScore):
     """Defines position genomic score."""
 
-    @ staticmethod
+    @staticmethod
     def get_schema():
         schema = copy.deepcopy(GenomicScore.get_schema())
         scores_schema = schema["scores"]["schema"]["schema"]
@@ -1017,7 +1173,7 @@ class PositionScore(GenomicScore):
 class NPScore(GenomicScore):
     """Defines nucleotide-position genomic score."""
 
-    @ staticmethod
+    @staticmethod
     def get_schema():
         schema = copy.deepcopy(GenomicScore.get_schema())
         schema["table"]["schema"]["reference"] = {
@@ -1143,7 +1299,7 @@ class NPScore(GenomicScore):
 class AlleleScore(GenomicScore):
     """Defines allele genomic scores."""
 
-    @ staticmethod
+    @staticmethod
     def get_schema():
         schema = copy.deepcopy(GenomicScore.get_schema())
         schema["table"]["schema"]["reference"] = {
@@ -1272,47 +1428,22 @@ class AlleleScore(GenomicScore):
         return [sagg.position_aggregator for sagg in score_aggs]
 
 
-def _build_genomic_score_from_resource(
-        clazz: Type[GenomicScore],
-        resource: GenomicResource) -> GenomicScore:
-    return clazz(resource)
-
-
-def build_position_score_from_resource(
-        resource: GenomicResource) -> PositionScore:
-    """Build a position score genomic resource and returns a position score."""
-    result = _build_genomic_score_from_resource(
-        PositionScore,
-        resource)
-    return cast(PositionScore, result)
-
-
-def build_np_score_from_resource(
-        resource: GenomicResource) -> NPScore:
-    """Build a NP-score genomic resource and returns a NP-score."""
-    result = _build_genomic_score_from_resource(
-        NPScore,
-        resource)
-    return cast(NPScore, result)
-
-
-def build_allele_score_from_resource(
-        resource: GenomicResource) -> AlleleScore:
-    """Build a allele score genomic resource and returns an allele score."""
-    result = _build_genomic_score_from_resource(
-        AlleleScore,
-        resource)
-    return cast(AlleleScore, result)
-
-
-def build_score_from_resource(resource: GenomicResource) -> GenomicScore:
+def build_score_from_resource(
+    resource: GenomicResource
+) -> GenomicScore:
     """Build a genomic score resource and return the coresponding score."""
     type_to_ctor = {
-        "position_score": build_position_score_from_resource,
-        "np_score": build_np_score_from_resource,
-        "allele_score": build_allele_score_from_resource,
+        "position_score": PositionScore,
+        "np_score": NPScore,
+        "allele_score": AlleleScore,
     }
     ctor = type_to_ctor.get(resource.get_type())
     if ctor is None:
         raise ValueError(f"Resource {resource.get_id()} is not of score type")
     return ctor(resource)
+
+
+def build_score_implementation_from_resource(
+    resource: GenomicResource
+) -> GenomicScoreImplementation:
+    return GenomicScoreImplementation(resource)

@@ -3,19 +3,18 @@
 import yaml
 import numpy as np
 
-from dae.genomic_resources.histogram import Histogram
+from dae.genomic_resources.histogram import NumberHistogram, \
+    NumberHistogramConfig
 
 
 def test_histogram_simple_input():
-    config = {
-        "score": "test",
-        "bins": 10,
-        "min": 0,
-        "max": 10,
-        "x_scale": "linear",
-        "y_scale": "linear"
-    }
-    hist = Histogram(config)
+    config = NumberHistogramConfig.from_yaml({
+        "view_range": {"min": 0, "max": 10},
+        "number_of_bins": 10,
+        "x_log_scale": False,
+        "y_log_scale": False
+    })
+    hist = NumberHistogram(config)
     assert (hist.bins == np.arange(0, 11)).all()
 
     hist.add_value(0)
@@ -27,20 +26,19 @@ def test_histogram_simple_input():
 
     hist.add_value(12)
     hist.add_value(-1)
-    assert (hist.bars == np.array([2, 1, 1, 1, 1, 1, 1, 1, 1, 3])).all()
+    assert hist.out_of_range_values[0] == 12
+    assert hist.out_of_range_values[1] == -1
 
 
 def test_histogram_log_scale():
-    config = {
-        "score": "test",
-        "bins": 4,
-        "min": 0,
-        "max": 1000,
-        "x_scale": "log",
-        "y_scale": "linear",
+    config = NumberHistogramConfig.from_yaml({
+        "view_range": {"min": 0, "max": 1000},
+        "number_of_bins": 4,
+        "x_log_scale": True,
+        "y_log_scale": False,
         "x_min_log": 1
-    }
-    hist = Histogram(config)
+    })
+    hist = NumberHistogram(config)
     assert (hist.bins == np.array([0, 1, 10, 100, 1000])).all()
 
     hist.add_value(0)
@@ -52,24 +50,23 @@ def test_histogram_log_scale():
 
     hist.add_value(2000)
     hist.add_value(-1)
-    assert (hist.bars == np.array([3, 1, 1, 2])).all()
+    assert hist.out_of_range_values[0] == 2000
+    assert hist.out_of_range_values[1] == -1
 
 
 def test_histogram_merge():
-    config = {
-        "score": "test",
-        "bins": 10,
-        "min": 0,
-        "max": 10,
-        "x_scale": "linear",
-        "y_scale": "linear"
-    }
-    hist1 = Histogram(
+    config = NumberHistogramConfig.from_yaml({
+        "view_range": {"min": 0, "max": 10},
+        "number_of_bins": 10,
+        "x_log_scale": False,
+        "y_log_scale": False
+    })
+    hist1 = NumberHistogram(
         config,
         bins=np.arange(0, 11),
         bars=np.array([0, 0, 0, 1, 0, 0, 0, 1, 0, 2])
     )
-    hist2 = Histogram(
+    hist2 = NumberHistogram(
         config,
         bins=np.arange(0, 11),
         bars=np.array([0, 0, 0, 0, 0, 1, 0, 1, 0, 0])
@@ -80,15 +77,13 @@ def test_histogram_merge():
 
 
 def test_histogram_serialize_deserialize():
-    config = {
-        "score": "test",
-        "bins": 10,
-        "min": 0,
-        "max": 10,
-        "x_scale": "linear",
-        "y_scale": "linear"
-    }
-    hist1 = Histogram(
+    config = NumberHistogramConfig.from_yaml({
+        "view_range": {"min": 0, "max": 10},
+        "number_of_bins": 10,
+        "x_log_scale": False,
+        "y_log_scale": False
+    })
+    hist1 = NumberHistogram(
         config,
         bins=np.arange(0, 11),
         bars=np.array([0, 0, 0, 1, 0, 0, 0, 1, 0, 2])
@@ -102,7 +97,7 @@ def test_histogram_serialize_deserialize():
     assert loaded["bins"] == [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
     assert loaded["bars"] == [0, 0, 0, 1, 0, 0, 0, 1, 0, 2]
 
-    hist2 = Histogram.deserialize(serialized)
+    hist2 = NumberHistogram.deserialize(serialized)
 
     assert np.array_equal(hist2.bins, hist1.bins)
     assert np.array_equal(hist2.bars, hist1.bars)

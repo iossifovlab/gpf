@@ -6,7 +6,7 @@ from typing import List
 import pytest
 
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME
-from dae.genomic_resources.histogram import Histogram
+from dae.genomic_resources.histogram import NumberHistogram
 from dae.genomic_resources.testing import \
     setup_directories, build_filesystem_test_repository, \
     setup_tabix
@@ -168,7 +168,7 @@ def test_stats_allele_score(tmp_path):
     assert os.path.exists(histogram_image_path)
 
     with open(histogram_statistic_path, "r") as infile:
-        freq_hist = Histogram.deserialize(infile.read())
+        freq_hist = NumberHistogram.deserialize(infile.read())
 
     assert len(freq_hist.bars) == 100
     assert freq_hist.bars[0] == 0
@@ -258,9 +258,9 @@ def test_stats_position_score(tmp_path):
     assert os.path.exists(histogram_image_5way_path)
 
     with open(histogram_100way_path, "r") as infile:
-        phast_cons_100way_hist = Histogram.deserialize(infile.read())
+        phast_cons_100way_hist = NumberHistogram.deserialize(infile.read())
     with open(histogram_5way_path, "r") as infile:
-        phast_cons_5way_hist = Histogram.deserialize(infile.read())
+        phast_cons_5way_hist = NumberHistogram.deserialize(infile.read())
 
     assert len(phast_cons_100way_hist.bars) == 100
     assert phast_cons_100way_hist.bars[0] == 0
@@ -359,9 +359,9 @@ def test_stats_np_score(tmp_path):
     assert os.path.exists(histogram_image_cadd_test_path)
 
     with open(histogram_cadd_raw_path, "r") as infile:
-        cadd_raw_hist = Histogram.deserialize(infile.read())
+        cadd_raw_hist = NumberHistogram.deserialize(infile.read())
     with open(histogram_cadd_test_path, "r") as infile:
-        cadd_test_hist = Histogram.deserialize(infile.read())
+        cadd_test_hist = NumberHistogram.deserialize(infile.read())
 
     assert len(cadd_raw_hist.bars) == 100
     assert cadd_raw_hist.bars[2] == 6  # region [10-15]

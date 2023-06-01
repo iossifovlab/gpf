@@ -82,8 +82,8 @@ def test_genomic_scores_db(scores_repo):
     score = db["phastcons100"]
     assert len(score.hist.bars) == 11
     assert len(score.hist.bins) == 11
-    assert score.hist.x_scale == "linear"
-    assert score.hist.y_scale == "linear"
+    assert score.hist.config.x_log_scale is False
+    assert score.hist.config.y_log_scale is False
 
 
 @pytest.fixture
@@ -131,5 +131,5 @@ def test_genomic_scores_db_with_annotation(annotation_gpf):
     score = db["phastcons100"]
     assert len(score.hist.bars) == 11
     assert len(score.hist.bins) == 11
-    assert score.hist.x_scale == "linear"
-    assert score.hist.y_scale == "linear"
+    assert score.hist.config.x_log_scale is False
+    assert score.hist.config.y_log_scale is False

@@ -1,6 +1,6 @@
 from __future__ import annotations
 import logging
-from typing import Optional, Callable, cast, Any
+from typing import Optional, cast
 from abc import abstractmethod, ABC
 from dataclasses import dataclass
 
@@ -60,8 +60,6 @@ class GenomicResourceImplementation(ABC):
     Resources are just a folder on a repository. Resource implementations
     are classes that know how to use the contents of the resource.
     """
-
-    config_validator: Optional[Callable[[dict], Any]] = None
 
     def __init__(self, genomic_resource: GenomicResource):
         self.resource = genomic_resource

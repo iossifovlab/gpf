@@ -417,6 +417,6 @@ chr1   5   .  A   T   .    .       A=1;C=c11,c12;D=d11
     assert isinstance(score.table, VCFGenomicPositionTable)
     assert set(score.score_definitions.keys()) == {"A", "C"}
     assert score.score_definitions["A"].desc == "Score A"
-    assert score.score_definitions["A"].type == "int"
+    assert score.score_definitions["A"].value_type == "int"
     assert score.score_definitions["C"].desc == "Score C"
-    assert score.score_definitions["C"].type == "str"
+    assert score.score_definitions["C"].value_type == "str"
