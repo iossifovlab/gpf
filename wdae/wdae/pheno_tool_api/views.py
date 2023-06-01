@@ -6,7 +6,7 @@ from rest_framework import status  # type: ignore
 
 from django.http.response import StreamingHttpResponse
 
-from gene_sets.expand_gene_set_decorator import expand_gene_set
+from gene_sets.expand_gene_set import expand_gene_set
 
 from query_base.query_base import QueryDatasetView
 from datasets_api.permissions import user_has_permission

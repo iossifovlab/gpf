@@ -219,7 +219,7 @@ def wdae_gpf_instance(
         return_value=fixtures_wgpf_instance,
     )
     mocker.patch(
-        "gene_sets.expand_gene_set_decorator.get_wgpf_instance",
+        "gene_sets.expand_gene_set.get_wgpf_instance",
         return_value=fixtures_wgpf_instance,
     )
     mocker.patch(
@@ -250,7 +250,7 @@ def wdae_gpf_instance_agp(  # pylint: disable=too-many-arguments
         return_value=wdae_gpf_instance,
     )
     mocker.patch(
-        "gene_sets.expand_gene_set_decorator.get_wgpf_instance",
+        "gene_sets.expand_gene_set.get_wgpf_instance",
         return_value=wdae_gpf_instance,
     )
     mocker.patch(

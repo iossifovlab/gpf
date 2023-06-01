@@ -14,7 +14,7 @@ from utils.query_params import parse_query_params
 
 from query_base.query_base import QueryDatasetView
 
-from gene_sets.expand_gene_set_decorator import expand_gene_set
+from gene_sets.expand_gene_set import expand_gene_set
 
 from studies.study_wrapper import StudyWrapperBase
 

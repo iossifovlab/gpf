@@ -6,7 +6,7 @@ from rest_framework import status
 
 from query_base.query_base import QueryDatasetView
 
-from gene_sets.expand_gene_set_decorator import expand_gene_set
+from gene_sets.expand_gene_set import expand_gene_set
 
 
 # from memory_profiler import profile
