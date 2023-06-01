@@ -1,7 +1,7 @@
 
-import { throwError as observableThrowError, Observable, Subject, ReplaySubject, of, BehaviorSubject } from 'rxjs';
+import { Observable, Subject, ReplaySubject } from 'rxjs';
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { ConfigService } from '../config/config.service';
 import { CookieService } from 'ngx-cookie-service';
 import { User } from './users';
@@ -40,6 +40,7 @@ export class UsersService {
 
   public logout(): Observable<object> {
     const csrfToken = this.cookieService.get('csrftoken');
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     const headers = { 'X-CSRFToken': csrfToken };
     const options = { headers: headers, withCredentials: true };
 
@@ -75,6 +76,7 @@ export class UsersService {
 
   public resetPassword(email: string): void {
     const csrfToken = this.cookieService.get('csrftoken');
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     const headers = { 'X-CSRFToken': csrfToken, 'Content-Type': 'application/json'};
 
     // Using plain js fetch, because the API end-point does not return JSON
@@ -102,16 +104,19 @@ export class UsersService {
   }
 
   public updateUser(user: User): Observable<object> {
+    if (!user.id) {
+      return;
+    }
+
     const dto = {
       id: user.id,
       name: user.name,
       groups: user.groups,
       hasPassword: user.hasPassword,
     };
-    if (!user.id) {
-      return observableThrowError('Unknown id...');
-    }
+
     const csrfToken = this.cookieService.get('csrftoken');
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     const headers = { 'X-CSRFToken': csrfToken };
     const options = { headers: headers, withCredentials: true };
     const url = `${this.config.baseUrl}${this.usersUrl}/${user.id}`;
@@ -120,37 +125,25 @@ export class UsersService {
   }
 
   public createUser(user: User): Observable<User> {
-    if (user.id) {
-      return observableThrowError('Create should not have user id');
-    }
-
-    // if (!this.isEmailValid(user.email)) {
-    //   return observableThrowError(new Error(
-    //     'Invalid email address entered. Please use a valid email address.'
-    //   ));
-    // }
-
-    // if (!this.isNameValid(user.name)) {
-    //   return observableThrowError(new Error(
-    //     'Name field cannot be empty.'
-    //   ));
-    // }
+    // id is backend generated - remove if present at creation
+    user.id = null;
 
     const csrfToken = this.cookieService.get('csrftoken');
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     const headers = { 'X-CSRFToken': csrfToken };
     const options = { headers: headers, withCredentials: true };
 
     return this.http.post(this.config.baseUrl + this.usersUrl, user, options).pipe(
       map(response => User.fromJson(response)),
-      catchError(error => {
-        return observableThrowError(new Error(error.error.email));
+      catchError((error: HttpErrorResponse) => {
+        throw error;
       })
     );
   }
 
   public deleteUser(user: User): Observable<object> {
     if (!user.id) {
-      return observableThrowError('No user id');
+      return;
     }
     const url = `${this.config.baseUrl}${this.usersUrl}/${user.id}`;
     const options = { withCredentials: true };
