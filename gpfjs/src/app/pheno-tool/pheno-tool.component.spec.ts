@@ -119,8 +119,24 @@ describe('PhenoToolComponent', () => {
     expect(component.phenoToolResults).toBeNull();
   });
 
-  xit('should test download', () => {
-    // TODO
+  it('should test download', () => {
+    const mockEvent = {
+      target: document.createElement('form'),
+      preventDefault: jest.fn()
+    };
+    mockEvent.target.queryData = {
+      value: ''
+    };
+    jest.spyOn(mockEvent.target, 'submit').mockImplementation();
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-explicit-any
+    component.onDownload(mockEvent as any);
+
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    expect(mockEvent.target.queryData.value).toStrictEqual(JSON.stringify({
+      ...component.phenoToolState,
+      datasetId: component.selectedDataset.id
+    }));
+    expect(mockEvent.target.submit).toHaveBeenCalledTimes(1);
   });
 });
 
