@@ -97,9 +97,8 @@ class EnrichmentTestView(QueryDatasetView):
         desc = f"Gene Symbols: {gene_syms}"
         return desc
 
-    @expand_gene_set
     def post(self, request):
-        query = request.data
+        query = expand_gene_set(request.data, request.user)
 
         dataset_id = query.get("datasetId", None)
         if dataset_id is None:

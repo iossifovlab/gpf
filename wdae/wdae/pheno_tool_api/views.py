@@ -91,14 +91,13 @@ class PhenoToolView(QueryDatasetView):
         else:
             return "{} ~ {}".format(measure_id, " + ".join(normalize_by))
 
-    @expand_gene_set
     def post(self, request):
-        data = request.data
+        data = expand_gene_set(request.data, request.user)
         adapter = self.prepare_pheno_tool_adapter(data)
 
         if not adapter:
             return Response(status=status.HTTP_404_NOT_FOUND)
-        effect_groups = [effect for effect in data["effectTypes"]]
+        effect_groups = list(data["effectTypes"])
         data = adapter.helper.genotype_data.transform_request(data)
         result = adapter.calc_variants(data, effect_groups)
 
@@ -106,9 +105,8 @@ class PhenoToolView(QueryDatasetView):
 
 
 class PhenoToolDownload(PhenoToolView):
-    @expand_gene_set
     def post(self, request):
-        data = parse_query_params(request.data)
+        data = expand_gene_set(parse_query_params(request.data), request.user)
         adapter = self.prepare_pheno_tool_adapter(data)
         if not adapter:
             return Response(status=status.HTTP_404_NOT_FOUND)

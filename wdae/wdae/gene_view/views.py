@@ -15,10 +15,9 @@ LOGGER = logging.getLogger(__name__)
 
 
 class ConfigView(QueryDatasetView):
-    @expand_gene_set
     @request_logging(LOGGER)
     def get(self, request):
-        data = request.query_params
+        data = expand_gene_set(request.query_params, request.user)
         dataset_id = data["datasetId"]
         if dataset_id is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
@@ -35,10 +34,9 @@ class ConfigView(QueryDatasetView):
 
 
 class QueryVariantsView(QueryDatasetView):
-    @expand_gene_set
     @request_logging(LOGGER)
     def post(self, request):
-        data = request.data
+        data = expand_gene_set(request.data, request.user)
         dataset_id = data.pop("datasetId", None)
         if dataset_id is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
@@ -62,10 +60,9 @@ class QueryVariantsView(QueryDatasetView):
 class DownloadSummaryVariantsView(QueryDatasetView):
     DOWNLOAD_LIMIT = 10000
 
-    @expand_gene_set
     @request_logging(LOGGER)
     def post(self, request):
-        data = parse_query_params(request.data)
+        data = expand_gene_set(parse_query_params(request.data), request.user)
         dataset_id = data.pop("datasetId", None)
         if dataset_id is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)

@@ -30,7 +30,6 @@ class GenotypeBrowserQueryView(QueryDatasetView):
 
     MAX_SHOWN_VARIANTS = 1000
 
-    @expand_gene_set
     @request_logging(LOGGER)
     def post(self, request):
         """
@@ -102,7 +101,7 @@ class GenotypeBrowserQueryView(QueryDatasetView):
         # pylint: disable=too-many-branches
         LOGGER.info("query v3 variants request: %s", str(request.data))
 
-        data = request.data
+        data = expand_gene_set(request.data, request.user)
         user = request.user
 
         if "queryData" in data:
