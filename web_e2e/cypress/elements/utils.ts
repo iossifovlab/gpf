@@ -15,14 +15,14 @@ export const userData = {
     password: 'secret',
     hasDatasetRights: false,
     sidenavElementsCount: 3,
-    sidenavElements: ['Datasets', 'Saved queries', 'Autism gene profiles']
+    sidenavElements: ['Datasets', 'Autism gene profiles', 'User profile']
   },
   admin: {
     username: 'admin@iossifovlab.com',
     password: 'secret',
     hasDatasetRights: true,
     sidenavElementsCount: 4,
-    sidenavElements: ['Datasets', 'Saved queries', 'Autism gene profiles', 'Management']
+    sidenavElements: ['Datasets', 'Autism gene profiles', 'User profile', 'Management']
   }
 };
 

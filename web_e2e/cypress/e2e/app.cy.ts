@@ -55,7 +55,7 @@ describe('App tests', () => {
     page.logout();
   });
 
-  it('should toggle sidenav, click on the "Saved queries" button and navigate to "/saved-queries"', () => {
+  it('should toggle sidenav, click on the "User profile" button and navigate to "/user-profile"', () => {
     const baseUrl = Cypress.config().baseUrl;
     const savedQueriesUrl = `${baseUrl}user-profile`;
 
@@ -122,7 +122,7 @@ describe('App user access rights tests', () => {
       page.toggleSidenav();
       page.sidenavElements.should('not.exist');
 
-      if (data.username || data.password !== undefined) {
+      if (data.username !== undefined && data.password !== undefined) {
         page.logout();
       }
     });
