@@ -147,7 +147,7 @@ def test_cnv_effect_annotation(infile: str, annotate_cnv_fixture):
     cli_columns([
         str(root_path / "input" / infile),
         str(root_path / "effect_annotation.yaml"),
-        str(root_path / "result.tsv"),
+        "-o", str(root_path / "result.tsv"),
         "--grr", str(root_path / "grr.yaml"),
         "-R", "genome/foobar_genome",
     ])
@@ -182,7 +182,7 @@ def test_cnv_gene_score_annotation(infile: str, annotate_cnv_fixture):
     cli_columns([
         str(root_path / "input" / infile),
         str(root_path / "gene_score_annotation.yaml"),
-        str(root_path / "result.tsv"),
+        "-o", str(root_path / "result.tsv"),
         "--grr", str(root_path / "grr.yaml"),
         "-R", "genome/foobar_genome",
     ])
@@ -214,7 +214,7 @@ def test_bad_cnv_effect_annotation(infile: str, annotate_cnv_fixture):
     cli_columns([
         str(root_path / "input" / infile),
         str(root_path / "effect_annotation.yaml"),
-        str(root_path / "result.tsv"),
+        "-o", str(root_path / "result.tsv"),
         "--grr", str(root_path / "grr.yaml"),
     ])
 
@@ -247,7 +247,7 @@ def test_bad_cnv_gene_score_annotation(infile: str, annotate_cnv_fixture):
     cli_columns([
         str(root_path / "input" / infile),
         str(root_path / "gene_score_annotation.yaml"),
-        str(root_path / "result.tsv"),
+        "-o", str(root_path / "result.tsv"),
         "--grr", str(root_path / "grr.yaml"),
     ])
 

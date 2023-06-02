@@ -7,7 +7,8 @@ import pysam
 
 from dae.annotation.annotate_columns import build_record_to_annotatable
 from dae.annotation.annotatable import Position, VCFAllele, Region
-from dae.testing import setup_directories, setup_vcf, setup_denovo
+from dae.testing import setup_directories, setup_vcf, setup_denovo, \
+    setup_genome
 from dae.annotation.annotate_columns import cli as cli_columns
 from dae.annotation.annotate_vcf import cli as cli_vcf, produce_partfile_paths
 
@@ -35,7 +36,6 @@ def test_default_columns(record, expected):
 
 @pytest.mark.parametrize(
     "parameters,record,expected", [
-
         ({"col_chrom": "chromosome", "col_pos": "position"},
          {"chromosome": "chr1", "position": "4", "ref": "C", "alt": "CT"},
          VCFAllele("chr1", 4, "C", "CT")),
@@ -89,7 +89,7 @@ def annotate_directory_fixture(tmp_path):
                           type: float
                           desc: |
                                 The phastCons computed over the tree of 100
-                                verterbarte species
+                                verterbrate species
                           name: s1
                     """
                 },
@@ -106,6 +106,13 @@ def annotate_directory_fixture(tmp_path):
                         - id: score
                           type: float
                           name: s1
+                    """
+                },
+                "foobar_genome": {
+                    "genomic_resource.yaml": """
+                        type: genome
+                        filename: chrAll.fa
+                        chrom_prefix: "chr"
                     """
                 }
             }
@@ -129,6 +136,13 @@ def annotate_directory_fixture(tmp_path):
     """)
     setup_denovo(tmp_path / "grr" / "one" / "data.txt", one_content)
     setup_denovo(tmp_path / "grr" / "two" / "data.txt", two_content)
+    setup_genome(
+        tmp_path / "grr" / "foobar_genome" / "chrAll.fa",
+        f"""
+        >chrA
+        {100 * "A"}
+        """
+    )
 
 
 def test_basic_setup(tmp_path, annotate_directory_fixture):
@@ -152,11 +166,11 @@ def test_basic_setup(tmp_path, annotate_directory_fixture):
 
     cli_columns([
         str(a) for a in [
-            in_file, annotation_file, out_file, "--grr", grr_file
+            in_file, annotation_file, "--grr", grr_file, "-o", out_file,
+            "--ref", "foobar_genome"
         ]
     ])
     out_file_content = get_file_content_as_string(out_file)
-    print(out_file_content)
     assert out_file_content == out_expected_content
 
 
@@ -275,9 +289,9 @@ def test_vcf_multiple_chroms(tmp_path, annotate_directory_fixture):
 def test_produce_partfile_paths():
     regions = [("chr1", 0, 1000), ("chr1", 1000, 2000), ("chr1", 2000, 3000)]
     expected_output = [
-        "work_dir/output/input.vcf_annotation_chr1_0_1000.vcf.gz",
-        "work_dir/output/input.vcf_annotation_chr1_1000_2000.vcf.gz",
-        "work_dir/output/input.vcf_annotation_chr1_2000_3000.vcf.gz",
+        "work_dir/output/input.vcf_annotation_chr1_0_1000.gz",
+        "work_dir/output/input.vcf_annotation_chr1_1000_2000.gz",
+        "work_dir/output/input.vcf_annotation_chr1_2000_3000.gz",
     ]
     # relative input file path
     assert produce_partfile_paths(
