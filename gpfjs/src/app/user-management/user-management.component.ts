@@ -93,8 +93,8 @@ export class UserManagementComponent implements OnInit {
     const newUser = new User(null, name, email, ['any_user', email], false, []);
 
     this.usersService.createUser(newUser)
-      .pipe(catchError(err => {
-        this.creationError = err as string;
+      .pipe(catchError((err: {error: { email: string[] } }) => {
+        this.creationError = `Error: ${err.error.email[0]}`;
         return of(null);
       }))
       .subscribe((user: User) => {
