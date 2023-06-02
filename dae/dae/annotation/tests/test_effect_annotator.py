@@ -22,3 +22,16 @@ def test_effect_annotator_resources(grr_fixture):
             genome,
             gene_models
         }
+
+
+def test_effect_annotator_documentation(grr_fixture):
+
+    pipeline = build_annotation_pipeline(pipeline_config_str="""
+        - effect_annotator:
+            genome: hg19/GATK_ResourceBundle_5777_b37_phiX174_short/genome
+            gene_models: hg19/GATK_ResourceBundle_5777_b37_phiX174_short/gene_models/refGene_201309
+        """, grr_repository=grr_fixture)
+
+    att = pipeline.get_attribute_info("worst_effect")
+    assert att is not None
+    assert "Worst" in att.documentation

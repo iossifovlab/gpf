@@ -290,8 +290,7 @@ def test_position_annotator_schema_one_source_two_dest_annotate(
 
 def test_position_score_annotator_attributes_with_aggr_fails(
         position_score_repo):
-    # TODO: Implement the mechanism for testing unused parameters!
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError) as error:
         build_annotation_pipeline(pipeline_config_str="""
             - position_score:
                 resource_id: position_score1
@@ -301,3 +300,51 @@ def test_position_score_annotator_attributes_with_aggr_fails(
                   position_aggregator: min
                   nucleotide_aggregator: mean
         """, grr_repository=position_score_repo)
+    assert "nucleotide_aggregator" in str(error)
+
+
+def test_position_score_annotator_invalid_aggregator(
+        position_score_repo):
+    with pytest.raises(ValueError) as error:
+        build_annotation_pipeline(pipeline_config_str="""
+            - position_score:
+                resource_id: position_score1
+                attributes:
+                - source: test100way
+                  destination: test100min
+                  position_aggregator: minn
+        """, grr_repository=position_score_repo)
+    assert "minn" in str(error)
+
+
+def test_position_annotator_documentation(
+        position_score_repo):
+    pipeline_config = textwrap.dedent("""
+            - position_score:
+                resource_id: position_score1
+                attributes:
+                - source: test100way
+                  destination: test100min
+                  position_aggregator: min
+                - source: test100way
+                  destination: test100max
+                  position_aggregator: max
+                - source: test100way
+                  destination: test100default
+            """)
+
+    pipeline = build_annotation_pipeline(
+        pipeline_config_str=pipeline_config,
+        grr_repository=position_score_repo)
+
+    att1 = pipeline.get_attribute_info("test100min")
+    assert att1 is not None
+    assert "min" in att1.documentation
+
+    att2 = pipeline.get_attribute_info("test100max")
+    assert att2 is not None
+    assert "max" in att2.documentation
+
+    att3 = pipeline.get_attribute_info("test100default")
+    assert att3 is not None
+    assert "default" in att3.documentation

@@ -38,12 +38,12 @@
         <tr class="annotator_line">
             <td>
                 <p>{{annotator_info.type}}</p>
+                {{ markdown(annotator_info.documentation) }}
             </td>
             <td colspan="2">
                 <table border="3">
                     <tr>
-
-                        {%- for genomic_resource in annotator_info.resrouces %}
+                        {%- for genomic_resource in annotator_info.resources %}
                         <td class="resource">
                             <p><b>Ressource</b></p>
                             <p>
@@ -51,7 +51,7 @@
                                 <a href="{{genomic_resource.get_url()}}/index.html">
                                     {{genomic_resource.get_id()}}</a>
                             </p>
-                            <p>{{markdown(genomic_resource.get_summary())}}</p>
+                            <p>{{ markdown(genomic_resource.get_summary()) }}</p>
                         </td>
                         {%- endfor %}
                     </tr>
@@ -74,7 +74,7 @@
             <td>
                 <div class="attribute_description">
                     <p>source: {{attribute_info.source}}</p>
-                    {{markdown(attribute_info.description)}}
+                    {{markdown(attribute_info.documentation)}}
                 </div>
             </td>
         </tr>

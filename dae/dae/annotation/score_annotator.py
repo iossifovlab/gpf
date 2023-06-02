@@ -1,8 +1,8 @@
 import abc
-from typing import Optional, Any
+from typing import Callable, Optional, Any
 
 from dae.annotation.annotatable import Annotatable, VCFAllele
-from dae.annotation.annotation_pipeline import Annotator
+from dae.annotation.annotation_pipeline import Annotator, AttributeInfo
 from dae.annotation.annotation_pipeline import AnnotationPipeline
 from dae.annotation.annotation_pipeline import AnnotatorInfo
 from dae.annotation.annotation_factory import AnnotationConfigParser
@@ -10,7 +10,7 @@ from dae.genomic_resources.aggregators import validate_aggregator
 
 from dae.genomic_resources.repository import GenomicResource
 
-from dae.genomic_resources.genomic_scores import GenomicScore
+from dae.genomic_resources.genomic_scores import GenomicScore, ScoreDef
 from dae.genomic_resources.genomic_scores import \
     build_allele_score_from_resource
 from dae.genomic_resources.genomic_scores import \
@@ -39,32 +39,29 @@ class GenomicScoreAnnotatorBase(Annotator):
     def __init__(self, pipeline: AnnotationPipeline, info: AnnotatorInfo,
                  score: GenomicScore):
 
-        info.resources.append(score.resource)
-        if not info.attributes:
-            info.attributes = AnnotationConfigParser.parse_raw_attributes(
-                score.get_default_annotation_attributes())
-
-        for attribute_config in info.attributes:
-            score_config = score.get_score_config(attribute_config.source)
-            if score_config is None:
-                message = f"The score '{attribute_config.source}' is " + \
-                          f"unknown in '{score.resource.get_id()}' " + \
-                          "resource!"
-                raise ValueError(message)
-            attribute_config.type = score_config.type
-            attribute_config.description = score_config.desc
-
-            hist_url = f"{score.resource.get_url()}" + \
-                       f"/statistics/histogram_{score}.png"
-            attribute_config.documentation = attribute_config.description + \
-                "\n\n" + score_config.desc + "\n\n" + \
-                f"![HISTOGRAM]({hist_url})"
         super().__init__(pipeline, info)
 
         self.score = score
         self.simple_score_queries = [attr.source for attr in info.attributes]
         self._region_length_cutoff = info.parameters.get(
             "region_length_cutoff", 500_000)
+
+        info.resources.append(score.resource)
+        if not info.attributes:
+            info.attributes = AnnotationConfigParser.parse_raw_attributes(
+                score.get_default_annotation_attributes())
+
+        for attribute_info in info.attributes:
+            score_config = score.get_score_config(attribute_info.source)
+            if score_config is None:
+                message = f"The score '{attribute_info.source}' is " + \
+                          f"unknown in '{score.resource.get_id()}' " + \
+                          "resource!"
+                raise ValueError(message)
+            attribute_info.type = score_config.type
+            attribute_info.description = score_config.desc
+
+            self.create_the_documentation(attribute_info)
 
     def open(self):
         self.score.open()
@@ -73,6 +70,53 @@ class GenomicScoreAnnotatorBase(Annotator):
     def close(self):
         self.score.close()
         super().close()
+
+    def create_the_documentation(self, attribute_info: AttributeInfo):
+        hist_url = f"{self.score.resource.get_url()}" + \
+                   f"/statistics/histogram_{attribute_info.source}.png"
+        attribute_info._documentation = \
+            f"{attribute_info.description}\n\n![HISTOGRAM]({hist_url})"
+
+    def add_score_aggregator_documentation(self, attribute_info: AttributeInfo,
+                                           aggregator: str,
+                                           attribute_conf_agg: Optional[str]):
+        default_aggregators = {
+            "position_aggregator": {
+                "float": "mean",
+                "int": "mean",
+                "str": "concatenate"
+            },
+            "nucleotide_aggregator": {
+                "float": "max",
+                "int": "max",
+                "str": "concatenate"
+            },
+            "allele_aggregator": {
+                "float": "max",
+                "int": "max",
+                "str": "concatenate"
+            }
+        }
+        aggregators_score_def_att: \
+            dict[str, Callable[[ScoreDef], Optional[str]]] = {
+                "position_aggregator": lambda sc: sc.pos_aggregator,
+                "nucleotide_aggregator": lambda sc: sc.nuc_aggregator,
+                "allele_aggregator": lambda sc: sc.allele_aggregator
+            }
+        if attribute_conf_agg is None:
+            score_def = self.score.get_score_config(attribute_info.source)
+            assert score_def is not None
+            value = aggregators_score_def_att[aggregator](score_def)
+            if value is not None:
+                value_str = f"{value} [default]"
+            else:
+                value = default_aggregators[aggregator][score_def.type]
+                value_str = f"{value} [type default]"
+        else:
+            value_str = attribute_conf_agg
+
+        attribute_info._documentation = \
+            attribute_info.documentation + f"\n\n**{aggregator}**: {value_str}"
 
 
 class PositionScoreAnnotatorBase(GenomicScoreAnnotatorBase):
@@ -132,6 +176,9 @@ class PositionScoreAnnotator(PositionScoreAnnotatorBase):
             self.position_score_queries.append(
                 PositionScoreQuery(att_info.source, pos_aggregator))
 
+            self.add_score_aggregator_documentation(
+                att_info, "position_aggregator", pos_aggregator)
+
     def _fetch_substitution_scores(self, allele: VCFAllele) \
             -> Optional[list[Any]]:
         return self.position_score.fetch_scores(
@@ -165,6 +212,10 @@ class NPScoreAnnotator(PositionScoreAnnotatorBase):
                     validate_aggregator(agg)
             self.np_score_queries.append(
                 NPScoreQuery(att_info.source, pos_agg, nuc_agg))
+            self.add_score_aggregator_documentation(
+                att_info, "position_aggregator", pos_agg)
+            self.add_score_aggregator_documentation(
+                att_info, "nucleotide_aggregator", nuc_agg)
 
     def _fetch_substitution_scores(self, allele: VCFAllele):
         return self.np_score.fetch_scores(allele.chromosome, allele.position,
@@ -197,6 +248,10 @@ class AlleleScoreAnnotator(GenomicScoreAnnotatorBase):
                     validate_aggregator(agg)
             self.allele_score_queries.append(
                 AlleleScoreQuery(att_info.source, pos_agg, all_agg))
+            self.add_score_aggregator_documentation(
+                att_info, "position_aggregator", pos_agg)
+            self.add_score_aggregator_documentation(
+                att_info, "allele_aggregator", all_agg)
 
     def _fetch_vcf_allele_score(self, allele: VCFAllele) \
             -> Optional[list[Any]]:

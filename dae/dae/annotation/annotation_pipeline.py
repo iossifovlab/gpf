@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 import abc
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 
 import logging
@@ -16,22 +17,60 @@ from dae.annotation.annotatable import Annotatable
 logger = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(init=False)
 class AttributeInfo:
+    def __init__(self, name: str, source: str, internal: bool,
+                 parameters: ParamsUsageMonitor | dict[str, Any],
+                 _type: str = "str", description: str = "",
+                 documentation: Optional[str] = None):
+        self.name = name
+        self.source = source
+        self.internal = internal
+        if isinstance(parameters, ParamsUsageMonitor):
+            self.parameters = parameters
+        else:
+            self.parameters = ParamsUsageMonitor(parameters)
+        self.type = _type
+        self.description = description
+        self._documentation = documentation
+
+
     name: str
     source: str
     internal: bool
-    parameters: dict[str, Any]
+    parameters: ParamsUsageMonitor
     type: str = "str"           # str, int, float, or object
     description: str = ""       # interpreted as md
-    documentation: Optional[str] = None
+    _documentation: Optional[str] = None
 
+    @property
+    def documentation(self):
+        if self._documentation is None:
+            return self.description
+        return self._documentation
 
-@dataclass
+@dataclass(init=False)
 class AnnotatorInfo:
+    def __init__(self, _type: str, attributes: list[AttributeInfo],
+                 parameters: ParamsUsageMonitor | dict[str, Any],
+                 documentation: str = "",
+                 resources: Optional[list[GenomicResource]] = None):
+        self.type = _type
+        self.attributes = attributes
+        self.documentation = documentation
+        if isinstance(parameters, ParamsUsageMonitor):
+            self.parameters = parameters
+        else:
+            self.parameters = ParamsUsageMonitor(parameters)
+        if resources is None:
+            self.resources = []
+        else:
+            self.resrouces = resources
+
     type: str
     attributes: list[AttributeInfo]
-    parameters: dict[str, Any]
+    parameters: ParamsUsageMonitor
+    documentation: str = ""
     resources: list[GenomicResource] = field(default_factory=list)
 
 
@@ -192,13 +231,18 @@ class InputAnnotableAnnotatorDecorator(AnnotatorDecorator):
         att_info = self.pipeline.get_attribute_info(
             self.input_annotatable_name)
         if att_info is None:
-            raise ValueError(f"The attribute {self.input_annotatable_name} "
-                             "has not been defined before its use in "
-                             f"{self._info}")
+            available_attributes = \
+                ",".join([f"'{att.name}' [{att.type}]"
+                          for att in self.pipeline.get_attributes()])
+            raise ValueError(f"The attribute '{self.input_annotatable_name}' "
+                             "has not been defined before its use. The "
+                             "available attributes are: "
+                             f"{available_attributes}")
         if att_info.type != "object":
-            raise ValueError(f"The attribute {self.input_annotatable_name} "
-                             "is expected to be of type object in "
-                             f"{self._info}")
+            raise ValueError(f"The attribute '{self.input_annotatable_name}' "
+                             "is expected to be of type object.")
+        self.child._info.documentation += \
+            f"\n*input_annotatable*: {self.input_annotatable_name}"
 
     def annotate(self, _: Annotatable, context: dict[str, Any]) \
             -> dict[str, Any]:
@@ -242,3 +286,32 @@ class ValueTransormAnnotatorDecorator(AnnotatorDecorator):
         return {k: (self.value_transformers[k](v)
                     if k in self.value_transformers else v)
                 for k, v in r.items()}
+
+
+class ParamsUsageMonitor(Mapping):
+
+    def __init__(self, data: dict[str, Any]):
+        self._data = data
+        self._used_keys = set([])
+
+    def __getitem__(self, key: str):
+        self._used_keys.add(key)
+        return self._data[key]
+
+    def __len__(self):
+        return len(self._data)
+
+    def __iter__(self):
+        raise Exception("Should not iterate a parameter dictionary.")
+
+    def __repr__(self):
+        return self._data.__repr__()
+
+    def __eq__(self, other: ParamsUsageMonitor):
+        return self._data == other._data
+
+    def get_used_keys(self) -> set[str]:
+        return self._used_keys
+
+    def get_unused_keys(self) -> set[str]:
+        return set(self._data.keys()) - self._used_keys

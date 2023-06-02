@@ -383,25 +383,6 @@ class GenomicScore(
                   if k not in ["destination", "source"]}
         return GenomicScore.DefaultAnnotationAttributeInfo(name, score, params)
 
-    def _get_default_annotation_attributes(self, score: str) -> list[str]:
-        """Return default annotation attribute for a score.
-        Re
-        """
-        attributes = self.get_default_annotation_attributes()
-        def_atts_desc = []
-        for att_conf_raw in attributes:
-            att_conf = self._parser_att_conf(att_conf_raw)
-            if att_conf.score != score:
-                continue
-            desc = att_conf.name
-            if att_conf.parameters:
-                params_str = \
-                    "; ".join([f"{k}: {v}"
-                               for k, v in att_conf.parameters.items()])
-                desc += f"{desc} [{params_str}]"
-            def_atts_desc.append(desc)
-        return def_atts_desc
-
     def get_score_config(self, score_id):
         return self.score_definitions.get(score_id)
 

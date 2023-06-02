@@ -1,7 +1,10 @@
 """Factory for creation of annotation pipeline."""
 
-import collections
+# import collections
+from collections import Counter
 import logging
+import copy
+from textwrap import dedent
 from typing import List, Dict, Optional, Callable, Any
 
 import yaml
@@ -114,38 +117,96 @@ class AnnotationConfigParser:
         return result
 
     @staticmethod
-    def parse_raw(pipeline_raw_config: list[dict]) -> list[AnnotatorInfo]:
-        pipeline_normalized_config = \
-            AnnotationConfigParser.normalize(pipeline_raw_config)
-
-        r = []
-        for annotator_raw_config in pipeline_normalized_config:
-            annotator_type = annotator_raw_config["annotator_type"]
-
-            attributes = []
-            if "attributes" in annotator_raw_config:
-                attributes = \
-                    AnnotationConfigParser.parse_raw_attributes(
-                        annotator_raw_config["attributes"])
-            parameters = {k: v for k, v in annotator_raw_config.items()
-                          if k not in ["annotator_type", "attributes"]}
-            r.append(AnnotatorInfo(annotator_type, attributes, parameters, []))
-        return r
-
-    @staticmethod
-    def parse_str(content: str) -> list[AnnotatorInfo]:
-        pipeline_raw_config = yaml.safe_load(content)
+    def parse_raw(pipeline_raw_config: Optional[Any]) -> list[AnnotatorInfo]:
         if pipeline_raw_config is None:
             logger.warning("empty annotation pipeline configuration")
             return []
+
+        if not isinstance(pipeline_raw_config, list):
+            raise AnnotationConfigurationError(
+                "The annotation is not a list of annotator configurations.")
+
+        r = []
+        for annotator_raw_config in pipeline_raw_config:
+            # the minimal annotator configuration form
+            if isinstance(annotator_raw_config, str):
+                r.append(AnnotatorInfo(annotator_raw_config, [], {}))
+                continue
+
+            if isinstance(annotator_raw_config, dict) and \
+               len(annotator_raw_config) == 1 and \
+               isinstance(list(annotator_raw_config)[0], str):
+                (ann_type, ann_details) = list(annotator_raw_config.items())[0]
+                assert isinstance(ann_type, str)
+
+                # the short annotator configuation form
+                if isinstance(ann_details, str):
+                    r.append(AnnotatorInfo(ann_type, [],
+                                           {"resource_id": ann_details}))
+                    continue
+
+                # the complete annotator configuration form
+                if isinstance(ann_details, dict) \
+                   and all([isinstance(k, str) for k in ann_details]):
+                    attributes = []
+                    if "attributes" in ann_details:
+                        attributes = \
+                            AnnotationConfigParser.parse_raw_attributes(
+                                ann_details["attributes"])
+                    parameters = {k: v for k, v in ann_details.items()
+                                  if k != "attributes"}
+                    r.append(AnnotatorInfo(ann_type, attributes, parameters))
+                    continue
+            raise AnnotationConfigurationError(dedent(f"""
+                Incorrect annotator configuation form: {annotator_raw_config}.
+                The allowed forms are:
+                    * minimal
+                        - <annotatory type>)
+                    * short
+                        - <annotator type>: <resource_id_pattern>
+                    * complete without aouttribut
+                        - <annotator type>:
+                            <param1>: <value1>
+                            ...
+                    * complete with aouttribut
+                        - <annotator type>:
+                            <param1>: <value1>
+                            ...
+                            attributes:
+                            - <att1 config>
+                            ....
+            """))
+        return r
+
+    @staticmethod
+    def parse_str(content: str, source_file_name: Optional[str] = None) \
+            -> list[AnnotatorInfo]:
+        try:
+            pipeline_raw_config = yaml.safe_load(content)
+        except Exception as exception:
+            if source_file_name is None:
+                raise AnnotationConfigurationError(
+                    f"The pipeline configuration {content} is an invalid yaml "
+                    "string.", exception)
+            else:
+                raise AnnotationConfigurationError(
+                    f"The pipeline configuration file {source_file_name} is "
+                    "an invalid yaml file.", exception)
+
         return AnnotationConfigParser.parse_raw(pipeline_raw_config)
 
     @staticmethod
     def parse_config_file(filename: str) -> List[AnnotatorInfo]:
         logger.info("loading annotation pipeline configuration: %s", filename)
-        with open(filename, "rt", encoding="utf8") as infile:
-            content = infile.read()
-            return AnnotationConfigParser.parse_str(content)
+        try:
+            with open(filename, "rt", encoding="utf8") as infile:
+                content = infile.read()
+        except Exception as exception:
+            raise AnnotationConfigurationError(
+                f"Problem reading the contents of the {filename} file.",
+                exception)
+
+        return AnnotationConfigParser.parse_str(content)
 
     @staticmethod
     def parse_raw_attribute_config(raw_attribute_config: dict[str, Any]) \
@@ -189,6 +250,10 @@ class AnnotationConfigParser:
         return attribute_config
 
 
+class AnnotationConfigurationError(ValueError):
+    pass
+
+
 def build_annotation_pipeline(
         pipeline_config: Optional[list[AnnotatorInfo]] = None,
         pipeline_config_raw: Optional[list[dict]] = None,
@@ -223,67 +288,55 @@ def build_annotation_pipeline(
 
     pipeline = AnnotationPipeline(grr_repository)
 
-    for annotator_config in pipeline_config:
-        builder = get_annotator_factory(annotator_config.type)
+    for annotator_id, annotator_config in enumerate(pipeline_config):
+        raw_config_copy = copy.deepcopy(annotator_config)
+        try:
+            builder = get_annotator_factory(annotator_config.type)
 
-        annotator_config = set_parameter_usage_monitors(annotator_config)
-        annotator = builder(pipeline, annotator_config)
-        annotator = InputAnnotableAnnotatorDecorator.decorate(annotator)
-        annotator = ValueTransormAnnotatorDecorator.decorate(annotator)
-        check_for_unused_parameters(annotator_config)
-        pipeline.add_annotator(annotator)
+            # annotator_config = set_parameter_usage_monitors(annotator_config)
+            annotator = builder(pipeline, annotator_config)
+            annotator = InputAnnotableAnnotatorDecorator.decorate(annotator)
+            annotator = ValueTransormAnnotatorDecorator.decorate(annotator)
+            check_for_unused_parameters(annotator_config)
+            check_for_repeated_attributes(pipeline, annotator_config)
+            pipeline.add_annotator(annotator)
+        except ValueError as value_error:
+            raise AnnotationConfigurationError(
+                f"The {annotator_id+1}-th annotator "
+                f"configuaraion {raw_config_copy} is incorrect: ", value_error)
 
     return pipeline
 
 
-def set_parameter_usage_monitors(info: AnnotatorInfo) -> AnnotatorInfo:
-    info.parameters = ParamsUsageMonitor(info.parameters)
-    for att in info.attributes:
-        att.parameters = ParamsUsageMonitor(att.parameters)
-    return info
+def check_for_repeated_attributes(pipeline: AnnotationPipeline,
+                                  annotator_config: AnnotatorInfo):
+    annotator_names_list = [att.name for att in annotator_config.attributes]
+    annotator_names_set = set(annotator_names_list)
+    pipeline_names_set = {att.name for att in pipeline.get_attributes()}
+
+    if len(annotator_names_set) < len(annotator_names_list):
+        repeated_annotator_names = ",".join(sorted(
+            [att for att, cnt in Counter(annotator_names_list).items()
+             if cnt > 1]))
+        raise ValueError("The annotator has repeated attributes: "
+                         f"{repeated_annotator_names}")
+
+    if pipeline_names_set & annotator_names_set:
+        repeated_attributes = \
+            ",".join(sorted(pipeline_names_set & annotator_names_set))
+        raise ValueError("The annotator repeats the attributes "
+                         f"{repeated_attributes} that are already in "
+                         f"the pipeline")
 
 
 def check_for_unused_parameters(info: AnnotatorInfo):
-    unused_annotator_parameters, params = get_unused_params(info.parameters)
+    unused_annotator_parameters = info.parameters.get_unused_keys()
     if unused_annotator_parameters:
         raise ValueError("The are unused annotator parameters: "
                          f"{unused_annotator_parameters}")
-    info.parameters = params
 
     for att in info.attributes:
-        unused_attribute_parameters, params = get_unused_params(att.parameters)
-        if unused_attribute_parameters:
-            raise ValueError("The are unused annotator attribute parameters: "
-                             f"{unused_attribute_parameters}")
-        att.parameters = params
-    return info
-
-
-def get_unused_params(d: dict) -> tuple[set[Any], dict]:
-    if isinstance(d, ParamsUsageMonitor):
-        return d.get_unused_keys(), d._data
-    else:
-        return set([]), d
-
-
-class ParamsUsageMonitor(collections.abc.Mapping):
-
-    def __init__(self, data):
-        self._data = data
-        self._used_keys = set([])
-
-    def __getitem__(self, key):
-        self._used_keys.add(key)
-        return self._data[key]
-
-    def __len__(self):
-        return len(self._data)
-
-    def __iter__(self):
-        raise Exception("Should not iterate a parameter dictionary.")
-
-    def get_used_keys(self) -> set[Any]:
-        return self._used_keys
-
-    def get_unused_keys(self) -> set[Any]:
-        return set(self._data.keys()) - self._used_keys
+        unused_params = att.parameters.get_unused_keys()
+        if unused_params:
+            raise ValueError("There are unused annotator attribute "
+                             f"parameters: {','.join(sorted(unused_params))}")

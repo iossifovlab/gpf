@@ -46,7 +46,7 @@ def cli(raw_args: Optional[list[str]] = None) -> None:
     context = get_genomic_context()
     pipeline = CLIAnnotationContext.get_pipeline(context)
 
-    annotation_info = pipeline.annotation_info()
+    annotation_info = pipeline.get_info()
 
     env = Environment(loader=PackageLoader("dae.annotation", "templates"))
     template = env.get_template("annotate_doc_pipeline_template.jinja")
