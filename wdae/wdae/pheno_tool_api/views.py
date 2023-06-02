@@ -6,11 +6,11 @@ from rest_framework import status  # type: ignore
 
 from django.http.response import StreamingHttpResponse
 
-from gene_sets.expand_gene_set import expand_gene_set
+from utils.expand_gene_set import expand_gene_set
+from utils.query_params import parse_query_params
 
 from query_base.query_base import QueryDatasetView
 from datasets_api.permissions import user_has_permission
-from utils.query_params import parse_query_params
 
 from dae.pheno_tool.tool import PhenoTool, PhenoToolHelper
 from dae.variants.attributes import Sex

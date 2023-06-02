@@ -7,14 +7,12 @@ from django.http.response import StreamingHttpResponse, FileResponse
 from rest_framework import status  # type: ignore
 from rest_framework.response import Response  # type: ignore
 
-from utils.logger import LOGGER
+from utils.logger import LOGGER, request_logging
 from utils.streaming_response_util import iterator_to_json
-from utils.logger import request_logging
 from utils.query_params import parse_query_params
+from utils.expand_gene_set import expand_gene_set
 
 from query_base.query_base import QueryDatasetView
-
-from gene_sets.expand_gene_set import expand_gene_set
 
 from studies.study_wrapper import StudyWrapperBase
 

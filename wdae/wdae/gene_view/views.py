@@ -5,7 +5,7 @@ from django.http.response import FileResponse
 from query_base.query_base import QueryDatasetView
 from utils.logger import request_logging
 from utils.query_params import parse_query_params
-from gene_sets.expand_gene_set import expand_gene_set
+from utils.expand_gene_set import expand_gene_set
 
 from datasets_api.permissions import \
     handle_partial_permissions
