@@ -403,7 +403,7 @@ class GenomicScoreImplementation(
         regions = []
         ref_genome_id = self.resource.get_labels().get("reference_genome")
         ref_genome = self._get_reference_genome_cached(grr, ref_genome_id)
-        for chrom in self.score.get_all_chromosomes():
+        for chrom in self.score.get_all_chromosomes_unmapped():
             if ref_genome is not None:
                 chrom_length = ref_genome.get_chrom_length(chrom)
             else:
@@ -413,7 +413,11 @@ class GenomicScoreImplementation(
                     self.score.table.pysam_file, chrom
                 )
             regions.extend(
-                split_into_regions(chrom, chrom_length, region_size)
+                split_into_regions(
+                    self.score.map_chromosome(chrom),
+                    chrom_length,
+                    region_size
+                )
             )
         return regions
 
@@ -1029,6 +1033,15 @@ class GenomicScore(ResourceConfigValidationMixin):
             raise ValueError(f"genomic score <{self.score_id}> is not open")
 
         return self.table.get_chromosomes()
+
+    def get_all_chromosomes_unmapped(self):
+        if not self.is_open():
+            raise ValueError(f"genomic score <{self.score_id}> is not open")
+
+        return self.table.get_chromosomes_unmapped()
+
+    def map_chromosome(self, chromosome):
+        return self.table.map_chromosome(chromosome)
 
     def get_all_scores(self):
         return list(self.score_definitions)

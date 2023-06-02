@@ -3,7 +3,7 @@ import textwrap
 import pytest
 from dae.genomic_resources.repository import GenomicResource, GR_CONF_FILE_NAME
 from dae.genomic_resources.genomic_scores import \
-    build_score_from_resource
+    build_score_from_resource, build_score_implementation_from_resource
 from dae.genomic_resources.genomic_position_table import \
     VCFGenomicPositionTable
 from dae.genomic_resources.fsspec_protocol import build_fsspec_protocol
@@ -323,6 +323,38 @@ def test_line_score_value_parsing(tmp_path):
     assert list(map(
         lambda l: l.get_score("c2"),  # type: ignore
         score._fetch_lines("1", 10, 30))) == [3.14, 4.14, 5.14]
+
+
+def test_genomic_score_chrom_mapping(tmp_path):
+    setup_directories(
+        tmp_path, {
+            "genomic_resource.yaml": """
+                type: position_score
+                table:
+                  filename: data.txt.gz
+                  chrom_mapping:
+                    add_prefix: chr
+                  format: tabix
+                scores:
+                - id: c2
+                  name: c2
+                  type: float
+            """,
+        })
+    setup_tabix(
+        tmp_path / "data.txt.gz",
+        """
+        #chrom  pos_begin  pos_end    c2
+        1     10        12       3.14
+        1     15        20       4.14
+        1     21        30       5.14
+        """, seq_col=0, start_col=1, end_col=2)
+    res = build_filesystem_test_resource(tmp_path)
+    impl = build_score_implementation_from_resource(res)
+    score = impl.score
+    score.open()
+    result = impl._get_chrom_regions(1_000_000)
+    assert result[0].chrom == "chr1"
 
 
 def test_line_score_na_values(tmp_path):
