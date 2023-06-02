@@ -191,7 +191,7 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
 
         import pysam  # pylint: disable=import-outside-toplevel
         return pysam.TabixFile(  # pylint: disable=no-member
-            file_url, index=index_url)
+            file_url, index=index_url, encoding="utf-8")
 
     def open_vcf_file(self, resource, filename, index_filename=None):
 
