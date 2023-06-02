@@ -136,6 +136,14 @@ class UserSerializer(serializers.ModelSerializer):
 
         return instance
 
+    def to_representation(self, instance):
+        response = super().to_representation(instance)
+        response["groups"] = sorted(
+            response["groups"],
+            key=lambda grp: "" if grp in ["admin", "any_user"] else grp
+        )
+        return response
+
 
 class UserWithoutEmailSerializer(UserSerializer):
     class Meta(object):
