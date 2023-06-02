@@ -1,4 +1,4 @@
-import { TestBed, inject } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { VariantReportsService } from './variant-reports.service';
 import { HttpClientModule} from '@angular/common/http';
 import { ConfigService } from 'app/config/config.service';
@@ -19,6 +19,8 @@ class MockDatasetsService {
 }
 
 describe('VariantReportsService', () => {
+  let service: VariantReportsService;
+
   beforeEach(() => {
     const configMock = { baseUrl: 'testUrl/' };
     const datasetsMock = new MockDatasetsService();
@@ -30,13 +32,20 @@ describe('VariantReportsService', () => {
         { provide: APP_BASE_HREF, useValue: '' },
       ]
     });
+
+    service = TestBed.inject(VariantReportsService);
   });
 
-  it('should ...', inject([VariantReportsService], (service: VariantReportsService) => {
+  it('should ...', () => {
     expect(service).toBeTruthy();
-  }));
+  });
 
-  xit('should download families', () => {
-    // TODO
+
+  it('should get download link', () => {
+    const expectedLink = 'http://localhost:8000/api/v3/common_reports/families_data/undefined';
+
+    const actualLink = service.getDownloadLink();
+
+    expect(actualLink).toBe(expectedLink);
   });
 });

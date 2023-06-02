@@ -23,7 +23,7 @@ describe('pheno browser service', () => {
     };
 
     TestBed.configureTestingModule({
-      imports: [ RouterTestingModule ],
+      imports: [RouterTestingModule],
       providers: [
         PhenoBrowserService,
         { provide: CookieService, useValue: cookieSpyObj },
