@@ -62,6 +62,7 @@ def update_header(variant_file, pipeline):
     for attribute in pipeline.annotation_schema.names:
         description = pipeline.annotation_schema[attribute].description
         description = description.replace("\n", " ")
+        description = description.replace('"', '\\"')
         header.info.add(attribute, "A", "String", description)
 
 
