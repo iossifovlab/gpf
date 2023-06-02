@@ -66,9 +66,25 @@ def _handle_output(outfile: str):
     return open(outfile, "wt")
 
 
+def _read_input(args, region=None):
+    if args.input.endswith(".gz"):
+        tabix_file = TabixFile(args.input)
+        # pylint: disable=unsubscriptable-object
+        with gzip.open(args.input, "rt") as in_file_raw:
+            header = in_file_raw.readline() \
+                .strip("\r\n") \
+                .split(args.input_separator)
+        return tabix_file, tabix_file.fetch(*region), header
+    # pylint: disable=consider-using-with
+    text_file = open(args.input, "rt")
+    header = text_file.readline().strip("\r\n").split(args.input_separator)
+    return text_file, text_file, header
+
+
 def annotate(
     args, region, pipeline_config,
-    grr_definition, ref_genome_id, out_file_path
+    grr_definition, ref_genome_id, out_file_path,
+    attach_header=False
 ):
     grr = build_genomic_resource_repository(definition=grr_definition)
     pipeline = build_annotation_pipeline(
@@ -83,33 +99,35 @@ def annotate(
         resources = resources | annotator.resources
     cache_resources(grr, resources)
 
-    with gzip.open(args.input, "rt") as in_file_raw:
-        hcs = in_file_raw.readline().strip("\r\n").split(args.input_separator)
+    in_file, line_iterator, hcs = _read_input(args, region)
     record_to_annotatable = build_record_to_annotatable(
         vars(args), set(hcs), ref_genome=ref_genome)
     annotation_attributes = pipeline.annotation_schema.public_fields
-
     pipeline.open()
-    in_file = TabixFile(args.input)
-    with _handle_output(out_file_path) as out_file:
-        for lnum, line in enumerate(in_file.fetch(*region)):
-            try:
-                columns = line.strip("\n\r").split(args.input_separator)
-                record = dict(zip(hcs, columns))
-                annotation = pipeline.annotate(
-                    record_to_annotatable.build(record)
-                )
-                result = columns + [
-                    str(annotation[attrib])
-                    for attrib in annotation_attributes
-                ]
-                out_file.write(args.output_separator.join(result))
+    with closing(in_file):
+        with _handle_output(out_file_path) as out_file:
+            if attach_header:
+                header = hcs + annotation_attributes
+                out_file.write(args.output_separator.join(header))
                 out_file.write("\n")
-            except Exception as ex:  # pylint: disable=broad-except
-                logger.warning(
-                    "unexpected input data format at line %s: %s",
-                    lnum, line, exc_info=True)
-                errors.append((lnum, line, str(ex)))
+            for lnum, line in enumerate(line_iterator):
+                try:
+                    columns = line.strip("\n\r").split(args.input_separator)
+                    record = dict(zip(hcs, columns))
+                    annotation = pipeline.annotate(
+                        record_to_annotatable.build(record)
+                    )
+                    result = columns + [
+                        str(annotation[attrib])
+                        for attrib in annotation_attributes
+                    ]
+                    out_file.write(args.output_separator.join(result))
+                    out_file.write("\n")
+                except Exception as ex:  # pylint: disable=broad-except
+                    logger.warning(
+                        "unexpected input data format at line %s: %s",
+                        lnum, line, exc_info=True)
+                    errors.append((lnum, line, str(ex)))
 
     if len(errors) > 0:
         logger.error("there were errors during the import")
@@ -194,13 +212,12 @@ def cli(raw_args: Optional[list[str]] = None) -> None:
         TaskGraphCli.process_graph(task_graph, **vars(args))
 
     def run_sequentially():
-        print("Tabixless annotation currently not supported. WIP")  # TODO
-        return 0
+        annotate(args, None, pipeline.config, grr.definition,
+                 ref_genome.resource_id, output, attach_header=True)
 
     if tabix_index_filename(args.input):
         run_parallelized()
     else:
-        # TODO Make it work for non-tabixed input
         run_sequentially()
 
 
