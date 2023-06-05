@@ -22,7 +22,6 @@ class GenomicPositionTable(abc.ABC):
         self.definition = Box(table_definition)
         self.chrom_map: Optional[Dict[str, str]] = None
         self.chrom_order: Optional[List[str]] = None
-        self.chrom_order_unmapped: Optional[List[str]] = None
         self.rev_chrom_map: Optional[Dict[str, str]] = None
 
         self.chrom_key: Optional[int] = None
@@ -59,7 +58,6 @@ class GenomicPositionTable(abc.ABC):
             mapping = self.definition.chrom_mapping
             if "filename" in mapping:
                 self.chrom_map = {}
-                self.chrom_order_unmapped = self.chrom_order
                 self.chrom_order = []
                 with self.genomic_resource.open_raw_file(
                         mapping["filename"], "rt") as infile:
@@ -94,7 +92,6 @@ class GenomicPositionTable(abc.ABC):
                     new_chromosomes = [
                         f"{pref}{chrom}" for chrom in new_chromosomes]
                 self.chrom_map = dict(zip(new_chromosomes, chromosomes))
-                self.chrom_order_unmapped = chromosomes
                 self.chrom_order = new_chromosomes
             self.rev_chrom_map = {
                 fch: ch for ch, fch in self.chrom_map.items()}
@@ -161,15 +158,17 @@ class GenomicPositionTable(abc.ABC):
     def get_chromosomes(self):
         return self.chrom_order
 
-    def get_chromosomes_unmapped(self):
-        if self.chrom_order_unmapped is not None:
-            return self.chrom_order_unmapped
-        return self.chrom_order
-
     def map_chromosome(self, chromosome):
         if self.rev_chrom_map is not None:
             assert chromosome in self.rev_chrom_map.keys()
             return self.rev_chrom_map[chromosome]
+
+        return chromosome
+
+    def unmap_chromosome(self, chromosome):
+        if self.chrom_map is not None:
+            assert chromosome in self.chrom_map.keys()
+            return self.chrom_map[chromosome]
 
         return chromosome
 

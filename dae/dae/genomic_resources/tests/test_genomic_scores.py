@@ -10,7 +10,8 @@ from dae.genomic_resources.fsspec_protocol import build_fsspec_protocol
 from dae.genomic_resources.testing import \
     setup_directories, setup_tabix, \
     convert_to_tab_separated, setup_vcf, \
-    build_filesystem_test_resource, build_inmemory_test_resource
+    build_filesystem_test_resource, build_inmemory_test_resource, \
+    setup_genome, build_filesystem_test_repository
 
 
 @pytest.fixture
@@ -350,6 +351,55 @@ def test_genomic_score_chrom_mapping(tmp_path):
         1     21        30       5.14
         """, seq_col=0, start_col=1, end_col=2)
     res = build_filesystem_test_resource(tmp_path)
+    impl = build_score_implementation_from_resource(res)
+    score = impl.score
+    score.open()
+    result = impl._get_chrom_regions(1_000_000)
+    assert result[0].chrom == "chr1"
+
+
+def test_genomic_score_chrom_mapping_with_genome(tmp_path):
+    setup_directories(
+        tmp_path, {
+            "one": {
+                "genomic_resource.yaml": """
+                    type: position_score
+                    table:
+                      filename: data.txt.gz
+                      chrom_mapping:
+                        add_prefix: chr
+                      format: tabix
+                    scores:
+                    - id: c2
+                      name: c2
+                      type: float
+                    meta:
+                      labels:
+                        reference_genome: two
+                """,
+            },
+            "two": {
+                "genomic_resource.yaml": "{type: genome, filename: chr.fa}",
+            }
+        })
+    setup_tabix(
+        tmp_path / "one" / "data.txt.gz",
+        """
+        #chrom  pos_begin  pos_end    c2
+        1     10        12       3.14
+        1     15        20       4.14
+        1     21        30       5.14
+        """, seq_col=0, start_col=1, end_col=2)
+    setup_genome(tmp_path / "two" / "chr.fa", textwrap.dedent("""
+            >chr1
+            NNACCCAAAC
+            GGGCCTTCCN
+            GGGCCTTCCN
+            GGGCCTTCCN
+            GGGCCTTCCN
+    """))
+    repo = build_filesystem_test_repository(tmp_path)
+    res = repo.get_resource("one")
     impl = build_score_implementation_from_resource(res)
     score = impl.score
     score.open()
