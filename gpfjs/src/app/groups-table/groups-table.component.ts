@@ -29,7 +29,12 @@ export class GroupsTableComponent {
     this.usersGroupsService.removeUser(userEmail, group.name).pipe(
       mergeMap(() => this.usersGroupsService.getGroups(1, group.name))
     ).subscribe(updatedGroups => {
-      group.users = updatedGroups.find(g => g.name === group.name).users;
+      const updatedGroup = updatedGroups.find(g => g.name === group.name);
+      if (!updatedGroup) {
+        group.users = [];
+      } else {
+        group.users = updatedGroup.users;
+      }
     });
   }
 
@@ -45,7 +50,12 @@ export class GroupsTableComponent {
     this.usersGroupsService.revokePermissionToDataset(group.id, datasetId).pipe(
       mergeMap(() => this.usersGroupsService.getGroups(1, group.name))
     ).subscribe(updatedGroups => {
-      group.datasets = updatedGroups.find(g => g.name === group.name).datasets;
+      const updatedGroup = updatedGroups.find(g => g.name === group.name);
+      if (!updatedGroup) {
+        group.datasets = [];
+      } else {
+        group.datasets = updatedGroup.datasets;
+      }
     });
   }
 
