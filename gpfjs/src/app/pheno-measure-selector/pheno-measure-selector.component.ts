@@ -79,7 +79,7 @@ export class PhenoMeasureSelectorComponent implements OnChanges {
           this.loadingDropdown = false;
           clearInterval(intervalId);
         }
-      }, 200);
+      }, 50);
     }
   }
 

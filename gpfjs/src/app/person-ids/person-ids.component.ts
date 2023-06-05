@@ -52,7 +52,7 @@ export class PersonIdsComponent extends StatefulComponent implements OnInit {
           resolve();
           clearInterval(timer);
         }
-      }, 200);
+      }, 50);
     });
   }
 

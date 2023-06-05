@@ -90,7 +90,7 @@ export class SearchableSelectComponent implements AfterViewInit, OnChanges {
           resolve();
           clearInterval(timer);
         }
-      }, 200);
+      }, 50);
     });
   }
 

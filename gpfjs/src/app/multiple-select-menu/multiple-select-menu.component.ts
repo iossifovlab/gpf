@@ -85,7 +85,7 @@ export class MultipleSelectMenuComponent implements OnChanges {
           resolve();
           clearInterval(timer);
         }
-      }, 100);
+      }, 50);
     });
   }
 }

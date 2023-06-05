@@ -339,7 +339,7 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
           resolve();
           clearInterval(timer);
         }
-      }, 200);
+      }, 50);
     });
   }
 
