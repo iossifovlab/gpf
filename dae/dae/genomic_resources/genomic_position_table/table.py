@@ -160,14 +160,14 @@ class GenomicPositionTable(abc.ABC):
 
     def map_chromosome(self, chromosome):
         if self.rev_chrom_map is not None:
-            assert chromosome in self.rev_chrom_map.keys()
+            assert chromosome in self.rev_chrom_map
             return self.rev_chrom_map[chromosome]
 
         return chromosome
 
     def unmap_chromosome(self, chromosome):
         if self.chrom_map is not None:
-            assert chromosome in self.chrom_map.keys()
+            assert chromosome in self.chrom_map
             return self.chrom_map[chromosome]
 
         return chromosome
