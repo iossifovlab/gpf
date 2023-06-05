@@ -411,7 +411,7 @@ class GenomicScoreImplementation(
                     raise ValueError("In memory tables are not supported")
                 chrom_length = get_chromosome_length_tabix(
                     self.score.table.pysam_file,
-                    self.score.unmap_chromosome(chrom)
+                    self.score.table.unmap_chromosome(chrom)
                 )
             regions.extend(
                 split_into_regions(
@@ -1034,12 +1034,6 @@ class GenomicScore(ResourceConfigValidationMixin):
             raise ValueError(f"genomic score <{self.score_id}> is not open")
 
         return self.table.get_chromosomes()
-
-    def map_chromosome(self, chromosome):
-        return self.table.map_chromosome(chromosome)
-
-    def unmap_chromosome(self, chromosome):
-        return self.table.unmap_chromosome(chromosome)
 
     def get_all_scores(self):
         return list(self.score_definitions)
