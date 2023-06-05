@@ -345,7 +345,7 @@ describe('User management tests for Users', () => {
     page.userGroupsCell('admin@iossifovlab.com').find('#admin-list-item #confirm-button').should('not.exist');
 
     page.userDatasetsCell('admin@iossifovlab.com').should('have.text',
-      'ALL Genotypescomp_allcomp_denovoCOMP Genotypescomp_vcfiossifov_2014multi');
+      'ALL GenotypesCOMP Genotypescomp_allcomp_denovocomp_vcfiossifov_2014multi');
 
     page.userActionsResetPassword('admin@iossifovlab.com').should('be.visible');
     page.userActionsDeleteUser('admin@iossifovlab.com').should('not.exist');
