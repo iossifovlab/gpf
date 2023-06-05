@@ -51,11 +51,6 @@ export class SearchableSelectComponent implements AfterViewInit, OnChanges {
   }
 
   public ngAfterViewInit(): void {
-    // temporary solution, fix along side issue GPF-1102
-    if (!(this.isInGeneBrowser && this.route.snapshot.params.gene)) {
-      this.focusSearchBox();
-    }
-
     this.dropdown.autoClose = 'inside';
   }
 
@@ -81,22 +76,5 @@ export class SearchableSelectComponent implements AfterViewInit, OnChanges {
 
   public onSelect(value): void {
     this.selectItem.emit(value);
-  }
-
-  private async waitForSearchBoxToLoad(): Promise<void> {
-    return new Promise<void>(resolve => {
-      const timer = setInterval(() => {
-        if (this.searchBox !== undefined) {
-          resolve();
-          clearInterval(timer);
-        }
-      }, 50);
-    });
-  }
-
-  private focusSearchBox(): void {
-    this.waitForSearchBoxToLoad().then(() => {
-      this.searchBox.nativeElement.focus();
-    });
   }
 }
