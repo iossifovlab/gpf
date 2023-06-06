@@ -410,10 +410,15 @@ class GenomicScoreImplementation(
                 if isinstance(self.score.table, InmemoryGenomicPositionTable):
                     raise ValueError("In memory tables are not supported")
                 chrom_length = get_chromosome_length_tabix(
-                    self.score.table.pysam_file, chrom
+                    self.score.table.pysam_file,
+                    self.score.table.unmap_chromosome(chrom)
                 )
             regions.extend(
-                split_into_regions(chrom, chrom_length, region_size)
+                split_into_regions(
+                    chrom,
+                    chrom_length,
+                    region_size
+                )
             )
         return regions
 
