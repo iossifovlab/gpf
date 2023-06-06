@@ -237,6 +237,9 @@ Effect annotator
         genome: <reference genome resource ID>
         gene_models: <gene models resource ID>
 
+.. automodule:: dae.annotation.score_annotator
+
+.. autoclass:: dae.annotation.score_annotator.PositionScoreAnnotator
 
 Normalize allele annotator
 ++++++++++++++++++++++++++
