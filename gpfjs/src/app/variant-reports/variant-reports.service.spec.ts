@@ -10,8 +10,8 @@ class MockDatasetsService {
   public getSelectedDatasetId(): string {
     return 'test_dataset';
   }
-  public getSelectedDataset(): Observable<any> {
-    return of({accessRights: true});
+  public getSelectedDataset(): object {
+    return {id: 'test_dataset'};
   }
   public getDataset(): Observable<any> {
     return of({accessRights: true});
@@ -36,13 +36,12 @@ describe('VariantReportsService', () => {
     service = TestBed.inject(VariantReportsService);
   });
 
-  it('should ...', () => {
+  it('should be created', () => {
     expect(service).toBeTruthy();
   });
 
-
   it('should get download link', () => {
-    const expectedLink = 'http://localhost:8000/api/v3/common_reports/families_data/undefined';
+    const expectedLink = 'http://localhost:8000/api/v3/common_reports/families_data/test_dataset';
 
     const actualLink = service.getDownloadLink();
 
