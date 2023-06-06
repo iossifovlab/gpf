@@ -189,13 +189,6 @@ def annotate_directory_fixture(tmp_path):
                           name: s1
                     """
                 },
-                "foobar_genome": {
-                    "genomic_resource.yaml": """
-                        type: genome
-                        filename: chrAll.fa
-                        chrom_prefix: "chr"
-                    """
-                }
             }
         }
     )
@@ -217,13 +210,6 @@ def annotate_directory_fixture(tmp_path):
     """)
     setup_denovo(tmp_path / "grr" / "one" / "data.txt", one_content)
     setup_denovo(tmp_path / "grr" / "two" / "data.txt", two_content)
-    setup_genome(
-        tmp_path / "grr" / "foobar_genome" / "chrAll.fa",
-        f"""
-        >chrA
-        {100 * "A"}
-        """
-    )
 
 
 def test_basic_setup(tmp_path, annotate_directory_fixture):
@@ -248,7 +234,6 @@ def test_basic_setup(tmp_path, annotate_directory_fixture):
     cli_columns([
         str(a) for a in [
             in_file, annotation_file, "-o", out_file, "--grr", grr_file,
-            "--ref", "foobar_genome"
         ]
     ])
     out_file_content = get_file_content_as_string(out_file)

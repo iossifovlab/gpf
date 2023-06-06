@@ -116,7 +116,7 @@ def annotate(args, region, pipeline_config, grr_definition,
     pipeline = build_annotation_pipeline(
         pipeline_config=pipeline_config,
         grr_repository=grr)
-    ref_genome = cast(ReferenceGenome, grr.get_resource(ref_genome_id)) \
+    ref_genome = cast(ReferenceGenome, grr.find_resource(ref_genome_id)) \
         if ref_genome_id else None
     errors = []
 
@@ -126,6 +126,7 @@ def annotate(args, region, pipeline_config, grr_definition,
     record_to_annotatable = build_record_to_annotatable(
         vars(args), set(header_columns), ref_genome=ref_genome)
 
+    pipeline.open()
     with pipeline, in_file, open(out_file_path, "wt") as out_file:
         new_header = header_columns + pipeline.annotation_schema.public_fields
         out_file.write(args.output_separator.join(new_header) + "\n")
