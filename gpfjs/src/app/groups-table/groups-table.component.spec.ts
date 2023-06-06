@@ -172,6 +172,24 @@ describe('GroupsTableComponent', () => {
     ));
   });
 
+  it('should remove all users from group', () => {
+    const getGroupsSpy = jest.spyOn(usersGroupsServiceMock, 'getGroups')
+      .mockImplementation(() => of([] as UserGroup[]));
+    const group = lodash.cloneDeep(groupMock);
+    group.name = 'removedUsers';
+
+    component.removeUser(group, 'user1email');
+    expect(getGroupsSpy).toHaveBeenCalledWith(1, 'removedUsers');
+
+    expect(group).toStrictEqual(new UserGroup(
+      groupMock.id,
+      'removedUsers',
+      [],
+      groupMock.datasets
+    ));
+    getGroupsSpy.mockRestore();
+  });
+
   it('should remove dataset from group', () => {
     const revokePermissionToDatasetSpy = jest.spyOn(usersGroupsServiceMock, 'revokePermissionToDataset');
     const group = lodash.cloneDeep(groupMock);
@@ -200,6 +218,24 @@ describe('GroupsTableComponent', () => {
       groupMock.users,
       groupMock.datasets.concat({datasetId: 'datasetId7', datasetName: 'dataset7'}),
     ));
+  });
+
+  it('should remove all datasets from group', () => {
+    const getGroupsSpy = jest.spyOn(usersGroupsServiceMock, 'getGroups')
+      .mockImplementation(() => of([] as UserGroup[]));
+    const group = lodash.cloneDeep(groupMock);
+    group.name = 'removedDatasets';
+
+    component.removeDataset(group, 'datasetId1');
+    expect(getGroupsSpy).toHaveBeenCalledWith(1, 'removedDatasets');
+
+    expect(group).toStrictEqual(new UserGroup(
+      groupMock.id,
+      'removedDatasets',
+      groupMock.users,
+      []
+    ));
+    getGroupsSpy.mockRestore();
   });
 
   it('should delete group', () => {
