@@ -34,7 +34,6 @@ class AttributeInfo:
         self.description = description
         self._documentation = documentation
 
-
     name: str
     source: str
     internal: bool
@@ -48,6 +47,7 @@ class AttributeInfo:
         if self._documentation is None:
             return self.description
         return self._documentation
+
 
 @dataclass(init=False)
 class AnnotatorInfo:
@@ -262,15 +262,18 @@ class ValueTransormAnnotatorDecorator(AnnotatorDecorator):
     @staticmethod
     def decorate(child: Annotator) -> Annotator:
         value_transformers: dict[str, Callable[[Any], Any]] = {}
-        for attribute_config in child.get_info().attributes:
-            if "value_transform" in attribute_config.parameters:
-                transform_str = attribute_config.parameters["value_transform"]
+        for attribute_info in child.get_info().attributes:
+            if "value_transform" in attribute_info.parameters:
+                transform_str = attribute_info.parameters["value_transform"]
                 try:
                     transform = eval("lambda value: " + transform_str)
                 except Exception as e:
                     raise Exception(f"The value trasform |{transform_str}| is "
                                     "sytactically invalid.", e)
-                value_transformers[attribute_config.name] = transform
+                value_transformers[attribute_info.name] = transform
+                attribute_info._documentation = \
+                    f"{attribute_info.documentation}\n\n" \
+                    f"**value_transform:** {transform_str}"
         if value_transformers:
             return ValueTransormAnnotatorDecorator(child, value_transformers)
         return child

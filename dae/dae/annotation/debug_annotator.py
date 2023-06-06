@@ -1,10 +1,9 @@
 
 from typing import Any
 from .annotatable import Annotatable
-from .annotation_pipeline import AnnotationPipeline
+from .annotation_pipeline import AnnotationPipeline, AttributeInfo
 from .annotation_pipeline import Annotator
 from .annotation_pipeline import AnnotatorInfo
-from .annotation_factory import AnnotationConfigParser
 
 
 class HelloWorldAnnotator(Annotator):
@@ -24,7 +23,7 @@ def build_annotator(pipeline: AnnotationPipeline,
                     info: AnnotatorInfo) -> Annotator:
 
     if not info.attributes:
-        info.attributes = AnnotationConfigParser.parse_raw_attributes(["hi"])
+        info.attributes = [AttributeInfo("hi", "hi", False, {})]
 
     for attribute_info in info.attributes:
         if attribute_info.source != "hi":

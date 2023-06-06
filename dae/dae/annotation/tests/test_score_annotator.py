@@ -2,16 +2,6 @@
 from dae.annotation.annotation_factory import build_annotation_pipeline
 import pytest
 
-from dae.genomic_resources.genomic_scores import \
-    build_np_score_from_resource, \
-    build_position_score_from_resource
-from dae.annotation.schema import Schema
-from dae.annotation.annotation_pipeline import AnnotationPipeline
-from dae.annotation.score_annotator import (
-    PositionScoreAnnotator,
-    NPScoreAnnotator,
-)
-
 
 def test_position_score_annotator(
         phastcons100way_variants_expected,

@@ -1,3 +1,7 @@
+"""
+This contains the implementation of the three annotators: positions_score,
+np_score, and allele_score.
+"""
 import abc
 from typing import Callable, Optional, Any
 
@@ -161,6 +165,20 @@ def build_position_score_annotator(pipeline: AnnotationPipeline,
 
 
 class PositionScoreAnnotator(PositionScoreAnnotatorBase):
+    """
+    This class implements the position_score annotator.
+
+    The position_score
+    annotator requires the resrouce_id parameter, whose value must be an id
+    of a genomic resource of type position_score.
+
+    The position_score resource provides a set of scores (see …) that the
+    position_score annotator uses as attributes to assign to the annotatable.
+
+    The position_score annotator recognized one attribute level parameter
+    called position_aggregator that controls how the position scores are
+    aggregator for annotates that ref to a region of the reference genome.
+    """
 
     def __init__(self, pipeline: AnnotationPipeline, info: AnnotatorInfo):
 
