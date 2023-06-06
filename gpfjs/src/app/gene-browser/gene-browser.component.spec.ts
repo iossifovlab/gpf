@@ -299,7 +299,7 @@ describe('GeneBrowserComponent', () => {
     expect(cancelSpy).toHaveBeenCalledTimes(1);
   });
 
-  it('should cancel request on loading component', () => {
+  it('should cancel request on loading service interrupt', () => {
     const spyOnSummaryVariants = jest.spyOn(mockQueryService, 'getSummaryVariants')
       .mockReturnValue(of([]));
     const spyOnCancelSummaryPost = jest.spyOn(mockQueryService, 'cancelStreamPost');

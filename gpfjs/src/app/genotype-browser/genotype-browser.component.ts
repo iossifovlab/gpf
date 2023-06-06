@@ -1,5 +1,5 @@
 import { Component, Input, OnDestroy, OnInit } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, Subscription } from 'rxjs';
 import { QueryService } from '../query/query.service';
 import { FullscreenLoadingService } from '../fullscreen-loading/fullscreen-loading.service';
 import { ConfigService } from '../config/config.service';
@@ -31,6 +31,7 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy {
   public legend: Array<PersonSet>;
 
   public disableQueryButtons = false;
+  private routerSubscription: Subscription;
 
   @Input()
   public selectedDatasetId: string;
@@ -85,7 +86,7 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy {
     private datasetsService: DatasetsService,
     private router: Router
   ) {
-    this.router.events.pipe(
+    this.routerSubscription = this.router.events.pipe(
       filter(event => event instanceof NavigationStart)
     ).subscribe(() => {
       this.queryService.cancelStreamPost();
@@ -118,6 +119,7 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy {
 
   public ngOnDestroy(): void {
     this.loadingService.setLoadingStop();
+    this.routerSubscription.unsubscribe();
   }
 
   public submitQuery(): void {

@@ -70,12 +70,6 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
     private loadingService: FullscreenLoadingService,
     private router: Router
   ) {
-    this.router.events.pipe(
-      filter(event => event instanceof NavigationStart)
-    ).subscribe(() => {
-      this.queryService.cancelStreamPost();
-      this.loadingService.setLoadingStop();
-    });
   }
 
   public variantsCountDisplay: string;
@@ -114,6 +108,12 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
           .subscribe((response: { 'gene_symbols': string[] }) => {
             this.geneSymbolSuggestions = response.gene_symbols;
           });
+      }),
+      this.router.events.pipe(
+        filter(event => event instanceof NavigationStart)
+      ).subscribe(() => {
+        this.queryService.cancelStreamPost();
+        this.loadingService.setLoadingStop();
       })
     );
 
