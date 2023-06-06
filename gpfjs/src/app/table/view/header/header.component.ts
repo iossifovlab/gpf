@@ -1,4 +1,7 @@
-import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy, HostListener } from '@angular/core';
+import {
+  Component, Input, Output, EventEmitter,
+  ChangeDetectionStrategy, HostListener, ChangeDetectorRef
+} from '@angular/core';
 import { SortInfo } from '../../table.component';
 
 @Component({
@@ -11,6 +14,13 @@ export class GpfTableHeaderComponent {
   @Input() public columns: any;
   @Output() public sortingInfoChange = new EventEmitter();
   @Input() public sortingInfo: SortInfo;
+
+  public constructor(private cd: ChangeDetectorRef) {}
+
+  @HostListener('window:resize', ['$event'])
+  public onWindowResize(): void {
+    this.cd.detectChanges();
+  }
 
   public get subheadersCount(): number[] {
     if (this.columns.first) {

@@ -4,7 +4,6 @@
     *ngFor="let column of columns"
     [columnInfo]="column.headerChildren.toArray()[i]"
     [sortingInfo]="sortingInfo"
-    [style.white-space]="'break-spaces'"
     [style.width]="column.columnWidth ? column.columnWidth : null"
     [style.min-width]="column.columnWidth ? column.columnWidth : null"
     [style.max-width]="column.columnWidth ? column.columnWidth : null"
