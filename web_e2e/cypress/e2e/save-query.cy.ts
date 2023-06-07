@@ -134,6 +134,7 @@ describe('Save query tests', () => {
     page.button.should('be.visible');
     page.button.click();
 
+    page.linkInput.should('not.have.value', '');
     page.linkInput.invoke('val').then(url => {
       cy.visit(String(url));
       page.waitForPageToLoad(toolPageLinks.genotypeBrowser);
