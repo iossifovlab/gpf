@@ -628,6 +628,10 @@ class GenotypeDataGroup(GenotypeData):
                     result,
                     self.studies[sind].families,
                     forced=True)
+        # pylint: disable=import-outside-toplevel
+        from dae.pedigrees.family_tag_builder import FamilyTagsBuilder
+        tagger = FamilyTagsBuilder()
+        tagger.tag_families_data(result)
 
         return result
 
