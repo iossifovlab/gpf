@@ -48,7 +48,7 @@ export class FamilyIdsComponent extends StatefulComponent implements OnInit {
           resolve();
           clearInterval(timer);
         }
-      }, 200);
+      }, 50);
     });
   }
 

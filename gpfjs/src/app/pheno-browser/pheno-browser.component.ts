@@ -151,7 +151,7 @@ export class PhenoBrowserComponent implements OnInit {
           resolve();
           clearInterval(timer);
         }
-      }, 200);
+      }, 50);
     });
   }
 

@@ -79,7 +79,7 @@ export class PhenoToolMeasureComponent extends StatefulComponent implements OnIn
           resolve();
           clearInterval(timer);
         }
-      }, 100);
+      }, 50);
     });
   }
 

@@ -59,7 +59,7 @@ export class MultiContinuousFilterComponent extends StatefulComponent implements
           resolve();
           clearInterval(timer);
         }
-      }, 100);
+      }, 50);
     });
   }
 

@@ -41,7 +41,7 @@ export class RegionsFilterComponent extends StatefulComponent implements OnInit 
           resolve();
           clearInterval(timer);
         }
-      }, 200);
+      }, 50);
     });
   }
 

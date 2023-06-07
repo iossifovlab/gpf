@@ -57,7 +57,7 @@ export class GeneSymbolsComponent extends StatefulComponent implements OnInit {
           resolve();
           clearInterval(timer);
         }
-      }, 200);
+      }, 50);
     });
   }
 

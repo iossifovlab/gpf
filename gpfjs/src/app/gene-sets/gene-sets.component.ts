@@ -191,7 +191,7 @@ export class GeneSetsComponent extends StatefulComponent implements OnInit {
       }
       this.isLoading = false;
       clearInterval(intervalId);
-    }, 350);
+    }, 50);
   }
 
   public get selectedGeneSetsCollection(): GeneSetsCollection {

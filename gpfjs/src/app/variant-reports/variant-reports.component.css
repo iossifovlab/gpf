@@ -178,6 +178,7 @@ h5 {
 
 ::ng-deep .modal-content {
   width: fit-content;
+  min-width: 500px;
 }
 
 #selected-tags-list {
