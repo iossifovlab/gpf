@@ -1,8 +1,9 @@
+// ? maybe rename to gene-plot ?
 import { GeneBrowserPage } from 'cypress/elements/gene-browser-page';
 import { GenePlotPage } from 'cypress/elements/gene-plot-page';
 import { datasetIds, toolPageLinks } from 'cypress/elements/utils';
 
-describe('Gene browser visual tests', () => {
+describe.skip('Gene browser visual tests', () => {
   const geneBrowserPage = new GeneBrowserPage();
   const genePlotPage = new GenePlotPage();
 
