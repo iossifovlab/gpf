@@ -13,9 +13,8 @@ from dae.parquet.parquet_writer import ParquetWriter
 from dae.parquet.schema2.parquet_io import \
     VariantsParquetWriter as S2VariantsWriter
 from dae.impala_storage.schema1.import_commons import \
-    construct_import_annotation_pipeline, construct_import_effect_annotator
-from dae.variants_loaders.raw.loader import AnnotationPipelineDecorator,\
-    EffectAnnotationDecorator
+    construct_import_annotation_pipeline
+from dae.variants_loaders.raw.loader import AnnotationPipelineDecorator
 
 
 @pytest.fixture(scope="module")
@@ -182,11 +181,6 @@ def run_ped2parquet(ped_file, output_dir):
 
 
 def build_variants_loader_pipeline(variants_loader, gpf_instance):
-    effect_annotator = construct_import_effect_annotator(gpf_instance)
-
-    variants_loader = EffectAnnotationDecorator(
-        variants_loader, effect_annotator)
-
     annotation_pipeline = construct_import_annotation_pipeline(gpf_instance)
     if annotation_pipeline is not None:
         variants_loader = AnnotationPipelineDecorator(

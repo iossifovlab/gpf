@@ -7,7 +7,8 @@ import pytest
 from dae.testing import convert_to_tab_separated, setup_directories, \
     setup_genome, setup_empty_gene_models, setup_gpf_instance
 from dae.genomic_resources.testing import build_inmemory_test_repository
-
+from dae.genomic_resources.repository_factory import \
+    build_genomic_resource_repository, build_genomic_resource_group_repository
 from dae.annotation.annotate_columns import cli as cli_columns
 from dae.genomic_resources.genomic_context import register_context
 from dae.gpf_instance_plugin.gpf_instance_context_plugin import \
@@ -59,20 +60,27 @@ def annotation_gpf(scores_repo, tmp_path_factory):
         - position_score: one
         """)
     })
-    genome = setup_genome(
+    setup_genome(
         root_path / "alla_gpf" / "genome" / "allChr.fa",
         f"""
         >chrA
         {100 * "A"}
         """
     )
-    empty_gene_models = setup_empty_gene_models(
+    setup_empty_gene_models(
         root_path / "alla_gpf" / "empty_gene_models" / "empty_genes.txt")
+    local_repo = build_genomic_resource_repository({
+        "id": "alla_local",
+        "type": "directory",
+        "directory": str(root_path / "alla_gpf")
+    })
+
     gpf_instance = setup_gpf_instance(
         root_path / "gpf_instance",
-        reference_genome=genome,
-        gene_models=empty_gene_models,
-        grr=scores_repo
+        reference_genome_id="genome",
+        gene_models_id="empty_gene_models",
+        grr=build_genomic_resource_group_repository(
+            "aaa", [local_repo, scores_repo])
     )
     register_context(GPFInstanceGenomicContext(gpf_instance))
     return gpf_instance

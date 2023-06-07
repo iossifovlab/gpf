@@ -1,0 +1,15 @@
+- md5: 15f0c39d1885992bf8375bceac58a00e
+  name: genomic_resource.yaml
+  size: 728
+- md5: 94608545a04c4b723ef0f33e24b50328
+  name: histograms/score_phred.csv
+  size: 1299
+- md5: 2add942caf1ad65c2392f3c83b294016
+  name: histograms/score_raw.csv
+  size: 2074
+- md5: e8905f626e885999e612e1f120461db4
+  name: histograms/score_raw_rankscore.csv
+  size: 1249
+- md5: 0de608bb0038128685f7bd88a91b70f1
+  name: table.txt
+  size: 45

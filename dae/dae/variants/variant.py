@@ -319,7 +319,6 @@ class SummaryAllele(core.Allele):
     def allele_index(self) -> int:
         return self._allele_index
 
-    @property
     def to_record(self) -> Dict[str, Any]:
         """Construct a record from an allele."""
         def enum_to_value(val):
@@ -809,9 +808,8 @@ class SummaryVariant:
     def transmission_type(self):
         return self.alleles[-1].transmission_type
 
-    @property
     def to_record(self):
-        return [allele.to_record for allele in self.alt_alleles]
+        return [allele.to_record() for allele in self.alt_alleles]
 
 
 class SummaryVariantFactory:

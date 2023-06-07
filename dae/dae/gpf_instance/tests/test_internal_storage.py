@@ -3,25 +3,33 @@ import textwrap
 
 from dae.testing import setup_gpf_instance, setup_genome, \
     setup_empty_gene_models, setup_directories
+from dae.genomic_resources.repository_factory import \
+    build_genomic_resource_repository
 
 
 def test_internal_genotype_storage(tmp_path_factory):
     # Given
     root_path = tmp_path_factory.mktemp("internal_storage_test")
 
-    genome = setup_genome(
+    setup_genome(
         root_path / "alla_gpf" / "genome" / "allChr.fa",
         f"""
         >chrA
         {100 * "A"}
         """
     )
-    empty_gene_models = setup_empty_gene_models(
+    setup_empty_gene_models(
         root_path / "alla_gpf" / "empty_gene_models" / "empty_genes.txt")
+    local_repo = build_genomic_resource_repository({
+        "id": "alla_local",
+        "type": "directory",
+        "directory": str(root_path / "alla_gpf")
+    })
     gpf = setup_gpf_instance(
         root_path / "gpf_instance",
-        reference_genome=genome,
-        gene_models=empty_gene_models,
+        reference_genome_id="genome",
+        gene_models_id="empty_gene_models",
+        grr=local_repo,
     )
 
     # When
@@ -39,14 +47,14 @@ def test_internal_genotype_storage_with_other_storages(tmp_path_factory):
     # Given
     root_path = tmp_path_factory.mktemp("internal_storage_test")
 
-    genome = setup_genome(
+    setup_genome(
         root_path / "alla_gpf" / "genome" / "allChr.fa",
         f"""
         >chrA
         {100 * "A"}
         """
     )
-    empty_gene_models = setup_empty_gene_models(
+    setup_empty_gene_models(
         root_path / "alla_gpf" / "empty_gene_models" / "empty_genes.txt")
 
     setup_directories(root_path / "gpf_instance", {
@@ -59,11 +67,17 @@ def test_internal_genotype_storage_with_other_storages(tmp_path_factory):
               dir: "%(wd)s/alabala_storage"
         """)
     })
+    local_repo = build_genomic_resource_repository({
+        "id": "alla_local",
+        "type": "directory",
+        "directory": str(root_path / "alla_gpf")
+    })
 
     gpf = setup_gpf_instance(
         root_path / "gpf_instance",
-        reference_genome=genome,
-        gene_models=empty_gene_models,
+        reference_genome_id="genome",
+        gene_models_id="empty_gene_models",
+        grr=local_repo
     )
 
     # When

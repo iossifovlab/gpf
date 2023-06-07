@@ -19,6 +19,8 @@ logger = logging.getLogger(__name__)
 
 @dataclass(init=False)
 class AttributeInfo:
+    """Defines annotation attribute configuration."""
+
     def __init__(self, name: str, source: str, internal: bool,
                  parameters: ParamsUsageMonitor | dict[str, Any],
                  _type: str = "str", description: str = "",
@@ -51,6 +53,8 @@ class AttributeInfo:
 
 @dataclass(init=False)
 class AnnotatorInfo:
+    """Defines annotator configuration."""
+
     def __init__(self, _type: str, attributes: list[AttributeInfo],
                  parameters: ParamsUsageMonitor | dict[str, Any],
                  documentation: str = "",
@@ -87,8 +91,9 @@ class Annotator(abc.ABC):
         return self._info
 
     @abc.abstractmethod
-    def annotate(self, annotatable: Annotatable, context: dict[str, Any]) \
-            -> dict[str, Any]:
+    def annotate(
+        self, annotatable: Optional[Annotatable], context: dict[str, Any]
+    ) -> dict[str, Any]:
         """Produce annotation attributes for an annotatable."""
 
     def close(self):
@@ -160,15 +165,20 @@ class AnnotationPipeline:
             attributes = annotator.annotate(annotatable, context)
             context.update(attributes)
 
-        # TODO: Decide where context should be cleaned up
-        for annotator in self.annotators:
-            for attr in annotator.get_info().attributes:
-                if attr.internal:
-                    del context[attr.name]
+        # # TODO: Decide where context should be cleaned up
+        # for annotator in self.annotators:
+        #     for attr in annotator.get_info().attributes:
+        #         if attr.internal:
+        #             del context[attr.name]
 
         return context
 
     def open(self) -> AnnotationPipeline:
+        """Open all annotators in the pipeline and mark it as open."""
+        if self._is_open:
+            logger.warning("annotation pipeline is already open")
+            return self
+
         assert not self._is_open
         for annotator in self.annotators:
             annotator.open()
@@ -176,13 +186,14 @@ class AnnotationPipeline:
         return self
 
     def close(self):
+        """Close the annotation pipeline."""
         for annotator in self.annotators:
             try:
                 annotator.close()
             except Exception:  # pylint: disable=broad-except
                 logger.error(
                     "exception while closing annotator %s",
-                    annotator._info, exc_info=True)
+                    annotator.get_info(), exc_info=True)
         self._is_open = False
 
     def __enter__(self):
@@ -197,6 +208,8 @@ class AnnotationPipeline:
 
 
 class AnnotatorDecorator(Annotator):
+    """Defines annotator decorator base class."""
+
     def __init__(self, child: Annotator):
         super().__init__(child.pipeline, child.get_info())
         self.child = child
@@ -212,6 +225,8 @@ class AnnotatorDecorator(Annotator):
 
 
 class InputAnnotableAnnotatorDecorator(AnnotatorDecorator):
+    """Defines annotator decorator to use input annotatable if defined."""
+
     @staticmethod
     def decorate(child: Annotator) -> Annotator:
         if "input_annotatable" in child.get_info().parameters:
@@ -226,8 +241,9 @@ class InputAnnotableAnnotatorDecorator(AnnotatorDecorator):
             self._info.parameters["input_annotatable"]
 
         if not self.pipeline:
-            raise Exception("InputAnnotableAnnotatorDecorator can only work "
-                            " within a pipeline")
+            raise ValueError(
+                "InputAnnotableAnnotatorDecorator can only work "
+                "within a pipeline")
         att_info = self.pipeline.get_attribute_info(
             self.input_annotatable_name)
         if att_info is None:
@@ -244,8 +260,9 @@ class InputAnnotableAnnotatorDecorator(AnnotatorDecorator):
         self.child._info.documentation += \
             f"\n*input_annotatable*: {self.input_annotatable_name}"
 
-    def annotate(self, _: Annotatable, context: dict[str, Any]) \
-            -> dict[str, Any]:
+    def annotate(
+        self, _: Optional[Annotatable], context: dict[str, Any]
+    ) -> dict[str, Any]:
 
         input_annotatable = context[self.input_annotatable_name]
 
@@ -258,24 +275,30 @@ class InputAnnotableAnnotatorDecorator(AnnotatorDecorator):
         )
 
 
-class ValueTransormAnnotatorDecorator(AnnotatorDecorator):
+class ValueTransformAnnotatorDecorator(AnnotatorDecorator):
+    """Define value transformer annotator decorator."""
+
     @staticmethod
     def decorate(child: Annotator) -> Annotator:
+        """Apply value transform decorator to an annotator."""
         value_transformers: dict[str, Callable[[Any], Any]] = {}
         for attribute_info in child.get_info().attributes:
             if "value_transform" in attribute_info.parameters:
                 transform_str = attribute_info.parameters["value_transform"]
                 try:
-                    transform = eval("lambda value: " + transform_str)
-                except Exception as e:
-                    raise Exception(f"The value trasform |{transform_str}| is "
-                                    "sytactically invalid.", e)
+                    # pylint: disable=eval-used
+                    transform = eval(f"lambda value: { transform_str }")
+                except Exception as error:
+                    raise ValueError(
+                        f"The value trasform |{transform_str}| is "
+                        f"sytactically invalid.", error) from error
                 value_transformers[attribute_info.name] = transform
+                # pylint: disable=protected-access
                 attribute_info._documentation = \
                     f"{attribute_info.documentation}\n\n" \
                     f"**value_transform:** {transform_str}"
         if value_transformers:
-            return ValueTransormAnnotatorDecorator(child, value_transformers)
+            return ValueTransformAnnotatorDecorator(child, value_transformers)
         return child
 
     def __init__(self, child: Annotator,
@@ -283,19 +306,21 @@ class ValueTransormAnnotatorDecorator(AnnotatorDecorator):
         super().__init__(child)
         self.value_transformers = value_transformers
 
-    def annotate(self, annotatable: Annotatable, context: dict[str, Any]) \
-            -> dict[str, Any]:
-        r = self.child.annotate(annotatable, context)
+    def annotate(
+        self, annotatable: Optional[Annotatable], context: dict[str, Any]
+    ) -> dict[str, Any]:
+        result = self.child.annotate(annotatable, context)
         return {k: (self.value_transformers[k](v)
                     if k in self.value_transformers else v)
-                for k, v in r.items()}
+                for k, v in result.items()}
 
 
 class ParamsUsageMonitor(Mapping):
+    """Class to monitor usage of annotator parameters."""
 
     def __init__(self, data: dict[str, Any]):
         self._data = data
-        self._used_keys = set([])
+        self._used_keys: set[str] = set([])
 
     def __getitem__(self, key: str):
         self._used_keys.add(key)
@@ -305,12 +330,14 @@ class ParamsUsageMonitor(Mapping):
         return len(self._data)
 
     def __iter__(self):
-        raise Exception("Should not iterate a parameter dictionary.")
+        raise ValueError("Should not iterate a parameter dictionary.")
 
     def __repr__(self):
         return self._data.__repr__()
 
-    def __eq__(self, other: ParamsUsageMonitor):
+    def __eq__(self, other):
+        if not isinstance(other, ParamsUsageMonitor):
+            return False
         return self._data == other._data
 
     def get_used_keys(self) -> set[str]:

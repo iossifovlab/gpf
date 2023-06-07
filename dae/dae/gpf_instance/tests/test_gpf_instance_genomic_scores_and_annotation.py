@@ -2,7 +2,9 @@
 import textwrap
 import pytest
 
-from dae.genomic_resources import build_genomic_resource_repository
+from dae.genomic_resources.repository_factory import \
+    build_genomic_resource_repository, \
+    build_genomic_resource_group_repository
 from dae.testing import setup_gpf_instance, setup_genome, \
     setup_empty_gene_models, setup_directories
 
@@ -19,24 +21,32 @@ def gpf_fixture(fixture_dirname, tmp_path_factory):
             }
         )
 
-        genome = setup_genome(
+        setup_genome(
             root_path / "alla_gpf" / "genome" / "allChr.fa",
             f"""
             >chrA
             {100 * "A"}
             """
         )
-        empty_gene_models = setup_empty_gene_models(
+        setup_empty_gene_models(
             root_path / "alla_gpf" / "empty_gene_models" / "empty_genes.txt")
+        local_repo = build_genomic_resource_repository({
+            "id": "alla_local",
+            "type": "directory",
+            "directory": str(root_path / "alla_gpf")
+        })
+        
         setup_directories(
             root_path / "gpf_instance",
             instance_config
         )
+
         return setup_gpf_instance(
             root_path / "gpf_instance",
-            reference_genome=genome,
-            gene_models=empty_gene_models,
-            grr=grr,
+            reference_genome_id="genome",
+            gene_models_id="empty_gene_models",
+            grr=build_genomic_resource_group_repository(
+                "repo_id", [local_repo, grr]),
         )
 
     return builder

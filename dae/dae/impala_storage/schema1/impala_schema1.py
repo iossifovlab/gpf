@@ -54,11 +54,16 @@ class ImpalaSchema1ImportStorage(ImportStorage):
         out_dir = cls._variants_dir(project)
         gpf_instance = project.get_gpf_instance()
         loader_type = next(iter(project.get_variant_loader_types()))
+        gpf_instance = project.get_gpf_instance()
+        variants_loader = project.get_variant_loader(
+            loader_type=loader_type,
+            reference_genome=gpf_instance.reference_genome)
+        variants_loader = project.build_variants_loader_pipeline(
+            variants_loader, gpf_instance
+        )
         ParquetWriter.write_meta(
             out_dir,
-            project.get_variant_loader(
-                loader_type=loader_type,
-                reference_genome=gpf_instance.reference_genome),
+            variants_loader,
             cls._get_partition_description(project),
             S1VariantsWriter)
 
@@ -67,10 +72,14 @@ class ImpalaSchema1ImportStorage(ImportStorage):
         start = time.time()
         out_dir = cls._variants_dir(project)
         gpf_instance = project.get_gpf_instance()
+        variants_loader = project.get_variant_loader(
+            bucket, gpf_instance.reference_genome)
+        variants_loader = project.build_variants_loader_pipeline(
+            variants_loader, gpf_instance
+        )
         ParquetWriter.write_variants(
             out_dir,
-            project.get_variant_loader(bucket,
-                                       gpf_instance.reference_genome),
+            variants_loader,
             cls._get_partition_description(project),
             bucket,
             project,

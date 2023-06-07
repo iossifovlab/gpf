@@ -8,6 +8,7 @@ import threading
 import tempfile
 import gzip
 import importlib
+import textwrap
 
 from typing import Any, Dict, Union, cast, Generator, \
     Tuple, ContextManager, List
@@ -183,6 +184,13 @@ def setup_genome(out_path: pathlib.Path, content):
     # pylint: disable=no-member
     pysam.faidx(str(out_path))  # type: ignore
 
+    setup_directories(out_path.parent, {
+        "genomic_resource.yaml": textwrap.dedent(f"""
+            type: genome
+
+            filename: {out_path.name}
+        """)
+    })
     # pylint: disable=import-outside-toplevel
     from dae.genomic_resources.reference_genome import \
         build_reference_genome_from_file
@@ -192,6 +200,15 @@ def setup_genome(out_path: pathlib.Path, content):
 def setup_gene_models(out_path: pathlib.Path, content, fileformat=None):
     """Set up gene models in refflat format using the passed content."""
     setup_directories(out_path, convert_to_tab_separated(content))
+    setup_directories(out_path.parent, {
+        "genomic_resource.yaml": textwrap.dedent(f"""
+            type: gene_models 
+
+            filename: { out_path.name }
+
+            format: "{ fileformat }"
+        """)
+    })
     # pylint: disable=import-outside-toplevel
     from dae.genomic_resources.gene_models import build_gene_models_from_file
     return build_gene_models_from_file(str(out_path), fileformat=fileformat)

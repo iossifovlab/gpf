@@ -144,10 +144,6 @@ class ParquetWriter:
                 "resetting regions (rb: %s): %s",
                 bucket.region_bin, bucket.regions)
             variants_loader.reset_regions(bucket.regions)
-        gpf_instance = project.get_gpf_instance()
-        variants_loader = project.build_variants_loader_pipeline(
-            variants_loader, gpf_instance
-        )
 
         rows = project.get_row_group_size(bucket)
         logger.debug("argv.rows: %s", rows)

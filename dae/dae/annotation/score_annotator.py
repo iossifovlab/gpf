@@ -1,6 +1,7 @@
-"""
-This contains the implementation of the three annotators: positions_score,
-np_score, and allele_score.
+"""This contains the implementation of the three score annotators.
+
+Genomic score annotators defined are positions_score, np_score,
+and allele_score.
 """
 import abc
 from typing import Callable, Optional, Any
@@ -26,8 +27,10 @@ from dae.genomic_resources.genomic_scores import NPScoreQuery
 from dae.genomic_resources.genomic_scores import AlleleScoreQuery
 
 
-def get_genomic_resource(pipeline: AnnotationPipeline, info: AnnotatorInfo,
-                         resource_type: str) -> GenomicResource:
+def get_genomic_resource(
+        pipeline: AnnotationPipeline, info: AnnotatorInfo,
+        resource_type: str) -> GenomicResource:
+    """Return genomic score resource used for given genomic score annotator."""
     if "resource_id" not in info.parameters:
         raise ValueError(f"The {info} has not 'resource_id' parameters")
     resource_id = info.parameters["resource_id"]
@@ -39,6 +42,7 @@ def get_genomic_resource(pipeline: AnnotationPipeline, info: AnnotatorInfo,
 
 
 class GenomicScoreAnnotatorBase(Annotator):
+    """Genomic score base annotator."""
 
     def __init__(self, pipeline: AnnotationPipeline, info: AnnotatorInfo,
                  score: GenomicScore):
@@ -78,12 +82,14 @@ class GenomicScoreAnnotatorBase(Annotator):
     def create_the_documentation(self, attribute_info: AttributeInfo):
         hist_url = f"{self.score.resource.get_url()}" + \
                    f"/statistics/histogram_{attribute_info.source}.png"
+        # pylint: disable=protected-access
         attribute_info._documentation = \
             f"{attribute_info.description}\n\n![HISTOGRAM]({hist_url})"
 
     def add_score_aggregator_documentation(self, attribute_info: AttributeInfo,
                                            aggregator: str,
                                            attribute_conf_agg: Optional[str]):
+        """Collect score aggregator documentation."""
         default_aggregators = {
             "position_aggregator": {
                 "float": "mean",
@@ -103,9 +109,12 @@ class GenomicScoreAnnotatorBase(Annotator):
         }
         aggregators_score_def_att: \
             dict[str, Callable[[ScoreDef], Optional[str]]] = {
-                "position_aggregator": lambda sc: sc.pos_aggregator,
-                "nucleotide_aggregator": lambda sc: sc.nuc_aggregator,
-                "allele_aggregator": lambda sc: sc.allele_aggregator
+                "position_aggregator":
+                lambda sc: sc.pos_aggregator,  # type: ignore
+                "nucleotide_aggregator":
+                lambda sc: sc.nuc_aggregator,  # type: ignore
+                "allele_aggregator":
+                lambda sc: sc.allele_aggregator  # type: ignore
             }
         if attribute_conf_agg is None:
             score_def = self.score.get_score_config(attribute_info.source)
@@ -118,12 +127,13 @@ class GenomicScoreAnnotatorBase(Annotator):
                 value_str = f"{value} [type default]"
         else:
             value_str = attribute_conf_agg
-
+        # pylint: disable=protected-access
         attribute_info._documentation = \
             attribute_info.documentation + f"\n\n**{aggregator}**: {value_str}"
 
 
 class PositionScoreAnnotatorBase(GenomicScoreAnnotatorBase):
+    """Defines position score base annotator class."""
 
     @abc.abstractmethod
     def _fetch_substitution_scores(self, allele: VCFAllele) \
@@ -134,8 +144,9 @@ class PositionScoreAnnotatorBase(GenomicScoreAnnotatorBase):
     def _fetch_aggregated_scores(self, chrom, pos_begin, pos_end) -> list[Any]:
         pass
 
-    def annotate(self, annotatable: Annotatable, _: dict[str, Any]) \
-            -> dict[str, Any]:
+    def annotate(
+        self, annotatable: Optional[Annotatable], _: dict[str, Any]
+    ) -> dict[str, Any]:
 
         if annotatable is None:
             return self._empty_result()
@@ -165,8 +176,7 @@ def build_position_score_annotator(pipeline: AnnotationPipeline,
 
 
 class PositionScoreAnnotator(PositionScoreAnnotatorBase):
-    """
-    This class implements the position_score annotator.
+    """This class implements the position_score annotator.
 
     The position_score
     annotator requires the resrouce_id parameter, whose value must be an id
@@ -215,6 +225,8 @@ def build_np_score_annotator(pipeline: AnnotationPipeline,
 
 
 class NPScoreAnnotator(PositionScoreAnnotatorBase):
+    """This class implements np_score annotator."""
+
     def __init__(self, pipeline: AnnotationPipeline, info: AnnotatorInfo):
         resource = get_genomic_resource(pipeline, info, "np_score")
         self.np_score = build_np_score_from_resource(resource)
@@ -252,6 +264,8 @@ def build_allele_score_annotator(pipeline: AnnotationPipeline,
 
 
 class AlleleScoreAnnotator(GenomicScoreAnnotatorBase):
+    """This class implements allele_score annotator."""
+
     def __init__(self, pipeline: AnnotationPipeline, info: AnnotatorInfo):
         resource = get_genomic_resource(pipeline, info, "allele_score")
         self.allele_score = build_allele_score_from_resource(resource)
@@ -283,8 +297,9 @@ class AlleleScoreAnnotator(GenomicScoreAnnotatorBase):
             self.allele_score_queries)
         return [sagg.get_final() for sagg in scores_agg]
 
-    def annotate(self, annotatable: Annotatable, _: dict[str, Any]) \
-            -> dict[str, Any]:
+    def annotate(
+        self, annotatable: Optional[Annotatable], _: dict[str, Any]
+    ) -> dict[str, Any]:
 
         if annotatable is None:
             return self._empty_result()

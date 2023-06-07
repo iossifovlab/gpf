@@ -7,7 +7,7 @@ import itertools
 import logging
 
 from collections import namedtuple
-from typing import Optional
+from typing import Optional, Any
 
 import numpy as np
 import pyarrow as pa
@@ -17,6 +17,7 @@ from dae.variants.variant import SummaryVariantFactory
 from dae.variants.family_variant import FamilyVariant
 from dae.variants.attributes import GeneticModel, Inheritance, \
     TransmissionType, Sex, Role
+from dae.annotation.annotation_pipeline import AttributeInfo
 
 
 logger = logging.getLogger(__name__)
@@ -237,7 +238,7 @@ def read_in_sexes(stream) -> list[Optional[Sex]]:
 def read_in_roles(stream):
     """Read a list of Roles from the stream."""
     length = int.from_bytes(stream.read(4), "big", signed=False)
-    out = []
+    out: list[Optional[Role]] = []
     for _i in range(0, length):
         is_not_none = read_int8(stream)
         if is_not_none:
@@ -250,7 +251,7 @@ def read_in_roles(stream):
 def read_inheritance(stream):
     """Read a list of Inheritances from the stream."""
     length = int.from_bytes(stream.read(4), "big", signed=False)
-    out = []
+    out: list[Optional[Inheritance]] = []
     for _i in range(0, length):
         is_not_none = read_int8(stream)
         if is_not_none:
@@ -413,7 +414,7 @@ class AlleleParquetSerializer:
         "variant_in_members",
     ]
 
-    GENOMIC_SCORES_SCHEMA_CLEAN_UP = [
+    GENOMIC_SCORES_CLEAN_UP = [
         "worst_effect",
         "family_bin",
         "rare",
@@ -452,7 +453,10 @@ class AlleleParquetSerializer:
         "family_variant_index"
     ]
 
-    def __init__(self, annotation_schema, extra_attributes=None):
+    def __init__(
+            self,
+            annotation_schema: Optional[list[AttributeInfo]],
+            extra_attributes=None):
         logger.debug("serializer annotation schema: %s", annotation_schema)
         if annotation_schema is None:
             logger.warning(
@@ -508,17 +512,16 @@ class AlleleParquetSerializer:
         scores_searchable = {}
         scores_binary = {}
         if annotation_schema:
-            for col_name in annotation_schema.public_fields:
-                if (
-                    col_name
-                    not in self.BASE_SEARCHABLE_PROPERTIES_TYPES
-                    and col_name not in additional_searchable_props
-                    and col_name not in self.GENOMIC_SCORES_SCHEMA_CLEAN_UP
-                    and col_name != "extra_attributes"
-                ):
+            for attr in annotation_schema:
+                if attr.internal:
+                    continue
+                if attr.name not in self.BASE_SEARCHABLE_PROPERTIES_TYPES \
+                        and attr.name not in additional_searchable_props \
+                        and attr.name not in self.GENOMIC_SCORES_CLEAN_UP \
+                        and attr.name != "extra_attributes":
 
-                    scores_binary[col_name] = FloatSerializer
-                    scores_searchable[col_name] = pa.float32()
+                    scores_binary[attr.name] = FloatSerializer
+                    scores_searchable[attr.name] = pa.float32()
 
         self.scores_serializers = scores_binary
 
@@ -798,7 +801,7 @@ class AlleleParquetSerializer:
 
     def build_searchable_vectors_summary(self, summary_variant):
         """Build searchable vectors summary."""
-        vectors = {}
+        vectors: dict[int, Any] = {}
         for allele in summary_variant.alleles:
             vector = []
             if allele.allele_index not in vectors:
@@ -876,7 +879,7 @@ class AlleleParquetSerializer:
                     header.append(spr)
             header = header + product_props
 
-            self._allele_batch_header = header
+            self._allele_batch_header = header  # type: ignore
         return self._allele_batch_header
 
     def build_allele_batch_dict(
@@ -896,7 +899,7 @@ class AlleleParquetSerializer:
             prop_value = self._get_searchable_prop_value(allele, spr)
             family_properties.append(prop_value)
         new_vectors = zip(vectors, itertools.repeat(family_properties))
-        new_vectors = list(map(list, map(
+        new_vectors = list(map(list, map(  # type: ignore
             itertools.chain.from_iterable,
             new_vectors
         )))
@@ -910,21 +913,25 @@ class AlleleParquetSerializer:
                 # has a variant_in_members consisting only of None, but has
                 # to be written anyways
                 prop_value = [None]
-            new_vectors = list(itertools.product(new_vectors, prop_value))
-            new_vectors = [list(itertools.chain.from_iterable(map(
-                lambda x: x if isinstance(x, list) else [x],
-                subvector
-            ))) for subvector in new_vectors]
+            new_vectors = list(  # type: ignore
+                itertools.product(new_vectors, prop_value))
+            new_vectors = [list(itertools.chain.from_iterable(  # type: ignore
+                map(
+                    lambda x: x if isinstance(x, list) else [x],
+                    subvector
+                ))) for subvector in new_vectors]
 
         header = self.allele_batch_header
-        allele_data = {name: [] for name in self.schema.names}
+        allele_data = {name: [] for name in self.schema.names}  # type: ignore
         for idx, field_name in enumerate(header):
             for vector in new_vectors:
                 allele_data[field_name].append(vector[idx])
-        allele_data["variant_data"] = list(itertools.repeat(
-            variant_data, len(new_vectors)))
-        allele_data["extra_attributes"] = list(itertools.repeat(
-            extra_attributes_data, len(new_vectors)))
+        allele_data["variant_data"] = list(
+            itertools.repeat(
+                variant_data, len(new_vectors)))  # type: ignore
+        allele_data["extra_attributes"] = list(
+            itertools.repeat(
+                extra_attributes_data, len(new_vectors)))  # type: ignore
         return allele_data
 
     def describe_blob_schema(self):

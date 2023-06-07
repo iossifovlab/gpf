@@ -401,9 +401,9 @@ class AnnotationDecorator(VariantsLoaderDecorator):
         if variants_loader.annotation_schema is not None:
             other_columns = list(
                 filter(
-                    lambda col: col not in common_columns
-                    and col not in AnnotationDecorator.CLEAN_UP_COLUMNS,
-                    variants_loader.annotation_schema.names,
+                    lambda name: name not in common_columns
+                    and name not in AnnotationDecorator.CLEAN_UP_COLUMNS,
+                    [attr.name for attr in variants_loader.annotation_schema],
                 )
             )
         else:
@@ -483,7 +483,7 @@ class AnnotationPipelineDecorator(AnnotationDecorator):
         self.annotation_pipeline = annotation_pipeline
         logger.debug(
             "creating annotation pipeline decorator with "
-            "annotation pipeline: %s", annotation_pipeline.annotation_schema)
+            "annotation pipeline: %s", annotation_pipeline.get_attributes())
 
         self.set_attribute("annotation_schema", self.annotation_schema)
         self.set_attribute(
@@ -493,7 +493,7 @@ class AnnotationPipelineDecorator(AnnotationDecorator):
 
     @property
     def annotation_schema(self):
-        return self.annotation_pipeline.annotation_schema
+        return self.annotation_pipeline.get_attributes()
 
     def full_variants_iterator(self):
         with self.annotation_pipeline.open() as annotation_pipeline:
@@ -508,6 +508,7 @@ class AnnotationPipelineDecorator(AnnotationDecorator):
                             attributes
                         # pylint: disable=protected-access
                         sallele._effects = allele_effects
+                        del attributes["allele_effects"]
                     sallele.update_attributes(attributes)
                 yield summary_variant, family_variants
 

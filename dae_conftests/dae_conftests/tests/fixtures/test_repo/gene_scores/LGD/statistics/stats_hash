@@ -1,0 +1,29 @@
+{
+  "config": {
+    "gene_scores": [
+      {
+        "desc": "LGD rank",
+        "id": "LGD_rank"
+      },
+      {
+        "desc": "LGD score",
+        "id": "LGD_score"
+      }
+    ],
+    "histograms": [
+      {
+        "bins": 150,
+        "score": "LGD_rank",
+        "x_scale": "linear",
+        "y_scale": "linear"
+      },
+      {
+        "bins": 150,
+        "score": "LGD_score",
+        "x_scale": "linear",
+        "y_scale": "log"
+      }
+    ]
+  },
+  "score_file": "4e9f0967f510d53285a51dfc33b4d06c"
+}

@@ -1,26 +1,33 @@
 - config:
-    filename: mock_file
+    filename: empty_genes.txt
+    format: refflat
     type: gene_models
   id: gene_models/mock
   manifest:
-  - md5: 0e224fc59b171d9d5e337e554481f733
+  - md5: 3e63e0b11e329809e291ea908fc43939
+    name: empty_genes.txt
+    size: 88
+  - md5: c140887dc9e1515ed4ebdf66119a7244
     name: genomic_resource.yaml
-    size: 38
+    size: 66
   - md5: 39407e7570763e1b085527daa17d1438
     name: mock_file
     size: 20
   version: '0'
 - config:
-    filename: mock_file
+    filename: allChr.fa
     type: genome
   id: genomes/mock
   manifest:
-  - md5: 8a69076afc4bc86af83e9e40de4ba37f
+  - md5: 02da5b5e851f2e4073da2cbdc897e397
+    name: allChr.fa
+    size: 107
+  - md5: c44c2b62a7ff9cc728b1b821f5d5e3e4
+    name: allChr.fa.fai
+    size: 19
+  - md5: 53520646d9aa2a74e38d280b46474eb7
     name: genomic_resource.yaml
-    size: 33
-  - md5: 39407e7570763e1b085527daa17d1438
-    name: mock_file
-    size: 20
+    size: 35
   version: '0'
 - config:
     filename: mock_file
@@ -36,51 +43,51 @@
   version: '0'
 - config:
     scores:
-    - id: mock
+    - id: mock1
       index: 0
       type: float
     table:
       filename: mock_file
-    type: mock_resource
+    type: position_score
   id: scores/mock1
   manifest:
-  - md5: a24d0dfa08d90113821ff09f090431ec
+  - md5: dbd520850d51ea33432a92571b903da5
     name: genomic_resource.yaml
-    size: 99
+    size: 101
   - md5: 39407e7570763e1b085527daa17d1438
     name: mock_file
     size: 20
   version: '0'
 - config:
     scores:
-    - id: mock
+    - id: mock2
       index: 0
       type: float
     table:
       filename: mock_file
-    type: mock_resource
+    type: position_score
   id: scores/mock2
   manifest:
-  - md5: a24d0dfa08d90113821ff09f090431ec
+  - md5: 73281e2939d52041163f808045852fce
     name: genomic_resource.yaml
-    size: 99
+    size: 101
   - md5: 39407e7570763e1b085527daa17d1438
     name: mock_file
     size: 20
   version: '0'
 - config:
     scores:
-    - id: mock
+    - id: mock_extra
       index: 0
       type: float
     table:
       filename: mock_file
-    type: mock_resource
+    type: position_score
   id: scores/mock_extra
   manifest:
-  - md5: a24d0dfa08d90113821ff09f090431ec
+  - md5: 28dc5b479de4fb5d9f3909c68145ab66
     name: genomic_resource.yaml
-    size: 99
+    size: 106
   - md5: 39407e7570763e1b085527daa17d1438
     name: mock_file
     size: 20

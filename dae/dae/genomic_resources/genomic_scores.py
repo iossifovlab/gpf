@@ -329,6 +329,7 @@ class GenomicScore(
         return self.get_config().get("id")
 
     def get_default_annotation_attributes(self) -> list[Any]:
+        """Collect default annotation attributes."""
         default_annotation = self.get_config().get("default_annotation")
         if not default_annotation:
             return list(self.score_definitions)
@@ -338,9 +339,10 @@ class GenomicScore(
         if isinstance(default_annotation, dict) and \
             len(default_annotation) == 1 and \
                 "attributes" in default_annotation:
-            logger.warning(f"The resrouce {self.resource_id} has 'attributes' "
-                           "in it's default_annotation section. These are "
-                           "depricated and should be removed")
+            logger.warning(
+                "The resrouce %s has 'attributes' "
+                "in it's default_annotation section. These are "
+                "depricated and should be removed", self.resource_id)
             default_annotation = default_annotation["attributes"]
 
         if not isinstance(default_annotation, list):
@@ -357,12 +359,15 @@ class GenomicScore(
     @staticmethod
     def _parser_att_conf(att_conf: Any) \
             -> GenomicScore.DefaultAnnotationAttributeInfo:
-        '''This function closely matches from the corresponding function in
+        """Parse default annotation attributes configuration.
+
+        This function closely matches from the corresponding function in
         in dae.annotation.annotation_factory.AnnotationConfigParser.
-        parse_raw_attribute_config. It is reimplemented here to avoid circular 
-        dependency, but it should be maintained to match the 
-        parse_raw_attribute_config implementation.'''
-        if isinstance(att_conf, "str"):
+        parse_raw_attribute_config. It is reimplemented here to avoid circular
+        dependency, but it should be maintained to match the
+        parse_raw_attribute_config implementation.
+        """
+        if isinstance(att_conf, str):
             return GenomicScore.DefaultAnnotationAttributeInfo(
                 att_conf, att_conf, {})
         if not isinstance(att_conf, dict):
@@ -529,7 +534,7 @@ class GenomicScore(
 
         <td>{{ score.type }}</td>
 
-        {% set d_atts = scores._get_default_annotation_attributes(score_id) %}
+        {% set d_atts = scores.get_default_annotation_attributes() %}
         <td>
             {%- for def_att_desc in d_atts -%}
             <p>{{ def_att_desc }}</p>

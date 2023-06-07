@@ -59,4 +59,5 @@ def imported_study(tmp_path_factory, duckdb_storage_fixture):
         root_path,
         "minimal_vcf", ped_path, [vcf_path],
         gpf_instance)
+    
     return study

@@ -140,7 +140,6 @@ class VariantsParquetWriter:
         self.data_writers = {}
         assert isinstance(partition_descriptor, PartitionDescriptor)
         self.partition_descriptor = partition_descriptor
-
         extra_attributes = self.variants_loader.get_attribute(
             "extra_attributes")
         self.serializer = AlleleParquetSerializer(

@@ -176,6 +176,12 @@ def _build_group_repository(
     return GenomicResourceCachedRepo(repo, f"file://{cache_dir}")
 
 
+def build_genomic_resource_group_repository(
+        repo_id: str,
+        children: list[GenomicResourceRepo]) -> GenomicResourceRepo:
+    return GenomicResourceGroupRepo(children, repo_id) 
+
+
 def build_genomic_resource_repository(
         definition: Optional[dict] = None,
         file_name: Optional[str] = None) -> GenomicResourceRepo:

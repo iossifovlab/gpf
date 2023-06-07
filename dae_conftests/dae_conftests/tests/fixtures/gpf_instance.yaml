@@ -99,7 +99,7 @@ remotes:
     credentials: "ZmVkZXJhdGlvbjpzZWNyZXQ="
 
 annotation:
-  conf_file: "annotation_pipeline/import_annotation.conf"
+  conf_file: "annotation_pipeline/import_annotation_no_effects.yaml"
 
 
 gene_sets_db:

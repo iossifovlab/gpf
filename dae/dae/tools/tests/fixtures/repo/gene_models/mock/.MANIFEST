@@ -1,9 +1,9 @@
-- md5: 0e224fc59b171d9d5e337e554481f733
+- md5: 3e63e0b11e329809e291ea908fc43939
+  name: empty_genes.txt
+  size: 88
+- md5: c140887dc9e1515ed4ebdf66119a7244
   name: genomic_resource.yaml
-  size: 38
+  size: 66
 - md5: 39407e7570763e1b085527daa17d1438
   name: mock_file
   size: 20
-- md5: 6a99c575ab87f8c7d1ed1e52e7e349ce
-  name: statistics/stats_hash
-  size: 11

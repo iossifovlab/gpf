@@ -314,9 +314,11 @@ def test_embedded_annotation_pipeline(fixture_dirname):
     project = import_tools.ImportProject.build_from_config(import_config)
     pipeline = project._build_annotation_pipeline(project.get_gpf_instance())
     assert pipeline is not None
-    assert pipeline.config == [
-        {"resource_id": "hg19/CADD", "annotator_type": "np_score"}
-    ]
+    assert len(pipeline.get_info()) == 1
+
+    annotator_info = pipeline.get_info()[0]
+    assert annotator_info.type == "np_score"
+    assert annotator_info.parameters["resource_id"] == "hg19/CADD"
 
 
 def test_annotation_file(tmpdir, fixture_dirname):
@@ -345,9 +347,11 @@ def test_annotation_file(tmpdir, fixture_dirname):
     project = import_tools.ImportProject.build_from_file(config_fn)
     pipeline = project._build_annotation_pipeline(project.get_gpf_instance())
     assert pipeline is not None
-    assert pipeline.config == [
-        {"resource_id": "hg19/CADD", "annotator_type": "np_score"}
-    ]
+    assert len(pipeline.get_info()) == 1
+
+    annotator_info = pipeline.get_info()[0] 
+    assert annotator_info.type == "np_score"
+    assert annotator_info.parameters["resource_id"] == "hg19/CADD"
 
 
 def test_annotation_file_and_external_input_config(tmpdir, fixture_dirname):
@@ -381,6 +385,7 @@ def test_annotation_file_and_external_input_config(tmpdir, fixture_dirname):
     project = import_tools.ImportProject.build_from_file(config_fn)
     pipeline = project._build_annotation_pipeline(project.get_gpf_instance())
     assert pipeline is not None
-    assert pipeline.config == [
-        {"resource_id": "hg19/CADD", "annotator_type": "np_score"}
-    ]
+    assert len(pipeline.get_info()) == 1
+
+    annotator_info = pipeline.get_info()[0]
+    assert annotator_info.type == "np_score"

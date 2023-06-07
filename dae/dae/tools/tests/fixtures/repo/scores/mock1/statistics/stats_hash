@@ -1,0 +1,21 @@
+{
+  "config": {
+    "histograms": [
+      {
+        "bins": 100,
+        "score": "mock1"
+      }
+    ],
+    "scores": [
+      {
+        "id": "mock1",
+        "index": 0,
+        "type": "float"
+      }
+    ],
+    "table": {
+      "filename": "mock_file"
+    }
+  },
+  "score_file": "39407e7570763e1b085527daa17d1438"
+}

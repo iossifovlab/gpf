@@ -1,16 +1,12 @@
 - md5: e2f399a1067bc25e39097330dd83224a
   name: GeneSets/CHD8_target_genes.txt
   size: 233
-  time: '2022-05-31T02:33:16+00:00'
 - md5: 0c283624811639f94feb70eaecd6e1f3
   name: GeneSets/FMRP_Darnell.txt
   size: 175
-  time: '2022-05-31T02:33:16+00:00'
 - md5: e0febb3a88fbdbe767ec91a92d35b754
   name: GeneSets/main_candidates.txt
   size: 89
-  time: '2022-05-31T02:33:16+00:00'
 - md5: af9a0254eb08c354abbd419a050fa2e3
   name: genomic_resource.yaml
   size: 118
-  time: '2022-05-31T02:33:16+00:00'

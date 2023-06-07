@@ -6,13 +6,15 @@ from dae.testing import setup_pedigree, setup_vcf, vcf_study
 from dae.testing import \
     setup_genome, setup_gene_models, setup_gpf_instance
 from dae.utils.regions import Region
+from dae.genomic_resources.repository_factory import \
+    build_genomic_resource_repository
 
 
 @pytest.fixture(scope="module")
 def imported_study(tmp_path_factory, genotype_storage):
     root_path = tmp_path_factory.mktemp(
         f"vcf_path_{genotype_storage.storage_id}")
-    genome = setup_genome(
+    setup_genome(
         root_path / "foobar_genome" / "chrAll.fa",
         """
             >foo
@@ -26,7 +28,7 @@ def imported_study(tmp_path_factory, genotype_storage):
         """
     )
 
-    genes = setup_gene_models(
+    setup_gene_models(
         root_path / "foobar_genes" / "genes.txt", textwrap.dedent("""
         #geneName name chrom strand txStart txEnd cdsStart cdsEnd exonCount exonStarts exonEnds
         g1        tx1  foo   +      3       19    3        17     2         3,13       6,17
@@ -34,11 +36,16 @@ def imported_study(tmp_path_factory, genotype_storage):
         g2        tx3  bar   -      3       20    3        18     1         3          17
         """),  # noqa
         fileformat="refflat")
-
+    local_repo = build_genomic_resource_repository({
+        "id": "foobar_local",
+        "type": "directory",
+        "directory": str(root_path)
+    })
     gpf_instance = setup_gpf_instance(
         root_path / "gpf_instance",
-        reference_genome=genome,
-        gene_models=genes)
+        reference_genome_id="foobar_genome",
+        gene_models_id="foobar_genes",
+        grr=local_repo)
 
     if genotype_storage:
         gpf_instance\

@@ -1,5 +1,3 @@
-"""Defines variant effect annotator."""
-
 import logging
 from typing import Any
 
@@ -31,6 +29,8 @@ def build_effect_annotator(pipeline: AnnotationPipeline,
 
 
 class EffectAnnotatorAdapter(AnnotatorBase):
+    """Adapts effect annotator to be used in annotation infrastructure."""
+
     def __init__(self, pipeline: AnnotationPipeline, info: AnnotatorInfo):
 
         genome_resrouce_id = info.parameters.get("genome")
@@ -113,8 +113,8 @@ class EffectAnnotatorAdapter(AnnotatorBase):
         return attributes
 
     def _region_length_cutoff_effect(
-        self, attributes, annotatable: Annotatable
-    ):
+        self, attributes: dict[str, Any], annotatable: Annotatable
+    ) -> dict[str, Any]:
         if annotatable.type == Annotatable.Type.LARGE_DELETION:
             effect_type = "CNV-"
         elif annotatable.type == Annotatable.Type.LARGE_DUPLICATION:
@@ -122,7 +122,8 @@ class EffectAnnotatorAdapter(AnnotatorBase):
         else:
             effect_type = "unknown"
         effect = AnnotationEffect(effect_type)
-        # TODO: Ask, why is this expected in the test_regions_effect_annotations
+        # TODO: Ask, why is this expected in the
+        # test_regions_effect_annotations
         effect.length = len(annotatable)
         full_desc = AnnotationEffect.effects_description([effect])
         attributes.update({
@@ -135,9 +136,11 @@ class EffectAnnotatorAdapter(AnnotatorBase):
         })
         return attributes
 
-    def _do_annotate(self, annotatable: Annotatable, _: dict[str, Any]) \
-            -> dict[str, Any]:
+    def _do_annotate(
+        self, annotatable: Annotatable, _: dict[str, Any]
+    ) -> dict[str, Any]:
         result: dict = {}
+
         if annotatable is None:
             return self._not_found(result)
 

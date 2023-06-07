@@ -15,7 +15,7 @@ from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.annotation.annotation_pipeline import AnnotationPipeline
 from dae.annotation.annotation_pipeline import AnnotatorInfo, AttributeInfo
 from dae.annotation.annotation_pipeline import Annotator
-from dae.annotation.annotation_pipeline import ValueTransormAnnotatorDecorator
+from dae.annotation.annotation_pipeline import ValueTransformAnnotatorDecorator
 from dae.annotation.annotation_pipeline import \
     InputAnnotableAnnotatorDecorator
 
@@ -117,7 +117,10 @@ class AnnotationConfigParser:
         return result
 
     @staticmethod
-    def parse_raw(pipeline_raw_config: Optional[Any]) -> list[AnnotatorInfo]:
+    def parse_raw(
+        pipeline_raw_config: Optional[list[dict[str, Any]]]
+    ) -> list[AnnotatorInfo]:
+        """Parse raw dictionary annotation pipeline configuration."""
         if pipeline_raw_config is None:
             logger.warning("empty annotation pipeline configuration")
             return []
@@ -126,11 +129,11 @@ class AnnotationConfigParser:
             raise AnnotationConfigurationError(
                 "The annotation is not a list of annotator configurations.")
 
-        r = []
+        result = []
         for annotator_raw_config in pipeline_raw_config:
             # the minimal annotator configuration form
             if isinstance(annotator_raw_config, str):
-                r.append(AnnotatorInfo(annotator_raw_config, [], {}))
+                result.append(AnnotatorInfo(annotator_raw_config, [], {}))
                 continue
 
             if isinstance(annotator_raw_config, dict) and \
@@ -141,13 +144,14 @@ class AnnotationConfigParser:
 
                 # the short annotator configuation form
                 if isinstance(ann_details, str):
-                    r.append(AnnotatorInfo(ann_type, [],
-                                           {"resource_id": ann_details}))
+                    result.append(
+                        AnnotatorInfo(ann_type, [],
+                                      {"resource_id": ann_details}))
                     continue
 
                 # the complete annotator configuration form
                 if isinstance(ann_details, dict) \
-                   and all([isinstance(k, str) for k in ann_details]):
+                   and all(isinstance(k, str) for k in ann_details):
                     attributes = []
                     if "attributes" in ann_details:
                         attributes = \
@@ -155,7 +159,8 @@ class AnnotationConfigParser:
                                 ann_details["attributes"])
                     parameters = {k: v for k, v in ann_details.items()
                                   if k != "attributes"}
-                    r.append(AnnotatorInfo(ann_type, attributes, parameters))
+                    result.append(AnnotatorInfo(
+                        ann_type, attributes, parameters))
                     continue
             raise AnnotationConfigurationError(dedent(f"""
                 Incorrect annotator configuation form: {annotator_raw_config}.
@@ -164,11 +169,11 @@ class AnnotationConfigParser:
                         - <annotatory type>)
                     * short
                         - <annotator type>: <resource_id_pattern>
-                    * complete without aouttribut
+                    * complete without attributes
                         - <annotator type>:
                             <param1>: <value1>
                             ...
-                    * complete with aouttribut
+                    * complete with attributes
                         - <annotator type>:
                             <param1>: <value1>
                             ...
@@ -176,41 +181,44 @@ class AnnotationConfigParser:
                             - <att1 config>
                             ....
             """))
-        return r
+        return result
 
     @staticmethod
-    def parse_str(content: str, source_file_name: Optional[str] = None) \
-            -> list[AnnotatorInfo]:
+    def parse_str(
+        content: str, source_file_name: Optional[str] = None
+    ) -> list[AnnotatorInfo]:
+        """Parse annotation pipeline configuration string."""
         try:
             pipeline_raw_config = yaml.safe_load(content)
-        except Exception as exception:
+        except Exception as error:  # pylint: disable=broad-exception-caught
             if source_file_name is None:
                 raise AnnotationConfigurationError(
                     f"The pipeline configuration {content} is an invalid yaml "
-                    "string.", exception)
-            else:
-                raise AnnotationConfigurationError(
-                    f"The pipeline configuration file {source_file_name} is "
-                    "an invalid yaml file.", exception)
+                    "string.", error) from error
+            raise AnnotationConfigurationError(
+                f"The pipeline configuration file {source_file_name} is "
+                "an invalid yaml file.", error) from error
 
         return AnnotationConfigParser.parse_raw(pipeline_raw_config)
 
     @staticmethod
     def parse_config_file(filename: str) -> List[AnnotatorInfo]:
+        """Parse annotation pipeline configuration file."""
         logger.info("loading annotation pipeline configuration: %s", filename)
         try:
             with open(filename, "rt", encoding="utf8") as infile:
                 content = infile.read()
-        except Exception as exception:
+        except Exception as error:
             raise AnnotationConfigurationError(
                 f"Problem reading the contents of the {filename} file.",
-                exception)
+                error) from error
 
         return AnnotationConfigParser.parse_str(content)
 
     @staticmethod
-    def parse_raw_attribute_config(raw_attribute_config: dict[str, Any]) \
-            -> AttributeInfo:
+    def parse_raw_attribute_config(
+            raw_attribute_config: dict[str, Any]) -> AttributeInfo:
+        """Parse annotation attribute raw configuration."""
         name = raw_attribute_config.get("destination")
         source = raw_attribute_config.get("source")
 
@@ -227,18 +235,19 @@ class AnnotationConfigParser:
         if not isinstance(name, str):
             message = "The destination for in an attribute " + \
                       f"config {raw_attribute_config} should be a string"
-            raise Exception(message)
+            raise ValueError(message)
 
         parameters = {k: v for k, v in raw_attribute_config.items()
                       if k not in ["destination", "source", "internal"]}
         return AttributeInfo(name, source, internal, parameters)
 
     @staticmethod
-    def parse_raw_attributes(raw_attributes_config: Any) \
-            -> list[AttributeInfo]:
+    def parse_raw_attributes(
+            raw_attributes_config: Any) -> list[AttributeInfo]:
+        """Parse annotator pipeline attribute configuration."""
         if not isinstance(raw_attributes_config, list):
             message = "The attributes parameters should be a list."
-            raise Exception(message)
+            raise ValueError(message)
 
         attribute_config = []
         for raw_attribute_config in raw_attributes_config:
@@ -278,6 +287,7 @@ def build_annotation_pipeline(
         assert pipeline_config is None
         pipeline_config = AnnotationConfigParser.parse_raw(pipeline_config_raw)
     assert pipeline_config is not None
+
     if not grr_repository:
         grr_repository = build_genomic_resource_repository(
             definition=grr_repository_definition,
@@ -296,20 +306,22 @@ def build_annotation_pipeline(
             # annotator_config = set_parameter_usage_monitors(annotator_config)
             annotator = builder(pipeline, annotator_config)
             annotator = InputAnnotableAnnotatorDecorator.decorate(annotator)
-            annotator = ValueTransormAnnotatorDecorator.decorate(annotator)
+            annotator = ValueTransformAnnotatorDecorator.decorate(annotator)
             check_for_unused_parameters(annotator_config)
             check_for_repeated_attributes(pipeline, annotator_config)
             pipeline.add_annotator(annotator)
         except ValueError as value_error:
             raise AnnotationConfigurationError(
                 f"The {annotator_id+1}-th annotator "
-                f"configuaraion {raw_config_copy} is incorrect: ", value_error)
+                f"configuaraion {raw_config_copy} is incorrect: ",
+                value_error) from value_error
 
     return pipeline
 
 
-def check_for_repeated_attributes(pipeline: AnnotationPipeline,
-                                  annotator_config: AnnotatorInfo):
+def check_for_repeated_attributes(
+        pipeline: AnnotationPipeline, annotator_config: AnnotatorInfo):
+    """Check repeated attributes in annotator configuration."""
     annotator_names_list = [att.name for att in annotator_config.attributes]
     annotator_names_set = set(annotator_names_list)
     pipeline_names_set = {att.name for att in pipeline.get_attributes()}
@@ -330,6 +342,7 @@ def check_for_repeated_attributes(pipeline: AnnotationPipeline,
 
 
 def check_for_unused_parameters(info: AnnotatorInfo):
+    """Check annotator configuration for unused parameters."""
     unused_annotator_parameters = info.parameters.get_unused_keys()
     if unused_annotator_parameters:
         raise ValueError("The are unused annotator parameters: "

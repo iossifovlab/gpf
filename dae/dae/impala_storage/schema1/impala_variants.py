@@ -5,12 +5,12 @@ from typing import Dict, Any, Tuple, Set
 
 import pyarrow as pa  # type: ignore
 from impala.util import as_pandas  # type: ignore
+from dae.annotation.annotation_pipeline import AttributeInfo
 
 from dae.person_sets import PersonSetCollection
 
 from dae.inmemory_storage.raw_variants import RawFamilyVariants
 
-from dae.annotation.schema import Schema
 from dae.pedigrees.family import FamiliesData
 from dae.pedigrees.loader import FamiliesLoader
 from dae.parquet.schema1.serializers import AlleleParquetSerializer
@@ -477,25 +477,25 @@ class ImpalaVariants:
         return ped_df
 
     TYPE_MAP: Dict[str, Any] = {
-        "str": (str, pa.string()),
-        "float": (float, pa.float32()),
-        "float32": (float, pa.float32()),
-        "float64": (float, pa.float64()),
-        "int": (int, pa.int32()),
-        "int8": (int, pa.int8()),
-        "tinyint": (int, pa.int8()),
-        "int16": (int, pa.int16()),
-        "smallint": (int, pa.int16()),
-        "int32": (int, pa.int32()),
-        "int64": (int, pa.int64()),
-        "bigint": (int, pa.int64()),
-        "list(str)": (list, pa.list_(pa.string())),
-        "list(float)": (list, pa.list_(pa.float64())),
-        "list(int)": (list, pa.list_(pa.int32())),
-        "bool": (bool, pa.bool_()),
-        "boolean": (bool, pa.bool_()),
-        "binary": (bytes, pa.binary()),
-        "string": (bytes, pa.string()),
+        "str": ("str", pa.string()),
+        "float": ("float", pa.float32()),
+        "float32": ("float", pa.float32()),
+        "float64": ("float", pa.float64()),
+        "int": ("int", pa.int32()),
+        "int8": ("int", pa.int8()),
+        "tinyint": ("int", pa.int8()),
+        "int16": ("int", pa.int16()),
+        "smallint": ("int", pa.int16()),
+        "int32": ("int", pa.int32()),
+        "int64": ("int", pa.int64()),
+        "bigint": ("int", pa.int64()),
+        "list(str)": ("list", pa.list_(pa.string())),
+        "list(float)": ("list", pa.list_(pa.float64())),
+        "list(int)": ("list", pa.list_(pa.int32())),
+        "bool": ("bool", pa.bool_()),
+        "boolean": ("bool", pa.bool_()),
+        "binary": ("bytes", pa.binary()),
+        "string": ("bytes", pa.string()),
     }
 
     def _fetch_variant_schema(self):
@@ -511,10 +511,11 @@ class ImpalaVariants:
             schema_desc = {
                 col_name: col_type for (_, col_name, col_type) in records
             }
-            schema = Schema()
+            schema: list[AttributeInfo] = []
             for name, type_name in schema_desc.items():
                 py_type, _ = self.TYPE_MAP[type_name]
-                schema.create_field(name, py_type)
+                attr = AttributeInfo(name, "table schema", False, {}, py_type)
+                schema.append(attr)
 
             return schema
 

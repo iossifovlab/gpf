@@ -1,0 +1,26 @@
+bars:
+- 51
+- 24
+- 55
+- 150
+- 263
+- 136
+- 19
+- 212
+bins:
+- 0.0
+- 0.875
+- 1.75
+- 2.625
+- 3.5
+- 4.375
+- 5.25
+- 6.125
+- 7.0
+config:
+  bins: 8
+  max: 7
+  min: 0
+  score: SFARI_gene_score
+  x_scale: linear
+  y_scale: linear

@@ -1,6 +1,8 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 from dae.testing import \
     setup_genome, setup_gene_models, setup_gpf_instance
+from dae.genomic_resources.repository_factory import \
+    build_genomic_resource_repository
 
 
 # this content follows the 'refflat' gene model format
@@ -37,13 +39,33 @@ def foobar_genome(root_path):
 
 
 def foobar_gpf(root_path, storage=None):
-    genome = foobar_genome(root_path)
-    genes = foobar_genes(root_path)
+    setup_genome(
+        root_path / "foobar_genome" / "chrAll.fa",
+        """
+            >foo
+            NNACCCAAAC
+            GGGCCTTCCN
+            NNNA
+            >bar
+            NNGGGCCTTC
+            CACGACCCAA
+            NN
+        """
+    )
+    setup_gene_models(
+        root_path / "foobar_genes" / "genes.txt",
+        GMM_CONTENT, fileformat="refflat")
+    local_repo = build_genomic_resource_repository({
+        "id": "alla_local",
+        "type": "directory",
+        "directory": str(root_path)
+    })
 
     gpf_instance = setup_gpf_instance(
         root_path / "gpf_instance",
-        reference_genome=genome,
-        gene_models=genes)
+        reference_genome_id="foobar_genome",
+        gene_models_id="foobar_genes",
+        grr=local_repo)
 
     if storage:
         gpf_instance\

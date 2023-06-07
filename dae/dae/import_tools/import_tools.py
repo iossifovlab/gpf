@@ -13,7 +13,7 @@ from dae.variants_loaders.cnv.loader import CNVLoader
 from dae.variants_loaders.dae.loader import DaeTransmittedLoader, DenovoLoader
 from dae.variants_loaders.vcf.loader import VcfLoader
 from dae.variants_loaders.raw.loader import AnnotationPipelineDecorator,\
-    EffectAnnotationDecorator, VariantsLoader
+    VariantsLoader
 
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.genotype_storage.genotype_storage_registry import (
@@ -28,7 +28,7 @@ from dae.configuration.schemas.import_config import import_config_schema,\
 from dae.pedigrees.loader import FamiliesLoader
 from dae.utils import fs_utils
 from dae.impala_storage.schema1.import_commons import MakefilePartitionHelper,\
-    construct_import_annotation_pipeline, construct_import_effect_annotator
+    construct_import_annotation_pipeline
 from dae.utils.statistics import StatsCollection
 
 
@@ -412,11 +412,6 @@ class ImportProject():
             self, variants_loader: VariantsLoader,
             gpf_instance) -> VariantsLoader:
         """Create an annotation pipeline around variants_loader."""
-        effect_annotator = construct_import_effect_annotator(gpf_instance)
-
-        variants_loader = EffectAnnotationDecorator(
-            variants_loader, effect_annotator)
-
         annotation_pipeline = self._build_annotation_pipeline(gpf_instance)
         if annotation_pipeline is not None:
             variants_loader = AnnotationPipelineDecorator(
@@ -579,7 +574,7 @@ class ImportProject():
             )
 
         # embedded annotation
-        annotation_config = AnnotationConfigParser.normalize(annotation_config)
+        annotation_config = AnnotationConfigParser.parse_raw(annotation_config)
         return build_annotation_pipeline(
             pipeline_config=annotation_config, grr_repository=gpf_instance.grr
         )

@@ -8,8 +8,6 @@ from typing import Any, Optional
 from .annotation_pipeline import AnnotationPipeline, Annotator, AnnotatorInfo
 from .annotatable import Annotatable
 
-from cerberus.validator import Validator
-
 
 class AnnotatorBase(Annotator):
     """Base implementation of the `Annotator` class."""
@@ -37,41 +35,10 @@ class AnnotatorBase(Annotator):
         """
 
     def annotate(
-        self, annotatable: Annotatable, context: dict[str, Any]
+        self, annotatable: Optional[Annotatable], context: dict[str, Any]
     ) -> dict[str, Any]:
         if annotatable is None:
             return self._empty_result()
         source_values = self._do_annotate(annotatable, context)
         return {attribute_config.name: source_values[attribute_config.source]
                 for attribute_config in self._info.attributes}
-
-
-ATTRIBUTES_SCHEMA = {
-    "type": "dict",
-    "coerce": "attributes",
-    "allow_unknown": True,
-    "schema": {
-        "source": {"type": "string"},
-        "destination": {"type": "string"},
-        "internal": {
-            "type": "boolean",
-            "default": False,
-        },
-    },
-}
-
-
-class AnnotatorConfigValidator(Validator):
-    """Cerberus validation for annotators configuration."""
-
-    def _normalize_coerce_attributes(self, value):
-        if isinstance(value, str):
-            return {
-                "source": value,
-                "destination": value,
-            }
-        if isinstance(value, dict):
-            if "source" in value and "destination" not in value:
-                value["destination"] = value["source"]
-            return value
-        return value

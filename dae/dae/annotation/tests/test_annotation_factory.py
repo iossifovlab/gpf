@@ -1,8 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+import pytest
 
 from dae.annotation.annotation_pipeline import AnnotatorInfo, AttributeInfo
-from dae.annotation.annotator_base import AnnotatorConfigValidator
-import pytest
 from dae.genomic_resources import build_genomic_resource_repository
 from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.annotation.annotation_factory import build_annotation_pipeline, \

@@ -31,7 +31,7 @@ def test_to_records():
         "1", 11539, "T", "G", 0, 1,
         effect=effect
     )
-    records = in_allele.to_record
+    records = in_allele.to_record()
     out_allele = SummaryVariantFactory.summary_allele_from_record(records)
 
     assert in_allele.summary_index == out_allele.summary_index

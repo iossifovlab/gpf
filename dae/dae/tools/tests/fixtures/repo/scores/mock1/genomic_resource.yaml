@@ -1,7 +1,7 @@
-type: mock_resource
+type: position_score
 table:
   filename: mock_file
 scores:
-  - id: mock
+  - id: mock1
     index: 0
     type: float

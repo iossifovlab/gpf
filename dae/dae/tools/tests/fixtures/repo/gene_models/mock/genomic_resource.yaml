@@ -1,2 +1,6 @@
-type: gene_models
-filename: mock_file
+
+type: gene_models 
+
+filename: empty_genes.txt
+
+format: "refflat"

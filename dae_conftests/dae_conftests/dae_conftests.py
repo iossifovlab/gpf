@@ -22,8 +22,7 @@ from dae.configuration.schemas.dae_conf import dae_conf_schema
 
 from dae.annotation.annotation_factory import build_annotation_pipeline
 
-from dae.variants_loaders.raw.loader import EffectAnnotationDecorator, \
-    AnnotationPipelineDecorator
+from dae.variants_loaders.raw.loader import AnnotationPipelineDecorator
 from dae.inmemory_storage.raw_variants import RawMemoryVariants
 
 from dae.variants_loaders.dae.loader import DaeTransmittedLoader, DenovoLoader
@@ -32,7 +31,7 @@ from dae.import_tools.import_tools import ImportProject
 from dae.import_tools.cli import run_with_project
 
 from dae.impala_storage.schema1.import_commons import \
-    construct_import_effect_annotator
+    construct_import_annotation_pipeline
 
 
 from dae.pedigrees.loader import FamiliesLoader
@@ -498,7 +497,7 @@ def vcf_loader_data():
 def vcf_variants_loaders(
         vcf_loader_data, gpf_instance_2019):
 
-    effect_annotator = construct_import_effect_annotator(
+    annotation_pipeline = construct_import_annotation_pipeline(
         gpf_instance_2019
     )
 
@@ -533,8 +532,8 @@ def vcf_variants_loaders(
                     "denovo_alt": "alt",
                 }
             )
-            loaders.append(EffectAnnotationDecorator(
-                denovo_loader, effect_annotator))
+            loaders.append(AnnotationPipelineDecorator(
+                denovo_loader, annotation_pipeline))
 
         vcf_loader = VcfLoader(
             families,
@@ -543,8 +542,8 @@ def vcf_variants_loaders(
             params=params
         )
 
-        loaders.append(EffectAnnotationDecorator(
-            vcf_loader, effect_annotator
+        loaders.append(AnnotationPipelineDecorator(
+            vcf_loader, annotation_pipeline
         ))
 
         return loaders

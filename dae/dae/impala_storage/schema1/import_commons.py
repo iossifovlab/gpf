@@ -12,6 +12,7 @@ from typing import Optional, Dict, Any, Type
 from math import ceil
 from collections import defaultdict
 
+import yaml
 import fsspec
 import toml
 from box import Box
@@ -19,11 +20,10 @@ from box import Box
 from jinja2 import Template
 
 from dae.annotation.annotation_factory import build_annotation_pipeline
-from dae.annotation.effect_annotator import EffectAnnotatorAdapter
 
 from dae.pedigrees.loader import FamiliesLoader
 from dae.variants_loaders.raw.loader import AnnotationPipelineDecorator, \
-    EffectAnnotationDecorator, VariantsLoader
+    VariantsLoader
 from dae.variants_loaders.dae.loader import DenovoLoader, DaeTransmittedLoader
 from dae.variants_loaders.vcf.loader import VcfLoader
 from dae.variants_loaders.cnv.loader import CNVLoader
@@ -67,46 +67,46 @@ def save_study_config(dae_config, study_id, study_config, force=False):
 def construct_import_annotation_pipeline(
         gpf_instance, annotation_configfile=None):
     """Construct annotation pipeline for importing data."""
+    pipeline_config = []
     if annotation_configfile is not None:
-        config_filename = annotation_configfile
+        assert os.path.exists(annotation_configfile), annotation_configfile
+        with open(annotation_configfile, "rt", encoding="utf8") as infile:
+            pipeline_config = yaml.safe_load(infile.read())
     else:
-        if gpf_instance.dae_config.annotation is None:
-            return None
-        config_filename = gpf_instance.dae_config.annotation.conf_file
+        if gpf_instance.dae_config.annotation is not None:
+            config_filename = gpf_instance.dae_config.annotation.conf_file
+            assert os.path.exists(config_filename), config_filename
+            with open(config_filename, "rt", encoding="utf8") as infile:
+                pipeline_config = yaml.safe_load(infile.read())
 
-    if not os.path.exists(config_filename):
-        logger.warning("missing annotation configuration: %s", config_filename)
-        return None
+        pipeline_config.insert(
+            0, _construct_import_effect_annotator_config(gpf_instance))
 
     grr = gpf_instance.grr
-    assert os.path.exists(config_filename), config_filename
     pipeline = build_annotation_pipeline(
-        pipeline_config_file=config_filename, grr_repository=grr)
-    # pipeline.open()  # FIXME:
+        pipeline_config_raw=pipeline_config, grr_repository=grr)
     return pipeline
 
 
-def construct_import_effect_annotator(gpf_instance):
+def _construct_import_effect_annotator_config(gpf_instance):
     """Construct import effect annotator."""
     genome = gpf_instance.reference_genome
     gene_models = gpf_instance.gene_models
 
-    config = Box({
-        "annotator_type": "effect_annotator",
-        "genome": genome.resource_id,
-        "gene_models": gene_models.resource_id,
-        "attributes": [
-            {
-                "source": "allele_effects",
-                "destination": "allele_effects",
-                "internal": True
-            }
-        ]
-    })
-
-    effect_annotator = EffectAnnotatorAdapter(
-        config, genome=genome, gene_models=gene_models)
-    return effect_annotator
+    config = {
+        "effect_annotator": {
+            "genome": genome.resource_id,
+            "gene_models": gene_models.resource_id,
+            "attributes": [
+                {
+                    "source": "allele_effects",
+                    "destination": "allele_effects",
+                    "internal": True
+                }
+            ]
+        }
+    }
+    return config
 
 
 class MakefilePartitionHelper:
@@ -1267,11 +1267,6 @@ class Variants2ParquetTool:
     @classmethod
     def _build_variants_loader_pipeline(
             cls, gpf_instance, argv, variants_loader):
-
-        effect_annotator = construct_import_effect_annotator(gpf_instance)
-
-        variants_loader = EffectAnnotationDecorator(
-            variants_loader, effect_annotator)
 
         annotation_pipeline = construct_import_annotation_pipeline(
             gpf_instance, annotation_configfile=argv.annotation_config,

@@ -1,10 +1,11 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
 
-from dae.annotation.schema import Schema
+# from dae.annotation.schema import Schema
 from dae.parquet.schema1.serializers import AlleleParquetSerializer
 from dae.variants_loaders.dae.loader import DenovoLoader
 from dae.pedigrees.loader import FamiliesLoader
+from dae.annotation.annotation_pipeline import AttributeInfo
 
 from dae.import_tools.import_tools import ImportProject
 from dae.import_tools.cli import run_with_project
@@ -61,9 +62,9 @@ def test_all_properties_in_blob(vcf_variants_loaders, impala_genotype_storage):
 
     fv = list(loader.full_variants_iterator())[0][1][0]
     family = loader.families.get(fv.family_id)
-    schema = Schema()
+    schema: list[AttributeInfo] = []
     print(schema)
-    schema.create_field("some_score", float)
+    schema.append(AttributeInfo("some_score", "test", False, {}, "float"))
     fv.update_attributes({"some_score": [1.24]})
 
     serializer = AlleleParquetSerializer(schema)
@@ -77,23 +78,23 @@ def test_all_properties_in_blob(vcf_variants_loaders, impala_genotype_storage):
 
     print(fv.alt_alleles[0].attributes)
 
-    for prop in schema.names:
-        if prop in {"effect_genes", "effect_details"}:
+    for attr in schema:
+        if attr.name in {"effect_genes", "effect_details"}:
             continue
-        if prop == "summary_variant_index":
+        if attr.name == "summary_variant_index":
             continue  # Summary variant index has special handling
-        fv_prop = getattr(fv, prop, None)
+        fv_prop = getattr(fv, attr.name, None)
         if not fv_prop:
-            fv_prop = fv.get_attribute(prop)
-        deserialized_prop = getattr(deserialized_variant, prop, None)
+            fv_prop = fv.get_attribute(attr.name)
+        deserialized_prop = getattr(deserialized_variant, attr.name, None)
         if not deserialized_prop:
-            deserialized_prop = deserialized_variant.get_attribute(prop)
-        if prop == "some_score":
+            deserialized_prop = deserialized_variant.get_attribute(attr.name)
+        if attr.name == "some_score":
             continue
-        print(prop)
+        print(attr)
         print(fv_prop)
         print(deserialized_prop)
-        assert fv_prop == deserialized_prop, prop
+        assert fv_prop == deserialized_prop, attr
 
 
 def test_extra_attributes_serialization_deserialization(
@@ -173,8 +174,8 @@ def test_build_allele_batch_dict(
     family = loader.families.get(fv.family_id)
     assert family, fv.family_id
 
-    schema = Schema()
-    schema.create_field("some_score", float)
+    schema: list[AttributeInfo] = []
+    schema.append(AttributeInfo("some_score", "test", False, {}, "float"))
     fv.update_attributes({"some_score": [1.24]})
 
     serializer = AlleleParquetSerializer(schema)

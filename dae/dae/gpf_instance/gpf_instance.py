@@ -177,32 +177,18 @@ class GPFInstance:
     @cached_property
     def genomic_scores_db(self):
         """Load and return genomic scores db."""
-        scores = []
-        if self.dae_config.genomic_scores_db is not None:
-            for score_def in self.dae_config.genomic_scores_db:
-                scores.append((score_def["resource"], score_def["score"]))
-            return GenomicScoresDb(self.grr, scores)
+        score_annotators = []
 
         pipeline = self.get_annotation_pipeline()
         if pipeline is not None and len(pipeline.annotators) > 0:
             for annotator in pipeline.annotators:
-                schema = annotator.annotation_schema
-                resource_id = annotator.config.get("resource_id")
-                if resource_id is None:
+                annotator_info = annotator.get_info()
+                if annotator_info.type not in \
+                        {"position_score", "np_score", "allele_score"}:
                     continue
+                score_annotators.append(annotator_info)
 
-                resource = self.grr.get_resource(resource_id)
-                assert resource is not None, resource_id
-
-                config = resource.get_config()
-
-                if "histograms" not in config:
-                    continue
-
-                for field_name in schema.public_fields:
-                    scores.append((resource_id, field_name))
-
-        return GenomicScoresDb(self.grr, scores)
+        return GenomicScoresDb(self.grr, score_annotators)
 
     @cached_property
     def genotype_storages(self):

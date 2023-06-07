@@ -318,7 +318,7 @@ class VariantsParquetWriter:
                 # build summary json blob (concat all other alleles)
                 # INSIDE summary_variant
                 summary_blobs_json = json.dumps(
-                    summary_variant.to_record, sort_keys=True
+                    summary_variant.to_record(), sort_keys=True
                 )
                 for summary_allele in summary_variant.alleles:
                     extra_atts = {

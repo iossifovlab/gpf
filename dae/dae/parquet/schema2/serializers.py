@@ -96,18 +96,14 @@ class AlleleParquetSerializer:
             }
 
             if self.annotation_schema is not None:
-                for annotation in self.annotation_schema.public_fields:
-                    annotation_field_type = self.annotation_schema[
-                        annotation
-                    ].type
-
-                    if annotation_field_type in annotation_type_to_pa_type:
+                for attr in self.annotation_schema:
+                    if attr.internal:
+                        continue
+                    if attr.type in annotation_type_to_pa_type:
                         fields.append(
                             pa.field(
-                                annotation,
-                                annotation_type_to_pa_type[
-                                    annotation_field_type
-                                ],
+                                attr.name,
+                                annotation_type_to_pa_type[attr.type],
                             )
                         )
 
@@ -193,7 +189,9 @@ class AlleleParquetSerializer:
             allele_data[spr] = [prop_value]
 
         if self.annotation_schema is not None:
-            for field in self.annotation_schema.public_fields:
-                allele_data[field] = [allele.get_attribute(field)]
+            for attr in self.annotation_schema:
+                if attr.internal:
+                    continue
+                allele_data[attr.name] = [allele.get_attribute(attr.name)]
 
         return allele_data
