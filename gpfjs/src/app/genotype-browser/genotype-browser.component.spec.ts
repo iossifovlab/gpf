@@ -34,6 +34,8 @@ import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { of } from 'rxjs/internal/observable/of';
 import { HttpResponse } from '@angular/common/http';
 import { Observable } from 'rxjs/internal/Observable';
+import { NavigationStart, Router, RouterEvent } from '@angular/router';
+import { Subject } from 'rxjs/internal/Subject';
 
 
 const genotypeBrowserConfigMock = {
@@ -53,12 +55,17 @@ class MockQueryService {
   public downloadVariants(): Observable<HttpResponse<Blob>> {
     return of([] as any) as Observable<HttpResponse<Blob>>;
   }
+
+  public cancelStreamPost(): void {
+    return null;
+  }
 }
 
 describe('GenotypeBrowserComponent', () => {
   let component: GenotypeBrowserComponent;
   let fixture: ComponentFixture<GenotypeBrowserComponent>;
   const queryService = new MockQueryService();
+  let loadingService: FullscreenLoadingService;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -99,6 +106,7 @@ describe('GenotypeBrowserComponent', () => {
     }).compileComponents();
     fixture = TestBed.createComponent(GenotypeBrowserComponent);
     component = fixture.componentInstance;
+    loadingService = TestBed.inject(FullscreenLoadingService);
     fixture.detectChanges();
   });
 
@@ -122,5 +130,16 @@ describe('GenotypeBrowserComponent', () => {
       download: true
     }));
     expect(mockEvent.target.submit).toHaveBeenCalledTimes(1);
+  });
+
+  it('should cancel queries on router change', () => {
+    const stopSpy = jest.spyOn(loadingService, 'setLoadingStop');
+    const cancelSpy = jest.spyOn(queryService, 'cancelStreamPost');
+    const router = TestBed.inject(Router);
+
+    (router.events as Subject<RouterEvent>).next(new NavigationStart(1, 'start'));
+
+    expect(stopSpy).toHaveBeenCalledTimes(1);
+    expect(cancelSpy).toHaveBeenCalledTimes(1);
   });
 });

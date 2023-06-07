@@ -1,5 +1,5 @@
 import { Component, Input, OnDestroy, OnInit } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, Subscription } from 'rxjs';
 import { QueryService } from '../query/query.service';
 import { FullscreenLoadingService } from '../fullscreen-loading/fullscreen-loading.service';
 import { ConfigService } from '../config/config.service';
@@ -15,9 +15,10 @@ import { FamilyFiltersBlockComponent } from 'app/family-filters-block/family-fil
 import { PersonFiltersBlockComponent } from 'app/person-filters-block/person-filters-block.component';
 import { UniqueFamilyVariantsFilterState } from 'app/unique-family-variants-filter/unique-family-variants-filter.state';
 import { ErrorsState, ErrorsModel } from '../common/errors.state';
-import { take } from 'rxjs/operators';
+import { filter, take } from 'rxjs/operators';
 import { StudyFiltersBlockState } from 'app/study-filters-block/study-filters-block.state';
 import { clone } from 'lodash';
+import { NavigationStart, Router } from '@angular/router';
 
 @Component({
   selector: 'gpf-genotype-browser',
@@ -30,6 +31,7 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy {
   public legend: Array<PersonSet>;
 
   public disableQueryButtons = false;
+  private routerSubscription: Subscription;
 
   @Input()
   public selectedDatasetId: string;
@@ -82,7 +84,15 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy {
     public readonly configService: ConfigService,
     private loadingService: FullscreenLoadingService,
     private datasetsService: DatasetsService,
-  ) { }
+    private router: Router
+  ) {
+    this.routerSubscription = this.router.events.pipe(
+      filter(event => event instanceof NavigationStart)
+    ).subscribe(() => {
+      this.queryService.cancelStreamPost();
+      this.loadingService.setLoadingStop();
+    });
+  }
 
   public ngOnInit(): void {
     this.genotypeBrowserState = {};
@@ -109,6 +119,7 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy {
 
   public ngOnDestroy(): void {
     this.loadingService.setLoadingStop();
+    this.routerSubscription.unsubscribe();
   }
 
   public submitQuery(): void {
@@ -139,7 +150,7 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy {
         ? this.selectedDataset?.genotypeBrowserConfig?.maxVariantsCount + 1
         : undefined,
       () => {
-        this.variantsCountDisplay = this.genotypePreviewVariantsArray.getVariantsCount(
+        this.variantsCountDisplay = this.genotypePreviewVariantsArray?.getVariantsCount(
           this.selectedDataset?.genotypeBrowserConfig?.maxVariantsCount
         );
       }
