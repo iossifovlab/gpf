@@ -329,8 +329,6 @@ describe('VariantReportsComponent', () => {
     expect(component.currentDenovoReport).toBeUndefined();
   });
 
-  it.todo('should test download');
-
   it('should initialize pedigree tags', async() => {
     component.ngOnInit();
     const tags = await lastValueFrom(variantReportsServiceMock.getTags());

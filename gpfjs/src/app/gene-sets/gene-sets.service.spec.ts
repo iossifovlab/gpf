@@ -8,9 +8,8 @@ import { APP_BASE_HREF } from '@angular/common';
 
 describe('GeneSetsService', () => {
   let service: GeneSetsService;
-
+  const configMock = { baseUrl: 'testUrl/' };
   beforeEach(() => {
-    const configMock = { baseUrl: 'testUrl/' };
     TestBed.configureTestingModule({
       providers: [
         { provide: ConfigService, useValue: configMock },
@@ -44,5 +43,13 @@ describe('GeneSetsService', () => {
     );
   });
 
-  it.todo('should downloadGeneSet');
+  it('should get the gene set download link', () => {
+    const mockGeneSet = {
+      download: 'gene_sets/gene_set_1/download'
+    };
+
+    const downloadLink = service.getGeneSetDownloadLink(mockGeneSet as any);
+
+    expect(downloadLink).toBe(`${configMock.baseUrl}gene_sets/gene_set_1/download`);
+  });
 });

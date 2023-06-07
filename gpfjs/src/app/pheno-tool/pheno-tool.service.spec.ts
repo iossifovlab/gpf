@@ -47,8 +47,4 @@ describe('PhenoToolService', () => {
       ]
     );
   });
-
-  xit('should download pheno tool results', () => {
-    // TODO
-  });
 });

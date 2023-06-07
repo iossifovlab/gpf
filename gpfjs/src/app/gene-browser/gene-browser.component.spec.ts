@@ -234,5 +234,51 @@ describe('GeneBrowserComponent', () => {
     });
   });
 
-  it.todo('should test download');
+  it('should test download', () => {
+    const mockEvent = {
+      target: {
+        queryData: {
+          value: ''
+        },
+        submit: jest.fn()
+      }
+    };
+
+    component.onSubmit(mockEvent as any);
+
+    expect(mockEvent.target.queryData.value).toStrictEqual(JSON.stringify({
+      effectTypes: [
+        'frame-shift',
+        'nonsense',
+        'splice-site',
+        'no-frame-shift-newStop',
+        'missense',
+        'synonymous',
+        'CNV+',
+        'CNV-',
+        '3\'UTR',
+        '3\'UTR-intron',
+        '5\'UTR',
+        '5\'UTR-intron',
+        'intergenic',
+        'intron',
+        'no-frame-shift',
+        'noEnd',
+        'noStart',
+        'non-coding',
+        'non-coding-intron',
+        'CDS'
+      ],
+      inheritanceTypeFilter: ['denovo', 'mendelian', 'omission', 'missing'],
+      affectedStatus: ['Affected only', 'Unaffected only', 'Affected and unaffected'],
+      variantTypes: ['sub', 'ins', 'del', 'CNV+', 'CNV-'],
+      geneSymbols: ['POGZ'],
+      datasetId: 'testDatasetId',
+      regions: '',
+      summaryVariantIds: [],
+      genomicScores: [{ metric: 'testColumn', rangeStart: null, rangeEnd: 100 }],
+      download: true
+    }));
+    expect(mockEvent.target.submit).toHaveBeenCalledTimes(1);
+  });
 });

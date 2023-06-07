@@ -107,7 +107,20 @@ describe('GenotypeBrowserComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  xit('should test download', () => {
-    // TODO
+  it('should test download', () => {
+    const mockEvent = {
+      target: {
+        queryData: {
+          value: ''
+        },
+        submit: jest.fn()
+      }
+    };
+    component.onSubmit(mockEvent);
+    expect(mockEvent.target.queryData.value).toStrictEqual(JSON.stringify({
+      datasetId: component.selectedDataset.id,
+      download: true
+    }));
+    expect(mockEvent.target.submit).toHaveBeenCalledTimes(1);
   });
 });

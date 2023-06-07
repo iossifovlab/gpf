@@ -37,7 +37,7 @@ export class VariantReportsService {
     if (tags) {
       url = `${url}?${new URLSearchParams({'tags': tags})}`;
     }
-    return url
+    return url;
   }
 
   public getFamilies(datasetId: string, groupName: string, counterId: number): Observable<string[]> {
