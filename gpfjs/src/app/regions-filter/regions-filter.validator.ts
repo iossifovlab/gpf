@@ -41,9 +41,9 @@ export class RegionsFilterValidator implements ValidatorConstraintInterface {
 
     if (
       match.length >= 3
-      && match[1]
       && match[2]
-      && Number(match[1].replace(',', '')) > Number(match[2].replace(',', ''))
+      && match[3]
+      && Number(match[2].replace(',', '')) > Number(match[3].replace(',', ''))
     ) {
       return false;
     }
