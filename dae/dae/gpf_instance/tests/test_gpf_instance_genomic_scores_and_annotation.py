@@ -35,7 +35,7 @@ def gpf_fixture(fixture_dirname, tmp_path_factory):
             "type": "directory",
             "directory": str(root_path / "alla_gpf")
         })
-        
+
         setup_directories(
             root_path / "gpf_instance",
             instance_config

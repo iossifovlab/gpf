@@ -309,7 +309,7 @@ class GenomicResource:
         return self.get_description()
 
     def get_url(self) -> str:
-        return self.proto.get_url() + self.get_id()
+        return f"{self.proto.get_url()}{self.get_id()}"
 
     def get_labels(self) -> dict[str, Any]:
         config: dict[str, Any] = self.get_config()
@@ -400,7 +400,7 @@ class ReadOnlyRepositoryProtocol(abc.ABC):
 
     @abc.abstractmethod
     def get_url(self) -> str:
-        """Get url for the repo???"""
+        """Return the repository URL."""
 
     @abc.abstractmethod
     def invalidate(self):

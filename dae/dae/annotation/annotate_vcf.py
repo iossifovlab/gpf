@@ -236,7 +236,8 @@ def cli(raw_args: Optional[list[str]] = None) -> None:
         task_graph.create_task(
             "combine",
             combine,
-            [args.input, pipeline.get_info(), grr.definition, file_paths, output],
+            [args.input, pipeline.get_info(),
+             grr.definition, file_paths, output],
             region_tasks
         )
 

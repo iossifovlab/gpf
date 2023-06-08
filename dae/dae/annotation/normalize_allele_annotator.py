@@ -24,6 +24,8 @@ def build_normalize_allele_annotator(pipeline: AnnotationPipeline,
 
 
 class NormalizeAlleleAnnotator(AnnotatorBase):
+    """Annotator to normalize VCF alleles."""
+
     def __init__(self, pipeline: AnnotationPipeline, info: AnnotatorInfo):
 
         genome_resrouce_id = info.parameters.get("genome")

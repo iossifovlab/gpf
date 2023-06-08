@@ -202,7 +202,7 @@ def setup_gene_models(out_path: pathlib.Path, content, fileformat=None):
     setup_directories(out_path, convert_to_tab_separated(content))
     setup_directories(out_path.parent, {
         "genomic_resource.yaml": textwrap.dedent(f"""
-            type: gene_models 
+            type: gene_models
 
             filename: { out_path.name }
 

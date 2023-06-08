@@ -349,7 +349,7 @@ def test_annotation_file(tmpdir, fixture_dirname):
     assert pipeline is not None
     assert len(pipeline.get_info()) == 1
 
-    annotator_info = pipeline.get_info()[0] 
+    annotator_info = pipeline.get_info()[0]
     assert annotator_info.type == "np_score"
     assert annotator_info.parameters["resource_id"] == "hg19/CADD"
 

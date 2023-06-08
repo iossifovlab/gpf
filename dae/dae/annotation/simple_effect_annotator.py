@@ -21,6 +21,7 @@ def build_simple_effect_annotator(pipeline: AnnotationPipeline,
 
 
 class SimpleEffectAnnotator(AnnotatorBase):
+    """Simple effect annotator class."""
 
     def __init__(self, pipeline: AnnotationPipeline, info: AnnotatorInfo):
 

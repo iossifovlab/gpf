@@ -7,7 +7,7 @@ import numpy as np
 
 from deprecation import deprecated  # type: ignore
 
-from dae.pedigrees.family import Family
+from dae.pedigrees.family import Family, Person
 from dae.utils.variant_utils import GenotypeType, \
     is_all_unknown_genotype, \
     is_reference_genotype, \
@@ -15,7 +15,8 @@ from dae.utils.variant_utils import GenotypeType, \
 
 from dae.variants.attributes import GeneticModel, \
     Inheritance,\
-    TransmissionType
+    TransmissionType, \
+    Role, Sex, Status
 
 from dae.effect_annotation.effect import AlleleEffects
 from dae.variants.core import Allele
@@ -79,16 +80,16 @@ class FamilyDelegate:
 
 
 class FamilyAllele(SummaryAllele, FamilyDelegate):
+    # pylint: disable=super-init-not-called,too-many-public-methods
     """Class representing an allele in a family."""
 
-    # pylint: disable=super-init-not-called
     def __init__(
             self,
             summary_allele: SummaryAllele,
             family: Family,
             genotype,
             best_state,
-            genetic_model=None,
+            genetic_model: Optional[GeneticModel] = None,
             inheritance_in_members=None):
 
         assert isinstance(family, Family)
@@ -102,16 +103,17 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
 
         # assert self.gt.dtype == GenotypeType, (self.gt, self.gt.dtype)
         self._best_state = best_state
-        self._genetic_model = genetic_model
-        if self._genetic_model is None:
+        if genetic_model is None:
             self._genetic_model = GeneticModel.autosomal
+        else:
+            self._genetic_model = genetic_model
 
         self._inheritance_in_members = inheritance_in_members
-        self._variant_in_members = None
-        self._variant_in_members_objects = None
-        self._variant_in_roles = None
-        self._variant_in_sexes = None
-        self._variant_in_statuses = None
+        self._variant_in_members: Optional[list[str]] = None
+        self._variant_in_members_objects: Optional[list[Person]] = None
+        self._variant_in_roles: Optional[list[Role]] = None
+        self._variant_in_sexes: Optional[list[Sex]] = None
+        self._variant_in_statuses: Optional[list[Status]] = None
         self._family_index = None
         self._family_attributes: dict = {}
 
@@ -299,6 +301,7 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
 
     @property
     def variant_in_members_objects(self):
+        """Return list of person with the variant."""
         if self._variant_in_members_objects is None:
 
             variant_in_members = set(filter(None, self.variant_in_members))
@@ -364,6 +367,7 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
         :param child: genotype of the child.
         :return: True, when the inheritance is mendelian.
         """
+        # pylint: disable=invalid-name
         ai = allele_index
         if ai not in set(child):
             return False
@@ -433,18 +437,17 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
         """
         if cls.check_mendelian_trio(parent_1, parent_2, child, allele_index):
             return Inheritance.mendelian
-        elif cls.check_denovo_trio(parent_1, parent_2, child, allele_index):
+        if cls.check_denovo_trio(parent_1, parent_2, child, allele_index):
             return Inheritance.denovo
-        elif cls.check_omission_trio(parent_1, parent_2, child, allele_index):
+        if cls.check_omission_trio(parent_1, parent_2, child, allele_index):
             return Inheritance.omission
-        else:
-            return Inheritance.other
+        return Inheritance.other
 
 
 class FamilyVariant(SummaryVariant, FamilyDelegate):
+    # pylint: disable=super-init-not-called,too-many-public-methods
     """Class representing a variant in a family."""
 
-    # pylint: disable=super-init-not-called
     def __init__(
             self,
             summary_variant: SummaryVariant,
@@ -462,7 +465,7 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
         self.summary_variant = summary_variant
         self.summary_alleles = self.summary_variant.alleles
         self.gt = genotype
-        self._genetic_model = None
+        self._genetic_model: Optional[GeneticModel] = None
 
         self._family_alleles: Optional[List[FamilyAllele]] = None
         self._best_state = best_state
@@ -488,7 +491,7 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
                 inheritance_in_members=self._inheritance_in_members.get(0)
             )
         ]
-
+        # pylint: disable=invalid-name
         for ai in self.calc_alt_alleles(self.gt):
             summary_allele = None
             for allele in self.summary_variant.alt_alleles:
@@ -557,7 +560,7 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
 
     @property
     def family_index(self):
-        return self.ref_allele.family_index
+        return cast(FamilyAllele, self.ref_allele).family_index
 
     @family_index.setter
     def family_index(self, val):
@@ -615,6 +618,7 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
         """Return family genotype using family variant indexes."""
         gt2fgt = zip(self.allele_indexes, self.family_allele_indexes)
         fgt = np.zeros(shape=self.gt.shape, dtype=np.int8)
+        # pylint: disable=invalid-name
         for gi, fgi in gt2fgt:
             fgt[self.gt == gi] = fgi
 
@@ -666,12 +670,14 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
 
     @property
     def variant_in_members(self):
-        members = set()
+        """Return list of members with the variant."""
+        members: set[str] = set()
         for allele in self.alt_alleles:
-            members = members.union(filter(None, allele.variant_in_members))
+            members = members.union(filter(
+                None,
+                cast(FamilyAllele, allele).variant_in_members))
         return members
 
-    @property
     def to_record(self):
         return {
             "family_id": self.family_id,

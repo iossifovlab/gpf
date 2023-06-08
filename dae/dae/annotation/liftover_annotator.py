@@ -25,6 +25,7 @@ logger = logging.getLogger(__name__)
 
 def build_liftover_annotator(pipeline: AnnotationPipeline,
                              info: AnnotatorInfo) -> Annotator:
+    """Create a liftover annotator."""
     chain_resource_id = info.parameters.get("chain")
     if chain_resource_id is None:
         raise ValueError("The {into} requires a 'chain' parameter.")
@@ -49,6 +50,8 @@ def build_liftover_annotator(pipeline: AnnotationPipeline,
 
 
 class LiftOverAnnotator(AnnotatorBase):
+    """Liftovver annotator class."""
+
     def __init__(self, pipeline: Optional[AnnotationPipeline],
                  info: AnnotatorInfo,
                  chain: LiftoverChain, target_genome: ReferenceGenome):

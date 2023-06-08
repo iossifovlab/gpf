@@ -288,7 +288,7 @@ class VariantsParquetWriter:
                     }
                     fa.update_attributes(extra_atts)
 
-                family_variant_data_json = json.dumps(fv.to_record,
+                family_variant_data_json = json.dumps(fv.to_record(),
                                                       sort_keys=True)
 
                 for fa in fv.alt_alleles:

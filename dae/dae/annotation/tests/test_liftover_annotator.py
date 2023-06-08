@@ -1,10 +1,10 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import textwrap
 from typing import cast
-from dae.annotation.annotation_pipeline import AnnotatorInfo
 
 import pytest
 
+from dae.annotation.annotation_pipeline import AnnotatorInfo
 from dae.annotation.annotatable import VCFAllele
 from dae.annotation.annotation_factory import build_annotation_pipeline
 from dae.variants.core import Allele

@@ -1,6 +1,5 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import textwrap
-from typing import cast
 
 import pytest
 
@@ -10,7 +9,6 @@ from dae.genomic_resources.repository import GenomicResourceProtocolRepo
 
 from dae.annotation.annotation_factory import build_annotation_pipeline
 from dae.annotation.annotatable import VCFAllele
-from dae.annotation.score_annotator import GenomicScoreAnnotatorBase
 
 
 @pytest.fixture
@@ -68,6 +66,7 @@ def test_vcf_info_annotator_all_attributes(score1_repo):
          for at in pipeline.get_attributes()]
 
     assert observed_name_src_type_desc == expected_name_scr_type_desc
+
 
 def test_vcf_info_config_annotation(score1_repo):
 

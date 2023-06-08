@@ -23,18 +23,6 @@ from .group_repository import GenomicResourceGroupRepo
 
 logger = logging.getLogger(__name__)
 
-# _registered_genomic_resource_repository_protocol_types: \
-#     dict[str, Type[
-#         Union[ReadOnlyRepositoryProtocol, ReadWriteRepositoryProtocol]]] = {}
-
-
-# def register_genomic_resource_repository_protocol_type(
-#         protocol_type: str,
-#         constructor: Type[
-#             Union[ReadOnlyRepositoryProtocol, ReadWriteRepositoryProtocol]]):
-#     _registered_genomic_resource_repository_protocol_types[
-#         protocol_type] = constructor
-
 
 DEFAULT_DEFINITION = {
     "id": "default",
@@ -179,7 +167,7 @@ def _build_group_repository(
 def build_genomic_resource_group_repository(
         repo_id: str,
         children: list[GenomicResourceRepo]) -> GenomicResourceRepo:
-    return GenomicResourceGroupRepo(children, repo_id) 
+    return GenomicResourceGroupRepo(children, repo_id)
 
 
 def build_genomic_resource_repository(

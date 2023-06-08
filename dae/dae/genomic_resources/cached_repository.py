@@ -43,7 +43,7 @@ class CachingProtocol(ReadOnlyRepositoryProtocol):
 
     def get_url(self) -> str:
         return self.remote_protocol.get_url()
-    
+
     def invalidate(self):
         self.remote_protocol.invalidate()
         self.local_protocol.invalidate()

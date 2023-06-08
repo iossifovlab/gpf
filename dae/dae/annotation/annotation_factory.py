@@ -190,7 +190,7 @@ class AnnotationConfigParser:
         """Parse annotation pipeline configuration string."""
         try:
             pipeline_raw_config = yaml.safe_load(content)
-        except Exception as error:  # pylint: disable=broad-exception-caught
+        except Exception as error:  # pylint: disable=broad-except
             if source_file_name is None:
                 raise AnnotationConfigurationError(
                     f"The pipeline configuration {content} is an invalid yaml "

@@ -1,14 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-import textwrap
+
 from dae.annotation.annotation_pipeline import AnnotatorInfo, AttributeInfo
-
-import pytest
-
 from dae.annotation.annotation_factory import AnnotationConfigParser
-from dae.annotation.score_annotator import AlleleScoreAnnotator, \
-    NPScoreAnnotator, PositionScoreAnnotator
-from dae.annotation.effect_annotator import EffectAnnotatorAdapter
-from dae.annotation.liftover_annotator import LiftOverAnnotator
 
 
 def test_simple_annotator_simple():
@@ -73,7 +66,7 @@ def test_annotator_config_with_attributes():
             AttributeInfo("att3", "some_score", False, {}),
             AttributeInfo("att4", "some_score", False, {"att_param": "foo"}),
             AttributeInfo("att5", "att5", True, {"att_param": "raz"}),
-            AttributeInfo("att6", "att6", False, {})], 
+            AttributeInfo("att6", "att6", False, {})],
             {})]
 
 
@@ -98,6 +91,7 @@ def test_annotator_config_with_params_and_attributes():
 def test_empty_config():
     pipeline_config = AnnotationConfigParser.parse_str("")
 
+    # pylint: disable=use-implicit-booleaness-not-comparison
     assert pipeline_config == []
 
 

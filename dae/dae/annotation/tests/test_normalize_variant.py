@@ -230,7 +230,7 @@ def test_normalize_allele_annotator_pipeline_schema(grr_fixture):
     attributes = pipeline.get_attributes()
     assert len(attributes) == 1
     assert attributes[0].name == "normalized_allele"
-    assert attributes[0].internal == True
+    assert attributes[0].internal
 
 
 @pytest.mark.parametrize("pos,ref,alt,npos, nref, nalt", [

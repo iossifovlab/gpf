@@ -131,12 +131,12 @@ class DenovoLoader(VariantsGenotypesLoader):
                 result.append(reg)
             else:
                 result.append(Region.from_str(reg))
-        self.regions = result
+        self.regions = result  # type: ignore
         logger.debug("denovo reset regions: %s", self.regions)
 
     def _is_in_regions(self, summary_variant):
         isin = [
-            r.isin(
+            r.isin(  # type: ignore
                 self._adjust_chrom_prefix(summary_variant.chrom),
                 summary_variant.position
             )
@@ -168,8 +168,9 @@ class DenovoLoader(VariantsGenotypesLoader):
                     attr_val = values.get(attr)[f_idx]
                     extra_attributes[attr] = [attr_val]
                 if genotype is None:
-                    fvariant.gt, fvariant._genetic_model = self._calc_genotype(
-                        fvariant, self.genome)
+                    fvariant.gt, fvariant._genetic_model = \
+                        self._calc_genotype(  # type: ignore
+                            fvariant, self.genome)
                     for fallele in fvariant.alleles:
                         fallele.gt = fvariant.gt
                         # pylint: disable=protected-access
@@ -183,7 +184,7 @@ class DenovoLoader(VariantsGenotypesLoader):
             ["chrom", "position", "reference", "alternative"],
             sort=False).agg(list)
         for num_idx, (idx, values) in enumerate(group.iterrows()):
-            chrom, position, reference, alternative = idx
+            chrom, position, reference, alternative = idx  # type: ignore
             position = int(position)
             summary_records = []
             for alt_index, alt in enumerate(alternative.split(",")):
@@ -547,7 +548,8 @@ class DenovoLoader(VariantsGenotypesLoader):
                 # where the person IDs are actually a list of IDs, separated
                 # by a ','
                 person_ids = ",".join(
-                    temp_df.iloc[variants_indices].loc[:, "person_id"]
+                    temp_df.iloc[
+                        variants_indices].loc[:, "person_id"]  # type: ignore
                 ).split(",")
 
                 variant_families = {
@@ -560,21 +562,21 @@ class DenovoLoader(VariantsGenotypesLoader):
                 for family_id in variant_families:
                     family = families[family_id]
                     family_dict = {
-                        "chrom": variant[0],
-                        "position": variant[1],
-                        "reference": variant[2],
-                        "alternative": variant[3],
+                        "chrom": variant[0],  # type: ignore
+                        "position": variant[1],  # type: ignore
+                        "reference": variant[2],  # type: ignore
+                        "alternative": variant[3],  # type: ignore
                         "family_id": family_id,
                         "genotype": self.produce_genotype(
-                            variant[0],
-                            variant[1],
+                            variant[0],  # type: ignore
+                            variant[1],  # type: ignore
                             genome,
                             family,
                             person_ids,
                         ),
                         "best_state": None,
                     }
-                    record = raw_df.loc[variants_indices[0]]
+                    record = raw_df.loc[variants_indices[0]]  # type: ignore
                     extra_attributes = record[extra_attributes_cols].to_dict()
 
                     result.append({**family_dict, **extra_attributes})
@@ -974,8 +976,9 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
 
             fvariant = FamilyVariant(
                 summary_variant, fam, None, best_state)
-            fvariant.gt, fvariant._genetic_model = self._calc_genotype(
-                fvariant, self.genome)
+            fvariant.gt, fvariant._genetic_model = \
+                self._calc_genotype(  # type: ignore
+                    fvariant, self.genome)
             for fallele in fvariant.alleles:
                 fallele.gt = fvariant.gt
                 # pylint: disable=protected-access

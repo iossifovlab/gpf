@@ -1,5 +1,6 @@
 
-from typing import Any
+from typing import Any, Optional
+
 from .annotatable import Annotatable
 from .annotation_pipeline import AnnotationPipeline, AttributeInfo
 from .annotation_pipeline import Annotator
@@ -7,21 +8,24 @@ from .annotation_pipeline import AnnotatorInfo
 
 
 class HelloWorldAnnotator(Annotator):
+    """Defines example annotator."""
+
     def __init__(self, pipeline: AnnotationPipeline, info: AnnotatorInfo):
         super().__init__(pipeline, info)
 
-    def annotate(self, _annotatable: Annotatable, _context: dict[str, Any]) \
-            -> dict[str, Any]:
-        r = {}
+    def annotate(
+        self, _annotatable: Optional[Annotatable], _context: dict[str, Any]
+    ) -> dict[str, Any]:
+        result = {}
         for attribute_config in self._info.attributes:
             assert attribute_config.source == "hi"
-            r[attribute_config.name] = "hello world"
-        return r
+            result[attribute_config.name] = "hello world"
+        return result
 
 
 def build_annotator(pipeline: AnnotationPipeline,
                     info: AnnotatorInfo) -> Annotator:
-
+    """Create an example hello world annotator."""
     if not info.attributes:
         info.attributes = [AttributeInfo("hi", "hi", False, {})]
 

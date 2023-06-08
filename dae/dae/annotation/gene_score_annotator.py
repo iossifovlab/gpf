@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 def build_gene_score_annotator(pipeline: AnnotationPipeline,
                                info: AnnotatorInfo) -> Annotator:
-
+    """Create a gene score annotator."""
     gene_score_resource_id = info.parameters["resource_id"]
     if not gene_score_resource_id:
         raise ValueError(f"The {info} needs a 'resrouce_id' parameter.")
@@ -45,6 +45,7 @@ def build_gene_score_annotator(pipeline: AnnotationPipeline,
 
 
 class GeneScoreAnnotator(Annotator):
+    """Gene score annotator class."""
 
     DEFAULT_AGGREGATOR_TYPE = "dict"
 
@@ -105,6 +106,7 @@ class GeneScoreAnnotator(Annotator):
 
     def aggregate_gene_values(
             self, gene_score, gene_symbols: list[str], aggregator_type: str):
+        """Aggregate gene score values."""
         aggregator = build_aggregator(aggregator_type)
 
         for symbol in gene_symbols:

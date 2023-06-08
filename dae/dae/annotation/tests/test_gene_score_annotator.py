@@ -1,9 +1,10 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 
 import textwrap
-from dae.annotation.annotation_pipeline import AnnotatorInfo, AttributeInfo
+
 import pytest
 
+from dae.annotation.annotation_pipeline import AnnotatorInfo, AttributeInfo
 from dae.genomic_resources.testing import build_inmemory_test_repository
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME
 from dae.annotation.gene_score_annotator import GeneScoreAnnotator

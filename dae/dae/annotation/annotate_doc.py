@@ -53,8 +53,8 @@ def cli(raw_args: Optional[list[str]] = None) -> None:
     html_doc = template.render(annotation_pipeline_info=annotation_info,
                                markdown=markdown)
     if args.output:
-        with open(args.output, "w") as OF:
-            OF.write(html_doc)
+        with open(args.output, "w") as outfile:
+            outfile.write(html_doc)
     else:
         print(html_doc)
 

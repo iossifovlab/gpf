@@ -1,6 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-from dae.annotation.annotation_factory import build_annotation_pipeline
 import pytest
+
+from dae.annotation.annotation_factory import build_annotation_pipeline
 
 
 def test_position_score_annotator(
@@ -95,7 +96,7 @@ def test_position_score_annotator_mean_aggregate(
 def test_np_score_annotator_indels(
         cadd_indel_variants_expected,
         grr_fixture):
-    
+
     pipeline = build_annotation_pipeline(
         pipeline_config_str="""
             - np_score:
@@ -104,7 +105,7 @@ def test_np_score_annotator_indels(
                 - cadd_raw
                 - cadd_phred
         """, grr_repository=grr_fixture)
-    
+
     for sv, expect in cadd_indel_variants_expected:
         for sa in sv.alt_alleles:
             result = pipeline.annotate(sa.get_annotatable())
