@@ -25,9 +25,9 @@ export class RegionsFilterValidator implements ValidatorConstraintInterface {
   }
 
   private isValid(line: string): boolean {
-    let lineRegex = '([0-9]+):([0-9]+)(?:-([0-9]+))?';
+    let lineRegex = '(2[0-2]|1[0-9]|[0-9]|X|Y):([0-9]+)(?:-([0-9]+))?|(2[0-2]|1[0-9]|[0-9]|X|Y)';
     if (DatasetsService.currentGenome === 'hg38') {
-      lineRegex = 'chr([0-9]+):([0-9]+)(?:-([0-9]+))?';
+      lineRegex = 'chr(2[0-2]|1[0-9]|[0-9]|X|Y):([0-9]+)(?:-([0-9]+))?|chr(2[0-2]|1[0-9]|[0-9]|X|Y)';
     }
 
     const match = line.match(new RegExp(lineRegex, 'i'));
