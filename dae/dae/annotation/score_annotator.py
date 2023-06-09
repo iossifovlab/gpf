@@ -17,14 +17,8 @@ from dae.genomic_resources.repository import GenomicResource
 
 from dae.genomic_resources.genomic_scores import GenomicScore, ScoreDef
 from dae.genomic_resources.genomic_scores import \
-    build_allele_score_from_resource
-from dae.genomic_resources.genomic_scores import \
-    build_position_score_from_resource
-from dae.genomic_resources.genomic_scores import \
-    build_np_score_from_resource
-from dae.genomic_resources.genomic_scores import PositionScoreQuery
-from dae.genomic_resources.genomic_scores import NPScoreQuery
-from dae.genomic_resources.genomic_scores import AlleleScoreQuery
+    PositionScoreQuery, NPScoreQuery, AlleleScoreQuery, ScoreQuery, \
+    PositionScore, NPScore, AlleleScore
 
 
 def get_genomic_resource(
@@ -66,14 +60,58 @@ class GenomicScoreAnnotatorBase(Annotator):
                           f"unknown in '{score.resource.get_id()}' " + \
                           "resource!"
                 raise ValueError(message)
-            attribute_info.type = score_config.type
+            attribute_info.type = score_config.value_type
             attribute_info.description = score_config.desc
 
             self.create_the_documentation(attribute_info)
 
     def open(self):
         self.score.open()
-        return super().open()
+
+    def is_open(self):
+        return self.score.is_open()
+
+    # def get_all_annotation_attributes(self) -> list[dict]:
+    #     result = []
+    #     for score_id, score in self.score.score_definitions.items():
+    #         result.append({
+    #             "name": score_id,
+    #             "type": score.value_type,
+    #             "desc": score.desc
+    #         })
+    #     return result
+
+    # def get_annotation_config(self) -> list[dict[str, Any]]:
+    #     if self.config.get("attributes"):
+    #         return cast(list[dict[str, Any]], self.config["attributes"])
+
+    #     if self.score.get_default_annotation():
+    #         attributes = self.score.get_default_annotation()["attributes"]
+    #         logger.debug(
+    #             "using default score annotation for %s: %s",
+    #             self.score.score_id, attributes)
+    #         return cast(list[dict[str, Any]], attributes)
+    #     logger.warning(
+    #         "can't find annotation config for resource: %s",
+    #         self.score.score_id)
+    #     return []
+
+    # @property
+    # def resources(self) -> set[str]:
+    #     return {self.score.resource.resource_id}
+
+    def _collect_score_queries(self) -> list[ScoreQuery]:
+        return []
+
+    # def get_scores(self):
+    #     return [attr["source"] for attr in self.get_annotation_config()]
+
+    # def _scores_not_found(self, attributes):
+    #     values = {
+    #         attr["destination"]: None
+    #         for attr in self.get_annotation_config()
+    #     }
+    #     attributes.update(values)
 
     def close(self):
         self.score.close()
@@ -193,7 +231,7 @@ class PositionScoreAnnotator(PositionScoreAnnotatorBase):
     def __init__(self, pipeline: AnnotationPipeline, info: AnnotatorInfo):
 
         resource = get_genomic_resource(pipeline, info, "position_score")
-        self.position_score = build_position_score_from_resource(resource)
+        self.position_score = PositionScore(resource)
         super().__init__(pipeline, info, self.position_score)
 
         self.position_score_queries = []
@@ -229,7 +267,7 @@ class NPScoreAnnotator(PositionScoreAnnotatorBase):
 
     def __init__(self, pipeline: AnnotationPipeline, info: AnnotatorInfo):
         resource = get_genomic_resource(pipeline, info, "np_score")
-        self.np_score = build_np_score_from_resource(resource)
+        self.np_score = NPScore(resource)
         super().__init__(pipeline, info, self.np_score)
 
         self.np_score_queries = []
@@ -268,7 +306,7 @@ class AlleleScoreAnnotator(GenomicScoreAnnotatorBase):
 
     def __init__(self, pipeline: AnnotationPipeline, info: AnnotatorInfo):
         resource = get_genomic_resource(pipeline, info, "allele_score")
-        self.allele_score = build_allele_score_from_resource(resource)
+        self.allele_score = AlleleScore(resource)
         super().__init__(pipeline, info, self.allele_score)
         self.allele_score_queries = []
         for att_info in info.attributes:

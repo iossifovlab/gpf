@@ -80,7 +80,7 @@ def test_empty_wgpf_instance_study(alla_wgpf, wdae_django_server):
         time.sleep(0.5)
 
         response = requests.get(
-            f"{server.url}/api/v3/datasets", timeout=0.5)
+            f"{server.url}/api/v3/datasets", timeout=2.5)
 
         assert response.status_code == 200
         assert "data" in response.json()

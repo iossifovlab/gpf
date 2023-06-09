@@ -1,6 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import os
 import textwrap
+import gzip
 
 import pytest
 import pysam
@@ -35,7 +36,6 @@ def test_default_columns(record, expected):
 
 @pytest.mark.parametrize(
     "parameters,record,expected", [
-
         ({"col_chrom": "chromosome", "col_pos": "position"},
          {"chromosome": "chr1", "position": "4", "ref": "C", "alt": "CT"},
          VCFAllele("chr1", 4, "C", "CT")),
@@ -89,7 +89,7 @@ def annotate_directory_fixture(tmp_path):
                           type: float
                           desc: |
                                 The phastCons computed over the tree of 100
-                                verterbarte species
+                                verterbrate species
                           name: s1
                     """
                 },
@@ -107,7 +107,7 @@ def annotate_directory_fixture(tmp_path):
                           type: float
                           name: s1
                     """
-                }
+                },
             }
         }
     )
@@ -152,11 +152,10 @@ def test_basic_setup(tmp_path, annotate_directory_fixture):
 
     cli_columns([
         str(a) for a in [
-            in_file, annotation_file, out_file, "--grr", grr_file
+            in_file, annotation_file, "--grr", grr_file, "-o", out_file,
         ]
     ])
     out_file_content = get_file_content_as_string(out_file)
-    print(out_file_content)
     assert out_file_content == out_expected_content
 
 
@@ -275,9 +274,9 @@ def test_vcf_multiple_chroms(tmp_path, annotate_directory_fixture):
 def test_produce_partfile_paths():
     regions = [("chr1", 0, 1000), ("chr1", 1000, 2000), ("chr1", 2000, 3000)]
     expected_output = [
-        "work_dir/output/input.vcf_annotation_chr1_0_1000.vcf.gz",
-        "work_dir/output/input.vcf_annotation_chr1_1000_2000.vcf.gz",
-        "work_dir/output/input.vcf_annotation_chr1_2000_3000.vcf.gz",
+        "work_dir/output/input.vcf_annotation_chr1_0_1000.gz",
+        "work_dir/output/input.vcf_annotation_chr1_1000_2000.gz",
+        "work_dir/output/input.vcf_annotation_chr1_2000_3000.gz",
     ]
     # relative input file path
     assert produce_partfile_paths(
@@ -287,3 +286,53 @@ def test_produce_partfile_paths():
     assert produce_partfile_paths(
         "/home/user/src/input.vcf", regions, "work_dir/output"
     ) == expected_output
+
+
+def test_annotate_columns_multiple_chrom(tmp_path, annotate_directory_fixture):
+    in_content = textwrap.dedent("""
+        chrom   pos
+        chr1    23
+        chr1    24
+        chr2    33
+        chr2    34
+        chr3    43
+        chr3    44
+    """)
+    out_expected_content = (
+        "chrom\tpos\tscore\n"
+        "chr1\t23\t0.1\n"
+        "chr1\t24\t0.2\n"
+        "chr2\t33\t0.3\n"
+        "chr2\t34\t0.4\n"
+        "chr3\t43\t0.5\n"
+        "chr3\t44\t0.6\n"
+    )
+
+    in_file = tmp_path / "in.txt"
+    in_file_gz = in_file.with_suffix(".txt.gz")
+    out_file = tmp_path / "out.txt"
+    out_file_tbi = tmp_path / "out.txt.gz.tbi"
+    workdir = tmp_path / "output"
+    annotation_file = tmp_path / "annotation.yaml"
+    grr_file = tmp_path / "grr.yaml"
+
+    setup_denovo(in_file, in_content)
+    pysam.tabix_compress(str(in_file), str(in_file_gz), force=True)
+    pysam.tabix_index(str(in_file_gz), force=True, line_skip=1, seq_col=0,
+                      start_col=1, end_col=1)
+
+    cli_columns([
+        str(a) for a in [
+            in_file_gz, annotation_file, "-w", workdir, "--grr", grr_file,
+            "-o", out_file, "-j 1"
+        ]
+    ])
+
+    with gzip.open(out_file.with_suffix(".txt.gz"), "rt") as out:
+        out_file_content = out.read()
+    assert out_file_content == out_expected_content
+    assert os.path.exists(out_file_tbi)
+    assert os.listdir(workdir) == [
+        "tasks-status",  # default task status dir
+        # part files must be cleaned up
+    ]

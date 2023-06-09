@@ -4,7 +4,7 @@
 import yaml
 from dae.genomic_resources import build_genomic_resource_repository
 from dae.genomic_resources.genomic_scores import \
-    build_position_score_from_resource
+    PositionScore
 
 
 def test_build_an_empty_repository():
@@ -143,6 +143,6 @@ def test_build_a_configuration_with_embedded():
     res = repo.get_resource("one")
     assert res is not None
 
-    score = build_position_score_from_resource(res)
+    score = PositionScore(res)
     score.open()
     assert score.fetch_scores("chr1", 23) == [0.01]

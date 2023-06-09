@@ -158,6 +158,20 @@ class GenomicPositionTable(abc.ABC):
     def get_chromosomes(self):
         return self.chrom_order
 
+    def map_chromosome(self, chromosome):
+        if self.rev_chrom_map is not None:
+            assert chromosome in self.rev_chrom_map
+            return self.rev_chrom_map[chromosome]
+
+        return chromosome
+
+    def unmap_chromosome(self, chromosome):
+        if self.chrom_map is not None:
+            assert chromosome in self.chrom_map
+            return self.chrom_map[chromosome]
+
+        return chromosome
+
     @abc.abstractmethod
     def get_file_chromosomes(self) -> List[str]:
         """Return chromosomes in a genomic table file.

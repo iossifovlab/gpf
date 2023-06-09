@@ -6,7 +6,7 @@ from rest_framework import status
 
 from query_base.query_base import QueryDatasetView
 
-from gene_sets.expand_gene_set_decorator import expand_gene_set
+from utils.expand_gene_set import expand_gene_set
 
 
 # from memory_profiler import profile
@@ -97,9 +97,8 @@ class EnrichmentTestView(QueryDatasetView):
         desc = f"Gene Symbols: {gene_syms}"
         return desc
 
-    @expand_gene_set
     def post(self, request):
-        query = request.data
+        query = expand_gene_set(request.data, request.user)
 
         dataset_id = query.get("datasetId", None)
         if dataset_id is None:

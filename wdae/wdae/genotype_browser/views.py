@@ -7,14 +7,12 @@ from django.http.response import StreamingHttpResponse, FileResponse
 from rest_framework import status  # type: ignore
 from rest_framework.response import Response  # type: ignore
 
-from utils.logger import LOGGER
+from utils.logger import LOGGER, request_logging
 from utils.streaming_response_util import iterator_to_json
-from utils.logger import request_logging
 from utils.query_params import parse_query_params
+from utils.expand_gene_set import expand_gene_set
 
 from query_base.query_base import QueryDatasetView
-
-from gene_sets.expand_gene_set_decorator import expand_gene_set
 
 from studies.study_wrapper import StudyWrapperBase
 
@@ -30,7 +28,6 @@ class GenotypeBrowserQueryView(QueryDatasetView):
 
     MAX_SHOWN_VARIANTS = 1000
 
-    @expand_gene_set
     @request_logging(LOGGER)
     def post(self, request):
         """
@@ -102,7 +99,7 @@ class GenotypeBrowserQueryView(QueryDatasetView):
         # pylint: disable=too-many-branches
         LOGGER.info("query v3 variants request: %s", str(request.data))
 
-        data = request.data
+        data = expand_gene_set(request.data, request.user)
         user = request.user
 
         if "queryData" in data:

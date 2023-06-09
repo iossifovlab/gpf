@@ -288,7 +288,12 @@ def get_directly_allowed_genotype_data(user):
                 "broken": dataset.broken
             })
 
-    return result
+    return sorted(
+        result,
+        key=lambda ds: ds["datasetName"] if ds["datasetName"] is not None
+        else ds["datasetId"]
+
+    )
 
 
 def add_group_perm_to_user(group_name, user):

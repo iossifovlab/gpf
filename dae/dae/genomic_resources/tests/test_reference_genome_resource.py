@@ -10,9 +10,9 @@ from dae.genomic_resources.testing import setup_directories, \
 from dae.genomic_resources.fsspec_protocol import build_local_resource
 
 from dae.genomic_resources.reference_genome import \
-    build_reference_genome_from_file, ReferenceGenome
-from dae.genomic_resources.reference_genome import \
-    build_reference_genome_from_resource
+    build_reference_genome_from_file, \
+    build_reference_genome_from_resource, \
+    ReferenceGenomeImplementation
 
 
 @pytest.fixture
@@ -96,7 +96,9 @@ def test_local_genomic_sequence(genome_fixture):
 
 def test_chromosome_statistic_basic(genome_fixture):
     res = build_filesystem_test_resource(genome_fixture)
-    stat = ReferenceGenome._do_chrom_statistic(res, "pesho", 1, None)
+    stat = ReferenceGenomeImplementation._do_chrom_statistic(
+        res, "pesho", 1, None
+    )
 
     assert stat.length == 24
 
@@ -139,7 +141,7 @@ def test_chromosome_statistic_basic(genome_fixture):
     print(stat.bi_nucleotide_distribution)
     print(stat.nucleotide_distribution)
 
-    ReferenceGenome._save_chrom_statistic(res, "pesho", stat)
+    ReferenceGenomeImplementation._save_chrom_statistic(res, "pesho", stat)
 
     assert os.path.exists(os.path.join(
         genome_fixture,
@@ -150,10 +152,10 @@ def test_chromosome_statistic_basic(genome_fixture):
 
 def test_reference_genome_fetch(genome_fixture):
     res = build_filesystem_test_resource(genome_fixture)
-    reference_genome = build_reference_genome_from_resource(res)
+    impl = ReferenceGenomeImplementation(res)
 
-    with reference_genome.open():
-        result = list(reference_genome.fetch("pesho", 1, 10))
+    with impl.reference_genome.open():
+        result = list(impl.reference_genome.fetch("pesho", 1, 10))
 
         assert result == [
             "N",
@@ -168,7 +170,7 @@ def test_reference_genome_fetch(genome_fixture):
             "C"
         ]
 
-        result = list(reference_genome.fetch("pesho", 18, 36))
+        result = list(impl.reference_genome.fetch("pesho", 18, 36))
 
         assert result == [
             "C",
@@ -180,7 +182,7 @@ def test_reference_genome_fetch(genome_fixture):
             "A"
         ]
 
-        result = list(reference_genome.fetch("pesho", 1, None))
+        result = list(impl.reference_genome.fetch("pesho", 1, None))
 
         assert result == [
             "N",
@@ -250,7 +252,8 @@ def test_reference_genome_fetch_small_buffer(genome_fixture):
 
 def test_reference_genome_pair_iter(genome_fixture):
     res = build_filesystem_test_resource(genome_fixture)
-    reference_genome = build_reference_genome_from_resource(res)
+    impl = ReferenceGenomeImplementation(res)
+    reference_genome = impl.reference_genome
 
     with reference_genome.open():
         result = list(reference_genome.pair_iter("pesho", 1, 10))

@@ -11,7 +11,6 @@ from pyliftover import LiftOver  # type: ignore
 
 from jinja2 import Template
 from markdown2 import markdown
-from cerberus import Validator
 
 from dae.genomic_resources import GenomicResource
 
@@ -30,8 +29,6 @@ class LiftoverChain(
     ResourceConfigValidationMixin
 ):
     """Defines Lift Over chain wrapper around pyliftover objects."""
-
-    config_validator = Validator
 
     def __init__(self, resource: GenomicResource):
 

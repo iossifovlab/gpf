@@ -15,7 +15,6 @@ from typing import Any, Optional, TextIO, cast
 import pandas as pd
 from jinja2 import Template
 from markdown2 import markdown
-from cerberus import Validator
 
 from dae.utils.regions import Region
 from dae.genomic_resources import GenomicResource
@@ -429,8 +428,6 @@ class GeneModels(
     InfoImplementationMixin
 ):
     """Provides class for gene models."""
-
-    config_validator = Validator
 
     def __init__(self, resource: GenomicResource):
         super().__init__(resource)

@@ -125,8 +125,6 @@ class CommonReport:
             "families_report": families_report.to_dict(full=True),
             "denovo_report": (
                 denovo_report.to_dict()
-                if not denovo_report.is_empty()
-                else None
             ),
             "study_name": genotype_data_study.name,
             "phenotype": phenotype,
@@ -148,8 +146,6 @@ class CommonReport:
             "families_report": self.families_report.to_dict(full=full),
             "denovo_report": (
                 self.denovo_report.to_dict()
-                if not self.denovo_report.is_empty()
-                else None
             ),
             "study_name": self.study_name,
             "phenotype": self.phenotype,

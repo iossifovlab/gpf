@@ -107,8 +107,10 @@ def gc_fixture(tmp_path):
     ]
 )
 def test_build_record(record, expected, gc_fixture):
+    ref_genome = gc_fixture.get_reference_genome()
     annotatable = build_record_to_annotatable(
-        {}, set(record.keys()), gc_fixture).build(record)
+        {}, set(record.keys()), ref_genome
+    ).build(record)
     assert str(annotatable) == str(expected)
 
 
@@ -186,7 +188,7 @@ def annotate_directory_fixture(tmp_path):
                           type: float
                           name: s1
                     """
-                }
+                },
             }
         }
     )
@@ -231,7 +233,7 @@ def test_basic_setup(tmp_path, annotate_directory_fixture):
 
     cli_columns([
         str(a) for a in [
-            in_file, annotation_file, out_file, "--grr", grr_file
+            in_file, annotation_file, "-o", out_file, "--grr", grr_file,
         ]
     ])
     out_file_content = get_file_content_as_string(out_file)

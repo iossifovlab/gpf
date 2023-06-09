@@ -48,9 +48,7 @@ def test_gene_view_summary_variants_query(db, admin_client):
         content_type="application/json"
     )
     assert response.status_code == status.HTTP_200_OK
-    res = response.streaming_content
-    res = json.loads("".join(map(lambda x: x.decode("utf-8"), res)))
-
+    res = response.data
     assert len(res) == 7
     for sv in res:
         assert len(sv["alleles"]) == 2

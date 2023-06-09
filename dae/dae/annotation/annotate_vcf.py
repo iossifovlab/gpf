@@ -25,7 +25,7 @@ from dae.task_graph.graph import TaskGraph
 logger = logging.getLogger("annotate_vcf")
 
 
-PART_FILENAME = "{in_file}_annotation_{chrom}_{pos_beg}_{pos_end}.vcf.gz"
+PART_FILENAME = "{in_file}_annotation_{chrom}_{pos_beg}_{pos_end}.gz"
 
 
 def configure_argument_parser() -> argparse.ArgumentParser:
@@ -62,6 +62,7 @@ def update_header(variant_file, pipeline):
     for attribute in pipeline.get_attributes():
         description = attribute.description
         description = description.replace("\n", " ")
+        description = description.replace('"', '\\"')
         header.info.add(attribute.name, "A", "String", description)
 
 

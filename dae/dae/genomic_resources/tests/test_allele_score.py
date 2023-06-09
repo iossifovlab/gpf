@@ -3,7 +3,7 @@ import pytest
 
 from dae.genomic_resources import GenomicResource
 from dae.genomic_resources.genomic_scores import \
-    build_allele_score_from_resource, AlleleScoreQuery
+    AlleleScoreQuery, AlleleScore
 from dae.genomic_resources.testing import build_inmemory_test_resource
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME
 
@@ -36,7 +36,7 @@ def test_the_simplest_allele_score():
     })
     assert res.get_type() == "allele_score"
 
-    score = build_allele_score_from_resource(res)
+    score = AlleleScore(res)
     score.open()
 
     assert score.get_all_scores() == ["freq"]
@@ -72,7 +72,7 @@ def test_allele_score_fetch_region():
             2      16         C          A            0.05
         """
     })
-    score = build_allele_score_from_resource(res)
+    score = AlleleScore(res)
     score.open()
 
     # The in-mem table will sort the records. In this example it will sort
@@ -118,7 +118,7 @@ def test_allele_score_missing_alt():
             1      10         A          .            0.03
         """
     })
-    score = build_allele_score_from_resource(res)
+    score = AlleleScore(res)
     score.open()
     assert score.fetch_scores("1", 10, "A", "A", ["freq"]) is None
     assert score.fetch_scores("1", 10, "A", "G", ["freq"]) is None
@@ -162,7 +162,7 @@ def test_allele_score_fetch_agg(
             2      16         C          TA           0.08
         """
     })
-    score = build_allele_score_from_resource(res)
+    score = AlleleScore(res)
     score.open()
 
     result = score.fetch_scores_agg(  # type: ignore
