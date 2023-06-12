@@ -165,12 +165,6 @@ class AnnotationPipeline:
             attributes = annotator.annotate(annotatable, context)
             context.update(attributes)
 
-        # # TODO: Decide where context should be cleaned up
-        # for annotator in self.annotators:
-        #     for attr in annotator.get_info().attributes:
-        #         if attr.internal:
-        #             del context[attr.name]
-
         return context
 
     def open(self) -> AnnotationPipeline:

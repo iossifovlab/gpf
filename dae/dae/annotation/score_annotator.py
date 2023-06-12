@@ -3,6 +3,7 @@
 Genomic score annotators defined are positions_score, np_score,
 and allele_score.
 """
+import logging
 import abc
 from typing import Callable, Optional, Any
 
@@ -19,6 +20,9 @@ from dae.genomic_resources.genomic_scores import GenomicScore, ScoreDef
 from dae.genomic_resources.genomic_scores import \
     PositionScoreQuery, NPScoreQuery, AlleleScoreQuery, ScoreQuery, \
     PositionScore, NPScore, AlleleScore
+
+
+logger = logging.getLogger(__name__)
 
 
 def get_genomic_resource(
@@ -44,7 +48,6 @@ class GenomicScoreAnnotatorBase(Annotator):
         super().__init__(pipeline, info)
 
         self.score = score
-        self.simple_score_queries = [attr.source for attr in info.attributes]
         self._region_length_cutoff = info.parameters.get(
             "region_length_cutoff", 500_000)
 
@@ -64,6 +67,8 @@ class GenomicScoreAnnotatorBase(Annotator):
             attribute_info.description = score_config.desc
 
             self.create_the_documentation(attribute_info)
+        self.simple_score_queries: list[str] = [
+            attr.source for attr in info.attributes]
 
     def open(self):
         self.score.open()
