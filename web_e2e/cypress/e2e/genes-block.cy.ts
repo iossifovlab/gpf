@@ -359,6 +359,7 @@ describe('Genes block denovo gene set gene symbols tests', () => {
         if (data.peopleGroup === 'unaffected') {
           page.findDenovoGeneSetCollectionCheckbox('iossifov_2014', 'affected').click();
           page.findDenovoGeneSetCollectionCheckbox('iossifov_2014', 'unaffected').click();
+          cy.wait(1000); // necessary to not desync search input results with checkboxes...
         }
         page.geneSetsSearchbox.click({force: true});
         page.geneSetsSearchbox.type(data.expectedConditions.effectTypesSearchQueries[i]);
