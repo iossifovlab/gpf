@@ -124,13 +124,12 @@ def test_stats_allele_score(tmp_path):
                       type: float
                       desc: ""
                       name: freq
-                histograms:
-                    - score: freq
-                      bins: 100
-                      min: 0
-                      max: 1
-                      x_scale: linear
-                      y_scale: log
+                      number_hist:
+                        number_of_bins: 100
+                        view_range:
+                          min: 0.0
+                          max: 1.0
+                        y_log_scale: true
                 """
         }
     })
@@ -193,6 +192,11 @@ def test_stats_position_score(tmp_path):
                       desc: "The phastCons computed over the tree of 100 \
                               verterbarte species"
                       name: s1
+                      number_hist:
+                        number_of_bins: 100
+                        view_range:
+                          min: 0.0
+                          max: 1.0
                     - id: phastCons5way
                       type: int
                       position_aggregator: max
@@ -200,19 +204,11 @@ def test_stats_position_score(tmp_path):
                       desc: "The phastCons computed over the tree of 5 \
                               verterbarte species"
                       name: s2
-                histograms:
-                    - score: phastCons100way
-                      bins: 100
-                      min: 0
-                      max: 1
-                      x_scale: linear
-                      y_scale: linear
-                    - score: phastCons5way
-                      bins: 4
-                      min: 0
-                      max: 4
-                      x_scale: linear
-                      y_scale: linear
+                      number_hist:
+                        number_of_bins: 4
+                        view_range:
+                          min: 0.0
+                          max: 4.0
                 """
         }
     })
@@ -290,6 +286,12 @@ def test_stats_np_score(tmp_path):
                       type: float
                       desc: ""
                       name: s1
+                      number_hist:
+                        number_of_bins: 100
+                        view_range:
+                          min: 0.0
+                          max: 1.0
+
                     - id: cadd_test
                       type: int
                       position_aggregator: max
@@ -297,19 +299,11 @@ def test_stats_np_score(tmp_path):
                       na_values: "-1"
                       desc: ""
                       name: s2
-                histograms:
-                    - score: cadd_raw
-                      bins: 100
-                      min: 0
-                      max: 1
-                      x_scale: linear
-                      y_scale: linear
-                    - score: cadd_test
-                      bins: 4
-                      min: 0
-                      max: 4
-                      x_scale: linear
-                      y_scale: linear
+                      number_hist:
+                        number_of_bins: 4
+                        view_range:
+                          min: 0.0
+                          max: 4.0
             """
         }
     })

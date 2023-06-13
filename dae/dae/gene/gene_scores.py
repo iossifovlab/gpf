@@ -140,7 +140,7 @@ class GeneScore:
     @property
     def range(self):
         if self.histogram is not None:
-            return self.histogram.range
+            return self.histogram.view_range
         return None
 
     def _load_data(self):
@@ -424,7 +424,7 @@ class GeneScoreCollection(
             save_task = task_graph.create_task(
                 f"{self.resource.resource_id}_{score_id}_save_histogram",
                 self._save_histogram,
-                [create_task, self.resource],
+                [create_task, self.resource, score_id],
                 [create_task]
             )
             save_tasks.append(save_task)
@@ -438,16 +438,24 @@ class GeneScoreCollection(
             histogram_config["min"] = score.min()
         if "max" not in histogram_config:
             histogram_config["max"] = score.max()
-        histogram_config = NumberHistogramConfig.from_yaml(histogram_config)
-        histogram = NumberHistogram(histogram_config)
+
+        legacy_keys = set(["x_scale", "y_scale", "bins", "min", "max"])
+        if len(legacy_keys.intersection(set(histogram_config.keys()))):
+            config = NumberHistogramConfig.convert_legacy_config(
+                histogram_config
+            )
+        else:
+            config = NumberHistogramConfig.from_dict(histogram_config)
+
+        # histogram_config = NumberHistogramConfig.from_dict(histogram_config)
+        histogram = NumberHistogram(config)
         for value in score.values():
             histogram.add_value(value)
         return histogram
 
     @staticmethod
-    def _save_histogram(histogram, resource):
+    def _save_histogram(histogram, resource, score_id):
         proto = resource.proto
-        score_id = histogram.score_id
         with proto.open_raw_file(
             resource,
             f"{GeneScoreStatistics.get_statistics_folder()}"
@@ -461,7 +469,7 @@ class GeneScoreCollection(
             f"/{GeneScoreStatistics.get_histogram_image_file(score_id)}",
             mode="wb"
         ) as outfile:
-            histogram.plot(outfile)
+            histogram.plot(outfile, score_id)
         return histogram
 
 

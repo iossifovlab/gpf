@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 class NumberHistogramConfig:
     """Configuration class for number histograms."""
 
-    view_range: tuple[int, int]
+    view_range: tuple[Optional[int], Optional[int]]
     number_of_bins: int = 30
     x_log_scale: bool = False
     y_log_scale: bool = False
@@ -53,14 +53,13 @@ class NumberHistogramConfig:
         )
 
     @staticmethod
-    def from_yaml(parsed):
+    def from_dict(parsed):
         """Build a number histogram config from a parsed yaml file."""
         yaml_range = parsed.get("view_range", {})
-        limits = np.iinfo(np.int64)
-        x_min = yaml_range.get("min", limits.min)
-        x_max = yaml_range.get("max", limits.max)
+        x_min = yaml_range.get("min", None)
+        x_max = yaml_range.get("max", None)
         view_range = (x_min, x_max)
-        number_of_bins = parsed.get("number_of_bins", 30)
+        number_of_bins = parsed.get("number_of_bins", 100)
         x_log_scale = parsed.get("x_log_scale", False)
         y_log_scale = parsed.get("y_log_scale", False)
         x_min_log = parsed.get("x_min_log", None)
@@ -70,12 +69,28 @@ class NumberHistogramConfig:
             x_min_log
         )
 
+    @staticmethod
+    def default_config():
+        """Build a number histogram config from a parsed yaml file."""
+        view_range = (None, None)
+        number_of_bins = 100
+        x_log_scale = False
+        y_log_scale = False
+        return NumberHistogramConfig(
+            view_range, number_of_bins, x_log_scale, y_log_scale)
+
 
 @dataclass
 class CategoricalHistogramConfig:
+    """Configuration class for categorical histograms."""
+
     value_order = Optional[list[str]]
     y_log_scale: bool = False
     x_min_log: Optional[float] = None
+
+    @staticmethod
+    def default_config():
+        return CategoricalHistogramConfig()
 
 
 class NumberHistogram(Statistic):
@@ -127,12 +142,12 @@ class NumberHistogram(Statistic):
                 "Cannot instantiate histogram with only bins or only bars!"
             )
 
-    @staticmethod
-    def default_config(score_id: str):
-        return {
-            "score": score_id,
-            "bins": 100,
-        }
+    # @staticmethod
+    # def default_config(score_id: str):
+    #     return {
+    #         "score": score_id,
+    #         "bins": 100,
+    #     }
 
     def merge(self, other: NumberHistogram) -> None:
         """Merge two histograms."""
@@ -143,7 +158,7 @@ class NumberHistogram(Statistic):
         self.out_of_range_values.extend(other.out_of_range_values)
 
     @property
-    def range(self):
+    def view_range(self):
         return self.config.view_range
 
     def add_value(self, value):
@@ -213,7 +228,8 @@ class NumberHistogram(Statistic):
                 res.get("config")
             )
         else:
-            config = NumberHistogramConfig.from_yaml(res.get("config"))
+
+            config = NumberHistogramConfig.from_dict(res.get("config"))
         return NumberHistogram(
             config,
             bins=np.array(res.get("bins")),

@@ -33,20 +33,20 @@ class EffectAnnotatorAdapter(AnnotatorBase):
 
     def __init__(self, pipeline: AnnotationPipeline, info: AnnotatorInfo):
 
-        genome_resrouce_id = info.parameters.get("genome")
-        if genome_resrouce_id is None:
+        genome_resource_id = info.parameters.get("genome")
+        if genome_resource_id is None:
             genome = get_genomic_context().get_reference_genome()
             if genome is None:
                 raise ValueError("The {info}  has no reference genome "
                                  "specified and a genome is missing in "
                                  "the context.")
         else:
-            resource = pipeline.repository.get_resource(genome_resrouce_id)
+            resource = pipeline.repository.get_resource(genome_resource_id)
             genome = build_reference_genome_from_resource(resource)
         assert isinstance(genome, ReferenceGenome)
 
-        gene_models_resrouce_id = info.parameters.get("gene_models")
-        if gene_models_resrouce_id is None:
+        gene_models_resource_id = info.parameters.get("gene_models")
+        if gene_models_resource_id is None:
             gene_models = get_genomic_context().get_gene_models()
             if gene_models is None:
                 raise ValueError(f"Can't create {info.type}: "
@@ -54,7 +54,7 @@ class EffectAnnotatorAdapter(AnnotatorBase):
                                  "and context")
         else:
             resource = pipeline.repository.get_resource(
-                gene_models_resrouce_id)
+                gene_models_resource_id)
             gene_models = build_gene_models_from_resource(resource)
         assert isinstance(gene_models, GeneModels)
 

@@ -2,8 +2,11 @@ from __future__ import annotations
 import copy
 from collections import defaultdict
 from typing import Union
+import logging
 
 import pysam
+
+logger = logging.getLogger(__name__)
 
 
 def bedfile2regions(bed_filename):
@@ -57,31 +60,38 @@ def get_chromosome_length_tabix(
             next(riter)
         except StopIteration:
             return False
+        except ValueError:
+            return None
 
         return True
+    try:
+        # First we find any region that includes the last record i.e.
+        # the length of the chromosome
+        left, right = None, None
+        pos = step
+        while left is None or right is None:
+            region = Region(chrom, pos, None)
+            if any_records(tabix_file.fetch(str(region))):
+                left = pos
+                pos = pos * 2
+            else:
+                right = pos
+                pos = pos // 2
+        # Second we use binary search to narrow the region until we find the
+        # index of the last element (in left) and the length (in right)
+        while (right - left) > precision:
+            pos = (left + right) // 2
+            region = Region(chrom, pos, None)
+            if any_records(tabix_file.fetch(str(region))):
+                left = pos
+            else:
+                right = pos
+        return right
 
-    # First we find any region that includes the last record i.e.
-    # the length of the chromosome
-    left, right = None, None
-    pos = step
-    while left is None or right is None:
-        region = Region(chrom, pos, None)
-        if any_records(tabix_file.fetch(str(region))):
-            left = pos
-            pos = pos * 2
-        else:
-            right = pos
-            pos = pos // 2
-    # Second we use binary search to narrow the region until we find the
-    # index of the last element (in left) and the length (in right)
-    while (right - left) > precision:
-        pos = (left + right) // 2
-        region = Region(chrom, pos, None)
-        if any_records(tabix_file.fetch(str(region))):
-            left = pos
-        else:
-            right = pos
-    return right
+    except ValueError as ex:
+        logger.warning(
+            "unable to find length of contig %s: %s", chrom, ex)
+        return None
 
 
 class Region:

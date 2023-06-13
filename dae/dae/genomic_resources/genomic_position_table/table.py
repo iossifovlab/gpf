@@ -53,7 +53,6 @@ class GenomicPositionTable(abc.ABC):
     def _build_chrom_mapping(self):
         self.chrom_map = None
         self.chrom_order = self.get_file_chromosomes()
-
         if "chrom_mapping" in self.definition:
             mapping = self.definition.chrom_mapping
             if "filename" in mapping:

@@ -76,47 +76,8 @@ class GenomicScoreAnnotatorBase(Annotator):
     def is_open(self):
         return self.score.is_open()
 
-    # def get_all_annotation_attributes(self) -> list[dict]:
-    #     result = []
-    #     for score_id, score in self.score.score_definitions.items():
-    #         result.append({
-    #             "name": score_id,
-    #             "type": score.value_type,
-    #             "desc": score.desc
-    #         })
-    #     return result
-
-    # def get_annotation_config(self) -> list[dict[str, Any]]:
-    #     if self.config.get("attributes"):
-    #         return cast(list[dict[str, Any]], self.config["attributes"])
-
-    #     if self.score.get_default_annotation():
-    #         attributes = self.score.get_default_annotation()["attributes"]
-    #         logger.debug(
-    #             "using default score annotation for %s: %s",
-    #             self.score.score_id, attributes)
-    #         return cast(list[dict[str, Any]], attributes)
-    #     logger.warning(
-    #         "can't find annotation config for resource: %s",
-    #         self.score.score_id)
-    #     return []
-
-    # @property
-    # def resources(self) -> set[str]:
-    #     return {self.score.resource.resource_id}
-
     def _collect_score_queries(self) -> list[ScoreQuery]:
         return []
-
-    # def get_scores(self):
-    #     return [attr["source"] for attr in self.get_annotation_config()]
-
-    # def _scores_not_found(self, attributes):
-    #     values = {
-    #         attr["destination"]: None
-    #         for attr in self.get_annotation_config()
-    #     }
-    #     attributes.update(values)
 
     def close(self):
         self.score.close()

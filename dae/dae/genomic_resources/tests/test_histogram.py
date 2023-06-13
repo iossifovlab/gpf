@@ -8,12 +8,14 @@ from dae.genomic_resources.histogram import NumberHistogram, \
 
 
 def test_histogram_simple_input():
-    config = NumberHistogramConfig.from_yaml({
+    config = NumberHistogramConfig.from_dict({
         "view_range": {"min": 0, "max": 10},
         "number_of_bins": 10,
         "x_log_scale": False,
-        "y_log_scale": False
+        "y_log_scale": True
     })
+    assert config.y_log_scale
+
     hist = NumberHistogram(config)
     assert (hist.bins == np.arange(0, 11)).all()
 
@@ -31,7 +33,7 @@ def test_histogram_simple_input():
 
 
 def test_histogram_log_scale():
-    config = NumberHistogramConfig.from_yaml({
+    config = NumberHistogramConfig.from_dict({
         "view_range": {"min": 0, "max": 1000},
         "number_of_bins": 4,
         "x_log_scale": True,
@@ -55,7 +57,7 @@ def test_histogram_log_scale():
 
 
 def test_histogram_merge():
-    config = NumberHistogramConfig.from_yaml({
+    config = NumberHistogramConfig.from_dict({
         "view_range": {"min": 0, "max": 10},
         "number_of_bins": 10,
         "x_log_scale": False,
@@ -77,7 +79,7 @@ def test_histogram_merge():
 
 
 def test_histogram_serialize_deserialize():
-    config = NumberHistogramConfig.from_yaml({
+    config = NumberHistogramConfig.from_dict({
         "view_range": {"min": 0, "max": 10},
         "number_of_bins": 10,
         "x_log_scale": False,

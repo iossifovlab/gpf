@@ -230,10 +230,7 @@ class GenomicScoreStatistics(
                 logger.warning(
                     "unable to load min/max statistics file: %s",
                     min_max_filepath)
-        for hist_config in genomic_score\
-                .get_config_histograms().values():
-            score_id = hist_config["score"]
-
+        for score_id in genomic_score.get_config_histograms():
             histogram_filepath = os.path.join(
                 GenomicScoreStatistics.get_statistics_folder(),
                 GenomicScoreStatistics.get_histogram_file(score_id)
@@ -277,12 +274,14 @@ class GenomicScoreImplementation(
     def get_config_histograms(self):
         """Collect all configurations of histograms for the genomic score."""
         result = {}
-        for score_id, score in self.score.score_definitions.items():
-            if score.value_type in {"int", "float"}:
-                result[score_id] = NumberHistogram.default_config(score_id)
-        hist_config_overwrite = self.get_config().get("histograms", {})
-        for hist_config in hist_config_overwrite:
-            result[hist_config["score"]] = copy.deepcopy(hist_config)
+        for score_id, score_def in self.score.score_definitions.items():
+            if score_def.value_type not in {"int", "float"}:
+                continue
+
+            if score_def.hist_number_conf:
+                result[score_id] = score_def.hist_number_conf
+            else:
+                result[score_id] = NumberHistogramConfig.default_config()
         return result
 
     def get_resource_id(self):
@@ -316,11 +315,9 @@ class GenomicScoreImplementation(
 
         <td>{{ score.value_type }}</td>
 
-        {% set d_atts = scores.get_default_annotation_attributes() %}
+        {% set d_atts = scores.get_default_annotation_attribute(score_id) %}
         <td>
-            {%- for def_att_desc in d_atts -%}
-            <p>{{ def_att_desc }}</p>
-            {%- endfor %}
+            <p>{{ d_atts }}</p>
         </td>
 
         <td>{{ score.desc }}</td>
@@ -408,7 +405,7 @@ class GenomicScoreImplementation(
         ref_genome_id = self.resource.get_labels().get("reference_genome")
         ref_genome = self._get_reference_genome_cached(grr, ref_genome_id)
         for chrom in self.score.get_all_chromosomes():
-            if ref_genome is not None:
+            if ref_genome is not None and chrom in ref_genome.chromosomes:
                 chrom_length = ref_genome.get_chrom_length(chrom)
             else:
                 if isinstance(self.score.table, InmemoryGenomicPositionTable):
@@ -421,6 +418,9 @@ class GenomicScoreImplementation(
                     self.score.table.pysam_file,
                     self.score.table.unmap_chromosome(chrom)
                 )
+                if chrom_length is None:
+                    continue
+
             regions.extend(
                 split_into_regions(
                     chrom,
@@ -554,15 +554,13 @@ class GenomicScoreImplementation(
         if not hist_configs:
             return {}
         res = {}
-        for hist_config in hist_configs:
-            score_id = hist_config["score"]
-            if hist_config.get("min") is None:
-                hist_config["min"] = save_minmax_task[score_id].min
-            if hist_config.get("max") is None:
-                hist_config["max"] = save_minmax_task[score_id].max
-            hist_config = NumberHistogramConfig.convert_legacy_config(
-                hist_config
-            )
+        for score_id, hist_config in impl.get_config_histograms().items():
+            range_min, range_max = hist_config.view_range
+            if range_min is None:
+                range_min = save_minmax_task[score_id].min
+            if range_max is None:
+                range_max = save_minmax_task[score_id].max
+            hist_config.view_range = (range_min, range_max)
             try:
                 res[score_id] = NumberHistogram(hist_config)
             except ValueError:
@@ -577,12 +575,9 @@ class GenomicScoreImplementation(
     @staticmethod
     def _merge_histograms(resource, *calculated_histograms):
         impl = build_score_implementation_from_resource(resource)
-        hist_configs = list(impl.get_config_histograms().values())
-        if not hist_configs:
-            return {}
         res: dict = {}
-        for hist_config in hist_configs:
-            res[hist_config["score"]] = None
+        for score_id in impl.get_config_histograms():
+            res[score_id] = None
         score_ids = list(res.keys())
 
         skipped_score_histograms = set()
@@ -624,36 +619,6 @@ class GenomicScoreImplementation(
                 score_histogram.plot(outfile, score_id)
         return merged_histograms
 
-    # def _split_into_regions(self, region_size, reference_genome=None):
-    #     chromosomes = self.score.get_all_chromosomes()
-    #     for chrom in chromosomes:
-    #         if reference_genome is not None \
-    #                 and chrom in reference_genome.chromosomes:
-    #             chrom_len = reference_genome.get_chrom_length(chrom)
-    #         else:
-    #             if reference_genome is not None:
-    #                 logger.info(
-    #                     "chromosome %s of %s not found in reference "
-    #                     "genome %s",
-    #                     chrom, self.resource.resource_id,
-    #                     reference_genome.resource_id
-    #                 )
-    #             else:
-    #                 logger.info(
-    #                     "chromosome %s of %s using table, no reference "
-    #                     "genome",
-    #                     chrom, self.resource.resource_id
-    #                 )
-    #             chrom_len = self.score.table.get_chromosome_length(chrom)
-    #         logger.debug(
-    #             "Chromosome '%s' has length %s",
-    #             chrom, chrom_len)
-    #         i = 1
-    #         while i < chrom_len - region_size:
-    #             yield chrom, i, i + region_size - 1
-    #             i += region_size
-    #         yield chrom, i, None
-
     def calc_info_hash(self):
         """Compute and return the info hash."""
         return "infohash"
@@ -671,7 +636,9 @@ class GenomicScoreImplementation(
         return json.dumps({
             "config": {
                 "scores": config.get("scores", {}),
-                "histograms": list(self.get_config_histograms().values()),
+                "histograms": list(
+                    c.to_dict()
+                    for c in self.get_config_histograms().values()),
                 "table": config["table"]
             },
             "score_file": manifest[score_filename].md5
@@ -719,11 +686,6 @@ class AlleleScoreAggr:
 
 
 ScoreQuery = Union[PositionScoreQuery, NPScoreQuery, AlleleScoreQuery]
-# ScoreQueryList = Union[
-#     list[PositionScoreQuery],
-#     list[NPScoreQuery],
-#     list[AlleleScoreQuery]
-# ]
 
 
 class GenomicScore(ResourceConfigValidationMixin):
@@ -837,11 +799,15 @@ class GenomicScore(ResourceConfigValidationMixin):
         for score_conf in config["scores"]:
             number_hist_conf = None
             categorical_hist_conf = None
-            if score_conf.get("number_hist"):
-                number_hist_conf = NumberHistogramConfig(
-                    **score_conf.get("number_hist")
-                )
-            if score_conf.get("categorical_hist"):
+            if score_conf.get("number_hist") is None:
+                number_hist_conf = NumberHistogramConfig.default_config()
+            else:
+                number_hist_conf = NumberHistogramConfig.from_dict(
+                    score_conf.get("number_hist"))
+            if score_conf.get("categorical_hist") is None:
+                categorical_hist_conf = \
+                    CategoricalHistogramConfig.default_config()
+            else:
                 categorical_hist_conf = CategoricalHistogramConfig(
                     **score_conf.get("categorical_hist")
                 )
@@ -962,7 +928,9 @@ class GenomicScore(ResourceConfigValidationMixin):
         """Collect default annotation attributes."""
         default_annotation = self.get_config().get("default_annotation")
         if not default_annotation:
-            return list(self.score_definitions)
+            return list(
+                {"source": attr, "destination": attr}
+                for attr in self.score_definitions)
 
         # TODO: to remove when all the default_annotation in the main GRR have
         # their "attributes" level removed.
@@ -980,33 +948,23 @@ class GenomicScore(ResourceConfigValidationMixin):
                              f"{self.resource_id} resource is not a list.")
         return default_annotation
 
-    def get_default_annotation(self) -> dict[str, Any]:
-        if "default_annotation" in self.get_config():
-            return cast(
-                dict[str, Any], self.get_config()["default_annotation"])
-        return {
-            "attributes": [
-                {"source": score, "destination": score}
-                for score in self.score_definitions]
-        }
-
-    def _get_default_annotation_attribute(self, score: str) -> Optional[str]:
+    def get_default_annotation_attribute(self, score_id: str) -> Optional[str]:
         """Return default annotation attribute for a score.
 
         Returns None if the score is not included in the default annotation.
         Returns the destination attribute if present or the score if not.
         """
-        default_annotation = self.get_default_annotation()
-        atts = []
-        for att_conf in default_annotation.get("attributes", []):
-            if att_conf["source"] != score:
+        attributes = self.get_default_annotation_attributes()
+        result = []
+        for attr in attributes:
+            if attr["source"] != score_id:
                 continue
-            dst = score
-            if "destination" in att_conf:
-                dst = att_conf["destination"]
-            atts.append(dst)
-        if atts:
-            return ",".join(atts)
+            dst = score_id
+            if "destination" in attr:
+                dst = attr["destination"]
+            result.append(dst)
+        if result:
+            return ",".join(result)
         return None
 
     def get_score_config(self, score_id):

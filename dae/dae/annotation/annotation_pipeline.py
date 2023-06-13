@@ -69,7 +69,7 @@ class AnnotatorInfo:
         if resources is None:
             self.resources = []
         else:
-            self.resrouces = resources
+            self.resources = resources
 
     type: str
     attributes: list[AttributeInfo]
