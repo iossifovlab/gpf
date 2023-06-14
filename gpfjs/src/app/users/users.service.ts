@@ -205,6 +205,20 @@ export class UsersService {
       );
   }
 
+  // public updateFederationCredentials(credentialName: string): Observable<string> {
+    // const options = { withCredentials: true };
+
+    // return this.http.post(this.config.baseUrl + 'users/federation_credentials', {name: credentialName}, options)
+    //   .pipe(
+    //     map(res => {
+    //       if (typeof (res as {credentials: string}).credentials === 'string') {
+    //         return (res as {credentials: string}).credentials;
+    //       }
+    //       return 'Error showing created credentials';
+    //     })
+    //   );
+  // }
+
   public deleteFederationCredentials(credentialName: string): Observable<object> {
     const options = { withCredentials: true, body: { name: credentialName }};
 

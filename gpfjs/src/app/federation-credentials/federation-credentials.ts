@@ -1,7 +1,6 @@
 export interface FederationJson {
   /* eslint-disable  @typescript-eslint/naming-convention */
-  client_id: string;
-  client_secret: string;
+  description: string;
   name: string;
   // eslint-enable
 }
@@ -13,15 +12,13 @@ export class FederationCredential {
 
   public static fromJson(json: FederationJson): FederationCredential {
     return new FederationCredential(
-      json['client_id'],
-      json['client_secret'],
+      json['description'],
       json['name']
     );
   }
 
   public constructor(
-    public clientId: string,
-    public clientSecret: string,
+    public description: string,
     public name: string) {}
 }
 

@@ -2,7 +2,7 @@ import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { UsersService } from 'app/users/users.service';
 import { FederationCredential } from './federation-credentials';
 import { NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
-import { concatMap, of, zip } from 'rxjs';
+import { concatMap, debounceTime, fromEvent, of, tap, zip } from 'rxjs';
 
 @Component({
   selector: 'gpf-federation-credentials',
@@ -16,6 +16,9 @@ export class FederationCredentialsComponent implements OnInit {
   public temporaryShownCredentials = '';
   @ViewChild('credentialModal') public credentialModal: ElementRef;
   @ViewChild('credentialNameBox') public newCredentialName: ElementRef;
+  @ViewChild('createButton') public createButton: ElementRef;
+  @ViewChild('descriptionBox') private descriptionBox: ElementRef;
+  public currentCredentialEdit = '';
 
   public constructor(
     private usersService: UsersService,
@@ -25,6 +28,13 @@ export class FederationCredentialsComponent implements OnInit {
   public ngOnInit(): void {
     this.usersService.getFederationCredentials().subscribe(res => {
       this.credentials = res;
+
+      fromEvent(this.createButton.nativeElement, 'click').pipe(
+        debounceTime(250),
+        tap(() => {
+          this.createCredential(this.newCredentialName.nativeElement.value);
+        })
+      ).subscribe();
     });
   }
 
@@ -67,4 +77,15 @@ export class FederationCredentialsComponent implements OnInit {
       {animation: false, centered: true, size: 'lg', windowClass: 'credential-modal'}
     );
   }
+
+  // public edit(credential: FederationCredential, desc: string): void {
+  //   credential.description = desc;
+  //   this.usersService.updateFederationCredentials(credential)
+  //     .pipe(take(1))
+  //     .subscribe(() => {
+  //       credential.description = desc;
+  //     });
+
+  //   this.currentCredentialEdit = '';
+  // }
 }
