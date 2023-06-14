@@ -1,9 +1,8 @@
-import { DatasetsService } from 'app/datasets/datasets.service';
-import { ValidatorConstraint, ValidatorConstraintInterface } from 'class-validator';
+import { ValidationArguments, ValidatorConstraint, ValidatorConstraintInterface } from 'class-validator';
 
 @ValidatorConstraint({ name: 'customText', async: false })
 export class RegionsFilterValidator implements ValidatorConstraintInterface {
-  public validate(text: string): boolean {
+  public validate(text: string, args: ValidationArguments): boolean {
     if (!text) {
       return null;
     }
@@ -18,24 +17,22 @@ export class RegionsFilterValidator implements ValidatorConstraintInterface {
     }
 
     for (const line of lines) {
-      valid = valid && this.isValid(line);
+      valid = valid && this.isValid(line, args.object['genome'] as string);
     }
 
     return valid;
   }
 
-  private isValid(line: string): boolean {
-    let lineRegex = '(2[0-2]|1[0-9]|[0-9]|X|Y):([0-9]+)(?:-([0-9]+))?|(2[0-2]|1[0-9]|[0-9]|X|Y)';
-    if (DatasetsService.currentGenome === 'hg38') {
-      lineRegex = 'chr(2[0-2]|1[0-9]|[0-9]|X|Y):([0-9]+)(?:-([0-9]+))?|chr(2[0-2]|1[0-9]|[0-9]|X|Y)';
+  private isValid(line: string, genome: string): boolean {
+    let chromRegex = '(2[0-2]|1[0-9]|[0-9]|X|Y)';
+    if (genome === 'hg38') {
+      chromRegex = 'chr' + chromRegex;
     }
+    const lineRegex = `${chromRegex}:([0-9]+)(?:-([0-9]+))?|${chromRegex}`;
+
 
     const match = line.match(new RegExp(lineRegex, 'i'));
-    if (match === null) {
-      return false;
-    }
-
-    if (match[0] !== line) {
+    if (match === null || match[0] !== line) {
       return false;
     }
 

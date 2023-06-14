@@ -22,7 +22,7 @@ export class DatasetsService {
   private datasetLoaded$ = new Subject<void>();
   public datasetsLoading = false;
 
-  public static currentGenome = '';
+  public static genomeVersion = '';
 
   public constructor(
     private http: HttpClient,
@@ -95,7 +95,7 @@ export class DatasetsService {
     this.getDataset(datasetId).pipe(
       take(1),
       tap(dataset => {
-        DatasetsService.currentGenome = dataset.genome;
+        DatasetsService.genomeVersion = dataset.genome;
       })
     ).subscribe(dataset => {
       this.selectedDataset$.next(dataset);
