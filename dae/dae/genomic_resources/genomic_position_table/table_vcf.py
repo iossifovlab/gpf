@@ -1,6 +1,7 @@
 from functools import cache
-from typing import List
 from copy import copy
+from typing import Optional
+
 # pylint: disable=no-member
 import pysam  # type: ignore
 
@@ -44,7 +45,7 @@ class VCFGenomicPositionTable(TabixGenomicPositionTable):
         return self
 
     @cache  # pylint: disable=method-cache-max-size-none
-    def get_file_chromosomes(self) -> List[str]:
+    def get_file_chromosomes(self) -> list[str]:
         with self.genomic_resource.open_tabix_file(
                 self.definition.filename) as pysam_file_tabix:
             contigs = pysam_file_tabix.contigs
@@ -55,6 +56,7 @@ class VCFGenomicPositionTable(TabixGenomicPositionTable):
         self.stats["tabix fetch"] += 1
         self.buffer.clear()
         for raw_line in self.pysam_file.fetch(*args):
+            allele_index: Optional[int]
             for allele_index, alt in enumerate(raw_line.alts or [None]):
                 assert raw_line.ref is not None
                 allele_index = allele_index if alt is not None else None

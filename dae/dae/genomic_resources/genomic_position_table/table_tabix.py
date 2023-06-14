@@ -1,5 +1,5 @@
 import logging
-from typing import Optional, Tuple, List, Union
+from typing import Optional, Tuple, Union
 from collections import Counter
 # pylint: disable=no-member
 import pysam  # type: ignore
@@ -71,7 +71,20 @@ class TabixGenomicPositionTable(GenomicPositionTable):
         self.pysam_file = None
         self.line_iterator = None
 
-    def get_file_chromosomes(self) -> List[str]:
+    def get_chromosomes(self) -> list[str]:
+        return list(filter(
+            lambda v: v is not None,
+            [
+                self.map_chromosome(chrom)
+                for chrom in self.get_file_chromosomes()
+            ]))
+
+    def get_file_chromosomes(self) -> list[str]:
+        if self.pysam_file is None:
+            raise ValueError(
+                f"tabix table not open: "
+                f"{self.genomic_resource.resource_id}: "
+                f"{self.definition}")
         assert isinstance(self.pysam_file, pysam.TabixFile)
         return self.pysam_file.contigs
 

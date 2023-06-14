@@ -77,7 +77,7 @@ class GenomicPositionTable(abc.ABC):
                         len(self.chrom_map)
             else:
                 chromosomes = self.chrom_order
-                new_chromosomes = chromosomes
+                new_chromosomes: list[str] = chromosomes
 
                 if "del_prefix" in mapping:
                     pref = mapping.del_prefix
@@ -173,8 +173,9 @@ class GenomicPositionTable(abc.ABC):
 
     def map_chromosome(self, chromosome):
         if self.rev_chrom_map is not None:
-            assert chromosome in self.rev_chrom_map
-            return self.rev_chrom_map[chromosome]
+            if chromosome in self.rev_chrom_map:
+                return self.rev_chrom_map[chromosome]
+            return None
 
         return chromosome
 
