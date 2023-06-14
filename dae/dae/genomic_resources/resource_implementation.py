@@ -45,13 +45,6 @@ class ResourceStatistics:
     def get_statistics_folder():
         return "statistics"
 
-    @staticmethod
-    @abstractmethod
-    def build_statistics(
-        genomic_resource: GenomicResource
-    ) -> ResourceStatistics:
-        raise NotImplementedError()
-
 
 class GenomicResourceImplementation(ABC):
     """

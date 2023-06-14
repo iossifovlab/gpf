@@ -247,3 +247,8 @@ class HistogramStatisticMixin:
     @staticmethod
     def get_histogram_image_file(score_id):
         return f"histogram_{score_id}.png"
+
+
+class CategoricalHistogram:
+    # pylint: disable=too-few-public-methods
+    pass

@@ -5,6 +5,7 @@ from collections import Counter
 import pysam  # type: ignore
 
 from dae.genomic_resources.repository import GenomicResource
+from dae.utils.regions import get_chromosome_length_tabix
 from .table import GenomicPositionTable
 from .line import Line, LineBuffer
 
@@ -73,6 +74,20 @@ class TabixGenomicPositionTable(GenomicPositionTable):
     def get_file_chromosomes(self) -> List[str]:
         assert isinstance(self.pysam_file, pysam.TabixFile)
         return self.pysam_file.contigs
+
+    def get_chromosome_length(self, chrom, step=100_000_000):
+        if self.pysam_file is None:
+            raise ValueError(
+                f"tabix table not open: "
+                f"{self.genomic_resource.resource_id}: "
+                f"{self.definition}")
+        if chrom not in self.get_chromosomes():
+            raise ValueError(
+                f"contig {chrom} not present in the table's contigs: "
+                f"{self.get_chromosomes()}")
+        return get_chromosome_length_tabix(
+            self.pysam_file,
+            self.unmap_chromosome(chrom), step)
 
     def _map_file_chrom(self, chrom: str) -> str:
         """Transfrom chromosome name to the chromosomes from score file."""

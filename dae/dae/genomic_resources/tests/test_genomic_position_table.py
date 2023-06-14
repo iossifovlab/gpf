@@ -11,8 +11,6 @@ from dae.genomic_resources.genomic_position_table import \
     VCFGenomicPositionTable, \
     build_genomic_position_table
 
-from dae.utils.regions import get_chromosome_length_tabix
-
 from dae.genomic_resources.testing import \
     build_inmemory_test_resource, build_filesystem_test_resource, \
     setup_directories, convert_to_tab_separated, setup_tabix, setup_vcf
@@ -1072,7 +1070,6 @@ def test_tabix_max_buffer(
         )
 
 
-@pytest.mark.xfail(reason="Unsupported method")
 def test_contig_length():
     res = build_inmemory_test_resource({
         "genomic_resource.yaml": """
@@ -1095,7 +1092,7 @@ def test_contig_length():
 
 
 def test_contig_length_tabix_table(tabix_table):
-    assert get_chromosome_length_tabix(tabix_table.pysam_file, "1") >= 13
+    assert tabix_table.get_chromosome_length("1") >= 13
 
 
 def test_vcf_autodetect_format(vcf_res_autodetect_format):

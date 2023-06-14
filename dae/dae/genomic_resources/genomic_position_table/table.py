@@ -154,8 +154,22 @@ class GenomicPositionTable(abc.ABC):
         The interval is closed on both sides and 1-based.
         """
 
-    def get_chromosomes(self):
+    def get_chromosomes(self) -> list[str]:
+        """Return list of contigs in the genomic position table."""
+        if self.chrom_order is None:
+            raise ValueError(
+                f"genomic table not open: "
+                f"{self.genomic_resource.resource_id}: "
+                f"{self.definition}")
+        assert self.chrom_order is not None
         return self.chrom_order
+
+    @abc.abstractmethod
+    def get_chromosome_length(self, chrom, step=100_000_000):
+        """Return the length of a chromosome (or contig).
+
+        Returned value is guarnteed to be larget than the actual contig length.
+        """
 
     def map_chromosome(self, chromosome):
         if self.rev_chrom_map is not None:

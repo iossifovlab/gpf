@@ -130,6 +130,17 @@ class InmemoryGenomicPositionTable(GenomicPositionTable):
             else:
                 yield line
 
+    def get_chromosome_length(self, chrom, step=100_000_000):
+        if chrom not in self.get_chromosomes():
+            raise ValueError(
+                f"contig {chrom} not present in the table's contigs: "
+                f"{self.get_chromosomes()}")
+        if self.chrom_map:
+            fch = self.chrom_map[chrom]
+        else:
+            fch = chrom
+        return max(line.pos_end for line in self.records_by_chr[fch]) + 1
+
     def close(self):
         if self.str_stream is not None:
             self.str_stream.close()
