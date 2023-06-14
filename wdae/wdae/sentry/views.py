@@ -1,5 +1,6 @@
 import os
 import codecs
+import time
 from urllib.parse import urlparse
 
 import requests
@@ -32,6 +33,14 @@ class PlainTextParser(BaseParser):
 @parser_classes([PlainTextParser])
 def sentry(request):
     """Tunnel Sentry requests from the frontend."""
+    expiration_time = 60 * 60  # in seconds
+    sentry_token = request.COOKIES.get("sentry_token").split("&")
+    time_issued = float(sentry_token[0].split("=")[1]) / pow(10, 6)
+    curr_time = time.time()
+
+    if time_issued + expiration_time <= curr_time:
+        return Response({}, status.HTTP_401_UNAUTHORIZED)
+
     dsn = os.environ.get("WDAE_SENTRY_DSN")
     fake_dsn = "https://0@0.ingest.sentry.io/0"  # gpfjs: main.ts
     project_id = urlparse(dsn).path.strip("/")
