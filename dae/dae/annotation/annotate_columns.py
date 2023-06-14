@@ -161,6 +161,12 @@ def annotate(
             logger.error("line %s: %s", lnum, line)
             logger.error("\t%s", error)
 
+    if len(errors) > 0:
+        logger.error("there were errors during the import")
+        for lnum, line, error in errors:
+            logger.error("line %s: %s", lnum, line)
+            logger.error("\t%s", error)
+
 
 def combine(args, partfile_paths, out_file_path):
     """Combine annotated region parts into a single VCF file."""

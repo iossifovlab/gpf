@@ -164,6 +164,20 @@ class GenomicPositionTable(abc.ABC):
         assert self.chrom_order is not None
         return self.chrom_order
 
+    def map_chromosome(self, chromosome):
+        if self.rev_chrom_map is not None:
+            assert chromosome in self.rev_chrom_map
+            return self.rev_chrom_map[chromosome]
+
+        return chromosome
+
+    def unmap_chromosome(self, chromosome):
+        if self.chrom_map is not None:
+            assert chromosome in self.chrom_map
+            return self.chrom_map[chromosome]
+
+        return chromosome
+
     @abc.abstractmethod
     def get_chromosome_length(self, chrom, step=100_000_000):
         """Return the length of a chromosome (or contig).

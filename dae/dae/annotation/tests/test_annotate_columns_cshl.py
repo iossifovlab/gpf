@@ -4,40 +4,13 @@ import pytest
 
 from dae.testing import convert_to_tab_separated, setup_directories, \
     setup_genome, setup_denovo
-from dae.genomic_resources.testing import build_inmemory_test_repository
+# from dae.genomic_resources.testing import build_inmemory_test_repository
 from dae.annotation.annotate_columns import cli as cli_columns
 
 
 def get_file_content_as_string(file):
     with open(file, "rt", encoding="utf8") as infile:
         return "".join(infile.readlines())
-
-
-@pytest.fixture
-def scores_repo(tmp_path):
-    repo = build_inmemory_test_repository({
-        "one": {
-            "genomic_resource.yaml": textwrap.dedent("""
-                type: position_score
-                table:
-                  filename: data.tsv
-                scores:
-                - id: score
-                  type: float
-                  desc: |
-                      The phastCons computed over the tree of 100
-                      verterbarte species
-                  name: s1
-            """),
-
-            "data.tsv": convert_to_tab_separated("""
-                    chrom  pos_begin  s1
-                    chrA   10         0.01
-                    chrA   11         0.2
-                """)
-        }
-    })
-    return repo
 
 
 @pytest.fixture

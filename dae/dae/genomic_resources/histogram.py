@@ -221,7 +221,6 @@ class NumberHistogram(Statistic):
                 res.get("config")
             )
         else:
-
             config = NumberHistogramConfig.from_dict(res.get("config"))
         return NumberHistogram(
             config,
