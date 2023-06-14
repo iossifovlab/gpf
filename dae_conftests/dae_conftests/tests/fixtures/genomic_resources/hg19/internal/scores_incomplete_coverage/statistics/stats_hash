@@ -1,0 +1,37 @@
+{
+  "config": {
+    "histograms": [
+      {
+        "number_of_bins": 100,
+        "view_range": {
+          "max": null,
+          "min": null
+        },
+        "x_log_scale": false,
+        "x_min_log": null,
+        "y_log_scale": false
+      }
+    ],
+    "scores": [
+      {
+        "id": "score0_incomplete_cov",
+        "name": "score0",
+        "type": "float"
+      }
+    ],
+    "table": {
+      "chrom": {
+        "name": "CHROM"
+      },
+      "filename": "scores_incomplete_coverage.tsv.gz",
+      "format": "tabix",
+      "pos_begin": {
+        "name": "POS"
+      },
+      "pos_end": {
+        "name": "POS"
+      }
+    }
+  },
+  "score_file": "28ee47e15cc15c1b8881cd453cdefc7d"
+}

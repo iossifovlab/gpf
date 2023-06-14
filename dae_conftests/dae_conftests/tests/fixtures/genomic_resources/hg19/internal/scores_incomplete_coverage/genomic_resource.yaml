@@ -16,12 +16,11 @@ table:
 
 # score values
 scores:
-    - id: score0_incomplete_cov
-      type: float
-      name: score0
+  - id: score0_incomplete_cov
+    type: float
+    name: score0
 
 default_annotation:
-  attributes:
-    - source: score0_incomplete_cov
-      destination: score0_incomplete_cov
-      position_aggregator: max
+  - source: score0_incomplete_cov
+    destination: score0_incomplete_cov
+    position_aggregator: max

@@ -34,36 +34,53 @@ def scores_repo(tmp_path):
                     index: 3
                     type: float
                     desc: phastCons100 desc
-                histograms:
-                 - score: phastCons100
-                   bins: 100
-                   min: 1574474507.0
-                   max: 23092042.0
-                   x_scale: linear
-                   y_scale: linear
+                    number_hist:
+                      number_of_bins: 10
+                      view_range:
+                        max: 1.0
+                        min: 0.0
+
                 default_annotation:
-                  attributes:
-                    - source: phastCons100
-                      destination: phastcons100
+                  - source: phastCons100
+                    destination: phastcons100
                 meta:
                   description:
                     test_help
                   labels: ~
             """),
-            "histograms": {
-                "phastCons100.csv": textwrap.dedent("""
-                    bars,bins
-                    1574474507.0,0.0
-                    270005746.0,0.01
-                    116838135.0,0.02
-                    85900783.0,0.03
-                    68361899.0,0.04
-                    48385988.0,0.05
-                    39892532.0,0.06
-                    33851345.0,0.07
-                    26584576.0,0.08
-                    28626413.0,0.09
-                    23092042.0,0.1
+            "statistics": {
+                "histogram_phastCons100.yaml": textwrap.dedent("""
+                    bars:
+                    - 470164
+                    - 48599
+                    - 25789
+                    - 16546
+                    - 9269
+                    - 6170
+                    - 4756
+                    - 4633
+                    - 5240
+                    - 25736
+                    bins:
+                    - 0.0
+                    - 0.1
+                    - 0.2
+                    - 0.30000000000000004
+                    - 0.4
+                    - 0.5
+                    - 0.6000000000000001
+                    - 0.7000000000000001
+                    - 0.8
+                    - 0.9
+                    - 1.0
+                    config:
+                      number_of_bins: 10
+                      view_range:
+                        max: 1.0
+                        min: 0.0
+                      x_log_scale: false
+                      x_min_log: null
+                      y_log_scale: false
                 """)
             }
         }
@@ -121,9 +138,8 @@ def test_genomic_scores_db_with_annotation(annotation_gpf):
     assert "phastcons100" in db
     assert db["phastcons100"] is not None
 
-    # FIXME: histograms not restored
-    # score = db["phastcons100"]
-    # assert len(score.hist.bars) == 11
-    # assert len(score.hist.bins) == 11
-    # assert score.hist.x_scale == "linear"
-    # assert score.hist.y_scale == "linear"
+    score = db["phastcons100"]
+    assert len(score.hist.bars) == 10
+    assert len(score.hist.bins) == 11
+    assert not score.hist.config.x_log_scale
+    assert not score.hist.config.y_log_scale

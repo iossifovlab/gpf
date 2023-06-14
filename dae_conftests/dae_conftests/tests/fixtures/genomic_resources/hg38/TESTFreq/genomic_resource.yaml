@@ -20,20 +20,19 @@ table:
 
 # score values
 scores:
-    - id: altFreq
-      type: float
-      desc: ""
-      name: all.altFreq
+  - id: altFreq
+    type: float
+    desc: ""
+    name: all.altFreq
 
-    - id: altFreq2
-      type: float
-      desc: ""
-      name: all.altFreq2
+  - id: altFreq2
+    type: float
+    desc: ""
+    name: all.altFreq2
 
 default_annotation:
-  attributes:
-    - source: altFreq
-      destination: alt_freq
+  - source: altFreq
+    destination: alt_freq
 
-    - source: altFreq2
-      destination: alt_freq2
+  - source: altFreq2
+    destination: alt_freq2

@@ -1,0 +1,40 @@
+{
+  "config": {
+    "histograms": [
+      {
+        "number_of_bins": 100,
+        "view_range": {
+          "max": null,
+          "min": null
+        },
+        "x_log_scale": false,
+        "x_min_log": null,
+        "y_log_scale": false
+      }
+    ],
+    "scores": [
+      {
+        "desc": "",
+        "id": "test_score",
+        "index": 3,
+        "position_aggregator": "mean",
+        "type": "float"
+      }
+    ],
+    "table": {
+      "chrom": {
+        "index": 0
+      },
+      "filename": "scores.tsv.gz",
+      "format": "tabix",
+      "header_mode": "none",
+      "pos_begin": {
+        "index": 1
+      },
+      "pos_end": {
+        "index": 2
+      }
+    }
+  },
+  "score_file": "590e48aff9382edfa3330a072c98c6c5"
+}

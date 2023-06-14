@@ -1,0 +1,67 @@
+{
+  "config": {
+    "histograms": [
+      {
+        "number_of_bins": 100,
+        "view_range": {
+          "max": null,
+          "min": null
+        },
+        "x_log_scale": false,
+        "x_min_log": null,
+        "y_log_scale": false
+      },
+      {
+        "number_of_bins": 100,
+        "view_range": {
+          "max": null,
+          "min": null
+        },
+        "x_log_scale": false,
+        "x_min_log": null,
+        "y_log_scale": false
+      },
+      {
+        "number_of_bins": 100,
+        "view_range": {
+          "max": null,
+          "min": null
+        },
+        "x_log_scale": false,
+        "x_min_log": null,
+        "y_log_scale": false
+      }
+    ],
+    "scores": [
+      {
+        "id": "score0",
+        "name": "score0",
+        "type": "float"
+      },
+      {
+        "id": "score2",
+        "name": "score2",
+        "type": "float"
+      },
+      {
+        "id": "score4",
+        "name": "score4",
+        "type": "float"
+      }
+    ],
+    "table": {
+      "chrom": {
+        "name": "CHROM"
+      },
+      "filename": "scores1.tsv.gz",
+      "format": "tabix",
+      "pos_begin": {
+        "name": "POS"
+      },
+      "pos_end": {
+        "name": "POS"
+      }
+    }
+  },
+  "score_file": "093c47435b7440def543b99758a92afe"
+}

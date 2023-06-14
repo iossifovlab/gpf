@@ -4,6 +4,30 @@
 - md5: 64ea2e483af33f1ad35d771653889e1d
   name: TESTCADD.tsv.gz.tbi
   size: 99
-- md5: b914ca8069ad2b83ef7ae58340ba9662
+- md5: 6ddfd7783ed4abd33d3e443bfc751350
   name: genomic_resource.yaml
-  size: 647
+  size: 601
+- md5: 9fe8b4728fecf0964d38f4dbd0026362
+  name: index.html
+  size: 3758
+- md5: 23329d335421d56e3eead7b1c6cbd900
+  name: statistics/histogram_cadd_phred.png
+  size: 14459
+- md5: 924a483f8fc0030feb967b767c63da26
+  name: statistics/histogram_cadd_phred.yaml
+  size: 1959
+- md5: 61c0f45f4a8354e1a9f368222591ba90
+  name: statistics/histogram_cadd_raw.png
+  size: 14290
+- md5: 8b5f04256c3997febe6fc166df8123f7
+  name: statistics/histogram_cadd_raw.yaml
+  size: 2055
+- md5: 6f2a0cc14be29b8b4303f43697ea206b
+  name: statistics/min_max_cadd_phred.yaml
+  size: 43
+- md5: 598ee4948b026d0dc780d3fa169540f5
+  name: statistics/min_max_cadd_raw.yaml
+  size: 46
+- md5: 5bcf6eb7accf7c4f5246d18ff227e631
+  name: statistics/stats_hash
+  size: 1068

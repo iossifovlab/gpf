@@ -4,9 +4,9 @@
 - md5: 0cae8c2951f4c60954b94c0a0cb2e431
   name: TESTphastCons100way.bedGraph.gz.tbi
   size: 169
-- md5: 865d73c2c2d3c40496232871df2ca10a
+- md5: 5202483f3106c876390d5af44902fa00
   name: genomic_resource.yaml
-  size: 890
+  size: 656
 - md5: d616082ad56b26177b0aa40c08d27f3f
   name: histograms/phastCons100way.csv
   size: 143
@@ -16,6 +16,21 @@
 - md5: 6173d0d671742284f909423144c4f07a
   name: histograms/phastCons100way.png
   size: 8178
+- md5: bb2881a2d4e2429a64a1e366fd177d48
+  name: index.html
+  size: 3893
 - md5: 56feb878ed78769d5200702392b8e4b7
   name: scores/phastCons100way.yaml
   size: 583
+- md5: 7253f59314b3cdec0fe36f4d19a79410
+  name: statistics/histogram_phastCons100way.png
+  size: 11865
+- md5: 50f50d296a496786a02583e5b29be09f
+  name: statistics/histogram_phastCons100way.yaml
+  size: 295
+- md5: 98ddd26b76ce999ec1f212448880f698
+  name: statistics/min_max_phastCons100way.yaml
+  size: 46
+- md5: 5ad5b6522430ce18d0233deb59e19d3c
+  name: statistics/stats_hash
+  size: 920

@@ -13,40 +13,28 @@ table:
       index: 2
 
 scores:
-    - id: phastCons100way
-      type: float
-      desc: "phastCons100way"
-      position_aggregator: max
-      index: 3
-
-# resrouce_default_type_aggregators:
-#     float.aggregator: max
-#     int.agregator: max
-#     str.agregator: concatenate
-# 
-# type_aggregators:
-#   - type: float
-#     aggregator: max 
-#   - type: int
-#     aggregator: max
-#   - type: str
-#     aggregator: concatente 
+  - id: phastCons100way
+    type: float
+    desc: "phastCons100way"
+    position_aggregator: max
+    index: 3
+    number_hist:
+      number_of_bins: 10
+      view_range:
+        min: 0.0
+        max: 1.0
 
 
-# defined by score_type
 
-histograms:
-  - score: phastCons100way
-    bins: 10
-    min: 0
-    max: 1
-    x_scale: linear
-    y_scale: linear
-
-# score values
+# histograms:
+#   - score: phastCons100way
+#     bins: 10
+#     min: 0
+#     max: 1
+#     x_scale: linear
+#     y_scale: linear
 
 default_annotation:
-  attributes:
-    - source: phastCons100way
-      destination: phastCons100way
-      position_aggregator: max
+  - source: phastCons100way
+    destination: phastCons100way
+    position_aggregator: max

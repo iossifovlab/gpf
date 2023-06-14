@@ -14,8 +14,8 @@ class GenomicScoresView(QueryBaseView):
                 "bins": score.hist.bins,
                 "xscale": "log" if score.hist.config.x_log_scale else "linear",
                 "yscale": "log" if score.hist.config.y_log_scale else "linear",
-                "range": score.hist.range,
-                # "help": score.help,
+                "range": score.hist.view_range,
+                "help": score.help
             }
             for score_id, score in self.gpf_instance.get_genomic_scores()
         ])

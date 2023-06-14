@@ -343,10 +343,6 @@ class GenomicResource:
         """Check if filename exists in this resource."""
         return self.proto.file_exists(self, filename)
 
-    # def file_local(self, filename):
-    #     """Check whether a file can be accessed locally in this resource."""
-    #     return self.proto.file_local(self, filename)
-
     def get_manifest(self) -> Manifest:
         """Load resource manifest if it exists. Otherwise builds it."""
         if self._manifest is None:

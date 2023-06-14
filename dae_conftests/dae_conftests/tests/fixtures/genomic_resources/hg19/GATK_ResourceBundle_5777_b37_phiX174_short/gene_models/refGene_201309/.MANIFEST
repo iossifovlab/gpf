@@ -1,6 +1,12 @@
 - md5: ed67a675e3f2d06a4f0736ca535a00f9
   name: genomic_resource.yaml
   size: 192
+- md5: 6614e43e3cdd08e62080a006a186ab38
+  name: index.html
+  size: 1504
 - md5: a42701941f92c7b999a4f8f26e4a3a47
   name: refGene201309.txt
   size: 3761
+- md5: 6a99c575ab87f8c7d1ed1e52e7e349ce
+  name: statistics/stats_hash
+  size: 11

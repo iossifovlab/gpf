@@ -1,5 +1,6 @@
 import logging
 from dataclasses import dataclass
+from typing import Optional
 
 from dae.genomic_resources.genomic_scores import build_score_from_resource
 from dae.genomic_resources.histogram import NumberHistogram
@@ -14,8 +15,9 @@ class ScoreDesc:
     score_id: str
     source: str
     destination: str
-    hist: NumberHistogram
+    hist: Optional[NumberHistogram]
     description: str
+    help: str
 
 
 class GenomicScoresDb:
@@ -46,12 +48,19 @@ class GenomicScoresDb:
         for attr in annotator_info.attributes:
             if attr.internal:
                 continue
-            result[attr.name] = ScoreDesc(
+            score_desc = ScoreDesc(
                 resource.resource_id,
                 attr.source, attr.source,
                 attr.name,
-                score.get_score_config(attr.source).hist_number_conf,
-                score.get_score_config(attr.source).desc)
+                score.get_number_histogram(attr.source),
+                score.get_score_config(attr.source).desc,
+                score.resource.get_description())
+            if score_desc.hist is None:
+                logger.warning(
+                    "unable to load histogram for %s: %s (%s)",
+                    score.resource_id, attr.name, attr.source)
+                continue
+            result[attr.name] = score_desc
         return result
 
     def get_scores(self):

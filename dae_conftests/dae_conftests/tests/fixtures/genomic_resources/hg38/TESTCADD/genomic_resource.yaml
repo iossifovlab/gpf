@@ -18,24 +18,23 @@ table:
 
 # score values
 scores:
-    - id: cadd_raw
-      type: float
-      desc: ""
-      name: RawScore
-    - id: cadd_phred
-      type: float
-      desc: ""
-      name: PHRED
+  - id: cadd_raw
+    type: float
+    desc: ""
+    name: RawScore
+  - id: cadd_phred
+    type: float
+    desc: ""
+    name: PHRED
 
 
 default_annotation:
-  attributes:
-    - source: cadd_raw
-      destination: cadd_raw
-      position_aggregator: max
-      nucleotide_aggregator: max
+  - source: cadd_raw
+    destination: cadd_raw
+    position_aggregator: max
+    nucleotide_aggregator: max
 
-    - source: cadd_phred
-      destination: cadd_phred
-      position_aggregator: max
-      nucleotide_aggregator: max
+  - source: cadd_phred
+    destination: cadd_phred
+    position_aggregator: max
+    nucleotide_aggregator: max

@@ -142,13 +142,6 @@ class NumberHistogram(Statistic):
                 "Cannot instantiate histogram with only bins or only bars!"
             )
 
-    # @staticmethod
-    # def default_config(score_id: str):
-    #     return {
-    #         "score": score_id,
-    #         "bins": 100,
-    #     }
-
     def merge(self, other: NumberHistogram) -> None:
         """Merge two histograms."""
         assert self.config == other.config

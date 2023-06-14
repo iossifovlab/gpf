@@ -1,0 +1,25 @@
+chrom: chr2
+length: 1400000
+nucleotide_counts:
+  A: 389454
+  C: 299760
+  G: 309110
+  N: 10000
+  T: 391676
+nucleotide_pair_counts:
+  AA: 121602
+  AC: 72578
+  AG: 98042
+  AT: 97232
+  CA: 105592
+  CC: 77900
+  CG: 20520
+  CT: 95747
+  GA: 84778
+  GC: 66910
+  GG: 82586
+  GT: 74836
+  TA: 77482
+  TC: 82371
+  TG: 107962
+  TT: 123861

@@ -18,21 +18,26 @@ table:
 
 # score values
 scores:
-    - id: MPC
-      type: float
-      desc: ""
-      name: MPC
+  - id: MPC
+    type: float
+    desc: ""
+    name: MPC
+    number_hist:
+      number_of_bins: 100
+      view_range:
+        min: 0.0
+        max: 5.0
+      y_log_scale: True
 
-histograms:
-  - score: MPC
-    bins: 100
-    min: 0.0
-    max: 5.0
-    y_scale: "log"
+# histograms:
+#   - score: MPC
+#     bins: 100
+#     min: 0.0
+#     max: 5.0
+#     y_scale: "log"
 
 default_annotation:
-  attributes:
-    - source: MPC
-      destination: mpc
-      position_aggregator: max
-      nucleotide_aggregator: max
+  - source: MPC
+    destination: mpc
+    position_aggregator: max
+    nucleotide_aggregator: max

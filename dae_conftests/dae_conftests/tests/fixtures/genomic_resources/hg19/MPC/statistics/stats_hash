@@ -1,0 +1,49 @@
+{
+  "config": {
+    "histograms": [
+      {
+        "number_of_bins": 100,
+        "view_range": {
+          "max": 5.0,
+          "min": 0.0
+        },
+        "x_log_scale": false,
+        "x_min_log": null,
+        "y_log_scale": true
+      }
+    ],
+    "scores": [
+      {
+        "desc": "",
+        "id": "MPC",
+        "name": "MPC",
+        "number_hist": {
+          "number_of_bins": 100,
+          "view_range": {
+            "max": 5.0,
+            "min": 0.0
+          },
+          "y_log_scale": true
+        },
+        "type": "float"
+      }
+    ],
+    "table": {
+      "alternative": {
+        "name": "alt"
+      },
+      "chrom": {
+        "name": "chrom"
+      },
+      "filename": "fordist_constraint_official_mpc_values_v2.txt.gz",
+      "format": "tabix",
+      "pos_begin": {
+        "name": "pos"
+      },
+      "reference": {
+        "name": "ref"
+      }
+    }
+  },
+  "score_file": "cd8f6f35577bc24f6b56c6ff1c06173a"
+}

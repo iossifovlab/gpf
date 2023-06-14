@@ -1,14 +1,13 @@
 - config:
     default_annotation:
-      attributes:
-      - destination: cadd_raw
-        nucleotide_aggregator: max
-        position_aggregator: max
-        source: cadd_raw
-      - destination: cadd_phred
-        nucleotide_aggregator: max
-        position_aggregator: max
-        source: cadd_phred
+    - destination: cadd_raw
+      nucleotide_aggregator: max
+      position_aggregator: max
+      source: cadd_raw
+    - destination: cadd_phred
+      nucleotide_aggregator: max
+      position_aggregator: max
+      source: cadd_phred
     scores:
     - desc: ''
       id: cadd_raw
@@ -25,6 +24,7 @@
         index: 0
       filename: CADD.bedgraph.gz
       format: tabix
+      header_mode: none
       pos_begin:
         index: 1
       reference:
@@ -38,9 +38,33 @@
   - md5: 5d95f08840be7f0f6fef13a5157d7f47
     name: CADD.bedgraph.gz.tbi
     size: 670
-  - md5: b0be61669206087266af3549cfc04b63
+  - md5: 77547fdd631548808bd6f733e39b9a37
     name: genomic_resource.yaml
-    size: 632
+    size: 606
+  - md5: 5a9e1079fb1b1bf35743a92d86cbeb3d
+    name: index.html
+    size: 3761
+  - md5: 79ab6b898617b641b4a86dc1f138fbb5
+    name: statistics/histogram_cadd_phred.png
+    size: 18985
+  - md5: 9571aa54582ef2c7c1ceaf6a95f8191d
+    name: statistics/histogram_cadd_phred.yaml
+    size: 2363
+  - md5: e1af790e58efc438f4621220b2b4a033
+    name: statistics/histogram_cadd_raw.png
+    size: 19533
+  - md5: 076277e0cf9716018a1f70d75d3a801e
+    name: statistics/histogram_cadd_raw.yaml
+    size: 2562
+  - md5: 79346b3fc62b019545b8d9299eb31dc3
+    name: statistics/min_max_cadd_phred.yaml
+    size: 42
+  - md5: 6e9e93dcb90385720a07807887b34f15
+    name: statistics/min_max_cadd_raw.yaml
+    size: 49
+  - md5: 593070197a0546c434e1ec2ad51c8d41
+    name: statistics/stats_hash
+    size: 1071
   version: '0'
 - config:
     filename: refGene201309.txt
@@ -59,9 +83,15 @@
   - md5: ed67a675e3f2d06a4f0736ca535a00f9
     name: genomic_resource.yaml
     size: 192
+  - md5: 6614e43e3cdd08e62080a006a186ab38
+    name: index.html
+    size: 1504
   - md5: a42701941f92c7b999a4f8f26e4a3a47
     name: refGene201309.txt
     size: 3761
+  - md5: 6a99c575ab87f8c7d1ed1e52e7e349ce
+    name: statistics/stats_hash
+    size: 11
   version: '0'
 - config:
     PARS:
@@ -93,24 +123,41 @@
   - md5: bd5e747b25ab3eca4dafef208c8c2cbf
     name: genomic_resource.yaml
     size: 302
+  - md5: 3aa41261de9140576eafa323e10f5d2a
+    name: index.html
+    size: 3790
+  - md5: 498eb0e860af29958bef946235b0e1db
+    name: statistics/1_statistic.yaml
+    size: 313
+  - md5: 2d914d63f47928c9e3f3784001f860b8
+    name: statistics/2_statistic.yaml
+    size: 315
+  - md5: 5fec382575553584edd947ce291dc90d
+    name: statistics/X_statistic.yaml
+    size: 305
+  - md5: d72e505b975e82e071437de993156b08
+    name: statistics/reference_genome_statistic.yaml
+    size: 596
+  - md5: ba67778c5b7dd39d68fe120945cf8ab4
+    name: statistics/stats_hash
+    size: 54
   version: '0'
 - config:
     default_annotation:
-      attributes:
-      - destination: mpc
-        nucleotide_aggregator: max
-        position_aggregator: max
-        source: MPC
-    histograms:
-    - bins: 100
-      max: 5.0
-      min: 0.0
-      score: MPC
-      y_scale: log
+    - destination: mpc
+      nucleotide_aggregator: max
+      position_aggregator: max
+      source: MPC
     scores:
     - desc: ''
       id: MPC
       name: MPC
+      number_hist:
+        number_of_bins: 100
+        view_range:
+          max: 5.0
+          min: 0.0
+        y_log_scale: true
       type: float
     table:
       alternative:
@@ -132,9 +179,9 @@
   - md5: 5bb77f8efe6ed1b01b3422a3b5070307
     name: fordist_constraint_official_mpc_values_v2.txt.gz.tbi
     size: 257
-  - md5: 9019249e4fdf19106a5d77b64005ac0a
+  - md5: cbb98947a53e033d591219f8494a9d24
     name: genomic_resource.yaml
-    size: 554
+    size: 655
   - md5: e8ee8861355ba3c1126e8ca7b48b2fe8
     name: histograms/MPC.csv
     size: 1481
@@ -144,19 +191,33 @@
   - md5: 558273e259dee3322accc97e92e9d7d1
     name: histograms/MPC.png
     size: 8667
+  - md5: 05364190a015e8db1f194c463603043a
+    name: index.html
+    size: 3473
+  - md5: c5bccdbfe3dc20fc06699476cfd3e5ca
+    name: statistics/histogram_MPC.png
+    size: 10251
+  - md5: 647f2366ca7712640b233ead7e929525
+    name: statistics/histogram_MPC.yaml
+    size: 1813
+  - md5: 5416e76393b5da61c3eefd628ca67fe3
+    name: statistics/min_max_MPC.yaml
+    size: 54
+  - md5: 97880225bbd11b94ad6475a32b76c25f
+    name: statistics/stats_hash
+    size: 945
   version: '0'
 - config:
     default_annotation:
-      attributes:
-      - destination: score0
-        position_aggregator: max
-        source: score0
-      - destination: score2
-        position_aggregator: max
-        source: score2
-      - destination: score4
-        position_aggregator: max
-        source: score4
+    - destination: score0
+      position_aggregator: max
+      source: score0
+    - destination: score2
+      position_aggregator: max
+      source: score2
+    - destination: score4
+      position_aggregator: max
+      source: score4
     scores:
     - id: score0
       name: score0
@@ -182,9 +243,12 @@
   - md5: 7eb9662b7995df530a9ac725a1316fbf
     name: MANIFEST
     size: 336
-  - md5: 32107e880baa6159a170017aa081f21d
+  - md5: 40bd340e93401645f87c7c41f571ce19
     name: genomic_resource.yaml
-    size: 643
+    size: 593
+  - md5: a92d14c606c9a64214daa3204805b3d9
+    name: index.html
+    size: 5197
   - md5: 093c47435b7440def543b99758a92afe
     name: scores1.tsv.gz
     size: 367
@@ -194,13 +258,42 @@
   - md5: 26aa9750f0a1ad0458bcc99fe7d71ac2
     name: scores1.tsv.gz.tbi
     size: 1350
+  - md5: 141a292e722188d15dd0433620edf930
+    name: statistics/histogram_score0.png
+    size: 10808
+  - md5: fb31e268452b0b747689bfddee2983ea
+    name: statistics/histogram_score0.yaml
+    size: 1963
+  - md5: 328478e8566f1c9e12bd16e566b97e6c
+    name: statistics/histogram_score2.png
+    size: 10741
+  - md5: d7f319d30397172c90e8838d86cff3bb
+    name: statistics/histogram_score2.yaml
+    size: 2222
+  - md5: fa41bbd14d8c1c143c32c77175e6312e
+    name: statistics/histogram_score4.png
+    size: 10880
+  - md5: 6759799a38b2956ccfd9bdb2523dd72b
+    name: statistics/histogram_score4.yaml
+    size: 2277
+  - md5: c1f3dfe8347110a45dc7344c0bca38da
+    name: statistics/min_max_score0.yaml
+    size: 48
+  - md5: be2dd6bfd508cc0f1e0f68a0ccd54db7
+    name: statistics/min_max_score2.yaml
+    size: 46
+  - md5: 928031108cbe0fa41f4ca78f36217139
+    name: statistics/min_max_score4.yaml
+    size: 46
+  - md5: a425d363e168abff82e2afc05203d621
+    name: statistics/stats_hash
+    size: 1269
   version: '0'
 - config:
     default_annotation:
-      attributes:
-      - destination: score0_incomplete_cov
-        position_aggregator: max
-        source: score0_incomplete_cov
+    - destination: score0_incomplete_cov
+      position_aggregator: max
+      source: score0_incomplete_cov
     scores:
     - id: score0_incomplete_cov
       name: score0
@@ -220,9 +313,12 @@
   - md5: 0861ec8c51f6d1909f42ef459e18fe4e
     name: MANIFEST
     size: 393
-  - md5: c8c3134770dc4131022e55674b60442e
+  - md5: 34cec79415c90ddb81028b496d90e134
     name: genomic_resource.yaml
-    size: 438
+    size: 412
+  - md5: b48b148e579053ac4d3ed90cca4d18f1
+    name: index.html
+    size: 3433
   - md5: 28ee47e15cc15c1b8881cd453cdefc7d
     name: scores_incomplete_coverage.tsv.gz
     size: 176
@@ -232,23 +328,40 @@
   - md5: f77946424457cdc1e16ae23ba2062b1d
     name: scores_incomplete_coverage.tsv.gz.tbi
     size: 987
+  - md5: c37eb1c557ec79e8be894d86a9211f7d
+    name: statistics/histogram_score0_incomplete_cov.png
+    size: 17129
+  - md5: 6b367e4c544e539cbb0e4d68df063331
+    name: statistics/histogram_score0_incomplete_cov.yaml
+    size: 2068
+  - md5: eddfe133c23241d1566c939701e16c9e
+    name: statistics/min_max_score0_incomplete_cov.yaml
+    size: 65
+  - md5: 2ed4cd199b638f2a9f3aa3f7ed0de0fb
+    name: statistics/stats_hash
+    size: 693
   version: '0'
 - config:
     default_annotation:
-      attributes:
-      - dest: phastCons100
-        position_aggregator: max
-        source: phastCons100
+    - dest: phastCons100
+      position_aggregator: max
+      source: phastCons100
     scores:
     - desc: phastCons100
       id: phastCons100
       index: 3
+      number_hist:
+        number_of_bins: 10
+        view_range:
+          max: 1.0
+          min: 0.0
       type: float
     table:
       chrom:
         index: 0
       filename: phastCons100.bedGraph.gz
       format: tabix
+      header_mode: none
       pos_begin:
         index: 1
       pos_end:
@@ -256,15 +369,30 @@
     type: position_score
   id: hg19/phastCons100
   manifest:
-  - md5: 50690d6288c6ca21e4755ef8b68d2511
+  - md5: 434e54042feda78eddac3041e740cb67
     name: genomic_resource.yaml
-    size: 413
+    size: 499
+  - md5: c3fc1f7094f118b9100d39ecd6fe7da6
+    name: index.html
+    size: 2790
   - md5: 00c69ea8fae8ab8445ff64616b8cc07a
     name: phastCons100.bedGraph.gz
     size: 2556019
   - md5: c2c4b109900b9f5ea940563bab3a8ad7
     name: phastCons100.bedGraph.gz.tbi
     size: 622
+  - md5: efcdd4628dbf6987139798f1c30e21e3
+    name: statistics/histogram_phastCons100.png
+    size: 14406
+  - md5: c2e93c59889e85912c51e680e1898b4a
+    name: statistics/histogram_phastCons100.yaml
+    size: 329
+  - md5: d97dfb28934fa829a2750ecc06bb247d
+    name: statistics/min_max_phastCons100.yaml
+    size: 41
+  - md5: cc7884f00e74d06eb1481810cfa2c486
+    name: statistics/stats_hash
+    size: 869
   version: '0'
 - config:
     filename: refSeq_20200330.txt
@@ -283,9 +411,15 @@
   - md5: 81951889cca5c55bb9a63b8d8aff00a3
     name: genomic_resource.yaml
     size: 200
+  - md5: 53919b1c3894ed0e4ffa5000c6fb731d
+    name: index.html
+    size: 1489
   - md5: 05d8bbd9616407e862d82593d5fd1756
     name: refSeq_20200330.txt
     size: 30558
+  - md5: 6a99c575ab87f8c7d1ed1e52e7e349ce
+    name: statistics/stats_hash
+    size: 11
   version: '0'
 - config:
     PARS:
@@ -313,18 +447,32 @@
   - md5: b151ecdcef68d9014ab78823b5147711
     name: genomic_resource.yaml
     size: 339
+  - md5: 5aed328ffd8802be6574a95aa90d2bb0
+    name: index.html
+    size: 3628
+  - md5: 65e05af202b257ce85a2c3194f4179a0
+    name: statistics/chr1_statistic.yaml
+    size: 324
+  - md5: 479a740a7f18f059abe9768c651aa272
+    name: statistics/chr2_statistic.yaml
+    size: 326
+  - md5: 381346727633b156c5297f852d11b4e5
+    name: statistics/reference_genome_statistic.yaml
+    size: 578
+  - md5: 160e5784ac6c6e266ab261b64c4ae02a
+    name: statistics/stats_hash
+    size: 54
   version: '0'
 - config:
     default_annotation:
-      attributes:
-      - destination: cadd_raw
-        nucleotide_aggregator: max
-        position_aggregator: max
-        source: cadd_raw
-      - destination: cadd_phred
-        nucleotide_aggregator: max
-        position_aggregator: max
-        source: cadd_phred
+    - destination: cadd_raw
+      nucleotide_aggregator: max
+      position_aggregator: max
+      source: cadd_raw
+    - destination: cadd_phred
+      nucleotide_aggregator: max
+      position_aggregator: max
+      source: cadd_phred
     scores:
     - desc: ''
       id: cadd_raw
@@ -354,17 +502,40 @@
   - md5: 64ea2e483af33f1ad35d771653889e1d
     name: TESTCADD.tsv.gz.tbi
     size: 99
-  - md5: b914ca8069ad2b83ef7ae58340ba9662
+  - md5: 6ddfd7783ed4abd33d3e443bfc751350
     name: genomic_resource.yaml
-    size: 647
+    size: 601
+  - md5: 9fe8b4728fecf0964d38f4dbd0026362
+    name: index.html
+    size: 3758
+  - md5: 23329d335421d56e3eead7b1c6cbd900
+    name: statistics/histogram_cadd_phred.png
+    size: 14459
+  - md5: 924a483f8fc0030feb967b767c63da26
+    name: statistics/histogram_cadd_phred.yaml
+    size: 1959
+  - md5: 61c0f45f4a8354e1a9f368222591ba90
+    name: statistics/histogram_cadd_raw.png
+    size: 14290
+  - md5: 8b5f04256c3997febe6fc166df8123f7
+    name: statistics/histogram_cadd_raw.yaml
+    size: 2055
+  - md5: 6f2a0cc14be29b8b4303f43697ea206b
+    name: statistics/min_max_cadd_phred.yaml
+    size: 43
+  - md5: 598ee4948b026d0dc780d3fa169540f5
+    name: statistics/min_max_cadd_raw.yaml
+    size: 46
+  - md5: 5bcf6eb7accf7c4f5246d18ff227e631
+    name: statistics/stats_hash
+    size: 1068
   version: '0'
 - config:
     default_annotation:
-      attributes:
-      - destination: alt_freq
-        source: altFreq
-      - destination: alt_freq2
-        source: altFreq2
+    - destination: alt_freq
+      source: altFreq
+    - destination: alt_freq2
+      source: altFreq2
     scores:
     - desc: ''
       id: altFreq
@@ -394,16 +565,39 @@
   - md5: 05e5bc2e111692d73e2c27e76fc7e2a7
     name: TESTFreq.tsv.gz.tbi
     size: 100
-  - md5: bb21193d676ed049712b0b17f815fcc0
+  - md5: 5057dfbead3499d29983468e36735f88
     name: genomic_resource.yaml
-    size: 582
+    size: 544
+  - md5: 9402e644b068da175b9ea0eb0197567d
+    name: index.html
+    size: 3732
+  - md5: a20bb25abfcdff63f22fbb2087f540d2
+    name: statistics/histogram_altFreq.png
+    size: 10546
+  - md5: bb158934e911de793f04995cf66af066
+    name: statistics/histogram_altFreq.yaml
+    size: 2054
+  - md5: 99a701ae7ae9134111deee6c9ffbbff1
+    name: statistics/histogram_altFreq2.png
+    size: 10898
+  - md5: 67b6f45f6d5da949b0d63ee998784963
+    name: statistics/histogram_altFreq2.yaml
+    size: 2002
+  - md5: 2a42a37fb04a15244e3648c1a19e4100
+    name: statistics/min_max_altFreq.yaml
+    size: 39
+  - md5: 052893976a56a5f8ecc5b595da4763fc
+    name: statistics/min_max_altFreq2.yaml
+    size: 41
+  - md5: 0927bef520ed6137c75bed3ec41494ba
+    name: statistics/stats_hash
+    size: 1078
   version: '0'
 - config:
     default_annotation:
-      attributes:
-      - destination: test_score
-        position_aggregator: mean
-        source: test_score
+    - destination: test_score
+      position_aggregator: mean
+      source: test_score
     scores:
     - desc: ''
       id: test_score
@@ -423,33 +617,45 @@
     type: position_score
   id: hg38/TESTPosAgg
   manifest:
-  - md5: 14c69783f5916ebdabe1a138f765b026
+  - md5: 42cbfe4cf0533ec061117c7013f235dd
     name: genomic_resource.yaml
-    size: 445
+    size: 415
+  - md5: acd4d002893c6d72fdf640497f54b7ff
+    name: index.html
+    size: 2711
   - md5: 590e48aff9382edfa3330a072c98c6c5
     name: scores.tsv.gz
     size: 107
   - md5: 313f112e74853fa39dc6af0fa526b692
     name: scores.tsv.gz.tbi
     size: 99
+  - md5: 305f3f4472bd42d08a1c26e493505048
+    name: statistics/histogram_test_score.png
+    size: 12257
+  - md5: 0ac24ada061f2988ad32d2d60d4369dc
+    name: statistics/histogram_test_score.yaml
+    size: 1923
+  - md5: e51e615c1d3d01c7c9a49126bce20fb4
+    name: statistics/min_max_test_score.yaml
+    size: 40
+  - md5: 3562159b1457c261d3e74263ae3f5447
+    name: statistics/stats_hash
+    size: 733
   version: '0'
 - config:
     default_annotation:
-      attributes:
-      - destination: phastCons100way
-        position_aggregator: max
-        source: phastCons100way
-    histograms:
-    - bins: 10
-      max: 1
-      min: 0
-      score: phastCons100way
-      x_scale: linear
-      y_scale: linear
+    - destination: phastCons100way
+      position_aggregator: max
+      source: phastCons100way
     scores:
     - desc: phastCons100way
       id: phastCons100way
       index: 3
+      number_hist:
+        number_of_bins: 10
+        view_range:
+          max: 1.0
+          min: 0.0
       position_aggregator: max
       type: float
     table:
@@ -471,9 +677,9 @@
   - md5: 0cae8c2951f4c60954b94c0a0cb2e431
     name: TESTphastCons100way.bedGraph.gz.tbi
     size: 169
-  - md5: 865d73c2c2d3c40496232871df2ca10a
+  - md5: 5202483f3106c876390d5af44902fa00
     name: genomic_resource.yaml
-    size: 890
+    size: 656
   - md5: d616082ad56b26177b0aa40c08d27f3f
     name: histograms/phastCons100way.csv
     size: 143
@@ -483,9 +689,24 @@
   - md5: 6173d0d671742284f909423144c4f07a
     name: histograms/phastCons100way.png
     size: 8178
+  - md5: bb2881a2d4e2429a64a1e366fd177d48
+    name: index.html
+    size: 3893
   - md5: 56feb878ed78769d5200702392b8e4b7
     name: scores/phastCons100way.yaml
     size: 583
+  - md5: 7253f59314b3cdec0fe36f4d19a79410
+    name: statistics/histogram_phastCons100way.png
+    size: 11865
+  - md5: 50f50d296a496786a02583e5b29be09f
+    name: statistics/histogram_phastCons100way.yaml
+    size: 295
+  - md5: 98ddd26b76ce999ec1f212448880f698
+    name: statistics/min_max_phastCons100way.yaml
+    size: 46
+  - md5: 5ad5b6522430ce18d0233deb59e19d3c
+    name: statistics/stats_hash
+    size: 920
   version: '0'
 - config:
     chrom_prefix:
@@ -501,4 +722,10 @@
   - md5: ff3031d93792f4cbb86af44055efd903
     name: hg38ToHg19.over.chain.gz
     size: 1246411
+  - md5: bfa5691cdb88bb01bd7854f92ef8e212
+    name: index.html
+    size: 1458
+  - md5: 6a99c575ab87f8c7d1ed1e52e7e349ce
+    name: statistics/stats_hash
+    size: 11
   version: '0'

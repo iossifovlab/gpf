@@ -1,0 +1,57 @@
+{
+  "config": {
+    "histograms": [
+      {
+        "number_of_bins": 100,
+        "view_range": {
+          "max": null,
+          "min": null
+        },
+        "x_log_scale": false,
+        "x_min_log": null,
+        "y_log_scale": false
+      },
+      {
+        "number_of_bins": 100,
+        "view_range": {
+          "max": null,
+          "min": null
+        },
+        "x_log_scale": false,
+        "x_min_log": null,
+        "y_log_scale": false
+      }
+    ],
+    "scores": [
+      {
+        "desc": "",
+        "id": "altFreq",
+        "name": "all.altFreq",
+        "type": "float"
+      },
+      {
+        "desc": "",
+        "id": "altFreq2",
+        "name": "all.altFreq2",
+        "type": "float"
+      }
+    ],
+    "table": {
+      "alternative": {
+        "name": "alt"
+      },
+      "chrom": {
+        "name": "chr"
+      },
+      "filename": "TESTFreq.tsv.gz",
+      "format": "tabix",
+      "pos_begin": {
+        "name": "position"
+      },
+      "reference": {
+        "name": "ref"
+      }
+    }
+  },
+  "score_file": "5220b08aa6081a753955e8b5cdf3566c"
+}

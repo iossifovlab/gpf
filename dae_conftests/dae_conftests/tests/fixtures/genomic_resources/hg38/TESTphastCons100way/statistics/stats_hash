@@ -1,0 +1,47 @@
+{
+  "config": {
+    "histograms": [
+      {
+        "number_of_bins": 10,
+        "view_range": {
+          "max": 1.0,
+          "min": 0.0
+        },
+        "x_log_scale": false,
+        "x_min_log": null,
+        "y_log_scale": false
+      }
+    ],
+    "scores": [
+      {
+        "desc": "phastCons100way",
+        "id": "phastCons100way",
+        "index": 3,
+        "number_hist": {
+          "number_of_bins": 10,
+          "view_range": {
+            "max": 1.0,
+            "min": 0.0
+          }
+        },
+        "position_aggregator": "max",
+        "type": "float"
+      }
+    ],
+    "table": {
+      "chrom": {
+        "index": 0
+      },
+      "filename": "TESTphastCons100way.bedGraph.gz",
+      "format": "tabix",
+      "header_mode": "none",
+      "pos_begin": {
+        "index": 1
+      },
+      "pos_end": {
+        "index": 2
+      }
+    }
+  },
+  "score_file": "e793fd5e2153ae2b35ecaa8efb595ab0"
+}

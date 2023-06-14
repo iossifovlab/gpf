@@ -1,0 +1,58 @@
+{
+  "config": {
+    "histograms": [
+      {
+        "number_of_bins": 100,
+        "view_range": {
+          "max": null,
+          "min": null
+        },
+        "x_log_scale": false,
+        "x_min_log": null,
+        "y_log_scale": false
+      },
+      {
+        "number_of_bins": 100,
+        "view_range": {
+          "max": null,
+          "min": null
+        },
+        "x_log_scale": false,
+        "x_min_log": null,
+        "y_log_scale": false
+      }
+    ],
+    "scores": [
+      {
+        "desc": "",
+        "id": "cadd_raw",
+        "index": 4,
+        "type": "float"
+      },
+      {
+        "desc": "",
+        "id": "cadd_phred",
+        "index": 5,
+        "type": "float"
+      }
+    ],
+    "table": {
+      "alternative": {
+        "index": 3
+      },
+      "chrom": {
+        "index": 0
+      },
+      "filename": "CADD.bedgraph.gz",
+      "format": "tabix",
+      "header_mode": "none",
+      "pos_begin": {
+        "index": 1
+      },
+      "reference": {
+        "index": 2
+      }
+    }
+  },
+  "score_file": "9499e8511a30d7445ec973cae9726920"
+}
