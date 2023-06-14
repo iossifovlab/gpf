@@ -74,7 +74,7 @@ class RemoteAllele(SummaryAllele):
             alternative=self._find_attribute("alternative"),
             end_position=end_position,
             summary_index=self._find_attribute("summary_index"),
-            allele_index=self._find_attribute("allele_index"),
+            allele_index=int(self._find_attribute("allele_index")),
             effect=self._find_attribute("raw_effects"),
             attributes={col: self._find_attribute(col) for col in self.columns}
         )
@@ -105,7 +105,7 @@ class RemoteFamilyAllele(FamilyAllele):
         self.attributes_list = attributes_list
         self.idx = idx
         summary_allele = RemoteAllele(attributes_list, idx, self.columns)
-        genotype = self._find_attribute("genotype")
+        genotype = str2fgt(self._find_attribute("genotype"))
         best_state = self._find_attribute("best_st")
         genetic_model = self._find_attribute("genetic_model")
         super().__init__(
