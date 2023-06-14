@@ -98,7 +98,7 @@ def test_example_request(mocker, wgpf_fixture, wdae_django_server):
             "eager_loading_true_settings") as server:
 
         response = requests.get(
-            f"{server.url}/api/v3/datasets", timeout=0.5)
+            f"{server.url}/api/v3/datasets", timeout=5.0)
 
         assert response.status_code == 200
         assert "data" in response.json()

@@ -51,6 +51,7 @@ class GeneScoreStatistics(ResourceStatistics):
     def build_statistics(
         genomic_resource: GenomicResource
     ) -> ResourceStatistics:
+        """Load gene score statistics."""
         histograms = {}
         config = genomic_resource.get_config()
         if "histograms" not in config:

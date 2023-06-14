@@ -166,8 +166,9 @@ class GenomicPositionTable(abc.ABC):
 
     def map_chromosome(self, chromosome):
         if self.rev_chrom_map is not None:
-            assert chromosome in self.rev_chrom_map
-            return self.rev_chrom_map[chromosome]
+            if chromosome in self.rev_chrom_map:
+                return self.rev_chrom_map[chromosome]
+            return None
 
         return chromosome
 
@@ -184,21 +185,6 @@ class GenomicPositionTable(abc.ABC):
 
         Returned value is guarnteed to be larget than the actual contig length.
         """
-
-    def map_chromosome(self, chromosome):
-        if self.rev_chrom_map is not None:
-            if chromosome in self.rev_chrom_map:
-                return self.rev_chrom_map[chromosome]
-            return None
-
-        return chromosome
-
-    def unmap_chromosome(self, chromosome):
-        if self.chrom_map is not None:
-            assert chromosome in self.chrom_map
-            return self.chrom_map[chromosome]
-
-        return chromosome
 
     @abc.abstractmethod
     def get_file_chromosomes(self) -> List[str]:

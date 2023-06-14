@@ -52,6 +52,7 @@ class ReferenceGenomeStatistics(
 
     @staticmethod
     def build_statistics(genomic_resource):
+        """Load reference genome statistics."""
         chrom_statistics = {}
         try:
             global_stat_filepath = os.path.join(

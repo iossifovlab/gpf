@@ -11,6 +11,8 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class ScoreDesc:
+    """Data class to describe genomic scores in GenomicScoresDb."""
+
     resource_id: str
     score_id: str
     source: str

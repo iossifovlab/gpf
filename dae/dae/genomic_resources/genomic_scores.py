@@ -951,7 +951,7 @@ class GenomicScore(ResourceConfigValidationMixin):
         if not self.is_open():
             raise ValueError(f"genomic score <{self.resource_id}> is not open")
 
-        return self.table.get_chromosomes()
+        return self.table.get_chromosomes()  # type: ignore
 
     def get_all_scores(self) -> list[str]:
         return list(self.score_definitions)
