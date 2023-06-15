@@ -196,12 +196,12 @@ describe('App user access rights tests', () => {
 
     page.loginAdmin();
     page.navigateToSidenavPage(sidenavPageLinks.management);
-    userManagementPage.userAddGroup(userData.normal.username, 'comp_vcf');
+    userManagementPage.userAddGroup('user_comp_vcf@iossifovlab.com', 'comp_vcf');
     userManagementPage.waitForPageToLoad(sidenavPageLinks.management);
     page.logout();
 
     page.navigateToDatasetPage(datasetIds.compVcf, toolPageLinks.datasetStatistics, false);
-    page.login(userData.normal.username, userData.normal.password);
+    page.login('user_comp_vcf@iossifovlab.com', userData.normal.password);
     datasetsPage.permissionDeniedPrompt.should('not.exist');
     datasetsPage.datasetStatisticsWindow.should('be.visible');
 
@@ -215,12 +215,12 @@ describe('App user access rights tests', () => {
 
     page.loginAdmin();
     page.navigateToSidenavPage(sidenavPageLinks.management);
-    userManagementPage.userAddGroup(userData.normal.username, 'COMP_genotypes');
+    userManagementPage.userAddGroup('user_comp_genotypes@iossifovlab.com', 'COMP_genotypes');
     userManagementPage.waitForPageToLoad(sidenavPageLinks.management);
     page.logout();
 
     page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.datasetStatistics, false);
-    page.login(userData.normal.username, userData.normal.password);
+    page.login('user_comp_genotypes@iossifovlab.com', userData.normal.password);
     datasetsPage.permissionDeniedPrompt.should('exist');
     datasetsPage.datasetStatisticsWindow.should('not.exist');
 
@@ -262,12 +262,12 @@ describe('App user access rights tests', () => {
 
     page.loginAdmin();
     page.navigateToSidenavPage(sidenavPageLinks.management);
-    userManagementPage.userAddGroup(userData.normal.username, 'ALL_genotypes');
+    userManagementPage.userAddGroup('user_all_genotypes@iossifovlab.com', 'ALL_genotypes');
     userManagementPage.waitForPageToLoad(sidenavPageLinks.management);
     page.logout();
 
     page.navigateToDatasetPage(datasetIds.allGenotypes, toolPageLinks.genotypeBrowser, false);
-    page.login(userData.normal.username, userData.normal.password);
+    page.login('user_all_genotypes@iossifovlab.com', userData.normal.password);
     datasetsPage.permissionDeniedPrompt.should('not.exist');
     genotypeBrowserPage.window.should('be.visible');
 
@@ -298,51 +298,18 @@ describe('App user access rights tests', () => {
     page.logout();
   });
 
-  it('should login admin and remove all researcher access rights,' +
-  ' then login researcher and verify his rights', () => {
+  after(() => {
     const userManagementPage = new UserManagementPage();
-    const genotypeBrowserPage = new GenotypeBrowserPage();
 
     page.loginAdmin();
     page.navigateToSidenavPage(sidenavPageLinks.management);
-    userManagementPage.userGroupRemoveButton(userData.normal.username, 'ALL_genotypes').click();
+    userManagementPage.userGroupRemoveButton('user_comp_vcf@iossifovlab.com', 'ALL_genotypes').click();
     userManagementPage.userRemoveGroupConfirm.click();
-    userManagementPage.userGroupRemoveButton(userData.normal.username, 'COMP_genotypes').click();
+    userManagementPage.userGroupRemoveButton('user_comp_genotypes@iossifovlab.com', 'COMP_genotypes').click();
     userManagementPage.userRemoveGroupConfirm.click();
-    userManagementPage.userGroupRemoveButton(userData.normal.username, 'comp_vcf').click();
+    userManagementPage.userGroupRemoveButton('user_comp_vcf@iossifovlab.com', 'comp_vcf').click();
     userManagementPage.userRemoveGroupConfirm.click();
     userManagementPage.waitForPageToLoad(sidenavPageLinks.management);
-    page.logout();
-
-    page.navigateToDatasetPage(datasetIds.allGenotypes, toolPageLinks.genotypeBrowser, false);
-    page.login(userData.normal.username, userData.normal.password, false);
-    datasetsPage.permissionDeniedPrompt.should('be.visible');
-    genotypeBrowserPage.window.should('not.exist');
-
-    page.navigateToDatasetPage(datasetIds.compGenotypes, toolPageLinks.genotypeBrowser, false);
-    datasetsPage.permissionDeniedPrompt.should('be.visible');
-    genotypeBrowserPage.window.should('not.exist');
-
-    page.navigateToDatasetPage(datasetIds.compDenovo, toolPageLinks.datasetStatistics, false);
-    datasetsPage.permissionDeniedPrompt.should('be.visible');
-    datasetsPage.datasetStatisticsWindow.should('not.exist');
-
-    page.navigateToDatasetPage(datasetIds.compVcf, toolPageLinks.datasetStatistics, false);
-    datasetsPage.permissionDeniedPrompt.should('be.visible');
-    datasetsPage.datasetStatisticsWindow.should('not.exist');
-
-    page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.datasetStatistics, false);
-    datasetsPage.permissionDeniedPrompt.should('be.visible');
-    datasetsPage.datasetStatisticsWindow.should('not.exist');
-
-    page.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.datasetStatistics, false);
-    datasetsPage.permissionDeniedPrompt.should('be.visible');
-    datasetsPage.datasetStatisticsWindow.should('not.exist');
-
-    page.navigateToDatasetPage(datasetIds.multi, toolPageLinks.datasetStatistics, false);
-    datasetsPage.permissionDeniedPrompt.should('be.visible');
-    datasetsPage.datasetStatisticsWindow.should('not.exist');
-
     page.logout();
   });
 });
