@@ -303,7 +303,7 @@ describe('App user access rights tests', () => {
 
     page.loginAdmin();
     page.navigateToSidenavPage(sidenavPageLinks.management);
-    userManagementPage.userGroupRemoveButton('user_comp_vcf@iossifovlab.com', 'ALL_genotypes').click();
+    userManagementPage.userGroupRemoveButton('user_all_genotypes@iossifovlab.com', 'ALL_genotypes').click();
     userManagementPage.userRemoveGroupConfirm.click();
     userManagementPage.userGroupRemoveButton('user_comp_genotypes@iossifovlab.com', 'COMP_genotypes').click();
     userManagementPage.userRemoveGroupConfirm.click();
