@@ -106,7 +106,7 @@ class RemoteFamilyAllele(FamilyAllele):
         self.idx = idx
         summary_allele = RemoteAllele(attributes_list, idx, self.columns)
         genotype = str2fgt(self._find_attribute("genotype"))
-        best_state = self._find_attribute("best_st")
+        best_state = str2mat(self._find_attribute("best_st"))
         genetic_model = self._find_attribute("genetic_model")
         super().__init__(
             summary_allele, family, genotype, best_state, genetic_model
