@@ -39,18 +39,18 @@ describe('Genomic scores panel tests', () => {
     page.histogramRangeSelectors.eq(2).should('have.text', '~35798106 (53.49%)');
 
     page.addFilterButton.click();
-    page.filterSelect.eq(1).select('cadd_raw');
+    page.filterSelect.eq(1).select('gnomAD exome allele frequency in %');
     page.fromInputField.eq(1).clear().type('9.7944').type('{enter}');
-    page.histogramRangeSelectors.eq(3).should('have.text', '~8591392889 (99.97%)');
+    page.histogramRangeSelectors.eq(3).should('have.text', '~17113188 (99.46%)');
 
     page.toInputField.eq(1).clear().type('13.6935').type('{enter}');
-    page.histogramRangeSelectors.eq(4).should('have.text', '~637710 (0.01%)');
-    page.histogramRangeSelectors.eq(5).should('have.text', '~2325073 (0.03%)');
+    page.histogramRangeSelectors.eq(4).should('have.text', '~82289 (0.48%)');
+    page.histogramRangeSelectors.eq(5).should('have.text', '~10162 (0.06%)');
 
     page.removeFilterButton.eq(0).click();
-    page.histogramRangeSelectors.eq(0).should('have.text', '~8591392889 (99.97%)');
-    page.histogramRangeSelectors.eq(1).should('have.text', '~637710 (0.01%)');
-    page.histogramRangeSelectors.eq(2).should('have.text', '~2325073 (0.03%)');
+    page.histogramRangeSelectors.eq(0).should('have.text', '~17113188 (99.46%)');
+    page.histogramRangeSelectors.eq(1).should('have.text', '~82289 (0.48%)');
+    page.histogramRangeSelectors.eq(2).should('have.text', '~10162 (0.06%)');
 
     page.removeFilterButton.eq(0).click();
   });
