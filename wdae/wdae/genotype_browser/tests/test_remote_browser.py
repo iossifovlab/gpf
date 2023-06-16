@@ -15,7 +15,7 @@ pytestmark = pytest.mark.usefixtures(
 def test_simple_query_variants_preview(db, admin_client):
     data = {
         "datasetId": "TEST_REMOTE_iossifov_2014",
-        "sources": [{"source": "location"}]
+        "sources": [{"source": "location"}, {"source": "carrier_person_attributes"}]
     }
 
     response = admin_client.post(
@@ -25,4 +25,5 @@ def test_simple_query_variants_preview(db, admin_client):
     res = json.loads(
         "".join(map(lambda x: x.decode("utf-8"), response.streaming_content))
     )
+    print(res)
     assert len(res) == 16
