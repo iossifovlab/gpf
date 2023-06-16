@@ -1,0 +1,47 @@
+.children {
+  position: relative;
+  left: 30px;
+}
+
+.dropdown {
+  position: relative;
+  transform: scale(1.1);
+  display: inline-block;
+}
+
+.dropdown-toggle {
+  display: block;
+  padding: 1.5px;
+  padding-right: 1px;
+  padding-left: 10px;
+  margin-right: 5px;
+  margin-top: 0.5px;
+  margin-left: -2px;
+}
+
+.dropdown-toggle:empty::after {
+  margin-left: -10px;
+}
+
+.dropdown-toggle-after {
+  -webkit-transform: rotate(-90deg);
+  transform: scale(1.15);
+  transform: rotate(-90deg);
+  transform-origin: 40% 40%;
+}
+
+button {
+  background-color: transparent;
+  border-width: 0;
+  font-family: inherit;
+  font-size: inherit;
+  font-style: inherit;
+  font-weight: inherit;
+  line-height: inherit;
+  padding: 0;
+}
+
+label {
+  padding-left: 2.5px !important;
+  padding-bottom: px !important;
+}
