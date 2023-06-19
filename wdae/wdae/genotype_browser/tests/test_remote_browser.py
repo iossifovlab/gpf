@@ -15,7 +15,10 @@ pytestmark = pytest.mark.usefixtures(
 def test_simple_query_variants_preview(db, admin_client):
     data = {
         "datasetId": "TEST_REMOTE_iossifov_2014",
-        "sources": [{"source": "location"}]
+        "sources": [
+            {"source": "location"},
+            # {"source": "carrier_person_attributes"}
+        ]
     }
 
     response = admin_client.post(

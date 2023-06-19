@@ -486,6 +486,10 @@ class RemoteStudyWrapper(StudyWrapperBase):
         return self.remote_genotype_data.is_group
 
     @property
+    def person_set_collections(self):
+        return self.remote_genotype_data.person_set_collections
+
+    @property
     def config_columns(self):
         return self.config.genotype_browser.columns
 

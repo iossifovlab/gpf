@@ -119,10 +119,12 @@ class StudiesView(QueryBaseView):
             self.gpf_instance.get_selected_genotype_data() \
             or self.gpf_instance.get_genotype_data_ids()
 
-        datasets = filter(lambda study: study.is_group is False, [
-            self.gpf_instance.get_wdae_wrapper(genotype_data_id)
-            for genotype_data_id in selected_genotype_data
-        ])
+        datasets = filter(
+            lambda study: study is not None and study.is_group is False, [
+                self.gpf_instance.get_wdae_wrapper(genotype_data_id)
+                for genotype_data_id in selected_genotype_data
+            ]
+        )
 
         res = [
             StudyWrapperBase.build_genotype_data_all_datasets(
