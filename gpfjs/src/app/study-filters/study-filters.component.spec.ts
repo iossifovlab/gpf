@@ -16,6 +16,7 @@ import { DatasetsService } from 'app/datasets/datasets.service';
 import { RouterModule } from '@angular/router';
 import { DatasetNode } from 'app/dataset-node/dataset-node';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const datasetConfigMock: any = {
   studies: ['test_name1', 'test_name2']
 };
@@ -51,12 +52,17 @@ describe('StudyFiltersComponent', () => {
 
     fixture = TestBed.createComponent(StudyFiltersComponent);
     component = fixture.componentInstance;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     component['store'] = {
-      selectOnce() {
+      // eslint-disable-next-line prefer-arrow/prefer-arrow-functions
+      selectOnce: function() {
         return of({});
       },
-      dispatch() {}
+      // eslint-disable-next-line prefer-arrow/prefer-arrow-functions, @typescript-eslint/no-empty-function
+      dispatch: function() {}
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     component.dataset = datasetConfigMock;
     fixture.detectChanges();
   }));

@@ -25,6 +25,7 @@ export class StudyFiltersTreeComponent implements OnInit, OnChanges {
     this.updateFilterStates(this.data);
   }
 
+  /* eslint-disable */
   public updateFilters($event): void {
     const datasetNode = findNodeById(this.data, $event.target.getAttribute('id'));
     if ($event.target.checked) {
@@ -46,6 +47,7 @@ export class StudyFiltersTreeComponent implements OnInit, OnChanges {
     this.checkboxChangeEvent.emit($event.target.id);
     this.updateFilterStates(this.data);
   }
+  /* eslint-enable */
 
   private setCheckbox(checkboxName: string, flag: number): void {
     const elements = document.querySelectorAll(`[id='${checkboxName}']`);
