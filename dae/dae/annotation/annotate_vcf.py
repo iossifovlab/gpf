@@ -104,7 +104,11 @@ def annotate(
                     )
                     for buff, attribute in zip(buffers, annotation_attributes):
                         # TODO Ask what value to use for missing attr
-                        buff.append(str(annotation.get(attribute.name, "-")))
+                        attr = str(annotation.get(attribute.name, "-"))\
+                            .replace(";", "|")\
+                            .replace(",", "|")\
+                            .replace(" ", "_")
+                        buff.append(attr)
 
                 for attribute, buff in zip(annotation_attributes, buffers):
                     vcf_var.info[attribute.name] = buff

@@ -73,6 +73,9 @@ def annotate_directory_fixture(tmp_path):
             "annotation_multiallelic.yaml": """
                 - allele_score: two
             """,
+            "annotation_forbidden_symbols.yaml": """
+                - allele_score: three
+            """,
             "grr.yaml": f"""
                 id: mm
                 type: dir
@@ -108,6 +111,21 @@ def annotate_directory_fixture(tmp_path):
                           name: s1
                     """
                 },
+                "three": {
+                    "genomic_resource.yaml": """
+                        type: allele_score
+                        table:
+                            filename: data.txt
+                            reference:
+                              name: reference
+                            alternative:
+                              name: alternative
+                        scores:
+                        - id: score
+                          type: str
+                          name: s1
+                    """
+                },
             }
         }
     )
@@ -127,8 +145,15 @@ def annotate_directory_fixture(tmp_path):
         chr1   24         C          A            0.3
         chr1   24         C          G            0.4
     """)
+    three_content = textwrap.dedent("""
+        chrom  pos_begin  reference  alternative  s1
+        chr1   23         C          A            a;b
+        chr1   24         C          A            c,d
+        chr1   25         C          A            e||f
+    """)
     setup_denovo(tmp_path / "grr" / "one" / "data.txt", one_content)
     setup_denovo(tmp_path / "grr" / "two" / "data.txt", two_content)
+    setup_denovo(tmp_path / "grr" / "three" / "data.txt", three_content)
 
 
 def test_basic_setup(tmp_path, annotate_directory_fixture):
@@ -336,3 +361,39 @@ def test_annotate_columns_multiple_chrom(tmp_path, annotate_directory_fixture):
         "tasks-status",  # default task status dir
         # part files must be cleaned up
     ]
+
+
+def test_annotate_vcf_forbidden_symbol_replacement(
+    tmp_path, annotate_directory_fixture
+):
+    in_content = textwrap.dedent("""
+        ##fileformat=VCFv4.2
+        ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+        ##contig=<ID=chr1>
+        #CHROM POS ID REF ALT QUAL FILTER INFO FORMAT m1  d1  c1
+        chr1   23  .  C   A   .    .      .    GT     0/1 0/0 0/0
+        chr1   24  .  C   A   .    .      .    GT     0/0 0/1 0/0
+        chr1   25  .  C   A   .    .      .    GT     0/0 0/1 0/0
+    """)
+
+    in_file = tmp_path / "in.vcf"
+    out_file = tmp_path / "out.vcf"
+    workdir = tmp_path / "output"
+    annotation_file = tmp_path / "annotation_forbidden_symbols.yaml"
+    grr_file = tmp_path / "grr.yaml"
+
+    setup_vcf(in_file, in_content)
+
+    cli_vcf([
+        str(a) for a in [
+            in_file, annotation_file, "-w", workdir, "--grr", grr_file,
+            "-o", out_file
+        ]
+    ])
+
+    result = []
+    # pylint: disable=no-member
+    with pysam.VariantFile(out_file) as vcf_file:
+        for vcf in vcf_file.fetch():
+            result.append(vcf.info["score"][0])
+    assert result == ["a|b", "c|d", "e_f"]
