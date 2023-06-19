@@ -24,9 +24,7 @@
 }
 
 .dropdown-toggle-after {
-  -webkit-transform: rotate(-90deg);
-  transform: scale(1.15);
-  transform: rotate(-90deg);
+  transform: scale(1.15) rotate(-90deg);
   transform-origin: 40% 40%;
 }
 

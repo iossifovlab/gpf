@@ -49,6 +49,7 @@ export class StudyFiltersComponent extends StatefulComponent implements OnInit, 
         }
       }
     });
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     this.store.selectOnce(state => state.studyFiltersState as StudyFiltersModel).subscribe(state => {
       // restore state
       if ((state?.studyFilters?.length ?? 0) !== 0) {
