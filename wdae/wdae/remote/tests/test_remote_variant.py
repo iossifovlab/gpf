@@ -1,7 +1,9 @@
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
 import numpy as np
 import pytest
 from remote.remote_variant import RemoteFamilyVariant, RemoteFamilyAllele
 from dae.pedigrees.family import Family, Person
+
 
 @pytest.fixture()
 def sample_family():
@@ -52,7 +54,6 @@ def sample_family():
         )
     ]
     return Family.from_persons(members)
-
 
 
 @pytest.fixture()
@@ -111,7 +112,6 @@ def sample_attributes_columns():
         "genetic_model"]
 
     return (attributes, columns)
-
 
 
 def test_remote_variant_alleles(sample_attributes_columns, sample_family):
