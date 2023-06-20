@@ -11,7 +11,7 @@
         class="{{ hide.value !== 'true' ? 'dropdown-toggle dropdown dropdown-toggle-after' : 'dropdown-toggle' }}"
         #hide
         [hidden]="node.children.length === 0"
-        (click)="updateFilters($event)"></button>
+        (click)="hide.value === 'true' ? (hide.value = 'false') : (hide.value = 'true')"></button>
     </div>
     <input
       [ngModel]="this.selectedStudies.has(node.dataset.id)"
@@ -20,7 +20,7 @@
       (click)="updateFilters($event)"
       type="checkbox" />
     <label for="{{ node.dataset.id }}">{{ node.dataset.name }}</label>
-    <div class="children" *ngIf="hide.value !== 'true'">
+    <div class="children" [hidden]="hide.value === 'true'">
       <ng-container
         *ngTemplateOutlet="datasetNodeTemplate; context: { children: node.children, depth: depth + 1 }"></ng-container>
     </div>
