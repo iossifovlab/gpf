@@ -17,7 +17,6 @@ export class FederationCredentialsComponent implements OnInit {
   @ViewChild('credentialModal') public credentialModal: ElementRef;
   @ViewChild('credentialNameBox') public newCredentialName: ElementRef;
   @ViewChild('createButton') public createButton: ElementRef;
-  @ViewChild('descriptionBox') private descriptionBox: ElementRef;
   public currentCredentialEdit = '';
 
   public constructor(
@@ -78,14 +77,11 @@ export class FederationCredentialsComponent implements OnInit {
     );
   }
 
-  // public edit(credential: FederationCredential, desc: string): void {
-  //   credential.description = desc;
-  //   this.usersService.updateFederationCredentials(credential)
-  //     .pipe(take(1))
-  //     .subscribe(() => {
-  //       credential.description = desc;
-  //     });
-
-  //   this.currentCredentialEdit = '';
-  // }
+  public edit(credential: FederationCredential, newName: string): void {
+    this.usersService.updateFederationCredentials(credential.name, newName)
+      .subscribe((res: string) => {
+        credential.name = res;
+      });
+    this.currentCredentialEdit = '';
+  }
 }

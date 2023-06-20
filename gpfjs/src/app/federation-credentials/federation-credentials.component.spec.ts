@@ -8,9 +8,9 @@ import { NO_ERRORS_SCHEMA } from '@angular/core';
 
 class MockUsersService {
   private credentials = [
-    new FederationCredential('id1', 'secret1', 'name1'),
-    new FederationCredential('id2', 'secret2', 'name2'),
-    new FederationCredential('id3', 'secret3', 'name3')
+    new FederationCredential('name1'),
+    new FederationCredential('name2'),
+    new FederationCredential('name3')
   ];
 
   public getFederationCredentials(): Observable<FederationCredential[]> {
@@ -24,9 +24,12 @@ class MockUsersService {
   }
 
   public createFederationCredentials(name: string): Observable<string> {
-    const num = this.credentials.length + 1;
-    this.credentials.push(new FederationCredential(`id${num}`, `secret${num}`, name));
+    this.credentials.push(new FederationCredential(name));
     return of('secret new credential');
+  }
+
+  public updateFederationCredentials(oldName: string, newName: string): Observable<string> {
+    return of(newName);
   }
 }
 
@@ -57,51 +60,58 @@ describe('FederationCredentialsComponent', () => {
     expect(component.credentials).toBeUndefined();
     component.ngOnInit();
     expect(component.credentials).toStrictEqual([
-      new FederationCredential('id1', 'secret1', 'name1'),
-      new FederationCredential('id2', 'secret2', 'name2'),
-      new FederationCredential('id3', 'secret3', 'name3')
+      new FederationCredential('name1'),
+      new FederationCredential('name2'),
+      new FederationCredential('name3')
     ]);
   });
 
   it('should delete credentials', () => {
     fixture.detectChanges();
     expect(component.credentials).toStrictEqual([
-      new FederationCredential('id1', 'secret1', 'name1'),
-      new FederationCredential('id2', 'secret2', 'name2'),
-      new FederationCredential('id3', 'secret3', 'name3')
+      new FederationCredential('name1'),
+      new FederationCredential('name2'),
+      new FederationCredential('name3')
     ]);
 
     component.deleteCredential('name2');
     expect(component.credentials).toStrictEqual([
-      new FederationCredential('id1', 'secret1', 'name1'),
-      new FederationCredential('id3', 'secret3', 'name3')
+      new FederationCredential('name1'),
+      new FederationCredential('name3')
     ]);
   });
 
   it('should create credential', () => {
     fixture.detectChanges();
     expect(component.credentials).toStrictEqual([
-      new FederationCredential('id1', 'secret1', 'name1'),
-      new FederationCredential('id2', 'secret2', 'name2'),
-      new FederationCredential('id3', 'secret3', 'name3')
+      new FederationCredential('name1'),
+      new FederationCredential('name2'),
+      new FederationCredential('name3')
     ]);
 
     component.createCredential('');
     expect(component.credentials).toStrictEqual([
-      new FederationCredential('id1', 'secret1', 'name1'),
-      new FederationCredential('id2', 'secret2', 'name2'),
-      new FederationCredential('id3', 'secret3', 'name3')
+      new FederationCredential('name1'),
+      new FederationCredential('name2'),
+      new FederationCredential('name3')
     ]);
 
     component.createCredential('name4');
     fixture.detectChanges();
     expect(component.credentials).toStrictEqual([
-      new FederationCredential('id1', 'secret1', 'name1'),
-      new FederationCredential('id2', 'secret2', 'name2'),
-      new FederationCredential('id3', 'secret3', 'name3'),
-      new FederationCredential('id4', 'secret4', 'name4')
+      new FederationCredential('name1'),
+      new FederationCredential('name2'),
+      new FederationCredential('name3'),
+      new FederationCredential('name4')
     ]);
     expect(component.temporaryShownCredentials).toBe('secret new credential');
     expect(document.getElementById('credential-modal-content').textContent).toBe('secret new credential');
+  });
+
+  it('should rename credential', () => {
+    const credential = new FederationCredential('rename');
+    component.edit(credential, 'newName');
+    fixture.detectChanges();
+    expect(credential.name).toBe('newName');
   });
 });

@@ -205,19 +205,17 @@ export class UsersService {
       );
   }
 
-  // public updateFederationCredentials(credentialName: string): Observable<string> {
-    // const options = { withCredentials: true };
+  public updateFederationCredentials(oldCredentialName: string, newCredentialName: string): Observable<string> {
+    const options = { withCredentials: true };
 
-    // return this.http.post(this.config.baseUrl + 'users/federation_credentials', {name: credentialName}, options)
-    //   .pipe(
-    //     map(res => {
-    //       if (typeof (res as {credentials: string}).credentials === 'string') {
-    //         return (res as {credentials: string}).credentials;
-    //       }
-    //       return 'Error showing created credentials';
-    //     })
-    //   );
-  // }
+    return this.http.put(this.config.baseUrl + 'users/federation_credentials',
+      // eslint-disable-next-line @typescript-eslint/naming-convention
+      {name: oldCredentialName, new_name: newCredentialName}, options)
+      .pipe(
+        // eslint-disable-next-line @typescript-eslint/naming-convention
+        map((res: {new_name: string}) => res.new_name)
+      );
+  }
 
   public deleteFederationCredentials(credentialName: string): Observable<object> {
     const options = { withCredentials: true, body: { name: credentialName }};
