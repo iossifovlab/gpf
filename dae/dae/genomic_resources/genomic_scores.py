@@ -630,7 +630,7 @@ class GenomicScore(ResourceConfigValidationMixin):
     to build all defined statistics.
     """
 
-    def __init__(self, resource):
+    def __init__(self, resource: GenomicResource):
         self.resource = resource
         self.resource_id = resource.resource_id
         self.config: dict = self.resource.config
@@ -897,8 +897,8 @@ class GenomicScore(ResourceConfigValidationMixin):
             return ",".join(result)
         return None
 
-    def get_score_config(self, score_id):
-        return self.score_definitions.get(score_id)
+    def get_score_config(self, score_id) -> ScoreDef:
+        return self.score_definitions[score_id]
 
     def close(self):
         self.table.close()
@@ -1072,7 +1072,10 @@ class GenomicScore(ResourceConfigValidationMixin):
             f"/histogram_{score_id}.png"
 
     def get_histogram_image_url(self, score_id: str) -> Optional[str]:
-        pass
+        hifn = self.get_histogram_image_filename(score_id)
+        if hifn:
+            return f"{self.resource.get_url()}/" + hifn
+        return None
 
 
 class PositionScore(GenomicScore):

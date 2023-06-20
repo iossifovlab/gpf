@@ -84,11 +84,16 @@ class GenomicScoreAnnotatorBase(Annotator):
         super().close()
 
     def create_the_documentation(self, attribute_info: AttributeInfo):
-        hist_url = f"{self.score.resource.get_url()}" + \
-                   f"/statistics/histogram_{attribute_info.source}.png"
+        hist_url = self.score.get_histogram_image_url(attribute_info.source)
+        score_def = self.score.get_score_config(attribute_info.source)
         # pylint: disable=protected-access
-        attribute_info._documentation = \
-            f"{attribute_info.description}\n\n![HISTOGRAM]({hist_url})"
+        attribute_info._documentation = f"""
+{attribute_info.description}
+
+![HISTOGRAM]({hist_url})
+
+small values: {score_def.small_values_desc}, large_values {score_def.large_values_desc}
+        """
 
     def add_score_aggregator_documentation(self, attribute_info: AttributeInfo,
                                            aggregator: str,
