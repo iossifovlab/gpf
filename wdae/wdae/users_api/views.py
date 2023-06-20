@@ -568,4 +568,7 @@ class FederationCredentials(views.APIView):
             return Response(status=status.HTTP_401_UNAUTHORIZED)
         app.name = request.data.get("new_name")
         app.save()
-        return Response(status=status.HTTP_200_OK)
+        return Response(
+            {"new_name": app.name},
+            status=status.HTTP_200_OK
+        )
