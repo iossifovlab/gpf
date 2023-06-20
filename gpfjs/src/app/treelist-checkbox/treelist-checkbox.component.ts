@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, OnChanges, OnInit, Output, ViewChild } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, OnInit, Output } from '@angular/core';
 import { DatasetNode } from 'app/dataset-node/dataset-node';
 @Component({
   selector: 'gpf-treelist-checkbox',
@@ -13,8 +13,6 @@ export class StudyFiltersTreeComponent implements OnInit, OnChanges {
 
   @Input()
   public selectedStudies: Set<string>;
-
-  @ViewChild('hide') public input;
 
   public ngOnInit(): void {
     this.selectedStudies?.clear();
