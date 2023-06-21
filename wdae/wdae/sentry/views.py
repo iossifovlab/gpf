@@ -34,14 +34,17 @@ class PlainTextParser(BaseParser):
 def sentry(request):
     """Tunnel Sentry requests from the frontend."""
     expiration_time = 60 * 60  # in seconds
-    sentry_token = request.COOKIES.get("sentry_token").split("&")
-    time_issued = float(sentry_token[0].split("=")[1]) / pow(10, 6)
+    sentry_token = request.COOKIES.get("sentry_token")
+    if not sentry_token:
+        return Response({}, status.HTTP_200_OK)
+    time_issued = float(sentry_token.split("&")[0].split("=")[1]) / pow(10, 6)
     curr_time = time.time()
-
     if time_issued + expiration_time <= curr_time:
         return Response({}, status.HTTP_401_UNAUTHORIZED)
 
-    dsn = os.environ.get("WDAE_SENTRY_DSN")
+    dsn = os.environ.get("GPFJS_SENTRY_DSN")
+    if not dsn:
+        return Response({}, status.HTTP_200_OK)
     fake_dsn = "https://0@0.ingest.sentry.io/0"  # gpfjs: main.ts
     project_id = urlparse(dsn).path.strip("/")
     sentry_host = dsn.split("@")[1].split("/")[0]
