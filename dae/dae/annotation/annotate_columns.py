@@ -99,7 +99,8 @@ def produce_tabix_index(filepath, args, header, ref_genome):
                 seq_col=seq_col,
                 start_col=start_col,
                 end_col=end_col,
-                line_skip=line_skip)
+                line_skip=line_skip,
+                force=True)
 
 
 def cache_pipeline(grr, pipeline):
@@ -112,7 +113,7 @@ def cache_pipeline(grr, pipeline):
 
 def annotate(
         args, region, pipeline_config: list[AnnotatorInfo], grr_definition,
-        ref_genome_id, out_file_path):
+        ref_genome_id, out_file_path, compress_output=False):
     """Annotate a variants file with a given pipeline configuration."""
     # pylint: disable=too-many-locals
     grr = build_genomic_resource_repository(definition=grr_definition)
@@ -133,8 +134,13 @@ def annotate(
         attr.name for attr in pipeline.get_attributes()
         if not attr.internal]
 
+    if compress_output:
+        out_file = gzip.open(out_file_path, "wt")
+    else:
+        out_file = open(out_file_path, "wt")
+
     pipeline.open()
-    with pipeline, in_file, open(out_file_path, "wt") as out_file:
+    with pipeline, in_file, out_file:
         new_header = header_columns + annotation_columns
         out_file.write(args.output_separator.join(new_header) + "\n")
         for lnum, line in enumerate(line_iterator):
@@ -185,7 +191,7 @@ def combine(args, partfile_paths, out_file_path):
     with open(out_file_path, "wt") as out_file:
         out_file.write(header + "\n")
         for partfile_path in partfile_paths:
-            with open(partfile_path, "rt") as partfile:
+            with gzip.open(partfile_path, "rt") as partfile:
                 partfile.readline()  # skip header
                 out_file.write(partfile.read())
     for partfile_path in partfile_paths:
@@ -216,8 +222,12 @@ def cli(raw_args: Optional[list[str]] = None) -> None:
     if args.output:
         output = args.output
     else:
-        filename, extension = os.path.basename(args.input).split(".")
-        output = f"{filename}_annotated.{extension}"
+        input_name = args.input.rstrip(".gz")
+        if "." in input_name:
+            idx = input_name.find(".")
+            output = f"{input_name[:idx]}_annotated{input_name[idx:]}"
+        else:
+            output = f"{input_name}_annotated"
 
     if tabix_index_filename(args.input):
         with closing(TabixFile(args.input)) as pysam_file:
@@ -230,7 +240,7 @@ def cli(raw_args: Optional[list[str]] = None) -> None:
                 f"part-{index}",
                 annotate,
                 [args, region, pipeline.get_info(), grr.definition,
-                 ref_genome_id, file_path],
+                 ref_genome_id, file_path, True],
                 []))
 
         task_graph.create_task(
@@ -247,7 +257,7 @@ def cli(raw_args: Optional[list[str]] = None) -> None:
         TaskGraphCli.process_graph(task_graph, **vars(args))
     else:
         annotate(args, None, pipeline.get_info(), grr.definition,
-                 ref_genome_id, output)
+                 ref_genome_id, output, output.endswith(".gz"))
 
 
 if __name__ == "__main__":
