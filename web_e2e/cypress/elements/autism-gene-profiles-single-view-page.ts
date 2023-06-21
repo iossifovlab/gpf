@@ -61,12 +61,8 @@ export class AutismGeneProfilesSingleViewPage extends BasePage {
     return cy.get('.datasets-table');
   }
 
-  public getGeneSymbols(id: string = null): void {
-    cy.get(
-      'gpf-autism-gene-profile-single-view'
-      + (id !== null ? ('#' + id + '-single-view') : '')
-      + ' > div > div > h2'
-    ).then(symbols => {
+  public getGeneSymbols(): void {
+    cy.get('h2').then(symbols => {
       cy.wrap(symbols.text()).as('geneSymbols');
     });
   }
@@ -74,39 +70,40 @@ export class AutismGeneProfilesSingleViewPage extends BasePage {
   public getGenomicScores(id: string = null) {
     const genomicScores = [];
 
-    cy.get((id !== null ? (('#' + id + '-single-view')) : 'div.ng-star-inserted >') + ' :nth-child(3) > table').each((table_iteration, index) => {
-      genomicScores[index] = {
-        category: '', name: '', scores: []
-      }
+    cy.get((id !== null ? '#' + id + '-single-view' : 'div.ng-star-inserted >') + ' :nth-child(3) > table')
+      .each((table_iteration, index) => {
+        genomicScores[index] = {
+          category: '', name: '', scores: []
+        };
 
-      cy.wrap(table_iteration).within(table => {
-        cy.wrap(table).invoke('attr', 'id').then(id => {
-          genomicScores[index].category = id;
-        });
+        cy.wrap(table_iteration).within(table => {
+          cy.wrap(table).invoke('attr', 'id').then(id => {
+            genomicScores[index].category = id;
+          });
 
-        cy.wrap(table).get('th').then(name => {
-          genomicScores[index].name = name.text();
-        });
+          cy.wrap(table).get('th').then(name => {
+            genomicScores[index].name = name.text();
+          });
 
-        cy.wrap(table).get('tr').each((table_row, row_index) => {
-          genomicScores[index].scores[row_index] = {
-            name: '', value: null
-          }
+          cy.wrap(table).get('tr').each((table_row, row_index) => {
+            genomicScores[index].scores[row_index] = {
+              name: '', value: null
+            };
 
-          cy.wrap(table_row).within(row => {
-            cy.wrap(row).get('td').not('.ng-star-inserted').then(score_name => {
-              genomicScores[index].scores[row_index].name = score_name.text();
-            });
+            cy.wrap(table_row).within(row => {
+              cy.wrap(row).get('td').not('.ng-star-inserted').then(score_name => {
+                genomicScores[index].scores[row_index].name = score_name.text();
+              });
 
-            cy.wrap(row).get('td.ng-star-inserted').within(score_values => {
-              cy.wrap(score_values).get('g > text.small').then(score => {
-                genomicScores[index].scores[row_index].value = parseFloat(score.text());
+              cy.wrap(row).get('td.ng-star-inserted').within(score_values => {
+                cy.wrap(score_values).get('g > text.small').then(score => {
+                  genomicScores[index].scores[row_index].value = parseFloat(score.text());
+                });
               });
             });
           });
         });
       });
-    });
 
     cy.wrap(genomicScores).as('genomicScores');
     return genomicScores;
@@ -115,39 +112,40 @@ export class AutismGeneProfilesSingleViewPage extends BasePage {
   public getGeneSets(id: string = null) {
     let geneSets: any = [];
 
-    cy.get((id !== null ? (('#' + id + '-single-view')) : 'div.ng-star-inserted >') + ' :nth-child(4) > table').each((table_iteration, index) => {
-      cy.wrap(table_iteration).within(table => {
-        geneSets[index] = {
-          id: null, name: null, scores: [
-          ]
-        };
+    cy.get((id !== null ? (('#' + id + '-single-view')) : 'div.ng-star-inserted >') + ' :nth-child(4) > table')
+      .each((table_iteration, index) => {
+        cy.wrap(table_iteration).within(table => {
+          geneSets[index] = {
+            id: null, name: null, scores: [
+            ]
+          };
 
-        cy.wrap(table).invoke('attr', 'id').then(id => {
-          geneSets[index]['id'] = id; // sets the id
-        });
-        cy.wrap(table).get('th').then(tableName => {
-          geneSets[index]['name'] = tableName.text();
-        });
+          cy.wrap(table).invoke('attr', 'id').then(id => {
+            geneSets[index]['id'] = id; // sets the id
+          });
+          cy.wrap(table).get('th').then(tableName => {
+            geneSets[index]['name'] = tableName.text();
+          });
 
-        cy.wrap(table).get('tr').each((row, rowIndex) => {
-          cy.wrap(row).within(el => {
-            geneSets[index]['scores'][rowIndex] = {
-              name: '',
-              value: false
-            };
+          cy.wrap(table).get('tr').each((row, rowIndex) => {
+            cy.wrap(row).within(el => {
+              geneSets[index]['scores'][rowIndex] = {
+                name: '',
+                value: false
+              };
 
-            cy.wrap(el).get('td').eq(0).then(name => {
-              geneSets[index]['scores'][rowIndex]['name'] = name.text();
-            });
-            cy.wrap(el).get('td').eq(1).then(value => {
-              if (value.text().length === 1 && value.text() === '✓') {
-                geneSets[index]['scores'][rowIndex]['value'] = true;
-              }
+              cy.wrap(el).get('td').eq(0).then(name => {
+                geneSets[index]['scores'][rowIndex]['name'] = name.text();
+              });
+              cy.wrap(el).get('td').eq(1).then(value => {
+                if (value.text().length === 1 && value.text() === '✓') {
+                  geneSets[index]['scores'][rowIndex]['value'] = true;
+                }
+              });
             });
           });
         });
       });
-    });
     cy.wrap(geneSets).as('geneSets');
 
     return geneSets;
@@ -156,44 +154,45 @@ export class AutismGeneProfilesSingleViewPage extends BasePage {
   public getDatasetData(id: string = null) {
     const datasets = [];
 
-    cy.get((id !== null ? (('#' + id + '-single-view')) : 'div.ng-star-inserted >') + ' :nth-child(5) > table').each((table_iterator,index) => {
-      datasets[index] = {
-        name: '', columns: [], rows: [
-          {
-            variant_statistics: '', variant_ids: '', affected: '', unaffected: ''
-          }
-        ]
-      }
-      cy.wrap(table_iterator).within(table => {
-        cy.wrap(table).get('thead > :nth-child(1) > th > span').then(name => {
-          datasets[index].name = name.text();
-        });
+    cy.get((id !== null ? (('#' + id + '-single-view')) : 'div.ng-star-inserted >') + ' :nth-child(5) > table')
+      .each((table_iterator,index) => {
+        datasets[index] = {
+          name: '', columns: [], rows: [
+            {
+              variant_statistics: '', variant_ids: '', affected: '', unaffected: ''
+            }
+          ]
+        }
+        cy.wrap(table_iterator).within(table => {
+          cy.wrap(table).get('thead > :nth-child(1) > th > span').then(name => {
+            datasets[index].name = name.text();
+          });
 
-        cy.wrap(table).get('thead > :nth-child(2) > th.ng-star-inserted').each((column, column_index) =>  {
-          datasets[index].columns[column_index] = column.text();
-        });
+          cy.wrap(table).get('thead > :nth-child(2) > th.ng-star-inserted').each((column, column_index) => {
+            datasets[index].columns[column_index] = column.text();
+          });
 
-        cy.wrap(table).get('tbody > tr').each((table_row, table_index) =>{
-          datasets[index].rows[table_index] = {
-            variant_statistics: '', variant_ids: '', affected: '', unaffected: ''
-          }
-          cy.wrap(table_row).within(row => {
-            cy.wrap(row).invoke('attr', 'id').then(id => {
-              datasets[index].rows[table_index].variant_ids = id;
-            });
-            cy.wrap(row).get('td').not('.ng-star-inserted').then(name => {
-              datasets[index].rows[table_index].variant_statistics = name.text();
-            });
-            cy.wrap(row).get('td').eq(1).then(affected => {
-              datasets[index].rows[table_index].affected = affected.text();
-            });
-            cy.wrap(row).get('td').eq(2).then(unaffected => {
-              datasets[index].rows[table_index].unaffected = unaffected.text();
+          cy.wrap(table).get('tbody > tr').each((table_row, table_index) => {
+            datasets[index].rows[table_index] = {
+              variant_statistics: '', variant_ids: '', affected: '', unaffected: ''
+            };
+            cy.wrap(table_row).within(row => {
+              cy.wrap(row).invoke('attr', 'id').then(id => {
+                datasets[index].rows[table_index].variant_ids = id;
+              });
+              cy.wrap(row).get('td').not('.ng-star-inserted').then(name => {
+                datasets[index].rows[table_index].variant_statistics = name.text();
+              });
+              cy.wrap(row).get('td').eq(1).then(affected => {
+                datasets[index].rows[table_index].affected = affected.text();
+              });
+              cy.wrap(row).get('td').eq(2).then(unaffected => {
+                datasets[index].rows[table_index].unaffected = unaffected.text();
+              });
             });
           });
         });
       });
-    });
 
     cy.wrap(datasets).as('datasets');
 
@@ -207,7 +206,7 @@ export class AutismGeneProfilesSingleViewPage extends BasePage {
       denovo_lgds: genotypeBlockPage.effectTypesGroups.get('LGDs'),
       denovo_missense: ['missense'],
       denovo_intron: ['intron']
-    }
+    };
     const effectModelFromGenotypeWrapper = new Map<string, string>();
     for (const value in studyWrapper) {
       effectModelFromGenotypeWrapper.set(value, studyWrapper[value]);
