@@ -1,7 +1,5 @@
-// import { AutismGeneProfilesBlockPage } from 'cypress/elements/autism-gene-profiles-block-page';
 import { AutismGeneProfilesSingleViewPage } from 'cypress/elements/autism-gene-profiles-single-view-page';
-// import { AutismGeneProfilesTablePage } from 'cypress/elements/autism-gene-profiles-table-page';
-// import { GenotypeBlockPage } from 'cypress/elements/genotype-block-page';
+import { GenotypeBlockPage } from 'cypress/elements/genotype-block-page';
 import { sidenavPageLinks } from 'cypress/elements/utils';
 
 describe('Autism gene profiles single view tests', () => {
@@ -109,48 +107,52 @@ describe('Autism gene profiles single view links tests', () => {
   });
 });
 
-// describe('Autism gene profiles single view dataset table tests', () => {
-//   const page = new AutismGeneProfilesSingleViewPage();
+describe('Autism gene profiles single view dataset table tests', () => {
+  const page = new AutismGeneProfilesSingleViewPage();
 
-//   it('should test redirect logic', () => {
-//     page.cleanup();
-//     page.navigateToHome();
-//     page.loginAdmin();
-//     page.navigateToSidenavPage(sidenavPageLinks.autismGeneProfiles);
+  before(() => {
+    page.cleanup();
+    page.navigateToHome(false);
+    page.loginAdmin();
+    page.navigateToSidenavPage(sidenavPageLinks.autismGeneProfiles);
+  });
 
-//     page.openSingleViewPage('GRIN2B');
+  it('should test redirect logic', () => {
+    page.openSingleViewPage('GRIN2B');
 
-//     cy.intercept({
-//       method: 'POST',
-//       url: '/gpf/api/v3/query_state/save'
-//     }).as('query');
-//     cy.get('#denovo_missense > :nth-child(2) > .link-genotype-browser > span').then(value => {
-//       cy.wrap(value).parent().parent().parent().invoke('attr', 'id').then(effectType => {
-//         cy.wrap(effectType).as('effectType');
-//       });
-//       cy.wrap(value).click();
-//     });
-//     cy.get('@query').then(req => {
-//       if (req !== null) {
-//         const genotypeBlockPage = new GenotypeBlockPage();
-//         cy.visit(Cypress.config().baseUrl + '/load-query/' + req['response'].body.uuid);
-//         // add waitForPageToLoad logic after visit...
-//         genotypeBlockPage.findCheckboxInComponentContainingText('.pedigree-selector-card', 'affected').parent().within(checkBoxes => {
-//           cy.wrap(checkBoxes).get('input').should('be.checked');
-//           cy.get('@effectType').then(effectType => {
-//             page.getStudyExpectedDataFromGenotype(effectType);
-//           });
-//         });
-//         page.getStudyActualDataFromGenotype();
-//         cy.get('@genotypeExpectedWrapper').then(expected => {
-//           cy.get('@genotypeActualWrapper').then(actual => {
-//             expect(expected).to.deep.equal(actual);
-//           });
-//         });
-//       }
-//     });
-//   });
-// });
+    cy.intercept({
+      method: 'POST',
+      url: '/gpf/api/v3/query_state/save'
+    }).as('query');
+    cy.get('#denovo_missense > :nth-child(2) > .link-genotype-browser > span').then(value => {
+      cy.wrap(value).parent().parent().parent().invoke('attr', 'id').then(effectType => {
+        cy.wrap(effectType).as('effectType');
+      });
+      cy.wrap(value).click();
+    });
+    cy.get('@query').then(req => {
+      if (req !== null) {
+        const genotypeBlockPage = new GenotypeBlockPage();
+        cy.visit(Cypress.config().baseUrl + '/load-query/' + req['response'].body.uuid);
+        // add waitForPageToLoad logic after visit...
+        genotypeBlockPage.window.should('be.visible');
+        genotypeBlockPage.findCheckboxInComponentContainingText('.pedigree-selector-card', 'affected')
+          .parent().within(checkBoxes => {
+            cy.wrap(checkBoxes).get('input').should('be.checked');
+            cy.get('@effectType').then(effectType => {
+              page.getStudyExpectedDataFromGenotype(effectType);
+            });
+          });
+        page.getStudyActualDataFromGenotype();
+        cy.get('@genotypeExpectedWrapper').then(expected => {
+          cy.get('@genotypeActualWrapper').then(actual => {
+            expect(expected).to.deep.equal(actual);
+          });
+        });
+      }
+    });
+  });
+});
 
 export const geneData = [
   {
@@ -158,7 +160,7 @@ export const geneData = [
     genomicScores: [
       {
         category: 'autism_scores', name: 'Autism Scores', scores: [
-          { name: 'SFARI_gene_score', value: 1 }
+          { name: 'SFARI gene score', value: 1 }
         ]
       }, {
         category: 'protection_scores', name: 'Protection Scores', scores: [
@@ -205,7 +207,7 @@ export const geneData = [
     genomicScores: [
       {
         category: 'autism_scores', name: 'Autism Scores', scores: [
-          { name: 'SFARI_gene_score', value: 1 }
+          { name: 'SFARI gene score', value: 1 }
         ]
       }, {
         category: 'protection_scores', name: 'Protection Scores', scores: [
@@ -255,7 +257,7 @@ export const geneData = [
     genomicScores: [
       {
         category: 'autism_scores', name: 'Autism Scores', scores: [
-          { name: 'SFARI_gene_score', value: 1 }
+          { name: 'SFARI gene score', value: 1 }
         ]
       }, {
         category: 'protection_scores', name: 'Protection Scores', scores: [
@@ -300,7 +302,7 @@ export const geneData = [
   }
 ];
 
-describe.skip('Autism gene profiles single view dynamic data tests', () => {
+describe('Autism gene profiles single view dynamic data tests', () => {
   const page = new AutismGeneProfilesSingleViewPage();
 
   before(() => {
@@ -309,81 +311,86 @@ describe.skip('Autism gene profiles single view dynamic data tests', () => {
     page.navigateToSidenavPage(sidenavPageLinks.autismGeneProfiles);
   });
 
-  // it('should compare all data in single view for GRIN2B', () => {
-  //   page.openSingleView('GRIN2B');
+  it('should compare all data in single view for GRIN2B', () => {
+    page.openSingleViewPage('GRIN2B');
 
-  //   const geneSingleViewData = geneData.find(data => data.geneSymbols === 'GRIN2B');
+    const geneSingleViewData = geneData.find(data => data.geneSymbols === 'GRIN2B');
 
-  //   page.getGeneSymbols();
-  //   cy.get('@geneSymbols').then(symbols => {
-  //     expect(symbols).to.deep.equal(geneSingleViewData.geneSymbols, geneSingleViewData.geneSymbols + ' gene symbols');
-  //   });
+    page.getGeneSymbols();
+    cy.get('@geneSymbols').then(symbols => {
+      expect(symbols).to.deep.equal(geneSingleViewData.geneSymbols, geneSingleViewData.geneSymbols + ' gene symbols');
+    });
 
-  //   page.getGeneSets();
-  //   cy.get('@geneSets').then(sets => {
-  //     expect(sets).to.deep.equal(geneSingleViewData.geneSets, geneSingleViewData.geneSymbols + ' gene sets');
-  //   });
+    page.getGeneSets();
+    cy.get('@geneSets').then(sets => {
+      expect(sets).to.deep.equal(geneSingleViewData.geneSets, geneSingleViewData.geneSymbols + ' gene sets');
+    });
 
-  //   page.getDatasetData();
-  //   cy.get('@datasets').then(sets => {
-  //     expect(sets).to.deep.equal(geneSingleViewData.datasets, geneSingleViewData.geneSymbols + ' single view datasets');
-  //   });
+    page.getDatasetData();
+    cy.get('@datasets').then(sets => {
+      expect(sets).to.deep.equal(geneSingleViewData.datasets, geneSingleViewData.geneSymbols + ' single view datasets');
+    });
 
-  //   page.getGenomicScores();
-  //   cy.get('@genomicScores').then(scores => {
-  //     expect(scores).to.deep.equal(geneSingleViewData.genomicScores, geneSingleViewData.geneSymbols + ' single view genomic scores');
-  //   });
+    page.getGenomicScores();
+    cy.get('@genomicScores').then(scores => {
+      expect(scores).to.deep.equal(
+        geneSingleViewData.genomicScores, geneSingleViewData.geneSymbols + ' single view genomic scores'
+      );
+    });
+  });
 
-  // });
+  it('should compare all data in single view for CHD8', () => {
+    page.openSingleViewPage('CHD8');
 
-  // it('should compare all data in single view for CHD8', () => {
-  //   page.openSingleView('CHD8', true);
+    const geneSingleViewData = geneData.find(data => data.geneSymbols === 'CHD8');
 
-  //   const geneSingleViewData = geneData.find(data => data.geneSymbols === 'CHD8');
+    page.getGeneSymbols();
+    cy.get('@geneSymbols').then(symbols => {
+      expect(symbols).to.deep.equal(geneSingleViewData.geneSymbols, geneSingleViewData.geneSymbols + ' gene symbols');
+    });
 
-  //   page.getGeneSymbols();
-  //   cy.get('@geneSymbols').then(symbols => {
-  //     expect(symbols).to.deep.equal(geneSingleViewData.geneSymbols, geneSingleViewData.geneSymbols + ' gene symbols');
-  //   });
+    page.getGeneSets();
+    cy.get('@geneSets').then(sets => {
+      expect(sets).to.deep.equal(geneSingleViewData.geneSets, geneSingleViewData.geneSymbols + ' gene sets');
+    });
 
-  //   page.getGeneSets();
-  //   cy.get('@geneSets').then(sets => {
-  //     expect(sets).to.deep.equal(geneSingleViewData.geneSets, geneSingleViewData.geneSymbols + ' gene sets');
-  //   });
+    page.getDatasetData();
+    cy.get('@datasets').then(sets => {
+      expect(sets).to.deep.equal(geneSingleViewData.datasets, geneSingleViewData.geneSymbols + ' single view datasets');
+    });
 
-  //   page.getDatasetData();
-  //   cy.get('@datasets').then(sets => {
-  //     expect(sets).to.deep.equal(geneSingleViewData.datasets, geneSingleViewData.geneSymbols + ' single view datasets');
-  //   });
+    page.getGenomicScores();
+    cy.get('@genomicScores').then(scores => {
+      expect(scores).to.deep.equal(
+        geneSingleViewData.genomicScores, geneSingleViewData.geneSymbols + ' single view genomic scores'
+      );
+    });
+  });
 
-  //   page.getGenomicScores();
-  //   cy.get('@genomicScores').then(scores => {
-  //     expect(scores).to.deep.equal(geneSingleViewData.genomicScores, geneSingleViewData.geneSymbols + ' single view genomic scores');
-  //   });
-  // });
+  it('should compare all data in single view for POGZ', () => {
+    page.openSingleViewPage('POGZ');
+    const geneSingleViewData = geneData.find(data => data.geneSymbols === 'POGZ');
 
-  // it('should compare all data in single view for POGZ', () => {
-  //   page.openSingleView('POGZ', true);
-  //   const geneSingleViewData = geneData.find(data => data.geneSymbols === 'POGZ');
+    page.getGeneSymbols();
+    cy.get('@geneSymbols').then(symbols => {
+      expect(symbols).to.deep.equal(geneSingleViewData.geneSymbols, geneSingleViewData.geneSymbols + ' gene symbols');
+    });
 
-  //   page.getGeneSymbols();
-  //   cy.get('@geneSymbols').then(symbols => {
-  //     expect(symbols).to.deep.equal(geneSingleViewData.geneSymbols, geneSingleViewData.geneSymbols + ' gene symbols');
-  //   });
+    page.getGeneSets();
+    cy.get('@geneSets').then(sets => {
+      expect(sets).to.deep.equal(geneSingleViewData.geneSets, geneSingleViewData.geneSymbols + ' gene sets');
+    });
 
-  //   page.getGeneSets();
-  //   cy.get('@geneSets').then(sets => {
-  //     expect(sets).to.deep.equal(geneSingleViewData.geneSets, geneSingleViewData.geneSymbols + ' gene sets');
-  //   });
+    page.getDatasetData();
+    cy.get('@datasets').then(sets => {
+      expect(sets).to.deep.equal(geneSingleViewData.datasets, geneSingleViewData.geneSymbols + ' single view datasets');
+    });
 
-  //   page.getDatasetData();
-  //   cy.get('@datasets').then(sets => {
-  //     expect(sets).to.deep.equal(geneSingleViewData.datasets, geneSingleViewData.geneSymbols + ' single view datasets');
-  //   });
-
-  //   page.getGenomicScores();
-  //   cy.get('@genomicScores').then(scores => {
-  //     expect(scores).to.deep.equal(geneSingleViewData.genomicScores, geneSingleViewData.geneSymbols + ' single view genomic scores');
-  //   });
-  // });
+    page.getGenomicScores();
+    cy.get('@genomicScores').then(scores => {
+      expect(scores).to.deep.equal(
+        geneSingleViewData.genomicScores, geneSingleViewData.geneSymbols + ' single view genomic scores'
+      );
+    });
+  });
 });
