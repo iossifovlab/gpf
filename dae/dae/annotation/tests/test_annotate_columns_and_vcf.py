@@ -144,6 +144,7 @@ def annotate_directory_fixture(tmp_path):
         chr1   23         C          A            0.2
         chr1   24         C          A            0.3
         chr1   24         C          G            0.4
+        chr1   25         C          G            0.4
     """)
     three_content = textwrap.dedent("""
         chrom  pos_begin  reference  alternative  s1
@@ -397,3 +398,38 @@ def test_annotate_vcf_forbidden_symbol_replacement(
         for vcf in vcf_file.fetch():
             result.append(vcf.info["score"][0])
     assert result == ["a|b", "c|d", "e_f"]
+
+
+def test_annotate_vcf_none_values(tmp_path, annotate_directory_fixture):
+    in_content = textwrap.dedent("""
+        ##fileformat=VCFv4.2
+        ##contig=<ID=chr1>
+        #CHROM POS ID REF ALT QUAL FILTER INFO
+        chr1   23  .  C   T   .    .      .
+        chr1   24  .  C   A,G,T   .    .      .
+        chr1   25  .  C   C,T   .    .      .
+        chr1   26  .  C   G   .    .      .
+    """)
+
+    in_file = tmp_path / "in.vcf"
+    out_file = tmp_path / "out.vcf"
+    workdir = tmp_path / "output"
+    annotation_file = tmp_path / "annotation_multiallelic.yaml"
+    grr_file = tmp_path / "grr.yaml"
+
+    setup_vcf(in_file, in_content)
+
+    cli_vcf([
+        str(a) for a in [
+            in_file, annotation_file, "-w", workdir, "--grr", grr_file,
+            "-o", out_file
+        ]
+    ])
+
+    # pylint: disable=no-member
+    with pysam.VariantFile(out_file) as vcf_file:
+        variants = [*vcf_file.fetch()]
+    assert variants[0].info["score"] == ("0.1",)
+    assert variants[1].info["score"] == ("0.3", "0.4", ".")
+    assert "score" not in variants[2].info
+    assert "score" not in variants[3].info

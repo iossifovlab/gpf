@@ -98,20 +98,25 @@ def annotate(
                     )
                     continue
 
+                has_value = {}
                 for alt in vcf_var.alts:
                     annotation = pipeline.annotate(
                         VCFAllele(vcf_var.chrom, vcf_var.pos, vcf_var.ref, alt)
                     )
+
                     for buff, attribute in zip(buffers, annotation_attributes):
-                        # TODO Ask what value to use for missing attr
-                        attr = str(annotation.get(attribute.name, "-"))\
-                            .replace(";", "|")\
-                            .replace(",", "|")\
-                            .replace(" ", "_")
+                        attr = annotation.get(attribute.name)
+                        attr = attr if attr is not None else "."
+                        if attr != ".":
+                            has_value[attribute.name] = True
+                        attr = str(attr).replace(";", "|")\
+                                        .replace(",", "|")\
+                                        .replace(" ", "_")
                         buff.append(attr)
 
                 for attribute, buff in zip(annotation_attributes, buffers):
-                    vcf_var.info[attribute.name] = buff
+                    if has_value.get(attribute.name, False):
+                        vcf_var.info[attribute.name] = buff
                 out_file.write(vcf_var)
 
 
