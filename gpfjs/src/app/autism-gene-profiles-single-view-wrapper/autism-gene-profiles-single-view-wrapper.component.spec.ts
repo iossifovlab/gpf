@@ -10,7 +10,7 @@ class MockActivatedRoute {
   public params = {dataset: 'testDatasetId', get: (): string => ''};
   public parent = {params: of(this.params)};
   public queryParamMap = of(this.params);
-  public snapshot = {params: {genes: 'abc1,def2,'}};
+  public snapshot = {params: {genes: 'ABC1,dEf2,'}};
 }
 
 class MockAutismGeneProfilesService {
@@ -51,6 +51,6 @@ describe('AutismGeneProfileSingleViewWrapperComponent', () => {
   it('should set gene symbols after view initialization', () => {
     expect(component.geneSymbols).toStrictEqual(new Set<string>());
     component.ngAfterViewInit();
-    expect(component.geneSymbols).toStrictEqual(new Set<string>(['ABC1', 'DEF2']));
+    expect(component.geneSymbols).toStrictEqual(new Set<string>(['ABC1', 'dEf2']));
   });
 });

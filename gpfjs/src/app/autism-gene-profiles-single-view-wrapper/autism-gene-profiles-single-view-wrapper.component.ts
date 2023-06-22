@@ -29,7 +29,7 @@ export class AutismGeneProfileSingleViewWrapperComponent implements OnInit, Afte
       (this.route.snapshot.params.genes as string)
         .split(',')
         .filter(p => p)
-        .map(p => p.trim().toUpperCase())
+        .map(p => p.trim())
     );
     this.location.replaceState('autism-gene-profiles/' + Array.from(this.geneSymbols).toString());
   }
