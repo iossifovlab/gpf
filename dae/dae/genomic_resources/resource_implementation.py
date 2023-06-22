@@ -194,6 +194,14 @@ h3,h4 {
 <tr><td><b>Id:</b></td><td>{{ resource.resource_id }}</td></tr>
 <tr><td><b>Type:</b></td><td>{{ resource.get_type() }}</td></tr>
 <tr>
+<td><b>Summary:</b></td>
+<td>
+{%- set summary = resource.get_summary() -%}
+{{
+    summary if summary else "N/A"
+}}</td>
+</tr>
+<tr>
 <td><b>Description:</b></td>
 <td>
 {%- set description = resource.get_description() -%}

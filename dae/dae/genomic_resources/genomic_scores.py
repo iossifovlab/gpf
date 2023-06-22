@@ -343,15 +343,21 @@ class GenomicScoreImplementation(
                 chrom_length = ref_genome.get_chrom_length(chrom)
             else:
                 if isinstance(self.score.table, InmemoryGenomicPositionTable):
-                    raise ValueError("In memory tables are not supported")
+                    # raise ValueError("In memory tables are not supported")
+                    chrom_length = \
+                        max([line.pos_end
+                             for line in
+                             self.score.table.get_records_in_region(chrom)])
+                    print("AAAA", chrom, chrom_length)
+                else:
+                    assert isinstance(self.score.table,
+                                      TabixGenomicPositionTable)
+                    assert self.score.table.pysam_file is not None
 
-                assert isinstance(self.score.table, TabixGenomicPositionTable)
-                assert self.score.table.pysam_file is not None
-
-                chrom_length = get_chromosome_length_tabix(
-                    self.score.table.pysam_file,
-                    self.score.table.unmap_chromosome(chrom)
-                )
+                    chrom_length = get_chromosome_length_tabix(
+                        self.score.table.pysam_file,
+                        self.score.table.unmap_chromosome(chrom)
+                    )
                 if chrom_length is None:
                     continue
 
@@ -656,6 +662,8 @@ class GenomicScore(ResourceConfigValidationMixin):
                     "type": {"type": "string"},
                     "desc": {"type": "string"},
                     "na_values": {"type": ["string", "list"]},
+                    "large_values_desc": {"type": "string"},
+                    "small_values_desc": {"type": "string"},
                     "number_hist": {"type": "dict", "schema": {
                         "number_of_bins": {"type": "number"},
                         "view_range": {"type": "dict", "schema": {

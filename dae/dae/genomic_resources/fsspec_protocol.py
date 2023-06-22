@@ -646,17 +646,9 @@ class FsspecReadWriteProtocol(
                 **res.config,
                 "res_version": res.get_version_str(),
                 "res_files": len(list(res.get_manifest().get_files())),
-                "res_size": res_size
+                "res_size": res_size,
+                "res_summary": res.get_summary()
             }
-
-            description = None
-
-            if "meta" in res.config:
-                meta = res.config["meta"]
-                if "description" in meta:
-                    description = markdown(meta["description"])
-
-            result[res.resource_id]["meta"] = description
 
         content_filepath = os.path.join(self.url, GR_INDEX_FILE_NAME)
         with self.filesystem.open(

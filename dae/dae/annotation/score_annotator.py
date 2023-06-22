@@ -5,6 +5,7 @@ and allele_score.
 """
 import logging
 import abc
+from textwrap import dedent
 from typing import Callable, Optional, Any
 
 from dae.annotation.annotatable import Annotatable, VCFAllele
@@ -206,6 +207,9 @@ class PositionScoreAnnotator(PositionScoreAnnotatorBase):
         super().__init__(pipeline, info, self.position_score)
 
         self.position_score_queries = []
+        info.documentation += dedent("""
+            [More info](https://www.iossifovlab.com/gpfuserdocs/administration/annotation_tools.html#position-score)
+        """)
         for att_info in info.attributes:
             pos_aggregator = att_info.parameters.get("position_aggregator")
             if pos_aggregator:

@@ -896,7 +896,7 @@ repository_template = Template("""
                 <th>Version</th>
                 <th>Number of files</th>
                 <th>Size in bytes (total)</th>
-                <th>Meta</th>
+                <th>Summary</th>
             </tr>
         </thead>
         <tbody>
@@ -909,11 +909,7 @@ repository_template = Template("""
                 <td class="nowrap">{{value['res_version']}}</td>
                 <td class="nowrap">{{value['res_files']}}</td>
                 <td class="nowrap">{{value['res_size']}}</td>
-                <td>
-                    <div class="meta-div">
-                        {{value.get('meta', 'N/A')}}
-                    </div>
-                </td>
+                <td class="nowrap">{{value['res_summary']}}</td>
             </tr>
             {%- endfor %}
         </tbody>
