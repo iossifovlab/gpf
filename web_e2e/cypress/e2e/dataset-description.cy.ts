@@ -158,6 +158,7 @@ describe('Dataset description access rights tests', () => {
     page.logout();
   });
 
+  // update
   it('should log admin, give researcher user access rights for iossifov_2014,' +
      'create dataset description for iossifov_2014, log researcher user and check ' +
      'whether the newly created description exists and that it cannot be edited', () => {
@@ -166,7 +167,7 @@ describe('Dataset description access rights tests', () => {
     // give researcher access for iossifov_2014
     page.loginAdmin();
     page.navigateToSidenavPage(sidenavPageLinks.management);
-    userManagementPage.userAddGroup(userData.normal.username, 'iossifov_2014');
+    userManagementPage.userAddGroup('user_iossifov_2014@iossifovlab.com', 'iossifov_2014');
 
     page.navigateToSidenavPage(sidenavPageLinks.datasets);
     page.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.datasetDescription);
@@ -175,7 +176,7 @@ describe('Dataset description access rights tests', () => {
     page.editorSaveButton.click();
     page.logout();
 
-    page.login(userData.normal.username, userData.normal.password);
+    page.login('user_iossifov_2014@iossifovlab.com', userData.normal.password);
     page.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.datasetDescription);
     page.descriptionText.should('have.text', 'IOSSIFOV TEST DESCRIPTION');
     page.editIcon.should('not.exist');
@@ -184,7 +185,7 @@ describe('Dataset description access rights tests', () => {
     // state cleanup
     page.loginAdmin();
     page.navigateToSidenavPage(sidenavPageLinks.management);
-    userManagementPage.userGroupRemoveButton(userData.normal.username, 'iossifov_2014').click();
+    userManagementPage.userGroupRemoveButton('user_iossifov_2014@iossifovlab.com', 'iossifov_2014').click();
     userManagementPage.userRemoveGroupConfirm.click();
     page.navigateToSidenavPage(sidenavPageLinks.datasets);
     page.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.datasetDescription);
