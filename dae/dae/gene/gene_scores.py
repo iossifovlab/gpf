@@ -322,8 +322,7 @@ class GeneScore(
         score_filename = config["filename"]
         return json.dumps({
             "config": {
-                "gene_scores": config["gene_scores"],
-                "histograms": config["histograms"]
+                "scores": config["scores"],
             },
             "score_file": manifest[score_filename].md5
         }, sort_keys=True, indent=2).encode()
