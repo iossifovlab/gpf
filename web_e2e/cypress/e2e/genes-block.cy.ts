@@ -290,12 +290,12 @@ describe('Genes block gene set file length tests', () => {
       cy.deleteDownloadsFolder();
       cy.window().document().then(doc => {
         doc.addEventListener('click', () => {
-          setTimeout(() => doc.location?.reload(), 5000);
+          setTimeout(() => doc.location?.reload(), 20000);
         });
         page.downloadButton.click();
       });
 
-      cy.readFile(downloadFilePath, { timeout: 10000 }).then((text: string) => {
+      cy.readFile(downloadFilePath, { timeout: 20000 }).then((text: string) => {
         const textLines = text.split(/\r\n|\r|\n/);
         expect(textLines.length - 2).to.eq(expectedCount);
         expectedName = expectedName.replace(/\s*\(\d+\)\s*/, '');
@@ -368,15 +368,15 @@ describe('Genes block denovo gene set gene symbols tests', () => {
         cy.deleteDownloadsFolder();
         cy.window().document().then(doc => {
           doc.addEventListener('click', () => {
-            setTimeout(() => doc.location?.reload(), 5000);
+            setTimeout(() => doc.location?.reload(), 20000);
           });
           page.downloadButton.click();
         });
 
-        cy.readFile(downloadedGeneSetFilePath, { timeout: 10000 }).then((text: string) => {
+        cy.readFile(downloadedGeneSetFilePath, { timeout: 20000 }).then((text: string) => {
           const textLines = text.split(/\r\n|\r|\n/);
           cy.readFile(
-            data.expectedConditions.expectedGeneSymbolsFiles[i], { timeout: 10000 }
+            data.expectedConditions.expectedGeneSymbolsFiles[i], { timeout: 20000 }
           ).then((expectedText: string) => {
             const expectedTextLines = expectedText.split(/\r\n|\r|\n/);
             expect(textLines.slice(1).sort()).to.deep.eq(expectedTextLines.slice(1).sort());

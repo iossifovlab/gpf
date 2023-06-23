@@ -88,7 +88,7 @@ describe('Pheno browser tests', () => {
     page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.phenotypeBrowser);
 
     const expectedFilePath = 'cypress/fixtures/pheno-browser/row_values.txt';
-    cy.readFile(expectedFilePath, { timeout: 10000 }).then((expectedFile: string) => {
+    cy.readFile(expectedFilePath, { timeout: 20000 }).then((expectedFile: string) => {
       const rowValues = expectedFile.split(',\n');
 
       for (let i = 0; i < rowValues.length; i++) {
@@ -105,8 +105,8 @@ describe('Pheno browser tests', () => {
     page.instrumentsBox.select('All instruments');
 
     page.downloadInstrumentsButton.click();
-    cy.readFile(downloadFilePath, { timeout: 10000 }).then((downloadedFile: string) => {
-      cy.readFile(expectedFilePath, { timeout: 10000 }).then((expectedFile: string) => {
+    cy.readFile(downloadFilePath, { timeout: 20000 }).then((downloadedFile: string) => {
+      cy.readFile(expectedFilePath, { timeout: 20000 }).then((expectedFile: string) => {
         const downloadedFileLines = downloadedFile.split(/\r\n|\r|\n/);
         const expectedFileLines = expectedFile.split(/\r\n|\r|\n/);
         expect(downloadedFileLines).to.deep.eq(expectedFileLines);

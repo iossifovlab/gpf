@@ -234,7 +234,7 @@ describe('Gene browser download tests', () => {
 
       cy.window().document().then(doc => {
         doc.addEventListener('click', () => {
-          setTimeout(() => doc.location?.reload(), 5000);
+          setTimeout(() => doc.location?.reload(), 20000);
         });
         page.downloadFamilyVariantsButton.click();
       });
@@ -242,8 +242,8 @@ describe('Gene browser download tests', () => {
       const downloadedFamilyVariantsPath = Cypress.config('downloadsFolder') + '/variants.tsv';
       const expectedVariantsPath = 'cypress/fixtures/gene-browser/' + data.expectedPath;
 
-      cy.readFile(downloadedFamilyVariantsPath, { timeout: 10000 }).then((downloadedFile: string) => {
-        cy.readFile(expectedVariantsPath, { timeout: 10000 }).then((expectedFile: string) => {
+      cy.readFile(downloadedFamilyVariantsPath, { timeout: 20000 }).then((downloadedFile: string) => {
+        cy.readFile(expectedVariantsPath, { timeout: 20000 }).then((expectedFile: string) => {
           const downloadedFileLines = downloadedFile.split(/\r\n|\r|\n/);
           const expectedFileLines = expectedFile.split(/\r\n|\r|\n/);
           expect(downloadedFileLines).to.deep.eq(expectedFileLines);

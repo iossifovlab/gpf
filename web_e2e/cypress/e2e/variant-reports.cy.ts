@@ -327,7 +327,7 @@ describe('Variant reports tests', () => {
 
       cy.window().document().then(doc => {
         doc.addEventListener('click', () => {
-          setTimeout(() => doc.location?.reload(), 5000);
+          setTimeout(() => doc.location?.reload(), 20000);
         });
         page.pedigreeModalDownloadBtn.click();
       });

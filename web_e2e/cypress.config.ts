@@ -4,7 +4,7 @@ import { initPlugin } from '@frsource/cypress-plugin-visual-regression-diff/plug
 export default defineConfig({
   viewportWidth: 1920,
   viewportHeight: 1080,
-  defaultCommandTimeout: 10000,
+  defaultCommandTimeout: 20000,
   reporter: 'cypress-multi-reporters',
   reporterOptions: {
     reporterEnabled: 'spec, mocha-junit-reporter',

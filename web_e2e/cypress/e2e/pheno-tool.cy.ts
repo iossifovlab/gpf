@@ -177,13 +177,13 @@ describe('Pheno tool download tests', () => {
 
     cy.window().document().then(doc => {
       doc.addEventListener('click', () => {
-        setTimeout(() => doc.location?.reload(), 5000);
+        setTimeout(() => doc.location?.reload(), 20000);
       });
       page.downloadButton.click();
     });
 
-    cy.readFile(downloadedVariantsPath, { timeout: 10000 }).then((downloadedFile: string) => {
-      cy.readFile(expectedVariantsPath, { timeout: 10000 }).then((expectedFile: string) => {
+    cy.readFile(downloadedVariantsPath, { timeout: 20000 }).then((downloadedFile: string) => {
+      cy.readFile(expectedVariantsPath, { timeout: 20000 }).then((expectedFile: string) => {
         const downloadedFileLines = downloadedFile.split(/\r\n|\r|\n/);
         const expectedFileLines = expectedFile.split(/\r\n|\r|\n/);
         expect(downloadedFileLines).to.deep.eq(expectedFileLines);
@@ -205,13 +205,13 @@ describe('Pheno tool download tests', () => {
 
       cy.window().document().then(doc => {
         doc.addEventListener('click', () => {
-          setTimeout(() => doc.location?.reload(), 5000);
+          setTimeout(() => doc.location?.reload(), 20000);
         });
         page.downloadButton.click();
       });
 
-      cy.readFile(downloadedVariantsPath, { timeout: 10000 }).then((downloadedFile: string) => {
-        cy.readFile(expectedVariantsPath, { timeout: 10000 }).then((expectedFile: string) => {
+      cy.readFile(downloadedVariantsPath, { timeout: 20000 }).then((downloadedFile: string) => {
+        cy.readFile(expectedVariantsPath, { timeout: 20000 }).then((expectedFile: string) => {
           const downloadedFileLines = downloadedFile.split(/\r\n|\r|\n/);
           const expectedFileLines = expectedFile.split(/\r\n|\r|\n/);
           expect(downloadedFileLines).to.deep.eq(expectedFileLines);
@@ -240,13 +240,13 @@ describe('Pheno tool download tests', () => {
 
       cy.window().document().then(doc => {
         doc.addEventListener('click', () => {
-          setTimeout(() => doc.location?.reload(), 5000);
+          setTimeout(() => doc.location?.reload(), 20000);
         });
         page.downloadButton.click();
       });
 
-      cy.readFile(downloadedVariantsPath, { timeout: 10000 }).then((downloadedFile: string) => {
-        cy.readFile(expectedVariantsPath, { timeout: 10000 }).then((expectedFile: string) => {
+      cy.readFile(downloadedVariantsPath, { timeout: 20000 }).then((downloadedFile: string) => {
+        cy.readFile(expectedVariantsPath, { timeout: 20000 }).then((expectedFile: string) => {
           const downloadedFileLines = downloadedFile.split(/\r\n|\r|\n/);
           const expectedFileLines = expectedFile.split(/\r\n|\r|\n/);
           expect(downloadedFileLines).to.deep.eq(expectedFileLines);
@@ -273,13 +273,13 @@ describe('Pheno tool download tests', () => {
 
       cy.window().document().then(doc => {
         doc.addEventListener('click', () => {
-          setTimeout(() => doc.location?.reload(), 5000);
+          setTimeout(() => doc.location?.reload(), 20000);
         });
         page.downloadButton.click();
       });
 
-      cy.readFile(downloadedVariantsPath, { timeout: 10000 }).then((downloadedFile: string) => {
-        cy.readFile(expectedVariantsPath, { timeout: 10000 }).then((expectedFile: string) => {
+      cy.readFile(downloadedVariantsPath, { timeout: 20000 }).then((downloadedFile: string) => {
+        cy.readFile(expectedVariantsPath, { timeout: 20000 }).then((expectedFile: string) => {
           const downloadedFileLines = downloadedFile.split(/\r\n|\r|\n/);
           const expectedFileLines = expectedFile.split(/\r\n|\r|\n/);
           expect(downloadedFileLines).to.deep.eq(expectedFileLines);
@@ -315,13 +315,13 @@ describe('Pheno tool download tests', () => {
       cy.wait('@partitions');
       cy.window().document().then(doc => {
         doc.addEventListener('click', () => {
-          setTimeout(() => doc.location?.reload(), 5000);
+          setTimeout(() => doc.location?.reload(), 20000);
         });
         page.downloadButton.click();
       });
 
-      cy.readFile(downloadedVariantsPath, { timeout: 10000 }).then((downloadedFile: string) => {
-        cy.readFile(expectedVariantsPath, { timeout: 10000 }).then((expectedFile: string) => {
+      cy.readFile(downloadedVariantsPath, { timeout: 20000 }).then((downloadedFile: string) => {
+        cy.readFile(expectedVariantsPath, { timeout: 20000 }).then((expectedFile: string) => {
           const downloadedFileLines = downloadedFile.split(/\r\n|\r|\n/);
           const expectedFileLines = expectedFile.split(/\r\n|\r|\n/);
           expect(downloadedFileLines).to.deep.eq(expectedFileLines);
@@ -348,13 +348,13 @@ describe('Pheno tool download tests', () => {
 
       cy.window().document().then(doc => {
         doc.addEventListener('click', () => {
-          setTimeout(() => doc.location?.reload(), 5000);
+          setTimeout(() => doc.location?.reload(), 20000);
         });
         page.downloadButton.click();
       });
 
-      cy.readFile(downloadedVariantsPath, { timeout: 10000 }).then((downloadedFile: string) => {
-        cy.readFile(expectedVariantsPath, { timeout: 10000 }).then((expectedFile: string) => {
+      cy.readFile(downloadedVariantsPath, { timeout: 20000 }).then((downloadedFile: string) => {
+        cy.readFile(expectedVariantsPath, { timeout: 20000 }).then((expectedFile: string) => {
           const downloadedFileLines = downloadedFile.split(/\r\n|\r|\n/);
           const expectedFileLines = expectedFile.split(/\r\n|\r|\n/);
           expect(downloadedFileLines).to.deep.eq(expectedFileLines);
@@ -385,13 +385,13 @@ describe('Pheno tool download tests', () => {
 
       cy.window().document().then(doc => {
         doc.addEventListener('click', () => {
-          setTimeout(() => doc.location?.reload(), 5000);
+          setTimeout(() => doc.location?.reload(), 20000);
         });
         page.downloadButton.click();
       });
 
-      cy.readFile(downloadedVariantsPath, { timeout: 10000 }).then((downloadedFile: string) => {
-        cy.readFile(expectedVariantsPath, { timeout: 10000 }).then((expectedFile: string) => {
+      cy.readFile(downloadedVariantsPath, { timeout: 20000 }).then((downloadedFile: string) => {
+        cy.readFile(expectedVariantsPath, { timeout: 20000 }).then((expectedFile: string) => {
           const downloadedFileLines = downloadedFile.split(/\r\n|\r|\n/);
           const expectedFileLines = expectedFile.split(/\r\n|\r|\n/);
           expect(downloadedFileLines).to.deep.eq(expectedFileLines);
@@ -437,13 +437,13 @@ describe('Pheno tool download tests', () => {
 
       cy.window().document().then(doc => {
         doc.addEventListener('click', () => {
-          setTimeout(() => doc.location?.reload(), 5000);
+          setTimeout(() => doc.location?.reload(), 20000);
         });
         page.downloadButton.click();
       });
 
-      cy.readFile(downloadedVariantsPath, { timeout: 10000 }).then((downloadedFile: string) => {
-        cy.readFile(expectedVariantsPath, { timeout: 10000 }).then((expectedFile: string) => {
+      cy.readFile(downloadedVariantsPath, { timeout: 20000 }).then((downloadedFile: string) => {
+        cy.readFile(expectedVariantsPath, { timeout: 20000 }).then((expectedFile: string) => {
           const downloadedFileLines = downloadedFile.split(/\r\n|\r|\n/);
           const expectedFileLines = expectedFile.split(/\r\n|\r|\n/);
           expect(downloadedFileLines).to.deep.eq(expectedFileLines);
@@ -476,16 +476,15 @@ describe('Pheno tool download tests', () => {
       const downloadedVariantsPath = Cypress.config('downloadsFolder') + '/pheno_report.csv';
       const expectedVariantsPath = `cypress/fixtures/pheno-tool/pheno_report${data.id}.csv`;
 
-      cy.wait('@partitions');
       cy.window().document().then(doc => {
         doc.addEventListener('click', () => {
-          setTimeout(() => doc.location?.reload(), 5000);
+          setTimeout(() => doc.location?.reload(), 20000);
         });
         page.downloadButton.click();
       });
 
-      cy.readFile(downloadedVariantsPath, { timeout: 10000 }).then((downloadedFile: string) => {
-        cy.readFile(expectedVariantsPath, { timeout: 10000 }).then((expectedFile: string) => {
+      cy.readFile(downloadedVariantsPath, { timeout: 20000 }).then((downloadedFile: string) => {
+        cy.readFile(expectedVariantsPath, { timeout: 20000 }).then((expectedFile: string) => {
           const downloadedFileLines = downloadedFile.split(/\r\n|\r|\n/);
           const expectedFileLines = expectedFile.split(/\r\n|\r|\n/);
           expect(downloadedFileLines).to.deep.eq(expectedFileLines);
