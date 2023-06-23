@@ -136,7 +136,11 @@ class AnnotationPipeline:
 
         self.repository: GenomicResourceRepo = repository
         self.annotators: list[Annotator] = []
+        self.annotator_keys: dict[str, int] = {}  # key -> idx
         self._is_open = False
+
+    def get_annotator(self, key: str) -> Annotator:
+        return self.annotators[self.annotator_keys[key]]
 
     def get_info(self) -> list[AnnotatorInfo]:
         return [annotator.get_info() for annotator in self.annotators]
@@ -160,6 +164,8 @@ class AnnotationPipeline:
     def add_annotator(self, annotator: Annotator) -> None:
         assert isinstance(annotator, Annotator)
         self.annotators.append(annotator)
+        self.annotator_keys[f"A{len(self.annotators)}"] = \
+            len(self.annotators) - 1
 
     def annotate(self, annotatable: Annotatable) -> dict:
         """Apply all annotators to an annotatable."""

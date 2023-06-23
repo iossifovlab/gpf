@@ -58,8 +58,8 @@ reannotation_grr = build_genomic_resource_repository({
 })
 
 
-def test_used_context_attributes():
-    """Test annotators know which attributes they used from the context."""
+def test_reannotation_utilities():
+    """Test various reannotation functionalities."""
     pipeline_config = """
     - liftover_annotator:
         chain: dummyChain
@@ -80,11 +80,12 @@ def test_used_context_attributes():
         pipeline_config_str=pipeline_config,
         grr_repository=reannotation_grr
     )
-    result = {}
-    for annotator in pipeline.annotators:
-        result[annotator.get_info().type] = annotator.used_context_attributes
+    result = {
+        key: pipeline.get_annotator(key).used_context_attributes
+        for key in pipeline.annotator_keys
+    }
     assert result == {
-        "liftover_annotator": (),
-        "effect_annotator": ("hgX_annotatable",),
-        "gene_score_annotator": ("my_genes",),
+        "A1": (),
+        "A2": ("hgX_annotatable",),
+        "A3": ("my_genes",),
     }
