@@ -13,4 +13,16 @@ export class GenotypePreviewTablePage extends BasePage {
     rowIndex = rowIndex === 1 ? 0 : rowIndex * 8;
     return cy.get('gpf-table gpf-table-view-cell').eq(rowIndex + columnIndex).find('gpf-genotype-preview-field span');
   }
+
+  public get getRows(): element {
+    return cy.get('.table-row');
+  }
+
+  public get getNothingFound(): element {
+    return cy.get('#nothing-found-row');
+  }
+
+  public get selectedVariants(): element {
+    return cy.get('#variants-count-span');
+  }
 }
