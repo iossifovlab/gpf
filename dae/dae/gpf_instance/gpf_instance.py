@@ -159,7 +159,8 @@ class GPFInstance:
     @cached_property
     def gene_scores_db(self):
         """Load and return gene scores db."""
-        from dae.gene.gene_scores import GeneScoresDb, GeneScoreCollection
+        from dae.gene.gene_scores import GeneScoresDb, \
+            build_gene_score_from_resource
         if self.dae_config.gene_scores_db is None:
             return GeneScoresDb([])
 
@@ -170,7 +171,7 @@ class GPFInstance:
             if resource is None:
                 logger.error("unable to find gene score: %s", score)
                 continue
-            collections.append(GeneScoreCollection(resource))
+            collections.append(build_gene_score_from_resource(resource))
 
         return GeneScoresDb(collections)
 
@@ -345,8 +346,14 @@ class GPFInstance:
     def get_gene_score(self, gene_score_id):
         return self.gene_scores_db.get_gene_score(gene_score_id)
 
+    def get_gene_score_desc(self, score_id):
+        return self.gene_scores_db.get_score_desc(score_id)
+
     def get_all_gene_scores(self):
         return self.gene_scores_db.get_gene_scores()
+
+    def get_all_gene_score_descs(self):
+        return self.gene_scores_db.get_scores()
 
     # Common reports
     def get_common_report(self, study_id):

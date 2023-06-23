@@ -123,10 +123,14 @@ class EnrichmentTestView(QueryDatasetView):
                 return Response(status=status.HTTP_400_BAD_REQUEST)
 
             if gene_score_id in self.gene_scores_db:
-                gene_score = self.gene_scores_db.get_gene_score(
+                score_desc = self.gpf_instance.get_gene_score_desc(
                     gene_score_id
                 )
+                gene_score = self.gene_scores_db.get_gene_score(
+                    score_desc.resource_id
+                )
                 gene_syms = gene_score.get_genes(
+                    gene_score_id,
                     score_min=range_start,
                     score_max=range_end
                 )

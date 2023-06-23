@@ -3,7 +3,8 @@
 import textwrap
 import pytest
 
-from dae.gene.gene_scores import GeneScoresDb, GeneScore, GeneScoreCollection
+from dae.gene.gene_scores import GeneScoresDb, GeneScore, \
+    build_gene_score_from_resource
 from dae.genomic_resources.testing import build_inmemory_test_repository
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME
 
@@ -15,14 +16,13 @@ def scores_repo(tmp_path):
             GR_CONF_FILE_NAME: """
                 type: gene_score
                 filename: RVIS.csv
-                gene_scores:
+                scores:
                   - id: RVIS_rank
                     desc: RVIS rank
-                histograms:
-                  - score: RVIS_rank
-                    bins: 150
-                    x_scale: linear
-                    y_scale: linear
+                    number_hist:
+                      number_of_bins: 150
+                      x_log_scale: false
+                      y_log_scale: false
                 """,
             "RVIS.csv": textwrap.dedent("""
                 "gene","RVIS","RVIS_rank"
@@ -45,14 +45,13 @@ def scores_repo(tmp_path):
             GR_CONF_FILE_NAME: """
                 type: gene_score
                 filename: LGD.csv
-                gene_scores:
+                scores:
                   - id: LGD_rank
                     desc: LGD rank
-                histograms:
-                  - score: LGD_rank
-                    bins: 150
-                    x_scale: linear
-                    y_scale: linear
+                    number_hist:
+                     number_of_bins: 150
+                     x_log_scale: false
+                     y_log_scale: false
                 """,
             "LGD.csv": textwrap.dedent("""
                 "gene","LGD_score","LGD_rank"
@@ -79,16 +78,16 @@ def gene_scores_db(scores_repo):
         scores_repo.get_resource("LGD_rank"),
         scores_repo.get_resource("RVIS_rank"),
     ]
-    collections = []
+    gene_scores = []
     for resource in resources:
-        collections.append(GeneScoreCollection(resource))
-    return GeneScoresDb(collections)
+        gene_scores.append(build_gene_score_from_resource(resource))
+    return GeneScoresDb(gene_scores)
 
 
 def test_scores_rvis_rank(gene_scores_db):
     assert gene_scores_db["RVIS_rank"] is not None
 
-    rvis = gene_scores_db["RVIS_rank"]
+    rvis = gene_scores_db.get_gene_score("RVIS_rank")
     assert rvis.df is not None
 
     assert "RVIS_rank" in rvis.df.columns
@@ -99,7 +98,7 @@ def test_scores_has_rvis_rank(gene_scores_db):
 
 
 def test_missing_gene_score(gene_scores_db):
-    with pytest.raises(ValueError, match="gene score bad_score not found"):
+    with pytest.raises(ValueError, match="score bad_score not found"):
         gene_scores_db["bad_score"]
 
 
@@ -112,21 +111,21 @@ def test_gene_scores_ids(gene_scores_db):
 
 
 def test_gene_scores(gene_scores_db):
-    gene_scores = gene_scores_db.get_gene_scores()
+    gene_scores = gene_scores_db.get_scores()
     assert sorted(gs.score_id for gs in gene_scores) == \
         ["LGD_rank", "RVIS_rank"]
 
 
 def test_create_score_from_repository(scores_repo):
     resource = scores_repo.get_resource("RVIS_rank")
-    score = GeneScore.load_gene_scores_from_resource(resource)
-    assert score[0]
-    print(score[0])
+    score = build_gene_score_from_resource(resource)
+    assert score
+    print(score)
 
 
 def test_scores_default(scores_repo):
     resource = scores_repo.get_resource("RVIS_rank")
-    score = GeneScore.load_gene_scores_from_resource(resource)[0]
+    score = build_gene_score_from_resource(resource)
     assert score.df is not None
 
     assert "RVIS_rank" in score.df.columns
@@ -134,33 +133,33 @@ def test_scores_default(scores_repo):
 
 def test_scores_min_max(scores_repo):
     resource = scores_repo.get_resource("LGD_rank")
-    score = GeneScore.load_gene_scores_from_resource(resource)[0]
+    score = build_gene_score_from_resource(resource)
 
-    assert score.min() == 1.0
-    assert score.max() == 59.0
+    assert score.get_min("LGD_rank") == 1.0
+    assert score.get_max("LGD_rank") == 59.0
 
 
 def test_scores_get_genes(scores_repo):
     resource = scores_repo.get_resource("LGD_rank")
-    score = GeneScore.load_gene_scores_from_resource(resource)[0]
+    score = build_gene_score_from_resource(resource)
 
-    genes = score.get_genes(1.5, 5.1)
+    genes = score.get_genes("LGD_rank", 1.5, 5.1)
     assert len(genes) == 2
 
-    genes = score.get_genes(-1, 5.1)
+    genes = score.get_genes("LGD_rank", -1, 5.1)
     assert len(genes) == 3
 
-    genes = score.get_genes(1, 5.1)
+    genes = score.get_genes("LGD_rank", 1, 5.1)
     assert len(genes) == 3
 
-    genes = score.get_genes(1, 5.0)
+    genes = score.get_genes("LGD_rank", 1, 5.0)
     assert len(genes) == 2
 
 
 def test_scores_to_tsv(scores_repo):
     resource = scores_repo.get_resource("LGD_rank")
-    score = GeneScore.load_gene_scores_from_resource(resource)[0]
-    tsv = list(score.to_tsv())
+    score = build_gene_score_from_resource(resource)
+    tsv = list(score.to_tsv("LGD_rank"))
 
     assert len(tsv) == 12
     assert tsv[0] == "gene\tLGD_rank\n"
