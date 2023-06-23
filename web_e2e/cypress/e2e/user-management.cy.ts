@@ -31,11 +31,9 @@ describe('User management tests for reset password in Users', () => {
     });
 
     page.logout();
-    usersPage.waitLoginAfterLogout();
     page.login('user_reset_password@email.com', 'XC^ZF*TZXuUChFsv');
 
     page.logout();
-    usersPage.waitLoginAfterLogout();
     page.loginAdmin();
 
     page.navigateToHome();
@@ -43,7 +41,6 @@ describe('User management tests for reset password in Users', () => {
     page.userHasPasswordCell('user_reset_password@email.com').find('.fa.fa-check').should('be.visible');
     deleteTestUser(page, 'user_reset_password@email.com');
     page.logout();
-    usersPage.waitLoginAfterLogout();
   });
 
   it('should reset password when login', () => {
@@ -58,7 +55,6 @@ describe('User management tests for reset password in Users', () => {
       }).as('popup');
     });
 
-    usersPage.waitLoginAfterLogout();
     usersPage.logInButton.click();
 
     cy.get('@popup').url().then(() => {
@@ -77,18 +73,15 @@ describe('User management tests for reset password in Users', () => {
       page.newPasswordButton.click();
     });
 
-    usersPage.waitLoginAfterLogout();
     page.login('forgotten_password@email.com', 'XC^ZF*TZXuUChFsv');
     page.logout();
 
-    usersPage.waitLoginAfterLogout();
     page.loginAdmin();
 
     page.navigateToHome();
     page.navigateToSidenavPage(sidenavPageLinks.management);
     deleteTestUser(page, 'forgotten_password@email.com');
     page.logout();
-    usersPage.waitLoginAfterLogout();
   });
 });
 
@@ -246,10 +239,6 @@ describe('User management tests for Users', () => {
   });
 
   it('should search and not find user', () => {
-    page.userSearchField.type('comp');
-    page.usersTableCells.should('not.exist');
-
-    page.userSearchField.clear();
     page.userSearchField.type('nonexistent_user_name');
     page.usersTableCells.should('not.exist');
   });

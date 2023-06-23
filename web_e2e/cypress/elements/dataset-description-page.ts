@@ -40,11 +40,4 @@ export class DatasetDescriptionPage extends BasePage {
   public get editorTextarea(): element {
     return this.editorWindow.find('textarea');
   }
-
-  public clearDescription(): void {
-    this.editIcon.click();
-    this.editorTextarea.clear();
-    this.editorSaveButton.click();
-    this.emptyDescriptionPlaceholder.should('be.visible');
-  }
 }

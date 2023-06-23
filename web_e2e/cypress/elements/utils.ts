@@ -90,7 +90,18 @@ export class BasePage {
     this.waitForPageToLoad(toolPageLinks.geneBrowser, hasAccessRights);
   }
 
+  private waitForLoginButtonWithRetries(retries = 10): Cypress.Chainable<void> {
+    return cy.get('#log-in-button').if('not.visible').then(() => {
+      if (retries === 0) {
+        throw new Error('Cannot find Login button after multiple checks.');
+      }
+      return this.waitForLoginButtonWithRetries(--retries);
+    });
+  }
+
   public login(username: string, password: string, hasAccessRights = true): void {
+    this.waitForLoginButtonWithRetries();
+
     cy.url().then(startUrl => {
       const usersPage = new UsersPage();
       cy.intercept('GET', '/gpf/api/v3/datasets').as('datasets');
@@ -104,6 +115,7 @@ export class BasePage {
           win.location.href = `${Cypress.config().baseUrl}accounts/login/?next=/gpf/o/authorize/%3F${url}`;
         }).as('popup');
       });
+
 
       usersPage.logInButton.click();
       cy.get('@popup').should('be.called');

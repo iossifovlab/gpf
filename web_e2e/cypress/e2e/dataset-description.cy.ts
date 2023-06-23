@@ -14,7 +14,7 @@ describe('Dataset description tests', () => {
 
   beforeEach(() => {
     page.preserveLogin();
-    page.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.datasetDescription);
+    page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.datasetDescription);
   });
 
   it('should display dataset description window', () => {
@@ -71,24 +71,20 @@ describe('Dataset description tests', () => {
     page.editIcon.should('be.visible');
   });
 
-  it('should save some description and than delete it and check whether the description' +
-     'returns to the empty placeholder text', () => {
-    page.emptyDescriptionPlaceholder.should('be.visible');
-    page.editIcon.click();
-    page.editorTextarea.type('TEST DESCRIPTION');
-    page.editorSaveButton.click();
-    page.emptyDescriptionPlaceholder.should('not.exist');
-    page.clearDescription();
-  });
-
   it('should save the markdown', () => {
     page.emptyDescriptionPlaceholder.should('be.visible');
     page.descriptionText.should('not.exist');
+
     page.editIcon.click();
     page.editorTextarea.type('TEST DESCRIPTION ASDF');
     page.editorSaveButton.click();
     page.descriptionText.should('have.text', 'TEST DESCRIPTION ASDF');
-    page.clearDescription();
+    page.emptyDescriptionPlaceholder.should('not.exist');
+
+    page.editIcon.click();
+    page.editorTextarea.clear();
+    page.editorSaveButton.click();
+    page.emptyDescriptionPlaceholder.should('be.visible');
   });
 });
 
@@ -189,7 +185,10 @@ describe('Dataset description access rights tests', () => {
     userManagementPage.userRemoveGroupConfirm.click();
     page.navigateToSidenavPage(sidenavPageLinks.datasets);
     page.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.datasetDescription);
-    page.clearDescription();
+    page.editIcon.click();
+    page.editorTextarea.clear();
+    page.editorSaveButton.click();
+    page.emptyDescriptionPlaceholder.should('be.visible');
     page.logout();
   });
 
