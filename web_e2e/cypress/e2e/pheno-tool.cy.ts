@@ -308,6 +308,7 @@ describe('Pheno tool download tests', () => {
       familyPage.fromInputField.type(data.familyHistogramfromTo[0]);
       familyPage.toInputField.clear();
       familyPage.toInputField.type(data.familyHistogramfromTo[1]);
+      cy.wait(3000); // wait needed for https://github.com/iossifovlab/gpfjs/issues/844
 
       const downloadedVariantsPath = Cypress.config('downloadsFolder') + '/pheno_report.csv';
       const expectedVariantsPath = `cypress/fixtures/pheno-tool/pheno_report${data.id}.csv`;

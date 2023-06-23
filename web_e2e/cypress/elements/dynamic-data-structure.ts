@@ -110,12 +110,14 @@ export function applyData(params: Params): void {
 
     if (params.geneScore.from) {
       geneScoresPage.fromInputField.clear();
-      geneScoresPage.fromInputField.type(params.geneScore.from.toString())
+      geneScoresPage.fromInputField.type(params.geneScore.from.toString());
+      cy.wait(3000); // wait needed for https://github.com/iossifovlab/gpfjs/issues/844
     }
 
     if (params.geneScore.to) {
       geneScoresPage.fromInputField.clear();
-      geneScoresPage.fromInputField.type(params.geneScore.to.toString())
+      geneScoresPage.fromInputField.type(params.geneScore.to.toString());
+      cy.wait(3000); // wait needed for https://github.com/iossifovlab/gpfjs/issues/844
     }
   }
 
