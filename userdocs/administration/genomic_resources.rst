@@ -72,6 +72,13 @@ Currently supported protocols for GRR access are:
   .. code:: yaml
 
     id: <repo id>
+    type: http
+    url: <http:// or https:// url>
+
+  
+  .. code:: yaml
+
+    id: <repo id>
     type: url
     url: <http(s) url>
 
@@ -90,6 +97,7 @@ Currently supported protocols for GRR access are:
 
     id: <repo id>
     type: embedded
+    content:
 
 
 Browse available resources
@@ -280,4 +288,47 @@ its content with:
 
 where ``grr-bucket-test`` is the bucket where you store the repository and
 ``--extra-args`` are used to specify the S3 endpoint.
+
+Genomic Resource types
+**********************
+
+
+position_score
+##############
+
+np_score
+########
+
+allele_score
+############
+
+gene_models
+###########
+
+Example genomic_resoruce.yaml:
+
+.. code:: yaml
+
+    type: gene_models 
+    filename: refGeneMito-201309.gz
+    format: "default"
+
+The available formats are:
+
+* default  -- this is a GPF internal format
+* refflat
+* refseq
+* ccds
+* knowngene
+* gtf
+* ucscgenepred
+
+reference_genome
+################
+
+liftover
+########
+
+
+
 
