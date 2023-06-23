@@ -119,6 +119,10 @@ class Annotator(abc.ABC):
     def attributes(self) -> list[AttributeInfo]:
         return self._info.attributes
 
+    @property
+    def used_context_attributes(self) -> tuple[str, ...]:
+        return tuple()
+
     def _empty_result(self) -> dict[str, Any]:
         return {attribute_info.name: None
                 for attribute_info in self._info.attributes}
@@ -259,6 +263,11 @@ class InputAnnotableAnnotatorDecorator(AnnotatorDecorator):
                              "is expected to be of type object.")
         self.child._info.documentation += \
             f"\n*input_annotatable*: {self.input_annotatable_name}"
+
+    @property
+    def used_context_attributes(self) -> tuple[str, ...]:
+        return (*self.child.used_context_attributes,
+                self.input_annotatable_name)
 
     def annotate(
         self, _: Optional[Annotatable], context: dict[str, Any]
