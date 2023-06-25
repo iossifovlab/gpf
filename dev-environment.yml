@@ -30,13 +30,15 @@ dependencies:
   - pandas-stubs=1.5.2.221124
   - django-stubs=4.2.1
   - types-pyyaml=6.0.12.2
-  - types-setuptools=65.6.0.2
+  - types-setuptools=67
   - sqlalchemy-stubs=0.4
   - types-toml=0.10.3
   - types-python-dateutil=2.8.9
   - types-requests=2.27.30
   - bandit=1.7.4
-  - pip=22.3.1
+  - pip=23
+  - invoke=2.1
+  - gitpython=3.1
   - pip:
     - sphinx-autorun==1.1.1
     - rangehttpserver==1.2.0
