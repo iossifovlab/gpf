@@ -81,8 +81,8 @@ def test_reannotation_utilities():
         grr_repository=reannotation_grr
     )
     result = {
-        key: pipeline.get_annotator(key).used_context_attributes
-        for key in pipeline.annotator_keys
+        annotator_id: annotator.used_context_attributes
+        for annotator_id, annotator in pipeline.annotator_ids.items()
     }
     assert result == {
         "A1": (),
