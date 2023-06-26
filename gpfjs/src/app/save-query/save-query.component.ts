@@ -44,6 +44,8 @@ export class SaveQueryComponent implements OnInit {
   }
 
   public saveUserQuery(name: string, description: string): void {
+    this.nameInputRef.nativeElement.value = '';
+    this.descInputRef.nativeElement.value = '';
     const datasetId = this.datasetsService.getSelectedDataset().id;
 
     this.store.selectOnce(state => state).subscribe(state => {
@@ -53,10 +55,7 @@ export class SaveQueryComponent implements OnInit {
           .pipe(take(1))
           .subscribe(response => {
             if (response.hasOwnProperty('uuid')) {
-              this.nameInputRef.nativeElement.value = '';
-              this.descInputRef.nativeElement.value = '';
               this.saveButtonText = 'Saved';
-
               window.clearTimeout(this.savedTimeoutHandle);
               this.savedTimeoutHandle = setTimeout(() => {
                 this.saveButtonText = 'Save';
