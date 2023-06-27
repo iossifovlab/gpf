@@ -1,3 +1,11 @@
+* Misc
+    - remove the ScoreLine class
+    - Implement the assert for the correct resrouce_type for PositionScore and AlleleScore
+    - Categorical histogram
+    - Range column in the genomic scores' index.html.
+    - Talk again about the min-max values. 
+    - Hack to update statis_hash without re-runing the stats
+
 * score resource
     - should return None when a histogram file is not created.
 

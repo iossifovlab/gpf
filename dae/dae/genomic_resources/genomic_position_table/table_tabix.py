@@ -130,16 +130,9 @@ class TabixGenomicPositionTable(GenomicPositionTable):
         rchrom = self._map_result_chrom(line.chrom)
         if rchrom is None:
             return None
+        
         line.chrom = rchrom
         return line
-        # new_data = list(line.data)
-        # if isinstance(self.chrom_key, int):
-        #     chrom_idx = self.chrom_key
-        # else:
-        #     assert self.header is not None
-        #     chrom_idx = self.header.index(self.chrom_key)
-        # new_data[chrom_idx] = rchrom
-        # return self._make_line(tuple(new_data))
 
     def get_all_records(self):
         # pylint: disable=no-member
