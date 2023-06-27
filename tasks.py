@@ -14,7 +14,7 @@ logger = logging.getLogger("invoke tasks")
 # Our CalVer pattern which works until year 2200, up to 100 releases a
 # month (purposefully excludes builds)
 VERSION_REGEX = re.compile(
-    r"(?P<year>2[0-1]\d{2})\.(?P<month>\d\d?)\.(?P<minor>\d+)"
+    r"v?(?P<year>2[0-1]\d{2})\.(?P<month>\d\d?)\.(?P<minor>\d+)"
     r"((?P<modifier>(dev|rc))(?P<micro>\d+))?")
 
 
@@ -70,7 +70,7 @@ def dev_version(context):  # pylint: disable=unused-argument
     if repo.head.is_detached:
         logger.error("In detached HEAD state, refusing to release")
         sys.exit(1)
-    elif repo.active_branch.name != "master":
+    elif repo.active_branch.name not in {"master", "production"}:
         logger.error("Not on the master branch, refusing to release")
         sys.exit(1)
 
@@ -110,7 +110,7 @@ def rc_version(context):  # pylint: disable=unused-argument
     if repo.head.is_detached:
         logger.error("In detached HEAD state, refusing to release")
         sys.exit(1)
-    elif repo.active_branch.name != "master":
+    elif repo.active_branch.name not in {"master", "staging"}:
         logger.error("Not on the master branch, refusing to release")
         sys.exit(1)
 
