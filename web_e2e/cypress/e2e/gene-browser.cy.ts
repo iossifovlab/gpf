@@ -108,8 +108,9 @@ describe('Gene browser basic display tests after query', () => {
   });
 });
 
-describe('Gene browser family alleles count tests', () => {
+describe('Gene browser family alleles count and table tests', () => {
   const page = new GeneBrowserPage();
+  const genotypePreviewTablePage = new GenotypePreviewTablePage();
 
   before(() => {
     page.cleanup();
@@ -185,6 +186,46 @@ describe('Gene browser family alleles count tests', () => {
       page.familyAllelesCount.should('have.text', data.expectedFamilyAllelesCount);
 
       page.getVariantTypes(data.checkbox).click();
+    });
+  });
+
+  it('should check table rows count', () => {
+    genotypePreviewTablePage.selectedVariants.then((selectedVarinats) => {
+      const text = selectedVarinats.text();
+      const regex = new RegExp(/^[^\d]*(\d+)/);
+      const numberOfRows = Number(text.match(regex)[0]);
+      page.familyAllelesCount.should('not.contain', '0 /');
+      genotypePreviewTablePage.getRows.should('have.length', numberOfRows);
+    });
+  });
+
+  it('should check table if nothing found is shown with filter Denovo', () => {
+    page.getInheritanceTypes('Denovo').click();
+    genotypePreviewTablePage.getNothingFound.should('be.visible');
+    genotypePreviewTablePage.selectedVariants.then((selectedVarinats) => {
+      const text = selectedVarinats.text();
+      const regex = new RegExp(/^[^\d]*(\d+)/);
+      const numberOfRows = Number(text.match(regex)[0]);
+      genotypePreviewTablePage.getRows.should('have.length', 0);
+      page.familyAllelesCount.contains('0 /');
+      expect(numberOfRows).to.eq(0);
+    });
+
+    page.getInheritanceTypes('Denovo').click();
+    genotypePreviewTablePage.getNothingFound.should('not.exist');
+  });
+
+  it('should check table rows when sub, ins and CNV+ are unchecked', () => {
+    page.getVariantTypes('sub').click();
+    page.getVariantTypes('ins').click();
+    page.getVariantTypes('CNV+').click();
+
+    genotypePreviewTablePage.selectedVariants.then((selectedVarinats) => {
+      const text = selectedVarinats.text();
+      const regex = new RegExp(/^[^\d]*(\d+)/);
+      const numberOfRows = Number(text.match(regex)[0]);
+      genotypePreviewTablePage.getRows.should('have.length', numberOfRows);
+      page.familyAllelesCount.should('not.contain', '0 /');
     });
   });
 });
