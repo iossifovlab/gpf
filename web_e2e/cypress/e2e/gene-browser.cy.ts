@@ -194,6 +194,7 @@ describe('Gene browser family alleles count and table tests', () => {
       const text = selectedVarinats.text();
       const regex = new RegExp(/^[^\d]*(\d+)/);
       const numberOfRows = Number(text.match(regex)[0]);
+      page.familyAllelesCount.should('not.contain', '0 /');
       genotypePreviewTablePage.getRows.should('have.length', numberOfRows);
     });
   });
@@ -206,6 +207,7 @@ describe('Gene browser family alleles count and table tests', () => {
       const regex = new RegExp(/^[^\d]*(\d+)/);
       const numberOfRows = Number(text.match(regex)[0]);
       genotypePreviewTablePage.getRows.should('have.length', 0);
+      page.familyAllelesCount.contains('0 /');
       expect(numberOfRows).to.eq(0);
     });
 
@@ -223,6 +225,7 @@ describe('Gene browser family alleles count and table tests', () => {
       const regex = new RegExp(/^[^\d]*(\d+)/);
       const numberOfRows = Number(text.match(regex)[0]);
       genotypePreviewTablePage.getRows.should('have.length', numberOfRows);
+      page.familyAllelesCount.should('not.contain', '0 /');
     });
   });
 });
