@@ -174,11 +174,6 @@ describe('Genotype browser table preview result tests', () => {
       overviewParagraph: '25 variants selected'
     },
     {
-      study: datasetIds.iossifov2014,
-      affectedStatus: 'affected',
-      overviewParagraph: 'more than 1000 variants selected (1000 shown)'
-    },
-    {
       study: datasetIds.multi,
       affectedStatus: 'affected',
       overviewParagraph: '1 variant selected'
@@ -197,11 +192,6 @@ describe('Genotype browser table preview result tests', () => {
       study: datasetIds.compVcf,
       affectedStatus: 'unaffected',
       overviewParagraph: '25 variants selected'
-    },
-    {
-      study: datasetIds.iossifov2014,
-      affectedStatus: 'unaffected',
-      overviewParagraph: 'more than 1000 variants selected (1000 shown)'
     },
     {
       study: datasetIds.multi,
@@ -305,11 +295,6 @@ describe('Genotype browser table preview result tests', () => {
       overviewParagraph: '0 variants selected'
     },
     {
-      study: datasetIds.iossifov2014,
-      inheritanceType: 'denovo',
-      overviewParagraph: 'more than 1000 variants selected (1000 shown)'
-    },
-    {
       study: datasetIds.multi,
       inheritanceType: 'denovo',
       overviewParagraph: '0 variants selected'
@@ -329,7 +314,6 @@ describe('Genotype browser table preview result tests', () => {
     {study: datasetIds.compAll, overviewParagraph: '5 variants selected'},
     {study: datasetIds.compDenovo, overviewParagraph: '5 variants selected'},
     {study: datasetIds.compVcf, overviewParagraph: '0 variants selected'},
-    {study: datasetIds.iossifov2014, overviewParagraph: 'more than 1000 variants selected (1000 shown)'},
     {study: datasetIds.multi, overviewParagraph: '0 variants selected'}
   ].forEach(data => {
     it('should display the correct overview paragraph when ' +
@@ -461,6 +445,19 @@ describe('Genotype browser table preview result tests', () => {
         expect(truncate(text)).to.be.eq(data.values.iq);
       });
     });
+  });
+
+  it('should display the correct overview paragraph with denovo inheritance types, affected only, 5\'UTR', () => {
+    const genotypeBlockPage = new GenotypeBlockPage();
+
+    genotypeBrowserController.setStudy(datasetIds.iossifov2014);
+    genotypeBrowserController.setInheritanceType('denovo');
+    genotypeBrowserController.setAffectedStatus('affected');
+    genotypeBrowserController.setEffectTypesGroup('None');
+    genotypeBlockPage.findCheckboxInComponentContainingText('gpf-effect-types', '5\'UTR').click();
+
+    genotypeBrowserController.pressTablePreviewButton();
+    page.overviewParagraph.should('have.text', '98 variants selected');
   });
 });
 
