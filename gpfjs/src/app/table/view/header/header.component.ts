@@ -15,11 +15,11 @@ export class GpfTableHeaderComponent {
   @Output() public sortingInfoChange = new EventEmitter();
   @Input() public sortingInfo: SortInfo;
 
-  public constructor(private cd: ChangeDetectorRef) {}
+  public constructor(private cdr: ChangeDetectorRef) {}
 
   @HostListener('window:resize', ['$event'])
   public onWindowResize(): void {
-    this.cd.detectChanges();
+    this.cdr.detectChanges();
   }
 
   public get subheadersCount(): number[] {

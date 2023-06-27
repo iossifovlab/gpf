@@ -15,7 +15,7 @@ export class PhenoBrowserTableComponent implements OnInit {
   @Input() public measures: PhenoMeasures;
 
   public singleColumnWidth;
-  private columnsCount = 8; // This is the number of columns
+  private columnsCount = 8;
 
   public constructor(
     private modalService: NgbModal
