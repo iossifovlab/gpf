@@ -4,9 +4,9 @@
     *ngFor="let column of columns"
     [columnInfo]="column.headerChildren.toArray()[i]"
     [sortingInfo]="sortingInfo"
-    [style.width]="column.columnWidth ? column.columnWidth : null"
-    [style.min-width]="column.columnWidth ? column.columnWidth : null"
-    [style.max-width]="column.columnWidth ? column.columnWidth : null"
+    [style.width]="column.columnWidth || null"
+    [style.min-width]="column.columnWidth || null"
+    [style.max-width]="column.columnWidth || null"
     (sortingInfoChange)="sortingInfoChange.emit($event)"
     style="vertical-align: middle">
   </gpf-table-view-header-cell>

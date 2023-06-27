@@ -75,7 +75,7 @@ export class GpfTableComponent implements OnChanges, AfterViewChecked {
 
   @HostListener('window:resize', ['$event'])
   public onWindowResize(): void {
-    this.tableWidth = String(this.calculateTableWidthFloat()) + 'px';
+    this.tableWidth = `${this.calculateTableWidthFloat()}px`;
   }
 
 
@@ -130,7 +130,7 @@ export class GpfTableComponent implements OnChanges, AfterViewChecked {
   }
 
   public getVisibleData(): Array<any> {
-    this.tableWidth = String(this.calculateTableWidthFloat()) + 'px';
+    this.tableWidth = `${this.calculateTableWidthFloat()}px`;
     if (!this.dataSource) {
       return [];
     }
@@ -142,13 +142,13 @@ export class GpfTableComponent implements OnChanges, AfterViewChecked {
   }
 
   public calculateTableWidthFloat(): number {
-    let tableWidthFloat = 0;
-    if (this.columnsChildren !== undefined && this.columnsChildren !== null) {
-      this.columnsChildren.forEach(column => {
-        tableWidthFloat += parseFloat(column.columnWidth);
-      });
-      return tableWidthFloat;
+    if (!this.columnsChildren) {
+      return undefined;
     }
-    return undefined;
+    let tableWidthFloat = 0;
+    this.columnsChildren.forEach(column => {
+      tableWidthFloat += parseFloat(column.columnWidth);
+    });
+    return tableWidthFloat;
   }
 }

@@ -25,6 +25,6 @@ export class GpfTableColumnComponent implements OnInit {
   private updateColumnWidth(percentage): void {
     const browserWidth = window.innerWidth;
     const pixelWidth = browserWidth * percentage / 100;
-    this.columnWidth = String(pixelWidth) + 'px';
+    this.columnWidth = `${pixelWidth}px`;
   }
 }
