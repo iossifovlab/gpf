@@ -233,21 +233,23 @@ class GeneScore(
             </a>
 
             <h3>Gene score definitions:</h2>
-            {% for score in data["gene_scores"] %}
+            {% for score in data["scores"] %}
             <div class="score-definition">
             <p>Gene score ID: {{ score["id"] }}</p>
             <p>Description: {{ score["desc"] }}
             </div>
             {% endfor %}
             <h3>Histograms:</h2>
-            {% for hist in data["histograms"] %}
+            {% for score in data["scores"] %}
+            {% if score["number_hist"] %}
             <div class="histogram">
-            <h4>{{ hist["score"] }}</h1>
+            <h4>{{ score["id"] }}</h1>
             <img src="{{ data["statistics_dir"] }}/{{ hist["img_file"] }}"
             width="200px"
             alt={{ hist["score"] }}
             title={{ hist["score"] }}>
             </div>
+            {% endif %}
             {% endfor %}
             {% endblock %}
         """))
@@ -257,10 +259,11 @@ class GeneScore(
 
         statistics = self.get_statistics()
         data["statistics_dir"] = statistics.get_statistics_folder()
-        if "histograms" in data:
-            for hist_config in data["histograms"]:
-                hist_config["img_file"] = statistics.get_histogram_image_file(
-                    hist_config["score"]
+        for score in data["scores"]:
+            if "number_hist" in score:
+                score["number_hist"]["img_file"] = \
+                    statistics.get_histogram_image_file(
+                        score["id"]
                 )
 
         return data
