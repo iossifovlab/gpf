@@ -1,3 +1,3 @@
-RELEASE = "2023.6.0rc2"
+RELEASE = "2023.6.0rc3"
 
 VERSION = ".".join(RELEASE.split(".")[:2])
