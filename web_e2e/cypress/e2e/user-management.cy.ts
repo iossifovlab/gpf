@@ -640,7 +640,8 @@ describe('User management tests for Users', () => {
     page.datasetGroupList('comp_all').should('not.contain', 'add_datasets_group');
   });
 
-  it('should create group, add dataset and users and check data in Datasets', () => {
+  // flaky - https://nemo.seqpipe.org/job/iossifovlab/job/gpf-e2e/job/master/1340/
+  it.skip('should create group, add dataset and users and check data in Datasets', () => {
     createTestUser(page, 'test_user_in_datasets1@email.com', 'test_user_in_datasets_username1');
     createTestUser(page, 'test_user_in_datasets2@email.com', 'test_user_in_datasets_username2');
     createTestGroup(page, 'test_user_in_datasets_groupname');

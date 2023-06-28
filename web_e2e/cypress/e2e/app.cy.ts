@@ -208,7 +208,8 @@ describe('App user access rights tests', () => {
     page.logout();
   });
 
-  it('should login admin and give researcher access rights for COMP_genotypes, ' +
+  // flaky - https://nemo.seqpipe.org/job/iossifovlab/job/gpf-e2e/job/master/1338/
+  it.skip('should login admin and give researcher access rights for COMP_genotypes, ' +
      'then login researcher and verify his rights', () => {
     const userManagementPage = new UserManagementPage();
     const genotypeBrowserPage = new GenotypeBrowserPage();
@@ -255,7 +256,8 @@ describe('App user access rights tests', () => {
     page.logout();
   });
 
-  it('should login admin and give researcher access rights for ALL Genotypes, ' +
+  // flaky - https://nemo.seqpipe.org/job/iossifovlab/job/gpf-e2e/job/master/1338/
+  it.skip('should login admin and give researcher access rights for ALL Genotypes, ' +
      'then login researcher and verify his rights', () => {
     const userManagementPage = new UserManagementPage();
     const genotypeBrowserPage = new GenotypeBrowserPage();
