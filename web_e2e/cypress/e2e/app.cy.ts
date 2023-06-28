@@ -300,18 +300,18 @@ describe('App user access rights tests', () => {
     page.logout();
   });
 
-  after(() => {
-    const userManagementPage = new UserManagementPage();
+  // after(() => {
+  //   const userManagementPage = new UserManagementPage();
 
-    page.loginAdmin();
-    page.navigateToSidenavPage(sidenavPageLinks.management);
-    userManagementPage.userGroupRemoveButton('user_all_genotypes@iossifovlab.com', 'ALL_genotypes').click();
-    userManagementPage.userRemoveGroupConfirm.click();
-    userManagementPage.userGroupRemoveButton('user_comp_genotypes@iossifovlab.com', 'COMP_genotypes').click();
-    userManagementPage.userRemoveGroupConfirm.click();
-    userManagementPage.userGroupRemoveButton('user_comp_vcf@iossifovlab.com', 'comp_vcf').click();
-    userManagementPage.userRemoveGroupConfirm.click();
-    userManagementPage.waitForPageToLoad(sidenavPageLinks.management);
-    page.logout();
-  });
+  //   page.loginAdmin();
+  //   page.navigateToSidenavPage(sidenavPageLinks.management);
+  //   userManagementPage.userGroupRemoveButton('user_all_genotypes@iossifovlab.com', 'ALL_genotypes').click();
+  //   userManagementPage.userRemoveGroupConfirm.click();
+  //   userManagementPage.userGroupRemoveButton('user_comp_genotypes@iossifovlab.com', 'COMP_genotypes').click();
+  //   userManagementPage.userRemoveGroupConfirm.click();
+  //   userManagementPage.userGroupRemoveButton('user_comp_vcf@iossifovlab.com', 'comp_vcf').click();
+  //   userManagementPage.userRemoveGroupConfirm.click();
+  //   userManagementPage.waitForPageToLoad(sidenavPageLinks.management);
+  //   page.logout();
+  // });
 });
