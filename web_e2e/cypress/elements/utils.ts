@@ -231,10 +231,10 @@ export class BasePage {
   }
 
   public navigateToSidenavPage(sidenavPageLink: string): void {
-    this.sidenavTogglerButton.scrollIntoView();
-    this.toggleSidenav();
+    this.sidenavTogglerButton.scrollIntoView().then(() => {
+      this.toggleSidenav();
+    });
     cy.get(`div.sidenav a[routerlink="/${sidenavPageLink}"]`).click({scrollBehavior: false});
-
     this.waitForPageToLoad(sidenavPageLink);
   }
 
