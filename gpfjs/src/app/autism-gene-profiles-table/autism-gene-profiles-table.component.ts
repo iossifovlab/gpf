@@ -5,8 +5,8 @@ import {
 import { NgbDropdownMenu } from '@ng-bootstrap/ng-bootstrap';
 import { MultipleSelectMenuComponent } from 'app/multiple-select-menu/multiple-select-menu.component';
 import { SortingButtonsComponent } from 'app/sorting-buttons/sorting-buttons.component';
-import { debounceTime, distinctUntilChanged, switchMap, take, tap } from 'rxjs/operators';
-import { forkJoin, Subject, Subscription } from 'rxjs';
+import { debounceTime, distinctUntilChanged, take, tap } from 'rxjs/operators';
+import { Subject, Subscription, zip } from 'rxjs';
 import { AgpTableConfig, Column } from './autism-gene-profiles-table';
 import { AgpTableService } from './autism-gene-profiles-table.service';
 import { environment } from 'environments/environment';
@@ -54,6 +54,7 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
   private prevVerticalScroll = 0;
   private loadMoreGenes = true;
   private keystrokeSubscription: Subscription;
+  private getGenesSubscription: Subscription = new Subscription();
   public imgPathPrefix = environment.imgPathPrefix;
 
   public constructor(
@@ -143,10 +144,9 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
       this.pageIndex++;
     }
     this.pageIndex = this.viewportPageCount;
-    forkJoin(agpRequests).pipe(switchMap(res => {
+    this.getGenesSubscription.unsubscribe();
+    this.getGenesSubscription = zip(agpRequests).subscribe(res => {
       this.genes = [];
-      return res;
-    })).subscribe(res => {
       for (const genes of res) {
         this.genes = this.genes.concat(genes);
       }
