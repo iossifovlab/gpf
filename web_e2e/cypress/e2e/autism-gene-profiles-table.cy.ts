@@ -317,6 +317,10 @@ describe('Autism gene profiles table functionality tests', () => {
     }).as('query');
     page.geneSearchInput.type('CHD8');
     page.allTableRows.should('have.length', 1);
+
+    cy.window().then(win => {
+      cy.stub(win, 'open');
+    });
     page.allTableCells.eq(12).click();
     cy.wrap('denovo_lgds').as('effectType');
     cy.wait('@query');

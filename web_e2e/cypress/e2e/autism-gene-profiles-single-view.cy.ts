@@ -128,6 +128,9 @@ describe('Autism gene profiles single view dataset table tests', () => {
       cy.wrap(value).parent().parent().parent().invoke('attr', 'id').then(effectType => {
         cy.wrap(effectType).as('effectType');
       });
+      cy.window().then(win => {
+        cy.stub(win, 'open');
+      });
       cy.wrap(value).click();
     });
     cy.get('@query').then(req => {
