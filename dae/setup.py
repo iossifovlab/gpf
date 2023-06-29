@@ -54,7 +54,7 @@ setuptools.setup(
 
     [dae.genomic_resources.implementations]
     gene_set=dae.gene.gene_sets_db:build_gene_set_collection_from_resource
-    gene_score=dae.gene.gene_scores:build_gene_score_from_resource
+    gene_score=dae.gene.gene_scores:build_gene_score_implementation_from_resource
     position_score=dae.genomic_resources.genomic_scores:GenomicScoreImplementation
     np_score=dae.genomic_resources.genomic_scores:GenomicScoreImplementation
     allele_score=dae.genomic_resources.genomic_scores:GenomicScoreImplementation

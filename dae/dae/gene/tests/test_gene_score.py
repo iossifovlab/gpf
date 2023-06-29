@@ -6,7 +6,8 @@ import numpy as np
 
 from dae.genomic_resources.testing import build_inmemory_test_repository
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME
-from dae.gene.gene_scores import GeneScore, build_gene_score_from_resource
+from dae.gene.gene_scores import GeneScore, build_gene_score_from_resource, \
+    GeneScoreImplementation
 
 
 @pytest.fixture
@@ -218,7 +219,7 @@ def test_calculate_histogram(scores_repo):
     result = build_gene_score_from_resource(res)
     assert result is not None
 
-    histogram = GeneScore._calc_histogram(res, "linear")
+    histogram = GeneScoreImplementation._calc_histogram(res, "linear")
     assert histogram is not None
     print(histogram.config.view_range[0])
     print(type(histogram.config.view_range[0]))

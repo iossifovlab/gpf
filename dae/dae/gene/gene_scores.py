@@ -78,15 +78,157 @@ class GeneScoreStatistics(ResourceStatistics):
         return GeneScoreStatistics(genomic_resource.resource_id, histograms)
 
 
-class GeneScore(
+class GeneScoreImplementation(
     GenomicResourceImplementation,
-    InfoImplementationMixin,
+    InfoImplementationMixin
+):
+    """Class used to represent gene score resource implementations."""
+
+    def __init__(self, resource):
+        super().__init__(resource)
+        self.gene_score: GeneScore = build_gene_score_from_resource(
+            resource
+        )
+
+    def get_template(self):
+        return Template(textwrap.dedent("""
+            {% extends base %}
+            {% block content %}
+            <hr>
+            <h3>Gene scores file:</h3>
+            <a href="{{ data["filename"] }}">
+            {{ data["filename"] }}
+            </a>
+
+            <h3>Gene score definitions:</h2>
+            {% for score in data["scores"] %}
+            <div class="score-definition">
+            <p>Gene score ID: {{ score["id"] }}</p>
+            <p>Description: {{ score["desc"] }}
+            </div>
+            {% endfor %}
+            <h3>Histograms:</h2>
+            {% for score in data["scores"] %}
+            {% if score["number_hist"] %}
+            <div class="histogram">
+            <h4>{{ score["id"] }}</h1>
+            <img src="{{ data["statistics_dir"] }}/{{ hist["img_file"] }}"
+            width="200px"
+            alt={{ hist["score"] }}
+            title={{ hist["score"] }}>
+            </div>
+            {% endif %}
+            {% endfor %}
+            {% endblock %}
+        """))
+
+    def _get_template_data(self):
+        data = copy.deepcopy(self.config)
+
+        statistics = self.get_statistics()
+        data["statistics_dir"] = statistics.get_statistics_folder()
+        for score in data["scores"]:
+            if "number_hist" in score:
+                score["number_hist"]["img_file"] = \
+                    statistics.get_histogram_image_file(
+                        score["id"]
+                )
+
+        return data
+
+    def get_info(self):
+        return InfoImplementationMixin.get_info(self)
+
+    def add_statistics_build_tasks(self, task_graph, **kwargs) -> List[Task]:
+        save_tasks = []
+        for score_id, score_config in self.score_configs.items():
+            if score_config.get("histogram_config") is None:
+                logger.warning(
+                    "Gene score %s in %s has no histogram config!",
+                    score_id, self.resource.resource_id
+                )
+                continue
+            create_task = task_graph.create_task(
+                f"{self.resource.resource_id}_{score_id}_calc_histogram",
+                self._calc_histogram,
+                [self.resource, score_id],
+                []
+            )
+            save_task = task_graph.create_task(
+                f"{self.resource.resource_id}_{score_id}_save_histogram",
+                self._save_histogram,
+                [create_task, self.resource, score_id],
+                [create_task]
+            )
+            save_tasks.append(save_task)
+        return save_tasks
+
+    @staticmethod
+    def _calc_histogram(resource, score_id):
+        score = build_gene_score_from_resource(resource)
+        histogram_config = score.score_configs[score_id].get(
+            "number_hist"
+        )
+        if "min" not in histogram_config:
+            histogram_config["min"] = score.get_min(score_id)
+        if "max" not in histogram_config:
+            histogram_config["max"] = score.get_max(score_id)
+
+        legacy_keys = set(["x_scale", "y_scale", "bins", "min", "max"])
+        if len(legacy_keys.intersection(set(histogram_config.keys()))):
+            config = NumberHistogramConfig.convert_legacy_config(
+                histogram_config
+            )
+        else:
+            config = NumberHistogramConfig.from_dict(histogram_config)
+
+        # histogram_config = NumberHistogramConfig.from_dict(histogram_config)
+        histogram = NumberHistogram(config)
+        for value in score.get_values(score_id):
+            histogram.add_value(value)
+        return histogram
+
+    @staticmethod
+    def _save_histogram(histogram, resource, score_id):
+        proto = resource.proto
+        with proto.open_raw_file(
+            resource,
+            f"{GeneScoreStatistics.get_statistics_folder()}"
+            f"/{GeneScoreStatistics.get_histogram_file(score_id)}",
+            mode="wt"
+        ) as outfile:
+            outfile.write(histogram.serialize())
+        with proto.open_raw_file(
+            resource,
+            f"{GeneScoreStatistics.get_statistics_folder()}"
+            f"/{GeneScoreStatistics.get_histogram_image_file(score_id)}",
+            mode="wb"
+        ) as outfile:
+            histogram.plot(outfile, score_id)
+        return histogram
+
+    def calc_info_hash(self):
+        return "placeholder"
+
+    def calc_statistics_hash(self) -> bytes:
+        manifest = self.resource.get_manifest()
+        config = self.get_config()
+        score_filename = config["filename"]
+        return json.dumps({
+            "config": {
+                "scores": config["scores"],
+            },
+            "score_file": manifest[score_filename].md5
+        }, sort_keys=True, indent=2).encode()
+
+
+class GeneScore(
     ResourceConfigValidationMixin
 ):
     """Class used to represent gene scores."""
 
     def __init__(self, resource):
-        super().__init__(resource)
+        super().__init__()
 
         if resource.get_type() != "gene_score":
             logger.error(
@@ -94,8 +236,9 @@ class GeneScore(
                 resource.resource_id)
             raise ValueError(f"invalid resource type {resource.resource_id}")
 
+        self.resource = resource
         self.config = self.validate_and_normalize_schema(
-            self.config, resource
+            resource.get_config(), resource
         )
         assert "filename" in self.config
         filename = self.config["filename"]
@@ -222,52 +365,6 @@ class GeneScore(
             )
         return self.statistics
 
-    def get_template(self):
-        return Template(textwrap.dedent("""
-            {% extends base %}
-            {% block content %}
-            <hr>
-            <h3>Gene scores file:</h3>
-            <a href="{{ data["filename"] }}">
-            {{ data["filename"] }}
-            </a>
-
-            <h3>Gene score definitions:</h2>
-            {% for score in data["scores"] %}
-            <div class="score-definition">
-            <p>Gene score ID: {{ score["id"] }}</p>
-            <p>Description: {{ score["desc"] }}
-            </div>
-            {% endfor %}
-            <h3>Histograms:</h2>
-            {% for score in data["scores"] %}
-            {% if score["number_hist"] %}
-            <div class="histogram">
-            <h4>{{ score["id"] }}</h1>
-            <img src="{{ data["statistics_dir"] }}/{{ hist["img_file"] }}"
-            width="200px"
-            alt={{ hist["score"] }}
-            title={{ hist["score"] }}>
-            </div>
-            {% endif %}
-            {% endfor %}
-            {% endblock %}
-        """))
-
-    def _get_template_data(self):
-        data = copy.deepcopy(self.config)
-
-        statistics = self.get_statistics()
-        data["statistics_dir"] = statistics.get_statistics_folder()
-        for score in data["scores"]:
-            if "number_hist" in score:
-                score["number_hist"]["img_file"] = \
-                    statistics.get_histogram_image_file(
-                        score["id"]
-                )
-
-        return data
-
     @property
     def files(self):
         files = set()
@@ -313,90 +410,6 @@ class GeneScore(
     def get_histogram_image_file(score_id):
         GeneScoreStatistics.get_histogram_image_file(score_id)
 
-    def get_info(self):
-        return InfoImplementationMixin.get_info(self)
-
-    def calc_info_hash(self):
-        return "placeholder"
-
-    def calc_statistics_hash(self) -> bytes:
-        manifest = self.resource.get_manifest()
-        config = self.get_config()
-        score_filename = config["filename"]
-        return json.dumps({
-            "config": {
-                "scores": config["scores"],
-            },
-            "score_file": manifest[score_filename].md5
-        }, sort_keys=True, indent=2).encode()
-
-    def add_statistics_build_tasks(self, task_graph, **kwargs) -> List[Task]:
-        save_tasks = []
-        for score_id, score_config in self.score_configs.items():
-            if score_config.get("histogram_config") is None:
-                logger.warning(
-                    "Gene score %s in %s has no histogram config!",
-                    score_id, self.resource.resource_id
-                )
-                continue
-            create_task = task_graph.create_task(
-                f"{self.resource.resource_id}_{score_id}_calc_histogram",
-                self._calc_histogram,
-                [self.resource, score_id],
-                []
-            )
-            save_task = task_graph.create_task(
-                f"{self.resource.resource_id}_{score_id}_save_histogram",
-                self._save_histogram,
-                [create_task, self.resource, score_id],
-                [create_task]
-            )
-            save_tasks.append(save_task)
-        return save_tasks
-
-    @staticmethod
-    def _calc_histogram(resource, score_id):
-        score = build_gene_score_from_resource(resource)
-        histogram_config = score.score_configs[score_id].get(
-            "number_hist"
-        )
-        if "min" not in histogram_config:
-            histogram_config["min"] = score.get_min(score_id)
-        if "max" not in histogram_config:
-            histogram_config["max"] = score.get_max(score_id)
-
-        legacy_keys = set(["x_scale", "y_scale", "bins", "min", "max"])
-        if len(legacy_keys.intersection(set(histogram_config.keys()))):
-            config = NumberHistogramConfig.convert_legacy_config(
-                histogram_config
-            )
-        else:
-            config = NumberHistogramConfig.from_dict(histogram_config)
-
-        # histogram_config = NumberHistogramConfig.from_dict(histogram_config)
-        histogram = NumberHistogram(config)
-        for value in score.get_values(score_id):
-            histogram.add_value(value)
-        return histogram
-
-    @staticmethod
-    def _save_histogram(histogram, resource, score_id):
-        proto = resource.proto
-        with proto.open_raw_file(
-            resource,
-            f"{GeneScoreStatistics.get_statistics_folder()}"
-            f"/{GeneScoreStatistics.get_histogram_file(score_id)}",
-            mode="wt"
-        ) as outfile:
-            outfile.write(histogram.serialize())
-        with proto.open_raw_file(
-            resource,
-            f"{GeneScoreStatistics.get_statistics_folder()}"
-            f"/{GeneScoreStatistics.get_histogram_image_file(score_id)}",
-            mode="wb"
-        ) as outfile:
-            histogram.plot(outfile, score_id)
-        return histogram
 
 
 @dataclass
@@ -419,7 +432,7 @@ class GeneScoresDb:
         self.score_descs = {}
         self.gene_scores = {}
         for gene_score in gene_scores:
-            self.gene_scores[gene_score.resource_id] = gene_score
+            self.gene_scores[gene_score.resource.get_id()] = gene_score
             for score_desc in GeneScoresDb._build_descs_from_score(gene_score):
                 self.score_descs[score_desc.score_id] = score_desc
 
@@ -428,7 +441,7 @@ class GeneScoresDb:
         result = []
         for score_id in gene_score.get_scores():
             result.append(ScoreDesc(
-                resource_id=gene_score.resource_id,
+                resource_id=gene_score.resource.get_id(),
                 score_id=score_id,
                 number_hist=gene_score.get_histogram(score_id),
                 description=gene_score.get_desc(score_id)
@@ -480,3 +493,9 @@ def build_gene_score_from_resource(resource: GenomicResource):
     if resource is None:
         raise ValueError(f"missing resource {resource}")
     return GeneScore(resource)
+
+
+def build_gene_score_implementation_from_resource(resource: GenomicResource):
+    if resource is None:
+        raise ValueError(f"missing resource {resource}")
+    return GeneScoreImplementation(resource)
