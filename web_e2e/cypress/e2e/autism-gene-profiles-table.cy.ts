@@ -313,7 +313,7 @@ describe('Autism gene profiles table functionality tests', () => {
     cy.wait(500);
     page.allTableRows.should('have.length', 4);
 
-    const dataArr = [[0, 0, 0], [0, 0, 1], [0, 0, 0], [1, 0, 0]];
+    const dataArr = [[0, 0], [0, 0], [0, 0], [1, 0]];
 
     page.allSortingButtons.eq(0).click({force: true});
     dataArr.forEach((allRows, allRowsIndex) => {
