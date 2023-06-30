@@ -4,5 +4,6 @@ gpf-table-view-header-cell {
   font-size: 0.9em;
   background: #eee;
   font-weight: 500;
+  height: auto;
   display: table-cell;
 }

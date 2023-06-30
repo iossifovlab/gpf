@@ -9,6 +9,16 @@
   height: 12px;
 }
 
+span.holder {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+span {
+  white-space: pre-line;
+  display: inline-block;
+}
+
 #sorting-buttons {
   display: table-cell;
   vertical-align: middle;

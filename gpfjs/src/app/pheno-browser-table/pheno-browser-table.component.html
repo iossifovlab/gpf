@@ -1,5 +1,5 @@
-<gpf-table [dataSource]="measures.measures" style="display: inline-block">
-  <gpf-table-column>
+<gpf-table [dataSource]="measures.measures" style="display: inline-block; min-width: 1200px">
+  <gpf-table-column [columnWidth]="singleColumnWidth">
     <gpf-table-header caption="Instrument" field="instrumentName"></gpf-table-header>
     <gpf-table-content>
       <span *gpfTableCellContent="let data">
@@ -7,7 +7,7 @@
       </span>
     </gpf-table-content>
   </gpf-table-column>
-  <gpf-table-column>
+  <gpf-table-column [columnWidth]="singleColumnWidth">
     <gpf-table-header caption="Proband Pheno Measure" field="measureName"></gpf-table-header>
     <gpf-table-content>
       <span *gpfTableCellContent="let data">
@@ -23,7 +23,7 @@
       </span>
     </gpf-table-content>
   </gpf-table-column>
-  <gpf-table-column>
+  <gpf-table-column [columnWidth]="singleColumnWidth">
     <gpf-table-header caption="Pheno Measure Values"></gpf-table-header>
     <gpf-table-content>
       <span *gpfTableCellContent="let data">
@@ -33,7 +33,7 @@
       </span>
     </gpf-table-content>
   </gpf-table-column>
-  <gpf-table-column>
+  <gpf-table-column [columnWidth]="singleColumnWidth">
     <gpf-table-header>
       <gpf-table-subheader caption="Measure Type" field="measureType"></gpf-table-subheader>
       <gpf-table-subheader caption="Values Domain"></gpf-table-subheader>
@@ -57,7 +57,7 @@
     </gpf-table-content>
   </gpf-table-column>
   <ng-container *ngFor="let regressionId of measures.regressionNames | getRegressionIds">
-    <gpf-table-column>
+    <gpf-table-column [columnWidth]="singleColumnWidth">
       <gpf-table-header
         caption="Regression by {{
           measures.regressionNames[regressionId] ? measures.regressionNames[regressionId] : regressionId
@@ -75,7 +75,7 @@
         </span>
       </gpf-table-content>
     </gpf-table-column>
-    <gpf-table-column>
+    <gpf-table-column [columnWidth]="singleColumnWidth">
       <gpf-table-header
         caption="{{
           measures.regressionNames[regressionId] ? measures.regressionNames[regressionId] : regressionId

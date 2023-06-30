@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { OnInit, Component, HostListener, Input } from '@angular/core';
 
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import {
@@ -11,12 +11,19 @@ import { PhenoMeasures } from '../pheno-browser/pheno-browser';
   templateUrl: './pheno-browser-table.component.html',
   styleUrls: ['./pheno-browser-table.component.css']
 })
-export class PhenoBrowserTableComponent {
+export class PhenoBrowserTableComponent implements OnInit {
   @Input() public measures: PhenoMeasures;
+
+  public singleColumnWidth;
+  private columnsCount = 8;
 
   public constructor(
     private modalService: NgbModal
   ) { }
+
+  public ngOnInit(): void {
+    this.onResize();
+  }
 
   public static compare(leftVal: any, rightVal: any): number {
     if (leftVal === null && rightVal === null) {
@@ -34,6 +41,15 @@ export class PhenoBrowserTableComponent {
     }
 
     return leftVal.localeCompare(rightVal);
+  }
+
+  @HostListener('window:resize', ['$event'])
+  public onResize(): void {
+    const screenWidth = window.innerWidth;
+    const padding = 60;
+    const scrollSize = 15;
+
+    this.singleColumnWidth = `${(screenWidth - padding - scrollSize) / this.columnsCount}px`;
   }
 
   public openModal(imageUrl: string): void {

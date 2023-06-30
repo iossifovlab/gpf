@@ -75,8 +75,9 @@ export class GpfTableComponent implements OnChanges, AfterViewChecked {
 
   @HostListener('window:resize', ['$event'])
   public onWindowResize(): void {
-    this.tableWidth = this.tableViewChild?.nativeElement.offsetWidth;
+    this.tableWidth = `${this.calculateTableWidthFloat()}px`;
   }
+
 
   public set sortingInfo(sortingInfo: SortInfo) {
     this.previousSortingInfo = sortingInfo;
@@ -129,7 +130,7 @@ export class GpfTableComponent implements OnChanges, AfterViewChecked {
   }
 
   public getVisibleData(): Array<any> {
-    this.tableWidth = this.tableViewChild?.nativeElement.offsetWidth;
+    this.tableWidth = `${this.calculateTableWidthFloat()}px`;
     if (!this.dataSource) {
       return [];
     }
@@ -138,5 +139,16 @@ export class GpfTableComponent implements OnChanges, AfterViewChecked {
     }
     const scrollIndices = this.getScrollIndices();
     return this.dataSource.slice(scrollIndices[0], scrollIndices[1]);
+  }
+
+  public calculateTableWidthFloat(): number {
+    if (!this.columnsChildren) {
+      return undefined;
+    }
+    let tableWidthFloat = 0;
+    this.columnsChildren.forEach(column => {
+      tableWidthFloat += parseFloat(column.columnWidth);
+    });
+    return tableWidthFloat;
   }
 }
