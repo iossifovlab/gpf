@@ -94,7 +94,7 @@ class _ScoreDef:
 
     value_parser: Any                             # internal
     na_values: Any                                # internal
-    score_index: int = -1                         # internal
+    score_index: Optional[int | str] = None       # internal
 
     def to_public(self):
         return ScoreDef(
@@ -939,15 +939,20 @@ class GenomicScore(ResourceConfigValidationMixin):
         if "scores" in self.config:
             self._validate_scoredefs()
 
-        for score_def in self.score_definitions.values():
-            if score_def.col_index is None:
-                assert self.table.header is not None
+        if isinstance(self.table, VCFGenomicPositionTable):
+            for score_def in self.score_definitions.values():
                 assert score_def.col_name is not None
-                score_def.score_index = self.table.header.index(
-                    score_def.col_name)
-            else:
-                assert score_def.col_name is None
-                score_def.score_index = score_def.col_index
+                score_def.score_index = score_def.col_name
+        else:
+            for score_def in self.score_definitions.values():
+                if score_def.col_index is None:
+                    assert self.table.header is not None
+                    assert score_def.col_name is not None
+                    score_def.score_index = self.table.header.index(
+                        score_def.col_name)
+                else:
+                    assert score_def.col_name is None
+                    score_def.score_index = score_def.col_index
         return self
 
     def __enter__(self):

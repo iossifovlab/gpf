@@ -208,9 +208,10 @@ class TabixGenomicPositionTable(GenomicPositionTable):
     def _gen_from_buffer_and_tabix(self, chrom, beg, end):
         for line in self.buffer.fetch(chrom, beg, end):
             self.stats["yield from buffer"] += 1
-            result = self._transform_result(line)
-            if result:
-                yield result
+            # result = self._transform_result(line)
+            # if result:
+            #     yield result
+            yield line
         last = self.buffer.peek_last()
         if end < last.pos_end:
             return

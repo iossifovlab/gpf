@@ -443,7 +443,6 @@ class GeneModels(
 
         self._reset()
 
-
     @property
     def resource_id(self):
         return self.resource.resource_id
@@ -1357,11 +1356,11 @@ class GeneModels(
             return self._parse_ucscgenepred_models_format
         return None
 
-    def _infer_gene_model_parser(self, infile, fileformat=None):
+    def _infer_gene_model_parser(self, infile, file_format=None):
 
-        parser = self._get_parser(fileformat)
+        parser = self._get_parser(file_format)
         if parser is not None:
-            return fileformat
+            return file_format
 
         logger.info("going to infer gene models file format...")
         inferred_formats = []
@@ -1379,7 +1378,7 @@ class GeneModels(
                     logger.debug(
                         "gene models format %s matches input", inferred_format)
             except Exception as ex:  # pylint: disable=broad-except
-                logger.warning(
+                logger.debug(
                     "file format %s does not match; %s",
                     inferred_format, ex, exc_info=True)
 
@@ -1510,24 +1509,21 @@ def join_gene_models(*gene_models):
 
 
 def build_gene_models_from_file(
-    filename: str,
-    fileformat: Optional[str] = None,
-    gene_mapping_filename: Optional[str] = None
+    file_name: str,
+    file_format: Optional[str] = None,
+    gene_mapping_file_name: Optional[str] = None
 ) -> GeneModels:
     """Load gene models from local filesystem."""
-    dirname = os.path.dirname(filename)
-    basename = os.path.basename(filename)
     config = {
         "type": "gene_models",
-        "filename": basename,
+        "filename": file_name,
     }
-    if fileformat:
-        config["format"] = fileformat
-    if gene_mapping_filename:
-        gene_mapping = os.path.relpath(gene_mapping_filename, dirname)
-        config["gene_mapping"] = gene_mapping
+    if file_format:
+        config["format"] = file_format
+    if gene_mapping_file_name:
+        config["gene_mapping"] = gene_mapping_file_name
 
-    res = build_local_resource(dirname, config)
+    res = build_local_resource(".", config)
     return build_gene_models_from_resource(res)
 
 

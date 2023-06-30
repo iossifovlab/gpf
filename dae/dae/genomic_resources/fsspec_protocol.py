@@ -178,8 +178,8 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
             self.scheme = "file"
         self.netloc = parsed.netloc
         self.root_path = parsed.path
-        if not self.root_path.startswith("/"):
-            self.root_path = f"/{self.root_path}"
+        # if not self.root_path.startswith("/"): ### WHY???
+        #     self.root_path = f"/{self.root_path}"
 
         self.url = f"{self.scheme}://{self.netloc}{self.root_path}"
         self.filesystem = filesystem

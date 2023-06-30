@@ -219,7 +219,7 @@ def setup_gene_models(
     })
     # pylint: disable=import-outside-toplevel
     from dae.genomic_resources.gene_models import build_gene_models_from_file
-    return build_gene_models_from_file(str(out_path), fileformat=fileformat)
+    return build_gene_models_from_file(str(out_path), file_format=fileformat)
 
 
 def setup_empty_gene_models(out_path: pathlib.Path) -> GeneModels:

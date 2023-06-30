@@ -24,14 +24,8 @@ class Line:
         alt_key: Optional[Key] = None,
         header: Optional[tuple[str, ...]] = None,
     ):
-        self.data: tuple = raw_line
-        self.header: Optional[tuple[str, ...]] = header
-
-        # self.chrom_key = chrom_key
-        # self.pos_begin_key = pos_begin_key
-        # self.pos_end_key = pos_end_key
-        # self.ref_key = ref_key
-        # self.alt_key = alt_key
+        self._data: tuple = raw_line
+        self._header: Optional[tuple[str, ...]] = header
 
         self.chrom: str = self.get(chrom_key)
         self.pos_begin: int = int(self.get(pos_begin_key))
@@ -44,61 +38,14 @@ class Line:
     def set_chrom(self, chrom: str):
         self.chrom = chrom
 
-    """
-    @property
-    def chrom(self) -> str:
-        try:
-            return self._chrom
-        except AttributeError:
-            self._chrom = self.get(self.chrom_key)
-            return self._chrom
-
-    
-    @property
-    def pos_begin(self) -> int:
-        try:
-            return self._pos_begin
-        except AttributeError:
-            self._pos_begin = int(self.get(self.pos_begin_key))
-            return self._pos_begin
-
-    @property
-    def pos_end(self) -> int:
-        try:
-            return self._pos_end
-        except AttributeError:
-            if self.pos_end_key == self.pos_begin_key:
-                self._pos_end = self.pos_begin
-            else:
-                self._pos_end = int(self.get(self.pos_end_key))
-            return self._pos_end
-
-    @property
-    def ref(self) -> Optional[str]:
-        try:
-            return self._ref
-        except AttributeError:
-            self._ref = None if self.ref_key is None \
-                else self.get(self.ref_key)
-            return self._ref
-
-    @property
-    def alt(self) -> Optional[str]:
-        try:
-            return self._alt
-        except AttributeError:
-            self._alt = None if self.alt_key is None \
-                else self.get(self.alt_key)
-            return self._alt
-    """
     
     def get(self, key: Key):
         if isinstance(key, int):
-            return self.data[key]
+            return self._data[key]
 
-        assert self.header is not None
-        idx = self.header.index(key)
-        return self.data[idx]
+        assert self._header is not None
+        idx = self._header.index(key)
+        return self._data[idx]
 
 
 class VCFLine:
