@@ -87,14 +87,14 @@ def annotate_cnv_fixture(tmp_path_factory):
                     "genomic_resource.yaml": textwrap.dedent("""
                         type: gene_score
                         filename: score.csv
-                        gene_scores:
+                        scores:
                         - id: gene_score1
                           desc: Test gene score
-                        histograms:
-                        - score: gene_score1
-                          bins: 100
-                          min: 0.0
-                          max: 56.0
+                          number_hist:
+                            number_of_bins: 100
+                            view_range:
+                              min: 0.0
+                              max: 56.0
                     """),
                     "score.csv": textwrap.dedent("""
                         gene,gene_score1

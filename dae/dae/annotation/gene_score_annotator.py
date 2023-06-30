@@ -9,7 +9,7 @@ from dae.annotation.annotation_pipeline import AnnotationPipeline
 from dae.annotation.annotation_pipeline import Annotator
 from dae.annotation.annotation_pipeline import AnnotatorInfo
 
-from dae.gene.gene_scores import GeneScore
+from dae.gene.gene_scores import build_gene_score_from_resource
 from dae.genomic_resources import GenomicResource
 from dae.genomic_resources.aggregators import build_aggregator
 from dae.genomic_resources.aggregators import validate_aggregator
@@ -54,26 +54,30 @@ class GeneScoreAnnotator(Annotator):
                  gene_score_resource: GenomicResource, input_gene_list: str):
 
         self.gene_score_resource = gene_score_resource
-        self.gene_scores_list = GeneScore.load_gene_scores_from_resource(
+        self.gene_score = build_gene_score_from_resource(
             self.gene_score_resource)
-        self.gene_scores = {gs.score_id: gs for gs in self.gene_scores_list}
 
         info.resources += [gene_score_resource]
         if not info.attributes:
             info.attributes = AnnotationConfigParser.parse_raw_attributes(
-                [gs_conf.score_id for gs_conf in self.gene_scores.values()])
+                list(self.gene_score.score_configs.keys())
+            )
 
         self.aggregators: list[str] = []
 
         for attribute_config in info.attributes:
-            score_config = self.gene_scores.get(attribute_config.source)
+            score_config = self.gene_score.score_configs.get(
+                attribute_config.source
+            )
             if score_config is None:
                 message = f"The gene score {attribute_config.source} is " + \
                           f"unknown in {gene_score_resource.get_id()} " + \
                           "resource!"
                 raise ValueError(message)
             attribute_config.type = "object"
-            attribute_config.description = score_config.desc
+            attribute_config.description = self.gene_score.get_desc(
+                attribute_config.source
+            )
 
             aggregator_type = \
                 attribute_config.parameters.get("gene_aggregator")
@@ -97,19 +101,22 @@ class GeneScoreAnnotator(Annotator):
 
         attributes = {}
         for attr, aggregator_type in zip(self.attributes, self.aggregators):
-            gene_score = self.gene_scores[attr.source]
-
             attributes[attr.name] = self.aggregate_gene_values(
-                gene_score, genes, aggregator_type
+                attr.source, genes, aggregator_type
             )
         return attributes
 
     def aggregate_gene_values(
-            self, gene_score, gene_symbols: list[str], aggregator_type: str):
+            self, score_id,
+            gene_symbols: list[str],
+            aggregator_type: str):
         """Aggregate gene score values."""
         aggregator = build_aggregator(aggregator_type)
 
         for symbol in gene_symbols:
-            aggregator.add(gene_score.get_gene_value(symbol), key=symbol)
+            aggregator.add(
+                self.gene_score.get_gene_value(score_id, symbol),
+                key=symbol
+            )
 
         return aggregator.get_final()

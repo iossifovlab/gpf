@@ -1,4 +1,5 @@
 from __future__ import annotations
+from dataclasses import dataclass
 import os
 import copy
 import itertools
@@ -54,11 +55,13 @@ class GeneScoreStatistics(ResourceStatistics):
         """Load gene score statistics."""
         histograms = {}
         config = genomic_resource.get_config()
-        if "histograms" not in config:
-            return GeneScoreStatistics(genomic_resource, {})
         try:
-            for hist_config in config["histograms"]:
-                score_id = hist_config["score"]
+            for score_config in config["scores"]:
+                score_id = score_config["id"]
+                hist_config = score_config.get("number_hist")
+                if hist_config is None:
+                    print(f"Skipping {score_id}")
+                    continue
                 histogram_filepath = os.path.join(
                     GeneScoreStatistics.get_statistics_folder(),
                     GeneScoreStatistics.get_histogram_file(score_id)
@@ -75,244 +78,17 @@ class GeneScoreStatistics(ResourceStatistics):
         return GeneScoreStatistics(genomic_resource.resource_id, histograms)
 
 
-class GeneScore:
-    """
-    Represents gene scores.
-
-    Loads a CSV file with gene scores by gene score id as described
-    in resource config.
-
-    Gene Score resource configuration format:
-    type: gene_score
-    filename: (filename to gene score)
-    gene_scores:
-      - id: (gene score id)
-        desc: (gene score description)
-    histograms:
-      - score: (gene score id)
-        bins: (number of bins)
-        x_scale: linear/log
-        y_scale: linear/log
-    meta: (gene score metadata)
-    """
-
-    def __init__(
-        self, score_id, file, desc, histogram_config, meta=None, histogram=None
-    ):
-        self.histogram_config = histogram_config
-
-        self.score_id = score_id
-        self.genomic_values_col = "gene"
-
-        self.desc = desc
-        self.file = file
-
-        self.meta = meta
-
-        self.df = self._load_data()
-        self.df.dropna(inplace=True)
-
-        self.histogram = histogram
-        self.histogram_bins = None
-        self.histogram_bars = None
-
-        if histogram is not None:
-            self.histogram_bins = self.histogram.bins
-            self.histogram_bars = self.histogram.bars
-
-    @property
-    def x_scale(self):
-        """Return the scale type of the X axis."""
-        x_log_scale = self.histogram_config.get("x_log_scale")
-        if self.histogram is not None:
-            x_log_scale = self.histogram.config.x_log_scale
-
-        return "log" if x_log_scale else "linear"
-
-    @property
-    def y_scale(self):
-        """Return the scale type of the Y axis."""
-        y_log_scale = self.histogram_config.get("y_log_scale")
-        if self.histogram is not None:
-            y_log_scale = self.histogram.config.y_log_scale
-
-        return "log" if y_log_scale else "linear"
-
-    @property
-    def range(self):
-        if self.histogram is not None:
-            return self.histogram.view_range
-        return None
-
-    def _load_data(self):
-        assert self.file is not None
-
-        df = pd.read_csv(self.file)
-        assert self.score_id in df.columns, \
-            f"{self.score_id} not found in {df.columns}"
-        return df[[self.genomic_values_col, self.score_id]].copy()
-
-    @staticmethod
-    def load_gene_scores_from_resource(
-            resource: GenomicResource,
-            statistics: Optional[GeneScoreStatistics] = None
-    ) -> List[GeneScore]:
-        """Create and return all of the gene scores described in a resource."""
-        if resource.get_type() != "gene_score":
-            logger.error(
-                "invalid resource type for gene score %s",
-                resource.resource_id)
-            raise ValueError(f"invalid resource type {resource.resource_id}")
-        logger.info("processing gene score %s", resource.resource_id)
-
-        config = resource.get_config()
-        if config.get("gene_scores") is None:
-            raise ValueError(
-                f"missing gene_scores config {resource.resource_id}")
-        if config.get("histograms") is None:
-            raise ValueError(
-                f"missing histograms config {resource.resource_id}")
-
-        scores = []
-        if statistics is None:
-            statistics = GeneScoreStatistics.build_statistics(
-                resource)  # type: ignore
-        assert statistics is not None
-        for gs_config in config["gene_scores"]:
-            histogram = statistics.get_histogram(gs_config["id"])
-            gene_score = GeneScore._load_gene_score(
-                resource, gs_config, histogram
-            )
-            scores.append(gene_score)
-
-        return scores
-
-    @staticmethod
-    def load_gene_score_from_resource(
-        resource: GenomicResource, score_id: str
-    ):
-        """Create and return specific gene score in a resource."""
-        if resource.get_type() != "gene_score":
-            logger.error(
-                "invalid resource type for gene score %s",
-                resource.resource_id)
-            raise ValueError(f"invalid resource type {resource.resource_id}")
-
-        config = resource.get_config()
-        gsc = GeneScoreCollection(resource)
-        stats = gsc.get_statistics()
-        for gs_config in config["gene_scores"]:
-            if gs_config["id"] == score_id:
-                histogram = stats.get_histogram(score_id)
-                return GeneScore._load_gene_score(
-                    resource, gs_config, histogram
-                )
-
-        return None
-
-    @staticmethod
-    def _load_gene_score(resource, gs_config, histogram):
-        resource_config = resource.get_config()
-        gene_score_id = gs_config["id"]
-        file = resource.open_raw_file(resource_config["filename"])
-        desc = gs_config["desc"]
-        histogram_config = None
-        for hist_config in resource_config["histograms"]:
-            if hist_config["score"] == gene_score_id:
-                histogram_config = hist_config
-                break
-        if histogram_config is None:
-            raise ValueError(
-                f"missing histogram config for score {gene_score_id} in "
-                f"resource {resource.resource_id}"
-            )
-
-        meta = resource_config.get("meta")
-
-        return GeneScore(
-            gene_score_id, file, desc, histogram_config,
-            meta=meta, histogram=histogram)
-
-    def values(self):
-        """Return a list of score values."""
-        return self.df[self.score_id].values
-
-    def get_gene_value(self, gene_symbol):
-        """Return the value for a given gene symbol."""
-        symbol_values = self._to_dict()
-        return symbol_values.get(gene_symbol)
-
-    def _to_dict(self):
-        """Return dictionary of all defined scores keyed by gene symbol."""
-        return self.df.set_index("gene")[self.score_id].to_dict()
-
-    def _to_list(self):
-        columns = self.df.applymap(str).columns.tolist()
-        values = self.df.applymap(str).values.tolist()
-
-        return itertools.chain([columns], values)
-
-    def to_tsv(self):
-        """Return a TSV version of the gene score data."""
-        return map(join_line, self._to_list())
-
-    def min(self):
-        """Return minimal score value."""
-        return self.df[self.score_id].min()
-
-    def max(self):
-        """Return maximal score value."""
-        return self.df[self.score_id].max()
-
-    def get_genes(self, score_min=None, score_max=None):
-        """
-        Return genes which scores are between `score_min` and `score_max`.
-
-        `score_min` -- the lower bound of scores. If not specified or `None`
-        works without lower bound.
-
-        `score_max` -- the upper bound of scores. If not specified or `None`
-        works without upper bound.
-        """
-        df = self.df[self.score_id]
-        df.dropna(inplace=True)
-
-        if score_min is None or score_min < df.min() or score_min > df.max():
-            score_min = float("-inf")
-        if score_max is None or score_max < df.min() or score_max > df.max():
-            score_max = float("inf")
-
-        index = np.logical_and(df.values >= score_min, df.values < score_max)
-        genes = self.df[index].gene
-        return set(genes.values)
-
-
-class GeneScoreCollection(
+class GeneScoreImplementation(
     GenomicResourceImplementation,
-    InfoImplementationMixin,
-    ResourceConfigValidationMixin
+    InfoImplementationMixin
 ):
-    """Class used to represent all gene scores in a resource."""
+    """Class used to represent gene score resource implementations."""
 
     def __init__(self, resource):
         super().__init__(resource)
-        self.config = self.validate_and_normalize_schema(
-            self.config, resource
+        self.gene_score: GeneScore = build_gene_score_from_resource(
+            resource
         )
-        self.statistics = None
-        self.scores = {
-            score.score_id: score for score in
-            GeneScore.load_gene_scores_from_resource(
-                self.resource, self.get_statistics()
-            )
-        }
-
-    def get_statistics(self):
-        if self.statistics is None:
-            self.statistics = GeneScoreStatistics.build_statistics(
-                self.resource
-            )
-        return self.statistics
 
     def get_template(self):
         return Template(textwrap.dedent("""
@@ -325,21 +101,23 @@ class GeneScoreCollection(
             </a>
 
             <h3>Gene score definitions:</h2>
-            {% for score in data["gene_scores"] %}
+            {% for score in data["scores"] %}
             <div class="score-definition">
             <p>Gene score ID: {{ score["id"] }}</p>
             <p>Description: {{ score["desc"] }}
             </div>
             {% endfor %}
             <h3>Histograms:</h2>
-            {% for hist in data["histograms"] %}
+            {% for score in data["scores"] %}
+            {% if score["number_hist"] %}
             <div class="histogram">
-            <h4>{{ hist["score"] }}</h1>
+            <h4>{{ score["id"] }}</h1>
             <img src="{{ data["statistics_dir"] }}/{{ hist["img_file"] }}"
             width="200px"
             alt={{ hist["score"] }}
             title={{ hist["score"] }}>
             </div>
+            {% endif %}
             {% endfor %}
             {% endblock %}
         """))
@@ -349,68 +127,22 @@ class GeneScoreCollection(
 
         statistics = self.get_statistics()
         data["statistics_dir"] = statistics.get_statistics_folder()
-        if "histograms" in data:
-            for hist_config in data["histograms"]:
-                hist_config["img_file"] = statistics.get_histogram_image_file(
-                    hist_config["score"]
+        for score in data["scores"]:
+            if "number_hist" in score:
+                score["number_hist"]["img_file"] = \
+                    statistics.get_histogram_image_file(
+                        score["id"]
                 )
 
         return data
 
-    @property
-    def files(self):
-        files = set()
-        files.add(self.resource.get_config().get("filename"))
-        return files
-
-    @staticmethod
-    def get_schema():
-        return {
-            **get_base_resource_schema(),
-            "filename": {"type": "string"},
-            "gene_scores": {"type": "list", "schema": {
-                "type": "dict",
-                "schema": {
-                    "id": {"type": "string"},
-                    "desc": {"type": "string"},
-                }
-            }},
-            "histograms": {"type": "list", "schema": {
-                "type": "dict",
-                "schema": {
-                    "score": {"type": "string"},
-                    "bins": {"type": "integer"},
-                    "min": {"type": "number"},
-                    "max": {"type": "number"},
-                    "x_min_log": {"type": "number"},
-                    "x_scale": {"type": "string"},
-                    "y_scale": {"type": "string"},
-                }
-            }},
-        }
-
     def get_info(self):
         return InfoImplementationMixin.get_info(self)
 
-    def calc_info_hash(self):
-        return "placeholder"
-
-    def calc_statistics_hash(self) -> bytes:
-        manifest = self.resource.get_manifest()
-        config = self.get_config()
-        score_filename = config["filename"]
-        return json.dumps({
-            "config": {
-                "gene_scores": config["gene_scores"],
-                "histograms": config["histograms"]
-            },
-            "score_file": manifest[score_filename].md5
-        }, sort_keys=True, indent=2).encode()
-
     def add_statistics_build_tasks(self, task_graph, **kwargs) -> List[Task]:
         save_tasks = []
-        for score_id, score in self.scores.items():
-            if score.histogram_config is None:
+        for score_id, score_config in self.score_configs.items():
+            if score_config.get("histogram_config") is None:
                 logger.warning(
                     "Gene score %s in %s has no histogram config!",
                     score_id, self.resource.resource_id
@@ -433,12 +165,14 @@ class GeneScoreCollection(
 
     @staticmethod
     def _calc_histogram(resource, score_id):
-        score = GeneScore.load_gene_score_from_resource(resource, score_id)
-        histogram_config = score.histogram_config
+        score = build_gene_score_from_resource(resource)
+        histogram_config = score.score_configs[score_id].get(
+            "number_hist"
+        )
         if "min" not in histogram_config:
-            histogram_config["min"] = score.min()
+            histogram_config["min"] = score.get_min(score_id)
         if "max" not in histogram_config:
-            histogram_config["max"] = score.max()
+            histogram_config["max"] = score.get_max(score_id)
 
         legacy_keys = set(["x_scale", "y_scale", "bins", "min", "max"])
         if len(legacy_keys.intersection(set(histogram_config.keys()))):
@@ -450,7 +184,7 @@ class GeneScoreCollection(
 
         # histogram_config = NumberHistogramConfig.from_dict(histogram_config)
         histogram = NumberHistogram(config)
-        for value in score.values():
+        for value in score.get_values(score_id):
             histogram.add_value(value)
         return histogram
 
@@ -473,6 +207,224 @@ class GeneScoreCollection(
             histogram.plot(outfile, score_id)
         return histogram
 
+    def calc_info_hash(self):
+        return "placeholder"
+
+    def calc_statistics_hash(self) -> bytes:
+        manifest = self.resource.get_manifest()
+        config = self.get_config()
+        score_filename = config["filename"]
+        return json.dumps({
+            "score_config": [(
+                score_id,
+                self.gene_score.get_desc(score_id),
+                self.gene_score.get_min(score_id),
+                self.gene_score.get_max(score_id),
+                self.gene_score.get_range(score_id),
+                self.gene_score.get_x_scale(score_id),
+                self.gene_score.get_y_scale(score_id)
+            ) for score_id in self.gene_score.get_scores()],
+            "score_file": manifest[score_filename].md5
+        }, sort_keys=True, indent=2).encode()
+
+
+class GeneScore(
+    ResourceConfigValidationMixin
+):
+    """Class used to represent gene scores."""
+
+    def __init__(self, resource):
+        super().__init__()
+
+        if resource.get_type() != "gene_score":
+            logger.error(
+                "invalid resource type for gene score %s",
+                resource.resource_id)
+            raise ValueError(f"invalid resource type {resource.resource_id}")
+
+        self.resource = resource
+        self.config = self.validate_and_normalize_schema(
+            resource.get_config(), resource
+        )
+        assert "filename" in self.config
+        filename = self.config["filename"]
+
+        with resource.open_raw_file(filename) as file:
+            self.df = pd.read_csv(file)
+        self.statistics = None
+
+        if self.config.get("scores") is None:
+            raise ValueError(f"missing scores config in {resource.get_id()}")
+        self.score_configs = {
+            score["id"]: score for score in
+            self.config["scores"]
+        }
+
+        for score_id, config in self.score_configs.items():
+            if config.get("number_hist") is None:
+                raise ValueError(
+                    "Missing histogram config for "
+                    f"{score_id} in {resource.get_id()}"
+                )
+        self.histograms = {
+            score["id"]: None for score in
+            self.config["scores"]
+        }
+
+    def get_min(self, score_id):
+        """Return minimal score value."""
+        return self.df[score_id].min()
+
+    def get_max(self, score_id):
+        """Return maximal score value."""
+        return self.df[score_id].max()
+
+    def get_range(self, score_id):
+        if score_id not in self.histograms:
+            logger.warning("Score %s does not exist!", score_id)
+            return None
+        if self.histograms[score_id] is not None:
+            return self.histograms[score_id].range
+        return None
+
+    def get_desc(self, score_id):
+        if score_id not in self.score_configs:
+            logger.warning("Score %s does not exist!", score_id)
+            return None
+        return self.score_configs.get(score_id).get("desc")
+
+    def get_values(self, score_id):
+        """Return a list of score values."""
+        return self.df[score_id].values
+
+    def get_x_scale(self, score_id):
+        """Return the scale type of the X axis."""
+        if score_id not in self.score_configs:
+            logger.warning("Score %s does not exist!", score_id)
+            return None
+        if "number_hist" in self.score_configs[score_id]:
+            config = self.score_configs[score_id]["number_hist"]
+            x_log_scale = config["x_log_scale"]
+            return "log" if x_log_scale else "linear"
+        return "linear"
+
+    def get_y_scale(self, score_id):
+        """Return the scale type of the Y axis."""
+        if score_id not in self.score_configs:
+            logger.warning("Score %s does not exist!", score_id)
+            return None
+        if "number_hist" in self.score_configs[score_id]:
+            config = self.score_configs[score_id]["number_hist"]
+            y_log_scale = config["y_log_scale"]
+            return "log" if y_log_scale else "linear"
+        return "linear"
+
+    def get_genes(self, score_id, score_min=None, score_max=None):
+        """Return set of genes for a score between a min and max value."""
+        score_value_df = self.get_score_df(score_id)
+        df = score_value_df[score_id]
+        if score_min is None or score_min < df.min() or score_min > df.max():
+            score_min = float("-inf")
+        if score_max is None or score_max < df.min() or score_max > df.max():
+            score_max = float("inf")
+
+
+        index = np.logical_and(df.values >= score_min, df.values < score_max)
+        index = np.logical_and(index, df.notnull())
+        genes = score_value_df[index].gene
+        return set(genes.values)
+
+    def get_scores(self):
+        return list(self.score_configs.keys())
+
+    def _to_dict(self, score_id):
+        """Return dictionary of all defined scores keyed by gene symbol."""
+        return self.df.set_index("gene")[score_id].to_dict()
+
+    def get_gene_value(self, score_id, gene_symbol):
+        """Return the value for a given gene symbol."""
+        symbol_values = self._to_dict(score_id)
+        return symbol_values.get(gene_symbol)
+
+    def _to_list(self, df=None):
+        if df is None:
+            df = self.df
+        columns = df.applymap(str).columns.tolist()
+        values = df.applymap(str).values.tolist()
+
+        return itertools.chain([columns], values)
+
+    def to_tsv(self, score_id=None):
+        """Return a TSV version of the gene score data."""
+        df = None
+        if score_id is not None:
+            df = self.get_score_df(score_id)
+        return map(join_line, self._to_list(df))
+
+    def get_score_df(self, score_id):
+        return self.df[["gene", score_id]].copy()
+
+    def get_statistics(self):
+        if self.statistics is None:
+            self.statistics = GeneScoreStatistics.build_statistics(
+                self.resource
+            )
+        return self.statistics
+
+    @property
+    def files(self):
+        files = set()
+        files.add(self.resource.get_config().get("filename"))
+        return files
+
+    @staticmethod
+    def get_schema():
+        return {
+            **get_base_resource_schema(),
+            "filename": {"type": "string"},
+            "scores": {"type": "list", "schema": {
+                "type": "dict",
+                "schema": {
+                    "id": {"type": "string"},
+                    "desc": {"type": "string"},
+                    "number_hist": {"type": "dict", "schema": {
+                        "number_of_bins": {"type": "number"},
+                        "view_range": {"type": "dict", "schema": {
+                            "min": {"type": "number"},
+                            "max": {"type": "number"},
+                        }},
+                        "x_log_scale": {"type": "boolean"},
+                        "y_log_scale": {"type": "boolean"},
+                        "x_min_log": {"type": "number"},
+                    }}
+                }
+            }},
+        }
+
+    def get_histogram(self, score_id):
+        if self.histograms[score_id] is None:
+            statistics = self.get_statistics()
+            self.histograms[score_id] = statistics.get_histogram(score_id)
+
+        return self.histograms[score_id]
+
+    @staticmethod
+    def get_histogram_file(score_id):
+        GeneScoreStatistics.get_histogram_file(score_id)
+
+    @staticmethod
+    def get_histogram_image_file(score_id):
+        GeneScoreStatistics.get_histogram_image_file(score_id)
+
+
+
+@dataclass
+class ScoreDesc:
+    resource_id: str
+    score_id: str
+    number_hist: Optional[NumberHistogram]
+    description: Optional[str]
+
 
 class GeneScoresDb:
     """
@@ -481,45 +433,75 @@ class GeneScoresDb:
     Used by Web interface.
     """
 
-    def __init__(self, collections):
+    def __init__(self, gene_scores: list[GeneScore]):
         super().__init__()
-        self.scores = {}
-        for collection in collections:
-            for score_id, score in collection.scores.items():
-                self.scores[score_id] = score
+        self.score_descs = {}
+        self.gene_scores = {}
+        for gene_score in gene_scores:
+            self.gene_scores[gene_score.resource.get_id()] = gene_score
+            for score_desc in GeneScoresDb._build_descs_from_score(gene_score):
+                self.score_descs[score_desc.score_id] = score_desc
+
+    @staticmethod
+    def _build_descs_from_score(gene_score: GeneScore) -> list[ScoreDesc]:
+        result = []
+        for score_id in gene_score.get_scores():
+            result.append(ScoreDesc(
+                resource_id=gene_score.resource.get_id(),
+                score_id=score_id,
+                number_hist=gene_score.get_histogram(score_id),
+                description=gene_score.get_desc(score_id)
+            ))
+        return result
+
+    def get_score_ids(self):
+        """Return a list of the IDs of all the gene scores contained."""
+        return sorted(list(self.score_descs.keys()))
 
     def get_gene_score_ids(self):
         """Return a list of the IDs of all the gene scores contained."""
-        return sorted(list(self.scores.keys()))
+        return sorted(list(self.gene_scores.keys()))
 
     def get_gene_scores(self):
         """Return a list of all the gene scores contained in the DB."""
-        return [self.get_gene_score(score_id) for score_id in self.scores]
+        return list(self.gene_scores.values())
+
+    def get_scores(self):
+        return list(self.score_descs.values())
 
     def get_gene_score(self, score_id):
         """Return a given gene score."""
-        if score_id not in self.scores:
+        if score_id not in self.gene_scores:
             return None
-        assert self.scores[score_id].df is not None
-        return self.scores[score_id]
+        assert self.gene_scores[score_id].df is not None
+        return self.gene_scores[score_id]
+
+    def get_score_desc(self, score_id):
+        if score_id not in self.score_descs:
+            return None
+        return self.score_descs[score_id]
 
     def __getitem__(self, score_id):
-        if score_id not in self.scores:
-            raise ValueError(f"gene score {score_id} not found")
+        if score_id not in self.score_descs:
+            raise ValueError(f"score {score_id} not found")
 
-        res = self.scores[score_id]
-        if res.df is None:
-            res.load_scores()
+        res = self.score_descs[score_id]
         return res
 
     def __contains__(self, score_id):
-        return score_id in self.scores
+        return score_id in self.score_descs
 
     def __len__(self):
-        return len(self.scores)
+        return len(self.score_descs)
 
 
-def build_gene_score_collection_from_resource(resource: GenomicResource):
+def build_gene_score_from_resource(resource: GenomicResource):
     if resource is None:
         raise ValueError(f"missing resource {resource}")
-    return GeneScoreCollection(resource)
+    return GeneScore(resource)
+
+
+def build_gene_score_implementation_from_resource(resource: GenomicResource):
+    if resource is None:
+        raise ValueError(f"missing resource {resource}")
+    return GeneScoreImplementation(resource)
