@@ -215,9 +215,15 @@ class GeneScoreImplementation(
         config = self.get_config()
         score_filename = config["filename"]
         return json.dumps({
-            "config": {
-                "scores": config["scores"],
-            },
+            "score_config": [(
+                score_id,
+                self.gene_score.get_desc(score_id),
+                self.gene_score.get_min(score_id),
+                self.gene_score.get_max(score_id),
+                self.gene_score.get_range(score_id),
+                self.gene_score.get_x_scale(score_id),
+                self.gene_score.get_y_scale(score_id)
+            ) for score_id in self.gene_score.get_scores()],
             "score_file": manifest[score_filename].md5
         }, sort_keys=True, indent=2).encode()
 
