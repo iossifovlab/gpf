@@ -12,10 +12,12 @@ import { concatMap, debounceTime, fromEvent, of, tap, zip } from 'rxjs';
 export class FederationCredentialsComponent implements OnInit {
   public credentials: FederationCredential[];
   public creationError = '';
+  public renameError = '';
   public modal: NgbModalRef;
   public temporaryShownCredentials = '';
   @ViewChild('credentialModal') public credentialModal: ElementRef;
   @ViewChild('credentialNameBox') public newCredentialName: ElementRef;
+  @ViewChild('credentialRename') public credentialRename: ElementRef;
   @ViewChild('createButton') public createButton: ElementRef;
   public currentCredentialEdit = '';
 
@@ -78,6 +80,14 @@ export class FederationCredentialsComponent implements OnInit {
   }
 
   public edit(credential: FederationCredential, newName: string): void {
+    if (this.credentials.find(cred => cred.name === newName) !== undefined) {
+      this.renameError = 'Credential with such name already exists!';
+      return;
+    }
+    if (!newName.trim()) {
+      this.renameError = 'Please fill the field!';
+      return;
+    }
     this.usersService.updateFederationCredentials(credential.name, newName)
       .subscribe((res: string) => {
         credential.name = res;
