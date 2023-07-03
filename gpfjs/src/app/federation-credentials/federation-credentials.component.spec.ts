@@ -109,9 +109,24 @@ describe('FederationCredentialsComponent', () => {
   });
 
   it('should rename credential', () => {
+    fixture.detectChanges();
     const credential = new FederationCredential('rename');
     component.edit(credential, 'newName');
     fixture.detectChanges();
     expect(credential.name).toBe('newName');
+  });
+
+  it('should not rename credential', () => {
+    fixture.detectChanges();
+    const credential = new FederationCredential('rename');
+    component.edit(credential, '  ');
+    fixture.detectChanges();
+    expect(component.renameError).toBe('Please fill the field!');
+    expect(credential.name).toBe('rename');
+
+    component.edit(credential, 'name1');
+    fixture.detectChanges();
+    expect(component.renameError).toBe('Credential with such name already exists!');
+    expect(credential.name).toBe('rename');
   });
 });
