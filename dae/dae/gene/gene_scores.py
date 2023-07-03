@@ -112,15 +112,18 @@ class GeneScoreImplementation(
             {% if score["number_hist"] %}
             <div class="histogram">
             <h4>{{ score["id"] }}</h1>
-            <img src="{{ data["statistics_dir"] }}/{{ hist["img_file"] }}"
+            <img src="{{ data["statistics_dir"] }}/{{score["number_hist"]["img_file"] }}"
             width="200px"
-            alt={{ hist["score"] }}
-            title={{ hist["score"] }}>
+            alt={{ score["id"] }}
+            title={{ score["id"] }}>
             </div>
             {% endif %}
             {% endfor %}
             {% endblock %}
         """))
+
+    def get_statistics(self):
+        return self.gene_score.get_statistics()
 
     def _get_template_data(self):
         data = copy.deepcopy(self.config)
@@ -141,7 +144,7 @@ class GeneScoreImplementation(
 
     def add_statistics_build_tasks(self, task_graph, **kwargs) -> List[Task]:
         save_tasks = []
-        for score_id, score_config in self.score_configs.items():
+        for score_id, score_config in self.gene_score.score_configs.items():
             if score_config.get("histogram_config") is None:
                 logger.warning(
                     "Gene score %s in %s has no histogram config!",
@@ -327,7 +330,6 @@ class GeneScore(
             score_min = float("-inf")
         if score_max is None or score_max < df.min() or score_max > df.max():
             score_max = float("inf")
-
 
         index = np.logical_and(df.values >= score_min, df.values < score_max)
         index = np.logical_and(index, df.notnull())
