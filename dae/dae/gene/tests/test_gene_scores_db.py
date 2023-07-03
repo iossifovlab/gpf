@@ -3,7 +3,7 @@
 import textwrap
 import pytest
 
-from dae.gene.gene_scores import GeneScoresDb, GeneScore, \
+from dae.gene.gene_scores import GeneScoresDb, \
     build_gene_score_from_resource
 from dae.genomic_resources.testing import build_inmemory_test_repository
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME

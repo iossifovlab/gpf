@@ -112,7 +112,8 @@ class GeneScoreImplementation(
             {% if score["number_hist"] %}
             <div class="histogram">
             <h4>{{ score["id"] }}</h1>
-            <img src="{{ data["statistics_dir"] }}/{{score["number_hist"]["img_file"] }}"
+            <img src="{{ data["statistics_dir"] }}/{{
+                score["number_hist"]["img_file"] }}"
             width="200px"
             alt={{ score["id"] }}
             title={{ score["id"] }}>
@@ -287,14 +288,14 @@ class GeneScore(
             logger.warning("Score %s does not exist!", score_id)
             return None
         if self.histograms[score_id] is not None:
-            return self.histograms[score_id].range
+            return self.histograms[score_id].range  # type: ignore
         return None
 
     def get_desc(self, score_id):
         if score_id not in self.score_configs:
             logger.warning("Score %s does not exist!", score_id)
             return None
-        return self.score_configs.get(score_id).get("desc")
+        return self.score_configs.get(score_id).get("desc")  # type: ignore
 
     def get_values(self, score_id):
         """Return a list of score values."""
@@ -417,7 +418,6 @@ class GeneScore(
     @staticmethod
     def get_histogram_image_file(score_id):
         GeneScoreStatistics.get_histogram_image_file(score_id)
-
 
 
 @dataclass

@@ -6,7 +6,7 @@ import numpy as np
 
 from dae.genomic_resources.testing import build_inmemory_test_repository
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME
-from dae.gene.gene_scores import GeneScore, build_gene_score_from_resource, \
+from dae.gene.gene_scores import build_gene_score_from_resource, \
     GeneScoreImplementation
 
 
@@ -190,7 +190,7 @@ def test_load_wrong_resource_type(scores_repo):
 def test_load_gene_score_without_histogram(scores_repo):
     res = scores_repo.get_resource("OopsHist")
     with pytest.raises(
-        ValueError, 
+        ValueError,
         match="Missing histogram config for linear in OopsHist"
     ):
         build_gene_score_from_resource(res)
