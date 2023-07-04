@@ -54,8 +54,16 @@ export class AutismGeneProfilesTablePage extends BasePage {
     return this.multipleSelectMenu.find('input[name="search"]');
   }
 
+  public get allMultipleSelectMenuOptions(): element {
+    return this.multipleSelectMenu.find('.cdk-drag');
+  }
+
   public get allMultipleSelectMenuCheckboxes(): element {
     return this.multipleSelectMenu.find('label input');
+  }
+
+  public multipleSelectMenuCheckboxText(text: string): element {
+    return this.multipleSelectMenu.find('label span').contains(text);
   }
 
   public get allSortingButtons(): element {
@@ -82,10 +90,18 @@ export class AutismGeneProfilesTablePage extends BasePage {
     return cy.get('.compare-gene-item');
   }
 
+  public get allColumnHeaders(): element {
+    return cy.get('.header-cell-content-span');
+  }
+
+  public columnHeader(columnName: string): element {
+    return cy.get('.header-cell').contains(columnName);
+  }
+
   public clickSortButton(columnName: string): void {
-    cy.get('th').contains(columnName).then(column => {
+    cy.get('div').contains(columnName).then(column => {
       cy.wrap(column).parent().within(button => {
-        cy.wrap(button).get('.clickable').click();
+        cy.wrap(button).get('.clickable').click({ multiple: true, force: true});
       });
     });
   }
@@ -116,7 +132,7 @@ export class AutismGeneProfilesTablePage extends BasePage {
       denovo_lgds: genotypeBlockPage.effectTypesGroups.get('LGDs'),
       denovo_missense: ['missense'],
       denovo_intron: ['intron']
-    }
+    };
     const effectModelFromGenotypeWrapper = new Map<string, string>();
     for (const value in studyWrapper) {
       effectModelFromGenotypeWrapper.set(value, studyWrapper[value]);

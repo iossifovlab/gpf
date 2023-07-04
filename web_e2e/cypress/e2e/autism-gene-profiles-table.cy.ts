@@ -1,4 +1,5 @@
 import { AutismGeneProfilesTablePage } from 'cypress/elements/autism-gene-profiles-table-page';
+import { GenotypeBlockPage } from 'cypress/elements/genotype-block-page';
 import { sidenavPageLinks } from 'cypress/elements/utils';
 
 describe('Autism gene profiles table tests', () => {
@@ -56,28 +57,23 @@ describe('Autism gene profiles table row data tests', () => {
   });
 });
 
-describe('Autism gene profiles table column filtering modal tests', {scrollBehavior: false}, () => {
+describe('Autism gene profiles table column filtering tests', {scrollBehavior: false}, () => {
   const page = new AutismGeneProfilesTablePage();
 
   beforeEach(() => {
     page.navigateToHome(false);
     page.navigateToSidenavPage(sidenavPageLinks.autismGeneProfiles);
-    page.autismGeneSetColumnFilteringButton.click();
   });
 
   it('should open autism gene sets dropdown after clicking on the autism gene sets columns filtering button', () => {
+    page.autismGeneSetColumnFilteringButton.click();
     page.multipleSelectMenu.should('be.visible');
-  });
-
-  it('should open gene sets dropdown and display the check/uncheck all button', () => {
     page.multipleSelectMenuCheckUncheckAllButton.should('be.visible');
-  });
-
-  it('should open gene sets dropdown and display the search input box', () => {
     page.multipleSelectMenuSearch.should('be.visible');
   });
 
   it('should check/uncheck all gene sets column filtering options using the check/uncheck all button', () => {
+    page.autismGeneSetColumnFilteringButton.click();
     page.allMultipleSelectMenuCheckboxes.each(element => {
       cy.wrap(element).should('be.checked');
     });
@@ -92,6 +88,7 @@ describe('Autism gene profiles table column filtering modal tests', {scrollBehav
   });
 
   it('should change the check/uncheck button text', () => {
+    page.autismGeneSetColumnFilteringButton.click();
     page.multipleSelectMenuCheckUncheckAllButton.should('have.text', 'Uncheck all');
 
     page.multipleSelectMenuCheckUncheckAllButton.click();
@@ -101,14 +98,107 @@ describe('Autism gene profiles table column filtering modal tests', {scrollBehav
     page.multipleSelectMenuCheckUncheckAllButton.should('have.text', 'Uncheck all');
   });
 
+
+  it('should test the check/uncheck button', () => {
+    page.autismGeneSetColumnFilteringButton.click();
+    page.multipleSelectMenuCheckUncheckAllButton.click();
+
+    page.columnHeader('Autism Gene Sets').should('not.exist');
+    page.columnHeader('autism candidates from Iossifov PNAS 2015').should('not.exist');
+    page.columnHeader('autism candidates from Sanders Neuron 2015').should('not.exist');
+    cy.get('body').click(0, 0);
+
+    page.categoryFilterButton.click();
+    page.multipleSelectMenuCheckboxText('Autism Gene Sets').should('not.be.checked');
+    page.multipleSelectMenuCheckboxText('Autism Gene Sets').click();
+    cy.get('body').click(0, 0);
+
+    page.autismGeneSetColumnFilteringButton.click();
+    page.columnHeader('Autism Gene Sets').should('be.visible');
+    page.columnHeader('autism candidates from Iossifov PNAS 2015').should('be.visible');
+    page.columnHeader('autism candidates from Sanders Neuron 2015').should('be.visible');
+  });
+
   it('should filter gene sets dropdown options using the search', () => {
+    page.autismGeneSetColumnFilteringButton.click();
     page.allMultipleSelectMenuCheckboxes.should('have.length', 2);
     page.multipleSelectMenuSearch.type('iossifov');
     page.allMultipleSelectMenuCheckboxes.should('have.length', 1);
   });
+
+  it('should uncheck gene set from autism gene sets dropdown and check table header', () => {
+    page.autismGeneSetColumnFilteringButton.click();
+    page.multipleSelectMenuCheckboxText('autism candidates from Sanders Neuron 2015').click();
+    page.columnHeader('autism candidates from Sanders Neuron 2015').should('not.exist');
+
+    page.multipleSelectMenuCheckboxText('autism candidates from Sanders Neuron 2015').click();
+    page.columnHeader('autism candidates from Sanders Neuron 2015').should('be.visible');
+  });
+
+  it('should uncheck iossifov_2014 and check table header', () => {
+    page.categoryFilterButton.click();
+    page.multipleSelectMenuCheckboxText('iossifov_2014').click();
+    page.columnHeader('affected').should('not.exist');
+    page.columnHeader('unaffected').should('not.exist');
+    page.columnHeader('LGDs').should('not.exist');
+    page.columnHeader('missense').should('not.exist');
+    page.columnHeader('intron').should('not.exist');
+    cy.get('.header-cell').should('have.length', 16);
+
+    page.multipleSelectMenuCheckboxText('iossifov_2014').click();
+    page.columnHeader('affected').should('be.visible');
+    page.columnHeader('unaffected').should('be.visible');
+    page.columnHeader('LGDs').should('be.visible');
+    page.columnHeader('missense').should('be.visible');
+    page.columnHeader('intron').should('be.visible');
+    cy.get('.header-cell').should('have.length', 25);
+  });
+
+  it('should drag and drop gene set and check table header', () => {
+    page.categoryFilterButton.click();
+
+    page.allMultipleSelectMenuOptions.first().should('have.text', 'Autism Gene Sets');
+    page.allColumnHeaders.eq(1).should('have.text', 'Autism Gene Sets');
+    page.allColumnHeaders.eq(2).should('have.text', 'autism candidates from Iossifov PNAS 2015');
+    page.allColumnHeaders.eq(3).should('have.text', 'autism candidates from Sanders Neuron 2015');
+
+    page.multipleSelectMenuCheckboxText('Autism Gene Sets')
+      .trigger('mousedown', {
+        button: 0,
+        pageX: 0,
+        pageY: 0,
+        force: true
+      })
+      .trigger('mousemove', {
+        force: true
+      })
+      .trigger('mousemove', {
+        button: 0,
+        pageX: 430,
+        pageY: 230,
+        force: true
+      })
+      .trigger('mouseup', {
+        button: 0,
+        force: true,
+      });
+
+    page.allMultipleSelectMenuOptions.first().should('have.text', 'Relevant Gene Sets');
+    page.allMultipleSelectMenuOptions.eq(1).should('have.text', 'Autism Gene Sets');
+
+    page.allColumnHeaders.eq(1).should('have.text', 'Relevant Gene Sets');
+    page.allColumnHeaders.eq(2).should('have.text', 'CHD8 target genes');
+    page.allColumnHeaders.eq(3).should('have.text', 'chromatin modifiers');
+    page.allColumnHeaders.eq(4).should('have.text', 'essential genes');
+    page.allColumnHeaders.eq(5).should('have.text', 'FMRP Darnell');
+
+    page.allColumnHeaders.eq(6).should('have.text', 'Autism Gene Sets');
+    page.allColumnHeaders.eq(7).should('have.text', 'autism candidates from Iossifov PNAS 2015');
+    page.allColumnHeaders.eq(8).should('have.text', 'autism candidates from Sanders Neuron 2015');
+  });
 });
 
-describe('Autism gene profiles table row highlight tests', {scrollBehavior: false}, () => {
+describe('Autism gene profiles gene comparison tests', {scrollBehavior: false}, () => {
   const page = new AutismGeneProfilesTablePage();
   const oddHighlightColor = 'rgb(247, 247, 203)';
   const evenHighlightColor = 'rgb(255, 255, 214)';
@@ -167,6 +257,43 @@ describe('Autism gene profiles table row highlight tests', {scrollBehavior: fals
     page.allTableRows.eq(1).should('not.have.class', 'row-highlight');
     page.allTableRows.eq(2).should('not.have.class', 'row-highlight');
   });
+
+  it('should select multiple genes and check whether the modal appears correctly', () => {
+    page.compareGenesModal.should('not.exist');
+
+    page.allTableRows.eq(0).click('left', {ctrlKey: true});
+    page.allTableRows.eq(1).click('left', {ctrlKey: true});
+    page.allTableRows.eq(2).click('left', {ctrlKey: true});
+    page.compareGenesModal.should('be.visible');
+    page.compareGeneItems.should('have.length', 3);
+
+    page.allTableRows.eq(0).click('left', {ctrlKey: true});
+    page.allTableRows.eq(1).click('left', {ctrlKey: true});
+    page.allTableRows.eq(2).click('left', {ctrlKey: true});
+    page.compareGenesModal.should('not.exist');
+  });
+
+  it('should select multiple genes and remove them from modal', () => {
+    page.compareGenesModal.should('not.exist');
+
+    page.allTableRows.eq(0).click('left', {ctrlKey: true});
+    page.allTableRows.eq(1).click('left', {ctrlKey: true});
+    page.allTableRows.eq(2).click('left', {ctrlKey: true});
+    page.compareGenesModal.should('be.visible');
+    page.compareGeneItems.should('have.length', 3);
+
+    page.findButtonInComponentContainingText('.compare-genes-close', '×').click();
+    page.allTableRows.eq(0).should('not.have.class', 'row-highlight');
+    page.compareGeneItems.should('have.length', 2);
+
+    page.findButtonInComponentContainingText('.compare-genes-close', '×').click();
+    page.allTableRows.eq(1).should('not.have.class', 'row-highlight');
+    page.compareGeneItems.should('have.length', 1);
+
+    page.findButtonInComponentContainingText('.compare-genes-close', '×').click();
+    page.allTableRows.eq(2).should('not.have.class', 'row-highlight');
+    page.compareGenesModal.should('not.exist');
+  });
 });
 
 describe('Autism gene profiles table functionality tests', () => {
@@ -181,158 +308,126 @@ describe('Autism gene profiles table functionality tests', () => {
     page.navigateToSidenavPage(sidenavPageLinks.autismGeneProfiles);
   });
 
-  // it('should test statistic to genotype browser test', () => {
-  //   page.loginAdmin();
+  it('should sort genes by autism gene sets', () => {
+    page.geneSearchInput.type('RAPGEF');
+    cy.wait(500);
+    page.allTableRows.should('have.length', 4);
 
-  //   cy.intercept({
-  //     method: 'POST',
-  //     url: '/gpf/api/v3/query_state/save'
-  //   }).as('query');
-  //   page.geneSearchInput.type('CHD8');
-  //   page.allTableRows.should('have.length', 1);
-  //   cy.get('tr.ng-star-inserted > :nth-child(13)').click();
-  //   cy.wrap('denovo_lgds').as('effectType');
-  //   cy.wait('@query');
-  //   cy.get('@query').then(req => {
-  //     if (req !== null) {
-  //       const genotypeBlockPage = new GenotypeBlockPage();
-  //       cy.visit(Cypress.config().baseUrl + '/load-query/' + req.response.body.uuid);
-  //       genotypeBlockPage.findCheckboxInComponentContainingText('.pedigree-selector-card', 'affected').parent().within(checkBoxes => {
-  //       // add waitForPageToLoad logic after visit...
-  //         cy.wrap(checkBoxes).get('input').should('be.checked');
-  //         cy.get('@effectType').then(effectType => {
-  //           page.getStudyExpectedDataFromGenotype(effectType);
-  //         });
-  //       });
-  //       page.getStudyActualDataFromGenotype();
-  //       cy.get('@genotypeExpectedWrapper').then(expected => {
-  //         cy.get('@genotypeActualWrapper').then(actual => {
-  //           expect(expected).to.deep.equal(actual);
-  //         });
-  //       });
-  //     }
-  //   });
-  // });
+    const dataArr = [[0, 0], [0, 0], [0, 0], [1, 0]];
 
-  // it('should sort genes by autism gene sets', () => {
-  //   page.geneSearchInput.type('RAPGEF');
-  //   page.allTableRows.should('have.length', 4);
+    page.allSortingButtons.eq(0).click({force: true});
+    dataArr.forEach((allRows, allRowsIndex) => {
+      allRows.forEach((rowData, rowIndex) => {
+        page.allTableRows.eq(allRowsIndex).within(row => {
+          cy.wrap(row).get('div').eq(rowIndex+1).should('have.text', rowData === 1 ? '✓' : '');
+        });
+      });
+    });
 
-  //   const dataArr = [[0, 0, 1], [0, 0, 0], [0, 0, 0], [1, 0, 0]];
+    dataArr.sort((a, b) => b[0] - a[0]);
 
-  //   page.allSortingButtons.eq(0).click();
-  //   dataArr.forEach((allRows, allRowsIndex) => {
-  //     allRows.forEach((rowData, rowIndex) => {
-  //       page.allTableRows.eq(allRowsIndex).within(row => {
-  //         cy.wrap(row).get('td').eq(rowIndex+1).should('have.text', rowData === 1 ? '✓' : '');
-  //       });
-  //     });
-  //   });
+    page.allSortingButtons.eq(0).click({force: true});
+    dataArr.forEach((allRows, allRowsIndex) => {
+      allRows.forEach((rowData, rowIndex) => {
+        page.allTableRows.eq(allRowsIndex).within(row => {
+          cy.wrap(row).get('div').eq(rowIndex+1).should('have.text', rowData === 1 ? '✓' : '');
+        });
+      });
+    });
+  });
 
-  //   dataArr.sort((a, b) => b[0] - a[0]);
+  it('should sort genes by relevant gene sets', () => {
+    page.geneSearchInput.type('RAPGEF');
+    page.allTableRows.should('have.length', 4);
 
-  //   page.allSortingButtons.eq(0).click();
-  //   dataArr.forEach((allRows, allRowsIndex) => {
-  //     allRows.forEach((rowData, rowIndex) => {
-  //       page.allTableRows.eq(allRowsIndex).within(row => {
-  //         cy.wrap(row).get('td').eq(rowIndex+1).should('have.text', rowData === 1 ? '✓' : '');
-  //       });
-  //     });
-  //   });
-  // });
+    page.clickSortButton('Relevant Gene Sets');
+    page.allTableRows.should('have.length', 4);
 
-  // it('should sort genes by relevant gene sets', () => {
-  //   page.geneSearchInput.type('RAPGEF');
-  //   page.allTableRows.should('have.length', 4);
+    const dataArr = [
+      [1, 0, 1, 1],
+      [0, 0, 1, 1],
+      [0, 0, 0, 1],
+      [0, 0, 0, 1]
+    ];
 
-  //   page.clickSortButton('Relevant Gene Sets');
-  //   page.allTableRows.should('have.length', 4);
+    dataArr.forEach((allRows, allRowsIndex) => {
+      allRows.forEach((rowData, rowIndex) => {
+        page.allTableRows.eq(allRowsIndex).within(row => {
+          cy.wrap(row).get('div').eq(rowIndex + 3).should('have.text', rowData === 1 ? '✓' : '');
+        });
+      });
+    });
 
-  //   const dataArr = [
-  //     [1, 0, 1, 1],
-  //     [0, 0, 1, 1],
-  //     [0, 0, 0, 1],
-  //     [0, 0, 0, 1]
-  //   ];
+    page.clickSortButton('Relevant Gene Sets');
+    page.allTableRows.should('have.length', 4);
 
-  //   dataArr.forEach((allRows, allRowsIndex) => {
-  //     allRows.forEach((rowData, rowIndex) => {
-  //       page.allTableRows.eq(allRowsIndex).within(row => {
-  //         cy.wrap(row).get('td').eq(rowIndex + 3).should('have.text', rowData === 1 ? '✓' : '');
-  //       });
-  //     });
-  //   });
+    dataArr.reverse();
+    dataArr.forEach((allRows, allRowsIndex) => {
+      allRows.forEach((rowData, rowIndex) => {
+        page.allTableRows.eq(allRowsIndex).within(row => {
+          cy.wrap(row).get('div').eq(rowIndex+3).should('have.text', rowData === 1 ? '✓' : '');
+        });
+      });
+    });
+  });
 
-  //   page.clickSortButton('Relevant Gene Sets');
-  //   page.allTableRows.should('have.length', 4);
+  it('should test autism scores', () => {
+    page.geneSearchInput.type('CHD');
+    page.allTableRows.should('have.length', 15);
 
-  //   dataArr.reverse();
-  //   dataArr.forEach((allRows, allRowsIndex) => {
-  //     allRows.forEach((rowData, rowIndex) => {
-  //       page.allTableRows.eq(allRowsIndex).within(row => {
-  //         cy.wrap(row).get('td').eq(rowIndex+3).should('have.text', rowData === 1 ? '✓' : '');
-  //       });
-  //     });
-  //   });
-  // });
+    page.clickSortButton('SFARI gene score');
 
-  // it('should test autism scores', () => {
-  //   page.geneSearchInput.type('CHD');
-  //   page.allTableRows.should('have.length', 15);
+    const dataArr = [3, 1, 1, 1, 1];
+    dataArr.forEach((rowData, allRowsIndex) => {
+      page.allTableRows.should('have.length', 15);
+      page.allTableRows.eq(allRowsIndex).within(row => {
+        cy.wrap(row).get('div').eq(7).should('have.text', rowData === null ? '' : rowData);
+      });
+    });
 
-  //   page.clickSortButton('SFARI_gene_score');
+    dataArr.reverse();
+    page.clickSortButton('SFARI gene score');
 
-  //   const dataArr = [2, 1, null];
-  //   dataArr.forEach((rowData, allRowsIndex) => {
-  //     page.allTableRows.should('have.length', 15);
-  //     page.allTableRows.eq(allRowsIndex).within(row => {
-  //       cy.wrap(row).get('td').eq(7).should('have.text', rowData === null ? '' : rowData);
-  //     });
-  //   });
+    dataArr.forEach((rowData, allRowsIndex) => {
+      page.allTableRows.should('have.length', 15);
+      page.allTableRows.eq(allRowsIndex).within(row => {
+        cy.wrap(row).get('div').eq(7).should('have.text', rowData === null ? '' : rowData);
+      });
+    });
+  });
 
-  //   dataArr.reverse();
-  //   page.clickSortButton('SFARI_gene_score');
+  it('should compare protection scores', () => {
+    page.geneSearchInput.type('RAPGEF');
+    page.allTableRows.should('have.length', 4);
 
-  //   dataArr.forEach((rowData, allRowsIndex) => {
-  //     page.allTableRows.should('have.length', 15);
-  //     page.allTableRows.eq(allRowsIndex).within(row => {
-  //       cy.wrap(row).get('td').eq(7).should('have.text', rowData === null ? '' : rowData);
-  //     });
-  //   });
-  // });
+    [
+      ['RVIS_rank', 2208.5, 449, 2187.5, 383],
+      ['LGD_rank', 10012.5, 1838.5, 737, 299.5],
+      ['pLI_rank', 3433, 374, 2574, 659],
+      ['pRec_rank', 13429, 17823, 14843, 17507]
+    ].forEach((dataArray, columnIndex) => {
+      page.clickSortButton(dataArray[0] as string);
+      const valuesArray = dataArray.splice(1);
+      valuesArray.sort((a: number, b: number) => b - a);
+      valuesArray.forEach((rowData, rowIndex) => {
+        page.allTableRows.should('have.length', 4);
+        page.allTableRows.eq(rowIndex).within(row => {
+          cy.wrap(row).get('div').eq(8 + columnIndex).should('have.text', rowData);
+        });
+      });
 
-  // it('should compare protection scores', () => {
-  //   page.geneSearchInput.type('RAPGEF');
-  //   page.allTableRows.should('have.length', 4);
+      page.clickSortButton(dataArray[0] as string);
+      valuesArray.sort((a: number, b: number) => a - b);
+      valuesArray.forEach((rowData, rowIndex) => {
+        page.allTableRows.should('have.length', 4);
+        page.allTableRows.eq(rowIndex).within(row => {
+          cy.wrap(row).get('div').eq(8 + columnIndex).should('have.text', rowData);
+        });
+      });
+    });
+  });
 
-  //   [
-  //     ['RVIS_rank', 2208.5, 449, 2187.5, 383],
-  //     ['LGD_rank', 10012.5, 1838.5, 737, 299.5],
-  //     ['pLI_rank', 3433, 374, 2574, 659],
-  //     ['pRec_rank', 13429, 17823, 14843, 17507]
-  //   ].forEach((dataArray, columnIndex) => {
-  //     page.clickSortButton(dataArray[0]);
-  //     const valuesArray = dataArray.splice(1);
-  //     valuesArray.sort((a, b) => b - a);
-  //     valuesArray.forEach((rowData, rowIndex) => {
-  //       page.allTableRows.should('have.length', 4);
-  //       page.allTableRows.eq(rowIndex).within(row => {
-  //         cy.wrap(row).get('td').eq(8 + columnIndex).should('have.text', rowData);
-  //       });
-  //     });
-
-  //     page.clickSortButton(dataArray[0]);
-  //     valuesArray.sort((a, b) => a - b);
-  //     valuesArray.forEach((rowData, rowIndex) => {
-  //       page.allTableRows.should('have.length', 4);
-  //       page.allTableRows.eq(rowIndex).within(row => {
-  //         cy.wrap(row).get('td').eq(8 + columnIndex).should('have.text', rowData);
-  //       });
-  //     });
-  //   });
-  // });
-
-  it('should show nothing found when search query dosent match', () => {
+  it('should show nothing found when search query doesn\'t match', () => {
     page.nothingFound.should('not.be.visible');
 
     page.geneSearchInput.type('ewoqoqwekwoqkeowqkeowqkeoqwk');
@@ -366,42 +461,44 @@ describe('Autism gene profiles table functionality tests', () => {
       cy.get('@pageEndY').should('equal', yScroll);
     });
   });
+
+  it('should test statistic to genotype browser test', () => {
+    page.loginAdmin();
+
+    cy.intercept({
+      method: 'POST',
+      url: '/gpf/api/v3/query_state/save'
+    }).as('query');
+    page.geneSearchInput.type('CHD8');
+    page.allTableRows.should('have.length', 1);
+
+    cy.window().then(win => {
+      cy.stub(win, 'open');
+    });
+    page.allTableCells.eq(12).click();
+    cy.wrap('denovo_lgds').as('effectType');
+    cy.wait('@query');
+    cy.get('@query').then(req => {
+      if (req !== null) {
+        const genotypeBlockPage = new GenotypeBlockPage();
+        cy.visit(Cypress.config().baseUrl + '/load-query/' + req['response'].body.uuid);
+        genotypeBlockPage.findCheckboxInComponentContainingText('.pedigree-selector-card', 'affected')
+          .parent().within(checkBoxes => {
+          // add waitForPageToLoad logic after visit...
+            cy.wrap(checkBoxes).get('input').should('be.checked');
+            cy.get('@effectType').then(effectType => {
+              page.getStudyExpectedDataFromGenotype(effectType);
+            });
+          });
+        page.getStudyActualDataFromGenotype();
+        cy.get('@genotypeExpectedWrapper').then(expected => {
+          cy.get('@genotypeActualWrapper').then(actual => {
+            expect(expected).to.deep.equal(actual);
+          });
+        });
+      }
+    });
+
+    page.logout();
+  });
 });
-
-// describe('Autism gene profiles compare modal tests', () => {
-//   const page = new AutismGeneProfilesTablePage();
-//   const AutismGeneProfilesBlockPage = new AutismGeneProfilesBlockPage();
-
-//   before(() => {
-//     AutismGeneProfilesBlockPage.cleanup();
-//   });
-
-//   beforeEach(() => {
-//     AutismGeneProfilesBlockPage.navigateToHome();
-//     AutismGeneProfilesBlockPage.navigateToSidenavPage(sidenavPageLinks.autismGeneProfiles);
-//   });
-
-//   it('should select multiple genes and check whether the modal appears correctly', () => {
-//     cy.intercept('GET', '/gpf/api/v3/autism_gene_tool/genes/?page=1&symbol=**').as('tableRequest');
-
-//     page.compareGenesModal.should('not.be.visible');
-//     page.geneSearchInput.clear().type('MYT1L');
-//     cy.wait('@tableRequest');
-//     page.allTableRows.eq(0).click({ctrlKey: true});
-//     page.compareGenesModal.should('be.visible');
-//     page.compareGeneItems.should('have.length', 1);
-
-//     page.allTableRows.eq(0).click({ctrlKey: true});
-//     page.compareGenesModal.should('not.be.visible');
-
-//     page.allTableRows.eq(0).click({ctrlKey: true});
-//     page.compareGenesModal.should('be.visible');
-//     page.compareGeneItems.should('have.length', 1);
-
-//     page.geneSearchInput.clear().type('SPAST');
-//     cy.wait('@tableRequest');
-//     page.allTableRows.eq(0).click({ctrlKey: true});
-//     page.compareGeneItems.should('have.length', 2);
-//   });
-// });
-
