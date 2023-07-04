@@ -36,7 +36,7 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
   @ViewChild('stickySpan', {static: false}) public menuElement: ElementRef;
   @ViewChild('wrapperElement') public wrapperElement: ElementRef;
 
-  @Input() public readonly geneSymbol: string;
+  @Input() public geneSymbol: string;
   @Input() public config: AgpSingleViewConfig;
   @Input() public isInGeneCompare = false;
   public showTemplate = true;
@@ -91,6 +91,9 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
     this.gene$ = this.autismGeneProfilesService.getGene(this.geneSymbol);
     this.gene$.pipe(
       switchMap(gene => {
+        if (this.geneSymbol !== gene.geneSymbol) {
+          this.geneSymbol = gene.geneSymbol;
+        }
         gene.geneSets.forEach(element => {
           if (element.match(/sfari/i)) {
             this.isGeneInSFARI = true;

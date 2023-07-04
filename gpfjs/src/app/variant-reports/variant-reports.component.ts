@@ -15,7 +15,7 @@ import { NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
 export class PeopleCounterRowPipe implements PipeTransform {
   public transform(currentPeopleCounterRow: string): string {
     const result = currentPeopleCounterRow.replace('people_', '');
-    return result[0].toUpperCase() + result.substring(1);
+    return result[0] + result.substring(1);
   }
 }
 

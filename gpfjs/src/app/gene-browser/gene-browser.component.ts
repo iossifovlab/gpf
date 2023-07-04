@@ -163,7 +163,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
     }
 
     if (geneSymbol) {
-      this.geneSymbol = geneSymbol.toUpperCase().trim();
+      this.geneSymbol = geneSymbol.trim();
     }
     if (!this.geneSymbol) {
       return;
@@ -171,8 +171,9 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
     this.closeDropdown();
     try {
       this.selectedGene = await this.geneService.getGene(
-        this.geneSymbol.toUpperCase().trim()
+        this.geneSymbol.trim()
       ).pipe(first()).toPromise();
+      this.geneSymbol = this.selectedGene.geneSymbol;
     } catch (error) {
       console.error(error);
       this.showError = true;
@@ -180,7 +181,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
     }
 
     this.location.replaceState(
-      `datasets/${this.selectedDatasetId}/gene-browser/${this.geneSymbol.toUpperCase()}`
+      `datasets/${this.selectedDatasetId}/gene-browser/${this.geneSymbol}`
       + `?coding_only=${String(this.summaryVariantsFilter.codingOnly)}`
     );
 
@@ -313,7 +314,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
   private get requestParamsSummary(): Record<string, unknown> {
     const params = {
       datasetId: this.selectedDatasetId,
-      geneSymbols: [this.geneSymbol.toUpperCase().trim()],
+      geneSymbols: [this.geneSymbol.trim()],
       maxVariantsCount: 10000,
       inheritanceTypeFilter: ['denovo', 'mendelian', 'omission', 'missing'],
     };

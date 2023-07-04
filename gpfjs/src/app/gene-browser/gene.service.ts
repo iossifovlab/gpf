@@ -24,6 +24,6 @@ export class GeneService {
   }
 
   public searchGenes(searchTerm: string): Observable<object> {
-    return this.http.get(this.config.baseUrl + this.geneSymbolSearchUrl + searchTerm.toUpperCase());
+    return this.http.get(this.config.baseUrl + this.geneSymbolSearchUrl + searchTerm);
   }
 }
