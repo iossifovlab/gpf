@@ -1,15 +1,20 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+import pathlib
+from typing import Optional
 
 import pytest
 
 from dae.testing import setup_vcf, setup_pedigree, vcf_study
-
+from dae.genotype_storage import GenotypeStorage
+from dae.studies.study import GenotypeData
 from dae.utils.variant_utils import mat2str
 from dae.utils.regions import Region
 
 
 @pytest.fixture(scope="module")
-def best_state_vcf(tmp_path_factory):
+def multi_vcf(
+    tmp_path_factory: pytest.TempPathFactory
+) -> tuple[pathlib.Path, pathlib.Path]:
     root_path = tmp_path_factory.mktemp("vcf_path")
     in_vcf = setup_vcf(
         root_path / "vcf_data" / "in.vcf.gz",
@@ -19,12 +24,7 @@ def best_state_vcf(tmp_path_factory):
 ##contig=<ID=1>
 #CHROM POS ID REF ALT   QUAL FILTER INFO FORMAT m1  d1  c1
 foo    10  .  T   G,C   .    .      .    GT     0/1 0/0 0/0
-foo    11  .  T   G,C   .    .      .    GT     0/2 0/0 0/0
 foo    12  .  T   G,C   .    .      .    GT     0/0 0/0 0/0
-foo    13  .  T   G,C   .    .      .    GT     0/. 0/0 0/0
-foo    14  .  T   G,C   .    .      .    GT     0/1 0/2 0/0
-foo    15  .  T   G,C,A .    .      .    GT     0/1 0/2 0/3
-foo    16  .  T   G,C,A .    .      .    GT     0/1 0/2 0/0
         """)
 
     in_ped = setup_pedigree(
@@ -34,41 +34,45 @@ familyId personId dadId momId sex status role
 f1       m1       0     0     2    1     mom
 f1       d1       0     0     1    1     dad
 f1       c1       d1    m1    2    2     prb
-f2       m2       0     0     2    1     mom
-f2       d2       0     0     1    1     dad
-f2       c2       d2    m2    2    2     prb
         """)
     return in_ped, in_vcf
 
 
 @pytest.fixture(scope="module")
-def imported_study(tmp_path_factory, best_state_vcf, genotype_storage):
+def multi_study(
+    tmp_path_factory: pytest.TempPathFactory,
+    multi_vcf: tuple[pathlib.Path, pathlib.Path],
+    genotype_storage: GenotypeStorage
+) -> GenotypeData:
     # pylint: disable=import-outside-toplevel
     from dae.testing.foobar_import import foobar_gpf
 
     root_path = tmp_path_factory.mktemp(genotype_storage.storage_id)
     gpf_instance = foobar_gpf(root_path, genotype_storage)
 
-    ped_path, vcf_path = best_state_vcf
+    ped_path, vcf_path = multi_vcf
 
     return vcf_study(
         root_path, "best_state", ped_path, [vcf_path], gpf_instance)
 
 
-@pytest.mark.parametrize("region, exp_num_variants", [
-    [Region("foo", 10, 10), 1],  # single allele
-    [Region("foo", 12, 12), 0],  # all reference
+@pytest.mark.parametrize("region, count, best_state", [
+    [Region("foo", 10, 10), 1, "122/100/000"],  # first allele
+    [Region("foo", 12, 12), 0, None],  # all reference
 ])
-def test_trios_multi(imported_study, region, exp_num_variants):
+def test_trios_multi(
+        multi_study: GenotypeData, region: Region, count: int,
+        best_state: Optional[str]) -> None:
 
     variants = list(
-        imported_study.query_variants(
+        multi_study.query_variants(
             regions=[region],
             return_reference=True,
             return_unknown=True,
         )
     )
-    assert len(variants) == exp_num_variants
-    for v in variants:
+    assert len(variants) == count
+    if count == 1:
+        v = variants[0]
         assert v.best_state.shape == (3, 3)
-        assert mat2str(v.best_state) == "122/100/000"
+        assert mat2str(v.best_state) == best_state

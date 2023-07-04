@@ -9,7 +9,7 @@ from pathlib import Path
 
 from dae.utils.fs_utils import find_directory_with_a_file
 from dae.enrichment_tool.background_facade import BackgroundFacade
-
+from dae.studies.study import GenotypeData
 from dae.gene.scores import GenomicScoresDb
 from dae.gene.gene_sets_db import GeneSetsDb, \
     build_gene_set_collection_from_resource
@@ -292,7 +292,7 @@ class GPFInstance:
             + self._variants_db.get_all_genotype_group_ids()
         )
 
-    def get_genotype_data(self, genotype_data_id):
+    def get_genotype_data(self, genotype_data_id) -> GenotypeData:
         genotype_data_study = self._variants_db.get_genotype_study(
             genotype_data_id)
         if genotype_data_study:
