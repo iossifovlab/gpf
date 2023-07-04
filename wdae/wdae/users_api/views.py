@@ -541,7 +541,10 @@ class FederationCredentials(views.APIView):
         user = request.user
         if not user.is_authenticated:
             return Response(status=status.HTTP_401_UNAUTHORIZED)
-        if not get_application_model().objects.filter(name=request.data.get("name")).exists():
+        if not get_application_model() \
+                .objects \
+                .filter(name=request.data.get("name")) \
+                .exists():
             return Response(status=status.HTTP_400_BAD_REQUEST)
         app = get_application_model().objects.get(
             name=request.data.get("name")
@@ -557,9 +560,15 @@ class FederationCredentials(views.APIView):
         user = request.user
         if not user.is_authenticated:
             return Response(status=status.HTTP_401_UNAUTHORIZED)
-        if not get_application_model().objects.filter(name=request.data.get("name")).exists():
+        if not get_application_model() \
+                .objects \
+                .filter(name=request.data.get("name")) \
+                .exists():
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        if get_application_model().objects.filter(name=request.data.get("new_name")).exists():
+        if (get_application_model()
+                .objects
+                .filter(name=request.data.get("new_name"))
+                .exists()):
             return Response(status=status.HTTP_400_BAD_REQUEST)
         app = get_application_model().objects.get(
             name=request.data.get("name")
