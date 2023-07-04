@@ -1,10 +1,12 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+import pathlib
 from typing import Optional, Any
+import pytest
 from dae.genotype_storage.genotype_storage_registry import \
-    GenotypeStorageRegistry
+    GenotypeStorageRegistry, GenotypeStorage
 
 
-def default_genotype_storage_configs(root_path):
+def default_genotype_storage_configs(root_path: pathlib.Path) -> list[dict]:
     return [
         # DuckDb Storage
         {
@@ -80,7 +82,8 @@ GENOTYPE_STORAGE_REGISTRY = GenotypeStorageRegistry()
 GENOTYPE_STORAGES: Optional[dict[str, Any]] = None
 
 
-def _select_storages_by_type(storage_types):
+def _select_storages_by_type(
+        storage_types: list[str]) -> dict[str, GenotypeStorage]:
     storages = {}
     for storage_id in GENOTYPE_STORAGE_REGISTRY.get_all_genotype_storage_ids():
         storage = GENOTYPE_STORAGE_REGISTRY.get_genotype_storage(storage_id)
@@ -89,7 +92,8 @@ def _select_storages_by_type(storage_types):
     return storages
 
 
-def _select_storages_by_ids(storage_ids):
+def _select_storages_by_ids(
+        storage_ids: list[str]) -> dict[str, GenotypeStorage]:
     storages = {}
     for storage_id in GENOTYPE_STORAGE_REGISTRY.get_all_genotype_storage_ids():
         if storage_id in storage_ids:
@@ -98,7 +102,7 @@ def _select_storages_by_ids(storage_ids):
     return storages
 
 
-def _populate_storages_from_registry():
+def _populate_storages_from_registry() -> dict[str, GenotypeStorage]:
     storages = {}
     for storage_id in GENOTYPE_STORAGE_REGISTRY.get_all_genotype_storage_ids():
         storages[storage_id] = \
@@ -106,7 +110,8 @@ def _populate_storages_from_registry():
     return storages
 
 
-def _populate_default_genotype_storages(root_path):
+def _populate_default_genotype_storages(
+        root_path: pathlib.Path) -> GenotypeStorageRegistry:
     if not GENOTYPE_STORAGE_REGISTRY.get_all_genotype_storage_ids():
         for storage_config in default_genotype_storage_configs(root_path):
             GENOTYPE_STORAGE_REGISTRY\
@@ -114,7 +119,7 @@ def _populate_default_genotype_storages(root_path):
     return GENOTYPE_STORAGE_REGISTRY
 
 
-def pytest_addoption(parser):
+def pytest_addoption(parser: pytest.Parser) -> None:
     parser.addoption(
         "--gst",
         dest="storage_types",
@@ -136,13 +141,13 @@ def pytest_addoption(parser):
         help="genotype storage configuration file to use integration tests")
 
 
-def pytest_sessionstart(session):
+def pytest_sessionstart(session: pytest.Session) -> None:
     global GENOTYPE_STORAGES  # pylint: disable=global-statement
     if not GENOTYPE_STORAGES:
         # pylint: disable=protected-access
         root_path = session\
             .config\
-            ._tmp_path_factory.mktemp("genotype_storage")
+            ._tmp_path_factory.mktemp("genotype_storage")  # type: ignore
         _populate_default_genotype_storages(root_path)
 
         storage_types = session.config.getoption("storage_types")
@@ -172,7 +177,7 @@ def pytest_sessionstart(session):
             GENOTYPE_STORAGES = _populate_storages_from_registry()
 
 
-def pytest_generate_tests(metafunc):
+def pytest_generate_tests(metafunc: pytest.Metafunc) -> None:
     if "genotype_storage" in metafunc.fixturenames:
 
         assert GENOTYPE_STORAGES is not None

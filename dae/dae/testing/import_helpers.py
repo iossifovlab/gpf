@@ -10,6 +10,7 @@ from dae.utils.dict_utils import recursive_dict_update
 from dae.testing import setup_directories
 from dae.configuration.study_config_builder import StudyConfigBuilder
 from dae.import_tools.cli import run_with_project
+from dae.studies.study import GenotypeData
 
 
 @dataclass
@@ -125,13 +126,14 @@ def vcf_import(
 
 
 def vcf_study(
-        root_path: pathlib.Path,
-        study_id: str,
-        ped_path: pathlib.Path, vcf_paths: list[pathlib.Path],
-        gpf_instance,
-        project_config_update: Optional[dict[str, Any]] = None,
-        project_config_overwrite: Optional[dict[str, Any]] = None,
-        study_config_update: Optional[dict[str, Any]] = None):
+    root_path: pathlib.Path,
+    study_id: str,
+    ped_path: pathlib.Path, vcf_paths: list[pathlib.Path],
+    gpf_instance,
+    project_config_update: Optional[dict[str, Any]] = None,
+    project_config_overwrite: Optional[dict[str, Any]] = None,
+    study_config_update: Optional[dict[str, Any]] = None
+) -> GenotypeData:
     """Import a VCF study and return the imported study."""
     project = vcf_import(
         root_path, study_id, ped_path, vcf_paths, gpf_instance,
