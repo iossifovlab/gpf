@@ -15,21 +15,25 @@ class GeneScoresListView(QueryBaseView):
         ids = request.query_params.get("ids")
         if ids:
             gene_scores = [
-                self.gpf_instance.get_gene_score(gene_score)
+                self.gpf_instance.get_gene_score_desc(gene_score)
                 for gene_score in ids.strip().split(",")
             ]
         else:
-            gene_scores = self.gpf_instance.get_all_gene_scores()
+            gene_scores = self.gpf_instance.get_all_gene_score_descs()
         return Response(
             [
                 {
                     "score": score.score_id,
-                    "desc": score.desc,
-                    "bars": score.histogram_bars,
-                    "bins": score.histogram_bins,
-                    "xscale": score.x_scale,
-                    "yscale": score.y_scale,
-                    "range": score.range,
+                    "desc": score.description,
+                    "bars": score.number_hist.bars,
+                    "bins": score.number_hist.bins,
+                    "xscale":
+                        "log" if score.number_hist.config.x_log_scale else
+                        "linear",
+                    "yscale":
+                        "log" if score.number_hist.config.y_log_scale else
+                        "linear",
+                    "range": score.number_hist.config.view_range,
                 }
                 for score in gene_scores
             ]
@@ -41,7 +45,9 @@ class GeneScoresDownloadView(QueryBaseView):
 
     def get(self, _request, score):
         """Serve a gene score download request."""
-        tsv = self.gpf_instance.get_gene_score(score).to_tsv()
+        score_desc = self.gpf_instance.get_gene_score_desc(score)
+        gene_score = score_desc.resource_id
+        tsv = self.gpf_instance.get_gene_score(gene_score).to_tsv()
 
         response = StreamingHttpResponse(tsv, content_type="text/csv")
 
@@ -60,16 +66,20 @@ class GeneScoresGetGenesView(QueryBaseView):
         score_name = data["score"]
         if not self.gpf_instance.has_gene_score(score_name):
             raise ValueError(f"unknown gene score {score_name}")
-        if "min" not in data:
-            score_min = None
-        else:
+
+        score_min = None
+        score_max = None
+
+        if "min" in data:
             score_min = float(data["min"])
-        if "max" not in data:
-            score_max = None
-        else:
+        if "max" in data:
             score_max = float(data["max"])
-        return self.gpf_instance.get_gene_score(score_name).get_genes(
-            score_min=score_min, score_max=score_max
+
+        score_desc = self.gpf_instance.get_gene_score_desc(score_name)
+        gene_score_id = score_desc.resource_id
+
+        return self.gpf_instance.get_gene_score(gene_score_id).get_genes(
+            score_name, score_min=score_min, score_max=score_max
         )
 
     def post(self, request):
@@ -94,8 +104,9 @@ class GeneScoresPartitionsView(QueryBaseView):
         if "min" not in data or "max" not in data:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        score = self.gpf_instance.get_gene_score(score_name)
-        df = score.df
+        score_desc = self.gpf_instance.get_gene_score_desc(score_name)
+        gene_score = self.gpf_instance.get_gene_score(score_desc.resource_id)
+        df = gene_score.get_score_df(score_name)
 
         try:
             score_min = float(data["min"])

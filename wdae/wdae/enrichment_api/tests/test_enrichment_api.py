@@ -212,6 +212,31 @@ def test_enrichment_test_gene_scores(admin_client, wdae_gpf_instance):
     assert response.status_code == 200
 
 
+def test_enrichment_test_gene_scores_with_zero_range(
+        admin_client, wdae_gpf_instance
+):
+    url = "/api/v3/enrichment/test"
+    query = {
+        "datasetId": "f1_trio",
+        "enrichmentBackgroundModel": "coding_len_background_model",
+        "enrichmentCountingModel": "enrichment_gene_counting",
+        "geneScores": {
+            "score": "LGD_rank",
+            "rangeStart": 0,
+            "rangeEnd": 1000
+        },
+    }
+    response = admin_client.post(
+        url, json.dumps(query), content_type="application/json", format="json"
+    )
+
+    assert response
+    assert response.status_code == 200
+
+    assert response.data["desc"] == \
+        "Gene Scores: LGD_rank from 0 upto 1000 (1024)"
+
+
 def test_enrichment_test_gene_set(admin_client, wdae_gpf_instance):
     url = "/api/v3/enrichment/test"
     query = {

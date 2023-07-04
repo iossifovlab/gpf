@@ -266,6 +266,7 @@ class GenomicScoreImplementation(
         </td>
 
         <td>
+        {%- if score.value_type in ['float', 'int'] -%}
         {% set min_max = impl.score.get_number_range(score_id) %}
         {%- if min_max is not none and
                 min_max[0] is not none and min_max[1] is not none -%}
@@ -273,6 +274,10 @@ class GenomicScoreImplementation(
         {%- else -%}
         NO RANGE
         {%- endif -%}
+        {%- else -%}
+        NO RANGE
+        {%- endif -%}
+
         </td>
 
         </tr>
@@ -1016,7 +1021,7 @@ class GenomicScore(ResourceConfigValidationMixin):
         if self.get_score_config(score_id).value_type not in {"float", "int"}:
             raise ValueError(
                 f"score {score_id} type is not a number; "
-                f"score type: {self.get_score_config(score_id).type}")
+                f"score type: {self.get_score_config(score_id).value_type}")
         number_range_filename = self.get_number_range_filename(score_id)
         try:
             with self.resource.open_raw_file(number_range_filename) as infile:

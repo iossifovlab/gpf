@@ -17,14 +17,13 @@ def scores_repo(tmp_path):
             GR_CONF_FILE_NAME: """
                 type: gene_score
                 filename: LGD.csv
-                gene_scores:
+                scores:
                   - id: LGD_rank
                     desc: LGD rank
-                histograms:
-                  - score: LGD_rank
-                    bins: 150
-                    x_scale: linear
-                    y_scale: linear
+                    number_hist:
+                      number_of_bins: 150
+                      x_log_scale: false
+                      y_log_scale: false
                 """,
             "LGD.csv": textwrap.dedent("""
                 "gene","LGD_score","LGD_rank"

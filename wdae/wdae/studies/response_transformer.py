@@ -214,10 +214,16 @@ class ResponseTransformer:
             if gwc not in self.study_wrapper.gene_scores_db:
                 continue
 
-            gene_scores = self.study_wrapper.gene_scores_db[gwc]
             if gene != "":
+                score_desc = self.study_wrapper.gene_scores_db.get_score_desc(
+                    gwc
+                )
+
+                gene_scores = self.study_wrapper.gene_scores_db.get_gene_score(
+                    score_desc.resource_id
+                )
                 # pylint: disable=protected-access
-                gene_scores_values[gwc] = gene_scores._to_dict().get(
+                gene_scores_values[gwc] = gene_scores._to_dict(gwc).get(
                     gene, default
                 )
             else:

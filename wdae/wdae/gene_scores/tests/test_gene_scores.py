@@ -1,3 +1,4 @@
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
 
 pytestmark = pytest.mark.usefixtures(
@@ -13,19 +14,25 @@ def test_lgd_rank_available(gene_scores_db):
 
 
 def test_get_lgd_rank(gene_scores_db):
-    w = gene_scores_db["LGD_rank"]
+    score = gene_scores_db.get_gene_score("gene_scores/LGD")
 
-    assert w is not None
-    assert w.min() == pytest.approx(1.0, 0.01)
-    assert w.max() == pytest.approx(18394.5, 0.01)
+    assert score is not None
+    assert score.get_min("LGD_rank") == pytest.approx(1.0, 0.01)
+    assert score.get_max("LGD_rank") == pytest.approx(18394.5, 0.01)
 
 
 def test_get_genes_by_score(gene_scores_db):
-    g = gene_scores_db["LGD_rank"].get_genes(1.5, 5.0)
-    assert len(g) == 3
+    genes = gene_scores_db.get_gene_score("gene_scores/LGD").get_genes(
+        "LGD_rank", 1.5, 5.0
+    )
+    assert len(genes) == 3
 
-    g = gene_scores_db["LGD_rank"].get_genes(-1, 5.0)
-    assert len(g) == 4
+    genes = gene_scores_db.get_gene_score("gene_scores/LGD").get_genes(
+        "LGD_rank", -1, 5.0
+    )
+    assert len(genes) == 4
 
-    g = gene_scores_db["LGD_rank"].get_genes(1.0, 5.0)
-    assert len(g) == 4
+    genes = gene_scores_db.get_gene_score("gene_scores/LGD").get_genes(
+        "LGD_rank", 1.0, 5.0
+    )
+    assert len(genes) == 4

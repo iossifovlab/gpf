@@ -313,7 +313,7 @@ def build_annotation_pipeline(
         except ValueError as value_error:
             raise AnnotationConfigurationError(
                 f"The {annotator_id+1}-th annotator "
-                f"configuaraion {raw_config_copy} is incorrect: ",
+                f"configuration {raw_config_copy} is incorrect: ",
                 value_error) from value_error
 
     return pipeline
