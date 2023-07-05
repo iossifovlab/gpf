@@ -1,0 +1,2 @@
+dae/dae/_version.py export-subst
+wdae/wdae/_version.py export-subst
