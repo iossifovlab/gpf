@@ -186,8 +186,9 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
   ): void {
     const effectTypes = {
       lgds: EffectTypes['LGDS'],
-      intron: ['Intron'],
-      missense: ['Missense'],
+      intron: ['intron'],
+      missense: ['missense'],
+      synonymous: ['synonymous'],
     };
     const newWindow = window.open('', '_blank');
 
