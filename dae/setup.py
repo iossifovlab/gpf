@@ -1,13 +1,15 @@
 """Setup for GPF data access environment (DAE)."""
 
 import setuptools
+import versioneer
 
 with open("README.md", "r", encoding="utf8") as fh:
     long_description = fh.read()
 
 setuptools.setup(
     name="gpf_dae",
-    version="2023.6.0.dev1",
+    version=versioneer.get_version(),
+    cmdclass=versioneer.get_cmdclass(),
     author="Lubomir Chorbadjiev",
     author_email="lubomir.chorbadjiev@gmail.com",
     description="GPF: Genotypes and Phenotypes in Families",
