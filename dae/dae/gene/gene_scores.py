@@ -342,7 +342,8 @@ class GeneScore(
 
     def _to_dict(self, score_id):
         """Return dictionary of all defined scores keyed by gene symbol."""
-        return self.df.set_index("gene")[score_id].to_dict()
+        return self.get_score_df(
+            score_id).set_index("gene")[score_id].to_dict()
 
     def get_gene_value(self, score_id, gene_symbol):
         """Return the value for a given gene symbol."""
@@ -365,7 +366,7 @@ class GeneScore(
         return map(join_line, self._to_list(df))
 
     def get_score_df(self, score_id):
-        return self.df[["gene", score_id]].copy()
+        return self.df[["gene", score_id]].dropna()
 
     def get_statistics(self):
         if self.statistics is None:

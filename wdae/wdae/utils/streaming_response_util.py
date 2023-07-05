@@ -25,7 +25,7 @@ def iterator_to_json(variants):
         while curr is None:
             yield ""
             curr = next(variants)
-        yield json.dumps(curr, default=convert)
+        yield json.dumps(curr, default=convert, allow_nan=False)
 
         while True:
 
@@ -35,7 +35,7 @@ def iterator_to_json(variants):
                 curr = next(variants)
 
             yield ","
-            yield json.dumps(curr, default=convert)
+            yield json.dumps(curr, default=convert, allow_nan=False)
 
     except StopIteration:
         logger.debug("iterator_to_json generator done")

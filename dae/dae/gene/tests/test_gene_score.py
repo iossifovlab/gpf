@@ -109,6 +109,49 @@ def scores_repo(tmp_path):
                 """)
             }
         },
+        "NaNTest": {
+            GR_CONF_FILE_NAME: """
+                type: gene_score
+                filename: scores.csv
+                scores:
+                - id: score1
+                  desc: linear gene score
+                  number_hist:
+                    number_of_bins: 3
+                    x_log_scale: false
+                    y_log_scale: false
+                """,
+            "scores.csv": textwrap.dedent("""
+                gene,score1
+                G1,1
+                G2,2
+                G3,nan
+                G4,1
+                G5,nan
+                G6,3
+            """),
+            "statistics": {
+                "histogram_linear.yaml": textwrap.dedent("""
+                    bars:
+                    - 2
+                    - 2
+                    - 2
+                    bins:
+                    - 1.0
+                    - 1.665
+                    - 2.333
+                    - 3.0
+                    config:
+                      number_of_bins: 3
+                      score: linear
+                      view_range:
+                        max: 3.0
+                        min: 1.0
+                      x_log_scale: false
+                      y_log_scale: false
+                """)
+            }
+        },
         "Oops": {
             GR_CONF_FILE_NAME: "",
         },
@@ -212,6 +255,15 @@ def test_gene_score(scores_repo):
 
     assert gene_score.get_gene_value("linear", "G2") == 2
     assert gene_score.get_gene_value("linear", "G3") == 3
+
+
+def test_gene_score_nan(scores_repo):
+    res = scores_repo.get_resource("NaNTest")
+    gene_score = build_gene_score_from_resource(res)
+
+    assert len(gene_score.df) == 6
+    df = gene_score.get_score_df("score1")
+    assert len(df) == 4
 
 
 def test_calculate_histogram(scores_repo):

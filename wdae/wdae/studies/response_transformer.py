@@ -1,6 +1,7 @@
 import itertools
 import traceback
 import logging
+import math
 from functools import partial
 from typing import List, Dict, Set
 
@@ -323,6 +324,8 @@ class ResponseTransformer:
                             logging.warning(
                                 "error formatting variant: %s (%s) (%s)",
                                 v, col_format, val, exc_info=True)
+                            if math.isnan(val):
+                                return None
                             return val
 
                 if col_role is not None:
