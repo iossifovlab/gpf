@@ -1,8 +1,3 @@
-[metadata]
-license_file = LICENSE
-
-[bdist_wheel]
-universal = 1
 
 [flake8]
 exclude = old,*tmp*,*temp*,data-hg19*,build,docs,migrations
