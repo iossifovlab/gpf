@@ -1,16 +1,20 @@
 import sys
 import argparse
 import logging
+from typing import Optional
 
 from dae.utils.verbosity_configuration import VerbosityConfiguration
-from dae.__version__ import VERSION, RELEASE
+from dae import __version__
 from dae.gpf_instance import GPFInstance
 
 
 logger = logging.getLogger("agp_exporter")
 
 
-def cli_export(argv=None, gpf_instance=None):
+def cli_export(
+    argv: Optional[list[str]] = None,
+    gpf_instance: Optional[GPFInstance] = None
+) -> None:
     """CLI for exporting AGP data."""
     if argv is None:
         argv = sys.argv[1:]
@@ -31,7 +35,7 @@ def cli_export(argv=None, gpf_instance=None):
     args = parser.parse_args(argv)
 
     if args.version:
-        print(f"GPF version: {VERSION} ({RELEASE})")
+        print(f"GPF version: {__version__}")
         sys.exit(0)
 
     VerbosityConfiguration.set(args)
@@ -42,7 +46,7 @@ def cli_export(argv=None, gpf_instance=None):
 
     if not gpf_instance.get_agp_configuration():
         logger.warning("missing AGP configuration; no AGP to export")
-        return 1
+        sys.exit(0)
 
     if args.output is None:
         outfile = sys.stdout
