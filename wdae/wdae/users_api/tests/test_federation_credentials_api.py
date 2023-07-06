@@ -123,6 +123,45 @@ def test_update_federation_credentials_with_unauthorized_user(
         .exists() is True
 
 
+def test_update_federation_credentials_with_incorrect_request_data(
+    db, user_client
+):
+    url = "/api/v3/users/federation_credentials"
+
+    body = {"name": "name1"}
+    user_client.post(
+        url, json.dumps(body), content_type="application/json", format="json"
+    )
+
+    body = {
+        "new_name": "name3"
+    }
+    response_without_name_res = user_client.put(
+        url, json.dumps(body), content_type="application/json", format="json"
+    )
+
+    assert response_without_name_res.data is None
+    assert response_without_name_res.status_code is status.HTTP_400_BAD_REQUEST
+    assert get_application_model() \
+        .objects \
+        .filter(name="name1") \
+        .exists() is True
+
+    body = {
+        "name": "name1",
+    }
+    response_without_name_res = user_client.put(
+        url, json.dumps(body), content_type="application/json", format="json"
+    )
+
+    assert response_without_name_res.data is None
+    assert response_without_name_res.status_code is status.HTTP_400_BAD_REQUEST
+    assert get_application_model() \
+        .objects \
+        .filter(name="name1") \
+        .exists() is True
+
+
 def test_update_federation_credentials_with_false_name(db, user_client):
     url = "/api/v3/users/federation_credentials"
 
@@ -135,12 +174,12 @@ def test_update_federation_credentials_with_false_name(db, user_client):
         "name": "name2",
         "new_name": "name3"
     }
-    response_without_name_res = user_client.put(
+    response_with_bad_name_res = user_client.put(
         url, json.dumps(body), content_type="application/json", format="json"
     )
 
-    assert response_without_name_res.data is None
-    assert response_without_name_res.status_code is status.HTTP_400_BAD_REQUEST
+    assert response_with_bad_name_res.data is None
+    assert response_with_bad_name_res.status_code is status.HTTP_400_BAD_REQUEST
     assert get_application_model() \
         .objects \
         .filter(name="name1") \
@@ -196,12 +235,12 @@ def test_update_federation_credentials_with_authorized_user(db, user_client):
         "name": "name1",
         "new_name": "name3",
     }
-    response_without_new_name_res = user_client.put(
+    response = user_client.put(
         url, json.dumps(body), content_type="application/json", format="json"
     )
 
-    assert response_without_new_name_res.status_code is status.HTTP_200_OK
-    assert str(response_without_new_name_res.data) == "{'new_name': 'name3'}"
+    assert response.status_code is status.HTTP_200_OK
+    assert str(response.data) == "{'new_name': 'name3'}"
     assert get_application_model() \
         .objects \
         .filter(name="name1") \
