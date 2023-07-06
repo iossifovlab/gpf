@@ -139,7 +139,7 @@ def is_version_constraint_satisfied(version_constraint, version):
     match = VERSION_CONSTRAINT_RE.fullmatch(version_constraint)
     if not match:
         raise ValueError(
-            f"Bad sintax of version constraint {version_constraint}")
+            f"Bad syntax of version constraint {version_constraint}")
     operator = match[1] if match[1] else ">="
     constraint_version = tuple(map(int, match[2].split(".")))
     if operator == "=":
@@ -210,20 +210,10 @@ class Manifest:
     def __iter__(self) -> Iterator[ManifestEntry]:
         return iter(sorted(self.entries.values()))
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, Manifest):
             return False
-        if len(self.entries) != len(other.entries):
-            return False
-
-        for name, entry in self.entries.items():
-            if name not in other:
-                return False
-            other_entry = other[name]
-            if entry != other_entry:
-                return False
-
-        return True
+        return self.entries == other.entries
 
     def __len__(self):
         return len(self.entries)
@@ -279,6 +269,19 @@ class GenomicResource:
         self.config = config
         self.proto = protocol
         self._manifest: Optional[Manifest] = manifest
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, GenomicResource):
+            return False
+        return self.resource_id == other.resource_id and \
+            self.version == other.version and \
+            self.config == other.config and \
+            self._manifest == other._manifest
+
+    def __hash__(self) -> int:
+        return hash(self.resource_id
+                    + ".".join(map(str, self.version))
+                    + self.proto.get_url())
 
     def invalidate(self):
         """Clean up cached attributes like manifest, etc."""

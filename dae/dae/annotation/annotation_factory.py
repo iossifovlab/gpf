@@ -166,7 +166,7 @@ class AnnotationConfigParser:
                 Incorrect annotator configuation form: {annotator_raw_config}.
                 The allowed forms are:
                     * minimal
-                        - <annotatory type>)
+                        - <annotator type>)
                     * short
                         - <annotator type>: <resource_id_pattern>
                     * complete without attributes
@@ -298,7 +298,8 @@ def build_annotation_pipeline(
 
     pipeline = AnnotationPipeline(grr_repository)
 
-    for annotator_id, annotator_config in enumerate(pipeline_config):
+    for idx, annotator_config in enumerate(pipeline_config):
+        annotator_id = f"A{idx}"
         raw_config_copy = copy.deepcopy(annotator_config)
         try:
             builder = get_annotator_factory(annotator_config.type)
@@ -312,7 +313,7 @@ def build_annotation_pipeline(
             pipeline.add_annotator(annotator)
         except ValueError as value_error:
             raise AnnotationConfigurationError(
-                f"The {annotator_id+1}-th annotator "
+                f"The {annotator_id} annotator ({idx}-th)"
                 f"configuration {raw_config_copy} is incorrect: ",
                 value_error) from value_error
 
