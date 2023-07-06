@@ -124,7 +124,8 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
       this.location.replaceState(`datasets/${this.selectedDatasetId}/gene-browser`);
       this.interruptSummaryVariants$.next(true);
     });
-    if (this.selectedDataset.studies?.length > 1) {
+
+    if (this.selectedDataset.studies?.length !== 0) {
       this.isUniqueFamilyFilterEnabled = true;
     }
   }
