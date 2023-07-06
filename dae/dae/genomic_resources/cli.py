@@ -6,7 +6,7 @@ import argparse
 import pathlib
 import copy
 
-from typing import Dict, Union
+from typing import Dict, Union, Optional, Any, cast
 from urllib.parse import urlparse
 
 import yaml
@@ -20,7 +20,7 @@ from dae.utils.helpers import convert_size
 from dae.task_graph.cli_tools import TaskGraphCli
 from dae.utils.fs_utils import find_directory_with_a_file
 from dae.task_graph.graph import TaskGraph
-from dae.__version__ import VERSION, RELEASE
+from dae import __version__
 from dae.genomic_resources.repository import \
     GR_CONF_FILE_NAME, \
     GR_CONTENTS_FILE_NAME, \
@@ -35,7 +35,8 @@ from dae.genomic_resources.cached_repository import \
     GenomicResourceCachedRepo
 from dae.genomic_resources.group_repository import \
     GenomicResourceGroupRepo
-
+from dae.genomic_resources.resource_implementation import \
+    GenomicResourceImplementation
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 
 from dae.genomic_resources.fsspec_protocol import build_fsspec_protocol
@@ -50,7 +51,9 @@ from dae.genomic_resources.resource_implementation import ResourceStatistics
 logger = logging.getLogger("grr_manage")
 
 
-def _add_repository_resource_parameters_group(parser, use_resource=True):
+def _add_repository_resource_parameters_group(
+    parser: argparse.ArgumentParser, use_resource: bool = True
+) -> None:
 
     group = parser.add_argument_group(title="Repository/Resource")
     group.add_argument(
@@ -85,7 +88,8 @@ def _add_repository_resource_parameters_group(parser, use_resource=True):
             "error is reported.")
 
 
-def _add_dry_run_and_force_parameters_group(parser):
+def _add_dry_run_and_force_parameters_group(
+        parser: argparse.ArgumentParser) -> None:
     group = parser.add_argument_group(title="Force/Dry run")
     group.add_argument(
         "-n", "--dry-run", default=False, action="store_true",
@@ -97,7 +101,7 @@ def _add_dry_run_and_force_parameters_group(parser):
         help="ignore resource state and rebuild manifest")
 
 
-def _add_dvc_parameters_group(parser):
+def _add_dvc_parameters_group(parser: argparse.ArgumentParser) -> None:
     group = parser.add_argument_group(title="DVC params")
     group.add_argument(
         "--with-dvc", default=True,
@@ -111,7 +115,7 @@ def _add_dvc_parameters_group(parser):
         "do not use '.dvc' files to get md5 sum of resource files")
 
 
-def _add_hist_parameters_group(parser):
+def _add_hist_parameters_group(parser: argparse.ArgumentParser) -> None:
     group = parser.add_argument_group(title="Statistics")
     group.add_argument(
         "--region-size", type=int, default=300_000_000,
@@ -119,15 +123,18 @@ def _add_hist_parameters_group(parser):
         "tasks")
 
 
-def _configure_list_subparser(subparsers):
+def _configure_list_subparser(subparsers: argparse._SubParsersAction) -> None:
     parser = subparsers.add_parser("list", help="List a GR Repo")
-    parser.add_argument("--hr", default=False, action="store_true", help="Projects the size in human-readable format.")
+    parser.add_argument(
+        "--hr", default=False, action="store_true",
+        help="Projects the size in human-readable format.")
     _add_repository_resource_parameters_group(parser, use_resource=False)
     VerbosityConfiguration.set_argumnets(parser)
 
 
 def _run_list_command(
-        proto: Union[ReadOnlyRepositoryProtocol, GenomicResourceRepo], args):
+        proto: Union[ReadOnlyRepositoryProtocol, GenomicResourceRepo],
+        args: argparse.Namespace) -> None:
     repos: list = [proto]
     if isinstance(proto, GenomicResourceGroupRepo):
         repos = proto.children
@@ -152,7 +159,8 @@ def _run_list_command(
                 f"{res.get_id()}")
 
 
-def _configure_repo_init_subparser(subparsers):
+def _configure_repo_init_subparser(
+        subparsers: argparse._SubParsersAction) -> None:
     parser = subparsers.add_parser(
         "repo-init", help="Initialize a directory to turn it into a GRR")
 
@@ -161,11 +169,12 @@ def _configure_repo_init_subparser(subparsers):
     VerbosityConfiguration.set_argumnets(parser)
 
 
-def _run_repo_init_command(**kwargs):
-    repository = kwargs.get("repository")
+def _run_repo_init_command(**kwargs: str) -> None:
+    repository: Optional[str] = kwargs.get("repository")
     if repository is None:
         repo_url = find_directory_with_a_file(GR_CONTENTS_FILE_NAME)
     else:
+        assert repository is not None
         repo_url = find_directory_with_a_file(
             GR_CONTENTS_FILE_NAME, repository)
 
@@ -183,7 +192,8 @@ def _run_repo_init_command(**kwargs):
     proto.build_content_file()
 
 
-def _configure_repo_manifest_subparser(subparsers):
+def _configure_repo_manifest_subparser(
+        subparsers: argparse._SubParsersAction) -> None:
     parser = subparsers.add_parser(
         "repo-manifest", help="Create/update manifests for whole GRR")
 
@@ -193,7 +203,8 @@ def _configure_repo_manifest_subparser(subparsers):
     VerbosityConfiguration.set_argumnets(parser)
 
 
-def _configure_resource_manifest_subparser(subparsers):
+def _configure_resource_manifest_subparser(
+        subparsers: argparse._SubParsersAction) -> None:
     parser = subparsers.add_parser(
         "resource-manifest", help="Create/update manifests for a resource")
 
@@ -203,7 +214,8 @@ def _configure_resource_manifest_subparser(subparsers):
     VerbosityConfiguration.set_argumnets(parser)
 
 
-def _configure_repo_stats_subparser(subparsers):
+def _configure_repo_stats_subparser(
+        subparsers: argparse._SubParsersAction) -> None:
     parser = subparsers.add_parser(
         "repo-stats",
         help="Build the statistics for a resource")
@@ -217,7 +229,8 @@ def _configure_repo_stats_subparser(subparsers):
     TaskGraphCli.add_arguments(parser, use_commands=False, force_mode="always")
 
 
-def _configure_resource_stats_subparser(subparsers):
+def _configure_resource_stats_subparser(
+        subparsers: argparse._SubParsersAction) -> None:
     parser = subparsers.add_parser(
         "resource-stats",
         help="Build the statistics for a resource")
@@ -231,7 +244,8 @@ def _configure_resource_stats_subparser(subparsers):
     TaskGraphCli.add_arguments(parser, use_commands=False, force_mode="always")
 
 
-def _configure_repo_repair_subparser(subparsers):
+def _configure_repo_repair_subparser(
+        subparsers: argparse._SubParsersAction) -> None:
     parser = subparsers.add_parser(
         "repo-repair",
         help="Update/rebuild manifest and histograms whole GRR")
@@ -244,7 +258,8 @@ def _configure_repo_repair_subparser(subparsers):
     TaskGraphCli.add_arguments(parser, use_commands=False, force_mode="always")
 
 
-def _configure_resource_repair_subparser(subparsers):
+def _configure_resource_repair_subparser(
+        subparsers: argparse._SubParsersAction) -> None:
     parser = subparsers.add_parser(
         "resource-repair",
         help="Update/rebuild manifest and histograms for a resource")
@@ -257,7 +272,8 @@ def _configure_resource_repair_subparser(subparsers):
     TaskGraphCli.add_arguments(parser, use_commands=False, force_mode="always")
 
 
-def _configure_repo_info_subparser(subparsers):
+def _configure_repo_info_subparser(
+        subparsers: argparse._SubParsersAction) -> None:
     parser = subparsers.add_parser(
         "repo-info", help="Build the index.html for the whole GRR"
     )
@@ -267,7 +283,8 @@ def _configure_repo_info_subparser(subparsers):
     TaskGraphCli.add_arguments(parser, use_commands=False, force_mode="always")
 
 
-def _configure_resource_info_subparser(subparsers):
+def _configure_resource_info_subparser(
+        subparsers: argparse._SubParsersAction) -> None:
     parser = subparsers.add_parser(
         "resource-info", help="Build the index.html for the specific resource"
     )
@@ -306,7 +323,10 @@ def collect_dvc_entries(
     return result
 
 
-def _do_resource_manifest_command(proto, res, dry_run, force, use_dvc):
+def _do_resource_manifest_command(
+        proto: ReadWriteRepositoryProtocol,
+        res: GenomicResource,
+        dry_run: bool, force: bool, use_dvc: bool) -> bool:
     prebuild_entries = {}
     if use_dvc:
         prebuild_entries = collect_dvc_entries(proto, res)
@@ -350,10 +370,12 @@ def _do_resource_manifest_command(proto, res, dry_run, force, use_dvc):
     return bool(manifest_update)
 
 
-def _run_repo_manifest_command(proto, **kwargs):
-    dry_run = kwargs.get("dry_run", False)
-    force = kwargs.get("force", False)
-    use_dvc = kwargs.get("use_dvc", True)
+def _run_repo_manifest_command(
+        proto: ReadWriteRepositoryProtocol,
+        **kwargs: Union[bool, int, str]) -> dict[str, Any]:
+    dry_run = cast(bool, kwargs.get("dry_run", False))
+    force = cast(bool, kwargs.get("force", False))
+    use_dvc = cast(bool, kwargs.get("use_dvc", True))
 
     if dry_run and force:
         logger.warning("please choose one of 'dry_run' and 'force' options")
@@ -371,8 +393,11 @@ def _run_repo_manifest_command(proto, **kwargs):
     return updates_needed
 
 
-def _find_resource(proto, repo_url, **kwargs):
-    resource_id = kwargs.get("resource")
+def _find_resource(
+        proto: ReadOnlyRepositoryProtocol,
+        repo_url: str,
+        **kwargs: Union[str, bool, int]) -> Optional[GenomicResource]:
+    resource_id = cast(str, kwargs.get("resource"))
     if resource_id is not None:
         res = proto.get_resource(resource_id)
     else:
@@ -397,10 +422,12 @@ def _find_resource(proto, repo_url, **kwargs):
     return res
 
 
-def _run_resource_manifest_command(proto, repo_url, **kwargs):
-    dry_run = kwargs.get("dry_run", False)
-    force = kwargs.get("force", False)
-    use_dvc = kwargs.get("use_dvc", True)
+def _run_resource_manifest_command(
+        proto: ReadWriteRepositoryProtocol,
+        repo_url: str, **kwargs: Union[bool, int, str]) -> bool:
+    dry_run = cast(bool, kwargs.get("dry_run", False))
+    force = cast(bool, kwargs.get("force", False))
+    use_dvc = cast(bool, kwargs.get("use_dvc", True))
 
     if dry_run and force:
         logger.warning("please choose one of 'dry_run' and 'force' options")
@@ -412,7 +439,9 @@ def _run_resource_manifest_command(proto, repo_url, **kwargs):
     return _do_resource_manifest_command(proto, res, dry_run, force, use_dvc)
 
 
-def _read_stats_hash(proto, implementation):
+def _read_stats_hash(
+        proto: ReadWriteRepositoryProtocol,
+        implementation: GenomicResourceImplementation) -> Optional[str]:
     res = implementation.resource
     stats_dir = ResourceStatistics.get_statistics_folder()
     if not proto.file_exists(res, f"{stats_dir}/stats_hash"):
@@ -420,10 +449,12 @@ def _read_stats_hash(proto, implementation):
     with proto.open_raw_file(
         res, f"{stats_dir}/stats_hash", mode="rb"
     ) as infile:
-        return infile.read()
+        return cast(str, infile.read())
 
 
-def _store_stats_hash(proto, resource):
+def _store_stats_hash(
+        proto: ReadWriteRepositoryProtocol,
+        resource: GenomicResource) -> bool:
 
     impl = build_resource_implementation(resource)
     stats_dir = ResourceStatistics.get_statistics_folder()
@@ -441,9 +472,14 @@ def _store_stats_hash(proto, resource):
 
 
 def _collect_impl_stats_tasks(  # pylint: disable=too-many-arguments
-        graph, proto, impl, grr, dry_run, force, use_dvc, region_size):
+        graph: TaskGraph,
+        proto: ReadWriteRepositoryProtocol,
+        impl: GenomicResourceImplementation,
+        grr: GenomicResourceRepo,
+        dry_run: bool, force: bool, use_dvc: bool, region_size: int) -> None:
 
-    tasks = impl.add_statistics_build_tasks(graph, region_size=region_size, grr=grr)
+    tasks = impl.add_statistics_build_tasks(
+        graph, region_size=region_size, grr=grr)
 
     graph.create_task(
         f"{impl.resource.resource_id}_store_stats_hash",
@@ -460,7 +496,9 @@ def _collect_impl_stats_tasks(  # pylint: disable=too-many-arguments
     )
 
 
-def _stats_need_rebuild(proto, impl):
+def _stats_need_rebuild(
+        proto: ReadWriteRepositoryProtocol,
+        impl: GenomicResourceImplementation) -> bool:
     """Check if an implementation's stats need rebuilding."""
     current_hash = impl.calc_statistics_hash()
     stored_hash = _read_stats_hash(proto, impl)
@@ -485,12 +523,15 @@ def _stats_need_rebuild(proto, impl):
     return False
 
 
-def _run_repo_stats_command(repo, proto, **kwargs):
+def _run_repo_stats_command(
+        repo: GenomicResourceRepo,
+        proto: ReadWriteRepositoryProtocol,
+        **kwargs: Union[bool, int, str]) -> None:
     updates_needed = _run_repo_manifest_command(proto, **kwargs)
-    dry_run = kwargs.get("dry_run", False)
-    force = kwargs.get("force", False)
-    use_dvc = kwargs.get("use_dvc", True)
-    region_size = kwargs.get("region_size", 3_000_000)
+    dry_run = cast(bool, kwargs.get("dry_run", False))
+    force = cast(bool, kwargs.get("force", False))
+    use_dvc = cast(bool, kwargs.get("use_dvc", True))
+    region_size = cast(int, kwargs.get("region_size", 3_000_000))
     if dry_run and force:
         logger.warning("please choose one of 'dry_run' and 'force' options")
         return
@@ -522,13 +563,19 @@ def _run_repo_stats_command(repo, proto, **kwargs):
         proto.build_content_file()
 
 
-def _run_resource_stats_command(repo, proto, repo_url, **kwargs):
+def _run_resource_stats_command(
+        repo: GenomicResourceRepo,
+        proto: ReadWriteRepositoryProtocol,
+        repo_url: str,
+        **kwargs: Union[bool, int, str]) -> None:
     needs_update = _run_resource_manifest_command(proto, repo_url, **kwargs)
-    dry_run = kwargs.get("dry_run", False)
-    force = kwargs.get("force", False)
-    use_dvc = kwargs.get("use_dvc", True)
-    region_size = kwargs.get("region_size", 3_000_000)
+    dry_run = cast(bool, kwargs.get("dry_run", False))
+    force = cast(bool, kwargs.get("force", False))
+    use_dvc = cast(bool, kwargs.get("use_dvc", True))
+    region_size = cast(int, kwargs.get("region_size", 3_000_000))
     res = _find_resource(proto, repo_url, **kwargs)
+    if res is None:
+        raise ValueError("can't find resource")
     if needs_update:
         logger.info(
             "Manifest of <%s> needs update, cannot check statistics",
@@ -564,17 +611,27 @@ def _run_resource_stats_command(repo, proto, repo_url, **kwargs):
         )
 
 
-def _run_repo_repair_command(repo, proto, **kwargs):
+def _run_repo_repair_command(
+        repo: GenomicResourceRepo,
+        proto: ReadWriteRepositoryProtocol,
+        **kwargs: Union[str, bool, int]) -> None:
     _run_repo_info_command(repo, proto, **kwargs)
 
 
-def _run_resource_repair_command(repo, proto, repo_url, **kwargs):
+def _run_resource_repair_command(
+        repo: GenomicResourceRepo,
+        proto: ReadWriteRepositoryProtocol,
+        repo_url: str,
+        **kwargs: Union[str, bool, int]) -> None:
     _run_resource_info_command(repo, proto, repo_url, **kwargs)
 
 
-def _run_repo_info_command(repo, proto, **kwargs):
+def _run_repo_info_command(
+        repo: GenomicResourceRepo,
+        proto: ReadWriteRepositoryProtocol,
+        **kwargs: Union[str, bool, int]) -> None:
     _run_repo_stats_command(repo, proto, **kwargs)
-    proto.build_index_info(repository_template)
+    proto.build_index_info(repository_template)  # type: ignore
 
     for res in proto.get_all_resources():
         try:
@@ -599,7 +656,8 @@ def _run_repo_info_command(repo, proto, **kwargs):
             )
 
 
-def _do_resource_info_command(proto, res):
+def _do_resource_info_command(
+        proto: ReadWriteRepositoryProtocol, res: GenomicResource) -> None:
     implementation = build_resource_implementation(res)
 
     with proto.open_raw_file(res, "index.html", mode="wt") as outfile:
@@ -607,7 +665,11 @@ def _do_resource_info_command(proto, res):
         outfile.write(content)
 
 
-def _run_resource_info_command(repo, proto, repo_url, **kwargs):
+def _run_resource_info_command(
+        repo: GenomicResourceRepo,
+        proto: ReadWriteRepositoryProtocol,
+        repo_url: str,
+        **kwargs: Union[str, int, bool]) -> None:
     _run_resource_stats_command(repo, proto, repo_url, **kwargs)
     res = _find_resource(proto, repo_url, **kwargs)
     if res is None:
@@ -617,7 +679,7 @@ def _run_resource_info_command(repo, proto, repo_url, **kwargs):
     _do_resource_info_command(proto, res)
 
 
-def cli_manage(cli_args=None):
+def cli_manage(cli_args: Optional[list[str]] = None) -> None:
     """Provide CLI for repository management."""
     # flake8: noqa: C901
     # pylint: disable=too-many-branches,too-many-statements
@@ -630,7 +692,7 @@ def cli_manage(cli_args=None):
         help="Prints GPF version and exists.")
     VerbosityConfiguration.set_argumnets(parser)
 
-    commands_parser = parser.add_subparsers(
+    commands_parser: argparse._SubParsersAction = parser.add_subparsers(
         dest="command", help="Command to execute")
 
     _configure_list_subparser(commands_parser)
@@ -648,7 +710,7 @@ def cli_manage(cli_args=None):
     VerbosityConfiguration.set(args)
 
     if args.version:
-        print(f"GPF version: {VERSION} ({RELEASE})")
+        print(f"GPF version: {__version__}")
         sys.exit(0)
 
     command = args.command
@@ -728,7 +790,9 @@ def cli_manage(cli_args=None):
         sys.exit(1)
 
 
-def _create_proto(repo_url, extra_args: str = ""):
+def _create_proto(
+    repo_url: str, extra_args: str = ""
+) -> ReadWriteRepositoryProtocol:
     url = urlparse(repo_url)
 
     if url.scheme in {"file", ""} and not os.path.isabs(repo_url):
@@ -741,10 +805,12 @@ def _create_proto(repo_url, extra_args: str = ""):
 
     proto = build_fsspec_protocol(
         proto_id="manage", root_url=repo_url, **kwargs)
+    if not isinstance(proto, ReadWriteRepositoryProtocol):
+        raise ValueError(f"repository protocol is not writable: {repo_url}")
     return proto
 
 
-def cli_browse(cli_args=None):
+def cli_browse(cli_args: Optional[list[str]] = None) -> None:
     """Provide CLI for repository browsing."""
     desc = "Genomic Resource Repository Browse Tool"
     parser = argparse.ArgumentParser(description=desc)
@@ -773,7 +839,7 @@ def cli_browse(cli_args=None):
     VerbosityConfiguration.set(args)
 
     if args.version:
-        print(f"GPF version: {VERSION} ({RELEASE})")
+        print(f"GPF version: {__version__}")
         sys.exit(0)
 
     definition_path = args.grr if args.grr is not None \

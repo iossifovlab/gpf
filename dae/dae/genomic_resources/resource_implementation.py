@@ -72,7 +72,7 @@ class GenomicResourceImplementation(ABC):
         return set()
 
     @abstractmethod
-    def calc_statistics_hash(self) -> bytes:
+    def calc_statistics_hash(self) -> str:
         """
         Compute the statistics hash.
 

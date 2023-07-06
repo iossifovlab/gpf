@@ -4,19 +4,22 @@ import argparse
 import pathlib
 import logging
 import logging.config
+from typing import Union, Optional, cast
 
 import django
 from django.conf import settings
 from django.core.management import execute_from_command_line
 
-from dae.__version__ import VERSION, RELEASE
+from gpf_instance.gpf_instance import WGPFInstance
+
+from dae import __version__
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 
 
 logger = logging.getLogger("wgpf")
 
 
-def _add_gpf_instance_path(parser):
+def _add_gpf_instance_path(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--gpf-instance", "--gpf", type=str,
         default=None,
@@ -28,7 +31,7 @@ def _add_gpf_instance_path(parser):
         "configuration file `gpf_instance.yaml`")
 
 
-def _configure_init_subparser(subparsers):
+def _configure_init_subparser(subparsers: argparse._SubParsersAction) -> None:
     parser = subparsers.add_parser(
         "init",
         help="Initialize a GPF Development Web Server for a GPF instance")
@@ -41,7 +44,7 @@ def _configure_init_subparser(subparsers):
         help="ingore the state of the instance and re-init.")
 
 
-def _add_host_port_group(parser):
+def _add_host_port_group(parser: argparse.ArgumentParser) -> None:
     group = parser.add_argument_group(
         title="Specify GPF development server host and port")
 
@@ -58,7 +61,7 @@ def _add_host_port_group(parser):
         "for incomming connections.")
 
 
-def _configure_run_subparser(subparsers):
+def _configure_run_subparser(subparsers: argparse._SubParsersAction) -> None:
     parser = subparsers.add_parser(
         "run",
         help="Run a GPF Development Web Server for a GPF instance")
@@ -66,11 +69,11 @@ def _configure_run_subparser(subparsers):
     _add_gpf_instance_path(parser)
 
 
-def _init_flag(wgpf_instance):
+def _init_flag(wgpf_instance: WGPFInstance) -> pathlib.Path:
     return pathlib.Path(wgpf_instance.dae_dir) / ".wgpf_init.flag"
 
 
-def _check_is_initialized(wgpf_instance):
+def _check_is_initialized(wgpf_instance: WGPFInstance) -> bool:
     if not os.path.exists(wgpf_instance.dae_dir):
         return False
     if _init_flag(wgpf_instance).exists():
@@ -78,8 +81,9 @@ def _check_is_initialized(wgpf_instance):
     return False
 
 
-def _run_init_command(wgpf_instance, **kwargs):
-    force = kwargs.pop("force", False)
+def _run_init_command(
+        wgpf_instance: WGPFInstance, **kwargs: Union[str, bool]) -> None:
+    force = cast(bool, kwargs.pop("force", False))
     if _check_is_initialized(wgpf_instance) and not force:
         logger.error(
             "GPF instance %s already initialized. If you need to re-init "
@@ -113,7 +117,8 @@ def _run_init_command(wgpf_instance, **kwargs):
         _init_flag(wgpf_instance).touch()
 
 
-def _run_run_command(wgpf_instance, **kwargs):
+def _run_run_command(
+        wgpf_instance: WGPFInstance, **kwargs: Union[bool, str]) -> None:
     if not _check_is_initialized(wgpf_instance):
         logger.error(
             "GPF instance %s should be initialized first. "
@@ -134,7 +139,7 @@ def _run_run_command(wgpf_instance, **kwargs):
         pass
 
 
-def cli(argv=None):
+def cli(argv: Optional[list[str]] = None) -> None:
     """Provide CLI for development GPF web server management."""
     if argv is None:
         argv = sys.argv[:]
@@ -155,7 +160,7 @@ def cli(argv=None):
     args = parser.parse_args(argv[1:])
 
     if args.version:
-        print(f"GPF version: {VERSION} ({RELEASE})")
+        print(f"GPF version: {__version__}")
         sys.exit(0)
     command = args.command
     if command is None:
