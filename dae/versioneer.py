@@ -1,3 +1,6 @@
+# pylint: skip-file
+# type: ignore
+# flake8: noqa
 
 # Version: 0.28
 
