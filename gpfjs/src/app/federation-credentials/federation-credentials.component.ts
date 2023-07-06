@@ -30,10 +30,10 @@ export class FederationCredentialsComponent implements OnInit {
     this.usersService.getFederationCredentials().subscribe(res => {
       this.credentials = res;
 
-      fromEvent(this.createButton.nativeElement, 'click').pipe(
+      fromEvent(this.createButton.nativeElement as HTMLElement, 'click').pipe(
         debounceTime(250),
         tap(() => {
-          this.createCredential(this.newCredentialName.nativeElement.value);
+          this.createCredential((this.newCredentialName.nativeElement as HTMLInputElement).value);
         })
       ).subscribe();
     });
