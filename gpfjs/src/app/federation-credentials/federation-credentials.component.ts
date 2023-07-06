@@ -2,7 +2,7 @@ import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { UsersService } from 'app/users/users.service';
 import { FederationCredential } from './federation-credentials';
 import { NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
-import { concatMap, of, zip } from 'rxjs';
+import { concatMap, debounceTime, fromEvent, of, tap, zip } from 'rxjs';
 
 @Component({
   selector: 'gpf-federation-credentials',
@@ -12,10 +12,14 @@ import { concatMap, of, zip } from 'rxjs';
 export class FederationCredentialsComponent implements OnInit {
   public credentials: FederationCredential[];
   public creationError = '';
+  public renameError = '';
   public modal: NgbModalRef;
   public temporaryShownCredentials = '';
   @ViewChild('credentialModal') public credentialModal: ElementRef;
   @ViewChild('credentialNameBox') public newCredentialName: ElementRef;
+  @ViewChild('credentialRename') public credentialRename: ElementRef;
+  @ViewChild('createButton') public createButton: ElementRef;
+  public currentCredentialEdit = '';
 
   public constructor(
     private usersService: UsersService,
@@ -25,6 +29,13 @@ export class FederationCredentialsComponent implements OnInit {
   public ngOnInit(): void {
     this.usersService.getFederationCredentials().subscribe(res => {
       this.credentials = res;
+
+      fromEvent(this.createButton.nativeElement, 'click').pipe(
+        debounceTime(250),
+        tap(() => {
+          this.createCredential(this.newCredentialName.nativeElement.value);
+        })
+      ).subscribe();
     });
   }
 
@@ -66,5 +77,21 @@ export class FederationCredentialsComponent implements OnInit {
       this.credentialModal,
       {animation: false, centered: true, size: 'lg', windowClass: 'credential-modal'}
     );
+  }
+
+  public edit(credential: FederationCredential, newName: string): void {
+    if (this.credentials.find(cred => cred.name === newName) !== undefined) {
+      this.renameError = 'Credential with such name already exists!';
+      return;
+    }
+    if (!newName.trim()) {
+      this.renameError = 'Please fill the field!';
+      return;
+    }
+    this.usersService.updateFederationCredentials(credential.name, newName)
+      .subscribe((res: string) => {
+        credential.name = res;
+      });
+    this.currentCredentialEdit = '';
   }
 }

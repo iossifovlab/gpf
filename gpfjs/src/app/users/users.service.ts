@@ -205,6 +205,18 @@ export class UsersService {
       );
   }
 
+  public updateFederationCredentials(oldCredentialName: string, newCredentialName: string): Observable<string> {
+    const options = { withCredentials: true };
+
+    return this.http.put(this.config.baseUrl + 'users/federation_credentials',
+      // eslint-disable-next-line @typescript-eslint/naming-convention
+      {name: oldCredentialName, new_name: newCredentialName}, options)
+      .pipe(
+        // eslint-disable-next-line @typescript-eslint/naming-convention
+        map((res: {new_name: string}) => res.new_name)
+      );
+  }
+
   public deleteFederationCredentials(credentialName: string): Observable<object> {
     const options = { withCredentials: true, body: { name: credentialName }};
 
