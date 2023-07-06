@@ -102,7 +102,9 @@ def test_gene_score_download(user_client):
 
     response = user_client.get(url)
     assert response.status_code == 200
-    assert len(list(response.streaming_content)) > 0
+    content = list(response.streaming_content)
+    assert len(content) > 0
+    assert len(content[0].decode().split("\t")) == 2
 
     # This is due to a bug that downloaded empty list
     # the second time that request has been made

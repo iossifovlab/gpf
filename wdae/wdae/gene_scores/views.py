@@ -47,7 +47,7 @@ class GeneScoresDownloadView(QueryBaseView):
         """Serve a gene score download request."""
         score_desc = self.gpf_instance.get_gene_score_desc(score)
         gene_score = score_desc.resource_id
-        tsv = self.gpf_instance.get_gene_score(gene_score).to_tsv()
+        tsv = self.gpf_instance.get_gene_score(gene_score).to_tsv(score)
 
         response = StreamingHttpResponse(tsv, content_type="text/csv")
 
