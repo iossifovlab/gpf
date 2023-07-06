@@ -8,7 +8,7 @@ from remote.remote_phenotype_data import RemotePhenotypeData
 from remote.remote_variant import RemoteFamilyVariant, QUERY_SOURCES
 from studies.query_transformer import QueryTransformer
 from studies.response_transformer import ResponseTransformer
-
+from dae.pedigrees.family import Family, FamiliesData
 from dae.variants.attributes import Role
 
 
@@ -236,7 +236,7 @@ class StudyWrapper(StudyWrapperBase):
         return self.genotype_data_study.is_group
 
     @property
-    def families(self):
+    def families(self) -> FamiliesData:
         return self.genotype_data_study.families
 
     @property
@@ -494,7 +494,7 @@ class RemoteStudyWrapper(StudyWrapperBase):
         return self.config.genotype_browser.columns
 
     @property
-    def families(self):
+    def families(self) -> FamiliesData:
         # pylint: disable=protected-access
         return self.remote_genotype_data._families
 
