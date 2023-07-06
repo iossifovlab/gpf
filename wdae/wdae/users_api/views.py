@@ -502,8 +502,6 @@ class FederationCredentials(views.APIView):
         for app in apps:
             res.append({
                 "name": app.name,
-                "client_id": app.client_id,
-                "client_secret": app.client_secret,
             })
         return Response(res, status=status.HTTP_200_OK)
 
@@ -516,11 +514,11 @@ class FederationCredentials(views.APIView):
             return Response(status=status.HTTP_401_UNAUTHORIZED)
 
         application = get_application_model()
-        if application.objects.filter(name=request.data.get("name")).exists():
+        if application.objects.filter(name=request.data["name"]).exists():
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
         new_application = application(**{
-            "name": request.data.get("name"),
+            "name": request.data["name"],
             "user_id": user.id,
             "client_type": "confidential",
             "authorization_grant_type": "client-credentials"
@@ -543,10 +541,48 @@ class FederationCredentials(views.APIView):
         user = request.user
         if not user.is_authenticated:
             return Response(status=status.HTTP_401_UNAUTHORIZED)
+        if not get_application_model() \
+                .objects \
+                .filter(name=request.data["name"]) \
+                .exists():
+            return Response(status=status.HTTP_400_BAD_REQUEST)
         app = get_application_model().objects.get(
-            name=request.data.get("name")
+            name=request.data["name"]
         )
         if not user.id == app.user_id:
             return Response(status=status.HTTP_401_UNAUTHORIZED)
         app.delete()
         return Response(status=status.HTTP_200_OK)
+
+    @request_logging(LOGGER)
+    def put(self, request):
+        """Update a given federation token's name."""
+        user = request.user
+        if not user.is_authenticated:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+        if "name" not in request.data or \
+                "new_name" not in request.data or \
+                request.data["name"] is None or \
+                request.data["new_name"] is None:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        if not get_application_model() \
+                .objects \
+                .filter(name=request.data["name"]) \
+                .exists():
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        if get_application_model() \
+                .objects \
+                .filter(name=request.data["new_name"]) \
+                .exists():
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        app = get_application_model().objects.get(
+            name=request.data["name"]
+        )
+        if not user.id == app.user_id:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+        app.name = request.data["new_name"]
+        app.save()
+        return Response(
+            {"new_name": app.name},
+            status=status.HTTP_200_OK
+        )
