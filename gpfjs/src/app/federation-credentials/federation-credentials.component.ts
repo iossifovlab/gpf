@@ -33,7 +33,7 @@ export class FederationCredentialsComponent implements OnInit {
       fromEvent(this.createButton.nativeElement as HTMLElement, 'click').pipe(
         debounceTime(250),
         tap(() => {
-          this.createCredential((this.newCredentialName.nativeElement as HTMLInputElement).value);
+          this.createCredential(this.newCredentialName.nativeElement.value);
         })
       ).subscribe();
     });
