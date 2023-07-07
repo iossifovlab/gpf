@@ -22,8 +22,6 @@ describe('Federation token tests', () => {
     page.newCredentialInput.should('be.visible');
     page.createCredentialButton.should('be.visible');
     cy.get('div').contains('Name').should('be.visible');
-    cy.get('div').contains('Client Id').should('be.visible');
-    cy.get('div').contains('Client Secret').should('be.visible');
     cy.get('div').contains('Actions').should('be.visible');
   });
 

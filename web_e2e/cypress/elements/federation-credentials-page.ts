@@ -10,7 +10,7 @@ export class FederationCredentialsPage extends BasePage {
   }
 
   public get newCredentialInput(): element {
-    return cy.get('#credential-name-box');
+    return cy.get('#new-credential-name-box');
   }
 
   public get createCredentialButton(): element {
