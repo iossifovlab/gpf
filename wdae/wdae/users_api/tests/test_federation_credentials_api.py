@@ -1,6 +1,5 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import json
-from pprint import pprint
 
 from rest_framework import status  # type: ignore
 from oauth2_provider.models import get_application_model  # type: ignore
@@ -43,7 +42,9 @@ def test_create_duplicate_name_federation_credentials(db, user_client):
     assert len(get_application_model().objects.filter(name="name1")) == 1
 
 
-def test_create_federation_credentials_with_authorized_user(db, user_client):
+def test_create_federation_credentials_with_authorized_user(
+    db, user_client
+) -> None:
     url = "/api/v3/users/federation_credentials"
     body = {
         "name": "name1"
@@ -179,7 +180,8 @@ def test_update_federation_credentials_with_false_name(db, user_client):
     )
 
     assert response_with_bad_name_res.data is None
-    assert response_with_bad_name_res.status_code is status.HTTP_400_BAD_REQUEST
+    assert response_with_bad_name_res \
+        .status_code is status.HTTP_400_BAD_REQUEST
     assert get_application_model() \
         .objects \
         .filter(name="name1") \
