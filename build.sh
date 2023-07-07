@@ -76,6 +76,33 @@ function main() {
         dae/.coverage*
   }
 
+  local gpf_version
+  if ee_exists "gpf_version"; then
+      gpf_version="$(ee "gpf_version")"
+  fi
+
+  build_stage "Get GPF version"
+  {
+    local docker_img_iossifovlab_mamba_base
+    docker_img_iossifovlab_mamba_base="$(e docker_img_iossifovlab_mamba_base)"
+
+    build_run_ctx_init "container" "${docker_img_iossifovlab_mamba_base}"
+    defer_ret build_run_ctx_reset
+
+    build_run git config --global --add safe.directory /wd
+    if [ "$gpf_version" == "" ]; then
+        version="$(build_run invoke -r /release_management current-version)"
+        if [ "$version" != "" ]; then
+            gpf_version=${version}
+            ee_set "gpf_version" "$gpf_version"
+        fi
+    fi
+
+    build_run echo "$(ee 'gpf_version')"
+
+  }
+
+
   local gpf_dev_image="gpf-dev"
   local gpf_dev_image_ref
   # create gpf docker image
@@ -421,25 +448,45 @@ EOT
 
   build_stage "Package"
   {
-    build_run_ctx_init "container" "ubuntu:20.04"
+
+    local docker_img_iossifovlab_mamba_base
+    docker_img_iossifovlab_mamba_base="$(e docker_img_iossifovlab_mamba_base)"
+
+    build_run_ctx_init "container" "${docker_img_iossifovlab_mamba_base}"
     defer_ret build_run_ctx_reset
 
     build_run rm -rf dae/.coverage*
 
+    local gpf_version=$(ee gpf_version)
     local gpf_tag=$(e gpf_tag)
-    build_run echo "${gpf_tag}"
     local __gpf_build_no=$(e __gpf_build_no)
-    build_run echo ${__gpf_build_no}
+
+    local gpf_git_branch=$(e gpf_git_branch)
+    local gpf_git_describe=$(e gpf_git_describe)
 
     build_run bash -c '
-      echo "# pylint: disable=W0621,C0114,C0116,W0212,W0613" > dae/dae/__build__.py
-      echo "# flake8: noqa: E501" >> dae/dae/__build__.py
+      echo '"${gpf_version}"' > VERSION
+      echo "" >> VERSION
+    '
+
+    build_run bash -c '
+      echo "# pylint: skip-file" > dae/dae/__build__.py
+      echo "# type: ignore" >> dae/dae/__build__.py
+      echo "# flake8: noqa" >> dae/dae/__build__.py
+      echo "VERSION = \"'"${gpf_version}"'\"" >> dae/dae/__build__.py
+      echo "GIT_DESCRIBE = \"'"${gpf_git_describe}"'\"" >> dae/dae/__build__.py
+      echo "GIT_BRANCH = \"'"${gpf_git_branch}"'\"" >> dae/dae/__build__.py
       echo "BUILD = \"'"${gpf_tag}"'-'"${__gpf_build_no}"'\"" >> dae/dae/__build__.py
       echo "" >> dae/dae/__build__.py
     '
+
     build_run bash -c '
-      echo "# pylint: disable=W0621,C0114,C0116,W0212,W0613" > wdae/wdae/__build__.py    
-      echo "# flake8: noqa: E501" >> wdae/wdae/__build__.py
+      echo "# pylint: skip-file" > wdae/wdae/__build__.py
+      echo "# type: ignore" >> wdae/wdae/__build__.py
+      echo "# flake8: noqa" >> wdae/wdae/__build__.py
+      echo "VERSION = \"'"${gpf_version}"'\"" >> wdae/wdae/__build__.py
+      echo "GIT_DESCRIBE = \"'"${gpf_git_describe}"'\"" >> wdae/wdae/__build__.py
+      echo "GIT_BRANCH = \"'"${gpf_git_branch}"'\"" >> wdae/wdae/__build__.py
       echo "BUILD = \"'"${gpf_tag}"'-'"${__gpf_build_no}"'\"" >> wdae/wdae/__build__.py
       echo "" >> wdae/wdae/__build__.py
     '
@@ -459,11 +506,17 @@ EOT
           --exclude dae/tmp \
           --exclude dae/build \
           --exclude wdae/build \
+          --exclude dae/docs \
+          --exclude wdae/docs \
           --exclude tests \
+          --exclude wdae_tests \
           --exclude dask-worker-space \
           --exclude demo-scripts \
           --exclude TESTphastCons100way.bedGraph.gz.tbi \
           --exclude test.txt.gz.tbi \
+          --exclude wdae.sql \
+          --exclude dist \
+          --exclude .DS_Store \
           --exclude conftest.py \
           --exclude gpf_wdae.egg-info \
           --exclude mypy.ini \
@@ -477,9 +530,10 @@ EOT
   # post cleanup
   build_stage "Post Cleanup"
   {
-    build_run_ctx_init "container" "ubuntu:20.04"
+    build_run_ctx_init "container" "ubuntu:22.04"
     defer_ret build_run_ctx_reset
     build_run rm -rvf ./data/ ./import/ ./downloads ./results
+    build_run rm -rvf dae/dae/__build__.py wdae/wdae/__build__.py VERSION
   }
 }
 
