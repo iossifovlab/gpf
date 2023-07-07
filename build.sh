@@ -91,7 +91,8 @@ function main() {
 
     build_run git config --global --add safe.directory /wd
     if [ "$gpf_version" == "" ]; then
-        version="$(build_run invoke -r /release_management current-version)"
+        # version="$(build_run invoke -r /release_management current-version)"
+        version="$(build_run git describe)"
         if [ "$version" != "" ]; then
             gpf_version=${version}
             ee_set "gpf_version" "$gpf_version"
