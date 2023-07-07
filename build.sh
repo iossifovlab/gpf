@@ -522,7 +522,6 @@ EOT
           --exclude gpf_wdae.egg-info \
           --exclude mypy.ini \
           --exclude pylintrc \
-          --exclude setup.cfg \
           --transform "s,^,gpf/," \
           dae/ wdae/ environment.yml dev-environment.yml VERSION
     )
