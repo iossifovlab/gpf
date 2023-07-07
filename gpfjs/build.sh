@@ -51,6 +51,27 @@ function main() {
     build_run npm install
   }
 
+  local gpfjs_version
+  if ee_exists "gpfjs_version"; then
+      gpfjs_version="$(ee "gpfjs_version")"
+  fi
+
+  build_stage "Get gpfjs version"
+  {
+
+    build_run git config --global --add safe.directory /wd
+    if [ "$gpfjs_version" == "" ]; then
+        version="$(build_run invoke -r /release_management current-version)"
+        if [ "$version" != "" ]; then
+            gpfjs_version=${version}
+            ee_set "gpfjs_version" "$gpfjs_version"
+        fi
+    fi
+
+    build_run echo "$(ee 'gpfjs_version')"
+
+  }
+
   build_stage "Lint"
   {
     build_run bash -c './node_modules/eslint/bin/eslint.js "**/*.{html,ts}" --format checkstyle >ts-lint-report.xml || echo "eslint exited with $?"'
@@ -73,19 +94,20 @@ function main() {
 
   build_stage "Package and clean production"
   {
+    local gpfjs_version="$(ee 'gpfjs_version')"
     local gpfjs_tag=$(e gpfjs_tag)
     build_run echo $gpfjs_tag
     local __gpfjs_build_no=$(e __gpfjs_build_no)
     build_run echo $__gpfjs_build_no
 
     build_run_container bash -c '
-      echo "'"${gpfjs_tag}"'" > dist/gpfjs/VERSION.txt
+      echo "'"${gpfjs_version}"'" > dist/gpfjs/VERSION.txt
     '
     build_run_container bash -c '
-      echo "'"${gpfjs_tag}"'-'"${__gpfjs_build_no}"'" >> dist/gpfjs/VERSION.txt
+      echo "'"${gpfjs_tag}"'-'"${__gpfjs_build_no}"'" >> dist/gpfjs/BUILD.txt
     '
   
-    local image_name="gpfjs-package"
+    local image_name="gpfjs-production-package"
     build_docker_data_image_create_from_tarball "${image_name}" <(
         build_run_local tar cvf - \
             -C dist \
@@ -102,19 +124,27 @@ function main() {
     build_run /usr/bin/python3 ppindex.py
   }
 
-  build_stage "Package and clean conda"
+  build_stage "Package a clean conda build"
   {
+    local gpfjs_version="$(ee 'gpfjs_version')"
     local gpfjs_tag=$(e gpfjs_tag)
     build_run echo $gpfjs_tag
     local __gpfjs_build_no=$(e __gpfjs_build_no)
     build_run echo $__gpfjs_build_no
 
     build_run_container bash -c '
-      echo "'"${gpfjs_tag}"'" > dist/gpfjs/VERSION.txt
+      echo "'"${gpfjs_version}"'" > dist/gpfjs/VERSION.txt
     '
     build_run_container bash -c '
-      echo "'"${gpfjs_tag}"'-'"${__gpfjs_build_no}"'" >> dist/gpfjs/VERSION.txt
+      echo "'"${gpfjs_tag}"'-'"${__gpfjs_build_no}"'" >> dist/gpfjs/BUILD.txt
     '
+  
+    local image_name="gpfjs-gpfjs-package"
+    build_docker_data_image_create_from_tarball "${image_name}" <(
+        build_run_local tar cvf - \
+            -C dist \
+            gpfjs/
+      )
   
     local image_name="gpfjs-conda-package"
     build_docker_data_image_create_from_tarball "${image_name}" <(
