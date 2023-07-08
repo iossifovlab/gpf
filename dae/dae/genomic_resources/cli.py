@@ -20,7 +20,7 @@ from dae.utils.helpers import convert_size
 from dae.task_graph.cli_tools import TaskGraphCli
 from dae.utils.fs_utils import find_directory_with_a_file
 from dae.task_graph.graph import TaskGraph
-from dae import __version__
+from dae import __version__  # type: ignore
 from dae.genomic_resources.repository import \
     GR_CONF_FILE_NAME, \
     GR_CONTENTS_FILE_NAME, \

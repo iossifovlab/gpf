@@ -4,7 +4,7 @@ import logging
 from typing import Optional
 
 from dae.utils.verbosity_configuration import VerbosityConfiguration
-from dae import __version__
+from dae import __version__  # type: ignore
 from dae.gpf_instance import GPFInstance
 
 
