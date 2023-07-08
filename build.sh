@@ -507,8 +507,6 @@ EOT
           --exclude dae/tmp \
           --exclude dae/build \
           --exclude wdae/build \
-          --exclude dae/docs \
-          --exclude wdae/docs \
           --exclude tests \
           --exclude wdae_tests \
           --exclude dask-worker-space \
