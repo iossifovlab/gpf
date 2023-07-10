@@ -1,27 +1,33 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+from typing import cast
+
 import pytest
 
 from dae.gene.denovo_gene_set_collection_factory import \
     DenovoGeneSetCollectionFactory
 from dae.gene.denovo_gene_set_collection import \
     DenovoGeneSetCollection
+from dae.studies.study import GenotypeData
 
 pytestmark = pytest.mark.usefixtures("gene_info_cache_dir", "calc_gene_sets")
 
 
-def test_get_person_set_collection_legend(denovo_gene_set_f4):
+def test_get_person_set_collection_legend(
+        denovo_gene_set_f4: DenovoGeneSetCollection) -> None:
     dgsl = denovo_gene_set_f4.get_person_set_collection_legend("phenotype")
     print(dgsl)
     assert len(dgsl) == 2
 
 
-def test_get_person_set_collection_legend_missing(denovo_gene_set_f4):
+def test_get_person_set_collection_legend_missing(
+        denovo_gene_set_f4: DenovoGeneSetCollection) -> None:
     dgsl = denovo_gene_set_f4.get_person_set_collection_legend("missing")
 
     assert len(dgsl) == 0
 
 
-def test_get_gene_sets_types_legend(denovo_gene_set_f4):
+def test_get_gene_sets_types_legend(
+        denovo_gene_set_f4: DenovoGeneSetCollection) -> None:
     dgstl = denovo_gene_set_f4.get_gene_sets_types_legend()
 
     assert len(dgstl) == 1
@@ -33,13 +39,13 @@ def test_get_gene_sets_types_legend(denovo_gene_set_f4):
 
 
 @pytest.fixture
-def trios2_dgsc(trios2_study):
+def trios2_dgsc(trios2_study: GenotypeData) -> DenovoGeneSetCollection:
     DenovoGeneSetCollectionFactory.build_collection(trios2_study)
     dgsc = DenovoGeneSetCollectionFactory.load_collection(trios2_study)
-    return dgsc
+    return cast(DenovoGeneSetCollection, dgsc)
 
 
-def test_denovo_gene_sets_legend(trios2_dgsc):
+def test_denovo_gene_sets_legend(trios2_dgsc: DenovoGeneSetCollection) -> None:
     assert trios2_dgsc is not None
     legend = trios2_dgsc.get_gene_sets_types_legend()
     assert len(legend) == 1
@@ -55,35 +61,28 @@ def test_denovo_gene_sets_legend(trios2_dgsc):
     ]
 
 
-# 'affected': {
-# 'LGDs':{'F': {}, 'M': {'g1': {'f1'}, 'g2': {'f2'}}, 'U': {}},
-# 'Missense':{'F': {'g1': {'f1'}}, 'M': {'g1': {'f1', 'f2'}}, 'U': {}},
-# 'Synonymous':{'F': {}, 'M': {'g2': {'f2'}}, 'U': {}}},
-# 'unaffected': {
-# 'LGDs':{'F': {}, 'M': {}, 'U': {}},
-# 'Missense':{'F': {'g1': {'f1'}, 'g2': {'f1'}}, 'M': {'g1': {'f1'}}, 'U': {}},
-# 'Synonymous':{'F': {}, 'M': {}, 'U': {}}
-
 @pytest.mark.parametrize(
     "denovo_gene_set,people_groups,count",
     [
         ("LGDs", ["affected"], 2),
-        ("LGDs.Male", ["affected"], 2),
+        ("LGDs.Male", ["affected"], 1),
+        ("LGDs.Female", ["affected"], 1),
         ("Missense", ["affected"], 1),
+        ("Missense", ["unaffected"], 1),
         ("Missense.Female", ["affected"], 1),
-        ("Missense.Male", ["affected"], 1),
+        ("Missense.Female", ["unaffected"], 1),
         ("Missense", ["affected", "unaffected"], 2),
-        ("Missense", ["unaffected"], 2),
-        ("Missense.Female", ["unaffected"], 2),
         ("Synonymous", ["affected"], 1),
-
     ],
 )
 def test_get_denovo_gene_set(
-        trios2_dgsc, denovo_gene_set, people_groups, count):
+        trios2_dgsc: DenovoGeneSetCollection,
+        denovo_gene_set: str, people_groups: list[str], count: int) -> None:
+
     dgs = DenovoGeneSetCollection.get_gene_set(
         denovo_gene_set, [trios2_dgsc], {"trios2": {"status": people_groups}}
     )
+
     assert dgs is not None
     assert dgs["count"] == count
     assert dgs["name"] == denovo_gene_set

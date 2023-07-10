@@ -134,7 +134,8 @@ def vcf_import(
 def vcf_study(
     root_path: pathlib.Path,
     study_id: str,
-    ped_path: pathlib.Path, vcf_paths: list[pathlib.Path],
+    ped_path: pathlib.Path,
+    vcf_paths: list[pathlib.Path],
     gpf_instance: GPFInstance,
     project_config_update: Optional[dict[str, Any]] = None,
     project_config_overwrite: Optional[dict[str, Any]] = None,

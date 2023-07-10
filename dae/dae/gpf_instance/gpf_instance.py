@@ -1,5 +1,6 @@
 """Defines GPFInstance class that gives access to different parts of GPF."""
 # pylint: disable=import-outside-toplevel
+from __future__ import annotations
 
 import os
 import logging
@@ -61,7 +62,8 @@ class GPFInstance:
 
     @staticmethod
     def build(
-            config_filename: Optional[Union[str, Path]] = None, **kwargs):
+            config_filename: Optional[Union[str, Path]] = None,
+            **kwargs) -> GPFInstance:
         """Construct and return a GPF instance.
 
         If the config_filename is None, tries to discover the GPF instance.

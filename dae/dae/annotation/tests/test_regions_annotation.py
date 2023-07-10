@@ -3,104 +3,101 @@
 import textwrap
 import pytest
 
-from dae.genomic_resources import build_genomic_resource_repository
+from dae.genomic_resources.repository import GenomicResourceRepo
+from dae.genomic_resources.testing import build_inmemory_test_repository
 from dae.annotation.annotatable import Region
 from dae.annotation.annotation_factory import build_annotation_pipeline
 
 
 @pytest.fixture
-def fixture_repo():
-    repo = build_genomic_resource_repository({
-        "id": "test_annotation",
-        "type": "embedded",
-        "content": {
-            "position_score1": {
-                "genomic_resource.yaml": textwrap.dedent("""
-                type: position_score
+def fixture_repo() -> GenomicResourceRepo:
+    repo = build_inmemory_test_repository({
+        "position_score1": {
+            "genomic_resource.yaml": textwrap.dedent("""
+            type: position_score
+            table:
+                filename: data.mem
+            scores:
+            - id: test100way
+              type: float
+              desc: "test values"
+              name: 100way
+            default_annotation:
+                attributes:
+                - source: test100way
+                  destination: test100
+            """),
+            "data.mem": """
+                chrom  pos_begin  pos_end  100way
+                chr1   10         19       1.0
+                chr1   20         29       2.0
+                chr1   30         39       3.0
+            """
+        },
+        "np_score1": {
+            "genomic_resource.yaml": textwrap.dedent("""
+            type: np_score
+            table:
+                filename: data.mem
+                reference:
+                  name: reference
+                alternative:
+                  name: alternative
+            scores:
+            - id: test_raw
+              type: float
+              desc: "test values"
+              name: raw
+            """),
+            "data.mem": """
+                chrom  pos_begin  reference  alternative  raw
+                chr1   10         A          C            0.00001
+                chr1   10         A          G            0.00002
+                chr1   10         A          T            0.00004
+                chr1   11         C          A            0.0001
+                chr1   11         C          G            0.0002
+                chr1   11         C          T            0.0004
+                chr1   12         C          A            0.001
+                chr1   12         C          G            0.002
+                chr1   12         C          T            0.004
+                chr1   13         C          A            0.01
+                chr1   13         C          G            0.02
+                chr1   13         C          T            0.04
+                chr1   14         T          A            0.1
+                chr1   14         T          C            0.2
+                chr1   14         T          G            0.4
+            """
+        },
+        "allele_score1": {
+            "genomic_resource.yaml": textwrap.dedent("""
+                type: allele_score
                 table:
                     filename: data.mem
-                scores:
-                - id: test100way
-                  type: float
-                  desc: "test values"
-                  name: 100way
-                default_annotation:
-                    attributes:
-                    - source: test100way
-                      destination: test100
-                """),
-                "data.mem": """
-                    chrom  pos_begin  pos_end  100way
-                    chr1   10         19       1.0
-                    chr1   20         29       2.0
-                    chr1   30         39       3.0
-                """
-            },
-            "np_score1": {
-                "genomic_resource.yaml": textwrap.dedent("""
-                type: np_score
-                table:
-                    filename: data.mem
+                    pos_begin:
+                      name: pos_begin
                     reference:
                       name: reference
                     alternative:
                       name: alternative
                 scores:
-                - id: test_raw
+                - id: score
+                  name: score
                   type: float
-                  desc: "test values"
-                  name: raw
-                """),
-                "data.mem": """
-                    chrom  pos_begin  reference  alternative  raw
-                    chr1   10         A          C            0.00001
-                    chr1   10         A          G            0.00002
-                    chr1   10         A          T            0.00004
-                    chr1   11         C          A            0.0001
-                    chr1   11         C          G            0.0002
-                    chr1   11         C          T            0.0004
-                    chr1   12         C          A            0.001
-                    chr1   12         C          G            0.002
-                    chr1   12         C          T            0.004
-                    chr1   13         C          A            0.01
-                    chr1   13         C          G            0.02
-                    chr1   13         C          T            0.04
-                    chr1   14         T          A            0.1
-                    chr1   14         T          C            0.2
-                    chr1   14         T          G            0.4
-                """
-            },
-            "allele_score1": {
-                "genomic_resource.yaml": textwrap.dedent("""
-                    type: allele_score
-                    table:
-                        filename: data.mem
-                        pos_begin:
-                          name: pos_begin
-                        reference:
-                          name: reference
-                        alternative:
-                          name: alternative
-                    scores:
-                    - id: score
-                      name: score
-                      type: float
-                """),
-                "data.mem": """
-                    chrom  pos_begin  reference  alternative  score
-                    chr1   10         A          C            0.00001
-                    chr1   10         A          G            0.00002
-                    chr1   11         A          T            0.00004
-                    chr1   11         C          A            0.0001
-                    chr1   12         C          A            0.001
-                    chr1   12         C          G            0.002
-                    chr1   13         C          A            0.01
-                    chr1   13         C          G            0.02
-                    chr1   14         T          A            0.1
-                    chr1   14         T          C            0.2
-                """
-            },
-        }
+            """),
+            "data.mem": """
+                chrom  pos_begin  reference  alternative  score
+                chr1   10         A          C            0.00001
+                chr1   10         A          G            0.00002
+                chr1   11         A          T            0.00004
+                chr1   11         C          A            0.0001
+                chr1   12         C          A            0.001
+                chr1   12         C          G            0.002
+                chr1   13         C          A            0.01
+                chr1   13         C          G            0.02
+                chr1   14         T          A            0.1
+                chr1   14         T          C            0.2
+            """
+        },
     })
 
     return repo
@@ -113,7 +110,8 @@ def fixture_repo():
 
 ])
 def test_position_score_annotator(
-        region, pos_aggregator, expected, fixture_repo):
+        region: tuple, pos_aggregator: str, expected: float,
+        fixture_repo: GenomicResourceRepo) -> None:
 
     annotatable = Region(*region)
 
@@ -143,7 +141,9 @@ def test_position_score_annotator(
     (("chr1", 10, 14), "max", "min", 0.1),
 ])
 def test_np_score_annotator(
-        region, pos_aggregator, nuc_aggregator, expected, fixture_repo):
+        region: tuple,
+        pos_aggregator: str, nuc_aggregator: str, expected: float,
+        fixture_repo: GenomicResourceRepo) -> None:
 
     annotatable = Region(*region)
 
@@ -173,7 +173,9 @@ def test_np_score_annotator(
     (("chr1", 10, 14), "max", "min", None),
 ])
 def test_np_score_annotator_region_length_cutoff(
-        region, pos_aggregator, nuc_aggregator, expected, fixture_repo):
+        region: tuple,
+        pos_aggregator: str, nuc_aggregator: str, expected: float,
+        fixture_repo: GenomicResourceRepo) -> None:
 
     annotatable = Region(*region)
 
@@ -204,7 +206,9 @@ def test_np_score_annotator_region_length_cutoff(
     (("chr1", 10, 14), "max", "min", 0.1),
 ])
 def test_allele_score_annotator(
-        region, pos_aggregator, allele_aggregator, expected, fixture_repo):
+        region: tuple,
+        pos_aggregator: str, allele_aggregator: str, expected: float,
+        fixture_repo: GenomicResourceRepo) -> None:
 
     annotatable = Region(*region)
 

@@ -1,4 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+from typing import Callable
+import pathlib
 import textwrap
 import pytest
 
@@ -7,12 +9,12 @@ from dae.testing import setup_pedigree, setup_vcf, \
 
 from dae.import_tools.import_tools import ImportProject
 from dae.tools.simple_study_import import main
-
+from dae.genotype_storage.genotype_storage import GenotypeStorage
 
 from dae.testing.foobar_import import foobar_gpf
 
 
-def test_del_loader_prefix():
+def test_del_loader_prefix() -> None:
     params = {"ped_alabala": "alabala", "portokala": "portokala"}
     res = ImportProject.del_loader_prefix(params, "ped_")
     assert res["alabala"] == "alabala"
@@ -20,7 +22,7 @@ def test_del_loader_prefix():
 
 
 @pytest.fixture
-def pedigree_data(tmp_path_factory):
+def pedigree_data(tmp_path_factory: pytest.TempPathFactory) -> pathlib.Path:
     root_path = tmp_path_factory.mktemp("pedigree")
     return setup_pedigree(
         root_path / "pedigree_data" / "in.ped",
@@ -38,7 +40,7 @@ def pedigree_data(tmp_path_factory):
 
 
 @pytest.fixture
-def denovo_dae_data(tmp_path_factory):
+def denovo_dae_data(tmp_path_factory: pytest.TempPathFactory) -> pathlib.Path:
     root_path = tmp_path_factory.mktemp("denovo_dae_path")
     return setup_denovo(
         root_path / "denovo_dae_data" / "in.tsv",
@@ -54,20 +56,21 @@ def denovo_dae_data(tmp_path_factory):
 
 
 def test_import_denovo_dae_style_into_genotype_storage(
-        tmp_path_factory, pedigree_data, denovo_dae_data,
-        genotype_storage):
+        tmp_path_factory: pytest.TempPathFactory,
+        pedigree_data: pathlib.Path, denovo_dae_data: pathlib.Path,
+        genotype_storage: GenotypeStorage) -> None:
     root_path = tmp_path_factory.mktemp(
         genotype_storage.storage_id)
     gpf_instance = foobar_gpf(root_path, genotype_storage)
     study_id = f"test_denovo_dae_style_{genotype_storage.storage_id}"
 
     argv = [
-        pedigree_data,
+        str(pedigree_data),
         "--id",
         study_id,
         # "--skip-reports",
         "--denovo-file",
-        denovo_dae_data,
+        str(denovo_dae_data),
         "--denovo-location",
         "location",
         "--denovo-variant",
@@ -96,7 +99,9 @@ def test_import_denovo_dae_style_into_genotype_storage(
 
 
 def test_import_denovo_dae_style_sep(
-        tmp_path_factory, pedigree_data, genotype_storage):
+        tmp_path_factory: pytest.TempPathFactory,
+        pedigree_data: pathlib.Path,
+        genotype_storage: GenotypeStorage) -> None:
     root_path = tmp_path_factory.mktemp(genotype_storage.storage_id)
     gpf_instance = foobar_gpf(root_path, genotype_storage)
 
@@ -119,7 +124,7 @@ def test_import_denovo_dae_style_sep(
     study_id = f"test_denovo_dae_style_sep_{genotype_storage.storage_id}"
 
     argv = [
-        pedigree_data,
+        str(pedigree_data),
         "--id",
         study_id,
         "--skip-reports",
@@ -159,7 +164,7 @@ def test_import_denovo_dae_style_sep(
 
 
 @pytest.fixture
-def vcf_data(tmp_path_factory):
+def vcf_data(tmp_path_factory: pytest.TempPathFactory) -> pathlib.Path:
     root_path = tmp_path_factory.mktemp("vcf_data")
 
     return setup_vcf(root_path / "vcf_data" / "in.vcf.gz", textwrap.dedent("""
@@ -173,19 +178,21 @@ def vcf_data(tmp_path_factory):
 
 
 def test_import_comp_vcf_into_genotype_storage(
-        tmp_path_factory, pedigree_data, vcf_data, genotype_storage):
+        tmp_path_factory: pytest.TempPathFactory,
+        pedigree_data: pathlib.Path, vcf_data: pathlib.Path,
+        genotype_storage: GenotypeStorage) -> None:
 
     root_path = tmp_path_factory.mktemp(genotype_storage.storage_id)
     gpf_instance = foobar_gpf(root_path, genotype_storage)
     study_id = f"test_comp_vcf_{genotype_storage.storage_id}"
 
     argv = [
-        pedigree_data,
+        str(pedigree_data),
         "--id",
         study_id,
         "--skip-reports",
         "--vcf-files",
-        vcf_data,
+        str(vcf_data),
         "--vcf-denovo-mode", "possible_denovo",
         "--vcf-omission-mode", "possible_omission",
         "--genotype-storage",
@@ -207,22 +214,23 @@ def test_import_comp_vcf_into_genotype_storage(
 
 
 def test_import_vcf_and_denovo_into_genotype_storage(
-        tmp_path_factory,
-        pedigree_data, denovo_dae_data, vcf_data,
-        genotype_storage):
+        tmp_path_factory: pytest.TempPathFactory,
+        pedigree_data: pathlib.Path,
+        denovo_dae_data: pathlib.Path, vcf_data: pathlib.Path,
+        genotype_storage: GenotypeStorage) -> None:
     root_path = tmp_path_factory.mktemp(genotype_storage.storage_id)
     gpf_instance = foobar_gpf(root_path, genotype_storage)
 
     study_id = f"test_comp_all_{genotype_storage.storage_id}"
 
     argv = [
-        pedigree_data,
+        str(pedigree_data),
         "--skip-reports",
         "--id", study_id,
         "--vcf-denovo-mode", "possible_denovo",
         "--vcf-omission-mode", "possible_omission",
-        "--vcf-files", vcf_data,
-        "--denovo-file", denovo_dae_data,
+        "--vcf-files", str(vcf_data),
+        "--denovo-file", str(denovo_dae_data),
         "--denovo-location", "location",
         "--denovo-variant", "variant",
         "--denovo-family-id", "familyId",
@@ -245,24 +253,25 @@ def test_import_vcf_and_denovo_into_genotype_storage(
 
 
 def test_add_chrom_prefix_simple(
-        tmp_path_factory,
-        pedigree_data, denovo_dae_data, vcf_data,
-        genotype_storage):
+        tmp_path_factory: pytest.TempPathFactory,
+        pedigree_data: pathlib.Path,
+        denovo_dae_data: pathlib.Path, vcf_data: pathlib.Path,
+        genotype_storage: GenotypeStorage) -> None:
     root_path = tmp_path_factory.mktemp(genotype_storage.storage_id)
     gpf_instance = foobar_gpf(root_path, genotype_storage)
     study_id = f"test_comp_all_prefix_{genotype_storage.storage_id}"
 
     argv = [
-        pedigree_data,
+        str(pedigree_data),
         "--id",
         study_id,
         "--skip-reports",
         "--vcf-denovo-mode", "possible_denovo",
         "--vcf-omission-mode", "possible_omission",
         "--vcf-files",
-        vcf_data,
+        str(vcf_data),
         "--denovo-file",
-        denovo_dae_data,
+        str(denovo_dae_data),
         "--denovo-location",
         "location",
         "--denovo-variant",
@@ -301,23 +310,23 @@ def test_add_chrom_prefix_simple(
 
 
 def test_import_del_chrom_prefix(
-        tmp_path_factory,
-        pedigree_data, vcf_data,
-        genotype_storage):
+        tmp_path_factory: pytest.TempPathFactory,
+        pedigree_data: pathlib.Path, vcf_data: pathlib.Path,
+        genotype_storage: GenotypeStorage) -> None:
     root_path = tmp_path_factory.mktemp(genotype_storage.storage_id)
     gpf_instance = foobar_gpf(root_path, genotype_storage)
 
     study_id = f"test_comp_all_del_chrom_prefix_{genotype_storage.storage_id}"
 
     argv = [
-        pedigree_data,
+        str(pedigree_data),
         "--id",
         study_id,
         "--skip-reports",
         "--vcf-denovo-mode", "possible_denovo",
         "--vcf-omission-mode", "possible_omission",
         "--vcf-files",
-        vcf_data,
+        str(vcf_data),
         "--genotype-storage",
         genotype_storage.storage_id,
         "--del-chrom-prefix",
@@ -342,9 +351,9 @@ def test_import_del_chrom_prefix(
 
 
 def test_import_transmitted_dae_into_genotype_storage(
-        tmp_path_factory,
-        pedigree_data,
-        genotype_storage):
+        tmp_path_factory: pytest.TempPathFactory,
+        pedigree_data: pathlib.Path,
+        genotype_storage: GenotypeStorage) -> None:
 
     root_path = tmp_path_factory.mktemp(genotype_storage.storage_id)
     gpf_instance = foobar_gpf(root_path, genotype_storage)
@@ -367,12 +376,12 @@ bar 11       sub(A->G) f1:1121/1101:38||4||83||25/16||23||0||16/0||0||0||0;f2:21
     )
 
     argv = [
-        pedigree_data,
+        str(pedigree_data),
         "--id",
         study_id,
         "--skip-reports",
         "--dae-summary-file",
-        summary_data,
+        str(summary_data),
         "--genotype-storage",
         genotype_storage.storage_id,
         "-o",
@@ -393,8 +402,9 @@ bar 11       sub(A->G) f1:1121/1101:38||4||83||25/16||23||0||16/0||0||0||0;f2:21
 
 
 def test_import_wild_multivcf_into_genotype_storage(
-        tmp_path_factory, genotype_storage,
-        pedigree_data):
+        tmp_path_factory: pytest.TempPathFactory,
+        genotype_storage: GenotypeStorage,
+        pedigree_data: pathlib.Path) -> None:
     root_path = tmp_path_factory.mktemp(genotype_storage.storage_id)
     gpf_instance = foobar_gpf(root_path, genotype_storage)
 
@@ -445,7 +455,7 @@ def test_import_wild_multivcf_into_genotype_storage(
 
     study_id = f"test_wile_multivcf_{genotype_storage.storage_id}"
     argv = [
-        pedigree_data,
+        str(pedigree_data),
         "--id", study_id,
         "--skip-reports",
         "--vcf-denovo-mode", "possible_denovo",
@@ -472,8 +482,10 @@ def test_import_wild_multivcf_into_genotype_storage(
 
 
 def test_import_study_config_arg(
-        tmp_path_factory, genotype_storage,
-        pedigree_data, vcf_data):
+        tmp_path_factory: pytest.TempPathFactory,
+        genotype_storage: GenotypeStorage,
+        pedigree_data: pathlib.Path,
+        vcf_data: pathlib.Path) -> None:
     root_path = tmp_path_factory.mktemp(genotype_storage.storage_id)
     gpf_instance = foobar_gpf(root_path, genotype_storage)
 
@@ -485,12 +497,12 @@ def test_import_study_config_arg(
     study_id = f"test_comp_vcf_{genotype_storage.storage_id}"
 
     argv = [
-        pedigree_data,
+        str(pedigree_data),
         "--id", study_id,
         "--skip-reports",
         "--vcf-denovo-mode", "possible_denovo",
         "--vcf-omission-mode", "possible_omission",
-        "--vcf-files", vcf_data,
+        "--vcf-files", str(vcf_data),
         "--genotype-storage", genotype_storage.storage_id,
         "--study-config", str(study_config),
         "-F",
@@ -502,7 +514,9 @@ def test_import_study_config_arg(
 
 @pytest.mark.xfail(reason="denovo-db import does not work on impala2")
 def test_denovo_db_import(
-        tmp_path_factory, genotype_storage, fixture_dirname):
+        tmp_path_factory: pytest.TempPathFactory,
+        genotype_storage: GenotypeStorage,
+        fixture_dirname: Callable[[str], str]) -> None:
     root_path = tmp_path_factory.mktemp(genotype_storage.storage_id)
     gpf_instance = foobar_gpf(root_path, genotype_storage)
 

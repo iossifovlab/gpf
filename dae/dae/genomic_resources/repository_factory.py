@@ -13,11 +13,11 @@ from urllib.parse import urlparse
 
 import yaml
 
-from .fsspec_protocol import build_fsspec_protocol
+from .fsspec_protocol import build_fsspec_protocol, build_inmemory_protocol
 from .repository import GenomicResourceRepo, GenomicResourceProtocolRepo, \
     GenomicResource
 from .cached_repository import GenomicResourceCachedRepo
-from .testing import build_inmemory_protocol
+# from .testing import build_inmemory_protocol
 
 from .group_repository import GenomicResourceGroupRepo
 

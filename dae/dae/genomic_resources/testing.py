@@ -1,5 +1,6 @@
 """Provides tools usefult for testing."""
 from __future__ import annotations
+
 import os
 import contextlib
 import pathlib
@@ -11,7 +12,7 @@ import importlib
 import textwrap
 
 from typing import Any, Dict, Union, cast, Generator, \
-    Tuple, ContextManager, List
+    Tuple, ContextManager, List, Optional
 from collections.abc import Callable
 import multiprocessing as mp
 
@@ -23,19 +24,18 @@ import pysam
 
 from dae.genomic_resources.repository import \
     GenomicResource, \
-    GenomicResourceProtocolRepo, \
-    parse_gr_id_version_token, \
-    is_gr_id_token, \
-    GR_CONF_FILE_NAME
+    GenomicResourceProtocolRepo
 from dae.genomic_resources.fsspec_protocol import \
     FsspecReadWriteProtocol, FsspecReadOnlyProtocol, \
-    build_fsspec_protocol
+    build_fsspec_protocol, build_inmemory_protocol
+from dae.genomic_resources.reference_genome import ReferenceGenome
+from dae.genomic_resources.gene_models import GeneModels
 
 
 logger = logging.getLogger(__name__)
 
 
-def convert_to_tab_separated(content: str):
+def convert_to_tab_separated(content: str) -> str:
     """Convert a string into tab separated file content.
 
     Useful for testing purposes.
@@ -70,19 +70,21 @@ def setup_directories(
             f"unexpected content type: {content} for {root_dir}")
 
 
-def setup_pedigree(ped_path, content):
+def setup_pedigree(ped_path: pathlib.Path, content: str) -> pathlib.Path:
     ped_data = convert_to_tab_separated(content)
     setup_directories(ped_path, ped_data)
-    return str(ped_path)
+    return ped_path
 
 
-def setup_denovo(denovo_path, content):
+def setup_denovo(denovo_path: pathlib.Path, content: str) -> pathlib.Path:
     denovo_data = convert_to_tab_separated(content)
     setup_directories(denovo_path, denovo_data)
-    return str(denovo_path)
+    return denovo_path
 
 
-def setup_tabix(tabix_path: pathlib.Path, tabix_content: str, **kwargs):
+def setup_tabix(
+        tabix_path: pathlib.Path, tabix_content: str,
+        **kwargs: Union[bool, str, int]) -> tuple[str, str]:
     """Set up a tabix file."""
     content = convert_to_tab_separated(tabix_content)
     out_path = tabix_path
@@ -92,17 +94,17 @@ def setup_tabix(tabix_path: pathlib.Path, tabix_content: str, **kwargs):
 
     tabix_filename = str(out_path.parent / f"{out_path.name}.gz")
     index_filename = f"{tabix_filename}.tbi"
-    force = kwargs.pop("force", False)
+    force = cast(bool, kwargs.pop("force", False))
     # pylint: disable=no-member
     pysam.tabix_compress(str(out_path), tabix_filename, force=force)
-    pysam.tabix_index(tabix_filename, force=force, **kwargs)
+    pysam.tabix_index(tabix_filename, force=force, **kwargs)  # type: ignore
 
     out_path.unlink()
 
     return tabix_filename, index_filename
 
 
-def setup_gzip(gzip_path: pathlib.Path, gzip_content: str):
+def setup_gzip(gzip_path: pathlib.Path, gzip_content: str) -> pathlib.Path:
     """Set up a gzipped TSV file."""
     content = convert_to_tab_separated(gzip_content)
     out_path = gzip_path
@@ -113,7 +115,9 @@ def setup_gzip(gzip_path: pathlib.Path, gzip_content: str):
     return out_path
 
 
-def setup_vcf(out_path: pathlib.Path, content: str, csi=False):
+def setup_vcf(
+        out_path: pathlib.Path, content: str,
+        csi: bool = False) -> pathlib.Path:
     """Set up a VCF file using the content."""
     vcf_data = convert_to_tab_separated(content)
     vcf_path = out_path
@@ -141,10 +145,12 @@ def setup_vcf(out_path: pathlib.Path, content: str, csi=False):
         header_gz_filename = str(header_path.parent / f"{header_path.name}.gz")
         pysam.tabix_compress(str(header_path), header_gz_filename)
         pysam.tabix_index(header_gz_filename, preset="vcf")
-    return str(out_path)
+    return out_path
 
 
-def setup_dae_transmitted(root_path, summary_content, toomany_content):
+def setup_dae_transmitted(
+        root_path: pathlib.Path,
+        summary_content: str, toomany_content: str) -> tuple[str, str]:
     """Set up a DAE transmitted variants file using passed content."""
     summary = convert_to_tab_separated(summary_content)
     toomany = convert_to_tab_separated(toomany_content)
@@ -175,7 +181,7 @@ def setup_dae_transmitted(root_path, summary_content, toomany_content):
             str(root_path / "dae_transmitted_data" / "tr-TOOMANY.txt.gz"))
 
 
-def setup_genome(out_path: pathlib.Path, content):
+def setup_genome(out_path: pathlib.Path, content: str) -> ReferenceGenome:
     """Set up reference genome using the content."""
     if out_path.suffix != ".fa":
         raise ValueError("genome output file is expected to have '.fa' suffix")
@@ -197,7 +203,9 @@ def setup_genome(out_path: pathlib.Path, content):
     return build_reference_genome_from_file(str(out_path)).open()
 
 
-def setup_gene_models(out_path: pathlib.Path, content, fileformat=None):
+def setup_gene_models(
+        out_path: pathlib.Path,
+        content: str, fileformat: Optional[str] = None) -> GeneModels:
     """Set up gene models in refflat format using the passed content."""
     setup_directories(out_path, convert_to_tab_separated(content))
     setup_directories(out_path.parent, {
@@ -214,97 +222,12 @@ def setup_gene_models(out_path: pathlib.Path, content, fileformat=None):
     return build_gene_models_from_file(str(out_path), fileformat=fileformat)
 
 
-def setup_empty_gene_models(out_path: pathlib.Path):
+def setup_empty_gene_models(out_path: pathlib.Path) -> GeneModels:
     """Set up empty gene models."""
     content = """
 #geneName name chrom strand txStart txEnd cdsStart cdsEnd exonCount exonStarts exonEnds
     """  # noqa
     return setup_gene_models(out_path, content, fileformat="refflat")
-
-
-def _scan_for_resource_files(content_dict: dict[str, Any], parent_dirs):
-
-    for path, content in content_dict.items():
-        if isinstance(content, dict):
-            # handle subdirectory
-            for fname, fcontent in _scan_for_resource_files(
-                    content, [*parent_dirs, path]):
-                yield fname, fcontent
-        else:
-            fname = "/".join([*parent_dirs, path])
-            if isinstance(content, (str, bytes)):
-                # handle file content
-                yield fname, content
-            else:
-                logger.error(
-                    "unexpected content at %s: %s", fname, content)
-                raise ValueError(f"unexpected content at {fname}: {content}")
-
-
-def _scan_for_resources(content_dict, parent_id):
-    name = "/".join(parent_id)
-    id_ver = parse_gr_id_version_token(name)
-    if isinstance(content_dict, dict) and id_ver and \
-            GR_CONF_FILE_NAME in content_dict and \
-            not isinstance(content_dict[GR_CONF_FILE_NAME], dict):
-        # resource found
-        resource_id, version = id_ver
-        yield "/".join([*parent_id, resource_id]), version, content_dict
-        return
-
-    for name, content in content_dict.items():
-        id_ver = parse_gr_id_version_token(name)
-        if isinstance(content, dict) and id_ver and \
-                GR_CONF_FILE_NAME in content and \
-                not isinstance(content[GR_CONF_FILE_NAME], dict):
-            # resource found
-            resource_id, version = id_ver
-            yield "/".join([*parent_id, resource_id]), version, content
-        else:
-            curr_id = parent_id + [name]
-            curr_id_path = "/".join(curr_id)
-            if not isinstance(content, dict):
-                logger.warning("file <%s> is not used.", curr_id_path)
-                continue
-            if not is_gr_id_token(name):
-                logger.warning(
-                    "directory <%s> has a name <%s> that is not a "
-                    "valid Genomic Resource Id Token.", curr_id_path, name)
-                continue
-
-            # scan children
-            for rid, rver, rcontent in _scan_for_resources(content, curr_id):
-                yield rid, rver, rcontent
-
-
-def build_inmemory_protocol(
-        proto_id: str,
-        root_path: str,
-        content: Dict[str, Any]) -> FsspecReadWriteProtocol:
-    """Build and return an embedded fsspec protocol for testing."""
-    if not os.path.isabs(root_path):
-        logger.error(
-            "for embedded resources repository we expects an "
-            "absolute path: %s", root_path)
-        raise ValueError(f"not an absolute root path: {root_path}")
-
-    proto = cast(
-        FsspecReadWriteProtocol,
-        build_fsspec_protocol(proto_id, f"memory://{root_path}"))
-    for rid, rver, rcontent in _scan_for_resources(content, []):
-        resource = GenomicResource(rid, rver, proto)
-        for fname, fcontent in _scan_for_resource_files(rcontent, []):
-            mode = "wt"
-            if isinstance(fcontent, bytes):
-                mode = "wb"
-            with proto.open_raw_file(resource, fname, mode) as outfile:
-                outfile.write(fcontent)
-            proto.save_resource_file_state(
-                resource, proto.build_resource_file_state(resource, fname))
-
-        proto.save_manifest(resource, proto.build_manifest(resource))
-
-    return proto
 
 
 def build_inmemory_test_protocol(
@@ -351,7 +274,8 @@ def build_inmemory_test_resource(
 
 
 def build_filesystem_test_protocol(
-        root_path: pathlib.Path, repair=True) -> FsspecReadWriteProtocol:
+    root_path: pathlib.Path, repair: bool = True
+) -> FsspecReadWriteProtocol:
     """Build and return an filesystem fsspec protocol for testing.
 
     The root_path is expected to point to a directory structure with all the
@@ -414,14 +338,14 @@ def http_threaded_test_server(
 
 
 @contextlib.contextmanager
-def http_process_test_server(path) -> Generator[str, None, None]:
+def http_process_test_server(path: pathlib.Path) -> Generator[str, None, None]:
     with _process_server_manager(http_threaded_test_server, path) as http_url:
         yield http_url
 
 
 @contextlib.contextmanager
 def build_http_test_protocol(
-        root_path: pathlib.Path, repair=True) -> Generator[
+        root_path: pathlib.Path, repair: bool = True) -> Generator[
             FsspecReadOnlyProtocol, None, None]:
     """Run an HTTP range server and construct genomic resource protocol.
 
@@ -440,7 +364,7 @@ def build_http_test_protocol(
 
 def _internal_process_runner(
         module_name: str, server_manager_name: str, args: List[Any],
-        start_queue: mp.Queue, stop_queue: mp.Queue):
+        start_queue: mp.Queue, stop_queue: mp.Queue) -> None:
     module = importlib.import_module(module_name)
     server_manager = getattr(module, server_manager_name)
     try:
@@ -458,7 +382,7 @@ def _internal_process_runner(
 @contextlib.contextmanager
 def _process_server_manager(
         server_manager: Callable[..., ContextManager[str]],
-        *args):
+        *args: pathlib.Path) -> Generator[str, None, None]:
     """Run a process server."""
     start_queue: mp.Queue = mp.Queue()
     stop_queue: mp.Queue = mp.Queue()
@@ -551,8 +475,9 @@ def build_s3_test_server() -> Generator[
 
 
 @contextlib.contextmanager
-def build_s3_test_protocol(root_path) -> Generator[
-        FsspecReadWriteProtocol, None, None]:
+def build_s3_test_protocol(
+    root_path: pathlib.Path
+) -> Generator[FsspecReadWriteProtocol, None, None]:
     """Run an S3 moto server and construct fsspec genomic resource protocol.
 
     The S3 moto server is populated with resource from filesystem GRR pointed
@@ -576,7 +501,7 @@ def build_s3_test_protocol(root_path) -> Generator[
 
 def copy_proto_genomic_resources(
         dest_proto: FsspecReadWriteProtocol,
-        src_proto: FsspecReadOnlyProtocol):
+        src_proto: FsspecReadOnlyProtocol) -> None:
     for res in src_proto.get_all_resources():
         dest_proto.copy_resource(res)
     dest_proto.build_content_file()
@@ -585,9 +510,10 @@ def copy_proto_genomic_resources(
 
 @contextlib.contextmanager
 def proto_builder(
-        scheme: str, content: dict) -> Generator[
-            Union[FsspecReadOnlyProtocol, FsspecReadWriteProtocol],
-            None, None]:
+    scheme: str, content: dict
+) -> Generator[
+        Union[FsspecReadOnlyProtocol, FsspecReadWriteProtocol],
+        None, None]:
     """Build a test genomic resource protocol with specified content."""
     with tempfile.TemporaryDirectory("s3_test_bucket") as tmp_path:
         root_path = pathlib.Path(tmp_path)
