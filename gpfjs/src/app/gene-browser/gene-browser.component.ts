@@ -125,7 +125,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
       this.interruptSummaryVariants$.next(true);
     });
 
-    if (this.selectedDataset.studies?.length !== 0) {
+    if (this.selectedDataset.studies?.length) {
       this.isUniqueFamilyFilterEnabled = true;
     }
   }

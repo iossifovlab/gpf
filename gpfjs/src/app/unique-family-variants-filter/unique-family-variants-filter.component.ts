@@ -30,7 +30,7 @@ export class UniqueFamilyVariantsFilterComponent extends StatefulComponent imple
     this.store.selectOnce(UniqueFamilyVariantsFilterState).subscribe(state => {
       this.filterValue = state.uniqueFamilyVariants;
     });
-    if (this.datasetService.getSelectedDataset().studies?.length !== 0) {
+    if (this.datasetService.getSelectedDataset().studies?.length) {
       this.isVisible = true;
     }
   }
