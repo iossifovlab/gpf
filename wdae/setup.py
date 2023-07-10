@@ -2,8 +2,7 @@ from pathlib import Path
 from typing import Dict, List
 
 import setuptools
-
-# from dae import __version__  # type: ignore
+import versioneer
 
 
 def _expand_recursive_globs(
@@ -36,7 +35,8 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="gpf_wdae",
-    # version=__version__,
+    version=versioneer.get_version(),
+    cmdclass=versioneer.get_cmdclass(),
     author="Lubomir Chorbadjiev",
     author_email="lubomir.chorbadjiev@gmail.com",
     description="GPF: Genotypes and Phenotypes in Families",

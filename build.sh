@@ -482,14 +482,14 @@ EOT
     '
 
     build_run bash -c '
-      echo "# pylint: skip-file" > wdae/wdae/__build__.py
-      echo "# type: ignore" >> wdae/wdae/__build__.py
-      echo "# flake8: noqa" >> wdae/wdae/__build__.py
-      echo "VERSION = \"'"${gpf_version}"'\"" >> wdae/wdae/__build__.py
-      echo "GIT_DESCRIBE = \"'"${gpf_git_describe}"'\"" >> wdae/wdae/__build__.py
-      echo "GIT_BRANCH = \"'"${gpf_git_branch}"'\"" >> wdae/wdae/__build__.py
-      echo "BUILD = \"'"${gpf_tag}"'-'"${__gpf_build_no}"'\"" >> wdae/wdae/__build__.py
-      echo "" >> wdae/wdae/__build__.py
+      echo "# pylint: skip-file" > wdae/wdae/wdae/__build__.py
+      echo "# type: ignore" >> wdae/wdae/wdae/__build__.py
+      echo "# flake8: noqa" >> wdae/wdae/wdae/__build__.py
+      echo "VERSION = \"'"${gpf_version}"'\"" >> wdae/wdae/wdae/__build__.py
+      echo "GIT_DESCRIBE = \"'"${gpf_git_describe}"'\"" >> wdae/wdae/wdae/__build__.py
+      echo "GIT_BRANCH = \"'"${gpf_git_branch}"'\"" >> wdae/wdae/wdae/__build__.py
+      echo "BUILD = \"'"${gpf_tag}"'-'"${__gpf_build_no}"'\"" >> wdae/wdae/wdae/__build__.py
+      echo "" >> wdae/wdae/wdae/__build__.py
     '
 
 
