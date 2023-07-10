@@ -8,7 +8,7 @@ from remote.remote_phenotype_data import RemotePhenotypeData
 from remote.remote_variant import RemoteFamilyVariant, QUERY_SOURCES
 from studies.query_transformer import QueryTransformer
 from studies.response_transformer import ResponseTransformer
-from dae.pedigrees.family import Family, FamiliesData
+from dae.pedigrees.family import FamiliesData
 from dae.variants.attributes import Role
 
 
