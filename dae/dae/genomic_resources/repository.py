@@ -25,7 +25,7 @@ import enum
 import hashlib
 import copy
 
-from typing import Optional, Any, Generator, Union, Iterator, cast
+from typing import IO, Optional, Any, Generator, Union, Iterator, cast
 from dataclasses import dataclass, asdict
 
 import abc
@@ -470,7 +470,7 @@ class ReadOnlyRepositoryProtocol(abc.ABC):
     @abc.abstractmethod
     def open_raw_file(
             self, resource, filename,
-            mode="rt", **kwargs):
+            mode="rt", **kwargs) -> IO:
         """Open file in a resource and returns a file-like object."""
 
     @abc.abstractmethod

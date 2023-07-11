@@ -38,7 +38,6 @@ class Line:
     def set_chrom(self, chrom: str):
         self.chrom = chrom
 
-    
     def get(self, key: Key):
         if isinstance(key, int):
             return self._data[key]

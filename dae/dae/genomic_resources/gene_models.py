@@ -1,6 +1,8 @@
 # pylint: disable=too-many-lines
 # FIXME: too-many-lines
 from __future__ import annotations
+from functools import cache
+import json
 
 import os
 import gzip
@@ -22,7 +24,8 @@ from dae.genomic_resources.resource_implementation import \
     GenomicResourceImplementation, get_base_resource_schema, \
     InfoImplementationMixin, ResourceConfigValidationMixin
 from dae.genomic_resources.fsspec_protocol import build_local_resource
-from dae.task_graph.graph import Task
+from dae.task_graph.graph import Task, TaskGraph
+import yaml
 
 logger = logging.getLogger(__name__)
 
@@ -481,11 +484,11 @@ class GeneModels(
             self.gene_models[transcript.gene].append(transcript)
             self.utr_models[transcript.chrom][transcript.tx].append(transcript)
 
-    def gene_names(self):
+    def gene_names(self) -> list[str]:
         if self.gene_models is None:
             logger.warning(
                 "gene models %s are empty", self.resource.resource_id)
-            return None
+            return []
 
         return list(self.gene_models.keys())
 
@@ -1452,20 +1455,25 @@ class GeneModels(
         return Template(textwrap.dedent("""
             {% extends base %}
             {% block content %}
-            <hr>
-            <h3>Gene models file:</h3>
-            <a href="{{ data["filename"] }}">
-            {{ data["filename"] }}
-            </a>
-            <p>Format: {{ data["format"] }}</p>
+            <h1>Configuration</h1>
+                Gene models file:
+                <p><a href="{{ data.config.filename }}">
+                {{ data.config.filename }}
+                </a></p>
+
+                <p>Format: {{ data.config.format }}</p>
+            <h1>Statistics</h1>
+                <table>
+                {% for stat, value in data.stats.items() %}
+                    <tr><td> {{ stat }} </td><td> {{ value }} </td></tr>
+                {% endfor %}
+                </table>
             {% endblock %}
         """))
 
     def _get_template_data(self):
-        info = copy.deepcopy(self.config)
-        if "meta" in info:
-            info["meta"] = markdown(str(info["meta"]))
-        return info
+        return {"config": self.config,
+                "stats": self.get_statistics()}
 
     @staticmethod
     def get_schema():
@@ -1483,10 +1491,71 @@ class GeneModels(
         return "placeholder"
 
     def calc_statistics_hash(self) -> bytes:
-        return b"placeholder"
+        manifest = self.resource.get_manifest()
+        return json.dumps({
+            "config": {
+                "format": self.config.get('format')
+            },
+            "files_md5": {
+                file_name: manifest[file_name].md5
+                for file_name in sorted(self.files)},
+        }, indent=2).encode()
 
-    def add_statistics_build_tasks(self, task_graph, **kwargs) -> list[Task]:
-        return []
+    def add_statistics_build_tasks(self, task_graph: TaskGraph, **_) \
+            -> list[Task]:
+        task = task_graph.create_task("alabala", GeneModels._do_statistics,
+                                      [self.resource], [])
+        return [task]
+
+    @staticmethod
+    def _do_statistics(resource: GenomicResource):
+        gene_models = build_gene_models_from_resource(resource).load()
+
+        coding_transcripts = [tm
+                              for tm in gene_models.transcript_models.values()
+                              if tm.is_coding()]
+        stats = {"transcript number": len(gene_models.transcript_models),
+                 "protein coding transcript number": len(coding_transcripts),
+                 "gene number": len(gene_models.gene_names()),
+                 "protein coding gene number":
+                 len({tm.gene for tm in coding_transcripts})
+                 }
+
+        tm_by_chrom: dict[str, list[TranscriptModel]] = defaultdict(list)
+        for tm in gene_models.transcript_models.values():
+            tm_by_chrom[tm.chrom].append(tm)
+
+        stats['chromosome number'] = len(tm_by_chrom)
+        for chrom, tms in tm_by_chrom.items():
+            stats[f"{chrom} transcript numbers"] = len(tms)
+
+        with resource.proto.open_raw_file(
+                resource, "statistics/stats.yaml", "wt") as stats_file:
+            yaml.dump(stats, stats_file, sort_keys=False)
+        return stats
+
+    @cache
+    def get_statistics(self) -> Optional[dict[str, int]]:
+        try:
+            with self.resource.proto.open_raw_file(
+                    self.resource, "statistics/stats.yaml", "rt") as stats_file:
+                stats = yaml.safe_load(stats_file)
+                if not isinstance(stats, dict):
+                    logger.error("The stats.yaml file for the "
+                                 f"{self.resource} is invalid (1).")
+                    return None
+                for stat, value in stats.items():
+                    if not isinstance(stat, str):
+                        logger.error("The stats.yaml file for the "
+                                     f"{self.resource} is invalid (2.{stat}).")
+                        return None
+                    if not isinstance(value, int):
+                        logger.error("The stats.yaml file for the "
+                                     f"{self.resource} is invalid (3.{value}).")
+                        return None
+                return stats
+        except FileExistsError:
+            return None
 
 
 def join_gene_models(*gene_models):
