@@ -5,19 +5,23 @@ import logging
 import textwrap
 import copy
 import json
+from types import TracebackType
 
-from typing import Iterator, Optional, cast, Any, Union, Callable
+from typing import Iterator, Optional, cast, Any, Union, Callable, Type
 from numbers import Number
 
 from dataclasses import dataclass
 from functools import lru_cache
 
 from jinja2 import Template
+from dae.genomic_resources.repository import GenomicResourceRepo
 
-from dae.task_graph.graph import TaskGraph
-from dae.utils.regions import split_into_regions, get_chromosome_length_tabix
+from dae.task_graph.graph import Task, TaskGraph
+from dae.utils.regions import Region, split_into_regions, \
+    get_chromosome_length_tabix
 from . import GenomicResource
-from .reference_genome import build_reference_genome_from_resource
+from .reference_genome import ReferenceGenome, \
+    build_reference_genome_from_resource
 from .resource_implementation import GenomicResourceImplementation, \
     get_base_resource_schema, \
     InfoImplementationMixin, \
@@ -25,8 +29,9 @@ from .resource_implementation import GenomicResourceImplementation, \
 from .genomic_position_table import build_genomic_position_table, Line, \
     TabixGenomicPositionTable, VCFGenomicPositionTable, VCFLine
 from .genomic_position_table.table_inmemory import InmemoryGenomicPositionTable
-from .histogram import NumberHistogram, NumberHistogramConfig, \
-    CategoricalHistogramConfig, CategoricalHistogram
+from .histogram import HistogramError, NumberHistogram, \
+    NumberHistogramConfig, CategoricalHistogramConfig, \
+    CategoricalHistogram, NullHistogram, annul_histogram
 from .statistics.min_max import MinMaxValue
 
 from .aggregators import build_aggregator, AGGREGATOR_SCHEMA, Aggregator
@@ -88,6 +93,7 @@ class _ScoreDef:
     # no more than one of these
     hist_number_conf: Optional[NumberHistogramConfig]
     hist_categorical_conf: Optional[CategoricalHistogramConfig]
+    hist_null: bool
 
     col_name: Optional[str]                       # internal
     col_index: Optional[int]                      # internal
@@ -96,7 +102,7 @@ class _ScoreDef:
     na_values: Any                                # internal
     score_index: Optional[int | str] = None       # internal
 
-    def to_public(self):
+    def to_public(self) -> ScoreDef:
         return ScoreDef(
             self.score_id,
             self.desc,
@@ -110,7 +116,7 @@ class _ScoreDef:
             self.hist_categorical_conf
         )
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if self.value_type is None:
             return
         default_na_values = {
@@ -157,26 +163,26 @@ class ScoreLine:
         self.score_defs = score_defs
 
     @property
-    def chrom(self):
+    def chrom(self) -> str:
         return self.line.chrom
 
     @property
-    def pos_begin(self):
+    def pos_begin(self) -> int:
         return self.line.pos_begin
 
     @property
-    def pos_end(self):
+    def pos_end(self) -> int:
         return self.line.pos_end
 
     @property
-    def ref(self):
+    def ref(self) -> Optional[str]:
         return self.line.ref
 
     @property
-    def alt(self):
+    def alt(self) -> Optional[str]:
         return self.line.alt
 
-    def get_score(self, score_id):
+    def get_score(self, score_id: str) -> Optional[Any]:
         """Get and parse configured score from line."""
         key = self.score_defs[score_id].score_index
         value = self.line.get(key)
@@ -192,7 +198,7 @@ class ScoreLine:
                     value = None
         return value
 
-    def get_available_scores(self):
+    def get_available_scores(self) -> tuple[Any, ...]:
         return tuple(self.score_defs.keys())
 
 
@@ -203,24 +209,34 @@ class GenomicScoreImplementation(
     # pylint: disable=too-many-public-methods
     """Genomic scores base class."""
 
-    def __init__(self, resource):
+    def __init__(self, resource: GenomicResource):
         super().__init__(resource)
         self.score: GenomicScore = build_score_from_resource(resource)
 
-    def get_config_histograms(self):
+    def get_config_histograms(self) -> dict[str, Any]:
         """Collect all configurations of histograms for the genomic score."""
-        result = {}
+        result: dict[str, Any] = {}
         for score_id, score_def in self.score.score_definitions.items():
-            if score_def.value_type not in {"int", "float"}:
+            if score_def.value_type not in {"int", "float", "str"}:
                 continue
 
+            result[score_id] = {}
+
+            if score_def.hist_null:
+                result[score_id]["null"] = True
+
             if score_def.hist_number_conf:
-                result[score_id] = score_def.hist_number_conf
-            else:
-                result[score_id] = NumberHistogramConfig.default_config()
+                result[score_id]["number"] = score_def.hist_number_conf
+            # else:
+            #     result[score_id]["number"] = \
+            #         NumberHistogramConfig.default_config()
+
+            if score_def.hist_categorical_conf:
+                result[score_id]["categorical"] = \
+                    score_def.hist_categorical_conf
         return result
 
-    def get_template(self):
+    def get_template(self) -> Template:
         return Template(textwrap.dedent("""
         {% extends base %}
         {% block content %}
@@ -257,7 +273,7 @@ class GenomicScoreImplementation(
 
         <td>
         {% set hist_image_file =
-            impl.score.get_histogram_image_filename(score_id) %}
+            impl.score.get_histogram_image_filename(score_id, "number") %}
         {%- if hist_image_file %}
         <img src="{{ hist_image_file }}"
             alt="{{ "HISTOGRAM FOR " + score_id }}"
@@ -292,13 +308,17 @@ class GenomicScoreImplementation(
         {% endblock %}
         """))
 
-    def _get_template_data(self):
+    def _get_template_data(self) -> dict[str, Any]:
         return {"genomic_scores": self}
 
-    def get_info(self):
+    def get_info(self) -> str:
         return InfoImplementationMixin.get_info(self)
 
-    def add_statistics_build_tasks(self, task_graph: TaskGraph, **kwargs):
+    def add_statistics_build_tasks(
+        self,
+        task_graph: TaskGraph,
+        **kwargs: Any
+    ) -> list[Task]:
         with self.score.open():
             region_size = kwargs.get("region_size", 1_000_000)
             grr = kwargs.get("grr")
@@ -319,11 +339,16 @@ class GenomicScoreImplementation(
         return self.score.files
 
     @staticmethod
-    def _get_reference_genome_cached(grr, genome_id):
+    def _get_reference_genome_cached(
+        grr: Optional[GenomicResourceRepo], genome_id: Optional[str]
+    ) -> Optional[ReferenceGenome]:
         if genome_id is None or grr is None:
             return None
         if genome_id in GenomicScoreImplementation._REF_GENOME_CACHE:
-            return GenomicScoreImplementation._REF_GENOME_CACHE[genome_id]
+            return cast(
+                ReferenceGenome,
+                GenomicScoreImplementation._REF_GENOME_CACHE[genome_id]
+            )
         try:
             ref_genome = build_reference_genome_from_resource(
                 grr.get_resource(genome_id)
@@ -342,9 +367,14 @@ class GenomicScoreImplementation(
         GenomicScoreImplementation._REF_GENOME_CACHE[genome_id] = ref_genome
         return ref_genome
 
-    def _get_chrom_regions(self, region_size, grr=None):
+    def _get_chrom_regions(
+        self, region_size: int, grr: Optional[GenomicResourceRepo] = None
+    ) -> list[Region]:
         regions = []
-        ref_genome_id = self.resource.get_labels().get("reference_genome")
+        ref_genome_id = cast(
+            str,
+            self.resource.get_labels().get("reference_genome")
+        )
         ref_genome = self._get_reference_genome_cached(grr, ref_genome_id)
         for chrom in self.score.get_all_chromosomes():
             if ref_genome is not None and chrom in ref_genome.chromosomes:
@@ -378,10 +408,15 @@ class GenomicScoreImplementation(
         return regions
 
     @property
-    def resource_id(self):
+    def resource_id(self) -> str:
         return self.score.resource_id
 
-    def _add_min_max_tasks(self, graph, region_size, grr=None):
+    def _add_min_max_tasks(
+        self,
+        graph: TaskGraph,
+        region_size: int,
+        grr: Optional[GenomicResourceRepo] = None
+    ) -> tuple[list[Task], Task, Task]:
         """
         Add and return calculation, merging and saving tasks for min max.
 
@@ -416,7 +451,10 @@ class GenomicScoreImplementation(
         return min_max_tasks, merge_task, save_task
 
     @staticmethod
-    def _do_min_max(resource, chrom, start, end):
+    def _do_min_max(
+        resource: GenomicResource,
+        chrom: str, start: int, end: int
+    ) -> dict[str, Any]:
         impl = build_score_implementation_from_resource(resource)
         score_ids = list(impl.get_config_histograms())
         res = {
@@ -430,8 +468,9 @@ class GenomicScoreImplementation(
         return res
 
     @staticmethod
-    def _merge_min_max(score_ids, *calculate_tasks):
-
+    def _merge_min_max(
+        score_ids: list[str], *calculate_tasks: dict[str, Any]
+    ) -> dict[str, Any]:
         res: dict[str, Optional[MinMaxValue]] = {
             score_id: None for score_id in score_ids}
         for score_id in score_ids:
@@ -445,7 +484,9 @@ class GenomicScoreImplementation(
         return res
 
     @staticmethod
-    def _save_min_max(resource, merged_min_max):
+    def _save_min_max(
+        resource: GenomicResource, merged_min_max: dict[str, Any]
+    ) -> dict[str, Any]:
         impl = build_score_implementation_from_resource(resource)
         proto = resource.proto
         for score_id, score_min_max in merged_min_max.items():
@@ -461,8 +502,9 @@ class GenomicScoreImplementation(
         return merged_min_max
 
     def _add_histogram_tasks(
-        self, graph, save_minmax_task, region_size, grr=None
-    ):
+        self, graph: TaskGraph, save_minmax_task: Task,
+        region_size: int, grr: Optional[GenomicResourceRepo] = None
+    ) -> tuple[list[Task], Task, Task]:
         """
         Add histogram tasks for specific score id.
 
@@ -496,36 +538,113 @@ class GenomicScoreImplementation(
         return histogram_tasks, merge_task, save_task
 
     @staticmethod
-    def _do_histogram(resource, chrom, start, end, save_minmax_task):
+    def _create_number_histogram(
+        hist_config: NumberHistogramConfig,
+        score_id: str,
+        save_minmax_task: dict[str, Any]
+    ) -> Optional[NumberHistogram]:
+        range_min, range_max = hist_config.view_range
+        if range_min is None:
+            range_min = save_minmax_task[score_id].min
+        if range_max is None:
+            range_max = save_minmax_task[score_id].max
+        hist_config.view_range = (range_min, range_max)
+        try:
+            return NumberHistogram(hist_config)
+        except ValueError:
+            logger.warning("skipping number histogram for %s", score_id)
+            return None
+
+    @staticmethod
+    def _create_categorical_histogram(
+        hist_config: CategoricalHistogramConfig,
+        score_id: str
+    ) -> Optional[CategoricalHistogram]:
+        try:
+            return CategoricalHistogram(hist_config)
+        except ValueError:
+            logger.warning("skipping categorical histogram for %s", score_id)
+            return None
+
+    @staticmethod
+    def _do_histogram(
+        resource: GenomicResource,
+        chrom: str, start: int, end: int,
+        save_minmax_task: dict[str, Any]
+    ) -> dict[str, Any]:
         impl = build_score_implementation_from_resource(resource)
         hist_configs = list(impl.get_config_histograms().values())
         if not hist_configs:
             return {}
-        res = {}
-        for score_id, hist_config in impl.get_config_histograms().items():
-            range_min, range_max = hist_config.view_range
-            if range_min is None:
-                range_min = save_minmax_task[score_id].min
-            if range_max is None:
-                range_max = save_minmax_task[score_id].max
-            hist_config.view_range = (range_min, range_max)
-            try:
-                res[score_id] = NumberHistogram(hist_config)
-            except ValueError:
-                logger.warning("skipping histogram for %s", score_id)
+        res: dict[str, Any] = {}
+        for score_id, hist_config_dict in impl.get_config_histograms().items():
+            res[score_id] = {
+                "number": None,
+                "categorical": None,
+                "null": None
+            }
+            if "null" in hist_config_dict:
+                res[score_id]["null"] = NullHistogram(
+                    reason="Null histogram"
+                )
+            elif "number" in hist_config_dict:
+                res[score_id]["number"] = \
+                    GenomicScoreImplementation._create_number_histogram(
+                        hist_config_dict["number"],
+                        score_id,
+                        save_minmax_task
+                )
+            elif "categorical" in hist_config_dict:
+                res[score_id]["categorical"] = \
+                    GenomicScoreImplementation._create_categorical_histogram(
+                        hist_config_dict["categorical"],
+                        score_id
+                )
+
         score_ids = list(res.keys())
         with impl.score.open():
+            t = impl.score.fetch_region(chrom, start, end, score_ids)
             for rec in impl.score.fetch_region(chrom, start, end, score_ids):
                 for scr_id in score_ids:
-                    res[scr_id].add_value(rec[scr_id])
+
+                    if res[scr_id]["number"]:
+                        if not isinstance(
+                            rec[scr_id], (int, float, type(None))
+                        ):
+                            raise TypeError(
+                                "Cannot add non numerical value "
+                                f"{rec[scr_id]} to number histogram of "
+                                f"{resource.resource_id} {chrom}:{start}-{end}"
+                            )
+                        hist = res[scr_id]["number"]
+                        hist.add_value(rec[scr_id])
+
+                    if res[scr_id]["categorical"]:
+                        if not isinstance(rec[scr_id], (str, type(None))):
+                            raise TypeError(
+                                "Cannot add non string value "
+                                f"{rec[scr_id]} to categorical histogram of "
+                                f"{resource.resource_id} {chrom}:{start}-{end}"
+                            )
+                        hist = res[scr_id]["categorical"]
+                        try:
+                            hist.add_value(rec[scr_id])
+                        except HistogramError:
+                            res[scr_id]["categorical"] = annul_histogram(hist)
         return res
 
     @staticmethod
-    def _merge_histograms(resource, *calculated_histograms):
+    def _merge_histograms(
+        resource: GenomicResource, *calculated_histograms: dict[str, Any]
+    ) -> dict[str, Any]:
         impl = build_score_implementation_from_resource(resource)
         res: dict = {}
-        for score_id in impl.get_config_histograms():
-            res[score_id] = None
+        for score_id in impl.get_config_histograms().keys():
+            res[score_id] = {
+                "number": None,
+                "categorical": None,
+                "null": None
+            }
         score_ids = list(res.keys())
 
         skipped_score_histograms = set()
@@ -534,39 +653,68 @@ class GenomicScoreImplementation(
                 if score_id not in histogram_region:
                     skipped_score_histograms.add(score_id)
                     continue
-                if res[score_id] is None:
-                    res[score_id] = histogram_region[score_id]
-                else:
-                    res[score_id].merge(histogram_region[score_id])
+                for hist_type, hist in histogram_region[score_id].items():
+                    if hist is None:
+                        continue
+                    if res[score_id][hist_type] is None or isinstance(
+                        hist, NullHistogram
+                    ):
+                        res[score_id][hist_type] = hist
+                    else:
+                        try:
+                            res[score_id][hist_type].merge(hist)
+                        except HistogramError:
+                            res[score_id][hist_type] = annul_histogram(hist)
         if skipped_score_histograms:
             logger.warning(
                 "skipped merging histograms: %s", skipped_score_histograms)
         return res
 
     @staticmethod
-    def _save_histograms(resource, merged_histograms):
+    def _save_histograms(
+        resource: GenomicResource, merged_histograms: dict[str, Any]
+    ) -> dict[str, Any]:
         impl = build_score_implementation_from_resource(resource)
         proto = resource.proto
-        for score_id, score_histogram in merged_histograms.items():
-            if score_histogram is None:
-                logger.warning("Histogram for %s is None", score_id)
-                continue
-            with proto.open_raw_file(
-                resource,
-                impl.score.get_number_histogram_filename(score_id),
-                mode="wt"
-            ) as outfile:
-                outfile.write(score_histogram.serialize())
+        for score_id, score_histogram_dict in merged_histograms.items():
+            if score_histogram_dict["number"]:
+                score_histogram = score_histogram_dict["number"]
+                with proto.open_raw_file(
+                    resource,
+                    impl.score.get_histogram_filename(score_id),
+                    mode="wt"
+                ) as outfile:
+                    outfile.write(score_histogram.serialize())
 
-            with proto.open_raw_file(
-                resource,
-                impl.score.get_histogram_image_filename(score_id),
-                mode="wb"
-            ) as outfile:
-                score_histogram.plot(outfile, score_id)
+                with proto.open_raw_file(
+                    resource,
+                    impl.score.get_histogram_image_filename(
+                        score_id, "number"
+                    ),
+                    mode="wb"
+                ) as outfile:
+                    score_histogram.plot(outfile, score_id)
+            else:
+                logger.warning("Number histogram for %s is None", score_id)
+            if score_histogram_dict["categorical"]:
+                score_histogram = score_histogram_dict["categorical"]
+                with proto.open_raw_file(
+                    resource,
+                    impl.score.get_histogram_filename(score_id),
+                    mode="wt"
+                ) as outfile:
+                    outfile.write(score_histogram.serialize())
+            if score_histogram_dict["null"]:
+                score_histogram = score_histogram_dict["null"]
+                with proto.open_raw_file(
+                    resource,
+                    impl.score.get_histogram_filename(score_id),
+                    mode="wt"
+                ) as outfile:
+                    outfile.write(score_histogram.serialize())
         return merged_histograms
 
-    def calc_info_hash(self):
+    def calc_info_hash(self) -> str:
         """Compute and return the info hash."""
         return "infohash"
 
@@ -578,11 +726,23 @@ class GenomicScoreImplementation(
         recomputed.
         """
         manifest = self.resource.get_manifest()
+        config = self.get_config()
+        score_filename = config["table"]["filename"]
+        histograms = [
+            self.score.get_score_histogram(score_id) for score_id in
+            self.get_config_histograms().keys()
+        ]
         return json.dumps({
-            "table": {
-                "config": self.score.table.definition,
-                "files_md5": {file_name: manifest[file_name].md5
-                              for file_name in sorted(self.score.files)}
+            "config": {
+                "scores": config.get("scores", {}),
+                "histograms": list(
+                    hist.to_dict()
+                    for hist in histograms),
+                "table": {
+                    "config": self.score.table.definition,
+                    "files_md5": {file_name: manifest[file_name].md5
+                                  for file_name in sorted(self.score.files)}
+                }
             },
             "score_config": [
                 (score_def.score_id,
@@ -663,7 +823,7 @@ class GenomicScore(ResourceConfigValidationMixin):
         self.score_definitions = self._build_scoredefs()
 
     @staticmethod
-    def get_schema():
+    def get_schema() -> dict[str, Any]:
         scores_schema = {
             "type": "list", "schema": {
                 "type": "dict",
@@ -685,7 +845,15 @@ class GenomicScore(ResourceConfigValidationMixin):
                         "x_log_scale": {"type": "boolean"},
                         "y_log_scale": {"type": "boolean"},
                         "x_min_log": {"type": "number"},
-                    }}
+                    }},
+                    "categorical_hist": {"type": "dict", "schema": {
+                        "value_order": {
+                            "type": "list", "schema": {"type": "string"}
+                        },
+                        "y_log_scale": {"type": "boolean"},
+                        "x_min_log": {"type": "number"},
+                    }},
+                    "null_hist": {"type": "boolean"}
                 }
             }
         }
@@ -738,7 +906,7 @@ class GenomicScore(ResourceConfigValidationMixin):
         }
 
     @property
-    def files(self):
+    def files(self) -> set[str]:
         files = set()
         files.add(self.table.definition.filename)
         if isinstance(self.table, TabixGenomicPositionTable):
@@ -746,22 +914,18 @@ class GenomicScore(ResourceConfigValidationMixin):
         return files
 
     @staticmethod
-    def _parse_scoredef_config(config) -> dict[str, _ScoreDef]:
+    def _parse_scoredef_config(config: dict[str, Any]) -> dict[str, _ScoreDef]:
         """Parse ScoreDef configuration."""
         scores = {}
 
         for score_conf in config["scores"]:
             number_hist_conf = None
             categorical_hist_conf = None
-            if score_conf.get("number_hist") is None:
-                number_hist_conf = NumberHistogramConfig.default_config()
-            else:
+            if score_conf.get("number_hist"):
                 number_hist_conf = NumberHistogramConfig.from_dict(
-                    score_conf.get("number_hist"))
-            if score_conf.get("categorical_hist") is None:
-                categorical_hist_conf = \
-                    CategoricalHistogramConfig.default_config()
-            else:
+                    score_conf.get("number_hist")
+                )
+            if score_conf.get("categorical_hist"):
                 categorical_hist_conf = CategoricalHistogramConfig(
                     **score_conf.get("categorical_hist")
                 )
@@ -792,14 +956,19 @@ class GenomicScore(ResourceConfigValidationMixin):
         return scores
 
     @staticmethod
-    def _parse_vcf_scoredefs(vcf_header_info, config_scoredefs):
-        def converter(val):
+    def _parse_vcf_scoredefs(
+        vcf_header_info: Optional[dict[str, Any]],
+        config_scoredefs: Optional[dict[str, _ScoreDef]]
+    ) -> dict[str, _ScoreDef]:
+        def converter(val: Any) -> Any:
             try:
                 return ",".join(map(str, val))
             except TypeError:
                 return val
 
         vcf_scoredefs = {}
+
+        assert vcf_header_info is not None
 
         for key, value in vcf_header_info.items():
             value_parser: Optional[Callable[[str], Any]] = converter
@@ -811,7 +980,7 @@ class GenomicScore(ResourceConfigValidationMixin):
                 col_name=key,
                 col_index=None,
                 desc=value.description or "",
-                value_type=VCF_TYPE_CONVERSION_MAP[value.type],  # type: ignore
+                value_type=VCF_TYPE_CONVERSION_MAP[value.type],
                 value_parser=value_parser,
                 na_values=tuple(),
                 pos_aggregator=None,
@@ -843,7 +1012,7 @@ class GenomicScore(ResourceConfigValidationMixin):
             scoredefs[score] = vcf_scoredef
         return scoredefs
 
-    def _validate_scoredefs(self):
+    def _validate_scoredefs(self) -> None:
         assert "scores" in self.config
         if self.table.header_mode == "none":
             assert all("name" not in score
@@ -868,14 +1037,14 @@ class GenomicScore(ResourceConfigValidationMixin):
 
         if isinstance(self.table, VCFGenomicPositionTable):
             return GenomicScore._parse_vcf_scoredefs(
-                self.table.header, config_scoredefs)
+                cast(dict[str, Any], self.table.header), config_scoredefs)
 
         if config_scoredefs is None:
             raise ValueError("No scores configured and not using a VCF")
 
         return config_scoredefs
 
-    def get_config(self):
+    def get_config(self) -> dict[str, Any]:
         return self.config
 
     def get_default_annotation_attributes(self) -> list[Any]:
@@ -921,8 +1090,8 @@ class GenomicScore(ResourceConfigValidationMixin):
             return ",".join(result)
         return None
 
-    def get_score_config(self, score_id) -> ScoreDef:
-        return self.score_definitions[score_id]
+    def get_score_config(self, score_id: str) -> Optional[_ScoreDef]:
+        return self.score_definitions.get(score_id)
 
     def close(self) -> None:
         self.table.close()
@@ -959,10 +1128,15 @@ class GenomicScore(ResourceConfigValidationMixin):
                     score_def.score_index = score_def.col_index
         return self
 
-    def __enter__(self):
+    def __enter__(self) -> GenomicScore:
         return self
 
-    def __exit__(self, exc_type, exc_value, exc_tb):
+    def __exit__(
+        self,
+        exc_type: Optional[Type[BaseException]],
+        exc_value: Optional[BaseException],
+        exc_tb: Optional[TracebackType]
+    ) -> None:
         if exc_type is not None:
             logger.error(
                 "exception while working with genomic score: %s, %s, %s",
@@ -970,7 +1144,7 @@ class GenomicScore(ResourceConfigValidationMixin):
         self.close()
 
     @staticmethod
-    def _line_to_begin_end(line):
+    def _line_to_begin_end(line: ScoreLine) -> tuple[int, int]:
         if line.pos_end < line.pos_begin:
             raise IOError(
                 f"The resource line {line} has a regions "
@@ -978,7 +1152,7 @@ class GenomicScore(ResourceConfigValidationMixin):
                 f"begining {line.pos_end}.")
         return line.pos_begin, line.pos_end
 
-    def _get_header(self):
+    def _get_header(self) -> Optional[tuple[Any, ...]]:
         assert self.table is not None
         return self.table.header
 
@@ -995,7 +1169,7 @@ class GenomicScore(ResourceConfigValidationMixin):
         if not self.is_open():
             raise ValueError(f"genomic score <{self.resource_id}> is not open")
 
-        return self.table.get_chromosomes()  # type: ignore
+        return self.table.get_chromosomes()
 
     def get_all_scores(self) -> list[str]:
         return list(self.score_definitions)
@@ -1042,10 +1216,10 @@ class GenomicScore(ResourceConfigValidationMixin):
                 yield val
 
     @staticmethod
-    def get_statistics_folder():
+    def get_statistics_folder() -> str:
         return "statistics"
 
-    def get_number_range_filename(self, score_id):
+    def get_number_range_filename(self, score_id: str) -> str:
         return f"{self.get_statistics_folder()}" \
             f"/min_max_{score_id}.yaml"
 
@@ -1057,10 +1231,12 @@ class GenomicScore(ResourceConfigValidationMixin):
             raise ValueError(
                 f"unknown score {score_id}; "
                 f"available scores are {self.get_all_scores()}")
-        if self.get_score_config(score_id).value_type not in {"float", "int"}:
+        score_def = self.get_score_config(score_id)
+        assert score_def is not None
+        if score_def.value_type not in {"float", "int"}:
             raise ValueError(
                 f"score {score_id} type is not a number; "
-                f"score type: {self.get_score_config(score_id).value_type}")
+                f"score type: {score_def.value_type}")
         number_range_filename = self.get_number_range_filename(score_id)
         try:
             with self.resource.open_raw_file(number_range_filename) as infile:
@@ -1073,9 +1249,39 @@ class GenomicScore(ResourceConfigValidationMixin):
                 number_range_filename)
             return None
 
-    def get_number_histogram_filename(self, score_id):
+    def get_histogram_filename(self, score_id: str) -> str:
         return f"{self.get_statistics_folder()}" \
             f"/histogram_{score_id}.yaml"
+
+    @lru_cache(maxsize=64)
+    def get_score_histogram(
+        self,
+        score_id: str
+    ) -> Union[NumberHistogram, CategoricalHistogram, NullHistogram]:
+        """Return defined histogram for a score."""
+        hist: Optional[Union[
+            NumberHistogram, CategoricalHistogram, NullHistogram
+        ]] = self.get_null_histogram(score_id)
+        if hist is None:
+            hist = self.get_number_histogram(score_id)
+        if hist is None:
+            hist = self.get_categorical_histogram(score_id)
+        if hist is None:
+            hist = NullHistogram(
+                reason=f"No histograms configured or found for {score_id}"
+            )
+        return hist
+
+    @lru_cache(maxsize=64)
+    def get_null_histogram(
+            self, score_id: str) -> Optional[NullHistogram]:
+        """Return a null histogram if defined in configuration."""
+        score_def = self.get_score_config(score_id)
+        if score_def and score_def.hist_null:
+            return NullHistogram(
+                reason=f"Null histogram defined for {score_id}"
+            )
+        return None
 
     @lru_cache(maxsize=64)
     def get_number_histogram(
@@ -1086,11 +1292,11 @@ class GenomicScore(ResourceConfigValidationMixin):
             raise ValueError(
                 f"unknown score {score_id}; "
                 f"available scores are {self.get_all_scores()}")
-        if self.get_score_config(score_id).value_type not in {"float", "int"}:
-            raise ValueError(
-                f"score {score_id} type is not a number; "
-                f"score type: {self.get_score_config(score_id).type}")
-        number_hist_filename = self.get_number_histogram_filename(score_id)
+        score_def = self.get_score_config(score_id)
+        assert score_def is not None
+        if score_def.value_type not in {"float", "int"}:
+            return None
+        number_hist_filename = self.get_histogram_filename(score_id)
         try:
             with self.resource.open_raw_file(number_hist_filename) as infile:
                 content = infile.read()
@@ -1101,14 +1307,39 @@ class GenomicScore(ResourceConfigValidationMixin):
                 number_hist_filename)
             return None
 
+    @lru_cache(maxsize=64)
     def get_categorical_histogram(
             self, score_id: str) -> Optional[CategoricalHistogram]:
-        # pylint: disable=unused-argument
-        return None
+        """Return the value range for a number score."""
+        if score_id not in self.get_all_scores():
+            raise ValueError(
+                f"unknown score {score_id}; "
+                f"available scores are {self.get_all_scores()}")
+        score_def = self.get_score_config(score_id)
+        assert score_def is not None
+        if score_def.value_type != "str":
+            return None
+        categorical_hist_filename = self.get_histogram_filename(
+            score_id
+        )
 
-    def get_histogram_image_filename(self, score_id: str) -> Optional[str]:
+        try:
+            with self.resource.open_raw_file(
+                categorical_hist_filename
+            ) as infile:
+                content = infile.read()
+                return CategoricalHistogram.deserialize(content)
+        except FileNotFoundError:
+            logger.warning(
+                "unable to load histogram file: %s",
+                categorical_hist_filename)
+            return None
+
+    def get_histogram_image_filename(
+        self, score_id: str, histogram_type: str
+    ) -> Optional[str]:
         return f"{self.get_statistics_folder()}" \
-            f"/histogram_{score_id}.png"
+            f"/histogram_{histogram_type}_{score_id}.png"
 
     def get_histogram_image_url(self, score_id: str) -> Optional[str]:
         hifn = self.get_histogram_image_filename(score_id)
@@ -1121,7 +1352,7 @@ class PositionScore(GenomicScore):
     """Defines position genomic score."""
 
     @staticmethod
-    def get_schema():
+    def get_schema() -> dict[str, Any]:
         schema = copy.deepcopy(GenomicScore.get_schema())
         scores_schema = schema["scores"]["schema"]["schema"]
         scores_schema["position_aggregator"] = AGGREGATOR_SCHEMA
@@ -1152,8 +1383,11 @@ class PositionScore(GenomicScore):
         requested_scores = scores if scores else self.get_all_scores()
         return [line.get_score(scr) for scr in requested_scores]
 
-    def _build_scores_agg(self, scores: list[PositionScoreQuery]):
+    def _build_scores_agg(
+        self, scores: list[PositionScoreQuery]
+    ) -> list[PositionScoreAggr]:
         score_aggs = []
+        aggregator_type: Optional[str] = None
         for score in scores:
             if score.position_aggregator is not None:
                 aggregator_type = score.position_aggregator
@@ -1164,7 +1398,8 @@ class PositionScore(GenomicScore):
             score_aggs.append(
                 PositionScoreAggr(
                     score.score,
-                    build_aggregator(aggregator_type)))
+                    build_aggregator(aggregator_type))
+            )
         return score_aggs
 
     def fetch_scores_agg(  # pylint: disable=too-many-arguments,too-many-locals
@@ -1222,7 +1457,7 @@ class NPScore(GenomicScore):
         super().__init__(resource)
 
     @staticmethod
-    def get_schema():
+    def get_schema() -> dict[str, Any]:
         schema = copy.deepcopy(GenomicScore.get_schema())
         schema["table"]["schema"]["reference"] = {
             "type": "dict", "schema": {
@@ -1277,12 +1512,14 @@ class NPScore(GenomicScore):
             if squery.position_aggregator is not None:
                 aggregator_type = squery.position_aggregator
             else:
+                assert scr_def.pos_aggregator is not None
                 aggregator_type = scr_def.pos_aggregator
             position_aggregator = build_aggregator(aggregator_type)
 
             if squery.nucleotide_aggregator is not None:
                 aggregator_type = squery.nucleotide_aggregator
             else:
+                assert scr_def.nuc_aggregator is not None
                 aggregator_type = scr_def.nuc_aggregator
             nucleotide_aggregator = build_aggregator(aggregator_type)
             score_aggs.append(
@@ -1313,7 +1550,7 @@ class NPScore(GenomicScore):
         if not score_lines:
             return [sagg.position_aggregator for sagg in score_aggs]
 
-        def aggregate_nucleotides():
+        def aggregate_nucleotides() -> None:
             for sagg in score_aggs:
                 sagg.position_aggregator.add(
                     sagg.nucleotide_aggregator.get_final())
@@ -1348,7 +1585,7 @@ class AlleleScore(GenomicScore):
     """Defines allele genomic scores."""
 
     @staticmethod
-    def get_schema():
+    def get_schema() -> dict[str, Any]:
         schema = copy.deepcopy(GenomicScore.get_schema())
         schema["table"]["schema"]["reference"] = {
             "type": "dict", "schema": {
@@ -1409,12 +1646,14 @@ class AlleleScore(GenomicScore):
             if squery.position_aggregator is not None:
                 aggregator_type = squery.position_aggregator
             else:
+                assert scr_def.pos_aggregator is not None
                 aggregator_type = scr_def.pos_aggregator
             position_aggregator = build_aggregator(aggregator_type)
 
             if squery.allele_aggregator is not None:
                 aggregator_type = squery.allele_aggregator
             else:
+                assert scr_def.allele_aggregator is not None
                 aggregator_type = scr_def.allele_aggregator
             allele_aggregator = build_aggregator(aggregator_type)
             score_aggs.append(
@@ -1445,7 +1684,7 @@ class AlleleScore(GenomicScore):
         if not score_lines:
             return [sagg.position_aggregator for sagg in score_aggs]
 
-        def aggregate_alleles():
+        def aggregate_alleles() -> None:
             for sagg in score_aggs:
                 sagg.position_aggregator.add(
                     sagg.allele_aggregator.get_final())

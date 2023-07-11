@@ -6,7 +6,7 @@ from typing import List
 import pytest
 
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME
-from dae.genomic_resources.histogram import NumberHistogram
+from dae.genomic_resources.histogram import NumberHistogram, CategoricalHistogram
 from dae.genomic_resources.testing import \
     setup_directories, build_filesystem_test_repository, \
     setup_tabix
@@ -527,3 +527,51 @@ def test_reference_genome_usage(tmp_path, mocker):
 
     assert genomic_table_length_mock.call_count == 6
     assert ref_genome_length_mock.call_count == 6
+
+
+def test_stats_categorical(tmp_path):
+    setup_directories(tmp_path, {
+        "one": {
+            GR_CONF_FILE_NAME: """
+                type: position_score
+                table:
+                    filename: data.txt.gz
+                    format: tabix
+                scores:
+                    - id: some_stat
+                      type: str
+                      desc: "desc"
+                      name: s1
+                      categorical_hist:
+                        value_order: []
+                """
+        }
+    })
+    setup_tabix(
+        tmp_path / "one" / "data.txt.gz",
+        """
+        #chrom  pos_begin  pos_end  s1
+        1       10         10       value1
+        1       17         17       value1
+        1       22         22       value2
+        2       5          5       value3
+        2       10         10       value2
+        """, seq_col=0, start_col=1, end_col=2)
+
+    repo = build_filesystem_test_repository(tmp_path)
+
+    assert repo is not None
+
+    cli_manage(["repo-stats", "-R", str(tmp_path), "-j", "1"])
+
+    histogram_statistic_path = os.path.join(
+        tmp_path, "one", "statistics", "histogram_some_stat.yaml"
+    )
+
+    with open(histogram_statistic_path, "r") as infile:
+        stat_hist = CategoricalHistogram.deserialize(infile.read())
+
+    assert len(stat_hist.values) == 3
+    assert stat_hist.values["value1"] == 2
+    assert stat_hist.values["value2"] == 2
+    assert stat_hist.values["value3"] == 1

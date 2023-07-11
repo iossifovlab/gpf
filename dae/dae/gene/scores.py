@@ -1,9 +1,10 @@
 import logging
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, Union
 
 from dae.genomic_resources.genomic_scores import build_score_from_resource
-from dae.genomic_resources.histogram import NumberHistogram
+from dae.genomic_resources.histogram import NumberHistogram, \
+    CategoricalHistogram, NullHistogram
 
 
 logger = logging.getLogger(__name__)
@@ -17,7 +18,7 @@ class ScoreDesc:
     score_id: str
     source: str
     destination: str
-    hist: Optional[NumberHistogram]
+    hist: Optional[Union[NumberHistogram, CategoricalHistogram, NullHistogram]]
     description: str
     help: str
 

@@ -6,7 +6,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 import logging
-from typing import cast, Optional
+from typing import cast, Optional, Any, BinaryIO, Union
 
 import yaml
 import numpy as np
@@ -14,6 +14,17 @@ import numpy as np
 from dae.genomic_resources.statistics.base_statistic import Statistic
 
 logger = logging.getLogger(__name__)
+
+
+class HistogramError(BaseException):
+    """
+    Class used for histogram specific errors.
+
+    Histograms should be annulled when a HistogramError occurs.
+    """
+
+    # pylint: disable=unnecessary-pass
+    pass
 
 
 @dataclass
@@ -26,7 +37,7 @@ class NumberHistogramConfig:
     y_log_scale: bool = False
     x_min_log: Optional[float] = None
 
-    def to_dict(self):
+    def to_dict(self) -> dict[str, Any]:
         return {
             "view_range": {
                 "min": self.view_range[0],
@@ -39,7 +50,7 @@ class NumberHistogramConfig:
         }
 
     @staticmethod
-    def convert_legacy_config(config):
+    def convert_legacy_config(config: dict[str, Any]) -> NumberHistogramConfig:
         logger.warning("Converting legacy config")
         limits = np.iinfo(np.int64)
         return NumberHistogramConfig(
@@ -53,7 +64,7 @@ class NumberHistogramConfig:
         )
 
     @staticmethod
-    def from_dict(parsed):
+    def from_dict(parsed: dict[str, Any]) -> NumberHistogramConfig:
         """Build a number histogram config from a parsed yaml file."""
         yaml_range = parsed.get("view_range", {})
         x_min = yaml_range.get("min", None)
@@ -70,7 +81,7 @@ class NumberHistogramConfig:
         )
 
     @staticmethod
-    def default_config():
+    def default_config() -> NumberHistogramConfig:
         """Build a number histogram config from a parsed yaml file."""
         view_range = (None, None)
         number_of_bins = 100
@@ -84,13 +95,32 @@ class NumberHistogramConfig:
 class CategoricalHistogramConfig:
     """Configuration class for categorical histograms."""
 
-    value_order = Optional[list[str]]
+    value_order: list[str]
     y_log_scale: bool = False
     x_min_log: Optional[float] = None
 
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "value_order": self.value_order,
+            "y_log_scale": self.y_log_scale,
+            "x_min_log": self.x_min_log
+        }
+
     @staticmethod
-    def default_config():
-        return CategoricalHistogramConfig()
+    def default_config() -> CategoricalHistogramConfig:
+        return CategoricalHistogramConfig([])
+
+    @staticmethod
+    def from_dict(parsed: dict[str, Any]) -> CategoricalHistogramConfig:
+        value_order = parsed.get("value_order", [])
+        y_log_scale = parsed.get("y_log_scale", False)
+        x_min_log = parsed.get("x_min_log")
+
+        return CategoricalHistogramConfig(
+            value_order=value_order,
+            y_log_scale=y_log_scale,
+            x_min_log=x_min_log
+        )
 
 
 class NumberHistogram(Statistic):
@@ -151,15 +181,20 @@ class NumberHistogram(Statistic):
         self.out_of_range_values.extend(other.out_of_range_values)
 
     @property
-    def view_range(self):
+    def view_range(self) -> tuple[Optional[int], Optional[int]]:
         return self.config.view_range
 
-    def add_value(self, value):
+    def add_value(self, value: float) -> bool:
         """Add value to the histogram."""
         if value is None:
             return False
-        if value < self.config.view_range[0] or \
-                value > self.config.view_range[1]:
+        if (
+            self.config.view_range[0] is not None
+            and value < self.config.view_range[0]
+        ) or (
+            self.config.view_range[1] is not None
+            and value > self.config.view_range[1]
+        ):
             logger.warning(
                 "value %s out of range: [%s, %s];",
                 value, self.config.view_range[0], self.config.view_range[1])
@@ -179,16 +214,17 @@ class NumberHistogram(Statistic):
         self.bars[index - 1] += 1
         return True
 
-    def serialize(self) -> str:
-        return cast(str, yaml.dump(
-            {
-                "config": self.config.to_dict(),
-                "bins": self.bins.tolist(),
-                "bars": self.bars.tolist()
-            }
-        ))
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "config": self.config.to_dict(),
+            "bins": self.bins.tolist(),
+            "bars": self.bars.tolist()
+        }
 
-    def plot(self, outfile, score_id):
+    def serialize(self) -> str:
+        return cast(str, yaml.dump(self.to_dict()))
+
+    def plot(self, outfile: BinaryIO, score_id: str) -> None:
         """Plot histogram and save it into outfile."""
         # pylint: disable=import-outside-toplevel
         import matplotlib.pyplot as plt
@@ -212,8 +248,10 @@ class NumberHistogram(Statistic):
         plt.clf()
 
     @staticmethod
-    def deserialize(data) -> NumberHistogram:
+    def deserialize(data: str) -> NumberHistogram:
         res = yaml.load(data, yaml.Loader)
+        if "null" in res and res["null"] is True:
+            return NullHistogram
         # TODO: Remove this
         legacy_keys = set(["x_scale", "y_scale", "bins", "min", "max"])
         if len(legacy_keys.intersection(set(res.get("config").keys()))):
@@ -233,14 +271,141 @@ class HistogramStatisticMixin:
     """Mixin for creating statistics classes with histograms."""
 
     @staticmethod
-    def get_histogram_file(score_id):
+    def get_histogram_file(score_id: str) -> str:
         return f"histogram_{score_id}.yaml"
 
     @staticmethod
-    def get_histogram_image_file(score_id):
+    def get_histogram_image_file(score_id: str) -> str:
         return f"histogram_{score_id}.png"
 
 
-class CategoricalHistogram:
+class NullHistogram(Statistic):
+    """Class for annulled histograms."""
+
+    def __init__(self, reason: str = "") -> None:
+        super().__init__(
+            "null_histogram", "Used for invalid/annulled histograms"
+        )
+        self.reason = reason
+
+    def add_value(self, value: Any) -> bool:
+        return False
+
+    def merge(self, other: Any) -> None:
+        return
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "null": True,
+            "reason": self.reason
+        }
+
+    def serialize(self) -> str:
+        return cast(str, yaml.dump(
+            self.to_dict()
+        ))
+
+    @staticmethod
+    def deserialize(data: str) -> NullHistogram:
+        res = yaml.load(data, yaml.Loader)
+        assert res.get("null", False)
+        return NullHistogram()
+
+
+class CategoricalHistogram(Statistic):
+    """Class for categorical data histograms."""
+
+    VALUES_LIMIT = 100
+
     # pylint: disable=too-few-public-methods
-    pass
+    def __init__(
+        self,
+        config: CategoricalHistogramConfig,
+        values: Optional[dict[str, int]] = None
+    ):
+        super().__init__(
+            "categorical_histogram",
+            "Collects values for categorical histogram."
+        )
+        self.config = config
+        self.values = {}
+        if values is not None:
+            self.values = values
+        for value in config.value_order:
+            if value not in self.values:
+                self.values[value] = 0
+        self.y_log_scale = config.y_log_scale
+        self.x_min_log = config.x_min_log
+
+    def add_value(self, value: Optional[str]) -> bool:
+        """
+        Add a value to the categorical histogram.
+
+        Returns true if successfully added and false if failed.
+        Will fail if too many values are accumulated.
+        """
+        if value is None:
+            return False
+        if value not in self.values:
+            if len(self.values) + 1 > CategoricalHistogram.VALUES_LIMIT:
+                raise HistogramError(
+                    f"Too many values already present to add {value}"
+                    " to categorical histogram."
+                )
+            self.values[value] = 1
+        else:
+            self.values[value] += 1
+
+        return True
+
+    def merge(self, other: CategoricalHistogram) -> None:
+        """Merge with other histogram."""
+        assert self.config == other.config
+
+        for value, count in other.values.items():
+            if value not in self.values:
+                if len(self.values) + 1 > CategoricalHistogram.VALUES_LIMIT:
+                    raise HistogramError(
+                        f"Too many values already present to merge {value}"
+                        " to categorical histogram."
+                    )
+                self.values[value] = count
+            else:
+                self.values[value] += count
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "config": self.config.to_dict(),
+            "values": self.values
+        }
+
+    def serialize(self) -> str:
+        return cast(str, yaml.dump(self.to_dict()))
+
+    @staticmethod
+    def deserialize(data: str) -> CategoricalHistogram:
+        res = yaml.load(data, yaml.Loader)
+        if "null" in res and res["null"] is True:
+            return NullHistogram
+        config = CategoricalHistogramConfig.from_dict(res.get("config"))
+        return CategoricalHistogram(config, res.get("values"))
+
+    def plot(self, outfile: BinaryIO, score_id: str) -> None:
+        """Plot histogram and save it into outfile."""
+        # pylint: disable=import-outside-toplevel
+        import matplotlib.pyplot as plt
+        values = self.values.keys()
+        counts = self.values.values()
+        plt.bar(values, counts)
+
+        plt.xlabel(score_id)
+        plt.ylabel("count")
+
+        plt.savefig(outfile)
+        plt.clf()
+
+
+def annul_histogram(
+    histogram: Union[NumberHistogram, CategoricalHistogram]
+) -> NullHistogram:
+    return NullHistogram()
