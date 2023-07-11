@@ -32,14 +32,12 @@ export class UsersComponent implements OnInit {
 
   public login(): void {
     const codeChallenge = this.authService.generatePKCE();
-    window.open(
-      `${this.config.rootUrl}${this.baseHref}`
-        + `o/authorize/?response_type=code&code_challenge_method=S256&code_challenge=${codeChallenge}`
-        + '&scope=read'
-        + `&client_id=${this.config.oauthClientId}`,
-      '_blank',
-      `popup=true,width=600,height=300,left=${window.screenX},top=${window.screenY}`
-    );
+    window.location.href = `${this.config.rootUrl}${this.baseHref}`
+      + `o/authorize/?response_type=code`
+      + `&code_challenge_method=S256`
+      + `&code_challenge=${codeChallenge}`
+      + `&scope=read`
+      + `&client_id=${this.config.oauthClientId}`;
   }
 
   public logout(): void {
