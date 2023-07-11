@@ -51,7 +51,7 @@ function main() {
     build_run_ctx_init "container" "ubuntu:20.04"
     defer_ret build_run_ctx_reset
 
-    build_run rm -rvf ./data/ ./results ./gpf
+    build_run rm -rf ./data/ ./results ./gpf
     build_run rm -rf ./userdocs/gpf
 
     build_run_local mkdir -p ./data/ ./results ./cache
@@ -153,6 +153,8 @@ EOT
       --env GRR_DEFINITION_FILE="/wd/cache/grr_definition.yaml"
 
     defer_ret build_run_ctx_reset
+
+    build_run_attach
 
     local d
     for d in /wd/gpf/dae /wd/gpf/wdae; do

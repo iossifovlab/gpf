@@ -1,5 +1,6 @@
 userdocs/.vscode
 userdocs/_build
+userdocs/wdae
 .pytest_cache
 .vscode
 *.retry
