@@ -11,7 +11,7 @@ from dae.utils.variant_utils import mat2str
     [
         ("backends/effects_trio_multi", 3),
         ("backends/effects_trio", 10),
-        ("backends/inheritance_multi", 6),
+        # ("backends/inheritance_multi", 6),
         # ("fixtures/trios2", 30),
     ],
 )

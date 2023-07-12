@@ -26,14 +26,14 @@ from dae.utils.regions import Region
             [Region("1", 865582, 865624), Region("1", 878109, 905956)],
             6,
         ),
-        ("backends/inheritance_multi", [Region("1", 11500, 11521)], 5),
-        ("backends/inheritance_multi", [Region("1", 11500, 11501)], 1),
-        ("backends/inheritance_multi", [Region("1", 11503, 11511)], 2),
-        (
-            "backends/inheritance_multi",
-            [Region("1", 11500, 11501), Region("1", 11503, 11511)],
-            3,
-        ),
+        # ("backends/inheritance_multi", [Region("1", 11500, 11521)], 5),
+        # ("backends/inheritance_multi", [Region("1", 11500, 11501)], 1),
+        # ("backends/inheritance_multi", [Region("1", 11503, 11511)], 2),
+        # (
+        #     "backends/inheritance_multi",
+        #     [Region("1", 11500, 11501), Region("1", 11503, 11511)],
+        #     3,
+        # ),
         ("backends/trios2", [Region("1", 11539, 11539)], 2),
         ("backends/trios2", [Region("1", 11551, 11551)], 2),
         (

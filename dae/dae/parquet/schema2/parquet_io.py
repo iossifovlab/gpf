@@ -15,11 +15,14 @@ from dae.utils import fs_utils
 from dae.parquet.helpers import url_to_pyarrow_fs
 from dae.utils.variant_utils import GenotypeType
 from dae.variants.attributes import Inheritance
-from dae.variants.family_variant import (
-    FamilyAllele,
-    FamilyVariant,
-    calculate_simple_best_state,
-)
+from dae.variants.family_variant import \
+    FamilyAllele, \
+    FamilyVariant, \
+    calculate_simple_best_state
+
+from dae.utils.variant_utils import is_all_reference_genotype, \
+    is_unknown_genotype
+
 from dae.variants.variant import SummaryVariant, SummaryAllele
 from dae.parquet.schema2.serializers import AlleleParquetSerializer
 from dae.parquet.partition_descriptor import PartitionDescriptor
@@ -275,7 +278,8 @@ class VariantsParquetWriter:
             for fv in family_variants:
                 family_variant_index += 1
 
-                if fv.is_unknown() or fv.is_reference():
+                if is_all_reference_genotype(fv.gt) and \
+                        not self.include_reference:
                     continue
 
                 fv.summary_index = summary_variant_index
@@ -290,8 +294,16 @@ class VariantsParquetWriter:
 
                 family_variant_data_json = json.dumps(fv.to_record(),
                                                       sort_keys=True)
+                family_alleles = []
+                if is_unknown_genotype(fv.gt):
+                    family_alleles.append(fv.ref_allele)
+                    num_fam_alleles_written += 1
+                elif is_all_reference_genotype(fv.gt):
+                    family_alleles.append(fv.ref_allele)
+                    num_fam_alleles_written += 1
 
-                for fa in fv.alt_alleles:
+                family_alleles.extend(fv.alt_alleles)
+                for fa in family_alleles:
                     family_bin_writer = self._get_bin_writer_family(fa)
                     family_bin_writer.append_family_allele(
                         fa, family_variant_data_json
