@@ -1,4 +1,5 @@
 from itertools import islice
+import re
 
 from rest_framework.response import Response
 from rest_framework import status
@@ -16,23 +17,23 @@ class DefaultGeneModelsId(QueryBaseView):
 class GeneModels(QueryBaseView):
     def get(self, request, gene_symbol):
         gene_models = self.gpf_instance.gene_models.gene_models
-        if gene_symbol not in gene_models:
-            return Response(None, status=status.HTTP_404_NOT_FOUND)
-        else:
-            transcripts = gene_models[gene_symbol]
-            response_data = {
-                "gene": gene_symbol,
-                "transcripts": [],
-            }
-            for tr in transcripts:
-                response_data["transcripts"].append(
-                    self.transcript_to_dict(tr)
-                )
+        for k, v in gene_models.items():
+            if re.fullmatch(gene_symbol, k, re.IGNORECASE):
+                transcripts = v
+                response_data = {
+                    "gene": k,
+                    "transcripts": [],
+                }
+                for tr in transcripts:
+                    response_data["transcripts"].append(
+                        self.transcript_to_dict(tr)
+                    )
 
-            return Response(
-                response_data,
-                status=status.HTTP_200_OK,
-            )
+                return Response(
+                    response_data,
+                    status=status.HTTP_200_OK,
+                )
+        return Response(None, status=status.HTTP_404_NOT_FOUND)
 
     def transcript_to_dict(self, transcript):
         output = dict()
@@ -78,7 +79,7 @@ class GeneSymbolsSearch(QueryBaseView):
         gene_models = self.gpf_instance.gene_models.gene_models
 
         matching_gene_symbols = filter(
-            lambda gs: gs.startswith(search_term),
+            lambda gs: gs.lower().startswith(search_term.lower()),
             gene_models.keys()
         )
 
