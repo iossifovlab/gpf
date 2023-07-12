@@ -26,7 +26,8 @@ describe('App tests', () => {
     const usersPage = new UsersPage();
     usersPage.logInButton.click();
 
-    cy.window().its('open').should('be.called');
+    cy.get('input#id_username').should('be.visible');
+    cy.get('input#id_password').should('be.visible');
   });
 
   it('should login using oauth authentication', () => {

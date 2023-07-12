@@ -102,39 +102,22 @@ export class BasePage {
   public login(username: string, password: string, hasAccessRights = true): void {
     this.waitForLoginButtonWithRetries();
 
-    cy.url().then(startUrl => {
-      const usersPage = new UsersPage();
-      cy.intercept('GET', '/gpf/api/v3/datasets').as('datasets');
+    const usersPage = new UsersPage();
+    cy.intercept('GET', '/gpf/api/v3/datasets').as('datasets');
+    if (!username || !password) {
+      return;
+    }
 
-      if (!username || !password) {
-        return;
-      }
+    usersPage.logInButton.click();
+    cy.get('#id_username').type(username);
+    cy.get('#id_password').type(password);
+    cy.get('.login-button').click();
 
-      cy.window().then((win) => {
-        cy.stub(win, 'open', (url: string) => {
-          win.location.href = `${Cypress.config().baseUrl}accounts/login/?next=/gpf/o/authorize/%3F${url}`;
-        }).as('popup');
-      });
-
-
-      usersPage.logInButton.click();
-      cy.get('@popup').should('be.called');
-      cy.get('#id_username').type(username);
-      cy.get('#id_password').type(password);
-      cy.get('@popup').url().then(url => {
-        url = url.replace(`${Cypress.config().baseUrl}accounts/login/?next=/gpf/o/authorize/%3F`, '');
-        cy.get('input').last().invoke('attr', 'value', url);
-        cy.get('.login-button').click();
-      });
-
-      usersPage.logOutButton.should('be.visible');
-      cy.url().then(currentUrl => {
-        this.waitForPageToLoad(currentUrl.split('/').pop(), hasAccessRights);
-      });
-      cy.wait('@datasets');
-
-      cy.visit(startUrl);
+    usersPage.logOutButton.should('be.visible');
+    cy.url().then(currentUrl => {
+      this.waitForPageToLoad(currentUrl.split('/').pop(), hasAccessRights);
     });
+    cy.wait('@datasets');
   }
 
   public loginAdmin(): void {
