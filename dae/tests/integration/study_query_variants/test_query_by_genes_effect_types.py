@@ -31,7 +31,8 @@ def imported_study(
         """
 ##fileformat=VCFv4.2
 ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
-##contig=<ID=1>
+##contig=<ID=foo>
+##contig=<ID=bar>
 #CHROM POS ID REF ALT   QUAL FILTER INFO FORMAT mom1 dad1 ch1
 foo    3   .  A   G     .    .      .    GT     0/0  0/1  0/0
 foo    4   .  C   G     .    .      .    GT     0/0  0/1  0/0

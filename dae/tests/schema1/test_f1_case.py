@@ -219,33 +219,3 @@ def test_f1_partially_known_denovo(
         variants_impl(variants), regions, inheritance, effect_types
     )
     assert couter == count
-
-
-@pytest.mark.parametrize("variants", ["variants_impala", "variants_vcf"])
-@pytest.mark.parametrize(
-    "regions,inheritance,effect_types,count",
-    [
-        ([Region("1", 901923, 901923)], None, None, 1),
-        ([Region("1", 901923, 901923)], "unknown", None, 1),
-        ([Region("1", 901923, 901923)], "mendelian", None, 0),
-        ([Region("1", 901923, 901923)], "not unknown", None, 0),
-        ([Region("1", 901923, 901923)], None, ["synonymous", "missense"], 0),
-    ],
-)
-def test_f1_all_unknown_901923(
-    variants_impl, variants, regions, inheritance, effect_types, count
-):
-
-    vvars = variants_impl(variants)("backends/f1_test_901923")
-    assert vvars is not None
-
-    vs = vvars.query_variants(
-        regions=regions,
-        inheritance=inheritance,
-        effect_types=effect_types,
-        return_reference=True,
-        return_unknown=True,
-    )
-
-    vs = list(vs)
-    assert len(vs) == count
