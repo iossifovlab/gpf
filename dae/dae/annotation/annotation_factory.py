@@ -299,7 +299,7 @@ def build_annotation_pipeline(
     pipeline = AnnotationPipeline(grr_repository)
 
     for idx, annotator_config in enumerate(pipeline_config):
-        annotator_id = f"A{idx}"
+        annotator_id = f"A{idx+1}"
         raw_config_copy = copy.deepcopy(annotator_config)
         try:
             builder = get_annotator_factory(annotator_config.type)
@@ -313,8 +313,8 @@ def build_annotation_pipeline(
             pipeline.add_annotator(annotator)
         except ValueError as value_error:
             raise AnnotationConfigurationError(
-                f"The {annotator_id} annotator ({idx}-th)"
-                f"configuration {raw_config_copy} is incorrect: ",
+                f"The {annotator_id} annotator ({idx+1}-th)"
+                f" configuration {raw_config_copy} is incorrect: ",
                 value_error) from value_error
 
     return pipeline

@@ -253,26 +253,28 @@ class ReannotationPipeline(AnnotationPipeline):
         infos_new = pipeline_new.get_info()
         infos_old = pipeline_old.get_info()
 
-        self.dependency_graph = self._build_dependency_graph()
+        self.dependency_graph = ReannotationPipeline.build_dependency_graph(
+            pipeline_new
+        )
 
-        self.new: list[AnnotatorInfo] = [
+        self.annotators_new: list[AnnotatorInfo] = [
             i for i in infos_new if i not in infos_old
         ]
 
         self.upstream: list[AnnotatorInfo] = []
         self.downstream: list[AnnotatorInfo] = []
-        for i in self.new:
+        for i in self.annotators_new:
             self.upstream.extend(self.get_dependencies_for(i))
             self.downstream.extend(self.get_dependents_for(i))
 
-        self.old: list[AnnotatorInfo] = [
+        self.annotators_old: list[AnnotatorInfo] = [
             i for i in infos_old if i not in infos_new
         ]
 
-        self.unchanged: list[AnnotatorInfo] = [
+        self.annotators_unchanged: list[AnnotatorInfo] = [
             i for i in infos_new if (
-                i not in self.new
-                and i not in self.old
+                i not in self.annotators_new
+                and i not in self.annotators_old
                 and i not in self.upstream
                 and i not in self.downstream
             )
@@ -282,40 +284,52 @@ class ReannotationPipeline(AnnotationPipeline):
         # TODO Add cleanup annotators for all columns produced by the
         # annotators found in "old"
 
-    def _build_dependency_graph(self) -> dict[AnnotatorInfo, list[tuple]]:
+    @staticmethod
+    def build_dependency_graph(
+        pipeline: AnnotationPipeline
+    ) -> dict[AnnotatorInfo, list[tuple]]:
+        """Make dependency graph for an annotation pipeline."""
         graph: dict[AnnotatorInfo, list[tuple]] = {}
-        for annotator in self.pipeline_new.annotators:
+        for annotator in pipeline.annotators:
             annotator_info = annotator.get_info()
+            if annotator_info not in graph:
+                graph[annotator_info] = []
             for attr in annotator.used_context_attributes:
-                attr_info = self.pipeline_new.get_attribute_info(attr)
+                attr_info = pipeline.get_attribute_info(attr)
                 upstream_annotator = \
-                    self.pipeline_new.get_annotator_by_attribute_info(
+                    pipeline.get_annotator_by_attribute_info(
                         attr_info
                     )
                 assert upstream_annotator is not None
-                if annotator_info not in graph:
-                    graph[annotator_info] = []
                 graph[annotator_info].append(
                     (upstream_annotator.get_info(), attr_info)
                 )
         return graph
 
     def get_dependencies_for(self, info: AnnotatorInfo) -> set[AnnotatorInfo]:
+        """Get all dependencies for a given annotator."""
         result: set[AnnotatorInfo] = set()
         if info in self.dependency_graph:
             for annotator, attr in self.dependency_graph[info]:
                 if attr.internal:
                     result.add(annotator)
-                    result.add(*self.get_dependents_for(annotator))
+                    dependencies = self.get_dependencies_for(annotator)
+                    if dependencies:
+                        result.add(*dependencies)
         return result
 
     def get_dependents_for(self, info: AnnotatorInfo) -> set[AnnotatorInfo]:
+        """Get all dependencies for a given annotator."""
         result: set[AnnotatorInfo] = set()
-        if info in self.dependency_graph:
-            for dependent, (dependency, _) in self.dependency_graph.items():
-                if dependency == info:
+        for dependent, dependencies in self.dependency_graph.items():
+            if not dependencies:
+                continue
+            for dep_annotator, _ in dependencies:
+                if dep_annotator == info:
                     result.add(dependent)
-                    result.add(*self.get_dependents_for(dependent))
+                    further = self.get_dependents_for(dependent)
+                    if further:
+                        result.add(*further)
         return result
 
     def annotate(self, annotatable: Annotatable, _=None) -> dict:
