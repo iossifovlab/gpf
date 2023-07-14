@@ -1,7 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
 
-from typing import Optional, cast
+from typing import Optional
 
 from dae.testing import \
     setup_genome, setup_gene_models, setup_gpf_instance
@@ -81,4 +81,4 @@ def foobar_gpf(
         gpf_instance\
             .genotype_storages\
             .register_default_storage(storage)
-    return cast(GPFInstance, gpf_instance)
+    return gpf_instance

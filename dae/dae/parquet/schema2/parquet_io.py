@@ -316,6 +316,8 @@ class VariantsParquetWriter:
                 elif is_all_reference_genotype(fv.gt):
                     family_alleles.append(fv.ref_allele)
                     num_fam_alleles_written += 1
+                elif self.include_reference:
+                    family_alleles.append(fv.ref_allele)
 
                 family_alleles.extend(fv.alt_alleles)
                 for fa in family_alleles:

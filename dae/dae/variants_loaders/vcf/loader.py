@@ -494,6 +494,8 @@ class SingleVcfLoader(VariantsGenotypesLoader):
             n_alleles = np.sum(known_independent_genotypes == allele_index)
             allele_freq = 0.0
 
+            percent_parents_called = 0.0
+
             if n_independent_parents > 0:
                 percent_parents_called = (
                     100.0 * n_parents_called
