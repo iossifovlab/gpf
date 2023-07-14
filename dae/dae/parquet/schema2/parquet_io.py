@@ -4,29 +4,22 @@ import time
 import logging
 import json
 from functools import reduce
-from typing import cast, Any, Optional
+from typing import Any, Optional
 import toml
 
 import fsspec
 
-import numpy as np
 import pyarrow as pa
 import pyarrow.parquet as pq
 
 from dae.utils import fs_utils
-from dae.pedigrees.family import Family
 from dae.parquet.helpers import url_to_pyarrow_fs
-from dae.utils.variant_utils import GenotypeType
 from dae.variants.attributes import Inheritance
-from dae.variants.family_variant import \
-    FamilyAllele, \
-    FamilyVariant, \
-    calculate_simple_best_state
-
+from dae.variants.family_variant import FamilyAllele
 from dae.utils.variant_utils import is_all_reference_genotype, \
     is_unknown_genotype
 
-from dae.variants.variant import SummaryVariant, SummaryAllele
+from dae.variants.variant import SummaryAllele
 from dae.parquet.schema2.serializers import AlleleParquetSerializer
 from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.variants_loaders.raw.loader import VariantsLoader
@@ -172,64 +165,6 @@ class VariantsParquetWriter:
             annotation_schema, extra_attributes
         )
 
-    @staticmethod
-    def _setup_reference_allele(
-            summary_variant: SummaryVariant, family: Family) -> FamilyAllele:
-        genotype = -1 * np.ones(shape=(2, len(family)), dtype=GenotypeType)
-        best_state = calculate_simple_best_state(
-            genotype, summary_variant.allele_count
-        )
-
-        ref_allele = summary_variant.ref_allele
-        reference_allele = FamilyAllele(ref_allele, family, genotype,
-                                        best_state)
-        return reference_allele
-
-    @staticmethod
-    def _setup_all_unknown_allele(
-            summary_variant: SummaryVariant, family: Family) -> FamilyAllele:
-        genotype = -1 * np.ones(shape=(2, len(family)), dtype=GenotypeType)
-        best_state = calculate_simple_best_state(
-            genotype, summary_variant.allele_count
-        )
-
-        ref_allele = summary_variant.ref_allele
-        assert ref_allele.reference is not None
-
-        unknown_allele = FamilyAllele(
-            SummaryAllele(
-                ref_allele.chromosome,
-                ref_allele.position,
-                ref_allele.reference,
-                ref_allele.reference,
-                summary_index=ref_allele.summary_index,
-                allele_index=-1,
-                transmission_type=ref_allele.transmission_type,
-                attributes={},
-            ),
-            family,
-            genotype,
-            best_state,
-        )
-        return unknown_allele
-
-    def _setup_all_unknown_variant(
-            self, summary_variant: SummaryVariant,
-            family_id: str) -> FamilyVariant:
-        family = self.families[family_id]
-        genotype = -1 * np.ones(shape=(2, len(family)), dtype=GenotypeType)
-        alleles = [
-            self._setup_reference_allele(summary_variant, family),
-            self._setup_all_unknown_allele(summary_variant, family),
-        ]
-        best_state = -1 * np.ones(
-            shape=(len(alleles), len(family)), dtype=GenotypeType
-        )
-        return FamilyVariant(
-            SummaryVariant(cast(list[SummaryAllele], alleles)),
-            family, genotype, best_state
-        )
-
     def _build_family_filename(self, allele: FamilyAllele) -> str:
         partition = self.partition_descriptor.family_partition(allele)
         partition_directory = self.partition_descriptor.partition_directory(
@@ -277,9 +212,8 @@ class VariantsParquetWriter:
         return self.data_writers[filename]
 
     def _write_internal(self) -> list[str]:
-        # pylint: disable=too-many-locals, too-many-statements
+        # pylint: disable=too-many-locals
         family_variant_index = 0
-        report = False
 
         for summary_variant_index, (
             summary_variant,
@@ -362,10 +296,7 @@ class VariantsParquetWriter:
                         summary_allele, summary_blobs_json
                     )
 
-            if summary_variant_index % 1000 == 0:
-                report = True
-
-            if report:
+            if summary_variant_index % 1000 == 0 and summary_variant_index > 0:
                 elapsed = time.time() - self.start
                 print(
                     f"Bucket {self.bucket_index}; "
@@ -376,7 +307,6 @@ class VariantsParquetWriter:
                     f"for {elapsed:.2f} sec ({len(self.data_writers)} files)",
                     file=sys.stderr,
                 )
-                report = False
 
         filenames = list(self.data_writers.keys())
 
