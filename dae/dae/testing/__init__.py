@@ -6,7 +6,9 @@ from dae.genomic_resources.testing import convert_to_tab_separated, \
 from .setup_helpers import \
     setup_gpf_instance
 from .import_helpers import vcf_import, vcf_study, \
-    denovo_import, denovo_study, setup_dataset, study_update
+    denovo_import, denovo_study, \
+    cnv_import, cnv_study, \
+    setup_dataset, study_update
 from .acgt_import import acgt_gpf
 from .alla_import import alla_gpf
 from .foobar_import import foobar_gpf
@@ -20,6 +22,8 @@ __all__ = [
 
     "vcf_import", "vcf_study",
     "denovo_import", "denovo_study",
+    "cnv_import", "cnv_study",
+
     "setup_dataset", "study_update",
 
     "acgt_gpf",

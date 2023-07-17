@@ -1,8 +1,10 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+import pathlib
 import pandas as pd
 import pytest
 from dae.utils.regions import Region
-from dae.query_variants.sql.schema2.base_query_builder import Dialect
+from dae.query_variants.sql.schema2.base_query_builder import Dialect, \
+    BaseQueryBuilder
 from dae.query_variants.sql.schema2.family_builder import FamilyQueryBuilder
 from dae.query_variants.sql.schema2.summary_builder import SummaryQueryBuilder
 from dae.variants.attributes import Role, Status, Sex
@@ -84,15 +86,16 @@ NO_PARTITIONING_PROPERTIES = {
 
 
 @pytest.fixture(scope="module")
-def pedigree_df(resources_dir):
+def pedigree_df(resources_dir: pathlib.Path) -> pd.DataFrame:
     ped_df = pd.read_csv(resources_dir / "pedigree_table.csv")
-    ped_df.role = ped_df.role.apply(Role)
-    ped_df.sex = ped_df.sex.apply(Sex)
-    ped_df.status = ped_df.status.apply(Status)
+    ped_df.role = ped_df.role.apply(Role.from_name)
+    ped_df.sex = ped_df.sex.apply(Sex.from_name)
+    ped_df.status = ped_df.status.apply(Status.from_name)
+    return ped_df
 
 
 @pytest.fixture()
-def family_query_builder(pedigree_df):
+def family_query_builder(pedigree_df: pd.DataFrame) -> FamilyQueryBuilder:
     dialect = Dialect()
 
     return FamilyQueryBuilder(
@@ -112,7 +115,7 @@ def family_query_builder(pedigree_df):
 
 
 @pytest.fixture()
-def summary_query_builder(pedigree_df):
+def summary_query_builder(pedigree_df: pd.DataFrame) -> SummaryQueryBuilder:
     dialect = Dialect()
 
     return SummaryQueryBuilder(
@@ -131,29 +134,33 @@ def summary_query_builder(pedigree_df):
 
 
 @pytest.fixture(params=["family", "summary"])
-def query_builder(request, family_query_builder, summary_query_builder):
+def query_builder(
+    request: pytest.FixtureRequest,
+    family_query_builder: FamilyQueryBuilder,
+    summary_query_builder: SummaryQueryBuilder
+) -> BaseQueryBuilder:
     if request.param == "family":
         return family_query_builder
     return summary_query_builder
 
 
-def test_get_all(query_builder):
+def test_get_all(query_builder: BaseQueryBuilder) -> None:
     query = query_builder.build_query()
     assert query.startswith("SELECT")
 
 
-def test_limit(query_builder):
+def test_limit(query_builder: BaseQueryBuilder) -> None:
     query = query_builder.build_query(limit=100)
     assert "LIMIT 100" in query
 
 
-def test_regions(query_builder):
+def test_regions(query_builder: BaseQueryBuilder) -> None:
     query = query_builder._build_regions_where(regions=[Region("X", 5, 15)])
     assert "sa.`chromosome` = 'X'" in query
-    assert "5 <= sa.`position`" in query
-    assert "15 >= COALESCE(sa.`end_position`, sa.`position`)" in query
+    assert "sa.`position` >= 5" in query
+    assert "COALESCE(sa.`end_position`, -1) <= 15" in query
 
     query = query_builder._build_regions_where([
         Region("13")
     ])
-    assert "(sa.`chromosome` = '13')" in query
+    assert "sa.`chromosome` = '13'" in query

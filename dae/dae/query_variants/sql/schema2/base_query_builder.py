@@ -130,7 +130,7 @@ class BaseQueryBuilder(ABC):
         self.query_columns = self._query_columns()
         self.where_accessors = self._where_accessors()
 
-    def _where_accessors(self):
+    def _where_accessors(self) -> str:
         cols = list(self.family_columns) + list(self.summary_columns)
         accessors = dict(zip(cols, cols))
 
@@ -441,11 +441,10 @@ class BaseQueryBuilder(ABC):
         for region in regions:
             assert isinstance(region, Region)
             esc = self.dialect.escape_char()
-            end_position = f"COALESCE(sa.{esc}end_position{esc}, " \
-                f"sa.{esc}position{esc})"
-            query = "(sa.{esc}chromosome{esc} = {q}{chrom}{q}"
+            end_position = f"COALESCE(sa.{esc}end_position{esc}, -1)"
+            query = "( sa.{esc}chromosome{esc} = {q}{chrom}{q}"
             if region.start is None and region.end is None:
-                query += ")"
+                query += " )"
                 query = query.format(
                     q=self.QUOTE,
                     chrom=region.chrom,
@@ -454,9 +453,18 @@ class BaseQueryBuilder(ABC):
             else:
                 query += (
                     " AND "
-                    "({start} <= sa.{esc}position{esc}) AND "
-                    "({stop} >= {end_position}))"
+                    "("
+                    "(sa.{esc}position{esc} >= {start} AND "
+                    "sa.{esc}position{esc} <= {stop}) "
+                    "OR "
+                    "({end_position} >= {start} AND "
+                    "{end_position} <= {stop}) "
+                    "OR "
+                    "({start} >= sa.{esc}position{esc} AND "
+                    "{stop} <= {end_position})"
+                    "))"
                 )
+
                 query = query.format(
                     q=self.QUOTE,
                     chrom=region.chrom,

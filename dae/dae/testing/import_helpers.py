@@ -80,6 +80,13 @@ def setup_import_project_config(
             - {{ denovo_path }}
             {% endfor %}
         {% endif %}
+        {% if cnv %}
+          cnv:
+            files:
+            {% for cnv_path in cnv %}
+            - {{ cnv_path }}
+            {% endfor %}
+        {% endif %}
         destination:
           storage_id: {{ storage_id}}
         """)).render(params)
@@ -184,6 +191,46 @@ def denovo_study(
     """Import a de Novo study and return the imported study."""
     project = denovo_import(
         root_path, study_id, ped_path, denovo_paths, gpf_instance,
+        project_config_update=project_config_update,
+        project_config_overwrite=project_config_overwrite)
+    run_with_project(project)
+    if study_config_update:
+        update_study_config(
+            gpf_instance, study_id, study_config_update)
+
+    gpf_instance.reload()
+    return gpf_instance.get_genotype_data(study_id)
+
+
+def cnv_import(
+    root_path: pathlib.Path,
+    study_id: str,
+    ped_path: pathlib.Path, cnv_paths: list[pathlib.Path],
+    gpf_instance: GPFInstance,
+    project_config_update: Optional[dict[str, Any]] = None,
+    project_config_overwrite: Optional[dict[str, Any]] = None
+) -> ImportProject:
+    """Import a de Novo study and return the import project."""
+    study = StudyInputLayout(study_id, ped_path, [], [], [], cnv_paths)
+    project = setup_import_project(
+        root_path, study, gpf_instance,
+        project_config_update=project_config_update,
+        project_config_overwrite=project_config_overwrite)
+    return project
+
+
+def cnv_study(
+    root_path: pathlib.Path,
+    study_id: str,
+    ped_path: pathlib.Path, cnv_paths: list[pathlib.Path],
+    gpf_instance: GPFInstance,
+    project_config_update: Optional[dict[str, Any]] = None,
+    project_config_overwrite: Optional[dict[str, Any]] = None,
+    study_config_update: Optional[dict[str, Any]] = None
+) -> GenotypeData:
+    """Import a de Novo study and return the imported study."""
+    project = cnv_import(
+        root_path, study_id, ped_path, cnv_paths, gpf_instance,
         project_config_update=project_config_update,
         project_config_overwrite=project_config_overwrite)
     run_with_project(project)

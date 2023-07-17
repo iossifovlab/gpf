@@ -1,16 +1,20 @@
 import os
 import time
 import logging
-from typing import Dict, Any, cast
+from typing import Dict, Any, cast, Optional
 
 from cerberus import Validator
+from box import Box
 
 from dae.configuration.utils import validate_path
 from dae.pedigrees.loader import FamiliesLoader
+from dae.genomic_resources.reference_genome import ReferenceGenome
+from dae.genomic_resources.gene_models import GeneModels
 
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 
-from dae.variants_loaders.raw.loader import StoredAnnotationDecorator
+from dae.variants_loaders.raw.loader import StoredAnnotationDecorator, \
+    VariantsLoader
 from dae.inmemory_storage.raw_variants import RawMemoryVariants
 
 from dae.variants_loaders.vcf.loader import VcfLoader
@@ -56,16 +60,20 @@ class InmemoryGenotypeStorage(GenotypeStorage):
                 f"{validator.errors}")
         return cast(Dict, validator.document)
 
-    def start(self):
+    def start(self) -> GenotypeStorage:
         return self
 
-    def shutdown(self):
+    def shutdown(self) -> GenotypeStorage:
         """No resources to close."""
+        return self
 
-    def get_data_dir(self, *path):
+    def get_data_dir(self, *path: str) -> str:
         return os.path.join(self.data_dir, *path)
 
-    def build_backend(self, study_config, genome, gene_models):
+    def build_backend(
+            self, study_config: Box,
+            genome: ReferenceGenome,
+            gene_models: Optional[GeneModels]) -> Any:
         start = time.time()
         ped_params = \
             study_config.genotype_storage.files.pedigree.params.to_dict()
@@ -84,7 +92,7 @@ class InmemoryGenotypeStorage(GenotypeStorage):
             variants_params = file_conf.params.to_dict()
             logger.debug(
                 "variant params: %s; %s", variants_filename, variants_params)
-
+            variants_loader: VariantsLoader
             annotation_filename = variants_filename
             if file_conf.format == "vcf":
                 variants_filenames = [
@@ -115,9 +123,12 @@ class InmemoryGenotypeStorage(GenotypeStorage):
                     params=variants_params,
                 )
             if file_conf.format == "cnv":
+                variants_filenames = [
+                    fn.strip() for fn in variants_filename.split(" ")
+                ]
                 variants_loader = CNVLoader(
                     families,
-                    variants_filename,
+                    variants_filenames,
                     genome,
                     params=variants_params,
                 )

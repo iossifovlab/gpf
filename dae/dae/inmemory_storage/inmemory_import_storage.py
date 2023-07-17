@@ -1,7 +1,7 @@
 import os
 import shutil
 import logging
-from typing import Any
+from typing import Any, Optional
 # FIXME move save_study_config function into better place
 from dae.impala_storage.schema1.import_commons import save_study_config
 
@@ -33,7 +33,7 @@ class InmemoryImportStorage(ImportStorage):
 
     @classmethod
     def _copy_to_filesystem_storage(
-            cls, project: ImportProject, source_filename) -> str:
+            cls, project: ImportProject, source_filename: str) -> str:
         destination_dir = cls._get_destination_study_dir(project)
         destination_filename = os.path.join(
             destination_dir, os.path.basename(source_filename))
@@ -63,7 +63,7 @@ class InmemoryImportStorage(ImportStorage):
     @classmethod
     def _do_copy_variants(
             cls, project: ImportProject,
-            loader_type=None) -> list[dict[str, Any]]:
+            loader_type: Optional[str] = None) -> list[dict[str, Any]]:
         if loader_type is None:
             loader_types = project.get_variant_loader_types()
         else:
@@ -71,7 +71,7 @@ class InmemoryImportStorage(ImportStorage):
 
         destination_dir = cls._get_destination_study_dir(project)
 
-        def construct_destination_filename(fname):
+        def construct_destination_filename(fname: str) -> str:
             return os.path.join(
                 destination_dir, os.path.basename(fname))
 
