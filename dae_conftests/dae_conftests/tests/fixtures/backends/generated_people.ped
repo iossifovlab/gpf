@@ -1,8 +1,0 @@
-familyId	personId	dadId	momId	sex	status	role	generated
-f1	mom1	0	0	2	-	mom	1.0
-f1	prb1	dad1	mom1	1	1	maternal_cousin	
-f1	unknown1	0	0	1	1	unknown	
-f1	dad1	0	0	1	-	dad	1.0
-f2	mom2	0	0	2	-	mom	
-f2	prb2	dad2	mom2	1	1	prb	
-f2	dad2	0	0	1	-	dad	
