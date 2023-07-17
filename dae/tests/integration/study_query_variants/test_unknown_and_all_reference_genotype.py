@@ -72,6 +72,56 @@ chrA   9   .  A   G,C   .    .      .    GT     2/0  2/0  2/0
 @pytest.mark.parametrize(
     "position, genotype",
     [
+        (1, np.array([[0, 0, -1], [0, 0, 0]])),
+        (2, np.array([[1, 1, -1], [2, -1, 2]])),
+        (3, np.array([[-1, -1, -1], [-1, -1, 2]])),
+        (4, np.array([[-1, -1, -1], [-1, -1, -1]])),
+        (5, np.array([[-1, -1, -1], [-1, -1, 3]])),
+        (6, np.array([[0, 0, 0], [0, 0, 0]])),
+        (7, np.array([[1, 1, 0], [0, 0, 0]])),
+        (8, np.array([[1, 1, 1], [0, 0, 0]])),
+        (9, np.array([[2, 2, 2], [0, 0, 0]])),
+    ],
+)
+def test_variant_gt(
+        imported_study: GenotypeData, position: int,
+        genotype: np.ndarray) -> None:
+    vs = list(imported_study.query_variants(
+        regions=[Region("chrA", position, position)],
+        return_reference=True,
+        return_unknown=True))
+    assert len(vs) == 1
+    assert np.all(vs[0].gt == genotype)
+
+
+@pytest.mark.parametrize(
+    "position, genotype",
+    [
+        (1, np.array([[0, 0], [0, 0], [-1, 0]])),
+        (2, np.array([[1, 2], [1, -1], [-1, 2]])),
+        (3, np.array([[-1, -1], [-1, -1], [-1, 2]])),
+        (4, np.array([[-1, -1], [-1, -1], [-1, -1]])),
+        (5, np.array([[-1, -1], [-1, -1], [-1, 3]])),
+        (6, np.array([[0, 0], [0, 0], [0, 0]])),
+        (7, np.array([[1, 0], [1, 0], [0, 0]])),
+        (8, np.array([[1, 0], [1, 0], [1, 0]])),
+        (9, np.array([[2, 0], [2, 0], [2, 0]])),
+    ],
+)
+def test_variant_genotype(
+        imported_study: GenotypeData, position: int,
+        genotype: np.ndarray) -> None:
+    vs = list(imported_study.query_variants(
+        regions=[Region("chrA", position, position)],
+        return_reference=True,
+        return_unknown=True))
+    assert len(vs) == 1
+    assert np.all(vs[0].genotype == genotype)
+
+
+@pytest.mark.parametrize(
+    "position, genotype",
+    [
         (1, np.array([0, 0, 0, 0, -1, 0])),
         (2, np.array([1, 2, 1, -1, -1, 2])),
         (3, np.array([-1, -1, -1, -1, -1, 2])),
@@ -83,7 +133,7 @@ chrA   9   .  A   G,C   .    .      .    GT     2/0  2/0  2/0
         (9, np.array([2, 0, 2, 0, 2, 0])),
     ],
 )
-def test_variant_genotype(
+def test_variant_genotype_flatten(
         imported_study: GenotypeData, position: int,
         genotype: np.ndarray) -> None:
     vs = list(imported_study.query_variants(
