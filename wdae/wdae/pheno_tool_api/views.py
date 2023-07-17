@@ -134,9 +134,9 @@ class PhenoToolDownload(PhenoToolView):
             )
             result_df = result_df.rename(columns={"normalized": column_name})
             result_df[column_name] = result_df[column_name].round(decimals=5)
-        else:
-            result_df[tool.measure_id] = \
-                result_df[tool.measure_id].round(decimals=5)
+
+        result_df[tool.measure_id] = \
+            result_df[tool.measure_id].round(decimals=5)
 
         # Select & sort columns for output
         effect_types_count = len(data["effect_types"])
