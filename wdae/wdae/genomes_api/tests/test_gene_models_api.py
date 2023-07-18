@@ -40,11 +40,14 @@ def test_get_nonexistant_gene_transcripts(anonymous_client):
     assert response
     assert response.status_code == 404
 
+
 def test_get_case_insensitive_gene(anonymous_client):
     response = anonymous_client.get("/api/v3/genome/gene_models/default/cHd8")
 
     assert response
+    assert response.data["gene"] == "CHD8"
     assert response.status_code == 200
+
 
 def test_search_gene_symbols(anonymous_client):
     response = anonymous_client.get("/api/v3/genome/gene_models/search/CHD8")

@@ -1,5 +1,4 @@
 from itertools import islice
-import re
 
 from rest_framework.response import Response
 from rest_framework import status
@@ -16,9 +15,10 @@ class DefaultGeneModelsId(QueryBaseView):
 
 class GeneModels(QueryBaseView):
     def get(self, request, gene_symbol):
+        gene_symbol = gene_symbol.lower()
         gene_models = self.gpf_instance.gene_models.gene_models
         for k, v in gene_models.items():
-            if re.fullmatch(gene_symbol, k, re.IGNORECASE):
+            if gene_symbol == k.lower():
                 transcripts = v
                 response_data = {
                     "gene": k,
@@ -76,10 +76,11 @@ class GeneSymbolsSearch(QueryBaseView):
     RESPONSE_LIMIT = 20
 
     def get(self, request, search_term):
+        search_term = search_term.lower()
         gene_models = self.gpf_instance.gene_models.gene_models
 
         matching_gene_symbols = filter(
-            lambda gs: gs.lower().startswith(search_term.lower()),
+            lambda gs: gs.lower().startswith(search_term),
             gene_models.keys()
         )
 
