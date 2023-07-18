@@ -2,7 +2,6 @@ import { Injectable, Inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { ConfigService } from './config/config.service';
 import { Observable, Subject, take, tap, catchError, of } from 'rxjs';
-import { Router } from '@angular/router';
 import { APP_BASE_HREF } from '@angular/common';
 import pkceChallenge from 'pkce-challenge';
 
@@ -20,7 +19,6 @@ export class AuthService {
   public constructor(
     private http: HttpClient,
     private config: ConfigService,
-    private router: Router,
     @Inject(APP_BASE_HREF) private baseHref: string
   ) {
     this.accessToken = localStorage.getItem('access_token') || '';
@@ -46,11 +44,6 @@ export class AuthService {
     }, this.options).pipe(take(1), tap(res => {
       this.setTokens(res);
       localStorage.removeItem('code_verifier');
-      // Remove auth code from query params and refresh navigation
-      this.router.navigate([], {
-        queryParams: {'code': null},
-        queryParamsHandling: 'merge'
-      });
       this.tokenExchangeSubject.next(true);
     }));
   }

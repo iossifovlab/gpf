@@ -4,6 +4,7 @@ import { ConfigService } from '../config/config.service';
 import { Observable } from 'rxjs';
 import { share, take } from 'rxjs/operators';
 import { AuthService } from 'app/auth.service';
+import { Router } from '@angular/router';
 import { APP_BASE_HREF } from '@angular/common';
 
 @Component({
@@ -18,6 +19,7 @@ export class UsersComponent implements OnInit {
     private usersService: UsersService,
     private config: ConfigService,
     private authService: AuthService,
+    private router: Router,
     @Inject(APP_BASE_HREF) private baseHref: string
   ) { }
 
@@ -32,12 +34,16 @@ export class UsersComponent implements OnInit {
 
   public login(): void {
     const codeChallenge = this.authService.generatePKCE();
+    const state = {
+      came_from: this.router.url
+    };
     window.location.href = `${this.config.rootUrl}${this.baseHref}`
       + `o/authorize/?response_type=code`
       + `&code_challenge_method=S256`
       + `&code_challenge=${codeChallenge}`
       + `&scope=read`
-      + `&client_id=${this.config.oauthClientId}`;
+      + `&client_id=${this.config.oauthClientId}`
+      + `&state=${btoa(JSON.stringify(state))}`;
   }
 
   public logout(): void {
