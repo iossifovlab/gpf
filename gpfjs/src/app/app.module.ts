@@ -178,12 +178,17 @@ import { ConfirmButtonComponent } from './confirm-button/confirm-button.componen
 import * as Sentry from '@sentry/angular-ivy';
 import { FederationCredentialsComponent } from './federation-credentials/federation-credentials.component';
 import { StudyFiltersTreeComponent } from './treelist-checkbox/treelist-checkbox.component';
+import { LoginComponent } from './login/login.component';
 
 const appRoutes: Routes = [
   {
+    path: 'login',
+    component: LoginComponent,
+    resolve: { _: AuthResolverService},
+  },
+  {
     path: 'datasets',
     component: DatasetsComponent,
-    resolve: { _: AuthResolverService},
   },
   {
     path: 'datasets/:dataset',
@@ -379,7 +384,8 @@ const appRoutes: Routes = [
     PedigreeComponent,
     ItemAddMenuComponent,
     FederationCredentialsComponent,
-    StudyFiltersTreeComponent
+    StudyFiltersTreeComponent,
+    LoginComponent
   ],
   imports: [
     BrowserModule,
