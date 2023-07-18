@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, Optional
+from typing import Dict, Optional, Any
 
 from dae.genotype_storage import get_genotype_storage_factory
 from dae.genotype_storage.genotype_storage import GenotypeStorage
@@ -23,12 +23,12 @@ class GenotypeStorageRegistry:
     it.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._genotype_storages: Dict[str, GenotypeStorage] = {}
         self._default_genotype_storage: Optional[GenotypeStorage] = None
 
     def register_storage_config(
-            self, storage_config) -> GenotypeStorage:
+            self, storage_config: dict[str, Any]) -> GenotypeStorage:
         """Create a genotype storage using storage config and registers it."""
         storage_type = storage_config["storage_type"]
         storage_factory = get_genotype_storage_factory(storage_type)
@@ -48,7 +48,8 @@ class GenotypeStorageRegistry:
         self._genotype_storages[storage_id] = storage
         return storage
 
-    def register_default_storage(self, genotype_storage):
+    def register_default_storage(
+            self, genotype_storage: GenotypeStorage) -> None:
         """Register a genotype storage and make it the default storage."""
         self.register_genotype_storage(genotype_storage)
         self._default_genotype_storage = genotype_storage
@@ -62,7 +63,7 @@ class GenotypeStorageRegistry:
             raise ValueError("default genotype storage not set")
         return self._default_genotype_storage
 
-    def get_genotype_storage(self, storage_id) -> GenotypeStorage:
+    def get_genotype_storage(self, storage_id: str) -> GenotypeStorage:
         """Return genotype storage with specified storage_id.
 
         If the method can not find storage with the specified ID, it will raise
@@ -74,15 +75,16 @@ class GenotypeStorageRegistry:
             raise ValueError(f"unknown storage id {storage_id}")
         return self._genotype_storages[storage_id]
 
-    def get_all_genotype_storage_ids(self):
+    def get_all_genotype_storage_ids(self) -> list[str]:
         """Return list of all registered genotype storage IDs."""
         return list(self._genotype_storages.keys())
 
-    def get_all_genotype_storages(self):
+    def get_all_genotype_storages(self) -> list[GenotypeStorage]:
         """Return list of registered genotype storages."""
         return list(self._genotype_storages.values())
 
-    def register_storages_configs(self, genotype_storages_config):
+    def register_storages_configs(
+            self, genotype_storages_config: dict[str, Any]) -> None:
         """Create and register all genotype storages defined in config.
 
         When defining a GPF instance, we specify a `genotype_storage` section
@@ -97,7 +99,7 @@ class GenotypeStorageRegistry:
             storage = self.get_genotype_storage(default_storage_id)
             self.register_default_storage(storage)
 
-    def shutdown(self):
+    def shutdown(self) -> None:
         for storage_id, storage in self._genotype_storages.items():
             logger.info("shutting down genotype storage %s", storage_id)
             storage.shutdown()

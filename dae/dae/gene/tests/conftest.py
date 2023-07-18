@@ -7,6 +7,7 @@ import pytest
 
 from dae.testing import setup_pedigree, setup_denovo, denovo_study
 from dae.testing.foobar_import import foobar_gpf
+from dae.studies.study import GenotypeData
 
 from dae.utils.fixtures import change_environment
 
@@ -131,7 +132,7 @@ def f4_trio_denovo_gene_set_config(local_gpf_instance):
 
 
 @pytest.fixture
-def trios2_study(tmp_path_factory):
+def trios2_study(tmp_path_factory) -> GenotypeData:
     root_path = tmp_path_factory.mktemp(
         "denovo_gene_sets_tios")
     gpf_instance = foobar_gpf(root_path)
@@ -145,20 +146,17 @@ def trios2_study(tmp_path_factory):
         f1       s1       d1     m1     2   1      sib
         f2       m2       0      0      2   1      mom
         f2       d2       0      0      1   1      dad
-        f2       p2       d2     m2     1   2      prb
+        f2       p2       d2     m2     2   2      prb
         """)
     vcf_path = setup_denovo(
         root_path / "trios2_data" / "in.tsv",
         """
           familyId  location  variant    bestState
-          f1        foo:7     sub(A->G)  2||2||1||1/0||0||1||0
-          f1        foo:10    sub(A->G)  2||2||1||1/0||0||1||1
-          f2        foo:10    sub(A->G)  2||2||1/0||0||1
-          f1        foo:11    sub(T->A)  2||2||1||2/0||0||1||0
-          f1        bar:10    sub(G->A)  2||2||2||1/0||0||0||1
-          f2        bar:11    sub(G->A)  2||2||1/0||0||1
-          f2        bar:12    sub(G->A)  2||2||1/0||0||1
-          f2        bar:14    del(2)     2||2||1/0||0||1
+          f1        foo:7     sub(A->G)  2||2||1||2/0||0||1||0
+          f1        foo:14    sub(C->T)  2||2||2||1/0||0||0||1
+          f2        bar:7     ins(CCCC)  2||2||1/0||0||1
+          f2        bar:7     sub(C->A)  2||2||1/0||0||1
+          f1        bar:7     sub(C->T)  2||2||1||2/0||0||1||0
         """
     )
 

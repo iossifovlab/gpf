@@ -1,17 +1,18 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-
+import pathlib
 import textwrap
 import pytest
 import numpy as np
 
 from dae.genomic_resources.testing import build_inmemory_test_repository
-from dae.genomic_resources.repository import GR_CONF_FILE_NAME
+from dae.genomic_resources.repository import GR_CONF_FILE_NAME, \
+    GenomicResourceRepo
 from dae.gene.gene_scores import build_gene_score_from_resource, \
     GeneScoreImplementation
 
 
 @pytest.fixture
-def scores_repo(tmp_path):
+def scores_repo(tmp_path: pathlib.Path) -> GenomicResourceRepo:
     scores_repo = build_inmemory_test_repository({
         "LinearHist": {
             GR_CONF_FILE_NAME: """
@@ -186,7 +187,8 @@ def scores_repo(tmp_path):
     return scores_repo
 
 
-def test_load_linear_gene_scores_from_resource(scores_repo):
+def test_load_linear_gene_scores_from_resource(
+        scores_repo: GenomicResourceRepo) -> None:
 
     res = scores_repo.get_resource("LinearHist")
     assert res.get_type() == "gene_score"
@@ -200,12 +202,14 @@ def test_load_linear_gene_scores_from_resource(scores_repo):
     assert result.get_y_scale(score_id) == "linear"
 
     hist = result.get_histogram(score_id)
+    assert hist is not None
     assert len(hist.bins) == 4
 
     assert np.all(hist.bars == np.array([2, 2, 2]))
 
 
-def test_load_log_gene_scores_from_resource(scores_repo):
+def test_load_log_gene_scores_from_resource(
+        scores_repo: GenomicResourceRepo) -> None:
 
     res = scores_repo.get_resource("LogHist")
     assert res.get_type() == "gene_score"
@@ -219,18 +223,21 @@ def test_load_log_gene_scores_from_resource(scores_repo):
     assert result.get_y_scale(score_id) == "linear"
 
     hist = result.get_histogram(score_id)
+    assert hist is not None
     assert len(hist.bins) == 6
 
     assert np.all(hist.bars == np.array([2, 1, 1, 1, 1]))
 
 
-def test_load_wrong_resource_type(scores_repo):
+def test_load_wrong_resource_type(
+        scores_repo: GenomicResourceRepo) -> None:
     res = scores_repo.get_resource("Oops")
     with pytest.raises(ValueError, match="invalid resource type Oops"):
         build_gene_score_from_resource(res)
 
 
-def test_load_gene_score_without_histogram(scores_repo):
+def test_load_gene_score_without_histogram(
+        scores_repo: GenomicResourceRepo) -> None:
     res = scores_repo.get_resource("OopsHist")
     with pytest.raises(
         ValueError,
@@ -239,14 +246,15 @@ def test_load_gene_score_without_histogram(scores_repo):
         build_gene_score_from_resource(res)
 
 
-def test_load_gene_score_without_gene_scores(scores_repo):
+def test_load_gene_score_without_gene_scores(
+        scores_repo: GenomicResourceRepo) -> None:
     res = scores_repo.get_resource("OopsScores")
     with pytest.raises(ValueError,
                        match="missing scores config in OopsScores"):
         build_gene_score_from_resource(res)
 
 
-def test_gene_score(scores_repo):
+def test_gene_score(scores_repo: GenomicResourceRepo) -> None:
 
     res = scores_repo.get_resource("LinearHist")
     gene_score = build_gene_score_from_resource(res)
@@ -257,7 +265,7 @@ def test_gene_score(scores_repo):
     assert gene_score.get_gene_value("linear", "G3") == 3
 
 
-def test_gene_score_nan(scores_repo):
+def test_gene_score_nan(scores_repo: GenomicResourceRepo) -> None:
     res = scores_repo.get_resource("NaNTest")
     gene_score = build_gene_score_from_resource(res)
 
@@ -266,7 +274,7 @@ def test_gene_score_nan(scores_repo):
     assert len(df) == 4
 
 
-def test_calculate_histogram(scores_repo):
+def test_calculate_histogram(scores_repo: GenomicResourceRepo) -> None:
     res = scores_repo.get_resource("LinearHist")
     result = build_gene_score_from_resource(res)
     assert result is not None

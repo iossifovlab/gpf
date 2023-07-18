@@ -4,7 +4,7 @@ import textwrap
 
 import pytest
 
-from dae.genomic_resources import build_genomic_resource_repository
+from dae.genomic_resources.testing import build_inmemory_test_repository
 
 from dae.annotation.annotatable import VCFAllele
 from dae.annotation.annotation_factory import build_annotation_pipeline
@@ -27,50 +27,47 @@ from dae.annotation.annotation_factory import build_annotation_pipeline
     (("1", 14970, "C", "CA"), "max", "max", 0.04),
 ])
 def test_np_score_annotator(
-        variant, pos_aggregator, nuc_aggregator, expected):
+        variant: tuple,
+        pos_aggregator: str, nuc_aggregator: str, expected: float) -> None:
 
     annotatable = VCFAllele(*variant)
     assert annotatable is not None
     print(annotatable)
-    repo = build_genomic_resource_repository({
-        "id": "test_annotation",
-        "type": "embedded",
-        "content": {
-            "np_score1": {
-                "genomic_resource.yaml":
-                """\
-                type: np_score
-                table:
-                    filename: data.mem
-                    reference:
-                      name: reference
-                    alternative:
-                      name: alternative
-                scores:
-                - id: test_raw
-                  type: float
-                  desc: "test values"
-                  name: raw
-                """,
-                "data.mem": """
-                    chrom  pos_begin  reference alternative raw
-                    1      14968      A         C           0.00001
-                    1      14968      A         G           0.00002
-                    1      14968      A         T           0.00004
-                    1      14969      C         A           0.0001
-                    1      14969      C         G           0.0002
-                    1      14969      C         T           0.0004
-                    1      14970      C         A           0.001
-                    1      14970      C         G           0.002
-                    1      14970      C         T           0.004
-                    1      14971      C         A           0.01
-                    1      14971      C         G           0.02
-                    1      14971      C         T           0.04
-                    1      14972      T         A           0.1
-                    1      14972      T         C           0.2
-                    1      14972      T         G           0.4
-                """
-            }
+    repo = build_inmemory_test_repository({
+        "np_score1": {
+            "genomic_resource.yaml":
+            """\
+            type: np_score
+            table:
+                filename: data.mem
+                reference:
+                  name: reference
+                alternative:
+                  name: alternative
+            scores:
+            - id: test_raw
+              type: float
+              desc: "test values"
+              name: raw
+            """,
+            "data.mem": """
+                chrom  pos_begin  reference alternative raw
+                1      14968      A         C           0.00001
+                1      14968      A         G           0.00002
+                1      14968      A         T           0.00004
+                1      14969      C         A           0.0001
+                1      14969      C         G           0.0002
+                1      14969      C         T           0.0004
+                1      14970      C         A           0.001
+                1      14970      C         G           0.002
+                1      14970      C         T           0.004
+                1      14971      C         A           0.01
+                1      14971      C         G           0.02
+                1      14971      C         T           0.04
+                1      14972      T         A           0.1
+                1      14972      T         C           0.2
+                1      14972      T         G           0.4
+            """
         }
     })
 

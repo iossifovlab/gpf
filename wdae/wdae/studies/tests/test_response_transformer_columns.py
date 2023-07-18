@@ -39,7 +39,7 @@ def test_special_attrs_formatting(fixtures_wgpf_instance):
 
 @pytest.fixture
 def v_impala(variants_impl):
-    vvars = variants_impl("variants_impala")("backends/a")
+    vvars = variants_impl("variants_vcf")("backends/a")
     vs = list(vvars.query_variants(regions=[Region("1", 11548, 11548)]))
     assert len(vs) == 1
 
@@ -59,7 +59,7 @@ def v_vcf(variants_impl):
 
 @pytest.fixture
 def phenotype_person_sets(variants_impl):
-    vvars = variants_impl("variants_impala")("backends/a")
+    vvars = variants_impl("variants_vcf")("backends/a")
     families = vvars.families
     person_sets_config = FrozenBox({
         "id": "phenotype",

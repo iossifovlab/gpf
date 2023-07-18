@@ -2,92 +2,90 @@
 
 import pytest
 
-from dae.genomic_resources import build_genomic_resource_repository
+from dae.genomic_resources.repository import GenomicResourceRepo
+from dae.genomic_resources.testing import build_inmemory_test_repository
 from dae.annotation.annotation_factory import build_annotation_pipeline
 
 
 @pytest.fixture
-def genomic_resources_repo():
-    repo = build_genomic_resource_repository({
-        "id": "test_annotation",
-        "type": "embedded",
-        "content": {
-            "position_score1": {
-                "genomic_resource.yaml":
-                """\
-                type: position_score
-                table:
-                    filename: data.mem
-                scores:
-                - id: test100way
-                  type: float
-                  desc: "test values"
-                  name: 100way
-                - id: t1
-                  type: float
-                  desc: "test score 1"
-                  name: t1
-                - id: t2
-                  type: float
-                  desc: "test score 2"
-                  name: t2
-                default_annotation:
-                    attributes:
-                    - source: test100way
-                      destination: test100
-                    - source: t1
-                      destination: t1
-                    - source: t2
-                      destination: t2
-                """,
-                "data.mem": """
-                    chrom  pos_begin  pos_end  100way   t1   t2
-                    1      14966      14967    0.02     -2   -20
-                    1      14968      14969    0.01     -1   -10
-                    1      14970      14971    0.1      1    10
-                    1      14972      14973    0.2      2    20
-                    1      14974      14975    0.3      3    30
-                    1      14976      14977    0.4      4    40
-                """
-            },
-            "np_score1": {
-                "genomic_resource.yaml":
-                """\
-                type: np_score
-                table:
-                    filename: data.mem
-                scores:
-                - id: test_raw
-                  type: float
-                  desc: "test values"
-                  name: raw
-                """,
-                "data.mem": """
-                    chrom  pos_begin  reference alternative raw
-                    1      14968      A         C           0.00001
-                    1      14968      A         G           0.00002
-                    1      14968      A         T           0.00004
-                    1      14969      C         A           0.0001
-                    1      14969      C         G           0.0002
-                    1      14969      C         T           0.0004
-                    1      14970      C         A           0.001
-                    1      14970      C         G           0.002
-                    1      14970      C         T           0.004
-                    1      14971      C         A           0.01
-                    1      14971      C         G           0.02
-                    1      14971      C         T           0.04
-                    1      14972      T         A           0.1
-                    1      14972      T         C           0.2
-                    1      14972      T         G           0.4
-                """
-            }
+def genomic_resources_repo() -> GenomicResourceRepo:
+    repo = build_inmemory_test_repository({
+        "position_score1": {
+            "genomic_resource.yaml":
+            """\
+            type: position_score
+            table:
+                filename: data.mem
+            scores:
+            - id: test100way
+              type: float
+              desc: "test values"
+              name: 100way
+            - id: t1
+              type: float
+              desc: "test score 1"
+              name: t1
+            - id: t2
+              type: float
+              desc: "test score 2"
+              name: t2
+            default_annotation:
+                attributes:
+                - source: test100way
+                  destination: test100
+                - source: t1
+                  destination: t1
+                - source: t2
+                  destination: t2
+            """,
+            "data.mem": """
+                chrom  pos_begin  pos_end  100way   t1   t2
+                1      14966      14967    0.02     -2   -20
+                1      14968      14969    0.01     -1   -10
+                1      14970      14971    0.1      1    10
+                1      14972      14973    0.2      2    20
+                1      14974      14975    0.3      3    30
+                1      14976      14977    0.4      4    40
+            """
+        },
+        "np_score1": {
+            "genomic_resource.yaml":
+            """\
+            type: np_score
+            table:
+                filename: data.mem
+            scores:
+            - id: test_raw
+              type: float
+              desc: "test values"
+              name: raw
+            """,
+            "data.mem": """
+                chrom  pos_begin  reference alternative raw
+                1      14968      A         C           0.00001
+                1      14968      A         G           0.00002
+                1      14968      A         T           0.00004
+                1      14969      C         A           0.0001
+                1      14969      C         G           0.0002
+                1      14969      C         T           0.0004
+                1      14970      C         A           0.001
+                1      14970      C         G           0.002
+                1      14970      C         T           0.004
+                1      14971      C         A           0.01
+                1      14971      C         G           0.02
+                1      14971      C         T           0.04
+                1      14972      T         A           0.1
+                1      14972      T         C           0.2
+                1      14972      T         G           0.4
+            """
         }
     })
 
     return repo
 
 
-def test_annotation_pipeline_schema_basics(genomic_resources_repo):
+def test_annotation_pipeline_schema_basics(
+        genomic_resources_repo: GenomicResourceRepo) -> None:
     pipeline = build_annotation_pipeline(
         pipeline_config_str="""
         - np_score:
@@ -104,7 +102,8 @@ def test_annotation_pipeline_schema_basics(genomic_resources_repo):
     assert pipeline.get_attribute_info("test100") is not None
 
 
-def test_annotation_pipeline_schema_with_internal(genomic_resources_repo):
+def test_annotation_pipeline_schema_with_internal(
+        genomic_resources_repo: GenomicResourceRepo) -> None:
 
     pipeline = build_annotation_pipeline(
         pipeline_config_str="""
@@ -130,49 +129,5 @@ def test_annotation_pipeline_schema_with_internal(genomic_resources_repo):
     assert att.internal
 
     att = pipeline.get_attribute_info("test100way")
-    assert att is not None
-    assert not att.internal
-
-
-def test_annotation_pipeline_liftover_annotator_schema(grr_fixture):
-
-    pipeline = build_annotation_pipeline(
-        pipeline_config_str="""
-    - liftover_annotator:
-        chain: hg38/hg38tohg19
-        target_genome: hg19/GATK_ResourceBundle_5777_b37_phiX174_short/genome
-    """, grr_repository=grr_fixture)
-
-    assert len(pipeline.annotators) == 1
-
-    assert len(pipeline.get_attributes()) == 1
-    att = pipeline.get_attribute_info("liftover_annotatable")
-    assert att is not None
-    assert att.internal
-    assert att.type == "object"
-
-
-def test_annotation_pipeline_effect_annotator_schema(grr_fixture):
-
-    pipeline = build_annotation_pipeline(
-        pipeline_config_str="""
-            - effect_annotator:
-                genome: hg38/GRCh38-hg38/genome
-                gene_models: hg38/GRCh38-hg38/gene_models/refSeq_20200330
-                attributes:
-                - worst_effect
-                - destination: allele_effects
-                  internal: true
-        """, grr_repository=grr_fixture)
-
-    assert len(pipeline.annotators) == 1
-
-    assert len(pipeline.get_attributes()) == 2
-
-    att = pipeline.get_attribute_info("allele_effects")
-    assert att is not None
-    assert att.internal
-
-    att = pipeline.get_attribute_info("worst_effect")
     assert att is not None
     assert not att.internal

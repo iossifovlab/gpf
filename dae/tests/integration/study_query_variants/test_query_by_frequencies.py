@@ -4,10 +4,14 @@ import pytest
 from dae.testing import setup_pedigree, setup_vcf, setup_denovo, \
     vcf_study, denovo_study
 from dae.testing.alla_import import alla_gpf
+from dae.genotype_storage.genotype_storage import GenotypeStorage
+from dae.studies.study import GenotypeData
 
 
 @pytest.fixture(scope="module")
-def imported_vcf_study(tmp_path_factory, genotype_storage):
+def imported_vcf_study(
+        tmp_path_factory: pytest.TempPathFactory,
+        genotype_storage: GenotypeStorage) -> GenotypeData:
     root_path = tmp_path_factory.mktemp(
         f"vcf_path_{genotype_storage.storage_id}")
     gpf_instance = alla_gpf(root_path, genotype_storage)
@@ -71,20 +75,23 @@ chrA   13  .  A   G,T,C .    .      .    GT     0/1  0/2  0/0 0/1  0/0 0/2
     ],
 )
 def test_query_by_real_attr_frequency(
-        real_attr_filter, count, imported_vcf_study):
+        real_attr_filter: tuple, count: int,
+        imported_vcf_study: GenotypeData) -> None:
     vs = imported_vcf_study.query_variants(real_attr_filter=real_attr_filter)
     vs = list(vs)
     assert len(vs) == count
 
 
-def test_query_by_ultra_rare(imported_vcf_study):
+def test_query_by_ultra_rare(imported_vcf_study: GenotypeData) -> None:
     vs = imported_vcf_study.query_variants(ultra_rare=True)
     vs = list(vs)
     assert len(vs) == 4
 
 
 @pytest.fixture(scope="module")
-def imported_denovo_study(tmp_path_factory, genotype_storage):
+def imported_denovo_study(
+        tmp_path_factory: pytest.TempPathFactory,
+        genotype_storage: GenotypeStorage) -> GenotypeData:
     root_path = tmp_path_factory.mktemp(
         f"denovo_path_{genotype_storage.storage_id}")
     gpf_instance = alla_gpf(root_path, genotype_storage)
@@ -114,7 +121,8 @@ def imported_denovo_study(tmp_path_factory, genotype_storage):
     return study
 
 
-def test_query_denovo_variants_by_allele_frequency(imported_denovo_study):
+def test_query_denovo_variants_by_allele_frequency(
+        imported_denovo_study: GenotypeData) -> None:
     vs = imported_denovo_study.query_variants(
         real_attr_filter=[("af_allele_freq", (None, 100))])
     vs = list(vs)

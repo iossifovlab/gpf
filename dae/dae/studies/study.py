@@ -524,7 +524,7 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
 
     @property
     @abstractmethod
-    def families(self):
+    def families(self) -> FamiliesData:
         pass
 
     @abstractmethod
@@ -588,7 +588,7 @@ class GenotypeDataGroup(GenotypeData):
         return True
 
     @property
-    def families(self):
+    def families(self) -> FamiliesData:
         return self._families
 
     def get_studies_ids(self, leaves=True):
@@ -599,7 +599,7 @@ class GenotypeDataGroup(GenotypeData):
             result.extend(study.get_studies_ids())
         return result
 
-    def _build_families(self):
+    def _build_families(self) -> FamiliesData:
         logger.info(
             "building combined families from studies: %s",
             [st.study_id for st in self.studies])
@@ -671,7 +671,7 @@ class GenotypeDataStudy(GenotypeData):
         return [self.study_id]
 
     @property
-    def families(self):
+    def families(self) -> FamiliesData:
         return self._backend.families
 
     def _build_person_set_collection(self, person_set_collection_id):

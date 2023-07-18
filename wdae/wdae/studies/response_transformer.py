@@ -3,7 +3,10 @@ import traceback
 import logging
 import math
 from functools import partial
-from typing import List, Dict, Set
+from typing import Optional, Any, Union, Generator, Iterator, Iterable, \
+    Callable, cast
+
+import pandas as pd
 
 from dae.utils.dae_utils import join_line, split_iterable
 from dae.utils.variant_utils import mat2str, fgt2str
@@ -13,14 +16,14 @@ from dae.utils.effect_utils import ge2str, \
     gene_effect_get_genes
 from dae.variants.attributes import Inheritance
 from dae.variants.variant import SummaryVariant, VariantDesc
-from dae.variants.family_variant import FamilyVariant
+from dae.variants.family_variant import FamilyVariant, FamilyAllele
+from dae.pedigrees.family import Person, FamiliesData
 from dae.person_sets import PersonSetCollection
-
 
 logger = logging.getLogger(__name__)
 
 
-def members_in_order_get_family_structure(mio):
+def members_in_order_get_family_structure(mio: list[Person]) -> str:
     return ";".join([
         f"{p.role.name}:{p.sex.short()}:{p.status.name}" for p in mio])
 
@@ -80,8 +83,8 @@ class ResponseTransformer:
         lambda v: list(
             map(
                 lambda aa:
-                members_in_order_get_family_structure(  # type: ignore
-                    filter(None, aa.variant_in_members_objects)
+                members_in_order_get_family_structure(
+                    list(filter(None, aa.variant_in_members_objects))
                 ),
                 v.alt_alleles
             )),
@@ -148,15 +151,20 @@ class ResponseTransformer:
         ],
     }
 
-    def __init__(self, study_wrapper):
-        self.study_wrapper = study_wrapper
+    def __init__(self, study_wrapper: Any):
+        # pylint: disable=import-outside-toplevel
+        from studies.study_wrapper import StudyWrapper
+
+        self.study_wrapper = cast(StudyWrapper, study_wrapper)
         self._pheno_columns = study_wrapper.config_columns.phenotype
 
     @property
-    def families(self):
+    def families(self) -> FamiliesData:
         return self.study_wrapper.families
 
-    def _get_all_pheno_values(self, family_ids):
+    def _get_all_pheno_values(
+        self, family_ids: Iterable[str]
+    ) -> Optional[list[tuple[pd.DataFrame, str]]]:
         if not self.study_wrapper.phenotype_data \
            or not self.study_wrapper.config_columns.phenotype:
             return None
@@ -184,7 +192,10 @@ class ResponseTransformer:
         return result
 
     @staticmethod
-    def _get_pheno_values_for_variant(variant, pheno_column_values):
+    def _get_pheno_values_for_variant(
+        variant: FamilyVariant,
+        pheno_column_values: Optional[list[tuple[pd.DataFrame, str]]]
+    ) -> Optional[dict[str, str]]:
         if not pheno_column_values:
             return None
 
@@ -204,7 +215,9 @@ class ResponseTransformer:
 
         return pheno_values
 
-    def _get_gene_scores_values(self, allele, default=None):
+    def _get_gene_scores_values(
+        self, allele: FamilyAllele, default: Optional[str] = None
+    ) -> dict[str, Any]:
         if not self.study_wrapper.gene_score_column_sources:
             return {}
         genes = gene_effect_get_genes(allele.effects).split(";")
@@ -233,7 +246,10 @@ class ResponseTransformer:
         return gene_scores_values
 
     @staticmethod
-    def _get_wdae_member(member, person_set_collection, best_st):
+    def _get_wdae_member(
+            member: Person,
+            person_set_collection: PersonSetCollection,
+            best_st: Union[str, int]) -> list:
         return [
             member.family_id,
             member.person_id,
@@ -250,7 +266,9 @@ class ResponseTransformer:
             0,
         ]
 
-    def _generate_pedigree(self, variant, collection_id):
+    def _generate_pedigree(
+        self, variant: FamilyVariant, collection_id: str
+    ) -> list:
         result = []
         # best_st = np.sum(allele.gt == allele.allele_index, axis=0)
         person_set_collection = self.study_wrapper.get_person_set_collection(
@@ -286,7 +304,9 @@ class ResponseTransformer:
 
         return result
 
-    def _add_additional_columns_summary(self, variants_iterable):
+    def _add_additional_columns_summary(
+        self, variants_iterable: Generator[SummaryVariant, None, None]
+    ) -> Generator[SummaryVariant, None, None]:
         for variants_chunk in split_iterable(
                 variants_iterable, self.STREAMING_CHUNK_SIZE):
 
@@ -299,9 +319,11 @@ class ResponseTransformer:
                 yield variant
 
     def _build_variant_row(  # noqa
-            self, v: FamilyVariant, column_descs: List[Dict], **kwargs):
+        self, v: Union[SummaryVariant, FamilyVariant],
+        column_descs: list[dict], **kwargs: Union[str]
+    ) -> list:
         # pylint: disable=too-many-branches
-        row_variant = []
+        row_variant: list[Any] = []
         for col_desc in column_descs:
             try:
                 col_source = col_desc["source"]
@@ -310,12 +332,12 @@ class ResponseTransformer:
 
                 if col_format is None:
                     # pylint: disable=unused-argument
-                    def col_formatter(val, col_format):
+                    def col_formatter(val, col_format):  # type: ignore
                         if val is None:
                             return "-"
                         return str(val)
                 else:
-                    def col_formatter(val, col_format):
+                    def col_formatter(val, col_format):  # type: ignore
                         if val is None:
                             return "-"
                         try:
@@ -332,8 +354,10 @@ class ResponseTransformer:
                     col_source = f"{col_source}.{col_role}"
 
                 if col_source == "pedigree":
+                    assert kwargs.get("person_set_collection") is not None
+                    assert isinstance(v, FamilyVariant)
                     row_variant.append(self._generate_pedigree(
-                        v, kwargs.get("person_set_collection")
+                        v, kwargs["person_set_collection"]
                     ))
                 elif col_source in self.PHENOTYPE_ATTRS:
                     phenotype_person_sets = \
@@ -375,7 +399,8 @@ class ResponseTransformer:
 
     @staticmethod
     def _gene_view_summary_download_variants_iterator(
-            variants: List[SummaryVariant], frequency_column):
+        variants: list[SummaryVariant], frequency_column: str
+    ) -> Generator[list, None, None]:
         for v in variants:
             for aa in v.alt_alleles:
                 yield [
@@ -394,7 +419,8 @@ class ResponseTransformer:
 
     @staticmethod
     def transform_gene_view_summary_variant(
-            variant: SummaryVariant, frequency_column):
+        variant: SummaryVariant, frequency_column: str
+    ) -> Generator[dict, None, None]:
         """Transform gene view summary response into dicts."""
         out = {
             "svuid": variant.svuid,
@@ -421,10 +447,10 @@ class ResponseTransformer:
 
     def transform_gene_view_summary_variant_download(
         self,
-        variants: List[SummaryVariant],
-        frequency_column,
-        summary_variant_ids: Set[str],
-    ):
+        variants: list[SummaryVariant],
+        frequency_column: str,
+        summary_variant_ids: set[str],
+    ) -> Iterator[str]:
         """Transform gene view summary response into rows."""
         columns = [
             "location",
@@ -448,7 +474,9 @@ class ResponseTransformer:
         )
         return map(join_line, itertools.chain([columns], rows))
 
-    def transform_variants(self, variants_iterable):
+    def transform_variants(
+        self, variants_iterable: Iterable[FamilyVariant]
+    ) -> Generator[FamilyVariant, None, None]:
         """Transform variant to add pheno and scores attributes."""
         for variants_chunk in split_iterable(
                 variants_iterable, self.STREAMING_CHUNK_SIZE):
@@ -474,30 +502,33 @@ class ResponseTransformer:
 
                 yield variant
 
-    def variant_transformer(self):
+    def variant_transformer(self) -> Callable[[FamilyVariant], FamilyVariant]:
         """Build and return a variant transformer function."""
         pheno_column_values = self._get_all_pheno_values(self.families)
 
-        def transformer(variant):
+        def transformer(variant: FamilyVariant) -> FamilyVariant:
             pheno_values = self._get_pheno_values_for_variant(
                 variant, pheno_column_values
             )
 
             for allele in variant.alt_alleles:
+                fallele = cast(FamilyAllele, allele)
                 if not self.study_wrapper.is_remote:
                     gene_scores_values = self._get_gene_scores_values(
-                        allele
+                        fallele
                     )
-                    allele.update_attributes(gene_scores_values)
+                    fallele.update_attributes(gene_scores_values)
 
                 if pheno_values:
-                    allele.update_attributes(pheno_values)
+                    fallele.update_attributes(pheno_values)
 
             return variant
 
         return transformer
 
-    def transform_summary_variants(self, variants_iterable):
+    def transform_summary_variants(
+        self, variants_iterable: Generator[SummaryVariant, None, None]
+    ) -> Generator[list, None, None]:
         for v in self._add_additional_columns_summary(variants_iterable):
             yield self._build_variant_row(
                 v, self.study_wrapper.summary_preview_descs

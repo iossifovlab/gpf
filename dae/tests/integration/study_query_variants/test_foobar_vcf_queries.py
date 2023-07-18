@@ -5,10 +5,14 @@ from dae.utils.regions import Region
 from dae.testing import setup_pedigree, setup_vcf, vcf_study
 
 from dae.testing.foobar_import import foobar_gpf
+from dae.genotype_storage.genotype_storage import GenotypeStorage
+from dae.studies.study import GenotypeData
 
 
 @pytest.fixture(scope="module")
-def imported_study(tmp_path_factory, genotype_storage):
+def imported_study(
+        tmp_path_factory: pytest.TempPathFactory,
+        genotype_storage: GenotypeStorage) -> GenotypeData:
     root_path = tmp_path_factory.mktemp(
         f"vcf_path_{genotype_storage.storage_id}")
     gpf_instance = foobar_gpf(root_path, genotype_storage)
@@ -28,7 +32,7 @@ def imported_study(tmp_path_factory, genotype_storage):
         ##contig=<ID=foo>
         #CHROM POS ID REF ALT QUAL FILTER INFO FORMAT m1  d1  p1
         foo    7   .  A   C   .    .      .    GT     0/1 0/0 0/1
-        foo    10  .  C   G   .    .      .    GT     0/0 0/1 0/1
+        foo    14  .  C   G   .    .      .    GT     0/0 0/1 0/1
         """)
 
     study = vcf_study(
@@ -44,9 +48,11 @@ def imported_study(tmp_path_factory, genotype_storage):
     (3, {"genes": ["g2"]}, 0),
     (4, {"effect_types": ["missense"]}, 1),
     (5, {"effect_types": ["splice-site"]}, 1),
-    (6, {"regions": [Region("foo", 10, 10)]}, 1),
+    (6, {"regions": [Region("foo", 14, 14)]}, 1),
 ])
-def test_family_queries(imported_study, index, query, ecount):
+def test_family_queries(
+        imported_study: GenotypeData, index: int, query: dict,
+        ecount: int) -> None:
 
     vs = list(imported_study.query_variants(**query))
 
@@ -59,9 +65,11 @@ def test_family_queries(imported_study, index, query, ecount):
     (3, {"genes": ["g2"]}, 0),
     (4, {"effect_types": ["missense"]}, 1),
     (5, {"effect_types": ["splice-site"]}, 1),
-    (6, {"regions": [Region("foo", 10, 10)]}, 1),
+    (6, {"regions": [Region("foo", 14, 14)]}, 1),
 ])
-def test_summary_queries(imported_study, index, query, ecount):
+def test_summary_queries(
+        imported_study: GenotypeData, index: int, query: dict,
+        ecount: int) -> None:
 
     vs = list(imported_study.query_summary_variants(**query))
 

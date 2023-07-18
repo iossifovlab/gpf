@@ -1,10 +1,12 @@
+from __future__ import annotations
+import os
 import sys
 import logging
 from abc import abstractmethod, ABC
 from copy import deepcopy
 from dataclasses import dataclass
 from functools import cache
-from typing import Callable, List, Optional, cast
+from typing import Callable, List, Optional, cast, Union
 from typing import Dict, Tuple, Any
 from dae.annotation.annotation_factory import AnnotationConfigParser,\
     build_annotation_pipeline
@@ -84,7 +86,9 @@ class ImportProject():
         self._input_filenames_cache: dict[str, list[str]] = {}
 
     @staticmethod
-    def build_from_config(import_config, base_input_dir="", gpf_instance=None):
+    def build_from_config(
+        import_config, base_input_dir="", gpf_instance=None
+    ) -> ImportProject:
         """Create a new project from the provided config.
 
         The config is first validated and normalized.
@@ -104,7 +108,9 @@ class ImportProject():
         )
 
     @staticmethod
-    def build_from_file(import_filename, gpf_instance=None):
+    def build_from_file(
+            import_filename: Union[str, os.PathLike],
+            gpf_instance=None) -> ImportProject:
         """Create a new project from the provided config filename.
 
         The file is first parsed, validated and normalized. The path to the

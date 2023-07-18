@@ -1,5 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import os
+import pathlib
 
 import pytest
 
@@ -7,10 +8,16 @@ from dae.testing import setup_pedigree, setup_vcf, vcf_import
 from dae.testing import alla_gpf
 from dae.testing.import_helpers import StudyInputLayout
 from dae.import_tools.cli import run_with_project
+from dae.import_tools.import_tools import ImportProject
+from dae.genotype_storage.genotype_storage import GenotypeStorage
+from dae.gpf_instance.gpf_instance import GPFInstance
 
 
 @pytest.fixture(scope="module")
-def vcf_import_data(tmp_path_factory, genotype_storage):
+def vcf_import_data(
+    tmp_path_factory: pytest.TempPathFactory,
+    genotype_storage: GenotypeStorage
+) -> tuple[pathlib.Path, GPFInstance, StudyInputLayout]:
     root_path = tmp_path_factory.mktemp(
         f"parquet_dataset_{genotype_storage.storage_id}")
 
@@ -46,7 +53,10 @@ def vcf_import_data(tmp_path_factory, genotype_storage):
 
 @pytest.fixture(scope="module")
 def vcf_project_to_parquet(
-        tmp_path_factory, vcf_import_data, genotype_storage):
+    tmp_path_factory: pytest.TempPathFactory,
+    vcf_import_data: tuple[pathlib.Path, GPFInstance, StudyInputLayout],
+    genotype_storage: GenotypeStorage
+) -> ImportProject:
     root_path, gpf_instance, layout = vcf_import_data
 
     project_config_overwrite = {
@@ -64,7 +74,10 @@ def vcf_project_to_parquet(
 
 @pytest.fixture(scope="module")
 def vcf_project_from_parquet(
-        tmp_path_factory, vcf_import_data, genotype_storage):
+    tmp_path_factory: pytest.TempPathFactory,
+    vcf_import_data: tuple[pathlib.Path, GPFInstance, StudyInputLayout],
+    genotype_storage: GenotypeStorage
+) -> ImportProject:
     root_path, gpf_instance, layout = vcf_import_data
 
     project_config_update = {
@@ -82,10 +95,14 @@ def vcf_project_from_parquet(
     return project
 
 
-@pytest.mark.impala2(reason="supported for impala schema2")
+@pytest.mark.duckdb(reason="supported for schema2 duckdb")
+@pytest.mark.impala2(reason="supported for schema2 impala")
 @pytest.mark.gcp(reason="supported for gcp")
 def test_with_destination_storage_type(
-        vcf_project_to_parquet, vcf_project_from_parquet, genotype_storage):
+    vcf_project_to_parquet: ImportProject,
+    vcf_project_from_parquet: ImportProject,
+    genotype_storage: GenotypeStorage
+) -> None:
 
     run_with_project(vcf_project_to_parquet)
     assert os.path.exists(

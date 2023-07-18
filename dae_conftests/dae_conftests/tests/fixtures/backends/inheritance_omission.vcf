@@ -1,7 +1,0 @@
-##fileformat=VCFv4.2
-##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
-##INFO=<ID=INH,Number=1,Type=String,Description="Inheritance">
-##contig=<ID=1>
-#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	mom	dad	ch1	ch2	ch3
-1	11500	.	T	G	.	.	.	GT	0/1	0/0	0/0	1/1	1/1
-1	11510	.	T	G	.	.	.	GT	1/1	1/1	1/1	0/0	0/0

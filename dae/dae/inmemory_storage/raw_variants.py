@@ -32,7 +32,7 @@ class RawVariantsQueryRunner(QueryRunner):
         self.variants_iterator = variants_iterator
         assert self.variants_iterator is not None
 
-    def run(self):
+    def run(self) -> None:
         assert self._result_queue is not None
         try:
             if self.is_closed():
@@ -230,9 +230,10 @@ class RawFamilyVariants(abc.ABC):
                     allele, [("af_allele_count", (None, 1))]):
                 return False
 
-        if genes is not None or effect_types is not None:
-            if not cls.filter_gene_effects(allele, effect_types, genes):
-                return False
+        if genes is None and effect_types is None:
+            allele.matched_gene_effects = []
+        elif not cls.filter_gene_effects(allele, effect_types, genes):
+            return False
         if variant_type is not None:
             if not variant_type.match([allele.allele_type]):
                 return False

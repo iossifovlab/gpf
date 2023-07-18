@@ -9,10 +9,12 @@ from dae.duckdb_storage.duckdb_genotype_storage import \
 
 from dae.testing import setup_pedigree, setup_vcf, vcf_study
 from dae.testing.foobar_import import foobar_gpf
+from dae.studies.study import GenotypeData
 
 
 @pytest.fixture(scope="session")
-def duckdb_storage_config(tmp_path_factory):
+def duckdb_storage_config(
+        tmp_path_factory: pytest.TempPathFactory) -> dict:
     storage_path = tmp_path_factory.mktemp("duckdb_storage")
     return {
         "id": "dev_duckdb_storage",
@@ -22,7 +24,8 @@ def duckdb_storage_config(tmp_path_factory):
 
 
 @pytest.fixture(scope="session")
-def duckdb_storage_fixture(duckdb_storage_config):
+def duckdb_storage_fixture(
+        duckdb_storage_config: dict) -> DuckDbGenotypeStorage:
     storage_factory = get_genotype_storage_factory("duckdb")
     assert storage_factory is not None
     storage = storage_factory(duckdb_storage_config)
@@ -32,7 +35,9 @@ def duckdb_storage_fixture(duckdb_storage_config):
 
 
 @pytest.fixture(scope="session")
-def imported_study(tmp_path_factory, duckdb_storage_fixture):
+def imported_study(
+        tmp_path_factory: pytest.TempPathFactory,
+        duckdb_storage_fixture: DuckDbGenotypeStorage) -> GenotypeData:
     root_path = tmp_path_factory.mktemp(
         f"vcf_path_{duckdb_storage_fixture.storage_id}")
     gpf_instance = foobar_gpf(root_path, duckdb_storage_fixture)
@@ -51,8 +56,8 @@ def imported_study(tmp_path_factory, duckdb_storage_fixture):
         ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
         ##contig=<ID=foo>
         #CHROM POS ID REF ALT QUAL FILTER INFO FORMAT m1  d1  p1
-        foo    7   .  A   C   .    .      .    GT     0/1 0/0 0/1
-        foo    10  .  C   G   .    .      .    GT     0/0 0/1 0/1
+        foo    13  .  G   C   .    .      .    GT     0/1 0/0 0/1
+        foo    14  .  C   T   .    .      .    GT     0/0 0/1 0/1
         """)
 
     study = vcf_study(

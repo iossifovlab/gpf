@@ -4,62 +4,60 @@ import textwrap
 import pytest
 
 from dae.annotation.annotatable import VCFAllele
-from dae.genomic_resources import build_genomic_resource_repository
+from dae.genomic_resources.testing import build_inmemory_test_repository
 from dae.genomic_resources.genomic_scores import \
     PositionScore
+from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.annotation.annotation_factory import build_annotation_pipeline
 
 
 @pytest.fixture
-def position_score_repo():
-    repo = build_genomic_resource_repository({
-        "id": "test_annotation",
-        "type": "embedded",
-        "content": {
-            "position_score1": {
-                "genomic_resource.yaml":
-                """\
-                type: position_score
-                table:
-                    filename: data.mem
-                scores:
-                - id: test100way
-                  type: float
-                  desc: "test values"
-                  name: 100way
-                - id: t1
-                  type: float
-                  desc: "test score 1"
-                  name: t1
-                - id: t2
-                  type: float
-                  desc: "test score 2"
-                  name: t2
-                default_annotation:
-                  - source: test100way
-                    destination: test100
-                  - source: t1
-                    destination: t1
-                  - source: t2
-                    destination: t2
-                """,
-                "data.mem": """
-                    chrom  pos_begin  pos_end  100way   t1   t2
-                    1      14966      14967    0.02     -2   -20
-                    1      14968      14969    0.01     -1   -10
-                    1      14970      14971    0.1      1    10
-                    1      14972      14973    0.2      2    20
-                    1      14974      14975    0.3      3    30
-                    1      14976      14977    0.4      4    40
-                """
-            }
+def position_score_repo() -> GenomicResourceRepo:
+    repo = build_inmemory_test_repository({
+        "position_score1": {
+            "genomic_resource.yaml":
+            """\
+            type: position_score
+            table:
+                filename: data.mem
+            scores:
+            - id: test100way
+              type: float
+              desc: "test values"
+              name: 100way
+            - id: t1
+              type: float
+              desc: "test score 1"
+              name: t1
+            - id: t2
+              type: float
+              desc: "test score 2"
+              name: t2
+            default_annotation:
+              - source: test100way
+                destination: test100
+              - source: t1
+                destination: t1
+              - source: t2
+                destination: t2
+            """,
+            "data.mem": """
+                chrom  pos_begin  pos_end  100way   t1   t2
+                1      14966      14967    0.02     -2   -20
+                1      14968      14969    0.01     -1   -10
+                1      14970      14971    0.1      1    10
+                1      14972      14973    0.2      2    20
+                1      14974      14975    0.3      3    30
+                1      14976      14977    0.4      4    40
+            """
         }
     })
 
     return repo
 
 
-def test_position_resource_default_annotation(position_score_repo):
+def test_position_resource_default_annotation(
+        position_score_repo: GenomicResourceRepo) -> None:
 
     res = position_score_repo.get_resource("position_score1")
     assert res is not None
@@ -70,7 +68,8 @@ def test_position_resource_default_annotation(position_score_repo):
     assert len(default_annotation) == 3
 
 
-def test_position_score_annotator_all_attributes(position_score_repo):
+def test_position_score_annotator_all_attributes(
+        position_score_repo: GenomicResourceRepo) -> None:
 
     pipeline_config = textwrap.dedent("""
             - position_score:
@@ -125,7 +124,8 @@ def test_position_score_annotator_all_attributes(position_score_repo):
     (("1", 14971, "C", "CAA"), "max", 0.2),
 ])
 def test_position_score_annotator(
-        allele, pos_aggregator, expected, position_score_repo):
+        allele: tuple, pos_aggregator: str, expected: float,
+        position_score_repo: GenomicResourceRepo) -> None:
 
     annotatable = VCFAllele(*allele)
 
@@ -154,7 +154,8 @@ def test_position_score_annotator(
         assert result.get("test100") == expected
 
 
-def test_position_annotator_info(position_score_repo):
+def test_position_annotator_info(
+        position_score_repo: GenomicResourceRepo) -> None:
     pipeline_config = textwrap.dedent("""
             - position_score:
                 resource_id: position_score1
@@ -185,7 +186,8 @@ def test_position_annotator_info(position_score_repo):
     assert attributes2[0] == attribute_info
 
 
-def test_position_default_annotator_schema(position_score_repo):
+def test_position_default_annotator_schema(
+        position_score_repo: GenomicResourceRepo) -> None:
     pipeline_config = textwrap.dedent("""
             - position_score:
                 resource_id: position_score1
@@ -200,7 +202,7 @@ def test_position_default_annotator_schema(position_score_repo):
 
 
 def test_position_annotator_schema_one_source_two_dest_schema(
-        position_score_repo):
+        position_score_repo: GenomicResourceRepo) -> None:
     pipeline_config = textwrap.dedent("""
             - position_score:
                 resource_id: position_score1
@@ -235,7 +237,8 @@ def test_position_annotator_schema_one_source_two_dest_schema(
     assert attributes[1].description == "test values"
 
 
-def test_position_annotator_join_aggregation(position_score_repo):
+def test_position_annotator_join_aggregation(
+        position_score_repo: GenomicResourceRepo) -> None:
     pipeline_config = textwrap.dedent("""
             - position_score:
                 resource_id: position_score1
@@ -259,7 +262,7 @@ def test_position_annotator_join_aggregation(position_score_repo):
 
 
 def test_position_annotator_schema_one_source_two_dest_annotate(
-        position_score_repo):
+        position_score_repo: GenomicResourceRepo) -> None:
     pipeline_config = textwrap.dedent("""
             - position_score:
                 resource_id: position_score1
@@ -289,7 +292,7 @@ def test_position_annotator_schema_one_source_two_dest_annotate(
 
 
 def test_position_score_annotator_attributes_with_aggr_fails(
-        position_score_repo):
+        position_score_repo: GenomicResourceRepo) -> None:
     with pytest.raises(ValueError) as error:
         build_annotation_pipeline(pipeline_config_str="""
             - position_score:
@@ -304,7 +307,7 @@ def test_position_score_annotator_attributes_with_aggr_fails(
 
 
 def test_position_score_annotator_invalid_aggregator(
-        position_score_repo):
+        position_score_repo: GenomicResourceRepo) -> None:
     with pytest.raises(ValueError) as error:
         build_annotation_pipeline(pipeline_config_str="""
             - position_score:
@@ -318,7 +321,7 @@ def test_position_score_annotator_invalid_aggregator(
 
 
 def test_position_annotator_documentation(
-        position_score_repo):
+        position_score_repo: GenomicResourceRepo) -> None:
     pipeline_config = textwrap.dedent("""
             - position_score:
                 resource_id: position_score1

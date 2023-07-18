@@ -513,6 +513,8 @@ class SummaryAllele(core.Allele):
         attributes. For example `sv['af_parents_called']` will return value
         matching key `af_parents_called` from addtional variant attributes.
         """
+        if not self.has_attribute(item):
+            raise AttributeError(f"attribute <{item}> not found")
         return self.get_attribute(item)
 
     def __contains__(self, item) -> bool:
