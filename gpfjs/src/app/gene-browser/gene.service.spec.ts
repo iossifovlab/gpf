@@ -45,7 +45,7 @@ describe('GeneService', () => {
     const response = await lastValueFrom(service.searchGenes('fakeSearchTerm').pipe(take(1)));
     expect(response).toBe('fakeResponse' as any);
     expect(httpGetSpy.mock.calls[0][0]).toBe(
-      environment.apiPath + 'genome/gene_models/search/FAKESEARCHTERM'
+      environment.apiPath + 'genome/gene_models/search/fakeSearchTerm'
     );
   });
 });

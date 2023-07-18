@@ -39,8 +39,7 @@ export class GeneSymbolsComponent extends StatefulComponent implements OnInit {
   public setGeneSymbols(geneSymbols: string): void {
     const result = geneSymbols
       .split(/[,\s]/)
-      .filter(s => s !== '')
-      .map(s => s.toUpperCase());
+      .filter(s => s !== '');
     this.geneSymbols.geneSymbols = geneSymbols;
     this.store.dispatch(new SetGeneSymbols(result));
   }
