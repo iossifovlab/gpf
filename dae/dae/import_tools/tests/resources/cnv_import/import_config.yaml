@@ -22,4 +22,4 @@ partition_description:
     rare_boundary: 5
 
 destination:
-  storage_type: impala2
+  storage_type: schema2

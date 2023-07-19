@@ -21,16 +21,4 @@ partition_description:
 
 destination:
   id: dummy_id
-  storage_type: impala2
-  hdfs:
-    base_dir: /user/schema2_tests/studies
-    host: localhost
-    port: 8020
-    replication: 1
-  impala:
-    db: schema2
-    hosts:
-    - localhost
-    pool_size: 3
-    port: 21050
-  storage_type: impala2
+  storage_type: duckdb

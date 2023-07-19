@@ -1,8 +1,11 @@
 # pylint: disable=redefined-outer-name,C0114,C0116,protected-access
 import os
+from typing import Callable
+
+from dae.gpf_instance import GPFInstance
 
 
-def test_init(fixtures_gpf_instance):
+def test_init(fixtures_gpf_instance: GPFInstance) -> None:
     assert fixtures_gpf_instance
 
     assert fixtures_gpf_instance.dae_config
@@ -18,7 +21,10 @@ def test_init(fixtures_gpf_instance):
     assert fixtures_gpf_instance._background_facade
 
 
-def test_eager_init(gpf_instance, global_dae_fixtures_dir):
+def test_eager_init(
+    gpf_instance: Callable[[str], GPFInstance],
+    global_dae_fixtures_dir: str
+) -> None:
     instance = gpf_instance(
         os.path.join(global_dae_fixtures_dir, "gpf_instance.yaml"))
     instance.load()
@@ -37,13 +43,18 @@ def test_eager_init(gpf_instance, global_dae_fixtures_dir):
     assert instance._background_facade
 
 
-def test_dae_config(fixtures_gpf_instance, global_dae_fixtures_dir):
+def test_dae_config(
+    fixtures_gpf_instance: GPFInstance,
+    global_dae_fixtures_dir: str
+) -> None:
     dae_config = fixtures_gpf_instance.dae_config
 
     assert dae_config.conf_dir == global_dae_fixtures_dir
 
 
-def test_variants_db(fixtures_gpf_instance):
+def test_variants_db(
+    fixtures_gpf_instance: GPFInstance,
+) -> None:
     variants_db = fixtures_gpf_instance._variants_db
 
-    assert len(variants_db.get_all_genotype_data()) == 42
+    assert len(variants_db.get_all_genotype_data()) == 38

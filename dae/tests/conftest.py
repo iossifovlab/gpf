@@ -28,45 +28,45 @@ def default_genotype_storage_configs(root_path: pathlib.Path) -> list[dict]:
             "storage_type": "duckdb",
         },
 
-        # Impala Schema 1
-        {
-            "id": "impala",
-            "storage_type": "impala",
-            "hdfs": {
-                "base_dir": "/tmp/genotype_impala_data",
-                "host": "localhost",
-                "port": 8020,
-                "replication": 1,
-            },
-            "impala": {
-                "db": "genotype_impala_db",
-                "hosts": [
-                    "localhost",
-                ],
-                "port": 21050,
-                "pool_size": 1,
-            }
-        },
+        # # Impala Schema 1
+        # {
+        #     "id": "impala",
+        #     "storage_type": "impala",
+        #     "hdfs": {
+        #         "base_dir": "/tmp/genotype_impala_data",
+        #         "host": "localhost",
+        #         "port": 8020,
+        #         "replication": 1,
+        #     },
+        #     "impala": {
+        #         "db": "genotype_impala_db",
+        #         "hosts": [
+        #             "localhost",
+        #         ],
+        #         "port": 21050,
+        #         "pool_size": 1,
+        #     }
+        # },
 
-        # Impala Schema 2
-        {
-            "id": "impala2",
-            "storage_type": "impala2",
-            "hdfs": {
-                "base_dir": "/tmp/genotype_impala2_data",
-                "host": "localhost",
-                "port": 8020,
-                "replication": 1,
-            },
-            "impala": {
-                "db": "genotype_impala2_db",
-                "hosts": [
-                    "localhost",
-                ],
-                "port": 21050,
-                "pool_size": 1,
-            }
-        },
+        # # Impala Schema 2
+        # {
+        #     "id": "impala2",
+        #     "storage_type": "impala2",
+        #     "hdfs": {
+        #         "base_dir": "/tmp/genotype_impala2_data",
+        #         "host": "localhost",
+        #         "port": 8020,
+        #         "replication": 1,
+        #     },
+        #     "impala": {
+        #         "db": "genotype_impala2_db",
+        #         "hosts": [
+        #             "localhost",
+        #         ],
+        #         "port": 21050,
+        #         "pool_size": 1,
+        #     }
+        # },
 
         # Filesystem InMemory
         {

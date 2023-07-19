@@ -2,22 +2,12 @@ vars:
   instance_id: data_hg19_local
 
 genotype_storage:
-  default: genotype_impala
+  default: local_duckdb
 
   storages:
-  - id: genotype_impala
-    storage_type: impala
-    hdfs:
-      base_dir: /user/%(instance_id)s/studies
-      host: localhost
-      port: 8020
-      replication: 1
-    impala:
-      db: "%(instance_id)s"
-      hosts:
-      - localhost
-      pool_size: 3
-      port: 21050
+  - id: local_duckdb
+    storage_type: duckdb
+    studies_path: "genotype_storage/local_duckdb"
 
 # annotation:
 #   conf_file: "annotation.yaml"

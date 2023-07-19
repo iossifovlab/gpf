@@ -20,6 +20,7 @@ from dae.utils.variant_utils import is_all_reference_genotype, \
     is_unknown_genotype
 
 from dae.variants.variant import SummaryAllele
+from dae.parquet.parquet_writer import AbstractVariantsParquetWriter
 from dae.parquet.schema2.serializers import AlleleParquetSerializer
 from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.variants_loaders.raw.loader import VariantsLoader
@@ -126,7 +127,7 @@ class ContinuousParquetFileWriter:
         self._writer.close()
 
 
-class VariantsParquetWriter:
+class VariantsParquetWriter(AbstractVariantsParquetWriter):
     """Provide functions for storing variants into parquet dataset."""
 
     def __init__(
@@ -163,6 +164,26 @@ class VariantsParquetWriter:
         )
         self.serializer = AlleleParquetSerializer(
             annotation_schema, extra_attributes
+        )
+
+    @staticmethod
+    def build(
+        out_dir: str,
+        variants_loader: VariantsLoader,
+        partition_descriptor: PartitionDescriptor,
+        bucket_index: int = 1,
+        rows: int = 100_000,
+        include_reference: bool = True,
+        filesystem: Optional[fsspec.AbstractFileSystem] = None,
+    ) -> AbstractVariantsParquetWriter:
+        return VariantsParquetWriter(
+            out_dir=out_dir,
+            variants_loader=variants_loader,
+            partition_descriptor=partition_descriptor,
+            bucket_index=bucket_index,
+            rows=rows,
+            include_reference=include_reference,
+            filesystem=filesystem,
         )
 
     def _build_family_filename(self, allele: FamilyAllele) -> str:

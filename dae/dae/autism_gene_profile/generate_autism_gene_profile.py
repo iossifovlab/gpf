@@ -473,7 +473,3 @@ def main(gpf_instance=None, argv=None):
     logger.info("Inserting statistics into DB")
     agpdb.insert_agps(agps.values())
     logger.info("Done")
-
-
-if __name__ == "__main__":
-    main()

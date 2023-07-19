@@ -27,20 +27,15 @@ from dae.inmemory_storage.raw_variants import RawMemoryVariants
 
 from dae.variants_loaders.dae.loader import DaeTransmittedLoader, DenovoLoader
 from dae.variants_loaders.vcf.loader import VcfLoader
-from dae.import_tools.import_tools import ImportProject
-from dae.import_tools.cli import run_with_project
-
-from dae.impala_storage.schema1.import_commons import \
+from dae.import_tools.import_tools import ImportProject, \
     construct_import_annotation_pipeline
-
+from dae.import_tools.cli import run_with_project
 
 from dae.pedigrees.loader import FamiliesLoader
 from dae.utils.helpers import study_id_from_path
 
 from dae.gene.denovo_gene_set_collection_factory import \
     DenovoGeneSetCollectionFactory
-from dae.autism_gene_profile.statistic import AGPStatistic
-from dae.autism_gene_profile.db import AutismGeneProfileDB
 from dae.genomic_resources import build_genomic_resource_repository
 from dae.genomic_resources.group_repository import GenomicResourceGroupRepo
 from dae.genomic_resources.gene_models import \
@@ -582,8 +577,8 @@ def variants_mem():
 
 
 @pytest.fixture
-def variants_implementations(variants_impala, variants_vcf):
-    impls = {"variants_impala": variants_impala, "variants_vcf": variants_vcf}
+def variants_implementations(variants_vcf):
+    impls = {"variants_vcf": variants_vcf}
     return impls
 
 
@@ -710,33 +705,33 @@ def impala_test_dbname():
     return "impala_test_db"
 
 
-@pytest.fixture(scope="session")
-def impala_genotype_storage(request, hdfs_host, impala_host):
+# @pytest.fixture(scope="session")
+# def impala_genotype_storage(request, hdfs_host, impala_host):
 
-    storage_config = {
-        "id": "impala_test_storage",
-        "storage_type": "impala",
-        "impala": {
-            "hosts": [impala_host],
-            "port": 21050,
-            "db": impala_test_dbname(),
-            "pool_size": 5,
-        },
-        "hdfs": {
-            "host": hdfs_host,
-            "port": 8020,
-            "base_dir": "/tmp/test_data"},
-    }
-    from dae.genotype_storage.genotype_storage_registry import \
-        GenotypeStorageRegistry
-    registry = GenotypeStorageRegistry()
-    registry.register_storage_config(storage_config)
+#     storage_config = {
+#         "id": "impala_test_storage",
+#         "storage_type": "impala",
+#         "impala": {
+#             "hosts": [impala_host],
+#             "port": 21050,
+#             "db": impala_test_dbname(),
+#             "pool_size": 5,
+#         },
+#         "hdfs": {
+#             "host": hdfs_host,
+#             "port": 8020,
+#             "base_dir": "/tmp/test_data"},
+#     }
+#     from dae.genotype_storage.genotype_storage_registry import \
+#         GenotypeStorageRegistry
+#     registry = GenotypeStorageRegistry()
+#     registry.register_storage_config(storage_config)
 
-    def fin():
-        registry.shutdown()
-    request.addfinalizer(fin)
+#     def fin():
+#         registry.shutdown()
+#     request.addfinalizer(fin)
 
-    return registry.get_genotype_storage("impala_test_storage")
+#     return registry.get_genotype_storage("impala_test_storage")
 
 
 def collect_vcf(dirname):
@@ -803,91 +798,91 @@ def _import_project_from_prefix_config(
     return ImportProject.build_from_config(project, gpf_instance=gpf_instance)
 
 
-DATA_IMPORT_COUNT = 0
+# DATA_IMPORT_COUNT = 0
 
 
-@pytest.fixture(scope="session")
-def data_import(
-        request,
-        hdfs_host,
-        impala_host,
-        impala_genotype_storage,
-        reimport,
-        default_dae_config,
-        gpf_instance_2013):
+# @pytest.fixture(scope="session")
+# def data_import(
+#         request,
+#         hdfs_host,
+#         impala_host,
+#         impala_genotype_storage,
+#         reimport,
+#         default_dae_config,
+#         gpf_instance_2013):
 
-    global DATA_IMPORT_COUNT
-    DATA_IMPORT_COUNT += 1
+#     global DATA_IMPORT_COUNT
+#     DATA_IMPORT_COUNT += 1
 
-    assert DATA_IMPORT_COUNT == 1
+#     assert DATA_IMPORT_COUNT == 1
 
-    from dae.impala_storage.helpers.hdfs_helpers import HdfsHelpers
+#     from dae.impala_storage.helpers.hdfs_helpers import HdfsHelpers
 
-    hdfs = HdfsHelpers(hdfs_host, 8020)
+#     hdfs = HdfsHelpers(hdfs_host, 8020)
 
-    temp_dirname = hdfs.tempdir(prefix="variants_", suffix="_data")
-    hdfs.mkdir(temp_dirname)
+#     temp_dirname = hdfs.tempdir(prefix="variants_", suffix="_data")
+#     hdfs.mkdir(temp_dirname)
 
-    def fin():
-        hdfs.delete(temp_dirname, recursive=True)
+#     def fin():
+#         hdfs.delete(temp_dirname, recursive=True)
 
-    request.addfinalizer(fin)
+#     request.addfinalizer(fin)
 
-    from dae.impala_storage.helpers.impala_helpers import ImpalaHelpers
+#     from dae.impala_storage.helpers.impala_helpers import ImpalaHelpers
 
-    impala_helpers = ImpalaHelpers(
-        impala_hosts=[impala_host], impala_port=21050)
-    gpf_instance_2013.genotype_storages.register_genotype_storage(
-        impala_genotype_storage)
+#     impala_helpers = ImpalaHelpers(
+#         impala_hosts=[impala_host], impala_port=21050)
+#     gpf_instance_2013.genotype_storages.register_genotype_storage(
+#         impala_genotype_storage)
 
-    def build(dirname):
+#     def build(dirname):
 
-        if not impala_helpers.check_database(impala_test_dbname()):
-            impala_helpers.create_database(impala_test_dbname())
+#         if not impala_helpers.check_database(impala_test_dbname()):
+#             impala_helpers.create_database(impala_test_dbname())
 
-        vcfdirname = relative_to_this_test_folder(
-            os.path.join("fixtures", dirname)
-        )
-        vcf_configs = collect_vcf(vcfdirname)
+#         vcfdirname = relative_to_this_test_folder(
+#             os.path.join("fixtures", dirname)
+#         )
+#         vcf_configs = collect_vcf(vcfdirname)
 
-        for config in vcf_configs:
-            logger.debug("importing: %s", config)
+#         for config in vcf_configs:
+#             logger.debug("importing: %s", config)
 
-            study_id = study_id_from_path(config.pedigree)
-            (variant_table, pedigree_table) = \
-                impala_genotype_storage.study_tables(
-                    FrozenBox({"id": study_id}))
+#             study_id = study_id_from_path(config.pedigree)
+#             (variant_table, pedigree_table) = \
+#                 impala_genotype_storage.study_tables(
+#                     FrozenBox({"id": study_id}))
 
-            if not reimport and \
-                    impala_helpers.check_table(
-                        impala_test_dbname(), variant_table) and \
-                    impala_helpers.check_table(
-                        impala_test_dbname(), pedigree_table):
-                continue
+#             if not reimport and \
+#                     impala_helpers.check_table(
+#                         impala_test_dbname(), variant_table) and \
+#                     impala_helpers.check_table(
+#                         impala_test_dbname(), pedigree_table):
+#                 continue
 
-            import_project = _import_project_from_prefix_config(
-                config, temp_dirname, gpf_instance_2013)
+#             import_project = _import_project_from_prefix_config(
+#                 config, temp_dirname, gpf_instance_2013)
 
-            run_with_project(import_project)
+#             run_with_project(import_project)
 
-    build("backends/")
-    return True
+#     build("backends/")
+#     return True
 
 
-@pytest.fixture(scope="session")
-def variants_impala(
-        request, data_import, impala_genotype_storage, gpf_instance_2013):
+# @pytest.fixture(scope="session")
+# def variants_impala(
+#         request, data_import, impala_genotype_storage, gpf_instance_2013):
 
-    def builder(path):
-        study_id = os.path.basename(path)
-        fvars = impala_genotype_storage.build_backend(
-            FrozenBox({"id": study_id}),
-            gpf_instance_2013.reference_genome,
-            gpf_instance_2013.gene_models
-        )
-        return fvars
+#     def builder(path):
+#         study_id = os.path.basename(path)
+#         fvars = impala_genotype_storage.build_backend(
+#             FrozenBox({"id": study_id}),
+#             gpf_instance_2013.reference_genome,
+#             gpf_instance_2013.gene_models
+#         )
+#         return fvars
 
-    return builder
+#     return builder
 
 
 @pytest.fixture(scope="session")
@@ -970,155 +965,155 @@ def fam1():
     return family
 
 
-@pytest.fixture
-def temp_dbfile(request):
-    dbfile = tempfile.mktemp(prefix="dbfile_")  # NOSONAR
+# @pytest.fixture
+# def temp_dbfile(request):
+#     dbfile = tempfile.mktemp(prefix="dbfile_")  # NOSONAR
 
-    def fin():
-        if os.path.exists(dbfile):
-            os.remove(dbfile)
+#     def fin():
+#         if os.path.exists(dbfile):
+#             os.remove(dbfile)
 
-    request.addfinalizer(fin)
-    return dbfile
-
-
-@pytest.fixture
-def agp_config(iossifov2014_import):
-    return Box({
-        "gene_sets": [
-            {
-                "category": "relevant_gene_sets",
-                "display_name": "Relevant Gene Sets",
-                "sets": [
-                    {"set_id": "CHD8 target genes", "collection_id": "main"},
-                    {
-                        "set_id": "FMRP Darnell",
-                        "collection_id": "main"
-                    }
-                ]
-            },
-        ],
-        "genomic_scores": [
-            {
-                "category": "protection_scores",
-                "display_name": "Protection scores",
-                "scores": [
-                    {"score_name": "SFARI_gene_score", "format": "%s"},
-                    {"score_name": "RVIS_rank", "format": "%s"},
-                    {"score_name": "RVIS", "format": "%s"}
-                ]
-            },
-            {
-                "category": "autism_scores",
-                "display_name": "Autism scores",
-                "scores": [
-                    {"score_name": "SFARI_gene_score", "format": "%s"},
-                    {"score_name": "RVIS_rank", "format": "%s"},
-                    {"score_name": "RVIS", "format": "%s"}
-                ]
-            },
-        ],
-        "datasets": Box({
-            "iossifov_we2014_test": Box({
-                "statistics": [
-                    {
-                        "id": "denovo_noncoding",
-                        "display_name": "Noncoding",
-                        "effects": ["noncoding"],
-                        "category": "denovo"
-                    },
-                    {
-                        "id": "denovo_missense",
-                        "display_name": "Missense",
-                        "effects": ["missense"],
-                        "category": "denovo"
-                    }
-                ],
-                "person_sets": [
-                    {
-                        "set_name": "unknown",
-                        "collection_name": "phenotype"
-                    },
-                    {
-                        "set_name": "unaffected",
-                        "collection_name": "phenotype"
-                    },
-                ]
-            })
-        })
-    })
+#     request.addfinalizer(fin)
+#     return dbfile
 
 
-@pytest.fixture
-def agp_gpf_instance(
-        fixtures_gpf_instance, mocker, sample_agp, temp_dbfile, agp_config):
-    from dae.gpf_instance.gpf_instance import GPFInstance
+# @pytest.fixture
+# def agp_config(iossifov2014_import):
+#     return Box({
+#         "gene_sets": [
+#             {
+#                 "category": "relevant_gene_sets",
+#                 "display_name": "Relevant Gene Sets",
+#                 "sets": [
+#                     {"set_id": "CHD8 target genes", "collection_id": "main"},
+#                     {
+#                         "set_id": "FMRP Darnell",
+#                         "collection_id": "main"
+#                     }
+#                 ]
+#             },
+#         ],
+#         "genomic_scores": [
+#             {
+#                 "category": "protection_scores",
+#                 "display_name": "Protection scores",
+#                 "scores": [
+#                     {"score_name": "SFARI_gene_score", "format": "%s"},
+#                     {"score_name": "RVIS_rank", "format": "%s"},
+#                     {"score_name": "RVIS", "format": "%s"}
+#                 ]
+#             },
+#             {
+#                 "category": "autism_scores",
+#                 "display_name": "Autism scores",
+#                 "scores": [
+#                     {"score_name": "SFARI_gene_score", "format": "%s"},
+#                     {"score_name": "RVIS_rank", "format": "%s"},
+#                     {"score_name": "RVIS", "format": "%s"}
+#                 ]
+#             },
+#         ],
+#         "datasets": Box({
+#             "iossifov_we2014_test": Box({
+#                 "statistics": [
+#                     {
+#                         "id": "denovo_noncoding",
+#                         "display_name": "Noncoding",
+#                         "effects": ["noncoding"],
+#                         "category": "denovo"
+#                     },
+#                     {
+#                         "id": "denovo_missense",
+#                         "display_name": "Missense",
+#                         "effects": ["missense"],
+#                         "category": "denovo"
+#                     }
+#                 ],
+#                 "person_sets": [
+#                     {
+#                         "set_name": "unknown",
+#                         "collection_name": "phenotype"
+#                     },
+#                     {
+#                         "set_name": "unaffected",
+#                         "collection_name": "phenotype"
+#                     },
+#                 ]
+#             })
+#         })
+#     })
 
-    mocker.patch.object(
-        GPFInstance,
-        "_autism_gene_profile_config",
-        return_value=agp_config,
-        new_callable=mocker.PropertyMock
-    )
-    main_gene_sets = {
-        "CHD8 target genes",
-        "FMRP Darnell",
-        "FMRP Tuschl",
-        "PSD",
-        "autism candidates from Iossifov PNAS 2015",
-        "autism candidates from Sanders Neuron 2015",
-        "brain critical genes",
-        "brain embryonically expressed",
-        "chromatin modifiers",
-        "essential genes",
-        "non-essential genes",
-        "postsynaptic inhibition",
-        "synaptic clefts excitatory",
-        "synaptic clefts inhibitory",
-        "topotecan downreg genes"
-    }
-    mocker.patch.object(
-        fixtures_gpf_instance.gene_sets_db,
-        "get_gene_set_ids",
-        return_value=main_gene_sets
-    )
-    fixtures_gpf_instance._autism_gene_profile_db = \
-        AutismGeneProfileDB(
-            fixtures_gpf_instance._autism_gene_profile_config,
-            temp_dbfile,
-            clear=True
-        )
-    print(temp_dbfile)
-    fixtures_gpf_instance._autism_gene_profile_db.insert_agp(sample_agp)
-    return fixtures_gpf_instance
+
+# @pytest.fixture
+# def agp_gpf_instance(
+#         fixtures_gpf_instance, mocker, sample_agp, temp_dbfile, agp_config):
+#     from dae.gpf_instance.gpf_instance import GPFInstance
+
+#     mocker.patch.object(
+#         GPFInstance,
+#         "_autism_gene_profile_config",
+#         return_value=agp_config,
+#         new_callable=mocker.PropertyMock
+#     )
+#     main_gene_sets = {
+#         "CHD8 target genes",
+#         "FMRP Darnell",
+#         "FMRP Tuschl",
+#         "PSD",
+#         "autism candidates from Iossifov PNAS 2015",
+#         "autism candidates from Sanders Neuron 2015",
+#         "brain critical genes",
+#         "brain embryonically expressed",
+#         "chromatin modifiers",
+#         "essential genes",
+#         "non-essential genes",
+#         "postsynaptic inhibition",
+#         "synaptic clefts excitatory",
+#         "synaptic clefts inhibitory",
+#         "topotecan downreg genes"
+#     }
+#     mocker.patch.object(
+#         fixtures_gpf_instance.gene_sets_db,
+#         "get_gene_set_ids",
+#         return_value=main_gene_sets
+#     )
+#     fixtures_gpf_instance._autism_gene_profile_db = \
+#         AutismGeneProfileDB(
+#             fixtures_gpf_instance._autism_gene_profile_config,
+#             temp_dbfile,
+#             clear=True
+#         )
+#     print(temp_dbfile)
+#     fixtures_gpf_instance._autism_gene_profile_db.insert_agp(sample_agp)
+#     return fixtures_gpf_instance
 
 
-@pytest.fixture
-def sample_agp():
-    gene_sets = ["main_CHD8 target genes"]
-    genomic_scores = {
-        "protection_scores": {
-            "SFARI_gene_score": 1, "RVIS_rank": 193.0, "RVIS": -2.34
-        },
-        "autism_scores": {
-            "SFARI_gene_score": 1, "RVIS_rank": 193.0, "RVIS": -2.34
-        },
-    }
-    variant_counts = {
-        "iossifov_we2014_test": {
-            "unknown": {
-                "denovo_noncoding": {"count": 53, "rate": 1},
-                "denovo_missense": {"count": 21, "rate": 2}
-            },
-            "unaffected": {
-                "denovo_noncoding": {"count": 43, "rate": 3},
-                "denovo_missense": {"count": 51, "rate": 4}
-            },
-        }
-    }
-    return AGPStatistic(
-        "CHD8", gene_sets, genomic_scores, variant_counts
-    )
+# @pytest.fixture
+# def sample_agp():
+#     gene_sets = ["main_CHD8 target genes"]
+#     genomic_scores = {
+#         "protection_scores": {
+#             "SFARI_gene_score": 1, "RVIS_rank": 193.0, "RVIS": -2.34
+#         },
+#         "autism_scores": {
+#             "SFARI_gene_score": 1, "RVIS_rank": 193.0, "RVIS": -2.34
+#         },
+#     }
+#     variant_counts = {
+#         "iossifov_we2014_test": {
+#             "unknown": {
+#                 "denovo_noncoding": {"count": 53, "rate": 1},
+#                 "denovo_missense": {"count": 21, "rate": 2}
+#             },
+#             "unaffected": {
+#                 "denovo_noncoding": {"count": 43, "rate": 3},
+#                 "denovo_missense": {"count": 51, "rate": 4}
+#             },
+#         }
+#     }
+#     return AGPStatistic(
+#         "CHD8", gene_sets, genomic_scores, variant_counts
+#     )
 
 
 @pytest.fixture

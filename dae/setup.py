@@ -27,27 +27,19 @@ setuptools.setup(
         "dae.dask": ["named_cluster.yaml"],
     },
     scripts=[
-        "dae/tools/impala_parquet_loader.py",
-        "dae/tools/impala_tables_loader.py",
-        "dae/tools/impala_tables_stats.py",
-        "dae/tools/impala_tables_summary_variants.py",
-        "dae/tools/hdfs_parquet_loader.py",
         "dae/tools/generate_common_report.py",
         "dae/tools/generate_denovo_gene_sets.py",
         "dae/tools/pheno2dae.py",
         "dae/tools/pheno2browser.py",
         "dae/tools/simple_pheno_import.py",
         "dae/tools/simple_study_import.py",
-        "dae/tools/run_gpf_impala.sh",
         "dae/tools/simple_family2pedigree.py",
         "dae/tools/ped2parquet.py",
         "dae/tools/ped2ped.py",
         "dae/tools/draw_pedigree.py",
-        "dae/tools/impala_batch_import.py",
         "dae/tools/remote_instance_mirror.py",
         "dae/tools/genotype_data_tool.py",
         "dae/tools/vcfinfo_extractor.py",
-        "dae/tools/generate_autism_gene_profile.py",
     ],
     entry_points="""
     [dae.genomic_resources.plugins]
@@ -77,14 +69,10 @@ setuptools.setup(
     debug_annotator=dae.annotation.debug_annotator:build_annotator
 
     [dae.genotype_storage.factories]
-    impala=dae.impala_storage.schema1.impala_genotype_storage:ImpalaGenotypeStorage
-    impala2=dae.impala_storage.schema2.impala2_genotype_storage:Impala2GenotypeStorage
     inmemory=dae.inmemory_storage.inmemory_genotype_storage:InmemoryGenotypeStorage
     duckdb=dae.duckdb_storage.duckdb_genotype_storage:DuckDbGenotypeStorage
 
     [dae.import_tools.storages]
-    impala=dae.impala_storage.schema1.impala_schema1:ImpalaSchema1ImportStorage
-    impala2=dae.impala_storage.schema2.impala2_import_storage:Impala2ImportStorage
     schema2=dae.schema2_storage.schema2_import_storage:Schema2ImportStorage
     inmemory=dae.inmemory_storage.inmemory_import_storage:InmemoryImportStorage
     duckdb=dae.duckdb_storage.duckdb_import_storage:DuckDbImportStorage
@@ -109,11 +97,6 @@ setuptools.setup(
     ped2ped=dae.tools.ped2ped:main
     draw_pedigree=dae.tools.draw_pedigree:main
 
-    dae2parquet.py=dae.tools.dae2parquet:main
-    vcf2parquet.py=dae.tools.vcf2parquet:main
-    vcf2schema2.py=dae.backends.schema2.vcf2schema2:main
-    denovo2parquet.py=dae.tools.denovo2parquet:main
-    cnv2parquet.py=dae.tools.cnv2parquet:main
     generate_vcf_score_histogram.py=dae.tools.generate_vcf_score_histogram:main
     gpf_validation_runner=dae.tools.gpf_validation_runner:main
     gpf_instance_adjustments=dae.tools.gpf_instance_adjustments:cli
@@ -122,6 +105,7 @@ setuptools.setup(
     stats_liftover=dae.tools.stats_liftover:main
 
     import_tools=dae.import_tools.cli:main
+    generate_autism_gene_profile=dae.tools.generate_autism_gene_profile:main
     """,
     classifiers=[
         "Development Status :: 4 - Beta",

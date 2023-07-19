@@ -25,7 +25,10 @@ from dae.variants.family_variant import FamilyAllele, FamilyVariant, \
     calculate_simple_best_state
 from dae.variants.variant import SummaryVariant, SummaryAllele
 from dae.parquet.partition_descriptor import PartitionDescriptor
-from dae.parquet.schema1.serializers import AlleleParquetSerializer
+from dae.parquet.parquet_writer import AbstractVariantsParquetWriter
+from dae.variants_loaders.raw.loader import VariantsLoader
+
+from impala_storage.schema1.serializers import AlleleParquetSerializer
 
 
 logger = logging.getLogger(__name__)
@@ -115,7 +118,7 @@ class ContinuousParquetFileWriter:
         self._writer.close()
 
 
-class VariantsParquetWriter:
+class VariantsParquetWriter(AbstractVariantsParquetWriter):
     """Provide functions for storing variants into parquet dataset."""
 
     def __init__(
@@ -144,6 +147,25 @@ class VariantsParquetWriter:
             "extra_attributes")
         self.serializer = AlleleParquetSerializer(
             self.variants_loader.annotation_schema, extra_attributes)
+
+    @staticmethod
+    def build(
+        out_dir: str,
+        variants_loader: VariantsLoader,
+        partition_descriptor: PartitionDescriptor,
+        bucket_index: int = 1,
+        rows: int = 100_000,
+        include_reference: bool = True,
+        filesystem: Optional[fsspec.AbstractFileSystem] = None,
+    ) -> AbstractVariantsParquetWriter:
+        return VariantsParquetWriter(
+            out_dir=out_dir,
+            variants_loader=variants_loader,
+            partition_descriptor=partition_descriptor,
+            bucket_index=bucket_index,
+            rows=rows,
+            include_reference=include_reference,
+        )
 
     @staticmethod
     def _setup_reference_allele(summary_variant, family):

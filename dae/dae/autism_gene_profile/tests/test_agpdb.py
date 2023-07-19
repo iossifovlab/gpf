@@ -1,12 +1,21 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+import pathlib
+import box
+
 from sqlalchemy import inspect
 from dae.autism_gene_profile.db import AutismGeneProfileDB
+from dae.autism_gene_profile.statistic import AGPStatistic
+from dae.gpf_instance import GPFInstance
 
 
-def test_agpdb_table_building(temp_dbfile, agp_config):
+def test_agpdb_table_building(
+    tmp_path: pathlib.Path,
+    agp_config: box.Box
+) -> None:
+    agpdb_filename = str(tmp_path / "agpdb")
     agpdb = AutismGeneProfileDB(
         agp_config,
-        temp_dbfile
+        agpdb_filename
     )
     inspector = inspect(agpdb.engine)
 
@@ -40,10 +49,19 @@ def test_agpdb_table_building(temp_dbfile, agp_config):
 
 
 def test_agpdb_insert_and_get_agp(
-        temp_dbfile, agp_gpf_instance, sample_agp, agp_config):
-    agpdb = AutismGeneProfileDB(agp_config, temp_dbfile, clear=True)
+        tmp_path: pathlib.Path,
+        agp_gpf_instance: GPFInstance,
+        sample_agp: AGPStatistic,
+        agp_config: box.Box) -> None:
+
+    agpdb_filename = str(tmp_path / "agpdb")
+    agpdb = AutismGeneProfileDB(
+        agp_config, agpdb_filename, clear=True)
     agpdb.insert_agp(sample_agp)
     agp = agpdb.get_agp("CHD8")
+
+    assert agp is not None
+
     assert agp.gene_sets == [
         "main_CHD8 target genes"
     ]
@@ -74,7 +92,9 @@ def test_agpdb_insert_and_get_agp(
     }
 
 
-def test_agpdb_sort(agp_gpf_instance, sample_agp):
+def test_agpdb_sort(
+        agp_gpf_instance: GPFInstance,
+        sample_agp: AGPStatistic) -> None:
     sample_agp.gene_symbol = "CHD7"
     sample_scores = sample_agp.genomic_scores
     sample_scores["protection_scores"]["SFARI_gene_score"] = -11

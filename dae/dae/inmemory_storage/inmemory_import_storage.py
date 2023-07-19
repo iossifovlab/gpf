@@ -2,13 +2,12 @@ import os
 import shutil
 import logging
 from typing import Any, Optional
-# FIXME move save_study_config function into better place
-from dae.impala_storage.schema1.import_commons import save_study_config
 
 from dae.variants_loaders.raw.loader import StoredAnnotationDecorator, \
     VariantsLoader
 from dae.configuration.study_config_builder import StudyConfigBuilder
-from dae.import_tools.import_tools import ImportProject, ImportStorage
+from dae.import_tools.import_tools import ImportProject, ImportStorage, \
+    save_study_config
 from dae.task_graph.graph import TaskGraph
 
 

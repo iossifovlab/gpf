@@ -5,7 +5,7 @@ import os
 from os.path import join
 
 import pytest
-import pyarrow.parquet as pq  # type: ignore
+import pyarrow.parquet as pq
 
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.import_tools import import_tools, cli

@@ -5,7 +5,7 @@ from dae.genomic_resources.reference_genome import \
     ReferenceGenome
 
 from dae.parquet.partition_descriptor import PartitionDescriptor
-from dae.impala_storage.schema1.import_commons import MakefilePartitionHelper
+from dae.import_tools.import_tools import MakefilePartitionHelper
 
 
 @pytest.mark.parametrize(
