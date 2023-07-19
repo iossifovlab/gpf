@@ -19,7 +19,7 @@ new_application = Application(**{
     "user_id": user.id,
     "client_type": "public",
     "authorization_grant_type": "authorization-code",
-    "redirect_uris": f"{gpfjs_url}/datasets",
+    "redirect_uris": f"{gpfjs_url}/login",
     "client_id": "gpfjs",
     "skip_authorization": True,
 })
