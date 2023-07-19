@@ -1,4 +1,5 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+# type: ignore
 
 def test_default_gene_models_id(anonymous_client):
     response = anonymous_client.get("/api/v3/genome/gene_models/default")
