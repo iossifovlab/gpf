@@ -3,8 +3,7 @@
 from django.contrib.sessions.models import Session
 from users_api.models import WdaeUser
 from rest_framework import exceptions
-from oauth2_provider.contrib.rest_framework \
-    import OAuth2Authentication  # type: ignore
+from oauth2_provider.contrib.rest_framework import OAuth2Authentication
 
 
 class GPFOAuth2Authentication(OAuth2Authentication):
@@ -30,6 +29,19 @@ class GPFOAuth2Authentication(OAuth2Authentication):
                 # handle federation users, set the user to the app owner
                 user = auth.application.user
             return user, auth
+        return retval  # no user authenticated, just pass on
+
+
+class GPFOAuth2CookieAuth(GPFOAuth2Authentication):
+    """
+    Check for a session cookie if no OAuth token is found.
+
+    Used to allow download requests which are made without an OAuth token
+    but with a session cookie instead.
+    """
+
+    def authenticate(self, request):
+        retval = super().authenticate(request)
         if retval is None:
             # As a last resort, check for a session cookie
             try:
@@ -41,4 +53,4 @@ class GPFOAuth2Authentication(OAuth2Authentication):
             except (Session.DoesNotExist,    # pylint: disable=no-member
                     WdaeUser.DoesNotExist):  # pylint: disable=no-member
                 pass
-        return retval  # no user authenticated, just pass on
+        return retval
