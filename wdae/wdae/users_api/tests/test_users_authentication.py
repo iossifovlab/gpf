@@ -1,4 +1,5 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+# type: ignore
 import json
 from datetime import timedelta
 import re
@@ -333,9 +334,9 @@ def test_authentication_logging(user, client, tokens):
     assert last_login.failed_attempt == 1
 
 
-def test_authentication_with_sessionid_cookie(user, client, oauth_app):
+def test_authentication_with_sessionid_cookie(wdae_gpf_instance, client):
     data = {
-        "username": "user@example.com",
+        "username": "admin@example.com",
         "password": "secret",
     }
     response = client.post(
@@ -343,6 +344,13 @@ def test_authentication_with_sessionid_cookie(user, client, oauth_app):
         content_type="application/json", format="json"
     )
     assert response.status_code == status.HTTP_302_FOUND
-    response = client.get("/api/v3/users/get_user_info")
-    assert response.data["loggedIn"] is True
-    assert response.data["email"] == "user@example.com"
+
+    data = {
+        "datasetId": "quads_f1",
+        "maxVariantsCount": "1"
+    }
+    response = client.post(
+        "/api/v3/genotype_browser/query", json.dumps(data),
+        content_type="application/json", format="json"
+    )
+    assert response.status_code == status.HTTP_200_OK
