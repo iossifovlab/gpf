@@ -4,6 +4,7 @@ import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http'
 import { ConfigService } from '../config/config.service';
 import { CookieService } from 'ngx-cookie-service';
 import { User } from './users';
+import { LocationStrategy } from '@angular/common';
 import { Store } from '@ngxs/store';
 import { StateResetAll } from 'ngxs-reset-plugin';
 import { catchError, map, tap, take, switchMap } from 'rxjs/operators';
@@ -27,6 +28,7 @@ export class UsersService {
     private config: ConfigService,
     private cookieService: CookieService,
     private store: Store,
+    private locationStrategy: LocationStrategy,
     private authService: AuthService,
   ) {
     this.authService.tokenExchangeSubject.subscribe(() => {
@@ -46,7 +48,7 @@ export class UsersService {
       switchMap(() => { return this.http.post(this.config.baseUrl + this.logoutUrl, {}, options) }),
       tap(() => {
         this.store.dispatch(new StateResetAll());
-        window.location.reload();
+        window.location.href = this.locationStrategy.getBaseHref();
       })
     );
   }
