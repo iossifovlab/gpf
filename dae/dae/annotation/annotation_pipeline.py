@@ -261,28 +261,31 @@ class ReannotationPipeline(AnnotationPipeline):
             i for i in infos_new if i not in infos_old
         ]
 
-        self.upstream: list[AnnotatorInfo] = []
-        self.downstream: list[AnnotatorInfo] = []
+        self.annotators_changed: list[AnnotatorInfo] = []
         for i in self.annotators_new:
-            self.upstream.extend(self.get_dependencies_for(i))
-            self.downstream.extend(self.get_dependents_for(i))
+            self.annotators_changed.extend(self.get_dependencies_for(i))
+            self.annotators_changed.extend(self.get_dependents_for(i))
 
-        self.annotators_old: list[AnnotatorInfo] = [
+        self.annotators_removed: list[AnnotatorInfo] = [
             i for i in infos_old if i not in infos_new
         ]
 
         self.annotators_unchanged: list[AnnotatorInfo] = [
             i for i in infos_new if (
                 i not in self.annotators_new
-                and i not in self.annotators_old
-                and i not in self.upstream
-                and i not in self.downstream
+                and i not in self.annotators_changed
             )
         ]
-        # TODO Add all annotators from new upstream and downstream to
-        # self.annotators so that they are re-run
-        # TODO Add cleanup annotators for all columns produced by the
-        # annotators found in "old"
+
+        self.annotators = [
+            annotator for annotator in self.pipeline_new.annotators
+            if annotator.get_info() not in self.annotators_unchanged
+        ]
+
+        self.reused_attributes = []
+        for annotator in self.annotators_unchanged:
+            for attr in annotator.attributes:
+                self.reused_attributes.append(attr.name)
 
     @staticmethod
     def build_dependency_graph(
@@ -332,10 +335,10 @@ class ReannotationPipeline(AnnotationPipeline):
                         result.add(*further)
         return result
 
-    def annotate(self, annotatable: Annotatable, _=None) -> dict:
-        # TODO Calculate reused context from old and new pipelines,
-        # use the "unchanged" annotators produced in the constructor
-        reused_context: dict = {}
+    def annotate(self, annotatable: Annotatable, record: dict) -> dict:
+        reused_context: dict = {
+            k: v for k, v in record.items() if k in self.reused_attributes
+        }
         return super().annotate(annotatable, reused_context)
 
 
