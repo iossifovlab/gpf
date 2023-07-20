@@ -289,8 +289,8 @@ describe('Pheno tool download tests', () => {
   });
 
   [
-    {id: '8', measure: 'i1.iq', familyHistogramfromTo: ['33', '130']},
-    {id: '9', measure: 'i1.m1', familyHistogramfromTo: ['84', '107']}
+    {id: '8', familyFilter: 'i1.iq', familyHistogramfromTo: ['33', '130']},
+    {id: '9', familyFilter: 'i1.m1', familyHistogramfromTo: ['84', '107']}
   ].forEach(data => {
     it('should test advanced family filters', () => {
       const familyPage = new FamilyFilterBlockPage();
@@ -301,7 +301,7 @@ describe('Pheno tool download tests', () => {
 
       familyPage.advancedButton.click();
       familyPage.searchbox.click();
-      familyPage.getDropdownMenuOptionByText(data.measure).click();
+      familyPage.getDropdownMenuOptionByText(data.familyFilter).click();
 
       familyPage.histogram.should('be.visible');
       familyPage.fromInputField.clear();
