@@ -463,7 +463,7 @@ describe('Autism gene profiles table functionality tests', () => {
   });
 
   it('should test statistic to genotype browser test', () => {
-    page.loginAdmin();
+    page.loginAdmin(true);
 
     cy.intercept({
       method: 'POST',

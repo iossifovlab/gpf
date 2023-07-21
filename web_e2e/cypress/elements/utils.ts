@@ -99,11 +99,13 @@ export class BasePage {
     });
   }
 
-  public login(username: string, password: string, hasAccessRights = true): void {
+  public login(username: string, password: string, hasAccessRights = true, isAutismGeneProfilesTool = false): void {
     this.waitForLoginButtonWithRetries();
 
     const usersPage = new UsersPage();
-    cy.intercept('GET', '/gpf/api/v3/datasets').as('datasets');
+    if (!isAutismGeneProfilesTool) {
+      cy.intercept('GET', '/gpf/api/v3/datasets').as('datasets');
+    }
     if (!username || !password) {
       return;
     }
@@ -117,11 +119,13 @@ export class BasePage {
     cy.url().then(currentUrl => {
       this.waitForPageToLoad(currentUrl.split('/').pop(), hasAccessRights);
     });
-    cy.wait('@datasets');
+    if (!isAutismGeneProfilesTool) {
+      cy.wait('@datasets');
+    }
   }
 
-  public loginAdmin(): void {
-    this.login(this.adminUsername, this.adminPassword);
+  public loginAdmin(isAutismGeneProfilesTool = false): void {
+    this.login(this.adminUsername, this.adminPassword, true, isAutismGeneProfilesTool);
   }
 
   public logout(hasAccessRights = false): void {
@@ -137,7 +141,7 @@ export class BasePage {
 
   public navigateToDatasetPage(dataset: string, page: string, hasAccessRights = true): void {
     this.openDatasetsDropdownMenu();
-    this.datasetsDropdownMenuElements.contains(dataset).click();
+    this.datasetsDropdownMenuElements.contains(dataset).should('be.visible').click({force: true});
     this.datasetsDropdownMenuButton.should('have.text', dataset);
     cy.get(`a.nav-link[href*="${page}"]`).click();
 
