@@ -99,16 +99,14 @@ export class BasePage {
     });
   }
 
-  public login(username: string, password: string, hasAccessRights = true, isAutismGeneProfilesTool = false): void {
+  public login(username: string, password: string, hasAccessRights = true, inAGP = false): void {
     this.waitForLoginButtonWithRetries();
 
-    const usersPage = new UsersPage();
-    if (!isAutismGeneProfilesTool) {
+    if (!inAGP) {
       cy.intercept('GET', '/gpf/api/v3/datasets').as('datasets');
     }
-    if (!username || !password) {
-      return;
-    }
+
+    const usersPage = new UsersPage();
 
     usersPage.logInButton.click();
     cy.get('#id_username').type(username);
@@ -119,13 +117,14 @@ export class BasePage {
     cy.url().then(currentUrl => {
       this.waitForPageToLoad(currentUrl.split('/').pop(), hasAccessRights);
     });
-    if (!isAutismGeneProfilesTool) {
+
+    if (!inAGP) {
       cy.wait('@datasets');
     }
   }
 
-  public loginAdmin(isAutismGeneProfilesTool = false): void {
-    this.login(this.adminUsername, this.adminPassword, true, isAutismGeneProfilesTool);
+  public loginAdmin(inAGP = false): void {
+    this.login(this.adminUsername, this.adminPassword, true, inAGP);
   }
 
   public logout(hasAccessRights = false): void {
