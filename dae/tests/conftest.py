@@ -12,14 +12,16 @@ def default_genotype_storage_configs(root_path: pathlib.Path) -> list[dict]:
         {
             "id": "duckdb",
             "storage_type": "duckdb",
-            "db": f"{root_path}/duckdb_storage/dev_storage.db",
+            "db": "duckdb_storage/dev_storage.db",
+            "base_dir": str(root_path)
         },
 
         # DuckDb Parquet Storage
         {
             "id": "duckdb_parquet",
             "storage_type": "duckdb",
-            "studies_path": f"{root_path}/duckdb_parquet",
+            "studies_dir": "duckdb_parquet",
+            "base_dir": str(root_path)
         },
 
         # DuckDb Parquet Inplace Storage

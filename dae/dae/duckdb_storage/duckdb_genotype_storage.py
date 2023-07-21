@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 import os
+import re
 import logging
 from typing import Any, cast, Optional
 from contextlib import closing
@@ -7,6 +10,9 @@ import duckdb
 from cerberus import Validator
 
 from dae.utils import fs_utils
+from dae.genomic_resources.reference_genome import ReferenceGenome
+from dae.genomic_resources.gene_models import GeneModels
+
 from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.schema2_storage.schema2_import_storage import Schema2DatasetLayout
@@ -26,9 +32,12 @@ class DuckDbGenotypeStorage(GenotypeStorage):
         "db": {
             "type": "string",
         },
-        "studies_path": {
+        "studies_dir": {
             "type": "string",
         },
+        "base_dir": {
+            "type": "string",
+        }
     }
 
     def __init__(self, storage_config: dict[str, Any]):
@@ -46,21 +55,29 @@ class DuckDbGenotypeStorage(GenotypeStorage):
             raise ValueError(
                 f"wrong config format for impala storage: "
                 f"{validator.errors}")
-        return cast(dict, validator.document)
+        result = cast(dict, validator.document)
+        base_dir = result.get("base_dir")
+        if base_dir:
+            if not os.path.isabs(base_dir):
+                raise ValueError(
+                    f"DuckDb genotype storage base dir should be an "
+                    f"absolute path; <{base_dir}> passed instead.")
+        return result
 
     @classmethod
     def get_storage_type(cls) -> str:
         return "duckdb"
 
-    def start(self):
+    def start(self) -> DuckDbGenotypeStorage:
         if self.connection:
             logger.warning(
                 "starting already started DuckDb genotype storage: <%s>",
                 self.storage_id)
             return self
 
-        if self.get_db() is not None:
-            db_name = self.get_db()
+        db_name = self.get_db()
+        if db_name is not None:
+            db_name = self._base_dir_join(db_name)
             dirname = os.path.dirname(db_name)
             os.makedirs(dirname, exist_ok=True)
             self.connection = duckdb.connect(f"{db_name}")
@@ -69,22 +86,26 @@ class DuckDbGenotypeStorage(GenotypeStorage):
         self.connection = duckdb.connect()
         return self
 
-    def shutdown(self):
+    def shutdown(self) -> DuckDbGenotypeStorage:
         if self.connection is None:
             logger.warning(
                 "trying to shutdown already stopped DuckDbGenotypeStorage")
-            return
+            return self
         self.connection.close()
         self.connection = None
+        return self
 
-    def close(self):
+    def close(self) -> None:
         self.shutdown()
 
-    def get_db(self):
+    def get_base_dir(self) -> Optional[str]:
+        return self.storage_config.get("base_dir")
+
+    def get_db(self) -> Optional[str]:
         return self.storage_config.get("db")
 
-    def get_studies_path(self):
-        return self.storage_config.get("studies_path")
+    def get_studies_dir(self) -> Optional[str]:
+        return self.storage_config.get("studies_dir")
 
     @staticmethod
     def create_table_layout(study_id: str) -> Schema2DatasetLayout:
@@ -94,20 +115,20 @@ class DuckDbGenotypeStorage(GenotypeStorage):
             f"{study_id}_summary", f"{study_id}_family",
             f"{study_id}_meta")
 
-    @staticmethod
-    def create_parquet_scans_layout_from_study_dir(
+    def create_parquet_scans_layout_from_studies_dir(
+            self,
             study_id: str,
             partition_descriptor: PartitionDescriptor,
-            base_dir: Optional[str] = "") -> Schema2DatasetLayout:
+            studies_dir: str) -> Schema2DatasetLayout:
         """Construct DuckDb parquet scans for all studies tables."""
-        study_dir = fs_utils.join(base_dir, study_id)
+        study_dir = fs_utils.join(studies_dir, study_id)
         pedigree_path = fs_utils.join(study_dir, "pedigree")
         meta_path = fs_utils.join(study_dir, "meta")
         summary_path = fs_utils.join(study_dir, "summary")
         summary_partition = partition_descriptor.dataset_summary_partition()
         family_path = fs_utils.join(study_dir, "family")
         family_partition = partition_descriptor.dataset_family_partition()
-
+        study_dir = self._base_dir_join(study_dir)
         paths = Schema2DatasetLayout(
             study_dir,
             f"{pedigree_path}/pedigree.parquet",
@@ -128,7 +149,6 @@ class DuckDbGenotypeStorage(GenotypeStorage):
         """Construct DuckDb parquet scans for all studies tables."""
         summary_partition = partition_descriptor.dataset_summary_partition()
         family_partition = partition_descriptor.dataset_family_partition()
-
         paths = Schema2DatasetLayout(
             layout.study,
             f"{layout.pedigree}",
@@ -142,7 +162,7 @@ class DuckDbGenotypeStorage(GenotypeStorage):
             f"parquet_scan('{paths.family}')",
             f"parquet_scan('{paths.meta}')")
 
-    def _create_table(self, parquet_path, table_name):
+    def _create_table(self, parquet_path: str, table_name: str) -> None:
         assert self.connection is not None
         query = f"DROP TABLE IF EXISTS {table_name}"
         self.connection.sql(query)
@@ -152,7 +172,8 @@ class DuckDbGenotypeStorage(GenotypeStorage):
         self.connection.sql(query)
 
     def _create_table_partitioned(
-            self, parquet_path, table_name, partition):
+            self, parquet_path: str, table_name: str,
+            partition: list[tuple[str, str]]) -> None:
         assert self.connection is not None
         query = f"DROP TABLE IF EXISTS {table_name}"
         self.connection.sql(query)
@@ -175,23 +196,40 @@ class DuckDbGenotypeStorage(GenotypeStorage):
                 # pylint: disable=protected-access
                 storage._create_table(layout.meta, tables_layout.meta)
                 storage._create_table(layout.pedigree, tables_layout.pedigree)
-                storage._create_table_partitioned(
-                    layout.summary, tables_layout.summary,
-                    partition_descriptor.dataset_summary_partition())
-                storage._create_table_partitioned(
-                    layout.family, tables_layout.family,
-                    partition_descriptor.dataset_family_partition())
+                if layout.summary is None:
+                    assert layout.family is None
+                    tables_layout = Schema2DatasetLayout(
+                        tables_layout.study,
+                        tables_layout.pedigree,
+                        None,
+                        None,
+                        tables_layout.meta)
+                else:
+                    assert tables_layout.summary is not None
+                    assert tables_layout.family is not None
+                    assert layout.summary is not None
+                    assert layout.family is not None
+                    storage._create_table_partitioned(
+                        layout.summary, tables_layout.summary,
+                        partition_descriptor.dataset_summary_partition())
+                    storage._create_table_partitioned(
+                        layout.family, tables_layout.family,
+                        partition_descriptor.dataset_family_partition())
             return tables_layout
 
-        if self.get_studies_path() is not None:
+        if self.get_studies_dir() is not None:
             # copy parquet files
-            dest_layout = self.create_parquet_scans_layout_from_study_dir(
+            studies_dir = self.get_studies_dir()
+            assert studies_dir is not None
+
+            dest_layout = self.create_parquet_scans_layout_from_studies_dir(
                 study_id, partition_descriptor,
-                base_dir=self.get_studies_path())
+                studies_dir=studies_dir)
+
             fs_utils.copy(dest_layout.study, layout.study)
             return dest_layout
 
-        if self.get_studies_path() is None:
+        if self.get_studies_dir() is None:
             return self.create_parquet_scans_layout_from_layout(
                 layout, partition_descriptor)
 
@@ -199,16 +237,68 @@ class DuckDbGenotypeStorage(GenotypeStorage):
             f"bad DuckDb genotype storage configuration: "
             f"{self.storage_config}")
 
-    def build_backend(self, study_config, genome, gene_models):
+    PARQUET_SCAN = re.compile(r"parquet_scan\('(?P<parquet_path>.+)'\)")
+
+    def _base_dir_join(self, dir_name: str) -> str:
+        if self.get_base_dir() is None:
+            return dir_name
+        return fs_utils.join(self.get_base_dir(), dir_name)
+
+    def _base_dir_join_parquet_scan_or_table(
+            self, parquet_scan: Optional[str]) -> Optional[str]:
+        if parquet_scan is None:
+            return None
+        if self.get_base_dir() is None:
+            return parquet_scan
+
+        match = self.PARQUET_SCAN.fullmatch(parquet_scan)
+        if not match:
+            return parquet_scan
+
+        parquet_path = match.groupdict()["parquet_path"]
+        assert parquet_path
+        base_dir = self.get_base_dir()
+        assert base_dir is not None
+
+        full_path = fs_utils.join(base_dir, parquet_path)
+        return f"parquet_scan('{full_path}')"
+
+    # def _create_parquet_scans_table_layout(
+    #         self, study_id: str, tables: dict) -> Schema2DatasetLayout:
+    #     tables_layout = Schema2DatasetLayout(
+    #         study_id,
+    #         tables["pedigree"],
+    #         tables.get("summary"),
+    #         tables.get("family"),
+    #         tables["meta"])
+    #     if self.get_base_dir() is not None:
+
+    #     if tables_layout.pedigree.startswith("parquet_scans"):
+    #         pass
+
+    def build_backend(
+            self, study_config: dict,
+            genome: ReferenceGenome,
+            gene_models: GeneModels) -> DuckDbVariants:
         tables = study_config["genotype_storage"]["tables"]
+        pedigree = self._base_dir_join_parquet_scan_or_table(
+            tables["pedigree"])
+        assert pedigree is not None
+        meta = self._base_dir_join_parquet_scan_or_table(tables["meta"])
+        assert meta is not None
+
         tables_layout = Schema2DatasetLayout(
             study_config["id"],
-            tables["pedigree"],
-            tables["summary"], tables["family"],
-            tables["meta"])
+            pedigree,
+            self._base_dir_join_parquet_scan_or_table(tables.get("summary")),
+            self._base_dir_join_parquet_scan_or_table(tables.get("family")),
+            meta)
 
+        db_name = self.get_db()
+        if db_name is not None:
+            db_name = self._base_dir_join(db_name)
         return DuckDbVariants(
-            self.get_db(),
+            db_name,
             tables_layout.family,
             tables_layout.summary,
             tables_layout.pedigree,

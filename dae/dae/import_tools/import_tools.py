@@ -368,7 +368,7 @@ class ImportProject():
             return None
         return cast(str, parquet_dataset_dir)
 
-    def get_parquet_dataset_dir(self) -> Optional[str]:
+    def get_parquet_dataset_dir(self) -> str:
         """Return parquet dataset direcotry.
 
         If processing parquet dataset dir is configured this method will

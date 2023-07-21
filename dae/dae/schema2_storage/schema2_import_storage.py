@@ -1,8 +1,9 @@
 import logging
 from dataclasses import dataclass
+from typing import Optional
 
 from dae.utils import fs_utils
-from dae.import_tools.import_tools import ImportStorage
+from dae.import_tools.import_tools import ImportStorage, ImportProject
 from dae.task_graph.graph import TaskGraph
 from dae.parquet.parquet_writer import ParquetWriter
 from dae.parquet.schema2.parquet_io import \
@@ -17,9 +18,10 @@ logger = logging.getLogger(__file__)
 class Schema2DatasetLayout:
     study: str
     pedigree: str
-    summary: str
-    family: str
+    summary: Optional[str]
+    family: Optional[str]
     meta: str
+    base_dir: Optional[str] = None
 
 
 def schema2_dataset_layout(study_dir: str) -> Schema2DatasetLayout:
@@ -31,7 +33,8 @@ def schema2_dataset_layout(study_dir: str) -> Schema2DatasetLayout:
         fs_utils.join(study_dir, "meta", "meta.parquet"))
 
 
-def schema2_project_dataset_layout(project) -> Schema2DatasetLayout:
+def schema2_project_dataset_layout(
+        project: ImportProject) -> Schema2DatasetLayout:
     study_dir = fs_utils.join(project.work_dir, project.study_id)
     return schema2_dataset_layout(study_dir)
 

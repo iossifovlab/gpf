@@ -19,7 +19,8 @@ def duckdb_storage_config(
     return {
         "id": "dev_duckdb_storage",
         "storage_type": "duckdb",
-        "db": f"{storage_path}/dev_storage.db",
+        "db": "duckdb_storage/dev_storage.db",
+        "base_dir": str(storage_path)
     }
 
 

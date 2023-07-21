@@ -7,7 +7,8 @@ genotype_storage:
   storages:
   - id: local_duckdb
     storage_type: duckdb
-    studies_path: "genotype_storage/local_duckdb"
+    studies_dir: "genotype_storage/local_duckdb"
+    base_dir: "%(wd)s"
 
 # annotation:
 #   conf_file: "annotation.yaml"
