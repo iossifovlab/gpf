@@ -3,7 +3,7 @@ from __future__ import annotations
 import abc
 import os
 import logging
-from typing import Optional
+from typing import Optional, Callable, Any
 
 import fsspec
 import pyarrow as pa
@@ -149,13 +149,16 @@ class ParquetWriter:
         out_dir,
         variants_loader,
         partition_descriptor,
-        variants_writer_class: AbstractVariantsParquetWriter,
+        variants_writer_builder: Callable[
+            [str, VariantsLoader, PartitionDescriptor,
+             int, int, bool, Optional[Any]],
+            AbstractVariantsParquetWriter],
         bucket_index=1,
         rows=100_000,
         include_reference=False,
     ):
         """Read variants from variant_loader and store them in parquet."""
-        variants_writer = variants_writer_class.build(
+        variants_writer = variants_writer_builder(
             out_dir,
             variants_loader,
             partition_descriptor,
@@ -168,12 +171,16 @@ class ParquetWriter:
 
     @staticmethod
     def write_variants(
-            out_dir,
-            variants_loader,
-            partition_description: PartitionDescriptor,
-            bucket,
-            project,
-            variants_writer_class: AbstractVariantsParquetWriter):
+        out_dir,
+        variants_loader,
+        partition_description: PartitionDescriptor,
+        bucket,
+        project,
+        variants_writer_builder: Callable[
+            [str, VariantsLoader, PartitionDescriptor,
+             int, int, bool, Optional[Any]],
+            AbstractVariantsParquetWriter]
+    ) -> None:
         """Write variants to the corresponding parquet files."""
         if bucket.region_bin is not None and bucket.region_bin != "none":
             logger.info(
@@ -187,7 +194,7 @@ class ParquetWriter:
             out_dir,
             variants_loader,
             partition_description,
-            variants_writer_class,
+            variants_writer_builder,
             bucket_index=bucket.index,
             rows=rows,
             include_reference=project.include_reference,
@@ -195,12 +202,16 @@ class ParquetWriter:
 
     @staticmethod
     def write_meta(
-            out_dir,
-            variants_loader,
-            partition_description: PartitionDescriptor,
-            variants_writer_class: AbstractVariantsParquetWriter):
+        out_dir,
+        variants_loader,
+        partition_description: PartitionDescriptor,
+        variants_writer_builder: Callable[
+            [str, VariantsLoader, PartitionDescriptor,
+             int, int, bool, Optional[Any]],
+            AbstractVariantsParquetWriter]
+    ):
         """Write dataset metadata."""
-        variants_writer = variants_writer_class.build(
+        variants_writer = variants_writer_builder(
             out_dir,
             variants_loader,
             partition_description,
