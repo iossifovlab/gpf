@@ -3,9 +3,11 @@ from __future__ import annotations
 import abc
 import os
 import logging
-from typing import Optional, Callable, Any
+from typing import Optional
+from typing_extensions import Protocol
 
 import fsspec
+import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
 
@@ -15,6 +17,7 @@ from dae.pedigrees.family import FamiliesData
 from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.parquet.helpers import url_to_pyarrow_fs
 from dae.variants_loaders.raw.loader import VariantsLoader
+from dae.import_tools.import_tools import ImportProject, Bucket
 
 logger = logging.getLogger(__file__)
 
@@ -38,7 +41,9 @@ def pedigree_parquet_schema() -> pa.schema:
     return pa.schema(fields)
 
 
-def add_missing_parquet_fields(pps, ped_df):
+def add_missing_parquet_fields(
+    pps: pa.schema, ped_df: pd.DataFrame
+) -> tuple[pd.DataFrame, pa.schema]:
     """Add missing parquet fields."""
     missing_fields = set(ped_df.columns.values) - set(pps.names)
 
@@ -61,13 +66,15 @@ def add_missing_parquet_fields(pps, ped_df):
     return ped_df, pps
 
 
-def save_ped_df_to_parquet(ped_df, filename: str, filesystem=None):
+def save_ped_df_to_parquet(
+        ped_df: pd.DataFrame, filename: str,
+        filesystem: Optional[fsspec.AbstractFileSystem] = None) -> None:
     """Save ped_df as a parquet file named filename."""
     ped_df = ped_df.copy()
 
-    ped_df.role = ped_df.role.apply(lambda r: r.value)
-    ped_df.sex = ped_df.sex.apply(lambda s: s.value)
-    ped_df.status = ped_df.status.apply(lambda s: s.value)
+    ped_df.role = ped_df.role.apply(lambda r: r.value)  # type: ignore
+    ped_df.sex = ped_df.sex.apply(lambda s: s.value)  # type: ignore
+    ped_df.status = ped_df.status.apply(lambda s: s.value)  # type: ignore
     if "generated" not in ped_df:
         ped_df["generated"] = False
     if "layout" not in ped_df:
@@ -121,13 +128,31 @@ class AbstractVariantsParquetWriter(abc.ABC):
         """Build a variants parquet writed."""
 
 
+class ParquetWriterBuilder(Protocol):
+    """Defines a parquet writer builder type protocol."""
+
+    @staticmethod
+    def build(
+        out_dir: str,
+        variants_loader: VariantsLoader,
+        partition_descriptor: PartitionDescriptor,
+        bucket_index: int = 1,
+        rows: int = 100_000,
+        include_reference: bool = True,
+        filesystem: Optional[fsspec.AbstractFileSystem] = None,
+    ) -> AbstractVariantsParquetWriter:
+        """Build a variants parquet writer object."""
+
+
 class ParquetWriter:
     """Implement writing variants and pedigrees parquet files."""
 
     @staticmethod
     def families_to_parquet(
-            families, pedigree_filename,
-            partition_descriptor: Optional[PartitionDescriptor] = None):
+        families: FamiliesData,
+        pedigree_filename: str,
+        partition_descriptor: Optional[PartitionDescriptor] = None
+    ) -> None:
         """Save families data into a parquet file."""
         if partition_descriptor is not None \
                 and partition_descriptor.has_family_bins():
@@ -146,19 +171,16 @@ class ParquetWriter:
 
     @staticmethod
     def variants_to_parquet(
-        out_dir,
-        variants_loader,
-        partition_descriptor,
-        variants_writer_builder: Callable[
-            [str, VariantsLoader, PartitionDescriptor,
-             int, int, bool, Optional[Any]],
-            AbstractVariantsParquetWriter],
-        bucket_index=1,
-        rows=100_000,
-        include_reference=False,
-    ):
+        out_dir: str,
+        variants_loader: VariantsLoader,
+        partition_descriptor: PartitionDescriptor,
+        variants_writer_builder: ParquetWriterBuilder,
+        bucket_index: int = 1,
+        rows: int = 100_000,
+        include_reference: bool = False,
+    ) -> None:
         """Read variants from variant_loader and store them in parquet."""
-        variants_writer = variants_writer_builder(
+        variants_writer = variants_writer_builder.build(
             out_dir,
             variants_loader,
             partition_descriptor,
@@ -171,15 +193,12 @@ class ParquetWriter:
 
     @staticmethod
     def write_variants(
-        out_dir,
-        variants_loader,
+        out_dir: str,
+        variants_loader: VariantsLoader,
         partition_description: PartitionDescriptor,
-        bucket,
-        project,
-        variants_writer_builder: Callable[
-            [str, VariantsLoader, PartitionDescriptor,
-             int, int, bool, Optional[Any]],
-            AbstractVariantsParquetWriter]
+        bucket: Bucket,
+        project: ImportProject,
+        variants_writer_builder: ParquetWriterBuilder
     ) -> None:
         """Write variants to the corresponding parquet files."""
         if bucket.region_bin is not None and bucket.region_bin != "none":
@@ -202,16 +221,13 @@ class ParquetWriter:
 
     @staticmethod
     def write_meta(
-        out_dir,
-        variants_loader,
+        out_dir: str,
+        variants_loader: VariantsLoader,
         partition_description: PartitionDescriptor,
-        variants_writer_builder: Callable[
-            [str, VariantsLoader, PartitionDescriptor,
-             int, int, bool, Optional[Any]],
-            AbstractVariantsParquetWriter]
-    ):
+        variants_writer_builder: ParquetWriterBuilder
+    ) -> None:
         """Write dataset metadata."""
-        variants_writer = variants_writer_builder(
+        variants_writer = variants_writer_builder.build(
             out_dir,
             variants_loader,
             partition_description,

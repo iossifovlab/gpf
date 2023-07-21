@@ -27,7 +27,7 @@ dependencies:
   - pandas=1.5.2
   - pyarrow=10.0.1
   - fsspec=2023.3
-  - aiohttp=3.8.4
+  - aiohttp=3.8.5
   - python-box=6.0.2
   - setuptools=67
   - sqlalchemy=1.4.40
