@@ -15,6 +15,7 @@ from dae.annotation.record_to_annotatable import build_record_to_annotatable, \
     RecordToRegion, RecordToCNVAllele, \
     RecordToVcfAllele, RecordToPosition
 from dae.annotation.annotate_vcf import produce_regions, produce_partfile_paths
+from dae.annotation.annotation_pipeline import ReannotationPipeline
 from dae.annotation.annotation_factory import build_annotation_pipeline, \
     AnnotatorInfo
 from dae.genomic_resources import build_genomic_resource_repository
@@ -53,6 +54,8 @@ def configure_argument_parser() -> argparse.ArgumentParser:
                         help="The column separator in the input")
     parser.add_argument("-out_sep", "--output-separator", default="\t",
                         help="The column separator in the output")
+    parser.add_argument("--reannotate", default=None,
+                        help="Old pipeline config to reannotate over")
     CLIAnnotationContext.add_context_arguments(parser)
     add_record_to_annotable_arguments(parser)
     TaskGraphCli.add_arguments(parser)
@@ -117,9 +120,21 @@ def annotate(
     """Annotate a variants file with a given pipeline configuration."""
     # pylint: disable=too-many-locals
     grr = build_genomic_resource_repository(definition=grr_definition)
+    # pipeline = build_annotation_pipeline(
+    #     pipeline_config=pipeline_config,
+    #     grr_repository=grr)
+
     pipeline = build_annotation_pipeline(
-        pipeline_config=pipeline_config,
+        pipeline_config_file=args.pipeline,
         grr_repository=grr)
+
+    if args.reannotate:
+        pipeline_old = build_annotation_pipeline(
+            pipeline_config_file=args.reannotate,
+            grr_repository=grr)
+        pipeline_new = pipeline
+        pipeline = ReannotationPipeline(pipeline_new, pipeline_old)
+
     ref_genome = cast(ReferenceGenome, grr.find_resource(ref_genome_id)) \
         if ref_genome_id else None
     errors = []
@@ -147,9 +162,14 @@ def annotate(
             try:
                 columns = line.strip("\n\r").split(args.input_separator)
                 record = dict(zip(header_columns, columns))
-                annotation = pipeline.annotate(
-                    record_to_annotatable.build(record)
-                )
+                if args.reannotate:
+                    annotation = pipeline.annotate(
+                        record_to_annotatable.build(record), record
+                    )
+                else:
+                    annotation = pipeline.annotate(
+                        record_to_annotatable.build(record)
+                    )
                 result = columns + [
                     str(annotation[attrib])
                     for attrib in annotation_columns

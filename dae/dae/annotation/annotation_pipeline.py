@@ -341,6 +341,9 @@ class ReannotationPipeline(AnnotationPipeline):
         }
         return super().annotate(annotatable, reused_context)
 
+    def get_attributes(self) -> list[AttributeInfo]:
+        return self.pipeline_new.get_attributes()
+
 
 class AnnotatorDecorator(Annotator):
     """Defines annotator decorator base class."""
