@@ -115,28 +115,12 @@ function main() {
     gpf_dev_image_ref="$(e docker_img_gpf_dev)"
   }
 
-  # run impala
-  build_stage "Run impala"
+  build_stage "Create network"
   {
     # create network
-    {
-      local -A ctx_network
-      build_run_ctx_init ctx:ctx_network "persistent" "network"
-      build_run_ctx_persist ctx:ctx_network
-    }
-    # setup impala
-    {
-      local -A ctx_impala
-      build_run_ctx_init ctx:ctx_impala "persistent" "container" "seqpipe/seqpipe-docker-impala:latest" \
-          "cmd-from-image" "no-def-mounts" \
-          ports:21050,8020 --hostname impala --network "${ctx_network["network_id"]}"
-
-      defer_ret build_run_ctx_reset ctx:ctx_impala
-
-      build_run_container ctx:ctx_impala /wait-for-it.sh -h localhost -p 21050 -t 300
-
-      build_run_ctx_persist ctx:ctx_impala
-    }
+    local -A ctx_network
+    build_run_ctx_init ctx:ctx_network "persistent" "network"
+    build_run_ctx_persist ctx:ctx_network
   }
 
   # run MailHog
@@ -172,8 +156,6 @@ EOT
       --network "${ctx_network["network_id"]}" \
       --env DAE_DB_DIR="/wd/data/data-hg19-local/" \
       --env GRR_DEFINITION_FILE="/wd/cache/grr_definition.yaml" \
-      --env DAE_HDFS_HOST="impala" \
-      --env DAE_IMPALA_HOST="impala" \
       --env WDAE_EMAIL_HOST="mailhog"
     defer_ret build_run_ctx_reset
 
@@ -191,8 +173,6 @@ EOT
       --network "${ctx_network["network_id"]}" \
       --env DAE_DB_DIR="/wd/data/data-hg19-remote/" \
       --env GRR_DEFINITION_FILE="/wd/cache/grr_definition.yaml" \
-      --env DAE_HDFS_HOST="impala" \
-      --env DAE_IMPALA_HOST="impala" \
       --env WDAE_EMAIL_HOST="mailhog"
     defer_ret build_run_ctx_reset ctx:ctx_gpf_remote
 

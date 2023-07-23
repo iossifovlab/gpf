@@ -76,7 +76,7 @@ class Schema2ImportStorage(ImportStorage):
             layout.study,
             variants_loader,
             cls._get_partition_description(project),
-            VariantsParquetWriter.build)
+            VariantsParquetWriter)
 
     @classmethod
     def _do_write_variant(
@@ -94,7 +94,7 @@ class Schema2ImportStorage(ImportStorage):
             cls._get_partition_description(project),
             bucket,
             project,
-            VariantsParquetWriter.build)
+            VariantsParquetWriter)
 
     @classmethod
     def _variant_partitions(
