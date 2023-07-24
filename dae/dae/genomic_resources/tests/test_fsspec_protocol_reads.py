@@ -1,6 +1,8 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
 
+from dae.genomic_resources.repository import \
+    GR_CONF_FILE_NAME
 from dae.genomic_resources.testing import \
     build_s3_test_protocol, build_http_test_protocol, \
     build_filesystem_test_protocol, setup_directories, setup_vcf, setup_tabix
@@ -52,6 +54,41 @@ def fsspec_proto(request, content_fixture, tmp_path_factory):
         return
 
     raise ValueError(f"unexpected protocol scheme: <{scheme}>")
+
+
+@pytest.fixture(scope="module")
+def fsspec_proto_utf8(tmp_path_factory):
+    root_path = tmp_path_factory.mktemp("fsspec_proto_utf8")
+    setup_directories(root_path, {
+        "one": {
+            GR_CONF_FILE_NAME: "",
+        }
+    })
+    setup_tabix(
+        root_path / "one" / "test.txt.gz",
+        """
+            #chrëm  pos_bëgin  pos_ënd    ë1
+            1      1          10         1.0
+            2      1          10         2.0
+            2      11         20         2.5
+            3      1          10         3.0
+            3      11         20         3.5
+        """,
+        seq_col=0, start_col=1, end_col=2)
+    setup_vcf(
+        root_path / "one" / "in.vcf.gz",
+        """
+        ##fileformat=VCFv4.2
+        ##FORMAT=<ID=GT,Number=1,Type=String,Description="Gënééééééotype">
+        ##contig=<ID=foo>
+        ##contig=<ID=bar>
+        #CHROM POS ID REF ALT QUAL FILTER INFO FORMAT m1
+        foo    10  .  T   G     .    .      .    GT   0/1
+        foo    13  .  T   G     .    .      .    GT   0/1
+        bar    15  .  T   G     .    .      .    GT   1/1
+        bar    16  .  T   G     .    .      .    GT   0/1
+        """)
+    return build_filesystem_test_protocol(root_path)
 
 
 def test_get_all_resources(fsspec_proto):
@@ -190,3 +227,24 @@ def test_open_vcf_file_fetch_region(fsspec_proto):
 
     # Then
     assert len(lines) == 2
+
+
+def test_open_utf8_tabix_file(fsspec_proto_utf8):
+    # Given
+    proto = fsspec_proto_utf8
+    res = proto.get_resource("one")
+
+    # When
+    lines = []
+    with proto.open_tabix_file(res, "test.txt.gz") as tabix:
+
+        for line in tabix.fetch():
+            lines.append(line)
+
+    # Then
+    print(" ".join(lines))
+    assert len(lines) == 5
+
+    lines = []
+    with proto.open_tabix_file(res, "in.vcf.gz") as vcf:
+        print(vcf.contigs)
