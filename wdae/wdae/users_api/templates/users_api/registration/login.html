@@ -15,53 +15,36 @@
     </head>
 
     <body>
-        <header>
-            <img src="{% static 'users_api/registration/logo-64x64.png' %}">
-            <label class="login-header">GPF: Genotypes and Phenotypes in Families</label>
-        </header>
+        <div class="login-container">
+            <div class="logo-header">
+                <img class="logo" src="{% static 'users_api/registration/logo-64x64.png' %}">
+                <label class="header-text">Genotypes and Phenotypes in Families</label>
+            </div>
+        
+            <form method="post" action="{% url 'login_user' %}">
+                {% csrf_token %}
 
-        <form method="post" action="{% url 'login_user' %}" style="text-align:center">
-            {% csrf_token %}
-            <table>
-                <tr>
-                    <td>
-                        <div>{{ form.username.label_tag }}</div>
-                        <div>{{ form.username }}</div>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <div>{{ form.password.label_tag }}</div>
-                        <div>{{ form.password }}</div>
-                    </td>
-                </tr>
+                <div class="login-data-label">{{ form.username.label_tag }}</div>
+                <div>{{ form.username }}</div>
+        
+                <div id="password-header">
+                    <div class="login-data-label">{{ form.password.label_tag }}</div>
+                    <a id="forgotten-password" href="{% url 'forgotten_password' %}">Forgotten password</a>
+                </div>
+                
+                <div>{{ form.password }}</div>
+            
                 {% if form.errors and show_errors %}
-                <tr>
-                    <td>
-                        {% for errors in form.errors.values %}
-                        {% for error in errors %}
-                        <div class="message error">{{ error }}</div>
-                        {% endfor %}
-                        {% endfor %}
-                    </td>
-                </tr>
+                    {% for errors in form.errors.values %}
+                    {% for error in errors %}
+                    <div class="message error">{{ error }}</div>
+                    {% endfor %}
+                    {% endfor %}
                 {% endif %}
-                <tr>
-                    <td>
-                        <input class="login-button" type="submit" value="Login">
-                        <input type="hidden" name="next" value="{{ next }}">
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <a href="{% url 'forgotten_password' %}">Forgotten password</a>
-                    </td>
-                </tr>
-            </table>
-
-
-        </form>
-
+            
+                <input class="login-button" type="submit" value="Log In">
+                <input type="hidden" name="next" value="{{ next }}">  
+            </form>
+        </div>
     </body>
-
 </html>

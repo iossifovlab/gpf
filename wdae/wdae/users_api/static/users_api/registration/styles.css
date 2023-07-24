@@ -1,24 +1,3 @@
-
-body {
-  margin-left: 15px;
-}
-
-header {
-    margin-bottom: 0.75rem;
-}
-
-table {
-  border-collapse:separate;
-  margin: 0%;
-  border-spacing: 0px;
-}
-
-table .message {
-  width: calc(344px - 2.5rem);
-  margin: 0px;
-  margin-bottom: 10px;
-}
-
 .message {
   padding: 0.75rem 1.25rem;
   margin-top: 15px;
@@ -45,9 +24,64 @@ table .message {
   color: #721c24;
 }
 
-.login-header {
-  font-weight: 500;
+.login-container {
+  border: 1px solid #ddd;
+  border-radius: 0.25rem;
+  padding: 40px 30px;
+  display: flex;
+  flex-direction: column;
+  margin: auto;
+  margin-top: 10%; 
+  width: max-content;
+  float: none;
+}
+
+.logo-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  row-gap: 10px;
+  margin-bottom: 35px;
+}
+
+.logo {
+  height: 80px;
+  width: 80px;
+}
+
+.header-text {
+  font-weight: 1000;
   font-family: Roboto, sans-serif;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  align-items: start;
+  row-gap: 5px;
+  text-align:center
+}
+
+#password-header {
+  display: flex;
+  flex-direction: row;
+  column-gap: 100px;
+  height: 25px;
+}
+
+#forgotten-password {
+  text-decoration: none;
+  width: initial;
+}
+
+a:visited {
+  color: #3981c0;
+}
+
+.login-data-label,
+#forgotten-password {
+  font-size: large;
+  font-family: Roboto;
 }
 
 .login-button {
@@ -56,38 +90,9 @@ table .message {
   background-color: #2a6395;
   float: left;
   border: 0px;
-}
+  margin-top: 30px;
 
-img {
-  height: 30px;
-  padding-right: 6px;
-  padding-bottom: 2px;
-  vertical-align: middle;
-}
-
-th {
-  padding-bottom: 10px;
-  float:left;
-}
-
-th label {
-  font-size: x-large 
-}
-
-td, th, input, a, .login-button {
-  font-size: large;
-  height: 40px;
-  margin-bottom: 10px;
-  font-family: Roboto;
-}
-
-a, .login-button {
   width: 346px;
-}
-
-div, a {
-  clear: left;
-  float: left;
 }
 
 input {
@@ -99,6 +104,11 @@ input {
   border-radius: 0.25rem;
   transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
   padding: 0 12px 0 12px;
+
+  font-size: large;
+  height: 40px;
+  margin-bottom: 10px;
+  font-family: Roboto;
 }
 
 input:focus {
