@@ -1,0 +1,20 @@
+# This file may be used to create an environment using:
+# $ conda env create --name <env> --file <this file>
+# platform: linux-64
+# conda create -c conda-forge -c bioconda -n <env name> --file <this file>
+# - conda-forge 
+
+name: gpf
+channels:
+  - defaults
+  - conda-forge
+  - bioconda
+  - iossifovlab
+dependencies:
+  - gpf_dae
+  - snakemake-minimal=7.24
+  - openjdk=8.0.312
+  - hadoop=3.1.2
+  - impyla=0.17.0
+  - thriftpy2=0.4.14
+  - thrift=0.16.0

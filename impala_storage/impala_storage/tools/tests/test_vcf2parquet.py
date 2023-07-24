@@ -5,7 +5,7 @@ import glob
 
 import pyarrow.parquet as pq
 
-from dae.tools.vcf2parquet import main
+from impala_storage.tools.vcf2parquet import main
 
 
 def test_vcf2parquet_vcf(

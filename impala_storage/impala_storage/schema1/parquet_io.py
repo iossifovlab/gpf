@@ -3,7 +3,7 @@ import os
 import sys
 import time
 import logging
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 
 from copy import copy
 from urllib.parse import urlparse
@@ -390,3 +390,6 @@ class VariantsParquetWriter(AbstractVariantsParquetWriter):
         # not written with every bucket.
         self.write_partition()
         self.write_schema()
+
+    def write_metadata(self) -> None:
+        """Write dataset metadata."""

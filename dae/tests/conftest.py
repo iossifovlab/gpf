@@ -169,12 +169,20 @@ def pytest_sessionstart(session: pytest.Session) -> None:
             import yaml  # pylint: disable=import-outside-toplevel
             with open(storage_config_filename, encoding="utf8") as infile:
                 storage_config = yaml.safe_load(infile.read())
-            storage = GENOTYPE_STORAGE_REGISTRY\
-                .register_storage_config(storage_config)
-            storage.start()
-            GENOTYPE_STORAGES = {
-                storage.storage_id: storage
-            }
+            if "storage_type" in storage_config:
+                storage = GENOTYPE_STORAGE_REGISTRY\
+                    .register_storage_config(storage_config)
+                storage.start()
+                GENOTYPE_STORAGES = {
+                    storage.storage_id: storage
+                }
+            elif "storages" in storage_config:
+                GENOTYPE_STORAGES = {}
+                for sconfig in storage_config["storages"]:
+                    storage = GENOTYPE_STORAGE_REGISTRY\
+                        .register_storage_config(sconfig)
+                    storage.start()
+                    GENOTYPE_STORAGES[storage.storage_id] = storage
         else:
             GENOTYPE_STORAGES = _populate_storages_from_registry()
 

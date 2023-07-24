@@ -1,6 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 
-from dae.tools.impala_parquet_loader import main
+from impala_storage.tools.impala_parquet_loader import main
 
 
 def test_impala_parquet_loader_partitioned(fixture_dirname, gpf_instance_2013):

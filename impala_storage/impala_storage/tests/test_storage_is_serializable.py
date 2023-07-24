@@ -1,9 +1,9 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import cloudpickle  # type: ignore
 import pytest
-from dae.impala_storage.schema1.impala_genotype_storage import \
+from impala_storage.schema1.impala_genotype_storage import \
     ImpalaGenotypeStorage
-from dae.impala_storage.schema2.impala2_genotype_storage import \
+from impala_storage.schema2.impala2_genotype_storage import \
     Impala2GenotypeStorage
 
 

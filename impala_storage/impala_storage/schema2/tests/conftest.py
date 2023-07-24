@@ -1,24 +1,27 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import os
+from typing import Optional, cast
 
 import pytest
 from box import Box
+from dae.gpf_instance import GPFInstance
 from dae.variants_loaders.vcf.loader import VcfLoader
 from dae.variants_loaders.dae.loader import DenovoLoader
 from dae.pedigrees.loader import FamiliesLoader
-from dae.impala_storage.schema2.impala2_genotype_storage import \
-    Impala2GenotypeStorage
 from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.parquet.parquet_writer import ParquetWriter
 from dae.parquet.schema2.parquet_io import \
     VariantsParquetWriter as S2VariantsWriter
-from dae.impala_storage.schema1.import_commons import \
-    construct_import_annotation_pipeline
 from dae.variants_loaders.raw.loader import AnnotationPipelineDecorator
+from dae.import_tools.import_tools import \
+    construct_import_annotation_pipeline
+
+from impala_storage.schema2.impala2_genotype_storage import \
+    Impala2GenotypeStorage
 
 
 @pytest.fixture(scope="module")
-def storage():
+def storage() -> Impala2GenotypeStorage:
     config = {
         "id": "genotype_schema2",
         "storage_type": "impala2",
@@ -40,10 +43,17 @@ def storage():
 
 
 @pytest.fixture(scope="module")
-def import_test_study(resources_dir, gpf_instance_2013, storage):
+def import_test_study(
+        resources_dir: str,
+        gpf_instance_2013: GPFInstance,
+        storage: Impala2GenotypeStorage):
+
     def importer(
-        study_id, tmpdir, partition_description, variant_files,
-        loader_args=None
+        study_id: str,
+        tmpdir: str,
+        partition_description: PartitionDescriptor,
+        variant_files: list[str],
+        loader_args: Optional[dict] = None
     ):
         partition_description.output = tmpdir
 
@@ -91,8 +101,9 @@ def import_test_study(resources_dir, gpf_instance_2013, storage):
             chromosomes=["1"], region_length=50, family_bin_size=2),
     ]
 )
-def partition_description(request):
-    return request.param
+def partition_description(
+        request: pytest.FixtureRequest) -> PartitionDescriptor:
+    return cast(PartitionDescriptor, request.param)
 
 
 @pytest.fixture(scope="module")

@@ -3,7 +3,7 @@ import sys
 import logging
 
 from dae.variants_loaders.vcf.loader import VcfLoader
-from dae.impala_storage.schema1.import_commons import Variants2ParquetTool
+from impala_storage.schema1.import_commons import Variants2ParquetTool
 
 
 logger = logging.getLogger("vcf2parquet")

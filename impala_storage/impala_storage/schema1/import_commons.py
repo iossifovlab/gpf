@@ -3,21 +3,16 @@ import abc
 import os
 import sys
 import argparse
-import time
 import logging
 from urllib.parse import urlparse
 from typing import Optional, Dict, Any, Type
-from math import ceil
-from collections import defaultdict
 
-import yaml
 import fsspec
-import toml
-from box import Box
 
 from jinja2 import Template
 
-from dae.annotation.annotation_factory import build_annotation_pipeline
+from dae.import_tools.import_tools import MakefilePartitionHelper, \
+    construct_import_annotation_pipeline
 
 from dae.pedigrees.loader import FamiliesLoader
 from dae.variants_loaders.raw.loader import AnnotationPipelineDecorator, \
@@ -27,11 +22,13 @@ from dae.variants_loaders.vcf.loader import VcfLoader
 from dae.variants_loaders.cnv.loader import CNVLoader
 from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.parquet.parquet_writer import ParquetWriter
-from impala_storage.helpers.rsync_helpers import RsyncHelpers
 
 from dae.configuration.study_config_builder import StudyConfigBuilder
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.utils.dict_utils import recursive_dict_update
+
+from impala_storage.helpers.rsync_helpers import RsyncHelpers
+from impala_storage.schema1.parquet_io import VariantsParquetWriter
 
 
 logger = logging.getLogger(__name__)
@@ -1090,7 +1087,7 @@ class Variants2ParquetTool:
             out_dir,
             variants_loader,
             partition_description,
-            S1VariantsWriter,
+            VariantsParquetWriter,
             bucket_index=bucket_index,
             rows=argv.rows,
         )
@@ -1099,7 +1096,7 @@ class Variants2ParquetTool:
             out_dir,
             variants_loader,
             partition_description,
-            S1VariantsWriter,
+            VariantsParquetWriter,
         )
 
     @classmethod

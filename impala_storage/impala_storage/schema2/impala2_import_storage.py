@@ -2,12 +2,13 @@ import logging
 from typing import cast
 
 from dae.configuration.study_config_builder import StudyConfigBuilder
-from dae.impala_storage.schema1.import_commons import save_study_config
+from dae.import_tools.import_tools import save_study_config
 from dae.task_graph.graph import TaskGraph
-from dae.impala_storage.schema2.impala2_genotype_storage import \
-    Impala2GenotypeStorage
 from dae.schema2_storage.schema2_import_storage import Schema2ImportStorage, \
     schema2_dataset_layout
+
+from impala_storage.schema2.impala2_genotype_storage import \
+    Impala2GenotypeStorage
 
 
 logger = logging.getLogger(__file__)

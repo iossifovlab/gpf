@@ -1,11 +1,12 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 from dataclasses import dataclass
 import os
-from box import Box  # type: ignore
+from box import Box
 import pytest
 import pandas as pd
 from fsspec.core import url_to_fs
-from dae.impala_storage.schema2.impala2_genotype_storage import \
+
+from impala_storage.schema2.impala2_genotype_storage import \
     Impala2GenotypeStorage
 
 

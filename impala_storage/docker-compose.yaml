@@ -1,0 +1,10 @@
+version: "3.9"
+services:
+    
+  impala:
+    image: seqpipe/seqpipe-docker-impala:latest
+    hostname: impala
+    restart: "no"
+    ports:
+      - "21050:21050"
+      - "8020:8020"

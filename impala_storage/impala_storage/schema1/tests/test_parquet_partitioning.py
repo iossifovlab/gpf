@@ -1,7 +1,8 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import os
-from dae.parquet.schema1.parquet_io import VariantsParquetWriter
 from dae.parquet.partition_descriptor import PartitionDescriptor
+
+from impala_storage.schema1.parquet_io import VariantsParquetWriter
 
 
 PARTITION_STUDY_DATA = "backends/partition"

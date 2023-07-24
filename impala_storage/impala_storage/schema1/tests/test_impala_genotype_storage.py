@@ -4,9 +4,9 @@ import os
 from contextlib import closing
 
 import pytest
-from box import Box  # type: ignore
+from box import Box
 
-from dae.impala_storage.schema1.impala_genotype_storage import \
+from impala_storage.schema1.impala_genotype_storage import \
     ImpalaGenotypeStorage
 
 

@@ -3,7 +3,7 @@
 from glob import glob
 import pandas as pd
 import pytest
-from dae.impala_storage.schema2.tests.conftest import run_vcf2schema2
+from impala_storage.schema2.tests.conftest import run_vcf2schema2
 from dae.parquet.partition_descriptor import \
     PartitionDescriptor
 

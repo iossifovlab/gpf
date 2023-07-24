@@ -4,9 +4,10 @@ import os
 import glob
 import pyarrow.parquet as pq
 
-from dae.tools.denovo2parquet import main
 from dae.parquet.partition_descriptor import PartitionDescriptor
-from dae.impala_storage.schema1.utils import generate_file_access_glob
+
+from impala_storage.tools.denovo2parquet import main
+from impala_storage.schema1.utils import generate_file_access_glob
 
 
 def test_denovo2parquet_denovo(

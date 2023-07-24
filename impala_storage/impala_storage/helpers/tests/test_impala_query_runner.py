@@ -8,7 +8,7 @@ import pytest
 
 from dae.query_variants.query_runners import QueryResult
 
-from dae.impala_storage.helpers.impala_query_runner import ImpalaQueryRunner
+from impala_storage.helpers.impala_query_runner import ImpalaQueryRunner
 
 
 @pytest.fixture(scope="session")

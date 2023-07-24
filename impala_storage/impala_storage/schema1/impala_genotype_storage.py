@@ -10,13 +10,13 @@ from dae.configuration.utils import validate_path
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.parquet.partition_descriptor import PartitionDescriptor
 
-from dae.impala_storage.helpers.hdfs_helpers import HdfsHelpers
-from dae.impala_storage.helpers.impala_helpers import ImpalaHelpers
-from dae.impala_storage.schema1.impala_variants import ImpalaVariants
-from dae.impala_storage.schema1.utils import generate_file_access_glob, \
+from impala_storage.helpers.hdfs_helpers import HdfsHelpers
+from impala_storage.helpers.impala_helpers import ImpalaHelpers
+from impala_storage.schema1.impala_variants import ImpalaVariants
+from impala_storage.schema1.utils import generate_file_access_glob, \
     variants_filename_basedir
 
-from dae.impala_storage.helpers.rsync_helpers import RsyncHelpers
+from impala_storage.helpers.rsync_helpers import RsyncHelpers
 
 
 logger = logging.getLogger(__name__)

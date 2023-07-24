@@ -4,10 +4,11 @@ import sys
 import argparse
 
 from dae.gpf_instance.gpf_instance import GPFInstance
-from dae.impala_storage.schema1.import_commons import save_study_config
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.study_config_builder import StudyConfigBuilder
 from dae.utils.dict_utils import recursive_dict_update
+
+from dae.import_tools.import_tools import save_study_config
 
 
 def parse_cli_arguments(argv, gpf_instance):

@@ -2,7 +2,6 @@
 import pytest
 
 # from dae.annotation.schema import Schema
-from dae.parquet.schema1.serializers import AlleleParquetSerializer
 from dae.variants_loaders.dae.loader import DenovoLoader
 from dae.pedigrees.loader import FamiliesLoader
 from dae.annotation.annotation_pipeline import AttributeInfo
@@ -10,6 +9,8 @@ from dae.annotation.annotation_pipeline import AttributeInfo
 from dae.import_tools.import_tools import ImportProject
 from dae.import_tools.cli import run_with_project
 from dae.configuration.gpf_config_parser import FrozenBox
+
+from impala_storage.schema1.serializers import AlleleParquetSerializer
 
 
 @pytest.fixture(scope="session")

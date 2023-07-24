@@ -6,12 +6,13 @@ from typing import cast, Any, Dict
 import toml
 import pytest
 
-from dae.impala_storage.schema1.impala_variants import ImpalaVariants
 from dae.testing import convert_to_tab_separated
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.person_sets import person_set_collections_schema
 from dae.pedigrees.loader import FamiliesLoader
 from dae.person_sets import PersonSetCollection
+
+from impala_storage.schema1.impala_variants import ImpalaVariants
 
 
 @pytest.fixture

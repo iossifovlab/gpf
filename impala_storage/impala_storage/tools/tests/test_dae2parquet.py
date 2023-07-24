@@ -5,7 +5,7 @@ import glob
 
 import pyarrow.parquet as pq
 
-from dae.tools.dae2parquet import main
+from impala_storage.tools.dae2parquet import main
 
 
 def test_dae2parquet_transmitted(

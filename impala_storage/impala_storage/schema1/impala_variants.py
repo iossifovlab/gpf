@@ -3,8 +3,8 @@ import logging
 from contextlib import closing
 from typing import Dict, Any, Tuple, Set
 
-import pyarrow as pa  # type: ignore
-from impala.util import as_pandas  # type: ignore
+import pyarrow as pa
+from impala.util import as_pandas
 from dae.annotation.annotation_pipeline import AttributeInfo
 
 from dae.person_sets import PersonSetCollection
@@ -13,7 +13,6 @@ from dae.inmemory_storage.raw_variants import RawFamilyVariants
 
 from dae.pedigrees.family import FamiliesData
 from dae.pedigrees.loader import FamiliesLoader
-from dae.parquet.schema1.serializers import AlleleParquetSerializer
 
 from dae.variants.attributes import Role, Status, Sex
 
@@ -24,7 +23,9 @@ from dae.query_variants.sql.schema1.family_variants_query_builder import \
     FamilyVariantsQueryBuilder
 from dae.query_variants.sql.schema1.summary_variants_query_builder import \
     SummaryVariantsQueryBuilder
-from dae.impala_storage.helpers.impala_query_runner import ImpalaQueryRunner
+
+from impala_storage.schema1.serializers import AlleleParquetSerializer
+from impala_storage.helpers.impala_query_runner import ImpalaQueryRunner
 
 logger = logging.getLogger(__name__)
 

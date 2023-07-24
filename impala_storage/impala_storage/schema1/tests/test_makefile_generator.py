@@ -2,7 +2,7 @@
 import os
 import pytest
 
-from dae.impala_storage.schema1.import_commons import BatchImporter, \
+from impala_storage.schema1.import_commons import BatchImporter, \
     SnakefileGenerator
 
 
@@ -16,7 +16,26 @@ def cli_parse(gpf_instance_2013):
 
 
 @pytest.fixture
-def importer(gpf_instance_2013):
+def importer(gpf_instance_2013, hdfs_host, impala_host):
+
+    storage_config = {
+        "id": "genotype_impala",
+        "storage_type": "impala",
+        "impala": {
+            "hosts": [impala_host],
+            "port": 21050,
+            "db": "genotype_impala",
+            "pool_size": 5,
+        },
+        "hdfs": {
+            "host": hdfs_host,
+            "port": 8020,
+            "base_dir": "/tmp/test_genotype_impala"},
+    }
+    gpf_instance_2013.genotype_storages.register_storage_config(
+        storage_config
+    )
+
     result = BatchImporter(gpf_instance_2013)
     assert result is not None
     return result

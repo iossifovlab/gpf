@@ -1,8 +1,0 @@
-##fileformat=VCFv4.2
-##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
-##INFO=<ID=EFF,Number=1,Type=String,Description="Effect">
-##contig=<ID=1>
-#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	f1.mom	f1.dad	f1.p1	f1.s1	f2.mom	f2.dad	f2.p1	f2.s1	f3.mom	f3.dad	f3.p1	f3.s1	f4.mom	f4.dad	f4.p1	f4.s1	f5.mom	f5.dad	f5.p1	f5.s1
-1	865581	.	C	T,G,A	.	.	.	GT	1/3	2/3	1/3	1/2	1/2	2/3	2/3	2/2	1/2	3/3	1/3	2/3	1/2	2/3	2/3	1/2	2/3	1/2	2/1	1/3
-1	865582	.	C	T,G,A	.	.	.	GT	1/3	2/3	1/3	1/2	1/2	2/3	2/3	2/2	1/2	3/3	1/3	2/3	1/2	2/3	2/3	1/2	./.	./.	./.	./.
-1	865583	.	C	T,G,A	.	.	.	GT	1/2	1/2	1/1	2/2	0/2	0/2	0/2	2/2	1/2	1/2	1/2	2/2	2/3	2/3	2/3	2/2	0/3	0/3	3/3	0/0

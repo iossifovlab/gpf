@@ -2,7 +2,7 @@
 import re
 import pytest
 
-from dae.impala_storage.schema1.impala_genotype_storage import \
+from impala_storage.schema1.impala_genotype_storage import \
     ImpalaGenotypeStorage
 
 
