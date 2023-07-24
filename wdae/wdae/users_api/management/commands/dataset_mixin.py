@@ -4,7 +4,7 @@ from django.db.models import Q
 from django.contrib.auth.models import Group
 from datasets_api.models import Dataset
 
-from datasets_api.dataset_helpers import DatasetHelpers
+from dae.studies.dataset_helpers import DatasetHelpers
 
 
 logger = logging.getLogger(__name__)
