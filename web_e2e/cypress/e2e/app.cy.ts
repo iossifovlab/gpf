@@ -114,16 +114,16 @@ describe('App user access rights tests', () => {
 
   Object.values(userData).forEach(data => {
     it('should toggle sidenav bar with the right elements inside', () => {
-      page.login(data.username, data.password, data.hasDatasetRights);
-      page.sidenavElements.should('not.exist');
-
-      page.toggleSidenav();
-      page.sidenavElements.should('have.length', data.sidenavElementsCount);
-
-      page.toggleSidenav();
-      page.sidenavElements.should('not.exist');
-
       if (data.username !== undefined && data.password !== undefined) {
+        page.login(data.username, data.password, data.hasDatasetRights);
+        page.sidenavElements.should('not.exist');
+
+        page.toggleSidenav();
+        page.sidenavElements.should('have.length', data.sidenavElementsCount);
+
+        page.toggleSidenav();
+        page.sidenavElements.should('not.exist');
+
         page.logout();
       }
     });
@@ -172,13 +172,13 @@ describe('App user access rights tests', () => {
   Object.values(userData).forEach(data => {
     it('should login with accounts with different access rights and check whether the datasets ' +
        'in the dropdown have the correct opacity value', () => {
-      const expectedOpacity = data.hasDatasetRights ? '1' : '0.3';
+      if (data.username !== undefined || data.password !== undefined) {
+        const expectedOpacity = data.hasDatasetRights ? '1' : '0.3';
 
-      page.login(data.username, data.password, data.hasDatasetRights);
-      page.openDatasetsDropdownMenu();
-      page.datasetsDropdownMenuElements.each(ele => cy.wrap(ele).should('have.css', 'opacity', expectedOpacity));
+        page.login(data.username, data.password, data.hasDatasetRights);
+        page.openDatasetsDropdownMenu();
+        page.datasetsDropdownMenuElements.each(ele => cy.wrap(ele).should('have.css', 'opacity', expectedOpacity));
 
-      if (data.username || data.password !== undefined) {
         page.logout();
       }
     });
