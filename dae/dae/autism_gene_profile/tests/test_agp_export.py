@@ -26,7 +26,7 @@ def two_rows_agp(
 
     sample_agp.gene_symbol = "CHD7"
     sample_scores = sample_agp.genomic_scores
-    sample_scores["protection_scores"]["SFARI_gene_score"] = -11
+    sample_scores["protection_scores"]["SFARI gene score"] = -11
     agpdb.insert_agp(sample_agp)
 
     mocker.patch.object(

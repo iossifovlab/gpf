@@ -56,23 +56,23 @@ function main() {
     build_run rm -f ./dae/dae/__build__.py
     build_run rm -f ./wdae/wdae/__build__.py
 
-    build_run rm -rvf ./data/ ./import/ ./downloads ./results
+    build_run rm -rf ./data/ ./import/ ./downloads ./results
     build_run_local mkdir -p ./data/ ./import/ ./downloads ./results ./cache
 
-    build_run rm -rvf ./test-results/
+    build_run rm -rf ./test-results/
     build_run_local mkdir -p ./test-results/
 
-    build_run rm -rvf \
+    build_run rm -rf \
       ./integration/remote/data/studies \
       ./integration/remote/data/pheno \
       ./integration/remote/data/wdae
 
-    build_run rm -rvf \
+    build_run rm -rf \
       ./integration/local/data/studies \
       ./integration/local/data/pheno \
       ./integration/local/data/wdae
 
-    build_run rm -rvf \
+    build_run rm -rf \
         dae/.coverage*
   }
 
@@ -510,8 +510,8 @@ EOT
   {
     build_run_ctx_init "container" "ubuntu:22.04"
     defer_ret build_run_ctx_reset
-    build_run rm -rvf ./data/ ./import/ ./downloads ./results
-    build_run rm -rvf dae/dae/__build__.py wdae/wdae/__build__.py VERSION
+    build_run rm -rf ./data/ ./import/ ./downloads ./results
+    build_run rm -rf dae/dae/__build__.py wdae/wdae/__build__.py VERSION
   }
 }
 

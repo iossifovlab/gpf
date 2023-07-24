@@ -8,7 +8,7 @@ from dae.gpf_instance import GPFInstance
 
 
 def test_generate_autism_gene_profile(
-        agp_gpf_instance: GPFInstance,
+        local_gpf_instance: GPFInstance,
         tmp_path: pathlib.Path, mocker: MockerFixture) -> None:
     agpdb_filename = str(tmp_path / "agpdb")
     argv = [
@@ -19,19 +19,19 @@ def test_generate_autism_gene_profile(
         "PCDHA4",
     ]
 
-    main(agp_gpf_instance, argv)
+    main(local_gpf_instance, argv)
     agpdb = AutismGeneProfileDB(
-        agp_gpf_instance._autism_gene_profile_config,
+        local_gpf_instance._autism_gene_profile_config,
         agpdb_filename,
         clear=False
     )
     agp = agpdb.get_agp("PCDHA4")
     assert agp is not None
 
-    counts = agp.variant_counts["iossifov_we2014_test"]
+    counts = agp.variant_counts["iossifov_2014"]
     assert counts is not None
 
-    unknown = counts["unknown"]
+    unknown = counts["autism"]
     assert unknown["denovo_noncoding"] == {
         "count": 1,
         "rate": 90.9090909090909
@@ -41,7 +41,7 @@ def test_generate_autism_gene_profile(
         "rate": 0.0
     }
 
-    counts = agp.variant_counts["iossifov_we2014_test"]
+    counts = agp.variant_counts["iossifov_2014"]
     assert counts is not None
 
     unaffected = counts["unaffected"]

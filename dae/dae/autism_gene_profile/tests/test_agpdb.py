@@ -32,18 +32,18 @@ def test_agpdb_table_building(
             "main_CHD8 target genes",
             "autism_scores_RVIS",
             "autism_scores_RVIS_rank",
-            "autism_scores_SFARI_gene_score",
+            "autism_scores_SFARI gene score",
             "protection_scores_RVIS",
             "protection_scores_RVIS_rank",
-            "protection_scores_SFARI_gene_score",
-            "iossifov_we2014_test_unaffected_denovo_missense_rate",
-            "iossifov_we2014_test_unaffected_denovo_missense",
-            "iossifov_we2014_test_unaffected_denovo_noncoding_rate",
-            "iossifov_we2014_test_unaffected_denovo_noncoding",
-            "iossifov_we2014_test_unknown_denovo_missense_rate",
-            "iossifov_we2014_test_unknown_denovo_missense",
-            "iossifov_we2014_test_unknown_denovo_noncoding_rate",
-            "iossifov_we2014_test_unknown_denovo_noncoding",
+            "protection_scores_SFARI gene score",
+            "iossifov_2014_unaffected_denovo_missense_rate",
+            "iossifov_2014_unaffected_denovo_missense",
+            "iossifov_2014_unaffected_denovo_noncoding_rate",
+            "iossifov_2014_unaffected_denovo_noncoding",
+            "iossifov_2014_autism_denovo_missense_rate",
+            "iossifov_2014_autism_denovo_missense",
+            "iossifov_2014_autism_denovo_noncoding_rate",
+            "iossifov_2014_autism_denovo_noncoding",
         ])
     ) == set()
 
@@ -67,20 +67,20 @@ def test_agpdb_insert_and_get_agp(
     ]
 
     assert agp.genomic_scores["autism_scores"] == {
-        "SFARI_gene_score": {"value": 1.0, "format": "%s"},
+        "SFARI gene score": {"value": 1.0, "format": "%s"},
         "RVIS_rank": {"value": 193.0, "format": "%s"},
         "RVIS": {"value": -2.34, "format": "%s"}
     }
 
     assert agp.genomic_scores["protection_scores"] == {
-        "SFARI_gene_score": {"value": 1.0, "format": "%s"},
+        "SFARI gene score": {"value": 1.0, "format": "%s"},
         "RVIS_rank": {"value": 193.0, "format": "%s"},
         "RVIS": {"value": -2.34, "format": "%s"}
     }
 
     assert agp.variant_counts == {
-        "iossifov_we2014_test": {
-            "unknown": {
+        "iossifov_2014": {
+            "autism": {
                 "denovo_noncoding": {"count": 53, "rate": 1},
                 "denovo_missense": {"count": 21, "rate": 2}
             },
@@ -97,11 +97,11 @@ def test_agpdb_sort(
         sample_agp: AGPStatistic) -> None:
     sample_agp.gene_symbol = "CHD7"
     sample_scores = sample_agp.genomic_scores
-    sample_scores["protection_scores"]["SFARI_gene_score"] = -11
+    sample_scores["protection_scores"]["SFARI gene score"] = -11
     agp_gpf_instance._autism_gene_profile_db.insert_agp(sample_agp)
     stats_unsorted = agp_gpf_instance.query_agp_statistics(1)
     stats_sorted = agp_gpf_instance.query_agp_statistics(
-        1, sort_by="protection_scores_SFARI_gene_score", order="asc"
+        1, sort_by="protection_scores_SFARI gene score", order="asc"
     )
     assert stats_unsorted[0]["geneSymbol"] == "CHD8"
     assert stats_unsorted[1]["geneSymbol"] == "CHD7"
@@ -110,11 +110,11 @@ def test_agpdb_sort(
     assert stats_sorted[1]["geneSymbol"] == "CHD8"
 
     stats_sorted = agp_gpf_instance.query_agp_statistics(
-        1, sort_by="autism_scores_SFARI_gene_score", order="desc"
+        1, sort_by="autism_scores_SFARI gene score", order="desc"
     )
     stats_sorted = agp_gpf_instance.query_agp_statistics(
         1,
-        sort_by="iossifov_we2014_test_unknown_denovo_noncoding", order="desc"
+        sort_by="iossifov_2014_autism_denovo_noncoding", order="desc"
     )
     stats_sorted = agp_gpf_instance.query_agp_statistics(
         1, sort_by="main_CHD8 target genes", order="desc"

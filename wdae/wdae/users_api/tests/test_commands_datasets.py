@@ -13,14 +13,11 @@ def test_datasets_export(wdae_gpf_instance, fixtures_wgpf_instance):
 person_sets_study_1,any_dataset;person_sets_study_1
 fake_study,any_dataset;fake_study
 quads_in_parent,any_dataset;quads_in_parent
-SVMergingStudy2,any_dataset;SVMergingStudy2
 inheritance_trio,any_dataset;inheritance_trio
 quads_variant_types,any_dataset;quads_variant_types
-SVMergingStudy1,any_dataset;SVMergingStudy1
 Study3,any_dataset;Study3
 f1_trio,any_dataset;f1_trio
 quads_two_families,any_dataset;quads_two_families
-iossifov_we2014_test,any_dataset;iossifov_we2014_test
 person_sets_study_3,any_dataset;person_sets_study_3
 person_sets_study_2,any_dataset;person_sets_study_2
 comp,any_dataset;comp
@@ -34,7 +31,6 @@ f1_study,any_dataset;f1_study
 Study2,any_dataset;Study2
 quads_in_child,any_dataset;quads_in_child
 f1_group,any_dataset;f1_group
-svmergingdataset,any_dataset;svmergingdataset
 quads_composite_ds,any_dataset;quads_composite_ds
 quads_f1_ds,any_dataset;quads_f1_ds
 person_sets_dataset_1,any_dataset;person_sets_dataset_1

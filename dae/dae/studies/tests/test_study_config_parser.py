@@ -8,7 +8,6 @@ def test_fixture_study_config_parser_is_loaded(genotype_data_study_configs):
         "f3_triple",
         "fake_study",
         "inheritance_trio",
-        "iossifov_we2014_test",
         "quads_f1",  # 'quads_f1_impala',
         "quads_f2",
         "quads_in_child",
@@ -22,8 +21,6 @@ def test_fixture_study_config_parser_is_loaded(genotype_data_study_configs):
         "person_sets_study_1",
         "person_sets_study_2",
         "person_sets_study_3",
-        "SVMergingStudy1",
-        "SVMergingStudy2",
         "comp",
     }
 

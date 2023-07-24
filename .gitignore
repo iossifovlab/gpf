@@ -93,3 +93,4 @@ temp
 dae/test.txt.gz.tbi
 tmpvcf
 VERSION
+wdae/wdae/wdae/__build__.py

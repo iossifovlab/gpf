@@ -46,18 +46,6 @@ gene_scores_db:
     - gene_properties/gene_scores/pLI
     - gene_properties/gene_scores/pRec
 
-genomic_scores_db:
-- resource: hg19/scores/MPC
-  score: mpc
-- resource: hg19/scores/CADD
-  score: cadd_raw
-- resource: hg19/scores/CADD
-  score: cadd_phred
-- resource: hg19/variant_frequencies/gnomAD_v2.1.1/exomes
-  score: exome_gnomad_af_percent
-- resource: hg19/variant_frequencies/gnomAD_v2.1.1/genomes
-  score: genome_gnomad_af_percent
-
 reference_genome:
   resource_id: "hg19/genomes/GATK_ResourceBundle_5777_b37_phiX174"
 
