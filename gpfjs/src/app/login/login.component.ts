@@ -20,5 +20,6 @@ export class LoginComponent implements OnInit {
         this.router.navigate([state['came_from']]);
       }
     }
+    this.router.navigate(['datasets']);
   }
 }
