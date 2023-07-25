@@ -2,6 +2,7 @@ from django.urls import path, re_path, include
 from users_api.views import WdaeLoginView
 
 from gpfjs.views import index, favicon
+from gpf_instance.views import version
 
 urlpatterns = [
     re_path(r"^$", index),
@@ -32,4 +33,5 @@ urlpatterns = [
     path("o/", include("oauth2_provider.urls", namespace="oauth2_provider")),
     re_path(r"^accounts/login/?$", WdaeLoginView.as_view(), name="login_user"),
     re_path(r"^api/v3/sentry", include("sentry.urls")),
+    re_path(r"^api/v3/version/?$", version),
 ]
