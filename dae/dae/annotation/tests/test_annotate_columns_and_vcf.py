@@ -76,6 +76,9 @@ def annotate_directory_fixture(tmp_path):
             "annotation_forbidden_symbols.yaml": """
                 - allele_score: three
             """,
+            "annotation_quotes_in_description.yaml": """
+                - position_score: four
+            """,
             "grr.yaml": f"""
                 id: mm
                 type: dir
@@ -126,6 +129,20 @@ def annotate_directory_fixture(tmp_path):
                           name: s1
                     """
                 },
+                "four": {
+                    "genomic_resource.yaml": """
+                        type: position_score
+                        table:
+                            filename: data.txt
+                        scores:
+                        - id: score
+                          type: float
+                          desc: |
+                                The "phastCons" computed over the tree of 100
+                                verterbrate species
+                          name: s1
+                    """
+                },
             }
         }
     )
@@ -155,6 +172,7 @@ def annotate_directory_fixture(tmp_path):
     setup_denovo(tmp_path / "grr" / "one" / "data.txt", one_content)
     setup_denovo(tmp_path / "grr" / "two" / "data.txt", two_content)
     setup_denovo(tmp_path / "grr" / "three" / "data.txt", three_content)
+    setup_denovo(tmp_path / "grr" / "four" / "data.txt", one_content)
 
 
 def test_basic_setup(tmp_path, annotate_directory_fixture):
@@ -433,3 +451,36 @@ def test_annotate_vcf_none_values(tmp_path, annotate_directory_fixture):
     assert variants[1].info["score"] == ("0.3", "0.4", ".")
     assert "score" not in variants[2].info
     assert "score" not in variants[3].info
+
+
+def test_vcf_description_with_quotes(tmp_path, annotate_directory_fixture):
+    in_content = textwrap.dedent("""
+        ##fileformat=VCFv4.2
+        ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+        ##contig=<ID=chr1>
+        #CHROM POS ID REF ALT QUAL FILTER INFO FORMAT m1  d1  c1
+        chr1   23  .  C   A   .    .      .    GT     0/1 0/0 0/0
+        chr1   24  .  C   A   .    .      .    GT     0/0 0/1 0/0
+        chr1   25  .  C   A   .    .      .    GT     0/0 0/1 0/0
+    """)
+
+    in_file = tmp_path / "in.vcf"
+    out_file = tmp_path / "out.vcf"
+    workdir = tmp_path / "output"
+    annotation_file = tmp_path / "annotation_quotes_in_description.yaml"
+    grr_file = tmp_path / "grr.yaml"
+
+    setup_vcf(in_file, in_content)
+
+    cli_vcf([
+        str(a) for a in [
+            in_file, annotation_file, "-w", workdir, "--grr", grr_file,
+            "-o", out_file
+        ]
+    ])
+
+    # pylint: disable=no-member
+    with pysam.VariantFile(out_file) as vcf_file:
+        info = vcf_file.header.info
+    assert info["score"].description == \
+        'The \\"phastCons\\" computed over the tree of 100 verterbrate species'  # noqa
