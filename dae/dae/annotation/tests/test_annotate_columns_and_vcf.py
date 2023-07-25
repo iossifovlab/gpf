@@ -453,7 +453,10 @@ def test_annotate_vcf_none_values(tmp_path, annotate_directory_fixture):
     assert "score" not in variants[3].info
 
 
-def test_vcf_description_with_quotes(tmp_path, annotate_directory_fixture):
+def test_vcf_description_with_quotes(  # type: ignore
+    tmp_path,
+    annotate_directory_fixture
+):
     in_content = textwrap.dedent("""
         ##fileformat=VCFv4.2
         ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">

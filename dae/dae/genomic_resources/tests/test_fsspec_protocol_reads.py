@@ -9,7 +9,7 @@ from dae.genomic_resources.testing import \
 
 
 @pytest.fixture(scope="module", params=["file", "http", "s3"])
-def fsspec_proto(request, content_fixture, tmp_path_factory):
+def fsspec_proto(request, content_fixture, tmp_path_factory):  # type: ignore
 
     root_path = tmp_path_factory.mktemp("fsspec_proto")
     setup_directories(root_path, content_fixture)
@@ -57,7 +57,7 @@ def fsspec_proto(request, content_fixture, tmp_path_factory):
 
 
 @pytest.fixture(scope="module")
-def fsspec_proto_utf8(tmp_path_factory):
+def fsspec_proto_utf8(tmp_path_factory):  # type: ignore
     root_path = tmp_path_factory.mktemp("fsspec_proto_utf8")
     setup_directories(root_path, {
         "one": {
@@ -91,13 +91,13 @@ def fsspec_proto_utf8(tmp_path_factory):
     return build_filesystem_test_protocol(root_path)
 
 
-def test_get_all_resources(fsspec_proto):
+def test_get_all_resources(fsspec_proto):  # type: ignore
     proto = fsspec_proto
     resources = list(proto.get_all_resources())
     assert len(resources) == 5, resources
 
 
-def test_open_raw_file_read_three_a(fsspec_proto):
+def test_open_raw_file_read_three_a(fsspec_proto):  # type: ignore
     # Given
     proto = fsspec_proto
     res = proto.get_resource("three")
@@ -110,7 +110,7 @@ def test_open_raw_file_read_three_a(fsspec_proto):
     assert content == "a"
 
 
-def test_open_raw_file_read_one_compressed(fsspec_proto):
+def test_open_raw_file_read_one_compressed(fsspec_proto):  # type: ignore
     # Given
     proto = fsspec_proto
     res = proto.get_resource("one")
@@ -124,7 +124,7 @@ def test_open_raw_file_read_one_compressed(fsspec_proto):
     assert header == "#chrom\tpos_begin\tpos_end\tc1\n"
 
 
-def test_open_raw_file_seek(fsspec_proto):
+def test_open_raw_file_seek(fsspec_proto):  # type: ignore
     # Given
     proto = fsspec_proto
     res = proto.get_resource("xxxxx-genome")
@@ -140,7 +140,7 @@ def test_open_raw_file_seek(fsspec_proto):
     assert sequence == "NNACCCAAAC"
 
 
-def test_open_tabix_file_contigs(fsspec_proto):
+def test_open_tabix_file_contigs(fsspec_proto):  # type: ignore
     # Given
     proto = fsspec_proto
     res = proto.get_resource("one")
@@ -153,7 +153,7 @@ def test_open_tabix_file_contigs(fsspec_proto):
     assert contigs == ["1", "2", "3"]
 
 
-def test_open_tabix_file_fetch_all(fsspec_proto):
+def test_open_tabix_file_fetch_all(fsspec_proto):  # type: ignore
     # Given
     proto = fsspec_proto
     res = proto.get_resource("one")
@@ -169,7 +169,7 @@ def test_open_tabix_file_fetch_all(fsspec_proto):
     assert len(lines) == 5
 
 
-def test_open_tabix_file_fetch_region(fsspec_proto):
+def test_open_tabix_file_fetch_region(fsspec_proto):  # type: ignore
     # Given
     proto = fsspec_proto
     res = proto.get_resource("one")
@@ -185,7 +185,7 @@ def test_open_tabix_file_fetch_region(fsspec_proto):
     assert lines == ["3\t1\t10\t3.0", "3\t11\t20\t3.5"]
 
 
-def test_open_vcf_file_contigs(fsspec_proto):
+def test_open_vcf_file_contigs(fsspec_proto):  # type: ignore
     # Given
     proto = fsspec_proto
     res = proto.get_resource("one")
@@ -197,7 +197,7 @@ def test_open_vcf_file_contigs(fsspec_proto):
     assert contigs == ["foo", "bar"]
 
 
-def test_open_vcf_file_fetch_all(fsspec_proto):
+def test_open_vcf_file_fetch_all(fsspec_proto):  # type: ignore
     # Given
     proto = fsspec_proto
     res = proto.get_resource("one")
@@ -213,7 +213,7 @@ def test_open_vcf_file_fetch_all(fsspec_proto):
     assert len(lines) == 4
 
 
-def test_open_vcf_file_fetch_region(fsspec_proto):
+def test_open_vcf_file_fetch_region(fsspec_proto):  # type: ignore
     # Given
     proto = fsspec_proto
     res = proto.get_resource("one")
@@ -229,7 +229,7 @@ def test_open_vcf_file_fetch_region(fsspec_proto):
     assert len(lines) == 2
 
 
-def test_open_utf8_tabix_file(fsspec_proto_utf8):
+def test_open_utf8_tabix_file(fsspec_proto_utf8):  # type: ignore
     proto = fsspec_proto_utf8
     res = proto.get_resource("one")
 
