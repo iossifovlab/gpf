@@ -2,7 +2,7 @@
 
 import sys
 from copy import deepcopy
-from box import Box  # type: ignore
+from box import Box
 
 from dae.configuration.gpf_config_parser import FrozenBox
 
@@ -68,9 +68,8 @@ def _parseNCBIGeneInfo(config):
                 continue
             cs = line.strip().split("\t")
             if len(cs) != 15:
-                raise Exception(
-                    "Unexpected line in the " + config.gene_info_file
-                )
+                raise ValueError(
+                    f"Unexpected line in the {config.gene_info_file}")
 
             # Format: tax_id GeneID Symbol LocusTag Synonyms dbXrefs
             # chromosome map_location description
@@ -103,13 +102,9 @@ def _parseNCBIGeneInfo(config):
             gi.desc = description
 
             if gi.id in genes:
-                raise Exception(
-                    "The gene "
-                    + gi.id
-                    + " is repeated twice in the "
-                    + config.gene_info_file
-                    + " file"
-                )
+                raise ValueError(
+                    f"The gene {gi.id} is repeated twice in the "
+                    f"{config.gene_info_file} file")
 
             genes[gi.id] = gi
             _addNSTokenToGeneInfo(nsTokens, "id", gi.id, gi)

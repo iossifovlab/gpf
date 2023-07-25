@@ -399,13 +399,13 @@ class ReferenceGenomeImplementation(
     def calc_info_hash(self):
         return "placeholder"
 
-    def calc_statistics_hash(self) -> bytes:
+    def calc_statistics_hash(self) -> str:
         manifest = self.resource.get_manifest()
         config = self.get_config()
         genome_filename = config["filename"]
         return json.dumps({
             "score_file": manifest[genome_filename].md5
-        }, sort_keys=True, indent=2).encode()
+        }, sort_keys=True, indent=2)
 
     def add_statistics_build_tasks(self, task_graph, **kwargs) -> list[Task]:
         tasks = []
@@ -726,6 +726,7 @@ class ReferenceGenome(
             for nuc in sequence:
                 yield nuc
             read_progress += len(sequence)
+        return None
 
     def get_sequence(self, chrom, start, stop):
         """Return sequence of nucleotides from specified chromosome region."""
@@ -771,8 +772,7 @@ class ReferenceGenome(
         pars_regions = self.pars.get(chrom, None)
         if pars_regions:
             return in_any_region(
-                chrom, pos, pars_regions  # type: ignore
-            )
+                chrom, pos, pars_regions)
         return False
 
     @staticmethod
