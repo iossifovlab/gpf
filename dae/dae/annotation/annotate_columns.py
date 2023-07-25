@@ -115,15 +115,15 @@ def cache_pipeline(grr, pipeline):
 
 
 def annotate(
-        args, region, pipeline_config: list[AnnotatorInfo], grr_definition,
-        ref_genome_id, out_file_path, compress_output=False):
+    args, region, grr_definition, ref_genome_id,
+    out_file_path, compress_output=False
+):
     """Annotate a variants file with a given pipeline configuration."""
     # pylint: disable=too-many-locals
     grr = build_genomic_resource_repository(definition=grr_definition)
-    # pipeline = build_annotation_pipeline(
-    #     pipeline_config=pipeline_config,
-    #     grr_repository=grr)
 
+    # TODO Insisting on having the pipeline config passed in args
+    # prevents the finding of a default annotation config. Consider fixing
     pipeline = build_annotation_pipeline(
         pipeline_config_file=args.pipeline,
         grr_repository=grr)
@@ -156,13 +156,24 @@ def annotate(
 
     pipeline.open()
     with pipeline, in_file, out_file:
-        new_header = header_columns + annotation_columns
+
+        new_header = header_columns
+        if args.reannotate:
+            new_header = list(filter(
+                lambda col: col not in pipeline.attributes_deleted, new_header
+            ))
+        for col in annotation_columns:
+            if col not in new_header:
+                new_header.append(col)
+
         out_file.write(args.output_separator.join(new_header) + "\n")
         for lnum, line in enumerate(line_iterator):
             try:
                 columns = line.strip("\n\r").split(args.input_separator)
                 record = dict(zip(header_columns, columns))
                 if args.reannotate:
+                    for col in pipeline.attributes_deleted:
+                        del record[col]
                     annotation = pipeline.annotate(
                         record_to_annotatable.build(record), record
                     )
@@ -170,10 +181,9 @@ def annotate(
                     annotation = pipeline.annotate(
                         record_to_annotatable.build(record)
                     )
-                result = columns + [
-                    str(annotation[attrib])
-                    for attrib in annotation_columns
-                ]
+
+                record.update(annotation)
+                result = list(map(str, record.values()))
                 out_file.write(args.output_separator.join(result) + "\n")
             except Exception as ex:  # pylint: disable=broad-except
                 logger.warning(
@@ -231,7 +241,6 @@ def cli(raw_args: Optional[list[str]] = None) -> None:
     CLIAnnotationContext.register(args)
 
     context = get_genomic_context()
-    pipeline = CLIAnnotationContext.get_pipeline(context)
     grr = CLIAnnotationContext.get_genomic_resources_repository(context)
     ref_genome = context.get_reference_genome()
     ref_genome_id = ref_genome.resource_id if ref_genome is not None else None
@@ -259,7 +268,7 @@ def cli(raw_args: Optional[list[str]] = None) -> None:
             region_tasks.append(task_graph.create_task(
                 f"part-{index}",
                 annotate,
-                [args, region, pipeline.get_info(), grr.definition,
+                [args, region, grr.definition,
                  ref_genome_id, file_path, True],
                 []))
 
@@ -276,7 +285,7 @@ def cli(raw_args: Optional[list[str]] = None) -> None:
 
         TaskGraphCli.process_graph(task_graph, **vars(args))
     else:
-        annotate(args, None, pipeline.get_info(), grr.definition,
+        annotate(args, None, grr.definition,
                  ref_genome_id, output, output.endswith(".gz"))
 
 

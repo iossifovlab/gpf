@@ -282,10 +282,15 @@ class ReannotationPipeline(AnnotationPipeline):
             if annotator.get_info() not in self.annotators_unchanged
         ]
 
-        self.reused_attributes = []
+        self.attributes_reused = []
         for annotator in self.annotators_unchanged:
             for attr in annotator.attributes:
-                self.reused_attributes.append(attr.name)
+                self.attributes_reused.append(attr.name)
+
+        self.attributes_deleted = []
+        for annotator in self.annotators_removed:
+            for attr in annotator.attributes:
+                self.attributes_deleted.append(attr.name)
 
     @staticmethod
     def build_dependency_graph(
@@ -337,7 +342,7 @@ class ReannotationPipeline(AnnotationPipeline):
 
     def annotate(self, annotatable: Annotatable, record: dict) -> dict:
         reused_context: dict = {
-            k: v for k, v in record.items() if k in self.reused_attributes
+            k: v for k, v in record.items() if k in self.attributes_reused
         }
         return super().annotate(annotatable, reused_context)
 
