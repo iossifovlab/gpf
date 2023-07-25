@@ -17,11 +17,11 @@ from dae.pedigrees.loader import FamiliesLoader
 from dae.variants.attributes import Role, Status, Sex
 
 from dae.query_variants.query_runners import QueryResult
-from dae.query_variants.sql.schema1.schema1_query_director import \
+from impala_storage.schema1.schema1_query_director import \
     ImpalaQueryDirector
-from dae.query_variants.sql.schema1.family_variants_query_builder import \
+from impala_storage.schema1.family_variants_query_builder import \
     FamilyVariantsQueryBuilder
-from dae.query_variants.sql.schema1.summary_variants_query_builder import \
+from impala_storage.schema1.summary_variants_query_builder import \
     SummaryVariantsQueryBuilder
 
 from impala_storage.schema1.serializers import AlleleParquetSerializer

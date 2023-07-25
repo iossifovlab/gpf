@@ -293,7 +293,8 @@ class BaseQueryBuilder(ABC):
             is_frequency=True
         )
 
-    def _build_regions_where(self, regions):
+    @classmethod
+    def _build_regions_where(cls, regions):
         assert isinstance(regions, list), regions
         where = []
         for region in regions:
@@ -303,7 +304,7 @@ class BaseQueryBuilder(ABC):
             if region.start is None and region.end is None:
                 query += ")"
                 query = query.format(
-                    q=self.QUOTE,
+                    q=cls.QUOTE,
                     chrom=region.chrom
                 )
             else:
@@ -318,7 +319,7 @@ class BaseQueryBuilder(ABC):
                     "))"
                 )
                 query = query.format(
-                    q=self.QUOTE,
+                    q=cls.QUOTE,
                     chrom=region.chrom,
                     start=region.start,
                     stop=region.stop,

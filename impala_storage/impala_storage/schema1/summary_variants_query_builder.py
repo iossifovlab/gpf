@@ -1,5 +1,5 @@
 import logging
-from dae.query_variants.sql.schema1.base_query_builder import BaseQueryBuilder
+from impala_storage.schema1.base_query_builder import BaseQueryBuilder
 
 logger = logging.getLogger(__name__)
 
