@@ -223,8 +223,11 @@ def run_wdae_bootstrap(work_dir):
             logger.error(result.stderr)
 
 
-def main(argv):
+def main(argv=None):
     """Entry point for the remote instance mirroring tool."""
+    if argv is None:
+        argv = sys.argv[1:]
+
     argv = parse_cli_arguments(argv)
 
     if argv.verbose == 1:
@@ -256,7 +259,3 @@ def main(argv):
     update_mirror_config(rsync_helpers, output, argv)
     build_setenv(output)
     run_wdae_bootstrap(output)
-
-
-if __name__ == "__main__":
-    main(sys.argv[1:])

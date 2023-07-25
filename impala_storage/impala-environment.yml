@@ -6,9 +6,9 @@
 
 name: gpf
 channels:
-  - defaults
   - conda-forge
   - bioconda
+  - defaults
   - iossifovlab
 dependencies:
   - snakemake-minimal=7.24

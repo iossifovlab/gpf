@@ -41,7 +41,7 @@ setuptools.setup(
     denovo2parquet.py=impala_storage.tools.denovo2parquet:main
     cnv2parquet.py=impala_storage.tools.cnv2parquet:main
     genotype_data_tool=impala_storage.tools.genotype_data_tool:main
-    remote_instance_mirror="impala_storage.tools.remote_instance_mirror:main",
+    remote_instance_mirror=impala_storage.tools.remote_instance_mirror:main
 
     """,
     classifiers=[
