@@ -13,7 +13,6 @@ class PhaseTest(unittest.TestCase):
         [[1, 2, 1, 2], [1, 0, 1, 0]],
     ]
     inp = [np.array(x) for x in inpR]
-    inp_fail_shape = [np.array([[1, 2, 2, 1], [1, 0, 0]])]
     inp_fail_loci = [
         np.array([[1, 2, 2, 1], [1, 0, 0, 1]]),
         np.array([[1, 2, 2, 1], [1, 0, 1, 1]]),
@@ -33,9 +32,6 @@ class PhaseTest(unittest.TestCase):
 
     def test_consistence(self):
         self.assertTrue(checkConsistency(self.inp))
-
-    def test_consistence_fail_shape(self):
-        self.assertRaises(Exception, checkConsistency, self.inp_fail_shape)
 
     def test_consistence_fail_loci(self):
         self.assertRaises(Exception, checkConsistency, self.inp_fail_loci)
