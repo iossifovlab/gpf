@@ -10,9 +10,10 @@ import copy
 
 import yaml
 
-from dae.impala_storage.helpers.rsync_helpers import RsyncHelpers
 from dae.genotype_storage.genotype_storage_registry import \
     GenotypeStorageRegistry
+
+from impala_storage.helpers.rsync_helpers import RsyncHelpers
 
 logger = logging.getLogger("remote_instance_mirror")
 

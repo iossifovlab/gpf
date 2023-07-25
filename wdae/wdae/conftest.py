@@ -2,11 +2,9 @@
 
 import os
 import logging
-import pathlib
 from datetime import timedelta
 
 import pytest
-from pytest_mock import MockerFixture
 
 from box import Box
 
@@ -29,8 +27,6 @@ from dae.genomic_resources import build_genomic_resource_repository
 from dae.genomic_resources.group_repository import GenomicResourceGroupRepo
 from dae.tools import generate_common_report
 
-from dae.testing.alla_import import alla_gpf
-from dae.gpf_instance import GPFInstance
 from dae.autism_gene_profile.statistic import AGPStatistic
 
 

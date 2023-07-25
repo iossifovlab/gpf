@@ -37,8 +37,6 @@ setuptools.setup(
         "dae/tools/ped2parquet.py",
         "dae/tools/ped2ped.py",
         "dae/tools/draw_pedigree.py",
-        "dae/tools/remote_instance_mirror.py",
-        "dae/tools/genotype_data_tool.py",
         "dae/tools/vcfinfo_extractor.py",
     ],
     entry_points="""

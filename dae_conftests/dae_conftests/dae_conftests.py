@@ -13,8 +13,6 @@ from io import StringIO
 import pandas as pd
 import pytest
 
-from box import Box
-
 from dae.configuration.gpf_config_parser import GPFConfigParser, FrozenBox, \
     DefaultBox
 

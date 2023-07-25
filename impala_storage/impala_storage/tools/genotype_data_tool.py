@@ -4,8 +4,8 @@ import sys
 import argparse
 import logging
 
-from dae.impala_storage.schema1.import_commons import DatasetHelpers
 from dae.gpf_instance.gpf_instance import GPFInstance
+from impala_storage.schema1.impala_dataset_helpers import ImpalaDatasetHelpers
 
 
 def main(argv, gpf_instance=None):
@@ -65,7 +65,7 @@ def main(argv, gpf_instance=None):
     assert dest_study is not None
     assert not dest_study.is_group
 
-    helpers = DatasetHelpers(gpf_instance)
+    helpers = ImpalaDatasetHelpers(gpf_instance)
 
     genotype_storage = helpers.get_genotype_storage(argv.source_id)
 
