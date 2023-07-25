@@ -169,20 +169,12 @@ def pytest_sessionstart(session: pytest.Session) -> None:
             import yaml  # pylint: disable=import-outside-toplevel
             with open(storage_config_filename, encoding="utf8") as infile:
                 storage_config = yaml.safe_load(infile.read())
-            if "storage_type" in storage_config:
-                storage = GENOTYPE_STORAGE_REGISTRY\
-                    .register_storage_config(storage_config)
-                storage.start()
-                GENOTYPE_STORAGES = {
-                    storage.storage_id: storage
-                }
-            elif "storages" in storage_config:
-                GENOTYPE_STORAGES = {}
-                for sconfig in storage_config["storages"]:
-                    storage = GENOTYPE_STORAGE_REGISTRY\
-                        .register_storage_config(sconfig)
-                    storage.start()
-                    GENOTYPE_STORAGES[storage.storage_id] = storage
+            storage = GENOTYPE_STORAGE_REGISTRY\
+                .register_storage_config(storage_config)
+            storage.start()
+            GENOTYPE_STORAGES = {
+                storage.storage_id: storage
+            }
         else:
             GENOTYPE_STORAGES = _populate_storages_from_registry()
 
@@ -197,11 +189,14 @@ def pytest_generate_tests(metafunc: pytest.Metafunc) -> None:
             marked_types = set()
             for mark in getattr(metafunc.function, "pytestmark", []):
                 marked_types.add(mark.name)
-            result = {}
-            for storage_id, storage in GENOTYPE_STORAGES.items():
-                if storage.get_storage_type() in marked_types:
-                    result[storage_id] = storage
-            if result:
+            marked_types = marked_types & {
+                "impala", "impala2", "duckdb", "inmemory", "gcp"}
+            if marked_types:
+                result = {}
+                for storage_id, storage in GENOTYPE_STORAGES.items():
+                    if storage.get_storage_type() in marked_types:
+                        result[storage_id] = storage
+
                 storages = result
 
         metafunc.parametrize(
