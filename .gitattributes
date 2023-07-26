@@ -1,2 +1,3 @@
 dae/dae/_version.py export-subst
 wdae/wdae/wdae/_version.py export-subst
+impala_storage/impala_storage/_version.py export-subst

@@ -93,4 +93,6 @@ temp
 dae/test.txt.gz.tbi
 tmpvcf
 VERSION
+BUILD
 wdae/wdae/wdae/__build__.py
+impala_storage/impala_storage/__build__.py

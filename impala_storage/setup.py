@@ -1,13 +1,16 @@
 """Setup for GPF genotype storage on the GCP."""
 
 import setuptools
+import versioneer
+
 
 setuptools.setup(
     name="gpf_impala_storage",
-    version="3.7.dev5",
+    version=versioneer.get_version(),
+    cmdclass=versioneer.get_cmdclass(),
     author="Lubomir Chorbadjiev",
     author_email="lubomir.chorbadjiev@gmail.com",
-    description="GPF genotype storage on the GCP",
+    description="GPF Apache Impala Genotype Storage",
     url="https://github.com/IossifovLab/gpf",
     packages=setuptools.find_packages(
         where=".", exclude=[

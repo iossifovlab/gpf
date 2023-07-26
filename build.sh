@@ -451,27 +451,19 @@ EOT
     '
 
     build_run bash -c '
-      echo "# pylint: skip-file" > dae/dae/__build__.py
-      echo "# type: ignore" >> dae/dae/__build__.py
-      echo "# flake8: noqa" >> dae/dae/__build__.py
-      echo "VERSION = \"'"${gpf_version}"'\"" >> dae/dae/__build__.py
-      echo "GIT_DESCRIBE = \"'"${gpf_git_describe}"'\"" >> dae/dae/__build__.py
-      echo "GIT_BRANCH = \"'"${gpf_git_branch}"'\"" >> dae/dae/__build__.py
-      echo "BUILD = \"'"${gpf_tag}"'-'"${__gpf_build_no}"'\"" >> dae/dae/__build__.py
-      echo "" >> dae/dae/__build__.py
+      echo "# pylint: skip-file" > BUILD
+      echo "# type: ignore" >> BUILD
+      echo "# flake8: noqa" >> BUILD
+      echo "VERSION = \"'"${gpf_version}"'\"" >> BUILD
+      echo "GIT_DESCRIBE = \"'"${gpf_git_describe}"'\"" >> BUILD
+      echo "GIT_BRANCH = \"'"${gpf_git_branch}"'\"" >> BUILD
+      echo "BUILD = \"'"${gpf_tag}"'-'"${__gpf_build_no}"'\"" >> BUILD
+      echo "" >> BUILD
     '
 
-    build_run bash -c '
-      echo "# pylint: skip-file" > wdae/wdae/wdae/__build__.py
-      echo "# type: ignore" >> wdae/wdae/wdae/__build__.py
-      echo "# flake8: noqa" >> wdae/wdae/wdae/__build__.py
-      echo "VERSION = \"'"${gpf_version}"'\"" >> wdae/wdae/wdae/__build__.py
-      echo "GIT_DESCRIBE = \"'"${gpf_git_describe}"'\"" >> wdae/wdae/wdae/__build__.py
-      echo "GIT_BRANCH = \"'"${gpf_git_branch}"'\"" >> wdae/wdae/wdae/__build__.py
-      echo "BUILD = \"'"${gpf_tag}"'-'"${__gpf_build_no}"'\"" >> wdae/wdae/wdae/__build__.py
-      echo "" >> wdae/wdae/wdae/__build__.py
-    '
-
+    build_run cp BUILD dae/dae/__build__.py
+    build_run cp BUILD wdae/wdae/wdae/__build__.py
+    build_run cp BUILD impala_storage/impala_storage/__build__.py
 
     local image_name="gpf-package"
     build_docker_data_image_create_from_tarball "${image_name}" <(
@@ -501,7 +493,8 @@ EOT
           --exclude mypy.ini \
           --exclude pylintrc \
           --transform "s,^,gpf/," \
-          dae/ wdae/ environment.yml dev-environment.yml VERSION
+          dae/ wdae/ impala_storage/ \
+          environment.yml dev-environment.yml VERSION BUILD
     )
   }
 
@@ -512,7 +505,9 @@ EOT
     defer_ret build_run_ctx_reset
     build_run rm -rf ./data/ ./import/ ./downloads ./results
     build_run rm -rf dae/dae/__build__.py wdae/wdae/__build__.py VERSION
+    build_run rm -rf impala_storage/impala_storage/__build__.py BUILD
   }
+
 }
 
 main "$@"
