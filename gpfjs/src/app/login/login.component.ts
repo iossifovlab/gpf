@@ -11,7 +11,7 @@ export class LoginComponent implements OnInit {
     private router: Router
   ) {}
 
-  public ngOnInit() {
+  public ngOnInit(): void {
     const url = new URL(window.location.href);
     let state = url.searchParams.get('state');
     let redirectTo = ['datasets'];
