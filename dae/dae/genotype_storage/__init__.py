@@ -51,9 +51,10 @@ def register_genotype_storage_factory(
     _REGISTERED_GENOTYPE_STORAGE_FACTORIES[storage_type] = factory
 
 
-def _load_genotype_storage_factory_plugins():
+def _load_genotype_storage_factory_plugins() -> None:
     # pylint: disable=global-statement
     global _EXTENTIONS_LOADED
+
     if _EXTENTIONS_LOADED:
         return
     # pylint: disable=import-outside-toplevel
