@@ -14,11 +14,11 @@ setuptools.setup(
     url="https://github.com/IossifovLab/gpf",
     packages=setuptools.find_packages(
         where=".", exclude=[
-            "impala.docs", "tests.*", "*.tests.*", "*.tests", ],
+            "impala_storage.docs", "tests.*", "*.tests.*", "*.tests", ],
     ),
     # include_package_data=True,
     package_data={
-        "impala": ["py.typed"],
+        "impala_storage": ["py.typed"],
     },
     scripts=[
         "impala_storage/tools/impala_parquet_loader.py",
