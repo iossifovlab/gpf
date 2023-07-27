@@ -104,7 +104,7 @@ setuptools.setup(
     stats_liftover=dae.tools.stats_liftover:main
 
     import_tools=dae.import_tools.cli:main
-    generate_autism_gene_profile=dae.tools.generate_autism_gene_profile:main
+    generate_autism_gene_profile=dae.autism_gene_profile.generate_autism_gene_profile:main
     """,
     classifiers=[
         "Development Status :: 4 - Beta",
