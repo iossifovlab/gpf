@@ -8,6 +8,7 @@ import { NgbNavConfig } from '@ng-bootstrap/ng-bootstrap';
 import { AgpTableConfig } from './autism-gene-profiles-table/autism-gene-profiles-table';
 import { AgpTableService } from './autism-gene-profiles-table/autism-gene-profiles-table.service';
 import { APP_BASE_HREF } from '@angular/common';
+import { AppVersionService } from './app-version.service';
 
 @Component({
   selector: 'gpf-root',
@@ -57,6 +58,9 @@ export class AppComponent implements OnInit {
   public agpConfig: AgpTableConfig;
   private sessionTimeoutInSeconds = 7 * 24 * 60 * 60; // 1 week
 
+  public gpfjsVersion = environment?.version;
+  public gpfVersion = '';
+
   @HostListener('window:scroll')
   public onWindowScroll(): void {
     this.hideSidenav();
@@ -82,6 +86,7 @@ export class AppComponent implements OnInit {
     private bnIdle: BnNgIdleService,
     private usersService: UsersService,
     private ngbNavConfig: NgbNavConfig,
+    private appVersionService: AppVersionService,
     @Inject(APP_BASE_HREF) private baseHref: string,
   ) {
     ngbNavConfig.animation = false;
@@ -96,6 +101,10 @@ export class AppComponent implements OnInit {
 
     this.autismGeneProfilesService.getConfig().subscribe(res => {
       this.agpConfig = res;
+    });
+
+    this.appVersionService.getGpfVersion().subscribe(res => {
+      this.gpfVersion = res;
     });
   }
 

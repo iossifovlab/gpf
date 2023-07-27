@@ -62,6 +62,11 @@
           >
         </li>
       </ul>
+      <div id="version-container">
+        <span> gpfjs: {{ gpfjsVersion }} </span>
+        <br />
+        <span *ngIf="gpfVersion"> gpf: {{ gpfVersion }} </span>
+      </div>
     </div>
 
     <div *ngIf="showSidenav" (click)="hideSidenav()" [@fadeInOut]="showSidenav" class="blackscreen"></div>

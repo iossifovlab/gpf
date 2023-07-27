@@ -1,3 +1,4 @@
+import versionInfo from '../../version.json';
 const basePath = '';
 
 export const environment = {
@@ -6,5 +7,6 @@ export const environment = {
   apiPath: basePath + 'api/v3/',
   imgPathPrefix: 'assets/',
   sentryTunnel: 'sentry/',
-  oauthClientId: 'gpfjs'
+  oauthClientId: 'gpfjs',
+  version: versionInfo.version
 };
