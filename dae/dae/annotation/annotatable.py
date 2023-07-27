@@ -76,15 +76,25 @@ class Annotatable:
         return self._pos_end - self._pos + 1
 
     def __repr__(self):
-        return \
-            f"{self.chrom}:{self.pos}-{self.pos_end} " \
-            f"{self.type}"
+        raise NotImplementedError()
 
     def __eq__(self, other):
         if not isinstance(other, Annotatable):
             return False
         return self.type == other.type and self.chrom == other.chrom and \
             self.pos == other.pos and self.pos_end == other.pos_end
+
+    @staticmethod
+    def tokenize(value: str) -> tuple[str, list[str]]:
+        # value := TYPE(arg1, arg2, ...)
+        tokens = value.split("(")
+        if len(tokens) != 2:
+            raise ValueError("Attempted to tokenize invalid input - ", value)
+        return tokens[0], tokens[1].rstrip(")").split(",")
+
+    @staticmethod
+    def from_string(value: str) -> Annotatable:
+        raise NotImplementedError()
 
 
 class Position(Annotatable):
@@ -93,12 +103,36 @@ class Position(Annotatable):
         super().__init__(
             chrom, pos, pos, Annotatable.Type.POSITION)
 
+    def __repr__(self) -> str:
+        return f"Position({self.chrom},{self.pos})"
+
+    @staticmethod
+    def from_string(value: str) -> Position:
+        a_type, args = Annotatable.tokenize(value)
+        if a_type not in ("Position", "POSITION"):
+            raise ValueError()
+        if len(args) != 2:
+            raise ValueError()
+        return Position(args[0], int(args[1]))
+
 
 class Region(Annotatable):
 
     def __init__(self, chrom, pos_begin, pos_end):
         super().__init__(
             chrom, pos_begin, pos_end, Annotatable.Type.REGION)
+
+    def __repr__(self) -> str:
+        return f"Region({self.chrom},{self.pos},{self.pos_end})"
+
+    @staticmethod
+    def from_string(value: str) -> Region:
+        a_type, args = Annotatable.tokenize(value)
+        if a_type not in ("Region", "REGION"):
+            raise ValueError()
+        if len(args) != 3:
+            raise ValueError()
+        return Region(args[0], int(args[1]), int(args[2]))
 
 
 class VCFAllele(Annotatable):
@@ -147,11 +181,9 @@ class VCFAllele(Annotatable):
     def alternative(self):
         return self._alt
 
-    def __repr__(self):
-        return \
-            f"{self.chrom}:{self.pos}-{self.pos_end} " \
-            f"vcf({self.ref}->{self.alt}) " \
-            f"{self.type}"
+    def __repr__(self) -> str:
+        return f"VCFAllele({self.chrom},{self.pos},{self.pos_end}" \
+               f",{self.ref},{self.alt})"
 
     def __eq__(self, other):
         if not super().__eq__(other):
@@ -159,6 +191,16 @@ class VCFAllele(Annotatable):
         if not isinstance(other, VCFAllele):
             return False
         return self.ref == other.ref and self.alt == other.alt
+
+    @staticmethod
+    def from_string(value: str) -> VCFAllele:
+        a_type, args = Annotatable.tokenize(value)
+        if a_type not in ("VCFAllele", "SUBSTITUTION", "COMPLEX",
+                          "SMALL_DELETION", "SMALL_INSERTION"):
+            raise ValueError()
+        if len(args) != 4:
+            raise ValueError()
+        return VCFAllele(args[0], int(args[1]), args[2], args[3])
 
 
 class CNVAllele(Annotatable):
@@ -170,3 +212,21 @@ class CNVAllele(Annotatable):
             Annotatable.Type.LARGE_DUPLICATION}, cnv_type
 
         super().__init__(chrom, pos_begin, pos_end, cnv_type)
+
+    def __repr__(self) -> str:
+        return f"CNVAllele({self.chrom},{self.pos},{self.pos_end},{self.type})"
+
+    @staticmethod
+    def from_string(value: str) -> CNVAllele:
+        a_type, args = Annotatable.tokenize(value)
+        if a_type == "CNVAllele":
+            if len(args) != 4:
+                raise ValueError()
+            cnv_type = Annotatable.Type.from_string(args[3])
+        elif a_type in ("LARGE_DUPLICATION", "LARGE_DELETION"):
+            if len(args) != 3:
+                raise ValueError()
+            cnv_type = Annotatable.Type.from_string(a_type)
+        else:
+            raise ValueError()
+        return CNVAllele(args[0], int(args[1]), int(args[2]), cnv_type)
