@@ -1,5 +1,6 @@
 import { Component, EventEmitter, Input, OnChanges, OnInit, Output } from '@angular/core';
 import { DatasetNode } from 'app/dataset-node/dataset-node';
+import { DatasetsTreeService } from 'app/datasets/datasets-tree.service';
 @Component({
   selector: 'gpf-treelist-checkbox',
   templateUrl: './treelist-checkbox.component.html',
@@ -14,6 +15,8 @@ export class StudyFiltersTreeComponent implements OnInit, OnChanges {
   @Input()
   public selectedStudies: Set<string>;
 
+  public constructor(private datasetsTreeService: DatasetsTreeService) {}
+
   public ngOnInit(): void {
     this.selectedStudies?.clear();
     this.updateFilterStates(this.data);
@@ -25,7 +28,7 @@ export class StudyFiltersTreeComponent implements OnInit, OnChanges {
 
   /* eslint-disable */
   public updateFilters($event): void {
-    const datasetNode = findNodeById(this.data, $event.target.getAttribute('id'));
+    const datasetNode = this.datasetsTreeService.findNodeById(this.data, $event.target.getAttribute('id'));
     if ($event.target.checked) {
       if (datasetNode.children.length > 0) {
         this.getAllChildren(datasetNode.children).forEach(child => {
@@ -94,21 +97,4 @@ export class StudyFiltersTreeComponent implements OnInit, OnChanges {
     });
     return list;
   }
-}
-
-// eslint-disable-next-line prefer-arrow/prefer-arrow-functions
-export function findNodeById(node: DatasetNode, id: string): DatasetNode | undefined {
-  if (node.dataset.id === id) {
-    return node;
-  }
-
-  if (node.children) {
-    for (const child of node.children) {
-      const foundNode = findNodeById(child, id);
-      if (foundNode) {
-        return foundNode;
-      }
-    }
-  }
-  return undefined;
 }

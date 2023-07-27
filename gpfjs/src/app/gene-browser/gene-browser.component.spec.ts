@@ -20,6 +20,7 @@ import { GenePlotComponent } from 'app/gene-plot/gene-plot.component';
 import { GenotypePreviewTableComponent } from 'app/genotype-preview-table/genotype-preview-table.component';
 import { APP_BASE_HREF } from '@angular/common';
 import { HttpResponse } from '@angular/common/http';
+import { DatasetsTreeService } from 'app/datasets/datasets-tree.service';
 
 jest.mock('../utils/svg-drawing');
 
@@ -95,7 +96,7 @@ describe('GeneBrowserComponent', () => {
         GenotypePreviewTableComponent, SearchableSelectComponent
       ],
       providers: [
-        ConfigService, UsersService, FullscreenLoadingService,
+        ConfigService, UsersService, DatasetsTreeService, FullscreenLoadingService,
         {provide: QueryService, useValue: mockQueryService},
         {provide: ActivatedRoute, useValue: new MockActivatedRoute()},
         {provide: GeneService, useValue: new MockGeneService()},
