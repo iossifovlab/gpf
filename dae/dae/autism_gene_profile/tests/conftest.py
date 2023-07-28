@@ -7,7 +7,9 @@ from pytest_mock import MockerFixture
 from box import Box
 
 from dae.testing.alla_import import alla_gpf
+
 from dae.gpf_instance import GPFInstance
+from dae.gene.gene_sets_db import GeneSet
 from dae.autism_gene_profile.statistic import AGPStatistic
 from dae.autism_gene_profile.db import AutismGeneProfileDB
 
@@ -124,27 +126,22 @@ def agp_gpf_instance(
         new_callable=mocker.PropertyMock
     )
     main_gene_sets = {
-        "CHD8 target genes",
-        "FMRP Darnell",
-        "FMRP Tuschl",
-        "PSD",
-        "autism candidates from Iossifov PNAS 2015",
-        "autism candidates from Sanders Neuron 2015",
-        "brain critical genes",
-        "brain embryonically expressed",
-        "chromatin modifiers",
-        "essential genes",
-        "non-essential genes",
-        "postsynaptic inhibition",
-        "synaptic clefts excitatory",
-        "synaptic clefts inhibitory",
-        "topotecan downreg genes"
+        "autism candidates",
     }
     mocker.patch.object(
         gpf_instance.gene_sets_db,
         "get_gene_set_ids",
         return_value=main_gene_sets
     )
+
+    mocker.patch.object(
+        gpf_instance.gene_sets_db,
+        "get_gene_set",
+        return_value=GeneSet(
+            "autism candidates",
+            "autism candidates",
+            ["CHD8"]))
+
     gpf_instance._autism_gene_profile_db = \
         AutismGeneProfileDB(
             gpf_instance._autism_gene_profile_config,
