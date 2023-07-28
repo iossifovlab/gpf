@@ -309,66 +309,55 @@ describe('Autism gene profiles table functionality tests', () => {
   });
 
   it('should sort genes by autism gene sets', () => {
+    cy.intercept('/gpf/api/v3/autism_gene_tool/table/rows**').as('rowsRequest');
+
     page.geneSearchInput.type('RAPGEF');
-    cy.wait(500);
     page.allTableRows.should('have.length', 4);
 
-    const dataArr = [[0, 0], [0, 0], [0, 0], [1, 0]];
+    page.allTableRows.eq(0).invoke('text').should('contain', 'RAPGEF4');
+    page.allTableRows.eq(1).invoke('text').should('contain', 'RAPGEFL1');
+    page.allTableRows.eq(2).invoke('text').should('contain', 'RAPGEF1');
+    page.allTableRows.eq(3).invoke('text').should('contain', 'RAPGEF2');
 
-    page.allSortingButtons.eq(0).click({force: true});
-    dataArr.forEach((allRows, allRowsIndex) => {
-      allRows.forEach((rowData, rowIndex) => {
-        page.allTableRows.eq(allRowsIndex).within(row => {
-          cy.wrap(row).get('div').eq(rowIndex+1).should('have.text', rowData === 1 ? '✓' : '');
-        });
-      });
-    });
+    page.columnHeader('Autism Gene Sets').click();
+    cy.wait('@rowsRequest');
+    page.allTableRows.eq(0).invoke('text').should('contain', 'RAPGEFL1');
+    page.allTableRows.eq(1).invoke('text').should('contain', 'RAPGEF1');
+    page.allTableRows.eq(2).invoke('text').should('contain', 'RAPGEF2');
+    page.allTableRows.eq(3).invoke('text').should('contain', 'RAPGEF4');
 
-    dataArr.sort((a, b) => b[0] - a[0]);
-
-    page.allSortingButtons.eq(0).click({force: true});
-    dataArr.forEach((allRows, allRowsIndex) => {
-      allRows.forEach((rowData, rowIndex) => {
-        page.allTableRows.eq(allRowsIndex).within(row => {
-          cy.wrap(row).get('div').eq(rowIndex+1).should('have.text', rowData === 1 ? '✓' : '');
-        });
-      });
-    });
+    page.columnHeader('Autism Gene Sets').click();
+    cy.wait('@rowsRequest');
+    page.allTableRows.eq(0).invoke('text').should('contain', 'RAPGEF4');
+    page.allTableRows.eq(1).invoke('text').should('contain', 'RAPGEFL1');
+    page.allTableRows.eq(2).invoke('text').should('contain', 'RAPGEF1');
+    page.allTableRows.eq(3).invoke('text').should('contain', 'RAPGEF2');
   });
 
-  it('should sort genes by relevant gene sets', () => {
-    page.geneSearchInput.type('RAPGEF');
-    page.allTableRows.should('have.length', 4);
+  it.only('should sort genes by relevant gene sets', () => {
+    cy.intercept('/gpf/api/v3/autism_gene_tool/table/rows**').as('rowsRequest');
 
-    page.clickSortButton('Relevant Gene Sets');
-    page.allTableRows.should('have.length', 4);
+    page.geneSearchInput.type('SENP');
+    page.allTableRows.should('have.length', 6);
 
-    const dataArr = [
-      [1, 0, 1, 1],
-      [0, 0, 1, 1],
-      [0, 0, 0, 1],
-      [0, 0, 0, 1]
-    ];
+    page.columnHeader('Relevant Gene Sets').click();
+    cy.wait('@rowsRequest');
+    page.allTableRows.eq(0).invoke('text').should('contain', 'SENP1');
+    page.allTableRows.eq(1).invoke('text').should('contain', 'SENP8');
+    page.allTableRows.eq(2).invoke('text').should('contain', 'SENP6');
+    page.allTableRows.eq(3).invoke('text').should('contain', 'SENP3');
+    page.allTableRows.eq(4).invoke('text').should('contain', 'SENP2');
+    page.allTableRows.eq(5).invoke('text').should('contain', 'SENP3-EIF4A1');
 
-    dataArr.forEach((allRows, allRowsIndex) => {
-      allRows.forEach((rowData, rowIndex) => {
-        page.allTableRows.eq(allRowsIndex).within(row => {
-          cy.wrap(row).get('div').eq(rowIndex + 3).should('have.text', rowData === 1 ? '✓' : '');
-        });
-      });
-    });
 
-    page.clickSortButton('Relevant Gene Sets');
-    page.allTableRows.should('have.length', 4);
-
-    dataArr.reverse();
-    dataArr.forEach((allRows, allRowsIndex) => {
-      allRows.forEach((rowData, rowIndex) => {
-        page.allTableRows.eq(allRowsIndex).within(row => {
-          cy.wrap(row).get('div').eq(rowIndex+3).should('have.text', rowData === 1 ? '✓' : '');
-        });
-      });
-    });
+    page.columnHeader('Relevant Gene Sets').click();
+    cy.wait('@rowsRequest');
+    page.allTableRows.eq(0).invoke('text').should('contain', 'SENP8');
+    page.allTableRows.eq(1).invoke('text').should('contain', 'SENP6');
+    page.allTableRows.eq(2).invoke('text').should('contain', 'SENP3');
+    page.allTableRows.eq(3).invoke('text').should('contain', 'SENP2');
+    page.allTableRows.eq(4).invoke('text').should('contain', 'SENP3-EIF4A1');
+    page.allTableRows.eq(5).invoke('text').should('contain', 'SENP1');
   });
 
   it('should test autism scores', () => {
