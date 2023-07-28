@@ -742,7 +742,7 @@ class GenomicScore(ResourceConfigValidationMixin):
         return files
 
     @staticmethod
-    def _parse_scoredef_config(config):
+    def _parse_scoredef_config(config) -> dict[str, _ScoreDef]:
         """Parse ScoreDef configuration."""
         scores = {}
 

@@ -53,7 +53,7 @@ class SomeTestImplementation(GenomicResourceImplementation):
         return True
 
     def get_statistics(self):
-        return TestStatistics.build_statistics(self)
+        return MockStatistics.build_statistics(self)
 
     def calc_info_hash(self):
         """Compute and return the info hash."""
@@ -68,10 +68,10 @@ class SomeTestImplementation(GenomicResourceImplementation):
         )
 
 
-class TestStatistics(ResourceStatistics):
+class MockStatistics(ResourceStatistics):
     @staticmethod
     def build_statistics(genomic_resource):
-        return TestStatistics(genomic_resource.resource_id)
+        return MockStatistics(genomic_resource.resource_id)
 
 
 def build_test_implementation(resource):

@@ -1,5 +1,6 @@
 from __future__ import annotations
 import logging
+import textwrap
 from typing import Optional, cast
 from abc import abstractmethod, ABC
 from dataclasses import dataclass
@@ -8,7 +9,7 @@ from jinja2 import Template
 from cerberus import Validator
 from markdown2 import markdown
 
-from dae.task_graph.graph import Task
+from dae.task_graph.graph import Task, TaskGraph
 from dae.utils.helpers import convert_size
 
 from .repository import GenomicResource
@@ -72,7 +73,7 @@ class GenomicResourceImplementation(ABC):
         return set()
 
     @abstractmethod
-    def calc_statistics_hash(self) -> str:
+    def calc_statistics_hash(self) -> bytes:
         """
         Compute the statistics hash.
 
@@ -82,12 +83,13 @@ class GenomicResourceImplementation(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def add_statistics_build_tasks(self, task_graph, **kwargs) -> list[Task]:
+    def add_statistics_build_tasks(self, task_graph: TaskGraph,
+                                   **kwargs) -> list[Task]:
         """Add tasks for calculating resource statistics to a task graph."""
         raise NotImplementedError()
 
     @abstractmethod
-    def calc_info_hash(self):
+    def calc_info_hash(self) -> bytes:
         """Compute and return the info hash."""
         raise NotImplementedError()
 
@@ -108,13 +110,16 @@ class GenomicResourceImplementation(ABC):
 class InfoImplementationMixin:
     """Mixin that provides generic template info page generation interface."""
 
-    @abstractmethod
     def get_template(self) -> Template:
-        raise NotImplementedError()
+        return Template(textwrap.dedent("""
+                {% extends base %}
+                {% block content %}
 
-    @abstractmethod
+                {% endblock %}
+            """))
+
     def _get_template_data(self):
-        raise NotImplementedError()
+        return {}
 
     def get_template_data(self):
         """
