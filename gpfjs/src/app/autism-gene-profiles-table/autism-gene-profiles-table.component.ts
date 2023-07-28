@@ -134,8 +134,10 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
     this.pageIndex = 1;
     this.loadMoreGenes = true;
     this.showNothingFound = false;
+    // In case of page zoom out where scroll will disappear, load more pages.
+    const initialPageCount = 4 * this.viewportPageCount;
 
-    for (let i = 1; i <= this.viewportPageCount; i++) {
+    for (let i = 1; i <= initialPageCount; i++) {
       agpRequests.push(
         this.autismGeneProfilesService
           .getGenes(this.pageIndex, this.geneInput, this.sortBy, this.orderBy)
@@ -143,7 +145,7 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
       );
       this.pageIndex++;
     }
-    this.pageIndex = this.viewportPageCount;
+    this.pageIndex = initialPageCount;
     this.getGenesSubscription.unsubscribe();
     this.getGenesSubscription = zip(agpRequests).subscribe(res => {
       this.genes = [];
