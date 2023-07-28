@@ -65,23 +65,34 @@ form {
 #password-header {
   display: flex;
   flex-direction: row;
-  column-gap: 100px;
+  column-gap: 145px;
   height: 25px;
 }
 
 #forgotten-password {
   text-decoration: none;
   width: initial;
+  font-size: 14px;
+  font-family: Roboto;
+  color: #0645ad;
+  align-self: flex-end;
+}
+
+#forgotten-password:hover {
+  text-decoration: underline;
 }
 
 a:visited {
   color: #3981c0;
 }
 
-.login-data-label,
-#forgotten-password {
-  font-size: large;
+.login-data-label {
+  font-size: 16px;
   font-family: Roboto;
+}
+
+.login-data-label:nth-child(1) {
+  align-self: flex-end;
 }
 
 .login-button {
@@ -90,8 +101,7 @@ a:visited {
   background-color: #2a6395;
   float: left;
   border: 0px;
-  margin-top: 30px;
-
+  margin-top: 20px;
   width: 346px;
 }
 
@@ -104,7 +114,6 @@ input {
   border-radius: 0.25rem;
   transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
   padding: 0 12px 0 12px;
-
   font-size: large;
   height: 40px;
   margin-bottom: 10px;
