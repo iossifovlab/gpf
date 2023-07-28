@@ -230,25 +230,19 @@ class AnnotationPipeline:
 class ReannotationPipeline(AnnotationPipeline):
     """Special pipeline that handles reannotation of a previous pipeline."""
 
+    AnnotationDependencyGraph = dict[
+        AnnotatorInfo, list[tuple[AnnotatorInfo, AttributeInfo]]
+    ]
+
     def __init__(
         self,
         pipeline_new: AnnotationPipeline,
         pipeline_old: AnnotationPipeline
     ):
-        """Produce a reannotation pipeline between two annotation pipelines.
-
-        - Annotators that are present in both pipelines and have not been
-        changed have their columns added to the context without being re-ran.
-        - Annotators found in 'pipeline_new' which are missing from
-        'pipeline_old' are added and are ran normally.
-        - Any annotators with internal columns which are dependencies for the
-        former annotators will also be re-ran.
-        - Annotators in 'pipeline_old' which are missing from 'pipeline_new'
-        are ignored and the columns they produce are marked for deletion.
-        """
+        """Produce a reannotation pipeline between two annotation pipelines."""
         super().__init__(pipeline_new.repository)
-        self.pipeline_new = pipeline_new
-        self.pipeline_old = pipeline_old
+        self.pipeline_new: AnnotationPipeline = pipeline_new
+        self.pipeline_old: AnnotationPipeline = pipeline_old
 
         infos_new = pipeline_new.get_info()
         infos_old = pipeline_old.get_info()
@@ -257,57 +251,44 @@ class ReannotationPipeline(AnnotationPipeline):
             pipeline_new
         )
 
-        self.annotators_new: list[AnnotatorInfo] = [
-            i for i in infos_new if i not in infos_old
-        ]
+        self.attributes_reused: set[AttributeInfo] = set()
+        for dep_annotator, dep_attr in self.dependency_graph.values():
+            if dep_annotator in infos_old and not dep_attr.internal:
+                self.attributes_reused.add(dep_attr)
 
-        self.annotators_changed: list[AnnotatorInfo] = []
-        for i in self.annotators_new:
-            self.annotators_changed.extend(self.get_dependencies_for(i))
-            self.annotators_changed.extend(self.get_dependents_for(i))
-
-        self.annotators_removed: list[AnnotatorInfo] = [
-            i for i in infos_old if i not in infos_new
-        ]
-
-        self.annotators_unchanged: list[AnnotatorInfo] = [
-            i for i in infos_new if (
-                i not in self.annotators_new
-                and i not in self.annotators_changed
-            )
-        ]
-
-        self.annotators = [
-            annotator for annotator in self.pipeline_new.annotators
-            if annotator.get_info() not in self.annotators_unchanged
-        ]
-
-        self.attributes_reused = []
-        for annotator in self.annotators_unchanged:
-            for attr in annotator.attributes:
-                self.attributes_reused.append(attr.name)
-
-        self.attributes_deleted = []
-        for annotator in self.annotators_removed:
-            for attr in annotator.attributes:
+        self.attributes_deleted: list[str] = []
+        for deleted_info in [i for i in infos_old if i not in infos_new]:
+            for attr in deleted_info.attributes:
                 self.attributes_deleted.append(attr.name)
+
+        self.annotators_new: set[AnnotatorInfo] = {
+            i for i in infos_new if i not in infos_old
+        }
+        self.annotators_rerun: set[AnnotatorInfo] = set()
+        for i in self.annotators_new:
+            self.annotators_rerun.add(*self.get_dependencies_for(i))
+            self.annotators_rerun.add(*self.get_dependents_for(i))
+
+        for annotator in self.pipeline_new.annotators:
+            info = annotator.get_info()
+            if info in self.annotators_new or info in self.annotators_rerun:
+                self.annotators.append(annotator)
 
     @staticmethod
     def build_dependency_graph(
         pipeline: AnnotationPipeline
-    ) -> dict[AnnotatorInfo, list[tuple]]:
+    ) -> AnnotationDependencyGraph:
         """Make dependency graph for an annotation pipeline."""
-        graph: dict[AnnotatorInfo, list[tuple]] = {}
+        graph: ReannotationPipeline.AnnotationDependencyGraph = {}
         for annotator in pipeline.annotators:
             annotator_info = annotator.get_info()
             if annotator_info not in graph:
                 graph[annotator_info] = []
             for attr in annotator.used_context_attributes:
                 attr_info = pipeline.get_attribute_info(attr)
+                assert attr_info is not None
                 upstream_annotator = \
-                    pipeline.get_annotator_by_attribute_info(
-                        attr_info
-                    )
+                    pipeline.get_annotator_by_attribute_info(attr_info)
                 assert upstream_annotator is not None
                 graph[annotator_info].append(
                     (upstream_annotator.get_info(), attr_info)
@@ -327,7 +308,7 @@ class ReannotationPipeline(AnnotationPipeline):
         return result
 
     def get_dependents_for(self, info: AnnotatorInfo) -> set[AnnotatorInfo]:
-        """Get all dependencies for a given annotator."""
+        """Get all dependents for a given annotator."""
         result: set[AnnotatorInfo] = set()
         for dependent, dependencies in self.dependency_graph.items():
             if not dependencies:
