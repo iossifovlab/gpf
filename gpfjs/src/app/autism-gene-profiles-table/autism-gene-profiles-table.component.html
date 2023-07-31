@@ -127,7 +127,7 @@
             *ngIf="searchBox.value !== '' && !showSearchLoading"
             class="search-clear-icon"
             [style.background-image]="'url(' + imgPathPrefix + 'search-clear-icon.png)'"
-            (click)="searchBox.value = ''; search(searchBox.value); showSearchLoading = true">
+            (click)="searchBox.value = ''; searchKeystrokes$.next(searchBox.value); showSearchLoading = true">
           </span>
           <span
             *ngIf="showSearchLoading"
