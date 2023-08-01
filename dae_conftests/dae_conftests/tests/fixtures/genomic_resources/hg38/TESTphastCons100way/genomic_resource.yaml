@@ -18,7 +18,8 @@ scores:
     desc: "phastCons100way"
     position_aggregator: max
     index: 3
-    number_hist:
+    histogram:
+      type: number
       number_of_bins: 10
       view_range:
         min: 0.0

@@ -124,7 +124,8 @@ def test_stats_allele_score(tmp_path):
                       type: float
                       desc: ""
                       name: freq
-                      number_hist:
+                      histogram:
+                        type: number
                         number_of_bins: 100
                         view_range:
                           min: 0.0
@@ -192,7 +193,8 @@ def test_stats_position_score(tmp_path):
                       desc: "The phastCons computed over the tree of 100 \
                               verterbarte species"
                       name: s1
-                      number_hist:
+                      histogram:
+                        type: number
                         number_of_bins: 100
                         view_range:
                           min: 0.0
@@ -204,7 +206,8 @@ def test_stats_position_score(tmp_path):
                       desc: "The phastCons computed over the tree of 5 \
                               verterbarte species"
                       name: s2
-                      number_hist:
+                      histogram:
+                        type: number
                         number_of_bins: 4
                         view_range:
                           min: 0.0
@@ -286,7 +289,8 @@ def test_stats_np_score(tmp_path):
                       type: float
                       desc: ""
                       name: s1
-                      number_hist:
+                      histogram:
+                        type: number
                         number_of_bins: 100
                         view_range:
                           min: 0.0
@@ -299,7 +303,8 @@ def test_stats_np_score(tmp_path):
                       na_values: "-1"
                       desc: ""
                       name: s2
-                      number_hist:
+                      histogram:
+                        type: number
                         number_of_bins: 4
                         view_range:
                           min: 0.0
@@ -385,11 +390,11 @@ def test_minmax(tmp_path):
                       desc: "The phastCons computed over the tree of 100 \
                               verterbarte species"
                       name: s1
-                histograms:
-                    - score: phastCons100way
-                      bins: 100
-                      x_scale: linear
-                      y_scale: linear
+                      histogram:
+                        type: number
+                        number_of_bins: 100
+                        x_log_scale: false
+                        y_log_scale: false
             """
         }
     })
@@ -438,11 +443,11 @@ def test_reference_genome_usage(tmp_path, mocker):
                       desc: "The phastCons computed over the tree of 100 \
                               verterbarte species"
                       name: s1
-                histograms:
-                    - score: phastCons100way
-                      bins: 100
-                      x_scale: linear
-                      y_scale: linear
+                      histogram:
+                        type: number
+                        number_of_bins: 100
+                        x_log_scale: false
+                        y_log_scale: false
                 meta:
                     labels:
                         reference_genome: genome
@@ -542,7 +547,8 @@ def test_stats_categorical(tmp_path):
                       type: str
                       desc: "desc"
                       name: s1
-                      categorical_hist:
+                      histogram:
+                        type: categorical
                         value_order: []
                 """
         }
@@ -554,7 +560,7 @@ def test_stats_categorical(tmp_path):
         1       10         10       value1
         1       17         17       value1
         1       22         22       value2
-        2       5          5       value3
+        2       5          5        value3
         2       10         10       value2
         """, seq_col=0, start_col=1, end_col=2)
 

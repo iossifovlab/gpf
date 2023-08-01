@@ -57,14 +57,14 @@ class GenomicScoreAnnotatorBase(Annotator):
                 score.get_default_annotation_attributes())
 
         for attribute_info in info.attributes:
-            score_config = score.get_score_config(attribute_info.source)
-            if score_config is None:
+            score_def = score.get_score_definition(attribute_info.source)
+            if score_def is None:
                 message = f"The score '{attribute_info.source}' is " + \
                           f"unknown in '{score.resource.get_id()}' " + \
                           "resource!"
                 raise ValueError(message)
-            attribute_info.type = score_config.value_type
-            attribute_info.description = score_config.desc
+            attribute_info.type = score_def.value_type
+            attribute_info.description = score_def.desc
 
             self.create_the_documentation(attribute_info)
         self.simple_score_queries: list[str] = [
@@ -129,7 +129,7 @@ large_values {score_def.large_values_desc}
                 lambda sc: sc.allele_aggregator
             }
         if attribute_conf_agg is None:
-            score_def = self.score.get_score_config(attribute_info.source)
+            score_def = self.score.get_score_definition(attribute_info.source)
             assert score_def is not None
             value = aggregators_score_def_att[aggregator](score_def)
             if value is not None:
