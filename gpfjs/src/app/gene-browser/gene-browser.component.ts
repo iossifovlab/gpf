@@ -127,8 +127,8 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
       this.interruptSummaryVariants$.next(true);
     });
 
-    const childLeafes = await this.datasetsTreeService.getUniqueLeafNodes(this.selectedDatasetId);
-    if (childLeafes.size > 1) {
+    const childleaves = await this.datasetsTreeService.getUniqueLeafNodes(this.selectedDatasetId);
+    if (childleaves.size > 1) {
       this.isUniqueFamilyFilterEnabled = true;
     }
   }

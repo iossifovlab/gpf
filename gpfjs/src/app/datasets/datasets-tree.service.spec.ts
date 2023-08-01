@@ -72,6 +72,7 @@ describe('DatasetService', () => {
     expect(service).toBeTruthy();
   });
 
+  /* eslint-disable @typescript-eslint/naming-convention */
   it('should test get datasets hierarchy', async() => {
     const httpGetSpy = jest.spyOn(HttpClient.prototype, 'get');
     httpGetSpy.mockReturnValue(of(hierarchyMock1));
@@ -81,16 +82,19 @@ describe('DatasetService', () => {
     expect(response).toStrictEqual({
       data: [
         {
-          dataset: 'dataset1', children: [
-            {dataset: 'datasetChild1', children: null},
-            {dataset: 'datasetChild2', children: [
-              {dataset: 'datasetSubChild1', children: null},
-            ]},
+          dataset: 'dataset1', name: 'id1', access_rights: false, children: [
+            {dataset: 'datasetChild1', name: 'id2', access_rights: true, children: null},
+            {
+              dataset: 'datasetChild2', name: 'id3', access_rights: false, children: [
+                {dataset: 'datasetSubChild1', name: 'id4', access_rights: true, children: null},
+              ]
+            },
           ]
         }
       ]
     });
   });
+  /* eslint-disable @typescript-eslint/naming-convention */
 
   it('should test find node by id', () => {
     expect(service.findNodeById(datasetNodeMock1, 'id3')).toStrictEqual(new DatasetNode(

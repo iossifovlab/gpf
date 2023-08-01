@@ -35,8 +35,8 @@ export class UniqueFamilyVariantsFilterComponent extends StatefulComponent imple
     this.store.selectOnce(UniqueFamilyVariantsFilterState).subscribe(state => {
       this.filterValue = state.uniqueFamilyVariants;
     });
-    const childLeafes = await this.datasetsTreeService.getUniqueLeafNodes(this.datasetService.getSelectedDataset().id);
-    if (childLeafes.size > 1) {
+    const childleaves = await this.datasetsTreeService.getUniqueLeafNodes(this.datasetService.getSelectedDataset().id);
+    if (childleaves.size > 1) {
       this.isVisible = true;
     }
   }

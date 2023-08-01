@@ -23,26 +23,10 @@ export class DatasetsTreeService {
     );
   }
 
-  public getDatasetHierarchy(onlyChildren = true): Observable<object> {
-    const deleteFields = (obj: object): void => {
-      if (obj === null || obj === undefined) {
-        return;
-      }
-      Object.keys(obj).forEach((key) => {
-        if (key === 'access_rights' || key === 'name') {
-          delete obj[key];
-        } else if (typeof obj[key] === 'object') {
-          deleteFields(obj[key] as object);
-        }
-      });
-    };
-
+  public getDatasetHierarchy(): Observable<object> {
     return this.http.get(`${this.config.baseUrl}${this.datasetHierarchyUrl}`).pipe(
       map(data => {
         this.datasetTreeNodes$.next(data);
-        if (onlyChildren) {
-          deleteFields(data);
-        }
         return data;
       })
     );
@@ -76,10 +60,6 @@ export class DatasetsTreeService {
       }
     }
     return undefined;
-  }
-
-  public getDatasetTreeNodes(): object {
-    return this.datasetTreeNodes$.getValue();
   }
 
   public async getUniqueLeafNodes(dataset: string): Promise<Set<string>> {
