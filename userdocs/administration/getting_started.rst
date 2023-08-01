@@ -82,20 +82,6 @@ environment:
 
 This command is going to install GPF and all of its dependencies.
 
-.. note:: 
-
-    If you want to install a development version of GPF, you can use
-    the following command:
-
-    .. code-block:: bash
-
-        mamba install \
-            -c defaults \
-            -c conda-forge \
-            -c bioconda \
-            -c iossifovlab/label/dev \
-            -c iossifovlab gpf_wdae
-
 
 Create an empty GPF instance
 ++++++++++++++++++++++++++++
