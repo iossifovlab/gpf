@@ -1,9 +1,9 @@
 #!/usr/bin/bash
 
-/opt/conda/bin/conda run --no-capture-output -n gpf \
-    /wd/scripts/wait-for-it.sh -h impala -p 8020 -t 300
-/opt/conda/bin/conda run --no-capture-output -n gpf \
-    /wd/scripts/wait-for-it.sh -h impala -p 21050 -t 300
+# /opt/conda/bin/conda run --no-capture-output -n gpf \
+#     /wd/scripts/wait-for-it.sh -h impala -p 8020 -t 300
+# /opt/conda/bin/conda run --no-capture-output -n gpf \
+#     /wd/scripts/wait-for-it.sh -h impala -p 21050 -t 300
 
 
 for d in /wd/dae /wd/wdae /wd/dae_conftests; do

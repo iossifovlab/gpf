@@ -116,7 +116,7 @@ class EffectAnnotatorBuilder:
         gm = self.get_genomic_context().get_gene_models()
         if gm:
             return gm
-        raise Exception("No gene models could be found!")
+        raise ValueError("No gene models could be found!")
 
     def get_refernce_genome(self) -> ReferenceGenome:
         if self.args.reference_genome_resource_id:
@@ -131,7 +131,7 @@ class EffectAnnotatorBuilder:
         ref = self.get_genomic_context().get_reference_genome()
         if ref:
             return ref
-        raise Exception("No reference genome could be found!")
+        raise ValueError("No reference genome could be found!")
 
     def build_effect_annotator(self):
         ref = self.get_refernce_genome()
@@ -188,8 +188,9 @@ class VariantColumnInputFile:
             col = args_dict[f"{variant_attribute}_col"]
             idx = [i for i, h in enumerate(self.header) if h == col]
             if len(idx) > 1:
-                raise Exception(f"the column {col} is repeated twice in the "
-                                f"input file {filename}")
+                raise ValueError(
+                    f"the column {col} is repeated twice in the "
+                    f"input file {filename}")
             if len(idx) == 1:
                 self.variant_attribute_index[variant_attribute] = idx[0]
 
@@ -270,13 +271,15 @@ class AnnotationAttributes:
                 out = parts[0]
                 source = parts[1]
             else:
-                raise Exception("In correct attribute definition. "
-                                "TO IMPROVE MESSAGE!")
+                raise ValueError(
+                    "Incorrect attribute definition. "
+                    "TO IMPROVE MESSAGE!")
             self.out_attributes.append(out)
             self.source_attributes.append(source)
         if len(self.out_attributes) != len(set(self.out_attributes)):
-            raise Exception("The output attributes should not be repeated. "
-                            "TO IMPROVE MESSAGE!!!")
+            raise ValueError(
+                "The output attributes should not be repeated. "
+                "TO IMPROVE MESSAGE!!!")
         self.value_idxs = [AnnotationAttributes.ALL_ATTRIBUTE_IDXS[aa]
                            for aa in self.source_attributes]
 

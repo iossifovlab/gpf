@@ -6,7 +6,7 @@ from dae.utils.helpers import to_response_json
 from query_base.query_base import QueryBaseView
 
 
-LOGGER = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class ConfigurationView(QueryBaseView):
@@ -33,13 +33,19 @@ class ConfigurationView(QueryBaseView):
             return Response(response)
 
         if "datasets" in configuration:
-            response["datasets"] = list()
+            response["datasets"] = []
+
             for dataset_id, dataset in configuration["datasets"].items():
                 study_wrapper = self.gpf_instance.get_wdae_wrapper(dataset_id)
+                if study_wrapper is None:
+                    logger.error(
+                        "could not create a study wrapper for %s",
+                        dataset_id)
+                    continue
 
                 if "person_sets" in dataset:
                     # Attach person set counts
-                    person_sets_config = list()
+                    person_sets_config = []
                     for person_set in dataset["person_sets"]:
                         set_id = person_set["set_name"]
                         collection_id = person_set["collection_name"]

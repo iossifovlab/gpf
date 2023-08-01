@@ -952,7 +952,7 @@ class SummaryVariantFactory:
         records = []
         alts = vcf_variant.alts \
             if vcf_variant.alts is not None else ["."]
-        allele_count = (len(alts) + 1)
+        allele_count = len(alts) + 1
 
         records.append(
             {

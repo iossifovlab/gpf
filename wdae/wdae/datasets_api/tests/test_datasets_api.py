@@ -13,7 +13,7 @@ def test_datasets_api_get_all(admin_client):
 
     assert response
     assert response.status_code == 200
-    assert len(response.data["data"]) == 43
+    assert len(response.data["data"]) == 39
 
 
 def test_datasets_api_get_all_studies(admin_client):
@@ -21,7 +21,7 @@ def test_datasets_api_get_all_studies(admin_client):
 
     assert response
     assert response.status_code == 200
-    assert len(response.data["data"]) == 24
+    assert len(response.data["data"]) == 21
 
 
 def test_datasets_api_get_one(admin_client):
@@ -207,7 +207,7 @@ def test_datasets_hierarchy(admin_client, wdae_gpf_instance):
     assert response
     assert response.status_code == 200
     assert response.data
-    assert len(response.data["data"]) == 24
+    assert len(response.data["data"]) == 22
     dataset1 = next(filter(
         lambda x: x["dataset"] == "Dataset1", response.data["data"]
     ))
@@ -239,7 +239,7 @@ def test_datasets_permissions(admin_client, wdae_gpf_instance):
         "groups"
     ])
     response = admin_client.get("/api/v3/datasets/permissions?page=2")
-    assert len(response.data) == 18
+    assert len(response.data) == 14
 
     response = admin_client.get("/api/v3/datasets/permissions?page=3")
     assert response.status_code == status.HTTP_204_NO_CONTENT
@@ -263,6 +263,6 @@ def test_datasets_permissions_single_missing(admin_client, wdae_gpf_instance):
 
 
 def test_datasets_permissions_search(admin_client, wdae_gpf_instance):
-    response = admin_client.get("/api/v3/datasets/permissions?search=we2014")
+    response = admin_client.get("/api/v3/datasets/permissions?search=set1")
     assert len(response.data) == 1
-    assert response.data[0]["dataset_id"] == "iossifov_we2014_test"
+    assert response.data[0]["dataset_id"] == "Dataset1"

@@ -298,7 +298,7 @@ class MeasureClassifier:
         ):
             return MeasureClassifier.meta_measures_numeric(values, report)
 
-        if (values.dtype == np.object  # type: ignore
+        if (values.dtype == object  # type: ignore
                 or values.dtype.char == "S"  # type: ignore
                 or values.dtype == bool):  # type: ignore
             return MeasureClassifier.meta_measures_text(values, report)

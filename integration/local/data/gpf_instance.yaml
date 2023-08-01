@@ -2,22 +2,13 @@ vars:
   instance_id: data_hg19_local
 
 genotype_storage:
-  default: genotype_impala
+  default: local_duckdb
 
   storages:
-  - id: genotype_impala
-    storage_type: impala
-    hdfs:
-      base_dir: /user/%(instance_id)s/studies
-      host: localhost
-      port: 8020
-      replication: 1
-    impala:
-      db: "%(instance_id)s"
-      hosts:
-      - localhost
-      pool_size: 3
-      port: 21050
+  - id: local_duckdb
+    storage_type: duckdb
+    studies_dir: "genotype_storage/local_duckdb"
+    base_dir: "%(wd)s"
 
 # annotation:
 #   conf_file: "annotation.yaml"
@@ -54,18 +45,6 @@ gene_scores_db:
     - gene_properties/gene_scores/LGD
     - gene_properties/gene_scores/pLI
     - gene_properties/gene_scores/pRec
-
-genomic_scores_db:
-- resource: hg19/scores/MPC
-  score: mpc
-- resource: hg19/scores/CADD
-  score: cadd_raw
-- resource: hg19/scores/CADD
-  score: cadd_phred
-- resource: hg19/variant_frequencies/gnomAD_v2.1.1/exomes
-  score: exome_gnomad_af_percent
-- resource: hg19/variant_frequencies/gnomAD_v2.1.1/genomes
-  score: genome_gnomad_af_percent
 
 reference_genome:
   resource_id: "hg19/genomes/GATK_ResourceBundle_5777_b37_phiX174"

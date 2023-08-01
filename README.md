@@ -19,7 +19,8 @@ for creation of GPF development environment.
 ### Install GPF dependencies
 
 Create a conda `gpf` environment with all of the conda package dependencies
-from `environment.yml` and `dev-environment.yml` files:
+from `environment.yml` and `dev-environment.yml` files. From `gpf` root
+directory run:
 
 ```bash
 mamba env create --name gpf --file ./environment.yml
@@ -32,16 +33,40 @@ To use this environment, you need to activate it using the following command:
 conda activate gpf
 ```
 
-The following commands are going to install GPF dae and wdae packages for
-development usage. (You need to install GPF packages in the development
+The following commands are going to install GPF `dae`` and `wdae`` packages for
+development usage. (You need to install GPF packages in the development `gpf`
 conda environment.)
 
 ```bash
 for d in dae wdae dae_conftests; do (cd $d; pip install -e .); done
 ```
 
-If you want support for genotype storage on Google Cloud Platform using the
-Google BigQuery for querying variants you need to install more dependencies
+### Additional GPF genotype storages
+
+There are some additional genotype storages that are not included in the
+default GPF installation and if you plan to use or develop features for these
+genotype storages you need to install their dependencies.
+
+#### Apache Impala genotype storage
+
+To use ore develop features for GPF impala genotype storage you need some
+additional dependencies installed. From `gpf` root directory update your `gpf`
+conda environment using:
+
+```bash
+mamba env update --name gpf --file ./impala_storage/impala-environment.yml
+```
+
+and install the `gpf_impala_storage` package using:
+
+```bash
+pip install -e impala_storage
+```
+
+#### GCP genotype storage
+
+If you want support for genotype storage on Google Cloud Platform (GCP) using
+the Google BigQuery for querying variants you need to install more dependencies
 in your development environment:
 
 ```bash

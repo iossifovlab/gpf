@@ -6,6 +6,8 @@ from datetime import timedelta
 
 import pytest
 
+from box import Box
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.test import Client
@@ -24,6 +26,9 @@ from dae.autism_gene_profile.db import AutismGeneProfileDB
 from dae.genomic_resources import build_genomic_resource_repository
 from dae.genomic_resources.group_repository import GenomicResourceGroupRepo
 from dae.tools import generate_common_report
+
+from dae.autism_gene_profile.statistic import AGPStatistic
+
 
 logger = logging.getLogger(__name__)
 
@@ -182,7 +187,8 @@ def wgpf_instance(default_dae_config, fixture_dirname):
         result = WGPFInstance.build(config_filename, grr=grr)
 
         remote_host = os.environ.get("TEST_REMOTE_HOST", "localhost")
-        if result.dae_config.remotes[0].id == "TEST_REMOTE":
+        if result.dae_config.remotes and \
+                result.dae_config.remotes[0].id == "TEST_REMOTE":
             result.dae_config.remotes[0].host = remote_host
         result.load_remotes()
 
@@ -232,15 +238,17 @@ def wdae_gpf_instance(
 
 
 @pytest.fixture(scope="function")
-def wdae_gpf_instance_agp(  # pylint: disable=too-many-arguments
+def agp_wgpf_instance(  # pylint: disable=too-many-arguments
         db, mocker, admin_client, wgpf_instance, sample_agp,
-        global_dae_fixtures_dir, agp_config, temp_filename,
-        fixture_dirname):
+        agp_config, tmp_path):
 
     wdae_gpf_instance = wgpf_instance(
-        os.path.join(global_dae_fixtures_dir, "gpf_instance.yaml"))
+        os.path.join(
+            os.path.dirname(__file__),
+            "../../data/data-hg19-local/gpf_instance.yaml"))
 
     reload_datasets(wdae_gpf_instance)
+
     mocker.patch(
         "query_base.query_base.get_wgpf_instance",
         return_value=wdae_gpf_instance,
@@ -284,7 +292,7 @@ def wdae_gpf_instance_agp(  # pylint: disable=too-many-arguments
     wdae_gpf_instance._autism_gene_profile_db = \
         AutismGeneProfileDB(
             agp_config,
-            os.path.join(wdae_gpf_instance.dae_dir, temp_filename),
+            str(tmp_path / "agpdb"),
             clear=True
         )
     wdae_gpf_instance._autism_gene_profile_db.insert_agp(sample_agp)
@@ -293,6 +301,101 @@ def wdae_gpf_instance_agp(  # pylint: disable=too-many-arguments
 
     wdae_gpf_instance.__autism_gene_profile_config = None
     wdae_gpf_instance.__autism_gene_profile_db = None
+
+
+@pytest.fixture
+def agp_config() -> Box:
+    return Box({
+        "gene_sets": [
+            {
+                "category": "relevant_gene_sets",
+                "display_name": "Relevant Gene Sets",
+                "sets": [
+                    {"set_id": "CHD8 target genes", "collection_id": "main"},
+                    {
+                        "set_id": "FMRP Darnell",
+                        "collection_id": "main"
+                    }
+                ]
+            },
+        ],
+        "genomic_scores": [
+            {
+                "category": "protection_scores",
+                "display_name": "Protection scores",
+                "scores": [
+                    {"score_name": "SFARI_gene_score", "format": "%s"},
+                    {"score_name": "RVIS_rank", "format": "%s"},
+                    {"score_name": "RVIS", "format": "%s"}
+                ]
+            },
+            {
+                "category": "autism_scores",
+                "display_name": "Autism scores",
+                "scores": [
+                    {"score_name": "SFARI_gene_score", "format": "%s"},
+                    {"score_name": "RVIS_rank", "format": "%s"},
+                    {"score_name": "RVIS", "format": "%s"}
+                ]
+            },
+        ],
+        "datasets": Box({
+            "iossifov_2014": Box({
+                "statistics": [
+                    {
+                        "id": "denovo_noncoding",
+                        "display_name": "Noncoding",
+                        "effects": ["noncoding"],
+                        "category": "denovo"
+                    },
+                    {
+                        "id": "denovo_missense",
+                        "display_name": "Missense",
+                        "effects": ["missense"],
+                        "category": "denovo"
+                    }
+                ],
+                "person_sets": [
+                    {
+                        "set_name": "autism",
+                        "collection_name": "phenotype"
+                    },
+                    {
+                        "set_name": "unaffected",
+                        "collection_name": "phenotype"
+                    },
+                ]
+            })
+        })
+    })
+
+
+@pytest.fixture
+def sample_agp() -> AGPStatistic:
+    gene_sets = ["main_CHD8 target genes"]
+    genomic_scores = {
+        "protection_scores": {
+            "SFARI_gene_score": 1, "RVIS_rank": 193.0, "RVIS": -2.34
+        },
+        "autism_scores": {
+            "SFARI_gene_score": 1, "RVIS_rank": 193.0, "RVIS": -2.34
+        },
+    }
+    variant_counts = {
+        "iossifov_2014": {
+            "autism": {
+                "denovo_noncoding": {"count": 53, "rate": 1},
+                "denovo_missense": {"count": 21, "rate": 2}
+            },
+            "unaffected": {
+                "denovo_noncoding": {"count": 43, "rate": 3},
+                "denovo_missense": {"count": 51, "rate": 4}
+            },
+        }
+    }
+    return AGPStatistic(
+        "CHD8", gene_sets, genomic_scores, variant_counts
+    )
 
 
 @pytest.fixture(scope="function")

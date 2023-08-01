@@ -2,12 +2,18 @@ from __future__ import annotations
 import os
 import sys
 import logging
+import time
 from abc import abstractmethod, ABC
 from copy import deepcopy
 from dataclasses import dataclass
 from functools import cache
 from typing import Callable, List, Optional, cast, Union
 from typing import Dict, Tuple, Any
+from collections import defaultdict
+from math import ceil
+
+import yaml
+
 from dae.annotation.annotation_factory import AnnotationConfigParser,\
     build_annotation_pipeline
 
@@ -29,8 +35,6 @@ from dae.configuration.schemas.import_config import import_config_schema,\
     embedded_input_schema
 from dae.pedigrees.loader import FamiliesLoader
 from dae.utils import fs_utils
-from dae.impala_storage.schema1.import_commons import MakefilePartitionHelper,\
-    construct_import_annotation_pipeline
 from dae.utils.statistics import StatsCollection
 
 
@@ -46,7 +50,7 @@ class Bucket:
     regions: list[str]
     index: int
 
-    def __str__(self):
+    def __str__(self) -> str:
         regions = ";".join(r if r else "all" for r in self.regions)
         if not regions:
             regions = "all"
@@ -62,8 +66,11 @@ class ImportProject():
 
     # pylint: disable=too-many-public-methods
     def __init__(
-            self, import_config: dict[str, Any], base_input_dir,
-            base_config_dir=None, gpf_instance=None, config_filenames=None):
+            self, import_config: dict[str, Any],
+            base_input_dir: Optional[str],
+            base_config_dir: Optional[str] = None,
+            gpf_instance=None,
+            config_filenames=None) -> None:
         """Create a new project from the provided config.
 
         It is best not to call this ctor directly but to use one of the
@@ -361,7 +368,7 @@ class ImportProject():
             return None
         return cast(str, parquet_dataset_dir)
 
-    def get_parquet_dataset_dir(self) -> Optional[str]:
+    def get_parquet_dataset_dir(self) -> str:
         """Return parquet dataset direcotry.
 
         If processing parquet dataset dir is configured this method will
@@ -775,3 +782,161 @@ def register_import_storage_factory(
     if storage_type in _REGISTERED_IMPORT_STORAGE_FACTORIES:
         logger.warning("overwriting import storage type: %s", storage_type)
     _REGISTERED_IMPORT_STORAGE_FACTORIES[storage_type] = factory
+
+
+def save_study_config(dae_config, study_id, study_config, force=False):
+    """Save the study config to a file."""
+    dirname = os.path.join(dae_config.studies.dir, study_id)
+    filename = os.path.join(dirname, f"{study_id}.yaml")
+
+    if os.path.exists(filename):
+        logger.info(
+            "configuration file already exists: %s", filename)
+        if not force:
+            logger.info("skipping overwring the old config file...")
+            return
+
+        new_name = os.path.basename(filename) + "." + str(time.time_ns())
+        new_path = os.path.join(os.path.dirname(filename), new_name)
+        logger.info(
+            "Backing up configuration for %s in %s", study_id, new_path)
+        os.rename(filename, new_path)
+
+    os.makedirs(dirname, exist_ok=True)
+    with open(filename, "w") as outfile:
+        outfile.write(study_config)
+
+
+def construct_import_annotation_pipeline(
+        gpf_instance, annotation_configfile=None):
+    """Construct annotation pipeline for importing data."""
+    pipeline_config = []
+    if annotation_configfile is not None:
+        assert os.path.exists(annotation_configfile), annotation_configfile
+        with open(annotation_configfile, "rt", encoding="utf8") as infile:
+            pipeline_config = yaml.safe_load(infile.read())
+    else:
+        if gpf_instance.dae_config.annotation is not None:
+            config_filename = gpf_instance.dae_config.annotation.conf_file
+            assert os.path.exists(config_filename), config_filename
+            with open(config_filename, "rt", encoding="utf8") as infile:
+                pipeline_config = yaml.safe_load(infile.read())
+
+        pipeline_config.insert(
+            0, _construct_import_effect_annotator_config(gpf_instance))
+
+    grr = gpf_instance.grr
+    pipeline = build_annotation_pipeline(
+        pipeline_config_raw=pipeline_config, grr_repository=grr)
+    return pipeline
+
+
+def _construct_import_effect_annotator_config(gpf_instance):
+    """Construct import effect annotator."""
+    genome = gpf_instance.reference_genome
+    gene_models = gpf_instance.gene_models
+
+    config = {
+        "effect_annotator": {
+            "genome": genome.resource_id,
+            "gene_models": gene_models.resource_id,
+            "attributes": [
+                {
+                    "source": "allele_effects",
+                    "destination": "allele_effects",
+                    "internal": True
+                }
+            ]
+        }
+    }
+    return config
+
+
+class MakefilePartitionHelper:
+    """Helper class for organizing partition targets."""
+
+    def __init__(
+            self,
+            partition_descriptor,
+            genome):
+
+        self.genome = genome
+        self.partition_descriptor = partition_descriptor
+        self.chromosome_lengths = dict(
+            self.genome.get_all_chrom_lengths()
+        )
+
+    def region_bins_count(self, chrom):
+        result = ceil(
+            self.chromosome_lengths[chrom]
+            / self.partition_descriptor.region_length
+        )
+        return result
+
+    @staticmethod
+    def build_target_chromosomes(target_chromosomes):
+        return target_chromosomes[:]
+
+    def generate_chrom_targets(self, target_chrom):
+        """Generate variant targets based on partition descriptor."""
+        target = target_chrom
+        if target_chrom not in self.partition_descriptor.chromosomes:
+            target = "other"
+        region_bins_count = self.region_bins_count(target_chrom)
+
+        chrom = target_chrom
+
+        if region_bins_count == 1:
+            return [(f"{target}_0", chrom)]
+        result = []
+        for region_index in range(region_bins_count):
+            start = region_index * self.partition_descriptor.region_length + 1
+            end = (region_index + 1) * self.partition_descriptor.region_length
+            if end > self.chromosome_lengths[target_chrom]:
+                end = self.chromosome_lengths[target_chrom]
+            result.append(
+                (f"{target}_{region_index}", f"{chrom}:{start}-{end}")
+            )
+        return result
+
+    def bucket_index(self, region_bin):
+        """Return bucket index based on variants target."""
+        genome_chromosomes = [
+            chrom
+            for chrom, _ in
+            self.genome.get_all_chrom_lengths()
+        ]
+        variants_targets = self.generate_variants_targets(genome_chromosomes)
+        assert region_bin in variants_targets
+
+        variants_targets = list(variants_targets.keys())
+        return variants_targets.index(region_bin)
+
+    def generate_variants_targets(self, target_chromosomes, mode=None):
+        """Produce variants targets."""
+        if len(self.partition_descriptor.chromosomes) == 0:
+            return {"none": [""]}
+
+        generated_target_chromosomes = target_chromosomes[:]
+        if mode == "single_bucket":
+            targets = {"all": [None]}
+            return targets
+        if mode == "chromosome":
+            targets = {chrom: [chrom]
+                       for chrom in generated_target_chromosomes}
+            return targets
+        if mode is not None:
+            raise ValueError(f"Invalid value for mode '{mode}'")
+
+        targets = defaultdict(list)
+        for target_chrom in generated_target_chromosomes:
+            assert target_chrom in self.chromosome_lengths, (
+                target_chrom,
+                self.chromosome_lengths,
+            )
+            region_targets = self.generate_chrom_targets(target_chrom)
+
+            for target, region in region_targets:
+                # target = self.reset_target(target)
+                targets[target].append(region)
+        return targets

@@ -51,7 +51,6 @@ class AutismGeneProfileDB:
         """
         if configuration is None:
             return {}
-
         order = configuration.get("order")
         if order is None:
             order = []

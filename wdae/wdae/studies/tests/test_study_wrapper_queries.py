@@ -6,7 +6,7 @@ import pytest
 pytestmark = pytest.mark.usefixtures(
     "wdae_gpf_instance",
     "dae_calc_gene_sets",
-    "agp_gpf_instance",
+    # "agp_gpf_instance",
 )
 
 

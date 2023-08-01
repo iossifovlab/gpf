@@ -3,16 +3,18 @@ import json
 import logging
 import queue
 import contextlib
-from typing import Optional, Any
+from typing import Optional, Any, cast, Generator
 import threading
 
 import duckdb
 import numpy as np
+import pandas as pd
 
+from dae.genomic_resources.gene_models import GeneModels
 from dae.variants.attributes import Role, Status, Sex
 from dae.query_variants.sql.schema2.base_variants import SqlSchema2Variants
 from dae.query_variants.sql.schema2.base_query_builder import Dialect
-from dae.variants.variant import SummaryVariantFactory
+from dae.variants.variant import SummaryVariantFactory, SummaryVariant
 from dae.variants.family_variant import FamilyVariant
 from dae.query_variants.query_runners import QueryRunner
 
@@ -23,21 +25,25 @@ _DUCKDB_LOCK = threading.Lock()
 
 
 @contextlib.contextmanager
-def _duckdb_connect():
+def _duckdb_connect() -> Generator[duckdb.DuckDBPyConnection, None, None]:
     with _DUCKDB_LOCK:
-        yield duckdb
+        yield cast(duckdb.DuckDBPyConnection, duckdb)
 
 
 class DuckDbRunner(QueryRunner):
     """Run a DuckDb query in a separate thread."""
 
-    def __init__(self, connection_factory, query, deserializer=None):
+    def __init__(
+            self,
+            connection_factory: duckdb.DuckDBPyConnection,
+            query: str,
+            deserializer: Optional[Any] = None):
         super().__init__(deserializer=deserializer)
 
         self.connection = connection_factory
         self.query = query
 
-    def run(self):
+    def run(self) -> None:
         """Execute the query and enqueue the resulting rows."""
         started = time.time()
         logger.debug(
@@ -74,7 +80,7 @@ class DuckDbRunner(QueryRunner):
 
         self._finalize(started)
 
-    def _put_value_in_result_queue(self, val):
+    def _put_value_in_result_queue(self, val: Any) -> None:
         assert self._result_queue is not None
 
         no_interest = 0
@@ -102,7 +108,7 @@ class DuckDbRunner(QueryRunner):
                     self.close()
                     break
 
-    def _finalize(self, started):
+    def _finalize(self, started: float) -> None:
         with self._status_lock:
             self._done = True
         elapsed = time.time() - started
@@ -158,13 +164,13 @@ class DuckDbVariants(SqlSchema2Variants):
 
     def __init__(
         self,
-        db,
-        family_variant_table,
-        summary_allele_table,
-        pedigree_table,
-        meta_table,
-        gene_models=None,
-    ):
+        db: str,
+        family_variant_table: str,
+        summary_allele_table: str,
+        pedigree_table: str,
+        meta_table: str,
+        gene_models: Optional[GeneModels] = None,
+    ) -> None:
         super().__init__(
             DuckDbQueryDialect(),
             db,
@@ -176,7 +182,7 @@ class DuckDbVariants(SqlSchema2Variants):
         assert pedigree_table, pedigree_table
         self.start_time = time.time()
 
-    def _fetch_tblproperties(self):
+    def _fetch_tblproperties(self) -> str:
         query = f"""SELECT value FROM {self.meta_table}
                WHERE key = 'partition_description'
                LIMIT 1
@@ -185,7 +191,7 @@ class DuckDbVariants(SqlSchema2Variants):
         with self._get_connection_factory() as connection:
             result = connection.execute(query).fetchall()
             for row in result:
-                return row[0]
+                return cast(str, row[0])
             return ""
 
     def _fetch_summary_schema(self) -> dict[str, str]:
@@ -214,13 +220,13 @@ class DuckDbVariants(SqlSchema2Variants):
                 schema_content = row[0]
         return dict(line.split("|") for line in schema_content.split("\n"))
 
-    def _fetch_schema(self, table) -> dict[str, str]:
+    def _fetch_schema(self, table: str) -> dict[str, str]:
         return {}
 
-    def _fetch_pedigree(self):
+    def _fetch_pedigree(self) -> pd.DataFrame:
         query = f"SELECT * FROM {self.pedigree_table}"
         with self._get_connection_factory() as connection:
-            ped_df = connection.execute(query).df()
+            ped_df = cast(pd.DataFrame, connection.execute(query).df())
             columns = {
                 "personId": "person_id",
                 "familyId": "family_id",
@@ -236,9 +242,9 @@ class DuckDbVariants(SqlSchema2Variants):
             }
 
             ped_df = ped_df.rename(columns=columns)
-            ped_df.role = ped_df.role.apply(Role)  # type: ignore
-            ped_df.sex = ped_df.sex.apply(Sex)  # type: ignore
-            ped_df.status = ped_df.status.apply(Status)  # type: ignore
+            ped_df.role = ped_df.role.apply(Role.from_value)
+            ped_df.sex = ped_df.sex.apply(Sex.from_value)
+            ped_df.status = ped_df.status.apply(Status.from_value)
             ped_df.loc[ped_df.layout.isna(), "layout"] = None
 
             return ped_df
@@ -249,13 +255,13 @@ class DuckDbVariants(SqlSchema2Variants):
             return duckdb.connect(self.db, read_only=True)
         return _duckdb_connect()
 
-    def _deserialize_summary_variant(self, record):
+    def _deserialize_summary_variant(self, record: str) -> SummaryVariant:
         sv_record = json.loads(record[2])
         return SummaryVariantFactory.summary_variant_from_records(
             sv_record
         )
 
-    def _deserialize_family_variant(self, record):
+    def _deserialize_family_variant(self, record: list[str]) -> FamilyVariant:
         sv_record = json.loads(record[4])
         fv_record = json.loads(record[5])
 

@@ -1,10 +1,11 @@
 from typing import cast
 
 from dae.configuration.study_config_builder import StudyConfigBuilder
-from dae.impala_storage.schema1.import_commons import save_study_config
+from dae.import_tools.import_tools import save_study_config, ImportProject
 
 from dae.task_graph.graph import TaskGraph
 from dae.schema2_storage.schema2_import_storage import Schema2ImportStorage, \
+    Schema2DatasetLayout, \
     schema2_dataset_layout
 from dae.duckdb_storage.duckdb_genotype_storage import DuckDbGenotypeStorage
 
@@ -13,7 +14,8 @@ class DuckDbImportStorage(Schema2ImportStorage):
     """Import logic for data in the DuckDb Schema 2 format."""
 
     @classmethod
-    def _do_import_dataset(cls, project):
+    def _do_import_dataset(
+            cls, project: ImportProject) -> Schema2DatasetLayout:
         genotype_storage = project.get_genotype_storage()
         assert isinstance(genotype_storage, DuckDbGenotypeStorage)
         layout = schema2_dataset_layout(project.get_parquet_dataset_dir())
@@ -21,7 +23,9 @@ class DuckDbImportStorage(Schema2ImportStorage):
             project.study_id, layout, project.get_partition_descriptor())
 
     @classmethod
-    def _do_study_config(cls, project, study_tables):
+    def _do_study_config(
+        cls, project: ImportProject, study_tables: Schema2DatasetLayout
+    ) -> None:
         genotype_storage: DuckDbGenotypeStorage = \
             cast(DuckDbGenotypeStorage, project.get_genotype_storage())
         # pylint: disable=protected-access
@@ -55,7 +59,7 @@ class DuckDbImportStorage(Schema2ImportStorage):
             project.study_id,
             config, force=True)
 
-    def generate_import_task_graph(self, project) -> TaskGraph:
+    def generate_import_task_graph(self, project: ImportProject) -> TaskGraph:
         graph = TaskGraph()
         all_parquet_tasks = []
         if project.get_processing_parquet_dataset_dir() is None:

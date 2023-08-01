@@ -1,8 +1,8 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
 
-from dae.impala_storage.schema1.impala_genotype_storage import \
-    ImpalaGenotypeStorage
+from dae.duckdb_storage.duckdb_genotype_storage import \
+    DuckDbGenotypeStorage
 from dae.inmemory_storage.inmemory_genotype_storage import \
     InmemoryGenotypeStorage
 
@@ -21,26 +21,27 @@ def test_get_genotype_storage_ids(genotype_storage_registry):
     genotype_storage_ids = \
         genotype_storage_registry.get_all_genotype_storage_ids()
 
-    assert len(genotype_storage_ids) == 8
+    assert len(genotype_storage_ids) == 5
     assert genotype_storage_ids == [
         "internal",
-        "genotype_impala",
-        "genotype_impala_2",
-        "genotype_impala_backends",
+        # "genotype_impala",
+        # "genotype_impala_2",
+        # "genotype_impala_backends",
         "genotype_filesystem",
         "genotype_filesystem2",
         "test_filesystem",
-        "test_impala",
+        # "test_impala",
+        "test_duckdb_storage",
     ]
 
 
-def test_get_genotype_storage_impala(genotype_storage_registry):
-    genotype_impala = genotype_storage_registry.get_genotype_storage(
-        "genotype_impala"
+def test_get_genotype_storage_duckdb(genotype_storage_registry):
+    storage = genotype_storage_registry.get_genotype_storage(
+        "test_duckdb_storage"
     )
 
-    assert isinstance(genotype_impala, ImpalaGenotypeStorage)
-    assert genotype_impala.storage_id == "genotype_impala"
+    assert isinstance(storage, DuckDbGenotypeStorage)
+    assert storage.storage_id == "test_duckdb_storage"
 
 
 def test_get_genotype_storage_filesystem(genotype_storage_registry):

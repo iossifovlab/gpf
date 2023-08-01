@@ -34,7 +34,7 @@ def test_parquet_files_are_generated(tmpdir, gpf_instance, config_dir,
     mocker.patch.object(import_tools.ImportProject, "get_gpf_instance",
                         return_value=gpf_instance)
     mocker.patch.object(import_tools.ImportProject, "_storage_type",
-                        return_value="impala2")
+                        return_value="schema2")
     project = import_tools.ImportProject.build_from_config(
         import_config, input_dir)
 

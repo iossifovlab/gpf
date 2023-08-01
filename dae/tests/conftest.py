@@ -12,14 +12,16 @@ def default_genotype_storage_configs(root_path: pathlib.Path) -> list[dict]:
         {
             "id": "duckdb",
             "storage_type": "duckdb",
-            "db": f"{root_path}/duckdb_storage/dev_storage.db",
+            "db": "duckdb_storage/dev_storage.db",
+            "base_dir": str(root_path)
         },
 
         # DuckDb Parquet Storage
         {
             "id": "duckdb_parquet",
             "storage_type": "duckdb",
-            "studies_path": f"{root_path}/duckdb_parquet",
+            "studies_dir": "duckdb_parquet",
+            "base_dir": str(root_path)
         },
 
         # DuckDb Parquet Inplace Storage
@@ -28,45 +30,45 @@ def default_genotype_storage_configs(root_path: pathlib.Path) -> list[dict]:
             "storage_type": "duckdb",
         },
 
-        # Impala Schema 1
-        {
-            "id": "impala",
-            "storage_type": "impala",
-            "hdfs": {
-                "base_dir": "/tmp/genotype_impala_data",
-                "host": "localhost",
-                "port": 8020,
-                "replication": 1,
-            },
-            "impala": {
-                "db": "genotype_impala_db",
-                "hosts": [
-                    "localhost",
-                ],
-                "port": 21050,
-                "pool_size": 1,
-            }
-        },
+        # # Impala Schema 1
+        # {
+        #     "id": "impala",
+        #     "storage_type": "impala",
+        #     "hdfs": {
+        #         "base_dir": "/tmp/genotype_impala_data",
+        #         "host": "localhost",
+        #         "port": 8020,
+        #         "replication": 1,
+        #     },
+        #     "impala": {
+        #         "db": "genotype_impala_db",
+        #         "hosts": [
+        #             "localhost",
+        #         ],
+        #         "port": 21050,
+        #         "pool_size": 1,
+        #     }
+        # },
 
-        # Impala Schema 2
-        {
-            "id": "impala2",
-            "storage_type": "impala2",
-            "hdfs": {
-                "base_dir": "/tmp/genotype_impala2_data",
-                "host": "localhost",
-                "port": 8020,
-                "replication": 1,
-            },
-            "impala": {
-                "db": "genotype_impala2_db",
-                "hosts": [
-                    "localhost",
-                ],
-                "port": 21050,
-                "pool_size": 1,
-            }
-        },
+        # # Impala Schema 2
+        # {
+        #     "id": "impala2",
+        #     "storage_type": "impala2",
+        #     "hdfs": {
+        #         "base_dir": "/tmp/genotype_impala2_data",
+        #         "host": "localhost",
+        #         "port": 8020,
+        #         "replication": 1,
+        #     },
+        #     "impala": {
+        #         "db": "genotype_impala2_db",
+        #         "hosts": [
+        #             "localhost",
+        #         ],
+        #         "port": 21050,
+        #         "pool_size": 1,
+        #     }
+        # },
 
         # Filesystem InMemory
         {
@@ -187,11 +189,14 @@ def pytest_generate_tests(metafunc: pytest.Metafunc) -> None:
             marked_types = set()
             for mark in getattr(metafunc.function, "pytestmark", []):
                 marked_types.add(mark.name)
-            result = {}
-            for storage_id, storage in GENOTYPE_STORAGES.items():
-                if storage.get_storage_type() in marked_types:
-                    result[storage_id] = storage
-            if result:
+            marked_types = marked_types & {
+                "impala", "impala2", "duckdb", "inmemory", "gcp"}
+            if marked_types:
+                result = {}
+                for storage_id, storage in GENOTYPE_STORAGES.items():
+                    if storage.get_storage_type() in marked_types:
+                        result[storage_id] = storage
+
                 storages = result
 
         metafunc.parametrize(

@@ -13,15 +13,13 @@ def checkConsistency(inp):
     _L, P, nCpies = getDims(inp)
     for locus, m in enumerate(inp):
         if m.shape != (2, P):
-            raise Exception(
-                "The matrix for the ", locus, "th locus has inconsisten shape"
-            )
+            raise ValueError(
+                f"The matrix for the {locus}th locus has inconsisten shape")
 
         lNC = sum(m, 0)
         if not np.array_equal(lNC, nCpies):
-            raise Exception(
-                "The ", locus, "th loci has inconsisten", "copynumber profile"
-            )
+            raise ValueError(
+                f"The {locus}th loci has inconsisten copynumber profile")
     return True
 
 

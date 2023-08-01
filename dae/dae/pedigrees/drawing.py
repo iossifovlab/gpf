@@ -106,7 +106,7 @@ class OffsetLayoutDrawer:
             self._draw_members(ax_pedigree, layout)
         if tags:
             tags = "\n".join(sorted(tags))
-            props = dict(boxstyle="round", facecolor="wheat", alpha=0.5)
+            props = {"boxstyle": "round", "facecolor": "wheat", "alpha": 0.5}
             ax_pedigree.text(
                 0.99, 0.01, tags,
                 transform=ax_pedigree.transAxes,

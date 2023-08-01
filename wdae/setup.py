@@ -35,8 +35,8 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="gpf_wdae",
-    version=versioneer.get_version(),
-    cmdclass=versioneer.get_cmdclass(),
+    version=versioneer.get_version(),  # type: ignore
+    cmdclass=versioneer.get_cmdclass(),  # type: ignore
     author="Lubomir Chorbadjiev",
     author_email="lubomir.chorbadjiev@gmail.com",
     description="GPF: Genotypes and Phenotypes in Families",

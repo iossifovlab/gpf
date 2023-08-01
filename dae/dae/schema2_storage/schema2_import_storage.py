@@ -1,12 +1,13 @@
 import logging
 from dataclasses import dataclass
+from typing import Optional, Generator
 
 from dae.utils import fs_utils
-from dae.import_tools.import_tools import ImportStorage
-from dae.task_graph.graph import TaskGraph
+from dae.import_tools.import_tools import ImportStorage, ImportProject, \
+    Bucket
+from dae.task_graph.graph import TaskGraph, Task
 from dae.parquet.parquet_writer import ParquetWriter
-from dae.parquet.schema2.parquet_io import \
-    VariantsParquetWriter as S2VariantsWriter
+from dae.parquet.schema2.parquet_io import VariantsParquetWriter
 from dae.parquet.partition_descriptor import PartitionDescriptor
 
 
@@ -17,9 +18,10 @@ logger = logging.getLogger(__file__)
 class Schema2DatasetLayout:
     study: str
     pedigree: str
-    summary: str
-    family: str
+    summary: Optional[str]
+    family: Optional[str]
     meta: str
+    base_dir: Optional[str] = None
 
 
 def schema2_dataset_layout(study_dir: str) -> Schema2DatasetLayout:
@@ -31,7 +33,8 @@ def schema2_dataset_layout(study_dir: str) -> Schema2DatasetLayout:
         fs_utils.join(study_dir, "meta", "meta.parquet"))
 
 
-def schema2_project_dataset_layout(project) -> Schema2DatasetLayout:
+def schema2_project_dataset_layout(
+        project: ImportProject) -> Schema2DatasetLayout:
     study_dir = fs_utils.join(project.work_dir, project.study_id)
     return schema2_dataset_layout(study_dir)
 
@@ -40,7 +43,9 @@ class Schema2ImportStorage(ImportStorage):
     """Import logic for data in the Impala Schema 1 format."""
 
     @staticmethod
-    def _get_partition_description(project, out_dir=None):
+    def _get_partition_description(
+            project: ImportProject,
+            out_dir: Optional[str] = None) -> PartitionDescriptor:
         out_dir = out_dir if out_dir else project.work_dir
         config_dict = project.get_partition_description_dict()
 
@@ -49,14 +54,14 @@ class Schema2ImportStorage(ImportStorage):
         return PartitionDescriptor.parse_dict(config_dict)
 
     @classmethod
-    def _do_write_pedigree(cls, project):
+    def _do_write_pedigree(cls, project: ImportProject) -> None:
         layout = schema2_project_dataset_layout(project)
         ParquetWriter.write_pedigree(
             layout.pedigree, project.get_pedigree(),
             cls._get_partition_description(project))
 
     @classmethod
-    def _do_write_meta(cls, project):
+    def _do_write_meta(cls, project: ImportProject) -> None:
         layout = schema2_project_dataset_layout(project)
         gpf_instance = project.get_gpf_instance()
         loader_type = next(iter(project.get_variant_loader_types()))
@@ -71,10 +76,11 @@ class Schema2ImportStorage(ImportStorage):
             layout.study,
             variants_loader,
             cls._get_partition_description(project),
-            S2VariantsWriter)
+            VariantsParquetWriter)
 
     @classmethod
-    def _do_write_variant(cls, project, bucket):
+    def _do_write_variant(
+            cls, project: ImportProject, bucket: Bucket) -> None:
         layout = schema2_project_dataset_layout(project)
         gpf_instance = project.get_gpf_instance()
         variants_loader = project.get_variant_loader(
@@ -88,10 +94,12 @@ class Schema2ImportStorage(ImportStorage):
             cls._get_partition_description(project),
             bucket,
             project,
-            S2VariantsWriter)
+            VariantsParquetWriter)
 
     @classmethod
-    def _variant_partitions(cls, project):
+    def _variant_partitions(
+        cls, project: ImportProject
+    ) -> Generator[tuple[str, list[tuple[str, str]]], None, None]:
         part_desc = cls._get_partition_description(project)
         chromosomes = project.get_variant_loader_chromosomes()
         chromosome_lengths = dict(filter(
@@ -107,14 +115,18 @@ class Schema2ImportStorage(ImportStorage):
             yield part_desc.partition_directory("family", part), part
 
     @classmethod
-    def _merge_parquets(cls, project, out_dir, partitions):
+    def _merge_parquets(
+        cls,
+        project: ImportProject, out_dir: str, partitions: list[tuple[str, str]]
+    ) -> None:
         layout = schema2_project_dataset_layout(project)
         full_out_dir = fs_utils.join(layout.study, out_dir)
         ParquetWriter.merge_parquets(
             cls._get_partition_description(project), full_out_dir, partitions
         )
 
-    def _build_all_parquet_tasks(self, project, graph):
+    def _build_all_parquet_tasks(
+            self, project: ImportProject, graph: TaskGraph) -> list[Task]:
         pedigree_task = graph.create_task(
             "Generating Pedigree", self._do_write_pedigree, [project], [],
             input_files=[project.get_pedigree_filename()]
@@ -148,7 +160,8 @@ class Schema2ImportStorage(ImportStorage):
         )
         return [pedigree_task, meta_task, all_parquet_task]
 
-    def generate_import_task_graph(self, project) -> TaskGraph:
+    def generate_import_task_graph(
+            self, project: ImportProject) -> TaskGraph:
         graph = TaskGraph()
         if project.get_processing_parquet_dataset_dir() is None:
             self._build_all_parquet_tasks(project, graph)

@@ -245,7 +245,7 @@ def cnv_study(
 def setup_dataset(
         dataset_id: str,
         gpf_instance: GPFInstance,
-        *studies: list[GenotypeData],
+        *studies: GenotypeData,
         dataset_config_udate: str = "") -> GenotypeData:
     """Create and register a dataset dataset_id with studies."""
     # pylint: disable=import-outside-toplevel

@@ -3,8 +3,7 @@
 import pytest
 
 pytestmark = pytest.mark.usefixtures(
-    "wdae_gpf_instance_agp",
-    "dae_calc_gene_sets",
+    "agp_wgpf_instance"
 )
 
 ROUTE_PREFIX = "/api/v3/autism_gene_tool"
@@ -27,13 +26,13 @@ def test_configuration(admin_client):
 
     datasets = response.data["datasets"]
     assert len(datasets) == 1
-    assert datasets[0]["id"] == "iossifov_we2014_test"
+    assert datasets[0]["id"] == "iossifov_2014"
     assert len(datasets[0]["statistics"]) == 2
     assert len(datasets[0]["personSets"]) == 2
     assert datasets[0]["personSets"] == [
         {
-            "id": "unknown",
-            "displayName": "unknown",
+            "id": "autism",
+            "displayName": "autism",
             "collectionId": "phenotype",
             "description": "",
             "parentsCount": 0,

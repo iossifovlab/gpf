@@ -83,7 +83,7 @@ def register_annotator_factory(
     """
     _load_annotator_factory_plugins()
     if annotator_type in _ANNOTATOR_FACTORY_REGISTRY:
-        logger.warning("overwriting genotype storage type: %s", annotator_type)
+        logger.warning("overwriting annotator type: %s", annotator_type)
     _ANNOTATOR_FACTORY_REGISTRY[annotator_type] = factory
 
 

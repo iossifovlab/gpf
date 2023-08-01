@@ -4,6 +4,9 @@ import abc
 import logging
 from typing import Dict, Any
 
+from dae.genomic_resources.reference_genome import ReferenceGenome
+from dae.genomic_resources.gene_models import GeneModels
+
 
 logger = logging.getLogger(__file__)
 
@@ -59,5 +62,9 @@ class GenotypeStorage(abc.ABC):
         """Frees all resources used by the genotype storage to work."""
 
     @abc.abstractmethod
-    def build_backend(self, study_config, genome, gene_models):
+    def build_backend(
+            self,
+            study_config: dict,
+            genome: ReferenceGenome,
+            gene_models: GeneModels) -> Any:
         """Construct a query backend for this genotype storage."""

@@ -22,48 +22,6 @@ genotype_storage:
   default: genotype_filesystem
 
   storages:
-    - id: genotype_impala
-      storage_type: impala
-      hdfs:
-        base_dir: /tmp/test_data
-        host: localhost
-        port: 8020
-        replication: 1
-      impala:
-        db: "impala_storage_test_db"
-        hosts:
-        - localhost
-        pool_size: 3
-        port: 21050
-
-    - id: genotype_impala_2
-      storage_type: impala2
-      schema_version: 2
-      hdfs:
-        base_dir: /user/schema2_tests/studies
-        host: localhost
-        port: 8020
-        replication: 1
-      impala:
-        db: schema2
-        hosts:
-        - localhost
-        pool_size: 3
-        port: 21050
-
-    - id: genotype_impala_backends
-      storage_type: impala
-      hdfs:
-        base_dir: /tmp/test_data
-        host: localhost
-        port: 8020
-        replication: 1
-      impala:
-        db: impala_test_db
-        hosts:
-        - localhost
-        pool_size: 1
-        port: 21050
 
     - id: genotype_filesystem
       dir: /tmp/studies
@@ -77,19 +35,8 @@ genotype_storage:
       dir: /tmp/test_filesystem/studies
       storage_type: inmemory
 
-    - id: test_impala
-      hdfs:
-        base_dir: /user/test_impala/studies
-        host: localhost
-        port: 8020
-        replication: 1
-      impala:
-        db: test_impala
-        hosts:
-        - localhost
-        pool_size: 1
-        port: 21050
-      storage_type: impala
+    - id: test_duckdb_storage
+      storage_type: "duckdb"
 
 remotes:
   - id: "TEST_REMOTE"
