@@ -1,8 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject } from 'rxjs';
 import { ConfigService } from '../config/config.service';
-import { map, tap } from 'rxjs/operators';
 import { DatasetNode } from 'app/dataset-node/dataset-node';
 
 @Injectable()
@@ -14,24 +13,14 @@ export class DatasetsTreeService {
     private http: HttpClient,
     private config: ConfigService
   ) {
-    this.getDatasetHierarchy().subscribe(
+    this.http.get(`${this.config.baseUrl}${this.datasetHierarchyUrl}`).subscribe(
       data => {
-        tap(() => {
-          this.datasetTreeNodes$.next(data);
-        });
+        this.datasetTreeNodes$.next(data);
       }
     );
   }
 
-  public getDatasetHierarchy(): Observable<object> {
-    return this.http.get(`${this.config.baseUrl}${this.datasetHierarchyUrl}`).pipe(
-      map(data => {
-        this.datasetTreeNodes$.next(data);
-        return data;
-      })
-    );
-  }
-
+  // This method finds Dataset Node by its id
   public findNodeById(node: DatasetNode, id: string): DatasetNode | undefined {
     if (node.dataset.id === id) {
       return node;
@@ -47,6 +36,7 @@ export class DatasetsTreeService {
     return undefined;
   }
 
+  // This method works with the backend derived treelist data structure and finds it by id
   public findHierarchyNode(node: object, id: string): object | undefined {
     if (node['dataset'] === id) {
       return node;
