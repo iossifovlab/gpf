@@ -4,9 +4,9 @@
 - md5: 0cae8c2951f4c60954b94c0a0cb2e431
   name: TESTphastCons100way.bedGraph.gz.tbi
   size: 169
-- md5: 5202483f3106c876390d5af44902fa00
+- md5: e7d8b331eb152fad5029bba14d170f4f
   name: genomic_resource.yaml
-  size: 656
+  size: 673
 - md5: d616082ad56b26177b0aa40c08d27f3f
   name: histograms/phastCons100way.csv
   size: 143

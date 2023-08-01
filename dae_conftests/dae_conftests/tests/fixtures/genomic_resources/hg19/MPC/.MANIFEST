@@ -4,9 +4,9 @@
 - md5: 5bb77f8efe6ed1b01b3422a3b5070307
   name: fordist_constraint_official_mpc_values_v2.txt.gz.tbi
   size: 257
-- md5: cbb98947a53e033d591219f8494a9d24
+- md5: 7dee634d0701a4801871d6c93be44b88
   name: genomic_resource.yaml
-  size: 655
+  size: 672
 - md5: e8ee8861355ba3c1126e8ca7b48b2fe8
   name: histograms/MPC.csv
   size: 1481

@@ -1150,7 +1150,7 @@ class GenomicScore(ResourceConfigValidationMixin):
             raise ValueError(
                 f"unknown score {score_id}; "
                 f"available scores are {self.get_all_scores()}")
-        score_def = self.get_score_config(score_id)
+        score_def = self.get_score_definition(score_id)
         assert score_def is not None
         if score_def.value_type not in {"float", "int"}:
             raise ValueError(
@@ -1178,7 +1178,7 @@ class GenomicScore(ResourceConfigValidationMixin):
         score_id: str
     ) -> Union[NumberHistogram, CategoricalHistogram, NullHistogram]:
         """Return defined histogram for a score."""
-        score_def = self.get_score_config(score_id)
+        score_def = self.get_score_definition(score_id)
         hist_filename = self.get_histogram_filename(score_id)
 
         hist = load_histogram(

@@ -150,14 +150,15 @@
       source: MPC
     scores:
     - desc: ''
-      id: MPC
-      name: MPC
-      number_hist:
+      histogram:
         number_of_bins: 100
+        type: number
         view_range:
           max: 5.0
           min: 0.0
         y_log_scale: true
+      id: MPC
+      name: MPC
       type: float
     table:
       alternative:
@@ -179,9 +180,9 @@
   - md5: 5bb77f8efe6ed1b01b3422a3b5070307
     name: fordist_constraint_official_mpc_values_v2.txt.gz.tbi
     size: 257
-  - md5: cbb98947a53e033d591219f8494a9d24
+  - md5: 7dee634d0701a4801871d6c93be44b88
     name: genomic_resource.yaml
-    size: 655
+    size: 672
   - md5: e8ee8861355ba3c1126e8ca7b48b2fe8
     name: histograms/MPC.csv
     size: 1481
@@ -649,13 +650,14 @@
       source: phastCons100way
     scores:
     - desc: phastCons100way
-      id: phastCons100way
-      index: 3
-      number_hist:
+      histogram:
         number_of_bins: 10
+        type: number
         view_range:
           max: 1.0
           min: 0.0
+      id: phastCons100way
+      index: 3
       position_aggregator: max
       type: float
     table:
@@ -677,9 +679,9 @@
   - md5: 0cae8c2951f4c60954b94c0a0cb2e431
     name: TESTphastCons100way.bedGraph.gz.tbi
     size: 169
-  - md5: 5202483f3106c876390d5af44902fa00
+  - md5: e7d8b331eb152fad5029bba14d170f4f
     name: genomic_resource.yaml
-    size: 656
+    size: 673
   - md5: d616082ad56b26177b0aa40c08d27f3f
     name: histograms/phastCons100way.csv
     size: 143
