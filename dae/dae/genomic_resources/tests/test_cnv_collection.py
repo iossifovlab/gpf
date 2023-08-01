@@ -23,7 +23,9 @@ def test_cnv_collection_resource():
                 - id: affected_status
                   name: affected_status
                   type: str
-                  desc: shows if the child that has the de novo is affected or unaffected        
+                  desc: |
+                    shows if the child that has the de novo
+                    is affected or unaffected
         """,
         "data.mem": """
             chrom  pos_begin  pos_end  frequency  collection affected_status
@@ -41,5 +43,5 @@ def test_cnv_collection_resource():
     cnv_collection.open()
     aaa = cnv_collection.fetch_cnvs("1", 5, 15)
     assert len(aaa) == 1
-    assert aaa[0].attributes['frequency'] == 0.02
-    assert aaa[0].attributes['collection'] == "SSC"
+    assert aaa[0].attributes["frequency"] == 0.02
+    assert aaa[0].attributes["collection"] == "SSC"

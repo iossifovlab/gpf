@@ -2,7 +2,9 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from typing import Any
-from dae.genomic_resources.genomic_position_table.table_vcf import VCFGenomicPositionTable
+from dae.genomic_resources.genomic_position_table.table_tabix import TabixGenomicPositionTable
+from dae.genomic_resources.genomic_position_table.table_vcf import \
+    VCFGenomicPositionTable
 from dae.genomic_resources.genomic_position_table.utils import \
     build_genomic_position_table
 from dae.genomic_resources.genomic_scores import GenomicScore
@@ -17,16 +19,26 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class CNV:
+    """Copy number object from a cnv_collection."""
+
     chrom: str
     pos_begin: int
     pos_end: int
     attributes: dict[str, Any]
 
+    @property
+    def size(self):
+        return self.pos_end - self.pos_begin
+
 
 class CnvCollection:
+    """A collection of CNVs."""
+
     def __init__(self, resource: GenomicResource):
         self.resource = resource
         self.table_loaded = False
+
+        assert self.resource.config is not None
         self.table = build_genomic_position_table(
             self.resource, self.resource.config["table"]
         )
@@ -64,6 +76,7 @@ class CnvCollection:
         return self
 
     def fetch_cnvs(self, chrom: str, start: int, stop: int) -> list[CNV]:
+        """Return list of CNVs that overlap with the provided region."""
         assert self.is_open()
         cnvs = []
         for line in self.table.get_records_in_region(chrom, start, stop):
@@ -86,6 +99,8 @@ class CnvCollection:
 
 class CnvCollectionImplementation(GenomicResourceImplementation,
                                   InfoImplementationMixin):
+    """Assists in the management of resource of type cnv_collection."""
+
     def add_statistics_build_tasks(self, _: TaskGraph,
                                    **_kwargs) -> list[Task]:
         return []
@@ -98,3 +113,14 @@ class CnvCollectionImplementation(GenomicResourceImplementation,
 
     def get_info(self) -> str:
         return InfoImplementationMixin.get_info(self)
+
+    @property
+    def files(self) -> set[str]:
+        cnv_collection = CnvCollection(self.resource)
+
+        files = set()
+        files.add(cnv_collection.table.definition.filename)
+        if isinstance(cnv_collection.table, TabixGenomicPositionTable):
+            files.add(f"{cnv_collection.table.definition.filename}.tbi")
+
+        return files

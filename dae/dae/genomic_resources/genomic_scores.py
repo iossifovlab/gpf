@@ -314,6 +314,10 @@ class GenomicScoreImplementation(
 
     _REF_GENOME_CACHE: dict[str, Any] = {}
 
+    @property
+    def files(self) -> set[str]:
+        return self.score.files
+
     @staticmethod
     def _get_reference_genome_cached(grr, genome_id):
         if genome_id is None or grr is None:
