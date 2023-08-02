@@ -18,7 +18,7 @@ class ScoreDesc:
     score_id: str
     source: str
     destination: str
-    hist: Optional[Union[NumberHistogram, CategoricalHistogram, NullHistogram]]
+    hist: Union[NumberHistogram, CategoricalHistogram, NullHistogram]
     description: str
     help: str
 
@@ -55,9 +55,10 @@ class GenomicScoresDb:
                 resource.resource_id,
                 attr.source, attr.source,
                 attr.name,
-                score.get_number_histogram(attr.source),
-                score.get_score_definition(attr.source).desc,
-                score.resource.get_description())
+                score.get_score_histogram(attr.source),
+                score.resource.get_description(),
+                ""
+            )
             if score_desc.hist is None:
                 logger.warning(
                     "unable to load histogram for %s: %s (%s)",

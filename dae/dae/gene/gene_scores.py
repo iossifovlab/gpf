@@ -61,7 +61,7 @@ class GeneScoreStatistics(ResourceStatistics):
         try:
             for score_config in config["scores"]:
                 score_id = score_config["id"]
-                hist_config = score_config.get("number_hist")
+                hist_config = score_config.get("histogram")
                 if hist_config is None:
                     print(f"Skipping {score_id}")
                     continue
@@ -112,7 +112,7 @@ class GeneScoreImplementation(
             {% endfor %}
             <h3>Histograms:</h2>
             {% for score in data["scores"] %}
-            {% if score["number_hist"] %}
+            {% if score["histogram"] %}
             <div class="histogram">
             <h4>{{ score["id"] }}</h1>
             <img src="{{ data["statistics_dir"] }}/{{
@@ -135,7 +135,7 @@ class GeneScoreImplementation(
         statistics = cast(GeneScoreStatistics, self.get_statistics())
         data["statistics_dir"] = statistics.get_statistics_folder()
         for score in data["scores"]:
-            if "number_hist" in score:
+            if "histogram" in score:
                 score["number_hist"]["img_file"] = \
                     statistics.get_histogram_image_file(
                         score["id"]
@@ -176,7 +176,7 @@ class GeneScoreImplementation(
             resource: GenomicResource, score_id: str) -> NumberHistogram:
         score = build_gene_score_from_resource(resource)
         histogram_config = score.score_configs[score_id].get(
-            "number_hist"
+            "histogram"
         )
         if "min" not in histogram_config:
             histogram_config["min"] = score.get_min(score_id)
@@ -272,7 +272,7 @@ class GeneScore(
         }
 
         for score_id, config in self.score_configs.items():
-            if config.get("number_hist") is None:
+            if config.get("histogram") is None:
                 raise ValueError(
                     "Missing histogram config for "
                     f"{score_id} in {resource.get_id()}"
@@ -313,8 +313,10 @@ class GeneScore(
         if score_id not in self.score_configs:
             logger.warning("Score %s does not exist!", score_id)
             return None
-        if "number_hist" in self.score_configs[score_id]:
-            config = self.score_configs[score_id]["number_hist"]
+        if "histogram" in self.score_configs[score_id]:
+            config = self.score_configs[score_id]["histogram"]
+            if config["type"] != "number":
+                return None
             x_log_scale = config["x_log_scale"]
             return "log" if x_log_scale else "linear"
         return "linear"
@@ -407,16 +409,37 @@ class GeneScore(
                 "schema": {
                     "id": {"type": "string"},
                     "desc": {"type": "string"},
-                    "number_hist": {"type": "dict", "schema": {
-                        "number_of_bins": {"type": "number"},
+                    "histogram": {"type": "dict", "schema": {
+                        "type": {"type": "string"},
+                        "number_of_bins": {
+                            "type": "number",
+                            "dependencies": {"type": "number"}
+                        },
                         "view_range": {"type": "dict", "schema": {
                             "min": {"type": "number"},
                             "max": {"type": "number"},
-                        }},
-                        "x_log_scale": {"type": "boolean"},
-                        "y_log_scale": {"type": "boolean"},
-                        "x_min_log": {"type": "number"},
-                    }}
+                        }, "dependencies": {"type": "number"}},
+                        "x_log_scale": {
+                            "type": "boolean",
+                            "dependencies": {"type": "number"}
+                        },
+                        "y_log_scale": {
+                            "type": "boolean",
+                            "dependencies": {"type": ["number", "categorical"]}
+                        },
+                        "x_min_log": {
+                            "type": "number",
+                            "dependencies": {"type": ["number", "categorical"]}
+                        },
+                        "value_order": {
+                            "type": "list", "schema": {"type": "string"},
+                            "dependencies": {"type": "categorical"}
+                        },
+                        "reason": {
+                            "type": "string",
+                            "dependencies": {"type": "null"}
+                        }
+                    }},
                 }
             }},
         }

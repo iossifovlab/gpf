@@ -620,14 +620,15 @@ class GenomicScoreImplementation(
             ) as outfile:
                 outfile.write(score_histogram.serialize())
 
-            with proto.open_raw_file(
-                resource,
-                impl.score.get_histogram_image_filename(
-                    score_id
-                ),
-                mode="wb"
-            ) as outfile:
-                score_histogram.plot(outfile, score_id)
+            if not isinstance(score_histogram, NullHistogram):
+                with proto.open_raw_file(
+                    resource,
+                    impl.score.get_histogram_image_filename(
+                        score_id
+                    ),
+                    mode="wb"
+                ) as outfile:
+                    score_histogram.plot(outfile, score_id)
         return merged_histograms
 
     def calc_info_hash(self) -> str:

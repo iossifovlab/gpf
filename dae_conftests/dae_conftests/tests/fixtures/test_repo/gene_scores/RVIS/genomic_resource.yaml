@@ -3,13 +3,15 @@ filename: RVIS.csv
 scores:
   - id: RVIS_rank
     desc: RVIS rank
-    number_hist:
+    histogram:
+      type: number
       number_of_bins: 150
       x_log_scale: false
       y_log_scale: false
   - id: RVIS
     desc: RVIS
-    number_hist:
+    histogram:
+      type: number
       number_of_bins: 150
       x_log_scale: false
       y_log_scale: true

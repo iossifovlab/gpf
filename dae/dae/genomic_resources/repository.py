@@ -295,7 +295,7 @@ class GenomicResource:
         """Return the resouce configuration."""
         return self.config
 
-    def get_description(self) -> Optional[str]:
+    def get_description(self) -> str:
         config = self.get_config()
         if config.get("meta"):
             meta = config["meta"]

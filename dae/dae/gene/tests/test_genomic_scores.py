@@ -34,7 +34,8 @@ def scores_repo(tmp_path):
                     index: 3
                     type: float
                     desc: phastCons100 desc
-                    number_hist:
+                    histogram:
+                      type: number
                       number_of_bins: 10
                       view_range:
                         max: 1.0
@@ -74,6 +75,7 @@ def scores_repo(tmp_path):
                     - 0.9
                     - 1.0
                     config:
+                      type: number
                       number_of_bins: 10
                       view_range:
                         max: 1.0

@@ -71,7 +71,7 @@ class NumberHistogramConfig:
         hist_type = parsed.get("type")
         if hist_type != "number":
             raise TypeError(
-                f"Invalid configuration type for number histogram!\n{parsed}"
+                f"Invalid configuration type ({hist_type}) for number histogram!\n{parsed}"
             )
         yaml_range = parsed.get("view_range", {})
         x_min = yaml_range.get("min", None)
@@ -204,10 +204,10 @@ class NumberHistogram(Statistic):
         if value is None:
             return False
 
-        if not isinstance(value, (int, float)):
+        if not isinstance(value, (int, float, np.integer)):
             raise TypeError(
                 "Cannot add non numerical value "
-                f"{value} to number histogram"
+                f"{value} ({type(value)}) to number histogram"
             )
 
         if (
