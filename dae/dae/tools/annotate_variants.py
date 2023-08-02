@@ -5,17 +5,21 @@ import os.path
 import time
 
 import argparse
+from typing import Optional, Any
 
-import pysam  # type: ignore
+import pysam
 
 from dae.genomic_resources.reference_genome import \
-    build_reference_genome_from_file
-from dae.genomic_resources.gene_models import build_gene_models_from_file
+    build_reference_genome_from_file, ReferenceGenome
+from dae.genomic_resources.gene_models import \
+    build_gene_models_from_file, GeneModels
 from dae.effect_annotation.annotator import EffectAnnotator
 from dae.effect_annotation.effect import AnnotationEffect
 
 
-def cli_genome_options(parser):
+def cli_genome_options(
+        parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
+    """Create parser options for reference genome and gene models."""
     genome_group = parser.add_argument_group("genome specification")
 
     genome_group.add_argument(
@@ -66,14 +70,17 @@ def cli_genome_options(parser):
     return parser
 
 
-def parse_cli_genome_options(args):
+def parse_cli_genome_options(
+    args: argparse.Namespace
+) -> tuple[Optional[ReferenceGenome], Optional[GeneModels]]:
+    """Parse reference genome and gene models options."""
     genomic_sequence = None
     gene_models = None
     if args.gene_models_filename:
         gene_models = build_gene_models_from_file(
             args.gene_models_filename,
-            fileformat=args.gene_models_fileformat,
-            gene_mapping_filename=args.gene_mapping_filename,
+            file_format=args.gene_models_fileformat,
+            gene_mapping_file_name=args.gene_mapping_filename,
         )
     if args.genome_filename:
         genomic_sequence = build_reference_genome_from_file(
@@ -84,20 +91,11 @@ def parse_cli_genome_options(args):
 
     if genomic_sequence is None or gene_models is None:
         return None, None
-        # from dae import GPFInstance
-
-        # gpf = GPFInstance()
-        # genome = gpf.genomes_db.get_genome(args.genome_id)
-        # if genomic_sequence is None:
-        #     genomic_sequence = genome.get_genomic_sequence()
-        # if gene_models is None:
-        #     gene_models = gpf.genomes_db.get_gene_models(
-        #         args.gene_models_id, args.genome_id
-        #     )
-        # return genomic_sequence, gene_models
+    return None, None
 
 
-def cli_variants_options(parser):
+def cli_variants_options(parser: argparse.ArgumentParser) -> None:
+    """Configure parser for variant specifying options."""
     location_group = parser.add_argument_group("variants location")
     location_group.add_argument(
         "--chrom", "-c", help="chromosome column number/name", action="store"
@@ -148,7 +146,8 @@ def cli_variants_options(parser):
     # )
 
 
-def parse_cli_variants_options(args):
+def parse_cli_variants_options(args: argparse.Namespace) -> dict[str, Any]:
+    """Parse variant definition options."""
     columns = {}
     if args.location is None:
         if args.chrom is None and args.pos is None:
@@ -176,7 +175,12 @@ def parse_cli_variants_options(args):
     return columns
 
 
-def cli(argv=sys.argv[1:]):
+def cli(argv: Optional[list[str]] = None) -> None:
+    """Annotate variants main function."""
+    # pylint: disable=too-many-branches,too-many-statements
+    if argv is None:
+        argv = sys.argv[1:]
+
     parser = argparse.ArgumentParser(
         description="variants effect annotator",
         conflict_handler="resolve",
@@ -206,11 +210,13 @@ def cli(argv=sys.argv[1:]):
         infile = sys.stdin
     else:
         assert os.path.exists(args.input_filename), args.input_filename
+        # pylint: disable=consider-using-with
         infile = open(args.input_filename, "r")
 
     if args.output_filename is None:
         outfile = sys.stdout
     else:
+        # pylint: disable=consider-using-with
         outfile = open(args.output_filename, "w")
 
     start = time.time()
@@ -267,7 +273,12 @@ def cli(argv=sys.argv[1:]):
     print(80 * "=", file=sys.stderr)
 
 
-def cli_vcf(argv=sys.argv[1:]):
+def cli_vcf(argv: Optional[list[str]] = None) -> None:
+    """Annotate variants main function for annotating VCF file."""
+    # pylint: disable=too-many-branches,too-many-statements,too-many-locals
+    if argv is None:
+        argv = sys.argv[1:]
+
     parser = argparse.ArgumentParser(
         description="VCF variants effect annotator",
         conflict_handler="resolve",
@@ -294,6 +305,7 @@ def cli_vcf(argv=sys.argv[1:]):
     if args.output_filename is None:
         outfile = sys.stdout
     else:
+        # pylint: disable=consider-using-with
         outfile = open(args.output_filename, "w")
 
     start = time.time()
@@ -303,7 +315,7 @@ def cli_vcf(argv=sys.argv[1:]):
         "variant_effect_annotation", "GPF variant effects annotation"
     )
     header.add_meta(
-        "variant_effect_annotation_command", '"{}"'.format(" ".join(sys.argv))
+        "variant_effect_annotation_command", f"'{' '.join(sys.argv)}'"
     )
 
     header.info.add("ET", ".", "String", "effected type")
@@ -316,28 +328,25 @@ def cli_vcf(argv=sys.argv[1:]):
         effect_types = []
         effect_genes = []
         effect_details = []
-        eg = ""
-        ed = ""
+        egs = ""
+        eds = ""
+        if variant.alts is not None:
+            for alt in variant.alts:
+                effects = annotator.do_annotate_variant(
+                    chrom=variant.chrom,
+                    pos=variant.pos,
+                    ref=variant.ref,
+                    alt=alt,
+                )
+                ets, egs, eds = AnnotationEffect.effects_description(effects)
+                eds = eds.replace(";", "|")
+                effect_types.append(ets)
+                effect_genes.append(egs)
+                effect_details.append(eds)
 
-        for alt in variant.alts:
-            effects = annotator.do_annotate_variant(
-                chrom=variant.chrom,
-                pos=variant.pos,
-                ref=variant.ref,
-                alt=alt,
-            )
-            et, eg, ed = annotator.effect_description(effects)
-            ed = ed.replace(";", "|")
-            effect_types.append(et)
-            effect_genes.append(eg)
-            effect_details.append(ed)
-
-        effect_types = ",".join(effect_types)
-        effect_genes = ",".join(effect_genes)
-        effect_details = ",".join(effect_details)
-        variant.info["ET"] = effect_types
-        variant.info["EG"] = eg
-        variant.info["ED"] = ed
+        variant.info["ET"] = ",".join(effect_types)
+        variant.info["EG"] = egs
+        variant.info["ED"] = eds
 
         print(str(variant), file=outfile, end="")
         if (counter + 1) % 1000 == 0:

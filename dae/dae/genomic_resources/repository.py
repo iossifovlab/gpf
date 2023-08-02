@@ -355,7 +355,8 @@ class GenomicResource:
             self, filename, uncompress=uncompress, mode=mode)
 
     def open_raw_file(
-            self, filename: str, mode="rt", **kwargs: Union[str, bool]) -> IO:
+            self, filename: str, mode: str = "rt",
+            **kwargs: Union[str, bool, None]) -> IO:
         """Open a file in the resource and returns a File-like object."""
         return self.proto.open_raw_file(
             self, filename, mode, **kwargs)
@@ -470,7 +471,7 @@ class ReadOnlyRepositoryProtocol(abc.ABC):
     @abc.abstractmethod
     def open_raw_file(
             self, resource: GenomicResource, filename: str,
-            mode: str = "rt", **kwargs: Union[str, bool]) -> IO:
+            mode: str = "rt", **kwargs: Union[str, bool, None]) -> IO:
         """Open file in a resource and returns a file-like object."""
 
     @abc.abstractmethod

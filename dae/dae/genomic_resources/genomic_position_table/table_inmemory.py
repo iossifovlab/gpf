@@ -90,7 +90,7 @@ class InmemoryGenomicPositionTable(GenomicPositionTable):
         return sorted(self.records_by_chr.keys())
 
     def _transform_result(self, line: Line, chrom) -> Line:
-        new_data = list(line._data)
+        new_data = list(line._data)  # pylint: disable=protected-access
         if isinstance(self.chrom_key, int):
             chrom_idx = self.chrom_key
         else:

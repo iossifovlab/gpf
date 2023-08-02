@@ -1,10 +1,8 @@
 # pylint: disable=too-many-lines
 # FIXME: too-many-lines
 from __future__ import annotations
-from functools import cache
 import json
 
-import os
 import gzip
 import logging
 import copy
@@ -14,9 +12,11 @@ from collections import defaultdict
 from contextlib import contextmanager
 from typing import Any, Optional, TextIO, cast
 
+from functools import cache
+
+import yaml
 import pandas as pd
 from jinja2 import Template
-from markdown2 import markdown
 
 from dae.utils.regions import Region
 from dae.genomic_resources import GenomicResource
@@ -25,7 +25,6 @@ from dae.genomic_resources.resource_implementation import \
     InfoImplementationMixin, ResourceConfigValidationMixin
 from dae.genomic_resources.fsspec_protocol import build_local_resource
 from dae.task_graph.graph import Task, TaskGraph
-import yaml
 
 logger = logging.getLogger(__name__)
 
@@ -1522,8 +1521,8 @@ class GeneModels(
                  }
 
         tm_by_chrom: dict[str, list[TranscriptModel]] = defaultdict(list)
-        for tm in gene_models.transcript_models.values():
-            tm_by_chrom[tm.chrom].append(tm)
+        for trm in gene_models.transcript_models.values():
+            tm_by_chrom[trm.chrom].append(trm)
 
         stats['chromosome number'] = len(tm_by_chrom)
         for chrom, tms in tm_by_chrom.items():
