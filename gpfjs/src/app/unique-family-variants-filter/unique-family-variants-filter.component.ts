@@ -4,6 +4,7 @@ import { UniqueFamilyVariantsFilterState, SetUniqueFamilyVariantsFilter } from '
 import { Validate, IsDefined } from 'class-validator';
 import { StatefulComponent } from '../common/stateful-component';
 import { DatasetsService } from 'app/datasets/datasets.service';
+import { DatasetsTreeService } from 'app/datasets/datasets-tree.service';
 
 @Component({
   selector: 'gpf-unique-family-variants-filter',
@@ -15,7 +16,11 @@ export class UniqueFamilyVariantsFilterComponent extends StatefulComponent imple
   private enabled = false;
   public isVisible = false;
 
-  public constructor(protected store: Store, public datasetService: DatasetsService) {
+  public constructor(
+    protected store: Store,
+    public datasetService: DatasetsService,
+    private datasetsTreeService: DatasetsTreeService
+  ) {
     super(store, UniqueFamilyVariantsFilterState, 'uniqueFamilyVariantsFilter');
   }
 
@@ -25,12 +30,13 @@ export class UniqueFamilyVariantsFilterComponent extends StatefulComponent imple
     });
   }
 
-  public ngOnInit(): void {
+  public async ngOnInit(): Promise<void> {
     // restore state
     this.store.selectOnce(UniqueFamilyVariantsFilterState).subscribe(state => {
       this.filterValue = state.uniqueFamilyVariants;
     });
-    if (this.datasetService.getSelectedDataset().studies?.length) {
+    const childLeaves = await this.datasetsTreeService.getUniqueLeafNodes(this.datasetService.getSelectedDataset().id);
+    if (childLeaves.size > 1) {
       this.isVisible = true;
     }
   }

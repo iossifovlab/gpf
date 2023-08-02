@@ -15,6 +15,7 @@ import { APP_BASE_HREF } from '@angular/common';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { RouterModule } from '@angular/router';
 import { DatasetNode } from 'app/dataset-node/dataset-node';
+import { DatasetsTreeService } from 'app/datasets/datasets-tree.service';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const datasetConfigMock: any = {
@@ -41,7 +42,7 @@ describe('StudyFiltersComponent', () => {
         NgbNavModule, NgbModule, FormsModule,
         {provide: DatasetsComponent, useValue: DatasetsComponentMock},
         UsersService, ConfigService, { provide: APP_BASE_HREF, useValue: '' },
-        DatasetsService
+        DatasetsService, DatasetsTreeService
       ],
       imports: [
         NgbNavModule, NgbModule, FormsModule,

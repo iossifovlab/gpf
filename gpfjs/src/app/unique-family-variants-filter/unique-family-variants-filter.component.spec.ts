@@ -4,6 +4,8 @@ import { NgxsModule } from '@ngxs/store';
 import { FormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
 import { DatasetsService } from 'app/datasets/datasets.service';
+import { DatasetsTreeService } from 'app/datasets/datasets-tree.service';
+import { ConfigService } from 'app/config/config.service';
 
 class DatasetsServiceMock {
   public getSelectedDataset(): object {
@@ -18,7 +20,7 @@ describe('UniqueFamilyVariantsFilterComponent', () => {
   beforeEach(async() => {
     await TestBed.configureTestingModule({
       declarations: [UniqueFamilyVariantsFilterComponent],
-      providers: [{provide: DatasetsService, useValue: new DatasetsServiceMock()}],
+      providers: [{provide: DatasetsService, useValue: new DatasetsServiceMock()}, DatasetsTreeService, ConfigService],
       imports: [HttpClientModule, NgxsModule.forRoot([], {developmentMode: true}), FormsModule]
     }).compileComponents();
 

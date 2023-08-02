@@ -16,6 +16,7 @@ import * as d3 from 'd3';
 import * as draw from 'app/utils/svg-drawing';
 import { NgbDropdown } from '@ng-bootstrap/ng-bootstrap';
 import { LGDS, CNV, OTHER, CODING } from 'app/effect-types/effect-types';
+import { DatasetsTreeService } from 'app/datasets/datasets-tree.service';
 
 @Component({
   selector: 'gpf-gene-browser',
@@ -68,13 +69,14 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
     private geneService: GeneService,
     private datasetsService: DatasetsService,
     private loadingService: FullscreenLoadingService,
-    private router: Router
+    private router: Router,
+    private datasetsTreeService: DatasetsTreeService
   ) {
   }
 
   public variantsCountDisplay: string;
 
-  public ngOnInit(): void {
+  public async ngOnInit(): Promise<void> {
     this.selectedDataset = this.datasetsService.getSelectedDataset();
     this.legend = this.selectedDataset.personSetCollections.getLegend(this.selectedDataset.defaultPersonSetCollection);
     this.geneBrowserConfig = this.selectedDataset.geneBrowser;
@@ -125,7 +127,8 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
       this.interruptSummaryVariants$.next(true);
     });
 
-    if (this.selectedDataset.studies?.length) {
+    const childLeaves = await this.datasetsTreeService.getUniqueLeafNodes(this.selectedDatasetId);
+    if (childLeaves.size > 1) {
       this.isUniqueFamilyFilterEnabled = true;
     }
   }

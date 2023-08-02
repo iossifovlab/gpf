@@ -179,6 +179,7 @@ import * as Sentry from '@sentry/angular-ivy';
 import { FederationCredentialsComponent } from './federation-credentials/federation-credentials.component';
 import { StudyFiltersTreeComponent } from './treelist-checkbox/treelist-checkbox.component';
 import { LoginComponent } from './login/login.component';
+import { DatasetsTreeService } from './datasets/datasets-tree.service';
 
 const appRoutes: Routes = [
   {
@@ -419,6 +420,7 @@ const appRoutes: Routes = [
     CookieService,
     ConfigService,
     DatasetsService,
+    DatasetsTreeService,
     QueryService,
     GeneScoresService,
     GeneSetsService,

@@ -9,8 +9,8 @@ import { SetNotEmpty } from 'app/utils/set.validators';
 import { Validate } from 'class-validator';
 import { DatasetNode } from 'app/dataset-node/dataset-node';
 import { DatasetsService } from 'app/datasets/datasets.service';
-import { findNodeById } from 'app/treelist-checkbox/treelist-checkbox.component';
 import { Subscription } from 'rxjs/internal/Subscription';
+import { DatasetsTreeService } from 'app/datasets/datasets-tree.service';
 
 @Component({
   selector: 'gpf-study-filters-block',
@@ -27,7 +27,9 @@ export class StudyFiltersComponent extends StatefulComponent implements OnInit, 
 
   @ViewChild('nav') public ngbNav: NgbNav;
 
-  public constructor(protected store: Store, public datasets: DatasetsService) {
+  public constructor(
+    protected store: Store, public datasets: DatasetsService, private datasetsTreeService: DatasetsTreeService
+  ) {
     super(store, StudyFiltersState, 'studyFilters');
   }
 
@@ -42,7 +44,7 @@ export class StudyFiltersComponent extends StatefulComponent implements OnInit, 
         datasetTrees.push(new DatasetNode(d, datasets));
       });
       for (const tree of datasetTrees) {
-        const node = findNodeById(tree, this.dataset.id);
+        const node = this.datasetsTreeService.findNodeById(tree, this.dataset.id);
         if (node) {
           this.rootDataset = node;
           break;
