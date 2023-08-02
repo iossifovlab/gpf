@@ -41,7 +41,7 @@ class AttributeInfo:
     source: str
     internal: bool
     parameters: ParamsUsageMonitor = field(compare=False, hash=None)
-    type: str = "str"           # str, int, float, or object
+    type: str = "str"           # str, int, float, annotatable, or object
     description: str = ""       # interpreted as md
     _documentation: Optional[str] = None
 
@@ -251,10 +251,10 @@ class ReannotationPipeline(AnnotationPipeline):
             pipeline_new
         )
 
-        self.attributes_reused: set[AttributeInfo] = set()
+        self.attributes_reused: dict[str, AttributeInfo] = {}
         for dep_annotator, dep_attr in self.dependency_graph.values():
             if dep_annotator in infos_old and not dep_attr.internal:
-                self.attributes_reused.add(dep_attr)
+                self.attributes_reused[dep_attr.name] = dep_attr
 
         self.attributes_deleted: list[str] = []
         for deleted_info in [i for i in infos_old if i not in infos_new]:
@@ -322,9 +322,20 @@ class ReannotationPipeline(AnnotationPipeline):
         return result
 
     def annotate(self, annotatable: Annotatable, record: dict) -> dict:
-        reused_context: dict = {
-            k: v for k, v in record.items() if k in self.attributes_reused
-        }
+        reused_context: dict[str, Any] = {}
+        for attr_name, attr in self.attributes_reused.items():
+            raw_value = record[attr_name]
+            converted_value: Any = None
+            if attr.type == "int":
+                converted_value = int(raw_value)
+            elif attr.type == "float":
+                converted_value = float(raw_value)
+            elif attr.type == "annotatable":
+                converted_value = Annotatable.from_string(raw_value)
+            elif attr.type == "object":
+                raise ValueError("Cannot deserialize object attribute - ",
+                                 attr_name)
+            reused_context[attr_name] = converted_value
         return super().annotate(annotatable, reused_context)
 
     def get_attributes(self) -> list[AttributeInfo]:

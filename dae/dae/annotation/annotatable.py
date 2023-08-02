@@ -94,7 +94,17 @@ class Annotatable:
 
     @staticmethod
     def from_string(value: str) -> Annotatable:
-        raise NotImplementedError()
+        a_type, _ = Annotatable.tokenize(value)
+        if a_type in ("Position", "POSITION"):
+            return Position.from_string(value)
+        if a_type in ("Region", "REGION"):
+            return Region.from_string(value)
+        if a_type in ("VCFAllele", "SUBSTITUTION", "COMPLEX",
+                      "SMALL_DELETION", "SMALL_INSERTION"):
+            return VCFAllele.from_string(value)
+        if a_type in ("CNVAllele", "LARGE_DUPLICATION", "LARGE_DELETION"):
+            return CNVAllele.from_string(value)
+        raise ValueError("No matching Annotatable type found for: ", value)
 
 
 class Position(Annotatable):
