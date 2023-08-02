@@ -9,17 +9,20 @@
         }
 
         .annotator_line {
-            font-size: 20px;
+            font-size: 14px;
             background-color: aquamarine;
-
+            vertical-align: top;
         }
 
         .attribute_description {
             font-size: 14px;
         }
 
+        .attribute_name {
+            font-size: 20px;
+        }
+
         .resource {
-            font-size: 14px;
             background-color: rgb(233, 151, 151);
 
         }
@@ -37,8 +40,9 @@
         {%- for annotator_info in annotation_pipeline_info %}
         <tr class="annotator_line">
             <td>
-                <p>{{annotator_info.type}}</p>
-                {{ markdown(annotator_info.documentation) }}
+                <p><b>Annotator</b></p>
+                <p>type: {{annotator_info.type}}</p>
+                <p>description: {{ markdown(annotator_info.documentation) }}</p>
             </td>
             <td colspan="2">
                 <table border="3">
@@ -46,12 +50,10 @@
                         {%- for genomic_resource in annotator_info.resources %}
                         <td class="resource">
                             <p><b>Ressource</b></p>
-                            <p>
-                                {{genomic_resource.get_type()}}
-                                <a href="{{genomic_resource.get_url()}}/index.html">
-                                    {{genomic_resource.get_id()}}</a>
-                            </p>
-                            <p>{{ markdown(genomic_resource.get_summary()) }}</p>
+                            <p>id: <a href="{{genomic_resource.get_url()}}/index.html">
+                                    {{genomic_resource.get_id()}}</a></p>                            
+                            <p>type: {{genomic_resource.get_type()}}</p>
+                            <p>description: {{ markdown(genomic_resource.get_summary()) }}</p>
                         </td>
                         {%- endfor %}
                     </tr>
@@ -60,10 +62,10 @@
         </tr>
 
         {%- for attribute_info in annotator_info.attributes %}
-        <tr>
+        <tr class="attribute">
             <td>
-                <div class="attribute">
-                    <p>{{attribute_info.name}}</p>
+                <div>
+                    <p class="attribute_name">{{attribute_info.name}}</p>
                 </div>
             </td>
             <td>

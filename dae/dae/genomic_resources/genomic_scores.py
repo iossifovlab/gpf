@@ -89,9 +89,12 @@ class _ScoreDef:
     hist_number_conf: Optional[NumberHistogramConfig]
     hist_categorical_conf: Optional[CategoricalHistogramConfig]
 
-    col_key: str                                  # internal
+    col_name: Optional[str]                       # internal
+    col_index: Optional[int]                      # internal
+
     value_parser: Any                             # internal
     na_values: Any                                # internal
+    score_index: Optional[int | str] = None       # internal
 
     def to_public(self):
         return ScoreDef(
@@ -148,7 +151,7 @@ class _ScoreDef:
 class ScoreLine:
     """Abstraction for a genomic score line. Wraps the line adapter."""
 
-    def __init__(self, line: Line, score_defs: dict):
+    def __init__(self, line: Line, score_defs: dict[str, _ScoreDef]):
         assert isinstance(line, (Line, VCFLine))
         self.line: Line = line
         self.score_defs = score_defs
@@ -175,7 +178,7 @@ class ScoreLine:
 
     def get_score(self, score_id):
         """Get and parse configured score from line."""
-        key = self.score_defs[score_id].col_key
+        key = self.score_defs[score_id].score_index
         value = self.line.get(key)
         if score_id in self.score_defs:
             col_def = self.score_defs[score_id]
@@ -266,6 +269,7 @@ class GenomicScoreImplementation(
         </td>
 
         <td>
+
         {%- if score.value_type in ['float', 'int'] -%}
         {% set min_max = impl.score.get_number_range(score_id) %}
         {%- if min_max is not none and
@@ -310,6 +314,10 @@ class GenomicScoreImplementation(
 
     _REF_GENOME_CACHE: dict[str, Any] = {}
 
+    @property
+    def files(self) -> set[str]:
+        return self.score.files
+
     @staticmethod
     def _get_reference_genome_cached(grr, genome_id):
         if genome_id is None or grr is None:
@@ -343,15 +351,20 @@ class GenomicScoreImplementation(
                 chrom_length = ref_genome.get_chrom_length(chrom)
             else:
                 if isinstance(self.score.table, InmemoryGenomicPositionTable):
-                    raise ValueError("In memory tables are not supported")
+                    # raise ValueError("In memory tables are not supported")
+                    chrom_length = \
+                        max(line.pos_end
+                            for line in
+                            self.score.table.get_records_in_region(chrom))
+                else:
+                    assert isinstance(self.score.table,
+                                      TabixGenomicPositionTable)
+                    assert self.score.table.pysam_file is not None
 
-                assert isinstance(self.score.table, TabixGenomicPositionTable)
-                assert self.score.table.pysam_file is not None
-
-                chrom_length = get_chromosome_length_tabix(
-                    self.score.table.pysam_file,
-                    self.score.table.unmap_chromosome(chrom)
-                )
+                    chrom_length = get_chromosome_length_tabix(
+                        self.score.table.pysam_file,
+                        self.score.table.unmap_chromosome(chrom)
+                    )
                 if chrom_length is None:
                     continue
 
@@ -565,18 +578,23 @@ class GenomicScoreImplementation(
         recomputed.
         """
         manifest = self.resource.get_manifest()
-        config = self.get_config()
-        score_filename = config["table"]["filename"]
         return json.dumps({
-            "config": {
-                "scores": config.get("scores", {}),
-                "histograms": list(
-                    c.to_dict()
-                    for c in self.get_config_histograms().values()),
-                "table": config["table"]
+            "table": {
+                "config": self.score.table.definition,
+                "files_md5": {file_name: manifest[file_name].md5
+                              for file_name in sorted(self.score.files)}
             },
-            "score_file": manifest[score_filename].md5
-        }, sort_keys=True, indent=2).encode()
+            "score_config": [
+                (score_def.score_id,
+                 score_def.value_type,
+                 str(score_def.hist_categorical_conf),
+                 str(score_def.hist_number_conf),
+                 score_def.col_name,
+                 score_def.col_index,
+                 str(sorted(score_def.na_values))
+                 )
+                for score_def in self.score.score_definitions.values()]
+        }, indent=2).encode()
 
 
 @dataclass
@@ -630,7 +648,7 @@ class GenomicScore(ResourceConfigValidationMixin):
     to build all defined statistics.
     """
 
-    def __init__(self, resource):
+    def __init__(self, resource: GenomicResource):
         self.resource = resource
         self.resource_id = resource.resource_id
         self.config: dict = self.resource.config
@@ -656,6 +674,8 @@ class GenomicScore(ResourceConfigValidationMixin):
                     "type": {"type": "string"},
                     "desc": {"type": "string"},
                     "na_values": {"type": ["string", "list"]},
+                    "large_values_desc": {"type": "string"},
+                    "small_values_desc": {"type": "string"},
                     "number_hist": {"type": "dict", "schema": {
                         "number_of_bins": {"type": "number"},
                         "view_range": {"type": "dict", "schema": {
@@ -726,7 +746,7 @@ class GenomicScore(ResourceConfigValidationMixin):
         return files
 
     @staticmethod
-    def _parse_scoredef_config(config):
+    def _parse_scoredef_config(config) -> dict[str, _ScoreDef]:
         """Parse ScoreDef configuration."""
         scores = {}
 
@@ -747,7 +767,9 @@ class GenomicScore(ResourceConfigValidationMixin):
                 )
             value_parser = SCORE_TYPE_PARSERS[score_conf.get("type", "float")]
 
-            col_key = score_conf.get("name") or score_conf.get("index")
+            col_name = score_conf.get("name")
+            col_index_str = score_conf.get("index")
+            col_index = int(col_index_str) if col_index_str else None
 
             score_def = _ScoreDef(
                 score_id=score_conf["id"],
@@ -760,7 +782,8 @@ class GenomicScore(ResourceConfigValidationMixin):
                 large_values_desc=score_conf.get("large_values_desc"),
                 hist_number_conf=number_hist_conf,
                 hist_categorical_conf=categorical_hist_conf,
-                col_key=col_key,
+                col_name=col_name,
+                col_index=col_index,
                 value_parser=value_parser,
                 na_values=score_conf.get("na_values")
             )
@@ -785,7 +808,8 @@ class GenomicScore(ResourceConfigValidationMixin):
 
             vcf_scoredefs[key] = _ScoreDef(
                 score_id=key,
-                col_key=key,
+                col_name=key,
+                col_index=None,
                 desc=value.description or "",
                 value_type=VCF_TYPE_CONVERSION_MAP[value.type],  # type: ignore
                 value_parser=value_parser,
@@ -837,7 +861,7 @@ class GenomicScore(ResourceConfigValidationMixin):
                     raise AssertionError("Either an index or name must"
                                          " be configured for scores!")
 
-    def _build_scoredefs(self):
+    def _build_scoredefs(self) -> dict[str, _ScoreDef]:
         config_scoredefs = None
         if "scores" in self.config:
             config_scoredefs = GenomicScore._parse_scoredef_config(self.config)
@@ -897,14 +921,14 @@ class GenomicScore(ResourceConfigValidationMixin):
             return ",".join(result)
         return None
 
-    def get_score_config(self, score_id):
-        return self.score_definitions.get(score_id)
+    def get_score_config(self, score_id) -> ScoreDef:
+        return self.score_definitions[score_id]
 
-    def close(self):
+    def close(self) -> None:
         self.table.close()
         self.table_loaded = False
 
-    def is_open(self):
+    def is_open(self) -> bool:
         return self.table_loaded
 
     def open(self) -> GenomicScore:
@@ -918,6 +942,21 @@ class GenomicScore(ResourceConfigValidationMixin):
         self.table_loaded = True
         if "scores" in self.config:
             self._validate_scoredefs()
+
+        if isinstance(self.table, VCFGenomicPositionTable):
+            for score_def in self.score_definitions.values():
+                assert score_def.col_name is not None
+                score_def.score_index = score_def.col_name
+        else:
+            for score_def in self.score_definitions.values():
+                if score_def.col_index is None:
+                    assert self.table.header is not None
+                    assert score_def.col_name is not None
+                    score_def.score_index = self.table.header.index(
+                        score_def.col_name)
+                else:
+                    assert score_def.col_name is None
+                    score_def.score_index = score_def.col_index
         return self
 
     def __enter__(self):
@@ -1072,7 +1111,10 @@ class GenomicScore(ResourceConfigValidationMixin):
             f"/histogram_{score_id}.png"
 
     def get_histogram_image_url(self, score_id: str) -> Optional[str]:
-        pass
+        hifn = self.get_histogram_image_filename(score_id)
+        if hifn:
+            return f"{self.resource.get_url()}/" + hifn
+        return None
 
 
 class PositionScore(GenomicScore):
@@ -1172,6 +1214,12 @@ class PositionScore(GenomicScore):
 
 class NPScore(GenomicScore):
     """Defines nucleotide-position genomic score."""
+
+    def __init__(self, resource: GenomicResource):
+        if resource.get_type() != "np_score":
+            raise ValueError("The resrouce provided to NPScore should be of"
+                             f"'np_score' type, not a '{resource.get_type()}'")
+        super().__init__(resource)
 
     @staticmethod
     def get_schema():

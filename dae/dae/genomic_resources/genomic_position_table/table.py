@@ -140,7 +140,7 @@ class GenomicPositionTable(abc.ABC):
 
     @abc.abstractmethod
     def get_all_records(self):
-        pass
+        return []
 
     @abc.abstractmethod
     def get_records_in_region(
@@ -153,6 +153,7 @@ class GenomicPositionTable(abc.ABC):
 
         The interval is closed on both sides and 1-based.
         """
+        return []
 
     def get_chromosomes(self) -> list[str]:
         """Return list of contigs in the genomic position table."""

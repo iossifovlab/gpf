@@ -1,8 +1,9 @@
+from __future__ import annotations
+
 import logging
-from typing import Optional, Tuple, Union
+from typing import Optional, Tuple, Union, Generator
 from collections import Counter
-# pylint: disable=no-member
-import pysam  # type: ignore
+import pysam
 
 from dae.genomic_resources.repository import GenomicResource
 from dae.utils.regions import get_chromosome_length_tabix
@@ -19,7 +20,8 @@ class TabixGenomicPositionTable(GenomicPositionTable):
 
     BUFFER_MAXSIZE = 20_000
 
-    def __init__(self, genomic_resource: GenomicResource, table_definition):
+    def __init__(
+            self, genomic_resource: GenomicResource, table_definition: dict):
         super().__init__(genomic_resource, table_definition)
         self.jump_threshold: int = 2_500
         if "jump_threshold" in self.definition:
@@ -37,9 +39,9 @@ class TabixGenomicPositionTable(GenomicPositionTable):
         self.stats: Counter = Counter()
         # pylint: disable=no-member
         self.pysam_file: Optional[PysamFile] = None
-        self.line_iterator = None
+        self.line_iterator: Optional[Generator[Line, None, None]] = None
 
-    def _load_header(self):
+    def _load_header(self) -> tuple[str, ...]:
         header_lines = []
         with self.genomic_resource.open_raw_file(
                 self.definition.filename, compression="gzip") as infile:
@@ -51,7 +53,7 @@ class TabixGenomicPositionTable(GenomicPositionTable):
         assert len(header_lines) > 0
         return tuple(header_lines[-1].strip("#\n").split("\t"))
 
-    def open(self):
+    def open(self) -> TabixGenomicPositionTable:
         self.pysam_file = self.genomic_resource.open_tabix_file(
             self.definition.filename)
         if self.header_mode == "file":
@@ -60,7 +62,7 @@ class TabixGenomicPositionTable(GenomicPositionTable):
         self._build_chrom_mapping()
         return self
 
-    def close(self):
+    def close(self) -> None:
         self.buffer.clear()
         if self.pysam_file is not None:
             if self.line_iterator:
@@ -88,7 +90,8 @@ class TabixGenomicPositionTable(GenomicPositionTable):
         assert isinstance(self.pysam_file, pysam.TabixFile)
         return self.pysam_file.contigs
 
-    def get_chromosome_length(self, chrom, step=100_000_000):
+    def get_chromosome_length(
+            self, chrom: str, step: int = 100_000_000) -> int:
         if self.pysam_file is None:
             raise ValueError(
                 f"tabix table not open: "
@@ -114,7 +117,7 @@ class TabixGenomicPositionTable(GenomicPositionTable):
             return self.rev_chrom_map[chrom]
         return chrom
 
-    def _make_line(self, data) -> Line:
+    def _make_line(self, data: tuple) -> Line:
         assert self.chrom_key is not None
         assert self.pos_begin_key is not None
         assert self.pos_end_key is not None
@@ -130,16 +133,11 @@ class TabixGenomicPositionTable(GenomicPositionTable):
         rchrom = self._map_result_chrom(line.chrom)
         if rchrom is None:
             return None
-        new_data = list(line.data)
-        if isinstance(self.chrom_key, int):
-            chrom_idx = self.chrom_key
-        else:
-            assert self.header is not None
-            chrom_idx = self.header.index(self.chrom_key)
-        new_data[chrom_idx] = rchrom
-        return self._make_line(tuple(new_data))
 
-    def get_all_records(self):
+        line.chrom = rchrom
+        return line
+
+    def get_all_records(self) -> Generator[Optional[Line], None, None]:
         # pylint: disable=no-member
         for line in self.get_line_iterator():
             if self.rev_chrom_map:
@@ -150,7 +148,8 @@ class TabixGenomicPositionTable(GenomicPositionTable):
             else:
                 yield line
 
-    def _should_use_sequential_seek_forward(self, chrom, pos) -> bool:
+    def _should_use_sequential_seek_forward(
+            self, chrom: Optional[str], pos: int) -> bool:
         """Determine if sequentially seeking forward is appropriate.
 
         Determine whether to use sequential access or jump-ahead
@@ -175,12 +174,12 @@ class TabixGenomicPositionTable(GenomicPositionTable):
             return False
         return True
 
-    def _sequential_seek_forward(self, chrom, pos):
+    def _sequential_seek_forward(self, chrom: str, pos: int) -> bool:
         """Advance the buffer forward to the given position."""
         assert len(self.buffer) > 0
         assert self.jump_threshold > 0
 
-        last = self.buffer.peek_last()
+        last: Line = self.buffer.peek_last()
         assert chrom == last.chrom
         assert pos >= last.pos_begin
 
@@ -190,7 +189,9 @@ class TabixGenomicPositionTable(GenomicPositionTable):
             last = row
         return bool(pos >= last.pos_end)
 
-    def _gen_from_tabix(self, chrom, pos, buffering=True):
+    def _gen_from_tabix(
+            self, chrom: str, pos: Optional[int],
+            buffering: bool = True) -> Generator[Line, None, None]:
         try:
             assert self.line_iterator is not None
             while True:
@@ -210,12 +211,15 @@ class TabixGenomicPositionTable(GenomicPositionTable):
         except StopIteration:
             pass
 
-    def _gen_from_buffer_and_tabix(self, chrom, beg, end):
+    def _gen_from_buffer_and_tabix(
+        self, chrom: str, beg: int, end: int
+    ) -> Generator[Line, None, None]:
         for line in self.buffer.fetch(chrom, beg, end):
             self.stats["yield from buffer"] += 1
-            result = self._transform_result(line)
-            if result:
-                yield result
+            # result = self._transform_result(line)
+            # if result:
+            #     yield result
+            yield line
         last = self.buffer.peek_last()
         if end < last.pos_end:
             return
@@ -226,7 +230,7 @@ class TabixGenomicPositionTable(GenomicPositionTable):
         self, chrom: str,
         pos_begin: Optional[int] = None,
         pos_end: Optional[int] = None
-    ):
+    ) -> Generator[Line, None, None]:
         self.stats["calls"] += 1
 
         if chrom not in self.get_chromosomes():
@@ -290,7 +294,9 @@ class TabixGenomicPositionTable(GenomicPositionTable):
 
         self.buffer.prune(fchrom, pos_begin)
 
-    def get_line_iterator(self, chrom=None, pos_begin=None):
+    def get_line_iterator(
+        self, chrom: Optional[str] = None, pos_begin: Optional[int] = None
+    ) -> Generator[Line, None, None]:
         """Extract raw lines and wrap them in our Line adapter."""
         assert isinstance(self.pysam_file, pysam.TabixFile)
 

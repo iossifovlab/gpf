@@ -39,6 +39,7 @@ setuptools.setup(
         "dae/tools/ped2ped.py",
         "dae/tools/draw_pedigree.py",
         "dae/tools/vcfinfo_extractor.py",
+        "dae/tools/to_gpf_gene_models_format.py"
     ],
     entry_points="""
     [dae.genomic_resources.plugins]
@@ -55,6 +56,7 @@ setuptools.setup(
     genome=dae.genomic_resources.reference_genome:ReferenceGenomeImplementation
     vcf_info=dae.genomic_resources.vcf_info_score:build_vcf_info_from_resource
     gene_models=dae.genomic_resources.gene_models:build_gene_models_from_resource
+    cnv_collection=dae.genomic_resources.cnv_collection:CnvCollectionImplementation
 
     [dae.annotation.annotators]
     allele_score=dae.annotation.score_annotator:build_allele_score_annotator
@@ -65,6 +67,7 @@ setuptools.setup(
     normalize_allele_annotator=dae.annotation.normalize_allele_annotator:build_normalize_allele_annotator
     gene_score_annotator=dae.annotation.gene_score_annotator:build_gene_score_annotator
     simple_effect_annotator=dae.annotation.simple_effect_annotator:build_simple_effect_annotator
+    cnv_collection=dae.annotation.cnv_collection_annotator:build_cnv_collection_annotator
     debug_annotator=dae.annotation.debug_annotator:build_annotator
 
     [dae.genotype_storage.factories]

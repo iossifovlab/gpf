@@ -217,7 +217,9 @@ class JoinAggregator(Aggregator):
         self.values.clear()
 
     def get_final(self):
-        return self.separator.join(self.values)
+        if len(self.values) > 0:
+            return self.separator.join(self.values)
+        return None
 
 
 class ListAggregator(Aggregator):

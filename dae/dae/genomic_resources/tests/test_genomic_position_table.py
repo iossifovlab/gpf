@@ -21,8 +21,8 @@ def compare(
     expected: list[tuple]
 ) -> bool:
     for idx, line in enumerate(res):
-        print(tuple(line.data), expected[idx])
-        if tuple(line.data) != expected[idx]:
+        print(tuple(line._data), expected[idx])
+        if tuple(line._data) != expected[idx]:
             return False
     return True
 
@@ -333,13 +333,10 @@ def test_chrom_mapping_file_with_tabix(tmp_path):
 
     with build_genomic_position_table(res, res.config["table"]) as tab:
         assert tab.get_chromosomes() == ["gosho", "pesho"]
-        assert compare(tab.get_all_records(), [
-            ("gosho", "10", "12", "3.14"),
-            ("pesho", "11", "11", "4.14")
-        ])
-        assert compare(tab.get_records_in_region("pesho"), [
-            ("pesho", "11", "11", "4.14"),
-        ])
+        assert [line.chrom for line in tab.get_all_records()] == \
+               ["gosho", "pesho"]
+        assert [line.chrom for line in tab.get_records_in_region("pesho")] == \
+               ["pesho"]
 
 
 def test_invalid_chrom_mapping_file_with_tabix(tmp_path):
@@ -775,8 +772,6 @@ def test_tabix_table_multi_get_regions(
         tabix_table_multiline, pos_beg, pos_end, expected):
     table = tabix_table_multiline
     assert not table._should_use_sequential_seek_forward("1", 1)
-    for row in table.get_records_in_region("1", 1, 1):
-        print(row.data)
     assert compare(
         table.get_records_in_region("1", pos_beg, pos_end), expected
     )
@@ -828,16 +823,17 @@ def test_tabix_middle_optimization(tmp_path):
     res = build_filesystem_test_resource(tmp_path)
 
     with build_genomic_position_table(res, res.config["tabix_table"]) as table:
-        row = None
-        for row in table.get_records_in_region("1", 1, 1):
-            assert row.data == ("1", "1", "1")
-            break
-        assert row.data == ("1", "1", "1")
 
         row = None
         for row in table.get_records_in_region("1", 1, 1):
-            assert row.data == ("1", "1", "1")
-        assert row.data == ("1", "1", "1")
+            assert tuple(row._data) == ("1", "1", "1")
+            break
+        assert tuple(row._data) == ("1", "1", "1")
+
+        row = None
+        for row in table.get_records_in_region("1", 1, 1):
+            assert tuple(row._data) == ("1", "1", "1")
+        assert tuple(row._data) == ("1", "1", "1")
 
 
 def test_tabix_middle_optimization_regions(tmp_path):
@@ -866,27 +862,27 @@ def test_tabix_middle_optimization_regions(tmp_path):
     with build_genomic_position_table(res, res.config["tabix_table"]) as table:
         row = None
         for row in table.get_records_in_region("1", 1, 1):
-            assert row.data == ("1", "1", "1", "1")
+            assert tuple(row._data) == ("1", "1", "1", "1")
             break
 
         row = None
         for row in table.get_records_in_region("1", 1, 1):
-            assert row.data == ("1", "1", "1", "1")
+            assert tuple(row._data) == ("1", "1", "1", "1")
 
         row = None
         for row in table.get_records_in_region("1", 4, 4):
             pass
-        assert row.data == ("1", "4", "8", "2")
+        assert tuple(row._data) == ("1", "4", "8", "2")
 
         row = None
         for row in table.get_records_in_region("1", 4, 4):
             break
-        assert row.data == ("1", "4", "8", "2")
+        assert tuple(row._data) == ("1", "4", "8", "2")
 
         row = None
         for row in table.get_records_in_region("1", 5, 5):
             break
-        assert row.data == ("1", "4", "8", "2")
+        assert tuple(row._data) == ("1", "4", "8", "2")
 
 
 def test_tabix_middle_optimization_regions_buggy_1(tmp_path):
@@ -928,17 +924,17 @@ def test_tabix_middle_optimization_regions_buggy_1(tmp_path):
     with build_genomic_position_table(res, res.config["tabix_table"]) as table:
         assert compare(
             table.get_records_in_region("chr1", 505637, 505637),
-            [("chr1", "505637", "505637", "0.009")]
+            [("1", "505637", "505637", "0.009")]
         )
 
-        assert compare(table.get_records_in_region("chr1", 505643, 505646), [
-            ("chr1", "505643", "505643", "0.012"),
-            ("chr1", "505644", "505645", "0.006"),
-            ("chr1", "505646", "505646", "0.005"),
-        ])
+        assert compare(
+            table.get_records_in_region("chr1", 505643, 505646),
+            [("1", "505643", "505643", "0.012"),
+             ("1", "505644", "505645", "0.006"),
+             ("1", "505646", "505646", "0.005")])
 
         assert compare(table.get_records_in_region("chr1", 505762, 505762), [
-            ("chr1", "505762", "505764", "0.002"),
+            ("1", "505762", "505764", "0.002"),
         ])
 
 

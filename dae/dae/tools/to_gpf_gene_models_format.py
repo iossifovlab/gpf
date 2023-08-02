@@ -1,12 +1,13 @@
 #!/usr/bin/env python
-
-from dae.genomic_resources.gene_models import build_gene_models_from_file
-import sys
 import optparse
 
-desc = """Program to annotate variants (substitutions & indels & cnvs)"""
+from dae.genomic_resources.gene_models import build_gene_models_from_file
+
+DESC = """Program to annotate variants (substitutions & indels & cnvs)"""
+
+
 parser = optparse.OptionParser(
-    version="%prog version 1.0 11/October/2013", description=desc
+    version="%prog version 1.0 11/October/2013", description=DESC
 )
 parser.add_option(
     "--gm_format",
@@ -17,7 +18,7 @@ parser.add_option(
 parser.add_option(
     "--gm_names",
     help="gene names mapping file [type None for no mapping]",
-    default="default",
+    default=None,
     type="string",
     action="store",
 )
@@ -37,19 +38,22 @@ if len(args) < 2:
         "1. gene models input file\n\t"
         "2. output file [no extension]"
     )
-    sys.exit(-1)
+    # sys.exit(-1)
+    args = ["gencode.v43.annotation.gtf.gz", "cc"]
 
-fromGMFile = args[0]
-toGMFile = args[1]
+from_filename = args[0]
+to_filename = args[1]
 
 
-gmDB = build_gene_models_from_file(
-    fromGMFile, gene_mapping_filename=opts.gm_names, fileformat=opts.gm_format
+gene_models = build_gene_models_from_file(
+    from_filename, file_format=opts.gm_format,
+    gene_mapping_file_name=opts.gm_names
 )
+gene_models.load()
 if opts.chr_names is not None:
-    gmDB.relabel_chromosomes(opts.chr_names)
+    gene_models.relabel_chromosomes(opts.chr_names)
 
 # else:
-#     gmDB.relabel_chromosomes()
-# save_dicts(gmDB, outputFile = toGMFile)
-gmDB.save(toGMFile)
+#     gene_models.relabel_chromosomes()
+# save_dicts(gene_models, outputFile = to_filename)
+gene_models.save(to_filename)

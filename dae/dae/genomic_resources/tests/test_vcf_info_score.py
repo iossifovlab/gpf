@@ -64,7 +64,7 @@ def test_clinvar_vcf_resource(vcf_info_clinvar):
     vcf_info_clinvar.open()
     scores = vcf_info_clinvar.score_definitions
     assert "CLNDN" in scores
-    assert scores["CLNDN"].col_key == "CLNDN"
+    assert scores["CLNDN"].score_index == "CLNDN"
     assert scores["CLNDN"].desc == ("ClinVar's preferred disease name for the"
                                     " concept specified by disease identifiers"
                                     " in CLNDISDB")
@@ -327,11 +327,11 @@ def test_gnomad_vcf_resource(vcf_info_gnomad):
     assert "AF" in scores
     info = scores["AF"]
 
-    assert info.col_key == "AF"
+    assert info.score_index == "AF"
     assert info.desc is not None
 
     info = scores["AN"]
-    assert info.col_key == "AN"
+    assert info.score_index == "AN"
 
 
 @pytest.mark.parametrize("chrom,start,end,scores,expected", [

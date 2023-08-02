@@ -25,7 +25,7 @@ import enum
 import hashlib
 import copy
 
-from typing import Optional, Any, Generator, Union, Iterator, cast
+from typing import IO, Optional, Any, Generator, Union, Iterator, cast
 from dataclasses import dataclass, asdict
 
 import abc
@@ -309,7 +309,7 @@ class GenomicResource:
         return self.get_description()
 
     def get_url(self) -> str:
-        return f"{self.proto.get_url()}{self.get_id()}"
+        return f"{self.proto.get_url()}/{self.get_id()}"
 
     def get_labels(self) -> dict[str, Any]:
         config: dict[str, Any] = self.get_config()
@@ -355,7 +355,7 @@ class GenomicResource:
             self, filename, uncompress=uncompress, mode=mode)
 
     def open_raw_file(
-            self, filename, mode="rt", **kwargs):
+            self, filename: str, mode="rt", **kwargs: Union[str, bool]) -> IO:
         """Open a file in the resource and returns a File-like object."""
         return self.proto.open_raw_file(
             self, filename, mode, **kwargs)
@@ -469,8 +469,8 @@ class ReadOnlyRepositoryProtocol(abc.ABC):
 
     @abc.abstractmethod
     def open_raw_file(
-            self, resource, filename,
-            mode="rt", **kwargs):
+            self, resource: GenomicResource, filename: str,
+            mode: str = "rt", **kwargs: Union[str, bool]) -> IO:
         """Open file in a resource and returns a file-like object."""
 
     @abc.abstractmethod

@@ -151,7 +151,7 @@ def _run_list_command(
                 if hasattr(args, 'bytes') and args.bytes is True \
                 else convert_size(res_size)
             repo_id = repo.repo_id if isinstance(repo, GenomicResourceRepo) \
-                                   else repo.get_id()
+                else repo.get_id()
             print(
                 f"{res.get_type():20} {res.get_version_str():7s} "
                 f"{files_msg} {res_size_msg:12} "
@@ -480,6 +480,9 @@ def _collect_impl_stats_tasks(  # pylint: disable=too-many-arguments
 
     tasks = impl.add_statistics_build_tasks(
         graph, region_size=region_size, grr=grr)
+
+    # This is the hack to update stats_hash without recreaing the histograms.
+    # tasks = []
 
     graph.create_task(
         f"{impl.resource.resource_id}_store_stats_hash",
@@ -832,7 +835,6 @@ def cli_browse(cli_args: Optional[list[str]] = None) -> None:
         help="Print the resource size in bytes"
     )
 
-
     if cli_args is None:
         cli_args = sys.argv[1:]
     args = parser.parse_args(cli_args)
@@ -843,11 +845,10 @@ def cli_browse(cli_args: Optional[list[str]] = None) -> None:
         sys.exit(0)
 
     definition_path = args.grr if args.grr is not None \
-                      else get_default_grr_definition_path()
+        else get_default_grr_definition_path()
     definition = load_definition_file(definition_path) \
-            if definition_path is not None \
-            else DEFAULT_DEFINITION
-
+        if definition_path is not None \
+        else DEFAULT_DEFINITION
 
     if definition_path is not None:
         print("Working with GRR definition:", definition_path)
@@ -857,7 +858,6 @@ def cli_browse(cli_args: Optional[list[str]] = None) -> None:
 
     repo = build_genomic_resource_repository(definition=definition)
     _run_list_command(repo, args)
-
 
 
 repository_template = Template("""
@@ -896,7 +896,7 @@ repository_template = Template("""
                 <th>Version</th>
                 <th>Number of files</th>
                 <th>Size in bytes (total)</th>
-                <th>Meta</th>
+                <th>Summary</th>
             </tr>
         </thead>
         <tbody>
@@ -909,11 +909,7 @@ repository_template = Template("""
                 <td class="nowrap">{{value['res_version']}}</td>
                 <td class="nowrap">{{value['res_files']}}</td>
                 <td class="nowrap">{{value['res_size']}}</td>
-                <td>
-                    <div class="meta-div">
-                        {{value.get('meta', 'N/A')}}
-                    </div>
-                </td>
+                <td class="nowrap">{{value['res_summary']}}</td>
             </tr>
             {%- endfor %}
         </tbody>

@@ -1,6 +1,7 @@
 from __future__ import annotations
 import logging
-from typing import Optional, cast
+import textwrap
+from typing import Optional, cast, Any
 from abc import abstractmethod, ABC
 from dataclasses import dataclass
 
@@ -8,7 +9,7 @@ from jinja2 import Template
 from cerberus import Validator
 from markdown2 import markdown
 
-from dae.task_graph.graph import Task
+from dae.task_graph.graph import Task, TaskGraph
 from dae.utils.helpers import convert_size
 
 from .repository import GenomicResource
@@ -16,7 +17,7 @@ from .repository import GenomicResource
 logger = logging.getLogger(__name__)
 
 
-def get_base_resource_schema():
+def get_base_resource_schema() -> dict[str, Any]:
     return {
         "type": {"type": "string"},
         "meta": {
@@ -42,7 +43,7 @@ class ResourceStatistics:
         self.resource_id = resource_id
 
     @staticmethod
-    def get_statistics_folder():
+    def get_statistics_folder() -> str:
         return "statistics"
 
 
@@ -60,7 +61,7 @@ class GenomicResourceImplementation(ABC):
         self._statistics: Optional[ResourceStatistics] = None
 
     @property
-    def resource_id(self):
+    def resource_id(self) -> str:
         return self.resource.resource_id
 
     def get_config(self) -> dict:
@@ -72,7 +73,7 @@ class GenomicResourceImplementation(ABC):
         return set()
 
     @abstractmethod
-    def calc_statistics_hash(self) -> str:
+    def calc_statistics_hash(self) -> bytes:
         """
         Compute the statistics hash.
 
@@ -82,12 +83,13 @@ class GenomicResourceImplementation(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def add_statistics_build_tasks(self, task_graph, **kwargs) -> list[Task]:
+    def add_statistics_build_tasks(self, task_graph: TaskGraph,
+                                   **kwargs: str) -> list[Task]:
         """Add tasks for calculating resource statistics to a task graph."""
         raise NotImplementedError()
 
     @abstractmethod
-    def calc_info_hash(self):
+    def calc_info_hash(self) -> bytes:
         """Compute and return the info hash."""
         raise NotImplementedError()
 
@@ -100,7 +102,7 @@ class GenomicResourceImplementation(ABC):
         """Try and load resource statistics."""
         return None
 
-    def reload_statistics(self):
+    def reload_statistics(self) -> Optional[ResourceStatistics]:
         self._statistics = None
         return self.get_statistics()
 
@@ -108,15 +110,18 @@ class GenomicResourceImplementation(ABC):
 class InfoImplementationMixin:
     """Mixin that provides generic template info page generation interface."""
 
-    @abstractmethod
     def get_template(self) -> Template:
-        raise NotImplementedError()
+        return Template(textwrap.dedent("""
+                {% extends base %}
+                {% block content %}
 
-    @abstractmethod
-    def _get_template_data(self):
-        raise NotImplementedError()
+                {% endblock %}
+            """))
 
-    def get_template_data(self):
+    def _get_template_data(self) -> dict:
+        return {}
+
+    def get_template_data(self) -> dict:
         """
         Return a data dictionary to be used by the template.
 
@@ -154,12 +159,13 @@ class ResourceConfigValidationMixin:
 
     @staticmethod
     @abstractmethod
-    def get_schema():
+    def get_schema() -> dict:
         """Return schema to be used for config validation."""
         raise NotImplementedError()
 
     @classmethod
-    def validate_and_normalize_schema(cls, config, resource) -> dict:
+    def validate_and_normalize_schema(
+            cls, config: dict, resource: GenomicResource) -> dict:
         """Validate the resource schema and return the normalized version."""
         # pylint: disable=not-callable
         validator = Validator(cls.get_schema())
@@ -193,6 +199,14 @@ h3,h4 {
 <table border="1">
 <tr><td><b>Id:</b></td><td>{{ resource.resource_id }}</td></tr>
 <tr><td><b>Type:</b></td><td>{{ resource.get_type() }}</td></tr>
+<tr>
+<td><b>Summary:</b></td>
+<td>
+{%- set summary = resource.get_summary() -%}
+{{
+    summary if summary else "N/A"
+}}</td>
+</tr>
 <tr>
 <td><b>Description:</b></td>
 <td>

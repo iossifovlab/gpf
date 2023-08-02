@@ -7,7 +7,8 @@ from dataclasses import dataclass, field
 
 import logging
 
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Optional, Iterator
+from types import TracebackType
 
 from dae.genomic_resources.repository import GenomicResource
 from dae.genomic_resources.repository import GenomicResourceRepo
@@ -45,7 +46,7 @@ class AttributeInfo:
     _documentation: Optional[str] = None
 
     @property
-    def documentation(self):
+    def documentation(self) -> str:
         if self._documentation is None:
             return self.description
         return self._documentation
@@ -96,7 +97,7 @@ class Annotator(abc.ABC):
     ) -> dict[str, Any]:
         """Produce annotation attributes for an annotatable."""
 
-    def close(self):
+    def close(self) -> None:
         self._is_open = False
 
     def open(self) -> Annotator:
@@ -140,7 +141,8 @@ class AnnotationPipeline:
         return [attribute_info for annotator in self.annotators for
                 attribute_info in annotator.attributes]
 
-    def get_attribute_info(self, attribute_name) -> Optional[AttributeInfo]:
+    def get_attribute_info(
+            self, attribute_name: str) -> Optional[AttributeInfo]:
         for annotator in self.annotators:
             for attribute_info in annotator.get_info().attributes:
                 if attribute_info.name == attribute_name:
@@ -179,7 +181,7 @@ class AnnotationPipeline:
         self._is_open = True
         return self
 
-    def close(self):
+    def close(self) -> None:
         """Close the annotation pipeline."""
         for annotator in self.annotators:
             try:
@@ -190,10 +192,14 @@ class AnnotationPipeline:
                     annotator.get_info(), exc_info=True)
         self._is_open = False
 
-    def __enter__(self):
+    def __enter__(self) -> AnnotationPipeline:
         return self
 
-    def __exit__(self, exc_type, exc_value, exc_tb):
+    def __exit__(
+            self,
+            exc_type: type[BaseException] | None,
+            exc_value: Optional[BaseException],
+            exc_tb: TracebackType | None) -> None:
         if exc_type is not None:
             logger.error(
                 "exception during annotation: %s, %s, %s",
@@ -208,7 +214,7 @@ class AnnotatorDecorator(Annotator):
         super().__init__(child.pipeline, child.get_info())
         self.child = child
 
-    def close(self):
+    def close(self) -> None:
         self.child.close()
 
     def open(self) -> Annotator:
@@ -316,20 +322,20 @@ class ParamsUsageMonitor(Mapping):
         self._data = data
         self._used_keys: set[str] = set([])
 
-    def __getitem__(self, key: str):
+    def __getitem__(self, key: str) -> Any:
         self._used_keys.add(key)
         return self._data[key]
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._data)
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator:
         raise ValueError("Should not iterate a parameter dictionary.")
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self._data.__repr__()
 
-    def __eq__(self, other):
+    def __eq__(self, other: Any) -> bool:
         if not isinstance(other, ParamsUsageMonitor):
             return False
         return self._data == other._data
