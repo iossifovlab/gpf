@@ -1,7 +1,7 @@
 from __future__ import annotations
 import logging
 import textwrap
-from typing import Optional, cast
+from typing import Optional, cast, Any
 from abc import abstractmethod, ABC
 from dataclasses import dataclass
 
@@ -17,7 +17,7 @@ from .repository import GenomicResource
 logger = logging.getLogger(__name__)
 
 
-def get_base_resource_schema():
+def get_base_resource_schema() -> dict[str, Any]:
     return {
         "type": {"type": "string"},
         "meta": {
@@ -43,7 +43,7 @@ class ResourceStatistics:
         self.resource_id = resource_id
 
     @staticmethod
-    def get_statistics_folder():
+    def get_statistics_folder() -> str:
         return "statistics"
 
 
@@ -61,7 +61,7 @@ class GenomicResourceImplementation(ABC):
         self._statistics: Optional[ResourceStatistics] = None
 
     @property
-    def resource_id(self):
+    def resource_id(self) -> str:
         return self.resource.resource_id
 
     def get_config(self) -> dict:
@@ -84,7 +84,7 @@ class GenomicResourceImplementation(ABC):
 
     @abstractmethod
     def add_statistics_build_tasks(self, task_graph: TaskGraph,
-                                   **kwargs) -> list[Task]:
+                                   **kwargs: str) -> list[Task]:
         """Add tasks for calculating resource statistics to a task graph."""
         raise NotImplementedError()
 
@@ -102,7 +102,7 @@ class GenomicResourceImplementation(ABC):
         """Try and load resource statistics."""
         return None
 
-    def reload_statistics(self):
+    def reload_statistics(self) -> Optional[ResourceStatistics]:
         self._statistics = None
         return self.get_statistics()
 
@@ -118,10 +118,10 @@ class InfoImplementationMixin:
                 {% endblock %}
             """))
 
-    def _get_template_data(self):
+    def _get_template_data(self) -> dict:
         return {}
 
-    def get_template_data(self):
+    def get_template_data(self) -> dict:
         """
         Return a data dictionary to be used by the template.
 
@@ -159,12 +159,13 @@ class ResourceConfigValidationMixin:
 
     @staticmethod
     @abstractmethod
-    def get_schema():
+    def get_schema() -> dict:
         """Return schema to be used for config validation."""
         raise NotImplementedError()
 
     @classmethod
-    def validate_and_normalize_schema(cls, config, resource) -> dict:
+    def validate_and_normalize_schema(
+            cls, config: dict, resource: GenomicResource) -> dict:
         """Validate the resource schema and return the normalized version."""
         # pylint: disable=not-callable
         validator = Validator(cls.get_schema())

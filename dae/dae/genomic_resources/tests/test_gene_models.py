@@ -168,7 +168,8 @@ def test_gene_models_from_default_with_transcript_orig_id(fixture_dirname):
 def test_load_gene_models_from_file(fixture_dirname, filename, file_format):
 
     filename = fixture_dirname(filename)
-    gene_models = build_gene_models_from_file(filename, file_format=file_format)
+    gene_models = build_gene_models_from_file(
+        filename, file_format=file_format)
     gene_models.load()
     assert gene_models is not None
 
@@ -265,7 +266,8 @@ def test_save_load_gene_models_from_file(
 ):
 
     filename = fixture_dirname(filename)
-    gene_models = build_gene_models_from_file(filename, file_format=file_format)
+    gene_models = build_gene_models_from_file(
+        filename, file_format=file_format)
     gene_models.load()
     assert gene_models is not None
     assert len(gene_models.transcript_models) > 0

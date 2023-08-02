@@ -64,7 +64,7 @@ class CnvCollectionAnnotator(Annotator):
                 attribute_def._documentation = f"""
                     {attribute_def.description}
 
-                    small values: {res_attribute_def.small_values_desc}, 
+                    small values: {res_attribute_def.small_values_desc},
                     large_values: {res_attribute_def.large_values_desc}
                     aggregator: {aggregator}
                 """
@@ -86,9 +86,9 @@ class CnvCollectionAnnotator(Annotator):
         self.cnv_collection.open()
         return super().open()
 
-    def close(self):
+    def close(self) -> None:
         self.cnv_collection.close()
-        return super().close()
+        super().close()
 
     def annotate(
         self, annotatable: Optional[Annotatable], _: dict[str, Any]

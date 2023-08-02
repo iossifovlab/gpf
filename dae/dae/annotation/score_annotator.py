@@ -5,7 +5,6 @@ and allele_score.
 """
 import logging
 import abc
-from textwrap import dedent
 from typing import Callable, Optional, Any
 
 from dae.annotation.annotatable import Annotatable, VCFAllele
@@ -71,20 +70,21 @@ class GenomicScoreAnnotatorBase(Annotator):
         self.simple_score_queries: list[str] = [
             attr.source for attr in info.attributes]
 
-    def open(self):
+    def open(self) -> Annotator:
         self.score.open()
+        return self
 
-    def is_open(self):
+    def is_open(self) -> bool:
         return self.score.is_open()
 
     def _collect_score_queries(self) -> list[ScoreQuery]:
         return []
 
-    def close(self):
+    def close(self) -> None:
         self.score.close()
         super().close()
 
-    def create_the_documentation(self, attribute_info: AttributeInfo):
+    def create_the_documentation(self, attribute_info: AttributeInfo) -> None:
         hist_url = self.score.get_histogram_image_url(attribute_info.source)
         score_def = self.score.get_score_config(attribute_info.source)
         # pylint: disable=protected-access
@@ -93,12 +93,14 @@ class GenomicScoreAnnotatorBase(Annotator):
 
 ![HISTOGRAM]({hist_url})
 
-small values: {score_def.small_values_desc}, large_values {score_def.large_values_desc}
+small values: {score_def.small_values_desc},
+large_values {score_def.large_values_desc}
         """
 
-    def add_score_aggregator_documentation(self, attribute_info: AttributeInfo,
-                                           aggregator: str,
-                                           attribute_conf_agg: Optional[str]):
+    def add_score_aggregator_documentation(
+            self, attribute_info: AttributeInfo,
+            aggregator: str,
+            attribute_conf_agg: Optional[str]) -> None:
         """Collect score aggregator documentation."""
         default_aggregators = {
             "position_aggregator": {
@@ -120,11 +122,11 @@ small values: {score_def.small_values_desc}, large_values {score_def.large_value
         aggregators_score_def_att: \
             dict[str, Callable[[ScoreDef], Optional[str]]] = {
                 "position_aggregator":
-                lambda sc: sc.pos_aggregator,  # type: ignore
+                lambda sc: sc.pos_aggregator,
                 "nucleotide_aggregator":
-                lambda sc: sc.nuc_aggregator,  # type: ignore
+                lambda sc: sc.nuc_aggregator,
                 "allele_aggregator":
-                lambda sc: sc.allele_aggregator  # type: ignore
+                lambda sc: sc.allele_aggregator
             }
         if attribute_conf_agg is None:
             score_def = self.score.get_score_config(attribute_info.source)
@@ -133,7 +135,7 @@ small values: {score_def.small_values_desc}, large_values {score_def.large_value
             if value is not None:
                 value_str = f"{value} [default]"
             else:
-                value = default_aggregators[aggregator][score_def.type]
+                value = default_aggregators[aggregator][score_def.value_type]
                 value_str = f"{value} [type default]"
         else:
             value_str = attribute_conf_agg
@@ -151,7 +153,8 @@ class PositionScoreAnnotatorBase(GenomicScoreAnnotatorBase):
         pass
 
     @abc.abstractmethod
-    def _fetch_aggregated_scores(self, chrom, pos_begin, pos_end) -> list[Any]:
+    def _fetch_aggregated_scores(
+            self, chrom: str, pos_begin: int, pos_end: int) -> list[Any]:
         pass
 
     def annotate(
@@ -207,9 +210,9 @@ class PositionScoreAnnotator(PositionScoreAnnotatorBase):
         super().__init__(pipeline, info, self.position_score)
 
         self.position_score_queries = []
-        info.documentation += dedent("""
-            [More info](https://www.iossifovlab.com/gpfuserdocs/administration/annotation_tools.html#position-score)
-        """)
+        info.documentation += \
+            "[More info](https://www.iossifovlab.com/gpfuserdocs/" \
+            "administration/annotation_tools.html#position-score)"
         for att_info in info.attributes:
             pos_aggregator = att_info.parameters.get("position_aggregator")
             if pos_aggregator:
@@ -225,7 +228,8 @@ class PositionScoreAnnotator(PositionScoreAnnotatorBase):
         return self.position_score.fetch_scores(
             allele.chromosome, allele.position, self.simple_score_queries)
 
-    def _fetch_aggregated_scores(self, chrom, pos_begin, pos_end) -> list[Any]:
+    def _fetch_aggregated_scores(
+            self, chrom: str, pos_begin: int, pos_end: int) -> list[Any]:
         scores_agg = self.position_score.fetch_scores_agg(
             chrom, pos_begin, pos_end, self.position_score_queries
         )
@@ -260,12 +264,14 @@ class NPScoreAnnotator(PositionScoreAnnotatorBase):
             self.add_score_aggregator_documentation(
                 att_info, "nucleotide_aggregator", nuc_agg)
 
-    def _fetch_substitution_scores(self, allele: VCFAllele):
+    def _fetch_substitution_scores(
+            self, allele: VCFAllele) -> Optional[list[Any]]:
         return self.np_score.fetch_scores(allele.chromosome, allele.position,
                                           allele.reference, allele.alternative,
                                           self.simple_score_queries)
 
-    def _fetch_aggregated_scores(self, chrom, pos_begin, pos_end) -> list[Any]:
+    def _fetch_aggregated_scores(
+            self, chrom: str, pos_begin: int, pos_end: int) -> list[Any]:
         scores_agg = self.np_score.fetch_scores_agg(chrom, pos_begin, pos_end,
                                                     self.np_score_queries)
         return [sagg.get_final() for sagg in scores_agg]

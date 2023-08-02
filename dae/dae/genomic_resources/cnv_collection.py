@@ -2,7 +2,8 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from typing import Any
-from dae.genomic_resources.genomic_position_table.table_tabix import TabixGenomicPositionTable
+from dae.genomic_resources.genomic_position_table.table_tabix import \
+    TabixGenomicPositionTable
 from dae.genomic_resources.genomic_position_table.table_vcf import \
     VCFGenomicPositionTable
 from dae.genomic_resources.genomic_position_table.utils import \
@@ -27,7 +28,7 @@ class CNV:
     attributes: dict[str, Any]
 
     @property
-    def size(self):
+    def size(self) -> int:
         return self.pos_end - self.pos_begin
 
 
@@ -45,11 +46,11 @@ class CnvCollection:
         self.score_defs = GenomicScore._parse_scoredef_config(
             self.resource.config)
 
-    def close(self):
+    def close(self) -> None:
         self.table.close()
         self.table_loaded = False
 
-    def is_open(self):
+    def is_open(self) -> bool:
         return self.table_loaded
 
     def open(self) -> CnvCollection:
@@ -101,8 +102,8 @@ class CnvCollectionImplementation(GenomicResourceImplementation,
                                   InfoImplementationMixin):
     """Assists in the management of resource of type cnv_collection."""
 
-    def add_statistics_build_tasks(self, _: TaskGraph,
-                                   **_kwargs) -> list[Task]:
+    def add_statistics_build_tasks(
+            self, task_graph: TaskGraph, **kwargs: str) -> list[Task]:
         return []
 
     def calc_info_hash(self) -> bytes:

@@ -8,14 +8,17 @@ import logging
 import datetime
 
 from urllib.parse import urlparse
-from typing import List, Generator, cast, Union, Optional, Dict, Any
-from dataclasses import asdict
+from typing import List, Generator, cast, Union, Optional, Dict, Any, IO, \
+    ContextManager
+from types import TracebackType
 
+from dataclasses import asdict
+import jinja2
+import pysam
 import fsspec
 
 import yaml
 
-from markdown2 import markdown
 
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME, \
     GR_INDEX_FILE_NAME, \
@@ -127,7 +130,8 @@ def build_inmemory_protocol(
     return proto
 
 
-def build_fsspec_protocol(proto_id: str, root_url: str, **kwargs) -> Union[
+def build_fsspec_protocol(
+        proto_id: str, root_url: str, **kwargs: str) -> Union[
         ReadOnlyRepositoryProtocol, ReadWriteRepositoryProtocol]:
     """Create fsspec GRR protocol based on the root url."""
     url = urlparse(root_url)
@@ -189,10 +193,10 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
     def get_url(self) -> str:
         return self.url
 
-    def invalidate(self):
+    def invalidate(self) -> None:
         self._all_resources = None
 
-    def get_all_resources(self):
+    def get_all_resources(self) -> Generator[GenomicResource, None, None]:
         """Return generator over all resources in the repository."""
         if self._all_resources is None:
             self._all_resources = []
@@ -215,30 +219,33 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
 
         yield from self._all_resources
 
-    def get_resource_url(self, resource) -> str:
+    def get_resource_url(self, resource: GenomicResource) -> str:
         """Return url of the specified resources."""
         resource_url = os.path.join(
             self.url,
             resource.get_genomic_resource_id_version())
         return resource_url
 
-    def get_resource_file_url(self, resource, filename: str) -> str:
+    def get_resource_file_url(
+            self, resource: GenomicResource, filename: str) -> str:
         """Return url of a file in the resource."""
         url = os.path.join(
             self.get_resource_url(resource), filename)
         return url
 
-    def file_exists(self, resource, filename) -> bool:
+    def file_exists(
+            self, resource: GenomicResource, filename: str) -> bool:
         filepath = self.get_resource_file_url(resource, filename)
         return cast(bool, self.filesystem.exists(filepath))
 
-    def load_manifest(self, resource) -> Manifest:
+    def load_manifest(self, resource: GenomicResource) -> Manifest:
         """Load resource manifest."""
         content = self.get_file_content(resource, GR_MANIFEST_FILE_NAME)
         return Manifest.from_file_content(content)
 
-    def open_raw_file(self, resource: GenomicResource, filename: str,
-                      mode="rt", **kwargs):
+    def open_raw_file(
+            self, resource: GenomicResource, filename: str,
+            mode: str = "rt", **kwargs: Union[str, bool]) -> IO:
 
         filepath = self.get_resource_file_url(resource, filename)
         if "w" in mode:
@@ -257,21 +264,26 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
         if kwargs.get("compression"):
             compression = "gzip"
 
-        return self.filesystem.open(
-            filepath, mode=mode,
-            compression=compression)  # pylint: disable=unspecified-encoding
+        return cast(
+            IO,
+            self.filesystem.open(
+                filepath, mode=mode,
+                compression=compression))
 
-    def _get_file_url(self, resource, filename):
-        def process_file_url(url):
+    def _get_file_url(self, resource: GenomicResource, filename: str) -> str:
+        def process_file_url(url: str) -> str:
             if self.scheme == "file":
                 return urlparse(url).path
             if self.scheme == "s3":
-                return self.filesystem.sign(url)
+                return cast(str, self.filesystem.sign(url))
             return url
 
         return process_file_url(self.get_resource_file_url(resource, filename))
 
-    def open_tabix_file(self, resource, filename, index_filename=None):
+    def open_tabix_file(
+            self, resource: GenomicResource,
+            filename: str,
+            index_filename: Optional[str] = None) -> pysam.TabixFile:
 
         if self.scheme not in {"file", "s3", "http", "https"}:
             raise IOError(
@@ -283,11 +295,13 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
             index_filename = f"{filename}.tbi"
         index_url = self._get_file_url(resource, index_filename)
 
-        import pysam  # pylint: disable=import-outside-toplevel
         return pysam.TabixFile(  # pylint: disable=no-member
             file_url, index=index_url, encoding="utf-8")
 
-    def open_vcf_file(self, resource, filename, index_filename=None):
+    def open_vcf_file(
+            self, resource: GenomicResource,
+            filename: str,
+            index_filename: Optional[str] = None) -> pysam.VariantFile:
 
         if self.scheme not in {"file", "s3", "http", "https"}:
             raise IOError(
@@ -299,7 +313,6 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
             index_filename = f"{filename}.tbi"
         index_url = self._get_file_url(resource, index_filename)
 
-        import pysam  # pylint: disable=import-outside-toplevel
         return pysam.VariantFile(  # pylint: disable=no-member
             file_url, index_filename=index_url)
 
@@ -329,13 +342,20 @@ class FsspecReadWriteProtocol(
 
     def obtain_resource_file_lock(
         self, resource: GenomicResource, filename: str
-    ):
+    ) -> ContextManager:
         """Lock a resource's file."""
+
         class Lock:
-            def __enter__(self):
+            """Lock representation."""
+
+            def __enter__(self) -> None:
                 pass
 
-            def __exit__(self, *args):
+            def __exit__(
+                    self,
+                    exc_type: type[BaseException] | None,
+                    exc_value: Optional[BaseException],
+                    exc_tb: TracebackType | None) -> None:
                 pass
 
         lock = Lock()
@@ -354,7 +374,9 @@ class FsspecReadWriteProtocol(
 
         return lock
 
-    def _scan_path_for_resources(self, path_array):
+    def _scan_path_for_resources(
+        self, path_array: list[str]
+    ) -> Generator[Any, None, None]:
 
         url = os.path.join(self.url, *path_array)
         path = os.path.join(self.root_path, *path_array)
@@ -383,7 +405,9 @@ class FsspecReadWriteProtocol(
             for name in content:
                 yield from self._scan_path_for_resources([*path_array, name])
 
-    def _scan_resource_for_files(self, resource_path, path_array):
+    def _scan_resource_for_files(
+        self, resource_path: str, path_array: list[str]
+    ) -> Generator[Any, None, None]:
 
         url = os.path.join(self.url, resource_path, *path_array)
         if not self.filesystem.isdir(url):
@@ -438,7 +462,7 @@ class FsspecReadWriteProtocol(
             yield self.build_genomic_resource(
                 res_id, res_ver, config, manifest)
 
-    def collect_resource_entries(self, resource) -> Manifest:
+    def collect_resource_entries(self, resource: GenomicResource) -> Manifest:
         """Scan the resource and resturn a manifest."""
         resource_path = resource.get_genomic_resource_id_version()
 
@@ -615,7 +639,7 @@ class FsspecReadWriteProtocol(
 
         return local_state
 
-    def build_content_file(self):
+    def build_content_file(self) -> list[dict[str, str]]:
         """Build the content of the repository (i.e '.CONTENTS' file)."""
         content = [
             {
@@ -625,7 +649,7 @@ class FsspecReadWriteProtocol(
                 "manifest": res.get_manifest().to_manifest_entries()
             }
             for res in self.get_all_resources()]
-        content = sorted(content, key=lambda x: x["id"])  # type: ignore
+        content = sorted(content, key=lambda x: x["id"])
 
         content_filepath = os.path.join(
             self.url, GR_CONTENTS_FILE_NAME)
@@ -635,7 +659,7 @@ class FsspecReadWriteProtocol(
 
         return content
 
-    def build_index_info(self, repository_template):
+    def build_index_info(self, repository_template: jinja2.Template) -> dict:
         """Build info dict for the repository."""
         result = {}
         for res in self.get_all_resources():

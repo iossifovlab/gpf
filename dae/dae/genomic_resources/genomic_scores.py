@@ -269,7 +269,7 @@ class GenomicScoreImplementation(
         </td>
 
         <td>
-                                        
+
         {%- if score.value_type in ['float', 'int'] -%}
         {% set min_max = impl.score.get_number_range(score_id) %}
         {%- if min_max is not none and
@@ -353,9 +353,9 @@ class GenomicScoreImplementation(
                 if isinstance(self.score.table, InmemoryGenomicPositionTable):
                     # raise ValueError("In memory tables are not supported")
                     chrom_length = \
-                        max([line.pos_end
-                             for line in
-                             self.score.table.get_records_in_region(chrom)])
+                        max(line.pos_end
+                            for line in
+                            self.score.table.get_records_in_region(chrom))
                 else:
                     assert isinstance(self.score.table,
                                       TabixGenomicPositionTable)
@@ -924,11 +924,11 @@ class GenomicScore(ResourceConfigValidationMixin):
     def get_score_config(self, score_id) -> ScoreDef:
         return self.score_definitions[score_id]
 
-    def close(self):
+    def close(self) -> None:
         self.table.close()
         self.table_loaded = False
 
-    def is_open(self):
+    def is_open(self) -> bool:
         return self.table_loaded
 
     def open(self) -> GenomicScore:

@@ -49,7 +49,7 @@ def split_into_regions(
 def get_chromosome_length_tabix(
     tabix_file: Union[pysam.TabixFile, pysam.VariantFile], chrom: str,
     step=100_000_000, precision=5_000_000
-):
+) -> int:
     """
     Return the length of a chromosome (or contig).
 
