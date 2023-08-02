@@ -309,8 +309,6 @@ describe('Autism gene profiles table functionality tests', () => {
   });
 
   it('should sort genes by autism gene sets', () => {
-    cy.intercept('/gpf/api/v3/autism_gene_tool/table/rows**').as('rowsRequest');
-
     page.geneSearchInput.type('RAPGEF');
     page.allTableRows.should('have.length', 4);
 
@@ -333,8 +331,6 @@ describe('Autism gene profiles table functionality tests', () => {
   });
 
   it('should sort genes by relevant gene sets', () => {
-    cy.intercept('/gpf/api/v3/autism_gene_tool/table/rows**').as('rowsRequest');
-
     page.geneSearchInput.type('SENP');
     page.allTableRows.should('have.length', 6);
 
@@ -344,7 +340,6 @@ describe('Autism gene profiles table functionality tests', () => {
     page.categoryFilterButton.click();
 
     page.columnHeader('Relevant Gene Sets').click();
-    cy.wait('@rowsRequest');
     page.allTableRows.eq(0).invoke('text').then(text => expect(text.split('✓').length-1).equal(2));
     page.allTableRows.eq(1).invoke('text').then(text => expect(text.split('✓').length-1).equal(1));
     page.allTableRows.eq(2).invoke('text').then(text => expect(text.split('✓').length-1).equal(1));
@@ -354,7 +349,6 @@ describe('Autism gene profiles table functionality tests', () => {
 
 
     page.columnHeader('Relevant Gene Sets').click();
-    cy.wait('@rowsRequest');
     page.allTableRows.eq(0).invoke('text').then(text => expect(text.split('✓').length-1).equal(1));
     page.allTableRows.eq(1).invoke('text').then(text => expect(text.split('✓').length-1).equal(1));
     page.allTableRows.eq(2).invoke('text').then(text => expect(text.split('✓').length-1).equal(1));
