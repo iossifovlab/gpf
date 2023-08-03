@@ -301,7 +301,7 @@ class BaseDatasetPermissionsView(QueryBaseView):
             )
             return {
                 "dataset_id": dataset.dataset_id,
-                "dataset_name": "Missing dataset",
+                "dataset_name": f"Missing dataset ({dataset.dataset_id})",
                 "users": [],
                 "groups": []
             }
