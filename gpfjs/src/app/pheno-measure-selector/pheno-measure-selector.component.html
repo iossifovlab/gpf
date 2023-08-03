@@ -11,14 +11,14 @@
     (click)="clear(); openDropdown(); loadDropdownData()"
     (keydown.escape)="closeDropdown()"
     style="width: 100%" />
-  <div ngbDropdownMenu style="z-index: 3; width: 100%; max-height: 200px; overflow-y: scroll">
+  <div ngbDropdownMenu style="z-index: 3; width: 100%; max-height: 300px; overflow-y: scroll">
     <ng-container *ngIf="filteredMeasures.length === 0">
       <div id="loading-dropdown-text" *ngIf="loadingMeasures || loadingDropdown">Loading...</div>
       <div id="loading-dropdown-text" *ngIf="!loadingDropdown">Nothing found</div>
     </ng-container>
 
     <button
-      *ngFor="let measure of filteredMeasures | slice : 0 : 25"
+      *ngFor="let measure of filteredMeasures"
       class="dropdown-item"
       type="button"
       (click)="selectMeasure(measure)"
