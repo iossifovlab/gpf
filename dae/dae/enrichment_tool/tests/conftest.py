@@ -1,9 +1,8 @@
 import pytest
 
-from dae.enrichment_tool.background import (
-    CodingLenBackground,
-    SamochaBackground,
-)
+from dae.enrichment_tool.background import \
+    CodingLenBackground, \
+    SamochaBackground
 
 
 @pytest.fixture(scope="session")
