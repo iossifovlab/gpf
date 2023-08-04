@@ -40,9 +40,9 @@ class GroupRetrieveSerializer(GroupSerializer):
         fields = ("id", "name", "users", "datasets")
 
     def get_datasets(self, group):
-        return sorted([
+        return sorted(filter(None, [
             get_dataset_info(d.dataset_id) for d in group.dataset_set.all()
-        ], key=lambda d: d["datasetName"].lower())
+        ]), key=lambda d: d["datasetName"].lower())
 
     def to_representation(self, instance):
         response = super().to_representation(instance)
