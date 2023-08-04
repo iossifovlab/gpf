@@ -45,13 +45,32 @@
         <gpf-table-subcontent>
           <span *gpfTableCellContent="let data">
             <ng-container *ngIf="data.measureType === 'continuous'">
-              <div title="[{{+data.valuesDomain.slice(data.valuesDomain.indexOf('[') + 1, data.valuesDomain.indexOf(',')) | numberWithExp : '1.3-3' }},{{ +data.valuesDomain.slice(data.valuesDomain.indexOf(',') + 1, data.valuesDomain.indexOf(']')) | numberWithExp : '1.3-3' }}]">
-                <span>[{{+data.valuesDomain.slice(data.valuesDomain.indexOf('[') + 1, data.valuesDomain.indexOf(',')) | numberWithExp : '1.3-3' }},</span>
-                <span>{{ +data.valuesDomain.slice(data.valuesDomain.indexOf(',') + 1, data.valuesDomain.indexOf(']')) | numberWithExp : '1.3-3' }}]</span>
+              <div
+                title="[{{
+                  +data.valuesDomain.slice(data.valuesDomain.indexOf('[') + 1, data.valuesDomain.indexOf(','))
+                    | numberWithExp : '1.3-3'
+                }},{{
+                  +data.valuesDomain.slice(data.valuesDomain.indexOf(',') + 1, data.valuesDomain.indexOf(']'))
+                    | numberWithExp : '1.3-3'
+                }}]">
+                <span
+                  >[{{
+                    +data.valuesDomain.slice(data.valuesDomain.indexOf('[') + 1, data.valuesDomain.indexOf(','))
+                      | numberWithExp : '1.3-3'
+                  }},</span
+                >
+                <span
+                  >{{
+                    +data.valuesDomain.slice(data.valuesDomain.indexOf(',') + 1, data.valuesDomain.indexOf(']'))
+                      | numberWithExp : '1.3-3'
+                  }}]</span
+                >
               </div>
             </ng-container>
             <ng-container
-              *ngIf="data.measureType === 'categorical' || data.measureType === 'raw' || data.measureType === 'ordinal'">
+              *ngIf="
+                data.measureType === 'categorical' || data.measureType === 'raw' || data.measureType === 'ordinal'
+              ">
               <span *ngFor="let value of data.valuesDomain.split(', ')" title="[{{ value }}]">[{{ value }}]</span>
             </ng-container>
           </span>
@@ -96,9 +115,12 @@
             <span
               class="expanded-span"
               *gpfTableCellContent="let data"
-              [style.background-color]="data.regressions.getReg(regressionId).pvalueRegressionMale | getBackgroundColor">
-              <span [attr.title]="data.regressions.getReg(regressionId).pvalueRegressionMale | numberWithExp : '1.2-4'"
-                >{{data.regressions.getReg(regressionId).pvalueRegressionMale | numberWithExp : '1.2-4'}}</span
+              [style.background-color]="
+                data.regressions.getReg(regressionId).pvalueRegressionMale | getBackgroundColor
+              ">
+              <span
+                [attr.title]="data.regressions.getReg(regressionId).pvalueRegressionMale | numberWithExp : '1.2-4'"
+                >{{ data.regressions.getReg(regressionId).pvalueRegressionMale | numberWithExp : '1.2-4' }}</span
               >
             </span>
           </gpf-table-subcontent>
