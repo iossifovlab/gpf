@@ -47,7 +47,7 @@ class BackgroundBase(abc.ABC):
     def calc_stats(
         self, effect_types: Iterable[str],
         enrichment_results: dict[str, EnrichmentResult],
-        gene_set: set[str],
+        gene_set: Iterable[str],
         children_by_sex: dict[str, set[str]]
     ) -> dict[str, EnrichmentResult]:
         """Calculate the enrichment statistics."""
@@ -316,18 +316,19 @@ class SamochaBackground(BackgroundBase):
         gene_syms = [g.upper() for g in gene_set]
         df = self.background[self.background["gene"].isin(gene_syms)]
         p_boys = (df["M"] * df[eff]).sum()
-        # result.male_expected = p_boys * events.male_count
         male_result.expected = p_boys * children_stats["M"]
 
         p_girls = (df["F"] * df[eff]).sum()
-        # result.female_expected = p_girls * events.female_count
         female_result.expected = p_boys * children_stats["F"]
 
         assert male_result.expected is not None
         assert female_result.expected is not None
 
-        all_result.expected = male_result.expected + female_result.expected
+        all_result.expected = \
+            p_boys * (children_stats["M"] + children_stats["U"]) + \
+            female_result.expected
 
+        assert all_result.expected is not None
         assert all_result.overlapped is not None
         assert male_result.overlapped is not None
         assert female_result.overlapped is not None
@@ -344,17 +345,8 @@ class SamochaBackground(BackgroundBase):
         children_count = (
             children_stats["M"] + children_stats["U"] + children_stats["F"]
         )
-        # p = (p_boys + p_girls) / 2.0
-        probability = (
-            1.0
-            * (
-                (children_stats["M"] + children_stats["U"]) * p_boys
-                + children_stats["F"] * p_girls
-            )
-            / (children_count)
-        )
-        #         result.rec_expected = \
-        #             (children_stats['M'] + children_stats['F']) * p * p
+        probability = ((children_stats["M"] + children_stats["U"]) * p_boys
+                       + children_stats["F"] * p_girls) / children_count
 
         assert rec_result.events is not None
         assert all_result.events is not None
