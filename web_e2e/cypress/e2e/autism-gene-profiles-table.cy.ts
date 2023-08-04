@@ -318,12 +318,15 @@ describe('Autism gene profiles table functionality tests', () => {
     page.categoryFilterButton.click();
 
     page.columnHeader('Autism Gene Sets').click();
+    cy.wait(200); // wait old content to be replaced
     page.allTableRows.eq(0).invoke('text').then(text => expect(text.split('✓').length-1).equal(0));
     page.allTableRows.eq(1).invoke('text').then(text => expect(text.split('✓').length-1).equal(0));
     page.allTableRows.eq(2).invoke('text').then(text => expect(text.split('✓').length-1).equal(0));
     page.allTableRows.eq(3).invoke('text').then(text => expect(text.split('✓').length-1).equal(1));
 
     page.columnHeader('Autism Gene Sets').click();
+    page.allTableRows.should('have.length', 4);
+    cy.wait(200);
     page.allTableRows.eq(0).invoke('text').then(text => expect(text.split('✓').length-1).equal(1));
     page.allTableRows.eq(1).invoke('text').then(text => expect(text.split('✓').length-1).equal(0));
     page.allTableRows.eq(2).invoke('text').then(text => expect(text.split('✓').length-1).equal(0));
@@ -340,6 +343,7 @@ describe('Autism gene profiles table functionality tests', () => {
     page.categoryFilterButton.click();
 
     page.columnHeader('Relevant Gene Sets').click();
+    cy.wait(200);
     page.allTableRows.eq(0).invoke('text').then(text => expect(text.split('✓').length-1).equal(2));
     page.allTableRows.eq(1).invoke('text').then(text => expect(text.split('✓').length-1).equal(1));
     page.allTableRows.eq(2).invoke('text').then(text => expect(text.split('✓').length-1).equal(1));
@@ -349,6 +353,7 @@ describe('Autism gene profiles table functionality tests', () => {
 
 
     page.columnHeader('Relevant Gene Sets').click();
+    cy.wait(200);
     page.allTableRows.eq(0).invoke('text').then(text => expect(text.split('✓').length-1).equal(1));
     page.allTableRows.eq(1).invoke('text').then(text => expect(text.split('✓').length-1).equal(1));
     page.allTableRows.eq(2).invoke('text').then(text => expect(text.split('✓').length-1).equal(1));
