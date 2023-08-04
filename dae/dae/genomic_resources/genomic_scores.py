@@ -31,8 +31,9 @@ from .genomic_position_table import build_genomic_position_table, Line, \
 from .genomic_position_table.table_inmemory import InmemoryGenomicPositionTable
 from .histogram import HistogramError, NumberHistogram, \
     NumberHistogramConfig, CategoricalHistogramConfig, \
-    CategoricalHistogram, NullHistogram, annul_histogram, \
-    load_histogram, create_histogram_from_score_config
+    NullHistogramConfig, CategoricalHistogram, NullHistogram, \
+    load_histogram, create_histogram_from_config, \
+    create_histogram_config_from_dict
 from .statistics.min_max import MinMaxValue
 
 from .aggregators import build_aggregator, AGGREGATOR_SCHEMA, Aggregator
@@ -71,7 +72,12 @@ class ScoreDef:
     small_values_desc: Optional[str]
     large_values_desc: Optional[str]
 
-    hist_conf: Optional[dict[str, Any]]
+    hist_conf: Union[
+        NumberHistogramConfig,
+        CategoricalHistogramConfig,
+        NullHistogramConfig,
+        None
+    ]
 
 
 @dataclass
@@ -89,7 +95,12 @@ class _ScoreDef:
     small_values_desc: Optional[str]
     large_values_desc: Optional[str]
 
-    hist_conf: Optional[dict[str, Any]]
+    hist_conf: Union[
+        NumberHistogramConfig,
+        CategoricalHistogramConfig,
+        NullHistogramConfig,
+        None
+    ]
 
     col_name: Optional[str]                       # internal
     col_index: Optional[int]                      # internal
@@ -97,7 +108,6 @@ class _ScoreDef:
     value_parser: Any                             # internal
     na_values: Any                                # internal
     score_index: Optional[int | str] = None       # internal
-    dict_conf: dict[str, Any]   # internal, original score config section
 
     def to_public(self) -> ScoreDef:
         return ScoreDef(
@@ -450,7 +460,7 @@ class GenomicScoreImplementation(
 
     @staticmethod
     def _merge_min_max(
-        score_ids: list[str], *calculate_tasks: dict[str, Any]
+        score_ids: list[str], *calculate_tasks: dict[str, MinMaxValue]
     ) -> dict[str, Any]:
         res: dict[str, Optional[MinMaxValue]] = {
             score_id: None for score_id in score_ids}
@@ -466,7 +476,7 @@ class GenomicScoreImplementation(
 
     @staticmethod
     def _save_min_max(
-        resource: GenomicResource, merged_min_max: dict[str, Any]
+        resource: GenomicResource, merged_min_max: dict[str, MinMaxValue]
     ) -> dict[str, Any]:
         impl = build_score_implementation_from_resource(resource)
         proto = resource.proto
@@ -519,45 +529,19 @@ class GenomicScoreImplementation(
         return histogram_tasks, merge_task, save_task
 
     @staticmethod
-    def _create_number_histogram(
-        hist_config: NumberHistogramConfig,
-        score_id: str,
-        save_minmax_task: dict[str, Any]
-    ) -> Optional[NumberHistogram]:
-        range_min, range_max = hist_config.view_range
-        if range_min is None:
-            range_min = save_minmax_task[score_id].min
-        if range_max is None:
-            range_max = save_minmax_task[score_id].max
-        hist_config.view_range = (range_min, range_max)
-        try:
-            return NumberHistogram(hist_config)
-        except ValueError:
-            logger.warning("skipping number histogram for %s", score_id)
-            return None
-
-    @staticmethod
-    def _create_categorical_histogram(
-        hist_config: CategoricalHistogramConfig,
-        score_id: str
-    ) -> Optional[CategoricalHistogram]:
-        try:
-            return CategoricalHistogram(hist_config)
-        except ValueError:
-            logger.warning("skipping categorical histogram for %s", score_id)
-            return None
-
-    @staticmethod
     def _do_histogram(  # pylint: disable=unused-argument
         resource: GenomicResource,
         chrom: str, start: int, end: int,
-        save_minmax_task: dict[str, Any]
+        save_minmax_task: dict[str, MinMaxValue]
     ) -> dict[str, Any]:
         impl = build_score_implementation_from_resource(resource)
         res: dict[str, Any] = {}
         for score_id, score_def in impl.score.score_definitions.items():
-            res[score_id] = create_histogram_from_score_config(
-                score_def.dict_conf
+            res[score_id] = create_histogram_from_config(
+                score_def.hist_conf,
+                score_id=score_id,
+                score_type=score_def.value_type,
+                min_max=save_minmax_task[score_id]
             )
 
         score_ids = list(res.keys())
@@ -571,8 +555,14 @@ class GenomicScoreImplementation(
                             "Failed adding value to histogram of "
                             f"{resource.resource_id} {chrom}:{start}-{end}"
                         ) from err
-                    except HistogramError:
-                        res[scr_id] = annul_histogram(res[scr_id])
+                    except HistogramError as err:
+                        logger.exception(
+                            "Histogram for %s annulled",
+                            scr_id
+                        )
+                        res[scr_id] = NullHistogram(
+                            NullHistogramConfig(str(err))
+                        )
         return res
 
     @staticmethod
@@ -599,8 +589,14 @@ class GenomicScoreImplementation(
                 else:
                     try:
                         res[score_id].merge(hist)
-                    except HistogramError:
-                        res[score_id] = annul_histogram(hist)
+                    except HistogramError as err:
+                        logger.exception(
+                            "Histogram for %s annulled",
+                            score_id
+                        )
+                        res[score_id] = NullHistogram(
+                            NullHistogramConfig(str(err))
+                        )
         if skipped_score_histograms:
             logger.warning(
                 "skipped merging histograms: %s", skipped_score_histograms)
@@ -644,7 +640,6 @@ class GenomicScoreImplementation(
         """
         manifest = self.resource.get_manifest()
         config = self.get_config()
-        score_filename = config["table"]["filename"]
         histograms = [
             self.score.get_score_histogram(score_id) for score_id in
             self.get_config_histograms()
@@ -664,8 +659,6 @@ class GenomicScoreImplementation(
             "score_config": [
                 (score_def.score_id,
                  score_def.value_type,
-                 str(score_def.hist_categorical_conf),
-                 str(score_def.hist_number_conf),
                  score_def.col_name,
                  score_def.col_index,
                  str(sorted(score_def.na_values))
@@ -855,6 +848,10 @@ class GenomicScore(ResourceConfigValidationMixin):
             col_index_str = score_conf.get("index")
             col_index = int(col_index_str) if col_index_str else None
 
+            hist_conf = create_histogram_config_from_dict(
+                score_conf.get("histogram")
+            )
+
             score_def = _ScoreDef(
                 score_id=score_conf["id"],
                 desc=score_conf.get("desc", ""),
@@ -864,14 +861,11 @@ class GenomicScore(ResourceConfigValidationMixin):
                 allele_aggregator=score_conf.get("allele_aggregator"),
                 small_values_desc=score_conf.get("small_values_desc"),
                 large_values_desc=score_conf.get("large_values_desc"),
-                hist_number_conf=number_hist_conf,
-                hist_categorical_conf=categorical_hist_conf,
                 col_name=col_name,
                 col_index=col_index,
-                hist_conf=score_conf.get("histogram"),
+                hist_conf=hist_conf,
                 value_parser=value_parser,
-                na_values=score_conf.get("na_values"),
-                dict_conf=score_conf
+                na_values=score_conf.get("na_values")
             )
 
             scores[score_conf["id"]] = score_def
@@ -910,8 +904,7 @@ class GenomicScore(ResourceConfigValidationMixin):
                 allele_aggregator=None,
                 small_values_desc=None,
                 large_values_desc=None,
-                hist_conf=None,
-                dict_conf=None
+                hist_conf=None
             )
         if config_scoredefs is None:
             return vcf_scoredefs
@@ -928,7 +921,6 @@ class GenomicScore(ResourceConfigValidationMixin):
             vcf_scoredef.value_parser = config_scoredef.value_parser
             vcf_scoredef.na_values = config_scoredef.na_values
             vcf_scoredef.hist_conf = config_scoredef.hist_conf
-            vcf_scoredef.dict_conf = config_scoredef.dict_conf
             scoredefs[score] = vcf_scoredef
         return scoredefs
 
@@ -1183,7 +1175,7 @@ class GenomicScore(ResourceConfigValidationMixin):
         hist_filename = self.get_histogram_filename(score_id)
 
         hist = load_histogram(
-            score_def.dict_conf, self.resource, hist_filename
+            score_def.hist_conf, self.resource, hist_filename
         )
         return hist
 

@@ -86,7 +86,7 @@ class GenomicScoreAnnotatorBase(Annotator):
 
     def create_the_documentation(self, attribute_info: AttributeInfo) -> None:
         hist_url = self.score.get_histogram_image_url(attribute_info.source)
-        score_def = self.score.get_score_config(attribute_info.source)
+        score_def = self.score.get_score_definition(attribute_info.source)
         # pylint: disable=protected-access
         attribute_info._documentation = f"""
 {attribute_info.description}
