@@ -2,7 +2,8 @@
 
 import pytest
 
-from dae.annotation.annotatable import Annotatable, VCFAllele
+from dae.annotation.annotatable import Annotatable, Position, Region, \
+    VCFAllele, CNVAllele
 from dae.utils.variant_utils import trim_parsimonious
 
 
@@ -72,3 +73,52 @@ def test_parsimonious_vcf_allele(
     assert annotatable.pos == expected[0]
     assert annotatable.ref == expected[1]
     assert annotatable.alt == expected[2]
+
+
+@pytest.mark.parametrize(
+    "value,expected", [
+        ("Position(chr1, 123)", Position("chr1", 123)),
+        ("POSITION(chr1, 123)", Position("chr1", 123)),
+    ]
+)
+def test_annotatable_from_string_position(value, expected):
+    assert Annotatable.from_string(value) == expected
+
+
+@pytest.mark.parametrize(
+    "value,expected", [
+        ("Region(chr1, 123, 456)", Region("chr1", 123, 456)),
+        ("REGION(chr1, 123, 456)", Region("chr1", 123, 456)),
+    ]
+)
+def test_annotatable_from_string_region(value, expected):
+    assert Annotatable.from_string(value) == expected
+
+
+@pytest.mark.parametrize(
+    "value,expected", [
+        ("VCFAllele(chr1, 123, A, G)", VCFAllele("chr1", 123, "A", "G")),
+        ("SUBSTITUTION(chr1, 123, A, G)", VCFAllele("chr1", 123, "A", "G")),
+        ("COMPLEX(chr1, 123, AC, GT)", VCFAllele("chr1", 123, "AC", "GT")),
+        ("SMALL_DELETION(X, 1, AAA, A)", VCFAllele("X", 1, "AAA", "A")),
+        ("SMALL_INSERTION(X, 1, A, AAA)", VCFAllele("X", 1, "A", "AAA")),
+    ]
+)
+def test_annotatable_from_string_vcf(value, expected):
+    assert Annotatable.from_string(value) == expected
+
+
+@pytest.mark.parametrize(
+    "value,expected", [
+        ("CNVAllele(X, 123, 345, LARGE_DUPLICATION)",
+         CNVAllele("X", 123, 345, Annotatable.Type.LARGE_DUPLICATION)),
+        ("CNVAllele(X, 123, 345, LARGE_DELETION)",
+         CNVAllele("X", 123, 345, Annotatable.Type.LARGE_DELETION)),
+        ("LARGE_DUPLICATION(X, 123, 345)",
+         CNVAllele("X", 123, 345, Annotatable.Type.LARGE_DUPLICATION)),
+        ("LARGE_DELETION(X, 123, 345)",
+         CNVAllele("X", 123, 345, Annotatable.Type.LARGE_DELETION)),
+    ]
+)
+def test_annotatable_from_string_cnv(value, expected):
+    assert Annotatable.from_string(value) == expected

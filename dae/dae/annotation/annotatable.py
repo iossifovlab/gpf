@@ -90,7 +90,7 @@ class Annotatable:
         tokens = value.split("(")
         if len(tokens) != 2:
             raise ValueError("Attempted to tokenize invalid input - ", value)
-        return tokens[0], tokens[1].rstrip(")").split(",")
+        return tokens[0], tokens[1].rstrip(")").replace(" ", "").split(",")
 
     @staticmethod
     def from_string(value: str) -> Annotatable:
@@ -159,21 +159,17 @@ class VCFAllele(Annotatable):
         if len(ref) == 1 and len(alt) == 1:
             allele_type = Annotatable.Type.SUBSTITUTION
             pos_end = pos
-
         elif len(ref) == 1 and len(alt) > 1 and ref[0] == alt[0]:
             allele_type = Annotatable.Type.SMALL_INSERTION
             pos_end = pos + 1
-
         elif len(ref) > 1 and len(alt) == 1 and ref[0] == alt[0]:
-
             allele_type = Annotatable.Type.SMALL_DELETION
             pos_end = pos + len(ref)
         else:
             allele_type = Annotatable.Type.COMPLEX
             pos_end = pos + len(ref)
 
-        super().__init__(
-            chrom, pos, pos_end, allele_type)
+        super().__init__(chrom, pos, pos_end, allele_type)
 
     @property
     def ref(self):

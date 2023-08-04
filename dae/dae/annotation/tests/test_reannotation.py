@@ -253,6 +253,7 @@ def test_basic_annotator_changes_detection(reannotation_grr) -> None:
 
     assert len(reannotation.annotators_new) == 1
     assert len(reannotation.attributes_deleted) == 1
+    assert len(reannotation.annotators_rerun) == 0
     assert len(reannotation.attributes_reused) == 0
 
 
