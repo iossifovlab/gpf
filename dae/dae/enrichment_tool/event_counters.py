@@ -1,9 +1,16 @@
+from __future__ import annotations
+
 import itertools
+from typing import Type, Optional, cast, Iterable
 
 from dae.variants.attributes import Sex
+from dae.effect_annotation.effect import AlleleEffects
+from dae.variants.family_variant import FamilyVariant, FamilyAllele
 
 
-def filter_denovo_one_event_per_family(vs, requested_effect_types):
+def filter_denovo_one_event_per_family(
+    vs: list[FamilyVariant], requested_effect_types: Iterable[str]
+) -> list[list[str]]:
     """
     For each variant returns list of affected gene syms.
 
@@ -18,30 +25,31 @@ def filter_denovo_one_event_per_family(vs, requested_effect_types):
     res = []
     for v in vs:
         syms = set(
-            [
-                ge.symbol.upper()
-                for aa in v.alt_alleles
-                for ge in aa.effects.genes
-                if ge.effect in requested_effect_types
-            ]
+            ge.symbol.upper()
+            for aa in v.alt_alleles
+            for ge in cast(AlleleEffects, aa.effects).genes
+            if ge.effect in requested_effect_types
         )
         not_seen_genes = [gs for gs in syms if (v.family_id + gs) not in seen]
         if not not_seen_genes:
             continue
-        for gs in not_seen_genes:
-            seen.add(v.family_id + gs)
+        for gene_sym in not_seen_genes:
+            seen.add(v.family_id + gene_sym)
         res.append(not_seen_genes)
 
     return res
 
 
-def get_sym_2_fn(vs, requested_effect_types):
+def get_sym_2_fn(
+    vs: list[FamilyVariant], requested_effect_types: Iterable[str]
+) -> dict[str, int]:
+    """Count the number of requested effected events in genes."""
     gn_sorted = sorted(
         [
             [ge.symbol.upper(), v]
             for v in vs
             for aa in v.alt_alleles
-            for ge in aa.effects.genes
+            for ge in cast(AlleleEffects, aa.effects).genes
             if ge.effect in requested_effect_types
         ]
     )
@@ -50,23 +58,27 @@ def get_sym_2_fn(vs, requested_effect_types):
         for sym, tpi in itertools.groupby(gn_sorted, key=lambda x: x[0])
     }
     sym_2_fn = {
-        sym: len(set([v.family_id for v in vs]))
+        sym: len(set(v.family_id for v in vs))
         for sym, vs in list(sym_2_vars.items())
     }
     return sym_2_fn
 
 
-def filter_denovo_one_gene_per_recurrent_events(vs, requsted_effect_types):
+def filter_denovo_one_gene_per_recurrent_events(
+    vs: list[FamilyVariant], requsted_effect_types: Iterable[str]
+) -> list[list[str]]:
     sym_2_fn = get_sym_2_fn(vs, requsted_effect_types)
     return [[gs] for gs, fn in list(sym_2_fn.items()) if fn > 1]
 
 
-def filter_denovo_one_gene_per_events(vs, requested_effect_types):
+def filter_denovo_one_gene_per_events(
+    vs: list[FamilyVariant], requested_effect_types: Iterable[str]
+) -> list[list[str]]:
     sym_2_fn = get_sym_2_fn(vs, requested_effect_types)
     return [[gs] for gs, _fn in list(sym_2_fn.items())]
 
 
-class EnrichmentResult(object):
+class EnrichmentResult:
     """Represents result of enrichment tool calculations.
 
     Supported fields are:
@@ -82,44 +94,45 @@ class EnrichmentResult(object):
     `pvalue`
     """
 
-    def __init__(self, name):
-        self.name = name
-        self.events = None
-        self.overlapped = None
-        self.expected = None
-        self.pvalue = None
+    def __init__(self, name: str):
+        self.name: str = name
+        self.events: Optional[list[list[str]]] = None
+        self.overlapped: Optional[list[list[str]]] = None
+        self.expected: Optional[float] = None
+        self.pvalue: Optional[float] = None
 
-    def __repr__(self):
-        return (
-            "EnrichmentResult({}): events={}; overlapped={}; "
-            "expected={}; pvalue={}".format(
-                self.name,
-                len(self.events) if self.events else None,
-                len(self.overlapped) if self.overlapped else None,
-                self.expected,
-                self.pvalue,
-            )
-        )
+    def __repr__(self) -> str:
+        return f"EnrichmentResult({self.name}): " \
+            f"events={len(self.events) if self.events else None}; " \
+            f"overlapped=" \
+            f"{len(self.overlapped) if self.overlapped else None}; " \
+            f"expected={self.expected}; pvalue={self.pvalue}"
 
 
-def filter_overlapping_events(events, gene_syms):
-    return [ev for ev in events if any([gs in gene_syms for gs in ev])]
+def filter_overlapping_events(
+        events: list[list[str]], gene_syms: list[str]) -> list[list[str]]:
+    return [ev for ev in events if any(gs in gene_syms for gs in ev)]
 
 
-def overlap_enrichment_result_dict(enrichment_results, gene_syms):
-    gene_syms = [gs.upper() for gs in gene_syms]
-
+def overlap_enrichment_result_dict(
+    enrichment_results: dict[str, EnrichmentResult], gene_syms: Iterable[str]
+) -> dict[str, EnrichmentResult]:
+    """Calculate the overlap between all events and requested gene syms."""
+    gene_syms_upper = [gs.upper() for gs in gene_syms]
     for enrichment_result in list(enrichment_results.values()):
+        assert enrichment_result.events is not None
         enrichment_result.overlapped = filter_overlapping_events(
-            enrichment_result.events, gene_syms
+            enrichment_result.events, gene_syms_upper
         )
 
     return enrichment_results
 
 
-class CounterBase(object):
+class CounterBase:
+    """Class to represent enrichement events counter object."""
+
     @staticmethod
-    def counters():
+    def counters() -> dict[str, Type[CounterBase]]:
         return {
             "enrichment_events_counting": EventsCounter,
             "enrichment_gene_counting": GeneEventsCounter,
@@ -133,10 +146,14 @@ class CounterBase(object):
     #         variants.append(vs)
     #     return list(itertools.chain(*variants))
 
-    def events(self, variants):
+    def events(
+        self, variants: list[FamilyVariant],
+        children_by_sex: dict[str, set[str]],
+        effect_types: Iterable[str]
+    ) -> dict[str, EnrichmentResult]:
         raise NotImplementedError()
 
-    def _create_event_result(self):
+    def _create_event_result(self) -> dict[str, EnrichmentResult]:
         return {
             "all": EnrichmentResult("all"),
             "rec": EnrichmentResult("rec"),
@@ -147,12 +164,12 @@ class CounterBase(object):
 
     def _set_result_events(
         self,
-        all_events,
-        rec_events,
-        male_events,
-        female_events,
-        unspecified_events,
-    ):
+        all_events: list[list[str]],
+        rec_events: list[list[str]],
+        male_events: list[list[str]],
+        female_events: list[list[str]],
+        unspecified_events: list[list[str]],
+    ) -> dict[str, EnrichmentResult]:
         result = self._create_event_result()
         result["all"].events = all_events
         result["rec"].events = rec_events
@@ -163,7 +180,13 @@ class CounterBase(object):
 
 
 class EventsCounter(CounterBase):
-    def events(self, variants, children_by_sex, effect_types):
+    """Events counter class."""
+
+    def events(
+        self, variants: list[FamilyVariant],
+        children_by_sex: dict[str, set[str]],
+        effect_types: Iterable[str]
+    ) -> dict[str, EnrichmentResult]:
         male_children = children_by_sex[Sex.male.name]
         female_children = children_by_sex[Sex.female.name]
         unspecified_children = children_by_sex[Sex.unspecified.name]
@@ -173,25 +196,26 @@ class EventsCounter(CounterBase):
             v
             for v in variants
             for aa in v.alt_alleles
-            if all_children & set(aa.variant_in_members)
+            if all_children & set(cast(FamilyAllele, aa).variant_in_members)
         ]
         male_variants = [
             v
             for v in variants
             for aa in v.alt_alleles
-            if male_children & set(aa.variant_in_members)
+            if male_children & set(cast(FamilyAllele, aa).variant_in_members)
         ]
         female_variants = [
             v
             for v in variants
             for aa in v.alt_alleles
-            if female_children & set(aa.variant_in_members)
+            if female_children & set(cast(FamilyAllele, aa).variant_in_members)
         ]
         unspecified_variants = [
             v
             for v in variants
             for aa in v.alt_alleles
-            if unspecified_children in set(aa.variant_in_members)
+            if unspecified_children in
+            set(cast(FamilyAllele, aa).variant_in_members)
         ]
 
         all_events = filter_denovo_one_event_per_family(
@@ -221,7 +245,14 @@ class EventsCounter(CounterBase):
 
 
 class GeneEventsCounter(CounterBase):
-    def events(self, variants, children_by_sex, effect_types):
+    """Counts events in genes."""
+
+    def events(
+        self, variants: list[FamilyVariant],
+        children_by_sex: dict[str, set[str]],
+        effect_types: Iterable[str]
+    ) -> dict[str, EnrichmentResult]:
+        """Count the events by sex and effect type."""
         male_children = children_by_sex[Sex.male.name]
         female_children = children_by_sex[Sex.female.name]
         unspecified_children = children_by_sex[Sex.unspecified.name]
@@ -231,25 +262,26 @@ class GeneEventsCounter(CounterBase):
             v
             for v in variants
             for aa in v.alt_alleles
-            if all_children & set(aa.variant_in_members)
+            if all_children & set(cast(FamilyAllele, aa).variant_in_members)
         ]
         male_variants = [
             v
             for v in variants
             for aa in v.alt_alleles
-            if male_children & set(aa.variant_in_members)
+            if male_children & set(cast(FamilyAllele, aa).variant_in_members)
         ]
         female_variants = [
             v
             for v in variants
             for aa in v.alt_alleles
-            if female_children & set(aa.variant_in_members)
+            if female_children & set(cast(FamilyAllele, aa).variant_in_members)
         ]
         unspecified_variants = [
             v
             for v in variants
             for aa in v.alt_alleles
-            if unspecified_children in set(aa.variant_in_members)
+            if unspecified_children in
+            set(cast(FamilyAllele, aa).variant_in_members)
         ]
 
         all_events = filter_denovo_one_gene_per_events(

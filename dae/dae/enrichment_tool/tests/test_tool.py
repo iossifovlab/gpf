@@ -1,13 +1,20 @@
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
+from box import Box
+
 from dae.enrichment_tool.tool import EnrichmentTool
 from dae.enrichment_tool.event_counters import EventsCounter
 from dae.enrichment_tool.genotype_helper import GenotypeHelper
+from dae.enrichment_tool.background import CodingLenBackground
 
 from dae.variants.attributes import Inheritance
+from dae.studies.study import GenotypeData
 
 
 def test_enrichment_tool(
-    f1_trio, f1_trio_enrichment_config, f1_trio_coding_len_background
-):
+    f1_trio: GenotypeData,
+    f1_trio_enrichment_config: Box,
+    f1_trio_coding_len_background: CodingLenBackground
+) -> None:
     variants = list(
         f1_trio.query_variants(inheritance=str(Inheritance.denovo.name))
     )
@@ -16,9 +23,9 @@ def test_enrichment_tool(
         f1_trio_enrichment_config, f1_trio_coding_len_background, event_counter
     )
     psc = f1_trio.get_person_set_collection("phenotype")
-    gh = GenotypeHelper(f1_trio, psc)
-    # children_stats = gh.get_children_stats()
-    children_by_sex = gh.children_by_sex("phenotype1")
+    helper = GenotypeHelper(f1_trio, psc)
+    # children_stats = helper.get_children_stats()
+    children_by_sex = helper.children_by_sex("phenotype1")
 
     enrichment_events = enrichment_tool.calc(
         ["missense", "synonymous"],
@@ -27,22 +34,31 @@ def test_enrichment_tool(
         children_by_sex,
     )
 
+    assert enrichment_events["all"].events is not None
     assert len(enrichment_events["all"].events) == 2
     assert enrichment_events["all"].events == [["SAMD11"], ["SAMD11"]]
     assert enrichment_events["all"].expected == 2.0
     assert enrichment_events["all"].pvalue == 1.0
+
+    assert enrichment_events["rec"].events is not None
     assert len(enrichment_events["rec"].events) == 1
     assert enrichment_events["rec"].events == [["SAMD11"]]
     assert enrichment_events["rec"].expected == 1.0
     assert enrichment_events["rec"].pvalue == 1.0
+
+    assert enrichment_events["male"].events is not None
     assert len(enrichment_events["male"].events) == 1
     assert enrichment_events["male"].events == [["SAMD11"]]
     assert enrichment_events["male"].expected == 1.0
     assert enrichment_events["male"].pvalue == 1.0
+
+    assert enrichment_events["female"].events is not None
     assert len(enrichment_events["female"].events) == 1
     assert enrichment_events["female"].events == [["SAMD11"]]
     assert enrichment_events["female"].expected == 1.0
     assert enrichment_events["female"].pvalue == 1.0
+
+    assert enrichment_events["unspecified"].events is not None
     assert len(enrichment_events["unspecified"].events) == 0
     assert enrichment_events["unspecified"].events == []
     assert enrichment_events["unspecified"].expected is None

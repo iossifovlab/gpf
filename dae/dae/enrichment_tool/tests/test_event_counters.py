@@ -1,23 +1,24 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 from dae.variants.attributes import Inheritance
+from dae.studies.study import GenotypeData
 
-from dae.enrichment_tool.event_counters import (
-    filter_denovo_one_event_per_family,
-    filter_denovo_one_gene_per_recurrent_events,
-    filter_denovo_one_gene_per_events,
-    get_sym_2_fn,
-    EnrichmentResult,
-    filter_overlapping_events,
-    overlap_enrichment_result_dict,
-    CounterBase,
-    EventsCounter,
-    GeneEventsCounter,
-)
+from dae.enrichment_tool.event_counters import \
+    filter_denovo_one_event_per_family, \
+    filter_denovo_one_gene_per_recurrent_events, \
+    filter_denovo_one_gene_per_events, \
+    get_sym_2_fn, \
+    EnrichmentResult, \
+    filter_overlapping_events, \
+    overlap_enrichment_result_dict, \
+    CounterBase, \
+    EventsCounter, \
+    GeneEventsCounter
 
 from dae.enrichment_tool.genotype_helper import GenotypeHelper
 
 
-def test_filter_denovo_one_event_per_family(f1_trio):
+def test_filter_denovo_one_event_per_family(
+        f1_trio: GenotypeData) -> None:
     variants = list(
         f1_trio.query_variants(inheritance=str(Inheritance.denovo.name))
     )
@@ -32,7 +33,8 @@ def test_filter_denovo_one_event_per_family(f1_trio):
     assert fv == [["SAMD11"], ["SAMD11"], ["PLEKHN1"]]
 
 
-def test_filter_denovo_one_gene_per_recurrent_events(f1_trio):
+def test_filter_denovo_one_gene_per_recurrent_events(
+        f1_trio: GenotypeData) -> None:
     variants = list(
         f1_trio.query_variants(inheritance=str(Inheritance.denovo.name))
     )
@@ -47,7 +49,7 @@ def test_filter_denovo_one_gene_per_recurrent_events(f1_trio):
     assert fv == [["SAMD11"]]
 
 
-def test_filter_denovo_one_gene_per_events(f1_trio):
+def test_filter_denovo_one_gene_per_events(f1_trio: GenotypeData) -> None:
     variants = list(
         f1_trio.query_variants(inheritance=str(Inheritance.denovo.name))
     )
@@ -62,7 +64,7 @@ def test_filter_denovo_one_gene_per_events(f1_trio):
     assert fv == [["PLEKHN1"], ["SAMD11"]]
 
 
-def test_get_sym_2_fn(f1_trio):
+def test_get_sym_2_fn(f1_trio: GenotypeData) -> None:
     variants = list(
         f1_trio.query_variants(inheritance=str(Inheritance.denovo.name))
     )
@@ -76,7 +78,7 @@ def test_get_sym_2_fn(f1_trio):
     assert sym_2_fn["SAMD11"] == 2
 
 
-def test_filter_overlapping_events(f1_trio):
+def test_filter_overlapping_events(f1_trio: GenotypeData) -> None:
     overlapping_events = filter_overlapping_events(
         [["SAMD11"], ["SAMD11"], ["PLEKHN1"]], ["SAMD11", "POGZ"]
     )
@@ -85,7 +87,7 @@ def test_filter_overlapping_events(f1_trio):
     assert overlapping_events == [["SAMD11"], ["SAMD11"]]
 
 
-def test_overlap_enrichment_result_dict(f1_trio):
+def test_overlap_enrichment_result_dict(f1_trio: GenotypeData) -> None:
     enrichment_result = EnrichmentResult("all")
     enrichment_result.events = [["SAMD11"], ["SAMD11"], ["PLEKHN1"]]
     enrichment_result.expected = 0.12345
@@ -94,6 +96,7 @@ def test_overlap_enrichment_result_dict(f1_trio):
     enrichment_results = {"all": enrichment_result}
 
     overlap_enrichment_result_dict(enrichment_results, ["PLEKHN1", "POGZ"])
+    assert enrichment_results["all"].overlapped is not None
     assert len(enrichment_results["all"].overlapped) == 1
     assert enrichment_results["all"].overlapped == [["PLEKHN1"]]
 
@@ -105,7 +108,7 @@ def test_overlap_enrichment_result_dict(f1_trio):
     )
 
 
-def test_counter_base_counters():
+def test_counter_base_counters() -> None:
     counters = CounterBase.counters()
 
     assert len(counters) == 2
@@ -113,7 +116,7 @@ def test_counter_base_counters():
     assert counters["enrichment_gene_counting"] == GeneEventsCounter
 
 
-def test_events_counter(f1_trio):
+def test_events_counter(f1_trio: GenotypeData) -> None:
     variants = list(
         f1_trio.query_variants(inheritance=str(Inheritance.denovo.name))
     )
@@ -127,18 +130,27 @@ def test_events_counter(f1_trio):
     events = event_counter.events(variants, children_by_sex, effect_types)
     print(events)
 
+    assert events["all"].events is not None
     assert len(events["all"].events) == 2
     assert events["all"].events == [["SAMD11"], ["SAMD11"]]
+
+    assert events["rec"].events is not None
     assert len(events["rec"].events) == 1
     assert events["rec"].events == [["SAMD11"]]
+
+    assert events["male"].events is not None
     assert len(events["male"].events) == 1
     assert events["male"].events == [["SAMD11"]]
+
+    assert events["female"].events is not None
     assert len(events["female"].events) == 1
     assert events["female"].events == [["SAMD11"]]
+
+    assert events["unspecified"].events is not None
     assert len(events["unspecified"].events) == 0
 
 
-def test_gene_events_counter(f1_trio):
+def test_gene_events_counter(f1_trio: GenotypeData) -> None:
     variants = list(
         f1_trio.query_variants(inheritance=str(Inheritance.denovo.name))
     )
@@ -151,14 +163,22 @@ def test_gene_events_counter(f1_trio):
 
     events = event_counter.events(variants, children_by_sex, effect_types)
 
+    assert events["all"].events is not None
     assert len(events["all"].events) == 1
     assert events["all"].events == [["SAMD11"]]
+
+    assert events["rec"].events is not None
     assert len(events["rec"].events) == 1
     assert events["rec"].events == [["SAMD11"]]
+
+    assert events["male"].events is not None
     assert len(events["male"].events) == 1
     assert events["male"].events == [["SAMD11"]]
 
-    print(events["female"].events)
+    assert events["female"].events is not None
+    assert len(events["female"].events) == 1
     assert events["female"].events == [["SAMD11"]]
     assert len(events["female"].events) == 1
+
+    assert events["unspecified"].events is not None
     assert len(events["unspecified"].events) == 0
