@@ -1,119 +1,144 @@
-<gpf-table [dataSource]="measures.measures" style="display: inline-block; min-width: 1200px">
-  <gpf-table-column [columnWidth]="singleColumnWidth">
-    <gpf-table-header caption="Instrument" field="instrumentName"></gpf-table-header>
-    <gpf-table-content>
-      <span *gpfTableCellContent="let data">
-        <div [attr.title]="data.instrumentName">{{ data.instrumentName }}</div>
-      </span>
-    </gpf-table-content>
-  </gpf-table-column>
-  <gpf-table-column [columnWidth]="singleColumnWidth">
-    <gpf-table-header caption="Proband Pheno Measure" field="measureName"></gpf-table-header>
-    <gpf-table-content>
-      <span *gpfTableCellContent="let data">
-        <div [attr.title]="data.measureName">{{ data.measureName }}</div>
-      </span>
-    </gpf-table-content>
-  </gpf-table-column>
-  <gpf-table-column *ngIf="measures.hasDescriptions">
-    <gpf-table-header caption="Measure Description" field="description"></gpf-table-header>
-    <gpf-table-content>
-      <span *gpfTableCellContent="let data">
-        <div [attr.title]="data.description">{{ data.description }}</div>
-      </span>
-    </gpf-table-content>
-  </gpf-table-column>
-  <gpf-table-column [columnWidth]="singleColumnWidth">
-    <gpf-table-header caption="Pheno Measure Values"></gpf-table-header>
-    <gpf-table-content>
-      <span *gpfTableCellContent="let data">
-        <a [class.clickable]="!!data.figureDistribution" (click)="openModal(data.figureDistribution)">
-          <img *ngIf="data.figureDistributionSmall" class="table-chart" [src]="data.figureDistributionSmall" />
-        </a>
-      </span>
-    </gpf-table-content>
-  </gpf-table-column>
-  <gpf-table-column [columnWidth]="singleColumnWidth">
-    <gpf-table-header>
-      <gpf-table-subheader caption="Measure Type" field="measureType"></gpf-table-subheader>
-      <gpf-table-subheader caption="Values Domain"></gpf-table-subheader>
-    </gpf-table-header>
-    <gpf-table-content>
-      <gpf-table-subcontent field="measureType"></gpf-table-subcontent>
-      <gpf-table-subcontent>
-        <span *gpfTableCellContent="let data">
-          <ng-container *ngIf="data.measureType === 'continuous'">
-            <div title="[{{+data.valuesDomain.slice(data.valuesDomain.indexOf('[') + 1, data.valuesDomain.indexOf(',')) | numberWithExp : '1.3-3' }},{{ +data.valuesDomain.slice(data.valuesDomain.indexOf(',') + 1, data.valuesDomain.indexOf(']')) | numberWithExp : '1.3-3' }}]">
-              <span>[{{+data.valuesDomain.slice(data.valuesDomain.indexOf('[') + 1, data.valuesDomain.indexOf(',')) | numberWithExp : '1.3-3' }},</span>
-              <span>{{ +data.valuesDomain.slice(data.valuesDomain.indexOf(',') + 1, data.valuesDomain.indexOf(']')) | numberWithExp : '1.3-3' }}]</span>
-            </div>
-          </ng-container>
-          <ng-container
-            *ngIf="data.measureType === 'categorical' || data.measureType === 'raw' || data.measureType === 'ordinal'">
-            <span *ngFor="let value of data.valuesDomain.split(', ')" title="[{{ value }}]">[{{ value }}]</span>
-          </ng-container>
-        </span>
-      </gpf-table-subcontent>
-    </gpf-table-content>
-  </gpf-table-column>
-  <ng-container *ngFor="let regressionId of measures.regressionNames | getRegressionIds">
+<ng-container #viewContainerRef [ngTemplateOutlet]="templateRef"></ng-container>
+<ng-template #templateRef>
+  <gpf-table [dataSource]="measures.measures" style="display: inline-block; min-width: 1200px">
     <gpf-table-column [columnWidth]="singleColumnWidth">
-      <gpf-table-header
-        caption="Regression by {{
-          measures.regressionNames[regressionId] ? measures.regressionNames[regressionId] : regressionId
-        }}"></gpf-table-header>
+      <gpf-table-header caption="Instrument" field="instrumentName"></gpf-table-header>
       <gpf-table-content>
         <span *gpfTableCellContent="let data">
-          <a
-            [class.clickable]="!!data.regressions.getReg(regressionId).figureRegression"
-            (click)="openModal(data.regressions.getReg(regressionId).figureRegression)">
-            <img
-              *ngIf="data.regressions.getReg(regressionId).figureRegressionSmall"
-              class="table-chart"
-              [src]="data.regressions.getReg(regressionId).figureRegressionSmall" />
+          <div [attr.title]="data.instrumentName">{{ data.instrumentName }}</div>
+        </span>
+      </gpf-table-content>
+    </gpf-table-column>
+    <gpf-table-column [columnWidth]="singleColumnWidth">
+      <gpf-table-header caption="Proband Pheno Measure" field="measureName"></gpf-table-header>
+      <gpf-table-content>
+        <span *gpfTableCellContent="let data">
+          <div [attr.title]="data.measureName">{{ data.measureName }}</div>
+        </span>
+      </gpf-table-content>
+    </gpf-table-column>
+    <gpf-table-column *ngIf="measures.hasDescriptions">
+      <gpf-table-header caption="Measure Description" field="description"></gpf-table-header>
+      <gpf-table-content>
+        <span *gpfTableCellContent="let data">
+          <div [attr.title]="data.description">{{ data.description }}</div>
+        </span>
+      </gpf-table-content>
+    </gpf-table-column>
+    <gpf-table-column [columnWidth]="singleColumnWidth">
+      <gpf-table-header caption="Pheno Measure Values"></gpf-table-header>
+      <gpf-table-content>
+        <span *gpfTableCellContent="let data">
+          <a [class.clickable]="!!data.figureDistribution" (click)="openModal(data.figureDistribution)">
+            <img *ngIf="data.figureDistributionSmall" class="table-chart" [src]="data.figureDistributionSmall" />
           </a>
         </span>
       </gpf-table-content>
     </gpf-table-column>
     <gpf-table-column [columnWidth]="singleColumnWidth">
-      <gpf-table-header
-        caption="{{
-          measures.regressionNames[regressionId] ? measures.regressionNames[regressionId] : regressionId
-        }} PV">
-        <gpf-table-subheader
-          caption="male"
-          field="pvalueRegressionMale"
-          [comparator]="regressionId | regressionComparePipe : 'pvalueRegressionMale'"></gpf-table-subheader>
-        <gpf-table-subheader
-          caption="female"
-          field="pvalueRegressionFemale"
-          [comparator]="regressionId | regressionComparePipe : 'pvalueRegressionFemale'"></gpf-table-subheader>
+      <gpf-table-header>
+        <gpf-table-subheader caption="Measure Type" field="measureType"></gpf-table-subheader>
+        <gpf-table-subheader caption="Values Domain"></gpf-table-subheader>
       </gpf-table-header>
       <gpf-table-content>
+        <gpf-table-subcontent field="measureType"></gpf-table-subcontent>
         <gpf-table-subcontent>
-          <span
-            class="expanded-span"
-            *gpfTableCellContent="let data"
-            [style.background-color]="data.regressions.getReg(regressionId).pvalueRegressionMale | getBackgroundColor">
-            <span [attr.title]="data.regressions.getReg(regressionId).pvalueRegressionMale | numberWithExp : '1.2-4'"
-              >{{data.regressions.getReg(regressionId).pvalueRegressionMale | numberWithExp : '1.2-4'}}</span
-            >
-          </span>
-        </gpf-table-subcontent>
-        <gpf-table-subcontent>
-          <span
-            class="expanded-span"
-            *gpfTableCellContent="let data"
-            [style.background-color]="
-              data.regressions.getReg(regressionId).pvalueRegressionFemale | getBackgroundColor
-            ">
-            <span
-              [attr.title]="data.regressions.getReg(regressionId).pvalueRegressionFemale | numberWithExp : '1.2-4'"
-              >{{ data.regressions.getReg(regressionId).pvalueRegressionFemale | numberWithExp : '1.2-4' }}</span
-            >
+          <span *gpfTableCellContent="let data">
+            <ng-container *ngIf="data.measureType === 'continuous'">
+              <div
+                title="[{{
+                  +data.valuesDomain.slice(data.valuesDomain.indexOf('[') + 1, data.valuesDomain.indexOf(','))
+                    | numberWithExp : '1.3-3'
+                }},{{
+                  +data.valuesDomain.slice(data.valuesDomain.indexOf(',') + 1, data.valuesDomain.indexOf(']'))
+                    | numberWithExp : '1.3-3'
+                }}]">
+                <span
+                  >[{{
+                    +data.valuesDomain.slice(data.valuesDomain.indexOf('[') + 1, data.valuesDomain.indexOf(','))
+                      | numberWithExp : '1.3-3'
+                  }},</span
+                >
+                <span
+                  >{{
+                    +data.valuesDomain.slice(data.valuesDomain.indexOf(',') + 1, data.valuesDomain.indexOf(']'))
+                      | numberWithExp : '1.3-3'
+                  }}]</span
+                >
+              </div>
+            </ng-container>
+            <ng-container
+              *ngIf="
+                data.measureType === 'categorical' || data.measureType === 'raw' || data.measureType === 'ordinal'
+              ">
+              <span *ngFor="let value of data.valuesDomain.split(', ')" title="[{{ value }}]">[{{ value }}]</span>
+            </ng-container>
           </span>
         </gpf-table-subcontent>
       </gpf-table-content>
     </gpf-table-column>
-  </ng-container>
-</gpf-table>
+    <ng-container *ngFor="let regressionId of measures.regressionNames | getRegressionIds">
+      <gpf-table-column [columnWidth]="singleColumnWidth">
+        <gpf-table-header
+          caption="Regression by {{
+            measures.regressionNames[regressionId] ? measures.regressionNames[regressionId] : regressionId
+          }}"></gpf-table-header>
+        <gpf-table-content>
+          <span *gpfTableCellContent="let data">
+            <a
+              [class.clickable]="!!data.regressions.getReg(regressionId).figureRegression"
+              (click)="openModal(data.regressions.getReg(regressionId).figureRegression)">
+              <img
+                *ngIf="data.regressions.getReg(regressionId).figureRegressionSmall"
+                class="table-chart"
+                [src]="data.regressions.getReg(regressionId).figureRegressionSmall" />
+            </a>
+          </span>
+        </gpf-table-content>
+      </gpf-table-column>
+      <gpf-table-column [columnWidth]="singleColumnWidth">
+        <gpf-table-header
+          caption="{{
+            measures.regressionNames[regressionId] ? measures.regressionNames[regressionId] : regressionId
+          }} PV">
+          <gpf-table-subheader
+            caption="male"
+            field="pvalueRegressionMale"
+            [comparator]="regressionId | regressionComparePipe : 'pvalueRegressionMale'"></gpf-table-subheader>
+          <gpf-table-subheader
+            caption="female"
+            field="pvalueRegressionFemale"
+            [comparator]="regressionId | regressionComparePipe : 'pvalueRegressionFemale'"></gpf-table-subheader>
+        </gpf-table-header>
+        <gpf-table-content>
+          <gpf-table-subcontent>
+            <span
+              class="expanded-span"
+              *gpfTableCellContent="let data"
+              [style.background-color]="
+                data.regressions.getReg(regressionId).pvalueRegressionMale | getBackgroundColor
+              ">
+              <span
+                [attr.title]="data.regressions.getReg(regressionId).pvalueRegressionMale | numberWithExp : '1.2-4'"
+                >{{ data.regressions.getReg(regressionId).pvalueRegressionMale | numberWithExp : '1.2-4' }}</span
+              >
+            </span>
+          </gpf-table-subcontent>
+          <gpf-table-subcontent>
+            <span
+              class="expanded-span"
+              *gpfTableCellContent="let data"
+              [style.background-color]="
+                data.regressions.getReg(regressionId).pvalueRegressionFemale | getBackgroundColor
+              ">
+              <span
+                [attr.title]="data.regressions.getReg(regressionId).pvalueRegressionFemale | numberWithExp : '1.2-4'"
+                >{{ data.regressions.getReg(regressionId).pvalueRegressionFemale | numberWithExp : '1.2-4' }}</span
+              >
+            </span>
+          </gpf-table-subcontent>
+        </gpf-table-content>
+      </gpf-table-column>
+    </ng-container>
+  </gpf-table>
+</ng-template>
