@@ -1,4 +1,6 @@
-import { OnInit, Component, HostListener, Input } from '@angular/core';
+import {
+  OnInit, Component, HostListener, Input, OnChanges, TemplateRef, ViewContainerRef, ViewChild
+} from '@angular/core';
 
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import {
@@ -11,8 +13,10 @@ import { PhenoMeasures } from '../pheno-browser/pheno-browser';
   templateUrl: './pheno-browser-table.component.html',
   styleUrls: ['./pheno-browser-table.component.css']
 })
-export class PhenoBrowserTableComponent implements OnInit {
+export class PhenoBrowserTableComponent implements OnInit, OnChanges {
   @Input() public measures: PhenoMeasures;
+  @ViewChild('templateRef', { read: TemplateRef }) private templateRef: TemplateRef<Element>;
+  @ViewChild('viewContainerRef', { read: ViewContainerRef }) private viewContainerRef: ViewContainerRef;
 
   public singleColumnWidth;
   private columnsCount = 8;
@@ -23,6 +27,11 @@ export class PhenoBrowserTableComponent implements OnInit {
 
   public ngOnInit(): void {
     this.onResize();
+  }
+
+  public ngOnChanges(): void {
+    this.viewContainerRef?.clear();
+    this.viewContainerRef?.createEmbeddedView(this.templateRef);
   }
 
   public static compare(leftVal: any, rightVal: any): number {
