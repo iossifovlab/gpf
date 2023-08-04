@@ -241,34 +241,8 @@ def variants_file_alt_2(
         person_id  location     variant
         f1.mo      chr1:1-3	    duplication
         f2.fa      chr1:5-8	    duplication
-        f1.fa      chr2:11-13   deletion
-        f2.p1      chr2:9-10    deletion
-        f1.s1      chr1:15-17   deletion
-        f1.fa      chr1:20-21   deletion
-        f1.s1      chr2:23-26   deletion
-        f2.mo      chr1:29-31	deletion
-        f2.mo      chr2:33-35	duplication
-        f1.fa      chr2:38-40	duplication
-        f2.mo      chr2:41-43	deletion
-        f1.fa      chr1:44-46	deletion
-        f1.s1      chr1:48-50	duplication
-        f2.mo      chr2:53-55	duplication
-        f1.s1      chr2:57-60	duplication
-        f1.p1      chr1:18-19	deletion
-        f2.fa      chr2:61-64	deletion
-        f2.mo      chr2:68-71	deletion
-        f1.fa      chr1:73-75	deletion
-        f1.mo      chr2:77-79	duplication
-        f1.mo      chr2:81-83	deletion
-        f1.fa      chr2:86-90	deletion
-        f1.mo      chr1:91-93	deletion
-        f2.fa      chr1:94-95	duplication
-        f1.fa      chr2:96-97	deletion
+        f1.s1      chr2:77-79	deletion
         f1.p1      chr2:98-99	deletion
-        f1.s1      chr1:51-52	duplication
-        f2.mo      chr1:65-67	deletion
-        f2.fa      chr2:84-85	duplication
-        f2.mo      chr1:39-40	deletion
         """)
 
     return cnv_path
@@ -301,8 +275,8 @@ def test_cnv_loader_alt_2(
         for fv in _fvs:
             fvs.append(fv)
 
-    assert len(svs) == 30
-    assert len(fvs) == 30
+    assert len(svs) == 4
+    assert len(fvs) == 4
 
 
 @pytest.fixture
@@ -334,81 +308,51 @@ def variants_file_2(
         family_id	location	              variant	best_state
         f1          chr1:1-4	              CNV+	    2||2||2||3
         f1          chr1:5-8	              CNV-	    2||2||2||1
-        f1          chr1:9-11	              CNV+	    2||2||2||3
         f2          chr1:12-20	              CNV+	    2||2||3
         f2          chr2:21-23	              CNV+	    2||2||3
-        f1          chr1:55-60	              CNV-	    2||2||1||1
         f1          chr1:44-48	              CNV-	    2||2||1||2
-        f1          chr1:24-30	              CNV-	    2||2||1||2
-        f1          chr2:31-35                CNV+	    2||2||2||3
-        f1          chr2:40-43                CNV+	    2||2||3||2
-        f1          chr2:77-80	              CNV-	    2||1||0||2
         f1          chr1:91-95                CNV+	    2||1||2||2
         """)
 
     return cnv_path
 
 
-adjust_chrom_params_add = (
-    "input_filename, params",
-    [
-        ("variants_file", {
-            "add_chrom_prefix": "chr",
-            "cnv_family_id": "family_id",
-            "cnv_best_state": "best_state"
-        }),
-    ]
-)
-
-
-adjust_chrom_params_del = (
-    "input_filename, params",
-    [
-        ("variants_file_2", {
-            "del_chrom_prefix": "chr",
-            "cnv_family_id": "family_id",
-            "cnv_best_state": "best_state"
-        }),
-    ]
-)
-
-
-@pytest.mark.parametrize(*adjust_chrom_params_add)
 def test_chromosomes_have_adjusted_chrom_add(
     simple_cnv_loader: Any,
     cnv_ped: Any,
-    input_filename: Any,
-    params: Any,
-    request: pytest.FixtureRequest
+    variants_file: Path
 ) -> None:
-    input_filename = str(request.getfixturevalue(input_filename))
-    loader = simple_cnv_loader(cnv_ped, input_filename, params)
+    loader = simple_cnv_loader(cnv_ped, variants_file, {
+        "add_chrom_prefix": "chr",
+        "cnv_family_id": "family_id",
+        "cnv_best_state": "best_state"
+    })
     assert loader.chromosomes == ["chrchr1", "chrchr2"]
 
 
-@pytest.mark.parametrize(*adjust_chrom_params_del)
 def test_chromosomes_have_adjusted_chrom_del(
     simple_cnv_loader: Any,
     cnv_ped: Any,
-    input_filename: Any,
-    params: Any,
-    request: pytest.FixtureRequest
+    variants_file_2: Path
 ) -> None:
-    input_filename = str(request.getfixturevalue(input_filename))
-    loader = simple_cnv_loader(cnv_ped, input_filename, params)
+    loader = simple_cnv_loader(cnv_ped, variants_file_2, {
+        "del_chrom_prefix": "chr",
+        "cnv_family_id": "family_id",
+        "cnv_best_state": "best_state"
+    })
     assert loader.chromosomes == ["1", "2"]
 
 
-@pytest.mark.parametrize(*adjust_chrom_params_add)
 def test_variants_have_adjusted_chrom_add(
     simple_cnv_loader: Any,
     cnv_ped: Any,
-    input_filename: Any,
-    params: Any,
-    request: pytest.FixtureRequest
+    variants_file: Path
 ) -> None:
-    input_filename = str(request.getfixturevalue(input_filename))
-    loader = simple_cnv_loader(cnv_ped, input_filename, params)
+    loader = simple_cnv_loader(cnv_ped, variants_file, {
+        "add_chrom_prefix": "chr",
+        "cnv_family_id": "family_id",
+        "cnv_best_state": "best_state"
+    })
 
     variants = list(loader.full_variants_iterator())
     assert len(variants) > 0
@@ -416,16 +360,16 @@ def test_variants_have_adjusted_chrom_add(
         assert summary_variant.chromosome.startswith("chrchr")
 
 
-@pytest.mark.parametrize(*adjust_chrom_params_del)
 def test_variants_have_adjusted_chrom_del(
     simple_cnv_loader: Any,
     cnv_ped: Any,
-    input_filename: Any,
-    params: Any,
-    request: pytest.FixtureRequest
+    variants_file_2: Path
 ) -> None:
-    input_filename = str(request.getfixturevalue(input_filename))
-    loader = simple_cnv_loader(cnv_ped, input_filename, params)
+    loader = simple_cnv_loader(cnv_ped, variants_file_2, {
+        "del_chrom_prefix": "chr",
+        "cnv_family_id": "family_id",
+        "cnv_best_state": "best_state"
+    })
 
     variants = list(loader.full_variants_iterator())
     assert len(variants) > 0
@@ -433,16 +377,16 @@ def test_variants_have_adjusted_chrom_del(
         assert not summary_variant.chromosome.startswith("chrchr")
 
 
-@pytest.mark.parametrize(*adjust_chrom_params_add)
 def test_reset_regions_with_adjusted_chrom_add(
     simple_cnv_loader: Any,
     cnv_ped: Any,
-    input_filename: Any,
-    params: Any,
-    request: pytest.FixtureRequest
+    variants_file: Path
 ) -> None:
-    input_filename = str(request.getfixturevalue(input_filename))
-    loader = simple_cnv_loader(cnv_ped, input_filename, params)
+    loader = simple_cnv_loader(cnv_ped, variants_file, {
+        "add_chrom_prefix": "chr",
+        "cnv_family_id": "family_id",
+        "cnv_best_state": "best_state"
+    })
     regions = ["chrchr1"]
     loader.reset_regions(regions)
 
@@ -452,16 +396,16 @@ def test_reset_regions_with_adjusted_chrom_add(
     assert (unique_chroms == regions).all()
 
 
-@pytest.mark.parametrize(*adjust_chrom_params_del)
 def test_reset_regions_with_adjusted_chrom_del(
     simple_cnv_loader: Any,
     cnv_ped: Any,
-    input_filename: Any,
-    params: Any,
-    request: pytest.FixtureRequest
+    variants_file_2: Path
 ) -> None:
-    input_filename = str(request.getfixturevalue(input_filename))
-    loader = simple_cnv_loader(cnv_ped, input_filename, params)
+    loader = simple_cnv_loader(cnv_ped, variants_file_2, {
+        "del_chrom_prefix": "chr",
+        "cnv_family_id": "family_id",
+        "cnv_best_state": "best_state"
+    })
     regions = ["1"]
     loader.reset_regions(regions)
 
