@@ -497,6 +497,11 @@ class AnnotationPipelineDecorator(AnnotationDecorator):
 
     def full_variants_iterator(self):
         with self.annotation_pipeline.open() as annotation_pipeline:
+            internal_attributes = set(
+                attr.name for attr in self.annotation_pipeline.get_attributes()
+                if attr.internal
+            )
+
             for (summary_variant, family_variants) in \
                     self.variants_loader.full_variants_iterator():
                 for sallele in summary_variant.alt_alleles:
@@ -509,7 +514,11 @@ class AnnotationPipelineDecorator(AnnotationDecorator):
                         # pylint: disable=protected-access
                         sallele._effects = allele_effects
                         del attributes["allele_effects"]
-                    sallele.update_attributes(attributes)
+                    public_attributes = {
+                        key: value for key, value in attributes.items()
+                        if key not in internal_attributes
+                    }
+                    sallele.update_attributes(public_attributes)
                 yield summary_variant, family_variants
 
     def close(self):
