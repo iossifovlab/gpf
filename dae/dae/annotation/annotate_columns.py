@@ -156,7 +156,6 @@ def annotate(
 
     pipeline.open()
     with pipeline, in_file, out_file:
-
         new_header = header_columns
         if args.reannotate:
             new_header = list(filter(

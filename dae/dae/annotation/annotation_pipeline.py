@@ -251,11 +251,6 @@ class ReannotationPipeline(AnnotationPipeline):
             pipeline_new
         )
 
-        self.attributes_reused: dict[str, AttributeInfo] = {}
-        for dep_annotator, dep_attr in self.dependency_graph.values():
-            if dep_annotator in infos_old and not dep_attr.internal:
-                self.attributes_reused[dep_attr.name] = dep_attr
-
         self.attributes_deleted: list[str] = []
         for deleted_info in [i for i in infos_old if i not in infos_new]:
             for attr in deleted_info.attributes:
@@ -266,13 +261,23 @@ class ReannotationPipeline(AnnotationPipeline):
         }
         self.annotators_rerun: set[AnnotatorInfo] = set()
         for i in self.annotators_new:
-            self.annotators_rerun.add(*self.get_dependencies_for(i))
-            self.annotators_rerun.add(*self.get_dependents_for(i))
+            for dep in self.get_dependencies_for(i):
+                self.annotators_rerun.add(dep)
+            for dep in self.get_dependents_for(i):
+                self.annotators_rerun.add(dep)
 
         for annotator in self.pipeline_new.annotators:
             info = annotator.get_info()
             if info in self.annotators_new or info in self.annotators_rerun:
                 self.annotators.append(annotator)
+
+        self.attributes_reused: dict[str, AttributeInfo] = {}
+        for annotator in self.annotators:
+            info = annotator.get_info()
+            for (dep_annotator, dep_attr) in self.dependency_graph[info]:
+                if dep_annotator in infos_old \
+                   and dep_annotator not in self.annotators_rerun:
+                    self.attributes_reused[dep_attr.name] = dep_attr
 
     @staticmethod
     def build_dependency_graph(
@@ -389,9 +394,9 @@ class InputAnnotableAnnotatorDecorator(AnnotatorDecorator):
                              "has not been defined before its use. The "
                              "available attributes are: "
                              f"{available_attributes}")
-        if att_info.type != "object":
+        if att_info.type != "annotatable":
             raise ValueError(f"The attribute '{self.input_annotatable_name}' "
-                             "is expected to be of type object.")
+                             "is expected to be of type annotatable.")
         self.child._info.documentation += \
             f"\n*input_annotatable*: {self.input_annotatable_name}"
 

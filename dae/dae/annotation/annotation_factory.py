@@ -303,8 +303,6 @@ def build_annotation_pipeline(
         raw_config_copy = copy.deepcopy(annotator_config)
         try:
             builder = get_annotator_factory(annotator_config.type)
-
-            # annotator_config = set_parameter_usage_monitors(annotator_config)
             annotator = builder(pipeline, annotator_config)
             annotator = InputAnnotableAnnotatorDecorator.decorate(annotator)
             annotator = ValueTransformAnnotatorDecorator.decorate(annotator)
