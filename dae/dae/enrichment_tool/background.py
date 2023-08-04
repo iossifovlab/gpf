@@ -77,9 +77,14 @@ class BackgroundCommon(BackgroundBase):
         result.expected = background_prob * events_count
 
         assert result.overlapped is not None
-        result.pvalue = stats.binom_test(
-            len(result.overlapped), events_count, p=background_prob
-        )
+        if not result.overlapped:
+            result.pvalue = 1.0
+        else:
+            assert len(result.overlapped) >= 1.0, result.overlapped
+            binom = stats.binomtest(
+                len(result.overlapped), events_count, p=background_prob
+            )
+            result.pvalue = binom.pvalue
 
     def calc_stats(
         self, effect_types: Iterable[str],

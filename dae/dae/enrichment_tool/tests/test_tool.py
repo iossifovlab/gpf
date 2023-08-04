@@ -34,22 +34,31 @@ def test_enrichment_tool(
         children_by_sex,
     )
 
+    assert enrichment_events["all"].events is not None
     assert len(enrichment_events["all"].events) == 2
     assert enrichment_events["all"].events == [["SAMD11"], ["SAMD11"]]
     assert enrichment_events["all"].expected == 2.0
     assert enrichment_events["all"].pvalue == 1.0
+
+    assert enrichment_events["rec"].events is not None
     assert len(enrichment_events["rec"].events) == 1
     assert enrichment_events["rec"].events == [["SAMD11"]]
     assert enrichment_events["rec"].expected == 1.0
     assert enrichment_events["rec"].pvalue == 1.0
+
+    assert enrichment_events["male"].events is not None
     assert len(enrichment_events["male"].events) == 1
     assert enrichment_events["male"].events == [["SAMD11"]]
     assert enrichment_events["male"].expected == 1.0
     assert enrichment_events["male"].pvalue == 1.0
+
+    assert enrichment_events["female"].events is not None
     assert len(enrichment_events["female"].events) == 1
     assert enrichment_events["female"].events == [["SAMD11"]]
     assert enrichment_events["female"].expected == 1.0
     assert enrichment_events["female"].pvalue == 1.0
+
+    assert enrichment_events["unspecified"].events is not None
     assert len(enrichment_events["unspecified"].events) == 0
     assert enrichment_events["unspecified"].events == []
     assert enrichment_events["unspecified"].expected is None

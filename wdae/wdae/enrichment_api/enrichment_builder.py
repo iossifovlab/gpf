@@ -56,7 +56,7 @@ class EnrichmentBuilder(BaseEnrichmentBuilder):
         if children_count <= 0:
             return None
 
-        results = {}
+        results: dict[str, Any] = {}
         for effect_type in effect_types:
             enrichment_results = self.tool.calc(
                 [effect_type],
