@@ -1,6 +1,8 @@
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
 
 from dae.enrichment_tool.genotype_helper import GenotypeHelper
+from dae.studies.study import GenotypeData
 
 
 # @pytest.mark.parametrize(
@@ -29,17 +31,19 @@ from dae.enrichment_tool.genotype_helper import GenotypeHelper
     ]
 )
 def test_get_children_stats(
-    f1_trio, person_set_id, male, female, unspecified, count
-):
+    f1_trio: GenotypeData,
+    person_set_id: str,
+    male: int, female: int, unspecified: int, count: int
+) -> None:
     psc = f1_trio.get_person_set_collection("phenotype")
-    gh = GenotypeHelper(f1_trio, psc)
+    helper = GenotypeHelper(f1_trio, psc)
 
-    children_stats = gh.get_children_stats(person_set_id)
+    children_stats = helper.get_children_stats(person_set_id)
 
     assert len(children_stats) == count
     assert children_stats["M"] == male
     assert children_stats["F"] == female
     assert children_stats["U"] == unspecified
 
-    children_stats = gh.get_children_stats(person_set_id)
+    children_stats = helper.get_children_stats(person_set_id)
     assert len(children_stats) == count
