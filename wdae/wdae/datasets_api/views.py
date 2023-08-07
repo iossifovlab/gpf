@@ -295,16 +295,11 @@ class BaseDatasetPermissionsView(QueryBaseView):
         )
 
         if dataset_gd is None:
-            logger.warning(
+            logger.error(
                 "Dataset %s missing in GPF instance!",
                 dataset.dataset_id
             )
-            return {
-                "dataset_id": dataset.dataset_id,
-                "dataset_name": "Missing dataset",
-                "users": [],
-                "groups": []
-            }
+            return None
 
         name = dataset_gd.name
         if name is None:
@@ -343,7 +338,12 @@ class DatasetPermissionsView(BaseDatasetPermissionsView):
 
         dataset_details = []
         for dataset in datasets:
-            dataset_details.append(self._get_dataset_info(dataset))
+            info = self._get_dataset_info(dataset)
+
+            if info is None:
+                continue
+
+            dataset_details.append(info)
 
         if len(dataset_details) == 0:
             return Response(status=status.HTTP_204_NO_CONTENT)
@@ -362,6 +362,9 @@ class DatasetPermissionsSingleView(BaseDatasetPermissionsView):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         dataset_details = self._get_dataset_info(dataset)
+
+        if dataset_details is None:
+            return Response({}, status=status.HTTP_404_NOT_FOUND)
 
         return Response(dataset_details)
 

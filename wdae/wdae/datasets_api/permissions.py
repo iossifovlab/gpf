@@ -252,10 +252,12 @@ def get_dataset_info(dataset_id):
     gpf_instance = get_wgpf_instance()
     study_wrapper = gpf_instance.get_wdae_wrapper(dataset_id)
     if study_wrapper is None:
-        raise ValueError(f"Could not find study wrapper for {dataset_id}")
+        logger.error("Could not find study wrapper for %s", dataset_id)
+        return None
     dataset = get_wdae_dataset(dataset_id)
     if dataset is None:
-        raise ValueError(f"Could not find WDAE dataset for {dataset_id}")
+        logger.error("Could not find WDAE dataset for %s", dataset_id)
+        return None
     return {
         "datasetName": study_wrapper.name,
         "datasetId": dataset_id,
