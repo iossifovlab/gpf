@@ -411,3 +411,55 @@ def test_position_annotator_add_chrom_prefix_tabix_table(
 
         print(annotatable, result)
         assert result.get("test100way") == expected
+
+
+@pytest.mark.parametrize("allele, expected", [
+    (("chr1", 1, "C", "A"), 0.1),
+    (("chr1", 21, "C", "A"), 0.2),
+    (("chr1", 31, "C", "A"), 0.3),
+])
+def test_position_annotator_add_chrom_prefix_inmemory_table(
+        allele: tuple, expected: float) -> None:
+
+    repo = build_inmemory_test_repository({
+        "position_score1": {
+            "genomic_resource.yaml":
+            """\
+                    type: position_score
+                    table:
+                        filename: data.mem
+                        chrom_mapping:
+                            add_prefix: chr
+                    scores:
+                    - id: test100way
+                      type: float
+                      desc: "test values"
+                      name: test100way
+            """,
+            "data.mem": """
+                chrom pos_begin pos_end test100way
+                1      1         10      0.1
+                1      11        20      0.1
+                1      21        30      0.2
+                1      31        40      0.3
+            """
+        }
+    })
+
+    pipeline_config = textwrap.dedent("""
+            - position_score:
+                resource_id: position_score1
+                attributes:
+                - source: test100way
+                  position_aggregator: min
+            """)
+
+    pipeline = build_annotation_pipeline(
+        pipeline_config_str=pipeline_config,
+        grr_repository=repo)
+    with pipeline.open() as work_pipeline:
+        annotatable = VCFAllele(*allele)
+        result = work_pipeline.annotate(annotatable)
+
+        print(annotatable, result)
+        assert result.get("test100way") == expected
