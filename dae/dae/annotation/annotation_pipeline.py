@@ -279,6 +279,12 @@ class ReannotationPipeline(AnnotationPipeline):
                    and dep_annotator not in self.annotators_rerun:
                     self.attributes_reused[dep_attr.name] = dep_attr
 
+        logger.debug("REANNOTATION SUMMARY:")
+        logger.debug("DELETED ATTRIBUTES - %s", self.attributes_deleted)
+        logger.debug("REUSED ATTRIBUTES - %s", self.attributes_reused)
+        logger.debug("NEW ANNOTATORS - %s", self.annotators_new)
+        logger.debug("RE-RUNNING ANNOTATORS - %s", self.annotators_rerun)
+
     @staticmethod
     def build_dependency_graph(
         pipeline: AnnotationPipeline

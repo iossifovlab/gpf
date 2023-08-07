@@ -156,15 +156,19 @@ def annotate(
 
     pipeline.open()
     with pipeline, in_file, out_file:
-        new_header = header_columns
         if args.reannotate:
-            new_header = list(filter(
-                lambda col: col not in pipeline.attributes_deleted, new_header
-            ))
-        for col in annotation_columns:
-            if col not in new_header:
-                new_header.append(col)
+            old_annotation_columns = {
+                attr.name for attr in pipeline_old.get_attributes()
+                if not attr.internal
+            }
+            new_header = [
+                col for col in header_columns
+                if col not in old_annotation_columns
+            ]
+        else:
+            new_header = list(header_columns)
 
+        new_header = new_header + annotation_columns
         out_file.write(args.output_separator.join(new_header) + "\n")
         for lnum, line in enumerate(line_iterator):
             try:

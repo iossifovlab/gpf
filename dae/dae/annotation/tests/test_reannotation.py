@@ -7,12 +7,18 @@ from dae.annotation.annotation_pipeline import ReannotationPipeline
 
 from dae.testing.foobar_import import foobar_genome, foobar_genes
 from dae.testing import setup_directories, convert_to_tab_separated, \
-    setup_genome
+    setup_genome, setup_denovo
+
+from dae.annotation.annotate_columns import cli as cli_columns
 
 
 @pytest.fixture(scope="module")
-def reannotation_grr(tmp_path_factory):
-    root_path = tmp_path_factory.mktemp("reannotation_grr")
+def root_path(tmp_path_factory):
+    return tmp_path_factory.mktemp("reannotation_grr")
+
+
+@pytest.fixture(scope="module")
+def reannotation_grr(root_path):
     foobar_genome(root_path / "grr")
     foobar_genes(root_path / "grr")
     setup_genome(
@@ -119,7 +125,31 @@ def reannotation_grr(tmp_path_factory):
                         g2,40.4
                     """),
                 }
-            }
+            },
+            "reannotation_old.yaml": textwrap.dedent("""
+                - position_score: one
+                - effect_annotator:
+                    genome: foobar_genome
+                    gene_models: foobar_genes
+                - gene_score_annotator:
+                    resource_id: gene_score1
+                    input_gene_list: gene_list
+                - gene_score_annotator:
+                    resource_id: gene_score2
+                    input_gene_list: gene_list
+            """),
+            "reannotation_new.yaml": textwrap.dedent("""
+                - position_score: one
+                - effect_annotator:
+                    genome: foobar_genome
+                    gene_models: foobar_genes
+                    attributes:
+                    - worst_effect
+                    - gene_list
+                - gene_score_annotator:
+                    resource_id: gene_score1
+                    input_gene_list: gene_list
+            """),
         }
     )
     return build_genomic_resource_repository(file_name=str(
@@ -479,3 +509,30 @@ def test_reused_attributes_detection_indirect(reannotation_grr) -> None:
     assert len(reannotation.annotators_rerun) == 1
     assert len(reannotation.attributes_deleted) == 0
     assert len(reannotation.attributes_reused) == 1
+
+
+def test_annotate_columns_reannotation(root_path, reannotation_grr):
+    in_content = (
+        "chrom\tpos\tscore\tworst_effect\tgene_effects\teffect_details\tgene_list\tgene_score1\tgene_score2\n"
+        "chr1\t23\t0.1\tbla\tbla\tbla\tbla\tbla\tbla\n"
+    )
+    out_expected_header = [
+        "chrom", "pos", "score", "worst_effect", "gene_list", "gene_score1"
+    ]
+    in_file = root_path / "in.txt"
+    out_file = root_path / "out.txt"
+    annotation_file_old = root_path / "reannotation_old.yaml"
+    annotation_file_new = root_path / "reannotation_new.yaml"
+    grr_file = root_path / "grr.yaml"
+
+    setup_denovo(in_file, in_content)
+
+    cli_columns([
+        str(a) for a in [
+            in_file, annotation_file_new, "-o", out_file, "--grr", grr_file,
+            "--reannotate", annotation_file_old
+        ]
+    ])
+    with open(out_file, "rt", encoding="utf8") as _:
+        out_file_header = "".join(_.readline()).strip().split("\t")
+    assert out_file_header == out_expected_header
