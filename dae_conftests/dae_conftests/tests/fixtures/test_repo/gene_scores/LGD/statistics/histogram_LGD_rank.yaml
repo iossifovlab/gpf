@@ -302,9 +302,30 @@ bins:
 - 18271.876666666667
 - 18394.5
 config:
-  bins: 150
-  max: 18394.5
-  min: 1.0
-  score: LGD_rank
-  x_scale: linear
-  y_scale: linear
+  number_of_bins: 150
+  type: number
+  view_range:
+    max: !!python/object/apply:numpy.core.multiarray.scalar
+    - &id001 !!python/object/apply:numpy.dtype
+      args:
+      - f8
+      - false
+      - true
+      state: !!python/tuple
+      - 3
+      - <
+      - null
+      - null
+      - null
+      - -1
+      - -1
+      - 0
+    - !!binary |
+      AAAAAKD20UA=
+    min: !!python/object/apply:numpy.core.multiarray.scalar
+    - *id001
+    - !!binary |
+      AAAAAAAA8D8=
+  x_log_scale: false
+  x_min_log: null
+  y_log_scale: false

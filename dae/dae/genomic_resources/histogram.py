@@ -71,9 +71,15 @@ class NumberHistogramConfig:
         """Build a number histogram config from a parsed yaml file."""
         hist_type = parsed.get("type")
         if hist_type != "number":
-            raise TypeError(
-                f"Invalid configuration type ({hist_type}) for number histogram!\n{parsed}"
+            logger.error(
+                "Invalid configuration type (%s)"
+                " for number histogram!\n%s",
+                hist_type, parsed
             )
+            #  raise TypeError(
+            #      f"Invalid configuration type ({hist_type})"
+            #      f" for number histogram!\n{parsed}"
+            #  )
         yaml_range = parsed.get("view_range", {})
         x_min = yaml_range.get("min", None)
         x_max = yaml_range.get("max", None)
@@ -232,6 +238,9 @@ class NumberHistogram(Statistic):
         if value is None:
             return False
 
+        if np.isnan(value):
+            return False
+
         if not isinstance(value, (int, float, np.integer)):
             raise TypeError(
                 "Cannot add non numerical value "
@@ -300,7 +309,7 @@ class NumberHistogram(Statistic):
     @staticmethod
     def deserialize(data: str) -> NumberHistogram:
         res = yaml.load(data, yaml.Loader)
-        assert res["config"]["type"] == "number"
+        # assert res["config"]["type"] == "number"
 
         config = NumberHistogramConfig.from_dict(res.get("config"))
 

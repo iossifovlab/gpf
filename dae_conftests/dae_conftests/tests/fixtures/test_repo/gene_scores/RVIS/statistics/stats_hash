@@ -1,29 +1,23 @@
 {
-  "config": {
-    "gene_scores": [
-      {
-        "desc": "RVIS rank",
-        "id": "RVIS_rank"
-      },
-      {
-        "desc": "RVIS",
-        "id": "RVIS"
-      }
+  "score_config": [
+    [
+      "RVIS_rank",
+      "RVIS rank",
+      2.0,
+      55.0,
+      null,
+      "linear",
+      "linear"
     ],
-    "histograms": [
-      {
-        "bins": 150,
-        "score": "RVIS_rank",
-        "x_scale": "linear",
-        "y_scale": "linear"
-      },
-      {
-        "bins": 150,
-        "score": "RVIS",
-        "x_scale": "linear",
-        "y_scale": "log"
-      }
+    [
+      "RVIS",
+      "RVIS",
+      -7.5,
+      -3.51,
+      null,
+      "linear",
+      "log"
     ]
-  },
+  ],
   "score_file": "75e39071ae36cc03ca06b0960e110d61"
 }

@@ -116,7 +116,7 @@ class GeneScoreImplementation(
             <div class="histogram">
             <h4>{{ score["id"] }}</h1>
             <img src="{{ data["statistics_dir"] }}/{{
-                score["number_hist"]["img_file"] }}"
+                score["histogram"]["img_file"] }}"
             width="200px"
             alt={{ score["id"] }}
             title={{ score["id"] }}>
@@ -136,7 +136,7 @@ class GeneScoreImplementation(
         data["statistics_dir"] = statistics.get_statistics_folder()
         for score in data["scores"]:
             if "histogram" in score:
-                score["number_hist"]["img_file"] = \
+                score["histogram"]["img_file"] = \
                     statistics.get_histogram_image_file(
                         score["id"]
                 )
@@ -150,7 +150,7 @@ class GeneScoreImplementation(
             self, task_graph: TaskGraph, **kwargs: str) -> list[Task]:
         save_tasks = []
         for score_id, score_config in self.gene_score.score_configs.items():
-            if score_config.get("histogram_config") is None:
+            if score_config.get("histogram") is None:
                 logger.warning(
                     "Gene score %s in %s has no histogram config!",
                     score_id, self.resource.resource_id
@@ -178,18 +178,13 @@ class GeneScoreImplementation(
         histogram_config = score.score_configs[score_id].get(
             "histogram"
         )
-        if "min" not in histogram_config:
-            histogram_config["min"] = score.get_min(score_id)
-        if "max" not in histogram_config:
-            histogram_config["max"] = score.get_max(score_id)
+        if "view_range" not in histogram_config:
+            histogram_config["view_range"] = {
+                "min": score.get_min(score_id),
+                "max": score.get_max(score_id)
+            }
 
-        legacy_keys = set(["x_scale", "y_scale", "bins", "min", "max"])
-        if len(legacy_keys.intersection(set(histogram_config.keys()))):
-            config = NumberHistogramConfig.convert_legacy_config(
-                histogram_config
-            )
-        else:
-            config = NumberHistogramConfig.from_dict(histogram_config)
+        config = NumberHistogramConfig.from_dict(histogram_config)
 
         # histogram_config = NumberHistogramConfig.from_dict(histogram_config)
         histogram = NumberHistogram(config)
@@ -284,11 +279,11 @@ class GeneScore(
 
     def get_min(self, score_id: str) -> float:
         """Return minimal score value."""
-        return cast(float, self.df[score_id].min())
+        return float(self.df[score_id].min())
 
     def get_max(self, score_id: str) -> float:
         """Return maximal score value."""
-        return cast(float, self.df[score_id].max())
+        return float(self.df[score_id].max())
 
     def get_range(self, score_id: str) -> Optional[tuple[float]]:
         if score_id not in self.histograms:
@@ -326,8 +321,8 @@ class GeneScore(
         if score_id not in self.score_configs:
             logger.warning("Score %s does not exist!", score_id)
             return None
-        if "number_hist" in self.score_configs[score_id]:
-            config = self.score_configs[score_id]["number_hist"]
+        if "histogram" in self.score_configs[score_id]:
+            config = self.score_configs[score_id]["histogram"]
             y_log_scale = config["y_log_scale"]
             return "log" if y_log_scale else "linear"
         return "linear"

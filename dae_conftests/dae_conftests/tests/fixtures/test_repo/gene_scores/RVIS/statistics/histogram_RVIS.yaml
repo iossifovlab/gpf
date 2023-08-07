@@ -302,9 +302,11 @@ bins:
 - -3.5365999999999995
 - -3.51
 config:
-  bins: 150
-  max: -3.51
-  min: -7.5
-  score: RVIS
-  x_scale: linear
-  y_scale: log
+  number_of_bins: 150
+  type: number
+  view_range:
+    max: -3.51
+    min: -7.5
+  x_log_scale: false
+  x_min_log: null
+  y_log_scale: true

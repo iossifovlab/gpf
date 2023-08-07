@@ -18,9 +18,11 @@ bins:
 - 6.125
 - 7.0
 config:
-  bins: 8
-  max: 7
-  min: 0
-  score: SFARI_gene_score
-  x_scale: linear
-  y_scale: linear
+  number_of_bins: 8
+  type: number
+  view_range:
+    max: 7.0
+    min: 0.0
+  x_log_scale: false
+  x_min_log: null
+  y_log_scale: false
