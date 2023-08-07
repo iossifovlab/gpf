@@ -1,6 +1,5 @@
 import os
-# pylint: disable=no-member
-import pysam  # type: ignore
+import pysam
 
 from dae.genomic_resources.repository import GenomicResource
 from .table import GenomicPositionTable
@@ -42,7 +41,7 @@ def build_genomic_position_table(
 
 def save_as_tabix_table(
         table: GenomicPositionTable,
-        full_file_path: str):
+        full_file_path: str) -> None:
     """Save a genome position table as Tabix table."""
     tmp_file = full_file_path + ".tmp"
     with open(tmp_file, "wt", encoding="utf8") as text_file:

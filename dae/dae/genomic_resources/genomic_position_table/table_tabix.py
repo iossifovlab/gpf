@@ -39,7 +39,8 @@ class TabixGenomicPositionTable(GenomicPositionTable):
         self.stats: Counter = Counter()
         # pylint: disable=no-member
         self.pysam_file: Optional[PysamFile] = None
-        self.line_iterator: Optional[Generator[Line, None, None]] = None
+        self.line_iterator: Optional[
+            Generator[Optional[Line], None, None]] = None
 
     def _load_header(self) -> tuple[str, ...]:
         header_lines = []
@@ -117,20 +118,26 @@ class TabixGenomicPositionTable(GenomicPositionTable):
             return self.rev_chrom_map[chrom]
         return chrom
 
-    def _make_line(self, data: tuple) -> Line:
+    def _make_line(self, data: tuple) -> Optional[Line]:
         assert self.chrom_key is not None
         assert self.pos_begin_key is not None
         assert self.pos_end_key is not None
-        return Line(
+        line: Line = Line(
             data,
             self.chrom_key,
             self.pos_begin_key, self.pos_end_key,
             self.ref_key, self.alt_key,
             self.header
         )
+        if not self.rev_chrom_map:
+            return line
+        if line.fchrom in self.rev_chrom_map:
+            self._transform_result(line)
+            return line
+        return None
 
     def _transform_result(self, line: Line) -> Optional[Line]:
-        rchrom = self._map_result_chrom(line.chrom)
+        rchrom = self._map_result_chrom(line.fchrom)
         if rchrom is None:
             return None
 
@@ -140,13 +147,9 @@ class TabixGenomicPositionTable(GenomicPositionTable):
     def get_all_records(self) -> Generator[Optional[Line], None, None]:
         # pylint: disable=no-member
         for line in self.get_line_iterator():
-            if self.rev_chrom_map:
-                if line.chrom in self.rev_chrom_map:
-                    yield self._transform_result(line)
-                else:
-                    continue
-            else:
-                yield line
+            if line is None:
+                continue
+            yield line
 
     def _should_use_sequential_seek_forward(
             self, chrom: Optional[str], pos: int) -> bool:
@@ -196,18 +199,19 @@ class TabixGenomicPositionTable(GenomicPositionTable):
             assert self.line_iterator is not None
             while True:
                 line = next(self.line_iterator)
-
+                if line is None:
+                    continue
                 if buffering:
                     self.buffer.append(line)
 
-                if line.chrom != chrom:
+                if line.fchrom != chrom:
                     return
                 if pos is not None and line.pos_begin > pos:
                     return
-                result = self._transform_result(line)
+
                 self.stats["yield from tabix"] += 1
-                if result:
-                    yield result
+                if line:
+                    yield line
         except StopIteration:
             pass
 
@@ -296,7 +300,7 @@ class TabixGenomicPositionTable(GenomicPositionTable):
 
     def get_line_iterator(
         self, chrom: Optional[str] = None, pos_begin: Optional[int] = None
-    ) -> Generator[Line, None, None]:
+    ) -> Generator[Optional[Line], None, None]:
         """Extract raw lines and wrap them in our Line adapter."""
         assert isinstance(self.pysam_file, pysam.TabixFile)
 
