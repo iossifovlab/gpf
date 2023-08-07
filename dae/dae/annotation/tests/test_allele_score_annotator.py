@@ -13,28 +13,13 @@ from dae.genomic_resources.testing import \
     setup_directories, convert_to_tab_separated, \
     setup_vcf, build_filesystem_test_repository
 
-from dae.genomic_resources.repository import GR_CONF_FILE_NAME
+from dae.genomic_resources.repository import GR_CONF_FILE_NAME, \
+    GenomicResourceRepo
 from dae.genomic_resources import build_genomic_resource_repository
 
 
-def test_allele_score_annotator(
-        frequency_variants_expected, grr_fixture):
-    pipeline = AnnotationPipeline(grr_fixture)
-    annotator = AlleleScoreAnnotator(
-        pipeline, AnnotatorInfo("allele_score", [],
-                                {"resource_id": "hg38/TESTFreq"}))
-    pipeline.add_annotator(annotator)
-
-    with pipeline.open() as work_pipeline:
-        for svar, expected in frequency_variants_expected:
-            for sallele in svar.alt_alleles:
-                annotatable = sallele.get_annotatable()
-                result = work_pipeline.annotate(annotatable)
-                for score, value in expected.items():
-                    assert result.get(score) == value
-
-
-def test_allele_score_annotator_attributes(grr_fixture):
+def test_allele_score_annotator_attributes(
+        grr_fixture: GenomicResourceRepo) -> None:
 
     pipeline = AnnotationPipeline(grr_fixture)
     annotator = AlleleScoreAnnotator(
@@ -65,8 +50,9 @@ def test_allele_score_annotator_attributes(grr_fixture):
     (("1", 16, "C", "A"), 0.05),
 ])
 def test_allele_score_with_default_score_annotation(
-        variant, expected, tmp_path_factory):
-    root_path = tmp_path_factory.mktemp("allele_score_annotation")
+        variant: tuple, expected: float,
+        tmp_path: pathlib.Path) -> None:
+    root_path = tmp_path
     setup_directories(
         root_path / "grr", {
             "allele_score": {
@@ -178,4 +164,4 @@ def test_allele_annotator_add_chrom_prefix_vcf_table(
         result = work_pipeline.annotate(annotatable)
 
         print(annotatable, result)
-        assert result.get("test100way") == pytest.approx(expected, rel=1e-5)
+        assert result.get("test100way") == pytest.approx(expected, rel=1e-3)

@@ -1,3 +1,4 @@
+import abc
 import collections
 from typing import Optional, Deque, Union, Generator, Any
 import pysam
@@ -6,7 +7,24 @@ import pysam
 Key = Union[str, int]
 
 
-class Line:
+class LineBase(abc.ABC):
+    """Base class for genomic position table lines."""
+
+    def __init__(self) -> None:
+
+        self.chrom: str
+        self.fchrom: str
+        self.pos_begin: int
+        self.pos_end: int
+        self.ref: Optional[str]
+        self.alt: Optional[str]
+
+    @abc.abstractmethod
+    def get(self, key: Key) -> Any:
+        """Return score value."""
+
+
+class Line(LineBase):
     """Represents a line read from a genomic position table.
 
     Provides attribute access to a number of important columns - chromosome,
@@ -23,6 +41,8 @@ class Line:
         alt_key: Optional[Key] = None,
         header: Optional[tuple[str, ...]] = None,
     ):
+        super().__init__()
+
         self._data: tuple[str, ...] = raw_line
         self._header: Optional[tuple[str, ...]] = header
 
@@ -44,7 +64,7 @@ class Line:
         return self._data[idx]
 
 
-class VCFLine:
+class VCFLine(LineBase):
     """Line adapter for lines derived from a VCF file.
 
     Implements functionality for handling multi-allelic variants
@@ -53,6 +73,8 @@ class VCFLine:
 
     def __init__(
             self, raw_line: pysam.VariantRecord, allele_index: Optional[int]):
+        super().__init__()
+
         self.chrom: str = raw_line.contig
         self.fchrom: str = raw_line.contig
         self.pos_begin: int = raw_line.pos
@@ -71,8 +93,10 @@ class VCFLine:
         self.info: pysam.VariantRecordInfo = raw_line.info
         self.info_meta: pysam.VariantHeaderMetadata = raw_line.header.info
 
-    def get(self, key: str) -> Any:
+    def get(self, key: Key) -> Any:
         """Get a value from the INFO field of the VCF line."""
+        assert isinstance(key, str)
+
         value, meta = self.info.get(key), self.info_meta.get(key)
         if isinstance(value, tuple):
             if meta.number == "A" and self.allele_index is not None:
@@ -90,7 +114,7 @@ class LineBuffer:
     """Represent a line buffer for Tabix genome position table."""
 
     def __init__(self) -> None:
-        self.deque: Deque[Line] = collections.deque()
+        self.deque: Deque[LineBase] = collections.deque()
 
     def __len__(self) -> int:
         return len(self.deque)
@@ -98,18 +122,18 @@ class LineBuffer:
     def clear(self) -> None:
         self.deque.clear()
 
-    def append(self, line: Line) -> None:
+    def append(self, line: LineBase) -> None:
         if len(self.deque) > 0 and self.peek_first().chrom != line.chrom:
             self.clear()
         self.deque.append(line)
 
-    def peek_first(self) -> Line:
+    def peek_first(self) -> LineBase:
         return self.deque[0]
 
-    def pop_first(self) -> Line:
+    def pop_first(self) -> LineBase:
         return self.deque.popleft()
 
-    def peek_last(self) -> Line:
+    def peek_last(self) -> LineBase:
         return self.deque[-1]
 
     def region(self) -> tuple[Optional[str], Optional[int], Optional[int]]:
@@ -194,7 +218,7 @@ class LineBuffer:
 
     def fetch(
         self, chrom: str, pos_begin: int, pos_end: int
-    ) -> Generator[Line, None, None]:
+    ) -> Generator[LineBase, None, None]:
         """Return a generator of rows matching the region."""
         beg_index = self.find_index(chrom, pos_begin)
         if beg_index == -1:

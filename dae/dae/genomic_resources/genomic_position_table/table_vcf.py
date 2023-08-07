@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from functools import cache
-from typing import Optional
+from typing import Optional, Generator
 
 import pysam
 
@@ -19,9 +21,9 @@ class VCFGenomicPositionTable(TabixGenomicPositionTable):
     def __init__(
             self, genomic_resource: GenomicResource, table_definition: dict):
         super().__init__(genomic_resource, table_definition)
-        self.header = self._load_header()
+        self.header = self._load_vcf_header()
 
-    def _load_header(self) -> pysam.VariantHeaderMetadata:
+    def _load_vcf_header(self) -> pysam.VariantHeaderMetadata:
         assert self.definition.get("header_mode", "file") == "file"
         filename = self.definition.filename
         idx = filename.index(".vcf")
@@ -30,7 +32,7 @@ class VCFGenomicPositionTable(TabixGenomicPositionTable):
             "VCF tables must have an accompanying *.header.vcf.gz file!"
         return self.genomic_resource.open_vcf_file(header_filename).header.info
 
-    def _transform_result(self, line: VCFLine) -> None:
+    def _transform_vcf_result(self, line: VCFLine) -> None:
         rchrom = self._map_result_chrom(line.chrom)
         line.chrom = rchrom
 
@@ -41,11 +43,11 @@ class VCFGenomicPositionTable(TabixGenomicPositionTable):
         if not self.rev_chrom_map:
             return line
         if line.fchrom in self.rev_chrom_map:
-            self._transform_result(line)
+            self._transform_vcf_result(line)
             return line
         return None
 
-    def open(self):
+    def open(self) -> VCFGenomicPositionTable:
         self.pysam_file = self.genomic_resource.open_vcf_file(
             self.definition.filename)
         self._set_core_column_keys()
@@ -59,11 +61,13 @@ class VCFGenomicPositionTable(TabixGenomicPositionTable):
             contigs = pysam_file_tabix.contigs
         return list(map(str, contigs))
 
-    def get_line_iterator(self, *args):
+    def get_line_iterator(
+        self, chrom: Optional[str] = None, pos_begin: Optional[int] = None
+    ) -> Generator[Optional[VCFLine], None, None]:
         assert isinstance(self.pysam_file, pysam.VariantFile)
         self.stats["tabix fetch"] += 1
         self.buffer.clear()
-        for raw_line in self.pysam_file.fetch(*args):
+        for raw_line in self.pysam_file.fetch(chrom, pos_begin):
             allele_index: Optional[int]
             for allele_index, alt in enumerate(raw_line.alts or [None]):
                 assert raw_line.ref is not None
