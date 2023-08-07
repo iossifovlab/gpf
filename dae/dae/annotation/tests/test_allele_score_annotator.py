@@ -1,5 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import textwrap
+import pathlib
+
 import pytest
 
 from dae.annotation.annotatable import VCFAllele
@@ -8,28 +10,16 @@ from dae.annotation.annotation_pipeline import AnnotatorInfo, \
     AnnotationPipeline
 from dae.annotation.annotation_factory import build_annotation_pipeline
 from dae.genomic_resources.testing import \
-    setup_directories, convert_to_tab_separated
-from dae.genomic_resources.repository import GR_CONF_FILE_NAME
+    setup_directories, convert_to_tab_separated, \
+    setup_vcf, build_filesystem_test_repository
+
+from dae.genomic_resources.repository import GR_CONF_FILE_NAME, \
+    GenomicResourceRepo
 from dae.genomic_resources import build_genomic_resource_repository
 
 
-def test_allele_score_annotator(frequency_variants_expected, grr_fixture):
-    pipeline = AnnotationPipeline(grr_fixture)
-    annotator = AlleleScoreAnnotator(
-        pipeline, AnnotatorInfo("allele_score", [],
-                                {"resource_id": "hg38/TESTFreq"}))
-    pipeline.add_annotator(annotator)
-
-    with pipeline.open() as work_pipeline:
-        for svar, expected in frequency_variants_expected:
-            for sallele in svar.alt_alleles:
-                annotatable = sallele.get_annotatable()
-                result = work_pipeline.annotate(annotatable)
-                for score, value in expected.items():
-                    assert result.get(score) == value
-
-
-def test_allele_score_annotator_attributes(grr_fixture):
+def test_allele_score_annotator_attributes(
+        grr_fixture: GenomicResourceRepo) -> None:
 
     pipeline = AnnotationPipeline(grr_fixture)
     annotator = AlleleScoreAnnotator(
@@ -60,8 +50,9 @@ def test_allele_score_annotator_attributes(grr_fixture):
     (("1", 16, "C", "A"), 0.05),
 ])
 def test_allele_score_with_default_score_annotation(
-        variant, expected, tmp_path_factory):
-    root_path = tmp_path_factory.mktemp("allele_score_annotation")
+        variant: tuple, expected: float,
+        tmp_path: pathlib.Path) -> None:
+    root_path = tmp_path
     setup_directories(
         root_path / "grr", {
             "allele_score": {
@@ -116,3 +107,61 @@ def test_allele_score_with_default_score_annotation(
     result = pipeline.annotate(annotatable)
     assert len(result) == 1
     assert result["allele_freq"] == expected
+
+
+@pytest.mark.parametrize("allele, expected", [
+    (("chr1", 1, "C", "A"), 0.001),
+    (("chr1", 11, "C", "A"), 0.1),
+    (("chr1", 21, "C", "A"), 0.2),
+])
+def test_allele_annotator_add_chrom_prefix_vcf_table(
+        tmp_path: pathlib.Path, allele: tuple, expected: float) -> None:
+
+    setup_directories(
+        tmp_path, {
+            "allele_score1": {
+                "genomic_resource.yaml": textwrap.dedent("""
+                    type: allele_score
+                    table:
+                        filename: data.vcf.gz
+                        format: vcf_info
+                        chrom_mapping:
+                            add_prefix: chr
+                    scores:
+                    - id: test100way
+                      type: float
+                      desc: "test values"
+                      name: test100way
+                    """),
+            }
+        })
+
+    setup_vcf(
+        tmp_path / "allele_score1" / "data.vcf.gz",
+        textwrap.dedent("""
+        ##fileformat=VCFv4.1
+        ##INFO=<ID=test100way,Number=1,Type=Float,Description="test values">
+        ##contig=<ID=1>
+        #CHROM POS ID REF ALT QUAL FILTER INFO
+        1      1   .  C   A   .    .      test100way=0.001;
+        1      11  .  C   A   .    .      test100way=0.1;
+        1      21  .  C   A   .    .      test100way=0.2;
+        """))
+    repo = build_filesystem_test_repository(tmp_path)
+
+    pipeline_config = textwrap.dedent("""
+            - allele_score:
+                resource_id: allele_score1
+                attributes:
+                - source: test100way
+            """)
+
+    pipeline = build_annotation_pipeline(
+        pipeline_config_str=pipeline_config,
+        grr_repository=repo)
+    with pipeline.open() as work_pipeline:
+        annotatable = VCFAllele(*allele)
+        result = work_pipeline.annotate(annotatable)
+
+        print(annotatable, result)
+        assert result.get("test100way") == pytest.approx(expected, rel=1e-3)

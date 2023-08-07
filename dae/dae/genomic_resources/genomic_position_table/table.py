@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 import abc
-from typing import Optional, Dict, List
-from box import Box  # type: ignore
+from typing import Optional, Dict, List, Union, cast, Generator
+from types import TracebackType
+
+from box import Box
 
 from dae.genomic_resources.repository import GenomicResource
+from .line import LineBase
 
 
 class GenomicPositionTable(abc.ABC):
@@ -16,7 +19,8 @@ class GenomicPositionTable(abc.ABC):
     REF = "reference"
     ALT = "alternative"
 
-    def __init__(self, genomic_resource: GenomicResource, table_definition):
+    def __init__(
+            self, genomic_resource: GenomicResource, table_definition: dict):
         self.genomic_resource = genomic_resource
 
         self.definition = Box(table_definition)
@@ -24,11 +28,11 @@ class GenomicPositionTable(abc.ABC):
         self.chrom_order: Optional[List[str]] = None
         self.rev_chrom_map: Optional[Dict[str, str]] = None
 
-        self.chrom_key: Optional[int] = None
-        self.pos_begin_key: Optional[int] = None
-        self.pos_end_key: Optional[int] = None
-        self.ref_key = None
-        self.alt_key = None
+        self.chrom_key: Optional[Union[int, str]] = None
+        self.pos_begin_key: Optional[Union[int, str]] = None
+        self.pos_end_key: Optional[Union[int, str]] = None
+        self.ref_key: Optional[Union[int, str]] = None
+        self.alt_key: Optional[Union[int, str]] = None
 
         self.header: Optional[tuple] = None
 
@@ -50,7 +54,7 @@ class GenomicPositionTable(abc.ABC):
                 f"{self.header_mode} does not meet these "
                 f"requirements.")
 
-    def _build_chrom_mapping(self):
+    def _build_chrom_mapping(self) -> None:
         self.chrom_map = None
         self.chrom_order = self.get_file_chromosomes()
         if "chrom_mapping" in self.definition:
@@ -95,39 +99,43 @@ class GenomicPositionTable(abc.ABC):
             self.rev_chrom_map = {
                 fch: ch for ch, fch in self.chrom_map.items()}
 
-    def _get_column_key(self, col):
+    def _get_column_key(self, col: str) -> Optional[Union[int, str]]:
         if col not in self.definition:
             return None
         if "name" in self.definition[col]:
-            return self.definition[col].name
+            return cast(str, self.definition[col].name)
         if "index" in self.definition[col]:
-            return self.definition[col].index
+            return cast(int, self.definition[col].index)
         return None
 
-    def _set_core_column_keys(self):
+    def _set_core_column_keys(self) -> None:
         self.chrom_key = self._get_column_key(self.CHROM)
         if self.chrom_key is None:
-            self.chrom_key = self.CHROM  # type: ignore
+            self.chrom_key = self.CHROM
 
         self.pos_begin_key = self._get_column_key(self.POS_BEGIN)
         if self.pos_begin_key is None:
-            self.pos_begin_key = self.POS_BEGIN  # type: ignore
+            self.pos_begin_key = self.POS_BEGIN
 
         self.pos_end_key = self._get_column_key(self.POS_END)
         if self.pos_end_key is None:
             if self.header and self.POS_END in self.header:
-                self.pos_end_key = self.POS_END  # type: ignore
+                self.pos_end_key = self.POS_END
             else:
                 self.pos_end_key = self.pos_begin_key
 
         self.ref_key = self._get_column_key(self.REF)
         self.alt_key = self._get_column_key(self.ALT)
 
-    def __enter__(self):
+    def __enter__(self) -> GenomicPositionTable:
         self.open()
         return self
 
-    def __exit__(self, *args):
+    def __exit__(
+            self,
+            exc_type: type[BaseException] | None,
+            exc_value: Optional[BaseException],
+            exc_tb: TracebackType | None) -> None:
         self.close()
 
     @abc.abstractmethod
@@ -135,25 +143,23 @@ class GenomicPositionTable(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def close(self):
+    def close(self) -> None:
         """Close the resource."""
 
     @abc.abstractmethod
-    def get_all_records(self):
-        return []
+    def get_all_records(self) -> Generator[Optional[LineBase], None, None]:
+        """Return generator of all records in the table."""
 
     @abc.abstractmethod
     def get_records_in_region(
-        self,
-        chrom: str,
+        self, chrom: str,
         pos_begin: Optional[int] = None,
         pos_end: Optional[int] = None
-    ):
+    ) -> Generator[LineBase, None, None]:
         """Return an iterable over the records in the specified range.
 
         The interval is closed on both sides and 1-based.
         """
-        return []
 
     def get_chromosomes(self) -> list[str]:
         """Return list of contigs in the genomic position table."""
@@ -165,7 +171,8 @@ class GenomicPositionTable(abc.ABC):
         assert self.chrom_order is not None
         return self.chrom_order
 
-    def map_chromosome(self, chromosome):
+    def map_chromosome(self, chromosome: str) -> Optional[str]:
+        """Map a chromosome from reference genome to file chromosome."""
         if self.rev_chrom_map is not None:
             if chromosome in self.rev_chrom_map:
                 return self.rev_chrom_map[chromosome]
@@ -173,15 +180,19 @@ class GenomicPositionTable(abc.ABC):
 
         return chromosome
 
-    def unmap_chromosome(self, chromosome):
+    def unmap_chromosome(self, chromosome: str) -> Optional[str]:
+        """Map a chromosome file contigs to reference genome chromosome."""
         if self.chrom_map is not None:
-            assert chromosome in self.chrom_map
-            return self.chrom_map[chromosome]
+            if chromosome in self.chrom_map:
+                assert chromosome in self.chrom_map
+                return self.chrom_map[chromosome]
+            return None
 
         return chromosome
 
     @abc.abstractmethod
-    def get_chromosome_length(self, chrom, step=100_000_000):
+    def get_chromosome_length(
+            self, chrom: str, step: int = 100_000_000) -> int:
         """Return the length of a chromosome (or contig).
 
         Returned value is guarnteed to be larget than the actual contig length.

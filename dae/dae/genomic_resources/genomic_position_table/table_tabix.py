@@ -1,14 +1,14 @@
 from __future__ import annotations
 
 import logging
-from typing import Optional, Tuple, Union, Generator
+from typing import Optional, Tuple, Union, Generator, Any
 from collections import Counter
 import pysam
 
 from dae.genomic_resources.repository import GenomicResource
 from dae.utils.regions import get_chromosome_length_tabix
 from .table import GenomicPositionTable
-from .line import Line, LineBuffer
+from .line import Line, LineBuffer, LineBase
 
 
 PysamFile = Union[pysam.TabixFile, pysam.VariantFile]
@@ -39,7 +39,9 @@ class TabixGenomicPositionTable(GenomicPositionTable):
         self.stats: Counter = Counter()
         # pylint: disable=no-member
         self.pysam_file: Optional[PysamFile] = None
-        self.line_iterator: Optional[Generator[Line, None, None]] = None
+        self.line_iterator: Optional[
+            Generator[Optional[LineBase], None, None]] = None
+        self.header: Any
 
     def _load_header(self) -> tuple[str, ...]:
         header_lines = []
@@ -75,7 +77,7 @@ class TabixGenomicPositionTable(GenomicPositionTable):
 
     def get_chromosomes(self) -> list[str]:
         return list(filter(
-            lambda v: v is not None,
+            lambda v: v is not None,  # type: ignore
             [
                 self.map_chromosome(chrom)
                 for chrom in self.get_file_chromosomes()
@@ -101,9 +103,14 @@ class TabixGenomicPositionTable(GenomicPositionTable):
             raise ValueError(
                 f"contig {chrom} not present in the table's contigs: "
                 f"{self.get_chromosomes()}")
+        fchrom = self.unmap_chromosome(chrom)
+        if fchrom is None:
+            raise ValueError(
+                f"error in mapping chromsome {chrom} to the file contigs: "
+                f"{self.get_file_chromosomes()}"
+            )
         return get_chromosome_length_tabix(
-            self.pysam_file,
-            self.unmap_chromosome(chrom), step)
+            self.pysam_file, fchrom, step)
 
     def _map_file_chrom(self, chrom: str) -> str:
         """Transfrom chromosome name to the chromosomes from score file."""
@@ -117,36 +124,38 @@ class TabixGenomicPositionTable(GenomicPositionTable):
             return self.rev_chrom_map[chrom]
         return chrom
 
-    def _make_line(self, data: tuple) -> Line:
+    def _make_line(self, data: tuple) -> Optional[Line]:
         assert self.chrom_key is not None
         assert self.pos_begin_key is not None
         assert self.pos_end_key is not None
-        return Line(
+        line: Line = Line(
             data,
             self.chrom_key,
             self.pos_begin_key, self.pos_end_key,
             self.ref_key, self.alt_key,
             self.header
         )
+        if not self.rev_chrom_map:
+            return line
+        if line.fchrom in self.rev_chrom_map:
+            self._transform_result(line)
+            return line
+        return None
 
     def _transform_result(self, line: Line) -> Optional[Line]:
-        rchrom = self._map_result_chrom(line.chrom)
+        rchrom = self._map_result_chrom(line.fchrom)
         if rchrom is None:
             return None
 
         line.chrom = rchrom
         return line
 
-    def get_all_records(self) -> Generator[Optional[Line], None, None]:
+    def get_all_records(self) -> Generator[Optional[LineBase], None, None]:
         # pylint: disable=no-member
         for line in self.get_line_iterator():
-            if self.rev_chrom_map:
-                if line.chrom in self.rev_chrom_map:
-                    yield self._transform_result(line)
-                else:
-                    continue
-            else:
-                yield line
+            if line is None:
+                continue
+            yield line
 
     def _should_use_sequential_seek_forward(
             self, chrom: Optional[str], pos: int) -> bool:
@@ -179,7 +188,7 @@ class TabixGenomicPositionTable(GenomicPositionTable):
         assert len(self.buffer) > 0
         assert self.jump_threshold > 0
 
-        last: Line = self.buffer.peek_last()
+        last: LineBase = self.buffer.peek_last()
         assert chrom == last.chrom
         assert pos >= last.pos_begin
 
@@ -191,29 +200,30 @@ class TabixGenomicPositionTable(GenomicPositionTable):
 
     def _gen_from_tabix(
             self, chrom: str, pos: Optional[int],
-            buffering: bool = True) -> Generator[Line, None, None]:
+            buffering: bool = True) -> Generator[LineBase, None, None]:
         try:
             assert self.line_iterator is not None
             while True:
                 line = next(self.line_iterator)
-
+                if line is None:
+                    continue
                 if buffering:
                     self.buffer.append(line)
 
-                if line.chrom != chrom:
+                if line.fchrom != chrom:
                     return
                 if pos is not None and line.pos_begin > pos:
                     return
-                result = self._transform_result(line)
+
                 self.stats["yield from tabix"] += 1
-                if result:
-                    yield result
+                if line:
+                    yield line
         except StopIteration:
             pass
 
     def _gen_from_buffer_and_tabix(
         self, chrom: str, beg: int, end: int
-    ) -> Generator[Line, None, None]:
+    ) -> Generator[LineBase, None, None]:
         for line in self.buffer.fetch(chrom, beg, end):
             self.stats["yield from buffer"] += 1
             # result = self._transform_result(line)
@@ -230,7 +240,7 @@ class TabixGenomicPositionTable(GenomicPositionTable):
         self, chrom: str,
         pos_begin: Optional[int] = None,
         pos_end: Optional[int] = None
-    ) -> Generator[Line, None, None]:
+    ) -> Generator[LineBase, None, None]:
         self.stats["calls"] += 1
 
         if chrom not in self.get_chromosomes():
@@ -241,7 +251,11 @@ class TabixGenomicPositionTable(GenomicPositionTable):
             raise ValueError(
                 f"The chromosome {chrom} is not part of the table.")
 
-        fchrom = self._map_file_chrom(chrom)
+        fchrom = self.unmap_chromosome(chrom)
+        if fchrom is None:
+            raise ValueError(
+                f"error in mapping chromosome {chrom} to file contigs: "
+                f"{self.get_file_chromosomes()}")
         buffering = True
         if pos_begin is None:
             pos_begin = 1
@@ -296,7 +310,7 @@ class TabixGenomicPositionTable(GenomicPositionTable):
 
     def get_line_iterator(
         self, chrom: Optional[str] = None, pos_begin: Optional[int] = None
-    ) -> Generator[Line, None, None]:
+    ) -> Generator[Optional[LineBase], None, None]:
         """Extract raw lines and wrap them in our Line adapter."""
         assert isinstance(self.pysam_file, pysam.TabixFile)
 

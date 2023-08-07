@@ -1,15 +1,20 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,too-many-lines
 
 import textwrap
+import pathlib
+from typing import cast, Iterable
+
 import pytest
-# pylint: disable=no-member
 import pysam
 
 from dae.genomic_resources.genomic_position_table import \
-    Line, \
+    Line, VCFLine, \
     TabixGenomicPositionTable, \
     VCFGenomicPositionTable, \
     build_genomic_position_table
+from dae.genomic_resources.genomic_position_table.table import \
+    GenomicPositionTable
+from dae.genomic_resources.repository import GenomicResource
 
 from dae.genomic_resources.testing import \
     build_inmemory_test_resource, build_filesystem_test_resource, \
@@ -17,7 +22,7 @@ from dae.genomic_resources.testing import \
 
 
 def compare(
-    res: list[Line],
+    res: Iterable[Line],
     expected: list[tuple]
 ) -> bool:
     for idx, line in enumerate(res):
@@ -28,7 +33,7 @@ def compare(
 
 
 @pytest.fixture
-def vcf_res(tmp_path):
+def vcf_res(tmp_path: pathlib.Path) -> GenomicResource:
     setup_directories(
         tmp_path, {
             "genomic_resource.yaml": textwrap.dedent("""
@@ -48,17 +53,17 @@ def vcf_res(tmp_path):
 ##contig=<ID=chr1>
 ##contig=<ID=chr2>
 ##contig=<ID=chr3>
-#CHROM POS ID REF ALT QUAL FILTER  INFO
-chr1   5   .  A   T   .    .       A=1;C=c11,c12;D=d11
-chr1   15   .  A   T   .    .       A=2;B=21;C=c21;D=d21,d22
-chr1   30   .  A   T   .    .       A=3;B=31;C=c21;D=d31,d32
+#CHROM POS ID REF ALT QUAL FILTER INFO
+chr1   5   .  A   T   .    .      A=1;C=c11,c12;D=d11
+chr1   15  .  A   T   .    .      A=2;B=21;C=c21;D=d21,d22
+chr1   30  .  A   T   .    .      A=3;B=31;C=c21;D=d31,d32
     """)
     )
     return build_filesystem_test_resource(tmp_path)
 
 
 @pytest.fixture
-def vcf_res_autodetect_format(tmp_path):
+def vcf_res_autodetect_format(tmp_path: pathlib.Path) -> GenomicResource:
     setup_directories(
         tmp_path, {
             "genomic_resource.yaml": textwrap.dedent("""
@@ -79,7 +84,7 @@ chr1   5   .  A   T   .    .       A=1
 
 
 @pytest.fixture
-def vcf_res_multiallelic(tmp_path):
+def vcf_res_multiallelic(tmp_path: pathlib.Path) -> GenomicResource:
     setup_directories(
         tmp_path, {
             "genomic_resource.yaml": textwrap.dedent("""
@@ -106,7 +111,7 @@ chr1   30   .  A   T,G,C   .    .     A=3;B=31;C=c31,c32,c33,c34;D=d31,d32,d33
     return build_filesystem_test_resource(tmp_path)
 
 
-def test_regions():
+def test_regions() -> None:
     res = build_inmemory_test_resource({
         "genomic_resource.yaml": """
             table:
@@ -121,20 +126,20 @@ def test_regions():
             1     15        20       4.14
             1     21        30       5.14""")})
 
-    with build_genomic_position_table(res, res.config["table"]) as tab:
-        assert compare(tab.get_all_records(), [
+    with build_genomic_position_table(res, res.config["table"]) as mem_tab:
+        assert compare(mem_tab.get_all_records(), [
             ("1", "10", "12", "3.14"),
             ("1", "15", "20", "4.14"),
             ("1", "21", "30", "5.14")
         ])
 
-        assert compare(tab.get_records_in_region("1", 11, 11), [
+        assert compare(mem_tab.get_records_in_region("1", 11, 11), [
             ("1", "10", "12", "3.14")
         ])
 
-        assert not list(tab.get_records_in_region("1", 13, 14))
+        assert not list(mem_tab.get_records_in_region("1", 13, 14))
 
-        assert compare(tab.get_records_in_region("1", 18, 21), [
+        assert compare(mem_tab.get_records_in_region("1", 18, 21), [
             ("1", "15", "20", "4.14"),
             ("1", "21", "30", "5.14")
         ])
@@ -146,7 +151,8 @@ def test_regions():
     2,
     1500,
 ])
-def test_regions_in_tabix(tmp_path, jump_threshold):
+def test_regions_in_tabix(
+        tmp_path: pathlib.Path, jump_threshold: int) -> None:
     setup_directories(
         tmp_path, {
             "genomic_resource.yaml": textwrap.dedent("""
@@ -186,7 +192,7 @@ def test_regions_in_tabix(tmp_path, jump_threshold):
         ])
 
 
-def test_last_call_is_updated(tmp_path):
+def test_last_call_is_updated(tmp_path: pathlib.Path) -> None:
     setup_directories(
         tmp_path, {
             "genomic_resource.yaml": textwrap.dedent("""
@@ -208,22 +214,24 @@ def test_last_call_is_updated(tmp_path):
         """, seq_col=0, start_col=1, end_col=2)
     res = build_filesystem_test_resource(tmp_path)
 
-    with build_genomic_position_table(res, res.config["table"]) as tab:
-        assert tab._last_call == ("", -1, -1)
-        assert compare(tab.get_records_in_region("1", 11, 11), [
+    with build_genomic_position_table(res, res.config["table"]) as tab_tab:
+        assert isinstance(tab_tab, TabixGenomicPositionTable)
+        # pylint: disable=no-member
+        assert tab_tab._last_call == ("", -1, -1)
+        assert compare(tab_tab.get_records_in_region("1", 11, 11), [
             ("1", "10", "12", "3.14")
         ])
-        assert tab._last_call == ("1", 11, 11)
-        assert not list(tab.get_records_in_region("1", 13, 14))
-        assert tab._last_call == ("1", 13, 14)
-        assert compare(tab.get_records_in_region("1", 18, 21), [
+        assert tab_tab._last_call == ("1", 11, 11)
+        assert not list(tab_tab.get_records_in_region("1", 13, 14))
+        assert tab_tab._last_call == ("1", 13, 14)
+        assert compare(tab_tab.get_records_in_region("1", 18, 21), [
             ("1", "15", "20", "4.14"),
             ("1", "21", "30", "5.14")
         ])
-        assert tab._last_call == ("1", 18, 21)
+        assert tab_tab._last_call == ("1", 18, 21)
 
 
-def test_chr_add_pref():
+def test_chr_add_pref() -> None:
     res = build_inmemory_test_resource({
         "genomic_resource.yaml": """
             table:
@@ -245,7 +253,7 @@ def test_chr_add_pref():
         assert tab.get_chromosomes() == ["chr1", "chr11", "chrX"]
 
 
-def test_chr_del_pref():
+def test_chr_del_pref() -> None:
     res = build_inmemory_test_resource({
         "genomic_resource.yaml": """
             table:
@@ -265,7 +273,7 @@ def test_chr_del_pref():
         assert tab.get_chromosomes() == ["1", "22", "X"]
 
 
-def test_chrom_mapping_file():
+def test_chrom_mapping_file() -> None:
     res = build_inmemory_test_resource({
         "genomic_resource.yaml": """
             table:
@@ -299,7 +307,7 @@ def test_chrom_mapping_file():
         ])
 
 
-def test_chrom_mapping_file_with_tabix(tmp_path):
+def test_chrom_mapping_file_with_tabix(tmp_path: pathlib.Path) -> None:
     setup_directories(
         tmp_path, {
             "genomic_resource.yaml": """
@@ -339,7 +347,7 @@ def test_chrom_mapping_file_with_tabix(tmp_path):
                ["pesho"]
 
 
-def test_invalid_chrom_mapping_file_with_tabix(tmp_path):
+def test_invalid_chrom_mapping_file_with_tabix(tmp_path: pathlib.Path) -> None:
     setup_directories(
         tmp_path, {
             "genomic_resource.yaml": """
@@ -373,7 +381,7 @@ def test_invalid_chrom_mapping_file_with_tabix(tmp_path):
     )
 
 
-def test_column_with_name():
+def test_column_with_name() -> None:
     res = build_inmemory_test_resource({
         "genomic_resource.yaml": """
             table:
@@ -397,7 +405,7 @@ def test_column_with_name():
             ("1", "10", "12", "3.14")])
 
 
-def test_column_with_index():
+def test_column_with_index() -> None:
     res = build_inmemory_test_resource({
         "genomic_resource.yaml": """
             table:
@@ -419,7 +427,7 @@ def test_column_with_index():
             ("1", "10", "12", "3.14")])
 
 
-def test_no_header():
+def test_no_header() -> None:
     res = build_inmemory_test_resource({
         "genomic_resource.yaml": """
             table:
@@ -444,7 +452,7 @@ def test_no_header():
             ("1", "10", "12", "3.14")])
 
 
-def test_header_in_config():
+def test_header_in_config() -> None:
     res = build_inmemory_test_resource({
         "genomic_resource.yaml": """
             table:
@@ -466,7 +474,7 @@ def test_header_in_config():
             ("1", "10", "12", "3.14")])
 
 
-def test_space_in_mem_table():
+def test_space_in_mem_table() -> None:
     res = build_inmemory_test_resource({
         "genomic_resource.yaml": """
             table:
@@ -485,7 +493,7 @@ def test_space_in_mem_table():
             ("1", "11", "", "4.14")])
 
 
-def test_text_table():
+def test_text_table() -> None:
     res = build_inmemory_test_resource(
         content={
             "genomic_resource.yaml": """
@@ -545,7 +553,7 @@ def test_text_table():
     2,
     1500,
 ])
-def test_tabix_table(tmp_path, jump_threshold):
+def test_tabix_table(tmp_path: pathlib.Path, jump_threshold: int) -> None:
     setup_directories(
         tmp_path, {
             "genomic_resource.yaml": textwrap.dedent("""
@@ -609,7 +617,7 @@ def test_tabix_table(tmp_path, jump_threshold):
 
 
 @pytest.fixture
-def tabix_table(tmp_path):
+def tabix_table(tmp_path: pathlib.Path) -> GenomicPositionTable:
     setup_directories(
         tmp_path, {
             "genomic_resource.yaml": """
@@ -646,7 +654,7 @@ def tabix_table(tmp_path):
 
 
 @pytest.fixture
-def regions_tabix_table(tmp_path):
+def regions_tabix_table(tmp_path: pathlib.Path) -> GenomicPositionTable:
     setup_directories(
         tmp_path, {
             "genomic_resource.yaml": """
@@ -678,8 +686,9 @@ def regions_tabix_table(tmp_path):
     return table
 
 
-def test_tabix_table_should_use_sequential_seek_forward(tabix_table):
-    table = tabix_table
+def test_tabix_table_should_use_sequential_seek_forward(
+        tabix_table: GenomicPositionTable) -> None:
+    table = cast(TabixGenomicPositionTable, tabix_table)
 
     assert not table._should_use_sequential_seek_forward("1", 1)
     for row in table.get_records_in_region("1", 1, 1):
@@ -695,8 +704,8 @@ def test_tabix_table_should_use_sequential_seek_forward(tabix_table):
 
 
 def test_regions_tabix_table_should_use_sequential_seek_forward(
-    regions_tabix_table
-):
+    regions_tabix_table: TabixGenomicPositionTable
+) -> None:
     table = regions_tabix_table
 
     assert not table._should_use_sequential_seek_forward("1", 1)
@@ -714,7 +723,8 @@ def test_regions_tabix_table_should_use_sequential_seek_forward(
     assert not table._should_use_sequential_seek_forward("1", 21)
 
 
-def test_tabix_table_jumper_current_position(tabix_table):
+def test_tabix_table_jumper_current_position(
+        tabix_table: TabixGenomicPositionTable) -> None:
     table = tabix_table
 
     for rec in table.get_records_in_region("1", 1):
@@ -729,7 +739,7 @@ def test_tabix_table_jumper_current_position(tabix_table):
 
 
 @pytest.fixture
-def tabix_table_multiline(tmp_path):
+def tabix_table_multiline(tmp_path: pathlib.Path) -> GenomicPositionTable:
     setup_directories(
         tmp_path, {
             "genomic_resource.yaml": """
@@ -769,7 +779,8 @@ def tabix_table_multiline(tmp_path):
             ("1", "4", "6"), ("1", "4", "7")]),
 ])
 def test_tabix_table_multi_get_regions(
-        tabix_table_multiline, pos_beg, pos_end, expected):
+        tabix_table_multiline: TabixGenomicPositionTable,
+        pos_beg: int, pos_end: int, expected: list[tuple[str, ...]]) -> None:
     table = tabix_table_multiline
     assert not table._should_use_sequential_seek_forward("1", 1)
     assert compare(
@@ -777,7 +788,8 @@ def test_tabix_table_multi_get_regions(
     )
 
 
-def test_tabix_table_multi_get_regions_partial(tabix_table_multiline):
+def test_tabix_table_multi_get_regions_partial(
+        tabix_table_multiline: TabixGenomicPositionTable) -> None:
     table = tabix_table_multiline
 
     assert not table._should_use_sequential_seek_forward("1", 1)
@@ -794,7 +806,7 @@ def test_tabix_table_multi_get_regions_partial(tabix_table_multiline):
     )
 
 
-def test_tabix_middle_optimization(tmp_path):
+def test_tabix_middle_optimization(tmp_path: pathlib.Path) -> None:
     setup_directories(
         tmp_path, {
             "genomic_resource.yaml": """
@@ -836,7 +848,7 @@ def test_tabix_middle_optimization(tmp_path):
         assert tuple(row._data) == ("1", "1", "1")
 
 
-def test_tabix_middle_optimization_regions(tmp_path):
+def test_tabix_middle_optimization_regions(tmp_path: pathlib.Path) -> None:
     setup_directories(
         tmp_path, {
             "genomic_resource.yaml": """
@@ -885,7 +897,8 @@ def test_tabix_middle_optimization_regions(tmp_path):
         assert tuple(row._data) == ("1", "4", "8", "2")
 
 
-def test_tabix_middle_optimization_regions_buggy_1(tmp_path):
+def test_tabix_middle_optimization_regions_buggy_1(
+        tmp_path: pathlib.Path) -> None:
     setup_directories(
         tmp_path, {
             "genomic_resource.yaml": """
@@ -938,7 +951,7 @@ def test_tabix_middle_optimization_regions_buggy_1(tmp_path):
         ])
 
 
-def test_buggy_fitcons_e67(tmp_path):
+def test_buggy_fitcons_e67(tmp_path: pathlib.Path) -> None:
     setup_directories(
         tmp_path, {
             "genomic_resource.yaml": """
@@ -978,7 +991,8 @@ def test_buggy_fitcons_e67(tmp_path):
     ("1", 1),
     ("1500", 1500),
 ])
-def test_tabix_jump_config(tmp_path, jump_threshold, expected):
+def test_tabix_jump_config(
+        tmp_path: pathlib.Path, jump_threshold: str, expected: int) -> None:
     setup_directories(
         tmp_path, {
             "genomic_resource.yaml": f"""
@@ -1022,7 +1036,8 @@ def test_tabix_jump_config(tmp_path, jump_threshold, expected):
     (20_000, 2_500),
 ])
 def test_tabix_max_buffer(
-        tmp_path, buffer_maxsize, jump_threshold):
+        tmp_path: pathlib.Path,
+        buffer_maxsize: int, jump_threshold: int) -> None:
     setup_directories(
         tmp_path, {
             "genomic_resource.yaml": f"""
@@ -1050,6 +1065,9 @@ def test_tabix_max_buffer(
     TabixGenomicPositionTable.BUFFER_MAXSIZE = buffer_maxsize
 
     with build_genomic_position_table(res, res.config["tabix_table"]) as table:
+        assert isinstance(table, TabixGenomicPositionTable)
+
+        # pylint: disable=no-member
         assert table.BUFFER_MAXSIZE == buffer_maxsize
         assert table.jump_threshold == jump_threshold
         assert compare(
@@ -1066,7 +1084,7 @@ def test_tabix_max_buffer(
         )
 
 
-def test_contig_length():
+def test_contig_length() -> None:
     res = build_inmemory_test_resource({
         "genomic_resource.yaml": """
             table:
@@ -1087,11 +1105,13 @@ def test_contig_length():
         assert tab.get_chromosome_length("2") >= 2
 
 
-def test_contig_length_tabix_table(tabix_table):
+def test_contig_length_tabix_table(
+        tabix_table: TabixGenomicPositionTable) -> None:
     assert tabix_table.get_chromosome_length("1") >= 13
 
 
-def test_vcf_autodetect_format(vcf_res_autodetect_format):
+def test_vcf_autodetect_format(
+        vcf_res_autodetect_format: GenomicResource) -> None:
     with build_genomic_position_table(
         vcf_res_autodetect_format,
         vcf_res_autodetect_format.config["tabix_table"]
@@ -1100,7 +1120,7 @@ def test_vcf_autodetect_format(vcf_res_autodetect_format):
         assert len(tuple(tab.get_all_records())) == 1
 
 
-def test_vcf_get_all_records(vcf_res):
+def test_vcf_get_all_records(vcf_res: GenomicResource) -> None:
     with build_genomic_position_table(
         vcf_res, vcf_res.config["tabix_table"]
     ) as tab:
@@ -1109,24 +1129,32 @@ def test_vcf_get_all_records(vcf_res):
         results = tuple(tab.get_all_records())
         assert len(results) == 3
 
-        assert results[0].chrom == "chr1"
-        assert results[0].pos_begin == 5
-        assert results[0].pos_end == 5
+        res0 = results[0]
+        assert res0 is not None
 
-        assert results[1].chrom == "chr1"
-        assert results[1].pos_begin == 15
-        assert results[1].pos_end == 15
+        assert res0.chrom == "chr1"
+        assert res0.pos_begin == 5
+        assert res0.pos_end == 5
 
-        assert results[2].chrom == "chr1"
-        assert results[2].pos_begin == 30
-        assert results[2].pos_end == 30
+        assert res0.ref == "A"
+        assert res0.alt == "T"
+        assert isinstance(res0, VCFLine)
+        assert isinstance(res0.info, pysam.VariantRecordInfo)
 
-        assert results[0].ref == "A"
-        assert results[0].alt == "T"
-        assert isinstance(results[0].info, pysam.VariantRecordInfo)
+        res1 = results[1]
+        assert res1 is not None
+        assert res1.chrom == "chr1"
+        assert res1.pos_begin == 15
+        assert res1.pos_end == 15
+
+        res2 = results[2]
+        assert res2 is not None
+        assert res2.chrom == "chr1"
+        assert res2.pos_begin == 30
+        assert res2.pos_end == 30
 
 
-def test_vcf_get_records_in_region(vcf_res):
+def test_vcf_get_records_in_region(vcf_res: GenomicResource) -> None:
     with build_genomic_position_table(
         vcf_res, vcf_res.config["tabix_table"]
     ) as tab:
@@ -1160,7 +1188,7 @@ def test_vcf_get_records_in_region(vcf_res):
         assert results[2].pos_end == 30
 
 
-def test_vcf_get_info_fields(vcf_res):
+def test_vcf_get_info_fields(vcf_res: GenomicResource) -> None:
     with build_genomic_position_table(
         vcf_res, vcf_res.config["tabix_table"]
     ) as tab:
@@ -1179,7 +1207,8 @@ def test_vcf_get_info_fields(vcf_res):
                     expected[score]  # type: ignore
 
 
-def test_vcf_jump_ahead_optimization_use_sequential(vcf_res):
+def test_vcf_jump_ahead_optimization_use_sequential(
+        vcf_res: GenomicResource) -> None:
     """
     Jump-ahead optimization test, use sequential case.
 
@@ -1200,6 +1229,7 @@ def test_vcf_jump_ahead_optimization_use_sequential(vcf_res):
         tab.jump_threshold = 6
         assert isinstance(tab, VCFGenomicPositionTable)
 
+        # pylint: disable=no-member
         assert tab.stats == {}
         tuple(tab.get_records_in_region("chr1", 1, 6))
         assert len(tab.buffer.deque) == 2
@@ -1210,7 +1240,8 @@ def test_vcf_jump_ahead_optimization_use_sequential(vcf_res):
         assert tab.stats["yield from tabix"] == 1
 
 
-def test_vcf_jump_ahead_optimization_use_jump(vcf_res):
+def test_vcf_jump_ahead_optimization_use_jump(
+        vcf_res: GenomicResource) -> None:
     """
     Jump-ahead optimization test, use jump case.
 
@@ -1226,17 +1257,19 @@ def test_vcf_jump_ahead_optimization_use_jump(vcf_res):
         tab.jump_threshold = 5
         assert isinstance(tab, VCFGenomicPositionTable)
 
+        # pylint: disable=no-member
         assert tab.stats == {}
         tuple(tab.get_records_in_region("chr1", 1, 6))
-        assert len(tab.buffer.deque) == 2
         assert tab.stats["yield from tabix"] == 1
+        assert len(tab.buffer.deque) == 2
+
         tuple(tab.get_records_in_region("chr1", 20, 35))
-        assert len(tab.buffer.deque) == 1
         assert tab.stats["sequential seek forward"] == 0
         assert tab.stats["yield from tabix"] == 2
+        assert len(tab.buffer.deque) == 1
 
 
-def test_vcf_multiallelic(vcf_res_multiallelic):
+def test_vcf_multiallelic(vcf_res_multiallelic: GenomicResource) -> None:
     """Test multiallelic variants are read as separate lines.
 
     Check that each line has proper allele indices.
@@ -1248,7 +1281,8 @@ def test_vcf_multiallelic(vcf_res_multiallelic):
         assert isinstance(tab, VCFGenomicPositionTable)
 
         results = tuple(map(
-            lambda r: (r.chrom, r.pos_begin, r.pos_end, r.allele_index),
+            lambda r:
+            (r.chrom, r.pos_begin, r.pos_end, r.allele_index),  # type:ignore
             tab.get_all_records()
         ))
         assert results == (
@@ -1262,7 +1296,8 @@ def test_vcf_multiallelic(vcf_res_multiallelic):
         )
 
 
-def test_vcf_multiallelic_region(vcf_res_multiallelic):
+def test_vcf_multiallelic_region(
+        vcf_res_multiallelic: GenomicResource) -> None:
     """Same as previous test, but for a given region."""
     with build_genomic_position_table(
         vcf_res_multiallelic,
@@ -1271,7 +1306,8 @@ def test_vcf_multiallelic_region(vcf_res_multiallelic):
         assert isinstance(tab, VCFGenomicPositionTable)
 
         results = tuple(map(
-            lambda r: (r.chrom, r.pos_begin, r.pos_end, r.allele_index),
+            lambda r:
+            (r.chrom, r.pos_begin, r.pos_end, r.allele_index),  # type:ignore
             tab.get_records_in_region("chr1", 14, 15))
         )
         assert results == (
@@ -1280,7 +1316,8 @@ def test_vcf_multiallelic_region(vcf_res_multiallelic):
         )
 
 
-def test_vcf_multiallelic_info_fields(vcf_res_multiallelic):
+def test_vcf_multiallelic_info_fields(
+        vcf_res_multiallelic: GenomicResource) -> None:
     """Test accessing an INFO field for multiallelic variants.
 
     Should return the correct value for the given allele.
@@ -1291,8 +1328,11 @@ def test_vcf_multiallelic_info_fields(vcf_res_multiallelic):
     ) as tab:
         assert isinstance(tab, VCFGenomicPositionTable)
 
-        results = []
+        results: list[tuple] = []
         for line in tab.get_all_records():
+            assert line is not None
+            assert isinstance(line, VCFLine)
+
             results.append(
                 (line.chrom,
                  line.pos_begin,
@@ -1316,7 +1356,7 @@ def test_vcf_multiallelic_info_fields(vcf_res_multiallelic):
         ]
 
 
-def test_get_ref_alt_nonconfigured_missing(tmp_path):
+def test_get_ref_alt_nonconfigured_missing(tmp_path: pathlib.Path) -> None:
     setup_directories(
         tmp_path, {
             "genomic_resource.yaml": """
@@ -1351,7 +1391,7 @@ def test_get_ref_alt_nonconfigured_missing(tmp_path):
         )
 
 
-def test_get_ref_alt_nonconfigured_existing(tmp_path):
+def test_get_ref_alt_nonconfigured_existing(tmp_path: pathlib.Path) -> None:
     setup_directories(
         tmp_path, {
             "genomic_resource.yaml": """
@@ -1386,7 +1426,7 @@ def test_get_ref_alt_nonconfigured_existing(tmp_path):
         )
 
 
-def test_get_ref_alt_configured_existing(tmp_path):
+def test_get_ref_alt_configured_existing(tmp_path: pathlib.Path) -> None:
     setup_directories(
         tmp_path, {
             "genomic_resource.yaml": """
@@ -1421,7 +1461,7 @@ def test_get_ref_alt_configured_existing(tmp_path):
         )
 
 
-def test_get_ref_alt_by_index_on_no_header(tmp_path):
+def test_get_ref_alt_by_index_on_no_header(tmp_path: pathlib.Path) -> None:
     setup_directories(
         tmp_path, {
             "genomic_resource.yaml": """
@@ -1463,18 +1503,21 @@ def test_get_ref_alt_by_index_on_no_header(tmp_path):
         )
 
 
-def test_vcf_get_missing_alt(vcf_res_multiallelic):
+def test_vcf_get_missing_alt(vcf_res_multiallelic: GenomicResource) -> None:
     with build_genomic_position_table(
         vcf_res_multiallelic, vcf_res_multiallelic.config["tabix_table"]
     ) as tab:
         assert isinstance(tab, VCFGenomicPositionTable)
 
         no_alt_line = next(tab.get_all_records())
+        assert no_alt_line is not None
+
         assert no_alt_line.ref == "A"
         assert no_alt_line.alt is None
 
 
-def test_overlapping_nonattribute_columns_config(tmp_path):
+def test_overlapping_nonattribute_columns_config(
+        tmp_path: pathlib.Path) -> None:
     setup_directories(
         tmp_path, {
             "genomic_resource.yaml": """
@@ -1522,7 +1565,7 @@ def test_overlapping_nonattribute_columns_config(tmp_path):
         )
 
 
-def test_vcf_get_chromosomes(vcf_res):
+def test_vcf_get_chromosomes(vcf_res: GenomicResource) -> None:
     with build_genomic_position_table(
         vcf_res, vcf_res.config["tabix_table"]
     ) as tab:
