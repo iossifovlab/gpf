@@ -51,7 +51,8 @@ class VCFLine:
     and INFO fields.
     """
 
-    def __init__(self, raw_line: pysam.VariantRecord, allele_index: int):
+    def __init__(
+            self, raw_line: pysam.VariantRecord, allele_index: Optional[int]):
         self.chrom: str = raw_line.contig
         self.fchrom: str = raw_line.contig
         self.pos_begin: int = raw_line.pos
@@ -66,7 +67,7 @@ class VCFLine:
         self.allele_index: Optional[int] = allele_index
         if self.allele_index is not None:
             assert raw_line.alts is not None
-            self.alt = raw_line.alts[allele_index]
+            self.alt = raw_line.alts[self.allele_index]
         self.info: pysam.VariantRecordInfo = raw_line.info
         self.info_meta: pysam.VariantHeaderMetadata = raw_line.header.info
 

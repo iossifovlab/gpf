@@ -53,10 +53,10 @@ def vcf_res(tmp_path: pathlib.Path) -> GenomicResource:
 ##contig=<ID=chr1>
 ##contig=<ID=chr2>
 ##contig=<ID=chr3>
-#CHROM POS ID REF ALT QUAL FILTER  INFO
-chr1   5   .  A   T   .    .       A=1;C=c11,c12;D=d11
-chr1   15   .  A   T   .    .       A=2;B=21;C=c21;D=d21,d22
-chr1   30   .  A   T   .    .       A=3;B=31;C=c21;D=d31,d32
+#CHROM POS ID REF ALT QUAL FILTER INFO
+chr1   5   .  A   T   .    .      A=1;C=c11,c12;D=d11
+chr1   15  .  A   T   .    .      A=2;B=21;C=c21;D=d21,d22
+chr1   30  .  A   T   .    .      A=3;B=31;C=c21;D=d31,d32
     """)
     )
     return build_filesystem_test_resource(tmp_path)
@@ -1260,12 +1260,13 @@ def test_vcf_jump_ahead_optimization_use_jump(
         # pylint: disable=no-member
         assert tab.stats == {}
         tuple(tab.get_records_in_region("chr1", 1, 6))
-        assert len(tab.buffer.deque) == 2
         assert tab.stats["yield from tabix"] == 1
+        assert len(tab.buffer.deque) == 2
+
         tuple(tab.get_records_in_region("chr1", 20, 35))
-        assert len(tab.buffer.deque) == 1
         assert tab.stats["sequential seek forward"] == 0
         assert tab.stats["yield from tabix"] == 2
+        assert len(tab.buffer.deque) == 1
 
 
 def test_vcf_multiallelic(vcf_res_multiallelic: GenomicResource) -> None:

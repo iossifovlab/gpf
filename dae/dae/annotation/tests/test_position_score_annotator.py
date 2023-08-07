@@ -361,7 +361,7 @@ def test_position_annotator_documentation(
     (("chr1", 21, "C", "A"), 0.2),
     (("chr1", 31, "C", "A"), 0.3),
 ])
-def test_position_annotator_add_chrom_prefix(
+def test_position_annotator_add_chrom_prefix_tabix_table(
         tmp_path: pathlib.Path, allele: tuple, expected: float) -> None:
 
     setup_directories(
