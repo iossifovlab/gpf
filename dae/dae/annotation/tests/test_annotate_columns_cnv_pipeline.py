@@ -90,7 +90,8 @@ def annotate_cnv_fixture(tmp_path_factory):
                         scores:
                         - id: gene_score1
                           desc: Test gene score
-                          number_hist:
+                          histogram:
+                            type: number
                             number_of_bins: 100
                             view_range:
                               min: 0.0
