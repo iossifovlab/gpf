@@ -1502,8 +1502,10 @@ class GeneModels(
 
     def add_statistics_build_tasks(self, task_graph: TaskGraph, **_) \
             -> list[Task]:
-        task = task_graph.create_task("alabala", GeneModels._do_statistics,
-                                      [self.resource], [])
+        task = task_graph.create_task(
+            f"{self.resource_id}_cals_stats",
+            GeneModels._do_statistics,
+            [self.resource], [])
         return [task]
 
     @staticmethod
