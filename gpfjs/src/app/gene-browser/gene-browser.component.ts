@@ -134,6 +134,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy, AfterViewInit {
       if (event.keyCode === 13) {
           $("#go-button").click();
           dropdown.autocomplete('close');
+          dropdown.blur();
       }
     });
   }
