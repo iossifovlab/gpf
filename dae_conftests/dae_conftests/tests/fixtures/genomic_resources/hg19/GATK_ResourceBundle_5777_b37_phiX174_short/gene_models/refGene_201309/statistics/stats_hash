@@ -1,1 +1,8 @@
-placeholder
+{
+  "config": {
+    "format": "default"
+  },
+  "files_md5": {
+    "refGene201309.txt": "a42701941f92c7b999a4f8f26e4a3a47"
+  }
+}

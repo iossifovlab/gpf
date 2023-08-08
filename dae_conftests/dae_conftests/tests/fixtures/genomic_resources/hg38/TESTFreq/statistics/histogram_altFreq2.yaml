@@ -203,6 +203,7 @@ bins:
 - 10.4352
 config:
   number_of_bins: 100
+  type: number
   view_range:
     max: 10.4352
     min: 0.8

@@ -16,18 +16,15 @@
 - md5: 558273e259dee3322accc97e92e9d7d1
   name: histograms/MPC.png
   size: 8667
-- md5: 05364190a015e8db1f194c463603043a
-  name: index.html
-  size: 3473
 - md5: c5bccdbfe3dc20fc06699476cfd3e5ca
   name: statistics/histogram_MPC.png
   size: 10251
-- md5: 647f2366ca7712640b233ead7e929525
+- md5: d391ac8dbe9e48d56d3bfb569d9487db
   name: statistics/histogram_MPC.yaml
-  size: 1813
+  size: 1828
 - md5: 5416e76393b5da61c3eefd628ca67fe3
   name: statistics/min_max_MPC.yaml
   size: 54
-- md5: 97880225bbd11b94ad6475a32b76c25f
+- md5: ea5c8c01e4be4ddd9459e4e8fe3581c2
   name: statistics/stats_hash
-  size: 945
+  size: 4930

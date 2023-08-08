@@ -16,21 +16,18 @@
 - md5: 6173d0d671742284f909423144c4f07a
   name: histograms/phastCons100way.png
   size: 8178
-- md5: bb2881a2d4e2429a64a1e366fd177d48
-  name: index.html
-  size: 3893
 - md5: 56feb878ed78769d5200702392b8e4b7
   name: scores/phastCons100way.yaml
   size: 583
 - md5: 7253f59314b3cdec0fe36f4d19a79410
   name: statistics/histogram_phastCons100way.png
   size: 11865
-- md5: 50f50d296a496786a02583e5b29be09f
+- md5: da2eb0f73da877f98766eec142601ba6
   name: statistics/histogram_phastCons100way.yaml
-  size: 295
+  size: 310
 - md5: 98ddd26b76ce999ec1f212448880f698
   name: statistics/min_max_phastCons100way.yaml
   size: 46
-- md5: 5ad5b6522430ce18d0233deb59e19d3c
+- md5: b1490f2761eff71bbfad9b4e26c3f37e
   name: statistics/stats_hash
-  size: 920
+  size: 1737

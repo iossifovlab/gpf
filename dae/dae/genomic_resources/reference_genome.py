@@ -397,15 +397,15 @@ class ReferenceGenomeImplementation(
         return InfoImplementationMixin.get_info(self)
 
     def calc_info_hash(self):
-        return "placeholder"
+        return b"placeholder"
 
-    def calc_statistics_hash(self) -> str:
+    def calc_statistics_hash(self) -> bytes:
         manifest = self.resource.get_manifest()
         config = self.get_config()
         genome_filename = config["filename"]
         return json.dumps({
             "score_file": manifest[genome_filename].md5
-        }, sort_keys=True, indent=2)
+        }, sort_keys=True, indent=2).encode()
 
     def add_statistics_build_tasks(self, task_graph, **kwargs) -> list[Task]:
         tasks = []

@@ -297,7 +297,7 @@ def cli(raw_args: Optional[list[str]] = None) -> None:
         if not os.path.exists(args.work_dir):
             os.mkdir(args.work_dir)
         args.task_status_dir = os.path.join(args.work_dir, "tasks-status")
-        args.log_dir = os.path.join(args.work_dir, "tasks-log")
+        args.log_dir = os.path.join(args.work_dir, ".tasks-log")
 
         TaskGraphCli.process_graph(task_graph, **vars(args))
     else:

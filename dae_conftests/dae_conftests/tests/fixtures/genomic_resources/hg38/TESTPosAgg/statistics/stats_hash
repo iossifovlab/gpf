@@ -1,40 +1,48 @@
 {
   "config": {
-    "histograms": [
-      {
-        "number_of_bins": 100,
-        "view_range": {
-          "max": null,
-          "min": null
-        },
-        "x_log_scale": false,
-        "x_min_log": null,
-        "y_log_scale": false
-      }
-    ],
     "scores": [
       {
-        "desc": "",
         "id": "test_score",
+        "type": "float",
+        "desc": "",
         "index": 3,
-        "position_aggregator": "mean",
-        "type": "float"
+        "position_aggregator": "mean"
+      }
+    ],
+    "histograms": [
+      {
+        "type": "null",
+        "reason": "Invalid histogram type"
       }
     ],
     "table": {
-      "chrom": {
-        "index": 0
+      "config": {
+        "filename": "scores.tsv.gz",
+        "format": "tabix",
+        "header_mode": "none",
+        "chrom": {
+          "index": 0
+        },
+        "pos_begin": {
+          "index": 1
+        },
+        "pos_end": {
+          "index": 2
+        }
       },
-      "filename": "scores.tsv.gz",
-      "format": "tabix",
-      "header_mode": "none",
-      "pos_begin": {
-        "index": 1
-      },
-      "pos_end": {
-        "index": 2
+      "files_md5": {
+        "scores.tsv.gz": "590e48aff9382edfa3330a072c98c6c5",
+        "scores.tsv.gz.tbi": "313f112e74853fa39dc6af0fa526b692"
       }
     }
   },
-  "score_file": "590e48aff9382edfa3330a072c98c6c5"
+  "score_config": [
+    [
+      "test_score",
+      "float",
+      null,
+      3,
+      "['', '.', 'NA', 'nan']"
+    ]
+  ]
 }

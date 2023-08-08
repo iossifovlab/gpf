@@ -1,57 +1,66 @@
 {
   "config": {
-    "histograms": [
-      {
-        "number_of_bins": 100,
-        "view_range": {
-          "max": null,
-          "min": null
-        },
-        "x_log_scale": false,
-        "x_min_log": null,
-        "y_log_scale": false
-      },
-      {
-        "number_of_bins": 100,
-        "view_range": {
-          "max": null,
-          "min": null
-        },
-        "x_log_scale": false,
-        "x_min_log": null,
-        "y_log_scale": false
-      }
-    ],
     "scores": [
       {
-        "desc": "",
         "id": "cadd_raw",
-        "name": "RawScore",
-        "type": "float"
+        "type": "float",
+        "desc": "",
+        "name": "RawScore"
       },
       {
-        "desc": "",
         "id": "cadd_phred",
-        "name": "PHRED",
-        "type": "float"
+        "type": "float",
+        "desc": "",
+        "name": "PHRED"
+      }
+    ],
+    "histograms": [
+      {
+        "type": "null",
+        "reason": "Invalid histogram type"
+      },
+      {
+        "type": "null",
+        "reason": "Invalid histogram type"
       }
     ],
     "table": {
-      "alternative": {
-        "name": "Alt"
+      "config": {
+        "filename": "TESTCADD.tsv.gz",
+        "format": "tabix",
+        "chrom": {
+          "name": "Chrom"
+        },
+        "pos_begin": {
+          "name": "Pos"
+        },
+        "reference": {
+          "name": "Ref"
+        },
+        "alternative": {
+          "name": "Alt"
+        }
       },
-      "chrom": {
-        "name": "Chrom"
-      },
-      "filename": "TESTCADD.tsv.gz",
-      "format": "tabix",
-      "pos_begin": {
-        "name": "Pos"
-      },
-      "reference": {
-        "name": "Ref"
+      "files_md5": {
+        "TESTCADD.tsv.gz": "18001f318b5e9226d4ce5fd16613ac43",
+        "TESTCADD.tsv.gz.tbi": "64ea2e483af33f1ad35d771653889e1d"
       }
     }
   },
-  "score_file": "18001f318b5e9226d4ce5fd16613ac43"
+  "score_config": [
+    [
+      "cadd_raw",
+      "float",
+      "RawScore",
+      null,
+      "['', '.', 'NA', 'nan']"
+    ],
+    [
+      "cadd_phred",
+      "float",
+      "PHRED",
+      null,
+      "['', '.', 'NA', 'nan']"
+    ]
+  ]
 }

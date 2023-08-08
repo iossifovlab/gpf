@@ -21,7 +21,8 @@ scores:
     type: float
     desc: "phastCons100"
     index: 3
-    number_hist:
+    histogram:
+      type: number
       number_of_bins: 10
       view_range:
         max: 1.0

@@ -1,1 +1,8 @@
-placeholder
+{
+  "config": {
+    "format": "refseq"
+  },
+  "files_md5": {
+    "refSeq_20200330.txt": "05d8bbd9616407e862d82593d5fd1756"
+  }
+}

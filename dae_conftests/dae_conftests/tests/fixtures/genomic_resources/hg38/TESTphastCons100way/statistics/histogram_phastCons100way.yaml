@@ -23,6 +23,7 @@ bins:
 - 1.0
 config:
   number_of_bins: 10
+  type: number
   view_range:
     max: 1.0
     min: 0.0

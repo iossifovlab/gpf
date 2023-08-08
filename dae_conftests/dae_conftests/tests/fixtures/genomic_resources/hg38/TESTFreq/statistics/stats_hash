@@ -1,57 +1,66 @@
 {
   "config": {
-    "histograms": [
-      {
-        "number_of_bins": 100,
-        "view_range": {
-          "max": null,
-          "min": null
-        },
-        "x_log_scale": false,
-        "x_min_log": null,
-        "y_log_scale": false
-      },
-      {
-        "number_of_bins": 100,
-        "view_range": {
-          "max": null,
-          "min": null
-        },
-        "x_log_scale": false,
-        "x_min_log": null,
-        "y_log_scale": false
-      }
-    ],
     "scores": [
       {
-        "desc": "",
         "id": "altFreq",
-        "name": "all.altFreq",
-        "type": "float"
+        "type": "float",
+        "desc": "",
+        "name": "all.altFreq"
       },
       {
-        "desc": "",
         "id": "altFreq2",
-        "name": "all.altFreq2",
-        "type": "float"
+        "type": "float",
+        "desc": "",
+        "name": "all.altFreq2"
+      }
+    ],
+    "histograms": [
+      {
+        "type": "null",
+        "reason": "Invalid histogram type"
+      },
+      {
+        "type": "null",
+        "reason": "Invalid histogram type"
       }
     ],
     "table": {
-      "alternative": {
-        "name": "alt"
+      "config": {
+        "filename": "TESTFreq.tsv.gz",
+        "format": "tabix",
+        "chrom": {
+          "name": "chr"
+        },
+        "pos_begin": {
+          "name": "position"
+        },
+        "reference": {
+          "name": "ref"
+        },
+        "alternative": {
+          "name": "alt"
+        }
       },
-      "chrom": {
-        "name": "chr"
-      },
-      "filename": "TESTFreq.tsv.gz",
-      "format": "tabix",
-      "pos_begin": {
-        "name": "position"
-      },
-      "reference": {
-        "name": "ref"
+      "files_md5": {
+        "TESTFreq.tsv.gz": "5220b08aa6081a753955e8b5cdf3566c",
+        "TESTFreq.tsv.gz.tbi": "05e5bc2e111692d73e2c27e76fc7e2a7"
       }
     }
   },
-  "score_file": "5220b08aa6081a753955e8b5cdf3566c"
+  "score_config": [
+    [
+      "altFreq",
+      "float",
+      "all.altFreq",
+      null,
+      "['', '.', 'NA', 'nan']"
+    ],
+    [
+      "altFreq2",
+      "float",
+      "all.altFreq2",
+      null,
+      "['', '.', 'NA', 'nan']"
+    ]
+  ]
 }

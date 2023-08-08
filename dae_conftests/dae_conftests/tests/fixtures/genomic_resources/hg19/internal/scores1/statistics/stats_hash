@@ -1,67 +1,77 @@
 {
   "config": {
-    "histograms": [
-      {
-        "number_of_bins": 100,
-        "view_range": {
-          "max": null,
-          "min": null
-        },
-        "x_log_scale": false,
-        "x_min_log": null,
-        "y_log_scale": false
-      },
-      {
-        "number_of_bins": 100,
-        "view_range": {
-          "max": null,
-          "min": null
-        },
-        "x_log_scale": false,
-        "x_min_log": null,
-        "y_log_scale": false
-      },
-      {
-        "number_of_bins": 100,
-        "view_range": {
-          "max": null,
-          "min": null
-        },
-        "x_log_scale": false,
-        "x_min_log": null,
-        "y_log_scale": false
-      }
-    ],
     "scores": [
       {
         "id": "score0",
-        "name": "score0",
-        "type": "float"
+        "type": "float",
+        "name": "score0"
       },
       {
         "id": "score2",
-        "name": "score2",
-        "type": "float"
+        "type": "float",
+        "name": "score2"
       },
       {
         "id": "score4",
-        "name": "score4",
-        "type": "float"
+        "type": "float",
+        "name": "score4"
+      }
+    ],
+    "histograms": [
+      {
+        "type": "null",
+        "reason": "Invalid histogram type"
+      },
+      {
+        "type": "null",
+        "reason": "Invalid histogram type"
+      },
+      {
+        "type": "null",
+        "reason": "Invalid histogram type"
       }
     ],
     "table": {
-      "chrom": {
-        "name": "CHROM"
+      "config": {
+        "filename": "scores1.tsv.gz",
+        "format": "tabix",
+        "chrom": {
+          "name": "CHROM"
+        },
+        "pos_begin": {
+          "name": "POS"
+        },
+        "pos_end": {
+          "name": "POS"
+        }
       },
-      "filename": "scores1.tsv.gz",
-      "format": "tabix",
-      "pos_begin": {
-        "name": "POS"
-      },
-      "pos_end": {
-        "name": "POS"
+      "files_md5": {
+        "scores1.tsv.gz": "093c47435b7440def543b99758a92afe",
+        "scores1.tsv.gz.tbi": "26aa9750f0a1ad0458bcc99fe7d71ac2"
       }
     }
   },
-  "score_file": "093c47435b7440def543b99758a92afe"
+  "score_config": [
+    [
+      "score0",
+      "float",
+      "score0",
+      null,
+      "['', '.', 'NA', 'nan']"
+    ],
+    [
+      "score2",
+      "float",
+      "score2",
+      null,
+      "['', '.', 'NA', 'nan']"
+    ],
+    [
+      "score4",
+      "float",
+      "score4",
+      null,
+      "['', '.', 'NA', 'nan']"
+    ]
+  ]
 }
