@@ -556,15 +556,16 @@ def load_histogram(  # pylint: disable=too-many-return-statements
     config: Union[
         NumberHistogramConfig, CategoricalHistogramConfig,
         NullHistogramConfig, None
-    ], resource: GenomicResource, filename: str
+    ],
+    resource: GenomicResource, filename: str
 ) -> Union[NumberHistogram, CategoricalHistogram, NullHistogram]:
     """
     Try and load and return a histogram in a resource.
 
     On an error or missing histogram, an appropriate NullHistogram is returned.
     """
-    if config is None:
-        return NullHistogram(NullHistogramConfig("No histogram configured"))
+    # if config is None:
+    #     return NullHistogram(NullHistogramConfig("No histogram configured"))
 
     try:
         with resource.open_raw_file(filename) as infile:

@@ -191,6 +191,7 @@ class ScoreLine:
     def get_score(self, score_id: str) -> Optional[Any]:
         """Get and parse configured score from line."""
         key = self.score_defs[score_id].score_index
+        assert key is not None
         value = self.line.get(key)
         if score_id in self.score_defs:
             col_def = self.score_defs[score_id]
@@ -627,9 +628,9 @@ class GenomicScoreImplementation(
                     score_histogram.plot(outfile, score_id)
         return merged_histograms
 
-    def calc_info_hash(self) -> str:
+    def calc_info_hash(self) -> bytes:
         """Compute and return the info hash."""
-        return "infohash"
+        return b"infohash"
 
     def calc_statistics_hash(self) -> bytes:
         """
@@ -1171,17 +1172,25 @@ class GenomicScore(ResourceConfigValidationMixin):
         score_id: str
     ) -> Union[NumberHistogram, CategoricalHistogram, NullHistogram]:
         """Return defined histogram for a score."""
+        if score_id not in self.score_definitions:
+            raise ValueError(
+                f"unexpected score ID {score_id}; available scores are: "
+                f"{self.score_definitions.keys()}")
         score_def = self.get_score_definition(score_id)
-        hist_filename = self.get_histogram_filename(score_id)
+        if score_def is None:
+            hist_conf = None
+        else:
+            hist_conf = score_def.hist_conf
 
+        hist_filename = self.get_histogram_filename(score_id)
         hist = load_histogram(
-            score_def.hist_conf, self.resource, hist_filename
+            hist_conf, self.resource, hist_filename
         )
         return hist
 
     def get_histogram_image_filename(
         self, score_id: str
-    ) -> Optional[str]:
+    ) -> str:
         return f"{self.get_statistics_folder()}" \
             f"/histogram_{score_id}.png"
 

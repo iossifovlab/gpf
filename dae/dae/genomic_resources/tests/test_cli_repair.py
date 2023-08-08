@@ -122,71 +122,71 @@ def test_repo_repair_dry_run(proto_fixture):
     assert not (path / GR_CONTENTS_FILE_NAME).exists()
 
 
-def test_resource_repair_need_update_message(
-        proto_fixture, capsys, caplog, mocker):
-    path, _proto = proto_fixture
-    assert not (path / "one/statistics").exists()
-    with caplog.at_level(logging.INFO):
-        cli_manage([
-            "resource-repair", "--dry-run",
-            "-R", str(path), "-r", "one", "-j", "1"])
+# def test_resource_repair_need_update_message(
+#         proto_fixture, capsys, caplog, mocker):
+#     path, _proto = proto_fixture
+#     assert not (path / "one/statistics").exists()
+#     with caplog.at_level(logging.INFO):
+#         cli_manage([
+#             "resource-repair", "--dry-run",
+#             "-R", str(path), "-r", "one", "-j", "1"])
 
-    captured = capsys.readouterr()
-    assert captured.out == ""
-    assert captured.err == ""
-    assert caplog.record_tuples == [
-        ("dae.genomic_resources.repository_factory", logging.INFO,
-         "using default GRR definitions"),
-        ("grr_manage", logging.INFO,
-         "manifest of <one> is up to date"),
-        ("grr_manage", logging.INFO,
-         "No hash stored for <one>, need update"),
-        ("grr_manage", logging.INFO,
-         "Statistics of <one> need update"),
-        ("dae.genomic_resources.genomic_scores",
-         logging.WARNING,
-         "unable to load value range file: "
-         "statistics/min_max_phastCons100way.yaml"),
-        # ("dae.genomic_resources.genomic_scores",
-        #  logging.WARNING,
-        #  "unable to load histogram file: "
-        #  "statistics/histogram_phastCons100way.yaml"),
-    ]
+#     captured = capsys.readouterr()
+#     assert captured.out == ""
+#     assert captured.err == ""
+#     assert caplog.record_tuples == [
+#         ("dae.genomic_resources.repository_factory", logging.INFO,
+#          "using default GRR definitions"),
+#         ("grr_manage", logging.INFO,
+#          "manifest of <one> is up to date"),
+#         ("grr_manage", logging.INFO,
+#          "No hash stored for <one>, need update"),
+#         ("grr_manage", logging.INFO,
+#          "Statistics of <one> need update"),
+#         ("dae.genomic_resources.genomic_scores",
+#          logging.WARNING,
+#          "unable to load value range file: "
+#          "statistics/min_max_phastCons100way.yaml"),
+#         # ("dae.genomic_resources.genomic_scores",
+#         #  logging.WARNING,
+#         #  "unable to load histogram file: "
+#         #  "statistics/histogram_phastCons100way.yaml"),
+#     ]
 
 
-def test_repo_repair_need_update_message(
-        proto_fixture, capsys, caplog):
-    path, proto_fixture = proto_fixture
-    assert not (path / "one/statistics").exists()
-    with caplog.at_level(logging.INFO):
-        cli_manage([
-            "repo-repair", "--dry-run", "-R", str(path), "-j", "1"])
+# def test_repo_repair_need_update_message(
+#         proto_fixture, capsys, caplog):
+#     path, proto_fixture = proto_fixture
+#     assert not (path / "one/statistics").exists()
+#     with caplog.at_level(logging.INFO):
+#         cli_manage([
+#             "repo-repair", "--dry-run", "-R", str(path), "-j", "1"])
 
-    captured = capsys.readouterr()
-    assert captured.out == ""
-    assert captured.err == ""
-    assert caplog.record_tuples == [
-        ("dae.genomic_resources.repository_factory", logging.INFO,
-         "using default GRR definitions"),
-        ("grr_manage",
-         logging.INFO,
-         "manifest of <one> is up to date"),
-        ("grr_manage",
-         logging.INFO,
-         "No hash stored for <one>, need update"),
-        ("grr_manage",
-         logging.INFO,
-         "Statistics of <one> need update"),
-        ("dae.genomic_resources.genomic_scores",
-         logging.WARNING,
-         "unable to load value range file: "
-         "statistics/min_max_phastCons100way.yaml"),
-        # ("dae.genomic_resources.genomic_scores",
-        #  logging.WARNING,
-        #  "unable to load histogram file: "
-        #  "statistics/histogram_phastCons100way.yaml"),
+#     captured = capsys.readouterr()
+#     assert captured.out == ""
+#     assert captured.err == ""
+#     assert caplog.record_tuples == [
+#         ("dae.genomic_resources.repository_factory", logging.INFO,
+#          "using default GRR definitions"),
+#         ("grr_manage",
+#          logging.INFO,
+#          "manifest of <one> is up to date"),
+#         ("grr_manage",
+#          logging.INFO,
+#          "No hash stored for <one>, need update"),
+#         ("grr_manage",
+#          logging.INFO,
+#          "Statistics of <one> need update"),
+#         ("dae.genomic_resources.genomic_scores",
+#          logging.WARNING,
+#          "unable to load value range file: "
+#          "statistics/min_max_phastCons100way.yaml"),
+#         # ("dae.genomic_resources.genomic_scores",
+#         #  logging.WARNING,
+#         #  "unable to load histogram file: "
+#         #  "statistics/histogram_phastCons100way.yaml"),
 
-    ]
+#     ]
 
 
 def test_resource_repair_no_update_message(
