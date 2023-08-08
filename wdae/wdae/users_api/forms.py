@@ -50,11 +50,16 @@ class WdaeRegisterPasswordForm(WdaeResetPasswordForm):
 
 class WdaeLoginForm(forms.Form):
 
-    username = UsernameField(widget=forms.TextInput(attrs={"autofocus": True, "tabindex": 1}))
+    username = UsernameField(widget=forms.TextInput(
+            attrs={"autofocus": True, "tabindex": 1}
+        )
+    )
     password = forms.CharField(
         label=gettext_lazy("Password"),
         strip=False,
-        widget=forms.PasswordInput(attrs={"autocomplete": "current-password", "tabindex": 2}),
+        widget=forms.PasswordInput(
+            attrs={"autocomplete": "current-password", "tabindex": 2}
+        ),
     )
 
     error_messages = {
