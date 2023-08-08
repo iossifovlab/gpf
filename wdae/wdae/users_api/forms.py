@@ -50,7 +50,8 @@ class WdaeRegisterPasswordForm(WdaeResetPasswordForm):
 
 class WdaeLoginForm(forms.Form):
 
-    username = UsernameField(widget=forms.TextInput(
+    username = UsernameField(
+        widget=forms.TextInput(
             attrs={"autofocus": True, "tabindex": 1}
         )
     )
