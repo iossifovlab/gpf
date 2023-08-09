@@ -10,15 +10,15 @@
 - md5: 79ab6b898617b641b4a86dc1f138fbb5
   name: statistics/histogram_cadd_phred.png
   size: 18985
-- md5: 222dd13d1904ba5289788b4f48ba3ca9
+- md5: 1d58f89f7ddafd24257a121991cc41e9
   name: statistics/histogram_cadd_phred.yaml
-  size: 2378
+  size: 2438
 - md5: e1af790e58efc438f4621220b2b4a033
   name: statistics/histogram_cadd_raw.png
   size: 19533
-- md5: fd97baa38225f9b890986f09fb27b17b
+- md5: c4dfbbfa8419a8974e4a2cb6c54ae3a5
   name: statistics/histogram_cadd_raw.yaml
-  size: 2577
+  size: 2646
 - md5: 79346b3fc62b019545b8d9299eb31dc3
   name: statistics/min_max_cadd_phred.yaml
   size: 42

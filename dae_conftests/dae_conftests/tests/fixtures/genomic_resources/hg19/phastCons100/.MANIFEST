@@ -10,12 +10,12 @@
 - md5: efcdd4628dbf6987139798f1c30e21e3
   name: statistics/histogram_phastCons100.png
   size: 14406
-- md5: 1d62d066c704867e1d15cea8bd81109e
+- md5: 286cd0a9c0d64cc61f8cac80f57efc9f
   name: statistics/histogram_phastCons100.yaml
-  size: 344
+  size: 401
 - md5: d97dfb28934fa829a2750ecc06bb247d
   name: statistics/min_max_phastCons100.yaml
   size: 41
-- md5: 5950bd9d8f7c8c0408238c3e705e2c9a
+- md5: 23baccc6c8276450e478ca40cc927b5f
   name: statistics/stats_hash
-  size: 1703
+  size: 1822

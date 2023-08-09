@@ -10,15 +10,15 @@
 - md5: a20bb25abfcdff63f22fbb2087f540d2
   name: statistics/histogram_altFreq.png
   size: 10546
-- md5: 23f58702004a5e87f2cb7126d6f93ecd
+- md5: e642f11ea6bafabb05bdbaee45f2c8f7
   name: statistics/histogram_altFreq.yaml
-  size: 2069
+  size: 2129
 - md5: 99a701ae7ae9134111deee6c9ffbbff1
   name: statistics/histogram_altFreq2.png
   size: 10898
-- md5: 3babd16dc632bd0a1bcc72e2be7f4dad
+- md5: 6a5f32217b4b4877ed5f1249a9fef731
   name: statistics/histogram_altFreq2.yaml
-  size: 2017
+  size: 2078
 - md5: 2a42a37fb04a15244e3648c1a19e4100
   name: statistics/min_max_altFreq.yaml
   size: 39

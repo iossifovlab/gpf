@@ -16,9 +16,9 @@
 - md5: c37eb1c557ec79e8be894d86a9211f7d
   name: statistics/histogram_score0_incomplete_cov.png
   size: 17129
-- md5: ce77c864d30684328abf13c30e60759c
+- md5: 021f3bdf01911638b8a29764a470a307
   name: statistics/histogram_score0_incomplete_cov.yaml
-  size: 2083
+  size: 2155
 - md5: eddfe133c23241d1566c939701e16c9e
   name: statistics/min_max_score0_incomplete_cov.yaml
   size: 65

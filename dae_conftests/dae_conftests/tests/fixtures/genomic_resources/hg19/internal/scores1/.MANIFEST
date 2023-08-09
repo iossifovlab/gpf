@@ -16,21 +16,21 @@
 - md5: 141a292e722188d15dd0433620edf930
   name: statistics/histogram_score0.png
   size: 10808
-- md5: c43f65ef7dfaa3bc01859805e2a95bd2
+- md5: 57d35c090ec0844fb824fb78cfa90b12
   name: statistics/histogram_score0.yaml
-  size: 1978
+  size: 2048
 - md5: 328478e8566f1c9e12bd16e566b97e6c
   name: statistics/histogram_score2.png
   size: 10741
-- md5: 0dceb77ceb0956688c54a036385c3764
+- md5: 6606c9e0ed42caf89b36bc13cbee1e12
   name: statistics/histogram_score2.yaml
-  size: 2237
+  size: 2305
 - md5: fa41bbd14d8c1c143c32c77175e6312e
   name: statistics/histogram_score4.png
   size: 10880
-- md5: 60509a941488070f75a83a46059ba871
+- md5: 34cf6144b0ca9ac192234765eccb09d6
   name: statistics/histogram_score4.yaml
-  size: 2292
+  size: 2360
 - md5: c1f3dfe8347110a45dc7344c0bca38da
   name: statistics/min_max_score0.yaml
   size: 48

@@ -1,12 +1,12 @@
 bars:
 - 470164
 - 48599
-- 25789
-- 16546
+- 25556
+- 16779
 - 9269
-- 6170
-- 4756
-- 4633
+- 6113
+- 4761
+- 4685
 - 5240
 - 25736
 bins:
@@ -30,3 +30,8 @@ config:
   x_log_scale: false
   x_min_log: null
   y_log_scale: false
+max_value: 1.0
+min_value: 0.0
+out_of_range_bins:
+- 0
+- 0
