@@ -33,7 +33,7 @@ class HistogramError(BaseException):
 class NumberHistogramConfig:
     """Configuration class for number histograms."""
 
-    view_range: tuple[Optional[int], Optional[int]]
+    view_range: tuple[Optional[float], Optional[float]]
     number_of_bins: int = 30
     x_log_scale: bool = False
     y_log_scale: bool = False
@@ -97,7 +97,10 @@ class NumberHistogramConfig:
     @staticmethod
     def default_config(min_max: MinMaxValue) -> NumberHistogramConfig:
         """Build a number histogram config from a parsed yaml file."""
-        view_range = (min_max.min, min_max.max)
+        if min_max.min == min_max.max:
+            view_range = (min_max.min, min_max.min + 1.0)
+        else:
+            view_range = (min_max.min, min_max.max)
         number_of_bins = 100
         x_log_scale = False
         y_log_scale = False
@@ -125,6 +128,7 @@ class CategoricalHistogramConfig:
 
     @staticmethod
     def from_dict(parsed: dict[str, Any]) -> CategoricalHistogramConfig:
+        """Create categorical histogram config from configuratin dict."""
         hist_type = parsed.get("type")
         if hist_type != "categorical":
             raise TypeError(
@@ -158,6 +162,7 @@ class NullHistogramConfig:
 
     @staticmethod
     def from_dict(parsed: dict[str, Any]) -> NullHistogramConfig:
+        """Create Null histogram from configuration dict."""
         hist_type = parsed.get("type")
         if hist_type != "null":
             raise TypeError(
@@ -176,13 +181,18 @@ class NumberHistogram(Statistic):
 
     # pylint: disable=too-many-instance-attributes
     # FIXME:
-    def __init__(self, config: NumberHistogramConfig, bins=None, bars=None):
+    def __init__(
+            self, config: NumberHistogramConfig,
+            bins: Optional[np.ndarray] = None,
+            bars: Optional[np.ndarray] = None):
         super().__init__("histogram", "Collects values for histogram.")
         assert isinstance(config, NumberHistogramConfig)
         self.config = config
-        self.bins = bins
-        self.bars = bars
         self.out_of_range_values: list[float] = []
+        self.out_of_range_bins: list[int] = [0, 0]
+
+        self.min_value: float = np.nan
+        self.max_value: float = np.nan
 
         if self.config.x_log_scale and self.config.x_min_log is None:
             raise ValueError(
@@ -198,7 +208,10 @@ class NumberHistogram(Statistic):
                 f"[{self.config.view_range[0]}, "
                 f"{self.config.view_range[1]}]")
 
-        if self.bins is None and self.bars is None:
+        if bins is not None and bars is not None:
+            self.bins = bins
+            self.bars = bars
+        elif bins is None and bars is None:
             if self.config.x_log_scale:
                 assert self.config.x_min_log is not None
                 self.bins = np.array([
@@ -208,37 +221,54 @@ class NumberHistogram(Statistic):
                         np.log10(self.config.view_range[1]),
                         self.config.number_of_bins
                     )])
+                self._rstep = (self.config.number_of_bins - 1) / \
+                    (np.log10(self.view_max())
+                     - np.log10(self.config.x_min_log))
             else:
                 self.bins = np.linspace(
                     self.config.view_range[0],
                     self.config.view_range[1],
                     self.config.number_of_bins + 1,
                 )
+                self._rstep = self.config.number_of_bins / \
+                    (self.view_max() - self.view_min())
             self.bars = np.zeros(self.config.number_of_bins, dtype=np.int64)
         elif self.bins is None or self.bars is None:
             raise ValueError(
                 "Cannot instantiate histogram with only bins or only bars!"
             )
 
+    def view_min(self) -> float:
+        if self.config.view_range[0] is None:
+            raise ValueError("view range min value not set")
+        return self.config.view_range[0]
+
+    def view_max(self) -> float:
+        if self.config.view_range[1] is None:
+            raise ValueError("view range max value not set")
+        return self.config.view_range[1]
+
     def merge(self, other: NumberHistogram) -> None:
         """Merge two histograms."""
         assert self.config == other.config
+        assert self.bins is not None and self.bars is not None
+        assert other.bins is not None and other.bars is not None
+
         assert all(self.bins == other.bins)
 
         self.bars += other.bars
-        self.out_of_range_values.extend(other.out_of_range_values)
+        self.out_of_range_bins[0] += other.out_of_range_bins[0]
+        self.out_of_range_bins[1] += other.out_of_range_bins[1]
+        self.min_value = min(self.min_value, other.min_value)
+        self.max_value = max(self.max_value, other.max_value)
 
     @property
-    def view_range(self) -> tuple[Optional[int], Optional[int]]:
+    def view_range(self) -> tuple[Optional[float], Optional[float]]:
         return self.config.view_range
 
     def add_value(self, value: float) -> bool:
         """Add value to the histogram."""
-
-        if value is None:
-            return False
-
-        if np.isnan(value):
+        if value is None or np.isnan(value):
             return False
 
         if not isinstance(value, (int, float, np.integer)):
@@ -247,37 +277,58 @@ class NumberHistogram(Statistic):
                 f"{value} ({type(value)}) to number histogram"
             )
 
-        if (
-            self.config.view_range[0] is not None
-            and value < self.config.view_range[0]
-        ) or (
-            self.config.view_range[1] is not None
-            and value > self.config.view_range[1]
-        ):
+        self.min_value = min(value, self.min_value)
+        self.max_value = max(value, self.max_value)
+
+        if self.config.x_log_scale:
+            index = self.choose_bin_log(value)
+        else:
+            index = self.choose_bin_lin(value)
+        if index < 0:
             logger.warning(
-                "value %s out of range: [%s, %s];",
-                value, self.config.view_range[0], self.config.view_range[1])
-            self.out_of_range_values.append(value)
+                "out of range %s value %s", self.view_range, value)
+            tindex = index + 2
+            self.out_of_range_bins[tindex] += 1
             return False
 
-        index = self.bins.searchsorted(value, side="right")
-        if index == 0:
-            logger.warning(
-                "(1) empty index %s for value %s",
-                index, value)
-            return False
-        if value == self.bins[-1]:
-            self.bars[-1] += 1
-            return True
-
-        self.bars[index - 1] += 1
+        self.bars[index] += 1
         return True
+
+    def choose_bin_lin(self, value: float) -> int:
+        """Compute bin index for a passed value for linear x-scale."""
+        if value < self.view_min():
+            return -2
+        if value > self.view_max():
+            return -1
+        index = int((value - self.view_min()) * self._rstep)
+        return min(index, self.config.number_of_bins - 1)
+
+    def choose_bin_log(self, value: float) -> int:
+        """Compute bin index for a passed value for log x-scale."""
+        assert self.config.x_log_scale
+        assert self.config.x_min_log is not None
+
+        if value < self.view_min():
+            return -2
+        if value > self.view_max():
+            return -1
+
+        if value < self.config.x_min_log:
+            return 0
+
+        index = int(
+            (np.log10(value) - np.log10(self.config.x_min_log))
+            * self._rstep) + 1
+        return min(index, self.config.number_of_bins - 1)
 
     def to_dict(self) -> dict[str, Any]:
         return {
             "config": self.config.to_dict(),
             "bins": self.bins.tolist(),
-            "bars": self.bars.tolist()
+            "bars": self.bars.tolist(),
+            "out_of_range_bins": self.out_of_range_bins,
+            "min_value": self.min_value,
+            "max_value": self.max_value
         }
 
     def serialize(self) -> str:
@@ -313,11 +364,16 @@ class NumberHistogram(Statistic):
 
         config = NumberHistogramConfig.from_dict(res.get("config"))
 
-        return NumberHistogram(
+        hist = NumberHistogram(
             config,
             bins=np.array(res.get("bins")),
             bars=np.array(res.get("bars"))
         )
+        hist.min_value = res.get("min_value", np.nan)
+        hist.max_value = res.get("max_value", np.nan)
+        hist.out_of_range_bins = res.get("out_of_range_bins", [0, 0])
+
+        return hist
 
 
 class HistogramStatisticMixin:
@@ -355,7 +411,7 @@ class NullHistogram(Statistic):
             "reason": self.reason
         }
 
-    # pylint: disable=unused-argument,no-self-use
+    # pylint: disable=unused-argument
     def plot(self, outfile: BinaryIO, score_id: str) -> None:
         return
 
@@ -375,7 +431,7 @@ class NullHistogram(Statistic):
 
         reason = res.get("reason", "")
 
-        return NullHistogram(reason=reason)
+        return NullHistogram(NullHistogramConfig(reason=reason))
 
 
 class CategoricalHistogram(Statistic):
@@ -403,8 +459,7 @@ class CategoricalHistogram(Statistic):
         self.y_log_scale = config.y_log_scale
 
     def add_value(self, value: Optional[str]) -> bool:
-        """
-        Add a value to the categorical histogram.
+        """Add a value to the categorical histogram.
 
         Returns true if successfully added and false if failed.
         Will fail if too many values are accumulated.
@@ -464,19 +519,22 @@ class CategoricalHistogram(Statistic):
         import matplotlib.pyplot as plt
         values = self.values.keys()
         counts = self.values.values()
+        plt.figure(figsize=(15, 10), tight_layout=True)
         plt.bar(values, counts)
 
         plt.xlabel(score_id)
         plt.ylabel("count")
 
+        plt.tick_params(axis="x", labelrotation=90)
+
         plt.savefig(outfile)
         plt.clf()
 
 
-def annul_histogram(
-    histogram: Union[NumberHistogram, CategoricalHistogram]
-) -> NullHistogram:
-    return NullHistogram(NullHistogramConfig.default_config())
+# def annul_histogram(
+#     histogram: Union[NumberHistogram, CategoricalHistogram]
+# ) -> NullHistogram:
+#     return NullHistogram(NullHistogramConfig.default_config())
 
 
 def create_histogram_config_from_dict(
@@ -484,6 +542,7 @@ def create_histogram_config_from_dict(
     NumberHistogramConfig, CategoricalHistogramConfig,
     NullHistogramConfig, None
 ]:
+    """Create histogram config form configuration dict."""
     if config is None:
         return None
     hist_type = config.get("type")
@@ -503,6 +562,8 @@ def create_histogram_from_config(
         NullHistogramConfig, None
     ], **kwargs: Any
 ) -> Union[NumberHistogram, CategoricalHistogram, NullHistogram]:
+    """Create an empty histogram from a deserialize histogram dictionary."""
+    # pylint: disable=too-many-return-statements
     if config is None:
         score_type = kwargs.get("score_type")
         if score_type in ["int", "float"]:
@@ -543,9 +604,9 @@ def create_histogram_from_config(
         ))
     except BaseException:  # pylint: disable=broad-except
         score_id = kwargs.get("score_id", "")
-        logger.exception(
+        logger.warning(
             "Failed to load histogram for score %s",
-            score_id
+            score_id, exc_info=True
         )
         return NullHistogram(NullHistogramConfig(
             f"Failed to create {hist_type} histogram from config."
