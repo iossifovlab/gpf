@@ -42,43 +42,46 @@ class Annotatable:
                 return Annotatable.Type.LARGE_DELETION
             raise ValueError(f"unexpected annotatable type: {variant}")
 
-    def __init__(self, chrom, pos, pos_end, annotatable_type):
+    def __init__(
+        self, chrom: str, pos: int, pos_end: int,
+        annotatable_type: Annotatable.Type
+    ):
         self._chrom = chrom
         self._pos = pos
         self._pos_end = pos_end
         self.type = annotatable_type
 
     @property
-    def chrom(self):
+    def chrom(self) -> str:
         return self._chrom
 
     @property
-    def chromosome(self):
+    def chromosome(self) -> str:
         return self._chrom
 
     @property
-    def pos(self):
+    def pos(self) -> int:
         return self._pos
 
     @property
-    def position(self):
+    def position(self) -> int:
         return self._pos
 
     @property
-    def end_position(self):
+    def end_position(self) -> int:
         return self._pos_end
 
     @property
-    def pos_end(self):
+    def pos_end(self) -> int:
         return self._pos_end
 
-    def __len__(self):
+    def __len__(self) -> int:
         return self._pos_end - self._pos + 1
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         raise NotImplementedError()
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, Annotatable):
             return False
         return self.type == other.type and self.chrom == other.chrom and \
@@ -94,6 +97,7 @@ class Annotatable:
 
     @staticmethod
     def from_string(value: str) -> Annotatable:
+        """Deserialize an Annotatable instance from a string value."""
         a_type, _ = Annotatable.tokenize(value)
         if a_type in ("Position", "POSITION"):
             return Position.from_string(value)
@@ -109,7 +113,7 @@ class Annotatable:
 
 class Position(Annotatable):
 
-    def __init__(self, chrom, pos):
+    def __init__(self, chrom: str, pos: int):
         super().__init__(
             chrom, pos, pos, Annotatable.Type.POSITION)
 
@@ -128,7 +132,7 @@ class Position(Annotatable):
 
 class Region(Annotatable):
 
-    def __init__(self, chrom, pos_begin, pos_end):
+    def __init__(self, chrom: str, pos_begin: int, pos_end: int):
         super().__init__(
             chrom, pos_begin, pos_end, Annotatable.Type.REGION)
 
@@ -148,7 +152,7 @@ class Region(Annotatable):
 class VCFAllele(Annotatable):
     """Defines small variants annotatable."""
 
-    def __init__(self, chrom, pos, ref, alt):
+    def __init__(self, chrom: str, pos: int, ref: str, alt: str):
         assert ref is not None
         assert alt is not None
 
@@ -172,26 +176,26 @@ class VCFAllele(Annotatable):
         super().__init__(chrom, pos, pos_end, allele_type)
 
     @property
-    def ref(self):
+    def ref(self) -> str:
         return self._ref
 
     @property
-    def reference(self):
+    def reference(self) -> str:
         return self._ref
 
     @property
-    def alt(self):
+    def alt(self) -> str:
         return self._alt
 
     @property
-    def alternative(self):
+    def alternative(self) -> str:
         return self._alt
 
     def __repr__(self) -> str:
         return f"VCFAllele({self.chrom},{self.pos},{self.pos_end}" \
                f",{self.ref},{self.alt})"
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         if not super().__eq__(other):
             return False
         if not isinstance(other, VCFAllele):
@@ -212,7 +216,10 @@ class VCFAllele(Annotatable):
 class CNVAllele(Annotatable):
     """Defines copy number variants annotatable."""
 
-    def __init__(self, chrom, pos_begin, pos_end, cnv_type):
+    def __init__(
+        self, chrom: str, pos_begin: int, pos_end: int,
+        cnv_type: Annotatable.Type
+    ):
         assert cnv_type in {
             Annotatable.Type.LARGE_DELETION,
             Annotatable.Type.LARGE_DUPLICATION}, cnv_type

@@ -163,7 +163,7 @@ class AnnotationPipeline:
                 for r_id in annotator.resource_ids}
 
     def get_annotator_by_attribute_info(
-        self, attribute_info
+        self, attribute_info: AttributeInfo
     ) -> Optional[Annotator]:
         for annotator in self.annotators:
             if attribute_info in annotator.attributes:
@@ -332,7 +332,7 @@ class ReannotationPipeline(AnnotationPipeline):
                         result.add(*further)
         return result
 
-    def annotate(self, annotatable: Annotatable, record: dict) -> dict:
+    def annotate(self, annotatable: Annotatable, record: dict) -> dict:  # type: ignore # noqa # pylint: disable=arguments-renamed
         reused_context: dict[str, Any] = {}
         for attr_name, attr in self.attributes_reused.items():
             raw_value = record[attr_name]

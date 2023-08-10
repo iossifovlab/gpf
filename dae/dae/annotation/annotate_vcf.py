@@ -5,7 +5,7 @@ import sys
 import argparse
 import logging
 from contextlib import closing
-from typing import List, Optional
+from typing import List, Optional, Any
 
 from pysam import VariantFile, TabixFile, \
     tabix_index  # pylint: disable=no-name-in-module
@@ -143,13 +143,15 @@ def combine(
         os.remove(partfile_path)
 
 
-def get_chromosome_length(tabix_file, chrom, step=100_000_000):
+def get_chromosome_length(
+    tabix_file: TabixFile, chrom: str, step: int = 100_000_000
+) -> int:
     # TODO Eventually this should be extracted as a util
     """Return the length of a chromosome (or contig).
 
     Returned value is guaranteed to be larger than the actual contig length.
     """
-    def any_records(riter):
+    def any_records(riter: Any) -> bool:
         try:
             next(riter)
         except StopIteration:
@@ -179,7 +181,9 @@ def get_chromosome_length(tabix_file, chrom, step=100_000_000):
     return right
 
 
-def produce_regions(pysam_file, region_size):
+def produce_regions(
+    pysam_file: TabixFile, region_size: int
+) -> list[tuple[str, int, int]]:
     """Given a region size, produce contig regions to annotate by."""
     contig_lengths = {}
     for contig in map(str, pysam_file.contigs):
@@ -191,7 +195,9 @@ def produce_regions(pysam_file, region_size):
     ]
 
 
-def produce_partfile_paths(input_file_path, regions, work_dir):
+def produce_partfile_paths(
+    input_file_path: str, regions: list[tuple[str, int, int]], work_dir: str
+) -> list[str]:
     """Produce a list of file paths for output region part files."""
     filenames = []
     for region in regions:

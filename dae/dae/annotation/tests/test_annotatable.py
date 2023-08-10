@@ -1,5 +1,4 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-
 import pytest
 
 from dae.annotation.annotatable import Annotatable, Position, Region, \
@@ -27,8 +26,7 @@ from dae.utils.variant_utils import trim_parsimonious
         ),
     ]
 )
-def test_vcf_allele(allele, allele_type):
-
+def test_vcf_allele(allele, allele_type):  # type: ignore
     annotatable = VCFAllele(*allele)
     assert annotatable.type == allele_type
 
@@ -62,7 +60,7 @@ def test_vcf_allele(allele, allele_type):
         1, 109, VCFAllele.Type.SUBSTITUTION
     ),
 ])
-def test_parsimonious_vcf_allele(
+def test_parsimonious_vcf_allele(  # type: ignore
         allele, expected, length, end_pos, allele_type):
 
     parsimonious = trim_parsimonious(*allele)
@@ -81,7 +79,7 @@ def test_parsimonious_vcf_allele(
         ("POSITION(chr1, 123)", Position("chr1", 123)),
     ]
 )
-def test_annotatable_from_string_position(value, expected):
+def test_annotatable_from_string_position(value, expected):  # type: ignore
     assert Annotatable.from_string(value) == expected
 
 
@@ -91,7 +89,7 @@ def test_annotatable_from_string_position(value, expected):
         ("REGION(chr1, 123, 456)", Region("chr1", 123, 456)),
     ]
 )
-def test_annotatable_from_string_region(value, expected):
+def test_annotatable_from_string_region(value, expected):  # type: ignore
     assert Annotatable.from_string(value) == expected
 
 
@@ -104,7 +102,7 @@ def test_annotatable_from_string_region(value, expected):
         ("SMALL_INSERTION(X, 1, A, AAA)", VCFAllele("X", 1, "A", "AAA")),
     ]
 )
-def test_annotatable_from_string_vcf(value, expected):
+def test_annotatable_from_string_vcf(value, expected):  # type: ignore
     assert Annotatable.from_string(value) == expected
 
 
@@ -120,5 +118,5 @@ def test_annotatable_from_string_vcf(value, expected):
          CNVAllele("X", 123, 345, Annotatable.Type.LARGE_DELETION)),
     ]
 )
-def test_annotatable_from_string_cnv(value, expected):
+def test_annotatable_from_string_cnv(value, expected):  # type: ignore
     assert Annotatable.from_string(value) == expected

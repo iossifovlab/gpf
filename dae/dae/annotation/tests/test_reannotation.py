@@ -1,4 +1,5 @@
-# pylint: disable=missing-function-docstring
+# pylint: disable=missing-function-docstring,redefined-outer-name
+# type: ignore
 import textwrap
 import pytest
 from dae.genomic_resources import build_genomic_resource_repository
@@ -511,9 +512,11 @@ def test_reused_attributes_detection_indirect(reannotation_grr) -> None:
     assert len(reannotation.attributes_reused) == 1
 
 
-def test_annotate_columns_reannotation(root_path, reannotation_grr):
+def test_annotate_columns_reannotation(
+    root_path, reannotation_grr  # pylint: disable=unused-argument
+):
     in_content = (
-        "chrom\tpos\tscore\tworst_effect\tgene_effects\teffect_details\tgene_list\tgene_score1\tgene_score2\n"
+        "chrom\tpos\tscore\tworst_effect\tgene_effects\teffect_details\tgene_list\tgene_score1\tgene_score2\n"  # noqa
         "chr1\t23\t0.1\tbla\tbla\tbla\tbla\tbla\tbla\n"
     )
     out_expected_header = [
