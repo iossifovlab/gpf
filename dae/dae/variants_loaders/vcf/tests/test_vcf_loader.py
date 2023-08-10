@@ -972,24 +972,33 @@ def test_reset_regions_with_adjusted_chrom(
 #     assert len(vs) == 30
 
 
-def test_collect_filenames_local(fixture_dirname):
-    vcf_filenames = [fixture_dirname("backends/multivcf_split[vc].vcf")]
+def test_collect_filenames_local(
+    multivcf_split1_vcf,
+    multivcf_split2_vcf,
+) -> None:
+    vcf_filenames = [str(multivcf_split1_vcf), str(multivcf_split2_vcf)]
 
     params = {
         "vcf_chromosomes": "1;2;3;4;5;6;7;8;9;10;11;12;13;14;15;16;17;18;X;Y"
     }
+
     all_filenames, _ = VcfLoader._collect_filenames(params, vcf_filenames)
 
     assert len(all_filenames) == 2
-    assert all_filenames[0] == fixture_dirname("backends/multivcf_split1.vcf")
-    assert all_filenames[1] == fixture_dirname("backends/multivcf_split2.vcf")
+    assert all_filenames[0] == str(multivcf_split1_vcf)
+    assert all_filenames[1] == str(multivcf_split2_vcf)
 
 
-def test_collect_filenames_s3(fixture_dirname, s3_filesystem,
-                              s3_tmp_bucket_url, mocker):
-    s3_filesystem.put(fixture_dirname("backends/multivcf_split1.vcf"),
+def test_collect_filenames_s3(
+    multivcf_split1_vcf: Path,
+    multivcf_split2_vcf: Path,
+    s3_filesystem,
+    s3_tmp_bucket_url,
+    mocker
+) -> None:
+    s3_filesystem.put(str(multivcf_split1_vcf),
                       f"{s3_tmp_bucket_url}/dir/multivcf_split1.vcf")
-    s3_filesystem.put(fixture_dirname("backends/multivcf_split2.vcf"),
+    s3_filesystem.put(str(multivcf_split2_vcf),
                       f"{s3_tmp_bucket_url}/dir/multivcf_split2.vcf")
 
     mocker.patch("dae.variants_loaders.vcf.loader.url_to_fs",
@@ -1007,14 +1016,57 @@ def test_collect_filenames_s3(fixture_dirname, s3_filesystem,
     assert all_filenames[1] == "s3://test-bucket/dir/multivcf_split2.vcf"
 
 
-def test_family_variants(resources_dir, gpf_instance_2013):
-    ped_filename = str(resources_dir / "simple_family.ped")
+@pytest.fixture
+def simple_family_vcf(tmp_path_factory: pytest.TempPathFactory) -> Path:
+    root_path = tmp_path_factory.mktemp("simple_family")
+    vcf_path = setup_vcf(root_path / "vcf_data" / "in.vcf", """
+    ##fileformat=VCFv4.2
+    ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+    ##contig=<ID=1>
+    #CHROM	POS	    ID	REF	ALT	        QUAL	FILTER	INFO	FORMAT	mom	dad	ch1	ch2	ch3	gma	gpa
+    1	    11539	.	T	G,A	        .   	.   	.   	GT  	0/0	0/0	0/0	0/0	0/0	0/0	0/0
+    1	    11540	.	T	G,A	        .   	.   	.   	GT  	0/2	0/0	0/0	0/0	0/0	0/0	0/0
+    1	    11541	.	T	G,A	        .   	.   	.   	GT  	./.	./.	./.	./.	./.	./.	./.
+    1	    11542	.	C	G,A	        .   	.   	.   	GT  	0/1	0/0	0/0	0/0	0/2	0/0	0/0
+    1	    11543	.	T	G,A	        .   	.   	.   	GT  	0/0	0/0	./.	0/0	0/0	0/0	0/0
+    1	    11544	.	T	G	        .   	.   	.   	GT  	0/0	0/0	./.	0/0	0/0	0/0	0/0
+    1	    11545	.	A	G	        .   	.   	.   	GT  	0/0	0/0	./.	0/0	0/1	0/0	0/0
+    1	    11546	.	T	G	        .   	.   	.   	GT  	0/0	0/0	0/0	1/1	0/1	0/0	0/0
+    1	    11547	.	C	G	        .   	.   	.   	GT  	0/0	0/0	0/0	0/1	0/0	0/0	1/1
+    1	    11548	.	T	GA,AA,CA,CC	.   	.   	.   	GT  	2/3	2/2	2/1	2/2	2/2	2/2	2/2
+    """)
+    return vcf_path
+
+
+@pytest.fixture
+def simple_family_ped(tmp_path_factory: pytest.TempPathFactory) -> Path:
+    root_path = tmp_path_factory.mktemp("simple_family")
+    ped_path = setup_pedigree(root_path / "ped_data" / "in.ped", """
+    familyId	personId	dadId	momId	sex	status	role
+    f	        gpa     	0   	0   	1	1   	paternal_grandfather
+    f	        gma     	0   	0   	2	1   	paternal_grandmother
+    f	        mom     	0   	0   	2	1   	mom
+    f	        dad     	gpa 	gma 	1	1   	dad
+    f	        ch1     	dad 	mom 	2	2   	prb
+    f	        ch2     	dad 	mom 	2	1   	sib
+    f	        ch3     	dad 	mom 	2	1   	sib
+    """)
+    return ped_path
+
+
+def test_family_variants(
+    simple_family_vcf: Path,
+    simple_family_ped: Path,
+    gpf_instance: GPFInstance
+) -> None:
+    ped_filename = str(simple_family_ped)
+    vcf_filename = str(simple_family_vcf)
     families = FamiliesLoader(ped_filename).load()
 
     vcf_loader = VcfLoader(
         families,
-        [str(resources_dir / "simple_variants.vcf")],
-        gpf_instance_2013.reference_genome,
+        [vcf_filename],
+        gpf_instance.reference_genome,
     )
     variants = list(vcf_loader.full_variants_iterator())
     assert len(variants) == 10
