@@ -5,7 +5,7 @@ import sys
 import gzip
 import argparse
 from contextlib import closing
-from typing import Optional, cast
+from typing import Optional, cast, Any
 
 from pysam import TabixFile, tabix_index
 
@@ -15,13 +15,15 @@ from dae.annotation.record_to_annotatable import build_record_to_annotatable, \
     RecordToRegion, RecordToCNVAllele, \
     RecordToVcfAllele, RecordToPosition
 from dae.annotation.annotate_vcf import produce_regions, produce_partfile_paths
-from dae.annotation.annotation_factory import build_annotation_pipeline, \
-    AnnotatorInfo
+from dae.annotation.annotation_pipeline import ReannotationPipeline
+from dae.annotation.annotation_factory import build_annotation_pipeline
+from dae.annotation.annotation_pipeline import AnnotationPipeline
 from dae.genomic_resources import build_genomic_resource_repository
 from dae.genomic_resources.cli import VerbosityConfiguration
 from dae.genomic_resources.genomic_context import get_genomic_context
 from dae.genomic_resources.cached_repository import cache_resources
 from dae.genomic_resources.reference_genome import ReferenceGenome
+from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.task_graph import TaskGraphCli
 from dae.task_graph.graph import TaskGraph
 from dae.utils.fs_utils import tabix_index_filename
@@ -53,6 +55,8 @@ def configure_argument_parser() -> argparse.ArgumentParser:
                         help="The column separator in the input")
     parser.add_argument("-out_sep", "--output-separator", default="\t",
                         help="The column separator in the output")
+    parser.add_argument("--reannotate", default=None,
+                        help="Old pipeline config to reannotate over")
     CLIAnnotationContext.add_context_arguments(parser)
     add_record_to_annotable_arguments(parser)
     TaskGraphCli.add_arguments(parser)
@@ -60,7 +64,9 @@ def configure_argument_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def read_input(args, region=tuple()):
+def read_input(
+    args: Any, region: tuple = tuple()
+) -> tuple[Any, Any, list[str]]:
     """Return a file object, line iterator and list of header columns.
 
     Handles differences between tabixed and non-tabixed input files.
@@ -78,7 +84,10 @@ def read_input(args, region=tuple()):
     return text_file, text_file, header
 
 
-def produce_tabix_index(filepath, args, header, ref_genome):
+def produce_tabix_index(
+    filepath: str, args: Any, header: list[str],
+    ref_genome: Optional[ReferenceGenome]
+) -> None:
     """Produce a tabix index file for the given variants file."""
     record_to_annotatable = build_record_to_annotatable(
         vars(args), set(header), ref_genome)
@@ -103,7 +112,10 @@ def produce_tabix_index(filepath, args, header, ref_genome):
                 force=True)
 
 
-def cache_pipeline(grr, pipeline):
+def cache_pipeline(
+    grr: GenomicResourceRepo, pipeline: AnnotationPipeline
+) -> None:
+    """Cache the resources used by the pipeline."""
     resource_ids: set[str] = set()
     for annotator in pipeline.annotators:
         resource_ids = resource_ids | \
@@ -112,14 +124,30 @@ def cache_pipeline(grr, pipeline):
 
 
 def annotate(
-        args, region, pipeline_config: list[AnnotatorInfo], grr_definition,
-        ref_genome_id, out_file_path, compress_output=False):
+    args: Any,
+    grr_definition: Optional[dict],
+    ref_genome_id: str,
+    out_file_path: str,
+    region: tuple = tuple(),
+    compress_output: bool = False
+) -> None:
     """Annotate a variants file with a given pipeline configuration."""
-    # pylint: disable=too-many-locals
+    # pylint: disable=too-many-locals,too-many-branches
     grr = build_genomic_resource_repository(definition=grr_definition)
+
+    # TODO Insisting on having the pipeline config passed in args
+    # prevents the finding of a default annotation config. Consider fixing
     pipeline = build_annotation_pipeline(
-        pipeline_config=pipeline_config,
+        pipeline_config_file=args.pipeline,
         grr_repository=grr)
+
+    if args.reannotate:
+        pipeline_old = build_annotation_pipeline(
+            pipeline_config_file=args.reannotate,
+            grr_repository=grr)
+        pipeline_new = pipeline
+        pipeline = ReannotationPipeline(pipeline_new, pipeline_old)
+
     ref_genome = cast(ReferenceGenome, grr.find_resource(ref_genome_id)) \
         if ref_genome_id else None
     errors = []
@@ -141,19 +169,37 @@ def annotate(
 
     pipeline.open()
     with pipeline, in_file, out_file:
-        new_header = header_columns + annotation_columns
+        if isinstance(pipeline, ReannotationPipeline):
+            old_annotation_columns = {
+                attr.name for attr in pipeline_old.get_attributes()
+                if not attr.internal
+            }
+            new_header = [
+                col for col in header_columns
+                if col not in old_annotation_columns
+            ]
+        else:
+            new_header = list(header_columns)
+
+        new_header = new_header + annotation_columns
         out_file.write(args.output_separator.join(new_header) + "\n")
         for lnum, line in enumerate(line_iterator):
             try:
                 columns = line.strip("\n\r").split(args.input_separator)
                 record = dict(zip(header_columns, columns))
-                annotation = pipeline.annotate(
-                    record_to_annotatable.build(record)
-                )
-                result = columns + [
-                    str(annotation[attrib])
-                    for attrib in annotation_columns
-                ]
+                if isinstance(pipeline, ReannotationPipeline):
+                    for col in pipeline.attributes_deleted:
+                        del record[col]
+                    annotation = pipeline.annotate(
+                        record_to_annotatable.build(record), record
+                    )
+                else:
+                    annotation = pipeline.annotate(
+                        record_to_annotatable.build(record)
+                    )
+
+                record.update(annotation)
+                result = list(map(str, record.values()))
                 out_file.write(args.output_separator.join(result) + "\n")
             except Exception as ex:  # pylint: disable=broad-except
                 logger.warning(
@@ -174,7 +220,7 @@ def annotate(
             logger.error("\t%s", error)
 
 
-def combine(args, partfile_paths, out_file_path):
+def combine(args: Any, partfile_paths: list[str], out_file_path: str) -> None:
     """Combine annotated region parts into a single VCF file."""
     CLIAnnotationContext.register(args)
     context = get_genomic_context()
@@ -211,7 +257,6 @@ def cli(raw_args: Optional[list[str]] = None) -> None:
     CLIAnnotationContext.register(args)
 
     context = get_genomic_context()
-    pipeline = CLIAnnotationContext.get_pipeline(context)
     grr = CLIAnnotationContext.get_genomic_resources_repository(context)
     ref_genome = context.get_reference_genome()
     ref_genome_id = ref_genome.resource_id if ref_genome is not None else None
@@ -239,8 +284,8 @@ def cli(raw_args: Optional[list[str]] = None) -> None:
             region_tasks.append(task_graph.create_task(
                 f"part-{index}",
                 annotate,
-                [args, region, pipeline.get_info(), grr.definition,
-                 ref_genome_id, file_path, True],
+                [args, grr.definition,
+                 ref_genome_id, file_path, region, True],
                 []))
 
         task_graph.create_task(
@@ -256,7 +301,7 @@ def cli(raw_args: Optional[list[str]] = None) -> None:
 
         TaskGraphCli.process_graph(task_graph, **vars(args))
     else:
-        annotate(args, None, pipeline.get_info(), grr.definition,
+        annotate(args, grr.definition,
                  ref_genome_id, output, output.endswith(".gz"))
 
 

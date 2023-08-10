@@ -61,7 +61,7 @@ class LiftOverAnnotator(AnnotatorBase):
             info.attributes = [AttributeInfo("liftover_annotatable",
                                              "liftover_annotatable", True, {})]
         super().__init__(pipeline, info, {
-            "liftover_annotatable": ("object", "Lifted over allele.")
+            "liftover_annotatable": ("annotatable", "Lifted over allele.")
         })
         self.chain = chain
         self.target_genome = target_genome

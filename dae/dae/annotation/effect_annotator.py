@@ -37,7 +37,7 @@ class EffectAnnotatorAdapter(AnnotatorBase):
         if genome_resource_id is None:
             genome = get_genomic_context().get_reference_genome()
             if genome is None:
-                raise ValueError("The {info}  has no reference genome "
+                raise ValueError(f"The {info} has no reference genome "
                                  "specified and a genome is missing in "
                                  "the context.")
         else:

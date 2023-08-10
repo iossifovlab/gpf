@@ -18,7 +18,7 @@ from dae.annotation.annotatable import Annotatable
 logger = logging.getLogger(__name__)
 
 
-@dataclass(init=False)
+@dataclass(init=False, eq=True, unsafe_hash=True)
 class AttributeInfo:
     """Defines annotation attribute configuration."""
 
@@ -40,8 +40,8 @@ class AttributeInfo:
     name: str
     source: str
     internal: bool
-    parameters: ParamsUsageMonitor
-    type: str = "str"           # str, int, float, or object
+    parameters: ParamsUsageMonitor = field(compare=False, hash=None)
+    type: str = "str"           # str, int, float, annotatable, or object
     description: str = ""       # interpreted as md
     _documentation: Optional[str] = None
 
@@ -77,6 +77,11 @@ class AnnotatorInfo:
     parameters: ParamsUsageMonitor
     documentation: str = ""
     resources: list[GenomicResource] = field(default_factory=list)
+
+    def __hash__(self) -> int:
+        attrs_hash = "".join(str(hash(attr)) for attr in self.attributes)
+        resources_hash = "".join(str(hash(res)) for res in self.resources)
+        return hash(f"{self.type}{attrs_hash}{resources_hash}")
 
 
 class Annotator(abc.ABC):
@@ -119,6 +124,10 @@ class Annotator(abc.ABC):
     def attributes(self) -> list[AttributeInfo]:
         return self._info.attributes
 
+    @property
+    def used_context_attributes(self) -> tuple[str, ...]:
+        return tuple()
+
     def _empty_result(self) -> dict[str, Any]:
         return {attribute_info.name: None
                 for attribute_info in self._info.attributes}
@@ -153,16 +162,27 @@ class AnnotationPipeline:
         return {r_id for annotator in self.annotators
                 for r_id in annotator.resource_ids}
 
+    def get_annotator_by_attribute_info(
+        self, attribute_info: AttributeInfo
+    ) -> Optional[Annotator]:
+        for annotator in self.annotators:
+            if attribute_info in annotator.attributes:
+                return annotator
+        return None
+
     def add_annotator(self, annotator: Annotator) -> None:
         assert isinstance(annotator, Annotator)
         self.annotators.append(annotator)
 
-    def annotate(self, annotatable: Annotatable) -> dict:
+    def annotate(self, annotatable: Annotatable,
+                 context: Optional[dict] = None) -> dict:
         """Apply all annotators to an annotatable."""
         if not self._is_open:
             self.open()
 
-        context: dict = {}
+        if context is None:
+            context = {}
+
         for annotator in self.annotators:
             attributes = annotator.annotate(annotatable, context)
             context.update(attributes)
@@ -205,6 +225,132 @@ class AnnotationPipeline:
                 "exception during annotation: %s, %s, %s",
                 exc_type, exc_value, exc_tb, exc_info=True)
         self.close()
+
+
+class ReannotationPipeline(AnnotationPipeline):
+    """Special pipeline that handles reannotation of a previous pipeline."""
+
+    AnnotationDependencyGraph = dict[
+        AnnotatorInfo, list[tuple[AnnotatorInfo, AttributeInfo]]
+    ]
+
+    def __init__(
+        self,
+        pipeline_new: AnnotationPipeline,
+        pipeline_old: AnnotationPipeline
+    ):
+        """Produce a reannotation pipeline between two annotation pipelines."""
+        super().__init__(pipeline_new.repository)
+        self.pipeline_new: AnnotationPipeline = pipeline_new
+        self.pipeline_old: AnnotationPipeline = pipeline_old
+
+        infos_new = pipeline_new.get_info()
+        infos_old = pipeline_old.get_info()
+
+        self.dependency_graph = ReannotationPipeline.build_dependency_graph(
+            pipeline_new
+        )
+
+        self.attributes_deleted: list[str] = []
+        for deleted_info in [i for i in infos_old if i not in infos_new]:
+            for attr in deleted_info.attributes:
+                self.attributes_deleted.append(attr.name)
+
+        self.annotators_new: set[AnnotatorInfo] = {
+            i for i in infos_new if i not in infos_old
+        }
+        self.annotators_rerun: set[AnnotatorInfo] = set()
+        for i in self.annotators_new:
+            for dep in self.get_dependencies_for(i):
+                self.annotators_rerun.add(dep)
+            for dep in self.get_dependents_for(i):
+                self.annotators_rerun.add(dep)
+
+        for annotator in self.pipeline_new.annotators:
+            info = annotator.get_info()
+            if info in self.annotators_new or info in self.annotators_rerun:
+                self.annotators.append(annotator)
+
+        self.attributes_reused: dict[str, AttributeInfo] = {}
+        for annotator in self.annotators:
+            info = annotator.get_info()
+            for (dep_annotator, dep_attr) in self.dependency_graph[info]:
+                if dep_annotator in infos_old \
+                   and dep_annotator not in self.annotators_rerun:
+                    self.attributes_reused[dep_attr.name] = dep_attr
+
+        logger.debug("REANNOTATION SUMMARY:")
+        logger.debug("DELETED ATTRIBUTES - %s", self.attributes_deleted)
+        logger.debug("REUSED ATTRIBUTES - %s", self.attributes_reused)
+        logger.debug("NEW ANNOTATORS - %s", self.annotators_new)
+        logger.debug("RE-RUNNING ANNOTATORS - %s", self.annotators_rerun)
+
+    @staticmethod
+    def build_dependency_graph(
+        pipeline: AnnotationPipeline
+    ) -> AnnotationDependencyGraph:
+        """Make dependency graph for an annotation pipeline."""
+        graph: ReannotationPipeline.AnnotationDependencyGraph = {}
+        for annotator in pipeline.annotators:
+            annotator_info = annotator.get_info()
+            if annotator_info not in graph:
+                graph[annotator_info] = []
+            for attr in annotator.used_context_attributes:
+                attr_info = pipeline.get_attribute_info(attr)
+                assert attr_info is not None
+                upstream_annotator = \
+                    pipeline.get_annotator_by_attribute_info(attr_info)
+                assert upstream_annotator is not None
+                graph[annotator_info].append(
+                    (upstream_annotator.get_info(), attr_info)
+                )
+        return graph
+
+    def get_dependencies_for(self, info: AnnotatorInfo) -> set[AnnotatorInfo]:
+        """Get all dependencies for a given annotator."""
+        result: set[AnnotatorInfo] = set()
+        if info in self.dependency_graph:
+            for annotator, attr in self.dependency_graph[info]:
+                if attr.internal:
+                    result.add(annotator)
+                    dependencies = self.get_dependencies_for(annotator)
+                    if dependencies:
+                        result.add(*dependencies)
+        return result
+
+    def get_dependents_for(self, info: AnnotatorInfo) -> set[AnnotatorInfo]:
+        """Get all dependents for a given annotator."""
+        result: set[AnnotatorInfo] = set()
+        for dependent, dependencies in self.dependency_graph.items():
+            if not dependencies:
+                continue
+            for dep_annotator, _ in dependencies:
+                if dep_annotator == info:
+                    result.add(dependent)
+                    further = self.get_dependents_for(dependent)
+                    if further:
+                        result.add(*further)
+        return result
+
+    def annotate(self, annotatable: Annotatable, record: dict) -> dict:  # type: ignore # noqa # pylint: disable=arguments-renamed
+        reused_context: dict[str, Any] = {}
+        for attr_name, attr in self.attributes_reused.items():
+            raw_value = record[attr_name]
+            converted_value: Any = None
+            if attr.type == "int":
+                converted_value = int(raw_value)
+            elif attr.type == "float":
+                converted_value = float(raw_value)
+            elif attr.type == "annotatable":
+                converted_value = Annotatable.from_string(raw_value)
+            elif attr.type == "object":
+                raise ValueError("Cannot deserialize object attribute - ",
+                                 attr_name)
+            reused_context[attr_name] = converted_value
+        return super().annotate(annotatable, reused_context)
+
+    def get_attributes(self) -> list[AttributeInfo]:
+        return self.pipeline_new.get_attributes()
 
 
 class AnnotatorDecorator(Annotator):
@@ -254,11 +400,16 @@ class InputAnnotableAnnotatorDecorator(AnnotatorDecorator):
                              "has not been defined before its use. The "
                              "available attributes are: "
                              f"{available_attributes}")
-        if att_info.type != "object":
+        if att_info.type != "annotatable":
             raise ValueError(f"The attribute '{self.input_annotatable_name}' "
-                             "is expected to be of type object.")
+                             "is expected to be of type annotatable.")
         self.child._info.documentation += \
             f"\n*input_annotatable*: {self.input_annotatable_name}"
+
+    @property
+    def used_context_attributes(self) -> tuple[str, ...]:
+        return (*self.child.used_context_attributes,
+                self.input_annotatable_name)
 
     def annotate(
         self, _: Optional[Annotatable], context: dict[str, Any]

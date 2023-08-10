@@ -45,7 +45,7 @@ class NormalizeAlleleAnnotator(AnnotatorBase):
             info.attributes = [AttributeInfo("normalized_allele",
                                              "normalized_allele", True, {})]
         super().__init__(pipeline, info, {
-            "normalized_allele": ("object", "Normalized allele.")
+            "normalized_allele": ("annotatable", "Normalized allele.")
         })
 
         self.genome = genome

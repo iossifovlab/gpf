@@ -91,6 +91,10 @@ class GeneScoreAnnotator(Annotator):
         self.input_gene_list = input_gene_list
         super().__init__(pipeline, info)
 
+    @property
+    def used_context_attributes(self) -> tuple[str, ...]:
+        return (self.input_gene_list,)
+
     def annotate(self, _: Optional[Annotatable],
                  context: dict[str, Any]) \
             -> dict[str, Any]:
