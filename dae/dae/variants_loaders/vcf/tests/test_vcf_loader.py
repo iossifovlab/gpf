@@ -12,7 +12,6 @@ from dae.variants_loaders.vcf.loader import VcfLoader
 from dae.configuration.gpf_config_parser import DefaultBox
 from dae.genomic_resources.testing import setup_pedigree, setup_vcf
 from dae.gpf_instance.gpf_instance import GPFInstance
-from dae.inmemory_storage.raw_variants import RawMemoryVariants
 from dae.testing.acgt_import import acgt_gpf
 from dae.pedigrees.loader import FamiliesLoader
 
@@ -51,6 +50,7 @@ def quads_f1_vcf(tmp_path_factory: pytest.TempPathFactory) -> Path:
     2	    11540	.	T	G	.	  .	      .	    GT	    0/0	  0/1	0/1	  0/0
     """)
     return vcf_path
+
 
 def vcf_loader_data(prefix: str, pedigree: Path, vcf: Path) -> DefaultBox:
     conf = {
@@ -114,27 +114,6 @@ def vcf_variants_loaders(gpf_instance):
         ))
 
         return loaders
-
-    return builder
-
-
-@pytest.fixture
-def variants_vcf(vcf_variants_loaders):
-    def builder(
-        path,
-        params={
-            "vcf_include_reference_genotypes": True,
-            "vcf_include_unknown_family_genotypes": True,
-            "vcf_include_unknown_person_genotypes": True,
-            "vcf_denovo_mode": "denovo",
-            "vcf_omission_mode": "omission",
-        },
-    ) -> RawMemoryVariants:
-
-        loaders = vcf_variants_loaders(path, params=params)
-        assert len(loaders) > 0
-        fvars = RawMemoryVariants(loaders, loaders[0].families)
-        return fvars
 
     return builder
 
@@ -266,7 +245,7 @@ def test_simple_vcf_loader_multi(
 
 
 @pytest.fixture
-def multivcf_original_ped(tmp_path_factory: pytest.TempPathFactory):
+def multivcf_original_ped(tmp_path_factory: pytest.TempPathFactory) -> Path:
     root_path = tmp_path_factory.mktemp("multivcf_original")
     ped_path = setup_pedigree(root_path / "ped_data" / "in.ped", """
     familyId	personId	dadId	momId	sex	status	role	phenotype
@@ -473,6 +452,7 @@ def test_multivcf_loader_fill_missing(
     gt2_f5_expected = np.array([[0, 0], [1, 1], [1, 0], [0, 1]], dtype=np.int8)
 
     assert all((gt2_f1 == gt2_f1_f2_f3_expected).flatten())
+    assert all((gt2_f2 == gt2_f1_f2_f3_expected).flatten())
     assert all((gt2_f3 == gt2_f1_f2_f3_expected).flatten())
     assert all((gt2_f5 == gt2_f5_expected).flatten())
     assert svs_fvs[0][0].ref_allele.position == 865582
