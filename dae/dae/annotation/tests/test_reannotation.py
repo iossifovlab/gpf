@@ -158,8 +158,9 @@ def reannotation_grr(root_path):
     ))
 
 
-def test_annotators_used_context(reannotation_grr) -> None:
-    pipeline_config = """
+@pytest.fixture(scope="module")
+def simple_pipeline_config() -> str:
+    return """
     - liftover_annotator:
         chain: foobar_chain
         target_genome: foobar_genome
@@ -177,101 +178,66 @@ def test_annotators_used_context(reannotation_grr) -> None:
         resource_id: gene_score1
         input_gene_list: my_genes
     """
+
+
+def test_annotators_used_context_attributes(
+    simple_pipeline_config, reannotation_grr
+) -> None:
     pipeline = build_annotation_pipeline(
-        pipeline_config_str=pipeline_config,
+        pipeline_config_str=simple_pipeline_config,
         grr_repository=reannotation_grr
     )
     assert pipeline.annotators[0].used_context_attributes == \
-        tuple()
+        tuple()               # default behaviour
     assert pipeline.annotators[1].used_context_attributes == \
-        ("hgX_annotatable",)
+        ("hgX_annotatable",)  # input annotatable, any annotator
     assert pipeline.annotators[2].used_context_attributes == \
-        ("my_genes",)
+        ("my_genes",)         # gene score annotator's input_gene_list
 
 
-def test_dependency_graph_construction(reannotation_grr) -> None:
-    pipeline_config = """
-    - liftover_annotator:
-        chain: foobar_chain
-        target_genome: foobar_genome
-        attributes:
-        - destination: hgX_annotatable
-          source: liftover_annotatable
-    - effect_annotator:
-        genome: foobar_genome
-        gene_models: foobar_genes
-        input_annotatable: hgX_annotatable
-        attributes:
-        - destination: my_genes
-          source: gene_list
-    - gene_score_annotator:
-        resource_id: gene_score1
-        input_gene_list: my_genes
-    """
+def test_dependency_graph_correctness(
+    simple_pipeline_config, reannotation_grr
+) -> None:
     pipeline = build_annotation_pipeline(
-        pipeline_config_str=pipeline_config,
+        pipeline_config_str=simple_pipeline_config,
         grr_repository=reannotation_grr
     )
     dependency_graph = ReannotationPipeline.build_dependency_graph(pipeline)
 
-    liftover = pipeline.annotators[0].get_info()
-    effect = pipeline.annotators[1].get_info()
-    gene_score = pipeline.annotators[2].get_info()
+    liftover_annotator = pipeline.annotators[0].get_info()
+    effect_annotator = pipeline.annotators[1].get_info()
+    gene_score_annotator = pipeline.annotators[2].get_info()
 
+    # All annotators are in the dependency graph
     assert len(dependency_graph) == 3
 
-    assert dependency_graph[liftover] == []
+    # Liftover annotator does not depend on anything
+    assert dependency_graph[liftover_annotator] == []
 
-    assert len(dependency_graph[effect]) == 1
-    assert dependency_graph[effect][0][0] == liftover
-    assert dependency_graph[effect][0][1].name == "hgX_annotatable"
+    # Effect annotator depends on liftover annotator
+    assert len(dependency_graph[effect_annotator]) == 1
+    assert dependency_graph[effect_annotator][0][0] == liftover_annotator
+    assert dependency_graph[effect_annotator][0][1].name == "hgX_annotatable"
 
-    assert len(dependency_graph[gene_score]) == 1
-    assert dependency_graph[gene_score][0][0] == effect
-    assert dependency_graph[gene_score][0][1].name == "my_genes"
+    # Gene score annotator depends on effect annotator
+    assert len(dependency_graph[gene_score_annotator]) == 1
+    assert dependency_graph[gene_score_annotator][0][0] == effect_annotator
+    assert dependency_graph[gene_score_annotator][0][1].name == "my_genes"
 
 
-def test_basic_annotator_changes_detection(reannotation_grr) -> None:
+def test_new_annotators_detection(reannotation_grr) -> None:
     old_pipeline_config = """
-    - liftover_annotator:
-        chain: foobar_chain
-        target_genome: foobar_genome
-        attributes:
-        - destination: hgX_annotatable
-          source: liftover_annotatable
-    - effect_annotator:
-        genome: foobar_genome
-        gene_models: foobar_genes
-        input_annotatable: hgX_annotatable
-        attributes:
-        - destination: my_genes
-          source: gene_list
-    - gene_score_annotator:
-        resource_id: gene_score1
-        input_gene_list: my_genes
-    - gene_score_annotator:
-        resource_id: gene_score2
-        input_gene_list: my_genes
-    """
-    new_pipeline_config = """
-    - liftover_annotator:
-        chain: foobar_chain
-        target_genome: foobar_genome
-        attributes:
-        - destination: hgX_annotatable
-          source: liftover_annotatable
-    - effect_annotator:
-        genome: foobar_genome
-        gene_models: foobar_genes
-        input_annotatable: hgX_annotatable
-        attributes:
-        - destination: my_genes
-          source: gene_list
-    - gene_score_annotator:
-        resource_id: gene_score1
-        input_gene_list: my_genes
     - position_score: one
     """
+    new_pipeline_config = """
+    - position_score: one
+    - liftover_annotator:
+        chain: foobar_chain
+        target_genome: foobar_genome
+        attributes:
+        - destination: hgX_annotatable
+          source: liftover_annotatable
+    """
     old_pipeline = build_annotation_pipeline(
         pipeline_config_str=old_pipeline_config,
         grr_repository=reannotation_grr
@@ -283,12 +249,142 @@ def test_basic_annotator_changes_detection(reannotation_grr) -> None:
     reannotation = ReannotationPipeline(new_pipeline, old_pipeline)
 
     assert len(reannotation.annotators_new) == 1
-    assert len(reannotation.attributes_deleted) == 1
     assert len(reannotation.annotators_rerun) == 0
     assert len(reannotation.attributes_reused) == 0
+    assert len(reannotation.attributes_deleted) == 0
 
 
-def test_upstream_change_detection(reannotation_grr) -> None:
+def test_deleted_attributes(reannotation_grr) -> None:
+    old_pipeline_config = """
+    - liftover_annotator:
+        chain: foobar_chain
+        target_genome: foobar_genome
+    - effect_annotator:
+        genome: foobar_genome
+        gene_models: foobar_genes
+        input_annotatable: liftover_annotatable
+    """
+    new_pipeline_config = """
+    - liftover_annotator:
+        chain: foobar_chain
+        target_genome: foobar_genome
+    """
+    old_pipeline = build_annotation_pipeline(
+        pipeline_config_str=old_pipeline_config,
+        grr_repository=reannotation_grr
+    )
+    new_pipeline = build_annotation_pipeline(
+        pipeline_config_str=new_pipeline_config,
+        grr_repository=reannotation_grr
+    )
+    reannotation = ReannotationPipeline(new_pipeline, old_pipeline)
+
+    assert len(reannotation.annotators_new) == 0
+    assert len(reannotation.annotators_rerun) == 0
+    assert len(reannotation.attributes_reused) == 0
+    assert reannotation.attributes_deleted == [
+        "worst_effect", "gene_effects", "effect_details", "gene_list"
+    ]
+
+
+def test_reused_attributes(reannotation_grr) -> None:
+    old_pipeline_config = """
+    - liftover_annotator:
+        chain: foobar_chain
+        target_genome: foobar_genome
+        attributes:
+        - destination: hgX_annotatable
+          source: liftover_annotatable
+    """
+    new_pipeline_config = """
+    - liftover_annotator:
+        chain: foobar_chain
+        target_genome: foobar_genome
+        attributes:
+        - destination: hgX_annotatable
+          source: liftover_annotatable
+    - effect_annotator:
+        genome: foobar_genome
+        gene_models: foobar_genes
+        input_annotatable: hgX_annotatable
+    """
+    old_pipeline = build_annotation_pipeline(
+        pipeline_config_str=old_pipeline_config,
+        grr_repository=reannotation_grr
+    )
+    new_pipeline = build_annotation_pipeline(
+        pipeline_config_str=new_pipeline_config,
+        grr_repository=reannotation_grr
+    )
+    reannotation = ReannotationPipeline(new_pipeline, old_pipeline)
+
+    assert "hgX_annotatable" in reannotation.attributes_reused
+    assert len(reannotation.annotators_new) == 1
+    assert len(reannotation.annotators_rerun) == 0
+    assert len(reannotation.attributes_reused) == 1
+    assert len(reannotation.attributes_deleted) == 0
+
+
+def test_reused_attributes_indirect(reannotation_grr) -> None:
+    old_pipeline_config = """
+    - liftover_annotator:
+        chain: foobar_chain
+        target_genome: foobar_genome
+        attributes:
+        - destination: hgX_annotatable
+          source: liftover_annotatable
+    - effect_annotator:
+        genome: foobar_genome
+        gene_models: foobar_genes
+        input_annotatable: hgX_annotatable
+        attributes:
+        - destination: my_genes
+          source: gene_list
+          internal: true
+    - gene_score_annotator:
+        resource_id: gene_score1
+        input_gene_list: my_genes
+    """
+    new_pipeline_config = """
+    - liftover_annotator:
+        chain: foobar_chain
+        target_genome: foobar_genome
+        attributes:
+        - destination: hgX_annotatable
+          source: liftover_annotatable
+    - effect_annotator:
+        genome: foobar_genome
+        gene_models: foobar_genes
+        input_annotatable: hgX_annotatable
+        attributes:
+        - destination: my_genes
+          source: gene_list
+          internal: true
+    - gene_score_annotator:
+        resource_id: gene_score1
+        input_gene_list: my_genes
+    - gene_score_annotator:
+        resource_id: gene_score2
+        input_gene_list: my_genes
+    """
+    old_pipeline = build_annotation_pipeline(
+        pipeline_config_str=old_pipeline_config,
+        grr_repository=reannotation_grr
+    )
+    new_pipeline = build_annotation_pipeline(
+        pipeline_config_str=new_pipeline_config,
+        grr_repository=reannotation_grr
+    )
+    reannotation = ReannotationPipeline(new_pipeline, old_pipeline)
+
+    assert "hgX_annotatable" in reannotation.attributes_reused
+    assert len(reannotation.annotators_new) == 1
+    assert len(reannotation.annotators_rerun) == 1
+    assert len(reannotation.attributes_reused) == 1
+    assert len(reannotation.attributes_deleted) == 0
+
+
+def test_annotators_rerun_detection_upstream(reannotation_grr) -> None:
     old_pipeline_config = """
     - liftover_annotator:
         chain: foobar_chain
@@ -340,12 +436,12 @@ def test_upstream_change_detection(reannotation_grr) -> None:
     reannotation = ReannotationPipeline(new_pipeline, old_pipeline)
 
     assert len(reannotation.annotators_new) == 1
-    assert len(reannotation.attributes_deleted) == 1
     assert len(reannotation.annotators_rerun) == 2
     assert len(reannotation.attributes_reused) == 0
+    assert len(reannotation.attributes_deleted) == 1
 
 
-def test_downstream_change_detection(reannotation_grr) -> None:
+def test_annotators_rerun_detection_downstream(reannotation_grr) -> None:
     old_pipeline_config = """
     - liftover_annotator:
         chain: foobar_chain
@@ -393,123 +489,9 @@ def test_downstream_change_detection(reannotation_grr) -> None:
     reannotation = ReannotationPipeline(new_pipeline, old_pipeline)
 
     assert len(reannotation.annotators_new) == 1
-    assert len(reannotation.attributes_deleted) == 1
     assert len(reannotation.annotators_rerun) == 2
     assert len(reannotation.attributes_reused) == 0
-
-
-def test_reused_attributes_detection_simple(reannotation_grr) -> None:
-    old_pipeline_config = """
-    - liftover_annotator:
-        chain: foobar_chain
-        target_genome: foobar_genome
-        attributes:
-        - destination: hgX_annotatable
-          source: liftover_annotatable
-    - effect_annotator:
-        genome: foobar_genome
-        gene_models: foobar_genes
-        input_annotatable: hgX_annotatable
-        attributes:
-        - destination: my_genes
-          source: gene_list
-    - gene_score_annotator:
-        resource_id: gene_score1
-        input_gene_list: my_genes
-    """
-    new_pipeline_config = """
-    - liftover_annotator:
-        chain: foobar_chain
-        target_genome: foobar_genome
-        attributes:
-        - destination: hgX_annotatable
-          source: liftover_annotatable
-    - effect_annotator:
-        genome: foobar_genome
-        gene_models: foobar_genes
-        input_annotatable: hgX_annotatable
-        attributes:
-        - destination: my_genes
-          source: gene_list
-    - gene_score_annotator:
-        resource_id: gene_score1
-        input_gene_list: my_genes
-    - gene_score_annotator:
-        resource_id: gene_score2
-        input_gene_list: my_genes
-    """
-    old_pipeline = build_annotation_pipeline(
-        pipeline_config_str=old_pipeline_config,
-        grr_repository=reannotation_grr
-    )
-    new_pipeline = build_annotation_pipeline(
-        pipeline_config_str=new_pipeline_config,
-        grr_repository=reannotation_grr
-    )
-    reannotation = ReannotationPipeline(new_pipeline, old_pipeline)
-
-    assert len(reannotation.annotators_new) == 1
-    assert len(reannotation.annotators_rerun) == 0
-    assert len(reannotation.attributes_deleted) == 0
-    assert len(reannotation.attributes_reused) == 1
-
-
-def test_reused_attributes_detection_indirect(reannotation_grr) -> None:
-    old_pipeline_config = """
-    - liftover_annotator:
-        chain: foobar_chain
-        target_genome: foobar_genome
-        attributes:
-        - destination: hgX_annotatable
-          source: liftover_annotatable
-    - effect_annotator:
-        genome: foobar_genome
-        gene_models: foobar_genes
-        input_annotatable: hgX_annotatable
-        attributes:
-        - destination: my_genes
-          source: gene_list
-          internal: true
-    - gene_score_annotator:
-        resource_id: gene_score1
-        input_gene_list: my_genes
-    """
-    new_pipeline_config = """
-    - liftover_annotator:
-        chain: foobar_chain
-        target_genome: foobar_genome
-        attributes:
-        - destination: hgX_annotatable
-          source: liftover_annotatable
-    - effect_annotator:
-        genome: foobar_genome
-        gene_models: foobar_genes
-        input_annotatable: hgX_annotatable
-        attributes:
-        - destination: my_genes
-          source: gene_list
-          internal: true
-    - gene_score_annotator:
-        resource_id: gene_score1
-        input_gene_list: my_genes
-    - gene_score_annotator:
-        resource_id: gene_score2
-        input_gene_list: my_genes
-    """
-    old_pipeline = build_annotation_pipeline(
-        pipeline_config_str=old_pipeline_config,
-        grr_repository=reannotation_grr
-    )
-    new_pipeline = build_annotation_pipeline(
-        pipeline_config_str=new_pipeline_config,
-        grr_repository=reannotation_grr
-    )
-    reannotation = ReannotationPipeline(new_pipeline, old_pipeline)
-
-    assert len(reannotation.annotators_new) == 1
-    assert len(reannotation.annotators_rerun) == 1
-    assert len(reannotation.attributes_deleted) == 0
-    assert len(reannotation.attributes_reused) == 1
+    assert len(reannotation.attributes_deleted) == 1
 
 
 def test_annotate_columns_reannotation(

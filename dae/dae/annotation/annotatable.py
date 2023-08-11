@@ -112,6 +112,7 @@ class Annotatable:
 
 
 class Position(Annotatable):
+    """Annotatable class representing a single position in a chromosome."""
 
     def __init__(self, chrom: str, pos: int):
         super().__init__(
@@ -131,6 +132,7 @@ class Position(Annotatable):
 
 
 class Region(Annotatable):
+    """Annotatable class representing a region in a chromosome."""
 
     def __init__(self, chrom: str, pos_begin: int, pos_end: int):
         super().__init__(
