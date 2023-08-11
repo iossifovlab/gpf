@@ -1,7 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import os
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any, Callable, Union
 import pytest
 import numpy as np
 from dae.variants_loaders.vcf.loader import VcfLoader
@@ -34,7 +34,7 @@ def multivcf_split1_vcf(tmp_path_factory: pytest.TempPathFactory) -> Path:
     1	    865627	.	G	A	.	    .	    EFF=MIS	GT	    0/0	    1/0 	0/1 	0/0 	0/0 	1/0 	0/1 	0/0 	0/0 	1/1 	0/1 	1/0
     1	    865664	.	G	A	.	    .	    EFF=SYN	GT	    0/1	    0/0 	0/1 	0/0 	0/1 	0/0 	0/0 	0/1 	0/1 	0/0 	0/1 	0/0
     1	    865691	.	C	T	.	    .	    EFF=MIS	GT	    1/0	    1/0 	0/1 	0/0 	1/0 	1/0 	0/1 	0/0 	1/0 	1/1 	0/1 	0/1
-    """)
+    """) # noqa
 
     return vcf_path
 
@@ -54,7 +54,7 @@ def multivcf_split2_vcf(tmp_path_factory: pytest.TempPathFactory) -> Path:
     1	    865627	.	G	A	.   	.   	EFF=MIS	GT  	0/0 	1/1 	1/0 	0/0 	0/0 	1/1 	1/0 	1/0 	./.
     1	    865664	.	G	A	.   	.   	EFF=SYN	GT  	0/1 	0/0 	0/1 	0/0 	0/1 	0/0 	0/0 	0/1 	./.
     1	    865691	.	C	T	.   	.   	EFF=MIS	GT  	1/0 	1/1 	1/0 	1/0 	1/0 	1/1 	0/1 	0/1 	./.
-    """)
+    """) # noqa
 
     return vcf_path
 
@@ -90,13 +90,16 @@ def multivcf_ped(tmp_path_factory: pytest.TempPathFactory) -> Path:
 
 
 @pytest.fixture
-def simple_vcf_loader(gpf_instance: GPFInstance):
-    def _split_all_ext(filename):
+def simple_vcf_loader(
+    gpf_instance: GPFInstance
+) -> Callable[[Path, Path, Any], VcfLoader]:
+    def _split_all_ext(filename: str) -> str:
         res, ext = os.path.splitext(filename)
         while len(ext) > 0:
             res, ext = os.path.splitext(res)
         return res
-    def ctor(ped: Path, vcf: Path, additional_params: Any):
+
+    def ctor(ped: Path, vcf: Path, additional_params: Any) -> VcfLoader:
         ped_filename = _split_all_ext(str(ped)) + ".ped"
         families_loader = FamiliesLoader(ped_filename)
         families = families_loader.load()
@@ -181,7 +184,7 @@ def multivcf_original_vcf(tmp_path_factory: pytest.TempPathFactory) -> Path:
     1	    865627	.	G	A	.	    .   	EFF=MIS	GT  	0/0 	1/0 	0/1	    0/0 	0/0 	1/0 	0/1 	0/0 	0/0 	1/1	    0/1 	1/0 	0/0 	1/1 	1/0	    0/0 	0/0	    1/1 	1/0	    1/0
     1	    865664	.	G	A	.	    .   	EFF=SYN	GT  	0/1 	0/0 	0/1	    0/0 	0/1 	0/0 	0/0 	0/1 	0/1 	0/0	    0/1 	0/0 	0/1 	0/0 	0/1	    0/0 	0/1	    0/0 	0/0	    0/1
     1	    865691	.	C	T	.	    .   	EFF=MIS	GT  	1/0 	1/0 	0/1	    0/0 	1/0 	1/0 	0/1 	0/0 	1/0 	1/1	    0/1 	0/1 	1/0 	1/1 	1/0	    1/0 	1/0	    1/1 	0/1	    0/1
-    """)
+    """) # noqa
 
     return vcf_path
 
@@ -266,7 +269,7 @@ def multivcf_missing1(tmp_path_factory: pytest.TempPathFactory) -> Path:
     1	    865627	.	G	A	.	    .	    EFF=MIS	GT  	0/0 	1/0 	0/1 	0/0	    0/0 	1/0 	0/1 	0/0 	0/0 	1/1 	0/1 	1/0
     1	    865664	.	G	A	.	    .	    EFF=SYN	GT  	0/1 	0/0 	0/1 	0/0	    0/1 	0/0 	0/0 	0/1 	0/1 	0/0 	0/1 	0/0
     1	    865691	.	C	T	.	    .	    EFF=MIS	GT  	1/0 	1/0 	0/1 	0/0	    1/0 	1/0 	0/1 	0/0 	1/0 	1/1 	0/1 	0/1
-    """)
+    """) # noqa
     return vcf_path
 
 
@@ -285,7 +288,7 @@ def multivcf_missing2(tmp_path_factory: pytest.TempPathFactory) -> Path:
     1	    865627	  .	  G	    A	    .   	.	    EFF=MIS	GT  	0/0 	1/1 	1/0	    0/0 	0/0	    1/1 	1/0	    1/0
     1	    865664	  .	  G	    A	    .   	.	    EFF=SYN	GT  	0/1 	0/0 	0/1	    0/0 	0/1	    0/0 	0/0 	0/1
     1	    865691	  .	  C     T	    .   	.	    EFF=MIS	GT  	1/0 	1/1 	1/0	    1/0 	1/0	    1/1 	0/1	    0/1
-    """)
+    """) # noqa
     return vcf_path
 
 
@@ -293,8 +296,8 @@ def multivcf_missing2(tmp_path_factory: pytest.TempPathFactory) -> Path:
     "fill_mode, fill_value", [["reference", 0], ["unknown", -1]]
 )
 def test_multivcf_loader_fill_missing(
-    fill_mode: list[str, int],
-    fill_value: list[str, int],
+    fill_mode: list[Union[str, int]],
+    fill_value: list[Union[str, int]],
     multivcf_ped: Path,
     multivcf_missing1: Path,
     multivcf_missing2: Path,
@@ -404,9 +407,9 @@ def test_collect_filenames_local(
 def test_collect_filenames_s3(
     multivcf_split1_vcf: Path,
     multivcf_split2_vcf: Path,
-    s3_filesystem,
-    s3_tmp_bucket_url,
-    mocker
+    s3_filesystem: Any,
+    s3_tmp_bucket_url: Any,
+    mocker: Any
 ) -> None:
     s3_filesystem.put(str(multivcf_split1_vcf),
                       f"{s3_tmp_bucket_url}/dir/multivcf_split1.vcf")
@@ -426,6 +429,7 @@ def test_collect_filenames_s3(
     assert len(all_filenames) == 2
     assert all_filenames[0] == "s3://test-bucket/dir/multivcf_split1.vcf"
     assert all_filenames[1] == "s3://test-bucket/dir/multivcf_split2.vcf"
+
 
 @pytest.fixture
 def multi_contig_ped(
@@ -466,7 +470,7 @@ def multi_contig_vcf(
     4   	11546	.	T	G	        .	    .   	.   	GT  	0/0	0/0	0/0	1/1	0/1	0/0	0/0
     4   	11547	.	T	G	        .	    .   	.   	GT  	0/0	0/0	0/0	0/1	0/0	0/0	1/1
     4   	11548	.	T	GA,AA,CA,CC	.	    .   	.   	GT  	2/3	2/2	2/2	2/2	2/2	2/2	2/2
-    """)
+    """) # noqa
 
     return vcf_path
 
@@ -494,7 +498,7 @@ def multi_contig_vcf_gz(
     4   	11546	.	T	G	        .	    .   	.   	GT  	0/0	0/0	0/0	1/1	0/1	0/0	0/0
     4   	11547	.	T	G	        .	    .   	.   	GT  	0/0	0/0	0/0	0/1	0/0	0/0	1/1
     4   	11548	.	T	GA,AA,CA,CC	.	    .   	.   	GT  	2/3	2/2	2/2	2/2	2/2	2/2	2/2
-    """)
+    """) # noqa
 
     return vcf_path
 
@@ -541,8 +545,7 @@ def multi_contig_chr_vcf(
     chr4	11546	.	T	G	        .	    .   	.   	GT  	0/0	0/0	0/0	1/1	0/1	0/0	0/0
     chr4	11547	.	T	G	        .	    .   	.   	GT  	0/0	0/0	0/0	0/1	0/0	0/0	1/1
     chr4	11548	.	T	GA,AA,CA,CC	.	    .   	.   	GT  	2/3	2/2	2/2	2/2	2/2	2/2	2/2
-
-    """)
+    """) # noqa
 
     return vcf_path
 
@@ -570,15 +573,14 @@ def multi_contig_chr_vcf_gz(
     chr4	11546	.	T	G	        .	    .   	.   	GT  	0/0	0/0	0/0	1/1	0/1	0/0	0/0
     chr4	11547	.	T	G	        .	    .   	.   	GT  	0/0	0/0	0/0	0/1	0/0	0/0	1/1
     chr4	11548	.	T	GA,AA,CA,CC	.	    .   	.   	GT  	2/3	2/2	2/2	2/2	2/2	2/2	2/2
-
-    """)
+    """) # noqa
 
     return vcf_path
 
 
 @pytest.mark.parametrize("input_filename, params", [
     (["multi_contig_ped", "multi_contig_vcf"], {"add_chrom_prefix": "chr"}),
-    (["multi_contig_chr_ped", "multi_contig_chr_vcf"], {"del_chrom_prefix": "chr"}),
+    (["multi_contig_chr_ped", "multi_contig_chr_vcf"], {"del_chrom_prefix": "chr"}), # noqa
 ])
 def test_chromosomes_have_adjusted_chrom(
     request: pytest.FixtureRequest,
@@ -597,7 +599,7 @@ def test_chromosomes_have_adjusted_chrom(
 
 @pytest.mark.parametrize("input_filename, params", [
     (["multi_contig_ped", "multi_contig_vcf"], {"add_chrom_prefix": "chr"}),
-    (["multi_contig_chr_ped", "multi_contig_chr_vcf"], {"del_chrom_prefix": "chr"}),
+    (["multi_contig_chr_ped", "multi_contig_chr_vcf"], {"del_chrom_prefix": "chr"}), # noqa
 ])
 def test_variants_have_adjusted_chrom(
     request: pytest.FixtureRequest,
@@ -621,7 +623,7 @@ def test_variants_have_adjusted_chrom(
 
 @pytest.mark.parametrize("input_filename, params", [
     (["multi_contig_ped", "multi_contig_vcf_gz"], {"add_chrom_prefix": "chr"}),
-    (["multi_contig_chr_ped", "multi_contig_chr_vcf_gz"], {"del_chrom_prefix": "chr"}),
+    (["multi_contig_chr_ped", "multi_contig_chr_vcf_gz"], {"del_chrom_prefix": "chr"}), # noqa
 ])
 def test_reset_regions_with_adjusted_chrom(
     request: pytest.FixtureRequest,

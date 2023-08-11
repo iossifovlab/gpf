@@ -1,6 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable, Dict, Literal, Optional
 import pytest
 from dae.import_tools.import_tools import construct_import_annotation_pipeline
 from dae.variants_loaders.dae.loader import DenovoLoader
@@ -61,21 +61,25 @@ def vcf_loader_data(prefix: str, pedigree: Path, vcf: Path) -> DefaultBox:
 
 
 @pytest.fixture()
-def vcf_variants_loaders(gpf_instance):
+def vcf_variants_loaders(
+    gpf_instance: GPFInstance
+) -> Callable[[Any, Optional[dict[str, Any]]], list[Any]]:
     annotation_pipeline = construct_import_annotation_pipeline(
         gpf_instance
     )
 
     def builder(
-        path,
-        params={
-            "vcf_include_reference_genotypes": True,
-            "vcf_include_unknown_family_genotypes": True,
-            "vcf_include_unknown_person_genotypes": True,
-            "vcf_denovo_mode": "denovo",
-            "vcf_omission_mode": "omission",
-        },
-    ):
+        path: Any,
+        params: Optional[Dict[str, Any]] = None,
+    ) -> list:
+        if params is None:
+            params = {
+                "vcf_include_reference_genotypes": True,
+                "vcf_include_unknown_family_genotypes": True,
+                "vcf_include_unknown_person_genotypes": True,
+                "vcf_denovo_mode": "denovo",
+                "vcf_omission_mode": "omission",
+            }
         config = path
 
         families_loader = FamiliesLoader(config.pedigree)
@@ -210,9 +214,9 @@ def inheritance_trio_denovo_omission_vcf(
     ],
 )
 def test_vcf_denovo_mode(
-    denovo_mode,
-    total,
-    unexpected_inheritance,
+    denovo_mode: Literal["denovo", "possible_denovo", "ignore", "ala_bala"],
+    total: Literal[1, 3],
+    unexpected_inheritance: set[Inheritance],
     inheritance_trio_denovo_omission_ped: Path,
     inheritance_trio_denovo_omission_vcf: Path,
     gpf_instance: GPFInstance,
@@ -254,9 +258,11 @@ def test_vcf_denovo_mode(
     ],
 )
 def test_vcf_omission_mode(
-    omission_mode,
-    total,
-    unexpected_inheritance,
+    omission_mode: Literal[
+        "omission", "possible_omission", "ignore", "ala_bala"
+    ],
+    total: Literal[3, 2],
+    unexpected_inheritance: set[Inheritance],
     inheritance_trio_denovo_omission_ped: Path,
     inheritance_trio_denovo_omission_vcf: Path,
     gpf_instance: GPFInstance,
@@ -324,7 +330,7 @@ def f1_test_vcf(
     1	    905966	.	A	G,T	.	    .	    EFF=SYN!MIS;INH=OMI	GT	    1/1 	0/0 	0/1	  0/0
     1	    906086	.	G	A,T	.	    .	    EFF=SYN!MIS;INH=MIX	GT	    1/0 	0/0 	0/.	  0/2
     1	    906092	.	T	C,A	.	    .	    EFF=SYN!MIS;INH=OMI	GT	    1/1 	2/2 	1/1	  2/2
-    """)
+    """) # noqa
 
     return vcf_path
 
@@ -386,7 +392,7 @@ def simple_family_vcf(tmp_path_factory: pytest.TempPathFactory) -> Path:
     1	    11546	.	T	G	        .   	.   	.   	GT  	0/0	0/0	0/0	1/1	0/1	0/0	0/0
     1	    11547	.	C	G	        .   	.   	.   	GT  	0/0	0/0	0/0	0/1	0/0	0/0	1/1
     1	    11548	.	T	GA,AA,CA,CC	.   	.   	.   	GT  	2/3	2/2	2/1	2/2	2/2	2/2	2/2
-    """)
+    """) # noqa
     return vcf_path
 
 
