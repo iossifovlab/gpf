@@ -115,3 +115,9 @@
   background-color: rgba(0, 0, 0, 50%);
   z-index: 190;
 }
+
+#version-container {
+  color: #9b9b9b;
+  position: absolute;
+  bottom: 10px;
+}
