@@ -12,5 +12,5 @@ export const environment = {
   imgPathPrefix: 'assets/',
   sentryTunnel: '',
   oauthClientId: 'gpfjs',
-  version: versionInfo.version
+  version: versionInfo?.version
 };
