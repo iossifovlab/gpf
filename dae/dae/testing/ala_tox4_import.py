@@ -1,5 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
+from typing import Optional
 
 from dae.testing import \
     setup_genome, setup_gene_models, setup_gpf_instance
@@ -7,6 +8,9 @@ from dae.genomic_resources.repository_factory import \
     build_genomic_resource_repository
 from dae.genomic_resources.gene_models import GeneModels
 from dae.genomic_resources.reference_genome import ReferenceGenome
+from dae.genotype_storage.genotype_storage import GenotypeStorage
+
+from dae.gpf_instance import GPFInstance
 
 
 def ala_tox4_genome(root_path: pathlib.Path) -> ReferenceGenome:
@@ -44,39 +48,26 @@ def ala_tox4_genes(root_path: pathlib.Path) -> GeneModels:
     return genes
 
 
-# def foobar_gpf(
-#         root_path: pathlib.Path,
-#         storage: Optional[GenotypeStorage] = None) -> GPFInstance:
-#     setup_genome(
-#         root_path / "foobar_genome" / "chrAll.fa",
-#         """
-#             >foo
-#             NNACCCAAAC
-#             GGGCCTTCCN
-#             NNNA
-#             >bar
-#             NNGGGCCTTC
-#             CACGACCCAA
-#             NN
-#         """
-#     )
-#     setup_gene_models(
-#         root_path / "foobar_genes" / "genes.txt",
-#         GMM_CONTENT, fileformat="refflat")
-#     local_repo = build_genomic_resource_repository({
-#         "id": "alla_local",
-#         "type": "directory",
-#         "directory": str(root_path)
-#     })
+def ala_tox4_gpf(
+        root_path: pathlib.Path,
+        storage: Optional[GenotypeStorage] = None) -> GPFInstance:
+    ala_tox4_genome(root_path)
+    ala_tox4_genes(root_path)
 
-#     gpf_instance = setup_gpf_instance(
-#         root_path / "gpf_instance",
-#         reference_genome_id="foobar_genome",
-#         gene_models_id="foobar_genes",
-#         grr=local_repo)
+    local_repo = build_genomic_resource_repository({
+        "id": "ala_tox4_local",
+        "type": "directory",
+        "directory": str(root_path)
+    })
 
-#     if storage:
-#         gpf_instance\
-#             .genotype_storages\
-#             .register_default_storage(storage)
-#     return gpf_instance
+    gpf_instance = setup_gpf_instance(
+        root_path / "gpf_instance",
+        reference_genome_id="ala_tox4_genome",
+        gene_models_id="ala_tox4_genes",
+        grr=local_repo)
+
+    if storage:
+        gpf_instance\
+            .genotype_storages\
+            .register_default_storage(storage)
+    return gpf_instance

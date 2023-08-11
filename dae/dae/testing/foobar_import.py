@@ -66,7 +66,7 @@ def foobar_gpf(
         root_path / "foobar_genes" / "genes.txt",
         GMM_CONTENT, fileformat="refflat")
     local_repo = build_genomic_resource_repository({
-        "id": "alla_local",
+        "id": "foobar_local",
         "type": "directory",
         "directory": str(root_path)
     })
