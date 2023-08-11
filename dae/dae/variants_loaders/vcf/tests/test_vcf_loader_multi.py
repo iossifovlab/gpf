@@ -578,65 +578,93 @@ def multi_contig_chr_vcf_gz(
     return vcf_path
 
 
-@pytest.mark.parametrize("input_filename, params", [
-    (["multi_contig_ped", "multi_contig_vcf"], {"add_chrom_prefix": "chr"}),
-    (["multi_contig_chr_ped", "multi_contig_chr_vcf"], {"del_chrom_prefix": "chr"}), # noqa
-])
-def test_chromosomes_have_adjusted_chrom(
-    request: pytest.FixtureRequest,
+def test_chromosomes_have_adjusted_chrom_add_prefix(
     simple_vcf_loader: Callable[[Path, Path, dict[str, str]], VcfLoader],
-    input_filename: list[str],
-    params: dict[str, str]
+    multi_contig_ped: Path,
+    multi_contig_vcf: Path,
 ) -> None:
-    ped = request.getfixturevalue(input_filename[0])
-    vcf = request.getfixturevalue(input_filename[1])
-    loader = simple_vcf_loader(ped, vcf, params)
+    ped = multi_contig_ped
+    vcf = multi_contig_vcf
+    loader = simple_vcf_loader(ped, vcf, {"add_chrom_prefix": "chr"})
 
-    prefix = params.get("add_chrom_prefix", "")
-    assert loader.chromosomes == [f"{prefix}1", f"{prefix}2", f"{prefix}3",
-                                  f"{prefix}4"]
+    assert loader.chromosomes == ["chr1", "chr2", "chr3", "chr4"]
 
 
-@pytest.mark.parametrize("input_filename, params", [
-    (["multi_contig_ped", "multi_contig_vcf"], {"add_chrom_prefix": "chr"}),
-    (["multi_contig_chr_ped", "multi_contig_chr_vcf"], {"del_chrom_prefix": "chr"}), # noqa
-])
-def test_variants_have_adjusted_chrom(
-    request: pytest.FixtureRequest,
+def test_chromosomes_have_adjusted_chrom_del_prefix(
     simple_vcf_loader: Callable[[Path, Path, dict[str, str]], VcfLoader],
-    input_filename: list[str],
-    params: dict[str, str]
+    multi_contig_chr_ped: Path,
+    multi_contig_chr_vcf: Path,
 ) -> None:
-    ped = request.getfixturevalue(input_filename[0])
-    vcf = request.getfixturevalue(input_filename[1])
-    loader = simple_vcf_loader(ped, vcf, params)
-    is_add = "add_chrom_prefix" in params
+    ped = multi_contig_chr_ped
+    vcf = multi_contig_chr_vcf
+    loader = simple_vcf_loader(ped, vcf, {"del_chrom_prefix": "chr"})
+
+    assert loader.chromosomes == ["1", "2", "3", "4"]
+
+
+def test_variants_have_adjusted_chrom_add_prefix(
+    simple_vcf_loader: Callable[[Path, Path, dict[str, str]], VcfLoader],
+    multi_contig_ped: Path,
+    multi_contig_vcf: Path
+) -> None:
+    ped = multi_contig_ped
+    vcf = multi_contig_vcf
+    loader = simple_vcf_loader(ped, vcf, {"add_chrom_prefix": "chr"})
+
+    variants = list(loader.full_variants_iterator())
 
     variants = list(loader.full_variants_iterator())
     assert len(variants) > 0
     for summary_variant, _ in variants:
-        if is_add:
-            assert summary_variant.chromosome.startswith("chr")
-        else:
-            assert not summary_variant.chromosome.startswith("chr")
+        assert summary_variant.chromosome.startswith("chr")
 
 
-@pytest.mark.parametrize("input_filename, params", [
-    (["multi_contig_ped", "multi_contig_vcf_gz"], {"add_chrom_prefix": "chr"}),
-    (["multi_contig_chr_ped", "multi_contig_chr_vcf_gz"], {"del_chrom_prefix": "chr"}), # noqa
-])
-def test_reset_regions_with_adjusted_chrom(
-    request: pytest.FixtureRequest,
+def test_variants_have_adjusted_chrom_del_prefix(
     simple_vcf_loader: Callable[[Path, Path, dict[str, str]], VcfLoader],
-    input_filename: list[str],
-    params: dict[str, str]
+    multi_contig_chr_ped: Path,
+    multi_contig_chr_vcf: Path
 ) -> None:
-    ped = request.getfixturevalue(input_filename[0])
-    vcf = request.getfixturevalue(input_filename[1])
+    ped = multi_contig_chr_ped
+    vcf = multi_contig_chr_vcf
+    loader = simple_vcf_loader(ped, vcf, {"del_chrom_prefix": "chr"})
 
-    loader = simple_vcf_loader(ped, vcf, params)
-    prefix = params.get("add_chrom_prefix", "")
-    regions = [f"{prefix}1", f"{prefix}2"]
+    list(loader.full_variants_iterator())
+
+    variants = list(loader.full_variants_iterator())
+    assert len(variants) > 0
+    for summary_variant, _ in variants:
+        assert not summary_variant.chromosome.startswith("chr")
+
+
+def test_reset_regions_with_adjusted_chrom_add_prefix(
+    simple_vcf_loader: Callable[[Path, Path, dict[str, str]], VcfLoader],
+    multi_contig_ped: Path,
+    multi_contig_vcf_gz: Path,
+) -> None:
+    ped = multi_contig_ped
+    vcf = multi_contig_vcf_gz
+
+    loader = simple_vcf_loader(ped, vcf, {"add_chrom_prefix": "chr"})
+    regions = ["chr1", "chr2"]
+
+    loader.reset_regions(regions)
+
+    variants = list(loader.full_variants_iterator())
+    assert len(variants) > 0
+    unique_chroms = np.unique([sv.chromosome for sv, _ in variants])
+    assert (unique_chroms == regions).all()
+
+
+def test_reset_regions_with_adjusted_chrom_del_prefix(
+    simple_vcf_loader: Callable[[Path, Path, dict[str, str]], VcfLoader],
+    multi_contig_ped: Path,
+    multi_contig_chr_vcf_gz: Path
+) -> None:
+    ped = multi_contig_ped
+    vcf = multi_contig_chr_vcf_gz
+
+    loader = simple_vcf_loader(ped, vcf, {"del_chrom_prefix": "chr"})
+    regions = ["1", "2"]
 
     loader.reset_regions(regions)
 
