@@ -298,7 +298,7 @@ class StudyWrapper(StudyWrapperBase):
                 self.config.phenotype_data
             )
 
-    def _validate_column_groups(self):
+    def _validate_column_groups(self) -> bool:
         genotype_cols = self.columns.get("genotype") or []
         phenotype_cols = self.columns.get("phenotype") or []
         for column_group_name, column_group in self.column_groups.items():
@@ -354,6 +354,7 @@ class StudyWrapper(StudyWrapperBase):
         index = 0
         seen = set()
         unique_family_variants = kwargs.get("unique_family_variants", False)
+
         try:
             started = time.time()
             variants_result = \
@@ -368,12 +369,10 @@ class StudyWrapper(StudyWrapperBase):
                 self.name, elapsed)
 
             with closing(variants_result) as variants:
-
                 for variant in variants:
                     if variant is None:
                         yield None
                         continue
-
                     v = transform(variant)
 
                     matched = True
@@ -399,8 +398,7 @@ class StudyWrapper(StudyWrapperBase):
                                 f"reached"
                             ]
                         break
-                    # pylint: disable=protected-access
-                    row_variant = self.response_transformer._build_variant_row(
+                    row_variant = self.response_transformer.build_variant_row(
                         v, sources,
                         person_set_collection=kwargs.get(
                             "person_set_collection", (None, None))[0]
@@ -561,7 +559,7 @@ class RemoteStudyWrapper(StudyWrapperBase):
             fv = RemoteFamilyVariant(
                 variant, family, list(map(get_source, sources)))
             # pylint: disable=protected-access
-            row_variant = self.response_transformer._build_variant_row(
+            row_variant = self.response_transformer.build_variant_row(
                 fv, sources, person_set_collection=person_set_collection_id)
 
             yield row_variant

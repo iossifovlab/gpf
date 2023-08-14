@@ -318,10 +318,11 @@ class ResponseTransformer:
 
                 yield variant
 
-    def _build_variant_row(  # noqa
+    def build_variant_row(  # noqa
         self, v: Union[SummaryVariant, FamilyVariant],
         column_descs: list[dict], **kwargs: Union[str]
     ) -> list:
+        """Construct response row for a variant."""
         # pylint: disable=too-many-branches
         row_variant: list[Any] = []
         for col_desc in column_descs:
@@ -475,36 +476,9 @@ class ResponseTransformer:
         )
         return map(join_line, itertools.chain([columns], rows))
 
-    def transform_variants(
-        self, variants_iterable: Iterable[FamilyVariant]
-    ) -> Generator[FamilyVariant, None, None]:
-        """Transform variant to add pheno and scores attributes."""
-        for variants_chunk in split_iterable(
-                variants_iterable, self.STREAMING_CHUNK_SIZE):
-
-            families = {variant.family_id for variant in variants_chunk}
-
-            pheno_column_values = self._get_all_pheno_values(families)
-
-            for variant in variants_chunk:
-                pheno_values = self._get_pheno_values_for_variant(
-                    variant, pheno_column_values
-                )
-
-                for allele in variant.alt_alleles:
-                    if not self.study_wrapper.is_remote:
-                        gene_scores_values = self._get_gene_scores_values(
-                            allele
-                        )
-                        allele.update_attributes(gene_scores_values)
-
-                    if pheno_values:
-                        allele.update_attributes(pheno_values)
-
-                yield variant
-
     def variant_transformer(self) -> Callable[[FamilyVariant], FamilyVariant]:
         """Build and return a variant transformer function."""
+        assert not self.study_wrapper.is_remote
         pheno_column_values = self._get_all_pheno_values(self.families)
 
         def transformer(variant: FamilyVariant) -> FamilyVariant:
@@ -514,11 +488,10 @@ class ResponseTransformer:
 
             for allele in variant.alt_alleles:
                 fallele = cast(FamilyAllele, allele)
-                if not self.study_wrapper.is_remote:
-                    gene_scores_values = self._get_gene_scores_values(
-                        fallele
-                    )
-                    fallele.update_attributes(gene_scores_values)
+                gene_scores_values = self._get_gene_scores_values(
+                    fallele
+                )
+                fallele.update_attributes(gene_scores_values)
 
                 if pheno_values:
                     fallele.update_attributes(pheno_values)
@@ -531,6 +504,6 @@ class ResponseTransformer:
         self, variants_iterable: Generator[SummaryVariant, None, None]
     ) -> Generator[list, None, None]:
         for v in self._add_additional_columns_summary(variants_iterable):
-            yield self._build_variant_row(
+            yield self.build_variant_row(
                 v, self.study_wrapper.summary_preview_descs
             )
