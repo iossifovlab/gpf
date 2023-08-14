@@ -26,14 +26,14 @@ def multivcf_split1_vcf(tmp_path_factory: pytest.TempPathFactory) -> Path:
     ##fileformat=VCFv4.2
     ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
     ##INFO=<ID=EFF,Number=1,Type=String,Description="Effect">
-    ##contig=<ID=1>
-    #CHROM	POS	    ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	f1.mom	f1.dad	f1.p1	f1.s1	f2.mom	f2.dad	f2.p1	f2.s1	f3.mom	f3.dad	f3.p1	f3.s1
-    1	    865582	.	C	T	.	    .	    EFF=SYN	GT	    1/1	    0/0 	0/1 	0/1 	1/1 	0/0 	0/1 	0/1 	1/1 	0/0 	0/1 	0/1
-    1	    865583	.	G	A	.	    .	    EFF=SYN	GT	    0/0	    1/1 	0/1 	0/1 	0/0 	1/1 	1/0 	0/1 	0/0 	1/1 	0/1 	0/1
-    1	    865624	.	G	A	.	    .	    EFF=MIS	GT	    1/0	    0/0 	0/1 	0/0 	1/0 	0/0 	0/1 	0/0 	1/0 	0/0 	0/1 	0/0
-    1	    865627	.	G	A	.	    .	    EFF=MIS	GT	    0/0	    1/0 	0/1 	0/0 	0/0 	1/0 	0/1 	0/0 	0/0 	1/1 	0/1 	1/0
-    1	    865664	.	G	A	.	    .	    EFF=SYN	GT	    0/1	    0/0 	0/1 	0/0 	0/1 	0/0 	0/0 	0/1 	0/1 	0/0 	0/1 	0/0
-    1	    865691	.	C	T	.	    .	    EFF=MIS	GT	    1/0	    1/0 	0/1 	0/0 	1/0 	1/0 	0/1 	0/0 	1/0 	1/1 	0/1 	0/1
+    ##contig=<ID=chr1>
+    #CHROM	POS	 ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	f1.mom	f1.dad	f1.p1	f1.s1	f2.mom	f2.dad	f2.p1	f2.s1	f3.mom	f3.dad	f3.p1	f3.s1
+    chr1    4    .	C	T	.	    .	    EFF=SYN	GT	    1/1	    0/0 	0/1 	0/1 	1/1 	0/0 	0/1 	0/1 	1/1 	0/0 	0/1 	0/1
+    chr1    13   .	G	A	.	    .	    EFF=SYN	GT	    0/0	    1/1 	0/1 	0/1 	0/0 	1/1 	1/0 	0/1 	0/0 	1/1 	0/1 	0/1
+    chr1    15   .	G	A	.	    .	    EFF=MIS	GT	    1/0	    0/0 	0/1 	0/0 	1/0 	0/0 	0/1 	0/0 	1/0 	0/0 	0/1 	0/0
+    chr1    23   .	G	A	.	    .	    EFF=MIS	GT	    0/0	    1/0 	0/1 	0/0 	0/0 	1/0 	0/1 	0/0 	0/0 	1/1 	0/1 	1/0
+    chr1    44   .	G	A	.	    .	    EFF=SYN	GT	    0/1	    0/0 	0/1 	0/0 	0/1 	0/0 	0/0 	0/1 	0/1 	0/0 	0/1 	0/0
+    chr1    55   .	C	T	.	    .	    EFF=MIS	GT	    1/0	    1/0 	0/1 	0/0 	1/0 	1/0 	0/1 	0/0 	1/0 	1/1 	0/1 	0/1
     """) # noqa
 
     return vcf_path
@@ -46,14 +46,14 @@ def multivcf_split2_vcf(tmp_path_factory: pytest.TempPathFactory) -> Path:
     ##fileformat=VCFv4.2
     ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
     ##INFO=<ID=EFF,Number=1,Type=String,Description="Effect">
-    ##contig=<ID=1>
-    #CHROM	POS	    ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	f4.mom	f4.dad	f4.p1	f4.s1	f5.mom	f5.dad	f5.p1	f5.s1	f3.s1
-    1	    865582	.	C	T	.   	.   	EFF=SYN	GT  	1/1 	0/0 	0/1 	0/1 	1/1 	0/0 	1/0 	0/1 	./.
-    1	    865583	.	G	A	.   	.   	EFF=SYN	GT  	0/0 	1/1 	0/1 	0/1 	0/0 	1/1 	1/0 	0/1 	./.
-    1	    865624	.	G	A	.   	.   	EFF=MIS	GT  	1/0 	0/0 	1/0 	0/0 	1/0 	0/0 	1/0 	0/0 	./.
-    1	    865627	.	G	A	.   	.   	EFF=MIS	GT  	0/0 	1/1 	1/0 	0/0 	0/0 	1/1 	1/0 	1/0 	./.
-    1	    865664	.	G	A	.   	.   	EFF=SYN	GT  	0/1 	0/0 	0/1 	0/0 	0/1 	0/0 	0/0 	0/1 	./.
-    1	    865691	.	C	T	.   	.   	EFF=MIS	GT  	1/0 	1/1 	1/0 	1/0 	1/0 	1/1 	0/1 	0/1 	./.
+    ##contig=<ID=chr1>
+    #CHROM	POS	 ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	f4.mom	f4.dad	f4.p1	f4.s1	f5.mom	f5.dad	f5.p1	f5.s1	f3.s1
+    chr1    4 	 .	C	T	.   	.   	EFF=SYN	GT  	1/1 	0/0 	0/1 	0/1 	1/1 	0/0 	1/0 	0/1 	./.
+    chr1    13   .	G	A	.   	.   	EFF=SYN	GT  	0/0 	1/1 	0/1 	0/1 	0/0 	1/1 	1/0 	0/1 	./.
+    chr1    15	 .	G	A	.   	.   	EFF=MIS	GT  	1/0 	0/0 	1/0 	0/0 	1/0 	0/0 	1/0 	0/0 	./.
+    chr1    23 	 .	G	A	.   	.   	EFF=MIS	GT  	0/0 	1/1 	1/0 	0/0 	0/0 	1/1 	1/0 	1/0 	./.
+    chr1    44 	 .	G	A	.   	.   	EFF=SYN	GT  	0/1 	0/0 	0/1 	0/0 	0/1 	0/0 	0/0 	0/1 	./.
+    chr1    55 	 .	C	T	.   	.   	EFF=MIS	GT  	1/0 	1/1 	1/0 	1/0 	1/0 	1/1 	0/1 	0/1 	./.
     """) # noqa
 
     return vcf_path
@@ -176,14 +176,14 @@ def multivcf_original_vcf(tmp_path_factory: pytest.TempPathFactory) -> Path:
     ##fileformat=VCFv4.2
     ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
     ##INFO=<ID=EFF,Number=1,Type=String,Description="Effect">
-    ##contig=<ID=1>
+    ##contig=<ID=chr1>
     #CHROM	POS 	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	f1.mom	f1.dad	f1.p1	f1.s1	f2.mom	f2.dad	f2.p1	f2.s1	f3.mom	f3.dad	f3.p1	f3.s1	f4.mom	f4.dad	f4.p1	f4.s1	f5.mom	f5.dad	f5.p1	f5.s1
-    1	    865582	.	C	T	.	    .   	EFF=SYN	GT  	1/1 	0/0 	0/1	    0/1 	1/1 	0/0 	0/1 	0/1 	1/1 	0/0	    0/1 	0/1 	1/1 	0/0 	0/1	    0/1 	1/1	    0/0 	1/0	    0/1
-    1	    865583	.	G	A	.	    .   	EFF=SYN	GT  	0/0 	1/1 	0/1	    0/1 	0/0 	1/1 	1/0 	0/1 	0/0 	1/1	    0/1 	0/1 	0/0 	1/1 	0/1	    0/1 	0/0	    1/1 	1/0	    0/1
-    1	    865624	.	G	A	.	    .   	EFF=MIS	GT  	1/0 	0/0 	0/1	    0/0 	1/0 	0/0 	0/1 	0/0 	1/0 	0/0	    0/1 	0/0 	1/0 	0/0 	1/0	    0/0 	1/0	    0/0 	1/0	    0/0
-    1	    865627	.	G	A	.	    .   	EFF=MIS	GT  	0/0 	1/0 	0/1	    0/0 	0/0 	1/0 	0/1 	0/0 	0/0 	1/1	    0/1 	1/0 	0/0 	1/1 	1/0	    0/0 	0/0	    1/1 	1/0	    1/0
-    1	    865664	.	G	A	.	    .   	EFF=SYN	GT  	0/1 	0/0 	0/1	    0/0 	0/1 	0/0 	0/0 	0/1 	0/1 	0/0	    0/1 	0/0 	0/1 	0/0 	0/1	    0/0 	0/1	    0/0 	0/0	    0/1
-    1	    865691	.	C	T	.	    .   	EFF=MIS	GT  	1/0 	1/0 	0/1	    0/0 	1/0 	1/0 	0/1 	0/0 	1/0 	1/1	    0/1 	0/1 	1/0 	1/1 	1/0	    1/0 	1/0	    1/1 	0/1	    0/1
+    chr1    4     	.	C	T	.	    .   	EFF=SYN	GT  	1/1 	0/0 	0/1	    0/1 	1/1 	0/0 	0/1 	0/1 	1/1 	0/0	    0/1 	0/1 	1/1 	0/0 	0/1	    0/1 	1/1	    0/0 	1/0	    0/1
+    chr1    13   	.	G	A	.	    .   	EFF=SYN	GT  	0/0 	1/1 	0/1	    0/1 	0/0 	1/1 	1/0 	0/1 	0/0 	1/1	    0/1 	0/1 	0/0 	1/1 	0/1	    0/1 	0/0	    1/1 	1/0	    0/1
+    chr1    15  	.	G	A	.	    .   	EFF=MIS	GT  	1/0 	0/0 	0/1	    0/0 	1/0 	0/0 	0/1 	0/0 	1/0 	0/0	    0/1 	0/0 	1/0 	0/0 	1/0	    0/0 	1/0	    0/0 	1/0	    0/0
+    chr1    23   	.	G	A	.	    .   	EFF=MIS	GT  	0/0 	1/0 	0/1	    0/0 	0/0 	1/0 	0/1 	0/0 	0/0 	1/1	    0/1 	1/0 	0/0 	1/1 	1/0	    0/0 	0/0	    1/1 	1/0	    1/0
+    chr1    44   	.	G	A	.	    .   	EFF=SYN	GT  	0/1 	0/0 	0/1	    0/0 	0/1 	0/0 	0/0 	0/1 	0/1 	0/0	    0/1 	0/0 	0/1 	0/0 	0/1	    0/0 	0/1	    0/0 	0/0	    0/1
+    chr1    55   	.	C	T	.	    .   	EFF=MIS	GT  	1/0 	1/0 	0/1	    0/0 	1/0 	1/0 	0/1 	0/0 	1/0 	1/1	    0/1 	0/1 	1/0 	1/1 	1/0	    1/0 	1/0	    1/1 	0/1	    0/1
     """) # noqa
 
     return vcf_path
@@ -263,12 +263,12 @@ def multivcf_missing1(tmp_path_factory: pytest.TempPathFactory) -> Path:
     ##fileformat=VCFv4.2
     ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
     ##INFO=<ID=EFF,Number=1,Type=String,Description="Effect">
-    ##contig=<ID=1>
+    ##contig=<ID=chr1>
     #CHROM	POS	    ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	f1.mom	f1.dad	f1.p1	f1.s1	f2.mom	f2.dad	f2.p1	f2.s1	f3.mom	f3.dad	f3.p1	f3.s1
-    1	    865582	.	C	T	.	    .	    EFF=SYN	GT  	1/1 	0/0 	0/1 	0/1	    1/1 	0/0 	0/1 	0/1 	1/1 	0/0 	0/1 	0/1
-    1	    865627	.	G	A	.	    .	    EFF=MIS	GT  	0/0 	1/0 	0/1 	0/0	    0/0 	1/0 	0/1 	0/0 	0/0 	1/1 	0/1 	1/0
-    1	    865664	.	G	A	.	    .	    EFF=SYN	GT  	0/1 	0/0 	0/1 	0/0	    0/1 	0/0 	0/0 	0/1 	0/1 	0/0 	0/1 	0/0
-    1	    865691	.	C	T	.	    .	    EFF=MIS	GT  	1/0 	1/0 	0/1 	0/0	    1/0 	1/0 	0/1 	0/0 	1/0 	1/1 	0/1 	0/1
+    chr1	1   	.	C	T	.	    .	    EFF=SYN	GT  	1/1 	0/0 	0/1 	0/1	    1/1 	0/0 	0/1 	0/1 	1/1 	0/0 	0/1 	0/1
+    chr1	24  	.	G	A	.	    .	    EFF=MIS	GT  	0/0 	1/0 	0/1 	0/0	    0/0 	1/0 	0/1 	0/0 	0/0 	1/1 	0/1 	1/0
+    chr1	44  	.	G	A	.	    .	    EFF=SYN	GT  	0/1 	0/0 	0/1 	0/0	    0/1 	0/0 	0/0 	0/1 	0/1 	0/0 	0/1 	0/0
+    chr1	54  	.	C	T	.	    .	    EFF=MIS	GT  	1/0 	1/0 	0/1 	0/0	    1/0 	1/0 	0/1 	0/0 	1/0 	1/1 	0/1 	0/1
     """) # noqa
     return vcf_path
 
@@ -280,14 +280,14 @@ def multivcf_missing2(tmp_path_factory: pytest.TempPathFactory) -> Path:
     ##fileformat=VCFv4.2
     ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
     ##INFO=<ID=EFF,Number=1,Type=String,Description="Effect">
-    ##contig=<ID=1>
+    ##contig=<ID=chr1>
     #CHROM	POS	      ID  REF	ALT	    QUAL	FILTER	INFO	FORMAT	f4.mom	f4.dad	f4.p1	f4.s1	f5.mom	f5.dad	f5.p1	f5.s1
-    1	    865582	  .	  C	    T	    .   	.	    EFF=SYN	GT  	1/1 	0/0 	0/1	    0/1 	1/1	    0/0 	1/0	    0/1
-    1	    865583	  .	  G	    A	    .   	.	    EFF=SYN	GT  	0/0 	1/1 	0/1	    0/1 	0/0	    1/1 	1/0 	0/1
-    1	    865624	  .	  G	    A	    .   	.	    EFF=MIS	GT  	1/0 	0/0 	1/0	    0/0 	1/0	    0/0 	1/0	    0/0
-    1	    865627	  .	  G	    A	    .   	.	    EFF=MIS	GT  	0/0 	1/1 	1/0	    0/0 	0/0	    1/1 	1/0	    1/0
-    1	    865664	  .	  G	    A	    .   	.	    EFF=SYN	GT  	0/1 	0/0 	0/1	    0/0 	0/1	    0/0 	0/0 	0/1
-    1	    865691	  .	  C     T	    .   	.	    EFF=MIS	GT  	1/0 	1/1 	1/0	    1/0 	1/0	    1/1 	0/1	    0/1
+    chr1    1     	  .	  C	    T	    .   	.	    EFF=SYN	GT  	1/1 	0/0 	0/1	    0/1 	1/1	    0/0 	1/0	    0/1
+    chr1    4  	      .	  G	    A	    .   	.	    EFF=SYN	GT  	0/0 	1/1 	0/1	    0/1 	0/0	    1/1 	1/0 	0/1
+    chr1    15  	  .	  G	    A	    .   	.	    EFF=MIS	GT  	1/0 	0/0 	1/0	    0/0 	1/0	    0/0 	1/0	    0/0
+    chr1    24  	  .	  G	    A	    .   	.	    EFF=MIS	GT  	0/0 	1/1 	1/0	    0/0 	0/0	    1/1 	1/0	    1/0
+    chr1    44   	  .	  G	    A	    .   	.	    EFF=SYN	GT  	0/1 	0/0 	0/1	    0/0 	0/1	    0/0 	0/0 	0/1
+    chr1    54  	  .	  C     T	    .   	.	    EFF=MIS	GT  	1/0 	1/1 	1/0	    1/0 	1/0	    1/1 	0/1	    0/1
     """) # noqa
     return vcf_path
 
@@ -350,12 +350,12 @@ def test_multivcf_loader_fill_missing(
     assert all((gt2_f2 == gt2_f1_f2_f3_expected).flatten())
     assert all((gt2_f3 == gt2_f1_f2_f3_expected).flatten())
     assert all((gt2_f5 == gt2_f5_expected).flatten())
-    assert svs_fvs[0][0].ref_allele.position == 865582
-    assert svs_fvs[1][0].ref_allele.position == 865583
-    assert svs_fvs[2][0].ref_allele.position == 865624
-    assert svs_fvs[3][0].ref_allele.position == 865627
-    assert svs_fvs[4][0].ref_allele.position == 865664
-    assert svs_fvs[5][0].ref_allele.position == 865691
+    assert svs_fvs[0][0].ref_allele.position == 1
+    assert svs_fvs[1][0].ref_allele.position == 4
+    assert svs_fvs[2][0].ref_allele.position == 15
+    assert svs_fvs[3][0].ref_allele.position == 24
+    assert svs_fvs[4][0].ref_allele.position == 44
+    assert svs_fvs[5][0].ref_allele.position == 54
 
 
 # @pytest.mark.parametrize(
@@ -422,7 +422,7 @@ def test_collect_filenames_s3(
     vcf_filenames = ["s3://test-bucket/dir/multivcf_split[vc].vcf"]
 
     params = {
-        "vcf_chromosomes": "1;2;3;4;5;6;7;8;9;10;11;12;13;14;15;16;17;18;X;Y"
+        "vcf_chromosomes": "1;2;3;4;5;6;7;8;9;10"
     }
     all_filenames, _ = VcfLoader._collect_filenames(params, vcf_filenames)
 
@@ -455,21 +455,21 @@ def multi_contig_vcf(
     vcf_path = setup_vcf(root_path / "vcf_data" / "in.vcf", """
     ##fileformat=VCFv4.2
     ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
-    ##contig=<ID=1>
-    ##contig=<ID=2>
-    ##contig=<ID=3>
-    ##contig=<ID=4>
+    ##contig=<ID=chr1>
+    ##contig=<ID=chr2>
+    ##contig=<ID=chr3>
+    ##contig=<ID=chr4>
     #CHROM	POS	    ID	REF	ALT	        QUAL	FILTER	INFO	FORMAT	mom	dad	ch1	ch2	ch3	gma	gpa
-    1   	11539	.	T	G,A	        .	    .   	.   	GT  	0/0	0/0	0/0	0/0	0/0	0/0	0/0
-    1   	11540	.	T	G,A	        .	    .   	.   	GT  	0/2	0/0	0/0	0/0	0/0	0/0	0/0
-    1   	11541	.	T	G,A	        .	    .   	.   	GT  	./.	./.	./.	./.	./.	./.	./.
-    2   	11542	.	T	G,A	        .	    .   	.   	GT  	0/1	0/0	0/0	0/0	0/2	0/0	0/0
-    3   	11543	.	T	G,A	        .	    .   	.   	GT  	0/0	0/0	./.	0/0	0/0	0/0	0/0
-    3   	11544	.	T	G	        .	    .   	.   	GT  	0/0	0/0	./.	0/0	0/0	0/0	0/0
-    3   	11545	.	T	G	        .	    .   	.   	GT  	0/0	0/0	./.	0/0	0/1	0/0	0/0
-    4   	11546	.	T	G	        .	    .   	.   	GT  	0/0	0/0	0/0	1/1	0/1	0/0	0/0
-    4   	11547	.	T	G	        .	    .   	.   	GT  	0/0	0/0	0/0	0/1	0/0	0/0	1/1
-    4   	11548	.	T	GA,AA,CA,CC	.	    .   	.   	GT  	2/3	2/2	2/2	2/2	2/2	2/2	2/2
+    chr1   	3   	.	T	G,A	        .	    .   	.   	GT  	0/0	0/0	0/0	0/0	0/0	0/0	0/0
+    chr1   	13  	.	T	G,A	        .	    .   	.   	GT  	0/2	0/0	0/0	0/0	0/0	0/0	0/0
+    chr1   	15  	.	T	G,A	        .	    .   	.   	GT  	./.	./.	./.	./.	./.	./.	./.
+    chr2   	16  	.	T	G,A	        .	    .   	.   	GT  	0/1	0/0	0/0	0/0	0/2	0/0	0/0
+    chr3   	23  	.	T	G,A	        .	    .   	.   	GT  	0/0	0/0	./.	0/0	0/0	0/0	0/0
+    chr3   	25  	.	T	G	        .	    .   	.   	GT  	0/0	0/0	./.	0/0	0/0	0/0	0/0
+    chr3   	29   	.	T	G	        .	    .   	.   	GT  	0/0	0/0	./.	0/0	0/1	0/0	0/0
+    chr4   	44  	.	T	G	        .	    .   	.   	GT  	0/0	0/0	0/0	1/1	0/1	0/0	0/0
+    chr4   	55   	.	T	G	        .	    .   	.   	GT  	0/0	0/0	0/0	0/1	0/0	0/0	1/1
+    chr4   	95  	.	T	GA,AA,CA,CC	.	    .   	.   	GT  	2/3	2/2	2/2	2/2	2/2	2/2	2/2
     """) # noqa
 
     return vcf_path
@@ -483,21 +483,21 @@ def multi_contig_vcf_gz(
     vcf_path = setup_vcf(root_path / "vcf_data" / "in.vcf.gz", """
     ##fileformat=VCFv4.2
     ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
-    ##contig=<ID=1>
-    ##contig=<ID=2>
-    ##contig=<ID=3>
-    ##contig=<ID=4>
+    ##contig=<ID=chr1>
+    ##contig=<ID=chr2>
+    ##contig=<ID=chr3>
+    ##contig=<ID=chr4>
     #CHROM	POS	    ID	REF	ALT	        QUAL	FILTER	INFO	FORMAT	mom	dad	ch1	ch2	ch3	gma	gpa
-    1   	11539	.	T	G,A	        .	    .   	.   	GT  	0/0	0/0	0/0	0/0	0/0	0/0	0/0
-    1   	11540	.	T	G,A	        .	    .   	.   	GT  	0/2	0/0	0/0	0/0	0/0	0/0	0/0
-    1   	11541	.	T	G,A	        .	    .   	.   	GT  	./.	./.	./.	./.	./.	./.	./.
-    2   	11542	.	T	G,A	        .	    .   	.   	GT  	0/1	0/0	0/0	0/0	0/2	0/0	0/0
-    3   	11543	.	T	G,A	        .	    .   	.   	GT  	0/0	0/0	./.	0/0	0/0	0/0	0/0
-    3   	11544	.	T	G	        .	    .   	.   	GT  	0/0	0/0	./.	0/0	0/0	0/0	0/0
-    3   	11545	.	T	G	        .	    .   	.   	GT  	0/0	0/0	./.	0/0	0/1	0/0	0/0
-    4   	11546	.	T	G	        .	    .   	.   	GT  	0/0	0/0	0/0	1/1	0/1	0/0	0/0
-    4   	11547	.	T	G	        .	    .   	.   	GT  	0/0	0/0	0/0	0/1	0/0	0/0	1/1
-    4   	11548	.	T	GA,AA,CA,CC	.	    .   	.   	GT  	2/3	2/2	2/2	2/2	2/2	2/2	2/2
+    chr1   	3 	    .	T	G,A	        .	    .   	.   	GT  	0/0	0/0	0/0	0/0	0/0	0/0	0/0
+    chr1   	13	    .	T	G,A	        .	    .   	.   	GT  	0/2	0/0	0/0	0/0	0/0	0/0	0/0
+    chr1   	15  	.	T	G,A	        .	    .   	.   	GT  	./.	./.	./.	./.	./.	./.	./.
+    chr2   	16  	.	T	G,A	        .	    .   	.   	GT  	0/1	0/0	0/0	0/0	0/2	0/0	0/0
+    chr3   	23  	.	T	G,A	        .	    .   	.   	GT  	0/0	0/0	./.	0/0	0/0	0/0	0/0
+    chr3   	25  	.	T	G	        .	    .   	.   	GT  	0/0	0/0	./.	0/0	0/0	0/0	0/0
+    chr3   	29  	.	T	G	        .	    .   	.   	GT  	0/0	0/0	./.	0/0	0/1	0/0	0/0
+    chr4   	44  	.	T	G	        .	    .   	.   	GT  	0/0	0/0	0/0	1/1	0/1	0/0	0/0
+    chr4   	55  	.	T	G	        .	    .   	.   	GT  	0/0	0/0	0/0	0/1	0/0	0/0	1/1
+    chr4   	95  	.	T	GA,AA,CA,CC	.	    .   	.   	GT  	2/3	2/2	2/2	2/2	2/2	2/2	2/2
     """) # noqa
 
     return vcf_path
@@ -535,16 +535,16 @@ def multi_contig_chr_vcf(
     ##contig=<ID=chr3>
     ##contig=<ID=chr4>
     #CHROM	POS 	ID	REF	ALT	        QUAL	FILTER	INFO	FORMAT	mom	dad	ch1	ch2	ch3	gma	gpa
-    chr1	11539	.	T	G,A	        .	    .   	.   	GT  	0/0	0/0	0/0	0/0	0/0	0/0	0/0
-    chr1	11540	.	T	G,A	        .	    .   	.   	GT  	0/2	0/0	0/0	0/0	0/0	0/0	0/0
-    chr1	11541	.	T	G,A	        .	    .   	.   	GT  	./.	./.	./.	./.	./.	./.	./.
-    chr2	11542	.	T	G,A	        .	    .   	.   	GT  	0/1	0/0	0/0	0/0	0/2	0/0	0/0
-    chr3	11543	.	T	G,A	        .	    .   	.   	GT  	0/0	0/0	./.	0/0	0/0	0/0	0/0
-    chr3	11544	.	T	G	        .	    .   	.   	GT  	0/0	0/0	./.	0/0	0/0	0/0	0/0
-    chr3	11545	.	T	G	        .	    .   	.   	GT  	0/0	0/0	./.	0/0	0/1	0/0	0/0
-    chr4	11546	.	T	G	        .	    .   	.   	GT  	0/0	0/0	0/0	1/1	0/1	0/0	0/0
-    chr4	11547	.	T	G	        .	    .   	.   	GT  	0/0	0/0	0/0	0/1	0/0	0/0	1/1
-    chr4	11548	.	T	GA,AA,CA,CC	.	    .   	.   	GT  	2/3	2/2	2/2	2/2	2/2	2/2	2/2
+    chr1	3  	    .	T	G,A	        .	    .   	.   	GT  	0/0	0/0	0/0	0/0	0/0	0/0	0/0
+    chr1	13  	.	T	G,A	        .	    .   	.   	GT  	0/2	0/0	0/0	0/0	0/0	0/0	0/0
+    chr1	15  	.	T	G,A	        .	    .   	.   	GT  	./.	./.	./.	./.	./.	./.	./.
+    chr2	16  	.	T	G,A	        .	    .   	.   	GT  	0/1	0/0	0/0	0/0	0/2	0/0	0/0
+    chr3	23  	.	T	G,A	        .	    .   	.   	GT  	0/0	0/0	./.	0/0	0/0	0/0	0/0
+    chr3	25   	.	T	G	        .	    .   	.   	GT  	0/0	0/0	./.	0/0	0/0	0/0	0/0
+    chr3	29   	.	T	G	        .	    .   	.   	GT  	0/0	0/0	./.	0/0	0/1	0/0	0/0
+    chr4	44   	.	T	G	        .	    .   	.   	GT  	0/0	0/0	0/0	1/1	0/1	0/0	0/0
+    chr4	55  	.	T	G	        .	    .   	.   	GT  	0/0	0/0	0/0	0/1	0/0	0/0	1/1
+    chr4	95  	.	T	GA,AA,CA,CC	.	    .   	.   	GT  	2/3	2/2	2/2	2/2	2/2	2/2	2/2
     """) # noqa
 
     return vcf_path
@@ -563,16 +563,16 @@ def multi_contig_chr_vcf_gz(
     ##contig=<ID=chr3>
     ##contig=<ID=chr4>
     #CHROM	POS 	ID	REF	ALT	        QUAL	FILTER	INFO	FORMAT	mom	dad	ch1	ch2	ch3	gma	gpa
-    chr1	11539	.	T	G,A	        .	    .   	.   	GT  	0/0	0/0	0/0	0/0	0/0	0/0	0/0
-    chr1	11540	.	T	G,A	        .	    .   	.   	GT  	0/2	0/0	0/0	0/0	0/0	0/0	0/0
-    chr1	11541	.	T	G,A	        .	    .   	.   	GT  	./.	./.	./.	./.	./.	./.	./.
-    chr2	11542	.	T	G,A	        .	    .   	.   	GT  	0/1	0/0	0/0	0/0	0/2	0/0	0/0
-    chr3	11543	.	T	G,A	        .	    .   	.   	GT  	0/0	0/0	./.	0/0	0/0	0/0	0/0
-    chr3	11544	.	T	G	        .	    .   	.   	GT  	0/0	0/0	./.	0/0	0/0	0/0	0/0
-    chr3	11545	.	T	G	        .	    .   	.   	GT  	0/0	0/0	./.	0/0	0/1	0/0	0/0
-    chr4	11546	.	T	G	        .	    .   	.   	GT  	0/0	0/0	0/0	1/1	0/1	0/0	0/0
-    chr4	11547	.	T	G	        .	    .   	.   	GT  	0/0	0/0	0/0	0/1	0/0	0/0	1/1
-    chr4	11548	.	T	GA,AA,CA,CC	.	    .   	.   	GT  	2/3	2/2	2/2	2/2	2/2	2/2	2/2
+    chr1	3    	.	T	G,A	        .	    .   	.   	GT  	0/0	0/0	0/0	0/0	0/0	0/0	0/0
+    chr1	13   	.	T	G,A	        .	    .   	.   	GT  	0/2	0/0	0/0	0/0	0/0	0/0	0/0
+    chr1	15    	.	T	G,A	        .	    .   	.   	GT  	./.	./.	./.	./.	./.	./.	./.
+    chr2	16  	.	T	G,A	        .	    .   	.   	GT  	0/1	0/0	0/0	0/0	0/2	0/0	0/0
+    chr3	23   	.	T	G,A	        .	    .   	.   	GT  	0/0	0/0	./.	0/0	0/0	0/0	0/0
+    chr3	25   	.	T	G	        .	    .   	.   	GT  	0/0	0/0	./.	0/0	0/0	0/0	0/0
+    chr3	29    	.	T	G	        .	    .   	.   	GT  	0/0	0/0	./.	0/0	0/1	0/0	0/0
+    chr4	44    	.	T	G	        .	    .   	.   	GT  	0/0	0/0	0/0	1/1	0/1	0/0	0/0
+    chr4	55     	.	T	G	        .	    .   	.   	GT  	0/0	0/0	0/0	0/1	0/0	0/0	1/1
+    chr4	95  	.	T	GA,AA,CA,CC	.	    .   	.   	GT  	2/3	2/2	2/2	2/2	2/2	2/2	2/2
     """) # noqa
 
     return vcf_path
@@ -587,7 +587,7 @@ def test_chromosomes_have_adjusted_chrom_add_prefix(
     vcf = multi_contig_vcf
     loader = simple_vcf_loader(ped, vcf, {"add_chrom_prefix": "chr"})
 
-    assert loader.chromosomes == ["chr1", "chr2", "chr3", "chr4"]
+    assert loader.chromosomes == ["chrchr1", "chrchr2", "chrchr3", "chrchr4"]
 
 
 def test_chromosomes_have_adjusted_chrom_del_prefix(
@@ -645,7 +645,7 @@ def test_reset_regions_with_adjusted_chrom_add_prefix(
     vcf = multi_contig_vcf_gz
 
     loader = simple_vcf_loader(ped, vcf, {"add_chrom_prefix": "chr"})
-    regions = ["chr1", "chr2"]
+    regions = ["chrchr1", "chrchr2"]
 
     loader.reset_regions(regions)
 

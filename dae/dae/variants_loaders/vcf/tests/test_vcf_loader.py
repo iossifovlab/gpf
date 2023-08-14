@@ -41,11 +41,11 @@ def quads_f1_vcf(tmp_path_factory: pytest.TempPathFactory) -> Path:
     vcf_path = setup_vcf(root_path / "vcf_data" / "in.vcf", """
     ##fileformat=VCFv4.2
     ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
-    ##contig=<ID=1>
-    ##contig=<ID=2>
+    ##contig=<ID=chr1>
+    ##contig=<ID=chr2>
     #CHROM	POS	    ID	REF	ALT	QUAL  FILTER  INFO	FORMAT	mom1  dad1	prb1  sib1
-    1	    11539	.	T	G	.	  .	      .	    GT	    0/1	  0/0	0/1	  0/0
-    2	    11540	.	T	G	.	  .	      .	    GT	    0/0	  0/1	0/1	  0/0
+    chr1    4    	.	T	G	.	  .	      .	    GT	    0/1	  0/0	0/1	  0/0
+    chr2    24   	.	T	G	.	  .	      .	    GT	    0/0	  0/1	0/1	  0/0
     """)
     return vcf_path
 
@@ -120,36 +120,6 @@ def vcf_variants_loaders(
     return builder
 
 
-def test_vcf_loader(
-    request: pytest.FixtureRequest,
-    gpf_instance: GPFInstance
-) -> None:
-    prefix, pedigree, vcf = ("quads_f1", "quads_f1_ped", "quads_f1_vcf")
-    pedigree_path = request.getfixturevalue(pedigree)
-    vcf_path = request.getfixturevalue(vcf)
-    conf = vcf_loader_data(prefix, pedigree_path, vcf_path)
-    print(conf)
-    families_loader = FamiliesLoader(conf.pedigree)
-    families = families_loader.load()
-
-    loader = VcfLoader(
-        families,
-        [conf.vcf],
-        gpf_instance.reference_genome,
-        params={
-            "vcf_include_reference_genotypes": True,
-            "vcf_include_unknown_family_genotypes": True,
-            "vcf_include_unknown_person_genotypes": True,
-        },
-    )
-    assert loader is not None
-
-    vars_new = list(loader.family_variants_iterator())
-
-    for nfv in vars_new:
-        print(nfv)
-
-
 # def test_transform_vcf_genotype():
 #     genotypes = [
 #         [0, 0, False],
@@ -194,11 +164,11 @@ def inheritance_trio_denovo_omission_vcf(
     ##fileformat=VCFv4.2
     ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
     ##INFO=<ID=INH,Number=1,Type=String,Description="Inheritance">
-    ##contig=<ID=1>
+    ##contig=<ID=chr1>
     #CHROM	POS	    ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	mom1	dad1	ch1
-    1	    11515	.	T	G	.	    .   	INH=OMI	GT	    0/0 	1/0 	1/1
-    1	    11523	.	T	G	.	    .   	INH=DEN	GT	    1/1 	1/1 	1/0
-    1	    11524	.	T	G	.	    .   	INH=DEN	GT	    1/1 	1/1 	0/1
+    chr1	1   	.	T	G	.	    .   	INH=OMI	GT	    0/0 	1/0 	1/1
+    chr1	5   	.	T	G	.	    .   	INH=DEN	GT	    1/1 	1/1 	1/0
+    chr1	12  	.	T	G	.	    .   	INH=DEN	GT	    1/1 	1/1 	0/1
     """)
 
     return vcf_path
@@ -232,7 +202,7 @@ def test_vcf_denovo_mode(
     }
     vcf_loader = VcfLoader(
         families,
-        [f"{str(inheritance_trio_denovo_omission_vcf)}"],
+        [f"{inheritance_trio_denovo_omission_vcf}"],
         gpf_instance.reference_genome,
         params=params,
     )
@@ -321,15 +291,15 @@ def f1_test_vcf(
     ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
     ##INFO=<ID=EFF,Number=1,Type=String,Description="Effect">
     ##INFO=<ID=INH,Number=1,Type=String,Description="Inheritance">
-    ##contig=<ID=1>
-    #CHROM	POS	    ID	REF	ALT	QUAL	FILTER	INFO	            FORMAT	mom1	dad1	ch1	  ch2
-    1	    878152	.	C	T,A	.	    .	    EFF=SYN!MIS;INH=MIX	GT  	0/0 	0/1 	0/1	  0/2
-    1	    901923	.	C	T,A	.	    .	    EFF=SYN!MIS;INH=UKN	GT  	./. 	./. 	./.	  ./.
-    1	    905951	.	G	A,T	.	    .	    EFF=SYN!MIS;INH=MIX	GT	    0/0 	0/0	    ./.	  0/0
-    1	    905957	.	C	T,A	.	    .	    EFF=SYN!MIS;INH=DEN	GT	    0/0 	0/0	    0/1	  0/0
-    1	    905966	.	A	G,T	.	    .	    EFF=SYN!MIS;INH=OMI	GT	    1/1 	0/0 	0/1	  0/0
-    1	    906086	.	G	A,T	.	    .	    EFF=SYN!MIS;INH=MIX	GT	    1/0 	0/0 	0/.	  0/2
-    1	    906092	.	T	C,A	.	    .	    EFF=SYN!MIS;INH=OMI	GT	    1/1 	2/2 	1/1	  2/2
+    ##contig=<ID=chr1>
+    #CHROM	POS	 ID	REF	ALT	QUAL	FILTER	INFO	            FORMAT	mom1	dad1	ch1	  ch2
+    1	    2    .	C	T,A	.	    .	    EFF=SYN!MIS;INH=MIX	GT  	0/0 	0/1 	0/1	  0/2
+    chr1    15   .	C	T,A	.	    .	    EFF=SYN!MIS;INH=UKN	GT  	./. 	./. 	./.	  ./.
+    chr1    20   .	G	A,T	.	    .	    EFF=SYN!MIS;INH=MIX	GT	    0/0 	0/0	    ./.	  0/0
+    chr1    55   .	C	T,A	.	    .	    EFF=SYN!MIS;INH=DEN	GT	    0/0 	0/0	    0/1	  0/0
+    chr1    70   .	A	G,T	.	    .	    EFF=SYN!MIS;INH=OMI	GT	    1/1 	0/0 	0/1	  0/0
+    chr1    77   .	G	A,T	.	    .	    EFF=SYN!MIS;INH=MIX	GT	    1/0 	0/0 	0/.	  0/2
+    chr1    97   .	T	C,A	.	    .	    EFF=SYN!MIS;INH=OMI	GT	    1/1 	2/2 	1/1	  2/2
     """) # noqa
 
     return vcf_path
@@ -380,19 +350,20 @@ def simple_family_vcf(tmp_path_factory: pytest.TempPathFactory) -> Path:
     vcf_path = setup_vcf(root_path / "vcf_data" / "in.vcf", """
     ##fileformat=VCFv4.2
     ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
-    ##contig=<ID=1>
-    #CHROM	POS	    ID	REF	ALT	        QUAL	FILTER	INFO	FORMAT	mom	dad	ch1	ch2	ch3	gma	gpa
-    1	    11539	.	T	G,A	        .   	.   	.   	GT  	0/0	0/0	0/0	0/0	0/0	0/0	0/0
-    1	    11540	.	T	G,A	        .   	.   	.   	GT  	0/2	0/0	0/0	0/0	0/0	0/0	0/0
-    1	    11541	.	T	G,A	        .   	.   	.   	GT  	./.	./.	./.	./.	./.	./.	./.
-    1	    11542	.	C	G,A	        .   	.   	.   	GT  	0/1	0/0	0/0	0/0	0/2	0/0	0/0
-    1	    11543	.	T	G,A	        .   	.   	.   	GT  	0/0	0/0	./.	0/0	0/0	0/0	0/0
-    1	    11544	.	T	G	        .   	.   	.   	GT  	0/0	0/0	./.	0/0	0/0	0/0	0/0
-    1	    11545	.	A	G	        .   	.   	.   	GT  	0/0	0/0	./.	0/0	0/1	0/0	0/0
-    1	    11546	.	T	G	        .   	.   	.   	GT  	0/0	0/0	0/0	1/1	0/1	0/0	0/0
-    1	    11547	.	C	G	        .   	.   	.   	GT  	0/0	0/0	0/0	0/1	0/0	0/0	1/1
-    1	    11548	.	T	GA,AA,CA,CC	.   	.   	.   	GT  	2/3	2/2	2/1	2/2	2/2	2/2	2/2
+    ##contig=<ID=chr1>
+    #CHROM	POS	ID	REF	ALT	        QUAL	FILTER	INFO	FORMAT	mom	dad	ch1	ch2	ch3	gma	gpa
+    chr1    1   .	T	G,A	        .   	.   	.   	GT  	0/0	0/0	0/0	0/0	0/0	0/0	0/0
+    chr1    11  .	T	G,A	        .   	.   	.   	GT  	0/2	0/0	0/0	0/0	0/0	0/0	0/0
+    chr1    14  .	T	G,A	        .   	.   	.   	GT  	./.	./.	./.	./.	./.	./.	./.
+    chr1    23  .	C	G,A	        .   	.   	.   	GT  	0/1	0/0	0/0	0/0	0/2	0/0	0/0
+    chr1    34  .	T	G,A	        .   	.   	.   	GT  	0/0	0/0	./.	0/0	0/0	0/0	0/0
+    chr1    42  .	T	G	        .   	.   	.   	GT  	0/0	0/0	./.	0/0	0/0	0/0	0/0
+    chr1    50  .	A	G	        .   	.   	.   	GT  	0/0	0/0	./.	0/0	0/1	0/0	0/0
+    chr1    55  .	T	G	        .   	.   	.   	GT  	0/0	0/0	0/0	1/1	0/1	0/0	0/0
+    chr1    64  .	C	G	        .   	.   	.   	GT  	0/0	0/0	0/0	0/1	0/0	0/0	1/1
+    chr1    77  .	T	GA,AA,CA,CC	.   	.   	.   	GT  	2/3	2/2	2/1	2/2	2/2	2/2	2/2
     """) # noqa
+
     return vcf_path
 
 
