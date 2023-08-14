@@ -1,4 +1,5 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+from typing import Any
 
 import yaml
 import numpy as np
@@ -6,7 +7,7 @@ import pytest
 
 from dae.genomic_resources.histogram import NumberHistogram, \
     NumberHistogramConfig, CategoricalHistogram, CategoricalHistogramConfig, \
-    HistogramError
+    HistogramError, build_histogram_config
 
 
 def test_histogram_simple_input() -> None:
@@ -307,3 +308,29 @@ def test_categorical_histogram_merge_raises() -> None:
         hist2.add_value(f"value{i+50}")
     with pytest.raises(HistogramError):
         hist1.merge(hist2)
+
+
+@pytest.mark.parametrize("conf", [
+    {
+        "number_hist": {}
+    },
+    {
+        "histogram": {"type": "number"}
+    },
+])
+def test_build_number_histogram_config(conf: dict[str, Any]) -> None:
+    hist_conf = build_histogram_config(conf)
+    assert isinstance(hist_conf, NumberHistogramConfig)
+
+
+@pytest.mark.parametrize("conf", [
+    {
+        "categorical_hist": {}
+    },
+    {
+        "histogram": {"type": "categorical"}
+    },
+])
+def test_build_categorical_histogram_config(conf: dict[str, Any]) -> None:
+    hist_conf = build_histogram_config(conf)
+    assert isinstance(hist_conf, CategoricalHistogramConfig)

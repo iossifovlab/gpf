@@ -41,6 +41,9 @@
   - md5: 77547fdd631548808bd6f733e39b9a37
     name: genomic_resource.yaml
     size: 606
+  - md5: baae95d247c148c7027dc2dbcb7e75b2
+    name: index.html
+    size: 3809
   - md5: 79ab6b898617b641b4a86dc1f138fbb5
     name: statistics/histogram_cadd_phred.png
     size: 18985
@@ -80,6 +83,9 @@
   - md5: ed67a675e3f2d06a4f0736ca535a00f9
     name: genomic_resource.yaml
     size: 192
+  - md5: c1bb65c548a6208471b5c844207b491c
+    name: index.html
+    size: 2488
   - md5: a42701941f92c7b999a4f8f26e4a3a47
     name: refGene201309.txt
     size: 3761
@@ -120,6 +126,9 @@
   - md5: bd5e747b25ab3eca4dafef208c8c2cbf
     name: genomic_resource.yaml
     size: 302
+  - md5: 480bea600c85e87dd69daa97c54bafbc
+    name: index.html
+    size: 3913
   - md5: 498eb0e860af29958bef946235b0e1db
     name: statistics/1_statistic.yaml
     size: 313
@@ -186,6 +195,9 @@
   - md5: 558273e259dee3322accc97e92e9d7d1
     name: histograms/MPC.png
     size: 8667
+  - md5: 091af24e3bac5182ee190361278983dd
+    name: index.html
+    size: 3521
   - md5: c5bccdbfe3dc20fc06699476cfd3e5ca
     name: statistics/histogram_MPC.png
     size: 10251
@@ -238,6 +250,9 @@
   - md5: 40bd340e93401645f87c7c41f571ce19
     name: genomic_resource.yaml
     size: 593
+  - md5: 4f3be32d08e2b88557366215077f030d
+    name: index.html
+    size: 5241
   - md5: 093c47435b7440def543b99758a92afe
     name: scores1.tsv.gz
     size: 367
@@ -305,6 +320,9 @@
   - md5: 34cec79415c90ddb81028b496d90e134
     name: genomic_resource.yaml
     size: 412
+  - md5: b017f9154b86bc69c9a58a73de54b73e
+    name: index.html
+    size: 3480
   - md5: 28ee47e15cc15c1b8881cd453cdefc7d
     name: scores_incomplete_coverage.tsv.gz
     size: 176
@@ -359,6 +377,9 @@
   - md5: dae62103e1256179406f5b4e086c8d53
     name: genomic_resource.yaml
     size: 516
+  - md5: 53b1b48c1a27fd0ffa78be32cb281399
+    name: index.html
+    size: 2840
   - md5: 00c69ea8fae8ab8445ff64616b8cc07a
     name: phastCons100.bedGraph.gz
     size: 2556019
@@ -395,6 +416,9 @@
   - md5: 81951889cca5c55bb9a63b8d8aff00a3
     name: genomic_resource.yaml
     size: 200
+  - md5: cd8fee7ba4ad330cda808343de083487
+    name: index.html
+    size: 2425
   - md5: 05d8bbd9616407e862d82593d5fd1756
     name: refSeq_20200330.txt
     size: 30558
@@ -431,6 +455,9 @@
   - md5: b151ecdcef68d9014ab78823b5147711
     name: genomic_resource.yaml
     size: 339
+  - md5: 4ebd6fa960ce41571a47bd383f0f22f1
+    name: index.html
+    size: 3743
   - md5: 65e05af202b257ce85a2c3194f4179a0
     name: statistics/chr1_statistic.yaml
     size: 324
@@ -486,6 +513,9 @@
   - md5: 6ddfd7783ed4abd33d3e443bfc751350
     name: genomic_resource.yaml
     size: 601
+  - md5: 519130f4d8dd9b760342b33453dd383e
+    name: index.html
+    size: 3805
   - md5: 23329d335421d56e3eead7b1c6cbd900
     name: statistics/histogram_cadd_phred.png
     size: 14459
@@ -546,6 +576,9 @@
   - md5: 5057dfbead3499d29983468e36735f88
     name: genomic_resource.yaml
     size: 544
+  - md5: 82b1b14a035032bfad67c1748013998a
+    name: index.html
+    size: 3779
   - md5: a20bb25abfcdff63f22fbb2087f540d2
     name: statistics/histogram_altFreq.png
     size: 10546
@@ -595,6 +628,9 @@
   - md5: 42cbfe4cf0533ec061117c7013f235dd
     name: genomic_resource.yaml
     size: 415
+  - md5: 196e57321f0aeb39f08ad6b3997a8649
+    name: index.html
+    size: 2759
   - md5: 590e48aff9382edfa3330a072c98c6c5
     name: scores.tsv.gz
     size: 107
@@ -662,6 +698,9 @@
   - md5: 6173d0d671742284f909423144c4f07a
     name: histograms/phastCons100way.png
     size: 8178
+  - md5: ad8610b2b28d1dc19c29df4d2dc69350
+    name: index.html
+    size: 3941
   - md5: 56feb878ed78769d5200702392b8e4b7
     name: scores/phastCons100way.yaml
     size: 583
@@ -692,6 +731,9 @@
   - md5: ff3031d93792f4cbb86af44055efd903
     name: hg38ToHg19.over.chain.gz
     size: 1246411
+  - md5: f3e74a1b862a62264d35ca4880294540
+    name: index.html
+    size: 1507
   - md5: 6a99c575ab87f8c7d1ed1e52e7e349ce
     name: statistics/stats_hash
     size: 11

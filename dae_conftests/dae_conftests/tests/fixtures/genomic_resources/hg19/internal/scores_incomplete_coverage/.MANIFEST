@@ -4,6 +4,9 @@
 - md5: 34cec79415c90ddb81028b496d90e134
   name: genomic_resource.yaml
   size: 412
+- md5: b017f9154b86bc69c9a58a73de54b73e
+  name: index.html
+  size: 3480
 - md5: 28ee47e15cc15c1b8881cd453cdefc7d
   name: scores_incomplete_coverage.tsv.gz
   size: 176

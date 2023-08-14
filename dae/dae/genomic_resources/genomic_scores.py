@@ -32,8 +32,8 @@ from .genomic_position_table.table_inmemory import InmemoryGenomicPositionTable
 from .histogram import HistogramError, NumberHistogram, \
     NumberHistogramConfig, CategoricalHistogramConfig, \
     NullHistogramConfig, CategoricalHistogram, NullHistogram, \
-    load_histogram, create_histogram_from_config, \
-    create_histogram_config_from_dict
+    load_histogram, build_empty_histogram, \
+    build_histogram_config
 from .statistics.min_max import MinMaxValue
 
 from .aggregators import build_aggregator, AGGREGATOR_SCHEMA, Aggregator
@@ -538,10 +538,9 @@ class GenomicScoreImplementation(
         impl = build_score_implementation_from_resource(resource)
         res: dict[str, Any] = {}
         for score_id, score_def in impl.score.score_definitions.items():
-            res[score_id] = create_histogram_from_config(
+            res[score_id] = build_empty_histogram(
                 score_def.hist_conf,
-                score_id=score_id,
-                score_type=score_def.value_type,
+                value_type=score_def.value_type,
                 min_max=save_minmax_task[score_id]
             )
 
@@ -747,6 +746,37 @@ class GenomicScore(ResourceConfigValidationMixin):
                     "na_values": {"type": ["string", "list"]},
                     "large_values_desc": {"type": "string"},
                     "small_values_desc": {"type": "string"},
+                    "number_hist": {"type": "dict", "schema": {
+                        "number_of_bins": {
+                            "type": "number",
+                        },
+                        "view_range": {"type": "dict", "schema": {
+                            "min": {"type": "number"},
+                            "max": {"type": "number"},
+                        }},
+                        "x_log_scale": {
+                            "type": "boolean",
+                        },
+                        "y_log_scale": {
+                            "type": "boolean",
+                        },
+                        "x_min_log": {
+                            "type": "number",
+                        },
+                    }},
+                    "categorical_hist": {"type": "dict", "schema": {
+                        "y_log_scale": {
+                            "type": "boolean",
+                        },
+                        "value_order": {
+                            "type": "list", "schema": {"type": "string"},
+                        },
+                    }},
+                    "null_hist": {"type": "dict", "schema": {
+                        "reason": {
+                            "type": "string",
+                        }
+                    }},
                     "histogram": {"type": "dict", "schema": {
                         "type": {"type": "string"},
                         "number_of_bins": {
@@ -849,9 +879,7 @@ class GenomicScore(ResourceConfigValidationMixin):
             col_index_str = score_conf.get("index")
             col_index = int(col_index_str) if col_index_str else None
 
-            hist_conf = create_histogram_config_from_dict(
-                score_conf.get("histogram")
-            )
+            hist_conf = build_histogram_config(score_conf)
 
             score_def = _ScoreDef(
                 score_id=score_conf["id"],

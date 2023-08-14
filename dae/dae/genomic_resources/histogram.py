@@ -3,10 +3,11 @@
 Currently we support only genomic scores histograms.
 """
 from __future__ import annotations
-from dataclasses import dataclass
 
+import copy
 import logging
 from typing import cast, Optional, Any, BinaryIO, Union
+from dataclasses import dataclass
 
 import yaml
 import numpy as np
@@ -76,10 +77,10 @@ class NumberHistogramConfig:
                 " for number histogram!\n%s",
                 hist_type, parsed
             )
-            #  raise TypeError(
-            #      f"Invalid configuration type ({hist_type})"
-            #      f" for number histogram!\n{parsed}"
-            #  )
+            raise TypeError(
+                "Invalid configuration for number histogram!\n"
+                f"{parsed}"
+            )
         yaml_range = parsed.get("view_range", {})
         x_min = yaml_range.get("min", None)
         x_max = yaml_range.get("max", None)
@@ -360,8 +361,6 @@ class NumberHistogram(Statistic):
     @staticmethod
     def deserialize(data: str) -> NumberHistogram:
         res = yaml.load(data, yaml.Loader)
-        # assert res["config"]["type"] == "number"
-
         config = NumberHistogramConfig.from_dict(res.get("config"))
 
         hist = NumberHistogram(
@@ -537,7 +536,7 @@ class CategoricalHistogram(Statistic):
 #     return NullHistogram(NullHistogramConfig.default_config())
 
 
-def create_histogram_config_from_dict(
+def build_histogram_config(
     config: Optional[dict[str, Any]]) -> Union[
     NumberHistogramConfig, CategoricalHistogramConfig,
     NullHistogramConfig, None
@@ -545,18 +544,35 @@ def create_histogram_config_from_dict(
     """Create histogram config form configuration dict."""
     if config is None:
         return None
-    hist_type = config.get("type")
+    if "histogram" in config:
+        hist_config = config["histogram"]
+        hist_type = hist_config["type"]
+    elif "number_hist" in config:
+        hist_type = "number"
+        hist_config = copy.copy(config["number_hist"])
+        hist_config["type"] = hist_type
+    elif "categorical_hist" in config:
+        hist_type = "categorical"
+        hist_config = copy.copy(config["categorical_hist"])
+        hist_config["type"] = hist_type
+    elif "null_hist" in config:
+        hist_type = "null"
+        hist_config = copy.copy(config["null_hist"])
+        hist_config["type"] = hist_type
+    else:
+        return None
+
     if hist_type == "number":
-        return NumberHistogramConfig.from_dict(config)
+        return NumberHistogramConfig.from_dict(hist_config)
     if hist_type == "categorical":
-        return CategoricalHistogramConfig.from_dict(config)
+        return CategoricalHistogramConfig.from_dict(hist_config)
     if hist_type == "null":
-        return NullHistogramConfig.from_dict(config)
+        return NullHistogramConfig.from_dict(hist_config)
 
     return NullHistogramConfig(f"Invalid histogram configuration {config}")
 
 
-def create_histogram_from_config(
+def build_empty_histogram(
     config: Union[
         NumberHistogramConfig, CategoricalHistogramConfig,
         NullHistogramConfig, None
@@ -565,52 +581,38 @@ def create_histogram_from_config(
     """Create an empty histogram from a deserialize histogram dictionary."""
     # pylint: disable=too-many-return-statements
     if config is None:
-        score_type = kwargs.get("score_type")
-        if score_type in ["int", "float"]:
+        # create default histogram config
+        value_type = kwargs.get("value_type")
+        if value_type in ["int", "float"]:
             min_max = kwargs.get("min_max")
             if min_max is not None and min_max.min is not None and \
                     min_max.max is not None:
                 return NumberHistogram(
                     NumberHistogramConfig.default_config(min_max)
                 )
-        if score_type == "str":
+        if value_type == "str":
             return CategoricalHistogram(
                 CategoricalHistogramConfig.default_config()
             )
         return NullHistogram(NullHistogramConfig(
             "No histogram configured and no default config available for type"
-            f"{score_type}"
+            f"{value_type}"
         ))
 
-    hist_type = None
     try:
         if isinstance(config, NumberHistogramConfig):
-            hist_type = "number"
-            return NumberHistogram(
-                config
-            )
+            return NumberHistogram(config)
         if isinstance(config, CategoricalHistogramConfig):
-            hist_type = "categorical"
-            return CategoricalHistogram(
-                config
-            )
+            return CategoricalHistogram(config)
         if isinstance(config, NullHistogramConfig):
-            hist_type = "null"
-            return NullHistogram(
-                config
-            )
+            return NullHistogram(config)
         return NullHistogram(NullHistogramConfig(
             "Could not match histogram config type"
         ))
     except BaseException:  # pylint: disable=broad-except
-        score_id = kwargs.get("score_id", "")
-        logger.warning(
-            "Failed to load histogram for score %s",
-            score_id, exc_info=True
-        )
+        logger.warning("Failed to create empty histogram from config")
         return NullHistogram(NullHistogramConfig(
-            f"Failed to create {hist_type} histogram from config."
-        ))
+            "Failed to create empty histogram from config."))
 
 
 def load_histogram(  # pylint: disable=too-many-return-statements
