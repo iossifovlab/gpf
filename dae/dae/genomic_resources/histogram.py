@@ -8,6 +8,7 @@ import copy
 import logging
 from typing import cast, Optional, Any, BinaryIO, Union
 from dataclasses import dataclass
+from collections import Counter
 
 import yaml
 import numpy as np
@@ -113,7 +114,7 @@ class NumberHistogramConfig:
 class CategoricalHistogramConfig:
     """Configuration class for categorical histograms."""
 
-    value_order: list[str]
+    value_order: Optional[list[str]] = None
     y_log_scale: bool = False
 
     def to_dict(self) -> dict[str, Any]:
@@ -449,13 +450,13 @@ class CategoricalHistogram(Statistic):
             "Collects values for categorical histogram."
         )
         self.config = config
-        self.values = {}
         if values is not None:
-            self.values = values
-        for value in config.value_order:
-            if value not in self.values:
-                self.values[value] = 0
+            self._values = Counter(values)
+        else:
+            self._values = Counter()
+
         self.y_log_scale = config.y_log_scale
+        self._bars: Optional[dict[str, int]] = None
 
     def add_value(self, value: Optional[str]) -> bool:
         """Add a value to the categorical histogram.
@@ -463,6 +464,7 @@ class CategoricalHistogram(Statistic):
         Returns true if successfully added and false if failed.
         Will fail if too many values are accumulated.
         """
+        self._bars = None
         if value is None:
             return False
         if not isinstance(value, str):
@@ -470,37 +472,41 @@ class CategoricalHistogram(Statistic):
                 "Cannot add non string value "
                 f"{value} to categorical histogram"
             )
-        if value not in self.values:
-            if len(self.values) + 1 > CategoricalHistogram.VALUES_LIMIT:
-                raise HistogramError(
-                    f"Too many values already present to add {value}"
-                    " to categorical histogram."
-                )
-            self.values[value] = 1
-        else:
-            self.values[value] += 1
-
+        self._values[value] += 1
+        if len(self._values) > CategoricalHistogram.VALUES_LIMIT:
+            raise HistogramError(
+                f"Too many values already present to add {value}"
+                " to categorical histogram."
+            )
         return True
 
     def merge(self, other: CategoricalHistogram) -> None:
         """Merge with other histogram."""
         assert self.config == other.config
+        self._bars = None
+        self._values += other._values  # pylint: disable=protected-access
+        if len(self._values) > CategoricalHistogram.VALUES_LIMIT:
+            raise HistogramError(
+                "Can not merge categorical histograms; too many unique values")
 
-        for value, count in other.values.items():
-            if value not in self.values:
-                if len(self.values) + 1 > CategoricalHistogram.VALUES_LIMIT:
-                    raise HistogramError(
-                        f"Too many values already present to merge {value}"
-                        " to categorical histogram."
-                    )
-                self.values[value] = count
-            else:
-                self.values[value] += count
+    @property
+    def bars(self) -> dict[str, int]:
+        """Return categorical histogram bars in order."""
+        if self._bars is None:
+            values = {}
+            if self.config.value_order:
+                for key in self.config.value_order:
+                    values[key] = self._values[key]
+            for key, count in self._values.most_common():
+                if key not in values:
+                    values[key] = count
+            self._bars = values
+        return self._bars
 
     def to_dict(self) -> dict[str, Any]:
         return {
             "config": self.config.to_dict(),
-            "values": self.values
+            "values": self.bars
         }
 
     def serialize(self) -> str:
@@ -516,8 +522,8 @@ class CategoricalHistogram(Statistic):
         """Plot histogram and save it into outfile."""
         # pylint: disable=import-outside-toplevel
         import matplotlib.pyplot as plt
-        values = self.values.keys()
-        counts = self.values.values()
+        values = self.bars.keys()
+        counts = self.bars.values()
         plt.figure(figsize=(15, 10), tight_layout=True)
         plt.bar(values, counts)
 

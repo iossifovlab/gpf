@@ -6,7 +6,8 @@ from typing import List
 import pytest
 
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME
-from dae.genomic_resources.histogram import NumberHistogram, CategoricalHistogram
+from dae.genomic_resources.histogram import NumberHistogram, \
+    CategoricalHistogram
 from dae.genomic_resources.testing import \
     setup_directories, build_filesystem_test_repository, \
     setup_tabix
@@ -577,7 +578,7 @@ def test_stats_categorical(tmp_path):
     with open(histogram_statistic_path, "r") as infile:
         stat_hist = CategoricalHistogram.deserialize(infile.read())
 
-    assert len(stat_hist.values) == 3
-    assert stat_hist.values["value1"] == 2
-    assert stat_hist.values["value2"] == 2
-    assert stat_hist.values["value3"] == 1
+    assert len(stat_hist.bars) == 3
+    assert stat_hist.bars["value1"] == 2
+    assert stat_hist.bars["value2"] == 2
+    assert stat_hist.bars["value3"] == 1

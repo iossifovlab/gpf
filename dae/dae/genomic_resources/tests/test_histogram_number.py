@@ -6,8 +6,8 @@ import numpy as np
 import pytest
 
 from dae.genomic_resources.histogram import NumberHistogram, \
-    NumberHistogramConfig, CategoricalHistogram, CategoricalHistogramConfig, \
-    HistogramError, build_histogram_config
+    NumberHistogramConfig, \
+    build_histogram_config
 
 
 def test_histogram_simple_input() -> None:
@@ -234,82 +234,6 @@ def test_histogram_serialize_deserialize() -> None:
     assert np.array_equal(hist2.bars, hist1.bars)
 
 
-def test_categorical_histogram() -> None:
-    config = CategoricalHistogramConfig(["value1", "value2"])
-
-    hist = CategoricalHistogram(config)
-    assert set(hist.values.keys()) == set(["value1", "value2"])
-
-    assert hist.values["value1"] == 0
-    assert hist.values["value2"] == 0
-
-    hist.add_value("value1")
-
-    hist.add_value("value2")
-    hist.add_value("value2")
-
-    hist.add_value("value3")
-
-    assert hist.values["value1"] == 1
-    assert hist.values["value2"] == 2
-    assert hist.values["value3"] == 1
-
-
-def test_categorical_histogram_add_value_raises() -> None:
-    config = CategoricalHistogramConfig.default_config()
-
-    hist = CategoricalHistogram(config)
-    with pytest.raises(HistogramError):
-        for i in range(101):
-            hist.add_value(f"value{i}")
-
-
-def test_categorical_histogram_merge() -> None:
-    config = CategoricalHistogramConfig(["value1", "value2"])
-
-    hist1 = CategoricalHistogram(config)
-
-    hist2 = CategoricalHistogram(config)
-
-    hist1.add_value("value1")
-    hist1.add_value("value1")
-    hist1.add_value("value2")
-    hist1.add_value("value2")
-    hist1.add_value("value4")
-
-    hist2.add_value("value2")
-    hist2.add_value("value2")
-    hist2.add_value("value3")
-    hist2.add_value("value3")
-
-    assert hist1.values["value1"] == 2
-    assert hist1.values["value2"] == 2
-    assert hist1.values["value4"] == 1
-
-    assert hist2.values["value1"] == 0
-    assert hist2.values["value2"] == 2
-    assert hist2.values["value3"] == 2
-
-    hist1.merge(hist2)
-    assert hist1.values["value1"] == 2
-    assert hist1.values["value2"] == 4
-    assert hist1.values["value3"] == 2
-    assert hist1.values["value4"] == 1
-
-
-def test_categorical_histogram_merge_raises() -> None:
-    config = CategoricalHistogramConfig.default_config()
-
-    hist1 = CategoricalHistogram(config)
-    for i in range(50):
-        hist1.add_value(f"value{i}")
-    hist2 = CategoricalHistogram(config)
-    for i in range(51):
-        hist2.add_value(f"value{i+50}")
-    with pytest.raises(HistogramError):
-        hist1.merge(hist2)
-
-
 @pytest.mark.parametrize("conf", [
     {
         "number_hist": {}
@@ -321,16 +245,3 @@ def test_categorical_histogram_merge_raises() -> None:
 def test_build_number_histogram_config(conf: dict[str, Any]) -> None:
     hist_conf = build_histogram_config(conf)
     assert isinstance(hist_conf, NumberHistogramConfig)
-
-
-@pytest.mark.parametrize("conf", [
-    {
-        "categorical_hist": {}
-    },
-    {
-        "histogram": {"type": "categorical"}
-    },
-])
-def test_build_categorical_histogram_config(conf: dict[str, Any]) -> None:
-    hist_conf = build_histogram_config(conf)
-    assert isinstance(hist_conf, CategoricalHistogramConfig)
