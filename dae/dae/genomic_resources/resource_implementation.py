@@ -110,6 +110,8 @@ class GenomicResourceImplementation(ABC):
 class InfoImplementationMixin:
     """Mixin that provides generic template info page generation interface."""
 
+    resource: GenomicResource
+
     def get_template(self) -> Template:
         return Template(textwrap.dedent("""
                 {% extends base %}
@@ -139,15 +141,18 @@ class InfoImplementationMixin:
 
         template_data["resource_files"] = [
             FileEntry(entry.name, convert_size(entry.size), entry.md5)
-            for entry in
-            self.resource.get_manifest().entries.values()]  # type: ignore
+            for entry in self.resource.get_manifest().entries.values()
+            if not entry.name.startswith("statistics")
+            and entry.name != "index.html"]
+        template_data["resource_files"].append(
+            FileEntry("statistics/", "", ""))
         return template_data
 
     def get_info(self) -> str:
         """Construct the contents of the implementation's HTML info page."""
         template_data = self.get_template_data()
         return self.get_template().render(
-            resource=self.resource,  # type: ignore
+            resource=self.resource,
             markdown=markdown,
             data=template_data,
             base=RESOURCE_TEMPLATE

@@ -1,6 +1,9 @@
 - md5: 42cbfe4cf0533ec061117c7013f235dd
   name: genomic_resource.yaml
   size: 415
+- md5: 2df33f0ff9c919049de132ae8e128278
+  name: index.html
+  size: 1904
 - md5: 590e48aff9382edfa3330a072c98c6c5
   name: scores.tsv.gz
   size: 107
@@ -13,9 +16,6 @@
 - md5: 6ec9ed0142fc0905644864d65c0a69d2
   name: statistics/histogram_test_score.yaml
   size: 1997
-- md5: e51e615c1d3d01c7c9a49126bce20fb4
-  name: statistics/min_max_test_score.yaml
-  size: 40
 - md5: b2cb34f34f7c74d57b62d45e24fe4aa0
   name: statistics/stats_hash
   size: 4847

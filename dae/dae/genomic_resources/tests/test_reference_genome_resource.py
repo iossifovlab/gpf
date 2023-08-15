@@ -2,6 +2,8 @@
 
 import os
 import textwrap
+import pathlib
+
 import pytest
 
 from dae.genomic_resources.testing import setup_directories, \
@@ -11,12 +13,14 @@ from dae.genomic_resources.fsspec_protocol import build_local_resource
 
 from dae.genomic_resources.reference_genome import \
     build_reference_genome_from_file, \
-    build_reference_genome_from_resource, \
+    build_reference_genome_from_resource
+
+from dae.genomic_resources.implementations.reference_genome import \
     ReferenceGenomeImplementation
 
 
 @pytest.fixture
-def genome_fixture(tmp_path):
+def genome_fixture(tmp_path: pathlib.Path) -> pathlib.Path:
     root_path = tmp_path / "genome"
     setup_directories(root_path, {
         "genomic_resource.yaml": "{type: genome, filename: chr.fa}",
@@ -33,7 +37,7 @@ def genome_fixture(tmp_path):
     return root_path
 
 
-def test_basic_sequence_resource_file(genome_fixture):
+def test_basic_sequence_resource_file(genome_fixture: pathlib.Path) -> None:
     res = build_filesystem_test_resource(genome_fixture)
     reference_genome = build_reference_genome_from_resource(res)
     with reference_genome.open() as ref:
@@ -46,7 +50,7 @@ def test_basic_sequence_resource_file(genome_fixture):
         assert ref.get_sequence("gosho", 11, 20) == "TTGGCCAANN"
 
 
-def test_basic_sequence_resource_http(genome_fixture):
+def test_basic_sequence_resource_http(genome_fixture: pathlib.Path) -> None:
     with build_http_test_protocol(genome_fixture) as proto:
         res = proto.get_resource("")
         reference_genome = build_reference_genome_from_resource(res)
@@ -60,7 +64,7 @@ def test_basic_sequence_resource_http(genome_fixture):
             assert ref.get_sequence("gosho", 11, 20) == "TTGGCCAANN"
 
 
-def test_filesystem_genomic_sequence(genome_fixture):
+def test_filesystem_genomic_sequence(genome_fixture: pathlib.Path) -> None:
     reference_genome = build_reference_genome_from_file(
         str(genome_fixture / "chr.fa"))
 
@@ -75,7 +79,7 @@ def test_filesystem_genomic_sequence(genome_fixture):
         assert ref.get_sequence("gosho", 11, 20) == "TTGGCCAANN"
 
 
-def test_local_genomic_sequence(genome_fixture):
+def test_local_genomic_sequence(genome_fixture: pathlib.Path) -> None:
 
     res = build_local_resource(str(genome_fixture), {
         "type": "genome",
@@ -94,7 +98,7 @@ def test_local_genomic_sequence(genome_fixture):
         assert ref.get_sequence("gosho", 11, 20) == "TTGGCCAANN"
 
 
-def test_chromosome_statistic_basic(genome_fixture):
+def test_chromosome_statistic_basic(genome_fixture: pathlib.Path) -> None:
     res = build_filesystem_test_resource(genome_fixture)
     stat = ReferenceGenomeImplementation._do_chrom_statistic(
         res, "pesho", 1, None
@@ -150,7 +154,7 @@ def test_chromosome_statistic_basic(genome_fixture):
     ))
 
 
-def test_reference_genome_fetch(genome_fixture):
+def test_reference_genome_fetch(genome_fixture: pathlib.Path) -> None:
     res = build_filesystem_test_resource(genome_fixture)
     impl = ReferenceGenomeImplementation(res)
 
@@ -212,7 +216,8 @@ def test_reference_genome_fetch(genome_fixture):
         ]
 
 
-def test_reference_genome_fetch_corner_case(genome_fixture):
+def test_reference_genome_fetch_corner_case(
+        genome_fixture: pathlib.Path) -> None:
     res = build_filesystem_test_resource(genome_fixture)
     reference_genome = build_reference_genome_from_resource(res)
 
@@ -231,7 +236,8 @@ def test_reference_genome_fetch_corner_case(genome_fixture):
         ]
 
 
-def test_reference_genome_fetch_small_buffer(genome_fixture):
+def test_reference_genome_fetch_small_buffer(
+        genome_fixture: pathlib.Path) -> None:
     res = build_filesystem_test_resource(genome_fixture)
     reference_genome = build_reference_genome_from_resource(res)
 
@@ -247,40 +253,4 @@ def test_reference_genome_fetch_small_buffer(genome_fixture):
             "A",
             "A",
             "A",
-        ]
-
-
-def test_reference_genome_pair_iter(genome_fixture):
-    res = build_filesystem_test_resource(genome_fixture)
-    impl = ReferenceGenomeImplementation(res)
-    reference_genome = impl.reference_genome
-
-    with reference_genome.open():
-        result = list(reference_genome.pair_iter("pesho", 1, 10))
-
-        assert result == [
-            (None, "N"),
-            ("N", "N"),
-            ("N", "A"),
-            ("A", "C"),
-            ("C", "C"),
-            ("C", "C"),
-            ("C", "A"),
-            ("A", "A"),
-            ("A", "A"),
-            ("A", "C")
-        ]
-        result = list(reference_genome.pair_iter("pesho", 2, 10))
-
-        print(result)
-        assert result == [
-            ("N", "N"),
-            ("N", "A"),
-            ("A", "C"),
-            ("C", "C"),
-            ("C", "C"),
-            ("C", "A"),
-            ("A", "A"),
-            ("A", "A"),
-            ("A", "C")
         ]

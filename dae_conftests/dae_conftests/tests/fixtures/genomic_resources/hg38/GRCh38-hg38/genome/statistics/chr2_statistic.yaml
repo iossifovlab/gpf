@@ -10,16 +10,25 @@ nucleotide_pair_counts:
   AA: 121602
   AC: 72578
   AG: 98042
+  AN: 0
   AT: 97232
   CA: 105592
   CC: 77900
   CG: 20520
+  CN: 0
   CT: 95747
   GA: 84778
   GC: 66910
   GG: 82586
+  GN: 0
   GT: 74836
+  NA: 0
+  NC: 1
+  NG: 0
+  NN: 9999
+  NT: 0
   TA: 77482
   TC: 82371
   TG: 107962
+  TN: 0
   TT: 123861

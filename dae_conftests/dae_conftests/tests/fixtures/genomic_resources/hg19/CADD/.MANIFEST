@@ -7,6 +7,9 @@
 - md5: 77547fdd631548808bd6f733e39b9a37
   name: genomic_resource.yaml
   size: 606
+- md5: 2b58be0a22232cb883f9fdd2c61f8afa
+  name: index.html
+  size: 2167
 - md5: 79ab6b898617b641b4a86dc1f138fbb5
   name: statistics/histogram_cadd_phred.png
   size: 18985
@@ -19,12 +22,6 @@
 - md5: bdbc630a5fc635026f9a3836223df4d0
   name: statistics/histogram_cadd_raw.yaml
   size: 2636
-- md5: 79346b3fc62b019545b8d9299eb31dc3
-  name: statistics/min_max_cadd_phred.yaml
-  size: 42
-- md5: 6e9e93dcb90385720a07807887b34f15
-  name: statistics/min_max_cadd_raw.yaml
-  size: 49
 - md5: 56813a1be3862f38ba21f37b896b6f8b
   name: statistics/stats_hash
   size: 10211
