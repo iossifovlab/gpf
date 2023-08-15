@@ -7,18 +7,18 @@
 - md5: bd5e747b25ab3eca4dafef208c8c2cbf
   name: genomic_resource.yaml
   size: 302
-- md5: 498eb0e860af29958bef946235b0e1db
+- md5: 70c82fe72004009eee59d3ffabd254e8
   name: statistics/1_statistic.yaml
-  size: 313
-- md5: 2d914d63f47928c9e3f3784001f860b8
+  size: 389
+- md5: d80e7bcdc1efb96abf51139478f8b7a6
   name: statistics/2_statistic.yaml
-  size: 315
-- md5: 5fec382575553584edd947ce291dc90d
+  size: 390
+- md5: b7aff904faff32a2fb53ab9712aadd3b
   name: statistics/X_statistic.yaml
-  size: 305
-- md5: d72e505b975e82e071437de993156b08
+  size: 382
+- md5: 6960243370fd466a175e064cc9e123e0
   name: statistics/reference_genome_statistic.yaml
-  size: 596
+  size: 820
 - md5: ba67778c5b7dd39d68fe120945cf8ab4
   name: statistics/stats_hash
   size: 54
