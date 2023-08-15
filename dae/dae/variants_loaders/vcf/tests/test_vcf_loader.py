@@ -67,10 +67,10 @@ def quads_f1_vcf(tmp_path_factory: pytest.TempPathFactory) -> Path:
 
 
 @pytest.fixture
-def inheritance_trio_denovo_omission_ped(
+def inheritance_trio_denovo_omission(
     tmp_path_factory: pytest.TempPathFactory
-) -> Path:
-    root_path = tmp_path_factory.mktemp("inheritance_trio_denovo_omission_ped")
+) -> tuple[str, str]:
+    root_path = tmp_path_factory.mktemp("inheritance_trio_denovo_omission")
     ped_path = setup_pedigree(root_path / "ped_data" / "in.ped", """
     familyId	personId	dadId	momId	sex	status	role
     f1		    mom1		0	    0	    2	1	    mom
@@ -78,14 +78,6 @@ def inheritance_trio_denovo_omission_ped(
     f1		    ch1		    dad1	mom1	2	2	    prb
     """)
 
-    return ped_path
-
-
-@pytest.fixture
-def inheritance_trio_denovo_omission_vcf(
-    tmp_path_factory: pytest.TempPathFactory
-) -> Path:
-    root_path = tmp_path_factory.mktemp("inheritance_trio_denovo_omission_vcf")
     vcf_path = setup_vcf(root_path / "vcf_data" / "in.vcf", """
     ##fileformat=VCFv4.2
     ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
@@ -97,7 +89,7 @@ def inheritance_trio_denovo_omission_vcf(
     chr1	12  	.	T	G	.	    .   	INH=DEN	GT	    1/1 	1/1 	0/1
     """)
 
-    return vcf_path
+    return (str(ped_path), str(vcf_path))
 
 
 @pytest.mark.parametrize(
@@ -113,13 +105,11 @@ def test_vcf_denovo_mode(
     denovo_mode: Literal["denovo", "possible_denovo", "ignore", "ala_bala"],
     total: Literal[1, 3],
     unexpected_inheritance: set[Inheritance],
-    inheritance_trio_denovo_omission_ped: Path,
-    inheritance_trio_denovo_omission_vcf: Path,
+    inheritance_trio_denovo_omission: tuple[str, str],
     gpf_instance: GPFInstance,
 ) -> None:
-    families = FamiliesLoader(
-        f"{str(inheritance_trio_denovo_omission_ped)}"
-    ).load()
+    ped_path, vcf_path = inheritance_trio_denovo_omission
+    families = FamiliesLoader(ped_path).load()
     params = {
         "vcf_include_reference_genotypes": True,
         "vcf_include_unknown_family_genotypes": True,
@@ -128,7 +118,7 @@ def test_vcf_denovo_mode(
     }
     vcf_loader = VcfLoader(
         families,
-        [f"{inheritance_trio_denovo_omission_vcf}"],
+        [f"{vcf_path}"],
         gpf_instance.reference_genome,
         params=params,
     )
@@ -159,13 +149,11 @@ def test_vcf_omission_mode(
     ],
     total: Literal[3, 2],
     unexpected_inheritance: set[Inheritance],
-    inheritance_trio_denovo_omission_ped: Path,
-    inheritance_trio_denovo_omission_vcf: Path,
+    inheritance_trio_denovo_omission: tuple[str, str],
     gpf_instance: GPFInstance,
 ) -> None:
-    families = FamiliesLoader(
-        f"{inheritance_trio_denovo_omission_ped}"
-    ).load()
+    ped_path, vcf_path = inheritance_trio_denovo_omission
+    families = FamiliesLoader(ped_path).load()
     params = {
         "vcf_include_reference_genotypes": True,
         "vcf_include_unknown_family_genotypes": True,
@@ -174,7 +162,7 @@ def test_vcf_omission_mode(
     }
     vcf_loader = VcfLoader(
         families,
-        [f"{inheritance_trio_denovo_omission_vcf}"],
+        [vcf_path],
         gpf_instance.reference_genome,
         params=params,
     )
