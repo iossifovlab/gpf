@@ -490,7 +490,7 @@ def test_space_in_mem_table() -> None:
             1     12        10     5.14""")})
     with build_genomic_position_table(res, res.config["table"]) as tab:
         assert compare(tab.get_records_in_region("1", 11, 11), [
-            ("1", "11", "", "4.14")])
+            ("1", "11", ".", "4.14")])
 
 
 def test_text_table() -> None:

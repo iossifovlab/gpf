@@ -4,9 +4,6 @@
 - md5: 34cec79415c90ddb81028b496d90e134
   name: genomic_resource.yaml
   size: 412
-- md5: 0f32c45712000a19941d7b491eb0f683
-  name: index.html
-  size: 3693
 - md5: 28ee47e15cc15c1b8881cd453cdefc7d
   name: scores_incomplete_coverage.tsv.gz
   size: 176
@@ -19,9 +16,9 @@
 - md5: c37eb1c557ec79e8be894d86a9211f7d
   name: statistics/histogram_score0_incomplete_cov.png
   size: 17129
-- md5: 021f3bdf01911638b8a29764a470a307
+- md5: 9a19dc320d21fef34dd78fa290bbb13e
   name: statistics/histogram_score0_incomplete_cov.yaml
-  size: 2155
+  size: 2142
 - md5: eddfe133c23241d1566c939701e16c9e
   name: statistics/min_max_score0_incomplete_cov.yaml
   size: 65

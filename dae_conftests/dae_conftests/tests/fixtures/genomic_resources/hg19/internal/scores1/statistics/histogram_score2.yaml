@@ -210,8 +210,8 @@ config:
   x_log_scale: false
   x_min_log: null
   y_log_scale: false
-max_value: 1959666.07
-min_value: 8655.82
+max_value: .nan
+min_value: .nan
 out_of_range_bins:
 - 0
 - 0

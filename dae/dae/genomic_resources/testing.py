@@ -51,7 +51,9 @@ def convert_to_tab_separated(content: str) -> str:
         else:
             result.append("\t".join(line.split()))
     text = "\n".join(result)
-    return text.replace("||", " ")
+    text = text.replace("||", " ")
+    text = text.replace("EMPTY", ".")
+    return text
 
 
 def setup_directories(

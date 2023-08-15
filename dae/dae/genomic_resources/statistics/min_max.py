@@ -1,6 +1,9 @@
 from __future__ import annotations
-from typing import cast
+
+from typing import cast, Optional
+
 import yaml
+import numpy as np
 
 from dae.genomic_resources.statistics.base_statistic import Statistic
 
@@ -8,23 +11,19 @@ from dae.genomic_resources.statistics.base_statistic import Statistic
 class MinMaxValue(Statistic):
     """Statistic that calculates Min and Max values in a genomic score."""
 
-    def __init__(self, score_id, min_value=None, max_value=None):
+    def __init__(
+            self, score_id: str,
+            min_value: float = np.nan, max_value: float = np.nan):
         super().__init__("min_max", "Calculates Min and Max values")
         self.score_id = score_id
         self.min = min_value
         self.max = max_value
 
-    def add_record(self, record):
-        value = record[self.score_id]
+    def add_value(self, value: Optional[float]) -> None:
         if value is None:
             return
-        self.add_value(value)
-
-    def add_value(self, value):
-        if self.min is None or value < self.min:
-            self.min = value
-        if self.max is None or value > self.max:
-            self.max = value
+        self.min = min(value, self.min)
+        self.max = max(value, self.max)
 
     def merge(self, other: MinMaxValue) -> None:
         if not isinstance(other, MinMaxValue):
@@ -33,19 +32,8 @@ class MinMaxValue(Statistic):
             raise ValueError(
                 "Attempting to merge min max values of different scores!"
             )
-        if self.min is None:
-            self.min = other.min
-        elif other.min is None:
-            pass
-        elif other.min < self.min:
-            self.min = other.min
-
-        if self.max is None:
-            self.max = other.max
-        elif other.max is None:
-            pass
-        elif other.max > self.max:
-            self.max = other.max
+        self.min = min(self.min, other.min)
+        self.max = max(self.max, other.max)
 
     def serialize(self) -> str:
         return cast(str, yaml.dump(
@@ -53,13 +41,13 @@ class MinMaxValue(Statistic):
         )
 
     @staticmethod
-    def deserialize(data) -> MinMaxValue:
+    def deserialize(data: str) -> MinMaxValue:
         res = yaml.load(data, yaml.Loader)
-        return MinMaxValue(res["score_id"], res.get("min"), res.get("max"))
+        return MinMaxValue(res["score_id"], res["min"], res["max"])
 
 
 class MinMaxValueStatisticMixin:
 
     @staticmethod
-    def get_min_max_file(score_id):
+    def get_min_max_file(score_id: str) -> str:
         return f"min_max_{score_id}.yaml"

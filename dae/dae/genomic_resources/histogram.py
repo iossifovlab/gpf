@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import copy
 import logging
-from typing import cast, Optional, Any, BinaryIO, Union
+from typing import cast, Optional, Any, IO, Union
 from dataclasses import dataclass
 from collections import Counter
 
@@ -41,6 +41,10 @@ class NumberHistogramConfig:
     y_log_scale: bool = False
     x_min_log: Optional[float] = None
 
+    def has_view_range(self) -> bool:
+        return self.view_range[0] is not None and \
+            self.view_range[1] is not None
+
     def to_dict(self) -> dict[str, Any]:
         return {
             "type": "number",
@@ -53,20 +57,6 @@ class NumberHistogramConfig:
             "y_log_scale": self.y_log_scale,
             "x_min_log": self.x_min_log
         }
-
-    @staticmethod
-    def convert_legacy_config(config: dict[str, Any]) -> NumberHistogramConfig:
-        logger.warning("Converting legacy config")
-        limits = np.iinfo(np.int64)
-        return NumberHistogramConfig(
-            view_range=(
-                config.get("min", limits.min), config.get("max", limits.max)
-            ),
-            number_of_bins=config.get("bins", 30),
-            x_log_scale=config.get("x_scale", "linear") == "log",
-            y_log_scale=config.get("y_scale", "linear") == "log",
-            x_min_log=config.get("x_min_log")
-        )
 
     @staticmethod
     def from_dict(parsed: dict[str, Any]) -> NumberHistogramConfig:
@@ -97,9 +87,13 @@ class NumberHistogramConfig:
         )
 
     @staticmethod
-    def default_config(min_max: MinMaxValue) -> NumberHistogramConfig:
+    def default_config(
+        min_max: Optional[MinMaxValue]
+    ) -> NumberHistogramConfig:
         """Build a number histogram config from a parsed yaml file."""
-        if min_max.min == min_max.max:
+        if min_max is None:
+            view_range = (None, None)
+        elif min_max.min == min_max.max:
             view_range = (min_max.min, min_max.min + 1.0)
         else:
             view_range = (min_max.min, min_max.max)
@@ -336,7 +330,7 @@ class NumberHistogram(Statistic):
     def serialize(self) -> str:
         return cast(str, yaml.dump(self.to_dict()))
 
-    def plot(self, outfile: BinaryIO, score_id: str) -> None:
+    def plot(self, outfile: IO, score_id: str) -> None:
         """Plot histogram and save it into outfile."""
         # pylint: disable=import-outside-toplevel
         import matplotlib.pyplot as plt
@@ -412,7 +406,7 @@ class NullHistogram(Statistic):
         }
 
     # pylint: disable=unused-argument
-    def plot(self, outfile: BinaryIO, score_id: str) -> None:
+    def plot(self, outfile: IO, score_id: str) -> None:
         return
 
     def serialize(self) -> str:
@@ -518,7 +512,7 @@ class CategoricalHistogram(Statistic):
         config = CategoricalHistogramConfig.from_dict(res.get("config"))
         return CategoricalHistogram(config, res.get("values"))
 
-    def plot(self, outfile: BinaryIO, score_id: str) -> None:
+    def plot(self, outfile: IO, score_id: str) -> None:
         """Plot histogram and save it into outfile."""
         # pylint: disable=import-outside-toplevel
         import matplotlib.pyplot as plt
@@ -534,12 +528,6 @@ class CategoricalHistogram(Statistic):
 
         plt.savefig(outfile)
         plt.clf()
-
-
-# def annul_histogram(
-#     histogram: Union[NumberHistogram, CategoricalHistogram]
-# ) -> NullHistogram:
-#     return NullHistogram(NullHistogramConfig.default_config())
 
 
 def build_histogram_config(
@@ -578,33 +566,27 @@ def build_histogram_config(
     return NullHistogramConfig(f"Invalid histogram configuration {config}")
 
 
+def build_default_histogram_conf(value_type: str, **kwargs: Any) -> Union[
+    NumberHistogramConfig, CategoricalHistogramConfig, NullHistogramConfig
+]:
+    """Build default histogram config for given value type."""
+    if value_type in ["int", "float"]:
+        min_max = kwargs.get("min_max")
+        return NumberHistogramConfig.default_config(min_max)
+
+    if value_type == "str":
+        return CategoricalHistogramConfig.default_config()
+
+    return NullHistogramConfig(
+        "No histogram configured and no default config available for type"
+        f"{value_type}"
+    )
+
+
 def build_empty_histogram(
-    config: Union[
-        NumberHistogramConfig, CategoricalHistogramConfig,
-        NullHistogramConfig, None
-    ], **kwargs: Any
+    config: HistogramConfig
 ) -> Union[NumberHistogram, CategoricalHistogram, NullHistogram]:
     """Create an empty histogram from a deserialize histogram dictionary."""
-    # pylint: disable=too-many-return-statements
-    if config is None:
-        # create default histogram config
-        value_type = kwargs.get("value_type")
-        if value_type in ["int", "float"]:
-            min_max = kwargs.get("min_max")
-            if min_max is not None and min_max.min is not None and \
-                    min_max.max is not None:
-                return NumberHistogram(
-                    NumberHistogramConfig.default_config(min_max)
-                )
-        if value_type == "str":
-            return CategoricalHistogram(
-                CategoricalHistogramConfig.default_config()
-            )
-        return NullHistogram(NullHistogramConfig(
-            "No histogram configured and no default config available for type"
-            f"{value_type}"
-        ))
-
     try:
         if isinstance(config, NumberHistogramConfig):
             return NumberHistogram(config)
@@ -664,3 +646,8 @@ def load_histogram(  # pylint: disable=too-many-return-statements
         return NullHistogram(NullHistogramConfig(
             "Failed to deserialize histogram."
         ))
+
+
+HistogramConfig = Union[
+    NullHistogramConfig, CategoricalHistogramConfig, NumberHistogramConfig]
+Histogram = Union[NullHistogram, CategoricalHistogram, NumberHistogram]

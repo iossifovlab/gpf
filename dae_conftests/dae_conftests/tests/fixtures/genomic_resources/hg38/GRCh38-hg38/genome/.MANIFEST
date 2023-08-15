@@ -7,9 +7,6 @@
 - md5: b151ecdcef68d9014ab78823b5147711
   name: genomic_resource.yaml
   size: 339
-- md5: d15d6e056e4d1610c5e678c85c1c88d2
-  name: index.html
-  size: 3957
 - md5: 65e05af202b257ce85a2c3194f4179a0
   name: statistics/chr1_statistic.yaml
   size: 324

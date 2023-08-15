@@ -138,7 +138,7 @@ def test_stats_allele_score(tmp_path):
     setup_tabix(
         tmp_path / "one" / "data.txt.gz",
         """
-        #chrom  pos_begin  reference  alternative  freq
+        #chrom pos_begin  reference  alternative  freq
         1      10         A          G            0.02
         1      10         A          C            0.03
         1      10         A          A            0.04
@@ -164,7 +164,7 @@ def test_stats_allele_score(tmp_path):
     histogram_image_path = os.path.join(
         tmp_path, "one", "statistics", "histogram_freq.yaml"
     )
-    assert os.path.exists(minmax_statistic_path)
+    assert not os.path.exists(minmax_statistic_path)
     assert os.path.exists(histogram_statistic_path)
     assert os.path.exists(histogram_image_path)
 
@@ -219,7 +219,7 @@ def test_stats_position_score(tmp_path):
     setup_tabix(
         tmp_path / "one" / "data.txt.gz",
         """
-        #chrom  pos_begin  pos_end  s1    s2
+        #chrom pos_begin  pos_end  s1    s2
         1      10         15       0.02  -1
         1      17         19       0.03  0
         1      22         25       0.46  EMPTY
@@ -250,10 +250,10 @@ def test_stats_position_score(tmp_path):
     histogram_image_5way_path = os.path.join(
         tmp_path, "one", "statistics", "histogram_phastCons5way.png"
     )
-    assert os.path.exists(minmax_100way_path)
+    assert not os.path.exists(minmax_100way_path)
     assert os.path.exists(histogram_100way_path)
     assert os.path.exists(histogram_image_100way_path)
-    assert os.path.exists(minmax_5way_path)
+    assert not os.path.exists(minmax_5way_path)
     assert os.path.exists(histogram_5way_path)
     assert os.path.exists(histogram_image_5way_path)
 
@@ -316,7 +316,7 @@ def test_stats_np_score(tmp_path):
     setup_tabix(
         tmp_path / "one" / "data.txt.gz",
         """
-        #chrom  pos_begin  pos_end  reference  alternative  s1    s2
+        #chrom  pos_begin  pos_end reference  alternative  s1    s2
         1      10         15       A          G            0.02  2
         1      10         15       A          C            0.03  -1
         1      10         15       A          T            0.04  4
@@ -351,10 +351,10 @@ def test_stats_np_score(tmp_path):
     histogram_image_cadd_test_path = os.path.join(
         tmp_path, "one", "statistics", "histogram_cadd_test.png"
     )
-    assert os.path.exists(minmax_cadd_raw_path)
+    assert not os.path.exists(minmax_cadd_raw_path)
     assert os.path.exists(histogram_cadd_raw_path)
     assert os.path.exists(histogram_image_cadd_raw_path)
-    assert os.path.exists(minmax_cadd_test_path)
+    assert not os.path.exists(minmax_cadd_test_path)
     assert os.path.exists(histogram_cadd_test_path)
     assert os.path.exists(histogram_image_cadd_test_path)
 

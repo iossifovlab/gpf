@@ -1,11 +1,13 @@
 from __future__ import annotations
-from dataclasses import dataclass
+
 import os
 import copy
 import itertools
 import logging
 import textwrap
 import json
+
+from dataclasses import dataclass
 from typing import Optional, Any, cast
 
 import numpy as np
@@ -213,8 +215,8 @@ class GeneScoreImplementation(
             histogram.plot(outfile, score_id)
         return histogram
 
-    def calc_info_hash(self) -> str:
-        return "placeholder"
+    def calc_info_hash(self) -> bytes:
+        return b"placeholder"
 
     def calc_statistics_hash(self) -> bytes:
         manifest = self.resource.get_manifest()

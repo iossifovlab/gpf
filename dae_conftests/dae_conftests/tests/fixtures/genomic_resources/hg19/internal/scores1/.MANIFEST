@@ -4,9 +4,6 @@
 - md5: 40bd340e93401645f87c7c41f571ce19
   name: genomic_resource.yaml
   size: 593
-- md5: 716cb64cee8c6a0fc1d5c773a5853e52
-  name: index.html
-  size: 5455
 - md5: 093c47435b7440def543b99758a92afe
   name: scores1.tsv.gz
   size: 367
@@ -19,21 +16,21 @@
 - md5: 141a292e722188d15dd0433620edf930
   name: statistics/histogram_score0.png
   size: 10808
-- md5: 57d35c090ec0844fb824fb78cfa90b12
+- md5: 081e29b36eed06481ece65f7f3f74d7f
   name: statistics/histogram_score0.yaml
-  size: 2048
+  size: 2037
 - md5: 328478e8566f1c9e12bd16e566b97e6c
   name: statistics/histogram_score2.png
   size: 10741
-- md5: 6606c9e0ed42caf89b36bc13cbee1e12
+- md5: 7ff5adbe4dde53712fc8ed9dde9cffe6
   name: statistics/histogram_score2.yaml
-  size: 2305
+  size: 2296
 - md5: fa41bbd14d8c1c143c32c77175e6312e
   name: statistics/histogram_score4.png
   size: 10880
-- md5: 34cf6144b0ca9ac192234765eccb09d6
+- md5: d237d79da81e91f24a671e1c7dabb730
   name: statistics/histogram_score4.yaml
-  size: 2360
+  size: 2351
 - md5: c1f3dfe8347110a45dc7344c0bca38da
   name: statistics/min_max_score0.yaml
   size: 48
@@ -43,6 +40,3 @@
 - md5: 928031108cbe0fa41f4ca78f36217139
   name: statistics/min_max_score4.yaml
   size: 46
-- md5: 00d7f5923b6340ea44b59b4ae06fe2eb
-  name: statistics/stats_hash
-  size: 1365
