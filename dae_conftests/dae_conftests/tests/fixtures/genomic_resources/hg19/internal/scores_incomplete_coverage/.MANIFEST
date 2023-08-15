@@ -22,6 +22,6 @@
 - md5: eddfe133c23241d1566c939701e16c9e
   name: statistics/min_max_score0_incomplete_cov.yaml
   size: 65
-- md5: 47f9d185248c0851e71fb3ab1fcdb65f
+- md5: eee157b2f6d2a6736eaf5d78ff804e60
   name: statistics/stats_hash
-  size: 896
+  size: 5008

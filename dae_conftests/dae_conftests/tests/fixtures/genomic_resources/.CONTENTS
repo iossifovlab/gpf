@@ -41,6 +41,27 @@
   - md5: 77547fdd631548808bd6f733e39b9a37
     name: genomic_resource.yaml
     size: 606
+  - md5: 79ab6b898617b641b4a86dc1f138fbb5
+    name: statistics/histogram_cadd_phred.png
+    size: 18985
+  - md5: ea436c3bb52cc7302212a1f167570a25
+    name: statistics/histogram_cadd_phred.yaml
+    size: 2437
+  - md5: e1af790e58efc438f4621220b2b4a033
+    name: statistics/histogram_cadd_raw.png
+    size: 19533
+  - md5: bdbc630a5fc635026f9a3836223df4d0
+    name: statistics/histogram_cadd_raw.yaml
+    size: 2636
+  - md5: 79346b3fc62b019545b8d9299eb31dc3
+    name: statistics/min_max_cadd_phred.yaml
+    size: 42
+  - md5: 6e9e93dcb90385720a07807887b34f15
+    name: statistics/min_max_cadd_raw.yaml
+    size: 49
+  - md5: 56813a1be3862f38ba21f37b896b6f8b
+    name: statistics/stats_hash
+    size: 10211
   version: '0'
 - config:
     filename: refGene201309.txt
@@ -62,6 +83,12 @@
   - md5: a42701941f92c7b999a4f8f26e4a3a47
     name: refGene201309.txt
     size: 3761
+  - md5: 90afd7bdd4ca41745aafa92369763180
+    name: statistics/stats.yaml
+    size: 198
+  - md5: 9e80b34285fd49637b6ccf862fbcbf38
+    name: statistics/stats_hash
+    size: 127
   version: '0'
 - config:
     PARS:
@@ -93,6 +120,21 @@
   - md5: bd5e747b25ab3eca4dafef208c8c2cbf
     name: genomic_resource.yaml
     size: 302
+  - md5: 498eb0e860af29958bef946235b0e1db
+    name: statistics/1_statistic.yaml
+    size: 313
+  - md5: 2d914d63f47928c9e3f3784001f860b8
+    name: statistics/2_statistic.yaml
+    size: 315
+  - md5: 5fec382575553584edd947ce291dc90d
+    name: statistics/X_statistic.yaml
+    size: 305
+  - md5: d72e505b975e82e071437de993156b08
+    name: statistics/reference_genome_statistic.yaml
+    size: 596
+  - md5: ba67778c5b7dd39d68fe120945cf8ab4
+    name: statistics/stats_hash
+    size: 54
   version: '0'
 - config:
     default_annotation:
@@ -144,6 +186,15 @@
   - md5: 558273e259dee3322accc97e92e9d7d1
     name: histograms/MPC.png
     size: 8667
+  - md5: c5bccdbfe3dc20fc06699476cfd3e5ca
+    name: statistics/histogram_MPC.png
+    size: 10251
+  - md5: fa34cc11495d17d5e7b82b1e4de087ab
+    name: statistics/histogram_MPC.yaml
+    size: 1887
+  - md5: d93c8841de74d808bf750125fe134b6b
+    name: statistics/stats_hash
+    size: 5049
   version: '0'
 - config:
     default_annotation:
@@ -193,6 +244,36 @@
   - md5: 26aa9750f0a1ad0458bcc99fe7d71ac2
     name: scores1.tsv.gz.tbi
     size: 1350
+  - md5: 141a292e722188d15dd0433620edf930
+    name: statistics/histogram_score0.png
+    size: 10808
+  - md5: 081e29b36eed06481ece65f7f3f74d7f
+    name: statistics/histogram_score0.yaml
+    size: 2037
+  - md5: 328478e8566f1c9e12bd16e566b97e6c
+    name: statistics/histogram_score2.png
+    size: 10741
+  - md5: 7ff5adbe4dde53712fc8ed9dde9cffe6
+    name: statistics/histogram_score2.yaml
+    size: 2296
+  - md5: fa41bbd14d8c1c143c32c77175e6312e
+    name: statistics/histogram_score4.png
+    size: 10880
+  - md5: d237d79da81e91f24a671e1c7dabb730
+    name: statistics/histogram_score4.yaml
+    size: 2351
+  - md5: c1f3dfe8347110a45dc7344c0bca38da
+    name: statistics/min_max_score0.yaml
+    size: 48
+  - md5: be2dd6bfd508cc0f1e0f68a0ccd54db7
+    name: statistics/min_max_score2.yaml
+    size: 46
+  - md5: 928031108cbe0fa41f4ca78f36217139
+    name: statistics/min_max_score4.yaml
+    size: 46
+  - md5: 4fa7f590cc6b9cdd992b332ce9b6aae3
+    name: statistics/stats_hash
+    size: 13959
   version: '0'
 - config:
     default_annotation:
@@ -230,6 +311,18 @@
   - md5: f77946424457cdc1e16ae23ba2062b1d
     name: scores_incomplete_coverage.tsv.gz.tbi
     size: 987
+  - md5: c37eb1c557ec79e8be894d86a9211f7d
+    name: statistics/histogram_score0_incomplete_cov.png
+    size: 17129
+  - md5: 9a19dc320d21fef34dd78fa290bbb13e
+    name: statistics/histogram_score0_incomplete_cov.yaml
+    size: 2142
+  - md5: eddfe133c23241d1566c939701e16c9e
+    name: statistics/min_max_score0_incomplete_cov.yaml
+    size: 65
+  - md5: eee157b2f6d2a6736eaf5d78ff804e60
+    name: statistics/stats_hash
+    size: 5008
   version: '0'
 - config:
     default_annotation:
@@ -269,6 +362,15 @@
   - md5: c2c4b109900b9f5ea940563bab3a8ad7
     name: phastCons100.bedGraph.gz.tbi
     size: 622
+  - md5: efcdd4628dbf6987139798f1c30e21e3
+    name: statistics/histogram_phastCons100.png
+    size: 14406
+  - md5: 47c4c84f0598f19fd3ca842c3f2f28c9
+    name: statistics/histogram_phastCons100.yaml
+    size: 403
+  - md5: bc8c83e9f2c3b16a8db0306b442ea368
+    name: statistics/stats_hash
+    size: 1822
   version: '0'
 - config:
     filename: refSeq_20200330.txt
@@ -290,6 +392,12 @@
   - md5: 05d8bbd9616407e862d82593d5fd1756
     name: refSeq_20200330.txt
     size: 30558
+  - md5: 088f8feb9e5264dc7579fe0556a891c7
+    name: statistics/stats.yaml
+    size: 185
+  - md5: fca08b9d5b481f89f0f04ea303d5bea7
+    name: statistics/stats_hash
+    size: 128
   version: '0'
 - config:
     PARS:
@@ -317,6 +425,18 @@
   - md5: b151ecdcef68d9014ab78823b5147711
     name: genomic_resource.yaml
     size: 339
+  - md5: 65e05af202b257ce85a2c3194f4179a0
+    name: statistics/chr1_statistic.yaml
+    size: 324
+  - md5: 479a740a7f18f059abe9768c651aa272
+    name: statistics/chr2_statistic.yaml
+    size: 326
+  - md5: 381346727633b156c5297f852d11b4e5
+    name: statistics/reference_genome_statistic.yaml
+    size: 578
+  - md5: 160e5784ac6c6e266ab261b64c4ae02a
+    name: statistics/stats_hash
+    size: 54
   version: '0'
 - config:
     default_annotation:
@@ -360,6 +480,27 @@
   - md5: 6ddfd7783ed4abd33d3e443bfc751350
     name: genomic_resource.yaml
     size: 601
+  - md5: 23329d335421d56e3eead7b1c6cbd900
+    name: statistics/histogram_cadd_phred.png
+    size: 14459
+  - md5: 5b2743a6ac2d8d0998dcd0c4a6c3cafa
+    name: statistics/histogram_cadd_phred.yaml
+    size: 2033
+  - md5: 61c0f45f4a8354e1a9f368222591ba90
+    name: statistics/histogram_cadd_raw.png
+    size: 14290
+  - md5: b0aa57e0a591b8080233002f97bcc14e
+    name: statistics/histogram_cadd_raw.yaml
+    size: 2129
+  - md5: 6f2a0cc14be29b8b4303f43697ea206b
+    name: statistics/min_max_cadd_phred.yaml
+    size: 43
+  - md5: 598ee4948b026d0dc780d3fa169540f5
+    name: statistics/min_max_cadd_raw.yaml
+    size: 46
+  - md5: 7421f8c2eb63ef9a060fc0ef6158db0d
+    name: statistics/stats_hash
+    size: 9308
   version: '0'
 - config:
     default_annotation:
@@ -399,6 +540,27 @@
   - md5: 5057dfbead3499d29983468e36735f88
     name: genomic_resource.yaml
     size: 544
+  - md5: a20bb25abfcdff63f22fbb2087f540d2
+    name: statistics/histogram_altFreq.png
+    size: 10546
+  - md5: 38c423062aabb20004fc987761fd4122
+    name: statistics/histogram_altFreq.yaml
+    size: 2128
+  - md5: 99a701ae7ae9134111deee6c9ffbbff1
+    name: statistics/histogram_altFreq2.png
+    size: 10898
+  - md5: 43e5e902c11a722578b1898960200f61
+    name: statistics/histogram_altFreq2.yaml
+    size: 2076
+  - md5: 2a42a37fb04a15244e3648c1a19e4100
+    name: statistics/min_max_altFreq.yaml
+    size: 39
+  - md5: 052893976a56a5f8ecc5b595da4763fc
+    name: statistics/min_max_altFreq2.yaml
+    size: 41
+  - md5: 9910e22bbf9ebaacdfebf887b11f8a18
+    name: statistics/stats_hash
+    size: 9367
   version: '0'
 - config:
     default_annotation:
@@ -433,6 +595,18 @@
   - md5: 313f112e74853fa39dc6af0fa526b692
     name: scores.tsv.gz.tbi
     size: 99
+  - md5: 305f3f4472bd42d08a1c26e493505048
+    name: statistics/histogram_test_score.png
+    size: 12257
+  - md5: 6ec9ed0142fc0905644864d65c0a69d2
+    name: statistics/histogram_test_score.yaml
+    size: 1997
+  - md5: e51e615c1d3d01c7c9a49126bce20fb4
+    name: statistics/min_max_test_score.yaml
+    size: 40
+  - md5: b2cb34f34f7c74d57b62d45e24fe4aa0
+    name: statistics/stats_hash
+    size: 4847
   version: '0'
 - config:
     default_annotation:
@@ -485,6 +659,15 @@
   - md5: 56feb878ed78769d5200702392b8e4b7
     name: scores/phastCons100way.yaml
     size: 583
+  - md5: 7253f59314b3cdec0fe36f4d19a79410
+    name: statistics/histogram_phastCons100way.png
+    size: 11865
+  - md5: b8e089e48e3ecd61146c73b181311056
+    name: statistics/histogram_phastCons100way.yaml
+    size: 369
+  - md5: 4a80cc48d86c0b4490d3763240c9b871
+    name: statistics/stats_hash
+    size: 1856
   version: '0'
 - config:
     chrom_prefix:
@@ -500,4 +683,7 @@
   - md5: ff3031d93792f4cbb86af44055efd903
     name: hg38ToHg19.over.chain.gz
     size: 1246411
+  - md5: 6a99c575ab87f8c7d1ed1e52e7e349ce
+    name: statistics/stats_hash
+    size: 11
   version: '0'

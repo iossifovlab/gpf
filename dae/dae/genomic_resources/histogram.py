@@ -92,7 +92,7 @@ class NumberHistogramConfig:
     ) -> NumberHistogramConfig:
         """Build a number histogram config from a parsed yaml file."""
         if min_max is None:
-            view_range = (None, None)
+            view_range: tuple[Optional[float], Optional[float]] = (None, None)
         elif min_max.min == min_max.max:
             view_range = (min_max.min, min_max.min + 1.0)
         else:
@@ -244,8 +244,9 @@ class NumberHistogram(Statistic):
             raise ValueError("view range max value not set")
         return self.config.view_range[1]
 
-    def merge(self, other: NumberHistogram) -> None:
+    def merge(self, other: Statistic) -> None:
         """Merge two histograms."""
+        assert isinstance(other, NumberHistogram)
         assert self.config == other.config
         assert self.bins is not None and self.bars is not None
         assert other.bins is not None and other.bars is not None
@@ -262,10 +263,10 @@ class NumberHistogram(Statistic):
     def view_range(self) -> tuple[Optional[float], Optional[float]]:
         return self.config.view_range
 
-    def add_value(self, value: float) -> bool:
+    def add_value(self, value: Optional[float]) -> None:
         """Add value to the histogram."""
         if value is None or np.isnan(value):
-            return False
+            return
 
         if not isinstance(value, (int, float, np.integer)):
             raise TypeError(
@@ -285,10 +286,9 @@ class NumberHistogram(Statistic):
                 "out of range %s value %s", self.view_range, value)
             tindex = index + 2
             self.out_of_range_bins[tindex] += 1
-            return False
+            return
 
         self.bars[index] += 1
-        return True
 
     def choose_bin_lin(self, value: float) -> int:
         """Compute bin index for a passed value for linear x-scale."""
@@ -354,18 +354,18 @@ class NumberHistogram(Statistic):
         plt.clf()
 
     @staticmethod
-    def deserialize(data: str) -> NumberHistogram:
-        res = yaml.load(data, yaml.Loader)
-        config = NumberHistogramConfig.from_dict(res.get("config"))
+    def deserialize(content: str) -> NumberHistogram:
+        data = yaml.load(content, yaml.Loader)
+        config = NumberHistogramConfig.from_dict(data.get("config"))
 
         hist = NumberHistogram(
             config,
-            bins=np.array(res.get("bins")),
-            bars=np.array(res.get("bars"))
+            bins=np.array(data.get("bins")),
+            bars=np.array(data.get("bars"))
         )
-        hist.min_value = res.get("min_value", np.nan)
-        hist.max_value = res.get("max_value", np.nan)
-        hist.out_of_range_bins = res.get("out_of_range_bins", [0, 0])
+        hist.min_value = data.get("min_value", np.nan)
+        hist.max_value = data.get("max_value", np.nan)
+        hist.out_of_range_bins = data.get("out_of_range_bins", [0, 0])
 
         return hist
 
@@ -393,16 +393,18 @@ class NullHistogram(Statistic):
             config = NullHistogramConfig.default_config()
         self.reason = config.reason
 
-    def add_value(self, value: Any) -> bool:
-        return False
+    def add_value(self, value: Any) -> None:
+        return
 
     def merge(self, other: Any) -> None:
         return
 
     def to_dict(self) -> dict[str, Any]:
         return {
-            "type": "null",
-            "reason": self.reason
+            "config": {
+                "type": "null",
+                "reason": self.reason
+            }
         }
 
     # pylint: disable=unused-argument
@@ -415,16 +417,14 @@ class NullHistogram(Statistic):
         ))
 
     @staticmethod
-    def deserialize(data: str) -> NullHistogram:
-        res = yaml.load(data, yaml.Loader)
-        hist_type = res.get("type")
+    def deserialize(content: str) -> NullHistogram:
+        data = yaml.load(content, yaml.Loader)
+        hist_type = data.get("type")
         if hist_type != "null":
             raise TypeError(
                 f"Invalid configuration type for null histogram!\n{data}"
             )
-
-        reason = res.get("reason", "")
-
+        reason = data.get("reason", "")
         return NullHistogram(NullHistogramConfig(reason=reason))
 
 
@@ -452,7 +452,7 @@ class CategoricalHistogram(Statistic):
         self.y_log_scale = config.y_log_scale
         self._bars: Optional[dict[str, int]] = None
 
-    def add_value(self, value: Optional[str]) -> bool:
+    def add_value(self, value: Optional[str]) -> None:
         """Add a value to the categorical histogram.
 
         Returns true if successfully added and false if failed.
@@ -460,7 +460,7 @@ class CategoricalHistogram(Statistic):
         """
         self._bars = None
         if value is None:
-            return False
+            return
         if not isinstance(value, str):
             raise TypeError(
                 "Cannot add non string value "
@@ -472,10 +472,10 @@ class CategoricalHistogram(Statistic):
                 f"Too many values already present to add {value}"
                 " to categorical histogram."
             )
-        return True
 
-    def merge(self, other: CategoricalHistogram) -> None:
+    def merge(self, other: Statistic) -> None:
         """Merge with other histogram."""
+        assert isinstance(other, CategoricalHistogram)
         assert self.config == other.config
         self._bars = None
         self._values += other._values  # pylint: disable=protected-access
@@ -507,10 +507,10 @@ class CategoricalHistogram(Statistic):
         return cast(str, yaml.dump(self.to_dict()))
 
     @staticmethod
-    def deserialize(data: str) -> CategoricalHistogram:
-        res = yaml.load(data, yaml.Loader)
-        config = CategoricalHistogramConfig.from_dict(res.get("config"))
-        return CategoricalHistogram(config, res.get("values"))
+    def deserialize(content: str) -> CategoricalHistogram:
+        data = yaml.load(content, yaml.Loader)
+        config = CategoricalHistogramConfig.from_dict(data.get("config"))
+        return CategoricalHistogram(config, data.get("values"))
 
     def plot(self, outfile: IO, score_id: str) -> None:
         """Plot histogram and save it into outfile."""
@@ -531,10 +531,7 @@ class CategoricalHistogram(Statistic):
 
 
 def build_histogram_config(
-    config: Optional[dict[str, Any]]) -> Union[
-    NumberHistogramConfig, CategoricalHistogramConfig,
-    NullHistogramConfig, None
-]:
+        config: Optional[dict[str, Any]]) -> Optional[HistogramConfig]:
     """Create histogram config form configuration dict."""
     if config is None:
         return None
@@ -603,38 +600,30 @@ def build_empty_histogram(
             "Failed to create empty histogram from config."))
 
 
-def load_histogram(  # pylint: disable=too-many-return-statements
-    config: Union[
-        NumberHistogramConfig, CategoricalHistogramConfig,
-        NullHistogramConfig, None
-    ],
+def load_histogram(
     resource: GenomicResource, filename: str
-) -> Union[NumberHistogram, CategoricalHistogram, NullHistogram]:
-    """
-    Try and load and return a histogram in a resource.
+) -> Optional[Histogram]:
+    """Load and return a histogram in a resource.
 
     On an error or missing histogram, an appropriate NullHistogram is returned.
     """
-    # if config is None:
-    #     return NullHistogram(NullHistogramConfig("No histogram configured"))
-
     try:
         with resource.open_raw_file(filename) as infile:
             content = infile.read()
     except FileNotFoundError:
-        logger.warning(
-            "unable to load histogram file: %s",
-            filename)
-        return NullHistogram(NullHistogramConfig(
-            f"Could not load file {filename}"
-        ))
+        logger.error(
+            "unable to load histogram file: %s; file not found", filename)
+        return None
 
+    hist_data = yaml.load(content, yaml.Loader)
+    config = hist_data["config"]
+    hist_type = config["type"]
     try:
-        if isinstance(config, NumberHistogramConfig):
+        if hist_type == "number":
             return NumberHistogram.deserialize(content)
-        if isinstance(config, CategoricalHistogramConfig):
+        if hist_type == "categorical":
             return CategoricalHistogram.deserialize(content)
-        if isinstance(config, NullHistogramConfig):
+        if hist_type == "null":
             return NullHistogram.deserialize(content)
 
         return NullHistogram(NullHistogramConfig("Invalid histogram type"))

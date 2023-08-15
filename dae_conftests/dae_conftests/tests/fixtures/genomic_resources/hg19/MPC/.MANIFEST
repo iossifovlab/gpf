@@ -22,3 +22,6 @@
 - md5: fa34cc11495d17d5e7b82b1e4de087ab
   name: statistics/histogram_MPC.yaml
   size: 1887
+- md5: d93c8841de74d808bf750125fe134b6b
+  name: statistics/stats_hash
+  size: 5049

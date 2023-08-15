@@ -3,7 +3,9 @@ import textwrap
 import pytest
 from dae.genomic_resources.repository import GenomicResource, GR_CONF_FILE_NAME
 from dae.genomic_resources.genomic_scores import \
-    build_score_from_resource, build_score_implementation_from_resource
+    build_score_from_resource
+from dae.genomic_resources.implementations.genomic_scores import \
+    build_score_implementation_from_resource
 from dae.genomic_resources.genomic_position_table import \
     VCFGenomicPositionTable
 from dae.genomic_resources.fsspec_protocol import build_fsspec_protocol

@@ -40,3 +40,6 @@
 - md5: 928031108cbe0fa41f4ca78f36217139
   name: statistics/min_max_score4.yaml
   size: 46
+- md5: 4fa7f590cc6b9cdd992b332ce9b6aae3
+  name: statistics/stats_hash
+  size: 13959

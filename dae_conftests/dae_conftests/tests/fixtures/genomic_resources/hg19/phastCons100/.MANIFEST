@@ -13,3 +13,6 @@
 - md5: 47c4c84f0598f19fd3ca842c3f2f28c9
   name: statistics/histogram_phastCons100.yaml
   size: 403
+- md5: bc8c83e9f2c3b16a8db0306b442ea368
+  name: statistics/stats_hash
+  size: 1822

@@ -25,3 +25,6 @@
 - md5: 6e9e93dcb90385720a07807887b34f15
   name: statistics/min_max_cadd_raw.yaml
   size: 49
+- md5: 56813a1be3862f38ba21f37b896b6f8b
+  name: statistics/stats_hash
+  size: 10211

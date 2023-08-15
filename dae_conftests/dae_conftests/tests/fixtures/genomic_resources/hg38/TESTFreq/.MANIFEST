@@ -25,3 +25,6 @@
 - md5: 052893976a56a5f8ecc5b595da4763fc
   name: statistics/min_max_altFreq2.yaml
   size: 41
+- md5: 9910e22bbf9ebaacdfebf887b11f8a18
+  name: statistics/stats_hash
+  size: 9367

@@ -16,3 +16,6 @@
 - md5: e51e615c1d3d01c7c9a49126bce20fb4
   name: statistics/min_max_test_score.yaml
   size: 40
+- md5: b2cb34f34f7c74d57b62d45e24fe4aa0
+  name: statistics/stats_hash
+  size: 4847
