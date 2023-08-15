@@ -1,13 +1,9 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 from pathlib import Path
-from typing import Any, Callable, Dict, Literal, Optional
+from typing import Literal
 import pytest
-from dae.import_tools.import_tools import construct_import_annotation_pipeline
-from dae.variants_loaders.dae.loader import DenovoLoader
-from dae.variants_loaders.raw.loader import AnnotationPipelineDecorator
 from dae.variants.attributes import Inheritance
 from dae.variants_loaders.vcf.loader import VcfLoader
-from dae.configuration.gpf_config_parser import DefaultBox
 from dae.genomic_resources.testing import setup_pedigree, setup_vcf
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.testing.acgt_import import acgt_gpf
@@ -48,76 +44,6 @@ def quads_f1_vcf(tmp_path_factory: pytest.TempPathFactory) -> Path:
     chr2    24   	.	T	G	.	  .	      .	    GT	    0/0	  0/1	0/1	  0/0
     """)
     return vcf_path
-
-
-def vcf_loader_data(prefix: str, pedigree: Path, vcf: Path) -> DefaultBox:
-    conf = {
-        "prefix": prefix,
-        "pedigree": str(pedigree),
-        "vcf": str(vcf)
-    }
-
-    return DefaultBox(conf)
-
-
-@pytest.fixture()
-def vcf_variants_loaders(
-    gpf_instance: GPFInstance
-) -> Callable[[Any, Optional[dict[str, Any]]], list[Any]]:
-    annotation_pipeline = construct_import_annotation_pipeline(
-        gpf_instance
-    )
-
-    def builder(
-        path: Any,
-        params: Optional[Dict[str, Any]] = None,
-    ) -> list:
-        if params is None:
-            params = {
-                "vcf_include_reference_genotypes": True,
-                "vcf_include_unknown_family_genotypes": True,
-                "vcf_include_unknown_person_genotypes": True,
-                "vcf_denovo_mode": "denovo",
-                "vcf_omission_mode": "omission",
-            }
-        config = path
-
-        families_loader = FamiliesLoader(config.pedigree)
-        families = families_loader.load()
-
-        loaders = []
-
-        if config.denovo:
-            denovo_loader = DenovoLoader(
-                families,
-                config.denovo,
-                gpf_instance.reference_genome,
-                params={
-                    "denovo_genotype": "genotype",
-                    "denovo_family_id": "family",
-                    "denovo_chrom": "chrom",
-                    "denovo_pos": "pos",
-                    "denovo_ref": "ref",
-                    "denovo_alt": "alt",
-                }
-            )
-            loaders.append(AnnotationPipelineDecorator(
-                denovo_loader, annotation_pipeline))
-
-        vcf_loader = VcfLoader(
-            families,
-            [config.vcf],
-            gpf_instance.reference_genome,
-            params=params
-        )
-
-        loaders.append(AnnotationPipelineDecorator(
-            vcf_loader, annotation_pipeline
-        ))
-
-        return loaders
-
-    return builder
 
 
 # def test_transform_vcf_genotype():
@@ -266,11 +192,12 @@ def test_vcf_omission_mode(
 
 
 @pytest.fixture
-def f1_test_ped(
+def f1_test(
     tmp_path_factory: pytest.TempPathFactory
-) -> Path:
-    root_path = tmp_path_factory.mktemp("inheritance_trio_denovo_omission_ped")
-    ped_path = setup_pedigree(root_path / "ped_data" / "in.ped", """
+) -> tuple[str, str]:
+    root_path = tmp_path_factory.mktemp("inheritance_trio_denovo_omission")
+
+    ped_path = setup_pedigree(root_path / "data" / "f1_test.ped", """
     familyId	personId	dadId	momId	sex	status	role
     f1	        mom1	    0	    0	    2	1   	mom
     f1	        dad1	    0	    0	    1	1   	dad
@@ -278,15 +205,7 @@ def f1_test_ped(
     f1	        ch2	        dad1	mom1	1	1   	sib
     """)
 
-    return ped_path
-
-
-@pytest.fixture
-def f1_test_vcf(
-    tmp_path_factory: pytest.TempPathFactory
-) -> Path:
-    root_path = tmp_path_factory.mktemp("inheritance_trio_denovo_omission_vcf")
-    vcf_path = setup_vcf(root_path / "vcf_data" / "in.vcf", """
+    vcf_path = setup_vcf(root_path / "data" / "f1_test.vcf", """
     ##fileformat=VCFv4.2
     ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
     ##INFO=<ID=EFF,Number=1,Type=String,Description="Effect">
@@ -302,7 +221,7 @@ def f1_test_vcf(
     chr1    97   .	T	C,A	.	    .	    EFF=SYN!MIS;INH=OMI	GT	    1/1 	2/2 	1/1	  2/2
     """) # noqa
 
-    return vcf_path
+    return (str(ped_path), str(vcf_path))
 
 
 @pytest.mark.parametrize(
@@ -319,13 +238,12 @@ def f1_test_vcf(
     ],
 )
 def test_vcf_loader_params(
-    vcf_variants_loaders: Any,
-    f1_test_ped: Path,
-    f1_test_vcf: Path,
+    f1_test: tuple[str, str],
     vcf_include_reference_genotypes: bool,
     vcf_include_unknown_family_genotypes: bool,
     vcf_include_unknown_person_genotypes: bool,
     count: bool,
+    gpf_instance: GPFInstance
 ) -> None:
     params = {
         "vcf_include_reference_genotypes":
@@ -335,12 +253,14 @@ def test_vcf_loader_params(
         "vcf_include_unknown_person_genotypes":
         vcf_include_unknown_person_genotypes,
     }
+    ped_path, vcf_path = f1_test
+    families = FamiliesLoader(ped_path).load()
+    vcf_loader = VcfLoader(families,
+                           [vcf_path],
+                           gpf_instance.reference_genome,
+                           params=params)
 
-    config = vcf_loader_data("f1_test", f1_test_ped, f1_test_vcf)
-
-    variants_loader = vcf_variants_loaders(
-        config, params=params)[0]
-    variants = list(variants_loader.family_variants_iterator())
+    variants = list(vcf_loader.family_variants_iterator())
     assert len(variants) == count
 
 
