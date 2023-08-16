@@ -619,7 +619,7 @@ def build_empty_histogram(
 
 def load_histogram(
     resource: GenomicResource, filename: str
-) -> Optional[Histogram]:
+) -> Histogram:
     """Load and return a histogram in a resource.
 
     On an error or missing histogram, an appropriate NullHistogram is returned.

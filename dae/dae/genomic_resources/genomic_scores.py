@@ -17,6 +17,7 @@ from dae.genomic_resources.resource_implementation import \
 from dae.genomic_resources.genomic_position_table import \
     build_genomic_position_table, Line, \
     TabixGenomicPositionTable, VCFGenomicPositionTable, VCFLine
+from dae.genomic_resources.genomic_position_table.line import LineBase
 from dae.genomic_resources.histogram import \
     HistogramConfig, Histogram, \
     build_histogram_config, load_histogram, \
@@ -139,9 +140,9 @@ class _ScoreDef:
 class ScoreLine:
     """Abstraction for a genomic score line. Wraps the line adapter."""
 
-    def __init__(self, line: Line, score_defs: dict[str, _ScoreDef]):
+    def __init__(self, line: LineBase, score_defs: dict[str, _ScoreDef]):
         assert isinstance(line, (Line, VCFLine))
-        self.line: Line = line
+        self.line = line
         self.score_defs = score_defs
 
     @property
@@ -168,7 +169,7 @@ class ScoreLine:
         """Get and parse configured score from line."""
         key = self.score_defs[score_id].score_index
         assert key is not None
-        value = self.line.get(key)
+        value: Optional[str] = self.line.get(key)
         if score_id in self.score_defs:
             col_def = self.score_defs[score_id]
             if value in col_def.na_values:
@@ -239,6 +240,7 @@ class GenomicScore(ResourceConfigValidationMixin):
     def __init__(self, resource: GenomicResource):
         self.resource = resource
         self.resource_id = resource.resource_id
+        assert self.resource.config is not None
         self.config: dict = self.resource.config
         self.config = self.validate_and_normalize_schema(
             self.config, resource
