@@ -175,8 +175,8 @@ class NullHistogramConfig:
 class NumberHistogram(Statistic):
     """Class to represent a histogram."""
 
-    # pylint: disable=too-many-instance-attributes
-    # FIXME:
+    type = "number_histogram"
+
     def __init__(
             self, config: NumberHistogramConfig,
             bins: Optional[np.ndarray] = None,
@@ -247,21 +247,30 @@ class NumberHistogram(Statistic):
     def merge(self, other: Statistic) -> None:
         """Merge two histograms."""
         assert isinstance(other, NumberHistogram)
-        assert self.config == other.config
+        # assert self.config == other.config, (self.config, other.config)
         assert self.bins is not None and self.bars is not None
         assert other.bins is not None and other.bars is not None
 
-        assert all(self.bins == other.bins)
+        assert all(self.bins == other.bins), (self.bins, other.bins)
 
         self.bars += other.bars
         self.out_of_range_bins[0] += other.out_of_range_bins[0]
         self.out_of_range_bins[1] += other.out_of_range_bins[1]
-        self.min_value = min(self.min_value, other.min_value)
-        self.max_value = max(self.max_value, other.max_value)
+        if np.isnan(self.min_value):
+            self.min_value = min(other.min_value, self.min_value)
+        else:
+            self.min_value = min(self.min_value, other.min_value)
+        if np.isnan(self.max_value):
+            self.max_value = max(other.max_value, self.max_value)
+        else:
+            self.max_value = max(self.max_value, other.max_value)
 
     @property
     def view_range(self) -> tuple[Optional[float], Optional[float]]:
         return self.config.view_range
+
+    def values_domain(self) -> str:
+        return f"[{self.min_value:0.3f}, {self.max_value:0.3f}]"
 
     def add_value(self, value: Optional[float]) -> None:
         """Add value to the histogram."""
@@ -385,6 +394,8 @@ class HistogramStatisticMixin:
 class NullHistogram(Statistic):
     """Class for annulled histograms."""
 
+    type = "null_histogram"
+
     def __init__(self, config: Optional[NullHistogramConfig]) -> None:
         super().__init__(
             "null_histogram", "Used for invalid/annulled histograms"
@@ -419,17 +430,20 @@ class NullHistogram(Statistic):
     @staticmethod
     def deserialize(content: str) -> NullHistogram:
         data = yaml.load(content, yaml.Loader)
-        hist_type = data.get("type")
+        config = data["config"]
+        hist_type = config.get("type")
         if hist_type != "null":
             raise TypeError(
                 f"Invalid configuration type for null histogram!\n{data}"
             )
-        reason = data.get("reason", "")
+        reason = config.get("reason", "")
         return NullHistogram(NullHistogramConfig(reason=reason))
 
 
 class CategoricalHistogram(Statistic):
     """Class for categorical data histograms."""
+
+    type = "categorical_histogram"
 
     VALUES_LIMIT = 100
 
@@ -496,6 +510,9 @@ class CategoricalHistogram(Statistic):
                     values[key] = count
             self._bars = values
         return self._bars
+
+    def values_domain(self) -> str:
+        return ", ".join(self.bars.keys())
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -613,7 +630,9 @@ def load_histogram(
     except FileNotFoundError:
         logger.error(
             "unable to load histogram file: %s; file not found", filename)
-        return None
+        return NullHistogram(NullHistogramConfig(
+            "Histogram file not found."
+        ))
 
     hist_data = yaml.load(content, yaml.Loader)
     config = hist_data["config"]

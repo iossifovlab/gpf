@@ -93,9 +93,10 @@ class GenomicScoreImplementation(
         <td>{{ score.desc }}</td>
 
         <td>
+        {% set hist = impl.score.get_score_histogram(score_id) %}
+        {%- if hist.type != 'null_histogram' %}
         {% set hist_image_file =
             impl.score.get_histogram_image_filename(score_id) %}
-        {%- if hist_image_file %}
         <img src="{{ hist_image_file }}"
             alt="{{ "HISTOGRAM FOR " + score_id }}"
             title={{ score_id }}
@@ -107,16 +108,10 @@ class GenomicScoreImplementation(
 
         <td>
 
-        {%- if score.value_type in ['float', 'int'] -%}
-        {% set min_max = impl.score.get_number_range(score_id) %}
-        {%- if min_max is not none and
-                min_max[0] is not none and min_max[1] is not none -%}
-        ({{"%0.3f" % min_max[0]}}, {{"%0.3f" % min_max[1]}})
+        {%- if hist.type != 'null_histogram' %}
+        {{ hist.values_domain() }}
         {%- else -%}
-        NO RANGE
-        {%- endif -%}
-        {%- else -%}
-        NO RANGE
+        NO DOMAIN
         {%- endif -%}
 
         </td>
@@ -437,28 +432,37 @@ class GenomicScoreImplementation(
         for score_id, hist_conf in all_hist_confs.items():
             if isinstance(hist_conf, NullHistogramConfig):
                 continue
-            for histogram_region in calculated_histograms:
-                if score_id not in histogram_region:
-                    logger.warning(
-                        "region has no histogram for score %s in %s",
-                        score_id, resource.resource_id)
-                    continue
-                hist = histogram_region[score_id]
-                if isinstance(result[score_id], NullHistogram):
-                    continue
-                if isinstance(hist, NullHistogram):
-                    result[score_id] = NullHistogram(NullHistogramConfig(
-                        f"Histogram for {score_id} nullified for a region"))
-                else:
-                    try:
+            try:
+                for histogram_region in calculated_histograms:
+                    if score_id not in histogram_region:
+                        logger.warning(
+                            "region has no histogram for score %s in %s",
+                            score_id, resource.resource_id)
+                        continue
+                    hist = histogram_region[score_id]
+                    if isinstance(result[score_id], NullHistogram):
+                        continue
+                    if isinstance(hist, NullHistogram):
+                        result[score_id] = NullHistogram(NullHistogramConfig(
+                            f"Histogram for {score_id} nullified for a "
+                            f"region"))
+                    else:
                         result[score_id].merge(hist)
-                    except HistogramError as err:
-                        logger.exception(
-                            "Histogram for %s nullified",
-                            score_id
-                        )
-                        result[score_id] = NullHistogram(
-                            NullHistogramConfig(str(err)))
+
+            except HistogramError as err:
+                logger.error(
+                    "Histogram for %s nullified",
+                    score_id
+                )
+                result[score_id] = NullHistogram(
+                    NullHistogramConfig(str(err)))
+            except AssertionError as err:
+                logger.error(
+                    "Assertion error for %s; histogram nullified",
+                    score_id
+                )
+                result[score_id] = NullHistogram(
+                    NullHistogramConfig(str(err)))
         return result
 
     @staticmethod
