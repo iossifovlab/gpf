@@ -45,7 +45,7 @@ GR_ENCODING = "utf-8"
 _GR_ID_TOKEN_RE = re.compile("[a-zA-Z0-9._-]+")
 
 
-def is_gr_id_token(token):
+def is_gr_id_token(token: str) -> bool:
     """Check if token can be used as a genomic resource ID.
 
     Genomic Resource Id Token is a string with one or more letters,
@@ -59,7 +59,7 @@ _GR_ID_WITH_VERSION_TOKEN_RE = re.compile(
     r"([a-zA-Z0-9._-]+)(?:\(([1-9]\d*(?:\.\d+)*)\))?")
 
 
-def parse_gr_id_version_token(token):
+def parse_gr_id_version_token(token: str) -> tuple[str, tuple[int, ...]]:
     """Parse genomic resource ID with version.
 
     Genomic Resource Id Version Token is a Genomic Resource Id Token with
@@ -73,7 +73,8 @@ def parse_gr_id_version_token(token):
 
     match = _GR_ID_WITH_VERSION_TOKEN_RE.fullmatch(token)
     if not match:
-        return None
+        raise ValueError(
+            f"unexpected value for resource ID + version: {token}")
     token = match[1]
     version_string = match[2]
     if version_string:
@@ -87,7 +88,8 @@ _RESOURCE_ID_WITH_VERSION_PATH_RE = re.compile(
     r"([a-zA-Z0-9/._-]+)(?:\(([1-9]\d*(?:\.\d+)*)\))?")
 
 
-def parse_resource_id_version(resource_path):
+def parse_resource_id_version(
+        resource_path: str) -> tuple[str, tuple[int, ...]]:
     """Parse genomic resource id and version path into Id, Version tuple.
 
     An optional version (0,) appened if needed. If present, the version suffix
@@ -101,7 +103,7 @@ def parse_resource_id_version(resource_path):
 
     match = _RESOURCE_ID_WITH_VERSION_PATH_RE.fullmatch(resource_path)
     if not match:
-        return None, None
+        raise ValueError(f"unexpeced resource path: {resource_path}")
     token = match[1]
     version_string = match[2]
     if version_string:
@@ -111,7 +113,7 @@ def parse_resource_id_version(resource_path):
     return token, version
 
 
-def version_string_to_suffix(version: str):
+def version_string_to_suffix(version: str) -> str:
     """Transform version string into resource ID version suffix."""
     if version == "0":
         return ""
@@ -122,7 +124,7 @@ def version_tuple_to_string(version: tuple[int, ...]) -> str:
     return ".".join(map(str, version))
 
 
-def version_tuple_to_suffix(version):
+def version_tuple_to_suffix(version: tuple[int, ...]) -> str:
     """Transform version tuple into resource ID version suffix."""
     if version == (0,):
         return ""
@@ -132,7 +134,8 @@ def version_tuple_to_suffix(version):
 VERSION_CONSTRAINT_RE = re.compile(r"(>=|=)?(\d+(?:\.\d+)*)")
 
 
-def is_version_constraint_satisfied(version_constraint, version):
+def is_version_constraint_satisfied(
+        version_constraint: Optional[str], version: tuple[int, ...]) -> bool:
     """Check if a version matches a version constraint."""
     if not version_constraint:
         return True
@@ -173,7 +176,7 @@ class ResourceFileState:
 class Manifest:
     """Provides genomic resource manifest object."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.entries: dict[str, ManifestEntry] = {}
 
     @staticmethod
@@ -201,10 +204,10 @@ class Manifest:
             for entry in self.entries.values()
         ]
 
-    def __getitem__(self, name):
+    def __getitem__(self, name: str) -> ManifestEntry:
         return self.entries[name]
 
-    def __contains__(self, name):
+    def __contains__(self, name: str) -> bool:
         return name in self.entries
 
     def __iter__(self) -> Iterator[ManifestEntry]:
@@ -215,13 +218,13 @@ class Manifest:
             return False
         return self.entries == other.entries
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.entries)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return str(self.entries)
 
-    def to_manifest_entries(self):
+    def to_manifest_entries(self) -> list[dict[str, Any]]:
         """Transform manifest to list of dictionaries.
 
         Helpfull when storing the manifest.
@@ -250,7 +253,7 @@ class ManifestUpdate:
     entries_to_delete: set[str]
     entries_to_update: set[str]
 
-    def __bool__(self):
+    def __bool__(self) -> bool:
         return bool(self.entries_to_delete or self.entries_to_update)
 
 
@@ -259,9 +262,8 @@ class GenomicResource:
 
     def __init__(
             self, resource_id: str, version: tuple[int, ...],
-            protocol: Union[
-                ReadOnlyRepositoryProtocol, ReadWriteRepositoryProtocol],
-            config=None,
+            protocol: RepositoryProtocol,
+            config: Optional[dict[str, Any]] = None,
             manifest: Optional[Manifest] = None):
 
         self.resource_id = resource_id
@@ -283,20 +285,23 @@ class GenomicResource:
                     + ".".join(map(str, self.version))
                     + self.proto.get_url())
 
-    def invalidate(self):
+    def invalidate(self) -> None:
         """Clean up cached attributes like manifest, etc."""
         self._manifest = None
 
-    def get_id(self):
+    def get_id(self) -> str:
         """Return genomic resource ID."""
         return self.resource_id
 
-    def get_config(self):
+    def get_config(self) -> Optional[dict[str, Any]]:
         """Return the resouce configuration."""
         return self.config
 
     def get_description(self) -> str:
+        """Return resource description."""
         config = self.get_config()
+        if config is None:
+            raise ValueError(f"resource {self.resource_id} not configured")
         if config.get("meta"):
             meta = config["meta"]
             if meta.get("description"):
@@ -304,7 +309,10 @@ class GenomicResource:
         return ""
 
     def get_summary(self) -> Optional[str]:
+        """Return resource summary."""
         config = self.get_config()
+        if config is None:
+            raise ValueError(f"resource {self.resource_id} not configured")
         if config.get("meta"):
             meta = config["meta"]
             if meta.get("summary"):
@@ -315,19 +323,25 @@ class GenomicResource:
         return f"{self.proto.get_url()}/{self.get_id()}"
 
     def get_labels(self) -> dict[str, Any]:
-        config: dict[str, Any] = self.get_config()
+        """Return resource labels."""
+        config = self.get_config()
+        if config is None:
+            raise ValueError(f"resource {self.resource_id} not configured")
         if config.get("meta"):
             meta: dict[str, Any] = config["meta"]
             if meta.get("labels"):
                 return cast(dict[str, Any], meta["labels"])
         return {}
 
-    def get_type(self):
+    def get_type(self) -> str:
         """Return resource type as defined in 'genomic_resource.yaml'."""
-        config_type = self.get_config().get("type")
+        config = self.get_config()
+        if config is None:
+            raise ValueError(f"resource {self.resource_id} not configured")
+        config_type = config.get("type")
         if config_type is None:
             return "Basic"
-        return config_type
+        return cast(str, config_type)
 
     def get_version_str(self) -> str:
         """Return version string of the form '3.1'."""
@@ -342,7 +356,7 @@ class GenomicResource:
         """
         return f"{self.resource_id}{version_tuple_to_suffix(self.version)}"
 
-    def file_exists(self, filename):
+    def file_exists(self, filename: str) -> bool:
         """Check if filename exists in this resource."""
         return self.proto.file_exists(self, filename)
 
@@ -352,7 +366,9 @@ class GenomicResource:
             self._manifest = self.proto.get_manifest(self)
         return self._manifest
 
-    def get_file_content(self, filename, uncompress=True, mode="t"):
+    def get_file_content(
+            self, filename: str,
+            uncompress: bool = True, mode: str = "t") -> Any:
         """Return the content of file in a resource."""
         return self.proto.get_file_content(
             self, filename, uncompress=uncompress, mode=mode)
@@ -365,12 +381,14 @@ class GenomicResource:
             self, filename, mode, **kwargs)
 
     def open_tabix_file(
-            self, filename, index_filename=None) -> pysam.TabixFile:
+            self, filename: str,
+            index_filename: Optional[str] = None) -> pysam.TabixFile:
         """Open a tabix file and returns a pysam.TabixFile."""
         return self.proto.open_tabix_file(self, filename, index_filename)
 
     def open_vcf_file(
-            self, filename, index_filename=None) -> pysam.VariantFile:
+            self, filename: str,
+            index_filename: Optional[str] = None) -> pysam.VariantFile:
         """Open a vcf file and returns a pysam.VariantFile."""
         return self.proto.open_vcf_file(self, filename, index_filename)
 
@@ -390,11 +408,11 @@ class ReadOnlyRepositoryProtocol(abc.ABC):
     def __init__(self, proto_id: str):
         self.proto_id = proto_id
 
-    def mode(self):
+    def mode(self) -> Mode:
         """Return repository protocol mode - READONLY or READWRITE."""
         return Mode.READONLY
 
-    def get_id(self):
+    def get_id(self) -> str:
         """Return the repository ID."""
         return self.proto_id
 
@@ -403,7 +421,7 @@ class ReadOnlyRepositoryProtocol(abc.ABC):
         """Return the repository URL."""
 
     @abc.abstractmethod
-    def invalidate(self):
+    def invalidate(self) -> None:
         """Invalidate internal cache of repository protocol."""
 
     @abc.abstractmethod
@@ -425,7 +443,7 @@ class ReadOnlyRepositoryProtocol(abc.ABC):
         if not matching_resources:
             return None
 
-        def get_resource_version(res: GenomicResource):
+        def get_resource_version(res: GenomicResource) -> tuple[int, ...]:
             return res.version
 
         return max(
@@ -446,17 +464,18 @@ class ReadOnlyRepositoryProtocol(abc.ABC):
                 f"resource <{resource_id}> ({version_constraint}) not found")
         return resource
 
-    def load_yaml(self, genomic_resource, filename):
+    def load_yaml(self, resource: GenomicResource, filename: str) -> Any:
         """Return parsed YAML file."""
         content = self.get_file_content(
-            genomic_resource, filename, uncompress=True)
+            resource, filename, uncompress=True)
         result = yaml.safe_load(content)
         if result is None:
             return {}
         return result
 
     def get_file_content(
-            self, resource, filename, uncompress=True, mode="t"):
+            self, resource: GenomicResource,
+            filename: str, uncompress: bool = True, mode: str = "t") -> Any:
         """Return content of a file in given resource."""
         with self.open_raw_file(
                 resource, filename, mode=f"r{mode}",
@@ -468,7 +487,7 @@ class ReadOnlyRepositoryProtocol(abc.ABC):
         """Load resource manifest."""
 
     @abc.abstractmethod
-    def file_exists(self, resource, filename) -> bool:
+    def file_exists(self, resource: GenomicResource, filename: str) -> bool:
         """Check if given file exist in give resource."""
 
     @abc.abstractmethod
@@ -479,8 +498,8 @@ class ReadOnlyRepositoryProtocol(abc.ABC):
 
     @abc.abstractmethod
     def open_tabix_file(
-            self, resource, filename,
-            index_filename=None) -> pysam.TabixFile:
+            self, resource: GenomicResource, filename: str,
+            index_filename: Optional[str] = None) -> pysam.TabixFile:
         """Open a tabix file in a resource and return a pysam tabix file.
 
         Not all repositories support this method. Repositories that do
@@ -489,15 +508,15 @@ class ReadOnlyRepositoryProtocol(abc.ABC):
 
     @abc.abstractmethod
     def open_vcf_file(
-            self, resource, filename,
-            index_filename=None) -> pysam.VariantFile:
+            self, resource: GenomicResource, filename: str,
+            index_filename: Optional[str] = None) -> pysam.VariantFile:
         """Open a vcf file in a resource and return a pysam VariantFile.
 
         Not all repositories support this method. Repositories that do
         no support this method raise and exception.
         """
 
-    def compute_md5_sum(self, resource, filename):
+    def compute_md5_sum(self, resource: GenomicResource, filename: str) -> str:
         """Compute a md5 hash for a file in the resource."""
         logger.debug(
             "compute md5sum for %s in %s", filename, resource.resource_id)
@@ -514,8 +533,9 @@ class ReadOnlyRepositoryProtocol(abc.ABC):
         return manifest
 
     def build_genomic_resource(
-            self, resource_id, version, config=None,
-            manifest: Optional[Manifest] = None):
+            self, resource_id: str, version: tuple[int, ...],
+            config: Optional[dict] = None,
+            manifest: Optional[Manifest] = None) -> GenomicResource:
         """Build a genomic resource based on this protocol."""
         if not config:
             res = GenomicResource(resource_id, version, self)
@@ -531,7 +551,7 @@ class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
 
     # pylint: disable=too-many-public-methods
 
-    def mode(self):
+    def mode(self) -> Mode:
         return Mode.READWRITE
 
     @abc.abstractmethod
@@ -539,11 +559,12 @@ class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
         """Return generator for all resources managed by this protocol."""
 
     @abc.abstractmethod
-    def collect_resource_entries(self, resource) -> Manifest:
+    def collect_resource_entries(self, resource: GenomicResource) -> Manifest:
         """Scan the resource and returns manifest with all files."""
 
     def _update_manifest_entry_and_state(
-            self, resource, entry, prebuild_entries):
+            self, resource: GenomicResource, entry: ManifestEntry,
+            prebuild_entries: dict[str, ManifestEntry]) -> None:
         pre_state = self.load_resource_file_state(resource, entry.name)
         size = None
         md5 = None
@@ -573,8 +594,9 @@ class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
         entry.size = state.size
 
     def build_manifest(
-            self, resource,
-            prebuild_entries: Optional[dict[str, ManifestEntry]] = None):
+        self, resource: GenomicResource,
+        prebuild_entries: Optional[dict[str, ManifestEntry]] = None
+    ) -> Manifest:
         """Build full manifest for the resource."""
         if prebuild_entries is None:
             prebuild_entries = {}
@@ -652,7 +674,8 @@ class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
 
         return manifest
 
-    def save_manifest(self, resource, manifest: Manifest):
+    def save_manifest(
+            self, resource: GenomicResource, manifest: Manifest) -> None:
         """Save manifest into genomic resource's directory."""
         logger.debug(
             "save manifest of resource %s from %s", resource.resource_id,
@@ -663,12 +686,12 @@ class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
             yaml.dump(manifest.to_manifest_entries(), outfile)
         resource.invalidate()
 
-    def save_index(self, resource: GenomicResource, contents: str):
+    def save_index(self, resource: GenomicResource, contents: str) -> None:
         """Save an index HTML file into the genomic resource's directory."""
         with self.open_raw_file(resource, GR_INDEX_FILE_NAME, "wt") as outfile:
             outfile.write(contents)
 
-    def get_manifest(self, resource):
+    def get_manifest(self, resource: GenomicResource) -> Manifest:
         """Load or build a resource manifest."""
         try:
             manifest = self.load_manifest(resource)
@@ -690,7 +713,7 @@ class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
     def build_resource_file_state(
             self, resource: GenomicResource,
             filename: str,
-            **kwargs) -> ResourceFileState:
+            **kwargs: Union[str, float, int, None]) -> ResourceFileState:
         """Build resource file state."""
         if not self.file_exists(resource, filename):
             raise ValueError(
@@ -712,9 +735,9 @@ class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
 
         return ResourceFileState(
             filename,
-            size,
-            timestamp,
-            md5)
+            cast(int, size),
+            cast(float, timestamp),
+            cast(str, md5))
 
     @abc.abstractmethod
     def save_resource_file_state(
@@ -817,7 +840,7 @@ class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
 
         if files_to_copy is None:
             files_to_copy = set(map(
-                lambda entry: entry.name, remote_manifest))  # type: ignore
+                lambda entry: entry.name, remote_manifest))
         else:
             files_to_copy.add(GR_CONF_FILE_NAME)  # config is always required
 
@@ -835,7 +858,7 @@ class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
             version_constraint=f"={remote_resource.get_version_str()}")
 
     @abc.abstractmethod
-    def build_content_file(self):
+    def build_content_file(self) -> None:
         """Build the content of the repository (i.e '.CONTENTS' file)."""
 
 
@@ -847,26 +870,26 @@ class GenomicResourceRepo(abc.ABC):
         self._definition: Optional[dict[str, Any]] = None
 
     @property
-    def definition(self):
+    def definition(self) -> Optional[dict[str, Any]]:
         if self._definition:
             return copy.deepcopy(self._definition)
         return self._definition
 
     @definition.setter
-    def definition(self, value):
+    def definition(self, value: dict[str, Any]) -> None:
         self._definition = copy.deepcopy(value)
 
     @abc.abstractmethod
-    def invalidate(self):
+    def invalidate(self) -> None:
         """Invalidate internal state of the repository."""
 
     @property
-    def repo_id(self):
+    def repo_id(self) -> str:
         return self._repo_id
 
     @abc.abstractmethod
     def get_resource(
-            self, resource_id, version_constraint: Optional[str] = None,
+            self, resource_id: str, version_constraint: Optional[str] = None,
             repository_id: Optional[str] = None) -> GenomicResource:
         """Return one resource with id qual to resource_id.
 
@@ -875,7 +898,7 @@ class GenomicResourceRepo(abc.ABC):
 
     @abc.abstractmethod
     def find_resource(
-            self, resource_id, version_constraint: Optional[str] = None,
+            self, resource_id: str, version_constraint: Optional[str] = None,
             repository_id: Optional[str] = None) -> Optional[GenomicResource]:
         """Return one resource with id qual to resource_id.
 
@@ -897,7 +920,7 @@ class GenomicResourceProtocolRepo(GenomicResourceRepo):
         super().__init__(proto.get_id())
         self.proto = proto
 
-    def invalidate(self):
+    def invalidate(self) -> None:
         self.proto.invalidate()
 
     def get_resource(
@@ -922,3 +945,7 @@ class GenomicResourceProtocolRepo(GenomicResourceRepo):
 
     def get_all_resources(self) -> Generator[GenomicResource, None, None]:
         return self.proto.get_all_resources()
+
+
+RepositoryProtocol = Union[
+    ReadOnlyRepositoryProtocol, ReadWriteRepositoryProtocol]

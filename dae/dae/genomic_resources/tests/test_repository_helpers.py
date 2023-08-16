@@ -1,25 +1,32 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+import pytest
 
 from dae.genomic_resources.repository import parse_gr_id_version_token
 from dae.genomic_resources.repository import \
     is_version_constraint_satisfied
 
 
-def test_parse_gr_id_version_token():
+def test_parse_gr_id_version_token() -> None:
+    with pytest.raises(ValueError):
+        parse_gr_id_version_token("aaa(3.")
 
-    assert not parse_gr_id_version_token("aaa(3.")
-    assert not parse_gr_id_version_token("aaa(3.a)")
-    assert not parse_gr_id_version_token("(3.2)")
-    assert not parse_gr_id_version_token("aa*(3.0)")
-    assert not parse_gr_id_version_token("aa(0)")
-    assert not parse_gr_id_version_token("aa(0.2.3)")
+    with pytest.raises(ValueError):
+        parse_gr_id_version_token("aaa(3.a)")
+    with pytest.raises(ValueError):
+        parse_gr_id_version_token("(3.2)")
+    with pytest.raises(ValueError):
+        parse_gr_id_version_token("aa*(3.0)")
+    with pytest.raises(ValueError):
+        parse_gr_id_version_token("aa(0)")
+    with pytest.raises(ValueError):
+        parse_gr_id_version_token("aa(0.2.3)")
 
     assert parse_gr_id_version_token("aa") == ("aa", (0,))
     assert parse_gr_id_version_token("aa(2)") == ("aa", (2,))
     assert parse_gr_id_version_token("aa(2.2.4.1)") == ("aa", (2, 2, 4, 1))
 
 
-def test_is_version_constraint_satisfied():
+def test_is_version_constraint_satisfied() -> None:
     assert is_version_constraint_satisfied(None, (0,))
     assert is_version_constraint_satisfied(None, (1, 2))
 
