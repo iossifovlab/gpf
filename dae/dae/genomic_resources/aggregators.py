@@ -1,41 +1,46 @@
+from __future__ import annotations
+
 import re
 import math
+import abc
 
 from typing import cast, Any, Callable, Type
 
 
-class Aggregator:
+class Aggregator(abc.ABC):
     """Base class for score aggregators."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.total_count = 0
         self.used_count = 0
 
-    def __call__(self):
+    def __call__(self) -> Any:
         return self.get_final()
 
-    def add(self, value, **kwargs):
+    def add(self, value: Any, **kwargs: Any) -> None:
         self.total_count += 1
         self._add_internal(value, **kwargs)
 
-    def _add_internal(self, value, **kwargs):
+    @abc.abstractmethod
+    def _add_internal(self, value: Any, **kwargs: Any) -> None:
         raise NotImplementedError()
 
-    def clear(self):
+    def clear(self) -> None:
         self.total_count = 0
         self.used_count = 0
         self._clear_internal()
 
-    def _clear_internal(self):
+    @abc.abstractmethod
+    def _clear_internal(self) -> None:
         raise NotImplementedError()
 
     def get_final(self) -> Any:
         raise NotImplementedError()
 
-    def get_total_count(self):
+    def get_total_count(self) -> int:
         return self.total_count
 
-    def get_used_count(self):
+    def get_used_count(self) -> int:
         return self.used_count
 
     def __eq__(self, obj: object) -> bool:
@@ -45,35 +50,35 @@ class Aggregator:
 class MaxAggregator(Aggregator):
     """Maximum value aggregator for genomic scores."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.current_max = None
 
-    def _add_internal(self, value, **kwargs):
+    def _add_internal(self, value: Any, **kwargs: Any) -> None:
         if value is None:
             return
         if self.current_max is not None:
-            self.current_max = max(self.current_max, value)
+            self.current_max = max(value, self.current_max)
         else:
             self.current_max = value
 
         self.used_count += 1
 
-    def _clear_internal(self):
+    def _clear_internal(self) -> None:
         self.current_max = None
 
-    def get_final(self):
+    def get_final(self) -> Any:
         return self.current_max
 
 
 class MinAggregator(Aggregator):
     """Minimum value aggregator for genomic scores."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.current_min = None
 
-    def _add_internal(self, value, **kwargs):
+    def _add_internal(self, value: Any, **kwargs: Any) -> None:
         if value is None:
             return
         if self.current_min is not None:
@@ -83,31 +88,31 @@ class MinAggregator(Aggregator):
 
         self.used_count += 1
 
-    def _clear_internal(self):
+    def _clear_internal(self) -> None:
         self.current_min = None
 
-    def get_final(self):
+    def get_final(self) -> Any:
         return self.current_min
 
 
 class MeanAggregator(Aggregator):
     """Aggregator for genomic scores that calculates mean value."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.sum = 0
 
-    def _add_internal(self, value, **kwargs):
+    def _add_internal(self, value: Any, **kwargs: Any) -> None:
         if value is None:
             return
 
         self.sum += value
         self.used_count += 1
 
-    def _clear_internal(self):
+    def _clear_internal(self) -> None:
         self.sum = 0
 
-    def get_final(self):
+    def get_final(self) -> Any:
         if self.used_count > 0:
             return self.sum / self.used_count
         return None
@@ -116,19 +121,19 @@ class MeanAggregator(Aggregator):
 class ConcatAggregator(Aggregator):
     """Aggregator that concatenates all passed values."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.out = ""
 
-    def _add_internal(self, value, **kwargs):
+    def _add_internal(self, value: Any, **kwargs: Any) -> None:
         if value is not None:
             self.out += str(value)
             self.used_count += 1
 
-    def _clear_internal(self):
+    def _clear_internal(self) -> None:
         self.out = ""
 
-    def get_final(self):
+    def get_final(self) -> Any:
         if self.out == "":
             return None
 
@@ -138,19 +143,19 @@ class ConcatAggregator(Aggregator):
 class MedianAggregator(Aggregator):
     """Aggregator for genomic scores that calculates median value."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
-        self.values = []
+        self.values: list[Any] = []
 
-    def _add_internal(self, value, **kwargs):
+    def _add_internal(self, value: Any, **kwargs: Any) -> None:
         if value is not None:
             self.values.append(value)
             self.used_count += 1
 
-    def _clear_internal(self):
+    def _clear_internal(self) -> None:
         self.values.clear()
 
-    def get_final(self):
+    def get_final(self) -> Any:
         self.values.sort()
         print(self.values)
         if len(self.values) % 2 == 1:
@@ -168,21 +173,21 @@ class MedianAggregator(Aggregator):
 class ModeAggregator(Aggregator):
     """Aggregator for genomic scores that calculates mode value."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
-        self.value_counts = {}
+        self.value_counts: dict[Any, int] = {}
 
-    def _add_internal(self, value, **kwargs):
+    def _add_internal(self, value: Any, **kwargs: Any) -> None:
         if value is not None:
             if value not in self.value_counts:
                 self.value_counts[value] = 0
             self.value_counts[value] += 1
             self.used_count += 1
 
-    def _clear_internal(self):
+    def _clear_internal(self) -> None:
         self.value_counts.clear()
 
-    def get_final(self):
+    def get_final(self) -> Any:
         count_values: dict[Any, Any] = {}
         current_max = None
         for value, count in self.value_counts.items():
@@ -203,20 +208,20 @@ class ModeAggregator(Aggregator):
 class JoinAggregator(Aggregator):
     """Aggregator that joins all passed values using a separator."""
 
-    def __init__(self, separator):
+    def __init__(self, separator: str):
         super().__init__()
-        self.values = []
+        self.values: list[Any] = []
         self.separator = separator
 
-    def _add_internal(self, value, **kwargs):
+    def _add_internal(self, value: Any, **kwargs: Any) -> None:
         if value is not None:
             self.values.append(str(value))
             self.used_count += 1
 
-    def _clear_internal(self):
+    def _clear_internal(self) -> None:
         self.values.clear()
 
-    def get_final(self):
+    def get_final(self) -> Any:
         if len(self.values) > 0:
             return self.separator.join(self.values)
         return None
@@ -225,38 +230,38 @@ class JoinAggregator(Aggregator):
 class ListAggregator(Aggregator):
     """Aggregator that builds a list of all passed values."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
-        self.values = []
+        self.values: list[Any] = []
 
-    def _add_internal(self, value, **kwargs):
+    def _add_internal(self, value: Any, **kwargs: Any) -> None:
         if value is not None:
             self.values.append(value)
             self.used_count += 1
 
-    def _clear_internal(self):
+    def _clear_internal(self) -> None:
         self.values.clear()
 
-    def get_final(self):
+    def get_final(self) -> Any:
         return self.values
 
 
 class DictAggregator(Aggregator):
     """Aggregator that builds a dictionary of all passed values."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
-        self.values = {}
+        self.values: dict[Any, Any] = {}
 
-    def _add_internal(self, value, **kwargs):
+    def _add_internal(self, value: Any, **kwargs: Any) -> None:
         if value is not None:
             self.values[kwargs["key"]] = value
             self.used_count += 1
 
-    def _clear_internal(self):
+    def _clear_internal(self) -> None:
         self.values.clear()
 
-    def get_final(self):
+    def get_final(self) -> Any:
         return self.values
 
 
@@ -288,11 +293,11 @@ AGGREGATOR_SCHEMA = {
 }
 
 
-def get_aggregator_class(aggregator) -> Callable[[], Aggregator]:
+def get_aggregator_class(aggregator: str) -> Callable[[], Aggregator]:
     return AGGREGATOR_CLASS_DICT[aggregator]
 
 
-def create_aggregator_definition(aggregator_type):
+def create_aggregator_definition(aggregator_type: str) -> dict[str, Any]:
     """Parse an aggregator definition string."""
     join_regex = r"^(join)\((.+)\)"
     join_match = re.match(join_regex, aggregator_type)
@@ -307,7 +312,7 @@ def create_aggregator_definition(aggregator_type):
     }
 
 
-def create_aggregator(aggregator_def) -> Aggregator:
+def create_aggregator(aggregator_def: dict[str, Any]) -> Aggregator:
     """Create an aggregator by aggregator definition."""
     aggregator_name = aggregator_def["name"]
     aggregator_class = get_aggregator_class(aggregator_name)
@@ -317,12 +322,12 @@ def create_aggregator(aggregator_def) -> Aggregator:
     return aggregator_class()
 
 
-def build_aggregator(aggregator_type) -> Aggregator:
+def build_aggregator(aggregator_type: str) -> Aggregator:
     aggregator_def = create_aggregator_definition(aggregator_type)
     return create_aggregator(aggregator_def)
 
 
-def validate_aggregator(aggregator_type):
+def validate_aggregator(aggregator_type: str) -> None:
     try:
         build_aggregator(aggregator_type)
     except Exception as ex:
