@@ -52,7 +52,7 @@ setuptools.setup(
     position_score=dae.genomic_resources.implementations.genomic_scores_impl:GenomicScoreImplementation
     np_score=dae.genomic_resources.implementations.genomic_scores_impl:GenomicScoreImplementation
     allele_score=dae.genomic_resources.implementations.genomic_scores_impl:GenomicScoreImplementation
-    liftover_chain=dae.genomic_resources.liftover_resource:build_liftover_chain_from_resource
+    liftover_chain=dae.genomic_resources.implementations.liftover_chain_impl:LiftoverChainImplementation
     genome=dae.genomic_resources.implementations.reference_genome_impl:ReferenceGenomeImplementation
     vcf_info=dae.genomic_resources.vcf_info_score:build_vcf_info_from_resource
     gene_models=dae.genomic_resources.gene_models:build_gene_models_from_resource

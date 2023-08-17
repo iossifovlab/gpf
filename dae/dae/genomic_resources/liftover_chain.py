@@ -1,39 +1,28 @@
 """Provides LiftOver chain resource."""
 
 from __future__ import annotations
-from typing import Optional, cast, Any, Union
-import copy
-import textwrap
+from typing import Optional, cast, Any
 
 import logging
 
 from pyliftover import LiftOver  # type: ignore
 
-from jinja2 import Template
-from markdown2 import markdown
-
 from dae.genomic_resources import GenomicResource
 
 from dae.genomic_resources.resource_implementation import \
-    GenomicResourceImplementation, get_base_resource_schema, \
-    InfoImplementationMixin, ResourceConfigValidationMixin
-from dae.task_graph.graph import Task, TaskGraph
+    get_base_resource_schema, \
+    ResourceConfigValidationMixin
 
 
 logger = logging.getLogger(__name__)
 
 
-class LiftoverChain(
-    GenomicResourceImplementation,
-    InfoImplementationMixin,
-    ResourceConfigValidationMixin
-):
+class LiftoverChain(ResourceConfigValidationMixin):
     """Defines Lift Over chain wrapper around pyliftover objects."""
 
     def __init__(self, resource: GenomicResource):
 
-        super().__init__(resource)
-
+        self.resource = resource
         config = resource.get_config()
         if resource.get_type() != "liftover_chain":
             logger.error(
@@ -87,7 +76,7 @@ class LiftoverChain(
         return chrom
 
     def convert_coordinate(
-            self, chrom: str, pos: int) -> Optional[tuple[str, int]]:
+            self, chrom: str, pos: int) -> Optional[tuple[str, int, str, int]]:
         """Lift over a genomic coordinate."""
         chrom = self.map_chromosome(chrom, self.chrom_variant_coordinates)
         assert self.liftover is not None
@@ -104,60 +93,7 @@ class LiftoverChain(
         coordinates[0] = self.map_chromosome(
             coordinates[0], self.chrom_target_coordinates)
 
-        return cast(tuple[str, int], tuple(coordinates))
-
-    def get_template(self) -> Template:
-        return Template(textwrap.dedent("""
-            {% extends base %}
-            {% block content %}
-            <hr>
-            <h3>Liftover chain file:</h3>
-            <a href="{{ data["filename"] }}">
-            {{ data["filename"] }}
-            </a>
-            <p>Format: {{ data["format"] }}</p>
-            {% if data["variant_chrom"] %}
-            <p>{{ data["variant_chrom"] }}</p>
-            {% endif %}
-            {% if data["target_chrom"] %}
-            <p>{{ data["target_chrom"] }}</p>
-            {% endif %}
-            {% endblock %}
-        """))
-
-    def _get_template_data(self) -> dict[str, Any]:
-        info = copy.deepcopy(self.config)
-
-        if self.chrom_variant_coordinates is not None:
-            if "del_prefix" in self.chrom_variant_coordinates:
-                prefix = self.chrom_variant_coordinates["del_prefix"]
-                info["variant_chrom"] = (
-                    f"Deletes chrom prefix {prefix}"
-                    " from variants before performing liftover."
-                )
-            elif "add_prefix" in self.chrom_variant_coordinates:
-                prefix = self.chrom_variant_coordinates["add_prefix"]
-                info["variant_chrom"] = (
-                    f"Adds chrom prefix {prefix}"
-                    " to variants before performing liftover."
-                )
-
-        if self.chrom_target_coordinates is not None:
-            if "del_prefix" in self.chrom_target_coordinates:
-                prefix = self.chrom_target_coordinates["del_prefix"]
-                info["target_chrom"] = (
-                    f"Deletes chrom prefix {prefix}"
-                    " from variants after performing liftover."
-                )
-            elif "add_prefix" in self.chrom_target_coordinates:
-                prefix = self.chrom_target_coordinates["add_prefix"]
-                info["target_chrom"] = (
-                    f"Adds chrom prefix {prefix}"
-                    " to variants after performing liftover."
-                )
-        if "meta" in info:
-            info["meta"] = markdown(str(info["meta"]))
-        return info
+        return cast(tuple[str, int, str, int], tuple(coordinates))
 
     @staticmethod
     def get_schema() -> dict[str, Any]:
@@ -175,20 +111,6 @@ class LiftoverChain(
                 }}
             }}
         }
-
-    def get_info(self) -> str:
-        return InfoImplementationMixin.get_info(self)
-
-    def calc_info_hash(self) -> bytes:
-        return b"placeholder"
-
-    def calc_statistics_hash(self) -> bytes:
-        return b"placeholder"
-
-    def add_statistics_build_tasks(
-            self, task_graph: TaskGraph,
-            **kwargs: Union[str, None]) -> list[Task]:
-        return []
 
 
 def build_liftover_chain_from_resource(

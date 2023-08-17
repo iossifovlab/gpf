@@ -1,11 +1,13 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 
+from typing import Callable
+
 import pytest
 
 from dae.genomic_resources.fsspec_protocol import build_fsspec_protocol
 from dae.genomic_resources.repository import GenomicResourceProtocolRepo
 
-from dae.genomic_resources.liftover_resource import \
+from dae.genomic_resources.liftover_chain import \
     build_liftover_chain_from_resource
 
 
@@ -16,7 +18,9 @@ from dae.genomic_resources.liftover_resource import \
     (260_000, "1", 229_750, "+"),
 ])
 def test_liftover_chain_resource(
-        fixture_dirname, pos, expected_chrom, expected_pos, expected_strand):
+        fixture_dirname: Callable[[str], str],
+        pos: int, expected_chrom: str, expected_pos: int,
+        expected_strand: str) -> None:
 
     dirname = fixture_dirname("genomic_resources")
     proto = build_fsspec_protocol("d", dirname)
@@ -29,6 +33,7 @@ def test_liftover_chain_resource(
     chain.open()
 
     out = chain.convert_coordinate("chr1", pos)
+    assert out is not None
     assert out[0] == expected_chrom
     assert out[1] == expected_pos
     assert out[2] == expected_strand
