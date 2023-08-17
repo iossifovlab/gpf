@@ -16,7 +16,7 @@ from dae.genomic_resources.resource_implementation import \
     ResourceConfigValidationMixin, get_base_resource_schema
 from dae.genomic_resources.genomic_position_table import \
     build_genomic_position_table, Line, \
-    TabixGenomicPositionTable, VCFGenomicPositionTable, VCFLine
+    VCFGenomicPositionTable, VCFLine
 from dae.genomic_resources.genomic_position_table.line import LineBase
 from dae.genomic_resources.histogram import \
     HistogramConfig, Histogram, \
@@ -378,14 +378,6 @@ class GenomicScore(ResourceConfigValidationMixin):
                 "type": ["dict", "list"], "allow_unknown": True
             }
         }
-
-    @property
-    def files(self) -> set[str]:
-        files = set()
-        files.add(self.table.definition.filename)
-        if isinstance(self.table, TabixGenomicPositionTable):
-            files.add(f"{self.table.definition.filename}.tbi")
-        return files
 
     @staticmethod
     def _parse_scoredef_config(config: dict[str, Any]) -> dict[str, _ScoreDef]:

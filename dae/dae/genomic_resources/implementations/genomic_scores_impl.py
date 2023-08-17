@@ -176,7 +176,11 @@ class GenomicScoreImplementation(
 
     @property
     def files(self) -> set[str]:
-        return self.score.files
+        files = set()
+        files.add(self.score.table.definition.filename)
+        if isinstance(self.score.table, TabixGenomicPositionTable):
+            files.add(f"{self.score.table.definition.filename}.tbi")
+        return files
 
     @staticmethod
     def _get_reference_genome_cached(
@@ -508,7 +512,7 @@ class GenomicScoreImplementation(
                 "table": {
                     "config": self.score.table.definition,
                     "files_md5": {file_name: manifest[file_name].md5
-                                  for file_name in sorted(self.score.files)}
+                                  for file_name in sorted(self.files)}
                 }
             },
             "score_config": [
