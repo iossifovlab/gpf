@@ -376,59 +376,6 @@ def test_stats_np_score(tmp_path):
     assert cadd_test_hist.bars.sum() == (4 + 6 + 22)
 
 
-# def test_minmax(tmp_path):
-#     setup_directories(tmp_path, {
-#         "one": {
-#             GR_CONF_FILE_NAME: """
-#                 type: position_score
-#                 table:
-#                     filename: data.txt.gz
-#                     format: tabix
-#                 scores:
-#                     - id: phastCons100way
-#                       type: float
-#                       desc: "The phastCons computed over the tree of 100 \
-#                               verterbarte species"
-#                       name: s1
-#                       histogram:
-#                         type: number
-#                         number_of_bins: 100
-#                         x_log_scale: false
-#                         y_log_scale: false
-#             """
-#         }
-#     })
-#     setup_tabix(
-#         tmp_path / "one" / "data.txt.gz",
-#         """
-#         #chrom  pos_begin  pos_end  s1
-#         1      10         15       0.0
-#         1      17         19       0.03
-#         1      22         25       0.46
-#         2      5          80       0.01
-#         2      10         11       1.0
-#         3      5          17       1.0
-#         3      18         20       0.01
-#         """, seq_col=0, start_col=1, end_col=2)
-
-#     repo = build_filesystem_test_repository(tmp_path)
-
-#     assert repo is not None
-
-#     cli_manage(["repo-stats", "-R", str(tmp_path), "-j", "1"])
-
-#     minmax_100way_path = os.path.join(
-#         tmp_path, "one", "statistics", "min_max_phastCons100way.yaml"
-#     )
-#     assert os.path.exists(minmax_100way_path)
-
-#     with open(minmax_100way_path, "r") as infile:
-#         minmax = MinMaxValue.deserialize(infile.read())
-
-#     assert minmax.min == 0
-#     assert minmax.max == 1
-
-
 def test_reference_genome_usage(tmp_path, mocker):
     setup_directories(tmp_path, {
         "one": {
@@ -519,7 +466,7 @@ def test_reference_genome_usage(tmp_path, mocker):
     genomic_table_length_mock = mocker.Mock(return_value=30)
     mocker.patch(
         "dae.genomic_resources.implementations."
-        "genomic_scores.get_chromosome_length_tabix",
+        "genomic_scores_impl.get_chromosome_length_tabix",
         new=genomic_table_length_mock
     )
 

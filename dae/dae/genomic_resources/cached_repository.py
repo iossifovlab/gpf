@@ -3,8 +3,10 @@ from __future__ import annotations
 import os
 import logging
 
-from typing import Optional, Generator, Tuple
+from typing import Optional, Generator, IO, Union
 from concurrent.futures import ThreadPoolExecutor, as_completed
+
+import pysam
 
 from dae.genomic_resources.fsspec_protocol import FsspecReadWriteProtocol
 from dae.genomic_resources.repository import GenomicResourceRepo, \
@@ -19,7 +21,7 @@ logger = logging.getLogger(__name__)
 class CacheResource(GenomicResource):
     """Represents resources stored in cache."""
 
-    def __init__(self, resource, protocol: CachingProtocol):
+    def __init__(self, resource: GenomicResource, protocol: CachingProtocol):
         super().__init__(
             resource.resource_id,
             resource.version,
@@ -44,7 +46,7 @@ class CachingProtocol(ReadOnlyRepositoryProtocol):
     def get_url(self) -> str:
         return self.remote_protocol.get_url()
 
-    def invalidate(self):
+    def invalidate(self) -> None:
         self.remote_protocol.invalidate()
         self.local_protocol.invalidate()
         self._all_resources = None
@@ -59,20 +61,20 @@ class CachingProtocol(ReadOnlyRepositoryProtocol):
         yield from self._all_resources
 
     def _create_cache_resource(
-            self, remote_resource) -> CacheResource:
+            self, remote_resource: GenomicResource) -> CacheResource:
 
         return CacheResource(
             remote_resource,
             self)
 
     def refresh_cached_resource_file(
-            self, resource: GenomicResource, filename: str) -> Tuple[str, str]:
+            self, resource: GenomicResource, filename: str) -> tuple[str, str]:
         """Refresh a resource file in cache if neccessary."""
         assert resource.proto == self
 
         if filename.endswith(".lockfile"):
             # Ignore lockfiles
-            return ("", "")
+            return (resource.resource_id, filename)
 
         remote_resource = self.remote_protocol.get_resource(
             resource.resource_id,
@@ -84,7 +86,7 @@ class CachingProtocol(ReadOnlyRepositoryProtocol):
                 remote_resource, resource, filename)
         return (resource.resource_id, filename)
 
-    def refresh_cached_resource(self, resource: GenomicResource):
+    def refresh_cached_resource(self, resource: GenomicResource) -> None:
         """Refresh all resource files in cache if neccessary."""
         assert resource.proto == self
 
@@ -101,9 +103,10 @@ class CachingProtocol(ReadOnlyRepositoryProtocol):
                     resource, filename):
                 self.local_protocol.update_resource_file(
                     remote_resource, resource, filename)
-        return (resource.resource_id, "<all>")
 
-    def open_raw_file(self, resource, filename, mode="rt", **kwargs):
+    def open_raw_file(
+            self, resource: GenomicResource, filename: str,
+            mode: str = "rt", **kwargs: Union[str, bool, None]) -> IO:
         if "w" in mode:
             raise IOError(
                 f"Read-Only caching protocol {self.get_id()} trying to open "
@@ -113,7 +116,9 @@ class CachingProtocol(ReadOnlyRepositoryProtocol):
         return self.local_protocol.open_raw_file(
             resource, filename, mode, **kwargs)
 
-    def open_tabix_file(self, resource, filename, index_filename=None):
+    def open_tabix_file(
+            self, resource: GenomicResource, filename: str,
+            index_filename: Optional[str] = None) -> pysam.TabixFile:
         self.refresh_cached_resource_file(resource, filename)
         if index_filename is None:
             index_filename = f"{filename}.tbi"
@@ -122,7 +127,9 @@ class CachingProtocol(ReadOnlyRepositoryProtocol):
         return self.local_protocol.open_tabix_file(
             resource, filename, index_filename)
 
-    def open_vcf_file(self, resource, filename, index_filename=None):
+    def open_vcf_file(
+            self, resource: GenomicResource, filename: str,
+            index_filename: Optional[str] = None) -> pysam.VariantFile:
         self.refresh_cached_resource_file(resource, filename)
         if index_filename is None:
             index_filename = f"{filename}.tbi"
@@ -131,7 +138,7 @@ class CachingProtocol(ReadOnlyRepositoryProtocol):
         return self.local_protocol.open_vcf_file(
             resource, filename, index_filename)
 
-    def file_exists(self, resource, filename) -> bool:
+    def file_exists(self, resource: GenomicResource, filename: str) -> bool:
         self.refresh_cached_resource_file(resource, filename)
 
         return self.local_protocol.file_exists(resource, filename)
@@ -144,13 +151,15 @@ class CachingProtocol(ReadOnlyRepositoryProtocol):
 class GenomicResourceCachedRepo(GenomicResourceRepo):
     """Defines caching genomic resources repository."""
 
-    def __init__(self, child, cache_url, **kwargs):
+    def __init__(
+            self, child: GenomicResourceProtocolRepo, cache_url: str,
+            **kwargs: Union[str, None]):
         repo_id: str = f"{child.repo_id}.caching_repo"
         super().__init__(repo_id)
 
         logger.debug(
             "creating cached GRR with cache url: %s", cache_url)
-        self._all_resources = None
+        self._all_resources: Optional[list[GenomicResource]] = None
         self.child: GenomicResourceProtocolRepo = child
         self.cache_url = cache_url
         self.cache_protos: dict[str, CachingProtocol] = {}
@@ -159,12 +168,12 @@ class GenomicResourceCachedRepo(GenomicResourceRepo):
     def get_url(self) -> str:
         return self.child.proto.get_url()
 
-    def invalidate(self):
+    def invalidate(self) -> None:
         self.child.invalidate()
         for proto in self.cache_protos.values():
             proto.invalidate()
 
-    def get_all_resources(self):
+    def get_all_resources(self) -> Generator[GenomicResource, None, None]:
         if self._all_resources is None:
             self._all_resources = []
             for remote_resource in self.child.get_all_resources():
@@ -219,15 +228,17 @@ class GenomicResourceCachedRepo(GenomicResourceRepo):
         if not matching_resources:
             return None
 
-        def get_resource_version(res: GenomicResource):
+        def get_resource_version(res: GenomicResource) -> tuple[int, ...]:
             return res.version
 
         return max(
             matching_resources,
             key=get_resource_version)
 
-    def get_resource(self, resource_id, version_constraint=None,
-                     repository_id=None) -> GenomicResource:
+    def get_resource(
+            self, resource_id: str,
+            version_constraint: Optional[str] = None,
+            repository_id: Optional[str] = None) -> GenomicResource:
 
         remote_resource = self.child.get_resource(
             resource_id, version_constraint, repository_id)
@@ -251,7 +262,9 @@ class GenomicResourceCachedRepo(GenomicResourceRepo):
         return cached_files
 
 
-def cache_resources(repository, resource_ids, workers=4):
+def cache_resources(
+        repository: GenomicResourceRepo, resource_ids: Optional[list[str]],
+        workers: Optional[int] = None) -> None:
     """Cache resources from a list of remote resource IDs."""
     # pylint: disable=import-outside-toplevel
     from dae.genomic_resources import get_resource_implementation_builder
@@ -287,7 +300,7 @@ def cache_resources(repository, resource_ids, workers=4):
 
         futures.append(
             executor.submit(
-                cached_proto.refresh_cached_resource_file,
+                cached_proto.refresh_cached_resource_file,  # type: ignore
                 resource,
                 "genomic_resource.yaml",
             )
@@ -301,7 +314,7 @@ def cache_resources(repository, resource_ids, workers=4):
                 cached_proto.remote_protocol.proto_id)
             futures.append(
                 executor.submit(
-                    cached_proto.refresh_cached_resource_file,
+                    cached_proto.refresh_cached_resource_file,  # type: ignore
                     resource,
                     res_file,
                 )
@@ -311,10 +324,12 @@ def cache_resources(repository, resource_ids, workers=4):
     logger.info("caching %s files", total_files)
     count = 0
     for future in as_completed(futures):
-        resource_id, filename = future.result()
+        filename: str
+
+        resource_id, filename = future.result()  # type: ignore
         count += 1
         logger.info(
             "finished %s/%s (%s: %s)", count, total_files,
             resource_id, filename)
 
-        executor.shutdown()
+    executor.shutdown()

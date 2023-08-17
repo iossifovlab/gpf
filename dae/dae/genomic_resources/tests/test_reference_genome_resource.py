@@ -15,7 +15,7 @@ from dae.genomic_resources.reference_genome import \
     build_reference_genome_from_file, \
     build_reference_genome_from_resource
 
-from dae.genomic_resources.implementations.reference_genome import \
+from dae.genomic_resources.implementations.reference_genome_impl import \
     ReferenceGenomeImplementation
 
 

@@ -480,7 +480,7 @@ class ReferenceGenomeImplementation(
 
     @staticmethod
     def _do_chrom_statistic(
-        resource: GenomicResource, chrom: str, start: int, end: int
+        resource: GenomicResource, chrom: str, start: int, end: Optional[int]
     ) -> ChromosomeStatistic:
         impl = build_reference_genome_from_resource(resource)
         statistic = ChromosomeStatistic(chrom)

@@ -293,8 +293,11 @@ class GenomicResource:
         """Return genomic resource ID."""
         return self.resource_id
 
-    def get_config(self) -> Optional[dict[str, Any]]:
+    def get_config(self) -> dict[str, Any]:
         """Return the resouce configuration."""
+        if self.config is None:
+            raise ValueError(
+                f"use of unconfigured genomic resource: {self.resource_id}")
         return self.config
 
     def get_description(self) -> str:
@@ -858,7 +861,7 @@ class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
             version_constraint=f"={remote_resource.get_version_str()}")
 
     @abc.abstractmethod
-    def build_content_file(self) -> None:
+    def build_content_file(self) -> list[dict[str, Any]]:
         """Build the content of the repository (i.e '.CONTENTS' file)."""
 
 
