@@ -251,7 +251,7 @@ class NumberHistogram(Statistic):
         assert self.bins is not None and self.bars is not None
         assert other.bins is not None and other.bars is not None
 
-        assert all(self.bins == other.bins), (self.bins, other.bins)
+        assert np.allclose(self.bins, other.bins, rtol=1e-5)
 
         self.bars += other.bars
         self.out_of_range_bins[0] += other.out_of_range_bins[0]
