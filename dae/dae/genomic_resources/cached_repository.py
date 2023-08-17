@@ -10,7 +10,6 @@ import pysam
 
 from dae.genomic_resources.fsspec_protocol import FsspecReadWriteProtocol
 from dae.genomic_resources.repository import GenomicResourceRepo, \
-    GenomicResourceProtocolRepo, \
     GR_CONF_FILE_NAME, Manifest, GenomicResource, \
     ReadOnlyRepositoryProtocol, is_version_constraint_satisfied
 from .fsspec_protocol import build_fsspec_protocol
@@ -152,7 +151,7 @@ class GenomicResourceCachedRepo(GenomicResourceRepo):
     """Defines caching genomic resources repository."""
 
     def __init__(
-            self, child: GenomicResourceProtocolRepo, cache_url: str,
+            self, child: GenomicResourceRepo, cache_url: str,
             **kwargs: Union[str, None]):
         repo_id: str = f"{child.repo_id}.caching_repo"
         super().__init__(repo_id)
@@ -160,13 +159,10 @@ class GenomicResourceCachedRepo(GenomicResourceRepo):
         logger.debug(
             "creating cached GRR with cache url: %s", cache_url)
         self._all_resources: Optional[list[GenomicResource]] = None
-        self.child: GenomicResourceProtocolRepo = child
+        self.child: GenomicResourceRepo = child
         self.cache_url = cache_url
         self.cache_protos: dict[str, CachingProtocol] = {}
         self.additional_kwargs = kwargs
-
-    def get_url(self) -> str:
-        return self.child.proto.get_url()
 
     def invalidate(self) -> None:
         self.child.invalidate()

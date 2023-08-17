@@ -3,7 +3,8 @@ from __future__ import annotations
 import argparse
 import logging
 from abc import ABC, abstractmethod
-from typing import List, Optional, Any, Tuple, Set, Callable, Dict
+from typing import Optional, Any, Callable, Dict, \
+    Iterable
 from functools import lru_cache
 
 from dae.genomic_resources.repository_factory import \
@@ -62,18 +63,18 @@ class GenomicContext(ABC):
             f"{type(obj)}")
 
     @abstractmethod
-    def get_context_object(self, key) -> Optional[Any]:
+    def get_context_object(self, key: str) -> Optional[Any]:
         """Return a genomic context object corresponding to the passed key.
 
         If there is no such object returns None.
         """
 
     @abstractmethod
-    def get_context_keys(self) -> Set[str]:
+    def get_context_keys(self) -> set[str]:
         """Return set of all keys that could be found in the context."""
 
     @abstractmethod
-    def get_source(self) -> Tuple[str, ...]:
+    def get_source(self) -> tuple[str, ...]:
         """Return a tuple of strings that identifies the genomic context."""
 
 
@@ -89,7 +90,7 @@ class GenomicContextProvider(ABC):
         pass
 
     @abstractmethod
-    def get_contexts(self) -> List[GenomicContext]:
+    def get_contexts(self) -> Iterable[GenomicContext]:
         pass
 
 
@@ -97,17 +98,17 @@ class SimpleGenomicContext(GenomicContext):
     """Simple implementation of genomic context."""
 
     def __init__(
-            self, context_objects: Dict[str, Any], source: Tuple[str, ...]):
+            self, context_objects: Dict[str, Any], source: tuple[str, ...]):
         self._context: Dict[str, Any] = context_objects
         self._source = source
 
-    def get_context_object(self, key) -> Optional[Any]:
+    def get_context_object(self, key: str) -> Optional[Any]:
         return self._context.get(key)
 
-    def get_context_keys(self):
+    def get_context_keys(self) -> set[str]:
         return set(self._context.keys())
 
-    def get_source(self) -> Tuple[str, ...]:
+    def get_source(self) -> tuple[str, ...]:
         return self._source
 
     def get_all_context_objects(self) -> Dict[str, Any]:
@@ -125,7 +126,7 @@ class SimpleGenomicContextProvider(GenomicContextProvider):
         self._type: str = provider_type
         self._priority: int = priority
         self._context_builder = context_builder
-        self._contexts: Optional[List[GenomicContext]] = None
+        self._contexts: Optional[Iterable[GenomicContext]] = None
 
     def get_context_provider_priority(self) -> int:
         return self._priority
@@ -133,7 +134,7 @@ class SimpleGenomicContextProvider(GenomicContextProvider):
     def get_context_provider_type(self) -> str:
         return f"SingleGenomicContextProvider[{self._type}]"
 
-    def get_contexts(self) -> List[GenomicContext]:
+    def get_contexts(self) -> Iterable[GenomicContext]:
         if self._contexts is None:
             try:
                 context = self._context_builder()
@@ -150,7 +151,9 @@ class SimpleGenomicContextProvider(GenomicContextProvider):
         return self._contexts
 
 
-def register_context_provider(context_provider: GenomicContextProvider):
+def register_context_provider(
+        context_provider: GenomicContextProvider) -> None:
+    """Register genomic context provider."""
     logger.debug(
         "Registering the %s "
         "genomic context generator with priority %s",
@@ -159,7 +162,7 @@ def register_context_provider(context_provider: GenomicContextProvider):
     _REGISTERED_CONTEXT_PROVIDERS.append(context_provider)
 
 
-def register_context(context: GenomicContext):
+def register_context(context: GenomicContext) -> None:
     logger.debug(
         "Registering the %s "
         "genomic context",
@@ -170,7 +173,7 @@ def register_context(context: GenomicContext):
 class PriorityGenomicContext(GenomicContext):
     """Defines a priority genomic context."""
 
-    def __init__(self, contexts):
+    def __init__(self, contexts: Iterable[GenomicContext]):
         self.contexts = contexts
         if self.contexts:
             logger.info("Using the following genomic context:")
@@ -179,7 +182,7 @@ class PriorityGenomicContext(GenomicContext):
         else:
             logger.info("No genomic contexts are available.")
 
-    def get_context_object(self, key) -> Optional[Any]:
+    def get_context_object(self, key: str) -> Optional[Any]:
         for context in self.contexts:
             obj = context.get_context_object(key)
             if obj:
@@ -189,14 +192,14 @@ class PriorityGenomicContext(GenomicContext):
                 return obj
         return None
 
-    def get_context_keys(self) -> Set[str]:
-        result: Set[str] = set()
+    def get_context_keys(self) -> set[str]:
+        result: set[str] = set()
         for context in self.contexts:
             result = result.union(context.get_context_keys())
         return result
 
     @lru_cache(maxsize=32)
-    def get_source(self) -> Tuple[str, ...]:
+    def get_source(self) -> tuple[str, ...]:
         result = ["PriorityGenomicContext"]
         for context in self.contexts:
             result.append(str(context.get_source()))
@@ -216,7 +219,7 @@ class CLIGenomicContext(SimpleGenomicContext):
     """Defines CLI genomics context."""
 
     @staticmethod
-    def add_context_arguments(parser: argparse.ArgumentParser):
+    def add_context_arguments(parser: argparse.ArgumentParser) -> None:
         """Add command line arguments to the argument parser."""
         parser.add_argument(
             "-g", "--grr-filename", "--grr", default=None,
@@ -239,12 +242,12 @@ class CLIGenomicContext(SimpleGenomicContext):
                  "context will be used.")
 
     @staticmethod
-    def register(args):
+    def register(args: argparse.Namespace) -> None:
         context = CLIGenomicContext.context_builder(args)
         register_context(context)
 
     @staticmethod
-    def context_builder(args) -> CLIGenomicContext:
+    def context_builder(args: argparse.Namespace) -> CLIGenomicContext:
         """Build a CLI genomic context."""
         context_objects: Dict[str, Any] = {}
         grr = None
@@ -301,7 +304,7 @@ class DefaultRepositoryContextProvider(SimpleGenomicContextProvider):
     """Genomic context provider for default GRR."""
 
     @staticmethod
-    def context_builder():
+    def context_builder() -> GenomicContext:
         grr = build_genomic_resource_repository()
         return SimpleGenomicContext(
             {
@@ -310,12 +313,12 @@ class DefaultRepositoryContextProvider(SimpleGenomicContextProvider):
             ("default_genomic_resources_repository", grr.repo_id)
         )
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(
             DefaultRepositoryContextProvider.context_builder,
             "DefaultGRRProvider",
             1000)
 
     @staticmethod
-    def register():
+    def register() -> None:
         register_context_provider(DefaultRepositoryContextProvider())

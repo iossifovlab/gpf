@@ -8,7 +8,7 @@ import pathlib
 import logging
 import tempfile
 
-from typing import Optional, List, cast
+from typing import Optional, List, cast, Any
 from urllib.parse import urlparse
 
 import yaml
@@ -35,7 +35,7 @@ DEFAULT_DEFINITION = {
 }
 
 
-def load_definition_file(filename):
+def load_definition_file(filename: str) -> Any:
     """Load GRR definition from a YAML file."""
     with open(filename, "rt", encoding="utf8") as infile:
         return yaml.safe_load(infile)
@@ -63,19 +63,19 @@ def get_default_grr_definition_path() -> Optional[str]:
     return None
 
 
-def get_default_grr_definition():
+def get_default_grr_definition() -> dict[str, Any]:
     """Return default genomic resources repository definition."""
     logger.info("using default GRR definitions")
     definition_path = get_default_grr_definition_path()
     if definition_path:
-        return load_definition_file(definition_path)
+        return cast(dict[str, Any], load_definition_file(definition_path))
     return copy.deepcopy(DEFAULT_DEFINITION)
 
 
 def _build_real_repository(
         proto_type: str = "",
         repo_id: str = "",
-        **kwargs) -> GenomicResourceRepo:
+        **kwargs: Any) -> GenomicResourceRepo:
     # pylint: disable=too-many-branches
     if proto_type == "group":
         repo = _build_group_repository(

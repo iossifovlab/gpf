@@ -57,7 +57,7 @@ class GenomicResourceImplementation(ABC):
 
     def __init__(self, genomic_resource: GenomicResource):
         self.resource = genomic_resource
-        self.config: dict = self.resource.config
+        self.config: dict = self.resource.get_config()
         self._statistics: Optional[ResourceStatistics] = None
 
     @property
@@ -84,7 +84,7 @@ class GenomicResourceImplementation(ABC):
 
     @abstractmethod
     def add_statistics_build_tasks(self, task_graph: TaskGraph,
-                                   **kwargs: str) -> list[Task]:
+                                   **kwargs: Any) -> list[Task]:
         """Add tasks for calculating resource statistics to a task graph."""
         raise NotImplementedError()
 
