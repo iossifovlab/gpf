@@ -24,11 +24,8 @@ class HistogramError(BaseException):
     """
     Class used for histogram specific errors.
 
-    Histograms should be annulled when a HistogramError occurs.
+    Histograms should be nullified when a HistogramError occurs.
     """
-
-    # pylint: disable=unnecessary-pass
-    pass
 
 
 @dataclass

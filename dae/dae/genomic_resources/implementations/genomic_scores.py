@@ -230,12 +230,13 @@ class GenomicScoreImplementation(
                     assert isinstance(self.score.table,
                                       TabixGenomicPositionTable)
                     assert self.score.table.pysam_file is not None
-
-                    chrom_length = get_chromosome_length_tabix(
-                        self.score.table.pysam_file,
-                        self.score.table.unmap_chromosome(chrom)
-                    )
+                    fchrom = self.score.table.unmap_chromosome(chrom)
+                    if fchrom is not None:
+                        chrom_length = get_chromosome_length_tabix(
+                            self.score.table.pysam_file, fchrom)
                 if chrom_length is None:
+                    logger.warning(
+                        "unable to find chromosome length for %s", chrom)
                     continue
 
             regions.extend(
@@ -412,7 +413,7 @@ class GenomicScoreImplementation(
                         )
                     except HistogramError as err:
                         logger.warning(
-                            "Histogram for %s annulled",
+                            "Histogram for %s nullified",
                             scr_id
                         )
                         result[scr_id] = NullHistogram(
@@ -452,13 +453,6 @@ class GenomicScoreImplementation(
             except HistogramError as err:
                 logger.error(
                     "Histogram for %s nullified",
-                    score_id
-                )
-                result[score_id] = NullHistogram(
-                    NullHistogramConfig(str(err)))
-            except AssertionError as err:
-                logger.error(
-                    "Assertion error for %s; histogram nullified",
                     score_id
                 )
                 result[score_id] = NullHistogram(
