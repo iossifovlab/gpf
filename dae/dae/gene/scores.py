@@ -1,6 +1,6 @@
 import logging
 from dataclasses import dataclass
-from typing import Optional, Union
+from typing import Union
 
 from dae.genomic_resources.genomic_scores import build_score_from_resource
 from dae.genomic_resources.histogram import NumberHistogram, \

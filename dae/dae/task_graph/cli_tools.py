@@ -1,7 +1,9 @@
 import argparse
 import textwrap
+from typing import Any, Optional
 
 import yaml
+
 from box import Box
 from dae.task_graph.cache import NoTaskCache, TaskCache
 from dae.task_graph.executor import DaskExecutor, TaskGraphExecutor, \
@@ -17,9 +19,9 @@ class TaskGraphCli:
 
     @staticmethod
     def add_arguments(parser: argparse.ArgumentParser,
-                      force_mode="optional",
-                      default_task_status_dir=".",
-                      use_commands=True):
+                      force_mode: str = "optional",
+                      default_task_status_dir: str = ".",
+                      use_commands: bool = True) -> None:
         """Add arguments needed to execute a task graph."""
         executor_group = parser.add_argument_group(title="Task Graph Executor")
         # cluster_name
@@ -42,7 +44,8 @@ class TaskGraphCli:
             help="dask cluster config file"
         )
         executor_group.add_argument(
-            "--tasks-log-dir", dest="log_dir", type=str, default="./.tasks-log",
+            "--tasks-log-dir", dest="log_dir", type=str,
+            default="./.tasks-log",
             help="Path to directory where to store tasks' logs"
         )
         # task_cache
@@ -80,7 +83,9 @@ class TaskGraphCli:
             assert force_mode == "always"
 
     @staticmethod
-    def create_executor(task_cache=None, **kwargs) -> TaskGraphExecutor:
+    def create_executor(
+            task_cache: Optional[TaskCache] = None,
+            **kwargs: Any) -> TaskGraphExecutor:
         """Create a task graph executor according to the args specified."""
         args = Box(kwargs)
 
@@ -113,7 +118,9 @@ class TaskGraphCli:
 
     @staticmethod
     def process_graph(
-            task_graph: TaskGraph, force_mode="optional", **kwargs) -> bool:
+            task_graph: TaskGraph,
+            force_mode: str = "optional",
+            **kwargs: Any) -> bool:
         """Process task_graph in according with the arguments in args.
 
         Return true if the graph get's successfully processed.

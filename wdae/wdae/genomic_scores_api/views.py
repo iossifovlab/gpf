@@ -22,7 +22,7 @@ class GenomicScoresView(QueryBaseView):
                     "range": score.hist.view_range,
                     "help": score.help
                 })
-            else: 
+            else:
                 res.append({
                     "score": score_id,
                     "desc": score.description,
