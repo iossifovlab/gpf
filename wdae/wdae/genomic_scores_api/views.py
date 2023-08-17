@@ -1,12 +1,15 @@
 from rest_framework.response import Response
+from rest_framework.request import Request
 
 from query_base.query_base import QueryBaseView
 from dae.genomic_resources.histogram import NumberHistogram
 
 
 class GenomicScoresView(QueryBaseView):
+    """View for genomic scores database for the instance."""
 
-    def get(self, _request):
+    def get(self, _request: Request) -> Response:
+        """List all genomic scores used by the GPF instance."""
         res = []
         for score_id, score in self.gpf_instance.get_genomic_scores():
             if isinstance(score.hist, NumberHistogram):
