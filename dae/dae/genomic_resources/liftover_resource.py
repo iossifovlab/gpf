@@ -1,7 +1,7 @@
 """Provides LiftOver chain resource."""
 
 from __future__ import annotations
-from typing import Optional, List
+from typing import Optional, cast, Any, Union
 import copy
 import textwrap
 
@@ -17,7 +17,7 @@ from dae.genomic_resources import GenomicResource
 from dae.genomic_resources.resource_implementation import \
     GenomicResourceImplementation, get_base_resource_schema, \
     InfoImplementationMixin, ResourceConfigValidationMixin
-from dae.task_graph.cache import Task
+from dae.task_graph.graph import Task, TaskGraph
 
 
 logger = logging.getLogger(__name__)
@@ -54,7 +54,7 @@ class LiftoverChain(
 
         self.liftover: Optional[LiftOver] = None
 
-    def close(self):
+    def close(self) -> None:
         del self.liftover
         self.liftover = None
 
@@ -65,15 +65,15 @@ class LiftoverChain(
             self.liftover = LiftOver(chain_file)
         return self
 
-    def is_open(self):
+    def is_open(self) -> bool:
         return self.liftover is not None
 
     @property
-    def files(self):
+    def files(self) -> set[str]:
         return {self.resource.get_config()["filename"], }
 
     @staticmethod
-    def map_chromosome(chrom, mapping):
+    def map_chromosome(chrom: str, mapping: Optional[dict[str, str]]) -> str:
         """Map a chromosome (contig) name according to configuration."""
         if not mapping:
             return chrom
@@ -86,7 +86,8 @@ class LiftoverChain(
             chrom = f"{add_prefix}{chrom}"
         return chrom
 
-    def convert_coordinate(self, chrom, pos):
+    def convert_coordinate(
+            self, chrom: str, pos: int) -> Optional[tuple[str, int]]:
         """Lift over a genomic coordinate."""
         chrom = self.map_chromosome(chrom, self.chrom_variant_coordinates)
         assert self.liftover is not None
@@ -103,9 +104,9 @@ class LiftoverChain(
         coordinates[0] = self.map_chromosome(
             coordinates[0], self.chrom_target_coordinates)
 
-        return tuple(coordinates)
+        return cast(tuple[str, int], tuple(coordinates))
 
-    def get_template(self):
+    def get_template(self) -> Template:
         return Template(textwrap.dedent("""
             {% extends base %}
             {% block content %}
@@ -124,7 +125,7 @@ class LiftoverChain(
             {% endblock %}
         """))
 
-    def _get_template_data(self):
+    def _get_template_data(self) -> dict[str, Any]:
         info = copy.deepcopy(self.config)
 
         if self.chrom_variant_coordinates is not None:
@@ -159,7 +160,7 @@ class LiftoverChain(
         return info
 
     @staticmethod
-    def get_schema():
+    def get_schema() -> dict[str, Any]:
         return {
             **get_base_resource_schema(),
             "filename": {"type": "string"},
@@ -175,16 +176,18 @@ class LiftoverChain(
             }}
         }
 
-    def get_info(self):
+    def get_info(self) -> str:
         return InfoImplementationMixin.get_info(self)
 
-    def calc_info_hash(self):
-        return "placeholder"
+    def calc_info_hash(self) -> bytes:
+        return b"placeholder"
 
     def calc_statistics_hash(self) -> bytes:
         return b"placeholder"
 
-    def add_statistics_build_tasks(self, task_graph, **kwargs) -> List[Task]:
+    def add_statistics_build_tasks(
+            self, task_graph: TaskGraph,
+            **kwargs: Union[str, None]) -> list[Task]:
         return []
 
 
