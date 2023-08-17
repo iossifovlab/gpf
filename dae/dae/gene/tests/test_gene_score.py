@@ -21,7 +21,8 @@ def scores_repo(tmp_path: pathlib.Path) -> GenomicResourceRepo:
                 scores:
                 - id: linear
                   desc: linear gene score
-                  number_hist:
+                  histogram:
+                    type: number
                     number_of_bins: 3
                     x_log_scale: false
                     y_log_scale: false
@@ -47,6 +48,7 @@ def scores_repo(tmp_path: pathlib.Path) -> GenomicResourceRepo:
                     - 2.333
                     - 3.0
                     config:
+                      type: number
                       number_of_bins: 3
                       score: linear
                       view_range:
@@ -64,7 +66,8 @@ def scores_repo(tmp_path: pathlib.Path) -> GenomicResourceRepo:
                 scores:
                 - id: log
                   desc: log gene score
-                  number_hist:
+                  histogram:
+                    type: number
                     number_of_bins: 5
                     view_range:
                       min: 0.0
@@ -98,8 +101,7 @@ def scores_repo(tmp_path: pathlib.Path) -> GenomicResourceRepo:
                     - 0.1778279410038923,
                     - 1.0
                     config:
-                      desc: log gene score
-                      number_hist:
+                      type: number
                       number_of_bins: 5
                       view_range:
                         min: 0.0
@@ -117,7 +119,8 @@ def scores_repo(tmp_path: pathlib.Path) -> GenomicResourceRepo:
                 scores:
                 - id: score1
                   desc: linear gene score
-                  number_hist:
+                  histogram:
+                    type: number
                     number_of_bins: 3
                     x_log_scale: false
                     y_log_scale: false
@@ -143,6 +146,7 @@ def scores_repo(tmp_path: pathlib.Path) -> GenomicResourceRepo:
                     - 2.333
                     - 3.0
                     config:
+                      type: number
                       number_of_bins: 3
                       score: linear
                       view_range:

@@ -1,20 +1,25 @@
 # pylint: disable=redefined-outer-name,C0114,C0116,protected-access,fixme
 
 import textwrap
+from typing import Optional
+
 import pytest
 
 from dae.genomic_resources.testing import \
     setup_directories, convert_to_tab_separated, setup_genome, \
     build_filesystem_test_repository, setup_gzip
 
-from dae.genomic_resources.liftover_resource import \
+from dae.genomic_resources.liftover_chain import \
     build_liftover_chain_from_resource
-from dae.annotation.annotatable import Region, Position, CNVAllele
+from dae.genomic_resources.repository import GenomicResourceRepo
+
+from dae.annotation.annotatable import Region, Position, CNVAllele, Annotatable
 from dae.annotation.annotation_factory import build_annotation_pipeline
 
 
 @pytest.fixture
-def fixture_repo(tmp_path_factory):
+def fixture_repo(
+        tmp_path_factory: pytest.TempPathFactory) -> GenomicResourceRepo:
     root_path = tmp_path_factory.mktemp("regions_effect_annotation")
     setup_directories(root_path, {
         "target_genome": {
@@ -77,7 +82,10 @@ def fixture_repo(tmp_path_factory):
     (("1", 53), None),
     (("2", 56), None),
 ])
-def test_liftover_chain_fixture(spos, expected, fixture_repo):
+def test_liftover_chain_fixture(
+        spos: tuple[str, int],
+        expected: Optional[tuple[str, int, str, int]],
+        fixture_repo: GenomicResourceRepo) -> None:
     res = fixture_repo.get_resource("liftover_chain")
     liftover_chain = build_liftover_chain_from_resource(res)
 
@@ -97,7 +105,9 @@ def test_liftover_chain_fixture(spos, expected, fixture_repo):
      CNVAllele("chr1", 1, 48, CNVAllele.Type.LARGE_DELETION))
 ])
 def test_liftover_annotator(
-        annotatable, expected, fixture_repo):
+        annotatable: Annotatable,
+        expected: Optional[Annotatable],
+        fixture_repo: GenomicResourceRepo) -> None:
 
     pipeline_config = textwrap.dedent("""
         - liftover_annotator:

@@ -1,12 +1,15 @@
 - md5: 81951889cca5c55bb9a63b8d8aff00a3
   name: genomic_resource.yaml
   size: 200
-- md5: 53919b1c3894ed0e4ffa5000c6fb731d
+- md5: 6a9aa91c85357dd20e4b4ef3d6887918
   name: index.html
-  size: 1489
+  size: 2130
 - md5: 05d8bbd9616407e862d82593d5fd1756
   name: refSeq_20200330.txt
   size: 30558
-- md5: 6a99c575ab87f8c7d1ed1e52e7e349ce
+- md5: 088f8feb9e5264dc7579fe0556a891c7
+  name: statistics/stats.yaml
+  size: 185
+- md5: fca08b9d5b481f89f0f04ea303d5bea7
   name: statistics/stats_hash
-  size: 11
+  size: 128

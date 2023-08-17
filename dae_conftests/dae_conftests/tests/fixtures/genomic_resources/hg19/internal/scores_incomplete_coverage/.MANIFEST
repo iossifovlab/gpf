@@ -1,12 +1,9 @@
-- md5: 0861ec8c51f6d1909f42ef459e18fe4e
-  name: MANIFEST
-  size: 393
 - md5: 34cec79415c90ddb81028b496d90e134
   name: genomic_resource.yaml
   size: 412
-- md5: b48b148e579053ac4d3ed90cca4d18f1
+- md5: d367ee5091cd6f76dbf64ec84ebac26f
   name: index.html
-  size: 3433
+  size: 2335
 - md5: 28ee47e15cc15c1b8881cd453cdefc7d
   name: scores_incomplete_coverage.tsv.gz
   size: 176
@@ -19,12 +16,9 @@
 - md5: c37eb1c557ec79e8be894d86a9211f7d
   name: statistics/histogram_score0_incomplete_cov.png
   size: 17129
-- md5: 6b367e4c544e539cbb0e4d68df063331
+- md5: 9a19dc320d21fef34dd78fa290bbb13e
   name: statistics/histogram_score0_incomplete_cov.yaml
-  size: 2068
-- md5: eddfe133c23241d1566c939701e16c9e
-  name: statistics/min_max_score0_incomplete_cov.yaml
-  size: 65
-- md5: 2ed4cd199b638f2a9f3aa3f7ed0de0fb
+  size: 2142
+- md5: eee157b2f6d2a6736eaf5d78ff804e60
   name: statistics/stats_hash
-  size: 693
+  size: 5008

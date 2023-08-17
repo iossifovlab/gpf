@@ -1,14 +1,14 @@
 # pylint: disable=W0621,C0114,C0116,C0415,W0212,W0613
 
 import logging
+from typing import Any, Generator
 
 import pytest
-# import pysam
 
 from dae.genomic_resources.repository import \
     GR_CONF_FILE_NAME
 from dae.genomic_resources.testing import \
-    build_filesystem_test_protocol
+    build_filesystem_test_protocol, FsspecReadWriteProtocol
 from dae.genomic_resources.testing import convert_to_tab_separated, \
     setup_directories
 from dae.genomic_resources.testing import \
@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 
 @pytest.fixture(scope="session")
-def content_fixture():
+def content_fixture() -> dict[str, Any]:
     demo_gtf_content = "TP53\tchr3\t300\t200"
     return {
         "one": {
@@ -60,14 +60,18 @@ def content_fixture():
 
 
 @pytest.fixture(scope="module")
-def s3_server_fixture():
+def s3_server_fixture() -> Generator[str, None, None]:
     with s3_process_test_server() as endpoint_url:
         yield endpoint_url
 
 
 @pytest.fixture(params=["file", "s3"])
 def rw_fsspec_proto(
-        request, content_fixture, tmp_path_factory, s3_server_fixture):
+    request: pytest.FixtureRequest,
+    content_fixture: dict[str, Any],
+    tmp_path_factory: pytest.TempPathFactory,
+    s3_server_fixture: str
+) -> Generator[FsspecReadWriteProtocol, None, None]:
 
     root_path = tmp_path_factory.mktemp("rw_fsspec_proto")
     setup_directories(root_path, content_fixture)

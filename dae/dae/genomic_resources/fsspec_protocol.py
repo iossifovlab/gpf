@@ -43,7 +43,7 @@ logger = logging.getLogger(__name__)
 
 def _scan_for_resources(
     content_dict: dict, parent_id: list[str]
-) -> Generator[tuple[str, tuple[int], dict], None, None]:
+) -> Generator[tuple[str, tuple[int, ...], dict], None, None]:
     name = "/".join(parent_id)
     id_ver = parse_gr_id_version_token(name)
     if isinstance(content_dict, dict) and id_ver and \
@@ -131,7 +131,7 @@ def build_inmemory_protocol(
 
 
 def build_fsspec_protocol(
-        proto_id: str, root_url: str, **kwargs: str) -> Union[
+        proto_id: str, root_url: str, **kwargs: Union[str, None]) -> Union[
         ReadOnlyRepositoryProtocol, ReadWriteRepositoryProtocol]:
     """Create fsspec GRR protocol based on the root url."""
     url = urlparse(root_url)
@@ -245,7 +245,7 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
 
     def open_raw_file(
             self, resource: GenomicResource, filename: str,
-            mode: str = "rt", **kwargs: Union[str, bool]) -> IO:
+            mode: str = "rt", **kwargs: Union[str, bool, None]) -> IO:
 
         filepath = self.get_resource_file_url(resource, filename)
         if "w" in mode:
@@ -639,7 +639,7 @@ class FsspecReadWriteProtocol(
 
         return local_state
 
-    def build_content_file(self) -> list[dict[str, str]]:
+    def build_content_file(self) -> list[dict[str, Any]]:
         """Build the content of the repository (i.e '.CONTENTS' file)."""
         content = [
             {
@@ -649,7 +649,7 @@ class FsspecReadWriteProtocol(
                 "manifest": res.get_manifest().to_manifest_entries()
             }
             for res in self.get_all_resources()]
-        content = sorted(content, key=lambda x: x["id"])
+        content = sorted(content, key=lambda x: x["id"])  # type: ignore
 
         content_filepath = os.path.join(
             self.url, GR_CONTENTS_FILE_NAME)
@@ -666,6 +666,7 @@ class FsspecReadWriteProtocol(
             res_size = convert_size(
                 sum(f for _, f in res.get_manifest().get_files())
             )
+            assert res.config is not None
             result[res.resource_id] = {
                 **res.config,
                 "res_version": res.get_version_str(),

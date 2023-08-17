@@ -1,5 +1,6 @@
 from __future__ import annotations
 from abc import abstractmethod
+from typing import Any
 
 
 class Statistic:
@@ -15,16 +16,16 @@ class Statistic:
     statistic_id: str
     description: str
 
-    def __init__(self, statistic_id, description):
+    def __init__(self, statistic_id: str, description: str):
         self.statistic_id = statistic_id
         self.description = description
 
     @abstractmethod
-    def add_value(self, value):
+    def add_value(self, value: Any) -> None:
         """Add a value to the statistic."""
         raise NotImplementedError()
 
-    def finish(self):
+    def finish(self) -> None:
         """
         Perform final calculations for the statistic.
 
@@ -38,7 +39,7 @@ class Statistic:
         return
 
     @abstractmethod
-    def merge(self, other) -> None:
+    def merge(self, other: Statistic) -> None:
         """Merge the values from another statistic in place."""
         raise NotImplementedError()
 
@@ -49,6 +50,6 @@ class Statistic:
 
     @staticmethod
     @abstractmethod
-    def deserialize(data) -> Statistic:
+    def deserialize(content: str) -> Statistic:
         """Create a statistic from serialized data."""
         raise NotImplementedError()

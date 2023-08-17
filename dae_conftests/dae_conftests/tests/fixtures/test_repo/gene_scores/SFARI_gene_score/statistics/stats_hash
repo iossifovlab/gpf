@@ -1,19 +1,14 @@
 {
-  "config": {
-    "gene_scores": [
-      {
-        "desc": "SFARI gene score",
-        "id": "SFARI_gene_score"
-      }
-    ],
-    "histograms": [
-      {
-        "bins": 8,
-        "score": "SFARI_gene_score",
-        "x_scale": "linear",
-        "y_scale": "linear"
-      }
+  "score_config": [
+    [
+      "SFARI_gene_score",
+      "SFARI gene score",
+      0.0,
+      7.0,
+      null,
+      "linear",
+      "linear"
     ]
-  },
+  ],
   "score_file": "ad0c332093f78227a14b9d2ce7e4991d"
 }

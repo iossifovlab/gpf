@@ -10,7 +10,7 @@ from dae.annotation.annotation_pipeline import AttributeInfo
 
 from dae.genomic_resources.reference_genome import \
     ReferenceGenome, build_reference_genome_from_resource
-from dae.genomic_resources.liftover_resource import \
+from dae.genomic_resources.liftover_chain import \
     LiftoverChain, build_liftover_chain_from_resource
 
 from dae.utils.variant_utils import trim_str_left

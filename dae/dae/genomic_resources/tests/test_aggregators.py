@@ -10,7 +10,7 @@ from dae.genomic_resources.aggregators import (
 )
 
 
-def test_concat_aggregator():
+def test_concat_aggregator() -> None:
     values = ["a", "b", "c", "d"]
     agg = ConcatAggregator()
     for val in values:
@@ -19,7 +19,7 @@ def test_concat_aggregator():
     assert agg.get_final() == "abcd"
 
 
-def test_min_aggregator():
+def test_min_aggregator() -> None:
     values = [5, 6, 1, 2, 7]
     agg = MinAggregator()
     for val in values:
@@ -28,7 +28,7 @@ def test_min_aggregator():
     assert agg.get_final() == 1
 
 
-def test_min_aggregator_string():
+def test_min_aggregator_string() -> None:
     values = ["asdf", "ghjk", "zab", "zob"]
     agg = MinAggregator()
     for val in values:
@@ -37,7 +37,7 @@ def test_min_aggregator_string():
     assert agg.get_final() == "asdf"
 
 
-def test_max_aggregator():
+def test_max_aggregator() -> None:
     values = [5, 6, 1, 2, 7]
     agg = MaxAggregator()
     for val in values:
@@ -46,7 +46,7 @@ def test_max_aggregator():
     assert agg.get_final() == 7
 
 
-def test_max_aggregator_string():
+def test_max_aggregator_string() -> None:
     values = ["asdf", "ghjk", "zab", "zob"]
     agg = MaxAggregator()
     for val in values:
@@ -55,7 +55,7 @@ def test_max_aggregator_string():
     assert agg.get_final() == "zob"
 
 
-def test_mean_aggregator():
+def test_mean_aggregator() -> None:
     values = [1, 2, 3, 4]
     agg = MeanAggregator()
     for val in values:
@@ -64,7 +64,7 @@ def test_mean_aggregator():
     assert numpy.isclose(agg.get_final(), 2.5)
 
 
-def test_median_aggregator_even():
+def test_median_aggregator_even() -> None:
     values = [2, 3, 4, 1]
     agg = MedianAggregator()
     for val in values:
@@ -73,7 +73,7 @@ def test_median_aggregator_even():
     assert numpy.isclose(agg.get_final(), 2.5)
 
 
-def test_median_aggregator_odd():
+def test_median_aggregator_odd() -> None:
     values = [2, 3, 4, 1, 5]
     agg = MedianAggregator()
     for val in values:
@@ -82,7 +82,7 @@ def test_median_aggregator_odd():
     assert agg.get_final() == 3
 
 
-def test_median_aggregator_string_even():
+def test_median_aggregator_string_even() -> None:
     values = ["a", "c", "b", "d"]
     agg = MedianAggregator()
     for val in values:
@@ -91,7 +91,7 @@ def test_median_aggregator_string_even():
     assert agg.get_final() == "bc"
 
 
-def test_median_aggregator_string_odd():
+def test_median_aggregator_string_odd() -> None:
     values = ["a", "c", "b", "d", "f"]
     agg = MedianAggregator()
     for val in values:
@@ -100,7 +100,7 @@ def test_median_aggregator_string_odd():
     assert agg.get_final() == "c"
 
 
-def test_mode_aggregator():
+def test_mode_aggregator() -> None:
     values = [1, 2, 3, 1, 5, 6, 6, 1]
     agg = ModeAggregator()
     for val in values:
@@ -109,7 +109,7 @@ def test_mode_aggregator():
     assert agg.get_final() == 1
 
 
-def test_mode_aggregator_multimode():
+def test_mode_aggregator_multimode() -> None:
     values = [6, 2, 3, 6, 5, 1, 1, 6, 1, 4, 4, 4]
     agg = ModeAggregator()
     for val in values:
@@ -118,7 +118,7 @@ def test_mode_aggregator_multimode():
     assert agg.get_final() == 1
 
 
-def test_join_aggregator():
+def test_join_aggregator() -> None:
     values = [1, 2, 3, 4, 5]
     agg = JoinAggregator(", ")
     for val in values:
@@ -127,7 +127,7 @@ def test_join_aggregator():
     assert agg.get_final() == "1, 2, 3, 4, 5"
 
 
-def test_aggregator_used_counts():
+def test_aggregator_used_counts() -> None:
     values = [1, 2, 3, None, None, 4, 5]
     agg = MinAggregator()
     for val in values:
@@ -146,7 +146,7 @@ def test_aggregator_used_counts():
     assert agg.get_total_count() == 2
 
 
-def test_list_aggregator():
+def test_list_aggregator() -> None:
     values = [1, 2, 3, 4]
     agg = ListAggregator()
     for val in values:
@@ -155,7 +155,7 @@ def test_list_aggregator():
     assert agg.get_final() == values
 
 
-def test_dict_aggregator():
+def test_dict_aggregator() -> None:
     values = [("first", 1), ("second", 2), ("third", 3), ("fourth", 4)]
     agg = DictAggregator()
     for key, value in values:

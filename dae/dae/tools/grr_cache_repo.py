@@ -5,22 +5,22 @@ import os
 import argparse
 import time
 import logging
+from typing import Optional
 
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 from dae.genomic_resources.repository_factory import load_definition_file, \
     get_default_grr_definition, \
-    build_genomic_resource_repository
+    build_genomic_resource_repository, GenomicResourceRepo
 from dae.genomic_resources.cached_repository import cache_resources
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.dae_conf import dae_conf_schema
-from dae.annotation.annotation_factory import AnnotationConfigParser, \
-    build_annotation_pipeline
+from dae.annotation.annotation_factory import build_annotation_pipeline
 
 
 logger = logging.getLogger("grr_cache_repo")
 
 
-def cli_cache_repo(argv=None):
+def cli_cache_repo(argv: Optional[list[str]] = None) -> None:
     """CLI for caching genomic resources."""
     if not argv:
         argv = sys.argv[1:]
@@ -80,9 +80,8 @@ def cli_cache_repo(argv=None):
         annotation = args.annotation
 
     if annotation is not None:
-        config = AnnotationConfigParser.parse_config_file(annotation)
         annotation_resources = extract_resource_ids_from_annotation(
-            config, repository
+            annotation, repository
         )
         resources |= annotation_resources
 
@@ -92,11 +91,13 @@ def cli_cache_repo(argv=None):
     logger.info("Cached all resources in %.2f secs", elapsed)
 
 
-def extract_resource_ids_from_annotation(config, repository) -> set[str]:
+def extract_resource_ids_from_annotation(
+        annotation: str, repository: GenomicResourceRepo) -> set[str]:
     """Collect resources and resource files used by annotation."""
     resources: set[str] = set()
     with build_annotation_pipeline(
-            pipeline_config=config, grr_repository=repository) as pipeline:
+            pipeline_config_file=annotation,
+            grr_repository=repository) as pipeline:
         for annotator in pipeline.annotators:
             resources = resources | {resource.get_id()
                                      for resource in annotator.resources}

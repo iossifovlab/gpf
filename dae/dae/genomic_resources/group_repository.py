@@ -1,6 +1,6 @@
 """Provides group genomic resources repository."""
 
-from typing import Optional, List, Generator
+from typing import Optional, Generator
 
 from .repository import GenomicResourceRepo
 from .repository import GenomicResource
@@ -9,12 +9,16 @@ from .repository import GenomicResource
 class GenomicResourceGroupRepo(GenomicResourceRepo):
     """Defines group genomic resources repository."""
 
-    def __init__(self, children, repo_id=None):
+    def __init__(
+            self, children: list[GenomicResourceRepo],
+            repo_id: Optional[str] = None):
+        if repo_id is None:
+            repo_id = "group_repo"
         super().__init__(repo_id)
 
-        self.children: List[GenomicResourceRepo] = children
+        self.children = children
 
-    def invalidate(self):
+    def invalidate(self) -> None:
         for child in self.children:
             child.invalidate()
 

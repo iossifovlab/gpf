@@ -1,27 +1,24 @@
 - md5: 4e9f0967f510d53285a51dfc33b4d06c
   name: LGD.csv
   size: 509716
-- md5: 4423a8d1d963bfa444cf1777d95b460a
+- md5: 558068485b8e3fe4911db03dad2dd6f3
   name: genomic_resource.yaml
-  size: 281
-- md5: 77266ddc5cf8f8dfdda2afefc08776ec
-  name: index.html
-  size: 1587
+  size: 336
 - md5: 73984602e0b7763a928f07d5e1bcc3d8
   name: statistics/histogram_LGD_rank.png
   size: 14066
-- md5: 011ea16ea769a60312d00654a9d84759
+- md5: f937cd1513e17676ec913e8b1abbf16e
   name: statistics/histogram_LGD_rank.yaml
-  size: 3619
+  size: 4059
 - md5: b84f124ad6497287316613ff94c33dad
   name: statistics/histogram_LGD_score.png
   size: 11872
-- md5: 9f210ba8984fa67be2fd93c9f4ea6be9
+- md5: 5b2a09a55aadc4fe42fac8f69e2f806d
   name: statistics/histogram_LGD_score.yaml
-  size: 3828
-- md5: 285aa88ed074d67fe06bca1704c4e35f
+  size: 4269
+- md5: aeef3ef0f999c646a0b96aab997b52ac
   name: statistics/stats_hash
-  size: 513
+  size: 313
 - md5: d41d8cd98f00b204e9800998ecf8427e
   name: tasks-log/log_gene_scores_LGD_LGD_rank_calc_histogram.log
   size: 0

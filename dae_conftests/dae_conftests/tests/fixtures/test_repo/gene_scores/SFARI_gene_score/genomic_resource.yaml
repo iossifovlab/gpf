@@ -3,7 +3,8 @@ filename: SFARI.csv
 scores:
   - id: SFARI_gene_score
     desc: SFARI gene score
-    number_hist:
+    histogram:
+      type: number
       number_of_bins: 8
       x_log_scale: false
       y_log_scale: false

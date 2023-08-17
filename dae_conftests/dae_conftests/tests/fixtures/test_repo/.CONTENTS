@@ -1,57 +1,71 @@
 - config:
     filename: LGD.csv
-    gene_scores:
+    scores:
     - desc: LGD rank
+      histogram:
+        number_of_bins: 150
+        type: number
+        x_log_scale: false
+        y_log_scale: false
       id: LGD_rank
     - desc: LGD score
+      histogram:
+        number_of_bins: 150
+        type: number
+        x_log_scale: false
+        y_log_scale: true
       id: LGD_score
-    histograms:
-    - bins: 150
-      score: LGD_rank
-      x_scale: linear
-      y_scale: linear
-    - bins: 150
-      score: LGD_score
-      x_scale: linear
-      y_scale: log
     type: gene_score
   id: gene_scores/LGD
   manifest:
   - md5: 4e9f0967f510d53285a51dfc33b4d06c
     name: LGD.csv
     size: 509716
-  - md5: 4423a8d1d963bfa444cf1777d95b460a
+  - md5: 558068485b8e3fe4911db03dad2dd6f3
     name: genomic_resource.yaml
-    size: 281
+    size: 336
+  - md5: 73984602e0b7763a928f07d5e1bcc3d8
+    name: statistics/histogram_LGD_rank.png
+    size: 14066
+  - md5: 011ea16ea769a60312d00654a9d84759
+    name: statistics/histogram_LGD_rank.yaml
+    size: 3619
+  - md5: b84f124ad6497287316613ff94c33dad
+    name: statistics/histogram_LGD_score.png
+    size: 11872
+  - md5: 9f210ba8984fa67be2fd93c9f4ea6be9
+    name: statistics/histogram_LGD_score.yaml
+    size: 3828
+  - md5: 285aa88ed074d67fe06bca1704c4e35f
+    name: statistics/stats_hash
+    size: 513
   version: '0'
 - config:
     filename: RVIS.csv
-    gene_scores:
+    scores:
     - desc: RVIS rank
+      histogram:
+        number_of_bins: 150
+        type: number
+        x_log_scale: false
+        y_log_scale: false
       id: RVIS_rank
     - desc: RVIS
+      histogram:
+        number_of_bins: 150
+        type: number
+        x_log_scale: false
+        y_log_scale: true
       id: RVIS
-    histograms:
-    - bins: 150
-      score: RVIS_rank
-      x_scale: linear
-      y_scale: linear
-    - bins: 150
-      score: RVIS
-      x_scale: linear
-      y_scale: log
     type: gene_score
   id: gene_scores/RVIS
   manifest:
   - md5: 75e39071ae36cc03ca06b0960e110d61
     name: RVIS.csv
     size: 241
-  - md5: 92b8c7d9713f7df8cf1ef5f33c2b74ec
+  - md5: 23c9655d86de1c4285bb449f2127eeb0
     name: genomic_resource.yaml
-    size: 270
-  - md5: 712e1a4d02873ae6cdb9e2f398d8c5c3
-    name: index.html
-    size: 4849
+    size: 329
   - md5: 7d98bd8159020fdcdd195e848a38ab89
     name: statistics/histogram_RVIS.png
     size: 12476
@@ -67,44 +81,35 @@
   - md5: b090c7875555a9df23d91a0f5d61ab40
     name: statistics/stats_hash
     size: 501
-  - md5: d41d8cd98f00b204e9800998ecf8427e
-    name: tasks-log/log_gene_scores_RVIS_RVIS_calc_histogram.log
-    size: 0
-  - md5: d41d8cd98f00b204e9800998ecf8427e
-    name: tasks-log/log_gene_scores_RVIS_RVIS_rank_calc_histogram.log
-    size: 0
-  - md5: d41d8cd98f00b204e9800998ecf8427e
-    name: tasks-log/log_gene_scores_RVIS_RVIS_rank_save_histogram.log
-    size: 0
-  - md5: d41d8cd98f00b204e9800998ecf8427e
-    name: tasks-log/log_gene_scores_RVIS_RVIS_save_histogram.log
-    size: 0
-  - md5: d41d8cd98f00b204e9800998ecf8427e
-    name: tasks-log/log_gene_scores_RVIS_manifest_rebuild.log
-    size: 0
-  - md5: d41d8cd98f00b204e9800998ecf8427e
-    name: tasks-log/log_gene_scores_RVIS_store_stats_hash.log
-    size: 0
   version: '0'
 - config:
     filename: SFARI.csv
-    gene_scores:
+    scores:
     - desc: SFARI gene score
+      histogram:
+        number_of_bins: 8
+        type: number
+        x_log_scale: false
+        y_log_scale: false
       id: SFARI_gene_score
-    histograms:
-    - bins: 8
-      score: SFARI_gene_score
-      x_scale: linear
-      y_scale: linear
     type: gene_score
   id: gene_scores/SFARI_gene_score
   manifest:
   - md5: ad0c332093f78227a14b9d2ce7e4991d
     name: SFARI.csv
     size: 9275
-  - md5: 11098dda9a1c54fafb1d06209bdd7d4b
+  - md5: 3892185823463e11633de27c9fd51bab
     name: genomic_resource.yaml
-    size: 195
+    size: 205
+  - md5: e389eedab465a607bb6d0b116e171019
+    name: statistics/histogram_SFARI_gene_score.png
+    size: 13245
+  - md5: 446534f6151dbb33e9a1a2da3888a940
+    name: statistics/histogram_SFARI_gene_score.yaml
+    size: 218
+  - md5: ea9d9faebe2737f8860f69041889f946
+    name: statistics/stats_hash
+    size: 341
   version: '0'
 - config:
     directory: GeneSets

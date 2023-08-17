@@ -19,7 +19,8 @@ def scores_repo(tmp_path):
                 scores:
                   - id: RVIS_rank
                     desc: RVIS rank
-                    number_hist:
+                    histogram:
+                      type: number
                       number_of_bins: 150
                       x_log_scale: false
                       y_log_scale: false
@@ -48,10 +49,11 @@ def scores_repo(tmp_path):
                 scores:
                   - id: LGD_rank
                     desc: LGD rank
-                    number_hist:
-                     number_of_bins: 150
-                     x_log_scale: false
-                     y_log_scale: false
+                    histogram:
+                      type: number
+                      number_of_bins: 150
+                      x_log_scale: false
+                      y_log_scale: false
                 """,
             "LGD.csv": textwrap.dedent("""
                 "gene","LGD_score","LGD_rank"

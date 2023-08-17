@@ -203,9 +203,15 @@ bins:
 - 1959666.07
 config:
   number_of_bins: 100
+  type: number
   view_range:
     max: 1959666.07
     min: 8655.82
   x_log_scale: false
   x_min_log: null
   y_log_scale: false
+max_value: .nan
+min_value: .nan
+out_of_range_bins:
+- 0
+- 0

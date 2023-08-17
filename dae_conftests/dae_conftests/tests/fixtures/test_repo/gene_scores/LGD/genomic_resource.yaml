@@ -3,13 +3,15 @@ filename: LGD.csv
 scores:
   - id: LGD_rank
     desc: LGD rank
-    number_hist:
+    histogram:
+      type: number
       number_of_bins: 150
       x_log_scale: false
       y_log_scale: false
   - id: LGD_score
     desc: LGD score
-    number_hist:
+    histogram:
+      type: number
       number_of_bins: 150
       x_log_scale: false
       y_log_scale: true

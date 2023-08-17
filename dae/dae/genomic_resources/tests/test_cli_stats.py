@@ -6,7 +6,8 @@ from typing import List
 import pytest
 
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME
-from dae.genomic_resources.histogram import NumberHistogram
+from dae.genomic_resources.histogram import NumberHistogram, \
+    CategoricalHistogram
 from dae.genomic_resources.testing import \
     setup_directories, build_filesystem_test_repository, \
     setup_tabix
@@ -15,7 +16,6 @@ from dae.genomic_resources.resource_implementation import \
 
 from dae.genomic_resources.cli import cli_manage
 from dae.genomic_resources import register_implementation
-from dae.genomic_resources.genomic_scores import MinMaxValue
 
 from dae.task_graph.graph import Task
 
@@ -124,7 +124,8 @@ def test_stats_allele_score(tmp_path):
                       type: float
                       desc: ""
                       name: freq
-                      number_hist:
+                      histogram:
+                        type: number
                         number_of_bins: 100
                         view_range:
                           min: 0.0
@@ -136,7 +137,7 @@ def test_stats_allele_score(tmp_path):
     setup_tabix(
         tmp_path / "one" / "data.txt.gz",
         """
-        #chrom  pos_begin  reference  alternative  freq
+        #chrom pos_begin  reference  alternative  freq
         1      10         A          G            0.02
         1      10         A          C            0.03
         1      10         A          A            0.04
@@ -162,7 +163,7 @@ def test_stats_allele_score(tmp_path):
     histogram_image_path = os.path.join(
         tmp_path, "one", "statistics", "histogram_freq.yaml"
     )
-    assert os.path.exists(minmax_statistic_path)
+    assert not os.path.exists(minmax_statistic_path)
     assert os.path.exists(histogram_statistic_path)
     assert os.path.exists(histogram_image_path)
 
@@ -192,7 +193,8 @@ def test_stats_position_score(tmp_path):
                       desc: "The phastCons computed over the tree of 100 \
                               verterbarte species"
                       name: s1
-                      number_hist:
+                      histogram:
+                        type: number
                         number_of_bins: 100
                         view_range:
                           min: 0.0
@@ -204,7 +206,8 @@ def test_stats_position_score(tmp_path):
                       desc: "The phastCons computed over the tree of 5 \
                               verterbarte species"
                       name: s2
-                      number_hist:
+                      histogram:
+                        type: number
                         number_of_bins: 4
                         view_range:
                           min: 0.0
@@ -215,7 +218,7 @@ def test_stats_position_score(tmp_path):
     setup_tabix(
         tmp_path / "one" / "data.txt.gz",
         """
-        #chrom  pos_begin  pos_end  s1    s2
+        #chrom pos_begin  pos_end  s1    s2
         1      10         15       0.02  -1
         1      17         19       0.03  0
         1      22         25       0.46  EMPTY
@@ -246,10 +249,10 @@ def test_stats_position_score(tmp_path):
     histogram_image_5way_path = os.path.join(
         tmp_path, "one", "statistics", "histogram_phastCons5way.png"
     )
-    assert os.path.exists(minmax_100way_path)
+    assert not os.path.exists(minmax_100way_path)
     assert os.path.exists(histogram_100way_path)
     assert os.path.exists(histogram_image_100way_path)
-    assert os.path.exists(minmax_5way_path)
+    assert not os.path.exists(minmax_5way_path)
     assert os.path.exists(histogram_5way_path)
     assert os.path.exists(histogram_image_5way_path)
 
@@ -286,7 +289,8 @@ def test_stats_np_score(tmp_path):
                       type: float
                       desc: ""
                       name: s1
-                      number_hist:
+                      histogram:
+                        type: number
                         number_of_bins: 100
                         view_range:
                           min: 0.0
@@ -299,7 +303,8 @@ def test_stats_np_score(tmp_path):
                       na_values: "-1"
                       desc: ""
                       name: s2
-                      number_hist:
+                      histogram:
+                        type: number
                         number_of_bins: 4
                         view_range:
                           min: 0.0
@@ -310,7 +315,7 @@ def test_stats_np_score(tmp_path):
     setup_tabix(
         tmp_path / "one" / "data.txt.gz",
         """
-        #chrom  pos_begin  pos_end  reference  alternative  s1    s2
+        #chrom  pos_begin  pos_end reference  alternative  s1    s2
         1      10         15       A          G            0.02  2
         1      10         15       A          C            0.03  -1
         1      10         15       A          T            0.04  4
@@ -345,10 +350,10 @@ def test_stats_np_score(tmp_path):
     histogram_image_cadd_test_path = os.path.join(
         tmp_path, "one", "statistics", "histogram_cadd_test.png"
     )
-    assert os.path.exists(minmax_cadd_raw_path)
+    assert not os.path.exists(minmax_cadd_raw_path)
     assert os.path.exists(histogram_cadd_raw_path)
     assert os.path.exists(histogram_image_cadd_raw_path)
-    assert os.path.exists(minmax_cadd_test_path)
+    assert not os.path.exists(minmax_cadd_test_path)
     assert os.path.exists(histogram_cadd_test_path)
     assert os.path.exists(histogram_image_cadd_test_path)
 
@@ -371,59 +376,6 @@ def test_stats_np_score(tmp_path):
     assert cadd_test_hist.bars.sum() == (4 + 6 + 22)
 
 
-def test_minmax(tmp_path):
-    setup_directories(tmp_path, {
-        "one": {
-            GR_CONF_FILE_NAME: """
-                type: position_score
-                table:
-                    filename: data.txt.gz
-                    format: tabix
-                scores:
-                    - id: phastCons100way
-                      type: float
-                      desc: "The phastCons computed over the tree of 100 \
-                              verterbarte species"
-                      name: s1
-                histograms:
-                    - score: phastCons100way
-                      bins: 100
-                      x_scale: linear
-                      y_scale: linear
-            """
-        }
-    })
-    setup_tabix(
-        tmp_path / "one" / "data.txt.gz",
-        """
-        #chrom  pos_begin  pos_end  s1
-        1      10         15       0.0
-        1      17         19       0.03
-        1      22         25       0.46
-        2      5          80       0.01
-        2      10         11       1.0
-        3      5          17       1.0
-        3      18         20       0.01
-        """, seq_col=0, start_col=1, end_col=2)
-
-    repo = build_filesystem_test_repository(tmp_path)
-
-    assert repo is not None
-
-    cli_manage(["repo-stats", "-R", str(tmp_path), "-j", "1"])
-
-    minmax_100way_path = os.path.join(
-        tmp_path, "one", "statistics", "min_max_phastCons100way.yaml"
-    )
-    assert os.path.exists(minmax_100way_path)
-
-    with open(minmax_100way_path, "r") as infile:
-        minmax = MinMaxValue.deserialize(infile.read())
-
-    assert minmax.min == 0
-    assert minmax.max == 1
-
-
 def test_reference_genome_usage(tmp_path, mocker):
     setup_directories(tmp_path, {
         "one": {
@@ -438,11 +390,11 @@ def test_reference_genome_usage(tmp_path, mocker):
                       desc: "The phastCons computed over the tree of 100 \
                               verterbarte species"
                       name: s1
-                histograms:
-                    - score: phastCons100way
-                      bins: 100
-                      x_scale: linear
-                      y_scale: linear
+                      histogram:
+                        type: number
+                        number_of_bins: 100
+                        x_log_scale: false
+                        y_log_scale: false
                 meta:
                     labels:
                         reference_genome: genome
@@ -513,7 +465,8 @@ def test_reference_genome_usage(tmp_path, mocker):
 
     genomic_table_length_mock = mocker.Mock(return_value=30)
     mocker.patch(
-        "dae.genomic_resources.genomic_scores.get_chromosome_length_tabix",
+        "dae.genomic_resources.implementations."
+        "genomic_scores_impl.get_chromosome_length_tabix",
         new=genomic_table_length_mock
     )
 
@@ -527,3 +480,52 @@ def test_reference_genome_usage(tmp_path, mocker):
 
     assert genomic_table_length_mock.call_count == 6
     assert ref_genome_length_mock.call_count == 6
+
+
+def test_stats_categorical(tmp_path):
+    setup_directories(tmp_path, {
+        "one": {
+            GR_CONF_FILE_NAME: """
+                type: position_score
+                table:
+                    filename: data.txt.gz
+                    format: tabix
+                scores:
+                    - id: some_stat
+                      type: str
+                      desc: "desc"
+                      name: s1
+                      histogram:
+                        type: categorical
+                        value_order: []
+                """
+        }
+    })
+    setup_tabix(
+        tmp_path / "one" / "data.txt.gz",
+        """
+        #chrom  pos_begin  pos_end  s1
+        1       10         10       value1
+        1       17         17       value1
+        1       22         22       value2
+        2       5          5        value3
+        2       10         10       value2
+        """, seq_col=0, start_col=1, end_col=2)
+
+    repo = build_filesystem_test_repository(tmp_path)
+
+    assert repo is not None
+
+    cli_manage(["repo-stats", "-R", str(tmp_path), "-j", "1"])
+
+    histogram_statistic_path = os.path.join(
+        tmp_path, "one", "statistics", "histogram_some_stat.yaml"
+    )
+
+    with open(histogram_statistic_path, "r") as infile:
+        stat_hist = CategoricalHistogram.deserialize(infile.read())
+
+    assert len(stat_hist.bars) == 3
+    assert stat_hist.bars["value1"] == 2
+    assert stat_hist.bars["value2"] == 2
+    assert stat_hist.bars["value3"] == 1

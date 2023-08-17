@@ -1,46 +1,95 @@
 {
   "config": {
-    "histograms": [
-      {
-        "number_of_bins": 10,
-        "view_range": {
-          "max": 1.0,
-          "min": 0.0
-        },
-        "x_log_scale": false,
-        "x_min_log": null,
-        "y_log_scale": false
-      }
-    ],
     "scores": [
       {
-        "desc": "phastCons100",
         "id": "phastCons100",
+        "type": "float",
+        "desc": "phastCons100",
         "index": 3,
-        "number_hist": {
+        "histogram": {
+          "type": "number",
           "number_of_bins": 10,
           "view_range": {
             "max": 1.0,
             "min": 0.0
           }
+        }
+      }
+    ],
+    "histograms": [
+      {
+        "config": {
+          "type": "number",
+          "view_range": {
+            "min": 0.0,
+            "max": 1.0
+          },
+          "number_of_bins": 10,
+          "x_log_scale": false,
+          "y_log_scale": false,
+          "x_min_log": null
         },
-        "type": "float"
+        "bins": [
+          0.0,
+          0.1,
+          0.2,
+          0.30000000000000004,
+          0.4,
+          0.5,
+          0.6000000000000001,
+          0.7000000000000001,
+          0.8,
+          0.9,
+          1.0
+        ],
+        "bars": [
+          470164,
+          48599,
+          25556,
+          16779,
+          9269,
+          6113,
+          4761,
+          4685,
+          5240,
+          25736
+        ],
+        "out_of_range_bins": [
+          0,
+          0
+        ],
+        "min_value": NaN,
+        "max_value": NaN
       }
     ],
     "table": {
-      "chrom": {
-        "index": 0
+      "config": {
+        "filename": "phastCons100.bedGraph.gz",
+        "format": "tabix",
+        "header_mode": "none",
+        "chrom": {
+          "index": 0
+        },
+        "pos_begin": {
+          "index": 1
+        },
+        "pos_end": {
+          "index": 2
+        }
       },
-      "filename": "phastCons100.bedGraph.gz",
-      "format": "tabix",
-      "header_mode": "none",
-      "pos_begin": {
-        "index": 1
-      },
-      "pos_end": {
-        "index": 2
+      "files_md5": {
+        "phastCons100.bedGraph.gz": "00c69ea8fae8ab8445ff64616b8cc07a",
+        "phastCons100.bedGraph.gz.tbi": "c2c4b109900b9f5ea940563bab3a8ad7"
       }
     }
   },
-  "score_file": "00c69ea8fae8ab8445ff64616b8cc07a"
+  "score_config": [
+    [
+      "phastCons100",
+      "float",
+      null,
+      3,
+      "['', '.', 'NA', 'nan']"
+    ]
+  ]
 }

@@ -1,9 +1,10 @@
 import logging
 from dataclasses import dataclass
-from typing import Optional
+from typing import Union
 
 from dae.genomic_resources.genomic_scores import build_score_from_resource
-from dae.genomic_resources.histogram import NumberHistogram
+from dae.genomic_resources.histogram import NumberHistogram, \
+    CategoricalHistogram, NullHistogram
 
 
 logger = logging.getLogger(__name__)
@@ -17,7 +18,7 @@ class ScoreDesc:
     score_id: str
     source: str
     destination: str
-    hist: Optional[NumberHistogram]
+    hist: Union[NumberHistogram, CategoricalHistogram, NullHistogram]
     description: str
     help: str
 
@@ -54,9 +55,10 @@ class GenomicScoresDb:
                 resource.resource_id,
                 attr.source, attr.source,
                 attr.name,
-                score.get_number_histogram(attr.source),
-                score.get_score_config(attr.source).desc,
-                score.resource.get_description())
+                score.get_score_histogram(attr.source),
+                score.resource.get_description(),
+                ""
+            )
             if score_desc.hist is None:
                 logger.warning(
                     "unable to load histogram for %s: %s (%s)",

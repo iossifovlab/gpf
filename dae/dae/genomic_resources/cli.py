@@ -441,7 +441,7 @@ def _run_resource_manifest_command(
 
 def _read_stats_hash(
         proto: ReadWriteRepositoryProtocol,
-        implementation: GenomicResourceImplementation) -> Optional[str]:
+        implementation: GenomicResourceImplementation) -> Optional[bytes]:
     res = implementation.resource
     stats_dir = ResourceStatistics.get_statistics_folder()
     if not proto.file_exists(res, f"{stats_dir}/stats_hash"):
@@ -449,7 +449,7 @@ def _read_stats_hash(
     with proto.open_raw_file(
         res, f"{stats_dir}/stats_hash", mode="rb"
     ) as infile:
-        return cast(str, infile.read())
+        return cast(bytes, infile.read())
 
 
 def _store_stats_hash(
@@ -483,7 +483,6 @@ def _collect_impl_stats_tasks(  # pylint: disable=too-many-arguments
 
     # This is the hack to update stats_hash without recreaing the histograms.
     # tasks = []
-
     graph.create_task(
         f"{impl.resource.resource_id}_store_stats_hash",
         _store_stats_hash,
