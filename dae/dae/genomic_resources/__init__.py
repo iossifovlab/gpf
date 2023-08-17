@@ -46,7 +46,7 @@ def get_resource_implementation_builder(
 def register_implementation(
     resource_type: str,
     builder: Callable[[GenomicResource], GenomicResourceImplementation]
-):
+) -> None:
     """
     Register a resource type with a given builder function.
 
@@ -58,7 +58,7 @@ def register_implementation(
     _REGISTERED_RESOURCE_IMPLEMENTATIONS[resource_type] = builder
 
 
-def _find_implementations():
+def _find_implementations() -> None:
     """
     Find and record implementations specified in entry points.
 
@@ -82,7 +82,7 @@ def _find_implementations():
     _IMPLEMENTATIONS_LOADED = True
 
 
-def _load_plugins():
+def _load_plugins() -> None:
     # pylint: disable=global-statement
     global _PLUGINS_LOADED
 

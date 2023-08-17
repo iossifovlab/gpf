@@ -1,4 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+from typing import Optional
+
 import pytest
 
 from dae.genomic_resources import GenomicResource
@@ -8,7 +10,7 @@ from dae.genomic_resources.testing import build_inmemory_test_resource
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME
 
 
-def test_the_simplest_allele_score():
+def test_the_simplest_allele_score() -> None:
     res: GenomicResource = build_inmemory_test_resource({
         GR_CONF_FILE_NAME: """
             type: allele_score
@@ -43,7 +45,7 @@ def test_the_simplest_allele_score():
     assert score.fetch_scores("1", 10, "A", "C") == [0.03]
 
 
-def test_allele_score_fetch_region():
+def test_allele_score_fetch_region() -> None:
     res: GenomicResource = build_inmemory_test_resource({
         GR_CONF_FILE_NAME: """
             type: allele_score
@@ -97,7 +99,7 @@ def test_allele_score_fetch_region():
          {"freq": 0.03}]
 
 
-def test_allele_score_missing_alt():
+def test_allele_score_missing_alt() -> None:
     res: GenomicResource = build_inmemory_test_resource({
         GR_CONF_FILE_NAME: """
             type: allele_score
@@ -133,7 +135,9 @@ def test_allele_score_missing_alt():
     (("1", 10, 16), None, None, (0.4 + 0.05) / 2.0)
 ])
 def test_allele_score_fetch_agg(
-        region, pos_aggregator, allele_aggregator, expected):
+        region: tuple[str, int, int],
+        pos_aggregator: Optional[str], allele_aggregator: Optional[str],
+        expected: float) -> None:
     res: GenomicResource = build_inmemory_test_resource({
         GR_CONF_FILE_NAME: """
             type: allele_score
@@ -165,7 +169,7 @@ def test_allele_score_fetch_agg(
     score = AlleleScore(res)
     score.open()
 
-    result = score.fetch_scores_agg(  # type: ignore
+    result = score.fetch_scores_agg(
         *region,
         [AlleleScoreQuery("freq", pos_aggregator, allele_aggregator)])
     assert result is not None

@@ -8,7 +8,7 @@ import pathlib
 import logging
 import tempfile
 
-from typing import Optional, List, cast, Any
+from typing import Optional, cast, Any
 from urllib.parse import urlparse
 
 import yaml
@@ -17,7 +17,7 @@ from .fsspec_protocol import build_fsspec_protocol, build_inmemory_protocol
 from .repository import GenomicResourceRepo, GenomicResourceProtocolRepo, \
     GenomicResource
 from .cached_repository import GenomicResourceCachedRepo
-# from .testing import build_inmemory_protocol
+from .resource_implementation import GenomicResourceImplementation
 
 from .group_repository import GenomicResourceGroupRepo
 
@@ -138,9 +138,9 @@ def _build_real_repository(
 
 def _build_group_repository(
         repo_id: str,
-        children: List[dict], **kwargs) -> GenomicResourceRepo:
+        children: list[dict], **kwargs: Any) -> GenomicResourceRepo:
 
-    result: List[GenomicResourceRepo] = []
+    result: list[GenomicResourceRepo] = []
     for child in children:
         child_id: str = child.pop("id", "")
         proto_type = child.pop("type")
@@ -212,7 +212,7 @@ def build_genomic_resource_repository(
                 "The children attribute in the definition of a group "
                 "repository must be a list")
 
-        children = cast(List[dict], definition.pop("children"))
+        children = cast(list[dict], definition.pop("children"))
         repo: GenomicResourceRepo = \
             _build_group_repository(repo_id, children, **definition)
     else:
@@ -222,7 +222,8 @@ def build_genomic_resource_repository(
     return repo
 
 
-def build_resource_implementation(res: GenomicResource):
+def build_resource_implementation(
+        res: GenomicResource) -> GenomicResourceImplementation:
     """Build a resource implementation from a resource."""
     # pylint: disable=import-outside-toplevel
     from dae.genomic_resources import get_resource_implementation_builder

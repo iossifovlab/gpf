@@ -25,15 +25,21 @@ class MinMaxValue(Statistic):
         self.min = min(value, self.min)
         self.max = max(value, self.max)
 
-    def merge(self, other: MinMaxValue) -> None:
+    def merge(self, other: Statistic) -> None:
         if not isinstance(other, MinMaxValue):
-            raise ValueError()
+            raise ValueError("unexpected type of statistics to merge with")
         if self.score_id != other.score_id:
             raise ValueError(
                 "Attempting to merge min max values of different scores!"
             )
-        self.min = min(self.min, other.min)
-        self.max = max(self.max, other.max)
+        if np.isnan(self.min):
+            self.min = min(other.min, self.min)
+        else:
+            self.min = min(self.min, other.min)
+        if np.isnan(self.max):
+            self.max = max(other.max, self.max)
+        else:
+            self.max = max(self.max, other.max)
 
     def serialize(self) -> str:
         return cast(str, yaml.dump(
@@ -41,9 +47,9 @@ class MinMaxValue(Statistic):
         )
 
     @staticmethod
-    def deserialize(data: str) -> MinMaxValue:
-        res = yaml.load(data, yaml.Loader)
-        return MinMaxValue(res["score_id"], res["min"], res["max"])
+    def deserialize(content: str) -> MinMaxValue:
+        data = yaml.load(content, yaml.Loader)
+        return MinMaxValue(data["score_id"], data["min"], data["max"])
 
 
 class MinMaxValueStatisticMixin:

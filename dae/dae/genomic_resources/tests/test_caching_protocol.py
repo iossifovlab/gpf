@@ -1,18 +1,22 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import contextlib
+from typing import Any, Callable, ContextManager, Generator
 
 import pytest
 
 from dae.genomic_resources.cached_repository import \
     CachingProtocol
 from dae.genomic_resources.testing import \
+    FsspecReadWriteProtocol, \
     build_inmemory_test_protocol, \
     build_filesystem_test_protocol, \
     build_s3_test_protocol, \
     setup_directories, setup_tabix
 
 
-def test_caching_repo_simple(content_fixture, tmp_path_factory):
+def test_caching_repo_simple(
+        content_fixture: dict[str, Any],
+        tmp_path_factory: pytest.TempPathFactory) -> None:
 
     local_proto = build_filesystem_test_protocol(
         tmp_path_factory.mktemp("cache_proto_test"))
@@ -30,7 +34,10 @@ def test_caching_repo_simple(content_fixture, tmp_path_factory):
 
 
 @pytest.fixture
-def remote_proto_fixture(content_fixture, tmp_path_factory):
+def remote_proto_fixture(
+    content_fixture: dict[str, Any],
+    tmp_path_factory: pytest.TempPathFactory
+) -> FsspecReadWriteProtocol:
     root_path = tmp_path_factory.mktemp("source_proto_fixture")
     setup_directories(root_path, content_fixture)
     setup_tabix(
@@ -48,11 +55,18 @@ def remote_proto_fixture(content_fixture, tmp_path_factory):
     return proto
 
 
+CachingProtocolBuilder = Callable[
+    [str], ContextManager[CachingProtocol]]
+
+
 @pytest.fixture
-def caching_proto(tmp_path_factory, remote_proto_fixture):
+def caching_proto(
+    tmp_path_factory: pytest.TempPathFactory,
+    remote_proto_fixture: FsspecReadWriteProtocol
+) -> CachingProtocolBuilder:
 
     @contextlib.contextmanager
-    def builder(caching_scheme):
+    def builder(caching_scheme: str) -> Generator[CachingProtocol, None, None]:
         remote_proto = remote_proto_fixture
 
         if caching_scheme == "file":
@@ -75,7 +89,8 @@ def caching_proto(tmp_path_factory, remote_proto_fixture):
     "file",
     "s3",
 ])
-def test_get_resource_three(caching_proto, caching_scheme):
+def test_get_resource_three(
+        caching_proto: CachingProtocolBuilder, caching_scheme: str) -> None:
     with caching_proto(caching_scheme) as proto:
         res = proto.get_resource("three")
 
@@ -87,7 +102,8 @@ def test_get_resource_three(caching_proto, caching_scheme):
     "file",
     "s3",
 ])
-def test_get_resource_two(caching_proto, caching_scheme):
+def test_get_resource_two(
+        caching_proto: CachingProtocolBuilder, caching_scheme: str) -> None:
     with caching_proto(caching_scheme) as proto:
         res = proto.get_resource("sub/two")
 
@@ -100,7 +116,7 @@ def test_get_resource_two(caching_proto, caching_scheme):
     "s3",
 ])
 def test_get_resource_copies_nothing_three(
-        caching_proto, caching_scheme):
+        caching_proto: CachingProtocolBuilder, caching_scheme: str) -> None:
     with caching_proto(caching_scheme) as proto:
         res = proto.get_resource("three")
 
@@ -115,7 +131,7 @@ def test_get_resource_copies_nothing_three(
     "s3",
 ])
 def test_get_resource_copies_nothing_two(
-        caching_proto, caching_scheme):
+        caching_proto: CachingProtocolBuilder, caching_scheme: str) -> None:
     with caching_proto(caching_scheme) as proto:
         res = proto.get_resource("sub/two")
 
@@ -129,7 +145,7 @@ def test_get_resource_copies_nothing_two(
     "s3",
 ])
 def test_open_raw_file_copies_the_file_three_a(
-        caching_proto, caching_scheme):
+        caching_proto: CachingProtocolBuilder, caching_scheme: str) -> None:
 
     with caching_proto(caching_scheme) as proto:
         res = proto.get_resource("three")
@@ -148,7 +164,7 @@ def test_open_raw_file_copies_the_file_three_a(
     "s3",
 ])
 def test_open_raw_file_copies_the_file_three_b(
-        caching_proto, caching_scheme):
+        caching_proto: CachingProtocolBuilder, caching_scheme: str) -> None:
     with caching_proto(caching_scheme) as proto:
         res = proto.get_resource("three")
         with proto.open_raw_file(res, "sub2/b.txt") as infile:
@@ -166,7 +182,7 @@ def test_open_raw_file_copies_the_file_three_b(
     "s3",
 ])
 def test_open_tabix_file_simple(
-        caching_proto, caching_scheme):
+        caching_proto: CachingProtocolBuilder, caching_scheme: str) -> None:
     with caching_proto(caching_scheme) as proto:
 
         res = proto.get_resource("one")

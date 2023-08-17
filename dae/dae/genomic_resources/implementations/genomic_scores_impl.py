@@ -6,6 +6,7 @@ import json
 from typing import Any, Optional, cast, Iterable
 
 from jinja2 import Template
+import numpy as np
 
 from dae.genomic_resources.repository import GenomicResourceRepo
 
@@ -336,7 +337,15 @@ class GenomicScoreImplementation(
             hist_conf = all_hist_confs[score_id]
             assert isinstance(hist_conf, NumberHistogramConfig)
             assert not hist_conf.has_view_range()
-            hist_conf.view_range = (min_max.min, min_max.max)
+            if np.isnan(min_max.min) or np.isnan(min_max.max):
+                logger.warning(
+                    "min/max value for %s not found; "
+                    "nullify the histogram", score_id)
+                all_hist_confs[score_id] = NullHistogramConfig(
+                    f"min/max for {score_id} not found")
+            else:
+                hist_conf.view_range = (min_max.min, min_max.max)
+        logger.info("histogram configs updated: %s", all_hist_confs)
         return all_hist_confs
 
     def _add_histogram_tasks(
@@ -377,7 +386,7 @@ class GenomicScoreImplementation(
             f"{self.resource_id}_merge_histograms",
             GenomicScoreImplementation._merge_histograms,
             [self.resource, update_hist_confs, *histogram_tasks],
-            [update_hist_confs, *histogram_tasks]
+            histogram_tasks
         )
         save_task = graph.create_task(
             f"{self.resource_id}_save_histograms",
@@ -395,6 +404,8 @@ class GenomicScoreImplementation(
     ) -> dict[str, Histogram]:
         impl = build_score_implementation_from_resource(resource)
         result: dict[str, Histogram] = {}
+
+        logger.info("updated hist confs: %s", all_hist_confs)
 
         for score_id, hist_conf in all_hist_confs.items():
             if isinstance(hist_conf, NullHistogramConfig):

@@ -179,6 +179,8 @@ class NumberHistogram(Statistic):
             bins: Optional[np.ndarray] = None,
             bars: Optional[np.ndarray] = None):
         super().__init__("histogram", "Collects values for histogram.")
+        logger.info("number histogram config: %s", config)
+
         assert isinstance(config, NumberHistogramConfig)
         self.config = config
         self.out_of_range_values: list[float] = []
@@ -226,18 +228,21 @@ class NumberHistogram(Statistic):
                 self._rstep = self.config.number_of_bins / \
                     (self.view_max() - self.view_min())
             self.bars = np.zeros(self.config.number_of_bins, dtype=np.int64)
+            assert not np.any(np.isnan(self.bins)), ("nan bins", self.config)
         elif self.bins is None or self.bars is None:
             raise ValueError(
                 "Cannot instantiate histogram with only bins or only bars!"
             )
 
     def view_min(self) -> float:
-        if self.config.view_range[0] is None:
+        if self.config.view_range[0] is None \
+                or np.isnan(self.config.view_range[0]):
             raise ValueError("view range min value not set")
         return self.config.view_range[0]
 
     def view_max(self) -> float:
-        if self.config.view_range[1] is None:
+        if self.config.view_range[1] is None \
+                or np.isnan(self.config.view_range[1]):
             raise ValueError("view range max value not set")
         return self.config.view_range[1]
 
@@ -248,7 +253,8 @@ class NumberHistogram(Statistic):
         assert self.bins is not None and self.bars is not None
         assert other.bins is not None and other.bars is not None
 
-        assert np.allclose(self.bins, other.bins, rtol=1e-5)
+        assert np.allclose(self.bins, other.bins, rtol=1e-5), \
+            (self.bins, other.bins)
 
         self.bars += other.bars
         self.out_of_range_bins[0] += other.out_of_range_bins[0]
@@ -608,10 +614,11 @@ def build_empty_histogram(
         return NullHistogram(NullHistogramConfig(
             "Could not match histogram config type"
         ))
-    except BaseException:  # pylint: disable=broad-except
-        logger.warning("Failed to create empty histogram from config")
+    except BaseException as err:  # pylint: disable=broad-except
+        logger.warning(
+            "Failed to create empty histogram from config", exc_info=True)
         return NullHistogram(NullHistogramConfig(
-            "Failed to create empty histogram from config."))
+            f"Failed to create empty histogram from config: {err}"))
 
 
 def load_histogram(
