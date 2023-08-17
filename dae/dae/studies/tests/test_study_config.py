@@ -8,7 +8,7 @@ from dae.configuration.schemas.study_config import study_config_schema
 
 
 @pytest.fixture(scope="module")
-def quads_f1_config(tmp_path_factory: pytest.TempPathFactory) -> Box:
+def study_config(tmp_path_factory: pytest.TempPathFactory) -> Box:
     config_contents =  textwrap.dedent("""
         name = "QUADS_F1"
         id = "quads_f1"
@@ -57,10 +57,6 @@ def quads_f1_config(tmp_path_factory: pytest.TempPathFactory) -> Box:
         evs_freq.source = "EVS-freq"
         evs_freq.format = "EVS %%.2f %%%%"
 
-        e65_freq.name = "E65"
-        e65_freq.source = "E65-freq"
-        e65_freq.format = "E65 %%.2f %%%%"
-
         [genotype_browser.columns.phenotype]
         prb_con.name = "Continuous Proband"
         prb_con.source = "instrument1.continuous"
@@ -69,14 +65,6 @@ def quads_f1_config(tmp_path_factory: pytest.TempPathFactory) -> Box:
         prb_cat.name = "Categorical"
         prb_cat.source = "instrument1.categorical"
         prb_cat.role = "prb"
-
-        prb_ord.name = "Ordinal"
-        prb_ord.source = "instrument1.ordinal"
-        prb_ord.role = "prb"
-
-        prb_raw.name = "Raw"
-        prb_raw.source = "instrument1.raw"
-        prb_raw.role = "prb"
     """)
     root_dir = tmp_path_factory.mktemp("quads_f1_test_config")
     config_file = root_dir / "quads_f1.conf"
@@ -89,21 +77,12 @@ def quads_f1_config(tmp_path_factory: pytest.TempPathFactory) -> Box:
     return GPFConfigParser.load_config(str(config_file), study_config_schema)
 
 
-def test_study_config_simple(genotype_data_study_configs):
-    assert genotype_data_study_configs is not None
-    assert list(genotype_data_study_configs.keys())
-
-
-def test_study_config_year(genotype_data_study_configs):
-    study_config = genotype_data_study_configs.get("inheritance_trio")
-    assert study_config is not None
+def test_study_config_year(study_config):
     assert study_config.year is None
 
 
-def test_quads_f1_config_genotype_storage(quads_f1_config):
-    assert quads_f1_config is not None
-
-    assert quads_f1_config.genotype_storage.id == "genotype_filesystem"
+def test_study_config_genotype_storage(study_config):
+    assert study_config.genotype_storage.id == "genotype_filesystem"
 
 
 @pytest.mark.parametrize(
@@ -118,11 +97,10 @@ def test_quads_f1_config_genotype_storage(quads_f1_config):
         ("pub_med", None),
     ],
 )
-def test_quads_f1_config_attr_access(
-    quads_f1_config, option_name, expected_value
+def test_study_config_attr_access(
+    study_config, option_name, expected_value
 ):
-    assert quads_f1_config is not None
-    assert getattr(quads_f1_config, option_name) == expected_value
+    assert getattr(study_config, option_name) == expected_value
 
 
 @pytest.mark.parametrize(
@@ -134,17 +112,15 @@ def test_quads_f1_config_attr_access(
         ("has_pedigree_selector", True),
     ],
 )
-def test_quads_f1_config_genotype_browser(
-    quads_f1_config, option_name, expected_value
+def test_study_config_genotype_browser(
+    study_config, option_name, expected_value
 ):
-    genotype_browser_config = quads_f1_config.genotype_browser
-
+    genotype_browser_config = study_config.genotype_browser
     assert getattr(genotype_browser_config, option_name) == expected_value
 
 
-def test_quads_f1_config_genotype_browser_pheno_filters(quads_f1_config):
-    genotype_browser_config = quads_f1_config.genotype_browser
-
+def test_study_config_genotype_browser_pheno_filters(study_config):
+    genotype_browser_config = study_config.genotype_browser
     assert genotype_browser_config.family_filters == {
         "categorical": {
             "name": "Categorical",
@@ -165,27 +141,27 @@ def test_quads_f1_config_genotype_browser_pheno_filters(quads_f1_config):
     }
 
 
-def test_quads_f1_config_genotype_browser_columns(quads_f1_config):
-    assert len(quads_f1_config.genotype_browser.columns.genotype) == 3
+def test_study_config_genotype_browser_columns(study_config):
+    assert len(study_config.genotype_browser.columns.genotype) == 2
 
 
-def test_quads_f1_config_genotype_browser_pheno_columns(quads_f1_config):
-    assert len(quads_f1_config.genotype_browser.columns.phenotype) == 4
+def test_study_config_genotype_browser_pheno_columns(study_config):
+    assert len(study_config.genotype_browser.columns.phenotype) == 2
 
 
-def test_quads_f1_files_and_tables(quads_f1_config):
-    assert quads_f1_config.genotype_storage.files.variants[0].path.endswith(
+def test_quads_f1_files_and_tables(study_config):
+    assert study_config.genotype_storage.files.variants[0].path.endswith(
         "data/quads_f1.vcf"
     )
-    assert quads_f1_config.genotype_storage.files.pedigree.path.endswith(
+    assert study_config.genotype_storage.files.pedigree.path.endswith(
         "data/quads_f1.ped"
     )
 
 
-def test_quads_f1_config_files(quads_f1_config):
-    assert quads_f1_config.genotype_storage.files is not None
-    assert quads_f1_config.genotype_storage.files.pedigree is not None
-    assert quads_f1_config.genotype_storage.files.pedigree.path.endswith(
+def test_study_config_files(study_config):
+    assert study_config.genotype_storage.files is not None
+    assert study_config.genotype_storage.files.pedigree is not None
+    assert study_config.genotype_storage.files.pedigree.path.endswith(
         "/data/quads_f1.ped"
     )
-    assert len(quads_f1_config.genotype_storage.files.pedigree.params) == 3
+    assert len(study_config.genotype_storage.files.pedigree.params) == 3
