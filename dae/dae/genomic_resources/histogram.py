@@ -421,6 +421,9 @@ class NullHistogram(Statistic):
             }
         }
 
+    def values_domain(self) -> str:
+        return "NO DOMAIN"
+
     # pylint: disable=unused-argument
     def plot(self, outfile: IO, score_id: str) -> None:
         return

@@ -2,9 +2,11 @@ import logging
 from dataclasses import dataclass
 from typing import Union
 
+from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.genomic_resources.genomic_scores import build_score_from_resource
 from dae.genomic_resources.histogram import NumberHistogram, \
     CategoricalHistogram, NullHistogram
+from dae.annotation.annotation_pipeline import AnnotatorInfo
 
 
 logger = logging.getLogger(__name__)
@@ -26,9 +28,11 @@ class ScoreDesc:
 class GenomicScoresDb:
     """Genomic scores DB allowing access to genomic scores histograms."""
 
-    def __init__(self, grr, score_annotators):
+    def __init__(
+            self, grr: GenomicResourceRepo,
+            score_annotators: list[AnnotatorInfo]):
         self.grr = grr
-        self.scores = {}
+        self.scores: dict[str, ScoreDesc] = {}
         for annotator_info in score_annotators:
             assert len(annotator_info.resources) == 1, annotator_info
             resource = annotator_info.resources[0]
@@ -38,25 +42,28 @@ class GenomicScoresDb:
                     "wrong resource type passed to genomic scores: %s",
                     resource.resource_id)
                 continue
-            scores_desc = self._build_annotator_scores_desc(annotator_info)
-            self.scores.update(scores_desc)
+            scores_descriptions = \
+                self._build_annotator_scores_desc(annotator_info)
+            self.scores.update(scores_descriptions)
         logger.info(
             "genomic scores histograms loaded: %s", list(self.scores.keys()))
 
     @staticmethod
-    def _build_annotator_scores_desc(annotator_info):
+    def _build_annotator_scores_desc(
+            annotator_info: AnnotatorInfo) -> dict[str, ScoreDesc]:
         resource = annotator_info.resources[0]
         score = build_score_from_resource(resource)
         result = {}
         for attr in annotator_info.attributes:
             if attr.internal:
                 continue
+            score_def = score.score_definitions[attr.source]
             score_desc = ScoreDesc(
                 resource.resource_id,
                 attr.source, attr.source,
                 attr.name,
                 score.get_score_histogram(attr.source),
-                score.resource.get_description(),
+                score_def.desc,
                 ""
             )
             if score_desc.hist is None:
@@ -67,7 +74,7 @@ class GenomicScoresDb:
             result[attr.name] = score_desc
         return result
 
-    def get_scores(self):
+    def get_scores(self) -> list[tuple[str, ScoreDesc]]:
         """Return all genomic scores histograms."""
         result = []
 
@@ -76,15 +83,15 @@ class GenomicScoresDb:
 
         return result
 
-    def __getitem__(self, score_id):
+    def __getitem__(self, score_id: str) -> ScoreDesc:
         if score_id not in self.scores:
             raise KeyError()
 
         res = self.scores[score_id]
         return res
 
-    def __contains__(self, score_id):
+    def __contains__(self, score_id: str) -> bool:
         return score_id in self.scores
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.scores)
