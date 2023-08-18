@@ -17,7 +17,7 @@ class Task:
     deps: list[Task]
     input_files: list[str]
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         deps = ",".join(dep.task_id for dep in self.deps)
         in_files = ",".join(self.input_files)
         return f"Task(id={self.task_id}, deps={deps}, in_files={in_files})"
@@ -26,7 +26,7 @@ class Task:
 class TaskGraph:
     """An object representing a graph of tasks."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.tasks: list[Task] = []
         self.input_files: list[str] = []
         self._task_ids: set[str] = set()
@@ -62,7 +62,7 @@ class TaskGraph:
         self._task_ids.add(task_id)
         return node
 
-    def prune(self, ids_to_keep: Iterable[str]):
+    def prune(self, ids_to_keep: Iterable[str]) -> TaskGraph:
         """Prune tasks which are not in ids_to_keep or in their deps.
 
         tasks ids which are in ids_to_keep but not in the graph are simply
@@ -87,8 +87,8 @@ class TaskGraph:
         return res
 
     @staticmethod
-    def _add_task_deps(task, task_set):
+    def _add_task_deps(task: Task, task_set: set[str]) -> None:
         for dep in task.deps:
-            if dep not in task_set:
+            if dep.task_id not in task_set:
                 task_set.add(dep.task_id)
                 TaskGraph._add_task_deps(dep, task_set)

@@ -1,18 +1,21 @@
 # pylint: disable=W0621,C0114,C0115,C0116,W0212,W0613
 import os
 import time
+import pathlib
+from typing import Generator
+
 import pytest
 
-from dask.distributed import Client  # type: ignore
+from dask.distributed import Client
 
 from dae.task_graph.cache import FileTaskCache
 from dae.task_graph.graph import TaskGraph
 from dae.task_graph.executor import \
-    DaskExecutor, SequentialExecutor
+    DaskExecutor, SequentialExecutor, AbstractTaskGraphExecutor
 
 
 @pytest.fixture(scope="module")
-def threaded_client():
+def threaded_client() -> Generator[Client, None, None]:
     # The client needs to be threaded b/c the global ORDER variable is modified
     client = Client(n_workers=4, threads_per_worker=1, processes=False)
     yield client
@@ -20,18 +23,20 @@ def threaded_client():
 
 
 @pytest.fixture(params=["dask", "sequential"])
-def executor(threaded_client, request):
+def executor(
+        threaded_client: Client,
+        request: pytest.FixtureRequest) -> AbstractTaskGraphExecutor:
     if request.param == "dask":
         return DaskExecutor(threaded_client)
     return SequentialExecutor()
 
 
-def do_work(timeout):
+def do_work(timeout: float) -> None:
     if timeout != 0:
         time.sleep(timeout)
 
 
-def test_dependancy_chain(executor):
+def test_dependancy_chain(executor: AbstractTaskGraphExecutor) -> None:
     graph = TaskGraph()
     task_1 = graph.create_task("Task 1", do_work, [0.01], [])
     graph.create_task("Task 2", do_work, [0], [task_1])
@@ -41,7 +46,7 @@ def test_dependancy_chain(executor):
     assert ids_in_finish_order == ["Task 1", "Task 2"]
 
 
-def test_multiple_dependancies(executor):
+def test_multiple_dependancies(executor: AbstractTaskGraphExecutor) -> None:
     graph = TaskGraph()
 
     tasks = []
@@ -58,10 +63,10 @@ def test_multiple_dependancies(executor):
     assert len(ids_in_finish_order) == 15
 
 
-def test_implicit_dependancies(executor):
+def test_implicit_dependancies(executor: AbstractTaskGraphExecutor) -> None:
     graph = TaskGraph()
 
-    def add_to_list(what, where):
+    def add_to_list(what: int, where: list[int]) -> list[int]:
         where.append(what)
         return where
 
@@ -79,7 +84,7 @@ def test_implicit_dependancies(executor):
     assert full_list == list(range(10))
 
 
-def test_calling_execute_twice(executor):
+def test_calling_execute_twice(executor: AbstractTaskGraphExecutor) -> None:
     graph = TaskGraph()
     first_task = graph.create_task("First", lambda: None, [], [])
     second_layer_tasks = [
@@ -98,17 +103,18 @@ def test_calling_execute_twice(executor):
     executor.execute(graph)
 
 
-def test_executing_with_cache(executor, tmpdir):
+def test_executing_with_cache(
+        executor: AbstractTaskGraphExecutor, tmp_path: pathlib.Path) -> None:
     graph = _create_graph_with_result_passing()
 
     # initial execution of the graph
-    executor._task_cache = FileTaskCache(cache_dir=tmpdir)
+    executor._task_cache = FileTaskCache(cache_dir=str(tmp_path))
     task_results = list(executor.execute(graph))
     assert len(task_results) == 9
 
     # now make a change and make sure the correct function with the correct
     # results are returned
-    executor._task_cache = FileTaskCache(cache_dir=tmpdir)
+    executor._task_cache = FileTaskCache(cache_dir=str(tmp_path))
     task_to_delete = graph.tasks[-2]
     assert task_to_delete.task_id == "7"
     os.remove(executor._task_cache._get_flag_filename(task_to_delete))
@@ -120,11 +126,11 @@ def test_executing_with_cache(executor, tmpdir):
             assert result == [0, 1, 0, 2, 0, 3, 0, 4, 0, 5, 0, 6, 0, 7]
 
 
-def _create_graph_with_result_passing():
-    def add_to_list(what, where):
+def _create_graph_with_result_passing() -> TaskGraph:
+    def add_to_list(what: int, where: list[int]) -> list[int]:
         return where + [what]
 
-    def concat_lists(*lists):
+    def concat_lists(*lists: list[int]) -> list[int]:
         res = []
         for next_list in lists:
             res.extend(next_list)

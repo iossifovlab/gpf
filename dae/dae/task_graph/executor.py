@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import sys
 import time
 import logging
@@ -5,8 +7,10 @@ import traceback
 from abc import abstractmethod
 from copy import copy
 from collections import deque
-from typing import Any, Iterator
-from typing import Optional
+from typing import Any, Iterator, Optional, Type, Generator, Callable, cast
+from types import TracebackType
+
+from dask.distributed import Client, Future
 
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 from dae.task_graph.graph import TaskGraph, Task
@@ -35,14 +39,19 @@ class TaskGraphExecutor:
         is already finished.
         """
 
-    def __enter__(self):
+    def __enter__(self) -> TaskGraphExecutor:
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(
+        self,
+        exc_type: Optional[Type[BaseException]],
+        exc_value: Optional[BaseException],
+        exc_tb: Optional[TracebackType]
+    ) -> None:
         self.close()
 
     @abstractmethod
-    def close(self):
+    def close(self) -> None:
         """Clean-up any resources used by the executor."""
 
 
@@ -73,8 +82,9 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
                 self._queue_task(task_node)
         return self._yield_task_results(already_computed_tasks)
 
-    def _yield_task_results(self, already_computed_tasks) \
-            -> Iterator[tuple[Task, Any]]:
+    def _yield_task_results(
+        self, already_computed_tasks: dict[Task, Any]
+    ) -> Iterator[tuple[Task, Any]]:
         for task_node, result in already_computed_tasks.items():
             yield task_node, result
         for task_node, result in self._await_tasks():
@@ -95,12 +105,16 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
     def _set_task_result(self, task: Task, result: Any) -> None:
         """Set a precomputed result for a task."""
 
-    def _in_exec_order(self, task_graph):
+    def _in_exec_order(
+        self, task_graph: TaskGraph
+    ) -> Generator[Task, None, None]:
         visited: set[Task] = set()
         for node in task_graph.tasks:
             yield from self._node_in_exec_order(node, visited)
 
-    def _node_in_exec_order(self, node, visited):
+    def _node_in_exec_order(
+        self, node: Task, visited: set[Task]
+    ) -> Generator[Task, None, None]:
         if node in visited:
             return
         visited.add(node)
@@ -108,7 +122,7 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
             yield from self._node_in_exec_order(dep, visited)
         yield node
 
-    def _check_for_cyclic_deps(self, task_graph):
+    def _check_for_cyclic_deps(self, task_graph: TaskGraph) -> None:
         visited: set[Task] = set()
         stack: list[Task] = []
         for node in task_graph.tasks:
@@ -117,7 +131,9 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
                 if cycle is not None:
                     raise ValueError(f"Cyclic dependancy {cycle}")
 
-    def _find_cycle(self, node, visited, stack):
+    def _find_cycle(
+        self, node: Task, visited: set[Task], stack: list[Task]
+    ) -> Optional[list[Task]]:
         visited.add(node)
         stack.append(node)
 
@@ -130,22 +146,22 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
         stack.pop()
         return None
 
-    def close(self):
+    def close(self) -> None:
         pass
 
 
 class SequentialExecutor(AbstractTaskGraphExecutor):
     """A Task Graph Executor that executes task in sequential order."""
 
-    def __init__(self, task_cache=NoTaskCache()):
+    def __init__(self, task_cache: TaskCache = NoTaskCache()):
         super().__init__(task_cache)
-        self._task_queue = []
-        self._task2result = {}
+        self._task_queue: list[Task] = []
+        self._task2result: dict[Task, Any] = {}
 
-    def _queue_task(self, task_node):
+    def _queue_task(self, task_node: Task) -> None:
         self._task_queue.append(task_node)
 
-    def _await_tasks(self):
+    def _await_tasks(self) -> Generator[tuple[Task, Any], None, None]:
         for task_node in self._task_queue:
             all_deps_satisfied = all(
                 d in self._task2result for d in task_node.deps
@@ -176,28 +192,31 @@ class SequentialExecutor(AbstractTaskGraphExecutor):
         self._task_queue = []
         self._task2result = {}
 
-    def _set_task_result(self, task, result):
+    def _set_task_result(self, task: Task, result: Any) -> None:
         self._task2result[task] = result
 
 
 class DaskExecutor(AbstractTaskGraphExecutor):
     """Execute tasks in parallel using Dask to do the heavy lifting."""
 
-    def __init__(self, client, task_cache=NoTaskCache(), **kwargs):
+    def __init__(
+        self, client: Client, task_cache: TaskCache = NoTaskCache(),
+        **kwargs: Any
+    ):
         super().__init__(task_cache)
         self._client = client
-        self._task2future = {}
-        self._future_key2task = {}
-        self._task2result = {}
+        self._task2future: dict[Task, Future] = {}
+        self._future_key2task: dict[str, Task] = {}
+        self._task2result: dict[Task, Any] = {}
         self._task_queue: deque[Task] = deque()
         log_dir = ensure_log_dir(**kwargs)
         self._params = copy(kwargs)
         self._params["log_dir"] = log_dir
 
-    def _queue_task(self, task_node):
+    def _queue_task(self, task_node: Task) -> None:
         self._task_queue.append(task_node)
 
-    def _submit_task(self, task_node: Task):
+    def _submit_task(self, task_node: Task) -> Future:
         deps = []
         for dep in task_node.deps:
             future = self._task2future.get(dep)
@@ -219,16 +238,22 @@ class DaskExecutor(AbstractTaskGraphExecutor):
 
         future = self._client.submit(
             self._exec, task_node.func, args, deps, params, pure=False)
+        if future is None:
+            raise ValueError(
+                f"unexpected dask executor return None: {task_node}, {args}, "
+                f"{deps}, {params}")
         self._task2future[task_node] = future
         self._future_key2task[future.key] = task_node
         return future
 
-    def _get_future_or_result(self, task):
+    def _get_future_or_result(self, task: Task) -> Any:
         future = self._task2future.get(task)
         return future if future else self._task2result[task]
 
     @staticmethod
-    def _exec(task_func, args, _deps, params):
+    def _exec(
+        task_func: Callable, args: list, _deps: list, params: dict[str, Any]
+    ) -> Any:
         verbose = params.get("verbose", 0)
         VerbosityConfiguration.set_verbosity(verbose)
 
@@ -252,17 +277,17 @@ class DaskExecutor(AbstractTaskGraphExecutor):
 
     MIN_QUEUE_SIZE = 700
 
-    def _queue_size(self):
-        n_workers = sum(self._client.ncores().values())
+    def _queue_size(self) -> int:
+        n_workers = cast(int, sum(self._client.ncores().values()))
         return max(self.MIN_QUEUE_SIZE, 2 * n_workers)
 
-    def _schedule_tasks(self, currently_running):
+    def _schedule_tasks(self, currently_running: set[Future]) -> set[Future]:
         while self._task_queue and len(currently_running) < self._queue_size():
             future = self._submit_task(self._task_queue.popleft())
             currently_running.add(future)
         return currently_running
 
-    def _await_tasks(self):
+    def _await_tasks(self) -> Generator[tuple[Task, Any], None, None]:
         # pylint: disable=import-outside-toplevel
         from dask.distributed import wait
 
@@ -305,10 +330,10 @@ class DaskExecutor(AbstractTaskGraphExecutor):
         self._task_queue = deque()
         self._task2result = {}
 
-    def _set_task_result(self, task, result):
+    def _set_task_result(self, task: Task, result: Any) -> None:
         self._task2result[task] = result
 
-    def close(self):
+    def close(self) -> None:
         self._client.close()
         cluster = self._client.cluster
         if cluster is not None:

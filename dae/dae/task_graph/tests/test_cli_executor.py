@@ -1,8 +1,10 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,too-many-lines,no-member
 import argparse
 import textwrap
+import pathlib
 
 import pytest
+from pytest_mock import MockerFixture
 
 import dask.distributed
 
@@ -16,7 +18,9 @@ from dae.task_graph import TaskGraphCli
     ["--dccf"],
     ["--dask-cluster-config-file"],
 ])
-def test_cli_cluster_with_config_file(mocker, argv, tmp_path):
+def test_cli_cluster_with_config_file(
+        mocker: MockerFixture, argv: list[str],
+        tmp_path: pathlib.Path) -> None:
     setup_directories(
         tmp_path / "cluster.yaml", textwrap.dedent("""
         name: special

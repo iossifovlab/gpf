@@ -6,7 +6,7 @@ from dae.task_graph import TaskGraph
 from dae.task_graph import TaskGraphCli
 
 
-def test_basic_default_executor():
+def test_basic_default_executor() -> None:
     parser = argparse.ArgumentParser(description="test_basic")
     TaskGraphCli.add_arguments(parser)
     args = parser.parse_args([])
@@ -15,7 +15,7 @@ def test_basic_default_executor():
     TaskGraphCli.process_graph(empty_graph, **vars(args))
 
 
-def test_basic_sequential_executor():
+def test_basic_sequential_executor() -> None:
     parser = argparse.ArgumentParser(description="test_basic")
     TaskGraphCli.add_arguments(parser)
     args = parser.parse_args(["-j", "1"])
@@ -24,7 +24,7 @@ def test_basic_sequential_executor():
     TaskGraphCli.process_graph(empty_graph, **vars(args))
 
 
-def test_force_always():
+def test_force_always() -> None:
     parser = argparse.ArgumentParser(description="test_basic")
     TaskGraphCli.add_arguments(parser, force_mode="always")
     args = parser.parse_args([])
@@ -33,7 +33,7 @@ def test_force_always():
     assert "task_status_dir" not in vars(args)
 
 
-def test_force_optional():
+def test_force_optional() -> None:
     parser = argparse.ArgumentParser(description="test_basic")
     TaskGraphCli.add_arguments(parser, force_mode="optional",
                                default_task_status_dir="gosho")

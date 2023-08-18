@@ -1,6 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,too-many-lines
 import argparse
 
+from typing import Optional
 import pytest
 
 from dae.task_graph import TaskGraphCli
@@ -13,7 +14,7 @@ from dae.task_graph import TaskGraphCli
     (["--jobs", "1"], 1),
     (["--jobs", "100"], 100)
 ])
-def test_cli_args_jobs(argv, jobs):
+def test_cli_args_jobs(argv: list[str], jobs: Optional[int]) -> None:
     parser = argparse.ArgumentParser(description="test_basic")
     TaskGraphCli.add_arguments(parser)
     args = parser.parse_args(argv)
@@ -27,7 +28,7 @@ def test_cli_args_jobs(argv, jobs):
     (["list"], "list"),
     (["status"], "status")
 ])
-def test_cli_args_command(argv, command):
+def test_cli_args_command(argv: list[str], command: str) -> None:
     parser = argparse.ArgumentParser(description="test_basic")
     TaskGraphCli.add_arguments(parser)
     args = parser.parse_args(argv)
@@ -41,7 +42,8 @@ def test_cli_args_command(argv, command):
     (["--dcn", "abc"], "abc"),
     (["--dask-cluster-name", "abc"], "abc")
 ])
-def test_cli_args_dask_cluster_name(argv, name):
+def test_cli_args_dask_cluster_name(
+        argv: list[str], name: Optional[str]) -> None:
     parser = argparse.ArgumentParser(description="test_basic")
     TaskGraphCli.add_arguments(parser)
     args = parser.parse_args(argv)
@@ -55,7 +57,8 @@ def test_cli_args_dask_cluster_name(argv, name):
     (["--dccf", "abc.yaml"], "abc.yaml"),
     (["--dask-cluster-config-file", "abc.yaml"], "abc.yaml")
 ])
-def test_cli_args_dask_cluster_config_file(argv, filename):
+def test_cli_args_dask_cluster_config_file(
+        argv: list[str], filename: Optional[str]) -> None:
     parser = argparse.ArgumentParser(description="test_basic")
     TaskGraphCli.add_arguments(parser)
     args = parser.parse_args(argv)
@@ -72,7 +75,8 @@ def test_cli_args_dask_cluster_config_file(argv, filename):
     (["-t", "a", "b"], ["a", "b"]),
     (["-t", "a", "b", "c"], ["a", "b", "c"]),
 ])
-def test_cli_args_task_ids(argv, task_ids):
+def test_cli_args_task_ids(
+        argv: list[str], task_ids: Optional[list[str]]) -> None:
     parser = argparse.ArgumentParser(description="test_basic")
     TaskGraphCli.add_arguments(parser)
     args = parser.parse_args(argv)
@@ -84,7 +88,7 @@ def test_cli_args_task_ids(argv, task_ids):
     ([], False),
     (["--keep-going"], True),
 ])
-def test_cli_args_keep_going(argv, keep_going):
+def test_cli_args_keep_going(argv: list[str], keep_going: bool) -> None:
     parser = argparse.ArgumentParser(description="test_basic")
     TaskGraphCli.add_arguments(parser)
     args = parser.parse_args(argv)
@@ -97,7 +101,8 @@ def test_cli_args_keep_going(argv, keep_going):
     ("optional", ["--force"], True),
     ("always", [], None),
 ])
-def test_cli_args_force(force_mode, argv, force):
+def test_cli_args_force(
+        force_mode: str, argv: list[str], force: Optional[bool]) -> None:
     parser = argparse.ArgumentParser(description="test_basic")
     TaskGraphCli.add_arguments(parser, force_mode=force_mode)
     args = vars(parser.parse_args(argv))
@@ -113,7 +118,8 @@ def test_cli_args_force(force_mode, argv, force):
     (".", ["--task-status-dir", ".status"], ".status"),
 ])
 def test_cli_args_task_status_dir(
-        default_task_status_dir, argv, task_status_dir):
+        default_task_status_dir: str, argv: list[str],
+        task_status_dir: str) -> None:
     parser = argparse.ArgumentParser(description="test_basic")
     TaskGraphCli.add_arguments(
         parser, default_task_status_dir=default_task_status_dir)
