@@ -190,6 +190,9 @@ class SequentialExecutor(AbstractTaskGraphExecutor):
         self._task_queue.append(task_node)
 
     def _await_tasks(self) -> Generator[tuple[Task, Any], None, None]:
+        finished_tasks = 0
+        initial_task_count = len(self._task_queue)
+
         for task_node in self._task_queue:
             all_deps_satisfied = all(
                 d in self._task2result for d in task_node.deps
@@ -216,6 +219,11 @@ class SequentialExecutor(AbstractTaskGraphExecutor):
             except Exception as exp:  # pylint: disable=broad-except
                 result = exp
                 is_error = True
+            finished_tasks += 1
+            logger.debug("clean up task %s", task_node)
+            logger.info(
+                "finished %s/%s", finished_tasks,
+                initial_task_count)
             if not is_error:
                 self._task2result[task_node] = result
             yield task_node, result
@@ -301,6 +309,7 @@ class DaskExecutor(AbstractTaskGraphExecutor):
         not_completed: set = set()
         completed = set()
         initial_task_count = len(self._task_queue)
+        finished_tasks = 0
 
         not_completed = self._schedule_tasks(not_completed)
         while not_completed:
@@ -316,11 +325,11 @@ class DaskExecutor(AbstractTaskGraphExecutor):
                 self._task2result[task] = result
 
                 yield task, result
-
+                finished_tasks += 1
                 # del ref to future in order to make dask gc its resources
                 logger.debug("clean up task %s", task)
                 logger.info(
-                    "finished %s/%s", len(self._task2result),
+                    "finished %s/%s", finished_tasks,
                     initial_task_count)
                 del self._task2future[task]
 
