@@ -1,11 +1,11 @@
 import copy
 import logging
 
-from typing import Any, List, Optional, cast
+from typing import Any, Optional, cast, List
 
 import numpy as np
 
-from deprecation import deprecated  # type: ignore
+from deprecation import deprecated
 
 from dae.pedigrees.family import Family, Person
 from dae.utils.variant_utils import GenotypeType, \
@@ -678,11 +678,21 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
                 cast(FamilyAllele, allele).variant_in_members))
         return members
 
-    def to_record(self):
+    def _serialize_inheritance_in_members(
+        self
+    ) -> dict[int, list[Inheritance]]:
+        result = {}
+        for allele in self.family_alleles:
+            result[allele.allele_index] = [
+                inh.value for inh in allele.inheritance_in_members]
+        return result
+
+    def to_record(self) -> dict[str, Any]:
         return {
             "family_id": self.family_id,
             "summary_index": self.summary_index,
             "family_index": self.family_index,
             "genotype": self.gt.tolist(),
-            "best_state": self.best_state.tolist()
+            "best_state": self.best_state.tolist(),
+            "inheritance_in_members": self._serialize_inheritance_in_members()
         }
