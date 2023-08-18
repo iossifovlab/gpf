@@ -158,8 +158,9 @@ class ResponseTransformer:
         self.study_wrapper = cast(StudyWrapper, study_wrapper)
         self._pheno_columns = study_wrapper.config_columns.phenotype
 
-        if not study_wrapper.is_remote:
-            self.gene_scores_dicts = {}
+        self.gene_scores_dicts = {}
+        if not study_wrapper.is_remote \
+                and self.study_wrapper.gene_scores_db is not None:
             gene_scores_db = self.study_wrapper.gene_scores_db
             for score_id, score_desc in gene_scores_db.score_descs.items():
                 gene_score = gene_scores_db.get_gene_score(
