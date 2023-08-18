@@ -158,11 +158,16 @@ class ResponseTransformer:
         self.study_wrapper = cast(StudyWrapper, study_wrapper)
         self._pheno_columns = study_wrapper.config_columns.phenotype
 
-        self.gene_scores_dicts = {}
-        gene_scores_db = self.study_wrapper.gene_scores_db
-        for score_id, score_desc in gene_scores_db.score_descs.items():
-            gene_score = gene_scores_db.get_gene_score(score_desc.resource_id)
-            self.gene_scores_dicts[score_id] = gene_score._to_dict(score_id)
+        if not study_wrapper.is_remote:
+            self.gene_scores_dicts = {}
+            gene_scores_db = self.study_wrapper.gene_scores_db
+            for score_id, score_desc in gene_scores_db.score_descs.items():
+                gene_score = gene_scores_db.get_gene_score(
+                    score_desc.resource_id
+                )
+                self.gene_scores_dicts[score_id] = gene_score._to_dict(
+                    score_id
+                )
 
     @property
     def families(self) -> FamiliesData:
