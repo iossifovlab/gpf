@@ -63,6 +63,31 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
         self._task_cache = task_cache
         self._executing = False
 
+    @staticmethod
+    def _exec(
+        task_func: Callable, args: list, _deps: list, params: dict[str, Any]
+    ) -> Any:
+        verbose = params.get("verbose", 0)
+        VerbosityConfiguration.set_verbosity(verbose)
+
+        task_id = params["task_id"]
+        log_dir = params.get("log_dir", ".")
+
+        root_logger = logging.getLogger()
+        handler = configure_task_logging(log_dir, task_id, verbose)
+        root_logger.addHandler(handler)
+
+        task_logger = logging.getLogger("task_executor")
+        task_logger.info("task <%s> started", task_id)
+        start = time.time()
+        result = task_func(*args)
+        elapsed = time.time() - start
+        task_logger.info("task <%s> finished in %0.2fsec", task_id, elapsed)
+
+        root_logger.removeHandler(handler)
+        handler.close()
+        return result
+
     def execute(self, task_graph: TaskGraph) -> Iterator[tuple[Task, Any]]:
         assert not self._executing, \
             "Cannot execute a new graph while an old one is still running."
@@ -153,10 +178,13 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
 class SequentialExecutor(AbstractTaskGraphExecutor):
     """A Task Graph Executor that executes task in sequential order."""
 
-    def __init__(self, task_cache: TaskCache = NoTaskCache()):
+    def __init__(self, task_cache: TaskCache = NoTaskCache(), **kwargs: Any):
         super().__init__(task_cache)
         self._task_queue: list[Task] = []
         self._task2result: dict[Task, Any] = {}
+        log_dir = ensure_log_dir(**kwargs)
+        self._params = copy(kwargs)
+        self._params["log_dir"] = log_dir
 
     def _queue_task(self, task_node: Task) -> None:
         self._task_queue.append(task_node)
@@ -179,8 +207,12 @@ class SequentialExecutor(AbstractTaskGraphExecutor):
                 for arg in task_node.args
             ]
             is_error = False
+
+            params = copy(self._params)
+            params["task_id"] = safe_task_id(task_node.task_id)
+
             try:
-                result = task_node.func(*args)
+                result = self._exec(task_node.func, args, [], params)
             except Exception as exp:  # pylint: disable=broad-except
                 result = exp
                 is_error = True
@@ -249,31 +281,6 @@ class DaskExecutor(AbstractTaskGraphExecutor):
     def _get_future_or_result(self, task: Task) -> Any:
         future = self._task2future.get(task)
         return future if future else self._task2result[task]
-
-    @staticmethod
-    def _exec(
-        task_func: Callable, args: list, _deps: list, params: dict[str, Any]
-    ) -> Any:
-        verbose = params.get("verbose", 0)
-        VerbosityConfiguration.set_verbosity(verbose)
-
-        task_id = params["task_id"]
-        log_dir = params.get("log_dir", ".")
-
-        root_logger = logging.getLogger()
-        handler = configure_task_logging(log_dir, task_id, verbose)
-        root_logger.addHandler(handler)
-
-        task_logger = logging.getLogger("task_executor")
-        task_logger.info("task <%s> started", task_id)
-        start = time.time()
-        result = task_func(*args)
-        elapsed = time.time() - start
-        task_logger.info("task <%s> finished in %0.2fsec", task_id, elapsed)
-
-        root_logger.removeHandler(handler)
-        handler.close()
-        return result
 
     MIN_QUEUE_SIZE = 700
 
