@@ -64,7 +64,7 @@ class GenomicScoresDb:
                 attr.name,
                 score.get_score_histogram(attr.source),
                 score_def.desc,
-                ""
+                resource.get_description()
             )
             if score_desc.hist is None:
                 logger.warning(
