@@ -69,7 +69,7 @@ class ResponseTransformer:
 
         "family_person_ids":
         lambda v: [";".join(list(map(
-            lambda m: m.person_id, v.members_in_order  # type: ignore
+            lambda m: m.person_id, v.members_in_order
         )))],
 
         "carrier_person_ids":
@@ -422,12 +422,12 @@ class ResponseTransformer:
         variant: SummaryVariant, frequency_column: str
     ) -> Generator[dict, None, None]:
         """Transform gene view summary response into dicts."""
-        out = {
+        out: dict[str, Any] = {
             "svuid": variant.svuid,
-            "alleles": []
         }
+        alleles = []
         for aa in variant.alt_alleles:
-            out["alleles"].append({
+            alleles.append({
                 "location": aa.cshl_location,
                 "position": aa.position,
                 "end_position": aa.end_position,
@@ -443,6 +443,7 @@ class ResponseTransformer:
                 "seen_in_unaffected":
                     aa.get_attribute("seen_in_status") in {1, 3},
             })
+        out["alleles"] = alleles
         yield out
 
     def transform_gene_view_summary_variant_download(

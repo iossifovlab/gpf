@@ -148,10 +148,14 @@ class Allele:
                 self.chrom, self.position, self.end_position,
                 Annotatable.Type.LARGE_DELETION)
         if Allele.Type.substitution == self.allele_type:
+            assert self.reference is not None and \
+                self.alternative is not None
             pos, ref, alt = trim_parsimonious(
                 self.position, self.reference, self.alternative)
             return VCFAllele(self.chrom, pos, ref, alt)
         if Allele.Type.indel & self.allele_type:
+            assert self.reference is not None and \
+                self.alternative is not None
             pos, ref, alt = trim_parsimonious(
                 self.position, self.reference, self.alternative)
             return VCFAllele(self.chrom, pos, ref, alt)
