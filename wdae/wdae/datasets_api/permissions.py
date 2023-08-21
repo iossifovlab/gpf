@@ -255,7 +255,7 @@ def get_dataset_info(dataset_id):
         return None
     return {
         "datasetName": dataset.dataset_name,
-        "datasetId": dataset_id,
+        "datasetId": dataset.dataset_id,
         "broken": dataset.broken
     }
 
@@ -265,25 +265,29 @@ def get_directly_allowed_genotype_data(user):
     gpf_instance = get_wgpf_instance()
     dataset_ids = gpf_instance.get_genotype_data_ids()
     user_groups = get_user_groups(user)
+    datasets = {
+        dataset.dataset_id: dataset
+        for dataset in Dataset.objects.all()
+    }
 
     result = []
 
     for dataset_id in dataset_ids:
-        if not user_groups & get_dataset_groups(dataset_id):
-            continue
-
-        try:
-            result.append(get_dataset_info(dataset_id))
-        except ValueError:
-            logger.warning("Dataset %s is broken.", dataset_id)
-            dataset = get_wdae_dataset(dataset_id)
-            if dataset is None:
-                continue
+        if dataset_id not in datasets:
+            logger.warning(
+                "Dataset %s found in DAE, but not in WDAE!", dataset_id
+            )
             result.append({
                 "datasetName": dataset_id,
                 "datasetId": dataset_id,
-                "broken": dataset.broken
+                "broken": True
             })
+
+        dataset = datasets[dataset_id]
+        if not user_groups & get_dataset_groups(dataset):
+            continue
+
+        result.append(get_dataset_info(dataset))
 
     return sorted(
         result,
