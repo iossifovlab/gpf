@@ -119,7 +119,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   public ngAfterViewInit(): void {
-    const dropdown = ($('#tags') as any);
+    const dropdown = $('#tags') as any;
     dropdown.autocomplete({
       source: (request, response) => {
         this.geneService
@@ -129,12 +129,14 @@ export class GeneBrowserComponent implements OnInit, OnDestroy, AfterViewInit {
             response(res.gene_symbols);
           });
       }
+    }).bind('focus', () => {
+      dropdown.val('');
     });
     dropdown.keyup(function(event, ui) {
       if (event.keyCode === 13) {
-          $("#go-button").click();
-          dropdown.autocomplete('close');
-          dropdown.blur();
+        $('#go-button').click();
+        dropdown.autocomplete('close');
+        dropdown.blur();
       }
     });
   }
