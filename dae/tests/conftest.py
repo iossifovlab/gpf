@@ -30,46 +30,6 @@ def default_genotype_storage_configs(root_path: pathlib.Path) -> list[dict]:
             "storage_type": "duckdb",
         },
 
-        # # Impala Schema 1
-        # {
-        #     "id": "impala",
-        #     "storage_type": "impala",
-        #     "hdfs": {
-        #         "base_dir": "/tmp/genotype_impala_data",
-        #         "host": "localhost",
-        #         "port": 8020,
-        #         "replication": 1,
-        #     },
-        #     "impala": {
-        #         "db": "genotype_impala_db",
-        #         "hosts": [
-        #             "localhost",
-        #         ],
-        #         "port": 21050,
-        #         "pool_size": 1,
-        #     }
-        # },
-
-        # # Impala Schema 2
-        # {
-        #     "id": "impala2",
-        #     "storage_type": "impala2",
-        #     "hdfs": {
-        #         "base_dir": "/tmp/genotype_impala2_data",
-        #         "host": "localhost",
-        #         "port": 8020,
-        #         "replication": 1,
-        #     },
-        #     "impala": {
-        #         "db": "genotype_impala2_db",
-        #         "hosts": [
-        #             "localhost",
-        #         ],
-        #         "port": 21050,
-        #         "pool_size": 1,
-        #     }
-        # },
-
         # Filesystem InMemory
         {
             "id": "inmemory",
@@ -160,11 +120,19 @@ def pytest_sessionstart(session: pytest.Session) -> None:
         if storage_types:
             assert not storage_ids
             assert not storage_config_filename
-            GENOTYPE_STORAGES = _select_storages_by_type(storage_types)
+            selected_storages = _select_storages_by_type(storage_types)
+            if not selected_storages:
+                raise ValueError(
+                    f"unsupported genotype storage type(s): {storage_types}")
+            GENOTYPE_STORAGES = selected_storages
+
         elif storage_ids:
             assert not storage_config_filename
-            GENOTYPE_STORAGES = _select_storages_by_ids(storage_ids)
-
+            selected_storages = _select_storages_by_ids(storage_ids)
+            if not selected_storages:
+                raise ValueError(
+                    f"unsupported genotype storage id(s): {storage_ids}")
+            GENOTYPE_STORAGES = selected_storages
         elif storage_config_filename:
             import yaml  # pylint: disable=import-outside-toplevel
             with open(storage_config_filename, encoding="utf8") as infile:
