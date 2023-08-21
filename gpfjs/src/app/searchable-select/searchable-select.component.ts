@@ -1,9 +1,8 @@
 import {
   Component, Input, Output, EventEmitter, ViewChild, ContentChild,
-  AfterViewInit, OnChanges, ElementRef, NgZone, HostListener
+  OnChanges, ElementRef, NgZone,
 } from '@angular/core';
 import { SearchableSelectTemplateDirective } from './searchable-select-template.directive';
-import { NgbDropdown } from '@ng-bootstrap/ng-bootstrap';
 import { ActivatedRoute } from '@angular/router';
 
 @Component({
@@ -11,32 +10,15 @@ import { ActivatedRoute } from '@angular/router';
   templateUrl: './searchable-select.component.html',
   styleUrls: ['./searchable-select.css']
 })
-export class SearchableSelectComponent implements AfterViewInit, OnChanges {
+export class SearchableSelectComponent implements OnChanges {
   @Input() public data: Array<any>;
   @Input() public caption: string;
   @Input() public isInGeneBrowser = false;
-  @Input() public showLoadingSpinner: boolean;
-  @Input() private hideDropdown: boolean;
   @Output() private search = new EventEmitter();
+  @ViewChild('searchBox') private searchBox: ElementRef;
   @Output() private selectItem = new EventEmitter();
   @Output() public focusEvent = new EventEmitter();
-  @ViewChild(NgbDropdown) private dropdown: NgbDropdown;
-  @ViewChild('searchBox') private searchBox: ElementRef;
   @ContentChild(SearchableSelectTemplateDirective) public template: SearchableSelectTemplateDirective;
-
-  @HostListener('document:click', ['$event'])
-  public clickout(event): void {
-    if (!this.eRef.nativeElement.contains(event.target)) {
-      this.dropdown.close();
-    }
-  }
-
-  public onEnterPress(): void {
-    if (this.isInGeneBrowser) {
-      this.onSelect(this.searchBox.nativeElement.value);
-      this.dropdown.close();
-    }
-  }
 
   public constructor(
     private ngZone: NgZone,
@@ -44,34 +26,31 @@ export class SearchableSelectComponent implements AfterViewInit, OnChanges {
     private eRef: ElementRef
   ) {}
 
+
   public ngOnChanges(): void {
-    if (this.hideDropdown) {
-      this.dropdown.close();
+    if (this.data.length > 0) {
+      this.fillDropdown();
     }
   }
 
-  public ngAfterViewInit(): void {
-    this.dropdown.autoClose = 'inside';
+  private fillDropdown(): void {
+    const dropdown = $('#sets') as any;
+    const self = this;
+    dropdown.autocomplete({
+      minLength: 0,
+      delay: 0,
+      source: this.data, // here
+      select: function(event, ui) {
+        self.onSelect(ui.item.value);
+        dropdown.trigger('blur');
+      },
+    }).bind('focus', () => {
+      dropdown.autocomplete('search');
+    });
   }
 
   public searchBoxChange(searchFieldValue): void {
     this.search.emit(searchFieldValue);
-  }
-
-  public onFocus(event): void {
-    this.searchBoxChange('');
-    event.stopPropagation();
-
-    this.ngZone.run(() => {
-      if (!this.dropdown.isOpen()) {
-        this.dropdown.open();
-      }
-    });
-    setTimeout(() => {
-      this.searchBox.nativeElement.focus();
-    });
-    this.onSelect(null);
-    this.focusEvent.emit();
   }
 
   public onSelect(value): void {
