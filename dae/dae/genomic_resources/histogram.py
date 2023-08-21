@@ -179,7 +179,7 @@ class NumberHistogram(Statistic):
             bins: Optional[np.ndarray] = None,
             bars: Optional[np.ndarray] = None):
         super().__init__("histogram", "Collects values for histogram.")
-        logger.info("number histogram config: %s", config)
+        logger.debug("number histogram config: %s", config)
 
         assert isinstance(config, NumberHistogramConfig)
         self.config = config
