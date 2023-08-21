@@ -2,8 +2,8 @@ import time
 import json
 import logging
 import queue
+from typing import Optional, Any, cast, Generator, ContextManager
 import contextlib
-from typing import Optional, Any, cast, Generator
 import threading
 
 import duckdb
@@ -25,9 +25,18 @@ _DUCKDB_LOCK = threading.Lock()
 
 
 @contextlib.contextmanager
-def _duckdb_connect() -> Generator[duckdb.DuckDBPyConnection, None, None]:
+def duckdb_global_connect(
+) -> Generator[duckdb.DuckDBPyConnection, None, None]:
     with _DUCKDB_LOCK:
         yield cast(duckdb.DuckDBPyConnection, duckdb)
+
+
+@contextlib.contextmanager
+def duckdb_db_connect(
+    db_name: str, read_only: bool = True
+) -> Generator[duckdb.DuckDBPyConnection, None, None]:
+    logger.info("duckdb internal connection to %s", db_name)
+    yield duckdb.connect(db_name, read_only=read_only)
 
 
 class DuckDbRunner(QueryRunner):
@@ -35,7 +44,7 @@ class DuckDbRunner(QueryRunner):
 
     def __init__(
             self,
-            connection_factory: duckdb.DuckDBPyConnection,
+            connection_factory: ContextManager[duckdb.DuckDBPyConnection],
             query: str,
             deserializer: Optional[Any] = None):
         super().__init__(deserializer=deserializer)
@@ -66,17 +75,17 @@ class DuckDbRunner(QueryRunner):
                     if self.is_closed():
                         logger.debug(
                             "query runner (%s) closed while iterating",
-                            self.study_id)
+                            self.query)
                         break
 
         except Exception as ex:  # pylint: disable=broad-except
             logger.error(
                 "exception in runner (%s) run: %s",
-                self.study_id, type(ex), exc_info=True)
+                self.query, type(ex), exc_info=True)
             self._put_value_in_result_queue(ex)
         finally:
             logger.debug(
-                "runner (%s) closing connection", self.study_id)
+                "runner (%s) closing connection", self.query)
 
         self._finalize(started)
 
@@ -91,7 +100,7 @@ class DuckDbRunner(QueryRunner):
             except queue.Full:
                 logger.debug(
                     "runner (%s) nobody interested",
-                    self.study_id)
+                    self.query)
 
                 if self.is_closed():
                     break
@@ -99,12 +108,12 @@ class DuckDbRunner(QueryRunner):
                 if no_interest % 1_000 == 0:
                     logger.warning(
                         "runner (%s) nobody interested %s",
-                        self.study_id, no_interest)
+                        self.query, no_interest)
                 if no_interest > 5_000:
                     logger.warning(
                         "runner (%s) nobody interested %s"
                         "closing...",
-                        self.study_id, no_interest)
+                        self.query, no_interest)
                     self.close()
                     break
 
@@ -112,7 +121,7 @@ class DuckDbRunner(QueryRunner):
         with self._status_lock:
             self._done = True
         elapsed = time.time() - started
-        logger.debug("runner (%s) done in %0.3f sec", self.study_id, elapsed)
+        logger.debug("runner (%s) done in %0.3f sec", self.query, elapsed)
 
 
 class DuckDbQueryDialect(Dialect):
@@ -164,9 +173,9 @@ class DuckDbVariants(SqlSchema2Variants):
 
     def __init__(
         self,
-        db: str,
-        family_variant_table: str,
-        summary_allele_table: str,
+        db: Optional[str],
+        family_variant_table: Optional[str],
+        summary_allele_table: Optional[str],
         pedigree_table: str,
         meta_table: str,
         gene_models: Optional[GeneModels] = None,
@@ -250,10 +259,9 @@ class DuckDbVariants(SqlSchema2Variants):
             return ped_df
 
     def _get_connection_factory(self) -> Any:
-        # pylint: disable=protected-access
         if self.db is not None:
-            return duckdb.connect(self.db, read_only=True)
-        return _duckdb_connect()
+            return duckdb_db_connect(self.db)
+        return duckdb_global_connect()
 
     def _deserialize_summary_variant(self, record: str) -> SummaryVariant:
         sv_record = json.loads(record[2])
