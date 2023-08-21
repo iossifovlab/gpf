@@ -29,7 +29,7 @@ class GenotypeBrowserQueryView(QueryDatasetView):
     MAX_SHOWN_VARIANTS = 1000
 
     @request_logging(LOGGER)
-    def post(self, request):
+    def post(self, request): # noqa # pylint: disable=too-many-statements
         """
         Query for variants from a dataset.
 
