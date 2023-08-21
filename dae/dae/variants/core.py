@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 
 from enum import Enum
-from typing import Optional, cast
+from typing import Optional
 
 from dae.annotation.annotatable import Annotatable, CNVAllele, VCFAllele
 from dae.utils.variant_utils import trim_parsimonious
@@ -43,21 +43,21 @@ class Allele:
         tandem_repeat_ins = tandem_repeat | small_insertion
         tandem_repeat_del = tandem_repeat | small_deletion
 
-        def __and__(self, other):
+        def __and__(self, other: Allele.Type) -> int:
             if other is None:
                 return 0
 
             assert isinstance(other, Allele.Type), type(other)
             return self.value & other.value
 
-        def __or__(self, other):
+        def __or__(self, other: Allele.Type) -> int:
             if other is None:
                 return 0
 
             assert isinstance(other, Allele.Type)
             return self.value | other.value
 
-        def __ior__(self, other):
+        def __ior__(self, other: Allele.Type) -> Allele.Type:
             if other is None:
                 return 0
 
@@ -68,20 +68,20 @@ class Allele:
             return Allele.TYPE_DISPLAY_NAME.get(self.name) or self.name
 
         @classmethod
-        def is_cnv(cls, vt):
+        def is_cnv(cls, vt: Allele.Type) -> bool:
             if vt is None:
                 return False
             if not isinstance(vt, Allele.Type):
                 return False
-            return vt & cls.cnv
+            return bool(vt & cls.cnv)
 
         @classmethod
-        def is_tr(cls, vt):
+        def is_tr(cls, vt: Allele.Type) -> bool:
             if vt is None:
                 return False
             if not isinstance(vt, Allele.Type):
                 return False
-            return vt & cls.tandem_repeat
+            return bool(vt & cls.tandem_repeat)
 
     def __init__(self, chrom: str, pos: int, pos_end: Optional[int] = None,
                  ref: Optional[str] = None, alt: Optional[str] = None,
@@ -91,18 +91,17 @@ class Allele:
         self._pos_end: Optional[int] = pos_end
         self._ref: Optional[str] = ref
         self._alt: Optional[str] = alt
-        self._allele_type: Optional[Allele.Type] = allele_type
+        self._allele_type: Allele.Type
 
         assert isinstance(self._chrom, str)
         assert isinstance(self._pos, int)
         assert self._pos_end is None or isinstance(self._pos_end, int)
         assert self._alt is None or isinstance(self._alt, str)
         assert self._ref is None or isinstance(self._ref, str)
-        assert self._allele_type is None or \
-            isinstance(self._allele_type, Allele.Type)
 
-        if not self._allele_type:
-
+        if allele_type is not None:
+            self._allele_type = allele_type
+        else:
             if not self._pos_end and not self._ref and not self._alt:
                 self._allele_type = Allele.Type.position
                 self._pos_end = self._pos
@@ -130,7 +129,8 @@ class Allele:
                 if not self._pos_end:
                     self._pos_end = self._pos + len(self._ref) - 1
 
-        if not self._allele_type:
+        if self._allele_type is None or \
+                not isinstance(self._allele_type, Allele.Type):
             raise ValueError(
                 f"Can not determine the type of variant: "
                 f"{self._chrom}:{self._pos} {self._ref}->{self._alt}")
@@ -138,10 +138,12 @@ class Allele:
     def get_annotatable(self) -> Annotatable:
         """Return an annotatable version of the allele."""
         if Allele.Type.large_duplication & self.allele_type:
+            assert self.end_position is not None
             return CNVAllele(
                 self.chrom, self.position, self.end_position,
                 Annotatable.Type.LARGE_DUPLICATION)
         if Allele.Type.large_deletion & self.allele_type:
+            assert self.end_position is not None
             return CNVAllele(
                 self.chrom, self.position, self.end_position,
                 Annotatable.Type.LARGE_DELETION)
@@ -183,17 +185,18 @@ class Allele:
 
     @property
     def allele_type(self) -> Allele.Type:
-        return cast(Allele.Type, self._allele_type)
+        return self._allele_type
 
     @staticmethod
-    def build_position_allele(chrom: str, pos: int):
+    def build_position_allele(chrom: str, pos: int) -> Allele:
         return Allele(chrom, pos)
 
     @staticmethod
-    def build_vcf_allele(chrom: str, pos: int, ref: str, alt: str):
+    def build_vcf_allele(
+            chrom: str, pos: int, ref: str, alt: str) -> Allele:
         return Allele(chrom, pos, ref=ref, alt=alt)
 
     @staticmethod
-    def build_cnv_allele(chrom: str, pos: int, pos_end,
-                         allele_type: Type):
+    def build_cnv_allele(chrom: str, pos: int, pos_end: int,
+                         allele_type: Type) -> Allele:
         return Allele(chrom, pos, pos_end, allele_type=allele_type)

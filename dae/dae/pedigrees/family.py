@@ -264,7 +264,7 @@ class Person:
 class Family:
     """Defines class to represent a family."""
 
-    def __init__(self, family_id):
+    def __init__(self, family_id: str):
         self.family_id = family_id
         self.persons = {}
         self._samples_index = None
@@ -385,11 +385,11 @@ class Family:
                 return False
         return True
 
-    def has_members(self):
+    def has_members(self) -> bool:
         return len(self.members_in_order) > 0
 
     @property
-    def members_ids(self):
+    def members_ids(self) -> list[str]:
         return [m.person_id for m in self.members_in_order]
 
     @property
