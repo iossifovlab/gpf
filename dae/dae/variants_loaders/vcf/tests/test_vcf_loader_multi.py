@@ -131,31 +131,20 @@ def multivcf_original_vcf(tmp_path_factory: pytest.TempPathFactory) -> str:
     return str(vcf_path)
 
 
-@pytest.mark.parametrize(
-    "multivcf_files",
-    [
-        ["multivcf_split1_vcf", "multivcf_split2_vcf"],
-        ["multivcf_original_vcf"],
-    ],
-)
 def test_vcf_loader_multi(
-    request: pytest.FixtureRequest,
-    multivcf_files: list[str],
+    multivcf_split1_vcf: str,
+    multivcf_split2_vcf: str,
     multivcf_original_vcf: str,
     multivcf_ped: str,
     gpf_instance: GPFInstance
 ) -> None:
     # pylint: disable=too-many-locals,invalid-name
 
-    multivcf_files = [
-        request.getfixturevalue(f) for f in multivcf_files
-    ]
-
     families = FamiliesLoader(multivcf_ped).load()
     families_multi = FamiliesLoader(multivcf_ped).load()
 
     multi_vcf_loader = VcfLoader(
-        families_multi, multivcf_files,
+        families_multi, [multivcf_split1_vcf, multivcf_split2_vcf],
         gpf_instance.reference_genome,
         fill_missing_ref=False
     )
@@ -163,9 +152,8 @@ def test_vcf_loader_multi(
     # for sv, fvs in multi_vcf_loader.full_variants_iterator():
     #     print(sv, fvs)
 
-    single_vcf = str(multivcf_original_vcf)
     single_loader = VcfLoader(
-        families, [single_vcf], gpf_instance.reference_genome
+        families, [multivcf_original_vcf], gpf_instance.reference_genome
     )
     assert single_loader is not None
 

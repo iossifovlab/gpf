@@ -1,7 +1,4 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-import os
-from pathlib import Path
-from typing import Any, Callable
 import pytest
 import numpy as np
 from dae.variants_loaders.vcf.loader import VcfLoader
@@ -20,10 +17,10 @@ def gpf_instance(
 
 
 @pytest.fixture
-def multi_contig_ped(
+def quad_ped(
     tmp_path_factory: pytest.TempPathFactory
-) -> Path:
-    root_path = tmp_path_factory.mktemp("multi_contig_ped")
+) -> str:
+    root_path = tmp_path_factory.mktemp("quad_ped")
     ped_path = setup_pedigree(root_path / "ped_data" / "in.ped", """
     familyId	personId	dadId	momId	sex	status	role
     f1	        mom1	    0	    0	    2	1   	mom
@@ -32,13 +29,13 @@ def multi_contig_ped(
     f1	        ch2	        dad1	mom1	1	1   	sib
     """)
 
-    return ped_path
+    return str(ped_path)
 
 
 @pytest.fixture
 def multi_contig_vcf(
     tmp_path_factory: pytest.TempPathFactory
-) -> Path:
+) -> str:
     root_path = tmp_path_factory.mktemp("multi_contig_vcf")
     vcf_path = setup_vcf(root_path / "vcf_data" / "in.vcf", """
     ##fileformat=VCFv4.2
@@ -60,13 +57,13 @@ def multi_contig_vcf(
     chr4   	95  	.	T	GA,AA,CA,CC	.	    .   	.   	GT  	2/3	2/2	2/2	2/2	2/2	2/2	2/2
     """) # noqa
 
-    return vcf_path
+    return str(vcf_path)
 
 
 @pytest.fixture
 def multi_contig_vcf_gz(
     tmp_path_factory: pytest.TempPathFactory
-) -> Path:
+) -> str:
     root_path = tmp_path_factory.mktemp("multi_contig_vcf")
     vcf_path = setup_vcf(root_path / "vcf_data" / "in.vcf.gz", """
     ##fileformat=VCFv4.2
@@ -85,16 +82,16 @@ def multi_contig_vcf_gz(
     chr3   	29  	.	T	G	        .	    .   	.   	GT  	0/0 	0/0 	./. 	0/0 	0/1 	0/0	    0/0
     chr4   	44  	.	T	G	        .	    .   	.   	GT  	0/0 	0/0 	0/0 	1/1 	0/1 	0/0	    0/0
     chr4   	55  	.	T	G	        .	    .   	.   	GT  	0/0 	0/0 	0/0 	0/1 	0/0 	0/0	    1/1
-    chr4   	95  	.	T	GA,AA,CA,CC	.	    .   	.   	GT  	2/3 	2/2 	2/2 	2/2 	2/2 	2/2	    2/2
+    chr4   	95  	.	T	GA,AA,CA,CC	.	    .   	.   	GT  	2/3 	2/2 	2/2 	2/2 	2/2 	2/2	2/2
     """) # noqa
 
-    return vcf_path
+    return str(vcf_path)
 
 
 @pytest.fixture
-def multi_contig_chr_ped(
+def multi_generational_ped(
     tmp_path_factory: pytest.TempPathFactory
-) -> Path:
+) -> str:
     root_path = tmp_path_factory.mktemp("multi_contig_chr_ped")
     ped_path = setup_pedigree(root_path / "ped_data" / "in.ped", """
     familyId	personId	dadId	momId	sex	status	role
@@ -107,13 +104,13 @@ def multi_contig_chr_ped(
     f	        ch3     	dad	    mom	    2	1   	sib
     """)
 
-    return ped_path
+    return str(ped_path)
 
 
 @pytest.fixture
 def multi_contig_chr_vcf(
     tmp_path_factory: pytest.TempPathFactory
-) -> Path:
+) -> str:
     root_path = tmp_path_factory.mktemp("multi_contig_chr_vcf")
     vcf_path = setup_vcf(root_path / "vcf_data" / "in.vcf", """
     ##fileformat=VCFv4.2
@@ -135,13 +132,13 @@ def multi_contig_chr_vcf(
     chr4	95  	.	T	GA,AA,CA,CC	.	    .   	.   	GT  	2/3	2/2	2/2	2/2	2/2	2/2	2/2
     """) # noqa
 
-    return vcf_path
+    return str(vcf_path)
 
 
 @pytest.fixture
 def multi_contig_chr_vcf_gz(
     tmp_path_factory: pytest.TempPathFactory
-) -> Path:
+) -> str:
     root_path = tmp_path_factory.mktemp("multi_contig_chr_vcf")
     vcf_path = setup_vcf(root_path / "vcf_data" / "in.vcf.gz", """
     ##fileformat=VCFv4.2
@@ -163,65 +160,58 @@ def multi_contig_chr_vcf_gz(
     chr4	95  	.	T	GA,AA,CA,CC	.	    .   	.   	GT  	2/3	2/2	2/2	2/2	2/2	2/2	2/2
     """) # noqa
 
-    return vcf_path
-
-
-@pytest.fixture
-def simple_vcf_loader(
-    gpf_instance: GPFInstance
-) -> Callable[[Path, Path, Any], VcfLoader]:
-    def _split_all_ext(filename: str) -> str:
-        res, ext = os.path.splitext(filename)
-        while len(ext) > 0:
-            res, ext = os.path.splitext(res)
-        return res
-
-    def ctor(ped: Path, vcf: Path, additional_params: Any) -> VcfLoader:
-        ped_filename = _split_all_ext(str(ped)) + ".ped"
-        families_loader = FamiliesLoader(ped_filename)
-        families = families_loader.load()
-        params = additional_params
-        vcf_filename = vcf
-
-        return VcfLoader(
-            families, [str(vcf_filename)],
-            genome=gpf_instance.reference_genome, params=params,
-        )
-    return ctor
+    return str(vcf_path)
 
 
 def test_chromosomes_have_adjusted_chrom_add_prefix(
-    simple_vcf_loader: Callable[[Path, Path, dict[str, str]], VcfLoader],
-    multi_contig_ped: Path,
-    multi_contig_vcf: Path,
+    quad_ped: str,
+    multi_contig_vcf: str,
+    gpf_instance: GPFInstance
 ) -> None:
-    ped = multi_contig_ped
-    vcf = multi_contig_vcf
-    loader = simple_vcf_loader(ped, vcf, {"add_chrom_prefix": "chr"})
+    ped_file = quad_ped
+
+    family_loader = FamiliesLoader(ped_file).load()
+    loader = VcfLoader(
+        family_loader,
+        [multi_contig_vcf],
+        gpf_instance.reference_genome,
+        params={"add_chrom_prefix": "chr"})
 
     assert loader.chromosomes == ["chrchr1", "chrchr2", "chrchr3", "chrchr4"]
 
 
 def test_chromosomes_have_adjusted_chrom_del_prefix(
-    simple_vcf_loader: Callable[[Path, Path, dict[str, str]], VcfLoader],
-    multi_contig_chr_ped: Path,
-    multi_contig_chr_vcf: Path,
+    multi_generational_ped: str,
+    multi_contig_chr_vcf: str,
+    gpf_instance: GPFInstance
 ) -> None:
-    ped = multi_contig_chr_ped
-    vcf = multi_contig_chr_vcf
-    loader = simple_vcf_loader(ped, vcf, {"del_chrom_prefix": "chr"})
+    ped_file = multi_generational_ped
+
+    family_loader = FamiliesLoader(ped_file).load()
+    loader = VcfLoader(
+        family_loader,
+        [multi_contig_chr_vcf],
+        gpf_instance.reference_genome,
+        params={"del_chrom_prefix": "chr"}
+    )
 
     assert loader.chromosomes == ["1", "2", "3", "4"]
 
 
 def test_variants_have_adjusted_chrom_add_prefix(
-    simple_vcf_loader: Callable[[Path, Path, dict[str, str]], VcfLoader],
-    multi_contig_ped: Path,
-    multi_contig_vcf: Path
+    quad_ped: str,
+    multi_contig_vcf: str,
+    gpf_instance: GPFInstance
 ) -> None:
-    ped = multi_contig_ped
-    vcf = multi_contig_vcf
-    loader = simple_vcf_loader(ped, vcf, {"add_chrom_prefix": "chr"})
+    ped_file = quad_ped
+
+    family_loader = FamiliesLoader(ped_file).load()
+    loader = VcfLoader(
+        family_loader,
+        [multi_contig_vcf],
+        gpf_instance.reference_genome,
+        params={"add_chrom_prefix": "chr"}
+    )
 
     variants = list(loader.full_variants_iterator())
 
@@ -232,13 +222,18 @@ def test_variants_have_adjusted_chrom_add_prefix(
 
 
 def test_variants_have_adjusted_chrom_del_prefix(
-    simple_vcf_loader: Callable[[Path, Path, dict[str, str]], VcfLoader],
-    multi_contig_chr_ped: Path,
-    multi_contig_chr_vcf: Path
+    multi_generational_ped: str,
+    multi_contig_chr_vcf: str,
+    gpf_instance: GPFInstance
 ) -> None:
-    ped = multi_contig_chr_ped
-    vcf = multi_contig_chr_vcf
-    loader = simple_vcf_loader(ped, vcf, {"del_chrom_prefix": "chr"})
+    ped_file = multi_generational_ped
+
+    family_loader = FamiliesLoader(ped_file).load()
+    loader = VcfLoader(
+        family_loader,
+        [multi_contig_chr_vcf],
+        gpf_instance.reference_genome,
+        params={"del_chrom_prefix": "chr"})
 
     list(loader.full_variants_iterator())
 
@@ -249,14 +244,19 @@ def test_variants_have_adjusted_chrom_del_prefix(
 
 
 def test_reset_regions_with_adjusted_chrom_add_prefix(
-    simple_vcf_loader: Callable[[Path, Path, dict[str, str]], VcfLoader],
-    multi_contig_ped: Path,
-    multi_contig_vcf_gz: Path,
+    quad_ped: str,
+    multi_contig_vcf_gz: str,
+    gpf_instance: GPFInstance
 ) -> None:
-    ped = multi_contig_ped
-    vcf = multi_contig_vcf_gz
+    ped_file = quad_ped
 
-    loader = simple_vcf_loader(ped, vcf, {"add_chrom_prefix": "chr"})
+    family_loader = FamiliesLoader(ped_file).load()
+    loader = VcfLoader(
+        family_loader,
+        [multi_contig_vcf_gz],
+        gpf_instance.reference_genome,
+        params={"add_chrom_prefix": "chr"}
+    )
     regions = ["chrchr1", "chrchr2"]
 
     loader.reset_regions(regions)
@@ -268,14 +268,18 @@ def test_reset_regions_with_adjusted_chrom_add_prefix(
 
 
 def test_reset_regions_with_adjusted_chrom_del_prefix(
-    simple_vcf_loader: Callable[[Path, Path, dict[str, str]], VcfLoader],
-    multi_contig_ped: Path,
-    multi_contig_chr_vcf_gz: Path
+    quad_ped: str,
+    multi_contig_chr_vcf_gz: str,
+    gpf_instance: GPFInstance
 ) -> None:
-    ped = multi_contig_ped
-    vcf = multi_contig_chr_vcf_gz
+    ped_file = quad_ped
+    family_loader = FamiliesLoader(ped_file).load()
 
-    loader = simple_vcf_loader(ped, vcf, {"del_chrom_prefix": "chr"})
+    loader = VcfLoader(
+        family_loader,
+        [multi_contig_chr_vcf_gz],
+        gpf_instance.reference_genome,
+        params={"del_chrom_prefix": "chr"})
     regions = ["1", "2"]
 
     loader.reset_regions(regions)
