@@ -39,8 +39,14 @@ export class PhenoMeasureSelectorComponent implements AfterViewInit {
         minLength: 0,
         delay: 0,
         source: this.measures.map(measure => measure.name),
-        select: function() { self.selectMeasure(this.value); dropdown.trigger('blur') },
-      }).bind('focus', () => { dropdown.autocomplete('search') });
+        select: function(event, ui) { 
+          self.selectMeasure(ui.item.value);
+          dropdown.trigger('blur');
+        },
+      }).bind('focus', () => {
+        dropdown.val('');
+        dropdown.autocomplete('search');
+      });
     });
   }
 
