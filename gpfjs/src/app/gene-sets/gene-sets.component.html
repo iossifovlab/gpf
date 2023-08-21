@@ -49,28 +49,11 @@
 
     <div class="col-sm-9">
       <fieldset
+        class="ui-widget"
         [disabled]="
           selectedGeneSetsCollection?.types?.length > 0 && object.keys(geneSetsLocalState.geneSetsTypes).length === 0
         ">
-        <gpf-searchable-select
-          [showLoadingSpinner]="isLoading"
-          (search)="onSearch($event)"
-          (selectItem)="onSelect($event)"
-          [data]="geneSets"
-          caption="{{
-            selectedGeneSet ? selectedGeneSet.name + ' (' + selectedGeneSet.count + '): ' + selectedGeneSet.desc : ''
-          }}">
-          <div *gpf-searchable-select-template="let element">
-            <span
-              data-toggle="tooltip"
-              data-placement="bottom"
-              title="{{ element.name }} ({{ element.count }}): {{ element.desc }}"
-              innerHtml="{{ element.name | boldMatching : searchQuery }} ({{ element.count }}): {{
-                element.desc | boldMatching : searchQuery
-              }}">
-            </span>
-          </div>
-        </gpf-searchable-select>
+        <input id="sets" />
       </fieldset>
 
       <div *ngIf="selectedGeneSet">

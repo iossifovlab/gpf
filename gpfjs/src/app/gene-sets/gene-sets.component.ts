@@ -97,6 +97,7 @@ export class GeneSetsComponent extends StatefulComponent implements OnInit {
 
     this.geneSetsResult.subscribe(geneSets => {
       this.geneSets = geneSets.sort((a, b) => a.name.localeCompare(b.name));
+      this.fillDropdown();
       this.store.selectOnce(state => state.geneSetsState).subscribe((state) => {
         if (!state.geneSet || !state.geneSet.geneSet) {
           return;
@@ -174,6 +175,31 @@ export class GeneSetsComponent extends StatefulComponent implements OnInit {
     if (event === null) {
       this.onSearch();
     }
+  }
+
+  private geneSetToString(set: GeneSet): string {
+    return `${set.name} (${set.count}): ${set.desc}`;
+  }
+
+  private fillDropdown(): void {
+    const dropdown = $('#sets') as any;
+    const self = this;
+    dropdown.autocomplete({
+      minLength: 0,
+      delay: 0,
+      source: this.geneSets.map(set => this.geneSetToString(set)),
+      select: function(event, ui) {
+        for (const set of self.geneSets) {
+          if (self.geneSetToString(set) === ui.item.value) {
+            self.onSelect(set);
+          }
+        }
+        dropdown.trigger('blur');
+      },
+    }).bind('focus', () => {
+      dropdown.val('');
+      dropdown.autocomplete('search');
+    });
   }
 
   public isSelectedGeneType(datasetId: string, personSetCollectionId: string, geneType: string): boolean {
