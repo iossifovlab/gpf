@@ -1,6 +1,7 @@
 import re
 import uuid
 import logging
+from typing import Any, cast, Optional
 
 from dae.utils import fs_utils
 
@@ -13,7 +14,7 @@ class FsspecHandler(logging.StreamHandler):
         stream = fs.open(logpath, "w")
         super().__init__(stream=stream)
 
-    def close(self):
+    def close(self) -> None:
         """Close the stream.
 
         Copied from logging.FileHandler.close().
@@ -38,7 +39,7 @@ class FsspecHandler(logging.StreamHandler):
             self.release()
 
 
-def ensure_log_dir(**kwargs):
+def ensure_log_dir(**kwargs: Any) -> str:
     """Ensure logging directory exists."""
     log_dir = kwargs.get("log_dir")
     if log_dir is not None:
@@ -46,10 +47,12 @@ def ensure_log_dir(**kwargs):
         if not fs_utils.exists(log_dir):
             fs, path = fs_utils.url_to_fs(log_dir)
             fs.mkdir(path, exists_ok=True)
-    return log_dir
+    return cast(str, log_dir)
 
 
-def configure_task_logging(log_dir, task_id, verbosity):
+def configure_task_logging(
+    log_dir: Optional[str], task_id: str, verbosity: int
+) -> logging.Handler:
     """Configure and return task logging hadnler."""
     if log_dir is None:
         return logging.NullHandler()
@@ -75,7 +78,7 @@ def configure_task_logging(log_dir, task_id, verbosity):
 RE_TASK_ID = re.compile(r"[\. /,()\-:;]")
 
 
-def safe_task_id(task_id):
+def safe_task_id(task_id: str) -> str:
     result = RE_TASK_ID.sub("_", task_id)
     if len(result) <= 200:
         return result

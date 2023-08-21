@@ -1,5 +1,7 @@
 import logging
+
 import numpy as np
+import numpy.typing as npt
 
 from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.variants.attributes import Sex
@@ -12,7 +14,7 @@ GenotypeType = np.int8
 BestStateType = np.int8
 
 
-def mat2str(mat, col_sep="", row_sep="/"):
+def mat2str(mat: np.ndarray, col_sep: str = "", row_sep: str = "/") -> str:
     return row_sep.join(
         [
             col_sep.join([str(n) if n >= 0 else "?" for n in mat[i, :]])
@@ -21,7 +23,10 @@ def mat2str(mat, col_sep="", row_sep="/"):
     )
 
 
-def str2mat(mat, col_sep="", row_sep="/", dtype=GenotypeType):
+def str2mat(
+        mat: str, col_sep: str = "", row_sep: str = "/",
+        dtype: npt.DTypeLike = GenotypeType) -> np.ndarray:
+    """Convert a string into a numpy matrix."""
     if col_sep == "":
         return np.array(
             [[int(c) for c in r] for r in mat.split(row_sep)],
@@ -33,11 +38,13 @@ def str2mat(mat, col_sep="", row_sep="/", dtype=GenotypeType):
     )
 
 
-def best2gt(best_state):
+def best2gt(
+        best_state: np.ndarray,
+        dtype: npt.DTypeLike = GenotypeType) -> np.ndarray:
     """Convert a best state array to a genotype array."""
     rows, cols = best_state.shape
 
-    genotype = np.zeros(shape=(2, cols), dtype=GenotypeType)
+    genotype = np.zeros(shape=(2, cols), dtype=dtype)
     ploidy = np.sum(best_state, 0)
     for allele_index in range(rows):
         best_state_row = best_state[allele_index, :]
@@ -55,7 +62,7 @@ def best2gt(best_state):
     return genotype
 
 
-def fgt2str(family_genotypes, sep=";"):
+def fgt2str(family_genotypes: np.ndarray, sep: str = ";") -> str:
     """Convert a family genotype array to a string."""
     result = []
     for genotype in family_genotypes:
@@ -69,7 +76,7 @@ def fgt2str(family_genotypes, sep=";"):
     return sep.join(result)
 
 
-def str2fgt(fgt):
+def str2fgt(fgt: str) -> np.ndarray:
     """Convert a string to a family genotype array."""
     cols = fgt.split(";")
     result = np.zeros(shape=(2, len(cols)), dtype=GenotypeType)
@@ -92,7 +99,7 @@ def str2fgt(fgt):
     return result
 
 
-def gt2str(gt):
+def gt2str(gt: np.ndarray) -> str:
     """Convert a genotype array to a string."""
     assert gt.shape[0] == 2
     result = []
@@ -107,9 +114,11 @@ def gt2str(gt):
     return ",".join(result)
 
 
-def str2gt(gts, split=",", dtype=GenotypeType):
+def str2gt(
+        genotypes: str, split: str = ",",
+        dtype: npt.DTypeLike = GenotypeType) -> np.ndarray:
     """Convert a string to a genotype array."""
-    gts = gts.split(split)
+    gts = genotypes.split(split)
     result = np.zeros(shape=(2, len(gts)), dtype=dtype)
 
     for col, pgts in enumerate(gts):
@@ -122,27 +131,27 @@ def str2gt(gts, split=",", dtype=GenotypeType):
     return result
 
 
-def reference_genotype(size):
+def reference_genotype(size: int) -> np.ndarray:
     return np.zeros(shape=(2, size), dtype=GenotypeType)
 
 
-def is_reference_genotype(gt):
-    return np.any(gt == 0) and np.all(np.logical_or(gt == 0, gt == -1))
+def is_reference_genotype(gt: np.ndarray) -> bool:
+    return bool(np.any(gt == 0) and np.all(np.logical_or(gt == 0, gt == -1)))
 
 
-def is_all_reference_genotype(gt):
+def is_all_reference_genotype(gt: np.ndarray) -> bool:
     return not np.any(gt != 0)
 
 
-def is_unknown_genotype(gt):
-    return np.any(gt == -1)
+def is_unknown_genotype(gt: np.ndarray) -> bool:
+    return bool(np.any(gt == -1))
 
 
-def is_all_unknown_genotype(gt):
-    return np.all(gt == -1)
+def is_all_unknown_genotype(gt: np.ndarray) -> bool:
+    return bool(np.all(gt == -1))
 
 
-def trim_str_left(pos, ref, alt):
+def trim_str_left(pos: int, ref: str, alt: str) -> tuple[int, str, str]:
     """Trim identical nucleotides prefixes and adjust position accordingly."""
     assert alt and ref, (pos, ref, alt)
     idx = 0
@@ -162,7 +171,7 @@ def trim_str_left(pos, ref, alt):
     return pos, ref, alt
 
 
-def trim_str_right(pos, ref, alt):
+def trim_str_right(pos: int, ref: str, alt: str) -> tuple[int, str, str]:
     """Trim identical nucleotides suffixes and adjust position accordingly."""
     assert alt, (pos, ref, alt)
     assert ref, (pos, ref, alt)
@@ -183,7 +192,7 @@ def trim_str_right(pos, ref, alt):
     return pos, ref, alt
 
 
-def trim_str_left_right(pos, ref, alt):
+def trim_str_left_right(pos: int, ref: str, alt: str) -> tuple[int, str, str]:
     if len(ref) == 0 or len(alt) == 0:
         return pos, ref, alt
     pos, ref, alt = trim_str_left(pos, ref, alt)
@@ -192,7 +201,7 @@ def trim_str_left_right(pos, ref, alt):
     return trim_str_right(pos, ref, alt)
 
 
-def trim_str_right_left(pos, ref, alt):
+def trim_str_right_left(pos: int, ref: str, alt: str) -> tuple[int, str, str]:
     if len(ref) == 0 or len(alt) == 0:
         return pos, ref, alt
     pos, ref, alt = trim_str_right(pos, ref, alt)
@@ -201,7 +210,7 @@ def trim_str_right_left(pos, ref, alt):
     return trim_str_left(pos, ref, alt)
 
 
-def trim_parsimonious(pos, ref, alt):
+def trim_parsimonious(pos: int, ref: str, alt: str) -> tuple[int, str, str]:
     """Trim identical nucleotides on both ends and adjust position."""
     assert alt, (pos, ref, alt)
     assert ref, (pos, ref, alt)

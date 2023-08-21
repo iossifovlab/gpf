@@ -1,20 +1,22 @@
 # pylint: disable=W0621,C0114,C0115,C0116,W0212,W0613
 import os
-from pathlib import Path
 import time
+from pathlib import Path
+from typing import Any, Optional, Generator
+
 import pytest
 
 from dae.task_graph.executor import SequentialExecutor
-from dae.task_graph.graph import TaskGraph
+from dae.task_graph.graph import TaskGraph, Task
 from dae.task_graph.cache import CacheRecordType, FileTaskCache
 
 
-def noop(*args, **kwargs):
+def noop(*args: Any, **kwargs: Any) -> None:
     pass
 
 
 @pytest.fixture()
-def graph():
+def graph() -> TaskGraph:
     graph = TaskGraph()
     first_task = graph.create_task("First", noop, [], [])
     second_layer_tasks = [
@@ -31,41 +33,42 @@ def graph():
     return graph
 
 
-def execute_with_file_cache(graph, work_dir):
+def execute_with_file_cache(graph: TaskGraph, work_dir: str) -> None:
     executor = SequentialExecutor(FileTaskCache(cache_dir=work_dir))
     for _ in executor.execute(graph):
         pass
 
 
-def test_file_cache_clear_state(graph: TaskGraph, tmpdir):
-    cache = FileTaskCache(cache_dir=tmpdir)
+def test_file_cache_clear_state(
+        graph: TaskGraph, tmp_path: Path) -> None:
+    cache = FileTaskCache(cache_dir=str(tmp_path))
     task2record = dict(cache.load(graph))
     for task in graph.tasks:
         assert task2record[task].type == CacheRecordType.NEEDS_COMPUTE
 
 
-def test_file_cache_just_executed(graph: TaskGraph, tmpdir):
-    executor = SequentialExecutor(FileTaskCache(cache_dir=tmpdir))
+def test_file_cache_just_executed(graph: TaskGraph, tmp_path: Path) -> None:
+    executor = SequentialExecutor(FileTaskCache(cache_dir=str(tmp_path)))
     for _ in executor.execute(graph):
         pass
 
-    cache = FileTaskCache(cache_dir=tmpdir)
+    cache = FileTaskCache(cache_dir=str(tmp_path))
     task2record = dict(cache.load(graph))
     for task in graph.tasks:
         assert task2record[task].type == CacheRecordType.COMPUTED
 
 
-def test_file_cache_touch_input_file(graph: TaskGraph, tmpdir):
-    config_fn = str(tmpdir / "config.yaml")
+def test_file_cache_touch_input_file(graph: TaskGraph, tmp_path: Path) -> None:
+    config_fn = str(tmp_path / "config.yaml")
     touch(config_fn)
     graph.input_files.append(config_fn)
 
-    executor = SequentialExecutor(FileTaskCache(cache_dir=tmpdir))
+    executor = SequentialExecutor(FileTaskCache(cache_dir=str(tmp_path)))
     for _ in executor.execute(graph):
         pass
 
     touch(config_fn)
-    cache = FileTaskCache(cache_dir=tmpdir)
+    cache = FileTaskCache(cache_dir=str(tmp_path))
     task2record = dict(cache.load(graph))
     for task in graph.tasks:
         assert task2record[task].type == CacheRecordType.NEEDS_COMPUTE
@@ -73,21 +76,22 @@ def test_file_cache_touch_input_file(graph: TaskGraph, tmpdir):
 
 @pytest.mark.parametrize("operation", ["touch", "remove"])
 def test_file_cache_mod_input_file_of_intermediate_node(
-    graph: TaskGraph, tmpdir, operation
-):
-    dep_fn = str(tmpdir / "file-used-by-intermediate-node")
+    graph: TaskGraph, tmp_path: Path, operation: str
+) -> None:
+    dep_fn = str(tmp_path / "file-used-by-intermediate-node")
     touch(dep_fn)
     int_node = get_task_by_id(graph, "Intermediate")
+    assert int_node is not None
     int_node.input_files.append(dep_fn)
 
-    execute_with_file_cache(graph, tmpdir)
+    execute_with_file_cache(graph, str(tmp_path))
 
     if operation == "touch":
         touch(dep_fn)
     else:
         assert operation == "remove"
         os.remove(dep_fn)
-    cache = FileTaskCache(cache_dir=tmpdir)
+    cache = FileTaskCache(cache_dir=str(tmp_path))
     task2record = dict(cache.load(graph))
 
     assert task2record[int_node].type == CacheRecordType.NEEDS_COMPUTE
@@ -97,16 +101,18 @@ def test_file_cache_mod_input_file_of_intermediate_node(
 
 @pytest.mark.parametrize("operation", ["touch", "remove"])
 def test_file_cache_mod_flag_file_of_intermediate_node(
-    graph: TaskGraph, tmpdir, operation
-):
-    execute_with_file_cache(graph, tmpdir)
+    graph: TaskGraph, tmp_path: Path, operation: str
+) -> None:
+    execute_with_file_cache(graph, str(tmp_path))
 
-    cache = FileTaskCache(cache_dir=tmpdir)
+    cache = FileTaskCache(cache_dir=str(tmp_path))
     task2record = dict(cache.load(graph))
     for _task, record in task2record.items():
         assert record.type == CacheRecordType.COMPUTED
 
     first_task = get_task_by_id(graph, "First")
+    assert first_task is not None
+
     if operation == "touch":
         touch(cache._get_flag_filename(first_task))
         task2record = dict(cache.load(graph))
@@ -121,16 +127,16 @@ def test_file_cache_mod_flag_file_of_intermediate_node(
         assert task2record[task].type == CacheRecordType.NEEDS_COMPUTE
 
 
-def test_file_cache_very_large_task_name(tmpdir):
+def test_file_cache_very_large_task_name(tmp_path: Path) -> None:
     graph = TaskGraph()
     graph.create_task("Task" * 500, noop, [], [])
 
-    executor = SequentialExecutor(FileTaskCache(cache_dir=tmpdir))
+    executor = SequentialExecutor(FileTaskCache(cache_dir=str(tmp_path)))
     for _ in executor.execute(graph):
         pass
 
 
-def touch(filename):
+def touch(filename: str) -> None:
     if os.path.exists(filename):
         # fsspec local file system has a resolution of 1 second so we have to
         # wait in order to make sure that the mtime will get updated
@@ -138,20 +144,22 @@ def touch(filename):
     Path(filename).touch()
 
 
-def get_task_by_id(graph, task_id):
+def get_task_by_id(graph: TaskGraph, task_id: str) -> Optional[Task]:
     for task in graph.tasks:
         if task.task_id == task_id:
             return task
     return None
 
 
-def get_task_descendants(graph, parent_task):
+def get_task_descendants(
+    graph: TaskGraph, parent_task: Task
+) -> Generator[Task, None, None]:
     for task in graph.tasks:
         if is_task_descendant(task, parent_task):
             yield task
 
 
-def is_task_descendant(child_task, parent_task):
+def is_task_descendant(child_task: Task, parent_task: Task) -> bool:
     if parent_task in child_task.deps:
         return True
     for dep in child_task.deps:

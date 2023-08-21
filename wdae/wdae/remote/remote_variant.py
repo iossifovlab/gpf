@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 import math
 from copy import copy
-from typing import List, Optional, cast
+from typing import List, Optional, cast, Any, Union
 
 from dae.variants.variant import SummaryAllele, SummaryVariant
 
@@ -49,6 +51,7 @@ COLUMNS = [
 
 
 class RemoteAllele(SummaryAllele):
+    """Federation remote alleles class."""
 
     def __init__(
         self,
@@ -67,7 +70,7 @@ class RemoteAllele(SummaryAllele):
             not math.isnan(float(end_position)) \
             else None
 
-        super(RemoteAllele, self).__init__(
+        super().__init__(
             self._find_attribute("chrom"),
             int(self._find_attribute("position")),
             self._find_attribute("reference"),
@@ -79,14 +82,16 @@ class RemoteAllele(SummaryAllele):
             attributes={col: self._find_attribute(col) for col in self.columns}
         )
 
-    def _find_attribute(self, source: str):
+    def _find_attribute(self, source: str) -> Any:
         if source not in self.columns:
             return None
         attr = self.attributes_list[self.columns.index(source)][self.idx]
         return attr if attr != "-" else None
 
     @staticmethod
-    def create_reference_allele(allele) -> "RemoteAllele":
+    def create_reference_allele(
+        allele: Union[RemoteAllele, RemoteFamilyAllele]  # type: ignore
+    ) -> RemoteAllele:
         new_attributes = copy(allele.attributes_list)
         new_attributes[allele.columns.index("allele_index")][0] = 0
         new_attributes[allele.columns.index("alternative")][0] = None
@@ -94,6 +99,8 @@ class RemoteAllele(SummaryAllele):
 
 
 class RemoteFamilyAllele(FamilyAllele):
+    """Federation remote family alleles class."""
+
     def __init__(
         self,
         attributes_list: List,
@@ -112,19 +119,20 @@ class RemoteFamilyAllele(FamilyAllele):
             summary_allele, family, genotype, best_state, genetic_model
         )
 
-    def _find_attribute(self, source: str):
+    def _find_attribute(self, source: str) -> Any:
         if source not in self.columns:
             return None
         attr = self.attributes_list[self.columns.index(source)][self.idx]
         return attr if attr != "-" else None
 
     @property
-    def inheritance_in_members(self):
+    def inheritance_in_members(self) -> list:
         # TODO Implement this
         return []
 
 
 class RemoteVariant(SummaryVariant):
+    """Federation remote summary variant class."""
 
     def __init__(
         self,
@@ -146,6 +154,8 @@ class RemoteVariant(SummaryVariant):
 
 
 class RemoteFamilyVariant(FamilyVariant):
+    """Federation remote family variant class."""
+
     def __init__(
         self,
         attributes_list: List,
@@ -167,7 +177,7 @@ class RemoteFamilyVariant(FamilyVariant):
             copy(self.attributes_list), self.columns
         )
         ref_allele = RemoteAllele.create_reference_allele(remote_alleles[0])
-        remote_alleles.insert(0, ref_allele)
+        remote_alleles.insert(0, ref_allele)  # type: ignore
 
         self._remote_alleles = remote_alleles
 
@@ -177,9 +187,9 @@ class RemoteFamilyVariant(FamilyVariant):
         )
 
     @property
-    def alt_alleles(self):
+    def alt_alleles(self) -> list[RemoteFamilyAllele]:  # type: ignore
         return self._remote_alleles[1:]
 
-    @property
-    def family_genotype(self):
-        return self.gt.transpose()
+    # @property
+    # def family_genotype(self) -> np.ndarray:
+    #     return self.gt.transpose()

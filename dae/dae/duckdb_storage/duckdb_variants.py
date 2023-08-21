@@ -11,7 +11,7 @@ import numpy as np
 import pandas as pd
 
 from dae.genomic_resources.gene_models import GeneModels
-from dae.variants.attributes import Role, Status, Sex
+from dae.variants.attributes import Role, Status, Sex, Inheritance
 from dae.query_variants.sql.schema2.base_variants import SqlSchema2Variants
 from dae.query_variants.sql.schema2.base_query_builder import Dialect
 from dae.variants.variant import SummaryVariantFactory, SummaryVariant
@@ -264,7 +264,10 @@ class DuckDbVariants(SqlSchema2Variants):
     def _deserialize_family_variant(self, record: list[str]) -> FamilyVariant:
         sv_record = json.loads(record[4])
         fv_record = json.loads(record[5])
-
+        inheritance_in_members = {
+            int(k): [Inheritance.from_value(inh) for inh in v]
+            for k, v in fv_record["inheritance_in_members"].items()
+        }
         return FamilyVariant(
             SummaryVariantFactory.summary_variant_from_records(
                 sv_record
@@ -272,4 +275,5 @@ class DuckDbVariants(SqlSchema2Variants):
             self.families[fv_record["family_id"]],
             np.array(fv_record["genotype"]),
             np.array(fv_record["best_state"]),
+            inheritance_in_members=inheritance_in_members
         )

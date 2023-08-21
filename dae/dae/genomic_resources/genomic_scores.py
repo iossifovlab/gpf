@@ -743,14 +743,14 @@ class PositionScore(GenomicScore):
         self, scores: list[PositionScoreQuery]
     ) -> list[PositionScoreAggr]:
         score_aggs = []
-        aggregator_type: Optional[str] = None
+        aggregator_type: Optional[str]
         for score in scores:
             if score.position_aggregator is not None:
                 aggregator_type = score.position_aggregator
             else:
                 aggregator_type = \
                     self.score_definitions[score.score].pos_aggregator
-
+            assert aggregator_type is not None
             score_aggs.append(
                 PositionScoreAggr(
                     score.score,

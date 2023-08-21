@@ -15,6 +15,7 @@ from cerberus.schema import SchemaError
 
 from jinja2 import Template
 
+from dae.utils import fs_utils
 from dae.utils.helpers import convert_size
 
 from dae.task_graph.cli_tools import TaskGraphCli
@@ -558,6 +559,11 @@ def _run_repo_stats_command(
     if not dry_run and len(graph.tasks) > 0:
         modified_kwargs = copy.copy(kwargs)
         modified_kwargs["command"] = "run"
+        if modified_kwargs.get("tasks_log_dir") is None:
+            repo_url = proto.get_url()
+            modified_kwargs["log_dir"] = \
+                fs_utils.join(repo_url, ".tasks-log")
+
         TaskGraphCli.process_graph(
             graph, force_mode="always", **modified_kwargs)
 
@@ -608,6 +614,11 @@ def _run_resource_stats_command(
             return
         modified_kwargs = copy.copy(kwargs)
         modified_kwargs["command"] = "run"
+        if modified_kwargs.get("tasks_log_dir") is None:
+            repo_url = proto.get_url()
+            modified_kwargs["log_dir"] = \
+                fs_utils.join(repo_url, ".tasks-log")
+
         TaskGraphCli.process_graph(
             graph, force_mode="always", **modified_kwargs
         )

@@ -1,4 +1,5 @@
 from __future__ import annotations
+import os
 from abc import abstractmethod
 from copy import copy
 from dataclasses import dataclass
@@ -6,7 +7,7 @@ import datetime
 import logging
 from enum import Enum
 import pickle
-from typing import Any, Iterator, cast, Optional
+from typing import Any, Iterator, cast, Optional, Generator
 import fsspec
 
 from dae.task_graph.graph import TaskGraph, Task
@@ -30,12 +31,12 @@ class CacheRecord:
     result_or_error: Any = None
 
     @property
-    def result(self):
+    def result(self) -> Any:
         assert self.type == CacheRecordType.COMPUTED
         return self.result_or_error
 
     @property
-    def error(self):
+    def error(self) -> Any:
         assert self.type == CacheRecordType.ERROR
         return self.result_or_error
 
@@ -48,7 +49,7 @@ class TaskCache:
         """For task in the `graph` load and yield the cache record."""
 
     @abstractmethod
-    def cache(self, task_node: Task, is_error: bool, result: Any):
+    def cache(self, task_node: Task, is_error: bool, result: Any) -> None:
         """Cache the result or exception of a task."""
 
     @staticmethod
@@ -60,38 +61,43 @@ class TaskCache:
             # the force_mode is set to 'always'
             return NoTaskCache()
 
+        if cache_dir is None:
+            cache_dir = os.getcwd()
         return FileTaskCache(force=force, cache_dir=cache_dir)
 
 
 class NoTaskCache(dict, TaskCache):
     """Don't check any conditions and just run any task."""
 
-    def load(self, graph: TaskGraph):
+    def load(
+        self, graph: TaskGraph
+    ) -> Generator[tuple[Task, CacheRecord], None, None]:
         for task in graph.tasks:
             yield task, CacheRecord(CacheRecordType.NEEDS_COMPUTE)
 
-    def cache(self, task_node: Task, is_error: bool, result: Any):
+    def cache(self, task_node: Task, is_error: bool, result: Any) -> None:
         pass
 
 
 class FileTaskCache(TaskCache):
     """Use file modification timestamps to determine if a task needs to run."""
 
-    def __init__(self, cache_dir, force=False):
+    def __init__(self, cache_dir: str, force: bool = False):
         self.force = force
         self.cache_dir = cache_dir
         self._global_dependancies: Optional[list[str]] = None
-        self._mtime_cache: Optional[dict[str, datetime.datetime]] = None
+        self._mtime_cache: dict[str, datetime.datetime] = {}
 
-    def load(self, graph: TaskGraph):
+    def load(
+        self, graph: TaskGraph
+    ) -> Generator[tuple[Task, CacheRecord], None, None]:
         assert self._global_dependancies is None
-        self._mtime_cache = {}
         self._global_dependancies = graph.input_files
         task2record: dict[Task, CacheRecord] = {}
         for task in graph.tasks:
             yield task, self._get_record(task, task2record)
         self._global_dependancies = None
-        self._mtime_cache = None
+        self._mtime_cache = {}
 
     def _get_record(
             self, task_node: Task, task2record: dict[Task, CacheRecord]
@@ -121,7 +127,7 @@ class FileTaskCache(TaskCache):
             task2record[task_node] = res_record
             return res_record
 
-    def _needs_compute(self, task):
+    def _needs_compute(self, task: Task) -> bool:
         # check _global_dependancies only for first level task_nodes
         if len(task.deps) == 0:
             in_files = copy(self._global_dependancies)
@@ -135,7 +141,7 @@ class FileTaskCache(TaskCache):
         output_fn = self._get_flag_filename(task)
         return self._should_recompute_output(in_files, [output_fn])
 
-    def cache(self, task_node: Task, is_error: bool, result: Any):
+    def cache(self, task_node: Task, is_error: bool, result: Any) -> None:
         record_type = (
             CacheRecordType.ERROR if is_error else CacheRecordType.COMPUTED
         )
@@ -153,10 +159,12 @@ class FileTaskCache(TaskCache):
                 task_node, exc_info=True
             )
 
-    def _get_flag_filename(self, task_node):
+    def _get_flag_filename(self, task_node: Task) -> str:
         return fs_utils.join(self.cache_dir, f"{task_node.task_id}.flag")
 
-    def _should_recompute_output(self, input_files, output_files) -> bool:
+    def _should_recompute_output(
+        self, input_files: list[str], output_files: list[str]
+    ) -> bool:
         input_mtime = self._get_last_mod_time(input_files)
         output_mtime = self._get_last_mod_time(output_files)
         if len(input_files) == 0 and output_mtime is not None:
@@ -166,16 +174,18 @@ class FileTaskCache(TaskCache):
         should_run: bool = input_mtime > output_mtime
         return should_run
 
-    def _get_last_mod_time(self, filenames: list[str]):
+    def _get_last_mod_time(
+        self, filenames: list[str]
+    ) -> Optional[datetime.datetime]:
         mtimes = [self._safe_getmtime(path) for path in filenames]
         if any(p is None for p in mtimes):
             # cannot determine the mtime of a filename. Assume it needs recalc.
             return None
         if len(mtimes) > 0:
-            return max(mtimes)
+            return max(cast(list[datetime.datetime], mtimes))
         return None
 
-    def _safe_getmtime(self, path):
+    def _safe_getmtime(self, path: str) -> Optional[datetime.datetime]:
         assert self._mtime_cache is not None
         if path in self._mtime_cache:
             return self._mtime_cache[path]

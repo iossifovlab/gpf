@@ -5,6 +5,7 @@ from dae.variants.core import Allele
 from dae.variants.variant import vcf2cshl, trim_str_right_left, \
     tandem_repeat
 from dae.utils.dae_utils import dae2vcf_variant
+from dae.gpf_instance import GPFInstance
 
 
 @pytest.mark.parametrize(
@@ -34,7 +35,8 @@ from dae.utils.dae_utils import dae2vcf_variant
          "ins(CAAC)",
          2, 4),
     ])
-def test_vcf2cshl_variant_format(ref, alt, variant_type, pos, length):
+def test_vcf2cshl_variant_format(
+        ref: str, alt: str, variant_type: str, pos: int, length: int) -> None:
 
     variant_desc = vcf2cshl(1, ref, alt, trimmer=trim_str_right_left)
 
@@ -70,7 +72,8 @@ def test_vcf2cshl_variant_format(ref, alt, variant_type, pos, length):
          "ins(CAAA)",
          1, 4),
     ])
-def test_vcf2cshl_variant_format2(ref, alt, variant_type, pos, length):
+def test_vcf2cshl_variant_format2(
+        ref: str, alt: str, variant_type: str, pos: int, length: int) -> None:
 
     variant_desc = vcf2cshl(1, ref, alt, trimmer=trim_str_right_left)
     assert variant_desc.position == pos
@@ -113,7 +116,8 @@ def test_vcf2cshl_variant_format2(ref, alt, variant_type, pos, length):
          "ins(C)",
          7, 1),
     ])
-def test_vcf2cshl_variant_format3(ref, alt, variant_type, pos, length):
+def test_vcf2cshl_variant_format3(
+        ref: str, alt: str, variant_type: str, pos: int, length: int) -> None:
 
     variant_desc = vcf2cshl(1, ref, alt, trimmer=trim_str_right_left)
     assert variant_desc.position == pos
@@ -121,7 +125,7 @@ def test_vcf2cshl_variant_format3(ref, alt, variant_type, pos, length):
     assert variant_desc.length == length
 
 
-def test_insert_long():
+def test_insert_long() -> None:
     ref = "CCCCCTCATCACCTCCCCAGCCACGGTGAGGACCCACCCTGGCATGATCT"
     alt = (
         "CCCCCTCATCACCTCCCCAGCCACGGTGAGGACCCACCCTGGCATGATCT"
@@ -132,7 +136,7 @@ def test_insert_long():
     assert variant_desc.position == 2  # FIXME
 
 
-def test_cshl_to_vcf_problem(gpf_instance_2013):
+def test_cshl_to_vcf_problem(gpf_instance_2013: GPFInstance) -> None:
     chrom = "2"
     position = 242815433
     variant = "sub(G->A)"
@@ -155,7 +159,7 @@ def test_cshl_to_vcf_problem(gpf_instance_2013):
     assert variant_desc.length == 1
 
 
-def test_spark_v3_problems_check():
+def test_spark_v3_problems_check() -> None:
 
     # chrom = '1'
     position = 865461
@@ -213,7 +217,9 @@ def test_spark_v3_problems_check():
 
     ])
 def test_tandem_repeat_unit(
-        chrom, position, ref, alt, unit, ref_repeats, alt_repeats):
+        chrom: str, position: int,
+        ref: str, alt: str,
+        unit: str, ref_repeats: int, alt_repeats: int) -> None:
 
     tr_unit, tr_ref, tr_alt = tandem_repeat(ref, alt)
     assert tr_unit is not None

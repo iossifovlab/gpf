@@ -1,11 +1,11 @@
 import copy
 import logging
 
-from typing import Any, List, Optional, cast
+from typing import Any, Optional, cast, List
 
 import numpy as np
 
-from deprecation import deprecated  # type: ignore
+from deprecation import deprecated
 
 from dae.pedigrees.family import Family, Person
 from dae.utils.variant_utils import GenotypeType, \
@@ -22,8 +22,8 @@ from dae.effect_annotation.effect import AlleleEffects
 from dae.variants.core import Allele
 from dae.variants.variant import \
     SummaryAllele, \
-    SummaryVariant
-
+    SummaryVariant, \
+    VariantDetails
 
 logger = logging.getLogger(__name__)
 
@@ -54,11 +54,11 @@ def calculate_simple_best_state(
 class FamilyDelegate:
     """Delegate for handling families."""
 
-    def __init__(self, family):
+    def __init__(self, family: Family):
         self.family = family
 
     @property
-    def members_in_order(self):
+    def members_in_order(self) -> list[Person]:
         """
         Return the members from the pedigree file in order.
 
@@ -69,12 +69,12 @@ class FamilyDelegate:
         return self.family.members_in_order
 
     @property
-    def members_ids(self):
+    def members_ids(self) -> list[str]:
         """Return list of family members IDs."""
         return self.family.members_ids
 
     @property
-    def family_id(self):
+    def family_id(self) -> str:
         """Return the family ID."""
         return self.family.family_id
 
@@ -84,13 +84,14 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
     """Class representing an allele in a family."""
 
     def __init__(
-            self,
-            summary_allele: SummaryAllele,
-            family: Family,
-            genotype,
-            best_state,
-            genetic_model: Optional[GeneticModel] = None,
-            inheritance_in_members=None):
+        self,
+        summary_allele: SummaryAllele,
+        family: Family,
+        genotype: Optional[np.ndarray],
+        best_state: Optional[np.ndarray],
+        genetic_model: Optional[GeneticModel] = None,
+        inheritance_in_members: Optional[list[Inheritance]] = None
+    ):
 
         assert isinstance(family, Family)
 
@@ -111,56 +112,56 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
         self._inheritance_in_members = inheritance_in_members
         self._variant_in_members: Optional[list[str]] = None
         self._variant_in_members_objects: Optional[list[Person]] = None
-        self._variant_in_roles: Optional[list[Role]] = None
-        self._variant_in_sexes: Optional[list[Sex]] = None
-        self._variant_in_statuses: Optional[list[Status]] = None
-        self._family_index = None
+        self._variant_in_roles: Optional[list[Optional[Role]]] = None
+        self._variant_in_sexes: Optional[list[Optional[Sex]]] = None
+        self._variant_in_statuses: Optional[list[Optional[Status]]] = None
+        self._family_index: Optional[int] = None
         self._family_attributes: dict = {}
 
         self.matched_gene_effects: List = []
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         allele_repr = SummaryAllele.__repr__(self)
         return f"{allele_repr} {self.family_id}"
 
     @property
-    def chromosome(self):
+    def chromosome(self) -> str:
         return self.summary_allele.chromosome
 
     @property
-    def chrom(self):
+    def chrom(self) -> str:
         return self.summary_allele.chromosome
 
     @property
-    def position(self):
+    def position(self) -> int:
         return self.summary_allele.position
 
     @property
-    def reference(self):
+    def reference(self) -> Optional[str]:
         return self.summary_allele.reference
 
     @property
-    def alternative(self):
+    def alternative(self) -> Optional[str]:
         return self.summary_allele.alternative
 
     @property
-    def summary_index(self):
+    def summary_index(self) -> int:
         return self.summary_allele.summary_index
 
     @summary_index.setter
-    def summary_index(self, val):
+    def summary_index(self, val: int) -> None:
         self.summary_allele.summary_index = val
 
     @property
-    def family_index(self):
+    def family_index(self) -> Optional[int]:
         return self._family_index
 
     @family_index.setter
-    def family_index(self, val):
+    def family_index(self, val: int) -> None:
         self._family_index = val
 
     @property
-    def allele_index(self):
+    def allele_index(self) -> int:
         return self.summary_allele.allele_index
 
     @property
@@ -168,20 +169,20 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
         return self.summary_allele.transmission_type
 
     @property
-    def summary_attributes(self):
+    def summary_attributes(self) -> dict[str, Any]:
         return self.summary_allele.attributes
 
     @property
-    def family_attributes(self):
+    def family_attributes(self) -> dict[str, Any]:
         return self._family_attributes
 
     @property
-    def attributes(self):
+    def attributes(self) -> dict[str, Any]:
         result = copy.deepcopy(self.summary_attributes)
         result.update(self.family_attributes)
         return result
 
-    def get_attribute(self, item: str, default=None):
+    def get_attribute(self, item: str, default: Any = None) -> Any:
         """
         Return list of values from additional attributes matching given key.
 
@@ -198,12 +199,12 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
         return item in self.family_attributes or \
             item in self.summary_attributes
 
-    def update_attributes(self, atts: dict) -> None:
+    def update_attributes(self, atts: dict[str, Any]) -> None:
         """Update additional attributes of the variant."""
         self._family_attributes.update(atts)
 
     @property
-    def details(self):
+    def details(self) -> VariantDetails:
         return self.summary_allele.details
 
     @property
@@ -219,35 +220,40 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
         return self.summary_allele.end_position
 
     @property
-    def genotype(self):
+    def genotype(self) -> np.ndarray:
         """Return the genotype of the family."""
+        assert self.gt is not None
         return self.gt.T
 
     @property
-    def best_state(self):
+    def best_state(self) -> np.ndarray:
+        """Return the best state of the variant."""
         if self._best_state is None:
+            assert self.gt is not None
             self._best_state = calculate_simple_best_state(
                 self.gt, self.attributes["allele_count"]
             )
         return self._best_state
 
-    @property  # type: ignore
+    @property
     @deprecated(details="Replace `best_st` with `best_state`")
-    def best_st(self):
+    def best_st(self) -> np.ndarray:
         return self.best_state
 
     @property
-    def genetic_model(self):
+    def genetic_model(self) -> Optional[GeneticModel]:
         return self._genetic_model
 
-    def gt_flatten(self):
+    def gt_flatten(self) -> np.ndarray:
         """Return the family variant genotype flattened to a 1d array."""
+        assert self.gt is not None
         return self.gt.flatten(order="F")
 
     @property
-    def inheritance_in_members(self):
+    def inheritance_in_members(self) -> list[Inheritance]:
         """Return list of family member inheritance."""
         if self._inheritance_in_members is None:
+            assert self.gt is not None
             allele_index = self.allele_index
             result = []
             for pid in self.members_ids:
@@ -278,9 +284,10 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
         return self._inheritance_in_members
 
     @property
-    def variant_in_members(self):
+    def variant_in_members(self) -> list[str]:
         """Return set of affected by this variant family members' IDs."""
         if self._variant_in_members is None:
+            assert self.gt is not None
             allele_index = getattr(self, "allele_index", None)
             gt = np.copy(self.gt)
 
@@ -296,11 +303,11 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
         return self._variant_in_members
 
     @property
-    def allele_in_members(self):
+    def allele_in_members(self) -> list[str]:
         return self.variant_in_members
 
     @property
-    def variant_in_members_objects(self):
+    def variant_in_members_objects(self) -> list[Person]:
         """Return list of person with the variant."""
         if self._variant_in_members_objects is None:
 
@@ -313,7 +320,7 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
         return self._variant_in_members_objects
 
     @property
-    def variant_in_roles(self):
+    def variant_in_roles(self) -> list[Optional[Role]]:
         """
         Return list of roles that have affected by this variant members.
 
@@ -327,11 +334,11 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
         return self._variant_in_roles
 
     @property
-    def allele_in_roles(self):
+    def allele_in_roles(self) -> list[Optional[Role]]:
         return self.variant_in_roles
 
     @property
-    def variant_in_statuses(self):
+    def variant_in_statuses(self) -> list[Optional[Status]]:
         """Return list of statuses (or 'None') of the members with variant."""
         if self._variant_in_statuses is None:
             self._variant_in_statuses = [
@@ -341,11 +348,11 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
         return self._variant_in_statuses
 
     @property
-    def allele_in_statuses(self):
+    def allele_in_statuses(self) -> list[Optional[Status]]:
         return self.variant_in_statuses
 
     @property
-    def variant_in_sexes(self):
+    def variant_in_sexes(self) -> list[Optional[Sex]]:
         """Return list of sexes that are affected by this variant in family."""
         if self._variant_in_sexes is None:
             self._variant_in_sexes = [
@@ -355,11 +362,13 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
         return self._variant_in_sexes
 
     @property
-    def allele_in_sexes(self):
+    def allele_in_sexes(self) -> list[Optional[Sex]]:
         return self.variant_in_sexes
 
     @staticmethod
-    def check_mendelian_trio(parent_1, parent_2, child, allele_index):
+    def check_mendelian_trio(
+            parent_1: np.ndarray, parent_2: np.ndarray,
+            child: np.ndarray, allele_index: int) -> bool:
         """Check if the inheritance type for a trio family is `mendelian`.
 
         :param parent_1: genotype of the first parent (pair of allele indexes).
@@ -372,13 +381,13 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
         if ai not in set(child):
             return False
 
-        m1 = (
+        m1: bool = (
             child[0] == parent_1[0] == ai or child[0] == parent_1[1] == ai
         ) or (
             child[1] == parent_2[0] == ai or child[1] == parent_2[1] == ai
         )
 
-        m2 = (
+        m2: bool = (
             child[0] == parent_2[0] == ai or child[0] == parent_2[1] == ai
         ) or (
             child[1] == parent_1[0] == ai or child[1] == parent_1[1] == ai
@@ -387,7 +396,9 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
         return m1 or m2
 
     @staticmethod
-    def check_denovo_trio(parent_1, parent_2, child, allele_index):
+    def check_denovo_trio(
+            parent_1: np.ndarray, parent_2: np.ndarray,
+            child: np.ndarray, allele_index: int) -> bool:
         """
         Check if the inheritance type for a trio family is `denovo`.
 
@@ -400,7 +411,9 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
         return allele_index in new_alleles
 
     @staticmethod
-    def check_omission_trio(parent_1, parent_2, child, allele_index):
+    def check_omission_trio(
+            parent_1: np.ndarray, parent_2: np.ndarray,
+            child: np.ndarray, allele_index: int) -> bool:
         """Check if the inheritance type for a trio family is `omission`.
 
         :param parent_1: genotype of the first parent (pair of allele indexes).
@@ -426,7 +439,9 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
         return p1res or p2res
 
     @classmethod
-    def calc_inheritance_trio(cls, parent_1, parent_2, child, allele_index):
+    def calc_inheritance_trio(
+            cls, parent_1: np.ndarray, parent_2: np.ndarray,
+            child: np.ndarray, allele_index: int) -> Inheritance:
         """Calculate the inheritance type of a trio family.
 
         :param parent_1: genotype of the first parent (pair of allele indexes).
@@ -449,12 +464,13 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
     """Class representing a variant in a family."""
 
     def __init__(
-            self,
-            summary_variant: SummaryVariant,
-            family: Family,
-            genotype: Any,
-            best_state: Any,
-            inheritance_in_members=None):
+        self,
+        summary_variant: SummaryVariant,
+        family: Family,
+        genotype: Optional[np.ndarray],
+        best_state: Optional[np.ndarray],
+        inheritance_in_members: Optional[dict[int, list[Inheritance]]] = None
+    ):
 
         # super(FamilyVariant, self).__init__()
 
@@ -476,15 +492,11 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
         else:
             self._inheritance_in_members = inheritance_in_members
 
-        # self._build_family_alleles()
-
-    def _build_family_alleles(self):
+    def _build_family_alleles(self) -> None:
         assert self._family_alleles is None
-
-        summary_allele = self.summary_variant.alleles[0]
         alleles = [
             FamilyAllele(
-                summary_allele,
+                self.summary_variant.alleles[0],
                 self.family,
                 self.gt,
                 self._best_state,
@@ -492,8 +504,9 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
             )
         ]
         # pylint: disable=invalid-name
+        assert self.gt is not None
         for ai in self.calc_alt_alleles(self.gt):
-            summary_allele = None
+            summary_allele: Optional[SummaryAllele] = None
             for allele in self.summary_variant.alt_alleles:
                 if allele.allele_index == ai:
                     summary_allele = allele
@@ -523,19 +536,19 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
         return self._fvuid
 
     @property
-    def chromosome(self):
+    def chromosome(self) -> str:
         return self.summary_variant.chromosome
 
     @property
-    def chrom(self):
+    def chrom(self) -> str:
         return self.summary_variant.chromosome
 
     @property
-    def position(self):
+    def position(self) -> int:
         return self.summary_variant.position
 
     @property
-    def reference(self):
+    def reference(self) -> Optional[str]:
         return self.summary_variant.reference
 
     # @property
@@ -547,75 +560,81 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
         return self.summary_variant.end_position
 
     @property
-    def allele_count(self):
+    def allele_count(self) -> int:
         return self.summary_variant.allele_count
 
     @property
-    def summary_index(self):
+    def summary_index(self) -> int:
         return self.summary_variant.summary_index
 
     @summary_index.setter
-    def summary_index(self, summary_index):
+    def summary_index(self, summary_index: int) -> None:
         self.summary_variant.summary_index = summary_index
 
     @property
-    def family_index(self):
+    def family_index(self) -> Optional[int]:
         return cast(FamilyAllele, self.ref_allele).family_index
 
     @family_index.setter
-    def family_index(self, val):
-        for allele in self.alleles:
+    def family_index(self, val: int) -> None:
+        for allele in self.family_alleles:
             allele.family_index = val
 
     @property
-    def allele_indexes(self):
+    def allele_indexes(self) -> list[int]:
         return [a.allele_index for a in self.alleles]
 
     @property
-    def family_allele_indexes(self):
+    def family_allele_indexes(self) -> list[int]:
         return list(range(len(self.alleles)))
 
     @property
-    def alleles(self):
+    def alleles(self) -> list[SummaryAllele]:
         if self._family_alleles is None:
             self._build_family_alleles()
-
-        return self._family_alleles
+        assert self._family_alleles is not None
+        return cast(list[SummaryAllele], self._family_alleles)
 
     @property
-    def family_alleles(self) -> List[FamilyAllele]:
+    def family_alleles(self) -> list[FamilyAllele]:
         if self._family_alleles is None:
             self._build_family_alleles()
-        return cast(List[FamilyAllele], self._family_alleles)
+        return cast(list[FamilyAllele], self._family_alleles)
 
     @property
     def family_alt_alleles(self) -> List[FamilyAllele]:
         return self.family_alleles[1:]
 
-    def gt_flatten(self):
+    def gt_flatten(self) -> np.ndarray:
         """Return genotype of the family variant flattened to a 1d array."""
+        assert self.gt is not None
         return self.gt.flatten(order="F")
 
-    def is_reference(self):
+    def is_reference(self) -> bool:
         """Return True if all known alleles in the variant are `reference`."""
+        assert self.gt is not None
         return is_reference_genotype(self.gt)
 
-    def is_unknown(self):
+    def is_unknown(self) -> bool:
         """Return True if all alleles in the variant are `unknown`."""
+        assert self.gt is not None
         return is_all_unknown_genotype(self.gt)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
+        assert self.gt is not None
         output = SummaryVariant.__repr__(self)
         return f"{output} {self.family_id} {mat2str(self.gt)}"
 
     @property
-    def genotype(self):
+    def genotype(self) -> list[list[int]]:
         """Return genotype using summary variant allele indexes."""
+        assert self.gt is not None
         return [list(self.gt[:, m]) for m in range(self.gt.shape[1])]
 
     @property
-    def family_genotype(self):
+    def family_genotype(self) -> list[list[int]]:
         """Return family genotype using family variant indexes."""
+        assert self.gt is not None
         gt2fgt = zip(self.allele_indexes, self.family_allele_indexes)
         fgt = np.zeros(shape=self.gt.shape, dtype=np.int8)
         # pylint: disable=invalid-name
@@ -625,21 +644,25 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
         return [list(fgt[:, m]) for m in range(fgt.shape[1])]
 
     @property
-    def genetic_model(self):
+    def genetic_model(self) -> GeneticModel:
         if self._genetic_model is None:
             self._genetic_model = GeneticModel.autosomal
+        assert self._genetic_model is not None
         return self._genetic_model
 
     @property
-    def best_state(self):
+    def best_state(self) -> np.ndarray:
+        """Return best state of the variant."""
         if self._best_state is None:
+            assert self.gt is not None
             self._best_state = calculate_simple_best_state(
                 self.gt, self.allele_count
             )
+        assert self._best_state is not None
         return self._best_state
 
     @property
-    def family_best_state(self):
+    def family_best_state(self) -> np.ndarray:
         return self.best_state[self.allele_indexes, :]
 
     @property  # type: ignore
@@ -648,7 +671,7 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
         return self.best_state
 
     @staticmethod
-    def calc_alt_alleles(gt):
+    def calc_alt_alleles(gt: np.ndarray) -> list[int]:
         """
         Return relevant for the given genotype alternative allele indexes.
 
@@ -659,7 +682,7 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
         return sorted(list(set(gt.flatten()).difference({0})))
 
     @staticmethod
-    def calc_alleles(gt):
+    def calc_alleles(gt: np.ndarray) -> list[int]:
         """
         Return allele indexes that are relevant for the given genotype.
 
@@ -669,7 +692,7 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
         return sorted(list(set(gt.flatten()).difference({-1})))
 
     @property
-    def variant_in_members(self):
+    def variant_in_members(self) -> set[str]:
         """Return list of members with the variant."""
         members: set[str] = set()
         for allele in self.alt_alleles:
@@ -678,11 +701,22 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
                 cast(FamilyAllele, allele).variant_in_members))
         return members
 
-    def to_record(self):
+    def _serialize_inheritance_in_members(
+        self
+    ) -> dict[int, list[Inheritance]]:
+        result = {}
+        for allele in self.family_alleles:
+            result[allele.allele_index] = [
+                inh.value for inh in allele.inheritance_in_members]
+        return result
+
+    def to_record(self) -> dict[str, Any]:  # type: ignore
+        assert self.gt is not None
         return {
             "family_id": self.family_id,
             "summary_index": self.summary_index,
             "family_index": self.family_index,
             "genotype": self.gt.tolist(),
-            "best_state": self.best_state.tolist()
+            "best_state": self.best_state.tolist(),
+            "inheritance_in_members": self._serialize_inheritance_in_members()
         }
