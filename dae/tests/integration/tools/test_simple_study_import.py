@@ -512,7 +512,6 @@ def test_import_study_config_arg(
         main(argv, gpf_instance)
 
 
-@pytest.mark.xfail(reason="denovo-db import does not work on impala2")
 def test_denovo_db_import(
         tmp_path_factory: pytest.TempPathFactory,
         genotype_storage: GenotypeStorage,
