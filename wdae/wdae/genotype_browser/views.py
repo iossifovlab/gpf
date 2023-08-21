@@ -10,7 +10,7 @@ from rest_framework.response import Response  # type: ignore
 from utils.logger import LOGGER, request_logging
 from utils.streaming_response_util import iterator_to_json
 from utils.query_params import parse_query_params
-from utils.expand_gene_set import expand_gene_set
+from utils.expand_gene_set import expand_gene_set, expand_gene_syms
 
 from query_base.query_base import QueryDatasetView
 
@@ -98,8 +98,7 @@ class GenotypeBrowserQueryView(QueryDatasetView):
         """
         # pylint: disable=too-many-branches
         LOGGER.info("query v3 variants request: %s", str(request.data))
-
-        data = expand_gene_set(request.data, request.user)
+        data = request.data
         user = request.user
 
         if "queryData" in data:
@@ -139,6 +138,12 @@ class GenotypeBrowserQueryView(QueryDatasetView):
 
         if dataset is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
+        if not dataset.is_remote:
+            data = expand_gene_set(request.data, request.user)
+        elif "geneSet" in data:
+            gene_set = expand_gene_syms(request.data, request.user)
+            data["geneSymbols"] = list(gene_set["syms"])
+            del data["geneSet"]
 
         if "sources" in data:
             sources = data.pop("sources")
