@@ -1,9 +1,10 @@
 import logging
 
+from typing import Any
 from rest_framework import permissions
 
 from django.conf import settings
-from django.contrib.auth.models import Group
+from django.contrib.auth.models import Group, User
 from django.utils.encoding import force_str
 
 from gpf_instance.gpf_instance import get_wgpf_instance
@@ -260,14 +261,14 @@ def get_dataset_info(dataset_id):
     }
 
 
-def get_directly_allowed_genotype_data(user):
+def get_directly_allowed_genotype_data(user: User) -> list[dict[str, Any]]:
     """Return list of genotype data the user has direct permissions to."""
     gpf_instance = get_wgpf_instance()
     dataset_ids = gpf_instance.get_genotype_data_ids()
     user_groups = get_user_groups(user)
     datasets = {
         dataset.dataset_id: dataset
-        for dataset in Dataset.objects.all()
+        for dataset in Dataset.objects.all()  # pylint: disable=no-member
     }
 
     result = []
