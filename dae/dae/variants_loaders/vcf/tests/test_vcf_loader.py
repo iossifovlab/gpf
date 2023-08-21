@@ -1,5 +1,4 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-from pathlib import Path
 from typing import Literal
 import pytest
 from dae.variants.attributes import Inheritance
@@ -16,34 +15,6 @@ def gpf_instance(
     root_path = tmp_path_factory.mktemp("instance")
     gpf_instance = acgt_gpf(root_path)
     return gpf_instance
-
-
-@pytest.fixture
-def quads_f1_ped(tmp_path_factory: pytest.TempPathFactory) -> Path:
-    root_path = tmp_path_factory.mktemp("quads_f1")
-    ped_path = setup_pedigree(root_path / "ped_data" / "in.ped", """
-    familyId  personId	dadId	momId	sex	status	role
-    f1	      mom1	    0	    0	    2	1	    mom
-    f1	      dad1	    0	    0	    1	1	    dad
-    f1	      prb1	    dad1	mom1	1	2	    prb
-    f1	      sib1	    dad1	mom1	2	2	    sib
-    """)
-    return ped_path
-
-
-@pytest.fixture
-def quads_f1_vcf(tmp_path_factory: pytest.TempPathFactory) -> Path:
-    root_path = tmp_path_factory.mktemp("quads_f1")
-    vcf_path = setup_vcf(root_path / "vcf_data" / "in.vcf", """
-    ##fileformat=VCFv4.2
-    ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
-    ##contig=<ID=chr1>
-    ##contig=<ID=chr2>
-    #CHROM	POS	    ID	REF	ALT	QUAL  FILTER  INFO	FORMAT	mom1  dad1	prb1  sib1
-    chr1    4    	.	T	G	.	  .	      .	    GT	    0/1	  0/0	0/1	  0/0
-    chr2    24   	.	T	G	.	  .	      .	    GT	    0/0	  0/1	0/1	  0/0
-    """)
-    return vcf_path
 
 
 # def test_transform_vcf_genotype():
@@ -118,7 +89,7 @@ def test_vcf_denovo_mode(
     }
     vcf_loader = VcfLoader(
         families,
-        [f"{vcf_path}"],
+        [vcf_path],
         gpf_instance.reference_genome,
         params=params,
     )
@@ -200,7 +171,7 @@ def f1_test(
     ##INFO=<ID=INH,Number=1,Type=String,Description="Inheritance">
     ##contig=<ID=chr1>
     #CHROM	POS	 ID	REF	ALT	QUAL	FILTER	INFO	            FORMAT	mom1	dad1	ch1	  ch2
-    1	    2    .	C	T,A	.	    .	    EFF=SYN!MIS;INH=MIX	GT  	0/0 	0/1 	0/1	  0/2
+    chr1	2    .	C	T,A	.	    .	    EFF=SYN!MIS;INH=MIX	GT  	0/0 	0/1 	0/1	  0/2
     chr1    15   .	C	T,A	.	    .	    EFF=SYN!MIS;INH=UKN	GT  	./. 	./. 	./.	  ./.
     chr1    20   .	G	A,T	.	    .	    EFF=SYN!MIS;INH=MIX	GT	    0/0 	0/0	    ./.	  0/0
     chr1    55   .	C	T,A	.	    .	    EFF=SYN!MIS;INH=DEN	GT	    0/0 	0/0	    0/1	  0/0
@@ -253,8 +224,19 @@ def test_vcf_loader_params(
 
 
 @pytest.fixture
-def simple_family_vcf(tmp_path_factory: pytest.TempPathFactory) -> Path:
+def simple_family(tmp_path_factory: pytest.TempPathFactory) -> tuple[str, str]:
     root_path = tmp_path_factory.mktemp("simple_family")
+    ped_path = setup_pedigree(root_path / "ped_data" / "in.ped", """
+    familyId	personId	dadId	momId	sex	status	role
+    f	        gpa     	0   	0   	1	1   	paternal_grandfather
+    f	        gma     	0   	0   	2	1   	paternal_grandmother
+    f	        mom     	0   	0   	2	1   	mom
+    f	        dad     	gpa 	gma 	1	1   	dad
+    f	        ch1     	dad 	mom 	2	2   	prb
+    f	        ch2     	dad 	mom 	2	1   	sib
+    f	        ch3     	dad 	mom 	2	1   	sib
+    """)
+
     vcf_path = setup_vcf(root_path / "vcf_data" / "in.vcf", """
     ##fileformat=VCFv4.2
     ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
@@ -272,32 +254,14 @@ def simple_family_vcf(tmp_path_factory: pytest.TempPathFactory) -> Path:
     chr1    77  .	T	GA,AA,CA,CC	.   	.   	.   	GT  	2/3	2/2	2/1	2/2	2/2	2/2	2/2
     """) # noqa
 
-    return vcf_path
-
-
-@pytest.fixture
-def simple_family_ped(tmp_path_factory: pytest.TempPathFactory) -> Path:
-    root_path = tmp_path_factory.mktemp("simple_family")
-    ped_path = setup_pedigree(root_path / "ped_data" / "in.ped", """
-    familyId	personId	dadId	momId	sex	status	role
-    f	        gpa     	0   	0   	1	1   	paternal_grandfather
-    f	        gma     	0   	0   	2	1   	paternal_grandmother
-    f	        mom     	0   	0   	2	1   	mom
-    f	        dad     	gpa 	gma 	1	1   	dad
-    f	        ch1     	dad 	mom 	2	2   	prb
-    f	        ch2     	dad 	mom 	2	1   	sib
-    f	        ch3     	dad 	mom 	2	1   	sib
-    """)
-    return ped_path
+    return str(ped_path), str(vcf_path)
 
 
 def test_family_variants(
-    simple_family_vcf: Path,
-    simple_family_ped: Path,
+    simple_family: tuple[str, str],
     gpf_instance: GPFInstance
 ) -> None:
-    ped_filename = str(simple_family_ped)
-    vcf_filename = str(simple_family_vcf)
+    ped_filename, vcf_filename = simple_family
     families = FamiliesLoader(ped_filename).load()
 
     vcf_loader = VcfLoader(

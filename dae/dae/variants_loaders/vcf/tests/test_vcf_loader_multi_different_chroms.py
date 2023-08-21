@@ -75,17 +75,17 @@ def multi_contig_vcf_gz(
     ##contig=<ID=chr2>
     ##contig=<ID=chr3>
     ##contig=<ID=chr4>
-    #CHROM	POS	    ID	REF	ALT	        QUAL	FILTER	INFO	FORMAT	mom	dad	ch1	ch2	ch3	gma	gpa
-    chr1   	3 	    .	T	G,A	        .	    .   	.   	GT  	0/0	0/0	0/0	0/0	0/0	0/0	0/0
-    chr1   	13	    .	T	G,A	        .	    .   	.   	GT  	0/2	0/0	0/0	0/0	0/0	0/0	0/0
-    chr1   	15  	.	T	G,A	        .	    .   	.   	GT  	./.	./.	./.	./.	./.	./.	./.
-    chr2   	16  	.	T	G,A	        .	    .   	.   	GT  	0/1	0/0	0/0	0/0	0/2	0/0	0/0
-    chr3   	23  	.	T	G,A	        .	    .   	.   	GT  	0/0	0/0	./.	0/0	0/0	0/0	0/0
-    chr3   	25  	.	T	G	        .	    .   	.   	GT  	0/0	0/0	./.	0/0	0/0	0/0	0/0
-    chr3   	29  	.	T	G	        .	    .   	.   	GT  	0/0	0/0	./.	0/0	0/1	0/0	0/0
-    chr4   	44  	.	T	G	        .	    .   	.   	GT  	0/0	0/0	0/0	1/1	0/1	0/0	0/0
-    chr4   	55  	.	T	G	        .	    .   	.   	GT  	0/0	0/0	0/0	0/1	0/0	0/0	1/1
-    chr4   	95  	.	T	GA,AA,CA,CC	.	    .   	.   	GT  	2/3	2/2	2/2	2/2	2/2	2/2	2/2
+    #CHROM	POS	    ID	REF	ALT	        QUAL	FILTER	INFO	FORMAT	mom 	dad 	ch1 	ch2 	ch3 	gma 	gpa
+    chr1   	3 	    .	T	G,A	        .	    .   	.   	GT  	0/0 	0/0 	0/0 	0/0 	0/0 	0/0	    0/0
+    chr1   	13	    .	T	G,A	        .	    .   	.   	GT  	0/2 	0/0 	0/0 	0/0 	0/0 	0/0 	0/0
+    chr1   	15  	.	T	G,A	        .	    .   	.   	GT  	./. 	./. 	./. 	./. 	./. 	./. 	./.
+    chr2   	16  	.	T	G,A	        .	    .   	.   	GT  	0/1 	0/0 	0/0 	0/0 	0/2 	0/0	    0/0
+    chr3   	23  	.	T	G,A	        .	    .   	.   	GT  	0/0 	0/0 	./. 	0/0 	0/0 	0/0	    0/0
+    chr3   	25  	.	T	G	        .	    .   	.   	GT  	0/0 	0/0 	./. 	0/0 	0/0 	0/0	    0/0
+    chr3   	29  	.	T	G	        .	    .   	.   	GT  	0/0 	0/0 	./. 	0/0 	0/1 	0/0	    0/0
+    chr4   	44  	.	T	G	        .	    .   	.   	GT  	0/0 	0/0 	0/0 	1/1 	0/1 	0/0	    0/0
+    chr4   	55  	.	T	G	        .	    .   	.   	GT  	0/0 	0/0 	0/0 	0/1 	0/0 	0/0	    1/1
+    chr4   	95  	.	T	GA,AA,CA,CC	.	    .   	.   	GT  	2/3 	2/2 	2/2 	2/2 	2/2 	2/2	    2/2
     """) # noqa
 
     return vcf_path

@@ -1,6 +1,5 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import os
-from pathlib import Path
 from typing import Any, Union
 import pytest
 import numpy as np
@@ -20,7 +19,7 @@ def gpf_instance(
 
 
 @pytest.fixture
-def multivcf_split1_vcf(tmp_path_factory: pytest.TempPathFactory) -> Path:
+def multivcf_split1_vcf(tmp_path_factory: pytest.TempPathFactory) -> str:
     root_path = tmp_path_factory.mktemp("mutlivcf_split1")
     vcf_path = setup_vcf(root_path / "vcf_data" / "in.vcf", """
     ##fileformat=VCFv4.2
@@ -36,11 +35,11 @@ def multivcf_split1_vcf(tmp_path_factory: pytest.TempPathFactory) -> Path:
     chr1    55   .	C	T	.	    .	    EFF=MIS	GT	    1/0	    1/0 	0/1 	0/0 	1/0 	1/0 	0/1 	0/0 	1/0 	1/1 	0/1 	0/1
     """) # noqa
 
-    return vcf_path
+    return str(vcf_path)
 
 
 @pytest.fixture
-def multivcf_split2_vcf(tmp_path_factory: pytest.TempPathFactory) -> Path:
+def multivcf_split2_vcf(tmp_path_factory: pytest.TempPathFactory) -> str:
     root_path = tmp_path_factory.mktemp("mutlivcf_split1")
     vcf_path = setup_vcf(root_path / "vcf_data" / "in.vcf", """
     ##fileformat=VCFv4.2
@@ -56,11 +55,11 @@ def multivcf_split2_vcf(tmp_path_factory: pytest.TempPathFactory) -> Path:
     chr1    55 	 .	C	T	.   	.   	EFF=MIS	GT  	1/0 	1/1 	1/0 	1/0 	1/0 	1/1 	0/1 	0/1 	./.
     """) # noqa
 
-    return vcf_path
+    return str(vcf_path)
 
 
 @pytest.fixture
-def multivcf_ped(tmp_path_factory: pytest.TempPathFactory) -> Path:
+def multivcf_ped(tmp_path_factory: pytest.TempPathFactory) -> str:
     root_path = tmp_path_factory.mktemp("multivcf")
     ped_path = setup_pedigree(root_path / "ped_data" / "in.ped", """
     familyId	personId	dadId	momId	sex	status	role	phenotype
@@ -86,19 +85,16 @@ def multivcf_ped(tmp_path_factory: pytest.TempPathFactory) -> Path:
     f5	        f5.s1   	f5.dad	f5.mom	2	2	    sib	    autism
     """)
 
-    return ped_path
+    return str(ped_path)
 
 
 def test_simple_vcf_loader_multi(
     gpf_instance: GPFInstance,
-    multivcf_split1_vcf: Path,
-    multivcf_split2_vcf: Path,
-    multivcf_ped: Path
+    multivcf_split1_vcf: str,
+    multivcf_split2_vcf: str,
+    multivcf_ped: str
 ) -> None:
-    vcf_filenames = [
-        str(multivcf_split1_vcf),
-        str(multivcf_split2_vcf),
-    ]
+    vcf_filenames = [multivcf_split1_vcf, multivcf_split2_vcf]
     assert all(os.path.exists(fn) for fn in vcf_filenames)
     assert os.path.exists(str(multivcf_ped))
 
@@ -116,37 +112,7 @@ def test_simple_vcf_loader_multi(
 
 
 @pytest.fixture
-def multivcf_original_ped(tmp_path_factory: pytest.TempPathFactory) -> Path:
-    root_path = tmp_path_factory.mktemp("multivcf_original")
-    ped_path = setup_pedigree(root_path / "ped_data" / "in.ped", """
-    familyId	personId	dadId	momId	sex	status	role	phenotype
-    f1	        f1.mom	    0	    0	    2	1	    mom 	unaffected
-    f1	        f1.dad	    0	    0	    1	1	    dad 	unaffected
-    f1	        f1.p1	    f1.dad	f1.mom	1	2	    prb 	autism
-    f1	        f1.s1	    f1.dad	f1.mom	2	2	    sib 	autism
-    f2	        f2.mom	    0	    0	    2	1	    mom 	unaffected
-    f2	        f2.dad	    0	    0	    1	1	    dad 	unaffected
-    f2	        f2.p1	    f2.dad	f2.mom	1	2	    prb 	autism
-    f2	        f2.s1	    f2.dad	f2.mom	2	2	    sib 	autism
-    f3	        f3.mom	    0	    0	    2	1	    mom 	unaffected
-    f3	        f3.dad	    0	    0	    1	1	    dad 	unaffected
-    f3	        f3.p1	    f3.dad	f3.mom	1	2	    prb 	autism
-    f3	        f3.s1	    f3.dad	f3.mom	2	2	    sib 	autism
-    f4	        f4.mom	    0	    0	    2	1	    mom 	unaffected
-    f4	        f4.dad	    0	    0	    1	1	    dad 	unaffected
-    f4	        f4.p1	    f4.dad	f4.mom	1	2	    prb 	autism
-    f4	        f4.s1	    f4.dad	f4.mom	2	2	    sib 	autism
-    f5	        f5.mom	    0	    0	    2	1	    mom 	unaffected
-    f5	        f5.dad	    0	    0	    1	1	    dad 	unaffected
-    f5	        f5.p1	    f5.dad	f5.mom	1	2	    prb 	autism
-    f5	        f5.s1	    f5.dad	f5.mom	2	2	    sib 	autism
-    """)
-
-    return ped_path
-
-
-@pytest.fixture
-def multivcf_original_vcf(tmp_path_factory: pytest.TempPathFactory) -> Path:
+def multivcf_original_vcf(tmp_path_factory: pytest.TempPathFactory) -> str:
     root_path = tmp_path_factory.mktemp("multivcf_original")
     vcf_path = setup_vcf(root_path / "vcf_path" / "in.vcf", """
     ##fileformat=VCFv4.2
@@ -162,7 +128,7 @@ def multivcf_original_vcf(tmp_path_factory: pytest.TempPathFactory) -> Path:
     chr1    55   	.	C	T	.	    .   	EFF=MIS	GT  	1/0 	1/0 	0/1	    0/0 	1/0 	1/0 	0/1 	0/0 	1/0 	1/1	    0/1 	0/1 	1/0 	1/1 	1/0	    1/0 	1/0	    1/1 	0/1	    0/1
     """) # noqa
 
-    return vcf_path
+    return str(vcf_path)
 
 
 @pytest.mark.parametrize(
@@ -175,18 +141,18 @@ def multivcf_original_vcf(tmp_path_factory: pytest.TempPathFactory) -> Path:
 def test_vcf_loader_multi(
     request: pytest.FixtureRequest,
     multivcf_files: list[str],
-    multivcf_original_vcf: Path,
-    multivcf_original_ped: Path,
+    multivcf_original_vcf: str,
+    multivcf_ped: str,
     gpf_instance: GPFInstance
 ) -> None:
     # pylint: disable=too-many-locals,invalid-name
 
     multivcf_files = [
-        str(request.getfixturevalue(f)) for f in multivcf_files
+        request.getfixturevalue(f) for f in multivcf_files
     ]
 
-    families = FamiliesLoader(str(multivcf_original_ped)).load()
-    families_multi = FamiliesLoader(str(multivcf_original_ped)).load()
+    families = FamiliesLoader(multivcf_ped).load()
+    families_multi = FamiliesLoader(multivcf_ped).load()
 
     multi_vcf_loader = VcfLoader(
         families_multi, multivcf_files,
@@ -233,7 +199,7 @@ def test_vcf_loader_multi(
 
 
 @pytest.fixture
-def multivcf_missing1(tmp_path_factory: pytest.TempPathFactory) -> Path:
+def multivcf_missing1(tmp_path_factory: pytest.TempPathFactory) -> str:
     root_path = tmp_path_factory.mktemp("multivcf_missing1")
     vcf_path = setup_vcf(root_path / "vcf_data" / "in.vcf", """
     ##fileformat=VCFv4.2
@@ -246,11 +212,11 @@ def multivcf_missing1(tmp_path_factory: pytest.TempPathFactory) -> Path:
     chr1	44  	.	G	A	.	    .	    EFF=SYN	GT  	0/1 	0/0 	0/1 	0/0	    0/1 	0/0 	0/0 	0/1 	0/1 	0/0 	0/1 	0/0
     chr1	54  	.	C	T	.	    .	    EFF=MIS	GT  	1/0 	1/0 	0/1 	0/0	    1/0 	1/0 	0/1 	0/0 	1/0 	1/1 	0/1 	0/1
     """) # noqa
-    return vcf_path
+    return str(vcf_path)
 
 
 @pytest.fixture
-def multivcf_missing2(tmp_path_factory: pytest.TempPathFactory) -> Path:
+def multivcf_missing2(tmp_path_factory: pytest.TempPathFactory) -> str:
     root_path = tmp_path_factory.mktemp("multivcf_missing2")
     vcf_path = setup_vcf(root_path / "vcf_data" / "in.vcf", """
     ##fileformat=VCFv4.2
@@ -265,7 +231,7 @@ def multivcf_missing2(tmp_path_factory: pytest.TempPathFactory) -> Path:
     chr1    44   	  .	  G	    A	    .   	.	    EFF=SYN	GT  	0/1 	0/0 	0/1	    0/0 	0/1	    0/0 	0/0 	0/1
     chr1    54  	  .	  C     T	    .   	.	    EFF=MIS	GT  	1/0 	1/1 	1/0	    1/0 	1/0	    1/1 	0/1	    0/1
     """) # noqa
-    return vcf_path
+    return str(vcf_path)
 
 
 @pytest.mark.parametrize(
@@ -274,17 +240,14 @@ def multivcf_missing2(tmp_path_factory: pytest.TempPathFactory) -> Path:
 def test_multivcf_loader_fill_missing(
     fill_mode: list[Union[str, int]],
     fill_value: list[Union[str, int]],
-    multivcf_ped: Path,
-    multivcf_missing1: Path,
-    multivcf_missing2: Path,
+    multivcf_ped: str,
+    multivcf_missing1: str,
+    multivcf_missing2: str,
     gpf_instance: GPFInstance
 ) -> None:
     # pylint: disable=too-many-locals
 
-    multivcf_files = [
-        str(multivcf_missing1),
-        str(multivcf_missing2),
-    ]
+    multivcf_files = [multivcf_missing1, multivcf_missing2]
     families = FamiliesLoader(multivcf_ped).load()
     params = {
         "vcf_include_reference_genotypes": True,
@@ -364,10 +327,10 @@ def test_multivcf_loader_fill_missing(
 
 
 def test_collect_filenames_local(
-    multivcf_split1_vcf: Path,
-    multivcf_split2_vcf: Path,
+    multivcf_split1_vcf: str,
+    multivcf_split2_vcf: str,
 ) -> None:
-    vcf_filenames = [str(multivcf_split1_vcf), str(multivcf_split2_vcf)]
+    vcf_filenames = [multivcf_split1_vcf, multivcf_split2_vcf]
 
     params = {
         "vcf_chromosomes": "1;2;3;4;5;6;7;8;9;10;11;12;13;14;15;16;17;18;X;Y"
@@ -381,8 +344,8 @@ def test_collect_filenames_local(
 
 
 def test_collect_filenames_s3(
-    multivcf_split1_vcf: Path,
-    multivcf_split2_vcf: Path,
+    multivcf_split1_vcf: str,
+    multivcf_split2_vcf: str,
     s3_filesystem: Any,
     s3_tmp_bucket_url: Any,
     mocker: Any
