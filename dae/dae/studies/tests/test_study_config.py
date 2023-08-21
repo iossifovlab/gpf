@@ -77,11 +77,11 @@ def study_config(tmp_path_factory: pytest.TempPathFactory) -> Box:
     return GPFConfigParser.load_config(str(config_file), study_config_schema)
 
 
-def test_study_config_year(study_config):
+def test_study_config_year(study_config) -> None:
     assert study_config.year is None
 
 
-def test_study_config_genotype_storage(study_config):
+def test_study_config_genotype_storage(study_config) -> None:
     assert study_config.genotype_storage.id == "genotype_filesystem"
 
 
@@ -99,7 +99,7 @@ def test_study_config_genotype_storage(study_config):
 )
 def test_study_config_attr_access(
     study_config, option_name, expected_value
-):
+) -> None:
     assert getattr(study_config, option_name) == expected_value
 
 
@@ -114,12 +114,12 @@ def test_study_config_attr_access(
 )
 def test_study_config_genotype_browser(
     study_config, option_name, expected_value
-):
+) -> None:
     genotype_browser_config = study_config.genotype_browser
     assert getattr(genotype_browser_config, option_name) == expected_value
 
 
-def test_study_config_genotype_browser_pheno_filters(study_config):
+def test_study_config_genotype_browser_pheno_filters(study_config) -> None:
     genotype_browser_config = study_config.genotype_browser
     assert genotype_browser_config.family_filters == {
         "categorical": {
@@ -141,15 +141,15 @@ def test_study_config_genotype_browser_pheno_filters(study_config):
     }
 
 
-def test_study_config_genotype_browser_columns(study_config):
+def test_study_config_genotype_browser_columns(study_config) -> None:
     assert len(study_config.genotype_browser.columns.genotype) == 2
 
 
-def test_study_config_genotype_browser_pheno_columns(study_config):
+def test_study_config_genotype_browser_pheno_columns(study_config) -> None:
     assert len(study_config.genotype_browser.columns.phenotype) == 2
 
 
-def test_quads_f1_files_and_tables(study_config):
+def test_quads_f1_files_and_tables(study_config) -> None:
     assert study_config.genotype_storage.files.variants[0].path.endswith(
         "data/quads_f1.vcf"
     )
@@ -158,7 +158,7 @@ def test_quads_f1_files_and_tables(study_config):
     )
 
 
-def test_study_config_files(study_config):
+def test_study_config_files(study_config) -> None:
     assert study_config.genotype_storage.files is not None
     assert study_config.genotype_storage.files.pedigree is not None
     assert study_config.genotype_storage.files.pedigree.path.endswith(
