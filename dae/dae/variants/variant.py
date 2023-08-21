@@ -317,7 +317,7 @@ class SummaryAllele(core.Allele):
         self._details: Optional[VariantDetails] = None
 
         self._effects = AlleleEffects.from_string(effect) if effect else None
-
+        self.matched_gene_effects: list[EffectGene] = []
         self._attributes: Dict[str, Any] = {
             "allele_index": allele_index,
             "transmission_type": transmission_type
@@ -594,7 +594,6 @@ class SummaryVariant:
         self._alleles: list[SummaryAllele] = alleles
         self._allele_count: int = len(self.alleles)
         self._matched_alleles: list[int] = []
-        self.matched_gene_effects: list[EffectGene] = []
 
         self._chromosome: str = self.ref_allele.chromosome
         self._position: int = self.ref_allele.position
@@ -824,6 +823,11 @@ class SummaryVariant:
     @property
     def matched_alleles_indexes(self) -> list[int]:
         return self._matched_alleles
+
+    @property
+    def matched_gene_effects(self) -> set[EffectGene]:
+        return set.union(
+            *[set(aa.matched_gene_effects) for aa in self.alt_alleles])
 
     @property
     def transmission_type(self) -> TransmissionType:

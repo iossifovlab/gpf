@@ -25,7 +25,6 @@ from dae.variants.variant import \
     SummaryVariant, \
     VariantDetails
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -492,8 +491,6 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
             self._inheritance_in_members = {}
         else:
             self._inheritance_in_members = inheritance_in_members
-
-        # self._build_family_alleles()
 
     def _build_family_alleles(self) -> None:
         assert self._family_alleles is None
