@@ -9,6 +9,7 @@ from dae.pedigrees.loader import FamiliesLoader
 from dae.testing.acgt_import import acgt_gpf
 from dae.variants_loaders.vcf.loader import VcfLoader
 
+
 @pytest.fixture
 def gpf_instance(
         tmp_path_factory: pytest.TempPathFactory) -> GPFInstance:
@@ -145,12 +146,85 @@ def test_wild_vcf_loader_simple(
     assert indexes == list(range(len(indexes)))
 
 
-def test_wild_vcf_loader_pedigree(
-        fixture_dirname, gpf_instance_2013):
+@pytest.fixture
+def multivcf_pedigree(
+    tmp_path_factory: pytest.TempPathFactory
+) -> List[str]:
+    path_list = []
 
-    vcf_file1 = fixture_dirname("multi_vcf/multivcf_pedigree1_chr[vc].vcf.gz")
-    vcf_file2 = fixture_dirname("multi_vcf/multivcf_pedigree2_chr[vc].vcf.gz")
-    ped_file = fixture_dirname("multi_vcf/multivcf.ped")
+    root_path = tmp_path_factory.mktemp("multivcf_pedigree1_chr1")
+    setup_vcf(root_path / "vcf_data" / "in_chr1.vcf.gz", """
+    ##fileformat=VCFv4.2
+    ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+    ##INFO=<ID=EFF,Number=1,Type=String,Description="Effect">
+    ##contig=<ID=chr1>
+    ##contig=<ID=chr2>
+    #CHROM	POS	    ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	f1.mom	f1.p1	f2.mom	f2.dad	f2.p1	f2.s1	f3.mom	f3.dad	f3.p1	f3.s1
+    chr1	865582	.	C	T	.	    .   	EFF=SYN	GT  	1/1 	0/1 	1/1 	0/0 	0/1 	0/1 	1/1 	0/0 	0/1 	0/1
+    chr1	865627	.	G	A	.	    .   	EFF=MIS	GT  	0/0 	0/1 	0/0 	1/0 	0/1 	0/0 	0/0 	1/1 	0/1 	1/0
+    chr1	865664	.	G	A	.	    .   	EFF=SYN	GT  	0/1 	0/1 	0/1 	0/0 	0/0 	0/1 	0/1 	0/0 	0/1 	0/0
+    chr1	865691	.	C	T	.	    .   	EFF=MIS	GT  	1/0 	0/1 	1/0 	1/0 	0/1 	0/0 	1/0 	1/1 	0/1 	0/1
+    """) # noqa
+    setup_vcf(root_path / "vcf_data" / "in_chr2.vcf.gz", """
+    ##fileformat=VCFv4.2
+    ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+    ##INFO=<ID=EFF,Number=1,Type=String,Description="Effect">
+    ##contig=<ID=chr1>
+    ##contig=<ID=chr2>
+    #CHROM	POS	    ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	f1.mom	f1.dad	f1.p1	f1.s1	f2.mom	f2.dad	f2.p1	f2.s1	f3.dad	f3.p1
+    chr2	865582	.	C	T	.	    .   	EFF=SYN	GT  	1/1 	0/0 	0/1 	0/1 	1/1 	0/0 	0/1 	0/1 	0/0 	0/1
+    chr2	865627	.	G	A	.	    .   	EFF=MIS	GT  	0/0 	1/0 	0/1 	0/0 	0/0 	1/0 	0/1 	0/0 	1/1 	0/1
+    chr2	865664	.	G	A	.	    .   	EFF=SYN	GT  	0/1 	0/0 	0/1 	0/0 	0/1 	0/0 	0/0 	0/1 	0/0 	0/1
+    chr2	865691	.	C	T	.	    .   	EFF=MIS	GT  	1/0 	1/0 	0/1 	0/0 	1/0 	1/0 	0/1 	0/0 	1/1 	0/1
+    """) # noqa
+
+    path_list.append(
+        str(root_path / "vcf_data" / "in_chr[vc].vcf.gz")
+    )
+    root_path = tmp_path_factory.mktemp("multivcf_pedigree2_chr2")
+    setup_vcf(root_path / "vcf_data" / "in_chr1.vcf.gz", """
+    ##fileformat=VCFv4.2
+    ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+    ##INFO=<ID=EFF,Number=1,Type=String,Description="Effect">
+    ##contig=<ID=chr1>
+    ##contig=<ID=chr2>
+    #CHROM	POS	    ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	f4.mom	f4.dad	f4.p1	f5.mom	f5.dad	f5.p1	f5.s1
+    chr1	865582	.	C	T	.	    .   	EFF=SYN	GT  	1/1 	0/0 	0/1 	1/1 	0/0 	1/0 	0/1
+    chr1	865583	.	G	A	.	    .   	EFF=SYN	GT  	0/0 	1/1 	0/1 	0/0 	1/1 	1/0 	0/1
+    chr1	865624	.	G	A	.	    .   	EFF=MIS	GT  	1/0 	0/0 	1/0 	1/0 	0/0 	1/0 	0/0
+    chr1	865627	.	G	A	.	    .   	EFF=MIS	GT  	0/0 	1/1 	1/0 	0/0 	1/1 	1/0 	1/0
+    chr1	865664	.	G	A	.	    .   	EFF=SYN	GT  	0/1 	0/0 	0/1 	0/1 	0/0 	0/0 	0/1
+    chr1	865691	.	C	T	.	    .   	EFF=MIS	GT  	1/0 	1/1 	1/0 	1/0 	1/1 	0/1 	0/1
+    """) # noqa
+    setup_vcf(root_path / "vcf_data" / "in_chr2.vcf.gz", """
+    ##fileformat=VCFv4.2
+    ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+    ##INFO=<ID=EFF,Number=1,Type=String,Description="Effect">
+    ##contig=<ID=chr1>
+    ##contig=<ID=chr2>
+    #CHROM	POS	    ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	f4.dad	f4.p1	f4.s1	f5.mom	f5.p1
+    chr2	865582	.	C	T	.	    .   	EFF=SYN	GT	    0/0 	0/1 	0/1 	1/1 	1/0
+    chr2	865583	.	G	A	.	    .   	EFF=SYN	GT	    1/1 	0/1 	0/1 	0/0 	1/0
+    chr2	865624	.	G	A	.	    .   	EFF=MIS	GT	    0/0 	1/0 	0/0 	1/0 	1/0
+    chr2	865627	.	G	A	.	    .   	EFF=MIS	GT	    1/1 	1/0 	0/0 	0/0 	1/0
+    chr2	865664	.	G	A	.	    .   	EFF=SYN	GT	    0/0 	0/1 	0/0 	0/1 	0/0
+    chr2	865691	.	C	T	.	    .   	EFF=MIS	GT	    1/1 	1/0 	1/0 	1/0 	0/1
+    """) # noqa
+    path_list.append(
+        str(root_path / "vcf_data" / "in_chr[vc].vcf.gz")
+    )
+    return path_list
+
+
+def test_wild_vcf_loader_pedigree(
+    multivcf_pedigree: List[str],
+    multivcf_ped: str,
+    gpf_instance: GPFInstance
+) -> None:
+
+    vcf_file1 = multivcf_pedigree[0]
+    vcf_file2 = multivcf_pedigree[1]
+    ped_file = multivcf_ped
 
     families_loader = FamiliesLoader(ped_file)
     families = families_loader.load()
@@ -158,7 +232,7 @@ def test_wild_vcf_loader_pedigree(
     variants_loader = VcfLoader(
         families,
         [vcf_file1, vcf_file2],
-        gpf_instance_2013.reference_genome,
+        gpf_instance.reference_genome,
         params={
             "vcf_chromosomes": "1;2",
             "vcf_pedigree_mode": "fixed",
@@ -199,7 +273,10 @@ def test_wild_vcf_loader_pedigree(
 
 
 def test_wild_vcf_loader_pedigree_union(
-        fixture_dirname, gpf_instance_2013):
+    multivcf_pedigree: List[str],
+    multivcf_ped: str,
+    gpf_instance: GPFInstance
+) -> None:
 
     # f1: f1.mom f1.dad f1.p1 f1.s1
     # f2: f2.mom f2.dad f2.p1 f2.s1
@@ -207,9 +284,9 @@ def test_wild_vcf_loader_pedigree_union(
     # f4: f4.mom f4.dad f4.p1 f4.s1
     # f5: f5.mom f5.dad f5.p1 f5.s1
 
-    vcf_file1 = fixture_dirname("multi_vcf/multivcf_pedigree1_chr[vc].vcf.gz")
-    vcf_file2 = fixture_dirname("multi_vcf/multivcf_pedigree2_chr[vc].vcf.gz")
-    ped_file = fixture_dirname("multi_vcf/multivcf.ped")
+    vcf_file1 = multivcf_pedigree[0]
+    vcf_file2 = multivcf_pedigree[1]
+    ped_file = multivcf_ped
 
     families_loader = FamiliesLoader(ped_file)
     families = families_loader.load()
@@ -217,7 +294,7 @@ def test_wild_vcf_loader_pedigree_union(
     variants_loader = VcfLoader(
         families,
         [vcf_file1, vcf_file2],
-        gpf_instance_2013.reference_genome,
+        gpf_instance.reference_genome,
         params={
             "vcf_chromosomes": "1;2",
             "vcf_pedigree_mode": "union",
