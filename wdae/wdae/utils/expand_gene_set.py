@@ -1,13 +1,11 @@
-from typing import Any
 from gpf_instance.gpf_instance import get_wgpf_instance
 
 from datasets_api.permissions import IsDatasetAllowed
 
 
-def expand_gene_set(data: Any, user: dict) -> dict:
+def expand_gene_set(data: dict, user: dict) -> dict:
     """Expand gene set to list of gene symbols."""
     if "geneSet" in data:
-        data = dict(data)
         gene_sets_collection_id = None
 
         query = data.get("geneSet")
@@ -28,10 +26,8 @@ def expand_gene_set(data: Any, user: dict) -> dict:
     return data
 
 
-def expand_gene_syms(data: Any, user: dict) -> dict:
+def expand_gene_syms(data: dict, user: dict) -> dict:
     """Expand gene set symbols."""
-    data = dict(data)
-
     gene_set = None
     query = data.get("geneSet")
     if query is None:
@@ -55,4 +51,4 @@ def expand_gene_syms(data: Any, user: dict) -> dict:
             gene_sets_collection, gene_set
         )
 
-    return gene_set
+    return dict(gene_set)
