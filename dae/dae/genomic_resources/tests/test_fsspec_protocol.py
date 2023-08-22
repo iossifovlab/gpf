@@ -2,22 +2,28 @@
 
 import gzip
 import time
+from typing import Any
+
 import pytest
+from pytest_mock import MockerFixture
 
 from dae.genomic_resources.repository import ReadWriteRepositoryProtocol, \
     GR_CONF_FILE_NAME
+from dae.genomic_resources.fsspec_protocol import FsspecReadWriteProtocol
 from dae.genomic_resources.testing import \
     build_inmemory_test_protocol
 
 
-def test_collect_all_resources(rw_fsspec_proto):
+def test_collect_all_resources(
+        rw_fsspec_proto: FsspecReadWriteProtocol) -> None:
     proto = rw_fsspec_proto
 
     resources = list(proto.collect_all_resources())
     assert len(resources) == 5, resources
 
 
-def test_resource_paths(rw_fsspec_proto):
+def test_resource_paths(
+        rw_fsspec_proto: FsspecReadWriteProtocol) -> None:
     proto = rw_fsspec_proto
 
     res = proto.get_resource("one")
@@ -30,7 +36,8 @@ def test_resource_paths(rw_fsspec_proto):
     assert config_path.endswith("one/genomic_resource.yaml")
 
 
-def test_build_resource_file_state(rw_fsspec_proto):
+def test_build_resource_file_state(
+        rw_fsspec_proto: FsspecReadWriteProtocol) -> None:
     proto = rw_fsspec_proto
     timestamp = 42
     res = proto.get_resource("one")
@@ -51,7 +58,8 @@ def test_build_resource_file_state(rw_fsspec_proto):
     assert state.md5 == "d9636a8dca9e5626851471d1c0ea92b1"
 
 
-def test_save_load_resource_file_state(rw_fsspec_proto):
+def test_save_load_resource_file_state(
+        rw_fsspec_proto: FsspecReadWriteProtocol) -> None:
     proto = rw_fsspec_proto
     timestamp = 42
 
@@ -70,7 +78,8 @@ def test_save_load_resource_file_state(rw_fsspec_proto):
     assert loaded.md5 == "d9636a8dca9e5626851471d1c0ea92b1"
 
 
-def test_collect_resource_entries(rw_fsspec_proto):
+def test_collect_resource_entries(
+        rw_fsspec_proto: FsspecReadWriteProtocol) -> None:
     proto = rw_fsspec_proto
 
     res = proto.get_resource("one")
@@ -87,7 +96,8 @@ def test_collect_resource_entries(rw_fsspec_proto):
     assert entry.size == 0
 
 
-def test_file_exists(rw_fsspec_proto):
+def test_file_exists(
+        rw_fsspec_proto: FsspecReadWriteProtocol) -> None:
     proto = rw_fsspec_proto
 
     res = proto.get_resource("one")
@@ -96,7 +106,8 @@ def test_file_exists(rw_fsspec_proto):
     assert not proto.file_exists(res, "alabala.txt")
 
 
-def test_open_raw_file_text_read(rw_fsspec_proto):
+def test_open_raw_file_text_read(
+        rw_fsspec_proto: FsspecReadWriteProtocol) -> None:
     proto = rw_fsspec_proto
 
     res = proto.get_resource("one")
@@ -106,7 +117,8 @@ def test_open_raw_file_text_read(rw_fsspec_proto):
         assert content == "alabala"
 
 
-def test_open_raw_file_text_write(rw_fsspec_proto):
+def test_open_raw_file_text_write(
+        rw_fsspec_proto: FsspecReadWriteProtocol) -> None:
     proto = rw_fsspec_proto
 
     res = proto.get_resource("one")
@@ -117,7 +129,8 @@ def test_open_raw_file_text_write(rw_fsspec_proto):
     assert proto.file_exists(res, "new_data.txt")
 
 
-def test_open_raw_file_text_write_compression(rw_fsspec_proto):
+def test_open_raw_file_text_write_compression(
+        rw_fsspec_proto: FsspecReadWriteProtocol) -> None:
     proto = rw_fsspec_proto
 
     res = proto.get_resource("one")
@@ -135,7 +148,8 @@ def test_open_raw_file_text_write_compression(rw_fsspec_proto):
         assert content == "new alabala"
 
 
-def test_open_raw_file_text_read_compression(rw_fsspec_proto):
+def test_open_raw_file_text_read_compression(
+        rw_fsspec_proto: FsspecReadWriteProtocol) -> None:
     proto = rw_fsspec_proto
 
     res = proto.get_resource("one")
@@ -153,7 +167,8 @@ def test_open_raw_file_text_read_compression(rw_fsspec_proto):
         assert content == "new alabala"
 
 
-def test_compute_md5_sum(rw_fsspec_proto):
+def test_compute_md5_sum(
+        rw_fsspec_proto: FsspecReadWriteProtocol) -> None:
     proto = rw_fsspec_proto
 
     res = proto.get_resource("one")
@@ -164,7 +179,8 @@ def test_compute_md5_sum(rw_fsspec_proto):
         "d41d8cd98f00b204e9800998ecf8427e"
 
 
-def test_build_manifest(rw_fsspec_proto):
+def test_build_manifest(
+        rw_fsspec_proto: FsspecReadWriteProtocol) -> None:
     proto = rw_fsspec_proto
 
     res = proto.get_resource("one")
@@ -181,7 +197,8 @@ def test_build_manifest(rw_fsspec_proto):
         "d41d8cd98f00b204e9800998ecf8427e"
 
 
-def test_load_manifest(rw_fsspec_proto):
+def test_load_manifest(
+        rw_fsspec_proto: FsspecReadWriteProtocol) -> None:
     proto = rw_fsspec_proto
 
     res = proto.get_resource("one")
@@ -198,7 +215,8 @@ def test_load_manifest(rw_fsspec_proto):
         "d41d8cd98f00b204e9800998ecf8427e"
 
 
-def test_load_missing_manifest(rw_fsspec_proto):
+def test_load_missing_manifest(
+        rw_fsspec_proto: FsspecReadWriteProtocol) -> None:
     proto = rw_fsspec_proto
 
     res = proto.get_resource("one")
@@ -213,7 +231,8 @@ def test_load_missing_manifest(rw_fsspec_proto):
         proto.load_manifest(res)
 
 
-def test_get_manifest(rw_fsspec_proto):
+def test_get_manifest(
+        rw_fsspec_proto: FsspecReadWriteProtocol) -> None:
     proto = rw_fsspec_proto
 
     res = proto.get_resource("one")
@@ -231,7 +250,8 @@ def test_get_manifest(rw_fsspec_proto):
         "d41d8cd98f00b204e9800998ecf8427e"
 
 
-def test_get_missing_manifest(rw_fsspec_proto):
+def test_get_missing_manifest(
+        rw_fsspec_proto: FsspecReadWriteProtocol) -> None:
     proto = rw_fsspec_proto
 
     res = proto.get_resource("one")
@@ -255,7 +275,8 @@ def test_get_missing_manifest(rw_fsspec_proto):
         "d41d8cd98f00b204e9800998ecf8427e"
 
 
-def test_delete_resource_file(rw_fsspec_proto):
+def test_delete_resource_file(
+        rw_fsspec_proto: FsspecReadWriteProtocol) -> None:
 
     # Given
     proto = rw_fsspec_proto
@@ -272,7 +293,9 @@ def test_delete_resource_file(rw_fsspec_proto):
     assert not proto.filesystem.exists(path)
 
 
-def test_copy_resource_file(content_fixture, rw_fsspec_proto):
+def test_copy_resource_file(
+        content_fixture: dict[str, Any],
+        rw_fsspec_proto: FsspecReadWriteProtocol) -> None:
     # Given
     src_proto = build_inmemory_test_protocol(content_fixture)
     proto = rw_fsspec_proto
@@ -286,6 +309,7 @@ def test_copy_resource_file(content_fixture, rw_fsspec_proto):
     # Then
     timestamp = proto.get_resource_file_timestamp(dst_res, "genes.gtf")
 
+    assert state is not None
     assert state.filename == "genes.gtf"
     assert state.timestamp == timestamp
     assert state.md5 == "d9636a8dca9e5626851471d1c0ea92b1"
@@ -294,8 +318,9 @@ def test_copy_resource_file(content_fixture, rw_fsspec_proto):
     assert loaded == state
 
 
-def test_copy_resource(content_fixture, rw_fsspec_proto):
-
+def test_copy_resource(
+        content_fixture: dict[str, Any],
+        rw_fsspec_proto: FsspecReadWriteProtocol) -> None:
     # Given
     src_proto = build_inmemory_test_protocol(content_fixture)
     proto = rw_fsspec_proto
@@ -311,6 +336,7 @@ def test_copy_resource(content_fixture, rw_fsspec_proto):
 
     state = proto.load_resource_file_state(dst_res, "genes.gtf")
 
+    assert state is not None
     assert state.filename == "genes.gtf"
     assert state.timestamp == timestamp
     assert state.timestamp == pytest.approx(time.time(), abs=5)
@@ -319,7 +345,7 @@ def test_copy_resource(content_fixture, rw_fsspec_proto):
 
 def test_update_resource_all_files(
     rw_fsspec_proto: ReadWriteRepositoryProtocol
-):
+) -> None:
     # Given
     src_proto = build_inmemory_test_protocol({
         "sample": {
@@ -342,7 +368,7 @@ def test_update_resource_all_files(
 
 def test_update_resource_specific_file(
     rw_fsspec_proto: ReadWriteRepositoryProtocol
-):
+) -> None:
     # Given
     src_proto = build_inmemory_test_protocol({
         "sample": {
@@ -364,8 +390,9 @@ def test_update_resource_specific_file(
 
 
 def test_build_manifest_should_not_update_existing_resource_state(
-    rw_fsspec_proto: ReadWriteRepositoryProtocol, mocker
-):
+    rw_fsspec_proto: ReadWriteRepositoryProtocol,
+    mocker: MockerFixture
+) -> None:
     # Given
     proto = rw_fsspec_proto
     res = proto.get_resource("one")

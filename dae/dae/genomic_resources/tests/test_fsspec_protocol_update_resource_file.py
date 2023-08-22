@@ -1,14 +1,17 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+from typing import Any
 
 import time
 import pytest
 
 from dae.genomic_resources.testing import \
     build_inmemory_test_protocol
+from dae.genomic_resources.fsspec_protocol import FsspecReadWriteProtocol
 
 
 def test_update_resource_file_when_file_missing(
-        content_fixture, rw_fsspec_proto):
+        content_fixture: dict[str, Any],
+        rw_fsspec_proto: FsspecReadWriteProtocol) -> None:
 
     # Given
     src_proto = build_inmemory_test_protocol(content_fixture)
@@ -31,6 +34,7 @@ def test_update_resource_file_when_file_missing(
 
     timestamp = proto.get_resource_file_timestamp(dst_res, "genes.gtf")
 
+    assert state is not None
     assert state.filename == "genes.gtf"
     assert state.timestamp == timestamp
     assert state.timestamp == pytest.approx(time.time(), abs=5)
@@ -38,7 +42,8 @@ def test_update_resource_file_when_file_missing(
 
 
 def test_update_resource_file_when_state_missing(
-        content_fixture, rw_fsspec_proto):
+        content_fixture: dict[str, Any],
+        rw_fsspec_proto: FsspecReadWriteProtocol) -> None:
 
     # Given
     src_proto = build_inmemory_test_protocol(content_fixture)
@@ -61,13 +66,15 @@ def test_update_resource_file_when_state_missing(
     # Then
     assert proto.file_exists(dst_res, "genes.gtf")
 
+    assert state is not None
     assert state.filename == "genes.gtf"
     assert state.md5 == "d9636a8dca9e5626851471d1c0ea92b1"
     assert proto.filesystem.modified(fileurl) == timestamp
 
 
 def test_update_resource_file_when_changed(
-        content_fixture, rw_fsspec_proto):
+        content_fixture: dict[str, Any],
+        rw_fsspec_proto: FsspecReadWriteProtocol) -> None:
 
     # Given
     src_proto = build_inmemory_test_protocol(content_fixture)
@@ -88,6 +95,7 @@ def test_update_resource_file_when_changed(
 
     timestamp = proto.get_resource_file_timestamp(dst_res, "genes.gtf")
 
+    assert state is not None
     assert state.filename == "genes.gtf"
     assert state.timestamp == timestamp
     assert state.timestamp == pytest.approx(time.time(), abs=5)
@@ -96,7 +104,8 @@ def test_update_resource_file_when_changed(
 
 
 def test_do_not_update_resource_file_when_state_changed_but_file_not(
-        content_fixture, rw_fsspec_proto):
+        content_fixture: dict[str, Any],
+        rw_fsspec_proto: FsspecReadWriteProtocol) -> None:
 
     # Given
     src_proto = build_inmemory_test_protocol(content_fixture)
@@ -106,6 +115,7 @@ def test_do_not_update_resource_file_when_state_changed_but_file_not(
     dst_res = proto.get_resource("sub/two")
 
     state = proto.load_resource_file_state(dst_res, "genes.gtf")
+    assert state is not None
     state.timestamp = 0
 
     proto.save_resource_file_state(dst_res, state)
