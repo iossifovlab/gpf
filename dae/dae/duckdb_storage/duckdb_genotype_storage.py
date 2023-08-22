@@ -54,10 +54,10 @@ class DuckDbGenotypeStorage(GenotypeStorage):
         validator = Validator(cls.VALIDATION_SCHEMA)
         if not validator.validate(config):
             logger.error(
-                "wrong config format for impala genotype storage: %s",
+                "wrong config format for duckdb genotype storage: %s",
                 validator.errors)
             raise ValueError(
-                f"wrong config format for impala storage: "
+                f"wrong config format for duckdb storage: "
                 f"{validator.errors}")
         result = cast(dict, validator.document)
         base_dir = result.get("base_dir")
