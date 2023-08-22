@@ -4,7 +4,7 @@ from gpf_instance.gpf_instance import get_wgpf_instance
 from datasets_api.permissions import IsDatasetAllowed
 
 
-def expand_gene_set(data: dict, user: dict) -> dict:
+def expand_gene_set(data: Any, user: dict) -> dict:
     """Expand gene set to list of gene symbols."""
     if "geneSet" in data:
         data = dict(data)
@@ -28,8 +28,10 @@ def expand_gene_set(data: dict, user: dict) -> dict:
     return data
 
 
-def expand_gene_syms(data: dict, user: dict) -> Any:
+def expand_gene_syms(data: Any, user: dict) -> dict:
     """Expand gene set symbols."""
+    data = dict(data)
+
     gene_set = None
     query = data.get("geneSet")
     if query is None:
