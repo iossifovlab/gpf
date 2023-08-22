@@ -852,14 +852,15 @@ def s3_moto_server_url():
         os.environ["AWS_SECRET_ACCESS_KEY"] = "foo"
     if "AWS_ACCESS_KEY_ID" not in os.environ:
         os.environ["AWS_ACCESS_KEY_ID"] = "foo"
-    from moto.server import ThreadedMotoServer  # type: ignore
-    server = ThreadedMotoServer(ip_address="", port=0)
-    server.start()
-    server_address = server._server.server_address
+    # from moto.server import ThreadedMotoServer  # type: ignore
+    # server = ThreadedMotoServer(ip_address="", port=0)
+    # server.start()
+    # server_address = server._server.server_address
 
-    yield f"http://{server_address[0]}:{server_address[1]}"
+    host = os.environ.get("LOCALSTACK_HOST", "localhost")
+    yield f"http://{host}:4566"
 
-    server.stop()
+    # server.stop()
 
 
 @pytest.fixture(scope="session")
@@ -886,9 +887,10 @@ def s3_filesystem(s3_moto_server_url):
 @pytest.fixture()
 def s3_tmp_bucket_url(s3_client, s3_filesystem):
     """Create a bucket called 'test-bucket' and return its URL."""
-    bucket_url = "s3://test-bucket"
-    s3_filesystem.mkdir(bucket_url, acl="public-read")
+    with tempfile.TemporaryDirectory("s3_test_bucket") as tmp_path:
+        bucket_url = f"s3:/{tmp_path}"
+        s3_filesystem.mkdir(bucket_url, acl="public-read")
 
-    yield bucket_url
+        yield bucket_url
 
-    s3_filesystem.rm("s3://test-bucket", recursive=True)
+        s3_filesystem.rm(bucket_url, recursive=True)

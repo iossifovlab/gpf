@@ -111,7 +111,7 @@ function main() {
   {
     local docker_img_iossifovlab_mamba_base_tag
     docker_img_iossifovlab_mamba_base_tag="$(e docker_img_iossifovlab_mamba_base_tag)"
-    build_docker_image_create "$gpf_dev_image" . ./Dockerfile "$docker_img_iossifovlab_mamba_base_tag"
+    build_docker_image_create "$gpf_dev_image" . ./Dockerfile.seqpipe "$docker_img_iossifovlab_mamba_base_tag"
     gpf_dev_image_ref="$(e docker_img_gpf_dev)"
   }
 
@@ -121,6 +121,20 @@ function main() {
     local -A ctx_network
     build_run_ctx_init ctx:ctx_network "persistent" "network"
     build_run_ctx_persist ctx:ctx_network
+  }
+
+  # run localstack
+  build_stage "Run localstack"
+  {
+
+      local -A ctx_localstack
+      build_run_ctx_init ctx:ctx_localstack "persistent" "container" "localstack/localstack" \
+          "cmd-from-image" "no-def-mounts" \
+          'ports:4566,4510-4559' \
+          --hostname localstack --network "${ctx_network["network_id"]}"
+
+      defer_ret build_run_ctx_reset ctx:ctx_localstack
+      build_run_ctx_persist ctx:ctx_localstack
   }
 
   # run MailHog
@@ -282,6 +296,7 @@ EOT
       --env TEST_REMOTE_HOST="gpfremote" \
       --env DAE_HDFS_HOST="impala" \
       --env DAE_IMPALA_HOST="impala" \
+      --env LOCALSTACK_HOST="localstack" \
       --env WDAE_EMAIL_HOST="mailhog"
 
     defer_ret build_run_ctx_reset
@@ -316,6 +331,7 @@ EOT
       --env TEST_REMOTE_HOST="gpfremote" \
       --env DAE_HDFS_HOST="impala" \
       --env DAE_IMPALA_HOST="impala" \
+      --env LOCALSTACK_HOST="localstack" \
       --env WDAE_EMAIL_HOST="mailhog"
 
     defer_ret build_run_ctx_reset
@@ -355,6 +371,7 @@ EOT
       --env TEST_REMOTE_HOST="gpfremote" \
       --env DAE_HDFS_HOST="impala" \
       --env DAE_IMPALA_HOST="impala" \
+      --env LOCALSTACK_HOST="localstack" \
       --env WDAE_EMAIL_HOST="mailhog"
 
     defer_ret build_run_ctx_reset
@@ -394,6 +411,7 @@ EOT
       --env TEST_REMOTE_HOST="gpfremote" \
       --env DAE_HDFS_HOST="impala" \
       --env DAE_IMPALA_HOST="impala" \
+      --env LOCALSTACK_HOST="localstack" \
       --env WDAE_EMAIL_HOST="mailhog"
 
     defer_ret build_run_ctx_reset

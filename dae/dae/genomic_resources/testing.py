@@ -411,29 +411,31 @@ def _process_server_manager(
     proc.join()
 
 
-@contextlib.contextmanager
-def s3_threaded_test_server() -> Generator[str, None, None]:
-    """Run threaded s3 moto server."""
-    # pylint: disable=protected-access,import-outside-toplevel
-    from moto.server import ThreadedMotoServer  # type: ignore
-    server = ThreadedMotoServer(ip_address="", port=0)
-    server.start()
-    server_address = server._server.server_address
-    endpoint_url = f"http://{server_address[0]}:{server_address[1]}"
+# @contextlib.contextmanager
+# def s3_threaded_test_server() -> Generator[str, None, None]:
+#     """Run threaded s3 moto server."""
+#     # pylint: disable=protected-access,import-outside-toplevel
+#     from moto.server import ThreadedMotoServer  # type: ignore
+#     server = ThreadedMotoServer(ip_address="", port=0)
+#     server.start()
+#     server_address = server._server.server_address
+#     endpoint_url = f"http://{server_address[0]}:{server_address[1]}"
 
-    yield endpoint_url
+#     yield endpoint_url
 
-    logger.info(
-        "Stopping S3 Moto thread at %s", endpoint_url)
-    server.stop()
-    logger.info(
-        "[DONE] Stopping S3 Moto thread at %s", endpoint_url)
+#     logger.info(
+#         "Stopping S3 Moto thread at %s", endpoint_url)
+#     server.stop()
+#     logger.info(
+#         "[DONE] Stopping S3 Moto thread at %s", endpoint_url)
 
 
 @contextlib.contextmanager
 def s3_process_test_server() -> Generator[str, None, None]:
-    with _process_server_manager(s3_threaded_test_server) as endpoint_url:
-        yield endpoint_url
+    # with _process_server_manager(s3_threaded_test_server) as endpoint_url:
+    #     yield endpoint_url
+    host = os.environ.get("LOCALSTACK_HOST", "localhost")
+    yield f"http://{host}:4566"
 
 
 def s3_test_protocol(endpoint_url: str) -> FsspecReadWriteProtocol:
@@ -455,7 +457,7 @@ def build_s3_test_bucket(endpoint_url: str) -> str:
             os.environ["AWS_SECRET_ACCESS_KEY"] = "foo"
         if "AWS_ACCESS_KEY_ID" not in os.environ:
             os.environ["AWS_ACCESS_KEY_ID"] = "foo"
-        S3FileSystem.clear_instance_cache()
+        # S3FileSystem.clear_instance_cache()
         s3filesystem = S3FileSystem(
             anon=False, client_kwargs={"endpoint_url": endpoint_url})
         s3filesystem.invalidate_cache()

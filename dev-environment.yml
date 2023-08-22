@@ -6,10 +6,14 @@ channels:
   - conda-forge
   - bioconda
   - iossifovlab
+  - defaults
 dependencies:
-  - dask-jobqueue=0.8.1
-  - dask-kubernetes=2023.3
   - versioneer=0.28
+  - dask-kubernetes=2023.8
+  - dask-jobqueue=0.8
+  # - moto
+  # - awscli
+  # - awscli-local
   - sphinx=6.1
   - sphinx_rtd_theme=1.2
   - sphinx-copybutton=0.5.1
@@ -25,7 +29,6 @@ dependencies:
   - pytest-mock=3.11.1
   - pytest-django=4.5.2
   - pytest-doctestplus=0.12.1
-  - moto
   - pylint=2.17.4
   - pandas-stubs=2.0
   - django-stubs=4.2
