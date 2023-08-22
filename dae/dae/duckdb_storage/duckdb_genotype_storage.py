@@ -3,20 +3,22 @@ from __future__ import annotations
 import os
 import re
 import logging
-from typing import Any, cast, Optional
-from contextlib import closing
+from typing import Any, cast, Optional, ContextManager, Callable
+import functools
 
 import duckdb
 from cerberus import Validator
 
 from dae.utils import fs_utils
+from dae.utils.debug_closing import closing
 from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.genomic_resources.gene_models import GeneModels
 
 from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.schema2_storage.schema2_import_storage import Schema2DatasetLayout
-from dae.duckdb_storage.duckdb_variants import DuckDbVariants
+from dae.duckdb_storage.duckdb_variants import DuckDbVariants, \
+    duckdb_db_connect, duckdb_global_connect
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +44,9 @@ class DuckDbGenotypeStorage(GenotypeStorage):
 
     def __init__(self, storage_config: dict[str, Any]):
         super().__init__(storage_config)
-        self.connection: Optional[duckdb.DuckDBPyConnection] = None
+        self.connection_factory: Optional[Callable[
+            [],
+            ContextManager[duckdb.DuckDBPyConnection]]] = None
 
     @classmethod
     def validate_and_normalize_config(cls, config: dict) -> dict:
@@ -69,7 +73,7 @@ class DuckDbGenotypeStorage(GenotypeStorage):
         return "duckdb"
 
     def start(self) -> DuckDbGenotypeStorage:
-        if self.connection:
+        if self.connection_factory:
             logger.warning(
                 "starting already started DuckDb genotype storage: <%s>",
                 self.storage_id)
@@ -80,19 +84,20 @@ class DuckDbGenotypeStorage(GenotypeStorage):
             db_name = self._base_dir_join(db_name)
             dirname = os.path.dirname(db_name)
             os.makedirs(dirname, exist_ok=True)
-            self.connection = duckdb.connect(f"{db_name}")
+            logger.info("connection to duckdb database: %s", db_name)
+            self.connection_factory = \
+                functools.partial(duckdb_db_connect, db_name, False)
             return self
 
-        self.connection = duckdb.connect()
+        self.connection_factory = duckdb_global_connect
         return self
 
     def shutdown(self) -> DuckDbGenotypeStorage:
-        if self.connection is None:
+        if self.connection_factory is None:
             logger.warning(
                 "trying to shutdown already stopped DuckDbGenotypeStorage")
             return self
-        self.connection.close()
-        self.connection = None
+        self.connection_factory = None
         return self
 
     def close(self) -> None:
@@ -163,25 +168,28 @@ class DuckDbGenotypeStorage(GenotypeStorage):
             f"parquet_scan('{paths.meta}')")
 
     def _create_table(self, parquet_path: str, table_name: str) -> None:
-        assert self.connection is not None
-        query = f"DROP TABLE IF EXISTS {table_name}"
-        self.connection.sql(query)
+        assert self.connection_factory is not None
+        with self.connection_factory() as connection:
+            assert connection is not None
+            query = f"DROP TABLE IF EXISTS {table_name}"
+            connection.sql(query)
 
-        query = f"CREATE TABLE {table_name} AS " \
-            f"SELECT * FROM parquet_scan('{parquet_path}')"
-        self.connection.sql(query)
+            query = f"CREATE TABLE {table_name} AS " \
+                f"SELECT * FROM parquet_scan('{parquet_path}')"
+            connection.sql(query)
 
     def _create_table_partitioned(
             self, parquet_path: str, table_name: str,
             partition: list[tuple[str, str]]) -> None:
-        assert self.connection is not None
-        query = f"DROP TABLE IF EXISTS {table_name}"
-        self.connection.sql(query)
+        assert self.connection_factory is not None
+        with self.connection_factory() as connection:
+            query = f"DROP TABLE IF EXISTS {table_name}"
+            connection.sql(query)
 
-        dataset_path = f"{parquet_path}/{ '*/' * len(partition)}*.parquet"
-        query = f"CREATE TABLE {table_name} AS " \
-            f"SELECT * FROM parquet_scan('{dataset_path}')"
-        self.connection.sql(query)
+            dataset_path = f"{parquet_path}/{ '*/' * len(partition)}*.parquet"
+            query = f"CREATE TABLE {table_name} AS " \
+                f"SELECT * FROM parquet_scan('{dataset_path}')"
+            connection.sql(query)
 
     def import_dataset(
             self,
@@ -262,19 +270,6 @@ class DuckDbGenotypeStorage(GenotypeStorage):
 
         full_path = fs_utils.join(base_dir, parquet_path)
         return f"parquet_scan('{full_path}')"
-
-    # def _create_parquet_scans_table_layout(
-    #         self, study_id: str, tables: dict) -> Schema2DatasetLayout:
-    #     tables_layout = Schema2DatasetLayout(
-    #         study_id,
-    #         tables["pedigree"],
-    #         tables.get("summary"),
-    #         tables.get("family"),
-    #         tables["meta"])
-    #     if self.get_base_dir() is not None:
-
-    #     if tables_layout.pedigree.startswith("parquet_scans"):
-    #         pass
 
     def build_backend(
             self, study_config: dict,
