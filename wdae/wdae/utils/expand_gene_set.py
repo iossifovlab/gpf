@@ -1,4 +1,4 @@
-from typing import Any
+from typing import cast
 from gpf_instance.gpf_instance import get_wgpf_instance
 
 from datasets_api.permissions import IsDatasetAllowed
@@ -7,7 +7,6 @@ from datasets_api.permissions import IsDatasetAllowed
 def expand_gene_set(data: dict, user: dict) -> dict:
     """Expand gene set to list of gene symbols."""
     if "geneSet" in data:
-        data = dict(data)
         gene_sets_collection_id = None
 
         query = data.get("geneSet")
@@ -28,7 +27,7 @@ def expand_gene_set(data: dict, user: dict) -> dict:
     return data
 
 
-def expand_gene_syms(data: dict, user: dict) -> Any:
+def expand_gene_syms(data: dict, user: dict) -> dict:
     """Expand gene set symbols."""
     gene_set = None
     query = data.get("geneSet")
@@ -53,4 +52,4 @@ def expand_gene_syms(data: dict, user: dict) -> Any:
             gene_sets_collection, gene_set
         )
 
-    return gene_set
+    return cast(dict, gene_set)
