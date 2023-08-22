@@ -342,6 +342,7 @@ def reload_datasets(gpf_instance):
         if genotype_data is None:
             continue
         Dataset.set_broken(genotype_data_id, False)
+        Dataset.update_name(genotype_data_id, genotype_data.name)
         if not genotype_data.studies:
             continue
 

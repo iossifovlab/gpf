@@ -1,9 +1,10 @@
 import logging
 
+from typing import Any
 from rest_framework import permissions
 
 from django.conf import settings
-from django.contrib.auth.models import Group
+from django.contrib.auth.models import Group, User
 from django.utils.encoding import force_str
 
 from gpf_instance.gpf_instance import get_wgpf_instance
@@ -249,46 +250,45 @@ def get_allowed_genotype_studies(user, dataset):
 
 def get_dataset_info(dataset_id):
     """Return a dictionary describing a Dataset object."""
-    gpf_instance = get_wgpf_instance()
-    study_wrapper = gpf_instance.get_wdae_wrapper(dataset_id)
-    if study_wrapper is None:
-        logger.error("Could not find study wrapper for %s", dataset_id)
-        return None
     dataset = get_wdae_dataset(dataset_id)
     if dataset is None:
         logger.error("Could not find WDAE dataset for %s", dataset_id)
         return None
     return {
-        "datasetName": study_wrapper.name,
-        "datasetId": dataset_id,
+        "datasetName": dataset.dataset_name,
+        "datasetId": dataset.dataset_id,
         "broken": dataset.broken
     }
 
 
-def get_directly_allowed_genotype_data(user):
+def get_directly_allowed_genotype_data(user: User) -> list[dict[str, Any]]:
     """Return list of genotype data the user has direct permissions to."""
     gpf_instance = get_wgpf_instance()
     dataset_ids = gpf_instance.get_genotype_data_ids()
     user_groups = get_user_groups(user)
+    datasets = {
+        dataset.dataset_id: dataset
+        for dataset in Dataset.objects.all()  # pylint: disable=no-member
+    }
 
     result = []
 
     for dataset_id in dataset_ids:
-        if not user_groups & get_dataset_groups(dataset_id):
-            continue
-
-        try:
-            result.append(get_dataset_info(dataset_id))
-        except ValueError:
-            logger.warning("Dataset %s is broken.", dataset_id)
-            dataset = get_wdae_dataset(dataset_id)
-            if dataset is None:
-                continue
+        if dataset_id not in datasets:
+            logger.warning(
+                "Dataset %s found in DAE, but not in WDAE!", dataset_id
+            )
             result.append({
                 "datasetName": dataset_id,
                 "datasetId": dataset_id,
-                "broken": dataset.broken
+                "broken": True
             })
+
+        dataset = datasets[dataset_id]
+        if not user_groups & get_dataset_groups(dataset):
+            continue
+
+        result.append(get_dataset_info(dataset))
 
     return sorted(
         result,
