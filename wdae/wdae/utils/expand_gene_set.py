@@ -1,3 +1,4 @@
+from typing import cast
 from gpf_instance.gpf_instance import get_wgpf_instance
 
 from datasets_api.permissions import IsDatasetAllowed
@@ -51,4 +52,4 @@ def expand_gene_syms(data: dict, user: dict) -> dict:
             gene_sets_collection, gene_set
         )
 
-    return dict(gene_set)
+    return cast(dict, gene_set)
