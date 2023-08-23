@@ -50,7 +50,7 @@ function main() {
   # cleanup
   build_stage "Cleanup"
   {
-    build_run_ctx_init "container" "ubuntu:20.04"
+    build_run_ctx_init "container" "ubuntu:22.04"
     defer_ret build_run_ctx_reset
 
     build_run rm -f ./dae/dae/__build__.py
@@ -136,10 +136,15 @@ function main() {
     #   defer_ret build_run_ctx_reset ctx:ctx_localstack
     #   build_run_ctx_persist ctx:ctx_localstack
 
-      docker run --rm -d \
+      build_run_local docker run --rm -d \
         --network "${ctx_network["network_id"]}" \
         --hostname localstack \
         localstack/localstack
+
+    #   docker run --rm -d \
+    #     --network "B_u32ecb239_iossifovlab.gpf_ctx_network_switch-to-using-localstack_2023.8.2-70-g4464b00e5-0" \
+    #     --hostname localstack \
+    #     localstack/localstack
 
   }
 
