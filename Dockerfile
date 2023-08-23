@@ -1,4 +1,4 @@
-FROM condaforge/mambaforge:latest
+FROM --platform=linux/amd64 condaforge/mambaforge:latest
 
 ARG SOURCE_DIR="."
 
