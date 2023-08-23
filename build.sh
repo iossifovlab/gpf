@@ -99,7 +99,7 @@ function main() {
         fi
     fi
 
-    build_run echo "$(ee 'gpf_version')"
+    build_run echo "${gpf_version}"
 
   }
 
@@ -440,7 +440,6 @@ EOT
 
     build_run rm -rf dae/.coverage*
 
-    local gpf_version=$(ee gpf_version)
     local gpf_tag=$(e gpf_tag)
     local __gpf_build_no=$(e __gpf_build_no)
 
