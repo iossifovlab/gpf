@@ -146,14 +146,21 @@ class EffectAnnotatorAdapter(AnnotatorBase):
 
         length = len(annotatable)
         if isinstance(annotatable, VCFAllele):
-            effects = self.effect_annotator.annotate_allele(
-                chrom=annotatable.chromosome,
-                pos=annotatable.position,
-                ref=annotatable.reference,
-                alt=annotatable.alternative,
-                variant_type=annotatable.type,
-                length=length
-            )
+            try:
+                effects = self.effect_annotator.annotate_allele(
+                    chrom=annotatable.chromosome,
+                    pos=annotatable.position,
+                    ref=annotatable.reference,
+                    alt=annotatable.alternative,
+                    variant_type=annotatable.type,
+                    length=length
+                )
+            except Exception:  # pylint: disable=broad-except
+                logger.error(
+                    "unable to create effect annotation for allele %s",
+                    annotatable, exc_info=True)
+                return self._not_found(result)
+
         elif length > self._region_length_cutoff:
             return self._region_length_cutoff_effect(result, annotatable)
         elif isinstance(annotatable, CNVAllele):
