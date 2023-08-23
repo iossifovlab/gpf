@@ -127,24 +127,14 @@ function main() {
   build_stage "Run localstack"
   {
 
-    #   local -A ctx_localstack
-    #   build_run_ctx_init ctx:ctx_localstack "persistent" "container" "localstack/localstack" \
-    #       "cmd-from-image" "no-def-mounts" \
-    #       'ports:4566,4510-4559' \
-    #       --hostname localstack --network "${ctx_network["network_id"]}"
+       local -A ctx_localstack
+       build_run_ctx_init ctx:ctx_localstack "persistent" "container" "localstack/localstack" \
+           "cmd-from-image" "no-def-mounts" \
+           'ports:4566,4510-4559' \
+           --hostname localstack --network "${ctx_network["network_id"]}" --workdir /opt/code/localstack/
 
-    #   defer_ret build_run_ctx_reset ctx:ctx_localstack
-    #   build_run_ctx_persist ctx:ctx_localstack
-
-      build_run_local docker run --rm -d \
-        --network "${ctx_network["network_id"]}" \
-        --hostname localstack \
-        localstack/localstack
-
-    #   docker run --rm -d \
-    #     --network "B_u32ecb239_iossifovlab.gpf_ctx_network_switch-to-using-localstack_2023.8.2-70-g4464b00e5-0" \
-    #     --hostname localstack \
-    #     localstack/localstack
+       defer_ret build_run_ctx_reset ctx:ctx_localstack
+       build_run_ctx_persist ctx:ctx_localstack
 
   }
 
