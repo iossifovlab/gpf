@@ -89,16 +89,16 @@ class EffectAnnotatorAdapter(AnnotatorBase):
             promoter_len=self._promoter_len
         )
 
-    def close(self):
+    def close(self) -> None:
         self.genome.close()
         super().close()
 
-    def open(self):
+    def open(self) -> Annotator:
         self.genome.open()
         self.gene_models.load()
         return super().open()
 
-    def _not_found(self, attributes):
+    def _not_found(self, attributes: dict[str, Any]) -> dict[str, Any]:
         effect_type = "unknown"
         effect = AnnotationEffect(effect_type)
         full_desc = AnnotationEffect.effects_description([effect])
