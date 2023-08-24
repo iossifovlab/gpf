@@ -198,6 +198,7 @@ export class GeneSetsComponent extends StatefulComponent implements OnInit {
       },
     }).bind('focus', () => {
       dropdown.val('');
+      self.onSelect(null);
       dropdown.autocomplete('search');
     });
   }

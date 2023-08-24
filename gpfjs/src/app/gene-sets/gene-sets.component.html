@@ -53,7 +53,7 @@
         [disabled]="
           selectedGeneSetsCollection?.types?.length > 0 && object.keys(geneSetsLocalState.geneSetsTypes).length === 0
         ">
-        <input id="sets" />
+        <textarea id="sets" placeholder="Select or start typing to search"></textarea>
       </fieldset>
 
       <div *ngIf="selectedGeneSet">
