@@ -119,7 +119,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   public ngAfterViewInit(): void {
-    const dropdown = $('#tags') as any;
+    const dropdown = $('#genes') as any;
     dropdown.autocomplete({
       source: (request, response) => {
         this.geneService
