@@ -94,10 +94,11 @@ export class GeneSetsComponent extends StatefulComponent implements OnInit {
         return of(null);
       })
     );
-
+    this.isLoading = true;
     this.geneSetsResult.subscribe(geneSets => {
       this.geneSets = geneSets.sort((a, b) => a.name.localeCompare(b.name));
       this.fillDropdown();
+      this.isLoading = false;
       this.store.selectOnce(state => state.geneSetsState).subscribe((state) => {
         if (!state.geneSet || !state.geneSet.geneSet) {
           return;
