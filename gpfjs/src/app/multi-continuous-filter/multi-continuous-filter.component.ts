@@ -47,7 +47,7 @@ export class MultiContinuousFilterComponent extends StatefulComponent implements
         };
         this.selectedMeasure = selection;
         await this.waitForSelectorComponent();
-        this.measureSelectorComponent.selectMeasure(this.selectedMeasure.name);
+        this.measureSelectorComponent.selectMeasure(this.selectedMeasure);
       }
     });
   }

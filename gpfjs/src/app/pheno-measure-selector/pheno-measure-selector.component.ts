@@ -29,32 +29,33 @@ export class PhenoMeasureSelectorComponent implements AfterViewInit {
   public ngAfterViewInit(): void {
     this.loadingMeasures = true;
     const datasetId = this.datasetsService.getSelectedDataset().id;
-    var self = this;
+    const self = this;
     this.measuresService.getContinuousMeasures(datasetId).pipe(first()).subscribe(measures => {
       this.measures = measures;
       this.measuresChange.emit(this.measures);
       this.loadingMeasures = false;
-      const dropdown = ($('#tags') as any);
+      const dropdown = $('#tags') as any;
       dropdown.autocomplete({
         minLength: 0,
         delay: 0,
         source: this.measures.map(measure => measure.name),
         select: function(event, ui) { 
-          self.selectMeasure(ui.item.value);
+          self.measures.forEach(element => {
+            if(element.name === ui.item.value) {
+              self.selectMeasure(element);
+            }
+          });
           dropdown.trigger('blur');
         },
       }).bind('focus', () => {
         dropdown.val('');
         dropdown.autocomplete('search');
+        self.selectMeasure(null);
       });
     });
   }
 
-  public selectMeasure(measureName: string, sendEvent: boolean = true): void {
-    const measure = this.measures.find(measure => measure.name === measureName);
-    if (!measure) {
-      return;
-    }
+  public selectMeasure(measure: ContinuousMeasure, sendEvent: boolean = true): void {
     this.selectedMeasure = measure;
     this.searchString = measure ? measure.name : '';
     if (sendEvent) {

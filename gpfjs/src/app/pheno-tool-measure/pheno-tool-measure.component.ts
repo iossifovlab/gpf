@@ -65,7 +65,7 @@ export class PhenoToolMeasureComponent extends StatefulComponent implements OnIn
         if (state.measureId) {
           this.selectedMeasure = measures.find(m => m.name === state.measureId);
           await this.waitForSelectorComponent();
-          this.measureSelectorComponent.selectMeasure(this.selectedMeasure.name, false);
+          this.measureSelectorComponent.selectMeasure(this.selectedMeasure, false);
         }
         this.normalizeBy = state.normalizeBy.length ? state.normalizeBy as Regression[] : [];
         this.updateState();
