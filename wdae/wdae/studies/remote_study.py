@@ -2,6 +2,7 @@ from dae.configuration.gpf_config_parser import FrozenBox
 from dae.studies.study import GenotypeData
 from dae.pedigrees.family import Person, Family, FamiliesData
 from dae.person_sets import PersonSetCollection
+from dae.pedigrees.family_tag_builder import FamilyTagsBuilder
 
 
 class RemoteGenotypeData(GenotypeData):
@@ -53,6 +54,8 @@ class RemoteGenotypeData(GenotypeData):
                 family_members.append(Person(**person_json))
             families[family_id] = Family.from_persons(family_members)
         self._families = FamiliesData.from_families(families)
+        tagger = FamilyTagsBuilder()
+        tagger.tag_families_data(self._families)
 
     def _build_person_set_collection(self, person_set_collection_id):
         raise NotImplementedError()
