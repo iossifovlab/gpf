@@ -1,7 +1,8 @@
 import logging
 
-from typing import Any, cast
+from typing import cast, Optional
 from urllib.parse import urlparse
+from fsspec.spec import AbstractFileSystem
 from fsspec.core import url_to_fs
 import pyarrow as pa
 import pyarrow.parquet as pq
@@ -10,7 +11,9 @@ import pyarrow.parquet as pq
 logger = logging.getLogger(__name__)
 
 
-def url_to_pyarrow_fs(filename: str, filesystem: Any = None):
+def url_to_pyarrow_fs(
+        filename: str,
+        filesystem: Optional[AbstractFileSystem] = None) -> pa.fs.FileSystem:
     """Turn URL into pyarrow filesystem instance.
 
     Parameters
@@ -39,7 +42,9 @@ def url_to_pyarrow_fs(filename: str, filesystem: Any = None):
     return pa_fs, filename
 
 
-def merge_parquets(in_files: list[str], out_file: str, delete_in_files=True):
+def merge_parquets(
+        in_files: list[str], out_file: str,
+        delete_in_files: bool = True) -> None:
     """Merge `in_files` into one large file called `out_file`."""
     try:
         _try_merge_parquets(in_files, out_file, delete_in_files)
@@ -51,7 +56,8 @@ def merge_parquets(in_files: list[str], out_file: str, delete_in_files=True):
         raise
 
 
-def _try_merge_parquets(in_files, out_file, delete_in_files):
+def _try_merge_parquets(
+        in_files: list[str], out_file: str, delete_in_files: bool) -> None:
     assert len(in_files) > 0
     out_parquet = None
 
