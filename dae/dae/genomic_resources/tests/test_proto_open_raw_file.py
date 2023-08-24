@@ -1,9 +1,13 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 
 import gzip
+from typing import Any, Generator
+
 import pytest
 
-from dae.genomic_resources.repository import GR_CONF_FILE_NAME
+from dae.genomic_resources.repository import GR_CONF_FILE_NAME, \
+    RepositoryProtocol
+
 from dae.genomic_resources.testing import build_inmemory_test_protocol, \
     build_filesystem_test_protocol, s3_test_protocol, \
     build_http_test_protocol, copy_proto_genomic_resources
@@ -14,7 +18,10 @@ BREH_GZ = gzip.compress(b"breh")
 
 @pytest.fixture(params=["file", "s3", "http", "inmemory"])
 def fsspec_proto(
-        request, content_fixture, tmp_path_factory, s3_server_fixture):
+    request: pytest.FixtureRequest,
+    content_fixture: dict[str, Any],
+    tmp_path_factory: pytest.TempPathFactory
+) -> Generator[RepositoryProtocol, None, None]:
 
     src_proto = build_inmemory_test_protocol(
         content={
@@ -33,7 +40,7 @@ def fsspec_proto(
         yield proto
         return
     if scheme == "s3":
-        proto = s3_test_protocol(s3_server_fixture)
+        proto = s3_test_protocol()
         copy_proto_genomic_resources(
             proto,
             src_proto)
@@ -52,7 +59,7 @@ def fsspec_proto(
     raise ValueError(f"unexpected protocol scheme: <{scheme}>")
 
 
-def test_open_raw_files(fsspec_proto):
+def test_open_raw_files(fsspec_proto: RepositoryProtocol) -> None:
     res = fsspec_proto.get_resource("one")
     files = sorted([fname for fname, _ in res.get_manifest().get_files()])
     assert files == ["data.txt", "data.txt.gz", GR_CONF_FILE_NAME]

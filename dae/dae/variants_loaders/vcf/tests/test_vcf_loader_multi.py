@@ -4,10 +4,11 @@ from typing import Any, Union
 import pytest
 import numpy as np
 from dae.variants_loaders.vcf.loader import VcfLoader
-from dae.genomic_resources.testing import setup_pedigree, setup_vcf
+from dae.genomic_resources.testing import setup_pedigree, setup_vcf, \
+    build_s3_test_filesystem, build_s3_test_bucket
 from dae.gpf_instance.gpf_instance import GPFInstance
-from dae.testing.acgt_import import acgt_gpf
 from dae.pedigrees.loader import FamiliesLoader
+from dae.testing.acgt_import import acgt_gpf
 
 
 @pytest.fixture
@@ -334,10 +335,11 @@ def test_collect_filenames_local(
 def test_collect_filenames_s3(
     multivcf_split1_vcf: str,
     multivcf_split2_vcf: str,
-    s3_filesystem: Any,
-    s3_tmp_bucket_url: Any,
     mocker: Any
 ) -> None:
+    s3_filesystem = build_s3_test_filesystem()
+    s3_tmp_bucket_url = build_s3_test_bucket(s3_filesystem)
+
     s3_filesystem.put(str(multivcf_split1_vcf),
                       f"{s3_tmp_bucket_url}/dir/multivcf_split1.vcf")
     s3_filesystem.put(str(multivcf_split2_vcf),

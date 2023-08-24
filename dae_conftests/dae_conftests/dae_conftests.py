@@ -844,53 +844,53 @@ def grr_fixture(fixture_dirname):
     return build_genomic_resource_repository(repositories)
 
 
-@pytest.fixture(scope="session")
-def s3_moto_server_url():
-    """Start a moto (i.e. mocked) s3 server and return its URL."""
-    # pylint: disable=protected-access,import-outside-toplevel
-    if "AWS_SECRET_ACCESS_KEY" not in os.environ:
-        os.environ["AWS_SECRET_ACCESS_KEY"] = "foo"
-    if "AWS_ACCESS_KEY_ID" not in os.environ:
-        os.environ["AWS_ACCESS_KEY_ID"] = "foo"
-    # from moto.server import ThreadedMotoServer  # type: ignore
-    # server = ThreadedMotoServer(ip_address="", port=0)
-    # server.start()
-    # server_address = server._server.server_address
+# @pytest.fixture(scope="session")
+# def s3_moto_server_url():
+#     """Start a moto (i.e. mocked) s3 server and return its URL."""
+#     # pylint: disable=protected-access,import-outside-toplevel
+#     if "AWS_SECRET_ACCESS_KEY" not in os.environ:
+#         os.environ["AWS_SECRET_ACCESS_KEY"] = "foo"
+#     if "AWS_ACCESS_KEY_ID" not in os.environ:
+#         os.environ["AWS_ACCESS_KEY_ID"] = "foo"
+#     # from moto.server import ThreadedMotoServer  # type: ignore
+#     # server = ThreadedMotoServer(ip_address="", port=0)
+#     # server.start()
+#     # server_address = server._server.server_address
 
-    host = os.environ.get("LOCALSTACK_HOST", "localhost")
-    yield f"http://{host}:4566"
+#     host = os.environ.get("LOCALSTACK_HOST", "localhost")
+#     yield f"http://{host}:4566"
 
-    # server.stop()
-
-
-@pytest.fixture(scope="session")
-def s3_client(s3_moto_server_url):
-    """Return a boto client connected to the moto server."""
-    from botocore.session import Session  # type: ignore
-
-    session = Session()
-    client = session.create_client("s3", endpoint_url=s3_moto_server_url)
-    return client
+#     # server.stop()
 
 
-@pytest.fixture()
-def s3_filesystem(s3_moto_server_url):
-    from s3fs.core import S3FileSystem  # type: ignore
+# @pytest.fixture(scope="session")
+# def s3_client(s3_moto_server_url):
+#     """Return a boto client connected to the moto server."""
+#     from botocore.session import Session  # type: ignore
 
-    S3FileSystem.clear_instance_cache()
-    s3 = S3FileSystem(anon=False,
-                      client_kwargs={"endpoint_url": s3_moto_server_url})
-    s3.invalidate_cache()
-    yield s3
+#     session = Session()
+#     client = session.create_client("s3", endpoint_url=s3_moto_server_url)
+#     return client
 
 
-@pytest.fixture()
-def s3_tmp_bucket_url(s3_client, s3_filesystem):
-    """Create a bucket called 'test-bucket' and return its URL."""
-    with tempfile.TemporaryDirectory("s3_test_bucket") as tmp_path:
-        bucket_url = f"s3:/{tmp_path}"
-        s3_filesystem.mkdir(bucket_url, acl="public-read")
+# @pytest.fixture()
+# def s3_filesystem(s3_moto_server_url):
+#     from s3fs.core import S3FileSystem  # type: ignore
 
-        yield bucket_url
+#     S3FileSystem.clear_instance_cache()
+#     s3 = S3FileSystem(anon=False,
+#                       client_kwargs={"endpoint_url": s3_moto_server_url})
+#     s3.invalidate_cache()
+#     yield s3
 
-        s3_filesystem.rm(bucket_url, recursive=True)
+
+# @pytest.fixture()
+# def s3_tmp_bucket_url(s3_client, s3_filesystem):
+#     """Create a bucket called 'test-bucket' and return its URL."""
+#     with tempfile.TemporaryDirectory("s3_test_bucket") as tmp_path:
+#         bucket_url = f"s3:/{tmp_path}"
+#         s3_filesystem.mkdir(bucket_url, acl="public-read")
+
+#         yield bucket_url
+
+#         s3_filesystem.rm(bucket_url, recursive=True)

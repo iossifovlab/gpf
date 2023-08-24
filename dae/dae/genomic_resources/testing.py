@@ -15,10 +15,11 @@ from typing import Any, Dict, Union, cast, Generator, \
     Tuple, ContextManager, List, Optional
 from collections.abc import Callable
 import multiprocessing as mp
+from functools import partial
 
 from http.server import HTTPServer  # ThreadingHTTPServer
+from s3fs.core import S3FileSystem
 
-from functools import partial
 
 import pysam
 
@@ -430,17 +431,18 @@ def _process_server_manager(
 #         "[DONE] Stopping S3 Moto thread at %s", endpoint_url)
 
 
-@contextlib.contextmanager
-def s3_process_test_server() -> Generator[str, None, None]:
+def s3_test_server_endpoint() -> str:
     # with _process_server_manager(s3_threaded_test_server) as endpoint_url:
     #     yield endpoint_url
     host = os.environ.get("LOCALSTACK_HOST", "localhost")
-    yield f"http://{host}:4566"
+    return f"http://{host}:4566"
 
 
-def s3_test_protocol(endpoint_url: str) -> FsspecReadWriteProtocol:
+def s3_test_protocol() -> FsspecReadWriteProtocol:
     """Build an S3 fsspec testing protocol on top of existing S3 server."""
-    bucket_url = build_s3_test_bucket(endpoint_url)
+    endpoint_url = s3_test_server_endpoint()
+    s3filesystem = build_s3_test_filesystem()
+    bucket_url = build_s3_test_bucket(s3filesystem)
     proto = cast(
         FsspecReadWriteProtocol,
         build_fsspec_protocol(
@@ -448,24 +450,29 @@ def s3_test_protocol(endpoint_url: str) -> FsspecReadWriteProtocol:
     return proto
 
 
-def build_s3_test_bucket(endpoint_url: str) -> str:
+def build_s3_test_filesystem(
+        endpoint_url: Optional[str] = None) -> S3FileSystem:
+    """Create an S3 fsspec filesystem connected to the S3 server."""
+    if "AWS_SECRET_ACCESS_KEY" not in os.environ:
+        os.environ["AWS_SECRET_ACCESS_KEY"] = "foo"
+    if "AWS_ACCESS_KEY_ID" not in os.environ:
+        os.environ["AWS_ACCESS_KEY_ID"] = "foo"
+    # S3FileSystem.clear_instance_cache()
+    if endpoint_url is None:
+        endpoint_url = s3_test_server_endpoint()
+    assert endpoint_url is not None
+    s3filesystem = S3FileSystem(
+        anon=False, client_kwargs={"endpoint_url": endpoint_url})
+    s3filesystem.invalidate_cache()
+    return s3filesystem
+
+
+def build_s3_test_bucket(s3filesystem: S3FileSystem) -> str:
     """Create an s3 test buckent."""
     with tempfile.TemporaryDirectory("s3_test_bucket") as tmp_path:
-        # pylint: disable=import-outside-toplevel
-        from s3fs.core import S3FileSystem  # type: ignore
-        if "AWS_SECRET_ACCESS_KEY" not in os.environ:
-            os.environ["AWS_SECRET_ACCESS_KEY"] = "foo"
-        if "AWS_ACCESS_KEY_ID" not in os.environ:
-            os.environ["AWS_ACCESS_KEY_ID"] = "foo"
-        # S3FileSystem.clear_instance_cache()
-        s3filesystem = S3FileSystem(
-            anon=False, client_kwargs={"endpoint_url": endpoint_url})
-        s3filesystem.invalidate_cache()
+        # s3filesystem = build_s3_test_filesystem(endpoint_url)
         bucket_url = f"s3:/{tmp_path}"
         s3filesystem.mkdir(bucket_url, acl="public-read")
-        logger.warning(
-            "S3 moto server at %s with bucket %s",
-            endpoint_url, bucket_url)
         return bucket_url
 
 
@@ -473,9 +480,10 @@ def build_s3_test_bucket(endpoint_url: str) -> str:
 def build_s3_test_server() -> Generator[
         Tuple[str, str], None, None]:
     """Run an S3 moto server."""
-    with s3_process_test_server() as endpoint_url:
-        bucket_url = build_s3_test_bucket(endpoint_url)
-        yield (bucket_url, endpoint_url)
+    endpoint_url = s3_test_server_endpoint()
+    s3filesystem = build_s3_test_filesystem(endpoint_url)
+    bucket_url = build_s3_test_bucket(s3filesystem)
+    yield (bucket_url, endpoint_url)
 
 
 @contextlib.contextmanager
@@ -487,20 +495,19 @@ def build_s3_test_protocol(
     The S3 moto server is populated with resource from filesystem GRR pointed
     by the root_path.
     """
-    # pylint: disable=protected-access,import-outside-toplevel
+    endpoint_url = s3_test_server_endpoint()
+    s3filesystem = build_s3_test_filesystem(endpoint_url)
+    bucket_url = build_s3_test_bucket(s3filesystem)
 
-    with s3_process_test_server() as endpoint_url:
-        bucket_url = build_s3_test_bucket(endpoint_url)
+    proto = cast(
+        FsspecReadWriteProtocol,
+        build_fsspec_protocol(
+            str(bucket_url), bucket_url, endpoint_url=endpoint_url))
+    copy_proto_genomic_resources(
+        proto,
+        build_filesystem_test_protocol(root_path))
 
-        proto = cast(
-            FsspecReadWriteProtocol,
-            build_fsspec_protocol(
-                str(bucket_url), bucket_url, endpoint_url=endpoint_url))
-        copy_proto_genomic_resources(
-            proto,
-            build_filesystem_test_protocol(root_path))
-
-        yield proto
+    yield proto
 
 
 def copy_proto_genomic_resources(

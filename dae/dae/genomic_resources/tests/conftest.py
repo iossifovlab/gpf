@@ -13,7 +13,6 @@ from dae.genomic_resources.testing import convert_to_tab_separated, \
     setup_directories
 from dae.genomic_resources.testing import \
     s3_test_protocol, \
-    s3_process_test_server, \
     copy_proto_genomic_resources
 
 logger = logging.getLogger(__name__)
@@ -59,18 +58,11 @@ def content_fixture() -> dict[str, Any]:
     }
 
 
-@pytest.fixture(scope="module")
-def s3_server_fixture() -> Generator[str, None, None]:
-    with s3_process_test_server() as endpoint_url:
-        yield endpoint_url
-
-
 @pytest.fixture(params=["file", "s3"])
 def rw_fsspec_proto(
     request: pytest.FixtureRequest,
     content_fixture: dict[str, Any],
     tmp_path_factory: pytest.TempPathFactory,
-    s3_server_fixture: str
 ) -> Generator[FsspecReadWriteProtocol, None, None]:
 
     root_path = tmp_path_factory.mktemp("rw_fsspec_proto")
@@ -81,7 +73,7 @@ def rw_fsspec_proto(
         yield build_filesystem_test_protocol(root_path)
         return
     if scheme == "s3":
-        proto = s3_test_protocol(s3_server_fixture)
+        proto = s3_test_protocol()
         copy_proto_genomic_resources(
             proto,
             build_filesystem_test_protocol(root_path))
