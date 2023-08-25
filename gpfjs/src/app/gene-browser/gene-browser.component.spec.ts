@@ -61,7 +61,7 @@ class MockQueryService {
     return of([] as any);
   }
 
-  public getSummaryVariants(filter: object): Observable<Object> {
+  public getSummaryVariants(filter: object): Observable<object> {
     return of([]);
   }
 
@@ -243,7 +243,7 @@ describe('GeneBrowserComponent', () => {
     });
   });
 
-  it('should test download', () => {
+  it('should test download', async() => {
     const mockEvent = {
       target: {
         queryData: {
@@ -254,7 +254,7 @@ describe('GeneBrowserComponent', () => {
     };
 
     document.getElementById('genes').textContent = 'POGZ';
-    component.submitGeneRequest();
+    await component.submitGeneRequest();
     component.onSubmit(mockEvent as any);
 
     expect(mockEvent.target.queryData.value).toStrictEqual(JSON.stringify({
@@ -292,6 +292,7 @@ describe('GeneBrowserComponent', () => {
     }));
     expect(mockEvent.target.submit).toHaveBeenCalledTimes(1);
   });
+
   it('should cancel queries on router change', () => {
     const stopSpy = jest.spyOn(loadingService, 'setLoadingStop');
     const cancelSpy = jest.spyOn(mockQueryService, 'cancelStreamPost');
@@ -303,11 +304,11 @@ describe('GeneBrowserComponent', () => {
     expect(cancelSpy).toHaveBeenCalledTimes(1);
   });
 
-  it('should cancel request on loading service interrupt', () => {
+  it('should cancel request on loading service interrupt', async() => {
     const spyOnSummaryVariants = jest.spyOn(mockQueryService, 'getSummaryVariants');
     const spyOnCancelSummaryPost = jest.spyOn(mockQueryService, 'cancelStreamPost');
     document.getElementById('genes').textContent = 'CHD8';
-    component.submitGeneRequest();
+    await component.submitGeneRequest();
     expect(spyOnSummaryVariants).toHaveBeenCalledTimes(1);
     loadingService.interruptEvent.emit(true);
     expect(spyOnSummaryVariants).toHaveBeenCalledTimes(1);
