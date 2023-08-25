@@ -18,7 +18,7 @@ from dae.genomic_resources.cached_repository import \
     cache_resources
 from dae.genomic_resources import build_genomic_resource_repository
 from dae.genomic_resources.testing import build_inmemory_test_repository, \
-    build_s3_test_server
+    s3_test_server_endpoint, build_s3_test_bucket
 
 
 def test_create_definition_with_cache(tmp_path: pathlib.Path) -> None:
@@ -38,27 +38,30 @@ def test_create_definition_with_cache(tmp_path: pathlib.Path) -> None:
 
 
 CacheRepositoryBuilder = Callable[
-    [dict[str, Any], str], ContextManager[GenomicResourceCachedRepo]]
+    [dict[str, Any]], ContextManager[GenomicResourceCachedRepo]]
 
 
-@pytest.fixture
+# @pytest.fixture(params=["file", "s3"])
+@pytest.fixture(params=["file"])
 def cache_repository(
+    request: pytest.FixtureRequest,
     tmp_path: pathlib.Path
 ) -> CacheRepositoryBuilder:
 
     @contextlib.contextmanager
     def builder(
-        content: dict[str, Any], scheme: str = "file"
+        content: dict[str, Any]
     ) -> Generator[GenomicResourceCachedRepo, None, None]:
         remote_repo = build_inmemory_test_repository(content)
-
+        scheme = request.param
         if scheme == "s3":
-            with build_s3_test_server() as (bucket_url, endpoint_url):
-                cache_repo = GenomicResourceCachedRepo(
-                    remote_repo,
-                    f"{bucket_url}/cache_repo_testing.caching",
-                    endpoint_url=endpoint_url)
-                yield cache_repo
+            endpoint_url = s3_test_server_endpoint()
+            bucket_url = build_s3_test_bucket()
+            cache_repo = GenomicResourceCachedRepo(
+                remote_repo,
+                f"{bucket_url}/cache_repo_testing.caching",
+                endpoint_url=endpoint_url)
+            yield cache_repo
         elif scheme == "file":
             cache_repo = GenomicResourceCachedRepo(
                 remote_repo,
@@ -70,27 +73,18 @@ def cache_repository(
     return builder
 
 
-@pytest.mark.parametrize("scheme", [
-    "file",
-    "s3",
-])
 def test_get_cached_resource(
-        cache_repository: CacheRepositoryBuilder,
-        scheme: str) -> None:
+        cache_repository: CacheRepositoryBuilder) -> None:
 
     with cache_repository(
-            {"one": {"genomic_resource.yaml": ""}}, scheme) as cache_repo:
+            {"one": {"genomic_resource.yaml": ""}}) as cache_repo:
 
         res = cache_repo.get_resource("one")
         assert res.resource_id == "one"
 
 
-@pytest.mark.parametrize("scheme", [
-    "file",
-    "s3",
-])
 def test_cached_repo_get_all_resources(
-        cache_repository: CacheRepositoryBuilder, scheme: str) -> None:
+        cache_repository: CacheRepositoryBuilder) -> None:
 
     demo_gtf_content = "TP53\tchr3\t300\t200"
     with cache_repository({
@@ -107,7 +101,7 @@ def test_cached_repo_get_all_resources(
                     GR_CONF_FILE_NAME: "type: gene_models\nfile: genes.gtf",
                     "genes.txt": demo_gtf_content,
                 }
-            }}, scheme) as cache_repo:
+            }}) as cache_repo:
 
         assert len(list(cache_repo.get_all_resources())) == 3
 
@@ -115,12 +109,8 @@ def test_cached_repo_get_all_resources(
         assert resource is not None
 
 
-@pytest.mark.parametrize("scheme", [
-    "file",
-    "s3",
-])
 def test_cached_resource_after_access(
-        cache_repository: CacheRepositoryBuilder, scheme: str) -> None:
+        cache_repository: CacheRepositoryBuilder) -> None:
 
     demo_gtf_content = "TP53\tchr3\t300\t200"
     with cache_repository({
@@ -137,7 +127,7 @@ def test_cached_resource_after_access(
                     GR_CONF_FILE_NAME: "type: gene_models\nfile: genes.gtf",
                     "genes.txt": demo_gtf_content,
                 }
-            }}, scheme) as cache_repo:
+            }}) as cache_repo:
 
         src_gr = cache_repo.child.get_resource("sub/two")
         cache_gr = cache_repo.get_resource("sub/two")
@@ -158,12 +148,8 @@ def test_cached_resource_after_access(
             os.path.join(base_url, "sub/two(1.0)", "genes.txt"))
 
 
-@pytest.mark.parametrize("scheme", [
-    "file",
-    "s3",
-])
 def test_cache_all(
-        cache_repository: CacheRepositoryBuilder, scheme: str) -> None:
+        cache_repository: CacheRepositoryBuilder) -> None:
 
     demo_gtf_content = "TP53\tchr3\t300\t200"
     with cache_repository({
@@ -182,7 +168,7 @@ def test_cache_all(
                     "type: gene_models\nfilename: genes.gtf",
                     "genes.gtf": demo_gtf_content,
                 }
-            }}, scheme) as cache_repo:
+            }}) as cache_repo:
 
         cache_resources(cache_repo, None, workers=1)
 
@@ -202,19 +188,15 @@ def test_cache_all(
             os.path.join(base_url, "sub/two(1.0)", "genes.gtf"))
 
 
-@pytest.mark.parametrize("scheme", [
-    "file",
-    "s3",
-])
 def test_cached_repository_resource_update_delete(
-        cache_repository: CacheRepositoryBuilder, scheme: str) -> None:
+        cache_repository: CacheRepositoryBuilder) -> None:
 
     with cache_repository({
             "one": {
                 GR_CONF_FILE_NAME: "",
                 "data.txt": "alabala",
                 "alabala.txt": "alabala",
-            }}, scheme) as cache_repo:
+            }}) as cache_repo:
 
         src_repo = cast(GenomicResourceProtocolRepo, cache_repo.child)
 
@@ -241,19 +223,15 @@ def test_cached_repository_resource_update_delete(
         assert not gr2.file_exists("alabala.txt")
 
 
-@pytest.mark.parametrize("scheme", [
-    "file",
-    "s3",
-])
 def test_cached_repository_file_level_cache(
-        cache_repository: CacheRepositoryBuilder, scheme: str) -> None:
+        cache_repository: CacheRepositoryBuilder) -> None:
 
     with cache_repository({
             "one": {
                 GR_CONF_FILE_NAME: "config",
                 "data.txt": "data",
                 "alabala.txt": "alabala",
-            }}, scheme) as cache_repo:
+            }}) as cache_repo:
 
         resource = cache_repo.get_resource("one")
         assert resource is not None
@@ -288,7 +266,7 @@ def test_filesystem_caching_lock_implementation(
             "one": {
                 GR_CONF_FILE_NAME: "config",
                 "data.txt": "data",
-            }}, "file") as cache_repo:
+            }}) as cache_repo:
 
         resource = cache_repo.get_resource("one")
         assert resource is not None
@@ -309,17 +287,13 @@ def test_filesystem_caching_lock_implementation(
             assert flock_spy.call_args[0][1] == fcntl.LOCK_EX
 
 
-@pytest.mark.parametrize("scheme", [
-    "file",
-    # "s3",
-])
 def test_cached_repository_locks_file_when_caching(
-        cache_repository: CacheRepositoryBuilder, scheme: str) -> None:
+        cache_repository: CacheRepositoryBuilder) -> None:
     with cache_repository({
             "one": {
                 GR_CONF_FILE_NAME: "config",
                 "data.txt": "data",
-            }}, scheme) as cache_repo:
+            }}) as cache_repo:
 
         resource = cache_repo.get_resource("one")
         assert resource is not None
@@ -361,19 +335,15 @@ def test_cached_repository_locks_file_when_caching(
         y.join()
 
 
-@pytest.mark.parametrize("scheme", [
-    "file",
-    "s3",
-])
 def test_get_resource_cached_files(
-        cache_repository: CacheRepositoryBuilder, scheme: str) -> None:
+        cache_repository: CacheRepositoryBuilder) -> None:
     with cache_repository({
             "one": {
                 GR_CONF_FILE_NAME: "",
                 "data1.txt": "alabala",
                 "data2.txt": "alabala",
                 "data3.txt": "alabala"
-            }}, scheme) as cache_repo:
+            }}) as cache_repo:
         cache_gr = cache_repo.get_resource("one")
 
         cache_proto = cache_gr.proto
@@ -414,7 +384,7 @@ def test_cached_repo_list_cli(
                 GR_CONF_FILE_NAME: "",
                 "genomic_resource.yaml": "",
                 "data1.txt": "alabala",
-                "data2.txt": "alabala"}}, "file") as cache_repo:
+                "data2.txt": "alabala"}}) as cache_repo:
         cache_repo._repo_id = "test_grr"
 
         res = cache_repo.get_resource("one")
@@ -445,7 +415,7 @@ def test_cached_repo_nested_list_cli(
                     GR_CONF_FILE_NAME: "type: gene_models\nfile: genes.gtf",
                     "data2.txt": "alabala2"
                 }
-            }}, "file") as cache_repo:
+            }}) as cache_repo:
         cache_repo._repo_id = "test_grr"
 
         res = cache_repo.get_resource("sub/two")

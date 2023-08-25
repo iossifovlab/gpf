@@ -11,8 +11,8 @@ import gzip
 import importlib
 import textwrap
 
-from typing import Any, Dict, Union, cast, Generator, \
-    Tuple, ContextManager, List, Optional
+from typing import Any, Union, cast, Generator, \
+    ContextManager, Optional
 from collections.abc import Callable
 import multiprocessing as mp
 from functools import partial
@@ -59,7 +59,7 @@ def convert_to_tab_separated(content: str) -> str:
 
 def setup_directories(
         root_dir: pathlib.Path,
-        content: Union[str, Dict[str, Any]]) -> None:
+        content: Union[str, dict[str, Any]]) -> None:
     """Set up directory and subdirectory structures using the content."""
     root_dir = pathlib.Path(root_dir)
     root_dir.parent.mkdir(parents=True, exist_ok=True)
@@ -234,7 +234,7 @@ def setup_empty_gene_models(out_path: pathlib.Path) -> GeneModels:
 
 
 def build_inmemory_test_protocol(
-        content: Dict[str, Any]) -> FsspecReadWriteProtocol:
+        content: dict[str, Any]) -> FsspecReadWriteProtocol:
     """Build and return an embedded fsspec protocol for testing."""
     with tempfile.TemporaryDirectory("embedded_test_protocol") as root_path:
         proto = build_inmemory_protocol(root_path, root_path, content)
@@ -366,7 +366,7 @@ def build_http_test_protocol(
 
 
 def _internal_process_runner(
-        module_name: str, server_manager_name: str, args: List[Any],
+        module_name: str, server_manager_name: str, args: list[Any],
         start_queue: mp.Queue, stop_queue: mp.Queue) -> None:
     module = importlib.import_module(module_name)
     server_manager = getattr(module, server_manager_name)
@@ -467,23 +467,14 @@ def build_s3_test_filesystem(
     return s3filesystem
 
 
-def build_s3_test_bucket(s3filesystem: S3FileSystem) -> str:
+def build_s3_test_bucket(s3filesystem: Optional[S3FileSystem] = None) -> str:
     """Create an s3 test buckent."""
     with tempfile.TemporaryDirectory("s3_test_bucket") as tmp_path:
-        # s3filesystem = build_s3_test_filesystem(endpoint_url)
+        if s3filesystem is None:
+            s3filesystem = build_s3_test_filesystem()
         bucket_url = f"s3:/{tmp_path}"
         s3filesystem.mkdir(bucket_url, acl="public-read")
         return bucket_url
-
-
-@contextlib.contextmanager
-def build_s3_test_server() -> Generator[
-        Tuple[str, str], None, None]:
-    """Run an S3 moto server."""
-    endpoint_url = s3_test_server_endpoint()
-    s3filesystem = build_s3_test_filesystem(endpoint_url)
-    bucket_url = build_s3_test_bucket(s3filesystem)
-    yield (bucket_url, endpoint_url)
 
 
 @contextlib.contextmanager

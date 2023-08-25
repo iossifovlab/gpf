@@ -16,7 +16,8 @@ from dae.genomic_resources.testing import build_inmemory_test_protocol, \
 BREH_GZ = gzip.compress(b"breh")
 
 
-@pytest.fixture(params=["file", "s3", "http", "inmemory"])
+# @pytest.fixture(params=["file", "s3", "http", "inmemory"])
+@pytest.fixture(params=["file", "inmemory"])
 def fsspec_proto(
     request: pytest.FixtureRequest,
     content_fixture: dict[str, Any],

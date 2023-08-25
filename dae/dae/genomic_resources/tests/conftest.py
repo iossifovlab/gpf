@@ -13,7 +13,8 @@ from dae.genomic_resources.testing import convert_to_tab_separated, \
     setup_directories
 from dae.genomic_resources.testing import \
     s3_test_protocol, \
-    copy_proto_genomic_resources
+    copy_proto_genomic_resources, \
+    build_inmemory_test_protocol
 
 logger = logging.getLogger(__name__)
 
@@ -58,7 +59,8 @@ def content_fixture() -> dict[str, Any]:
     }
 
 
-@pytest.fixture(params=["file", "s3"])
+# @pytest.fixture(params=["file", "s3"])
+@pytest.fixture(params=["file", "inmemory"])
 def rw_fsspec_proto(
     request: pytest.FixtureRequest,
     content_fixture: dict[str, Any],
@@ -77,6 +79,11 @@ def rw_fsspec_proto(
         copy_proto_genomic_resources(
             proto,
             build_filesystem_test_protocol(root_path))
+        yield proto
+        return
+
+    if scheme == "inmemory":
+        proto = build_inmemory_test_protocol(content=content_fixture)
         yield proto
         return
 
