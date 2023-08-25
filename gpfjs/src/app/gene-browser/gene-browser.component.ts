@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, AfterViewInit, ViewChild } from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
 import { ActivatedRoute, NavigationStart, Params, Router } from '@angular/router';
 import { Location } from '@angular/common';
 import { GeneService } from 'app/gene-browser/gene.service';
@@ -28,6 +28,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy, AfterViewInit {
     this.drawTransmittedIcons();
     this.drawEffectTypesIcons();
   }
+  @ViewChild('geneSymbolInput') public geneSymbolInput: ElementRef;
 
   public selectedGene: Gene;
   public geneSymbol = '';
@@ -146,11 +147,13 @@ export class GeneBrowserComponent implements OnInit, OnDestroy, AfterViewInit {
     this.location.replaceState(`datasets/${this.selectedDatasetId}/gene-browser`);
   }
 
-  public async submitGeneRequest(geneSymbol?: string): Promise<void> {
+  public async submitGeneRequest(): Promise<void> {
     if (this.showError) {
       return;
     }
-    this.geneSymbol = document.getElementById('tags')['value'];
+
+    this.geneSymbol = (this.geneSymbolInput.nativeElement as HTMLTextAreaElement).value;
+
     try {
       this.selectedGene = await this.geneService.getGene(
         this.geneSymbol.trim()

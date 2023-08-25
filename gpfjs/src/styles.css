@@ -1,3 +1,5 @@
+@import url("jquery-ui.css");
+
 html,
 body,
 material-app {
@@ -203,7 +205,7 @@ label {
 .dropdown-menu {
   padding: 0;
 }
-
+angular
 .dropdown-item.active,
 .dropdown-item:active {
   background-color: #2a6395;
