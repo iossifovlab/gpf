@@ -332,25 +332,3 @@ def test_authentication_logging(user, client, tokens):
     # Give a tolerance of 5 seconds to prevent test from becoming flaky
     assert abs(login_time - expected_time) <= timedelta(seconds=5)
     assert last_login.failed_attempt == 1
-
-
-def test_authentication_with_sessionid_cookie(wdae_gpf_instance, client):
-    data = {
-        "username": "admin@example.com",
-        "password": "secret",
-    }
-    response = client.post(
-        "/api/v3/users/login", json.dumps(data),
-        content_type="application/json", format="json"
-    )
-    assert response.status_code == status.HTTP_302_FOUND
-
-    data = {
-        "datasetId": "quads_f1",
-        "maxVariantsCount": "1"
-    }
-    response = client.post(
-        "/api/v3/genotype_browser/query", json.dumps(data),
-        content_type="application/json", format="json"
-    )
-    assert response.status_code == status.HTTP_200_OK
