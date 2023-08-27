@@ -19,6 +19,7 @@ import { filter, take } from 'rxjs/operators';
 import { StudyFiltersState } from 'app/study-filters/study-filters.state';
 import { clone } from 'lodash';
 import { NavigationStart, Router } from '@angular/router';
+import { AuthService } from 'app/auth.service';
 
 @Component({
   selector: 'gpf-genotype-browser',
@@ -84,6 +85,7 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy {
     public readonly configService: ConfigService,
     private loadingService: FullscreenLoadingService,
     private datasetsService: DatasetsService,
+    private authService: AuthService,
     private router: Router
   ) {
     this.routerSubscription = this.router.events.pipe(
@@ -163,6 +165,7 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy {
     const args = clone(this.genotypeBrowserState);
     args['download'] = true;
     event.target.queryData.value = JSON.stringify(args);
+    event.target.access_token.value = this.authService.getAccessToken();
     event.target.submit();
   }
 
