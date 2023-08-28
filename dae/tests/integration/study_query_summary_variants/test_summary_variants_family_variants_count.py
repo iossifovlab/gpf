@@ -63,8 +63,8 @@ def test_summary_variants_family_variants_count_single_allele(
     assert aa.get_attribute("family_variants_count") == family_variants_count
 
 
-@pytest.mark.inmemory
-@pytest.mark.impala2(reason="supported for impala schema2")
+@pytest.mark.gs_inmemory
+@pytest.mark.gs_impala2(reason="supported for impala schema2")
 @pytest.mark.parametrize("region,family_variants_count", [
     (Region("chrA", 5, 5), [1, 1]),
     (Region("chrA", 6, 6), [1, 2]),
@@ -84,7 +84,7 @@ def test_summary_variants_family_variants_count_multi_allele(
         family_variants_count[1]
 
 
-@pytest.mark.impala2(reason="supported for impala schema2")
+@pytest.mark.gs_impala2(reason="supported for impala schema2")
 @pytest.mark.parametrize("region,family_variants_count", [
     (Region("chrA", 5, 5), [1, 1]),
     (Region("chrA", 6, 6), [1, 2]),

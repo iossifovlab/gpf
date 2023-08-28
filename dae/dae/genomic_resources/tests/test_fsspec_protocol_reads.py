@@ -9,16 +9,17 @@ from dae.genomic_resources.testing import \
     build_s3_test_protocol, build_http_test_protocol, \
     build_filesystem_test_protocol, setup_directories, setup_vcf, setup_tabix
 
+pytestmark = [pytest.mark.grr_full, pytest.mark.grr_http]
 
-# @pytest.fixture(scope="module", params=["file", "http", "s3"])
-@pytest.fixture(scope="module", params=["file"])
-def fsspec_proto(
-    request: pytest.FixtureRequest,
+
+@pytest.fixture
+def tabix_fsspec_proto(
     content_fixture: dict[str, Any],
-    tmp_path_factory: pytest.TempPathFactory
+    tmp_path_factory: pytest.TempPathFactory,
+    grr_scheme: str
 ) -> Generator[RepositoryProtocol, None, None]:
 
-    root_path = tmp_path_factory.mktemp("fsspec_proto")
+    root_path = tmp_path_factory.mktemp("tabix_fsspec_proto")
     setup_directories(root_path, content_fixture)
     setup_tabix(
         root_path / "one" / "test.txt.gz",
@@ -45,7 +46,7 @@ def fsspec_proto(
         bar    15  .  T   G     .    .      .    GT   1/1
         bar    16  .  T   G     .    .      .    GT   0/1
         """)
-    scheme = request.param
+    scheme = grr_scheme
     if scheme == "file":
         yield build_filesystem_test_protocol(root_path)
         return
@@ -55,18 +56,16 @@ def fsspec_proto(
         return
     if scheme == "s3":
         with build_s3_test_protocol(root_path) as proto:
-
             yield proto
-
         return
 
     raise ValueError(f"unexpected protocol scheme: <{scheme}>")
 
 
 @pytest.fixture(scope="module")
-def fsspec_proto_utf8(
+def tabix_fsspec_proto_utf8(
         tmp_path_factory: pytest.TempPathFactory) -> RepositoryProtocol:
-    root_path = tmp_path_factory.mktemp("fsspec_proto_utf8")
+    root_path = tmp_path_factory.mktemp("tabix_fsspec_proto_utf8")
     setup_directories(root_path, {
         "one": {
             GR_CONF_FILE_NAME: "",
@@ -75,7 +74,7 @@ def fsspec_proto_utf8(
     setup_tabix(
         root_path / "one" / "test.txt.gz",
         """
-            #chrëm  pos_bëgin  pos_ënd    ë1
+            #chrëm  pos_bëgin pos_ënd    ë1
             1      1          10         1.0
             2      1          10         2.0
             2      11         20         2.5
@@ -99,15 +98,18 @@ def fsspec_proto_utf8(
     return build_filesystem_test_protocol(root_path)
 
 
-def test_get_all_resources(fsspec_proto: RepositoryProtocol) -> None:
-    proto = fsspec_proto
+@pytest.mark.grr_tabix
+def test_get_all_resources(tabix_fsspec_proto: RepositoryProtocol) -> None:
+    proto = tabix_fsspec_proto
     resources = list(proto.get_all_resources())
     assert len(resources) == 5, resources
 
 
-def test_open_raw_file_read_three_a(fsspec_proto: RepositoryProtocol) -> None:
+@pytest.mark.grr_tabix
+def test_open_raw_file_read_three_a(
+        tabix_fsspec_proto: RepositoryProtocol) -> None:
     # Given
-    proto = fsspec_proto
+    proto = tabix_fsspec_proto
     res = proto.get_resource("three")
 
     # When
@@ -118,10 +120,11 @@ def test_open_raw_file_read_three_a(fsspec_proto: RepositoryProtocol) -> None:
     assert content == "a"
 
 
+@pytest.mark.grr_tabix
 def test_open_raw_file_read_one_compressed(
-        fsspec_proto: RepositoryProtocol) -> None:
+        tabix_fsspec_proto: RepositoryProtocol) -> None:
     # Given
-    proto = fsspec_proto
+    proto = tabix_fsspec_proto
     res = proto.get_resource("one")
 
     # When
@@ -133,9 +136,10 @@ def test_open_raw_file_read_one_compressed(
     assert header == "#chrom\tpos_begin\tpos_end\tc1\n"
 
 
-def test_open_raw_file_seek(fsspec_proto: RepositoryProtocol) -> None:
+@pytest.mark.grr_tabix
+def test_open_raw_file_seek(tabix_fsspec_proto: RepositoryProtocol) -> None:
     # Given
-    proto = fsspec_proto
+    proto = tabix_fsspec_proto
     res = proto.get_resource("xxxxx-genome")
 
     # When
@@ -149,9 +153,11 @@ def test_open_raw_file_seek(fsspec_proto: RepositoryProtocol) -> None:
     assert sequence == "NNACCCAAAC"
 
 
-def test_open_tabix_file_contigs(fsspec_proto: RepositoryProtocol) -> None:
+@pytest.mark.grr_tabix
+def test_open_tabix_file_contigs(
+        tabix_fsspec_proto: RepositoryProtocol) -> None:
     # Given
-    proto = fsspec_proto
+    proto = tabix_fsspec_proto
     res = proto.get_resource("one")
 
     # When
@@ -162,9 +168,11 @@ def test_open_tabix_file_contigs(fsspec_proto: RepositoryProtocol) -> None:
     assert contigs == ["1", "2", "3"]
 
 
-def test_open_tabix_file_fetch_all(fsspec_proto: RepositoryProtocol) -> None:
+@pytest.mark.grr_tabix
+def test_open_tabix_file_fetch_all(
+        tabix_fsspec_proto: RepositoryProtocol) -> None:
     # Given
-    proto = fsspec_proto
+    proto = tabix_fsspec_proto
     res = proto.get_resource("one")
 
     # When
@@ -178,10 +186,11 @@ def test_open_tabix_file_fetch_all(fsspec_proto: RepositoryProtocol) -> None:
     assert len(lines) == 5
 
 
+@pytest.mark.grr_tabix
 def test_open_tabix_file_fetch_region(
-        fsspec_proto: RepositoryProtocol) -> None:
+        tabix_fsspec_proto: RepositoryProtocol) -> None:
     # Given
-    proto = fsspec_proto
+    proto = tabix_fsspec_proto
     res = proto.get_resource("one")
 
     # When
@@ -195,9 +204,11 @@ def test_open_tabix_file_fetch_region(
     assert lines == ["3\t1\t10\t3.0", "3\t11\t20\t3.5"]
 
 
-def test_open_vcf_file_contigs(fsspec_proto: RepositoryProtocol) -> None:
+@pytest.mark.grr_tabix
+def test_open_vcf_file_contigs(
+        tabix_fsspec_proto: RepositoryProtocol) -> None:
     # Given
-    proto = fsspec_proto
+    proto = tabix_fsspec_proto
     res = proto.get_resource("one")
     # When
     with proto.open_vcf_file(res, "in.vcf.gz") as vcf:
@@ -207,9 +218,11 @@ def test_open_vcf_file_contigs(fsspec_proto: RepositoryProtocol) -> None:
     assert contigs == ["foo", "bar"]
 
 
-def test_open_vcf_file_fetch_all(fsspec_proto: RepositoryProtocol) -> None:
+@pytest.mark.grr_tabix
+def test_open_vcf_file_fetch_all(
+        tabix_fsspec_proto: RepositoryProtocol) -> None:
     # Given
-    proto = fsspec_proto
+    proto = tabix_fsspec_proto
     res = proto.get_resource("one")
 
     # When
@@ -223,9 +236,11 @@ def test_open_vcf_file_fetch_all(fsspec_proto: RepositoryProtocol) -> None:
     assert len(lines) == 4
 
 
-def test_open_vcf_file_fetch_region(fsspec_proto: RepositoryProtocol) -> None:
+@pytest.mark.grr_tabix
+def test_open_vcf_file_fetch_region(
+        tabix_fsspec_proto: RepositoryProtocol) -> None:
     # Given
-    proto = fsspec_proto
+    proto = tabix_fsspec_proto
     res = proto.get_resource("one")
 
     # When
@@ -239,8 +254,10 @@ def test_open_vcf_file_fetch_region(fsspec_proto: RepositoryProtocol) -> None:
     assert len(lines) == 2
 
 
-def test_open_utf8_tabix_file(fsspec_proto_utf8: RepositoryProtocol) -> None:
-    proto = fsspec_proto_utf8
+@pytest.mark.grr_tabix
+def test_open_utf8_tabix_file(
+        tabix_fsspec_proto_utf8: RepositoryProtocol) -> None:
+    proto = tabix_fsspec_proto_utf8
     res = proto.get_resource("one")
 
     with proto.open_tabix_file(res, "test.txt.gz") as tabix:

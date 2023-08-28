@@ -60,8 +60,8 @@ def test_summary_variants_seen_in_status_single_allele(
     assert aa.get_attribute("seen_in_status") == seen_in_status
 
 
-@pytest.mark.inmemory
-@pytest.mark.impala2
+@pytest.mark.gs_inmemory
+@pytest.mark.gs_impala2
 @pytest.mark.parametrize("region,seen_in_status", [
     (Region("chrA", 4, 4), [
         Status.unaffected.value,

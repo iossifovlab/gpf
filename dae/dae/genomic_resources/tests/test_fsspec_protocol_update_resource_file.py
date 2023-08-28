@@ -9,13 +9,14 @@ from dae.genomic_resources.testing import \
 from dae.genomic_resources.fsspec_protocol import FsspecReadWriteProtocol
 
 
+@pytest.mark.grr_rw
 def test_update_resource_file_when_file_missing(
         content_fixture: dict[str, Any],
-        rw_fsspec_proto: FsspecReadWriteProtocol) -> None:
+        fsspec_proto: FsspecReadWriteProtocol) -> None:
 
     # Given
     src_proto = build_inmemory_test_protocol(content_fixture)
-    proto = rw_fsspec_proto
+    proto = fsspec_proto
 
     src_res = src_proto.get_resource("sub/two")
     dst_res = proto.get_resource("sub/two")
@@ -41,13 +42,14 @@ def test_update_resource_file_when_file_missing(
     assert state.md5 == "d9636a8dca9e5626851471d1c0ea92b1"
 
 
+@pytest.mark.grr_rw
 def test_update_resource_file_when_state_missing(
         content_fixture: dict[str, Any],
-        rw_fsspec_proto: FsspecReadWriteProtocol) -> None:
+        fsspec_proto: FsspecReadWriteProtocol) -> None:
 
     # Given
     src_proto = build_inmemory_test_protocol(content_fixture)
-    proto = rw_fsspec_proto
+    proto = fsspec_proto
 
     src_res = src_proto.get_resource("sub/two")
     dst_res = proto.get_resource("sub/two")
@@ -72,13 +74,14 @@ def test_update_resource_file_when_state_missing(
     assert proto.filesystem.modified(fileurl) == timestamp
 
 
+@pytest.mark.grr_rw
 def test_update_resource_file_when_changed(
         content_fixture: dict[str, Any],
-        rw_fsspec_proto: FsspecReadWriteProtocol) -> None:
+        fsspec_proto: FsspecReadWriteProtocol) -> None:
 
     # Given
     src_proto = build_inmemory_test_protocol(content_fixture)
-    proto = rw_fsspec_proto
+    proto = fsspec_proto
 
     src_res = src_proto.get_resource("sub/two")
     dst_res = proto.get_resource("sub/two")
@@ -103,13 +106,14 @@ def test_update_resource_file_when_changed(
     assert state.md5 == "d9636a8dca9e5626851471d1c0ea92b1"
 
 
+@pytest.mark.grr_rw
 def test_do_not_update_resource_file_when_state_changed_but_file_not(
         content_fixture: dict[str, Any],
-        rw_fsspec_proto: FsspecReadWriteProtocol) -> None:
+        fsspec_proto: FsspecReadWriteProtocol) -> None:
 
     # Given
     src_proto = build_inmemory_test_protocol(content_fixture)
-    proto = rw_fsspec_proto
+    proto = fsspec_proto
 
     src_res = src_proto.get_resource("sub/two")
     dst_res = proto.get_resource("sub/two")

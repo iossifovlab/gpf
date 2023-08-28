@@ -65,6 +65,8 @@ def setup_directories(
     root_dir.parent.mkdir(parents=True, exist_ok=True)
     if isinstance(content, str):
         root_dir.write_text(content, encoding="utf8")
+    elif isinstance(content, bytes):
+        root_dir.write_bytes(content)
     elif isinstance(content, dict):
         for path_name, path_content in content.items():
             setup_directories(root_dir / path_name, path_content)
@@ -358,11 +360,7 @@ def build_http_test_protocol(
     build_filesystem_test_protocol(root_path, repair=repair)
 
     with http_process_test_server(root_path) as server_address:
-        proto = cast(
-            FsspecReadOnlyProtocol,
-            build_fsspec_protocol(str(root_path), server_address))
-
-        yield proto
+        yield build_fsspec_protocol(str(root_path), server_address)
 
 
 def _internal_process_runner(

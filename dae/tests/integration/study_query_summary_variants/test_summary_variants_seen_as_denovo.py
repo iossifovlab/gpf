@@ -61,8 +61,8 @@ def test_summary_variants_seen_as_denovo_single_allele(
     assert aa.get_attribute("seen_as_denovo") == seen_as_denovo
 
 
-@pytest.mark.inmemory
-@pytest.mark.impala2
+@pytest.mark.gs_inmemory
+@pytest.mark.gs_impala2
 @pytest.mark.parametrize("region,seen_as_denovo", [
     (Region("chrA", 5, 5), [False, False]),
     (Region("chrA", 6, 6), [True, False]),

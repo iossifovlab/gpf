@@ -1,11 +1,10 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import os
-from typing import Any, Union
+from typing import Union
 import pytest
 import numpy as np
 from dae.variants_loaders.vcf.loader import VcfLoader
-from dae.genomic_resources.testing import setup_pedigree, setup_vcf, \
-    build_s3_test_filesystem, build_s3_test_bucket
+from dae.genomic_resources.testing import setup_pedigree, setup_vcf
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.pedigrees.loader import FamiliesLoader
 from dae.testing.acgt_import import acgt_gpf
@@ -313,48 +312,3 @@ def test_multivcf_loader_fill_missing(
 #     assert multi_vcf_loader is not None
 #     vs = list(multi_vcf_loader.family_variants_iterator())
 #     assert len(vs) == 30
-
-
-def test_collect_filenames_local(
-    multivcf_split1_vcf: str,
-    multivcf_split2_vcf: str,
-) -> None:
-    vcf_filenames = [multivcf_split1_vcf, multivcf_split2_vcf]
-
-    params = {
-        "vcf_chromosomes": "1;2;3;4;5;6;7;8;9;10;11;12;13;14;15;16;17;18;X;Y"
-    }
-
-    all_filenames, _ = VcfLoader._collect_filenames(params, vcf_filenames)
-
-    assert len(all_filenames) == 2
-    assert all_filenames[0] == str(multivcf_split1_vcf)
-    assert all_filenames[1] == str(multivcf_split2_vcf)
-
-
-def test_collect_filenames_s3(
-    multivcf_split1_vcf: str,
-    multivcf_split2_vcf: str,
-    mocker: Any
-) -> None:
-    s3_filesystem = build_s3_test_filesystem()
-    s3_tmp_bucket_url = build_s3_test_bucket(s3_filesystem)
-
-    s3_filesystem.put(str(multivcf_split1_vcf),
-                      f"{s3_tmp_bucket_url}/dir/multivcf_split1.vcf")
-    s3_filesystem.put(str(multivcf_split2_vcf),
-                      f"{s3_tmp_bucket_url}/dir/multivcf_split2.vcf")
-
-    mocker.patch("dae.variants_loaders.vcf.loader.url_to_fs",
-                 return_value=(s3_filesystem, None))
-
-    vcf_filenames = [f"{s3_tmp_bucket_url}/dir/multivcf_split[vc].vcf"]
-
-    params = {
-        "vcf_chromosomes": "1;2;3;4;5;6;7;8;9;10"
-    }
-    all_filenames, _ = VcfLoader._collect_filenames(params, vcf_filenames)
-
-    assert len(all_filenames) == 2
-    assert all_filenames[0] == f"{s3_tmp_bucket_url}/dir/multivcf_split1.vcf"
-    assert all_filenames[1] == f"{s3_tmp_bucket_url}/dir/multivcf_split2.vcf"

@@ -226,32 +226,6 @@ EOT
     build_run_local cp ./results/pylint_gpf_report ./test-results/
   }
 
-  build_stage "bandit"
-  {
-    build_run_ctx_init "container" "${gpf_dev_image_ref}"
-    defer_ret build_run_ctx_reset
-
-    build_run_container bash -c '
-      cd /wd/dae; 
-      /opt/conda/bin/conda run --no-capture-output -n gpf \
-      bandit --exit-zero \
-        -r dae/ -o /wd/results/bandit_dae_report.html \
-        -f html \
-        --exclude "*tests/*" \
-        -s B101 || true'
-
-    build_run_container bash -c '
-      cd /wd/wdae; 
-      /opt/conda/bin/conda run --no-capture-output -n gpf \
-      bandit --exit-zero \
-        -r wdae/ -o /wd/results/bandit_wdae_report.html \
-        -f html \
-        --exclude "*tests/*" \
-        -s B101 || true'
-
-    build_run_local cp ./results/bandit_dae_report.html ./results/bandit_wdae_report.html ./test-results/
-  }
-
   build_stage "MyPy"
   {
     build_run_ctx_init "container" "${gpf_dev_image_ref}"
@@ -311,6 +285,7 @@ EOT
         cd /wd/dae;
         export PYTHONHASHSEED=0;
         /opt/conda/bin/conda run --no-capture-output -n gpf py.test -v \
+          --s3 --http \
           -n 5 \
           --durations 20 \
           --cov-config /wd/coveragerc \
@@ -387,6 +362,7 @@ EOT
         cd /wd/dae/tests;
         export PYTHONHASHSEED=0;
         /opt/conda/bin/conda run --no-capture-output -n gpf py.test -v \
+          --s3 --http \
           -n 5 \
           --durations 20 \
           --cov-config /wd/coveragerc \

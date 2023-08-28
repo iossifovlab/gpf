@@ -14,17 +14,18 @@ from dae.genomic_resources.testing import \
     build_inmemory_test_protocol
 
 
+@pytest.mark.grr_rw
 def test_collect_all_resources(
-        rw_fsspec_proto: FsspecReadWriteProtocol) -> None:
-    proto = rw_fsspec_proto
+        fsspec_proto: FsspecReadWriteProtocol) -> None:
+    proto = fsspec_proto
 
     resources = list(proto.collect_all_resources())
     assert len(resources) == 5, resources
 
 
 def test_resource_paths(
-        rw_fsspec_proto: FsspecReadWriteProtocol) -> None:
-    proto = rw_fsspec_proto
+        fsspec_proto: FsspecReadWriteProtocol) -> None:
+    proto = fsspec_proto
 
     res = proto.get_resource("one")
 
@@ -36,9 +37,10 @@ def test_resource_paths(
     assert config_path.endswith("one/genomic_resource.yaml")
 
 
+@pytest.mark.grr_rw
 def test_build_resource_file_state(
-        rw_fsspec_proto: FsspecReadWriteProtocol) -> None:
-    proto = rw_fsspec_proto
+        fsspec_proto: FsspecReadWriteProtocol) -> None:
+    proto = fsspec_proto
     timestamp = 42
     res = proto.get_resource("one")
 
@@ -58,9 +60,10 @@ def test_build_resource_file_state(
     assert state.md5 == "d9636a8dca9e5626851471d1c0ea92b1"
 
 
+@pytest.mark.grr_rw
 def test_save_load_resource_file_state(
-        rw_fsspec_proto: FsspecReadWriteProtocol) -> None:
-    proto = rw_fsspec_proto
+        fsspec_proto: FsspecReadWriteProtocol) -> None:
+    proto = fsspec_proto
     timestamp = 42
 
     res = proto.get_resource("sub/two")
@@ -78,14 +81,15 @@ def test_save_load_resource_file_state(
     assert loaded.md5 == "d9636a8dca9e5626851471d1c0ea92b1"
 
 
+@pytest.mark.grr_rw
 def test_collect_resource_entries(
-        rw_fsspec_proto: FsspecReadWriteProtocol) -> None:
-    proto = rw_fsspec_proto
+        fsspec_proto: FsspecReadWriteProtocol) -> None:
+    proto = fsspec_proto
 
     res = proto.get_resource("one")
 
     entries = proto.collect_resource_entries(res)
-    assert len(entries) == 2
+    assert len(entries) == 3
 
     entry = entries["data.txt"]
     assert entry.name == "data.txt"
@@ -97,8 +101,8 @@ def test_collect_resource_entries(
 
 
 def test_file_exists(
-        rw_fsspec_proto: FsspecReadWriteProtocol) -> None:
-    proto = rw_fsspec_proto
+        fsspec_proto: FsspecReadWriteProtocol) -> None:
+    proto = fsspec_proto
 
     res = proto.get_resource("one")
 
@@ -107,8 +111,8 @@ def test_file_exists(
 
 
 def test_open_raw_file_text_read(
-        rw_fsspec_proto: FsspecReadWriteProtocol) -> None:
-    proto = rw_fsspec_proto
+        fsspec_proto: FsspecReadWriteProtocol) -> None:
+    proto = fsspec_proto
 
     res = proto.get_resource("one")
 
@@ -117,9 +121,10 @@ def test_open_raw_file_text_read(
         assert content == "alabala"
 
 
+@pytest.mark.grr_rw
 def test_open_raw_file_text_write(
-        rw_fsspec_proto: FsspecReadWriteProtocol) -> None:
-    proto = rw_fsspec_proto
+        fsspec_proto: FsspecReadWriteProtocol) -> None:
+    proto = fsspec_proto
 
     res = proto.get_resource("one")
 
@@ -129,9 +134,10 @@ def test_open_raw_file_text_write(
     assert proto.file_exists(res, "new_data.txt")
 
 
+@pytest.mark.grr_rw
 def test_open_raw_file_text_write_compression(
-        rw_fsspec_proto: FsspecReadWriteProtocol) -> None:
-    proto = rw_fsspec_proto
+        fsspec_proto: FsspecReadWriteProtocol) -> None:
+    proto = fsspec_proto
 
     res = proto.get_resource("one")
 
@@ -149,27 +155,20 @@ def test_open_raw_file_text_write_compression(
 
 
 def test_open_raw_file_text_read_compression(
-        rw_fsspec_proto: FsspecReadWriteProtocol) -> None:
-    proto = rw_fsspec_proto
+        fsspec_proto: FsspecReadWriteProtocol) -> None:
 
+    proto = fsspec_proto
     res = proto.get_resource("one")
 
-    filepath = proto.get_resource_file_url(res, "new_data.txt.gz")
-    with proto.filesystem.open(
-            filepath, mode="wt", compression="gzip") as outfile:
-        outfile.write("new alabala")
-
-    assert proto.file_exists(res, "new_data.txt.gz")
-
     with proto.open_raw_file(
-            res, "new_data.txt.gz", mode="rt", compression=True) as infile:
+            res, "data.txt.gz", mode="rt", compression=True) as infile:
         content = infile.read()
-        assert content == "new alabala"
+        assert content == "alabala"
 
 
 def test_compute_md5_sum(
-        rw_fsspec_proto: FsspecReadWriteProtocol) -> None:
-    proto = rw_fsspec_proto
+        fsspec_proto: FsspecReadWriteProtocol) -> None:
+    proto = fsspec_proto
 
     res = proto.get_resource("one")
 
@@ -179,15 +178,16 @@ def test_compute_md5_sum(
         "d41d8cd98f00b204e9800998ecf8427e"
 
 
+@pytest.mark.grr_rw
 def test_build_manifest(
-        rw_fsspec_proto: FsspecReadWriteProtocol) -> None:
-    proto = rw_fsspec_proto
+        fsspec_proto: FsspecReadWriteProtocol) -> None:
+    proto = fsspec_proto
 
     res = proto.get_resource("one")
 
     manifest = proto.build_manifest(res)
 
-    assert len(manifest) == 2
+    assert len(manifest) == 3
     assert manifest["data.txt"].size == 7
     assert manifest["data.txt"].md5 == \
         "c1cfdaf7e22865b29b8d62a564dc8f23"
@@ -198,14 +198,14 @@ def test_build_manifest(
 
 
 def test_load_manifest(
-        rw_fsspec_proto: FsspecReadWriteProtocol) -> None:
-    proto = rw_fsspec_proto
+        fsspec_proto: FsspecReadWriteProtocol) -> None:
+    proto = fsspec_proto
 
     res = proto.get_resource("one")
 
     manifest = proto.load_manifest(res)
 
-    assert len(manifest) == 2
+    assert len(manifest) == 3
     assert manifest["data.txt"].size == 7
     assert manifest["data.txt"].md5 == \
         "c1cfdaf7e22865b29b8d62a564dc8f23"
@@ -215,9 +215,10 @@ def test_load_manifest(
         "d41d8cd98f00b204e9800998ecf8427e"
 
 
+@pytest.mark.grr_rw
 def test_load_missing_manifest(
-        rw_fsspec_proto: FsspecReadWriteProtocol) -> None:
-    proto = rw_fsspec_proto
+        fsspec_proto: FsspecReadWriteProtocol) -> None:
+    proto = fsspec_proto
 
     res = proto.get_resource("one")
 
@@ -232,14 +233,14 @@ def test_load_missing_manifest(
 
 
 def test_get_manifest(
-        rw_fsspec_proto: FsspecReadWriteProtocol) -> None:
-    proto = rw_fsspec_proto
+        fsspec_proto: FsspecReadWriteProtocol) -> None:
+    proto = fsspec_proto
 
     res = proto.get_resource("one")
 
     manifest = proto.get_manifest(res)
 
-    assert len(manifest) == 2
+    assert len(manifest) == 3
 
     assert manifest["data.txt"].size == 7
     assert manifest["data.txt"].md5 == \
@@ -250,9 +251,10 @@ def test_get_manifest(
         "d41d8cd98f00b204e9800998ecf8427e"
 
 
+@pytest.mark.grr_rw
 def test_get_missing_manifest(
-        rw_fsspec_proto: FsspecReadWriteProtocol) -> None:
-    proto = rw_fsspec_proto
+        fsspec_proto: FsspecReadWriteProtocol) -> None:
+    proto = fsspec_proto
 
     res = proto.get_resource("one")
 
@@ -265,7 +267,7 @@ def test_get_missing_manifest(
     # now manifest file is missing... proto should recreate it...
     manifest = proto.get_manifest(res)
 
-    assert len(manifest) == 2
+    assert len(manifest) == 3
     assert manifest["data.txt"].size == 7
     assert manifest["data.txt"].md5 == \
         "c1cfdaf7e22865b29b8d62a564dc8f23"
@@ -275,11 +277,12 @@ def test_get_missing_manifest(
         "d41d8cd98f00b204e9800998ecf8427e"
 
 
+@pytest.mark.grr_rw
 def test_delete_resource_file(
-        rw_fsspec_proto: FsspecReadWriteProtocol) -> None:
+        fsspec_proto: FsspecReadWriteProtocol) -> None:
 
     # Given
-    proto = rw_fsspec_proto
+    proto = fsspec_proto
 
     res = proto.get_resource("sub/two")
 
@@ -293,12 +296,13 @@ def test_delete_resource_file(
     assert not proto.filesystem.exists(path)
 
 
+@pytest.mark.grr_rw
 def test_copy_resource_file(
         content_fixture: dict[str, Any],
-        rw_fsspec_proto: FsspecReadWriteProtocol) -> None:
+        fsspec_proto: FsspecReadWriteProtocol) -> None:
     # Given
     src_proto = build_inmemory_test_protocol(content_fixture)
-    proto = rw_fsspec_proto
+    proto = fsspec_proto
 
     src_res = src_proto.get_resource("sub/two")
     dst_res = proto.get_resource("sub/two")
@@ -318,12 +322,13 @@ def test_copy_resource_file(
     assert loaded == state
 
 
+@pytest.mark.grr_rw
 def test_copy_resource(
         content_fixture: dict[str, Any],
-        rw_fsspec_proto: FsspecReadWriteProtocol) -> None:
+        fsspec_proto: FsspecReadWriteProtocol) -> None:
     # Given
     src_proto = build_inmemory_test_protocol(content_fixture)
-    proto = rw_fsspec_proto
+    proto = fsspec_proto
 
     src_res = src_proto.get_resource("sub/two")
 
@@ -343,8 +348,9 @@ def test_copy_resource(
     assert state.md5 == "d9636a8dca9e5626851471d1c0ea92b1"
 
 
+@pytest.mark.grr_rw
 def test_update_resource_all_files(
-    rw_fsspec_proto: ReadWriteRepositoryProtocol
+    fsspec_proto: ReadWriteRepositoryProtocol
 ) -> None:
     # Given
     src_proto = build_inmemory_test_protocol({
@@ -355,7 +361,7 @@ def test_update_resource_all_files(
         },
     })
     src_res = src_proto.get_resource("sample")
-    proto = rw_fsspec_proto
+    proto = fsspec_proto
 
     # When
     proto.update_resource(src_res)
@@ -366,8 +372,9 @@ def test_update_resource_all_files(
     assert proto.file_exists(dst_res, "second.txt")
 
 
+@pytest.mark.grr_rw
 def test_update_resource_specific_file(
-    rw_fsspec_proto: ReadWriteRepositoryProtocol
+    fsspec_proto: ReadWriteRepositoryProtocol
 ) -> None:
     # Given
     src_proto = build_inmemory_test_protocol({
@@ -378,7 +385,7 @@ def test_update_resource_specific_file(
         },
     })
     src_res = src_proto.get_resource("sample")
-    proto = rw_fsspec_proto
+    proto = fsspec_proto
 
     # When
     proto.update_resource(src_res, {"prim.txt"})
@@ -389,12 +396,13 @@ def test_update_resource_specific_file(
     assert not proto.file_exists(dst_res, "second.txt")
 
 
+@pytest.mark.grr_rw
 def test_build_manifest_should_not_update_existing_resource_state(
-    rw_fsspec_proto: ReadWriteRepositoryProtocol,
+    fsspec_proto: ReadWriteRepositoryProtocol,
     mocker: MockerFixture
 ) -> None:
     # Given
-    proto = rw_fsspec_proto
+    proto = fsspec_proto
     res = proto.get_resource("one")
     proto.build_manifest(res)
 

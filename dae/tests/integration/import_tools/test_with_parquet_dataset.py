@@ -95,9 +95,9 @@ def vcf_project_from_parquet(
     return project
 
 
-@pytest.mark.duckdb(reason="supported for schema2 duckdb")
-@pytest.mark.impala2(reason="supported for schema2 impala")
-@pytest.mark.gcp(reason="supported for gcp")
+@pytest.mark.gs_duckdb(reason="supported for schema2 duckdb")
+@pytest.mark.gs_impala2(reason="supported for schema2 impala")
+@pytest.mark.gs_gcp(reason="supported for gcp")
 def test_with_destination_storage_type(
     vcf_project_to_parquet: ImportProject,
     vcf_project_from_parquet: ImportProject,
