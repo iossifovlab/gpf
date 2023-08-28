@@ -2,18 +2,16 @@
 # $ conda env create --name <env> --file <this file>
 # platform: linux-64
 # conda create -c conda-forge -c bioconda -n <env name> --file <this file>
+
+name: gpf
 channels:
   - conda-forge
   - bioconda
   - iossifovlab
-  - defaults
 dependencies:
   - versioneer=0.28
   - dask-kubernetes=2023.8
   - dask-jobqueue=0.8
-  # - moto
-  # - awscli
-  # - awscli-local
   - sphinx=6.1
   - sphinx_rtd_theme=1.2
   - sphinx-copybutton=0.5.1

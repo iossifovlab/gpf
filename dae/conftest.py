@@ -166,67 +166,66 @@ def pytest_generate_tests(metafunc: pytest.Metafunc) -> None:
     # pylint: disable=too-many-branches
     # flake8: noqa: C901
     if "genotype_storage" in metafunc.fixturenames:
-
-        assert GENOTYPE_STORAGES is not None
-        storages = GENOTYPE_STORAGES
-
-        if hasattr(metafunc, "function"):
-            marked_types = set()
-            for mark in getattr(metafunc.function, "pytestmark", []):
-                if mark.name.startswith("gs_"):
-                    marked_types.add(mark.name[3:])
-            marked_types = marked_types & {
-                "impala", "impala2", "duckdb", "inmemory", "gcp"}
-            if marked_types:
-                result = {}
-                for storage_id, storage in GENOTYPE_STORAGES.items():
-                    if storage.get_storage_type() in marked_types:
-                        result[storage_id] = storage
-
-                storages = result
-
-        metafunc.parametrize(
-            "genotype_storage",
-            storages.values(),
-            ids=storages.keys(),
-            scope="module")
-
+        _generate_genotype_storage_fixtures(metafunc)
     if "grr_scheme" in metafunc.fixturenames:
+        _generate_grr_schemes_fixtures(metafunc)
 
-        # schemes = {"inmemory", "file", "http", "s3"}
-        schemes = {"inmemory", "file"}
-        if metafunc.config.getoption("enable_s3"):
-            schemes.add("s3")
-        if metafunc.config.getoption("enable_http"):
-            schemes.add("http")
 
-        if hasattr(metafunc, "function"):
-            marked_schemes = set()
-            for mark in getattr(metafunc.function, "pytestmark", []):
-                if mark.name.startswith("grr_"):
-                    marked_schemes.add(mark.name[4:])
+def _generate_genotype_storage_fixtures(metafunc: pytest.Metafunc) -> None:
+    assert GENOTYPE_STORAGES is not None
+    storages = GENOTYPE_STORAGES
 
-            print("marked>", marked_schemes)
+    if hasattr(metafunc, "function"):
+        marked_types = set()
+        for mark in getattr(metafunc.function, "pytestmark", []):
+            if mark.name.startswith("gs_"):
+                marked_types.add(mark.name[3:])
+        marked_types = marked_types & {
+            "impala", "impala2", "duckdb", "inmemory", "gcp"}
+        if marked_types:
+            result = {}
+            for storage_id, storage in GENOTYPE_STORAGES.items():
+                if storage.get_storage_type() in marked_types:
+                    result[storage_id] = storage
 
-            if "rw" in marked_schemes:
-                marked_schemes.add("file")
-                marked_schemes.add("s3")
-                marked_schemes.add("inmemory")
+            storages = result
 
-            if "full" in marked_schemes:
-                marked_schemes.add("file")
-                marked_schemes.add("s3")
-            if "tabix" in marked_schemes:
-                marked_schemes.add("file")
-                marked_schemes.add("s3")
-                marked_schemes.add("http")
+    metafunc.parametrize(
+        "genotype_storage",
+        storages.values(),
+        ids=storages.keys(),
+        scope="module")
 
-            marked_schemes = marked_schemes & {
-                "file", "inmemory", "http", "s3"}
-            if marked_schemes:
-                schemes = schemes & marked_schemes
-        print(">", schemes)
-        metafunc.parametrize(
-            "grr_scheme",
-            schemes,
-            scope="module")
+
+def _generate_grr_schemes_fixtures(metafunc: pytest.Metafunc) -> None:
+    schemes = {"inmemory", "file"}
+    if metafunc.config.getoption("enable_s3"):
+        schemes.add("s3")
+    if metafunc.config.getoption("enable_http"):
+        schemes.add("http")
+
+    if hasattr(metafunc, "function"):
+        marked_schemes = set()
+        for mark in getattr(metafunc.function, "pytestmark", []):
+            if mark.name.startswith("grr_"):
+                marked_schemes.add(mark.name[4:])
+        if "rw" in marked_schemes:
+            marked_schemes.add("file")
+            marked_schemes.add("s3")
+            marked_schemes.add("inmemory")
+        if "full" in marked_schemes:
+            marked_schemes.add("file")
+            marked_schemes.add("s3")
+        if "tabix" in marked_schemes:
+            marked_schemes.add("file")
+            marked_schemes.add("s3")
+            marked_schemes.add("http")
+
+        marked_schemes = marked_schemes & {
+            "file", "inmemory", "http", "s3"}
+        if marked_schemes:
+            schemes = schemes & marked_schemes
+    metafunc.parametrize(
+        "grr_scheme",
+        schemes,
+        scope="module")

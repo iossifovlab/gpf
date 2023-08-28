@@ -9,7 +9,6 @@ channels:
   - conda-forge
   - bioconda
   - iossifovlab
-  - defaults
 dependencies:
   - python=3.9
   - importlib_metadata=6.8
