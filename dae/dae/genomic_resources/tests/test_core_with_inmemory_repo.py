@@ -6,7 +6,7 @@ from dae.genomic_resources.testing import build_inmemory_test_repository
 from dae.genomic_resources.repository import GenomicResource, Manifest
 
 
-def test_the_basic_resource_finding():
+def test_the_basic_resource_finding() -> None:
     repo = build_inmemory_test_repository(
         {
             "one": {"genomic_resource.yaml": ""}
@@ -17,7 +17,7 @@ def test_the_basic_resource_finding():
     assert res.version == (0,)
 
 
-def test_not_finding_resource_with_the_required_version():
+def test_not_finding_resource_with_the_required_version() -> None:
     repo = build_inmemory_test_repository(
         {
             "one": {"genomic_resource.yaml": ""}
@@ -27,7 +27,7 @@ def test_not_finding_resource_with_the_required_version():
         repo.get_resource("one", version_constraint="1.0")
 
 
-def test_finding_resource_with_version_and_repo_id():
+def test_finding_resource_with_version_and_repo_id() -> None:
     repo = build_inmemory_test_repository(
         {
             "one(1.0)": {"genomic_resource.yaml": ""}
@@ -39,7 +39,7 @@ def test_finding_resource_with_version_and_repo_id():
     assert res.version == (1, 0)
 
 
-def test_md5_checksum():
+def test_md5_checksum() -> None:
     repo = build_inmemory_test_repository(
         {
             "one": {
@@ -54,7 +54,7 @@ def test_md5_checksum():
         "a778802ca2a9c24a08981f9be4f2f31f"
 
 
-def test_manifest_file_creation():
+def test_manifest_file_creation() -> None:
     repo = build_inmemory_test_repository(
         {
             "one": {
@@ -78,7 +78,7 @@ def test_manifest_file_creation():
          "md5": "9d9676541599e2054d98df2d361775c0"}])
 
 
-def test_type_of_genomic_resoruces():
+def test_type_of_genomic_resoruces() -> None:
     repo = build_inmemory_test_repository(
         {"one": {
             "genomic_resource.yaml": "type: genome\nseqFile: chrAll.fa",
@@ -91,7 +91,7 @@ def test_type_of_genomic_resoruces():
     assert res.get_type() == "genome"
 
 
-def test_resources_files():
+def test_resources_files() -> None:
     repo = build_inmemory_test_repository(
         {
             "one": {

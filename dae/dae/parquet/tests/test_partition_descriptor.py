@@ -1,11 +1,12 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import textwrap
+import pathlib
 
 from dae.testing import setup_directories
 from dae.parquet.partition_descriptor import PartitionDescriptor
 
 
-def test_parse_toml_partition_description(tmp_path):
+def test_parse_toml_partition_description(tmp_path: pathlib.Path) -> None:
     setup_directories(
         tmp_path / "partition_description.conf",
         textwrap.dedent("""
@@ -32,7 +33,7 @@ def test_parse_toml_partition_description(tmp_path):
     assert pdesc.rare_boundary == 50
 
 
-def test_parse_yaml_partition_description(tmp_path):
+def test_parse_yaml_partition_description(tmp_path: pathlib.Path) -> None:
     setup_directories(
         tmp_path / "partition_description.yaml",
         textwrap.dedent("""
@@ -56,20 +57,20 @@ def test_parse_yaml_partition_description(tmp_path):
     assert pdesc.rare_boundary == 50
 
 
-def test_partition_directory():
+def test_partition_directory() -> None:
     assert PartitionDescriptor.partition_directory(
         "work", [("region_bin", "1")]) == "work/region_bin=1"
     assert PartitionDescriptor.partition_directory(
         "s3://work", [("region_bin", "1")]) == "s3://work/region_bin=1"
 
 
-def test_partition_filename():
+def test_partition_filename() -> None:
     assert PartitionDescriptor.partition_filename(
         "summary", [("region_bin", "1")], 1) == \
         "summary_region_bin_1_bucket_index_000001.parquet"
 
 
-def test_partition_descriptor_serialization():
+def test_partition_descriptor_serialization() -> None:
     pd_content = textwrap.dedent("""
         [region_bin]
         chromosomes = foo,bar
@@ -96,7 +97,7 @@ def test_partition_descriptor_serialization():
     assert pdesc1.coding_effect_types == pdesc2.coding_effect_types
 
 
-def test_empty_partition_descriptor_serialization():
+def test_empty_partition_descriptor_serialization() -> None:
     pd_content = textwrap.dedent("""
     """)
     pdesc1 = PartitionDescriptor.parse_string(pd_content)
@@ -110,7 +111,7 @@ def test_empty_partition_descriptor_serialization():
     assert pdesc1.coding_effect_types == pdesc2.coding_effect_types
 
 
-def test_partition_descriptor_yaml_serialization():
+def test_partition_descriptor_yaml_serialization() -> None:
     pd_content = textwrap.dedent("""
         region_bin:
             chromosomes: foo,bar
@@ -134,7 +135,7 @@ def test_partition_descriptor_yaml_serialization():
     assert pdesc1.coding_effect_types == pdesc2.coding_effect_types
 
 
-def test_empty_partition_descriptor_yaml_serialization():
+def test_empty_partition_descriptor_yaml_serialization() -> None:
     pd_content = textwrap.dedent("""
     """)
     pdesc1 = PartitionDescriptor.parse_string(pd_content, "yaml")
@@ -148,7 +149,7 @@ def test_empty_partition_descriptor_yaml_serialization():
     assert pdesc1.coding_effect_types == pdesc2.coding_effect_types
 
 
-def test_partition_descriptor_varint_dirs_simple():
+def test_partition_descriptor_varint_dirs_simple() -> None:
     pd_content = textwrap.dedent("""
         region_bin:
             chromosomes: foo,bar
@@ -167,7 +168,7 @@ def test_partition_descriptor_varint_dirs_simple():
     assert sum_parts[2] == [("region_bin", "bar_0")]
 
 
-def test_partition_descriptor_varint_dirs_full():
+def test_partition_descriptor_varint_dirs_full() -> None:
     family_bin_size = 2
     pd_content = textwrap.dedent(f"""
         region_bin:

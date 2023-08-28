@@ -1,4 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+import pathlib
+from typing import Any
 
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME
 from dae.genomic_resources.fsspec_protocol import _scan_for_resource_files, \
@@ -7,13 +9,14 @@ from dae.genomic_resources.testing import \
     build_inmemory_test_protocol
 
 
-def test_scan_content_for_resources(content_fixture):
+def test_scan_content_for_resources(content_fixture: dict[str, Any]) -> None:
     result = list(_scan_for_resources(content_fixture, []))
 
     assert len(result) == 5
 
 
-def test_scan_for_resource_one_files(content_fixture):
+def test_scan_for_resource_one_files(
+        content_fixture: dict[str, Any], alabala_gz: bytes) -> None:
     # Given
     result = list(_scan_for_resources(content_fixture, []))
 
@@ -25,13 +28,15 @@ def test_scan_for_resource_one_files(content_fixture):
     resource_files = sorted(list(_scan_for_resource_files(content, [])))
 
     # Then
-    assert len(resource_files) == 2
+    assert len(resource_files) == 3
 
     assert resource_files[0] == ("data.txt", "alabala")
-    assert resource_files[1] == (GR_CONF_FILE_NAME, "")
+    assert resource_files[1] == ("data.txt.gz", alabala_gz)
+    assert resource_files[2] == (GR_CONF_FILE_NAME, "")
 
 
-def test_scan_for_resource_two_0_files(content_fixture):
+def test_scan_for_resource_two_0_files(
+        content_fixture: dict[str, Any]) -> None:
 
     # Given
     result = list(_scan_for_resources(content_fixture, []))
@@ -49,7 +54,8 @@ def test_scan_for_resource_two_0_files(content_fixture):
     assert resource_files[0] == (GR_CONF_FILE_NAME, "")
 
 
-def test_scan_for_resource_two_1_files(content_fixture):
+def test_scan_for_resource_two_1_files(
+        content_fixture: dict[str, Any]) -> None:
 
     # Given
     result = list(_scan_for_resources(content_fixture, []))
@@ -69,7 +75,8 @@ def test_scan_for_resource_two_1_files(content_fixture):
         (GR_CONF_FILE_NAME, "type: gene_models\nfile: genes.gtf")
 
 
-def test_scan_for_resource_three_files(content_fixture):
+def test_scan_for_resource_three_files(
+        content_fixture: dict[str, Any]) -> None:
 
     # Given
     result = list(_scan_for_resources(content_fixture, []))
@@ -89,7 +96,8 @@ def test_scan_for_resource_three_files(content_fixture):
     assert resource_files[2] == ("sub2/b.txt", "b")
 
 
-def test_scan_path_for_resources(content_fixture, tmp_path):
+def test_scan_path_for_resources(
+        content_fixture: dict[str, Any], tmp_path: pathlib.Path) -> None:
     proto = build_inmemory_test_protocol(content_fixture)
     result = list(proto._scan_path_for_resources([]))
 
@@ -102,12 +110,16 @@ def test_scan_path_for_resources(content_fixture, tmp_path):
     result_files = sorted(list(
         proto._scan_resource_for_files(res_path, [])))
 
-    assert len(result_files) == 2
+    assert len(result_files) == 3
 
     assert result_files[0][0] == "data.txt"
     assert result_files[0][1].endswith("/one/data.txt")
-    assert result_files[1][0] == "genomic_resource.yaml"
-    assert result_files[1][1].endswith("/one/genomic_resource.yaml")
+
+    assert result_files[1][0] == "data.txt.gz"
+    assert result_files[1][1].endswith("/one/data.txt.gz")
+
+    assert result_files[2][0] == "genomic_resource.yaml"
+    assert result_files[2][1].endswith("/one/genomic_resource.yaml")
 
     res_id, res_version, res_path = result[3]
     assert res_id == "three"
@@ -121,19 +133,19 @@ def test_scan_path_for_resources(content_fixture, tmp_path):
     print(result_files)
 
 
-def test_inmemory_proto_simple(content_fixture):
+def test_inmemory_proto_simple(content_fixture: dict[str, Any]) -> None:
     proto = build_inmemory_test_protocol(content_fixture)
     assert len(list(proto.get_all_resources())) == 5
 
 
-def test_get_resource(content_fixture):
+def test_get_resource(content_fixture: dict[str, Any]) -> None:
     proto = build_inmemory_test_protocol(content_fixture)
     res = proto.get_resource("sub/two")
     assert res.resource_id == "sub/two"
     assert res.version == (1, 0)
 
 
-def test_load_manifest(content_fixture):
+def test_load_manifest(content_fixture: dict[str, Any]) -> None:
     proto = build_inmemory_test_protocol(content_fixture)
 
     res = proto.get_resource("sub/two")
@@ -146,7 +158,7 @@ def test_load_manifest(content_fixture):
     assert entry.md5 == "d9636a8dca9e5626851471d1c0ea92b1"
 
 
-def test_get_manifest(content_fixture):
+def test_get_manifest(content_fixture: dict[str, Any]) -> None:
     proto = build_inmemory_test_protocol(content_fixture)
 
     res = proto.get_resource("sub/two")

@@ -3,13 +3,17 @@ import pytest
 
 from dae.utils.regions import Region
 from dae.variants.attributes import Status
-from dae.testing import setup_pedigree, setup_vcf, vcf_study
+from dae.genotype_storage.genotype_storage import GenotypeStorage
+from dae.studies.study import GenotypeData
 
+from dae.testing import setup_pedigree, setup_vcf, vcf_study
 from dae.testing.alla_import import alla_gpf
 
 
 @pytest.fixture(scope="module")
-def imported_study(tmp_path_factory, genotype_storage):
+def imported_study(
+        tmp_path_factory: pytest.TempPathFactory,
+        genotype_storage: GenotypeStorage) -> GenotypeData:
     root_path = tmp_path_factory.mktemp(
         f"vcf_path_{genotype_storage.storage_id}")
     gpf_instance = alla_gpf(root_path, genotype_storage)
@@ -51,7 +55,8 @@ def imported_study(tmp_path_factory, genotype_storage):
     (Region("chrA", 3, 3), Status.unaffected.value),
 ])
 def test_summary_variants_seen_in_status_single_allele(
-        region, seen_in_status, imported_study):
+        region: Region, seen_in_status: bool,
+        imported_study: GenotypeData) -> None:
 
     svs = list(imported_study.query_summary_variants(regions=[region]))
     assert len(svs) == 1
@@ -60,8 +65,8 @@ def test_summary_variants_seen_in_status_single_allele(
     assert aa.get_attribute("seen_in_status") == seen_in_status
 
 
-@pytest.mark.inmemory
-@pytest.mark.impala2
+@pytest.mark.gs_inmemory
+@pytest.mark.gs_impala2
 @pytest.mark.parametrize("region,seen_in_status", [
     (Region("chrA", 4, 4), [
         Status.unaffected.value,
@@ -77,7 +82,9 @@ def test_summary_variants_seen_in_status_single_allele(
         Status.affected.value | Status.unaffected.value]),
 ])
 def test_summary_variants_seen_in_status_multi_allele(
-        region, seen_in_status, imported_study):
+        region: Region,
+        seen_in_status: list[Status],
+        imported_study: GenotypeData) -> None:
 
     svs = list(imported_study.query_summary_variants(regions=[region]))
     assert len(svs) == 1

@@ -50,7 +50,7 @@ function main() {
   # cleanup
   build_stage "Cleanup"
   {
-    build_run_ctx_init "container" "ubuntu:20.04"
+    build_run_ctx_init "container" "ubuntu:22.04"
     defer_ret build_run_ctx_reset
 
     build_run rm -f ./dae/dae/__build__.py
@@ -111,7 +111,7 @@ function main() {
   {
     local docker_img_iossifovlab_mamba_base_tag
     docker_img_iossifovlab_mamba_base_tag="$(e docker_img_iossifovlab_mamba_base_tag)"
-    build_docker_image_create "$gpf_dev_image" . ./Dockerfile "$docker_img_iossifovlab_mamba_base_tag"
+    build_docker_image_create "$gpf_dev_image" . ./Dockerfile.seqpipe "$docker_img_iossifovlab_mamba_base_tag"
     gpf_dev_image_ref="$(e docker_img_gpf_dev)"
   }
 
@@ -121,6 +121,21 @@ function main() {
     local -A ctx_network
     build_run_ctx_init ctx:ctx_network "persistent" "network"
     build_run_ctx_persist ctx:ctx_network
+  }
+
+  # run localstack
+  build_stage "Run localstack"
+  {
+
+       local -A ctx_localstack
+       build_run_ctx_init ctx:ctx_localstack "persistent" "container" "localstack/localstack" \
+           "cmd-from-image" "no-def-mounts" \
+           'ports:4566,4510-4559' \
+           --hostname localstack --network "${ctx_network["network_id"]}" --workdir /opt/code/localstack/
+
+       defer_ret build_run_ctx_reset ctx:ctx_localstack
+       build_run_ctx_persist ctx:ctx_localstack
+
   }
 
   # run MailHog
@@ -211,32 +226,6 @@ EOT
     build_run_local cp ./results/pylint_gpf_report ./test-results/
   }
 
-  build_stage "bandit"
-  {
-    build_run_ctx_init "container" "${gpf_dev_image_ref}"
-    defer_ret build_run_ctx_reset
-
-    build_run_container bash -c '
-      cd /wd/dae; 
-      /opt/conda/bin/conda run --no-capture-output -n gpf \
-      bandit --exit-zero \
-        -r dae/ -o /wd/results/bandit_dae_report.html \
-        -f html \
-        --exclude "*tests/*" \
-        -s B101 || true'
-
-    build_run_container bash -c '
-      cd /wd/wdae; 
-      /opt/conda/bin/conda run --no-capture-output -n gpf \
-      bandit --exit-zero \
-        -r wdae/ -o /wd/results/bandit_wdae_report.html \
-        -f html \
-        --exclude "*tests/*" \
-        -s B101 || true'
-
-    build_run_local cp ./results/bandit_dae_report.html ./results/bandit_wdae_report.html ./test-results/
-  }
-
   build_stage "MyPy"
   {
     build_run_ctx_init "container" "${gpf_dev_image_ref}"
@@ -282,6 +271,7 @@ EOT
       --env TEST_REMOTE_HOST="gpfremote" \
       --env DAE_HDFS_HOST="impala" \
       --env DAE_IMPALA_HOST="impala" \
+      --env LOCALSTACK_HOST="localstack" \
       --env WDAE_EMAIL_HOST="mailhog"
 
     defer_ret build_run_ctx_reset
@@ -295,6 +285,7 @@ EOT
         cd /wd/dae;
         export PYTHONHASHSEED=0;
         /opt/conda/bin/conda run --no-capture-output -n gpf py.test -v \
+          --s3 --http \
           -n 5 \
           --durations 20 \
           --cov-config /wd/coveragerc \
@@ -316,6 +307,7 @@ EOT
       --env TEST_REMOTE_HOST="gpfremote" \
       --env DAE_HDFS_HOST="impala" \
       --env DAE_IMPALA_HOST="impala" \
+      --env LOCALSTACK_HOST="localstack" \
       --env WDAE_EMAIL_HOST="mailhog"
 
     defer_ret build_run_ctx_reset
@@ -355,6 +347,7 @@ EOT
       --env TEST_REMOTE_HOST="gpfremote" \
       --env DAE_HDFS_HOST="impala" \
       --env DAE_IMPALA_HOST="impala" \
+      --env LOCALSTACK_HOST="localstack" \
       --env WDAE_EMAIL_HOST="mailhog"
 
     defer_ret build_run_ctx_reset
@@ -369,6 +362,7 @@ EOT
         cd /wd/dae/tests;
         export PYTHONHASHSEED=0;
         /opt/conda/bin/conda run --no-capture-output -n gpf py.test -v \
+          --s3 --http \
           -n 5 \
           --durations 20 \
           --cov-config /wd/coveragerc \
@@ -394,6 +388,7 @@ EOT
       --env TEST_REMOTE_HOST="gpfremote" \
       --env DAE_HDFS_HOST="impala" \
       --env DAE_IMPALA_HOST="impala" \
+      --env LOCALSTACK_HOST="localstack" \
       --env WDAE_EMAIL_HOST="mailhog"
 
     defer_ret build_run_ctx_reset

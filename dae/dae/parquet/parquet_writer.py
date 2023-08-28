@@ -72,9 +72,9 @@ def save_ped_df_to_parquet(
     """Save ped_df as a parquet file named filename."""
     ped_df = ped_df.copy()
 
-    ped_df.role = ped_df.role.apply(lambda r: r.value)  # type: ignore
-    ped_df.sex = ped_df.sex.apply(lambda s: s.value)  # type: ignore
-    ped_df.status = ped_df.status.apply(lambda s: s.value)  # type: ignore
+    ped_df.role = ped_df.role.apply(lambda r: r.value)
+    ped_df.sex = ped_df.sex.apply(lambda s: s.value)
+    ped_df.status = ped_df.status.apply(lambda s: s.value)
     if "generated" not in ped_df:
         ped_df["generated"] = False
     if "layout" not in ped_df:

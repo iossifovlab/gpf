@@ -1,5 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import os
+import pathlib
+
 import pytest
 import pyarrow as pa
 import pyarrow.parquet as pq
@@ -7,21 +9,21 @@ import pandas as pd
 from dae.parquet.helpers import url_to_pyarrow_fs, merge_parquets
 
 
-def test_url_to_pyarrow_fs():
+def test_url_to_pyarrow_fs() -> None:
     filename = "path/to/some/file.txt"
     fs, path = url_to_pyarrow_fs(filename)
     assert fs is None
     assert path == filename
 
 
-def test_url_to_pyarrow_fs_s3_url():
+def test_url_to_pyarrow_fs_s3_url() -> None:
     filename = "s3://bucket/file.txt"
     fs, path = url_to_pyarrow_fs(filename)
     assert isinstance(fs, pa.fs.PyFileSystem)
     assert path == "bucket/file.txt"
 
 
-def test_merge_parquets(tmpdir):
+def test_merge_parquets(tmp_path: pathlib.Path) -> None:
     full_data = pd.DataFrame({
         "n_legs": [2, 2, 4, 4, 5, 100],
         "animal": [
@@ -32,12 +34,12 @@ def test_merge_parquets(tmpdir):
     in_files = []
     for i in range(0, len(full_data), 2):
         table = pa.table(full_data.iloc[i:i + 2])
-        in_files.append(str(tmpdir / f"p{i}.parquet"))
+        in_files.append(str(tmp_path / f"p{i}.parquet"))
         writer = pq.ParquetWriter(in_files[-1], table.schema, version="1.0")
         writer.write_table(table)
         writer.close()
 
-    out_file = str(tmpdir / "merged.parquet")
+    out_file = str(tmp_path / "merged.parquet")
     merge_parquets(in_files, out_file)
 
     merged = pq.ParquetFile(out_file)
@@ -50,19 +52,19 @@ def test_merge_parquets(tmpdir):
         assert not os.path.exists(in_file)
 
 
-def test_merge_parquets_single_file(tmpdir):
+def test_merge_parquets_single_file(tmp_path: pathlib.Path) -> None:
     table = pa.table({
         "n_legs": [2, 2, 4, 4, 5, 100],
         "animal": [
             "Flamingo", "Parrot", "Dog", "Horse", "Brittle stars", "Centipede"
         ]
     })
-    in_file = str(tmpdir / "in.parquet")
+    in_file = str(tmp_path / "in.parquet")
     writer = pq.ParquetWriter(in_file, table.schema, version="1.0")
     writer.write_table(table)
     writer.close()
 
-    out_file = str(tmpdir / "out.parquet")
+    out_file = str(tmp_path / "out.parquet")
     merge_parquets([in_file], out_file)
 
     merged = pq.ParquetFile(out_file)
@@ -71,13 +73,13 @@ def test_merge_parquets_single_file(tmpdir):
     assert (data == table.to_pandas()).all().all()
 
 
-def test_merge_parquets_no_files():
+def test_merge_parquets_no_files() -> None:
     with pytest.raises(Exception):
         merge_parquets([], "out.parquet")
     assert not os.path.exists("out.parquet")
 
 
-def test_merge_parquets_broken_input_file(tmpdir):
+def test_merge_parquets_broken_input_file(tmp_path: pathlib.Path) -> None:
     table = pa.table({
         "n_legs": [2, 2, 4, 4, 5, 100],
         "animal": [
@@ -85,15 +87,15 @@ def test_merge_parquets_broken_input_file(tmpdir):
         ]
     })
     writer = pq.ParquetWriter(
-        str(tmpdir / "p1.parquet"), table.schema, version="1.0")
+        str(tmp_path / "p1.parquet"), table.schema, version="1.0")
     writer.write_table(table)
     writer.close()
 
-    with open(str(tmpdir / "p2.parquet"), "wt") as file:
+    with open(str(tmp_path / "p2.parquet"), "wt") as file:
         file.write("This is not a parquet file.")
 
-    in_files = [str(tmpdir / "p1.parquet"), str(tmpdir / "p2.parquet")]
-    out_file = str(tmpdir / "merged.parquet")
+    in_files = [str(tmp_path / "p1.parquet"), str(tmp_path / "p2.parquet")]
+    out_file = str(tmp_path / "merged.parquet")
     with pytest.raises(Exception):
         merge_parquets(in_files, out_file)
 
@@ -101,7 +103,7 @@ def test_merge_parquets_broken_input_file(tmpdir):
     assert not os.path.exists(out_file)
 
 
-def test_merge_parquets_missing_input_file(tmpdir):
+def test_merge_parquets_missing_input_file(tmp_path: pathlib.Path) -> None:
     table = pa.table({
         "n_legs": [2, 2, 4, 4, 5, 100],
         "animal": [
@@ -109,15 +111,15 @@ def test_merge_parquets_missing_input_file(tmpdir):
         ]
     })
     writer = pq.ParquetWriter(
-        str(tmpdir / "p1.parquet"), table.schema, version="1.0")
+        str(tmp_path / "p1.parquet"), table.schema, version="1.0")
     writer.write_table(table)
     writer.close()
 
     in_files = [
-        str(tmpdir / "p1.parquet"),
-        str(tmpdir / "p2.parquet"),
-        str(tmpdir / "p3.parquet")]
-    out_file = str(tmpdir / "merged.parquet")
+        str(tmp_path / "p1.parquet"),
+        str(tmp_path / "p2.parquet"),
+        str(tmp_path / "p3.parquet")]
+    out_file = str(tmp_path / "merged.parquet")
     merge_parquets(in_files, out_file)
 
     # assert no partial output file is left behind in case of error

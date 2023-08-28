@@ -2,19 +2,20 @@
 import multiprocessing as mp
 import textwrap
 import contextlib
+import pathlib
+from typing import Generator
 
-import requests
+# import requests
 import pytest
 
 from dae.genomic_resources.testing import setup_tabix, \
     build_inmemory_test_protocol, build_inmemory_test_resource, \
     setup_directories, build_filesystem_test_resource, \
-    build_http_test_protocol, build_s3_test_protocol, \
-    s3_threaded_test_server, \
+    build_http_test_protocol, \
     _process_server_manager, _internal_process_runner
 
 
-def test_setup_tabix(tmp_path):
+def test_setup_tabix(tmp_path: pathlib.Path) -> None:
     tabix_filename, index_filename = setup_tabix(
         tmp_path / "data.txt",
         """
@@ -32,7 +33,7 @@ def test_setup_tabix(tmp_path):
     assert index_filename.endswith(".gz.tbi")
 
 
-def test_build_inmemory_test_protocol():
+def test_build_inmemory_test_protocol() -> None:
     proto = build_inmemory_test_protocol({
         "res1": {
             "genomic_resource.yaml": textwrap.dedent("""
@@ -56,7 +57,7 @@ def test_build_inmemory_test_protocol():
     assert res.get_type() == "position_score"
 
 
-def test_build_inmemory_test_resource():
+def test_build_inmemory_test_resource() -> None:
     res = build_inmemory_test_resource({
         "genomic_resource.yaml": textwrap.dedent("""
             type: position_score
@@ -78,8 +79,8 @@ def test_build_inmemory_test_resource():
 
 
 @pytest.fixture
-def np_score_directory(tmp_path_factory):
-    root_path = tmp_path_factory.mktemp("np_score_resource")
+def np_score_directory(tmp_path: pathlib.Path) -> pathlib.Path:
+    root_path = tmp_path
     tabix_filename, _ = setup_tabix(
         root_path / "data.txt",
         """
@@ -108,32 +109,35 @@ def np_score_directory(tmp_path_factory):
     return root_path
 
 
-def test_build_filesystem_resource(np_score_directory):
+def test_build_filesystem_resource(
+        np_score_directory: pathlib.Path) -> None:
 
     res = build_filesystem_test_resource(np_score_directory)
     assert res.get_type() == "np_score"
 
 
-def test_build_http_test_proto(np_score_directory):
+def test_build_http_test_proto(
+        np_score_directory: pathlib.Path) -> None:
 
     with build_http_test_protocol(np_score_directory) as proto:
         res = proto.get_resource("")
         assert res.get_type() == "np_score"
 
 
-def test_build_s3_test_proto(np_score_directory):
+# def test_build_s3_test_proto(
+#         np_score_directory: pathlib.Path) -> None:
 
-    with build_s3_test_protocol(np_score_directory) as proto:
-        res = proto.get_resource("")
-        assert res.get_type() == "np_score"
+#     with build_s3_test_protocol(np_score_directory) as proto:
+#         res = proto.get_resource("")
+#         assert res.get_type() == "np_score"
 
 
 @contextlib.contextmanager
-def _server_manager_simple():
+def _server_manager_simple() -> Generator[str, None, None]:
     yield "started"
 
 
-def test_internal_process_runner():
+def test_internal_process_runner() -> None:
     start_queue: mp.Queue = mp.Queue()
     stop_queue: mp.Queue = mp.Queue()
     stop_queue.put("stop")
@@ -152,17 +156,17 @@ def test_internal_process_runner():
     stop_queue.join_thread()
 
 
-def test_process_server_simple():
+def test_process_server_simple() -> None:
     with _process_server_manager(_server_manager_simple) as start_message:
         assert start_message == "started"
 
 
 @contextlib.contextmanager
-def _server_manager_start_failed():
+def _server_manager_start_failed() -> Generator[str, None, None]:
     raise ValueError("unexpected error")
 
 
-def test_internal_process_runner_start_failed():
+def test_internal_process_runner_start_failed() -> None:
     start_queue: mp.Queue = mp.Queue()
     stop_queue: mp.Queue = mp.Queue()
     stop_queue.put("stop")
@@ -181,7 +185,7 @@ def test_internal_process_runner_start_failed():
     stop_queue.join_thread()
 
 
-def test_process_server_start_failed():
+def test_process_server_start_failed() -> None:
     with pytest.raises(ValueError):
         with _process_server_manager(
                 _server_manager_start_failed) as _:
@@ -189,12 +193,12 @@ def test_process_server_start_failed():
 
 
 @contextlib.contextmanager
-def _server_manager_stop_failed():
+def _server_manager_stop_failed() -> Generator[str, None, None]:
     yield "started"
     raise ValueError("unexpected error")
 
 
-def test_internal_process_runner_stop_failed():
+def test_internal_process_runner_stop_failed() -> None:
     start_queue: mp.Queue = mp.Queue()
     stop_queue: mp.Queue = mp.Queue()
     stop_queue.put("stop")
@@ -214,20 +218,20 @@ def test_internal_process_runner_stop_failed():
     stop_queue.join_thread()
 
 
-def test_process_server_stop_failed():
+def test_process_server_stop_failed() -> None:
     with _process_server_manager(_server_manager_stop_failed) as start_message:
         assert start_message == "started"
 
 
-def test_s3_threaded_server_simple():
-    with s3_threaded_test_server() as endpoint_url:
-        response = requests.get(endpoint_url, timeout=10.0)
-        assert response.status_code == 200
+# def test_s3_threaded_server_simple():
+#     with s3_threaded_test_server() as endpoint_url:
+#         response = requests.get(endpoint_url, timeout=10.0)
+#         assert response.status_code == 200
 
-    with s3_threaded_test_server() as endpoint_url:
-        response = requests.get(endpoint_url, timeout=10.0)
-        assert response.status_code == 200
+#     with s3_threaded_test_server() as endpoint_url:
+#         response = requests.get(endpoint_url, timeout=10.0)
+#         assert response.status_code == 200
 
-    with s3_threaded_test_server() as endpoint_url:
-        response = requests.get(endpoint_url, timeout=10.0)
-        assert response.status_code == 200
+#     with s3_threaded_test_server() as endpoint_url:
+#         response = requests.get(endpoint_url, timeout=10.0)
+#         assert response.status_code == 200

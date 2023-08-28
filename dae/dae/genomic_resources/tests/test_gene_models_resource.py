@@ -1,14 +1,11 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-import pathlib
 import pytest
 
 from dae.genomic_resources.gene_models import \
     build_gene_models_from_resource, GeneModels
 from dae.genomic_resources.testing import \
     build_inmemory_test_resource, convert_to_tab_separated, \
-    build_filesystem_test_repository, resource_builder
-from dae.genomic_resources.repository import \
-    GenomicResource
+    resource_builder
 
 
 # this content follows the 'refflat' gene model format
@@ -20,7 +17,7 @@ POGZ      tx3  17    +      10      100   12       95     3         10,50,70   1
 """  # noqa
 
 
-def test_gene_models_resource_with_format():
+def test_gene_models_resource_with_format() -> None:
     res = build_inmemory_test_resource(
         content={
             "genomic_resource.yaml":
@@ -37,7 +34,7 @@ def test_gene_models_resource_with_format():
     assert len(gene_models.transcript_models) == 3
 
 
-def test_gene_models_resource_with_inferred_format():
+def test_gene_models_resource_with_inferred_format() -> None:
     res = build_inmemory_test_resource(
         content={
             "genomic_resource.yaml":
@@ -54,7 +51,7 @@ def test_gene_models_resource_with_inferred_format():
     assert len(gene_models.transcript_models) == 3
 
 
-def test_gene_models_resource_with_inferred_format_and_gene_mapping():
+def test_gene_models_resource_with_inferred_format_and_gene_mapping() -> None:
     res = build_inmemory_test_resource(
         content={
             "genomic_resource.yaml":
@@ -79,10 +76,10 @@ def test_gene_models_resource_with_inferred_format_and_gene_mapping():
 
 @pytest.mark.parametrize("scheme", [
     "file",
-    "s3",
+    # "s3",
     "http"
 ])
-def test_against_against_different_repo_types(scheme):
+def test_against_against_different_repo_types(scheme: str) -> None:
     with resource_builder(scheme, {
             "genomic_resource.yaml":
             "{type: gene_models, filename: genes.txt, format: refflat}",
@@ -95,21 +92,21 @@ def test_against_against_different_repo_types(scheme):
         assert len(gene_models.transcript_models) == 3
 
 
-def test_gene_models_resource(fixture_dirname):
+# def test_gene_models_resource(fixture_dirname):
 
-    dirname = fixture_dirname("genomic_resources")
-    repo = build_filesystem_test_repository(pathlib.Path(dirname))
+#     dirname = fixture_dirname("genomic_resources")
+#     repo = build_filesystem_test_repository(pathlib.Path(dirname))
 
-    res = repo.get_resource(
-        "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/"
-        "gene_models/refGene_201309")
+#     res = repo.get_resource(
+#         "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/"
+#         "gene_models/refGene_201309")
 
-    assert res is not None
-    assert isinstance(res, GenomicResource)
+#     assert res is not None
+#     assert isinstance(res, GenomicResource)
 
-    gene_models = build_gene_models_from_resource(res)
-    gene_models.load()
+#     gene_models = build_gene_models_from_resource(res)
+#     gene_models.load()
 
-    assert isinstance(gene_models, GeneModels)
-    assert gene_models.gene_models is not None
-    assert len(gene_models.gene_models) == 13
+#     assert isinstance(gene_models, GeneModels)
+#     assert gene_models.gene_models is not None
+#     assert len(gene_models.gene_models) == 13

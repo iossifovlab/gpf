@@ -2,30 +2,40 @@
 
 import logging
 from typing import Any, Generator
+import gzip
 
 import pytest
 
 from dae.genomic_resources.repository import \
     GR_CONF_FILE_NAME
+from dae.genomic_resources.fsspec_protocol import FsspecRepositoryProtocol
 from dae.genomic_resources.testing import \
-    build_filesystem_test_protocol, FsspecReadWriteProtocol
+    build_filesystem_test_protocol
 from dae.genomic_resources.testing import convert_to_tab_separated, \
     setup_directories
 from dae.genomic_resources.testing import \
     s3_test_protocol, \
-    s3_process_test_server, \
-    copy_proto_genomic_resources
+    copy_proto_genomic_resources, \
+    build_inmemory_test_protocol, \
+    build_http_test_protocol
 
 logger = logging.getLogger(__name__)
 
 
 @pytest.fixture(scope="session")
-def content_fixture() -> dict[str, Any]:
+def alabala_gz() -> bytes:
+    return gzip.compress(b"alabala")
+
+
+@pytest.fixture
+def content_fixture(alabala_gz: bytes) -> dict[str, Any]:
     demo_gtf_content = "TP53\tchr3\t300\t200"
+
     return {
         "one": {
             GR_CONF_FILE_NAME: "",
-            "data.txt": "alabala"
+            "data.txt": "alabala",
+            "data.txt.gz": alabala_gz
         },
         "sub": {
             "two": {
@@ -59,33 +69,36 @@ def content_fixture() -> dict[str, Any]:
     }
 
 
-@pytest.fixture(scope="module")
-def s3_server_fixture() -> Generator[str, None, None]:
-    with s3_process_test_server() as endpoint_url:
-        yield endpoint_url
-
-
-@pytest.fixture(params=["file", "s3"])
-def rw_fsspec_proto(
+@pytest.fixture
+def fsspec_proto(
     request: pytest.FixtureRequest,
     content_fixture: dict[str, Any],
     tmp_path_factory: pytest.TempPathFactory,
-    s3_server_fixture: str
-) -> Generator[FsspecReadWriteProtocol, None, None]:
+    grr_scheme: str,
+) -> Generator[FsspecRepositoryProtocol, None, None]:
 
     root_path = tmp_path_factory.mktemp("rw_fsspec_proto")
     setup_directories(root_path, content_fixture)
 
-    scheme = request.param
-    if scheme == "file":
+    if grr_scheme == "file":
         yield build_filesystem_test_protocol(root_path)
         return
-    if scheme == "s3":
-        proto = s3_test_protocol(s3_server_fixture)
+
+    if grr_scheme == "s3":
+        proto = s3_test_protocol()
         copy_proto_genomic_resources(
             proto,
             build_filesystem_test_protocol(root_path))
         yield proto
         return
 
-    raise ValueError(f"unexpected protocol scheme: <{scheme}>")
+    if grr_scheme == "inmemory":
+        yield build_inmemory_test_protocol(content=content_fixture)
+        return
+
+    if grr_scheme == "http":
+        with build_http_test_protocol(root_path) as http_proto:
+            yield http_proto
+        return
+
+    raise ValueError(f"unexpected protocol scheme: <{grr_scheme}>")

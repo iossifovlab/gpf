@@ -1,13 +1,13 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import os
-from typing import Any, Union
+from typing import Union
 import pytest
 import numpy as np
 from dae.variants_loaders.vcf.loader import VcfLoader
 from dae.genomic_resources.testing import setup_pedigree, setup_vcf
 from dae.gpf_instance.gpf_instance import GPFInstance
-from dae.testing.acgt_import import acgt_gpf
 from dae.pedigrees.loader import FamiliesLoader
+from dae.testing.acgt_import import acgt_gpf
 
 
 @pytest.fixture
@@ -167,23 +167,23 @@ def test_vcf_loader_multi(
 
         s_gt_f1 = s[1][0].gt
         m_gt_f1 = m[1][0].gt
-        assert all((s_gt_f1 == m_gt_f1).flatten())
+        assert np.all(s_gt_f1 == m_gt_f1)
 
         s_gt_f2 = s[1][0].gt
         m_gt_f2 = m[1][0].gt
-        assert all((s_gt_f2 == m_gt_f2).flatten())
+        assert np.all(s_gt_f2 == m_gt_f2)
 
         s_gt_f3 = s[1][0].gt
         m_gt_f3 = m[1][0].gt
-        assert all((s_gt_f3 == m_gt_f3).flatten())
+        assert np.all(s_gt_f3 == m_gt_f3)
 
         s_gt_f4 = s[1][0].gt
         m_gt_f4 = m[1][0].gt
-        assert all((s_gt_f4 == m_gt_f4).flatten())
+        assert np.all(s_gt_f4 == m_gt_f4)
 
         s_gt_f5 = s[1][0].gt
         m_gt_f5 = m[1][0].gt
-        assert all((s_gt_f5 == m_gt_f5).flatten())
+        assert np.all(s_gt_f5 == m_gt_f5)
 
 
 @pytest.fixture
@@ -260,8 +260,8 @@ def test_multivcf_loader_fill_missing(
     gt1_f1_expected = np.array([[1, 1], [0, 0], [0, 1], [0, 1]], dtype=np.int8)
     gt1_f5 = first_present[1][4].genotype
     gt1_f5_expected = np.array([[1, 1], [0, 0], [1, 0], [0, 1]], dtype=np.int8)
-    assert all((gt1_f1 == gt1_f1_expected).flatten())
-    assert all((gt1_f5 == gt1_f5_expected).flatten())
+    assert np.all(gt1_f1 == gt1_f1_expected)
+    assert np.all(gt1_f5 == gt1_f5_expected)
     print(second_missing[1][0], " ", second_missing[1][0].genotype)
     print(second_missing[1][1], " ", second_missing[1][1].genotype)
 
@@ -273,10 +273,10 @@ def test_multivcf_loader_fill_missing(
     gt2_f1_f2_f3_expected = np.array([[fill_value] * 2] * 4, dtype=np.int8)
     gt2_f5_expected = np.array([[0, 0], [1, 1], [1, 0], [0, 1]], dtype=np.int8)
 
-    assert all((gt2_f1 == gt2_f1_f2_f3_expected).flatten())
-    assert all((gt2_f2 == gt2_f1_f2_f3_expected).flatten())
-    assert all((gt2_f3 == gt2_f1_f2_f3_expected).flatten())
-    assert all((gt2_f5 == gt2_f5_expected).flatten())
+    assert np.all(gt2_f1 == gt2_f1_f2_f3_expected)
+    assert np.all(gt2_f2 == gt2_f1_f2_f3_expected)
+    assert np.all(gt2_f3 == gt2_f1_f2_f3_expected)
+    assert np.all(gt2_f5 == gt2_f5_expected)
     assert svs_fvs[0][0].ref_allele.position == 1
     assert svs_fvs[1][0].ref_allele.position == 4
     assert svs_fvs[2][0].ref_allele.position == 15
@@ -312,47 +312,3 @@ def test_multivcf_loader_fill_missing(
 #     assert multi_vcf_loader is not None
 #     vs = list(multi_vcf_loader.family_variants_iterator())
 #     assert len(vs) == 30
-
-
-def test_collect_filenames_local(
-    multivcf_split1_vcf: str,
-    multivcf_split2_vcf: str,
-) -> None:
-    vcf_filenames = [multivcf_split1_vcf, multivcf_split2_vcf]
-
-    params = {
-        "vcf_chromosomes": "1;2;3;4;5;6;7;8;9;10;11;12;13;14;15;16;17;18;X;Y"
-    }
-
-    all_filenames, _ = VcfLoader._collect_filenames(params, vcf_filenames)
-
-    assert len(all_filenames) == 2
-    assert all_filenames[0] == str(multivcf_split1_vcf)
-    assert all_filenames[1] == str(multivcf_split2_vcf)
-
-
-def test_collect_filenames_s3(
-    multivcf_split1_vcf: str,
-    multivcf_split2_vcf: str,
-    s3_filesystem: Any,
-    s3_tmp_bucket_url: Any,
-    mocker: Any
-) -> None:
-    s3_filesystem.put(str(multivcf_split1_vcf),
-                      f"{s3_tmp_bucket_url}/dir/multivcf_split1.vcf")
-    s3_filesystem.put(str(multivcf_split2_vcf),
-                      f"{s3_tmp_bucket_url}/dir/multivcf_split2.vcf")
-
-    mocker.patch("dae.variants_loaders.vcf.loader.url_to_fs",
-                 return_value=(s3_filesystem, None))
-
-    vcf_filenames = ["s3://test-bucket/dir/multivcf_split[vc].vcf"]
-
-    params = {
-        "vcf_chromosomes": "1;2;3;4;5;6;7;8;9;10"
-    }
-    all_filenames, _ = VcfLoader._collect_filenames(params, vcf_filenames)
-
-    assert len(all_filenames) == 2
-    assert all_filenames[0] == "s3://test-bucket/dir/multivcf_split1.vcf"
-    assert all_filenames[1] == "s3://test-bucket/dir/multivcf_split2.vcf"

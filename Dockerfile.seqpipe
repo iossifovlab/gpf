@@ -1,4 +1,7 @@
-FROM --platform=linux/amd64 condaforge/mambaforge:latest
+ARG REGISTRY=""
+ARG BASE_IMAGE_TAG=latest
+FROM ${REGISTRY}iossifovlab-mamba-base:${BASE_IMAGE_TAG}
+# FROM condaforge/mambaforge:latest
 
 ARG SOURCE_DIR="."
 

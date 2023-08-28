@@ -1,6 +1,5 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-import contextlib
-from typing import Any, Callable, ContextManager, Generator
+from typing import Any, Generator
 
 import pytest
 
@@ -55,136 +54,103 @@ def remote_proto_fixture(
     return proto
 
 
-CachingProtocolBuilder = Callable[
-    [str], ContextManager[CachingProtocol]]
-
-
+# @pytest.fixture(params=["file", "s3"])
 @pytest.fixture
 def caching_proto(
     tmp_path_factory: pytest.TempPathFactory,
-    remote_proto_fixture: FsspecReadWriteProtocol
-) -> CachingProtocolBuilder:
+    remote_proto_fixture: FsspecReadWriteProtocol,
+    grr_scheme: str
+) -> Generator[CachingProtocol, None, None]:
 
-    @contextlib.contextmanager
-    def builder(caching_scheme: str) -> Generator[CachingProtocol, None, None]:
-        remote_proto = remote_proto_fixture
+    remote_proto = remote_proto_fixture
+    caching_scheme = grr_scheme
 
-        if caching_scheme == "file":
-            root_path = tmp_path_factory.mktemp("file_caching_proto_path")
-            caching_proto = build_filesystem_test_protocol(root_path)
+    if caching_scheme == "file":
+        root_path = tmp_path_factory.mktemp("file_caching_proto_path")
+        caching_proto = build_filesystem_test_protocol(root_path)
+        yield CachingProtocol(remote_proto, caching_proto)
+
+    elif caching_scheme == "s3":
+        root_path = tmp_path_factory.mktemp("s3_caching_proto_path")
+        with build_s3_test_protocol(root_path) as caching_proto:
             yield CachingProtocol(remote_proto, caching_proto)
 
-        elif caching_scheme == "s3":
-            root_path = tmp_path_factory.mktemp("s3_caching_proto_path")
-            with build_s3_test_protocol(root_path) as caching_proto:
-                yield CachingProtocol(remote_proto, caching_proto)
-
-        else:
-            raise ValueError(f"Unsupported caching scheme: {caching_scheme}")
-
-    return builder
+    else:
+        raise ValueError(f"Unsupported caching scheme: {caching_scheme}")
 
 
-@pytest.mark.parametrize("caching_scheme", [
-    "file",
-    "s3",
-])
+@pytest.mark.grr_full
 def test_get_resource_three(
-        caching_proto: CachingProtocolBuilder, caching_scheme: str) -> None:
-    with caching_proto(caching_scheme) as proto:
-        res = proto.get_resource("three")
+        caching_proto: CachingProtocol) -> None:
+    proto = caching_proto
+    res = proto.get_resource("three")
 
-        assert res.resource_id == "three"
-        assert res.version == (2, 0)
+    assert res.resource_id == "three"
+    assert res.version == (2, 0)
 
 
-@pytest.mark.parametrize("caching_scheme", [
-    "file",
-    "s3",
-])
+@pytest.mark.grr_full
 def test_get_resource_two(
-        caching_proto: CachingProtocolBuilder, caching_scheme: str) -> None:
-    with caching_proto(caching_scheme) as proto:
-        res = proto.get_resource("sub/two")
+        caching_proto: CachingProtocol) -> None:
+    res = caching_proto.get_resource("sub/two")
 
-        assert res.resource_id == "sub/two"
-        assert res.version == (1, 0)
+    assert res.resource_id == "sub/two"
+    assert res.version == (1, 0)
 
 
-@pytest.mark.parametrize("caching_scheme", [
-    "file",
-    "s3",
-])
+@pytest.mark.grr_full
 def test_get_resource_copies_nothing_three(
-        caching_proto: CachingProtocolBuilder, caching_scheme: str) -> None:
-    with caching_proto(caching_scheme) as proto:
-        res = proto.get_resource("three")
+        caching_proto: CachingProtocol) -> None:
+    res = caching_proto.get_resource("three")
 
-        local_proto = proto.local_protocol
-        assert not local_proto.file_exists(res, "genomic_resource.yaml")
-        assert not local_proto.file_exists(res, "sub1/a.txt")
-        assert not local_proto.file_exists(res, "sub2/b.txt")
+    local_proto = caching_proto.local_protocol
+    assert not local_proto.file_exists(res, "genomic_resource.yaml")
+    assert not local_proto.file_exists(res, "sub1/a.txt")
+    assert not local_proto.file_exists(res, "sub2/b.txt")
 
 
-@pytest.mark.parametrize("caching_scheme", [
-    "file",
-    "s3",
-])
+@pytest.mark.grr_full
 def test_get_resource_copies_nothing_two(
-        caching_proto: CachingProtocolBuilder, caching_scheme: str) -> None:
-    with caching_proto(caching_scheme) as proto:
-        res = proto.get_resource("sub/two")
+        caching_proto: CachingProtocol) -> None:
+    res = caching_proto.get_resource("sub/two")
 
-        local_proto = proto.local_protocol
-        assert not local_proto.file_exists(res, "genomic_resource.yaml")
-        assert not local_proto.file_exists(res, "genes.gtf")
+    local_proto = caching_proto.local_protocol
+    assert not local_proto.file_exists(res, "genomic_resource.yaml")
+    assert not local_proto.file_exists(res, "genes.gtf")
 
 
-@pytest.mark.parametrize("caching_scheme", [
-    "file",
-    "s3",
-])
+@pytest.mark.grr_full
 def test_open_raw_file_copies_the_file_three_a(
-        caching_proto: CachingProtocolBuilder, caching_scheme: str) -> None:
+        caching_proto: CachingProtocol) -> None:
 
-    with caching_proto(caching_scheme) as proto:
-        res = proto.get_resource("three")
-        with proto.open_raw_file(res, "sub1/a.txt") as infile:
-            content = infile.read()
-        assert content == "a"
+    res = caching_proto.get_resource("three")
+    with caching_proto.open_raw_file(res, "sub1/a.txt") as infile:
+        content = infile.read()
+    assert content == "a"
 
-        local_proto = proto.local_protocol
-        assert local_proto.file_exists(res, "sub1/a.txt")
-        assert not local_proto.file_exists(res, "genomic_resource.yaml")
-        assert not local_proto.file_exists(res, "sub2/b.txt")
+    local_proto = caching_proto.local_protocol
+    assert local_proto.file_exists(res, "sub1/a.txt")
+    assert not local_proto.file_exists(res, "genomic_resource.yaml")
+    assert not local_proto.file_exists(res, "sub2/b.txt")
 
 
-@pytest.mark.parametrize("caching_scheme", [
-    "file",
-    "s3",
-])
+@pytest.mark.grr_full
 def test_open_raw_file_copies_the_file_three_b(
-        caching_proto: CachingProtocolBuilder, caching_scheme: str) -> None:
-    with caching_proto(caching_scheme) as proto:
-        res = proto.get_resource("three")
-        with proto.open_raw_file(res, "sub2/b.txt") as infile:
-            content = infile.read()
-        assert content == "b"
+        caching_proto: CachingProtocol) -> None:
+    res = caching_proto.get_resource("three")
+    with caching_proto.open_raw_file(res, "sub2/b.txt") as infile:
+        content = infile.read()
+    assert content == "b"
 
-        local_proto = proto.local_protocol
-        assert local_proto.file_exists(res, "sub2/b.txt")
-        assert not local_proto.file_exists(res, "genomic_resource.yaml")
-        assert not local_proto.file_exists(res, "sub1/a.txt")
+    local_proto = caching_proto.local_protocol
+    assert local_proto.file_exists(res, "sub2/b.txt")
+    assert not local_proto.file_exists(res, "genomic_resource.yaml")
+    assert not local_proto.file_exists(res, "sub1/a.txt")
 
 
-@pytest.mark.parametrize("caching_scheme", [
-    "file",
-    "s3",
-])
+@pytest.mark.grr_full
 def test_open_tabix_file_simple(
-        caching_proto: CachingProtocolBuilder, caching_scheme: str) -> None:
-    with caching_proto(caching_scheme) as proto:
-
-        res = proto.get_resource("one")
-        with proto.open_tabix_file(res, "test.txt.gz") as tabix:
-            assert tabix.contigs == ["1", "2", "3"]
+        caching_proto: CachingProtocol) -> None:
+    res = caching_proto.get_resource("one")
+    with caching_proto.open_tabix_file(res, "test.txt.gz") as tabix:
+        assert tabix.contigs == ["1", "2", "3"]

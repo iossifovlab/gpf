@@ -11,14 +11,15 @@ import gzip
 import importlib
 import textwrap
 
-from typing import Any, Dict, Union, cast, Generator, \
-    Tuple, ContextManager, List, Optional
+from typing import Any, Union, cast, Generator, \
+    ContextManager, Optional
 from collections.abc import Callable
 import multiprocessing as mp
+from functools import partial
 
 from http.server import HTTPServer  # ThreadingHTTPServer
+from s3fs.core import S3FileSystem
 
-from functools import partial
 
 import pysam
 
@@ -58,12 +59,14 @@ def convert_to_tab_separated(content: str) -> str:
 
 def setup_directories(
         root_dir: pathlib.Path,
-        content: Union[str, Dict[str, Any]]) -> None:
+        content: Union[str, dict[str, Any]]) -> None:
     """Set up directory and subdirectory structures using the content."""
     root_dir = pathlib.Path(root_dir)
     root_dir.parent.mkdir(parents=True, exist_ok=True)
     if isinstance(content, str):
         root_dir.write_text(content, encoding="utf8")
+    elif isinstance(content, bytes):
+        root_dir.write_bytes(content)
     elif isinstance(content, dict):
         for path_name, path_content in content.items():
             setup_directories(root_dir / path_name, path_content)
@@ -233,7 +236,7 @@ def setup_empty_gene_models(out_path: pathlib.Path) -> GeneModels:
 
 
 def build_inmemory_test_protocol(
-        content: Dict[str, Any]) -> FsspecReadWriteProtocol:
+        content: dict[str, Any]) -> FsspecReadWriteProtocol:
     """Build and return an embedded fsspec protocol for testing."""
     with tempfile.TemporaryDirectory("embedded_test_protocol") as root_path:
         proto = build_inmemory_protocol(root_path, root_path, content)
@@ -357,15 +360,11 @@ def build_http_test_protocol(
     build_filesystem_test_protocol(root_path, repair=repair)
 
     with http_process_test_server(root_path) as server_address:
-        proto = cast(
-            FsspecReadOnlyProtocol,
-            build_fsspec_protocol(str(root_path), server_address))
-
-        yield proto
+        yield build_fsspec_protocol(str(root_path), server_address)
 
 
 def _internal_process_runner(
-        module_name: str, server_manager_name: str, args: List[Any],
+        module_name: str, server_manager_name: str, args: list[Any],
         start_queue: mp.Queue, stop_queue: mp.Queue) -> None:
     module = importlib.import_module(module_name)
     server_manager = getattr(module, server_manager_name)
@@ -411,34 +410,37 @@ def _process_server_manager(
     proc.join()
 
 
-@contextlib.contextmanager
-def s3_threaded_test_server() -> Generator[str, None, None]:
-    """Run threaded s3 moto server."""
-    # pylint: disable=protected-access,import-outside-toplevel
-    from moto.server import ThreadedMotoServer  # type: ignore
-    server = ThreadedMotoServer(ip_address="", port=0)
-    server.start()
-    server_address = server._server.server_address
-    endpoint_url = f"http://{server_address[0]}:{server_address[1]}"
+# @contextlib.contextmanager
+# def s3_threaded_test_server() -> Generator[str, None, None]:
+#     """Run threaded s3 moto server."""
+#     # pylint: disable=protected-access,import-outside-toplevel
+#     from moto.server import ThreadedMotoServer  # type: ignore
+#     server = ThreadedMotoServer(ip_address="", port=0)
+#     server.start()
+#     server_address = server._server.server_address
+#     endpoint_url = f"http://{server_address[0]}:{server_address[1]}"
 
-    yield endpoint_url
+#     yield endpoint_url
 
-    logger.info(
-        "Stopping S3 Moto thread at %s", endpoint_url)
-    server.stop()
-    logger.info(
-        "[DONE] Stopping S3 Moto thread at %s", endpoint_url)
-
-
-@contextlib.contextmanager
-def s3_process_test_server() -> Generator[str, None, None]:
-    with _process_server_manager(s3_threaded_test_server) as endpoint_url:
-        yield endpoint_url
+#     logger.info(
+#         "Stopping S3 Moto thread at %s", endpoint_url)
+#     server.stop()
+#     logger.info(
+#         "[DONE] Stopping S3 Moto thread at %s", endpoint_url)
 
 
-def s3_test_protocol(endpoint_url: str) -> FsspecReadWriteProtocol:
+def s3_test_server_endpoint() -> str:
+    # with _process_server_manager(s3_threaded_test_server) as endpoint_url:
+    #     yield endpoint_url
+    host = os.environ.get("LOCALSTACK_HOST", "localhost")
+    return f"http://{host}:4566"
+
+
+def s3_test_protocol() -> FsspecReadWriteProtocol:
     """Build an S3 fsspec testing protocol on top of existing S3 server."""
-    bucket_url = build_s3_test_bucket(endpoint_url)
+    endpoint_url = s3_test_server_endpoint()
+    s3filesystem = build_s3_test_filesystem()
+    bucket_url = build_s3_test_bucket(s3filesystem)
     proto = cast(
         FsspecReadWriteProtocol,
         build_fsspec_protocol(
@@ -446,34 +448,31 @@ def s3_test_protocol(endpoint_url: str) -> FsspecReadWriteProtocol:
     return proto
 
 
-def build_s3_test_bucket(endpoint_url: str) -> str:
+def build_s3_test_filesystem(
+        endpoint_url: Optional[str] = None) -> S3FileSystem:
+    """Create an S3 fsspec filesystem connected to the S3 server."""
+    if "AWS_SECRET_ACCESS_KEY" not in os.environ:
+        os.environ["AWS_SECRET_ACCESS_KEY"] = "foo"
+    if "AWS_ACCESS_KEY_ID" not in os.environ:
+        os.environ["AWS_ACCESS_KEY_ID"] = "foo"
+    # S3FileSystem.clear_instance_cache()
+    if endpoint_url is None:
+        endpoint_url = s3_test_server_endpoint()
+    assert endpoint_url is not None
+    s3filesystem = S3FileSystem(
+        anon=False, client_kwargs={"endpoint_url": endpoint_url})
+    s3filesystem.invalidate_cache()
+    return s3filesystem
+
+
+def build_s3_test_bucket(s3filesystem: Optional[S3FileSystem] = None) -> str:
     """Create an s3 test buckent."""
     with tempfile.TemporaryDirectory("s3_test_bucket") as tmp_path:
-        # pylint: disable=import-outside-toplevel
-        from s3fs.core import S3FileSystem  # type: ignore
-        if "AWS_SECRET_ACCESS_KEY" not in os.environ:
-            os.environ["AWS_SECRET_ACCESS_KEY"] = "foo"
-        if "AWS_ACCESS_KEY_ID" not in os.environ:
-            os.environ["AWS_ACCESS_KEY_ID"] = "foo"
-        S3FileSystem.clear_instance_cache()
-        s3filesystem = S3FileSystem(
-            anon=False, client_kwargs={"endpoint_url": endpoint_url})
-        s3filesystem.invalidate_cache()
+        if s3filesystem is None:
+            s3filesystem = build_s3_test_filesystem()
         bucket_url = f"s3:/{tmp_path}"
         s3filesystem.mkdir(bucket_url, acl="public-read")
-        logger.warning(
-            "S3 moto server at %s with bucket %s",
-            endpoint_url, bucket_url)
         return bucket_url
-
-
-@contextlib.contextmanager
-def build_s3_test_server() -> Generator[
-        Tuple[str, str], None, None]:
-    """Run an S3 moto server."""
-    with s3_process_test_server() as endpoint_url:
-        bucket_url = build_s3_test_bucket(endpoint_url)
-        yield (bucket_url, endpoint_url)
 
 
 @contextlib.contextmanager
@@ -485,20 +484,19 @@ def build_s3_test_protocol(
     The S3 moto server is populated with resource from filesystem GRR pointed
     by the root_path.
     """
-    # pylint: disable=protected-access,import-outside-toplevel
+    endpoint_url = s3_test_server_endpoint()
+    s3filesystem = build_s3_test_filesystem(endpoint_url)
+    bucket_url = build_s3_test_bucket(s3filesystem)
 
-    with s3_process_test_server() as endpoint_url:
-        bucket_url = build_s3_test_bucket(endpoint_url)
+    proto = cast(
+        FsspecReadWriteProtocol,
+        build_fsspec_protocol(
+            str(bucket_url), bucket_url, endpoint_url=endpoint_url))
+    copy_proto_genomic_resources(
+        proto,
+        build_filesystem_test_protocol(root_path))
 
-        proto = cast(
-            FsspecReadWriteProtocol,
-            build_fsspec_protocol(
-                str(bucket_url), bucket_url, endpoint_url=endpoint_url))
-        copy_proto_genomic_resources(
-            proto,
-            build_filesystem_test_protocol(root_path))
-
-        yield proto
+    yield proto
 
 
 def copy_proto_genomic_resources(

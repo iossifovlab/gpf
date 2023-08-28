@@ -130,42 +130,6 @@ def build_inmemory_protocol(
     return proto
 
 
-def build_fsspec_protocol(
-        proto_id: str, root_url: str, **kwargs: Union[str, None]) -> Union[
-        ReadOnlyRepositoryProtocol, ReadWriteRepositoryProtocol]:
-    """Create fsspec GRR protocol based on the root url."""
-    url = urlparse(root_url)
-    # pylint: disable=import-outside-toplevel
-
-    if url.scheme in {"file", ""}:
-        from fsspec.implementations.local import LocalFileSystem
-        filesystem = LocalFileSystem()
-        return FsspecReadWriteProtocol(
-            proto_id, root_url, filesystem)
-    if url.scheme in {"http", "https"}:
-        from fsspec.implementations.http import HTTPFileSystem
-        base_url = kwargs.get("base_url")
-        filesystem = HTTPFileSystem(client_kwargs={"base_url": base_url})
-        return FsspecReadOnlyProtocol(proto_id, root_url, filesystem)
-
-    if url.scheme in {"s3"}:
-        filesystem = kwargs.get("filesystem")
-        if filesystem is None:
-            from s3fs.core import S3FileSystem  # type: ignore
-
-            endpoint_url = kwargs.get("endpoint_url")
-            filesystem = S3FileSystem(
-                anon=False, client_kwargs={"endpoint_url": endpoint_url})
-        return FsspecReadWriteProtocol(
-            proto_id, root_url, filesystem)
-    if url.scheme == "memory":
-        from fsspec.implementations.memory import MemoryFileSystem
-        filesystem = MemoryFileSystem()
-        return FsspecReadWriteProtocol(proto_id, root_url, filesystem)
-
-    raise NotImplementedError(f"unsupported schema {url.scheme}")
-
-
 class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
     """Provides fsspec genomic resources repository protocol."""
 
@@ -691,3 +655,43 @@ def build_local_resource(
         dirname, (0, ), proto,
         config)
     return resource
+
+
+FsspecRepositoryProtocol = Union[
+    FsspecReadOnlyProtocol, FsspecReadWriteProtocol]
+
+
+def build_fsspec_protocol(
+    proto_id: str, root_url: str, **kwargs: Union[str, None]
+) -> FsspecRepositoryProtocol:
+    """Create fsspec GRR protocol based on the root url."""
+    url = urlparse(root_url)
+    # pylint: disable=import-outside-toplevel
+
+    if url.scheme in {"file", ""}:
+        from fsspec.implementations.local import LocalFileSystem
+        filesystem = LocalFileSystem()
+        return FsspecReadWriteProtocol(
+            proto_id, root_url, filesystem)
+    if url.scheme in {"http", "https"}:
+        from fsspec.implementations.http import HTTPFileSystem
+        base_url = kwargs.get("base_url")
+        filesystem = HTTPFileSystem(client_kwargs={"base_url": base_url})
+        return FsspecReadOnlyProtocol(proto_id, root_url, filesystem)
+
+    if url.scheme in {"s3"}:
+        filesystem = kwargs.get("filesystem")
+        if filesystem is None:
+            from s3fs.core import S3FileSystem
+
+            endpoint_url = kwargs.get("endpoint_url")
+            filesystem = S3FileSystem(
+                anon=False, client_kwargs={"endpoint_url": endpoint_url})
+        return FsspecReadWriteProtocol(
+            proto_id, root_url, filesystem)
+    if url.scheme == "memory":
+        from fsspec.implementations.memory import MemoryFileSystem
+        filesystem = MemoryFileSystem()
+        return FsspecReadWriteProtocol(proto_id, root_url, filesystem)
+
+    raise NotImplementedError(f"unsupported schema {url.scheme}")

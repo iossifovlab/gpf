@@ -62,10 +62,10 @@ chrA   4   .  A   C   .    .      .    GT     0/0 0/1 1/1
     return study
 
 
-@pytest.mark.duckdb(reason="supported for schema2 duckdb")
-@pytest.mark.impala2(reason="supported for schema2 impala")
-@pytest.mark.gcp(reason="supported for schema2 gcp")
-@pytest.mark.inmemory(reason="supported for inmemory storage")
+@pytest.mark.gs_duckdb(reason="supported for schema2 duckdb")
+@pytest.mark.gs_impala2(reason="supported for schema2 impala")
+@pytest.mark.gs_gcp(reason="supported for schema2 gcp")
+@pytest.mark.gs_inmemory(reason="supported for inmemory storage")
 @pytest.mark.parametrize("position,freqs", [
     (1, [75.0, 25.0]),
     (2, [75.0, 25.0]),

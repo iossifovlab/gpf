@@ -3,24 +3,24 @@ import os
 import shutil
 from pathlib import Path
 from urllib.parse import urlparse
-from typing import Optional, Union, cast
+from typing import Optional, Union, cast, Any
 
 from fsspec.core import url_to_fs
 
 
-def abspath(filename):
+def abspath(filename: str) -> str:
     url = urlparse(filename)
     if url.scheme:
         return filename
     return os.path.abspath(filename)
 
 
-def exists(filename):
+def exists(filename: str) -> bool:
     fs, relative_path = url_to_fs(filename)
-    return fs.exists(relative_path)
+    return bool(fs.exists(relative_path))
 
 
-def join(path, *paths) -> str:
+def join(path: str, *paths: str) -> str:
     for i in range(len(paths) - 1, -1, -1):
         if urlparse(paths[i]).scheme:
             return str(os.path.join(*paths[i:]))
@@ -112,13 +112,13 @@ def glob(path: str) -> list[str]:
     return cast(list[str], fs.glob(relative_path))
 
 
-def rm_file(path: str):
+def rm_file(path: str) -> None:
     """Remove a file."""
     fs, relative_path = url_to_fs(path)
-    return fs.rm_file(relative_path)
+    fs.rm_file(relative_path)
 
 
-def _handle_env_variables(envdict=None):
+def _handle_env_variables(envdict: Optional[dict[str, Any]] = None) -> None:
     """Handle filesystem-related environment variables.
 
     Passing certain settings as env variables is useful in certain scenarios
@@ -131,7 +131,8 @@ def _handle_env_variables(envdict=None):
     module import we get these env variables and set the appropriate config
     variables for fsspec.
     """
-    envdict = envdict if envdict is not None else os.environ
+    envdict = cast(
+        dict[str, Any], envdict if envdict is not None else os.environ)
     if "S3_ENDPOINT_URL" not in envdict:
         return
     endpoint_url = envdict["S3_ENDPOINT_URL"]
