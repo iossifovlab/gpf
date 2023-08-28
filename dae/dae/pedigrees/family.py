@@ -33,6 +33,7 @@ PEDIGREE_COLUMN_NAMES = {
     "generated": "generated",
     "proband": "proband",
     "not_sequenced": "not_sequenced",
+    "missing": "missing"
 }
 
 
@@ -91,7 +92,11 @@ class Person:
         self.family = None
         self.person_id = self._attributes["person_id"]
         self.sample_id = self._attributes.get("sample_id", None)
-        self.index = self._attributes.get("index", None)
+        index = self._attributes.get("index", None)
+        if index is not None:
+            self.set_attr("member_index", index)
+            del self._attributes["index"]
+        self.member_index = self._attributes.get("member_index", None)
 
         self._sex = Sex.from_name(self._attributes["sex"])
         if "role" not in self._attributes:
@@ -127,6 +132,8 @@ class Person:
             value = self._attributes.get("generated")
             if value in {"None", "0", "False"}:
                 self._attributes["generated"] = None
+        if self._attributes.get("missing") is None:
+            self._attributes["missing"] = self.missing
 
     def __repr__(self):
         decorator = ""
@@ -144,7 +151,7 @@ class Person:
             "dad_id": self.dad_id,
             "mom_id": self.mom_id,
             "sample_id": self.sample_id,
-            "index": self.index,
+            "member_index": self.member_index,
             "sex": str(self.sex),
             "role": str(self.role),
             "status": str(self.status),
@@ -286,9 +293,9 @@ class Family:
             member.mom = self.get_member(member.mom_id, None)
             member.dad = self.get_member(member.dad_id, None)
             if member.missing:
-                member.index = -1
+                member.member_index = -1
             else:
-                member.index = index
+                member.member_index = index
                 index += 1
 
     @staticmethod
@@ -515,7 +522,7 @@ class Family:
     def members_index(self, person_ids):
         index = []
         for pid in person_ids:
-            index.append(self.persons[pid].index)
+            index.append(self.persons[pid].member_index)
         return index
 
     def get_member(self, person_id, default=None):
