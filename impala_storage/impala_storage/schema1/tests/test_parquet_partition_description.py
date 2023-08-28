@@ -1,5 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 from io import StringIO
+from typing import cast
 
 import pytest
 import numpy as np
@@ -7,7 +8,7 @@ import numpy as np
 from dae.variants.attributes import TransmissionType
 from dae.pedigrees.loader import FamiliesLoader
 from dae.parquet.partition_descriptor import PartitionDescriptor
-from dae.variants.family_variant import FamilyVariant
+from dae.variants.family_variant import FamilyVariant, FamilyAllele
 from dae.variants.variant import SummaryAllele, SummaryVariant
 
 
@@ -107,11 +108,11 @@ def test_parquet_family_bin(fam1, fam2, genotype):
 @pytest.mark.parametrize(
     "attributes, rare_boundary, expected",
     [
-        ({"af_allele_count": 1}, 5, 1),
-        ({"af_allele_count": 10, "af_allele_freq": 2}, 5, 2),
-        ({"af_allele_count": 10, "af_allele_freq": 5}, 5, 3),
-        ({"af_allele_count": 10, "af_allele_freq": 6}, 5, 3),
-        ({"af_allele_count": 10, "af_allele_freq": 50}, 10, 3),
+        ({"af_allele_count": 1}, 5, "1"),
+        ({"af_allele_count": 10, "af_allele_freq": 2}, 5, "2"),
+        ({"af_allele_count": 10, "af_allele_freq": 5}, 5, "3"),
+        ({"af_allele_count": 10, "af_allele_freq": 6}, 5, "3"),
+        ({"af_allele_count": 10, "af_allele_freq": 50}, 10, "3"),
     ],
 )
 def test_parquet_frequency_bin(fam1, genotype, attributes, rare_boundary,
@@ -131,7 +132,7 @@ def test_parquet_frequency_bin(fam1, genotype, attributes, rare_boundary,
 
         assert part_desc.make_frequency_bin(
             allele_count, allele_freq, is_denovo) == expected
-        partition = part_desc.family_partition(fa)
+        partition = part_desc.family_partition(cast(FamilyAllele, fa))
         assert partition == [
             ("region_bin", "1_11"), ("frequency_bin", expected)]
 

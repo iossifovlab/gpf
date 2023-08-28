@@ -226,19 +226,19 @@ class PartitionDescriptor:
 
     def make_frequency_bin(
             self, allele_count: Optional[int], allele_freq: Optional[float],
-            is_denovo: bool = False) -> int:
+            is_denovo: bool = False) -> str:
         """Produce frequency bin from allele count, frequency and de Novo flag.
 
         Params are allele count, allele frequence and de Novo flag.
         """
         if is_denovo:
-            frequency_bin = 0
+            frequency_bin = "0"
         elif allele_count and int(allele_count) == 1:  # Ultra rare
-            frequency_bin = 1
+            frequency_bin = "1"
         elif allele_freq and float(allele_freq) < self.rare_boundary:  # Rare
-            frequency_bin = 2
+            frequency_bin = "2"
         else:  # Common
-            frequency_bin = 3
+            frequency_bin = "3"
 
         return frequency_bin
 

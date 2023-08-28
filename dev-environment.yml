@@ -36,7 +36,6 @@ dependencies:
   - types-toml=0.10.3
   - types-python-dateutil=2.8.9
   - types-requests=2.27.30
-  - bandit=1.7.4
   - pip=23
   - invoke=2.1
   - gitpython=3.1
