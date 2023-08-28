@@ -5,7 +5,6 @@
 channels:
   - conda-forge
   - bioconda
-  - defaults
   - iossifovlab
 dependencies:
   - dask-jobqueue=0.8.1
