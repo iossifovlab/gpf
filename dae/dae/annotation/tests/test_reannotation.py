@@ -302,7 +302,7 @@ def test_deleted_attributes(reannotation_grr) -> None:
     assert len(reannotation.annotators_rerun) == 0
     assert len(reannotation.attributes_reused) == 0
     assert reannotation.attributes_deleted == [
-        "worst_effect", "gene_effects", "effect_details", "gene_list"
+        "worst_effect", "effect_details",
     ]
 
 
@@ -517,8 +517,8 @@ def test_annotate_columns_reannotation(
     root_path, reannotation_grr  # pylint: disable=unused-argument
 ):
     in_content = (
-        "chrom\tpos\tscore\tworst_effect\tgene_effects\teffect_details\tgene_list\tgene_score1\tgene_score2\n"  # noqa
-        "chr1\t23\t0.1\tbla\tbla\tbla\tbla\tbla\tbla\n"
+        "chrom\tpos\tscore\tworst_effect\teffect_details\tgene_score1\tgene_score2\n"  # noqa
+        "chr1\t23\t0.1\tbla\tbla\tbla\tbla\n"
     )
     out_expected_header = [
         "chrom", "pos", "score", "worst_effect", "gene_list", "gene_score1"
@@ -546,8 +546,8 @@ def test_annotate_columns_reannotation_internal(
     root_path, reannotation_grr  # pylint: disable=unused-argument
 ):
     in_content = (
-        "chrom\tpos\tscore\tworst_effect\tgene_effects\teffect_details\tgene_list\tgene_score1\n"  # noqa
-        "chr1\t23\t0.1\tbla\tbla\tbla\tbla\tbla\n"
+        "chrom\tpos\tscore\tworst_effect\teffect_details\tgene_score1\n"  # noqa
+        "chr1\t23\t0.1\tbla\tbla\tbla\n"
     )
     out_expected_header = [
         "chrom", "pos", "score", "worst_effect", "gene_list", "gene_score1"
@@ -578,15 +578,14 @@ def test_annotate_vcf_reannotation(
         ##fileformat=VCFv4.2
         ##INFO=<ID=score,Number=A,Type=Float,Description="">
         ##INFO=<ID=worst_effect,Number=A,Type=String,Description="">
-        ##INFO=<ID=gene_effects,Number=A,Type=String,Description="">
         ##INFO=<ID=effect_details,Number=A,Type=String,Description="">
         ##INFO=<ID=gene_list,Number=A,Type=String,Description="">
         ##INFO=<ID=gene_score1,Number=A,Type=String,Description="">
         ##INFO=<ID=gene_score2,Number=A,Type=String,Description="">
         ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
         ##contig=<ID=foo>
-        #CHROM POS ID REF ALT QUAL FILTER INFO                                                                                                                  FORMAT m1  d1  c1
-        foo    12  .  C   T   .    .      score=0.1;worst_effect=splice-site;gene_effects=bla;effect_details=bla;gene_list=g1;gene_score1=10.1;gene_score2=20.2 GT     0/1 0/0 0/0
+        #CHROM POS ID REF ALT QUAL FILTER INFO                                                                                                 FORMAT m1  d1  c1
+        foo    12  .  C   T   .    .      score=0.1;worst_effect=splice-site;effect_details=bla;gene_list=g1;gene_score1=10.1;gene_score2=20.2 GT     0/1 0/0 0/0
     """)
 
     in_file = root_path / "in.vcf"
@@ -604,6 +603,9 @@ def test_annotate_vcf_reannotation(
         ]
     ])
     out_vcf = pysam.VariantFile(out_file)
+
+    with open(out_file, "r") as output_txt:
+        print(output_txt.read())
 
     assert set(out_vcf.header.info.keys()) == {  # pylint: disable=no-member
         "score", "worst_effect", "gene_list", "gene_score1"

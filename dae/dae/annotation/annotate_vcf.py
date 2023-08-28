@@ -167,7 +167,10 @@ def annotate(
                         if isinstance(attr, list):
                             attr = ";".join(map(str, attr))
                         elif isinstance(attr, dict):
-                            attr = ";".join(map(str, attr.values()))
+                            attr = ";".join(
+                                f"{k}:{v}"
+                                for k, v in attr.items()
+                            )
                         attr = str(attr).replace(";", "|")\
                                         .replace(",", "|")\
                                         .replace(" ", "_")
