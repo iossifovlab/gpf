@@ -74,13 +74,13 @@ pipeline {
           //   reportName: 'wdae-mypy-report',
           //   reportTitles: 'wdae-mypy-report'])
 
-          publishHTML (target : [allowMissing: true,
-            alwaysLinkToLastBuild: true,
-            keepAll: true,
-            reportDir: 'test-results/',
-            reportFiles: 'bandit_*dae_report.html',
-            reportName: 'bandit-dae-report',
-            reportTitles: 'bandit-dae-report'])
+        //   publishHTML (target : [allowMissing: true,
+        //     alwaysLinkToLastBuild: true,
+        //     keepAll: true,
+        //     reportDir: 'test-results/',
+        //     reportFiles: 'bandit_*dae_report.html',
+        //     reportName: 'bandit-dae-report',
+        //     reportTitles: 'bandit-dae-report'])
 
           publishHTML (target : [allowMissing: true,
             alwaysLinkToLastBuild: true,
