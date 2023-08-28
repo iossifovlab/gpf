@@ -2,15 +2,18 @@
 # type: ignore
 import textwrap
 import pytest
+import pysam
 from dae.genomic_resources import build_genomic_resource_repository
 from dae.annotation.annotation_factory import build_annotation_pipeline
 from dae.annotation.annotation_pipeline import ReannotationPipeline
 
 from dae.testing.foobar_import import foobar_genome, foobar_genes
 from dae.testing import setup_directories, convert_to_tab_separated, \
-    setup_genome, setup_denovo
+    setup_genome, setup_denovo, setup_vcf
 
 from dae.annotation.annotate_columns import cli as cli_columns
+
+from dae.annotation.annotate_vcf import cli as cli_vcf
 
 
 @pytest.fixture(scope="module")
@@ -138,6 +141,22 @@ def reannotation_grr(root_path):
                 - gene_score_annotator:
                     resource_id: gene_score2
                     input_gene_list: gene_list
+            """),
+            "reannotation_old_internal.yaml": textwrap.dedent("""
+                - position_score: one
+                - effect_annotator:
+                    genome: foobar_genome
+                    gene_models: foobar_genes
+                - gene_score_annotator:
+                    resource_id: gene_score1
+                    input_gene_list: gene_list
+                - gene_score_annotator:
+                    resource_id: gene_score2
+                    input_gene_list: gene_list
+                    attributes:
+                    - source: gene_score2
+                      destination: gene_score2
+                      internal: true
             """),
             "reannotation_new.yaml": textwrap.dedent("""
                 - position_score: one
@@ -521,3 +540,71 @@ def test_annotate_columns_reannotation(
     with open(out_file, "rt", encoding="utf8") as _:
         out_file_header = "".join(_.readline()).strip().split("\t")
     assert out_file_header == out_expected_header
+
+
+def test_annotate_columns_reannotation_internal(
+    root_path, reannotation_grr  # pylint: disable=unused-argument
+):
+    in_content = (
+        "chrom\tpos\tscore\tworst_effect\tgene_effects\teffect_details\tgene_list\tgene_score1\n"  # noqa
+        "chr1\t23\t0.1\tbla\tbla\tbla\tbla\tbla\n"
+    )
+    out_expected_header = [
+        "chrom", "pos", "score", "worst_effect", "gene_list", "gene_score1"
+    ]
+    in_file = root_path / "in.txt"
+    out_file = root_path / "out.txt"
+    annotation_file_old = root_path / "reannotation_old_internal.yaml"
+    annotation_file_new = root_path / "reannotation_new.yaml"
+    grr_file = root_path / "grr.yaml"
+
+    setup_denovo(in_file, in_content)
+
+    cli_columns([
+        str(a) for a in [
+            in_file, annotation_file_new, "-o", out_file, "--grr", grr_file,
+            "--reannotate", annotation_file_old
+        ]
+    ])
+    with open(out_file, "rt", encoding="utf8") as _:
+        out_file_header = "".join(_.readline()).strip().split("\t")
+    assert out_file_header == out_expected_header
+
+
+def test_annotate_vcf_reannotation(
+    root_path, reannotation_grr  # pylint: disable=unused-argument
+):
+    in_content = textwrap.dedent("""
+        ##fileformat=VCFv4.2
+        ##INFO=<ID=score,Number=A,Type=Float,Description="">
+        ##INFO=<ID=worst_effect,Number=A,Type=String,Description="">
+        ##INFO=<ID=gene_effects,Number=A,Type=String,Description="">
+        ##INFO=<ID=effect_details,Number=A,Type=String,Description="">
+        ##INFO=<ID=gene_list,Number=A,Type=String,Description="">
+        ##INFO=<ID=gene_score1,Number=A,Type=String,Description="">
+        ##INFO=<ID=gene_score2,Number=A,Type=String,Description="">
+        ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+        ##contig=<ID=foo>
+        #CHROM POS ID REF ALT QUAL FILTER INFO                                                                                                                  FORMAT m1  d1  c1
+        foo    12  .  C   T   .    .      score=0.1;worst_effect=splice-site;gene_effects=bla;effect_details=bla;gene_list=g1;gene_score1=10.1;gene_score2=20.2 GT     0/1 0/0 0/0
+    """)
+
+    in_file = root_path / "in.vcf"
+    out_file = root_path / "out.vcf"
+    annotation_file_old = root_path / "reannotation_old.yaml"
+    annotation_file_new = root_path / "reannotation_new.yaml"
+    grr_file = root_path / "grr.yaml"
+
+    setup_vcf(in_file, in_content)
+
+    cli_vcf([
+        str(a) for a in [
+            in_file, annotation_file_new, "-o", out_file, "--grr", grr_file,
+            "--reannotate", annotation_file_old
+        ]
+    ])
+    out_vcf = pysam.VariantFile(out_file)
+
+    assert set(out_vcf.header.info.keys()) == {  # pylint: disable=no-member
+        "score", "worst_effect", "gene_list", "gene_score1"
+    }
