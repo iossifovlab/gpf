@@ -163,7 +163,7 @@ def _cnv_person_id_to_best_state(
             ) for p in family.members_in_order
         ])
         alt_row = np.zeros(len(family.members_in_order), dtype=np.int8)
-        alt_row[person.index] = 1
+        alt_row[person.member_index] = 1
 
         ref_row = expected_ploidy - alt_row
         best_state = np.stack((ref_row, alt_row)).astype(np.int8)
