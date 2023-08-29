@@ -13,7 +13,3 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
-
-#sets {
-  height: fit-content;
-}

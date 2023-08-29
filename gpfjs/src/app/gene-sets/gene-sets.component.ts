@@ -196,6 +196,7 @@ export class GeneSetsComponent extends StatefulComponent implements OnInit {
           }
         }
         dropdown.trigger('blur');
+        dropdown.attr('title', ui.item.value);
       },
     }).bind('focus', () => {
       dropdown.val('');

@@ -53,10 +53,10 @@
         [disabled]="
           selectedGeneSetsCollection?.types?.length > 0 && object.keys(geneSetsLocalState.geneSetsTypes).length === 0
         ">
-        <textarea
+        <input
           id="sets"
           [disabled]="isLoading"
-          [placeholder]="isLoading ? 'Loading...' : 'Select or start typing to search'"></textarea>
+          [placeholder]="isLoading ? 'Loading...' : 'Select or start typing to search'" />
       </fieldset>
 
       <div *ngIf="selectedGeneSet">
