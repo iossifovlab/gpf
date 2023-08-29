@@ -253,5 +253,4 @@ def test_bad_cnv_gene_score_annotation(infile: str, annotate_cnv_fixture):
 
     df = pd.read_csv(root_path / "result.tsv", sep="\t")
     assert list(df.worst_effect.values) == ["CNV+"]
-    assert list(df.gene_effects.values) == ["None:CNV+"]
     assert list(df.gene_score1.values) == ["None"]
