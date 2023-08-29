@@ -40,7 +40,7 @@ export class PhenoMeasureSelectorComponent implements AfterViewInit {
 
   private fillDropdown(): void {
     const self = this;
-    const dropdown = $('#tags') as any;
+    const dropdown = $(this.measureSelectorDropdownRef.nativeElement) as any;
     dropdown.autocomplete({
       minLength: 0,
       delay: 0,
