@@ -79,21 +79,21 @@ def update_header(variant_file, pipeline):
                     and info_key not in new_annotation_columns:
                 variant_file.header.info.remove_header(info_key)
 
+        attributes = []
         for attr in pipeline.get_attributes():
             if attr.internal:
                 continue
 
             if attr.name not in variant_file.header.info:
-                description = attr.description
-                description = description.replace("\n", " ")
-                description = description.replace('"', '\\"')
-                header.info.add(attr.name, "A", "String", description)
+                attributes.append(attr)
     else:
-        for attribute in pipeline.get_attributes():
-            description = attribute.description
-            description = description.replace("\n", " ")
-            description = description.replace('"', '\\"')
-            header.info.add(attribute.name, "A", "String", description)
+        attributes = pipeline.get_attributes()
+
+    for attribute in attributes:
+        description = attribute.description
+        description = description.replace("\n", " ")
+        description = description.replace('"', '\\"')
+        header.info.add(attribute.name, "A", "String", description)
 
 
 def annotate(
