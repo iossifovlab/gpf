@@ -28,7 +28,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy, AfterViewInit {
     this.drawTransmittedIcons();
     this.drawEffectTypesIcons();
   }
-  @ViewChild('geneSymbolInput') public geneSymbolInput: ElementRef;
+  @ViewChild('geneSymbolInput') public geneSymbolInputRef: ElementRef;
 
   public selectedGene: Gene;
   public geneSymbol = '';
@@ -152,7 +152,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy, AfterViewInit {
       return;
     }
 
-    this.geneSymbol = (this.geneSymbolInput.nativeElement as HTMLTextAreaElement).value;
+    this.geneSymbol = (this.geneSymbolInputRef.nativeElement as HTMLTextAreaElement).value;
 
     try {
       this.selectedGene = await this.geneService.getGene(

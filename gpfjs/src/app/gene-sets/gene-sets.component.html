@@ -54,9 +54,11 @@
           selectedGeneSetsCollection?.types?.length > 0 && object.keys(geneSetsLocalState.geneSetsTypes).length === 0
         ">
         <input
+          #geneSetsDropdown
           id="sets"
           [disabled]="isLoading"
-          [placeholder]="isLoading ? 'Loading...' : 'Select or start typing to search'" />
+          [placeholder]="isLoading ? 'Loading...' : 'Select or start typing to search'"
+          (window:resize)="geneSetsDropdownRef.nativeElement.blur()" />
       </fieldset>
 
       <div *ngIf="selectedGeneSet">

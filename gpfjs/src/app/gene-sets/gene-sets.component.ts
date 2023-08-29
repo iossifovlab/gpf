@@ -1,5 +1,5 @@
 import { GeneSetsLocalState } from './gene-sets-state';
-import { Component, OnInit } from '@angular/core';
+import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { GeneSetsService } from './gene-sets.service';
 import { GeneSetsCollection, GeneSet, GeneSetType } from './gene-sets';
 import { Subject, Observable, combineLatest, of } from 'rxjs';
@@ -23,6 +23,7 @@ export class GeneSetsComponent extends StatefulComponent implements OnInit {
   public searchQuery: string;
   public defaultSelectedDenovoGeneSetId: string[] = [];
   public isLoading = false;
+  @ViewChild('geneSetsDropdown') public geneSetsDropdownRef: ElementRef;
 
   private geneSetsQueryChange = new Subject<[string, string, object]>();
   private geneSetsResult: Observable<GeneSet[]>;

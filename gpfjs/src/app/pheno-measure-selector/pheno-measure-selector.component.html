@@ -1,3 +1,7 @@
 <div class="ui-widget">
-  <input id="tags" placeholder="Select or start typing to search" />
+  <input
+    #measureSelectorDropdown
+    id="tags"
+    placeholder="Select or start typing to search"
+    (window:resize)="measureSelectorDropdownRef.nativeElement.blur()" />
 </div>

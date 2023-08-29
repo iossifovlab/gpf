@@ -1,4 +1,4 @@
-import { Component, AfterViewInit, Input, Output, EventEmitter } from '@angular/core';
+import { Component, AfterViewInit, Input, Output, EventEmitter, ViewChild, ElementRef } from '@angular/core';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { MeasuresService } from '../measures/measures.service';
 import { ContinuousMeasure } from '../measures/measures';
@@ -13,6 +13,7 @@ export class PhenoMeasureSelectorComponent implements AfterViewInit {
   @Input() public datasetId: string;
   @Output() public selectedMeasureChange = new EventEmitter(true);
   @Output() public measuresChange = new EventEmitter(true);
+  @ViewChild('measureSelectorDropdown') public measureSelectorDropdownRef: ElementRef;
 
   public measures: Array<ContinuousMeasure> = [];
   public filteredMeasures: Array<ContinuousMeasure> = [];

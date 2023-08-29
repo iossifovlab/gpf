@@ -6,7 +6,11 @@
     <div class="card-block">
       <div class="input-group panel" style="padding: 15px; align-items: center">
         <div class="ui-widget">
-          <input id="genes" #geneSymbolInput placeholder="Search gene" />
+          <input
+            id="genes"
+            #geneSymbolInput
+            placeholder="Search gene"
+            (window:resize)="geneSymbolInputRef.nativeElement.blur()" />
         </div>
 
         <div style="padding-left: 16px">
