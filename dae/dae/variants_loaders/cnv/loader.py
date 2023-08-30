@@ -114,7 +114,7 @@ def _cnv_loader(
         cnv_plus_values: Optional[List[str]] = None,
         cnv_minus_values: Optional[List[str]] = None,
         cnv_sep: str = "\t",
-        **kwargs) -> pd.DataFrame:
+        **kwargs: Any) -> pd.DataFrame:
     """Flexible load of CNV variants.
 
     This function uses flexible variant loader infrastructure to
@@ -145,7 +145,7 @@ def _cnv_loader(
     for record in variant_generator:
         data.append(record)
 
-    df: pd.DataFrame = pd.DataFrame.from_records(  # type: ignore
+    df: pd.DataFrame = pd.DataFrame.from_records(
         data, columns=[
             "chrom", "pos", "pos_end",
             "variant_type",
@@ -211,20 +211,24 @@ class CNVLoader(VariantsGenotypesLoader):
 
         self._init_chromosomes()
 
-    def _init_chromosomes(self):
-        self.chromosomes = list(self.cnv_df.chrom.unique())
-        self.chromosomes = [
-            self._adjust_chrom_prefix(chrom) for chrom in self.chromosomes
+    def _init_chromosomes(self) -> None:
+        self._chromosomes = list(self.cnv_df.chrom.unique())
+        self._chromosomes = [
+            self._adjust_chrom_prefix(chrom) for chrom in self._chromosomes
         ]
 
         all_chromosomes = self.genome.chromosomes
-        if all(chrom in set(all_chromosomes) for chrom in self.chromosomes):
-            self.chromosomes = sorted(
-                self.chromosomes,
+        if all(chrom in set(all_chromosomes) for chrom in self._chromosomes):
+            self._chromosomes = sorted(
+                self._chromosomes,
                 key=all_chromosomes.index)
 
+    @property
+    def chromosomes(self) -> list[str]:
+        return self._chromosomes
+
     @classmethod
-    def _arguments(cls):
+    def _arguments(cls) -> list[CLIArgument]:
         arguments = super()._arguments()
         arguments.append(CLIArgument(
             "cnv_file",
@@ -323,7 +327,7 @@ class CNVLoader(VariantsGenotypesLoader):
         ))
         return arguments
 
-    def reset_regions(self, regions):
+    def reset_regions(self, regions: list[Union[str, Region]]) -> None:
         super().reset_regions(regions)
 
         result = []

@@ -248,9 +248,10 @@ class DuckDbGenotypeStorage(GenotypeStorage):
     PARQUET_SCAN = re.compile(r"parquet_scan\('(?P<parquet_path>.+)'\)")
 
     def _base_dir_join(self, dir_name: str) -> str:
-        if self.get_base_dir() is None:
+        base_dir = self.get_base_dir()
+        if base_dir is None:
             return dir_name
-        return fs_utils.join(self.get_base_dir(), dir_name)
+        return fs_utils.join(base_dir, dir_name)
 
     def _base_dir_join_parquet_scan_or_table(
             self, parquet_scan: Optional[str]) -> Optional[str]:

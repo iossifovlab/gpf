@@ -823,7 +823,7 @@ class VcfLoader(VariantsGenotypesLoader):
         return self.vcf_files
 
     @property
-    def chromosomes(self):
+    def chromosomes(self) -> list[str]:
         """Return list of all chromosomes from VCF files."""
         assert len(self.vcf_loaders) > 0
         all_chromosomes = []
