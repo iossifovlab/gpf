@@ -107,6 +107,7 @@ def annotate(  # pylint: disable=too-many-locals,too-many-branches
     out_file_path: str,
     reannotate: Optional[str] = None
 ) -> None:
+    # flake8: noqa: C901
     """Annotate a region from a given input VCF file using a pipeline."""
     grr = build_genomic_resource_repository(definition=grr_definition)
 
