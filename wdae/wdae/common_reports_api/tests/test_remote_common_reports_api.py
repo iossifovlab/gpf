@@ -33,7 +33,7 @@ def test_remote_families_data_download(admin_client):
     header = streaming_content[0].decode("utf8")
     assert header[-1] == "\n"
     header = header[:-1].split("\t")
-    assert len(header) == 15
+    assert len(header) == 35
 
     assert header == [
         "family_id",
@@ -47,14 +47,34 @@ def test_remote_families_data_download(admin_client):
         "layout",
         "generated",
         "not_sequenced",
-        "family_bin",
-        "index",
-        "member_index",
         "missing",
+        "family_bin",
+        "member_index",
+        "tag_affected_dad_family",
+        "tag_affected_mom_family",
+        "tag_affected_prb_family",
+        "tag_affected_sib_family",
+        "tag_control_family",
+        "tag_family_type",
+        "tag_family_type_full",
+        "tag_female_prb_family",
+        "tag_male_prb_family",
+        "tag_missing_dad_family",
+        "tag_missing_mom_family",
+        "tag_multiplex_family",
+        "tag_nuclear_family",
+        "tag_quad_family",
+        "tag_simplex_family",
+        "tag_trio_family",
+        "tag_unaffected_dad_family",
+        "tag_unaffected_mom_family",
+        "tag_unaffected_prb_family",
+        "tag_unaffected_sib_family",
+        "tags"
     ]
 
     first_person = streaming_content[1].decode("utf8")
     assert first_person[-1] == "\n"
     first_person = first_person[:-1].split("\t")
-    assert len(first_person) == 15
+    assert len(first_person) == 35
     # assert first_person[-1] == "iossifov_2014"
