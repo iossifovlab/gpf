@@ -599,7 +599,8 @@ describe('User management tests for Users', () => {
     page.groupUsersList('delete_group_delete_user_group').should('not.exist');
   });
 
-  it('should add group to user and check data in Datasets', () => {
+  // flaky - https://nemo.seqpipe.org/job/iossifovlab/job/gpf-e2e/job/master/1498/
+  it.skip('should add group to user and check data in Datasets', () => {
     createTestUser(page, 'add_group_to_user_datasets_email@email.com', 'add_group_to_user_datasets_name');
     page.userAddGroup('add_group_to_user_datasets_email@email.com', 'comp_all');
 

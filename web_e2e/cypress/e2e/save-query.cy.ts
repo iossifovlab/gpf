@@ -101,7 +101,8 @@ describe('Save query tests', () => {
     savedQueriesPage.queryNameCell('genotype-browser', 'TestLoadAndDeleteQuery').should('not.exist');
   });
 
-  it('should navigate to genotype browser, check all effect types checkboxes, save a query, ' +
+  // flaky - https://nemo.seqpipe.org/job/iossifovlab/job/gpf-e2e/job/master/1501/
+  it.skip('should navigate to genotype browser, check all effect types checkboxes, save a query, ' +
      'load it and validate that all effect types checkboxes are checked', () => {
     const genotypeBlockPage = new GenotypeBlockPage();
     cy.intercept('POST', '/gpf/api/v3/user_queries/save').as('save');
