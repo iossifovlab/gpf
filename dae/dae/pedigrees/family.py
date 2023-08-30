@@ -29,6 +29,7 @@ PEDIGREE_COLUMN_NAMES = {
     "status": "status",
     "role": "role",
     "sample id": "sample_id",
+    "member_index": "member_index",
     "layout": "layout",
     "generated": "generated",
     "proband": "proband",
@@ -132,8 +133,8 @@ class Person:
             value = self._attributes.get("generated")
             if value in {"None", "0", "False"}:
                 self._attributes["generated"] = None
-        if self._attributes.get("missing") is None:
-            self._attributes["missing"] = self.missing
+        missing = self._attributes.get("missing", False) == "True"
+        self._attributes["missing"] = missing
 
     def __repr__(self):
         decorator = ""
@@ -686,7 +687,6 @@ class FamiliesData(Mapping[str, Family]):
             columns.extend(sorted(extention_columns))
             ped_df = pd.DataFrame.from_records(records, columns=columns)
             self._ped_df = ped_df
-
         return self._ped_df
 
     def copy(self) -> FamiliesData:
