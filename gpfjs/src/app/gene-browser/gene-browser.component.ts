@@ -221,14 +221,14 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
   public onSubmit(event: Event): void {
     const target = event.target as HTMLFormElement;
     target.queryData.value = JSON.stringify({...this.requestParams, download: true});
-    target.access_token.value = this.authService.getAccessToken();
+    target.access_token.value = this.authService.accessToken;
     target.submit();
   }
 
   public onSubmitSummary(): void {
     const target = document.getElementById('download-summary-form') as HTMLFormElement;
     target.queryData.value = JSON.stringify({...this.requestParams, download: true});
-    target.access_token.value = this.authService.getAccessToken();
+    target.access_token.value = this.authService.accessToken;
     target.submit();
   }
 

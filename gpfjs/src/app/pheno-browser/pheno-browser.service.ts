@@ -59,8 +59,8 @@ export class PhenoBrowserService {
         .set('search', search);
     const measuresSubject: Subject<PhenoMeasure> = new Subject();
 
-    if (this.authService.getAccessToken() !== '') {
-      headers['Authorization'] = `Bearer ${this.authService.getAccessToken()}`;
+    if (this.authService.accessToken !== '') {
+      headers['Authorization'] = `Bearer ${this.authService.accessToken}`;
     }
 
     oboe({

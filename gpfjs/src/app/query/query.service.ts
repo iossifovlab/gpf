@@ -50,8 +50,8 @@ export class QueryService {
     this.cancelStreamPost();
 
     const headers = { 'Content-Type': 'application/json' };
-    if (this.authService.getAccessToken() !== '') {
-      headers['Authorization'] = `Bearer ${this.authService.getAccessToken()}`;
+    if (this.authService.accessToken !== '') {
+      headers['Authorization'] = `Bearer ${this.authService.accessToken}`;
     }
 
     this.oboeInstance = oboe({
@@ -90,8 +90,8 @@ export class QueryService {
     }
 
     const headers = { 'Content-Type': 'application/json' };
-    if (this.authService.getAccessToken() !== '') {
-      headers['Authorization'] = `Bearer ${this.authService.getAccessToken()}`;
+    if (this.authService.accessToken !== '') {
+      headers['Authorization'] = `Bearer ${this.authService.accessToken}`;
     }
 
     this.summaryOboeInstance = oboe({

@@ -74,7 +74,7 @@ export class PedigreeComponent {
       counter_id: this.counterId
     };
     event.target.queryData.value = JSON.stringify(args);
-    event.target.access_token.value = this.authService.getAccessToken();
+    event.target.access_token.value = this.authService.accessToken;
     event.target.submit();
   }
 }

@@ -11,22 +11,20 @@ import pkceChallenge from 'pkce-challenge';
 export class AuthService {
   private readonly headers = new HttpHeaders({ 'Content-Type': 'application/json' });
   private readonly options = { headers: this.headers };
-  private accessToken = '';
-  private refreshAccessToken = '';
-
   public tokenExchangeSubject = new Subject<boolean>();
 
   public constructor(
     private http: HttpClient,
     private config: ConfigService,
     @Inject(APP_BASE_HREF) private baseHref: string
-  ) {
-    this.accessToken = localStorage.getItem('access_token') || '';
-    this.refreshAccessToken = localStorage.getItem('refresh_token') || '';
+  ) { }
+
+  public get accessToken(): string {
+    return localStorage.getItem('access_token') || '';
   }
 
-  public getAccessToken(): string {
-    return this.accessToken;
+  public get refreshAccessToken(): string {
+    return localStorage.getItem('refresh_token') || '';
   }
 
   public generatePKCE(): string {
@@ -56,8 +54,6 @@ export class AuthService {
   }
 
   public clearTokens(): void {
-    this.accessToken = '';
-    this.refreshAccessToken = '';
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
   }
@@ -87,9 +83,7 @@ export class AuthService {
   }
 
   private setTokens(res: object): void {
-    this.accessToken = res['access_token'];
-    this.refreshAccessToken = res['refresh_token'];
-    localStorage.setItem('access_token', this.accessToken);
-    localStorage.setItem('refresh_token', this.refreshAccessToken);
+    localStorage.setItem('access_token', res['access_token']);
+    localStorage.setItem('refresh_token', res['refresh_token']);
   }
 }
