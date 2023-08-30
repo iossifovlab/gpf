@@ -792,15 +792,20 @@ def save_study_config(dae_config, study_id, study_config, force=False):
     if os.path.exists(filename):
         logger.info(
             "configuration file already exists: %s", filename)
+        bak_name = os.path.basename(filename) + "." + str(time.time_ns())
+        bak_path = os.path.join(os.path.dirname(filename), bak_name)
+
         if not force:
-            logger.info("skipping overwring the old config file...")
+            logger.info(
+                "skipping overwring the old config file... "
+                "storing new config in %s", bak_path)
+            with open(bak_path, "w") as outfile:
+                outfile.write(study_config)
             return
 
-        new_name = os.path.basename(filename) + "." + str(time.time_ns())
-        new_path = os.path.join(os.path.dirname(filename), new_name)
         logger.info(
-            "Backing up configuration for %s in %s", study_id, new_path)
-        os.rename(filename, new_path)
+            "Backing up configuration for %s in %s", study_id, bak_path)
+        os.rename(filename, bak_path)
 
     os.makedirs(dirname, exist_ok=True)
     with open(filename, "w") as outfile:

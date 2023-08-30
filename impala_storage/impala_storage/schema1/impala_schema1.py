@@ -208,7 +208,7 @@ class ImpalaSchema1ImportStorage(ImportStorage):
         save_study_config(
             project.get_gpf_instance().dae_config,
             project.study_id,
-            config, force=True)
+            config)
         elapsed = time.time() - start
         logger.info("study config elapsed %.2f sec", elapsed)
         project.stats[("elapsed", "study_config")] = elapsed

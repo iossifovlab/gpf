@@ -57,7 +57,7 @@ class DuckDbImportStorage(Schema2ImportStorage):
         save_study_config(
             project.get_gpf_instance().dae_config,
             project.study_id,
-            config, force=True)
+            config)
 
     def generate_import_task_graph(self, project: ImportProject) -> TaskGraph:
         graph = TaskGraph()

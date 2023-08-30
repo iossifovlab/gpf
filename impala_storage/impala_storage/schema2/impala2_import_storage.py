@@ -82,7 +82,7 @@ class Impala2ImportStorage(Schema2ImportStorage):
         save_study_config(
             project.get_gpf_instance().dae_config,
             project.study_id,
-            config, force=True)
+            config)
 
     def generate_import_task_graph(self, project) -> TaskGraph:
         graph = TaskGraph()
