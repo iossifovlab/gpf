@@ -1,5 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import textwrap
+from pathlib import Path
 
 import pytest
 import pandas as pd
@@ -14,7 +15,7 @@ from dae.testing.foobar_import import foobar_genome, foobar_genes
 
 
 @pytest.fixture(scope="module")
-def annotate_cnv_fixture(tmp_path_factory):
+def annotate_cnv_fixture(tmp_path_factory: pytest.TempPathFactory) -> Path:
     root_path = tmp_path_factory.mktemp("annotate_columns_cnv")
 
     foobar_genome(
@@ -109,7 +110,10 @@ def annotate_cnv_fixture(tmp_path_factory):
     return root_path
 
 
-def test_basic_setup(tmp_path_factory, annotate_cnv_fixture):
+def test_basic_setup(
+    tmp_path_factory: pytest.TempPathFactory,
+    annotate_cnv_fixture: Path
+) -> None:
     root_path = annotate_cnv_fixture
     grr_path = root_path / "grr.yaml"
     grr = build_genomic_resource_repository(file_name=str(grr_path))
@@ -132,7 +136,10 @@ def test_basic_setup(tmp_path_factory, annotate_cnv_fixture):
         "cnv.tsv",
     ]
 )
-def test_cnv_effect_annotation(infile: str, annotate_cnv_fixture):
+def test_cnv_effect_annotation(
+    infile: str,
+    annotate_cnv_fixture: Path
+) -> None:
     root_path = annotate_cnv_fixture
     setup_directories(root_path, {
         "effect_annotation.yaml": textwrap.dedent("""
@@ -165,7 +172,10 @@ def test_cnv_effect_annotation(infile: str, annotate_cnv_fixture):
         "cnv.tsv",
     ]
 )
-def test_cnv_gene_score_annotation(infile: str, annotate_cnv_fixture):
+def test_cnv_gene_score_annotation(
+    infile: str,
+    annotate_cnv_fixture: Path
+) -> None:
     root_path = annotate_cnv_fixture
     setup_directories(root_path, {
         "gene_score_annotation.yaml": textwrap.dedent("""
@@ -198,7 +208,10 @@ def test_cnv_gene_score_annotation(infile: str, annotate_cnv_fixture):
         "bad_cnv.tsv",
     ]
 )
-def test_bad_cnv_effect_annotation(infile: str, annotate_cnv_fixture):
+def test_bad_cnv_effect_annotation(
+    infile: str,
+    annotate_cnv_fixture: Path
+) -> None:
     root_path = annotate_cnv_fixture
     setup_directories(root_path, {
         "effect_annotation.yaml": textwrap.dedent("""
@@ -229,7 +242,10 @@ def test_bad_cnv_effect_annotation(infile: str, annotate_cnv_fixture):
         "bad_cnv.tsv",
     ]
 )
-def test_bad_cnv_gene_score_annotation(infile: str, annotate_cnv_fixture):
+def test_bad_cnv_gene_score_annotation(
+    infile: str,
+    annotate_cnv_fixture: Path
+) -> None:
     root_path = annotate_cnv_fixture
     setup_directories(root_path, {
         "gene_score_annotation.yaml": textwrap.dedent("""

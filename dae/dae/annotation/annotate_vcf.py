@@ -5,7 +5,7 @@ import sys
 import argparse
 import logging
 from contextlib import closing
-from typing import List, Optional, Any
+from typing import List, Optional, Any, Union, Tuple
 
 from pysam import VariantFile, TabixFile, \
     tabix_index  # pylint: disable=no-name-in-module
@@ -14,7 +14,7 @@ from dae.annotation.context import CLIAnnotationContext
 from dae.annotation.annotatable import VCFAllele
 from dae.annotation.annotation_factory import build_annotation_pipeline
 from dae.annotation.annotation_pipeline import AnnotationPipeline, \
-    ReannotationPipeline
+    ReannotationPipeline, AnnotatorInfo
 
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 from dae.utils.fs_utils import tabix_index_filename
@@ -58,7 +58,10 @@ def configure_argument_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def update_header(variant_file, pipeline):
+def update_header(
+    variant_file: VariantFile,
+    pipeline: Union[AnnotationPipeline, ReannotationPipeline]
+) -> None:
     """Update a variant file's header with annotation pipeline scores."""
     header = variant_file.header
     header.add_meta("pipeline_annotation_tool", "GPF variant annotation.")
@@ -96,11 +99,14 @@ def update_header(variant_file, pipeline):
         header.info.add(attribute.name, "A", "String", description)
 
 
-def annotate(
-        input_file, region, pipeline_config,
-        grr_definition, out_file_path,
-        reannotate=None
-):
+def annotate(  # pylint: disable=too-many-locals,too-many-branches
+    input_file: str,
+    region: Optional[Tuple[str, int, int]],
+    pipeline_config: Optional[list[AnnotatorInfo]],
+    grr_definition: Optional[dict],
+    out_file_path: str,
+    reannotate: Optional[str] = None
+) -> None:
     """Annotate a region from a given input VCF file using a pipeline."""
     grr = build_genomic_resource_repository(definition=grr_definition)
 
@@ -120,7 +126,7 @@ def annotate(
     resources: set[str] = set()
     for annotator in pipeline.annotators:
         resources = resources | {res.get_id() for res in annotator.resources}
-    cache_resources(grr, resources)
+    cache_resources(grr, list(resources))
 
     with closing(VariantFile(input_file)) as in_file:
         update_header(in_file, pipeline)
@@ -128,9 +134,22 @@ def annotate(
             out_file_path, "w", header=in_file.header
         )) as out_file:
             annotation_attributes = pipeline.get_attributes()
-            for vcf_var in in_file.fetch(*region):
+
+            if region is None:
+                in_file_iter = in_file.fetch()
+            else:
+                in_file_iter = in_file.fetch(*region)
+
+            for vcf_var in in_file_iter:
                 # pylint: disable=use-list-literal
                 buffers: List[List] = [list() for _ in annotation_attributes]
+
+                if vcf_var.ref is None:
+                    logger.warning(
+                        "vcf variant without reference: %s %s",
+                        vcf_var.chrom, vcf_var.pos
+                    )
+                    continue
 
                 if vcf_var.alts is None:
                     logger.info(
@@ -183,8 +202,12 @@ def annotate(
 
 
 def combine(
-        input_file_path, pipeline_config, grr_definition,
-        partfile_paths, output_file_path):
+    input_file_path: str,
+    pipeline_config: Optional[list[AnnotatorInfo]],
+    grr_definition: Optional[dict],
+    partfile_paths: List[str],
+    output_file_path: str
+) -> None:
     """Combine annotated region parts into a single VCF file."""
     pipeline = build_annotation_pipeline(
         pipeline_config=pipeline_config,
@@ -294,7 +317,7 @@ def cli(raw_args: Optional[list[str]] = None) -> None:
     if not os.path.exists(args.work_dir):
         os.mkdir(args.work_dir)
 
-    def run_parallelized():
+    def run_parallelized() -> None:
         with closing(TabixFile(args.input)) as pysam_file:
             regions = produce_regions(pysam_file, args.region_size)
         file_paths = produce_partfile_paths(args.input, regions, args.work_dir)
@@ -325,9 +348,9 @@ def cli(raw_args: Optional[list[str]] = None) -> None:
 
         TaskGraphCli.process_graph(task_graph, **vars(args))
 
-    def run_sequentially():
+    def run_sequentially() -> None:
         assert grr is not None
-        annotate(args.input, tuple(), pipeline.get_info(),
+        annotate(args.input, None, pipeline.get_info(),
                  grr.definition, output, args.reannotate)
 
     if tabix_index_filename(args.input):

@@ -126,7 +126,7 @@ def cache_pipeline(
 def annotate(
     args: Any,
     grr_definition: Optional[dict],
-    ref_genome_id: str,
+    ref_genome_id: Optional[str],
     out_file_path: str,
     region: tuple = tuple(),
     compress_output: bool = False

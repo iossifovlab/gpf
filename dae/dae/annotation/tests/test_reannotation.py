@@ -584,8 +584,12 @@ def test_annotate_vcf_reannotation(
         ##INFO=<ID=gene_score2,Number=A,Type=String,Description="">
         ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
         ##contig=<ID=foo>
-        #CHROM POS ID REF ALT QUAL FILTER INFO                                                                                                 FORMAT m1  d1  c1
-        foo    12  .  C   T   .    .      score=0.1;worst_effect=splice-site;effect_details=bla;gene_list=g1;gene_score1=10.1;gene_score2=20.2 GT     0/1 0/0 0/0
+        #CHROM POS ID REF ALT QUAL FILTER \
+INFO                                                  \
+                                               FORMAT m1  d1  c1
+        foo    12  .  C   T   .    .      \
+score=0.1;worst_effect=splice-site;effect_details=bla;\
+gene_list=g1;gene_score1=10.1;gene_score2=20.2 GT     0/1 0/0 0/0
     """)
 
     in_file = root_path / "in.vcf"
