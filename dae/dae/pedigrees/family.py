@@ -29,7 +29,6 @@ PEDIGREE_COLUMN_NAMES = {
     "status": "status",
     "role": "role",
     "sample id": "sample_id",
-    "member_index": "member_index",
     "layout": "layout",
     "generated": "generated",
     "proband": "proband",
