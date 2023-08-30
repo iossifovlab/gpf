@@ -198,7 +198,8 @@ def annotate(
                         record_to_annotatable.build(record)
                     )
 
-                record.update(annotation)
+                for col in annotation_columns:
+                    record[col] = annotation[col]
                 result = list(map(str, record.values()))
                 out_file.write(args.output_separator.join(result) + "\n")
             except Exception as ex:  # pylint: disable=broad-except
@@ -206,12 +207,6 @@ def annotate(
                     "unexpected input data format at line %s: %s",
                     lnum, line, exc_info=True)
                 errors.append((lnum, line, str(ex)))
-
-    if len(errors) > 0:
-        logger.error("there were errors during the import")
-        for lnum, line, error in errors:
-            logger.error("line %s: %s", lnum, line)
-            logger.error("\t%s", error)
 
     if len(errors) > 0:
         logger.error("there were errors during the import")

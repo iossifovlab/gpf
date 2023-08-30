@@ -332,4 +332,4 @@ def validate_aggregator(aggregator_type: str) -> None:
         build_aggregator(aggregator_type)
     except Exception as ex:
         raise ValueError(
-            f"Incorrenct aggregator '{aggregator_type}'", ex) from ex
+            f"Incorrect aggregator '{aggregator_type}'", ex) from ex

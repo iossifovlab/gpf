@@ -13,6 +13,8 @@ from pysam import VariantFile, TabixFile, \
 from dae.annotation.context import CLIAnnotationContext
 from dae.annotation.annotatable import VCFAllele
 from dae.annotation.annotation_factory import build_annotation_pipeline
+from dae.annotation.annotation_pipeline import AnnotationPipeline, \
+    ReannotationPipeline
 
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 from dae.utils.fs_utils import tabix_index_filename
@@ -48,6 +50,8 @@ def configure_argument_parser() -> argparse.ArgumentParser:
     parser.add_argument("-o", "--output",
                         help="Filename of the output VCF result",
                         default=None)
+    parser.add_argument("--reannotate", default=None,
+                        help="Old pipeline config to reannotate over")
     CLIAnnotationContext.add_context_arguments(parser)
     TaskGraphCli.add_arguments(parser)
     VerbosityConfiguration.set_argumnets(parser)
@@ -59,7 +63,33 @@ def update_header(variant_file, pipeline):
     header = variant_file.header
     header.add_meta("pipeline_annotation_tool", "GPF variant annotation.")
     header.add_meta("pipeline_annotation_tool", f"{' '.join(sys.argv)}")
-    for attribute in pipeline.get_attributes():
+    if isinstance(pipeline, ReannotationPipeline):
+        header_info_keys = variant_file.header.info.keys()
+        old_annotation_columns = {
+            attr.name for attr in pipeline.pipeline_old.get_attributes()
+            if not attr.internal
+        }
+        new_annotation_columns = {
+            attr.name for attr in pipeline.get_attributes()
+            if not attr.internal
+        }
+
+        for info_key in header_info_keys:
+            if info_key in old_annotation_columns \
+                    and info_key not in new_annotation_columns:
+                variant_file.header.info.remove_header(info_key)
+
+        attributes = []
+        for attr in pipeline.get_attributes():
+            if attr.internal:
+                continue
+
+            if attr.name not in variant_file.header.info:
+                attributes.append(attr)
+    else:
+        attributes = pipeline.get_attributes()
+
+    for attribute in attributes:
         description = attribute.description
         description = description.replace("\n", " ")
         description = description.replace('"', '\\"')
@@ -67,13 +97,24 @@ def update_header(variant_file, pipeline):
 
 
 def annotate(
-        input_file, region, pipeline_config, grr_definition, out_file_path):
+        input_file, region, pipeline_config,
+        grr_definition, out_file_path,
+        reannotate=None
+):
     """Annotate a region from a given input VCF file using a pipeline."""
     grr = build_genomic_resource_repository(definition=grr_definition)
 
     pipeline = build_annotation_pipeline(
         pipeline_config=pipeline_config,
         grr_repository=grr)
+
+    if reannotate:
+        pipeline_old = build_annotation_pipeline(
+            pipeline_config_file=reannotate,
+            grr_repository=grr
+        )
+        pipeline_new = pipeline
+        pipeline = ReannotationPipeline(pipeline_new, pipeline_old)
 
     # cache pipeline
     resources: set[str] = set()
@@ -99,16 +140,37 @@ def annotate(
                     continue
 
                 has_value = {}
+
+                if isinstance(pipeline, ReannotationPipeline):
+                    for col in pipeline.attributes_deleted:
+                        del vcf_var.info[col]
+
                 for alt in vcf_var.alts:
-                    annotation = pipeline.annotate(
-                        VCFAllele(vcf_var.chrom, vcf_var.pos, vcf_var.ref, alt)
-                    )
+                    if isinstance(pipeline, ReannotationPipeline):
+                        annotation = pipeline.annotate(
+                            VCFAllele(
+                                vcf_var.chrom, vcf_var.pos, vcf_var.ref, alt
+                            ), dict(vcf_var.info)
+                        )
+                    else:
+                        annotation = pipeline.annotate(
+                            VCFAllele(
+                                vcf_var.chrom, vcf_var.pos, vcf_var.ref, alt
+                            )
+                        )
 
                     for buff, attribute in zip(buffers, annotation_attributes):
                         attr = annotation.get(attribute.name)
                         attr = attr if attr is not None else "."
                         if attr != ".":
                             has_value[attribute.name] = True
+                        if isinstance(attr, list):
+                            attr = ";".join(map(str, attr))
+                        elif isinstance(attr, dict):
+                            attr = ";".join(
+                                f"{k}:{v}"
+                                for k, v in attr.items()
+                            )
                         attr = str(attr).replace(";", "|")\
                                         .replace(",", "|")\
                                         .replace(" ", "_")
@@ -244,7 +306,8 @@ def cli(raw_args: Optional[list[str]] = None) -> None:
                 f"part-{index}",
                 annotate,
                 [args.input, region,
-                 pipeline.get_info(), grr.definition, file_path],
+                 pipeline.get_info(), grr.definition,
+                 file_path, args.reannotate],
                 []
             ))
 
@@ -265,7 +328,7 @@ def cli(raw_args: Optional[list[str]] = None) -> None:
     def run_sequentially():
         assert grr is not None
         annotate(args.input, tuple(), pipeline.get_info(),
-                 grr.definition, output)
+                 grr.definition, output, args.reannotate)
 
     if tabix_index_filename(args.input):
         run_parallelized()

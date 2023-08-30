@@ -254,7 +254,8 @@ class ReannotationPipeline(AnnotationPipeline):
         self.attributes_deleted: list[str] = []
         for deleted_info in [i for i in infos_old if i not in infos_new]:
             for attr in deleted_info.attributes:
-                self.attributes_deleted.append(attr.name)
+                if not attr.internal:
+                    self.attributes_deleted.append(attr.name)
 
         self.annotators_new: set[AnnotatorInfo] = {
             i for i in infos_new if i not in infos_old
