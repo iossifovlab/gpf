@@ -8,10 +8,9 @@ name: gpf
 channels:
   - conda-forge
   - bioconda
-  - defaults
   - iossifovlab
 dependencies:
-  - snakemake-minimal=7.24
+  - snakemake-minimal=7.32
   - openjdk=8.0.312
   - hadoop=3.1.2
   - impyla=0.17.0

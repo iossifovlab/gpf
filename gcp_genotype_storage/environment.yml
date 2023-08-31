@@ -6,7 +6,6 @@
 
 name: gpf
 channels:
-  - defaults
   - conda-forge
   - bioconda
   - iossifovlab
