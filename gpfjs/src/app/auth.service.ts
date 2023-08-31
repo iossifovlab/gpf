@@ -1,3 +1,4 @@
+/* eslint @typescript-eslint/naming-convention: 0 */
 import { Injectable, Inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { ConfigService } from './config/config.service';
@@ -16,7 +17,7 @@ export class AuthService {
   public constructor(
     private http: HttpClient,
     private config: ConfigService,
-    @Inject(APP_BASE_HREF) private baseHref: string
+    @Inject(APP_BASE_HREF) private baseHref: string,
   ) { }
 
   public get accessToken(): string {
@@ -70,6 +71,7 @@ export class AuthService {
           this.setTokens(res);
         }),
         catchError((err, caught) => {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
           if (err.status === 400 && err.error.error === 'invalid_grant') {
             this.clearTokens();
             window.location.reload();
@@ -83,7 +85,7 @@ export class AuthService {
   }
 
   private setTokens(res: object): void {
-    localStorage.setItem('access_token', res['access_token']);
-    localStorage.setItem('refresh_token', res['refresh_token']);
+    localStorage.setItem('access_token', res['access_token'] as string);
+    localStorage.setItem('refresh_token', res['refresh_token'] as string);
   }
 }

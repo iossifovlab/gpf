@@ -220,16 +220,20 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
 
   public onSubmit(event: Event): void {
     const target = event.target as HTMLFormElement;
+    /* eslint-disable @typescript-eslint/no-unsafe-member-access */
     target.queryData.value = JSON.stringify({...this.requestParams, download: true});
     target.access_token.value = this.authService.accessToken;
     target.submit();
+    /* eslint-enable */
   }
 
   public onSubmitSummary(): void {
     const target = document.getElementById('download-summary-form') as HTMLFormElement;
+    /* eslint-disable @typescript-eslint/no-unsafe-member-access */
     target.queryData.value = JSON.stringify({...this.requestParams, download: true});
     target.access_token.value = this.authService.accessToken;
     target.submit();
+    /* eslint-enable */
   }
 
   public updateVariants(): void {
