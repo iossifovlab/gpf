@@ -5,6 +5,8 @@ import { DatasetsService } from 'app/datasets/datasets.service';
 import { VariantReportsService } from 'app/variant-reports/variant-reports.service';
 import { Observable, of } from 'rxjs';
 import { PedigreeComponent } from './pedigree.component';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { APP_BASE_HREF } from '@angular/common';
 
 class MockVariantReportsService {
   public getFamilies(): Observable<string[]> {
@@ -32,7 +34,9 @@ describe('PedigreeComponent', () => {
         {provide: VariantReportsService, useValue: mockVariantReportsService},
         ConfigService,
         {provide: DatasetsService, useValue: mockDatasetsService},
-      ]
+        {provide: APP_BASE_HREF, useValue: ''}
+      ],
+      imports: [HttpClientTestingModule]
     }).compileComponents();
 
     modalService = TestBed.inject(NgbModal);

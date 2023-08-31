@@ -101,7 +101,7 @@ describe('GeneBrowserComponent', () => {
         {provide: ActivatedRoute, useValue: new MockActivatedRoute()},
         {provide: GeneService, useValue: new MockGeneService()},
         {provide: DatasetsService, useValue: mockDatasetsService},
-        { provide: APP_BASE_HREF, useValue: '' }
+        {provide: APP_BASE_HREF, useValue: ''}
       ],
       imports: [
         HttpClientTestingModule, RouterTestingModule,
@@ -248,6 +248,7 @@ describe('GeneBrowserComponent', () => {
         queryData: {
           value: ''
         },
+        access_token: {value: ''},
         submit: jest.fn()
       }
     };
