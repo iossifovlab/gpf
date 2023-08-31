@@ -130,41 +130,49 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
     def _set_task_result(self, task: Task, result: Any) -> None:
         """Set a precomputed result for a task."""
 
+    @staticmethod
     def _in_exec_order(
-        self, task_graph: TaskGraph
+        task_graph: TaskGraph
     ) -> Generator[Task, None, None]:
         visited: set[Task] = set()
         for node in task_graph.tasks:
-            yield from self._node_in_exec_order(node, visited)
+            yield from AbstractTaskGraphExecutor._node_in_exec_order(
+                node, visited)
 
+    @staticmethod
     def _node_in_exec_order(
-        self, node: Task, visited: set[Task]
+        node: Task, visited: set[Task]
     ) -> Generator[Task, None, None]:
         if node in visited:
             return
         visited.add(node)
         for dep in node.deps:
-            yield from self._node_in_exec_order(dep, visited)
+            yield from AbstractTaskGraphExecutor._node_in_exec_order(
+                dep, visited)
         yield node
 
-    def _check_for_cyclic_deps(self, task_graph: TaskGraph) -> None:
+    @staticmethod
+    def _check_for_cyclic_deps(task_graph: TaskGraph) -> None:
         visited: set[Task] = set()
         stack: list[Task] = []
         for node in task_graph.tasks:
             if node not in visited:
-                cycle = self._find_cycle(node, visited, stack)
+                cycle = AbstractTaskGraphExecutor._find_cycle(
+                    node, visited, stack)
                 if cycle is not None:
                     raise ValueError(f"Cyclic dependancy {cycle}")
 
+    @staticmethod
     def _find_cycle(
-        self, node: Task, visited: set[Task], stack: list[Task]
+        node: Task, visited: set[Task], stack: list[Task]
     ) -> Optional[list[Task]]:
         visited.add(node)
         stack.append(node)
 
         for dep in node.deps:
             if dep not in visited:
-                return self._find_cycle(dep, visited, stack)
+                return AbstractTaskGraphExecutor._find_cycle(
+                    dep, visited, stack)
             if dep in stack:
                 return copy(stack)
 
@@ -402,3 +410,24 @@ def task_graph_run(
             else:
                 raise result_or_error
     return no_errors
+
+
+def task_graph_all_done(task_graph: TaskGraph, task_cache: TaskCache) -> bool:
+    """Check if the task graph is fully executed.
+
+    When all tasks are already computed, the function returns True.
+    If there are tasks, that need to run, the function returns False.
+    """
+    # pylint: disable=protected-access
+    AbstractTaskGraphExecutor._check_for_cyclic_deps(task_graph)
+
+    already_computed_tasks = {}
+    for task_node, record in task_cache.load(task_graph):
+        if record.type == CacheRecordType.COMPUTED:
+            already_computed_tasks[task_node] = record.result
+
+    for task_node in AbstractTaskGraphExecutor._in_exec_order(task_graph):
+        if task_node not in already_computed_tasks:
+            return False
+
+    return True

@@ -1,17 +1,21 @@
 import argparse
 import textwrap
 from typing import Any, Optional
+import logging
 
 import yaml
 
 from box import Box
 from dae.task_graph.cache import NoTaskCache, TaskCache
 from dae.task_graph.executor import DaskExecutor, TaskGraphExecutor, \
-    SequentialExecutor, task_graph_run, task_graph_status
+    SequentialExecutor, task_graph_run, task_graph_status, task_graph_all_done
 
 from dae.task_graph.graph import TaskGraph
 from dae.dask.named_cluster import setup_client
 from dae.dask.named_cluster import setup_client_from_config
+
+
+logger = logging.getLogger(__name__)
 
 
 class TaskGraphCli:
@@ -138,6 +142,10 @@ class TaskGraphCli:
             force=force, cache_dir=args.get("task_status_dir"))
 
         if args.command is None or args.command == "run":
+            if task_graph_all_done(task_graph, task_cache):
+                logger.warning(
+                    "All tasks are already COMPUTED; nothing to compute")
+                return True
             with TaskGraphCli.create_executor(task_cache, **kwargs) as xtor:
                 return task_graph_run(task_graph, xtor, args.keep_going)
 
