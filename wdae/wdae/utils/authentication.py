@@ -32,25 +32,12 @@ class GPFOAuth2Authentication(OAuth2Authentication):
         return retval  # no user authenticated, just pass on
 
 
-class GPFOAuth2CookieAuth(GPFOAuth2Authentication):
-    """
-    Check for a session cookie if no OAuth token is found.
-
-    Used to allow download requests which are made without an OAuth token
-    but with a session cookie instead.
-    """
-
-    def authenticate(self, request):
-        retval = super().authenticate(request)
-        if retval is None:
-            # As a last resort, check for a session cookie
-            try:
-                user_id = Session.objects.get(
-                    session_key=request.session.session_key
-                ).get_decoded().get("_auth_user_id")
-                user = WdaeUser.objects.get(id=user_id)
-                return user, None
-            except (Session.DoesNotExist,    # pylint: disable=no-member
-                    WdaeUser.DoesNotExist):  # pylint: disable=no-member
-                pass
-        return retval
+def oauth_html_form_patch(get_response):
+    def middleware(request):
+        if request.method == "POST" and \
+           request.content_type == "application/x-www-form-urlencoded" and \
+           "access_token" in request.POST:
+            token = request.POST["access_token"]
+            request.META["HTTP_AUTHORIZATION"] = f"Bearer {token}"
+        return get_response(request)
+    return middleware

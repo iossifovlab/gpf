@@ -167,6 +167,7 @@ MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "oauth2_provider.middleware.OAuth2TokenMiddleware",
+    "utils.authentication.oauth_html_form_patch",
 ]
 
 ROOT_URLCONF = "wdae.urls"
