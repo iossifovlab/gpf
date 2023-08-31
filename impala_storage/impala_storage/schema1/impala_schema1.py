@@ -186,7 +186,7 @@ class ImpalaSchema1ImportStorage(ImportStorage):
         study_config = {
             "id": project.study_id,
             "conf_dir": ".",
-            "has_denovo": "denovo" in variants_types,
+            "has_denovo": project.has_denovo_variants(),
             "has_cnv": "cnv" in variants_types,
             "has_transmitted": bool({"dae", "vcf"} & variants_types),
             "genotype_storage": {

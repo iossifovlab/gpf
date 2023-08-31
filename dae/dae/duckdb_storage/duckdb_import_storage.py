@@ -1,4 +1,4 @@
-from typing import cast
+from typing import cast, Any
 
 from dae.configuration.study_config_builder import StudyConfigBuilder
 from dae.import_tools.import_tools import save_study_config, ImportProject
@@ -33,7 +33,7 @@ class DuckDbImportStorage(Schema2ImportStorage):
         study_config = {
             "id": project.study_id,
             "conf_dir": ".",
-            "has_denovo": "denovo" in variants_types,
+            "has_denovo": project.has_denovo_variants(),
             "has_cnv": "cnv" in variants_types,
             "has_transmitted": bool({"dae", "vcf"} & variants_types),
             "genotype_storage": {
@@ -45,11 +45,14 @@ class DuckDbImportStorage(Schema2ImportStorage):
 
         if study_tables.summary:
             assert study_tables.family is not None
-            storage_config = study_config["genotype_storage"]
-            storage_config["tables"]["summary"] = study_tables.summary
-            storage_config["tables"]["family"] = study_tables.family
-            storage_config["tables"]["meta"] = study_tables.meta
-            study_config["genotype_browser"]["enabled"] = True
+            storage_config = cast(dict, study_config["genotype_storage"])
+            tables_config = cast(dict[str, str], storage_config["tables"])
+            tables_config["summary"] = study_tables.summary
+            tables_config["family"] = study_tables.family
+            tables_config["meta"] = study_tables.meta
+            genotype_browser_config = \
+                cast(dict[str, Any], study_config["genotype_browser"])
+            genotype_browser_config["enabled"] = True
 
         config_builder = StudyConfigBuilder(study_config)
         config = config_builder.build_config()

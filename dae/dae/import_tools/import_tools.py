@@ -176,6 +176,17 @@ class ImportProject():
                 result.add(loader_type)
         return result
 
+    def has_denovo_variants(self) -> bool:
+        """Check if the resulting imported study has denovo variants."""
+        if "denovo" in self.get_variant_loader_types():
+            return True
+        if "vcf" in self.get_variant_loader_types():
+            _, variants_params = \
+                self.get_variant_params("vcf")
+            if variants_params.get("vcf_denovo_mode") == "denovo":
+                return True
+        return False
+
     def get_variant_loader_chromosomes(
             self, loader_type: Optional[str] = None) -> list[str]:
         """Collect all chromosomes available in input files."""
