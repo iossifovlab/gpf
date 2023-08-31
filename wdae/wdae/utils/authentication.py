@@ -1,7 +1,8 @@
 """Module containing a custom OAuth2 authentication class."""
 
-from django.contrib.sessions.models import Session
-from users_api.models import WdaeUser
+from typing import Optional, Callable
+from django.http.request import HttpRequest
+from django.http.response import HttpResponse
 from rest_framework import exceptions
 from oauth2_provider.contrib.rest_framework import OAuth2Authentication
 
@@ -17,7 +18,7 @@ class GPFOAuth2Authentication(OAuth2Authentication):
     authentication headers.
     """
 
-    def authenticate(self, request):
+    def authenticate(self, request: HttpRequest) -> Optional[tuple]:
         retval = super().authenticate(request)
         if retval is None and request.headers.get("Authorization"):
             raise exceptions.AuthenticationFailed(
@@ -32,8 +33,11 @@ class GPFOAuth2Authentication(OAuth2Authentication):
         return retval  # no user authenticated, just pass on
 
 
-def oauth_html_form_patch(get_response):
-    def middleware(request):
+def oauth_html_form_patch(
+    get_response: Callable[[HttpRequest], HttpResponse]
+) -> Callable[[HttpRequest], HttpResponse]:
+    """Middleware patch to allow using form-based POST downloads with OAuth."""
+    def middleware(request: HttpRequest) -> HttpResponse:
         if request.method == "POST" and \
            request.content_type == "application/x-www-form-urlencoded" and \
            "access_token" in request.POST:

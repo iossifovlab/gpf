@@ -223,7 +223,6 @@ INSTALLED_APPS = [
 ]
 
 if os.environ.get("WDAE_SENTRY_DSN", None):
-    # type: ignore
     import sentry_sdk
     from sentry_sdk.integrations.django import DjangoIntegration
 
@@ -301,7 +300,7 @@ class CustomFormatter(logging.Formatter):
         logging.CRITICAL: logging.Formatter(bold_red + fmt_invert + reset, time_fmt),
     }
 
-    def format(self, record):
+    def format(self, record):  # type: ignore
         if record.levelno not in self.FORMATS:
             formatter = self.FORMATS[logging.DEBUG]
         else:
