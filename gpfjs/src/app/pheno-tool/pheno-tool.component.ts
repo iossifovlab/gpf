@@ -12,6 +12,7 @@ import { FamilyFiltersBlockComponent } from 'app/family-filters-block/family-fil
 import { PhenoToolMeasureState } from 'app/pheno-tool-measure/pheno-tool-measure.state';
 import { Select, Selector } from '@ngxs/store';
 import { ErrorsState, ErrorsModel } from 'app/common/errors.state';
+import { AuthService } from 'app/auth.service';
 
 @Component({
   selector: 'gpf-pheno-tool',
@@ -36,6 +37,7 @@ export class PhenoToolComponent implements OnInit, OnDestroy {
     private loadingService: FullscreenLoadingService,
     private phenoToolService: PhenoToolService,
     public readonly configService: ConfigService,
+    private authService: AuthService,
   ) { }
 
   @Selector([
@@ -101,6 +103,7 @@ export class PhenoToolComponent implements OnInit, OnDestroy {
   public onDownload(event: Event): void {
     if (event.target instanceof HTMLFormElement) {
       event.target.queryData.value = JSON.stringify({...this.phenoToolState, datasetId: this.selectedDataset.id});
+      event.target.access_token.value = this.authService.accessToken;
       event.target.submit();
     }
   }

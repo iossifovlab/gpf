@@ -17,6 +17,7 @@ import * as draw from 'app/utils/svg-drawing';
 import { NgbDropdown } from '@ng-bootstrap/ng-bootstrap';
 import { LGDS, CNV, OTHER, CODING } from 'app/effect-types/effect-types';
 import { DatasetsTreeService } from 'app/datasets/datasets-tree.service';
+import { AuthService } from 'app/auth.service';
 
 @Component({
   selector: 'gpf-gene-browser',
@@ -69,6 +70,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
     private geneService: GeneService,
     private datasetsService: DatasetsService,
     private loadingService: FullscreenLoadingService,
+    private authService: AuthService,
     private router: Router,
     private datasetsTreeService: DatasetsTreeService
   ) {
@@ -219,12 +221,14 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
   public onSubmit(event: Event): void {
     const target = event.target as HTMLFormElement;
     target.queryData.value = JSON.stringify({...this.requestParams, download: true});
+    target.access_token.value = this.authService.accessToken;
     target.submit();
   }
 
   public onSubmitSummary(): void {
     const target = document.getElementById('download-summary-form') as HTMLFormElement;
     target.queryData.value = JSON.stringify({...this.requestParams, download: true});
+    target.access_token.value = this.authService.accessToken;
     target.submit();
   }
 
