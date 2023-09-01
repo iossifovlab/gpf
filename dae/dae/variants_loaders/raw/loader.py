@@ -140,18 +140,6 @@ class FamiliesGenotypes(ABC):
         pass
 
     @abstractmethod
-    def full_families_genotypes(self):
-        pass
-
-    @abstractmethod
-    def get_family_genotype(self, family):
-        pass
-
-    @abstractmethod
-    def get_family_best_state(self, family):
-        pass
-
-    @abstractmethod
     def family_genotype_iterator(self):
         pass
 

@@ -1,17 +1,20 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-from typing import List
+from typing import Callable, cast
 
 import pytest
 import pandas as pd
 import numpy as np
 
+from dae.pedigrees.family import FamiliesData
 from dae.variants.attributes import Inheritance
-from dae.variants.family_variant import FamilyVariant
+from dae.variants.family_variant import FamilyVariant, FamilyAllele
 from dae.variants_loaders.dae.loader import DenovoLoader
 from dae.utils.variant_utils import GenotypeType
+from dae.gpf_instance import GPFInstance
 
 
-def compare_variant_dfs(res_df, expected_df):
+def compare_variant_dfs(
+        res_df: pd.DataFrame, expected_df: pd.DataFrame) -> bool:
     equal = True
 
     # The genotype and best_state columns must be
@@ -43,7 +46,9 @@ def compare_variant_dfs(res_df, expected_df):
     return equal and res_df.equals(expected_df)
 
 
-def test_produce_genotype(fake_families, gpf_instance_2013):
+def test_produce_genotype(
+        fake_families: FamiliesData,
+        gpf_instance_2013: GPFInstance) -> None:
     expected_output = np.array([[0, 0, 0, 0, 0], [0, 0, 0, 1, 1]])
     output = DenovoLoader.produce_genotype(
         "1", 123123, gpf_instance_2013.reference_genome,
@@ -54,7 +59,8 @@ def test_produce_genotype(fake_families, gpf_instance_2013):
 
 
 def test_produce_genotype_no_people_with_variants(
-        fake_families, gpf_instance_2013):
+        fake_families: FamiliesData,
+        gpf_instance_2013: GPFInstance) -> None:
     expected_output = np.array([[0, 0, 0, 0, 0], [0, 0, 0, 0, 0]])
     output = DenovoLoader.produce_genotype(
         "1", 123123, gpf_instance_2013.reference_genome,
@@ -65,7 +71,9 @@ def test_produce_genotype_no_people_with_variants(
 
 
 def test_families_instance_type_assertion(
-        fixture_dirname, fake_families, gpf_instance_2013):
+        fixture_dirname: Callable[[str], str],
+        fake_families: FamiliesData,
+        gpf_instance_2013: GPFInstance) -> None:
     error_message = "families must be an instance of FamiliesData!"
     filename = fixture_dirname("denovo_import/variants_DAE_style.tsv")
     loader = DenovoLoader(
@@ -83,7 +91,9 @@ def test_families_instance_type_assertion(
 
 
 def test_read_variants_dae_style(
-        gpf_instance_2013, fixture_dirname, fake_families):
+        fixture_dirname: Callable[[str], str],
+        fake_families: FamiliesData,
+        gpf_instance_2013: GPFInstance) -> None:
     filename = fixture_dirname("denovo_import/variants_DAE_style.tsv")
     loader = DenovoLoader(
         fake_families, filename, gpf_instance_2013.reference_genome)
@@ -119,8 +129,9 @@ def test_read_variants_dae_style(
 
 
 def test_read_variants_a_la_vcf_style(
-    gpf_instance_2013, fixture_dirname, fake_families
-):
+        fixture_dirname: Callable[[str], str],
+        fake_families: FamiliesData,
+        gpf_instance_2013: GPFInstance) -> None:
     filename = fixture_dirname("denovo_import/variants_VCF_style.tsv")
     loader = DenovoLoader(
         fake_families, filename, gpf_instance_2013.reference_genome,
@@ -166,7 +177,9 @@ def test_read_variants_a_la_vcf_style(
 
 
 def test_read_variants_mixed_a(
-        gpf_instance_2013, fixture_dirname, fake_families):
+        fixture_dirname: Callable[[str], str],
+        fake_families: FamiliesData,
+        gpf_instance_2013: GPFInstance) -> None:
     filename = fixture_dirname("denovo_import/variants_mixed_style_A.tsv")
     loader = DenovoLoader(
         fake_families, filename, gpf_instance_2013.reference_genome,
@@ -210,7 +223,9 @@ def test_read_variants_mixed_a(
 
 
 def test_read_variants_mixed_b(
-        gpf_instance_2013, fixture_dirname, fake_families):
+        fixture_dirname: Callable[[str], str],
+        fake_families: FamiliesData,
+        gpf_instance_2013: GPFInstance) -> None:
     filename = fixture_dirname("denovo_import/variants_mixed_style_B.tsv")
     loader = DenovoLoader(
         fake_families, filename, gpf_instance_2013.reference_genome,
@@ -261,8 +276,10 @@ def test_read_variants_mixed_b(
     ],
 )
 def test_read_variants_person_ids(
-    gpf_instance_2013, filename, fake_families, fixture_dirname
-):
+        filename: str,
+        fixture_dirname: Callable[[str], str],
+        fake_families: FamiliesData,
+        gpf_instance_2013: GPFInstance) -> None:
     filename = fixture_dirname(filename)
     loader = DenovoLoader(
         fake_families, filename, gpf_instance_2013.reference_genome,
@@ -317,8 +334,9 @@ def test_read_variants_person_ids(
 
 
 def test_read_variants_different_separator(
-    gpf_instance_2013, fixture_dirname, fake_families
-):
+        fixture_dirname: Callable[[str], str],
+        fake_families: FamiliesData,
+        gpf_instance_2013: GPFInstance) -> None:
     filename = fixture_dirname(
         "denovo_import/variants_different_separator.dsv"
     )
@@ -368,8 +386,9 @@ def test_read_variants_different_separator(
 
 
 def test_read_variants_with_genotype(
-    gpf_instance_2013, fixture_dirname, fake_families
-):
+        fixture_dirname: Callable[[str], str],
+        fake_families: FamiliesData,
+        gpf_instance_2013: GPFInstance) -> None:
     filename = fixture_dirname(
         "denovo_import/variants_VCF_genotype.tsv"
     )
@@ -423,7 +442,9 @@ def test_read_variants_with_genotype(
 
 
 def test_read_variants_genome_assertion(
-        fixture_dirname, fake_families, gpf_instance_2013):
+        fixture_dirname: Callable[[str], str],
+        fake_families: FamiliesData,
+        gpf_instance_2013: GPFInstance) -> None:
     filename = fixture_dirname("denovo_import/variants_DAE_style.tsv")
 
     with pytest.raises(AssertionError) as excinfo:
@@ -520,8 +541,10 @@ def test_read_variants_genome_assertion(
     ],
 )
 def test_denovo_loader(
-    gpf_instance_2013, fixture_dirname, fake_families, filename, params
-):
+        filename: str, params: dict[str, str],
+        fixture_dirname: Callable[[str], str],
+        fake_families: FamiliesData,
+        gpf_instance_2013: GPFInstance) -> None:
     denovo_filename = fixture_dirname(f"denovo_import/{filename}")
     variants_loader = DenovoLoader(
         fake_families, denovo_filename,
@@ -532,8 +555,8 @@ def test_denovo_loader(
     variants = list(variants_loader.full_variants_iterator())
     print(variants)
 
-    def falt_allele(index):
-        return variants[index][1][0].alt_alleles[0]
+    def falt_allele(index: int) -> FamilyAllele:
+        return cast(FamilyAllele, variants[index][1][0].alt_alleles[0])
 
     fa = falt_allele(0)
     print(fa, fa.variant_in_members, fa.inheritance_in_members)
@@ -585,8 +608,9 @@ def test_denovo_loader(
 
 
 def test_denovo_loader_avoids_duplicates(
-    gpf_instance_2013, fixture_dirname, fake_families,
-):
+        fixture_dirname: Callable[[str], str],
+        fake_families: FamiliesData,
+        gpf_instance_2013: GPFInstance) -> None:
     denovo_filename = fixture_dirname(
         "denovo_import/variants_VCF_style_dup.tsv"
     )
@@ -606,7 +630,7 @@ def test_denovo_loader_avoids_duplicates(
     variants_iter = variants_loader.full_variants_iterator()
 
     svs = []
-    fvs: List[FamilyVariant] = []
+    fvs: list[FamilyVariant] = []
     for sv, fvs_ in variants_iter:
         print(sv, fvs)
         svs.append(sv)

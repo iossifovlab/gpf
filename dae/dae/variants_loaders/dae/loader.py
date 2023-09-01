@@ -4,7 +4,7 @@ import os
 import gzip
 import warnings
 import logging
-from typing import List, Optional, Dict, Any, Tuple
+from typing import List, Optional, Dict, Any, Tuple, Generator
 from contextlib import closing
 
 import numpy as np
@@ -26,7 +26,7 @@ from dae.utils.dae_utils import dae2vcf_variant
 from dae.pedigrees.family import Family, FamiliesData
 from dae.variants.attributes import Inheritance, Role
 
-from dae.variants.variant import SummaryVariantFactory, \
+from dae.variants.variant import SummaryVariant, SummaryVariantFactory, \
     allele_type_from_cshl_variant
 from dae.variants.family_variant import FamilyVariant
 
@@ -45,24 +45,17 @@ logger = logging.getLogger(__name__)
 
 class DenovoFamiliesGenotypes(FamiliesGenotypes):
     """Tuple of family, genotype, and best_state"""
-    def __init__(self, family, gt, best_state=None):
+    def __init__(
+            self, family: Family,
+            gt: np.ndarray, best_state: Optional[np.ndarray] = None):
         super().__init__()
         self.family = family
         self.genotype = gt
         self.best_state = best_state
 
-    def full_families_genotypes(self):
-        raise NotImplementedError()
-
-    def get_family_genotype(self, family):
-        assert family.family_id == self.family.family_id
-        return self.genotype
-
-    def get_family_best_state(self, family):
-        assert family.family_id == self.family.family_id
-        return self.best_state
-
-    def family_genotype_iterator(self):
+    def family_genotype_iterator(
+        self
+    ) -> Generator[tuple[Family, np.ndarray, Optional[np.ndarray]], None, None]:
         yield self.family, self.genotype, self.best_state
 
 
@@ -111,7 +104,7 @@ class DenovoLoader(VariantsGenotypesLoader):
             self.denovo_df = self.denovo_df.sort_values(
                 by=["chrom", "position", "reference", "alternative"])
 
-    def _init_chromosomes(self):
+    def _init_chromosomes(self) -> None:
         self.chromosomes = list(self.denovo_df.chrom.unique())
         self.chromosomes = [
             self._adjust_chrom_prefix(chrom) for chrom in self.chromosomes
@@ -213,7 +206,8 @@ class DenovoLoader(VariantsGenotypesLoader):
             fvs = self._produce_family_variants(svariant, values)
             yield svariant, fvs
 
-    def full_variants_iterator(self):
+    def full_variants_iterator(self) -> Generator[
+        tuple[SummaryVariant, list[FamilyVariant]], None, None]:
         full_iterator = super().full_variants_iterator()
         for summary_variants, family_variants in full_iterator:
             for fvariant in family_variants:
@@ -731,31 +725,11 @@ class DaeTransmittedFamiliesGenotypes(FamiliesGenotypes):
         self.families = families
         self.family_data = family_data
 
-    # def get_family_genotype(self, family):
-    #     gt = self.families_genotypes.get(family.family_id, None)
-    #     if gt is not None:
-    #         return gt
-    #     else:
-    #         # FIXME: what genotype we should return in case
-    #         # we have no data in the file:
-    #         # - reference
-    #         # - unknown
-    #         return reference_genotype(len(family))
-
-    def get_family_best_state(self, family):
-        fdata = self.family_data.get(family.family_id, None)
-        if fdata is None:
-            return None
-        return fdata[0]
-
     def get_family_read_counts(self, family):
         fdata = self.family_data.get(family.family_id, None)
         if fdata is None:
             return None
         return fdata[1]
-
-    def get_family_genotype(self, family):
-        raise NotImplementedError()
 
     def family_genotype_iterator(self):
         for family_id, (best_state, read_counts) in self.family_data.items():
@@ -765,10 +739,6 @@ class DaeTransmittedFamiliesGenotypes(FamiliesGenotypes):
             assert best_state is not None, (family_id, best_state, read_counts)
 
             yield fam, best_state, read_counts
-
-    def full_families_genotypes(self):
-        raise NotImplementedError()
-        # return self.families_genotypes
 
 
 class DaeTransmittedLoader(VariantsGenotypesLoader):
