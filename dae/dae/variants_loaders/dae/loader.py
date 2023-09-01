@@ -583,7 +583,7 @@ class DenovoLoader(VariantsGenotypesLoader):
             if denovo_best_state:
                 best_state_col = list(
                     map(
-                        lambda bs: str2mat_adjust_colsep(bs),
+                        str2mat_adjust_colsep,
                         raw_df[denovo_best_state],
                     )
                 )
