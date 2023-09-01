@@ -1,13 +1,15 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import textwrap
-
+import pathlib
 import pytest
 
 from dae.annotation.annotate_columns import build_record_to_annotatable
-from dae.annotation.annotatable import Position, VCFAllele, Region, CNVAllele
+from dae.annotation.annotatable import Position, VCFAllele, Region, \
+    CNVAllele, Annotatable
 from dae.testing import setup_directories, setup_denovo
 from dae.annotation.annotate_columns import cli as cli_columns
-from dae.genomic_resources.genomic_context import SimpleGenomicContext
+from dae.genomic_resources.genomic_context import SimpleGenomicContext, \
+    GenomicContext
 from dae.testing import setup_genome
 
 
@@ -29,7 +31,8 @@ from dae.testing import setup_genome
          Region("chr1", 4, 30)),
     ]
 )
-def test_default_columns(record, expected):
+def test_default_columns(
+        record: dict[str, str], expected: Annotatable) -> None:
     annotatable = build_record_to_annotatable(
         {}, set(record.keys())).build(record)
     assert str(annotatable) == str(expected)
@@ -44,14 +47,15 @@ def test_default_columns(record, expected):
          CNVAllele("chr1", 3, 13, CNVAllele.Type.LARGE_DUPLICATION)),
     ]
 )
-def test_cshl_variants_without_context(record, expected):
+def test_cshl_variants_without_context(
+        record: dict[str, str], expected: Annotatable) -> None:
     with pytest.raises(ValueError):
         build_record_to_annotatable(
             {}, set(record.keys())).build(record)
 
 
 @pytest.fixture
-def gc_fixture(tmp_path):
+def gc_fixture(tmp_path: pathlib.Path) -> GenomicContext:
     genome = setup_genome(
         tmp_path / "acgt_gpf" / "genome" / "allChr.fa",
         f"""
@@ -106,7 +110,10 @@ def gc_fixture(tmp_path):
          CNVAllele("chr1", 3, 13, CNVAllele.Type.LARGE_DELETION)),
     ]
 )
-def test_build_record(record, expected, gc_fixture):
+def test_build_record(
+        record: dict[str, str],
+        expected: Annotatable,
+        gc_fixture: GenomicContext) -> None:
     ref_genome = gc_fixture.get_reference_genome()
     annotatable = build_record_to_annotatable(
         {}, set(record.keys()), ref_genome
@@ -122,13 +129,16 @@ def test_build_record(record, expected, gc_fixture):
          VCFAllele("chr1", 4, "C", "CT")),
     ]
 )
-def test_renamed_columns(parameters, record, expected):
+def test_renamed_columns(
+        parameters: dict[str, str],
+        record: dict[str, str],
+        expected: Annotatable) -> None:
     annotatable = build_record_to_annotatable(
         parameters, set(record.keys())).build(record)
     assert str(annotatable) == str(expected)
 
 
-def test_build_record_to_annotable_failures():
+def test_build_record_to_annotable_failures() -> None:
     with pytest.raises(
             ValueError, match="no record to annotatable could be found"):
         build_record_to_annotatable({}, set([]))
@@ -138,15 +148,16 @@ def test_build_record_to_annotable_failures():
         build_record_to_annotatable({"gosho": "pesho"}, set([]))
 
 
-def get_file_content_as_string(file):
+def get_file_content_as_string(file: str) -> str:
     with open(file, "rt", encoding="utf8") as infile:
         return "".join(infile.readlines())
 
 
 @pytest.fixture
-def annotate_directory_fixture(tmp_path):
+def annotate_directory_fixture(tmp_path: pathlib.Path) -> pathlib.Path:
+    root_path = tmp_path / "annotate_columns"
     setup_directories(
-        tmp_path,
+        root_path,
         {
             "annotation.yaml": """
                 - position_score: one
@@ -157,7 +168,7 @@ def annotate_directory_fixture(tmp_path):
             "grr.yaml": f"""
                 id: mm
                 type: dir
-                directory: "{tmp_path}/grr"
+                directory: "{root_path}/grr"
             """,
             "grr": {
                 "one": {
@@ -208,11 +219,13 @@ def annotate_directory_fixture(tmp_path):
         chr1   24         C          A            0.3
         chr1   24         C          G            0.4
     """)
-    setup_denovo(tmp_path / "grr" / "one" / "data.txt", one_content)
-    setup_denovo(tmp_path / "grr" / "two" / "data.txt", two_content)
+    setup_denovo(root_path / "grr" / "one" / "data.txt", one_content)
+    setup_denovo(root_path / "grr" / "two" / "data.txt", two_content)
+    return root_path
 
 
-def test_basic_setup(tmp_path, annotate_directory_fixture):
+def test_cli_columns_basic_setup(
+        annotate_directory_fixture: pathlib.Path) -> None:
     in_content = textwrap.dedent("""
         chrom   pos
         chr1    23
@@ -224,18 +237,23 @@ def test_basic_setup(tmp_path, annotate_directory_fixture):
         "chr1\t24\t0.2\n"
     )
 
-    in_file = tmp_path / "in.txt"
-    out_file = tmp_path / "out.txt"
-    annotation_file = tmp_path / "annotation.yaml"
-    grr_file = tmp_path / "grr.yaml"
+    root_path = annotate_directory_fixture
+    in_file = root_path / "in.txt"
+    out_file = root_path / "out.txt"
+    annotation_file = root_path / "annotation.yaml"
+    grr_file = root_path / "grr.yaml"
+    work_dir = root_path / "work"
 
     setup_denovo(in_file, in_content)
 
     cli_columns([
         str(a) for a in [
-            in_file, annotation_file, "-o", out_file, "--grr", grr_file,
+            in_file, annotation_file, "-o", out_file,
+            "-w", work_dir,
+            "--grr", grr_file,
+            "-j", 1
         ]
     ])
-    out_file_content = get_file_content_as_string(out_file)
+    out_file_content = get_file_content_as_string(str(out_file))
     print(out_file_content)
     assert out_file_content == out_expected_content

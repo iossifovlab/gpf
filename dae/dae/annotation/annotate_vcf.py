@@ -318,11 +318,29 @@ def cli(raw_args: Optional[list[str]] = None) -> None:
     if not os.path.exists(args.work_dir):
         os.mkdir(args.work_dir)
 
-    def run_parallelized() -> None:
+
+    task_graph = TaskGraph()
+
+    task_graph.input_files.append(args.input)
+    task_graph.input_files.append(args.pipeline)
+    if args.reannotate:
+        task_graph.input_files.append(args.reannotate)
+
+    if not tabix_index_filename(args.input):
+        # annotate(args.input, None, pipeline.get_info(),
+        #          grr.definition, output, args.reannotate)
+        assert grr is not None
+        task_graph.create_task(
+            "all_variants_annotate",
+            annotate,
+            [args.input, None, pipeline.get_info(),
+             grr.definition, output, args.reannotate],
+            []
+        )
+    else:
         with closing(TabixFile(args.input)) as pysam_file:
             regions = produce_regions(pysam_file, args.region_size)
         file_paths = produce_partfile_paths(args.input, regions, args.work_dir)
-        task_graph = TaskGraph()
         region_tasks = []
         for index, (region, file_path) in enumerate(zip(regions, file_paths)):
             assert grr is not None
@@ -344,20 +362,11 @@ def cli(raw_args: Optional[list[str]] = None) -> None:
             region_tasks
         )
 
-        args.task_status_dir = os.path.join(args.work_dir, "tasks-status")
-        args.log_dir = os.path.join(args.work_dir, ".tasks-log")
+    args.task_status_dir = os.path.join(args.work_dir, ".tasks-status")
+    args.log_dir = os.path.join(args.work_dir, ".tasks-log")
 
-        TaskGraphCli.process_graph(task_graph, **vars(args))
+    TaskGraphCli.process_graph(task_graph, **vars(args))
 
-    def run_sequentially() -> None:
-        assert grr is not None
-        annotate(args.input, None, pipeline.get_info(),
-                 grr.definition, output, args.reannotate)
-
-    if tabix_index_filename(args.input):
-        run_parallelized()
-    else:
-        run_sequentially()
 
 
 if __name__ == "__main__":

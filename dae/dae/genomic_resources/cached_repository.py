@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 import logging
 
-from typing import Optional, Generator, IO, Union
+from typing import Optional, Generator, IO, Union, Iterable
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import pysam
@@ -259,7 +259,7 @@ class GenomicResourceCachedRepo(GenomicResourceRepo):
 
 
 def cache_resources(
-        repository: GenomicResourceRepo, resource_ids: Optional[list[str]],
+        repository: GenomicResourceRepo, resource_ids: Optional[Iterable[str]],
         workers: Optional[int] = None) -> None:
     """Cache resources from a list of remote resource IDs."""
     # pylint: disable=import-outside-toplevel
