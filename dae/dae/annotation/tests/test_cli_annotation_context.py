@@ -1,14 +1,20 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import os
 import argparse
+from typing import Callable
+
 import pytest
+from pytest_mock import MockerFixture
 
 from dae.annotation.context import CLIAnnotationContext
-from dae.genomic_resources.genomic_context import get_genomic_context
+from dae.genomic_resources.genomic_context import get_genomic_context, \
+    GenomicContext
 
 
 @pytest.fixture
-def context_fixture(fixture_dirname, mocker):
+def context_fixture(
+        fixture_dirname: Callable[[str], str],
+        mocker: MockerFixture) -> GenomicContext:
     conf_dir = fixture_dirname("")
     home_dir = os.environ["HOME"]
     mocker.patch("os.environ", {
@@ -28,7 +34,8 @@ def context_fixture(fixture_dirname, mocker):
 
 
 def test_cli_genomic_context_reference_genome(
-        fixture_dirname, context_fixture):
+        fixture_dirname: Callable[[str], str],
+        context_fixture: GenomicContext) -> None:
     # Given
     parser = argparse.ArgumentParser(
         description="Test CLI genomic context",

@@ -5,7 +5,7 @@ from dae.annotation.annotation_pipeline import AnnotatorInfo, AttributeInfo
 from dae.genomic_resources.testing import build_inmemory_test_repository
 from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.annotation.annotation_factory import build_annotation_pipeline, \
-    get_annotator_factory
+    get_annotator_factory, AnnotationPipeline
 
 
 @pytest.fixture(scope="session")
@@ -38,7 +38,8 @@ def grr_np_score1() -> GenomicResourceRepo:
 
 
 @pytest.fixture(scope="session")
-def annotation_pipeline1(grr_np_score1):
+def annotation_pipeline1(
+        grr_np_score1: GenomicResourceRepo) -> AnnotationPipeline:
     pipeline = build_annotation_pipeline(
         pipeline_config=[],
         grr_repository=grr_np_score1)
@@ -46,7 +47,8 @@ def annotation_pipeline1(grr_np_score1):
     return pipeline
 
 
-def test_annotation_factory_np_score(annotation_pipeline1):
+def test_annotation_factory_np_score(
+        annotation_pipeline1: AnnotationPipeline) -> None:
     annotator_info = AnnotatorInfo(
         "np_score",
         [AttributeInfo("np_score1", "test_raw", False, {})],

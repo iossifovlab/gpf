@@ -7,26 +7,25 @@ from abc import abstractmethod, ABC
 from copy import deepcopy
 from dataclasses import dataclass
 from functools import cache
-from typing import Callable, List, Optional, cast, Union
-from typing import Dict, Tuple, Any
+from typing import Callable, Optional, cast, Union, Generator, Any
 from collections import defaultdict
 from math import ceil
 
 import yaml
+from box import Box
 
 from dae.annotation.annotation_factory import AnnotationConfigParser,\
-    build_annotation_pipeline
+    build_annotation_pipeline, AnnotationPipeline
 
 from dae.variants_loaders.cnv.loader import CNVLoader
 from dae.variants_loaders.dae.loader import DaeTransmittedLoader, DenovoLoader
 from dae.variants_loaders.vcf.loader import VcfLoader
 from dae.variants_loaders.raw.loader import AnnotationPipelineDecorator,\
     VariantsLoader
-
+from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.genotype_storage.genotype_storage import GenotypeStorage
-from dae.genotype_storage.genotype_storage_registry import (
+from dae.genotype_storage.genotype_storage_registry import \
     GenotypeStorageRegistry
-)
 from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.task_graph.graph import TaskGraph
@@ -34,6 +33,7 @@ from dae.pedigrees.family import FamiliesData
 from dae.configuration.schemas.import_config import import_config_schema,\
     embedded_input_schema
 from dae.pedigrees.loader import FamiliesLoader
+from dae.gpf_instance import GPFInstance
 from dae.utils import fs_utils
 from dae.utils.statistics import StatsCollection
 
@@ -69,8 +69,8 @@ class ImportProject():
             self, import_config: dict[str, Any],
             base_input_dir: Optional[str],
             base_config_dir: Optional[str] = None,
-            gpf_instance=None,
-            config_filenames=None) -> None:
+            gpf_instance: Optional[GPFInstance] = None,
+            config_filenames: Optional[list[str]] = None) -> None:
         """Create a new project from the provided config.
 
         It is best not to call this ctor directly but to use one of the
@@ -94,7 +94,9 @@ class ImportProject():
 
     @staticmethod
     def build_from_config(
-        import_config, base_input_dir="", gpf_instance=None
+        import_config: dict[str, Any],
+        base_input_dir: str = "",
+        gpf_instance: Optional[GPFInstance] = None
     ) -> ImportProject:
         """Create a new project from the provided config.
 
@@ -117,7 +119,7 @@ class ImportProject():
     @staticmethod
     def build_from_file(
             import_filename: Union[str, os.PathLike],
-            gpf_instance=None) -> ImportProject:
+            gpf_instance: Optional[GPFInstance] = None) -> ImportProject:
         """Create a new project from the provided config filename.
 
         The file is first parsed, validated and normalized. The path to the
@@ -132,10 +134,10 @@ class ImportProject():
         project = ImportProject.build_from_config(
             import_config, base_input_dir, gpf_instance=gpf_instance)
         # the path to the import filename should be the first config file
-        project.config_filenames.insert(0, import_filename)
+        project.config_filenames.insert(0, str(import_filename))
         return project
 
-    def get_pedigree_params(self) -> Tuple[str, Dict[str, Any]]:
+    def get_pedigree_params(self) -> tuple[str, dict[str, Any]]:
         """Get params for loading the pedigree."""
         families_filename = self.get_pedigree_filename()
 
@@ -174,6 +176,17 @@ class ImportProject():
                 result.add(loader_type)
         return result
 
+    def has_denovo_variants(self) -> bool:
+        """Check if the resulting imported study has denovo variants."""
+        if "denovo" in self.get_variant_loader_types():
+            return True
+        if "vcf" in self.get_variant_loader_types():
+            _, variants_params = \
+                self.get_variant_params("vcf")
+            if variants_params.get("vcf_denovo_mode") == "denovo":
+                return True
+        return False
+
     def get_variant_loader_chromosomes(
             self, loader_type: Optional[str] = None) -> list[str]:
         """Collect all chromosomes available in input files."""
@@ -204,14 +217,16 @@ class ImportProject():
         return buckets
 
     def get_variant_loader(
-            self,
-            bucket: Optional[Bucket] = None, loader_type: Optional[str] = None,
-            reference_genome=None):
+        self,
+        bucket: Optional[Bucket] = None, loader_type: Optional[str] = None,
+        reference_genome: Optional[ReferenceGenome] = None
+    ) -> VariantsLoader:
         """Get the appropriate variant loader for the specified bucket."""
         if bucket is None and loader_type is None:
             raise ValueError("loader_type or bucket is required")
         if bucket is not None:
             loader_type = bucket.type
+        assert loader_type is not None
         loader = self._get_variant_loader(loader_type, reference_genome)
         if bucket is not None and bucket.region_bin != "all":
             loader.reset_regions(bucket.regions)
@@ -225,7 +240,8 @@ class ImportProject():
             self._input_filenames_cache[bucket.type] = loader.filenames
         return self._input_filenames_cache[bucket.type]
 
-    def get_variant_params(self, loader_type):
+    def get_variant_params(
+            self, loader_type: str) -> tuple[list[str], dict[str, Any]]:
         """Return variant loader filenames and params."""
         assert loader_type in self.import_config["input"],\
             f"No input config for loader {loader_type}"
@@ -248,8 +264,10 @@ class ImportProject():
             variants_filenames = variants_filenames[0]
         return variants_filenames, variants_params
 
-    def _get_variant_loader(self, loader_type, reference_genome=None) \
-            -> VariantsLoader:
+    def _get_variant_loader(
+        self, loader_type: str,
+        reference_genome: Optional[ReferenceGenome] = None
+    ) -> VariantsLoader:
         assert loader_type in self.import_config["input"],\
             f"No input config for loader {loader_type}"
         if reference_genome is None:
@@ -301,13 +319,10 @@ class ImportProject():
 
         return partition_desc
 
-    def get_gpf_instance(self):
+    def get_gpf_instance(self) -> GPFInstance:
         """Create and return a gpf instance as desribed in the config."""
         if self._gpf_instance is not None:
             return self._gpf_instance
-
-        # pylint: disable=import-outside-toplevel
-        from dae.gpf_instance.gpf_instance import GPFInstance
 
         instance_config = self.import_config.get("gpf_instance", {})
         instance_dir = instance_config.get("path")
@@ -319,44 +334,49 @@ class ImportProject():
         self._gpf_instance = GPFInstance.build(config_filename)
         return self._gpf_instance
 
-    def get_import_storage(self):
+    def get_import_storage(self) -> ImportStorage:
         """Create an import storage as described in the import config."""
         storage_type = self._storage_type()
         return self._get_import_storage(storage_type)
 
     @staticmethod
     @cache
-    def _get_import_storage(storage_type):
+    def _get_import_storage(storage_type: str) -> ImportStorage:
         factory = get_import_storage_factory(storage_type)
         return factory()
 
     @property
-    def work_dir(self):
+    def work_dir(self) -> str:
         """Where to store generated import files (e.g. parquet files)."""
-        return self.import_config.get("processing_config", {})\
-            .get("work_dir", "")
+        return cast(
+            str,
+            self.import_config.get("processing_config", {}).get("work_dir", "")
+        )
 
     @property
-    def include_reference(self):
+    def include_reference(self) -> bool:
         """Check if the import should include ref allele in the output data."""
-        return self.import_config.get("processing_config", {})\
-            .get("include_reference", False)
+        return cast(
+            bool,
+            self.import_config.get("processing_config", {}).get(
+                "include_reference", False))
 
     @property
-    def input_dir(self):
+    def input_dir(self) -> str:
         """Return the path relative to which input files are specified."""
+        assert self._base_input_dir is not None
         return fs_utils.join(
             self._base_input_dir,
             self.import_config["input"].get("input_dir", "")
         )
 
-    def has_variants(self):
+    def has_variants(self) -> bool:
         # FIXME: this method should check if the input has variants
         return True
 
     @property
-    def study_id(self):
-        return self.import_config["id"]
+    def study_id(self) -> str:
+        return cast(str, self.import_config["id"])
 
     def get_processing_parquet_dataset_dir(self) -> Optional[str]:
         """Return processing parquet dataset dir if configured and exists."""
@@ -380,7 +400,7 @@ class ImportProject():
             return parquet_dataset_dir
         return fs_utils.join(self.work_dir, self.study_id)
 
-    def has_genotype_storage(self):
+    def has_genotype_storage(self) -> bool:
         """Return if a genotype storage can be created."""
         if not self._has_destination():
             return True  # Use default genotype storage
@@ -392,7 +412,7 @@ class ImportProject():
         # this is a special case and we assume there is no genotype storage
         return False
 
-    def get_genotype_storage(self):
+    def get_genotype_storage(self) -> GenotypeStorage:
         """Find, create and return the correct genotype storage."""
         explicit_config = (
             self._has_destination()
@@ -400,7 +420,8 @@ class ImportProject():
         )
         if not explicit_config:
             gpf_instance = self.get_gpf_instance()
-            genotype_storages = gpf_instance.genotype_storages
+            genotype_storages: GenotypeStorageRegistry = \
+                gpf_instance.genotype_storages
             storage_id = self.import_config.get("destination", {})\
                 .get("storage_id", None)
             if storage_id is not None:
@@ -416,14 +437,14 @@ class ImportProject():
         """Return if there is a *destination* section in the import config."""
         return "destination" in self.import_config
 
-    def get_row_group_size(self, bucket) -> int:
+    def get_row_group_size(self, bucket: Bucket) -> int:
         res = self.import_config.get("parquet_row_group_size", {})\
             .get(bucket.type, 20_000)
         return cast(int, res)
 
     def build_variants_loader_pipeline(
             self, variants_loader: VariantsLoader,
-            gpf_instance) -> VariantsLoader:
+            gpf_instance: GPFInstance) -> VariantsLoader:
         """Create an annotation pipeline around variants_loader."""
         annotation_pipeline = self._build_annotation_pipeline(gpf_instance)
         if annotation_pipeline is not None:
@@ -452,7 +473,7 @@ class ImportProject():
         return cast(str, destination["storage_type"])
 
     @staticmethod
-    def _get_default_bucket_index(loader_type):
+    def _get_default_bucket_index(loader_type: str) -> int:
         return {
             "denovo": 0,
             "vcf": 1_000_000,
@@ -461,7 +482,8 @@ class ImportProject():
         }[loader_type]
 
     @staticmethod
-    def _add_loader_prefix(params, prefix):
+    def _add_loader_prefix(
+            params: dict[str, Any], prefix: str) -> dict[str, Any]:
         res = {}
         exclude = {"add_chrom_prefix", "del_chrom_prefix", "files"}
         for k, val in params.items():
@@ -472,7 +494,8 @@ class ImportProject():
         return res
 
     @staticmethod
-    def del_loader_prefix(params, prefix):
+    def del_loader_prefix(
+            params: dict[str, Any], prefix: str) -> dict[str, Any]:
         """Remove prefix from parameter keys."""
         res = {}
         for k, val in params.items():
@@ -484,12 +507,13 @@ class ImportProject():
             res[key] = val
         return res
 
-    def _loader_region_bins(self, loader_type):
+    def _loader_region_bins(
+            self, loader_type: str) -> Generator[Bucket, None, None]:
         # pylint: disable=too-many-locals
         reference_genome = self.get_gpf_instance().reference_genome
 
         loader = self._get_variant_loader(loader_type, reference_genome)
-        loader_chromosomes = loader.chromosomes  # type: ignore
+        loader_chromosomes = loader.chromosomes
         target_chromosomes = self._get_loader_target_chromosomes(loader_type)
         if target_chromosomes is None:
             target_chromosomes = loader_chromosomes
@@ -497,9 +521,11 @@ class ImportProject():
         # cannot use self.get_partition_description() here as the
         # processing region length might be different than the region length
         # specified in the parition description section of the import config
+        processing_region_length = \
+            self._get_processing_region_length(loader_type)
         partition_description = PartitionDescriptor(
             chromosomes=target_chromosomes,
-            region_length=self._get_processing_region_length(loader_type),
+            region_length=processing_region_length  # type: ignore
         )
 
         partition_helper = MakefilePartitionHelper(
@@ -525,24 +551,31 @@ class ImportProject():
             yield Bucket(loader_type, region_bin, regions, bucket_index)
             index += 1
 
-    def _get_processing_region_length(self, loader_type):
+    def _get_processing_region_length(self, loader_type: str) -> Optional[int]:
         processing_config = self._get_loader_processing_config(loader_type)
         if isinstance(processing_config, str):
             return None
-        return processing_config.get("region_length", sys.maxsize)
+        return cast(int, processing_config.get("region_length", sys.maxsize))
 
-    def _get_loader_target_chromosomes(self, loader_type):
+    def _get_loader_target_chromosomes(
+            self, loader_type: str) -> Optional[list[str]]:
         processing_config = self._get_loader_processing_config(loader_type)
         if isinstance(processing_config, str):
             return None
-        return processing_config.get("chromosomes", None)
+        return cast(
+            Optional[list[str]], processing_config.get("chromosomes", None))
 
-    def _get_loader_processing_config(self, loader_type):
-        return self.import_config.get("processing_config", {})\
-            .get(loader_type, {})
+    def _get_loader_processing_config(
+            self, loader_type: str) -> dict[str, Any]:
+        return cast(
+            dict[str, Any],
+            self.import_config.get("processing_config", {}).get(
+                loader_type, {}))
 
     @staticmethod
-    def _check_chrom_prefix(loader, variants_params):
+    def _check_chrom_prefix(
+            loader: VariantsLoader,
+            variants_params: dict[str, Any]) -> None:
         prefix = variants_params.get("add_chrom_prefix")
         if prefix:
             all_already_have_prefix = True
@@ -571,7 +604,8 @@ class ImportProject():
                     "Consider removing del_chrom_prefix."
                 ) from exp
 
-    def _build_annotation_pipeline(self, gpf_instance):
+    def _build_annotation_pipeline(
+            self, gpf_instance: GPFInstance) -> AnnotationPipeline:
         if "annotation" not in self.import_config:
             # build default annotation pipeline as described in the gpf
             return construct_import_annotation_pipeline(gpf_instance)
@@ -579,6 +613,7 @@ class ImportProject():
         annotation_config = self.import_config["annotation"]
         if "file" in annotation_config:
             # pipeline in external file
+            assert self._base_config_dir is not None
             annotation_config_file = fs_utils.join(
                 self._base_config_dir, annotation_config["file"]
             )
@@ -592,10 +627,10 @@ class ImportProject():
             pipeline_config=annotation_config, grr_repository=gpf_instance.grr
         )
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"Project({self.study_id})"
 
-    def __getstate__(self):
+    def __getstate__(self) -> dict[str, Any]:
         """Return state of object used for pickling.
 
         The state is the default state but doesn't include the _gpf_instance
@@ -608,11 +643,9 @@ class ImportProject():
         state["_gpf_dae_dir"] = gpf_instance.dae_dir
         return state
 
-    def __setstate__(self, state):
+    def __setstate__(self, state: dict[str, Any]) -> None:
         """Set state of object after unpickling."""
         self.__dict__.update(state)
-        # pylint: disable=import-outside-toplevel
-        from dae.gpf_instance.gpf_instance import GPFInstance
         self._gpf_instance = GPFInstance(
             state["_gpf_dae_config"], state["_gpf_dae_dir"])
 
@@ -625,7 +658,9 @@ class ImportConfigNormalizer:
     embeds them in the final configuration dict.
     """
 
-    def normalize(self, import_config: dict, base_input_dir: str):
+    def normalize(
+            self, import_config: dict,
+            base_input_dir: str) -> tuple[dict[str, Any], str, list[str]]:
         """Normalize the import config."""
         config = deepcopy(import_config)
 
@@ -643,8 +678,9 @@ class ImportConfigNormalizer:
         return config, base_input_dir, external_files
 
     @classmethod
-    def _load_external_files(cls, config, base_input_dir):
-        external_files: List[str] = []
+    def _load_external_files(
+            cls, config: dict, base_input_dir: str) -> tuple[str, list[str]]:
+        external_files: list[str] = []
 
         base_input_dir = cls._load_external_file(
             config, "input", base_input_dir, embedded_input_schema,
@@ -658,8 +694,10 @@ class ImportConfigNormalizer:
         return base_input_dir, external_files
 
     @staticmethod
-    def _load_external_file(config, section_key, base_input_dir, schema,
-                            external_files):
+    def _load_external_file(
+            config: dict, section_key: str, base_input_dir: str,
+            schema: dict,
+            external_files: list[str]) -> str:
         if section_key not in config:
             return base_input_dir
 
@@ -678,7 +716,9 @@ class ImportConfigNormalizer:
         return base_input_dir
 
     @classmethod
-    def _map_for_key(cls, config, key, func):
+    def _map_for_key(
+            cls, config: dict[str, Any], key: str,
+            func: Callable[[Any], Any]) -> None:
         for k, val in config.items():
             if k == key:
                 config[k] = func(val)
@@ -686,7 +726,7 @@ class ImportConfigNormalizer:
                 cls._map_for_key(val, key, func)
 
     @staticmethod
-    def _int_shorthand(obj):
+    def _int_shorthand(obj: Union[str, int]) -> int:
         if isinstance(obj, int):
             return obj
         assert isinstance(obj, str)
@@ -699,7 +739,7 @@ class ImportConfigNormalizer:
         return int(obj[:-1]) * unit_suffixes[obj[-1].upper()]
 
     @classmethod
-    def _normalize_chrom_list(cls, obj):
+    def _normalize_chrom_list(cls, obj: Union[str, list[str]]) -> list[str]:
         if isinstance(obj, list):
             return cls._expand_chromosomes(obj)
         assert isinstance(obj, str)
@@ -710,7 +750,7 @@ class ImportConfigNormalizer:
         return cls._expand_chromosomes(chrom_list)
 
     @staticmethod
-    def _expand_chromosomes(chromosomes):
+    def _expand_chromosomes(chromosomes: list[str]) -> list[str]:
         if chromosomes is None:
             return None
         res = []
@@ -731,7 +771,7 @@ class ImportConfigNormalizer:
 class ImportStorage(ABC):
     """Defines abstract base class for import storages."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         pass
 
     @abstractmethod
@@ -739,12 +779,12 @@ class ImportStorage(ABC):
         """Generate task grap for import of the project into this storage."""
 
 
-_REGISTERED_IMPORT_STORAGE_FACTORIES: \
-    Dict[str, Callable[[], ImportStorage]] = {}
+_REGISTERED_IMPORT_STORAGE_FACTORIES: dict[
+    str, Callable[[], ImportStorage]] = {}
 _EXTENTIONS_LOADED = False
 
 
-def _load_import_storage_factory_plugins():
+def _load_import_storage_factory_plugins() -> None:
     # pylint: disable=global-statement
     global _EXTENTIONS_LOADED
     if _EXTENTIONS_LOADED:
@@ -770,7 +810,7 @@ def get_import_storage_factory(
     return _REGISTERED_IMPORT_STORAGE_FACTORIES[storage_type]
 
 
-def get_import_storage_types() -> List[str]:
+def get_import_storage_types() -> list[str]:
     _load_import_storage_factory_plugins()
     return list(_REGISTERED_IMPORT_STORAGE_FACTORIES.keys())
 
@@ -784,7 +824,9 @@ def register_import_storage_factory(
     _REGISTERED_IMPORT_STORAGE_FACTORIES[storage_type] = factory
 
 
-def save_study_config(dae_config, study_id, study_config, force=False):
+def save_study_config(
+        dae_config: Box, study_id: str,
+        study_config: str, force: bool = False) -> None:
     """Save the study config to a file."""
     dirname = os.path.join(dae_config.studies.dir, study_id)
     filename = os.path.join(dirname, f"{study_id}.yaml")
@@ -792,15 +834,20 @@ def save_study_config(dae_config, study_id, study_config, force=False):
     if os.path.exists(filename):
         logger.info(
             "configuration file already exists: %s", filename)
+        bak_name = os.path.basename(filename) + "." + str(time.time_ns())
+        bak_path = os.path.join(os.path.dirname(filename), bak_name)
+
         if not force:
-            logger.info("skipping overwring the old config file...")
+            logger.info(
+                "skipping overwring the old config file... "
+                "storing new config in %s", bak_path)
+            with open(bak_path, "w") as outfile:
+                outfile.write(study_config)
             return
 
-        new_name = os.path.basename(filename) + "." + str(time.time_ns())
-        new_path = os.path.join(os.path.dirname(filename), new_name)
         logger.info(
-            "Backing up configuration for %s in %s", study_id, new_path)
-        os.rename(filename, new_path)
+            "Backing up configuration for %s in %s", study_id, bak_path)
+        os.rename(filename, bak_path)
 
     os.makedirs(dirname, exist_ok=True)
     with open(filename, "w") as outfile:
@@ -808,7 +855,8 @@ def save_study_config(dae_config, study_id, study_config, force=False):
 
 
 def construct_import_annotation_pipeline(
-        gpf_instance, annotation_configfile=None):
+        gpf_instance: GPFInstance,
+        annotation_configfile: Optional[str] = None) -> AnnotationPipeline:
     """Construct annotation pipeline for importing data."""
     pipeline_config = []
     if annotation_configfile is not None:
@@ -831,7 +879,8 @@ def construct_import_annotation_pipeline(
     return pipeline
 
 
-def _construct_import_effect_annotator_config(gpf_instance):
+def _construct_import_effect_annotator_config(
+        gpf_instance: GPFInstance) -> dict[str, Any]:
     """Construct import effect annotator."""
     genome = gpf_instance.reference_genome
     gene_models = gpf_instance.gene_models
@@ -857,8 +906,8 @@ class MakefilePartitionHelper:
 
     def __init__(
             self,
-            partition_descriptor,
-            genome):
+            partition_descriptor: PartitionDescriptor,
+            genome: ReferenceGenome):
 
         self.genome = genome
         self.partition_descriptor = partition_descriptor
@@ -866,7 +915,7 @@ class MakefilePartitionHelper:
             self.genome.get_all_chrom_lengths()
         )
 
-    def region_bins_count(self, chrom):
+    def region_bins_count(self, chrom: str) -> int:
         result = ceil(
             self.chromosome_lengths[chrom]
             / self.partition_descriptor.region_length
@@ -874,10 +923,11 @@ class MakefilePartitionHelper:
         return result
 
     @staticmethod
-    def build_target_chromosomes(target_chromosomes):
+    def build_target_chromosomes(target_chromosomes: list[str]) -> list[str]:
         return target_chromosomes[:]
 
-    def generate_chrom_targets(self, target_chrom):
+    def generate_chrom_targets(
+            self, target_chrom: str) -> list[tuple[str, str]]:
         """Generate variant targets based on partition descriptor."""
         target = target_chrom
         if target_chrom not in self.partition_descriptor.chromosomes:
@@ -899,7 +949,7 @@ class MakefilePartitionHelper:
             )
         return result
 
-    def bucket_index(self, region_bin):
+    def bucket_index(self, region_bin: str) -> int:
         """Return bucket index based on variants target."""
         genome_chromosomes = [
             chrom
@@ -909,15 +959,18 @@ class MakefilePartitionHelper:
         variants_targets = self.generate_variants_targets(genome_chromosomes)
         assert region_bin in variants_targets
 
-        variants_targets = list(variants_targets.keys())
-        return variants_targets.index(region_bin)
+        targets = list(variants_targets.keys())
+        return targets.index(region_bin)
 
-    def generate_variants_targets(self, target_chromosomes, mode=None):
+    def generate_variants_targets(
+            self, target_chromosomes: list[str],
+            mode: Optional[str] = None) -> dict[str, list]:
         """Produce variants targets."""
         if len(self.partition_descriptor.chromosomes) == 0:
             return {"none": [""]}
 
         generated_target_chromosomes = target_chromosomes[:]
+        targets: dict[str, list]
         if mode == "single_bucket":
             targets = {"all": [None]}
             return targets

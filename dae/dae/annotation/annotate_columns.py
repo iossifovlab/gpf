@@ -269,11 +269,18 @@ def cli(raw_args: Optional[list[str]] = None) -> None:
         else:
             output = f"{input_name}_annotated"
 
+    task_graph = TaskGraph()
+
+    task_graph.input_files.append(args.input)
+    task_graph.input_files.append(args.pipeline)
+    if args.reannotate:
+        task_graph.input_files.append(args.reannotate)
+
     if tabix_index_filename(args.input):
         with closing(TabixFile(args.input)) as pysam_file:
             regions = produce_regions(pysam_file, args.region_size)
         file_paths = produce_partfile_paths(args.input, regions, args.work_dir)
-        task_graph = TaskGraph()
+
         region_tasks = []
         for index, (region, file_path) in enumerate(zip(regions, file_paths)):
             region_tasks.append(task_graph.create_task(
@@ -289,15 +296,22 @@ def cli(raw_args: Optional[list[str]] = None) -> None:
             [args, file_paths, output],
             region_tasks)
 
-        if not os.path.exists(args.work_dir):
-            os.mkdir(args.work_dir)
-        args.task_status_dir = os.path.join(args.work_dir, "tasks-status")
-        args.log_dir = os.path.join(args.work_dir, ".tasks-log")
-
-        TaskGraphCli.process_graph(task_graph, **vars(args))
     else:
-        annotate(args, grr.definition,
-                 ref_genome_id, output, output.endswith(".gz"))
+        task_graph.create_task(
+            "annotate_all",
+            annotate,
+            [args, grr.definition, ref_genome_id, output,
+             tuple(), output.endswith(".gz")],
+            [])
+        # annotate(args, grr.definition,
+        #          ref_genome_id, output, tuple(), output.endswith(".gz"))
+
+    if not os.path.exists(args.work_dir):
+        os.mkdir(args.work_dir)
+    args.task_status_dir = os.path.join(args.work_dir, ".tasks-status")
+    args.log_dir = os.path.join(args.work_dir, ".tasks-log")
+
+    TaskGraphCli.process_graph(task_graph, **vars(args))
 
 
 if __name__ == "__main__":

@@ -5,7 +5,7 @@ from dae.annotation.annotation_factory import build_annotation_pipeline
 from dae.annotation.annotatable import Position
 
 
-def test_default_attributes():
+def test_default_attributes() -> None:
     empty_grr = build_inmemory_test_repository({})
     annotation_cofiguration = """
     - debug_annotator
@@ -26,7 +26,7 @@ def test_default_attributes():
     assert annotation["hi"] == "hello world"
 
 
-def test_default_remapping():
+def test_default_remapping() -> None:
     empty_grr = build_inmemory_test_repository({})
     annotation_cofiguration = """
     - debug_annotator:
@@ -55,7 +55,7 @@ def test_default_remapping():
     assert annotation["hi3"] == "hello world"
 
 
-def test_str_value_trasform():
+def test_str_value_trasform() -> None:
     empty_grr = build_inmemory_test_repository({})
     annotation_cofiguration = """
     - debug_annotator:

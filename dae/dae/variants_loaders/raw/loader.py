@@ -270,6 +270,11 @@ class VariantsLoader(CLILoader):
     def close(self):
         """Close resources used by the loader."""
 
+    @property
+    @abstractmethod
+    def chromosomes(self) -> list[str]:
+        """Return list of all chromosomes."""
+
 
 class VariantsLoaderDecorator(VariantsLoader):
     """Base class for wrapping and decoring a variant loader."""
@@ -317,6 +322,10 @@ class VariantsLoaderDecorator(VariantsLoader):
 
     def close(self):
         self.variants_loader.close()
+
+    @property
+    def chromosomes(self) -> list[str]:
+        return self.variants_loader.chromosomes
 
 
 class AnnotationDecorator(VariantsLoaderDecorator):

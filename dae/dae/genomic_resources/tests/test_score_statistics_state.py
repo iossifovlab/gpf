@@ -2,25 +2,29 @@
 
 import textwrap
 import pathlib
+import time
+from typing import Generator
+
 import pytest
 import pysam
 
-from dask.distributed import Client  # type: ignore
+from dask.distributed import Client
 
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME
 from dae.genomic_resources.testing import \
-    setup_directories, setup_tabix, build_filesystem_test_protocol
+    setup_directories, setup_tabix, build_filesystem_test_protocol, \
+    FsspecReadWriteProtocol
 
 
 @pytest.fixture(scope="module")
-def dask_client():
+def dask_client() -> Generator[Client, None, None]:
     client = Client(n_workers=4, threads_per_worker=1)
     yield client
     client.close()
 
 
 @pytest.fixture
-def proto_fixture(tmp_path):
+def proto_fixture(tmp_path: pathlib.Path) -> FsspecReadWriteProtocol:
     # the following config is missing min/max for phastCons100way
     setup_directories(tmp_path, {
         "one": {
@@ -52,19 +56,26 @@ def proto_fixture(tmp_path):
     return build_filesystem_test_protocol(tmp_path)
 
 
-def one_tabix_index_update(proto):
+def one_tabix_index_update(proto: FsspecReadWriteProtocol) -> None:
     root_path = pathlib.Path(proto.root_path)
-    # pylint: disable=no-member
+    # resource state timestamp is with 0.01 sec resolution
+    # ensure that more than 0.01 seq passed before resource update
+    time.sleep(0.01)
+
     pysam.tabix_index(
         str(root_path / "one" / "data.txt.gz"),
         seq_col=0, start_col=1, end_col=2, line_skip=1, force=True)
     res = proto.get_resource("one")
+    # assert proto.compute_md5_sum(
+    #     res, str(root_path / "one" / "data.txt.gz.tbi")
+    # ) == "57f50275bad095d15956af26d8b91406"
+
     proto.save_manifest(res, proto.build_manifest(res))
     proto.invalidate()
     proto.build_content_file()
 
 
-def test_tabix_index_update(proto_fixture):
+def test_tabix_index_update(proto_fixture: FsspecReadWriteProtocol) -> None:
     res = proto_fixture.get_resource("one")
     manifest = res.get_manifest()
 

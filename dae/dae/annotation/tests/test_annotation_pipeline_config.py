@@ -4,7 +4,7 @@ from dae.annotation.annotation_pipeline import AnnotatorInfo, AttributeInfo
 from dae.annotation.annotation_factory import AnnotationConfigParser
 
 
-def test_simple_annotator_simple():
+def test_simple_annotator_simple() -> None:
     pipeline_config = AnnotationConfigParser.parse_str("""
         - annotator:
             resource_id: resource
@@ -14,7 +14,7 @@ def test_simple_annotator_simple():
         [AnnotatorInfo("annotator", [], {"resource_id": "resource"})]
 
 
-def test_short_annotator_config():
+def test_short_annotator_config() -> None:
     pipeline_config = AnnotationConfigParser.parse_str("""
         - annotator: resource
     """)
@@ -23,14 +23,14 @@ def test_short_annotator_config():
         [AnnotatorInfo("annotator", [], {"resource_id": "resource"})]
 
 
-def test_minimal_annotator_config():
+def test_minimal_annotator_config() -> None:
     pipeline_config = AnnotationConfigParser.parse_str("""
         - annotator
     """)
     assert pipeline_config == [AnnotatorInfo("annotator", [], {})]
 
 
-def test_annotator_config_with_more_parameters():
+def test_annotator_config_with_more_parameters() -> None:
     pipeline_config = AnnotationConfigParser.parse_str("""
         - annotator:
                 resource_id: resource
@@ -42,7 +42,7 @@ def test_annotator_config_with_more_parameters():
                                          "key": "value"})]
 
 
-def test_annotator_config_with_attributes():
+def test_annotator_config_with_attributes() -> None:
     pipeline_config = AnnotationConfigParser.parse_str("""
             - annotator:
                 attributes:
@@ -70,7 +70,7 @@ def test_annotator_config_with_attributes():
             {})]
 
 
-def test_annotator_config_with_params_and_attributes():
+def test_annotator_config_with_params_and_attributes() -> None:
     pipeline_config = AnnotationConfigParser.parse_str("""
         - annotator:
             resource_id: resource
@@ -88,14 +88,14 @@ def test_annotator_config_with_params_and_attributes():
         })]
 
 
-def test_empty_config():
+def test_empty_config() -> None:
     pipeline_config = AnnotationConfigParser.parse_str("")
 
     # pylint: disable=use-implicit-booleaness-not-comparison
     assert pipeline_config == []
 
 
-def test_effect_annotator_extra_attributes():
+def test_effect_annotator_extra_attributes() -> None:
     pipeline_config = AnnotationConfigParser.parse_str("""
         - effect_annotator:
             gene_models: hg38/gene_models/refSeq_20200330

@@ -5,16 +5,16 @@ import glob
 import logging
 from copy import deepcopy
 
-from typing import List, Any, Dict, Optional, cast
+from typing import List, Any, Dict, Optional, cast, Union, Callable
 
-import fsspec  # type: ignore
+import fsspec
 
 import yaml
 import toml
 
-from box import Box  # type: ignore
+from box import Box
 
-from cerberus import Validator  # type: ignore
+from cerberus import Validator
 
 from dae.utils.dict_utils import recursive_dict_update
 
@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 class DefaultBox(Box):
     # pylint: disable=too-few-public-methods
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any):
         kwargs["default_box"] = True
         kwargs["default_box_attr"] = None
         kwargs["default_box_none_transform"] = False
@@ -32,7 +32,7 @@ class DefaultBox(Box):
 
 class FrozenBox(DefaultBox):
     # pylint: disable=too-few-public-methods
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any):
         kwargs["frozen_box"] = True
         super().__init__(*args, **kwargs)
 
@@ -46,7 +46,9 @@ class GPFConfigValidator(Validator):
         to an absolute path
     """
 
-    def _validate_depends_global(self, constraint, field, value):
+    def _validate_depends_global(
+            self, constraint: str,
+            field: str, value: Any) -> None:
         # pylint: disable=unused-argument
         """
         Check if a given other value exists anywhere in the dictionary.
@@ -109,14 +111,14 @@ class GPFConfigParser:
         return config_files
 
     @classmethod
-    def _get_file_contents(cls, filename: str) -> str:
+    def _get_file_contents(cls, filename: Union[str, os.PathLike]) -> str:
         with fsspec.open(filename, "r") as infile:
             return cast(str, infile.read())
 
     @staticmethod
     def parse_and_interpolate(
-            content: str, parser=yaml.safe_load,
-            conf_dir=None) -> dict:
+            content: str, parser: Callable[[str], dict] = yaml.safe_load,
+            conf_dir: Optional[str] = None) -> dict:
         """Parse text content and perform variable interpolation on result."""
         parsed_content = parser(content) or {}
         interpol_vars = parsed_content.get("vars", {})
@@ -140,11 +142,12 @@ class GPFConfigParser:
 
         config = parser(interpolated_text) or {}
         config.pop("vars", None)
-        return cast(dict, config)
+        return config
 
     @classmethod
     def parse_and_interpolate_file(
-        cls, filename: str, conf_dir: Optional[str] = None
+        cls, filename: Union[str, os.PathLike],
+        conf_dir: Optional[str] = None
     ) -> dict:
         """Open a file and interpolate it's contents."""
         try:

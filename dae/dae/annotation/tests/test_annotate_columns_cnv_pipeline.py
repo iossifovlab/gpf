@@ -14,9 +14,9 @@ from dae.testing import setup_directories, \
 from dae.testing.foobar_import import foobar_genome, foobar_genes
 
 
-@pytest.fixture(scope="module")
-def annotate_cnv_fixture(tmp_path_factory: pytest.TempPathFactory) -> Path:
-    root_path = tmp_path_factory.mktemp("annotate_columns_cnv")
+@pytest.fixture
+def annotate_cnv_fixture(tmp_path: Path) -> Path:
+    root_path = tmp_path / "annotate_columns_cnv_pipeline"
 
     foobar_genome(
         root_path / "grr" / "genome")
@@ -110,8 +110,7 @@ def annotate_cnv_fixture(tmp_path_factory: pytest.TempPathFactory) -> Path:
     return root_path
 
 
-def test_basic_setup(
-    tmp_path_factory: pytest.TempPathFactory,
+def test_cnv_cli_columns_basic_setup(
     annotate_cnv_fixture: Path
 ) -> None:
     root_path = annotate_cnv_fixture
@@ -156,8 +155,10 @@ def test_cnv_effect_annotation(
         str(root_path / "input" / infile),
         str(root_path / "effect_annotation.yaml"),
         "-o", str(root_path / "result.tsv"),
+        "-w", str(root_path / "work"),
         "--grr", str(root_path / "grr.yaml"),
         "-R", "genome/foobar_genome",
+        "-j", "1"
     ])
 
     df = pd.read_csv(root_path / "result.tsv", sep="\t")
@@ -194,8 +195,10 @@ def test_cnv_gene_score_annotation(
         str(root_path / "input" / infile),
         str(root_path / "gene_score_annotation.yaml"),
         "-o", str(root_path / "result.tsv"),
+        "-w", str(root_path / "work"),
         "--grr", str(root_path / "grr.yaml"),
         "-R", "genome/foobar_genome",
+        "-j", "1"
     ])
 
     df = pd.read_csv(root_path / "result.tsv", sep="\t")
@@ -228,7 +231,9 @@ def test_bad_cnv_effect_annotation(
         str(root_path / "input" / infile),
         str(root_path / "effect_annotation.yaml"),
         "-o", str(root_path / "result.tsv"),
+        "-w", str(root_path / "work"),
         "--grr", str(root_path / "grr.yaml"),
+        "-j", "1"
     ])
 
     df = pd.read_csv(root_path / "result.tsv", sep="\t")
@@ -264,7 +269,9 @@ def test_bad_cnv_gene_score_annotation(
         str(root_path / "input" / infile),
         str(root_path / "gene_score_annotation.yaml"),
         "-o", str(root_path / "result.tsv"),
+        "-w", str(root_path / "work"),
         "--grr", str(root_path / "grr.yaml"),
+        "-j", "1"
     ])
 
     df = pd.read_csv(root_path / "result.tsv", sep="\t")

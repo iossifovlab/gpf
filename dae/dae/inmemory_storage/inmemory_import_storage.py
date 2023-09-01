@@ -111,7 +111,7 @@ class InmemoryImportStorage(ImportStorage):
         variants_types = project.get_variant_loader_types()
         config = {
             "id": project.study_id,
-            "has_denovo": "denovo" in variants_types,
+            "has_denovo": project.has_denovo_variants(),
             "has_cnv": "cnv" in variants_types,
             "has_transmitted": bool({"dae", "vcf"} & variants_types),
             "genotype_storage": {
@@ -128,8 +128,7 @@ class InmemoryImportStorage(ImportStorage):
         save_study_config(
             project.get_gpf_instance().dae_config,
             project.study_id,
-            study_config,
-            force=True)
+            study_config)
 
     def generate_import_task_graph(self, project: ImportProject) -> TaskGraph:
         graph = TaskGraph()

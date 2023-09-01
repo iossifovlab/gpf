@@ -104,17 +104,21 @@ class DenovoLoader(VariantsGenotypesLoader):
             self.denovo_df = self.denovo_df.sort_values(
                 by=["chrom", "position", "reference", "alternative"])
 
-    def _init_chromosomes(self) -> None:
-        self.chromosomes = list(self.denovo_df.chrom.unique())
-        self.chromosomes = [
-            self._adjust_chrom_prefix(chrom) for chrom in self.chromosomes
+    def _init_chromosomes(self):
+        self._chromosomes = list(self.denovo_df.chrom.unique())
+        self._chromosomes = [
+            self._adjust_chrom_prefix(chrom) for chrom in self._chromosomes
         ]
 
         all_chromosomes = self.genome.chromosomes
-        if all(chrom in set(all_chromosomes) for chrom in self.chromosomes):
-            self.chromosomes = sorted(
-                self.chromosomes,
+        if all(chrom in set(all_chromosomes) for chrom in self._chromosomes):
+            self._chromosomes = sorted(
+                self._chromosomes,
                 key=all_chromosomes.index)
+
+    @property
+    def chromosomes(self) -> list[str]:
+        return self._chromosomes
 
     def reset_regions(self, regions):
         super().reset_regions(regions)
@@ -783,10 +787,14 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
         try:
             # pylint: disable=no-member
             with pysam.Tabixfile(self.summary_filename) as tbx:
-                self.chromosomes = \
+                self._chromosomes = \
                     [self._adjust_chrom_prefix(chrom) for chrom in tbx.contigs]
         except Exception:  # pylint: disable=broad-except
-            self.chromosomes = self.genome.chromosomes
+            self._chromosomes = self.genome.chromosomes
+
+    @property
+    def chromosomes(self) -> list[str]:
+        return self._chromosomes
 
     @property
     def variants_filenames(self):

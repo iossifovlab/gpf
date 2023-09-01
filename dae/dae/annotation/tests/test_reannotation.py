@@ -1,9 +1,13 @@
 # pylint: disable=missing-function-docstring,redefined-outer-name
-# type: ignore
 import textwrap
+import pathlib
+
 import pytest
 import pysam
+
 from dae.genomic_resources import build_genomic_resource_repository
+from dae.genomic_resources.repository import GenomicResourceRepo
+
 from dae.annotation.annotation_factory import build_annotation_pipeline
 from dae.annotation.annotation_pipeline import ReannotationPipeline
 
@@ -16,13 +20,9 @@ from dae.annotation.annotate_columns import cli as cli_columns
 from dae.annotation.annotate_vcf import cli as cli_vcf
 
 
-@pytest.fixture(scope="module")
-def root_path(tmp_path_factory):
-    return tmp_path_factory.mktemp("reannotation_grr")
-
-
-@pytest.fixture(scope="module")
-def reannotation_grr(root_path):
+@pytest.fixture
+def reannotation_grr(tmp_path: pathlib.Path) -> GenomicResourceRepo:
+    root_path = tmp_path
     foobar_genome(root_path / "grr")
     foobar_genes(root_path / "grr")
     setup_genome(
@@ -177,7 +177,7 @@ def reannotation_grr(root_path):
     ))
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture
 def simple_pipeline_config() -> str:
     return """
     - liftover_annotator:
@@ -200,7 +200,7 @@ def simple_pipeline_config() -> str:
 
 
 def test_annotators_used_context_attributes(
-    simple_pipeline_config, reannotation_grr
+    simple_pipeline_config: str, reannotation_grr: GenomicResourceRepo
 ) -> None:
     pipeline = build_annotation_pipeline(
         pipeline_config_str=simple_pipeline_config,
@@ -215,7 +215,7 @@ def test_annotators_used_context_attributes(
 
 
 def test_dependency_graph_correctness(
-    simple_pipeline_config, reannotation_grr
+    simple_pipeline_config: str, reannotation_grr: GenomicResourceRepo
 ) -> None:
     pipeline = build_annotation_pipeline(
         pipeline_config_str=simple_pipeline_config,
@@ -244,7 +244,8 @@ def test_dependency_graph_correctness(
     assert dependency_graph[gene_score_annotator][0][1].name == "my_genes"
 
 
-def test_new_annotators_detection(reannotation_grr) -> None:
+def test_new_annotators_detection(
+        reannotation_grr: GenomicResourceRepo) -> None:
     old_pipeline_config = """
     - position_score: one
     """
@@ -273,7 +274,8 @@ def test_new_annotators_detection(reannotation_grr) -> None:
     assert len(reannotation.attributes_deleted) == 0
 
 
-def test_deleted_attributes(reannotation_grr) -> None:
+def test_deleted_attributes(
+        reannotation_grr: GenomicResourceRepo) -> None:
     old_pipeline_config = """
     - liftover_annotator:
         chain: foobar_chain
@@ -306,7 +308,8 @@ def test_deleted_attributes(reannotation_grr) -> None:
     ]
 
 
-def test_reused_attributes(reannotation_grr) -> None:
+def test_reused_attributes(
+        reannotation_grr: GenomicResourceRepo) -> None:
     old_pipeline_config = """
     - liftover_annotator:
         chain: foobar_chain
@@ -344,7 +347,8 @@ def test_reused_attributes(reannotation_grr) -> None:
     assert len(reannotation.attributes_deleted) == 0
 
 
-def test_reused_attributes_indirect(reannotation_grr) -> None:
+def test_reused_attributes_indirect(
+        reannotation_grr: GenomicResourceRepo) -> None:
     old_pipeline_config = """
     - liftover_annotator:
         chain: foobar_chain
@@ -403,7 +407,8 @@ def test_reused_attributes_indirect(reannotation_grr) -> None:
     assert len(reannotation.attributes_deleted) == 0
 
 
-def test_annotators_rerun_detection_upstream(reannotation_grr) -> None:
+def test_annotators_rerun_detection_upstream(
+        reannotation_grr: GenomicResourceRepo) -> None:
     old_pipeline_config = """
     - liftover_annotator:
         chain: foobar_chain
@@ -460,7 +465,8 @@ def test_annotators_rerun_detection_upstream(reannotation_grr) -> None:
     assert len(reannotation.attributes_deleted) == 1
 
 
-def test_annotators_rerun_detection_downstream(reannotation_grr) -> None:
+def test_annotators_rerun_detection_downstream(
+        reannotation_grr: GenomicResourceRepo) -> None:
     old_pipeline_config = """
     - liftover_annotator:
         chain: foobar_chain
@@ -514,8 +520,10 @@ def test_annotators_rerun_detection_downstream(reannotation_grr) -> None:
 
 
 def test_annotate_columns_reannotation(
-    root_path, reannotation_grr  # pylint: disable=unused-argument
-):
+    tmp_path: pathlib.Path,
+    reannotation_grr: GenomicResourceRepo
+) -> None:
+    assert reannotation_grr is not None
     in_content = (
         "chrom\tpos\tscore\tworst_effect\teffect_details\tgene_score1\tgene_score2\n"  # noqa
         "chr1\t23\t0.1\tbla\tbla\tbla\tbla\n"
@@ -523,28 +531,35 @@ def test_annotate_columns_reannotation(
     out_expected_header = [
         "chrom", "pos", "score", "worst_effect", "gene_list", "gene_score1"
     ]
-    in_file = root_path / "in.txt"
-    out_file = root_path / "out.txt"
-    annotation_file_old = root_path / "reannotation_old.yaml"
-    annotation_file_new = root_path / "reannotation_new.yaml"
-    grr_file = root_path / "grr.yaml"
+    in_file = tmp_path / "in.txt"
+    out_file = tmp_path / "out.txt"
+    annotation_file_old = tmp_path / "reannotation_old.yaml"
+    annotation_file_new = tmp_path / "reannotation_new.yaml"
+    grr_file = tmp_path / "grr.yaml"
+    work_dir = tmp_path / "work"
 
     setup_denovo(in_file, in_content)
 
     cli_columns([
         str(a) for a in [
-            in_file, annotation_file_new, "-o", out_file, "--grr", grr_file,
-            "--reannotate", annotation_file_old
+            in_file, annotation_file_new,
+            "-o", out_file,
+            "-w", work_dir,
+            "--grr", grr_file,
+            "--reannotate", annotation_file_old,
+            "-j", 1
         ]
     ])
+
     with open(out_file, "rt", encoding="utf8") as _:
         out_file_header = "".join(_.readline()).strip().split("\t")
     assert out_file_header == out_expected_header
 
 
 def test_annotate_columns_reannotation_internal(
-    root_path, reannotation_grr  # pylint: disable=unused-argument
-):
+    tmp_path: pathlib.Path, reannotation_grr: GenomicResourceRepo
+) -> None:
+    assert reannotation_grr is not None
     in_content = (
         "chrom\tpos\tscore\tworst_effect\teffect_details\tgene_score1\n"  # noqa
         "chr1\t23\t0.1\tbla\tbla\tbla\n"
@@ -552,18 +567,23 @@ def test_annotate_columns_reannotation_internal(
     out_expected_header = [
         "chrom", "pos", "score", "worst_effect", "gene_list", "gene_score1"
     ]
-    in_file = root_path / "in.txt"
-    out_file = root_path / "out.txt"
-    annotation_file_old = root_path / "reannotation_old_internal.yaml"
-    annotation_file_new = root_path / "reannotation_new.yaml"
-    grr_file = root_path / "grr.yaml"
+    in_file = tmp_path / "in.txt"
+    out_file = tmp_path / "out.txt"
+    annotation_file_old = tmp_path / "reannotation_old_internal.yaml"
+    annotation_file_new = tmp_path / "reannotation_new.yaml"
+    grr_file = tmp_path / "grr.yaml"
+    work_dir = tmp_path / "work"
 
     setup_denovo(in_file, in_content)
 
     cli_columns([
         str(a) for a in [
-            in_file, annotation_file_new, "-o", out_file, "--grr", grr_file,
-            "--reannotate", annotation_file_old
+            in_file, annotation_file_new,
+            "-o", out_file,
+            "-w", work_dir,
+            "--grr", grr_file,
+            "--reannotate", annotation_file_old,
+            "-j", 1
         ]
     ])
     with open(out_file, "rt", encoding="utf8") as _:
@@ -572,8 +592,10 @@ def test_annotate_columns_reannotation_internal(
 
 
 def test_annotate_vcf_reannotation(
-    root_path, reannotation_grr  # pylint: disable=unused-argument
-):
+    tmp_path: pathlib.Path,
+    reannotation_grr: GenomicResourceRepo
+) -> None:
+    assert reannotation_grr is not None
     in_content = textwrap.dedent("""
         ##fileformat=VCFv4.2
         ##INFO=<ID=score,Number=A,Type=Float,Description="">
@@ -592,21 +614,26 @@ score=0.1;worst_effect=splice-site;effect_details=bla;\
 gene_list=g1;gene_score1=10.1;gene_score2=20.2 GT     0/1 0/0 0/0
     """)
 
-    in_file = root_path / "in.vcf"
-    out_file = root_path / "out.vcf"
-    annotation_file_old = root_path / "reannotation_old.yaml"
-    annotation_file_new = root_path / "reannotation_new.yaml"
-    grr_file = root_path / "grr.yaml"
+    in_file = tmp_path / "in.vcf"
+    out_file = tmp_path / "out.vcf"
+    annotation_file_old = tmp_path / "reannotation_old.yaml"
+    annotation_file_new = tmp_path / "reannotation_new.yaml"
+    grr_file = tmp_path / "grr.yaml"
+    work_dir = tmp_path / "work"
 
     setup_vcf(in_file, in_content)
 
     cli_vcf([
         str(a) for a in [
-            in_file, annotation_file_new, "-o", out_file, "--grr", grr_file,
-            "--reannotate", annotation_file_old
+            in_file, annotation_file_new,
+            "-o", out_file,
+            "-w", work_dir,
+            "--grr", grr_file,
+            "--reannotate", annotation_file_old,
+            "-j", 1
         ]
     ])
-    out_vcf = pysam.VariantFile(out_file)
+    out_vcf = pysam.VariantFile(str(out_file))
 
     with open(out_file, "r") as output_txt:
         print(output_txt.read())

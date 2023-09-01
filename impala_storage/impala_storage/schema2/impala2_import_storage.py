@@ -58,7 +58,7 @@ class Impala2ImportStorage(Schema2ImportStorage):
         study_config = {
             "id": project.study_id,
             "conf_dir": ".",
-            "has_denovo": "denovo" in variants_types,
+            "has_denovo": project.has_denovo_variants(),
             "has_cnv": "cnv" in variants_types,
             "has_transmitted": bool({"dae", "vcf"} & variants_types),
             "genotype_storage": {
@@ -82,7 +82,7 @@ class Impala2ImportStorage(Schema2ImportStorage):
         save_study_config(
             project.get_gpf_instance().dae_config,
             project.study_id,
-            config, force=True)
+            config)
 
     def generate_import_task_graph(self, project) -> TaskGraph:
         graph = TaskGraph()
