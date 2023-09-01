@@ -43,15 +43,6 @@ class VcfFamiliesGenotypes(FamiliesGenotypes):
         self.vcf_variants = vcf_variants
         self.known_independent_genotypes = []
 
-    def full_families_genotypes(self):
-        raise NotImplementedError()
-
-    def get_family_best_state(self, family):
-        raise NotImplementedError()
-
-    def get_family_genotype(self, family):
-        raise NotImplementedError()
-
     def _collect_family_genotype(self, family, samples_index, fill_value):
         genotypes = []
         for person in family.members_in_order:

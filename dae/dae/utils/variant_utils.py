@@ -38,6 +38,14 @@ def str2mat(
     )
 
 
+def str2mat_adjust_colsep(mat: str) -> np.ndarray:
+    """Convert a string into a numpy matrix."""
+    col_sep = ""
+    if " " in mat:
+        col_sep = " "
+    return str2mat(mat, col_sep=col_sep)
+
+
 def best2gt(
         best_state: np.ndarray,
         dtype: npt.DTypeLike = GenotypeType) -> np.ndarray:
