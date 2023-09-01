@@ -9,15 +9,16 @@ from contextlib import closing
 
 import numpy as np
 
-import pysam  # type: ignore
+import pysam
 import pandas as pd
 
-import fsspec  # type: ignore
+import fsspec
 from dae.utils.regions import Region
 from dae.utils import fs_utils
 
 from dae.genomic_resources.reference_genome import ReferenceGenome
-from dae.utils.variant_utils import str2mat, GenotypeType, str2gt
+from dae.utils.variant_utils import str2mat, str2mat_adjust_colsep, \
+     GenotypeType, str2gt
 from dae.utils.helpers import str2bool
 
 from dae.utils.dae_utils import dae2vcf_variant
@@ -550,7 +551,7 @@ class DenovoLoader(VariantsGenotypesLoader):
                 person_ids = ",".join(
                     temp_df.iloc[
                         variants_indices].loc[:, "person_id"]  # type: ignore
-                ).split(",")
+                ).replace(";", ",").split(",")
 
                 variant_families = {
                     families.persons[pid].family_id
@@ -588,7 +589,7 @@ class DenovoLoader(VariantsGenotypesLoader):
             if denovo_best_state:
                 best_state_col = list(
                     map(
-                        lambda bs: str2mat(bs, col_sep=" "),  # type: ignore
+                        lambda bs: str2mat_adjust_colsep(bs),
                         raw_df[denovo_best_state],
                     )
                 )
