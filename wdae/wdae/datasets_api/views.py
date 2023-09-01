@@ -154,15 +154,21 @@ class PermissionDeniedPromptView(QueryBaseView):
         super(PermissionDeniedPromptView, self).__init__()
 
         dae_config = self.gpf_instance.dae_config
+        default_prompt = (
+            "The Genotype and Phenotype in Families (GPF) data is"
+            " accessible by registered users. Contact the system"
+            " administrator of the GPF system to get an account in"
+            " the system and get permission to access the data."
+        )
         if dae_config.gpfjs is None or \
                 dae_config.gpfjs.permission_denied_prompt_file is None:
-            self.permission_denied_prompt = ""
+            self.permission_denied_prompt = default_prompt
         else:
             prompt_filepath = dae_config.gpfjs.permission_denied_prompt_file
 
             if not os.path.exists(prompt_filepath) or\
                     not os.path.isfile(prompt_filepath):
-                self.permission_denied_prompt = ""
+                self.permission_denied_prompt = default_prompt
             else:
                 with open(prompt_filepath, "r") as infile:
                     self.permission_denied_prompt = infile.read()
