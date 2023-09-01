@@ -5,8 +5,9 @@ import pytest
 
 from dae.testing import convert_to_tab_separated
 from dae.genomic_resources.testing import build_inmemory_test_resource
+from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.genomic_resources.reference_genome import \
-    build_reference_genome_from_resource
+    build_reference_genome_from_resource, ReferenceGenome
 from dae.annotation.annotatable import VCFAllele
 from dae.annotation.annotation_factory import AnnotationConfigParser, \
     build_annotation_pipeline
@@ -16,7 +17,7 @@ from dae.annotation.normalize_allele_annotator import normalize_allele, \
 
 
 @pytest.fixture
-def example_1_genome():
+def example_1_genome() -> ReferenceGenome:
     # Example from
     # https://genome.sph.umich.edu/wiki/File:Normalization_mnp.png
 
@@ -40,7 +41,9 @@ def example_1_genome():
     (4, 8, "GCATG"),
     (5, 7, "CAT"),
 ])
-def test_example_1_genome_basic(example_1_genome, beg, end, seq):
+def test_example_1_genome_basic(
+        example_1_genome: ReferenceGenome,
+        beg: int, end: int, seq: str) -> None:
     with example_1_genome.open() as genome:
         assert genome.get_chrom_length("1") == 11
 
@@ -48,7 +51,7 @@ def test_example_1_genome_basic(example_1_genome, beg, end, seq):
 
 
 @pytest.fixture
-def example_2_genome():
+def example_2_genome() -> ReferenceGenome:
     # Example from
     # https://genome.sph.umich.edu/wiki/File:Normalization_str.png
 
@@ -74,7 +77,9 @@ def example_2_genome():
     (3, 5, "GCA"),
     (3, 3, "G"),
 ])
-def test_example_2_genome_basic(example_2_genome, beg, end, seq):
+def test_example_2_genome_basic(
+        example_2_genome: ReferenceGenome,
+        beg: int, end: int, seq: str) -> None:
     with example_2_genome.open() as genome:
         assert genome.get_chrom_length("1") == 14
 
@@ -87,7 +92,9 @@ def test_example_2_genome_basic(example_2_genome, beg, end, seq):
     (4, "GCATG", "GTGCG"),
     (5, "CAT", "TGC"),
 ])
-def test_example_1_normalize(example_1_genome, pos, ref, alt):
+def test_example_1_normalize(
+        example_1_genome: ReferenceGenome,
+        pos: int, ref: str, alt: str) -> None:
     with example_1_genome.open() as genome:
         allele = VCFAllele("1", pos, ref, alt)
 
@@ -108,7 +115,9 @@ def test_example_1_normalize(example_1_genome, pos, ref, alt):
     (2, "GGCA", "GG"),
     (3, "GCA", "G"),
 ])
-def test_example_2_normalize(example_2_genome, pos, ref, alt):
+def test_example_2_normalize(
+        example_2_genome: ReferenceGenome,
+        pos: int, ref: str, alt: str) -> None:
 
     with example_2_genome.open() as genome:
         allele = VCFAllele("1", pos, ref, alt)
@@ -123,7 +132,7 @@ def test_example_2_normalize(example_2_genome, pos, ref, alt):
         assert normalized.alt == "G", (allele, normalized)
 
 
-def test_normalize_allele_annotator_config():
+def test_normalize_allele_annotator_config() -> None:
     pipeline_config = AnnotationConfigParser.parse_str(
         textwrap.dedent("""
         - normalize_allele_annotator:
@@ -144,7 +153,9 @@ def test_normalize_allele_annotator_config():
     (20_004, "GGTGC", "GGT"),
     (20_007, "GC", ""),
 ])
-def test_normalize_allele_annotator_pipeline(grr_fixture, pos, ref, alt):
+def test_normalize_allele_annotator_pipeline(
+        grr_fixture: GenomicResourceRepo,
+        pos: int, ref: str, alt: str) -> None:
     config = textwrap.dedent("""
         - normalize_allele_annotator:
             genome: hg19/GATK_ResourceBundle_5777_b37_phiX174_short/genome
@@ -183,7 +194,9 @@ def test_normalize_allele_annotator_pipeline(grr_fixture, pos, ref, alt):
     (1_948_771, "TTTTTTTTTTTT", "TTTTTTTTTTTTT", 1_948_770, "A", "AT"),
     (1_948_771, "TTTTTTTTTTTT", "TTTTTTTTTTTTTT", 1_948_770, "A", "ATT"),
 ])
-def test_normalize_tandem_repeats(pos, ref, alt, npos, nref, nalt):
+def test_normalize_tandem_repeats(
+        pos: int, ref: str, alt: str,
+        npos: int, nref: str, nalt: str) -> None:
     config = textwrap.dedent("""
         - normalize_allele_annotator:
             genome: hg38/genomes/GRCh38-hg38
@@ -218,7 +231,8 @@ def test_normalize_tandem_repeats(pos, ref, alt, npos, nref, nalt):
         assert norm.alt == nalt
 
 
-def test_normalize_allele_annotator_pipeline_schema(grr_fixture):
+def test_normalize_allele_annotator_pipeline_schema(
+        grr_fixture: GenomicResourceRepo) -> None:
     config = textwrap.dedent("""
         - normalize_allele_annotator:
             genome: hg19/GATK_ResourceBundle_5777_b37_phiX174_short/genome
@@ -241,7 +255,9 @@ def test_normalize_allele_annotator_pipeline_schema(grr_fixture):
     (4, "CA", "CA", 4, "C", "C"),
 ])
 def test_normalize_novariant_allele(
-        example_2_genome, pos, ref, alt, npos, nref, nalt):
+        example_2_genome: ReferenceGenome,
+        pos: int, ref: str, alt: str,
+        npos: int, nref: str, nalt: str) -> None:
     with example_2_genome.open() as genome:
         allele = VCFAllele("1", pos, ref, alt)
 
@@ -255,7 +271,8 @@ def test_normalize_novariant_allele(
         assert normalized.alt == nalt
 
 
-def test_normalize_allele_annotator_resources(grr_fixture):
+def test_normalize_allele_annotator_resources(
+        grr_fixture: GenomicResourceRepo) -> None:
     config = textwrap.dedent("""
         - normalize_allele_annotator:
             genome: hg19/GATK_ResourceBundle_5777_b37_phiX174_short/genome

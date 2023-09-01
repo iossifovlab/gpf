@@ -1,17 +1,20 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import textwrap
-from typing import cast
+from typing import cast, Callable
 
 import pytest
+from pytest_mock import MockerFixture
 
+from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.annotation.annotation_pipeline import AnnotatorInfo
 from dae.annotation.annotatable import VCFAllele
 from dae.annotation.annotation_factory import build_annotation_pipeline
 from dae.variants.core import Allele
 from dae.annotation.liftover_annotator import LiftOverAnnotator
+from dae.gpf_instance import GPFInstance
 
 
-def mock_get_sequence(_, start, stop):
+def mock_get_sequence(_: str, start: int, stop: int) -> str:
     return "G" * (stop - start + 1)
 
 
@@ -39,7 +42,10 @@ def mock_get_sequence(_, start, stop):
     ],
 )
 def test_liftover(
-        mocker, chrom, pos, lift_over, expected_chrom, expected_pos):
+        mocker: MockerFixture,
+        chrom: str, pos: int,
+        lift_over: Callable[[str, int, int], tuple[str, int, str, str]],
+        expected_chrom: str, expected_pos: int) -> None:
 
     chain = mocker.Mock()
     chain.convert_coordinate = lift_over
@@ -67,7 +73,8 @@ def test_liftover(
 
 
 def test_pipeline_liftover(
-        annotation_config, grr_fixture):
+        annotation_config: str,
+        grr_fixture: GenomicResourceRepo) -> None:
 
     pipeline = build_annotation_pipeline(
         pipeline_config_file=annotation_config, grr_repository=grr_fixture)
@@ -84,7 +91,8 @@ def test_pipeline_liftover(
     ("1", 2690489, "C", "G"),
 ])
 def test_liftover_annotator_denovo_db_examples(
-        gpf_instance_2013, chrom, pos, ref, alt):
+        gpf_instance_2013: GPFInstance,
+        chrom: str, pos: int, ref: str, alt: str) -> None:
 
     pipeline_config = textwrap.dedent("""
         - liftover_annotator:
@@ -104,7 +112,8 @@ def test_liftover_annotator_denovo_db_examples(
     assert liftover_allele is None
 
 
-def test_liftover_annotator_resources(grr_fixture):
+def test_liftover_annotator_resources(
+        grr_fixture: GenomicResourceRepo) -> None:
 
     pipeline_config = textwrap.dedent("""
       - liftover_annotator:

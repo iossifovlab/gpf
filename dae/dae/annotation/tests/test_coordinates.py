@@ -1,5 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
+from pytest_mock import MockerFixture
 
 from dae.utils.dae_utils import dae2vcf_variant
 from dae.variants.variant import SummaryAllele
@@ -15,8 +16,10 @@ from dae.variants.variant import SummaryAllele
     ],
 )
 def test_dae2vcf(
-    mocker, variant, check_pos, check_cshl_pos, check_ref, check_alt
-):
+    mocker: MockerFixture,
+    variant: str, check_pos: int, check_cshl_pos: int,
+    check_ref: str, check_alt: str
+) -> None:
 
     genome = mocker.Mock()
     genome.get_sequence = lambda _, start, end: "A" * (end - start + 1)

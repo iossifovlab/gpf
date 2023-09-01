@@ -3,7 +3,7 @@
 import textwrap
 import pytest
 
-from dae.annotation.annotatable import Position, Region
+from dae.annotation.annotatable import Position, Region, Annotatable
 # VCFAllele
 from dae.annotation.annotation_factory import build_annotation_pipeline
 from dae.genomic_resources.repository import GenomicResourceRepo
@@ -53,7 +53,9 @@ def grr() -> GenomicResourceRepo:
     (Region("1", 15, 60), 2),
     (Region("1", 30, 40), 0),
 ])
-def test_basic(annotatable, cnv_count, grr: GenomicResourceRepo):
+def test_basic(
+        annotatable: Annotatable,
+        cnv_count: int, grr: GenomicResourceRepo) -> None:
     pipeline = build_annotation_pipeline(
         pipeline_config_str=textwrap.dedent("""
             - cnv_collection: cnvs
@@ -69,7 +71,9 @@ def test_basic(annotatable, cnv_count, grr: GenomicResourceRepo):
     (Region("1", 15, 60), 1),
     (Region("1", 30, 40), 0),
 ])
-def test_cnv_filter(annotatable, cnv_count, grr: GenomicResourceRepo):
+def test_cnv_filter(
+        annotatable: Annotatable, cnv_count: int,
+        grr: GenomicResourceRepo) -> None:
     pipeline = build_annotation_pipeline(
         pipeline_config_str=textwrap.dedent("""
             - cnv_collection:
@@ -92,9 +96,11 @@ def test_cnv_filter(annotatable, cnv_count, grr: GenomicResourceRepo):
          "affected,affected", "affected", "SSCAGRE"),
         (Region("1", 30, 40), 0, None, None, None),
     ])
-def test_cnv_filter_and_attribute(annotatable, cnv_count: int,
-                                  status: str, status2: str, collection: str,
-                                  grr: GenomicResourceRepo):
+def test_cnv_filter_and_attribute(
+    annotatable: Annotatable, cnv_count: int,
+    status: str, status2: str, collection: str,
+    grr: GenomicResourceRepo
+) -> None:
     pipeline = build_annotation_pipeline(
         pipeline_config_str=textwrap.dedent("""
             - cnv_collection:

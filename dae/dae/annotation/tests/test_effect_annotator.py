@@ -1,9 +1,11 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,too-many-lines
 import textwrap
+from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.annotation.annotation_factory import build_annotation_pipeline
 
 
-def test_effect_annotator_resources(grr_fixture):
+def test_effect_annotator_resources(
+        grr_fixture: GenomicResourceRepo) -> None:
     genome = "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/genome"
     gene_models = "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/" \
         "gene_models/refGene_201309"
@@ -24,7 +26,8 @@ def test_effect_annotator_resources(grr_fixture):
         }
 
 
-def test_effect_annotator_documentation(grr_fixture):
+def test_effect_annotator_documentation(
+        grr_fixture: GenomicResourceRepo) -> None:
 
     pipeline = build_annotation_pipeline(pipeline_config_str=textwrap.dedent(
         """
