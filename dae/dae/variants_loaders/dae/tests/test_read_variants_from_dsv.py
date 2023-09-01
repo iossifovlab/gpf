@@ -1,4 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+import pathlib
+import textwrap
 from typing import Callable, cast
 
 import pytest
@@ -6,11 +8,14 @@ import pandas as pd
 import numpy as np
 
 from dae.pedigrees.family import FamiliesData
+from dae.pedigrees.loader import FamiliesLoader
+
 from dae.variants.attributes import Inheritance
 from dae.variants.family_variant import FamilyVariant, FamilyAllele
 from dae.variants_loaders.dae.loader import DenovoLoader
-from dae.utils.variant_utils import GenotypeType
+from dae.utils.variant_utils import GenotypeType, mat2str
 from dae.gpf_instance import GPFInstance
+from dae.testing import setup_denovo, setup_pedigree, alla_gpf
 
 
 def compare_variant_dfs(
@@ -639,3 +644,147 @@ def test_denovo_loader_avoids_duplicates(
 
     assert len(svs) == 3
     assert len(fvs) == 4
+
+
+@pytest.fixture
+def families_fixture(tmp_path: pathlib.Path) -> FamiliesData:
+    ped_path = setup_pedigree(
+        tmp_path / "pedigree.ped",
+        textwrap.dedent("""
+        familyId personId dadId  momId  sex status role
+        f1       f1.dad   0      0      1   1      dad
+        f1       f1.mom   0      0      2   1      mom
+        f1       f1.s1    f1.dad f1.mom 2   1      sib
+        f1       f1.p1    f1.dad f1.mom 1   2      prb
+        f1       f1.s2    f1.dad f1.mom 2   2      sib
+        f2       f2.mom   0      0      2   1      mom
+        f2       f2.dad   0      0      1   1      dad
+        f2       f2.p1    f2.dad f2.mom 1   2      prb
+        f2       f2.s1    f2.dad f2.mom 2   1      sib
+        f3       f3.p1    0      0      1   2      prb
+        """)
+    )
+    return FamiliesLoader(str(ped_path)).load()
+
+
+@pytest.mark.parametrize("variants,params", [
+    (textwrap.dedent("""
+        familyId location variant   bestState
+        f1       chrA:1   sub(A->G) 2||2||1||2||1/0||0||1||0||1
+        f2       chrA:2   sub(A->G) 2||2||2||1/0||0||0||1
+        f3       chrA:3   sub(A->G) 1/1
+        """), {
+        "denovo_location": "location",
+        "denovo_variant": "variant",
+        "denovo_family_id": "familyId",
+        "denovo_best_state": "bestState",
+    }),
+    (textwrap.dedent("""
+        familyId chrom pos ref alt bestState
+        f1       chrA  1   A   G   2||2||1||2||1/0||0||1||0||1
+        f2       chrA  2   A   G   2||2||2||1/0||0||0||1
+        f3       chrA  3   A   G   1/1
+        """), {
+        "denovo_chrom": "chrom",
+        "denovo_pos": "pos",
+        "denovo_ref": "ref",
+        "denovo_alt": "alt",
+        "denovo_family_id": "familyId",
+        "denovo_best_state": "bestState",
+    }),
+    (textwrap.dedent("""
+        familyId location variant   bestState
+        f1       chrA:1   sub(A->G) 22121/00101
+        f2       chrA:2   sub(A->G) 2221/0001
+        f3       chrA:3   sub(A->G) 1/1
+        """), {
+        "denovo_location": "location",
+        "denovo_variant": "variant",
+        "denovo_family_id": "familyId",
+        "denovo_best_state": "bestState",
+    }),
+    (textwrap.dedent("""
+        familyId chrom pos ref alt bestState
+        f1       chrA  1   A   G   22121/00101
+        f2       chrA  2   A   G   2221/0001
+        f3       chrA  3   A   G   1/1
+        """), {
+        "denovo_chrom": "chrom",
+        "denovo_pos": "pos",
+        "denovo_ref": "ref",
+        "denovo_alt": "alt",
+        "denovo_family_id": "familyId",
+        "denovo_best_state": "bestState",
+    }),
+    (textwrap.dedent("""
+        familyId chrom pos ref alt personId
+        f1       chrA  1   A   G   f1.s1,f1.s2
+        f2       chrA  2   A   G   f2.s1
+        f3       chrA  3   A   G   f3.p1
+        """), {
+        "denovo_chrom": "chrom",
+        "denovo_pos": "pos",
+        "denovo_ref": "ref",
+        "denovo_alt": "alt",
+        "denovo_family_id": "familyId",
+        "denovo_person_id": "personId",
+    }),
+    (textwrap.dedent("""
+        familyId chrom pos ref alt personId
+        f1       chrA  1   A   G   f1.s1;f1.s2
+        f2       chrA  2   A   G   f2.s1
+        f3       chrA  3   A   G   f3.p1
+        """), {
+        "denovo_chrom": "chrom",
+        "denovo_pos": "pos",
+        "denovo_ref": "ref",
+        "denovo_alt": "alt",
+        "denovo_family_id": "familyId",
+        "denovo_person_id": "personId",
+    }),
+])
+def test_denovo_loader_new(
+    tmp_path: pathlib.Path,
+    families_fixture: FamiliesData,
+    variants: str, params: dict[str, str]
+) -> None:
+    gpf = alla_gpf(tmp_path)
+    denovo_path = setup_denovo(tmp_path / "variants.tsv", variants)
+
+    variants_loader = DenovoLoader(
+        families_fixture, str(denovo_path),
+        genome=gpf.reference_genome, params=params,
+        sort=False
+    )
+
+    vs = list(variants_loader.full_variants_iterator())
+    print(vs)
+    assert len(vs) == 3
+
+    def falt_allele(index: int) -> FamilyAllele:
+        return cast(FamilyAllele, vs[index][1][0].alt_alleles[0])
+
+    fa = falt_allele(0)
+    assert fa.inheritance_in_members == [
+        Inheritance.unknown,
+        Inheritance.unknown,
+        Inheritance.denovo,
+        Inheritance.missing,
+        Inheritance.denovo,
+    ]
+    assert mat2str(fa.best_state) == "22121/00101"
+
+    fa = falt_allele(1)
+    assert fa.inheritance_in_members == [
+        Inheritance.unknown,
+        Inheritance.unknown,
+        Inheritance.missing,
+        Inheritance.denovo,
+    ]
+    assert mat2str(fa.best_state) == "2221/0001"
+
+    fa = falt_allele(2)
+    assert fa.inheritance_in_members == [
+        Inheritance.denovo,
+    ]
+    assert mat2str(fa.best_state) == "1/1"
