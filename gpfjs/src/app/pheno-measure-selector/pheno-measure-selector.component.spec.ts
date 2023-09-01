@@ -6,7 +6,6 @@ import { NgxsModule } from '@ngxs/store';
 import { ConfigService } from 'app/config/config.service';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { MeasuresService } from 'app/measures/measures.service';
-import { SearchableSelectComponent } from 'app/searchable-select/searchable-select.component';
 import { UsersService } from 'app/users/users.service';
 
 import { PhenoMeasureSelectorComponent } from './pheno-measure-selector.component';
@@ -30,7 +29,6 @@ describe('PhenoMeasureSelectorComponent', () => {
         ConfigService,
         {provide: DatasetsService, useValue: mockDatasetsService},
         UsersService,
-        SearchableSelectComponent
       ],
       imports: [HttpClientTestingModule, RouterTestingModule, NgxsModule.forRoot([], {developmentMode: true})],
       schemas: [NO_ERRORS_SCHEMA]

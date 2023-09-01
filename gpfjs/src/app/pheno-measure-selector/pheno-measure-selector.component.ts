@@ -6,8 +6,7 @@ import { first } from 'rxjs/operators';
 
 @Component({
   selector: 'gpf-pheno-measure-selector',
-  templateUrl: './pheno-measure-selector.component.html',
-  styleUrls: ['./pheno-measure-selector.component.css']
+  templateUrl: './pheno-measure-selector.component.html'
 })
 export class PhenoMeasureSelectorComponent implements AfterViewInit {
   @Input() public datasetId: string;

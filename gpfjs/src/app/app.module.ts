@@ -34,8 +34,6 @@ import { GeneScoresState } from './gene-scores/gene-scores.state';
 import { GeneSetsComponent } from './gene-sets/gene-sets.component';
 import { GeneSetsState } from './gene-sets/gene-sets.state';
 import { GeneSetsService } from './gene-sets/gene-sets.service';
-import { SearchableSelectComponent } from './searchable-select/searchable-select.component';
-import { SearchableSelectTemplateDirective } from './searchable-select/searchable-select-template.directive';
 import { UsersComponent } from './users/users.component';
 import { UsersService } from './users/users.service';
 import { BoldMatchingPipe } from './utils/bold-matching.pipe';
@@ -286,8 +284,6 @@ const appRoutes: Routes = [
     MinValidatorDirective,
     MaxValidatorDirective,
     GeneSetsComponent,
-    SearchableSelectComponent,
-    SearchableSelectTemplateDirective,
     BoldMatchingPipe,
     PresentInChildComponent,
     PresentInParentComponent,
