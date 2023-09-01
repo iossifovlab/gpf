@@ -4,7 +4,7 @@ import sys
 import argparse
 import logging
 import textwrap
-from typing import cast, Any
+from typing import cast, Any, Optional
 
 from collections import defaultdict, Counter
 
@@ -18,6 +18,7 @@ from dae.annotation.annotation_factory import \
     build_annotation_pipeline
 
 from dae.annotation.annotatable import VCFAllele
+from dae.variants.family_variant import FamilyAllele
 
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.variants_loaders.dae.loader import DenovoLoader
@@ -27,7 +28,7 @@ from dae.tools.stats_liftover import save_liftover_stats
 logger = logging.getLogger("denovo_liftover")
 
 
-def parse_cli_arguments(argv):
+def parse_cli_arguments(argv: list[str]) -> argparse.Namespace:
     """Create CLI parser."""
     parser = argparse.ArgumentParser(description="liftover denovo to hg38")
 
@@ -62,11 +63,12 @@ def parse_cli_arguments(argv):
         "-o", "--output", help="output filename",
         default="denovo_liftover.txt")
 
-    argv = parser.parse_args(argv)
-    return argv
+    return parser.parse_args(argv)
 
 
-def main(argv=None, gpf_instance=None):
+def main(
+        argv: Optional[list[str]] = None,
+        gpf_instance: Optional[GPFInstance] = None) -> None:
     """Liftover de Novo variants tool main function."""
     # pylint: disable=too-many-locals
     if argv is None:
@@ -74,17 +76,17 @@ def main(argv=None, gpf_instance=None):
     if gpf_instance is None:
         gpf_instance = GPFInstance.build()
 
-    argv = parse_cli_arguments(argv)
+    args = parse_cli_arguments(argv)
 
-    VerbosityConfiguration.set(argv)
+    VerbosityConfiguration.set(args)
     grr = build_genomic_resource_repository()
     source_genome = build_reference_genome_from_resource(
-        grr.get_resource(argv.source_genome))
+        grr.get_resource(args.source_genome))
     assert source_genome is not None
     source_genome.open()
 
     families_filename, families_params = \
-        FamiliesLoader.parse_cli_arguments(argv)
+        FamiliesLoader.parse_cli_arguments(args)
 
     families_loader = FamiliesLoader(
         families_filename, **families_params
@@ -92,7 +94,7 @@ def main(argv=None, gpf_instance=None):
     families = families_loader.load()
 
     variants_filenames, variants_params = \
-        DenovoLoader.parse_cli_arguments(argv)
+        DenovoLoader.parse_cli_arguments(args)
 
     variants_loader = DenovoLoader(
         families,
@@ -104,34 +106,34 @@ def main(argv=None, gpf_instance=None):
     pipeline_config = textwrap.dedent(
         f"""
         - effect_annotator:
-            gene_models: {argv.source_gene_models}
-            genome: {argv.source_genome}
+            gene_models: {args.source_gene_models}
+            genome: {args.source_genome}
             attributes:
             - source: "worst_effect"
-              destination: "source_worst_effect"
+              name: "source_worst_effect"
             - source: "gene_effects"
-              destination: "source_gene_effects"
+              name: "source_gene_effects"
             - source: "effect_details"
-              destination: "source_effect_details"
+              name: "source_effect_details"
 
         - liftover_annotator:
-            chain: {argv.chain}
-            target_genome: {argv.target_genome}
+            chain: {args.chain}
+            target_genome: {args.target_genome}
             attributes:
             - source: liftover_annotatable
-              destination: target_annotatable
+              name: target_annotatable
 
         - effect_annotator:
-            gene_models: {argv.target_gene_models}
-            genome: {argv.target_genome}
+            gene_models: {args.target_gene_models}
+            genome: {args.target_genome}
             input_annotatable: target_annotatable
             attributes:
             - source: "worst_effect"
-              destination: "target_worst_effect"
+              name: "target_worst_effect"
             - source: "gene_effects"
-              destination: "target_gene_effects"
+              name: "target_gene_effects"
             - source: "effect_details"
-              destination: "target_effect_details"
+              name: "target_effect_details"
 
         """
     )
@@ -143,7 +145,7 @@ def main(argv=None, gpf_instance=None):
 
     target_stats: dict[str, Any] = defaultdict(Counter)
 
-    with open(argv.output, "wt") as output:
+    with open(args.output, "wt") as output:
 
         header = [
             "chrom38", "pos38", "ref38", "alt38",  # "location38", "variant38",
@@ -175,7 +177,7 @@ def main(argv=None, gpf_instance=None):
             target_stats[source_worst_effect][target_worst_effect] += 1
 
             for fv in fvs:
-                fa = fv.alt_alleles[0]
+                fa = cast(FamilyAllele, fv.alt_alleles[0])
 
                 line = [
                     liftover_annotatable.chrom, str(liftover_annotatable.pos),
@@ -190,4 +192,4 @@ def main(argv=None, gpf_instance=None):
                 output.write("\t".join(line))
                 output.write("\n")
 
-    save_liftover_stats(target_stats, argv.stats)
+    save_liftover_stats(target_stats, args.stats)

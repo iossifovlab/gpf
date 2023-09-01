@@ -155,7 +155,7 @@ def reannotation_grr(tmp_path: pathlib.Path) -> GenomicResourceRepo:
                     input_gene_list: gene_list
                     attributes:
                     - source: gene_score2
-                      destination: gene_score2
+                      name: gene_score2
                       internal: true
             """),
             "reannotation_new.yaml": textwrap.dedent("""
@@ -184,14 +184,14 @@ def simple_pipeline_config() -> str:
         chain: foobar_chain
         target_genome: foobar_genome
         attributes:
-        - destination: hgX_annotatable
+        - name: hgX_annotatable
           source: liftover_annotatable
     - effect_annotator:
         genome: foobar_genome
         gene_models: foobar_genes
         input_annotatable: hgX_annotatable
         attributes:
-        - destination: my_genes
+        - name: my_genes
           source: gene_list
     - gene_score_annotator:
         resource_id: gene_score1
@@ -255,7 +255,7 @@ def test_new_annotators_detection(
         chain: foobar_chain
         target_genome: foobar_genome
         attributes:
-        - destination: hgX_annotatable
+        - name: hgX_annotatable
           source: liftover_annotatable
     """
     old_pipeline = build_annotation_pipeline(
@@ -315,7 +315,7 @@ def test_reused_attributes(
         chain: foobar_chain
         target_genome: foobar_genome
         attributes:
-        - destination: hgX_annotatable
+        - name: hgX_annotatable
           source: liftover_annotatable
     """
     new_pipeline_config = """
@@ -323,7 +323,7 @@ def test_reused_attributes(
         chain: foobar_chain
         target_genome: foobar_genome
         attributes:
-        - destination: hgX_annotatable
+        - name: hgX_annotatable
           source: liftover_annotatable
     - effect_annotator:
         genome: foobar_genome
@@ -354,14 +354,14 @@ def test_reused_attributes_indirect(
         chain: foobar_chain
         target_genome: foobar_genome
         attributes:
-        - destination: hgX_annotatable
+        - name: hgX_annotatable
           source: liftover_annotatable
     - effect_annotator:
         genome: foobar_genome
         gene_models: foobar_genes
         input_annotatable: hgX_annotatable
         attributes:
-        - destination: my_genes
+        - name: my_genes
           source: gene_list
           internal: true
     - gene_score_annotator:
@@ -373,14 +373,14 @@ def test_reused_attributes_indirect(
         chain: foobar_chain
         target_genome: foobar_genome
         attributes:
-        - destination: hgX_annotatable
+        - name: hgX_annotatable
           source: liftover_annotatable
     - effect_annotator:
         genome: foobar_genome
         gene_models: foobar_genes
         input_annotatable: hgX_annotatable
         attributes:
-        - destination: my_genes
+        - name: my_genes
           source: gene_list
           internal: true
     - gene_score_annotator:
@@ -414,7 +414,7 @@ def test_annotators_rerun_detection_upstream(
         chain: foobar_chain
         target_genome: foobar_genome
         attributes:
-        - destination: hgX_annotatable
+        - name: hgX_annotatable
           source: liftover_annotatable
           internal: true
     - effect_annotator:
@@ -422,7 +422,7 @@ def test_annotators_rerun_detection_upstream(
         gene_models: foobar_genes
         input_annotatable: hgX_annotatable
         attributes:
-        - destination: my_genes
+        - name: my_genes
           source: gene_list
           internal: true
     - gene_score_annotator:
@@ -434,7 +434,7 @@ def test_annotators_rerun_detection_upstream(
         chain: foobar_chain
         target_genome: foobar_genome
         attributes:
-        - destination: hgX_annotatable
+        - name: hgX_annotatable
           source: liftover_annotatable
           internal: true
     - effect_annotator:
@@ -442,7 +442,7 @@ def test_annotators_rerun_detection_upstream(
         gene_models: foobar_genes
         input_annotatable: hgX_annotatable
         attributes:
-        - destination: my_genes
+        - name: my_genes
           source: gene_list
           internal: true
     - gene_score_annotator:
@@ -472,14 +472,14 @@ def test_annotators_rerun_detection_downstream(
         chain: foobar_chain
         target_genome: foobar_genome
         attributes:
-        - destination: hgX_annotatable
+        - name: hgX_annotatable
           source: liftover_annotatable
     - effect_annotator:
         genome: foobar_genome
         gene_models: foobar_genes
         input_annotatable: hgX_annotatable
         attributes:
-        - destination: my_genes
+        - name: my_genes
           source: gene_list
     - gene_score_annotator:
         resource_id: gene_score1
@@ -490,14 +490,14 @@ def test_annotators_rerun_detection_downstream(
         chain: foobar_chain
         target_genome: foobar_genome_2
         attributes:
-        - destination: hgX_annotatable
+        - name: hgX_annotatable
           source: liftover_annotatable
     - effect_annotator:
         genome: foobar_genome
         gene_models: foobar_genes
         input_annotatable: hgX_annotatable
         attributes:
-        - destination: my_genes
+        - name: my_genes
           source: gene_list
     - gene_score_annotator:
         resource_id: gene_score1

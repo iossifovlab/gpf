@@ -76,7 +76,7 @@ def test_vcf_info_config_annotation(score1_repo):
                 resource_id: score1
                 attributes:
                 - source: C
-                  destination: score1_c
+                  name: score1_c
         """, grr_repository=score1_repo)
 
     assert len(pipeline.get_attributes()) == 1
@@ -115,13 +115,13 @@ def test_vcf_info_annotator(
             resource_id: score1
             attributes:
             - source: A
-              destination: score1_a
+              name: score1_a
             - source: B
-              destination: score1_b
+              name: score1_b
             - source: C
-              destination: score1_c
+              name: score1_c
             - source: D
-              destination: score1_d
+              name: score1_d
         """)
 
     pipeline = build_annotation_pipeline(

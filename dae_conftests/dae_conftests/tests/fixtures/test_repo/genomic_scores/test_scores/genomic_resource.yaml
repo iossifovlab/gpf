@@ -7,30 +7,47 @@ scores:
   - id: score_raw_rankscore
     desc: "SCORE raw rankscore"
     index: 3
+    type: float
+    histogram:
+      type: number
+      number_of_bins: 101
+      view_range:
+        min: 0
+        max: 1
+      x_log_scale: false
+      y_log_scale: true
+
   - id: score_raw
     desc: "SCORE raw"
     index: 4
+    type: float
+    histogram:
+      type: number
+      number_of_bins: 101
+      view_range:
+        min: 0
+        max: 1
+      x_log_scale: false
+      y_log_scale: true
+
   - id: score_phred
     desc: "SCORE phred"
     index: 5
-histograms:
-  - score: score_raw_rankscore
-    bins: 101
-    y_scale: "log"
-    x_scale: "linear"
-  - score: score_raw
-    bins: 101
-    y_scale: "log"
-    x_scale: "linear"
-  - score: score_phred
-    bins: 101
-    y_scale: "log"
-    x_scale: "linear"
+    type: float
+    histogram:
+      type: number
+      number_of_bins: 101
+      view_range:
+        min: 0
+        max: 1
+      x_log_scale: false
+      y_log_scale: true
+
 default_annotation:
   attributes:
     - source: score_raw_rankscore
-      destination: score_raw_rankscore
+      name: score_raw_rankscore
     - source: score_raw
-      destination: score_raw
+      name: score_raw
     - source: score_phred
-      destination: score_phred
+      name: score_phred

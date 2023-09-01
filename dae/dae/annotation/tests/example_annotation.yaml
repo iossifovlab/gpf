@@ -7,7 +7,7 @@
     genome: hg38/GRCh38-hg38/genome
     attributes:
       - source: worst_effect
-        destination: old_worst_effect
+        name: old_worst_effect
 
 
 
@@ -26,10 +26,10 @@
 - position_score: 
     resource_id: hg38/TESTCADD
     attributes:
-    - destination: max_sc
+    - name: max_sc
       source: score_name
       position_aggregator: max
-    - destination: mean_sc
+    - name: mean_sc
       source: score_name
       position_aggregator: mean  
 
@@ -45,9 +45,9 @@
     attributes:
     - destiantion: score1
       source: score1
-    - destination: score2
+    - name: score2
       source: score2
-    - destination: score3
+    - name: score3
       source: score3
 # if the default scores for the hg38/TESTCADD are score1, score2, and score3, 
 # the above is equivallent to:
@@ -61,7 +61,7 @@
 #    liftover_chr           string
 # The default attribute configuration is:
 #    attributes:
-#    - destination: liftover_annotable
+#    - name: liftover_annotable
 #      source:      liftover_annotable
 #      internal:    yes
 - liftover_annotator:
@@ -72,7 +72,7 @@
     chain: hg38/hg38tohg19
     target_genome: hg17/bla/genome
     attributes:
-    - destination: liftover_annotable_hg17
+    - name: liftover_annotable_hg17
       source: liftover_annotable
       internal: yes
 
@@ -88,7 +88,7 @@
 - effect_annotator:
     attributes:
       - source: genes
-        destination: list_of_genes
+        name: list_of_genes
         format: list
         internal: yes
       - source: genes

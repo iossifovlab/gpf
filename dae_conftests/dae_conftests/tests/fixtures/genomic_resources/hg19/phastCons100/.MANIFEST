@@ -1,9 +1,9 @@
 - md5: dae62103e1256179406f5b4e086c8d53
   name: genomic_resource.yaml
   size: 516
-- md5: 091b376d49cc441200f4a2ecfe800742
+- md5: fa97914cdea92bbbe74440f757f3c285
   name: index.html
-  size: 1973
+  size: 1979
 - md5: 00c69ea8fae8ab8445ff64616b8cc07a
   name: phastCons100.bedGraph.gz
   size: 2556019
@@ -13,9 +13,9 @@
 - md5: efcdd4628dbf6987139798f1c30e21e3
   name: statistics/histogram_phastCons100.png
   size: 14406
-- md5: 47c4c84f0598f19fd3ca842c3f2f28c9
+- md5: 286cd0a9c0d64cc61f8cac80f57efc9f
   name: statistics/histogram_phastCons100.yaml
-  size: 403
-- md5: bc8c83e9f2c3b16a8db0306b442ea368
+  size: 401
+- md5: 23baccc6c8276450e478ca40cc927b5f
   name: statistics/stats_hash
   size: 1822

@@ -32,9 +32,9 @@ def test_default_remapping() -> None:
     - debug_annotator:
         attributes:
           - hi
-          - destination: hi2
+          - name: hi2
             source: hi
-          - destination: hi3
+          - name: hi3
             source: hi
     """
     pipeline = build_annotation_pipeline(
@@ -61,10 +61,10 @@ def test_str_value_trasform() -> None:
     - debug_annotator:
         attributes:
           - hi
-          - destination: hi_gosho
+          - name: hi_gosho
             source: hi
             value_transform: value + ' gosho'
-          - destination: hi_len
+          - name: hi_len
             source: hi
             value_transform: len(value)
     """

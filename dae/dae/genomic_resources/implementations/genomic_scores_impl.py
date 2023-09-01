@@ -514,6 +514,7 @@ class GenomicScoreImplementation(
             self.score.get_score_histogram(score_id) for score_id in
             self.get_config_histograms()
         ]
+
         return json.dumps({
             "config": {
                 "scores": config.get("scores", {}),

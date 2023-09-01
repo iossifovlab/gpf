@@ -5,7 +5,10 @@
       "SFARI gene score",
       0.0,
       7.0,
-      null,
+      [
+        0.0,
+        7.0
+      ],
       "linear",
       "linear"
     ]

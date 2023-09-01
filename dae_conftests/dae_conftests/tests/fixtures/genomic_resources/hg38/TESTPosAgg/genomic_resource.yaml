@@ -26,5 +26,5 @@ scores:
 
 default_annotation:
   - source: test_score
-    destination: test_score
+    name: test_score
     position_aggregator: mean

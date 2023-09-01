@@ -24,21 +24,24 @@
   - md5: 558068485b8e3fe4911db03dad2dd6f3
     name: genomic_resource.yaml
     size: 336
-  - md5: 73984602e0b7763a928f07d5e1bcc3d8
+  - md5: c6c74ddcc72d72589b975e9be0b82d6f
+    name: index.html
+    size: 1822
+  - md5: d41d8cd98f00b204e9800998ecf8427e
     name: statistics/histogram_LGD_rank.png
-    size: 14066
-  - md5: 011ea16ea769a60312d00654a9d84759
+    size: 0
+  - md5: 8efcee07e171f747a0db84304422c2fc
     name: statistics/histogram_LGD_rank.yaml
-    size: 3619
-  - md5: b84f124ad6497287316613ff94c33dad
+    size: 4044
+  - md5: d41d8cd98f00b204e9800998ecf8427e
     name: statistics/histogram_LGD_score.png
-    size: 11872
-  - md5: 9f210ba8984fa67be2fd93c9f4ea6be9
+    size: 0
+  - md5: 4cb2174ad9265e2dce1a19350895867b
     name: statistics/histogram_LGD_score.yaml
-    size: 3828
-  - md5: 285aa88ed074d67fe06bca1704c4e35f
+    size: 4254
+  - md5: 789656e681ae6f3d5cf29c3f504e286b
     name: statistics/stats_hash
-    size: 513
+    size: 381
   version: '0'
 - config:
     filename: RVIS.csv
@@ -66,21 +69,24 @@
   - md5: 23c9655d86de1c4285bb449f2127eeb0
     name: genomic_resource.yaml
     size: 329
-  - md5: 7d98bd8159020fdcdd195e848a38ab89
+  - md5: f459e8ac59de2cf8f14ae14c4d8c1285
+    name: index.html
+    size: 1801
+  - md5: d41d8cd98f00b204e9800998ecf8427e
     name: statistics/histogram_RVIS.png
-    size: 12476
-  - md5: c121ea617ea48c516682be8f90ebaa1d
+    size: 0
+  - md5: 0c828b30bc33c3c109a8726d79dbe196
     name: statistics/histogram_RVIS.yaml
-    size: 2548
-  - md5: 578e6cbb24e8ada3bce4bd2c347a8dae
+    size: 2979
+  - md5: d41d8cd98f00b204e9800998ecf8427e
     name: statistics/histogram_RVIS_rank.png
-    size: 11564
-  - md5: e1a9fe2510f0299e5ae68a49873ab5b9
+    size: 0
+  - md5: 1c18c2ea33d04fa5db5961e9a1eb8e8e
     name: statistics/histogram_RVIS_rank.yaml
-    size: 3167
-  - md5: b090c7875555a9df23d91a0f5d61ab40
+    size: 3595
+  - md5: 925e12b883b809d53185fe5025f2bc91
     name: statistics/stats_hash
-    size: 501
+    size: 365
   version: '0'
 - config:
     filename: SFARI.csv
@@ -101,15 +107,18 @@
   - md5: 3892185823463e11633de27c9fd51bab
     name: genomic_resource.yaml
     size: 205
-  - md5: e389eedab465a607bb6d0b116e171019
+  - md5: dd845683c73bf2abbf4deb451d41478c
+    name: index.html
+    size: 1646
+  - md5: d41d8cd98f00b204e9800998ecf8427e
     name: statistics/histogram_SFARI_gene_score.png
-    size: 13245
-  - md5: 446534f6151dbb33e9a1a2da3888a940
+    size: 0
+  - md5: 02fb7630a4198d04444b82ed5d565578
     name: statistics/histogram_SFARI_gene_score.yaml
-    size: 218
-  - md5: ea9d9faebe2737f8860f69041889f946
+    size: 639
+  - md5: af43d14e299dcdd53719baae1f279083
     name: statistics/stats_hash
-    size: 341
+    size: 238
   version: '0'
 - config:
     directory: GeneSets
@@ -132,6 +141,12 @@
   - md5: af9a0254eb08c354abbd419a050fa2e3
     name: genomic_resource.yaml
     size: 118
+  - md5: 97d2b04a91b05f726ac1414bfa07e7df
+    name: index.html
+    size: 1944
+  - md5: 6a99c575ab87f8c7d1ed1e52e7e349ce
+    name: statistics/stats_hash
+    size: 11
   version: '0'
 - config:
     filename: test-gmt.gmt
@@ -145,6 +160,12 @@
   - md5: 108e781ddcbbefa72cd70d58fae46ccd
     name: genomic_resource.yaml
     size: 116
+  - md5: f472240da6b5aef37aac6bce45c1820c
+    name: index.html
+    size: 1417
+  - md5: 6a99c575ab87f8c7d1ed1e52e7e349ce
+    name: statistics/stats_hash
+    size: 11
   - md5: 6ed968f512c03b7c6187381bfcb865dd
     name: test-gmt.gmt
     size: 118
@@ -161,6 +182,12 @@
   - md5: a2c6e1efdf34070d9b890eca85260b57
     name: genomic_resource.yaml
     size: 124
+  - md5: bb6d065d8c063f885170bfa3973c78a9
+    name: index.html
+    size: 1655
+  - md5: 6a99c575ab87f8c7d1ed1e52e7e349ce
+    name: statistics/stats_hash
+    size: 11
   - md5: ecac75f4e2a086c19a979cfa2948f8d7
     name: test-map.txt
     size: 54
@@ -171,43 +198,57 @@
 - config:
     default_annotation:
       attributes:
-      - destination: score_raw_rankscore
+      - name: score_raw_rankscore
         source: score_raw_rankscore
-      - destination: score_raw
+      - name: score_raw
         source: score_raw
-      - destination: score_phred
+      - name: score_phred
         source: score_phred
-    histograms:
-    - bins: 101
-      score: score_raw_rankscore
-      x_scale: linear
-      y_scale: log
-    - bins: 101
-      score: score_raw
-      x_scale: linear
-      y_scale: log
-    - bins: 101
-      score: score_phred
-      x_scale: linear
-      y_scale: log
     scores:
     - desc: SCORE raw rankscore
+      histogram:
+        number_of_bins: 101
+        type: number
+        view_range:
+          max: 1
+          min: 0
+        x_log_scale: false
+        y_log_scale: true
       id: score_raw_rankscore
       index: 3
+      type: float
     - desc: SCORE raw
+      histogram:
+        number_of_bins: 101
+        type: number
+        view_range:
+          max: 1
+          min: 0
+        x_log_scale: false
+        y_log_scale: true
       id: score_raw
       index: 4
+      type: float
     - desc: SCORE phred
+      histogram:
+        number_of_bins: 101
+        type: number
+        view_range:
+          max: 1
+          min: 0
+        x_log_scale: false
+        y_log_scale: true
       id: score_phred
       index: 5
+      type: float
     table:
       filename: table.txt
     type: position_score
   id: genomic_scores/test_scores
   manifest:
-  - md5: 15f0c39d1885992bf8375bceac58a00e
+  - md5: 28dee83ddd51112a3721f94c7be54eca
     name: genomic_resource.yaml
-    size: 728
+    size: 977
   - md5: 94608545a04c4b723ef0f33e24b50328
     name: histograms/score_phred.csv
     size: 1299
@@ -217,6 +258,30 @@
   - md5: e8905f626e885999e612e1f120461db4
     name: histograms/score_raw_rankscore.csv
     size: 1249
+  - md5: bac987f706083289930360f39939fdf4
+    name: index.html
+    size: 3075
+  - md5: 36fc9e01882649a95519c3ea1be5f6f0
+    name: statistics/histogram_score_phred.png
+    size: 9858
+  - md5: 7687d9e3ac906c077d08baa4ceaf744c
+    name: statistics/histogram_score_phred.yaml
+    size: 2759
+  - md5: 0d7eb0c8ae70fac92d62ee9d9b8b08d7
+    name: statistics/histogram_score_raw.png
+    size: 9606
+  - md5: 7687d9e3ac906c077d08baa4ceaf744c
+    name: statistics/histogram_score_raw.yaml
+    size: 2759
+  - md5: d41d8cd98f00b204e9800998ecf8427e
+    name: statistics/histogram_score_raw_rankscore.png
+    size: 0
+  - md5: 7687d9e3ac906c077d08baa4ceaf744c
+    name: statistics/histogram_score_raw_rankscore.yaml
+    size: 2759
+  - md5: ba047c88be9df2fff3a738b1ef866bf3
+    name: statistics/stats_hash
+    size: 16158
   - md5: 0de608bb0038128685f7bd88a91b70f1
     name: table.txt
     size: 45

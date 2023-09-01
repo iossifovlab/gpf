@@ -38,11 +38,11 @@ def position_score_repo() -> GenomicResourceRepo:
               name: t2
             default_annotation:
               - source: test100way
-                destination: test100
+                name: test100
               - source: t1
-                destination: t1
+                name: t1
               - source: t2
-                destination: t2
+                name: t2
             """,
             "data.mem": """
                 chrom  pos_begin  pos_end  100way   t1   t2
@@ -79,7 +79,7 @@ def test_position_score_annotator_all_attributes(
                 resource_id: position_score1
                 attributes:
                 - source: test100way
-                  destination: test100
+                  name: test100
                   position_aggregator: max
             """)
 
@@ -137,7 +137,7 @@ def test_position_score_annotator(
                 resource_id: position_score1
                 attributes:
                 - source: test100way
-                  destination: test100
+                  name: test100
                   position_aggregator: {pos_aggregator}
             """)
 
@@ -164,7 +164,7 @@ def test_position_annotator_info(
                 resource_id: position_score1
                 attributes:
                 - source: test100way
-                  destination: test100
+                  name: test100
             """)
 
     pipeline = build_annotation_pipeline(
@@ -211,9 +211,9 @@ def test_position_annotator_schema_one_source_two_dest_schema(
                 resource_id: position_score1
                 attributes:
                 - source: test100way
-                  destination: test100
+                  name: test100
                 - source: test100way
-                  destination: test100max
+                  name: test100max
                   position_aggregator: max
             """)
 
@@ -247,7 +247,7 @@ def test_position_annotator_join_aggregation(
                 resource_id: position_score1
                 attributes:
                 - source: test100way
-                  destination: test100
+                  name: test100
                   position_aggregator: join(, )
             """)
     print(pipeline_config)
@@ -271,10 +271,10 @@ def test_position_annotator_schema_one_source_two_dest_annotate(
                 resource_id: position_score1
                 attributes:
                 - source: test100way
-                  destination: test100min
+                  name: test100min
                   position_aggregator: min
                 - source: test100way
-                  destination: test100max
+                  name: test100max
                   position_aggregator: max
             """)
 
@@ -302,7 +302,7 @@ def test_position_score_annotator_attributes_with_aggr_fails(
                 resource_id: position_score1
                 attributes:
                 - source: test100way
-                  destination: test100min
+                  name: test100min
                   position_aggregator: min
                   nucleotide_aggregator: mean
         """, grr_repository=position_score_repo)
@@ -317,7 +317,7 @@ def test_position_score_annotator_invalid_aggregator(
                 resource_id: position_score1
                 attributes:
                 - source: test100way
-                  destination: test100min
+                  name: test100min
                   position_aggregator: minn
         """, grr_repository=position_score_repo)
     assert "minn" in str(error)
@@ -330,13 +330,13 @@ def test_position_annotator_documentation(
                 resource_id: position_score1
                 attributes:
                 - source: test100way
-                  destination: test100min
+                  name: test100min
                   position_aggregator: min
                 - source: test100way
-                  destination: test100max
+                  name: test100max
                   position_aggregator: max
                 - source: test100way
-                  destination: test100default
+                  name: test100default
             """)
 
     pipeline = build_annotation_pipeline(

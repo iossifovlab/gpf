@@ -1,6 +1,6 @@
-- md5: 15f0c39d1885992bf8375bceac58a00e
+- md5: 28dee83ddd51112a3721f94c7be54eca
   name: genomic_resource.yaml
-  size: 728
+  size: 977
 - md5: 94608545a04c4b723ef0f33e24b50328
   name: histograms/score_phred.csv
   size: 1299
@@ -10,6 +10,30 @@
 - md5: e8905f626e885999e612e1f120461db4
   name: histograms/score_raw_rankscore.csv
   size: 1249
+- md5: bac987f706083289930360f39939fdf4
+  name: index.html
+  size: 3075
+- md5: 36fc9e01882649a95519c3ea1be5f6f0
+  name: statistics/histogram_score_phred.png
+  size: 9858
+- md5: 7687d9e3ac906c077d08baa4ceaf744c
+  name: statistics/histogram_score_phred.yaml
+  size: 2759
+- md5: 0d7eb0c8ae70fac92d62ee9d9b8b08d7
+  name: statistics/histogram_score_raw.png
+  size: 9606
+- md5: 7687d9e3ac906c077d08baa4ceaf744c
+  name: statistics/histogram_score_raw.yaml
+  size: 2759
+- md5: 20acac11f79ed9654414b3f96d9918b1
+  name: statistics/histogram_score_raw_rankscore.png
+  size: 11012
+- md5: 7687d9e3ac906c077d08baa4ceaf744c
+  name: statistics/histogram_score_raw_rankscore.yaml
+  size: 2759
+- md5: ba047c88be9df2fff3a738b1ef866bf3
+  name: statistics/stats_hash
+  size: 16158
 - md5: 0de608bb0038128685f7bd88a91b70f1
   name: table.txt
   size: 45

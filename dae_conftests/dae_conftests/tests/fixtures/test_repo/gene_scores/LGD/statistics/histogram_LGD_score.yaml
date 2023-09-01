@@ -305,27 +305,32 @@ config:
   number_of_bins: 150
   type: number
   view_range:
-    max: !!python/object/apply:numpy.core.multiarray.scalar
-    - &id001 !!python/object/apply:numpy.dtype
-      args:
-      - f8
-      - false
-      - true
-      state: !!python/tuple
-      - 3
-      - <
-      - null
-      - null
-      - null
-      - -1
-      - -1
-      - 0
-    - !!binary |
-      AAAAAAAA8D8=
-    min: !!python/object/apply:numpy.core.multiarray.scalar
-    - *id001
-    - !!binary |
-      t18+WTFc7T4=
+    max: 1.0
+    min: 1.4e-05
   x_log_scale: false
   x_min_log: null
   y_log_scale: true
+max_value: !!python/object/apply:numpy.core.multiarray.scalar
+- &id001 !!python/object/apply:numpy.dtype
+  args:
+  - f8
+  - false
+  - true
+  state: !!python/tuple
+  - 3
+  - <
+  - null
+  - null
+  - null
+  - -1
+  - -1
+  - 0
+- !!binary |
+  AAAAAAAA8D8=
+min_value: !!python/object/apply:numpy.core.multiarray.scalar
+- *id001
+- !!binary |
+  t18+WTFc7T4=
+out_of_range_bins:
+- 0
+- 0
