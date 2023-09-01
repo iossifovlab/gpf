@@ -4,14 +4,14 @@
 * To view and modify this theme, visit http://jqueryui.com/themeroller/?scope=&folderName=custom-theme&bgImgOpacityError=&bgImgOpacityHighlight=&bgImgOpacityActive=&bgImgOpacityHover=&bgImgOpacityDefault=&bgImgOpacityContent=&bgImgOpacityHeader=&cornerRadiusShadow=8px&offsetLeftShadow=0px&offsetTopShadow=0px&thicknessShadow=5px&opacityShadow=30&bgImgOpacityShadow=0&bgTextureShadow=flat&bgColorShadow=%23666666&opacityOverlay=30&bgImgOpacityOverlay=0&bgTextureOverlay=flat&bgColorOverlay=%23aaaaaa&iconColorError=%23cc0000&fcError=%235f3f3f&borderColorError=%23f1a899&bgTextureError=flat&bgColorError=%23fddfdf&iconColorHighlight=%23777620&fcHighlight=%23777620&borderColorHighlight=%23dad55e&bgTextureHighlight=flat&bgColorHighlight=%23fffa90&iconColorActive=%23ffffff&fcActive=%23ffffff&borderColorActive=%232a6395&bgTextureActive=flat&bgColorActive=%232a6395&iconColorHover=%23555555&fcHover=%232b2b2b&borderColorHover=%23cccccc&bgTextureHover=flat&bgColorHover=%23e9ecef&iconColorDefault=%23777777&fcDefault=%23454545&borderColorDefault=%23c5c5c5&bgTextureDefault=flat&bgColorDefault=%23f6f6f6&iconColorContent=%23444444&fcContent=%23333333&borderColorContent=%23ccc&bgTextureContent=flat&bgColorContent=%23ffffff&iconColorHeader=%23444444&fcHeader=%23333333&borderColorHeader=%23dddddd&bgTextureHeader=flat&bgColorHeader=%23e9e9e9&cornerRadius=5px&fwDefault=normal&fsDefault=16px&ffDefault=Roboto%2Csans-serif
 * Copyright jQuery Foundation and other contributors; Licensed MIT */
 
-.ui-draggable-handle {
+/* .ui-draggable-handle {
   -ms-touch-action: none;
   touch-action: none;
-}
+} */
 
 /* Layout helpers---------------------------------- */
 
-.ui-helper-hidden {
+/* .ui-helper-hidden {
   display: none;
 }
 
@@ -46,30 +46,30 @@
 
 .ui-helper-clearfix::after {
   clear: both;
-}
+} */
 
-.ui-helper-zfix {
+/* .ui-helper-zfix {
   width: 100%;
   height: 100%;
   top: 0;
   left: 0;
   position: absolute;
   opacity: 0;
-  -ms-filter: "alpha(opacity=0)"; /* support: IE8 */
+  -ms-filter: "alpha(opacity=0)";
 }
 
 .ui-front {
   z-index: 100;
-}
+} */
 
 /* Interaction Cues---------------------------------- */
-.ui-state-disabled {
+/* .ui-state-disabled {
   cursor: default !important;
   pointer-events: none;
-}
+} */
 
 /* Icons---------------------------------- */
-.ui-icon {
+/* .ui-icon {
   display: inline-block;
   vertical-align: middle;
   margin-top: -0.25em;
@@ -83,12 +83,12 @@
   left: 50%;
   margin-left: -8px;
   display: block;
-}
+} */
 
 /* Misc visuals---------------------------------- */
 
 /* Overlays */
-.ui-widget-overlay {
+/* .ui-widget-overlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -206,7 +206,7 @@
   padding: 1em 2.2em;
   border-top: 0;
   overflow: auto;
-}
+} */
 
 .ui-autocomplete {
   position: absolute;
@@ -250,10 +250,10 @@
 
 .ui-menu .ui-state-focus,
 .ui-menu .ui-state-active {
-  margin: -1px;
+  margin: 0;
 }
 
-/* icon support */
+/* 
 .ui-menu-icons {
   position: relative;
 }
@@ -262,7 +262,6 @@
   padding-left: 2em;
 }
 
-/* left-aligned */
 .ui-menu .ui-icon {
   position: absolute;
   top: 0;
@@ -271,7 +270,6 @@
   margin: auto 0;
 }
 
-/* right-aligned */
 .ui-menu .ui-menu-icon {
   left: auto;
   right: 0;
@@ -291,7 +289,6 @@
   -ms-user-select: none;
   user-select: none;
 
-  /* Support: IE <= 11 */
   overflow: visible;
 }
 
@@ -303,7 +300,6 @@
   text-decoration: none;
 }
 
-/* to make room for the icon, a width needs to be set here */
 .ui-button-icon-only {
   width: 2em;
   box-sizing: border-box;
@@ -311,12 +307,10 @@
   white-space: nowrap;
 }
 
-/* no icon support for input elements */
 input.ui-button.ui-button-icon-only {
   text-indent: 0;
 }
 
-/* button icon element(s) */
 .ui-button-icon-only .ui-icon {
   position: absolute;
   top: 50%;
@@ -341,9 +335,7 @@ input.ui-button.ui-icon-notext .ui-icon {
   padding: 0.4em 1em;
 }
 
-/* workarounds */
 
-/* Support: Firefox 5 - 40 */
 input.ui-button::-moz-focus-inner,
 button.ui-button::-moz-focus-inner {
   border: 0;
@@ -401,12 +393,11 @@ button.ui-button::-moz-focus-inner {
 
 .ui-controlgroup-vertical .ui-controlgroup-label.ui-widget-content {
   border-bottom: none;
-}
+} */
 
 /* Spinner specific style fixes */
-.ui-controlgroup-vertical .ui-spinner-input {
-  /* Support: IE8 only, Android < 4.4 only */
-  width: 75%;
+/* .ui-controlgroup-vertical .ui-spinner-input { */
+  /* width: 75%;
   width: calc(100% - 2.4em);
 }
 
@@ -554,10 +545,10 @@ button.ui-button::-moz-focus-inner {
 
 .ui-datepicker .ui-datepicker-buttonpane button.ui-datepicker-current {
   float: left;
-}
+} */
 
 /* with multiple calendars */
-.ui-datepicker.ui-datepicker-multi {
+/* .ui-datepicker.ui-datepicker-multi {
   width: auto;
 }
 
@@ -595,10 +586,10 @@ button.ui-button::-moz-focus-inner {
   clear: both;
   width: 100%;
   font-size: 0;
-}
+} */
 
 /* RTL support */
-.ui-datepicker-rtl {
+/* .ui-datepicker-rtl {
   direction: rtl;
 }
 
@@ -639,10 +630,10 @@ button.ui-button::-moz-focus-inner {
 .ui-datepicker-rtl .ui-datepicker-group-middle .ui-datepicker-header {
   border-right-width: 0;
   border-left-width: 1px;
-}
+} */
 
 /* Icons */
-.ui-datepicker .ui-icon {
+/* .ui-datepicker .ui-icon {
   display: block;
   text-indent: -99999px;
   overflow: hidden;
@@ -774,11 +765,10 @@ button.ui-button::-moz-focus-inner {
 .ui-progressbar .ui-progressbar-overlay {
   background: url("data:image/gif;base64,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");
   height: 100%;
-  -ms-filter: "alpha(opacity=25)"; /* support: IE8 */
-  opacity: 25%;
-}
+  -ms-filter: "alpha(opacity=25)";
+} */
 
-.ui-progressbar-indeterminate .ui-progressbar-value {
+/* .ui-progressbar-indeterminate .ui-progressbar-value {
   background-image: none;
 }
 
@@ -851,10 +841,10 @@ button.ui-button::-moz-focus-inner {
   display: block;
   border: 0;
   background-position: 0 0;
-}
+} */
 
 /* support: IE8 - See #6727 */
-.ui-slider.ui-state-disabled .ui-slider-handle,
+/* .ui-slider.ui-state-disabled .ui-slider-handle,
 .ui-slider.ui-state-disabled .ui-slider-range {
   filter: inherit;
 }
@@ -936,10 +926,10 @@ width: 100%;
   display: block;
   overflow: hidden;
   right: 0;
-}
+} */
 
 /* more specificity required here to override default borders */
-.ui-spinner a.ui-spinner-button {
+/* .ui-spinner a.ui-spinner-button {
   border-top-style: none;
   border-bottom-style: none;
   border-right-style: none;
@@ -954,7 +944,6 @@ width: 100%;
 }
 
 .ui-tabs {
-  position: relative;/* position: relative prevents IE scroll bug (element with position: relative inside container with overflow: auto appear as "fixed") */
   padding: 0.2em;
 }
 
@@ -1011,7 +1000,7 @@ width: 100%;
 
 body .ui-tooltip {
   border-width: 2px;
-}
+} */
 
 /* Component containers---------------------------------- */
 .ui-widget {
@@ -1070,8 +1059,6 @@ body .ui-tooltip {
 .ui-widget-content .ui-state-default,
 .ui-widget-header .ui-state-default,
 .ui-button,
-/* We use html here because we need a greater specificity to make sure disabled
-works properly when clicked or hovered */
 html .ui-button.ui-state-disabled:hover,
 html .ui-button.ui-state-disabled:active {
   border: 1px solid #c5c5c5;
@@ -1124,7 +1111,7 @@ a.ui-button:focus {
 }
 
 .ui-widget-content .ui-state-active {
-  border: 1px solid #e9ecef;
+  border: 0;
   background: #e9ecef;
   font-weight: normal;
   color: #212529;
@@ -1156,7 +1143,7 @@ a.ui-button:active,
 }
 
 /* Interaction Cues---------------------------------- */
-.ui-state-highlight,
+/* .ui-state-highlight,
 .ui-widget-content .ui-state-highlight,
 .ui-widget-header .ui-state-highlight {
   border: 1px solid #dad55e;
@@ -1205,7 +1192,7 @@ a.ui-button:active,
 .ui-widget-content .ui-priority-secondary,
 .ui-widget-header .ui-priority-secondary {
   opacity: 70%;
-  -ms-filter: "alpha(opacity=70)"; /* support: IE8 */
+  -ms-filter: "alpha(opacity=70)";
   font-weight: normal;
 }
 
@@ -1213,24 +1200,24 @@ a.ui-button:active,
 .ui-widget-content .ui-state-disabled,
 .ui-widget-header .ui-state-disabled {
   opacity: 35%;
-  -ms-filter: "alpha(opacity=35)"; /* support: IE8 */
+  -ms-filter: "alpha(opacity=35)";
   background-image: none;
 }
 
 .ui-state-disabled .ui-icon {
-  -ms-filter: "alpha(opacity=35)"; /* support: IE8 - See #6059 */
-}
+  -ms-filter: "alpha(opacity=35)";
+} */
 
 /* Icons
 ---------------------------------- */
 
 /* states and images */
-.ui-icon {
+/* .ui-icon {
   width: 16px;
   height: 16px;
-}
+} */
 
-.ui-icon,
+/* .ui-icon,
 .ui-widget-content .ui-icon {
   background-image: url("images/ui-icons_444444_256x240.png");
 }
@@ -1263,12 +1250,12 @@ a.ui-button:active,
 
 .ui-button .ui-icon {
   background-image: url("images/ui-icons_777777_256x240.png");
-}
+} */
 
 /* positioning */
 
 /* Three classes needed to override `.ui-button:hover .ui-icon` */
-.ui-icon-blank.ui-icon-blank.ui-icon-blank {
+/* .ui-icon-blank.ui-icon-blank.ui-icon-blank {
   background-image: none;
 }
 .ui-icon-caret-1-n { background-position: 0 0; }
@@ -1406,10 +1393,10 @@ a.ui-button:active,
 .ui-icon-seek-next { background-position: -32px -160px; }
 .ui-icon-seek-prev { background-position: -48px -160px; }
 .ui-icon-seek-end { background-position: -64px -160px; }
-.ui-icon-seek-start { background-position: -80px -160px; }
+.ui-icon-seek-start { background-position: -80px -160px; } */
 
 /* ui-icon-seek-first is deprecated, use ui-icon-seek-start instead */
-.ui-icon-seek-first { background-position: -80px -160px; }
+/* .ui-icon-seek-first { background-position: -80px -160px; }
 .ui-icon-stop { background-position: -96px -160px; }
 .ui-icon-eject { background-position: -112px -160px; }
 .ui-icon-volume-off { background-position: -128px -160px; }
@@ -1446,13 +1433,13 @@ a.ui-button:active,
 .ui-icon-grip-solid-vertical { background-position: -32px -224px; }
 .ui-icon-grip-solid-horizontal { background-position: -48px -224px; }
 .ui-icon-gripsmall-diagonal-se { background-position: -64px -224px; }
-.ui-icon-grip-diagonal-se { background-position: -80px -224px; }
+.ui-icon-grip-diagonal-se { background-position: -80px -224px; } */
 
 /* Misc visuals
 ---------------------------------- */
 
 /* Corner radius */
-.ui-corner-all,
+/* .ui-corner-all,
 .ui-corner-top,
 .ui-corner-left,
 .ui-corner-tl {
@@ -1478,16 +1465,16 @@ a.ui-button:active,
 .ui-corner-right,
 .ui-corner-br {
   border-bottom-right-radius: 5px;
-}
+} */
 
 /* Overlays */
-.ui-widget-overlay {
+/* .ui-widget-overlay {
   background: #aaa;
   opacity: 30%;
-  -ms-filter: Alpha(Opacity=30); /* support: IE8 */
+  -ms-filter: Alpha(Opacity=30);
 }
 
 .ui-widget-shadow {
   -webkit-box-shadow: 0 0 5px #666;
   box-shadow: 0 0 5px #666;
-}
+} */
