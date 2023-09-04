@@ -3,6 +3,7 @@ import { DatasetsService } from 'app/datasets/datasets.service';
 import { MeasuresService } from '../measures/measures.service';
 import { ContinuousMeasure } from '../measures/measures';
 import { first } from 'rxjs/operators';
+import { JqueryUIElement } from 'typings';
 
 @Component({
   selector: 'gpf-pheno-measure-selector',
@@ -38,26 +39,25 @@ export class PhenoMeasureSelectorComponent implements AfterViewInit {
   }
 
   private fillDropdown(): void {
-    const self = this;
-    const dropdown = $(this.measureSelectorDropdownRef.nativeElement) as any;
+    const dropdown = $(this.measureSelectorDropdownRef.nativeElement) as unknown as JqueryUIElement;
     dropdown.autocomplete({
       minLength: 0,
       delay: 0,
       source: this.measures.map(measure => measure.name),
-      select: function(event, ui) {
-        self.measures.forEach(element => {
-          if(element.name === ui.item.value) {
-            self.selectMeasure(element);
+      select: (event, ui: {item: { value: string }}) => {
+        this.measures.forEach(element => {
+          if (element.name === ui.item.value) {
+            this.selectMeasure(element);
           }
         });
-        
+
         dropdown.trigger('blur');
         dropdown.attr('title', ui.item.value);
       },
     }).bind('focus', () => {
       dropdown.val('');
       dropdown.autocomplete('search');
-      self.selectMeasure(null);
+      this.selectMeasure(null);
     });
   }
 

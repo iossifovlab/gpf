@@ -16,6 +16,7 @@ import * as d3 from 'd3';
 import * as draw from 'app/utils/svg-drawing';
 import { LGDS, CNV, OTHER, CODING } from 'app/effect-types/effect-types';
 import { DatasetsTreeService } from 'app/datasets/datasets-tree.service';
+import { JqueryUIElement } from 'typings';
 
 @Component({
   selector: 'gpf-gene-browser',
@@ -120,12 +121,13 @@ export class GeneBrowserComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   public ngAfterViewInit(): void {
-    const dropdown = $('#genes') as any;
+    const dropdown = $('#genes') as unknown as JqueryUIElement;
     dropdown.autocomplete({
-      source: (request, response) => {
+      source: (request: {term: string}, response: (arg: string[]) => void) => {
         this.geneService
           .searchGenes(request.term)
           .pipe(take(1))
+          // eslint-disable-next-line @typescript-eslint/naming-convention
           .subscribe((res: { 'gene_symbols': string[] }) => {
             response(res.gene_symbols);
           });
@@ -133,7 +135,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy, AfterViewInit {
     }).bind('focus', () => {
       dropdown.val('');
     });
-    dropdown.keyup(function(event, ui) {
+    dropdown.keyup((event) => {
       if (event.keyCode === 13) {
         $('#go-button').click();
         dropdown.autocomplete('close');

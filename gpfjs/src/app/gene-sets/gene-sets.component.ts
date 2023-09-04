@@ -11,6 +11,7 @@ import { catchError, debounceTime, distinctUntilChanged, switchMap } from 'rxjs/
 import { StatefulComponent } from 'app/common/stateful-component';
 import { environment } from 'environments/environment';
 import { PersonSet } from 'app/datasets/datasets';
+import { JqueryUIElement } from 'typings';
 
 @Component({
   selector: 'gpf-gene-sets',
@@ -184,16 +185,15 @@ export class GeneSetsComponent extends StatefulComponent implements OnInit {
   }
 
   private fillDropdown(): void {
-    const dropdown = $('#sets') as any;
-    const self = this;
+    const dropdown = $('#sets') as unknown as JqueryUIElement;
     dropdown.autocomplete({
       minLength: 0,
       delay: 0,
       source: this.geneSets.map(set => this.geneSetToString(set)),
-      select: function(event, ui) {
-        for (const set of self.geneSets) {
-          if (self.geneSetToString(set) === ui.item.value) {
-            self.onSelect(set);
+      select: (event, ui: {item: { value: string }}) => {
+        for (const set of this.geneSets) {
+          if (this.geneSetToString(set) === ui.item.value) {
+            this.onSelect(set);
           }
         }
         dropdown.trigger('blur');
@@ -201,7 +201,7 @@ export class GeneSetsComponent extends StatefulComponent implements OnInit {
       },
     }).bind('focus', () => {
       dropdown.val('');
-      self.onSelect(null);
+      this.onSelect(null);
       dropdown.autocomplete('search');
     });
   }
