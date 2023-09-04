@@ -222,7 +222,7 @@ class AnnotationConfigParser:
         attribute_config = copy.deepcopy(raw_attribute_config)
         if "destination" in attribute_config:
             logger.warning(
-                "usage of 'destination' in annotators attribute configuration"
+                "usage of 'destination' in annotators attribute configuration "
                 "is deprecated; use 'name' instead")
             name = attribute_config.get("destination")
             attribute_config.pop("destination")
