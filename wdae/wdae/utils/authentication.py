@@ -33,15 +33,13 @@ class GPFOAuth2Authentication(OAuth2Authentication):
         return retval  # no user authenticated, just pass on
 
 
-def oauth_html_form_patch(
+def oauth_cookie_to_header(
     get_response: Callable[[HttpRequest], HttpResponse]
 ) -> Callable[[HttpRequest], HttpResponse]:
-    """Middleware patch to allow using form-based POST downloads with OAuth."""
+    """Middleware patch to allow storing OAuth tokens as cookies."""
     def middleware(request: HttpRequest) -> HttpResponse:
-        if request.method == "POST" and \
-           request.content_type == "application/x-www-form-urlencoded" and \
-           "access_token" in request.POST:
-            token = request.POST["access_token"]
+        if "access_token" in request.COOKIES:
+            token = request.COOKIES["access_token"]
             request.META["HTTP_AUTHORIZATION"] = f"Bearer {token}"
         return get_response(request)
     return middleware
