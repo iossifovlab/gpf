@@ -200,7 +200,6 @@
               action="{{ configService.baseUrl }}genotype_browser/query"
               method="post">
               <input name="queryData" type="hidden" />
-              <input name="access_token" type="hidden" />
               <button
                 [disabled]="!this.summaryVariantsArrayFiltered?.totalFamilyVariantsCount"
                 class="btn btn-md btn-primary btn-right"
@@ -215,7 +214,6 @@
               method="post"
               style="display: hidden">
               <input name="queryData" type="hidden" />
-              <input name="access_token" type="hidden" />
             </form>
           </div>
         </div>

@@ -121,7 +121,6 @@ describe('GenotypeBrowserComponent', () => {
         queryData: {
           value: ''
         },
-        access_token: {value: ''},
         submit: jest.fn()
       }
     };

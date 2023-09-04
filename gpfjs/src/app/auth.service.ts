@@ -4,6 +4,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { ConfigService } from './config/config.service';
 import { Observable, Subject, take, tap, catchError, of } from 'rxjs';
 import { APP_BASE_HREF } from '@angular/common';
+import { CookieService } from 'ngx-cookie-service';
 import pkceChallenge from 'pkce-challenge';
 
 @Injectable({
@@ -17,11 +18,12 @@ export class AuthService {
   public constructor(
     private http: HttpClient,
     private config: ConfigService,
+    private cookieService: CookieService,
     @Inject(APP_BASE_HREF) private baseHref: string,
   ) { }
 
   public get accessToken(): string {
-    return localStorage.getItem('access_token') || '';
+    return this.cookieService.get('access_token') || '';
   }
 
   public get refreshAccessToken(): string {
@@ -51,11 +53,11 @@ export class AuthService {
     return this.http.post(`${this.config.rootUrl}${this.baseHref}o/revoke_token/`, {
       client_id: this.config.oauthClientId,
       token: this.accessToken,
-    }, this.options).pipe(take(1), tap(this.clearTokens));
+    }, this.options).pipe(take(1), tap({next: () => { this.clearTokens(); }}));
   }
 
   public clearTokens(): void {
-    localStorage.removeItem('access_token');
+    this.cookieService.delete('access_token');
     localStorage.removeItem('refresh_token');
   }
 
@@ -72,7 +74,7 @@ export class AuthService {
         }),
         catchError((err, caught) => {
           // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-          if (err.status === 400 && err.error.error === 'invalid_grant') {
+          if (err.status === 500 || (err.status === 400 && err.error.error === 'invalid_grant')) {
             this.clearTokens();
             window.location.reload();
           }
@@ -80,12 +82,13 @@ export class AuthService {
         })
       );
     } else {
-      return of(null);
+      this.clearTokens();
+      window.location.reload();
     }
   }
 
   private setTokens(res: object): void {
-    localStorage.setItem('access_token', res['access_token'] as string);
+    this.cookieService.set('access_token', res['access_token'] as string);
     localStorage.setItem('refresh_token', res['refresh_token'] as string);
   }
 }
