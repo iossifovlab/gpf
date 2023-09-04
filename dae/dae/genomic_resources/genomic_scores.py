@@ -396,7 +396,7 @@ class GenomicScore(ResourceConfigValidationMixin):
             score_def = _ScoreDef(
                 score_id=score_conf["id"],
                 desc=score_conf.get("desc", ""),
-                value_type=score_conf["type"],
+                value_type=score_conf.get("type"),
                 pos_aggregator=score_conf.get("position_aggregator"),
                 nuc_aggregator=score_conf.get("nucleotide_aggregator"),
                 allele_aggregator=score_conf.get("allele_aggregator"),
