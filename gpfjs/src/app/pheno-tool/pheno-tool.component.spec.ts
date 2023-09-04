@@ -19,7 +19,6 @@ import { GeneSymbolsState, SetGeneSymbols } from 'app/gene-symbols/gene-symbols.
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { HttpResponse } from '@angular/common/http';
-import { APP_BASE_HREF } from '@angular/common';
 
 class PhenoToolServiceMock {
   public getPhenoToolResults(): Observable<string> {
@@ -54,7 +53,6 @@ describe('PhenoToolComponent', () => {
         {provide: DatasetsService, useValue: new MockDatasetsService()},
         {provide: ConfigService, useValue: configMock},
         {provide: PhenoToolService, useValue: phenoToolMockService},
-        {provide: APP_BASE_HREF, useValue: ''},
         UsersService,
         FullscreenLoadingService,
         MeasuresService,
@@ -127,9 +125,6 @@ describe('PhenoToolComponent', () => {
       preventDefault: jest.fn()
     };
     mockEvent.target.queryData = {
-      value: ''
-    };
-    mockEvent.target.access_token = {
       value: ''
     };
     jest.spyOn(mockEvent.target, 'submit').mockImplementation();
