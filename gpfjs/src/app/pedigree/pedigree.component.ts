@@ -4,7 +4,6 @@ import { ConfigService } from 'app/config/config.service';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { PedigreeData } from 'app/genotype-preview-model/genotype-preview';
 import { VariantReportsService } from 'app/variant-reports/variant-reports.service';
-import { AuthService } from 'app/auth.service';
 
 @Component({
   selector: 'gpf-pedigree',
@@ -29,7 +28,6 @@ export class PedigreeComponent {
     private variantReportsService: VariantReportsService,
     private datasetsService: DatasetsService,
     public configService: ConfigService,
-    private authService: AuthService,
   ) { }
 
   public loadFamilyListData(): void {
@@ -74,7 +72,6 @@ export class PedigreeComponent {
       counter_id: this.counterId
     };
     event.target.queryData.value = JSON.stringify(args);
-    event.target.access_token.value = this.authService.accessToken;
     event.target.submit();
   }
 }
