@@ -10,9 +10,9 @@ import textwrap
 
 from collections import defaultdict
 from contextlib import contextmanager
-from typing import Any, Optional, TextIO, cast
+from typing import Any, Optional, cast, Generator, IO, Protocol  # TextIO
 
-from functools import cache
+from functools import lru_cache
 
 import yaml
 import pandas as pd
@@ -36,12 +36,12 @@ class Exon:
 
     def __init__(
         self,
-        start=None,
-        stop=None,
-        frame=None,
-        number=None,
-        cds_start=None,
-        cds_stop=None,
+        start: int,
+        stop: int,
+        frame: Optional[int] = None,
+        number: Optional[int] = None,
+        cds_start: Optional[int] = None,
+        cds_stop: Optional[int] = None,
     ):
         self.start = start
         self.stop = stop
@@ -52,7 +52,7 @@ class Exon:
         self.cds_start = cds_start  #
         self.cds_stop = cds_stop
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return (
             f"Exon(start={self.start}; stop={self.stop}; "
             f"number={self.number})"
@@ -65,18 +65,15 @@ class TranscriptModel:
     # pylint: disable=too-many-instance-attributes,too-many-arguments
     def __init__(
         self,
-        gene=None,
-        tr_id=None,
-        tr_name=None,
-        chrom=None,
-        strand=None,
-        tx=None,  # pylint: disable=invalid-name
-        cds=None,
-        exons=None,
-        start_codon=None,
-        stop_codon=None,
-        is_coding=False,
-        attributes=None,
+        gene: str,
+        tr_id: str,
+        tr_name: str,
+        chrom: str,
+        strand: str,
+        tx: tuple[int, int],  # pylint: disable=invalid-name
+        cds: tuple[int, int],
+        exons: Optional[list[Exon]] = None,
+        attributes: Optional[dict[str, Any]] = None,
     ):
         self.gene = gene
         self.tr_id = tr_id
@@ -85,88 +82,88 @@ class TranscriptModel:
         self.strand = strand
         self.tx = tx  # pylint: disable=invalid-name
         self.cds = cds
-        self.exons = exons if exons is not None else []
+        self.exons: list[Exon] = exons if exons is not None else []
 
         # for GTF
-        self.utrs = []
-        self.start_codon = start_codon
-        self.stop_codon = stop_codon
+        self.utrs: list[tuple[int, int, int]] = []
+        self.start_codon: tuple[int, int, int]
+        self.stop_codon: tuple[int, int, int]
 
-        # it can be derivable from cds' start and end
-        self._is_coding = is_coding
+        # # it can be derivable from cds' start and end
+        # self._is_coding = is_coding
 
         self.attributes = attributes if attributes is not None else {}
 
-    def is_coding(self):
+    def is_coding(self) -> bool:
         if self.cds[0] >= self.cds[1]:
             return False
         return True
 
-    def CDS_regions(self, ss=0):  # pylint: disable=invalid-name
+    def cds_regions(self, ss_extend: int = 0) -> list[Region]:
         """Compute CDS regions."""
         if self.cds[0] >= self.cds[1]:
             return []
 
-        cds_regions = []
+        regions = []
         k = 0
         while self.exons[k].stop < self.cds[0]:
             k += 1
 
         if self.cds[1] <= self.exons[k].stop:
-            cds_regions.append(
+            regions.append(
                 Region(chrom=self.chrom, start=self.cds[0], stop=self.cds[1])
             )
-            return cds_regions
+            return regions
 
-        cds_regions.append(
+        regions.append(
             Region(
                 chrom=self.chrom,
                 start=self.cds[0],
-                stop=self.exons[k].stop + ss,
+                stop=self.exons[k].stop + ss_extend,
             )
         )
         k += 1
         while k < len(self.exons) and self.exons[k].stop <= self.cds[1]:
             if self.exons[k].stop < self.cds[1]:
-                cds_regions.append(
+                regions.append(
                     Region(
                         chrom=self.chrom,
-                        start=self.exons[k].start - ss,
-                        stop=self.exons[k].stop + ss,
+                        start=self.exons[k].start - ss_extend,
+                        stop=self.exons[k].stop + ss_extend,
                     )
                 )
                 k += 1
             else:
-                cds_regions.append(
+                regions.append(
                     Region(
                         chrom=self.chrom,
-                        start=self.exons[k].start - ss,
+                        start=self.exons[k].start - ss_extend,
                         stop=self.exons[k].stop,
                     )
                 )
-                return cds_regions
+                return regions
 
         if k < len(self.exons) and self.exons[k].start <= self.cds[1]:
-            cds_regions.append(
+            regions.append(
                 Region(
                     chrom=self.chrom,
-                    start=self.exons[k].start - ss,
+                    start=self.exons[k].start - ss_extend,
                     stop=self.cds[1],
                 )
             )
 
-        return cds_regions
+        return regions
 
-    def UTR5_regions(self):  # pylint: disable=invalid-name
+    def utr5_regions(self) -> list[Region]:
         """Build list of UTR5 regions."""
         if self.cds[0] >= self.cds[1]:
             return []
 
-        utr5_regions = []
+        regions = []
         k = 0
         if self.strand == "+":
             while self.exons[k].stop < self.cds[0]:
-                utr5_regions.append(
+                regions.append(
                     Region(
                         chrom=self.chrom,
                         start=self.exons[k].start,
@@ -175,7 +172,7 @@ class TranscriptModel:
                 )
                 k += 1
             if self.exons[k].start < self.cds[0]:
-                utr5_regions.append(
+                regions.append(
                     Region(
                         chrom=self.chrom,
                         start=self.exons[k].start,
@@ -189,7 +186,7 @@ class TranscriptModel:
             if self.exons[k].stop == self.cds[1]:
                 k += 1
             else:
-                utr5_regions.append(
+                regions.append(
                     Region(
                         chrom=self.chrom,
                         start=self.cds[1] + 1,
@@ -199,22 +196,22 @@ class TranscriptModel:
                 k += 1
 
             for exon in self.exons[k:]:
-                utr5_regions.append(
+                regions.append(
                     Region(chrom=self.chrom, start=exon.start, stop=exon.stop)
                 )
 
-        return utr5_regions
+        return regions
 
-    def UTR3_regions(self):  # pylint: disable=invalid-name
+    def utr3_regions(self) -> list[Region]:
         """Build and return list of UTR3 regions."""
         if self.cds[0] >= self.cds[1]:
             return []
 
-        utr3_regions = []
+        regions = []
         k = 0
         if self.strand == "-":
             while self.exons[k].stop < self.cds[0]:
-                utr3_regions.append(
+                regions.append(
                     Region(
                         chrom=self.chrom,
                         start=self.exons[k].start,
@@ -223,7 +220,7 @@ class TranscriptModel:
                 )
                 k += 1
             if self.exons[k].start < self.cds[0]:
-                utr3_regions.append(
+                regions.append(
                     Region(
                         chrom=self.chrom,
                         start=self.exons[k].start,
@@ -237,7 +234,7 @@ class TranscriptModel:
             if self.exons[k].stop == self.cds[1]:
                 k += 1
             else:
-                utr3_regions.append(
+                regions.append(
                     Region(
                         chrom=self.chrom,
                         start=self.cds[1] + 1,
@@ -247,115 +244,115 @@ class TranscriptModel:
                 k += 1
 
             for exon in self.exons[k:]:
-                utr3_regions.append(
+                regions.append(
                     Region(chrom=self.chrom, start=exon.start, stop=exon.stop)
                 )
 
-        return utr3_regions
+        return regions
 
-    def all_regions(self, ss=0, prom=0):  # pylint: disable=invalid-name
+    def all_regions(self, ss_extend: int = 0, prom: int = 0) -> list[Region]:
         """Build and return list of regions."""
         # pylint:disable=too-many-branches
-        all_regions = []
+        regions = []
 
-        if ss == 0:
+        if ss_extend == 0:
             for exon in self.exons:
-                all_regions.append(
+                regions.append(
                     Region(chrom=self.chrom, start=exon.start, stop=exon.stop)
                 )
 
         else:
             for exon in self.exons:
                 if exon.stop <= self.cds[0]:
-                    all_regions.append(
+                    regions.append(
                         Region(
                             chrom=self.chrom,
                             start=exon.start, stop=exon.stop)
                     )
                 elif exon.start <= self.cds[0]:
                     if exon.stop >= self.cds[1]:
-                        all_regions.append(
+                        regions.append(
                             Region(
                                 chrom=self.chrom,
                                 start=exon.start, stop=exon.stop)
                         )
                     else:
-                        all_regions.append(
+                        regions.append(
                             Region(
                                 chrom=self.chrom,
                                 start=exon.start,
-                                stop=exon.stop + ss,
+                                stop=exon.stop + ss_extend,
                             )
                         )
                 elif exon.start > self.cds[1]:
-                    all_regions.append(
+                    regions.append(
                         Region(
                             chrom=self.chrom, start=exon.start, stop=exon.stop)
                     )
                 else:
                     if exon.stop >= self.cds[1]:
-                        all_regions.append(
+                        regions.append(
                             Region(
                                 chrom=self.chrom,
-                                start=exon.start - ss,
+                                start=exon.start - ss_extend,
                                 stop=exon.stop,
                             )
                         )
                     else:
-                        all_regions.append(
+                        regions.append(
                             Region(
                                 chrom=self.chrom,
-                                start=exon.start - ss,
-                                stop=exon.stop + ss,
+                                start=exon.start - ss_extend,
+                                stop=exon.stop + ss_extend,
                             )
                         )
 
         if prom != 0:
             if self.strand == "+":
-                all_regions[0] = Region(
-                    chrom=all_regions[0].chrom,
-                    start=all_regions[0].start - prom,
-                    stop=all_regions[0].stop,
+                regions[0] = Region(
+                    chrom=regions[0].chrom,
+                    start=regions[0].start - prom,
+                    stop=regions[0].stop,
                 )
             else:
-                all_regions[-1] = Region(
-                    chrom=all_regions[-1].chrom,
-                    start=all_regions[-1].start,
-                    stop=all_regions[-1].stop + prom,
+                regions[-1] = Region(
+                    chrom=regions[-1].chrom,
+                    start=regions[-1].start,
+                    stop=regions[-1].stop + prom,
                 )
 
-        return all_regions
+        return regions
 
-    def total_len(self):
+    def total_len(self) -> int:
         length = 0
         for reg in self.exons:
             length += reg.stop - reg.start + 1
         return length
 
-    def CDS_len(self):  # pylint: disable=invalid-name
-        cds_region = self.CDS_regions()
+    def cds_len(self) -> int:
+        regions = self.cds_regions()
         length = 0
-        for reg in cds_region:
+        for reg in regions:
             length += reg.stop - reg.start + 1
         return length
 
-    def UTR3_len(self):  # pylint: disable=invalid-name
-        utr3 = self.UTR3_regions()
+    def utr3_len(self) -> int:
+        utr3 = self.utr3_regions()
         length = 0
         for reg in utr3:
             length += reg.stop - reg.start + 1
 
         return length
 
-    def UTR5_len(self):  # pylint: disable=invalid-name
-        utr5 = self.UTR5_regions()
+    def utr5_len(self) -> int:
+        utr5 = self.utr5_regions()
         length = 0
         for reg in utr5:
             length += reg.stop - reg.start + 1
 
         return length
 
-    def calc_frames(self):
+    def calc_frames(self) -> list[int]:
         """Calculate codon frames."""
         length = len(self.exons)
         fms = []
@@ -398,13 +395,13 @@ class TranscriptModel:
         assert len(self.exons) == len(fms)
         return fms
 
-    def update_frames(self):
+    def update_frames(self) -> None:
         """Update codon frames."""
         frames = self.calc_frames()
         for exon, frame in zip(self.exons, frames):
             exon.frame = frame
 
-    def test_frames(self):
+    def test_frames(self) -> bool:
         frames = self.calc_frames()
         for exon, frame in zip(self.exons, frames):
             if exon.frame != frame:
@@ -413,7 +410,7 @@ class TranscriptModel:
 
 
 @contextmanager
-def _open_file(filename):
+def _open_file(filename: str) -> Generator[IO, None, None]:
     if filename.endswith(".gz") or filename.endswith(".bgz"):
         infile = gzip.open(filename, "rt")
     else:
@@ -422,6 +419,18 @@ def _open_file(filename):
         yield infile
     finally:
         infile.close()
+
+
+class GeneModelsParser(Protocol):
+    """Gene models parser function type."""
+
+    def __call__(
+        self, infile: IO,
+        gene_mapping: Optional[dict[str, str]] = None,
+        nrows: Optional[int] = None
+    ) -> bool:
+        ...
+
 
 
 class GeneModels(
@@ -438,19 +447,28 @@ class GeneModels(
             self.config, resource
         )
 
-        self.gene_models = None
-        self.utr_models = None
+        self.gene_models: dict[str, list[TranscriptModel]] = defaultdict(list)
+        self.utr_models: dict[
+                str, dict[tuple[int, int], list[TranscriptModel]]] = \
+            defaultdict(lambda: defaultdict(list))
         self.transcript_models: dict[str, Any] = {}
         self.alternative_names: dict[str, Any] = {}
 
         self._reset()
 
+    def _reset(self) -> None:
+        self.alternative_names = {}
+
+        self.utr_models = defaultdict(lambda: defaultdict(list))
+        self.transcript_models = {}
+        self.gene_models = defaultdict(list)
+
     @property
-    def resource_id(self):
+    def resource_id(self) -> str:
         return self.resource.resource_id
 
     @property
-    def files(self):
+    def files(self) -> set[str]:
         res = set()
         res.add(self.resource.get_config()["filename"])
         gene_mapping_filename = self.resource.get_config().get("gene_mapping")
@@ -458,15 +476,7 @@ class GeneModels(
             res.add(gene_mapping_filename)
         return res
 
-    def _reset(self):
-        self._shift = None
-        self.alternative_names = None
-
-        self.utr_models = defaultdict(lambda: defaultdict(list))
-        self.transcript_models = {}
-        self.gene_models = defaultdict(list)
-
-    def _add_transcript_model(self, transcript_model):
+    def _add_transcript_model(self, transcript_model: TranscriptModel) -> None:
 
         assert transcript_model.tr_id not in self.transcript_models
 
@@ -476,7 +486,7 @@ class GeneModels(
         self.utr_models[transcript_model.chrom][transcript_model.tx]\
             .append(transcript_model)
 
-    def update_indexes(self):
+    def update_indexes(self) -> None:
         self.gene_models = defaultdict(list)
         self.utr_models = defaultdict(lambda: defaultdict(list))
         for transcript in self.transcript_models.values():
@@ -491,7 +501,9 @@ class GeneModels(
 
         return list(self.gene_models.keys())
 
-    def gene_models_by_gene_name(self, name):
+    def gene_models_by_gene_name(
+        self, name: str
+    ) -> Optional[list[TranscriptModel]]:
         return self.gene_models.get(name, None)
 
     # def gene_models_by_location(self, chrom, pos1, pos2=None):
@@ -514,14 +526,21 @@ class GeneModels(
 
     #     return result
 
-    def relabel_chromosomes(self, relabel=None, map_file=None):
+    def relabel_chromosomes(
+        self, relabel: Optional[dict[str, str]] = None,
+        map_file: Optional[str] = None
+    ) -> None:
         """Relabel chromosomes in gene model."""
         assert relabel or map_file
         if not relabel:
+            assert map_file is not None
             with open(map_file) as infile:
-                relabel = {
-                    line.strip("\n\r").split()[:2] for line in infile
-                }
+                relabel = cast(
+                    dict[str, str],
+                    {
+                        line.strip("\n\r").split()[:2] for line in infile
+                    }
+                )
 
         self.utr_models = {
             relabel[chrom]: v
@@ -538,7 +557,7 @@ class GeneModels(
         for transcript_model in self.transcript_models.values():
             transcript_model.chrom = relabel[transcript_model.chrom]
 
-    def _save_gene_models(self, outfile):
+    def _save_gene_models(self, outfile: IO) -> None:
         outfile.write(
             "\t".join(
                 [
@@ -593,7 +612,7 @@ class GeneModels(
             outfile.write("\t".join([str(x) if x else "" for x in columns]))
             outfile.write("\n")
 
-    def save(self, output_filename, gzipped=True):
+    def save(self, output_filename: str, gzipped: bool = True) -> None:
         """Save gene models in a file in default file format."""
         if gzipped:
             if not output_filename.endswith(".gz"):
@@ -606,7 +625,7 @@ class GeneModels(
                 self._save_gene_models(outfile)
 
     def _parse_default_gene_models_format(
-        self, infile: TextIO,
+        self, infile: IO,
         gene_mapping: Optional[dict[str, str]] = None,
         nrows: Optional[int] = None
     ) -> bool:
@@ -691,7 +710,7 @@ class GeneModels(
         return True
 
     def _parse_ref_flat_gene_models_format(
-        self, infile: TextIO,
+        self, infile: IO,
         gene_mapping: Optional[dict[str, str]] = None,
         nrows: Optional[int] = None
     ) -> bool:
@@ -761,7 +780,7 @@ class GeneModels(
         return True
 
     def _parse_ref_seq_gene_models_format(
-        self, infile: TextIO,
+        self, infile: IO,
         gene_mapping: Optional[dict[str, str]] = None,
         nrows: Optional[int] = None
     ) -> bool:
@@ -849,21 +868,30 @@ class GeneModels(
         return True
 
     @classmethod
-    def _probe_header(cls, infile, expected_columns, comment=None):
+    def _probe_header(
+        cls, infile: IO, expected_columns: list[str],
+        comment: Optional[str] = None
+    ) -> bool:
         infile.seek(0)
         df = pd.read_csv(
             infile, sep="\t", nrows=1, header=None, comment=comment)
         return list(df.iloc[0, :]) == expected_columns
 
     @classmethod
-    def _probe_columns(cls, infile, expected_columns, comment=None):
+    def _probe_columns(
+        cls, infile: IO, expected_columns: list[str],
+        comment: Optional[str] = None) -> bool:
         infile.seek(0)
         df = pd.read_csv(
             infile, sep="\t", nrows=1, header=None, comment=comment)
-        return list(df.columns) == list(range(0, len(expected_columns)))
+        return cast(list[int], list(df.columns)) == \
+            list(range(0, len(expected_columns)))
 
     @classmethod
-    def _parse_raw(cls, infile, expected_columns, nrows=None, comment=None):
+    def _parse_raw(
+        cls, infile: IO, expected_columns: list[str],
+        nrows: Optional[int] = None, comment: Optional[str] = None
+    ) -> Optional[pd.DataFrame]:
         if cls._probe_header(infile, expected_columns, comment=comment):
             infile.seek(0)
             df = pd.read_csv(infile, sep="\t", nrows=nrows, comment=comment)
@@ -885,7 +913,7 @@ class GeneModels(
         return None
 
     def _parse_ccds_gene_models_format(
-        self, infile: TextIO,
+        self, infile: IO,
         gene_mapping: Optional[dict[str, str]] = None,
         nrows: Optional[int] = None
     ) -> bool:
@@ -976,7 +1004,7 @@ class GeneModels(
         return True
 
     def _parse_known_gene_models_format(
-        self, infile: TextIO,
+        self, infile: IO,
         gene_mapping: Optional[dict[str, str]] = None,
         nrows: Optional[int] = None
     ) -> bool:
@@ -1052,7 +1080,7 @@ class GeneModels(
         return True
 
     def _parse_ucscgenepred_models_format(
-        self, infile: TextIO,
+        self, infile: IO,
         gene_mapping: Optional[dict[str, str]] = None,
         nrows: Optional[int] = None
     ) -> bool:
@@ -1180,7 +1208,7 @@ class GeneModels(
         return True
 
     def _parse_gtf_gene_models_format(
-        self, infile: TextIO,
+        self, infile: IO,
         gene_mapping: Optional[dict[str, str]] = None,
         nrows: Optional[int] = None
     ) -> bool:
@@ -1212,9 +1240,9 @@ class GeneModels(
             if df is None:
                 return False
 
-        def parse_gtf_attributes(attributes):
+        def parse_gtf_attributes(data: str) -> dict[str, str]:
             attributes = list(
-                filter(lambda x: x, [a.strip() for a in attributes.split(";")])
+                filter(lambda x: x, [a.strip() for a in data.split(";")])
             )
             result = {}
             for attr in attributes:
@@ -1262,7 +1290,7 @@ class GeneModels(
                 exon_number = int(attributes["exon_number"])
                 transcript_model = self.transcript_models[tr_id]
                 if len(transcript_model.exons) < exon_number:
-                    transcript_model.exons.append(Exon())
+                    transcript_model.exons.append(Exon(-1, -1))
                 assert len(transcript_model.exons) >= exon_number
 
                 exon = transcript_model.exons[exon_number - 1]
@@ -1277,7 +1305,7 @@ class GeneModels(
                     exon.cds_stop = rec["end"]
                     exon.frame = rec["phase"]
                     # pylint: disable=protected-access
-                    transcript_model._is_coding = True
+                    # transcript_model._is_coding = True
                     continue
             if feature in {"UTR", "5UTR", "3UTR", "start_codon", "stop_codon"}:
                 exon_number = int(attributes["exon_number"])
@@ -1303,20 +1331,20 @@ class GeneModels(
 
         for transcript_model in self.transcript_models.values():
             transcript_model.exons = sorted(
-                transcript_model.exons, key=lambda x: x.start)  # type: ignore
+                transcript_model.exons, key=lambda x: x.start)
             transcript_model.utrs = sorted(
-                transcript_model.utrs, key=lambda x: x[0])  # type: ignore
+                transcript_model.utrs, key=lambda x: x[0])
             transcript_model.update_frames()
 
         return True
 
     @classmethod
-    def _gene_mapping(cls, filename: str) -> dict[str, str]:
+    def _gene_mapping(cls, infile: IO) -> dict[str, str]:
         """Load alternative names for genes.
 
         Assume that its first line has two column names
         """
-        df = pd.read_csv(filename, sep="\t")
+        df = pd.read_csv(infile, sep="\t")
         assert len(df.columns) == 2
 
         df = df.rename(columns={df.columns[0]: "tr_id", df.columns[1]: "gene"})
@@ -1340,7 +1368,9 @@ class GeneModels(
         "ucscgenepred",
     }
 
-    def _get_parser(self, fileformat):
+    def _get_parser(
+        self, fileformat: str
+    ) -> Optional[GeneModelsParser]:
         # pylint: disable=too-many-return-statements
         if fileformat == "default":
             return self._parse_default_gene_models_format
@@ -1358,11 +1388,14 @@ class GeneModels(
             return self._parse_ucscgenepred_models_format
         return None
 
-    def _infer_gene_model_parser(self, infile, file_format=None):
+    def _infer_gene_model_parser(
+        self, infile: IO,
+        file_format: Optional[str]=None) -> Optional[str]:
 
-        parser = self._get_parser(file_format)
-        if parser is not None:
-            return file_format
+        if file_format is not None:
+            parser = self._get_parser(file_format)
+            if parser is not None:
+                return file_format
 
         logger.info("going to infer gene models file format...")
         inferred_formats = []
@@ -1393,7 +1426,7 @@ class GeneModels(
             "inferred file formats are %s", inferred_formats)
         return None
 
-    def is_loaded(self):
+    def is_loaded(self) -> bool:
         return len(self.transcript_models) > 0
 
     def load(self) -> GeneModels:
@@ -1450,7 +1483,7 @@ class GeneModels(
             parser(infile, gene_mapping=gene_mapping)
         return self
 
-    def get_template(self):
+    def get_template(self) -> Template:
         return Template(textwrap.dedent("""
             {% extends base %}
             {% block content %}
@@ -1470,12 +1503,12 @@ class GeneModels(
             {% endblock %}
         """))
 
-    def _get_template_data(self):
+    def _get_template_data(self) -> dict[str, Any]:
         return {"config": self.config,
                 "stats": self.get_statistics()}
 
     @staticmethod
-    def get_schema():
+    def get_schema() -> dict[str, Any]:
         return {
             **get_base_resource_schema(),
             "filename": {"type": "string"},
@@ -1483,11 +1516,11 @@ class GeneModels(
             "gene_mapping": {"type": "string"}
         }
 
-    def get_info(self):
+    def get_info(self) -> str:
         return InfoImplementationMixin.get_info(self)
 
-    def calc_info_hash(self):
-        return "placeholder"
+    def calc_info_hash(self) -> bytes:
+        return b"placeholder"
 
     def calc_statistics_hash(self) -> bytes:
         manifest = self.resource.get_manifest()
@@ -1500,8 +1533,9 @@ class GeneModels(
                 for file_name in sorted(self.files)},
         }, indent=2).encode()
 
-    def add_statistics_build_tasks(self, task_graph: TaskGraph, **_) \
-            -> list[Task]:
+    def add_statistics_build_tasks(
+        self, task_graph: TaskGraph, **kwargs: Any
+    ) -> list[Task]:
         task = task_graph.create_task(
             f"{self.resource_id}_cals_stats",
             GeneModels._do_statistics,
@@ -1509,7 +1543,7 @@ class GeneModels(
         return [task]
 
     @staticmethod
-    def _do_statistics(resource: GenomicResource):
+    def _do_statistics(resource: GenomicResource) -> dict[str, int]:
         gene_models = build_gene_models_from_resource(resource).load()
 
         coding_transcripts = [tm
@@ -1535,31 +1569,35 @@ class GeneModels(
             yaml.dump(stats, stats_file, sort_keys=False)
         return stats
 
-    @cache
-    def get_statistics(self) -> Optional[dict[str, int]]:
+    @lru_cache(maxsize=64)
+    def get_statistics(self) -> Optional[dict[str, int]]:  # type: ignore
         try:
             with self.resource.proto.open_raw_file(
                     self.resource, "statistics/stats.yaml", "rt") as stats_file:
                 stats = yaml.safe_load(stats_file)
                 if not isinstance(stats, dict):
-                    logger.error("The stats.yaml file for the "
-                                 f"{self.resource} is invalid (1).")
+                    logger.error(
+                        "The stats.yaml file for the "
+                        "%s is invalid (1).", self.resource)
                     return None
                 for stat, value in stats.items():
                     if not isinstance(stat, str):
-                        logger.error("The stats.yaml file for the "
-                                     f"{self.resource} is invalid (2.{stat}).")
+                        logger.error(
+                            "The stats.yaml file for the "
+                            "%s is invalid (2.{stat}).", self.resource)
                         return None
                     if not isinstance(value, int):
-                        logger.error("The stats.yaml file for the "
-                                     f"{self.resource} is invalid (3.{value}).")
+                        logger.error(
+                            "The stats.yaml file for the "
+                            "%s is invalid (3. %s).", self.resource,
+                            value)
                         return None
                 return stats
         except FileExistsError:
             return None
 
 
-def join_gene_models(*gene_models):
+def join_gene_models(*gene_models: GeneModels) -> GeneModels:
     """Join muliple gene models into a single gene models object."""
     if len(gene_models) < 2:
         raise ValueError("The function needs at least 2 arguments!")

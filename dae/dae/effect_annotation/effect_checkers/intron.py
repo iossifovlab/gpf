@@ -17,20 +17,20 @@ class IntronicEffectChecker(EffectChecker):
         self, request: AnnotationRequest
     ) -> Optional[AnnotationEffect]:
 
-        coding_regions = request.CDS_regions()
+        coding_regions = request.cds_regions()
         prev = coding_regions[0].stop
 
         last_position = request.variant.corrected_ref_position_last
 
         intron_regions_before_coding = 0
-        for j in request.transcript_model.exons:
+        for exon in request.transcript_model.exons:
             logger.debug(
                 "reg %d-%d cds:%d",
-                j.start,
-                j.stop,
+                exon.start,
+                exon.stop,
                 request.transcript_model.cds[0],
             )
-            if request.transcript_model.cds[0] <= j.stop:
+            if request.transcript_model.cds[0] <= exon.stop:
                 break
             intron_regions_before_coding += 1
 

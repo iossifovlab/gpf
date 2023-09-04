@@ -17,6 +17,7 @@ class SpliceSiteEffectChecker(EffectChecker):
         self, request: AnnotationRequest
     ) -> Optional[AnnotationEffect]:
         coding_regions = request.transcript_model.exons
+        assert request.variant.reference is not None
         last_position = request.variant.position + len(
             request.variant.reference
         )

@@ -70,7 +70,7 @@ class UTREffectChecker(EffectChecker):
         self, request: AnnotationRequest
     ) -> Optional[AnnotationEffect]:
         """Check for stop codon."""
-        if not request.has_3_UTR_region():
+        if not request.has_utr3_region():
             return None
 
         try:

@@ -7,7 +7,9 @@ from .effect_checker import EffectChecker, AnnotationEffect, AnnotationRequest
 class ProteinChangeEffectChecker(EffectChecker):
     """Protein change effect checker."""
 
-    def mutation_type(self, aaref: str, aaalt: str) -> str:
+    def mutation_type(
+            self, aaref: list[Optional[str]],
+            aaalt: list[Optional[str]]) -> str:
         """Check the mutation type."""
         assert len(aaref) == len(aaalt)
 
@@ -24,7 +26,9 @@ class ProteinChangeEffectChecker(EffectChecker):
     def get_effect(
         self, request: AnnotationRequest
     ) -> Optional[AnnotationEffect]:
-        coding_regions = request.CDS_regions()
+        coding_regions = request.cds_regions()
+        assert request.variant.reference is not None
+        assert request.variant.alternate is not None
         ref_length = len(request.variant.reference)
         alt_length = len(request.variant.alternate)
         length = abs(alt_length - ref_length)

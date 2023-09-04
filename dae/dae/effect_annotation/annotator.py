@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import logging
 
 from typing import Optional
@@ -20,10 +22,33 @@ from .effect_checkers.splice_site import SpliceSiteEffectChecker
 from .effect_checkers.intron import IntronicEffectChecker
 from .effect import EffectFactory, AnnotationEffect
 from .variant import Variant
-from .annotation_request import AnnotationRequestFactory
-
+from .annotation_request import PositiveStrandAnnotationRequest, \
+    NegativeStrandAnnotationRequest, \
+    AnnotationRequest
 
 logger = logging.getLogger(__name__)
+
+
+class AnnotationRequestFactory:
+    """Factory for annotation requests."""
+
+    @staticmethod
+    def create_annotation_request(
+            annotator: EffectAnnotator,
+            variant: Variant,
+            transcript_model: TranscriptModel) -> AnnotationRequest:
+        """Create an annotation request."""
+        if transcript_model.strand == "+":
+            return PositiveStrandAnnotationRequest(
+                annotator.reference_genome, annotator.code,
+                annotator.promoter_len,
+                variant, transcript_model
+            )
+        return NegativeStrandAnnotationRequest(
+            annotator.reference_genome, annotator.code,
+            annotator.promoter_len,
+            variant, transcript_model
+        )
 
 
 class EffectAnnotator:

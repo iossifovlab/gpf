@@ -13,6 +13,7 @@ class StopLossEffectChecker(EffectChecker):
     def get_effect(
         self, request: AnnotationRequest
     ) -> Optional[AnnotationEffect]:
+        assert request.variant.reference is not None
         last_position = request.variant.position + len(
             request.variant.reference
         )

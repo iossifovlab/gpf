@@ -68,7 +68,9 @@ class FrameShiftEffectChecker(EffectChecker):
     def get_effect(
         self, request: AnnotationRequest
     ) -> Optional[AnnotationEffect]:
-        coding_regions = request.CDS_regions()
+        coding_regions = request.cds_regions()
+        assert request.variant.reference is not None
+        assert request.variant.alternate is not None
         ref_length = len(request.variant.reference)
         alt_length = len(request.variant.alternate)
         length = abs(alt_length - ref_length)

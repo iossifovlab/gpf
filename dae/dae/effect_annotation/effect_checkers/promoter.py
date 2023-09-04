@@ -39,7 +39,7 @@ class PromoterEffectChecker(EffectChecker):
     def get_effect(
         self, request: AnnotationRequest
     ) -> Optional[AnnotationEffect]:
-        if request.annotator.promoter_len == 0:
+        if request.promoter_len == 0:
             return None
 
         if (
@@ -47,7 +47,7 @@ class PromoterEffectChecker(EffectChecker):
             and request.transcript_model.strand == "+"
             and request.variant.ref_position_last
             >= request.transcript_model.exons[0].start
-            - request.annotator.promoter_len
+            - request.promoter_len
         ):
             return self.create_positive_strand_effect(
                 request.transcript_model, request.variant
@@ -58,7 +58,7 @@ class PromoterEffectChecker(EffectChecker):
             and request.transcript_model.strand == "-"
             and request.variant.position
             <= request.transcript_model.exons[-1].stop
-            + request.annotator.promoter_len
+            + request.promoter_len
         ):
             return self.create_negative_strand_effect(
                 request.transcript_model, request.variant

@@ -1,17 +1,19 @@
 # pylint: disable=W0621,C0114,C0115,C0116,W0212,W0613
+from typing import Optional, cast
 
-class ExonMock:
-    # pylint: disable=too-few-public-methods
-    def __init__(self, start, stop, frame):
-        self.start = start
-        self.stop = stop
-        self.frame = frame
+from dae.utils.regions import Region
+from dae.genomic_resources.gene_models import Exon
+from dae.genomic_resources.reference_genome import ReferenceGenome
 
 
 class TranscriptModelMock:
     # pylint: disable=too-many-instance-attributes
     def __init__(
-        self, strand, cds_start, cds_end, exons, coding=None, is_coding=True
+        self, strand: str,
+        cds_start: int, cds_end: int,
+        exons: list[Exon],
+        coding: Optional[list[Exon]] = None,
+        is_coding: bool = True
     ):
         self.strand = strand
         self.cds = [cds_start, cds_end]
@@ -27,19 +29,21 @@ class TranscriptModelMock:
             self.coding = coding
         self._is_coding = is_coding
 
-    def CDS_regions(self):  # pylint: disable=invalid-name
-        return self.coding
+    def cds_regions(self) -> list[Region]:
+        return cast(list[Region], self.coding)
 
-    def is_coding(self):
+    def is_coding(self) -> bool:
         return self._is_coding
 
-    def all_regions(self):
-        return self.exons
+    def all_regions(self) -> list[Region]:
+        return cast(list[Region], self.exons)
 
 
 class ReferenceGenomeMock:
-    # pylint: disable=no-self-use
-    def get_sequence(self, chromosome, pos, pos_last):
+
+    def get_sequence(
+        self, chromosome: str, pos: int, pos_last: int
+    ) -> str:
         print(("get", chromosome, pos, pos_last))
         return "".join([chr(i) for i in range(pos, pos_last + 1)])
 
@@ -53,6 +57,7 @@ class CodeMock:
 class AnnotatorMock:
     # pylint: disable=too-few-public-methods
 
-    def __init__(self, reference_genome):
+    def __init__(self, reference_genome: ReferenceGenome):
         self.reference_genome = reference_genome
         self.code = CodeMock()
+        self.promoter_len = 0
