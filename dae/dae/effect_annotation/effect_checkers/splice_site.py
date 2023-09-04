@@ -1,13 +1,21 @@
 import logging
+from typing import Optional
+
 from ..effect import EffectFactory
+from .effect_checker import EffectChecker, AnnotationEffect, AnnotationRequest
+
+logger = logging.getLogger(__name__)
 
 
-class SpliceSiteEffectChecker:
-    def __init__(self, splice_site_length=2):
+class SpliceSiteEffectChecker(EffectChecker):
+    """Splice site effect checker class."""
+
+    def __init__(self, splice_site_length: int = 2):
         self.splice_site_length = splice_site_length
-        self.logger = logging.getLogger(__name__)
 
-    def get_effect(self, request):
+    def get_effect(
+        self, request: AnnotationRequest
+    ) -> Optional[AnnotationEffect]:
         coding_regions = request.transcript_model.exons
         last_position = request.variant.position + len(
             request.variant.reference
@@ -19,7 +27,7 @@ class SpliceSiteEffectChecker:
                 prev = j.stop
                 continue
 
-            self.logger.debug(
+            logger.debug(
                 "pos: %d-%d checking intronic region %d-%d %d",
                 request.variant.position,
                 last_position,
@@ -44,3 +52,5 @@ class SpliceSiteEffectChecker:
                     "splice-site", request, prev, j.start, i
                 )
             prev = j.stop
+
+        return None

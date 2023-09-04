@@ -7,6 +7,8 @@ import itertools
 from typing import List, Optional, Dict
 
 from dae.utils.effect_utils import EffectTypesMixin
+from dae.genomic_resources.gene_models import TranscriptModel
+from dae.effect_annotation.annotation_request import AnnotationRequest
 
 
 class AnnotationEffect:  # pylint: disable=too-many-instance-attributes
@@ -276,11 +278,13 @@ class EffectFactory:
     """Factory class for build annotation effects."""
 
     @classmethod
-    def create_effect(cls, effect_name):
+    def create_effect(cls, effect_name: str) -> AnnotationEffect:
         return AnnotationEffect(effect_name)
 
     @classmethod
-    def create_effect_with_tm(cls, effect_name, transcript_model):
+    def create_effect_with_tm(
+        cls, effect_name: str, transcript_model: TranscriptModel
+    ) -> AnnotationEffect:
         """Create effect with transcript model."""
         effect = cls.create_effect(effect_name)
         effect.gene = transcript_model.gene
@@ -293,7 +297,9 @@ class EffectFactory:
         return effect
 
     @classmethod
-    def create_effect_with_request(cls, effect_name, request):
+    def create_effect_with_request(
+        cls, effect_name: str, request: AnnotationRequest
+    ) -> AnnotationEffect:
         """Create effect with annotation request."""
         effect = cls.create_effect_with_tm(
             effect_name, request.transcript_model
@@ -303,20 +309,26 @@ class EffectFactory:
         return effect
 
     @classmethod
-    def create_effect_with_prot_length(cls, effect_name, request):
+    def create_effect_with_prot_length(
+        cls, effect_name: str, request: AnnotationRequest
+    ) -> AnnotationEffect:
         effect = cls.create_effect_with_request(effect_name, request)
         effect.prot_length = request.get_protein_length()
         return effect
 
     @classmethod
-    def create_effect_with_prot_pos(cls, effect_name, request):
+    def create_effect_with_prot_pos(
+        cls, effect_name: str, request: AnnotationRequest
+    ) -> AnnotationEffect:
         effect = cls.create_effect_with_prot_length(effect_name, request)
         start_prot, _ = request.get_protein_position()
         effect.prot_pos = start_prot
         return effect
 
     @classmethod
-    def create_effect_with_aa_change(cls, effect_name, request):
+    def create_effect_with_aa_change(
+        cls, effect_name: str, request: AnnotationRequest
+    ) -> AnnotationEffect:
         """Create effect with amino acid change."""
         effect = cls.create_effect_with_prot_pos(effect_name, request)
         # ef.prot_pos, _ = request.get_protein_position()
@@ -352,7 +364,11 @@ class EffectFactory:
         return effect
 
     @classmethod
-    def create_intronic_effect(cls, effect_type, request, start, end, index):
+    def create_intronic_effect(
+        cls, effect_type: str,
+        request: AnnotationRequest,
+        start: int, end: int, index: int
+    ) -> AnnotationEffect:
         """Create intronic effect."""
         effect = cls.create_intronic_non_coding_effect(
             effect_type, request, start, end, index

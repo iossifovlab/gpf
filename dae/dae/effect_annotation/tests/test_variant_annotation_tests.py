@@ -1,25 +1,33 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+from typing import cast
+
 import pytest
 
+from dae.genomic_resources.reference_genome import ReferenceGenome
+from dae.genomic_resources.gene_models import GeneModels
+
 from dae.effect_annotation.annotator import EffectAnnotator
+from dae.gpf_instance import GPFInstance
 
 
 @pytest.fixture
-def genomic_sequence_2013(gpf_instance_2013):
-    return gpf_instance_2013.reference_genome
+def genomic_sequence_2013(gpf_instance_2013: GPFInstance) -> ReferenceGenome:
+    return cast(ReferenceGenome, gpf_instance_2013.reference_genome)
 
 
 @pytest.fixture
-def gene_models_2013(gpf_instance_2013):
-    return gpf_instance_2013.gene_models
+def gene_models_2013(gpf_instance_2013: GPFInstance) -> GeneModels:
+    return cast(GeneModels, gpf_instance_2013.gene_models)
 
 
-def test_synonymous_complex_var(genomic_sequence_2013, gene_models_2013):
+def test_synonymous_complex_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
-        loc="1:897349",
-        var="complex(GG->AA)",
+        location="1:897349",
+        variant="complex(GG->AA)",
     )
 
     assert len(effects) == 1
@@ -34,13 +42,17 @@ def test_synonymous_complex_var(genomic_sequence_2013, gene_models_2013):
     assert effect.aa_change == "LysAla->LysThr"
 
 
-def test_just_next_to_splice_site_var(genomic_sequence_2013, gene_models_2013):
+def test_just_next_to_splice_site_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
-        gene_models_2013, genomic_sequence_2013, loc="5:86705101", var="del(4)"
+        gene_models_2013, genomic_sequence_2013,
+        location="5:86705101", variant="del(4)"
     )
 
     assert len(effects) == 2
-    effects_sorted = sorted(effects, key=lambda k: k.transcript_id)
+    effects_sorted = sorted(
+        effects, key=lambda k: k.transcript_id)  # type: ignore
 
     assert effects_sorted[0].gene == "CCNH"
     assert effects_sorted[0].transcript_id == "NM_001199189_1"
@@ -59,16 +71,19 @@ def test_just_next_to_splice_site_var(genomic_sequence_2013, gene_models_2013):
     assert effects_sorted[1].aa_change is None
 
 
-def test_chr2_32853362_ins_var(genomic_sequence_2013, gene_models_2013):
+def test_chr2_32853362_ins_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
-        loc="6:157527729",
-        var="complex(CTGG->ATAG)",
+        location="6:157527729",
+        variant="complex(CTGG->ATAG)",
     )
 
     assert len(effects) == 2
-    effects_sorted = sorted(effects, key=lambda k: k.transcript_id)
+    effects_sorted = sorted(
+        effects, key=lambda k: k.transcript_id)  # type: ignore
 
     assert effects_sorted[0].gene == "ARID1B"
     assert effects_sorted[0].transcript_id == "NM_017519_1"
@@ -87,12 +102,14 @@ def test_chr2_32853362_ins_var(genomic_sequence_2013, gene_models_2013):
     assert effects_sorted[1].aa_change == "HisTrp->GlnEnd"
 
 
-def test_chr5_75902128_sub_var(genomic_sequence_2013, gene_models_2013):
+def test_chr5_75902128_sub_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
-        loc="5:75902128",
-        var="sub(C->T)",
+        location="5:75902128",
+        variant="sub(C->T)",
     )
     assert len(effects) == 1
     effect = effects[0]

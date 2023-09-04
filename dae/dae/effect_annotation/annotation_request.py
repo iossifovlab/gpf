@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 import logging
+from typing import Union
 
 logger = logging.getLogger(__name__)
 
@@ -528,3 +531,6 @@ class AnnotationRequestFactory:
         return NegativeStrandAnnotationRequest(
             annotator, variant, transcript_model
         )
+
+AnnotationRequest = Union[
+    PositiveStrandAnnotationRequest, NegativeStrandAnnotationRequest]

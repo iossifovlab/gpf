@@ -1,13 +1,21 @@
 import logging
+from typing import Optional
+
 from ..effect import EffectFactory
+from .effect_checker import EffectChecker, AnnotationEffect, AnnotationRequest
+
+logger = logging.getLogger(__name__)
 
 
-class IntronicEffectChecker:
-    def __init__(self, splice_site_length=2):
+class IntronicEffectChecker(EffectChecker):
+    """Intonic effect checker class."""
+
+    def __init__(self, splice_site_length: int = 2):
         self.splice_site_length = splice_site_length
 
-    def get_effect(self, request):
-        logger = logging.getLogger(__name__)
+    def get_effect(
+        self, request: AnnotationRequest
+    ) -> Optional[AnnotationEffect]:
 
         coding_regions = request.CDS_regions()
         prev = coding_regions[0].stop
@@ -43,3 +51,5 @@ class IntronicEffectChecker:
                     intron_regions_before_coding + i,
                 )
             prev = j.stop
+
+        return None

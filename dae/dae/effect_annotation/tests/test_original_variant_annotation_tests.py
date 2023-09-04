@@ -1,21 +1,26 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,too-many-lines
+from typing import cast
 
 import pytest
 
-from dae.effect_annotation.annotator import EffectAnnotator
+from dae.effect_annotation.annotator import EffectAnnotator, AnnotationEffect
+from dae.genomic_resources.reference_genome import ReferenceGenome
+from dae.genomic_resources.gene_models import GeneModels
+
+from dae.gpf_instance import GPFInstance
 
 
 @pytest.fixture
-def genomic_sequence_2013(gpf_instance_2013):
-    return gpf_instance_2013.reference_genome
+def genomic_sequence_2013(gpf_instance_2013: GPFInstance) -> ReferenceGenome:
+    return cast(ReferenceGenome, gpf_instance_2013.reference_genome)
 
 
 @pytest.fixture
-def gene_models_2013(gpf_instance_2013):
-    return gpf_instance_2013.gene_models
+def gene_models_2013(gpf_instance_2013: GPFInstance) -> GeneModels:
+    return cast(GeneModels, gpf_instance_2013.gene_models)
 
 
-def assert_chr1_897349_sub(effect):
+def assert_chr1_897349_sub(effect: AnnotationEffect) -> None:
     assert effect.gene == "KLHL17"
     assert effect.transcript_id == "NM_198317_1"
     assert effect.strand == "+"
@@ -25,12 +30,14 @@ def assert_chr1_897349_sub(effect):
     assert effect.aa_change == "Lys->Lys"
 
 
-def test_synonymous_sub_var(genomic_sequence_2013, gene_models_2013):
+def test_synonymous_sub_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
-        loc="1:897349",
-        var="sub(G->A)",
+        location="1:897349",
+        variant="sub(G->A)",
     )
     assert len(effects) == 1
     effect = effects[0]
@@ -38,11 +45,13 @@ def test_synonymous_sub_var(genomic_sequence_2013, gene_models_2013):
     assert_chr1_897349_sub(effect)
 
 
-def test_synonymous_sub_ref_alt(genomic_sequence_2013, gene_models_2013):
+def test_synonymous_sub_ref_alt(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
-        loc="1:897349",
+        location="1:897349",
         ref="G",
         alt="A",
     )
@@ -52,12 +61,14 @@ def test_synonymous_sub_ref_alt(genomic_sequence_2013, gene_models_2013):
     assert_chr1_897349_sub(effect)
 
 
-def test_synonymous_sub_ref_alt_pos(genomic_sequence_2013, gene_models_2013):
+def test_synonymous_sub_ref_alt_pos(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
         chrom="1",
-        position="897349",
+        position=897349,
         ref="G",
         alt="A",
     )
@@ -68,10 +79,11 @@ def test_synonymous_sub_ref_alt_pos(genomic_sequence_2013, gene_models_2013):
 
 
 def test_reverse_strand_frame_shift_var(
-    genomic_sequence_2013, gene_models_2013
-):
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
-        gene_models_2013, genomic_sequence_2013, loc="1:3519050", var="del(1)"
+        gene_models_2013, genomic_sequence_2013,
+        location="1:3519050", variant="del(1)"
     )
     assert len(effects) == 1
     effect = effects[0]
@@ -85,9 +97,12 @@ def test_reverse_strand_frame_shift_var(
     # assert effect.aa_change is None
 
 
-def test_intron_var(genomic_sequence_2013, gene_models_2013):
+def test_intron_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
-        gene_models_2013, genomic_sequence_2013, loc="1:53287094", var="ins(G)"
+        gene_models_2013, genomic_sequence_2013,
+        location="1:53287094", variant="ins(G)"
     )
     assert len(effects) == 1
     effect = effects[0]
@@ -107,12 +122,14 @@ def test_intron_var(genomic_sequence_2013, gene_models_2013):
     assert effect.intron_length == 4809
 
 
-def test_no_start_var(genomic_sequence_2013, gene_models_2013):
+def test_no_start_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
-        loc="17:74729179",
-        var="del(3)",
+        location="17:74729179",
+        variant="del(3)",
     )
 
     assert len(effects) == 7
@@ -170,12 +187,14 @@ def test_no_start_var(genomic_sequence_2013, gene_models_2013):
     assert effect.aa_change is None
 
 
-def test_frame_shift_var(genomic_sequence_2013, gene_models_2013):
+def test_frame_shift_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
-        loc="2:238617257",
-        var="ins(A)",
+        location="2:238617257",
+        variant="ins(A)",
     )
 
     assert len(effects) == 5
@@ -227,14 +246,15 @@ def test_frame_shift_var(genomic_sequence_2013, gene_models_2013):
     # assert effect.aa_change is None
 
 
-def test_no_frame_shift_var(genomic_sequence_2013, gene_models_2013):
+def test_no_frame_shift_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
-        gene_models_2013, genomic_sequence_2013, loc="1:24507340", var="del(3)"
+        gene_models_2013, genomic_sequence_2013,
+        location="1:24507340", variant="del(3)"
     )
 
     assert len(effects) == 3
-
-    print(effects)
 
     effect = effects.pop(0)
     assert effect.gene == "IFNLR1"
@@ -264,12 +284,14 @@ def test_no_frame_shift_var(genomic_sequence_2013, gene_models_2013):
     assert effect.aa_change == "Arg->"
 
 
-def test_nonsense_var(genomic_sequence_2013, gene_models_2013):
+def test_nonsense_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
-        loc="1:61553905",
-        var="sub(C->T)",
+        location="1:61553905",
+        variant="sub(C->T)",
     )
 
     assert len(effects) == 4
@@ -312,13 +334,15 @@ def test_nonsense_var(genomic_sequence_2013, gene_models_2013):
     assert effect.aa_change == "Arg->End"
 
 
-def test_splice_site_var(genomic_sequence_2013, gene_models_2013):
+def test_splice_site_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     # pylint: disable=too-many-statements
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
-        loc="1:67878948",
-        var="sub(T->G)",
+        location="1:67878948",
+        variant="sub(T->G)",
     )
 
     assert len(effects) == 4
@@ -384,12 +408,14 @@ def test_splice_site_var(genomic_sequence_2013, gene_models_2013):
     assert effect.intron_length == 1902
 
 
-def test_no_frame_shift_newstop_var(genomic_sequence_2013, gene_models_2013):
+def test_no_frame_shift_newstop_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
-        loc="17:17697260",
-        var="ins(AGT)",
+        location="17:17697260",
+        variant="ins(AGT)",
     )
     assert len(effects) == 1
     effect = effects[0]
@@ -403,9 +429,12 @@ def test_no_frame_shift_newstop_var(genomic_sequence_2013, gene_models_2013):
     assert effect.aa_change == "Gln->GlnEnd"
 
 
-def test_no_end_var(genomic_sequence_2013, gene_models_2013):
+def test_no_end_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
-        gene_models_2013, genomic_sequence_2013, loc="19:8645778", var="del(9)"
+        gene_models_2013, genomic_sequence_2013,
+        location="19:8645778", variant="del(9)"
     )
     assert len(effects) == 1
     effect = effects[0]
@@ -419,12 +448,14 @@ def test_no_end_var(genomic_sequence_2013, gene_models_2013):
     assert effect.aa_change is None
 
 
-def test_intergenic_var(genomic_sequence_2013, gene_models_2013):
+def test_intergenic_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
-        loc="1:20421037",
-        var="sub(G->A)",
+        location="1:20421037",
+        variant="sub(G->A)",
     )
     assert len(effects) == 1
     effect = effects[0]
@@ -438,12 +469,14 @@ def test_intergenic_var(genomic_sequence_2013, gene_models_2013):
     assert effect.aa_change is None
 
 
-def test_3_utr_var(genomic_sequence_2013, gene_models_2013):
+def test_3_utr_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
-        loc="1:47013144",
-        var="sub(G->A)",
+        location="1:47013144",
+        variant="sub(G->A)",
     )
 
     assert len(effects) == 2
@@ -466,12 +499,14 @@ def test_3_utr_var(genomic_sequence_2013, gene_models_2013):
     assert effects[1].aa_change is None
 
 
-def test_5_utr_var(genomic_sequence_2013, gene_models_2013):
+def test_5_utr_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
-        loc="1:57284965",
-        var="sub(G->A)",
+        location="1:57284965",
+        variant="sub(G->A)",
     )
     assert len(effects) == 1
     effect = effects[0]
@@ -486,12 +521,14 @@ def test_5_utr_var(genomic_sequence_2013, gene_models_2013):
     assert effect.dist_from_coding == 2
 
 
-def test_middle_codon_sub_var(genomic_sequence_2013, gene_models_2013):
+def test_middle_codon_sub_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
-        loc="1:897348",
-        var="sub(A->G)",
+        location="1:897348",
+        variant="sub(A->G)",
     )
     assert len(effects) == 1
     effect = effects[0]
@@ -506,10 +543,11 @@ def test_middle_codon_sub_var(genomic_sequence_2013, gene_models_2013):
 
 
 def test_splice_site_del_pos_strand_var(
-    genomic_sequence_2013, gene_models_2013
-):
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
-        gene_models_2013, genomic_sequence_2013, loc="7:24720141", var="del(1)"
+        gene_models_2013, genomic_sequence_2013,
+        location="7:24720141", variant="del(1)"
     )
     assert len(effects) == 1
     effect = effects[0]
@@ -530,10 +568,11 @@ def test_splice_site_del_pos_strand_var(
 
 
 def test_splice_site_del_neg_strand_var(
-    genomic_sequence_2013, gene_models_2013
-):
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
-        gene_models_2013, genomic_sequence_2013, loc="4:48523230", var="del(4)"
+        gene_models_2013, genomic_sequence_2013,
+        location="4:48523230", variant="del(4)"
     )
     assert len(effects) == 1
     effect = effects[0]
@@ -554,10 +593,11 @@ def test_splice_site_del_neg_strand_var(
 
 
 def test_splice_site_ins_pos_strand_var(
-    genomic_sequence_2013, gene_models_2013
-):
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
-        gene_models_2013, genomic_sequence_2013, loc="7:24720141", var="ins(C)"
+        gene_models_2013, genomic_sequence_2013,
+        location="7:24720141", variant="ins(C)"
     )
     assert len(effects) == 1
     effect = effects[0]
@@ -578,13 +618,13 @@ def test_splice_site_ins_pos_strand_var(
 
 
 def test_splice_site_ins_neg_strand_var(
-    genomic_sequence_2013, gene_models_2013
-):
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
-        loc="12:116418554",
-        var="ins(C)",
+        location="12:116418554",
+        variant="ins(C)",
     )
     assert len(effects) == 1
     effect = effects[0]
@@ -604,9 +644,12 @@ def test_splice_site_ins_neg_strand_var(
     assert effect.intron_length == 5011
 
 
-def test_first_codon_ins_noend_var(genomic_sequence_2013, gene_models_2013):
+def test_first_codon_ins_noend_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
-        gene_models_2013, genomic_sequence_2013, loc="1:3407093", var="ins(A)"
+        gene_models_2013, genomic_sequence_2013,
+        location="1:3407093", variant="ins(A)"
     )
     assert len(effects) == 1
     effect = effects[0]
@@ -620,12 +663,14 @@ def test_first_codon_ins_noend_var(genomic_sequence_2013, gene_models_2013):
     assert effect.aa_change is None
 
 
-def test_first_codon_sub_nostart_var(genomic_sequence_2013, gene_models_2013):
+def test_first_codon_sub_nostart_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
-        loc="7:24663287",
-        var="sub(T->C)",
+        location="7:24663287",
+        variant="sub(T->C)",
     )
     assert len(effects) == 1
     effect = effects[0]
@@ -639,12 +684,14 @@ def test_first_codon_sub_nostart_var(genomic_sequence_2013, gene_models_2013):
     assert effect.aa_change is None
 
 
-def test_last_codon_sub_nostop_var(genomic_sequence_2013, gene_models_2013):
+def test_last_codon_sub_nostop_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
-        loc="7:24727231",
-        var="sub(T->C)",
+        location="7:24727231",
+        variant="sub(T->C)",
     )
     assert len(effects) == 1
     effect = effects[0]
@@ -658,17 +705,20 @@ def test_last_codon_sub_nostop_var(genomic_sequence_2013, gene_models_2013):
     assert effect.aa_change is None
 
 
-def test_chr1_71418630_sub_var(genomic_sequence_2013, gene_models_2013):
+def test_chr1_71418630_sub_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     # pylint: disable=too-many-statements
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
-        loc="1:71418630",
-        var="sub(A->G)",
+        location="1:71418630",
+        variant="sub(A->G)",
     )
 
     assert len(effects) == 8
-    effects_sorted = sorted(effects, key=lambda k: k.transcript_id)
+    effects_sorted = sorted(
+        effects, key=lambda k: k.transcript_id)  # type: ignore
 
     assert effects_sorted[0].gene == "PTGER3"
     assert effects_sorted[0].transcript_id == "NM_001126044_1"
@@ -748,16 +798,19 @@ def test_chr1_71418630_sub_var(genomic_sequence_2013, gene_models_2013):
     assert effects_sorted[7].aa_change is None
 
 
-def test_chr20_56284593_ins_var(genomic_sequence_2013, gene_models_2013):
+def test_chr20_56284593_ins_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
-        loc="20:56284593",
-        var="ins(CGGCGG)",
+        location="20:56284593",
+        variant="ins(CGGCGG)",
     )
 
     assert len(effects) == 4
-    effects_sorted = sorted(effects, key=lambda k: k.transcript_id)
+    effects_sorted = sorted(
+        effects, key=lambda k: k.transcript_id)  # type: ignore
 
     assert effects_sorted[0].gene == "PMEPA1"
     assert effects_sorted[0].transcript_id == "NM_020182_1"
@@ -798,17 +851,20 @@ def test_chr20_56284593_ins_var(genomic_sequence_2013, gene_models_2013):
     assert effects_sorted[3].aa_change is None
 
 
-def test_chr20_57478739_sub_var(genomic_sequence_2013, gene_models_2013):
+def test_chr20_57478739_sub_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     # pylint: disable=too-many-statements
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
-        loc="20:57478739",
-        var="sub(G->A)",
+        location="20:57478739",
+        variant="sub(G->A)",
     )
 
     assert len(effects) == 8
-    effects_sorted = sorted(effects, key=lambda k: k.transcript_id)
+    effects_sorted = sorted(
+        effects, key=lambda k: k.transcript_id)  # type: ignore
 
     assert effects_sorted[0].gene == "GNAS"
     assert effects_sorted[0].transcript_id == "NM_000516_1"
@@ -877,16 +933,19 @@ def test_chr20_57478739_sub_var(genomic_sequence_2013, gene_models_2013):
     assert effects_sorted[7].aa_change is None
 
 
-def test_chr14_78227471_del_var(genomic_sequence_2013, gene_models_2013):
+def test_chr14_78227471_del_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
-        loc="14:78227471",
-        var="del(9)",
+        location="14:78227471",
+        variant="del(9)",
     )
 
     assert len(effects) == 3
-    effects_sorted = sorted(effects, key=lambda k: k.transcript_id)
+    effects_sorted = sorted(
+        effects, key=lambda k: k.transcript_id)  # type: ignore
 
     assert effects_sorted[0].gene == "C14orf178"
     assert effects_sorted[0].transcript_id == "NM_001173978_1"
@@ -920,17 +979,20 @@ def test_chr14_78227471_del_var(genomic_sequence_2013, gene_models_2013):
     assert effects_sorted[2].intron_length == 7335
 
 
-def test_chr3_128813981_sub_var(genomic_sequence_2013, gene_models_2013):
+def test_chr3_128813981_sub_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     # pylint: disable=too-many-statements
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
-        loc="3:128813981",
-        var="sub(C->T)",
+        location="3:128813981",
+        variant="sub(C->T)",
     )
 
     assert len(effects) == 8
-    effects_sorted = sorted(effects, key=lambda k: k.transcript_id)
+    effects_sorted = sorted(
+        effects, key=lambda k: k.transcript_id)  # type: ignore
 
     assert effects_sorted[0].gene == "RAB43"
     assert effects_sorted[0].transcript_id == "NM_001204883_1"
@@ -997,16 +1059,19 @@ def test_chr3_128813981_sub_var(genomic_sequence_2013, gene_models_2013):
     assert effects_sorted[7].aa_change == "Arg->Gln"
 
 
-def test_chr14_21895990_del_var(genomic_sequence_2013, gene_models_2013):
+def test_chr14_21895990_del_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
-        loc="14:21895990",
-        var="del(47)",
+        location="14:21895990",
+        variant="del(47)",
     )
 
     assert len(effects) == 2
-    effects_sorted = sorted(effects, key=lambda k: k.transcript_id)
+    effects_sorted = sorted(
+        effects, key=lambda k: k.transcript_id)  # type: ignore
 
     assert effects_sorted[0].gene == "CHD8"
     assert effects_sorted[0].transcript_id == "NM_001170629_1"
@@ -1037,16 +1102,19 @@ def test_chr14_21895990_del_var(genomic_sequence_2013, gene_models_2013):
     assert effects_sorted[1].intron_length == 1626
 
 
-def test_chr1_12175787_sub_var(genomic_sequence_2013, gene_models_2013):
+def test_chr1_12175787_sub_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
-        loc="1:12175787",
-        var="sub(G->A)",
+        location="1:12175787",
+        variant="sub(G->A)",
     )
 
     assert len(effects) == 2
-    effects_sorted = sorted(effects, key=lambda k: k.transcript_id)
+    effects_sorted = sorted(
+        effects, key=lambda k: k.transcript_id)  # type: ignore
 
     assert effects_sorted[0].gene == "TNFRSF8"
     assert effects_sorted[0].transcript_id == "NM_001243_1"
@@ -1077,16 +1145,19 @@ def test_chr1_12175787_sub_var(genomic_sequence_2013, gene_models_2013):
     assert effects_sorted[1].intron_length == 7554
 
 
-def test_chr13_23904276_sub_var(genomic_sequence_2013, gene_models_2013):
+def test_chr13_23904276_sub_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
-        loc="13:23904276",
-        var="sub(C->T)",
+        location="13:23904276",
+        variant="sub(C->T)",
     )
 
     assert len(effects) == 2
-    effects_sorted = sorted(effects, key=lambda k: k.transcript_id)
+    effects_sorted = sorted(
+        effects, key=lambda k: k.transcript_id)  # type: ignore
 
     assert effects_sorted[0].gene == "SACS"
     assert effects_sorted[0].transcript_id == "NM_001278055_1"
@@ -1105,16 +1176,19 @@ def test_chr13_23904276_sub_var(genomic_sequence_2013, gene_models_2013):
     assert effects_sorted[1].aa_change == "End->End"
 
 
-def test_chr20_61476990_del_var(genomic_sequence_2013, gene_models_2013):
+def test_chr20_61476990_del_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
-        loc="20:61476990",
-        var="del(3)",
+        location="20:61476990",
+        variant="del(3)",
     )
 
     assert len(effects) == 2
-    effects_sorted = sorted(effects, key=lambda k: k.transcript_id)
+    effects_sorted = sorted(
+        effects, key=lambda k: k.transcript_id)  # type: ignore
 
     assert effects_sorted[0].gene == "TCFL5"
     assert effects_sorted[0].transcript_id == "NM_006602_1"
@@ -1140,12 +1214,14 @@ def test_chr20_61476990_del_var(genomic_sequence_2013, gene_models_2013):
     assert effects_sorted[1].dist_from_coding == 24
 
 
-def test_chr17_43227526_ins_var(genomic_sequence_2013, gene_models_2013):
+def test_chr17_43227526_ins_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
-        loc="17:43227526",
-        var="ins(GGAGCT)",
+        location="17:43227526",
+        variant="ins(GGAGCT)",
     )
     assert len(effects) == 1
     effect = effects[0]
@@ -1159,16 +1235,19 @@ def test_chr17_43227526_ins_var(genomic_sequence_2013, gene_models_2013):
     assert effect.aa_change == "Arg->ArgGluLeu"
 
 
-def test_chr5_56527122_sub_var(genomic_sequence_2013, gene_models_2013):
+def test_chr5_56527122_sub_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
-        loc="5:56527122",
-        var="sub(C->T)",
+        location="5:56527122",
+        variant="sub(C->T)",
     )
 
     assert len(effects) == 4
-    effects_sorted = sorted(effects, key=lambda k: k.transcript_id)
+    effects_sorted = sorted(
+        effects, key=lambda k: k.transcript_id)  # type: ignore
 
     assert effects_sorted[0].gene == "GPBP1"
     assert effects_sorted[0].transcript_id == "NM_001127235_1"
@@ -1204,13 +1283,17 @@ def test_chr5_56527122_sub_var(genomic_sequence_2013, gene_models_2013):
     assert effects_sorted[3].aa_change == "Arg->Cys"
 
 
-def test_chr4_2514166_del_var(genomic_sequence_2013, gene_models_2013):
+def test_chr4_2514166_del_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
-        gene_models_2013, genomic_sequence_2013, loc="4:2514166", var="del(3)"
+        gene_models_2013, genomic_sequence_2013,
+        location="4:2514166", variant="del(3)"
     )
 
     assert len(effects) == 3
-    effects_sorted = sorted(effects, key=lambda k: k.transcript_id)
+    effects_sorted = sorted(
+        effects, key=lambda k: k.transcript_id)  # type: ignore
 
     assert effects_sorted[0].gene == "RNF4"
     assert effects_sorted[0].transcript_id == "NM_001185009_1"
@@ -1243,12 +1326,14 @@ def test_chr4_2514166_del_var(genomic_sequence_2013, gene_models_2013):
     assert effects_sorted[2].aa_change == "GluArg->Glu"
 
 
-def test_chr7_131870222_sub_var(genomic_sequence_2013, gene_models_2013):
+def test_chr7_131870222_sub_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
-        loc="7:131870222",
-        var="sub(C->A)",
+        location="7:131870222",
+        variant="sub(C->A)",
     )
     assert len(effects) == 1
     effect = effects[0]
@@ -1262,12 +1347,14 @@ def test_chr7_131870222_sub_var(genomic_sequence_2013, gene_models_2013):
     assert effect.aa_change == "Arg->Ser"
 
 
-def test_chr6_107780195_sub_var(genomic_sequence_2013, gene_models_2013):
+def test_chr6_107780195_sub_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
-        loc="6:107780195",
-        var="sub(T->A)",
+        location="6:107780195",
+        variant="sub(T->A)",
     )
     assert len(effects) == 1
     effect = effects[0]
@@ -1281,16 +1368,19 @@ def test_chr6_107780195_sub_var(genomic_sequence_2013, gene_models_2013):
     assert effect.aa_change == "Arg->Trp"
 
 
-def test_chr15_80137554_ins_var(genomic_sequence_2013, gene_models_2013):
+def test_chr15_80137554_ins_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
-        loc="15:80137554",
-        var="ins(A)",
+        location="15:80137554",
+        variant="ins(A)",
     )
 
     assert len(effects) == 4
-    effects_sorted = sorted(effects, key=lambda k: k.transcript_id)
+    effects_sorted = sorted(
+        effects, key=lambda k: k.transcript_id)  # type: ignore
 
     assert effects_sorted[0].gene == "MTHFS"
     assert effects_sorted[0].transcript_id == "NM_001199758_1"
@@ -1325,16 +1415,19 @@ def test_chr15_80137554_ins_var(genomic_sequence_2013, gene_models_2013):
     assert effects_sorted[3].aa_change is None
 
 
-def test_chr1_207793410_sub_var(genomic_sequence_2013, gene_models_2013):
+def test_chr1_207793410_sub_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
-        loc="1:207793410",
-        var="sub(C->T)",
+        location="1:207793410",
+        variant="sub(C->T)",
     )
 
     assert len(effects) == 2
-    effects_sorted = sorted(effects, key=lambda k: k.transcript_id)
+    effects_sorted = sorted(
+        effects, key=lambda k: k.transcript_id)  # type: ignore
 
     assert effects_sorted[0].gene == "CR1"
     assert effects_sorted[0].transcript_id == "NM_000573_1"
@@ -1353,12 +1446,14 @@ def test_chr1_207793410_sub_var(genomic_sequence_2013, gene_models_2013):
     assert effects_sorted[1].aa_change == "Arg->Cys"
 
 
-def test_chr3_49051816_sub_var(genomic_sequence_2013, gene_models_2013):
+def test_chr3_49051816_sub_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
-        loc="3:49051816",
-        var="sub(G->A)",
+        location="3:49051816",
+        variant="sub(G->A)",
     )
     assert len(effects) == 1
     effect = effects[0]
@@ -1372,9 +1467,12 @@ def test_chr3_49051816_sub_var(genomic_sequence_2013, gene_models_2013):
     assert effect.aa_change == "Arg->Arg"
 
 
-def test_chr5_79855195_del_var(genomic_sequence_2013, gene_models_2013):
+def test_chr5_79855195_del_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
-        gene_models_2013, genomic_sequence_2013, loc="5:79855195", var="del(6)"
+        gene_models_2013, genomic_sequence_2013,
+        location="5:79855195", variant="del(6)"
     )
     assert len(effects) == 1
     effect = effects[0]
@@ -1388,12 +1486,14 @@ def test_chr5_79855195_del_var(genomic_sequence_2013, gene_models_2013):
     assert effect.aa_change == "AspLeuGlu->Glu"
 
 
-def test_chr3_112997521_sub_var(genomic_sequence_2013, gene_models_2013):
+def test_chr3_112997521_sub_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
-        loc="3:112997521",
-        var="sub(A->T)",
+        location="3:112997521",
+        variant="sub(A->T)",
     )
     assert len(effects) == 1
     effect = effects[0]
@@ -1407,16 +1507,19 @@ def test_chr3_112997521_sub_var(genomic_sequence_2013, gene_models_2013):
     assert effect.aa_change == "Gly->Gly"
 
 
-def test_chr2_169417831_sub_var(genomic_sequence_2013, gene_models_2013):
+def test_chr2_169417831_sub_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
-        loc="2:169417831",
-        var="sub(A->G)",
+        location="2:169417831",
+        variant="sub(A->G)",
     )
 
     assert len(effects) == 2
-    effects_sorted = sorted(effects, key=lambda k: k.transcript_id)
+    effects_sorted = sorted(
+        effects, key=lambda k: k.transcript_id)  # type: ignore
 
     assert effects_sorted[0].gene == "CERS6"
     assert effects_sorted[0].transcript_id == "NM_001256126_1"
@@ -1435,12 +1538,14 @@ def test_chr2_169417831_sub_var(genomic_sequence_2013, gene_models_2013):
     assert effects_sorted[1].aa_change == "Met->Val"
 
 
-def test_chr2_170062840_sub_var(genomic_sequence_2013, gene_models_2013):
+def test_chr2_170062840_sub_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
-        loc="2:170062840",
-        var="sub(C->T)",
+        location="2:170062840",
+        variant="sub(C->T)",
     )
     assert len(effects) == 1
     effect = effects[0]
@@ -1454,12 +1559,14 @@ def test_chr2_170062840_sub_var(genomic_sequence_2013, gene_models_2013):
     assert effect.aa_change == "Gly->Ser"
 
 
-def test_chr17_72954572_sub_var(genomic_sequence_2013, gene_models_2013):
+def test_chr17_72954572_sub_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
-        loc="17:72954572",
-        var="sub(A->T)",
+        location="17:72954572",
+        variant="sub(A->T)",
     )
     assert len(effects) == 1
     effect = effects[0]
@@ -1473,16 +1580,19 @@ def test_chr17_72954572_sub_var(genomic_sequence_2013, gene_models_2013):
     assert effect.aa_change == "Ser->Ser"
 
 
-def test_chr4_140640596_sub_var(genomic_sequence_2013, gene_models_2013):
+def test_chr4_140640596_sub_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
-        loc="4:140640596",
-        var="sub(C->T)",
+        location="4:140640596",
+        variant="sub(C->T)",
     )
 
     assert len(effects) == 3
-    effects_sorted = sorted(effects, key=lambda k: k.transcript_id)
+    effects_sorted = sorted(
+        effects, key=lambda k: k.transcript_id)  # type: ignore
 
     assert effects_sorted[0].gene == "MGST2"
     assert effects_sorted[0].transcript_id == "NM_001204366_1"
@@ -1509,16 +1619,19 @@ def test_chr4_140640596_sub_var(genomic_sequence_2013, gene_models_2013):
     assert effects_sorted[2].aa_change == "Gly->Arg"
 
 
-def test_chr7_40134547_ins_var(genomic_sequence_2013, gene_models_2013):
+def test_chr7_40134547_ins_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
-        loc="7:40134547",
-        var="ins(GGCAGA)",
+        location="7:40134547",
+        variant="ins(GGCAGA)",
     )
 
     assert len(effects) == 2
-    effects_sorted = sorted(effects, key=lambda k: k.transcript_id)
+    effects_sorted = sorted(
+        effects, key=lambda k: k.transcript_id)  # type: ignore
 
     assert effects_sorted[0].gene == "CDK13"
     assert effects_sorted[0].transcript_id == "NM_003718_1"
@@ -1537,16 +1650,19 @@ def test_chr7_40134547_ins_var(genomic_sequence_2013, gene_models_2013):
     assert effects_sorted[1].aa_change == "->GlyArg"
 
 
-def test_chr9_98279102_sub_var(genomic_sequence_2013, gene_models_2013):
+def test_chr9_98279102_sub_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
-        loc="9:98279102",
-        var="sub(T->G)",
+        location="9:98279102",
+        variant="sub(T->G)",
     )
 
     assert len(effects) == 2
-    effects_sorted = sorted(effects, key=lambda k: k.transcript_id)
+    effects_sorted = sorted(
+        effects, key=lambda k: k.transcript_id)  # type: ignore
 
     assert effects_sorted[0].gene == "PTCH1"
     assert effects_sorted[0].transcript_id == "NM_001083602_1"
@@ -1566,16 +1682,19 @@ def test_chr9_98279102_sub_var(genomic_sequence_2013, gene_models_2013):
     assert effects_sorted[1].aa_change is None
 
 
-def test_chr2_166535661_del_var(genomic_sequence_2013, gene_models_2013):
+def test_chr2_166535661_del_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
-        loc="2:166535661",
-        var="del(3)",
+        location="2:166535661",
+        variant="del(3)",
     )
 
     assert len(effects) == 2
-    effects_sorted = sorted(effects, key=lambda k: k.transcript_id)
+    effects_sorted = sorted(
+        effects, key=lambda k: k.transcript_id)  # type: ignore
 
     assert effects_sorted[0].gene == "CSRNP3"
     assert effects_sorted[0].transcript_id == "NM_001172173_1"
@@ -1594,12 +1713,14 @@ def test_chr2_166535661_del_var(genomic_sequence_2013, gene_models_2013):
     assert effects_sorted[1].aa_change == "Asp->"
 
 
-def test_chr4_76734406_sub_var(genomic_sequence_2013, gene_models_2013):
+def test_chr4_76734406_sub_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
-        loc="4:76734406",
-        var="sub(T->C)",
+        location="4:76734406",
+        variant="sub(T->C)",
     )
     assert len(effects) == 1
     effect = effects[0]
@@ -1613,12 +1734,14 @@ def test_chr4_76734406_sub_var(genomic_sequence_2013, gene_models_2013):
     assert effect.aa_change == "Asp->Asp"
 
 
-def test_chr12_70824294_del_var(genomic_sequence_2013, gene_models_2013):
+def test_chr12_70824294_del_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
-        loc="12:70824294",
-        var="del(3)",
+        location="12:70824294",
+        variant="del(3)",
     )
     assert len(effects) == 1
     effect = effects[0]
@@ -1632,17 +1755,20 @@ def test_chr12_70824294_del_var(genomic_sequence_2013, gene_models_2013):
     assert effect.aa_change == "HisAsp->His"
 
 
-def test_chr20_34243229_sub_var(genomic_sequence_2013, gene_models_2013):
+def test_chr20_34243229_sub_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     # pylint: disable=too-many-statements
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
-        loc="20:34243229",
-        var="sub(G->A)",
+        location="20:34243229",
+        variant="sub(G->A)",
     )
 
     assert len(effects) == 10
-    effects_sorted = sorted(effects, key=lambda k: k.transcript_id)
+    effects_sorted = sorted(
+        effects, key=lambda k: k.transcript_id)  # type: ignore
 
     assert effects_sorted[0].gene == "RBM12"
     assert effects_sorted[0].transcript_id == "NM_001198838_1"
@@ -1725,13 +1851,17 @@ def test_chr20_34243229_sub_var(genomic_sequence_2013, gene_models_2013):
     assert effects_sorted[9].aa_change is None
 
 
-def test_chr7_6505720_del_var(genomic_sequence_2013, gene_models_2013):
+def test_chr7_6505720_del_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
-        gene_models_2013, genomic_sequence_2013, loc="7:6505720", var="del(3)"
+        gene_models_2013, genomic_sequence_2013,
+        location="7:6505720", variant="del(3)"
     )
 
     assert len(effects) == 2
-    effects_sorted = sorted(effects, key=lambda k: k.transcript_id)
+    effects_sorted = sorted(
+        effects, key=lambda k: k.transcript_id)  # type: ignore
 
     assert effects_sorted[0].gene == "KDELR2"
     assert effects_sorted[0].transcript_id == "NM_001100603_1"
@@ -1756,16 +1886,19 @@ def test_chr7_6505720_del_var(genomic_sequence_2013, gene_models_2013):
     assert effects_sorted[1].aa_change == "PheTyr->Tyr"
 
 
-def test_chr7_31609423_sub_var(genomic_sequence_2013, gene_models_2013):
+def test_chr7_31609423_sub_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
-        loc="7:31609423",
-        var="sub(G->C)",
+        location="7:31609423",
+        variant="sub(G->C)",
     )
 
     assert len(effects) == 4
-    effects_sorted = sorted(effects, key=lambda k: k.transcript_id)
+    effects_sorted = sorted(
+        effects, key=lambda k: k.transcript_id)  # type: ignore
 
     assert effects_sorted[0].gene == "CCDC129"
     assert effects_sorted[0].transcript_id == "NM_001257967_1"
@@ -1800,12 +1933,14 @@ def test_chr7_31609423_sub_var(genomic_sequence_2013, gene_models_2013):
     assert effects_sorted[3].aa_change is None
 
 
-def test_chr3_136057284_ins_var(genomic_sequence_2013, gene_models_2013):
+def test_chr3_136057284_ins_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
-        loc="3:136057284",
-        var="ins(TGA)",
+        location="3:136057284",
+        variant="ins(TGA)",
     )
     assert len(effects) == 1
     effect = effects[0]
@@ -1819,16 +1954,19 @@ def test_chr3_136057284_ins_var(genomic_sequence_2013, gene_models_2013):
     assert effect.aa_change == "->Ser"
 
 
-def test_chr1_120311364_sub_var(genomic_sequence_2013, gene_models_2013):
+def test_chr1_120311364_sub_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
-        loc="1:120311364",
-        var="sub(C->A)",
+        location="1:120311364",
+        variant="sub(C->A)",
     )
 
     assert len(effects) == 2
-    effects_sorted = sorted(effects, key=lambda k: k.transcript_id)
+    effects_sorted = sorted(
+        effects, key=lambda k: k.transcript_id)  # type: ignore
 
     assert effects_sorted[0].gene == "HMGCS2"
     assert effects_sorted[0].transcript_id == "NM_001166107_1"
@@ -1847,12 +1985,14 @@ def test_chr1_120311364_sub_var(genomic_sequence_2013, gene_models_2013):
     assert effects_sorted[1].aa_change == "Arg->Met"
 
 
-def test_chr3_128969525_sub_var(genomic_sequence_2013, gene_models_2013):
+def test_chr3_128969525_sub_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
-        loc="3:128969525",
-        var="sub(G->T)",
+        location="3:128969525",
+        variant="sub(G->T)",
     )
     assert len(effects) == 1
     effect = effects[0]
@@ -1866,12 +2006,14 @@ def test_chr3_128969525_sub_var(genomic_sequence_2013, gene_models_2013):
     assert effect.aa_change == "Gly->Val"
 
 
-def test_chr8_3046533_sub_var(genomic_sequence_2013, gene_models_2013):
+def test_chr8_3046533_sub_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
-        loc="8:3046533",
-        var="sub(A->T)",
+        location="8:3046533",
+        variant="sub(A->T)",
     )
     assert len(effects) == 1
     effect = effects[0]
@@ -1885,10 +2027,13 @@ def test_chr8_3046533_sub_var(genomic_sequence_2013, gene_models_2013):
     assert effect.aa_change == "Val->Glu"
 
 
-def test_chr4_41748269_ins_var(genomic_sequence_2013, gene_models_2013):
+def test_chr4_41748269_ins_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     var = "ins(GCCGCGGCCGCTGCGGCT)"
     effects = EffectAnnotator.annotate_variant(
-        gene_models_2013, genomic_sequence_2013, loc="4:41748269", var=var
+        gene_models_2013, genomic_sequence_2013,
+        location="4:41748269", variant=var
     )
     assert len(effects) == 1
     effect = effects[0]
@@ -1903,13 +2048,17 @@ def test_chr4_41748269_ins_var(genomic_sequence_2013, gene_models_2013):
 
 
 @pytest.mark.skip()
-def test_chr21_11097543_del_var(genomic_sequence_2013, gene_models_2013):
+def test_chr21_11097543_del_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
-        gene_models_2013, genomic_sequence_2013, loc="21:1109754", var="del(2)"
+        gene_models_2013, genomic_sequence_2013,
+        location="21:1109754", variant="del(2)"
     )
 
     assert len(effects) == 5
-    effects_sorted = sorted(effects, key=lambda k: k.transcript_id)
+    effects_sorted = sorted(
+        effects, key=lambda k: k.transcript_id)  # type: ignore
 
     assert effects_sorted[0].gene == "BAGE"
     assert effects_sorted[0].transcript_id == "NM_001187_1"
@@ -1952,16 +2101,19 @@ def test_chr21_11097543_del_var(genomic_sequence_2013, gene_models_2013):
     assert effects_sorted[4].aa_change is None
 
 
-def test_chr9_130422308_del_var(genomic_sequence_2013, gene_models_2013):
+def test_chr9_130422308_del_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
-        loc="9:130422308",
-        var="del(1)",
+        location="9:130422308",
+        variant="del(1)",
     )
 
     assert len(effects) == 2
-    effects_sorted = sorted(effects, key=lambda k: k.transcript_id)
+    effects_sorted = sorted(
+        effects, key=lambda k: k.transcript_id)  # type: ignore
 
     assert effects_sorted[0].gene == "STXBP1"
     assert effects_sorted[0].transcript_id == "NM_001032221_1"
@@ -1992,16 +2144,19 @@ def test_chr9_130422308_del_var(genomic_sequence_2013, gene_models_2013):
     assert effects_sorted[1].intron_length == 1578
 
 
-def test_chr1_245019922_del_var(genomic_sequence_2013, gene_models_2013):
+def test_chr1_245019922_del_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
-        loc="1:245019922",
-        var="del(10)",
+        location="1:245019922",
+        variant="del(10)",
     )
 
     assert len(effects) == 2
-    effects_sorted = sorted(effects, key=lambda k: k.transcript_id)
+    effects_sorted = sorted(
+        effects, key=lambda k: k.transcript_id)  # type: ignore
 
     assert effects_sorted[0].gene == "HNRNPU"
     assert effects_sorted[0].transcript_id == "NM_004501_1"
@@ -2032,12 +2187,14 @@ def test_chr1_245019922_del_var(genomic_sequence_2013, gene_models_2013):
     assert effects_sorted[1].intron_length == 102
 
 
-def test_chr9_140509156_ins_var(genomic_sequence_2013, gene_models_2013):
+def test_chr9_140509156_ins_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
-        loc="9:140509156",
-        var="ins(AGGAGG)",
+        location="9:140509156",
+        variant="ins(AGGAGG)",
     )
     assert len(effects) == 1
     effect = effects[0]
@@ -2051,17 +2208,20 @@ def test_chr9_140509156_ins_var(genomic_sequence_2013, gene_models_2013):
     assert effect.aa_change == "Gln->GlnGluGlu"
 
 
-def test_chr20_57466823_sub_var(genomic_sequence_2013, gene_models_2013):
+def test_chr20_57466823_sub_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     # pylint: disable=too-many-statements
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
-        loc="20:57466823",
-        var="sub(C->T)",
+        location="20:57466823",
+        variant="sub(C->T)",
     )
 
     assert len(effects) == 8
-    effects_sorted = sorted(effects, key=lambda k: k.transcript_id)
+    effects_sorted = sorted(
+        effects, key=lambda k: k.transcript_id)  # type: ignore
 
     assert effects_sorted[0].gene == "GNAS"
     assert effects_sorted[0].transcript_id == "NM_000516_1"
@@ -2134,16 +2294,19 @@ def test_chr20_57466823_sub_var(genomic_sequence_2013, gene_models_2013):
     assert effects_sorted[7].aa_change is None
 
 
-def test_chr1_156354348_del_var(genomic_sequence_2013, gene_models_2013):
+def test_chr1_156354348_del_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
-        loc="1:156354348",
-        var="del(1)",
+        location="1:156354348",
+        variant="del(1)",
     )
 
     assert len(effects) == 4
-    effects_sorted = sorted(effects, key=lambda k: k.transcript_id)
+    effects_sorted = sorted(
+        effects, key=lambda k: k.transcript_id)  # type: ignore
 
     assert effects_sorted[0].gene == "RHBG"
     assert effects_sorted[0].transcript_id == "NM_001256395_1"
@@ -2196,12 +2359,14 @@ def test_chr1_156354348_del_var(genomic_sequence_2013, gene_models_2013):
     assert effects_sorted[3].aa_change is None
 
 
-def test_chr17_76528711_sub_var(genomic_sequence_2013, gene_models_2013):
+def test_chr17_76528711_sub_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
-        loc="17:76528711",
-        var="sub(C->T)",
+        location="17:76528711",
+        variant="sub(C->T)",
     )
     assert len(effects) == 1
     effect = effects[0]
@@ -2215,12 +2380,14 @@ def test_chr17_76528711_sub_var(genomic_sequence_2013, gene_models_2013):
     assert effect.aa_change == "Arg->Arg"
 
 
-def test_chr1_244816618_ins_var(genomic_sequence_2013, gene_models_2013):
+def test_chr1_244816618_ins_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
-        loc="1:244816618",
-        var="ins(G)",
+        location="1:244816618",
+        variant="ins(G)",
     )
     assert len(effects) == 1
     effect = effects[0]
@@ -2234,16 +2401,19 @@ def test_chr1_244816618_ins_var(genomic_sequence_2013, gene_models_2013):
     assert effect.aa_change is None
 
 
-def test_chr10_46248650_del_var(genomic_sequence_2013, gene_models_2013):
+def test_chr10_46248650_del_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
-        loc="10:46248650",
-        var="del(3)",
+        location="10:46248650",
+        variant="del(3)",
     )
 
     assert len(effects) == 3
-    effects_sorted = sorted(effects, key=lambda k: k.transcript_id)
+    effects_sorted = sorted(
+        effects, key=lambda k: k.transcript_id)  # type: ignore
 
     assert effects_sorted[0].gene == "FAM21C"
     assert effects_sorted[0].transcript_id == "NM_001169106_1"
@@ -2270,12 +2440,14 @@ def test_chr10_46248650_del_var(genomic_sequence_2013, gene_models_2013):
     assert effects_sorted[2].aa_change == "SerGln->End"
 
 
-def test_chr15_41864763_del_var(genomic_sequence_2013, gene_models_2013):
+def test_chr15_41864763_del_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
-        loc="15:41864763",
-        var="del(3)",
+        location="15:41864763",
+        variant="del(3)",
     )
     assert len(effects) == 1
     effect = effects[0]
@@ -2295,16 +2467,19 @@ def test_chr15_41864763_del_var(genomic_sequence_2013, gene_models_2013):
     assert effect.intron_length == 437
 
 
-def test_chr3_131100722_sub_var(genomic_sequence_2013, gene_models_2013):
+def test_chr3_131100722_sub_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
-        loc="3:131100722",
-        var="sub(C->G)",
+        location="3:131100722",
+        variant="sub(C->G)",
     )
 
     assert len(effects) == 4
-    effects_sorted = sorted(effects, key=lambda k: k.transcript_id)
+    effects_sorted = sorted(
+        effects, key=lambda k: k.transcript_id)  # type: ignore
 
     assert effects_sorted[0].gene == "NUDT16"
     assert effects_sorted[0].transcript_id == "NM_001171905_1"
@@ -2339,12 +2514,14 @@ def test_chr3_131100722_sub_var(genomic_sequence_2013, gene_models_2013):
     assert effects_sorted[3].aa_change is None
 
 
-def test_chr1_42619122_sub_var(genomic_sequence_2013, gene_models_2013):
+def test_chr1_42619122_sub_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
-        loc="1:42619122",
-        var="sub(A->G)",
+        location="1:42619122",
+        variant="sub(A->G)",
     )
     assert len(effects) == 1
     effect = effects[0]
@@ -2358,12 +2535,14 @@ def test_chr1_42619122_sub_var(genomic_sequence_2013, gene_models_2013):
     assert effect.aa_change is None
 
 
-def test_chr1_16558543_sub_var(genomic_sequence_2013, gene_models_2013):
+def test_chr1_16558543_sub_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
-        loc="1:16558543",
-        var="sub(T->C)",
+        location="1:16558543",
+        variant="sub(T->C)",
     )
     assert len(effects) == 1
     effect = effects[0]
@@ -2377,12 +2556,14 @@ def test_chr1_16558543_sub_var(genomic_sequence_2013, gene_models_2013):
     assert effect.aa_change is None
 
 
-def test_chr1_47515176_ins_var(genomic_sequence_2013, gene_models_2013):
+def test_chr1_47515176_ins_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
-        loc="1:47515176",
-        var="ins(TAGAAATATAAT)",
+        location="1:47515176",
+        variant="ins(TAGAAATATAAT)",
     )
     assert len(effects) == 1
     effect = effects[0]
@@ -2396,16 +2577,19 @@ def test_chr1_47515176_ins_var(genomic_sequence_2013, gene_models_2013):
     assert effect.aa_change == "Arg->IleGluIleEndTrp"
 
 
-def test_chr1_120934555_sub_var(genomic_sequence_2013, gene_models_2013):
+def test_chr1_120934555_sub_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
-        loc="1:120934555",
-        var="sub(C->T)",
+        location="1:120934555",
+        variant="sub(C->T)",
     )
 
     assert len(effects) == 4
-    effects_sorted = sorted(effects, key=lambda k: k.transcript_id)
+    effects_sorted = sorted(
+        effects, key=lambda k: k.transcript_id)  # type: ignore
 
     assert effects_sorted[0].gene == "FCGR1B"
     assert effects_sorted[0].transcript_id == "NM_001004340_1"
@@ -2446,9 +2630,12 @@ def test_chr1_120934555_sub_var(genomic_sequence_2013, gene_models_2013):
     assert effects_sorted[3].aa_change is None
 
 
-def test_chr1_26190329_del_var(genomic_sequence_2013, gene_models_2013):
+def test_chr1_26190329_del_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
-        gene_models_2013, genomic_sequence_2013, loc="1:26190329", var="del(6)"
+        gene_models_2013, genomic_sequence_2013,
+        location="1:26190329", variant="del(6)"
     )
     assert len(effects) == 1
     effect = effects[0]
@@ -2462,9 +2649,12 @@ def test_chr1_26190329_del_var(genomic_sequence_2013, gene_models_2013):
     assert effect.aa_change is None
 
 
-def test_chr1_42628578_del_var(genomic_sequence_2013, gene_models_2013):
+def test_chr1_42628578_del_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
-        gene_models_2013, genomic_sequence_2013, loc="1:42628578", var="del(1)"
+        gene_models_2013, genomic_sequence_2013,
+        location="1:42628578", variant="del(1)"
     )
     assert len(effects) == 1
     effect = effects[0]
@@ -2478,16 +2668,19 @@ def test_chr1_42628578_del_var(genomic_sequence_2013, gene_models_2013):
     assert effect.aa_change is None
 
 
-def test_chr1_203652334_del_var(genomic_sequence_2013, gene_models_2013):
+def test_chr1_203652334_del_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
-        loc="1:203652334",
-        var="del(6)",
+        location="1:203652334",
+        variant="del(6)",
     )
 
     assert len(effects) == 2
-    effects_sorted = sorted(effects, key=lambda k: k.transcript_id)
+    effects_sorted = sorted(
+        effects, key=lambda k: k.transcript_id)  # type: ignore
 
     assert effects_sorted[0].gene == "ATP2B4"
     assert effects_sorted[0].transcript_id == "NM_001001396_1"
@@ -2506,16 +2699,19 @@ def test_chr1_203652334_del_var(genomic_sequence_2013, gene_models_2013):
     assert effects_sorted[1].aa_change is None
 
 
-def test_chr2_133426005_del_var(genomic_sequence_2013, gene_models_2013):
+def test_chr2_133426005_del_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
-        loc="2:133426005",
-        var="del(2)",
+        location="2:133426005",
+        variant="del(2)",
     )
 
     assert len(effects) == 2
-    effects_sorted = sorted(effects, key=lambda k: k.transcript_id)
+    effects_sorted = sorted(
+        effects, key=lambda k: k.transcript_id)  # type: ignore
 
     assert effects_sorted[0].gene == "LYPD1"
     assert effects_sorted[0].transcript_id == "NM_001077427_1"
@@ -2534,12 +2730,14 @@ def test_chr2_133426005_del_var(genomic_sequence_2013, gene_models_2013):
     # assert effects_sorted[1].aa_change is None
 
 
-def test_chr1_237060943_ins_var(genomic_sequence_2013, gene_models_2013):
+def test_chr1_237060943_ins_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
-        loc="1:237060943",
-        var="ins(TTTGGAATAG)",
+        location="1:237060943",
+        variant="ins(TTTGGAATAG)",
     )
     assert len(effects) == 1
     effect = effects[0]
@@ -2553,12 +2751,14 @@ def test_chr1_237060943_ins_var(genomic_sequence_2013, gene_models_2013):
     assert effect.aa_change is None
 
 
-def test_chr1_160854666_ins_var(genomic_sequence_2013, gene_models_2013):
+def test_chr1_160854666_ins_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
-        loc="1:160854666",
-        var="ins(AA)",
+        location="1:160854666",
+        variant="ins(AA)",
     )
     assert len(effects) == 1
     effect = effects[0]
@@ -2572,10 +2772,13 @@ def test_chr1_160854666_ins_var(genomic_sequence_2013, gene_models_2013):
     assert effect.aa_change is None
 
 
-def test_chr1_248903150_ins_var(genomic_sequence_2013, gene_models_2013):
+def test_chr1_248903150_ins_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     var = "ins(AGTCTAGGCAATCTTCCCAGAATGGAAACCCAATCCACTCTTACTA)"
     effects = EffectAnnotator.annotate_variant(
-        gene_models_2013, genomic_sequence_2013, loc="1:248903150", var=var
+        gene_models_2013, genomic_sequence_2013,
+        location="1:248903150", variant=var
     )
     assert len(effects) == 1
     effect = effects[0]
@@ -2589,13 +2792,17 @@ def test_chr1_248903150_ins_var(genomic_sequence_2013, gene_models_2013):
     assert effect.aa_change is None
 
 
-def test_chr2_58390000_del_var(genomic_sequence_2013, gene_models_2013):
+def test_chr2_58390000_del_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
-        gene_models_2013, genomic_sequence_2013, loc="2:58390000", var="del(1)"
+        gene_models_2013, genomic_sequence_2013,
+        location="2:58390000", variant="del(1)"
     )
 
     assert len(effects) == 2
-    effects_sorted = sorted(effects, key=lambda k: k.transcript_id)
+    effects_sorted = sorted(
+        effects, key=lambda k: k.transcript_id)  # type: ignore
 
     assert effects_sorted[0].gene == "FANCL"
     assert effects_sorted[0].transcript_id == "NM_001114636_1"
@@ -2626,12 +2833,14 @@ def test_chr2_58390000_del_var(genomic_sequence_2013, gene_models_2013):
     assert effects_sorted[1].intron_length == 1227
 
 
-def test_chr20_5295014_ins_var(genomic_sequence_2013, gene_models_2013):
+def test_chr20_5295014_ins_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
-        loc="20:5295014",
-        var="ins(AAG)",
+        location="20:5295014",
+        variant="ins(AAG)",
     )
     assert len(effects) == 1
     effect = effects[0]
@@ -2645,12 +2854,14 @@ def test_chr20_5295014_ins_var(genomic_sequence_2013, gene_models_2013):
     assert effect.aa_change is None
 
 
-def test_chr5_126859172_del_var(genomic_sequence_2013, gene_models_2013):
+def test_chr5_126859172_del_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
-        loc="5:126859172",
-        var="del(3)",
+        location="5:126859172",
+        variant="del(3)",
     )
     assert len(effects) == 1
     effect = effects[0]
@@ -2664,12 +2875,14 @@ def test_chr5_126859172_del_var(genomic_sequence_2013, gene_models_2013):
     assert effect.aa_change is None
 
 
-def test_chr4_141471529_ins_var(genomic_sequence_2013, gene_models_2013):
+def test_chr4_141471529_ins_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
-        loc="4:141471529",
-        var="ins(T)",
+        location="4:141471529",
+        variant="ins(T)",
     )
     assert len(effects) == 1
     effect = effects[0]
@@ -2683,13 +2896,17 @@ def test_chr4_141471529_ins_var(genomic_sequence_2013, gene_models_2013):
     assert effect.aa_change is None
 
 
-def test_chr1_33330213_del_var(genomic_sequence_2013, gene_models_2013):
+def test_chr1_33330213_del_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
-        gene_models_2013, genomic_sequence_2013, loc="1:33330213", var="del(1)"
+        gene_models_2013, genomic_sequence_2013,
+        location="1:33330213", variant="del(1)"
     )
 
     assert len(effects) == 3
-    effects_sorted = sorted(effects, key=lambda k: k.transcript_id)
+    effects_sorted = sorted(
+        effects, key=lambda k: k.transcript_id)  # type: ignore
 
     assert effects_sorted[0].gene == "FNDC5"
     assert effects_sorted[0].transcript_id == "NM_001171940_1"
@@ -2728,12 +2945,14 @@ def test_chr1_33330213_del_var(genomic_sequence_2013, gene_models_2013):
     assert effects_sorted[2].intron_length == 364
 
 
-def test_chr5_96430453_ins_var(genomic_sequence_2013, gene_models_2013):
+def test_chr5_96430453_ins_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
-        loc="5:96430453",
-        var="ins(TAG)",
+        location="5:96430453",
+        variant="ins(TAG)",
     )
     assert len(effects) == 1
     effect = effects[0]
@@ -2747,10 +2966,13 @@ def test_chr5_96430453_ins_var(genomic_sequence_2013, gene_models_2013):
     assert effect.aa_change is None
 
 
-def test_chr10_25138774_ins_var(genomic_sequence_2013, gene_models_2013):
+def test_chr10_25138774_ins_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     var = "ins(ATATTGGATTTAATCCAAGTTAACAAAAATAAAGCCGCAGGA)"
     effects = EffectAnnotator.annotate_variant(
-        gene_models_2013, genomic_sequence_2013, loc="10:25138774", var=var
+        gene_models_2013, genomic_sequence_2013,
+        location="10:25138774", variant=var
     )
     assert len(effects) == 1
     effect = effects[0]
@@ -2764,12 +2986,14 @@ def test_chr10_25138774_ins_var(genomic_sequence_2013, gene_models_2013):
     assert effect.aa_change is None
 
 
-def test_chr2_218747134_ins_var(genomic_sequence_2013, gene_models_2013):
+def test_chr2_218747134_ins_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
-        loc="2:218747134",
-        var="ins(AGTTAT)",
+        location="2:218747134",
+        variant="ins(AGTTAT)",
     )
     assert len(effects) == 1
     effect = effects[0]
@@ -2783,17 +3007,20 @@ def test_chr2_218747134_ins_var(genomic_sequence_2013, gene_models_2013):
     assert effect.aa_change == "Asp->GluEndLeu"
 
 
-def test_chr11_3846347_del_var(genomic_sequence_2013, gene_models_2013):
+def test_chr11_3846347_del_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     # pylint: disable=too-many-statements
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
-        loc="11:3846347",
-        var="del(12)",
+        location="11:3846347",
+        variant="del(12)",
     )
 
     assert len(effects) == 16
-    effects_sorted = sorted(effects, key=lambda k: k.transcript_id)
+    effects_sorted = sorted(
+        effects, key=lambda k: k.transcript_id)  # type: ignore
 
     assert effects_sorted[0].gene == "PGAP2"
     assert effects_sorted[0].transcript_id == "NM_001145438_1"
@@ -2924,16 +3151,19 @@ def test_chr11_3846347_del_var(genomic_sequence_2013, gene_models_2013):
     assert effects_sorted[15].aa_change is None
 
 
-def test_chr1_145567756_ins_var(genomic_sequence_2013, gene_models_2013):
+def test_chr1_145567756_ins_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
-        loc="1:145567756",
-        var="ins(CTC)",
+        location="1:145567756",
+        variant="ins(CTC)",
     )
 
     assert len(effects) == 4
-    effects_sorted = sorted(effects, key=lambda k: k.transcript_id)
+    effects_sorted = sorted(
+        effects, key=lambda k: k.transcript_id)  # type: ignore
 
     assert effects_sorted[0].gene == "NBPF10"
     assert effects_sorted[0].transcript_id == "NM_001039703_1"
@@ -2980,14 +3210,18 @@ def test_chr1_145567756_ins_var(genomic_sequence_2013, gene_models_2013):
     assert effects_sorted[3].aa_change is None
 
 
-def test_chr3_135969219_ins_var(genomic_sequence_2013, gene_models_2013):
+def test_chr3_135969219_ins_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     var = "ins(TGGCGGCGGCATTACGGG)"
     effects = EffectAnnotator.annotate_variant(
-        gene_models_2013, genomic_sequence_2013, loc="3:135969219", var=var
+        gene_models_2013, genomic_sequence_2013,
+        location="3:135969219", variant=var
     )
 
     assert len(effects) == 2
-    effects_sorted = sorted(effects, key=lambda k: k.transcript_id)
+    effects_sorted = sorted(
+        effects, key=lambda k: k.transcript_id)  # type: ignore
 
     assert effects_sorted[0].gene == "PCCB"
     assert effects_sorted[0].transcript_id == "NM_000532_1"
@@ -3006,9 +3240,12 @@ def test_chr3_135969219_ins_var(genomic_sequence_2013, gene_models_2013):
     assert effects_sorted[1].aa_change is None
 
 
-def test_chr1_27180332_del_var(genomic_sequence_2013, gene_models_2013):
+def test_chr1_27180332_del_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
-        gene_models_2013, genomic_sequence_2013, loc="1:27180332", var="del(1)"
+        gene_models_2013, genomic_sequence_2013,
+        location="1:27180332", variant="del(1)"
     )
     assert len(effects) == 1
     effect = effects[0]
@@ -3022,10 +3259,13 @@ def test_chr1_27180332_del_var(genomic_sequence_2013, gene_models_2013):
     assert effect.aa_change is None
 
 
-def test_chr1_1425787_ins_var(genomic_sequence_2013, gene_models_2013):
+def test_chr1_1425787_ins_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     var = "ins(ACGTGACATTTAGCTGTCACTTCTGGTGGGCTCCTGCCA)"
     effects = EffectAnnotator.annotate_variant(
-        gene_models_2013, genomic_sequence_2013, loc="1:1425787", var=var
+        gene_models_2013, genomic_sequence_2013,
+        location="1:1425787", variant=var
     )
     assert len(effects) == 1
     effect = effects[0]
@@ -3042,15 +3282,19 @@ def test_chr1_1425787_ins_var(genomic_sequence_2013, gene_models_2013):
     )
 
 
-def test_chr1_33476432_ins_var(genomic_sequence_2013, gene_models_2013):
+def test_chr1_33476432_ins_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     var = "ins(AGGATGTGGCTTTGGAGA)"
     effects = EffectAnnotator.annotate_variant(
-        gene_models_2013, genomic_sequence_2013, loc="1:33476432", var=var
+        gene_models_2013, genomic_sequence_2013,
+        location="1:33476432", variant=var
     )
 
     assert len(effects) == 3
 
-    effects_sorted = sorted(effects, key=lambda k: k.transcript_id)
+    effects_sorted = sorted(
+        effects, key=lambda k: k.transcript_id)  # type: ignore
 
     assert effects_sorted[0].gene == "AK2"
     assert effects_sorted[0].transcript_id == "NM_001199199_1"
@@ -3077,16 +3321,19 @@ def test_chr1_33476432_ins_var(genomic_sequence_2013, gene_models_2013):
     assert effects_sorted[2].aa_change is None
 
 
-def test_chr1_245017754_del_var(genomic_sequence_2013, gene_models_2013):
+def test_chr1_245017754_del_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
-        loc="1:245017754",
-        var="del(3)",
+        location="1:245017754",
+        variant="del(3)",
     )
 
     assert len(effects) == 2
-    effects_sorted = sorted(effects, key=lambda k: k.transcript_id)
+    effects_sorted = sorted(
+        effects, key=lambda k: k.transcript_id)  # type: ignore
 
     assert effects_sorted[0].gene == "HNRNPU"
     assert effects_sorted[0].transcript_id == "NM_004501_1"
@@ -3105,13 +3352,17 @@ def test_chr1_245017754_del_var(genomic_sequence_2013, gene_models_2013):
     assert effects_sorted[1].aa_change is None
 
 
-def test_chr4_26862842_del_var(genomic_sequence_2013, gene_models_2013):
+def test_chr4_26862842_del_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
-        gene_models_2013, genomic_sequence_2013, loc="4:26862842", var="del(3)"
+        gene_models_2013, genomic_sequence_2013,
+        location="4:26862842", variant="del(3)"
     )
 
     assert len(effects) == 3
-    effects_sorted = sorted(effects, key=lambda k: k.transcript_id)
+    effects_sorted = sorted(
+        effects, key=lambda k: k.transcript_id)  # type: ignore
 
     assert effects_sorted[0].gene == "STIM2"
     assert effects_sorted[0].transcript_id == "NM_001169117_1"
@@ -3138,12 +3389,14 @@ def test_chr4_26862842_del_var(genomic_sequence_2013, gene_models_2013):
     assert effects_sorted[2].aa_change is None
 
 
-def test_chr5_68578558_ins_var(genomic_sequence_2013, gene_models_2013):
+def test_chr5_68578558_ins_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
-        loc="5:68578558",
-        var="ins(TA)",
+        location="5:68578558",
+        variant="ins(TA)",
     )
     assert len(effects) == 1
     effect = effects[0]
@@ -3157,9 +3410,12 @@ def test_chr5_68578558_ins_var(genomic_sequence_2013, gene_models_2013):
     assert effect.aa_change is None
 
 
-def test_chr6_33054014_ins_var(genomic_sequence_2013, gene_models_2013):
+def test_chr6_33054014_ins_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
-        gene_models_2013, genomic_sequence_2013, loc="6:33054014", var="ins(C)"
+        gene_models_2013, genomic_sequence_2013,
+        location="6:33054014", variant="ins(C)"
     )
     assert len(effects) == 1
     effect = effects[0]
@@ -3173,12 +3429,14 @@ def test_chr6_33054014_ins_var(genomic_sequence_2013, gene_models_2013):
     assert effect.aa_change is None
 
 
-def test_chr1_152648485_del_var(genomic_sequence_2013, gene_models_2013):
+def test_chr1_152648485_del_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
-        loc="1:152648485",
-        var="del(13)",
+        location="1:152648485",
+        variant="del(13)",
     )
     assert len(effects) == 1
     effect = effects[0]
@@ -3192,9 +3450,12 @@ def test_chr1_152648485_del_var(genomic_sequence_2013, gene_models_2013):
     assert effect.aa_change is None
 
 
-def test_chr1_7844919_del_var(genomic_sequence_2013, gene_models_2013):
+def test_chr1_7844919_del_var(
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+) -> None:
     effects = EffectAnnotator.annotate_variant(
-        gene_models_2013, genomic_sequence_2013, loc="1:7844919", var="del(21)"
+        gene_models_2013, genomic_sequence_2013,
+        location="1:7844919", variant="del(21)"
     )
     assert len(effects) == 1
     effect = effects[0]

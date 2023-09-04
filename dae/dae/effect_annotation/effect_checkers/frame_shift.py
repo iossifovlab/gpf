@@ -1,12 +1,21 @@
 import logging
-from ..effect import EffectFactory
+from typing import Optional
+
+from ..effect import EffectFactory, AnnotationEffect
+from ..annotation_request import AnnotationRequest
+from .effect_checker import EffectChecker
 
 
-class FrameShiftEffectChecker:
-    def __init__(self):
+class FrameShiftEffectChecker(EffectChecker):
+    """Frame shift effect checker class."""
+
+    def __init__(self) -> None:
         self.logger = logging.getLogger(__name__)
 
-    def create_effect(self, request, change_length):
+    def create_effect(
+        self, request: AnnotationRequest, change_length: int
+    ) -> Optional[AnnotationEffect]:
+        """Create frame-shift annotation effect."""
         if change_length > 0:
             if change_length % 3 == 0:
                 if self.check_if_new_stop(request):
@@ -24,7 +33,8 @@ class FrameShiftEffectChecker:
             return effect
         return None
 
-    def check_if_new_stop(self, request):
+    def check_if_new_stop(self, request: AnnotationRequest) -> bool:
+        """Check for a new stop codon."""
         ref_aa, alt_aa = request.get_amino_acids()
         for aa in ref_aa:
             if aa == "End":
@@ -34,7 +44,10 @@ class FrameShiftEffectChecker:
                 return True
         return False
 
-    def check_stop_codon(self, request):
+    def check_stop_codon(
+        self, request: AnnotationRequest
+    ) -> Optional[AnnotationEffect]:
+        """Check for stop codon."""
         try:
             ref_aa, alt_aa = request.get_amino_acids()
             if "End" not in ref_aa:
@@ -52,7 +65,9 @@ class FrameShiftEffectChecker:
             pass
         return None
 
-    def get_effect(self, request):
+    def get_effect(
+        self, request: AnnotationRequest
+    ) -> Optional[AnnotationEffect]:
         coding_regions = request.CDS_regions()
         ref_length = len(request.variant.reference)
         alt_length = len(request.variant.alternate)
@@ -91,3 +106,4 @@ class FrameShiftEffectChecker:
                 )
 
                 return self.create_effect(request, length)
+        return None
