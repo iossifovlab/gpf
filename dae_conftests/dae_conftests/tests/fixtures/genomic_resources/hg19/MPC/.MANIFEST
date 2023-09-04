@@ -4,9 +4,9 @@
 - md5: 5bb77f8efe6ed1b01b3422a3b5070307
   name: fordist_constraint_official_mpc_values_v2.txt.gz.tbi
   size: 257
-- md5: 7dee634d0701a4801871d6c93be44b88
+- md5: 236019c42a2792203d240c041485cacf
   name: genomic_resource.yaml
-  size: 672
+  size: 665
 - md5: e8ee8861355ba3c1126e8ca7b48b2fe8
   name: histograms/MPC.csv
   size: 1481
@@ -16,15 +16,15 @@
 - md5: 558273e259dee3322accc97e92e9d7d1
   name: histograms/MPC.png
   size: 8667
-- md5: af923276ac07a26e3f73d666231d7078
+- md5: c559c7612e8019f98f04ef793bab6376
   name: index.html
-  size: 2708
+  size: 2714
 - md5: c5bccdbfe3dc20fc06699476cfd3e5ca
   name: statistics/histogram_MPC.png
   size: 10251
-- md5: fa34cc11495d17d5e7b82b1e4de087ab
+- md5: 9448bfc27262aeebe9ced0cc07a28ec2
   name: statistics/histogram_MPC.yaml
-  size: 1887
-- md5: d93c8841de74d808bf750125fe134b6b
+  size: 1907
+- md5: 6a66d8328eea3542b302d0b403a9569e
   name: statistics/stats_hash
-  size: 5049
+  size: 5071

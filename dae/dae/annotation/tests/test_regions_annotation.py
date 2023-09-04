@@ -25,7 +25,7 @@ def fixture_repo() -> GenomicResourceRepo:
             default_annotation:
                 attributes:
                 - source: test100way
-                  destination: test100
+                  name: test100
             """),
             "data.mem": """
                 chrom  pos_begin  pos_end  100way
@@ -120,7 +120,7 @@ def test_position_score_annotator(
                 resource_id: position_score1
                 attributes:
                 - source: test100way
-                  destination: test100
+                  name: test100
                   position_aggregator: {pos_aggregator}
             """)
 
@@ -152,7 +152,7 @@ def test_np_score_annotator(
             resource_id: np_score1
             attributes:
             - source: test_raw
-              destination: test
+              name: test
               position_aggregator: {pos_aggregator}
               nucleotide_aggregator: {nuc_aggregator}
         """)
@@ -185,7 +185,7 @@ def test_np_score_annotator_region_length_cutoff(
             region_length_cutoff: 3
             attributes:
             - source: test_raw
-              destination: test
+              name: test
               position_aggregator: {pos_aggregator}
               nucleotide_aggregator: {nuc_aggregator}
         """)
@@ -217,7 +217,7 @@ def test_allele_score_annotator(
             resource_id: allele_score1
             attributes:
             - source: score
-              destination: test
+              name: test
               position_aggregator: {pos_aggregator}
               allele_aggregator: {allele_aggregator}
         """)

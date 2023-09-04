@@ -4,36 +4,21 @@
 - md5: 23c9655d86de1c4285bb449f2127eeb0
   name: genomic_resource.yaml
   size: 329
+- md5: f459e8ac59de2cf8f14ae14c4d8c1285
+  name: index.html
+  size: 1801
 - md5: 7d98bd8159020fdcdd195e848a38ab89
   name: statistics/histogram_RVIS.png
   size: 12476
-- md5: a2f3a6dd2bf5068ede92b08334ee90b8
+- md5: 0c828b30bc33c3c109a8726d79dbe196
   name: statistics/histogram_RVIS.yaml
-  size: 2603
+  size: 2979
 - md5: 578e6cbb24e8ada3bce4bd2c347a8dae
   name: statistics/histogram_RVIS_rank.png
   size: 11564
-- md5: ee88660eb37677d0a7551ed29dab9fbd
+- md5: 1c18c2ea33d04fa5db5961e9a1eb8e8e
   name: statistics/histogram_RVIS_rank.yaml
-  size: 3219
-- md5: d4af1015895ce278d823f1c2fb6ad0ac
+  size: 3595
+- md5: 925e12b883b809d53185fe5025f2bc91
   name: statistics/stats_hash
-  size: 301
-- md5: d41d8cd98f00b204e9800998ecf8427e
-  name: tasks-log/log_gene_scores_RVIS_RVIS_calc_histogram.log
-  size: 0
-- md5: d41d8cd98f00b204e9800998ecf8427e
-  name: tasks-log/log_gene_scores_RVIS_RVIS_rank_calc_histogram.log
-  size: 0
-- md5: d41d8cd98f00b204e9800998ecf8427e
-  name: tasks-log/log_gene_scores_RVIS_RVIS_rank_save_histogram.log
-  size: 0
-- md5: d41d8cd98f00b204e9800998ecf8427e
-  name: tasks-log/log_gene_scores_RVIS_RVIS_save_histogram.log
-  size: 0
-- md5: d41d8cd98f00b204e9800998ecf8427e
-  name: tasks-log/log_gene_scores_RVIS_manifest_rebuild.log
-  size: 0
-- md5: d41d8cd98f00b204e9800998ecf8427e
-  name: tasks-log/log_gene_scores_RVIS_store_stats_hash.log
-  size: 0
+  size: 365

@@ -32,11 +32,11 @@ def genomic_resources_repo() -> GenomicResourceRepo:
             default_annotation:
                 attributes:
                 - source: test100way
-                  destination: test100
+                  name: test100
                 - source: t1
-                  destination: t1
+                  name: t1
                 - source: t2
-                  destination: t2
+                  name: t2
             """,
             "data.mem": """
                 chrom  pos_begin  pos_end  100way   t1   t2
@@ -92,7 +92,7 @@ def test_annotation_pipeline_schema_basics(
             resource_id: np_score1
             attributes:
             - source: test_raw
-              destination: test
+              name: test
         - position_score:
             resource_id: position_score1
         """, grr_repository=genomic_resources_repo)
@@ -110,13 +110,13 @@ def test_annotation_pipeline_schema_with_internal(
         - np_score:
             resource_id: np_score1
             attributes:
-            - destination: test
+            - name: test
               source: test_raw
         - position_score:
             resource_id: position_score1
             attributes:
             - test100way
-            - destination: t1
+            - name: t1
               internal: True
         """, grr_repository=genomic_resources_repo)
 

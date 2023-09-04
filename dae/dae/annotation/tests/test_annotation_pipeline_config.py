@@ -47,13 +47,13 @@ def test_annotator_config_with_attributes() -> None:
             - annotator:
                 attributes:
                 - att1
-                - destination: att2
-                - destination: att3
+                - name: att2
+                - name: att3
                   source: some_score
-                - destination: att4
+                - name: att4
                   source: some_score
                   att_param: foo
-                - destination: att5
+                - name: att5
                   att_param: raz
                   internal: true
                 - source: att6
@@ -103,7 +103,7 @@ def test_effect_annotator_extra_attributes() -> None:
             promoter_len: 100
             attributes:
             - source: genes
-              destination: list_of_genes
+              name: list_of_genes
               format: list
               internal: yes
             - source: genes

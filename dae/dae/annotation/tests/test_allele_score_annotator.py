@@ -76,7 +76,7 @@ def test_allele_score_with_default_score_annotation(
                     default_annotation:
                       attributes:
                       - source: freq
-                        destination: allele_freq
+                        name: allele_freq
 
                 """,
                 "data.txt": convert_to_tab_separated("""

@@ -1,13 +1,3 @@
-
-# - effect_annotator:
-#     genome: "hg19/genomes/GATK_ResourceBundle_5777_b37_phiX174"
-#     gene_models: "hg19/gene_models/refGene_v201309"
-#     attributes:
-#     - source: allele_effects
-#       destination: allele_effects
-#       internal: false
-
-
 - position_score: hg19/internal/scores1
 
 - position_score: hg19/internal/scores_incomplete_coverage

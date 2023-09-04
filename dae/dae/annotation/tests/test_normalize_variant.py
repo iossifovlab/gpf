@@ -161,7 +161,7 @@ def test_normalize_allele_annotator_pipeline(
             genome: hg19/GATK_ResourceBundle_5777_b37_phiX174_short/genome
             attributes:
             - source: normalized_allele
-              destination: normalized_allele
+              name: normalized_allele
               internal: False
         """)
 
@@ -202,7 +202,7 @@ def test_normalize_tandem_repeats(
             genome: hg38/genomes/GRCh38-hg38
             attributes:
             - source: normalized_allele
-              destination: normalized_allele
+              name: normalized_allele
               internal: False
         """)
 
@@ -278,7 +278,7 @@ def test_normalize_allele_annotator_resources(
             genome: hg19/GATK_ResourceBundle_5777_b37_phiX174_short/genome
             attributes:
             - source: normalized_allele
-              destination: normalized_allele
+              name: normalized_allele
               internal: False
         """)
 

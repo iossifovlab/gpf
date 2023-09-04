@@ -76,7 +76,7 @@ def test_np_score_annotator(
             resource_id: np_score1
             attributes:
             - source: test_raw
-              destination: test
+              name: test
               position_aggregator: {pos_aggregator}
               nucleotide_aggregator: {nuc_aggregator}
         """)

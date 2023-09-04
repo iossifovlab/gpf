@@ -4,7 +4,7 @@ import sys
 import argparse
 import logging
 import textwrap
-from typing import cast, Any
+from typing import cast, Any, Optional
 
 from collections import defaultdict, Counter
 
@@ -29,7 +29,7 @@ from dae.tools.stats_liftover import save_liftover_stats
 logger = logging.getLogger("dae_liftover")
 
 
-def parse_cli_arguments():
+def parse_cli_arguments() -> argparse.ArgumentParser:
     """Create CLI parser."""
     parser = argparse.ArgumentParser(
         description="liftover denovo variants to hg38")
@@ -77,7 +77,9 @@ def parse_cli_arguments():
     return parser
 
 
-def main(argv=None, gpf_instance=None):
+def main(
+        argv: Optional[list[str]] = None,
+        gpf_instance: Optional[GPFInstance] = None) -> None:
     """Liftover dae variants tool main function."""
     # pylint: disable=too-many-locals,too-many-statements
     if argv is None:
@@ -86,18 +88,19 @@ def main(argv=None, gpf_instance=None):
         gpf_instance = GPFInstance.build()
 
     parser = parse_cli_arguments()
-    argv = parser.parse_args(argv)
+    assert argv is not None
+    args = parser.parse_args(argv)
 
-    VerbosityConfiguration.set(argv)
+    VerbosityConfiguration.set(args)
 
     grr = gpf_instance.grr
     source_genome = build_reference_genome_from_resource(
-        grr.get_resource(argv.source_genome))
+        grr.get_resource(args.source_genome))
     assert source_genome is not None
     source_genome.open()
 
     families_filename, families_params = \
-        FamiliesLoader.parse_cli_arguments(argv)
+        FamiliesLoader.parse_cli_arguments(args)
 
     families_loader = FamiliesLoader(
         families_filename, **families_params
@@ -105,7 +108,7 @@ def main(argv=None, gpf_instance=None):
     families = families_loader.load()
 
     variants_filenames, variants_params = \
-        DaeTransmittedLoader.parse_cli_arguments(argv)
+        DaeTransmittedLoader.parse_cli_arguments(args)
 
     variants_loader = DaeTransmittedLoader(
         families,
@@ -114,46 +117,46 @@ def main(argv=None, gpf_instance=None):
         genome=source_genome,
     )
 
-    summary_filename = f"{argv.output_prefix}.txt"
-    toomany_filename = f"{argv.output_prefix}-TOOMANY.txt"
-    if argv.region is not None:
-        region = argv.region
+    summary_filename = f"{args.output_prefix}.txt"
+    toomany_filename = f"{args.output_prefix}-TOOMANY.txt"
+    if args.region is not None:
+        region = args.region
         logger.info("resetting regions (region): %s", region)
         variants_loader.reset_regions(region)
-        summary_filename = f"{argv.output_prefix}-{region}.txt"
-        toomany_filename = f"{argv.output_prefix}-TOOMANY-{region}.txt"
+        summary_filename = f"{args.output_prefix}-{region}.txt"
+        toomany_filename = f"{args.output_prefix}-TOOMANY-{region}.txt"
 
     pipeline_config = textwrap.dedent(
         f"""
         - effect_annotator:
-            gene_models: {argv.source_gene_models}
-            genome: {argv.source_genome}
+            gene_models: {args.source_gene_models}
+            genome: {args.source_genome}
             attributes:
             - source: "worst_effect"
-              destination: "source_worst_effect"
+              name: "source_worst_effect"
             - source: "gene_effects"
-              destination: "source_gene_effects"
+              name: "source_gene_effects"
             - source: "effect_details"
-              destination: "source_effect_details"
+              name: "source_effect_details"
 
         - liftover_annotator:
-            chain: {argv.chain}
-            target_genome: {argv.target_genome}
+            chain: {args.chain}
+            target_genome: {args.target_genome}
             attributes:
             - source: liftover_annotatable
-              destination: target_annotatable
+              name: target_annotatable
 
         - effect_annotator:
-            gene_models: {argv.target_gene_models}
-            genome: {argv.target_genome}
+            gene_models: {args.target_gene_models}
+            genome: {args.target_genome}
             input_annotatable: target_annotatable
             attributes:
             - source: "worst_effect"
-              destination: "target_worst_effect"
+              name: "target_worst_effect"
             - source: "gene_effects"
-              destination: "target_gene_effects"
+              name: "target_gene_effects"
             - source: "effect_details"
-              destination: "target_effect_details"
+              name: "target_effect_details"
 
         """
     )
@@ -235,7 +238,7 @@ def main(argv=None, gpf_instance=None):
                     fa.family_id,
                     mat2str(fa.best_state),
                     mat2str(
-                        fa.family_attributes.get("read_counts"), col_sep=" ")
+                        fa.family_attributes["read_counts"], col_sep=" ")
                 ]
                 families_data.append(":".join(fdata))
 
@@ -254,4 +257,4 @@ def main(argv=None, gpf_instance=None):
                 output_toomany.write("\t".join(toomany_line))
                 output_toomany.write("\n")
 
-    save_liftover_stats(target_stats, argv.stats)
+    save_liftover_stats(target_stats, args.stats)

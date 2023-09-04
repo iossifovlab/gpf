@@ -345,6 +345,8 @@ class NumberHistogram(Statistic):
     def plot(self, outfile: IO, score_id: str) -> None:
         """Plot histogram and save it into outfile."""
         # pylint: disable=import-outside-toplevel
+        import matplotlib
+        matplotlib.use("agg")
         import matplotlib.pyplot as plt
         width = self.bins[1:] - self.bins[:-1]
         plt.bar(
@@ -538,6 +540,8 @@ class CategoricalHistogram(Statistic):
     def plot(self, outfile: IO, score_id: str) -> None:
         """Plot histogram and save it into outfile."""
         # pylint: disable=import-outside-toplevel
+        import matplotlib
+        matplotlib.use("agg")
         import matplotlib.pyplot as plt
         values = self.bars.keys()
         counts = self.bars.values()

@@ -27,7 +27,7 @@ _ANNOTATOR_FACTORY_REGISTRY: dict[
 _EXTENTIONS_LOADED = False
 
 
-def _load_annotator_factory_plugins():
+def _load_annotator_factory_plugins() -> None:
     # pylint: disable=global-statement
     global _EXTENTIONS_LOADED
     if _EXTENTIONS_LOADED:
@@ -219,26 +219,35 @@ class AnnotationConfigParser:
     def parse_raw_attribute_config(
             raw_attribute_config: dict[str, Any]) -> AttributeInfo:
         """Parse annotation attribute raw configuration."""
-        name = raw_attribute_config.get("destination")
-        source = raw_attribute_config.get("source")
+        attribute_config = copy.deepcopy(raw_attribute_config)
+        if "destination" in attribute_config:
+            logger.warning(
+                "usage of 'destination' in annotators attribute configuration "
+                "is deprecated; use 'name' instead")
+            name = attribute_config.get("destination")
+            attribute_config.pop("destination")
+            attribute_config["name"] = name
+
+        name = attribute_config.get("name")
+        source = attribute_config.get("source")
 
         if name is None and source is None:
             raise ValueError(f"The raw attribute configuraion "
-                             f"{raw_attribute_config} has neigther "
-                             "destination nor source.")
+                             f"{attribute_config} has neigther "
+                             "name nor source.")
 
         name = name if name else source
         source = source if source else name
-        internal = bool(raw_attribute_config.get("internal", False))
+        internal = bool(attribute_config.get("internal", False))
 
         assert source is not None
         if not isinstance(name, str):
-            message = "The destination for in an attribute " + \
-                      f"config {raw_attribute_config} should be a string"
+            message = "The name for in an attribute " + \
+                      f"config {attribute_config} should be a string"
             raise ValueError(message)
 
-        parameters = {k: v for k, v in raw_attribute_config.items()
-                      if k not in ["destination", "source", "internal"]}
+        parameters = {k: v for k, v in attribute_config.items()
+                      if k not in ["name", "source", "internal"]}
         return AttributeInfo(name, source, internal, parameters)
 
     @staticmethod
@@ -252,7 +261,7 @@ class AnnotationConfigParser:
         attribute_config = []
         for raw_attribute_config in raw_attributes_config:
             if isinstance(raw_attribute_config, str):
-                raw_attribute_config = {"destination": raw_attribute_config}
+                raw_attribute_config = {"name": raw_attribute_config}
             attribute_config.append(
                 AnnotationConfigParser.parse_raw_attribute_config(
                     raw_attribute_config))
@@ -319,7 +328,8 @@ def build_annotation_pipeline(
 
 
 def check_for_repeated_attributes(
-        pipeline: AnnotationPipeline, annotator_config: AnnotatorInfo):
+        pipeline: AnnotationPipeline,
+        annotator_config: AnnotatorInfo) -> None:
     """Check repeated attributes in annotator configuration."""
     annotator_names_list = [att.name for att in annotator_config.attributes]
     annotator_names_set = set(annotator_names_list)
@@ -340,7 +350,7 @@ def check_for_repeated_attributes(
                          f"the pipeline")
 
 
-def check_for_unused_parameters(info: AnnotatorInfo):
+def check_for_unused_parameters(info: AnnotatorInfo) -> None:
     """Check annotator configuration for unused parameters."""
     unused_annotator_parameters = info.parameters.get_unused_keys()
     if unused_annotator_parameters:

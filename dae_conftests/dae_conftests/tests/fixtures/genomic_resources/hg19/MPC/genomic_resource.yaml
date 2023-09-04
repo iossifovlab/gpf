@@ -39,6 +39,6 @@ scores:
 
 default_annotation:
   - source: MPC
-    destination: mpc
+    name: mpc
     position_aggregator: max
     nucleotide_aggregator: max

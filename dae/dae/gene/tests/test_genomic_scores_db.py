@@ -43,7 +43,7 @@ def scores_repo(tmp_path):
 
                 default_annotation:
                   - source: phastCons100
-                    destination: phastcons100
+                    name: phastcons100
                 meta:
                   description:
                     test_help

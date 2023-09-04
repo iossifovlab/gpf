@@ -110,9 +110,9 @@ def test_cnv_filter_and_attribute(
                   cnv.attributes["collection"] == "AGRE"
                 attributes:
                 - count
-                - destination: status
+                - name: status
                   source: "attribute.affected_status"
-                - destination: status2
+                - name: status2
                   source: "attribute.affected_status"
                   aggregator: max
                 - source: "attribute.collection"

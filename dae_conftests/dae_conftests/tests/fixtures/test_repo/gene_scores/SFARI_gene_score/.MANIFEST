@@ -4,24 +4,15 @@
 - md5: 3892185823463e11633de27c9fd51bab
   name: genomic_resource.yaml
   size: 205
+- md5: dd845683c73bf2abbf4deb451d41478c
+  name: index.html
+  size: 1646
 - md5: e389eedab465a607bb6d0b116e171019
   name: statistics/histogram_SFARI_gene_score.png
   size: 13245
-- md5: 1e5c777e9d9607b6a9e9bae61096d808
+- md5: 02fb7630a4198d04444b82ed5d565578
   name: statistics/histogram_SFARI_gene_score.yaml
-  size: 263
-- md5: aca6abd4ebeea88dc241bc2880123303
+  size: 639
+- md5: af43d14e299dcdd53719baae1f279083
   name: statistics/stats_hash
-  size: 208
-- md5: d41d8cd98f00b204e9800998ecf8427e
-  name: tasks-log/log_gene_scores_SFARI_gene_score_SFARI_gene_score_calc_histogram.log
-  size: 0
-- md5: d41d8cd98f00b204e9800998ecf8427e
-  name: tasks-log/log_gene_scores_SFARI_gene_score_SFARI_gene_score_save_histogram.log
-  size: 0
-- md5: d41d8cd98f00b204e9800998ecf8427e
-  name: tasks-log/log_gene_scores_SFARI_gene_score_manifest_rebuild.log
-  size: 0
-- md5: d41d8cd98f00b204e9800998ecf8427e
-  name: tasks-log/log_gene_scores_SFARI_gene_score_store_stats_hash.log
-  size: 0
+  size: 238

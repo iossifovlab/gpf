@@ -22,5 +22,5 @@ scores:
 
 default_annotation:
   - source: score0_incomplete_cov
-    destination: score0_incomplete_cov
+    name: score0_incomplete_cov
     position_aggregator: max

@@ -505,7 +505,7 @@ class GenomicScore(ResourceConfigValidationMixin):
         default_annotation = self.get_config().get("default_annotation")
         if not default_annotation:
             return list(
-                {"source": attr, "destination": attr}
+                {"source": attr, "name": attr}
                 for attr in self.score_definitions)
 
         # TODO: to remove when all the default_annotation in the main GRR have
@@ -528,7 +528,7 @@ class GenomicScore(ResourceConfigValidationMixin):
         """Return default annotation attribute for a score.
 
         Returns None if the score is not included in the default annotation.
-        Returns the destination attribute if present or the score if not.
+        Returns the name of the attribute if present or the score if not.
         """
         attributes = self.get_default_annotation_attributes()
         result = []
@@ -536,8 +536,8 @@ class GenomicScore(ResourceConfigValidationMixin):
             if attr["source"] != score_id:
                 continue
             dst = score_id
-            if "destination" in attr:
-                dst = attr["destination"]
+            if "name" in attr:
+                dst = attr["name"]
             result.append(dst)
         if result:
             return ",".join(result)

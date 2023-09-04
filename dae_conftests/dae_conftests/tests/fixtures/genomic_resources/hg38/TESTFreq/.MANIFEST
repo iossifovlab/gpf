@@ -4,24 +4,24 @@
 - md5: 05e5bc2e111692d73e2c27e76fc7e2a7
   name: TESTFreq.tsv.gz.tbi
   size: 100
-- md5: 5057dfbead3499d29983468e36735f88
+- md5: 4804693a90df0092106684d6de246e13
   name: genomic_resource.yaml
-  size: 544
-- md5: a98cc72144d312d0f416b5198d3b6a05
+  size: 530
+- md5: d632c45a63e5868979f86cbe58d914dc
   name: index.html
-  size: 2158
+  size: 2171
 - md5: a20bb25abfcdff63f22fbb2087f540d2
   name: statistics/histogram_altFreq.png
   size: 10546
-- md5: 38c423062aabb20004fc987761fd4122
+- md5: e642f11ea6bafabb05bdbaee45f2c8f7
   name: statistics/histogram_altFreq.yaml
-  size: 2128
+  size: 2129
 - md5: 99a701ae7ae9134111deee6c9ffbbff1
   name: statistics/histogram_altFreq2.png
   size: 10898
-- md5: 43e5e902c11a722578b1898960200f61
+- md5: 6a5f32217b4b4877ed5f1249a9fef731
   name: statistics/histogram_altFreq2.yaml
-  size: 2076
-- md5: 9910e22bbf9ebaacdfebf887b11f8a18
+  size: 2078
+- md5: 524f1829ff855ae7d8a4bd920cb07b82
   name: statistics/stats_hash
-  size: 9367
+  size: 9374

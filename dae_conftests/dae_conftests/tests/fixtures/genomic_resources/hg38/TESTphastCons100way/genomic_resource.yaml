@@ -37,5 +37,5 @@ scores:
 
 default_annotation:
   - source: phastCons100way
-    destination: phastCons100way
+    name: phastCons100way
     position_aggregator: max

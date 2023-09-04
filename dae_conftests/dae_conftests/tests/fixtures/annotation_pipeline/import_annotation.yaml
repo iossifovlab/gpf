@@ -4,7 +4,7 @@
     gene_models: "hg19/gene_models/refGene_v201309"
     attributes:
     - source: allele_effects
-      destination: allele_effects
+      name: allele_effects
       internal: false
 
 - position_score: hg19/internal/scores1

@@ -236,8 +236,8 @@
           0,
           0
         ],
-        "min_value": NaN,
-        "max_value": NaN
+        "min_value": -3.668719,
+        "max_value": 15.616411
       },
       {
         "config": {
@@ -460,8 +460,8 @@
           0,
           0
         ],
-        "min_value": NaN,
-        "max_value": NaN
+        "min_value": 0.001,
+        "max_value": 52.0
       }
     ],
     "table": {

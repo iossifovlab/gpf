@@ -231,8 +231,8 @@
           0,
           0
         ],
-        "min_value": NaN,
-        "max_value": NaN
+        "min_value": 0.0,
+        "max_value": 0.01
       }
     ],
     "table": {
