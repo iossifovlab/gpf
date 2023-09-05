@@ -7,7 +7,7 @@ material-app {
 }
 
 body {
-  font-family: Roboto, sans-serif;
+  font-family: Roboto, sans-serif, "Noto Sans Symbols 2", "Noto Sans Math";
   overflow-y: scroll;
 }
 
@@ -34,7 +34,7 @@ a {
 
 input,
 button {
-  font-family: Roboto, sans-serif;
+  font-family: Roboto, sans-serif, "Noto Sans Symbols 2", "Noto Sans Math";
 }
 
 @keyframes example {
@@ -222,7 +222,7 @@ label {
 }
 
 .nav-title-custom {
-  font-family: Roboto, sans-serif;
+  font-family: Roboto, sans-serif, "Noto Sans Symbols 2", "Noto Sans Math";
   font-weight: 500;
   width: 100px;
   margin-right: 8px;

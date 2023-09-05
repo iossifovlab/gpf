@@ -9,7 +9,9 @@
           (click)="undo()"
           [disabled]="!zoomHistory?.canGoBackward"
           title="Undo (Ctrl+Z or Z)">
-          <span>&#x021FD;</span>
+          <span>
+            <i class="fa fa-arrow-left" aria-hidden="true"></i>
+          </span>
         </button>
         <button
           type="button"
@@ -18,7 +20,9 @@
           (click)="redo()"
           [disabled]="!zoomHistory?.canGoForward"
           title="Redo (Ctrl+Y or Y)">
-          <span>&#x021FE;</span>
+          <span>
+            <i class="fa fa-arrow-right" aria-hidden="true"></i>
+          </span>
         </button>
         <button
           type="button"
@@ -26,7 +30,9 @@
           class="gene-plot-header-icon"
           (click)="reset()"
           title="Reset (Double-click or 5)">
-          <span style="position: relative; top: 1px">⟳</span>
+          <span>
+            <i class="fa fa-repeat" aria-hidden="true"></i>
+          </span>
         </button>
       </span>
 
