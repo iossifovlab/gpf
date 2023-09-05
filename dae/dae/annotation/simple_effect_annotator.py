@@ -1,5 +1,6 @@
 import logging
 from typing import Any, Optional, Tuple, Set
+
 from dae.annotation.annotatable import Annotatable
 from dae.annotation.annotation_factory import AnnotationConfigParser
 from dae.annotation.annotation_pipeline import AnnotationPipeline
@@ -7,7 +8,7 @@ from dae.annotation.annotation_pipeline import Annotator
 from dae.annotation.annotation_pipeline import AnnotatorInfo
 from dae.annotation.annotator_base import AnnotatorBase
 from dae.genomic_resources.gene_models import GeneModels, \
-    build_gene_models_from_resource
+    build_gene_models_from_resource, TranscriptModel
 
 from dae.genomic_resources.genomic_context import get_genomic_context
 from dae.utils.regions import Region
@@ -50,7 +51,7 @@ class SimpleEffectAnnotator(AnnotatorBase):
 
         self.gene_models = gene_models
 
-    def open(self):
+    def open(self) -> Annotator:
         self.gene_models.load()
         return super().open()
 
@@ -71,7 +72,9 @@ class SimpleEffectAnnotator(AnnotatorBase):
             "gene_list": gene_list
         }
 
-    def cds_intron_regions(self, transcript):
+    def cds_intron_regions(
+        self, transcript: TranscriptModel
+    ) -> list[Region]:
         """Return whether region is CDS intron."""
         region: list[Region] = []
         if not transcript.is_coding():
@@ -83,18 +86,18 @@ class SimpleEffectAnnotator(AnnotatorBase):
                 region.append(Region(transcript.chrom, beg, end))
         return region
 
-    def utr_regions(self, transcript):
+    def utr_regions(self, transcript: TranscriptModel) -> list[Region]:
         """Return whether the region is classified as UTR."""
         region: list[Region] = []
         if not transcript.is_coding():
             return region
 
-        utr5_regions = transcript.UTR5_regions()
-        utr3_regions = transcript.UTR3_regions()
+        utr5_regions = transcript.utr5_regions()
+        utr3_regions = transcript.utr3_regions()
         utr3_regions.extend(utr3_regions)
         return utr5_regions
 
-    def peripheral_regions(self, transcript):
+    def peripheral_regions(self, transcript: TranscriptModel) -> list[Region]:
         """Return whether the region is peripheral."""
         region: list[Region] = []
         if not transcript.is_coding():
@@ -112,7 +115,7 @@ class SimpleEffectAnnotator(AnnotatorBase):
 
         return region
 
-    def noncoding_regions(self, transcript):
+    def noncoding_regions(self, transcript: TranscriptModel) -> list[Region]:
         """Return whether the region is noncoding."""
         region: list[Region] = []
         if transcript.is_coding():
@@ -124,7 +127,9 @@ class SimpleEffectAnnotator(AnnotatorBase):
         return region
 
     def call_region(
-        self, chrom, beg, end, transcripts, func_name, classification
+        self, chrom: str, beg: int, end: int,
+        transcripts: list[TranscriptModel],
+        func_name: str, classification: str
     ) -> Optional[Tuple[str, Set[str]]]:
         """Call a region with a specific classification."""
         genes = set()
@@ -134,7 +139,7 @@ class SimpleEffectAnnotator(AnnotatorBase):
 
             regions = []
             if func_name == "CDS_regions":
-                regions = transcript.CDS_regions()
+                regions = transcript.cds_regions()
             else:
                 regions = getattr(self, func_name)(transcript)
 

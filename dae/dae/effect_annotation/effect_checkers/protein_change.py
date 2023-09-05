@@ -1,8 +1,16 @@
+from typing import Optional
+
 from ..effect import EffectFactory
+from .effect_checker import EffectChecker, AnnotationEffect, AnnotationRequest
 
 
-class ProteinChangeEffectChecker:
-    def mutation_type(self, aaref, aaalt):
+class ProteinChangeEffectChecker(EffectChecker):
+    """Protein change effect checker."""
+
+    def mutation_type(
+            self, aaref: list[Optional[str]],
+            aaalt: list[Optional[str]]) -> str:
+        """Check the mutation type."""
         assert len(aaref) == len(aaalt)
 
         if "End" in aaalt and "End" not in aaref:
@@ -15,8 +23,12 @@ class ProteinChangeEffectChecker:
                 return "missense"
         return "synonymous"
 
-    def get_effect(self, request):
-        coding_regions = request.CDS_regions()
+    def get_effect(
+        self, request: AnnotationRequest
+    ) -> Optional[AnnotationEffect]:
+        coding_regions = request.cds_regions()
+        assert request.variant.reference is not None
+        assert request.variant.alternate is not None
         ref_length = len(request.variant.reference)
         alt_length = len(request.variant.alternate)
         length = abs(alt_length - ref_length)
@@ -31,3 +43,4 @@ class ProteinChangeEffectChecker:
                     return EffectFactory.create_effect_with_aa_change(
                         self.mutation_type(ref_aa, alt_aa), request
                     )
+        return None

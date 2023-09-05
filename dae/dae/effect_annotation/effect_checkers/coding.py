@@ -1,9 +1,16 @@
 import logging
+from typing import Optional
+
 from ..effect import EffectFactory
+from .effect_checker import EffectChecker, AnnotationEffect, AnnotationRequest
 
 
-class CodingEffectChecker:
-    def get_effect(self, request):
+class CodingEffectChecker(EffectChecker):
+    """Coding effect checker class."""
+
+    def get_effect(
+        self, request: AnnotationRequest
+    ) -> Optional[AnnotationEffect]:
         logger = logging.getLogger(__name__)
         logger.debug("is coding=%s", request.transcript_model.is_coding())
         if not request.transcript_model.is_coding():
@@ -19,3 +26,4 @@ class CodingEffectChecker:
             return EffectFactory.create_effect_with_request(
                 "non-coding-intron", request
             )
+        return None

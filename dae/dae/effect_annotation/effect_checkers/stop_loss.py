@@ -1,10 +1,19 @@
 import logging
+from typing import Optional
+
 from ..effect import EffectFactory
+from .effect_checker import EffectChecker, AnnotationEffect, AnnotationRequest
+
+logger = logging.getLogger(__name__)
 
 
-class StopLossEffectChecker:
-    def get_effect(self, request):
-        logger = logging.getLogger(__name__)
+class StopLossEffectChecker(EffectChecker):
+    """Stop loss effect checker class."""
+
+    def get_effect(
+        self, request: AnnotationRequest
+    ) -> Optional[AnnotationEffect]:
+        assert request.variant.reference is not None
         last_position = request.variant.position + len(
             request.variant.reference
         )
@@ -23,7 +32,7 @@ class StopLossEffectChecker:
 
                 if len(ref_aa) == len(alt_aa):
                     if alt_aa[ref_aa.index("End")] == "End":
-                        return
+                        return None
 
                 logger.debug("ref aa=%s, alt aa=%s", ref_aa, alt_aa)
 
@@ -33,3 +42,5 @@ class StopLossEffectChecker:
                 pass
 
             return EffectFactory.create_effect_with_prot_pos("noEnd", request)
+
+        return None

@@ -20,12 +20,12 @@ EFFECT_DATA_1 = "splice-site!" \
 EFFECT_TRANSCRIPT_DATA_1 = "NM_031857:PCDHA9:3'UTR:1480"
 
 
-def test_effect_transcript_deserialization():
+def test_effect_transcript_deserialization() -> None:
     effect_trancript = EffectTranscript.from_string(EFFECT_TRANSCRIPT_DATA_1)
     assert str(effect_trancript) == EFFECT_TRANSCRIPT_DATA_1
 
 
-def test_allele_effect_deserialization():
+def test_allele_effect_deserialization() -> None:
     allele_effect = AlleleEffects.from_string(EFFECT_DATA_1)
 
     assert str(allele_effect) == EFFECT_DATA_1
