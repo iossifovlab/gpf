@@ -88,7 +88,7 @@ export class AuthService {
   }
 
   private setTokens(res: object): void {
-    this.cookieService.set('access_token', res['access_token'] as string);
+    this.cookieService.set('access_token', res['access_token'] as string, {path: '/'});
     localStorage.setItem('refresh_token', res['refresh_token'] as string);
   }
 }
