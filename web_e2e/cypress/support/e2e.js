@@ -20,5 +20,5 @@ import './commands';
 // require('./commands')
 
 Cypress.Cookies.defaults({
-  preserve: 'sessionid',
+  preserve: ['sessionid', 'access_token'],
 });

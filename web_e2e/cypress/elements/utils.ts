@@ -57,10 +57,6 @@ export class BasePage {
   private readonly adminUsername = 'admin@iossifovlab.com';
   private readonly adminPassword = 'secret';
   private oauthTokens = {
-    accessToken: {
-      key: 'access_token',
-      value: ''
-    },
     refreshToken: {
       key: 'refresh_token',
       value: ''
@@ -69,19 +65,20 @@ export class BasePage {
 
   public preserveLogin(): void {
     Cypress.Cookies.preserveOnce('sessionid');
+    Cypress.Cookies.preserveOnce('access_token');
 
     if (localStorage.length === 0) {
-      localStorage.setItem(this.oauthTokens.accessToken.key, this.oauthTokens.accessToken.value);
       localStorage.setItem(this.oauthTokens.refreshToken.key, this.oauthTokens.refreshToken.value);
     } else {
-      this.oauthTokens.accessToken.value = localStorage.getItem(this.oauthTokens.accessToken.key);
       this.oauthTokens.refreshToken.value = localStorage.getItem(this.oauthTokens.refreshToken.key);
     }
   }
 
   public cleanup(): void {
     cy.clearCookie('sessionid');
+    cy.clearCookie('access_token');
     cy.getCookie('sessionid').should('be.null');
+    cy.getCookie('access_token').should('be.null');
     localStorage.clear();
   }
 
