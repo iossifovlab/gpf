@@ -57,7 +57,7 @@ export class AuthService {
   }
 
   public clearTokens(): void {
-    this.cookieService.delete('access_token');
+    this.cookieService.delete('access_token', '/');
     localStorage.removeItem('refresh_token');
   }
 
