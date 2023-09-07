@@ -26,10 +26,6 @@ th {
   margin-bottom: 50px;
 }
 
-.children-stats {
-  font-family: monospace;
-}
-
 .selector-cell {
   max-width: fit-content;
   width: 100px;
