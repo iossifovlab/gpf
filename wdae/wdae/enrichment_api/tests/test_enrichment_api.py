@@ -234,7 +234,7 @@ def test_enrichment_test_gene_scores_with_zero_range(
     assert response.status_code == 200
 
     assert response.data["desc"] == \
-        "Gene Scores: LGD_rank from 0 upto 1000 (1024)"
+        "Gene Scores: LGD_rank from 0 up to 1000 (1024)"
 
 
 def test_enrichment_test_gene_set(admin_client, wdae_gpf_instance):

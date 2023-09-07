@@ -80,12 +80,12 @@ class EnrichmentTestView(QueryDatasetView):
             if range_start is not None and range_end is not None:
                 desc = (
                     f"Gene Scores: {gene_scores_id} "
-                    f"from {range_start} upto {range_end}"
+                    f"from {range_start} up to {range_end}"
                 )
             elif range_start is not None:
                 desc = f"Gene Scores: {gene_scores_id} from {range_start}"
             elif range_end is not None:
-                desc = f"Gene Scores: {gene_scores_id} upto {range_end}"
+                desc = f"Gene Scores: {gene_scores_id} up to {range_end}"
             else:
                 desc = f"Gene Scores: {gene_scores_id}"
             return desc
