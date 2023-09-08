@@ -1,6 +1,6 @@
 import logging
 
-from typing import List, Set
+from typing import Optional, cast, Any
 
 from functools import reduce
 
@@ -8,22 +8,24 @@ from dae.utils.effect_utils import EffectTypesMixin
 from dae.variants.attributes import Role, Inheritance
 from dae.utils.regions import Region
 from dae.pedigrees.family import ALL_FAMILY_TYPES, FamilyType
-from dae.query_variants.attributes_query import (
-    role_query,
-    variant_type_converter,
-    sex_converter,
-    AndNode,
-    NotNode,
-    OrNode,
-    ContainsNode,
-)
+from dae.query_variants.attributes_query import \
+    QNode, \
+    role_query, \
+    variant_type_converter, \
+    sex_converter, \
+    AndNode, \
+    NotNode, \
+    OrNode, \
+    ContainsNode
 
 from dae.person_filters import make_pedigree_filter, make_pheno_filter
+
 
 logger = logging.getLogger(__name__)
 
 
 class QueryTransformer:
+    """Transform genotype data query WEB parameters into query variants."""
 
     FILTER_RENAMES_MAP = {
         "familyIds": "family_ids",
@@ -35,11 +37,13 @@ class QueryTransformer:
         "regionS": "regions",
     }
 
-    def __init__(self, study_wrapper):
+    def __init__(self, study_wrapper):  # type: ignore
         self.study_wrapper = study_wrapper
         self.effect_types_mixin = EffectTypesMixin()
 
-    def _transform_genomic_scores(self, genomic_scores):
+    def _transform_genomic_scores(
+        self, genomic_scores: list[dict]
+    ) -> list[tuple[str, tuple[Optional[int], Optional[int]]]]:
         genomic_scores_filter = [
             (score["metric"], (score["rangeStart"], score["rangeEnd"]))
             for score in genomic_scores
@@ -48,9 +52,9 @@ class QueryTransformer:
 
         return genomic_scores_filter
 
-    def _transform_gene_scores(self, gene_scores):
+    def _transform_gene_scores(self, gene_scores: dict) -> Optional[list[str]]:
         if not self.study_wrapper.gene_scores_db:
-            return
+            return None
 
         scores_name = gene_scores.get("score", None)
         range_start = gene_scores.get("rangeStart", None)
@@ -68,44 +72,56 @@ class QueryTransformer:
 
             return list(genes)
 
-    def _transform_min_max_alt_frequency(self, min_value, max_value):
+        return None
+
+    def _transform_min_max_alt_frequency(
+        self, min_value: Optional[float], max_value: Optional[float]
+    ) -> Optional[tuple[str, tuple[float, float]]]:
         value_range = (min_value, max_value)
 
         if value_range == (None, None):
-            return
+            return None
 
+        result_range: tuple[float, float]
         if value_range[0] is None:
-            value_range = (float("-inf"), value_range[1])
+            assert value_range[1] is not None
+            result_range = (float("-inf"), value_range[1])
 
-        if value_range[1] is None:
-            value_range = (value_range[0], float("inf"))
+        elif value_range[1] is None:
+            assert value_range[0] is not None
+            result_range = (value_range[0], float("inf"))
+        else:
+            assert value_range[0] is not None
+            assert value_range[1] is not None
+            result_range = cast(tuple[float, float], value_range)
 
         value = "af_allele_freq"
 
-        return (value, value_range)
+        return (value, result_range)
 
     @staticmethod
     def _transform_present_in_child_and_parent_roles(
-            present_in_child, present_in_parent):
+        present_in_child: set[str], present_in_parent: set[str]
+    ) -> Optional[QNode]:
         roles_query = []
         roles_query.append(
             QueryTransformer._present_in_child_to_roles(present_in_child))
         roles_query.append(
             QueryTransformer._present_in_parent_to_roles(present_in_parent))
         roles_query = list(filter(lambda rq: rq is not None, roles_query))
-        if len(roles_query) == 2:
-            roles_query = AndNode(roles_query)
-        elif len(roles_query) == 1:
-            roles_query = roles_query[0]
-        else:
-            roles_query = None
 
-        return roles_query
+        if len(roles_query) == 2:
+            return AndNode(roles_query)
+
+        if len(roles_query) == 1:
+            return roles_query[0]
+
+        return None
 
     @staticmethod
     def _transform_present_in_child_and_parent_inheritance(
-            present_in_child, present_in_parent,
-            show_all_unknown=False):
+            present_in_child: set[str], present_in_parent: set[str],
+            show_all_unknown: bool = False) -> str:
 
         inheritance = None
         if present_in_child == set(["neither"]) and \
@@ -124,29 +140,36 @@ class QueryTransformer:
             if show_all_unknown:
                 inheritance.append(Inheritance.unknown)
 
-        inheritance = ",".join([str(inh) for inh in inheritance])
-        return f"any({inheritance})"
+        result = ",".join([str(inh) for inh in inheritance])
+        return f"any({result})"
 
     @staticmethod
     def _transform_present_in_child_and_parent_frequency(
-            present_in_child, present_in_parent,
-            rarity, frequency_filter):
+        _present_in_child: set[str], _present_in_parent: set[str],
+        rarity: dict,
+        frequency_filter: list[
+            tuple[str, tuple[Optional[float], Optional[float]]]]
+    ) -> tuple[Optional[str], Any]:
+
         ultra_rare = rarity.get("ultraRare", None)
         ultra_rare = bool(ultra_rare)
         if ultra_rare:
             return ("ultra_rare", True)
-        else:
-            max_alt_freq = rarity.get("maxFreq", None)
-            min_alt_freq = rarity.get("minFreq", None)
-            if min_alt_freq is not None or max_alt_freq is not None:
-                frequency_filter.append(
-                    ("af_allele_freq", (min_alt_freq, max_alt_freq))
-                )
-                return ("frequency_filter", frequency_filter)
+
+        max_alt_freq = rarity.get("maxFreq", None)
+        min_alt_freq = rarity.get("minFreq", None)
+        if min_alt_freq is not None or max_alt_freq is not None:
+            frequency_filter.append(
+                ("af_allele_freq", (min_alt_freq, max_alt_freq))
+            )
+            return ("frequency_filter", frequency_filter)
+
         return (None, None)
 
     @staticmethod
-    def _present_in_child_to_roles(present_in_child):
+    def _present_in_child_to_roles(
+        present_in_child: set[str]
+    ) -> Optional[QNode]:
         roles_query = []
 
         if "proband only" in present_in_child:
@@ -178,7 +201,9 @@ class QueryTransformer:
         return OrNode(roles_query)
 
     @staticmethod
-    def _present_in_parent_to_roles(present_in_parent):
+    def _present_in_parent_to_roles(
+        present_in_parent: set[str]
+    ) -> Optional[QNode]:
         roles_query = []
 
         if "mother only" in present_in_parent:
@@ -215,8 +240,8 @@ class QueryTransformer:
             return roles_query[0]
         return OrNode(roles_query)
 
-    def _transform_filters_to_ids(self, filters: List[dict]) -> Set[str]:
-        result = list()
+    def _transform_filters_to_ids(self, filters: list[dict]) -> set[str]:
+        result = []
         for filter_conf in filters:
             roles = filter_conf.get("role") if "role" in filter_conf else None
             if filter_conf["from"] == "phenodb":
@@ -231,7 +256,7 @@ class QueryTransformer:
         return reduce(set.intersection, result)
 
     @staticmethod
-    def _add_inheritance_to_query(query, kwargs):
+    def _add_inheritance_to_query(query: str, kwargs: dict[str, Any]) -> None:
         if not query:
             return
         inheritance = kwargs.get("inheritance", [])
@@ -244,7 +269,10 @@ class QueryTransformer:
             raise ValueError(f"unexpected inheritance query {inheritance}")
         kwargs["inheritance"] = inheritance
 
-    def _add_roles_to_query(self, query, kwargs):
+    @staticmethod
+    def _add_roles_to_query(
+        query: Optional[QNode], kwargs: dict[str, Any]
+    ) -> None:
         if not query:
             return
 
@@ -258,9 +286,12 @@ class QueryTransformer:
         else:
             kwargs["roles"] = query
 
-    def _handle_person_set_collection(self, kwargs):
+    def _handle_person_set_collection(
+        self, kwargs: dict[str, Any]
+    ) -> dict[str, Any]:
         people_group = kwargs.pop("personSetCollection", {})
-        logger.debug(f"person set collection requested: {people_group}")
+        logger.debug("person set collection requested: %s", people_group)
+
         collection_id, selected_sets = None, None
         if people_group:
             collection_id = people_group["id"]
@@ -277,13 +308,11 @@ class QueryTransformer:
             kwargs["person_set_collection"] = collection_id, selected_sets
         return kwargs
 
-    # Not implemented:
-    # callSet
-    # minParentsCalled
-    # TMM_ALL
-    def transform_kwargs(self, **kwargs):
+    def transform_kwargs(self, **kwargs: Any) -> dict[str, Any]:
+        """Transform WEB query variants params into genotype data params."""
         # flake8: noqa: C901
-        logger.debug(f"kwargs in study wrapper: {kwargs}")
+        # pylint: disable=too-many-locals,too-many-branches,too-many-statements
+        logger.debug("kwargs in study wrapper: %s", kwargs)
         self._add_inheritance_to_query(
             "not possible_denovo and not possible_omission",
             kwargs
@@ -340,8 +369,7 @@ class QueryTransformer:
                     and inheritance_types & {"mendelian", "missing"}:
                 inheritance_types.add("unknown")
 
-            query = "any({})".format(
-                    ",".join(inheritance_types))
+            query = f"any({','.join(inheritance_types)})"
 
             self._add_inheritance_to_query(query, kwargs)
             kwargs.pop("inheritanceTypeFilter")
@@ -371,8 +399,8 @@ class QueryTransformer:
         if "gender" in kwargs:
             sexes = set(kwargs["gender"])
             if sexes != set(["female", "male", "unspecified"]):
-                sexes = [ContainsNode(sex_converter(sex)) for sex in sexes]
-                kwargs["gender"] = OrNode(sexes)
+                qnodes = [ContainsNode(sex_converter(sex)) for sex in sexes]
+                kwargs["gender"] = OrNode(qnodes)
             else:
                 kwargs["gender"] = None
 
@@ -385,11 +413,11 @@ class QueryTransformer:
                     variant_types.add("CNV+")
                     variant_types.add("CNV-")
 
-                variant_types = [
+                qnodes = [
                     ContainsNode(variant_type_converter(t))
                     for t in variant_types
                 ]
-                kwargs["variantTypes"] = OrNode(variant_types)
+                kwargs["variantTypes"] = OrNode(qnodes)
             else:
                 del kwargs["variantTypes"]
 
@@ -438,9 +466,9 @@ class QueryTransformer:
             kwargs["personIds"] = list(kwargs["personIds"])
 
         if "familyTypes" in kwargs:
-            family_ids_with_types = set()
-            family_types = set([
-                FamilyType.from_name(ft) for ft in kwargs["familyTypes"]])
+            family_ids_with_types: set[str] = set()
+            family_types = set(
+                FamilyType.from_name(ft) for ft in kwargs["familyTypes"])
 
             if family_types != ALL_FAMILY_TYPES:
                 for family_type in family_types:

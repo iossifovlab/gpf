@@ -414,7 +414,7 @@ def remote_config(fixtures_wgpf_instance):
 
 
 @pytest.fixture(scope="function")
-def rest_client(admin_client, remote_config):
+def rest_client(admin_client, remote_config) -> RESTClient:
     client = RESTClient(
         remote_config["id"],
         remote_config["host"],

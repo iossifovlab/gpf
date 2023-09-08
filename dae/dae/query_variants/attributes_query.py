@@ -1,6 +1,7 @@
 # pylint: disable=too-few-public-methods
 import enum
 from functools import reduce
+from typing import Union
 
 from lark import Lark, InlineTransformer
 from lark.visitors import Interpreter
@@ -191,6 +192,8 @@ class TreeNode:
     def __init__(self, children):
         self.children = children
 
+
+QNode = Union[LeafNode, TreeNode]
 
 class AndNode(TreeNode):
     pass
