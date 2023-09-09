@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 import enum
+from typing import Optional, Union
 
 _VARIANT_TYPE_DISPLAY_NAME = {
     "invalid": "inv",
@@ -100,18 +103,18 @@ class Role(enum.Enum):
     unknown = 0
 
     @property
-    def display_name(self):
+    def display_name(self) -> str:
         return _ROLE_DISPLAY_NAME[self.name]
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self.name
         # return "{}: {:023b}".format(self.name, self.value)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name
 
     @staticmethod
-    def from_name(name):
+    def from_name(name: Optional[Union[str, int]]) -> Optional[Role]:
         """Construct and return a Role from it's string representation."""
         if name is None:
             return None
@@ -129,7 +132,7 @@ class Role(enum.Enum):
         return None
 
     @staticmethod
-    def from_value(val):
+    def from_value(val: int) -> Role:
         return Role(int(val))
 
 
@@ -146,7 +149,7 @@ class Sex(enum.Enum):
     unspecified = U
 
     @staticmethod
-    def from_name(name):
+    def from_name(name: Optional[Union[int, str]]) -> Sex:
         """Construct and return person Sex from string."""
         if name is None:
             return Sex.U
@@ -165,16 +168,16 @@ class Sex(enum.Enum):
         raise ValueError("unexpected sex type: " + str(name))
 
     @staticmethod
-    def from_value(val):
+    def from_value(val: int) -> Sex:
         return Sex(int(val))
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self.name
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name
 
-    def short(self):
+    def short(self) -> str:
         return self.name[0].upper()
 
 
@@ -187,7 +190,7 @@ class Status(enum.Enum):
     unspecified = 0
 
     @staticmethod
-    def from_name(name):
+    def from_name(name: Optional[Union[int, str]]) -> Status:
         """Construct and return person status from string."""
         if name is None:
             return Status.unspecified
@@ -206,36 +209,36 @@ class Status(enum.Enum):
         raise ValueError("unexpected status type: " + name)
 
     @staticmethod
-    def from_value(val):
+    def from_value(val: int) -> Status:
         return Status(int(val))
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self.name
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name
 
-    def short(self):
+    def short(self) -> str:
         return self.name[0].upper()
 
-    def __ge__(self, other):
+    def __ge__(self, other: Status) -> bool:
         if self.__class__ is other.__class__:
-            return self.value >= other.value
+            return bool(self.value >= other.value)
         return NotImplemented
 
-    def __gt__(self, other):
+    def __gt__(self, other: Status) -> bool:
         if self.__class__ is other.__class__:
-            return self.value > other.value
+            return bool(self.value > other.value)
         return NotImplemented
 
-    def __le__(self, other):
+    def __le__(self, other: Status) -> bool:
         if self.__class__ is other.__class__:
-            return self.value <= other.value
+            return bool(self.value <= other.value)
         return NotImplemented
 
-    def __lt__(self, other):
+    def __lt__(self, other: Status) -> bool:
         if self.__class__ is other.__class__:
-            return self.value < other.value
+            return bool(self.value < other.value)
         return NotImplemented
 
 
@@ -255,20 +258,20 @@ class Inheritance(enum.Enum):
     unknown = 1 << 8
 
     @staticmethod
-    def from_name(name):
+    def from_name(name: str) -> Inheritance:
         assert (
             name in Inheritance.__members__
         ), f"Inheritance type {name} does not exist!"
         return Inheritance[name]
 
     @staticmethod
-    def from_value(value):
+    def from_value(value: int) -> Inheritance:
         return Inheritance(value)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self.name
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name
 
 

@@ -550,8 +550,9 @@ class BaseQueryBuilder(ABC):
 
         result = []
         for tree in trees:
-            transformer = InheritanceTransformer(column_name,
-                                                 use_bit_and_function)
+            transformer = InheritanceTransformer(
+                column_name,
+                use_bit_and_function=use_bit_and_function)
             res = transformer.transform(tree)
             result.append(res)
         return result
