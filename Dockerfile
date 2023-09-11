@@ -1,22 +1,15 @@
 FROM --platform=linux/amd64 condaforge/mambaforge:latest
 
-ARG SOURCE_DIR="."
 
-
-ADD ${SOURCE_DIR}/environment.yml /
-ADD ${SOURCE_DIR}/dev-environment.yml /
+ADD environment.yml /
+ADD dev-environment.yml /
 
 RUN /opt/conda/bin/mamba env create --name gpf --file /environment.yml
-RUN /opt/conda/bin/mamba env update --name gpf --file /dev-environment.yml
+# RUN /opt/conda/bin/mamba env update --name gpf --file /dev-environment.yml
 
 
 # GPF ENV
 ENV PATH /opt/conda/envs/gpf/bin:$PATH
-
-# HADOOP CONFIG
-ENV JAVA_HOME /opt/conda/envs/gpf
-ENV HADOOP_HOME /opt/conda/envs/gpf
-ENV HADOOP_CONF_DIR /opt/conda/envs/gpf/etc/hadoop
 
 RUN mkdir -p /data && mkdir -p /code
 
