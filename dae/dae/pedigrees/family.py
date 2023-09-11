@@ -5,8 +5,8 @@ from __future__ import annotations
 import copy
 import logging
 
-from typing import Dict, Iterator, KeysView, ValuesView, \
-    Optional, Set, List, Tuple
+from typing import Iterator, KeysView, ValuesView, ItemsView, \
+    Optional, Any
 from enum import Enum, auto
 from collections import defaultdict
 from collections.abc import Mapping
@@ -48,7 +48,7 @@ class FamilyType(Enum):
     OTHER = auto()
 
     @staticmethod
-    def from_name(name: str):
+    def from_name(name: str) -> FamilyType:
         """Construct family type from string."""
         assert isinstance(name, str)
         name = name.lower()
@@ -81,15 +81,16 @@ class Person:
     """Class to represent an individual."""
 
     # pylint: disable=too-many-instance-attributes
-    def __init__(self, **attributes):
+    def __init__(self, **attributes: Any):
         self._attributes = attributes
         self.redefine()
 
-    def redefine(self):
+    def redefine(self) -> None:
+        # pylint: disable=too-many-branches
         """Extract attributes and turns them into properties."""
         assert "person_id" in self._attributes
         self.family_id = self._attributes["family_id"]
-        self.family = None
+        self.family: Optional[Family] = None
         self.person_id = self._attributes["person_id"]
         self.sample_id = self._attributes.get("sample_id", None)
         index = self._attributes.get("index", None)
@@ -118,8 +119,8 @@ class Person:
         if self.dad_id == "0":
             self.dad_id = None
             self._attributes["dad_id"] = None
-        self.mom = None
-        self.dad = None
+        self.mom: Optional[Person] = None
+        self.dad: Optional[Person] = None
         assert self.mom_id is None or isinstance(self.mom_id, str), \
             (self, self._attributes)
         assert self.dad_id is None or isinstance(self.dad_id, str), \
@@ -142,7 +143,7 @@ class Person:
             else:
                 self._attributes["missing"] = None
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         decorator = ""
         if self.generated:
             decorator = "[G] "
@@ -151,7 +152,7 @@ class Person:
         return f"Person({decorator}{self.person_id} ({self.family_id}); " \
             f"{self.role}; {self.sex}, {self.status})"
 
-    def to_json(self):
+    def to_json(self) -> dict[str, Any]:
         return {
             "family_id": self.family_id,
             "person_id": self.person_id,
@@ -170,75 +171,77 @@ class Person:
         }
 
     @property
-    def role(self):
+    def role(self) -> Optional[Role]:
         return self._role
 
     @property
-    def sex(self):
+    def sex(self) -> Optional[Sex]:
         return self._sex
 
     @property
-    def status(self):
+    def status(self) -> Optional[Status]:
         return self._status
 
     @property
-    def layout(self):
+    def layout(self) -> Optional[str]:
         return self._attributes.get("layout", None)
 
     @property
-    def generated(self):
-        return self._attributes.get("generated", None)
+    def generated(self) -> bool:
+        return self._attributes.get("generated", False)
 
     @property
-    def not_sequenced(self):
+    def not_sequenced(self) -> bool:
         return self.generated or \
-            self._attributes.get("not_sequenced", None)
+            self._attributes.get("not_sequenced", False)
 
     @property
-    def missing(self):
-        return self.generated or self.not_sequenced or\
-            self._attributes.get("missing", False)
+    def missing(self) -> bool:
+        return bool(
+            self.generated or self.not_sequenced
+            or self._attributes.get("missing", False))
 
     @property
-    def family_bin(self):
+    def family_bin(self) -> Optional[str]:
         return self._attributes.get("family_bin", None)
 
     @property
-    def sample_index(self):
+    def sample_index(self) -> Optional[int]:
         return self._attributes.get("sample_index", None)
 
-    def has_mom(self):
+    def has_mom(self) -> bool:
         return self.mom is not None
 
-    def has_dad(self):
+    def has_dad(self) -> bool:
         return self.dad is not None
 
-    def has_parent(self):
+    def has_parent(self) -> bool:
         return self.has_dad() or self.has_mom()
 
-    def has_both_parents(self):
+    def has_both_parents(self) -> bool:
         return self.has_dad() and self.has_mom()
 
-    def has_missing_parent(self):
-        return \
-            (self.dad is not None
-             and (self.dad.generated or self.dad.not_sequenced)) \
-            or (self.mom is not None
-                and (self.mom.generated or self.mom.not_sequenced))
+    def has_missing_parent(self) -> bool:
+        if self.dad is None or self.mom is None:
+            return True
+        assert self.dad is not None
+        assert self.mom is not None
+        return (self.dad.generated or self.dad.not_sequenced) \
+            or (self.mom.generated or self.mom.not_sequenced)
 
-    def has_attr(self, key):
+    def has_attr(self, key: str) -> bool:
         return key in self._attributes
 
-    def get_attr(self, key, default=None):
+    def get_attr(self, key: str, default: Any = None) -> Any:
         res = self._attributes.get(key, default)
         if isinstance(res, float) and isnan(res):
             return None
         return res
 
-    def set_attr(self, key, value):
+    def set_attr(self, key: str, value: Any) -> None:
         self._attributes[key] = value
 
-    def __eq__(self, other):
+    def __eq__(self, other: Any) -> bool:
         if not isinstance(other, Person):
             return False
         return self.person_id == other.person_id and \
@@ -251,7 +254,7 @@ class Person:
             self.generated == other.generated and \
             self.not_sequenced == other.not_sequenced
 
-    def diff(self, other):
+    def diff(self, other: Any) -> None:
         """Print difference between two individuals."""
         if self.person_id != other.person_id:
             print(f"{self}  person_id:", self.person_id, other.person_id)
@@ -280,25 +283,25 @@ class Family:
 
     def __init__(self, family_id: str):
         self.family_id = family_id
-        self.persons = {}
-        self._samples_index = None
-        self._members_in_order: Optional[List[Person]] = None
-        self._trios: Optional[Dict[str, Tuple[str, str, str]]] = None
-        self._tags: Set[str] = set()
+        self.persons: dict[str, Person] = {}
+        self._samples_index: Optional[tuple[Optional[int], ...]] = None
+        self._members_in_order: Optional[list[Person]] = None
+        self._trios: Optional[dict[str, tuple[str, str, str]]] = None
+        self._tags: set[str] = set()
 
     def add_tag(self, tag: str) -> None:
         self._tags.add(tag)
 
     @property
-    def tags(self) -> Set[str]:
+    def tags(self) -> set[str]:
         return self._tags
 
-    def _connect_family(self):
+    def _connect_family(self) -> None:
         index = 0
         for member in self.persons.values():
             member.family = self
-            member.mom = self.get_member(member.mom_id, None)
-            member.dad = self.get_member(member.dad_id, None)
+            member.mom = self.get_member(member.mom_id)
+            member.dad = self.get_member(member.dad_id)
             if member.missing:
                 member.member_index = -1
             else:
@@ -306,7 +309,7 @@ class Family:
                 index += 1
 
     @staticmethod
-    def from_persons(persons) -> Family:
+    def from_persons(persons: list[Person]) -> Family:
         """Create a family from list of persons."""
         assert len(persons) > 0
         assert all(persons[0].family_id == p.family_id for p in persons)
@@ -322,20 +325,20 @@ class Family:
         return family
 
     @staticmethod
-    def from_records(records):
+    def from_records(records: dict) -> Family:
         persons = []
         for rec in records:
             person = Person(**rec)
             persons.append(person)
         return Family.from_persons(persons)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.members_in_order)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"Family({self.family_id}, {list(self.persons.values())})"
 
-    def to_json(self):
+    def to_json(self) -> dict:
         return {
             "family_id": self.family_id,
             "person_ids": self.members_ids,
@@ -344,7 +347,7 @@ class Family:
             "tags": self.tags
         }
 
-    def get_columns(self):
+    def get_columns(self) -> list[str]:
         """Collect list of columns for representing a family as data frame."""
         column_names = set(
             self.members_in_order[0]  # pylint: disable=protected-access
@@ -362,7 +365,7 @@ class Family:
         columns.extend(sorted(extension_columns))
         return columns
 
-    def add_members(self, persons: List[Person]) -> None:
+    def add_members(self, persons: list[Person]) -> None:
         assert all(isinstance(p, Person) for p in persons)
         assert all(p.family_id == self.family_id for p in persons)
 
@@ -377,11 +380,11 @@ class Family:
         self._connect_family()
 
     @property
-    def full_members(self):
+    def full_members(self) -> list[Person]:
         return list(self.persons.values())
 
     @property
-    def members_in_order(self) -> List[Person]:
+    def members_in_order(self) -> list[Person]:
         """Return list of family members in the order of definition."""
         if self._members_in_order is None:
             self._members_in_order = list(
@@ -391,7 +394,9 @@ class Family:
             )
         return self._members_in_order
 
-    def __eq__(self, other):
+    def __eq__(self, other: Any) -> bool:
+        if not isinstance(other, Family):
+            return False
         if len(self.full_members) != len(other.full_members):
             return False
         for member1, member2 in zip(self.full_members, other.full_members):
@@ -407,7 +412,7 @@ class Family:
         return [m.person_id for m in self.members_in_order]
 
     @property
-    def trios(self) -> Dict[str, Tuple[str, str, str]]:
+    def trios(self) -> dict[str, tuple[str, str, str]]:
         """Split family into list of trios - child, mom and dad."""
         if self._trios is None:
             self._trios = {}
@@ -418,14 +423,14 @@ class Family:
         return self._trios
 
     @property
-    def samples_index(self):
+    def samples_index(self) -> tuple[Optional[int], ...]:
         if self._samples_index is None:
             self._samples_index = tuple(
                 m.sample_index for m in self.members_in_order)
         return self._samples_index
 
     @property
-    def family_type(self):
+    def family_type(self) -> FamilyType:
         """Calculate the type of the family."""
         # pylint: disable=too-many-return-statements
         has_grandparent = any(
@@ -460,7 +465,7 @@ class Family:
         return FamilyType.OTHER
 
     @staticmethod
-    def merge(l_fam: Family, r_fam: Family, forced=True) -> Family:
+    def merge(l_fam: Family, r_fam: Family, forced: bool = True) -> Family:
         """Merge two families into one."""
         assert l_fam.family_id == r_fam.family_id, \
             ("Merging families is only allowed with matching family IDs!"
@@ -526,21 +531,29 @@ class Family:
             for person in merged_persons.values()
         ])
 
-    def members_index(self, person_ids):
+    def members_index(
+        self, person_ids: list[str]
+    ) -> list[Optional[int]]:
         index = []
         for pid in person_ids:
             index.append(self.persons[pid].member_index)
         return index
 
-    def get_member(self, person_id, default=None):
-        return self.persons.get(person_id, default)
+    def get_member(
+        self, person_id: str
+    ) -> Optional[Person]:
+        return self.persons.get(person_id, None)
 
-    def get_members_with_roles(self, roles):
+    def get_members_with_roles(
+        self, roles: list[Role]
+    ) -> list[Person]:
         if not isinstance(roles[0], Role):
             roles = [Role.from_name(role) for role in roles]
         return list(filter(lambda m: m.role in roles, self.members_in_order))
 
-    def get_members_with_statuses(self, statuses):
+    def get_members_with_statuses(
+        self, statuses: list[Status]
+    ) -> list[Person]:
         if not isinstance(statuses[0], Status):
             statuses = [Status.from_name(status) for status in statuses]
         return list(
@@ -551,16 +564,16 @@ class Family:
 class FamiliesData(Mapping[str, Family]):
     """Defines class for handling families in a study."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._ped_df: Optional[pd.DataFrame] = None
-        self._families: Dict[str, Family] = {}
-        self.persons = {}
-        self._broken = {}
+        self._families: dict[str, Family] = {}
+        self.persons: dict[str, Person] = {}
+        self._broken: dict[str, Family] = {}
         self._person_ids_with_parents = None
-        self._real_persons = None
-        self._families_by_type: Dict[str, Set[str]] = {}
+        self._real_persons: Optional[dict[str, Person]] = None
+        self._families_by_type: dict[FamilyType, set[str]] = {}
 
-    def redefine(self):
+    def redefine(self) -> None:
         """Rebuild all families."""
         error_msgs = []
 
@@ -593,21 +606,21 @@ class FamiliesData(Mapping[str, Family]):
             raise AttributeError("; ".join(error_msgs))
 
     @property
-    def broken_families(self):
+    def broken_families(self) -> dict[str, Family]:
         return self._broken
 
     @property
-    def real_persons(self):
+    def real_persons(self) -> dict[str, Person]:
         """Return a subset of individuals that are not generated."""
         if self._real_persons is None:
             self._real_persons = {}
             for person in self.persons.values():
-                if not person.generated:
+                if not person.generated and not person.missing:
                     self._real_persons[person.person_id] = person
         return self._real_persons
 
     @property
-    def families_by_type(self):
+    def families_by_type(self) -> dict[FamilyType, set[str]]:
         """Build a dictionary of families by type."""
         if not self._families_by_type:
             for family_id, family in self._families.items():
@@ -618,7 +631,7 @@ class FamiliesData(Mapping[str, Family]):
 
     @staticmethod
     def from_family_persons(
-            family_persons: Dict[str, List[Person]]) -> FamiliesData:
+            family_persons: dict[str, list[Person]]) -> FamiliesData:
         """Build a families data object from persons grouped by family."""
         families_data = FamiliesData()
         for family_id, persons in family_persons.items():
@@ -643,7 +656,7 @@ class FamiliesData(Mapping[str, Family]):
         return fams
 
     @staticmethod
-    def from_families(families: Dict[str, Family]) -> FamiliesData:
+    def from_families(families: dict[str, Family]) -> FamiliesData:
         """Build families data from dictionary of families."""
         families_data = FamiliesData.from_family_persons(
             {fam.family_id: fam.full_members for fam in families.values()}
@@ -655,7 +668,7 @@ class FamiliesData(Mapping[str, Family]):
 
         return families_data
 
-    def pedigree_samples(self):
+    def pedigree_samples(self) -> list[str]:
         result = []
         for family in self.values():
             for member in family.members_in_order:
@@ -667,7 +680,7 @@ class FamiliesData(Mapping[str, Family]):
         """Build a pedigree dataframe from a families data."""
         if self._ped_df is None:
             # build ped_df
-            column_names: Set[str] = set()
+            column_names: set[str] = set()
             records = []
             for family in self.values():
                 for person in family.full_members:
@@ -699,7 +712,7 @@ class FamiliesData(Mapping[str, Family]):
         """Build a copy of a families data object."""
         return FamiliesData.from_pedigree_df(self.ped_df)
 
-    def __getitem__(self, family_id) -> Family:
+    def __getitem__(self, family_id: str) -> Family:
         return self._families[family_id]
 
     def __len__(self) -> int:
@@ -708,10 +721,10 @@ class FamiliesData(Mapping[str, Family]):
     def __iter__(self) -> Iterator[str]:
         return iter(self._families)
 
-    def __contains__(self, family_id) -> bool:
+    def __contains__(self, family_id: Any) -> bool:
         return family_id in self._families
 
-    def __delitem__(self, family_id) -> None:
+    def __delitem__(self, family_id: str) -> None:
         del self._families[family_id]
 
     def keys(self) -> KeysView[str]:
@@ -720,7 +733,7 @@ class FamiliesData(Mapping[str, Family]):
     def values(self) -> ValuesView[Family]:
         return self._families.values()
 
-    def items(self):
+    def items(self) -> ItemsView[str, Family]:
         return self._families.items()
 
     def get(  # type: ignore
@@ -741,18 +754,18 @@ class FamiliesData(Mapping[str, Family]):
     #         res[family.family_id] = family
     #     return res
 
-    def persons_without_parents(self) -> List[Person]:
+    def persons_without_parents(self) -> list[Person]:
         """Return list of persons without parents."""
-        result: List[Person] = []
+        result: list[Person] = []
         for fam in list(self._families.values()):
             for person in fam.members_in_order:
                 if not person.has_parent():
                     result.append(person)
         return result
 
-    def persons_with_parents(self) -> List[Person]:
+    def persons_with_parents(self) -> list[Person]:
         """Return list of persons with both parents."""
-        result: List[Person] = []
+        result: list[Person] = []
         for fam in list(self._families.values()):
             for person in fam.members_in_order:
                 if person.has_both_parents() \
@@ -760,26 +773,30 @@ class FamiliesData(Mapping[str, Family]):
                     result.append(person)
         return result
 
-    def persons_with_roles(self, roles=None, family_ids=None):
+    def persons_with_roles(
+        self,
+        roles: Optional[list[Role]] = None,
+        family_ids: Optional[list[str]] = None
+    ) -> list[Person]:
         """Return list of persons matching the specified roles."""
         if family_ids is None:
             persons = self.persons.values()
         else:
-            family_ids = set(family_ids)
             persons = filter(  # type: ignore
-                lambda p: p.family_id in family_ids,
+                lambda p: p.family_id in set(family_ids),  # type: ignore
                 self.persons.values())
 
         if roles is None:
-            return persons
+            return list(persons)
 
         if not isinstance(roles[0], Role):
-            roles = [Role.from_name(role) for role in roles]
+            roles_q = set([Role.from_name(role) for role in roles])
 
-        return list(filter(lambda m: m.role in roles, persons))
+        return list(
+            filter(lambda m: m.role in roles_q, persons))  # type: ignore
 
-    def families_of_persons(self, person_ids: Set[str]) -> Set[str]:
-        family_ids: Set[str] = set()
+    def families_of_persons(self, person_ids: set[str]) -> set[str]:
+        family_ids: set[str] = set()
         for person_id in person_ids:
             family_ids.add(self.persons[person_id].family_id)
         return family_ids
@@ -787,11 +804,11 @@ class FamiliesData(Mapping[str, Family]):
     @staticmethod
     def combine(
             first: FamiliesData, second: FamiliesData,
-            forced=True) -> FamiliesData:
+            forced: bool = True) -> FamiliesData:
         """Combine families from two families data objects."""
         same_families = set(first.keys()) & \
             set(second.keys())
-        combined_dict: Dict[str, Family] = {}
+        combined_dict: dict[str, Family] = {}
         combined_dict.update(first)
         combined_dict.update(second)
         mismatched_families = []
