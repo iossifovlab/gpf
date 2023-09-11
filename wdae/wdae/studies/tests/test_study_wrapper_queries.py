@@ -1,6 +1,9 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+from typing import Optional
 
 import pytest
+
+from studies.study_wrapper import StudyWrapperBase
 
 
 pytestmark = pytest.mark.usefixtures(
@@ -14,7 +17,10 @@ pytestmark = pytest.mark.usefixtures(
     "wrapper_type",
     ["local", "remote"]
 )
-def test_query_all_variants(iossifov_2014_wrappers, wrapper_type):
+def test_query_all_variants(
+    iossifov_2014_wrappers: dict[str, StudyWrapperBase],
+    wrapper_type: str
+) -> None:
     study_wrapper = iossifov_2014_wrappers[wrapper_type]
     variants = list(study_wrapper.query_variants_wdae(
         {}, [{"source": "location"}]))
@@ -43,7 +49,10 @@ def test_query_all_variants(iossifov_2014_wrappers, wrapper_type):
     ],
 )
 def test_query_inheritance_variants(
-        iossifov_2014_wrappers, wrapper_type, inheritance_type, count):
+    iossifov_2014_wrappers: dict[str, StudyWrapperBase],
+    wrapper_type: str,
+    inheritance_type: str, count: int
+) -> None:
     study_wrapper = iossifov_2014_wrappers[wrapper_type]
     query = {
         "inheritance": inheritance_type
@@ -59,7 +68,10 @@ def test_query_inheritance_variants(
     "wrapper_type",
     ["local", "remote"]
 )
-def test_query_limit_variants(iossifov_2014_wrappers, wrapper_type):
+def test_query_limit_variants(
+    iossifov_2014_wrappers: dict[str, StudyWrapperBase],
+    wrapper_type: str,
+) -> None:
     study_wrapper = iossifov_2014_wrappers[wrapper_type]
     variants = list(study_wrapper.query_variants_wdae(
         {}, [{"source": "location"}], max_variants_count=1
@@ -85,7 +97,10 @@ def test_query_limit_variants(iossifov_2014_wrappers, wrapper_type):
     ],
 )
 def test_query_family_variants(
-        iossifov_2014_wrappers, wrapper_type, family_ids, count):
+    iossifov_2014_wrappers: dict[str, StudyWrapperBase],
+    wrapper_type: str,
+    family_ids: Optional[list[str]], count: int
+) -> None:
     study_wrapper = iossifov_2014_wrappers[wrapper_type]
     query = {
         "family_ids": family_ids
@@ -112,7 +127,10 @@ def test_query_family_variants(
     ],
 )
 def test_query_sexes_variants(
-        iossifov_2014_wrappers, wrapper_type, sexes, count):
+    iossifov_2014_wrappers: dict[str, StudyWrapperBase],
+    wrapper_type: str,
+    sexes: list[str], count: int
+) -> None:
     study_wrapper = iossifov_2014_wrappers[wrapper_type]
     query = {
         "gender": sexes
@@ -140,7 +158,10 @@ def test_query_sexes_variants(
     ],
 )
 def test_query_variant_type_variants(
-        iossifov_2014_wrappers, wrapper_type, variant_type, count):
+    iossifov_2014_wrappers: dict[str, StudyWrapperBase],
+    wrapper_type: str,
+    variant_type: list[str], count: int
+) -> None:
     study_wrapper = iossifov_2014_wrappers[wrapper_type]
     query = {
         "variantTypes": variant_type
@@ -169,7 +190,10 @@ def test_query_variant_type_variants(
     ],
 )
 def test_query_effect_types_variants(
-        iossifov_2014_wrappers, wrapper_type, effect_types, count):
+    iossifov_2014_wrappers: dict[str, StudyWrapperBase],
+    wrapper_type: str,
+    effect_types: list[str], count: int
+) -> None:
     study_wrapper = iossifov_2014_wrappers[wrapper_type]
     query = {
         "effect_types": effect_types
@@ -197,7 +221,10 @@ def test_query_effect_types_variants(
     ],
 )
 def test_query_regions_variants(
-        iossifov_2014_wrappers, wrapper_type, regions, count):
+    iossifov_2014_wrappers: dict[str, StudyWrapperBase],
+    wrapper_type: str,
+    regions: list[str], count: int
+) -> None:
     study_wrapper = iossifov_2014_wrappers[wrapper_type]
     query = {
         "regions": regions
@@ -232,7 +259,10 @@ def test_query_regions_variants(
     ],
 )
 def test_query_present_in_child(
-        iossifov_2014_wrappers, wrapper_type, options, count):
+    iossifov_2014_wrappers: dict[str, StudyWrapperBase],
+    wrapper_type: str,
+    options: list[str], count: int
+) -> None:
     study_wrapper = iossifov_2014_wrappers[wrapper_type]
     query = {
         "presentInChild": options,
@@ -274,7 +304,10 @@ def test_query_present_in_child(
     ],
 )
 def test_query_present_in_parent(
-        iossifov_2014_wrappers, wrapper_type, options, count):
+    iossifov_2014_wrappers: dict[str, StudyWrapperBase],
+    wrapper_type: str,
+    options: dict, count: int
+) -> None:
     study_wrapper = iossifov_2014_wrappers[wrapper_type]
     query = {
         "presentInParent": options,
@@ -330,7 +363,10 @@ def test_query_present_in_parent(
     ],
 )
 def test_query_gene_scores(
-        iossifov_2014_wrappers, wrapper_type, option, count):
+    iossifov_2014_wrappers: dict[str, StudyWrapperBase],
+    wrapper_type: str,
+    option: dict, count: int
+) -> None:
     study_wrapper = iossifov_2014_wrappers[wrapper_type]
     query = {
         "geneScores": option
@@ -349,7 +385,10 @@ def test_query_gene_scores(
         "remote"
     ]
 )
-def test_query_person_filters(iossifov_2014_wrappers, wrapper_type):
+def test_query_person_filters(
+    iossifov_2014_wrappers: dict[str, StudyWrapperBase],
+    wrapper_type: str,
+) -> None:
     study_wrapper = iossifov_2014_wrappers[wrapper_type]
     query = {
         "personFilters": [
@@ -368,7 +407,10 @@ def test_query_person_filters(iossifov_2014_wrappers, wrapper_type):
 
 
 @pytest.mark.parametrize("wrapper_type", ["local", "remote"])
-def test_query_family_filters(iossifov_2014_wrappers, wrapper_type):
+def test_query_family_filters(
+    iossifov_2014_wrappers: dict[str, StudyWrapperBase],
+    wrapper_type: str,
+) -> None:
     study_wrapper = iossifov_2014_wrappers[wrapper_type]
     query = {
         "familyFilters": [
@@ -388,7 +430,10 @@ def test_query_family_filters(iossifov_2014_wrappers, wrapper_type):
 
 
 @pytest.mark.parametrize("wrapper_type", ["local", "remote"])
-def test_query_study_filters(iossifov_2014_wrappers, wrapper_type):
+def test_query_study_filters(
+    iossifov_2014_wrappers: dict[str, StudyWrapperBase],
+    wrapper_type: str,
+) -> None:
     study_wrapper = iossifov_2014_wrappers[wrapper_type]
     query = {
         "studyFilters": ["iossifov_2014"],
@@ -415,7 +460,10 @@ def test_query_study_filters(iossifov_2014_wrappers, wrapper_type):
         "remote"
     ]
 )
-def test_query_family_types(iossifov_2014_wrappers, wrapper_type):
+def test_query_family_types(
+    iossifov_2014_wrappers: dict[str, StudyWrapperBase],
+    wrapper_type: str,
+) -> None:
     study_wrapper = iossifov_2014_wrappers[wrapper_type]
     query = {
         "familyTypes": ["trio"]

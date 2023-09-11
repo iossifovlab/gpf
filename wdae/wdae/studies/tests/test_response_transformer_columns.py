@@ -1,17 +1,25 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+from typing import Any, cast
+
 import pytest
 
 from studies.response_transformer import ResponseTransformer
+from gpf_instance.gpf_instance import WGPFInstance
 
 from dae.utils.regions import Region
+from dae.variants.family_variant import FamilyVariant
 from dae.configuration.gpf_config_parser import FrozenBox
 from dae.person_sets import PersonSetCollection
 
 
-def test_special_attrs_formatting(fixtures_wgpf_instance):
+def test_special_attrs_formatting(
+    fixtures_wgpf_instance: WGPFInstance
+) -> None:
     genotype_data = fixtures_wgpf_instance.make_wdae_wrapper("f1_study")
+    assert genotype_data is not None
+
     download_sources = genotype_data.get_columns_as_sources(
-        genotype_data.config, genotype_data.download_columns
+        genotype_data.config, genotype_data.download_columns  # type: ignore
     )
     vs = genotype_data.query_variants_wdae({}, download_sources)
     vs = list(vs)
@@ -38,27 +46,17 @@ def test_special_attrs_formatting(fixtures_wgpf_instance):
 
 
 @pytest.fixture
-def v_impala(variants_impl):
+def v_vcf(variants_impl: Any) -> FamilyVariant:
     vvars = variants_impl("variants_vcf")("backends/a")
     vs = list(vvars.query_variants(regions=[Region("1", 11548, 11548)]))
     assert len(vs) == 1
 
     v = vs[0]
-    return v
+    return cast(FamilyVariant, v)
 
 
 @pytest.fixture
-def v_vcf(variants_impl):
-    vvars = variants_impl("variants_vcf")("backends/a")
-    vs = list(vvars.query_variants(regions=[Region("1", 11548, 11548)]))
-    assert len(vs) == 1
-
-    v = vs[0]
-    return v
-
-
-@pytest.fixture
-def phenotype_person_sets(variants_impl):
+def phenotype_person_sets(variants_impl: Any) -> PersonSetCollection:
     vvars = variants_impl("variants_vcf")("backends/a")
     families = vvars.families
     person_sets_config = FrozenBox({
@@ -128,24 +126,20 @@ def phenotype_person_sets(variants_impl):
         ("is_denovo", [False, False]),
     ]
 )
-def test_special_attr_columns(v_impala, v_vcf, column, expected):
+def test_special_attr_columns(
+    v_vcf: FamilyVariant, column: str, expected: Any
+) -> None:
 
     transformer = ResponseTransformer.SPECIAL_ATTRS[column]
-
-    result = transformer(v_impala)
-    assert result == expected
 
     result = transformer(v_vcf)
     assert result == expected
 
 
-def test_reference_column(v_impala, v_vcf):
+def test_reference_column(v_vcf: FamilyVariant) -> None:
 
     transformer = ResponseTransformer.SPECIAL_ATTRS["reference"]
     expected = ["T", "T"]
-
-    result = transformer(v_impala)
-    assert result == expected
 
     result = transformer(v_vcf)
     assert result == expected
@@ -164,14 +158,14 @@ def test_reference_column(v_impala, v_vcf):
     ]
 )
 def test_phenotype_attr_columns(
-        v_impala, v_vcf, phenotype_person_sets, column, expected):
+    v_vcf: FamilyVariant,
+    phenotype_person_sets: PersonSetCollection,
+    column: str, expected: Any
+) -> None:
 
     print(phenotype_person_sets)
 
     transformer = ResponseTransformer.PHENOTYPE_ATTRS[column]
-
-    result = transformer(v_impala, phenotype_person_sets)
-    assert result == expected
 
     result = transformer(v_vcf, phenotype_person_sets)
     assert result == expected

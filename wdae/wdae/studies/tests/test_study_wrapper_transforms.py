@@ -62,10 +62,13 @@ from dae.query_variants.attributes_query import inheritance_query, \
     ]
 )
 def test_transform_present_in_child_and_present_in_parent(
-        present_in_child, present_in_parent, inheritance, roles, accepted):
+        present_in_child: set[str], present_in_parent: set[str],
+        inheritance: list[Inheritance],
+        roles: list[Role], accepted: bool) -> None:
 
     roles_q = QueryTransformer._transform_present_in_child_and_parent_roles(
         present_in_child, present_in_parent)
+    assert roles_q is not None
     roles_m = role_query.transform_tree_to_matcher(roles_q)
 
     inheritance_q = QueryTransformer\
@@ -87,7 +90,7 @@ def test_transform_present_in_child_and_present_in_parent(
         accepted, (roles_matched, inheritance_matched)
 
 
-def test_attributes_query_roles():
+def test_attributes_query_roles() -> None:
     roles_q = "sib and not prb"
     roles_m = role_query.transform_tree_to_matcher(
         OrNode([role_query.transform_query_string_to_tree(roles_q)]))

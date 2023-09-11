@@ -108,13 +108,14 @@ class QueryTransformer:
             QueryTransformer._present_in_child_to_roles(present_in_child))
         roles_query.append(
             QueryTransformer._present_in_parent_to_roles(present_in_parent))
-        roles_query = list(filter(lambda rq: rq is not None, roles_query))
+        result = cast(
+            list[QNode], list(filter(lambda rq: rq is not None, roles_query)))
 
-        if len(roles_query) == 2:
-            return AndNode(roles_query)
+        if len(result) == 2:
+            return AndNode(result)
 
-        if len(roles_query) == 1:
-            return roles_query[0]
+        if len(result) == 1:
+            return result[0]
 
         return None
 
@@ -174,25 +175,26 @@ class QueryTransformer:
 
         if "proband only" in present_in_child:
             roles_query.append(AndNode(
-                [ContainsNode(Role.prb), NotNode(ContainsNode(Role.sib))]
+                [ContainsNode(Role.prb),  # type: ignore
+                 NotNode(ContainsNode(Role.sib))]  # type: ignore
             ))
 
         if "sibling only" in present_in_child:
             roles_query.append(AndNode(
-                [NotNode(ContainsNode(Role.prb)), ContainsNode(Role.sib)]
+                [NotNode(ContainsNode(Role.prb)),  # type: ignore
+                 ContainsNode(Role.sib)]  # type: ignore
             ))
 
         if "proband and sibling" in present_in_child:
             roles_query.append(AndNode(
-                [ContainsNode(Role.prb), ContainsNode(Role.sib)]
+                [ContainsNode(Role.prb),  # type: ignore
+                 ContainsNode(Role.sib)]  # type: ignore
             ))
 
         if "neither" in present_in_child:
             roles_query.append(AndNode(
-                [
-                    NotNode(ContainsNode(Role.prb)),
-                    NotNode(ContainsNode(Role.sib)),
-                ]
+                [NotNode(ContainsNode(Role.prb)),  # type: ignore
+                 NotNode(ContainsNode(Role.sib))]  # type: ignore
             ))
         if len(roles_query) == 4 or len(roles_query) == 0:
             return None
@@ -208,31 +210,26 @@ class QueryTransformer:
 
         if "mother only" in present_in_parent:
             roles_query.append(AndNode(
-                [
-                    NotNode(ContainsNode(Role.dad)),
-                    ContainsNode(Role.mom),
-                ]
+                [NotNode(ContainsNode(Role.dad)),  # type: ignore
+                 ContainsNode(Role.mom)]  # type: ignore
             ))
 
         if "father only" in present_in_parent:
             roles_query.append(AndNode(
-                [
-                    ContainsNode(Role.dad),
-                    NotNode(ContainsNode(Role.mom)),
-                ]
+                [ContainsNode(Role.dad),  # type: ignore
+                 NotNode(ContainsNode(Role.mom))]  # type: ignore
             ))
 
         if "mother and father" in present_in_parent:
             roles_query.append(AndNode(
-                [ContainsNode(Role.dad), ContainsNode(Role.mom)]
+                [ContainsNode(Role.dad),  # type: ignore
+                 ContainsNode(Role.mom)]  # type: ignore
             ))
 
         if "neither" in present_in_parent:
             roles_query.append(AndNode(
-                [
-                    NotNode(ContainsNode(Role.dad)),
-                    NotNode(ContainsNode(Role.mom)),
-                ]
+                [NotNode(ContainsNode(Role.dad)),  # type: ignore
+                 NotNode(ContainsNode(Role.mom))]  # type: ignore
             ))
         if len(roles_query) == 4 or len(roles_query) == 0:
             return None
@@ -399,7 +396,9 @@ class QueryTransformer:
         if "gender" in kwargs:
             sexes = set(kwargs["gender"])
             if sexes != set(["female", "male", "unspecified"]):
-                qnodes = [ContainsNode(sex_converter(sex)) for sex in sexes]
+                qnodes = [
+                    ContainsNode(sex_converter(sex))  # type: ignore
+                    for sex in sexes]
                 kwargs["gender"] = OrNode(qnodes)
             else:
                 kwargs["gender"] = None
@@ -414,7 +413,7 @@ class QueryTransformer:
                     variant_types.add("CNV-")
 
                 qnodes = [
-                    ContainsNode(variant_type_converter(t))
+                    ContainsNode(variant_type_converter(t))  # type: ignore
                     for t in variant_types
                 ]
                 kwargs["variantTypes"] = OrNode(qnodes)
