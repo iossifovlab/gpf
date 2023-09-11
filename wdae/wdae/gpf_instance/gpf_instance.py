@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 import pathlib
 import os
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Any, Union
 from threading import Lock
 from functools import cached_property
 
@@ -45,7 +45,10 @@ class WGPFInstance(GPFInstance):
         super().__init__(dae_config, dae_dir, **kwargs)
 
     @staticmethod
-    def build(config_filename=None, **kwargs):
+    def build(
+        config_filename: Optional[Union[str, pathlib.Path]] = None,
+        **kwargs: Any
+    ) -> WGPFInstance:
         dae_config, dae_dir = GPFInstance._build_gpf_config(config_filename)
         return WGPFInstance(dae_config, dae_dir, **kwargs)
 

@@ -1,10 +1,9 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,C0415,
 
 import textwrap
+import contextlib
 import time
-from typing import Callable, ContextManager
-
-import requests
+from typing import Callable, ContextManager, Generator
 
 import pytest
 
@@ -72,24 +71,20 @@ def alla_wgpf(tmp_path_factory: pytest.TempPathFactory) -> WGPFInstance:
     return gpf
 
 
-def test_empty_wgpf_instance_study(
+@pytest.fixture
+def remote_wgpf_instance(
     alla_wgpf: WGPFInstance,
     wdae_django_server: Callable[
         [WGPFInstance, str], ContextManager[LiveServer]]
-) -> None:
+) -> Callable[[], ContextManager[LiveServer]]:
 
-    with wdae_django_server(
-            alla_wgpf,
-            "wdae_tests.integration.test_wgpf_instance."
-            "wgpf_settings") as server:
+    @contextlib.contextmanager
+    def builder() -> Generator[LiveServer, None, None]:
+        with wdae_django_server(
+                alla_wgpf,
+                "wdae_tests.integration.test_wdae_remote."
+                "remote_settings") as server:
+            time.sleep(0.5)
+            yield server
 
-        assert server.url.startswith("http://localhost")
-        time.sleep(0.5)
-
-        response = requests.get(
-            f"{server.url}/api/v3/datasets", timeout=2.5)
-
-        assert response.status_code == 200
-        assert "data" in response.json()
-        data = response.json()["data"]
-        assert len(data) == 1
+    return builder

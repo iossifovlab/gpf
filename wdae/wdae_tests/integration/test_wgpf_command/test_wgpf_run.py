@@ -1,15 +1,26 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,C0415,
 
-from wdae import wgpf
+from typing import Callable, ContextManager
+
+import pytest_mock
+
+from gpf_instance.gpf_instance import WGPFInstance
+from wdae import wgpf  # type: ignore
+from wdae_tests.integration.testing import LiveServer
 
 
-def test_wgpf_run_simple(wgpf_fixture, wdae_django_setup, mocker):
+def test_wgpf_run_simple(
+    wgpf_fixture: WGPFInstance,
+    wdae_django_setup: Callable[
+        [WGPFInstance, str], ContextManager[LiveServer]],
+    mocker: pytest_mock.MockerFixture
+) -> None:
     # Given
     with wdae_django_setup(
             wgpf_fixture,
             "wdae_tests.integration.test_wgpf_command.wgpf_settings"):
 
-        (wgpf_fixture.instance_dir / ".wgpf_init.flag").touch()
+        (wgpf_fixture.instance_dir / ".wgpf_init.flag").touch()  # type: ignore
         mocker.patch(
             "wdae.wgpf.execute_from_command_line",
             return_value=None)
@@ -24,7 +35,13 @@ def test_wgpf_run_simple(wgpf_fixture, wdae_django_setup, mocker):
         ])
 
 
-def test_wgpf_run_without_init(wgpf_fixture, wdae_django_setup, mocker):
+def test_wgpf_run_without_init(
+    wgpf_fixture: WGPFInstance,
+    wdae_django_setup: Callable[
+        [WGPFInstance, str], ContextManager[LiveServer]],
+    mocker: pytest_mock.MockerFixture
+) -> None:
+
     # Given
     with wdae_django_setup(
             wgpf_fixture,
@@ -59,13 +76,19 @@ def test_wgpf_run_without_init(wgpf_fixture, wdae_django_setup, mocker):
         ])
 
 
-def test_wgpf_run_with_port(wgpf_fixture, wdae_django_setup, mocker):
+def test_wgpf_run_with_port(
+    wgpf_fixture: WGPFInstance,
+    wdae_django_setup: Callable[
+        [WGPFInstance, str], ContextManager[LiveServer]],
+    mocker: pytest_mock.MockerFixture
+) -> None:
+
     # Given
     with wdae_django_setup(
             wgpf_fixture,
             "wdae_tests.integration.test_wgpf_command.wgpf_settings"):
 
-        (wgpf_fixture.instance_dir / ".wgpf_init.flag").touch()
+        (wgpf_fixture.instance_dir / ".wgpf_init.flag").touch()  # type: ignore
         mocker.patch(
             "wdae.wgpf.execute_from_command_line",
             return_value=None)
@@ -80,13 +103,19 @@ def test_wgpf_run_with_port(wgpf_fixture, wdae_django_setup, mocker):
         ])
 
 
-def test_wgpf_run_with_host(wgpf_fixture, wdae_django_setup, mocker):
+def test_wgpf_run_with_host(
+    wgpf_fixture: WGPFInstance,
+    wdae_django_setup: Callable[
+        [WGPFInstance, str], ContextManager[LiveServer]],
+    mocker: pytest_mock.MockerFixture
+) -> None:
+
     # Given
     with wdae_django_setup(
             wgpf_fixture,
             "wdae_tests.integration.test_wgpf_command.wgpf_settings"):
 
-        (wgpf_fixture.instance_dir / ".wgpf_init.flag").touch()
+        (wgpf_fixture.instance_dir / ".wgpf_init.flag").touch()  # type: ignore
         mocker.patch(
             "wdae.wgpf.execute_from_command_line",
             return_value=None)
@@ -102,13 +131,17 @@ def test_wgpf_run_with_host(wgpf_fixture, wdae_django_setup, mocker):
 
 
 def test_wgpf_run_check_wdae_directory(
-        wgpf_fixture, wdae_django_setup, mocker):
+    wgpf_fixture: WGPFInstance,
+    wdae_django_setup: Callable[
+        [WGPFInstance, str], ContextManager[LiveServer]],
+    mocker: pytest_mock.MockerFixture
+) -> None:
     # Given
     with wdae_django_setup(
             wgpf_fixture,
             "wdae_tests.integration.test_wgpf_command.wgpf_settings"):
 
-        (wgpf_fixture.instance_dir / ".wgpf_init.flag").touch()
+        (wgpf_fixture.instance_dir / ".wgpf_init.flag").touch()  # type: ignore
         mocker.patch(
             "wdae.wgpf.execute_from_command_line",
             return_value=None)
@@ -117,4 +150,4 @@ def test_wgpf_run_check_wdae_directory(
         wgpf.cli(["wgpf", "run"])
 
         # Then
-        assert (wgpf_fixture.instance_dir / "wdae").exists()
+        assert (wgpf_fixture.instance_dir / "wdae").exists()  # type: ignore

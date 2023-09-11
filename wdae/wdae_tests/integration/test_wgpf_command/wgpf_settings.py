@@ -3,4 +3,4 @@
 
 # pylint: disable=wildcard-import,unused-wildcard-import
 
-from wdae.test_settings import *
+from wdae.test_settings import *  # type: ignore

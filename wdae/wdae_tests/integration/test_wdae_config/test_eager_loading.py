@@ -2,18 +2,23 @@
 
 import textwrap
 import requests
+from typing import Callable, ContextManager
 
 import pytest
+import pytest_mock
+
+from gpf_instance.gpf_instance import WGPFInstance
 
 from dae.testing import setup_directories, setup_genome, \
     setup_empty_gene_models
 from dae.genomic_resources.repository_factory import \
     build_genomic_resource_repository
-from ..testing import setup_wgpf_instance
+from wdae_tests.integration.testing import setup_wgpf_instance, \
+    LiveServer
 
 
 @pytest.fixture
-def wgpf_fixture(tmp_path_factory):
+def wgpf_fixture(tmp_path_factory: pytest.TempPathFactory) -> WGPFInstance:
     root_path = tmp_path_factory.mktemp("eager_loading_wgpf_instance")
 
     setup_directories(root_path / "gpf_instance", {
@@ -44,7 +49,12 @@ def wgpf_fixture(tmp_path_factory):
     return gpf
 
 
-def test_eager_loading(mocker, wgpf_fixture, wdae_django_server):
+def test_eager_loading(
+    mocker: pytest_mock.MockerFixture,
+    wgpf_fixture: WGPFInstance,
+    wdae_django_server: Callable[
+        [WGPFInstance, str], ContextManager[LiveServer]]
+) -> None:
 
     mocker.patch.object(
         wgpf_fixture,
@@ -63,11 +73,16 @@ def test_eager_loading(mocker, wgpf_fixture, wdae_django_server):
             "eager_loading_true_settings") as server:
 
         assert server.url.startswith("http://localhost")
-        assert wgpf_fixture.load.called
-        assert wgpf_fixture.get_all_genotype_data.called
+        assert wgpf_fixture.load.called  # type: ignore
+        assert wgpf_fixture.get_all_genotype_data.called  # type: ignore
 
 
-def test_no_eager_loading(mocker, wgpf_fixture, wdae_django_server):
+def test_no_eager_loading(
+    mocker: pytest_mock.MockerFixture,
+    wgpf_fixture: WGPFInstance,
+    wdae_django_server: Callable[
+        [WGPFInstance, str], ContextManager[LiveServer]]
+) -> None:
 
     mocker.patch.object(
         wgpf_fixture,
@@ -86,11 +101,16 @@ def test_no_eager_loading(mocker, wgpf_fixture, wdae_django_server):
             "eager_loading_false_settings") as server:
 
         assert server.url.startswith("http://localhost")
-        assert not wgpf_fixture.load.called
-        assert not wgpf_fixture.get_all_genotype_data.called
+        assert not wgpf_fixture.load.called  # type: ignore
+        assert not wgpf_fixture.get_all_genotype_data.called  # type: ignore
 
 
-def test_example_request(mocker, wgpf_fixture, wdae_django_server):
+def test_example_request(
+    mocker: pytest_mock.MockerFixture,
+    wgpf_fixture: WGPFInstance,
+    wdae_django_server: Callable[
+        [WGPFInstance, str], ContextManager[LiveServer]]
+) -> None:
 
     with wdae_django_server(
             wgpf_fixture,
