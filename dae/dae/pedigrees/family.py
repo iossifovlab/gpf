@@ -130,10 +130,17 @@ class Person:
                 self._attributes["not_sequenced"] = None
         if self._attributes.get("generated"):
             value = self._attributes.get("generated")
-            if value in {"None", "0", "False"}:
-                self._attributes["generated"] = None
-        missing = self._attributes.get("missing", False) == "True"
-        self._attributes["missing"] = missing
+            if value in {True, "True", "1", "yes"}:
+                self._attributes["generated"] = True
+            else:
+                self._attributes["generated"] = False
+
+        if self._attributes.get("missing"):
+            value = self._attributes.get("missing")
+            if value in {True, "True", "1", "yes"}:
+                self._attributes["missing"] = True
+            else:
+                self._attributes["missing"] = None
 
     def __repr__(self):
         decorator = ""
@@ -379,7 +386,7 @@ class Family:
         if self._members_in_order is None:
             self._members_in_order = list(
                 filter(
-                    lambda m: not m.missing,
+                    lambda m: not m.missing and not m.generated,
                     self.persons.values())
             )
         return self._members_in_order
