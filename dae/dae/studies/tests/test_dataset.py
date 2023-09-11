@@ -1,103 +1,12 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-import os
 import time
 
 import pytest
-from dae.pedigrees.loader import FamiliesLoader
-from dae.pedigrees.family import FamiliesData
+
 from dae.studies.study import GenotypeData
 
 from dae.testing import setup_pedigree, setup_vcf, setup_dataset, vcf_study
 from dae.testing.acgt_import import acgt_gpf
-
-
-def relative_to_this_test_folder(path: str) -> str:
-    return os.path.join(
-        os.path.dirname(os.path.realpath(__file__)), path
-    )
-
-
-def test_inheritance_trio_can_init(
-        inheritance_trio_genotype_data_group: GenotypeData) -> None:
-    print("is inited")
-    assert inheritance_trio_genotype_data_group is not None
-
-
-def test_combine_families() -> None:
-    families_a = FamiliesLoader.load_pedigree_file(
-        relative_to_this_test_folder("fixtures/pedigree_A.ped")
-    )
-    families_b = FamiliesLoader.load_pedigree_file(
-        relative_to_this_test_folder("fixtures/pedigree_B.ped")
-    )
-    new_families = FamiliesData.combine(
-        families_a,
-        families_b,
-        forced=False
-    )
-
-    merged_f1 = new_families["f1"]
-    assert set(merged_f1.persons.keys()) == {
-        "f1.mom",
-        "f1.dad",
-        "f1.p1",
-        "f1.s1",
-        "f1.s2",
-    }
-
-
-def test_combine_families_role_mismatch() -> None:
-    families_a = FamiliesLoader.load_pedigree_file(
-        relative_to_this_test_folder("fixtures/pedigree_A.ped")
-    )
-    families_c = FamiliesLoader.load_pedigree_file(
-        relative_to_this_test_folder("fixtures/pedigree_C.ped")
-    )
-    with pytest.raises(AssertionError):
-        FamiliesData.combine(
-            families_a,
-            families_c,
-            forced=False
-        )
-
-
-def test_combine_families_sex_mismatch() -> None:
-    families_a = FamiliesLoader.load_pedigree_file(
-        relative_to_this_test_folder("fixtures/pedigree_A.ped")
-    )
-    families_d = FamiliesLoader.load_pedigree_file(
-        relative_to_this_test_folder("fixtures/pedigree_D.ped")
-    )
-    with pytest.raises(AssertionError):
-        FamiliesData.combine(
-            families_a,
-            families_d,
-            forced=False
-        )
-
-
-def test_combine_families_sex_unspecified_mismatch() -> None:
-    families_a = FamiliesLoader.load_pedigree_file(
-        relative_to_this_test_folder("fixtures/pedigree_A.ped")
-    )
-    families_e = FamiliesLoader.load_pedigree_file(
-        relative_to_this_test_folder("fixtures/pedigree_E.ped")
-    )
-
-    new_families = FamiliesData.combine(
-        families_a,
-        families_e,
-        forced=False,
-    )
-
-    merged_f1 = new_families["f1"]
-    assert set(merged_f1.persons.keys()) == {
-        "f1.mom",
-        "f1.dad",
-        "f1.p1",
-        "f1.s1",
-        "f1.s2",
-    }
 
 
 @pytest.fixture(scope="module")
@@ -169,7 +78,7 @@ def test_summary_variant_merging(svmergingdataset: GenotypeData) -> None:
     genotype_data_group = svmergingdataset
     assert genotype_data_group is not None
     variants = list(genotype_data_group.query_summary_variants())
-    variants = list(sorted(variants, key=lambda v: v.position))  # type: ignore
+    variants = list(sorted(variants, key=lambda v: v.position))
 
     assert [
         a.get_attribute("family_variants_count")

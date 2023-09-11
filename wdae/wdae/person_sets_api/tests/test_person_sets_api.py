@@ -82,14 +82,14 @@ def test_get_person_sets_collection_stats(admin_client):
         },
         "phenotype2": {
             "parents": 0,
-            "children": 4,
+            "children": 2,
         },
         "unaffected": {
             "parents": 8,
             "children": 1,
         },
         "unknown": {
-            "parents": 4,
+            "parents": 3,
             "children": 0,
         }
     }

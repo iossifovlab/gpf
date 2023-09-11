@@ -241,6 +241,8 @@ class PersonSetCollection:
         }
 
         for person_id, person in families_data.persons.items():
+            if person.missing or person.generated:
+                continue
             value = collection.collect_person_collection_attributes(
                 person, pheno_db)
             if value not in value_to_id:
