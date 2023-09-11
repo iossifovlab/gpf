@@ -25,7 +25,8 @@ logger = logging.getLogger(__name__)
 
 def members_in_order_get_family_structure(mio: list[Person]) -> str:
     return ";".join([
-        f"{p.role.name}:{p.sex.short()}:{p.status.name}" for p in mio])
+        f"{p.role.name}:{p.sex.short()}:{p.status.name}"  # type: ignore
+        for p in mio])
 
 
 class ResponseTransformer:

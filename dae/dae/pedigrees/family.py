@@ -6,7 +6,7 @@ import copy
 import logging
 
 from typing import Iterator, KeysView, ValuesView, ItemsView, \
-    Optional, Any
+    Optional, Any, Iterable
 from enum import Enum, auto
 from collections import defaultdict
 from collections.abc import Mapping
@@ -175,11 +175,11 @@ class Person:
         return self._role
 
     @property
-    def sex(self) -> Optional[Sex]:
+    def sex(self) -> Sex:
         return self._sex
 
     @property
-    def status(self) -> Optional[Status]:
+    def status(self) -> Status:
         return self._status
 
     @property
@@ -776,7 +776,7 @@ class FamiliesData(Mapping[str, Family]):
     def persons_with_roles(
         self,
         roles: Optional[list[Role]] = None,
-        family_ids: Optional[list[str]] = None
+        family_ids: Optional[Iterable[str]] = None
     ) -> list[Person]:
         """Return list of persons matching the specified roles."""
         if family_ids is None:
@@ -790,7 +790,7 @@ class FamiliesData(Mapping[str, Family]):
             return list(persons)
 
         if not isinstance(roles[0], Role):
-            roles_q = set([Role.from_name(role) for role in roles])
+            roles_q = set(Role.from_name(role) for role in roles)
         else:
             roles_q = set(roles)
 
