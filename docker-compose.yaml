@@ -33,8 +33,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      args:
-        REGISTRY: "registry.seqpipe.org/"
+    platform: linux/amd64
     restart: "no"
     environment:
       DAE_DB_DIR: /wd/data/data-hg19-local
@@ -51,8 +50,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      args:
-        REGISTRY: "registry.seqpipe.org/"
+    platform: linux/amd64
     depends_on:
       - setup
     ports:

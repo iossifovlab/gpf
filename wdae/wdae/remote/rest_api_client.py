@@ -1,28 +1,32 @@
-"""WDAE REST API client class."""
-
 import logging
-from typing import List, Dict, Any, Optional, cast
+from typing import List, Dict, Any, Optional, cast, Generator
 
-import requests  # type: ignore
-import ijson  # type: ignore
+import requests
+import ijson
 
 
 logger = logging.getLogger(__name__)
 
 
 class RESTClientRequestError(Exception):
-    def __init__(self, message):
-        self.message = message
-        super().__init__(self.message)
+
+    def __init__(self, message: str) -> None:
+        super().__init__(message)
+        self.message: str = message
 
 
 class RESTClient:
+    # pylint: disable=too-many-public-methods
     """Class defining WDAE REST API client."""
 
+    DEFAULT_TIMEOUT = 300_000
+
     def __init__(
-            self, remote_id, host, credentials,
-            base_url=None, port=None,
-            protocol=None, gpf_prefix=None):
+            self, remote_id: str, host: str, credentials: str,
+            base_url: Optional[str] = None,
+            port: Optional[int] = None,
+            protocol: Optional[str] = None,
+            gpf_prefix: Optional[str] = None):
         self.host = host
         self.remote_id = remote_id
         self.credentials = credentials
@@ -42,7 +46,7 @@ class RESTClient:
 
         self._refresh_token()
 
-    def _refresh_token(self):
+    def _refresh_token(self) -> None:
         prefix = f"/{self.gpf_prefix}" if self.gpf_prefix else ""
         token_url = f"{self.build_host_url()}{prefix}/o/token/"
         response = requests.post(
@@ -50,7 +54,8 @@ class RESTClient:
             headers={"Authorization": f"Basic {self.credentials}",
                      "Cache-Control": "no-cache",
                      "Content-Type": "application/json"},
-            json={"grant_type": "client_credentials"}
+            json={"grant_type": "client_credentials"},
+            timeout=self.DEFAULT_TIMEOUT
         )
         if response.status_code != 200:
             raise RESTClientRequestError(
@@ -58,18 +63,20 @@ class RESTClient:
             )
         self.token = response.json()["access_token"]
 
-    def build_host_url(self):
+    def build_host_url(self) -> str:
         if self.port:
             return f"{self.protocol}://{self.host}:{self.port}"
         return f"{self.protocol}://{self.host}"
 
-    def build_api_base_url(self):
+    def build_api_base_url(self) -> str:
         host_url = self.build_host_url()
         if self.gpf_prefix:
             return f"{host_url}/{self.gpf_prefix}{self.base_url}"
         return f"{host_url}{self.base_url}"
 
-    def _build_url(self, url, query_values=None):
+    def _build_url(
+        self, url: str, query_values: Optional[dict] = None
+    ) -> str:
         query_url = url
         if query_values:
             first = True
@@ -83,13 +90,17 @@ class RESTClient:
         result = f"{base}{query_url}"
         return result
 
-    def _get(self, url, query_values=None, stream=False):
+    def _get(
+        self, url: str,
+        query_values: Optional[dict] = None,
+        stream: bool = False
+    ) -> requests.Response:
         url = self._build_url(url, query_values)
 
-        def make_request():
+        def make_request() -> requests.Response:
             return requests.get(url, stream=stream, headers={
-                "Authorization": f"Bearer {self.token}"
-            })
+                "Authorization": f"Bearer {self.token}",
+            }, timeout=self.DEFAULT_TIMEOUT)
 
         response = make_request()
         if response.status_code == 401:
@@ -98,13 +109,17 @@ class RESTClient:
             response = make_request()
         return response
 
-    def _post(self, url, data=None, stream=False):
+    def _post(
+        self, url: str,
+        data: Optional[dict] = None,
+        stream: bool = False
+    ) -> requests.Response:
         url = self._build_url(url)
 
-        def make_request():
+        def make_request() -> requests.Response:
             return requests.post(url, json=data, stream=stream, headers={
                 "Authorization": f"Bearer {self.token}"
-            })
+            }, timeout=self.DEFAULT_TIMEOUT)
 
         response = make_request()
         if response.status_code == 401:
@@ -112,14 +127,17 @@ class RESTClient:
             response = make_request()
         return response
 
-    def _put(self, url, data=None):
+    def _put(self, url: str, data: Optional[dict] = None) -> None:
         pass
 
-    def _delete(self, url, data=None):
+    def _delete(self, url: str, data: Optional[dict] = None) -> None:
         pass
 
     @staticmethod
-    def _read_json_list_stream(response, _multiple_values=False):
+    def _read_json_list_stream(
+        response: requests.Response,
+        _multiple_values: bool = False
+    ) -> Generator[Any, None, None]:
         stream = response.iter_content()
         objects = ijson.sendable_list()
         coro = ijson.items_coro(
@@ -132,31 +150,31 @@ class RESTClient:
                     yield obj
                 del objects[:]
 
-    def prefix_remote_identifier(self, value):
+    def prefix_remote_identifier(self, value: Any) -> str:
         return f"{self.remote_id}_{value}"
 
-    def prefix_remote_name(self, value):
+    def prefix_remote_name(self, value: Any) -> str:
         return f"({self.remote_id}) {value}"
 
-    def get_datasets(self):
+    def get_datasets(self) -> Optional[dict]:
         response = self._get("datasets")
         if response.status_code == 200:
-            return response.json()
+            return cast(dict, response.json())
         return None
 
-    def get_studies(self):
+    def get_studies(self) -> Optional[dict]:
         response = self._get("datasets/studies")
         if response.status_code == 200:
-            return response.json()
+            return cast(dict, response.json())
         return None
 
-    def get_dataset_config(self, study_id):
+    def get_dataset_config(self, study_id: str) -> Optional[dict]:
         response = self._get(f"datasets/config/{study_id}")
         if response.status_code == 200:
-            return response.json()
+            return cast(dict, response.json())
         return None
 
-    def get_variants_preview(self, data):
+    def get_variants_preview(self, data: dict) -> requests.Response:
         response = self._post(
             "genotype_browser/preview/variants",
             data=data,
@@ -164,7 +182,10 @@ class RESTClient:
         )
         return response
 
-    def post_query_variants(self, data, reduce_alleles=False):
+    def post_query_variants(
+        self, data: dict, reduce_alleles: bool = False
+    ) -> Generator[Any, None, None]:
+        """Post query request for variants preview."""
         assert data.get("download", False) is False
         data["reduceAlleles"] = reduce_alleles
         response = self._post(
@@ -174,7 +195,10 @@ class RESTClient:
         )
         return self._read_json_list_stream(response)
 
-    def post_query_variants_download(self, data):
+    def post_query_variants_download(
+        self, data: dict
+    ) -> Generator[Any, None, None]:
+        """Post query request for variants download."""
         data["download"] = True
         response = self._post(
             "genotype_browser/query",
@@ -183,7 +207,91 @@ class RESTClient:
         )
         return self._read_json_list_stream(response)
 
-    def get_common_report(self, common_report_id, full=False):
+    def get_member_details(
+        self, dataset_id: str, family_id: str, member_id: str
+    ) -> Any:
+        """Get family member details."""
+        response = self._get(
+            f"families/{dataset_id}/{family_id}/members/{member_id}"
+        )
+
+        if response.status_code != 200:
+            return None
+
+        return response.json()
+
+    def get_all_member_details(
+        self, dataset_id: str, family_id: str
+    ) -> Any:
+        """Get all family members details."""
+        response = self._get(
+            f"families/{dataset_id}/{family_id}/members/all"
+        )
+
+        if response.status_code != 200:
+            return None
+
+        return response.json()
+
+    def get_members(self, dataset_id: str, family_id: str) -> Any:
+        """Get family members."""
+        response = self._get(
+            f"families/{dataset_id}/{family_id}/members"
+        )
+
+        if response.status_code != 200:
+            return None
+
+        return response.json()
+
+    def get_family_details(
+        self, dataset_id: str, family_id: str
+    ) -> Any:
+        """Get a family details."""
+        response = self._get(
+            f"families/{dataset_id}/{family_id}"
+        )
+
+        if response.status_code != 200:
+            return None
+
+        return response.json()
+
+    def get_families(self, dataset_id: str) -> Any:
+        """Get families in a dataset."""
+        response = self._get(
+            f"families/{dataset_id}"
+        )
+
+        if response.status_code != 200:
+            return None
+
+        return response.json()
+
+    def get_all_family_details(self, dataset_id: str) -> Any:
+        """Get all families details of a dataset."""
+        response = self._get(
+            f"families/{dataset_id}/all"
+        )
+
+        if response.status_code != 200:
+            return None
+
+        return response.json()
+
+    def get_person_set_collection_configs(self, dataset_id: str) -> Any:
+        """Get person set collection configuration for a dataset."""
+        response = self._get(f"person_sets/{dataset_id}/configs")
+
+        if response.status_code != 200:
+            return None
+
+        return response.json()
+
+    def get_common_report(
+        self, common_report_id: str, full: bool = False
+    ) -> Any:
+        """Get the commont report for a dataset."""
         if full:
             url = f"common_reports/studies/{common_report_id}/full"
         else:
@@ -191,28 +299,37 @@ class RESTClient:
         response = self._get(url)
         return response.json()
 
-    def get_common_report_families_data(self, common_report_id):
+    def get_common_report_families_data(
+        self, common_report_id: str
+    ) -> Any:
+        """Get families part of the common report for a study."""
         response = self._get(
             f"common_reports/families_data/{common_report_id}",
             stream=True
         )
         return response
 
-    def get_pheno_browser_config(self, db_name):
+    def get_pheno_browser_config(self, db_name: str) -> Any:
+        """Get the pheno browser congigruation."""
         response = self._get(
             "pheno_browser/config",
             query_values={"db_name": db_name},
         )
         return response.json()
 
-    def get_browser_measures_info(self, dataset_id):
+    def get_browser_measures_info(self, dataset_id: str) -> Any:
+        """Get pheno browser measuers info for a dataset."""
         response = self._get(
             "pheno_browser/measures_info",
             query_values={"dataset_id": dataset_id}
         )
         return response.json()
 
-    def get_browser_measures(self, dataset_id, instrument, search_term):
+    def get_browser_measures(
+        self, dataset_id: str, instrument: str,
+        search_term: Optional[str]
+    ) -> Any:
+        """Get pheno measures that correspond to a search."""
         response = self._get(
             "pheno_browser/measures",
             query_values={
@@ -224,7 +341,8 @@ class RESTClient:
         )
         return self._read_json_list_stream(response)
 
-    def get_instruments(self, dataset_id):
+    def get_instruments(self, dataset_id: str) -> Any:
+        """Get instruments for a pheno measure."""
         response = self._get(
             "pheno_browser/instruments",
             query_values={"dataset_id": dataset_id},
@@ -232,8 +350,11 @@ class RESTClient:
         return response.json()["instruments"]
 
     def post_measures_download(
-            self, dataset_id, measure_ids=None, instrument=None
-    ):
+            self, dataset_id: str,
+            measure_ids: Optional[list[str]] = None,
+            instrument: Optional[str] = None
+    ) -> Any:
+        """Post download request for pheno measures."""
         response = self._post(
             "pheno_browser/download",
             data={
@@ -245,7 +366,7 @@ class RESTClient:
         )
         return response.iter_content()
 
-    def post_enrichment_test(self, query):
+    def post_enrichment_test(self, query: dict) -> Any:
         response = self._post(
             "enrichment/test",
             data=query,
@@ -253,7 +374,13 @@ class RESTClient:
         return response.json()
 
     def post_pheno_persons(
-            self, dataset_id, measure_ids, roles, person_ids, family_ids):
+        self, dataset_id: str,
+        measure_ids: list[str],
+        roles: Optional[list[str]],
+        person_ids: Optional[list[str]],
+        family_ids: Optional[list[str]]
+    ) -> Any:
+        """Post a pheno measures person query request."""
         data = {
             "datasetId": dataset_id,
             "measureIds": measure_ids,
@@ -268,7 +395,13 @@ class RESTClient:
         return response.json()
 
     def post_pheno_persons_values(
-            self, dataset_id, measure_ids, roles, person_ids, family_ids):
+        self, dataset_id: str,
+        measure_ids: list[str],
+        roles: Optional[list[str]],
+        person_ids: Optional[list[str]],
+        family_ids: Optional[list[str]]
+    ) -> Any:
+        """Post a pheno measures persons values request."""
         data = {
             "datasetId": dataset_id,
             "measureIds": measure_ids,
@@ -282,7 +415,7 @@ class RESTClient:
         )
         return response.json()
 
-    def get_instruments_details(self, dataset_id):
+    def get_instruments_details(self, dataset_id: str) -> Any:
         response = self._get(
             "pheno_tool/instruments",
             query_values={"datasetId": dataset_id}
@@ -290,7 +423,8 @@ class RESTClient:
 
         return response.json()
 
-    def get_measure(self, dataset_id, measure_id):
+    def get_measure(self, dataset_id: str, measure_id: str) -> Any:
+        """Get a measure in a dataset."""
         response = self._get(
             "pheno_tool/measure",
             query_values={
@@ -304,7 +438,8 @@ class RESTClient:
 
         return response.json()
 
-    def get_measure_description(self, dataset_id, measure_id):
+    def get_measure_description(self, dataset_id: str, measure_id: str) -> Any:
+        """Get a measure description."""
         response = self._get(
             "pheno_browser/measure_description",
             query_values={
@@ -318,7 +453,12 @@ class RESTClient:
 
         return response.json()
 
-    def get_measures(self, dataset_id, instrument_name, measure_type):
+    def get_measures(
+        self, dataset_id: str,
+        instrument_name: str,
+        measure_type: str
+    ) -> Any:
+        """Get measures for a dataset."""
         response = self._get(
             "pheno_tool/measures",
             query_values={
@@ -333,7 +473,8 @@ class RESTClient:
 
         return response.json()
 
-    def get_regressions(self, dataset_id):
+    def get_regressions(self, dataset_id: str) -> Any:
+        """Get pheno measures regressions in a dataset."""
         response = self._get(
             "measures/regressions",
             query_values={
@@ -347,8 +488,14 @@ class RESTClient:
         return response.json()
 
     def post_measure_values(
-            self, dataset_id, measure_id, person_ids,
-            family_ids, roles, default_filter):
+        self, dataset_id: str,
+        measure_id: str,
+        person_ids: Optional[list[str]],
+        family_ids: Optional[list[str]],
+        roles: Optional[list[str]],
+        default_filter: Optional[str]
+    ) -> Any:
+        """Post pheno measure values request."""
         data = {
             "datasetId": dataset_id,
             "measureId": measure_id,
@@ -365,8 +512,14 @@ class RESTClient:
         return response.json()
 
     def post_pheno_values(
-            self, dataset_id, measure_ids, person_ids,
-            family_ids, roles, default_filter):
+        self, dataset_id: str,
+        measure_ids: list[str],
+        person_ids: Optional[list[str]],
+        family_ids: Optional[list[str]],
+        roles: Optional[list[str]],
+        default_filter: Optional[str]
+    ) -> Any:
+        """Post pheno measures values query request."""
         data = {
             "datasetId": dataset_id,
             "measureIds": measure_ids,
@@ -383,8 +536,14 @@ class RESTClient:
         return response.json()
 
     def post_instrument_values(
-            self, dataset_id, instrument_name,
-            person_ids, family_ids, roles, measures):
+        self, dataset_id: str,
+        instrument_name: str,
+        person_ids: Optional[list[str]],
+        family_ids: Optional[list[str]],
+        roles: Optional[list[str]],
+        measures: Optional[list[str]]
+    ) -> Any:
+        """Post pheno instrument measures query request."""
         data = {
             "datasetId": dataset_id,
             "instrumentName": instrument_name,
@@ -400,7 +559,8 @@ class RESTClient:
         )
         return response.json()
 
-    def post_pheno_tool(self, data):
+    def post_pheno_tool(self, data: dict) -> Any:
+        """Post pheno tool request."""
         response = self._post(
             "pheno_tool",
             data=data
@@ -411,7 +571,8 @@ class RESTClient:
 
         return response.json()
 
-    def get_gene_set_collections(self):
+    def get_gene_set_collections(self) -> Any:
+        """Get gene set collections."""
         response = self._get(
             "gene_sets/gene_sets_collections"
         )
@@ -424,7 +585,10 @@ class RESTClient:
 
         return response.json()
 
-    def get_gene_sets(self, collection_id) -> Optional[List[Dict[str, Any]]]:
+    def get_gene_sets(
+        self, collection_id: str
+    ) -> Optional[list[dict[str, Any]]]:
+        """Get a gene set from a gene set collection."""
         response = self._post(
             "gene_sets/gene_sets",
             data={"geneSetsCollection": collection_id}
@@ -435,7 +599,10 @@ class RESTClient:
 
         return cast(List[Dict[str, Any]], response.json())
 
-    def get_gene_set_download(self, gene_sets_collection, gene_set):
+    def get_gene_set_download(
+        self, gene_sets_collection: str, gene_set: str
+    ) -> Any:
+        """Download a gene set."""
         response = self._get(
             "gene_sets/gene_set_download",
             query_values={
@@ -449,13 +616,14 @@ class RESTClient:
 
         return response.content.decode()
 
-    def has_denovo_gene_sets(self):
+    def has_denovo_gene_sets(self) -> bool:
         response = self._get("gene_sets/has_denovo")
         if response.status_code != 204:
             return False
         return True
 
-    def get_denovo_gene_sets(self, gene_set_types):
+    def get_denovo_gene_sets(self, gene_set_types: dict) -> Any:
+        """Get denovo gene sets."""
         logger.debug(
             "getting denovo gene sets for: %s", gene_set_types)
 
@@ -472,7 +640,10 @@ class RESTClient:
 
         return response.json()
 
-    def get_denovo_gene_set(self, gene_set_id, gene_set_types):
+    def get_denovo_gene_set(
+        self, gene_set_id: str, gene_set_types: dict
+    ) -> Any:
+        """Get a denovo gene set."""
         response = self._post(
             "gene_sets/gene_set_download",
             data={
@@ -486,71 +657,3 @@ class RESTClient:
             return None
 
         return response.content.decode()
-
-    def get_member_details(self, dataset_id, family_id, member_id):
-        response = self._get(
-            f"families/{dataset_id}/{family_id}/members/{member_id}"
-        )
-
-        if response.status_code != 200:
-            return None
-
-        return response.json()
-
-    def get_all_member_details(self, dataset_id, family_id):
-        response = self._get(
-            f"families/{dataset_id}/{family_id}/members/all"
-        )
-
-        if response.status_code != 200:
-            return None
-
-        return response.json()
-
-    def get_members(self, dataset_id, family_id):
-        response = self._get(
-            f"families/{dataset_id}/{family_id}/members"
-        )
-
-        if response.status_code != 200:
-            return None
-
-        return response.json()
-
-    def get_family_details(self, dataset_id, family_id):
-        response = self._get(
-            f"families/{dataset_id}/{family_id}"
-        )
-
-        if response.status_code != 200:
-            return None
-
-        return response.json()
-
-    def get_families(self, dataset_id):
-        response = self._get(
-            f"families/{dataset_id}"
-        )
-
-        if response.status_code != 200:
-            return None
-
-        return response.json()
-
-    def get_all_family_details(self, dataset_id):
-        response = self._get(
-            f"families/{dataset_id}/all"
-        )
-
-        if response.status_code != 200:
-            return None
-
-        return response.json()
-
-    def get_person_set_collection_configs(self, dataset_id):
-        response = self._get(f"person_sets/{dataset_id}/configs")
-
-        if response.status_code != 200:
-            return None
-
-        return response.json()

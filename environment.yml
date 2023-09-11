@@ -12,9 +12,9 @@ channels:
 dependencies:
   - python=3.9
   - importlib_metadata=6.8
-  - pysam=0.21.0
-  - samtools=1.17
+  - pysam=0.21
   - htslib=1.17
+  - samtools=1.17
   - bcftools=1.17
   - pyliftover=0.4
   - lark-parser=0.6.7
@@ -26,8 +26,8 @@ dependencies:
   - seaborn=0.12.1
   - pandas=1.5.2
   - pyarrow=10.0.1
-  - fsspec=2023.6
-  - s3fs=2023.6
+  - fsspec=2023.9
+  - s3fs=2023.9
   - dask=2023.8
   - python-box=6.0.2
   - setuptools=67
