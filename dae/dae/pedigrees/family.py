@@ -782,7 +782,7 @@ class FamiliesData(Mapping[str, Family]):
         if family_ids is None:
             persons = self.persons.values()
         else:
-            persons = filter(  # type: ignore
+            persons = filter(
                 lambda p: p.family_id in set(family_ids),  # type: ignore
                 self.persons.values())
 
@@ -791,9 +791,11 @@ class FamiliesData(Mapping[str, Family]):
 
         if not isinstance(roles[0], Role):
             roles_q = set([Role.from_name(role) for role in roles])
+        else:
+            roles_q = set(roles)
 
         return list(
-            filter(lambda m: m.role in roles_q, persons))  # type: ignore
+            filter(lambda m: m.role in roles_q, persons))
 
     def families_of_persons(self, person_ids: set[str]) -> set[str]:
         family_ids: set[str] = set()
