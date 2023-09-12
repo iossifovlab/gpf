@@ -10,8 +10,8 @@ from dataclasses import dataclass
 import logging
 
 from typing import Optional, Any, FrozenSet, Generator
+from box import Box
 
-from dae.configuration.gpf_config_parser import FrozenBox
 from dae.pedigrees.family import Person, FamiliesData
 from dae.pheno.pheno_db import PhenotypeData, MeasureType
 from dae.variants.attributes import Role
@@ -84,7 +84,7 @@ class PersonSetCollection:
         ssource: str
 
     def __init__(
-            self, pscid: str, name: str, config: FrozenBox,
+            self, pscid: str, name: str, config: Box,
             sources: list[Source],
             person_sets: dict[str, PersonSet],
             default: PersonSet,
@@ -124,7 +124,7 @@ class PersonSetCollection:
         return sources
 
     @staticmethod
-    def _produce_sets(config: FrozenBox) -> dict[str, PersonSet]:
+    def _produce_sets(config: Box) -> dict[str, PersonSet]:
         """
         Produce initial PersonSet instances.
 
@@ -144,7 +144,7 @@ class PersonSetCollection:
         return result
 
     @staticmethod
-    def _produce_default_person_set(config: FrozenBox) -> PersonSet:
+    def _produce_default_person_set(config: Box) -> PersonSet:
         assert config.default is not None, config
 
         return PersonSet(
@@ -229,7 +229,7 @@ class PersonSetCollection:
 
     @staticmethod
     def from_families(
-        collection_config: FrozenBox,
+        collection_config: Box,
         families_data: FamiliesData,
         pheno_db: Optional[PhenotypeData] = None
     ) -> PersonSetCollection:
@@ -269,7 +269,7 @@ class PersonSetCollection:
     @staticmethod
     def merge_configs(
         person_set_collections: list[PersonSetCollection]
-    ) -> FrozenBox:
+    ) -> Box:
         """
         Merge the configurations of a list of PersonSetCollection objects.
 
@@ -336,7 +336,7 @@ class PersonSetCollection:
             domain[vid] for vid in sorted(domain.keys())
         ]
 
-        return FrozenBox(result)
+        return Box(result)
 
     def get_person_set(self, person_id: str) -> Optional[PersonSet]:
         for person_set in self.person_sets.values():
@@ -437,7 +437,7 @@ class PersonSetCollection:
     def from_json(
         config_json: dict[str, Any], families: FamiliesData
     ) -> PersonSetCollection:
-        config = FrozenBox(config_json)
+        config = Box(config_json)
         return PersonSetCollection.from_families(config, families)
 
     def get_stats(self) -> dict[str, dict[str, int]]:
