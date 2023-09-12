@@ -211,6 +211,10 @@ export class GeneSetsComponent extends StatefulComponent implements OnInit {
   }
 
   public setSelectedGeneType(datasetId: string, personSetCollectionId: string, geneType: string, value: boolean): void {
+    if ((this.geneSetsDropdownRef.nativeElement as HTMLInputElement).value !== '') {
+      (this.geneSetsDropdownRef.nativeElement as HTMLInputElement).value = '';
+    }
+
     this.selectedGeneSet = null;
     this.isLoading = true;
     const intervalId = setInterval(() => {
