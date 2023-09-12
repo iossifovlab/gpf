@@ -9,7 +9,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 import logging
 
-from typing import Dict, Optional, Any, FrozenSet, List
+from typing import Optional, Any, FrozenSet, Generator
+
 from dae.configuration.gpf_config_parser import FrozenBox
 from dae.pedigrees.family import Person, FamiliesData
 from dae.pheno.pheno_db import PhenotypeData, MeasureType
@@ -25,28 +26,30 @@ class PersonSet:
 
     def __init__(
             self, psid: str, name: str,
-            values: List[str], color: str,
-            persons: Dict[str, Person]):
+            values: list[str], color: str,
+            persons: dict[str, Person]):
         self.id: str = psid  # pylint: disable=invalid-name
         self.name: str = name
-        self.values: List[str] = values
+        self.values: list[str] = values
         self.color: str = color
-        self.persons: Dict[str, Person] = persons
+        self.persons: dict[str, Person] = persons
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"PersonSet({self.id}: {self.name}, {len(self.persons)})"
 
-    def get_persons_with_roles(self, *roles):
+    def get_persons_with_roles(
+        self, *roles: Role
+    ) -> Generator[Person, None, None]:
         for person in self.persons.values():
             if person.role in roles:
                 yield person
 
-    def get_children(self):
+    def get_children(self) -> Generator[Person, None, None]:
         for person in self.persons.values():
-            if person.has_parent() and not person.generated:
+            if person.has_parent() and not person.generated and person.missing:
                 yield person
 
-    def to_json(self):
+    def to_json(self) -> dict[str, Any]:
         return {
             "id": self.id,
             "name": self.name,
@@ -56,9 +59,12 @@ class PersonSet:
         }
 
     @staticmethod
-    def from_json(json, families):
+    def from_json(json: dict[str, Any], families: FamiliesData) -> PersonSet:
+        """Construct person set from a JSON dict."""
+        real_persons = families.real_persons
         persons = {
-            pid: families.persons.get(pid) for pid in json["person_ids"]
+            pid: real_persons[pid]
+            for pid in json["person_ids"] if pid in real_persons
         }
         return PersonSet(
             json["id"],
@@ -79,8 +85,8 @@ class PersonSetCollection:
 
     def __init__(
             self, pscid: str, name: str, config: FrozenBox,
-            sources: List[Source],
-            person_sets: Dict[str, PersonSet],
+            sources: list[Source],
+            person_sets: dict[str, PersonSet],
             default: PersonSet,
             families: FamiliesData):
 
@@ -91,24 +97,26 @@ class PersonSetCollection:
         self.config = config
         self.sources = sources
 
-        self.person_sets: Dict[str, PersonSet] = person_sets
+        self.person_sets: dict[str, PersonSet] = person_sets
         self.default: PersonSet = default
 
         self.person_sets[default.id] = default
 
         self.families: FamiliesData = families
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"PersonSetCollection({self.id}: {self.person_sets})"
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.person_sets)
 
-    def is_pedigree_only(self):
+    def is_pedigree_only(self) -> bool:
         return all(s.sfrom == "pedigree" for s in self.sources)
 
     @staticmethod
-    def _sources_from_config(person_set_collection) -> List[Source]:
+    def _sources_from_config(
+        person_set_collection: dict[str, Any]
+    ) -> list[Source]:
         sources = [
             PersonSetCollection.Source(src["from"], src["source"])
             for src in person_set_collection["sources"]
@@ -116,7 +124,7 @@ class PersonSetCollection:
         return sources
 
     @staticmethod
-    def _produce_sets(config: FrozenBox) -> Dict[str, PersonSet]:
+    def _produce_sets(config: FrozenBox) -> dict[str, PersonSet]:
         """
         Produce initial PersonSet instances.
 
@@ -239,13 +247,18 @@ class PersonSetCollection:
             frozenset(person_set["values"]): person_set.id
             for person_set in collection_config.domain
         }
-
-        for person_id, person in families_data.persons.items():
+        logger.debug("person set collection value_to_id: %s", value_to_id)
+        for person_id, person in families_data.real_persons.items():
             if person.missing or person.generated:
                 continue
             value = collection.collect_person_collection_attributes(
                 person, pheno_db)
+            logger.debug(
+                "person %s person set values: %s", person_id, value)
             if value not in value_to_id:
+                logger.debug(
+                    "person value %s not in value_to_id: %s; added to default",
+                    value, value_to_id)
                 collection.default.persons[person_id] = person
             else:
                 set_id = value_to_id[value]
@@ -255,7 +268,7 @@ class PersonSetCollection:
 
     @staticmethod
     def merge_configs(
-        person_set_collections: List[PersonSetCollection]
+        person_set_collections: list[PersonSetCollection]
     ) -> FrozenBox:
         """
         Merge the configurations of a list of PersonSetCollection objects.
@@ -267,7 +280,7 @@ class PersonSetCollection:
         collections_iterator = iter(person_set_collections)
         first = next(collections_iterator)
 
-        result: Dict[str, Any] = {}
+        result: dict[str, Any] = {}
         result["id"] = first.id
         result["name"] = first.name
 
@@ -371,7 +384,7 @@ class PersonSetCollection:
         return PersonSetCollection.remove_empty_person_sets(result)
 
     @staticmethod
-    def combine(collections: List[PersonSetCollection]) -> PersonSetCollection:
+    def combine(collections: list[PersonSetCollection]) -> PersonSetCollection:
         """Combine a list of PersonSetCollection objects into a single one."""
         if len(collections) == 0:
             raise ValueError("can't combine empty list of collections")
@@ -390,7 +403,7 @@ class PersonSetCollection:
         raise ValueError(
             f"person {person_id} not in person set collection {self.id}")
 
-    def config_json(self):
+    def config_json(self) -> dict[str, Any]:
         """Produce a JSON configuration for this PersonSetCollection object."""
         domain = []
         for person_set in self.person_sets.values():
@@ -421,11 +434,13 @@ class PersonSetCollection:
         return conf
 
     @staticmethod
-    def from_json(config_json, families):
+    def from_json(
+        config_json: dict[str, Any], families: FamiliesData
+    ) -> PersonSetCollection:
         config = FrozenBox(config_json)
         return PersonSetCollection.from_families(config, families)
 
-    def get_stats(self) -> Dict[str, Dict[str, int]]:
+    def get_stats(self) -> dict[str, dict[str, int]]:
         """
         Return a dictionary with statistics for each PersonSet.
 

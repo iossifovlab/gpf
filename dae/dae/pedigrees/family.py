@@ -226,8 +226,12 @@ class Person:
             return True
         assert self.dad is not None
         assert self.mom is not None
-        return (self.dad.generated or self.dad.not_sequenced) \
-            or (self.mom.generated or self.mom.not_sequenced)
+        return (self.dad.generated
+                or self.dad.not_sequenced
+                or self.dad.missing) \
+            or (self.mom.generated
+                or self.mom.not_sequenced
+                or self.mom.missing)
 
     def has_attr(self, key: str) -> bool:
         return key in self._attributes
