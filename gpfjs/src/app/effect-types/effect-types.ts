@@ -73,8 +73,8 @@ export const NONSYNONYMOUS: Set<string> = new Set([
 ]);
 
 export const UTRS: Set<string> = new Set([
-  '3\'-UTR',
-  '5\'-UTR',
+  '3\'UTR',
+  '5\'UTR',
 ]);
 
 export const OTHER: Set<string> = new Set([
