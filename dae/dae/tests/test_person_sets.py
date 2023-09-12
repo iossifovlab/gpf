@@ -1,24 +1,28 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-import io
 import textwrap
-from typing import cast, Any, Dict
+import pathlib
+from typing import cast, Any
 
 import pytest
 import toml
+from box import Box
 
-
-from dae.testing import convert_to_tab_separated
+from dae.testing import setup_pedigree
 
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.person_sets import person_set_collections_schema
 from dae.pedigrees.loader import FamiliesLoader
+from dae.pedigrees.family import FamiliesData
 from dae.person_sets import PersonSet, PersonSetCollection
+from dae.gpf_instance import GPFInstance
 
 
 @pytest.fixture
-def families_fixture():
-    ped_content = io.StringIO(convert_to_tab_separated(
-        """
+def families_fixture(tmp_path: pathlib.Path) -> FamiliesData:
+
+    ped_path = setup_pedigree(
+        tmp_path / "test_pedigree" / "ped.ped",
+        textwrap.dedent("""
             familyId personId dadId	 momId	sex status role
             f1       mom1     0      0      2   1      mom
             f1       dad1     0      0      1   1      dad
@@ -32,20 +36,21 @@ def families_fixture():
             f2       prb2     dad2   mom2   1   2      prb
             f2       sib2_3   dad2   mom2   2   2      sib
         """))
-    families = FamiliesLoader(ped_content).load()
+    families = FamiliesLoader(ped_path).load()
     assert families is not None
     return families
 
 
-def get_person_set_collections_config(content: str):
-    return GPFConfigParser.process_config(
-        cast(Dict[str, Any], toml.loads(content)),
+def get_person_set_collections_config(content: str) -> Box:
+    config = GPFConfigParser.process_config(
+        cast(dict[str, Any], toml.loads(content)),
         {"person_set_collections": person_set_collections_schema},
     ).person_set_collections
+    return cast(Box, config)
 
 
 @pytest.fixture
-def status_person_sets_collection():
+def status_person_sets_collection() -> Box:
     content = textwrap.dedent(
         """
         [person_set_collections]
@@ -68,37 +73,41 @@ def status_person_sets_collection():
             },
         ]
         status.default = {id = "unknown",name = "Unknown",color = "#aaaaaa"}
-
         """)
 
     return get_person_set_collections_config(content)
 
 
-def test_load_config(status_person_sets_collection):
+def test_load_config(status_person_sets_collection: Box) -> None:
     assert status_person_sets_collection.status is not None
 
 
-def test_produce_sets(status_person_sets_collection):
+def test_produce_sets(status_person_sets_collection: Box) -> None:
     people_sets = PersonSetCollection._produce_sets(
         status_person_sets_collection.status)
     assert people_sets == {
         "affected": PersonSet(
-            "affected", "Affected", {"affected_val"}, "#aabbcc", {}
+            "affected", "Affected", ["affected_val"], "#aabbcc", {}
         ),
         "unaffected": PersonSet(
-            "unaffected", "Unaffected", {"unaffected_val"}, "#ffffff", {}
+            "unaffected", "Unaffected", ["unaffected_val"], "#ffffff", {}
         ),
     }
 
 
-def test_produce_default_person_set(status_person_sets_collection):
+def test_produce_default_person_set(
+    status_person_sets_collection: Box
+) -> None:
     people_set = PersonSetCollection._produce_default_person_set(
         status_person_sets_collection.status)
     assert people_set == PersonSet(
-        "unknown", "Unknown", {"DEFAULT"}, "#aaaaaa", {})
+        "unknown", "Unknown", ["DEFAULT"], "#aaaaaa", {})
 
 
-def test_from_pedigree(families_fixture, status_person_sets_collection):
+def test_from_pedigree(
+    families_fixture: FamiliesData,
+    status_person_sets_collection: Box
+) -> None:
     status_collection = PersonSetCollection.from_families(
         status_person_sets_collection.status, families_fixture
     )
@@ -114,7 +123,9 @@ def test_from_pedigree(families_fixture, status_person_sets_collection):
     }
 
 
-def test_from_pedigree_missing_value_in_domain(families_fixture):
+def test_from_pedigree_missing_value_in_domain(
+    families_fixture: FamiliesData
+) -> None:
 
     content = textwrap.dedent(
         """
@@ -143,7 +154,9 @@ def test_from_pedigree_missing_value_in_domain(families_fixture):
     assert set(collection.person_sets.keys()) == {"unaffected", "unknown"}
 
 
-def test_from_pedigree_nonexistent_domain(fixture_dirname, families_fixture):
+def test_from_pedigree_nonexistent_domain(
+    families_fixture: FamiliesData
+) -> None:
     content = textwrap.dedent("""
         [person_set_collections]
         selected_person_set_collections = ["invalid"]
@@ -168,7 +181,9 @@ def test_from_pedigree_nonexistent_domain(fixture_dirname, families_fixture):
 
 
 def test_get_person_color(
-        status_person_sets_collection, families_fixture):
+    status_person_sets_collection: Box,
+    families_fixture: FamiliesData
+) -> None:
 
     status_collection = PersonSetCollection.from_families(
         status_person_sets_collection.status, families_fixture
@@ -182,7 +197,9 @@ def test_get_person_color(
     )
 
 
-def test_collection_merging_configs_order(families_fixture):
+def test_collection_merging_configs_order(
+    families_fixture: FamiliesData
+) -> None:
     role_config = get_person_set_collections_config(textwrap.dedent("""
     [person_set_collections]
     selected_person_set_collections = ["role"]
@@ -250,7 +267,9 @@ def test_collection_merging_configs_order(families_fixture):
     ]
 
 
-def test_multiple_column_person_set(families_fixture):
+def test_multiple_column_person_set(
+    families_fixture: FamiliesData
+) -> None:
     config = get_person_set_collections_config(textwrap.dedent("""
         [person_set_collections]
         selected_person_set_collections = ["status_sex"]
@@ -291,7 +310,9 @@ def test_multiple_column_person_set(families_fixture):
 
 
 def test_phenotype_person_set_categorical(
-        fixtures_gpf_instance, families_fixture):
+    fixtures_gpf_instance: GPFInstance,
+    families_fixture: FamiliesData
+) -> None:
 
     config = get_person_set_collections_config(textwrap.dedent("""
     [person_set_collections]
@@ -329,7 +350,9 @@ def test_phenotype_person_set_categorical(
 
 
 def test_phenotype_person_set_continuous(
-        families_fixture, fixtures_gpf_instance):
+    families_fixture: FamiliesData,
+    fixtures_gpf_instance: GPFInstance
+) -> None:
 
     config = get_person_set_collections_config(textwrap.dedent("""
     [person_set_collections]
@@ -359,7 +382,9 @@ def test_phenotype_person_set_continuous(
         "(instrument1.continuous)" in str(excinfo.value)
 
 
-def test_genotype_group_person_sets(fixtures_gpf_instance):
+def test_genotype_group_person_sets(
+    fixtures_gpf_instance: GPFInstance
+) -> None:
     genotype_data_group = fixtures_gpf_instance.get_genotype_data(
         "person_sets_dataset_1"
     )
@@ -378,7 +403,9 @@ def test_genotype_group_person_sets(fixtures_gpf_instance):
     )
 
 
-def test_genotype_group_person_sets_overlapping(fixtures_gpf_instance):
+def test_genotype_group_person_sets_overlapping(
+    fixtures_gpf_instance: GPFInstance
+) -> None:
     genotype_data_group = fixtures_gpf_instance.get_genotype_data(
         "person_sets_dataset_2"
     )
@@ -401,7 +428,9 @@ def test_genotype_group_person_sets_overlapping(fixtures_gpf_instance):
     assert "person3" in phenotype2_persons
 
 
-def test_genotype_group_person_sets_subset(fixtures_gpf_instance):
+def test_genotype_group_person_sets_subset(
+    fixtures_gpf_instance: GPFInstance
+) -> None:
     genotype_data_group_config = fixtures_gpf_instance.\
         get_genotype_data_config("person_sets_dataset_1")
     genotype_data_group = \
@@ -430,9 +459,10 @@ def test_genotype_group_person_sets_subset(fixtures_gpf_instance):
 
 
 @pytest.fixture
-def families_fixture2():
-    ped_content = io.StringIO(convert_to_tab_separated(
-        """
+def families_fixture2(tmp_path: pathlib.Path) -> FamiliesData:
+    ped_path = setup_pedigree(
+        tmp_path / "test_pedigree2" / "ped2.ped",
+        textwrap.dedent("""
             familyId personId  dadId	momId    sex status role
             ff1      ff1.mom1  0        0        2   1      mom
             ff1      ff1.dad1  0        0        1   1      dad
@@ -443,12 +473,15 @@ def families_fixture2():
             ff2      ff2.prb2  ff2.dad2 ff2.mom2 1   2      prb
             ff2      ff2.sib2  ff2.dad2 ff2.mom2 2   2      sib
         """))
-    families = FamiliesLoader(ped_content).load()
+    families = FamiliesLoader(ped_path).load()
     assert families is not None
     return families
 
 
-def test_merge_person_sets(families_fixture, families_fixture2):
+def test_merge_person_sets(
+    families_fixture: FamiliesData,
+    families_fixture2: FamiliesData
+) -> None:
 
     content1 = textwrap.dedent("""
     [person_set_collections]
