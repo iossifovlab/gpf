@@ -4,6 +4,7 @@
 from collections import Counter
 import logging
 import copy
+import fnmatch
 from textwrap import dedent
 from typing import List, Dict, Optional, Callable, Any
 
@@ -185,7 +186,8 @@ class AnnotationConfigParser:
 
     @staticmethod
     def parse_str(
-        content: str, source_file_name: Optional[str] = None
+        content: str, source_file_name: Optional[str] = None,
+        grr: Optional[GenomicResourceRepo] = None
     ) -> list[AnnotatorInfo]:
         """Parse annotation pipeline configuration string."""
         try:
@@ -198,6 +200,10 @@ class AnnotationConfigParser:
             raise AnnotationConfigurationError(
                 f"The pipeline configuration file {source_file_name} is "
                 "an invalid yaml file.", error) from error
+
+        pipeline_raw_config = AnnotationConfigParser.expand_wildcards(
+            pipeline_raw_config, grr
+        )
 
         return AnnotationConfigParser.parse_raw(pipeline_raw_config)
 
@@ -266,6 +272,33 @@ class AnnotationConfigParser:
                 AnnotationConfigParser.parse_raw_attribute_config(
                     raw_attribute_config))
         return attribute_config
+
+    @staticmethod
+    def expand_wildcards(
+        pipeline_raw_config: list[dict[str, Any]],
+        grr: Optional[GenomicResourceRepo]
+    ) -> list[dict[str, Any]]:
+        assert grr is not None
+        result = []
+        for annotator_raw_config in pipeline_raw_config:
+            if isinstance(annotator_raw_config, dict) and \
+               len(annotator_raw_config) == 1 and \
+               isinstance(list(annotator_raw_config)[0], str):
+                (ann_type, ann_details) = list(annotator_raw_config.items())[0]
+                assert isinstance(ann_type, str)
+
+                if isinstance(ann_details, str) and "*" in ann_details:
+                    all_resources_ids = list(
+                        map(lambda r: r.get_id(), grr.get_all_resources())
+                    )
+                    matching_resources = fnmatch.filter(
+                        all_resources_ids, ann_details
+                    )
+                    for resource in matching_resources:
+                        result.append({ann_type: resource})
+                    continue
+            result.append(annotator_raw_config)
+        return result
 
 
 class AnnotationConfigurationError(ValueError):
