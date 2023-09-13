@@ -347,14 +347,6 @@ class ResponseTransformer:
                         if val is None:
                             return "-"
                         try:
-                            if val is None:
-                                return "-"
-                            if col_format.endswith("d"):
-                                val = int(val)
-                            elif col_format.endswith("s"):
-                                val = str(val)
-                            elif col_format.endswith("f"):
-                                val = float(val)
                             return col_format % val
                         except Exception:  # pylint: disable=broad-except
                             logging.warning(

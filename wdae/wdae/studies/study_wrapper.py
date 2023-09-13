@@ -589,6 +589,10 @@ class RemoteStudyWrapper(StudyWrapperBase):
             kwargs, reduce_alleles=False
         )
 
+        for source in sources:
+            if "format" in source:
+                del source["format"]
+
         def get_source(col: dict[str, Any]) -> Any:
             res = col["source"]
             if "role" in col:
