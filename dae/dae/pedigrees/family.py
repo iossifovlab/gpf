@@ -226,12 +226,14 @@ class Person:
             return True
         assert self.dad is not None
         assert self.mom is not None
-        return (self.dad.generated
-                or self.dad.not_sequenced
-                or self.dad.missing) \
-            or (self.mom.generated
-                or self.mom.not_sequenced
-                or self.mom.missing)
+        return self.dad.missing or self.mom.missing
+
+    def has_no_parent(self) -> bool:
+        if self.dad is None or self.mom is None:
+            return True
+        assert self.dad is not None
+        assert self.mom is not None
+        return self.dad.missing and self.mom.missing
 
     def has_attr(self, key: str) -> bool:
         return key in self._attributes
@@ -763,7 +765,7 @@ class FamiliesData(Mapping[str, Family]):
         result: list[Person] = []
         for fam in list(self._families.values()):
             for person in fam.members_in_order:
-                if not person.has_parent():
+                if person.has_no_parent():
                     result.append(person)
         return result
 
@@ -772,8 +774,8 @@ class FamiliesData(Mapping[str, Family]):
         result: list[Person] = []
         for fam in list(self._families.values()):
             for person in fam.members_in_order:
-                if person.has_both_parents() \
-                        and (not person.has_missing_parent()):
+                if person.has_both_parents() and \
+                        not person.has_missing_parent():
                     result.append(person)
         return result
 
@@ -784,11 +786,11 @@ class FamiliesData(Mapping[str, Family]):
     ) -> list[Person]:
         """Return list of persons matching the specified roles."""
         if family_ids is None:
-            persons = self.persons.values()
+            persons = self.real_persons.values()
         else:
             persons = filter(
                 lambda p: p.family_id in set(family_ids),  # type: ignore
-                self.persons.values())
+                self.real_persons.values())
 
         if roles is None:
             return list(persons)

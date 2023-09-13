@@ -37,6 +37,9 @@ class PersonSet:
     def __repr__(self) -> str:
         return f"PersonSet({self.id}: {self.name}, {len(self.persons)})"
 
+    def __len__(self) -> int:
+        return len(self.persons)
+
     def get_persons_with_roles(
         self, *roles: Role
     ) -> Generator[Person, None, None]:
@@ -472,3 +475,11 @@ class PersonSetCollection:
                 "children": children,
             }
         return result
+
+
+@dataclass
+class PSCQuery:
+    """Person set collection query."""
+
+    collection_id: str
+    selected_person_sets: set[str]
