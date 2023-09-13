@@ -12,7 +12,6 @@ import { QueryService } from 'app/query/query.service';
 import { UsersService } from 'app/users/users.service';
 import { GeneService } from './gene.service';
 import { GeneBrowserComponent } from './gene-browser.component';
-import { SearchableSelectComponent } from '../searchable-select/searchable-select.component';
 import { FormsModule } from '@angular/forms';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { SummaryAllelesArray, SummaryAllelesFilter } from './summary-variants';
@@ -61,7 +60,7 @@ class MockQueryService {
     return of([] as any);
   }
 
-  public getSummaryVariants(): Observable<Object> {
+  public getSummaryVariants(filter: object): Observable<object> {
     return of([]);
   }
 
@@ -93,7 +92,7 @@ describe('GeneBrowserComponent', () => {
     await TestBed.configureTestingModule({
       declarations: [
         GeneBrowserComponent, GenePlotComponent,
-        GenotypePreviewTableComponent, SearchableSelectComponent
+        GenotypePreviewTableComponent
       ],
       providers: [
         ConfigService, UsersService, DatasetsTreeService, FullscreenLoadingService,
@@ -220,7 +219,8 @@ describe('GeneBrowserComponent', () => {
       affectedStatus: ['Affected only'],
       variantTypes: ['sub']
     });
-    await component.submitGeneRequest('POGZ');
+    document.getElementById('genes').textContent = 'POGZ';
+    await component.submitGeneRequest();
     expect(component.summaryVariantsFilter.queryParams).toStrictEqual({
       effectTypes: [
         'frame-shift',
@@ -242,7 +242,7 @@ describe('GeneBrowserComponent', () => {
     });
   });
 
-  it('should test download', () => {
+  it('should test download', async() => {
     const mockEvent = {
       target: {
         queryData: {
@@ -252,6 +252,8 @@ describe('GeneBrowserComponent', () => {
       }
     };
 
+    document.getElementById('genes').textContent = 'POGZ';
+    await component.submitGeneRequest();
     component.onSubmit(mockEvent as any);
 
     expect(mockEvent.target.queryData.value).toStrictEqual(JSON.stringify({
@@ -289,6 +291,7 @@ describe('GeneBrowserComponent', () => {
     }));
     expect(mockEvent.target.submit).toHaveBeenCalledTimes(1);
   });
+
   it('should cancel queries on router change', () => {
     const stopSpy = jest.spyOn(loadingService, 'setLoadingStop');
     const cancelSpy = jest.spyOn(mockQueryService, 'cancelStreamPost');
@@ -300,11 +303,11 @@ describe('GeneBrowserComponent', () => {
     expect(cancelSpy).toHaveBeenCalledTimes(1);
   });
 
-  it('should cancel request on loading service interrupt', () => {
-    const spyOnSummaryVariants = jest.spyOn(mockQueryService, 'getSummaryVariants')
-      .mockReturnValue(of([]));
+  it('should cancel request on loading service interrupt', async() => {
+    const spyOnSummaryVariants = jest.spyOn(mockQueryService, 'getSummaryVariants');
     const spyOnCancelSummaryPost = jest.spyOn(mockQueryService, 'cancelStreamPost');
-    component.submitGeneRequest('CHD8');
+    document.getElementById('genes').textContent = 'CHD8';
+    await component.submitGeneRequest();
     expect(spyOnSummaryVariants).toHaveBeenCalledTimes(1);
     loadingService.interruptEvent.emit(true);
     expect(spyOnSummaryVariants).toHaveBeenCalledTimes(1);

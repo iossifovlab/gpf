@@ -1,3 +1,5 @@
+@import url("jquery-ui.css");
+
 html,
 body,
 material-app {
@@ -59,8 +61,10 @@ label {
 
 .row-eq-height {
   display: -webkit-box;
+  /* stylelint-disable */
   display: -webkit-flex;
   display: -ms-flexbox;
+  /* stylelint-enable */
   display: flex;
 }
 
@@ -177,10 +181,12 @@ label {
 .nav-link {
   margin-right: 8px;
   color: #2a6395;
+  /* stylelint-disable */
   -webkit-transition: height 0.01s;
   -moz-transition: height 0.01s;
   -ms-transition: height 0.01s;
   -o-transition: height 0.01s;
+  /* stylelint-enable */
   transition: height 0.01s;
 }
 
@@ -253,6 +259,7 @@ label {
 }
 
 .select-wrapper select {
+  /* stylelint-disable-next-line property-no-vendor-prefix */
   -webkit-appearance: none;
   appearance: none;
 }
@@ -311,6 +318,7 @@ label {
   }
 }
 
+/* stylelint-disable-next-line at-rule-no-vendor-prefix */
 @-webkit-keyframes rotation {
   from {
     transform: rotate(90deg);

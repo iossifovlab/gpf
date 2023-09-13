@@ -34,8 +34,6 @@ import { GeneScoresState } from './gene-scores/gene-scores.state';
 import { GeneSetsComponent } from './gene-sets/gene-sets.component';
 import { GeneSetsState } from './gene-sets/gene-sets.state';
 import { GeneSetsService } from './gene-sets/gene-sets.service';
-import { SearchableSelectComponent } from './searchable-select/searchable-select.component';
-import { SearchableSelectTemplateDirective } from './searchable-select/searchable-select-template.directive';
 import { UsersComponent } from './users/users.component';
 import { UsersService } from './users/users.service';
 import { BoldMatchingPipe } from './utils/bold-matching.pipe';
@@ -176,6 +174,8 @@ import { ContrastAdjustPipe } from './utils/contrast-adjust.pipe';
 import { ItemAddMenuComponent } from './item-add-menu/item-add-menu.component';
 import { ConfirmButtonComponent } from './confirm-button/confirm-button.component';
 import * as Sentry from '@sentry/angular-ivy';
+import * as $ from 'jquery'; // This is a global import, do not remove (even if linter says unused)
+import 'jquery-ui/ui/widgets/autocomplete.js'; // This as well
 import { FederationCredentialsComponent } from './federation-credentials/federation-credentials.component';
 import { StudyFiltersTreeComponent } from './treelist-checkbox/treelist-checkbox.component';
 import { LoginComponent } from './login/login.component';
@@ -284,8 +284,6 @@ const appRoutes: Routes = [
     MinValidatorDirective,
     MaxValidatorDirective,
     GeneSetsComponent,
-    SearchableSelectComponent,
-    SearchableSelectTemplateDirective,
     BoldMatchingPipe,
     PresentInChildComponent,
     PresentInParentComponent,
@@ -386,7 +384,7 @@ const appRoutes: Routes = [
     ItemAddMenuComponent,
     FederationCredentialsComponent,
     StudyFiltersTreeComponent,
-    LoginComponent
+    LoginComponent,
   ],
   imports: [
     BrowserModule,
