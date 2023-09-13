@@ -206,6 +206,10 @@ def get_allowed_genotype_studies(user, dataset):
     """Collect and return genotype study IDs the user has access to."""
     allowed_studies = []
     dataset = get_wdae_dataset(dataset)
+    if DatasetHierarchy.is_study(dataset):
+        if _user_has_permission_strict(user, dataset) \
+                or _user_has_permission_up(user, dataset):
+            allowed_studies.append(dataset.dataset_id)
     for child in get_wdae_children(dataset):
         if DatasetHierarchy.is_study(child):
             if _user_has_permission_strict(user, child) \
@@ -304,12 +308,15 @@ def get_dataset_groups(dataset):
 
 
 def handle_partial_permissions(user, dataset_id: str, request_data: dict):
-    """Hanlde partial permission on a dataset.
+    """Handle partial permission on a dataset.
 
     A user may have only partial access to a dataset based
     on which of its constituent studies he has rights to access.
     This method attaches these rights to the request as study filters
     in order to filter variants from studies the user cannot access.
     """
+    print("======")
+    print(dataset_id)
     request_data["allowed_studies"] = \
         get_allowed_genotype_studies(user, dataset_id)
+    print(request_data["allowed_studies"])
