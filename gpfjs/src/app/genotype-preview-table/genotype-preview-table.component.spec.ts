@@ -34,8 +34,8 @@ describe('GenotypePreviewTableComponent', () => {
     component = fixture.componentInstance;
 
     component.legend = [
-      new PersonSet('id1', 'name1', ['value1', 'value2'], 'color1'),
-      new PersonSet('id2', 'name2', ['value3', 'value4'], 'color2')
+      new PersonSet('id1', 'name1', 'color1'),
+      new PersonSet('id2', 'name2', 'color2')
     ];
     component.columns = GenotypeBrowser.tableColumnsFromJson([
       {
@@ -116,8 +116,8 @@ describe('GenotypePreviewTableComponent', () => {
 
   it('should have set legend on init', () => {
     expect(component.legend).toStrictEqual([
-      new PersonSet('id1', 'name1', ['value1', 'value2'], 'color1'),
-      new PersonSet('id2', 'name2', ['value3', 'value4'], 'color2')
+      new PersonSet('id1', 'name1', 'color1'),
+      new PersonSet('id2', 'name2', 'color2')
     ]);
   });
 
