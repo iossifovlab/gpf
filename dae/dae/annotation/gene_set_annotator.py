@@ -65,7 +65,7 @@ class GeneSetAnnotator(Annotator):
         self.gene_set_resource = gene_set_resource
         self.gene_set_collection = build_gene_set_collection_from_resource(
             self.gene_set_resource)
-        
+
         self.gene_set = self.gene_set_collection.get_gene_set(gene_set_id)
         if self.gene_set is None:
             raise ValueError(f"The {gene_set_id} is not in the collection")
@@ -91,6 +91,6 @@ class GeneSetAnnotator(Annotator):
         if len([gene for gene in genes if gene in self.gene_set.syms]) != 0:
             is_in = True
 
-        attributes = {f"in_{self.gene_set.name}": is_in}
+        attributes = {self.gene_set.name: is_in}
 
         return attributes
