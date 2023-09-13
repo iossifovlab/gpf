@@ -336,7 +336,7 @@ def get_wgpf_instance(config_filename=None, **kwargs) -> WGPFInstance:
 def reload_datasets(gpf_instance):
     """Recreate datasets permissions."""
     # pylint: disable=import-outside-toplevel
-    from datasets_api.models import Dataset
+    from datasets_api.models import Dataset, DatasetHierarchy
     for genotype_data_id in gpf_instance.get_genotype_data_ids():
         Dataset.recreate_dataset_perm(genotype_data_id)
         Dataset.set_broken(genotype_data_id, True)
@@ -350,9 +350,24 @@ def reload_datasets(gpf_instance):
             continue
 
         for study_id in genotype_data.get_studies_ids(leaves=False):
-            if study_id is None:
+            if study_id is None or study_id == genotype_data_id:
                 continue
             Dataset.recreate_dataset_perm(study_id)
+
+    DatasetHierarchy.clear()
+    datasets = gpf_instance.get_selected_genotype_data()
+    if datasets is None:
+        datasets = gpf_instance.get_genotype_data_ids()
+    for genotype_data_id in datasets:
+        genotype_data = gpf_instance.get_genotype_data(genotype_data_id)
+        direct_descendants = genotype_data.get_studies_ids(leaves=False)
+        for study_id in genotype_data.get_studies_ids():
+            if study_id == genotype_data_id:
+                continue
+            is_direct = study_id in direct_descendants
+            DatasetHierarchy.add_relation(
+                genotype_data_id, study_id, is_direct
+            )
 
 
 def recreated_dataset_perm(gpf_instance):

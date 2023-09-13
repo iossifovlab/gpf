@@ -1,5 +1,5 @@
 import logging
-from typing import List
+from typing import List, Optional
 
 from django.db import models
 from django.contrib.auth.models import Group
@@ -62,3 +62,63 @@ class Dataset(models.Model):
             return
         dataset_object.dataset_name = dataset_name
         dataset_object.save()
+
+
+class DatasetHierarchy(models.Model):
+    """Data for dataset hierarchy and inheritance."""
+
+    ancestor: models.ForeignKey = models.ForeignKey(
+        Dataset, on_delete=models.CASCADE, related_name="ancestor"
+    )
+    descendant: models.ForeignKey = models.ForeignKey(
+        Dataset, on_delete=models.CASCADE, related_name="descendant"
+    )
+    direct: models.BooleanField = models.BooleanField()
+
+    @classmethod
+    def clear(cls) -> None:
+        """Clear the model's records."""
+        cls.objects.all().delete()
+
+    @classmethod
+    def add_relation(
+        cls, ancestor_id: str,
+        descendant_id: str, direct: bool = False
+    ) -> None:
+        """Add a relation to the hierarchy with provided dataset IDs."""
+        ancestor = Dataset.objects.get(dataset_id=ancestor_id)
+        descendant = Dataset.objects.get(dataset_id=descendant_id)
+        cls.objects.create(
+            ancestor=ancestor, descendant=descendant, direct=direct
+        )
+
+    @classmethod
+    def is_study(cls, dataset: Dataset):
+        """
+        Return whether a dataset is a study.
+
+        A dataset without children is a study and not a group.
+        """
+        return len(cls.objects.filter(ancestor_id=dataset.id)) == 0
+
+    @classmethod
+    def get_parents(
+        cls, dataset: Dataset, direct: Optional[bool] = None
+    ) -> List[Dataset]:
+        if direct is True:
+            relations = cls.objects.filter(
+                descendant_id=dataset.id, direct=True
+            )
+        else:
+            relations = cls.objects.filter(descendant_id=dataset.id)
+        return [relation.ancestor for relation in relations]
+
+    @classmethod
+    def get_children(
+        cls, dataset: Dataset, direct: Optional[bool] = None
+    ) -> List[Dataset]:
+        if direct is True:
+            relations = cls.objects.filter(ancestor_id=dataset.id, direct=True)
+        else:
+            relations = cls.objects.filter(ancestor_id=dataset.id)
+        return [relation.descendant for relation in relations]

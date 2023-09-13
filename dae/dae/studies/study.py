@@ -592,11 +592,12 @@ class GenotypeDataGroup(GenotypeData):
         return self._families
 
     def get_studies_ids(self, leaves=True):
+        result = set([self.study_id])
         if not leaves:
-            return [st.study_id for st in self.studies]
-        result = []
+            result = result.union([st.study_id for st in self.studies])
+            return result
         for study in self.studies:
-            result.extend(study.get_studies_ids())
+            result = result.union(study.get_studies_ids())
         return result
 
     def _build_families(self) -> FamiliesData:

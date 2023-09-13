@@ -35,7 +35,7 @@ def augment_with_groups(dataset):
 
 def augment_with_parents(dataset):
     dataset["parents"] = [
-        ds.dataset_id for ds in get_wdae_parents(dataset["id"])
+        ds.dataset_id for ds in get_wdae_parents(dataset["id"], direct=True)
     ]
     return dataset
 
