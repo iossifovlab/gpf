@@ -253,12 +253,7 @@ class PersonSetCollection:
                 continue
             value = collection.collect_person_collection_attributes(
                 person, pheno_db)
-            logger.debug(
-                "person %s person set values: %s", person_id, value)
             if value not in value_to_id:
-                logger.debug(
-                    "person value %s not in value_to_id: %s; added to default",
-                    value, value_to_id)
                 collection.default.persons[person_id] = person
             else:
                 set_id = value_to_id[value]
@@ -429,6 +424,23 @@ class PersonSetCollection:
                 "name": self.default.name,
                 "color": self.default.color,
             }
+        }
+
+        return conf
+
+    def domain_json(self) -> dict[str, Any]:
+        """Produce a JSON to represent domain of this PersonSetCollection."""
+        domain = []
+        for person_set in self.person_sets.values():
+            domain.append({
+                "id": person_set.id,
+                "name": person_set.name,
+                "color": person_set.color,
+            })
+        conf = {
+            "id": self.id,
+            "name": self.name,
+            "domain": domain,
         }
 
         return conf

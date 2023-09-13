@@ -1,4 +1,11 @@
+from typing import Optional, Generator, Any, cast
+
+from remote.rest_api_client import RESTClient
+
+from dae.utils.regions import Region
 from dae.configuration.gpf_config_parser import FrozenBox
+from dae.variants.variant import SummaryVariant
+from dae.variants.family_variant import FamilyVariant
 from dae.studies.study import GenotypeData
 from dae.pedigrees.family import Person, Family, FamiliesData
 from dae.person_sets import PersonSetCollection
@@ -6,12 +13,16 @@ from dae.pedigrees.family_tag_builder import FamilyTagsBuilder
 
 
 class RemoteGenotypeData(GenotypeData):
+    """Represent remote genotype data."""
 
-    def __init__(self, study_id, rest_client):
+    def __init__(self, study_id: str, rest_client: RESTClient):
         self._remote_study_id = study_id
         self.rest_client = rest_client
 
         config = self.rest_client.get_dataset_config(self._remote_study_id)
+        if config is None:
+            raise ValueError(f"unable to find remote study {study_id}")
+
         config["id"] = self.rest_client.prefix_remote_identifier(study_id)
         config["name"] = self.rest_client.prefix_remote_name(
             config.get("name", self._remote_study_id)
@@ -24,7 +35,7 @@ class RemoteGenotypeData(GenotypeData):
                     config["parents"]
                 )
             )
-            self._parents = list(config["parents"])
+            self._parents = set(config["parents"])
 
         if config.get("studies") is not None:
             raise ValueError("Tried to create remote dataset")
@@ -33,16 +44,12 @@ class RemoteGenotypeData(GenotypeData):
 
         self.is_remote = True
 
-        self._families = None
-
+        self._families: FamiliesData
         self._build_families()
+        self._description = ""
 
-        self._person_set_collections = None
-
-        self._build_person_set_collections()
-
-    def _build_families(self):
-        families = dict()
+    def _build_families(self) -> None:
+        families = {}
         families_details = self.rest_client.get_all_family_details(
             self._remote_study_id
         )
@@ -57,11 +64,13 @@ class RemoteGenotypeData(GenotypeData):
         tagger = FamilyTagsBuilder()
         tagger.tag_families_data(self._families)
 
-    def _build_person_set_collection(self, person_set_collection_id):
+    def _build_person_set_collection(
+        self, person_set_collection_id: str
+    ) -> None:
         raise NotImplementedError()
 
-    def _build_person_set_collections(self):
-        person_set_collections = dict()
+    def _build_person_set_collections(self) -> None:
+        person_set_collections = {}
 
         configs = self.rest_client.get_person_set_collection_configs(
             self._remote_study_id
@@ -73,73 +82,83 @@ class RemoteGenotypeData(GenotypeData):
 
         self._person_set_collections = person_set_collections
 
-    def get_studies_ids(self, leaves=True):
+    def get_studies_ids(self, leaves: bool = True) -> list[str]:
         return [self.study_id]
 
-    @property
-    def description(self):
-        # FIXME
-        return ""
+    # @property
+    # def description(self) -> Optional[str]:
+    #     # FIXME
+    #     return ""
 
     @property
-    def is_group(self):
+    def is_group(self) -> bool:
         return "studies" in self.config
 
     @property
-    def families(self):
+    def families(self) -> FamiliesData:
         return self._families
 
     def query_variants(
         self,
-        regions=None,
-        genes=None,
-        effect_types=None,
-        family_ids=None,
-        person_ids=None,
-        person_set_collection=None,
-        inheritance=None,
-        roles=None,
-        sexes=None,
-        variant_type=None,
-        real_attr_filter=None,
-        ultra_rare=None,
-        return_reference=None,
-        return_unknown=None,
-        limit=None,
-        study_filters=None,
-        affected_status=None,
-        **kwargs,
-    ):
+        regions: Optional[list[Region]] = None,
+        genes: Optional[list[str]] = None,
+        effect_types: Optional[list[str]] = None,
+        family_ids: Optional[list[str]] = None,
+        person_ids: Optional[list[str]] = None,
+        person_set_collection: Optional[tuple[str, list[str]]] = None,
+        inheritance: Optional[str] = None,
+        roles: Optional[str] = None,
+        sexes: Optional[str] = None,
+        variant_type: Optional[str] = None,
+        real_attr_filter: Optional[dict] = None,
+        ultra_rare: Optional[bool] = None,
+        frequency_filter: Optional[dict] = None,
+        return_reference: Optional[bool] = None,
+        return_unknown: Optional[bool] = None,
+        limit: Optional[int] = None,
+        study_filters: Optional[list[str]] = None,
+        pedigree_fields: Optional[list[str]] = None,
+        unique_family_variants: bool = True,
+        **kwargs: Any,
+    ) -> Generator[FamilyVariant, None, None]:
+        # pylint: disable=too-many-arguments,too-many-locals
         raise NotImplementedError()
 
     def query_summary_variants(
-            self,
-            regions=None,
-            genes=None,
-            effect_types=None,
-            family_ids=None,
-            person_ids=None,
-            person_set_collection=None,
-            inheritance=None,
-            roles=None,
-            sexes=None,
-            variant_type=None,
-            real_attr_filter=None,
-            ultra_rare=None,
-            return_reference=None,
-            return_unknown=None,
-            limit=None,
-            study_filters=None,
-            **kwargs):
+        self,
+        regions: Optional[list[Region]] = None,
+        genes: Optional[list[str]] = None,
+        effect_types: Optional[list[str]] = None,
+        # family_ids=None,
+        # person_ids=None,
+        # person_set_collection=None,
+        # inheritance=None,
+        # roles=None,
+        # sexes=None,
+        variant_type: Optional[str] = None,
+        real_attr_filter: Optional[dict] = None,
+        ultra_rare: Optional[bool] = None,
+        frequency_filter: Optional[dict] = None,
+        return_reference: Optional[bool] = None,
+        return_unknown: Optional[bool] = None,
+        limit: Optional[int] = None,
+        study_filters: Optional[list[str]] = None,
+        **kwargs: Any
+    ) -> Generator[SummaryVariant, None, None]:
+        # pylint: disable=too-many-arguments
         raise NotImplementedError()
 
     @property
-    def person_set_collection_configs(self):
-        return self.rest_client.get_person_set_collection_configs(
-            self._remote_study_id
+    def person_set_collection_configs(self) -> Optional[dict[str, Any]]:
+        return cast(
+            dict[str, Any],
+            self.rest_client.get_person_set_collection_configs(
+                self._remote_study_id)
         )
 
-    def get_person_set_collection(self, person_set_collection_id):
+    def get_person_set_collection(
+        self, person_set_collection_id: str
+    ) -> PersonSetCollection:
         if person_set_collection_id is None:
             return None
         return self._person_set_collections[person_set_collection_id]

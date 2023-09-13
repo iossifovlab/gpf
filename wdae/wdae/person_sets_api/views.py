@@ -1,11 +1,15 @@
-from rest_framework.response import Response  # type: ignore
-from rest_framework import status  # type: ignore
+from rest_framework.response import Response
+from rest_framework.request import Request
+from rest_framework import status
 
 from query_base.query_base import QueryBaseView
 
 
 class CollectionConfigsView(QueryBaseView):
-    def get(self, request, dataset_id):
+    """Serve person set collections configuration view."""
+
+    def get(self, _request: Request, dataset_id: str) -> Response:
+        """Get person set collections configurations."""
         if dataset_id is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
@@ -23,8 +27,35 @@ class CollectionConfigsView(QueryBaseView):
         )
 
 
+class CollectionDomainView(QueryBaseView):
+    """Serve person set collections domain view."""
+
+    def get(self, _request: Request, dataset_id: str) -> Response:
+        """Get person set collections domains."""
+        if dataset_id is None:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
+        if dataset is None:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        result = {
+            psc.id: psc.domain_json()
+            for psc in dataset.person_set_collections.values()
+        }
+        return Response(
+            result,
+            status.HTTP_200_OK
+        )
+
+
 class CollectionStatsView(QueryBaseView):
-    def get(self, request, dataset_id, collection_id):
+    """Serve person set collections statistics view."""
+
+    def get(
+        self, _request: Request, dataset_id: str, collection_id: str
+    ) -> Response:
+        """Get person set collection statistics."""
         if dataset_id is None or collection_id is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
