@@ -4,8 +4,9 @@ import itertools
 
 from django.http.response import StreamingHttpResponse, FileResponse
 
-from rest_framework import status  # type: ignore
-from rest_framework.response import Response  # type: ignore
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.request import Request
 
 from utils.logger import LOGGER, request_logging
 from utils.streaming_response_util import iterator_to_json
@@ -29,7 +30,7 @@ class GenotypeBrowserQueryView(QueryDatasetView):
     MAX_SHOWN_VARIANTS = 1000
 
     @request_logging(LOGGER)
-    def post(self, request): # noqa # pylint: disable=too-many-statements
+    def post(self, request: Request) -> Response:
         """
         Query for variants from a dataset.
 

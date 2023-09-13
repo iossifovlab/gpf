@@ -1,10 +1,11 @@
 from typing import cast
 from gpf_instance.gpf_instance import get_wgpf_instance
 
+from django.contrib.auth.models import User
 from datasets_api.permissions import IsDatasetAllowed
 
 
-def expand_gene_set(data: dict, user: dict) -> dict:
+def expand_gene_set(data: dict, user: User) -> dict:
     """Expand gene set to list of gene symbols."""
     if "geneSet" in data:
         gene_sets_collection_id = None
@@ -27,7 +28,7 @@ def expand_gene_set(data: dict, user: dict) -> dict:
     return data
 
 
-def expand_gene_syms(data: dict, user: dict) -> dict:
+def expand_gene_syms(data: dict, user: User) -> dict:
     """Expand gene set symbols."""
     gene_set = None
     query = data.get("geneSet")

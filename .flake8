@@ -1,7 +1,7 @@
 
 [flake8]
 exclude = old,*tmp*,*temp*,data-hg19*,build,docs,migrations
-max-complexity = 15
+max-complexity = 20
 inline-quotes=double
 docstring-quotes=double
 multiline-quotes=double
