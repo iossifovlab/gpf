@@ -370,4 +370,4 @@ def test_unregistered_dataset_does_not_propagate_permissions(
 
     user = AnonymousUser()
 
-    assert user_has_permission(user, study1) is False
+    assert user_has_permission(user, study1.study_id) is False
