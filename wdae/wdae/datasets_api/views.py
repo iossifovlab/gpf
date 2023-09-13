@@ -20,8 +20,7 @@ logger = logging.getLogger(__name__)
 
 def augment_accessibility(dataset, user):
     # pylint: disable=no-member
-    dataset_object = Dataset.objects.get(dataset_id=dataset["id"])
-    dataset["access_rights"] = user_has_permission(user, dataset_object)
+    dataset["access_rights"] = user_has_permission(user, dataset["id"])
     return dataset
 
 
