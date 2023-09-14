@@ -109,10 +109,18 @@ class Schema2ImportStorage(ImportStorage):
             .get_all_chrom_lengths()))
         sum_parts, fam_parts = \
             part_desc.get_variant_partitions(chromosome_lengths)
-        for part in sum_parts:
-            yield part_desc.partition_directory("summary", part), part
-        for part in fam_parts:
-            yield part_desc.partition_directory("family", part), part
+        if len(sum_parts) == 0:
+            yield part_desc.partition_directory("summary", []), \
+                [("summary", "single_bucket")]
+        else:
+            for part in sum_parts:
+                yield part_desc.partition_directory("summary", part), part
+        if len(fam_parts) == 0:
+            yield part_desc.partition_directory("family", []), \
+                [("family", "single_bucket")]
+        else:
+            for part in fam_parts:
+                yield part_desc.partition_directory("family", part), part
 
     @classmethod
     def _merge_parquets(
