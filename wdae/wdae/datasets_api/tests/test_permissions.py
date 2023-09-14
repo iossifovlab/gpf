@@ -17,8 +17,9 @@ from datasets_api.permissions import user_has_permission, \
     get_user_groups, get_dataset_groups, \
     get_directly_allowed_genotype_data, \
     _user_has_permission_strict
-from dae.studies.study import GenotypeDataGroup
 from gpf_instance.gpf_instance import reload_datasets
+
+from dae.studies.study import GenotypeDataGroup
 
 
 @pytest.fixture()

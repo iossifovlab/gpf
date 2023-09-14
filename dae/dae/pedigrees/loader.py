@@ -319,7 +319,6 @@ class FamiliesLoader(CLILoader):
         for col in header:
             assert isinstance(col[0], int), col[0]
         header = tuple(sorted(header, key=lambda col: col[0]))  # type: ignore
-
         return zip(*header)
 
     @staticmethod
@@ -339,7 +338,7 @@ class FamiliesLoader(CLILoader):
         ped_layout="layout",
         ped_generated="generated",
         ped_not_sequenced="not_sequenced",
-        ped_sample_id="sampleId",
+        ped_sample_id="sample_id",
         **kwargs,  # pylint: disable=unused-argument
     ):
         """Read a pedigree from file."""
@@ -414,8 +413,8 @@ class FamiliesLoader(CLILoader):
             if ped_generated in ped_df or ped_not_sequenced in ped_df:
 
                 def fill_sample_id(rec):
-                    if not pd.isna(rec.sampleId):
-                        return rec.sampleId
+                    if not pd.isna(rec.sample_id):
+                        return rec.sample_id
                     if rec.generated or rec.not_sequenced:
                         return None
                     return rec.personId
@@ -423,8 +422,8 @@ class FamiliesLoader(CLILoader):
             else:
 
                 def fill_sample_id(rec):
-                    if not pd.isna(rec.sampleId):
-                        return rec.sampleId
+                    if not pd.isna(rec.sample_id):
+                        return rec.sample_id
                     return rec.personId
 
             sample_ids = ped_df.apply(  # type: ignore
@@ -494,7 +493,7 @@ class FamiliesLoader(CLILoader):
                 "familyId": "family_id",
                 "momId": "mom_id",
                 "dadId": "dad_id",
-                "sampleId": "sample_id",
+                "sample_id": "sample_id",
             },
         )
 
@@ -549,7 +548,7 @@ class FamiliesLoader(CLILoader):
                 "family_id": "familyId",
                 "mom_id": "momId",
                 "dad_id": "dadId",
-                "sample_id": "sampleId",
+                "sample_id": "sample_id",
             }
         )
         df.sex = df.sex.apply(lambda v: v.name)  # type: ignore

@@ -1,17 +1,18 @@
 # pylint: disable=redefined-outer-name,C0114,C0116,protected-access
 
 import pytest
-from rest_framework import status  # type: ignore
+from rest_framework import status
+from django.test.client import Client
 
 pytestmark = pytest.mark.usefixtures(
     "wdae_gpf_instance", "dae_calc_gene_sets")
 
 
-def test_collection_configs_view(admin_client):
+def test_collection_configs_view(admin_client: Client) -> None:
     url = "/api/v3/person_sets/Study1/configs"
     response = admin_client.get(url)
     assert response.status_code == status.HTTP_200_OK
-    assert response.data == {
+    assert response.data == {  # type: ignore
         "phenotype": {
             "domain": [
                 {
@@ -71,11 +72,61 @@ def test_collection_configs_view(admin_client):
     }
 
 
-def test_get_person_sets_collection_stats(admin_client):
+def test_collection_domain_view(admin_client: Client) -> None:
+    url = "/api/v3/person_sets/Study1/domain"
+    response = admin_client.get(url)
+    assert response.status_code == status.HTTP_200_OK
+    assert response.data == {  # type: ignore
+        "phenotype": {
+            "domain": [
+                {
+                    "color": "#e35252",
+                    "id": "phenotype1",
+                    "name": "phenotype 1",
+                },
+                {
+                    "color": "#b8008a",
+                    "id": "phenotype2",
+                    "name": "phenotype 2",
+                },
+                {
+                    "color": "#ffffff",
+                    "id": "unaffected",
+                    "name": "unaffected",
+                },
+                {
+                    "id": "unknown",
+                    "name": "unknown",
+                    "color": "#aaaaaa",
+                },
+            ],
+            "id": "phenotype",
+            "name": "Phenotype",
+        },
+        "status": {
+            "domain": [
+                {
+                    "color": "#e35252",
+                    "id": "affected",
+                    "name": "affected",
+                },
+                {
+                    "color": "#ffffff",
+                    "id": "unaffected",
+                    "name": "unaffected",
+                }
+            ],
+            "id": "status",
+            "name": "Affected Status",
+        }
+    }
+
+
+def test_get_person_sets_collection_stats(admin_client: Client) -> None:
     url = "/api/v3/person_sets/Study1/stats/phenotype"
     response = admin_client.get(url)
     assert response.status_code == 200
-    assert response.data == {
+    assert response.data == {  # type: ignore
         "phenotype1": {
             "parents": 4,
             "children": 12,
@@ -95,7 +146,9 @@ def test_get_person_sets_collection_stats(admin_client):
     }
 
 
-def test_get_person_sets_collection_stats_nonexistent(admin_client):
+def test_get_person_sets_collection_stats_nonexistent(
+    admin_client: Client
+) -> None:
     response = admin_client.get(
         "/api/v3/person_sets/nonexistentstudy/stats/status"
     )
@@ -106,7 +159,7 @@ def test_get_person_sets_collection_stats_nonexistent(admin_client):
     assert response.status_code == 404
 
 
-def test_get_person_sets_collection_stats_no_id(admin_client):
+def test_get_person_sets_collection_stats_no_id(admin_client: Client) -> None:
     response = admin_client.get(
         "/api/v3/person_sets/Study1/stats"
     )

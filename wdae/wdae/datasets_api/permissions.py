@@ -1,6 +1,6 @@
 import logging
 
-from typing import Any, Union, Optional, List, cast
+from typing import Any, Optional, List, cast
 from rest_framework import permissions
 
 from django.conf import settings
@@ -10,7 +10,6 @@ from django.http import HttpRequest
 
 from gpf_instance.gpf_instance import get_wgpf_instance
 from utils.datasets import find_dataset_id_in_request
-from dae.studies.study import GenotypeData
 
 from .models import Dataset, DatasetHierarchy
 

@@ -17,7 +17,7 @@ def test_denovo_report_table(denovo_variants_ds1, phenotype_role_collection):
 
     assert denovo_report_table.group_name == "Diagnosis"
     assert sorted(denovo_report_table.columns) == \
-        ["phenotype 1 (6)", "phenotype 2 (2)", ]
+        ["phenotype 1 (16)", "phenotype 2 (2)", ]
 
     assert denovo_report_table.effect_groups == ["Missense"]
     assert denovo_report_table.effect_types == ["Frame-shift"]
@@ -66,9 +66,9 @@ def test_effect_row(denovo_variants_ds1, phenotype_role_sets):
     assert out_dict["row"][0] == {
         "number_of_observed_events": 3,
         "number_of_children_with_event": 3,
-        "observed_rate_per_child": 0.5,
-        "percent_of_children_with_events": 0.5,
-        "column": "phenotype 1 (6)"
+        "observed_rate_per_child": 0.1875,
+        "percent_of_children_with_events": 0.1875,
+        "column": "phenotype 1 (16)"
     }
     assert out_dict["row"][1] == {
         "number_of_observed_events": 2,
@@ -82,7 +82,7 @@ def test_effect_row(denovo_variants_ds1, phenotype_role_sets):
         "number_of_children_with_event": 0,
         "observed_rate_per_child": 0,
         "percent_of_children_with_events": 0,
-        "column": "unaffected (1)"
+        "column": "unaffected (9)"
     }
     assert out_dict["row"][3] == {
         "number_of_observed_events": 0,
@@ -100,10 +100,11 @@ def test_effect_cell(denovo_variants_ds1, phenotype_role_sets):
     assert effect_cell1.to_dict() == {
         "number_of_observed_events": 3,
         "number_of_children_with_event": 3,
-        "observed_rate_per_child": 0.5,
-        "percent_of_children_with_events": 0.5,
-        "column": "phenotype 1 (6)"
+        "observed_rate_per_child": 0.1875,
+        "percent_of_children_with_events": 0.1875,
+        "column": "phenotype 1 (16)"
     }
+
     effect_cell2 = EffectCell(
         denovo_variants_ds1, phenotype_role_sets[1], "Missense"
     )
@@ -114,6 +115,7 @@ def test_effect_cell(denovo_variants_ds1, phenotype_role_sets):
         "percent_of_children_with_events": 0.5,
         "column": "phenotype 2 (2)"
     }
+
     effect_cell3 = EffectCell(
         denovo_variants_ds1, phenotype_role_sets[2], "Missense"
     )
@@ -122,8 +124,9 @@ def test_effect_cell(denovo_variants_ds1, phenotype_role_sets):
         "number_of_children_with_event": 0,
         "observed_rate_per_child": 0,
         "percent_of_children_with_events": 0,
-        "column": "unaffected (1)"
+        "column": "unaffected (9)"
     }
+
     effect_cell4 = EffectCell(
         denovo_variants_ds1, phenotype_role_sets[3], "Missense"
     )

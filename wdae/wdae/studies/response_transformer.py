@@ -426,7 +426,7 @@ class ResponseTransformer:
     @staticmethod
     def transform_gene_view_summary_variant(
         variant: SummaryVariant, frequency_column: str
-    ) -> Generator[dict, None, None]:
+    ) -> Generator[dict[str, Any], None, None]:
         """Transform gene view summary response into dicts."""
         out: dict[str, Any] = {
             "svuid": variant.svuid,
@@ -454,7 +454,7 @@ class ResponseTransformer:
 
     def transform_gene_view_summary_variant_download(
         self,
-        variants: list[SummaryVariant],
+        variants: Iterable[SummaryVariant],
         frequency_column: str,
         summary_variant_ids: set[str],
     ) -> Iterator[str]:

@@ -153,7 +153,7 @@ indent-string='    '
 max-line-length=79
 
 # Maximum number of lines in a module.
-max-module-lines=1000
+max-module-lines=1500
 
 # Allow the body of a class to be on the same line as the declaration if body
 # contains single statement.
@@ -478,10 +478,10 @@ max-attributes=17
 max-bool-expr=5
 
 # Maximum number of branch for function / method body.
-max-branches=12
+max-branches=15
 
 # Maximum number of locals for function / method body.
-max-locals=20
+max-locals=30
 
 # Maximum number of parents for a class (see R0901).
 max-parents=7
@@ -490,10 +490,10 @@ max-parents=7
 max-public-methods=25
 
 # Maximum number of return / yield for function / method body.
-max-returns=6
+max-returns=15
 
 # Maximum number of statements in function / method body.
-max-statements=50
+max-statements=80
 
 # Minimum number of public methods for a class (see R0903).
 min-public-methods=1

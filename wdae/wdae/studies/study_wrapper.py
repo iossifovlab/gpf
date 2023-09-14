@@ -3,13 +3,23 @@ import itertools
 import logging
 from contextlib import closing
 from abc import abstractmethod
+from typing import Optional, Any, Iterable, Generator, cast
+
+from box import Box
 
 from remote.remote_phenotype_data import RemotePhenotypeData
 from remote.remote_variant import RemoteFamilyVariant, QUERY_SOURCES
 from studies.query_transformer import QueryTransformer
 from studies.response_transformer import ResponseTransformer
+from studies.remote_study import RemoteGenotypeData
+
 from dae.pedigrees.family import FamiliesData
+from dae.person_sets import PersonSetCollection
 from dae.variants.attributes import Role
+from dae.variants.family_variant import FamilyAllele
+from dae.studies.study import GenotypeData
+from dae.pheno.pheno_db import PhenotypeData, PhenoDb
+from dae.gene.gene_scores import GeneScoresDb
 
 
 logger = logging.getLogger(__name__)
@@ -18,24 +28,26 @@ logger = logging.getLogger(__name__)
 class StudyWrapperBase:
     """Defines WDAE wrapper class to DAE genotype data object."""
 
-    def __init__(self, genotype_data):
+    def __init__(self, genotype_data: GenotypeData):
         self.genotype_data = genotype_data
         self.config = self.genotype_data.config
 
     @property
-    def study_id(self):
+    def study_id(self) -> str:
         return self.genotype_data.study_id
 
     @property
-    def description(self):
+    def description(self) -> Optional[str]:
         return self.genotype_data.description
 
     @property
-    def person_set_collection_configs(self):
+    def person_set_collection_configs(self) -> Optional[dict[str, Any]]:
         return self.genotype_data.person_set_collection_configs
 
     @staticmethod
-    def get_columns_as_sources(config, column_ids):
+    def get_columns_as_sources(
+        config: Box, column_ids: list[str]
+    ) -> list[dict[str, Any]]:
         """Return the list of column sources."""
         column_groups = config.genotype_browser.column_groups
         genotype_cols = config.genotype_browser.columns.get("genotype", {})
@@ -61,7 +73,7 @@ class StudyWrapperBase:
         return result
 
     @staticmethod
-    def build_genotype_data_all_datasets(config):
+    def build_genotype_data_all_datasets(config: Box) -> dict[str, Any]:
         """Prepare response for all genotype datasets."""
         keys = [
             "id",
@@ -81,8 +93,12 @@ class StudyWrapperBase:
         return result
 
     @staticmethod
-    def build_genotype_data_group_description(
-            gpf_instance, config, description, person_set_collection_configs):
+    def build_genotype_data_description(
+        gpf_instance: Any,
+        config: Box,
+        description: Optional[str],
+        person_set_collection_configs: Optional[dict[str, Any]]
+    ) -> dict[str, Any]:
         """Build and return genotype data group description."""
         keys = [
             "id",
@@ -187,8 +203,11 @@ class StudyWrapperBase:
         return result
 
     def query_variants_wdae(
-            self, kwargs, sources, max_variants_count=10000,
-            max_variants_message=False):
+        self, kwargs: dict[str, Any],
+        sources: list[dict[str, Any]],
+        max_variants_count: int = 10000,
+        max_variants_message: bool = False
+    ) -> Iterable[list]:
         """Wrap query variants method for WDAE streaming."""
         variants_result = self.query_variants_wdae_streaming(
             kwargs, sources, max_variants_count,
@@ -197,12 +216,15 @@ class StudyWrapperBase:
 
     @abstractmethod
     def query_variants_wdae_streaming(
-            self, kwargs, sources, max_variants_count=10000,
-            max_variants_message=False):
+        self, kwargs: dict[str, Any],
+        sources: list[dict[str, Any]],
+        max_variants_count: int = 10000,
+        max_variants_message: bool = False
+    ) -> Generator[Optional[list], None, None]:
         """Wrap query variants method for WDAE streaming."""
 
     @abstractmethod
-    def has_pheno_data(self):
+    def has_pheno_data(self) -> bool:
         raise NotImplementedError()
 
 
@@ -210,7 +232,11 @@ class StudyWrapper(StudyWrapperBase):
     """Genotype data study wrapper class for WDAE."""
 
     # pylint: disable=too-many-instance-attributes
-    def __init__(self, genotype_data_study, pheno_db, gene_scores_db):
+    def __init__(
+        self, genotype_data_study: GenotypeData,
+        pheno_db: PhenoDb,
+        gene_scores_db: GeneScoresDb
+    ):
 
         assert genotype_data_study is not None
 
@@ -228,11 +254,11 @@ class StudyWrapper(StudyWrapperBase):
         self.query_transformer = QueryTransformer(self)
         self.response_transformer = ResponseTransformer(self)
 
-    def __getattr__(self, name):
+    def __getattr__(self, name: str) -> Any:
         return getattr(self.genotype_data_study, name)
 
     @property
-    def is_group(self):
+    def is_group(self) -> bool:
         return self.genotype_data_study.is_group
 
     @property
@@ -240,18 +266,18 @@ class StudyWrapper(StudyWrapperBase):
         return self.genotype_data_study.families
 
     @property
-    def person_set_collections(self):
+    def person_set_collections(self) -> dict[str, PersonSetCollection]:
         return self.genotype_data_study.person_set_collections
 
     @property
-    def person_set_collection_configs(self):
+    def person_set_collection_configs(self) -> Optional[dict[str, Any]]:
         # pylint: disable=protected-access
         return self.genotype_data_study._person_set_collection_configs
 
-    def get_studies_ids(self, leaves=True):
+    def get_studies_ids(self, leaves: bool = True) -> list[str]:
         return self.genotype_data_study.get_studies_ids(leaves=leaves)
 
-    def _init_wdae_config(self):
+    def _init_wdae_config(self) -> None:
         genotype_browser_config = self.config.genotype_browser
         if not genotype_browser_config:
             return
@@ -291,8 +317,10 @@ class StudyWrapper(StudyWrapperBase):
         self.summary_download_columns = \
             genotype_browser_config.summary_download_columns
 
-    def _init_pheno(self, pheno_db):
-        self.phenotype_data = None
+    def _init_pheno(self, pheno_db: Optional[PhenoDb]) -> None:
+        self.phenotype_data: Optional[PhenotypeData] = None
+        if pheno_db is None:
+            return
         if self.config.phenotype_data:
             self.phenotype_data = pheno_db.get_phenotype_data(
                 self.config.phenotype_data
@@ -315,36 +343,42 @@ class StudyWrapper(StudyWrapperBase):
                     return False
         return True
 
-    def has_pheno_data(self):
+    def has_pheno_data(self) -> bool:
         return self.phenotype_data is not None
 
     @property
-    def config_columns(self):
-        return self.config.genotype_browser.columns
+    def config_columns(self) -> list[dict[str, Any]]:
+        return cast(
+            list[dict[str, Any]], self.config.genotype_browser.columns)
 
-    def transform_request(self, kwargs):
+    def transform_request(self, kwargs: dict[str, Any]) -> dict[str, Any]:
         return self.query_transformer.transform_kwargs(**kwargs)
 
     def query_variants_wdae_streaming(  # noqa
-            self, kwargs, sources, max_variants_count=10000,
-            max_variants_message=False):
+        self, kwargs: dict[str, Any],
+        sources: list[dict[str, Any]],
+        max_variants_count: int = 10000,
+        max_variants_message: bool = False
+    ) -> Generator[Optional[list], None, None]:
         """Wrap query variants method for WDAE streaming of variants."""
         # pylint: disable=too-many-locals,too-many-branches
         max_variants_count = kwargs.pop("maxVariantsCount", max_variants_count)
         summary_variant_ids = kwargs.pop("summaryVariantIds", None)
-
         kwargs = self.query_transformer.transform_kwargs(**kwargs)
 
         if summary_variant_ids is None:
-            def filter_allele(allele):  # pylint: disable=unused-argument
+            def filter_allele(
+                allele: FamilyAllele  # pylint: disable=unused-argument
+            ) -> bool:
                 return True
 
         elif len(summary_variant_ids) > 0:
             summary_variant_ids = set(summary_variant_ids)
 
-            def filter_allele(allele):
+            def filter_allele(allele: FamilyAllele) -> bool:
                 svid = f"{allele.cshl_location}:{allele.cshl_variant}"
                 return svid in summary_variant_ids
+
         else:
             # passed empty list of summary variants; empty result
             return
@@ -378,7 +412,7 @@ class StudyWrapper(StudyWrapperBase):
                     matched = True
                     for aa in v.matched_alleles:
                         assert not aa.is_reference_allele
-                        if not filter_allele(aa):
+                        if not filter_allele(cast(FamilyAllele, aa)):
                             matched = False
                             break
                     if not matched:
@@ -413,12 +447,16 @@ class StudyWrapper(StudyWrapperBase):
                 "study wrapper (%s)  query returned %s variants; "
                 "closed in %0.3fsec", self.study_id, index, elapsed)
 
-    def get_gene_view_summary_variants(self, frequency_column, **kwargs):
+    def get_gene_view_summary_variants(
+        self, frequency_column: str, **kwargs: Any
+    ) -> Generator[dict[str, Any], None, None]:
         """Return gene browser summary variants."""
         kwargs = self.query_transformer.transform_kwargs(**kwargs)
         limit = kwargs.pop("maxVariantsCount", None)
         variants_from_studies = itertools.islice(
-            self.genotype_data_study.query_summary_variants(**kwargs), limit
+            self.genotype_data_study.query_summary_variants(
+                **kwargs),
+            cast(Optional[int], limit)
         )
         for v in variants_from_studies:
             for aa in self.response_transformer.\
@@ -426,7 +464,9 @@ class StudyWrapper(StudyWrapperBase):
                 yield aa
 
     def get_gene_view_summary_variants_download(
-            self, frequency_column, **kwargs):
+        self, frequency_column: str,
+        **kwargs: Any
+    ) -> Iterable:
         """Return gene browser summary variants for downloading."""
         kwargs = self.query_transformer.transform_kwargs(**kwargs)
         limit = kwargs.get("limit", None)
@@ -441,12 +481,13 @@ class StudyWrapper(StudyWrapperBase):
             )
 
     @staticmethod
-    def _get_roles_value(allele, roles):
+    def _get_roles_value(allele: FamilyAllele, roles: list[str]) -> list[str]:
         result = []
         variant_in_members = allele.variant_in_members_objects
-        for role in roles:
+        for role_name in roles:
             for member in variant_in_members:
-                role = Role.from_name(role)
+                role = Role.from_name(role_name)
+                assert role is not None
                 if member.role == role:
                     result.append(str(role) + member.sex.short())
 
@@ -456,7 +497,7 @@ class StudyWrapper(StudyWrapperBase):
 class RemoteStudyWrapper(StudyWrapperBase):
     """Wrapper class for remote (federation) studies."""
 
-    def __init__(self, remote_genotype_data):
+    def __init__(self, remote_genotype_data: RemoteGenotypeData):
         self.remote_genotype_data = remote_genotype_data
         self._remote_study_id = remote_genotype_data._remote_study_id
         self.rest_client = remote_genotype_data.rest_client
@@ -480,16 +521,18 @@ class RemoteStudyWrapper(StudyWrapperBase):
         self.response_transformer = ResponseTransformer(self)
 
     @property
-    def is_group(self):
+    def is_group(self) -> bool:
         return self.remote_genotype_data.is_group
 
     @property
-    def person_set_collections(self):
+    def person_set_collections(self) -> dict[str, PersonSetCollection]:
         return self.remote_genotype_data.person_set_collections
 
     @property
-    def config_columns(self):
-        return self.config.genotype_browser.columns
+    def config_columns(self) -> list[dict[str, Any]]:
+        return cast(
+            list[dict[str, Any]],
+            self.config.genotype_browser.columns)
 
     @property
     def families(self) -> FamiliesData:
@@ -497,23 +540,25 @@ class RemoteStudyWrapper(StudyWrapperBase):
         return self.remote_genotype_data._families
 
     @property
-    def parents(self):
+    def parents(self) -> set[str]:
         return self.remote_genotype_data.parents
 
     @property
-    def name(self):
+    def name(self) -> str:
         return self.remote_genotype_data.name
 
-    def has_pheno_data(self):
+    def has_pheno_data(self) -> bool:
         return self.phenotype_data is not None
 
-    def get_studies_ids(self, leaves=True):
+    def get_studies_ids(self, leaves: bool = True) -> list[str]:
         return self.remote_genotype_data.get_studies_ids(leaves=leaves)
 
     def query_variants_wdae_streaming(
-            self, kwargs, sources,
-            max_variants_count=10000,
-            max_variants_message=False):
+        self, kwargs: dict[str, Any],
+        sources: list[dict[str, Any]],
+        max_variants_count: int = 10000,
+        max_variants_message: bool = False
+    ) -> Generator[list, None, None]:
         study_filters = kwargs.get("study_filters")
         person_set_collection_id = \
             kwargs.get("personSetCollection", {}).get("id")
@@ -547,7 +592,7 @@ class RemoteStudyWrapper(StudyWrapperBase):
             kwargs, reduce_alleles=False
         )
 
-        def get_source(col):
+        def get_source(col: dict[str, Any]) -> Any:
             res = col["source"]
             if "role" in col:
                 res = f"{res}.{col['role']}"
@@ -555,7 +600,7 @@ class RemoteStudyWrapper(StudyWrapperBase):
 
         for variant in response:
             fam_id = variant[fam_id_idx][0]
-            family = self.families.get(fam_id)
+            family = self.families[fam_id]
             fv = RemoteFamilyVariant(
                 variant, family, list(map(get_source, sources)))
             # pylint: disable=protected-access
@@ -564,7 +609,9 @@ class RemoteStudyWrapper(StudyWrapperBase):
 
             yield row_variant
 
-    def get_person_set_collection(self, person_set_collection_id):
+    def get_person_set_collection(
+        self, person_set_collection_id: str
+    ) -> Optional[PersonSetCollection]:
         return self.remote_genotype_data.get_person_set_collection(
             person_set_collection_id
         )

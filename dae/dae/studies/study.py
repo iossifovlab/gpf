@@ -1,6 +1,5 @@
 """Classes to represent genotype data."""
 from __future__ import annotations
-
 import time
 import logging
 import functools
@@ -10,8 +9,13 @@ from os.path import basename, exists
 
 from abc import ABC, abstractmethod
 
-from typing import Dict, List, cast, Any
+from typing import cast, Any, Optional, Generator
 
+from box import Box
+
+from dae.utils.regions import Region
+from dae.variants.variant import SummaryVariant
+from dae.variants.family_variant import FamilyVariant
 from dae.query_variants.query_runners import QueryResult
 from dae.pedigrees.family import FamiliesData
 from dae.person_sets import PersonSetCollection
@@ -25,37 +29,37 @@ logger = logging.getLogger(__name__)
 class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
     """Abstract base class for genotype data."""
 
-    def __init__(self, config, studies):
+    def __init__(self, config: Box, studies: list[GenotypeData]):
         self.config = config
         self.studies = studies
 
-        self._description = None
+        self._description: Optional[str] = None
 
         self._person_set_collection_configs = None
-        self._person_set_collections: Dict[str, PersonSetCollection] = {}
-        self._parents = set()
+        self._person_set_collections: dict[str, PersonSetCollection] = {}
+        self._parents: set[str] = set()
         self._executor = None
 
-    def close(self):
+    def close(self) -> None:
         logger.error("base genotype data close() called for %s", self.study_id)
 
     @property
-    def study_id(self):
-        return self.config["id"]
+    def study_id(self) -> str:
+        return cast(str, self.config["id"])
 
     # @property
     # def id(self):  # pylint: disable=invalid-name
     #     return self.study_id
 
     @property
-    def name(self):
+    def name(self) -> str:
         name = self.config.get("name")
         if name:
-            return name
+            return cast(str, name)
         return self.study_id
 
     @property
-    def description(self):
+    def description(self) -> Optional[str]:
         """Load and return description of a genotype data."""
         if self._description is None:
             if basename(self.config.description_file) != "description.md" and \
@@ -73,7 +77,7 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
         return self._description
 
     @description.setter
-    def description(self, input_text: str):
+    def description(self, input_text: str) -> None:
         self._description = None
         with open(
                 self.config.description_file,
@@ -81,62 +85,62 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
             outfile.write(input_text)
 
     @property
-    def year(self):
-        return self.config.get("year")
+    def year(self) -> Optional[str]:
+        return cast(str, self.config.get("year"))
 
     @property
-    def pub_med(self):
-        return self.config.get("pub_med")
+    def pub_med(self) -> Optional[str]:
+        return cast(str, self.config.get("pub_med"))
 
     @property
-    def phenotype(self):
-        return self.config.get("phenotype")
+    def phenotype(self) -> Optional[str]:
+        return cast(str, self.config.get("phenotype"))
 
     @property
-    def has_denovo(self):
-        return self.config.get("has_denovo")
+    def has_denovo(self) -> bool:
+        return cast(bool, self.config.get("has_denovo"))
 
     @property
-    def has_transmitted(self):
-        return self.config.get("has_transmitted")
+    def has_transmitted(self) -> bool:
+        return cast(bool, self.config.get("has_transmitted"))
 
     @property
-    def has_cnv(self):
-        return self.config.get("has_cnv")
+    def has_cnv(self) -> bool:
+        return cast(bool, self.config.get("has_cnv"))
 
     @property
-    def has_complex(self):
-        return self.config.get("has_complex")
+    def has_complex(self) -> bool:
+        return cast(bool, self.config.get("has_complex"))
 
     @property
-    def study_type(self):
-        return self.config.get("study_type")
+    def study_type(self) -> str:
+        return cast(str, self.config.get("study_type"))
 
     @property
-    def parents(self):
+    def parents(self) -> set[str]:
         return self._parents
 
     @property
-    def person_set_collections(self):
+    def person_set_collections(self) -> dict[str, PersonSetCollection]:
         return self._person_set_collections
 
     @property
-    def person_set_collection_configs(self):
+    def person_set_collection_configs(self) -> Optional[dict[str, Any]]:
         return self._person_set_collection_configs
 
-    def _add_parent(self, genotype_data_id):
+    def _add_parent(self, genotype_data_id: str) -> None:
         self._parents.add(genotype_data_id)
 
     @property
     @abstractmethod
-    def is_group(self):
+    def is_group(self) -> bool:
         return False
 
     @abstractmethod
-    def get_studies_ids(self, leaves=True):
+    def get_studies_ids(self, leaves: bool = True) -> list[str]:
         pass
 
-    def get_leaf_children(self) -> List[GenotypeDataStudy]:
+    def get_leaf_children(self) -> list[GenotypeDataStudy]:
         """Return list of genotype studies children of this group."""
         if not self.is_group:
             return []
@@ -146,7 +150,7 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
             if not study.is_group:
                 if study.study_id in seen:
                     continue
-                result.append(study)
+                result.append(cast(GenotypeDataStudy, study))
                 seen.add(study.study_id)
             else:
                 children = study.get_leaf_children()
@@ -157,7 +161,9 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
                     seen.add(child.study_id)
         return result
 
-    def _get_query_children(self, study_filters) -> List[GenotypeDataStudy]:
+    def _get_query_children(
+        self, study_filters: Optional[list[str]]
+    ) -> list[GenotypeDataStudy]:
         leafs = []
         if self.is_group:
             leafs = self.get_leaf_children()
@@ -173,26 +179,27 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
 
     # FIXME: Too many locals, too many arguments, complex. To refactor
     def query_result_variants(
-            self,
-            regions=None,
-            genes=None,
-            effect_types=None,
-            family_ids=None,
-            person_ids=None,
-            person_set_collection=None,
-            inheritance=None,
-            roles=None,
-            sexes=None,
-            variant_type=None,
-            real_attr_filter=None,
-            ultra_rare=None,
-            frequency_filter=None,
-            return_reference=None,
-            return_unknown=None,
-            limit=None,
-            study_filters=None,
-            pedigree_fields=None,
-            **_kwargs):
+        self,
+        regions: Optional[list[Region]] = None,
+        genes: Optional[list[str]] = None,
+        effect_types: Optional[list[str]] = None,
+        family_ids: Optional[list[str]] = None,
+        person_ids: Optional[list[str]] = None,
+        person_set_collection: Optional[tuple[str, list[str]]] = None,
+        inheritance: Optional[str] = None,
+        roles: Optional[str] = None,
+        sexes: Optional[str] = None,
+        variant_type: Optional[str] = None,
+        real_attr_filter: Optional[dict] = None,
+        ultra_rare: Optional[bool] = None,
+        frequency_filter: Optional[dict]=None,
+        return_reference: Optional[bool] = None,
+        return_unknown: Optional[bool] = None,
+        limit: Optional[int] = None,
+        study_filters: Optional[list[str]] = None,
+        pedigree_fields: Optional[list[str]] = None,
+        **_kwargs: Any
+    ) -> Optional[QueryResult]:
         """Build a query result."""
         # flake8: noqa: C901
         # pylint: disable=too-many-locals,too-many-arguments
@@ -203,7 +210,11 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
         if effect_types:
             effect_types = expand_effect_types(effect_types)
 
-        def adapt_study_variants(study_name, study_phenotype, v):
+        def adapt_study_variants(
+            study_name: str,
+            study_phenotype: str,
+            v: FamilyVariant
+        ) -> FamilyVariant:
             if v is None:
                 return None
             for allele in v.alleles:
@@ -289,27 +300,28 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
         return QueryResult(runners)
 
     def query_variants(  # pylint: disable=too-many-locals,too-many-arguments
-            self,
-            regions=None,
-            genes=None,
-            effect_types=None,
-            family_ids=None,
-            person_ids=None,
-            person_set_collection=None,
-            inheritance=None,
-            roles=None,
-            sexes=None,
-            variant_type=None,
-            real_attr_filter=None,
-            ultra_rare=None,
-            frequency_filter=None,
-            return_reference=None,
-            return_unknown=None,
-            limit=None,
-            study_filters=None,
-            pedigree_fields=None,
-            unique_family_variants=True,
-            **kwargs):
+        self,
+        regions: Optional[list[Region]] = None,
+        genes: Optional[list[str]] = None,
+        effect_types: Optional[list[str]] = None,
+        family_ids: Optional[list[str]] = None,
+        person_ids: Optional[list[str]] = None,
+        person_set_collection: Optional[tuple[str, list[str]]] = None,
+        inheritance: Optional[str] = None,
+        roles: Optional[str] = None,
+        sexes: Optional[str] = None,
+        variant_type: Optional[str] = None,
+        real_attr_filter: Optional[dict] = None,
+        ultra_rare: Optional[bool] = None,
+        frequency_filter: Optional[dict] = None,
+        return_reference: Optional[bool] = None,
+        return_unknown: Optional[bool] = None,
+        limit: Optional[int] = None,
+        study_filters: Optional[list[str]] = None,
+        pedigree_fields: Optional[list[str]] = None,
+        unique_family_variants: bool = True,
+        **kwargs: Any
+    ) -> Generator[FamilyVariant, None, None]:
         """Query and return generator containing variants."""
         result = self.query_result_variants(
             regions=regions,
@@ -368,35 +380,35 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
     # FIXME: Too many locals, too many arguments, To refactor
     def query_result_summary_variants(
         self,
-        regions=None,
-        genes=None,
-        effect_types=None,
-        family_ids=None,
-        person_ids=None,
-        person_set_collection=None,
-        inheritance=None,
-        roles=None,
-        sexes=None,
-        variant_type=None,
-        real_attr_filter=None,
-        ultra_rare=None,
-        frequency_filter=None,
-        return_reference=None,
-        return_unknown=None,
-        limit=None,
-        study_filters=None,
-        **kwargs,
-    ):
+        regions: Optional[list[Region]] = None,
+        genes: Optional[list[str]] = None,
+        effect_types: Optional[list[str]] = None,
+        # family_ids=None,
+        # person_ids=None,
+        # person_set_collection=None,
+        # inheritance=None,
+        # roles=None,
+        # sexes=None,
+        variant_type: Optional[str] = None,
+        real_attr_filter: Optional[dict] = None,
+        ultra_rare: Optional[bool] = None,
+        frequency_filter: Optional[dict]=None,
+        return_reference: Optional[bool] = None,
+        return_unknown: Optional[bool] = None,
+        limit: Optional[int] = None,
+        study_filters: Optional[list[str]] = None,
+        **kwargs: Any
+    ) -> Optional[QueryResult]:
         # pylint: disable=too-many-locals,too-many-arguments,unused-argument
         """Build a query result for summary variants only."""
         logger.info("summary query - study_filters: %s", study_filters)
         logger.info(
             "study %s children: %s", self.study_id, self.get_leaf_children())
 
-        person_ids = self._transform_person_set_collection_query(
-            person_set_collection, person_ids)
-        if person_ids is not None and len(person_ids) == 0:
-            return None
+        # person_ids = self._transform_person_set_collection_query(
+        #     person_set_collection, person_ids)
+        # if person_ids is not None and len(person_ids) == 0:
+        #     return None
 
         if effect_types:
             effect_types = expand_effect_types(effect_types)
@@ -409,11 +421,11 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
                     regions=regions,
                     genes=genes,
                     effect_types=effect_types,
-                    family_ids=family_ids,
-                    person_ids=person_ids,
-                    inheritance=inheritance,
-                    roles=roles,
-                    sexes=sexes,
+                    # family_ids=family_ids,
+                    # person_ids=person_ids,
+                    # inheritance=inheritance,
+                    # roles=roles,
+                    # sexes=sexes,
                     variant_type=variant_type,
                     real_attr_filter=real_attr_filter,
                     ultra_rare=ultra_rare,
@@ -432,37 +444,37 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
 
     def query_summary_variants(
         self,
-        regions=None,
-        genes=None,
-        effect_types=None,
-        family_ids=None,
-        person_ids=None,
-        person_set_collection=None,
-        inheritance=None,
-        roles=None,
-        sexes=None,
-        variant_type=None,
-        real_attr_filter=None,
-        ultra_rare=None,
-        frequency_filter=None,
-        return_reference=None,
-        return_unknown=None,
-        limit=None,
-        study_filters=None,
-        **kwargs,
-    ):
+        regions: Optional[list[Region]] = None,
+        genes: Optional[list[str]] = None,
+        effect_types: Optional[list[str]] = None,
+        # family_ids=None,
+        # person_ids=None,
+        # person_set_collection=None,
+        # inheritance=None,
+        # roles=None,
+        # sexes=None,
+        variant_type: Optional[str] = None,
+        real_attr_filter: Optional[dict] = None,
+        ultra_rare: Optional[bool] = None,
+        frequency_filter: Optional[dict] = None,
+        return_reference: Optional[bool] = None,
+        return_unknown: Optional[bool] = None,
+        limit: Optional[int] = None,
+        study_filters: Optional[list[str]] = None,
+        **kwargs: Any
+    ) -> Generator[SummaryVariant, None, None]:
         """Query and return generator containing summary variants."""
         # pylint: disable=too-many-locals,too-many-arguments
         result = self.query_result_summary_variants(
             regions=regions,
             genes=genes,
             effect_types=effect_types,
-            family_ids=family_ids,
-            person_ids=person_ids,
-            person_set_collection=person_set_collection,
-            inheritance=inheritance,
-            roles=roles,
-            sexes=sexes,
+            # family_ids=family_ids,
+            # person_ids=person_ids,
+            # person_set_collection=person_set_collection,
+            # inheritance=inheritance,
+            # roles=roles,
+            # sexes=sexes,
             variant_type=variant_type,
             real_attr_filter=real_attr_filter,
             ultra_rare=ultra_rare,
@@ -473,8 +485,10 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
             study_filters=study_filters,
             **kwargs)
         try:
-            started = time.time()
+            if result is None:
+                return
 
+            started = time.time()
             variants: dict[str, Any] = {}
             with closing(result) as result:
                 result.start()
@@ -528,10 +542,12 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
         pass
 
     @abstractmethod
-    def _build_person_set_collection(self, person_set_collection_id):
+    def _build_person_set_collection(
+        self, person_set_collection_id: str
+    ) -> None:
         pass
 
-    def _build_person_set_collections(self):
+    def _build_person_set_collections(self) -> None:
         collections_config = self.config.person_set_collections
         if collections_config:
             selected_collections = \
@@ -539,13 +555,18 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
             for collection_id in selected_collections:
                 self._build_person_set_collection(collection_id)
 
-    def _transform_person_set_collection_query(self, collection, person_ids):
-        if collection is not None:
-            collection_id, selected_sets = collection
+    def _transform_person_set_collection_query(
+        self, collection_query: tuple[str, list[str]],
+        person_ids: Optional[list[str]]
+    ) -> Optional[list[str]]:
+        if collection_query is not None:
+            collection_id, selected_sets = collection_query
             collection = self.get_person_set_collection(collection_id)
+            if collection is None:
+                return person_ids
             person_set_ids = set(collection.person_sets.keys())
             if selected_sets is not None:
-                selected_person_ids = set()
+                selected_person_ids: set[str] = set()
                 if set(selected_sets) == person_set_ids:
                     return person_ids
 
@@ -554,12 +575,14 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
                         collection.person_sets[set_id].persons.keys()
                     )
                 if person_ids is not None:
-                    person_ids = set(person_ids) & selected_person_ids
+                    person_ids = list(set(person_ids) & selected_person_ids)
                 else:
-                    person_ids = selected_person_ids
+                    person_ids = list(selected_person_ids)
         return person_ids
 
-    def get_person_set_collection(self, person_set_collection_id):
+    def get_person_set_collection(
+        self, person_set_collection_id: str
+    ) -> Optional[PersonSetCollection]:
         if person_set_collection_id is None:
             return None
         return self.person_set_collections[person_set_collection_id]
@@ -572,7 +595,10 @@ class GenotypeDataGroup(GenotypeData):
     Queries to this object will be sent to all child data.
     """
 
-    def __init__(self, genotype_data_group_config, studies):
+    def __init__(
+        self, genotype_data_group_config: Box,
+        studies: list[GenotypeData]
+    ):
         super().__init__(
             genotype_data_group_config, studies
         )
@@ -584,21 +610,21 @@ class GenotypeDataGroup(GenotypeData):
             study._add_parent(self.study_id)
 
     @property
-    def is_group(self):
+    def is_group(self) -> bool:
         return True
 
     @property
     def families(self) -> FamiliesData:
         return self._families
 
-    def get_studies_ids(self, leaves=True):
+    def get_studies_ids(self, leaves: bool = True) -> list[str]:
         result = set([self.study_id])
         if not leaves:
             result = result.union([st.study_id for st in self.studies])
-            return result
+            return list(result)
         for study in self.studies:
             result = result.union(study.get_studies_ids())
-        return result
+        return list(result)
 
     def _build_families(self) -> FamiliesData:
         logger.info(
@@ -636,15 +662,21 @@ class GenotypeDataGroup(GenotypeData):
 
         return result
 
-    def _build_person_set_collection(self, person_set_collection_id):
+    def _build_person_set_collection(
+        self, person_set_collection_id: str
+    ) -> None:
         assert person_set_collection_id in \
             self.config.person_set_collections.selected_person_set_collections
 
         collections = []
         for study in self.studies:
-            collections.append(study.get_person_set_collection(
-                person_set_collection_id
-            ))
+            study_collection = study.get_person_set_collection(
+                person_set_collection_id)
+            if study_collection is None:
+                raise ValueError(
+                    f"person set collection {person_set_collection_id} "
+                    f"not found in study {study.study_id}")
+            collections.append(study_collection)
         self._person_set_collections[person_set_collection_id] = \
             PersonSetCollection.combine(collections)
 
@@ -652,7 +684,7 @@ class GenotypeDataGroup(GenotypeData):
 class GenotypeDataStudy(GenotypeData):
     """Represents a singular genotype data study."""
 
-    def __init__(self, config, backend):
+    def __init__(self, config: Box, backend: Any):
         super().__init__(config, [self])
 
         self._backend = backend
@@ -661,21 +693,23 @@ class GenotypeDataStudy(GenotypeData):
         self.is_remote = False
 
     @property
-    def study_phenotype(self):
-        return self.config.get("study_phenotype", "-")
+    def study_phenotype(self) -> str:
+        return cast(str, self.config.get("study_phenotype", "-"))
 
     @property
-    def is_group(self):
+    def is_group(self) -> bool:
         return False
 
-    def get_studies_ids(self, leaves=True):
+    def get_studies_ids(self, leaves: bool = True) -> list[str]:
         return [self.study_id]
 
     @property
     def families(self) -> FamiliesData:
-        return self._backend.families
+        return cast(FamiliesData, self._backend.families)
 
-    def _build_person_set_collection(self, person_set_collection_id):
+    def _build_person_set_collection(
+        self, person_set_collection_id: str
+    ) -> None:
         collection_config = getattr(
             self.config.person_set_collections, person_set_collection_id
         )

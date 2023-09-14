@@ -3,8 +3,8 @@ import logging
 
 from django.contrib.auth import get_user_model
 from django.conf import settings
-from rest_framework.response import Response  # type: ignore
-from rest_framework import status  # type: ignore
+from rest_framework.response import Response
+from rest_framework import status
 
 from query_base.query_base import QueryBaseView
 from studies.study_wrapper import StudyWrapperBase
@@ -91,10 +91,10 @@ class DatasetView(QueryBaseView):
 
             if user_has_permission(user, dataset_object):
                 person_set_collection_configs = {
-                    psc.id: psc.config_json()
+                    psc.id: psc.domain_json()
                     for psc in dataset.person_set_collections.values()
                 }
-                res = StudyWrapperBase.build_genotype_data_group_description(
+                res = StudyWrapperBase.build_genotype_data_description(
                     self.gpf_instance,
                     dataset.config,
                     dataset.description,

@@ -308,7 +308,7 @@ class CustomFormatter(logging.Formatter):
         return formatter.format(record)
 
 
-CONSOLE_LOGGING_LEVEL = "INFO"
+CONSOLE_LOGGING_LEVEL = "DEBUG"
 
 LOG_DIR = os.environ.get("WDAE_LOG_DIR", ".")
 
