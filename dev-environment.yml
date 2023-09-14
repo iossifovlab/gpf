@@ -43,4 +43,4 @@ dependencies:
     - sphinx-autorun==1.1.1
     - rangehttpserver==1.2.0
     - sphinxcontrib-video==0.0.1.dev3
-    - pylint-django==2.5
+    - pylint-django==2.5.3
