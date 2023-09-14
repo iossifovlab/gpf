@@ -229,7 +229,7 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
         runners = []
         for genotype_study in self._get_query_children(study_filters):
             person_sets_query = None
-            query_person_ids = person_ids.copy() \
+            query_person_ids = set(person_ids.copy()) \
                 if person_ids is not None else None
             if person_set_collection is not None:
                 collection_id, selected_person_sets = person_set_collection
@@ -558,17 +558,18 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
     def _transform_person_set_collection_query(
         self, collection_query: tuple[str, list[str]],
         person_ids: Optional[list[str]]
-    ) -> Optional[list[str]]:
+    ) -> Optional[set[str]]:
         if collection_query is not None:
             collection_id, selected_sets = collection_query
             collection = self.get_person_set_collection(collection_id)
             if collection is None:
-                return person_ids
+                return set(person_ids) if person_ids is not None else None
             person_set_ids = set(collection.person_sets.keys())
             if selected_sets is not None:
                 selected_person_ids: set[str] = set()
                 if set(selected_sets) == person_set_ids:
-                    return person_ids
+                    return set(person_ids) \
+                        if person_ids is not None else None
 
                 for set_id in set(selected_sets) & person_set_ids:
                     selected_person_ids.update(
@@ -578,7 +579,7 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
                     person_ids = list(set(person_ids) & selected_person_ids)
                 else:
                     person_ids = list(selected_person_ids)
-        return person_ids
+        return set(person_ids)
 
     def get_person_set_collection(
         self, person_set_collection_id: str

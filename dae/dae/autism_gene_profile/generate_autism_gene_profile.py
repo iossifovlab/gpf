@@ -345,7 +345,7 @@ def main(gpf_instance=None, argv=None):
                 genotype_data._transform_person_set_collection_query(
                     person_set_query, None
                 )
-            children_person_set = person_set & genotype_data_children
+            children_person_set = set(person_set) & genotype_data_children
 
             person_ids[dataset_id][ps.set_name] = children_person_set
 
