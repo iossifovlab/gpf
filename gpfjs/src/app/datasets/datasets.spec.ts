@@ -16,19 +16,17 @@ describe('PersonSet', () => {
     {
       id: 'id1',
       name: 'name1',
-      values: ['value1', 'value2'],
       color: 'color1'
     },
     {
       id: 'id2',
       name: 'name2',
-      values: ['value2', 'value3'],
       color: 'color2'
     }
   ];
   const personSetParams = [
-    ['id1', 'name1', ['value1', 'value2'] as string[], 'color1'],
-    ['id2', 'name2', ['value2', 'value3'] as string[], 'color2']
+    ['id1', 'name1', 'color1'],
+    ['id2', 'name2', 'color2']
   ] as const;
 
   it('should create person set from json', () => {
@@ -51,21 +49,19 @@ describe('PersonSetCollection', () => {
       new PersonSetCollection(
         'id1',
         'name1',
-        'id1',
-        new PersonSet('id1', 'name1', ['value1', 'value2'], 'color1'),
         [
-          new PersonSet('id1', 'name2', ['value2', 'value2'], 'color3'),
-          new PersonSet('id2', 'name3', ['value2', 'value3'], 'color4')
+          new PersonSet('id1', 'name1', 'color1'),
+          new PersonSet('id1', 'name2', 'color3'),
+          new PersonSet('id2', 'name3', 'color4')
         ]
       ),
       new PersonSetCollection(
         'id2',
         'name2',
-        'id2',
-        new PersonSet('id2', 'name2', ['value3', 'value4'], 'color2'),
         [
-          new PersonSet('id2', 'name3', ['value3', 'value3'], 'color5'),
-          new PersonSet('id3', 'name4', ['value3', 'value4'], 'color6')
+          new PersonSet('id2', 'name2', 'color2'),
+          new PersonSet('id2', 'name3', 'color5'),
+          new PersonSet('id3', 'name4', 'color6')
         ]
       )
     ];
@@ -74,24 +70,20 @@ describe('PersonSetCollection', () => {
       id1: {
         id: 'id1',
         name: 'name1',
-        source: 'source1',
-        default: {
-          id: 'id1',
-          name: 'name1',
-          values: ['value1', 'value2'],
-          color: 'color1'
-        },
         domain: [
           {
             id: 'id1',
+            name: 'name1',
+            color: 'color1'
+          },
+          {
+            id: 'id1',
             name: 'name2',
-            values: ['value2', 'value2'],
             color: 'color3'
           },
           {
             id: 'id2',
             name: 'name3',
-            values: ['value2', 'value3'],
             color: 'color4'
           }
         ]
@@ -99,24 +91,20 @@ describe('PersonSetCollection', () => {
       id2: {
         id: 'id2',
         name: 'name2',
-        source: 'source2',
-        default: {
-          id: 'id2',
-          name: 'name2',
-          values: ['value3', 'value4'],
-          color: 'color2'
-        },
         domain: [
           {
             id: 'id2',
+            name: 'name2',
+            color: 'color2'
+          },
+          {
+            id: 'id2',
             name: 'name3',
-            values: ['value3', 'value3'],
             color: 'color5'
           },
           {
             id: 'id3',
             name: 'name4',
-            values: ['value3', 'value4'],
             color: 'color6'
           }
         ]
@@ -133,21 +121,19 @@ describe('PersonSetCollections', () => {
       new PersonSetCollection(
         'id1',
         'name1',
-        'id1',
-        new PersonSet('id1', 'name1', ['value1', 'value2'], 'color1'),
         [
-          new PersonSet('id1', 'name2', ['value2', 'value2'], 'color3'),
-          new PersonSet('id2', 'name3', ['value2', 'value3'], 'color4')
+          new PersonSet('id1', 'name1', 'color1'),
+          new PersonSet('id1', 'name2', 'color3'),
+          new PersonSet('id2', 'name3', 'color4')
         ]
       ),
       new PersonSetCollection(
         'id2',
         'name2',
-        'id2',
-        new PersonSet('id2', 'name2', ['value3', 'value4'], 'color2'),
         [
-          new PersonSet('id2', 'name3', ['value3', 'value3'], 'color5'),
-          new PersonSet('id3', 'name4', ['value3', 'value4'], 'color6')
+          new PersonSet('id2', 'name2', 'color2'),
+          new PersonSet('id2', 'name3', 'color5'),
+          new PersonSet('id3', 'name4', 'color6')
         ]
       )
     ]);
@@ -155,46 +141,40 @@ describe('PersonSetCollections', () => {
     const mockPersonSetCollections2 = PersonSetCollections.fromJson({
       id1: {
         name: 'name1',
-        default: {
-          id: 'id1',
-          name: 'name1',
-          values: ['value1', 'value2'],
-          color: 'color1'
-        },
         domain: [
           {
             id: 'id1',
+            name: 'name1',
+            color: 'color1'
+          },
+          {
+            id: 'id1',
             name: 'name2',
-            values: ['value2', 'value2'],
             color: 'color3'
           },
           {
             id: 'id2',
             name: 'name3',
-            values: ['value2', 'value3'],
             color: 'color4'
           }
         ]
       },
       id2: {
         name: 'name2',
-        default: {
-          id: 'id2',
-          name: 'name2',
-          values: ['value3', 'value4'],
-          color: 'color2'
-        },
         domain: [
           {
             id: 'id2',
+            name: 'name2',
+            color: 'color2'
+          },
+          {
+            id: 'id2',
             name: 'name3',
-            values: ['value3', 'value3'],
             color: 'color5'
           },
           {
             id: 'id3',
             name: 'name4',
-            values: ['value3', 'value4'],
             color: 'color6'
           }
         ]
@@ -209,29 +189,27 @@ describe('PersonSetCollections', () => {
       new PersonSetCollection(
         'id1',
         'name1',
-        'id1',
-        new PersonSet('id1', 'name1', ['value1', 'value2'], 'color1'),
         [
-          new PersonSet('id1', 'name2', ['value2', 'value2'], 'color3'),
-          new PersonSet('id2', 'name3', ['value2', 'value3'], 'color4')
+          new PersonSet('id1', 'name2', 'color3'),
+          new PersonSet('id2', 'name3', 'color4'),
+          new PersonSet('id1', 'name1', 'color1')
         ]
       ),
       new PersonSetCollection(
         'id2',
         'name2',
-        'id2',
-        new PersonSet('id2', 'name2', ['value3', 'value4'], 'color2'),
         [
-          new PersonSet('id2', 'name3', ['value3', 'value3'], 'color5'),
-          new PersonSet('id3', 'name4', ['value3', 'value4'], 'color6')
+          new PersonSet('id2', 'name2', 'color2'),
+          new PersonSet('id2', 'name3', 'color5'),
+          new PersonSet('id3', 'name4', 'color6')
         ]
       )
     ]);
 
     const mockPersonSetCollections2 = [];
-    mockPersonSetCollections2.push(new PersonSet('id1', 'name2', ['value2', 'value2'], 'color3'));
-    mockPersonSetCollections2.push(new PersonSet('id2', 'name3', ['value2', 'value3'], 'color4'));
-    mockPersonSetCollections2.push(new PersonSet('id1', 'name1', ['value1', 'value2'], 'color1'));
+    mockPersonSetCollections2.push(new PersonSet('id1', 'name2', 'color3'));
+    mockPersonSetCollections2.push(new PersonSet('id2', 'name3', 'color4'));
+    mockPersonSetCollections2.push(new PersonSet('id1', 'name1', 'color1'));
     mockPersonSetCollections2.push({color: '#E0E0E0', id: 'missing-person', name: 'missing-person'});
 
     expect(mockPersonSetCollections1.getLegend(mockPersonSetCollections1.collections[0]))
@@ -558,21 +536,19 @@ describe('Dataset', () => {
         new PersonSetCollection(
           'id1',
           'name1',
-          'id1',
-          new PersonSet('id1', 'name1', ['value1', 'value2'], 'color1'),
           [
-            new PersonSet('id1', 'name2', ['value2', 'value2'], 'color3'),
-            new PersonSet('id2', 'name3', ['value2', 'value3'], 'color4')
+            new PersonSet('id1', 'name1', 'color1'),
+            new PersonSet('id1', 'name2', 'color3'),
+            new PersonSet('id2', 'name3', 'color4')
           ]
         ),
         new PersonSetCollection(
           'id2',
           'name2',
-          'id2',
-          new PersonSet('id2', 'name2', ['value3', 'value4'], 'color2'),
           [
-            new PersonSet('id2', 'name3', ['value3', 'value3'], 'color5'),
-            new PersonSet('id3', 'name4', ['value3', 'value4'], 'color6')
+            new PersonSet('id2', 'name2', 'color2'),
+            new PersonSet('id2', 'name3', 'color5'),
+            new PersonSet('id3', 'name4', 'color6')
           ]
         )
       ]
@@ -639,21 +615,19 @@ describe('Dataset', () => {
       new PersonSetCollection(
         'id4',
         'name4',
-        'id4',
-        new PersonSet('id4', 'name1', ['value1', 'value2'], 'color1'),
         [
-          new PersonSet('id4', 'name2', ['value2', 'value2'], 'color3'),
-          new PersonSet('id2', 'name3', ['value2', 'value3'], 'color4')
+          new PersonSet('id4', 'name1', 'color1'),
+          new PersonSet('id4', 'name2', 'color3'),
+          new PersonSet('id2', 'name3', 'color4')
         ]
       ),
       new PersonSetCollection(
         'id2',
         'name3',
-        'id2',
-        new PersonSet('id5', 'name2', ['value3', 'value4'], 'color2'),
         [
-          new PersonSet('id3', 'name7', ['value3', 'value3'], 'color5'),
-          new PersonSet('id5', 'name8', ['value4', 'value4'], 'color6')
+          new PersonSet('id5', 'name2', 'color2'),
+          new PersonSet('id3', 'name7', 'color5'),
+          new PersonSet('id5', 'name8', 'color6')
         ]
       )
     ]),
@@ -755,46 +729,40 @@ describe('Dataset', () => {
     person_set_collections: {
       id1: {
         name: 'name1',
-        default: {
-          id: 'id1',
-          name: 'name1',
-          values: ['value1', 'value2'],
-          color: 'color1'
-        },
         domain: [
           {
             id: 'id1',
+            name: 'name1',
+            color: 'color1'
+          },
+          {
+            id: 'id1',
             name: 'name2',
-            values: ['value2', 'value2'],
             color: 'color3'
           },
           {
             id: 'id2',
             name: 'name3',
-            values: ['value2', 'value3'],
             color: 'color4'
           }
         ]
       },
       id2: {
         name: 'name2',
-        default: {
-          id: 'id2',
-          name: 'name2',
-          values: ['value3', 'value4'],
-          color: 'color2'
-        },
         domain: [
           {
             id: 'id2',
+            name: 'name2',
+            color: 'color2'
+          },
+          {
+            id: 'id2',
             name: 'name3',
-            values: ['value3', 'value3'],
             color: 'color5'
           },
           {
             id: 'id3',
             name: 'name4',
-            values: ['value3', 'value4'],
             color: 'color6'
           }
         ]
@@ -916,46 +884,40 @@ describe('Dataset', () => {
     person_set_collections: {
       id4: {
         name: 'name4',
-        default: {
-          id: 'id4',
-          name: 'name1',
-          values: ['value1', 'value2'],
-          color: 'color1'
-        },
         domain: [
           {
             id: 'id4',
+            name: 'name1',
+            color: 'color1'
+          },
+          {
+            id: 'id4',
             name: 'name2',
-            values: ['value2', 'value2'],
             color: 'color3'
           },
           {
             id: 'id2',
             name: 'name3',
-            values: ['value2', 'value3'],
             color: 'color4'
           }
         ]
       },
       id2: {
         name: 'name3',
-        default: {
-          id: 'id5',
-          name: 'name2',
-          values: ['value3', 'value4'],
-          color: 'color2'
-        },
         domain: [
+          {
+            id: 'id5',
+            name: 'name2',
+            color: 'color2'
+          },
           {
             id: 'id3',
             name: 'name7',
-            values: ['value3', 'value3'],
             color: 'color5'
           },
           {
             id: 'id5',
             name: 'name8',
-            values: ['value4', 'value4'],
             color: 'color6'
           }
         ]
@@ -1090,46 +1052,40 @@ describe('Dataset', () => {
       }, person_set_collections: {
         id1: {
           name: 'name1',
-          default: {
-            id: 'id1',
-            name: 'name1',
-            values: ['value1', 'value2'],
-            color: 'color1'
-          },
           domain: [
             {
               id: 'id1',
+              name: 'name1',
+              color: 'color1'
+            },
+            {
+              id: 'id1',
               name: 'name2',
-              values: ['value2', 'value2'],
               color: 'color3'
             },
             {
               id: 'id2',
               name: 'name3',
-              values: ['value2', 'value3'],
               color: 'color4'
             }
           ]
         },
         id2: {
           name: 'name2',
-          default: {
-            id: 'id2',
-            name: 'name2',
-            values: ['value3', 'value4'],
-            color: 'color2'
-          },
           domain: [
             {
               id: 'id2',
+              name: 'name2',
+              color: 'color2'
+            },
+            {
+              id: 'id2',
               name: 'name3',
-              values: ['value3', 'value3'],
               color: 'color5'
             },
             {
               id: 'id3',
               name: 'name4',
-              values: ['value3', 'value4'],
               color: 'color6'
             }
           ]

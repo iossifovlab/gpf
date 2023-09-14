@@ -15,7 +15,7 @@ export class PersonSet extends IdName {
   public constructor(
     public readonly id: string,
     public readonly name: string,
-    public readonly values: Array<string>,
+    // public readonly values: Array<string>,
     public readonly color: string,
   ) {
     super(id, name);
@@ -29,7 +29,7 @@ export class PersonSet extends IdName {
     return new PersonSet(
       json['id'] as string,
       json['name'] as string,
-      json['values'] as string[],
+      // json['values'] as string[],
       json['color'] as string,
     );
   }
@@ -46,12 +46,12 @@ export class PersonSetCollection extends IdName {
   public constructor(
     public readonly id: string,
     public readonly name: string,
-    public readonly source: string,
-    public readonly defaultValue: PersonSet,
+    // public readonly source: string,
+    // public readonly defaultValue: PersonSet,
     public readonly domain: PersonSet[]
   ) {
     super(id, name);
-    domain.push(defaultValue);
+    // domain.push(defaultValue);
   }
 
   public static fromJson(json: object): PersonSetCollection[] {
@@ -66,8 +66,8 @@ export class PersonSetCollection extends IdName {
       collections.push(new PersonSetCollection(
         k,
         v['name'] as string,
-        k,
-        PersonSet.fromJson(v['default'] as object),
+        // k,
+        // PersonSet.fromJson(v['default'] as object),
         PersonSet.fromJsonArray(v['domain'] as object[]),
       ));
     }

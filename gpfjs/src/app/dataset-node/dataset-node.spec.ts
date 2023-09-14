@@ -53,21 +53,19 @@ const datasetMock = new Dataset(
       new PersonSetCollection(
         'id1',
         'name1',
-        'id1',
-        new PersonSet('id1', 'name1', ['value1', 'value2'], 'color1'),
         [
-          new PersonSet('id1', 'name2', ['value2', 'value2'], 'color3'),
-          new PersonSet('id2', 'name3', ['value2', 'value3'], 'color4')
+          new PersonSet('id1', 'name1', 'color1'),
+          new PersonSet('id1', 'name2', 'color3'),
+          new PersonSet('id2', 'name3', 'color4')
         ]
       ),
       new PersonSetCollection(
         'id2',
         'name2',
-        'id2',
-        new PersonSet('id2', 'name2', ['value3', 'value4'], 'color2'),
         [
-          new PersonSet('id2', 'name3', ['value3', 'value3'], 'color5'),
-          new PersonSet('id3', 'name4', ['value3', 'value4'], 'color6')
+          new PersonSet('id2', 'name2', 'color2'),
+          new PersonSet('id2', 'name3', 'color5'),
+          new PersonSet('id3', 'name4', 'color6')
         ]
       )
     ]
