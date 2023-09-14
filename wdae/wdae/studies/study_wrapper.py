@@ -575,9 +575,6 @@ class RemoteStudyWrapper(StudyWrapperBase):
             if not any(query_s["source"] == s["source"] for s in sources):
                 new_sources.append(query_s)
         sources.extend(new_sources)
-        for source in sources:
-            if "format" in source:
-                del source["format"]
         kwargs["sources"] = sources
 
         fam_id_idx = -1
@@ -591,6 +588,10 @@ class RemoteStudyWrapper(StudyWrapperBase):
         response = self.rest_client.post_query_variants(
             kwargs, reduce_alleles=False
         )
+
+        for source in sources:
+            if "format" in source:
+                del source["format"]
 
         def get_source(col: dict[str, Any]) -> Any:
             res = col["source"]
