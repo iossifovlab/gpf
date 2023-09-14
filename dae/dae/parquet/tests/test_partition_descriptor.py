@@ -63,6 +63,11 @@ def test_partition_directory() -> None:
     assert PartitionDescriptor.partition_directory(
         "s3://work", [("region_bin", "1")]) == "s3://work/region_bin=1"
 
+    assert PartitionDescriptor.partition_directory(
+        "work", []) == "work"
+    assert PartitionDescriptor.partition_directory(
+        "s3://work", []) == "s3://work"
+
 
 def test_partition_filename() -> None:
     assert PartitionDescriptor.partition_filename(
