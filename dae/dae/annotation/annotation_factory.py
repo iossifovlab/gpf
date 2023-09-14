@@ -179,6 +179,7 @@ class AnnotationConfigParser:
             if isinstance(raw_cfg, str):
                 # the minimal annotator configuration form
                 result.append(AnnotationConfigParser.parse_minimal(raw_cfg))
+                continue
             elif isinstance(raw_cfg, dict):
                 ann_details = next(iter(raw_cfg.values()))
                 if isinstance(ann_details, str):
@@ -193,8 +194,6 @@ class AnnotationConfigParser:
                         AnnotationConfigParser.parse_complete(raw_cfg)
                     )
                     continue
-                else:
-                    raise AnnotationConfigurationError()
             raise AnnotationConfigurationError(dedent(f"""
                 Incorrect annotator configuation form: {raw_cfg}.
                 The allowed forms are:
