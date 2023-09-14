@@ -51,6 +51,26 @@ def test_grr(tmp_path: pathlib.Path) -> GenomicResourceRepo:
                         foo    1          0.2
                     """)
                 },
+                "score_three": {
+                    "genomic_resource.yaml": textwrap.dedent("""
+                        type: np_score
+                        table:
+                            filename: data.txt
+                            reference:
+                              name: ref
+                            alternative:
+                              name: alt
+                        scores:
+                            - id: s3
+                              name: s3
+                              type: float
+                              desc: ""
+                    """),
+                    "data.txt": convert_to_tab_separated("""
+                        chrom  pos_begin  ref  alt  s3
+                        foo    1          A    G    0.2
+                    """)
+                },
             },
         }
     )

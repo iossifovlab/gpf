@@ -118,11 +118,15 @@ class AnnotationConfigParser:
         return result
 
     @staticmethod
-    def query_resources(wildcard: str, grr: GenomicResourceRepo) -> list[str]:
-        all_resources_ids = list(
-            map(lambda r: r.get_id(), grr.get_all_resources())
-        )
-        return fnmatch.filter(all_resources_ids, wildcard)
+    def query_resources(
+        annotator_type: str, wildcard: str, grr: GenomicResourceRepo
+    ) -> list[str]:
+        result = []
+        for resource in grr.get_all_resources():
+            if (resource.get_type() == annotator_type
+               and fnmatch.fnmatch(resource.get_id(), wildcard)):
+                result.append(resource.get_id())
+        return result
 
     @staticmethod
     def parse_minimal(raw: str) -> AnnotatorInfo:
@@ -136,7 +140,7 @@ class AnnotationConfigParser:
         if "*" in ann_details:
             assert grr is not None
             matching_resources = AnnotationConfigParser.query_resources(
-                ann_details, grr
+                ann_type, ann_details, grr
             )
             return [
                 AnnotatorInfo(ann_type, [], {"resource_id": resource})
