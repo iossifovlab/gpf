@@ -472,3 +472,35 @@ def test_query_family_types(
         query, [{"source": "location"}])
     )
     assert len(variants) == 1
+
+
+@pytest.mark.parametrize(
+    "wrapper_type, float_format, float_val",
+    [
+        ("remote", "%.2f", "0.16"),
+        ("remote", "%.4f", "0.1642"),
+        ("local", "%.2f", "0.16"),
+        ("local", "%.4f", "0.1642")
+    ]
+)
+def test_query_gene_scores_formatting(
+    iossifov_2014_wrappers: dict[str, StudyWrapperBase],
+    wrapper_type: str,
+    float_format: str,
+    float_val: str
+) -> None:
+    study_wrapper = iossifov_2014_wrappers[wrapper_type]
+
+    columns = [{"name": "pLI", "source": "pLI", "format": float_format}]
+    query = {
+        "family_ids": ["13943"]
+    }
+    variants = list(study_wrapper.query_variants_wdae(
+        query, columns)
+    )
+    v = variants[0]
+    source_pli = {"name": "pLI", "source": "pLI"}
+    if wrapper_type == "local":
+        source_pli.update({"format": float_format})
+    assert source_pli in columns
+    assert v[0] == [float_val]
