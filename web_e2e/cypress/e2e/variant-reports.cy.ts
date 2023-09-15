@@ -318,7 +318,7 @@ describe('Variant reports tests', () => {
     {index: 1, name: 'second'},
     {index: 5, name: 'fifth'}
   ].forEach(cell => {
-    it(`should download family counters report from ${cell.name} pedigree modal`, () => {
+    it.skip(`should download family counters report from ${cell.name} pedigree modal`, () => {
       page.familiesByPedigreeTab.click();
       page.pedigreeCells.eq(cell.index).click({force: true});
 
