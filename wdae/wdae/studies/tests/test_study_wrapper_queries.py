@@ -477,13 +477,13 @@ def test_query_family_types(
 @pytest.mark.parametrize(
     "wrapper_type, float_format, float_val",
     [
-        ("remote", "%.2f", "0.00"),
-        ("remote", "%.3f", "0.000"),
-        ("local", "%.2f", "0.00"),
-        ("local", "%.3f", "0.000")
+        ("remote", "%.2f", "0.16"),
+        ("remote", "%.4f", "0.1642"),
+        ("local", "%.2f", "0.16"),
+        ("local", "%.4f", "0.1642")
     ]
 )
-def test_query_family_types_rounded(
+def test_query_gene_scores_formatting(
     iossifov_2014_wrappers: dict[str, StudyWrapperBase],
     wrapper_type: str,
     float_format: str,
@@ -493,16 +493,14 @@ def test_query_family_types_rounded(
 
     columns = [{"name": "pLI", "source": "pLI", "format": float_format}]
     query = {
-        "familyTypes": ["trio"]
+        "family_ids": ["13943"]
     }
     variants = list(study_wrapper.query_variants_wdae(
         query, columns)
     )
-    for v in variants:
-        source_pli = {"name": "pLI", "source": "pLI"}
-        if wrapper_type == "local":
-            source_pli.update({"format": float_format})
-        assert source_pli in columns
-        for index, col in enumerate(columns):
-            if col["source"] == "pLI":
-                assert v[index] == [float_val]
+    v = variants[0]
+    source_pli = {"name": "pLI", "source": "pLI"}
+    if wrapper_type == "local":
+        source_pli.update({"format": float_format})
+    assert source_pli in columns
+    assert v[0] == [float_val]
