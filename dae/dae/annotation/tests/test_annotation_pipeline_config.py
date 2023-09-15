@@ -30,6 +30,10 @@ def test_grr(tmp_path: pathlib.Path) -> GenomicResourceRepo:
                         - id: score
                           type: float
                           name: s1
+                        meta:
+                            labels:
+                                foo: ALPHA
+                                bar: GAMMA
                     """),
                     "data.txt": convert_to_tab_separated("""
                         chrom  pos_begin  s1
@@ -45,6 +49,10 @@ def test_grr(tmp_path: pathlib.Path) -> GenomicResourceRepo:
                         - id: score
                           type: float
                           name: s2
+                        meta:
+                            labels:
+                                foo: BETA
+                                bar: GAMMA
                     """),
                     "data.txt": convert_to_tab_separated("""
                         chrom  pos_begin  s2
@@ -82,6 +90,10 @@ def test_grr(tmp_path: pathlib.Path) -> GenomicResourceRepo:
                                 - id: score
                                   type: float
                                   name: s1
+                                meta:
+                                    labels:
+                                        foo: ALPHA
+                                        bar: DELTA
                             """),
                             "data.txt": convert_to_tab_separated("""
                                 chrom  pos_begin  s1
@@ -99,6 +111,10 @@ def test_grr(tmp_path: pathlib.Path) -> GenomicResourceRepo:
                                 - id: score
                                   type: float
                                   name: s2
+                                meta:
+                                    labels:
+                                        foo: BETA
+                                        bar: DELTA
                             """),
                             "data.txt": convert_to_tab_separated("""
                                 chrom  pos_begin  s2
@@ -281,4 +297,35 @@ def test_wildcard_directory(test_grr: GenomicResourceRepo) -> None:
             "position_score", [],
             {"resource_id": "scores/scoredir_two/subscore"}
         ),
+    ]
+
+
+def test_wildcard_label_single(test_grr: GenomicResourceRepo) -> None:
+    pipeline_config = AnnotationConfigParser.parse_str("""
+        - position_score: score_*[foo=ALPHA]
+    """, grr=test_grr)
+    assert pipeline_config == [
+        AnnotatorInfo("position_score", [], {"resource_id": "score_one"}),
+    ]
+
+
+def test_wildcard_label_and_dir(test_grr: GenomicResourceRepo) -> None:
+    pipeline_config = AnnotationConfigParser.parse_str("""
+        - position_score: "*[foo=ALPHA]"
+    """, grr=test_grr)
+    assert pipeline_config == [
+        AnnotatorInfo("position_score", [], {"resource_id": "score_one"}),
+        AnnotatorInfo(
+            "position_score", [],
+            {"resource_id": "scores/scoredir_one/subscore"}
+        ),
+    ]
+
+
+def test_wildcard_label_multiple(test_grr: GenomicResourceRepo) -> None:
+    pipeline_config = AnnotationConfigParser.parse_str("""
+        - position_score: "*[foo=ALPHA and bar=GAMMA]"
+    """, grr=test_grr)
+    assert pipeline_config == [
+        AnnotatorInfo("position_score", [], {"resource_id": "score_one"}),
     ]

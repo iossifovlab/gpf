@@ -123,10 +123,24 @@ class AnnotationConfigParser:
     ) -> list[str]:
         """Collect resources matching a given query."""
         result = []
+        labels_query: dict[str, str] = {}
+
+        # Handle querying by labels
+        if wildcard.endswith("]"):
+            assert "[" in wildcard
+            wildcard, raw_labels = wildcard.split("[")
+            labels = raw_labels.strip("]").split(" and ")
+            for label in labels:
+                k, v = label.split("=")
+                labels_query[k] = v
+
         for resource in grr.get_all_resources():
             if (resource.get_type() == annotator_type
-               and fnmatch.fnmatch(resource.get_id(), wildcard)):
+               and fnmatch.fnmatch(resource.get_id(), wildcard)
+               and (not labels_query
+                    or labels_query.items() <= resource.get_labels().items())):
                 result.append(resource.get_id())
+
         return result
 
     @staticmethod
