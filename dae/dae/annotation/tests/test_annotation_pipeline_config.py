@@ -71,6 +71,64 @@ def test_grr(tmp_path: pathlib.Path) -> GenomicResourceRepo:
                         foo    1          A    G    0.2
                     """)
                 },
+                "scores": {
+                    "scoredir_one": {
+                        "subscore": {
+                            "genomic_resource.yaml": textwrap.dedent("""
+                                type: position_score
+                                table:
+                                    filename: data.txt
+                                scores:
+                                - id: score
+                                  type: float
+                                  name: s1
+                            """),
+                            "data.txt": convert_to_tab_separated("""
+                                chrom  pos_begin  s1
+                                foo    1          0.1
+                            """)
+                        },
+                    },
+                    "scoredir_two": {
+                        "subscore": {
+                            "genomic_resource.yaml": textwrap.dedent("""
+                                type: position_score
+                                table:
+                                    filename: data.txt
+                                scores:
+                                - id: score
+                                  type: float
+                                  name: s2
+                            """),
+                            "data.txt": convert_to_tab_separated("""
+                                chrom  pos_begin  s2
+                                foo    1          0.2
+                            """)
+                        },
+                    },
+                    "scoredir_three": {
+                        "subscore": {
+                            "genomic_resource.yaml": textwrap.dedent("""
+                                type: np_score
+                                table:
+                                    filename: data.txt
+                                    reference:
+                                      name: ref
+                                    alternative:
+                                      name: alt
+                                scores:
+                                    - id: s3
+                                      name: s3
+                                      type: float
+                                      desc: ""
+                            """),
+                            "data.txt": convert_to_tab_separated("""
+                                chrom  pos_begin  ref  alt  s3
+                                foo    1          A    G    0.2
+                            """)
+                        },
+                    },
+                },
             },
         }
     )
@@ -200,12 +258,27 @@ def test_effect_annotator_extra_attributes() -> None:
     ]
 
 
-def test_basic_config_wildcard(test_grr: GenomicResourceRepo) -> None:
-    # TODO Add grr to arguments
+def test_wildcard_basic(test_grr: GenomicResourceRepo) -> None:
     pipeline_config = AnnotationConfigParser.parse_str("""
         - position_score: score_*
     """, grr=test_grr)
     assert pipeline_config == [
         AnnotatorInfo("position_score", [], {"resource_id": "score_one"}),
         AnnotatorInfo("position_score", [], {"resource_id": "score_two"}),
+    ]
+
+
+def test_wildcard_directory(test_grr: GenomicResourceRepo) -> None:
+    pipeline_config = AnnotationConfigParser.parse_str("""
+        - position_score: "scores/**/subscore"
+    """, grr=test_grr)
+    assert pipeline_config == [
+        AnnotatorInfo(
+            "position_score", [],
+            {"resource_id": "scores/scoredir_one/subscore"}
+        ),
+        AnnotatorInfo(
+            "position_score", [],
+            {"resource_id": "scores/scoredir_two/subscore"}
+        ),
     ]
