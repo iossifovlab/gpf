@@ -121,6 +121,7 @@ class AnnotationConfigParser:
     def query_resources(
         annotator_type: str, wildcard: str, grr: GenomicResourceRepo
     ) -> list[str]:
+        """Collect resources matching a given query."""
         result = []
         for resource in grr.get_all_resources():
             if (resource.get_type() == annotator_type
@@ -130,12 +131,14 @@ class AnnotationConfigParser:
 
     @staticmethod
     def parse_minimal(raw: str) -> AnnotatorInfo:
+        """Parse a minimal-form annotation config."""
         return AnnotatorInfo(raw, [], {})
 
     @staticmethod
     def parse_short(
         raw: dict[str, Any], grr: Optional[GenomicResourceRepo] = None
     ) -> list[AnnotatorInfo]:
+        """Parse a short-form annotation config."""
         ann_type, ann_details = next(iter(raw.items()))
         if "*" in ann_details:
             assert grr is not None
@@ -150,6 +153,7 @@ class AnnotationConfigParser:
 
     @staticmethod
     def parse_complete(raw: dict[str, Any]) -> AnnotatorInfo:
+        """Parse a full-form annotation config."""
         ann_type, ann_details = next(iter(raw.items()))
         attributes = []
         if "attributes" in ann_details:
@@ -180,7 +184,7 @@ class AnnotationConfigParser:
                 # the minimal annotator configuration form
                 result.append(AnnotationConfigParser.parse_minimal(raw_cfg))
                 continue
-            elif isinstance(raw_cfg, dict):
+            if isinstance(raw_cfg, dict):
                 ann_details = next(iter(raw_cfg.values()))
                 if isinstance(ann_details, str):
                     # the short annotator configuation form
@@ -188,7 +192,7 @@ class AnnotationConfigParser:
                         raw_cfg, grr
                     ))
                     continue
-                elif isinstance(ann_details, dict):
+                if isinstance(ann_details, dict):
                     # the complete annotator configuration form
                     result.append(
                         AnnotationConfigParser.parse_complete(raw_cfg)

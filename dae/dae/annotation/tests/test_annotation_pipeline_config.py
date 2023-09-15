@@ -206,6 +206,6 @@ def test_basic_config_wildcard(test_grr: GenomicResourceRepo) -> None:
         - position_score: score_*
     """, grr=test_grr)
     assert pipeline_config == [
-        AnnotatorInfo("position_score", [], {'resource_id': 'score_one'}),
-        AnnotatorInfo("position_score", [], {'resource_id': 'score_two'}),
+        AnnotatorInfo("position_score", [], {"resource_id": "score_one"}),
+        AnnotatorInfo("position_score", [], {"resource_id": "score_two"}),
     ]
