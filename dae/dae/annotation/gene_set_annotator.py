@@ -88,7 +88,7 @@ class GeneSetAnnotator(Annotator):
             return self._empty_result()
 
         is_in = False
-        if len([gene for gene in genes if gene in self.gene_set.syms]) != 0:
+        if len(set(genes).intersection(set(self.gene_set.syms))) != 0:
             is_in = True
 
         attributes = {self.gene_set.name: is_in}

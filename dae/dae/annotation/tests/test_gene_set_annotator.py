@@ -67,7 +67,6 @@ def test_grr(tmp_path_factory: pytest.TempPathFactory) -> GenomicResourceRepo:
             }
         }
     )
-    # import pdb; pdb.set_trace()
     return build_genomic_resource_repository(file_name=str(
         root_path / "grr.yaml"
     ))
