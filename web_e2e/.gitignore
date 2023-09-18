@@ -16,3 +16,6 @@ __pycache__
 *diff.png
 wdae-debug.log
 wdae-api.log
+/test-results/
+/playwright-report/
+/playwright/.cache/
