@@ -1,5 +1,9 @@
 .dataset-selector {
   width: 380px;
+}
+
+#selected-dataset-name {
+  width: 340px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -30,6 +34,7 @@
 }
 
 #datasets-dropdown-menu-button {
+  display: grid;
   color: #000;
 }
 
