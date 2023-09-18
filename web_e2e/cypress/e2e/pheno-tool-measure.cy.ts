@@ -28,7 +28,7 @@ describe('Pheno tool measure tests', () => {
     page.ageCheckbox.should('not.be.disabled');
     page.iqCheckbox.should('not.be.disabled');
 
-    page.clearMeasureButton.click();
+    page.searchbox.click();
     page.findErrorAlertInComponent('gpf-pheno-tool-measure').should('be.visible');
     page.ageCheckbox.should('be.disabled');
     page.iqCheckbox.should('be.disabled');
@@ -40,17 +40,9 @@ describe('Pheno tool measure tests', () => {
     page.getDropdownOptionByText('i1.age').click();
     page.ageCheckbox.should('be.disabled');
 
-    page.clearMeasureButton.click();
     page.searchbox.click();
     page.getDropdownOptionByText('i1.iq').click();
     page.iqCheckbox.should('be.disabled');
-  });
-
-  it('should check if the dropdown menu closes when clicking the remove button', () => {
-    page.searchbox.click();
-    page.dropdown.should('be.visible');
-    page.clearMeasureButton.click();
-    page.dropdown.should('not.be.visible');
   });
 
   it('should check if the dropdown menu closes when clicking outside', () => {
@@ -64,7 +56,6 @@ describe('Pheno tool measure tests', () => {
     page.searchbox.click();
     page.dropdown.should('be.visible');
     page.getDropdownOptionByText('i1.iq').click();
-    page.clearMeasureButton.click();
     page.searchbox.should('be.empty');
     page.dropdown.should('not.be.visible');
   });
