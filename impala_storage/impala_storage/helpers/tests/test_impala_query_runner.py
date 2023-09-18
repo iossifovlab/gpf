@@ -31,13 +31,13 @@ def test_impala_runner_simple(impala_helpers):
 
     runner = create_runner(impala_helpers, query)
     runner._set_result_queue(result_queue)
-    assert not runner.started()
+    assert not runner.is_started()
 
     executor = ThreadPoolExecutor(max_workers=1)
     runner.start(executor)
     time.sleep(1)
 
-    assert runner.started()
+    assert runner.is_started()
 
     runner.close()
     time.sleep(1)
@@ -52,13 +52,13 @@ def test_impala_runner_result_with_exception(impala_helpers):
     query = "SELECT * FROM gpf_variant_db.test_study_impala_01_variants"
 
     runner = create_runner(impala_helpers, query)
-    assert not runner.started()
+    assert not runner.is_started()
 
     result = QueryResult([runner])
     result.start()
     time.sleep(0.1)
 
-    assert runner.started()
+    assert runner.is_started()
 
     for row in result:
         print(row)
@@ -81,7 +81,7 @@ def test_impala_runner_result_experimental_1(impala_helpers):
         "FROM gpf_variant_db.test_study_impala_01_variants"
 
     runner = create_runner(impala_helpers, query)
-    assert not runner.started()
+    assert not runner.is_started()
 
     result = QueryResult([runner])
     result.start()
@@ -104,13 +104,13 @@ def test_impala_runner_result_experimental_2(impala_helpers):
         "FROM gpf_variant_db.test_study_impala_01_variants"
 
     runner = create_runner(impala_helpers, query)
-    assert not runner.started()
+    assert not runner.is_started()
 
     result = QueryResult([runner])
     result.start()
     time.sleep(0.1)
 
-    assert runner.started()
+    assert runner.is_started()
 
     with pytest.raises(
             IOError,
@@ -128,13 +128,13 @@ def test_impala_runner_result_experimental(impala_helpers):
 
     runner = create_runner(impala_helpers, query)
 
-    assert not runner.started()
+    assert not runner.is_started()
 
     result = QueryResult([runner])
     result.start()
     time.sleep(0.1)
 
-    assert runner.started()
+    assert runner.is_started()
 
     for row in result:
         print(row)

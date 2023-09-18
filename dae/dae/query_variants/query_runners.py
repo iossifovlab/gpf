@@ -1,10 +1,13 @@
+from __future__ import annotations
+
 import abc
 import threading
 import logging
 import queue
 import time
-from typing import Optional
-from concurrent.futures import ThreadPoolExecutor, Future
+from typing import Optional, Any, Callable
+
+from concurrent.futures import ThreadPoolExecutor, Future, Executor
 
 
 logger = logging.getLogger(__name__)
@@ -13,7 +16,7 @@ logger = logging.getLogger(__name__)
 class QueryRunner(abc.ABC):
     """Run a query in the backround using the provided executor."""
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: Any):
         super().__init__()
 
         self._status_lock = threading.RLock()
@@ -32,16 +35,16 @@ class QueryRunner(abc.ABC):
         else:
             self.deserializer = lambda v: v
 
-    def adapt(self, adapter_func):
+    def adapt(self, adapter_func: Callable[[Any], Any]) -> None:
         func = self.deserializer
 
         self.deserializer = lambda v: adapter_func(func(v))
 
-    def started(self):
+    def is_started(self) -> bool:
         with self._status_lock:
             return self._started
 
-    def start(self, executor):
+    def start(self, executor: Executor) -> None:
         with self._status_lock:
             assert self._result_queue is not None
 
@@ -49,11 +52,11 @@ class QueryRunner(abc.ABC):
             self._started = True
             self.timestamp = time.time()
 
-    def is_closed(self):
+    def is_closed(self) -> bool:
         with self._status_lock:
             return self._closed
 
-    def close(self):
+    def close(self) -> None:
         """Close query runner."""
         elapsed = time.time() - self.timestamp
         logger.debug("closing runner after %0.3f", elapsed)
@@ -63,21 +66,21 @@ class QueryRunner(abc.ABC):
                 self._future.cancel()
             self._closed = True
 
-    def is_done(self):
+    def is_done(self) -> bool:
         with self._status_lock:
             return self._done
 
     @abc.abstractmethod
-    def run(self):
+    def run(self) -> None:
         pass
 
-    def _set_future(self, future):
+    def _set_future(self, future: Future) -> None:
         self._future = future
 
-    def _set_result_queue(self, result_queue):
+    def _set_result_queue(self, result_queue: queue.Queue) -> None:
         self._result_queue = result_queue
 
-    def _put_value_in_result_queue(self, val):
+    def _put_value_in_result_queue(self, val: Any) -> None:
         assert self._result_queue is not None
 
         no_interest = 0
@@ -112,7 +115,7 @@ class QueryResult:
     The result of the queries is enqueued on result_queue
     """
 
-    def __init__(self, runners: list[QueryRunner], limit=-1):
+    def __init__(self, runners: list[QueryRunner], limit: int = -1):
         self.result_queue: queue.Queue = queue.Queue(maxsize=1_000)
 
         if limit is None:
@@ -128,7 +131,7 @@ class QueryResult:
             runner._set_result_queue(self.result_queue)
         self.executor = ThreadPoolExecutor(max_workers=len(runners))
 
-    def done(self):
+    def done(self) -> bool:
         if self.limit >= 0 and self._counter >= self.limit:
             logger.debug("limit done %d >= %d", self._counter, self.limit)
             return True
@@ -136,10 +139,10 @@ class QueryResult:
             return True
         return False
 
-    def __iter__(self):
+    def __iter__(self) -> QueryResult:
         return self
 
-    def __next__(self):
+    def __next__(self) -> Any:
         while True:
             try:
                 item = self.result_queue.get(timeout=0.1)
@@ -154,7 +157,7 @@ class QueryResult:
                 logger.debug("result done")
                 raise StopIteration() from exp
 
-    def get(self, timeout=0):
+    def get(self, timeout: float = 0.0) -> Any:
         """Pop the next entry from the queue.
 
         Return None if the queue is still empty after timeout seconds.
@@ -170,13 +173,13 @@ class QueryResult:
                 raise StopIteration() from exp
             return None
 
-    def start(self):
+    def start(self) -> None:
         self.timestamp = time.time()
         for runner in self.runners:
             runner.start(self.executor)
         time.sleep(0.1)
 
-    def close(self):
+    def close(self) -> None:
         """Gracefully close and dispose of resources."""
         for runner in self.runners:
             try:
