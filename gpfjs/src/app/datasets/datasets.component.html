@@ -12,7 +12,7 @@
               aria-haspopup="true"
               aria-expanded="false">
               <span *ngIf="datasetsLoading">Loading datasets...</span>
-              <span *ngIf="!datasetsLoading">{{ selectedDataset.name }}</span>
+              <span *ngIf="!datasetsLoading" id="selected-dataset-name">{{ selectedDataset.name }}</span>
             </button>
             <div
               ngbDropdownMenu
