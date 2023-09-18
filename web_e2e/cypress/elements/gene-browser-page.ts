@@ -10,7 +10,7 @@ export class GeneBrowserPage extends BasePage {
   }
 
   public get searchInputBox(): element {
-    return cy.get('gpf-gene-browser input#search-box');
+    return cy.get('gpf-gene-browser input#genes');
   }
 
   public get goButton(): element {

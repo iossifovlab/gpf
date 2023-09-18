@@ -34,15 +34,15 @@ export class FamilyFilterBlockPage extends BasePage {
   }
 
   public get searchbox(): element {
-    return cy.get('gpf-family-filters-block input#search-box');
+    return cy.get('gpf-family-filters-block input#tags');
   }
 
   public get dropdownMenu(): element {
-    return this.window.find('.dropdown-menu');
+    return cy.get('.ui-front');
   }
 
   public getDropdownMenuOptionByText(text: string): element {
-    return this.dropdownMenu.find('span').contains(text);
+    return cy.get('.ui-menu-item-wrapper').contains(text);
   }
 
   public get fromInputField(): element {
