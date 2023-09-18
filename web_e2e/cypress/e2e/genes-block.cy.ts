@@ -164,7 +164,7 @@ describe('Genes block gene sets names and count tests', () => {
       const geneSetName = expectedSetName.substring(0, expectedSetName.indexOf('(') - 1);
       genotypeBrowserController.filterGenesByGeneSets(data.collection, geneSetName);
 
-      page.selectedGeneSet.should('contain.text', expectedSetName);
+      page.geneSetsSearchbox.invoke('attr', 'title').should('contain', expectedSetName);
 
       page.geneSetCountElement.invoke('text').then(actualText => {
         const actualCount = actualText.replace('Count: ', '').replace(' (Download)', '').trim();
