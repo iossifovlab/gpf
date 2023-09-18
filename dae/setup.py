@@ -63,6 +63,7 @@ setuptools.setup(
     np_score=dae.annotation.score_annotator:build_np_score_annotator
     position_score=dae.annotation.score_annotator:build_position_score_annotator
     effect_annotator=dae.annotation.effect_annotator:build_effect_annotator
+    gene_set_annotator=dae.annotation.gene_set_annotator:build_gene_set_annotator
     liftover_annotator=dae.annotation.liftover_annotator:build_liftover_annotator
     normalize_allele_annotator=dae.annotation.normalize_allele_annotator:build_normalize_allele_annotator
     gene_score_annotator=dae.annotation.gene_score_annotator:build_gene_score_annotator
