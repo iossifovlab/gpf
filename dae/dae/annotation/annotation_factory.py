@@ -253,7 +253,7 @@ class AnnotationConfigParser:
         return AnnotationConfigParser.parse_raw(pipeline_raw_config, grr=grr)
 
     @staticmethod
-    def parse_config_file(filename: str) -> List[AnnotatorInfo]:
+    def parse_config_file(filename: str, grr: Optional[GenomicResourceRepo]) -> List[AnnotatorInfo]:
         """Parse annotation pipeline configuration file."""
         logger.info("loading annotation pipeline configuration: %s", filename)
         try:
@@ -264,7 +264,7 @@ class AnnotationConfigParser:
                 f"Problem reading the contents of the {filename} file.",
                 error) from error
 
-        return AnnotationConfigParser.parse_str(content)
+        return AnnotationConfigParser.parse_str(content, grr=grr)
 
     @staticmethod
     def parse_raw_attribute_config(
@@ -333,21 +333,6 @@ def build_annotation_pipeline(
         grr_repository_definition: Optional[dict] = None
 ) -> AnnotationPipeline:
     """Build an annotation pipeline."""
-    if pipeline_config_file is not None:
-        assert pipeline_config is None
-        assert pipeline_config_raw is None
-        assert pipeline_config_str is None
-        pipeline_config = AnnotationConfigParser.parse_config_file(
-            pipeline_config_file)
-    elif pipeline_config_str is not None:
-        assert pipeline_config_raw is None
-        assert pipeline_config is None
-        pipeline_config = AnnotationConfigParser.parse_str(pipeline_config_str)
-    elif pipeline_config_raw is not None:
-        assert pipeline_config is None
-        pipeline_config = AnnotationConfigParser.parse_raw(pipeline_config_raw)
-    assert pipeline_config is not None
-
     if not grr_repository:
         grr_repository = build_genomic_resource_repository(
             definition=grr_repository_definition,
@@ -355,6 +340,21 @@ def build_annotation_pipeline(
     else:
         assert grr_repository_file is None
         assert grr_repository_definition is None
+
+    if pipeline_config_file is not None:
+        assert pipeline_config is None
+        assert pipeline_config_raw is None
+        assert pipeline_config_str is None
+        pipeline_config = AnnotationConfigParser.parse_config_file(
+            pipeline_config_file, grr=grr_repository)
+    elif pipeline_config_str is not None:
+        assert pipeline_config_raw is None
+        assert pipeline_config is None
+        pipeline_config = AnnotationConfigParser.parse_str(pipeline_config_str, grr=grr_repository)
+    elif pipeline_config_raw is not None:
+        assert pipeline_config is None
+        pipeline_config = AnnotationConfigParser.parse_raw(pipeline_config_raw, grr=grr_repository)
+    assert pipeline_config is not None
 
     pipeline = AnnotationPipeline(grr_repository)
 
