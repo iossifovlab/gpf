@@ -60,6 +60,7 @@ def full_study_config():
         "phenotype_data": "test",
         "phenotype_browser": True,
         "phenotype_tool": True,
+        "description_editable": True, 
         "description_file": "test",
         "study_type": ["test"],
         "year": [1],
