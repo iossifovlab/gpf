@@ -27,6 +27,10 @@ class RemoteGenotypeData(GenotypeData):
         config["name"] = self.rest_client.prefix_remote_name(
             config.get("name", self._remote_study_id)
         )
+        config["phenotype_tool"] = False
+        config["description_editable"] = False
+        if config["gene_browser"]:
+            config["gene_browser"]["enabled"] = False
 
         if config["parents"]:
             config["parents"] = list(

@@ -85,31 +85,29 @@ class DatasetView(QueryBaseView):
             return Response({"error": f"Dataset {dataset_id} not found"},
                             status=status.HTTP_404_NOT_FOUND)
 
-        if dataset:
-            # pylint: disable=no-member
-            dataset_object = Dataset.objects.get(dataset_id=dataset_id)
+        dataset_object = Dataset.objects.get(dataset_id=dataset_id)
 
-            if user_has_permission(user, dataset_object):
-                person_set_collection_configs = {
-                    psc.id: psc.domain_json()
-                    for psc in dataset.person_set_collections.values()
-                }
-                res = StudyWrapperBase.build_genotype_data_description(
-                    self.gpf_instance,
-                    dataset.config,
-                    dataset.description,
-                    person_set_collection_configs
-                )
-            else:
-                res = StudyWrapperBase.build_genotype_data_all_datasets(
-                    dataset.config
-                )
+        if user_has_permission(user, dataset_object.dataset_id):
+            person_set_collection_configs = {
+                psc.id: psc.domain_json()
+                for psc in dataset.person_set_collections.values()
+            }
+            res = StudyWrapperBase.build_genotype_data_description(
+                self.gpf_instance,
+                dataset.config,
+                dataset.description,
+                person_set_collection_configs
+            )
+        else:
+            res = StudyWrapperBase.build_genotype_data_all_datasets(
+                dataset.config
+            )
 
-            res = augment_accessibility(res, user)
-            res = augment_with_groups(res)
-            res = augment_with_parents(res)
+        res = augment_accessibility(res, user)
+        res = augment_with_groups(res)
+        res = augment_with_parents(res)
 
-            return Response({"data": res})
+        return Response({"data": res})
 
 
 class StudiesView(QueryBaseView):
