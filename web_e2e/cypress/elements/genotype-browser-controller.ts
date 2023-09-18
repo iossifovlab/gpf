@@ -181,6 +181,7 @@ export class GenotypeBrowserController extends BaseController {
     this.genesBlockPage.geneSetsButton.click();
     this.genesBlockPage.geneSetsCollectionSelectorDropdownMenu.select(collection, {force: true});
 
+    cy.wait(500);
     this.genesBlockPage.geneSetsSearchbox.click();
     this.genesBlockPage.geneSetsSearchbox.type(set);
     this.genesBlockPage.findGeneSetsSearchboxDropdownOptionsByText(set).click();
