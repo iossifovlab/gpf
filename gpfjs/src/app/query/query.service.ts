@@ -28,6 +28,8 @@ export class QueryService {
   private summaryOboeInstance = null;
   public streamingSubject = new Subject();
   public summaryStreamingSubject = new Subject<object>();
+  public streamingStartSubject = new Subject();
+  public streamingUpdateSubject = new Subject();
   public streamingFinishedSubject = new Subject();
   public summaryStreamingFinishedSubject = new Subject();
 
@@ -53,6 +55,7 @@ export class QueryService {
     if (this.authService.accessToken !== '') {
       headers['Authorization'] = `Bearer ${this.authService.accessToken}`;
     }
+    this.streamingStartSubject.next(true);
 
     this.oboeInstance = oboe({
       url: `${environment.apiPath}${url}`,
@@ -61,6 +64,7 @@ export class QueryService {
       body: filter,
       withCredentials: true
     }).node('!.*', data => {
+      this.streamingUpdateSubject.next(true);
       this.streamingSubject.next(data);
     }).done(data => {
       this.streamingFinishedSubject.next(true);
@@ -84,10 +88,7 @@ export class QueryService {
   }
 
   public summaryStreamPost(url: string, filter): Subject<object> {
-    if (this.summaryOboeInstance) {
-      this.summaryOboeInstance.abort();
-      this.summaryOboeInstance = null;
-    }
+    this.cancelSummaryStreamPost();
 
     const headers = { 'Content-Type': 'application/json' };
     if (this.authService.accessToken !== '') {

@@ -213,14 +213,15 @@
         <div class="col-6">
           <gpf-loading-spinner
             *ngIf="selectedGene"
-            [loadingFinished]="familyLoadingFinished"
-            [count]="variantsCountDisplay">
+            [loadingFinished]="familyVariantsLoaded"
+            [count]="variantsCountDisplay"
+            [verboseMode]="true">
           </gpf-loading-spinner>
         </div>
       </div>
 
       <gpf-genotype-preview-table
-        *ngIf="familyLoadingFinished"
+        *ngIf="showFamilyVariants"
         [columns]="selectedDataset?.genotypeBrowserConfig?.tableColumns"
         [genotypePreviewVariantsArray]="genotypePreviewVariantsArray"
         [legend]="legend">
