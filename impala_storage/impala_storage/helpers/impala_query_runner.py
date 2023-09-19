@@ -29,7 +29,7 @@ class ImpalaQueryRunner(QueryRunner):
         self.query = query
         self._counter = 0
 
-    def connect(self) -> HiveServer2Connection:
+    def connect(self) -> Optional[HiveServer2Connection]:
         """Connect to the connection pool and return the connection."""
         started = time.time()
         logger.debug("(%s) going to conect", self.study_id)
@@ -57,7 +57,7 @@ class ImpalaQueryRunner(QueryRunner):
                         "after %0.2fsec",
                         self.study_id, elapsed)
                     return None
-            except Exception:  # pylint: disable=broad-except
+            except BaseException:  # pylint: disable=broad-except
                 logger.error(
                     "(%s) unexpected exception", self.study_id, exc_info=True)
                 return None

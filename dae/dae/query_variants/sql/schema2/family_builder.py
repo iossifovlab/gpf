@@ -1,8 +1,10 @@
 import logging
-from typing import Optional
+from typing import Optional, Any
+
 from dae.pedigrees.family import FamiliesData
+from dae.genomic_resources.gene_models import GeneModels
 from dae.query_variants.sql.schema2.base_query_builder import \
-    BaseQueryBuilder, Dialect,\
+    BaseQueryBuilder, Dialect, \
     TableSchema
 
 logger = logging.getLogger(__name__)
@@ -23,9 +25,9 @@ class FamilyQueryBuilder(BaseQueryBuilder):
         table_properties: Optional[dict],
         pedigree_schema: TableSchema,
         families: FamiliesData,
-        gene_models=None,
-        do_join_pedigree=False,
-        do_join_allele_in_members=False
+        gene_models: Optional[GeneModels] = None,
+        do_join_pedigree: bool = False,
+        do_join_allele_in_members: bool = False
     ):
         # pylint: disable=too-many-arguments
         self.family_variant_table = family_variant_table
@@ -48,7 +50,7 @@ class FamilyQueryBuilder(BaseQueryBuilder):
         self.do_join_pedigree = do_join_pedigree
         self.do_join_allele_in_members = do_join_allele_in_members
 
-    def _query_columns(self):
+    def _query_columns(self) -> list[str]:
         self.select_accessors = {
             "bucket_index": "sa.bucket_index",
             "summary_index": "sa.summary_index",
@@ -61,7 +63,10 @@ class FamilyQueryBuilder(BaseQueryBuilder):
         columns = list(self.select_accessors.values())
         return columns
 
-    def _build_join(self, genes=None, effect_types=None):
+    def _build_join(
+        self, genes: Optional[list[str]] = None,
+        effect_types: Optional[list[str]] = None
+    ) -> None:
 
         if self.do_join_allele_in_members or self.do_join_pedigree:
             self._add_to_product(
@@ -80,7 +85,7 @@ class FamilyQueryBuilder(BaseQueryBuilder):
                 self.dialect.build_array_join("sa.effect_gene", "eg")
             )
 
-    def _build_from(self):
+    def _build_from(self) -> None:
         summary_table_name = self.dialect.build_table_name(
             self.summary_allele_table, self.db)
         assert self.family_variant_table is not None
@@ -95,8 +100,8 @@ class FamilyQueryBuilder(BaseQueryBuilder):
             f"\n        fa.bucket_index = sa.bucket_index AND"
             f"\n        fa.allele_index = sa.allele_index)")
 
-    def _build_group_by(self):
+    def _build_group_by(self) -> None:
         pass
 
-    def _build_having(self, **kwargs):
+    def _build_having(self, **kwargs: Any) -> None:
         pass

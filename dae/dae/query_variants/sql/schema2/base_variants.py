@@ -1,15 +1,21 @@
 import logging
 import abc
 from contextlib import closing
-from typing import Any, Tuple, Set
+from typing import Any, Optional, Generator, Union, Iterable
 
 import pandas as pd
 
+from dae.utils.regions import Region
+from dae.genomic_resources.gene_models import GeneModels
 from dae.person_sets import PersonSetCollection
 from dae.pedigrees.loader import FamiliesLoader
+from dae.variants.variant import SummaryVariant
+from dae.variants.family_variant import FamilyVariant
 from dae.query_variants.query_runners import QueryResult, QueryRunner
 from dae.inmemory_storage.raw_variants import RawFamilyVariants
 from dae.parquet.partition_descriptor import PartitionDescriptor
+from dae.query_variants.base_query_variants import QueryVariantsBase
+from dae.query_variants.sql.schema2.base_query_builder import Dialect
 from dae.query_variants.sql.schema2.family_builder import FamilyQueryBuilder
 from dae.query_variants.sql.schema2.summary_builder import SummaryQueryBuilder
 
@@ -17,20 +23,21 @@ logger = logging.getLogger(__name__)
 
 
 # pylint: disable=too-many-instance-attributes
-class SqlSchema2Variants(abc.ABC):
+class SqlSchema2Variants(QueryVariantsBase):
     """Base class for Schema2 SQL like variants' query interface."""
 
     RUNNER_CLASS: type[QueryRunner]
 
     def __init__(
-            self,
-            dialect,
-            db,
-            family_variant_table,
-            summary_allele_table,
-            pedigree_table,
-            meta_table,
-            gene_models=None):
+        self,
+        dialect: Dialect,
+        db: Optional[str],
+        family_variant_table: Optional[str],
+        summary_allele_table: Optional[str],
+        pedigree_table: str,
+        meta_table: str,
+        gene_models: Optional[GeneModels] = None
+    ):
         assert pedigree_table
 
         self.dialect = dialect
@@ -57,13 +64,15 @@ class SqlSchema2Variants(abc.ABC):
             self._fetch_tblproperties())
 
     def _fetch_summary_schema(self) -> dict[str, str]:
+        assert self.summary_allele_table is not None
         return self._fetch_schema(self.summary_allele_table)
 
     def _fetch_family_schema(self) -> dict[str, str]:
+        assert self.family_variant_table is not None
         return self._fetch_schema(self.family_variant_table)
 
     @abc.abstractmethod
-    def _fetch_schema(self, table) -> dict[str, str]:
+    def _fetch_schema(self, table: str) -> dict[str, str]:
         """Fetch schema of a table and return it as a Dict."""
 
     @abc.abstractmethod
@@ -79,31 +88,32 @@ class SqlSchema2Variants(abc.ABC):
         """Return the connection factory for specific SQL engine."""
 
     @abc.abstractmethod
-    def _deserialize_summary_variant(self, record):
+    def _deserialize_summary_variant(
+        self, record: Any
+    ) -> SummaryVariant:
         """Deserialize a summary variant from SQL record."""
 
     @abc.abstractmethod
-    def _deserialize_family_variant(self, record):
+    def _deserialize_family_variant(
+        self, record: Any
+    ) -> FamilyVariant:
         """Deserialize a family variant from SQL record."""
 
     # pylint: disable=too-many-arguments
     def build_summary_variants_query_runner(
-            self,
-            regions=None,
-            genes=None,
-            effect_types=None,
-            family_ids=None,
-            person_ids=None,
-            inheritance=None,
-            roles=None,
-            sexes=None,
-            variant_type=None,
-            real_attr_filter=None,
-            ultra_rare=None,
-            frequency_filter=None,
-            return_reference=None,
-            return_unknown=None,
-            limit=None) -> QueryRunner:
+        self,
+        regions: Optional[list[Region]] = None,
+        genes: Optional[list[str]] = None,
+        effect_types: Optional[list[str]] = None,
+        variant_type: Optional[str] = None,
+        real_attr_filter: Optional[dict] = None,
+        ultra_rare: Optional[bool] = None,
+        frequency_filter: Optional[dict] = None,
+        return_reference: Optional[bool] = None,
+        return_unknown: Optional[bool] = None,
+        limit: Optional[int] = None,
+        **kwargs: Any
+    ) -> QueryRunner:
         """Build a query selecting the appropriate summary variants."""
         query_builder = SummaryQueryBuilder(
             self.dialect,
@@ -123,11 +133,6 @@ class SqlSchema2Variants(abc.ABC):
             regions=regions,
             genes=genes,
             effect_types=effect_types,
-            family_ids=family_ids,
-            person_ids=person_ids,
-            inheritance=inheritance,
-            roles=roles,
-            sexes=sexes,
             variant_type=variant_type,
             real_attr_filter=real_attr_filter,
             ultra_rare=ultra_rare,
@@ -148,11 +153,6 @@ class SqlSchema2Variants(abc.ABC):
             regions=regions,
             genes=genes,
             effect_types=effect_types,
-            family_ids=family_ids,
-            person_ids=person_ids,
-            inheritance=inheritance,
-            roles=roles,
-            sexes=sexes,
             variant_type=variant_type,
             real_attr_filter=real_attr_filter,
             ultra_rare=ultra_rare,
@@ -168,29 +168,37 @@ class SqlSchema2Variants(abc.ABC):
 
     # pylint: disable=too-many-arguments,too-many-locals
     def build_family_variants_query_runner(
-            self,
-            regions=None,
-            genes=None,
-            effect_types=None,
-            family_ids=None,
-            person_ids=None,
-            inheritance=None,
-            roles=None,
-            sexes=None,
-            variant_type=None,
-            real_attr_filter=None,
-            ultra_rare=None,
-            frequency_filter=None,
-            return_reference=None,
-            return_unknown=None,
-            limit=None,
-            pedigree_fields=None):
+        self,
+        regions: Optional[list[Region]] = None,
+        genes: Optional[list[str]] = None,
+        effect_types: Optional[list[str]] = None,
+        family_ids: Optional[list[str]] = None,
+        person_ids: Optional[list[str]] = None,
+        person_set_collection: Optional[tuple[str, list[str]]] = None,
+        inheritance: Optional[str] = None,
+        roles: Optional[str] = None,
+        sexes: Optional[str] = None,
+        variant_type: Optional[str] = None,
+        real_attr_filter: Optional[dict] = None,
+        ultra_rare: Optional[bool] = None,
+        frequency_filter: Optional[dict] = None,
+        return_reference: Optional[bool] = None,
+        return_unknown: Optional[bool] = None,
+        limit: Optional[int] = None,
+        study_filters: Optional[list[str]] = None,
+        pedigree_fields: Optional[list[str]] = None,
+        **kwargs: Any
+    ) -> QueryRunner:
         """Build a query selecting the appropriate family variants."""
         do_join_pedigree = pedigree_fields is not None
         do_join_allele_in_members = person_ids is not None
+
+        assert self.family_variant_table is not None
+        assert self.summary_allele_table is not None
+
         query_builder = FamilyQueryBuilder(
             self.dialect,
-            self.db,
+            self.db,  # type: ignore
             self.family_variant_table,
             self.summary_allele_table,
             self.pedigree_table,
@@ -255,22 +263,18 @@ class SqlSchema2Variants(abc.ABC):
 
     def query_summary_variants(
         self,
-        regions=None,
-        genes=None,
-        effect_types=None,
-        family_ids=None,
-        person_ids=None,
-        inheritance=None,
-        roles=None,
-        sexes=None,
-        variant_type=None,
-        real_attr_filter=None,
-        ultra_rare=None,
-        frequency_filter=None,
-        return_reference=None,
-        return_unknown=None,
-        limit=None,
-    ):
+        regions: Optional[list[Region]] = None,
+        genes: Optional[list[str]] = None,
+        effect_types: Optional[list[str]] = None,
+        variant_type: Optional[str] = None,
+        real_attr_filter: Optional[dict] = None,
+        ultra_rare: Optional[bool] = None,
+        frequency_filter: Optional[dict] = None,
+        return_reference: Optional[bool] = None,
+        return_unknown: Optional[bool] = None,
+        limit: Optional[int] = None,
+        **kwargs: Any
+    ) -> Generator[SummaryVariant, None, None]:
         """Query summary variants."""
         # pylint: disable=too-many-arguments,too-many-locals
         if limit is None:
@@ -283,11 +287,6 @@ class SqlSchema2Variants(abc.ABC):
             regions=regions,
             genes=genes,
             effect_types=effect_types,
-            family_ids=family_ids,
-            person_ids=person_ids,
-            inheritance=inheritance,
-            roles=roles,
-            sexes=sexes,
             variant_type=variant_type,
             real_attr_filter=real_attr_filter,
             ultra_rare=ultra_rare,
@@ -314,23 +313,25 @@ class SqlSchema2Variants(abc.ABC):
 
     def query_variants(
         self,
-        regions=None,
-        genes=None,
-        effect_types=None,
-        family_ids=None,
-        person_ids=None,
-        inheritance=None,
-        roles=None,
-        sexes=None,
-        variant_type=None,
-        real_attr_filter=None,
-        ultra_rare=None,
-        frequency_filter=None,
-        return_reference=None,
-        return_unknown=None,
-        limit=None,
-        pedigree_fields=None
-    ):
+        regions: Optional[list[Region]] = None,
+        genes: Optional[list[str]] = None,
+        effect_types: Optional[list[str]] = None,
+        family_ids: Optional[list[str]] = None,
+        person_ids: Optional[list[str]] = None,
+        person_set_collection: Optional[tuple[str, list[str]]] = None,
+        inheritance: Optional[str] = None,
+        roles: Optional[str] = None,
+        sexes: Optional[str] = None,
+        variant_type: Optional[str] = None,
+        real_attr_filter: Optional[dict] = None,
+        ultra_rare: Optional[bool] = None,
+        frequency_filter: Optional[dict] = None,
+        return_reference: Optional[bool] = None,
+        return_unknown: Optional[bool] = None,
+        limit: Optional[int] = None,
+        pedigree_fields: Optional[list[str]] = None,
+        **kwargs: Any
+    ) -> Generator[FamilyVariant, None, None]:
         """Query family variants."""
         # pylint: disable=too-many-arguments,too-many-locals
         if limit is None:
@@ -373,7 +374,8 @@ class SqlSchema2Variants(abc.ABC):
     @staticmethod
     def build_person_set_collection_query(
             person_set_collection: PersonSetCollection,
-            person_set_collection_query: Tuple[str, Set[str]]):
+            person_set_collection_query: tuple[str, set[str]]
+    ) -> Optional[Union[tuple, tuple[list[str], list[str]]]]:
         """No idea what it does. If you know please edit."""
         collection_id, selected_person_sets = person_set_collection_query
         assert collection_id == person_set_collection.id
@@ -388,7 +390,9 @@ class SqlSchema2Variants(abc.ABC):
                 available_person_sets:
             return ()
 
-        def pedigree_columns(selected_person_sets):
+        def pedigree_columns(
+            selected_person_sets: Iterable[str]
+        ) -> list[dict[str, str]]:
             result = []
             for person_set_id in sorted(selected_person_sets):
                 if person_set_id not in person_set_collection.person_sets:
@@ -404,8 +408,10 @@ class SqlSchema2Variants(abc.ABC):
             return result
 
         if person_set_collection.default.id not in selected_person_sets:
-            return (pedigree_columns(selected_person_sets), [])
+            return (list(pedigree_columns(selected_person_sets)), [])
         return (
             [],
-            pedigree_columns(available_person_sets - selected_person_sets)
+            list(
+                pedigree_columns(
+                    available_person_sets - selected_person_sets))
         )
