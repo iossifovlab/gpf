@@ -79,8 +79,6 @@ class ImpalaQueryRunner(QueryRunner):
             self._finalize(started)
             return
 
-        empty_rows = 0
-        empty_vals = 0
         with closing(connection) as connection:
             elapsed = time.time() - started
             logger.debug(
@@ -100,34 +98,21 @@ class ImpalaQueryRunner(QueryRunner):
                     self._wait_cursor_executing(cursor)
 
                     while not self.is_closed():
-                        logger.debug(
-                            "(%s) empty rows:%s; empty vals: %s",
-                            self.study_id, empty_rows, empty_vals)
                         row = cursor.fetchone()
                         if row is None:
-                            empty_rows += 1
                             break
                         val = self.deserializer(row)
 
                         if val is None:
-                            empty_vals += 1
                             continue
 
                         self._put_value_in_result_queue(val)
                         self._counter += 1
-                        empty_vals = 0
-                        empty_rows = 0
 
                         if self.is_closed():
                             logger.debug(
                                 "query runner (%s) closed while iterating",
                                 self.study_id)
-                            break
-
-                        if empty_rows > self.NO_DATA_LIMIT or \
-                                empty_vals > self.NO_DATA_LIMIT:
-                            logger.info(
-                                "(%s) no data; exiting...", self.study_id)
                             break
 
                 except Exception as ex:  # pylint: disable=broad-except
