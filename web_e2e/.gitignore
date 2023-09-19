@@ -18,4 +18,5 @@ wdae-debug.log
 wdae-api.log
 /test-results/
 /playwright-report/
+/playwright/test-results/
 /playwright/.cache/
