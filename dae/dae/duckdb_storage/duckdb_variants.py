@@ -1,7 +1,6 @@
 import time
 import json
 import logging
-import queue
 from typing import Optional, Any, cast, Generator, ContextManager
 import contextlib
 import threading
@@ -56,7 +55,7 @@ class DuckDbRunner(QueryRunner):
         """Execute the query and enqueue the resulting rows."""
         started = time.time()
         logger.debug(
-            "bigquery runner (%s) started", self.study_id)
+            "duckdb runner (%s) started", self.study_id)
 
         try:
             if self.is_closed():
@@ -88,34 +87,6 @@ class DuckDbRunner(QueryRunner):
                 "runner (%s) closing connection", self.query)
 
         self._finalize(started)
-
-    def _put_value_in_result_queue(self, val: Any) -> None:
-        assert self._result_queue is not None
-
-        no_interest = 0
-        while True:
-            try:
-                self._result_queue.put(val, timeout=0.1)
-                break
-            except queue.Full:
-                logger.debug(
-                    "runner (%s) nobody interested",
-                    self.query)
-
-                if self.is_closed():
-                    break
-                no_interest += 1
-                if no_interest % 1_000 == 0:
-                    logger.warning(
-                        "runner (%s) nobody interested %s",
-                        self.query, no_interest)
-                if no_interest > 5_000:
-                    logger.warning(
-                        "runner (%s) nobody interested %s"
-                        "closing...",
-                        self.query, no_interest)
-                    self.close()
-                    break
 
     def _finalize(self, started: float) -> None:
         with self._status_lock:
@@ -251,9 +222,10 @@ class DuckDbVariants(SqlSchema2Variants):
             }
 
             ped_df = ped_df.rename(columns=columns)
-            ped_df.role = ped_df.role.apply(Role.from_value)
-            ped_df.sex = ped_df.sex.apply(Sex.from_value)
-            ped_df.status = ped_df.status.apply(Status.from_value)
+            ped_df.role = ped_df.role.apply(Role.from_value)  # type: ignore
+            ped_df.sex = ped_df.sex.apply(Sex.from_value)  # type: ignore
+            ped_df.status = ped_df.status.apply(
+                Status.from_value)  # type: ignore
             ped_df.loc[ped_df.layout.isna(), "layout"] = None
 
             return ped_df

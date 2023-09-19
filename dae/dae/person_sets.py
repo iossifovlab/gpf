@@ -373,10 +373,6 @@ class PersonSetCollection:
             if person_set is not None:
                 result.person_sets[person_set.id].persons[person_id] = person
                 continue
-
-            logger.warning(
-                "person %s not found in any of the person sets; "
-                "addint to default: %s", person_id, result.default.id)
             result.default.persons[person_id] = person
 
         return PersonSetCollection.remove_empty_person_sets(result)

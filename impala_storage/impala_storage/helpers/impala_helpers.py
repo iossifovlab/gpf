@@ -6,9 +6,9 @@ import logging
 from typing import Optional
 from contextlib import closing
 
-from impala import dbapi  # type: ignore
+from impala import dbapi
 from sqlalchemy.pool import QueuePool
-from sqlalchemy.exc import TimeoutError as SqlTimeoutError
+from sqlalchemy import exc
 
 
 logger = logging.getLogger(__name__)
@@ -38,14 +38,16 @@ class ImpalaHelpers:
 
         if pool_size is None:
             pool_size = 3 * len(impala_hosts) + 1
+        # pool_size = 1
 
         logger.info("impala connection pool size is: %s", pool_size)
 
         self._connection_pool = QueuePool(
             create_connection, pool_size=pool_size,
             reset_on_return=False,
+            # max_overflow=0,
             max_overflow=pool_size,
-            timeout=1)
+            timeout=3)
 
         logger.debug(
             "created impala pool with %s connections",
@@ -56,14 +58,15 @@ class ImpalaHelpers:
 
     def connection(self, timeout: Optional[int] = None):
         """Create a new connection to the impala host."""
-        logger.debug("going to get impala connection from the pool; %s",
+        logger.debug("getting impala connection from the pool; %s",
                      self._connection_pool.status())
         started = time.time()
         while True:
             try:
                 connection = self._connection_pool.connect()
+                logger.info("connect passed...; returning...")
                 return connection
-            except SqlTimeoutError:
+            except exc.TimeoutError:
                 elapsed = time.time() - started
                 logger.debug(
                     "unable to connect; elapsed %0.2fsec", elapsed)

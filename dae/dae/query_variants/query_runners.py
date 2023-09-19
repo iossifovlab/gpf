@@ -5,6 +5,7 @@ import threading
 import logging
 import queue
 import time
+
 from typing import Optional, Any, Callable
 
 from concurrent.futures import ThreadPoolExecutor, Future, Executor
@@ -59,7 +60,7 @@ class QueryRunner(abc.ABC):
     def close(self) -> None:
         """Close query runner."""
         elapsed = time.time() - self.timestamp
-        logger.debug("closing runner after %0.3f", elapsed)
+        logger.debug("(%s) closing runner after %0.3f", self.study_id, elapsed)
         with self._status_lock:
             if not self._closed and self._started:
                 assert self._future is not None
@@ -131,12 +132,18 @@ class QueryResult:
             runner._set_result_queue(self.result_queue)
         self.executor = ThreadPoolExecutor(max_workers=len(runners))
 
-    def done(self) -> bool:
+    def is_done(self) -> bool:
+        """Check if the query result is done."""
         if self.limit >= 0 and self._counter >= self.limit:
             logger.debug("limit done %d >= %d", self._counter, self.limit)
             return True
         if all(r.is_done() for r in self.runners):
+            logger.debug("all runners are done... exiting...")
+            logger.info("returned variants: %s", self._counter)
             return True
+        logger.debug(
+            "studies not done: %s",
+            [r.study_id for r in self.runners if not r.is_done()])
         return False
 
     def __iter__(self) -> QueryResult:
@@ -152,9 +159,8 @@ class QueryResult:
                 self._counter += 1
                 return item
             except queue.Empty as exp:
-                if not self.done():
+                if not self.is_done():
                     return None
-                logger.debug("result done")
                 raise StopIteration() from exp
 
     def get(self, timeout: float = 0.0) -> Any:
@@ -169,7 +175,7 @@ class QueryResult:
                 return None
             return row
         except queue.Empty as exp:
-            if self.done():
+            if self.is_done():
                 raise StopIteration() from exp
             return None
 

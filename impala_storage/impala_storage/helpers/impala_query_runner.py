@@ -1,6 +1,11 @@
 import time
 import logging
 from contextlib import closing
+
+import impala
+from sqlalchemy import exc
+
+# from dae.utils.debug_closing import closing
 from dae.query_variants.query_runners import QueryRunner
 
 logger = logging.getLogger(__name__)
@@ -14,15 +19,26 @@ class ImpalaQueryRunner(QueryRunner):
 
         self.connection_pool = connection_factory
         self.query = query
+        self._counter = 0
 
     def connect(self):
         """Connect to the connection pool and return the connection."""
         started = time.time()
+        logger.debug("(%s) going to conect", self.study_id)
+        attempt = 0
         while True:
             try:
+                attempt += 1
+                logger.debug(
+                    "(%s) trying to connect; attemp %s; %s", self.study_id,
+                    attempt, self.connection_pool.status())
                 connection = self.connection_pool.connect()
+                logger.debug(
+                    "(%s) connection created; pool status %s",
+                    self.study_id,
+                    self.connection_pool.status())
                 return connection
-            except TimeoutError:
+            except exc.TimeoutError:
                 elapsed = time.time() - started
                 logger.debug(
                     "runner (%s) timeout in connect; elapsed %0.2fsec",
@@ -33,8 +49,14 @@ class ImpalaQueryRunner(QueryRunner):
                         "after %0.2fsec",
                         self.study_id, elapsed)
                     return None
+            except Exception:  # pylint: disable=broad-except
+                logger.error(
+                    "(%s) unexpected exception", self.study_id, exc_info=True)
+                return None
 
-    def run(self):
+    NO_DATA_LIMIT = 1_000
+
+    def run(self) -> None:
         """Execute the query and enqueue the resulting rows."""
         started = time.time()
         if self.is_closed():
@@ -44,16 +66,21 @@ class ImpalaQueryRunner(QueryRunner):
             return
 
         logger.debug(
-            "impala runner (%s) started; "
-            "connectio pool: %s",
+            "(%s) impala runner started; trying to connect... "
+            "connection pool: %s",
             self.study_id, self.connection_pool.status())
 
         connection = self.connect()
+        logger.debug(
+            "(%s) connected; connection pool: %s",
+            self.study_id, self.connection_pool.status())
 
         if connection is None:
             self._finalize(started)
             return
 
+        empty_rows = 0
+        empty_vals = 0
         with closing(connection) as connection:
             elapsed = time.time() - started
             logger.debug(
@@ -73,20 +100,34 @@ class ImpalaQueryRunner(QueryRunner):
                     self._wait_cursor_executing(cursor)
 
                     while not self.is_closed():
+                        logger.debug(
+                            "(%s) empty rows:%s; empty vals: %s",
+                            self.study_id, empty_rows, empty_vals)
                         row = cursor.fetchone()
                         if row is None:
+                            empty_rows += 1
                             break
                         val = self.deserializer(row)
 
                         if val is None:
+                            empty_vals += 1
                             continue
 
                         self._put_value_in_result_queue(val)
+                        self._counter += 1
+                        empty_vals = 0
+                        empty_rows = 0
 
                         if self.is_closed():
                             logger.debug(
                                 "query runner (%s) closed while iterating",
                                 self.study_id)
+                            break
+
+                        if empty_rows > self.NO_DATA_LIMIT or \
+                                empty_vals > self.NO_DATA_LIMIT:
+                            logger.info(
+                                "(%s) no data; exiting...", self.study_id)
                             break
 
                 except Exception as ex:  # pylint: disable=broad-except
@@ -95,12 +136,17 @@ class ImpalaQueryRunner(QueryRunner):
                         self.study_id, type(ex), exc_info=True)
                     self._put_value_in_result_queue(ex)
         logger.debug(
-            "runner (%s) closing connection", self.study_id)
+            "(%s) runner connection closed", self.study_id)
         self.close()
-
+        logger.debug(
+            "(%s) connection pool status %s", self.study_id,
+            self.connection_pool.status()
+        )
         self._finalize(started)
 
-    def _wait_cursor_executing(self, cursor):
+    def _wait_cursor_executing(
+        self, cursor: impala.hiveserver2.HiveServer2Cursor
+    ) -> None:
         while True:
             if self.is_closed():
                 logger.debug(
@@ -114,9 +160,13 @@ class ImpalaQueryRunner(QueryRunner):
                 break
             time.sleep(0.1)
 
-    def _finalize(self, started):
+    def _finalize(self, started: float) -> None:
+        logger.debug("(%s) going to finalize", self.study_id)
         with self._status_lock:
             self._done = True
         elapsed = time.time() - started
-        logger.debug("runner (%s) done in %0.3f sec", self.study_id, elapsed)
-        logger.debug("connection pool: %s", self.connection_pool.status())
+        logger.debug("(%s) runner done in %0.3f sec", self.study_id, elapsed)
+        logger.debug(
+            "(%s) connection pool status: %s", self.study_id,
+            self.connection_pool.status())
+        logger.info("(%s) returned %s rows", self.study_id, self._counter)

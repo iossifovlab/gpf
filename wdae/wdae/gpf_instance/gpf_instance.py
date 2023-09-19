@@ -360,6 +360,10 @@ def reload_datasets(gpf_instance):
         datasets = gpf_instance.get_genotype_data_ids()
     for genotype_data_id in datasets:
         genotype_data = gpf_instance.get_genotype_data(genotype_data_id)
+        if genotype_data is None:
+            logger.error(
+                "unable to find study %s; skipping...", genotype_data_id)
+            continue
         direct_descendants = genotype_data.get_studies_ids(leaves=False)
         for study_id in genotype_data.get_studies_ids():
             if study_id == genotype_data_id:
