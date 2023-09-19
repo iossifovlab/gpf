@@ -3,12 +3,15 @@ import re
 import time
 import itertools
 import logging
-from typing import Optional
 from contextlib import closing
+from typing import Optional, Any
 
 from impala import dbapi
+from impala.hiveserver2 import HiveServer2Connection
 from sqlalchemy.pool import QueuePool
+
 from sqlalchemy import exc
+from dae.parquet.partition_descriptor import PartitionDescriptor
 
 
 logger = logging.getLogger(__name__)
@@ -17,7 +20,10 @@ logger = logging.getLogger(__name__)
 class ImpalaHelpers:
     """Helper methods for working with impala."""
 
-    def __init__(self, impala_hosts, impala_port=21050, pool_size=1):
+    def __init__(
+        self, impala_hosts: Optional[list[str]],
+        impala_port: int = 21050, pool_size: Optional[int] = 1
+    ):
 
         if os.environ.get("DAE_IMPALA_HOST", None) is not None:
             impala_host = os.environ.get("DAE_IMPALA_HOST", None)
@@ -25,11 +31,11 @@ class ImpalaHelpers:
             if impala_host is not None:
                 impala_hosts = [impala_host]
         if impala_hosts is None:
-            impala_hosts = []
+            raise ValueError("impala hosts are not configured")
 
         host_generator = itertools.cycle(impala_hosts)
 
-        def create_connection():
+        def create_connection() -> HiveServer2Connection:
             impala_host = next(host_generator)
             logger.debug("creating connection to impala host %s", impala_host)
             connection = dbapi.connect(host=impala_host, port=impala_port)
@@ -38,14 +44,12 @@ class ImpalaHelpers:
 
         if pool_size is None:
             pool_size = 3 * len(impala_hosts) + 1
-        # pool_size = 1
 
         logger.info("impala connection pool size is: %s", pool_size)
 
         self._connection_pool = QueuePool(
             create_connection, pool_size=pool_size,
             reset_on_return=False,
-            # max_overflow=0,
             max_overflow=pool_size,
             timeout=3)
 
@@ -53,10 +57,12 @@ class ImpalaHelpers:
             "created impala pool with %s connections",
             self._connection_pool.status())
 
-    def close(self):
+    def close(self) -> None:
         self._connection_pool.dispose()
 
-    def connection(self, timeout: Optional[int] = None):
+    def connection(
+        self, timeout: Optional[int] = None
+    ) -> HiveServer2Connection:
         """Create a new connection to the impala host."""
         logger.debug("getting impala connection from the pool; %s",
                      self._connection_pool.status())
@@ -66,15 +72,19 @@ class ImpalaHelpers:
                 connection = self._connection_pool.connect()
                 logger.info("connect passed...; returning...")
                 return connection
-            except exc.TimeoutError:
+            except exc.TimeoutError as error:
                 elapsed = time.time() - started
                 logger.debug(
                     "unable to connect; elapsed %0.2fsec", elapsed)
                 if timeout is not None and elapsed > timeout:
-                    return None
+                    raise TimeoutError(
+                        f"unable to connect to impala for {elapsed:0.2f}sec"
+                    ) from error
 
     @staticmethod
-    def _import_single_file(cursor, db, table, import_file):
+    def _import_single_file(
+        cursor: Any, db: str, table: str, import_file: str
+    ) -> None:
         cursor.execute(
             f"""
             DROP TABLE IF EXISTS {db}.{table}
@@ -90,7 +100,10 @@ class ImpalaHelpers:
         cursor.execute(f"REFRESH {db}.{table}")
 
     @staticmethod
-    def _add_partition_properties(cursor, db, table, partition_description):
+    def _add_partition_properties(
+        cursor: Any, db: str, table:
+        str, partition_description: PartitionDescriptor
+    ) -> None:
         chromosomes = ", ".join(partition_description.chromosomes)
         cursor.execute(
             f"ALTER TABLE {db}.{table} "
@@ -133,7 +146,9 @@ class ImpalaHelpers:
         )
 
     @staticmethod
-    def _build_impala_partitions(partition_descriptor):
+    def _build_impala_partitions(
+        partition_descriptor: PartitionDescriptor
+    ) -> str:
         partitions = partition_descriptor.dataset_family_partition()
         type_convertion = {
             "int32": "INT",
@@ -149,36 +164,43 @@ class ImpalaHelpers:
         ])
         return impala_partitions
 
-    @staticmethod
-    def _create_dataset_table(
-        cursor, db, table, sample_file, partition_description
-    ):
-        cursor.execute(
-            f"DROP TABLE IF EXISTS {db}.{table}")
+    # @staticmethod
+    # def _create_dataset_table(
+    #     cursor: Any, db: str, table: str, sample_file: str,
+    #     partition_description: PartitionDescriptor
+    # ) -> None:
+    #     cursor.execute(
+    #         f"DROP TABLE IF EXISTS {db}.{table}")
 
-        hdfs_dir = partition_description.variants_filename_basedir(sample_file)
-        if not partition_description.has_partitions():
-            statement = f"""
-                CREATE EXTERNAL TABLE {db}.{table} LIKE PARQUET '{sample_file}'
-                STORED AS PARQUET LOCATION '{hdfs_dir}'
-            """
-        else:
-            impala_partitions = \
-                ImpalaHelpers._build_impala_partitions(partition_description)
-            statement = f"""
-                CREATE EXTERNAL TABLE {db}.{table} LIKE PARQUET '{sample_file}'
-                PARTITIONED BY ({impala_partitions})
-                STORED AS PARQUET LOCATION '{hdfs_dir}'
-            """
-        cursor.execute(statement)
+    #     hdfs_dir = partition_description.variants_filename_basedir(
+    #           sample_file)
+    #     if not partition_description.has_partitions():
+    #         statement = f"""
+    #             CREATE EXTERNAL TABLE {db}.{table}
+    #             LIKE PARQUET '{sample_file}'
+    #             STORED AS PARQUET LOCATION '{hdfs_dir}'
+    #         """
+    #     else:
+    #         impala_partitions = \
+    #             ImpalaHelpers._build_impala_partitions(partition_description)
+    #         statement = f"""
+    #             CREATE EXTERNAL TABLE {db}.{table}
+    #             LIKE PARQUET '{sample_file}'
+    #             PARTITIONED BY ({impala_partitions})
+    #             STORED AS PARQUET LOCATION '{hdfs_dir}'
+    #         """
+    #     cursor.execute(statement)
 
-        if partition_description.has_partitions():
-            cursor.execute(
-                f"ALTER TABLE {db}.{table} RECOVER PARTITIONS")
-        cursor.execute(
-            f"REFRESH {db}.{table}")
+    #     if partition_description.has_partitions():
+    #         cursor.execute(
+    #             f"ALTER TABLE {db}.{table} RECOVER PARTITIONS")
+    #     cursor.execute(
+    #         f"REFRESH {db}.{table}")
 
-    def import_pedigree_into_db(self, db, pedigree_table, pedigree_hdfs_file):
+    def import_pedigree_into_db(
+        self, db: str, pedigree_table: str, pedigree_hdfs_file: str
+    ) -> None:
+        """Import pedigree files into impala table."""
         with closing(self.connection()) as conn:
             with conn.cursor() as cursor:
                 cursor.execute(
@@ -188,7 +210,7 @@ class ImpalaHelpers:
                     cursor, db, pedigree_table, pedigree_hdfs_file)
 
     @staticmethod
-    def _build_variants_schema(variants_schema):
+    def _build_variants_schema(variants_schema: dict[str, Any]) -> str:
         type_convertion = {
             "int32": "INT",
             "int16": "SMALLINT",
@@ -207,10 +229,11 @@ class ImpalaHelpers:
         return statement
 
     def _build_import_variants_statement(
-            self, db, variants_table, variants_hdfs_dir,
-            partition_description,
-            variants_sample=None,
-            variants_schema=None):
+        self, db: str, variants_table: str, variants_hdfs_dir: str,
+        partition_description: PartitionDescriptor,
+        variants_sample: Optional[str] = None,
+        variants_schema: Optional[dict[str, Any]] = None
+    ) -> str:
 
         assert variants_sample is not None or variants_schema is not None
 
@@ -238,10 +261,11 @@ class ImpalaHelpers:
         return " ".join(statement)
 
     def import_variants_into_db(
-            self, db, variants_table, variants_hdfs_dir,
-            partition_description,
-            variants_sample=None,
-            variants_schema=None):
+        self, db: str, variants_table: str, variants_hdfs_dir: str,
+        partition_description: PartitionDescriptor,
+        variants_sample: Optional[str] = None,
+        variants_schema: Optional[dict[str, Any]] = None
+    ) -> None:
         """Import variant parquet files in variants_hdfs_dir in impala."""
         assert variants_schema is not None or variants_sample is not None
 
@@ -272,7 +296,9 @@ class ImpalaHelpers:
                     self._add_partition_properties(
                         cursor, db, variants_table, partition_description)
 
-    def compute_table_stats(self, db, table, region_bin=None):
+    def compute_table_stats(
+        self, db: str, table: str, region_bin: Optional[str] = None
+    ) -> None:
         """Compute impala table stats."""
         with closing(self.connection()) as connection:
             with connection.cursor() as cursor:
@@ -284,7 +310,9 @@ class ImpalaHelpers:
                 logger.info("compute stats for impala table: %s", query)
                 cursor.execute(query)
 
-    def collect_region_bins(self, db, table):
+    def collect_region_bins(
+        self, db: str, table: str
+    ) -> list[str]:
         """Collect region bins from table."""
         region_bins = []
         with closing(self.connection()) as connection:
@@ -299,7 +327,9 @@ class ImpalaHelpers:
         logger.info("collected region bins: %s", region_bins)
         return region_bins
 
-    def get_table_create_statement(self, db, table):
+    def get_table_create_statement(
+        self, db: str, table: str
+    ) -> Optional[str]:
         """Get the create statement for table."""
         with closing(self.connection()) as conn:
             with conn.cursor() as cursor:
@@ -312,7 +342,9 @@ class ImpalaHelpers:
                     break
                 return create_statement
 
-    def recreate_table(self, db, table, new_table, new_hdfs_dir):
+    def recreate_table(
+        self, db: str, table: str, new_table: str, new_hdfs_dir: str
+    ) -> None:
         """Recreate a table."""
         create_statement = self.get_table_create_statement(db, table)
         assert create_statement is not None
@@ -367,7 +399,9 @@ class ImpalaHelpers:
                 cursor.execute(
                     f"REFRESH {db}.{new_table}")
 
-    def rename_table(self, db, table, new_table):
+    def rename_table(
+        self, db: str, table: str, new_table: str
+    ) -> None:
         """Rename db.table to new_table."""
         parts = [
             f"ALTER TABLE {db}.{table} RENAME TO {db}.{new_table}"
@@ -379,7 +413,7 @@ class ImpalaHelpers:
             with conn.cursor() as cursor:
                 cursor.execute(statement)
 
-    def check_database(self, dbname):
+    def check_database(self, dbname: str) -> bool:
         """Check if dbname exists."""
         with closing(self.connection()) as conn:
             with conn.cursor() as cursor:
@@ -390,7 +424,7 @@ class ImpalaHelpers:
                         return True
         return False
 
-    def check_table(self, dbname, tablename):
+    def check_table(self, dbname: str, tablename: str) -> bool:
         """Check if dbname.tablename exists."""
         with closing(self.connection()) as conn:
             with conn.cursor() as cursor:
@@ -401,19 +435,19 @@ class ImpalaHelpers:
                         return True
         return False
 
-    def drop_table(self, dbname, tablename):
+    def drop_table(self, dbname: str, tablename: str) -> None:
         with closing(self.connection()) as conn:
             with conn.cursor() as cursor:
                 query = f"DROP TABLE IF EXISTS {dbname}.{tablename}"
                 cursor.execute(query)
 
-    def create_database(self, dbname):
+    def create_database(self, dbname: str) -> None:
         with closing(self.connection()) as conn:
             with conn.cursor() as cursor:
                 query = f"CREATE DATABASE IF NOT EXISTS {dbname}"
                 cursor.execute(query)
 
-    def drop_database(self, dbname):
+    def drop_database(self, dbname: str) -> None:
         with closing(self.connection()) as conn:
             with conn.cursor() as cursor:
                 cursor.execute(

@@ -1,9 +1,13 @@
 import time
 import logging
 from contextlib import closing
+from typing import Callable, Optional, Any
 
 import impala
+from impala.hiveserver2 import HiveServer2Connection
+
 from sqlalchemy import exc
+from sqlalchemy.pool import QueuePool
 
 # from dae.utils.debug_closing import closing
 from dae.query_variants.query_runners import QueryRunner
@@ -14,14 +18,18 @@ logger = logging.getLogger(__name__)
 class ImpalaQueryRunner(QueryRunner):
     """Run a Impala query in a separate thread."""
 
-    def __init__(self, connection_factory, query, deserializer=None):
+    def __init__(
+        self, connection_factory: QueuePool,
+        query: str,
+        deserializer: Optional[Callable[[Any], Any]] = None
+    ):
         super().__init__(deserializer=deserializer)
 
         self.connection_pool = connection_factory
         self.query = query
         self._counter = 0
 
-    def connect(self):
+    def connect(self) -> HiveServer2Connection:
         """Connect to the connection pool and return the connection."""
         started = time.time()
         logger.debug("(%s) going to conect", self.study_id)

@@ -131,9 +131,13 @@ class QueryResult:
             assert runner._result_queue is None
             runner._set_result_queue(self.result_queue)
         self.executor = ThreadPoolExecutor(max_workers=len(runners))
+        self._is_done_check = 0
+
+    CHECK_VERBOSITY = 20
 
     def is_done(self) -> bool:
         """Check if the query result is done."""
+        self._is_done_check += 1
         if self.limit >= 0 and self._counter >= self.limit:
             logger.debug("limit done %d >= %d", self._counter, self.limit)
             return True
@@ -141,9 +145,11 @@ class QueryResult:
             logger.debug("all runners are done... exiting...")
             logger.info("returned variants: %s", self._counter)
             return True
-        logger.debug(
-            "studies not done: %s",
-            [r.study_id for r in self.runners if not r.is_done()])
+        if self._is_done_check > self.CHECK_VERBOSITY:
+            self._is_done_check = 0
+            logger.debug(
+                "studies not done: %s",
+                [r.study_id for r in self.runners if not r.is_done()])
         return False
 
     def __iter__(self) -> QueryResult:
