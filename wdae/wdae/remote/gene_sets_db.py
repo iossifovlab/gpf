@@ -66,7 +66,7 @@ class RemoteGeneSetCollection(BaseGeneSetCollection):
             raw_gene_set = [gs.strip() for gs in raw_gene_set]
             raw_gene_set = [gs for gs in raw_gene_set if gs]
 
-            description = raw_gene_set.pop(0)
+            description = raw_gene_set.pop(0).strip(f"{gene_set_id}: ")
             gene_set = GeneSet(gene_set_id, description, raw_gene_set)
             self.gene_sets[gene_set_id] = gene_set
 
