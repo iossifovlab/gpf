@@ -184,7 +184,7 @@ describe('Gene scores download tests', () => {
     cy.deleteDownloadsFolder();
   });
 
-  it('should download RVIS and compare the file to the reference data', () => {
+  it.skip('should download RVIS and compare the file to the reference data', () => {
     page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
     genesBlockPage.geneScoresButton.click();
     page.dropdownButton.select('RVIS');

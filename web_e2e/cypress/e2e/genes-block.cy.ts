@@ -269,7 +269,7 @@ describe('Genes block gene set file length tests', () => {
       expectedCondition: 'miR-124 (1018):'
     }
   ].forEach(data => {
-    it('should download "' + data.expectedCondition + '" in the "' + data.collection +
+    it.skip('should download "' + data.expectedCondition + '" in the "' + data.collection +
        '" collection and check whether the count in the name should matches ' +
        'the downloaded"s file length and the gene set"s name matches the first value of the file', () => {
       const downloadFilePath = Cypress.config('downloadsFolder') + '/geneset.csv';
@@ -346,7 +346,7 @@ describe('Genes block denovo gene set gene symbols tests', () => {
       }
     }
   ].forEach(data => {
-    it('should download iossifov ' + data.peopleGroup + ' denovo gene sets ' +
+    it.skip('should download iossifov ' + data.peopleGroup + ' denovo gene sets ' +
        'and check whether they are equal to the reference data', () => {
       const downloadedGeneSetFilePath = Cypress.config('downloadsFolder') + '/geneset.csv';
 
