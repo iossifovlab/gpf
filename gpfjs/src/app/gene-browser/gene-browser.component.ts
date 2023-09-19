@@ -37,7 +37,8 @@ export class GeneBrowserComponent implements OnInit, OnDestroy, AfterViewInit {
   public selectedDataset: Dataset;
   public showResults: boolean;
   public showError = false;
-  public familyLoadingFinished: boolean;
+  public showFamilyVariants = false;
+  public familyVariantsLoaded = false;
   public geneBrowserConfig: GeneBrowser;
 
   public readonly affectedStatusValues = ['Affected only', 'Unaffected only', 'Affected and unaffected'];
@@ -79,6 +80,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy, AfterViewInit {
     this.legend = this.selectedDataset.personSetCollections.getLegend(this.selectedDataset.defaultPersonSetCollection);
     this.geneBrowserConfig = this.selectedDataset.geneBrowser;
 
+
     this.route.queryParams.subscribe(params => {
       if (params['coding_only'] !== undefined && params['coding_only'] !== null) {
         this.summaryVariantsFilter.codingOnly = params['coding_only'] === 'true';
@@ -86,8 +88,16 @@ export class GeneBrowserComponent implements OnInit, OnDestroy, AfterViewInit {
     });
 
     this.subscriptions.push(
+      this.queryService.streamingStartSubject.subscribe(() => {
+        this.showFamilyVariants = false;
+        this.familyVariantsLoaded = false;
+        this.variantsCountDisplay = 'Loading variants...';
+      }),
+      this.queryService.streamingUpdateSubject.subscribe(() => {
+        this.showFamilyVariants = true;
+      }),
       this.queryService.streamingFinishedSubject.subscribe(() => {
-        this.familyLoadingFinished = true;
+        this.familyVariantsLoaded = true;
       }),
       this.route.parent.params.subscribe((params: Params) => {
         this.selectedDatasetId = params['dataset'] as string;
@@ -173,7 +183,6 @@ export class GeneBrowserComponent implements OnInit, OnDestroy, AfterViewInit {
     );
 
     this.showResults = false;
-    this.variantsCountDisplay = 'Loading variants...';
     this.loadingService.setLoadingStart();
     this.genotypePreviewVariantsArray = null;
 
@@ -272,13 +281,11 @@ export class GeneBrowserComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   public setSelectedRegion(region: [number, number]): void {
-    this.familyLoadingFinished = false;
     this.summaryVariantsFilter.selectedRegion = region;
     this.updateVariants();
   }
 
   public setSelectedFrequencies(frequencies: [number, number]): void {
-    this.familyLoadingFinished = false;
     this.summaryVariantsFilter.selectedFrequencies = frequencies;
     this.updateVariants();
   }
@@ -316,7 +323,6 @@ export class GeneBrowserComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   private updateShownTablePreviewVariantsArray(): void {
-    this.familyLoadingFinished = false;
     const params = {
       ...this.requestParams,
       maxVariantsCount: this.maxFamilyVariants,
