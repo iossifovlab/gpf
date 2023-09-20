@@ -229,11 +229,7 @@ class Person:
         return self.dad.missing or self.mom.missing
 
     def has_no_parent(self) -> bool:
-        if self.dad is None or self.mom is None:
-            return True
-        assert self.dad is not None
-        assert self.mom is not None
-        return self.dad.missing and self.mom.missing
+        return self.dad is None or self.mom is None
 
     def has_attr(self, key: str) -> bool:
         return key in self._attributes
