@@ -7,7 +7,7 @@
           title="{{ selectedGeneSetsCollection.desc }}"
           [(ngModel)]="selectedGeneSetsCollection"
           required
-          (change)="isLoading = true"
+          (change)="cleanInput()"
           id="selected-collection">
           <option *ngFor="let collection of geneSetsCollections" [ngValue]="collection">{{ collection.desc }}</option>
         </select>

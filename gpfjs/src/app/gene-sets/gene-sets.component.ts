@@ -180,6 +180,11 @@ export class GeneSetsComponent extends StatefulComponent implements OnInit {
     }
   }
 
+  public cleanInput(): void {
+    (this.geneSetsDropdownRef.nativeElement as HTMLInputElement).value = '';
+    this.isLoading = true;
+  }
+
   private geneSetToString(set: GeneSet): string {
     return `${set.name} (${set.count}): ${set.desc}`;
   }
