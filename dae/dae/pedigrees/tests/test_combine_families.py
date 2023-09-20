@@ -9,6 +9,7 @@ from dae.pedigrees.family_tag_builder import FamilyTagsBuilder
 
 from dae.testing import setup_pedigree
 
+
 @pytest.fixture
 def ped_a(tmp_path: pathlib.Path) -> FamiliesData:
     ped_path = setup_pedigree(
@@ -21,6 +22,7 @@ def ped_a(tmp_path: pathlib.Path) -> FamiliesData:
         """)
     )
     return FamiliesLoader(str(ped_path)).load()
+
 
 @pytest.fixture
 def ped_b(tmp_path: pathlib.Path) -> FamiliesData:
