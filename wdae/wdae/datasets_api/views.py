@@ -1,8 +1,10 @@
 import os
 import logging
+from typing import Any, cast, Optional
 
 from django.contrib.auth import get_user_model
 from django.conf import settings
+from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework import status
 
@@ -10,6 +12,7 @@ from query_base.query_base import QueryBaseView
 from studies.study_wrapper import StudyWrapperBase
 
 from groups_api.serializers import GroupSerializer
+from users_api.models import WdaeUser
 from datasets_api.permissions import get_wdae_parents, user_has_permission
 from dae.studies.study import GenotypeData
 from .models import Dataset
@@ -18,13 +21,15 @@ from .models import Dataset
 logger = logging.getLogger(__name__)
 
 
-def augment_accessibility(dataset, user):
+def augment_accessibility(
+    dataset: dict[str, Any], user: WdaeUser
+) -> dict[str, Any]:
     # pylint: disable=no-member
     dataset["access_rights"] = user_has_permission(user, dataset["id"])
     return dataset
 
 
-def augment_with_groups(dataset):
+def augment_with_groups(dataset: dict[str, Any]) -> dict[str, Any]:
     # pylint: disable=no-member
     dataset_object = Dataset.objects.get(dataset_id=dataset["id"])
     serializer = GroupSerializer(dataset_object.groups.all(), many=True)
@@ -32,7 +37,7 @@ def augment_with_groups(dataset):
     return dataset
 
 
-def augment_with_parents(dataset):
+def augment_with_parents(dataset: dict[str, Any]) -> dict[str, Any]:
     dataset["parents"] = [
         ds.dataset_id for ds in get_wdae_parents(dataset["id"], direct=True)
     ]
@@ -48,15 +53,20 @@ class DatasetView(QueryBaseView):
     whether the request is made with a dataset_id param or not.
     """
 
-    def _collect_datasets_summary(self, user):
+    def _collect_datasets_summary(
+        self, user: WdaeUser
+    ) -> list[dict[str, Any]]:
         selected_genotype_data = \
             self.gpf_instance.get_selected_genotype_data() \
             or self.gpf_instance.get_genotype_data_ids()
 
-        datasets = filter(None, [
-            self.gpf_instance.get_wdae_wrapper(genotype_data_id)
-            for genotype_data_id in selected_genotype_data
-        ])
+        datasets: list[StudyWrapperBase] = cast(
+            list[StudyWrapperBase],
+            filter(None, [
+                self.gpf_instance.get_wdae_wrapper(genotype_data_id)
+                for genotype_data_id in selected_genotype_data
+            ])
+        )
 
         res = [
             StudyWrapperBase.build_genotype_data_all_datasets(
@@ -73,7 +83,9 @@ class DatasetView(QueryBaseView):
         res = [augment_with_parents(ds) for ds in res]
         return res
 
-    def get(self, request, dataset_id=None):
+    def get(
+        self, request: Request, dataset_id: Optional[str] = None
+    ) -> Response:
         user = request.user
 
         if dataset_id is None:
@@ -111,7 +123,9 @@ class DatasetView(QueryBaseView):
 
 
 class StudiesView(QueryBaseView):
-    def _collect_datasets_summary(self, user):
+    def _collect_datasets_summary(
+        self, user: WdaeUser
+    ) -> list[dict[str, Any]]:
         selected_genotype_data = \
             self.gpf_instance.get_selected_genotype_data() \
             or self.gpf_instance.get_genotype_data_ids()
@@ -138,7 +152,7 @@ class StudiesView(QueryBaseView):
         res = [augment_with_parents(ds) for ds in res]
         return res
 
-    def get(self, request):
+    def get(self, request: Request) -> Response:
         user = request.user
 
         return Response({"data": self._collect_datasets_summary(user)})
@@ -147,8 +161,8 @@ class StudiesView(QueryBaseView):
 class PermissionDeniedPromptView(QueryBaseView):
     """Provide the markdown-formatted permission denied prompt text."""
 
-    def __init__(self):
-        super(PermissionDeniedPromptView, self).__init__()
+    def __init__(self) -> None:
+        super().__init__()
 
         dae_config = self.gpf_instance.dae_config
         default_prompt = (
@@ -170,14 +184,14 @@ class PermissionDeniedPromptView(QueryBaseView):
                 with open(prompt_filepath, "r") as infile:
                     self.permission_denied_prompt = infile.read()
 
-    def get(self, request):
+    def get(self, request: Request) -> Response:
         return Response({"data": self.permission_denied_prompt})
 
 
 class DatasetDetailsView(QueryBaseView):
     """Provide miscellaneous details for a given dataset."""
 
-    def get(self, request, dataset_id):
+    def get(self, request: Request, dataset_id: str) -> Response:
         genotype_data_config = \
             self.gpf_instance.get_genotype_data_config(dataset_id)
         if genotype_data_config is None:
@@ -199,7 +213,7 @@ class DatasetDetailsView(QueryBaseView):
 class DatasetPedigreeView(QueryBaseView):
     """Provide pedigree data for a given dataset."""
 
-    def get(self, request, dataset_id, column):
+    def get(self, request: Request, dataset_id: str, column: str) -> Response:
         genotype_data = self.gpf_instance.get_genotype_data(dataset_id)
 
         if genotype_data is None:
@@ -226,7 +240,9 @@ class DatasetPedigreeView(QueryBaseView):
 class DatasetConfigView(DatasetView):
     """Provide a dataset's configuration. Used for remote instances."""
 
-    def get(self, request, dataset_id=None):
+    def get(
+        self, request: Request, dataset_id: Optional[str] = None
+    ) -> Response:
         genotype_data = self.gpf_instance.get_genotype_data(dataset_id)
 
         if genotype_data is None:
@@ -240,7 +256,9 @@ class DatasetConfigView(DatasetView):
 class DatasetDescriptionView(QueryBaseView):
     """Provide fetching and editing a dataset's description."""
 
-    def get(self, request, dataset_id):  # pylint: disable=unused-argument
+    def get(
+        self, request: Request, dataset_id: str
+    ) -> Response:  # pylint: disable=unused-argument
         """Collect a dataset's description."""
         if dataset_id is None:
             return Response(
@@ -258,7 +276,7 @@ class DatasetDescriptionView(QueryBaseView):
             status=status.HTTP_200_OK
         )
 
-    def post(self, request, dataset_id):
+    def post(self, request: Request, dataset_id: str) -> Response:
         """Overwrite a dataset's description."""
         if not request.user.is_staff:
             return Response(
@@ -274,7 +292,7 @@ class DatasetDescriptionView(QueryBaseView):
 
 
 class BaseDatasetPermissionsView(QueryBaseView):
-    def _get_dataset_info(self, dataset):
+    def _get_dataset_info(self, dataset: Dataset) -> Optional[dict[str, Any]]:
         groups = dataset.groups.all()
         group_names = sorted([group.name for group in groups])
 
@@ -322,7 +340,7 @@ class DatasetPermissionsView(BaseDatasetPermissionsView):
 
     page_size = settings.REST_FRAMEWORK["PAGE_SIZE"]
 
-    def get(self, request):
+    def get(self, request: Request) -> Response:
         dataset_search = request.GET.get("search")
         page = request.GET.get("page", 1)
         query = Dataset.objects
@@ -358,7 +376,7 @@ class DatasetPermissionsSingleView(BaseDatasetPermissionsView):
 
     page_size = settings.REST_FRAMEWORK["PAGE_SIZE"]
 
-    def get(self, request, dataset_id):
+    def get(self, request: Request, dataset_id: str) -> Response:
         try:
             dataset = Dataset.objects.get(dataset_id=dataset_id)
         except Dataset.DoesNotExist:
@@ -376,7 +394,9 @@ class DatasetHierarchyView(QueryBaseView):
     """Provide the hierarchy of all datasets configured in the instance."""
 
     @staticmethod
-    def produce_tree(dataset: GenotypeData, user, selected):
+    def produce_tree(
+        dataset: GenotypeData, user: WdaeUser, selected: list[str]
+    ) -> dict[str, Any]:
         """Recursively collect a dataset's id, children and access rights."""
         children = None
         if dataset.is_group:
@@ -394,7 +414,7 @@ class DatasetHierarchyView(QueryBaseView):
             "access_rights": user_has_permission(user, dataset_object)
         }
 
-    def get(self, request):
+    def get(self, request: Request) -> Response:
         """Return the hierarchy of configured datasets in the instance."""
         user = request.user
         selected_genotype_data = \
