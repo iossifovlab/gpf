@@ -810,22 +810,23 @@ class FamiliesData(Mapping[str, Family]):
             first: FamiliesData, second: FamiliesData,
             forced: bool = True) -> FamiliesData:
         """Combine families from two families data objects."""
-        same_families = set(first.keys()) & \
-            set(second.keys())
+        all_families = set(first.keys()) | set(second.keys())
         combined_dict: dict[str, Family] = {}
-        combined_dict.update(first)
-        combined_dict.update(second)
         mismatched_families = []
-        for fid in same_families:
-            try:
-                combined_dict[fid] = Family.merge(
-                    first[fid], second[fid], forced=forced)
-            except AssertionError:
-                logger.error(
-                    "mismatched families: %s, %s",
-                    first[fid], second[fid], exc_info=True)
-
-                mismatched_families.append(fid)
+        for fid in all_families:
+            if fid in first and fid in second:
+                try:
+                    combined_dict[fid] = Family.merge(
+                        first[fid], second[fid], forced=forced)
+                except AssertionError:
+                    logger.error(
+                        "mismatched families: %s, %s",
+                        first[fid], second[fid], exc_info=True)
+                    mismatched_families.append(fid)
+            elif fid in first:
+                combined_dict[fid] = copy.deepcopy(first[fid])
+            elif fid in second:
+                combined_dict[fid] = copy.deepcopy(second[fid])
 
         if len(mismatched_families) > 0:
             logger.warning("mismatched families: %s", mismatched_families)
