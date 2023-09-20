@@ -32,6 +32,7 @@ class PersonSet:
         self.name: str = name
         self.values: list[str] = values
         self.color: str = color
+        assert all(not p.generated for p in persons.values())
         self.persons: dict[str, Person] = persons
 
     def __repr__(self) -> str:
@@ -49,7 +50,7 @@ class PersonSet:
 
     def get_children(self) -> Generator[Person, None, None]:
         for person in self.persons.values():
-            if person.has_parent() and not person.generated and person.missing:
+            if person.has_parent() and not person.generated:
                 yield person
 
     def to_json(self) -> dict[str, Any]:

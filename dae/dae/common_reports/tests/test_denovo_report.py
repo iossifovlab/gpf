@@ -17,7 +17,7 @@ def test_denovo_report_table(denovo_variants_ds1, phenotype_role_collection):
 
     assert denovo_report_table.group_name == "Diagnosis"
     assert sorted(denovo_report_table.columns) == \
-        ["phenotype 1 (16)", "phenotype 2 (2)", ]
+        ["phenotype 1 (6)", "phenotype 2 (2)", ]
 
     assert denovo_report_table.effect_groups == ["Missense"]
     assert denovo_report_table.effect_types == ["Frame-shift"]
@@ -63,12 +63,13 @@ def test_effect_row(denovo_variants_ds1, phenotype_role_sets):
     )
     out_dict = effect_row.to_dict()
     assert out_dict["effect_type"] == "Missense"
+
     assert out_dict["row"][0] == {
         "number_of_observed_events": 3,
         "number_of_children_with_event": 3,
-        "observed_rate_per_child": 0.1875,
-        "percent_of_children_with_events": 0.1875,
-        "column": "phenotype 1 (16)"
+        "observed_rate_per_child": 0.5,
+        "percent_of_children_with_events": 0.5,
+        "column": "phenotype 1 (6)"
     }
     assert out_dict["row"][1] == {
         "number_of_observed_events": 2,
@@ -82,7 +83,7 @@ def test_effect_row(denovo_variants_ds1, phenotype_role_sets):
         "number_of_children_with_event": 0,
         "observed_rate_per_child": 0,
         "percent_of_children_with_events": 0,
-        "column": "unaffected (9)"
+        "column": "unaffected (1)"
     }
     assert out_dict["row"][3] == {
         "number_of_observed_events": 0,
@@ -100,9 +101,9 @@ def test_effect_cell(denovo_variants_ds1, phenotype_role_sets):
     assert effect_cell1.to_dict() == {
         "number_of_observed_events": 3,
         "number_of_children_with_event": 3,
-        "observed_rate_per_child": 0.1875,
-        "percent_of_children_with_events": 0.1875,
-        "column": "phenotype 1 (16)"
+        "observed_rate_per_child": 0.5,
+        "percent_of_children_with_events": 0.5,
+        "column": "phenotype 1 (6)"
     }
 
     effect_cell2 = EffectCell(
@@ -124,7 +125,7 @@ def test_effect_cell(denovo_variants_ds1, phenotype_role_sets):
         "number_of_children_with_event": 0,
         "observed_rate_per_child": 0,
         "percent_of_children_with_events": 0,
-        "column": "unaffected (9)"
+        "column": "unaffected (1)"
     }
 
     effect_cell4 = EffectCell(

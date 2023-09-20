@@ -188,6 +188,8 @@ def build_genomic_resource_repository(
     if definition is None:
         raise ValueError("can't find GRR definition")
 
+    logger.info("GRR definition in use: %s", definition)
+
     if "type" not in definition:
         logger.error(
             "missing type in genomic resources repository definition: %s",
