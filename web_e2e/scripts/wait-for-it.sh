@@ -32,7 +32,7 @@ wait_for()
     start_ts=$(date +%s)
     while :
     do
-        (echo > /dev/tcp/$HOST/$PORT) >/dev/null 2>&1
+        (echo -n > /dev/tcp/$HOST/$PORT) >/dev/null 2>&1
         result=$?
         if [[ $result -eq 0 ]]; then
             end_ts=$(date +%s)

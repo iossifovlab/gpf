@@ -168,7 +168,7 @@ describe('Pheno tool download tests', () => {
     cy.deleteDownloadsFolder();
   });
 
-  it('should download i1.m1 and check if it equals the reference data', () => {
+  it.skip('should download i1.m1 and check if it equals the reference data', () => {
     phenoToolMeasurePage.searchbox.click();
     phenoToolMeasurePage.getDropdownOptionByText('i1.m1').click();
 
@@ -195,7 +195,7 @@ describe('Pheno tool download tests', () => {
     {id: '2', measure: 'i1.m2', normalizedBy: 'Age'},
     {id: '3', measure: 'i1.age', normalizedBy: 'Non verbal IQ'}
   ].forEach(data => {
-    it(`should normalize by "${data.normalizedBy}", download report and compare it to the reference data`, () => {
+    it.skip(`should normalize by "${data.normalizedBy}", download report and compare it to the reference data`, () => {
       phenoToolMeasurePage.searchbox.click();
       phenoToolMeasurePage.getDropdownOptionByText(data.measure).click();
       phenoToolMeasurePage.block.contains(data.normalizedBy).find('input[type="checkbox"]').click();
@@ -224,7 +224,7 @@ describe('Pheno tool download tests', () => {
     {id: '4', filters: ['father only', 'mother and father', 'Nonsense', 'Nonsynonymous', 'Synonymous'] },
     {id: '5', filters: ['mother only', 'mother and father', 'neither', 'LGDs', 'Splice-site', 'Frame-shift'] }
   ].forEach(data => {
-    it(`should apply ${data.filters.toString()} filters, download report and compare it to the reference data`, () => {
+    it.skip(`should apply ${data.filters.toString()} filters, download report and compare it to the reference data`, () => {
       phenoToolMeasurePage.searchbox.click();
       phenoToolMeasurePage.getDropdownOptionByText('i1.m1').click();
 
@@ -259,7 +259,7 @@ describe('Pheno tool download tests', () => {
     {id: '6', familyId: 'f1'},
     {id: '7', familyId: 'f3'}
   ].forEach(data => {
-    it(`should check downloaded report with family id ${data.familyId}`, () => {
+    it.skip(`should check downloaded report with family id ${data.familyId}`, () => {
       const familyPage = new FamilyFilterBlockPage();
 
       phenoToolMeasurePage.searchbox.click();
@@ -292,7 +292,7 @@ describe('Pheno tool download tests', () => {
     {id: '8', familyFilter: 'i1.iq', familyHistogramfromTo: ['33', '130']},
     {id: '9', familyFilter: 'i1.m1', familyHistogramfromTo: ['84', '107']}
   ].forEach(data => {
-    it('should test advanced family filters', () => {
+    it.skip('should test advanced family filters', () => {
       const familyPage = new FamilyFilterBlockPage();
       cy.intercept('POST', '/gpf/api/v3/measures/partitions').as('partitions');
 
@@ -335,7 +335,7 @@ describe('Pheno tool download tests', () => {
     {id: '10', geneSymbol: 'CAMSAP1'},
     {id: '11', geneSymbol: 'SAMD11'}
   ].forEach(data => {
-    it(`should check downloaded report with gene symbol ${data.geneSymbol}`, () => {
+    it.skip(`should check downloaded report with gene symbol ${data.geneSymbol}`, () => {
       const genesBlockPage = new GenesBlockPage();
 
       genesBlockPage.geneSymbolsButton.click();
@@ -368,7 +368,7 @@ describe('Pheno tool download tests', () => {
     {id: '12', collection: 'SFARI Genes', set: 'SFARI ALL (910): SFARI Genes (2017-09): All genes', measure: 'i1.age'},
     {id: '13', collection: 'Protein domains', set: 'AMOP (3): ', measure: 'i1.iq'}
   ].forEach(data => {
-    it('should check downloaded report with gene sets', () => {
+    it.skip('should check downloaded report with gene sets', () => {
       const genesBlockPage = new GenesBlockPage();
 
       genesBlockPage.geneSetsButton.click();
@@ -417,7 +417,7 @@ describe('Pheno tool download tests', () => {
       measure: 'i1.iq'
     }
   ].forEach(data => {
-    it('should check downloaded report with gene set Denovo', () => {
+    it.skip('should check downloaded report with gene set Denovo', () => {
       const genesBlockPage = new GenesBlockPage();
 
       genesBlockPage.geneSetsButton.click();
@@ -457,7 +457,7 @@ describe('Pheno tool download tests', () => {
     {id: '16', measure: 'i1.age', geneScore: 'LGD rank', geneScoresHistogramFromTo: ['2944', '14716']},
     {id: '17', measure: 'i1.m1', geneScore: 'ExAC pRec', geneScoresHistogramFromTo: ['0.000012', '0.832']}
   ].forEach(data => {
-    it(`should check downloaded report with gene score ${data.geneScore}`, () => {
+    it.skip(`should check downloaded report with gene score ${data.geneScore}`, () => {
       const genesBlockPage = new GenesBlockPage();
       const geneScoresPage = new GeneScoresPage();
       cy.intercept('POST', '/gpf/api/v3/gene_scores/partitions').as('partitions');

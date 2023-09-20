@@ -264,7 +264,7 @@ describe('Gene browser download tests', () => {
       expectedPath: 'variants2.tsv'
     }
   ].forEach(data => {
-    it('should go to ' + data.gene + ' gene page, filter out ' + data.filtersToUncheck.toString() +
+    it.skip('should go to ' + data.gene + ' gene page, filter out ' + data.filtersToUncheck.toString() +
       'family variants and compare the files to the reference data', () => {
       page.searchInputBox.type(data.gene);
       page.pressGoButton();

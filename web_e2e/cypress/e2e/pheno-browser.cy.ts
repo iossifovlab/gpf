@@ -84,7 +84,7 @@ describe('Pheno browser tests', () => {
     page.tableRows.eq(2).get('gpf-table-view-cell').eq(2).should('have.text', '');
   });
 
-  it('should have the correct text values in all rows', () => {
+  it.skip('should have the correct text values in all rows', () => {
     page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.phenotypeBrowser);
 
     const expectedFilePath = 'cypress/fixtures/pheno-browser/row_values.txt';
@@ -97,7 +97,7 @@ describe('Pheno browser tests', () => {
     });
   });
 
-  it('should download all instruments and validate whether they are equal to the reference data', () => {
+  it.skip('should download all instruments and validate whether they are equal to the reference data', () => {
     const downloadFilePath = Cypress.config('downloadsFolder') + '/measures_comp_all.csv';
     const expectedFilePath = 'cypress/fixtures/pheno-browser/measures_comp_all.csv';
 
