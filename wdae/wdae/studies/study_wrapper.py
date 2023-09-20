@@ -114,6 +114,7 @@ class StudyWrapperBase:
             "genome",
             "chr_prefix",
             "gene_browser",
+            "description_editable"
         ]
         result = {
             key: config.get(key, None) for key in keys

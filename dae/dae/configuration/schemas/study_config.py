@@ -301,6 +301,7 @@ study_config_schema = {
         "coerce": "abspath",
         "default": "description.md"
     },
+    "description_editable": {"type": "boolean", "default": True},
     "study_type": {"type": "list", "schema": {"type": "string"}},
     "year": {"type": "list", "schema": {"type": "integer"}},
     "pub_med": {"type": "list", "schema": {"type": "string"}},
