@@ -667,10 +667,6 @@ class FamiliesData(Mapping[str, Family]):
         families_data = FamiliesData.from_family_persons(
             {fam.family_id: fam.full_members for fam in families.values()}
         )
-        # FIXME: Avoid this workaround
-        for family_id, family in families.items():
-            families_data[family_id]\
-                ._tags = family.tags  # pylint: disable=protected-access
 
         return families_data
 
