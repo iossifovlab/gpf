@@ -144,13 +144,14 @@ class AnnotationConfigParser:
         return result
 
     @staticmethod
-    def parse_minimal(raw: str) -> AnnotatorInfo:
+    def parse_minimal(raw: str, idx: int) -> AnnotatorInfo:
         """Parse a minimal-form annotation config."""
-        return AnnotatorInfo(raw, [], {})
+        return AnnotatorInfo(raw, [], {}, uid=f"#{idx}")
 
     @staticmethod
     def parse_short(
-        raw: dict[str, Any], grr: Optional[GenomicResourceRepo] = None
+        raw: dict[str, Any], idx: int,
+        grr: Optional[GenomicResourceRepo] = None,
     ) -> list[AnnotatorInfo]:
         """Parse a short-form annotation config."""
         ann_type, ann_details = next(iter(raw.items()))
@@ -160,13 +161,20 @@ class AnnotationConfigParser:
                 ann_type, ann_details, grr
             )
             return [
-                AnnotatorInfo(ann_type, [], {"resource_id": resource})
+                AnnotatorInfo(
+                    ann_type, [], {"resource_id": resource},
+                    uid=f"#{idx}-{resource}"
+                )
                 for resource in matching_resources
             ]
-        return [AnnotatorInfo(ann_type, [], {"resource_id": ann_details})]
+        return [
+            AnnotatorInfo(
+                ann_type, [], {"resource_id": ann_details}, uid=f"#{idx}"
+            )
+        ]
 
     @staticmethod
-    def parse_complete(raw: dict[str, Any]) -> AnnotatorInfo:
+    def parse_complete(raw: dict[str, Any], idx: int) -> AnnotatorInfo:
         """Parse a full-form annotation config."""
         ann_type, ann_details = next(iter(raw.items()))
         attributes = []
@@ -176,7 +184,7 @@ class AnnotationConfigParser:
             )
         parameters = {k: v for k, v in ann_details.items()
                       if k != "attributes"}
-        return AnnotatorInfo(ann_type, attributes, parameters)
+        return AnnotatorInfo(ann_type, attributes, parameters, uid=f"#{idx}")
 
     @staticmethod
     def parse_raw(
@@ -193,23 +201,25 @@ class AnnotationConfigParser:
                 "The annotation is not a list of annotator configurations.")
 
         result = []
-        for raw_cfg in pipeline_raw_config:
+        for idx, raw_cfg in enumerate(pipeline_raw_config):
             if isinstance(raw_cfg, str):
                 # the minimal annotator configuration form
-                result.append(AnnotationConfigParser.parse_minimal(raw_cfg))
+                result.append(
+                    AnnotationConfigParser.parse_minimal(raw_cfg, idx)
+                )
                 continue
             if isinstance(raw_cfg, dict):
                 ann_details = next(iter(raw_cfg.values()))
                 if isinstance(ann_details, str):
                     # the short annotator configuation form
                     result.extend(AnnotationConfigParser.parse_short(
-                        raw_cfg, grr
+                        raw_cfg, idx, grr
                     ))
                     continue
                 if isinstance(ann_details, dict):
                     # the complete annotator configuration form
                     result.append(
-                        AnnotationConfigParser.parse_complete(raw_cfg)
+                        AnnotationConfigParser.parse_complete(raw_cfg, idx)
                     )
                     continue
             raise AnnotationConfigurationError(dedent(f"""
@@ -362,9 +372,7 @@ def build_annotation_pipeline(
 
     pipeline = AnnotationPipeline(grr_repository)
 
-    for idx, annotator_config in enumerate(pipeline_config):
-        annotator_id = f"A{idx+1}"
-        raw_config_copy = copy.deepcopy(annotator_config)
+    for annotator_config in pipeline_config:
         try:
             builder = get_annotator_factory(annotator_config.type)
             annotator = builder(pipeline, annotator_config)
@@ -375,8 +383,8 @@ def build_annotation_pipeline(
             pipeline.add_annotator(annotator)
         except ValueError as value_error:
             raise AnnotationConfigurationError(
-                f"The {annotator_id} annotator ({idx+1}-th)"
-                f" configuration {raw_config_copy} is incorrect: ",
+                f"The {annotator_config.uid} annotator"
+                f" configuration is incorrect: ",
                 value_error) from value_error
 
     return pipeline

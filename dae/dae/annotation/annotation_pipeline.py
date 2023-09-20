@@ -59,8 +59,10 @@ class AnnotatorInfo:
     def __init__(self, _type: str, attributes: list[AttributeInfo],
                  parameters: ParamsUsageMonitor | dict[str, Any],
                  documentation: str = "",
-                 resources: Optional[list[GenomicResource]] = None):
+                 resources: Optional[list[GenomicResource]] = None,
+                 uid: str = "N/A"):
         self.type = _type
+        self.uid = f"{uid} ({self.type})"
         self.attributes = attributes
         self.documentation = documentation
         if isinstance(parameters, ParamsUsageMonitor):
@@ -72,6 +74,7 @@ class AnnotatorInfo:
         else:
             self.resources = resources
 
+    uid: str
     type: str
     attributes: list[AttributeInfo]
     parameters: ParamsUsageMonitor
