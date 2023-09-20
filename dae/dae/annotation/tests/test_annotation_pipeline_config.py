@@ -160,7 +160,8 @@ def test_simple_annotator_simple() -> None:
     """)
 
     assert pipeline_config == [
-        AnnotatorInfo("annotator", [], {"resource_id": "resource"}, uid="#0")
+        AnnotatorInfo("annotator", [], {"resource_id": "resource"},
+                      annotator_id="#0")
     ]
 
 
@@ -170,7 +171,9 @@ def test_short_annotator_config() -> None:
     """)
 
     assert pipeline_config == [
-        AnnotatorInfo("annotator", [], {"resource_id": "resource"}, uid="#0")
+        AnnotatorInfo(
+            "annotator", [], {"resource_id": "resource"}, annotator_id="#0"
+        )
     ]
 
 
@@ -178,7 +181,9 @@ def test_minimal_annotator_config() -> None:
     pipeline_config = AnnotationConfigParser.parse_str("""
         - annotator
     """)
-    assert pipeline_config == [AnnotatorInfo("annotator", [], {}, uid="#0")]
+    assert pipeline_config == [
+        AnnotatorInfo("annotator", [], {}, annotator_id="#0")
+    ]
 
 
 def test_annotator_config_with_more_parameters() -> None:
@@ -191,7 +196,7 @@ def test_annotator_config_with_more_parameters() -> None:
     assert pipeline_config == [
         AnnotatorInfo(
             "annotator", [], {"resource_id": "resource", "key": "value"},
-            uid="#0"
+            annotator_id="#0"
         )
     ]
 
@@ -221,7 +226,7 @@ def test_annotator_config_with_attributes() -> None:
             AttributeInfo("att4", "some_score", False, {"att_param": "foo"}),
             AttributeInfo("att5", "att5", True, {"att_param": "raz"}),
             AttributeInfo("att6", "att6", False, {})],
-            {}, uid="#0")]
+            {}, annotator_id="#0")]
 
 
 def test_annotator_config_with_params_and_attributes() -> None:
@@ -239,7 +244,7 @@ def test_annotator_config_with_params_and_attributes() -> None:
             AttributeInfo("att2", "att2", False, {}),
         ], {
             "resource_id": "resource"
-        }, uid="#0")]
+        }, annotator_id="#0")]
 
 
 def test_empty_config() -> None:
@@ -274,7 +279,7 @@ def test_effect_annotator_extra_attributes() -> None:
             AttributeInfo("genes_missense", "genes_missense", False, {})], {
             "gene_models": "hg38/gene_models/refSeq_20200330",
             "genome": "hg38/genomes/GRCh38-hg38",
-            "promoter_len": 100}, uid="#0"
+            "promoter_len": 100}, annotator_id="#0"
         )
     ]
 
@@ -286,11 +291,11 @@ def test_wildcard_basic(test_grr: GenomicResourceRepo) -> None:
     assert pipeline_config == [
         AnnotatorInfo(
             "position_score", [], {"resource_id": "score_one"},
-            uid="#0-score_one"
+            annotator_id="#0-score_one"
         ),
         AnnotatorInfo(
             "position_score", [], {"resource_id": "score_two"},
-            uid="#0-score_two"
+            annotator_id="#0-score_two"
         ),
     ]
 
@@ -303,12 +308,12 @@ def test_wildcard_directory(test_grr: GenomicResourceRepo) -> None:
         AnnotatorInfo(
             "position_score", [],
             {"resource_id": "scores/scoredir_one/subscore"},
-            uid="#0-scores/scoredir_one/subscore"
+            annotator_id="#0-scores/scoredir_one/subscore"
         ),
         AnnotatorInfo(
             "position_score", [],
             {"resource_id": "scores/scoredir_two/subscore"},
-            uid="#0-scores/scoredir_two/subscore"
+            annotator_id="#0-scores/scoredir_two/subscore"
         ),
     ]
 
@@ -320,7 +325,7 @@ def test_wildcard_label_single(test_grr: GenomicResourceRepo) -> None:
     assert pipeline_config == [
         AnnotatorInfo(
             "position_score", [], {"resource_id": "score_one"},
-            uid="#0-score_one"
+            annotator_id="#0-score_one"
         )
     ]
 
@@ -332,12 +337,12 @@ def test_wildcard_label_and_dir(test_grr: GenomicResourceRepo) -> None:
     assert pipeline_config == [
         AnnotatorInfo(
             "position_score", [], {"resource_id": "score_one"},
-            uid="#0-score_one"
+            annotator_id="#0-score_one"
         ),
         AnnotatorInfo(
             "position_score", [],
             {"resource_id": "scores/scoredir_one/subscore"},
-            uid="#0-scores/scoredir_one/subscore"
+            annotator_id="#0-scores/scoredir_one/subscore"
         ),
     ]
 
@@ -349,6 +354,6 @@ def test_wildcard_label_multiple(test_grr: GenomicResourceRepo) -> None:
     assert pipeline_config == [
         AnnotatorInfo(
             "position_score", [], {"resource_id": "score_one"},
-            uid="#0-score_one"
+            annotator_id="#0-score_one"
         ),
     ]

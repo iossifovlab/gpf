@@ -146,7 +146,7 @@ class AnnotationConfigParser:
     @staticmethod
     def parse_minimal(raw: str, idx: int) -> AnnotatorInfo:
         """Parse a minimal-form annotation config."""
-        return AnnotatorInfo(raw, [], {}, uid=f"#{idx}")
+        return AnnotatorInfo(raw, [], {}, annotator_id=f"#{idx}")
 
     @staticmethod
     def parse_short(
@@ -163,13 +163,14 @@ class AnnotationConfigParser:
             return [
                 AnnotatorInfo(
                     ann_type, [], {"resource_id": resource},
-                    uid=f"#{idx}-{resource}"
+                    annotator_id=f"#{idx}-{resource}"
                 )
                 for resource in matching_resources
             ]
         return [
             AnnotatorInfo(
-                ann_type, [], {"resource_id": ann_details}, uid=f"#{idx}"
+                ann_type, [], {"resource_id": ann_details},
+                annotator_id=f"#{idx}"
             )
         ]
 
@@ -184,7 +185,9 @@ class AnnotationConfigParser:
             )
         parameters = {k: v for k, v in ann_details.items()
                       if k != "attributes"}
-        return AnnotatorInfo(ann_type, attributes, parameters, uid=f"#{idx}")
+        return AnnotatorInfo(
+            ann_type, attributes, parameters, annotator_id=f"#{idx}"
+        )
 
     @staticmethod
     def parse_raw(
@@ -383,7 +386,7 @@ def build_annotation_pipeline(
             pipeline.add_annotator(annotator)
         except ValueError as value_error:
             raise AnnotationConfigurationError(
-                f"The {annotator_config.uid} annotator"
+                f"The {annotator_config.annotator_id} annotator"
                 f" configuration is incorrect: ",
                 value_error) from value_error
 

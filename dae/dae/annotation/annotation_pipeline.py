@@ -60,9 +60,9 @@ class AnnotatorInfo:
                  parameters: ParamsUsageMonitor | dict[str, Any],
                  documentation: str = "",
                  resources: Optional[list[GenomicResource]] = None,
-                 uid: str = "N/A"):
+                 annotator_id: str = "N/A"):
         self.type = _type
-        self.uid = f"{uid} ({self.type})"
+        self.annotator_id = f"{annotator_id} ({self.type})"
         self.attributes = attributes
         self.documentation = documentation
         if isinstance(parameters, ParamsUsageMonitor):
@@ -74,7 +74,7 @@ class AnnotatorInfo:
         else:
             self.resources = resources
 
-    uid: str
+    annotator_id: str
     type: str
     attributes: list[AttributeInfo]
     parameters: ParamsUsageMonitor
