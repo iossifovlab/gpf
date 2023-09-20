@@ -1,5 +1,4 @@
 import os
-import sys
 import time
 import logging
 import json
@@ -235,7 +234,7 @@ class VariantsParquetWriter(AbstractVariantsParquetWriter):
     def _write_internal(self) -> list[str]:
         # pylint: disable=too-many-locals
         family_variant_index = 0
-
+        summary_variant_index = 0
         for summary_variant_index, (
             summary_variant,
             family_variants,
@@ -319,32 +318,25 @@ class VariantsParquetWriter(AbstractVariantsParquetWriter):
 
             if summary_variant_index % 1000 == 0 and summary_variant_index > 0:
                 elapsed = time.time() - self.start
-                print(
-                    f"Bucket {self.bucket_index}; "
-                    f"{summary_variant.chromosome}:"
-                    f"{summary_variant.position}: "
-                    f"{summary_variant_index}/"
-                    f"{family_variant_index} variants imported "
-                    f"for {elapsed:.2f} sec ({len(self.data_writers)} files)",
-                    file=sys.stderr,
-                )
+                logger.info(
+                    "progress bucked %s; "
+                    "summary variants: %s; family variants: %s; "
+                    "elapsed time: %0.2f sec",
+                    self.bucket_index,
+                    summary_variant_index, family_variant_index,
+                    elapsed)
 
         filenames = list(self.data_writers.keys())
 
         for bin_writer in self.data_writers.values():
             bin_writer.close()
 
-        print("-------------------------------------------", file=sys.stderr)
-        print("Bucket:", self.bucket_index, file=sys.stderr)
-        print("-------------------------------------------", file=sys.stderr)
         elapsed = time.time() - self.start
-        print(
-            f"DONE: {family_variant_index} family variants imported "
-            f"for {elapsed:.2f} sec ({len(self.data_writers)} files)",
-            file=sys.stderr,
-        )
-        print("-------------------------------------------", file=sys.stderr)
-
+        logger.info(
+            "finished bucked %s; summary variants: %s; family variants: %s; "
+            "elapsed time: %0.2f sec",
+            self.bucket_index, summary_variant_index, family_variant_index,
+            elapsed)
         return filenames
 
     def write_schema(self) -> None:
