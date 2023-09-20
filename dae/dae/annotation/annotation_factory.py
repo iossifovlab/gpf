@@ -253,7 +253,9 @@ class AnnotationConfigParser:
         return AnnotationConfigParser.parse_raw(pipeline_raw_config, grr=grr)
 
     @staticmethod
-    def parse_config_file(filename: str, grr: Optional[GenomicResourceRepo]) -> List[AnnotatorInfo]:
+    def parse_config_file(
+        filename: str, grr: Optional[GenomicResourceRepo]
+    ) -> List[AnnotatorInfo]:
         """Parse annotation pipeline configuration file."""
         logger.info("loading annotation pipeline configuration: %s", filename)
         try:
@@ -350,10 +352,12 @@ def build_annotation_pipeline(
     elif pipeline_config_str is not None:
         assert pipeline_config_raw is None
         assert pipeline_config is None
-        pipeline_config = AnnotationConfigParser.parse_str(pipeline_config_str, grr=grr_repository)
+        pipeline_config = AnnotationConfigParser.parse_str(
+            pipeline_config_str, grr=grr_repository)
     elif pipeline_config_raw is not None:
         assert pipeline_config is None
-        pipeline_config = AnnotationConfigParser.parse_raw(pipeline_config_raw, grr=grr_repository)
+        pipeline_config = AnnotationConfigParser.parse_raw(
+            pipeline_config_raw, grr=grr_repository)
     assert pipeline_config is not None
 
     pipeline = AnnotationPipeline(grr_repository)
