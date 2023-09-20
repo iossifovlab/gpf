@@ -42,7 +42,7 @@ export class FamilyFilterBlockPage extends BasePage {
   }
 
   public getDropdownMenuOptionByText(text: string): element {
-    return cy.get('.ui-menu-item-wrapper').contains(text);
+    return cy.get('.ui-front').last().find('.ui-menu-item-wrapper').contains(text);
   }
 
   public get fromInputField(): element {

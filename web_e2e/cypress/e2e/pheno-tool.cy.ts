@@ -144,6 +144,7 @@ describe('Pheno tool tests', () => {
     page.reportButton.should('be.disabled');
     page.downloadButton.should('be.disabled');
     familyPage.searchbox.click();
+    cy.wait(1500);
     familyPage.getDropdownMenuOptionByText('i1.age').click();
     saveQueryPage.button.should('be.enabled');
     page.reportButton.should('be.enabled');
@@ -342,6 +343,7 @@ describe('Pheno tool download tests', () => {
       genesBlockPage.geneSymbolsTextarea.type(data.geneSymbol);
 
       phenoToolMeasurePage.searchbox.click();
+      cy.wait(1500);
       phenoToolMeasurePage.getDropdownOptionByText('i1.age').click();
 
       const downloadedVariantsPath = Cypress.config('downloadsFolder') + '/pheno_report.csv';
@@ -427,10 +429,12 @@ describe('Pheno tool download tests', () => {
       genesBlockPage.findDenovoGeneSetsAccordionButtonByText(data.genotype + ': Affected Status').click();
       genesBlockPage.findDenovoGeneSetCollectionCheckbox(data.genotype, data.affectedStatus).click();
 
+      cy.wait(1500);
       genesBlockPage.geneSetsSearchbox.click();
       genesBlockPage.findGeneSetsSearchboxDropdownOptionsByText(data.set).click();
 
       phenoToolMeasurePage.searchbox.click();
+      cy.wait(1500);
       phenoToolMeasurePage.getDropdownOptionByText(data.measure).click();
 
       const downloadedVariantsPath = Cypress.config('downloadsFolder') + '/pheno_report.csv';
