@@ -99,7 +99,7 @@ class TaskGraphCli:
         if args.jobs == 1:
             assert args.dask_cluster_name is None
             assert args.dask_cluster_config_file is None
-            return SequentialExecutor(task_cache=task_cache)
+            return SequentialExecutor(task_cache=task_cache, **kwargs)
 
         assert args.dask_cluster_name is None or \
             args.dask_cluster_config_file is None
