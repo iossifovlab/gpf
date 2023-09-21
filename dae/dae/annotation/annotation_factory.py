@@ -4,6 +4,7 @@
 from collections import Counter
 import logging
 import copy
+import fnmatch
 from textwrap import dedent
 from typing import List, Dict, Optional, Callable, Any
 
@@ -117,8 +118,81 @@ class AnnotationConfigParser:
         return result
 
     @staticmethod
+    def query_resources(
+        annotator_type: str, wildcard: str, grr: GenomicResourceRepo
+    ) -> list[str]:
+        """Collect resources matching a given query."""
+        result = []
+        labels_query: dict[str, str] = {}
+
+        # Handle querying by labels
+        if wildcard.endswith("]"):
+            assert "[" in wildcard
+            wildcard, raw_labels = wildcard.split("[")
+            labels = raw_labels.strip("]").split(" and ")
+            for label in labels:
+                k, v = label.split("=")
+                labels_query[k] = v
+
+        for resource in grr.get_all_resources():
+            if (resource.get_type() == annotator_type
+               and fnmatch.fnmatch(resource.get_id(), wildcard)
+               and (not labels_query
+                    or labels_query.items() <= resource.get_labels().items())):
+                result.append(resource.get_id())
+
+        return result
+
+    @staticmethod
+    def parse_minimal(raw: str, idx: int) -> AnnotatorInfo:
+        """Parse a minimal-form annotation config."""
+        return AnnotatorInfo(raw, [], {}, annotator_id=f"#{idx}")
+
+    @staticmethod
+    def parse_short(
+        raw: dict[str, Any], idx: int,
+        grr: Optional[GenomicResourceRepo] = None,
+    ) -> list[AnnotatorInfo]:
+        """Parse a short-form annotation config."""
+        ann_type, ann_details = next(iter(raw.items()))
+        if "*" in ann_details:
+            assert grr is not None
+            matching_resources = AnnotationConfigParser.query_resources(
+                ann_type, ann_details, grr
+            )
+            return [
+                AnnotatorInfo(
+                    ann_type, [], {"resource_id": resource},
+                    annotator_id=f"#{idx}-{resource}"
+                )
+                for resource in matching_resources
+            ]
+        return [
+            AnnotatorInfo(
+                ann_type, [], {"resource_id": ann_details},
+                annotator_id=f"#{idx}"
+            )
+        ]
+
+    @staticmethod
+    def parse_complete(raw: dict[str, Any], idx: int) -> AnnotatorInfo:
+        """Parse a full-form annotation config."""
+        ann_type, ann_details = next(iter(raw.items()))
+        attributes = []
+        if "attributes" in ann_details:
+            attributes = AnnotationConfigParser.parse_raw_attributes(
+                ann_details["attributes"]
+            )
+        parameters = {k: v for k, v in ann_details.items()
+                      if k != "attributes"}
+        return AnnotatorInfo(
+            ann_type, attributes, parameters, annotator_id=f"#{idx}"
+        )
+
+    @staticmethod
     def parse_raw(
-        pipeline_raw_config: Optional[list[dict[str, Any]]]
+        pipeline_raw_config: Optional[list[dict[str, Any]]],
+        grr: Optional[GenomicResourceRepo] = None
     ) -> list[AnnotatorInfo]:
         """Parse raw dictionary annotation pipeline configuration."""
         if pipeline_raw_config is None:
@@ -130,43 +204,32 @@ class AnnotationConfigParser:
                 "The annotation is not a list of annotator configurations.")
 
         result = []
-        for annotator_raw_config in pipeline_raw_config:
-            # the minimal annotator configuration form
-            if isinstance(annotator_raw_config, str):
-                result.append(AnnotatorInfo(annotator_raw_config, [], {}))
+        for idx, raw_cfg in enumerate(pipeline_raw_config):
+            if isinstance(raw_cfg, str):
+                # the minimal annotator configuration form
+                result.append(
+                    AnnotationConfigParser.parse_minimal(raw_cfg, idx)
+                )
                 continue
-
-            if isinstance(annotator_raw_config, dict) and \
-               len(annotator_raw_config) == 1 and \
-               isinstance(list(annotator_raw_config)[0], str):
-                (ann_type, ann_details) = list(annotator_raw_config.items())[0]
-                assert isinstance(ann_type, str)
-
-                # the short annotator configuation form
+            if isinstance(raw_cfg, dict):
+                ann_details = next(iter(raw_cfg.values()))
                 if isinstance(ann_details, str):
-                    result.append(
-                        AnnotatorInfo(ann_type, [],
-                                      {"resource_id": ann_details}))
+                    # the short annotator configuation form
+                    result.extend(AnnotationConfigParser.parse_short(
+                        raw_cfg, idx, grr
+                    ))
                     continue
-
-                # the complete annotator configuration form
-                if isinstance(ann_details, dict) \
-                   and all(isinstance(k, str) for k in ann_details):
-                    attributes = []
-                    if "attributes" in ann_details:
-                        attributes = \
-                            AnnotationConfigParser.parse_raw_attributes(
-                                ann_details["attributes"])
-                    parameters = {k: v for k, v in ann_details.items()
-                                  if k != "attributes"}
-                    result.append(AnnotatorInfo(
-                        ann_type, attributes, parameters))
+                if isinstance(ann_details, dict):
+                    # the complete annotator configuration form
+                    result.append(
+                        AnnotationConfigParser.parse_complete(raw_cfg, idx)
+                    )
                     continue
             raise AnnotationConfigurationError(dedent(f"""
-                Incorrect annotator configuation form: {annotator_raw_config}.
+                Incorrect annotator configuation form: {raw_cfg}.
                 The allowed forms are:
                     * minimal
-                        - <annotator type>)
+                        - <annotator type>
                     * short
                         - <annotator type>: <resource_id_pattern>
                     * complete without attributes
@@ -185,7 +248,8 @@ class AnnotationConfigParser:
 
     @staticmethod
     def parse_str(
-        content: str, source_file_name: Optional[str] = None
+        content: str, source_file_name: Optional[str] = None,
+        grr: Optional[GenomicResourceRepo] = None
     ) -> list[AnnotatorInfo]:
         """Parse annotation pipeline configuration string."""
         try:
@@ -199,10 +263,12 @@ class AnnotationConfigParser:
                 f"The pipeline configuration file {source_file_name} is "
                 "an invalid yaml file.", error) from error
 
-        return AnnotationConfigParser.parse_raw(pipeline_raw_config)
+        return AnnotationConfigParser.parse_raw(pipeline_raw_config, grr=grr)
 
     @staticmethod
-    def parse_config_file(filename: str) -> List[AnnotatorInfo]:
+    def parse_config_file(
+        filename: str, grr: Optional[GenomicResourceRepo]
+    ) -> List[AnnotatorInfo]:
         """Parse annotation pipeline configuration file."""
         logger.info("loading annotation pipeline configuration: %s", filename)
         try:
@@ -213,7 +279,7 @@ class AnnotationConfigParser:
                 f"Problem reading the contents of the {filename} file.",
                 error) from error
 
-        return AnnotationConfigParser.parse_str(content)
+        return AnnotationConfigParser.parse_str(content, grr=grr)
 
     @staticmethod
     def parse_raw_attribute_config(
@@ -282,21 +348,6 @@ def build_annotation_pipeline(
         grr_repository_definition: Optional[dict] = None
 ) -> AnnotationPipeline:
     """Build an annotation pipeline."""
-    if pipeline_config_file is not None:
-        assert pipeline_config is None
-        assert pipeline_config_raw is None
-        assert pipeline_config_str is None
-        pipeline_config = AnnotationConfigParser.parse_config_file(
-            pipeline_config_file)
-    elif pipeline_config_str is not None:
-        assert pipeline_config_raw is None
-        assert pipeline_config is None
-        pipeline_config = AnnotationConfigParser.parse_str(pipeline_config_str)
-    elif pipeline_config_raw is not None:
-        assert pipeline_config is None
-        pipeline_config = AnnotationConfigParser.parse_raw(pipeline_config_raw)
-    assert pipeline_config is not None
-
     if not grr_repository:
         grr_repository = build_genomic_resource_repository(
             definition=grr_repository_definition,
@@ -305,11 +356,26 @@ def build_annotation_pipeline(
         assert grr_repository_file is None
         assert grr_repository_definition is None
 
+    if pipeline_config_file is not None:
+        assert pipeline_config is None
+        assert pipeline_config_raw is None
+        assert pipeline_config_str is None
+        pipeline_config = AnnotationConfigParser.parse_config_file(
+            pipeline_config_file, grr=grr_repository)
+    elif pipeline_config_str is not None:
+        assert pipeline_config_raw is None
+        assert pipeline_config is None
+        pipeline_config = AnnotationConfigParser.parse_str(
+            pipeline_config_str, grr=grr_repository)
+    elif pipeline_config_raw is not None:
+        assert pipeline_config is None
+        pipeline_config = AnnotationConfigParser.parse_raw(
+            pipeline_config_raw, grr=grr_repository)
+    assert pipeline_config is not None
+
     pipeline = AnnotationPipeline(grr_repository)
 
-    for idx, annotator_config in enumerate(pipeline_config):
-        annotator_id = f"A{idx+1}"
-        raw_config_copy = copy.deepcopy(annotator_config)
+    for annotator_config in pipeline_config:
         try:
             builder = get_annotator_factory(annotator_config.type)
             annotator = builder(pipeline, annotator_config)
@@ -320,8 +386,8 @@ def build_annotation_pipeline(
             pipeline.add_annotator(annotator)
         except ValueError as value_error:
             raise AnnotationConfigurationError(
-                f"The {annotator_id} annotator ({idx+1}-th)"
-                f" configuration {raw_config_copy} is incorrect: ",
+                f"The {annotator_config.annotator_id} annotator"
+                f" configuration is incorrect: ",
                 value_error) from value_error
 
     return pipeline
