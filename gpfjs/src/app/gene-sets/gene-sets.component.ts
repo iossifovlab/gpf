@@ -186,7 +186,10 @@ export class GeneSetsComponent extends StatefulComponent implements OnInit {
   }
 
   public geneSetToString(set: GeneSet): string {
-    return `${set.name} (${set.count}): ${set.desc}`;
+    if (set.desc) {
+      return `${set.name} (${set.count}): ${set.desc}`;
+    }
+    return `${set.name} (${set.count})`;
   }
 
   private fillDropdown(): void {
@@ -207,6 +210,7 @@ export class GeneSetsComponent extends StatefulComponent implements OnInit {
     }).bind('focus', () => {
       dropdown.val('');
       this.onSelect(null);
+      dropdown.removeAttr('title');
       dropdown.autocomplete('search');
     });
   }

@@ -3,5 +3,6 @@
     #measureSelectorDropdown
     id="tags"
     placeholder="Select or start typing to search"
-    (window:resize)="measureSelectorDropdownRef.nativeElement.blur()" />
+    (window:resize)="measureSelectorDropdownRef.nativeElement.blur()"
+    [value]="searchString" />
 </div>
