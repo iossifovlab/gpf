@@ -196,3 +196,22 @@ def test_post_pheno_tool(rest_client: RESTClient) -> None:
 
     assert test_results is not None
     assert isinstance(test_results, dict)
+
+
+def test_gene_sets_download(rest_client: RESTClient) -> None:
+    response = rest_client.get_gene_sets("main")
+    assert response is not None
+    gene_set = response[0]
+
+    assert gene_set["name"] == "CHD8 target genes"
+    assert gene_set["desc"] == (
+        "Cotney J, et al. "
+        "The autism-associated chromatin modifier"
+        " CHD8 regulates other autism risk genes during human"
+        " neurodevelopment. Nat Commun. (2015)"
+    )
+    assert gene_set["download"] == (
+        "gene_sets/gene_set_download?geneSetsCollection"
+        "=main&geneSet=CHD8+target+genes&geneSetsTypes=%7B%7D"
+    )
+    assert gene_set["count"] == 2158
