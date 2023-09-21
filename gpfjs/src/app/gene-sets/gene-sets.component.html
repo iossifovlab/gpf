@@ -60,6 +60,7 @@
           [disabled]="isLoading"
           [placeholder]="isLoading ? 'Loading...' : 'Select or start typing to search'"
           (window:resize)="geneSetsDropdownRef.nativeElement.blur()" />
+          [value]="selectedGeneSet ? geneSetToString(selectedGeneSet) : ''" />
       </fieldset>
 
       <div *ngIf="selectedGeneSet">

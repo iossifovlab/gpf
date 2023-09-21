@@ -102,11 +102,11 @@ export class GeneSetsComponent extends StatefulComponent implements OnInit {
       this.fillDropdown();
       this.isLoading = false;
       this.store.selectOnce(state => state.geneSetsState).subscribe((state) => {
-        if (!state.geneSet || !state.geneSet.geneSet) {
+        if (!state.geneSet) {
           return;
         }
         for (const geneSet of this.geneSets) {
-          if (geneSet.name === state.geneSet.geneSet) {
+          if (geneSet.name === state.geneSet.name) {
             this.geneSetsLocalState.geneSet = geneSet;
           }
         }
@@ -185,7 +185,7 @@ export class GeneSetsComponent extends StatefulComponent implements OnInit {
     this.isLoading = true;
   }
 
-  private geneSetToString(set: GeneSet): string {
+  public geneSetToString(set: GeneSet): string {
     return `${set.name} (${set.count}): ${set.desc}`;
   }
 
@@ -216,7 +216,7 @@ export class GeneSetsComponent extends StatefulComponent implements OnInit {
   }
 
   public setSelectedGeneType(datasetId: string, personSetCollectionId: string, geneType: string, value: boolean): void {
-    if ((this.geneSetsDropdownRef.nativeElement as HTMLInputElement).value !== '') {
+    if (this.geneSetsDropdownRef && (this.geneSetsDropdownRef.nativeElement as HTMLInputElement).value !== '') {
       (this.geneSetsDropdownRef.nativeElement as HTMLInputElement).value = '';
     }
 
