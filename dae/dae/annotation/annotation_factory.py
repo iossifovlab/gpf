@@ -345,7 +345,8 @@ def build_annotation_pipeline(
         pipeline_config_str: Optional[str] = None,
         grr_repository: Optional[GenomicResourceRepo] = None,
         grr_repository_file: Optional[str] = None,
-        grr_repository_definition: Optional[dict] = None
+        grr_repository_definition: Optional[dict] = None,
+        allow_repeated_attributes: bool = False,
 ) -> AnnotationPipeline:
     """Build an annotation pipeline."""
     if not grr_repository:
@@ -382,7 +383,7 @@ def build_annotation_pipeline(
             annotator = InputAnnotableAnnotatorDecorator.decorate(annotator)
             annotator = ValueTransformAnnotatorDecorator.decorate(annotator)
             check_for_unused_parameters(annotator_config)
-            check_for_repeated_attributes(pipeline, annotator_config)
+            check_for_repeated_attributes_in_annotator(annotator_config)
             pipeline.add_annotator(annotator)
         except ValueError as value_error:
             raise AnnotationConfigurationError(
@@ -390,17 +391,19 @@ def build_annotation_pipeline(
                 f" configuration is incorrect: ",
                 value_error) from value_error
 
+    check_for_repeated_attributes_in_pipeline(
+        pipeline, allow_repeated_attributes
+    )
+
     return pipeline
 
 
-def check_for_repeated_attributes(
-        pipeline: AnnotationPipeline,
-        annotator_config: AnnotatorInfo) -> None:
-    """Check repeated attributes in annotator configuration."""
+def check_for_repeated_attributes_in_annotator(
+    annotator_config: AnnotatorInfo
+) -> None:
+    """Check for repeated attributes in annotator configuration."""
     annotator_names_list = [att.name for att in annotator_config.attributes]
     annotator_names_set = set(annotator_names_list)
-    pipeline_names_set = {att.name for att in pipeline.get_attributes()}
-
     if len(annotator_names_set) < len(annotator_names_list):
         repeated_annotator_names = ",".join(sorted(
             [att for att, cnt in Counter(annotator_names_list).items()
@@ -408,12 +411,35 @@ def check_for_repeated_attributes(
         raise ValueError("The annotator has repeated attributes: "
                          f"{repeated_annotator_names}")
 
-    if pipeline_names_set & annotator_names_set:
-        repeated_attributes = \
-            ",".join(sorted(pipeline_names_set & annotator_names_set))
-        raise ValueError("The annotator repeats the attributes "
-                         f"{repeated_attributes} that are already in "
-                         f"the pipeline")
+
+def check_for_repeated_attributes_in_pipeline(
+    pipeline: AnnotationPipeline, allow_repeated_attributes: bool = False
+) -> None:
+    """Check for repeated attributes in pipeline configuration."""
+    pipeline_names_set = Counter(att.name for att in pipeline.get_attributes())
+    repeated_attributes = {
+        att for att, cnt in Counter(pipeline_names_set).items() if cnt > 1
+    }
+    if repeated_attributes:
+        attrs_err_msg = ",".join(sorted(repeated_attributes))
+        if not allow_repeated_attributes:
+            raise AnnotationConfigurationError(
+                "The annotator repeats the attributes "
+                 f"{attrs_err_msg} that are already in "
+                 f"the pipeline"
+            )
+        resolve_repeated_attributes(pipeline, repeated_attributes)
+
+
+def resolve_repeated_attributes(
+    pipeline: AnnotationPipeline, repeated_attributes: set[str]
+) -> None:
+    """Resolve repeated attributes in pipeline configuration via renaming."""
+    for rep in repeated_attributes:
+        for annotator in pipeline.annotators:
+            for attribute in annotator.attributes:
+                if attribute.name == rep:
+                    attribute.name = f"{attribute.name}_({annotator.get_info().annotator_id})"  # noqa
 
 
 def check_for_unused_parameters(info: AnnotatorInfo) -> None:
