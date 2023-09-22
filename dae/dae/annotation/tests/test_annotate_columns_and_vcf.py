@@ -85,6 +85,10 @@ def annotate_directory_fixture(tmp_path: pathlib.Path) -> pathlib.Path:
             "annotation_quotes_in_description.yaml": """
                 - position_score: four
             """,
+            "annotation_repeated_attributes.yaml": """
+                - position_score: one
+                - position_score: four
+            """,
             "grr.yaml": f"""
                 id: mm
                 type: dir
@@ -175,10 +179,19 @@ def annotate_directory_fixture(tmp_path: pathlib.Path) -> pathlib.Path:
         chr1   24         C          A            c,d
         chr1   25         C          A            e||f
     """)
+    four_content = textwrap.dedent("""
+        chrom  pos_begin  s1
+        chr1   23         0.101
+        chr1   24         0.201
+        chr2   33         0.301
+        chr2   34         0.401
+        chr3   43         0.501
+        chr3   44         0.601
+    """)
     setup_denovo(root_path / "grr" / "one" / "data.txt", one_content)
     setup_denovo(root_path / "grr" / "two" / "data.txt", two_content)
     setup_denovo(root_path / "grr" / "three" / "data.txt", three_content)
-    setup_denovo(root_path / "grr" / "four" / "data.txt", one_content)
+    setup_denovo(root_path / "grr" / "four" / "data.txt", four_content)
     return root_path
 
 
@@ -527,3 +540,79 @@ def test_vcf_description_with_quotes(
         info = vcf_file.header.info
     assert info["score"].description == \
         'The \\"phastCons\\" computed over the tree of 100 verterbrate species'  # noqa
+
+
+def test_annotate_columns_repeated_attributes(
+    annotate_directory_fixture: pathlib.Path
+) -> None:
+    in_content = textwrap.dedent("""
+        chrom   pos
+        chr1    23
+        chr1    24
+    """)
+    out_expected_content = (
+        "chrom\tpos\tscore_(#0)\tscore_(#1)\n"
+        "chr1\t23\t0.1\t0.101\n"
+        "chr1\t24\t0.2\t0.201\n"
+    )
+    root_path = annotate_directory_fixture
+    in_file = root_path / "in.txt"
+    out_file = root_path / "out.txt"
+    annotation_file = root_path / "annotation_repeated_attributes.yaml"
+    grr_file = root_path / "grr.yaml"
+    work_dir = root_path / "work"
+
+    setup_denovo(in_file, in_content)
+
+    cli_columns([
+        str(a) for a in [
+            in_file, annotation_file,
+            "--grr", grr_file,
+            "-o", out_file,
+            "-w", work_dir,
+            "-j", 1,
+            "--rename-repeated"
+        ]
+    ])
+    out_file_content = get_file_content_as_string(str(out_file))
+    assert out_file_content == out_expected_content
+
+
+def test_annotate_vcf_repeated_attributes(
+    annotate_directory_fixture: pathlib.Path
+) -> None:
+    in_content = textwrap.dedent("""
+        ##fileformat=VCFv4.2
+        ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+        ##contig=<ID=chr1>
+        #CHROM POS ID REF ALT QUAL FILTER INFO FORMAT m1  d1  c1
+        chr1   23  .  C   T   .    .      .    GT     0/1 0/0 0/0
+        chr1   24  .  C   A   .    .      .    GT     0/0 0/1 0/0
+    """)
+    root_path = annotate_directory_fixture
+    in_file = root_path / "in.vcf"
+    out_file = root_path / "out.vcf"
+    workdir = root_path / "output"
+    annotation_file = root_path / "annotation_repeated_attributes.yaml"
+    grr_file = root_path / "grr.yaml"
+
+    setup_vcf(in_file, in_content)
+
+    cli_vcf([
+        str(a) for a in [
+            in_file, annotation_file,
+            "--grr", grr_file,
+            "-o", out_file,
+            "-w", workdir,
+            "-j", 1,
+            "--rename-repeated"
+        ]
+    ])
+
+    result = []
+    # pylint: disable=no-member
+    with pysam.VariantFile(str(out_file)) as vcf_file:
+        for vcf in vcf_file.fetch():
+            result.append(vcf.info["score_(#0)"][0])
+            result.append(vcf.info["score_(#1)"][0])
+    assert result == ["0.1", "0.101", "0.2", "0.201"]

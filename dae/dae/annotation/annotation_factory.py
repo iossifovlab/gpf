@@ -425,8 +425,8 @@ def check_for_repeated_attributes_in_pipeline(
         if not allow_repeated_attributes:
             raise AnnotationConfigurationError(
                 "The annotator repeats the attributes "
-                 f"{attrs_err_msg} that are already in "
-                 f"the pipeline"
+                f"{attrs_err_msg} that are already in "
+                f"the pipeline"
             )
         resolve_repeated_attributes(pipeline, repeated_attributes)
 

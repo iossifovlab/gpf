@@ -28,7 +28,8 @@ class CLIAnnotationContext(CLIGenomicContext):
             grr = context.get_genomic_resources_repository()
             pipeline = build_annotation_pipeline(
                 pipeline_config_file=args.pipeline,
-                grr_repository=grr)
+                grr_repository=grr,
+                allow_repeated_attributes=args.rename_repeated)
             context_objects["annotation_pipeline"] = pipeline
 
         return CLIAnnotationContext(

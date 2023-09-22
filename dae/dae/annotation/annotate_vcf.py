@@ -52,6 +52,10 @@ def configure_argument_parser() -> argparse.ArgumentParser:
                         default=None)
     parser.add_argument("--reannotate", default=None,
                         help="Old pipeline config to reannotate over")
+    parser.add_argument("--rename-repeated", default=False,
+                        action="store_true",
+                        help="Rename repeated attributes instead of raising"
+                        " an error.")
     CLIAnnotationContext.add_context_arguments(parser)
     TaskGraphCli.add_arguments(parser)
     VerbosityConfiguration.set_argumnets(parser)
@@ -105,7 +109,8 @@ def annotate(  # pylint: disable=too-many-locals,too-many-branches
     pipeline_config: Optional[list[AnnotatorInfo]],
     grr_definition: Optional[dict],
     out_file_path: str,
-    reannotate: Optional[str] = None
+    rename_repeated: bool,
+    reannotate: Optional[str] = None,
 ) -> None:
     # flake8: noqa: C901
     """Annotate a region from a given input VCF file using a pipeline."""
@@ -113,12 +118,14 @@ def annotate(  # pylint: disable=too-many-locals,too-many-branches
 
     pipeline = build_annotation_pipeline(
         pipeline_config=pipeline_config,
-        grr_repository=grr)
+        grr_repository=grr,
+        allow_repeated_attributes=rename_repeated)
 
     if reannotate:
         pipeline_old = build_annotation_pipeline(
             pipeline_config_file=reannotate,
-            grr_repository=grr
+            grr_repository=grr,
+            allow_repeated_attributes=rename_repeated
         )
         pipeline_new = pipeline
         pipeline = ReannotationPipeline(pipeline_new, pipeline_old)
@@ -318,7 +325,6 @@ def cli(raw_args: Optional[list[str]] = None) -> None:
     if not os.path.exists(args.work_dir):
         os.mkdir(args.work_dir)
 
-
     task_graph = TaskGraph()
 
     task_graph.input_files.append(args.input)
@@ -327,14 +333,12 @@ def cli(raw_args: Optional[list[str]] = None) -> None:
         task_graph.input_files.append(args.reannotate)
 
     if not tabix_index_filename(args.input):
-        # annotate(args.input, None, pipeline.get_info(),
-        #          grr.definition, output, args.reannotate)
         assert grr is not None
         task_graph.create_task(
             "all_variants_annotate",
             annotate,
             [args.input, None, pipeline.get_info(),
-             grr.definition, output, args.reannotate],
+             grr.definition, output, args.rename_repeated, args.reannotate],
             []
         )
     else:
@@ -349,7 +353,7 @@ def cli(raw_args: Optional[list[str]] = None) -> None:
                 annotate,
                 [args.input, region,
                  pipeline.get_info(), grr.definition,
-                 file_path, args.reannotate],
+                 file_path, args.rename_repeated, args.reannotate],
                 []
             ))
 
