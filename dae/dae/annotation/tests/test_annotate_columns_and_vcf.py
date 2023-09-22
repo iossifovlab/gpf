@@ -335,11 +335,11 @@ def test_vcf_multiple_chroms(
                       "0.3", "0.4",
                       "0.5", "0.6"]
     assert os.path.exists(out_file_tbi)
-    assert os.listdir(workdir) == [
+    assert set(os.listdir(workdir)) == {
         ".tasks-log",     # default task logs dir
         ".tasks-status",  # default task status dir
         # part files must be cleaned up
-    ]
+    }
 
 
 def test_produce_partfile_paths() -> None:
@@ -405,11 +405,11 @@ def test_annotate_columns_multiple_chrom(
         out_file_content = out.read()
     assert out_file_content == out_expected_content
     assert os.path.exists(out_file_tbi)
-    assert os.listdir(workdir) == [
+    assert set(os.listdir(workdir)) == {
         ".tasks-log",     # default task logs dir
         ".tasks-status",  # default task status dir
         # part files must be cleaned up
-    ]
+    }
 
 
 def test_annotate_vcf_forbidden_symbol_replacement(
