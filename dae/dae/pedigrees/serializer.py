@@ -37,6 +37,6 @@ class FamiliesTsvSerializer:
                 if member.not_sequenced else False
             row = []
             for col in columns:
-                row.append(str(record[col]))
+                row.append(str(record.get(col, "-")))
             rows.append(f"{sep.join(row)}\n")
         return rows
