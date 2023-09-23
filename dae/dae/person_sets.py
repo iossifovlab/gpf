@@ -50,7 +50,7 @@ class PersonSet:
 
     def get_children(self) -> Generator[Person, None, None]:
         for person in self.persons.values():
-            if person.has_parent() and not person.generated:
+            if person.role in {Role.prb, Role.sib, Role.child}:
                 yield person
 
     def to_json(self) -> dict[str, Any]:
@@ -365,7 +365,7 @@ class PersonSetCollection:
             PersonSetCollection._produce_default_person_set(config),
             families)
 
-        for person_id, person in families.persons.items():
+        for person_id, person in families.real_persons.items():
             person_set = first.get_person_set(person_id)
             if person_set is not None:
                 result.person_sets[person_set.id].persons[person_id] = person
