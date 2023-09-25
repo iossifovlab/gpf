@@ -7,7 +7,7 @@
           title="{{ selectedGeneSetsCollection.desc }}"
           [(ngModel)]="selectedGeneSetsCollection"
           required
-          (change)="isLoading = true"
+          (change)="cleanInput()"
           id="selected-collection">
           <option *ngFor="let collection of geneSetsCollections" [ngValue]="collection">{{ collection.desc }}</option>
         </select>
@@ -59,7 +59,9 @@
           id="sets"
           [disabled]="isLoading"
           [placeholder]="isLoading ? 'Loading...' : 'Select or start typing to search'"
-          (window:resize)="geneSetsDropdownRef.nativeElement.blur()" />
+          (window:resize)="geneSetsDropdownRef.nativeElement.blur()"
+          (input)="onSearch(geneSetsDropdown.value)"
+          [value]="selectedGeneSet ? geneSetToString(selectedGeneSet) : ''" />
       </fieldset>
 
       <div *ngIf="selectedGeneSet">
