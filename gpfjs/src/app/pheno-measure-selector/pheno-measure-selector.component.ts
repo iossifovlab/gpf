@@ -56,6 +56,7 @@ export class PhenoMeasureSelectorComponent implements AfterViewInit {
       },
     }).bind('focus', () => {
       dropdown.val('');
+      dropdown.removeAttr('title');
       dropdown.autocomplete('search');
       this.selectMeasure(null);
     });
