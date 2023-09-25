@@ -155,7 +155,7 @@ export class GeneSetsComponent extends StatefulComponent implements OnInit {
     }
   }
 
-  public onSearch(searchTerm = ''): number {
+  public onSearch(searchTerm = ''): void {
     if (!this.selectedGeneSetsCollection) {
       return;
     }
@@ -196,7 +196,7 @@ export class GeneSetsComponent extends StatefulComponent implements OnInit {
     const dropdown = $('#sets') as unknown as JqueryUIElement;
     dropdown.autocomplete({
       minLength: 0,
-      delay: 0,
+      delay: 500,
       source: this.geneSets.map(set => this.geneSetToString(set)),
       select: (event, ui: {item: { value: string }}) => {
         for (const set of this.geneSets) {
