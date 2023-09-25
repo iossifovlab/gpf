@@ -59,7 +59,8 @@
           id="sets"
           [disabled]="isLoading"
           [placeholder]="isLoading ? 'Loading...' : 'Select or start typing to search'"
-          (window:resize)="geneSetsDropdownRef.nativeElement.blur()" />
+          (window:resize)="geneSetsDropdownRef.nativeElement.blur()"
+          (input)="onSearch(geneSetsDropdown.value)"
           [value]="selectedGeneSet ? geneSetToString(selectedGeneSet) : ''" />
       </fieldset>
 
