@@ -1,7 +1,8 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 
-from requests import Response
 from remote.rest_api_client import RESTClient
+from remote.gene_sets_db import RemoteGeneSetCollection
+from requests import Response
 
 
 def test_get_datasets(rest_client: RESTClient) -> None:
@@ -198,10 +199,12 @@ def test_post_pheno_tool(rest_client: RESTClient) -> None:
     assert isinstance(test_results, dict)
 
 
-def test_gene_sets_download(rest_client: RESTClient) -> None:
-    response = rest_client.get_gene_sets("main")
-    assert response is not None
-    gene_set = response[0]
+def test_get_gene_set(rest_client: RESTClient) -> None:
+    rgsc = RemoteGeneSetCollection(
+        "main", rest_client, "", ""
+    )
+    gene_set = rgsc.get_gene_set("CHD8 target genes")
+    assert gene_set is not None
 
     assert gene_set["name"] == "CHD8 target genes"
     assert gene_set["desc"] == (
@@ -210,8 +213,6 @@ def test_gene_sets_download(rest_client: RESTClient) -> None:
         " CHD8 regulates other autism risk genes during human"
         " neurodevelopment. Nat Commun. (2015)"
     )
-    assert gene_set["download"] == (
-        "gene_sets/gene_set_download?geneSetsCollection"
-        "=main&geneSet=CHD8+target+genes&geneSetsTypes=%7B%7D"
-    )
+
     assert gene_set["count"] == 2158
+    assert len(gene_set["syms"]) == 2158
