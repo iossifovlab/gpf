@@ -1,23 +1,26 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import io
 import textwrap
+from typing import TextIO, Optional
 import pytest
 
 from dae.variants_loaders.cnv.loader import CNVLoader
 from dae.variants.attributes import Inheritance
 from dae.variants.core import Allele
+from dae.gpf_instance import GPFInstance
 
 from dae.testing import convert_to_tab_separated
 from dae.pedigrees.loader import FamiliesLoader
+from dae.pedigrees.family import FamiliesData
 
 
 @pytest.fixture
-def abn_families():
+def abn_families() -> FamiliesData:
     ped_content = io.StringIO(convert_to_tab_separated(
         """
             familyId personId dadId	 momId	sex status role
-            p1       p1       0      0      2   2      prb
-            p2       p2       0      0      1   2      prb
+            f1       p1       0      0      2   2      prb
+            f2       p2       0      0      1   2      prb
         """))
     families = FamiliesLoader(ped_content).load()
     assert families is not None
@@ -25,7 +28,7 @@ def abn_families():
 
 
 @pytest.fixture
-def canvas_cnv():
+def canvas_cnv() -> TextIO:
     content = io.StringIO(convert_to_tab_separated(textwrap.dedent(
         """
         study_id  family_id  person_id  location            variant
@@ -43,12 +46,17 @@ def canvas_cnv():
     ]
 )
 def test_cnv_loader_expected_inheritance(
-        abn_families, canvas_cnv, gpf_instance_2013,
-        transmission_type, expected_inheritance):
+    abn_families: FamiliesData,
+    canvas_cnv: str,
+    gpf_instance_2013: GPFInstance,
+    transmission_type: str,
+    expected_inheritance: Inheritance
+) -> None:
 
     loader = CNVLoader(
         abn_families, [canvas_cnv], gpf_instance_2013.reference_genome,
         params={
+            "cnv_family_id": "family_id",
             "cnv_person_id": "person_id",
             "cnv_location": "location",
             "cnv_variant_type": "variant",
@@ -73,9 +81,12 @@ def test_cnv_loader_expected_inheritance(
     ]
 )
 def test_cnv_loader_expected_variant_type(
-        abn_families, canvas_cnv, gpf_instance_2013,
-        variant_index, expected_variant_type):
-
+    abn_families: FamiliesData,
+    canvas_cnv: TextIO,
+    gpf_instance_2013: GPFInstance,
+    variant_index: int,
+    expected_variant_type: Allele.Type
+) -> None:
     loader = CNVLoader(
         abn_families, [canvas_cnv], gpf_instance_2013.reference_genome,
         params={
@@ -108,8 +119,12 @@ def test_cnv_loader_expected_variant_type(
     ]
 )
 def test_cnv_loader_regions(
-        abn_families, canvas_cnv, gpf_instance_2013,
-        add_chrom_prefix, region, expected):
+    abn_families: FamiliesData, canvas_cnv: TextIO,
+    gpf_instance_2013: GPFInstance,
+    add_chrom_prefix: Optional[str],
+    region: str,
+    expected: int
+) -> None:
 
     loader = CNVLoader(
         abn_families, [canvas_cnv], gpf_instance_2013.reference_genome,
@@ -127,7 +142,7 @@ def test_cnv_loader_regions(
     variants = list(loader.full_variants_iterator())
     assert len(variants) == 2
 
-    loader.reset_regions(region)
+    loader.reset_regions([region])
     variants = list(loader.family_variants_iterator())
     assert len(variants) == expected
 
@@ -144,8 +159,12 @@ def test_cnv_loader_regions(
     ]
 )
 def test_cnv_loader_constructor_regions(
-        abn_families, canvas_cnv, gpf_instance_2013,
-        add_chrom_prefix, region, expected):
+    abn_families: FamiliesData,
+    canvas_cnv: TextIO,
+    gpf_instance_2013: GPFInstance,
+    add_chrom_prefix: Optional[str],
+    region: str, expected: int
+) -> None:
 
     loader = CNVLoader(
         abn_families, [canvas_cnv], gpf_instance_2013.reference_genome,
@@ -175,18 +194,22 @@ def test_cnv_loader_constructor_regions(
     ]
 )
 def test_cnv_loader_del_chrom_prefix_regions(
-        abn_families, gpf_instance_2013, region, expected):
+    abn_families: FamiliesData,
+    gpf_instance_2013: GPFInstance,
+    region: str,
+    expected: int
+) -> None:
 
     content = io.StringIO(convert_to_tab_separated(textwrap.dedent(
         """
         study_id  family_id  person_id  location               variant
-        st1       p1         p1         chr1:10000000-2000000  LOSS
-        st1       p2         p2         chr2:10000000-2000000  GAIN
+        st1       f1         p1         chr1:10000000-2000000  LOSS
+        st1       f2         p2         chr2:10000000-2000000  GAIN
         """
     )))
 
     loader = CNVLoader(
-        abn_families, [content],  # type: ignore
+        abn_families, [content],
         genome=gpf_instance_2013.reference_genome,
         params={
             "cnv_person_id": "person_id",
@@ -202,6 +225,6 @@ def test_cnv_loader_del_chrom_prefix_regions(
     variants = list(loader.full_variants_iterator())
     assert len(variants) == 2
 
-    loader.reset_regions(region)
+    loader.reset_regions([region])
     variants = list(loader.family_variants_iterator())
     assert len(variants) == expected

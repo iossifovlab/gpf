@@ -33,21 +33,19 @@ class GenotypeHelper:
         children = list(
             families.persons_with_roles(
                 roles=[Role.prb, Role.sib, Role.child]))
-
         for person_set_id, person_set in \
                 self.person_set_collection.person_sets.items():
             children_by_sex: dict[str, set[str]] = defaultdict(set)
             seen = set()
             for person in children:
-                iid = f"{person.family_id}:{person.person_id}"
-                if iid in seen:
+                if person.fpid in seen:
                     continue
 
-                if person.person_id not in person_set.persons:
+                if person.fpid not in person_set.persons:
                     continue
 
-                children_by_sex[person.sex.name].add(person.person_id)
-                seen.add(iid)
+                children_by_sex[person.sex.name].add(person.fpid)
+                seen.add(person.fpid)
             self._children_by_sex[person_set_id] = children_by_sex
             counter: dict[str, int] = Counter()
             for sex, persons in children_by_sex.items():

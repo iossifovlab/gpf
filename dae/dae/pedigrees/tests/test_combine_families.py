@@ -6,6 +6,7 @@ import pytest
 from dae.pedigrees.loader import FamiliesLoader
 from dae.pedigrees.family import FamiliesData
 from dae.pedigrees.family_tag_builder import FamilyTagsBuilder
+from dae.variants.attributes import Sex, Status
 
 from dae.testing import setup_pedigree
 
@@ -189,11 +190,11 @@ def ped_gen_and_mis(tmp_path: pathlib.Path) -> FamiliesData:
 
 
 def test_generated_and_missing_persons(ped_gen_and_mis: FamiliesData) -> None:
-    p_s3 = ped_gen_and_mis.persons["f1.s3"]
+    p_s3 = ped_gen_and_mis.persons[("f1", "f1.s3")]
     assert p_s3.missing
     assert not p_s3.generated
 
-    p_s4 = ped_gen_and_mis.persons["f1.s4"]
+    p_s4 = ped_gen_and_mis.persons[("f1", "f1.s4")]
     assert p_s4.missing
     assert p_s4.generated
 
@@ -209,11 +210,11 @@ def test_combine_families_generated_and_missing(
         forced=False,
     )
 
-    p_s3 = new_families.persons["f1.s3"]
+    p_s3 = new_families.persons[("f1", "f1.s3")]
     assert p_s3.missing
     assert not p_s3.generated
 
-    p_s4 = new_families.persons["f1.s4"]
+    p_s4 = new_families.persons[("f1", "f1.s4")]
     assert p_s4.missing
     assert p_s4.generated
 
@@ -247,7 +248,66 @@ def test_combine_families_creates_copy(
     assert len(ped_a["f1"].tags.intersection(["tag_family_type"])) == 0
     assert len(ped_f["f2"].tags.intersection(["tag_family_type"])) == 0
     assert len(ped_g["f1"].tags.intersection(["tag_family_type"])) == 0
-    assert ped_a["f1"].persons["f1.dad"].get_attr("tag_family_type") is None
-    assert ped_f["f2"].persons["f2.dad"].get_attr("tag_family_type") is None
-    assert ped_g["f1"].persons["f1.dad"].get_attr("tag_family_type") is None
-    assert ped_g["f3"].persons["f3.dad"].get_attr("tag_family_type") is None
+    assert ped_a["f1"].persons["f1.dad"] \
+        .get_attr("tag_family_type") is None
+    assert ped_f["f2"].persons["f2.dad"] \
+        .get_attr("tag_family_type") is None
+    assert ped_g["f1"].persons["f1.dad"] \
+        .get_attr("tag_family_type") is None
+    assert ped_g["f3"].persons["f3.dad"] \
+        .get_attr("tag_family_type") is None
+
+
+@pytest.fixture
+def ped_f1_all(tmp_path: pathlib.Path) -> FamiliesData:
+    ped_path = setup_pedigree(
+        tmp_path / "ped_a" / "ped.ped", textwrap.dedent("""
+        familyId  personId  dadId   momId   sex  status  role
+        f1        f1.dad    0       0       1    1       dad
+        f1        f1.mom    0       0       2    1       mom
+        f1        f1.s2     f1.dad  f1.mom  2    1       sib
+        f1        f1.p1     f1.dad  f1.mom  1    2       prb
+        f1        f1.s3     f1.dad  f1.mom  1    1       sib
+        f1        f1.s4     f1.dad  f1.mom  2    1       sib
+        """)
+    )
+    return FamiliesLoader(str(ped_path)).load()
+
+
+def test_combine_missing(
+    ped_gen_and_mis: FamiliesData, ped_f1_all: FamiliesData
+) -> None:
+    combined1 = FamiliesData.combine(
+        ped_gen_and_mis,
+        ped_f1_all,
+        forced=True
+    )
+    person = combined1.persons[("f1", "f1.s3")]
+    assert not person.missing
+    assert not person.generated
+    assert person.sex == Sex.male
+    assert person.status == Status.unaffected
+
+    person = combined1.persons[("f1", "f1.s4")]
+    assert not person.missing
+    assert not person.generated
+    assert person.sex == Sex.female
+    assert person.status == Status.unaffected
+
+    combined2 = FamiliesData.combine(
+        ped_f1_all,
+        ped_gen_and_mis,
+        forced=True
+    )
+
+    person = combined2.persons[("f1", "f1.s3")]
+    assert not person.missing
+    assert not person.generated
+    assert person.sex == Sex.male
+    assert person.status == Status.unaffected
+
+    person = combined2.persons[("f1", "f1.s4")]
+    assert not person.missing
+    assert not person.generated
+    assert person.sex == Sex.female
+    assert person.status == Status.unaffected

@@ -118,8 +118,10 @@ def test_from_pedigree(
     result_person_ids = set(
         status_collection.person_sets["affected"].persons.keys()
     )
+
     assert result_person_ids == {
-        "prb2", "sib2_3", "sib2", "prb1", "sib1"
+        ("f2", "prb2"), ("f2", "sib2_3"),
+        ("f1", "sib2"), ("f1", "prb1"), ("f1", "sib1")
     }
 
 
@@ -191,7 +193,7 @@ def test_get_person_color(
 
     assert (
         PersonSetCollection.get_person_color(
-            families_fixture.persons["prb1"], status_collection
+            families_fixture.persons[("f1", "prb1")], status_collection
         )
         == "#aabbcc"
     )
@@ -305,8 +307,9 @@ def test_multiple_column_person_set(
         status_sex_collection.person_sets["affected_female"].persons.keys()
     )
 
-    assert affected_male == {"prb1", "prb2"}
-    assert affected_female == {"sib1", "sib2", "sib2_3"}
+    assert affected_male == {("f1", "prb1"), ("f2", "prb2")}
+    assert affected_female == {
+        ("f1", "sib1"), ("f1", "sib2"), ("f2", "sib2_3")}
 
 
 def test_phenotype_person_set_categorical(
@@ -345,8 +348,8 @@ def test_phenotype_person_set_categorical(
         pheno_categorical_collection.person_sets["option2"].persons.keys()
     )
 
-    assert option1 == {"mom1"}
-    assert option2 == {"prb1"}
+    assert option1 == {("f1", "mom1")}
+    assert option2 == {("f1", "prb1")}
 
 
 def test_phenotype_person_set_continuous(
@@ -393,10 +396,13 @@ def test_genotype_group_person_sets(
     phenotype_collection = genotype_data_group.get_person_set_collection(
         "phenotype"
     )
+    assert phenotype_collection is not None
 
-    expected_unaffected_persons = set(
-        ["person1", "person2", "person5", "person6"]
-    )
+    expected_unaffected_persons = {
+        ("f1", "person1"), ("f1", "person2"),
+        ("f2", "person5"), ("f2", "person6")
+    }
+
     assert (
         set(phenotype_collection.person_sets["unaffected"].persons.keys())
         == expected_unaffected_persons
@@ -413,8 +419,7 @@ def test_genotype_group_person_sets_overlapping(
     phenotype_collection = genotype_data_group.get_person_set_collection(
         "phenotype"
     )
-
-    print(phenotype_collection.person_sets)
+    assert phenotype_collection is not None
 
     unaffected_persons = set(
         phenotype_collection.person_sets["unaffected"].persons.keys()
@@ -424,8 +429,8 @@ def test_genotype_group_person_sets_overlapping(
     phenotype2_persons = set(
         phenotype_collection.person_sets["phenotype1"].persons.keys()
     )
-    assert "person3" not in unaffected_persons
-    assert "person3" in phenotype2_persons
+    assert ("f1", "person3") not in unaffected_persons
+    assert ("f1", "person3") in phenotype2_persons
 
 
 def test_genotype_group_person_sets_subset(
@@ -438,7 +443,8 @@ def test_genotype_group_person_sets_subset(
             genotype_data_group_config)
 
     # Remove a person to simulate a subset of people being used
-    del genotype_data_group.families.persons["person4"]
+    del genotype_data_group.families.persons[("f1", "person4")]
+
     genotype_data_group._person_set_collections = {}
     genotype_data_group._build_person_set_collections()
 
@@ -453,8 +459,8 @@ def test_genotype_group_person_sets_subset(
         phenotype_collection.person_sets["phenotype1"].persons.keys()
     )
     assert (
-        "person4" not in unaffected_persons
-        and "person4" in phenotype1_persons
+        ("f1", "person4") not in unaffected_persons
+        and ("f1", "person4") in phenotype1_persons
     )
 
 

@@ -1,6 +1,6 @@
 from pathlib import Path
 from copy import deepcopy
-from typing import Callable, List, Optional, Dict, Any, Tuple, \
+from typing import Callable, Optional, Any, \
     Union, Generator, TextIO
 
 import numpy as np
@@ -16,13 +16,13 @@ from dae.pedigrees.family import FamiliesData
 
 
 def _cnv_location_to_vcf_trasformer() \
-        -> Callable[[Dict[str, Any]], Dict[str, Any]]:
+        -> Callable[[dict[str, Any]], dict[str, Any]]:
     """Expand shorthand loc notation to separate crom, pos, pos_end attrs.
 
     In case the input uses CNV location this transformer will produce
     internal (chrom, pos, pos_end) description of the CNV position.
     """
-    def transformer(result: Dict[str, Any]) -> Dict[str, Any]:
+    def transformer(result: dict[str, Any]) -> dict[str, Any]:
         location = result["location"]
         chrom, pos_range = location.split(":")
         beg, end = pos_range.split("-")
@@ -36,14 +36,14 @@ def _cnv_location_to_vcf_trasformer() \
 
 
 def _cnv_vcf_to_vcf_trasformer() \
-        -> Callable[[Dict[str, Any]], Dict[str, Any]]:
+        -> Callable[[dict[str, Any]], dict[str, Any]]:
     """Convert pos and pos_end to int.
 
     In case the input uses VCF-like description of the CNVs this
     transformer will check it and handle the proper type conversion for
     `pos` and `pos_end` values.
     """
-    def trasformer(result: Dict[str, Any]) -> Dict[str, Any]:
+    def trasformer(result: dict[str, Any]) -> dict[str, Any]:
         chrom = result["chrom"]
         pos = int(result["pos"])
         pos_end = int(result["pos_end"])
@@ -58,8 +58,8 @@ def _cnv_vcf_to_vcf_trasformer() \
 
 
 def _configure_cnv_location(
-        header: List[str],
-        transformers: List[Callable[[Dict[str, Any]], Dict[str, Any]]],
+        header: list[str],
+        transformers: list[Callable[[dict[str, Any]], dict[str, Any]]],
         cnv_chrom: Optional[str] = None,
         cnv_start: Optional[str] = None,
         cnv_end: Optional[str] = None,
@@ -101,14 +101,14 @@ def _configure_cnv_location(
 
 def _cnv_dae_best_state_to_best_state(
         families: FamiliesData, genome: ReferenceGenome) \
-        -> Callable[[Dict[str, Any]], Dict[str, Any]]:
+        -> Callable[[dict[str, Any]], dict[str, Any]]:
     """Transform old dae family id/best state to canonical form.
 
     In case the genotype of the CNVs is specified in old
     dae family id/best state notation, this transformer will handle it
     and transform it to canonical family id/best state form
     """
-    def transformer(result: Dict[str, Any]) -> Dict[str, Any]:
+    def transformer(result: dict[str, Any]) -> dict[str, Any]:
         variant_type = result["variant_type"]
         actual_ploidy = np.fromstring(
             result["best_state"], dtype=np.int8, sep=" ")
@@ -141,17 +141,23 @@ def _cnv_dae_best_state_to_best_state(
 
 def _cnv_person_id_to_best_state(
         families: FamiliesData, genome: ReferenceGenome) \
-        -> Callable[[Dict[str, Any]], Dict[str, Any]]:
+        -> Callable[[dict[str, Any]], dict[str, Any]]:
     """Transform variant into canonical family id/best state form.
 
     In case the genotype is specified by person id having the variant
     this transformer will transform it into canonical family id/best state
     form
     """
-    def transformer(result: Dict[str, Any]) -> Dict[str, Any]:
+    def transformer(result: dict[str, Any]) -> dict[str, Any]:
         person_id = result["person_id"]
-        person = families.persons[person_id]
-        family = families[person.family_id]
+        if "family_id" in result:
+            family_id = result["family_id"]
+            family = families[family_id]
+            person = family.persons[person_id]
+        else:
+            assert len(families.persons_by_person_id[person_id]) == 1
+            person = families.persons_by_person_id[person_id][0]
+            family = families[person.family_id]
 
         chrom = result["chrom"]
         pos = result["pos"]
@@ -176,8 +182,8 @@ def _cnv_person_id_to_best_state(
 
 
 def _configure_cnv_best_state(
-        header: List[str],
-        transformers: List[Callable[[Dict[str, Any]], Dict[str, Any]]],
+        header: list[str],
+        transformers: list[Callable[[dict[str, Any]], dict[str, Any]]],
         families: FamiliesData,
         genome: ReferenceGenome,
         cnv_person_id: Optional[str] = None,
@@ -214,8 +220,10 @@ def _configure_cnv_best_state(
             _cnv_dae_best_state_to_best_state(families, genome))
 
 
-def _cnv_variant_to_variant_type(cnv_plus_values=None, cnv_minus_values=None) \
-        -> Callable[[Dict[str, Any]], Dict[str, Any]]:
+def _cnv_variant_to_variant_type(
+    cnv_plus_values: Optional[list[str]] = None,
+    cnv_minus_values: Optional[list[str]] = None
+) -> Callable[[dict[str, Any]], dict[str, Any]]:
     """Transform variant type to canonical internal representation.
 
     This transformer is used to transform variant type to canonical
@@ -227,7 +235,7 @@ def _cnv_variant_to_variant_type(cnv_plus_values=None, cnv_minus_values=None) \
     if cnv_plus_values is None:
         cnv_plus_values = ["CNV+"]
 
-    def transformer(result: Dict[str, Any]) -> Dict[str, Any]:
+    def transformer(result: dict[str, Any]) -> dict[str, Any]:
         variant = result["variant"]
         if variant in cnv_plus_values:
             variant_type = Allele.Type.large_duplication
@@ -243,11 +251,12 @@ def _cnv_variant_to_variant_type(cnv_plus_values=None, cnv_minus_values=None) \
 
 
 def _configure_cnv_variant_type(
-        header: List[str],
-        transformers: List[Callable[[Dict[str, Any]], Dict[str, Any]]],
-        cnv_variant_type: Optional[str] = None,
-        cnv_plus_values: Optional[Union[str, List[str]]] = None,
-        cnv_minus_values: Optional[Union[str, List[str]]] = None):
+    header: list[str],
+    transformers: list[Callable[[dict[str, Any]], dict[str, Any]]],
+    cnv_variant_type: Optional[str] = None,
+    cnv_plus_values: Optional[Union[str, list[str]]] = None,
+    cnv_minus_values: Optional[Union[str, list[str]]] = None
+) -> None:
     """Configure header and transformer needed to handle CNV variant type."""
     if cnv_plus_values is None:
         cnv_plus_values = ["CNV+"]
@@ -271,7 +280,7 @@ def _configure_cnv_variant_type(
 
 
 def _configure_loader(
-        header: List[str],
+        header: list[str],
         families: FamiliesData,
         genome: ReferenceGenome,
         cnv_chrom: Optional[str] = None,
@@ -282,15 +291,15 @@ def _configure_loader(
         cnv_family_id: Optional[str] = None,
         cnv_best_state: Optional[str] = None,
         cnv_variant_type: Optional[str] = None,
-        cnv_plus_values: Optional[List[str]] = None,
-        cnv_minus_values: Optional[List[str]] = None) \
-        -> Tuple[
-            List[str],
-            List[Callable[[Dict[str, Any]], Dict[str, Any]]]]:
+        cnv_plus_values: Optional[list[str]] = None,
+        cnv_minus_values: Optional[list[str]] = None) \
+        -> tuple[
+            list[str],
+            list[Callable[[dict[str, Any]], dict[str, Any]]]]:
     """Configure all headers and transformers needed to handle CNVs input."""
     # pylint: disable=too-many-arguments
-    transformers: List[
-        Callable[[Dict[str, Any]], Dict[str, Any]]] = []
+    transformers: list[
+        Callable[[dict[str, Any]], dict[str, Any]]] = []
     header = deepcopy(header)
 
     _configure_cnv_location(
@@ -313,21 +322,22 @@ def _configure_loader(
 
 
 def flexible_cnv_loader(
-        filepath_or_buffer: Union[str, Path, TextIO],
-        families: FamiliesData,
-        genome: ReferenceGenome,
-        cnv_chrom: Optional[str] = None,
-        cnv_start: Optional[str] = None,
-        cnv_end: Optional[str] = None,
-        cnv_location: Optional[str] = None,
-        cnv_person_id: Optional[str] = None,
-        cnv_family_id: Optional[str] = None,
-        cnv_best_state: Optional[str] = None,
-        cnv_variant_type: Optional[str] = None,
-        cnv_plus_values: Optional[List[str]] = None,
-        cnv_minus_values: Optional[List[str]] = None,
-        cnv_sep: str = "\t",
-        **_kwargs) -> Generator[Dict[str, Any], None, None]:
+    filepath_or_buffer: Union[str, Path, TextIO],
+    families: FamiliesData,
+    genome: ReferenceGenome,
+    cnv_chrom: Optional[str] = None,
+    cnv_start: Optional[str] = None,
+    cnv_end: Optional[str] = None,
+    cnv_location: Optional[str] = None,
+    cnv_person_id: Optional[str] = None,
+    cnv_family_id: Optional[str] = None,
+    cnv_best_state: Optional[str] = None,
+    cnv_variant_type: Optional[str] = None,
+    cnv_plus_values: Optional[list[str]] = None,
+    cnv_minus_values: Optional[list[str]] = None,
+    cnv_sep: str = "\t",
+    **_kwargs: Any
+) -> Generator[dict[str, Any], None, None]:
     """Load variants from CNVs input and transform them into DataFrames.
 
     This function uses flexible variant loader infrastructure to
@@ -335,7 +345,7 @@ def flexible_cnv_loader(
     `DataFrame`.
     """
     # pylint: disable=too-many-locals,too-many-arguments
-    def line_splitter(line: str) -> List[str]:
+    def line_splitter(line: str) -> list[str]:
         return line.strip("\n\r").split(cnv_sep)
 
     if isinstance(filepath_or_buffer, (str, Path)):

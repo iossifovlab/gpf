@@ -204,7 +204,7 @@ class DenovoGeneSetCollectionFactory:
             for aa in variant.alt_alleles:
                 if Inheritance.denovo not in aa.inheritance_in_members:
                     continue
-                if not set(aa.variant_in_members) & persons_in_set:
+                if not set(aa.variant_in_members_fpid) & persons_in_set:
                     continue
 
                 filter_flag = False

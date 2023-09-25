@@ -88,10 +88,11 @@ class Person:
     def redefine(self) -> None:
         # pylint: disable=too-many-branches
         """Extract attributes and turns them into properties."""
-        assert "person_id" in self._attributes
         self.family_id = self._attributes["family_id"]
-        self.family: Optional[Family] = None
         self.person_id = self._attributes["person_id"]
+        self.fpid: tuple[str, str] = (self.family_id, self.person_id)
+
+        self.family: Optional[Family] = None
         self.sample_id = self._attributes.get("sample_id", None)
         index = self._attributes.get("index", None)
         if index is not None:
@@ -256,28 +257,38 @@ class Person:
             self.generated == other.generated and \
             self.not_sequenced == other.not_sequenced
 
-    def diff(self, other: Any) -> None:
-        """Print difference between two individuals."""
-        if self.person_id != other.person_id:
-            print(f"{self}  person_id:", self.person_id, other.person_id)
+    def diff(self, other: Any) -> list:
+        """Collect difference between two individuals."""
+        result = []
         if self.family_id != other.family_id:
-            print(f"{self}  family_id:", self.family_id, other.family_id)
-        if self.sex != other.sex:
-            print(f"{self}        sex:", self.sex, other.sex)
-        if self.role != other.role:
-            print(f"{self}       role:", self.role, other.role)
-        if self.status != other.status:
-            print(f"{self}      status:", self.status, other.status)
+            result.append(
+                f"{self}    family_id: {self.family_id} != {other.family_id}")
+        if self.person_id != other.person_id:
+            result.append(
+                f"{self}    person_id: {self.person_id} != {other.person_id}")
         if self.mom_id != other.mom_id:
-            print(f"{self}      mom_id:", self.mom_id, other.mom_id)
+            result.append(
+                f"{self}       mom_id: {self.mom_id} != {other.mom_id}")
         if self.dad_id != other.dad_id:
-            print(f"{self}      dad_id:", self.dad_id, other.dad_id)
+            result.append(
+                f"{self}       dad_id: {self.dad_id} != {other.dad_id}")
+        if self.sex != other.sex:
+            result.append(
+                f"{self}          sex: {self.sex} != {other.sex}")
+        if self.role != other.role:
+            result.append(
+                f"{self}         role: {self.role} != {other.role}")
+        if self.status != other.status:
+            result.append(
+                f"{self}       status: {self.status} != {other.status}")
         if self.generated != other.generated:
-            print(f"{self}   generated:", self.generated, other.generated)
+            result.append(
+                f"{self}     generated: {self.generated} != {other.generated}")
         if self.not_sequenced != other.not_sequenced:
-            print(
-                f"{self} not_sequenced:",
-                self.not_sequenced, other.not_sequenced)
+            result.append(
+                f"{self} not_sequenced: "
+                f"{self.not_sequenced} != {other.not_sequenced}")
+        return result
 
 
 class Family:
@@ -320,6 +331,10 @@ class Family:
         family = Family(family_id)
         for index, person in enumerate(persons):
             person.set_attr("member_index", index)
+            if person.person_id in family.persons:
+                raise ValueError(
+                    f"multiple person with the same person id "
+                    f"{person.person_id} in family {family_id}")
             family.persons[person.person_id] = person
         family._connect_family()  # pylint: disable=protected-access
         assert all(p.family is not None for p in family.persons.values())
@@ -485,11 +500,14 @@ class Family:
             r_person = r_fam.persons[person_id]
 
             # Use the other person if this one is generated
-            if l_person.generated:
+            if l_person.generated or l_person.missing:
                 merged_persons[person_id] = r_person
-            elif r_person.generated:
+                continue
+            if r_person.generated or r_person.missing:
                 merged_persons[person_id] = l_person
-            elif l_person.sex == Sex.unspecified:
+                continue
+
+            if l_person.sex == Sex.unspecified:
                 merged_persons[person_id] = r_person
             elif r_person.sex == Sex.unspecified:
                 merged_persons[person_id] = l_person
@@ -542,7 +560,7 @@ class Family:
         return index
 
     def get_member(
-        self, person_id: str
+        self, person_id: str,
     ) -> Optional[Person]:
         return self.persons.get(person_id, None)
 
@@ -569,17 +587,20 @@ class FamiliesData(Mapping[str, Family]):
     def __init__(self) -> None:
         self._ped_df: Optional[pd.DataFrame] = None
         self._families: dict[str, Family] = {}
-        self.persons: dict[str, Person] = {}
+        self.persons_by_person_id: dict[str, list[Person]] = defaultdict(list)
+        self.persons: dict[tuple[str, str], Person] = {}
         self._broken: dict[str, Family] = {}
         self._person_ids_with_parents = None
-        self._real_persons: Optional[dict[str, Person]] = None
+        self._real_persons: Optional[dict[tuple[str, str], Person]] = None
         self._families_by_type: dict[FamilyType, set[str]] = {}
 
     def redefine(self) -> None:
         """Rebuild all families."""
         error_msgs = []
 
+        self.persons_by_person_id = defaultdict(list)
         self.persons = {}
+
         self._ped_df = None
         self._real_persons = None
 
@@ -594,16 +615,38 @@ class FamiliesData(Mapping[str, Family]):
             self._families[family.family_id] = family
 
             for person in family.full_members:
-                if person.person_id in self.persons:
-                    logger.error(
-                        "person %s included in more "
-                        "than one family: %s, %s",
-                        person.person_id, family.family_id,
-                        self.persons[person.person_id].family_id)
-                    error_msgs.append(
-                        f"person {person.person_id} "
-                        f"in multiple families")
-                self.persons[person.person_id] = person
+                if person.person_id not in self.persons_by_person_id:
+                    self.persons_by_person_id[person.person_id].append(person)
+                    self.persons[person.fpid] = person
+                    continue
+
+                other_persons = self.persons_by_person_id[person.person_id]
+                logger.warning(
+                    "person %s included in more "
+                    "than one family: %s, %s",
+                    person.person_id, family.family_id,
+                    other_persons)
+
+                if person.fpid in self.persons:
+                    other_person = self.persons[person.fpid]
+                    if other_person.missing:
+                        self.persons[person.fpid] = person
+                        self.persons_by_person_id[person.person_id].append(
+                            person)
+                        continue
+                    if person.missing:
+                        self.persons_by_person_id[person.person_id].append(
+                            person)
+                        continue
+                    diff = person.diff(other_person)
+                    if diff:
+                        error_msgs.append(
+                            f"multiple different definitions for person "
+                            f"{person.person_id}: "
+                            f"{', '.join(diff)}; "
+                            f"{other_persons}")
+                    self.persons_by_person_id[person.person_id].append(
+                        person)
         if error_msgs:
             raise AttributeError("; ".join(error_msgs))
 
@@ -612,13 +655,13 @@ class FamiliesData(Mapping[str, Family]):
         return self._broken
 
     @property
-    def real_persons(self) -> dict[str, Person]:
+    def real_persons(self) -> dict[tuple[str, str], Person]:
         """Return a subset of individuals that are not generated."""
         if self._real_persons is None:
             self._real_persons = {}
             for person in self.persons.values():
                 if not person.generated and not person.missing:
-                    self._real_persons[person.person_id] = person
+                    self._real_persons[person.fpid] = person
         return self._real_persons
 
     @property
@@ -642,8 +685,7 @@ class FamiliesData(Mapping[str, Family]):
             family = Family.from_persons(persons)
             # pylint: disable=protected-access
             families_data._families[family_id] = family
-            for person_id, person in family.persons.items():
-                families_data.persons[person_id] = person
+        families_data.redefine()
         return families_data
 
     @staticmethod
@@ -798,7 +840,8 @@ class FamiliesData(Mapping[str, Family]):
     def families_of_persons(self, person_ids: set[str]) -> set[str]:
         family_ids: set[str] = set()
         for person_id in person_ids:
-            family_ids.add(self.persons[person_id].family_id)
+            family_ids = family_ids.union(
+                set(p.family_id for p in self.persons_by_person_id[person_id]))
         return family_ids
 
     @staticmethod

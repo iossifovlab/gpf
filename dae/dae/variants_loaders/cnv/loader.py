@@ -169,7 +169,7 @@ class CNVLoader(VariantsGenotypesLoader):
     def __init__(
             self,
             families: FamiliesData,
-            cnv_filenames: List[str],
+            cnv_filenames: list[Union[str, Path, TextIO]],
             genome: ReferenceGenome,
             regions: Optional[List[str]] = None,
             params: Optional[Dict[str, Any]] = None):
@@ -349,7 +349,7 @@ class CNVLoader(VariantsGenotypesLoader):
         ]
         return any(isin)
 
-    def close(self):
+    def close(self) -> None:
         pass
 
     def _full_variants_iterator_impl(

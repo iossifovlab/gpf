@@ -27,13 +27,13 @@ class PersonSet:
     def __init__(
             self, psid: str, name: str,
             values: list[str], color: str,
-            persons: dict[str, Person]):
+            persons: dict[tuple[str, str], Person]):
         self.id: str = psid  # pylint: disable=invalid-name
         self.name: str = name
         self.values: list[str] = values
         self.color: str = color
         assert all(not p.generated for p in persons.values())
-        self.persons: dict[str, Person] = persons
+        self.persons: dict[tuple[str, str], Person] = persons
 
     def __repr__(self) -> str:
         return f"PersonSet({self.id}: {self.name}, {len(self.persons)})"
@@ -171,7 +171,7 @@ class PersonSetCollection:
             return "#FFFFFF"
 
         matching_person_set = person_set_collection.get_person_set_of_person(
-            person.person_id
+            person.fpid
         )
         if matching_person_set is not None:
             return matching_person_set.color
@@ -179,7 +179,7 @@ class PersonSetCollection:
         logger.warning(
             "Person <%s> could not be found in any"
             " domain of <%s>!",
-            person.person_id, person_set_collection.id
+            person.fpid, person_set_collection.id
         )
         return "#AAAAAA"
 
@@ -337,7 +337,9 @@ class PersonSetCollection:
 
         return Box(result)
 
-    def get_person_set(self, person_id: str) -> Optional[PersonSet]:
+    def get_person_set(
+        self, person_id: tuple[str, str]
+    ) -> Optional[PersonSet]:
         for person_set in self.person_sets.values():
             if person_id in person_set.persons:
                 return person_set
@@ -391,12 +393,12 @@ class PersonSetCollection:
             first = PersonSetCollection._combine(first, second)
         return first
 
-    def get_person_set_of_person(self, person_id: str) -> PersonSet:
+    def get_person_set_of_person(self, fpid: tuple[str, str]) -> PersonSet:
         for person_set in self.person_sets.values():
-            if person_id in person_set.persons:
+            if fpid in person_set.persons:
                 return person_set
         raise ValueError(
-            f"person {person_id} not in person set collection {self.id}")
+            f"person {fpid} not in person set collection {self.id}")
 
     def config_json(self) -> dict[str, Any]:
         """Produce a JSON configuration for this PersonSetCollection object."""

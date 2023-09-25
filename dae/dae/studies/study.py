@@ -579,7 +579,7 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
                     person_ids = list(set(person_ids) & selected_person_ids)
                 else:
                     person_ids = list(selected_person_ids)
-        return set(person_ids)
+        return set(fpid[1] for fpid in person_ids)
 
     def get_person_set_collection(
         self, person_set_collection_id: str

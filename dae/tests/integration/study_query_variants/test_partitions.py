@@ -186,7 +186,7 @@ def test_query_complex(imported_study):
     assert len(list(imported_study.
                     query_variants(
                         effect_types="missense",
-                        person_ids=set(["s1"]),
+                        person_ids={"s1"},
                         frequency_filter=[("af_allele_freq", (10, 27))],
                         regions=[Region("bar", 3, 17)],
                         # genes=set(["g2"])

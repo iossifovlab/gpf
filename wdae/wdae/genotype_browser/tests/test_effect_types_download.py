@@ -1,10 +1,10 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 
 import json
-from rest_framework import status  # type: ignore
+from rest_framework import status
 
 
-def test_effect_details_download(admin_client, datasets):
+def test_effect_details_download(admin_client, datasets) -> None:
     data = {
         "datasetId": "iossifov_2014",
         "effectTypes": ["missense"],
