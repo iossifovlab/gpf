@@ -9,6 +9,7 @@ import json
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.common_reports.common_report import CommonReport
+from dae.pedigrees.loader import FamiliesLoader
 
 logger = logging.getLogger("generate_common_reports")
 
@@ -56,12 +57,27 @@ def main(argv, gpf_instance=None):
         else:
             logger.info("generating common reports for all studies!!!")
             studies = available_studies
-        for study in studies:
-            if study not in available_studies:
-                logger.error("study %s not found! skipping...", study)
+        for study_id in studies:
+            if study_id not in available_studies:
+                logger.error("study %s not found! skipping...", study_id)
                 continue
 
-            study = gpf_instance.get_genotype_data(study)
+            study = gpf_instance.get_genotype_data(study_id)
+
+            if study.is_group:
+                logger.info("%s is group, caching families...", study_id)
+                try:
+                    path = os.path.join(
+                        study.config["conf_dir"], "families_cache.ped"
+                    )
+                    FamiliesLoader.save_families(study.families, path)
+                    logger.info(
+                        "Done writing %s families data into %s", study_id, path
+                    )
+                except BaseException:  # pylint: disable=broad-except
+                    logger.exception(
+                        "Failed to cache families for %s", study_id
+                    )
 
             if not study.config.common_report or \
                     not study.config.common_report.enabled:

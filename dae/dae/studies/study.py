@@ -1,5 +1,6 @@
 """Classes to represent genotype data."""
 from __future__ import annotations
+import os
 import time
 import logging
 import functools
@@ -18,6 +19,7 @@ from dae.variants.variant import SummaryVariant
 from dae.variants.family_variant import FamilyVariant
 from dae.query_variants.query_runners import QueryResult
 from dae.pedigrees.family import FamiliesData
+from dae.pedigrees.loader import FamiliesLoader
 from dae.person_sets import PersonSetCollection
 from dae.utils.effect_utils import expand_effect_types
 
@@ -628,6 +630,20 @@ class GenotypeDataGroup(GenotypeData):
         return list(result)
 
     def _build_families(self) -> FamiliesData:
+        cache_path = os.path.join(
+            self.config["conf_dir"], "families_cache.ped"
+        )
+
+        if os.path.exists(cache_path):
+            try:
+                result = FamiliesLoader.load_pedigree_file(cache_path)
+                return result
+            except BaseException:  # pylint: disable=broad-except
+                logger.error(
+                    "Couldn't load families cache for %s", self.study_id
+                )
+
+
         logger.info(
             "building combined families from studies: %s",
             [st.study_id for st in self.studies])
@@ -660,6 +676,12 @@ class GenotypeDataGroup(GenotypeData):
         from dae.pedigrees.family_tag_builder import FamilyTagsBuilder
         tagger = FamilyTagsBuilder()
         tagger.tag_families_data(result)
+        try:
+            FamiliesLoader.save_families(result, cache_path)
+        except BaseException:  # pylint: disable=broad-except
+            logger.exception(
+                "Failed to cache families for %s", self.study_id
+            )
 
         return result
 

@@ -246,7 +246,7 @@ def setup_dataset(
         dataset_id: str,
         gpf_instance: GPFInstance,
         *studies: GenotypeData,
-        dataset_config_udate: str = "") -> GenotypeData:
+        dataset_config_update: str = "") -> GenotypeData:
     """Create and register a dataset dataset_id with studies."""
     # pylint: disable=import-outside-toplevel
     from box import Box
@@ -255,8 +255,8 @@ def setup_dataset(
     dataset_config = {
         "id": dataset_id
     }
-    if dataset_config_udate:
-        config_update = yaml.safe_load(dataset_config_udate)
+    if dataset_config_update:
+        config_update = yaml.safe_load(dataset_config_update)
         dataset_config.update(config_update)
 
     dataset = GenotypeDataGroup(
