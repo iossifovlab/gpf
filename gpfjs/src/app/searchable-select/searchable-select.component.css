@@ -1,0 +1,36 @@
+#loading-dropdown-text {
+  font-style: italic;
+  text-align: center;
+  opacity: 75%;
+  height: 32px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+#loading-wrapper {
+  background-color: #6c757d;
+  padding-top: 10px;
+  padding-left: 5px;
+  width: 29px;
+  border-top-right-radius: 6px;
+  border-bottom-right-radius: 6px;
+}
+
+.loader {
+  border: 3px solid #f3f3f3;
+  border-radius: 50%;
+  border-bottom: 3px solid #6c757d;
+  width: 18px;
+  height: 18px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+#search-box:disabled {
+  background-color: rgb(239, 239, 239);
+}
