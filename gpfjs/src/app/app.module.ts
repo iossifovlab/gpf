@@ -180,6 +180,8 @@ import { FederationCredentialsComponent } from './federation-credentials/federat
 import { StudyFiltersTreeComponent } from './treelist-checkbox/treelist-checkbox.component';
 import { LoginComponent } from './login/login.component';
 import { DatasetsTreeService } from './datasets/datasets-tree.service';
+import { SearchableSelectComponent } from './searchable-select/searchable-select.component';
+import { SearchableSelectTemplateDirective } from './searchable-select/searchable-select-template.directive';
 
 const appRoutes: Routes = [
   {
@@ -385,6 +387,8 @@ const appRoutes: Routes = [
     FederationCredentialsComponent,
     StudyFiltersTreeComponent,
     LoginComponent,
+    SearchableSelectComponent,
+    SearchableSelectTemplateDirective,
   ],
   imports: [
     BrowserModule,

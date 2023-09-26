@@ -1,0 +1,47 @@
+<div ngbDropdown role="group" style="display: inline-flex; flex-wrap: nowrap; width: 100%" placement="bottom-right">
+  <input
+    [hidden]="caption"
+    #searchBox
+    id="search-box"
+    style="width: 100%"
+    autocomplete="off"
+    (keyup)="searchBoxChange(searchBox.value)"
+    placeholder="Select or start typing to search"
+    (click)="searchBox.value = ''; onFocus($event)"
+    (keydown.enter)="onEnterPress()"
+    spellcheck="false" />
+  <span
+    style="width: 100%"
+    [hidden]="!caption"
+    id="selected-value"
+    class="clickable"
+    (click)="searchBox.value = ''; onFocus($event)">
+    <span>{{ caption }}</span>
+  </span>
+  <div *ngIf="showLoadingSpinner" id="loading-wrapper">
+    <div class="loader"></div>
+  </div>
+  <button
+    ngbDropdownToggle
+    [hidden]="showLoadingSpinner"
+    style="border-top-left-radius: 0; border-bottom-left-radius: 0"
+    type="button"
+    class="dropdown-toggle btn btn-secondary dropdown-toggle-split">
+    <span class="caret"></span>
+  </button>
+  <div ngbDropdownMenu style="width: 100%; overflow-x: hidden; max-height: 300px; overflow-y: scroll; z-index: 150">
+    <div id="loading-dropdown-text" *ngIf="data.length === 0 && searchBox.value !== ''">Nothing found</div>
+    <button
+      *ngFor="let element of data"
+      class="dropdown-item"
+      type="button"
+      style="cursor: pointer; padding: 8px"
+      (click)="onSelect(element)">
+      <ng-template
+        *ngIf="template?.templateRef"
+        [ngTemplateOutlet]="template.templateRef"
+        [ngTemplateOutletContext]="{ $implicit: element }">
+      </ng-template>
+    </button>
+  </div>
+</div>

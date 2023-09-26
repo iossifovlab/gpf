@@ -13,7 +13,7 @@ import { CommonModule, APP_BASE_HREF } from '@angular/common';
 import { GeneSet, GeneSetsCollection, GeneSetType } from './gene-sets';
 import { Observable } from 'rxjs/internal/Observable';
 import { of } from 'rxjs';
-import { ElementRef, NO_ERRORS_SCHEMA } from '@angular/core';
+import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { GeneSetsState } from './gene-sets.state';
 
 class MockDatasetsService {
@@ -75,7 +75,6 @@ describe('GeneSetsComponent', () => {
   let fixture: ComponentFixture<GeneSetsComponent>;
   const datasetsServiceMock = new MockDatasetsService();
 
-
   beforeEach(() => {
     TestBed.configureTestingModule({
       declarations: [GeneSetsComponent],
@@ -89,13 +88,12 @@ describe('GeneSetsComponent', () => {
       providers: [
         ConfigService, GeneSetsService, { provide: DatasetsService, useValue: datasetsServiceMock }, UsersService,
         { provide: APP_BASE_HREF, useValue: '' },
-      ],
+      ], schemas: [NO_ERRORS_SCHEMA]
     }).compileComponents();
 
     fixture = TestBed.createComponent(GeneSetsComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
-    component.geneSetsDropdownRef = {nativeElement: {value: ''}} as ElementRef;
   });
 
   it('should create', () => {
@@ -123,12 +121,14 @@ describe('GeneSetsComponent', () => {
   });
 
   it('should set and get selectedGeneSetsCollection', () => {
-    component.selectedGeneSetsCollection = new GeneSetsCollection('name1', 'desc2', [
+    const geneSetsCollectionMock1 = new GeneSetsCollection('name1', 'desc2', [
       new GeneSetType('datasetId3', 'datasetName4', 'personSetCollectionId5', 'personSetCollectionName6',
         ['personSetCollectionLegend7', 'personSetCollectionLegend8']),
       new GeneSetType('datasetId9', 'datasetName10', 'personSetCollectionId11', 'personSetCollectionName12',
         ['personSetCollectionLegend13', 'personSetCollectionLegend14'])
     ]);
+
+    component.selectedGeneSetsCollection = geneSetsCollectionMock1;
 
     expect(component.selectedGeneSetsCollection).toStrictEqual(GeneSetsCollection.fromJson({
       name: 'name1', desc: 'desc2',
