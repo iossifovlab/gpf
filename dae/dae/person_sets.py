@@ -9,7 +9,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import logging
 
-from typing import Optional, Any, FrozenSet, Generator
+from typing import Optional, Any, FrozenSet, Generator, cast
 from box import Box
 
 from dae.pedigrees.family import Person, FamiliesData
@@ -135,27 +135,28 @@ class PersonSetCollection:
         Initializes a dictionary of person set IDs mapped to
         empty PersonSet instances from a given configuration.
         """
-        person_set_configs = [*config.domain]
+        person_set_configs = config["domain"]
         result = {}
         for person_set in person_set_configs:
-            result[person_set.id] = PersonSet(
-                person_set.id,
-                person_set.name,
+            result[person_set["id"]] = PersonSet(
+                person_set["id"],
+                person_set["name"],
                 person_set["values"],
-                person_set.color,
+                person_set["color"],
                 {},
             )
         return result
 
     @staticmethod
     def _produce_default_person_set(config: Box) -> PersonSet:
-        assert config.default is not None, config
+        assert config["default"] is not None, config
 
+        default_config = config["default"]
         return PersonSet(
-            config.default.id,
-            config.default.name,
+            default_config["id"],
+            default_config["name"],
             [],
-            config.default.color,
+            default_config["color"],
             {},
         )
 
@@ -480,6 +481,7 @@ class PersonSetCollection:
     ) -> PersonSetCollection:
         """Construct person sets collection from json serialization."""
         config = data["config"]
+
         psc = PersonSetCollection(
             config["id"],
             config["name"],
@@ -491,10 +493,13 @@ class PersonSetCollection:
         )
         for ps_json in data["person_sets"]:
             person_set = psc.person_sets[ps_json["id"]]
-            for fpid in ps_json["person_ids"]:
+            for fpid_json in ps_json["person_ids"]:
+                fpid = cast(tuple[str, str], tuple(fpid_json))
                 person = families.persons[fpid]
                 assert person.get_attr(psc.id) == person_set.id
                 person_set.persons[fpid] = person
+
+        PersonSetCollection.remove_empty_person_sets(psc)
         return psc
 
 

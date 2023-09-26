@@ -66,7 +66,7 @@ f2       ch2      dad2  mom2  2   2      prb
                     ],
                     "default": {
                         "color": "#aaaaaa",
-                        "id": "nspecified",
+                        "id": "unspecified",
                         "name": "unspecified",
                     },
                     "domain": [
@@ -111,7 +111,7 @@ f2       ch2      dad2  mom2  2   2      prb
                     ],
                     "default": {
                         "color": "#aaaaaa",
-                        "id": "nspecified",
+                        "id": "unspecified",
                         "name": "unspecified",
                     },
                     "domain": [
@@ -173,12 +173,13 @@ f2       ch2      dad2  mom2  2   2      prb
                     - phenotype""")))
 
 
-def test_dataset_person_set_collection_build(
-    dataset: GenotypeDataGroup
+def test_dataset_build_person_set_collection(
+    tmp_path: pathlib.Path, dataset: GenotypeDataGroup
 ) -> None:
 
     assert dataset is not None
     psc = dataset.person_set_collections["phenotype"]
+
     assert len(psc.person_sets["autism"]) == 1
     assert len(psc.person_sets["developmental_disorder"]) == 1
     assert len(psc.person_sets["unaffected"]) == 4
@@ -221,3 +222,28 @@ def test_dataset_load_cached_families(
 
     person = all_persons[("f1", "dad1")]
     assert person.get_attr("phenotype") == "unaffected"
+
+
+def test_dataset_save_cached_person_sets(
+    tmp_path: pathlib.Path,
+    dataset: GenotypeDataGroup
+) -> None:
+    assert dataset.save_cached_person_sets()
+    assert (tmp_path / "dataset" / "person_set_phenotype_cache.json").exists()
+
+
+def test_dataset_load_cached_person_sets(
+    tmp_path: pathlib.Path,
+    dataset: GenotypeDataGroup
+) -> None:
+    assert dataset.save_cached_person_sets()
+    assert (tmp_path / "dataset" / "person_set_phenotype_cache.json").exists()
+
+    pscs = dataset.load_cached_person_sets()
+    assert pscs is not None
+
+    psc = pscs["phenotype"]
+
+    assert len(psc.person_sets["autism"]) == 1
+    assert len(psc.person_sets["developmental_disorder"]) == 1
+    assert len(psc.person_sets["unaffected"]) == 4

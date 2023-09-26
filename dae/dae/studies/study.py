@@ -4,6 +4,7 @@ import os
 import time
 import logging
 import functools
+import json
 
 from contextlib import closing
 from os.path import basename, exists
@@ -37,7 +38,8 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
 
         self._description: Optional[str] = None
 
-        self._person_set_collection_configs: dict[str, Any] = {}
+        self._person_set_collection_configs: dict[str, Any] = \
+            config.person_set_collections
         self._person_set_collections: dict[str, PersonSetCollection] = {}
         self._parents: set[str] = set()
         self._executor = None
@@ -666,6 +668,67 @@ class GenotypeDataGroup(GenotypeData):
                 exc_info=True
             )
             return False
+
+    def save_cached_person_sets(self) -> bool:
+        """Save cached person set collections defined for a genotype group."""
+        cache_base_path = None
+        if "conf_dir" in self.config:
+            cache_base_path = self.config["conf_dir"]
+
+        if cache_base_path is None:
+            logger.error(
+                "unable to save person sets cache; missing study %s "
+                "config directory", self.study_id)
+            return False
+
+        try:
+            for psc in self._person_set_collections.values():
+                cache_path = os.path.join(
+                    cache_base_path,
+                    f"person_set_{psc.id}_cache.json")
+                with open(cache_path, "wt") as outfile:
+                    json.dump(psc.to_json(), outfile)
+            return True
+        except BaseException:  # pylint: disable=broad-except
+            logger.error(
+                "Failed to cache person sets for study %s", self.study_id,
+                exc_info=True
+            )
+            return False
+
+    def load_cached_person_sets(
+            self) -> Optional[dict[str, PersonSetCollection]]:
+        """Save cached person set collections defined for a genotype group."""
+        cache_base_path = None
+        if "conf_dir" in self.config:
+            cache_base_path = self.config["conf_dir"]
+
+        if cache_base_path is None:
+            logger.error(
+                "unable to load person sets cache; missing study %s "
+                "config directory", self.study_id)
+            return None
+
+        try:
+            result = {}
+            selected_collections = self._person_set_collection_configs[
+                "selected_person_set_collections"]
+            for psc_id in selected_collections:
+                cache_path = os.path.join(
+                    cache_base_path,
+                    f"person_set_{psc_id}_cache.json")
+                with open(cache_path, "rt") as infile:
+                    content = infile.read()
+                    data = json.loads(content)
+
+                    psc = PersonSetCollection.from_json(data, self.families)
+                    result[psc_id] = psc
+            return result
+        except BaseException:  # pylint: disable=broad-except
+            logger.error(
+                "Failed to load cached person sets for study %s",
+                self.study_id, exc_info=True)
+            return None
 
     def _build_families(self) -> FamiliesData:
         result = self.load_cached_families()
