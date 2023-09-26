@@ -12,6 +12,7 @@ import { ActivatedRoute } from '@angular/router';
   styleUrls: ['./searchable-select.component.css']
 })
 export class SearchableSelectComponent implements AfterViewInit, OnChanges {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   @Input() public data: Array<any>;
   @Input() public caption: string;
   @Input() public isInGeneBrowser = false;
@@ -26,14 +27,15 @@ export class SearchableSelectComponent implements AfterViewInit, OnChanges {
 
   @HostListener('document:click', ['$event'])
   public clickout(event): void {
-    if (!this.eRef.nativeElement.contains(event.target)) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument
+    if (!(this.eRef.nativeElement as HTMLElement).contains(event.target)) {
       this.dropdown.close();
     }
   }
 
   public onEnterPress(): void {
     if (this.isInGeneBrowser) {
-      this.onSelect(this.searchBox.nativeElement.value);
+      this.onSelect((this.searchBox.nativeElement as HTMLInputElement).value);
       this.dropdown.close();
     }
   }
@@ -58,7 +60,7 @@ export class SearchableSelectComponent implements AfterViewInit, OnChanges {
     this.search.emit(searchFieldValue);
   }
 
-  public onFocus(event): void {
+  public onFocus(event: Event): void {
     this.searchBoxChange('');
     event.stopPropagation();
 
@@ -68,7 +70,7 @@ export class SearchableSelectComponent implements AfterViewInit, OnChanges {
       }
     });
     setTimeout(() => {
-      this.searchBox.nativeElement.focus();
+      (this.searchBox.nativeElement as HTMLInputElement).focus();
     });
     this.onSelect(null);
     this.focusEvent.emit();
