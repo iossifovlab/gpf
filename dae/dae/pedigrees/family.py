@@ -531,18 +531,17 @@ class Family:
                      or r_person.role == Role.unknown) \
                 and (l_person.family_id == r_person.family_id)
             if not match:
-                message = f"mismatched attributes for person {person_id}; " \
-                    f"sex[{l_person.sex} == {r_person.sex}], " \
-                    f"status[{l_person.status} == {r_person.status}], " \
-                    f"role[{l_person.role} == {r_person.role}], " \
-                    f"family[{l_person.family_id} == {r_person.family_id}]"
-
-                logger.warning(message)
+                messages = l_person.diff(r_person)
+                logger.warning(
+                    "different definitions for person %s: %s",
+                    l_person, " ".join(messages))
                 if forced:
-                    logger.warning("second person overwrites: %s", r_person)
+                    logger.warning(
+                        "second person %s overwrites the first %s",
+                        r_person, l_person)
                     merged_persons[person_id] = r_person
                 else:
-                    raise AssertionError(message)
+                    raise AssertionError(messages)
 
         # Construct new instances of Person to avoid
         # modifying the original family's Person instances
@@ -611,6 +610,7 @@ class FamiliesData(Mapping[str, Family]):
 
             if len(family) == 0:
                 self._broken[family.family_id] = family
+                continue
 
             self._families[family.family_id] = family
 
@@ -623,30 +623,32 @@ class FamiliesData(Mapping[str, Family]):
                 other_persons = self.persons_by_person_id[person.person_id]
                 logger.warning(
                     "person %s included in more "
-                    "than one family: %s, %s",
-                    person.person_id, family.family_id,
-                    other_persons)
+                    "than one family: %s",
+                    person, other_persons)
+                if person.fpid not in self.persons:
+                    self.persons_by_person_id[person.person_id].append(person)
+                    self.persons[person.fpid] = person
+                    continue
 
-                if person.fpid in self.persons:
-                    other_person = self.persons[person.fpid]
-                    if other_person.missing:
-                        self.persons[person.fpid] = person
-                        self.persons_by_person_id[person.person_id].append(
-                            person)
-                        continue
-                    if person.missing:
-                        self.persons_by_person_id[person.person_id].append(
-                            person)
-                        continue
-                    diff = person.diff(other_person)
-                    if diff:
-                        error_msgs.append(
-                            f"multiple different definitions for person "
-                            f"{person.person_id}: "
-                            f"{', '.join(diff)}; "
-                            f"{other_persons}")
+                other_person = self.persons[person.fpid]
+                if other_person.missing:
+                    self.persons[person.fpid] = person
                     self.persons_by_person_id[person.person_id].append(
                         person)
+                    continue
+                if person.missing:
+                    self.persons_by_person_id[person.person_id].append(
+                        person)
+                    continue
+                diff = person.diff(other_person)
+                if diff:
+                    error_msgs.append(
+                        f"multiple different definitions for person "
+                        f"{person.person_id}: "
+                        f"{', '.join(diff)}; "
+                        f"{other_persons}")
+                self.persons_by_person_id[person.person_id].append(
+                    person)
         if error_msgs:
             raise AttributeError("; ".join(error_msgs))
 

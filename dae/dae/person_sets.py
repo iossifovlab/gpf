@@ -253,8 +253,7 @@ class PersonSetCollection:
         }
         logger.debug("person set collection value_to_id: %s", value_to_id)
         for person_id, person in families_data.real_persons.items():
-            if person.missing or person.generated:
-                continue
+            assert not person.missing
             value = collection.collect_person_collection_attributes(
                 person, pheno_db)
             if value not in value_to_id:
@@ -345,6 +344,13 @@ class PersonSetCollection:
                 return person_set
         return None
 
+    def get_person_set_of_person(self, fpid: tuple[str, str]) -> PersonSet:
+        result = self.get_person_set(fpid)
+        if result is not None:
+            return result
+        raise ValueError(
+            f"person {fpid} not in person set collection {self.id}")
+
     @staticmethod
     def _combine(first: PersonSetCollection, second: PersonSetCollection) \
             -> PersonSetCollection:
@@ -392,13 +398,6 @@ class PersonSetCollection:
         for second in collections[1:]:
             first = PersonSetCollection._combine(first, second)
         return first
-
-    def get_person_set_of_person(self, fpid: tuple[str, str]) -> PersonSet:
-        for person_set in self.person_sets.values():
-            if fpid in person_set.persons:
-                return person_set
-        raise ValueError(
-            f"person {fpid} not in person set collection {self.id}")
 
     def config_json(self) -> dict[str, Any]:
         """Produce a JSON configuration for this PersonSetCollection object."""
