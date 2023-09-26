@@ -1,5 +1,5 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-import os
+# import os
 import time
 
 import pytest
@@ -8,7 +8,7 @@ from dae.studies.study import GenotypeData
 
 from dae.testing import setup_pedigree, setup_vcf, setup_dataset, vcf_study
 from dae.testing.acgt_import import acgt_gpf
-from dae.pedigrees.loader import FamiliesLoader
+# from dae.pedigrees.loader import FamiliesLoader
 
 
 @pytest.fixture(scope="module")
@@ -115,12 +115,12 @@ def test_can_close_study_group_query(svmergingdataset: GenotypeData) -> None:
     time.sleep(1)
 
 
-def test_cache_is_created(svmergingdataset: GenotypeData) -> None:
-    cache_path = os.path.join(
-        svmergingdataset.config["conf_dir"], "families_cache.ped"
-    )
-    assert os.path.exists(cache_path)
-    cached_families = FamiliesLoader.load_pedigree_file(cache_path)
-    assert len(cached_families) == 2
-    assert len(cached_families["f1"]) == 3
-    assert len(cached_families["f3"]) == 3
+# def test_cache_is_created(svmergingdataset: GenotypeData) -> None:
+#     cache_path = os.path.join(
+#         svmergingdataset.config["conf_dir"], "families_cache.ped"
+#     )
+#     assert os.path.exists(cache_path)
+#     cached_families = FamiliesLoader.load_pedigree_file(cache_path)
+#     assert len(cached_families) == 2
+#     assert len(cached_families["f1"]) == 3
+#     assert len(cached_families["f3"]) == 3

@@ -49,10 +49,6 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
     def study_id(self) -> str:
         return cast(str, self.config["id"])
 
-    # @property
-    # def id(self):  # pylint: disable=invalid-name
-    #     return self.study_id
-
     @property
     def name(self) -> str:
         name = self.config.get("name")
@@ -568,7 +564,7 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
                 return set(person_ids) if person_ids is not None else None
             person_set_ids = set(collection.person_sets.keys())
             if selected_sets is not None:
-                selected_person_ids: set[str] = set()
+                selected_person_ids: set[tuple[str, str]] = set()
                 if set(selected_sets) == person_set_ids:
                     return set(person_ids) \
                         if person_ids is not None else None
@@ -676,12 +672,12 @@ class GenotypeDataGroup(GenotypeData):
         from dae.pedigrees.family_tag_builder import FamilyTagsBuilder
         tagger = FamilyTagsBuilder()
         tagger.tag_families_data(result)
-        try:
-            FamiliesLoader.save_families(result, cache_path)
-        except BaseException:  # pylint: disable=broad-except
-            logger.exception(
-                "Failed to cache families for %s", self.study_id
-            )
+        # try:
+        #     FamiliesLoader.save_families(result, cache_path)
+        # except BaseException:  # pylint: disable=broad-except
+        #     logger.exception(
+        #         "Failed to cache families for %s", self.study_id
+        #     )
 
         return result
 
