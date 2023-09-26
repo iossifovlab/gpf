@@ -423,8 +423,5 @@ class DatasetsShownView(QueryBaseView):
         """Return the list of shown datasets."""
         res = self.gpf_instance.get_shown_datasets()
         if res is None:
-            res = sorted(
-                self.gpf_instance.get_genotype_data_ids(),
-                key=lambda desc: desc["name"]
-            )
+            res = sorted(self.gpf_instance.get_genotype_data_ids())
         return Response(res)
