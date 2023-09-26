@@ -69,7 +69,7 @@ class RemoteGenotypeData(GenotypeData):
         tagger.tag_families_data(self._families)
 
     def _build_person_set_collection(
-        self, person_set_collection_id: str
+        self, psc_id: str
     ) -> None:
         raise NotImplementedError()
 

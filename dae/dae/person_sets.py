@@ -239,8 +239,8 @@ class PersonSetCollection:
     ) -> PersonSetCollection:
         """Produce a PersonSetCollection from a config and pedigree."""
         collection = PersonSetCollection(
-            collection_config.id,
-            collection_config.name,
+            collection_config["id"],
+            collection_config["name"],
             collection_config,
             PersonSetCollection._sources_from_config(collection_config),
             PersonSetCollection._produce_sets(collection_config),
@@ -444,13 +444,6 @@ class PersonSetCollection:
 
         return conf
 
-    @staticmethod
-    def from_json(
-        config_json: dict[str, Any], families: FamiliesData
-    ) -> PersonSetCollection:
-        config = Box(config_json)
-        return PersonSetCollection.from_families(config, families)
-
     def get_stats(self) -> dict[str, dict[str, int]]:
         """
         Return a dictionary with statistics for each PersonSet.
@@ -471,6 +464,38 @@ class PersonSetCollection:
                 "children": children,
             }
         return result
+
+    def to_json(self) -> dict[str, Any]:
+        """Serialize a person sets collection to a json format."""
+        return {
+            "config": self.config_json(),
+            "person_sets": [
+                ps.to_json() for ps in self.person_sets.values()
+            ]
+        }
+
+    @staticmethod
+    def from_json(
+        data: dict[str, Any], families: FamiliesData
+    ) -> PersonSetCollection:
+        """Construct person sets collection from json serialization."""
+        config = data["config"]
+        psc = PersonSetCollection(
+            config["id"],
+            config["name"],
+            config,
+            PersonSetCollection._sources_from_config(config),
+            PersonSetCollection._produce_sets(config),
+            PersonSetCollection._produce_default_person_set(config),
+            families,
+        )
+        for ps_json in data["person_sets"]:
+            person_set = psc.person_sets[ps_json["id"]]
+            for fpid in ps_json["person_ids"]:
+                person = families.persons[fpid]
+                assert person.get_attr(psc.id) == person_set.id
+                person_set.persons[fpid] = person
+        return psc
 
 
 @dataclass

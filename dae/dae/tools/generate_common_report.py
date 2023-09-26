@@ -5,16 +5,17 @@ import argparse
 import logging
 import os
 import json
+from typing import Optional, cast
 
 from dae.utils.verbosity_configuration import VerbosityConfiguration
+from dae.studies.study import GenotypeDataGroup
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.common_reports.common_report import CommonReport
-from dae.pedigrees.loader import FamiliesLoader
 
 logger = logging.getLogger("generate_common_reports")
 
 
-def main(argv, gpf_instance=None):
+def main(argv: list[str], gpf_instance: Optional[GPFInstance] = None) -> None:
     """Command line tool to generate dataset statistics."""
     description = "Generate common reports tool"
     parser = argparse.ArgumentParser(description=description)
@@ -65,19 +66,8 @@ def main(argv, gpf_instance=None):
             study = gpf_instance.get_genotype_data(study_id)
 
             if study.is_group:
-                logger.info("%s is group, caching families...", study_id)
-                try:
-                    path = os.path.join(
-                        study.config["conf_dir"], "families_cache.ped"
-                    )
-                    FamiliesLoader.save_families(study.families, path)
-                    logger.info(
-                        "Done writing %s families data into %s", study_id, path
-                    )
-                except BaseException:  # pylint: disable=broad-except
-                    logger.exception(
-                        "Failed to cache families for %s", study_id
-                    )
+                logger.info("%s is a group, caching families...", study_id)
+                cast(GenotypeDataGroup, study).save_cached_families()
 
             if not study.config.common_report or \
                     not study.config.common_report.enabled:

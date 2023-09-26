@@ -627,12 +627,15 @@ class GenotypeDataGroup(GenotypeData):
             result = result.union(study.get_studies_ids())
         return list(result)
 
-    def _build_families(self) -> FamiliesData:
-        cache_path = os.path.join(
-            self.config["conf_dir"], "families_cache.ped"
-        )
+    def load_cached_families(self) -> Optional[FamiliesData]:
+        """Load families data cache if exists."""
+        cache_path = None
+        if "conf_dir" in self.config:
+            cache_path = os.path.join(
+                self.config["conf_dir"], "families_cache.ped"
+            )
 
-        if os.path.exists(cache_path):
+        if cache_path is not None and os.path.exists(cache_path):
             try:
                 result = FamiliesLoader.load_pedigree_file(cache_path)
                 return result
@@ -640,7 +643,34 @@ class GenotypeDataGroup(GenotypeData):
                 logger.error(
                     "Couldn't load families cache for %s", self.study_id
                 )
+        return None
 
+    def save_cached_families(self) -> bool:
+        """Store genotype data group families data into cache."""
+        cache_path = None
+        if "conf_dir" in self.config:
+            cache_path = os.path.join(
+                self.config["conf_dir"], "families_cache.ped"
+            )
+        if cache_path is None:
+            logger.error(
+                "unable to save families data cache; missing study %s "
+                "config directory", self.study_id)
+            return False
+        try:
+            FamiliesLoader.save_families(self.families, cache_path)
+            return True
+        except BaseException:  # pylint: disable=broad-except
+            logger.error(
+                "Failed to cache families for %s", self.study_id,
+                exc_info=True
+            )
+            return False
+
+    def _build_families(self) -> FamiliesData:
+        result = self.load_cached_families()
+        if result is not None:
+            return result
 
         logger.info(
             "building combined families from studies: %s",
@@ -699,11 +729,8 @@ class GenotypeDataGroup(GenotypeData):
             collections.append(study_collection)
         psc = PersonSetCollection.combine(collections)
         for fpid, person in self.families.real_persons.items():
-            person_set_value = psc.get_person_set(fpid)
-            if person_set_value is None:
-                import ipdb; ipdb.set_trace()
-
-            person.set_attr(psc_id, person_set_value)
+            person_set_value = psc.get_person_set_of_person(fpid)
+            person.set_attr(psc_id, person_set_value.id)
         self._person_set_collection_configs[psc_id] = psc.config
         self._person_set_collections[psc_id] = psc
 
