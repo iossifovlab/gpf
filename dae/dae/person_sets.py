@@ -282,12 +282,10 @@ class PersonSetCollection:
         result["id"] = first.id
         result["name"] = first.name
 
-        sources = []
-        for source in first.sources:
-            sources.append({
-                "from": source.sfrom,
-                "source": source.ssource
-            })
+        sources = [{
+            "from": "pedigree",
+            "source": first.id
+        }]
         result["sources"] = sources
 
         result["default"] = {

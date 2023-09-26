@@ -37,7 +37,7 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
 
         self._description: Optional[str] = None
 
-        self._person_set_collection_configs = None
+        self._person_set_collection_configs: dict[str, Any] = {}
         self._person_set_collections: dict[str, PersonSetCollection] = {}
         self._parents: set[str] = set()
         self._executor = None
@@ -541,7 +541,7 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
 
     @abstractmethod
     def _build_person_set_collection(
-        self, person_set_collection_id: str
+        self, psc_id: str
     ) -> None:
         pass
 
@@ -557,27 +557,29 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
         self, collection_query: tuple[str, list[str]],
         person_ids: Optional[list[str]]
     ) -> Optional[set[str]]:
-        if collection_query is not None:
-            collection_id, selected_sets = collection_query
-            collection = self.get_person_set_collection(collection_id)
-            if collection is None:
-                return set(person_ids) if person_ids is not None else None
-            person_set_ids = set(collection.person_sets.keys())
-            if selected_sets is not None:
-                selected_person_ids: set[tuple[str, str]] = set()
-                if set(selected_sets) == person_set_ids:
-                    return set(person_ids) \
-                        if person_ids is not None else None
+        assert collection_query is not None
 
-                for set_id in set(selected_sets) & person_set_ids:
-                    selected_person_ids.update(
-                        collection.person_sets[set_id].persons.keys()
-                    )
-                if person_ids is not None:
-                    person_ids = list(set(person_ids) & selected_person_ids)
-                else:
-                    person_ids = list(selected_person_ids)
-        return set(fpid[1] for fpid in person_ids)
+        collection_id, selected_sets = collection_query
+        collection = self.get_person_set_collection(collection_id)
+        if collection is None or selected_sets is None:
+            return set(person_ids) if person_ids is not None else None
+
+        person_set_ids = set(collection.person_sets.keys())
+        selected_fpids: set[tuple[str, str]] = set()
+        if set(selected_sets) == person_set_ids:
+            return set(person_ids) \
+                if person_ids is not None else None
+
+        for set_id in (set(selected_sets) & person_set_ids):
+            selected_fpids.update(
+                collection.person_sets[set_id].persons.keys()
+            )
+        selected_person_ids: set[str] = set(
+            fpid[1] for fpid in selected_fpids)
+
+        if person_ids is not None:
+            return set(person_ids) & selected_person_ids
+        return selected_person_ids
 
     def get_person_set_collection(
         self, person_set_collection_id: str
@@ -682,22 +684,28 @@ class GenotypeDataGroup(GenotypeData):
         return result
 
     def _build_person_set_collection(
-        self, person_set_collection_id: str
+        self, psc_id: str
     ) -> None:
-        assert person_set_collection_id in \
+        assert psc_id in \
             self.config.person_set_collections.selected_person_set_collections
 
         collections = []
         for study in self.studies:
-            study_collection = study.get_person_set_collection(
-                person_set_collection_id)
+            study_collection = study.get_person_set_collection(psc_id)
             if study_collection is None:
                 raise ValueError(
-                    f"person set collection {person_set_collection_id} "
+                    f"person set collection {psc_id} "
                     f"not found in study {study.study_id}")
             collections.append(study_collection)
-        self._person_set_collections[person_set_collection_id] = \
-            PersonSetCollection.combine(collections)
+        psc = PersonSetCollection.combine(collections)
+        for fpid, person in self.families.real_persons.items():
+            person_set_value = psc.get_person_set(fpid)
+            if person_set_value is None:
+                import ipdb; ipdb.set_trace()
+
+            person.set_attr(psc_id, person_set_value)
+        self._person_set_collection_configs[psc_id] = psc.config
+        self._person_set_collections[psc_id] = psc
 
 
 class GenotypeDataStudy(GenotypeData):
@@ -727,10 +735,10 @@ class GenotypeDataStudy(GenotypeData):
         return cast(FamiliesData, self._backend.families)
 
     def _build_person_set_collection(
-        self, person_set_collection_id: str
+        self, psc_id: str
     ) -> None:
         collection_config = getattr(
-            self.config.person_set_collections, person_set_collection_id
+            self.config.person_set_collections, psc_id
         )
-        self.person_set_collections[person_set_collection_id] = \
+        self.person_set_collections[psc_id] = \
             PersonSetCollection.from_families(collection_config, self.families)
