@@ -157,7 +157,7 @@ class BaseQueryBuilder(ABC):
         if person_ids is not None:
             # pylint: disable=no-member
             person_ids = set(person_ids) & \
-                set(self.families.persons.keys())  # type: ignore
+                set(self.families.persons_by_person_id.keys())  # type: ignore
             where.append(
                 self._build_iterable_string_attr_where(
                     self.where_accessors["variant_in_members"], person_ids
