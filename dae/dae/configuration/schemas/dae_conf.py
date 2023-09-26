@@ -199,7 +199,7 @@ dae_conf_schema = {
     "gpfjs": {
         "type": "dict",
         "schema": {
-            "selected_genotype_data": {
+            "shown_datasets": {
                 "type": "list",
                 "schema": {"type": "string"}
             },

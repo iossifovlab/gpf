@@ -95,7 +95,7 @@ def test_datasets_api_get_all_with_selected_restriction(
     # fixture does not work.
     old_conf = wdae_gpf_instance.dae_config
     edited_conf = old_conf.to_dict()
-    edited_conf["gpfjs"]["selected_genotype_data"] = [
+    edited_conf["gpfjs"]["shown_datasets"] = [
         "quads_f1", "quads_f2", "f1_group"
     ]
     wdae_gpf_instance.dae_config = FrozenBox(edited_conf)

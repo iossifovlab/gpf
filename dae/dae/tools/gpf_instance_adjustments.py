@@ -226,21 +226,21 @@ class EnableDisableStudies(StudyConfigsAdjustmentCommand):
 
         gpfjs = self.config.get("gpfjs")
         if gpfjs is not None:
-            selected_genotype_data = gpfjs.get("selected_genotype_data")
-            if selected_genotype_data:
+            shown_datasets = gpfjs.get("shown_datasets")
+            if shown_datasets:
                 if self.enabled:
-                    result = selected_genotype_data
+                    result = shown_datasets
                     for study_id in self.study_ids:
                         if study_id not in result:
                             result.append(study_id)
                 else:
                     result = []
-                    for study_id in selected_genotype_data:
+                    for study_id in shown_datasets:
                         if study_id in self.study_ids:
                             continue
                         result.append(study_id)
 
-                gpfjs["selected_genotype_data"] = result
+                gpfjs["shown_datasets"] = result
 
     def adjust_study(self, study_id, study_config):
         if study_id in self.study_ids:

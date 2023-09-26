@@ -442,12 +442,6 @@ class GPFInstance:
         ))
         return statistics
 
-    # DAE config
-    def get_selected_genotype_data(self):
-        if self.dae_config.gpfjs is None:
-            return None
-        return self.dae_config.gpfjs.selected_genotype_data
-
     def get_annotation_pipeline(self):
         """Return the annotation pipeline configured in the GPF instance."""
         if self._annotation_pipeline is None:
