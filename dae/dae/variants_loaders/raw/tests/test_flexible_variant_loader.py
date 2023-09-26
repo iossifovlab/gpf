@@ -48,11 +48,12 @@ def denovo_short():
 
 
 def test_families_simple(families):
-    assert families.persons["f1.m"].sex == Sex.female
-    assert families.persons["f1.d"].sex == Sex.male
 
-    assert families.persons["f1.m"].role == Role.mom
-    assert families.persons["f1.d"].role == Role.dad
+    assert families.persons[("f1", "f1.m")].sex == Sex.female
+    assert families.persons[("f1", "f1.d")].sex == Sex.male
+
+    assert families.persons[("f1", "f1.m")].role == Role.mom
+    assert families.persons[("f1", "f1.d")].role == Role.dad
 
 
 def test_denovo_short_simple(denovo_short):

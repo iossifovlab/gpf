@@ -527,17 +527,31 @@ class DenovoLoader(VariantsGenotypesLoader):
         ])
 
         if denovo_person_id:
-            temp_df = pd.DataFrame(
-                {
-                    "chrom": chrom_col,
-                    "pos": pos_col,
-                    "ref": ref_col,
-                    "alt": alt_col,
-                    "person_id": raw_df.loc[:, denovo_person_id],
-                }
-            )
+            if denovo_family_id in raw_df.columns:
+                temp_df = pd.DataFrame(
+                    {
+                        "chrom": chrom_col,
+                        "pos": pos_col,
+                        "ref": ref_col,
+                        "alt": alt_col,
+                        "family_id": raw_df.loc[:, denovo_family_id],
+                        "person_id": raw_df.loc[:, denovo_person_id],
+                    }
+                )
+                grouped = temp_df.groupby(
+                    ["chrom", "pos", "ref", "alt", "family_id"])
+            else:                
+                temp_df = pd.DataFrame(
+                    {
+                        "chrom": chrom_col,
+                        "pos": pos_col,
+                        "ref": ref_col,
+                        "alt": alt_col,
+                        "person_id": raw_df.loc[:, denovo_person_id],
+                    }
+                )
 
-            grouped = temp_df.groupby(["chrom", "pos", "ref", "alt"])
+                grouped = temp_df.groupby(["chrom", "pos", "ref", "alt"])
 
             result = []
 
@@ -550,14 +564,22 @@ class DenovoLoader(VariantsGenotypesLoader):
                     temp_df.iloc[
                         variants_indices].loc[:, "person_id"]  # type: ignore
                 ).replace(";", ",").split(",")
-
-                variant_families = {
-                    families.persons[pid].family_id
-                    for pid in filter(
-                        lambda p: p in families.persons, person_ids)}
+                if "family_id" in temp_df.columns:
+                    family_id = variant[4]
+                    variant_families = {
+                        families.persons[(family_id, pid)].family_id
+                        for pid in person_ids}
+                else:
+                    assert all(
+                        len(families.persons_by_person_id[person_id]) == 1
+                        for person_id in person_ids)
+                    variant_families = {
+                        families.persons_by_person_id[pid][0].family_id
+                        for pid in filter(
+                            lambda p: p in families.persons_by_person_id,
+                            person_ids)}
 
                 # TODO Implement support for multiallelic variants
-
                 for family_id in variant_families:
                     family = families[family_id]
                     family_dict = {

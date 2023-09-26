@@ -148,7 +148,7 @@ class CounterBase:
 
     def events(
         self, variants: list[FamilyVariant],
-        children_by_sex: dict[str, set[str]],
+        children_by_sex: dict[str, set[tuple[str, str]]],
         effect_types: Iterable[str]
     ) -> dict[str, EnrichmentResult]:
         raise NotImplementedError()
@@ -184,7 +184,7 @@ class EventsCounter(CounterBase):
 
     def events(
         self, variants: list[FamilyVariant],
-        children_by_sex: dict[str, set[str]],
+        children_by_sex: dict[str, set[tuple[str, str]]],
         effect_types: Iterable[str]
     ) -> dict[str, EnrichmentResult]:
         male_children = children_by_sex[Sex.male.name]
@@ -196,26 +196,29 @@ class EventsCounter(CounterBase):
             v
             for v in variants
             for aa in v.alt_alleles
-            if all_children & set(cast(FamilyAllele, aa).variant_in_members)
+            if all_children
+            & set(cast(FamilyAllele, aa).variant_in_members_fpid)
         ]
         male_variants = [
             v
             for v in variants
             for aa in v.alt_alleles
-            if male_children & set(cast(FamilyAllele, aa).variant_in_members)
+            if male_children
+            & set(cast(FamilyAllele, aa).variant_in_members_fpid)
         ]
         female_variants = [
             v
             for v in variants
             for aa in v.alt_alleles
-            if female_children & set(cast(FamilyAllele, aa).variant_in_members)
+            if female_children
+            & set(cast(FamilyAllele, aa).variant_in_members_fpid)
         ]
         unspecified_variants = [
             v
             for v in variants
             for aa in v.alt_alleles
-            if unspecified_children in
-            set(cast(FamilyAllele, aa).variant_in_members)
+            if unspecified_children
+            & set(cast(FamilyAllele, aa).variant_in_members_fpid)
         ]
 
         all_events = filter_denovo_one_event_per_family(
@@ -249,7 +252,7 @@ class GeneEventsCounter(CounterBase):
 
     def events(
         self, variants: list[FamilyVariant],
-        children_by_sex: dict[str, set[str]],
+        children_by_sex: dict[str, set[tuple[str, str]]],
         effect_types: Iterable[str]
     ) -> dict[str, EnrichmentResult]:
         """Count the events by sex and effect type."""
@@ -262,26 +265,29 @@ class GeneEventsCounter(CounterBase):
             v
             for v in variants
             for aa in v.alt_alleles
-            if all_children & set(cast(FamilyAllele, aa).variant_in_members)
+            if all_children
+            & set(cast(FamilyAllele, aa).variant_in_members_fpid)
         ]
         male_variants = [
             v
             for v in variants
             for aa in v.alt_alleles
-            if male_children & set(cast(FamilyAllele, aa).variant_in_members)
+            if male_children
+            & set(cast(FamilyAllele, aa).variant_in_members_fpid)
         ]
         female_variants = [
             v
             for v in variants
             for aa in v.alt_alleles
-            if female_children & set(cast(FamilyAllele, aa).variant_in_members)
+            if female_children
+            & set(cast(FamilyAllele, aa).variant_in_members_fpid)
         ]
         unspecified_variants = [
             v
             for v in variants
             for aa in v.alt_alleles
-            if unspecified_children in
-            set(cast(FamilyAllele, aa).variant_in_members)
+            if unspecified_children
+            & set(cast(FamilyAllele, aa).variant_in_members_fpid)
         ]
 
         all_events = filter_denovo_one_gene_per_events(

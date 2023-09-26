@@ -114,10 +114,14 @@ def test_families_loader_roles_testing(fixture_dirname):
     loader = FamiliesLoader(filename, **params)
     families = loader.load()
 
-    assert families.persons["f1.mg_dad"].role == Role.maternal_grandfather
-    assert families.persons["f1.mg_mom"].role == Role.maternal_grandmother
-    assert families.persons["f1.pg_dad"].role == Role.paternal_grandfather
-    assert families.persons["f1.pg_mom"].role == Role.paternal_grandmother
+    assert families.persons[("f1", "f1.mg_dad")].role == \
+        Role.maternal_grandfather
+    assert families.persons[("f1", "f1.mg_mom")].role == \
+        Role.maternal_grandmother
+    assert families.persons[("f1", "f1.pg_dad")].role == \
+        Role.paternal_grandfather
+    assert families.persons[("f1", "f1.pg_mom")].role == \
+        Role.paternal_grandmother
 
 
 @pytest.mark.parametrize(

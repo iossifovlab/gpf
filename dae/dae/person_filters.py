@@ -91,10 +91,11 @@ class PhenoFilter(CriteriaFilter):  # pylint: disable=abstract-method
     ) -> Set[str]:
         ids = set()
         for person_id in self.measure_df["person_id"]:
-            if person_id not in families.persons:
+            if person_id not in families.persons_by_person_id:
                 continue
             if roles is not None:
-                if str(families.persons[person_id].role) not in roles:
+                persons = families.persons_by_person_id[person_id]
+                if not any(str(p.role) in roles for p in persons):
                     continue
             ids.add(person_id)
         return ids

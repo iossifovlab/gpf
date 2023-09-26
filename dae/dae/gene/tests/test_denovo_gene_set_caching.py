@@ -14,8 +14,7 @@ def name_in_gene_sets(gene_sets, name, count=None):
             if count is not None:
                 if gene_set["count"] == count:
                     return True
-                else:
-                    return False
+                return False
             return True
 
     return False

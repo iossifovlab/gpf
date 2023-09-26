@@ -1,9 +1,14 @@
 from collections import defaultdict
+from typing import Any, Optional
 
 from dae.person_sets import PersonSetCollection
+from dae.pedigrees.family import Family
 
 
-def get_family_pedigree(family, person_set_collection):
+def get_family_pedigree(
+    family: Family,
+    person_set_collection: PersonSetCollection
+) -> list:
     return [
         (
             p.family_id,
@@ -22,7 +27,9 @@ def get_family_pedigree(family, person_set_collection):
     ]
 
 
-def get_family_type(family, person_to_set):
+def get_family_type(
+    family: Family, person_to_set: dict
+) -> tuple:
     """Transform a family into a tuple of strings describing members."""
     family_type = []
     # get family size
@@ -33,7 +40,10 @@ def get_family_type(family, person_to_set):
     members_by_role_and_sex = sorted(members_by_role, key=lambda p: str(p.sex))
     for person in members_by_role_and_sex:
         # get person set collection value
-        set_value = person_to_set[person.person_id]
+        if person.fpid not in person_to_set:
+            raise ValueError(f"person {person.fpid} in found in person sets")
+
+        set_value = person_to_set[person.fpid]
         family_type.append(
             f"{set_value}.{person.role}.{person.sex}.{person.status}"
         )
@@ -43,19 +53,19 @@ def get_family_type(family, person_to_set):
 class FamilyCounter:
     """Class representing a family counter JSON."""
 
-    def __init__(self, json):
+    def __init__(self, json: dict[str, Any]):
         self.families = json["families"]
         self.pedigree = json["pedigree"]
         self.pedigrees_count = json["pedigrees_count"]
+        self.tags: Optional[list] = None
+
         tags = json.get("tags")
         if tags is not None:
-            self.tags = list(json.get("tags"))
-        else:
-            self.tags = None
+            self.tags = list(tags)
         self.counter_id = int(json["counter_id"])
 
     @property
-    def family(self):
+    def family(self) -> dict[str, Any]:
         return self.families[0]
 
     @staticmethod
@@ -88,7 +98,7 @@ class FamilyCounter:
 class FamiliesGroupCounters:
     """Class representing families group counters JSON."""
 
-    def __init__(self, json):
+    def __init__(self, json: dict[str, Any]):
         self.group_name = json["group_name"]
         self.phenotypes = json["phenotypes"]
         self.legend = json["legend"]

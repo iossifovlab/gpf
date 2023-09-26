@@ -74,6 +74,11 @@ class FamilyDelegate:
         return self.family.members_ids
 
     @property
+    def members_fpids(self) -> list[tuple[str, str]]:
+        """Return list of family members IDs."""
+        return [m.fpid for m in self.family.members_in_order]
+
+    @property
     def family_id(self) -> str:
         """Return the family ID."""
         return self.family.family_id
@@ -318,6 +323,11 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
                 if member.person_id in variant_in_members
             ]
         return self._variant_in_members_objects
+
+    @property
+    def variant_in_members_fpid(self) -> list[tuple[str, str]]:
+        """Return list of person with the variant."""
+        return [p.fpid for p in self.variant_in_members_objects]
 
     @property
     def variant_in_roles(self) -> list[Optional[Role]]:

@@ -139,7 +139,7 @@ class ResponseTransformer:
         [
             ":".join([
                 phenotype_person_sets.get_person_set_of_person(mid).name
-                for mid in v.members_ids])
+                for mid in v.members_fpids])
         ],
 
         "carrier_phenotypes":
@@ -147,7 +147,7 @@ class ResponseTransformer:
         [
             ":".join([  # type: ignore
                 phenotype_person_sets.get_person_set_of_person(mid).name
-                for mid in filter(None, aa.variant_in_members)])
+                for mid in filter(None, aa.variant_in_members_fpid)])
             for aa in v.alt_alleles
         ],
     }
