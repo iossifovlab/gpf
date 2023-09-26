@@ -131,27 +131,27 @@ describe('Genes block gene sets names and count tests', () => {
     },
     {
       collection: 'Protein domains',
-      expectedCondition: '35EXO (9):'
+      expectedCondition: '35EXO (9)'
     },
     {
       collection: 'Protein domains',
-      expectedCondition: 'AAA (132):'
+      expectedCondition: 'AAA (132)'
     },
     {
       collection: 'Protein domains',
-      expectedCondition: 'ABH (18):'
+      expectedCondition: 'ABH (18)'
     },
     {
       collection: 'miRNA from Darnell',
-      expectedCondition: 'let-7 (881):'
+      expectedCondition: 'let-7 (881)'
     },
     {
       collection: 'miRNA from Darnell',
-      expectedCondition: 'miR-101 (510):'
+      expectedCondition: 'miR-101 (510)'
     },
     {
       collection: 'miRNA from Darnell',
-      expectedCondition: 'miR-124 (1018):'
+      expectedCondition: 'miR-124 (1018)'
     }
   ].forEach(data => {
     it('should properly display "' + data.expectedCondition + '" in "' +

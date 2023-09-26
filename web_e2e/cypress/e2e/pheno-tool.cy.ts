@@ -368,7 +368,7 @@ describe('Pheno tool download tests', () => {
 
   [
     {id: '12', collection: 'SFARI Genes', set: 'SFARI ALL (910): SFARI Genes (2017-09): All genes', measure: 'i1.age'},
-    {id: '13', collection: 'Protein domains', set: 'AMOP (3): ', measure: 'i1.iq'}
+    {id: '13', collection: 'Protein domains', set: 'AMOP (3) ', measure: 'i1.iq'}
   ].forEach(data => {
     it.skip('should check downloaded report with gene sets', () => {
       const genesBlockPage = new GenesBlockPage();
