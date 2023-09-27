@@ -88,7 +88,8 @@ class PersonSetCollection:
         ssource: str
 
     def __init__(
-            self, pscid: str, name: str, config: Box,
+            self, pscid: str, name: str,
+            config: dict[str, Any],
             sources: list[Source],
             person_sets: dict[str, PersonSet],
             default: PersonSet,
@@ -128,7 +129,7 @@ class PersonSetCollection:
         return sources
 
     @staticmethod
-    def _produce_sets(config: Box) -> dict[str, PersonSet]:
+    def _produce_sets(config: dict[str, Any]) -> dict[str, PersonSet]:
         """
         Produce initial PersonSet instances.
 
@@ -148,7 +149,7 @@ class PersonSetCollection:
         return result
 
     @staticmethod
-    def _produce_default_person_set(config: Box) -> PersonSet:
+    def _produce_default_person_set(config: dict[str, Any]) -> PersonSet:
         assert config["default"] is not None, config
 
         default_config = config["default"]
@@ -234,23 +235,23 @@ class PersonSetCollection:
 
     @staticmethod
     def from_families(
-        collection_config: Box,
+        psc_config: dict[str, Any],
         families_data: FamiliesData,
         pheno_db: Optional[PhenotypeData] = None
     ) -> PersonSetCollection:
         """Produce a PersonSetCollection from a config and pedigree."""
         collection = PersonSetCollection(
-            collection_config["id"],
-            collection_config["name"],
-            collection_config,
-            PersonSetCollection._sources_from_config(collection_config),
-            PersonSetCollection._produce_sets(collection_config),
-            PersonSetCollection._produce_default_person_set(collection_config),
+            psc_config["id"],
+            psc_config["name"],
+            psc_config,
+            PersonSetCollection._sources_from_config(psc_config),
+            PersonSetCollection._produce_sets(psc_config),
+            PersonSetCollection._produce_default_person_set(psc_config),
             families_data,
         )
         value_to_id = {
             frozenset(person_set["values"]): person_set.id
-            for person_set in collection_config.domain
+            for person_set in psc_config["domain"]
         }
         logger.debug("person set collection value_to_id: %s", value_to_id)
         for person_id, person in families_data.real_persons.items():

@@ -445,8 +445,11 @@ def test_genotype_group_person_sets_subset(
     # Remove a person to simulate a subset of people being used
     del genotype_data_group.families.persons[("f1", "person4")]
 
-    genotype_data_group._person_set_collections = {}
-    genotype_data_group._build_person_set_collections()
+    genotype_data_group._person_set_collections = \
+        genotype_data_group._build_person_set_collections(
+            genotype_data_group_config["person_set_collections"],
+            genotype_data_group.families
+        )
 
     phenotype_collection = genotype_data_group.get_person_set_collection(
         "phenotype"

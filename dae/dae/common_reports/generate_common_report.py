@@ -72,7 +72,11 @@ def main(
 
             if study.is_group:
                 logger.info("%s is a group, caching families...", study_id)
-                cast(GenotypeDataGroup, study).save_cached_families()
+                study_group = cast(GenotypeDataGroup, study)
+                if study_group.load_families():
+                    study_group.build_families()
+                study_group.save_cached_families()
+                study_group.save_cached_person_sets()
 
             if not study.config.common_report or \
                     not study.config.common_report.enabled:
