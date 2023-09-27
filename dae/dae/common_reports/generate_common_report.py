@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 import sys
 import time
 import argparse
@@ -15,7 +14,10 @@ from dae.common_reports.common_report import CommonReport
 logger = logging.getLogger("generate_common_reports")
 
 
-def main(argv: list[str], gpf_instance: Optional[GPFInstance] = None) -> None:
+def main(
+    argv: Optional[list[str]] = None,
+    gpf_instance: Optional[GPFInstance] = None
+) -> None:
     """Command line tool to generate dataset statistics."""
     description = "Generate common reports tool"
     parser = argparse.ArgumentParser(description=description)
@@ -35,6 +37,9 @@ def main(argv: list[str], gpf_instance: Optional[GPFInstance] = None) -> None:
         default=None,
         action="store",
     )
+
+    if argv is None:
+        argv = sys.argv[1:]
 
     args = parser.parse_args(argv)
     VerbosityConfiguration.set(args)
@@ -85,5 +90,5 @@ def main(argv: list[str], gpf_instance: Optional[GPFInstance] = None) -> None:
                 json.dump(common_report.to_dict(full=True), crf)
 
 
-if __name__ == "__main__":
-    main(sys.argv[1:])
+# if __name__ == "__main__":
+#     main(sys.argv[1:])
