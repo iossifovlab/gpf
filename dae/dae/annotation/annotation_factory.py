@@ -421,12 +421,20 @@ def check_for_repeated_attributes_in_pipeline(
         att for att, cnt in Counter(pipeline_names_set).items() if cnt > 1
     }
     if repeated_attributes:
-        attrs_err_msg = ",".join(sorted(repeated_attributes))
         if not allow_repeated_attributes:
+            overlapping_annotators = []
+            for annotator in pipeline.annotators:
+                for attr in annotator.attributes:
+                    if attr.name in repeated_attributes:
+                        overlapping_annotators.append(
+                            annotator.get_info().annotator_id
+                        )
+            attrs_err_msg = ",".join(sorted(repeated_attributes))
+            # reversed so that it follows the order of the pipeline config
+            ann_err_msg = ",".join(reversed(overlapping_annotators))
             raise AnnotationConfigurationError(
-                "The annotator repeats the attributes "
-                f"{attrs_err_msg} that are already in "
-                f"the pipeline"
+                f"The attributes {attrs_err_msg} were found to be repeated"
+                f" in the annotators {ann_err_msg}"
             )
         resolve_repeated_attributes(pipeline, repeated_attributes)
 

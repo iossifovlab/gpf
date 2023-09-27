@@ -123,10 +123,10 @@ def test_pipeline_repeated_attributes_forbidden(
             pipeline_config_str=pipeline_config,
             grr_repository=test_grr
         )
-        assert str(error) == (
-            "The annotator repeats the attributes s1"
-            " that are already in the pipeline."
-        )
+    assert str(error.value) == (
+        "The attributes s1 were found to be repeated"
+        " in the annotators A0-score_one,A0-dup_score_one"
+    )
 
 
 def test_pipeline_repeated_attributes_allowed(
