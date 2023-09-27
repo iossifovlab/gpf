@@ -22,6 +22,8 @@ from dae.variants.family_variant import FamilyVariant
 from dae.query_variants.query_runners import QueryResult
 from dae.pedigrees.family import FamiliesData
 from dae.pedigrees.loader import FamiliesLoader
+from dae.pedigrees.layout import Layout
+
 from dae.person_sets import PersonSetCollection
 from dae.utils.effect_utils import expand_effect_types
 
@@ -609,6 +611,7 @@ class GenotypeDataGroup(GenotypeData):
         super().__init__(
             config, studies
         )
+        self._families: FamiliesData
         if not self.load_families():
             self.build_families()
 
@@ -750,12 +753,13 @@ class GenotypeDataGroup(GenotypeData):
 
         If cached families or persons are missing, returns False.
         """
-        result = self.load_cached_families()
-        pscs = self.load_cached_person_sets()
-        if result is None or pscs is None:
+        families = self.load_cached_families()
+        if families is None:
             return False
-
-        self._families = result
+        self._families = families
+        pscs = self.load_cached_person_sets()
+        if pscs is None:
+            return False
         self._person_set_collections = pscs
         return True
 
@@ -791,17 +795,26 @@ class GenotypeDataGroup(GenotypeData):
                     result,
                     self.studies[sind].families,
                     forced=True)
+        for family in result.values():
+            logger.debug(
+                "building layout for family: %s; %s",
+                family.family_id, family)
+            layouts = Layout.from_family(family)
+            for layout in layouts:
+                layout.apply_to_family(family)
+
         # pylint: disable=import-outside-toplevel
         from dae.pedigrees.family_tag_builder import FamilyTagsBuilder
         tagger = FamilyTagsBuilder()
         tagger.tag_families_data(result)
+
+        self._families = result
 
         pscs = self._build_person_set_collections(
             self.config.get("person_set_collections"),
             result
         )
 
-        self._families = result
         self._person_set_collections = pscs
 
     def _build_person_set_collection(

@@ -109,6 +109,7 @@ setuptools.setup(
     import_tools=dae.import_tools.cli:main
     generate_autism_gene_profile=dae.autism_gene_profile.generate_autism_gene_profile:main
     generate_common_report=dae.common_reports.generate_common_report:main
+    generate_families_cache=dae.pedigrees.generate_families_cache:main
     """,
     classifiers=[
         "Development Status :: 4 - Beta",
