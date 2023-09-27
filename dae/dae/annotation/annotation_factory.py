@@ -146,7 +146,7 @@ class AnnotationConfigParser:
     @staticmethod
     def parse_minimal(raw: str, idx: int) -> AnnotatorInfo:
         """Parse a minimal-form annotation config."""
-        return AnnotatorInfo(raw, [], {}, annotator_id=f"#{idx}")
+        return AnnotatorInfo(raw, [], {}, annotator_id=f"A{idx}")
 
     @staticmethod
     def parse_short(
@@ -163,14 +163,14 @@ class AnnotationConfigParser:
             return [
                 AnnotatorInfo(
                     ann_type, [], {"resource_id": resource},
-                    annotator_id=f"#{idx}-{resource}"
+                    annotator_id=f"A{idx}-{resource}"
                 )
                 for resource in matching_resources
             ]
         return [
             AnnotatorInfo(
                 ann_type, [], {"resource_id": ann_details},
-                annotator_id=f"#{idx}"
+                annotator_id=f"A{idx}"
             )
         ]
 
@@ -186,7 +186,7 @@ class AnnotationConfigParser:
         parameters = {k: v for k, v in ann_details.items()
                       if k != "attributes"}
         return AnnotatorInfo(
-            ann_type, attributes, parameters, annotator_id=f"#{idx}"
+            ann_type, attributes, parameters, annotator_id=f"A{idx}"
         )
 
     @staticmethod
@@ -439,7 +439,7 @@ def resolve_repeated_attributes(
         for annotator in pipeline.annotators:
             for attribute in annotator.attributes:
                 if attribute.name == rep:
-                    attribute.name = f"{attribute.name}_({annotator.get_info().annotator_id})"  # noqa
+                    attribute.name = f"{attribute.name}_{annotator.get_info().annotator_id}"  # noqa
 
 
 def check_for_unused_parameters(info: AnnotatorInfo) -> None:

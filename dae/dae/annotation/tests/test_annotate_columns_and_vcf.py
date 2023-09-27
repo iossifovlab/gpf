@@ -551,7 +551,7 @@ def test_annotate_columns_repeated_attributes(
         chr1    24
     """)
     out_expected_content = (
-        "chrom\tpos\tscore_(#0)\tscore_(#1)\n"
+        "chrom\tpos\tscore_A0\tscore_A1\n"
         "chr1\t23\t0.1\t0.101\n"
         "chr1\t24\t0.2\t0.201\n"
     )
@@ -613,6 +613,6 @@ def test_annotate_vcf_repeated_attributes(
     # pylint: disable=no-member
     with pysam.VariantFile(str(out_file)) as vcf_file:
         for vcf in vcf_file.fetch():
-            result.append(vcf.info["score_(#0)"][0])
-            result.append(vcf.info["score_(#1)"][0])
+            result.append(vcf.info["score_A0"][0])
+            result.append(vcf.info["score_A1"][0])
     assert result == ["0.1", "0.101", "0.2", "0.201"]

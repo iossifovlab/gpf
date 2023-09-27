@@ -142,4 +142,4 @@ def test_pipeline_repeated_attributes_allowed(
     )
     result = pipeline.annotate(Position("foo", 1))
     assert len(pipeline.annotators) == 2
-    assert result == {"s1_(#0-score_one)": 0.1, "s1_(#0-dup_score_one)": 0.123}
+    assert result == {"s1_A0-score_one": 0.1, "s1_A0-dup_score_one": 0.123}
