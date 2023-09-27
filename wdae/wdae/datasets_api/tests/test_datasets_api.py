@@ -231,20 +231,20 @@ def test_datasets_permissions_search(admin_client, wdae_gpf_instance):
     assert response.data[0]["dataset_id"] == "Dataset1"
 
 
-def test_datasets_api_shown_datasets(admin_client, wdae_gpf_instance):
+def test_datasets_api_visible_datasets(admin_client, wdae_gpf_instance):
     # FIXME This is a temporary hack to mock the
     # dae_config of wdae_gpf_instance since using the mocker
     # fixture does not work.
     old_conf = wdae_gpf_instance.dae_config
     edited_conf = old_conf.to_dict()
-    edited_conf["gpfjs"]["shown_datasets"] = [
-        "quads_f1", "quads_f2", "f1_group"
+    edited_conf["gpfjs"]["visible_datasets"] = [
+        "quads_f1", "quads_f2", "f1_group", "nonexistent"
     ]
     wdae_gpf_instance.dae_config = FrozenBox(edited_conf)
 
     try:
-        response = admin_client.get("/api/v3/datasets/shown")
+        response = admin_client.get("/api/v3/datasets/visible")
         assert response and response.status_code == 200
-        assert response.data == ("quads_f1", "quads_f2", "f1_group")
+        assert response.data == ["quads_f1", "quads_f2", "f1_group"]
     finally:
         wdae_gpf_instance.dae_config = old_conf

@@ -416,12 +416,12 @@ class DatasetHierarchyView(QueryBaseView):
         ]}, status=status.HTTP_200_OK)
 
 
-class DatasetsShownView(QueryBaseView):
+class VisibleDatasetsView(QueryBaseView):
     """Provide a list of which datasets to show in the frontend."""
 
     def get(self, request: Request) -> Response:
-        """Return the list of shown datasets."""
-        res = self.gpf_instance.get_shown_datasets()
-        if res is None:
+        """Return the list of visible datasets."""
+        res = self.gpf_instance.get_visible_datasets()
+        if not res:
             res = sorted(self.gpf_instance.get_genotype_data_ids())
         return Response(res)

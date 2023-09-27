@@ -226,21 +226,21 @@ class EnableDisableStudies(StudyConfigsAdjustmentCommand):
 
         gpfjs = self.config.get("gpfjs")
         if gpfjs is not None:
-            shown_datasets = gpfjs.get("shown_datasets")
-            if shown_datasets:
+            visible_datasets = gpfjs.get("visible_datasets")
+            if visible_datasets:
                 if self.enabled:
-                    result = shown_datasets
+                    result = visible_datasets
                     for study_id in self.study_ids:
                         if study_id not in result:
                             result.append(study_id)
                 else:
                     result = []
-                    for study_id in shown_datasets:
+                    for study_id in visible_datasets:
                         if study_id in self.study_ids:
                             continue
                         result.append(study_id)
 
-                gpfjs["shown_datasets"] = result
+                gpfjs["visible_datasets"] = result
 
     def adjust_study(self, study_id, study_config):
         if study_id in self.study_ids:

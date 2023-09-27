@@ -285,10 +285,15 @@ class WGPFInstance(GPFInstance):
         return self.denovo_gene_sets_db.get_gene_set(
             gene_set_id, types, datasets, collection_id)
 
-    def get_shown_datasets(self) -> Optional[list[str]]:
+    def get_visible_datasets(self) -> Optional[list[str]]:
         if self.dae_config.gpfjs is None:
             return None
-        return self.dae_config.gpfjs.shown_datasets
+        all_datasets = self.get_genotype_data_ids()
+        return [
+            dataset_id for dataset_id
+            in self.dae_config.gpfjs.visible_datasets
+            if dataset_id in all_datasets
+        ]
 
 
 def get_wgpf_instance_path(config_filename=None):

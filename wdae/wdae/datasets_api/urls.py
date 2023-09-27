@@ -4,9 +4,9 @@ from . import views
 
 urlpatterns = [
     re_path(
-        r"^/shown/?$",
-        views.DatasetsShownView.as_view(),
-        name="shown",
+        r"^/visible/?$",
+        views.VisibleDatasetsView.as_view(),
+        name="visible",
     ),
     re_path(
         r"^/denied_prompt/?$",
