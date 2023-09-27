@@ -70,10 +70,14 @@ class MockQueryService {
 
   public streamingFinishedSubject = new Subject();
   public summaryStreamingFinishedSubject = new Subject();
+  public streamingUpdateSubject = new Subject();
+  public streamingStartSubject = new Subject();
 
   public ngOnInit(): void {
     this.streamingFinishedSubject.next([]);
     this.summaryStreamingFinishedSubject.next([]);
+    this.streamingUpdateSubject.next([]);
+    this.streamingStartSubject.next([]);
   }
 
   public cancelStreamPost(): void {
@@ -242,7 +246,7 @@ describe('GeneBrowserComponent', () => {
     });
   });
 
-  xit('should test download', async() => {
+  it('should test download', async() => {
     const mockEvent = {
       target: {
         queryData: {
@@ -292,7 +296,7 @@ describe('GeneBrowserComponent', () => {
     expect(mockEvent.target.submit).toHaveBeenCalledTimes(1);
   });
 
-  xit('should cancel queries on router change', () => {
+  it('should cancel queries on router change', () => {
     const stopSpy = jest.spyOn(loadingService, 'setLoadingStop');
     const cancelSpy = jest.spyOn(mockQueryService, 'cancelStreamPost');
     const router = TestBed.inject(Router);
@@ -303,7 +307,7 @@ describe('GeneBrowserComponent', () => {
     expect(cancelSpy).toHaveBeenCalledTimes(1);
   });
 
-  xit('should cancel request on loading service interrupt', async() => {
+  it('should cancel request on loading service interrupt', async() => {
     const spyOnSummaryVariants = jest.spyOn(mockQueryService, 'getSummaryVariants');
     const spyOnCancelSummaryPost = jest.spyOn(mockQueryService, 'cancelStreamPost');
     document.getElementById('genes').textContent = 'CHD8';
