@@ -174,8 +174,6 @@ import { ContrastAdjustPipe } from './utils/contrast-adjust.pipe';
 import { ItemAddMenuComponent } from './item-add-menu/item-add-menu.component';
 import { ConfirmButtonComponent } from './confirm-button/confirm-button.component';
 import * as Sentry from '@sentry/angular-ivy';
-import * as $ from 'jquery'; // This is a global import, do not remove (even if linter says unused)
-import 'jquery-ui/ui/widgets/autocomplete.js'; // This as well
 import { FederationCredentialsComponent } from './federation-credentials/federation-credentials.component';
 import { StudyFiltersTreeComponent } from './treelist-checkbox/treelist-checkbox.component';
 import { LoginComponent } from './login/login.component';

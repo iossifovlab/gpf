@@ -7,10 +7,20 @@ import { MeasuresService } from 'app/measures/measures.service';
 import { PhenoMeasureSelectorComponent } from 'app/pheno-measure-selector/pheno-measure-selector.component';
 import { UsersService } from 'app/users/users.service';
 import { MultiContinuousFilterComponent } from './multi-continuous-filter.component';
+import { Component, Input } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { NgxsModule } from '@ngxs/store';
 import { FormsModule } from '@angular/forms';
 import { PhenoMeasure } from 'app/pheno-browser/pheno-browser';
+
+@Component({
+  selector: 'gpf-searchable-select',
+  template: ''
+})
+class SearchableSelectMockComponent {
+  @Input() public data;
+  @Input() public caption;
+}
 
 const SelectionMock = {
   isEmpty: (): boolean => true,
@@ -56,6 +66,8 @@ describe('MultiContinuousFilterComponent', () => {
     TestBed.configureTestingModule({
       declarations: [
         MultiContinuousFilterComponent,
+        PhenoMeasureSelectorComponent,
+        SearchableSelectMockComponent,
       ],
       providers: [
         MultiContinuousFilterComponent,
@@ -63,8 +75,7 @@ describe('MultiContinuousFilterComponent', () => {
         HttpClientTestingModule,
         ConfigService,
         {provide: DatasetsService, useValue: mockDatasetsService},
-        UsersService,
-        PhenoMeasureSelectorComponent
+        UsersService
       ],
       imports: [
         RouterTestingModule,

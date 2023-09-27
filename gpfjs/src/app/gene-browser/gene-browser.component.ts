@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
 import { ActivatedRoute, NavigationStart, Params, Router } from '@angular/router';
 import { Location } from '@angular/common';
 import { GeneService } from 'app/gene-browser/gene.service';
@@ -6,7 +6,7 @@ import { Gene } from 'app/gene-browser/gene';
 import { SummaryAllelesArray, SummaryAllelesFilter } from 'app/gene-browser/summary-variants';
 import { GenotypePreviewVariantsArray } from 'app/genotype-preview-model/genotype-preview';
 import { QueryService } from 'app/query/query.service';
-import { first, debounceTime, take, takeUntil, filter } from 'rxjs/operators';
+import { first, debounceTime, distinctUntilChanged, take, takeUntil, filter } from 'rxjs/operators';
 import { Subject, Subscription } from 'rxjs';
 import { Dataset, GeneBrowser, PersonSet } from 'app/datasets/datasets';
 import { DatasetsService } from 'app/datasets/datasets.service';
@@ -14,22 +14,23 @@ import { FullscreenLoadingService } from 'app/fullscreen-loading/fullscreen-load
 import { ConfigService } from 'app/config/config.service';
 import * as d3 from 'd3';
 import * as draw from 'app/utils/svg-drawing';
+import { NgbDropdown } from '@ng-bootstrap/ng-bootstrap';
 import { LGDS, CNV, OTHER, CODING } from 'app/effect-types/effect-types';
 import { DatasetsTreeService } from 'app/datasets/datasets-tree.service';
-import { JqueryUIElement } from 'typings';
 
 @Component({
   selector: 'gpf-gene-browser',
   templateUrl: './gene-browser.component.html',
   styleUrls: ['./gene-browser.component.css'],
 })
-export class GeneBrowserComponent implements OnInit, OnDestroy, AfterViewInit {
+export class GeneBrowserComponent implements OnInit, OnDestroy {
+  @ViewChild(NgbDropdown) private dropdown: NgbDropdown;
+  @ViewChild('searchBox') private searchBox: ElementRef;
   @ViewChild('filters', { static: false }) public set filters(element: HTMLElement) {
     this.drawDenovoIcons();
     this.drawTransmittedIcons();
     this.drawEffectTypesIcons();
   }
-  @ViewChild('geneSymbolInput') public geneSymbolInputRef: ElementRef;
 
   public selectedGene: Gene;
   public geneSymbol = '';
@@ -37,8 +38,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy, AfterViewInit {
   public selectedDataset: Dataset;
   public showResults: boolean;
   public showError = false;
-  public showFamilyVariants = false;
-  public familyVariantsLoaded = false;
+  public familyLoadingFinished: boolean;
   public geneBrowserConfig: GeneBrowser;
 
   public readonly affectedStatusValues = ['Affected only', 'Unaffected only', 'Affected and unaffected'];
@@ -53,6 +53,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy, AfterViewInit {
 
   public legend: Array<PersonSet>;
   public geneSymbolSuggestions: string[] = [];
+  public searchBoxInput$: Subject<string> = new Subject();
   public isUniqueFamilyFilterEnabled = false;
 
   private subscriptions: Subscription[] = [];
@@ -79,7 +80,9 @@ export class GeneBrowserComponent implements OnInit, OnDestroy, AfterViewInit {
     this.selectedDataset = this.datasetsService.getSelectedDataset();
     this.legend = this.selectedDataset.personSetCollections.getLegend(this.selectedDataset.defaultPersonSetCollection);
     this.geneBrowserConfig = this.selectedDataset.geneBrowser;
-
+    if (this.route.snapshot.params.gene && typeof this.route.snapshot.params.gene === 'string') {
+      void this.submitGeneRequest(this.route.snapshot.params.gene);
+    }
 
     this.route.queryParams.subscribe(params => {
       if (params['coding_only'] !== undefined && params['coding_only'] !== null) {
@@ -88,21 +91,26 @@ export class GeneBrowserComponent implements OnInit, OnDestroy, AfterViewInit {
     });
 
     this.subscriptions.push(
-      this.queryService.streamingStartSubject.subscribe(() => {
-        this.showFamilyVariants = false;
-        this.familyVariantsLoaded = false;
-        this.variantsCountDisplay = 'Loading variants...';
-      }),
-      this.queryService.streamingUpdateSubject.subscribe(() => {
-        this.showFamilyVariants = true;
-      }),
       this.queryService.streamingFinishedSubject.subscribe(() => {
-        this.familyVariantsLoaded = true;
+        this.familyLoadingFinished = true;
       }),
       this.route.parent.params.subscribe((params: Params) => {
         this.selectedDatasetId = params['dataset'] as string;
       }),
       this.variantUpdate$.pipe(debounceTime(750)).subscribe(() => this.updateShownTablePreviewVariantsArray()),
+      this.searchBoxInput$.pipe(debounceTime(100), distinctUntilChanged()).subscribe(() => {
+        if (!this.geneSymbol) {
+          this.geneSymbolSuggestions = [];
+          return;
+        }
+        this.geneService
+          .searchGenes(this.geneSymbol)
+          .pipe(take(1))
+          // eslint-disable-next-line @typescript-eslint/naming-convention
+          .subscribe((response: { 'gene_symbols': string[] }) => {
+            this.geneSymbolSuggestions = response.gene_symbols;
+          });
+      }),
       this.router.events.pipe(
         filter(event => event instanceof NavigationStart)
       ).subscribe(() => {
@@ -130,28 +138,8 @@ export class GeneBrowserComponent implements OnInit, OnDestroy, AfterViewInit {
     this.subscriptions.map(subscription => subscription.unsubscribe());
   }
 
-  public ngAfterViewInit(): void {
-    const dropdown = $('#genes') as unknown as JqueryUIElement;
-    dropdown.autocomplete({
-      source: (request: {term: string}, response: (arg: string[]) => void) => {
-        this.geneService
-          .searchGenes(request.term)
-          .pipe(take(1))
-          // eslint-disable-next-line @typescript-eslint/naming-convention
-          .subscribe((res: { 'gene_symbols': string[] }) => {
-            response(res.gene_symbols);
-          });
-      }
-    }).bind('focus', () => {
-      dropdown.val('');
-    });
-    dropdown.keyup((event) => {
-      if (event.keyCode === 13) {
-        $('#go-button').click();
-        dropdown.autocomplete('close');
-        dropdown.blur();
-      }
-    });
+  public selectGeneSymbol(geneSymbol: string): void {
+    this.geneSymbol = geneSymbol;
   }
 
   public reset(): void {
@@ -159,13 +147,31 @@ export class GeneBrowserComponent implements OnInit, OnDestroy, AfterViewInit {
     this.location.replaceState(`datasets/${this.selectedDatasetId}/gene-browser`);
   }
 
-  public async submitGeneRequest(): Promise<void> {
+  public openDropdown(): void {
+    if (this.dropdown && !this.dropdown.isOpen()) {
+      this.dropdown.open();
+    }
+  }
+
+  public closeDropdown(): void {
+    if (this.dropdown && this.dropdown.isOpen()) {
+      this.dropdown.close();
+      (this.searchBox.nativeElement as HTMLElement).blur();
+    }
+  }
+
+  public async submitGeneRequest(geneSymbol?: string): Promise<void> {
     if (this.showError) {
       return;
     }
 
-    this.geneSymbol = (this.geneSymbolInputRef.nativeElement as HTMLTextAreaElement).value;
-
+    if (geneSymbol) {
+      this.geneSymbol = geneSymbol.trim();
+    }
+    if (!this.geneSymbol) {
+      return;
+    }
+    this.closeDropdown();
     try {
       this.selectedGene = await this.geneService.getGene(
         this.geneSymbol.trim()
@@ -183,6 +189,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy, AfterViewInit {
     );
 
     this.showResults = false;
+    this.variantsCountDisplay = 'Loading variants...';
     this.loadingService.setLoadingStart();
     this.genotypePreviewVariantsArray = null;
 
@@ -281,11 +288,13 @@ export class GeneBrowserComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   public setSelectedRegion(region: [number, number]): void {
+    this.familyLoadingFinished = false;
     this.summaryVariantsFilter.selectedRegion = region;
     this.updateVariants();
   }
 
   public setSelectedFrequencies(frequencies: [number, number]): void {
+    this.familyLoadingFinished = false;
     this.summaryVariantsFilter.selectedFrequencies = frequencies;
     this.updateVariants();
   }
@@ -323,6 +332,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   private updateShownTablePreviewVariantsArray(): void {
+    this.familyLoadingFinished = false;
     const params = {
       ...this.requestParams,
       maxVariantsCount: this.maxFamilyVariants,
