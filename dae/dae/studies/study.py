@@ -5,6 +5,7 @@ import time
 import logging
 import functools
 import json
+import gzip
 
 from contextlib import closing
 from os.path import basename, exists
@@ -638,7 +639,7 @@ class GenotypeDataGroup(GenotypeData):
         cache_path = None
         if "conf_dir" in self.config:
             cache_path = os.path.join(
-                self.config["conf_dir"], "families_cache.ped"
+                self.config["conf_dir"], "families_cache.ped.gz"
             )
 
         if cache_path is not None and os.path.exists(cache_path):
@@ -656,7 +657,7 @@ class GenotypeDataGroup(GenotypeData):
         cache_path = None
         if "conf_dir" in self.config:
             cache_path = os.path.join(
-                self.config["conf_dir"], "families_cache.ped"
+                self.config["conf_dir"], "families_cache.ped.gz"
             )
         if cache_path is None:
             logger.error(
@@ -689,8 +690,8 @@ class GenotypeDataGroup(GenotypeData):
             for psc in self._person_set_collections.values():
                 cache_path = os.path.join(
                     cache_base_path,
-                    f"person_set_{psc.id}_cache.json")
-                with open(cache_path, "wt") as outfile:
+                    f"person_set_{psc.id}_cache.json.gz")
+                with gzip.open(cache_path, "wt") as outfile:
                     json.dump(psc.to_json(), outfile)
             return True
         except BaseException:  # pylint: disable=broad-except
@@ -723,7 +724,7 @@ class GenotypeDataGroup(GenotypeData):
             for psc_id in selected_pscs:
                 cache_path = os.path.join(
                     cache_base_path,
-                    f"person_set_{psc_id}_cache.json")
+                    f"person_set_{psc_id}_cache.json.gz")
                 if not os.path.exists(cache_path):
                     logger.info(
                         "unable to load person sets collection <%s> cache "
@@ -731,7 +732,7 @@ class GenotypeDataGroup(GenotypeData):
                         psc_id, self.study_id, cache_path)
                     return None
 
-                with open(cache_path, "rt") as infile:
+                with gzip.open(cache_path, "rt") as infile:
                     content = infile.read()
                     data = json.loads(content)
 

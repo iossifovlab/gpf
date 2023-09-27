@@ -250,8 +250,8 @@ class PersonSetCollection:
             families_data,
         )
         value_to_id = {
-            frozenset(person_set["values"]): person_set.id
-            for person_set in psc_config["domain"]
+            frozenset(ps_config["values"]): ps_config["id"]
+            for ps_config in psc_config["domain"]
         }
         logger.debug("person set collection value_to_id: %s", value_to_id)
         for person_id, person in families_data.real_persons.items():
