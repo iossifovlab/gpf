@@ -21,7 +21,7 @@ export class DatasetsComponent implements OnInit, OnDestroy {
   public selectedDataset: Dataset;
   public permissionDeniedPrompt: string;
   public toolPageLinks = toolPageLinks;
-  public shownDatasets: string[];
+  public visibleDatasets: string[];
 
   private subscriptions: Subscription[] = [];
 
@@ -49,15 +49,15 @@ export class DatasetsComponent implements OnInit, OnDestroy {
       // Create dataset hierarchy
       combineLatest({
         datasets: this.datasetsService.getDatasetsObservable(),
-        shownDatasets: this.datasetsService.getShownDatasets()
-      }).subscribe(({datasets, shownDatasets}) => {
-        this.shownDatasets = shownDatasets as string[];
+        visibleDatasets: this.datasetsService.getVisibleDatasets()
+      }).subscribe(({datasets, visibleDatasets}) => {
+        this.visibleDatasets = visibleDatasets as string[];
         this.datasetTrees = new Array<DatasetNode>();
         datasets = datasets
           .filter(d => d.groups.find((g) => g.name === 'hidden') === undefined || d.accessRights)
-          .filter(d => this.shownDatasets.includes(d.id));
+          .filter(d => this.visibleDatasets.includes(d.id));
         datasets
-          .sort((a, b) => this.shownDatasets.indexOf(a.id) - this.shownDatasets.indexOf(b.id))
+          .sort((a, b) => this.visibleDatasets.indexOf(a.id) - this.visibleDatasets.indexOf(b.id))
           .filter(d => !d.parents.length)
           .map(d => this.datasetTrees.push(new DatasetNode(d, datasets)));
 
