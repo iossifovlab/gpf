@@ -91,6 +91,15 @@
   100% { transform: rotate(360deg); }
 }
 
-#genes {
+#search-box {
   width: 270px;
+  border: 1px solid #ccc;
+  padding-left: 10px;
+  line-height: 34px;
+  border-radius: 5px;
+}
+
+#genes-dropdown {
+  width: 270px;
+  z-index: 3;
 }

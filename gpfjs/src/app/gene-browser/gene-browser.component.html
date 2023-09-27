@@ -4,13 +4,29 @@
       >Gene Symbol</div
     >
     <div class="card-block">
-      <div class="input-group panel" style="padding: 15px; align-items: center">
-        <div class="ui-widget">
-          <input
-            id="genes"
-            #geneSymbolInput
-            placeholder="Search gene"
-            (window:resize)="geneSymbolInputRef.nativeElement.blur()" />
+      <div ngbDropdown class="input-group panel" style="padding: 15px; align-items: baseline">
+        <input
+          ngbDropdownAnchor
+          #searchBox
+          id="search-box"
+          placeholder="Search gene"
+          autocomplete="off"
+          spellcheck="false"
+          [(ngModel)]="geneSymbol"
+          (keyup)="openDropdown(); searchBoxInput$.next(geneSymbol)"
+          (click)="reset(); geneSymbol = ''; showError = false"
+          (keydown.enter)="submitGeneRequest()"
+          (keydown.escape)="closeDropdown()" />
+
+        <div ngbDropdownMenu id="genes-dropdown">
+          <button
+            *ngFor="let suggestion of geneSymbolSuggestions"
+            class="dropdown-item"
+            type="button"
+            (click)="selectGeneSymbol(suggestion)"
+            (keydown.enter)="selectGeneSymbol(suggestion); submitGeneRequest()">
+            <span>{{ suggestion }}</span>
+          </button>
         </div>
 
         <div style="padding-left: 16px">
@@ -36,13 +52,7 @@
   </div>
 
   <div style="margin-top: 15px">
-    <input
-      id="go-button"
-      type="button"
-      style="width: 75px"
-      class="btn btn-md btn-primary"
-      value="Go"
-      (click)="submitGeneRequest()" />
+    <input type="button" style="width: 75px" class="btn btn-md btn-primary" value="Go" (click)="submitGeneRequest()" />
   </div>
 
   <div *ngIf="showResults">
@@ -213,15 +223,14 @@
         <div class="col-6">
           <gpf-loading-spinner
             *ngIf="selectedGene"
-            [loadingFinished]="familyVariantsLoaded"
-            [count]="variantsCountDisplay"
-            [verboseMode]="true">
+            [loadingFinished]="familyLoadingFinished"
+            [count]="variantsCountDisplay">
           </gpf-loading-spinner>
         </div>
       </div>
 
       <gpf-genotype-preview-table
-        *ngIf="showFamilyVariants"
+        *ngIf="familyLoadingFinished"
         [columns]="selectedDataset?.genotypeBrowserConfig?.tableColumns"
         [genotypePreviewVariantsArray]="genotypePreviewVariantsArray"
         [legend]="legend">
