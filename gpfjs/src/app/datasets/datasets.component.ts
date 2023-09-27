@@ -2,13 +2,12 @@ import { UsersService } from '../users/users.service';
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { DatasetsService } from './datasets.service';
 import { Dataset, toolPageLinks } from './datasets';
-import { Observable, Subscription } from 'rxjs';
+import { Subscription, combineLatest } from 'rxjs';
 import { ActivatedRoute, Params, Router } from '@angular/router';
 import { isEmpty } from 'lodash';
 import { DatasetNode } from 'app/dataset-node/dataset-node';
 import { Store } from '@ngxs/store';
 import { StateResetAll } from 'ngxs-reset-plugin';
-import { map, take } from 'rxjs/operators';
 
 @Component({
   selector: 'gpf-datasets',
@@ -18,11 +17,11 @@ import { map, take } from 'rxjs/operators';
 export class DatasetsComponent implements OnInit, OnDestroy {
   private static previousUrl = '';
   public registerAlertVisible = false;
-  private datasets$: Observable<Dataset[]>;
   public datasetTrees: DatasetNode[];
   public selectedDataset: Dataset;
   public permissionDeniedPrompt: string;
   public toolPageLinks = toolPageLinks;
+  public visibleDatasets: string[];
 
   private subscriptions: Subscription[] = [];
 
@@ -38,7 +37,6 @@ export class DatasetsComponent implements OnInit, OnDestroy {
 
   public ngOnInit(): void {
     this.datasetTrees = new Array<DatasetNode>();
-    this.datasets$ = this.filterHiddenGroups(this.datasetsService.getDatasetsObservable());
     this.subscriptions.push(
       this.route.params.subscribe((params: Params) => {
         if (isEmpty(params)) {
@@ -49,17 +47,26 @@ export class DatasetsComponent implements OnInit, OnDestroy {
         this.datasetsService.setSelectedDatasetById(params['dataset'] as string);
       }),
       // Create dataset hierarchy
-      this.datasets$.subscribe(datasets => {
+      combineLatest({
+        datasets: this.datasetsService.getDatasetsObservable(),
+        visibleDatasets: this.datasetsService.getVisibleDatasets()
+      }).subscribe(({datasets, visibleDatasets}) => {
+        this.visibleDatasets = visibleDatasets as string[];
         this.datasetTrees = new Array<DatasetNode>();
-        datasets.filter(d => !d.parents.length).map(d => this.datasetTrees.push(new DatasetNode(d, datasets)));
-      }),
-      this.datasetsService.getDatasetsLoadedObservable().subscribe(() => {
-        this.setupSelectedDataset();
-      }),
-      this.datasets$.pipe(take(1)).subscribe(() => {
+        datasets = datasets
+          .filter(d => d.groups.find((g) => g.name === 'hidden') === undefined || d.accessRights)
+          .filter(d => this.visibleDatasets.includes(d.id));
+        datasets
+          .sort((a, b) => this.visibleDatasets.indexOf(a.id) - this.visibleDatasets.indexOf(b.id))
+          .filter(d => !d.parents.length)
+          .map(d => this.datasetTrees.push(new DatasetNode(d, datasets)));
+
         if (this.router.url === '/datasets' && this.datasetTrees.length > 0) {
           this.router.navigate(['/', 'datasets', this.datasetTrees[0].dataset.id]);
         }
+      }),
+      this.datasetsService.getDatasetsLoadedObservable().subscribe(() => {
+        this.setupSelectedDataset();
       }),
       this.usersService.getUserInfoObservable().subscribe(() => {
         this.datasetsService.reloadSelectedDataset(true);
@@ -162,12 +169,6 @@ export class DatasetsComponent implements OnInit, OnDestroy {
     }
 
     return firstTool;
-  }
-
-  private filterHiddenGroups(datasets: Observable<Dataset[]>): Observable<Dataset[]> {
-    return datasets.pipe(map((d) =>
-      d.filter((dataset) => dataset.groups.find((g) => g.name === 'hidden') === undefined || dataset.accessRights)
-    ));
   }
 
   public routeChange(): void {

@@ -14,6 +14,7 @@ export class DatasetsService {
   private readonly permissionDeniedPromptUrl = 'datasets/denied_prompt';
   private readonly datasetsDetailsUrl = 'datasets/details';
   private readonly datasetPedigreeUrl = 'datasets/pedigree';
+  private readonly visibleDatasetsUrl = 'datasets/visible';
 
   // eslint-disable-next-line @typescript-eslint/naming-convention
   private readonly headers = new HttpHeaders({ 'Content-Type': 'application/json' });
@@ -152,5 +153,10 @@ export class DatasetsService {
       {description: description},
       options
     );
+  }
+
+  public getVisibleDatasets(): Observable<object> {
+    const options = { headers: this.headers, withCredentials: true };
+    return this.http.get(`${this.config.baseUrl}${this.visibleDatasetsUrl}`, options);
   }
 }
