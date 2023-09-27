@@ -9,7 +9,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import logging
 
-from typing import Optional, Any, FrozenSet, Generator
+from typing import Optional, Any, FrozenSet, Generator, cast
 from box import Box
 
 from dae.pedigrees.family import Person, FamiliesData
@@ -88,7 +88,8 @@ class PersonSetCollection:
         ssource: str
 
     def __init__(
-            self, pscid: str, name: str, config: Box,
+            self, pscid: str, name: str,
+            config: dict[str, Any],
             sources: list[Source],
             person_sets: dict[str, PersonSet],
             default: PersonSet,
@@ -128,34 +129,35 @@ class PersonSetCollection:
         return sources
 
     @staticmethod
-    def _produce_sets(config: Box) -> dict[str, PersonSet]:
+    def _produce_sets(config: dict[str, Any]) -> dict[str, PersonSet]:
         """
         Produce initial PersonSet instances.
 
         Initializes a dictionary of person set IDs mapped to
         empty PersonSet instances from a given configuration.
         """
-        person_set_configs = [*config.domain]
+        person_set_configs = config["domain"]
         result = {}
         for person_set in person_set_configs:
-            result[person_set.id] = PersonSet(
-                person_set.id,
-                person_set.name,
+            result[person_set["id"]] = PersonSet(
+                person_set["id"],
+                person_set["name"],
                 person_set["values"],
-                person_set.color,
+                person_set["color"],
                 {},
             )
         return result
 
     @staticmethod
-    def _produce_default_person_set(config: Box) -> PersonSet:
-        assert config.default is not None, config
+    def _produce_default_person_set(config: dict[str, Any]) -> PersonSet:
+        assert config["default"] is not None, config
 
+        default_config = config["default"]
         return PersonSet(
-            config.default.id,
-            config.default.name,
+            default_config["id"],
+            default_config["name"],
             [],
-            config.default.color,
+            default_config["color"],
             {},
         )
 
@@ -233,23 +235,23 @@ class PersonSetCollection:
 
     @staticmethod
     def from_families(
-        collection_config: Box,
+        psc_config: dict[str, Any],
         families_data: FamiliesData,
         pheno_db: Optional[PhenotypeData] = None
     ) -> PersonSetCollection:
         """Produce a PersonSetCollection from a config and pedigree."""
         collection = PersonSetCollection(
-            collection_config.id,
-            collection_config.name,
-            collection_config,
-            PersonSetCollection._sources_from_config(collection_config),
-            PersonSetCollection._produce_sets(collection_config),
-            PersonSetCollection._produce_default_person_set(collection_config),
+            psc_config["id"],
+            psc_config["name"],
+            psc_config,
+            PersonSetCollection._sources_from_config(psc_config),
+            PersonSetCollection._produce_sets(psc_config),
+            PersonSetCollection._produce_default_person_set(psc_config),
             families_data,
         )
         value_to_id = {
-            frozenset(person_set["values"]): person_set.id
-            for person_set in collection_config.domain
+            frozenset(ps_config["values"]): ps_config["id"]
+            for ps_config in psc_config["domain"]
         }
         logger.debug("person set collection value_to_id: %s", value_to_id)
         for person_id, person in families_data.real_persons.items():
@@ -282,12 +284,10 @@ class PersonSetCollection:
         result["id"] = first.id
         result["name"] = first.name
 
-        sources = []
-        for source in first.sources:
-            sources.append({
-                "from": source.sfrom,
-                "source": source.ssource
-            })
+        sources = [{
+            "from": "pedigree",
+            "source": first.id
+        }]
         result["sources"] = sources
 
         result["default"] = {
@@ -446,13 +446,6 @@ class PersonSetCollection:
 
         return conf
 
-    @staticmethod
-    def from_json(
-        config_json: dict[str, Any], families: FamiliesData
-    ) -> PersonSetCollection:
-        config = Box(config_json)
-        return PersonSetCollection.from_families(config, families)
-
     def get_stats(self) -> dict[str, dict[str, int]]:
         """
         Return a dictionary with statistics for each PersonSet.
@@ -473,6 +466,42 @@ class PersonSetCollection:
                 "children": children,
             }
         return result
+
+    def to_json(self) -> dict[str, Any]:
+        """Serialize a person sets collection to a json format."""
+        return {
+            "config": self.config_json(),
+            "person_sets": [
+                ps.to_json() for ps in self.person_sets.values()
+            ]
+        }
+
+    @staticmethod
+    def from_json(
+        data: dict[str, Any], families: FamiliesData
+    ) -> PersonSetCollection:
+        """Construct person sets collection from json serialization."""
+        config = data["config"]
+
+        psc = PersonSetCollection(
+            config["id"],
+            config["name"],
+            config,
+            PersonSetCollection._sources_from_config(config),
+            PersonSetCollection._produce_sets(config),
+            PersonSetCollection._produce_default_person_set(config),
+            families,
+        )
+        for ps_json in data["person_sets"]:
+            person_set = psc.person_sets[ps_json["id"]]
+            for fpid_json in ps_json["person_ids"]:
+                fpid = cast(tuple[str, str], tuple(fpid_json))
+                person = families.persons[fpid]
+                assert person.get_attr(psc.id) == person_set.id
+                person_set.persons[fpid] = person
+
+        PersonSetCollection.remove_empty_person_sets(psc)
+        return psc
 
 
 @dataclass

@@ -40,10 +40,6 @@ class StudyWrapperBase:
     def description(self) -> Optional[str]:
         return self.genotype_data.description
 
-    @property
-    def person_set_collection_configs(self) -> Optional[dict[str, Any]]:
-        return self.genotype_data.person_set_collection_configs
-
     @staticmethod
     def get_columns_as_sources(
         config: Box, column_ids: list[str]
@@ -269,11 +265,6 @@ class StudyWrapper(StudyWrapperBase):
     @property
     def person_set_collections(self) -> dict[str, PersonSetCollection]:
         return self.genotype_data_study.person_set_collections
-
-    @property
-    def person_set_collection_configs(self) -> Optional[dict[str, Any]]:
-        # pylint: disable=protected-access
-        return self.genotype_data_study._person_set_collection_configs
 
     def get_studies_ids(self, leaves: bool = True) -> list[str]:
         return self.genotype_data_study.get_studies_ids(leaves=leaves)

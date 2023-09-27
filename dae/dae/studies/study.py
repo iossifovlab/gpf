@@ -1,8 +1,11 @@
 """Classes to represent genotype data."""
 from __future__ import annotations
+import os
 import time
 import logging
 import functools
+import json
+import gzip
 
 from contextlib import closing
 from os.path import basename, exists
@@ -18,6 +21,9 @@ from dae.variants.variant import SummaryVariant
 from dae.variants.family_variant import FamilyVariant
 from dae.query_variants.query_runners import QueryResult
 from dae.pedigrees.family import FamiliesData
+from dae.pedigrees.loader import FamiliesLoader
+from dae.pedigrees.layout import Layout
+
 from dae.person_sets import PersonSetCollection
 from dae.utils.effect_utils import expand_effect_types
 
@@ -35,7 +41,6 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
 
         self._description: Optional[str] = None
 
-        self._person_set_collection_configs = None
         self._person_set_collections: dict[str, PersonSetCollection] = {}
         self._parents: set[str] = set()
         self._executor = None
@@ -46,10 +51,6 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
     @property
     def study_id(self) -> str:
         return cast(str, self.config["id"])
-
-    # @property
-    # def id(self):  # pylint: disable=invalid-name
-    #     return self.study_id
 
     @property
     def name(self) -> str:
@@ -123,10 +124,6 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
     @property
     def person_set_collections(self) -> dict[str, PersonSetCollection]:
         return self._person_set_collections
-
-    @property
-    def person_set_collection_configs(self) -> Optional[dict[str, Any]]:
-        return self._person_set_collection_configs
 
     def _add_parent(self, genotype_data_id: str) -> None:
         self._parents.add(genotype_data_id)
@@ -543,43 +540,54 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
 
     @abstractmethod
     def _build_person_set_collection(
-        self, person_set_collection_id: str
-    ) -> None:
+        self, psc_config: dict[str, Any],
+        families: FamiliesData
+    ) -> PersonSetCollection:
         pass
 
-    def _build_person_set_collections(self) -> None:
-        collections_config = self.config.person_set_collections
-        if collections_config:
-            selected_collections = \
-                collections_config.selected_person_set_collections or []
-            for collection_id in selected_collections:
-                self._build_person_set_collection(collection_id)
+    def _build_person_set_collections(
+        self, pscs_config: Optional[dict[str, Any]],
+        families: FamiliesData
+    ) -> dict[str, PersonSetCollection]:
+        if pscs_config is None:
+            return {}
+
+        selected_collections = pscs_config["selected_person_set_collections"]
+        result = {}
+        for psc_id in selected_collections:
+            psc_config = pscs_config[psc_id]
+            psc = self._build_person_set_collection(
+                psc_config, families)
+            result[psc_id] = psc
+        return result
 
     def _transform_person_set_collection_query(
         self, collection_query: tuple[str, list[str]],
         person_ids: Optional[list[str]]
     ) -> Optional[set[str]]:
-        if collection_query is not None:
-            collection_id, selected_sets = collection_query
-            collection = self.get_person_set_collection(collection_id)
-            if collection is None:
-                return set(person_ids) if person_ids is not None else None
-            person_set_ids = set(collection.person_sets.keys())
-            if selected_sets is not None:
-                selected_person_ids: set[str] = set()
-                if set(selected_sets) == person_set_ids:
-                    return set(person_ids) \
-                        if person_ids is not None else None
+        assert collection_query is not None
 
-                for set_id in set(selected_sets) & person_set_ids:
-                    selected_person_ids.update(
-                        collection.person_sets[set_id].persons.keys()
-                    )
-                if person_ids is not None:
-                    person_ids = list(set(person_ids) & selected_person_ids)
-                else:
-                    person_ids = list(selected_person_ids)
-        return set(fpid[1] for fpid in person_ids)
+        collection_id, selected_sets = collection_query
+        collection = self.get_person_set_collection(collection_id)
+        if collection is None or selected_sets is None:
+            return set(person_ids) if person_ids is not None else None
+
+        person_set_ids = set(collection.person_sets.keys())
+        selected_fpids: set[tuple[str, str]] = set()
+        if set(selected_sets) == person_set_ids:
+            return set(person_ids) \
+                if person_ids is not None else None
+
+        for set_id in (set(selected_sets) & person_set_ids):
+            selected_fpids.update(
+                collection.person_sets[set_id].persons.keys()
+            )
+        selected_person_ids: set[str] = set(
+            fpid[1] for fpid in selected_fpids)
+
+        if person_ids is not None:
+            return set(person_ids) & selected_person_ids
+        return selected_person_ids
 
     def get_person_set_collection(
         self, person_set_collection_id: str
@@ -597,14 +605,16 @@ class GenotypeDataGroup(GenotypeData):
     """
 
     def __init__(
-        self, genotype_data_group_config: Box,
+        self, config: Box,
         studies: list[GenotypeData]
     ):
         super().__init__(
-            genotype_data_group_config, studies
+            config, studies
         )
-        self._families = self._build_families()
-        self._build_person_set_collections()
+        self._families: FamiliesData
+        if not self.load_families():
+            self.build_families()
+
         self._executor = None
         self.is_remote = False
         for study in self.studies:
@@ -627,13 +637,142 @@ class GenotypeDataGroup(GenotypeData):
             result = result.union(study.get_studies_ids())
         return list(result)
 
-    def _build_families(self) -> FamiliesData:
+    def load_cached_families(self) -> Optional[FamiliesData]:
+        """Load families data cache if exists."""
+        cache_path = None
+        if "conf_dir" in self.config:
+            cache_path = os.path.join(
+                self.config["conf_dir"], "families_cache.ped.gz"
+            )
+
+        if cache_path is not None and os.path.exists(cache_path):
+            try:
+                result = FamiliesLoader.load_pedigree_file(cache_path)
+                return result
+            except BaseException:  # pylint: disable=broad-except
+                logger.error(
+                    "Couldn't load families cache for %s", self.study_id
+                )
+        return None
+
+    def save_cached_families(self) -> bool:
+        """Store genotype data group families data into cache."""
+        cache_path = None
+        if "conf_dir" in self.config:
+            cache_path = os.path.join(
+                self.config["conf_dir"], "families_cache.ped.gz"
+            )
+        if cache_path is None:
+            logger.error(
+                "unable to save families data cache; missing study %s "
+                "config directory", self.study_id)
+            return False
+        try:
+            FamiliesLoader.save_families(self.families, cache_path)
+            return True
+        except BaseException:  # pylint: disable=broad-except
+            logger.error(
+                "Failed to cache families for %s", self.study_id,
+                exc_info=True
+            )
+            return False
+
+    def save_cached_person_sets(self) -> bool:
+        """Save cached person set collections defined for a genotype group."""
+        cache_base_path = None
+        if "conf_dir" in self.config:
+            cache_base_path = self.config["conf_dir"]
+
+        if cache_base_path is None:
+            logger.error(
+                "unable to save person sets cache; missing study %s "
+                "config directory", self.study_id)
+            return False
+
+        try:
+            for psc in self._person_set_collections.values():
+                cache_path = os.path.join(
+                    cache_base_path,
+                    f"person_set_{psc.id}_cache.json.gz")
+                with gzip.open(cache_path, "wt") as outfile:
+                    json.dump(psc.to_json(), outfile)
+            return True
+        except BaseException:  # pylint: disable=broad-except
+            logger.error(
+                "Failed to cache person sets for study %s", self.study_id,
+                exc_info=True
+            )
+            return False
+
+    def load_cached_person_sets(
+            self) -> Optional[dict[str, PersonSetCollection]]:
+        """Save cached person set collections defined for a genotype group."""
+        cache_base_path = None
+        if "conf_dir" in self.config:
+            cache_base_path = self.config["conf_dir"]
+
+        if cache_base_path is None:
+            logger.error(
+                "unable to load person sets cache; missing study %s "
+                "config directory", self.study_id)
+            return None
+
+        pscs_config = self.config.get("person_set_collections")
+        if pscs_config is None:
+            return {}
+
+        selected_pscs = pscs_config["selected_person_set_collections"]
+        try:
+            result = {}
+            for psc_id in selected_pscs:
+                cache_path = os.path.join(
+                    cache_base_path,
+                    f"person_set_{psc_id}_cache.json.gz")
+                if not os.path.exists(cache_path):
+                    logger.info(
+                        "unable to load person sets collection <%s> cache "
+                        "for study %s; missing file %s",
+                        psc_id, self.study_id, cache_path)
+                    return None
+
+                with gzip.open(cache_path, "rt") as infile:
+                    content = infile.read()
+                    data = json.loads(content)
+
+                    psc = PersonSetCollection.from_json(data, self.families)
+                    result[psc_id] = psc
+            return result
+        except BaseException:  # pylint: disable=broad-except
+            logger.error(
+                "Failed to load cached person sets for study %s",
+                self.study_id, exc_info=True)
+            return None
+
+    def load_families(self) -> bool:
+        """Load cached families and person set collections.
+
+        If cached families or persons are missing, returns False.
+        """
+        families = self.load_cached_families()
+        if families is None:
+            return False
+        self._families = families
+        pscs = self.load_cached_person_sets()
+        if pscs is None:
+            return False
+        self._person_set_collections = pscs
+        return True
+
+    def build_families(self) -> None:
+        """Construct genotype group families data from child studies."""
         logger.info(
             "building combined families from studies: %s",
             [st.study_id for st in self.studies])
 
         if len(self.studies) == 1:
-            return FamiliesData.copy(self.studies[0].families)
+            self._families = FamiliesData.copy(self.studies[0].families)
+            self._person_set_collections = self.studies[0].person_set_collections
+            return
 
         logger.info(
             "combining families from study %s and from study %s",
@@ -656,30 +795,48 @@ class GenotypeDataGroup(GenotypeData):
                     result,
                     self.studies[sind].families,
                     forced=True)
+        for family in result.values():
+            logger.debug(
+                "building layout for family: %s; %s",
+                family.family_id, family)
+            layouts = Layout.from_family(family)
+            for layout in layouts:
+                layout.apply_to_family(family)
+
         # pylint: disable=import-outside-toplevel
         from dae.pedigrees.family_tag_builder import FamilyTagsBuilder
         tagger = FamilyTagsBuilder()
         tagger.tag_families_data(result)
 
-        return result
+        self._families = result
+
+        pscs = self._build_person_set_collections(
+            self.config.get("person_set_collections"),
+            result
+        )
+
+        self._person_set_collections = pscs
 
     def _build_person_set_collection(
-        self, person_set_collection_id: str
-    ) -> None:
-        assert person_set_collection_id in \
-            self.config.person_set_collections.selected_person_set_collections
+        self, psc_config: dict[str, Any],
+        families: FamiliesData
+    ) -> PersonSetCollection:
 
-        collections = []
+        psc_id = psc_config["id"]
+
+        studies_psc = []
         for study in self.studies:
-            study_collection = study.get_person_set_collection(
-                person_set_collection_id)
-            if study_collection is None:
+            study_psc = study.get_person_set_collection(psc_id)
+            if study_psc is None:
                 raise ValueError(
-                    f"person set collection {person_set_collection_id} "
+                    f"person set collection {psc_id} "
                     f"not found in study {study.study_id}")
-            collections.append(study_collection)
-        self._person_set_collections[person_set_collection_id] = \
-            PersonSetCollection.combine(collections)
+            studies_psc.append(study_psc)
+        psc = PersonSetCollection.combine(studies_psc)
+        for fpid, person in families.real_persons.items():
+            person_set_value = psc.get_person_set_of_person(fpid)
+            person.set_attr(psc_id, person_set_value.id)
+        return psc
 
 
 class GenotypeDataStudy(GenotypeData):
@@ -689,7 +846,10 @@ class GenotypeDataStudy(GenotypeData):
         super().__init__(config, [self])
 
         self._backend = backend
-        self._build_person_set_collections()
+        self. _person_set_collections = self._build_person_set_collections(
+            self.config.get("person_set_collections"),
+            self.families
+        )
 
         self.is_remote = False
 
@@ -709,10 +869,7 @@ class GenotypeDataStudy(GenotypeData):
         return cast(FamiliesData, self._backend.families)
 
     def _build_person_set_collection(
-        self, person_set_collection_id: str
-    ) -> None:
-        collection_config = getattr(
-            self.config.person_set_collections, person_set_collection_id
-        )
-        self.person_set_collections[person_set_collection_id] = \
-            PersonSetCollection.from_families(collection_config, self.families)
+        self, psc_config: dict[str, Any],
+        families: FamiliesData
+    ) -> PersonSetCollection:
+        return PersonSetCollection.from_families(psc_config, self.families)

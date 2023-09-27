@@ -49,10 +49,11 @@ class RemoteGenotypeData(GenotypeData):
         self.is_remote = True
 
         self._families: FamiliesData
-        self._build_families()
+        self.build_families()
         self._description = ""
 
-    def _build_families(self) -> None:
+    def build_families(self) -> None:
+        """Construct remote genotype data families."""
         families = {}
         families_details = self.rest_client.get_all_family_details(
             self._remote_study_id
@@ -67,32 +68,34 @@ class RemoteGenotypeData(GenotypeData):
         self._families = FamiliesData.from_families(families)
         tagger = FamilyTagsBuilder()
         tagger.tag_families_data(self._families)
+        pscs_config = self.config.get("person_set_collections")
+        self._person_set_collections = \
+            self._build_person_set_collections(pscs_config, self._families)
 
-    def _build_person_set_collection(
-        self, person_set_collection_id: str
-    ) -> None:
-        raise NotImplementedError()
+    def _build_person_set_collections(
+        self, pscs_config: Optional[dict[str, Any]],
+        families: FamiliesData
+    ) -> dict[str, PersonSetCollection]:
 
-    def _build_person_set_collections(self) -> None:
-        person_set_collections = {}
-
+        if pscs_config is None:
+            return {}
+        result = {}
         configs = self.rest_client.get_person_set_collection_configs(
             self._remote_study_id
         )
-
         for conf in configs.values():
-            psc = PersonSetCollection.from_json(conf, self._families)
-            person_set_collections[psc.id] = psc
+            psc = PersonSetCollection.from_families(conf, self._families)
+            result[psc.id] = psc
+        return result
 
-        self._person_set_collections = person_set_collections
+    def _build_person_set_collection(
+        self, psc_config: dict[str, Any],
+        families: FamiliesData
+    ) -> PersonSetCollection:
+        raise NotImplementedError()
 
     def get_studies_ids(self, leaves: bool = True) -> list[str]:
         return [self.study_id]
-
-    # @property
-    # def description(self) -> Optional[str]:
-    #     # FIXME
-    #     return ""
 
     @property
     def is_group(self) -> bool:

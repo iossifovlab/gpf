@@ -25,7 +25,7 @@ from users_api.models import WdaeUser
 from dae.autism_gene_profile.db import AutismGeneProfileDB
 from dae.genomic_resources import build_genomic_resource_repository
 from dae.genomic_resources.group_repository import GenomicResourceGroupRepo
-from dae.tools import generate_common_report
+from dae.common_reports import generate_common_report
 
 from dae.autism_gene_profile.statistic import AGPStatistic
 

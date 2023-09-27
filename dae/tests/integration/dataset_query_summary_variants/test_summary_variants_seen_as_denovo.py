@@ -73,7 +73,10 @@ def imported_dataset(tmp_path_factory, genotype_storage):
         "study_2", ped_path2, [vcf_path2],
         gpf_instance)
 
-    return setup_dataset("ds1", gpf_instance, study1, study2)
+    return setup_dataset(
+        "ds1", gpf_instance, study1, study2,
+        dataset_config_update=f"conf_dir: {root_path}"
+    )
 
 
 @pytest.mark.parametrize("region,seen_as_denovo", [
