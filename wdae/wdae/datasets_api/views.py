@@ -56,27 +56,20 @@ class DatasetView(QueryBaseView):
     def _collect_datasets_summary(
         self, user: WdaeUser
     ) -> list[dict[str, Any]]:
-        selected_genotype_data = \
-            self.gpf_instance.get_selected_genotype_data() \
-            or self.gpf_instance.get_genotype_data_ids()
+        genotype_data = self.gpf_instance.get_genotype_data_ids()
 
         datasets: list[StudyWrapperBase] = cast(
             list[StudyWrapperBase],
             filter(None, [
                 self.gpf_instance.get_wdae_wrapper(genotype_data_id)
-                for genotype_data_id in selected_genotype_data
+                for genotype_data_id in genotype_data
             ])
         )
 
         res = [
-            StudyWrapperBase.build_genotype_data_all_datasets(
-                dataset.config
-            )
+            StudyWrapperBase.build_genotype_data_all_datasets(dataset.config)
             for dataset in datasets
         ]
-
-        if not self.gpf_instance.get_selected_genotype_data():
-            res = sorted(res, key=lambda desc: desc["name"])
 
         res = [augment_accessibility(ds, user) for ds in res]
         res = [augment_with_groups(ds) for ds in res]
@@ -126,14 +119,12 @@ class StudiesView(QueryBaseView):
     def _collect_datasets_summary(
         self, user: WdaeUser
     ) -> list[dict[str, Any]]:
-        selected_genotype_data = \
-            self.gpf_instance.get_selected_genotype_data() \
-            or self.gpf_instance.get_genotype_data_ids()
+        genotype_data = self.gpf_instance.get_genotype_data_ids()
 
         datasets = filter(
             lambda study: study is not None and study.is_group is False, [
                 self.gpf_instance.get_wdae_wrapper(genotype_data_id)
-                for genotype_data_id in selected_genotype_data
+                for genotype_data_id in genotype_data
             ]
         )
 
@@ -143,9 +134,6 @@ class StudiesView(QueryBaseView):
             )
             for dataset in datasets
         ]
-
-        if not self.gpf_instance.get_selected_genotype_data():
-            res = sorted(res, key=lambda desc: desc["name"])
 
         res = [augment_accessibility(ds, user) for ds in res]
         res = [augment_with_groups(ds) for ds in res]
@@ -417,14 +405,23 @@ class DatasetHierarchyView(QueryBaseView):
     def get(self, request: Request) -> Response:
         """Return the hierarchy of configured datasets in the instance."""
         user = request.user
-        selected_genotype_data = \
-            self.gpf_instance.get_selected_genotype_data() \
-            or self.gpf_instance.get_genotype_data_ids()
+        genotype_data_ids = self.gpf_instance.get_genotype_data_ids()
         genotype_data = filter(lambda gd: gd and not gd.parents, [
             self.gpf_instance.get_wdae_wrapper(genotype_data_id)
-            for genotype_data_id in selected_genotype_data
+            for genotype_data_id in genotype_data_ids
         ])
         return Response({"data": [
-            DatasetHierarchyView.produce_tree(gd, user, selected_genotype_data)
+            DatasetHierarchyView.produce_tree(gd, user, genotype_data_ids)
             for gd in genotype_data
         ]}, status=status.HTTP_200_OK)
+
+
+class VisibleDatasetsView(QueryBaseView):
+    """Provide a list of which datasets to show in the frontend."""
+
+    def get(self, request: Request) -> Response:
+        """Return the list of visible datasets."""
+        res = self.gpf_instance.get_visible_datasets()
+        if not res:
+            res = sorted(self.gpf_instance.get_genotype_data_ids())
+        return Response(res)

@@ -4,6 +4,11 @@ from . import views
 
 urlpatterns = [
     re_path(
+        r"^/visible/?$",
+        views.VisibleDatasetsView.as_view(),
+        name="visible",
+    ),
+    re_path(
         r"^/denied_prompt/?$",
         views.PermissionDeniedPromptView.as_view(),
         name="denied_prompt",
