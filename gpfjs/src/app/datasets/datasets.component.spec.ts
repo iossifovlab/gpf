@@ -34,41 +34,19 @@ class MockDatasetService {
 }
 
 const mockDataset1 = new Dataset(
-  'id1',
-  'desc1',
-  'name1',
-  [],
-  true,
-  ['study1', 'study2'],
-  ['studyName1', 'studyName2'],
-  ['studyType1', 'studyType2'],
-  'phenotypeData1',
-  false,
-  true,
-  true,
-  false,
-  {enabled: true},
+  'id1', 'desc1', 'name1', [], true,
+  ['study1'], ['studyName1'], ['studyType1'], 'phenotypeData1',
+  false, true, true, false, {enabled: true},
   new GenotypeBrowser(
-    false,
-    true,
-    false,
-    false,
-    true,
-    false,
-    true,
-    false,
-    false,
+    false, true, false, false, true, false, true, false, false,
     [
-      new Column('name1', 'source1', 'format1'),
-      new Column('name2', 'source2', 'format2')
+      new Column('name1', 'source1', 'format1')
     ],
     [
-      new PersonFilter('personFilter1', 'string1', 'source1', 'sourceType1', 'filterType1', 'role1'),
-      new PersonFilter('personFilter2', 'string2', 'source2', 'sourceType2', 'filterType2', 'role2')
+      new PersonFilter('personFilter1', 'string1', 'source1', 'sourceType1', 'filterType1', 'role1')
     ],
     [
-      new PersonFilter('familyFilter3', 'string3', 'source3', 'sourceType3', 'filterType3', 'role3'),
-      new PersonFilter('familyFilter4', 'string4', 'source4', 'sourceType4', 'filterType4', 'role4')
+      new PersonFilter('familyFilter3', 'string3', 'source3', 'sourceType3', 'filterType3', 'role3')
     ],
     new Set(['inheritance', 'string1']),
     new Set(['selectedInheritance', 'string2']),
@@ -79,22 +57,10 @@ const mockDataset1 = new Dataset(
   new PersonSetCollections(
     [
       new PersonSetCollection(
-        'id1',
-        'name1',
-        [
-          new PersonSet('id1', 'name1', 'color1'),
-          new PersonSet('id1', 'name2', 'color3'),
-          new PersonSet('id2', 'name3', 'color4')
-        ]
+        'id1', 'name1', [new PersonSet('id1', 'name1', 'color1')]
       ),
       new PersonSetCollection(
-        'id2',
-        'name2',
-        [
-          new PersonSet('id2', 'name2', 'color2'),
-          new PersonSet('id2', 'name3', 'color5'),
-          new PersonSet('id3', 'name4', 'color6')
-        ]
+        'id2', 'name2', [new PersonSet('id2', 'name2', 'color2')]
       )
     ]
   ),
