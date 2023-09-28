@@ -163,7 +163,7 @@ class AnnotationConfigParser:
             return [
                 AnnotatorInfo(
                     ann_type, [], {"resource_id": resource},
-                    annotator_id=f"A{idx}-{resource}"
+                    annotator_id=f"A{idx}_{resource}"
                 )
                 for resource in matching_resources
             ]
@@ -420,23 +420,24 @@ def check_for_repeated_attributes_in_pipeline(
     repeated_attributes = {
         att for att, cnt in Counter(pipeline_names_set).items() if cnt > 1
     }
-    if repeated_attributes:
-        if not allow_repeated_attributes:
-            overlapping_annotators = []
-            for annotator in pipeline.annotators:
-                for attr in annotator.attributes:
-                    if attr.name in repeated_attributes:
-                        overlapping_annotators.append(
-                            annotator.get_info().annotator_id
-                        )
-            attrs_err_msg = ",".join(sorted(repeated_attributes))
-            # reversed so that it follows the order of the pipeline config
-            ann_err_msg = ",".join(reversed(overlapping_annotators))
-            raise AnnotationConfigurationError(
-                f"The attributes {attrs_err_msg} were found to be repeated"
-                f" in the annotators {ann_err_msg}"
-            )
+
+    if not repeated_attributes:
+        return
+
+    if allow_repeated_attributes:
         resolve_repeated_attributes(pipeline, repeated_attributes)
+        return
+
+    overlaps: dict[str, list[str]] = {}
+    # reversed so that it follows the order of the pipeline config
+    for annotator in reversed(pipeline.annotators):
+        annotator_id = annotator.get_info().annotator_id
+        for attr in annotator.attributes:
+            if attr.name in repeated_attributes:
+                overlaps.setdefault(attr.name, []).append(annotator_id)
+    raise AnnotationConfigurationError(
+        f"Repeated attributes in pipeline were found - {overlaps}"
+    )
 
 
 def resolve_repeated_attributes(
@@ -447,7 +448,8 @@ def resolve_repeated_attributes(
         for annotator in pipeline.annotators:
             for attribute in annotator.attributes:
                 if attribute.name == rep:
-                    attribute.name = f"{attribute.name}_{annotator.get_info().annotator_id}"  # noqa
+                    attribute.name = \
+                        f"{attribute.name}_{annotator.get_info().annotator_id}"
 
 
 def check_for_unused_parameters(info: AnnotatorInfo) -> None:

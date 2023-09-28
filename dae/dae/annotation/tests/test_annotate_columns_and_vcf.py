@@ -571,7 +571,7 @@ def test_annotate_columns_repeated_attributes(
             "-o", out_file,
             "-w", work_dir,
             "-j", 1,
-            "--rename-repeated"
+            "--allow-repeated-attributes"
         ]
     ])
     out_file_content = get_file_content_as_string(str(out_file))
@@ -605,7 +605,7 @@ def test_annotate_vcf_repeated_attributes(
             "-o", out_file,
             "-w", workdir,
             "-j", 1,
-            "--rename-repeated"
+            "--allow-repeated-attributes"
         ]
     ])
 

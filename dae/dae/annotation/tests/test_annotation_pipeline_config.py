@@ -291,11 +291,11 @@ def test_wildcard_basic(test_grr: GenomicResourceRepo) -> None:
     assert pipeline_config == [
         AnnotatorInfo(
             "position_score", [], {"resource_id": "score_one"},
-            annotator_id="A0-score_one"
+            annotator_id="A0_score_one"
         ),
         AnnotatorInfo(
             "position_score", [], {"resource_id": "score_two"},
-            annotator_id="A0-score_two"
+            annotator_id="A0_score_two"
         ),
     ]
 
@@ -308,12 +308,12 @@ def test_wildcard_directory(test_grr: GenomicResourceRepo) -> None:
         AnnotatorInfo(
             "position_score", [],
             {"resource_id": "scores/scoredir_one/subscore"},
-            annotator_id="A0-scores/scoredir_one/subscore"
+            annotator_id="A0_scores/scoredir_one/subscore"
         ),
         AnnotatorInfo(
             "position_score", [],
             {"resource_id": "scores/scoredir_two/subscore"},
-            annotator_id="A0-scores/scoredir_two/subscore"
+            annotator_id="A0_scores/scoredir_two/subscore"
         ),
     ]
 
@@ -325,7 +325,7 @@ def test_wildcard_label_single(test_grr: GenomicResourceRepo) -> None:
     assert pipeline_config == [
         AnnotatorInfo(
             "position_score", [], {"resource_id": "score_one"},
-            annotator_id="A0-score_one"
+            annotator_id="A0_score_one"
         )
     ]
 
@@ -337,12 +337,12 @@ def test_wildcard_label_and_dir(test_grr: GenomicResourceRepo) -> None:
     assert pipeline_config == [
         AnnotatorInfo(
             "position_score", [], {"resource_id": "score_one"},
-            annotator_id="A0-score_one"
+            annotator_id="A0_score_one"
         ),
         AnnotatorInfo(
             "position_score", [],
             {"resource_id": "scores/scoredir_one/subscore"},
-            annotator_id="A0-scores/scoredir_one/subscore"
+            annotator_id="A0_scores/scoredir_one/subscore"
         ),
     ]
 
@@ -354,6 +354,6 @@ def test_wildcard_label_multiple(test_grr: GenomicResourceRepo) -> None:
     assert pipeline_config == [
         AnnotatorInfo(
             "position_score", [], {"resource_id": "score_one"},
-            annotator_id="A0-score_one"
+            annotator_id="A0_score_one"
         ),
     ]

@@ -124,8 +124,8 @@ def test_pipeline_repeated_attributes_forbidden(
             grr_repository=test_grr
         )
     assert str(error.value) == (
-        "The attributes s1 were found to be repeated"
-        " in the annotators A0-score_one,A0-dup_score_one"
+        "Repeated attributes in pipeline were found -"
+        " {'s1': ['A0_score_one', 'A0_dup_score_one']}"
     )
 
 
@@ -142,4 +142,4 @@ def test_pipeline_repeated_attributes_allowed(
     )
     result = pipeline.annotate(Position("foo", 1))
     assert len(pipeline.annotators) == 2
-    assert result == {"s1_A0-score_one": 0.1, "s1_A0-dup_score_one": 0.123}
+    assert result == {"s1_A0_score_one": 0.1, "s1_A0_dup_score_one": 0.123}

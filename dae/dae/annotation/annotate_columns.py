@@ -57,7 +57,7 @@ def configure_argument_parser() -> argparse.ArgumentParser:
                         help="The column separator in the output")
     parser.add_argument("--reannotate", default=None,
                         help="Old pipeline config to reannotate over")
-    parser.add_argument("--rename-repeated", default=False,
+    parser.add_argument("-ar", "--allow-repeated-attributes", default=False,
                         action="store_true",
                         help="Rename repeated attributes instead of raising"
                         " an error.")
@@ -144,13 +144,13 @@ def annotate(
     pipeline = build_annotation_pipeline(
         pipeline_config_file=args.pipeline,
         grr_repository=grr,
-        allow_repeated_attributes=args.rename_repeated)
+        allow_repeated_attributes=args.allow_repeated_attributes)
 
     if args.reannotate:
         pipeline_old = build_annotation_pipeline(
             pipeline_config_file=args.reannotate,
             grr_repository=grr,
-            allow_repeated_attributes=args.rename_repeated)
+            allow_repeated_attributes=args.allow_repeated_attributes)
         pipeline_new = pipeline
         pipeline = ReannotationPipeline(pipeline_new, pipeline_old)
 
