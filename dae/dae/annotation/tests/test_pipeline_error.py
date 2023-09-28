@@ -23,7 +23,7 @@ def test_pipeline_repeated_annotator_attribute():
 
 
 def test_pipeline_repeated_attribute():
-    with pytest.raises(AnnotationConfigurationError, match="attributes hi"):
+    with pytest.raises(AnnotationConfigurationError, match="hi"):
         build_annotation_pipeline(pipeline_config_str="""
             - debug_annotator:
                 attributes:

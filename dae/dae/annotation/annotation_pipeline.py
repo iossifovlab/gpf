@@ -62,7 +62,7 @@ class AnnotatorInfo:
                  resources: Optional[list[GenomicResource]] = None,
                  annotator_id: str = "N/A"):
         self.type = _type
-        self.annotator_id = f"{annotator_id} ({self.type})"
+        self.annotator_id = f"{annotator_id}"
         self.attributes = attributes
         self.documentation = documentation
         if isinstance(parameters, ParamsUsageMonitor):

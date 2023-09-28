@@ -57,6 +57,10 @@ def configure_argument_parser() -> argparse.ArgumentParser:
                         help="The column separator in the output")
     parser.add_argument("--reannotate", default=None,
                         help="Old pipeline config to reannotate over")
+    parser.add_argument("-ar", "--allow-repeated-attributes", default=False,
+                        action="store_true",
+                        help="Rename repeated attributes instead of raising"
+                        " an error.")
     CLIAnnotationContext.add_context_arguments(parser)
     add_record_to_annotable_arguments(parser)
     TaskGraphCli.add_arguments(parser)
@@ -139,12 +143,14 @@ def annotate(
     # prevents the finding of a default annotation config. Consider fixing
     pipeline = build_annotation_pipeline(
         pipeline_config_file=args.pipeline,
-        grr_repository=grr)
+        grr_repository=grr,
+        allow_repeated_attributes=args.allow_repeated_attributes)
 
     if args.reannotate:
         pipeline_old = build_annotation_pipeline(
             pipeline_config_file=args.reannotate,
-            grr_repository=grr)
+            grr_repository=grr,
+            allow_repeated_attributes=args.allow_repeated_attributes)
         pipeline_new = pipeline
         pipeline = ReannotationPipeline(pipeline_new, pipeline_old)
 

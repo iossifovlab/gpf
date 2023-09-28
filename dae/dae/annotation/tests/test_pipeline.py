@@ -3,7 +3,8 @@ import pathlib
 import textwrap
 import pytest
 from dae.annotation.annotatable import Position
-from dae.annotation.annotation_factory import build_annotation_pipeline
+from dae.annotation.annotation_factory import build_annotation_pipeline, \
+    AnnotationConfigurationError
 from dae.genomic_resources import build_genomic_resource_repository
 from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.testing import setup_directories, convert_to_tab_separated
@@ -50,6 +51,21 @@ def test_grr(tmp_path: pathlib.Path) -> GenomicResourceRepo:
                         foo    1          0.2
                     """)
                 },
+                "dup_score_one": {
+                    "genomic_resource.yaml": textwrap.dedent("""
+                        type: position_score
+                        table:
+                            filename: data.txt
+                        scores:
+                        - id: s1
+                          type: float
+                          name: s1
+                    """),
+                    "data.txt": convert_to_tab_separated("""
+                        chrom  pos_begin  s1
+                        foo    1          0.123
+                    """)
+                },
             },
         }
     )
@@ -94,3 +110,36 @@ def test_pipeline_with_wildcards(test_grr: GenomicResourceRepo) -> None:
     result = pipeline.annotate(Position("foo", 1))
     assert len(pipeline.annotators) == 2
     assert result == {"s1": 0.1, "s2": 0.2}
+
+
+def test_pipeline_repeated_attributes_forbidden(
+    test_grr: GenomicResourceRepo
+) -> None:
+    pipeline_config = """
+        - position_score: "*score_one"
+    """
+    with pytest.raises(AnnotationConfigurationError) as error:
+        build_annotation_pipeline(
+            pipeline_config_str=pipeline_config,
+            grr_repository=test_grr
+        )
+    assert str(error.value) == (
+        "Repeated attributes in pipeline were found -"
+        " {'s1': ['A0_score_one', 'A0_dup_score_one']}"
+    )
+
+
+def test_pipeline_repeated_attributes_allowed(
+    test_grr: GenomicResourceRepo
+) -> None:
+    pipeline_config = """
+        - position_score: "*score_one"
+    """
+    pipeline = build_annotation_pipeline(
+        pipeline_config_str=pipeline_config,
+        grr_repository=test_grr,
+        allow_repeated_attributes=True
+    )
+    result = pipeline.annotate(Position("foo", 1))
+    assert len(pipeline.annotators) == 2
+    assert result == {"s1_A0_score_one": 0.1, "s1_A0_dup_score_one": 0.123}
