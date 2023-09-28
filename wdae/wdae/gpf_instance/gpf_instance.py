@@ -288,6 +288,8 @@ class WGPFInstance(GPFInstance):
     def get_visible_datasets(self) -> Optional[list[str]]:
         if self.dae_config.gpfjs is None:
             return None
+        if not self.dae_config.gpfjs.visible_datasets:
+            return None
         all_datasets = self.get_genotype_data_ids()
         return [
             dataset_id for dataset_id
