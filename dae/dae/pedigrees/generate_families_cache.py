@@ -61,8 +61,8 @@ def main(
     start = time.time()
 
     studies = []
-    if args.studies:
-        study_ids = args.studies.split(",")
+    if args.groups:
+        study_ids = args.groups.split(",")
         all_study_ids = set(gpf_instance.get_genotype_data_ids())
         for study_id in study_ids:
             if study_id not in all_study_ids:
