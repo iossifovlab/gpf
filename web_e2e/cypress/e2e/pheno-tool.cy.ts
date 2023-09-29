@@ -378,6 +378,7 @@ describe('Pheno tool download tests', () => {
       genesBlockPage.geneSetsCollectionSelectorDropdownMenu.select(data.collection);
       genesBlockPage.geneSetsSearchbox.click();
       genesBlockPage.geneSetsSearchbox.type(data.set.substring(0, data.set.indexOf(' (')));
+      cy.wait(1500);
       genesBlockPage.findGeneSetsSearchboxDropdownOptionsByText(data.set).click();
 
       phenoToolMeasurePage.searchbox.click();
