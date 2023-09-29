@@ -6,7 +6,7 @@ export class PhenoToolMeasurePage extends BasePage {
   }
 
   public get searchbox(): element {
-    return this.block.find('input#tags');
+    return this.block.find('input#search-box');
   }
 
   public get ageCheckbox(): element {
@@ -22,11 +22,15 @@ export class PhenoToolMeasurePage extends BasePage {
   }
 
   public get dropdown(): element {
-    return cy.get('.ui-front');
+    return cy.get('.dropdown-menu');
   }
 
   public getDropdownOptionByText(text: string): element {
-    return cy.get('.ui-menu-item-wrapper').contains(text);
+    return this.dropdown.find('span').contains(text);
+  }
+
+  public get clearMeasureButton(): element {
+    return cy.get('#clear-measure-button');
   }
 
   public get fromInputField(): element {

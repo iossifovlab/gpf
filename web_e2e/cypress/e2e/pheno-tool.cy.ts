@@ -100,7 +100,7 @@ describe('Pheno tool tests', () => {
     page.reportButton.should('be.enabled');
     page.downloadButton.should('be.enabled');
 
-    phenoToolMeasurePage.searchbox.click();
+    phenoToolMeasurePage.clearMeasureButton.click();
     saveQueryPage.button.should('be.disabled');
     page.reportButton.should('be.disabled');
     page.downloadButton.should('be.disabled');

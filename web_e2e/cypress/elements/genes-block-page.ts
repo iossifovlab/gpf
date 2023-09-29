@@ -30,15 +30,19 @@ export class GenesBlockPage extends BasePage {
   }
 
   public get geneSetsSearchbox(): element {
-    return cy.get('#sets');
+    return cy.get('#search-box');
   }
 
   public findGeneSetsSearchboxDropdownOptionsByText(text: string): element {
-    return cy.get('.ui-menu-item-wrapper').contains(text);
+    return cy.get('button.dropdown-item span').contains(text);
   }
 
   public get firstGeneSetFromDropdownMenu(): element {
-    return cy.get('.ui-menu-item-wrapper').first();
+    return cy.get('button.dropdown-item span').first();
+  }
+
+  public get selectedGeneSet(): element {
+    return cy.get('#selected-value');
   }
 
   public get geneSetCountElement(): element {
