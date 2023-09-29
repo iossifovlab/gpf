@@ -399,7 +399,7 @@ class DatasetHierarchyView(QueryBaseView):
             "dataset": dataset.study_id,
             "name": dataset.name,
             "children": children,
-            "access_rights": user_has_permission(user, dataset_object)
+            "access_rights": user_has_permission(user, dataset.study_id)
         }
 
     def get(self, request: Request) -> Response:
