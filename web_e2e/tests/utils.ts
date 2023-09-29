@@ -1,6 +1,9 @@
 import { Page, expect } from '@playwright/test';
 
-export const instanceUrl = process.env.GPF_STAGING_INSTANCE_URL ? process.env.GPF_STAGING_INSTANCE_URL : 'http://172.21.0.6/gpf';
+// For local replace with http://172.xx.x.x/gpf
+export const instanceUrl = process.env.GPF_STAGING_INSTANCE_URL ? process.env.GPF_STAGING_INSTANCE_URL : 'http://gpf/gpf';
+// Replace with http://localhost:8025 if testing local
+export const mailhogUrl = 'http://mailhog:8025';
 export const username = process.env.GPF_STAGING_USERNAME ? process.env.GPF_STAGING_USERNAME : 'admin@iossifovlab.com';
 export const password = process.env.GPF_STAGING_PASSWORD ? process.env.GPF_STAGING_PASSWORD : 'secret';
 
@@ -57,6 +60,32 @@ export function readFile(name): Promise<unknown> {
       resolve(data.toString());
     });
   });
+}
+
+export function getRandomString(): string {
+  return Math.random().toString(36).substring(2, 9);
+}
+
+// Create user without password
+export async function createUser(page: Page, email: string, name: string): Promise<void> {
+  await page.locator('#sidenav-toggle-button').click();
+  await page.locator('a:text("Management")').click();
+  await page.locator('#create-user-form-button').click();
+
+  await page.waitForSelector('.grid-container.ng-star-inserted'); // In case of duplicates
+  if (await page.locator(`[id="${email}-user-cell"]`).isVisible() === true) {
+    await page.locator(`[id="${email}-delete-user-button"]`).click();
+    await page.locator('button:text("Delete")').click();
+    await page.waitForSelector(`[id="${email}-user-cell"]`, {state: 'detached'});
+  }
+
+  await page.locator('#name-box').fill(name);
+  await page.locator('#email-box').fill(email);
+  await page.locator('#create-user-button').click();
+
+
+  await expect(page.locator(`[id="${email}-user-cell"]`)).toBeVisible();
+  await expect(page.locator(`[id="${email}-password-cell"]`)).toBeEmpty();
 }
 
 // export async function navigateToDatasetPage(dataset: string, page: string, hasAccessRights = true): void {
