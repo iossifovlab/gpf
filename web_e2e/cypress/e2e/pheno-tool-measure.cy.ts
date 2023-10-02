@@ -39,7 +39,6 @@ describe('Pheno tool measure tests', () => {
     page.searchbox.click();
     page.getDropdownOptionByText('i1.age').click();
     page.ageCheckbox.should('be.disabled');
-
     page.clearMeasureButton.click();
     page.searchbox.click();
     page.getDropdownOptionByText('i1.iq').click();

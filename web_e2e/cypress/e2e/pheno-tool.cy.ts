@@ -144,6 +144,7 @@ describe('Pheno tool tests', () => {
     page.reportButton.should('be.disabled');
     page.downloadButton.should('be.disabled');
     familyPage.searchbox.click();
+    cy.wait(1500);
     familyPage.getDropdownMenuOptionByText('i1.age').click();
     saveQueryPage.button.should('be.enabled');
     page.reportButton.should('be.enabled');
@@ -342,6 +343,7 @@ describe('Pheno tool download tests', () => {
       genesBlockPage.geneSymbolsTextarea.type(data.geneSymbol);
 
       phenoToolMeasurePage.searchbox.click();
+      cy.wait(1500);
       phenoToolMeasurePage.getDropdownOptionByText('i1.age').click();
 
       const downloadedVariantsPath = Cypress.config('downloadsFolder') + '/pheno_report.csv';
@@ -366,7 +368,7 @@ describe('Pheno tool download tests', () => {
 
   [
     {id: '12', collection: 'SFARI Genes', set: 'SFARI ALL (910): SFARI Genes (2017-09): All genes', measure: 'i1.age'},
-    {id: '13', collection: 'Protein domains', set: 'AMOP (3): ', measure: 'i1.iq'}
+    {id: '13', collection: 'Protein domains', set: 'AMOP (3)', measure: 'i1.iq'}
   ].forEach(data => {
     it.skip('should check downloaded report with gene sets', () => {
       const genesBlockPage = new GenesBlockPage();
@@ -427,10 +429,12 @@ describe('Pheno tool download tests', () => {
       genesBlockPage.findDenovoGeneSetsAccordionButtonByText(data.genotype + ': Affected Status').click();
       genesBlockPage.findDenovoGeneSetCollectionCheckbox(data.genotype, data.affectedStatus).click();
 
+      cy.wait(1500);
       genesBlockPage.geneSetsSearchbox.click();
       genesBlockPage.findGeneSetsSearchboxDropdownOptionsByText(data.set).click();
 
       phenoToolMeasurePage.searchbox.click();
+      cy.wait(1500);
       phenoToolMeasurePage.getDropdownOptionByText(data.measure).click();
 
       const downloadedVariantsPath = Cypress.config('downloadsFolder') + '/pheno_report.csv';
