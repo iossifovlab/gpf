@@ -31,18 +31,25 @@ test.describe('Variant reports tests', () => {
       ]).then((files: [string, string]) => {
         const downloadedFileLines: string[] = files[0].split(/\r\n|\r|\n/);
         const expectedFileLines: string[] = files[1].split(/\r\n|\r|\n/);
+        expect(expectedFileLines).toHaveLength(downloadedFileLines.length);
 
-        const expectedColNames = expectedFileLines[0].split('\t');
-        const columnIndexToCheck = ['family_id', 'person_id', 'mo_id', 'dad_id', 'sex', 'status', 'role']
-          .map(col => expectedColNames.indexOf(col));
+        const columnToCheck = ['family_id', 'person_id', 'mom_id', 'dad_id', 'sex', 'status', 'role'];
+
+        const expectedFileHeaders = expectedFileLines[0].split('\t');
+        const expectedColIndexes = columnToCheck.map(col => expectedFileHeaders.indexOf(col));
+        expect(expectedColIndexes).not.toContain(-1);
+
+        const downloadedFileHeaders = expectedFileLines[0].split('\t');
+        const downloadedColIndexes = columnToCheck.map(col => downloadedFileHeaders.indexOf(col));
+        expect(downloadedColIndexes).not.toContain(-1);
 
         for (let i = 0; i < expectedFileLines.length; i++) {
           const expectedColData = expectedFileLines[i].split('\t');
           const downloadedColData = downloadedFileLines[i].split('\t');
 
-          columnIndexToCheck.forEach(index => {
-            expect(expectedColData[index]).toEqual(downloadedColData[index]);
-          });
+          for (let k = 0; k < expectedColIndexes.length; k++) {
+            expect(expectedColData[expectedColIndexes[k]]).toEqual(downloadedColData[downloadedColIndexes[k]]);
+          }
         }
       });
     });
