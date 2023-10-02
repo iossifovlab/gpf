@@ -93,7 +93,7 @@ def draw_families_report(families):
             title = f"Number of families: {count}"
         else:
             title = ", ".join(family_counter.families)
-        figure = draw_pedigree(layout, title=title, tags=family.tags)
+        figure = draw_pedigree(layout, title=title, tags=family.tag_labels)
         yield figure
 
 
@@ -102,7 +102,7 @@ def draw_families(families):
     for family_id, family in families.items():
         layout = build_family_layout(family)
 
-        figure = draw_pedigree(layout, title=family_id, tags=family.tags)
+        figure = draw_pedigree(layout, title=family_id, tags=family.tag_labels)
         yield figure
 
 

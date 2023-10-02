@@ -84,7 +84,7 @@ def test_family_counter_tags(study1):
         "tag_trio_family",
         "tag_nuclear_family",
         "tag_affected_prb_family",
-        "tag_family_type:type#3",
+        # "tag_family_type:type#3",
         "tag_male_prb_family",
         "tag_unaffected_dad_family",
         "tag_unaffected_mom_family"

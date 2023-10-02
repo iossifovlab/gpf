@@ -2,7 +2,8 @@ from rest_framework.response import Response
 from rest_framework import status
 from query_base.query_base import QueryDatasetView
 
-from dae.pedigrees.family_tag_builder import FamilyTagsBuilder, check_tag
+from dae.pedigrees.family_tag_builder import check_tag, \
+    FamilyTag
 
 
 class ListFamiliesView(QueryDatasetView):
@@ -16,19 +17,20 @@ class ListFamiliesView(QueryDatasetView):
 
         families = dataset.families
 
-        tags = request.GET.get("tags")
-        if tags is None:
+        tags_query = request.GET.get("tags")
+        if tags_query is None:
             return Response(
                 families.keys(),
                 status.HTTP_200_OK
             )
 
         result = set()
-        tags = tags.split(",")
+        tag_labels = tags_query.split(",")
+        tags = {FamilyTag.from_label(label) for label in tag_labels}
         for family_id, family in families.items():
             for tag in tags:
                 try:
-                    tagged = check_tag(family, tag, True)
+                    tagged = check_tag(family, tag)
                     if tagged:
                         result.add(family_id)
                 except ValueError as err:
@@ -71,7 +73,7 @@ class TagsView(QueryDatasetView):
     def get(self, request):
         # pylint: disable=unused-argument,no-self-use
         return Response(
-            list(FamilyTagsBuilder.TAGS.keys()),
+            list(FamilyTag.all_labels()),
             status=status.HTTP_200_OK
         )
 

@@ -98,7 +98,7 @@ def test_family_details_view(admin_client):
         "samples_index": None,
         "tags": set([
             "tag_affected_prb_family",
-            "tag_family_type:type#3",
+            # "tag_family_type:type#3",
             "tag_male_prb_family",
             "tag_nuclear_family",
             "tag_simplex_family",

@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from query_base.query_base import QueryDatasetView
 
 from utils.query_params import parse_query_params
-from dae.pedigrees.family import FamiliesData
+from dae.pedigrees.family import FamiliesData, FamilyTag
 from dae.pedigrees.family_tag_builder import check_tag
 from dae.pedigrees.serializer import FamiliesTsvSerializer
 
@@ -129,7 +129,7 @@ class FamiliesDataDownloadView(QueryDatasetView):
 
     def get(self, request, dataset_id):
         """Return full family data for a specified study and tags."""
-        tags = request.GET.get("tags")
+        tags_query = request.GET.get("tags")
 
         if not dataset_id:
             return Response(status=status.HTTP_400_BAD_REQUEST)
@@ -141,16 +141,17 @@ class FamiliesDataDownloadView(QueryDatasetView):
 
         study_families = study.families
 
-        if tags is None or len(tags) == 0:
+        if tags_query is None or len(tags_query) == 0:
             result = study_families
         else:
             result = {}
-            tags = set(tags.split(","))
+            tag_labels = set(tags_query.split(","))
+            tags = {FamilyTag.from_label(label) for label in tag_labels}
             for family_id, family in study_families.items():
                 has_tags = True
                 for tag in tags:
                     try:
-                        tagged = check_tag(family, tag, True)
+                        tagged = check_tag(family, tag)
                         if not tagged:
                             has_tags = False
                             break

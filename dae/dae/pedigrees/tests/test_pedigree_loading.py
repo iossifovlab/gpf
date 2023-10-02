@@ -187,7 +187,6 @@ def test_flexible_pedigree_read_do_not_override_sample_id_column(
     assert pedigree_df.equals(expected_df)
 
 
-@pytest.mark.skip
 def test_flexible_pedigree_read_no_header(fixture_dirname):
     expected_df = expected_pedigree_df.copy()
     expected_df["sample_id"] = expected_df["person_id"]

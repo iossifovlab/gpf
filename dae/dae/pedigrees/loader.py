@@ -2,8 +2,12 @@
 
 import warnings
 import logging
+import pathlib
+import argparse
+
 from functools import partial
 from collections import defaultdict
+from typing import Optional, Any, Union, TextIO
 
 import pandas as pd
 
@@ -30,10 +34,13 @@ PED_COLUMNS_REQUIRED = (
 )
 
 
+PedigreeIO = Union[str, pathlib.Path, TextIO]  # pylint: disable=invalid-name
+
+
 class FamiliesLoader(CLILoader):
     """Pedigree files loader."""
 
-    def __init__(self, families_filename, **params):
+    def __init__(self, families_filename: PedigreeIO, **params: Any):
 
         super().__init__(params=params)
         self.filename = families_filename
@@ -41,7 +48,9 @@ class FamiliesLoader(CLILoader):
 
     @staticmethod
     def load_pedigree_file(
-            pedigree_filename, pedigree_params=None) -> FamiliesData:
+        pedigree_filename: PedigreeIO,
+        pedigree_params: Optional[dict[str, Any]] = None
+    ) -> FamiliesData:
         """Load a pedigree files and return FamiliesData object."""
         if pedigree_params is None:
             pedigree_params = {}
@@ -53,7 +62,8 @@ class FamiliesLoader(CLILoader):
 
     @staticmethod
     def build_families_data_from_pedigree(
-        ped_df, pedigree_params=None
+        ped_df: pd.DataFrame,
+        pedigree_params: Optional[dict[str, Any]] = None
     ) -> FamiliesData:
         """Build a families data object from a pedigree data frame."""
         if pedigree_params is None:
@@ -77,7 +87,9 @@ class FamiliesLoader(CLILoader):
         return families
 
     @staticmethod
-    def _build_families_tags(families, pedigree_params):
+    def _build_families_tags(
+        families: FamiliesData, pedigree_params: dict[str, Any]
+    ) -> None:
         ped_tags = pedigree_params.get("ped_tags", False)
         if not ped_tags:
             return
@@ -86,7 +98,10 @@ class FamiliesLoader(CLILoader):
         tagger.tag_families_data(families)
 
     @staticmethod
-    def _build_families_layouts(families, pedigree_params):
+    def _build_families_layouts(
+        families: FamiliesData,
+        pedigree_params: dict[str, Any]
+    ) -> None:
         ped_layout_mode = pedigree_params.get("ped_layout_mode", "load")
         if ped_layout_mode == "generate":
             for family in families.values():
@@ -105,7 +120,10 @@ class FamiliesLoader(CLILoader):
             )
 
     @staticmethod
-    def _build_families_roles(families, pedigree_format):
+    def _build_families_roles(
+        families: FamiliesData,
+        pedigree_format: dict[str, Any]
+    ) -> None:
         has_unknown_roles = any(
             p.role is None  # or p.role == Role.unknown
             for p in families.persons.values())
@@ -126,7 +144,7 @@ class FamiliesLoader(CLILoader):
         )
 
     @classmethod
-    def _arguments(cls):
+    def _arguments(cls) -> list[CLIArgument]:
         arguments = []
         arguments.append(CLIArgument(
             "families",
@@ -250,7 +268,10 @@ class FamiliesLoader(CLILoader):
         return arguments
 
     @classmethod
-    def parse_cli_arguments(cls, argv, use_defaults=False):
+    def parse_cli_arguments(
+        cls, argv: argparse.Namespace,
+        use_defaults: bool = False
+    ) -> tuple[list[str], dict[str, Any]]:
         filename = argv.families
         super().parse_cli_arguments(argv, use_defaults=use_defaults)
 
@@ -298,7 +319,7 @@ class FamiliesLoader(CLILoader):
         return filename, res
 
     @staticmethod
-    def _produce_header_from_indices(**kwargs):
+    def _produce_header_from_indices(**kwargs: Any) -> tuple[str, ...]:
         header = (
             (kwargs.get("ped_family"), PEDIGREE_COLUMN_NAMES["family"]),
             (kwargs.get("ped_person"), PEDIGREE_COLUMN_NAMES["person"]),
@@ -319,28 +340,28 @@ class FamiliesLoader(CLILoader):
         for col in header:
             assert isinstance(col[0], int), col[0]
         header = tuple(sorted(header, key=lambda col: col[0]))  # type: ignore
-        return zip(*header)
+        return zip(*header)  # type: ignore
 
     @staticmethod
     def flexible_pedigree_read(
-        pedigree_filepath,
-        ped_sep="\t",
-        ped_no_header=False,
-        ped_no_role=False,
-        ped_family="familyId",
-        ped_person="personId",
-        ped_mom="momId",
-        ped_dad="dadId",
-        ped_sex="sex",
-        ped_status="status",
-        ped_role="role",
-        ped_proband="proband",
-        ped_layout="layout",
-        ped_generated="generated",
-        ped_not_sequenced="not_sequenced",
-        ped_sample_id="sample_id",
-        **kwargs,  # pylint: disable=unused-argument
-    ):
+        pedigree_filepath: PedigreeIO,
+        ped_sep: str = "\t",
+        ped_no_header: bool = False,
+        ped_no_role: bool = False,
+        ped_family: str = "familyId",
+        ped_person: str = "personId",
+        ped_mom: str = "momId",
+        ped_dad: str = "dadId",
+        ped_sex: str = "sex",
+        ped_status: str = "status",
+        ped_role: str = "role",
+        ped_proband: str = "proband",
+        ped_layout: str = "layout",
+        ped_generated: str = "generated",
+        ped_not_sequenced: str = "not_sequenced",
+        ped_sample_id: str = "sample_id",
+        **kwargs: Any,  # pylint: disable=unused-argument
+    ) -> pd.DataFrame:
         """Read a pedigree from file."""
         # pylint: disable=too-many-arguments, too-many-locals
         if isinstance(ped_no_role, str):
@@ -387,6 +408,7 @@ class FamiliesLoader(CLILoader):
                     ped_not_sequenced=ped_not_sequenced,
                     ped_sample_id=ped_sample_id,
                 )
+
                 ped_family = PEDIGREE_COLUMN_NAMES["family"]
                 ped_person = PEDIGREE_COLUMN_NAMES["person"]
                 ped_mom = PEDIGREE_COLUMN_NAMES["mother"]
@@ -412,7 +434,7 @@ class FamiliesLoader(CLILoader):
         if ped_sample_id in ped_df:
             if ped_generated in ped_df or ped_not_sequenced in ped_df:
 
-                def fill_sample_id(rec):
+                def fill_sample_id(rec):  # type: ignore
                     if not pd.isna(rec.sample_id):
                         return rec.sample_id
                     if rec.generated or rec.not_sequenced:
@@ -421,7 +443,7 @@ class FamiliesLoader(CLILoader):
 
             else:
 
-                def fill_sample_id(rec):
+                def fill_sample_id(rec):  # type: ignore
                     if not pd.isna(rec.sample_id):
                         return rec.sample_id
                     return rec.personId
@@ -436,12 +458,12 @@ class FamiliesLoader(CLILoader):
             ped_df[ped_sample_id] = sample_ids  # type: ignore
         if ped_generated in ped_df:
             ped_df[ped_generated] = ped_df[  # type: ignore
-                ped_generated].apply(  # type: ignore
+                ped_generated].apply(
                     lambda v: v if v else None)
         if ped_not_sequenced in ped_df:
             ped_df[ped_not_sequenced] = ped_df[  # type: ignore
                 ped_not_sequenced].apply(
-                    lambda v: v if v else None)  # type: ignore
+                    lambda v: v if v else None)
 
         ped_df = ped_df.rename(  # type: ignore
             columns={
@@ -467,10 +489,12 @@ class FamiliesLoader(CLILoader):
             raise ValueError(
                 f"pedigree file missing columns {message}"
             )
-        return ped_df
+        return ped_df  # type: ignore
 
     @staticmethod
-    def load_simple_families_file(infile, ped_sep="\t") -> FamiliesData:
+    def load_simple_families_file(
+        infile: PedigreeIO, ped_sep: str = "\t"
+    ) -> FamiliesData:
         """Load a pedigree from a DAE simple family format file."""
         fam_df = pd.read_csv(
             infile,
@@ -499,7 +523,8 @@ class FamiliesLoader(CLILoader):
 
         fam_df["status"] = pd.Series(index=fam_df.index, data=1)
         fam_df.loc[fam_df.role == Role.prb, "status"] = 2
-        fam_df["status"] = fam_df.status.apply(Status.from_value)
+        fam_df["status"] = fam_df.status.apply(
+            Status.from_value)  # type: ignore
 
         fam_df["mom_id"] = pd.Series(index=fam_df.index, data="0")
         fam_df["dad_id"] = pd.Series(index=fam_df.index, data="0")
@@ -538,7 +563,7 @@ class FamiliesLoader(CLILoader):
         return FamiliesData.from_family_persons(result)
 
     @staticmethod
-    def save_pedigree(families: FamiliesData, filename):
+    def save_pedigree(families: FamiliesData, filename: str) -> None:
         """Save FamiliesData object into a pedigree file."""
         df = families.ped_df.copy()
 
@@ -551,13 +576,13 @@ class FamiliesLoader(CLILoader):
                 "sample_id": "sample_id",
             }
         )
-        df.sex = df.sex.apply(lambda v: v.name)  # type: ignore
-        df.role = df.role.apply(lambda v: v.name)  # type: ignore
-        df.status = df.status.apply(lambda v: v.name)  # type: ignore
+        df.sex = df.sex.apply(lambda v: v.name)
+        df.role = df.role.apply(lambda v: v.name)
+        df.status = df.status.apply(lambda v: v.name)
 
         df.to_csv(filename, index=False, sep="\t")
 
     @staticmethod
-    def save_families(families: FamiliesData, filename):
+    def save_families(families: FamiliesData, filename: str) -> None:
         assert isinstance(families, FamiliesData)
         FamiliesLoader.save_pedigree(families, filename)
