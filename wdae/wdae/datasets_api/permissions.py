@@ -4,12 +4,15 @@ from typing import Any, Optional, List, cast
 from rest_framework import permissions
 
 from django.conf import settings
+# pylint: disable=imported-auth-user
 from django.contrib.auth.models import Group, User
+
 from django.utils.encoding import force_str
 from django.http import HttpRequest
 
 from gpf_instance.gpf_instance import get_wgpf_instance
 from utils.datasets import find_dataset_id_in_request
+# from users_api.models import WdaeUser as User
 
 from .models import Dataset, DatasetHierarchy
 
