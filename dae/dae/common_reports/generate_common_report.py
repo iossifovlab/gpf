@@ -4,10 +4,9 @@ import argparse
 import logging
 import os
 import json
-from typing import Optional, cast
+from typing import Optional
 
 from dae.utils.verbosity_configuration import VerbosityConfiguration
-from dae.studies.study import GenotypeDataGroup
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.common_reports.common_report import CommonReport
 
@@ -70,14 +69,6 @@ def main(
 
             study = gpf_instance.get_genotype_data(study_id)
 
-            if study.is_group:
-                logger.info("%s is a group, caching families...", study_id)
-                study_group = cast(GenotypeDataGroup, study)
-                if study_group.load_families():
-                    study_group.build_families()
-                study_group.save_cached_families()
-                study_group.save_cached_person_sets()
-
             if not study.config.common_report or \
                     not study.config.common_report.enabled:
                 logger.warning(
@@ -92,7 +83,3 @@ def main(
                 os.makedirs(os.path.dirname(file_path))
             with open(file_path, "w+", encoding="utf8") as crf:
                 json.dump(common_report.to_dict(full=True), crf)
-
-
-# if __name__ == "__main__":
-#     main(sys.argv[1:])

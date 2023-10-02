@@ -4,6 +4,9 @@ from typing import Any, cast, Optional
 
 from django.contrib.auth import get_user_model
 from django.conf import settings
+# pylint: disable=imported-auth-user
+from django.contrib.auth.models import User
+
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework import status
@@ -12,7 +15,6 @@ from query_base.query_base import QueryBaseView
 from studies.study_wrapper import StudyWrapperBase
 
 from groups_api.serializers import GroupSerializer
-from users_api.models import WdaeUser
 from datasets_api.permissions import get_wdae_parents, user_has_permission
 from dae.studies.study import GenotypeData
 from .models import Dataset
@@ -22,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 
 def augment_accessibility(
-    dataset: dict[str, Any], user: WdaeUser
+    dataset: dict[str, Any], user: User
 ) -> dict[str, Any]:
     # pylint: disable=no-member
     dataset["access_rights"] = user_has_permission(user, dataset["id"])
@@ -54,7 +56,7 @@ class DatasetView(QueryBaseView):
     """
 
     def _collect_datasets_summary(
-        self, user: WdaeUser
+        self, user: User
     ) -> list[dict[str, Any]]:
         genotype_data = self.gpf_instance.get_genotype_data_ids()
 
@@ -79,6 +81,7 @@ class DatasetView(QueryBaseView):
     def get(
         self, request: Request, dataset_id: Optional[str] = None
     ) -> Response:
+        """Return response to a get request for a dataset or all datasets."""
         user = request.user
 
         if dataset_id is None:
@@ -116,8 +119,10 @@ class DatasetView(QueryBaseView):
 
 
 class StudiesView(QueryBaseView):
+    """View class for genotype data stuides and datasets."""
+
     def _collect_datasets_summary(
-        self, user: WdaeUser
+        self, user: User
     ) -> list[dict[str, Any]]:
         genotype_data = self.gpf_instance.get_genotype_data_ids()
 
@@ -180,6 +185,7 @@ class DatasetDetailsView(QueryBaseView):
     """Provide miscellaneous details for a given dataset."""
 
     def get(self, request: Request, dataset_id: str) -> Response:
+        """Return response for a specific dataset configuration details."""
         genotype_data_config = \
             self.gpf_instance.get_genotype_data_config(dataset_id)
         if genotype_data_config is None:
@@ -202,6 +208,7 @@ class DatasetPedigreeView(QueryBaseView):
     """Provide pedigree data for a given dataset."""
 
     def get(self, request: Request, dataset_id: str, column: str) -> Response:
+        """Return response for a pedigree get request for pedigree column."""
         genotype_data = self.gpf_instance.get_genotype_data(dataset_id)
 
         if genotype_data is None:
@@ -280,6 +287,8 @@ class DatasetDescriptionView(QueryBaseView):
 
 
 class BaseDatasetPermissionsView(QueryBaseView):
+    """Base dataset permission view."""
+
     def _get_dataset_info(self, dataset: Dataset) -> Optional[dict[str, Any]]:
         groups = dataset.groups.all()
         group_names = sorted([group.name for group in groups])
@@ -325,16 +334,18 @@ class BaseDatasetPermissionsView(QueryBaseView):
 
 
 class DatasetPermissionsView(BaseDatasetPermissionsView):
+    """Dataset permissions view."""
 
     page_size = settings.REST_FRAMEWORK["PAGE_SIZE"]
 
     def get(self, request: Request) -> Response:
+        """Return dataset permissions details."""
         dataset_search = request.GET.get("search")
         page = request.GET.get("page", 1)
         query = Dataset.objects
         if dataset_search is not None and dataset_search != "":
-            query = \
-                query.filter(dataset_id__icontains=dataset_search)
+            query = query.filter(  # type: ignore
+                dataset_id__icontains=dataset_search)
 
         if page is None:
             return Response(status.HTTP_400_BAD_REQUEST)
@@ -361,10 +372,12 @@ class DatasetPermissionsView(BaseDatasetPermissionsView):
 
 
 class DatasetPermissionsSingleView(BaseDatasetPermissionsView):
+    """Single dataset permission view."""
 
     page_size = settings.REST_FRAMEWORK["PAGE_SIZE"]
 
     def get(self, request: Request, dataset_id: str) -> Response:
+        """Return dataset permission details."""
         try:
             dataset = Dataset.objects.get(dataset_id=dataset_id)
         except Dataset.DoesNotExist:
@@ -383,7 +396,7 @@ class DatasetHierarchyView(QueryBaseView):
 
     @staticmethod
     def produce_tree(
-        dataset: GenotypeData, user: WdaeUser, selected: list[str]
+        dataset: GenotypeData, user: User, selected: list[str]
     ) -> dict[str, Any]:
         """Recursively collect a dataset's id, children and access rights."""
         children = None
@@ -393,8 +406,6 @@ class DatasetHierarchyView(QueryBaseView):
                 for child in dataset.studies
                 if child.study_id in selected
             ]
-        # pylint: disable=no-member
-        dataset_object = Dataset.objects.get(dataset_id=dataset.study_id)
         return {
             "dataset": dataset.study_id,
             "name": dataset.name,

@@ -771,7 +771,10 @@ class GenotypeDataGroup(GenotypeData):
 
         if len(self.studies) == 1:
             self._families = FamiliesData.copy(self.studies[0].families)
-            self._person_set_collections = self.studies[0].person_set_collections
+            self._person_set_collections = self._build_person_set_collections(
+                self.config.get("person_set_collections"),
+                self._families
+            )
             return
 
         logger.info(

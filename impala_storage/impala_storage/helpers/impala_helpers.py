@@ -70,7 +70,6 @@ class ImpalaHelpers:
         while True:
             try:
                 connection = self._connection_pool.connect()
-                logger.info("connect passed...; returning...")
                 return connection
             except exc.TimeoutError as error:
                 elapsed = time.time() - started
