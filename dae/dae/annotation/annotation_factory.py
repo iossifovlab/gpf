@@ -118,6 +118,17 @@ class AnnotationConfigParser:
         return result
 
     @staticmethod
+    def match_labels_query(
+        query: dict[str, str], resource_labels: dict[str, str]
+    ) -> bool:
+        """Check if the labels query for a wildcard matches."""
+        for k, v in query.items():
+            if k not in resource_labels \
+               or not fnmatch.fnmatch(resource_labels[k], v):
+                return False
+        return True
+
+    @staticmethod
     def query_resources(
         annotator_type: str, wildcard: str, grr: GenomicResourceRepo
     ) -> list[str]:
@@ -137,11 +148,22 @@ class AnnotationConfigParser:
         for resource in grr.get_all_resources():
             if (resource.get_type() == annotator_type
                and fnmatch.fnmatch(resource.get_id(), wildcard)
-               and (not labels_query
-                    or labels_query.items() <= resource.get_labels().items())):
+               and AnnotationConfigParser.match_labels_query(
+                    labels_query, resource.get_labels())):
                 result.append(resource.get_id())
 
         return result
+
+    @staticmethod
+    def has_wildcard(string: str) -> bool:
+        """Ascertain whether a string contains a valid wildcard."""
+        if "*" in string:
+            if "[" not in string or string.index("*") < string.index("["):
+                # We assert that at least one wildcard symbol is present
+                # in the resource id itself, since '*' can also be used
+                # in the label query as well.
+                return True
+        return False
 
     @staticmethod
     def parse_minimal(raw: str, idx: int) -> AnnotatorInfo:
@@ -155,7 +177,7 @@ class AnnotationConfigParser:
     ) -> list[AnnotatorInfo]:
         """Parse a short-form annotation config."""
         ann_type, ann_details = next(iter(raw.items()))
-        if "*" in ann_details:
+        if AnnotationConfigParser.has_wildcard(ann_details):
             assert grr is not None
             matching_resources = AnnotationConfigParser.query_resources(
                 ann_type, ann_details, grr
