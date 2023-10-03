@@ -1,6 +1,6 @@
 import logging
 from typing import Optional
-import pandas as pd
+from dae.pedigrees.family import FamiliesData
 from dae.query_variants.sql.schema2.base_query_builder import \
     BaseQueryBuilder, Dialect,\
     TableSchema
@@ -22,7 +22,7 @@ class FamilyQueryBuilder(BaseQueryBuilder):
         summary_allele_schema: TableSchema,
         table_properties: Optional[dict],
         pedigree_schema: TableSchema,
-        pedigree_df: pd.DataFrame,
+        families: FamiliesData,
         gene_models=None,
         do_join_pedigree=False,
         do_join_allele_in_members=False
@@ -41,7 +41,7 @@ class FamilyQueryBuilder(BaseQueryBuilder):
             summary_allele_schema,
             table_properties,
             pedigree_schema,
-            pedigree_df,
+            families,
             gene_models=gene_models,
         )
 

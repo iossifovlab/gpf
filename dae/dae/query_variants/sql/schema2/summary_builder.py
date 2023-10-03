@@ -19,7 +19,7 @@ class SummaryQueryBuilder(BaseQueryBuilder):
         summary_allele_schema,
         table_properties,
         pedigree_schema,
-        pedigree_df,
+        families,
         gene_models=None,
     ):
         # pylint: disable=too-many-arguments
@@ -33,7 +33,7 @@ class SummaryQueryBuilder(BaseQueryBuilder):
             summary_allele_schema,
             table_properties,
             pedigree_schema,
-            pedigree_df,
+            families,
             gene_models=gene_models,
         )
 

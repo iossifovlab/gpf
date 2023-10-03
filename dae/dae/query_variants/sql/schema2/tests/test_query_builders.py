@@ -3,6 +3,7 @@ import pathlib
 import pandas as pd
 import pytest
 from dae.utils.regions import Region
+from dae.pedigrees.family import FamiliesData
 from dae.query_variants.sql.schema2.base_query_builder import Dialect, \
     BaseQueryBuilder
 from dae.query_variants.sql.schema2.family_builder import FamilyQueryBuilder
@@ -86,16 +87,17 @@ NO_PARTITIONING_PROPERTIES = {
 
 
 @pytest.fixture(scope="module")
-def pedigree_df(resources_dir: pathlib.Path) -> pd.DataFrame:
+def families(resources_dir: pathlib.Path) -> FamiliesData:
     ped_df = pd.read_csv(resources_dir / "pedigree_table.csv")
     ped_df.role = ped_df.role.apply(Role.from_name)
     ped_df.sex = ped_df.sex.apply(Sex.from_name)
     ped_df.status = ped_df.status.apply(Status.from_name)
-    return ped_df
+    families = FamiliesData.from_pedigree_df(ped_df)
+    return families
 
 
 @pytest.fixture()
-def family_query_builder(pedigree_df: pd.DataFrame) -> FamilyQueryBuilder:
+def family_query_builder(families: FamiliesData) -> FamilyQueryBuilder:
     dialect = Dialect()
 
     return FamilyQueryBuilder(
@@ -108,14 +110,14 @@ def family_query_builder(pedigree_df: pd.DataFrame) -> FamilyQueryBuilder:
         summary_allele_schema=SUMMARY_ALLELE_SCHEMA,
         table_properties=NO_PARTITIONING_PROPERTIES,
         pedigree_schema=PEDIGREE_SCHEMA,
-        pedigree_df=pedigree_df,
+        families=families,
         gene_models=None,
         do_join_pedigree=False,
     )
 
 
 @pytest.fixture()
-def summary_query_builder(pedigree_df: pd.DataFrame) -> SummaryQueryBuilder:
+def summary_query_builder(families: FamiliesData) -> SummaryQueryBuilder:
     dialect = Dialect()
 
     return SummaryQueryBuilder(
@@ -128,7 +130,7 @@ def summary_query_builder(pedigree_df: pd.DataFrame) -> SummaryQueryBuilder:
         summary_allele_schema=SUMMARY_ALLELE_SCHEMA,
         table_properties=NO_PARTITIONING_PROPERTIES,
         pedigree_schema=PEDIGREE_SCHEMA,
-        pedigree_df=pedigree_df,
+        families=families,
         gene_models=None
     )
 

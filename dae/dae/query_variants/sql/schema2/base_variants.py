@@ -49,9 +49,9 @@ class SqlSchema2Variants(abc.ABC):
         }
 
         self.pedigree_schema = self._fetch_schema(self.pedigree_table)
-        self.ped_df = self._fetch_pedigree()
+        ped_df = self._fetch_pedigree()
         self.families = FamiliesLoader\
-            .build_families_data_from_pedigree(self.ped_df)
+            .build_families_data_from_pedigree(ped_df)
 
         self.partition_descriptor = PartitionDescriptor.parse_string(
             self._fetch_tblproperties())
@@ -115,7 +115,7 @@ class SqlSchema2Variants(abc.ABC):
             self.summary_allele_schema,
             self.partition_descriptor.to_dict(),
             self.pedigree_schema,
-            self.ped_df,
+            self.families,
             gene_models=self.gene_models
         )
 
@@ -198,7 +198,7 @@ class SqlSchema2Variants(abc.ABC):
             self.summary_allele_schema,
             self.partition_descriptor.to_dict(),
             self.pedigree_schema,
-            self.ped_df,
+            self.families,
             gene_models=self.gene_models,
             do_join_pedigree=do_join_pedigree,
             do_join_allele_in_members=do_join_allele_in_members

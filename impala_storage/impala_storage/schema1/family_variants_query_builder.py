@@ -12,12 +12,12 @@ class FamilyVariantsQueryBuilder(BaseQueryBuilder):
     def __init__(
             self, db, variants_table, pedigree_table,
             variants_schema, table_properties, pedigree_schema,
-            pedigree_df, families, gene_models=None, do_join=False):
+            families, gene_models=None, do_join=False):
         self.do_join = do_join
         super().__init__(
             db, variants_table, pedigree_table,
             variants_schema, table_properties, pedigree_schema,
-            pedigree_df, gene_models=gene_models)
+            families, gene_models=gene_models)
         self.families = families
 
     @staticmethod

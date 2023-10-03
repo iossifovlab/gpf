@@ -52,8 +52,8 @@ class ImpalaVariants:
         self._impala_helpers = impala_helpers
         self.pedigree_schema = self._fetch_pedigree_schema()
 
-        self.ped_df = self._fetch_pedigree()
-        self.families = FamiliesData.from_pedigree_df(self.ped_df)
+        ped_df = self._fetch_pedigree()
+        self.families = FamiliesData.from_pedigree_df(ped_df)
         # Temporary workaround for studies that are imported without tags
         # e.g. production data that is too large to reimport
         FamiliesLoader._build_families_tags(
@@ -125,7 +125,7 @@ class ImpalaVariants:
         query_builder = SummaryVariantsQueryBuilder(
             self.db, self.variants_table, self.pedigree_table,
             self.schema, self.table_properties,
-            self.pedigree_schema, self.ped_df,
+            self.pedigree_schema, self.families,
             self.gene_models, summary_variants_table=sv_table
         )
         if limit is None:
@@ -255,7 +255,7 @@ class ImpalaVariants:
         query_builder = FamilyVariantsQueryBuilder(
             self.db, self.variants_table, self.pedigree_table,
             self.schema, self.table_properties,
-            self.pedigree_schema, self.ped_df,
+            self.pedigree_schema,
             self.families, gene_models=self.gene_models,
             do_join=do_join,
         )

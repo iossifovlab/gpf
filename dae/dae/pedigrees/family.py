@@ -105,67 +105,60 @@ class FamilyTag(enum.IntEnum):
     MISSING_MOM = enum.auto()
     MISSING_DAD = enum.auto()
 
-    @staticmethod
-    def _tag2label() -> dict[FamilyTag, str]:
-        return {
-            FamilyTag.NUCLEAR: "tag_nuclear_family",
-            FamilyTag.QUAD: "tag_quad_family",
-            FamilyTag.TRIO: "tag_trio_family",
-            FamilyTag.SIMPLEX: "tag_simplex_family",
-            FamilyTag.MULTIPLEX: "tag_multiplex_family",
-            FamilyTag.CONTROL: "tag_control_family",
-            FamilyTag.AFFECTED_DAD: "tag_affected_dad_family",
-            FamilyTag.AFFECTED_MOM: "tag_affected_mom_family",
-            FamilyTag.AFFECTED_PRB: "tag_affected_prb_family",
-            FamilyTag.AFFECTED_SIB: "tag_affected_sib_family",
-            FamilyTag.UNAFFECTED_DAD: "tag_unaffected_dad_family",
-            FamilyTag.UNAFFECTED_MOM: "tag_unaffected_mom_family",
-            FamilyTag.UNAFFECTED_PRB: "tag_unaffected_prb_family",
-            FamilyTag.UNAFFECTED_SIB: "tag_unaffected_sib_family",
-            FamilyTag.MALE_PRB: "tag_male_prb_family",
-            FamilyTag.FEMALE_PRB: "tag_female_prb_family",
-            FamilyTag.MISSING_MOM: "tag_missing_mom_family",
-            FamilyTag.MISSING_DAD: "tag_missing_dad_family",
-        }
-
-    @staticmethod
-    def _label2tag() -> dict[str, FamilyTag]:
-        return {
-            "tag_nuclear_family": FamilyTag.NUCLEAR,
-            "tag_quad_family": FamilyTag.QUAD,
-            "tag_trio_family": FamilyTag.TRIO,
-            "tag_simplex_family": FamilyTag.SIMPLEX,
-            "tag_multiplex_family": FamilyTag.MULTIPLEX,
-            "tag_control_family": FamilyTag.CONTROL,
-            "tag_affected_dad_family": FamilyTag.AFFECTED_DAD,
-            "tag_affected_mom_family": FamilyTag.AFFECTED_MOM,
-            "tag_affected_prb_family": FamilyTag.AFFECTED_PRB,
-            "tag_affected_sib_family": FamilyTag.AFFECTED_SIB,
-            "tag_unaffected_dad_family": FamilyTag.UNAFFECTED_DAD,
-            "tag_unaffected_mom_family": FamilyTag.UNAFFECTED_MOM,
-            "tag_unaffected_prb_family": FamilyTag.UNAFFECTED_PRB,
-            "tag_unaffected_sib_family": FamilyTag.UNAFFECTED_SIB,
-            "tag_male_prb_family": FamilyTag.MALE_PRB,
-            "tag_female_prb_family": FamilyTag.FEMALE_PRB,
-            "tag_missing_mom_family": FamilyTag.MISSING_MOM,
-            "tag_missing_dad_family": FamilyTag.MISSING_DAD,
-        }
-
     @property
     def label(self) -> str:
-        return self._tag2label()[self]
+        return _TAG2LABEL[self]
 
     @staticmethod
     def from_label(label: str) -> FamilyTag:
-        return FamilyTag._label2tag()[label]
+        return _LABEL2TAG[label]
 
-    @staticmethod
-    def all_labels() -> list[str]:
-        return list(FamilyTag._label2tag().keys())
 
-    @staticmethod
-    def all_tags() -> list[FamilyTag]:
-        return list(FamilyTag._tag2label().keys())
+_LABEL2TAG = {
+    "tag_nuclear_family": FamilyTag.NUCLEAR,
+    "tag_quad_family": FamilyTag.QUAD,
+    "tag_trio_family": FamilyTag.TRIO,
+    "tag_simplex_family": FamilyTag.SIMPLEX,
+    "tag_multiplex_family": FamilyTag.MULTIPLEX,
+    "tag_control_family": FamilyTag.CONTROL,
+    "tag_affected_dad_family": FamilyTag.AFFECTED_DAD,
+    "tag_affected_mom_family": FamilyTag.AFFECTED_MOM,
+    "tag_affected_prb_family": FamilyTag.AFFECTED_PRB,
+    "tag_affected_sib_family": FamilyTag.AFFECTED_SIB,
+    "tag_unaffected_dad_family": FamilyTag.UNAFFECTED_DAD,
+    "tag_unaffected_mom_family": FamilyTag.UNAFFECTED_MOM,
+    "tag_unaffected_prb_family": FamilyTag.UNAFFECTED_PRB,
+    "tag_unaffected_sib_family": FamilyTag.UNAFFECTED_SIB,
+    "tag_male_prb_family": FamilyTag.MALE_PRB,
+    "tag_female_prb_family": FamilyTag.FEMALE_PRB,
+    "tag_missing_mom_family": FamilyTag.MISSING_MOM,
+    "tag_missing_dad_family": FamilyTag.MISSING_DAD,
+}
+
+
+_TAG2LABEL = {
+    FamilyTag.NUCLEAR: "tag_nuclear_family",
+    FamilyTag.QUAD: "tag_quad_family",
+    FamilyTag.TRIO: "tag_trio_family",
+    FamilyTag.SIMPLEX: "tag_simplex_family",
+    FamilyTag.MULTIPLEX: "tag_multiplex_family",
+    FamilyTag.CONTROL: "tag_control_family",
+    FamilyTag.AFFECTED_DAD: "tag_affected_dad_family",
+    FamilyTag.AFFECTED_MOM: "tag_affected_mom_family",
+    FamilyTag.AFFECTED_PRB: "tag_affected_prb_family",
+    FamilyTag.AFFECTED_SIB: "tag_affected_sib_family",
+    FamilyTag.UNAFFECTED_DAD: "tag_unaffected_dad_family",
+    FamilyTag.UNAFFECTED_MOM: "tag_unaffected_mom_family",
+    FamilyTag.UNAFFECTED_PRB: "tag_unaffected_prb_family",
+    FamilyTag.UNAFFECTED_SIB: "tag_unaffected_sib_family",
+    FamilyTag.MALE_PRB: "tag_male_prb_family",
+    FamilyTag.FEMALE_PRB: "tag_female_prb_family",
+    FamilyTag.MISSING_MOM: "tag_missing_mom_family",
+    FamilyTag.MISSING_DAD: "tag_missing_dad_family",
+}
+
+ALL_FAMILY_TAGS = set(_TAG2LABEL.keys())
+ALL_FAMILY_TAG_LABELS = set(_LABEL2TAG.keys())
 
 
 class Person:
@@ -175,13 +168,12 @@ class Person:
     def __init__(self, **attributes: Any):
         tags = {
             tag: attributes.get(tag.label, False)
-            for tag in FamilyTag.all_tags()
+            for tag in ALL_FAMILY_TAGS
         }
-        all_tag_labels = set(FamilyTag.all_labels())
         self._attributes = {
             key: value
             for key, value in attributes.items()
-            if key not in all_tag_labels
+            if key not in ALL_FAMILY_TAG_LABELS
         }
         self._tags: set[FamilyTag] = {
             tag for tag, value in tags.items() if value
@@ -358,10 +350,10 @@ class Person:
         return tag in self._tags
 
     def all_tags(self) -> dict[FamilyTag, bool]:
-        return {tag: self.has_tag(tag) for tag in FamilyTag.all_tags()}
+        return {tag: self.has_tag(tag) for tag in ALL_FAMILY_TAGS}
 
     def all_tag_labels(self) -> dict[str, bool]:
-        return {tag.label: self.has_tag(tag) for tag in FamilyTag.all_tags()}
+        return {tag.label: self.has_tag(tag) for tag in ALL_FAMILY_TAGS}
 
     def __eq__(self, other: Any) -> bool:
         if not isinstance(other, Person):
@@ -418,7 +410,7 @@ def get_pedigree_column_names(column_names: set[str]) -> list[str]:
         if col in column_names
     ]
     columns.extend(
-        tag_label for tag_label in FamilyTag.all_labels()
+        tag_label for tag_label in _LABEL2TAG
     )
     extention_columns = column_names.difference(set(columns))
     extention_columns = extention_columns.difference(
