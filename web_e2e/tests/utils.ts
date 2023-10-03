@@ -1,7 +1,7 @@
 import { Page, expect } from '@playwright/test';
 
 // For local replace with http://172.xx.x.x/gpf
-export const instanceUrl = process.env.GPF_STAGING_INSTANCE_URL ? process.env.GPF_STAGING_INSTANCE_URL : 'http://gpf/gpf';
+export const instanceUrl = process.env.GPF_STAGING_INSTANCE_URL ? process.env.GPF_STAGING_INSTANCE_URL : 'http://172.26.0.6/gpf';
 // Replace with http://localhost:8025 if testing local
 export const mailhogUrl = 'http://mailhog:8025';
 export const username = process.env.GPF_STAGING_USERNAME ? process.env.GPF_STAGING_USERNAME : 'admin@iossifovlab.com';
@@ -48,6 +48,30 @@ export async function login(page: Page, user = username, pass = password): Promi
   await page.waitForSelector('#log-out-button');
   await expect(page.getByText('Loading datasets...')).not.toBeVisible();
   await page.waitForLoadState('networkidle');
+}
+
+export async function loginAdmin(page: Page, user = username, pass = password): Promise<void> {
+  await login(page, user, pass);
+}
+
+export async function cleanup(page: Page): Promise<void> {
+  await page.context().clearCookies();
+  expect(await page.context().cookies()).toEqual([]);
+  await page.evaluate(() => {
+    window.localStorage.clear();
+    window.sessionStorage.clear();
+  });
+}
+
+export async function navigateToHome(page: Page): Promise<void> {
+  await page.goto(`${page.url()}datasets/ALL_genotypes/${toolPageLinks.geneBrowser}`);
+}
+
+export async function navigateToDatasetPage(page: Page, dataset: string, tool: string): Promise<void> {
+  await page.locator('#datasets-dropdown-menu-button').click();
+  await page.locator('button.dataset-selector').getByText(dataset).click();
+  await expect(page.getByRole('button', { name: dataset })).toHaveText(dataset);
+  await page.getByRole('link', { name: `${tool}`}).click();
 }
 
 export function readFile(name): Promise<unknown> {

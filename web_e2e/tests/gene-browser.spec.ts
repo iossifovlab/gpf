@@ -1,5 +1,8 @@
+// cypress/integration/example.spec.ts
 import { test, expect, Page, Locator } from '@playwright/test';
 import * as utils from './utils';
+import * as path from 'path';
+import * as fs from 'fs';
 
 test.describe('Gene browser basic display tests before query', () => {
   test.beforeEach(async({ page }) => {
@@ -103,6 +106,56 @@ test.describe('Gene browser basic display tests after query', () => {
   });
 });
 
+test.describe('Gene browser download tests', () => {
+  test.beforeEach(async({ page }) => {
+    await page.goto(utils.instanceUrl, {waitUntil: 'load'});
+    await utils.loginAdmin(page);
+    await utils.navigateToDatasetPage(page, 'ALL Genotypes', 'Gene browser');
+  });
+  const tests = [
+    {
+      gene: 'chd8',
+      filtersToUncheck: [{ field: 'effectTypes', filter: 'Other'},
+        { field: 'variantTypes', filter: 'ins'}],
+      expectedPath: 'variants1.tsv'
+    },
+    {
+      gene: 'pogz',
+      filtersToUncheck: [{ field: 'effectTypes', filter: 'missense'},
+        { field: 'effectTypes', filter: 'synonymous'}],
+      expectedPath: 'variants2.tsv'
+    }
+  ];
+  tests.forEach(({ gene, filtersToUncheck, expectedPath }) => {
+    test('should go to ' + gene + ' gene page, filter out ' + filtersToUncheck.toString() +
+              'family variants and compare the files to the reference data', async({ page }) => {
+      await page.locator('#search-box').pressSequentially(gene);
+      await page.locator('#search-box').press('Enter');
+
+      await getAnyFilter(page, filtersToUncheck[0].field, filtersToUncheck[0].filter).click();
+      await page.waitForRequest(utils.instanceUrl + '/api/v3/genotype_browser/query');
+      await getAnyFilter(page, filtersToUncheck[1].field, filtersToUncheck[1].filter).click();
+      await page.waitForRequest(utils.instanceUrl + '/api/v3/genotype_browser/query');
+
+      const downloadPromise = page.waitForEvent('download');
+      await page.locator('#download-family-variants-button').click();
+      const downloadedFile = await downloadPromise;
+
+      const streamData = downloadedFile.createReadStream();
+      const data = [];
+
+      for await (const chunk of await streamData) {
+        data.push(chunk);
+      }
+
+      const expectedVariantsPath = path.join(__dirname + '/../fixtures/gene-browser/' + expectedPath);
+      const expectedFileLines = fs.readFileSync(expectedVariantsPath, 'utf8');
+      const downloadedData = Buffer.concat(data);
+      expect(downloadedData.toString()).toEqual(expectedFileLines);
+    });
+  });
+});
+
 function getAffectedStatusFilter(page: Page, affectedStatusCheckbox: string): Locator {
   return page.getByLabel(affectedStatusCheckbox, { exact: true });
 }
@@ -117,4 +170,19 @@ function getInheritanceTypesFilter(page: Page, inheritanceTypesCheckbox: string)
 
 function getVariantTypesFilter(page: Page, variantTypeCheckbox: string): Locator {
   return page.locator('#variant-types-filters').getByText(variantTypeCheckbox);
+}
+
+function getAnyFilter(page: Page, field: string, filterName: string): Locator {
+  switch (field) {
+    case 'variantTypes':
+      return getVariantTypesFilter(page, filterName);
+    case 'affectedStatus':
+      return getAffectedStatusFilter(page, filterName);
+    case 'inheritanceTypes':
+      return getInheritanceTypesFilter(page, filterName);
+    case 'effectTypes':
+      return getEffectTypesFilter(page, filterName);
+    default:
+      return null;
+  }
 }
