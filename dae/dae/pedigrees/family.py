@@ -177,10 +177,11 @@ class Person:
             tag: attributes.get(tag.label, False)
             for tag in FamilyTag.all_tags()
         }
+        all_tag_labels = set(FamilyTag.all_labels())
         self._attributes = {
             key: value
             for key, value in attributes.items()
-            if key not in FamilyTag.all_labels()
+            if key not in all_tag_labels
         }
         self._tags: set[FamilyTag] = {
             tag for tag, value in tags.items() if value
@@ -446,7 +447,7 @@ class Family:
         return self._tags
 
     @property
-    def tag_labels(self) -> set[FamilyTag]:
+    def tag_labels(self) -> set[str]:
         return {tag.label for tag in self._tags}
 
     def _connect_family(self) -> None:

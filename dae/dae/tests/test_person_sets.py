@@ -526,8 +526,11 @@ def test_merge_person_sets(
         config2.phenotype, families_fixture2)
     assert collection2.person_sets is not None, (config2, collection2)
 
+    combined_families = FamiliesData.combine(
+        families_fixture, families_fixture2)
+
     combined_collection = PersonSetCollection.combine(
-        [collection1, collection2])
+        [collection1, collection2], combined_families)
 
     print(combined_collection)
 

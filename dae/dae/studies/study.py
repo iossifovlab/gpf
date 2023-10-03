@@ -612,8 +612,8 @@ class GenotypeDataGroup(GenotypeData):
             config, studies
         )
         self._families: FamiliesData
-        if not self.load_families():
-            self.build_families()
+        if not self.load_families_cache():
+            self.rebuild_families()
 
         self._executor = None
         self.is_remote = False
@@ -637,13 +637,26 @@ class GenotypeDataGroup(GenotypeData):
             result = result.union(study.get_studies_ids())
         return list(result)
 
-    def load_cached_families(self) -> Optional[FamiliesData]:
+    def _has_cached_families_data(self) -> bool:
         """Load families data cache if exists."""
         cache_path = None
         if "conf_dir" in self.config:
             cache_path = os.path.join(
                 self.config["conf_dir"], "families_cache.ped.gz"
             )
+
+        if cache_path is None or not os.path.exists(cache_path):
+            return False
+        return True
+
+    def _load_cached_families_data(
+        self, cache_dir: Optional[str] = None
+    ) -> Optional[FamiliesData]:
+        """Load families data cache if exists."""
+        cache_dir = self._ensure_cache_dir(cache_dir)
+        cache_path = os.path.join(
+            cache_dir, "families_cache.ped.gz"
+        )
 
         if cache_path is not None and os.path.exists(cache_path):
             try:
@@ -655,18 +668,27 @@ class GenotypeDataGroup(GenotypeData):
                 )
         return None
 
-    def save_cached_families(self) -> bool:
+    def _ensure_cache_dir(self, cache_dir: Optional[str] = None) -> str:
+        if cache_dir is None and "conf_dir" not in self.config:
+            raise ValueError("genotype study group cache dir not specified")
+
+        if cache_dir is None:
+            cache_dir = self.config["conf_dir"]
+
+        if not os.path.exists(cache_dir):
+            os.makedirs(cache_dir)
+        if not os.path.isdir(cache_dir):
+            raise ValueError(f"cache dir {cache_dir} is not a directory")
+        return cache_dir
+
+
+    def _save_cached_families_data(
+        self, cache_dir: Optional[str] = None
+    ) -> bool:
         """Store genotype data group families data into cache."""
-        cache_path = None
-        if "conf_dir" in self.config:
-            cache_path = os.path.join(
-                self.config["conf_dir"], "families_cache.ped.gz"
-            )
-        if cache_path is None:
-            logger.error(
-                "unable to save families data cache; missing study %s "
-                "config directory", self.study_id)
-            return False
+        cache_dir = self._ensure_cache_dir(cache_dir)
+        cache_path = os.path.join(cache_dir, "families_cache.ped.gz")
+
         try:
             FamiliesLoader.save_families(self.families, cache_path)
             return True
@@ -677,22 +699,15 @@ class GenotypeDataGroup(GenotypeData):
             )
             return False
 
-    def save_cached_person_sets(self) -> bool:
+    def _save_cached_person_sets(
+        self, cache_dir: Optional[str] = None
+    ) -> bool:
         """Save cached person set collections defined for a genotype group."""
-        cache_base_path = None
-        if "conf_dir" in self.config:
-            cache_base_path = self.config["conf_dir"]
-
-        if cache_base_path is None:
-            logger.error(
-                "unable to save person sets cache; missing study %s "
-                "config directory", self.study_id)
-            return False
-
+        cache_dir = self._ensure_cache_dir(cache_dir)
         try:
             for psc in self._person_set_collections.values():
                 cache_path = os.path.join(
-                    cache_base_path,
+                    cache_dir,
                     f"person_set_{psc.id}_cache.json.gz")
                 with gzip.open(cache_path, "wt") as outfile:
                     json.dump(psc.to_json(), outfile)
@@ -704,18 +719,32 @@ class GenotypeDataGroup(GenotypeData):
             )
             return False
 
-    def load_cached_person_sets(
-            self) -> Optional[dict[str, PersonSetCollection]]:
+    def _has_cached_person_sets(self, cache_dir: Optional[str] = None) -> bool:
         """Save cached person set collections defined for a genotype group."""
-        cache_base_path = None
-        if "conf_dir" in self.config:
-            cache_base_path = self.config["conf_dir"]
+        cache_dir = self._ensure_cache_dir(cache_dir)
+        pscs_config = self.config.get("person_set_collections")
+        if pscs_config is None:
+            return False
 
-        if cache_base_path is None:
-            logger.error(
-                "unable to load person sets cache; missing study %s "
-                "config directory", self.study_id)
-            return None
+        selected_pscs = pscs_config["selected_person_set_collections"]
+        for psc_id in selected_pscs:
+            cache_path = os.path.join(
+                cache_dir,
+                f"person_set_{psc_id}_cache.json.gz")
+            if not os.path.exists(cache_path):
+                logger.info(
+                    "unable to load person sets collection <%s> cache "
+                    "for study %s; missing file %s",
+                    psc_id, self.study_id, cache_path)
+                return False
+
+        return True
+
+    def _load_cached_person_sets(
+        self, cache_dir: Optional[str] = None
+    ) -> Optional[dict[str, PersonSetCollection]]:
+        """Save cached person set collections defined for a genotype group."""
+        cache_dir = self._ensure_cache_dir(cache_dir)
 
         pscs_config = self.config.get("person_set_collections")
         if pscs_config is None:
@@ -726,7 +755,7 @@ class GenotypeDataGroup(GenotypeData):
             result = {}
             for psc_id in selected_pscs:
                 cache_path = os.path.join(
-                    cache_base_path,
+                    cache_dir,
                     f"person_set_{psc_id}_cache.json.gz")
                 if not os.path.exists(cache_path):
                     logger.info(
@@ -748,22 +777,35 @@ class GenotypeDataGroup(GenotypeData):
                 self.study_id, exc_info=True)
             return None
 
-    def load_families(self) -> bool:
+    def has_families_cache(self) -> bool:
+        """Check cached families and person set collections."""
+        return self._has_cached_families_data() \
+            and self._has_cached_person_sets()
+
+    def load_families_cache(self) -> bool:
         """Load cached families and person set collections.
 
         If cached families or persons are missing, returns False.
         """
-        families = self.load_cached_families()
+        families = self._load_cached_families_data()
         if families is None:
             return False
         self._families = families
-        pscs = self.load_cached_person_sets()
+        pscs = self._load_cached_person_sets()
         if pscs is None:
             return False
         self._person_set_collections = pscs
         return True
 
-    def build_families(self) -> None:
+    def save_families_cache(self, cache_dir: Optional[str] = None) -> None:
+        """Load cached families and person set collections.
+
+        If cached families or persons are missing, returns False.
+        """
+        self._save_cached_families_data(cache_dir)
+        self._save_cached_person_sets(cache_dir)
+
+    def rebuild_families(self) -> None:
         """Construct genotype group families data from child studies."""
         logger.info(
             "building combined families from studies: %s",
@@ -780,6 +822,7 @@ class GenotypeDataGroup(GenotypeData):
         logger.info(
             "combining families from study %s and from study %s",
             self.studies[0].study_id, self.studies[1].study_id)
+
         result = FamiliesData.combine(
             self.studies[0].families,
             self.studies[1].families)
@@ -835,7 +878,8 @@ class GenotypeDataGroup(GenotypeData):
                     f"person set collection {psc_id} "
                     f"not found in study {study.study_id}")
             studies_psc.append(study_psc)
-        psc = PersonSetCollection.combine(studies_psc)
+
+        psc = PersonSetCollection.combine(studies_psc, families)
         for fpid, person in families.real_persons.items():
             person_set_value = psc.get_person_set_of_person(fpid)
             person.set_attr(psc_id, person_set_value.id)

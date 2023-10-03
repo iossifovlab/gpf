@@ -199,7 +199,7 @@ def test_dataset_save_cached_families(
     tmp_path: pathlib.Path,
     dataset: GenotypeDataGroup
 ) -> None:
-    assert dataset.save_cached_families()
+    assert dataset._save_cached_families_data()
     assert (tmp_path / "dataset" / "families_cache.ped.gz").exists()
 
 
@@ -207,10 +207,10 @@ def test_dataset_load_cached_families(
     tmp_path: pathlib.Path,
     dataset: GenotypeDataGroup
 ) -> None:
-    assert dataset.save_cached_families()
+    assert dataset._save_cached_families_data()
     assert (tmp_path / "dataset" / "families_cache.ped.gz").exists()
 
-    families = dataset.load_cached_families()
+    families = dataset._load_cached_families_data()
     assert families is not None
 
     all_persons = families.persons
@@ -228,7 +228,7 @@ def test_dataset_save_cached_person_sets(
     tmp_path: pathlib.Path,
     dataset: GenotypeDataGroup
 ) -> None:
-    assert dataset.save_cached_person_sets()
+    assert dataset._save_cached_person_sets()
     assert (
         tmp_path / "dataset" / "person_set_phenotype_cache.json.gz").exists()
 
@@ -237,11 +237,11 @@ def test_dataset_load_cached_person_sets(
     tmp_path: pathlib.Path,
     dataset: GenotypeDataGroup
 ) -> None:
-    assert dataset.save_cached_person_sets()
+    assert dataset._save_cached_person_sets()
     assert (
         tmp_path / "dataset" / "person_set_phenotype_cache.json.gz").exists()
 
-    pscs = dataset.load_cached_person_sets()
+    pscs = dataset._load_cached_person_sets()
     assert pscs is not None
 
     psc = pscs["phenotype"]

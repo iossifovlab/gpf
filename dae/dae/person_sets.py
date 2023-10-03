@@ -352,8 +352,10 @@ class PersonSetCollection:
             f"person {fpid} not in person set collection {self.id}")
 
     @staticmethod
-    def _combine(first: PersonSetCollection, second: PersonSetCollection) \
-            -> PersonSetCollection:
+    def _combine(
+        first: PersonSetCollection, second: PersonSetCollection,
+        families: FamiliesData
+    ) -> PersonSetCollection:
 
         if first.id != second.id:
             raise ValueError(
@@ -364,7 +366,6 @@ class PersonSetCollection:
                 f"trying to combine different person set collections: "
                 f"different names {first.name} <-> {second.name}")
 
-        families = FamiliesData.combine(first.families, second.families)
         config = PersonSetCollection.merge_configs([first, second])
         result = PersonSetCollection(
             first.id, first.name, config,
@@ -387,7 +388,10 @@ class PersonSetCollection:
         return PersonSetCollection.remove_empty_person_sets(result)
 
     @staticmethod
-    def combine(collections: list[PersonSetCollection]) -> PersonSetCollection:
+    def combine(
+        collections: list[PersonSetCollection],
+        families: FamiliesData
+    ) -> PersonSetCollection:
         """Combine a list of PersonSetCollection objects into a single one."""
         if len(collections) == 0:
             raise ValueError("can't combine empty list of collections")
@@ -396,7 +400,8 @@ class PersonSetCollection:
 
         first = collections[0]
         for second in collections[1:]:
-            first = PersonSetCollection._combine(first, second)
+            first = PersonSetCollection._combine(
+                first, second, families)
         return first
 
     def config_json(self) -> dict[str, Any]:
