@@ -55,17 +55,8 @@ export async function loginAdmin(page: Page, user = username, pass = password): 
   await login(page, user, pass);
 }
 
-export async function cleanup(page: Page): Promise<void> {
-  await page.context().clearCookies();
-  expect(await page.context().cookies()).toEqual([]);
-  await page.evaluate(() => {
-    window.localStorage.clear();
-    window.sessionStorage.clear();
-  });
-}
-
-export async function navigateToHome(page: Page): Promise<void> {
-  await page.goto(`${page.url()}datasets/ALL_genotypes/${toolPageLinks.geneBrowser}`);
+export async function navigateToHome(page: Page, dataset = 'ALL_genotypes'): Promise<void> {
+  await page.goto(`${page.url()}datasets/${dataset}/${toolPageLinks.geneBrowser}`);
 }
 
 export async function navigateToDatasetPage(page: Page, dataset: string, tool: string): Promise<void> {
