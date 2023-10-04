@@ -763,7 +763,7 @@ class BaseQueryBuilder(ABC):
             family_ids = set(family_ids)
             family_bins = family_bins.union(
                 set(
-                    p.family_bin
+                    p.family_bin  # type: ignore
                     for p in self.families.persons.values()
                     if p.family_id in family_ids
                 )
@@ -773,7 +773,7 @@ class BaseQueryBuilder(ABC):
             person_ids = set(person_ids)
             family_bins = family_bins.union(
                 set(
-                    p.family_bin
+                    p.family_bin  # type: ignore
                     for p in self.families.persons.values()
                     if p.person_id in person_ids
                 )

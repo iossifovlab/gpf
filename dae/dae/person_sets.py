@@ -14,7 +14,6 @@ from box import Box
 
 from dae.pedigrees.family import Person, FamiliesData
 from dae.pheno.pheno_db import PhenotypeData, MeasureType
-from dae.variants.attributes import Role
 
 
 logger = logging.getLogger(__name__)
@@ -41,16 +40,14 @@ class PersonSet:
     def __len__(self) -> int:
         return len(self.persons)
 
-    def get_persons_with_roles(
-        self, *roles: Role
-    ) -> Generator[Person, None, None]:
-        for person in self.persons.values():
-            if person.role in roles:
-                yield person
-
     def get_children(self) -> Generator[Person, None, None]:
         for person in self.persons.values():
-            if person.role in {Role.prb, Role.sib, Role.child}:
+            if person.is_child():
+                yield person
+
+    def get_parents(self) -> Generator[Person, None, None]:
+        for person in self.persons.values():
+            if person.is_parent():
                 yield person
 
     def to_json(self) -> dict[str, Any]:
@@ -460,12 +457,8 @@ class PersonSetCollection:
         """
         result = {}
         for set_id, person_set in self.person_sets.items():
-            parents = len(list(
-                person_set.get_persons_with_roles(Role.dad, Role.mom)
-            ))
-            children = len(list(
-                person_set.get_persons_with_roles(Role.prb, Role.sib)
-            ))
+            parents = len(list(person_set.get_parents()))
+            children = len(list(person_set.get_children()))
             result[set_id] = {
                 "parents": parents,
                 "children": children,

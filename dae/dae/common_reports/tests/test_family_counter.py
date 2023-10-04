@@ -22,7 +22,7 @@ def test_family_counter(study1):
         "F",
         "mom",
         "#e35252",
-        "1:10.0,50.0",
+        None,
         None,
         "",
         "",
@@ -35,12 +35,12 @@ def test_family_counter(study1):
         "M",
         "dad",
         "#aaaaaa",
-        "1:39.0,50.0",
+        None,
         None,
         "",
         "",
     )
-    assert family_counter.pedigree[2][:7] == (
+    assert family_counter.pedigree[2] == (
         "f5",
         "ch5",
         "mom5",
@@ -48,12 +48,12 @@ def test_family_counter(study1):
         "F",
         "prb",
         "#e35252",
-        # "2:39.0,80.0",
-        # None,
-        # "",
-        # "",
+        None,
+        None,
+        "",
+        "",
     )
-    assert family_counter.pedigree[3][:7] == (
+    assert family_counter.pedigree[3] == (
         "f5",
         "ch5.1",
         "mom5",
@@ -61,10 +61,10 @@ def test_family_counter(study1):
         "F",
         "sib",
         "#E0E0E0",
-        # "2:10.0,80.0",
-        # True,
-        # "",
-        # "",
+        None,
+        True,
+        "",
+        "",
     )
     assert family_counter.pedigrees_count == 1
 

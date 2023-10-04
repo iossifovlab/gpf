@@ -1,7 +1,7 @@
 from typing import Optional
 from collections import Counter, defaultdict
 
-from dae.variants.attributes import Inheritance, Role
+from dae.variants.attributes import Inheritance
 from dae.variants.family_variant import FamilyVariant
 from dae.studies.study import GenotypeData
 from dae.person_sets import PersonSetCollection
@@ -13,13 +13,13 @@ class GenotypeHelper:
     def __init__(
             self, genotype_data: GenotypeData,
             person_set_collection: PersonSetCollection,
-            effect_types: Optional[set[str]] = None):
+            effect_types: Optional[list[str]] = None):
 
         self.genotype_data = genotype_data
         self.person_set_collection = person_set_collection
         # self.person_set = person_set_collection.person_sets[person_set_id]
         self._children_stats: dict[str, dict[str, int]] = {}
-        self._children_by_sex: dict[str, dict[str, set[str]]] = {}
+        self._children_by_sex: dict[str, dict[str, set[tuple[str, str]]]] = {}
 
         self._denovo_variants = list(
             self.genotype_data.query_variants(
@@ -30,12 +30,10 @@ class GenotypeHelper:
 
     def _build_children_stats(self) -> None:
         families = self.genotype_data.families
-        children = list(
-            families.persons_with_roles(
-                roles=[Role.prb, Role.sib, Role.child]))
+        children = families.persons_with_parents()
         for person_set_id, person_set in \
                 self.person_set_collection.person_sets.items():
-            children_by_sex: dict[str, set[str]] = defaultdict(set)
+            children_by_sex: dict[str, set[tuple[str, str]]] = defaultdict(set)
             seen = set()
             for person in children:
                 if person.fpid in seen:
@@ -55,7 +53,9 @@ class GenotypeHelper:
     def get_denovo_variants(self) -> list[FamilyVariant]:
         return self._denovo_variants
 
-    def children_by_sex(self, person_set_id: str) -> dict[str, set[str]]:
+    def children_by_sex(
+        self, person_set_id: str
+    ) -> dict[str, set[tuple[str, str]]]:
         return self._children_by_sex[person_set_id]
 
     def get_children_stats(self, person_set_id: str) -> dict[str, int]:

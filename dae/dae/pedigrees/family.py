@@ -332,6 +332,16 @@ class Person:
         assert self.mom is not None
         return self.dad.missing or self.mom.missing
 
+    def is_child(self) -> bool:
+        return not self.missing \
+            and self.has_both_parents() \
+            and not self.has_missing_parent()
+
+    def is_parent(self) -> bool:
+        return not self.missing \
+            and (self.dad is None or self.dad.missing) \
+            and (self.mom is None or self.mom.missing)
+
     def has_no_parent(self) -> bool:
         return self.dad is None or self.mom is None
 
@@ -678,10 +688,21 @@ class Family:
 
         # Construct new instances of Person to avoid
         # modifying the original family's Person instances
-        return Family.from_persons([
+        merged = Family.from_persons([
             Person(**person._attributes)  # pylint: disable=protected-access
             for person in merged_persons.values()
         ])
+        # pylint: disable=import-outside-toplevel
+        from dae.pedigrees.layout import Layout
+        layouts = Layout.from_family(merged)
+        for layout in layouts:
+            layout.apply_to_family(merged)
+
+        from dae.pedigrees.family_tag_builder import FamilyTagsBuilder
+        tagger = FamilyTagsBuilder()
+        tagger.tag_family(merged)
+
+        return merged
 
     def members_index(
         self, person_ids: list[str]
@@ -927,7 +948,7 @@ class FamiliesData(Mapping[str, Family]):
         result: list[Person] = []
         for fam in list(self._families.values()):
             for person in fam.members_in_order:
-                if person.has_no_parent():
+                if person.is_parent():
                     result.append(person)
         return result
 

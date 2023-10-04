@@ -3,7 +3,6 @@ import os
 import time
 import argparse
 import logging
-import itertools
 from typing import Dict, Any, Set, cast
 
 from dae.gpf_instance.gpf_instance import GPFInstance
@@ -126,9 +125,7 @@ def calculate_rates(instance, agps, config):
                 set_name = ps.set_name
                 person_set = psc.person_sets[set_name]
 
-                children_count = len(list(person_set.get_persons_with_roles(
-                    Role.prb, Role.sib, Role.child
-                )))
+                children_count = len(list(person_set.get_children()))
 
                 for statistic in filters.statistics:
                     stat_id = statistic["id"]
@@ -329,10 +326,7 @@ def main(gpf_instance=None, argv=None):
         assert genotype_data is not None
         genotype_data_children = {
             p.person_id
-            for p in itertools.chain(
-                genotype_data.families.persons_with_parents(),
-                genotype_data.families.persons_with_roles(
-                    ["prb", "sib", "child"]))
+            for p in genotype_data.families.persons_with_parents()
         }
         assert genotype_data is not None, dataset_id
         person_ids[dataset_id] = {}

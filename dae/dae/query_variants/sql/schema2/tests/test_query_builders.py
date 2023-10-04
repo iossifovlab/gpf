@@ -89,9 +89,9 @@ NO_PARTITIONING_PROPERTIES = {
 @pytest.fixture(scope="module")
 def families(resources_dir: pathlib.Path) -> FamiliesData:
     ped_df = pd.read_csv(resources_dir / "pedigree_table.csv")
-    ped_df.role = ped_df.role.apply(Role.from_name)
-    ped_df.sex = ped_df.sex.apply(Sex.from_name)
-    ped_df.status = ped_df.status.apply(Status.from_name)
+    ped_df.role = ped_df.role.apply(Role.from_name)  # type: ignore
+    ped_df.sex = ped_df.sex.apply(Sex.from_name)  # type: ignore
+    ped_df.status = ped_df.status.apply(Status.from_name)  # type: ignore
     families = FamiliesData.from_pedigree_df(ped_df)
     return families
 

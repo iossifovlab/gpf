@@ -114,6 +114,8 @@ class CommonReport:
         number_of_siblings = 0
         for family in genotype_data_study.families.values():
             for person in family.members_in_order:
+                if not person.is_child():
+                    continue
                 if person.role == Role.prb:
                     number_of_probands += 1
                 if person.role == Role.sib:

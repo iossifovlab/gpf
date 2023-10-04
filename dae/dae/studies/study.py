@@ -812,7 +812,7 @@ class GenotypeDataGroup(GenotypeData):
             [st.study_id for st in self.studies])
 
         if len(self.studies) == 1:
-            self._families = FamiliesData.copy(self.studies[0].families)
+            self._families = self.studies[0].families
             self._person_set_collections = self._build_person_set_collections(
                 self.config.get("person_set_collections"),
                 self._families
@@ -841,18 +841,18 @@ class GenotypeDataGroup(GenotypeData):
                     result,
                     self.studies[sind].families,
                     forced=True)
-        for family in result.values():
-            logger.debug(
-                "building layout for family: %s; %s",
-                family.family_id, family)
-            layouts = Layout.from_family(family)
-            for layout in layouts:
-                layout.apply_to_family(family)
+        # for family in result.values():
+        #     logger.debug(
+        #         "building layout for family: %s; %s",
+        #         family.family_id, family)
+        #     layouts = Layout.from_family(family)
+        #     for layout in layouts:
+        #         layout.apply_to_family(family)
 
-        # pylint: disable=import-outside-toplevel
-        from dae.pedigrees.family_tag_builder import FamilyTagsBuilder
-        tagger = FamilyTagsBuilder()
-        tagger.tag_families_data(result)
+        # # pylint: disable=import-outside-toplevel
+        # from dae.pedigrees.family_tag_builder import FamilyTagsBuilder
+        # tagger = FamilyTagsBuilder()
+        # tagger.tag_families_data(result)
 
         self._families = result
 
