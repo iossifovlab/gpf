@@ -1,6 +1,6 @@
 import { Component, EventEmitter, HostListener, Input, Output, ViewChild } from '@angular/core';
 import { environment } from 'environments/environment';
-import { Observable } from 'rxjs';
+import { Observable, Subscription, debounceTime } from 'rxjs';
 import { Item } from './item-add-menu';
 
 @Component({
@@ -19,8 +19,9 @@ export class ItemAddMenuComponent {
   public imgPathPrefix = environment.imgPathPrefix;
   public searchText = '';
   private isInside = false;
-  private pageCounter = 0;
-  private loadingPage = false;
+  private pageCounter = 1;
+  private itemSubscription = new Subscription();
+  private finalParams: {page: number; searchText: string} = {page: undefined, searchText: undefined};
 
   public addItem(item: Item): void {
     this.items.splice(this.items.indexOf(item), 1);
@@ -29,32 +30,40 @@ export class ItemAddMenuComponent {
 
   public search(value: string): void {
     this.searchText = value;
-    this.resetItems();
+    this.items = [];
+    this.pageCounter = 1;
     this.updateItemsList();
   }
 
   public updateItemsIfScrolled(searchText: string, tableContainer: HTMLElement): void {
-    if (tableContainer.offsetHeight + tableContainer.scrollTop + 200 > tableContainer.scrollHeight) {
+    if (this.itemSubscription.closed
+      && tableContainer.offsetHeight + tableContainer.scrollTop + 200 > tableContainer.scrollHeight
+    ) {
       this.updateItemsList();
     }
   }
 
   private updateItemsList(): void {
-    if (this.showMenu && !this.loadingPage) {
-      this.pageCounter++;
-      this.loadingPage = true;
-      this.getItems(this.pageCounter, this.searchText).subscribe((res: Item[]) => {
-        this.items = this.items.concat(res);
-        this.loadingPage = false;
-
-        document.getElementById('menu').scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'start' });
-      });
+    if (
+      this.showMenu
+      && (this.pageCounter !== this.finalParams.page
+      || this.searchText !== this.finalParams.searchText)
+    ) {
+      this.itemSubscription.unsubscribe();
+      this.itemSubscription = this.getItems(this.pageCounter, this.searchText)
+        .pipe(
+          debounceTime(300)
+        ).subscribe((res: Item[]) => {
+          if (res.length) {
+            this.pageCounter++;
+            this.items = this.items.concat(res);
+            document.getElementById('menu').scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'start' });
+          } else {
+            this.finalParams.page = this.pageCounter;
+            this.finalParams.searchText = this.searchText;
+          }
+        });
     }
-  }
-
-  private resetItems(): void {
-    this.items = [];
-    this.pageCounter = 0;
   }
 
   @HostListener('click')
@@ -66,6 +75,7 @@ export class ItemAddMenuComponent {
   public allClicks(): void {
     if (!this.isInside) {
       this.showMenu = false;
+      this.finalParams = {page: undefined, searchText: undefined};
     }
     this.isInside = false;
   }
@@ -73,5 +83,6 @@ export class ItemAddMenuComponent {
   @HostListener('document:keydown.escape')
   public onEscapeButtonPress(): void {
     this.showMenu = false;
+    this.finalParams = {page: undefined, searchText: undefined};
   }
 }
