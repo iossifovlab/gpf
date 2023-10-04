@@ -10,7 +10,7 @@ from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.parquet.parquet_writer import ParquetWriter
 
 
-def main(argv):
+def main(argv: list[str]) -> None:
     """Entry point for ped2parquet."""
     parser = argparse.ArgumentParser()
 
@@ -39,29 +39,30 @@ def main(argv):
         "If none specified, the basename of families filename is used to "
         "construct study id [default: basename(families filename)]",
     )
-    argv = parser.parse_args(argv)
-    VerbosityConfiguration.set(argv)
-    run(argv)
+    args = parser.parse_args(argv)
+    VerbosityConfiguration.set(args)
+    run(args)
 
 
-def run(argv):
+def run(args: argparse.Namespace) -> None:
     """Run the ped to parquet conversion."""
-    filename, params = FamiliesLoader.parse_cli_arguments(argv)
+    filenames, params = FamiliesLoader.parse_cli_arguments(args)
+    filename = filenames[0]
 
     loader = FamiliesLoader(filename, **params)
     families = loader.load()
 
-    if argv.partition_description:
+    if args.partition_description:
         partition_description = PartitionDescriptor.parse(
-            argv.partition_description)
+            args.partition_description)
     else:
         partition_description = PartitionDescriptor()
 
-    if not argv.output_filename:
+    if not args.output_filename:
         output_filename, _ = os.path.splitext(os.path.basename(filename))
         output_filename = f"{output_filename}.parquet"
     else:
-        output_filename = argv.output_filename
+        output_filename = args.output_filename
 
     ParquetWriter.families_to_parquet(
         families, output_filename, partition_description)

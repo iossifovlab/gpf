@@ -316,7 +316,7 @@ class FamiliesLoader(CLILoader):
             elif ped_value is not None and col in columns:
                 res[col] = int(ped_value)
 
-        return filename, res
+        return [filename], res
 
     @staticmethod
     def _produce_header_from_indices(**kwargs: Any) -> tuple[str, ...]:
@@ -563,7 +563,7 @@ class FamiliesLoader(CLILoader):
         return FamiliesData.from_family_persons(result)
 
     @staticmethod
-    def save_pedigree(families: FamiliesData, filename: str) -> None:
+    def save_pedigree(families: FamiliesData, filename: PedigreeIO) -> None:
         """Save FamiliesData object into a pedigree file."""
         df = families.ped_df.copy()
 
@@ -583,6 +583,6 @@ class FamiliesLoader(CLILoader):
         df.to_csv(filename, index=False, sep="\t")
 
     @staticmethod
-    def save_families(families: FamiliesData, filename: str) -> None:
+    def save_families(families: FamiliesData, filename: PedigreeIO) -> None:
         assert isinstance(families, FamiliesData)
         FamiliesLoader.save_pedigree(families, filename)

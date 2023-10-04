@@ -198,8 +198,10 @@ def build_import_project(
 
     project["input"] = {}
 
-    families_filename, families_params = \
+    families_filenames, families_params = \
         FamiliesLoader.parse_cli_arguments(args)
+    families_filename = families_filenames[0]
+
     project["input"]["pedigree"] = \
         ImportProject.del_loader_prefix(families_params, "ped_")
     project["input"]["pedigree"]["file"] = families_filename

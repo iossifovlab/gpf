@@ -5,9 +5,12 @@ import os
 import sys
 import argparse
 import logging
+from typing import Optional
+
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 from dae.parquet.partition_descriptor import PartitionDescriptor
-from dae.pedigrees.loader import FamiliesLoader
+from dae.pedigrees.family import FamiliesData
+from dae.pedigrees.loader import FamiliesLoader, PedigreeIO
 from dae.variants_loaders.vcf.loader import VcfLoader
 from dae.genomic_resources.genomic_context import CLIGenomicContext, \
     get_genomic_context
@@ -15,10 +18,12 @@ from dae.genomic_resources.genomic_context import CLIGenomicContext, \
 logger = logging.getLogger("ped2ped")
 
 
-def _handle_partition_description(families, argv):
-    if argv.partition_description:
+def _handle_partition_description(
+    families: FamiliesData, args: argparse.Namespace
+) -> FamiliesData:
+    if args.partition_description:
         partition_descriptor = PartitionDescriptor.parse(
-            argv.partition_description
+            args.partition_description
         )
         for family in families.values():
             family_bin = partition_descriptor.make_family_bin(
@@ -30,9 +35,11 @@ def _handle_partition_description(families, argv):
     return families
 
 
-def _handle_vcf_files(families, argv):
+def _handle_vcf_files(
+    families: FamiliesData, args: argparse.Namespace
+) -> FamiliesData:
     variants_filenames, variants_params = \
-        VcfLoader.parse_cli_arguments(argv)
+        VcfLoader.parse_cli_arguments(args)
 
     if variants_filenames:
         assert variants_filenames is not None
@@ -53,7 +60,7 @@ def _handle_vcf_files(families, argv):
     return families
 
 
-def main(argv=None):
+def main(argv: Optional[list[str]] = None) -> None:
     """Transform a pedigree file into cannonical GPF pedigree.
 
     It should be called from the command line.
@@ -87,34 +94,37 @@ def main(argv=None):
     if argv is None:
         argv = sys.argv[1:]
 
-    argv = parser.parse_args(argv)
-    VerbosityConfiguration.set(argv)
-    CLIGenomicContext.register(argv)
+    args = parser.parse_args(argv)
+    VerbosityConfiguration.set(args)
+    CLIGenomicContext.register(args)
 
-    filename, params = FamiliesLoader.parse_cli_arguments(argv)
+    filenames, params = FamiliesLoader.parse_cli_arguments(args)
+    filename = filenames[0]
+
     logger.info("PED PARAMS: %s", params)
 
     loader = FamiliesLoader(filename, **params)
     families = loader.load()
 
-    families = _handle_partition_description(families, argv)
-    families = _handle_vcf_files(families, argv)
+    families = _handle_partition_description(families, args)
+    families = _handle_vcf_files(families, args)
 
     if families.broken_families:
         for family_id, family in families.broken_families.items():
-            if not family.has_members():
+            if not family.has_members() and family_id in families:
                 del families[family_id]
                 logger.warning(
                     "family %s does not contain sequenced members "
                     "and is removed from the pedigree: %s", family_id, family)
 
-    if not argv.output_filename:
+    output_filename: PedigreeIO
+    if not args.output_filename:
         output_filename, _ = os.path.splitext(os.path.basename(filename))
         output_filename = f"{output_filename}.ped"
-    elif argv.output_filename == "-":
+    elif args.output_filename == "-":
         output_filename = sys.stdout
     else:
-        output_filename = argv.output_filename
+        output_filename = args.output_filename
 
     FamiliesLoader.save_pedigree(families, output_filename)
 
