@@ -45,7 +45,7 @@ def test_get_common_report_families_data_columns(
     content = families_response.content.decode("utf-8").split("\n")
     assert families_response is not None
     first_row = content[0].split("\t")
-    assert len(first_row) == 33
+    assert len(first_row) == 32
 
 
 def test_get_pheno_browser_config(rest_client: RESTClient) -> None:

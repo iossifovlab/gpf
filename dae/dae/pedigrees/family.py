@@ -113,6 +113,14 @@ class FamilyTag(enum.IntEnum):
     def from_label(label: str) -> FamilyTag:
         return _LABEL2TAG[label]
 
+    @staticmethod
+    def all_labels() -> Iterable[str]:
+        return _LABEL2TAG.keys()
+
+    @staticmethod
+    def all_tags() -> Iterable[FamilyTag]:
+        return _TAG2LABEL.keys()
+
 
 _LABEL2TAG = {
     "tag_nuclear_family": FamilyTag.NUCLEAR,
@@ -610,6 +618,9 @@ class Family:
             ("Merging families is only allowed with matching family IDs!"
              f" ({l_fam.family_id} != {r_fam.family_id})")
 
+        if l_fam == r_fam:
+            return r_fam
+
         people_intersection = \
             set(l_fam.persons.keys()) & set(r_fam.persons.keys())
 
@@ -980,9 +991,9 @@ class FamiliesData(Mapping[str, Family]):
                         first[fid], second[fid], exc_info=True)
                     mismatched_families.append(fid)
             elif fid in first:
-                combined_dict[fid] = copy.deepcopy(first[fid])
+                combined_dict[fid] = first[fid]
             elif fid in second:
-                combined_dict[fid] = copy.deepcopy(second[fid])
+                combined_dict[fid] = second[fid]
 
         if len(mismatched_families) > 0:
             logger.warning("mismatched families: %s", mismatched_families)

@@ -1,6 +1,8 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-import pytest
 import json
+
+import pytest
+
 from rest_framework import status  # type: ignore
 from dae.variants.attributes import Sex, Role, Status
 
@@ -142,7 +144,7 @@ def test_member_details_view(admin_client):
         "sex": str(Sex.male),
         "role": str(Role.prb),
         "status": str(Status.affected),
-        "layout": None,
+        "layout": "2:31.75,80.0",
         "generated": None,
         "family_bin": None,
         "not_sequenced": None,
@@ -172,7 +174,7 @@ def test_full_family_details_view(admin_client):
         "sex": str(Sex.female),
         "role": str(Role.mom),
         "status": str(Status.unaffected),
-        "layout": None,
+        "layout": "1:10.0,50.0",
         "generated": None,
         "family_bin": None,
         "not_sequenced": None,
@@ -188,7 +190,7 @@ def test_full_family_details_view(admin_client):
         "sex": str(Sex.male),
         "role": str(Role.dad),
         "status": str(Status.unaffected),
-        "layout": None,
+        "layout": "1:53.5,50.0",
         "generated": None,
         "family_bin": None,
         "not_sequenced": None,
@@ -204,7 +206,7 @@ def test_full_family_details_view(admin_client):
         "sex": str(Sex.male),
         "role": str(Role.prb),
         "status": str(Status.affected),
-        "layout": None,
+        "layout": "2:31.75,80.0",
         "generated": None,
         "family_bin": None,
         "not_sequenced": None,
@@ -238,7 +240,7 @@ def test_full_study_families_view(admin_client):
         "sex": str(Sex.male),
         "role": str(Role.prb),
         "status": str(Status.affected),
-        "layout": None,
+        "layout": "2:31.75,80.0",
         "generated": None,
         "family_bin": None,
         "not_sequenced": None,
