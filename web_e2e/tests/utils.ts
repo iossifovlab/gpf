@@ -61,7 +61,7 @@ export async function navigateToHome(page: Page, dataset = 'ALL_genotypes'): Pro
 
 export async function navigateToDatasetPage(page: Page, dataset: string, tool: string): Promise<void> {
   await page.locator('#datasets-dropdown-menu-button').click();
-  await page.locator('button.dataset-selector').getByText(dataset).click();
+  await page.locator('a').filter({ hasText: dataset }).click();
   await expect(page.getByRole('button', { name: dataset })).toHaveText(dataset);
   await page.getByRole('link', { name: `${tool}`}).click();
 }
