@@ -34,6 +34,7 @@ def test_grr(tmp_path: pathlib.Path) -> GenomicResourceRepo:
                             labels:
                                 foo: ALPHA
                                 bar: GAMMA
+                                baz: sub_one
                     """),
                     "data.txt": convert_to_tab_separated("""
                         chrom  pos_begin  s1
@@ -53,6 +54,7 @@ def test_grr(tmp_path: pathlib.Path) -> GenomicResourceRepo:
                             labels:
                                 foo: BETA
                                 bar: GAMMA
+                                baz: sub_two
                     """),
                     "data.txt": convert_to_tab_separated("""
                         chrom  pos_begin  s2
@@ -355,5 +357,21 @@ def test_wildcard_label_multiple(test_grr: GenomicResourceRepo) -> None:
         AnnotatorInfo(
             "position_score", [], {"resource_id": "score_one"},
             annotator_id="A0_score_one"
+        ),
+    ]
+
+
+def test_wildcard_label_substring(test_grr: GenomicResourceRepo) -> None:
+    pipeline_config = AnnotationConfigParser.parse_str("""
+        - position_score: "*[baz=sub_*]"
+    """, grr=test_grr)
+    assert pipeline_config == [
+        AnnotatorInfo(
+            "position_score", [], {"resource_id": "score_one"},
+            annotator_id="A0_score_one"
+        ),
+        AnnotatorInfo(
+            "position_score", [], {"resource_id": "score_two"},
+            annotator_id="A0_score_two"
         ),
     ]
