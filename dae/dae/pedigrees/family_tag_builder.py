@@ -418,32 +418,9 @@ class FamilyTagsBuilder:
     def _tag_family_type(self, family: Family) -> None:
         """Tag a family with family type tags - short and full."""
         full_type = _build_family_type_full(family)
-        if full_type not in self._family_types:
-            short_type = f"type#{len(self._family_types) + 1}"
-            self._family_types[full_type] = short_type
-        # short_type = self._family_types[full_type]
-        # set_attr(family, "tag_family_type", short_type)
         set_attr(family, "tag_family_type_full", full_type)
 
     def tag_families_data(self, families: FamiliesData) -> None:
-        # self._family_types = self._prebuild_family_types(families)
         for family in families.values():
             self.tag_family(family)
             self._tag_family_type(family)
-
-    # @staticmethod
-    # def _prebuild_family_types(families: FamiliesData) -> dict[str, str]:
-    #     counter: Counter[str] = Counter()
-    #     for family in families.values():
-    #         full_type = _build_family_type_full(family)
-    #         counter[full_type] += 1
-
-    #     def type_order(full_type: str) -> int:
-    #         return counter[full_type]
-
-    #     all_types = sorted(
-    #         counter.keys(), key=type_order, reverse=True)
-    #     result: dict[str, str] = {}
-    #     for index, full_type in enumerate(all_types):
-    #         result[full_type] = f"type#{index + 1}"
-    #     return result

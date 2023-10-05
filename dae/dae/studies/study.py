@@ -22,7 +22,6 @@ from dae.variants.family_variant import FamilyVariant
 from dae.query_variants.query_runners import QueryResult
 from dae.pedigrees.family import FamiliesData
 from dae.pedigrees.loader import FamiliesLoader
-from dae.pedigrees.layout import Layout
 
 from dae.person_sets import PersonSetCollection
 from dae.utils.effect_utils import expand_effect_types
@@ -841,19 +840,6 @@ class GenotypeDataGroup(GenotypeData):
                     result,
                     self.studies[sind].families,
                     forced=True)
-        # for family in result.values():
-        #     logger.debug(
-        #         "building layout for family: %s; %s",
-        #         family.family_id, family)
-        #     layouts = Layout.from_family(family)
-        #     for layout in layouts:
-        #         layout.apply_to_family(family)
-
-        # # pylint: disable=import-outside-toplevel
-        # from dae.pedigrees.family_tag_builder import FamilyTagsBuilder
-        # tagger = FamilyTagsBuilder()
-        # tagger.tag_families_data(result)
-
         self._families = result
 
         pscs = self._build_person_set_collections(
@@ -919,4 +905,9 @@ class GenotypeDataStudy(GenotypeData):
         self, psc_config: dict[str, Any],
         families: FamiliesData
     ) -> PersonSetCollection:
-        return PersonSetCollection.from_families(psc_config, self.families)
+        psc = PersonSetCollection.from_families(psc_config, self.families)
+
+        for fpid, person in families.real_persons.items():
+            person_set_value = psc.get_person_set_of_person(fpid)
+            person.set_attr(psc.id, person_set_value.id)
+        return psc
