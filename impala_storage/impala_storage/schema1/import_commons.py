@@ -387,8 +387,9 @@ class BatchImporter:
 
     def build_familes_loader(self, argv):
         """Construct a family loader based on CLI arguments."""
-        families_filename, families_params = \
+        families_filenames, families_params = \
             FamiliesLoader.parse_cli_arguments(argv)
+        families_filename = families_filenames[0]
 
         families_loader = FamiliesLoader(
             families_filename, **families_params
@@ -1023,9 +1024,9 @@ class Variants2ParquetTool:
             from dae.gpf_instance.gpf_instance import GPFInstance
             gpf_instance = GPFInstance.build()
 
-        families_filename, families_params = \
+        families_filenames, families_params = \
             FamiliesLoader.parse_cli_arguments(argv)
-
+        families_filename = families_filenames[0]
         families_loader = FamiliesLoader(
             families_filename, **families_params
         )

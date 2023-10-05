@@ -99,8 +99,9 @@ def main(
     assert source_genome is not None
     source_genome.open()
 
-    families_filename, families_params = \
+    families_filenames, families_params = \
         FamiliesLoader.parse_cli_arguments(args)
+    families_filename = families_filenames[0]
 
     families_loader = FamiliesLoader(
         families_filename, **families_params
