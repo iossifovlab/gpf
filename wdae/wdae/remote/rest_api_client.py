@@ -657,3 +657,15 @@ class RESTClient:
             return None
 
         return response.content.decode()
+
+    def get_genomic_scores(self) -> Optional[list[dict[str, Any]]]:
+        response = self._get("genomic_scores/score_descs")
+        if response.status_code != 200:
+            return None
+        return cast(list[dict[str, Any]], response.json())
+
+    def get_genomic_score(self, score_id: str) -> Optional[dict[str, Any]]:
+        response = self._get(f"genomic_scores/score_descs/{score_id}")
+        if response.status_code != 200:
+            return None
+        return response.json()[0]

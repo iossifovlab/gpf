@@ -11,7 +11,7 @@ from pathlib import Path
 from dae.utils.fs_utils import find_directory_with_a_file
 from dae.enrichment_tool.background_facade import BackgroundFacade
 from dae.studies.study import GenotypeData
-from dae.gene.scores import GenomicScoresDb
+from dae.gene.scores import GenomicScoresDb, ScoreDesc
 from dae.gene.gene_sets_db import GeneSetsDb, \
     build_gene_set_collection_from_resource
 from dae.gene.denovo_gene_sets_db import DenovoGeneSetsDb
@@ -337,8 +337,14 @@ class GPFInstance:
         return self._pheno_db.get_phenotype_data_config(phenotype_data_id)
 
     # Genomic scores
-    def get_genomic_scores(self):
+    def get_genomic_scores(self) -> list[tuple[str, ScoreDesc]]:
         return self.genomic_scores_db.get_scores()
+
+    def has_genomic_score(self, score_id: str) -> bool:
+        return score_id in self.genomic_scores_db
+
+    def get_genomic_score(self, score_id: str) -> ScoreDesc:
+        return self.genomic_scores_db.get(score_id)
 
     # Gene scores
 

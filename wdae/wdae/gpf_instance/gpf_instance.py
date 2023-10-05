@@ -18,6 +18,7 @@ from enrichment_api.enrichment_builder import \
 from remote.gene_sets_db import RemoteGeneSetsDb
 from remote.denovo_gene_sets_db import RemoteDenovoGeneSetsDb
 from remote.rest_api_client import RESTClient
+from remote.genomic_scores_db import RemoteGenomicScoresDb
 
 from dae.utils.fs_utils import find_directory_with_a_file
 from dae.gpf_instance.gpf_instance import GPFInstance
@@ -109,6 +110,13 @@ class WGPFInstance(GPFInstance):
         self.load_remotes()
         denovo_gene_sets_db = super().denovo_gene_sets_db
         return RemoteDenovoGeneSetsDb(self._clients, denovo_gene_sets_db)
+
+    @cached_property
+    def genomic_scores_db(self):
+        self.load_remotes()
+        genomic_scores_db = super().genomic_scores_db
+        db = RemoteGenomicScoresDb(self._clients, genomic_scores_db)
+        return db
 
     def register_genotype_data(self, genotype_data):
         super().register_genotype_data(genotype_data)

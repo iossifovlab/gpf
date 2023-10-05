@@ -1,3 +1,5 @@
+from typing import Optional
+from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.request import Request
 
@@ -36,4 +38,24 @@ class GenomicScoresView(QueryBaseView):
                     "range": None,
                     "help": score.help
                 })
+        return Response(res)
+
+
+class GenomicScoreDescsView(QueryBaseView):
+    def get(
+        self, _request: Request, score_id: Optional[str] = None
+    ) -> Response:
+        res = []
+        if score_id is not None:
+            if not self.gpf_instance.has_genomic_score(score_id):
+                return Response(status=status.HTTP_404_NOT_FOUND)
+            scores = [
+                (score_id, self.gpf_instance.get_genomic_score(score_id))
+            ]
+        else:
+            scores = self.gpf_instance.get_genomic_scores()
+
+        for _, score in scores:
+            res.append(score.to_json())
+
         return Response(res)
