@@ -231,17 +231,22 @@ class RemotePhenotypeData(PhenotypeData):
         return self._instruments
 
     def get_instruments(self):
-        self.rest_client.get_instruments(self.remote_dataset_id)
+        return self.rest_client.get_instruments(self.remote_dataset_id)
 
     def get_regressions(self):
-        self.rest_client.get_regressions(self.remote_dataset_id)
+        return self.rest_client.get_regressions(self.remote_dataset_id)
 
     def get_measures_info(self):
-        self.rest_client.get_browser_measures_info(self.remote_dataset_id)
+        output = self.rest_client.get_browser_measures_info(
+            self.remote_dataset_id
+        )
+        output["base_image_url"] = \
+            f"/{self.rest_client.gpf_prefix}/{output['base_image_url']}"
+        return output
 
     def search_measures(self, instrument, search_term):
         measures = self.rest_client.get_browser_measures(
-            self._remote_dataset_id,
+            self.remote_dataset_id,
             instrument,
             search_term
         )
