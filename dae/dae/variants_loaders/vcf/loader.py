@@ -663,7 +663,9 @@ class VcfLoader(VariantsGenotypesLoader):
             if not person.not_sequenced:
                 continue
             for vcf_loader in self.vcf_loaders:
-                other_person = vcf_loader.families.persons[person_id]
+                if person_id not in vcf_loader.families.persons:
+                    continue
+                other_person = vcf_loader.families.persons[person.fpid]
 
                 if not other_person.not_sequenced:
                     logger.warning(

@@ -10,12 +10,12 @@ class SummaryVariantsQueryBuilder(BaseQueryBuilder):
     def __init__(
             self, db, variants_table, pedigree_table,
             variants_schema, table_properties, pedigree_schema,
-            pedigree_df, gene_models=None, summary_variants_table=None):
+            families, gene_models=None, summary_variants_table=None):
         self.summary_variants_table = summary_variants_table
         super().__init__(
             db, variants_table, pedigree_table,
             variants_schema, table_properties, pedigree_schema,
-            pedigree_df, gene_models=gene_models)
+            families, gene_models=gene_models)
 
     def _where_accessors(self):
         accessors = super()._where_accessors()

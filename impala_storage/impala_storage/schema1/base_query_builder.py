@@ -34,7 +34,7 @@ class BaseQueryBuilder(ABC):
     def __init__(
             self, db, variants_table, pedigree_table,
             variants_schema, table_properties, pedigree_schema,
-            pedigree_df, gene_models=None):
+            families, gene_models=None):
         assert variants_schema is not None
 
         self.db = db
@@ -45,7 +45,7 @@ class BaseQueryBuilder(ABC):
             attr.name: attr for attr in variants_schema
         }
         self.pedigree_columns = pedigree_schema
-        self.ped_df = pedigree_df
+        self.families = families
         self.has_extra_attributes = \
             "extra_attributes" in self.variants_columns
         self._product = ""
@@ -559,9 +559,9 @@ class BaseQueryBuilder(ABC):
             family_ids = set(family_ids)
             family_bins = family_bins.union(
                 set(
-                    self.ped_df[
-                        self.ped_df["family_id"].isin(family_ids)
-                    ].family_bin.values
+                    p.family_bin
+                    for p in self.families.persons.values()
+                    if p.family_id in family_ids
                 )
             )
 
@@ -569,9 +569,9 @@ class BaseQueryBuilder(ABC):
             person_ids = set(person_ids)
             family_bins = family_bins.union(
                 set(
-                    self.ped_df[
-                        self.ped_df["person_id"].isin(person_ids)
-                    ].family_bin.values
+                    p.family_bin
+                    for p in self.families.persons.values()
+                    if p.person_id in person_ids
                 )
             )
 

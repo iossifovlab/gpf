@@ -7,6 +7,7 @@ import logging
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
+from dae.pedigrees.family import FamiliesData
 from dae.pedigrees.loader import FamiliesLoader
 
 from dae.pedigrees.drawing import OffsetLayoutDrawer, PDFLayoutDrawer
@@ -22,7 +23,7 @@ plt.ioff()
 logger = logging.getLogger("draw_pedigree")
 
 
-def build_families_report(families):
+def build_families_report(families: FamiliesData) -> FamiliesReport:
     """Build a family report based on affected status."""
     status_collection_config = {
         "id": "status",
@@ -93,7 +94,7 @@ def draw_families_report(families):
             title = f"Number of families: {count}"
         else:
             title = ", ".join(family_counter.families)
-        figure = draw_pedigree(layout, title=title, tags=family.tags)
+        figure = draw_pedigree(layout, title=title, tags=family.tag_labels)
         yield figure
 
 
@@ -102,7 +103,7 @@ def draw_families(families):
     for family_id, family in families.items():
         layout = build_family_layout(family)
 
-        figure = draw_pedigree(layout, title=family_id, tags=family.tags)
+        figure = draw_pedigree(layout, title=family_id, tags=family.tag_labels)
         yield figure
 
 
@@ -151,7 +152,9 @@ def main(argv=None):
 
     logging.getLogger("matplotlib").setLevel(logging.WARNING)
 
-    filename, params = FamiliesLoader.parse_cli_arguments(argv)
+    filenames, params = FamiliesLoader.parse_cli_arguments(argv)
+    filename = filenames[0]
+
     families_loader = FamiliesLoader(filename, **params)
     families = families_loader.load()
 

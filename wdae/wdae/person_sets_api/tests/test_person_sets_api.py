@@ -128,12 +128,12 @@ def test_get_person_sets_collection_stats(admin_client: Client) -> None:
     assert response.status_code == 200
     assert response.data == {  # type: ignore
         "phenotype1": {
-            "parents": 4,
-            "children": 12,
+            "parents": 10,
+            "children": 5,
         },
         "phenotype2": {
             "parents": 0,
-            "children": 2,
+            "children": 1,
         },
         "unaffected": {
             "parents": 8,

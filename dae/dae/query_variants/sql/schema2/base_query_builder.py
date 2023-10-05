@@ -1,7 +1,7 @@
 import logging
 from abc import ABC, abstractmethod
 from typing import Optional
-import pandas as pd
+from dae.pedigrees.family import FamiliesData
 from dae.genomic_resources.gene_models import GeneModels
 from dae.variants.attributes import Inheritance
 from dae.utils.regions import Region
@@ -98,7 +98,7 @@ class BaseQueryBuilder(ABC):
         summary_allele_schema: TableSchema,
         partition_descriptor: Optional[dict],
         pedigree_schema: TableSchema,
-        pedigree_df: pd.DataFrame,
+        families: FamiliesData,
         gene_models: Optional[GeneModels] = None,
     ):
         # pylint: disable=too-many-arguments
@@ -123,7 +123,7 @@ class BaseQueryBuilder(ABC):
         }
 
         self.pedigree_columns = pedigree_schema
-        self.ped_df = pedigree_df
+        self.families = families
         self.has_extra_attributes = "extra_attributes" in self.combined_columns
         self._product = ""
         self.gene_models = gene_models
@@ -763,9 +763,9 @@ class BaseQueryBuilder(ABC):
             family_ids = set(family_ids)
             family_bins = family_bins.union(
                 set(
-                    self.ped_df[
-                        self.ped_df["family_id"].isin(family_ids)
-                    ].family_bin.values
+                    p.family_bin  # type: ignore
+                    for p in self.families.persons.values()
+                    if p.family_id in family_ids
                 )
             )
 
@@ -773,9 +773,9 @@ class BaseQueryBuilder(ABC):
             person_ids = set(person_ids)
             family_bins = family_bins.union(
                 set(
-                    self.ped_df[
-                        self.ped_df["person_id"].isin(person_ids)
-                    ].family_bin.values
+                    p.family_bin  # type: ignore
+                    for p in self.families.persons.values()
+                    if p.person_id in person_ids
                 )
             )
 

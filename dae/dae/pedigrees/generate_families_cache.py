@@ -91,10 +91,10 @@ def main(
     for study in studies:
         study_group = cast(GenotypeDataGroup, study)
         logger.info("%s is a group, caching families...", study_group.study_id)
-        if study_group.load_families():
-            study_group.build_families()
-        study_group.save_cached_families()
-        study_group.save_cached_person_sets()
+
+        if study_group.has_families_cache():
+            study_group.rebuild_families()
+        study_group.save_families_cache()
 
     logger.info(
         "generate families cache for %s genotype groups elapsed %.2f sec",

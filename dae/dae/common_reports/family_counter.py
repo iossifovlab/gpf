@@ -76,7 +76,7 @@ class FamilyCounter:
             "pedigrees_count": (
                 label if label is not None else family.family_id
             ),
-            "tags": family.tags,
+            "tags": family.tag_labels,
             "counter_id": 0
         })
 

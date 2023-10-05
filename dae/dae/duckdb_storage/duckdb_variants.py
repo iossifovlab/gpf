@@ -34,7 +34,7 @@ def duckdb_global_connect(
 def duckdb_db_connect(
     db_name: str, read_only: bool = True
 ) -> Generator[duckdb.DuckDBPyConnection, None, None]:
-    logger.info("duckdb internal connection to %s", db_name)
+    logger.debug("duckdb internal connection to %s", db_name)
     yield duckdb.connect(db_name, read_only=read_only)
 
 

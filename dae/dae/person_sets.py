@@ -14,7 +14,6 @@ from box import Box
 
 from dae.pedigrees.family import Person, FamiliesData
 from dae.pheno.pheno_db import PhenotypeData, MeasureType
-from dae.variants.attributes import Role
 
 
 logger = logging.getLogger(__name__)
@@ -41,16 +40,14 @@ class PersonSet:
     def __len__(self) -> int:
         return len(self.persons)
 
-    def get_persons_with_roles(
-        self, *roles: Role
-    ) -> Generator[Person, None, None]:
-        for person in self.persons.values():
-            if person.role in roles:
-                yield person
-
     def get_children(self) -> Generator[Person, None, None]:
         for person in self.persons.values():
-            if person.role in {Role.prb, Role.sib, Role.child}:
+            if person.is_child():
+                yield person
+
+    def get_parents(self) -> Generator[Person, None, None]:
+        for person in self.persons.values():
+            if person.is_parent():
                 yield person
 
     def to_json(self) -> dict[str, Any]:
@@ -352,52 +349,36 @@ class PersonSetCollection:
             f"person {fpid} not in person set collection {self.id}")
 
     @staticmethod
-    def _combine(first: PersonSetCollection, second: PersonSetCollection) \
-            -> PersonSetCollection:
-
-        if first.id != second.id:
-            raise ValueError(
-                f"trying to combine different person set collections: "
-                f"different ids {first.id} <-> {second.id}")
-        if first.name != second.name:
-            raise ValueError(
-                f"trying to combine different person set collections: "
-                f"different names {first.name} <-> {second.name}")
-
-        families = FamiliesData.combine(first.families, second.families)
-        config = PersonSetCollection.merge_configs([first, second])
-        result = PersonSetCollection(
-            first.id, first.name, config,
-            PersonSetCollection._sources_from_config(config),
-            PersonSetCollection._produce_sets(config),
-            PersonSetCollection._produce_default_person_set(config),
-            families)
-
-        for person_id, person in families.real_persons.items():
-            person_set = first.get_person_set(person_id)
-            if person_set is not None:
-                result.person_sets[person_set.id].persons[person_id] = person
-                continue
-            person_set = second.get_person_set(person_id)
-            if person_set is not None:
-                result.person_sets[person_set.id].persons[person_id] = person
-                continue
-            result.default.persons[person_id] = person
-
-        return PersonSetCollection.remove_empty_person_sets(result)
-
-    @staticmethod
-    def combine(collections: list[PersonSetCollection]) -> PersonSetCollection:
+    def combine(
+        collections: list[PersonSetCollection],
+        families: FamiliesData
+    ) -> PersonSetCollection:
         """Combine a list of PersonSetCollection objects into a single one."""
         if len(collections) == 0:
             raise ValueError("can't combine empty list of collections")
         if len(collections) == 1:
             return collections[0]
 
-        first = collections[0]
-        for second in collections[1:]:
-            first = PersonSetCollection._combine(first, second)
-        return first
+        config = PersonSetCollection.merge_configs(collections)
+        result = PersonSetCollection(
+            config["id"], config["name"], config,
+            PersonSetCollection._sources_from_config(config),
+            PersonSetCollection._produce_sets(config),
+            PersonSetCollection._produce_default_person_set(config),
+            families)
+
+        for person_id, person in families.real_persons.items():
+            person_set = None
+            for psc in collections:
+                person_set = psc.get_person_set(person_id)
+                if person_set is not None:
+                    break
+            if person_set is not None:
+                result.person_sets[person_set.id].persons[person_id] = person
+            else:
+                result.default.persons[person_id] = person
+
+        return PersonSetCollection.remove_empty_person_sets(result)
 
     def config_json(self) -> dict[str, Any]:
         """Produce a JSON configuration for this PersonSetCollection object."""
@@ -455,12 +436,8 @@ class PersonSetCollection:
         """
         result = {}
         for set_id, person_set in self.person_sets.items():
-            parents = len(list(
-                person_set.get_persons_with_roles(Role.dad, Role.mom)
-            ))
-            children = len(list(
-                person_set.get_persons_with_roles(Role.prb, Role.sib)
-            ))
+            parents = len(list(person_set.get_parents()))
+            children = len(list(person_set.get_children()))
             result[set_id] = {
                 "parents": parents,
                 "children": children,

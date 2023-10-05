@@ -53,7 +53,7 @@ class AdjustmentsCommand(abc.ABC):
     def close(self):
         """Save adjusted config."""
         with open(self.filename, "w", encoding="utf8") as outfile:
-            outfile.write(yaml.safe_dump(self.config))
+            outfile.write(yaml.safe_dump(self.config, sort_keys=False))
 
     def __enter__(self):
         return self
@@ -136,7 +136,8 @@ class StudyConfigsAdjustmentCommand(AdjustmentsCommand):
                 if config_format == "toml":
                     outfile.write(toml.dumps(result_config))
                 elif config_format == "yaml":
-                    outfile.write(yaml.safe_dump(result_config))
+                    outfile.write(
+                        yaml.safe_dump(result_config, sort_keys=False))
 
     def _execute_datasets(self):
         study_configs_dir = os.path.join(self.instance_dir, "datasets")
