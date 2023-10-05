@@ -4,13 +4,14 @@ from __future__ import annotations
 import logging
 import pathlib
 import os
-from typing import Optional, List, Dict, Any, Union
+from typing import Optional, List, Dict, Any, Union, cast
 from threading import Lock
 from functools import cached_property
+from box import Box
 
-from studies.study_wrapper import StudyWrapper, RemoteStudyWrapper, \
-    StudyWrapperBase
+from studies.study_wrapper import StudyWrapper, RemoteStudyWrapper
 from studies.remote_study_db import RemoteStudyDB
+from studies.remote_study import RemoteGenotypeData
 
 from enrichment_api.enrichment_builder import \
     EnrichmentBuilder, RemoteEnrichmentBuilder
@@ -20,11 +21,13 @@ from remote.denovo_gene_sets_db import RemoteDenovoGeneSetsDb
 from remote.rest_api_client import RESTClient
 from remote.genomic_scores_db import RemoteGenomicScoresDb
 
+from dae.studies.study import GenotypeData
 from dae.utils.fs_utils import find_directory_with_a_file
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.enrichment_tool.tool import EnrichmentTool
 from dae.enrichment_tool.event_counters import CounterBase
 from dae.common_reports.common_report import CommonReport
+from dae.gene.denovo_gene_set_collection import DenovoGeneSetCollection
 
 
 logger = logging.getLogger(__name__)
@@ -39,10 +42,15 @@ _GPF_RECREATED_DATASET_PERM = False
 class WGPFInstance(GPFInstance):
     """GPF instance class for use in wdae."""
 
-    def __init__(self, dae_config, dae_dir, **kwargs):
+    def __init__(
+        self, dae_config: dict[str, Any], dae_dir: str,
+        **kwargs: dict[str, Any]
+    ) -> None:
         self._remote_study_db: Optional[RemoteStudyDB] = None
         self._clients: List[RESTClient] = []
-        self._study_wrappers: Dict[str, StudyWrapperBase] = {}
+        self._study_wrappers: Dict[
+            str, Union[StudyWrapper, RemoteStudyWrapper]
+        ] = {}
         super().__init__(dae_config, dae_dir, **kwargs)
 
     @staticmethod
@@ -53,7 +61,7 @@ class WGPFInstance(GPFInstance):
         dae_config, dae_dir = GPFInstance._build_gpf_config(config_filename)
         return WGPFInstance(dae_config, dae_dir, **kwargs)
 
-    def load_remotes(self):
+    def load_remotes(self) -> None:
         """Load remote instances for use in GPF federation."""
         if self._remote_study_db is not None:
             return
@@ -99,26 +107,28 @@ class WGPFInstance(GPFInstance):
         return self._remote_study_db.remote_study_ids
 
     @cached_property
-    def gene_sets_db(self):
+    def gene_sets_db(self) -> RemoteGeneSetsDb:
         logger.debug("creating new instance of GeneSetsDb")
         self.load_remotes()
         gene_sets_db = super().gene_sets_db
         return RemoteGeneSetsDb(self._clients, gene_sets_db)
 
     @cached_property
-    def denovo_gene_sets_db(self):
+    def denovo_gene_sets_db(self) -> RemoteDenovoGeneSetsDb:
         self.load_remotes()
         denovo_gene_sets_db = super().denovo_gene_sets_db
         return RemoteDenovoGeneSetsDb(self._clients, denovo_gene_sets_db)
 
     @cached_property
-    def genomic_scores_db(self):
+    def genomic_scores_db(self) -> RemoteGenomicScoresDb:
         self.load_remotes()
         genomic_scores_db = super().genomic_scores_db
         db = RemoteGenomicScoresDb(self._clients, genomic_scores_db)
         return db
 
-    def register_genotype_data(self, genotype_data):
+    def register_genotype_data(
+        self, genotype_data: GenotypeData
+    ) -> StudyWrapper:
         super().register_genotype_data(genotype_data)
 
         logger.debug("genotype data config; %s", genotype_data.study_id)
@@ -130,30 +140,35 @@ class WGPFInstance(GPFInstance):
         )
         return study_wrapper
 
-    def make_wdae_wrapper(self, dataset_id: str) -> Optional[StudyWrapperBase]:
+    def make_wdae_wrapper(
+        self, dataset_id: str
+    ) -> Optional[Union[StudyWrapper, RemoteStudyWrapper]]:
         """Create and return wdae study wrapper."""
         genotype_data = self.get_genotype_data(dataset_id)
         if genotype_data is None:
             return None
 
         if genotype_data.is_remote:
-            return RemoteStudyWrapper(genotype_data)
+            return RemoteStudyWrapper(cast(RemoteGenotypeData, genotype_data))
         return StudyWrapper(
             genotype_data, self._pheno_db, self.gene_scores_db
         )
 
-    def get_wdae_wrapper(self, dataset_id):
+    def get_wdae_wrapper(
+        self, dataset_id: str
+    ) -> Optional[Union[StudyWrapper, RemoteStudyWrapper]]:
         """Return wdae study wrapper."""
+        wrapper: Optional[Union[StudyWrapper, RemoteStudyWrapper]] = None
         if dataset_id not in self._study_wrappers:
             wrapper = self.make_wdae_wrapper(dataset_id)
             if wrapper is not None:
                 self._study_wrappers[dataset_id] = wrapper
         else:
-            wrapper = self._study_wrappers.get(dataset_id, None)
+            wrapper = self._study_wrappers.get(dataset_id)
 
         return wrapper
 
-    def get_genotype_data_ids(self, local_only=False):
+    def get_genotype_data_ids(self, local_only: bool = False) -> list[str]:
         if local_only:
             return list(super().get_genotype_data_ids())
 
@@ -161,7 +176,9 @@ class WGPFInstance(GPFInstance):
             list(super().get_genotype_data_ids()) + self.remote_studies
         )
 
-    def get_genotype_data(self, genotype_data_id):
+    def get_genotype_data(
+        self, genotype_data_id: str
+    ) -> Union[GenotypeData, RemoteGenotypeData]:
         genotype_data = super().get_genotype_data(genotype_data_id)
         if genotype_data is not None:
             return genotype_data
@@ -170,16 +187,18 @@ class WGPFInstance(GPFInstance):
             .get_genotype_data(genotype_data_id)
         return genotype_data
 
-    def get_genotype_data_config(self, genotype_data_id):
+    def get_genotype_data_config(self, genotype_data_id: str) -> Box:
         genotype_data_config = \
             super().get_genotype_data_config(genotype_data_id)
         if genotype_data_config is not None:
-            return genotype_data_config
+            return cast(Box, genotype_data_config)
         assert self._remote_study_db is not None
-        return self._remote_study_db\
-            .get_genotype_data_config(genotype_data_id)
+        return cast(
+            Box,
+            self._remote_study_db.get_genotype_data_config(genotype_data_id)
+        )
 
-    def get_common_report(self, study_id):
+    def get_common_report(self, study_id: str) -> Optional[CommonReport]:
         common_report = \
             super().get_common_report(study_id)
 
@@ -194,8 +213,8 @@ class WGPFInstance(GPFInstance):
         common_report = client.get_common_report(remote_study_id, full=True)
         return CommonReport(common_report)
 
-    def get_study_enrichment_config(self, dataset_id):
-        result = \
+    def get_study_enrichment_config(self, dataset_id: str) -> Optional[Box]:
+        result: Optional[Box] = \
             super().get_study_enrichment_config(dataset_id)
 
         if not result:
@@ -208,8 +227,9 @@ class WGPFInstance(GPFInstance):
         return result
 
     def get_enrichment_tool(
-            self, enrichment_config, dataset_id,
-            background_name, counting_name=None):
+        self, enrichment_config: Box, dataset_id: str,
+        background_name: Optional[str], counting_name: Optional[str] = None
+    ) -> EnrichmentTool:
         """Build and return enrichment tool."""
         if (
             background_name is None
@@ -228,7 +248,7 @@ class WGPFInstance(GPFInstance):
         if background is None:
             logger.warning("Background %s not found!", background_name)
 
-        counter = CounterBase.counters()[counting_name]()
+        counter = CounterBase.counters()[cast(str, counting_name)]()
         enrichment_tool = EnrichmentTool(
             enrichment_config, background, counter
         )
@@ -236,8 +256,11 @@ class WGPFInstance(GPFInstance):
         return enrichment_tool
 
     def _create_local_enrichment_builder(
-            self, dataset_id, background_name, counting_name,
-            gene_syms):
+            self, dataset_id: str,
+            background_name: Optional[str],
+            counting_name: Optional[str],
+            gene_syms: list[str]
+    ) -> Optional[EnrichmentBuilder]:
         dataset = self.get_genotype_data(dataset_id)
         enrichment_config = GPFInstance.get_study_enrichment_config(
             self,
@@ -254,13 +277,21 @@ class WGPFInstance(GPFInstance):
         return builder
 
     def create_enrichment_builder(
-            self, dataset_id, background_name, counting_name,
-            gene_syms):
+            self,
+            dataset_id: str,
+            background_name: Optional[str],
+            counting_name: Optional[str],
+            gene_syms: list[str]
+    ) -> Optional[Union[EnrichmentBuilder, RemoteEnrichmentBuilder]]:
         """Create an enrichment builder."""
-        builder = self._create_local_enrichment_builder(
-            dataset_id, background_name, counting_name, gene_syms)
+        builder: Optional[Union[EnrichmentBuilder, RemoteEnrichmentBuilder]] \
+            = self._create_local_enrichment_builder(
+                dataset_id, background_name, counting_name, gene_syms
+        )
         if not builder:
             dataset = self.get_wdae_wrapper(dataset_id)
+            if dataset is None:
+                return None
             if dataset.is_remote is False:
                 logger.warning("WARNING: Using is_remote")
                 logger.warning(
@@ -271,27 +302,43 @@ class WGPFInstance(GPFInstance):
                     dataset_id, background_name, counting_name
                 )
             builder = RemoteEnrichmentBuilder(
-                dataset, dataset.rest_client,
+                cast(RemoteStudyWrapper, dataset), dataset.rest_client,
                 background_name, counting_name,
                 gene_syms)
 
         return builder
 
     @property
-    def remote_studies(self):
+    def remote_studies(self) -> list[str]:
         if self._remote_study_db is None:
             return []
         return list(self._remote_study_db.get_genotype_data_ids())
 
-    def get_all_denovo_gene_sets(self, types, datasets, collection_id):
+    def get_all_denovo_gene_sets(
+            self, types: dict[str, Any],
+            datasets: list[Any], collection_id: str
+    ) -> list[DenovoGeneSetCollection]:
         # pylint: disable=arguments-differ
-        return self.denovo_gene_sets_db.get_all_gene_sets(
-            types, datasets, collection_id)
+        return cast(
+            list[DenovoGeneSetCollection],
+            self.denovo_gene_sets_db.get_all_gene_sets(
+                types, datasets, collection_id
+            )
+        )
 
-    def get_denovo_gene_set(self, gene_set_id, types, datasets, collection_id):
+    def get_denovo_gene_set(
+        self, gene_set_id: str,
+        types: dict[str, Any],
+        datasets: list[Any],
+        collection_id: str
+    ) -> DenovoGeneSetCollection:
         # pylint: disable=arguments-differ
-        return self.denovo_gene_sets_db.get_gene_set(
-            gene_set_id, types, datasets, collection_id)
+        return cast(
+            DenovoGeneSetCollection,
+            self.denovo_gene_sets_db.get_gene_set(
+                gene_set_id, types, datasets, collection_id
+            )
+        )
 
     def get_visible_datasets(self) -> Optional[list[str]]:
         if self.dae_config.gpfjs is None:
@@ -306,7 +353,9 @@ class WGPFInstance(GPFInstance):
         ]
 
 
-def get_wgpf_instance_path(config_filename=None):
+def get_wgpf_instance_path(
+    config_filename: Union[str, pathlib.Path, None] = None
+) -> pathlib.Path:
     """Return the path to the GPF instance in use."""
     if _GPF_INSTANCE is not None:
         return pathlib.Path(_GPF_INSTANCE.dae_dir)
@@ -334,7 +383,10 @@ def get_wgpf_instance_path(config_filename=None):
     return dae_dir
 
 
-def get_wgpf_instance(config_filename=None, **kwargs) -> WGPFInstance:
+def get_wgpf_instance(
+    config_filename: Union[str, pathlib.Path, None] = None,
+    **kwargs: dict[str, Any]
+) -> WGPFInstance:
     """Load and return a WGPFInstance."""
     # pylint: disable=global-statement
     global _GPF_INSTANCE
@@ -353,7 +405,7 @@ def get_wgpf_instance(config_filename=None, **kwargs) -> WGPFInstance:
     return _GPF_INSTANCE
 
 
-def reload_datasets(gpf_instance):
+def reload_datasets(gpf_instance: WGPFInstance) -> None:
     """Recreate datasets permissions."""
     # pylint: disable=import-outside-toplevel
     from datasets_api.models import Dataset, DatasetHierarchy
@@ -392,7 +444,7 @@ def reload_datasets(gpf_instance):
             )
 
 
-def recreated_dataset_perm(gpf_instance):
+def recreated_dataset_perm(gpf_instance: WGPFInstance) -> None:
     """Recreate dataset permisions for a GPF instance."""
     # pylint: disable=global-statement
     global _GPF_RECREATED_DATASET_PERM

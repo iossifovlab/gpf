@@ -3,10 +3,13 @@ from dae.gene.scores import GenomicScoresDb, ScoreDesc
 
 
 class RemoteGenomicScoresDb(GenomicScoresDb):
+    """Class for automatic fetching and usage of remote genomic scores."""
+
     def __init__(
         self, rest_clients: list[RESTClient],
         local_scores_db: GenomicScoresDb
     ):
+        # pylint: disable=super-init-not-called
         self.remote_scores: dict[str, ScoreDesc] = {}
         self.local_db = local_scores_db
         for client in rest_clients:

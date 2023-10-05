@@ -369,7 +369,8 @@ class NumberHistogram(Statistic):
 
     @staticmethod
     def from_dict(data: dict[str, Any]) -> NumberHistogram:
-        config = NumberHistogramConfig.from_dict(data.get("config"))
+        """Build a number histogram from a dict."""
+        config = NumberHistogramConfig.from_dict(data["config"])
 
         hist = NumberHistogram(
             config,
@@ -381,7 +382,6 @@ class NumberHistogram(Statistic):
         hist.out_of_range_bins = data.get("out_of_range_bins", [0, 0])
 
         return hist
-
 
     @staticmethod
     def deserialize(content: str) -> NumberHistogram:
@@ -442,6 +442,7 @@ class NullHistogram(Statistic):
 
     @staticmethod
     def from_dict(data: dict[str, Any]) -> NullHistogram:
+        """Build a null histogram from a dict."""
         config = data["config"]
         hist_type = config.get("type")
         if hist_type != "null":

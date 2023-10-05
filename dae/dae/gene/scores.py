@@ -41,6 +41,7 @@ class ScoreDesc:
 
     @staticmethod
     def from_json(data: dict[str, Any]) -> ScoreDesc:
+        """Build a ScoreDesc from a JSON."""
         hist_data: Optional[Histogram] = None
         if "hist" in data:
             hist_type = data["hist"]["config"]["type"]

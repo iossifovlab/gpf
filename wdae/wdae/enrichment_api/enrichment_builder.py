@@ -1,8 +1,9 @@
 import abc
-from typing import Any, Optional, Iterable, cast
+from typing import Any, Optional, Iterable, cast, Union
 
 from remote.rest_api_client import RESTClient
 from studies.remote_study import RemoteGenotypeData
+from studies.study_wrapper import RemoteStudyWrapper
 
 from dae.studies.study import GenotypeData
 from dae.enrichment_tool.genotype_helper import GenotypeHelper
@@ -104,15 +105,15 @@ class RemoteEnrichmentBuilder(BaseEnrichmentBuilder):
     """Builder for enrichment tool test for remote dataset."""
 
     def __init__(
-        self, dataset: RemoteGenotypeData,
+        self, dataset: Union[RemoteGenotypeData, RemoteStudyWrapper],
         client: RESTClient,
-        background_name: str,
-        counting_name: str,
+        background_name: Optional[str],
+        counting_name: Optional[str],
         gene_syms: Iterable[str]
     ):
         self.dataset = dataset
         self.client = client
-        query = {}
+        query: dict[str, Any] = {}
         query["datasetId"] = dataset._remote_study_id
         query["geneSymbols"] = list(gene_syms)
         query["enrichmentBackgroundModel"] = background_name

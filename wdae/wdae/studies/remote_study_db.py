@@ -40,7 +40,7 @@ class RemoteStudyDB:
             self.remote_study_clients[study_id] = rest_client
             self.remote_genotype_data[study_id] = rgd
 
-    def get_genotype_data(self, study_id):
+    def get_genotype_data(self, study_id: str) -> RemoteGenotypeData:
         return self.remote_genotype_data.get(study_id)
 
     def get_genotype_data_config(self, study_id):

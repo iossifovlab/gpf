@@ -1,3 +1,4 @@
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
 from pytest_mock import MockerFixture
 from remote.genomic_scores_db import RemoteGenomicScoresDb
 from remote.rest_api_client import RESTClient

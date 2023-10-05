@@ -42,9 +42,12 @@ class GenomicScoresView(QueryBaseView):
 
 
 class GenomicScoreDescsView(QueryBaseView):
+    """View for accessing inner genomic scores data from federations."""
+
     def get(
         self, _request: Request, score_id: Optional[str] = None
     ) -> Response:
+        """Convert all genomic score descs into a JSON list."""
         res = []
         if score_id is not None:
             if not self.gpf_instance.has_genomic_score(score_id):
