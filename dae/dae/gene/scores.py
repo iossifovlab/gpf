@@ -20,7 +20,7 @@ class ScoreDesc:
     resource_id: str
     score_id: str
     source: str
-    destination: str
+    name: str
     hist: Optional[Union[NumberHistogram, CategoricalHistogram, NullHistogram]]
     description: str
     help: str
@@ -33,7 +33,7 @@ class ScoreDesc:
             "resource_id": self.resource_id,
             "score_id": self.score_id,
             "source": self.source,
-            "destination": self.destination,
+            "name": self.name,
             "hist": hist_data,
             "description": self.description,
             "help": self.help
@@ -56,7 +56,7 @@ class ScoreDesc:
             data["resource_id"],
             data["score_id"],
             data["source"],
-            data["destination"],
+            data["name"],
             hist_data,
             data["description"],
             data["help"]
