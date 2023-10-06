@@ -183,9 +183,19 @@ class Person:
             for key, value in attributes.items()
             if key not in ALL_FAMILY_TAG_LABELS
         }
-        self._tags: set[FamilyTag] = {
-            tag for tag, value in tags.items() if value
-        }
+        self._tags: set[FamilyTag] = set()
+        for tag, tag_value in tags.items():
+            # logger.debug(
+            #     "person tag <%s> value <%s> (<%s>)",
+            #     tag, tag_value, type(tag_value))
+            if isinstance(tag_value, bool) and tag_value:
+                self.set_tag(tag)
+                continue
+            if tag_value == "True":
+                self.set_tag(tag)
+                continue
+
+            self.unset_tag(tag)
         self.redefine()
 
     def redefine(self) -> None:
@@ -561,10 +571,11 @@ class Family:
     def __eq__(self, other: Any) -> bool:
         if not isinstance(other, Family):
             return False
-        if len(self.full_members) != len(other.full_members):
+        if len(self.persons) != len(other.persons):
             return False
-        for member1, member2 in zip(self.full_members, other.full_members):
-            if member1 != member2:
+        for person in self.persons.values():
+            other_person = other.persons.get(person.person_id)
+            if person != other_person:
                 return False
         return True
 

@@ -408,7 +408,7 @@ class FamilyTagsBuilder:
 
     def tag_family(self, family: Family) -> None:
         """Tag family with all available tags."""
-        for tag, tagger in self._taggers.items():
+        for tagger in self._taggers.values():
             tagger(family)
 
     def tag_family_type(self, family: Family) -> None:
