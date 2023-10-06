@@ -571,13 +571,11 @@ class FamiliesLoader(CLILoader):
     @staticmethod
     def save_pedigree(families: FamiliesData, filename: PedigreeIO) -> None:
         """Save FamiliesData object into a pedigree file."""
-        csv = FamiliesLoader.to_tsv(families)
-        with open(filename, "w") as outfile:
-            outfile.write(csv)
+        FamiliesLoader._transform_families(families)\
+            .to_csv(filename, index=False, sep="\t")
 
     @staticmethod
-    def to_tsv(families: FamiliesData) -> str:
-        """Convert a FamiliesData object into a TSV string."""
+    def _transform_families(families: FamiliesData) -> pd.DataFrame:
         df = families.ped_df.copy()
 
         df = df.rename(
@@ -593,7 +591,13 @@ class FamiliesLoader(CLILoader):
         df.role = df.role.apply(lambda v: v.name)
         df.status = df.status.apply(lambda v: v.name)
 
-        return df.to_csv(index=False, sep="\t")
+        return df
+
+    @staticmethod
+    def to_tsv(families: FamiliesData) -> str:
+        """Convert a FamiliesData object into a TSV string."""
+        return FamiliesLoader._transform_families(families)\
+            .to_csv(index=False, sep="\t")
 
     @staticmethod
     def save_families(families: FamiliesData, filename: PedigreeIO) -> None:

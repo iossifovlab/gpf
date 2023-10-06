@@ -113,9 +113,10 @@ class FamilyCounterDownloadView(QueryDatasetView):
         })
 
         tsv = FamiliesLoader.to_tsv(counter_families_data)
+        lines = map(lambda x: x + "\n", tsv.strip().split("\n"))
 
         response = StreamingHttpResponse(
-            tsv.split("\n"),
+            lines,
             content_type="text/tab-separated-values"
         )
         response["Content-Disposition"] = "attachment; filename=families.ped"
@@ -164,10 +165,11 @@ class FamiliesDataDownloadView(QueryDatasetView):
 
             result = FamiliesData.from_families(result)
 
-        tsv_data = FamiliesLoader.to_tsv(result)
+        tsv = FamiliesLoader.to_tsv(result)
+        lines = map(lambda x: x + "\n", tsv.strip().split("\n"))
 
         response = StreamingHttpResponse(
-            tsv_data.split("\n"),
+            lines,
             content_type="text/tab-separated-values"
         )
         response["Content-Disposition"] = "attachment; filename=families.ped"
