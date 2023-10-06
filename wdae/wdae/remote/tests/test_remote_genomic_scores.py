@@ -14,7 +14,7 @@ def test_remote_genomic_scores(
         "resource_id": "test_resource",
         "score_id": "test_score",
         "source": "attr_source",
-        "destination": "attr_dest",
+        "name": "attr_dest",
         "hist": {
             "config": {
                 "type": "number",
