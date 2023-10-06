@@ -1,7 +1,8 @@
 import { Page, expect } from '@playwright/test';
 
 // For local replace with http://172.xx.x.x/gpf
-export const instanceUrl = process.env.GPF_STAGING_INSTANCE_URL ? process.env.GPF_STAGING_INSTANCE_URL : 'http://172.26.0.6/gpf';
+export const instanceUrl = process.env.GPF_STAGING_INSTANCE_URL ?
+  process.env.GPF_STAGING_INSTANCE_URL : 'http://gpf/gpf';
 // Replace with http://localhost:8025 if testing local
 export const mailhogUrl = 'http://mailhog:8025';
 export const username = process.env.GPF_STAGING_USERNAME ? process.env.GPF_STAGING_USERNAME : 'admin@iossifovlab.com';
@@ -81,7 +82,7 @@ export function readFile(name): Promise<unknown> {
       if (err) {
         reject(err);
       }
-      resolve(data.toString());
+      resolve(data);
     });
   });
 }
