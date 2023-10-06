@@ -1,6 +1,7 @@
 """Genotype browser routes for browsing and listing variants in studies."""
 import logging
 import itertools
+from typing import Union
 
 from django.http.response import StreamingHttpResponse, FileResponse
 
@@ -160,30 +161,31 @@ class GenotypeBrowserQueryView(QueryDatasetView):
 
         handle_partial_permissions(user, dataset_id, data)
 
+        response: Union[FileResponse, StreamingHttpResponse, None] = None
         if is_download:
-            response = dataset.query_variants_wdae(
+            result = dataset.query_variants_wdae(
                 data, sources,
                 max_variants_count=max_variants,
                 max_variants_message=is_download
             )
             columns = [s.get("name", s["source"]) for s in sources]
-            response = map(
-                join_line, itertools.chain([columns], response))
+            result = map(
+                join_line, itertools.chain([columns], result))
             response = FileResponse(
-                response, filename="variants.tsv",
+                result, filename="variants.tsv",
                 as_attachment=True, content_type="text/tsv"
             )
             response["Content-Disposition"] = \
                 "attachment; filename=variants.tsv"
             response["Expires"] = "0"
         else:
-            response = dataset.query_variants_wdae_streaming(
+            stream = dataset.query_variants_wdae_streaming(
                 data, sources,
                 max_variants_count=max_variants,
                 max_variants_message=is_download
             )
             response = StreamingHttpResponse(
-                iterator_to_json(response),
+                iterator_to_json(stream),
                 status=status.HTTP_200_OK,
                 content_type="text/event-stream",
             )

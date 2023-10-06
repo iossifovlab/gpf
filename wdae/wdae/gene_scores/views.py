@@ -35,7 +35,7 @@ class GeneScoresListView(QueryBaseView):
                         "linear",
                     "range": score.number_hist.config.view_range,
                 }
-                for score in gene_scores
+                for score in gene_scores if score.number_hist is not None
             ]
         )
 

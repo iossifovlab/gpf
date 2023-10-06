@@ -43,7 +43,8 @@ class WGPFInstance(GPFInstance):
     """GPF instance class for use in wdae."""
 
     def __init__(
-        self, dae_config: dict[str, Any], dae_dir: str,
+        self, dae_config: dict[str, Any],
+        dae_dir: Union[str, pathlib.Path],
         **kwargs: dict[str, Any]
     ) -> None:
         self._remote_study_db: Optional[RemoteStudyDB] = None
@@ -51,7 +52,7 @@ class WGPFInstance(GPFInstance):
         self._study_wrappers: Dict[
             str, Union[StudyWrapper, RemoteStudyWrapper]
         ] = {}
-        super().__init__(dae_config, dae_dir, **kwargs)
+        super().__init__(cast(Box, dae_config), dae_dir, **kwargs)
 
     @staticmethod
     def build(
@@ -191,7 +192,7 @@ class WGPFInstance(GPFInstance):
         genotype_data_config = \
             super().get_genotype_data_config(genotype_data_id)
         if genotype_data_config is not None:
-            return cast(Box, genotype_data_config)
+            return genotype_data_config
         assert self._remote_study_db is not None
         return cast(
             Box,
@@ -242,7 +243,7 @@ class WGPFInstance(GPFInstance):
             counting_name = enrichment_config.default_counting_model
 
         background = self.get_study_background(
-            dataset_id, background_name
+            dataset_id, cast(str, background_name)
         )
 
         if background is None:
@@ -315,12 +316,12 @@ class WGPFInstance(GPFInstance):
         return list(self._remote_study_db.get_genotype_data_ids())
 
     def get_all_denovo_gene_sets(
-            self, types: dict[str, Any],
-            datasets: list[Any], collection_id: str
-    ) -> list[DenovoGeneSetCollection]:
+        self, types: dict[str, Any],
+        datasets: list[Any], collection_id: str
+    ) -> list[dict[str, Any]]:
         # pylint: disable=arguments-differ
         return cast(
-            list[DenovoGeneSetCollection],
+            list[dict[str, Any]],
             self.denovo_gene_sets_db.get_all_gene_sets(
                 types, datasets, collection_id
             )
@@ -331,10 +332,10 @@ class WGPFInstance(GPFInstance):
         types: dict[str, Any],
         datasets: list[Any],
         collection_id: str
-    ) -> DenovoGeneSetCollection:
+    ) -> dict[str, Any]:
         # pylint: disable=arguments-differ
         return cast(
-            DenovoGeneSetCollection,
+            dict[str, Any],
             self.denovo_gene_sets_db.get_gene_set(
                 gene_set_id, types, datasets, collection_id
             )

@@ -543,6 +543,33 @@ class PhenotypeData(ABC):
             measure_ids = self._get_instrument_measures(instrument_name)
         return self.get_values(measure_ids, person_ids, family_ids, role)
 
+    @abstractmethod
+    def get_values_streaming_csv(
+        self,
+        measure_ids: list[str],
+        person_ids=None,
+        family_ids=None,
+        roles=None,
+    ):
+        """
+        Collect and format the values of the given measures in CSV format.
+
+        Yields lines.
+
+        `measure_ids` -- list of measure ids which values should be returned.
+
+        `person_ids` -- list of person IDs to filter result. Only data for
+        individuals with person_id in the list `person_ids` are returned.
+
+        `family_ids` -- list of family IDs to filter result. Only data for
+        individuals that are members of any of the specified `family_ids`
+        are returned.
+
+        `roles` -- list of roles of individuals to select measure value for.
+        If not specified value for individuals in all roles are returned.
+        """
+        raise NotImplementedError()
+
 
 class PhenotypeStudy(PhenotypeData):
     """
@@ -857,23 +884,6 @@ class PhenotypeStudy(PhenotypeData):
         family_ids=None,
         roles=None,
     ):
-        """
-        Collect and format the values of the given measures in CSV format.
-
-        Yields lines.
-
-        `measure_ids` -- list of measure ids which values should be returned.
-
-        `person_ids` -- list of person IDs to filter result. Only data for
-        individuals with person_id in the list `person_ids` are returned.
-
-        `family_ids` -- list of family IDs to filter result. Only data for
-        individuals that are members of any of the specified `family_ids`
-        are returned.
-
-        `roles` -- list of roles of individuals to select measure value for.
-        If not specified value for individuals in all roles are returned.
-        """
         assert isinstance(measure_ids, list)
         assert len(measure_ids) >= 1
         assert all(self.has_measure(m) for m in measure_ids)
@@ -1204,6 +1214,15 @@ class PhenotypeGroup(PhenotypeData):
         ]
         measures = chain(*generators)
         yield from measures
+
+    def get_values_streaming_csv(
+        self,
+        measure_ids: list[str],
+        person_ids=None,
+        family_ids=None,
+        roles=None,
+    ):
+        raise NotImplementedError()
 
 
 class PhenoDb(object):

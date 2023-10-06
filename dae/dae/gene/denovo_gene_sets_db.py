@@ -93,7 +93,12 @@ class DenovoGeneSetsDb:
         return self._denovo_gene_set_configs[genotype_data_id].gene_sets_names
 
     def get_gene_set(
-            self, gene_set_id, gene_set_spec, permitted_datasets=None):
+        self,
+        gene_set_id,
+        gene_set_spec,
+        permitted_datasets=None,
+        collection_id="denovo"  # pylint: disable=unused-argument
+    ):
         """Return de Novo gene set matching the spec for permitted datasets."""
         gene_set_spec = self._filter_spec(gene_set_spec, permitted_datasets)
 
@@ -103,7 +108,12 @@ class DenovoGeneSetsDb:
             gene_set_spec,
         )
 
-    def get_all_gene_sets(self, denovo_gene_set_spec, permitted_datasets=None):
+    def get_all_gene_sets(
+        self,
+        denovo_gene_set_spec,
+        permitted_datasets=None,
+        collection_id="denovo"  # pylint: disable=unused-argument
+    ):
         denovo_gene_set_spec = self._filter_spec(
             denovo_gene_set_spec, permitted_datasets
         )

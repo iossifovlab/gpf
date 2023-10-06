@@ -1,8 +1,10 @@
+from typing import cast
 import logging
 from rest_framework import status
 from rest_framework.response import Response
 from django.http.response import FileResponse
 from query_base.query_base import QueryDatasetView
+from studies.study_wrapper import StudyWrapper
 from utils.logger import request_logging
 from utils.query_params import parse_query_params
 from utils.expand_gene_set import expand_gene_set
@@ -46,6 +48,11 @@ class QueryVariantsView(QueryDatasetView):
         if dataset is None:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+        if dataset.is_remote:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        dataset = cast(StudyWrapper, dataset)
+
         user = request.user
         handle_partial_permissions(user, dataset_id, data)
 
@@ -71,6 +78,11 @@ class DownloadSummaryVariantsView(QueryDatasetView):
 
         if dataset is None:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        if dataset.is_remote:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        dataset = cast(StudyWrapper, dataset)
 
         user = request.user
         user = request.user

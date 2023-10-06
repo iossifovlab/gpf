@@ -42,7 +42,7 @@ class PhenoInstrumentsView(QueryDatasetView):
         dataset_id = request.query_params["dataset_id"]
 
         dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
-        if dataset is None or not dataset.has_pheno_data():
+        if not dataset or dataset.phenotype_data is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         instruments = sorted(dataset.phenotype_data.get_instruments())
@@ -60,7 +60,7 @@ class PhenoMeasuresInfoView(PhenoBrowserBaseView):
         dataset_id = request.query_params["dataset_id"]
 
         dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
-        if dataset is None or not dataset.has_pheno_data():
+        if not dataset or dataset.phenotype_data is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         res = dataset.phenotype_data.get_measures_info()
@@ -75,7 +75,7 @@ class PhenoMeasureDescriptionView(PhenoBrowserBaseView):
         dataset_id = request.query_params["dataset_id"]
 
         dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
-        if dataset is None or not dataset.has_pheno_data():
+        if not dataset or dataset.phenotype_data is None:
             return Response(
                 {"error": "Dataset not found"},
                 status=status.HTTP_404_NOT_FOUND
@@ -101,7 +101,7 @@ class PhenoMeasuresView(PhenoBrowserBaseView):
         dataset_id = request.query_params["dataset_id"]
 
         dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
-        if dataset is None or not dataset.has_pheno_data():
+        if not dataset or dataset.phenotype_data is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         instrument = request.query_params.get("instrument", None)
@@ -133,7 +133,7 @@ class PhenoMeasuresDownload(QueryDatasetView):
         dataset_id = data["dataset_id"]
 
         dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
-        if dataset is None or not dataset.has_pheno_data():
+        if not dataset or dataset.phenotype_data is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         measure_ids = data.get("measures", None)

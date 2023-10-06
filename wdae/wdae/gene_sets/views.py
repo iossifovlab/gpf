@@ -4,11 +4,15 @@ import ast
 import json
 import itertools
 import logging
+from typing import Union, Optional, Sequence, Any
 
 from copy import deepcopy
+from dae.gene.denovo_gene_set_collection import DenovoGeneSetCollection
+from dae.gene.gene_sets_db import GeneSet
 
-from rest_framework import status  # type: ignore
-from rest_framework.response import Response  # type: ignore
+from rest_framework import status
+from rest_framework.request import Request
+from rest_framework.response import Response
 
 from django.http.response import StreamingHttpResponse
 from django.utils.http import urlencode
@@ -22,7 +26,7 @@ logger = logging.getLogger(__name__)
 class GeneSetsCollectionsView(QueryBaseView):
     """Class to handle gene sets collections view."""
 
-    def get(self, request):
+    def get(self, request: Request) -> Response:
         """Build response to a get request."""
         permitted_datasets = self.get_permitted_datasets(request.user)
         gene_sets_collections = deepcopy(
@@ -60,13 +64,15 @@ class GeneSetsView(QueryBaseView):
             query["geneSetsTypes"] = query["geneSetsTypes"].replace(" ", "")
         return f"{url}?{urlencode(query)}"
 
-    def post(self, request):
+    def post(self, request: Request) -> Response:
         """Build response to a post request."""
         data = request.data
         if "geneSetsCollection" not in data:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         gene_sets_collection_id = data["geneSetsCollection"]
         gene_sets_types = data.get("geneSetsTypes", {})
+
+        gene_sets: Sequence[Union[GeneSet, dict[str, Any]]] = []
 
         if "denovo" in gene_sets_collection_id:
             if not self.gpf_instance.has_denovo_gene_sets():
@@ -144,6 +150,8 @@ class GeneSetDownloadView(QueryBaseView):
         gene_sets_types = data.get("geneSetsTypes", {})
 
         permitted_datasets = self.get_permitted_datasets(user)
+
+        gene_set: Union[GeneSet, dict[str, Any], None] = None
 
         if "denovo" in gene_sets_collection_id:
             if not self.gpf_instance.has_denovo_gene_sets():

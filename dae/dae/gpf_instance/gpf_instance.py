@@ -21,6 +21,7 @@ from dae.utils.fs_utils import find_directory_with_a_file
 from dae.enrichment_tool.background_facade import BackgroundFacade
 from dae.studies.study import GenotypeData
 from dae.gene.scores import GenomicScoresDb, ScoreDesc
+from dae.gene.gene_scores import ScoreDesc as GeneScoreDesc
 from dae.gene.gene_sets_db import GeneSet, GeneSetCollection, GeneSetsDb, \
     build_gene_set_collection_from_resource
 from dae.gene.denovo_gene_sets_db import DenovoGeneSetsDb
@@ -381,14 +382,16 @@ class GPFInstance:
             GeneScore, self.gene_scores_db.get_gene_score(gene_score_id)
         )
 
-    def get_gene_score_desc(self, score_id: str) -> ScoreDesc:
-        return cast(ScoreDesc, self.gene_scores_db.get_score_desc(score_id))
+    def get_gene_score_desc(self, score_id: str) -> GeneScoreDesc:
+        return cast(
+            GeneScoreDesc, self.gene_scores_db.get_score_desc(score_id)
+        )
 
     def get_all_gene_scores(self) -> list[GeneScore]:
         return cast(list[GeneScore], self.gene_scores_db.get_gene_scores())
 
-    def get_all_gene_score_descs(self) -> list[ScoreDesc]:
-        return cast(list[ScoreDesc], self.gene_scores_db.get_scores())
+    def get_all_gene_score_descs(self) -> list[GeneScoreDesc]:
+        return cast(list[GeneScoreDesc], self.gene_scores_db.get_scores())
 
     # Common reports
     def get_common_report(self, study_id: str) -> Optional[CommonReport]:
@@ -415,7 +418,7 @@ class GPFInstance:
         return configs
 
     # Gene sets
-    def get_gene_sets_collections(self) -> list[GeneSetCollection]:
+    def get_gene_sets_collections(self) -> list[dict[str, Any]]:
         return cast(
             list[GeneSetCollection], self.gene_sets_db.collections_descriptions
         )
@@ -444,17 +447,20 @@ class GPFInstance:
         return len(self.denovo_gene_sets_db) > 0
 
     def get_all_denovo_gene_sets(
-        self, types: dict[str, Any], datasets: list[GenotypeData]
-    ) -> list[DenovoGeneSetCollection]:
+        self, types: dict[str, Any],
+        datasets: list[Any],
+        collection_id: str  # pylint: disable=unused-argument
+    ) -> list[dict[str, Any]]:
         return cast(
-            list[DenovoGeneSetCollection],
+            list[dict[str, Any]],
             self.denovo_gene_sets_db.get_all_gene_sets(types, datasets)
         )
 
     def get_denovo_gene_set(
         self, gene_set_id: str,
         types: dict[str, Any],
-        datasets: list[GenotypeData]
+        datasets: list[GenotypeData],
+        collection_id: str  # pylint: disable=unused-argument
     ) -> DenovoGeneSetCollection:
         return cast(
             DenovoGeneSetCollection,
