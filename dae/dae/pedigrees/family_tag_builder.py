@@ -38,11 +38,13 @@ def _get_sibs(family: Family) -> Iterable[Person]:
 def set_tag(family: Family, tag: FamilyTag) -> None:
     for person in family.persons.values():
         person.set_tag(tag)
+    family.set_tag(tag)
 
 
 def unset_tag(family: Family, tag: FamilyTag) -> None:
     for person in family.persons.values():
         person.unset_tag(tag)
+    family.unset_tag(tag)
 
 
 def set_attr(family: Family, label: str, value: Any) -> None:
@@ -407,15 +409,9 @@ class FamilyTagsBuilder:
     def tag_family(self, family: Family) -> None:
         """Tag family with all available tags."""
         for tag, tagger in self._taggers.items():
-            value = tagger(family)
-            if value is None:
-                continue
-            if isinstance(value, bool):
-                if value:
-                    family.set_tag(tag)
-                continue
+            tagger(family)
 
-    def _tag_family_type(self, family: Family) -> None:
+    def tag_family_type(self, family: Family) -> None:
         """Tag a family with family type tags - short and full."""
         full_type = _build_family_type_full(family)
         set_attr(family, "tag_family_type_full", full_type)
@@ -423,4 +419,4 @@ class FamilyTagsBuilder:
     def tag_families_data(self, families: FamiliesData) -> None:
         for family in families.values():
             self.tag_family(family)
-            self._tag_family_type(family)
+            self.tag_family_type(family)

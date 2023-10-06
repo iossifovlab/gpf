@@ -367,11 +367,12 @@ class Person:
     def has_tag(self, tag: FamilyTag) -> bool:
         return tag in self._tags
 
-    def all_tags(self) -> dict[FamilyTag, bool]:
-        return {tag: self.has_tag(tag) for tag in ALL_FAMILY_TAGS}
-
     def all_tag_labels(self) -> dict[str, bool]:
         return {tag.label: self.has_tag(tag) for tag in ALL_FAMILY_TAGS}
+
+    @property
+    def tags(self) -> set[FamilyTag]:
+        return self._tags
 
     def __eq__(self, other: Any) -> bool:
         if not isinstance(other, Person):
@@ -452,6 +453,10 @@ class Family:
     def set_tag(self, tag: FamilyTag) -> None:
         self._tags.add(tag)
 
+    def unset_tag(self, tag: FamilyTag) -> None:
+        if tag in self._tags:
+            self._tags.remove(tag)
+
     @property
     def tags(self) -> set[FamilyTag]:
         return self._tags
@@ -487,6 +492,8 @@ class Family:
                     f"multiple person with the same person id "
                     f"{person.person_id} in family {family_id}")
             family.persons[person.person_id] = person
+            family._tags |= person.tags
+
         family._connect_family()  # pylint: disable=protected-access
         assert all(p.family is not None for p in family.persons.values())
 
@@ -546,7 +553,7 @@ class Family:
         if self._members_in_order is None:
             self._members_in_order = list(
                 filter(
-                    lambda m: not m.missing and not m.generated,
+                    lambda m: not m.missing,
                     self.persons.values())
             )
         return self._members_in_order

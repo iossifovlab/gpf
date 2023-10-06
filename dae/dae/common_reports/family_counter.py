@@ -123,7 +123,7 @@ class FamiliesGroupCounters:
                         family, person_set_collection
                     ),
                     "pedigrees_count": family.family_id,
-                    "tags": family.tags,
+                    "tags": family.tag_labels,
                     "counter_id": idx
                 })
                 counters[family.family_id] = family_counter
@@ -157,7 +157,7 @@ class FamiliesGroupCounters:
                     "pedigree": get_family_pedigree(
                         family, person_set_collection
                     ),
-                    "tags": family.tags,
+                    "tags": family.tag_labels,
                     "pedigrees_count": pedigree_label,
                     "counter_id": idx
                 })

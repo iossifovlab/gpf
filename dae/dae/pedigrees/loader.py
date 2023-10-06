@@ -15,7 +15,8 @@ from dae.utils.helpers import str2bool
 from dae.variants.attributes import Role, Sex, Status
 from dae.variants_loaders.raw.loader import CLILoader, CLIArgument
 
-from dae.pedigrees.family import FamiliesData, Person, PEDIGREE_COLUMN_NAMES
+from dae.pedigrees.family import FamiliesData, Person, PEDIGREE_COLUMN_NAMES, \
+    ALL_FAMILY_TAG_LABELS
 from dae.pedigrees.family_role_builder import FamilyRoleBuilder
 from dae.pedigrees.family_tag_builder import FamilyTagsBuilder
 from dae.pedigrees.layout import Layout
@@ -369,19 +370,24 @@ class FamiliesLoader(CLILoader):
         if isinstance(ped_no_header, str):
             ped_no_header = str2bool(ped_no_header)
 
+        converters = {
+            ped_role: Role.from_name,
+            ped_sex: Sex.from_name,
+            ped_status: Status.from_name,
+            ped_generated: str2bool,
+            ped_not_sequenced: str2bool,
+            ped_proband: str2bool,
+        }
+        converters.update({
+            tag_label: str2bool for tag_label in ALL_FAMILY_TAG_LABELS
+        })
+
         read_csv_func = partial(
             pd.read_csv,
             sep=ped_sep,
             index_col=False,
             skipinitialspace=True,
-            converters={
-                ped_role: Role.from_name,
-                ped_sex: Sex.from_name,
-                ped_status: Status.from_name,
-                ped_generated: str2bool,
-                ped_not_sequenced: str2bool,
-                ped_proband: str2bool,
-            },
+            converters=converters,
             dtype=str,
             comment="#",
             encoding="utf-8",

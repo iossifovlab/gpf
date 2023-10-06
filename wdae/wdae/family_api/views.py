@@ -1,4 +1,5 @@
 from rest_framework.response import Response
+from rest_framework.request import Request
 from rest_framework import status
 from query_base.query_base import QueryDatasetView
 
@@ -7,7 +8,8 @@ from dae.pedigrees.family_tag_builder import check_tag, \
 
 
 class ListFamiliesView(QueryDatasetView):
-    def get(self, request, dataset_id):
+
+    def get(self, request: Request, dataset_id: str) -> Response:
         if dataset_id is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
@@ -44,7 +46,10 @@ class ListFamiliesView(QueryDatasetView):
 
 
 class FamilyDetailsView(QueryDatasetView):
-    def get(self, request, dataset_id, family_id):
+
+    def get(
+        self, request: Request, dataset_id: str, family_id: str
+    ) -> Response:
         if dataset_id is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
@@ -70,7 +75,8 @@ class FamilyDetailsView(QueryDatasetView):
 
 
 class TagsView(QueryDatasetView):
-    def get(self, request):
+
+    def get(self, request: Request) -> Response:
         # pylint: disable=unused-argument,no-self-use
         return Response(
             list(FamilyTag.all_labels()),
@@ -79,7 +85,10 @@ class TagsView(QueryDatasetView):
 
 
 class ListMembersView(QueryDatasetView):
-    def get(self, request, dataset_id, family_id):
+
+    def get(
+        self, request: Request, dataset_id: str, family_id: str
+    ) -> Response:
         if dataset_id is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
@@ -105,7 +114,11 @@ class ListMembersView(QueryDatasetView):
 
 
 class MemberDetailsView(QueryDatasetView):
-    def get(self, request, dataset_id, family_id, member_id):
+
+    def get(
+        self, request: Request, dataset_id: str,
+        family_id: str, member_id: str
+    ) -> Response:
         if dataset_id is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
@@ -139,7 +152,10 @@ class MemberDetailsView(QueryDatasetView):
 
 
 class AllMemberDetailsView(QueryDatasetView):
-    def get(self, request, dataset_id, family_id):
+
+    def get(
+        self, request: Request, dataset_id: str, family_id: str
+    ) -> Response:
         if dataset_id is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
@@ -170,7 +186,8 @@ class AllMemberDetailsView(QueryDatasetView):
 
 
 class ListAllDetailsView(QueryDatasetView):
-    def get(self, request, dataset_id):
+
+    def get(self, request: Request, dataset_id: str) -> Response:
         if dataset_id is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
