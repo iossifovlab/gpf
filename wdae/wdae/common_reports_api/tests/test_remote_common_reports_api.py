@@ -28,10 +28,11 @@ def test_remote_families_data_download(admin_client: Client) -> None:
 
     streaming_content = list(response.streaming_content)  # type: ignore
     assert streaming_content
-    assert len(streaming_content) == 45
+    assert len(streaming_content) == 44
 
     header = streaming_content[0].decode("utf8")
-    header = header.split("\t")
+    assert header[-1] == "\n"
+    header = header[:-1].split("\t")
     assert len(header) == 35
 
     assert header == [
@@ -75,6 +76,7 @@ def test_remote_families_data_download(admin_client: Client) -> None:
     assert len(header) == 33
 
     first_person = streaming_content[1].decode("utf8")
-    first_person = first_person.split("\t")
+    assert first_person[-1] == "\n"
+    first_person = first_person[:-1].split("\t")
     assert len(first_person) == 35
     # assert first_person[-1] == "iossifov_2014"

@@ -114,7 +114,7 @@ def test_family_counters_download(admin_client: Client) -> None:
     res = list(response.streaming_content)  # type: ignore
     print(b"".join(res).decode())
 
-    assert len(res) == 14
+    assert len(res) == 13
 
 
 def test_families_tags_download(admin_client: Client) -> None:
@@ -131,7 +131,7 @@ def test_families_tags_download(admin_client: Client) -> None:
 
     res = list(response.streaming_content)  # type: ignore
     print(b"".join(res).decode())
-    assert len(res) == 25
+    assert len(res) == 24
 
 
 def test_families_tags_download_succeeds_on_empty_tags(
@@ -184,7 +184,7 @@ def test_families_data_download(admin_client: Client) -> None:
     streaming_content = list(response.streaming_content)  # type: ignore
     assert streaming_content
 
-    assert len(streaming_content) == 35
+    assert len(streaming_content) == 34
 
 
 def test_families_data_download_no_permissions(user_client: Client) -> None:
