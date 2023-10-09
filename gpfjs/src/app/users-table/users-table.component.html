@@ -12,12 +12,14 @@
             <div>
               <span *ngIf="user.name === '' && currentUserEdit !== user.id" id="add-user-name">Add username</span>
               <span *ngIf="user.name !== '' && currentUserEdit !== user.id" id="user-name">{{ user.name }}</span>
-              <i
+              <span
                 *ngIf="currentUserEdit !== user.id"
                 (click)="currentUserEdit = user.id"
                 id="edit-icon"
-                class="fa fa-pencil fa-lg"
-                title="Edit"></i>
+                class="material-symbols-outlined"
+                title="Edit"
+                >edit</span
+              >
               <div *ngIf="currentUserEdit === user.id" id="edit-wrapper">
                 <input
                   #newNameBox
@@ -32,8 +34,8 @@
                   (keydown.enter)="edit(user, newNameBox.value)"
                   (keydown.escape)="currentUserEdit = -1" />
                 <button id="cancel-button" (click)="currentUserEdit = -1" title="Cancel">
-                  <i class="fa fa-thin fa-times" aria-hidden="true"></i
-                ></button>
+                  <span class="material-symbols-outlined sm bold red">close</span></button
+                >
               </div>
             </div>
             <div>{{ user.email }}</div>
@@ -42,7 +44,7 @@
 
         <div class="grid-cell" [attr.id]="user.email + '-password-cell'">
           <span *ngIf="user.hasPassword">
-            <i class="fa fa-check" aria-hidden="true"></i>
+            <span class="material-symbols-outlined">check</span>
           </span>
         </div>
 
@@ -56,7 +58,7 @@
                 confirmText="Remove"
                 title="Remove group"
                 message="Remove group?"
-                [iconStyle]="['fa', 'fa-thin', 'fa-times']">
+                [iconStyle]="{ name: 'close', class: 'material-symbols-outlined sm bold' }">
               </gpf-confirm-button>
             </div>
           </div>
@@ -90,7 +92,7 @@
                 user.email +
                 ' password will be reset. An email with reset instructions will be sent and they won&lsquo;t be able to log in until they set a new password.'
               "
-              [iconStyle]="['fa', 'fa-lg', 'fa-refresh']">
+              [iconStyle]="{ name: 'refresh', class: 'material-symbols-outlined bold' }">
             </gpf-confirm-button>
             <gpf-confirm-button
               [attr.id]="user.email + '-delete-user-button'"
@@ -99,7 +101,7 @@
               confirmText="Delete"
               title="Delete user"
               [message]="user.name + ' ' + user.email + ' will be deleted. This action is irrevertible!'"
-              [iconStyle]="['fa', 'fa-lg', 'fa-times']">
+              [iconStyle]="{ name: 'close', class: 'material-symbols-outlined bold' }">
             </gpf-confirm-button>
           </span>
         </div>

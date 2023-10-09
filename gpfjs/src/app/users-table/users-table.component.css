@@ -37,11 +37,6 @@
   justify-content: center;
 }
 
-span {
-  line-height: 30px;
-  padding: 0 10px;
-}
-
 .list-cell {
   justify-content: space-between;
 }
@@ -67,19 +62,12 @@ gpf-item-add-menu {
 #cancel-button {
   background-color: transparent;
   border: none;
-}
-
-#cancel-button > i {
-  color: red;
-}
-
-#cancel-button > i:hover {
-  color: rgb(255, 110, 110);
+  padding-top: 8px;
 }
 
 #edit-icon {
-  font-size: 12px;
-  padding-bottom: 5px;
+  font-size: 15px;
+  padding-left: 5px;
 }
 
 #edit-icon:hover {
