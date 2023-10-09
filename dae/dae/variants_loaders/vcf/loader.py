@@ -659,13 +659,11 @@ class VcfLoader(VariantsGenotypesLoader):
     def _families_union(self):
         logger.warning("families union run...")
         families = self.vcf_loaders[0].families
-        for person_id, person in families.persons.items():
+        for fpid, person in families.persons.items():
             if not person.not_sequenced:
                 continue
             for vcf_loader in self.vcf_loaders:
-                if person_id not in vcf_loader.families.persons:
-                    continue
-                other_person = vcf_loader.families.persons[person.fpid]
+                other_person = vcf_loader.families.persons[fpid]
 
                 if not other_person.not_sequenced:
                     logger.warning(

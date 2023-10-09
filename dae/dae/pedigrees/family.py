@@ -782,7 +782,6 @@ class FamiliesData(Mapping[str, Family]):
 
             if len(family) == 0:
                 self._broken[family.family_id] = family
-                continue
 
             self._families[family.family_id] = family
 
