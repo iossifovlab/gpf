@@ -1,6 +1,6 @@
 import { test, expect, Page } from '@playwright/test';
 import * as utils from './utils';
-import { readCSV } from 'nodejs-polars';
+import { readCSV, scanCSV } from 'nodejs-polars';
 
 test.describe('Variant reports tests', () => {
   test.beforeEach(async({ page }) => {
@@ -27,14 +27,11 @@ test.describe('Variant reports tests', () => {
       await page.locator('.modal-content >> #download-button').click();
       const download = await downloadPromise;
 
-      await Promise.all([
-        utils.readFile(await download.path()),
-        utils.readFile(`playwright/fixtures/variant-reports/families${cell.index}.ped`)
-      ]).then((files: [string, string]) => {
-        const fixtureData = readCSV(files[0], {sep: '\t', columns: cell.columnsToCheck});
-        const downloadData = readCSV(files[1], {sep: '\t', columns: cell.columnsToCheck});
-        expect(fixtureData.frameEqual(downloadData)).toBe(true);
-      });
+      const fixtureData = scanCSV(await download.path(), {sep: '\t'});
+      const downloadData = scanCSV(`playwright/fixtures/variant-reports/families${cell.index}.ped`, {sep: '\t'});
+      const fixtureFrame = await fixtureData.select().collect();
+      const downloadFrame = await downloadData.select().collect();
+      expect(fixtureFrame.frameEqual(downloadFrame)).toBe(true);
     });
   });
 });
