@@ -264,9 +264,8 @@ label {
 
 .select-wrapper .select-dropdown-icon {
   position: absolute;
-  right: 10px;
-  padding-top: 2px;
-  font-size: 1em;
+  right: 5px;
+  font-size: 20px;
   pointer-events: none;
 }
 
@@ -281,50 +280,58 @@ label {
   padding-right: 25px;
 }
 
+.search-icon {
+  width: 16px;
+  height: 16px;
+  opacity: 50%;
+  margin-top: 7px;
+}
+
 .search-clear-icon {
-  display: inline-block;
-  background-repeat: no-repeat;
-  background-position-y: center;
-  background-position-x: center;
-  width: 20px;
-  height: 20px;
+  opacity: 50%;
   position: absolute;
   right: 7px;
 }
 
+.search-clear-icon:hover {
+  cursor: pointer;
+}
+
 .search-loading-icon {
-  display: inline-block;
-  background-repeat: no-repeat;
-  background-position-y: center;
-  background-position-x: center;
-  width: 20px;
-  height: 20px;
   position: absolute;
   right: 7px;
-  background-size: 18px;
   opacity: 50%;
-  animation: rotation 0.8s steps(8) infinite;
+  display: inline-block;
+  animation: rotation 1.5s infinite;
 }
 
 @keyframes rotation {
   from {
-    transform: rotate(90deg);
+    transform: rotate(0deg);
   }
 
   to {
-    transform: rotate(450deg);
+    transform: rotate(360deg);
   }
 }
 
 /* stylelint-disable-next-line at-rule-no-vendor-prefix */
 @-webkit-keyframes rotation {
   from {
-    transform: rotate(90deg);
+    transform: rotate(0deg);
   }
 
   to {
-    transform: rotate(450deg);
+    transform: rotate(360deg);
   }
+}
+
+.clear-button {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  height: 38px;
+  width: 28px;
+  padding: 0;
 }
 
 .form-label {
@@ -422,4 +429,24 @@ gpf-genotype-preview-field gpf-pedigree gpf-pedigree-chart .svg-container {
 #person-ids-panel textarea,
 #regions-filter-panel textarea {
   min-height: 70px;
+}
+
+.material-symbols-outlined {
+  font-weight: 400;
+}
+
+.material-symbols-outlined.bold {
+  font-weight: 800;
+}
+
+.material-symbols-outlined.sm {
+  font-size: 16px;
+}
+
+.material-symbols-outlined.md {
+  font-size: 20px;
+}
+
+.material-symbols-outlined.red {
+  color: red;
 }
