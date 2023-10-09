@@ -12,7 +12,7 @@ from os.path import basename, exists
 
 from abc import ABC, abstractmethod
 
-from typing import cast, Any, Optional, Generator
+from typing import cast, Any, Optional, Generator, Iterable
 
 from box import Box
 
@@ -605,13 +605,13 @@ class GenotypeDataGroup(GenotypeData):
 
     def __init__(
         self, config: Box,
-        studies: list[GenotypeData]
+        studies: Iterable[GenotypeData]
     ):
         super().__init__(
-            config, studies
+            config, list(studies)
         )
         self._families: FamiliesData
-        if not self.load_families_cache():
+        if not self.has_families_cache():
             self.rebuild_families()
 
         self._executor = None

@@ -1,7 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import textwrap
 import pathlib
-from typing import cast
 
 import pytest
 
@@ -141,36 +140,34 @@ f2       ch2      dad2  mom2  2   2      prb
 
     (root_path / "dataset").mkdir(exist_ok=True)
 
-    return cast(
-        GenotypeDataGroup,
-        setup_dataset(
-            "ds1", gpf_instance, study1, study2,
-            dataset_config_update=textwrap.dedent(f"""
-                conf_dir: { root_path / "dataset "}
-                person_set_collections:
-                    phenotype:
-                        id: phenotype
-                        name: Phenotype
-                        sources:
-                        - from: pedigree
-                          source: status
-                        domain:
-                        - color: '#4b2626'
-                          id: developmental_disorder
-                          name: developmental disorder
-                          values:
-                          - affected
-                        - color: '#ffffff'
-                          id: unaffected
-                          name: unaffected
-                          values:
-                          - unaffected
-                        default:
-                          color: '#aaaaaa'
-                          id: unspecified
-                          name: unspecified
-                    selected_person_set_collections:
-                    - phenotype""")))
+    return setup_dataset(
+        "ds1", gpf_instance, study1, study2,
+        dataset_config_update=textwrap.dedent(f"""
+            conf_dir: { root_path / "dataset "}
+            person_set_collections:
+                phenotype:
+                    id: phenotype
+                    name: Phenotype
+                    sources:
+                    - from: pedigree
+                      source: status
+                    domain:
+                    - color: '#4b2626'
+                      id: developmental_disorder
+                      name: developmental disorder
+                      values:
+                      - affected
+                    - color: '#ffffff'
+                      id: unaffected
+                      name: unaffected
+                      values:
+                      - unaffected
+                    default:
+                      color: '#aaaaaa'
+                      id: unspecified
+                      name: unspecified
+                selected_person_set_collections:
+                - phenotype"""))
 
 
 def test_dataset_build_person_set_collection(

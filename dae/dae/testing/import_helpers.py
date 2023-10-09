@@ -7,12 +7,14 @@ from typing import Any, Optional
 
 import jinja2
 import yaml
+from box import Box
+
 
 from dae.utils.dict_utils import recursive_dict_update
 from dae.testing import setup_directories
 from dae.configuration.study_config_builder import StudyConfigBuilder
 from dae.import_tools.cli import run_with_project
-from dae.studies.study import GenotypeData
+from dae.studies.study import GenotypeData, GenotypeDataGroup
 from dae.gpf_instance import GPFInstance
 from dae.import_tools.import_tools import ImportProject
 
@@ -246,12 +248,8 @@ def setup_dataset(
         dataset_id: str,
         gpf_instance: GPFInstance,
         *studies: GenotypeData,
-        dataset_config_update: str = "") -> GenotypeData:
+        dataset_config_update: str = "") -> GenotypeDataGroup:
     """Create and register a dataset dataset_id with studies."""
-    # pylint: disable=import-outside-toplevel
-    from box import Box
-    from dae.studies.study import GenotypeDataGroup
-
     dataset_config = {
         "id": dataset_id
     }
