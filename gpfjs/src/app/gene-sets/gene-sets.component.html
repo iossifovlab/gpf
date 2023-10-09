@@ -10,7 +10,7 @@
           id="selected-collection">
           <option *ngFor="let collection of geneSetsCollections" [ngValue]="collection">{{ collection.desc }}</option>
         </select>
-        <span class="select-dropdown-icon" [style.content]="'url(' + imgPathPrefix + 'dropdown_icon.png)'"> </span>
+        <span class="material-symbols-outlined select-dropdown-icon"> arrow_drop_down </span>
       </div>
       <ngb-accordion
         *ngIf="selectedGeneSetsCollection?.types"
