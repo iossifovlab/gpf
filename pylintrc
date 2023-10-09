@@ -45,9 +45,7 @@ limit-inference-results=100
 
 # List of plugins (as comma separated values of python module names) to load,
 # usually to register additional checkers.
-load-plugins=pylint_django
-
-django-settings-module=wdae.test_settings
+# load-plugins=pylint_django
 
 # Pickle collected data for later comparisons.
 persistent=yes
@@ -89,7 +87,8 @@ disable=missing-module-docstring,
         unspecified-encoding,
         line-too-long,
         duplicate-code,
-        c-extension-no-member
+        c-extension-no-member,
+        no-member
 
 
 # Enable the message, report, category or checker with the given id(s). You can
