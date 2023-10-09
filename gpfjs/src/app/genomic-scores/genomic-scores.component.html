@@ -6,15 +6,17 @@
           <span>{{ genomicScores.desc ? genomicScores.desc : genomicScores.score }}</span>
         </option>
       </select>
-      <span class="select-dropdown-icon" [style.content]="'url(' + imgPathPrefix + 'dropdown_icon.png)'"></span>
+      <span class="material-symbols-outlined select-dropdown-icon"> arrow_drop_down </span>
     </div>
   </div>
   <div>
-    <i
+    <span
       [style.visibility]="this.genomicScoreState.score.help ? 'visible' : 'hidden'"
-      class="clickable fa fa-question-circle-o fa-2x"
+      class="material-symbols-outlined"
+      id="help-icon"
       (click)="showHelp()"
-      style="margin-left: 15px"></i>
+      >help</span
+    >
   </div>
   <div class="col-sm-12">
     <gpf-histogram

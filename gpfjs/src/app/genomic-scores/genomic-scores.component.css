@@ -1,0 +1,8 @@
+#help-icon {
+  margin-top: 6px;
+  margin-left: 10px;
+}
+
+#help-icon:hover {
+  cursor: pointer;
+}
