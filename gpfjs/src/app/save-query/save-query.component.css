@@ -40,14 +40,6 @@ button:disabled {
   padding: 8px;
 }
 
-.clone-icon {
-  background-repeat: no-repeat;
-  background-position-y: center;
-  background-position-x: center;
-  width: 20px;
-  height: 20px;
-}
-
 p {
   font-size: 20px;
   font-weight: bold;
