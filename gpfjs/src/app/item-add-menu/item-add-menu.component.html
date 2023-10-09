@@ -14,10 +14,10 @@
         [ngModel]="searchText"
         spellcheck="false" />
       <span
-        class="search-clear-icon"
-        [style.background-image]="'url(' + imgPathPrefix + 'search-clear-icon.png)'"
+        class="material-symbols-outlined md search-clear-icon"
         *ngIf="searchInput.value !== ''"
         (click)="searchInput.value = ''; search(searchInput.value)">
+        close
       </span>
     </div>
   </div>
