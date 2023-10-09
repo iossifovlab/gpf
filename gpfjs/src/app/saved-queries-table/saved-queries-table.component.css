@@ -30,10 +30,6 @@
   column-gap: 5px;
 }
 
-#delete-button {
-  font-size: 1.4rem;
-}
-
 .action-button {
   color: #2a6395;
   font-size: 1.2rem;
@@ -59,4 +55,11 @@
   display: inline-block;
   padding-left: 12px;
   opacity: 75%;
+}
+
+.actions-cell {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  column-gap: 5px;
 }

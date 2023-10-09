@@ -7,15 +7,15 @@
 
     <div class="grid-cell" [attr.id]="'query-' + query.name + '-description-cell'">{{ query.description }}</div>
 
-    <div class="grid-cell" [attr.id]="'query-' + query.name + '-actions-cell'">
+    <div class="grid-cell actions-cell" [attr.id]="'query-' + query.name + '-actions-cell'">
       <a href="{{ query.url }}" title="Load" id="load-button" class="action-button">
-        <i class="fa fa-external-link" aria-hidden="true"></i>
+        <span class="material-symbols-outlined"> open_in_new </span>
       </a>
       <button [cdkCopyToClipboard]="query.url" title="Copy link" id="copy-link-button" class="action-button">
-        <i class="fa fa-link" aria-hidden="true"></i>
+        <span class="material-symbols-outlined"> link </span>
       </button>
       <button (click)="deleteQuery(query.uuid)" title="Delete" id="delete-button" class="action-button">
-        <i aria-hidden="true" class="fa fa-thin fa-times"></i>
+        <span class="material-symbols-outlined bold"> close </span>
       </button>
     </div>
   </ng-container>
