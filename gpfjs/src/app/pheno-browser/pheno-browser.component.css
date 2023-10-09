@@ -91,13 +91,3 @@
 #search-term-label {
   padding-left: 10px;
 }
-
-#search-icon {
-  width: 16px;
-  height: 16px;
-  opacity: 60%;
-}
-
-.search-clear-icon:hover {
-  cursor: pointer;
-}
