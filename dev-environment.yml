@@ -27,7 +27,7 @@ dependencies:
   - pytest-mock=3.11.1
   - pytest-django=4.5.2
   - pytest-doctestplus=0.12.1
-  - pylint=2.17.4
+  - pylint=3.0.1
   - pandas-stubs=2.0
   - django-stubs=4.2
   - types-pyyaml=6.0.12.2
@@ -43,4 +43,3 @@ dependencies:
     - sphinx-autorun==1.1.1
     - rangehttpserver==1.2.0
     - sphinxcontrib-video==0.0.1.dev3
-    - pylint-django==2.5.3
