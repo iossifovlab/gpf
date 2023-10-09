@@ -88,12 +88,8 @@
 }
 
 .navbar-toggler-icon {
-  width: 20px;
-  height: 20px;
-}
-
-.navbar-button {
-  margin-right: 10px;
+  height: 24px;
+  color: #9b9b9b;
 }
 
 .navbar-toggler {
@@ -102,8 +98,9 @@
   height: 34px;
 }
 
-.navbar-button .navbar-toggler {
+.navbar-button {
   padding: 0.25rem 0.55rem;
+  padding-left: 0;
 }
 
 .blackscreen {
