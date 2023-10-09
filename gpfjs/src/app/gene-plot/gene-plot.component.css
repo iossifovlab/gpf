@@ -1,11 +1,11 @@
 .gene-plot-header-icon {
-  font-size: 24px;
   background: none;
   border: none;
   margin: 0;
   outline: none;
   padding: 0;
   margin-left: 16px;
+  margin-top: 5px;
 }
 
 .header-item {
@@ -52,8 +52,7 @@ label {
 
 #download-summary-variants-button {
   margin-left: 10px;
-  font-size: 15px;
-  padding: 5px;
+  padding: 1px;
   width: 35px;
   height: 30px;
 }
