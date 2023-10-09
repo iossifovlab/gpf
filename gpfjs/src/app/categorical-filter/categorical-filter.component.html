@@ -4,9 +4,11 @@
     <select class="form-control" [(ngModel)]="selectedValue" required>
       <option *ngFor="let value of valuesDomain" [ngValue]="value">{{ value }}</option>
     </select>
-    <span class="select-dropdown-icon" [style.content]="'url(' + imgPathPrefix + 'dropdown_icon.png)'"></span>
+    <span class="material-symbols-outlined select-dropdown-icon"> arrow_drop_down </span>
   </div>
   <span class="input-group-btn">
-    <button class="btn btn-secondary clear-button" (click)="clear()">&times;</button>
+    <button class="btn btn-secondary clear-button" (click)="clear()"
+      ><span id="clear-filter-icon" class="material-symbols-outlined sm"> close </span></button
+    >
   </span>
 </div>

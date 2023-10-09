@@ -12,9 +12,10 @@ select {
   border-top-right-radius: 0;
   border-bottom-right-radius: 0;
   box-shadow: none !important;
+  padding-right: 5px;
 }
 
-.clear-button {
-  border-top-left-radius: 0;
-  border-bottom-left-radius: 0;
+#clear-filter-icon {
+  padding-top: 5px;
+  height: 10px;
 }
