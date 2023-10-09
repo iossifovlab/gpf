@@ -29,8 +29,8 @@ test.describe('Variant reports tests', () => {
 
       const fixtureData = scanCSV(await download.path(), {sep: '\t'});
       const downloadData = scanCSV(`playwright/fixtures/variant-reports/families${cell.index}.ped`, {sep: '\t'});
-      const fixtureFrame = await fixtureData.select().collect();
-      const downloadFrame = await downloadData.select().collect();
+      const fixtureFrame = await fixtureData.select(cell.columnsToCheck).collect();
+      const downloadFrame = await downloadData.select(cell.columnsToCheck).collect();
       expect(fixtureFrame.frameEqual(downloadFrame)).toBe(true);
     });
   });
