@@ -1,6 +1,11 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 
-def test_fixture_study_config_parser_is_loaded(genotype_data_study_configs):
+from box import Box
+
+
+def test_fixture_study_config_parser_is_loaded(
+    genotype_data_study_configs: dict[str, Box]
+) -> None:
     expected = {
         "f1_study",
         "f1_trio",
