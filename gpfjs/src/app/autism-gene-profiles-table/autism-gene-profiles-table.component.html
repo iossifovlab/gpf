@@ -23,7 +23,8 @@
             (click)="handleCellClick($event, row, column)"
             (middleclick)="handleCellClick($event, row, column)">
             <span *ngIf="column.clickable !== null && row[column.id]" class="clickable">{{ row[column.id] }}</span
-            >{{ column.clickable === null ? row[column.id] : '' }}</div
+            ><span *ngIf="row[column.id] === '✓'" class="material-symbols-outlined check">check_small</span
+            >{{ row[column.id] !== '✓' && column.clickable === null ? row[column.id] : '' }}</div
           >
         </ng-container>
       </div>
@@ -91,7 +92,9 @@
               [attr.id]="column.id + '-column-filtering-button'"
               class="header-button column-filtering-button"
               (click)="openDropdown(column, $event)"
-              title="Filter columns">&#9776;</button>
+              title="Filter columns"><span class="material-symbols-outlined">
+                menu
+                </span></button>
           </div>
         </div>
         <ng-container *ngTemplateOutlet="tableHeaderTemplate; context: { columns: column.columns }"></ng-container>
@@ -104,15 +107,7 @@
       <div style="width: 270px">
         <div class="search-input-wrapper">
           <label id="gene-search-label" for="gene-search-input">
-            <svg
-              id="search-icon"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="currentColor"
-              class="bi bi-search"
-              viewBox="0 0 16 16">
-              <path
-                d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z" />
-            </svg>
+            <span class="material-symbols-outlined search-icon"> search </span>
           </label>
           <input
             #searchBox
@@ -125,14 +120,12 @@
             spellcheck="false" />
           <span
             *ngIf="searchBox.value !== '' && !showSearchLoading"
-            class="search-clear-icon"
-            [style.background-image]="'url(' + imgPathPrefix + 'search-clear-icon.png)'"
+            class="material-symbols-outlined search-clear-icon"
             (click)="searchBox.value = ''; searchKeystrokes$.next(searchBox.value); showSearchLoading = true">
+            close
           </span>
-          <span
-            *ngIf="showSearchLoading"
-            class="search-loading-icon"
-            [style.background-image]="'url(' + imgPathPrefix + 'load-search-icon.png)'">
+          <span *ngIf="showSearchLoading" class="material-symbols-outlined search-loading-icon"
+            >progress_activity
           </span>
         </div>
       </div>
@@ -146,7 +139,9 @@
           id="category-filtering-button"
           class="btn btn-default"
           (click)="openCategoryFilterDropdown($event)"
-          title="Filter categories">&#9776;</button>
+          title="Filter categories"><span id="filter-menu-icon" class="material-symbols-outlined">
+            menu
+            </span></button>
       </div>
 
       <div id="keybinds-icon" (mouseover)="showKeybinds = true" (mouseout)="showKeybinds = false">
@@ -193,8 +188,9 @@
           (middleclick)="openSingleView(gene)"
           >{{ gene }}</span
         >
-        <!-- prettier-ignore -->
-        <button (click)="toggleHighlightGene(gene)" class="compare-genes-close font-weight-light" type="button">×</button>
+        <button (click)="toggleHighlightGene(gene)" class="compare-genes-close font-weight-light" type="button">
+          <span class="material-symbols-outlined sm search-clear-icon"> close </span></button
+        >
       </button>
     </div>
 

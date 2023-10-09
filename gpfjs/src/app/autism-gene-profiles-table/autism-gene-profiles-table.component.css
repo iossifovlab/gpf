@@ -141,6 +141,8 @@
   box-shadow: none;
   border-radius: 0;
   margin-right: 8px;
+  width: 43px;
+  height: 40px;
 }
 
 .dropdown-span {
@@ -345,4 +347,21 @@
 
 .grid-row-2-3 {
   white-space: nowrap;
+}
+
+#filter-menu-icon {
+  font-size: 17px;
+  padding-top: 5px;
+}
+
+.search-icon {
+  margin-top: -7px;
+}
+
+.search-clear-icon {
+  top: 8px;
+}
+
+.check {
+  padding-top: 5px;
 }

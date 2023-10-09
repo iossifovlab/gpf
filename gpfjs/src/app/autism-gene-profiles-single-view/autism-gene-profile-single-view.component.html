@@ -6,7 +6,7 @@
     <ng-container *ngIf="isInGeneCompare">
       <div style="position: relative" [style.width]="showTemplate ? 'unset' : '30px'">
         <div [attr.title]="geneSymbol" (click)="showTemplate = !showTemplate" class="minimize-elements-wrapper">
-          <button class="minimize-button">&ndash;</button>
+          <button class="minimize-button"><span class="material-symbols-outlined"> remove </span></button>
           <span *ngIf="!showTemplate" class="minimize-gene-symbol">{{ geneSymbol }}</span>
         </div>
       </div>
@@ -106,8 +106,11 @@
                 >{{ set.setId }}</td
               >
               <td style="text-align: center; width: 55px">
-                <span style="font-size: 20px" *ngIf="gene.geneSets.indexOf(set.collectionId + '_' + set.setId) !== -1"
-                  >&#10003;</span
+                <span
+                  style="font-size: 20px"
+                  class="material-symbols-outlined"
+                  *ngIf="gene.geneSets.indexOf(set.collectionId + '_' + set.setId) !== -1"
+                  >check</span
                 >
               </td>
             </tr>
@@ -155,7 +158,9 @@
                             >
                           </a>
                         </ng-container>
-                        <ng-container *ngIf="effectType.value.count === 0">&ndash;</ng-container>
+                        <ng-container *ngIf="effectType.value.count === 0"
+                          ><span class="material-symbols-outlined sm"> remove </span></ng-container
+                        >
                       </ng-container>
                     </td>
                   </tr>
