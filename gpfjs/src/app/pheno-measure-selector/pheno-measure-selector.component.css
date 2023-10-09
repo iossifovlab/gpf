@@ -12,3 +12,8 @@
   border-top-left-radius: 0;
   border-bottom-left-radius: 0;
 }
+
+#clear-pheno-measure-icon {
+  padding-top: 5px;
+  height: 10px;
+}
