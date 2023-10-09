@@ -34,5 +34,5 @@
   [customTemplate]="confirmation"
   [popoverMessage]="message"
   (confirm)="onClick($event)">
-  <i [ngClass]="iconStyle" aria-hidden="true"></i>
+  <span [ngClass]="iconStyle.class">{{ iconStyle.name }}</span>
 </button>
