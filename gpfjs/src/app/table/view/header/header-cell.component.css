@@ -6,7 +6,8 @@
 #bg,
 #asc,
 #desc {
-  height: 12px;
+  padding-top: 7px;
+  font-weight: normal;
 }
 
 span.holder {
