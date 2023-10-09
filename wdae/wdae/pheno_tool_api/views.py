@@ -92,9 +92,11 @@ class PhenoToolView(QueryDatasetView):
     def _build_report_description(measure_id, normalize_by):
         if not normalize_by:
             return measure_id
-        return "{} ~ {}".format(measure_id, " + ".join(normalize_by))
+        normalize_desc = " + ".join(normalize_by)
+        return f"{measure_id} ~ {normalize_desc}"
 
     def post(self, request):
+        """Return pheno tool results based on POST request."""
         data = expand_gene_set(request.data, request.user)
         adapter = self.prepare_pheno_tool_adapter(data)
 
@@ -195,6 +197,7 @@ class PhenoToolPersons(QueryDatasetView):
 
 
 class PhenoToolPersonsValues(QueryDatasetView):
+    """View for returning person phenotype data."""
 
     def post(self, request):
         data = request.data

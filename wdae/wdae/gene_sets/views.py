@@ -4,11 +4,9 @@ import ast
 import json
 import itertools
 import logging
-from typing import Union, Optional, Sequence, Any
+from typing import Union, Sequence, Any
 
 from copy import deepcopy
-from dae.gene.denovo_gene_set_collection import DenovoGeneSetCollection
-from dae.gene.gene_sets_db import GeneSet
 
 from rest_framework import status
 from rest_framework.request import Request
@@ -18,6 +16,8 @@ from django.http.response import StreamingHttpResponse
 from django.utils.http import urlencode
 
 from query_base.query_base import QueryBaseView
+
+from dae.gene.gene_sets_db import GeneSet
 
 
 logger = logging.getLogger(__name__)

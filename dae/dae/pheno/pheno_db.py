@@ -3,7 +3,7 @@ import os
 import math
 import logging
 from typing import Dict, Iterable, Any, List, cast
-from typing import Optional, Sequence, Union
+from typing import Optional, Sequence, Union, Generator
 from abc import ABC, abstractmethod
 
 from collections import defaultdict
@@ -547,10 +547,10 @@ class PhenotypeData(ABC):
     def get_values_streaming_csv(
         self,
         measure_ids: list[str],
-        person_ids=None,
-        family_ids=None,
-        roles=None,
-    ):
+        person_ids: Optional[list[str]] = None,
+        family_ids: Optional[list[str]] = None,
+        roles: Optional[list[str]] = None,
+    ) -> Generator[str, None, None]:
         """
         Collect and format the values of the given measures in CSV format.
 
@@ -880,10 +880,10 @@ class PhenotypeStudy(PhenotypeData):
     def get_values_streaming_csv(
         self,
         measure_ids: list[str],
-        person_ids=None,
-        family_ids=None,
-        roles=None,
-    ):
+        person_ids: Optional[list[str]] = None,
+        family_ids: Optional[list[str]] = None,
+        roles: Optional[list[str]] = None,
+    ) -> Generator[str, None, None]:
         assert isinstance(measure_ids, list)
         assert len(measure_ids) >= 1
         assert all(self.has_measure(m) for m in measure_ids)
@@ -959,21 +959,23 @@ class PhenotypeStudy(PhenotypeData):
         buffer.close()
         del output
 
-    def get_regressions(self):
-        return self.db.regression_display_names_with_ids
+    def get_regressions(self) -> dict[str, Any]:
+        return cast(dict[str, Any], self.db.regression_display_names_with_ids)
 
-    def _get_pheno_images_base_url(self):
+    def _get_pheno_images_base_url(self) -> Optional[str]:
         return None if self.config is None \
             else self.config.get("browser_images_url")
 
-    def get_measures_info(self):
+    def get_measures_info(self) -> dict[str, Any]:
         return {
             "base_image_url": self._get_pheno_images_base_url(),
             "has_descriptions": self.db.has_descriptions,
             "regression_names": self.db.regression_display_names,
         }
 
-    def search_measures(self, instrument, search_term):
+    def search_measures(
+        self, instrument: Optional[str], search_term: Optional[str]
+    ) -> Generator[dict[str, Any], None, None]:
         measures = self.db.search_measures(instrument, search_term)
 
         for measure in measures:
@@ -1218,14 +1220,14 @@ class PhenotypeGroup(PhenotypeData):
     def get_values_streaming_csv(
         self,
         measure_ids: list[str],
-        person_ids=None,
-        family_ids=None,
-        roles=None,
-    ):
+        person_ids: Optional[list[str]] = None,
+        family_ids: Optional[list[str]] = None,
+        roles: Optional[list[str]] = None,
+    ) -> Generator[str, None, None]:
         raise NotImplementedError()
 
 
-class PhenoDb(object):
+class PhenoDb:
     """Represents a phenotype databases stored in an sqlite database."""
 
     def __init__(self, dae_config):

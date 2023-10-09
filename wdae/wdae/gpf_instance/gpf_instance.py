@@ -27,7 +27,6 @@ from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.enrichment_tool.tool import EnrichmentTool
 from dae.enrichment_tool.event_counters import CounterBase
 from dae.common_reports.common_report import CommonReport
-from dae.gene.denovo_gene_set_collection import DenovoGeneSetCollection
 
 
 logger = logging.getLogger(__name__)

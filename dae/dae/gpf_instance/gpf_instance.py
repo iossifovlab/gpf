@@ -420,7 +420,7 @@ class GPFInstance:
     # Gene sets
     def get_gene_sets_collections(self) -> list[dict[str, Any]]:
         return cast(
-            list[GeneSetCollection], self.gene_sets_db.collections_descriptions
+            list[dict[str, Any]], self.gene_sets_db.collections_descriptions
         )
 
     def has_gene_set_collection(self, gsc_id: str) -> bool:

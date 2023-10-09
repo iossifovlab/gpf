@@ -114,6 +114,7 @@ class DenovoGeneSetsDb:
         permitted_datasets=None,
         collection_id="denovo"  # pylint: disable=unused-argument
     ):
+        """Return all de Novo gene sets matching the spec for permitted DS."""
         denovo_gene_set_spec = self._filter_spec(
             denovo_gene_set_spec, permitted_datasets
         )

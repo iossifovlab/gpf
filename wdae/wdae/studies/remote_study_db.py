@@ -4,7 +4,6 @@ import logging
 from typing import List, Dict, Optional
 from remote.rest_api_client import RESTClient, RESTClientRequestError
 from studies.remote_study import RemoteGenotypeData
-from dae.studies.study import GenotypeData
 
 logger = logging.getLogger(__name__)
 
