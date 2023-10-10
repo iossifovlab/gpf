@@ -2,7 +2,8 @@
 import pytest
 
 from dae.variants.attributes import Role
-from dae.pedigrees.family import FamilyType, Person, Family, FamiliesData
+from dae.pedigrees.family import FamilyType, Person, Family
+from dae.pedigrees.families_data import FamiliesData
 
 
 def trio_persons(family_id="trio_family"):

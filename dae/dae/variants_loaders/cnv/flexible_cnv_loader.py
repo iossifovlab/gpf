@@ -12,7 +12,7 @@ from dae.variants_loaders.raw.flexible_variant_loader import \
 
 from dae.variants.core import Allele
 from dae.genomic_resources.reference_genome import ReferenceGenome
-from dae.pedigrees.family import FamiliesData
+from dae.pedigrees.families_data import FamiliesData
 
 
 def _cnv_location_to_vcf_trasformer() \

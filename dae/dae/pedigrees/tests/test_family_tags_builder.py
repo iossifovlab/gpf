@@ -3,8 +3,8 @@ import pathlib
 import pytest
 
 from dae.pedigrees.family import FamilyTag
+from dae.pedigrees.families_data import tag_families_data
 from dae.pedigrees.testing import build_families_data
-from dae.pedigrees.family_tag_builder import FamilyTagsBuilder
 from dae.pedigrees.loader import FamiliesLoader
 
 
@@ -36,8 +36,7 @@ def test_family_tags_builder_simple(tag_label: str, value: bool) -> None:
             f1       s2       d1     m1     2   2      sib
         """)
 
-    tagger = FamilyTagsBuilder()
-    tagger.tag_families_data(families)
+    tag_families_data(families)
 
     ped_df = families.ped_df
     assert all(ped_df[tag_label] == value)
@@ -63,8 +62,7 @@ def test_family_types_simple() -> None:
             f3       s3.1     d3     m3     1   1      sib
         """)
 
-    tagger = FamilyTagsBuilder()
-    tagger.tag_families_data(families)
+    tag_families_data(families)
 
     ped_df = families.ped_df
 
@@ -92,8 +90,7 @@ def test_family_tags_save_load(tmp_path: pathlib.Path) -> None:
             f1       s2       d1     m1     2   2      sib
         """)
 
-    tagger = FamilyTagsBuilder()
-    tagger.tag_families_data(families)
+    tag_families_data(families)
 
     FamiliesLoader.save_pedigree(families, str(tmp_path / "families.ped"))
     assert (tmp_path / "families.ped").exists()

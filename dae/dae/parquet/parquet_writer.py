@@ -13,7 +13,7 @@ import pyarrow.parquet as pq
 
 from dae.utils import fs_utils
 from dae.parquet import helpers as parquet_helpers
-from dae.pedigrees.family import FamiliesData
+from dae.pedigrees.families_data import FamiliesData
 from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.parquet.helpers import url_to_pyarrow_fs
 from dae.variants_loaders.raw.loader import VariantsLoader

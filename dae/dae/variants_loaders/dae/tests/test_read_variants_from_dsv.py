@@ -7,7 +7,7 @@ import pytest
 import pandas as pd
 import numpy as np
 
-from dae.pedigrees.family import FamiliesData
+from dae.pedigrees.families_data import FamiliesData
 from dae.pedigrees.loader import FamiliesLoader
 
 from dae.variants.attributes import Inheritance

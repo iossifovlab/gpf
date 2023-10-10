@@ -3,7 +3,7 @@ import pathlib
 import pandas as pd
 import pytest
 from dae.utils.regions import Region
-from dae.pedigrees.family import FamiliesData
+from dae.pedigrees.families_data import FamiliesData
 from dae.query_variants.sql.schema2.base_query_builder import Dialect, \
     BaseQueryBuilder
 from dae.query_variants.sql.schema2.family_builder import FamilyQueryBuilder

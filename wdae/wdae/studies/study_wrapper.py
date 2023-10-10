@@ -13,7 +13,7 @@ from studies.query_transformer import QueryTransformer
 from studies.response_transformer import ResponseTransformer
 from studies.remote_study import RemoteGenotypeData
 
-from dae.pedigrees.family import FamiliesData
+from dae.pedigrees.families_data import FamiliesData
 from dae.person_sets import PersonSetCollection
 from dae.variants.attributes import Role
 from dae.variants.family_variant import FamilyAllele

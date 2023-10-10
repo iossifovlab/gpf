@@ -1,13 +1,20 @@
 import os
 import logging
 import copy
+from typing import Any, Dict, List, Optional, Union
 
 import toml
-from deprecation import deprecated  # type: ignore
+from box import Box
+from deprecation import deprecated
 
-from dae.studies.study import GenotypeDataStudy, GenotypeDataGroup
+from dae.studies.study import GenotypeData, \
+    GenotypeDataStudy, GenotypeDataGroup
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.study_config import study_config_schema
+from dae.genomic_resources.gene_models import GeneModels
+from dae.genomic_resources.reference_genome import ReferenceGenome
+from dae.genotype_storage.genotype_storage_registry import \
+    GenotypeStorageRegistry
 
 
 logger = logging.getLogger(__name__)
@@ -236,7 +243,7 @@ enabled = true
 
 
 DEFAULT_STUDY_CONFIG = GPFConfigParser.parse_and_interpolate(
-    DEFAULT_STUDY_CONFIG_TOML, parser=toml.loads)  # noqa
+    DEFAULT_STUDY_CONFIG_TOML, parser=toml.loads)  # type: ignore
 
 
 class VariantsDb:
@@ -244,10 +251,10 @@ class VariantsDb:
 
     def __init__(
             self,
-            dae_config,
-            genome,
-            gene_models,
-            genotype_storage_factory):
+            dae_config: Box,
+            genome: ReferenceGenome,
+            gene_models: GeneModels,
+            genotype_storage_factory: GenotypeStorageRegistry) -> None:
 
         self.dae_config = dae_config
 
@@ -262,10 +269,10 @@ class VariantsDb:
 
         self.reload()
 
-    def reload(self):
+    def reload(self) -> None:
         """Load all studies and groups again."""
-        self._genotype_study_cache = {}
-        self._genotype_group_cache = {}
+        self._genotype_study_cache: dict[str, GenotypeData] = {}
+        self._genotype_group_cache: dict[str, GenotypeData] = {}
 
         genotype_study_configs = self._load_study_configs()
         genotype_group_configs = self._load_group_configs()
@@ -287,7 +294,7 @@ class VariantsDb:
             from dae.common_reports.common_report import CommonReport
             CommonReport.build_and_save(study)
 
-    def _load_study_configs(self):
+    def _load_study_configs(self) -> Dict[str, Box]:
         logger.info("loading study configs: %s", self.dae_config.studies)
         default_config_filename = None
         default_config = None
@@ -329,7 +336,7 @@ class VariantsDb:
                 study_config
         return genotype_study_configs
 
-    def _load_group_configs(self):
+    def _load_group_configs(self) -> Dict[str, Box]:
         default_config_filename = None
         default_config = None
 
@@ -369,7 +376,7 @@ class VariantsDb:
                 group_config
         return genotype_group_configs
 
-    def get_genotype_study(self, study_id):
+    def get_genotype_study(self, study_id: str) -> Optional[GenotypeData]:
         # if study_id not in self._genotype_study_cache:
         #     study_configs = self._load_study_configs()
         #     if study_id not in study_configs:
@@ -377,25 +384,25 @@ class VariantsDb:
         #     self._load_genotype_study(study_configs[study_id])
         return self._genotype_study_cache.get(study_id)
 
-    def get_genotype_study_config(self, study_id):
+    def get_genotype_study_config(self, study_id: str) -> Optional[Box]:
         genotype_study = self.get_genotype_study(study_id)
         if genotype_study is None:
             return None
         return genotype_study.config
 
-    def get_all_genotype_study_ids(self):
+    def get_all_genotype_study_ids(self) -> List[Union[str, Any]]:
         return list(self._genotype_study_cache.keys())
 
-    def get_all_genotype_study_configs(self):
+    def get_all_genotype_study_configs(self) -> list[Box]:
         return [
             genotype_study.config
             for genotype_study in self._genotype_study_cache.values()
         ]
 
-    def get_all_genotype_studies(self):
+    def get_all_genotype_studies(self) -> List[Union[GenotypeDataStudy, Any]]:
         return list(self._genotype_study_cache.values())
 
-    def get_genotype_group(self, group_id):
+    def get_genotype_group(self, group_id: str) -> Optional[GenotypeData]:
         # if group_id not in self._genotype_group_cache:
         #     group_configs = self._load_group_configs()
         #     if group_id not in group_configs:
@@ -403,33 +410,33 @@ class VariantsDb:
         #     self._load_genotype_group(group_configs[group_id])
         return self._genotype_group_cache.get(group_id)
 
-    def get_genotype_group_config(self, group_id):
+    def get_genotype_group_config(self, group_id: str) -> Optional[Box]:
         genotype_group = self.get_genotype_group(group_id)
         if genotype_group is None:
             return None
         return genotype_group.config
 
-    def get_all_genotype_group_ids(self):
+    def get_all_genotype_group_ids(self) -> list[str]:
         return list(self._genotype_group_cache.keys())
 
-    def get_all_genotype_groups(self):
+    def get_all_genotype_groups(self) -> list[GenotypeData]:
         return list(self._genotype_group_cache.values())
 
-    def get_all_genotype_group_configs(self):
+    def get_all_genotype_group_configs(self) -> list[Box]:
         return [
             genotype_group.config
             for genotype_group in self._genotype_group_cache.values()
         ]
 
     @deprecated(details="start using GPFInstance methods")
-    def get_all_ids(self):
+    def get_all_ids(self) -> list[str]:
         return (
             self.get_all_genotype_study_ids()
             + self.get_all_genotype_group_ids()
         )
 
     @deprecated(details="start using GPFInstance methods")
-    def get_config(self, config_id):
+    def get_config(self, config_id: str) -> Optional[Box]:
         study_config = self.get_genotype_study_config(config_id)
         genotype_data_group_config = self.get_genotype_group_config(
             config_id
@@ -437,19 +444,21 @@ class VariantsDb:
         return study_config if study_config else genotype_data_group_config
 
     @deprecated(details="start using GPFInstance methods")
-    def get(self, object_id):
+    def get(self, object_id: str) -> Optional[GenotypeData]:
         genotype_data_study = self.get_genotype_study(object_id)
         genotype_data_group = self.get_genotype_group(object_id)
         return (
             genotype_data_study if genotype_data_study else genotype_data_group
         )
 
-    def get_all_genotype_data(self):
+    def get_all_genotype_data(self) -> list[GenotypeData]:
         group_studies = self.get_all_genotype_studies()
         genotype_data_groups = self.get_all_genotype_groups()
         return group_studies + genotype_data_groups
 
-    def _load_all_genotype_studies(self, genotype_study_configs):
+    def _load_all_genotype_studies(
+        self, genotype_study_configs: dict[str, Box]
+    ) -> None:
         if genotype_study_configs is None:
             genotype_study_configs = self._load_study_configs()
 
@@ -457,7 +466,9 @@ class VariantsDb:
             if study_id not in self._genotype_study_cache:
                 self._load_genotype_study(study_config)
 
-    def _load_genotype_study(self, study_config):
+    def _load_genotype_study(
+        self, study_config: Box
+    ) -> Optional[GenotypeData]:
         if not study_config:
             return None
 
@@ -472,7 +483,9 @@ class VariantsDb:
         self._genotype_study_cache[study_config.id] = genotype_study
         return genotype_study
 
-    def _make_genotype_study(self, study_config):
+    def _make_genotype_study(
+        self, study_config: Box
+    ) -> Optional[GenotypeData]:
         if study_config is None:
             return None
 
@@ -502,7 +515,9 @@ class VariantsDb:
             logger.exception(ex)
             return None
 
-    def _load_all_genotype_groups(self, genotype_group_configs=None):
+    def _load_all_genotype_groups(
+        self, genotype_group_configs: Optional[dict[str, Box]] = None
+    ) -> None:
         if genotype_group_configs is None:
             genotype_group_configs = self._load_group_configs()
 
@@ -510,7 +525,9 @@ class VariantsDb:
             if group_id not in self._genotype_group_cache:
                 self._load_genotype_group(group_config)
 
-    def _load_genotype_group(self, group_config):
+    def _load_genotype_group(
+        self, group_config: Box
+    ) -> Optional[GenotypeData]:
         if group_config is None:
             return None
 
@@ -535,7 +552,11 @@ class VariantsDb:
                         genotype_group_configs = self._load_group_configs()
                         child_config = genotype_group_configs[child_id]
                         child_data = self._load_genotype_group(child_config)
-
+                        if child_data is None:
+                            logger.warning(
+                                "unable to load %s", child_id)
+                            continue
+                assert child_data is not None
                 group_studies.append(child_data)
             assert group_studies
 
@@ -549,7 +570,7 @@ class VariantsDb:
             logger.exception(ex)
             return None
 
-    def register_genotype_data(self, genotype_data):
+    def register_genotype_data(self, genotype_data: GenotypeDataGroup) -> None:
         """Add GenotypeData to DB."""
         if genotype_data.study_id in self.get_all_genotype_study_ids():
             logger.warning(
@@ -563,7 +584,7 @@ class VariantsDb:
         else:
             self._genotype_study_cache[genotype_data.study_id] = genotype_data
 
-    def unregister_genotype_data(self, genotype_data):
+    def unregister_genotype_data(self, genotype_data: GenotypeData) -> None:
         """Remove GenotypeData from DB."""
         if genotype_data.is_group:
             self._genotype_group_cache.pop(genotype_data.study_id)

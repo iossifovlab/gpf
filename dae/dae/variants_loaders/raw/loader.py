@@ -18,7 +18,7 @@ from dae.annotation.annotation_pipeline import AnnotationPipeline
 
 from dae.genomic_resources.reference_genome import ReferenceGenome
 
-from dae.pedigrees.family import FamiliesData
+from dae.pedigrees.families_data import FamiliesData
 
 from dae.effect_annotation.effect import AlleleEffects
 from dae.variants.variant import SummaryVariant

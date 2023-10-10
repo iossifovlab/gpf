@@ -5,7 +5,7 @@ import pytest
 import pyarrow.parquet as pq
 
 from dae.pedigrees.loader import FamiliesLoader
-from dae.pedigrees.family import FamiliesData
+from dae.pedigrees.families_data import FamiliesData
 from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.parquet.parquet_writer import ParquetWriter
 

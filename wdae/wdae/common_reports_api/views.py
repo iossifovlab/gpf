@@ -5,7 +5,8 @@ from rest_framework.response import Response
 from query_base.query_base import QueryDatasetView
 
 from utils.query_params import parse_query_params
-from dae.pedigrees.family import FamiliesData, FamilyTag
+from dae.pedigrees.family import FamilyTag
+from dae.pedigrees.families_data import FamiliesData
 from dae.pedigrees.family_tag_builder import check_tag
 from dae.pedigrees.loader import FamiliesLoader
 

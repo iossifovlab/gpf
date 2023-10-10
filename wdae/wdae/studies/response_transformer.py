@@ -17,7 +17,8 @@ from dae.utils.effect_utils import ge2str, \
 from dae.variants.attributes import Inheritance
 from dae.variants.variant import SummaryVariant, VariantDesc
 from dae.variants.family_variant import FamilyVariant, FamilyAllele
-from dae.pedigrees.family import Person, FamiliesData
+from dae.pedigrees.family import Person
+from dae.pedigrees.families_data import FamiliesData
 from dae.person_sets import PersonSetCollection
 
 logger = logging.getLogger(__name__)

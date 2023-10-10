@@ -19,7 +19,6 @@ from dae.query_variants.query_runners import QueryRunner
 
 logger = logging.getLogger(__name__)
 
-
 _DUCKDB_LOCK = threading.Lock()
 
 
@@ -129,7 +128,7 @@ class DuckDbQueryDialect(Dialect):
     def escape_quote_char() -> str:
         return "'"
 
-    def build_table_name(self, table: str, db: str) -> str:
+    def build_table_name(self, table: str, db: Optional[str]) -> str:
         return table
 
     def build_array_join(self, column: str, allias: str) -> str:
@@ -200,7 +199,7 @@ class DuckDbVariants(SqlSchema2Variants):
                 schema_content = row[0]
         return dict(line.split("|") for line in schema_content.split("\n"))
 
-    def _fetch_schema(self, table: str) -> dict[str, str]:
+    def _fetch_schema(self, _table: str) -> dict[str, str]:
         return {}
 
     def _fetch_pedigree(self) -> pd.DataFrame:

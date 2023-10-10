@@ -12,7 +12,7 @@ from dae.testing import setup_pedigree
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.person_sets import person_set_collections_schema
 from dae.pedigrees.loader import FamiliesLoader
-from dae.pedigrees.family import FamiliesData
+from dae.pedigrees.families_data import FamiliesData
 from dae.person_sets import PersonSet, PersonSetCollection
 from dae.gpf_instance import GPFInstance
 
