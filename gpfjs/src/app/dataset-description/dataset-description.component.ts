@@ -22,6 +22,7 @@ export class DatasetDescriptionComponent implements OnInit {
   public editMode = false;
   public editorText: string;
   private initialDatasetDescription: string;
+  public isDescriptionEditable: boolean;
 
   public editorOptions: EditorOption = {
     autofocus: true,
@@ -63,6 +64,7 @@ export class DatasetDescriptionComponent implements OnInit {
       } else {
         this.editorText = dataset.description;
         this.initialDatasetDescription = dataset.description;
+        this.isDescriptionEditable = dataset.descriptionEditable;
       }
       this.loading = false;
     });

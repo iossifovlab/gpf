@@ -76,7 +76,8 @@ const datasetMock = new Dataset(
   ],
   new GeneBrowser(true, 'frequencyCol1', 'frequencyName1', 'effectCol1', 'locationCol1', 5, 6, true),
   false,
-  'genome1'
+  'genome1',
+  true
 );
 
 describe('DatasetNode', () => {
