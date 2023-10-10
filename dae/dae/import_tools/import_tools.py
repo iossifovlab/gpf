@@ -14,13 +14,13 @@ from math import ceil
 import yaml
 from box import Box
 
-from dae.annotation.annotation_factory import AnnotationConfigParser,\
+from dae.annotation.annotation_factory import AnnotationConfigParser, \
     build_annotation_pipeline, AnnotationPipeline
 
 from dae.variants_loaders.cnv.loader import CNVLoader
 from dae.variants_loaders.dae.loader import DaeTransmittedLoader, DenovoLoader
 from dae.variants_loaders.vcf.loader import VcfLoader
-from dae.variants_loaders.raw.loader import AnnotationPipelineDecorator,\
+from dae.variants_loaders.raw.loader import AnnotationPipelineDecorator, \
     VariantsLoader
 from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.genotype_storage.genotype_storage import GenotypeStorage
@@ -29,8 +29,8 @@ from dae.genotype_storage.genotype_storage_registry import \
 from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.task_graph.graph import TaskGraph
-from dae.pedigrees.family import FamiliesData
-from dae.configuration.schemas.import_config import import_config_schema,\
+from dae.pedigrees.families_data import FamiliesData
+from dae.configuration.schemas.import_config import import_config_schema, \
     embedded_input_schema
 from dae.pedigrees.loader import FamiliesLoader
 from dae.gpf_instance import GPFInstance
@@ -243,7 +243,7 @@ class ImportProject():
     def get_variant_params(
             self, loader_type: str) -> tuple[list[str], dict[str, Any]]:
         """Return variant loader filenames and params."""
-        assert loader_type in self.import_config["input"],\
+        assert loader_type in self.import_config["input"], \
             f"No input config for loader {loader_type}"
 
         loader_config = self.import_config["input"][loader_type]
@@ -259,7 +259,7 @@ class ImportProject():
         variants_filenames = [fs_utils.join(self.input_dir, f)
                               for f in variants_filenames]
         if loader_type in {"denovo", "dae"}:
-            assert len(variants_filenames) == 1,\
+            assert len(variants_filenames) == 1, \
                 f"Support for multiple {loader_type} files is NYI"
             variants_filenames = variants_filenames[0]
         return variants_filenames, variants_params
@@ -268,7 +268,7 @@ class ImportProject():
         self, loader_type: str,
         reference_genome: Optional[ReferenceGenome] = None
     ) -> VariantsLoader:
-        assert loader_type in self.import_config["input"],\
+        assert loader_type in self.import_config["input"], \
             f"No input config for loader {loader_type}"
         if reference_genome is None:
             reference_genome = self.get_gpf_instance().reference_genome

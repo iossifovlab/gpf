@@ -2,7 +2,7 @@ import logging
 from abc import ABC, abstractmethod
 from typing import Optional, Iterable, Union, Any, cast
 
-from dae.pedigrees.family import FamiliesData
+from dae.pedigrees.families_data import FamiliesData
 from dae.genomic_resources.gene_models import GeneModels
 from dae.variants.attributes import Inheritance
 from dae.utils.regions import Region

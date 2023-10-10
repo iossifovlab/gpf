@@ -87,7 +87,7 @@ from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.variants_loaders.raw.loader import VariantsGenotypesLoader, \
     TransmissionType
 
-from dae.pedigrees.family import FamiliesData
+from dae.pedigrees.families_data import FamiliesData
 from dae.variants.attributes import Inheritance
 from dae.variants.variant import SummaryVariantFactory, SummaryVariant
 from dae.variants.family_variant import FamilyVariant

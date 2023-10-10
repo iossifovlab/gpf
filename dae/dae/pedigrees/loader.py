@@ -15,11 +15,11 @@ from dae.utils.helpers import str2bool
 from dae.variants.attributes import Role, Sex, Status
 from dae.variants_loaders.raw.loader import CLILoader, CLIArgument
 
-from dae.pedigrees.family import FamiliesData, Person, PEDIGREE_COLUMN_NAMES, \
+from dae.pedigrees.family import Person, PEDIGREE_COLUMN_NAMES, \
     ALL_FAMILY_TAG_LABELS
 from dae.pedigrees.family_role_builder import FamilyRoleBuilder
-from dae.pedigrees.family_tag_builder import FamilyTagsBuilder
 from dae.pedigrees.layout import Layout
+from dae.pedigrees.families_data import FamiliesData, tag_families_data
 
 
 logger = logging.getLogger(__name__)
@@ -95,8 +95,7 @@ class FamiliesLoader(CLILoader):
         if not ped_tags:
             return
 
-        tagger = FamilyTagsBuilder()
-        tagger.tag_families_data(families)
+        tag_families_data(families)
 
     @staticmethod
     def _build_families_layouts(

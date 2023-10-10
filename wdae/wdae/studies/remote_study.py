@@ -7,9 +7,9 @@ from dae.configuration.gpf_config_parser import FrozenBox
 from dae.variants.variant import SummaryVariant
 from dae.variants.family_variant import FamilyVariant
 from dae.studies.study import GenotypeData
-from dae.pedigrees.family import Person, Family, FamiliesData
+from dae.pedigrees.family import Person, Family
+from dae.pedigrees.families_data import FamiliesData, tag_families_data
 from dae.person_sets import PersonSetCollection
-from dae.pedigrees.family_tag_builder import FamilyTagsBuilder
 
 
 class RemoteGenotypeData(GenotypeData):
@@ -66,8 +66,7 @@ class RemoteGenotypeData(GenotypeData):
                 family_members.append(Person(**person_json))
             families[family_id] = Family.from_persons(family_members)
         self._families = FamiliesData.from_families(families)
-        tagger = FamilyTagsBuilder()
-        tagger.tag_families_data(self._families)
+        tag_families_data(self._families)
         pscs_config = self.config.get("person_set_collections")
         self._person_set_collections = \
             self._build_person_set_collections(pscs_config, self._families)

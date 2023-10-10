@@ -7,7 +7,7 @@ import numpy as np
 from dae.pedigrees.testing import build_families_data
 from dae.genomic_resources.testing import setup_dae_transmitted
 from dae.gpf_instance.gpf_instance import GPFInstance
-from dae.pedigrees.family import FamiliesData
+from dae.pedigrees.families_data import FamiliesData
 from dae.testing import foobar_gpf
 from dae.utils.variant_utils import mat2str, str2mat
 from dae.variants_loaders.dae.loader import DaeTransmittedLoader

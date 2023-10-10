@@ -7,7 +7,7 @@ import logging
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
-from dae.pedigrees.family import FamiliesData
+from dae.pedigrees.families_data import FamiliesData
 from dae.pedigrees.loader import FamiliesLoader
 
 from dae.pedigrees.drawing import OffsetLayoutDrawer, PDFLayoutDrawer

@@ -11,7 +11,7 @@ from dae.person_sets import PersonSetCollection
 
 from dae.inmemory_storage.raw_variants import RawFamilyVariants
 
-from dae.pedigrees.family import FamiliesData
+from dae.pedigrees.families_data import FamiliesData
 from dae.pedigrees.loader import FamiliesLoader
 
 from dae.variants.attributes import Role, Status, Sex

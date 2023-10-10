@@ -1,7 +1,7 @@
 import logging
 from typing import Optional, Any
 
-from dae.pedigrees.family import FamiliesData
+from dae.pedigrees.families_data import FamiliesData
 from dae.genomic_resources.gene_models import GeneModels
 from dae.variants.attributes import Sex, Role, Status
 from dae.query_variants.sql.schema2.base_query_builder import \

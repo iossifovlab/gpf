@@ -2,7 +2,7 @@
 from __future__ import annotations
 from typing import Any
 
-from dae.pedigrees.family import FamiliesData
+from dae.pedigrees.families_data import FamiliesData
 from dae.person_sets import PersonSetCollection
 from dae.studies.study import GenotypeData
 

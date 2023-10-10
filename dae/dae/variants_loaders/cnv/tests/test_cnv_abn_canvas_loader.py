@@ -11,7 +11,7 @@ from dae.gpf_instance import GPFInstance
 
 from dae.testing import convert_to_tab_separated
 from dae.pedigrees.loader import FamiliesLoader
-from dae.pedigrees.family import FamiliesData
+from dae.pedigrees.families_data import FamiliesData
 
 
 @pytest.fixture

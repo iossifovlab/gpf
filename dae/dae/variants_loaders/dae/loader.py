@@ -23,7 +23,8 @@ from dae.utils.helpers import str2bool
 
 from dae.utils.dae_utils import dae2vcf_variant
 
-from dae.pedigrees.family import Family, FamiliesData
+from dae.pedigrees.family import Family
+from dae.pedigrees.families_data import FamiliesData
 from dae.variants.attributes import Inheritance, Role
 
 from dae.variants.variant import SummaryVariant, SummaryVariantFactory, \
@@ -540,7 +541,7 @@ class DenovoLoader(VariantsGenotypesLoader):
                 )
                 grouped = temp_df.groupby(
                     ["chrom", "pos", "ref", "alt", "family_id"])
-            else:                
+            else:
                 temp_df = pd.DataFrame(
                     {
                         "chrom": chrom_col,

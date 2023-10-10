@@ -98,3 +98,5 @@ wdae/wdae/wdae/__build__.py
 impala_storage/impala_storage/__build__.py
 in.vcf.gz.tbi
 test.txt.gz.tbi
+monkeytype.sqlite3
+

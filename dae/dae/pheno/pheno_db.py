@@ -16,7 +16,8 @@ import pandas as pd
 from sqlalchemy.sql import select, text
 from sqlalchemy import not_, desc
 
-from dae.pedigrees.family import Person, FamiliesData
+from dae.pedigrees.family import Person
+from dae.pedigrees.families_data import FamiliesData
 from dae.pheno.db import DbManager
 from dae.pheno.common import MeasureType
 from dae.configuration.gpf_config_parser import GPFConfigParser

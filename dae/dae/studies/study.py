@@ -20,7 +20,7 @@ from dae.utils.regions import Region
 from dae.variants.variant import SummaryVariant
 from dae.variants.family_variant import FamilyVariant
 from dae.query_variants.query_runners import QueryResult
-from dae.pedigrees.family import FamiliesData
+from dae.pedigrees.families_data import FamiliesData
 from dae.pedigrees.loader import FamiliesLoader
 
 from dae.person_sets import PersonSetCollection

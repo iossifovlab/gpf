@@ -5,7 +5,8 @@ import textwrap
 
 from dae.testing import convert_to_tab_separated
 
-from dae.pedigrees.family import FamiliesData, Family
+from dae.pedigrees.family import Family
+from dae.pedigrees.families_data import FamiliesData
 from dae.pedigrees.loader import FamiliesLoader
 
 

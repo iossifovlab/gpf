@@ -12,7 +12,8 @@ import logging
 from typing import Optional, Any, FrozenSet, Generator, cast
 from box import Box
 
-from dae.pedigrees.family import Person, FamiliesData
+from dae.pedigrees.family import Person
+from dae.pedigrees.families_data import FamiliesData
 from dae.pheno.pheno_db import PhenotypeData, MeasureType
 
 

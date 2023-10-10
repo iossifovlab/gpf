@@ -22,7 +22,8 @@ from dae.utils import fs_utils
 from dae.utils.variant_utils import is_all_reference_genotype, \
     is_all_unknown_genotype, \
     is_unknown_genotype
-from dae.pedigrees.family import FamiliesData, Family
+from dae.pedigrees.family import Family
+from dae.pedigrees.families_data import FamiliesData
 from dae.variants.attributes import Inheritance
 from dae.variants.variant import SummaryVariantFactory, SummaryVariant
 from dae.variants.family_variant import FamilyVariant, FamilyAllele

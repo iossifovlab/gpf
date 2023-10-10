@@ -4,7 +4,7 @@ from pandas.api.types import is_string_dtype  # type: ignore
 
 from dae.variants.attributes import Role
 
-from dae.pedigrees.family import FamiliesData
+from dae.pedigrees.families_data import FamiliesData
 from dae.pedigrees.loader import FamiliesLoader
 
 

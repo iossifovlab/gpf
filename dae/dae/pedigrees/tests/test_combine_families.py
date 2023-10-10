@@ -4,8 +4,7 @@ import pathlib
 
 import pytest
 from dae.pedigrees.loader import FamiliesLoader
-from dae.pedigrees.family import FamiliesData
-from dae.pedigrees.family_tag_builder import FamilyTagsBuilder
+from dae.pedigrees.families_data import FamiliesData, tag_families_data
 from dae.variants.attributes import Sex, Status
 
 from dae.testing import setup_pedigree
@@ -240,9 +239,7 @@ def test_combine_families_creates_copy(
     new_families["f1"].persons["f1.dad"].set_attr("test", "asdf")
     print(ped_a["f1"].persons["f1.dad"]._attributes)
 
-    builder = FamilyTagsBuilder()
-
-    builder.tag_families_data(new_families)
+    tag_families_data(new_families)
 
     # assert new_families["f1"].persons["f1.dad"].get_attr(
     #     "tag_family_type"

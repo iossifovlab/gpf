@@ -1,9 +1,8 @@
 """Helper class for tagging families."""
 from typing import Callable, Iterable, Optional, Any
-# from collections import Counter
 
 from dae.variants.attributes import Role, Status, Sex
-from dae.pedigrees.family import FamiliesData, Person, Family, FamilyTag
+from dae.pedigrees.family import Person, Family, FamilyTag
 
 
 def _get_mom(family: Family) -> Optional[Person]:
@@ -415,8 +414,3 @@ class FamilyTagsBuilder:
         """Tag a family with family type tags - short and full."""
         full_type = _build_family_type_full(family)
         set_attr(family, "tag_family_type_full", full_type)
-
-    def tag_families_data(self, families: FamiliesData) -> None:
-        for family in families.values():
-            self.tag_family(family)
-            self.tag_family_type(family)
