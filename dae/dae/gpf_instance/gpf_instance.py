@@ -22,7 +22,7 @@ from dae.enrichment_tool.background_facade import BackgroundFacade
 from dae.studies.study import GenotypeData
 from dae.gene.scores import GenomicScoresDb, ScoreDesc
 from dae.gene.gene_scores import ScoreDesc as GeneScoreDesc
-from dae.gene.gene_sets_db import GeneSet, GeneSetCollection, GeneSetsDb, \
+from dae.gene.gene_sets_db import GeneSet, GeneSetsDb, \
     build_gene_set_collection_from_resource
 from dae.gene.denovo_gene_sets_db import DenovoGeneSetsDb
 from dae.common_reports.common_report import CommonReport
