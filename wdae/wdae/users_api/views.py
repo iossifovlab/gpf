@@ -155,15 +155,14 @@ class ForgotPassword(views.APIView):
             )
         email = form.data["email"]
         user_model = get_user_model()
+        message = (
+            f"An e-mail has been sent to {email}"
+            " containing the reset link"
+        )
         try:
             user = user_model.objects.get(email=email)
             user.reset_password()
             user.deauthenticate()
-
-            message = (
-                f"An e-mail has been sent to {email}"
-                " containing the reset link"
-            )
 
             return render(
                 request,
@@ -176,18 +175,15 @@ class ForgotPassword(views.APIView):
                 }
             )
         except user_model.DoesNotExist:
-            form = WdaePasswordForgottenForm()
-            message = f"There is no user registered for {email}"
             return render(
                 request,
                 "users_api/registration/forgotten-password.html",
                 {
                     "form": form,
                     "message": message,
-                    "message_type": "warn",
-                    "show_form": True
-                },
-                status=status.HTTP_404_NOT_FOUND
+                    "message_type": "success",
+                    "show_form": False
+                }
             )
 
 
