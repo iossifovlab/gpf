@@ -588,7 +588,6 @@ class FamiliesLoader(CLILoader):
             }
         )
         df.sex = df.sex.apply(lambda v: v.name)
-        df.role = df.role.apply(lambda v: v.name)
 
         return df
 
