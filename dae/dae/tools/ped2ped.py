@@ -9,7 +9,7 @@ from typing import Optional
 
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 from dae.parquet.partition_descriptor import PartitionDescriptor
-from dae.pedigrees.family import FamiliesData
+from dae.pedigrees.families_data import FamiliesData
 from dae.pedigrees.loader import FamiliesLoader, PedigreeIO
 from dae.variants_loaders.vcf.loader import VcfLoader
 from dae.genomic_resources.genomic_context import CLIGenomicContext, \

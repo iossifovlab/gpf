@@ -661,4 +661,3 @@ class Family:
         return list(
             filter(lambda m: m.status in statuses, self.members_in_order)
         )
-
