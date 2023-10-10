@@ -3,8 +3,7 @@ from __future__ import annotations
 import os
 import re
 import logging
-from typing import Any, cast, Optional, ContextManager, Callable
-import functools
+from typing import Any, cast, Optional
 
 import duckdb
 from cerberus import Validator
@@ -17,10 +16,29 @@ from dae.genomic_resources.gene_models import GeneModels
 from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.schema2_storage.schema2_import_storage import Schema2DatasetLayout
-from dae.duckdb_storage.duckdb_variants import DuckDbVariants, \
-    duckdb_db_connect, duckdb_global_connect
+from dae.duckdb_storage.duckdb_variants import DuckDbVariants
 
 logger = logging.getLogger(__name__)
+
+
+def _duckdb_global_connect() -> duckdb.DuckDBPyConnection:
+    logger.info("connection to gloabl duckdb")
+    return cast(duckdb.DuckDBPyConnection, duckdb)
+
+
+def _duckdb_db_connect(
+    db_name: str, read_only: bool = True
+) -> duckdb.DuckDBPyConnection:
+    logger.debug("duckdb internal connection to %s", db_name)
+    return duckdb.connect(db_name, read_only=read_only)
+
+
+def duckdb_connect(
+    db_name: Optional[str] = None, read_only: bool = True
+) -> duckdb.DuckDBPyConnection:
+    if db_name is not None:
+        return _duckdb_db_connect(db_name=db_name, read_only=read_only)
+    return _duckdb_global_connect()
 
 
 class DuckDbGenotypeStorage(GenotypeStorage):
@@ -34,6 +52,10 @@ class DuckDbGenotypeStorage(GenotypeStorage):
         "db": {
             "type": "string",
         },
+        "read_only": {
+            "type": "boolean",
+            "default": False,
+        },
         "studies_dir": {
             "type": "string",
         },
@@ -44,9 +66,7 @@ class DuckDbGenotypeStorage(GenotypeStorage):
 
     def __init__(self, storage_config: dict[str, Any]):
         super().__init__(storage_config)
-        self.connection_factory: Optional[Callable[
-            [],
-            ContextManager[duckdb.DuckDBPyConnection]]] = None
+        self.connection_factory: Optional[duckdb.DuckDBPyConnection] = None
 
     @classmethod
     def validate_and_normalize_config(cls, config: dict) -> dict:
@@ -80,16 +100,14 @@ class DuckDbGenotypeStorage(GenotypeStorage):
             return self
 
         db_name = self.get_db()
+        read_only = self.get_read_only()
         if db_name is not None:
             db_name = self._base_dir_join(db_name)
             dirname = os.path.dirname(db_name)
             os.makedirs(dirname, exist_ok=True)
-            logger.info("connection to duckdb database: %s", db_name)
-            self.connection_factory = \
-                functools.partial(duckdb_db_connect, db_name, False)
-            return self
 
-        self.connection_factory = duckdb_global_connect
+        self.connection_factory = duckdb_connect(
+            db_name=db_name, read_only=read_only)
         return self
 
     def shutdown(self) -> DuckDbGenotypeStorage:
@@ -97,17 +115,22 @@ class DuckDbGenotypeStorage(GenotypeStorage):
             logger.warning(
                 "trying to shutdown already stopped DuckDbGenotypeStorage")
             return self
+        self.connection_factory.close()
         self.connection_factory = None
         return self
 
     def close(self) -> None:
-        self.shutdown()
+        pass
+        # self.shutdown()
 
     def get_base_dir(self) -> Optional[str]:
         return self.storage_config.get("base_dir")
 
     def get_db(self) -> Optional[str]:
         return self.storage_config.get("db")
+
+    def get_read_only(self) -> bool:
+        return self.storage_config.get("read_only", True)
 
     def get_studies_dir(self) -> Optional[str]:
         return self.storage_config.get("studies_dir")
@@ -169,7 +192,7 @@ class DuckDbGenotypeStorage(GenotypeStorage):
 
     def _create_table(self, parquet_path: str, table_name: str) -> None:
         assert self.connection_factory is not None
-        with self.connection_factory() as connection:
+        with self.connection_factory.cursor() as connection:
             assert connection is not None
             query = f"DROP TABLE IF EXISTS {table_name}"
             connection.sql(query)
@@ -182,7 +205,7 @@ class DuckDbGenotypeStorage(GenotypeStorage):
             self, parquet_path: str, table_name: str,
             partition: list[tuple[str, str]]) -> None:
         assert self.connection_factory is not None
-        with self.connection_factory() as connection:
+        with self.connection_factory.cursor() as connection:
             query = f"DROP TABLE IF EXISTS {table_name}"
             connection.sql(query)
 
@@ -293,7 +316,14 @@ class DuckDbGenotypeStorage(GenotypeStorage):
         db_name = self.get_db()
         if db_name is not None:
             db_name = self._base_dir_join(db_name)
+
+        if self.connection_factory is None:
+            raise ValueError(
+                f"duckdb genotype storage not started: "
+                f"{self.storage_config}")
+        assert self.connection_factory is not None
         return DuckDbVariants(
+            self.connection_factory,
             db_name,
             tables_layout.family,
             tables_layout.summary,
