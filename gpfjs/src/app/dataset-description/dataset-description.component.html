@@ -6,7 +6,7 @@
       </div>
       <div id="edit-description">
         <markdown id="markdown-id" [data]="dataset.description || ''"></markdown>
-        <div *ngIf="!editMode">
+        <div *ngIf="!editMode && isDescriptionEditable">
           <div style="position: relative">
             <i
               *ngIf="('' | userInfo)?.isAdministrator"
