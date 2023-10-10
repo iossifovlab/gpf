@@ -1,9 +1,7 @@
 import time
 import json
 import logging
-from typing import Optional, Any, cast, Generator, ContextManager
-import contextlib
-import threading
+from typing import Optional, Any, cast
 
 import duckdb
 import numpy as np
@@ -19,30 +17,13 @@ from dae.query_variants.query_runners import QueryRunner
 
 logger = logging.getLogger(__name__)
 
-_DUCKDB_LOCK = threading.Lock()
-
-
-@contextlib.contextmanager
-def duckdb_global_connect(
-) -> Generator[duckdb.DuckDBPyConnection, None, None]:
-    with _DUCKDB_LOCK:
-        yield cast(duckdb.DuckDBPyConnection, duckdb)
-
-
-@contextlib.contextmanager
-def duckdb_db_connect(
-    db_name: str, read_only: bool = True
-) -> Generator[duckdb.DuckDBPyConnection, None, None]:
-    logger.debug("duckdb internal connection to %s", db_name)
-    yield duckdb.connect(db_name, read_only=read_only)
-
 
 class DuckDbRunner(QueryRunner):
     """Run a DuckDb query in a separate thread."""
 
     def __init__(
             self,
-            connection_factory: ContextManager[duckdb.DuckDBPyConnection],
+            connection_factory: duckdb.DuckDBPyConnection,
             query: str,
             deserializer: Optional[Any] = None):
         super().__init__(deserializer=deserializer)
@@ -143,6 +124,7 @@ class DuckDbVariants(SqlSchema2Variants):
 
     def __init__(
         self,
+        connection: duckdb.DuckDBPyConnection,
         db: Optional[str],
         family_variant_table: Optional[str],
         summary_allele_table: Optional[str],
@@ -150,6 +132,9 @@ class DuckDbVariants(SqlSchema2Variants):
         meta_table: str,
         gene_models: Optional[GeneModels] = None,
     ) -> None:
+        self.connection = connection
+        assert self.connection is not None
+
         super().__init__(
             DuckDbQueryDialect(),
             db,
@@ -160,6 +145,9 @@ class DuckDbVariants(SqlSchema2Variants):
             gene_models)
         assert pedigree_table, pedigree_table
         self.start_time = time.time()
+
+    def _get_connection_factory(self) -> Any:
+        return self.connection.cursor()
 
     def _fetch_tblproperties(self) -> str:
         query = f"""SELECT value FROM {self.meta_table}
@@ -205,6 +193,7 @@ class DuckDbVariants(SqlSchema2Variants):
     def _fetch_pedigree(self) -> pd.DataFrame:
         query = f"SELECT * FROM {self.pedigree_table}"
         with self._get_connection_factory() as connection:
+
             ped_df = cast(pd.DataFrame, connection.execute(query).df())
             columns = {
                 "personId": "person_id",
@@ -228,11 +217,6 @@ class DuckDbVariants(SqlSchema2Variants):
             ped_df.loc[ped_df.layout.isna(), "layout"] = None
 
             return ped_df
-
-    def _get_connection_factory(self) -> Any:
-        if self.db is not None:
-            return duckdb_db_connect(self.db)
-        return duckdb_global_connect()
 
     def _deserialize_summary_variant(self, record: str) -> SummaryVariant:
         sv_record = json.loads(record[2])
