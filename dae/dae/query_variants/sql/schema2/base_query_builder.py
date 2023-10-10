@@ -62,7 +62,7 @@ class Dialect(ABC):
     def escape_quote_char() -> str:
         return "\\"
 
-    def build_table_name(self, table: str, db: str) -> str:
+    def build_table_name(self, table: str, db: Optional[str]) -> str:
         return f"`{self.namespace}`.{db}.{table}" if self.namespace else \
                f"{db}.{table}"
 
@@ -95,7 +95,7 @@ class BaseQueryBuilder(ABC):
     def __init__(
         self,
         dialect: Dialect,
-        db: str,
+        db: Optional[str],
         family_variant_table: Optional[str],
         summary_allele_table: str,
         pedigree_table: str,
@@ -191,6 +191,7 @@ class BaseQueryBuilder(ABC):
             frequency_filter=frequency_filter,
             return_reference=return_reference,
             return_unknown=return_unknown,
+            pedigree_fields=pedigree_fields
         )
 
         self._build_group_by()
@@ -213,6 +214,13 @@ class BaseQueryBuilder(ABC):
     ) -> None:
         pass
 
+    def _build_where_pedigree_fields(
+        self,
+        pedigree_fields: Optional[tuple]
+    ) -> str:
+        # pylint: disable=unused-argument
+        return ""
+
     def _build_where(
         self,
         regions: Optional[list[Region]] = None,
@@ -229,6 +237,7 @@ class BaseQueryBuilder(ABC):
         frequency_filter: Optional[RealAttrFilterType] = None,
         return_reference: Optional[bool] = None,
         return_unknown: Optional[bool] = None,
+        pedigree_fields: Optional[tuple] = None,
         **kwargs: Any,
     ) -> None:
         # pylint: disable=too-many-arguments,too-many-locals,unused-argument
@@ -247,6 +256,7 @@ class BaseQueryBuilder(ABC):
             frequency_filter=frequency_filter,
             return_reference=return_reference,
             return_unknown=return_unknown,
+            pedigree_fields=pedigree_fields
         )
         self._add_to_product(where_clause)
 
@@ -266,6 +276,7 @@ class BaseQueryBuilder(ABC):
         frequency_filter: Optional[RealAttrFilterType] = None,
         return_reference: Optional[bool] = None,
         return_unknown: Optional[bool] = None,
+        pedigree_fields: Optional[tuple] = None,
         **kwargs: Any,
     ) -> str:
         # pylint: disable=too-many-arguments,too-many-branches,unused-argument
@@ -361,6 +372,7 @@ class BaseQueryBuilder(ABC):
         where.append(self._build_family_bin_heuristic(family_ids, person_ids))
         where.append(self._build_coding_heuristic(effect_types))
         where.append(self._build_region_bin_heuristic(regions))
+        where.append(self._build_where_pedigree_fields(pedigree_fields))
 
         where = [w for w in where if w]
 

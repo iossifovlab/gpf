@@ -9,7 +9,6 @@ from typing import Dict, Union, List
 from collections import defaultdict, namedtuple
 from functools import reduce
 
-from dae.pedigrees.family import Family
 from dae.pedigrees.pedigrees import FamilyConnections, Individual
 from dae.pedigrees.interval_sandwich import SandwichSolver
 
@@ -198,7 +197,7 @@ class Layout:
 
     @staticmethod
     def _build_family_layout(
-            family: Family, family_connections: FamilyConnections):
+            family, family_connections: FamilyConnections):
 
         if family_connections is None:
             logger.warning(
@@ -222,7 +221,7 @@ class Layout:
         return Layout(individuals_intervals)
 
     @staticmethod
-    def from_family(family: Family, add_missing_members=True) -> List[Layout]:
+    def from_family(family, add_missing_members=True) -> List[Layout]:
         """Generate layout for each connected component of a family."""
         family_connections = FamilyConnections.from_family(
             family, add_missing_members=add_missing_members
@@ -237,6 +236,8 @@ class Layout:
             return [Layout._build_family_layout(family, family_connections)]
 
         layouts = []
+        # pylint: disable=import-outside-toplevel
+        from dae.pedigrees.family import Family
         for component in family_connections.connected_components():
             members = [
                 m for m in family.full_members

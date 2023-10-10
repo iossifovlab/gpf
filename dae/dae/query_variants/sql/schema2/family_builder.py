@@ -3,6 +3,7 @@ from typing import Optional, Any
 
 from dae.pedigrees.family import FamiliesData
 from dae.genomic_resources.gene_models import GeneModels
+from dae.variants.attributes import Sex, Role, Status
 from dae.query_variants.sql.schema2.base_query_builder import \
     BaseQueryBuilder, Dialect, \
     TableSchema
@@ -84,6 +85,48 @@ class FamilyQueryBuilder(BaseQueryBuilder):
             self._add_to_product(
                 self.dialect.build_array_join("sa.effect_gene", "eg")
             )
+
+    @staticmethod
+    def _pedigree_column_value(source: str, value: str) -> str:
+        if source == "status":
+            return f"{Status.from_name(value).value}"
+        if source == "role":
+            return f"{Role.from_name(value).value}"
+        if source == "sex":
+            return f"{Sex.from_name(value).value}"
+
+        return f"'{value}'"
+
+    def _build_where_pedigree_fields(
+        self,
+        pedigree_fields: Optional[  # type: ignore
+            tuple[list[dict[str, str]], list[dict[str, str]]]]
+    ) -> str:
+        if not pedigree_fields:
+            return ""
+        result = []
+
+        query = []
+        for positive_fields in pedigree_fields[0]:
+            for key, value in positive_fields.items():
+                str_value = self._pedigree_column_value(key, value)
+                query.append(
+                    f"pedigree.{key} = {str_value}"
+                )
+        if query:
+            result.append(" OR ".join(query))
+
+        query = []
+        for negative_fields in pedigree_fields[1]:
+            for key, value in negative_fields.items():
+                str_value = self._pedigree_column_value(key, value)
+                query.append(
+                    f"pedigree.{key} != {str_value}"
+                )
+        if query:
+            result.append(" AND ".join(query))
+
+        return " AND ".join(f"( {r} )" for r in result)
 
     def _build_from(self) -> None:
         summary_table_name = self.dialect.build_table_name(

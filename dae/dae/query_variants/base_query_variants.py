@@ -8,6 +8,8 @@ from dae.variants.family_variant import FamilyVariant
 
 from dae.query_variants.query_runners import QueryRunner
 
+RealAttrFilterType = list[tuple[str, tuple[Optional[float], Optional[float]]]]
+
 logger = logging.getLogger(__name__)
 
 
@@ -23,9 +25,9 @@ class QueryVariantsBase(abc.ABC):
         genes: Optional[list[str]] = None,
         effect_types: Optional[list[str]] = None,
         variant_type: Optional[str] = None,
-        real_attr_filter: Optional[dict] = None,
+        real_attr_filter: Optional[RealAttrFilterType] = None,
         ultra_rare: Optional[bool] = None,
-        frequency_filter: Optional[dict] = None,
+        frequency_filter: Optional[RealAttrFilterType] = None,
         return_reference: Optional[bool] = None,
         return_unknown: Optional[bool] = None,
         limit: Optional[int] = None,
@@ -40,9 +42,9 @@ class QueryVariantsBase(abc.ABC):
         genes: Optional[list[str]] = None,
         effect_types: Optional[list[str]] = None,
         variant_type: Optional[str] = None,
-        real_attr_filter: Optional[dict] = None,
+        real_attr_filter: Optional[RealAttrFilterType] = None,
         ultra_rare: Optional[bool] = None,
-        frequency_filter: Optional[dict] = None,
+        frequency_filter: Optional[RealAttrFilterType] = None,
         return_reference: Optional[bool] = None,
         return_unknown: Optional[bool] = None,
         limit: Optional[int] = None,
@@ -63,14 +65,14 @@ class QueryVariantsBase(abc.ABC):
         roles: Optional[str] = None,
         sexes: Optional[str] = None,
         variant_type: Optional[str] = None,
-        real_attr_filter: Optional[dict] = None,
+        real_attr_filter: Optional[RealAttrFilterType] = None,
         ultra_rare: Optional[bool] = None,
-        frequency_filter: Optional[dict] = None,
+        frequency_filter: Optional[RealAttrFilterType] = None,
         return_reference: Optional[bool] = None,
         return_unknown: Optional[bool] = None,
         limit: Optional[int] = None,
         study_filters: Optional[list[str]] = None,
-        pedigree_fields: Optional[list[str]] = None,
+        pedigree_fields: Optional[tuple] = None,
         **kwargs: Any
     ) -> QueryRunner:
         # pylint: disable=too-many-arguments
@@ -89,13 +91,13 @@ class QueryVariantsBase(abc.ABC):
         roles: Optional[str] = None,
         sexes: Optional[str] = None,
         variant_type: Optional[str] = None,
-        real_attr_filter: Optional[dict] = None,
+        real_attr_filter: Optional[RealAttrFilterType] = None,
         ultra_rare: Optional[bool] = None,
-        frequency_filter: Optional[dict] = None,
+        frequency_filter: Optional[RealAttrFilterType] = None,
         return_reference: Optional[bool] = None,
         return_unknown: Optional[bool] = None,
         limit: Optional[int] = None,
-        pedigree_fields: Optional[list[str]] = None,
+        pedigree_fields: Optional[tuple] = None,
         **kwargs: Any
     ) -> Generator[FamilyVariant, None, None]:
         # pylint: disable=too-many-arguments

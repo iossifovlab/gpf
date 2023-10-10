@@ -128,7 +128,7 @@ class DuckDbQueryDialect(Dialect):
     def escape_quote_char() -> str:
         return "'"
 
-    def build_table_name(self, table: str, db: str) -> str:
+    def build_table_name(self, table: str, db: Optional[str]) -> str:
         return table
 
     def build_array_join(self, column: str, allias: str) -> str:

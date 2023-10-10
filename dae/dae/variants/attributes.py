@@ -1,7 +1,11 @@
 from __future__ import annotations
 
 import enum
+import logging
+
 from typing import Optional, Union
+
+logger = logging.getLogger(__name__)
 
 _VARIANT_TYPE_DISPLAY_NAME = {
     "invalid": "inv",
@@ -114,10 +118,8 @@ class Role(enum.Enum):
         return self.name
 
     @staticmethod
-    def from_name(name: Optional[Union[str, int]]) -> Optional[Role]:
+    def from_name(name: Optional[Union[str, int]]) -> Role:
         """Construct and return a Role from it's string representation."""
-        if name is None:
-            return None
         if isinstance(name, Role):
             return name
         if isinstance(name, int):
@@ -129,7 +131,8 @@ class Role(enum.Enum):
             if key in _ROLE_SYNONYMS:
                 return Role[_ROLE_SYNONYMS[key]]
 
-        return None
+        logger.debug("unexpected role name: <%s>", name)
+        return Role.unknown
 
     @staticmethod
     def from_value(val: int) -> Role:
@@ -165,7 +168,7 @@ class Sex(enum.Enum):
             return Sex.female
         if name in set(["unspecified", "u", "0", "unknown"]):
             return Sex.unspecified
-        raise ValueError("unexpected sex type: " + str(name))
+        raise ValueError(f"unexpected sex name: {name}")
 
     @staticmethod
     def from_value(val: int) -> Sex:

@@ -17,8 +17,8 @@ class SummaryQueryBuilder(BaseQueryBuilder):
     def __init__(
         self,
         dialect: Dialect,
-        db: str,
-        family_variant_table: str,
+        db: Optional[str],
+        family_variant_table: Optional[str],
         summary_allele_table: str,
         pedigree_table: str,
         family_variant_schema: TableSchema,
@@ -86,6 +86,7 @@ class SummaryQueryBuilder(BaseQueryBuilder):
         frequency_filter: Optional[RealAttrFilterType] = None,
         return_reference: Optional[bool] = None,
         return_unknown: Optional[bool] = None,
+        pedigree_fields: Optional[tuple] = None,
         **kwargs: Any,
     ) -> None:
         # pylint: disable=too-many-arguments,too-many-locals,unused-argument

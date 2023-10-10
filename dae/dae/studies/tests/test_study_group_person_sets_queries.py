@@ -278,3 +278,25 @@ def test_dataset_simple(dataset: GenotypeDataGroup) -> None:
     assert "epilepsy" in psc.person_sets
     assert "unaffected" in psc.person_sets
     assert "unspecified" in psc.person_sets
+
+
+@pytest.mark.parametrize(
+    "psc_query, count", [
+        (("phenotype", ["epilepsy"]), 3),
+        (("phenotype", ["autism"]), 3),
+        (("phenotype", ["unaffected"]), 2),
+        (("phenotype", ["unspecified"]), 2),
+        (("phenotype", ["epilepsy", "autism"]), 6),
+        (("phenotype", ["unaffected", "autism"]), 4),
+        (("phenotype", ["epilepsy", "autism", "unaffected"]), 6),
+        (("phenotype",
+          ["epilepsy", "autism", "unaffected", "unspecified"]), 8),
+    ]
+)
+def test_dataset_person_sets_queries(
+    dataset: GenotypeDataGroup,
+    psc_query: tuple[str, list[str]],
+    count: int
+) -> None:
+    vs = list(dataset.query_variants(person_set_collection=psc_query))
+    assert len(vs) == count

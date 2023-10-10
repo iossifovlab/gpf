@@ -21,6 +21,8 @@ from dae.query_variants.sql.schema2.summary_builder import SummaryQueryBuilder
 
 logger = logging.getLogger(__name__)
 
+RealAttrFilterType = list[tuple[str, tuple[Optional[float], Optional[float]]]]
+
 
 # pylint: disable=too-many-instance-attributes
 class SqlSchema2Variants(QueryVariantsBase):
@@ -106,15 +108,16 @@ class SqlSchema2Variants(QueryVariantsBase):
         genes: Optional[list[str]] = None,
         effect_types: Optional[list[str]] = None,
         variant_type: Optional[str] = None,
-        real_attr_filter: Optional[dict] = None,
+        real_attr_filter: Optional[RealAttrFilterType] = None,
         ultra_rare: Optional[bool] = None,
-        frequency_filter: Optional[dict] = None,
+        frequency_filter: Optional[RealAttrFilterType] = None,
         return_reference: Optional[bool] = None,
         return_unknown: Optional[bool] = None,
         limit: Optional[int] = None,
         **kwargs: Any
     ) -> QueryRunner:
         """Build a query selecting the appropriate summary variants."""
+        assert self.summary_allele_table is not None
         query_builder = SummaryQueryBuilder(
             self.dialect,
             self.db,
@@ -179,14 +182,14 @@ class SqlSchema2Variants(QueryVariantsBase):
         roles: Optional[str] = None,
         sexes: Optional[str] = None,
         variant_type: Optional[str] = None,
-        real_attr_filter: Optional[dict] = None,
+        real_attr_filter: Optional[RealAttrFilterType] = None,
         ultra_rare: Optional[bool] = None,
-        frequency_filter: Optional[dict] = None,
+        frequency_filter: Optional[RealAttrFilterType] = None,
         return_reference: Optional[bool] = None,
         return_unknown: Optional[bool] = None,
         limit: Optional[int] = None,
         study_filters: Optional[list[str]] = None,
-        pedigree_fields: Optional[list[str]] = None,
+        pedigree_fields: Optional[tuple] = None,
         **kwargs: Any
     ) -> QueryRunner:
         """Build a query selecting the appropriate family variants."""
@@ -258,7 +261,6 @@ class SqlSchema2Variants(QueryVariantsBase):
             seen=set())
 
         runner.adapt(filter_func)
-
         return runner
 
     def query_summary_variants(
@@ -267,9 +269,9 @@ class SqlSchema2Variants(QueryVariantsBase):
         genes: Optional[list[str]] = None,
         effect_types: Optional[list[str]] = None,
         variant_type: Optional[str] = None,
-        real_attr_filter: Optional[dict] = None,
+        real_attr_filter: Optional[RealAttrFilterType] = None,
         ultra_rare: Optional[bool] = None,
-        frequency_filter: Optional[dict] = None,
+        frequency_filter: Optional[RealAttrFilterType] = None,
         return_reference: Optional[bool] = None,
         return_unknown: Optional[bool] = None,
         limit: Optional[int] = None,
@@ -323,13 +325,13 @@ class SqlSchema2Variants(QueryVariantsBase):
         roles: Optional[str] = None,
         sexes: Optional[str] = None,
         variant_type: Optional[str] = None,
-        real_attr_filter: Optional[dict] = None,
+        real_attr_filter: Optional[RealAttrFilterType] = None,
         ultra_rare: Optional[bool] = None,
-        frequency_filter: Optional[dict] = None,
+        frequency_filter: Optional[RealAttrFilterType] = None,
         return_reference: Optional[bool] = None,
         return_unknown: Optional[bool] = None,
         limit: Optional[int] = None,
-        pedigree_fields: Optional[list[str]] = None,
+        pedigree_fields: Optional[tuple] = None,
         **kwargs: Any
     ) -> Generator[FamilyVariant, None, None]:
         """Query family variants."""

@@ -200,6 +200,8 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
         # flake8: noqa: C901
         # pylint: disable=too-many-locals,too-many-arguments
         del pedigree_fields  # Unused argument
+        psc_query = person_set_collection
+
         if person_ids is not None and len(person_ids) == 0:
             return None
 
@@ -227,31 +229,30 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
             person_sets_query = None
             query_person_ids = set(person_ids.copy()) \
                 if person_ids is not None else None
-            if person_set_collection is not None:
-                collection_id, selected_person_sets = person_set_collection
-                if selected_person_sets is not None:
-                    collection = genotype_study\
-                        .get_person_set_collection(collection_id)
+
+            if psc_query is not None:
+                psc_id, selected_person_set_ids = psc_query
+                if selected_person_set_ids is not None:
+                    psc = genotype_study.get_person_set_collection(psc_id)
 
                     # pylint: disable=no-member,protected-access
                     person_sets_query = genotype_study\
                         ._backend\
-                        .build_person_set_collection_query(
-                            collection, person_set_collection)
+                        .build_person_set_collection_query(psc, psc_query)
                     if person_sets_query == ([], []):
                         continue
 
                     if person_sets_query is None:
                         query_person_ids = genotype_study\
                             ._transform_person_set_collection_query(
-                                person_set_collection, person_ids)
+                                psc_query, person_ids)
 
             if query_person_ids is not None and len(query_person_ids) == 0:
                 logger.debug(
                     "Study %s can't match any person to filter %s... "
                     "skipping",
                     genotype_study.study_id,
-                    person_set_collection)
+                    psc_query)
                 continue
 
             # pylint: disable=no-member,protected-access
