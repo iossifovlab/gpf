@@ -7,7 +7,7 @@ from query_base.query_base import QueryDatasetView
 from utils.query_params import parse_query_params
 from dae.pedigrees.family import FamiliesData, FamilyTag
 from dae.pedigrees.family_tag_builder import check_tag
-from dae.pedigrees.serializer import FamiliesTsvSerializer
+from dae.pedigrees.loader import FamiliesLoader
 
 
 class VariantReportsView(QueryDatasetView):
@@ -112,10 +112,11 @@ class FamilyCounterDownloadView(QueryDatasetView):
             for family_id in counter_families
         })
 
-        serializer = FamiliesTsvSerializer(counter_families_data)
+        tsv = FamiliesLoader.to_tsv(counter_families_data)
+        lines = map(lambda x: x + "\n", tsv.strip().split("\n"))
 
         response = StreamingHttpResponse(
-            serializer.serialize(),
+            lines,
             content_type="text/tab-separated-values"
         )
         response["Content-Disposition"] = "attachment; filename=families.ped"
@@ -164,10 +165,11 @@ class FamiliesDataDownloadView(QueryDatasetView):
 
             result = FamiliesData.from_families(result)
 
-        serializer = FamiliesTsvSerializer(result)
+        tsv = FamiliesLoader.to_tsv(result)
+        lines = map(lambda x: x + "\n", tsv.strip().split("\n"))
 
         response = StreamingHttpResponse(
-            serializer.serialize(),
+            lines,
             content_type="text/tab-separated-values"
         )
         response["Content-Disposition"] = "attachment; filename=families.ped"

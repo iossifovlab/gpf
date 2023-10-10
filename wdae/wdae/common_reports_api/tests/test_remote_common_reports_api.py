@@ -33,12 +33,13 @@ def test_remote_families_data_download(admin_client: Client) -> None:
     header = streaming_content[0].decode("utf8")
     assert header[-1] == "\n"
     header = header[:-1].split("\t")
+    assert len(header) == 33
 
     assert header == [
-        "family_id",
-        "person_id",
-        "mom_id",
-        "dad_id",
+        "familyId",
+        "personId",
+        "momId",
+        "dadId",
         "sex",
         "status",
         "role",
@@ -78,3 +79,4 @@ def test_remote_families_data_download(admin_client: Client) -> None:
     assert first_person[-1] == "\n"
     first_person = first_person[:-1].split("\t")
     assert len(first_person) == 33
+    # assert first_person[-1] == "iossifov_2014"
