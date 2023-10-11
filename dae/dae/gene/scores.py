@@ -1,7 +1,7 @@
 from __future__ import annotations
 import logging
 from dataclasses import dataclass
-from typing import Union, Any, Optional
+from typing import Any
 
 from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.genomic_resources.genomic_scores import build_score_from_resource
@@ -21,14 +21,12 @@ class ScoreDesc:
     score_id: str
     source: str
     name: str
-    hist: Optional[Union[NumberHistogram, CategoricalHistogram, NullHistogram]]
+    hist: Histogram
     description: str
     help: str
 
     def to_json(self) -> dict[str, Any]:
-        hist_data = None
-        if self.hist is not None:
-            hist_data = self.hist.to_dict()
+        hist_data = self.hist.to_dict()
         return {
             "resource_id": self.resource_id,
             "score_id": self.score_id,
@@ -42,17 +40,16 @@ class ScoreDesc:
     @staticmethod
     def from_json(data: dict[str, Any]) -> ScoreDesc:
         """Build a ScoreDesc from a JSON."""
-        hist_data: Optional[Histogram] = None
-        if "hist" in data:
-            hist_type = data["hist"]["config"]["type"]
-            if hist_type == "categorical":
-                hist_data = CategoricalHistogram.from_dict(data["hist"])
-            elif hist_type == "null":
-                hist_data = NullHistogram.from_dict(data["hist"])
-            elif hist_type == "number":
-                hist_data = NumberHistogram.from_dict(data["hist"])
-            else:
-                raise ValueError(f"Unknown histogram type {hist_type}")
+        assert "hist" in data
+        hist_type = data["hist"]["config"]["type"]
+        if hist_type == "categorical":
+            hist_data: Histogram = CategoricalHistogram.from_dict(data["hist"])
+        elif hist_type == "null":
+            hist_data = NullHistogram.from_dict(data["hist"])
+        elif hist_type == "number":
+            hist_data = NumberHistogram.from_dict(data["hist"])
+        else:
+            raise ValueError(f"Unknown histogram type {hist_type}")
         return ScoreDesc(
             data["resource_id"],
             data["score_id"],

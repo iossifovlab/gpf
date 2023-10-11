@@ -11,7 +11,6 @@ from box import Box
 from dae.annotation.annotation_pipeline import AnnotationPipeline
 from dae.autism_gene_profile.statistic import AGPStatistic
 from dae.enrichment_tool.background import BackgroundBase
-from dae.gene.denovo_gene_set_collection import DenovoGeneSetCollection
 from dae.gene.gene_scores import GeneScore
 from dae.genomic_resources.gene_models import GeneModels
 from dae.genomic_resources.reference_genome import ReferenceGenome
@@ -315,7 +314,7 @@ class GPFInstance:
         genotype_data_study = self._variants_db.get_genotype_study(
             genotype_data_id)
         if genotype_data_study:
-            return cast(GenotypeData, genotype_data_study)
+            return genotype_data_study
         return cast(
             GenotypeData,
             self._variants_db.get_genotype_group(genotype_data_id)
@@ -331,7 +330,7 @@ class GPFInstance:
     def get_genotype_data_config(self, genotype_data_id: str) -> Optional[Box]:
         config = self._variants_db.get_genotype_study_config(genotype_data_id)
         if config is not None:
-            return cast(Box, config)
+            return config
         return cast(Box, self._variants_db.get_genotype_group_config(
             genotype_data_id
         ))
@@ -461,9 +460,9 @@ class GPFInstance:
         types: dict[str, Any],
         datasets: list[GenotypeData],
         collection_id: str  # pylint: disable=unused-argument
-    ) -> DenovoGeneSetCollection:
+    ) -> dict[str, Any]:
         return cast(
-            DenovoGeneSetCollection,
+            dict[str, Any],
             self.denovo_gene_sets_db.get_gene_set(
                 gene_set_id, types, datasets
             )

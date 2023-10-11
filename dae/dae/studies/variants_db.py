@@ -570,7 +570,9 @@ class VariantsDb:
             logger.exception(ex)
             return None
 
-    def register_genotype_data(self, genotype_data: GenotypeDataGroup) -> None:
+    def register_genotype_data(
+        self, genotype_data: Union[GenotypeData, GenotypeDataGroup]
+    ) -> None:
         """Add GenotypeData to DB."""
         if genotype_data.study_id in self.get_all_genotype_study_ids():
             logger.warning(
