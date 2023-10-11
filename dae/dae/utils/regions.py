@@ -167,6 +167,9 @@ class Region:
     def len(self):
         return self.stop - self.start + 1
 
+    def __len__(self):
+        return self.len()
+
     @classmethod
     def from_str(cls, region):
         """Parse string representation of a region."""
