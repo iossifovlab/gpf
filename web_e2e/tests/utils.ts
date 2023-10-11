@@ -71,6 +71,11 @@ export async function navigateToSidenavPage(page: Page, sidenavPageLink: string)
   await page.locator(`div.sidenav a[routerlink="/${sidenavPageLink}"]`).click();
 }
 
+export async function navigateToSidenavPage(page: Page, sidenavPageLink: string): Promise<void> {
+  await page.locator('#sidenav-toggle-button').click();
+  await page.locator(`div.sidenav a[routerlink="/${sidenavPageLink}"]`).click();
+}
+
 export function readFile(name): Promise<unknown> {
   const fs = require('fs');
   return new Promise((resolve, reject) => {
