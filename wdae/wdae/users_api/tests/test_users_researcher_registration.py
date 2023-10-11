@@ -82,7 +82,7 @@ def test_reset_pass_without_registration_wrong_email(db, client):
     response = client.post(
         url, json.dumps(data), content_type="application/json", format="json"
     )
-    assert response.status_code == status.HTTP_404_NOT_FOUND
+    assert response.status_code == status.HTTP_200_OK
 
 
 def test_successful_register(client, researcher_without_password):
