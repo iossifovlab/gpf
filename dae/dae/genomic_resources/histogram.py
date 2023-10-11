@@ -368,9 +368,9 @@ class NumberHistogram(Statistic):
         plt.clf()
 
     @staticmethod
-    def deserialize(content: str) -> NumberHistogram:
-        data = yaml.load(content, yaml.Loader)
-        config = NumberHistogramConfig.from_dict(data.get("config"))
+    def from_dict(data: dict[str, Any]) -> NumberHistogram:
+        """Build a number histogram from a dict."""
+        config = NumberHistogramConfig.from_dict(data["config"])
 
         hist = NumberHistogram(
             config,
@@ -382,6 +382,11 @@ class NumberHistogram(Statistic):
         hist.out_of_range_bins = data.get("out_of_range_bins", [0, 0])
 
         return hist
+
+    @staticmethod
+    def deserialize(content: str) -> NumberHistogram:
+        data = yaml.load(content, yaml.Loader)
+        return NumberHistogram.from_dict(data)
 
 
 class HistogramStatisticMixin:
@@ -436,8 +441,8 @@ class NullHistogram(Statistic):
         ))
 
     @staticmethod
-    def deserialize(content: str) -> NullHistogram:
-        data = yaml.load(content, yaml.Loader)
+    def from_dict(data: dict[str, Any]) -> NullHistogram:
+        """Build a null histogram from a dict."""
         config = data["config"]
         hist_type = config.get("type")
         if hist_type != "null":
@@ -446,6 +451,11 @@ class NullHistogram(Statistic):
             )
         reason = config.get("reason", "")
         return NullHistogram(NullHistogramConfig(reason=reason))
+
+    @staticmethod
+    def deserialize(content: str) -> NullHistogram:
+        data = yaml.load(content, yaml.Loader)
+        return NullHistogram.from_dict(data)
 
 
 class CategoricalHistogram(Statistic):
@@ -532,10 +542,14 @@ class CategoricalHistogram(Statistic):
         return cast(str, yaml.dump(self.to_dict()))
 
     @staticmethod
-    def deserialize(content: str) -> CategoricalHistogram:
-        data = yaml.load(content, yaml.Loader)
+    def from_dict(data: dict[str, Any]) -> CategoricalHistogram:
         config = CategoricalHistogramConfig.from_dict(data.get("config"))
         return CategoricalHistogram(config, data.get("values"))
+
+    @staticmethod
+    def deserialize(content: str) -> CategoricalHistogram:
+        data = yaml.load(content, yaml.Loader)
+        return CategoricalHistogram.from_dict(data)
 
     def plot(self, outfile: IO, score_id: str) -> None:
         """Plot histogram and save it into outfile."""

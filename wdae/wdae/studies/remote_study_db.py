@@ -1,10 +1,9 @@
 """Provides class for handling of remote studies."""
 
 import logging
-from typing import List, Dict
+from typing import List, Dict, Optional
 from remote.rest_api_client import RESTClient, RESTClientRequestError
 from studies.remote_study import RemoteGenotypeData
-from dae.studies.study import GenotypeData
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +14,7 @@ class RemoteStudyDB:
     def __init__(self, clients: List[RESTClient]):
         self.remote_study_clients: Dict[str, RESTClient] = {}
         self.remote_study_ids: Dict[str, str] = {}
-        self.remote_genotype_data: Dict[str, GenotypeData] = {}
+        self.remote_genotype_data: Dict[str, RemoteGenotypeData] = {}
 
         for client in clients:
             try:
@@ -26,7 +25,7 @@ class RemoteStudyDB:
     def add_client(self, rest_client: RESTClient) -> None:
         self._fetch_remote_studies(rest_client)
 
-    def _fetch_remote_studies(self, rest_client: RESTClient):
+    def _fetch_remote_studies(self, rest_client: RESTClient) -> None:
         studies = rest_client.get_studies()
         if studies is None:
             raise RESTClientRequestError(
@@ -40,7 +39,7 @@ class RemoteStudyDB:
             self.remote_study_clients[study_id] = rest_client
             self.remote_genotype_data[study_id] = rgd
 
-    def get_genotype_data(self, study_id):
+    def get_genotype_data(self, study_id: str) -> Optional[RemoteGenotypeData]:
         return self.remote_genotype_data.get(study_id)
 
     def get_genotype_data_config(self, study_id):

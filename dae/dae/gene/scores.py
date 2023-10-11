@@ -1,11 +1,12 @@
+from __future__ import annotations
 import logging
 from dataclasses import dataclass
-from typing import Union
+from typing import Any
 
 from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.genomic_resources.genomic_scores import build_score_from_resource
 from dae.genomic_resources.histogram import NumberHistogram, \
-    CategoricalHistogram, NullHistogram
+    CategoricalHistogram, NullHistogram, Histogram
 from dae.annotation.annotation_pipeline import AnnotatorInfo
 
 
@@ -19,10 +20,46 @@ class ScoreDesc:
     resource_id: str
     score_id: str
     source: str
-    destination: str
-    hist: Union[NumberHistogram, CategoricalHistogram, NullHistogram]
+    name: str
+    hist: Histogram
     description: str
     help: str
+
+    def to_json(self) -> dict[str, Any]:
+        hist_data = self.hist.to_dict()
+        return {
+            "resource_id": self.resource_id,
+            "score_id": self.score_id,
+            "source": self.source,
+            "name": self.name,
+            "hist": hist_data,
+            "description": self.description,
+            "help": self.help
+        }
+
+    @staticmethod
+    def from_json(data: dict[str, Any]) -> ScoreDesc:
+        """Build a ScoreDesc from a JSON."""
+        assert "hist" in data
+        hist_type = data["hist"]["config"]["type"]
+        if hist_type == "categorical":
+            hist_data: Histogram = CategoricalHistogram.from_dict(data["hist"])
+        elif hist_type == "null":
+            hist_data = NullHistogram.from_dict(data["hist"])
+        elif hist_type == "number":
+            hist_data = NumberHistogram.from_dict(data["hist"])
+        else:
+            raise ValueError(f"Unknown histogram type {hist_type}")
+        return ScoreDesc(
+            data["resource_id"],
+            data["score_id"],
+            data["source"],
+            data["name"],
+            hist_data,
+            data["description"],
+            data["help"]
+
+        )
 
 
 class GenomicScoresDb:

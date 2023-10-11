@@ -1,15 +1,16 @@
 import abc
-from typing import Any, Optional, Iterable, cast
+from typing import Any, Optional, Iterable, cast, Union
 
 from remote.rest_api_client import RESTClient
 from studies.remote_study import RemoteGenotypeData
+from studies.study_wrapper import RemoteStudyWrapper
 
 from dae.studies.study import GenotypeData
 from dae.enrichment_tool.genotype_helper import GenotypeHelper
 from dae.enrichment_tool.tool import EnrichmentTool
 
 from dae.utils.effect_utils import expand_effect_types
-from dae.person_sets import PersonSet
+from dae.person_sets import PersonSet, PersonSetCollection
 
 from .enrichment_serializer import EnrichmentSerializer
 
@@ -36,8 +37,11 @@ class EnrichmentBuilder(BaseEnrichmentBuilder):
         assert enrichment_config is not None
         effect_types = expand_effect_types(enrichment_config.effect_types)
 
-        self.person_set_collection = self.dataset.get_person_set_collection(
-            enrichment_config.selected_person_set_collections[0]
+        self.person_set_collection = cast(
+            PersonSetCollection,
+            self.dataset.get_person_set_collection(
+                enrichment_config.selected_person_set_collections[0]
+            )
         )
 
         self.helper = GenotypeHelper(
@@ -104,15 +108,15 @@ class RemoteEnrichmentBuilder(BaseEnrichmentBuilder):
     """Builder for enrichment tool test for remote dataset."""
 
     def __init__(
-        self, dataset: RemoteGenotypeData,
+        self, dataset: Union[RemoteGenotypeData, RemoteStudyWrapper],
         client: RESTClient,
-        background_name: str,
-        counting_name: str,
+        background_name: Optional[str],
+        counting_name: Optional[str],
         gene_syms: Iterable[str]
     ):
         self.dataset = dataset
         self.client = client
-        query = {}
+        query: dict[str, Any] = {}
         query["datasetId"] = dataset._remote_study_id
         query["geneSymbols"] = list(gene_syms)
         query["enrichmentBackgroundModel"] = background_name

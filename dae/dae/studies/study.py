@@ -43,6 +43,7 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
         self._person_set_collections: dict[str, PersonSetCollection] = {}
         self._parents: set[str] = set()
         self._executor = None
+        self.is_remote = False
 
     def close(self) -> None:
         logger.error("base genotype data close() called for %s", self.study_id)

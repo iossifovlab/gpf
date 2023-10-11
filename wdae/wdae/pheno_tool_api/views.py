@@ -1,10 +1,12 @@
 import math
 import logging
+from typing import cast, Any
 
 from rest_framework.response import Response  # type: ignore
 from rest_framework import status  # type: ignore
 
 from django.http.response import StreamingHttpResponse
+from studies.study_wrapper import StudyWrapper
 
 from utils.expand_gene_set import expand_gene_set
 from utils.query_params import parse_query_params
@@ -51,6 +53,7 @@ class PhenoToolView(QueryDatasetView):
         study_wrapper = self.gpf_instance.get_wdae_wrapper(data["datasetId"])
         if not (
             study_wrapper
+            and study_wrapper.phenotype_data is not None
             and study_wrapper.phenotype_data.has_measure(data["measureId"])
         ):
             return None
@@ -60,6 +63,7 @@ class PhenoToolView(QueryDatasetView):
                 study_wrapper.rest_client,
                 study_wrapper._remote_study_id
             )
+        study_wrapper = cast(StudyWrapper, study_wrapper)
 
         helper = PhenoToolHelper(study_wrapper, study_wrapper.phenotype_data)
 
@@ -88,10 +92,11 @@ class PhenoToolView(QueryDatasetView):
     def _build_report_description(measure_id, normalize_by):
         if not normalize_by:
             return measure_id
-        else:
-            return "{} ~ {}".format(measure_id, " + ".join(normalize_by))
+        normalize_desc = " + ".join(normalize_by)
+        return f"{measure_id} ~ {normalize_desc}"
 
     def post(self, request):
+        """Return pheno tool results based on POST request."""
         data = expand_gene_set(request.data, request.user)
         adapter = self.prepare_pheno_tool_adapter(data)
 
@@ -168,7 +173,7 @@ class PhenoToolPersons(QueryDatasetView):
         data = request.data
         dataset_id = data["datasetId"]
         dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
-        if not dataset:
+        if not dataset or dataset.phenotype_data is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         result = dataset.phenotype_data.get_persons(
@@ -177,9 +182,10 @@ class PhenoToolPersons(QueryDatasetView):
             data.get("familyIds", None),
         )
 
+        response: dict[str, Any] = {}
         for key in result.keys():
             person = result[key]
-            result[key] = {
+            response[key] = {
                 "person_id": person.person_id,
                 "family_id": person.family_id,
                 "role": str(person.role),
@@ -187,16 +193,17 @@ class PhenoToolPersons(QueryDatasetView):
                 "status": str(person.status),
             }
 
-        return Response(result)
+        return Response(response)
 
 
 class PhenoToolPersonsValues(QueryDatasetView):
+    """View for returning person phenotype data."""
 
     def post(self, request):
         data = request.data
         dataset_id = data["datasetId"]
         dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
-        if not dataset:
+        if not dataset or dataset.phenotype_data is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         result = dataset.phenotype_data.get_persons_values_df(
@@ -223,7 +230,7 @@ class PhenoToolMeasure(QueryDatasetView):
         if not dataset_id:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
-        if not dataset:
+        if not dataset or dataset.phenotype_data is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         measure_id = params.get("measureId", None)
@@ -247,7 +254,7 @@ class PhenoToolMeasures(QueryDatasetView):
         if not dataset_id:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
-        if not dataset:
+        if not dataset or dataset.phenotype_data is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         instrument = params.get("instrument", None)
@@ -270,7 +277,7 @@ class PhenoToolMeasureValues(QueryDatasetView):
         data = request.data
         dataset_id = data["datasetId"]
         dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
-        if not dataset:
+        if not dataset or dataset.phenotype_data is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         result = dataset.phenotype_data.get_measure_values(
@@ -289,7 +296,7 @@ class PhenoToolValues(QueryDatasetView):
         data = request.data
         dataset_id = data["datasetId"]
         dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
-        if not dataset:
+        if not dataset or dataset.phenotype_data is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         result = dataset.phenotype_data.get_values_df(
@@ -326,7 +333,7 @@ class PhenoToolInstruments(QueryDatasetView):
         if not dataset_id:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
-        if not dataset:
+        if not dataset or dataset.phenotype_data is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         instruments = dataset.phenotype_data.instruments
@@ -351,7 +358,7 @@ class PhenoToolInstrumentValues(QueryDatasetView):
         if not dataset_id:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
-        if not dataset:
+        if not dataset or dataset.phenotype_data is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         instrument_name = data["instrumentName"]

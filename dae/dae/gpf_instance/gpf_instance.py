@@ -5,21 +5,30 @@ from __future__ import annotations
 import os
 import logging
 from functools import cached_property
-from typing import Optional, Union
+from typing import Optional, Union, Any, cast
 from pathlib import Path
+from box import Box
+from dae.annotation.annotation_pipeline import AnnotationPipeline
+from dae.autism_gene_profile.statistic import AGPStatistic
+from dae.enrichment_tool.background import BackgroundBase
+from dae.gene.gene_scores import GeneScore
+from dae.genomic_resources.gene_models import GeneModels
+from dae.genomic_resources.reference_genome import ReferenceGenome
 
+from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.utils.fs_utils import find_directory_with_a_file
 from dae.enrichment_tool.background_facade import BackgroundFacade
 from dae.studies.study import GenotypeData
-from dae.gene.scores import GenomicScoresDb
-from dae.gene.gene_sets_db import GeneSetsDb, \
+from dae.gene.scores import GenomicScoresDb, ScoreDesc
+from dae.gene.gene_scores import ScoreDesc as GeneScoreDesc
+from dae.gene.gene_sets_db import GeneSet, GeneSetsDb, \
     build_gene_set_collection_from_resource
 from dae.gene.denovo_gene_sets_db import DenovoGeneSetsDb
 from dae.common_reports.common_report import CommonReport
 
 from dae.studies.variants_db import VariantsDb
 
-from dae.pheno.pheno_db import PhenoDb
+from dae.pheno.pheno_db import PhenoDb, PhenotypeData
 
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.dae_conf import dae_conf_schema
@@ -38,7 +47,9 @@ class GPFInstance:
 
     # pylint: disable=too-many-public-methods
     @staticmethod
-    def _build_gpf_config(config_filename: Optional[Union[str, Path]] = None):
+    def _build_gpf_config(
+        config_filename: Optional[Union[str, Path]] = None
+    ) -> tuple[Box, Path]:
         dae_dir: Optional[Path]
         if config_filename is not None:
             config_filename = Path(config_filename)
@@ -63,7 +74,7 @@ class GPFInstance:
     @staticmethod
     def build(
             config_filename: Optional[Union[str, Path]] = None,
-            **kwargs) -> GPFInstance:
+            **kwargs: dict[str, Any]) -> GPFInstance:
         """Construct and return a GPF instance.
 
         If the config_filename is None, tries to discover the GPF instance.
@@ -78,20 +89,25 @@ class GPFInstance:
 
     def __init__(
             self,
-            dae_config,
-            dae_dir,
-            **kwargs):
+            dae_config: Box,
+            dae_dir: Union[str, Path],
+            **kwargs: dict[str, Any]):
         assert dae_dir is not None
 
         self.dae_config = dae_config
         self.dae_dir = str(dae_dir)
 
-        self._grr = kwargs.get("grr")
-        self._reference_genome = kwargs.get("reference_genome")
-        self._gene_models = kwargs.get("gene_models")
-        self._annotation_pipeline = None
+        self._grr = cast(GenomicResourceRepo, kwargs.get("grr"))
+        self._reference_genome = cast(
+            ReferenceGenome, kwargs.get("reference_genome")
+        )
+        self._gene_models = cast(
+            GeneModels,
+            kwargs.get("gene_models")
+        )
+        self._annotation_pipeline: Optional[AnnotationPipeline] = None
 
-    def load(self):
+    def load(self) -> GPFInstance:
         """Load all GPF instance attributes."""
         # pylint: disable=pointless-statement
         self.reference_genome
@@ -106,7 +122,7 @@ class GPFInstance:
         return self
 
     @cached_property
-    def grr(self):
+    def grr(self) -> GenomicResourceRepo:
         """Return genomic resource repository configured for GPF instance."""
         if self._grr is not None:
             return self._grr
@@ -121,7 +137,7 @@ class GPFInstance:
         return self._grr
 
     @cached_property
-    def reference_genome(self):
+    def reference_genome(self) -> ReferenceGenome:
         """Return reference genome defined in the GPFInstance config."""
         if self._reference_genome is not None:
             return self._reference_genome
@@ -137,7 +153,7 @@ class GPFInstance:
         return result
 
     @cached_property
-    def gene_models(self):
+    def gene_models(self) -> GeneModels:
         """Return gene models used in the GPF instance."""
         if self._gene_models is not None:
             return self._gene_models
@@ -155,7 +171,7 @@ class GPFInstance:
         return result
 
     @cached_property
-    def _pheno_db(self):
+    def _pheno_db(self) -> PhenoDb:
         return PhenoDb(dae_config=self.dae_config)
 
     @cached_property
@@ -178,7 +194,7 @@ class GPFInstance:
         return GeneScoresDb(collections)
 
     @cached_property
-    def genomic_scores_db(self):
+    def genomic_scores_db(self) -> GenomicScoresDb:
         """Load and return genomic scores db."""
         score_annotators = []
 
@@ -213,7 +229,7 @@ class GPFInstance:
         return registry
 
     @cached_property
-    def _variants_db(self):
+    def _variants_db(self) -> VariantsDb:
         return VariantsDb(
             self.dae_config,
             self.reference_genome,
@@ -222,7 +238,7 @@ class GPFInstance:
         )
 
     @cached_property
-    def _autism_gene_profile_db(self):
+    def _autism_gene_profile_db(self) -> AutismGeneProfileDB:
         config = None if self._autism_gene_profile_config is None else\
             self._autism_gene_profile_config.to_dict()
 
@@ -232,13 +248,13 @@ class GPFInstance:
         )
         return agpdb
 
-    def reload(self):
+    def reload(self) -> None:
         """Reload GPF instance studies, de Novo gene sets, etc."""
         self._variants_db.reload()
         self.denovo_gene_sets_db.reload()
 
     @cached_property
-    def _autism_gene_profile_config(self):
+    def _autism_gene_profile_config(self) -> Optional[Box]:
         agp_config = self.dae_config.autism_gene_tool_config
         config_filename = None
 
@@ -259,7 +275,7 @@ class GPFInstance:
         )
 
     @cached_property
-    def gene_sets_db(self):
+    def gene_sets_db(self) -> GeneSetsDb:
         """Return GeneSetsDb populated with gene sets from the GPFInstance."""
         logger.debug("creating new instance of GeneSetsDb")
         if "gene_sets_db" in self.dae_config:
@@ -280,85 +296,104 @@ class GPFInstance:
         return GeneSetsDb([])
 
     @cached_property
-    def denovo_gene_sets_db(self):
+    def denovo_gene_sets_db(self) -> DenovoGeneSetsDb:
         return DenovoGeneSetsDb(self)
 
     @cached_property
-    def _background_facade(self):
+    def _background_facade(self) -> BackgroundFacade:
         return BackgroundFacade(self._variants_db)
 
-    def get_genotype_data_ids(self, local_only=False):
+    def get_genotype_data_ids(self, local_only: bool = False) -> list[str]:
         # pylint: disable=unused-argument
-        return (
+        return cast(list[str], (
             self._variants_db.get_all_genotype_study_ids()
             + self._variants_db.get_all_genotype_group_ids()
-        )
+        ))
 
-    def get_genotype_data(self, genotype_data_id) -> GenotypeData:
+    def get_genotype_data(self, genotype_data_id: str) -> GenotypeData:
         genotype_data_study = self._variants_db.get_genotype_study(
             genotype_data_id)
         if genotype_data_study:
             return genotype_data_study
-        return self._variants_db.get_genotype_group(genotype_data_id)
+        return cast(
+            GenotypeData,
+            self._variants_db.get_genotype_group(genotype_data_id)
+        )
 
-    def get_all_genotype_data(self):
+    def get_all_genotype_data(self) -> list[GenotypeData]:
         genotype_studies = self._variants_db.get_all_genotype_studies()
         genotype_data_groups = self._variants_db.get_all_genotype_groups()
-        return genotype_studies + genotype_data_groups
+        return cast(
+            list[GenotypeData], genotype_studies + genotype_data_groups
+        )
 
-    def get_genotype_data_config(self, genotype_data_id):
+    def get_genotype_data_config(self, genotype_data_id: str) -> Optional[Box]:
         config = self._variants_db.get_genotype_study_config(genotype_data_id)
         if config is not None:
             return config
-        return self._variants_db.get_genotype_group_config(
+        return cast(Box, self._variants_db.get_genotype_group_config(
             genotype_data_id
-        )
+        ))
 
-    def register_genotype_data(self, genotype_data):
+    def register_genotype_data(self, genotype_data: GenotypeData) -> None:
         self._variants_db.register_genotype_data(genotype_data)
 
-    def unregister_genotype_data(self, genotype_data):
+    def unregister_genotype_data(self, genotype_data: GenotypeData) -> None:
         self._variants_db.unregister_genotype_data(genotype_data)
 
     # Phenotype data
-    def get_phenotype_db_config(self):
-        return self._pheno_db.config
+    def get_phenotype_db_config(self) -> Box:
+        return cast(Box, self._pheno_db.config)
 
-    def get_phenotype_data_ids(self):
-        return self._pheno_db.get_phenotype_data_ids()
+    def get_phenotype_data_ids(self) -> list[str]:
+        return cast(list[str], self._pheno_db.get_phenotype_data_ids())
 
-    def get_phenotype_data(self, phenotype_data_id):
+    def get_phenotype_data(self, phenotype_data_id: str) -> PhenotypeData:
         return self._pheno_db.get_phenotype_data(phenotype_data_id)
 
-    def get_all_phenotype_data(self):
-        return self._pheno_db.get_all_phenotype_data()
+    def get_all_phenotype_data(self) -> list[PhenotypeData]:
+        return cast(
+            list[PhenotypeData], self._pheno_db.get_all_phenotype_data()
+        )
 
-    def get_phenotype_data_config(self, phenotype_data_id):
-        return self._pheno_db.get_phenotype_data_config(phenotype_data_id)
+    def get_phenotype_data_config(self, phenotype_data_id: str) -> Box:
+        return cast(
+            Box, self._pheno_db.get_phenotype_data_config(phenotype_data_id)
+        )
 
     # Genomic scores
-    def get_genomic_scores(self):
+    def get_genomic_scores(self) -> list[tuple[str, ScoreDesc]]:
         return self.genomic_scores_db.get_scores()
+
+    def has_genomic_score(self, score_id: str) -> bool:
+        return score_id in self.genomic_scores_db
+
+    def get_genomic_score(self, score_id: str) -> ScoreDesc:
+        return self.genomic_scores_db[score_id]
 
     # Gene scores
 
-    def has_gene_score(self, gene_score_id):
+    def has_gene_score(self, gene_score_id: str) -> bool:
         return gene_score_id in self.gene_scores_db
 
-    def get_gene_score(self, gene_score_id):
-        return self.gene_scores_db.get_gene_score(gene_score_id)
+    def get_gene_score(self, gene_score_id: str) -> GeneScore:
+        return cast(
+            GeneScore, self.gene_scores_db.get_gene_score(gene_score_id)
+        )
 
-    def get_gene_score_desc(self, score_id):
-        return self.gene_scores_db.get_score_desc(score_id)
+    def get_gene_score_desc(self, score_id: str) -> GeneScoreDesc:
+        return cast(
+            GeneScoreDesc, self.gene_scores_db.get_score_desc(score_id)
+        )
 
-    def get_all_gene_scores(self):
-        return self.gene_scores_db.get_gene_scores()
+    def get_all_gene_scores(self) -> list[GeneScore]:
+        return cast(list[GeneScore], self.gene_scores_db.get_gene_scores())
 
-    def get_all_gene_score_descs(self):
-        return self.gene_scores_db.get_scores()
+    def get_all_gene_score_descs(self) -> list[GeneScoreDesc]:
+        return cast(list[GeneScoreDesc], self.gene_scores_db.get_scores())
 
     # Common reports
-    def get_common_report(self, study_id):
+    def get_common_report(self, study_id: str) -> Optional[CommonReport]:
         """Load and return common report (dataset statistics) for a study."""
         study = self.get_genotype_data(study_id)
         if study is None or study.is_remote:
@@ -371,67 +406,106 @@ class GPFInstance:
             report = CommonReport.build_and_save(study)
         return report
 
-    def get_all_common_report_configs(self):
+    def get_all_common_report_configs(self) -> list[Box]:
         """Return all common report configuration."""
         configs = []
         local_ids = self.get_genotype_data_ids(True)
         for gd_id in local_ids:
             config = self.get_genotype_data_config(gd_id)
-            if config.common_report is not None:
+            if config is not None and config.common_report is not None:
                 configs.append(config.common_report)
         return configs
 
     # Gene sets
-    def get_gene_sets_collections(self):
-        return self.gene_sets_db.collections_descriptions
+    def get_gene_sets_collections(self) -> list[dict[str, Any]]:
+        return cast(
+            list[dict[str, Any]], self.gene_sets_db.collections_descriptions
+        )
 
-    def has_gene_set_collection(self, gsc_id):
-        return self.gene_sets_db.has_gene_set_collection(gsc_id)
+    def has_gene_set_collection(self, gsc_id: str) -> bool:
+        return cast(bool, self.gene_sets_db.has_gene_set_collection(gsc_id))
 
-    def get_all_gene_sets(self, collection_id):
+    def get_all_gene_sets(self, collection_id: str) -> list[GeneSet]:
         return self.gene_sets_db.get_all_gene_sets(collection_id)
 
-    def get_gene_set(self, collection_id, gene_set_id):
-        return self.gene_sets_db.get_gene_set(collection_id, gene_set_id)
+    def get_gene_set(self, collection_id: str, gene_set_id: str) -> GeneSet:
+        return cast(
+            GeneSet,
+            self.gene_sets_db.get_gene_set(collection_id, gene_set_id)
+        )
 
-    def get_denovo_gene_sets(self, datasets):
-        return self.denovo_gene_sets_db.get_gene_set_descriptions(datasets)
+    def get_denovo_gene_sets(
+        self, datasets: list[GenotypeData]
+    ) -> list[dict[str, Any]]:
+        return cast(
+            list[dict[str, Any]],
+            self.denovo_gene_sets_db.get_gene_set_descriptions(datasets)
+        )
 
-    def has_denovo_gene_sets(self):
+    def has_denovo_gene_sets(self) -> bool:
         return len(self.denovo_gene_sets_db) > 0
 
-    def get_all_denovo_gene_sets(self, types, datasets):
-        return self.denovo_gene_sets_db.get_all_gene_sets(types, datasets)
+    def get_all_denovo_gene_sets(
+        self, types: dict[str, Any],
+        datasets: list[Any],
+        collection_id: str  # pylint: disable=unused-argument
+    ) -> list[dict[str, Any]]:
+        return cast(
+            list[dict[str, Any]],
+            self.denovo_gene_sets_db.get_all_gene_sets(types, datasets)
+        )
 
-    def get_denovo_gene_set(self, gene_set_id, types, datasets):
-        return self.denovo_gene_sets_db.get_gene_set(
-            gene_set_id, types, datasets)
+    def get_denovo_gene_set(
+        self, gene_set_id: str,
+        types: dict[str, Any],
+        datasets: list[GenotypeData],
+        collection_id: str  # pylint: disable=unused-argument
+    ) -> dict[str, Any]:
+        return cast(
+            dict[str, Any],
+            self.denovo_gene_sets_db.get_gene_set(
+                gene_set_id, types, datasets
+            )
+        )
 
     # Variants DB
-    def get_dataset(self, dataset_id):
-        return self._variants_db.get(dataset_id)
+    def get_dataset(self, dataset_id: str) -> GenotypeData:
+        return cast(GenotypeData, self._variants_db.get(dataset_id))
 
     # Enrichment
-    def get_study_enrichment_config(self, dataset_id):
+    def get_study_enrichment_config(self, dataset_id: str) -> Optional[Box]:
         return self._background_facade.get_study_enrichment_config(dataset_id)
 
-    def has_background(self, dataset_id, background_name):
+    def has_background(self, dataset_id: str, background_name: str) -> bool:
         return self._background_facade.has_background(
             dataset_id, background_name)
 
-    def get_study_background(self, dataset_id, background_name):
-        return self._background_facade.get_study_background(
-            dataset_id, background_name)
+    def get_study_background(
+        self, dataset_id: str, background_name: str
+    ) -> BackgroundBase:
+        return cast(
+            BackgroundBase,
+            self._background_facade.get_study_background(
+                dataset_id, background_name
+            )
+        )
 
     # AGP
-    def get_agp_configuration(self):
-        return self._autism_gene_profile_db.configuration
+    def get_agp_configuration(self) -> Box:
+        return cast(Box, self._autism_gene_profile_db.configuration)
 
-    def get_agp_statistic(self, gene_symbol):
-        return self._autism_gene_profile_db.get_agp(gene_symbol)
+    def get_agp_statistic(self, gene_symbol: str) -> AGPStatistic:
+        return cast(
+            AGPStatistic, self._autism_gene_profile_db.get_agp(gene_symbol)
+        )
 
     def query_agp_statistics(
-            self, page, symbol_like=None, sort_by=None, order=None):
+        self,
+        page: int,
+        symbol_like: Optional[str] = None,
+        sort_by: Optional[str] = None,
+        order: Optional[str] = None
+    ) -> list[AGPStatistic]:
         """Query AGR statistics and return results."""
         rows = self._autism_gene_profile_db.query_agps(
             page, symbol_like, sort_by, order
@@ -440,9 +514,9 @@ class GPFInstance:
             self._autism_gene_profile_db.agp_from_table_row,
             rows
         ))
-        return statistics
+        return cast(list[AGPStatistic], statistics)
 
-    def get_annotation_pipeline(self):
+    def get_annotation_pipeline(self) -> AnnotationPipeline:
         """Return the annotation pipeline configured in the GPF instance."""
         if self._annotation_pipeline is None:
             if self.dae_config.annotation is None:
