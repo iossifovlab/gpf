@@ -73,6 +73,6 @@ def build_coding_length_background(gene_models: GeneModels) -> pd.DataFrame:
         genes_lengths[gene] = gene_len
 
     df = pd.DataFrame.from_records(
-        list(genes_lengths.items()), columns=["gene", "coding_length"])
+        list(genes_lengths.items()), columns=["gene", "gene_weight"])
 
     return df
