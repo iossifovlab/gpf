@@ -3,7 +3,7 @@ import abc
 import logging
 from typing import Union, Optional
 
-from dae.utils.regions import Region
+from dae.utils.regions import BedRegion
 from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.genomic_resources.gene_models import TranscriptModel
 from dae.effect_annotation.variant import Variant
@@ -28,7 +28,7 @@ class BaseAnnotationRequest(abc.ABC):
         self.promoter_len = promoter_len
         self.variant = variant
         self.transcript_model = transcript_model
-        self.__cds_regions: Optional[list[Region]] = None
+        self.__cds_regions: Optional[list[BedRegion]] = None
 
     def _clamp_in_cds(self, position: int) -> int:
         if position < self.transcript_model.cds[0]:
@@ -106,7 +106,7 @@ class BaseAnnotationRequest(abc.ABC):
             self.transcript_model.chrom, start_position, end_position
         )
 
-    def cds_regions(self) -> list[Region]:  # pylint: disable=invalid-name
+    def cds_regions(self) -> list[BedRegion]:
         if self.__cds_regions is None:
             self.__cds_regions = self.transcript_model.cds_regions()
         return self.__cds_regions

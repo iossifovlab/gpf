@@ -1,6 +1,10 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+import pathlib
+from typing import List
+
 import pytest
 import pysam
+
 from dae.utils.regions import Region, collapse, collapse_no_chrom, \
     split_into_regions, get_chromosome_length_tabix
 
@@ -22,14 +26,14 @@ from dae.genomic_resources.testing import setup_tabix
         ("chr1_KI270706v1_random", Region("chr1_KI270706v1_random")),
     ],
 )
-def test_parse_regions(region, expected):
+def test_parse_regions(region: str, expected: Region) -> None:
     result = Region.from_str(region)
     # assert result is not None
     assert result == expected
 
 
 @pytest.mark.parametrize(
-    "regions,expected",
+    "data,expected",
     [
         ("1:1-2,1:1-3", [Region("1", 1, 3)]),
         ("1:1-2,1:2-3", [Region("1", 1, 3)]),
@@ -37,8 +41,8 @@ def test_parse_regions(region, expected):
         ("1:1-2,1:3-4", [Region("1", 1, 2), Region("1", 3, 4)]),
     ],
 )
-def test_collapse_simple(regions, expected):
-    regions = [Region.from_str(r) for r in regions.split(",")]
+def test_collapse_simple(data: str, expected: List[Region]) -> None:
+    regions = [Region.from_str(r) for r in data.split(",")]
     result = collapse(regions)
 
     assert len(result) == len(expected)
@@ -47,15 +51,15 @@ def test_collapse_simple(regions, expected):
 
 
 @pytest.mark.parametrize(
-    "regions,expected",
+    "data,expected",
     [
         ("1:1-2,1:1-3", [Region("1", 1, 3)]),
         ("1:1-2,1:2-3", [Region("1", 1, 3)]),
         ("1:1-2,1:3-4", [Region("1", 1, 2), Region("1", 3, 4)]),
     ],
 )
-def test_collapse_no_chrom_simple(regions, expected):
-    regions = [Region.from_str(r) for r in regions.split(",")]
+def test_collapse_no_chrom_simple(data: str, expected: List[Region]) -> None:
+    regions = [Region.from_str(r) for r in data.split(",")]
     result = collapse_no_chrom(regions)
 
     assert len(result) == len(expected)
@@ -76,7 +80,10 @@ def test_collapse_no_chrom_simple(regions, expected):
         ]),
     ]
 )
-def test_split_into_regions(chrom, chrom_length, region_size, expected):
+def test_split_into_regions(
+    chrom: str, chrom_length: int, region_size: int,
+    expected: List[Region]
+) -> None:
     result = split_into_regions(chrom, chrom_length, region_size)
 
     assert len(result) == len(expected)
@@ -86,7 +93,7 @@ def test_split_into_regions(chrom, chrom_length, region_size, expected):
 
 
 @pytest.fixture()
-def sample_tabix(tmp_path):
+def sample_tabix(tmp_path: pathlib.Path) -> pysam.TabixFile:
     filepath = tmp_path / "data.txt.gz"
     setup_tabix(
         filepath,
@@ -113,17 +120,75 @@ def sample_tabix(tmp_path):
         1,
     ]
 )
-def test_get_chrom_length(sample_tabix, precision):
+def test_get_chrom_length(
+    sample_tabix: pysam.TabixFile, precision: int
+) -> None:
     one_length = get_chromosome_length_tabix(
         sample_tabix, "1", precision=precision)
+    assert one_length is not None
     assert one_length > 14
     assert one_length - 14 <= precision
+
     two_length = get_chromosome_length_tabix(
         sample_tabix, "2", precision=precision)
+    assert two_length is not None
+
     assert two_length > 4
     assert two_length - 14 <= precision
+
     three_length = get_chromosome_length_tabix(
         sample_tabix, "3", precision=precision
     )
+    assert three_length is not None
     assert three_length > 500_010
     assert three_length - 500_010 <= precision
+
+
+@pytest.mark.parametrize(
+    "reg1,reg2,expected",
+    [
+        (Region("1", 1, 10), Region("1", 2, 9), True),
+        (Region("1", 1, 10), Region("1", 1, 10), True),
+        (Region("1", 2, 10), Region("1", 1, 10), False),
+        (Region("1", 1, 11), Region("1", 1, 10), True),
+        (Region("1", 1), Region("1", 1, 10), True),
+        (Region("1", 1), Region("1", 1), True),
+        (Region("1", 2), Region("1", 1), False),
+        (Region("1", 2), Region("1"), False),
+        (Region("1"), Region("1"), True),
+        (Region("1"), Region("1", 1), True),
+        (Region("1"), Region("1", 1, 10), True),
+        (Region("1", None, 10), Region("1", 1, 10), True),
+        (Region("1", None, 10), Region("1", None, 10), True),
+        (Region("1", None, 10), Region("1"), False),
+        (Region("1", None, 10), Region("1", 1), False),
+    ]
+)
+def test_region_contains(reg1: Region, reg2: Region, expected: bool) -> None:
+    assert reg1.contains(reg2) == expected
+
+
+@pytest.mark.parametrize(
+    "reg1,reg2,expected",
+    [
+        (Region("1", 1, 10), Region("1", 2, 9), Region("1", 2, 9)),
+        (Region("1", 1, 10), Region("1", 1, 10), Region("1", 1, 10)),
+        (Region("1", 2, 10), Region("1", 1, 10), Region("1", 2, 10)),
+        (Region("1", 1, 11), Region("1", 1, 10), Region("1", 1, 10)),
+        (Region("1", 1), Region("1", 1, 10), Region("1", 1, 10)),
+        (Region("1", 1), Region("1", 1), Region("1", 1)),
+        (Region("1", 2), Region("1", 1), Region("1", 2)),
+        (Region("1", 2), Region("1"), Region("1", 2)),
+        (Region("1"), Region("1"), Region("1")),
+        (Region("1"), Region("1", 1), Region("1", 1)),
+        (Region("1"), Region("1", 1, 10), Region("1", 1, 10)),
+        (Region("1", None, 10), Region("1", 1, 10), Region("1", 1, 10)),
+        (Region("1", None, 10), Region("1", None, 10), Region("1", None, 10)),
+        (Region("1", None, 10), Region("1"), Region("1", None, 10)),
+        (Region("1", None, 10), Region("1", 1), Region("1", 1, 10)),
+    ]
+)
+def test_region_intersection(
+    reg1: Region, reg2: Region, expected: Region
+) -> None:
+    assert reg1.intersection(reg2) == expected
