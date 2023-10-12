@@ -60,81 +60,18 @@ test.describe('Genes block gene sets names and count tests', () => {
     [
         {
           collection: 'Main',
-          expectedCondition: 'autism candidates from Iossifov PNAS 2015 (239): Iossifov I., et al. ' +
-            'Low load for disruptive mutations in autism genes and their biased transmission. PNAS (2015)'
-        },
-        {
-          collection: 'Main',
-          expectedCondition: 'autism candidates from Sanders Neuron 2015 (65): Sanders S., et. al, Insights into ' +
-            'Autism Spectrum Disorder Genomic Architecture and Biology from 71 Risk Loci. Neuron (2015)'
-        },
-        {
-          collection: 'Main',
-          expectedCondition: 'brain critical genes (1744): Uddin M, et al. Brain-expressed exons under ' +
-            'purifying selection are enriched for de novo mutations in autism spectrum disorder. Nat Genetics (2014)'
+          expectedSearchCondition: 'autism candidates from Iossifov PNAS 2015 (239): Iossifov I., et al. ' +
+            'Low load for disruptive mutations in autism genes and their biased transmission. PNAS (2015)',
+          expectedDownloadCount: '239'
         },
         {
           collection: 'SFARI Genes',
-          expectedCondition: 'SFARI ALL (910): SFARI Genes (2017-09): All genes'
+          expectedSearchCondition: 'SFARI ALL (910): SFARI Genes (2017-09): All genes',
+          expectedDownloadCount: '910'
         },
-        {
-          collection: 'SFARI Genes',
-          expectedCondition: 'SFARI Score 1 (24): SFARI Genes (2017-09): Gene score 1'
-        },
-        {
-          collection: 'SFARI Genes',
-          expectedCondition: 'SFARI Score 2 (55): SFARI Genes (2017-09): Gene score 2'
-        },
-        {
-          collection: 'SPARK Gene Lists',
-          expectedCondition: 'SPARK Gene list 2016 (50): SPARK Gene list 2016'
-        },
-        {
-          collection: 'SPARK Gene Lists',
-          expectedCondition: 'SPARK Gene list 2017 (27): SPARK Gene list 2017'
-        },
-        {
-          collection: 'SPARK Gene Lists',
-          expectedCondition: 'SPARK Gene list ALL 2016,2017 (76): SPARK Gene list ALL 2016,2017'
-        },
-        {
-          collection: 'GO Terms',
-          expectedCondition: 'GO:0000002 (7): mitochondrial_genome_maintenance'
-        },
-        {
-          collection: 'GO Terms',
-          expectedCondition: 'GO:0000003 (10): reproduction'
-        },
-        {
-          collection: 'GO Terms',
-          expectedCondition: 'GO:0000009 (1): alpha-1,6-mannosyltransferase_activity'
-        },
-        {
-          collection: 'Protein domains',
-          expectedCondition: '35EXO (9)'
-        },
-        {
-          collection: 'Protein domains',
-          expectedCondition: 'AAA (132)'
-        },
-        {
-          collection: 'Protein domains',
-          expectedCondition: 'ABH (18)'
-        },
-        {
-          collection: 'miRNA from Darnell',
-          expectedCondition: 'let-7 (881)'
-        },
-        {
-          collection: 'miRNA from Darnell',
-          expectedCondition: 'miR-101 (510)'
-        },
-        {
-          collection: 'miRNA from Darnell',
-          expectedCondition: 'miR-124 (1018)'
-        }
+
       ].forEach(data => {
-        test('should properly display "' + data.expectedCondition + '" in "' +
+        test('should properly display "' + data.expectedSearchCondition + '" in "' +
         data.collection + '" collection, and the counts should match', async({ page }) => {
             await utils.navigateToDatasetPage(page, 'iossifov_2014', 'Genotype browser');
             await page.getByRole('tab', { name: 'Gene Sets' }).click();
@@ -142,7 +79,7 @@ test.describe('Genes block gene sets names and count tests', () => {
             await page.waitForRequest(utils.instanceUrl + '/api/v3/gene_sets/gene_sets');
             await page.getByPlaceholder('Select or start typing to search').click();
 
-            const expectedSetName = data.expectedCondition;
+            const expectedSetName = data.expectedSearchCondition;
             const geneSetName = expectedSetName.substring(0, expectedSetName.indexOf('(') - 1);
 
             await page.getByPlaceholder('Select or start typing to search').pressSequentially(geneSetName);
@@ -159,9 +96,7 @@ test.describe('Genes block gene sets names and count tests', () => {
                 'span:has-text("Count:")'
             ).textContent();
             const actualCount = actualCountElement.replace('Count: ', '').replace(' (Download)', '').trim();
-            const expectedCount = expectedSetName.substring(
-                expectedSetName.indexOf('(') + 1, expectedSetName.indexOf(')')
-            );
+            const expectedCount = data.expectedDownloadCount;
             expect(actualCount).toEqual(expectedCount);
           });
         });
@@ -178,81 +113,33 @@ test.beforeEach(async({ page }) => {
 [
     {
       collection: 'Main',
-      expectedCondition: 'autism candidates from Iossifov PNAS 2015 (239): Iossifov I., et al. ' +
+      expectedSearchCondition: 'autism candidates from Iossifov PNAS 2015 (239): Iossifov I., et al. ' +
         'Low load for disruptive mutations in autism genes and their biased transmission. PNAS (2015)'
     },
     {
       collection: 'Main',
-      expectedCondition: 'autism candidates from Sanders Neuron 2015 (65): Sanders S., et. al, Insights into ' +
+      expectedSearchCondition: 'autism candidates from Sanders Neuron 2015 (65): Sanders S., et. al, Insights into ' +
         'Autism Spectrum Disorder Genomic Architecture and Biology from 71 Risk Loci. Neuron (2015)'
     },
     {
       collection: 'Main',
-      expectedCondition: 'brain critical genes (1744): Uddin M, et al. Brain-expressed exons under ' +
+      expectedSearchCondition: 'brain critical genes (1744): Uddin M, et al. Brain-expressed exons under ' +
         'purifying selection are enriched for de novo mutations in autism spectrum disorder. Nat Genetics (2014)'
     },
     {
-      collection: 'SFARI Genes',
-      expectedCondition: 'SFARI ALL (910): SFARI Genes (2017-09): All genes'
-    },
-    {
-      collection: 'SFARI Genes',
-      expectedCondition: 'SFARI Score 1 (24): SFARI Genes (2017-09): Gene score 1'
-    },
-    {
-      collection: 'SFARI Genes',
-      expectedCondition: 'SFARI Score 2 (55): SFARI Genes (2017-09): Gene score 2'
-    },
-    {
-      collection: 'SPARK Gene Lists',
-      expectedCondition: 'SPARK Gene list 2016 (50): SPARK Gene list 2016'
-    },
-    {
-      collection: 'SPARK Gene Lists',
-      expectedCondition: 'SPARK Gene list 2017 (27): SPARK Gene list 2017'
-    },
-    {
-      collection: 'SPARK Gene Lists',
-      expectedCondition: 'SPARK Gene list ALL 2016,2017 (76): SPARK Gene list ALL 2016,2017'
-    },
-    {
-      collection: 'GO Terms',
-      expectedCondition: 'GO:0000002 (7): mitochondrial_genome_maintenance'
-    },
-    {
-      collection: 'GO Terms',
-      expectedCondition: 'GO:0000003 (10): reproduction'
-    },
-    {
-      collection: 'GO Terms',
-      expectedCondition: 'GO:0000009 (1): alpha-1,6-mannosyltransferase_activity'
-    },
-    {
       collection: 'Protein domains',
-      expectedCondition: '35EXO (9):'
-    },
-    {
-      collection: 'Protein domains',
-      expectedCondition: 'AAA (132):'
-    },
-    {
-      collection: 'Protein domains',
-      expectedCondition: 'ABH (18):'
+      expectedSearchCondition: 'ABH (18):'
     },
     {
       collection: 'miRNA from Darnell',
-      expectedCondition: 'let-7 (881):'
+      expectedSearchCondition: 'let-7 (881):'
     },
     {
       collection: 'miRNA from Darnell',
-      expectedCondition: 'miR-101 (510):'
-    },
-    {
-      collection: 'miRNA from Darnell',
-      expectedCondition: 'miR-124 (1018):'
+      expectedSearchCondition: 'miR-124 (1018):'
     }
 ].forEach(data => {
-     test('should download "' + data.expectedCondition + '" in the "' + data.collection +
+     test('should download "' + data.expectedSearchCondition + '" in the "' + data.collection +
      '" collection and check whether the count in the name should matches ' +
      'the downloaded"s file length and the gene set"s name matches the first value of the file', async({ page }) => {
     const results = [];
@@ -263,7 +150,7 @@ test.beforeEach(async({ page }) => {
     await page.locator('gpf-gene-sets select.form-control').selectOption(data.collection);
 
     results.splice(0, results.length);
-    let expectedName = data.expectedCondition;
+    let expectedName = data.expectedSearchCondition;
     const geneSetName = expectedName.substring(0, expectedName.indexOf('(') - 1);
     const expectedCount = Number(expectedName.substring(expectedName.indexOf('(') + 1, expectedName.indexOf(')')));
 
@@ -304,7 +191,7 @@ test.describe('Genes block denovo gene set gene symbols tests', () => {
   [
     {
       peopleGroup: 'affected',
-      expectedConditions: {
+      expectedSearchConditions: {
         effectTypesSearchQueries: [
           'LGDs',
           'Missense',
@@ -325,7 +212,7 @@ test.describe('Genes block denovo gene set gene symbols tests', () => {
     },
     {
       peopleGroup: 'unaffected',
-      expectedConditions: {
+      expectedSearchConditions: {
         effectTypesSearchQueries: ['LGDs'],
         expectedGeneSymbolsFiles: [
           '/../fixtures/gene-sets/LGDs_iossifov_2014_unaffected.csv',
@@ -339,7 +226,7 @@ test.describe('Genes block denovo gene set gene symbols tests', () => {
       } denovo gene sets and check whether they are equal to the reference data`,
       async({ page }) => {
         let index = 0;
-        for await (const queryData of data.expectedConditions.effectTypesSearchQueries) {
+        for await (const queryData of data.expectedSearchConditions.effectTypesSearchQueries) {
           await utils.navigateToDatasetPage(
             page,
             'iossifov_2014',
@@ -374,7 +261,7 @@ test.describe('Genes block denovo gene set gene symbols tests', () => {
           );
           await page
             .locator('button.dropdown-item span')
-            .getByText(data.expectedConditions.effectTypesSearchQueries[index])
+            .getByText(data.expectedSearchConditions.effectTypesSearchQueries[index])
             .first()
             .click();
 
@@ -393,7 +280,7 @@ test.describe('Genes block denovo gene set gene symbols tests', () => {
           const expectedDataLines = (await utils.readFile(
             path.join(
               __dirname +
-                data.expectedConditions.expectedGeneSymbolsFiles[index]
+                data.expectedSearchConditions.expectedGeneSymbolsFiles[index]
             )
           )) as string;
             expect(downloadedDataLines.split('\n').sort()).toEqual(
