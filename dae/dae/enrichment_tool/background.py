@@ -1,117 +1,112 @@
 from __future__ import annotations
 
-from collections import Counter
 import abc
-from typing import cast, Iterable
+
+from typing import cast, Iterable, Any
 
 from scipy import stats
-import numpy as np
 import pandas as pd
-from box import Box
 
 from dae.enrichment_tool.event_counters import \
     overlap_enrichment_result_dict, \
-    EnrichmentResult
+    EnrichmentResult, EventsCounterResult, ChildrenStats
 
 
 class BackgroundBase(abc.ABC):
     """Base class for Background."""
 
-    @staticmethod
-    def build_background(
-        background_kind: str, enrichment_config: Box
-    ) -> BackgroundBase:
-        """Construct a specified type of background."""
-        if background_kind == "coding_len_background_model":
-            return CodingLenBackground(enrichment_config)
-        if background_kind == "samocha_background_model":
-            return SamochaBackground(enrichment_config)
-        raise ValueError(f"unexpected background: {background_kind}")
-
-    def __init__(self, name: str, config: Box):
-        self.background: pd.DataFrame
+    def __init__(self, name: str, config: dict[str, Any]):
         self.name = name
         assert self.name is not None
         self.config = config
         self.load()
-
-    @property
-    def is_ready(self) -> bool:
-        return self.background is not None
 
     @abc.abstractmethod
     def load(self) -> None:
         """Load the background data."""
 
     @abc.abstractmethod
-    def calc_stats(
-        self, effect_types: Iterable[str],
-        enrichment_results: dict[str, EnrichmentResult],
+    def calc_enrichment_test(
+        self,
+        events_counts: EventsCounterResult,
         gene_set: Iterable[str],
-        children_by_sex: dict[str, set[str]]
+        **kwargs: Any
     ) -> dict[str, EnrichmentResult]:
-        """Calculate the enrichment statistics."""
+        """Calculate the enrichment test."""
 
 
-class BackgroundCommon(BackgroundBase):
-    """A common background base class."""
+# class BackgroundCommon(BackgroundBase):
+#     """A common background base class."""
 
-    @abc.abstractmethod
-    def _count(self, gene_syms: set[str]) -> int:
-        """Count the expected events in the specified genes."""
+#     @abc.abstractmethod
+#     def _count(self, gene_syms: set[str]) -> int:
+#         """Count the expected events in the specified genes."""
 
-    @property
-    @abc.abstractmethod
-    def _total(self) -> int:
-        """Count the total number of expected events."""
+#     @property
+#     @abc.abstractmethod
+#     def _total(self) -> int:
+#         """Count the total number of expected events."""
 
-    def _prob(self, gene_syms: set[str]) -> float:
-        assert self._total > 0
-        return float(self._count(gene_syms)) / self._total
+#     def _prob(self, gene_syms: set[str]) -> float:
+#         assert self._total > 0
+#         return float(self._count(gene_syms)) / self._total
 
-    def _calc_enrichment_results_stats(
-        self, background_prob: float, result: EnrichmentResult
-    ) -> None:
-        assert result.events is not None
-        events_count = len(result.events)
-        result.expected = background_prob * events_count
+#     def _calc_enrichment_results_stats(
+#         self, background_prob: float, result: EnrichmentResult
+#     ) -> None:
+#         assert result.events is not None
+#         events_count = len(result.events)
+#         result.expected = background_prob * events_count
 
-        assert result.overlapped is not None
-        if not result.overlapped:
-            result.pvalue = 1.0
-        else:
-            assert len(result.overlapped) >= 1.0, result.overlapped
-            binom = stats.binomtest(
-                len(result.overlapped), events_count, p=background_prob
-            )
-            result.pvalue = binom.pvalue
+#         assert result.overlapped is not None
+#         if not result.overlapped:
+#             result.pvalue = 1.0
+#         else:
+#             assert len(result.overlapped) >= 1.0, result.overlapped
+#             binom = stats.binomtest(
+#                 len(result.overlapped), events_count, p=background_prob
+#             )
+#             result.pvalue = binom.pvalue
 
-    def calc_stats(
-        self, effect_types: Iterable[str],
-        enrichment_results: dict[str, EnrichmentResult],
-        gene_set: Iterable[str],
-        children_by_sex: dict[str, set[str]]
-    ) -> dict[str, EnrichmentResult]:
-        """Calculate enrichment statistics."""
-        gene_syms = set(gs.upper() for gs in gene_set)
-        overlap_enrichment_result_dict(enrichment_results, gene_syms)
+#     @staticmethod
+#     def calc_expected_observed_pvalue(
+#         events_prob: float, events_count: int, observed: int
+#     ) -> tuple[float, float]:
+#         """Calculate expected event count and binomtest p-value."""
+#         expected = events_count * events_prob
+#         if observed == 0:
+#             return expected, 1.0
+#         assert observed >= 1
+#         binom = stats.binomtest(observed, events_count, events_prob)
+#         return expected, binom.pvalue
 
-        background_prob = self._prob(gene_syms)
+#     def calc_stats(
+#         self, effect_types: Iterable[str],
+#         events_counts: EventsCounterResult,
+#         gene_set: Iterable[str],
+#         children_by_sex: dict[str, set[str]]
+#     ) -> dict[str, EnrichmentResult]:
+#         """Calculate enrichment statistics."""
+#         gene_syms = set(gs.upper() for gs in gene_set)
+#         overlap_counts = overlap_enrichment_result_dict(
+#             events_counts, gene_syms)
 
-        self._calc_enrichment_results_stats(
-            background_prob, enrichment_results["all"]
-        )
-        self._calc_enrichment_results_stats(
-            background_prob, enrichment_results["rec"]
-        )
-        self._calc_enrichment_results_stats(
-            background_prob, enrichment_results["male"]
-        )
-        self._calc_enrichment_results_stats(
-            background_prob, enrichment_results["female"]
-        )
+#         background_prob = self._prob(gene_syms)
 
-        return enrichment_results
+#         self._calc_enrichment_results_stats(
+#             background_prob, enrichment_results["all"]
+#         )
+#         self._calc_enrichment_results_stats(
+#             background_prob, enrichment_results["rec"]
+#         )
+#         self._calc_enrichment_results_stats(
+#             background_prob, enrichment_results["male"]
+#         )
+#         self._calc_enrichment_results_stats(
+#             background_prob, enrichment_results["female"]
+#         )
+
+#         return enrichment_results
 
 
 # class SynonymousBackground(BackgroundCommon):
@@ -209,44 +204,45 @@ class BackgroundCommon(BackgroundBase):
 #         return np.sum(self.background["raw"]) + len(self.foreground)
 
 
-class CodingLenBackground(BackgroundCommon):
-    """Defines conding len enrichment background."""
+# class CodingLenBackground(BackgroundCommon):
+#     """Defines conding len enrichment background."""
 
-    @property
-    def filename(self) -> str:
-        return str(getattr(self.config.background, self.name).file)
+#     @property
+#     def filename(self) -> str:
+#         return str(getattr(self.config.background, self.name).file)
 
-    def _load_and_prepare_build(self) -> pd.DataFrame:
-        filename = self.filename
-        assert filename is not None
+#     def _load_and_prepare_build(self) -> pd.DataFrame:
+#         filename = self.filename
+#         assert filename is not None
 
-        df = pd.read_csv(filename, usecols=["gene_upper", "codingLenInTarget"])
+#         df = pd.read_csv(
+#               filename, usecols=["gene_upper", "codingLenInTarget"])
 
-        df = df.rename(
-            columns={"gene_upper": "sym", "codingLenInTarget": "raw"}
-        )
-        df = df.astype(dtype={"sym": np.str_, "raw": np.int32})
+#         df = df.rename(
+#             columns={"gene_upper": "sym", "codingLenInTarget": "raw"}
+#         )
+#         df = df.astype(dtype={"sym": np.str_, "raw": np.int32})
 
-        return df
+#         return df
 
-    def __init__(self, config: Box):
-        super().__init__(
-            "coding_len_background_model", config
-        )
+#     def __init__(self, config: Box):
+#         super().__init__(
+#             "coding_len_background_model", config
+#         )
 
-    def load(self) -> None:
-        self.background = self._load_and_prepare_build()
+#     def load(self) -> None:
+#         self.background = self._load_and_prepare_build()
 
-    def _count(self, gene_syms: set[str]) -> int:
-        vpred = np.vectorize(lambda sym: sym in gene_syms)
-        index = vpred(self.background["sym"])
+#     def _count(self, gene_syms: set[str]) -> int:
+#         vpred = np.vectorize(lambda sym: sym in gene_syms)
+#         index = vpred(self.background["sym"])
 
-        res = np.sum(self.background["raw"][index])
-        return cast(int, res)
+#         res = np.sum(self.background["raw"][index])
+#         return cast(int, res)
 
-    @property
-    def _total(self) -> int:
-        return cast(int, np.sum(self.background["raw"]))
+#     @property
+#     def _total(self) -> int:
+#         return cast(int, np.sum(self.background["raw"]))
 
 
 def poisson_test(observed: float, expected: float) -> float:
@@ -269,9 +265,21 @@ def poisson_test(observed: float, expected: float) -> float:
 class SamochaBackground(BackgroundBase):
     """Represents Samocha's enrichment background model."""
 
-    @property
-    def filename(self) -> str:
-        return cast(str, getattr(self.config.background, self.name).file)
+    def __init__(
+        self, config: dict[str, Any],
+    ):
+        super().__init__(
+            "Samocha's enrichment background model",
+            config
+        )
+        self.background: pd.DataFrame
+        self.background_id = "samocha_background_model"
+        self.description = ""
+
+        self.config = config
+        self.filename = \
+            self.config["background"]["samocha_background_model"]["file"]
+        self.load()
 
     def _load_and_prepare_build(self) -> pd.DataFrame:
         filename = self.filename
@@ -284,90 +292,101 @@ class SamochaBackground(BackgroundBase):
 
         return df
 
-    def __init__(self, config: Box):
-        super().__init__(
-            "samocha_background_model", config
-        )
-
     def load(self) -> None:
         self.background = self._load_and_prepare_build()
 
-    def calc_stats(
-        self, effect_types: Iterable[str],
-        enrichment_results: dict[str, EnrichmentResult],
+    def calc_enrichment_test(
+        self,
+        events_counts: EventsCounterResult,
         gene_set: Iterable[str],
-        children_by_sex: dict[str, set[str]]
+        **kwargs: Any
     ) -> dict[str, EnrichmentResult]:
         """Calculate enrichment statistics."""
         # pylint: disable=too-many-locals
-        children_stats: dict[str, int] = Counter()
-        for sex, persons in children_by_sex.items():
-            children_stats[sex] = len(persons)
+        effect_types = list(kwargs["event_types"])
+        assert len(effect_types) == 1
+        effect_type = effect_types[0]
 
-        overlap_enrichment_result_dict(enrichment_results, gene_set)
+        children_stats = cast(ChildrenStats, kwargs["children_stats"])
 
-        ets = list(effect_types)
-        assert len(ets) == 1
-        effect_type = ets[0]
+        overlapped_counts = overlap_enrichment_result_dict(
+            events_counts, gene_set)
 
         eff = f"P_{effect_type.upper()}"
         assert eff in self.background.columns, (eff, self.background.columns)
 
-        all_result = enrichment_results["all"]
-        male_result = enrichment_results["male"]
-        female_result = enrichment_results["female"]
-        rec_result = enrichment_results["rec"]
+        # all_result = enrichment_results["all"]
+        # male_result = enrichment_results["male"]
+        # female_result = enrichment_results["female"]
+        # rec_result = enrichment_results["rec"]
 
         gene_syms = [g.upper() for g in gene_set]
         df = self.background[self.background["gene"].isin(gene_syms)]
+
         p_boys = (df["M"] * df[eff]).sum()
-        male_result.expected = p_boys * children_stats["M"]
+        male_expected = p_boys * children_stats.male
 
         p_girls = (df["F"] * df[eff]).sum()
-        female_result.expected = p_boys * children_stats["F"]
+        female_expected = p_boys * children_stats.female
 
-        assert male_result.expected is not None
-        assert female_result.expected is not None
-
-        all_result.expected = \
-            p_boys * (children_stats["M"] + children_stats["U"]) + \
-            female_result.expected
-
-        assert all_result.expected is not None
-        assert all_result.overlapped is not None
-        assert male_result.overlapped is not None
-        assert female_result.overlapped is not None
-        all_result.pvalue = poisson_test(
-            len(all_result.overlapped), all_result.expected
-        )
-        male_result.pvalue = poisson_test(
-            len(male_result.overlapped), male_result.expected
-        )
-        female_result.pvalue = poisson_test(
-            len(female_result.overlapped), female_result.expected
+        expected = p_boys * (
+            children_stats.male + children_stats.unspecified) + female_expected
+        all_result = EnrichmentResult(
+            "all",
+            events_counts.all,
+            overlapped_counts.all,
+            expected,
+            poisson_test(
+                len(overlapped_counts.all), expected)
         )
 
-        children_count = (
-            children_stats["M"] + children_stats["U"] + children_stats["F"]
+        male_result = EnrichmentResult(
+            "male",
+            events_counts.male,
+            overlapped_counts.male,
+            male_expected,
+            poisson_test(
+                len(overlapped_counts.male), male_expected)
         )
-        probability = ((children_stats["M"] + children_stats["U"]) * p_boys
-                       + children_stats["F"] * p_girls) / children_count
 
-        assert rec_result.events is not None
-        assert all_result.events is not None
-        if len(rec_result.events) == 0 or len(all_result.events) == 0:
-            rec_result.expected = 0
+        female_result = EnrichmentResult(
+            "female",
+            events_counts.female,
+            overlapped_counts.female,
+            female_expected,
+            poisson_test(
+                len(overlapped_counts.female), female_expected)
+        )
+
+        if len(events_counts.rec) == 0 or len(events_counts.all) == 0:
+            expected = 0
         else:
-            rec_result.expected = (
+            children_count = (
+                children_stats.male + children_stats.unspecified
+                + children_stats.female
+            )
+            probability = (
+                (children_stats.male + children_stats.unspecified) * p_boys
+                + children_stats.female * p_girls) / children_count
+            expected = (
                 children_count
                 * probability
-                * len(rec_result.events)
-                / len(all_result.events)
+                * len(events_counts.rec)
+                / len(events_counts.all)
             )
-        assert rec_result.overlapped is not None
-        assert rec_result.expected is not None
-        rec_result.pvalue = poisson_test(
-            len(rec_result.overlapped), rec_result.expected
+
+        pvalue = poisson_test(len(overlapped_counts.rec), expected)
+        rec_result = EnrichmentResult(
+            "rec",
+            events_counts.rec,
+            overlapped_counts.rec,
+            expected,
+            pvalue
         )
 
-        return enrichment_results
+        return {
+            "all": all_result,
+            "rec": rec_result,
+            "male": male_result,
+            "female": female_result
+        }

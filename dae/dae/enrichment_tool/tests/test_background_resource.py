@@ -5,7 +5,8 @@ from dae.genomic_resources.testing import build_inmemory_test_resource, \
     convert_to_tab_separated
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME
 
-from dae.enrichment_tool.background_resource import EnrichmentBackground
+from dae.enrichment_tool.background_resource import \
+    GeneWeightEnrichmentBackground
 
 
 def test_background_resource_simple() -> None:
@@ -26,7 +27,7 @@ def test_background_resource_simple() -> None:
     })
     assert res.get_type() == "enrichment_background"
 
-    background = EnrichmentBackground(res)
+    background = GeneWeightEnrichmentBackground(res)
     assert background is not None
 
     background.load()

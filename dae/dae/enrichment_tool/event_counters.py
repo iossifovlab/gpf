@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import itertools
-from typing import Type, Optional, cast, Iterable
+
+from typing import Type, cast, Iterable
+from dataclasses import dataclass
 
 from dae.variants.attributes import Sex
 from dae.effect_annotation.effect import AlleleEffects
@@ -78,6 +80,15 @@ def filter_denovo_one_gene_per_events(
     return [[gs] for gs, _fn in list(sym_2_fn.items())]
 
 
+@dataclass
+class EventsCounterResult:
+    all: list[list[str]]
+    rec: list[list[str]]
+    male: list[list[str]]
+    female: list[list[str]]
+    unspecified: list[list[str]]
+
+
 class EnrichmentResult:
     """Represents result of enrichment tool calculations.
 
@@ -94,12 +105,18 @@ class EnrichmentResult:
     `pvalue`
     """
 
-    def __init__(self, name: str):
+    def __init__(
+        self, name: str,
+        events: list[list[str]],
+        overlapped: list[list[str]],
+        expected: float,
+        pvalue: float
+    ):
         self.name: str = name
-        self.events: Optional[list[list[str]]] = None
-        self.overlapped: Optional[list[list[str]]] = None
-        self.expected: Optional[float] = None
-        self.pvalue: Optional[float] = None
+        self.events = events
+        self.overlapped = overlapped
+        self.expected = expected
+        self.pvalue = pvalue
 
     def __repr__(self) -> str:
         return f"EnrichmentResult({self.name}): " \
@@ -115,17 +132,18 @@ def filter_overlapping_events(
 
 
 def overlap_enrichment_result_dict(
-    enrichment_results: dict[str, EnrichmentResult], gene_syms: Iterable[str]
-) -> dict[str, EnrichmentResult]:
+    events_counts: EventsCounterResult, gene_syms: Iterable[str]
+) -> EventsCounterResult:
     """Calculate the overlap between all events and requested gene syms."""
     gene_syms_upper = [gs.upper() for gs in gene_syms]
-    for enrichment_result in list(enrichment_results.values()):
-        assert enrichment_result.events is not None
-        enrichment_result.overlapped = filter_overlapping_events(
-            enrichment_result.events, gene_syms_upper
-        )
-
-    return enrichment_results
+    result = EventsCounterResult(
+        filter_overlapping_events(events_counts.all, gene_syms_upper),
+        filter_overlapping_events(events_counts.rec, gene_syms_upper),
+        filter_overlapping_events(events_counts.male, gene_syms_upper),
+        filter_overlapping_events(events_counts.female, gene_syms_upper),
+        filter_overlapping_events(events_counts.unspecified, gene_syms_upper),
+    )
+    return result
 
 
 class CounterBase:
@@ -138,45 +156,12 @@ class CounterBase:
             "enrichment_gene_counting": GeneEventsCounter,
         }
 
-    # def get_variants(self, denovo_studies, in_child, effect_types):
-    #     variants = []
-    #     for st in denovo_studies:
-    #         vs = st.get_denovo_variants(
-    #             inChild=in_child, effectTypes=effect_types)
-    #         variants.append(vs)
-    #     return list(itertools.chain(*variants))
-
     def events(
         self, variants: list[FamilyVariant],
         children_by_sex: dict[str, set[tuple[str, str]]],
         effect_types: Iterable[str]
-    ) -> dict[str, EnrichmentResult]:
+    ) -> EventsCounterResult:
         raise NotImplementedError()
-
-    def _create_event_result(self) -> dict[str, EnrichmentResult]:
-        return {
-            "all": EnrichmentResult("all"),
-            "rec": EnrichmentResult("rec"),
-            "male": EnrichmentResult("male"),
-            "female": EnrichmentResult("female"),
-            "unspecified": EnrichmentResult("unspecified"),
-        }
-
-    def _set_result_events(
-        self,
-        all_events: list[list[str]],
-        rec_events: list[list[str]],
-        male_events: list[list[str]],
-        female_events: list[list[str]],
-        unspecified_events: list[list[str]],
-    ) -> dict[str, EnrichmentResult]:
-        result = self._create_event_result()
-        result["all"].events = all_events
-        result["rec"].events = rec_events
-        result["male"].events = male_events
-        result["female"].events = female_events
-        result["unspecified"].events = unspecified_events
-        return result
 
 
 class EventsCounter(CounterBase):
@@ -186,7 +171,7 @@ class EventsCounter(CounterBase):
         self, variants: list[FamilyVariant],
         children_by_sex: dict[str, set[tuple[str, str]]],
         effect_types: Iterable[str]
-    ) -> dict[str, EnrichmentResult]:
+    ) -> EventsCounterResult:
         male_children = children_by_sex[Sex.male.name]
         female_children = children_by_sex[Sex.female.name]
         unspecified_children = children_by_sex[Sex.unspecified.name]
@@ -237,7 +222,7 @@ class EventsCounter(CounterBase):
             unspecified_variants, effect_types
         )
 
-        result = self._set_result_events(
+        result = EventsCounterResult(
             all_events,
             rec_events,
             male_events,
@@ -254,7 +239,7 @@ class GeneEventsCounter(CounterBase):
         self, variants: list[FamilyVariant],
         children_by_sex: dict[str, set[tuple[str, str]]],
         effect_types: Iterable[str]
-    ) -> dict[str, EnrichmentResult]:
+    ) -> EventsCounterResult:
         """Count the events by sex and effect type."""
         male_children = children_by_sex[Sex.male.name]
         female_children = children_by_sex[Sex.female.name]
@@ -306,7 +291,7 @@ class GeneEventsCounter(CounterBase):
             unspecified_variants, effect_types
         )
 
-        result = self._set_result_events(
+        result = EventsCounterResult(
             all_events,
             rec_events,
             male_events,
@@ -314,3 +299,10 @@ class GeneEventsCounter(CounterBase):
             unspecified_events,
         )
         return result
+
+
+@dataclass
+class ChildrenStats:
+    male: int
+    female: int
+    unspecified: int
