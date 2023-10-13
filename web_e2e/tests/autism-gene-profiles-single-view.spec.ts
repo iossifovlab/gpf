@@ -105,3 +105,38 @@ test.describe('Autism gene profiles single view links tests', () => {
     await expect(targetPage.locator('a.link-external-page').filter({ hasText: 'Pubmed' })).toHaveText('Pubmed');
   });
 });
+
+test.describe('Autism gene profiles single view dataset table tests', () => {
+  let singleViewPage: Page;
+
+  test.beforeEach(async({ page, context }) => {
+    await page.goto(utils.instanceUrl, {waitUntil: 'load'});
+    await utils.loginAdmin(page);
+    await utils.navigateToSidenavPage(page, 'autism-gene-profiles');
+    await page.locator('input#gene-search-input').fill('GRIN2B');
+    const pagePromise = context.waitForEvent('page');
+    await page.locator('div').filter({ hasText: /^GRIN2B$/}).click();
+    singleViewPage = await pagePromise;
+    await singleViewPage.waitForLoadState();
+  });
+
+  test('should test redirect logic', async() => {
+    const page = singleViewPage;
+    const queryResponse = page.waitForResponse(
+      response => response.url() === utils.instanceUrl + '/api/v3/query_state/save'
+    );
+    const genotypeBrowserLink = page.locator('#denovo_missense > :nth-child(2) > .link-genotype-browser > span');
+    await genotypeBrowserLink.click();
+
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    const queryResponseBody = await (await queryResponse).json();
+
+    // eslint-disable-next-line max-len
+    // eslint-disable-next-line @typescript-eslint/restrict-template-expressions, @typescript-eslint/no-unsafe-member-access
+    await page.goto(`${utils.instanceUrl}/load-query/${queryResponseBody.uuid}`, {waitUntil: 'load'});
+    await page.waitForSelector('gpf-genotype-browser');
+
+    await expect(page.locator('label').filter({ hasText: 'missense' })).toBeChecked();
+    await expect(page.locator('label').filter({ hasText: /^affected$/ })).toBeChecked();
+  });
+});
