@@ -1,4 +1,6 @@
 from __future__ import annotations
+
+import sys
 import math
 import textwrap
 import hashlib
@@ -126,7 +128,7 @@ class PartitionDescriptor:
         config: dict[str, Any] = {}
         if "region_bin" in config_dict.keys():
             config["region_length"] = int(
-                config_dict["region_bin"]["region_length"])
+                config_dict["region_bin"].get("region_length", sys.maxsize))
             chromosomes = config_dict["region_bin"]["chromosomes"]
             if isinstance(chromosomes, str):
                 config["chromosomes"] = [
@@ -195,8 +197,8 @@ class PartitionDescriptor:
                 f"Partition <{self.serialize()}> does not define region bins.")
         assert self.chromosomes is not None
         assert self.region_length > 0
-
         pos_bin = pos // self.region_length
+
         if chrom in self.chromosomes:
             return f"{chrom}_{pos_bin}"
 
@@ -340,7 +342,6 @@ class PartitionDescriptor:
                 if chrom not in self.chromosomes:
                     other_max_len = max(other_max_len, chrom_len)
                     continue
-
                 num_buckets = math.ceil(chrom_len / self.region_length)
                 for bin_i in range(num_buckets):
                     summary_parts.append([("region_bin", f"{chrom}_{bin_i}")])
