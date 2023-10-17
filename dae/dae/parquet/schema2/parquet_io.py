@@ -185,16 +185,24 @@ class VariantsParquetWriter(AbstractVariantsParquetWriter):
             filesystem=filesystem,
         )
 
-    def _build_family_filename(self, allele: FamilyAllele) -> str:
-        partition = self.partition_descriptor.family_partition(allele)
+    def _build_family_filename(
+        self, allele: FamilyAllele,
+        seen_as_denovo: bool
+    ) -> str:
+        partition = self.partition_descriptor.family_partition(
+            allele, seen_as_denovo)
         partition_directory = self.partition_descriptor.partition_directory(
             fs_utils.join(self.out_dir, "family"), partition)
         partition_filename = self.partition_descriptor.partition_filename(
             "family", partition, self.bucket_index)
         return fs_utils.join(partition_directory, partition_filename)
 
-    def _build_summary_filename(self, allele: SummaryAllele) -> str:
-        partition = self.partition_descriptor.summary_partition(allele)
+    def _build_summary_filename(
+        self, allele: SummaryAllele,
+        seen_as_denovo: bool
+    ) -> str:
+        partition = self.partition_descriptor.summary_partition(
+            allele, seen_as_denovo)
         partition_directory = self.partition_descriptor.partition_directory(
             fs_utils.join(self.out_dir, "summary"), partition)
         partition_filename = self.partition_descriptor.partition_filename(
@@ -202,8 +210,10 @@ class VariantsParquetWriter(AbstractVariantsParquetWriter):
         return fs_utils.join(partition_directory, partition_filename)
 
     def _get_bin_writer_family(
-            self, allele: FamilyAllele) -> ContinuousParquetFileWriter:
-        filename = self._build_family_filename(allele)
+        self, allele: FamilyAllele,
+        seen_as_denovo: bool
+    ) -> ContinuousParquetFileWriter:
+        filename = self._build_family_filename(allele, seen_as_denovo)
 
         if filename not in self.data_writers:
             self.data_writers[filename] = ContinuousParquetFileWriter(
@@ -217,8 +227,10 @@ class VariantsParquetWriter(AbstractVariantsParquetWriter):
         return self.data_writers[filename]
 
     def _get_bin_writer_summary(
-            self, allele: SummaryAllele) -> ContinuousParquetFileWriter:
-        filename = self._build_summary_filename(allele)
+        self, allele: SummaryAllele,
+        seen_as_denovo: bool
+    ) -> ContinuousParquetFileWriter:
+        filename = self._build_summary_filename(allele, seen_as_denovo)
 
         if filename not in self.data_writers:
             self.data_writers[filename] = ContinuousParquetFileWriter(
@@ -232,7 +244,7 @@ class VariantsParquetWriter(AbstractVariantsParquetWriter):
         return self.data_writers[filename]
 
     def _write_internal(self) -> list[str]:
-        # pylint: disable=too-many-locals
+        # pylint: disable=too-many-locals,too-many-branches
         family_variant_index = 0
         summary_variant_index = 0
         for summary_variant_index, (
@@ -242,6 +254,7 @@ class VariantsParquetWriter(AbstractVariantsParquetWriter):
             num_fam_alleles_written = 0
             seen_in_status = summary_variant.allele_count * [0]
             seen_as_denovo = summary_variant.allele_count * [False]
+            seen_as_transmitted = summary_variant.allele_count * [False]
             family_variants_count = summary_variant.allele_count * [0]
 
             for fv in family_variants:
@@ -275,18 +288,42 @@ class VariantsParquetWriter(AbstractVariantsParquetWriter):
 
                 family_alleles.extend(fv.alt_alleles)
                 for fa in family_alleles:
-                    family_bin_writer = self._get_bin_writer_family(fa)
-                    family_bin_writer.append_family_allele(
-                        fa, family_variant_data_json
-                    )
                     seen_in_status[fa.allele_index] = reduce(
                         lambda t, s: t | s.value,  # type: ignore
                         filter(None, fa.allele_in_statuses),
                         seen_in_status[fa.allele_index])
-                    seen_as_denovo[fa.allele_index] = reduce(
-                        lambda t, s: t or (s == Inheritance.denovo),
-                        filter(None, fa.inheritance_in_members),
-                        seen_as_denovo[fa.allele_index])
+                    inheritance = list(
+                        filter(
+                            lambda v: v not in {
+                                None,
+                                Inheritance.unknown, Inheritance.missing},
+                            fa.inheritance_in_members))
+
+                    sad = any(
+                        i == Inheritance.denovo
+                        for i in inheritance)
+                    sat = len(inheritance) == 0 or any(
+                        i != Inheritance.denovo
+                        for i in inheritance)
+
+                    seen_as_denovo[fa.allele_index] = \
+                        sad or seen_as_denovo[fa.allele_index]
+                    seen_as_transmitted[fa.allele_index] = \
+                        sat or seen_as_transmitted[fa.allele_index]
+
+                    if sad:
+                        family_bin_writer = self._get_bin_writer_family(
+                            fa, True)
+                        family_bin_writer.append_family_allele(
+                            fa, family_variant_data_json
+                        )
+                    if sat:
+                        family_bin_writer = self._get_bin_writer_family(
+                            fa, False)
+                        family_bin_writer.append_family_allele(
+                            fa, family_variant_data_json
+                        )
+
                     family_variants_count[fa.allele_index] += 1
                     num_fam_alleles_written += 1
 
@@ -295,11 +332,10 @@ class VariantsParquetWriter(AbstractVariantsParquetWriter):
                 summary_variant.update_attributes({
                     "seen_in_status": seen_in_status[1:],
                     "seen_as_denovo": seen_as_denovo[1:],
+                    "seen_as_transmitted": seen_as_transmitted[1:],
                     "family_variants_count": family_variants_count[1:],
                     "family_alleles_count": family_variants_count[1:],
                 })
-                # build summary json blob (concat all other alleles)
-                # INSIDE summary_variant
                 summary_blobs_json = json.dumps(
                     summary_variant.to_record(), sort_keys=True
                 )
@@ -309,12 +345,16 @@ class VariantsParquetWriter(AbstractVariantsParquetWriter):
                     }
                     summary_allele.summary_index = summary_variant_index
                     summary_allele.update_attributes(extra_atts)
-                    summary_writer = self._get_bin_writer_summary(
-                        summary_allele
-                    )
-                    summary_writer.append_summary_allele(
-                        summary_allele, summary_blobs_json
-                    )
+                    if seen_as_denovo[summary_allele.allele_index]:
+                        summary_writer = self._get_bin_writer_summary(
+                            summary_allele, True)
+                        summary_writer.append_summary_allele(
+                            summary_allele, summary_blobs_json)
+                    if seen_as_transmitted[summary_allele.allele_index]:
+                        summary_writer = self._get_bin_writer_summary(
+                            summary_allele, False)
+                        summary_writer.append_summary_allele(
+                            summary_allele, summary_blobs_json)
 
             if summary_variant_index % 1000 == 0 and summary_variant_index > 0:
                 elapsed = time.time() - self.start

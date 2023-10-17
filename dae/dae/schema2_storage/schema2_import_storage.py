@@ -47,11 +47,7 @@ class Schema2ImportStorage(ImportStorage):
             project: ImportProject,
             out_dir: Optional[str] = None) -> PartitionDescriptor:
         out_dir = out_dir if out_dir else project.work_dir
-        config_dict = project.get_partition_description_dict()
-
-        if config_dict is None:
-            return PartitionDescriptor()
-        return PartitionDescriptor.parse_dict(config_dict)
+        return project.get_partition_descriptor()
 
     @classmethod
     def _do_write_pedigree(cls, project: ImportProject) -> None:
@@ -84,7 +80,7 @@ class Schema2ImportStorage(ImportStorage):
         layout = schema2_project_dataset_layout(project)
         gpf_instance = project.get_gpf_instance()
         variants_loader = project.get_variant_loader(
-            bucket, gpf_instance.reference_genome)
+            bucket, reference_genome=gpf_instance.reference_genome)
         variants_loader = project.build_variants_loader_pipeline(
             variants_loader, gpf_instance
         )

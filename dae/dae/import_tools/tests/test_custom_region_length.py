@@ -48,18 +48,18 @@ def test_import_task_bin_size(gpf_instance_2019, tmpdir, mocker,
     parquet_files = [
         "merged_region_bin_1_0_frequency_bin_0.parquet",
     ]
+
     assert set(os.listdir(out_dir)) == set(parquet_files)
     _assert_variants(
         join(out_dir, parquet_files[0]),
         bucket_index=[
-            0, 0, 0, 0, 0, 0,
-            1, 1, 1, 1,
-            3, 3,
+            0, 0, 0,
+            1, 1,
+            3,
         ],
         positions=[
-            123, 123, 150, 150, 30000000, 30000000,
-            30000001, 30000001, 40000000, 40000000,
-            99999999, 99999999
+            123, 150, 30000000,
+            30000001, 40000000, 99999999
         ]
     )
 
@@ -74,18 +74,17 @@ def test_import_task_bin_size(gpf_instance_2019, tmpdir, mocker,
     _assert_variants(
         join(out_dir, parquet_files[0]),
         bucket_index=[
-            3, 3, 3, 3,
-            4, 4,
+            3, 3, 4,
         ],
         positions=[
-            100000000, 100000000, 120000000, 120000000,
-            120000001, 120000001,
+            100000000, 120000000, 120000001,
         ]
     )
 
 
 def _assert_variants(parquet_fn, bucket_index, positions):
     variants = pq.read_table(parquet_fn).to_pandas()
+
     assert variants.shape[0] == len(positions)
     assert (variants.bucket_index == bucket_index).all()
     assert (variants.position == positions).all()
@@ -99,11 +98,12 @@ def test_bucket_generation(gpf_instance_2019, mocker):
             },
             "denovo": {
                 "files": [join(_input_dir, "single_chromosome_variants.tsv")],
-                "person_id": "spid",
+                "family_id": "familyId",
                 "chrom": "chrom",
                 "pos": "pos",
                 "ref": "ref",
                 "alt": "alt",
+                "genotype": "genotype",
             }
         },
         "processing_config": {
@@ -139,11 +139,12 @@ def test_bucket_generation_chrom_mismatch(gpf_instance_short, mocker):
             },
             "denovo": {
                 "files": [join(_input_dir, "single_chromosome_variants.tsv")],
-                "person_id": "spid",
+                "family_id": "familyId",
                 "chrom": "chrom",
                 "pos": "pos",
                 "ref": "ref",
                 "alt": "alt",
+                "genotype": "genotype",
             }
         },
         "processing_config": {
@@ -182,11 +183,12 @@ _denovo_multi_chrom_config = {
         },
         "denovo": {
             "files": [join(_input_dir, "multi_chromosome_variants.tsv")],
-            "person_id": "spid",
+            "family_id": "familyId",
             "chrom": "chrom",
             "pos": "pos",
             "ref": "ref",
             "alt": "alt",
+            "genotype": "genotype",
         }
     },
     "processing_config": {

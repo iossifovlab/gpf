@@ -296,29 +296,6 @@ class ImportProject():
         config_dict: dict = self.import_config["partition_description"]
         return PartitionDescriptor.parse_dict(config_dict)
 
-    def get_partition_description_dict(self) -> Optional[dict]:
-        """Retrurn a dict describing the paritition description.
-
-        The dict is sutable for passing to the from_dict function of a
-        PartitionDescriptor. Return None if no partition description is
-        specified in the input config.
-        """
-        if "partition_description" not in self.import_config:
-            return None
-
-        partition_desc: dict = self.import_config["partition_description"]
-        chromosomes = partition_desc.get("region_bin", {})\
-            .get("chromosomes", None)
-        assert isinstance(chromosomes, list)
-
-        # ParquetPartitionDescriptor expects a string
-        # that gets parsed internally
-        partition_desc = deepcopy(partition_desc)
-        partition_desc["region_bin"]["chromosomes"] = \
-            ",".join(chromosomes)
-
-        return partition_desc
-
     def get_gpf_instance(self) -> GPFInstance:
         """Create and return a gpf instance as desribed in the config."""
         if self._gpf_instance is not None:

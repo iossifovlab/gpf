@@ -2,13 +2,18 @@
 import pytest
 
 from dae.utils.regions import Region
-from dae.testing import setup_pedigree, setup_vcf, setup_dataset, vcf_study
+from dae.genotype_storage.genotype_storage import GenotypeStorage
+from dae.studies.study import GenotypeData
 
+from dae.testing import setup_pedigree, setup_vcf, setup_dataset, vcf_study
 from dae.testing.alla_import import alla_gpf
 
 
 @pytest.fixture(scope="module")
-def imported_dataset(tmp_path_factory, genotype_storage):
+def imported_dataset(
+    tmp_path_factory: pytest.TempPathFactory,
+    genotype_storage: GenotypeStorage
+) -> GenotypeData:
     root_path = tmp_path_factory.mktemp(
         f"vcf_path_{genotype_storage.storage_id}")
     gpf_instance = alla_gpf(root_path, genotype_storage)
@@ -82,7 +87,8 @@ def imported_dataset(tmp_path_factory, genotype_storage):
     (Region("chrA", 4, 4), 4),
 ])
 def test_summary_variants_family_variants_count_single_allele(
-        region, family_variants_count, imported_dataset):
+    region: Region, family_variants_count: int, imported_dataset: GenotypeData
+) -> None:
 
     assert imported_dataset is not None
     svs = list(imported_dataset.query_summary_variants(regions=[region]))

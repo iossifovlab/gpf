@@ -179,8 +179,8 @@ def test_shorthand_autosomes():
         assert str(i) in loader_chromosomes
         assert f"chr{i}" in loader_chromosomes
 
-    pd_dict = project.get_partition_description_dict()
-    pd_chromosomes = pd_dict["region_bin"]["chromosomes"].split(",")
+    part_desc = project.get_partition_descriptor()
+    pd_chromosomes = part_desc.chromosomes
     assert len(pd_chromosomes) == 22 * 2 + 4
     for i in range(1, 23):
         assert str(i) in pd_chromosomes
