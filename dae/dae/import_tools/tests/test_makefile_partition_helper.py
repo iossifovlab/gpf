@@ -1,11 +1,12 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
-
+import pytest_mock
 from dae.genomic_resources.reference_genome import \
     ReferenceGenome
 
 from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.import_tools.import_tools import MakefilePartitionHelper
+from dae.gpf_instance.gpf_instance import GPFInstance
 
 
 @pytest.mark.parametrize(
@@ -23,8 +24,9 @@ from dae.import_tools.import_tools import MakefilePartitionHelper
     ],
 )
 def test_target_generator_region_bins_count(
-    region_length, chrom, bins_count, gpf_instance_2013
-):
+    region_length: int, chrom: str, bins_count: int,
+    gpf_instance_2013: GPFInstance
+) -> None:
 
     partition_descriptor = PartitionDescriptor(
         ["1", "2"], region_length
@@ -55,8 +57,10 @@ def test_target_generator_region_bins_count(
     ],
 )
 def test_target_generator_region_bins(
-    region_length, chrom, targets, gpf_instance_2013
-):
+    region_length: int, chrom: str,
+    targets: list[tuple[str, str]],
+    gpf_instance_2013: GPFInstance
+) -> None:
 
     partition_descriptor = PartitionDescriptor(
         ["1", "2"], region_length
@@ -75,15 +79,18 @@ def test_target_generator_region_bins(
 @pytest.mark.parametrize(
     "region_length,target_chroms,targets",
     [
-        (3_000_000_000, ("1", "2", "3"), ["3"]),
-        (3_000_000_000, ("3",), ["3"]),
-        (3_000_000_000, ("3", "X"), ["3", "X"]),
-        (3_000_000, ("3", "X"), ["3:1-3000000", "X:1-3000000"]),
+        (3_000_000_000, ["1", "2", "3"], ["3"]),
+        (3_000_000_000, ["3"], ["3"]),
+        (3_000_000_000, ["3", "X"], ["3", "X"]),
+        (3_000_000, ["3", "X"], ["3:1-3000000", "X:1-3000000"]),
     ],
 )
 def test_target_generator_other_0(
-    region_length, target_chroms, targets, gpf_instance_2013
-):
+    region_length: int,
+    target_chroms: list[str],
+    targets: list[str],
+    gpf_instance_2013: GPFInstance
+) -> None:
 
     partition_descriptor = PartitionDescriptor(
         ["1", "2"], region_length
@@ -107,7 +114,11 @@ def test_target_generator_other_0(
         (50_000_000, set(["1_0", "1_1", "1_2", "1_3", "1_4"])),
     ],
 )
-def test_target_generator_chrom_1(region_length, targets, gpf_instance_2013):
+def test_target_generator_chrom_1(
+    region_length: int,
+    targets: set[str],
+    gpf_instance_2013: GPFInstance
+) -> None:
 
     partition_descriptor = PartitionDescriptor(
         ["1", "2"], region_length
@@ -132,7 +143,10 @@ def test_target_generator_chrom_1(region_length, targets, gpf_instance_2013):
     ],
 )
 def test_target_generator_chrom_other(
-        region_length, targets, gpf_instance_2013):
+        region_length: int,
+        targets: set[str],
+        gpf_instance_2013: GPFInstance
+) -> None:
 
     partition_descriptor = PartitionDescriptor(
         ["1", "2"], region_length
@@ -158,8 +172,11 @@ def test_target_generator_chrom_other(
     ],
 )
 def test_target_generator_chrom_prefix_target_other(
-    region_length, targets, gpf_instance_2013, mocker
-):
+    region_length: int,
+    targets: set[str],
+    gpf_instance_2013: GPFInstance,
+    mocker: pytest_mock.MockerFixture
+) -> None:
 
     mocker.patch.object(
         ReferenceGenome,
@@ -201,8 +218,11 @@ def test_target_generator_chrom_prefix_target_other(
     ],
 )
 def test_target_generator_add_chrom_prefix_target_chrom(
-    region_length, targets, gpf_instance_2013, mocker
-):
+    region_length: int,
+    targets: set[str],
+    gpf_instance_2013: GPFInstance,
+    mocker: pytest_mock.MockerFixture
+) -> None:
 
     mocker.patch.object(
         ReferenceGenome,
@@ -244,8 +264,11 @@ def test_target_generator_add_chrom_prefix_target_chrom(
     ],
 )
 def test_target_generator_del_chrom_prefix_target_chrom(
-    region_length, targets, gpf_instance_2013, mocker
-):
+    region_length: int,
+    targets: set[str],
+    gpf_instance_2013: GPFInstance,
+    mocker: pytest_mock.MockerFixture
+) -> None:
 
     mocker.patch.object(
         ReferenceGenome,
@@ -308,8 +331,11 @@ def test_target_generator_del_chrom_prefix_target_chrom(
     ],
 )
 def test_makefile_generator_bucket_numbering(
-    region_length, targets, gpf_instance_2013, mocker
-):
+    region_length: int,
+    targets: list[tuple[str, int]],
+    gpf_instance_2013: GPFInstance,
+    mocker: pytest_mock.MockerFixture
+) -> None:
 
     mocker.patch.object(
         ReferenceGenome,
@@ -365,8 +391,11 @@ def test_makefile_generator_bucket_numbering(
     ],
 )
 def test_makefile_generator_regions(
-    region_length, targets, gpf_instance_2013, mocker
-):
+    region_length: int,
+    targets: list[tuple[str, list[str]]],
+    gpf_instance_2013: GPFInstance,
+    mocker: pytest_mock.MockerFixture
+) -> None:
 
     mocker.patch.object(
         ReferenceGenome,
@@ -427,8 +456,11 @@ def test_makefile_generator_regions(
     ],
 )
 def test_makefile_generator_regions_del_chrom_prefix(
-    region_length, targets, gpf_instance_2013, mocker
-):
+    region_length: int,
+    targets: list[tuple[str, list[str]]],
+    gpf_instance_2013: GPFInstance,
+    mocker: pytest_mock.MockerFixture
+) -> None:
 
     mocker.patch.object(
         ReferenceGenome,
@@ -487,8 +519,11 @@ def test_makefile_generator_regions_del_chrom_prefix(
     ],
 )
 def test_makefile_generator_regions_add_chrom_prefix(
-    region_length, targets, gpf_instance_2013, mocker
-):
+    region_length: int,
+    targets: list[tuple[str, list[str]]],
+    gpf_instance_2013: GPFInstance,
+    mocker: pytest_mock.MockerFixture
+) -> None:
 
     mocker.patch.object(
         ReferenceGenome,

@@ -1,38 +1,48 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 
-from copy import deepcopy
 import os
+import pathlib
+
 from os.path import join
+from copy import deepcopy
+from typing import Optional
 
 import pytest
+import pytest_mock
+
 import pyarrow.parquet as pq
 
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.import_tools import import_tools, cli
+from dae.gpf_instance.gpf_instance import GPFInstance
 
 
-def test_import_task_bin_size(gpf_instance_2019, tmpdir, mocker,
-                              resources_dir):
+def test_import_task_bin_size(
+    gpf_instance_2019: GPFInstance,
+    tmp_path: pathlib.Path,
+    mocker: pytest_mock.MockerFixture,
+    resources_dir: pathlib.Path
+) -> None:
     # Create the import config and set tmpdir as work_dir
     input_dir = resources_dir / "import_task_bin_size"
     config_fn = input_dir / "import_config.yaml"
 
     import_config = GPFConfigParser.parse_and_interpolate_file(config_fn)
-    import_config["processing_config"]["work_dir"] = str(tmpdir)
+    import_config["processing_config"]["work_dir"] = str(tmp_path)
 
     # Running the import
     mocker.patch.object(import_tools.ImportProject, "get_gpf_instance",
                         return_value=gpf_instance_2019)
     project = import_tools.ImportProject.build_from_config(
-        import_config, input_dir)
+        import_config, str(input_dir))
     cli.run_with_project(project)
 
     # Assert the expected output files and dirs are created in the work_dir
     # (i.e. tmpdir)
-    files = os.listdir(tmpdir)
+    files = os.listdir(tmp_path)
     assert "test_import" in files
 
-    study_dir = join(tmpdir, "test_import")
+    study_dir = join(tmp_path, "test_import")
     assert set(os.listdir(study_dir)) == {
         "_PARTITION_DESCRIPTION",
         "_VARIANTS_SCHEMA",
@@ -82,7 +92,11 @@ def test_import_task_bin_size(gpf_instance_2019, tmpdir, mocker,
     )
 
 
-def _assert_variants(parquet_fn, bucket_index, positions):
+def _assert_variants(
+    parquet_fn: str,
+    bucket_index: list[int],
+    positions: list[int]
+) -> None:
     variants = pq.read_table(parquet_fn).to_pandas()
 
     assert variants.shape[0] == len(positions)
@@ -90,7 +104,10 @@ def _assert_variants(parquet_fn, bucket_index, positions):
     assert (variants.position == positions).all()
 
 
-def test_bucket_generation(gpf_instance_2019, mocker):
+def test_bucket_generation(
+    gpf_instance_2019: GPFInstance,
+    mocker: pytest_mock.MockerFixture
+) -> None:
     import_config = {
         "input": {
             "pedigree": {
@@ -131,7 +148,10 @@ def test_bucket_generation(gpf_instance_2019, mocker):
     assert buckets[3].regions == ["1:210000001-249250621"]
 
 
-def test_bucket_generation_chrom_mismatch(gpf_instance_short, mocker):
+def test_bucket_generation_chrom_mismatch(
+    gpf_instance_short: GPFInstance,
+    mocker: pytest_mock.MockerFixture
+) -> None:
     import_config = {
         "input": {
             "pedigree": {
@@ -204,7 +224,11 @@ _denovo_multi_chrom_config = {
 
 
 @pytest.mark.parametrize("add_chrom_prefix", [None, "chr"])
-def test_single_bucket_generation(add_chrom_prefix, gpf_instance_2019, mocker):
+def test_single_bucket_generation(
+    add_chrom_prefix: Optional[str],
+    gpf_instance_2019: GPFInstance,
+    mocker: pytest_mock.MockerFixture
+) -> None:
     import_config = deepcopy(_denovo_multi_chrom_config)
 
     import_config[
@@ -219,7 +243,9 @@ def test_single_bucket_generation(add_chrom_prefix, gpf_instance_2019, mocker):
 
 
 def test_single_bucket_is_default_when_missing_processing_config(
-        gpf_instance_2019, mocker):
+    gpf_instance_2019: GPFInstance,
+    mocker: pytest_mock.MockerFixture
+) -> None:
     import_config = deepcopy(_denovo_multi_chrom_config)
     assert "denovo" not in import_config["processing_config"]  # type: ignore
 
@@ -232,8 +258,11 @@ def test_single_bucket_is_default_when_missing_processing_config(
 
 
 @pytest.mark.parametrize("add_chrom_prefix", [None, "chr"])
-def test_chromosome_bucket_generation(add_chrom_prefix, gpf_instance_2019,
-                                      mocker):
+def test_chromosome_bucket_generation(
+    add_chrom_prefix: Optional[str],
+    gpf_instance_2019: GPFInstance,
+    mocker: pytest_mock.MockerFixture
+) -> None:
     import_config = deepcopy(_denovo_multi_chrom_config)
     import_config["processing_config"]["denovo"] = "chromosome"  # type: ignore
     if add_chrom_prefix:
@@ -255,7 +284,10 @@ def test_chromosome_bucket_generation(add_chrom_prefix, gpf_instance_2019,
     assert buckets[4].regions == [f"{prefix}5"]
 
 
-def test_chromosome_list_bucket_generation(gpf_instance_2019, mocker):
+def test_chromosome_list_bucket_generation(
+    gpf_instance_2019: GPFInstance,
+    mocker: pytest_mock.MockerFixture
+) -> None:
     import_config = deepcopy(_denovo_multi_chrom_config)
     import_config["processing_config"]["denovo"] = {  # type: ignore
         "chromosomes": ["1", "2", "3"]

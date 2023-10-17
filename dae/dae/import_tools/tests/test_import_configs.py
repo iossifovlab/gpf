@@ -1,34 +1,43 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 
 import os
+import pathlib
 from glob import glob
-from typing import Any
+from typing import Callable, Any
 
 import yaml
 import pytest
+import pytest_mock
+
 import fsspec
 
 from dae.import_tools import import_tools, cli
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.testing.alla_import import alla_gpf
+from dae.gpf_instance.gpf_instance import GPFInstance
 
 
 @pytest.fixture()
-def gpf_instance(tmp_path_factory):
+def gpf_instance(tmp_path_factory: pytest.TempPathFactory) -> GPFInstance:
     root_path = tmp_path_factory.mktemp(__name__)
     return alla_gpf(root_path)
 
 
 @pytest.mark.parametrize("config_dir", ["denovo_import", "vcf_import",
                                         "cnv_import", "dae_import"])
-def test_parquet_files_are_generated(tmpdir, gpf_instance, config_dir,
-                                     mocker, resources_dir):
+def test_parquet_files_are_generated(
+    tmp_path: pathlib.Path,
+    gpf_instance: GPFInstance,
+    config_dir: str,
+    mocker: pytest_mock.MockerFixture,
+    resources_dir: pathlib.Path
+) -> None:
     input_dir = resources_dir / config_dir
     config_fn = input_dir / "import_config.yaml"
 
     import_config = GPFConfigParser.parse_and_interpolate_file(config_fn)
     import_config["processing_config"] = {
-        "work_dir": str(tmpdir),
+        "work_dir": str(tmp_path),
     }
 
     mocker.patch.object(import_tools.ImportProject, "get_gpf_instance",
@@ -36,55 +45,63 @@ def test_parquet_files_are_generated(tmpdir, gpf_instance, config_dir,
     mocker.patch.object(import_tools.ImportProject, "_storage_type",
                         return_value="schema2")
     project = import_tools.ImportProject.build_from_config(
-        import_config, input_dir)
+        import_config, str(input_dir))
 
     cli.run_with_project(project)
 
-    files = os.listdir(tmpdir)
+    files = os.listdir(tmp_path)
     assert len(files) != 0
     assert "test_import" in files
 
-    files = os.listdir(os.path.join(tmpdir, "test_import"))
+    files = os.listdir(os.path.join(tmp_path, "test_import"))
     assert "pedigree" in files
     assert "family" in files
     assert "summary" in files
 
-    ped_parquets = os.listdir(os.path.join(tmpdir, "test_import", "pedigree"))
+    ped_parquets = os.listdir(
+        os.path.join(tmp_path, "test_import", "pedigree"))
     assert len(ped_parquets) != 0
 
     parquet_fns = os.path.join(
-        tmpdir, "test_import", "family", "**/*.parquet")
+        tmp_path, "test_import", "family", "**/*.parquet")
     family_bins = glob(parquet_fns, recursive=True)
     assert len(family_bins) != 0
 
     parquet_fns = os.path.join(
-        tmpdir, "test_import", "summary", "**/*.parquet")
+        tmp_path, "test_import", "summary", "**/*.parquet")
     summary_bins = glob(parquet_fns, recursive=True)
     assert len(summary_bins) != 0
 
 
-def test_import_with_add_chrom_prefix(tmpdir, gpf_instance_grch38, mocker,
-                                      resources_dir):
+def test_import_with_add_chrom_prefix(
+    tmp_path: pathlib.Path,
+    gpf_instance_grch38: GPFInstance,
+    mocker: pytest_mock.MockerFixture,
+    resources_dir: pathlib.Path
+) -> None:
     input_dir = resources_dir / "vcf_import"
     config_fn = input_dir / "import_config_add_chrom_prefix.yaml"
 
     import_config = GPFConfigParser.parse_and_interpolate_file(config_fn)
     import_config["processing_config"] = {
-        "work_dir": str(tmpdir),
+        "work_dir": str(tmp_path),
     }
 
     mocker.patch.object(import_tools.ImportProject, "get_gpf_instance",
                         return_value=gpf_instance_grch38)
     project = import_tools.ImportProject.build_from_config(
-        import_config, input_dir)
+        import_config, str(input_dir))
     cli.run_with_project(project)
 
-    files = os.listdir(tmpdir)
+    files = os.listdir(tmp_path)
     assert len(files) != 0
 
 
-def test_add_chrom_prefix_is_propagated_to_the_loader(resources_dir, mocker,
-                                                      gpf_instance):
+def test_add_chrom_prefix_is_propagated_to_the_loader(
+    resources_dir: pathlib.Path,
+    mocker: pytest_mock.MockerFixture,
+    gpf_instance: GPFInstance
+) -> None:
     config_fn = resources_dir / "vcf_import" \
         / "import_config_add_chrom_prefix.yaml"
 
@@ -92,10 +109,10 @@ def test_add_chrom_prefix_is_propagated_to_the_loader(resources_dir, mocker,
                         return_value=gpf_instance)
     project = import_tools.ImportProject.build_from_file(config_fn)
     loader = project._get_variant_loader("vcf")
-    assert loader._chrom_prefix == "chr"
+    assert loader._chrom_prefix == "chr"  # type: ignore
 
 
-def test_row_group_size():
+def test_row_group_size() -> None:
     import_config = {
         "input": {},
         "processing_config": {
@@ -117,7 +134,7 @@ def test_row_group_size():
         import_tools.Bucket("vcf", "", [""], 0)) == 20_000
 
 
-def test_row_group_size_short_config():
+def test_row_group_size_short_config() -> None:
     import_config = {
         "input": {},
         "processing_config": {
@@ -131,7 +148,7 @@ def test_row_group_size_short_config():
         import_tools.Bucket("denovo", "", [""], 0)) == 20_000
 
 
-def test_shorthand_for_large_integers():
+def test_shorthand_for_large_integers() -> None:
     config: dict[str, Any] = {
         "id": "test_import",
         "input": {},
@@ -155,7 +172,7 @@ def test_shorthand_for_large_integers():
         == 100_000_000
 
 
-def test_shorthand_autosomes():
+def test_shorthand_autosomes() -> None:
     config = {
         "id": "test_import",
         "input": {},
@@ -174,6 +191,7 @@ def test_shorthand_autosomes():
     }
     project = import_tools.ImportProject.build_from_config(config)
     loader_chromosomes = project._get_loader_target_chromosomes("vcf")
+    assert loader_chromosomes is not None
     assert len(loader_chromosomes) == 22 * 2
     for i in range(1, 23):
         assert str(i) in loader_chromosomes
@@ -190,7 +208,7 @@ def test_shorthand_autosomes():
         assert f"chr{j}" in pd_chromosomes
 
 
-def test_shorthand_chromosomes():
+def test_shorthand_chromosomes() -> None:
     config: dict[str, Any] = {
         "id": "test_import",
         "input": {},
@@ -215,7 +233,7 @@ def test_shorthand_chromosomes():
     assert chroms[-1] == "X"
 
 
-def test_project_input_dir_default_value():
+def test_project_input_dir_default_value() -> None:
     config = {
         "id": "test_import",
         "input": {},
@@ -225,7 +243,7 @@ def test_project_input_dir_default_value():
 
 
 @pytest.mark.parametrize("input_dir", ["/input-dir", "input-dir"])
-def test_project_input_dir(input_dir):
+def test_project_input_dir(input_dir: str) -> None:
     config = {
         "id": "test_import",
         "input": {
@@ -236,7 +254,9 @@ def test_project_input_dir(input_dir):
     assert project.input_dir == os.path.join("/dir", input_dir)
 
 
-def test_get_genotype_storage_no_explicit_config(fixture_dirname):
+def test_get_genotype_storage_no_explicit_config(
+    fixture_dirname: Callable
+) -> None:
     config = {
         "id": "test_import",
         "input": {},
@@ -254,7 +274,9 @@ def test_get_genotype_storage_no_explicit_config(fixture_dirname):
     )
 
 
-def test_add_chrom_prefix_already_present(resources_dir):
+def test_add_chrom_prefix_already_present(
+    resources_dir: pathlib.Path
+) -> None:
     config = {
         "id": "test_import",
         "input": {
@@ -272,7 +294,9 @@ def test_add_chrom_prefix_already_present(resources_dir):
         project._get_variant_loader("vcf")
 
 
-def test_del_chrom_prefix_already_deleted(resources_dir):
+def test_del_chrom_prefix_already_deleted(
+    resources_dir: pathlib.Path
+) -> None:
     config = {
         "id": "test_import",
         "input": {
@@ -290,7 +314,9 @@ def test_del_chrom_prefix_already_deleted(resources_dir):
         project._get_variant_loader("vcf")
 
 
-def test_input_in_external_file(resources_dir):
+def test_input_in_external_file(
+    resources_dir: pathlib.Path
+) -> None:
     config_fn = resources_dir / "external_input" / "import_config.yaml"
     project = import_tools.ImportProject.build_from_file(config_fn)
 
@@ -299,7 +325,7 @@ def test_input_in_external_file(resources_dir):
         f"{resources_dir}/external_input/files/multivcf.ped"
 
 
-def test_embedded_annotation_pipeline(fixture_dirname):
+def test_embedded_annotation_pipeline(fixture_dirname: Callable) -> None:
     import_config = {
         "input": {},
         "annotation": [{
@@ -321,13 +347,16 @@ def test_embedded_annotation_pipeline(fixture_dirname):
     assert annotator_info.parameters["resource_id"] == "hg19/CADD"
 
 
-def test_annotation_file(tmpdir, fixture_dirname):
+def test_annotation_file(
+    tmp_path: pathlib.Path,
+    fixture_dirname: Callable
+) -> None:
     annotation = [{
         "np_score": {
             "resource_id": "hg19/CADD",
         }
     }]
-    annotation_fn = str(tmpdir / "annotation.yaml")
+    annotation_fn = str(tmp_path / "annotation.yaml")
     with open(annotation_fn, "wt") as out_file:
         yaml.safe_dump(annotation, out_file)
 
@@ -340,7 +369,7 @@ def test_annotation_file(tmpdir, fixture_dirname):
             "path": fixture_dirname("")
         }
     }
-    config_fn = str(tmpdir / "import_config.yaml")
+    config_fn = str(tmp_path / "import_config.yaml")
     with open(config_fn, "wt") as out_file:
         yaml.safe_dump(import_config, out_file)
 
@@ -354,17 +383,19 @@ def test_annotation_file(tmpdir, fixture_dirname):
     assert annotator_info.parameters["resource_id"] == "hg19/CADD"
 
 
-def test_annotation_file_and_external_input_config(tmpdir, fixture_dirname):
+def test_annotation_file_and_external_input_config(
+    tmp_path: pathlib.Path, fixture_dirname: Callable
+) -> None:
     annotation = [{
         "np_score": {
             "resource_id": "hg19/CADD",
         }
     }]
-    with open(str(tmpdir / "annotation.yaml"), "wt") as out_file:
+    with open(str(tmp_path / "annotation.yaml"), "wt") as out_file:
         yaml.safe_dump(annotation, out_file)
 
     input_config: dict[str, Any] = {}
-    with fsspec.open(str(tmpdir / "input" / "input.yaml"), "wt") as out_file:
+    with fsspec.open(str(tmp_path / "input" / "input.yaml"), "wt") as out_file:
         yaml.safe_dump(input_config, out_file)
 
     import_config = {
@@ -378,7 +409,7 @@ def test_annotation_file_and_external_input_config(tmpdir, fixture_dirname):
             "path": fixture_dirname("")
         }
     }
-    config_fn = str(tmpdir / "import_config.yaml")
+    config_fn = str(tmp_path / "import_config.yaml")
     with open(config_fn, "wt") as out_file:
         yaml.safe_dump(import_config, out_file)
 
