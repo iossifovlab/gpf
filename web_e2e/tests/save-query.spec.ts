@@ -58,7 +58,7 @@ test.describe('Save query tests', () => {
     await expect(page.locator('ngb-tooltip-window')).toBeVisible();
   });
 
-  test('should save a query, load it, open all tools tabs and delete the query', async ({ page }) => {
+  test('should save a query, load it, open all tools tabs and delete the query', async({ page }) => {
     await utils.navigateToDatasetPage(page, utils.datasetIds.compAll, 'Genotype browser');
     await page.locator('#save-query-dropdown-button').click();
     await page.locator('gpf-save-query #name').fill('TestLoadAndDeleteQuery');
@@ -118,6 +118,33 @@ test.describe('Save query tests', () => {
 
     await page.goto(utils.instanceUrl + '/user-profile', { waitUntil: 'load'});
     await cell.locator('#delete-button').click();
+  });
+
+
+  test('should navigate to genotype browser, check all effect types checkboxes, click on "Save/share query" button, ' +
+  'copy the share link, load it and validate that all effect types checkboxes are checked', async({ page }) => {
+    await utils.navigateToDatasetPage(page, utils.datasetIds.compAll, 'Genotype browser');
+    await page.locator('gpf-effect-types').getByText('All').click();
+    await page.locator('#save-query-dropdown-button').click();
+
+    await expect(page.locator('#link-input')).not.toHaveValue('');
+    const url = await page.locator('#link-input').inputValue();
+    await page.goto(url);
+    await page.waitForSelector('gpf-genotype-browser');
+
+    const radios = page.locator('gpf-effect-types input');
+    await expect(page.getByText('nonsense')).toBeChecked();
+    const radiosPromises = [];
+    const count = await radios.count();
+    for (let i = 0; i < count; i++) {
+      radiosPromises.push(radios.nth(i).isChecked());
+    }
+
+    await Promise.all(radiosPromises).then(results => {
+      for (let i = 0; i < results.length; i++) {
+        expect(results[i]).toBe(true);
+      }
+    });
   });
 });
 
