@@ -140,3 +140,75 @@ test.describe('Autism gene profiles single view dataset table tests', () => {
     await expect(page.locator('label').filter({ hasText: /^affected$/ })).toBeChecked();
   });
 });
+
+export const geneData = [
+  {
+    geneSymbols: 'GRIN2B',
+    genomicScores: [
+      {
+        category: 'autism_scores', name: 'Autism Scores', scores: [
+          { name: 'SFARI gene score', value: 1 }
+        ]
+      }, {
+        category: 'protection_scores', name: 'Protection Scores', scores: [
+          { name: 'RVIS_rank', value: 174.5 },
+          { name: 'LGD_rank', value: 85.5 },
+          { name: 'pLI_rank', value: 400 },
+          { name: 'pRec_rank', value: 17792 }
+        ]
+      }
+    ],
+    geneSets: [
+      {
+        id: 'autism_gene_sets', name: 'Autism Gene Sets', scores: [
+          { name: 'autism candidates from Iossifov PNAS 2015', value: true },
+          { name: 'autism candidates from Sanders Neuron 2015', value: true }
+        ]
+      }, {
+        id: 'relevant_gene_sets', name: 'Relevant Gene Sets', scores: [
+          { name: 'CHD8 target genes', value: false },
+          { name: 'chromatin modifiers', value: false },
+          { name: 'essential genes', value: true },
+          { name: 'FMRP Darnell', value: true }
+        ]
+      }
+    ], datasets: [
+      {
+        name: 'iossifov_2014', columns: [
+          'affected (2507)', 'unaffected (1910)'
+        ], rows: [
+          {
+            variant_statistics: 'LGDs', variant_ids: 'denovo_lgds', affected: '3 (1.197)', unaffected: '–'
+          },
+          {
+            variant_statistics: 'missense', variant_ids: 'denovo_missense', affected: '1 (0.399)', unaffected: '–'
+          },
+          {
+            variant_statistics: 'intron', variant_ids: 'denovo_intron', affected: '–', unaffected: '–'
+          }
+        ]
+      }
+    ]
+  }
+];
+
+test.describe('Autism gene profiles single view dynamic data tests', () => {
+  let singleViewPage: Page;
+  test.beforeEach(async({ page, context }) => {
+    await page.goto(utils.instanceUrl, {waitUntil: 'load'});
+    await utils.loginAdmin(page);
+    await utils.navigateToSidenavPage(page, 'autism-gene-profiles');
+    await page.locator('input#gene-search-input').fill('GRIN2B');
+    const pagePromise = context.waitForEvent('page');
+    await page.locator('div').filter({ hasText: /^GRIN2B$/}).click();
+    singleViewPage = await pagePromise;
+    await singleViewPage.waitForLoadState();
+  });
+
+  test('should compare all data in single view for GRIN2B', async() => {
+    const page = singleViewPage;
+    await expect(page).toHaveScreenshot({fullPage: true});
+  });
+});
+
+
