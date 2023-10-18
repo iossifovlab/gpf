@@ -7,7 +7,7 @@
 
 
 [iossifovlab]
-iossifovlab.com ansible_ssh_host=iossifovlab.com  ansible_ssh_port=22 ansible_ssh_user=lubo ansible_ssh_extra_args='-o StrictHostKeyChecking=no'
+iossifovlab.seqpipe.org ansible_ssh_user=root
 
 [iossifovlab:vars]
-base_path="/home/lubo/sites"
+base_path="/var/www/iossifovlab.seqpipe.org/gpf_documentation"
