@@ -8,9 +8,10 @@ import math
 from typing import Any
 from contextlib import closing
 
-from dae.gpf_instance.gpf_instance import GPFInstance
-from dae.impala_storage.schema1.impala_variants import ImpalaVariants
 from dae.utils.regions import Region
+from dae.gpf_instance.gpf_instance import GPFInstance
+
+from impala_storage.schema1.impala_variants import ImpalaVariants
 
 
 logger = logging.getLogger("impala_tables_summary_variants")
@@ -75,17 +76,18 @@ def collect_summary_schema(impala_variants):
         "extra_attributes",
     ])
     TYPE_MAP: dict[Any, str] = {
-        int: "int",
-        float: "float",
-        str: "string",
-        bytes: "string",
+        "int": "int",
+        "float": "float",
+        "str": "string",
+        "bytes": "string",
     }
     schema = {}
-    for field_name in impala_variants.schema.names:
+    for attr_info in impala_variants.schema:
+        field_name = attr_info.name
         if field_name in FAMILY_FIELDS:
             continue
-        field_type = impala_variants.schema[field_name]
-        schema[field_name] = TYPE_MAP[field_type.type]
+        field_type = attr_info.type
+        schema[field_name] = TYPE_MAP[field_type]
 
     schema["seen_in_status"] = "tinyint"
     schema["seen_as_denovo"] = "boolean"
