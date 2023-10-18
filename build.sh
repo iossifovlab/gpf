@@ -208,25 +208,6 @@ EOT
 
   }
 
-  build_stage "Publish documentation"
-  {
-
-    local iossifovlab_infra_ref;
-    iossifovlab_infra_ref=$(e docker_img_iossifovlab_infra)
-
-    build_run_ctx_init "container" "${iossifovlab_infra_ref}"
-    defer_ret build_run_ctx_reset
-
-    # copy host's .ssh dir as the root .ssh in the container
-    build_run_container_cp_to /root/ $HOME/.ssh
-    build_run_container chown -R root:root /root/.ssh
-        build_run_container bash -c "
-            /opt/conda/bin/conda run --no-capture-output -n infra \
-            ansible-playbook -i doc_inventory doc_publish.yml"
-
-  }
-
-
 }
 
 main "$@"
