@@ -3,7 +3,7 @@ from __future__ import annotations
 import enum
 import logging
 
-from typing import Optional, Union
+from typing import Optional, Union, Any
 
 logger = logging.getLogger(__name__)
 
@@ -182,6 +182,17 @@ class Sex(enum.Enum):
 
     def short(self) -> str:
         return self.name[0].upper()
+
+    def __lt__(self, other: Sex) -> bool:
+        return bool(self.value < other.value)
+
+    def __eq__(self, other: Any) -> bool:
+        if not isinstance(other, Sex):
+            return False
+        return bool(self.value == other.value)
+
+    def __hash__(self) -> int:
+        return self.value
 
 
 class Status(enum.Enum):

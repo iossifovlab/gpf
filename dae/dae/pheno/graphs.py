@@ -144,17 +144,18 @@ def draw_linregres(df, col1, col2, jitter: Optional[int] = None, ax=None):
         jfemale2 = np.random.uniform(-jitter, jitter, len(dfemale[col2]))
 
     color_male, color_female = gender_palette_light()
+    # import pdb; pdb.set_trace()
     ax.plot(
-        dmale[col1] + jmale1,
-        dmale[col2] + jmale2,
+        dmale[col1].values + jmale1,
+        dmale[col2].values + jmale2,
         ".",
         color=color_male,
         ms=4,
         label="male",
     )
     ax.plot(
-        dfemale[col1] + jfemale1,
-        dfemale[col2] + jfemale2,
+        dfemale[col1].values + jfemale1,
+        dfemale[col2].values + jfemale2,
         ".",
         color=color_female,
         ms=4,
@@ -163,11 +164,13 @@ def draw_linregres(df, col1, col2, jitter: Optional[int] = None, ax=None):
     color_male, color_female = gender_palette()
     if res_male:
         ax.plot(
-            dmale[col1], res_male.predict(male_x), color=color_male
+            dmale[col1].values,
+            res_male.predict(male_x), color=color_male
         )
     if res_female:
         ax.plot(
-            dfemale[col1], res_female.predict(female_x), color=color_female
+            dfemale[col1].values,
+            res_female.predict(female_x), color=color_female
         )
     male_female_legend(color_male, color_female, ax)
     plt.tight_layout()
