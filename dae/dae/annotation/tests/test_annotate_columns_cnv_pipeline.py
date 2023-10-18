@@ -4,6 +4,7 @@ from pathlib import Path
 
 import pytest
 import pandas as pd
+import numpy as np
 
 from dae.annotation.annotate_columns import cli as cli_columns
 
@@ -276,4 +277,4 @@ def test_bad_cnv_gene_score_annotation(
 
     df = pd.read_csv(root_path / "result.tsv", sep="\t")
     assert list(df.worst_effect.values) == ["CNV+"]
-    assert list(df.gene_score1.values) == ["None"]
+    assert all(np.isnan(v) for v in df.gene_score1.values)
