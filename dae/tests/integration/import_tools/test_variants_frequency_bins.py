@@ -4,7 +4,7 @@ import pathlib
 
 import pytest
 
-from dae.testing import setup_pedigree, setup_vcf, vcf_import, \
+from dae.testing import setup_pedigree, setup_vcf, vcf_study, \
     setup_denovo, denovo_import
 from dae.testing import alla_gpf
 from dae.testing.import_helpers import StudyInputLayout
@@ -12,6 +12,7 @@ from dae.import_tools.cli import run_with_project
 from dae.import_tools.import_tools import ImportProject
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.gpf_instance.gpf_instance import GPFInstance
+from dae.studies.study import GenotypeData
 
 
 @pytest.fixture(scope="module")
@@ -19,9 +20,7 @@ def vcf_import_data(
     tmp_path_factory: pytest.TempPathFactory,
     genotype_storage: GenotypeStorage
 ) -> tuple[pathlib.Path, GPFInstance, StudyInputLayout]:
-    root_path = tmp_path_factory.mktemp(
-        f"parquet_dataset_{genotype_storage.storage_id}")
-
+    root_path = tmp_path_factory.mktemp("vcf_import")
     gpf_instance = alla_gpf(root_path)
 
     if genotype_storage:
@@ -43,12 +42,12 @@ def vcf_import_data(
     vcf_path = setup_vcf(
         root_path / "vcf_data" / "in.vcf.gz",
         """
-        ##fileformat=VCFv4.2
-        ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
-        ##contig=<ID=chrA>
-        #CHROM POS ID REF ALT QUAL FILTER INFO FORMAT m1  d1  p1  m2  d2  p2
-        chrA   1   .  A   C   .    .      .    GT     0/1 0/1 0/1 0/0 0/0 0/1
-        chrA   2   .  A   G   .    .      .    GT     0/0 0/0 0/1 0/1 0/1 0/1
+##fileformat=VCFv4.2
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##contig=<ID=chrA>
+#CHROM POS ID REF ALT QUAL FILTER INFO FORMAT m1  d1  p1  m2  d2  p2
+chrA   1   .  A   C   .    .      .    GT     0/1 0/1 0/1 0/0 0/0 0/1
+chrA   2   .  A   G   .    .      .    GT     0/0 0/0 0/1 0/1 0/0 0/1
         """)
 
     return root_path, gpf_instance, StudyInputLayout(
@@ -56,11 +55,10 @@ def vcf_import_data(
 
 
 @pytest.fixture(scope="module")
-def vcf_project_to_parquet(
-    tmp_path_factory: pytest.TempPathFactory,
+def vcf_fixture(
     vcf_import_data: tuple[pathlib.Path, GPFInstance, StudyInputLayout],
     genotype_storage: GenotypeStorage
-) -> ImportProject:
+) -> tuple[pathlib.Path, GenotypeData]:
     root_path, gpf_instance, layout = vcf_import_data
 
     project_config_update = {
@@ -70,20 +68,20 @@ def vcf_project_to_parquet(
             }
         },
         "destination": {
-            "storage_type": genotype_storage.get_storage_type()
+            "storage_id": genotype_storage.storage_id
         },
         "partition_description": {
             "frequency_bin": {
-                "rare_boundary": 50.0
+                "rare_boundary": 20.0
             }
         }
     }
-    project = vcf_import(
+    return root_path, vcf_study(
         root_path,
-        "parquet_dataset", layout.pedigree, layout.vcf,
+        "vcf_fixture", layout.pedigree,
+        layout.vcf,
         gpf_instance,
         project_config_update=project_config_update)
-    return project
 
 
 @pytest.mark.gs_duckdb(reason="supported for schema2 duckdb")
@@ -98,18 +96,40 @@ def vcf_project_to_parquet(
         ("common >50", 3, False),
     ]
 )
-def test_denovo_frequency_bin_for_vcf_input(
-    vcf_project_to_parquet: ImportProject,
+def test_denovo_frequency_bin_for_vcf(
+    vcf_fixture: tuple[pathlib.Path, GenotypeData],
     genotype_storage: GenotypeStorage,
     label: str, frequency_bin: int, exists: bool
 ) -> None:
 
-    run_with_project(vcf_project_to_parquet)
+    root_path, _ = vcf_fixture
+
     assert os.path.exists(
         os.path.join(
-            vcf_project_to_parquet.work_dir,
-            f"parquet_dataset/family/frequency_bin="
+            root_path / "work_dir",
+            f"vcf_fixture/family/frequency_bin="
             f"{frequency_bin}")) == exists, label
+
+
+@pytest.mark.gs_duckdb(reason="supported for schema2 duckdb")
+@pytest.mark.gs_impala2(reason="supported for schema2 impala")
+@pytest.mark.gs_gcp(reason="supported for gcp")
+@pytest.mark.parametrize(
+    "real_attr_filter,count",
+    [
+        (None, 4),
+        ([("af_allele_freq", (0.0, 20.0))], 2),
+        ([("af_allele_freq", (20.0, 100.0))], 2),
+    ]
+)
+def test_frequency_bin_queries(
+    real_attr_filter: list[tuple], count: int,
+    vcf_fixture: tuple[pathlib.Path, GenotypeData],
+    genotype_storage: GenotypeStorage,
+) -> None:
+    _, study = vcf_fixture
+    vs = list(study.query_variants(real_attr_filter=real_attr_filter))
+    assert len(vs) == count
 
 
 @pytest.fixture(scope="module")

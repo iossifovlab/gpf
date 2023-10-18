@@ -254,7 +254,6 @@ class VariantsParquetWriter(AbstractVariantsParquetWriter):
             num_fam_alleles_written = 0
             seen_in_status = summary_variant.allele_count * [0]
             seen_as_denovo = summary_variant.allele_count * [False]
-            seen_as_transmitted = summary_variant.allele_count * [False]
             family_variants_count = summary_variant.allele_count * [0]
 
             for fv in family_variants:
@@ -302,27 +301,14 @@ class VariantsParquetWriter(AbstractVariantsParquetWriter):
                     sad = any(
                         i == Inheritance.denovo
                         for i in inheritance)
-                    sat = len(inheritance) == 0 or any(
-                        i != Inheritance.denovo
-                        for i in inheritance)
 
                     seen_as_denovo[fa.allele_index] = \
                         sad or seen_as_denovo[fa.allele_index]
-                    seen_as_transmitted[fa.allele_index] = \
-                        sat or seen_as_transmitted[fa.allele_index]
 
-                    if sad:
-                        family_bin_writer = self._get_bin_writer_family(
-                            fa, True)
-                        family_bin_writer.append_family_allele(
-                            fa, family_variant_data_json
-                        )
-                    if sat:
-                        family_bin_writer = self._get_bin_writer_family(
-                            fa, False)
-                        family_bin_writer.append_family_allele(
-                            fa, family_variant_data_json
-                        )
+                    family_bin_writer = self._get_bin_writer_family(fa, sad)
+                    family_bin_writer.append_family_allele(
+                        fa, family_variant_data_json
+                    )
 
                     family_variants_count[fa.allele_index] += 1
                     num_fam_alleles_written += 1
@@ -332,7 +318,6 @@ class VariantsParquetWriter(AbstractVariantsParquetWriter):
                 summary_variant.update_attributes({
                     "seen_in_status": seen_in_status[1:],
                     "seen_as_denovo": seen_as_denovo[1:],
-                    "seen_as_transmitted": seen_as_transmitted[1:],
                     "family_variants_count": family_variants_count[1:],
                     "family_alleles_count": family_variants_count[1:],
                 })
@@ -345,16 +330,11 @@ class VariantsParquetWriter(AbstractVariantsParquetWriter):
                     }
                     summary_allele.summary_index = summary_variant_index
                     summary_allele.update_attributes(extra_atts)
-                    if seen_as_denovo[summary_allele.allele_index]:
-                        summary_writer = self._get_bin_writer_summary(
-                            summary_allele, True)
-                        summary_writer.append_summary_allele(
-                            summary_allele, summary_blobs_json)
-                    if seen_as_transmitted[summary_allele.allele_index]:
-                        summary_writer = self._get_bin_writer_summary(
-                            summary_allele, False)
-                        summary_writer.append_summary_allele(
-                            summary_allele, summary_blobs_json)
+                    summary_writer = self._get_bin_writer_summary(
+                        summary_allele,
+                        seen_as_denovo[summary_allele.allele_index])
+                    summary_writer.append_summary_allele(
+                        summary_allele, summary_blobs_json)
 
             if summary_variant_index % 1000 == 0 and summary_variant_index > 0:
                 elapsed = time.time() - self.start

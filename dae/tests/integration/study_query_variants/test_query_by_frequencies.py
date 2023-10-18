@@ -75,16 +75,15 @@ chrA   13  .  A   G,T,C .    .      .    GT     0/1  0/2  0/0 0/1  0/0 0/2
     ],
 )
 def test_query_by_real_attr_frequency(
-        real_attr_filter: tuple, count: int,
+        real_attr_filter: list[tuple], count: int,
         imported_vcf_study: GenotypeData) -> None:
-    vs = imported_vcf_study.query_variants(real_attr_filter=real_attr_filter)
-    vs = list(vs)
+    vs = list(imported_vcf_study.query_variants(
+        real_attr_filter=real_attr_filter))
     assert len(vs) == count
 
 
 def test_query_by_ultra_rare(imported_vcf_study: GenotypeData) -> None:
-    vs = imported_vcf_study.query_variants(ultra_rare=True)
-    vs = list(vs)
+    vs = list(imported_vcf_study.query_variants(ultra_rare=True))
     assert len(vs) == 4
 
 
@@ -123,7 +122,6 @@ def imported_denovo_study(
 
 def test_query_denovo_variants_by_allele_frequency(
         imported_denovo_study: GenotypeData) -> None:
-    vs = imported_denovo_study.query_variants(
-        real_attr_filter=[("af_allele_freq", (None, 100))])
-    vs = list(vs)
+    vs = list(imported_denovo_study.query_variants(
+        real_attr_filter=[("af_allele_freq", (None, 100))]))
     assert len(vs) == 4
