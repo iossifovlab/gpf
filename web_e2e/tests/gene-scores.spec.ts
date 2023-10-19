@@ -1,6 +1,7 @@
 /* eslint-disable indent */
 import { test, expect } from '@playwright/test';
 import * as utils from './utils';
+import * as path from 'path';
 
 const geneScoresData = [
   {
@@ -145,17 +146,36 @@ test.describe('Gene scores tests', () => {
           test(`should filter variants when "${geneScore.desc}" gene score is selected`, async({ page }) => {
             await utils.navigateToDatasetPage(page, utils.datasetIds.compAll, 'Genotype browser');
             await page.click('#gene-scores');
-
             await page.locator('gpf-gene-scores select').selectOption(geneScore.desc);
 
             await expect(page.locator('text#sumOfBarsLabel')).not.toContainText('~');
 
             await page.locator('gpf-effect-types').getByRole('button', { name: 'All' }).click();
-
             await page.getByRole('button', { name: 'Table Preview' }).click();
 
             await expect(page.locator('#variants-count-span')).toHaveText(`${geneScore.allVariants} variants selected`);
           });
         });
       });
+
+        test('should download RVIS and compare the file to the reference data', async({ page }) => {
+          await page.click('#gene-scores');
+
+          await page.locator('gpf-gene-scores select').selectOption('RVIS');
+          const downloadPromise = page.waitForEvent('download');
+          await page.click('gpf-gene-scores .download-link');
+          const downloadedFile = await downloadPromise;
+
+          const streamData = downloadedFile.createReadStream();
+          const data = [];
+
+          for await (const chunk of await streamData) {
+            data.push(chunk);
+          }
+
+          const expectedVariantsPath = path.join(__dirname + '/../fixtures/gene-scores/scores.csv');
+          const expectedFileLines = await utils.readFile(expectedVariantsPath);
+          const downloadedData = Buffer.concat(data);
+          expect(downloadedData.toString()).toEqual(expectedFileLines.toString());
+        });
 });
