@@ -1,3 +1,4 @@
+from __future__ import annotations
 import time
 import logging
 from copy import deepcopy
@@ -13,8 +14,7 @@ logger = logging.getLogger(__name__)
 class EffectCell:  # pylint: disable=too-many-instance-attributes
     """Class representing a cell in the denovo report table."""
 
-    def __init__(self, denovo_variants, person_set, effect):
-        self.denovo_variants = denovo_variants
+    def __init__(self, person_set, effect):
         assert len(person_set.persons) > 0
         self.person_set = person_set
         self.effect = effect
@@ -31,10 +31,6 @@ class EffectCell:  # pylint: disable=too-many-instance-attributes
         }
         if len(self.person_set_children) == 0:
             self.person_set_children = set(self.person_set.persons.keys())
-
-        for fv in self.denovo_variants:
-            for fa in fv.alt_alleles:
-                self.count_variant(fv, fa)
 
         logger.info(
             "DENOVO REPORTS: persons set %s children %s",
@@ -120,8 +116,7 @@ class EffectCell:  # pylint: disable=too-many-instance-attributes
 class EffectRow:
     """Class representing a row in the denovo report table."""
 
-    def __init__(self, denovo_variants, effect, person_sets):
-        self.denovo_variants = denovo_variants
+    def __init__(self, effect, person_sets):
         self.person_sets = person_sets
 
         self.effect_type = effect
@@ -136,12 +131,16 @@ class EffectRow:
     def _build_row(self):
         return [
             EffectCell(
-                self.denovo_variants,
                 person_set,
                 self.effect_type,
             )
             for person_set in self.person_sets
         ]
+
+    def count_variant(self, fv) -> None:
+        for cell in self.row:
+            for fa in fv.alt_alleles:
+                cell.count_variant(fv, fa)
 
     def is_row_empty(self):
         return all(value.is_empty() for value in self.row)
@@ -170,10 +169,11 @@ class DenovoReportTable:
     # FIXME: Too many locals
     @staticmethod
     def from_variants(  # pylint: disable=too-many-locals
-            denovo_variants,
-            effect_groups,
-            effect_types,
-            person_set_collection):
+        denovo_variants,
+        effect_groups,
+        effect_types,
+        person_set_collection
+    ) -> DenovoReportTable:
         """Construct a denovo report table from variants."""
         person_sets = []
         for person_set in person_set_collection.person_sets.values():
@@ -186,12 +186,15 @@ class DenovoReportTable:
 
         effect_rows = [
             EffectRow(
-                denovo_variants,
                 effect,
                 person_sets,
             )
             for effect in effects
         ]
+
+        for fv in denovo_variants:
+            for effect_row in effect_rows:
+                effect_row.count_variant(fv)
 
         effect_rows_empty_columns = list(
             map(
@@ -259,6 +262,9 @@ class DenovoReportTable:
             "effect_types": self.effect_types,
         }
 
+    def count_variant(self, fv):
+        self.rows
+
     def is_empty(self):
         """Return whether the table does not have a single counted variant."""
         def _is_row_empty(row):
@@ -290,26 +296,13 @@ class DenovoReport:
             "DENOVO REPORTS: person set collections %s",
             person_set_collections)
         start = time.time()
-        denovo_variants = []
-        if genotype_data.config.has_denovo:
-            denovo_variants = list(genotype_data.query_variants(
-                limit=None, inheritance=["denovo"],
-            ))
-
-        elapsed = time.time() - start
-        logger.info(
-            "DENOVO REPORTS: denovo variants query in %.2f sec", elapsed
-        )
-        logger.info(
-            "DENOVO REPORTS: denovo variants count is %s",
-            len(denovo_variants)
-        )
-
-        start = time.time()
 
         denovo_report_tables = []
-        if len(denovo_variants) > 0:
+        if genotype_data.config.has_denovo:
             for psc in person_set_collections:
+                denovo_variants = genotype_data.query_variants(
+                    limit=None, inheritance=["denovo"],
+                )
                 denovo_report_table = DenovoReportTable.from_variants(
                     denovo_variants,
                     deepcopy(effect_groups),
