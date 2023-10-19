@@ -1,4 +1,4 @@
-from typing import Optional, Generator
+from typing import Optional
 from collections import Counter, defaultdict
 
 from dae.variants.attributes import Inheritance
@@ -20,7 +20,11 @@ class GenotypeHelper:
         # self.person_set = person_set_collection.person_sets[person_set_id]
         self._children_stats: dict[str, dict[str, int]] = {}
         self._children_by_sex: dict[str, dict[str, set[tuple[str, str]]]] = {}
-        self._effect_types = effect_types
+
+        self._denovo_variants = list(
+            self.genotype_data.query_variants(
+                effect_types=effect_types,
+                inheritance=str(Inheritance.denovo.name)))
 
         self._build_children_stats()
 
@@ -46,11 +50,8 @@ class GenotypeHelper:
                 counter[sex] = len(persons)
             self._children_stats[person_set_id] = counter
 
-    def get_denovo_variants(self) -> Generator[FamilyVariant, None, None]:
-        return self.genotype_data.query_variants(
-            effect_types=self._effect_types,
-            inheritance=str(Inheritance.denovo.name)
-        )
+    def get_denovo_variants(self) -> list[FamilyVariant]:
+        return self._denovo_variants
 
     def children_by_sex(
         self, person_set_id: str
