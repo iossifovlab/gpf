@@ -139,4 +139,23 @@ test.describe('Gene scores tests', () => {
             await expect(page.locator('input#to-input-field')).toHaveValue('1');
         });
     });
+
+    test.describe('Gene scores', () => {
+        geneScoresData.forEach(geneScore => {
+          test(`should filter variants when "${geneScore.desc}" gene score is selected`, async({ page }) => {
+            await utils.navigateToDatasetPage(page, utils.datasetIds.compAll, 'Genotype browser');
+            await page.click('#gene-scores');
+
+            await page.locator('gpf-gene-scores select').selectOption(geneScore.desc);
+
+            await expect(page.locator('text#sumOfBarsLabel')).not.toContainText('~');
+
+            await page.locator('gpf-effect-types').getByRole('button', { name: 'All' }).click();
+
+            await page.getByRole('button', { name: 'Table Preview' }).click();
+
+            await expect(page.locator('#variants-count-span')).toHaveText(`${geneScore.allVariants} variants selected`);
+          });
+        });
+      });
 });
