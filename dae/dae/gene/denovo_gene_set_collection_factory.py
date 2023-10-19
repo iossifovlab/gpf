@@ -2,6 +2,7 @@ import json
 import os
 from itertools import product
 
+from dae.utils.dict_utils import recursive_dict_update_inplace
 from dae.variants.attributes import Inheritance
 from dae.gene.denovo_gene_set_collection import DenovoGeneSetCollection
 from dae.variants.attributes import Sex
@@ -104,6 +105,29 @@ class DenovoGeneSetCollectionFactory:
         return (effect_type_criterias, sex_criterias)
 
     @classmethod
+    def _recursive_cache_update(
+        cls, input_cache: dict, updater_cache: dict
+    ) -> None:
+        """Recursively update a dictionary with another dictionary."""
+        # FIXME !
+        # This method cannot handle nested dictionaries
+        # that hold a reference to the dictionary that
+        # contains them. If such a dictionary is given
+        # to this function, it will reach the maximum
+        # recursion depth.
+
+        for key, val in updater_cache.items():
+            if key in input_cache and isinstance(val, dict):
+                assert isinstance(input_cache[key], dict), updater_cache[key]
+                cls._recursive_cache_update(
+                    input_cache[key], updater_cache[key]
+                )
+            elif key in input_cache and isinstance(val, set):
+                input_cache[key] = input_cache[key].union(val)
+            else:
+                input_cache[key] = updater_cache[key]
+
+    @classmethod
     def _generate_gene_set_for(
             cls, genotype_data, config, person_set_collection_id):
         """
@@ -120,29 +144,32 @@ class DenovoGeneSetCollectionFactory:
             set_id: {} for set_id in person_set_collection.person_sets.keys()
         }
 
-        variants = list(
-            genotype_data.query_variants(inheritance=["denovo"]))
+        variants = genotype_data.query_variants(inheritance=["denovo"])
 
-        criterias = product(*cls._format_criterias(config.standard_criterias))
+        criterias = list(product(
+            *cls._format_criterias(config.standard_criterias))
+        )
 
-        for criteria_combination in criterias:
-            search_args = {
-                criteria["property"]: criteria["value"]
-                for criteria in criteria_combination
-            }
-            for person_set in person_set_collection.person_sets.values():
-                innermost_cache = cache[person_set.id]
-                for criteria in criteria_combination:
-                    innermost_cache = innermost_cache.setdefault(
-                        criteria["name"], {}
+        for variant in variants:
+            for criteria_combination in criterias:
+                search_args = {
+                    criteria["property"]: criteria["value"]
+                    for criteria in criteria_combination
+                }
+                for person_set in person_set_collection.person_sets.values():
+                    innermost_cache = cache[person_set.id]
+                    for criteria in criteria_combination:
+                        innermost_cache = innermost_cache.setdefault(
+                            criteria["name"], {}
+                        )
+
+                    persons_in_set = set(person_set.persons.keys())
+                    cls._recursive_cache_update(
+                        innermost_cache,
+                        cls._add_genes_families(
+                            variant, persons_in_set, search_args
+                        )
                     )
-
-                persons_in_set = set(person_set.persons.keys())
-                innermost_cache.update(
-                    cls._add_genes_families(
-                        variants, persons_in_set, search_args
-                    )
-                )
 
         return cache
 
@@ -188,7 +215,7 @@ class DenovoGeneSetCollectionFactory:
         return res
 
     @staticmethod
-    def _add_genes_families(variants, persons_in_set, search_args):
+    def _add_genes_families(variant, persons_in_set, search_args):
         """
         Return a map of gene symbols in variants to family IDs.
 
@@ -199,37 +226,36 @@ class DenovoGeneSetCollectionFactory:
         """
         cache = {}
 
-        for variant in variants:
-            family_id = variant.family_id
-            for aa in variant.alt_alleles:
-                if Inheritance.denovo not in aa.inheritance_in_members:
-                    continue
-                if not set(aa.variant_in_members_fpid) & persons_in_set:
-                    continue
+        family_id = variant.family_id
+        for aa in variant.alt_alleles:
+            if Inheritance.denovo not in aa.inheritance_in_members:
+                continue
+            if not set(aa.variant_in_members_fpid) & persons_in_set:
+                continue
 
-                filter_flag = False
-                for search_arg_name, search_arg_value in search_args.items():
-                    if search_arg_name == "effect_types":
-                        # FIXME: Avoid conversion of effect types to set
-                        if not (
-                            aa.effects
-                            and set(aa.effects.types) & set(search_arg_value)
-                        ):
-                            filter_flag = True
-                            break
-                    elif search_arg_name == "sexes":
-                        if not (
-                            set(aa.variant_in_sexes) & set(search_arg_value)
-                        ):
-                            filter_flag = True
-                            break
+            filter_flag = False
+            for search_arg_name, search_arg_value in search_args.items():
+                if search_arg_name == "effect_types":
+                    # FIXME: Avoid conversion of effect types to set
+                    if not (
+                        aa.effects
+                        and set(aa.effects.types) & set(search_arg_value)
+                    ):
+                        filter_flag = True
+                        break
+                elif search_arg_name == "sexes":
+                    if not (
+                        set(aa.variant_in_sexes) & set(search_arg_value)
+                    ):
+                        filter_flag = True
+                        break
 
-                if filter_flag:
-                    continue
+            if filter_flag:
+                continue
 
-                effect = aa.effects
-                for gene in effect.genes:
-                    if gene.effect in search_args.get("effect_types", set()):
-                        cache.setdefault(gene.symbol, set()).add(family_id)
+            effect = aa.effects
+            for gene in effect.genes:
+                if gene.effect in search_args.get("effect_types", set()):
+                    cache.setdefault(gene.symbol, set()).add(family_id)
 
         return cache
