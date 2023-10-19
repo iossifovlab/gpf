@@ -47,7 +47,7 @@ def test_denovo_report(
 
 def test_denovo_report_empty(study2, phenotype_role_collection):
     denovo_report = DenovoReport.from_genotype_study(
-        study2, phenotype_role_collection
+        study2, [phenotype_role_collection]
     )
 
     assert len(denovo_report.tables) == 0
@@ -59,8 +59,10 @@ def test_denovo_report_empty(study2, phenotype_role_collection):
 
 def test_effect_row(denovo_variants_ds1, phenotype_role_sets):
     effect_row = EffectRow(
-        denovo_variants_ds1, "Missense", phenotype_role_sets
+        "Missense", phenotype_role_sets
     )
+    for fv in denovo_variants_ds1:
+        effect_row.count_variant(fv)
     out_dict = effect_row.to_dict()
     assert out_dict["effect_type"] == "Missense"
 
@@ -96,8 +98,11 @@ def test_effect_row(denovo_variants_ds1, phenotype_role_sets):
 
 def test_effect_cell(denovo_variants_ds1, phenotype_role_sets):
     effect_cell1 = EffectCell(
-        denovo_variants_ds1, phenotype_role_sets[0], "Missense"
+        phenotype_role_sets[0], "Missense"
     )
+    for fv in denovo_variants_ds1:
+        for fa in fv.alt_alleles:
+            effect_cell1.count_variant(fv, fa)
     assert effect_cell1.to_dict() == {
         "number_of_observed_events": 3,
         "number_of_children_with_event": 3,
@@ -107,8 +112,11 @@ def test_effect_cell(denovo_variants_ds1, phenotype_role_sets):
     }
 
     effect_cell2 = EffectCell(
-        denovo_variants_ds1, phenotype_role_sets[1], "Missense"
+        phenotype_role_sets[1], "Missense"
     )
+    for fv in denovo_variants_ds1:
+        for fa in fv.alt_alleles:
+            effect_cell2.count_variant(fv, fa)
     assert effect_cell2.to_dict() == {
         "number_of_observed_events": 2,
         "number_of_children_with_event": 1,
@@ -118,8 +126,11 @@ def test_effect_cell(denovo_variants_ds1, phenotype_role_sets):
     }
 
     effect_cell3 = EffectCell(
-        denovo_variants_ds1, phenotype_role_sets[2], "Missense"
+        phenotype_role_sets[2], "Missense"
     )
+    for fv in denovo_variants_ds1:
+        for fa in fv.alt_alleles:
+            effect_cell3.count_variant(fv, fa)
     assert effect_cell3.to_dict() == {
         "number_of_observed_events": 0,
         "number_of_children_with_event": 0,
@@ -129,8 +140,11 @@ def test_effect_cell(denovo_variants_ds1, phenotype_role_sets):
     }
 
     effect_cell4 = EffectCell(
-        denovo_variants_ds1, phenotype_role_sets[3], "Missense"
+        phenotype_role_sets[3], "Missense"
     )
+    for fv in denovo_variants_ds1:
+        for fa in fv.alt_alleles:
+            effect_cell4.count_variant(fv, fa)
     assert effect_cell4.to_dict() == {
         "number_of_observed_events": 0,
         "number_of_children_with_event": 0,
