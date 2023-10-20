@@ -60,4 +60,68 @@ test.describe('Pheno tool tests', () => {
 
     await expect(page.locator('gpf-pheno-tool-results-chart')).not.toBeVisible();
   });
+
+  test('should proplery disable the "Report", "Save/share query" and "Download" buttons on errors', async({
+    page
+  }) => {
+    await expect(page.locator('#save-query-dropdown-button')).toBeDisabled();
+    await expect(page.getByText('Report')).toBeDisabled();
+    await expect(page.getByRole('button', {name: 'Download'})).toBeDisabled();
+
+    await page.locator('input#search-box').click();
+    await page.getByText('i1.age').first().click();
+    await expect(page.locator('#save-query-dropdown-button')).toBeEnabled();
+    await expect(page.getByText('Report')).toBeEnabled();
+    await expect(page.getByRole('button', {name: 'Download'})).toBeEnabled();
+
+    await page.locator('#clear-measure-button').click();
+    await expect(page.locator('#save-query-dropdown-button')).toBeDisabled();
+    await expect(page.getByText('Report')).toBeDisabled();
+    await expect(page.getByRole('button', {name: 'Download'})).toBeDisabled();
+
+    await page.locator('input#search-box').click();
+    await page.getByText('i1.age').first().click();
+    await expect(page.locator('#save-query-dropdown-button')).toBeEnabled();
+    await expect(page.getByText('Report')).toBeEnabled();
+    await expect(page.getByRole('button', {name: 'Download'})).toBeEnabled();
+    await page.locator('gpf-present-in-parent button').filter({ hasText: 'None'}).click();
+    await expect(page.locator('#save-query-dropdown-button')).toBeDisabled();
+    await expect(page.getByText('Report')).toBeDisabled();
+    await expect(page.getByRole('button', {name: 'Download'})).toBeDisabled();
+
+    await page.locator('gpf-present-in-parent button').filter({ hasText: 'All' }).click();
+    await expect(page.locator('#save-query-dropdown-button')).toBeEnabled();
+    await expect(page.getByText('Report')).toBeEnabled();
+    await expect(page.getByRole('button', {name: 'Download'})).toBeEnabled();
+
+    await page.locator('gpf-pheno-tool-effect-types button').filter({ hasText: 'None' }).click();
+    await expect(page.locator('#save-query-dropdown-button')).toBeDisabled();
+    await expect(page.getByText('Report')).toBeDisabled();
+    await expect(page.getByRole('button', {name: 'Download'})).toBeDisabled();
+    await page.locator('gpf-pheno-tool-effect-types button').filter({ hasText: 'All' }).click();
+    await expect(page.locator('#save-query-dropdown-button')).toBeEnabled();
+    await expect(page.getByText('Report')).toBeEnabled();
+    await expect(page.getByRole('button', {name: 'Download'})).toBeEnabled();
+
+    await page.locator('#family-ids').click();
+    await expect(page.locator('#save-query-dropdown-button')).toBeDisabled();
+    await expect(page.getByText('Report')).toBeDisabled();
+    await expect(page.getByRole('button', {name: 'Download'})).toBeDisabled();
+
+    await page.locator('gpf-family-ids textarea').fill('f1');
+    await expect(page.locator('#save-query-dropdown-button')).toBeEnabled();
+    await expect(page.getByText('Report')).toBeEnabled();
+    await expect(page.getByRole('button', {name: 'Download'})).toBeEnabled();
+
+    await page.getByText('Advanced').click();
+    await expect(page.locator('#save-query-dropdown-button')).toBeDisabled();
+    await expect(page.getByText('Report')).toBeDisabled();
+    await expect(page.getByRole('button', {name: 'Download'})).toBeDisabled();
+
+    await page.getByLabel('Advanced').getByPlaceholder('Select or start typing to search').click();
+    await page.getByRole('button', { name: 'i1.age' }).first().click();
+    await expect(page.locator('#save-query-dropdown-button')).toBeEnabled();
+    await expect(page.getByText('Report')).toBeEnabled();
+    await expect(page.getByRole('button', {name: 'Download'})).toBeEnabled();
+  });
 });
