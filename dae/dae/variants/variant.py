@@ -506,15 +506,15 @@ class SummaryAllele(core.Allele):
     def is_reference_allele(self) -> bool:
         return self.allele_index == 0
 
-    def get_attribute(self, item: str, default: Any = None) -> Any:
+    def get_attribute(self, item: str, default_val: Any = None) -> Any:
         """Return attribute value.
 
         Looks up values matching key `item` in additional attributes passed
         on creation of the variant.
         """
-        val = self.attributes.get(item, default)
+        val = self.attributes.get(item, default_val)
         if val is None:
-            val = default
+            return default_val
         return val
 
     def has_attribute(self, item: str) -> bool:

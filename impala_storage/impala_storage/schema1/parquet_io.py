@@ -219,7 +219,7 @@ class VariantsParquetWriter(AbstractVariantsParquetWriter):
         )
 
     def _build_family_filename(self, allele):
-        partition = self.partition_descriptor.family_partition(allele)
+        partition = self.partition_descriptor.schema1_partition(allele)
         partition_directory = self.partition_descriptor.partition_directory(
             self.out_dir, partition)
         partition_filename = self.partition_descriptor.partition_filename(

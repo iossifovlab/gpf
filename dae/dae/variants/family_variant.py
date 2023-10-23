@@ -14,7 +14,7 @@ from dae.utils.variant_utils import GenotypeType, \
     mat2str
 
 from dae.variants.attributes import GeneticModel, \
-    Inheritance,\
+    Inheritance, \
     TransmissionType, \
     Role, Sex, Status
 
@@ -187,17 +187,20 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
         result.update(self.family_attributes)
         return result
 
-    def get_attribute(self, item: str, default: Any = None) -> Any:
+    def get_attribute(self, item: str, default_val: Any = None) -> Any:
         """
         Return list of values from additional attributes matching given key.
 
         looks up values matching key `item` in additional attributes passed
         on creation of the variant.
         """
-        val = self.family_attributes.get(item, default)
+        val = self.family_attributes.get(item)
         if val is not None:
             return val
-        return self.summary_allele.get_attribute(item, default)
+        val = self.summary_allele.get_attribute(item, default_val)
+        if val is None:
+            return default_val
+        return val
 
     def has_attribute(self, item: str) -> bool:
         """Check if the additional variant attributes contain a given key."""

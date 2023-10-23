@@ -85,7 +85,7 @@ def test_parquet_region_bin(
     region_bin = part_desc.make_region_bin(fv.chrom, fv.position)
     for fa in fv.alleles:
         assert region_bin == expected
-        partition = part_desc.family_partition(fa)
+        partition = part_desc.schema1_partition(fa)
         assert partition == [("region_bin", region_bin)]
 
 
@@ -99,8 +99,8 @@ def test_parquet_family_bin(fam1, fam2, genotype):
     for fa1, fa2 in zip(fv1.alleles, fv2.alleles):
         assert part_desc.make_family_bin(fa1.family_id) == 9
         assert part_desc.make_family_bin(fa2.family_id) == 6
-        partition1 = part_desc.family_partition(fa1)
-        partition2 = part_desc.family_partition(fa2)
+        partition1 = part_desc.schema1_partition(fa1)
+        partition2 = part_desc.schema1_partition(fa2)
         assert partition1 == [("region_bin", "1_11"), ("family_bin", "9")]
         assert partition2 == [("region_bin", "1_11"), ("family_bin", "6")]
 
@@ -132,7 +132,7 @@ def test_parquet_frequency_bin(fam1, genotype, attributes, rare_boundary,
 
         assert part_desc.make_frequency_bin(
             allele_count, allele_freq, is_denovo) == expected
-        partition = part_desc.family_partition(cast(FamilyAllele, fa))
+        partition = part_desc.schema1_partition(cast(FamilyAllele, fa))
         assert partition == [
             ("region_bin", "1_11"), ("frequency_bin", expected)]
 

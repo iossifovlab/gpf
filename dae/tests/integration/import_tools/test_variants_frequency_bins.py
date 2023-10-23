@@ -93,21 +93,46 @@ def vcf_fixture(
         ("denovo", 0, True),
         ("ultra rare", 1, True),
         ("rare <= 50%", 2, False),
-        ("common >50", 3, False),
+        ("common >50", 3, True),
     ]
 )
-def test_denovo_frequency_bin_for_vcf(
+def test_family_frequency_bin_for_vcf(
     vcf_fixture: tuple[pathlib.Path, GenotypeData],
     genotype_storage: GenotypeStorage,
     label: str, frequency_bin: int, exists: bool
 ) -> None:
 
     root_path, _ = vcf_fixture
-
     assert os.path.exists(
         os.path.join(
             root_path / "work_dir",
             f"vcf_fixture/family/frequency_bin="
+            f"{frequency_bin}")) == exists, label
+
+
+@pytest.mark.gs_duckdb(reason="supported for schema2 duckdb")
+@pytest.mark.gs_impala2(reason="supported for schema2 impala")
+@pytest.mark.gs_gcp(reason="supported for gcp")
+@pytest.mark.parametrize(
+    "label,frequency_bin,exists",
+    [
+        ("denovo", 0, True),
+        ("ultra rare", 1, False),
+        ("rare <= 50%", 2, False),
+        ("common >50", 3, True),
+    ]
+)
+def test_summary_frequency_bin_for_vcf(
+    vcf_fixture: tuple[pathlib.Path, GenotypeData],
+    genotype_storage: GenotypeStorage,
+    label: str, frequency_bin: int, exists: bool
+) -> None:
+
+    root_path, _ = vcf_fixture
+    assert os.path.exists(
+        os.path.join(
+            root_path / "work_dir",
+            f"vcf_fixture/summary/frequency_bin="
             f"{frequency_bin}")) == exists, label
 
 
