@@ -68,7 +68,7 @@ test.describe('Users management', () => {
     await page.goto(utils.instanceUrl, {waitUntil: 'load'});
     await utils.loginAdmin(page);
   });
-  test.skip('should not create user with already used email', async({ page }) => {
+  test('should not create user with already used email', async({ page }) => {
     await utils.createUser(page, 'used_email@email.com', 'used_name');
 
     await page.locator('#create-user-form-button').click();
@@ -340,7 +340,7 @@ test.describe('Groups management', () => {
     await expect(page.locator('[id="cancel_creation_group-group-cell"]')).not.toBeVisible();
   });
 
-  test.skip('should fail to create group with already used name', async({ page }) => {
+  test('should fail to create group with already used name', async({ page }) => {
     await page.locator('#sidenav-toggle-button').click();
     await page.locator('a:text("Management")').click();
     const groupName = utils.getRandomString();
