@@ -1,4 +1,5 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+import sys
 import textwrap
 import pathlib
 
@@ -55,6 +56,71 @@ def test_parse_yaml_partition_description(tmp_path: pathlib.Path) -> None:
     assert pdesc.region_length == 8
     assert pdesc.family_bin_size == 2
     assert pdesc.rare_boundary == 50
+
+
+def test_parse_region_bin_no_region_length(tmp_path: pathlib.Path) -> None:
+    setup_directories(
+        tmp_path / "partition_description.yaml",
+        textwrap.dedent("""
+            region_bin:
+              chromosomes: foo,bar
+        """)
+    )
+    pd_filename = tmp_path / "partition_description.yaml"
+    pdesc = PartitionDescriptor.parse(pd_filename)
+
+    assert pdesc.has_region_bins()
+    assert pdesc.chromosomes == ["foo", "bar"]
+    assert pdesc.region_length == sys.maxsize
+
+
+def test_parse_partition_description_no_region_bin(
+    tmp_path: pathlib.Path
+) -> None:
+    setup_directories(
+        tmp_path / "partition_description.yaml",
+        textwrap.dedent("""
+            family_bin:
+              family_bin_size: 2
+            frequency_bin:
+              rare_boundary: 50
+            coding_bin:
+              coding_effect_types: splice-site,missense,frame-shift
+        """)
+    )
+    pd_filename = tmp_path / "partition_description.yaml"
+    pdesc = PartitionDescriptor.parse(pd_filename)
+
+    assert not pdesc.has_region_bins()
+    assert not pdesc.chromosomes
+    assert pdesc.region_length == 0
+
+    assert pdesc.family_bin_size == 2
+    assert pdesc.rare_boundary == 50
+
+
+def test_parse_partition_description_no_region_and_family_bin(
+    tmp_path: pathlib.Path
+) -> None:
+    setup_directories(
+        tmp_path / "partition_description.yaml",
+        textwrap.dedent("""
+            frequency_bin:
+              rare_boundary: 50
+            coding_bin:
+              coding_effect_types: splice-site,missense,frame-shift
+        """)
+    )
+    pd_filename = tmp_path / "partition_description.yaml"
+    pdesc = PartitionDescriptor.parse(pd_filename)
+
+    assert not pdesc.has_region_bins()
+    assert not pdesc.has_family_bins()
+
+    assert pdesc.has_frequency_bins()
+    assert pdesc.rare_boundary == 50
+
+    assert pdesc.has_coding_bins()
 
 
 def test_partition_directory() -> None:

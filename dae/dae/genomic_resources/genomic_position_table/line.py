@@ -23,6 +23,10 @@ class LineBase(abc.ABC):
     def get(self, key: Key) -> Any:
         """Return score value."""
 
+    @abc.abstractmethod
+    def row(self) -> tuple:
+        """Return row as tuple."""
+
 
 class Line(LineBase):
     """Represents a line read from a genomic position table.
@@ -62,6 +66,9 @@ class Line(LineBase):
         assert self._header is not None
         idx = self._header.index(key)
         return self._data[idx]
+
+    def row(self) -> tuple:
+        return self._data
 
 
 class VCFLine(LineBase):
@@ -108,6 +115,9 @@ class VCFLine(LineBase):
                     else 0  # Get reference allele value if ALT is '.'
                 ]
         return value
+
+    def row(self) -> tuple:
+        return tuple()
 
 
 class LineBuffer:

@@ -5,10 +5,11 @@ import pytest
 
 from dae.testing import acgt_gpf, setup_pedigree, setup_vcf, setup_denovo
 from dae.testing.import_helpers import StudyInputLayout, setup_import_project
+from dae.import_tools.import_tools import ImportProject
 
 
 @pytest.fixture
-def project_fixture(tmp_path_factory):
+def project_fixture(tmp_path_factory: pytest.TempPathFactory) -> ImportProject:
     root_path = tmp_path_factory.mktemp("import_project_tests")
     gpf_instance = acgt_gpf(root_path)
 
@@ -46,9 +47,13 @@ def project_fixture(tmp_path_factory):
     return project
 
 
-def test_import_project_chromosomes_simple(project_fixture):
+def test_import_project_chromosomes_simple(
+    project_fixture: ImportProject
+) -> None:
     assert project_fixture.get_variant_loader_chromosomes() == ["chr1", "chr2"]
 
 
-def test_import_project_variant_loader_types(project_fixture):
+def test_import_project_variant_loader_types(
+    project_fixture: ImportProject
+) -> None:
     assert project_fixture.get_variant_loader_types() == {"vcf", "denovo"}

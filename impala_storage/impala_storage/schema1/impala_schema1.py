@@ -8,7 +8,6 @@ from dae.utils import fs_utils
 from dae.import_tools.import_tools import save_study_config
 from dae.import_tools.import_tools import ImportStorage
 from dae.task_graph.graph import TaskGraph
-from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.parquet.parquet_writer import ParquetWriter
 
 from impala_storage.schema1.parquet_io import \
@@ -34,10 +33,7 @@ class ImpalaSchema1ImportStorage(ImportStorage):
     @staticmethod
     def _get_partition_description(project, out_dir=None):
         out_dir = out_dir if out_dir else project.work_dir
-        config_dict = project.get_partition_description_dict()
-        if config_dict is None:
-            return PartitionDescriptor()
-        return PartitionDescriptor.parse_dict(config_dict)
+        return project.get_partition_descriptort()
 
     @classmethod
     def _do_write_pedigree(cls, project):

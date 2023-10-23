@@ -7,7 +7,6 @@ input:
   denovo:
     files:
       - single_chromosome_variants.tsv
-    person_id: spid
     chrom: chrom
     pos: pos
     ref: ref
@@ -17,12 +16,12 @@ input:
 
 processing_config:
   denovo:
-    region_length: 30000000
+    region_length: 20
 
 partition_description:
   region_bin:
-    chromosomes: '1'
-    region_length: 100000000
+    chromosomes: chr1
+    region_length: 60
   family_bin:
     family_bin_size: 2
   frequency_bin:

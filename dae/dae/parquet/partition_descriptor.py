@@ -1,4 +1,6 @@
 from __future__ import annotations
+
+import sys
 import math
 import textwrap
 import hashlib
@@ -10,7 +12,6 @@ from typing import Optional, Iterable, Union, Any, cast
 import yaml
 import jinja2
 
-from dae.variants.attributes import TransmissionType
 from dae.variants.variant import SummaryAllele
 from dae.variants.family_variant import FamilyAllele
 
@@ -126,7 +127,7 @@ class PartitionDescriptor:
         config: dict[str, Any] = {}
         if "region_bin" in config_dict.keys():
             config["region_length"] = int(
-                config_dict["region_bin"]["region_length"])
+                config_dict["region_bin"].get("region_length", sys.maxsize))
             chromosomes = config_dict["region_bin"]["chromosomes"]
             if isinstance(chromosomes, str):
                 config["chromosomes"] = [
@@ -195,8 +196,8 @@ class PartitionDescriptor:
                 f"Partition <{self.serialize()}> does not define region bins.")
         assert self.chromosomes is not None
         assert self.region_length > 0
-
         pos_bin = pos // self.region_length
+
         if chrom in self.chromosomes:
             return f"{chrom}_{pos_bin}"
 
@@ -225,22 +226,20 @@ class PartitionDescriptor:
         return 1
 
     def make_frequency_bin(
-            self, allele_count: Optional[int], allele_freq: Optional[float],
+            self, allele_count: int, allele_freq: float,
             is_denovo: bool = False) -> str:
         """Produce frequency bin from allele count, frequency and de Novo flag.
 
         Params are allele count, allele frequence and de Novo flag.
         """
         if is_denovo:
-            frequency_bin = "0"
-        elif allele_count and int(allele_count) == 1:  # Ultra rare
-            frequency_bin = "1"
-        elif allele_freq and float(allele_freq) < self.rare_boundary:  # Rare
-            frequency_bin = "2"
-        else:  # Common
-            frequency_bin = "3"
+            return "0"
+        if int(allele_count) <= 1:  # Ultra rare
+            return "1"
+        if allele_freq < self.rare_boundary:  # Rare
+            return "2"
 
-        return frequency_bin
+        return "3"
 
     def dataset_summary_partition(self) -> list[tuple[str, str]]:
         """Build summary parquet dataset partition for table creation.
@@ -269,7 +268,9 @@ class PartitionDescriptor:
         return result
 
     def summary_partition(
-            self, allele: SummaryAllele) -> list[tuple[str, str]]:
+        self, allele: SummaryAllele,
+        seen_as_denovo: bool
+    ) -> list[tuple[str, str]]:
         """Produce summary partition for an allele.
 
         The partition is returned as a list of tuples consiting of the
@@ -288,15 +289,14 @@ class PartitionDescriptor:
                 "region_bin",
                 self.make_region_bin(allele.chrom, allele.position)))
         if self.has_frequency_bins():
-            allele_count = allele.get_attribute("af_allele_count")
-            allele_freq = allele.get_attribute("af_allele_freq")
-            is_denovo = allele.transmission_type == TransmissionType.denovo
+            allele_count = allele.get_attribute("af_allele_count", 0)
+            allele_freq = allele.get_attribute("af_allele_freq", 0)
             result.append((
                 "frequency_bin",
                 str(self.make_frequency_bin(
                     allele_count=allele_count,
                     allele_freq=allele_freq,
-                    is_denovo=is_denovo))
+                    is_denovo=seen_as_denovo))
             ))
         if self.has_coding_bins():
             coding_bin = 0
@@ -308,7 +308,10 @@ class PartitionDescriptor:
 
         return result
 
-    def family_partition(self, allele: FamilyAllele) -> list[tuple[str, str]]:
+    def family_partition(
+        self, allele: FamilyAllele,
+        seen_as_denovo: bool
+    ) -> list[tuple[str, str]]:
         """Produce family partition for an allele.
 
         The partition is returned as a list of tuples consiting of the
@@ -322,7 +325,7 @@ class PartitionDescriptor:
             ("family_bin", "1)
         ]
         """
-        partition = self.summary_partition(allele)
+        partition = self.summary_partition(allele, seen_as_denovo)
         if self.has_family_bins():
             partition.append((
                 "family_bin",
@@ -340,7 +343,6 @@ class PartitionDescriptor:
                 if chrom not in self.chromosomes:
                     other_max_len = max(other_max_len, chrom_len)
                     continue
-
                 num_buckets = math.ceil(chrom_len / self.region_length)
                 for bin_i in range(num_buckets):
                     summary_parts.append([("region_bin", f"{chrom}_{bin_i}")])

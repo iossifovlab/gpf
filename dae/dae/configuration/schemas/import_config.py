@@ -138,7 +138,7 @@ import_config_schema: dict[str, Any] = {
             "frequency_bin": {
                 "type": "dict",
                 "schema": {
-                    "rare_boundary": {"type": "integer"},
+                    "rare_boundary": {"type": "float"},
                 }
             },
             "coding_bin": {

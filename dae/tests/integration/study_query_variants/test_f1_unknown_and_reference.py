@@ -1,12 +1,13 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
-from typing import Optional
+from typing import Optional, cast
 
 import pytest
 
 from dae.utils.regions import Region
 from dae.testing import setup_pedigree, setup_vcf, \
     vcf_study
+from dae.variants.family_variant import FamilyAllele
 from dae.testing.foobar_import import foobar_gpf
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.studies.study import GenotypeData
@@ -121,7 +122,7 @@ def test_unknown_and_reference(
     for v in vs:
         print(100 * "-")
         for aa in v.alleles:
-            print(aa, aa.inheritance_in_members)
+            print(aa, cast(FamilyAllele, aa).inheritance_in_members)
 
     assert len(vs) == count
 
