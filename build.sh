@@ -257,15 +257,18 @@ EOT
           --no-incremental \
           > /wd/results/mypy_wdae_report || true'
 
-    build_run_container bash -c '
-      cd /wd/impala_storage;
-      /opt/conda/bin/conda run --no-capture-output -n gpf mypy impala_storage \
-          --pretty \
-          --show-error-context \
-          --no-incremental \
-          > /wd/results/mypy_impala_report || true'
+    # build_run_container bash -c '
+    #   cd /wd/impala_storage;
+    #   /opt/conda/bin/conda run --no-capture-output -n gpf mypy impala_storage \
+    #       --pretty \
+    #       --show-error-context \
+    #       --no-incremental \
+    #       > /wd/results/mypy_impala_report || true'
 
-      build_run_local cp ./results/mypy_dae_report ./results/mypy_wdae_report ./results/mypy_impala_report ./test-results/
+    #   build_run_local cp ./results/mypy_dae_report ./results/mypy_wdae_report ./results/mypy_impala_report ./test-results/
+
+      build_run_local cp ./results/mypy_dae_report ./results/mypy_wdae_report ./test-results/
+
   }
 
   # Tests - dae
