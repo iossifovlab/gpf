@@ -51,6 +51,7 @@ def test_generate_denovo_gene_sets_study_1(
         "column"
     ] == "autism (2)"
 
+
 def test_generate_denovo_gene_sets_study_2(
     t4c8_instance: GPFInstance,
     t4c8_study_2: GenotypeData

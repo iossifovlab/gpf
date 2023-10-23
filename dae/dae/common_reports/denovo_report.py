@@ -262,9 +262,6 @@ class DenovoReportTable:
             "effect_types": self.effect_types,
         }
 
-    def count_variant(self, fv):
-        self.rows
-
     def is_empty(self):
         """Return whether the table does not have a single counted variant."""
         def _is_row_empty(row):
