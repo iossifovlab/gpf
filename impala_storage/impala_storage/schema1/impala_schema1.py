@@ -33,7 +33,7 @@ class ImpalaSchema1ImportStorage(ImportStorage):
     @staticmethod
     def _get_partition_description(project, out_dir=None):
         out_dir = out_dir if out_dir else project.work_dir
-        return project.get_partition_descriptort()
+        return project.get_partition_descriptor()
 
     @classmethod
     def _do_write_pedigree(cls, project):

@@ -14,6 +14,7 @@ import jinja2
 
 from dae.variants.variant import SummaryAllele
 from dae.variants.family_variant import FamilyAllele
+from dae.variants.attributes import TransmissionType
 
 from dae.utils import fs_utils
 
@@ -326,6 +327,31 @@ class PartitionDescriptor:
         ]
         """
         partition = self.summary_partition(allele, seen_as_denovo)
+        if self.has_family_bins():
+            partition.append((
+                "family_bin",
+                str(self.make_family_bin(allele.family_id))
+            ))
+        return partition
+
+    def schema1_partition(
+        self, allele: FamilyAllele
+    ) -> list[tuple[str, str]]:
+        """Produce Schema1 family partition for an allele.
+
+        The partition is returned as a list of tuples consiting of the
+        name of the partition and the value.
+
+        Example:
+        [
+            ("region_bin", "chr1_0"),
+            ("frequency_bin", "0"),
+            ("coding_bin", "1"),
+            ("family_bin", "1)
+        ]
+        """
+        is_denovo = allele.transmission_type == TransmissionType.denovo
+        partition = self.summary_partition(allele, is_denovo)
         if self.has_family_bins():
             partition.append((
                 "family_bin",

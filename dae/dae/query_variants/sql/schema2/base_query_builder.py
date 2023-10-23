@@ -650,7 +650,7 @@ class BaseQueryBuilder(ABC):
     def _build_frequency_bin_heuristic_compute_bins(
         self, inheritance: Optional[Union[str, list[str]]],
         ultra_rare: Optional[bool],
-        real_attr_filter: Optional[RealAttrFilterType],
+        frequency_filter: Optional[RealAttrFilterType],
         rare_boundary: float
     ) -> set[str]:
         frequency_bins: set[str] = set([])
@@ -686,8 +686,8 @@ class BaseQueryBuilder(ABC):
         ):
             if ultra_rare:
                 frequency_bins |= set(["0", "1"])
-            elif real_attr_filter:
-                for name, (begin, end) in real_attr_filter:
+            elif frequency_filter:
+                for name, (begin, end) in frequency_filter:
                     if name == "af_allele_freq":
 
                         if end and end < rare_boundary:
@@ -703,7 +703,7 @@ class BaseQueryBuilder(ABC):
     def _build_frequency_bin_heuristic(
         self, inheritance: Union[None, str, list[str]],
         ultra_rare: Optional[bool],
-        real_attr_filter: Optional[RealAttrFilterType]
+        frequency_filter: Optional[RealAttrFilterType]
     ) -> str:
         # pylint: disable=too-many-branches
         assert self.partition_descriptor is not None
@@ -713,7 +713,7 @@ class BaseQueryBuilder(ABC):
         rare_boundary = self.partition_descriptor["rare_boundary"]
 
         frequency_bins = self._build_frequency_bin_heuristic_compute_bins(
-            inheritance, ultra_rare, real_attr_filter, rare_boundary)
+            inheritance, ultra_rare, frequency_filter, rare_boundary)
 
         return self._build_partition_bin_heuristic_where(
             "frequency_bin", frequency_bins, 4)
