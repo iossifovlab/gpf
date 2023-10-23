@@ -37,12 +37,12 @@ class GeneWeightsEnrichmentBackground(
         self.config = self.validate_and_normalize_schema(
             self.config, resource
         )
+        self._total: Optional[float] = None
+        self._gene_weights: Optional[dict[str, float]] = None
+
         BackgroundBase.__init__(
             self, f"GeneWeightsEnrichmentBackground({resource.resource_id})",
             self.config)
-
-        self._total: Optional[float] = None
-        self._gene_weights: Optional[dict[str, float]] = None
 
     @property
     def resource_id(self) -> str:

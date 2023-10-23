@@ -36,14 +36,12 @@ def test_get_children_stats(
     male: int, female: int, unspecified: int, count: int
 ) -> None:
     psc = f1_trio.get_person_set_collection("phenotype")
+    assert psc is not None
+
     helper = GenotypeHelper(f1_trio, psc)
 
     children_stats = helper.get_children_stats(person_set_id)
 
-    assert len(children_stats) == count
-    assert children_stats["M"] == male
-    assert children_stats["F"] == female
-    assert children_stats["U"] == unspecified
-
-    children_stats = helper.get_children_stats(person_set_id)
-    assert len(children_stats) == count
+    assert children_stats.male == male
+    assert children_stats.female == female
+    assert children_stats.unspecified == unspecified

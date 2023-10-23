@@ -299,10 +299,3 @@ class GeneEventsCounter(CounterBase):
             unspecified_events,
         )
         return result
-
-
-@dataclass
-class ChildrenStats:
-    male: int
-    female: int
-    unspecified: int

@@ -23,15 +23,16 @@ def test_enrichment_tool(
         f1_trio_enrichment_config, f1_trio_coding_len_background, event_counter
     )
     psc = f1_trio.get_person_set_collection("phenotype")
+    assert psc is not None
+
     helper = GenotypeHelper(f1_trio, psc)
-    # children_stats = helper.get_children_stats()
     children_by_sex = helper.children_by_sex("phenotype1")
 
     enrichment_events = enrichment_tool.calc(
-        ["missense", "synonymous"],
         ["SAMD11", "PLEKHN1", "POGZ"],
         variants,
-        children_by_sex,
+        effect_types=["missense", "synonymous"],
+        children_by_sex=children_by_sex,
     )
 
     assert enrichment_events["all"].events is not None
@@ -61,5 +62,5 @@ def test_enrichment_tool(
     assert enrichment_events["unspecified"].events is not None
     assert len(enrichment_events["unspecified"].events) == 0
     assert enrichment_events["unspecified"].events == []
-    assert enrichment_events["unspecified"].expected is None
-    assert enrichment_events["unspecified"].pvalue is None
+    assert enrichment_events["unspecified"].expected == 0
+    assert enrichment_events["unspecified"].pvalue == 1.0

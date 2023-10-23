@@ -1,10 +1,18 @@
 from typing import Optional
 from collections import Counter, defaultdict
+from dataclasses import dataclass
 
 from dae.variants.attributes import Inheritance
 from dae.variants.family_variant import FamilyVariant
 from dae.studies.study import GenotypeData
 from dae.person_sets import PersonSetCollection
+
+
+@dataclass
+class ChildrenStats:
+    male: int
+    female: int
+    unspecified: int
 
 
 class GenotypeHelper:
@@ -18,7 +26,7 @@ class GenotypeHelper:
         self.genotype_data = genotype_data
         self.person_set_collection = person_set_collection
         # self.person_set = person_set_collection.person_sets[person_set_id]
-        self._children_stats: dict[str, dict[str, int]] = {}
+        self._children_stats: dict[str, ChildrenStats] = {}
         self._children_by_sex: dict[str, dict[str, set[tuple[str, str]]]] = {}
 
         self._denovo_variants = list(
@@ -45,10 +53,8 @@ class GenotypeHelper:
                 children_by_sex[person.sex.name].add(person.fpid)
                 seen.add(person.fpid)
             self._children_by_sex[person_set_id] = children_by_sex
-            counter: dict[str, int] = Counter()
-            for sex, persons in children_by_sex.items():
-                counter[sex] = len(persons)
-            self._children_stats[person_set_id] = counter
+            self._children_stats[person_set_id] = children_stats(
+                children_by_sex)
 
     def get_denovo_variants(self) -> list[FamilyVariant]:
         return self._denovo_variants
@@ -58,5 +64,18 @@ class GenotypeHelper:
     ) -> dict[str, set[tuple[str, str]]]:
         return self._children_by_sex[person_set_id]
 
-    def get_children_stats(self, person_set_id: str) -> dict[str, int]:
+    def get_children_stats(self, person_set_id: str) -> ChildrenStats:
         return self._children_stats[person_set_id]
+
+
+def children_stats(
+    children_by_sex: dict[str, set[tuple[str, str]]]
+) -> ChildrenStats:
+    counter: dict[str, int] = Counter()
+    for sex, persons in children_by_sex.items():
+        counter[sex] = len(persons)
+    return ChildrenStats(
+        counter["M"],
+        counter["F"],
+        counter["U"]
+    )

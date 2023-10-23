@@ -1,13 +1,14 @@
 import logging
 
-from typing import Optional
+from typing import Optional, Any, cast
 from collections import defaultdict
 
 from box import Box
 
 from dae.genomic_resources.repository import GenomicResourceRepo
-from dae.enrichment_tool.background import BackgroundBase, SamochaBackground
-from dae.enrichment_tool.background_resource import \
+from dae.enrichment_tool.background import BackgroundBase, SamochaBackground, \
+    CodingLenBackground
+from dae.enrichment_tool.gene_weights_background import \
     GeneWeightsEnrichmentBackground
 from dae.studies.study import GenotypeData
 
@@ -30,6 +31,13 @@ class BackgroundFacade:
         background = SamochaBackground(config)
         return background
 
+    def _build_coding_len_background(
+        self, study: GenotypeData
+    ) -> BackgroundBase:
+        config = study.config["enrichment"]
+        background = CodingLenBackground(config)
+        return background
+
     def _build_background_from_resource(
         self, resource_id: str
     ) -> BackgroundBase:
@@ -42,6 +50,15 @@ class BackgroundFacade:
             f"of resource <{resource.resource_id}> "
             f"for enrichment backgound"
         )
+
+    def get_study_enrichment_config(
+        self, study: GenotypeData
+    ) -> dict[str, Any]:
+        return cast(dict[str, Any], study.config["enrichment"])
+
+    def has_background(self, study: GenotypeData, background_id: str) -> bool:
+        config = self.get_study_enrichment_config(study)
+        return background_id in config["background"]
 
     def get_study_background(
         self, study: GenotypeData,
@@ -60,4 +77,7 @@ class BackgroundFacade:
             return None
         if background_id == "samocha_background_model":
             return self._build_samocha_background_for_study(study)
+        if background_id == "coding_len_background_model":
+            return self._build_coding_len_background(study)
+
         return self._build_background_from_resource(background_id)

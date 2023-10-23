@@ -15,9 +15,10 @@ from dae.studies.study import GenotypeData
 
 @pytest.fixture(scope="session")
 def f1_trio_enrichment_config(fixtures_gpf_instance: GPFInstance) -> Box:
-    return cast(
-        Box,
-        fixtures_gpf_instance.get_genotype_data_config("f1_trio").enrichment)
+    config = fixtures_gpf_instance.get_genotype_data_config("f1_trio")
+    assert config is not None
+
+    return cast(Box, config["enrichment"])
 
 
 @pytest.fixture(scope="session")
@@ -42,4 +43,4 @@ def f1_trio_samocha_background(
 
 @pytest.fixture(scope="session")
 def background_facade(fixtures_gpf_instance: GPFInstance) -> BackgroundFacade:
-    return cast(BackgroundFacade, fixtures_gpf_instance._background_facade)
+    return fixtures_gpf_instance._background_facade

@@ -1,19 +1,19 @@
-from typing import Iterable
-
-from box import Box
+from typing import Iterable, Any
 
 from dae.utils.effect_utils import expand_effect_types
 from dae.variants.family_variant import FamilyVariant
 
+from dae.enrichment_tool.genotype_helper import children_stats
 from dae.enrichment_tool.background import BackgroundBase
-from dae.enrichment_tool.event_counters import CounterBase, EnrichmentResult
+from dae.enrichment_tool.event_counters import CounterBase, \
+    EnrichmentResult
 
 
 class EnrichmentTool:
     """Construct and run enrichment tool test."""
 
     def __init__(
-        self, config: Box,
+        self, config: dict[str, Any],
         background: BackgroundBase,
         event_counter: CounterBase
     ):
@@ -23,17 +23,19 @@ class EnrichmentTool:
         self.event_counter = event_counter
 
     def calc(
-        self, effect_types: Iterable[str],
+        self,
         gene_syms: Iterable[str],
         variants: list[FamilyVariant],
-        children_by_sex: dict[str, set[str]]
+        effect_types: Iterable[str],
+        children_by_sex: dict[str, set[tuple[str, str]]]
     ) -> dict[str, EnrichmentResult]:
         """Perform the enrichment tool test."""
         requested_effect_types = expand_effect_types(effect_types)
         enrichment_events = self.event_counter.events(
             variants, children_by_sex, requested_effect_types
         )
-        self.background.calc_stats(
-            effect_types, enrichment_events, gene_syms, children_by_sex
+        return self.background.calc_enrichment_test(
+            enrichment_events, gene_syms,
+            effect_types=effect_types,
+            children_stats=children_stats(children_by_sex)
         )
-        return enrichment_events
