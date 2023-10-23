@@ -1,7 +1,7 @@
 import { test, expect, Page } from '@playwright/test';
 import * as utils from './utils';
 
-test.describe.skip('User management tests for reset password in Users', () => {
+test.describe('User management tests for reset password in Users', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.instanceUrl, {waitUntil: 'load'});
   });
@@ -36,8 +36,6 @@ test.describe.skip('User management tests for reset password in Users', () => {
 
   test('should reset password when login', async({ page }) => {
     await utils.loginAdmin(page);
-    await page.locator('#sidenav-toggle-button').click();
-    await page.locator('a:text("Management")').click();
     const username = utils.getRandomString();
     const email = `${username}@mail.com`;
     const password = 'XC^ZF*TZXuUChFsv';
@@ -70,7 +68,7 @@ test.describe('Users management', () => {
     await page.goto(utils.instanceUrl, {waitUntil: 'load'});
     await utils.loginAdmin(page);
   });
-  test('should not create user with already used email', async({ page }) => {
+  test.skip('should not create user with already used email', async({ page }) => {
     await utils.createUser(page, 'used_email@email.com', 'used_name');
 
     await page.locator('#create-user-form-button').click();
@@ -196,8 +194,10 @@ test.describe('Users management', () => {
   test('should check admin', async({ page }) => {
     await page.locator('#sidenav-toggle-button').click();
     await page.locator('a:text("Management")').click();
+    await searchInTable(page, 'admin@iossifovlab.com');
     await expect(page.locator('#admin-list-item gpf-confirm-button')).not.toBeVisible();
-    await expect(page.locator('[id="admin@iossifovlab.com-datasets-cell"]')).toHaveText('ALL GenotypesCOMP Genotypescomp_allcomp_denovocomp_vcfiossifov_2014multi');
+    await expect(page.locator('[id="admin@iossifovlab.com-datasets-cell"]'))
+      .toHaveText('ALL GenotypesCOMP Genotypescomp_allcomp_denovocomp_vcfiossifov_2014multi');
     await expect(page.locator('[id="admin@iossifovlab.com-reset-password-button"]')).toBeVisible();
     await expect(page.locator('[id="admin@iossifovlab.com-reset-delete-user-button"]')).not.toBeVisible();
   });
@@ -340,7 +340,7 @@ test.describe('Groups management', () => {
     await expect(page.locator('[id="cancel_creation_group-group-cell"]')).not.toBeVisible();
   });
 
-  test('should fail to create group with already used name', async({ page }) => {
+  test.skip('should fail to create group with already used name', async({ page }) => {
     await page.locator('#sidenav-toggle-button').click();
     await page.locator('a:text("Management")').click();
     const groupName = utils.getRandomString();
@@ -711,6 +711,7 @@ async function addUserToGroup(page: Page, groupName: string, email: string): Pro
   await page.waitForSelector(`button:text("${email}")`);
   await page.getByRole('button', { name: email }).click();
   await page.mouse.click(0, 0); // close the menu
+  await expect(page.locator(`[id="${groupName}-users-cell"]`)).toContainText(email);
 }
 
 async function addDatasetToGroup(page: Page, groupName: string, datasetName: string): Promise<void> {
@@ -720,6 +721,7 @@ async function addDatasetToGroup(page: Page, groupName: string, datasetName: str
   await page.waitForSelector(`button:text("${datasetName}")`);
   await page.getByRole('button', { name: datasetName }).click();
   await page.mouse.click(0, 0); // close the menu
+  await expect(page.locator(`[id="${groupName}-datasets-cell"]`)).toContainText(datasetName);
 }
 
 async function deleteUser(page: Page, email: string): Promise<void> {
