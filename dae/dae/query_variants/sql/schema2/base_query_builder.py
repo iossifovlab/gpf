@@ -693,11 +693,11 @@ class BaseQueryBuilder(ABC):
                         if end and end < rare_boundary:
                             frequency_bins |= set(["0", "1", "2"])
                         elif begin and begin >= rare_boundary:
-                            frequency_bins.add("3")
+                            frequency_bins |= set(["0", "1", "3"])
                         elif end is not None and end >= rare_boundary:
                             frequency_bins |= set(["0", "1", "2", "3"])
             elif inheritance is not None:
-                frequency_bins |= set(["1", "2", "3"])
+                frequency_bins |= set(["0", "1", "2", "3"])
         return frequency_bins
 
     def _build_frequency_bin_heuristic(

@@ -395,12 +395,25 @@ class VariantsParquetWriter(AbstractVariantsParquetWriter):
 
     def write_metadata(self) -> None:
         """Write dataset metadata."""
+        schema = [
+            (f.name, f.type) for f in self.serializer.schema_summary
+        ]
+        schema.extend(
+            list(self.partition_descriptor.dataset_summary_partition()))
         schema_summary = "\n".join([
-            f"{f.name}|{f.type}" for f in self.serializer.schema_summary
+            f"{n}|{t}" for n, t in schema
         ])
+
+        schema = [
+            (f.name, f.type) for f in self.serializer.schema_family
+        ]
+        schema.extend(
+            list(self.partition_descriptor.dataset_family_partition())
+        )
         schema_family = "\n".join([
-            f"{f.name}|{f.type}" for f in self.serializer.schema_family
+            f"{n}|{t}" for n, t in schema
         ])
+
         extra_attributes = self.serializer.extra_attributes
 
         metadata_table = pa.Table.from_pydict(

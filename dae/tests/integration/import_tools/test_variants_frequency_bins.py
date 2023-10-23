@@ -115,7 +115,7 @@ def test_denovo_frequency_bin_for_vcf(
 @pytest.mark.gs_impala2(reason="supported for schema2 impala")
 @pytest.mark.gs_gcp(reason="supported for gcp")
 @pytest.mark.parametrize(
-    "real_attr_filter,count",
+    "frequency_filter,count",
     [
         (None, 4),
         ([("af_allele_freq", (0.0, 20.0))], 2),
@@ -123,12 +123,12 @@ def test_denovo_frequency_bin_for_vcf(
     ]
 )
 def test_frequency_bin_queries(
-    real_attr_filter: list[tuple], count: int,
+    frequency_filter: list[tuple], count: int,
     vcf_fixture: tuple[pathlib.Path, GenotypeData],
     genotype_storage: GenotypeStorage,
 ) -> None:
     _, study = vcf_fixture
-    vs = list(study.query_variants(real_attr_filter=real_attr_filter))
+    vs = list(study.query_variants(frequency_filter=frequency_filter))
     assert len(vs) == count
 
 
