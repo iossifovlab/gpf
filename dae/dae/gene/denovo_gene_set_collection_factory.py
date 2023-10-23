@@ -2,7 +2,6 @@ import json
 import os
 from itertools import product
 
-from dae.utils.dict_utils import recursive_dict_update_inplace
 from dae.variants.attributes import Inheritance
 from dae.gene.denovo_gene_set_collection import DenovoGeneSetCollection
 from dae.variants.attributes import Sex
