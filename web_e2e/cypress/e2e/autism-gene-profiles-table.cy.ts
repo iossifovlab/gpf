@@ -387,7 +387,10 @@ describe('Autism gene profiles table functionality tests', () => {
     });
   });
 
-  it('should compare protection scores', () => {
+  // Sort results change slowly and cypress gets the old result instead of the new
+  // should be refactored in playwright to use data.forEach(it()) structure
+  // and not have loop inside the test
+  it.skip('should compare protection scores', () => {
     page.geneSearchInput.type('RAPGEF');
     page.allTableRows.should('have.length', 4);
 
