@@ -105,65 +105,6 @@ test.describe('Gene browser basic display tests after query', () => {
   });
 });
 
-test.describe('Gene browser basic display tests after query', () => {
-  test.beforeEach(async({ page }) => {
-    await page.goto(utils.instanceUrl, {waitUntil: 'load'});
-    await utils.loginAdmin(page);
-    await utils.navigateToDatasetPage(page, 'ALL Genotypes', 'Gene browser');
-    await page.getByPlaceholder('Search gene').pressSequentially('chd8');
-    await page.getByRole('button', { name: 'Go' }).click();
-    await expect(page.locator('gpf-genotype-preview-table')).toBeVisible();
-  });
-
-  test('should display the filters', async({ page }) => {
-    await expect(page.locator('#filters')).toBeVisible();
-  });
-
-  test('should display the gene plot', async({ page }) => {
-    await expect(page.locator('.gene-plot')).toBeVisible();
-  });
-
-  test('should display the genotype preview table', async({ page }) => {
-    await expect(page.locator('.genotype-preview-table')).toBeVisible();
-  });
-
-  test('should have Affected status checkboxes', async({ page }) => {
-    await expect(getAffectedStatusFilter(page, 'Affected only')).toBeVisible();
-    await expect(getAffectedStatusFilter(page, 'Unaffected only')).toBeVisible();
-    await expect(getAffectedStatusFilter(page, 'Affected and unaffected')).toBeVisible();
-  });
-
-  test('should have effect types checkboxes', async({ page }) => {
-    await expect(getEffectTypesFilter(page, 'LGDs')).toBeVisible();
-    await expect(getEffectTypesFilter(page, 'missense')).toBeVisible();
-    await expect(getEffectTypesFilter(page, 'synonymous')).toBeVisible();
-    await expect(getEffectTypesFilter(page, 'CNV+')).toBeVisible();
-    await expect(getEffectTypesFilter(page, 'CNV-')).toBeVisible();
-    await expect(getEffectTypesFilter(page, 'Other')).toBeVisible();
-  });
-
-  test('should have inheritance types checkboxes', async({ page }) => {
-    await expect(getInheritanceTypesFilter(page, 'Denovo')).toBeVisible();
-    await expect(getInheritanceTypesFilter(page, 'Transmitted')).toBeVisible();
-  });
-
-  test('should have variant types checkboxes', async({ page }) => {
-    await expect(getVariantTypesFilter(page, 'del')).toBeVisible();
-    await expect(getVariantTypesFilter(page, 'ins')).toBeVisible();
-    await expect(getVariantTypesFilter(page, 'del')).toBeVisible();
-    await expect(getVariantTypesFilter(page, 'CNV+')).toBeVisible();
-    await expect(getVariantTypesFilter(page, 'CNV-')).toBeVisible();
-  });
-
-  test('should have family variants count', async({ page }) => {
-    await expect(page.locator('.family-alleles-count')).toBeVisible();
-  });
-
-  test('should have download family varinats button', async({ page }) => {
-    await expect(page.locator('.download-family-variants-button')).toBeVisible();
-  });
-});
-
 test.describe('Gene browser family alleles count and table tests', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.instanceUrl, {waitUntil: 'load'});

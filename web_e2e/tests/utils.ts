@@ -63,7 +63,12 @@ export async function navigateToDatasetPage(page: Page, dataset: string, tool: s
   await page.locator('#datasets-dropdown-menu-button').click();
   await page.locator('a').filter({ hasText: dataset }).click();
   await expect(page.getByRole('button', { name: dataset })).toHaveText(dataset);
-  await page.getByRole('link', { name: `${tool}`}).click();
+  await page.locator('a').filter({ hasText: `${tool}`}).click();
+}
+
+export async function navigateToSidenavPage(page: Page, sidenavPageLink: string): Promise<void> {
+  await page.locator('#sidenav-toggle-button').click();
+  await page.locator(`div.sidenav a[routerlink="/${sidenavPageLink}"]`).click();
 }
 
 export function readFile(name): Promise<unknown> {
