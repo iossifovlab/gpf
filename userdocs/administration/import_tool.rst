@@ -115,15 +115,28 @@ Import Tools configuration format
         vcf: 30M
 
     partition_description:
-        region_bin:
-            chromosomes: [chr1, chr2, chr3, chr4, chr5, chr6, chr7, chr8, chr9, chr10, chr11, chr12, chr13, chr14, chr15, chr16, chr17, chr18, chr19, chr20, chr21, chr22, chrX]
-            region_length: 30000000
-        family_bin:
+        region_bin:     
+            chromosomes: ['autosomes', chrX]  # All chromosomes not explicitly listed are grouped into 'other'.
+            region_length: 30M   # this is optional. If ommitted, one region_per chromosome is created.
+        family_bin:  # creates family_bin partition. 
+                     # Families are randomly split into groups of size bin_size.
             bin_size: 10
+        frequency_bin:   # creates frequency_bin partition: 
+                         #    0 - de novo, 1 - ultra-rare, 
+                         #    2 rare (frequency less than the rare_boundary), 
+                         #    3 - common (frequency more than the rare_boundary)
+            rare_boundary: 5
+        coding_bin:      # creates coding_bin: 1 - coding, 0 - non-coding
+            coding_effect_types: "splice-site,frame-shift,nonsense,no-frame-shift-newStop,noStart,noEnd,missense,no-frame-shift,CDS,synonymous,coding_unknown,regulatory,3'UTR,5'UTR"
+    OR
+    partition_description:
+        region_bin:
+            chromosomes: ['autosomes', chrX]
+    OR
+    partition_description:
         frequency_bin:
             rare_boundary: 5
-        coding_bin:
-            coding_effect_types: [splice-site,frame-shift,nonsense,no-frame-shift-newStop,noStart,noEnd,missense,no-frame-shift,CDS,synonymous,coding_unknown,regulatory,3'UTR,5'UTR]
+
 
 *input* is the section where we describe the input files. It is devided into
 subsections for each input type (vcf, denovo and so on).
