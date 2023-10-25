@@ -56,22 +56,22 @@ class BackgroundCommon(BackgroundBase):
         assert self._total > 0
         return float(self._count(gene_syms)) / self._total
 
-    def _calc_enrichment_results_stats(
-        self, background_prob: float, result: EnrichmentResult
-    ) -> None:
-        assert result.events is not None
-        events_count = len(result.events)
-        result.expected = background_prob * events_count
+    # def _calc_enrichment_results_stats(
+    #     self, background_prob: float, result: EnrichmentResult
+    # ) -> None:
+    #     assert result.events is not None
+    #     events_count = len(result.events)
+    #     result.expected = background_prob * events_count
 
-        assert result.overlapped is not None
-        if not result.overlapped:
-            result.pvalue = 1.0
-        else:
-            assert len(result.overlapped) >= 1.0, result.overlapped
-            binom = stats.binomtest(
-                len(result.overlapped), events_count, p=background_prob
-            )
-            result.pvalue = binom.pvalue
+    #     assert result.overlapped is not None
+    #     if not result.overlapped:
+    #         result.pvalue = 1.0
+    #     else:
+    #         assert len(result.overlapped) >= 1.0, result.overlapped
+    #         binom = stats.binomtest(
+    #             len(result.overlapped), events_count, p=background_prob
+    #         )
+    #         result.pvalue = binom.pvalue
 
     @staticmethod
     def calc_expected_observed_pvalue(

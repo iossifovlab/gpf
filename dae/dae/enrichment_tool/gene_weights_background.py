@@ -1,5 +1,4 @@
 from __future__ import annotations
-
 import logging
 from typing import Optional, Any, Iterable
 
@@ -7,65 +6,43 @@ import pandas as pd
 from scipy import stats
 
 from dae.genomic_resources.repository import GenomicResource
-from dae.genomic_resources.resource_implementation import \
-    GenomicResourceImplementation, get_base_resource_schema, \
-    InfoImplementationMixin, ResourceConfigValidationMixin
-from dae.task_graph.graph import Task, TaskGraph
 from dae.enrichment_tool.event_counters import EventsCounterResult, \
     EnrichmentResult, overlap_enrichment_result_dict
-from dae.enrichment_tool.background import BackgroundBase
-
+from dae.enrichment_tool.base_enrichment_background import \
+    BaseEnrichmentBackground
 
 logger = logging.getLogger(__name__)
 
 
-class GeneWeightsEnrichmentBackground(
-    ResourceConfigValidationMixin,
-    GenomicResourceImplementation,
-    InfoImplementationMixin,
-    BackgroundBase
-):
+class GeneWeightsEnrichmentBackground(BaseEnrichmentBackground):
     """Provides class for gene models."""
 
     def __init__(self, resource: GenomicResource):
-        super().__init__(resource)
         if resource.get_type() != "gene_weights_enrichment_background":
             raise ValueError(
                 f"unexpected enrichment background resource type: "
                 f"<{resource.get_type()}> for resource "
                 f"<{resource.resource_id}>")
-        self.config = self.validate_and_normalize_schema(
-            self.config, resource
+        super().__init__(
+            resource,
+            f"gene_weights_enrichment_background({resource.resource_id})"
         )
+
         self._total: Optional[float] = None
         self._gene_weights: Optional[dict[str, float]] = None
-
-        BackgroundBase.__init__(
-            self, f"GeneWeightsEnrichmentBackground({resource.resource_id})",
-            self.config)
-
-    @property
-    def resource_id(self) -> str:
-        return self.resource.resource_id
-
-    @property
-    def files(self) -> set[str]:
-        res = set()
-        res.add(self.resource.get_config()["filename"])
-        return res
 
     def is_loaded(self) -> bool:
         return self._total is not None and self._gene_weights is not None
 
     def load(self) -> None:
-        """Load gene models."""
+        """Load enrichment background model."""
         if self.is_loaded():
             logger.info(
-                "loading already loaded gene models: %s",
+                "loading already loaded enrichment background model: %s",
                 self.resource.resource_id)
             return
 
-        filename = self.resource.get_config()["filename"]
+        filename = self.config["filename"]
         compression = False
         if filename.endswith(".gz"):
             compression = True
@@ -79,27 +56,6 @@ class GeneWeightsEnrichmentBackground(
                 self._gene_weights[row[1]["gene"]] = \
                     float(row[1]["gene_weight"])
             self._total = float(df.gene_weight.sum())
-
-    @staticmethod
-    def get_schema() -> dict[str, Any]:
-        return {
-            **get_base_resource_schema(),
-            "filename": {"type": "string"},
-        }
-
-    def add_statistics_build_tasks(
-        self, task_graph: TaskGraph, **kwargs: Any
-    ) -> list[Task]:
-        return []
-
-    def get_info(self) -> str:
-        return InfoImplementationMixin.get_info(self)
-
-    def calc_info_hash(self) -> bytes:
-        return b"placeholder"
-
-    def calc_statistics_hash(self) -> bytes:
-        return b"placeholder"
 
     def genes_weight(self, genes: Iterable[str]) -> float:
         assert self._gene_weights is not None

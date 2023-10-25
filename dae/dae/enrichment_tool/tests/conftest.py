@@ -11,6 +11,13 @@ from dae.enrichment_tool.background import \
 from dae.enrichment_tool.background_facade import BackgroundFacade
 from dae.gpf_instance import GPFInstance
 from dae.studies.study import GenotypeData
+from dae.genomic_resources import GenomicResource
+from dae.genomic_resources.testing import build_inmemory_test_resource, \
+    convert_to_tab_separated
+from dae.genomic_resources.repository import GR_CONF_FILE_NAME
+
+from dae.enrichment_tool.gene_weights_background import \
+    GeneWeightsEnrichmentBackground
 
 
 @pytest.fixture(scope="session")
@@ -44,3 +51,28 @@ def f1_trio_samocha_background(
 @pytest.fixture(scope="session")
 def background_facade(fixtures_gpf_instance: GPFInstance) -> BackgroundFacade:
     return fixtures_gpf_instance._background_facade
+
+
+@pytest.fixture(scope="session")
+def coding_len_background() -> GeneWeightsEnrichmentBackground:
+    res: GenomicResource = build_inmemory_test_resource({
+        GR_CONF_FILE_NAME: """
+            type: gene_weights_enrichment_background
+            filename: data.mem
+            name: CodingLenBackground
+        """,
+        "data.mem": convert_to_tab_separated("""
+            gene     gene_weight
+            SAMD11   3
+            PLEKHN1  7
+            POGZ     13
+        """)
+    })
+    assert res.get_type() == "gene_weights_enrichment_background"
+
+    background = GeneWeightsEnrichmentBackground(res)
+    assert background is not None
+    assert background.name == "CodingLenBackground"
+
+    background.load()
+    return background

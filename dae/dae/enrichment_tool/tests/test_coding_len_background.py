@@ -1,38 +1,25 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-from typing import Callable
 
 from dae.variants.attributes import Inheritance
 from dae.studies.study import GenotypeData
 
-from dae.enrichment_tool.background import CodingLenBackground
 from dae.enrichment_tool.event_counters import EventsCounter
 from dae.enrichment_tool.genotype_helper import GenotypeHelper
+from dae.enrichment_tool.gene_weights_background import \
+    GeneWeightsEnrichmentBackground
 
 
-def test_filename(
-        f1_trio_coding_len_background: CodingLenBackground,
-        fixture_dirname: Callable[[str], str]) -> None:
-    assert f1_trio_coding_len_background.filename == fixture_dirname(
-        "studies/f1_trio/enrichment/codingLenBackgroundModel.csv"
-    )
+def test_load(coding_len_background: GeneWeightsEnrichmentBackground) -> None:
+    assert coding_len_background.is_loaded()
 
-
-def test_load(f1_trio_coding_len_background: CodingLenBackground) -> None:
-    f1_trio_coding_len_background.load()
-    background = f1_trio_coding_len_background.background
-
-    assert len(background) == 3
-    assert background.iloc[0]["sym"] == "SAMD11"
-    assert background.iloc[0]["raw"] == 3
-    assert background.iloc[1]["sym"] == "PLEKHN1"
-    assert background.iloc[1]["raw"] == 7
-    assert background.iloc[2]["sym"] == "POGZ"
-    assert background.iloc[2]["raw"] == 13
+    assert coding_len_background.genes_weight(["SAMD11"]) == 3.0
+    assert coding_len_background.genes_weight(["PLEKHN1"]) == 7.0
+    assert coding_len_background.genes_weight(["POGZ"]) == 13.0
 
 
 def test_calc_stats(
         f1_trio: GenotypeData,
-        f1_trio_coding_len_background: CodingLenBackground) -> None:
+        coding_len_background: GeneWeightsEnrichmentBackground) -> None:
     # pylint: disable=too-many-statements
     variants = list(
         f1_trio.query_variants(inheritance=str(Inheritance.denovo.name))
@@ -76,7 +63,7 @@ def test_calc_stats(
     assert enrichment_events.unspecified is not None
     assert len(enrichment_events.unspecified) == 0
 
-    result = f1_trio_coding_len_background.calc_enrichment_test(
+    result = coding_len_background.calc_enrichment_test(
         enrichment_events,
         ["SAMD11", "PLEKHN1", "POGZ"],
     )

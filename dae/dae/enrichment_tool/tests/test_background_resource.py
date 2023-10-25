@@ -14,6 +14,7 @@ def test_background_resource_simple() -> None:
         GR_CONF_FILE_NAME: """
             type: gene_weights_enrichment_background
             filename: data.mem
+            name: TestingGeneWeightsBackground
         """,
         "data.mem": convert_to_tab_separated("""
             gene   gene_weight
@@ -29,6 +30,7 @@ def test_background_resource_simple() -> None:
 
     background = GeneWeightsEnrichmentBackground(res)
     assert background is not None
+    assert background.name == "TestingGeneWeightsBackground"
 
     background.load()
 
