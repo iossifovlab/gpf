@@ -414,10 +414,10 @@ class DbManager(object):
         )
         with self.browser_engine.connect() as connection:
             for row in connection.execute(selector):
-                res[row.values()[0]] = {
-                    "display_name": row.values()[1],
-                    "instrument_name": row.values()[2],
-                    "measure_name": row.values()[3],
+                res[row[0]] = {
+                    "display_name": row[1],
+                    "instrument_name": row[2],
+                    "measure_name": row[3],
                 }
         return res
 
