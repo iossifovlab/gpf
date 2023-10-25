@@ -638,7 +638,7 @@ class PhenotypeStudy(PhenotypeData):
             measure.c.min_value,
             measure.c.max_value,
         ]
-        query = select(columns)
+        query = select(*columns)
         query = query.where(not_(measure.c.measure_type.is_(None)))
         if instrument is not None:
             query = query.where(measure.c.instrument_name == instrument)
@@ -716,7 +716,7 @@ class PhenotypeStudy(PhenotypeData):
             self.db.person.c.status,
             self.db.person.c.sex,
         ]
-        query = select(columns)
+        query = select(*columns)
         query = query.select_from(self.db.family.join(self.db.person))
         if roles is not None:
             query = query.where(self.db.person.c.role.in_(roles))
@@ -763,7 +763,7 @@ class PhenotypeStudy(PhenotypeData):
             value_table.c.value,
         ]
 
-        query = select(columns)
+        query = select(*columns)
         query = query.select_from(
             value_table.join(self.db.measure)
             .join(self.db.person)
@@ -920,7 +920,7 @@ class PhenotypeStudy(PhenotypeData):
         output = {}
 
         for table in value_tables:
-            query = select(columns + [table.c.value])
+            query = select(*columns, table.c.value)
 
             join = (
                 self.db.family.join(self.db.person)
@@ -943,6 +943,7 @@ class PhenotypeStudy(PhenotypeData):
             with self.db.pheno_engine.connect() as connection:
                 results = connection.execute(query)
                 for row in results:
+                    row = row._mapping
                     person_id = row["person_id"]
                     if person_id not in output:
                         output[person_id] = ["-"] * len(header)

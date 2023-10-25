@@ -59,6 +59,7 @@ class PreparePersons(PrepareBase):
         ins = self.db.family.insert()
         with self.db.pheno_engine.connect() as connection:
             connection.execute(ins, families)
+            connection.commit()
 
     @staticmethod
     def _build_sample_id(sample_id):
@@ -84,6 +85,7 @@ class PreparePersons(PrepareBase):
         ins = self.db.person.insert()
         with self.db.pheno_engine.connect() as connection:
             connection.execute(ins, persons)
+            connection.commit()
 
     def save_pedigree(self, ped_df):
         self._save_families(ped_df)
@@ -356,6 +358,7 @@ class PrepareVariables(PreparePersons):
         with self.db.pheno_engine.begin() as connection:
             result = connection.execute(ins)
             measure_id = result.inserted_primary_key[0]
+            connection.commit()
 
         return measure_id
 
@@ -373,6 +376,7 @@ class PrepareVariables(PreparePersons):
 
         with self.db.pheno_engine.begin() as connection:
             connection.execute(ins, list(values.values()))
+            connection.commit()
 
     def _collect_instruments(self, dirname):
         regexp = re.compile("(?P<instrument>.*)(?P<ext>\\.csv.*)")

@@ -225,6 +225,7 @@ class DbManager(object):
             )
             with self.browser_engine.begin() as connection:
                 connection.execute(update)
+                connection.commit()
 
     def save_regression(self, reg):
         """Save regressions into the database."""
@@ -242,6 +243,7 @@ class DbManager(object):
             )
             with self.browser_engine.begin() as connection:
                 connection.execute(update)
+                connection.commit()
 
     def save_regression_values(self, reg):
         """Save regression values into the databases."""
@@ -265,10 +267,11 @@ class DbManager(object):
             )
             with self.browser_engine.begin() as connection:
                 connection.execute(update)
+                connection.commit()
 
     def get_browser_measure(self, measure_id):
         """Get measrue description from phenotype browser database."""
-        sel = select([self.variable_browser])
+        sel = select(self.variable_browser)
         sel = sel.where(self.variable_browser.c.measure_id == measure_id)
         with self.browser_engine.connect() as connection:
             vs = connection.execute(sel).fetchall()
@@ -309,7 +312,6 @@ class DbManager(object):
             )
 
         with self.browser_engine.connect() as connection:
-            print(query)
             cursor = connection.execution_options(stream_results=True)\
                 .execute(query)
             rows = cursor.fetchmany(self.STREAMING_CHUNK_SIZE)
@@ -350,7 +352,7 @@ class DbManager(object):
             query_params.append(
                 self.variable_browser.c.description.like(keyword, escape="\\")
             )
-            query = self.variable_browser.select(or_(*query_params))
+            query = self.variable_browser.select().where(or_(*query_params))
         else:
             query = self.variable_browser.select()
 
@@ -364,17 +366,17 @@ class DbManager(object):
 
     def get_regression(self, regression_id):
         """Return regressions."""
-        selector = select([self.regressions])
+        selector = select(self.regressions)
         selector = selector.where(
             self.regressions.c.regression_id == regression_id)
         with self.browser_engine.connect() as connection:
             vs = connection.execute(selector).fetchall()
             if vs:
-                return vs[0]
+                return vs[0]._mapping
             return None
 
     def get_regression_values(self, measure_id):
-        selector = select([self.regression_values])
+        selector = select(self.regression_values)
         selector = selector.where(
             self.regression_values.c.measure_id == measure_id)
         with self.browser_engine.connect() as connection:
@@ -382,10 +384,10 @@ class DbManager(object):
 
     @property
     def regression_ids(self):
-        selector = select([self.regressions.c.regression_id])
+        selector = select(self.regressions.c.regression_id)
         with self.browser_engine.connect() as connection:
             return list(map(
-                lambda x: x.values()[0],  # type: ignore
+                lambda x: x[0],  # type: ignore
                 connection.execute(selector)))
 
     @property
@@ -393,11 +395,11 @@ class DbManager(object):
         """Return regressions display name."""
         res = {}
         selector = select(
-            [self.regressions.c.regression_id, self.regressions.c.display_name]
+            self.regressions.c.regression_id, self.regressions.c.display_name
         )
         with self.browser_engine.connect() as connection:
             for row in connection.execute(selector):
-                res[row.values()[0]] = row.values()[1]
+                res[row[0]] = row[1]
         return res
 
     @property
@@ -405,12 +407,10 @@ class DbManager(object):
         """Return regression display names with measure IDs."""
         res = {}
         selector = select(
-            [
-                self.regressions.c.regression_id,
-                self.regressions.c.display_name,
-                self.regressions.c.instrument_name,
-                self.regressions.c.measure_name,
-            ]
+            self.regressions.c.regression_id,
+            self.regressions.c.display_name,
+            self.regressions.c.instrument_name,
+            self.regressions.c.measure_name,
         )
         with self.browser_engine.connect() as connection:
             for row in connection.execute(selector):
@@ -427,7 +427,7 @@ class DbManager(object):
         with self.browser_engine.connect() as connection:
             return bool(
                 connection.execute(
-                    select([func.count()])
+                    select(func.count())
                     .select_from(self.variable_browser)
                     .where(Column("description").isnot(None))  # type: ignore
                 ).scalar()
@@ -451,7 +451,7 @@ class DbManager(object):
 
     def get_families(self):
         """Return families in the phenotype database."""
-        value_type = select([self.family])
+        value_type = select(self.family)
         with self.pheno_engine.connect() as connection:
             families = connection.execute(value_type).fetchall()
         families = {f.family_id: f for f in families}
@@ -460,14 +460,12 @@ class DbManager(object):
     def get_persons(self):
         """Return individuals in the phenotype database."""
         selector = select(
-            [
-                self.person.c.id,
-                self.person.c.person_id,
-                self.family.c.family_id,
-                self.person.c.role,
-                self.person.c.status,
-                self.person.c.sex,
-            ]
+            self.person.c.id,
+            self.person.c.person_id,
+            self.family.c.family_id,
+            self.person.c.role,
+            self.person.c.status,
+            self.person.c.sex,
         )
         selector = selector.select_from(self.person.join(self.family))
         with self.pheno_engine.connect() as connection:
@@ -478,13 +476,11 @@ class DbManager(object):
     def get_measures(self):
         """Return measures in the phenotype database."""
         selector = select(
-            [
-                self.measure.c.id,
-                self.measure.c.measure_id,
-                self.measure.c.instrument_name,
-                self.measure.c.measure_name,
-                self.measure.c.measure_type,
-            ]
+            self.measure.c.id,
+            self.measure.c.measure_id,
+            self.measure.c.instrument_name,
+            self.measure.c.measure_name,
+            self.measure.c.measure_type,
         )
         selector = selector.select_from(self.measure)
         with self.pheno_engine.begin() as connection:
