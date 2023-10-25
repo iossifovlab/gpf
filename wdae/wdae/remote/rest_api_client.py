@@ -359,7 +359,7 @@ class RESTClient:
             "pheno_browser/download",
             data={
                 "dataset_id": dataset_id,
-                "measures": measure_ids,
+                "measure_ids": measure_ids,
                 "instrument": instrument,
             },
             stream=True
