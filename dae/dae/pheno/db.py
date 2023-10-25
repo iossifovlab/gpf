@@ -302,7 +302,7 @@ class DbManager(object):
             query_params.append(
                 self.variable_browser.c.description.like(keyword, escape="\\")
             )
-            query = self.variable_browser.select(or_(*query_params))
+            query = self.variable_browser.select().where((or_(*query_params)))
         else:
             query = self.variable_browser.select()
 

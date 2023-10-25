@@ -989,12 +989,12 @@ class PhenotypeStudy(PhenotypeData):
                 measure["measure_id"]) or []
 
             for reg in regressions:
-                reg = dict(reg)
+                reg = reg._mapping
                 if isnan(reg["pvalue_regression_male"]):
                     reg["pvalue_regression_male"] = "NaN"
                 if isnan(reg["pvalue_regression_female"]):
                     reg["pvalue_regression_female"] = "NaN"
-                measure["regressions"].append(reg)
+                measure["regressions"].append(dict(reg))
 
             yield {
                 "measure": measure,
