@@ -44,32 +44,16 @@ function main() {
   build_run_ctx_init "container" "$node_base_image_ref"
   defer_ret build_run_ctx_reset
 
-  build_stage "Clean and fetch fresh dependencies"
-  {
-    build_run rm -rf dist
-    build_run rm -rf node_modules package-lock.json
-    build_run npm install
-  }
-
   local gpfjs_version
   if ee_exists "gpfjs_version"; then
       gpfjs_version="$(ee "gpfjs_version")"
   fi
 
-  build_stage "Get gpfjs version"
+  build_stage "Clean and fetch fresh dependencies"
   {
-
-    build_run git config --global --add safe.directory /wd
-    if [ "$gpfjs_version" == "" ]; then
-        version="$(build_run invoke -r /release_management current-version)"
-        if [ "$version" != "" ]; then
-            gpfjs_version=${version}
-            ee_set "gpfjs_version" "$gpfjs_version"
-        fi
-    fi
-
-    build_run echo "$(ee 'gpfjs_version')"
-    build_run echo "{\"version\": \"${gpfjs_version}\"}" > "version.json"
+    build_run rm -rf dist
+    build_run rm -rf node_modules package-lock.json
+    build_run npm install
   }
 
   build_stage "Lint"
@@ -82,6 +66,22 @@ function main() {
   build_stage "Tests"
   {
     build_run bash -c 'npm run-script test:ci || false'
+  }
+
+  build_stage "Get gpfjs version"
+  {
+
+    build_run git config --global --add safe.directory /wd
+    if [ "$gpfjs_version" == "" ]; then
+        version="$(build_run invoke -r /release_management current-version)"
+        if [ "$version" != "" ]; then
+            gpfjs_version=${version}
+            ee_set "gpfjs_version" "$gpfjs_version"
+            build_run echo "{\"version\": \"${version}\"}" > "version.json"
+        fi
+    fi
+
+    build_run echo "$(ee 'gpfjs_version')"
   }
 
   build_stage "Compile production"
