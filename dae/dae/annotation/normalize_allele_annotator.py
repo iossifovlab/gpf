@@ -50,11 +50,11 @@ class NormalizeAlleleAnnotator(AnnotatorBase):
 
         self.genome = genome
 
-    def close(self):
+    def close(self) -> None:
         self.genome.close()
         super().close()
 
-    def open(self):
+    def open(self) -> Annotator:
         self.genome.open()
         return super().open()
 

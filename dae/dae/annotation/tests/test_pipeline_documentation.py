@@ -3,7 +3,7 @@
 from dae.annotation.annotation_factory import build_annotation_pipeline
 
 
-def test_basic():
+def test_basic() -> None:
     # pipeline = build_annotation_pipeline(pipeline_config_str="""
     #         - normalize_allele_annotator
     #         - debug_annotator

@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 import logging
+import argparse
+
 from dae.annotation.annotation_factory import build_annotation_pipeline
 from dae.annotation.annotation_pipeline import AnnotationPipeline
-from dae.genomic_resources.genomic_context import register_context
+from dae.genomic_resources.genomic_context import GenomicContext, \
+    register_context
 
 from dae.genomic_resources.genomic_context import CLIGenomicContext
 
@@ -14,7 +17,7 @@ class CLIAnnotationContext(CLIGenomicContext):
     """Defines annotation pipeline genomics context."""
 
     @staticmethod
-    def context_builder(args) -> CLIAnnotationContext:
+    def context_builder(args: argparse.Namespace) -> CLIAnnotationContext:
         """Build a CLI genomic context."""
         context = CLIGenomicContext.context_builder(args)
         register_context(context)
@@ -36,12 +39,12 @@ class CLIAnnotationContext(CLIGenomicContext):
             context_objects, source=("CLIAnnotationContext", ))
 
     @staticmethod
-    def register(args):
+    def register(args: argparse.Namespace) -> None:
         context = CLIAnnotationContext.context_builder(args)
         register_context(context)
 
     @staticmethod
-    def get_pipeline(context) -> AnnotationPipeline:
+    def get_pipeline(context: GenomicContext) -> AnnotationPipeline:
         """Construct an annotation pipeline."""
         pipeline = context.get_context_object("annotation_pipeline")
         if pipeline is None:

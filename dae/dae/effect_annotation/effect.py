@@ -4,17 +4,18 @@ from __future__ import annotations
 
 import itertools
 
-from typing import List, Optional, Dict
+from typing import Optional, Any
 
 from dae.utils.effect_utils import EffectTypesMixin
 from dae.genomic_resources.gene_models import TranscriptModel
-from dae.effect_annotation.annotation_request import AnnotationRequest
+from dae.effect_annotation.annotation_request import \
+    AnnotationRequest
 
 
 class AnnotationEffect:  # pylint: disable=too-many-instance-attributes
     """Class to represent variant effect."""
 
-    SEVERITY: Dict[str, int] = {
+    SEVERITY: dict[str, int] = {
         "CNV+": 35,
         "CNV-": 35,
         "tRNA:ANTICODON": 30,
@@ -44,29 +45,30 @@ class AnnotationEffect:  # pylint: disable=too-many-instance-attributes
         "no-mutation": 1,
     }
 
-    def __init__(self, effect_name):
+    def __init__(self, effect_name: str) -> None:
         self.effect: str = effect_name
         self.gene: Optional[str] = None
         self.transcript_id: Optional[str] = None
         self.strand: Optional[str] = None
-        self.prot_pos = None
-        self.non_coding_pos = None
-        self.prot_length = None
-        self.length = None
-        self.which_intron = None
-        self.how_many_introns = None
-        self.dist_from_coding = None
+        self.prot_pos: Optional[int] = None
+        self.non_coding_pos: Optional[int] = None
+        self.prot_length: Optional[int] = None
+        self.length: Optional[int] = None
+        self.which_intron: Optional[int] = None
+        self.how_many_introns: Optional[int] = None
+        self.dist_from_coding: Optional[int] = None
         self.aa_change: Optional[str] = None
-        self.dist_from_acceptor = None
-        self.dist_from_donor = None
-        self.intron_length = None
-        self.mRNA_length = None  # pylint: disable=invalid-name
-        self.mRNA_position = None  # pylint: disable=invalid-name
-        self.ref_aa = None
-        self.alt_aa = None
+        self.dist_from_acceptor: Optional[int] = None
+        self.dist_from_donor: Optional[int] = None
+        self.intron_length: Optional[int] = None
+        # pylint: disable=invalid-name
+        self.mRNA_length: Optional[int] = None
+        self.mRNA_position: Optional[int] = None
+        self.ref_aa: Optional[list[str]] = None
+        self.alt_aa: Optional[list[str]] = None
         self.dist_from_5utr = None
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return \
             f"Effect gene:{self.gene} trID:{self.transcript_id} " \
             f"strand:{self.strand} effect:{self.effect} " \
@@ -74,7 +76,7 @@ class AnnotationEffect:  # pylint: disable=too-many-instance-attributes
             f"aa: {self.aa_change} " \
             f"len: {self.length}"
 
-    def create_effect_details(self):
+    def create_effect_details(self) -> str:
         """Build effect details."""
         eff_data = [
             (
@@ -157,18 +159,18 @@ class AnnotationEffect:  # pylint: disable=too-many-instance-attributes
 
     @classmethod
     def sort_effects(
-            cls, effects: List[AnnotationEffect]) -> List[AnnotationEffect]:
+            cls, effects: list[AnnotationEffect]) -> list[AnnotationEffect]:
         sorted_effects = sorted(
             effects, key=lambda v: - cls.effect_severity(v))
         return sorted_effects
 
     @classmethod
-    def worst_effect(cls, effects: List[AnnotationEffect]):
+    def worst_effect(cls, effects: list[AnnotationEffect]) -> str:
         sorted_effects = cls.sort_effects(effects)
         return sorted_effects[0].effect
 
     @classmethod
-    def gene_effects(cls, effects: List[AnnotationEffect]):
+    def gene_effects(cls, effects: list[AnnotationEffect]) -> list[list[str]]:
         """Build parallel lists of genes and effects in that genes.
 
         Consider deprecating this.
@@ -192,7 +194,9 @@ class AnnotationEffect:  # pylint: disable=too-many-instance-attributes
         return [[str(r[0]) for r in result], [str(r[1]) for r in result]]
 
     @classmethod
-    def transcript_effects(cls, effects: List[AnnotationEffect]):
+    def transcript_effects(
+        cls, effects: list[AnnotationEffect]
+    ) -> tuple[list[str], list[Optional[str]], list[Optional[str]], list[str]]:
         """Build parallel lists of transcripts, genes, effects and details.
 
         Consider deprecating this.
@@ -226,7 +230,13 @@ class AnnotationEffect:  # pylint: disable=too-many-instance-attributes
         return (transcripts, genes, gene_effects, details)
 
     @classmethod
-    def simplify_effects(cls, effects: List[AnnotationEffect]):
+    def simplify_effects(
+        cls, effects: list[AnnotationEffect]
+    ) -> tuple[
+        str,
+        list[tuple[str, str]],
+        list[tuple[str, Optional[str], Optional[str], str]]
+    ]:
         """Simplify effects.
 
         Consider deprecating this.
@@ -247,7 +257,9 @@ class AnnotationEffect:  # pylint: disable=too-many-instance-attributes
             list(zip(*transcript_effects)))
 
     @classmethod
-    def lgd_gene_effects(cls, effects: List[AnnotationEffect]):
+    def lgd_gene_effects(
+        cls, effects: list[AnnotationEffect]
+    ) -> list[list[str]]:
         """Filter and return a mapping of gene to effects by the LGD group."""
         gene_effects = zip(*cls.gene_effects(effects))
         result = []
@@ -259,7 +271,9 @@ class AnnotationEffect:  # pylint: disable=too-many-instance-attributes
         return [[str(r[0]) for r in result], [str(r[1]) for r in result]]
 
     @classmethod
-    def effects_description(cls, effects: List[AnnotationEffect]):
+    def effects_description(
+        cls, effects: list[AnnotationEffect]
+    ) -> tuple[str, str, str]:
         """Build effects description.
 
         Condider deprecating this.
@@ -267,11 +281,11 @@ class AnnotationEffect:  # pylint: disable=too-many-instance-attributes
         worst_effect, gene_effects, transcript_effects = \
             cls.simplify_effects(effects)
 
-        gene_effects = "|".join([f"{g}:{e}" for g, e in gene_effects])
-        transcript_effects = "|".join(
+        gene_effects_out = "|".join([f"{g}:{e}" for g, e in gene_effects])
+        transcript_effects_out = "|".join(
             [f"{t}:{g}:{e}:{d}" for t, g, e, d in transcript_effects]
         )
-        return (worst_effect, gene_effects, transcript_effects)
+        return (worst_effect, gene_effects_out, transcript_effects_out)
 
 
 class EffectFactory:
@@ -320,6 +334,7 @@ class EffectFactory:
     def create_effect_with_prot_pos(
         cls, effect_name: str, request: AnnotationRequest
     ) -> AnnotationEffect:
+        """Create effect with protein change position."""
         effect = cls.create_effect_with_prot_length(effect_name, request)
         start_prot, _ = request.get_protein_position()
         effect.prot_pos = start_prot
@@ -334,8 +349,9 @@ class EffectFactory:
         # ef.prot_pos, _ = request.get_protein_position()
 
         ref_aa, alt_aa = request.get_amino_acids()
+        assert ref_aa is not None
+        assert alt_aa is not None
         effect.aa_change = f"{''.join(ref_aa)}->{''.join(alt_aa)}"
-
         effect.ref_aa = ref_aa
         effect.alt_aa = alt_aa
 
@@ -343,8 +359,10 @@ class EffectFactory:
 
     @classmethod
     def create_intronic_non_coding_effect(
-        cls, effect_type, request, start, end, index
-    ):
+        cls, effect_type: str,
+        request: AnnotationRequest,
+        start: int, end: int, index: int
+    ) -> AnnotationEffect:
         """Create intronic non coding effect."""
         effect = cls.create_effect_with_prot_length(effect_type, request)
         dist_left = request.variant.position - start - 1
@@ -383,12 +401,15 @@ class EffectFactory:
 class EffectGene:
     """Combine gene and effect and that gene."""
 
-    def __init__(self, symbol=None, effect=None):
+    def __init__(
+        self, symbol: Optional[str] = None,
+        effect: Optional[str] = None
+    ) -> None:
         self.symbol = symbol
         self.effect = effect
 
     @staticmethod
-    def from_string(data):
+    def from_string(data: str) -> Optional[EffectGene]:
         """Deserialize effect gene."""
         if not data:
             return None
@@ -401,31 +422,37 @@ class EffectGene:
 
         raise ValueError(f"unexpected effect gene format: {data}")
 
-    def __repr__(self):
+    def __repr__(self) -> str:
+        if self.symbol is None and self.effect is None:
+            return "(no effect)"
         if self.symbol is None:
+            assert self.effect is not None
             return self.effect
         return f"{self.symbol}:{self.effect}"
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.__repr__()
 
-    def __eq__(self, other):
+    def __eq__(self, other: Any) -> bool:
         assert isinstance(other, EffectGene)
 
         return self.symbol == other.symbol and self.effect == other.effect
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(tuple([self.symbol, self.effect]))
 
     @classmethod
-    def from_gene_effects(cls, gene_effects):
+    def from_gene_effects(
+        cls, gene_effects: list[tuple[str, str]]
+    ) -> list[EffectGene]:
+        """Build effect gene objects from list of gene, effect tuples."""
         result = []
         for symbol, effect in gene_effects:
             result.append(cls.from_tuple((symbol, effect)))
         return result
 
     @classmethod
-    def from_tuple(cls, gene_effect):
+    def from_tuple(cls, gene_effect: tuple[str, str]) -> "EffectGene":
         (symbol, effect) = tuple(gene_effect)
         return EffectGene(symbol, effect)
 
@@ -433,14 +460,19 @@ class EffectGene:
 class EffectTranscript:
     """Defines effect transcript."""
 
-    def __init__(self, transcript_id, gene=None, effect=None, details=None):
+    def __init__(
+        self, transcript_id: str,
+        gene: Optional[str] = None,
+        effect: Optional[str] = None,
+        details: Optional[str] = None
+    ) -> None:
         self.transcript_id = transcript_id
         self.gene = gene
         self.effect = effect
         self.details = details
 
     @staticmethod
-    def from_string(data):
+    def from_string(data: str) -> Optional[EffectTranscript]:
         """Deserialize effect transcript/details."""
         if not data:
             return None
@@ -457,13 +489,13 @@ class EffectTranscript:
         raise ValueError(
             f"unexpected effect details format: {data}")
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{self.transcript_id}:{self.gene}:{self.effect}:{self.details}"
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.__repr__()
 
-    def __eq__(self, other):
+    def __eq__(self, other: Any) -> bool:
         assert isinstance(other, EffectTranscript)
 
         return (
@@ -472,14 +504,18 @@ class EffectTranscript:
         )
 
     @classmethod
-    def from_tuple(cls, transcript_tuple):
+    def from_tuple(
+        cls, transcript_tuple: tuple[str, Optional[str], Optional[str], str]
+    ) -> EffectTranscript:
         (transcript_id, gene, effect, details) = tuple(transcript_tuple)
+        assert transcript_id is not None
         return EffectTranscript(
             transcript_id, gene=gene, effect=effect, details=details)
 
     @classmethod
     def from_effect_transcripts(
-            cls, effect_transcripts) -> Dict[str, EffectTranscript]:
+            cls, effect_transcripts: list[tuple[str, str]]
+    ) -> dict[str, EffectTranscript]:
         """Build effect transcripts."""
         result = {}
         for transcript_id, details in effect_transcripts:
@@ -500,8 +536,9 @@ class AlleleEffects:
 
     def __init__(
             self, worst_effect: str,
-            gene_effects: List[EffectGene],
-            effect_transcripts):
+            gene_effects: list[EffectGene],
+            effect_transcripts: dict[str, EffectTranscript]
+    ) -> None:
         self.worst_effect = worst_effect
         self.genes = gene_effects
         self.transcripts = effect_transcripts
@@ -509,18 +546,20 @@ class AlleleEffects:
         self.all_effects: Optional[list[AnnotationEffect]] = None
 
     @property
-    def worst(self):
+    def worst(self) -> str:
         return self.worst_effect
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         effects = "|".join([str(g) for g in self.genes])
         transcripts = "|".join([str(t) for t in self.transcripts.values()])
         return f"{self.worst}!{effects}!{transcripts}"
 
-    def __str__(self):
+    def __str__(self) -> str:
         return repr(self)
 
-    def __eq__(self, other):
+    def __eq__(self, other: Any) -> bool:
+        if not isinstance(other, AlleleEffects):
+            return False
         assert isinstance(other, AlleleEffects)
 
         return (
@@ -530,36 +569,37 @@ class AlleleEffects:
         )
 
     @property
-    def types(self):
+    def types(self) -> list[str]:
         if self._effect_types is None:
             self._effect_types = [eg.effect for eg in self.genes]
         return self._effect_types
 
     @classmethod
     def from_simplified_effects(
-            cls, effect_type,
-            effect_genes, transcripts) -> Optional[AlleleEffects]:
+            cls, effect_type: str,
+            effect_genes: list[tuple[str, str]],
+            transcripts: list[tuple[str, str]]
+    ) -> Optional[AlleleEffects]:
         """Build allele effects from simplified effects."""
         if effect_type is None:
             return None
 
-        transcripts = EffectTranscript.from_effect_transcripts(transcripts)
-        effect_genes = EffectGene.from_gene_effects(effect_genes)
-        return AlleleEffects(effect_type, effect_genes, transcripts)
+        effect_genes_out = EffectGene.from_gene_effects(effect_genes)
+        transcripts_out = EffectTranscript.from_effect_transcripts(transcripts)
+        return AlleleEffects(effect_type, effect_genes_out, transcripts_out)
 
     @staticmethod
-    def from_string(data) -> Optional[AlleleEffects]:
+    def from_string(data: Optional[str]) -> Optional[AlleleEffects]:
         """Build allele effect from string."""
         if data is None:
             return None
         parts = data.split("!")
         assert len(parts) == 3, parts
         worst = parts[0].strip()
-        effect_genes = [
+        effect_genes = list(filter(None, [
             EffectGene.from_string(eg.strip()) for eg in parts[1].split("|")
-        ]
-        effect_genes = list(filter(None, effect_genes))
-        transcripts_list: List[EffectTranscript] = list(filter(None, [
+        ]))
+        transcripts_list: list[EffectTranscript] = list(filter(None, [
             EffectTranscript.from_string(et.strip())
             for et in parts[2].split("|")
         ]))
@@ -569,16 +609,17 @@ class AlleleEffects:
         return AlleleEffects(worst, effect_genes, transcripts)
 
     @classmethod
-    def from_effects(cls, effects: List[AnnotationEffect]) -> AlleleEffects:
+    def from_effects(cls, effects: list[AnnotationEffect]) -> AlleleEffects:
         """Build allele effects from list of annotation effect."""
         worst_effect, gene_effects, transcript_effects = \
             AnnotationEffect.simplify_effects(effects)
-        gene_effects = [EffectGene(g, e) for g, e in gene_effects]
-        transcript_effects = {
+        gene_effects_out = [EffectGene(g, e) for g, e in gene_effects]
+        transcript_effects_out = {
             t: EffectTranscript(t, g, e, d)
             for t, g, e, d in transcript_effects
         }
 
-        result = AlleleEffects(worst_effect, gene_effects, transcript_effects)
+        result = AlleleEffects(
+            worst_effect, gene_effects_out, transcript_effects_out)
         result.all_effects = effects
         return result

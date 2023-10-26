@@ -189,7 +189,7 @@ class BaseAnnotationRequest(abc.ABC):
     def get_nucleotides_count_to_full_codon(length: int) -> int:
         return (3 - (length % 3)) % 3
 
-    def cod2aa(self, codon: str) -> Optional[str]:
+    def cod2aa(self, codon: str) -> str:
         """Translate codon to amino acid."""
         codon = codon.upper()
         if len(codon) != 3:
@@ -208,7 +208,7 @@ class BaseAnnotationRequest(abc.ABC):
             if codon in self.code.CodonsAa[key]:
                 return key
 
-        return None
+        return "?"
 
     def is_start_codon_affected(self) -> bool:
         return (
@@ -251,7 +251,7 @@ class PositiveStrandAnnotationRequest(BaseAnnotationRequest):
             reference_genome, code, promoter_len,
             variant, transcript_model)
         self.__amino_acids: Optional[
-            tuple[list[Optional[str]], list[Optional[str]]]] = None
+            tuple[list[str], list[str]]] = None
 
     def _get_coding_nucleotide_position(self, position: int) -> int:
         length = 0
@@ -344,7 +344,7 @@ class PositiveStrandAnnotationRequest(BaseAnnotationRequest):
 
     def get_amino_acids(
         self
-    ) -> tuple[list[Optional[str]], list[Optional[str]]]:
+    ) -> tuple[list[str], list[str]]:
         """Construct the list of amino acids."""
         if self.__amino_acids is None:
             ref_codons, alt_codons = self.get_codons()
@@ -377,7 +377,7 @@ class NegativeStrandAnnotationRequest(BaseAnnotationRequest):
             reference_genome, code, promoter_len,
             variant, transcript_model)
         self.__amino_acids: Optional[
-            tuple[list[Optional[str]], list[Optional[str]]]] = None
+            tuple[list[str], list[str]]] = None
 
     def _get_coding_nucleotide_position(self, position: int) -> int:
         length = 0
@@ -523,7 +523,7 @@ class NegativeStrandAnnotationRequest(BaseAnnotationRequest):
                     nucleotide, sequence)
         return "".join(reverse)
 
-    def cod2aa(self, codon: str) -> Optional[str]:
+    def cod2aa(self, codon: str) -> str:
         complement_codon = self.complement(codon[::-1])
         logger.debug(
             "complement codon %s for codon %s", complement_codon, codon
@@ -532,7 +532,7 @@ class NegativeStrandAnnotationRequest(BaseAnnotationRequest):
 
     def get_amino_acids(
         self
-    ) -> tuple[list[Optional[str]], list[Optional[str]]]:
+    ) -> tuple[list[str], list[str]]:
         """Construct the list of amino acids."""
         if self.__amino_acids is None:
             ref_codons, alt_codons = self.get_codons()

@@ -75,9 +75,11 @@ class GeneScoreAnnotator(Annotator):
                           "resource!"
                 raise ValueError(message)
             attribute_config.type = "object"
-            attribute_config.description = self.gene_score.get_desc(
+            description = self.gene_score.get_desc(
                 attribute_config.source
             )
+            assert description is not None
+            attribute_config.description = description
 
             aggregator_type = \
                 attribute_config.parameters.get("gene_aggregator")
@@ -111,9 +113,9 @@ class GeneScoreAnnotator(Annotator):
         return attributes
 
     def aggregate_gene_values(
-            self, score_id,
+            self, score_id: str,
             gene_symbols: list[str],
-            aggregator_type: str):
+            aggregator_type: str) -> Any:
         """Aggregate gene score values."""
         aggregator = build_aggregator(aggregator_type)
 

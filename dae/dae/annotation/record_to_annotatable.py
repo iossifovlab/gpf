@@ -128,7 +128,7 @@ RECORD_TO_ANNOTATABLE_CONFIGURATION: Dict[tuple, Type[RecordToAnnotable]] = {
 }
 
 
-def add_record_to_annotable_arguments(parser: argparse.ArgumentParser):
+def add_record_to_annotable_arguments(parser: argparse.ArgumentParser) -> None:
     all_columns = {
         col for cols in RECORD_TO_ANNOTATABLE_CONFIGURATION
         for col in cols}

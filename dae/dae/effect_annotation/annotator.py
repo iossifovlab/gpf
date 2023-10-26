@@ -143,6 +143,7 @@ class EffectAnnotator:
         if variant.variant_type in {
                 Annotatable.Type.LARGE_DUPLICATION,
                 Annotatable.Type.LARGE_DELETION}:
+            assert variant.length is not None
             return self.annotate_cnv(
                 variant.chromosome,
                 variant.position,

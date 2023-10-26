@@ -1,4 +1,5 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+import pathlib
 
 from dae.genomic_resources import GenomicResource
 from dae.genomic_resources.genomic_scores import \
@@ -9,7 +10,7 @@ from dae.testing import convert_to_tab_separated
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME
 
 
-def test_the_simplest_np_score(tmp_path):
+def test_the_simplest_np_score(tmp_path: pathlib.Path) -> None:
     res: GenomicResource = build_inmemory_test_resource({
         "genomic_resource.yaml": """
             type: np_score
@@ -46,7 +47,7 @@ def test_the_simplest_np_score(tmp_path):
     assert score.fetch_scores_agg("1", 15, 16) == [0.045]
 
 
-def test_np_score_aggregation():
+def test_np_score_aggregation() -> None:
     res: GenomicResource = build_inmemory_test_resource({
         GR_CONF_FILE_NAME: """
             type: np_score
@@ -110,7 +111,7 @@ def test_np_score_aggregation():
         [0]
 
 
-def test_np_score_fetch_region():
+def test_np_score_fetch_region() -> None:
     res: GenomicResource = build_inmemory_test_resource({
         GR_CONF_FILE_NAME: """
             type: np_score

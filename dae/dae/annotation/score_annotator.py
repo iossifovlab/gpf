@@ -5,7 +5,7 @@ and allele_score.
 """
 import logging
 import abc
-from typing import Callable, Optional, Any
+from typing import Callable, Optional, Any, cast
 
 from dae.annotation.annotatable import Annotatable, VCFAllele
 from dae.annotation.annotation_pipeline import Annotator, AttributeInfo
@@ -87,6 +87,7 @@ class GenomicScoreAnnotatorBase(Annotator):
     def create_the_documentation(self, attribute_info: AttributeInfo) -> None:
         hist_url = self.score.get_histogram_image_url(attribute_info.source)
         score_def = self.score.get_score_definition(attribute_info.source)
+        assert score_def is not None
         # pylint: disable=protected-access
         attribute_info._documentation = f"""
 {attribute_info.description}
@@ -131,7 +132,8 @@ large_values {score_def.large_values_desc}
         if attribute_conf_agg is None:
             score_def = self.score.get_score_definition(attribute_info.source)
             assert score_def is not None
-            value = aggregators_score_def_att[aggregator](score_def)
+            value = aggregators_score_def_att[aggregator](
+                cast(ScoreDef, score_def))
             if value is not None:
                 value_str = f"{value} [default]"
             else:
