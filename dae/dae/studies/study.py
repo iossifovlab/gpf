@@ -158,14 +158,18 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
                     seen.add(child.study_id)
         return result
 
-    def _get_query_children(
+    def _get_query_leaf_studies(
         self, study_filters: Optional[list[str]]
     ) -> list[GenotypeDataStudy]:
         leafs = []
+        logger.debug("find leaf studies started...")
+        start = time.time()
         if self.is_group:
             leafs = self.get_leaf_children()
         else:
             leafs = [cast(GenotypeDataStudy, self)]
+        elapsed = time.time() - start
+        logger.debug("leaf studies found in %.2f sec", elapsed)
         logger.debug("leaf children: %s", [st.study_id for st in leafs])
         logger.debug("study_filters: %s", study_filters)
 
@@ -226,7 +230,8 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
             return v
 
         runners = []
-        for genotype_study in self._get_query_children(study_filters):
+        logger.debug("query leaf studies...")
+        for genotype_study in self._get_query_leaf_studies(study_filters):
             person_sets_query = None
             query_person_ids = set(person_ids.copy()) \
                 if person_ids is not None else None
@@ -406,7 +411,7 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
             effect_types = expand_effect_types(effect_types)
 
         runners = []
-        for genotype_study in self._get_query_children(study_filters):
+        for genotype_study in self._get_query_leaf_studies(study_filters):
             # pylint: disable=no-member,protected-access
             runner = genotype_study._backend \
                 .build_summary_variants_query_runner(

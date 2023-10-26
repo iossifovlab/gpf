@@ -153,12 +153,13 @@ class ResponseTransformer:
         ],
     }
 
-    def __init__(self, study_wrapper: Any):
+    def __init__(self, study_wrapper: Any) -> None:
         # pylint: disable=import-outside-toplevel
         from studies.study_wrapper import StudyWrapper
 
         self.study_wrapper = cast(StudyWrapper, study_wrapper)
         self._pheno_columns = study_wrapper.config_columns.phenotype
+        self._pheno_values: Optional[list[tuple[pd.DataFrame, str]]] = None
 
         self.gene_scores_dicts = {}
         if not study_wrapper.is_remote \
@@ -168,17 +169,22 @@ class ResponseTransformer:
                 gene_score = gene_scores_db.get_gene_score(
                     score_desc.resource_id
                 )
+                if gene_score is None:
+                    continue
                 self.gene_scores_dicts[score_id] = gene_score._to_dict(
                     score_id
                 )
+            self._get_all_pheno_values()
 
     @property
     def families(self) -> FamiliesData:
         return self.study_wrapper.families
 
     def _get_all_pheno_values(
-        self, family_ids: Iterable[str]
+        self
     ) -> Optional[list[tuple[pd.DataFrame, str]]]:
+        if self._pheno_values is not None:
+            return self._pheno_values
         if not self.study_wrapper.phenotype_data \
            or not self.study_wrapper.config_columns.phenotype:
             return None
@@ -187,23 +193,15 @@ class ResponseTransformer:
         pheno_column_dfs = []
         for column in self.study_wrapper.config_columns.phenotype.values():
             assert column.role
-            persons = self.study_wrapper.families.persons_with_roles(
-                [column.role], family_ids)
-            person_ids = [p.person_id for p in persons]
-
-            kwargs = {
-                "person_ids": list(person_ids),
-            }
-
             pheno_column_names.append(f"{column.source}.{column.role}")
             pheno_column_dfs.append(
                 self.study_wrapper.phenotype_data.get_measure_values_df(
-                    column.source, **kwargs
+                    column.source
                 )
             )
 
-        result = list(zip(pheno_column_dfs, pheno_column_names))
-        return result
+        self._pheno_values = list(zip(pheno_column_dfs, pheno_column_names))
+        return self._pheno_values
 
     @staticmethod
     def _get_pheno_values_for_variant(
@@ -406,7 +404,7 @@ class ResponseTransformer:
 
     @staticmethod
     def _gene_view_summary_download_variants_iterator(
-        variants: list[SummaryVariant], frequency_column: str
+        variants: Iterable[SummaryVariant], frequency_column: str
     ) -> Generator[list, None, None]:
         for v in variants:
             for aa in v.alt_alleles:
@@ -485,7 +483,7 @@ class ResponseTransformer:
     def variant_transformer(self) -> Callable[[FamilyVariant], FamilyVariant]:
         """Build and return a variant transformer function."""
         assert not self.study_wrapper.is_remote
-        pheno_column_values = self._get_all_pheno_values(self.families)
+        pheno_column_values = self._get_all_pheno_values()
 
         def transformer(variant: FamilyVariant) -> FamilyVariant:
             pheno_values = self._get_pheno_values_for_variant(

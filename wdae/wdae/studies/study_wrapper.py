@@ -339,9 +339,8 @@ class StudyWrapper(StudyWrapperBase):
         return self.phenotype_data is not None
 
     @property
-    def config_columns(self) -> list[dict[str, Any]]:
-        return cast(
-            list[dict[str, Any]], self.config.genotype_browser.columns)
+    def config_columns(self) -> Box:
+        return cast(Box, self.config.genotype_browser.columns)
 
     def transform_request(self, kwargs: dict[str, Any]) -> dict[str, Any]:
         return self.query_transformer.transform_kwargs(**kwargs)
@@ -375,7 +374,14 @@ class StudyWrapper(StudyWrapperBase):
             # passed empty list of summary variants; empty result
             return
 
+        start = time.time()
+        logger.debug(
+            "study wrapper (%s) creating variant transformer...",
+            self.name)
         transform = self.response_transformer.variant_transformer()
+        logger.debug(
+            "study wrapper (%s) variant transformer created in %.2f sec",
+            self.name, time.time() - start)
 
         index = 0
         seen = set()
@@ -383,11 +389,17 @@ class StudyWrapper(StudyWrapperBase):
 
         try:
             started = time.time()
+            logger.debug(
+                "study wrapper (%s) creating query_result_variants...",
+                self.name)
             variants_result = \
                 self.genotype_data_study.query_result_variants(**kwargs)
             if variants_result is None:
                 return
 
+            logger.debug(
+                "study wrapper (%s) starting query_result_variants...",
+                self.name)
             variants_result.start()
             elapsed = time.time() - started
             logger.info(
