@@ -11,7 +11,7 @@ export class ConfirmButtonComponent {
   @Input() public message = '';
   @Input() public confirmText = 'Remove';
   @Input() public title = 'Remove';
-  @Input() public iconStyle: string[];
+  @Input() public iconStyle: {name: string; class: string} = {name: '', class: ''};
   @Output() public clicked = new EventEmitter(true);
 
   public onClick(event: ConfirmCancelEvent): void {

@@ -33,6 +33,8 @@
 #download-button {
   box-shadow: none;
   height: 33px;
+  width: 40px;
+  padding: 3px;
 }
 
 #download-button:focus {
@@ -41,10 +43,6 @@
 
 #download-button:hover {
   background: #173f62;
-}
-
-#download-button i {
-  color: #fff;
 }
 
 form {

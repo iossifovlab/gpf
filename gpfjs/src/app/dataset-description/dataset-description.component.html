@@ -8,13 +8,14 @@
         <markdown id="markdown-id" [data]="dataset.description || ''"></markdown>
         <div *ngIf="!editMode && isDescriptionEditable">
           <div style="position: relative">
-            <i
+            <span
               *ngIf="('' | userInfo)?.isAdministrator"
               (click)="edit()"
               id="edit-icon"
-              class="fa fa-pencil fa-lg"
-              title="Edit">
-            </i>
+              class="material-symbols-outlined"
+              title="Edit"
+              >edit</span
+            >
           </div>
         </div>
 

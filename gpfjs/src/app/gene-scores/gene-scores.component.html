@@ -5,7 +5,7 @@
         <select class="form-control" [(ngModel)]="selectedGeneScores" required>
           <option *ngFor="let geneScores of geneScoresArray" [ngValue]="geneScores">{{ geneScores.desc }}</option>
         </select>
-        <span class="select-dropdown-icon" [style.content]="'url(' + imgPathPrefix + 'dropdown_icon.png)'"> </span>
+        <span class="material-symbols-outlined select-dropdown-icon"> arrow_drop_down </span>
       </div>
       <div style="margin-top: 5px">
         <a class="download-link" href="{{ downloadUrl }}">Download</a>

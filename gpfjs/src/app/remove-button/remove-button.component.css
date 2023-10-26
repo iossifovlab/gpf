@@ -1,5 +1,6 @@
-img {
-  float: left;
-  display: block;
+#remove-button {
+  width: 30px;
   height: 30px;
+  float: right;
+  margin-top: 5px;
 }

@@ -9,7 +9,7 @@
         (ngModelChange)="changeBackground($event)">
         <option *ngFor="let background of backgrounds" [ngValue]="background">{{ background.id }}</option>
       </select>
-      <span class="select-dropdown-icon" [style.content]="'url(' + imgPathPrefix + 'dropdown_icon.png)'"></span>
+      <span class="material-symbols-outlined select-dropdown-icon"> arrow_drop_down </span>
     </div>
   </div>
   <div *ngIf="countings" id="counting-models" style="display: inline-block; width: 300px; padding: 15px">
@@ -18,7 +18,7 @@
       <select class="form-control" style="width: 100%" [ngModel]="counting" (ngModelChange)="changeCounting($event)">
         <option *ngFor="let counting of countings" [ngValue]="counting">{{ counting.id }}</option>
       </select>
-      <span class="select-dropdown-icon" [style.content]="'url(' + imgPathPrefix + 'dropdown_icon.png)'"></span>
+      <span class="material-symbols-outlined select-dropdown-icon"> arrow_drop_down </span>
     </div>
   </div>
 

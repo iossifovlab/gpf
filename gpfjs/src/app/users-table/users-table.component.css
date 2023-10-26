@@ -3,6 +3,10 @@
   color: #2a6395;
 }
 
+.action-buttons {
+  margin-top: 5px;
+}
+
 .action-buttons .btn:hover {
   color: white;
   background-color: #2a6395;
@@ -37,11 +41,6 @@
   justify-content: center;
 }
 
-span {
-  line-height: 30px;
-  padding: 0 10px;
-}
-
 .list-cell {
   justify-content: space-between;
 }
@@ -67,19 +66,12 @@ gpf-item-add-menu {
 #cancel-button {
   background-color: transparent;
   border: none;
-}
-
-#cancel-button > i {
-  color: red;
-}
-
-#cancel-button > i:hover {
-  color: rgb(255, 110, 110);
+  padding-top: 8px;
 }
 
 #edit-icon {
-  font-size: 12px;
-  padding-bottom: 5px;
+  font-size: 15px;
+  padding-left: 5px;
 }
 
 #edit-icon:hover {
@@ -109,4 +101,8 @@ input:invalid:focus {
   outline: rgb(255, 0, 0);
   border-color: rgb(255, 0, 0);
   box-shadow: 0 0 0 4px rgba(244, 15, 15, 30%);
+}
+
+.remove-group-button {
+  margin-top: 4px;
 }

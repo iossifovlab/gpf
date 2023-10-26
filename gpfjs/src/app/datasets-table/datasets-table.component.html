@@ -16,10 +16,11 @@
               <gpf-confirm-button
                 *ngIf="!isDefaultGroup(dataset, group)"
                 (clicked)="removeGroup(dataset, group)"
+                class="remove-group-button"
                 confirmText="Remove"
                 title="Remove group"
                 message="Remove group?"
-                [iconStyle]="['fa', 'fa-thin', 'fa-times']">
+                [iconStyle]="{ name: 'close', class: 'material-symbols-outlined sm bold' }">
               </gpf-confirm-button>
             </div>
           </div>

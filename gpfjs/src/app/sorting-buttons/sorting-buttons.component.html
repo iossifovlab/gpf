@@ -1,5 +1,5 @@
 <div class="clickable" (click)="emitSort()" id="sorting-buttons">
-  <i *ngIf="hideState === 0" id="bg" class="clickable fa fa-sort"></i>
-  <i *ngIf="hideState === -1" id="asc" class="clickable fa fa-sort-up"></i>
-  <i *ngIf="hideState === 1" id="desc" class="clickable fa fa-sort-down"></i>
+  <span *ngIf="hideState === 0" id="bg" class="material-symbols-outlined">unfold_more</span>
+  <span *ngIf="hideState === -1" id="asc" class="material-symbols-outlined">expand_less</span>
+  <span *ngIf="hideState === 1" id="desc" class="material-symbols-outlined">expand_more</span>
 </div>

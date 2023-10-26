@@ -8,22 +8,28 @@
           <span *ngIf="columnInfo.caption">{{ columnInfo.caption }}</span>
         </div>
         <div (click)="onSortClick(columnInfo)" [class.clickable]="columnInfo.sortable" id="sorting-buttons">
-          <i
+          <span
             [hidden]="!(columnInfo.sortable && sortingInfo?.sortBySubcolumn !== columnInfo)"
             id="bg"
-            class="clickable fa fa-sort"></i>
-          <i
+            class="material-symbols-outlined"
+            >unfold_more</span
+          >
+          <span
             [hidden]="
               !(columnInfo.sortable && sortingInfo?.sortBySubcolumn === columnInfo && sortingInfo?.sortOrderAsc)
             "
             id="asc"
-            class="clickable fa fa-sort-up"></i>
-          <i
+            class="material-symbols-outlined"
+            >expand_less</span
+          >
+          <span
             [hidden]="
               !(columnInfo.sortable && sortingInfo?.sortBySubcolumn === columnInfo && !sortingInfo?.sortOrderAsc)
             "
             id="desc"
-            class="clickable fa fa-sort-down"></i>
+            class="material-symbols-outlined"
+            >expand_more</span
+          >
         </div>
       </div>
     </div>
@@ -36,18 +42,24 @@
           <span *ngIf="!child.contentTemplateRef">{{ child.caption }}</span>
         </div>
         <div (click)="onSortClick(child)" [class.clickable]="child.sortable" id="sorting-buttons">
-          <i
+          <span
             [hidden]="!(child.sortable && sortingInfo?.sortBySubcolumn !== child)"
             id="bg"
-            class="clickable fa fa-sort"></i>
-          <i
+            class="material-symbols-outlined"
+            >unfold_more</span
+          >
+          <span
             [hidden]="!(child.sortable && sortingInfo?.sortBySubcolumn === child && sortingInfo?.sortOrderAsc)"
             id="asc"
-            class="clickable fa fa-sort-up"></i>
-          <i
+            class="material-symbols-outlined"
+            >expand_less</span
+          >
+          <span
             [hidden]="!(child.sortable && sortingInfo?.sortBySubcolumn === child && !sortingInfo?.sortOrderAsc)"
             id="desc"
-            class="clickable fa fa-sort-down"></i>
+            class="material-symbols-outlined"
+            >expand_more</span
+          >
         </div>
       </div>
     </div>

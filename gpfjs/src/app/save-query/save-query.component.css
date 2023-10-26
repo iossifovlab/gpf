@@ -16,6 +16,10 @@ button:disabled {
   width: 125px;
 }
 
+#copy-link-button:hover {
+  cursor: pointer;
+}
+
 #share-url-div {
   display: flex;
   align-items: center;
@@ -38,14 +42,6 @@ button:disabled {
 #share-url-div div {
   display: flex;
   padding: 8px;
-}
-
-.clone-icon {
-  background-repeat: no-repeat;
-  background-position-y: center;
-  background-position-x: center;
-  width: 20px;
-  height: 20px;
 }
 
 p {

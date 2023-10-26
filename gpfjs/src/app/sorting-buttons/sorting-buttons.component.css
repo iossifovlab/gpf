@@ -1,8 +1,17 @@
 #bg,
 #asc,
 #desc {
-  height: 12px;
-  width: 12px;
+  padding-top: 7px;
+  font-weight: normal;
+}
+
+#asc,
+#desc {
+  font-size: 17px;
+  font-weight: 600;
+  margin-top: 7px;
+  padding-left: 3.5px;
+  padding-right: 3.5px;
 }
 
 #sorting-buttons {

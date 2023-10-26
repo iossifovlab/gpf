@@ -1,19 +1,10 @@
-span {
-  padding: 5px;
-  line-height: 30px;
-  height: 30px;
-}
-
-img {
-  height: 30px;
-}
-
 #add-filter {
   margin: -10px -16px;
-  padding: 10px 16px;
+  padding: 10px;
   border: 0;
-  vertical-align: baseline;
-  height: auto;
-  display: inline-block;
-  width: 130px;
+  width: 115px;
+  height: fit-content;
+  display: flex;
+  align-items: center;
+  column-gap: 5px;
 }

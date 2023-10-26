@@ -46,8 +46,12 @@
           type="number"
           [(ngModel)]="rangeStartWithoutNull"
           placeholder="start" />
-        <button type="button" class="step up" (click)="startStepUp()">&#x25BC;</button>
-        <button type="button" class="step down" (click)="startStepDown()">&#x25BC;</button>
+        <button type="button" class="step up" (click)="startStepUp()"
+          ><span class="material-symbols-outlined md"> arrow_drop_up </span></button
+        >
+        <button type="button" class="step down" (click)="startStepDown()"
+          ><span class="material-symbols-outlined md"> arrow_drop_down </span></button
+        >
       </div>
     </div>
     <div class="histogram-to">
@@ -60,8 +64,12 @@
           type="number"
           [(ngModel)]="rangeEndWithoutNull"
           placeholder="end" />
-        <button type="button" class="step up" (click)="endStepUp()">&#x25BC;</button>
-        <button type="button" class="step down" (click)="endStepDown()">&#x25BC;</button>
+        <button type="button" class="step up" (click)="endStepUp()"
+          ><span class="material-symbols-outlined md"> arrow_drop_up </span></button
+        >
+        <button type="button" class="step down" (click)="endStepDown()"
+          ><span class="material-symbols-outlined md"> arrow_drop_down </span></button
+        >
       </div>
     </div>
   </div>

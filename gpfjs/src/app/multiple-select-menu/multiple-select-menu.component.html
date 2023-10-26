@@ -20,10 +20,10 @@
         autocomplete="off"
         spellcheck="false" />
       <span
-        class="search-clear-icon"
-        [style.background-image]="'url(' + imgPathPrefix + 'search-clear-icon.png)'"
+        class="material-symbols-outlined search-clear-icon"
         *ngIf="searchInput.value !== ''"
         (click)="searchInput.value = ''; searchText = ''; filterItems('')">
+        close
       </span>
     </div>
   </div>

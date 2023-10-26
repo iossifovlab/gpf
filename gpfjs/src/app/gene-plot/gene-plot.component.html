@@ -9,9 +9,7 @@
           (click)="undo()"
           [disabled]="!zoomHistory?.canGoBackward"
           title="Undo (Ctrl+Z or Z)">
-          <span>
-            <i class="fa fa-arrow-left" aria-hidden="true"></i>
-          </span>
+          <span class="material-symbols-outlined">arrow_back</span>
         </button>
         <button
           type="button"
@@ -20,9 +18,7 @@
           (click)="redo()"
           [disabled]="!zoomHistory?.canGoForward"
           title="Redo (Ctrl+Y or Y)">
-          <span>
-            <i class="fa fa-arrow-right" aria-hidden="true"></i>
-          </span>
+          <span class="material-symbols-outlined">arrow_forward</span>
         </button>
         <button
           type="button"
@@ -30,9 +26,7 @@
           class="gene-plot-header-icon"
           (click)="reset()"
           title="Reset (Double-click or 5)">
-          <span>
-            <i class="fa fa-repeat" aria-hidden="true"></i>
-          </span>
+          <span class="material-symbols-outlined">refresh</span>
         </button>
       </span>
 
@@ -68,7 +62,7 @@
           id="download-summary-variants-button"
           (click)="onDownload()"
           title="Download summary variants">
-          <i class="fa fa-solid fa-download"></i>
+          <span class="material-symbols-outlined">download</span>
         </button>
       </div>
     </span>
