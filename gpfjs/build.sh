@@ -49,6 +49,22 @@ function main() {
       gpfjs_version="$(ee "gpfjs_version")"
   fi
 
+  build_stage "Get gpfjs version"
+  {
+
+    build_run git config --global --add safe.directory /wd
+    if [ "$gpfjs_version" == "" ]; then
+        version="$(build_run invoke -r /release_management current-version)"
+        if [ "$version" != "" ]; then
+            gpfjs_version=${version}
+            ee_set "gpfjs_version" "$gpfjs_version"
+            build_run echo "{\"version\": \"${version}\"}" > "version.json"
+        fi
+    fi
+
+    build_run echo "$(ee 'gpfjs_version')"
+  }
+
   build_stage "Clean and fetch fresh dependencies"
   {
     build_run rm -rf dist
@@ -66,22 +82,6 @@ function main() {
   build_stage "Tests"
   {
     build_run bash -c 'npm run-script test:ci || false'
-  }
-
-  build_stage "Get gpfjs version"
-  {
-
-    build_run git config --global --add safe.directory /wd
-    if [ "$gpfjs_version" == "" ]; then
-        version="$(build_run invoke -r /release_management current-version)"
-        if [ "$version" != "" ]; then
-            gpfjs_version=${version}
-            ee_set "gpfjs_version" "$gpfjs_version"
-            build_run echo "{\"version\": \"${version}\"}" > "version.json"
-        fi
-    fi
-
-    build_run echo "$(ee 'gpfjs_version')"
   }
 
   build_stage "Compile production"
