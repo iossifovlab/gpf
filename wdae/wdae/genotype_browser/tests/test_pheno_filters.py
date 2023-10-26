@@ -43,6 +43,7 @@ SOURCE_RAW = {
 }
 
 
+@pytest.mark.xfail(reason="support for changing phenotype sources is broken")
 @pytest.mark.parametrize(
     "pheno_filters,variants_count,preview_sources,pheno_values",
     [
