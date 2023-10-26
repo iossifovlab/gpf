@@ -379,6 +379,8 @@ class WGPFInstance(GPFInstance):
         """Prepare AGP configuration for response ahead of time."""
         configuration = self.get_agp_configuration()
         if configuration is None:
+            self._agp_configuration = {}
+            self._agp_table_configuration = {}
             return
 
         # Camelize snake_cased keys, excluding "datasets"
