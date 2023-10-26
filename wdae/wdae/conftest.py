@@ -232,7 +232,8 @@ def wdae_gpf_instance(
         "datasets_api.permissions.get_wgpf_instance",
         return_value=fixtures_wgpf_instance,
     )
-    wdae_gpf_instance._autism_gene_profile_config = None
+    fixtures_wgpf_instance._autism_gene_profile_config = None
+    fixtures_wgpf_instance.prepare_agp_configuration()
 
     return fixtures_wgpf_instance
 
@@ -296,8 +297,12 @@ def agp_wgpf_instance(  # pylint: disable=too-many-arguments
             clear=True
         )
     wdae_gpf_instance._autism_gene_profile_db.insert_agp(sample_agp)
+    wdae_gpf_instance.prepare_agp_configuration()
 
     yield wdae_gpf_instance
+
+    wdae_gpf_instance._agp_configuration = {}
+    wdae_gpf_instance._agp_table_configuration = {}
 
     wdae_gpf_instance.__autism_gene_profile_config = None
     wdae_gpf_instance.__autism_gene_profile_db = None

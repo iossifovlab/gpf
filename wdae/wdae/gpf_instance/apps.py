@@ -27,6 +27,8 @@ class WDAEConfig(AppConfig):
 
         gpf_instance = get_wgpf_instance(config_filename)
 
+        gpf_instance.prepare_agp_configuration()
+
         if not settings.STUDIES_EAGER_LOADING:
             logger.info("skip preloading gpf instance...")
             return
