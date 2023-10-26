@@ -48,3 +48,7 @@ package-lock.json
 
 # build scripts
 /build-env
+
+# version json
+version.json
+

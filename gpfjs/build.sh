@@ -69,7 +69,7 @@ function main() {
     fi
 
     build_run echo "$(ee 'gpfjs_version')"
-
+    build_run echo "{\"version\": \"${gpfjs_version}\"}" > "version.json"
   }
 
   build_stage "Lint"
