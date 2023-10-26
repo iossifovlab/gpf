@@ -13,13 +13,13 @@ from dae.studies.study import GenotypeData
 
 
 @pytest.fixture(scope="session")
-def background_facade(fixtures_gpf_instance: GPFInstance) -> BackgroundFacade:
-    return fixtures_gpf_instance._background_facade
+def background_facade(fixtures_wgpf_instance: GPFInstance) -> BackgroundFacade:
+    return fixtures_wgpf_instance._background_facade
 
 
 @pytest.fixture(scope="session")
-def f1_trio(fixtures_gpf_instance: GPFInstance) -> GenotypeData:
-    return fixtures_gpf_instance.get_genotype_data("f1_trio")
+def f1_trio(fixtures_wgpf_instance: GPFInstance) -> GenotypeData:
+    return fixtures_wgpf_instance.get_genotype_data("f1_trio")
 
 
 @pytest.fixture(scope="session")
@@ -30,7 +30,7 @@ def enrichment_builder(
         f1_trio
     )
     backgorund = background_facade.get_study_background(
-        f1_trio, "coding_len_background_model"
+        f1_trio, "enrichment/coding_len_testing"
     )
     assert backgorund is not None
 

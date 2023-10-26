@@ -4,7 +4,8 @@ from dae.utils.effect_utils import expand_effect_types
 from dae.variants.family_variant import FamilyVariant
 
 from dae.enrichment_tool.genotype_helper import children_stats
-from dae.enrichment_tool.background import BackgroundBase
+from dae.enrichment_tool.base_enrichment_background import \
+    BaseEnrichmentBackground
 from dae.enrichment_tool.event_counters import CounterBase, \
     EnrichmentResult
 
@@ -14,7 +15,7 @@ class EnrichmentTool:
 
     def __init__(
         self, config: dict[str, Any],
-        background: BackgroundBase,
+        background: BaseEnrichmentBackground,
         event_counter: CounterBase
     ):
         self.config = config

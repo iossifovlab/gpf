@@ -1,30 +1,37 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 from dae.studies.study import GenotypeData
-from dae.enrichment_tool.background import \
-    CodingLenBackground, \
-    SamochaBackground
+from dae.enrichment_tool.gene_weights_background import \
+    GeneWeightsEnrichmentBackground
+from dae.enrichment_tool.samocha_background import \
+    SamochaEnrichmentBackground
 from dae.enrichment_tool.background_facade import BackgroundFacade
+from dae.gpf_instance import GPFInstance
+
+
+def test_gpf_fixture(gpf_fixture: GPFInstance) -> None:
+    grr = gpf_fixture.grr
+    res = grr.get_resource("enrichment/samocha_testing")
+    assert res.get_type() == "samocha_enrichment_background"
 
 
 def test_get_study_background(
     f1_trio: GenotypeData,
     background_facade: BackgroundFacade
 ) -> None:
-    # assert isinstance(background_facade.get_study_background(
-    #     'f1_trio', 'synonymous_background_model'), SynonymousBackground)
+    assert background_facade.grr.repo_id == "enrichment_testing_repo"
 
     assert isinstance(
         background_facade.get_study_background(
-            f1_trio, "coding_len_background_model"
+            f1_trio, "enrichment/coding_len_testing"
         ),
-        CodingLenBackground,
+        GeneWeightsEnrichmentBackground,
     )
 
     assert isinstance(
         background_facade.get_study_background(
-            f1_trio, "samocha_background_model"
+            f1_trio, "enrichment/samocha_testing"
         ),
-        SamochaBackground,
+        SamochaEnrichmentBackground,
     )
 
     assert background_facade.get_study_background(f1_trio, "Model") is None
@@ -65,13 +72,14 @@ def test_has_background(
 
     assert (
         background_facade.has_background(
-            f1_trio, "coding_len_background_model"
+            f1_trio, "enrichment/coding_len_testing"
         )
         is True
     )
 
     assert (
-        background_facade.has_background(f1_trio, "samocha_background_model")
+        background_facade.has_background(
+            f1_trio, "enrichment/samocha_testing")
         is True
     )
 

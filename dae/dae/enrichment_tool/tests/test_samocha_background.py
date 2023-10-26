@@ -1,5 +1,4 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-from typing import Callable
 
 import pytest
 
@@ -7,20 +6,13 @@ from dae.variants.attributes import Inheritance
 from dae.studies.study import GenotypeData
 from dae.enrichment_tool.event_counters import EventsCounter
 from dae.enrichment_tool.genotype_helper import GenotypeHelper
-from dae.enrichment_tool.background import SamochaBackground
+from dae.enrichment_tool.samocha_background import SamochaEnrichmentBackground
 
 
-def test_filename(
-        f1_trio_samocha_background: SamochaBackground,
-        fixture_dirname: Callable[[str], str]) -> None:
-    assert f1_trio_samocha_background.filename == fixture_dirname(
-        "studies/f1_trio/enrichment/samochaBackgroundModel.csv"
-    )
+def test_load(samocha_background: SamochaEnrichmentBackground) -> None:
+    background = samocha_background._df
+    assert background is not None
 
-
-def test_load(f1_trio_samocha_background: SamochaBackground) -> None:
-    f1_trio_samocha_background.load()
-    background = f1_trio_samocha_background.background
     assert len(background) == 3
 
     assert background.iloc[0]["gene"] == "SAMD11"
@@ -46,7 +38,7 @@ def test_load(f1_trio_samocha_background: SamochaBackground) -> None:
 
 
 def test_calc_stats(
-    f1_trio: GenotypeData, f1_trio_samocha_background: SamochaBackground
+    f1_trio: GenotypeData, samocha_background: SamochaEnrichmentBackground
 ) -> None:
     # pylint: disable=too-many-statements
     variants = list(
@@ -84,7 +76,7 @@ def test_calc_stats(
     assert len(enrichment_events.unspecified) == 0
 
     children_stats = helper.get_children_stats("phenotype1")
-    result = f1_trio_samocha_background.calc_enrichment_test(
+    result = samocha_background.calc_enrichment_test(
         enrichment_events,
         ["SAMD11", "PLEKHN1", "POGZ"],
         event_types=["missense"],

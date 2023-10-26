@@ -41,10 +41,25 @@ class EnrichmentModelsView(QueryDatasetView):
         dataset_id: str
     ) -> Response:
         """Return enrichment configuration prepared for choosing."""
+        study = self.gpf_instance.get_genotype_data(dataset_id)
+        if study is None:
+            return Response(status.HTTP_404_NOT_FOUND)
+
+        background_descriptions = []
+        # pylint: disable=protected-access
+        study_backgrounds = self.gpf_instance \
+            ._background_facade \
+            .get_all_study_backgrounds(study)
+        for background in study_backgrounds:
+            background_descriptions.append({
+                "id": background.background_id,
+                "name": background.name,
+                "type": background.background_type,
+                "summary": background.resource.get_summary(),
+                "description": background.resource.get_description()
+            })
         result = {
-            "background": self.get_from_config(
-                dataset_id, "background", "selected_background_values"
-            ),
+            "background": background_descriptions,
             "counting": self.get_from_config(
                 dataset_id, "counting", "selected_counting_values"
             ),

@@ -4,7 +4,8 @@ from box import Box
 from dae.enrichment_tool.tool import EnrichmentTool
 from dae.enrichment_tool.event_counters import EventsCounter
 from dae.enrichment_tool.genotype_helper import GenotypeHelper
-from dae.enrichment_tool.background import CodingLenBackground
+from dae.enrichment_tool.gene_weights_background import \
+    GeneWeightsEnrichmentBackground
 
 from dae.variants.attributes import Inheritance
 from dae.studies.study import GenotypeData
@@ -13,14 +14,14 @@ from dae.studies.study import GenotypeData
 def test_enrichment_tool(
     f1_trio: GenotypeData,
     f1_trio_enrichment_config: Box,
-    f1_trio_coding_len_background: CodingLenBackground
+    coding_len_background: GeneWeightsEnrichmentBackground
 ) -> None:
     variants = list(
         f1_trio.query_variants(inheritance=str(Inheritance.denovo.name))
     )
     event_counter = EventsCounter()
     enrichment_tool = EnrichmentTool(
-        f1_trio_enrichment_config, f1_trio_coding_len_background, event_counter
+        f1_trio_enrichment_config, coding_len_background, event_counter
     )
     psc = f1_trio.get_person_set_collection("phenotype")
     assert psc is not None

@@ -21,11 +21,9 @@ class BaseEnrichmentBackground(
     """Provides class for gene models."""
 
     def __init__(
-        self, resource: GenomicResource,
-        background_id: str
+        self, resource: GenomicResource
     ):
         self.resource = resource
-        self.background_id = background_id
 
         self.config = self.validate_and_normalize_schema(
             resource.get_config(), resource
@@ -42,6 +40,14 @@ class BaseEnrichmentBackground(
     @property
     def resource_id(self) -> str:
         return self.resource.resource_id
+
+    @property
+    def background_id(self) -> str:
+        return self.resource.resource_id
+
+    @property
+    def background_type(self) -> str:
+        return self.resource.get_type()
 
     @abc.abstractmethod
     def load(self) -> None:

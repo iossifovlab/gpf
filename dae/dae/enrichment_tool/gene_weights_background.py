@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 class GeneWeightsEnrichmentBackground(BaseEnrichmentBackground):
-    """Provides class for gene models."""
+    """Provides class for gene weights enrichment background model."""
 
     def __init__(self, resource: GenomicResource):
         if resource.get_type() != "gene_weights_enrichment_background":
@@ -23,10 +23,7 @@ class GeneWeightsEnrichmentBackground(BaseEnrichmentBackground):
                 f"unexpected enrichment background resource type: "
                 f"<{resource.get_type()}> for resource "
                 f"<{resource.resource_id}>")
-        super().__init__(
-            resource,
-            f"gene_weights_enrichment_background({resource.resource_id})"
-        )
+        super().__init__(resource)
 
         self._total: Optional[float] = None
         self._gene_weights: Optional[dict[str, float]] = None
