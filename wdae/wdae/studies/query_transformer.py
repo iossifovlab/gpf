@@ -1,3 +1,4 @@
+import time
 import logging
 
 from typing import Optional, cast, Any
@@ -309,6 +310,7 @@ class QueryTransformer:
         """Transform WEB query variants params into genotype data params."""
         # flake8: noqa: C901
         # pylint: disable=too-many-locals,too-many-branches,too-many-statements
+        start = time.time()
         logger.debug("kwargs in study wrapper: %s", kwargs)
         self._add_inheritance_to_query(
             "not possible_denovo and not possible_omission",
@@ -493,5 +495,8 @@ class QueryTransformer:
             if key in self.FILTER_RENAMES_MAP:
                 kwargs[self.FILTER_RENAMES_MAP[key]] = kwargs[key]
                 kwargs.pop(key)
+
+        elapsed = time.time() - start
+        logger.debug("transform kwargs took %.2f sec", elapsed)
 
         return kwargs
