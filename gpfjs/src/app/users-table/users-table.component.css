@@ -3,6 +3,10 @@
   color: #2a6395;
 }
 
+.action-buttons {
+  margin-top: 5px;
+}
+
 .action-buttons .btn:hover {
   color: white;
   background-color: #2a6395;
@@ -97,4 +101,8 @@ input:invalid:focus {
   outline: rgb(255, 0, 0);
   border-color: rgb(255, 0, 0);
   box-shadow: 0 0 0 4px rgba(244, 15, 15, 30%);
+}
+
+.remove-group-button {
+  margin-top: 4px;
 }

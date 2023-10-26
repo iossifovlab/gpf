@@ -350,8 +350,7 @@
 }
 
 #filter-menu-icon {
-  font-size: 17px;
-  padding-top: 5px;
+  margin-left: -3px;
 }
 
 .search-icon {
@@ -364,4 +363,9 @@
 
 .check {
   padding-top: 5px;
+}
+
+.menu-button {
+  margin-top: 6px;
+  font-size: 20px;
 }

@@ -55,6 +55,7 @@
               <gpf-confirm-button
                 *ngIf="!isDefaultGroup(user, group) && !(user.email === currentUserEmail && group === 'admin')"
                 (clicked)="removeGroup(user, group)"
+                class="remove-group-button"
                 confirmText="Remove"
                 title="Remove group"
                 message="Remove group?"

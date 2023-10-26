@@ -82,7 +82,7 @@
               *ngIf="column.sortable"
               [id]="column.id"
               class="header-button sorting-button"
-              style="pointer-events: none"
+              style="pointer-events: none; margin-top: 3px"
               [hideState]="column.id !== sortBy ? 0 : orderBy === 'asc' ? -1 : 1">
             </gpf-sorting-buttons>
             <!-- prettier-ignore -->
@@ -92,7 +92,7 @@
               [attr.id]="column.id + '-column-filtering-button'"
               class="header-button column-filtering-button"
               (click)="openDropdown(column, $event)"
-              title="Filter columns"><span class="material-symbols-outlined">
+              title="Filter columns"><span class="menu-button material-symbols-outlined">
                 menu
                 </span></button>
           </div>

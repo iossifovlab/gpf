@@ -16,6 +16,10 @@ button:disabled {
   width: 125px;
 }
 
+#copy-link-button:hover {
+  cursor: pointer;
+}
+
 #share-url-div {
   display: flex;
   align-items: center;

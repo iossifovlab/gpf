@@ -23,10 +23,11 @@
               <gpf-confirm-button
                 *ngIf="!(group.name === 'admin' && currentUserEmail === user)"
                 (clicked)="removeUser(group, user)"
+                class="remove-group-button"
                 confirmText="Remove"
                 title="Remove user"
                 message="Remove user?"
-                [iconStyle]="{ name: 'close', class: 'material-symbols-outlined' }">
+                [iconStyle]="{ name: 'close', class: 'material-symbols-outlined sm bold' }">
               </gpf-confirm-button>
             </div>
           </div>
