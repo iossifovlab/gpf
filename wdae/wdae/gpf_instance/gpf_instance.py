@@ -377,6 +377,7 @@ class WGPFInstance(GPFInstance):
 
     def prepare_agp_configuration(self) -> None:
         """Prepare AGP configuration for response ahead of time."""
+        # pylint: disable=too-many-branches
         configuration = self.get_agp_configuration()
         if configuration is None:
             self._agp_configuration = {}
@@ -387,6 +388,7 @@ class WGPFInstance(GPFInstance):
         # since its keys are dataset IDs
         json_config = to_response_json(configuration)
         self._agp_configuration = json_config
+        # pylint: disable=too-many-nested-blocks
         if len(configuration) > 0:
             if "datasets" in configuration:
                 json_config["datasets"] = []
@@ -455,7 +457,7 @@ class WGPFInstance(GPFInstance):
 
             self._agp_configuration = json_config
 
-        self._agp_table_configuration = dict()
+        self._agp_table_configuration = {}
         if len(configuration) > 0:
             table_config = {
                 "defaultDataset": configuration.get("default_dataset"),
@@ -505,7 +507,7 @@ class WGPFInstance(GPFInstance):
                 for dataset_id, dataset in configuration["datasets"].items():
                     study_wrapper = self.get_wdae_wrapper(dataset_id)
                     if study_wrapper is None:
-                        LOGGER.error("missing dataset %s", dataset_id)
+                        logger.error("missing dataset %s", dataset_id)
                         continue
                     display_name = dataset.get("display_name") \
                         or study_wrapper.config.get("name") \
@@ -562,8 +564,9 @@ def column(
     columns: Optional[list[dict[str, Any]]] = None,
     meta: Optional[str] = None
 ):
+    """Build columns descriptions."""
     if columns is None:
-        columns = list()
+        columns = []
     return {
         "id": col_id,
         "displayName": display_name,
