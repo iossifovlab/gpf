@@ -370,9 +370,13 @@ class WGPFInstance(GPFInstance):
         return None
 
     def get_wdae_agp_configuration(self) -> Optional[dict[str, Any]]:
+        if self._agp_configuration is None:
+            self.prepare_agp_configuration()
         return self._agp_configuration
 
     def get_wdae_agp_table_configuration(self) -> Optional[dict[str, Any]]:
+        if self._agp_table_configuration is None:
+            self.prepare_agp_configuration()
         return self._agp_table_configuration
 
     def prepare_agp_configuration(self) -> None:
