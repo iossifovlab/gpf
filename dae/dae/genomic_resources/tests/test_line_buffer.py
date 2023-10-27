@@ -5,7 +5,7 @@ import pytest
 from dae.genomic_resources.genomic_position_table import Line, LineBuffer
 
 
-def test_line_buffer_simple():
+def test_line_buffer_simple() -> None:
     buffer = LineBuffer()
     buffer.append(Line(("1", 1435348, 1435664, {})))
     buffer.append(Line(("1", 1435665, 1435739, {})))
@@ -19,7 +19,7 @@ def test_line_buffer_simple():
         assert row.pos_end == 1435664
 
 
-def test_line_buffer_simple_2():
+def test_line_buffer_simple_2() -> None:
     buffer = LineBuffer()
     buffer.append(Line(("1", 4, 4, {})))
     buffer.append(Line(("1", 4, 4, {})))
@@ -37,7 +37,7 @@ def test_line_buffer_simple_2():
     (4, 4),
     (5, 2),
 ])
-def test_line_buffer_prune(pos, expected):
+def test_line_buffer_prune(pos: int, expected: int) -> None:
     buffer = LineBuffer()
 
     buffer.append(Line(("1", 2, 2, {})))
@@ -59,7 +59,7 @@ def test_line_buffer_prune(pos, expected):
     (10, 4),
     (11, 5),
 ])
-def test_line_buffer_find_index(pos, expected):
+def test_line_buffer_find_index(pos: int, expected: int) -> None:
     buffer = LineBuffer()
     buffer.append(Line(("1", 4, 4, {})))  # 0
     buffer.append(Line(("1", 4, 4, {})))  # 1
@@ -71,7 +71,7 @@ def test_line_buffer_find_index(pos, expected):
     assert buffer.find_index("1", pos) == expected
 
 
-def test_line_buffer_simple_3():
+def test_line_buffer_simple_3() -> None:
     buffer = LineBuffer()
     buffer.append(Line(("1", 1, 10, {})))
     buffer.append(Line(("1", 11, 20, {})))
@@ -97,7 +97,7 @@ def test_line_buffer_simple_3():
     (1847884, 8),
     (1847885, 11),
 ])
-def test_find_index_buggy(pos, index):
+def test_find_index_buggy(pos: int, index: int) -> None:
     buffer = LineBuffer()
     buffer.append(Line(("1", 1847880, 1847880, {})))  # 0
     buffer.append(Line(("1", 1847880, 1847880, {})))  # 1
@@ -115,7 +115,7 @@ def test_find_index_buggy(pos, index):
     assert buffer.find_index("1", pos) == index
 
 
-def test_find_index_buggy_2():
+def test_find_index_buggy_2() -> None:
     buffer = LineBuffer()
     buffer.append(Line(("1", 503142, 503143, {})))
     buffer.append(Line(("1", 503144, 503144, {})))

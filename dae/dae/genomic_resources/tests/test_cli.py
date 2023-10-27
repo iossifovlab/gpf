@@ -3,8 +3,11 @@ import os
 import pathlib
 
 import pytest
+import pytest_mock
+
 from dae.utils.fs_utils import find_directory_with_a_file
-from dae.genomic_resources.repository import GR_CONF_FILE_NAME
+from dae.genomic_resources.repository import GenomicResourceProtocolRepo, \
+    GR_CONF_FILE_NAME
 from dae.genomic_resources.repository import GR_CONTENTS_FILE_NAME
 from dae.genomic_resources.cli import cli_manage, \
     _find_resource
@@ -13,7 +16,9 @@ from dae.genomic_resources.testing import \
 
 
 @pytest.fixture
-def repo_fixture(tmp_path_factory):
+def repo_fixture(
+    tmp_path_factory: pytest.TempPathFactory
+) -> tuple[pathlib.Path, GenomicResourceProtocolRepo]:
     path = tmp_path_factory.mktemp("cli_hist_repo_fixture")
     demo_gtf_content = "TP53\tchr3\t300\t200"
     setup_directories(
@@ -36,7 +41,9 @@ def repo_fixture(tmp_path_factory):
     return path, repo
 
 
-def test_cli_manifest(repo_fixture):
+def test_cli_manifest(
+    repo_fixture: tuple[pathlib.Path, GenomicResourceProtocolRepo]
+) -> None:
     # Given
     path, _repo = repo_fixture
     (path / GR_CONTENTS_FILE_NAME).unlink(missing_ok=True)
@@ -51,7 +58,11 @@ def test_cli_manifest(repo_fixture):
     assert (path / "one/.MANIFEST").is_file()
 
 
-def test_cli_without_arguments(repo_fixture, mocker, capsys):
+def test_cli_without_arguments(
+    repo_fixture: tuple[pathlib.Path, GenomicResourceProtocolRepo],
+    mocker: pytest_mock.MockerFixture,
+    capsys: pytest.CaptureFixture
+) -> None:
     # Given
     path, _repo = repo_fixture
     cli_manage(["repo-manifest", "-R", str(path)])
@@ -69,7 +80,10 @@ def test_cli_without_arguments(repo_fixture, mocker, capsys):
         assert out.startswith("usage: py.test [-h] [--version] [--verbose]")
 
 
-def test_cli_list(repo_fixture, capsys):
+def test_cli_list(
+    repo_fixture: tuple[pathlib.Path, GenomicResourceProtocolRepo],
+    capsys: pytest.CaptureFixture
+) -> None:
     path, _repo = repo_fixture
 
     cli_manage(["list", "-R", str(path)])
@@ -81,7 +95,11 @@ def test_cli_list(repo_fixture, capsys):
         "gene_models          1.0      2 50.0 B       manage sub/two\n"
 
 
-def test_cli_list_without_repo_argument(repo_fixture, capsys, mocker):
+def test_cli_list_without_repo_argument(
+    repo_fixture: tuple[pathlib.Path, GenomicResourceProtocolRepo],
+    capsys: pytest.CaptureFixture,
+    mocker: pytest_mock.MockerFixture
+) -> None:
     # Given
     path, _repo = repo_fixture
     cli_manage(["repo-manifest", "-R", str(path)])
@@ -100,7 +118,9 @@ def test_cli_list_without_repo_argument(repo_fixture, capsys, mocker):
         "gene_models          1.0      2 50.0 B       manage sub/two\n"
 
 
-def test_find_repo_dir_simple(repo_fixture):
+def test_find_repo_dir_simple(
+    repo_fixture: tuple[pathlib.Path, GenomicResourceProtocolRepo]
+) -> None:
     # Given
     path, _repo = repo_fixture
     (path / GR_CONTENTS_FILE_NAME).unlink(missing_ok=True)
@@ -117,7 +137,9 @@ def test_find_repo_dir_simple(repo_fixture):
     assert res == path
 
 
-def test_find_resource_dir_simple(repo_fixture):
+def test_find_resource_dir_simple(
+    repo_fixture: tuple[pathlib.Path, GenomicResourceProtocolRepo]
+) -> None:
     path, _repo = repo_fixture
 
     cli_manage(["repo-manifest", "-R", str(path)])
@@ -133,38 +155,49 @@ def test_find_resource_dir_simple(repo_fixture):
     assert str(path.relative_to(repo_dir)) == "sub/two(1.0)"
 
 
-def test_find_resource_with_version(repo_fixture):
+def test_find_resource_with_version(
+    repo_fixture: tuple[pathlib.Path, GenomicResourceProtocolRepo]
+) -> None:
     path, repo = repo_fixture
 
     cli_manage(["repo-manifest", "-R", str(path)])
     os.chdir(path / "sub" / "two(1.0)" / "gene_models")
 
     res = _find_resource(repo.proto, str(path))
+    assert res is not None
     assert res.resource_id == "sub/two"
     assert res.version == (1, 0)
 
 
-def test_find_resource_without_version(repo_fixture):
+def test_find_resource_without_version(
+    repo_fixture: tuple[pathlib.Path, GenomicResourceProtocolRepo]
+) -> None:
     path, repo = repo_fixture
 
     cli_manage(["repo-manifest", "-R", str(path)])
     os.chdir(path / "one")
 
     res = _find_resource(repo.proto, str(path))
+    assert res is not None
     assert res.resource_id == "one"
     assert res.version == (0,)
 
 
-def test_find_resource_with_resource_id(repo_fixture):
+def test_find_resource_with_resource_id(
+    repo_fixture: tuple[pathlib.Path, GenomicResourceProtocolRepo]
+) -> None:
     path, repo = repo_fixture
 
     res = _find_resource(
         repo.proto, str(path), resource="sub/two")
+    assert res is not None
     assert res.resource_id == "sub/two"
     assert res.version == (1, 0)
 
 
-def test_repo_init(repo_fixture):
+def test_repo_init(
+    repo_fixture: tuple[pathlib.Path, GenomicResourceProtocolRepo]
+) -> None:
     # Given
     path, _repo = repo_fixture
     (path / GR_CONTENTS_FILE_NAME).unlink(missing_ok=True)
@@ -176,7 +209,9 @@ def test_repo_init(repo_fixture):
     assert (path / ".CONTENTS").exists()
 
 
-def test_repo_init_inside_repo(repo_fixture):
+def test_repo_init_inside_repo(
+    repo_fixture: tuple[pathlib.Path, GenomicResourceProtocolRepo]
+) -> None:
     # Given
     path, _repo = repo_fixture
     (path / GR_CONTENTS_FILE_NAME).unlink(missing_ok=True)

@@ -66,12 +66,12 @@ class LiftOverAnnotator(AnnotatorBase):
         self.chain = chain
         self.target_genome = target_genome
 
-    def close(self):
+    def close(self) -> None:
         self.target_genome.close()
         self.chain.close()
         super().close()
 
-    def open(self):
+    def open(self) -> Annotator:
         self.target_genome.open()
         self.chain.open()
         return super().open()
@@ -97,7 +97,7 @@ class LiftOverAnnotator(AnnotatorBase):
 
         return {"liftover_annotatable": value}
 
-    def liftover_allele(self, allele: VCFAllele):
+    def liftover_allele(self, allele: VCFAllele) -> Optional[VCFAllele]:
         """Liftover an allele."""
         if not isinstance(allele, VCFAllele):
             return None

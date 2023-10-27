@@ -15,7 +15,7 @@ class WDAEConfig(AppConfig):
 
     name = "gpf_instance"
 
-    def ready(self):
+    def ready(self) -> None:
         logger.warning("WGPConfig application starting...")
         AppConfig.ready(self)
         config_filename = None
@@ -27,8 +27,6 @@ class WDAEConfig(AppConfig):
 
         gpf_instance = get_wgpf_instance(config_filename)
 
-        gpf_instance.prepare_agp_configuration()
-
         if not settings.STUDIES_EAGER_LOADING:
             logger.info("skip preloading gpf instance...")
             return
@@ -38,6 +36,9 @@ class WDAEConfig(AppConfig):
             gpf_instance.load()
             result = gpf_instance.get_all_genotype_data()
             logger.info("preloading studies: %s", result)
+
+            gpf_instance.prepare_agp_configuration()
+
         except Exception:  # pylint: disable=broad-except
             logger.error(
                 "problem while eager loading of studies", exc_info=True)

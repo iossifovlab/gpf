@@ -1,5 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import textwrap
+from typing import Optional, Union
 
 import pytest
 
@@ -12,7 +13,9 @@ from dae.annotation.annotatable import VCFAllele
 
 
 @pytest.fixture
-def score1_repo(tmp_path_factory):
+def score1_repo(
+    tmp_path_factory: pytest.TempPathFactory
+) -> GenomicResourceProtocolRepo:
     root_path = tmp_path_factory.mktemp("score1_repo")
     setup_directories(
         root_path / "grr",
@@ -48,7 +51,9 @@ chrA   3   .  A   T   .    .       A=3;B=31;C=c21;D=d31,d32
     return GenomicResourceProtocolRepo(proto)
 
 
-def test_vcf_info_annotator_all_attributes(score1_repo):
+def test_vcf_info_annotator_all_attributes(
+    score1_repo: GenomicResourceProtocolRepo
+) -> None:
 
     pipeline = build_annotation_pipeline(
         pipeline_config_str="""
@@ -68,7 +73,9 @@ def test_vcf_info_annotator_all_attributes(score1_repo):
     assert observed_name_src_type_desc == expected_name_scr_type_desc
 
 
-def test_vcf_info_config_annotation(score1_repo):
+def test_vcf_info_config_annotation(
+    score1_repo: GenomicResourceProtocolRepo
+) -> None:
 
     pipeline = build_annotation_pipeline(
         pipeline_config_str="""
@@ -108,7 +115,10 @@ def test_vcf_info_config_annotation(score1_repo):
     ),
 ])
 def test_vcf_info_annotator(
-        vcf_allele, expected, score1_repo):
+    vcf_allele: VCFAllele,
+    expected: dict[str, Optional[Union[int, str]]],
+    score1_repo: GenomicResourceProtocolRepo
+) -> None:
 
     pipeline_config = textwrap.dedent("""
         - allele_score:

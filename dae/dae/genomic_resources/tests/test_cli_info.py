@@ -1,5 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import textwrap
+import pathlib
 
 import pytest
 
@@ -7,10 +8,13 @@ from dae.genomic_resources.cli import cli_manage
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME
 from dae.genomic_resources.testing import build_filesystem_test_protocol, \
     setup_directories, setup_tabix
+from dae.genomic_resources.fsspec_protocol import FsspecReadWriteProtocol
 
 
 @pytest.fixture
-def proto_fixture(tmp_path_factory):
+def proto_fixture(
+    tmp_path_factory: pytest.TempPathFactory
+) -> tuple[pathlib.Path, FsspecReadWriteProtocol]:
     path = tmp_path_factory.mktemp("cli_info_repo_fixture")
     setup_directories(
         path,
@@ -72,7 +76,9 @@ def proto_fixture(tmp_path_factory):
     return path, proto
 
 
-def test_resource_info(proto_fixture):
+def test_resource_info(
+    proto_fixture: tuple[pathlib.Path, FsspecReadWriteProtocol]
+) -> None:
     path, _proto = proto_fixture
     assert not (path / "one/index.html").exists()
 
@@ -99,7 +105,9 @@ def test_resource_info(proto_fixture):
     print(result)
 
 
-def test_repo_info(proto_fixture):
+def test_repo_info(
+    proto_fixture: tuple[pathlib.Path, FsspecReadWriteProtocol]
+) -> None:
     path, _proto = proto_fixture
 
     assert not (path / "one/index.html").exists()

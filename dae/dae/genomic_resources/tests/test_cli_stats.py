@@ -1,11 +1,13 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import os
 import textwrap
-from typing import List
+import pathlib
+from typing import Any
 
 import pytest
+import pytest_mock
 
-from dae.genomic_resources.repository import GR_CONF_FILE_NAME
+from dae.genomic_resources.repository import GenomicResource, GR_CONF_FILE_NAME
 from dae.genomic_resources.histogram import NumberHistogram, \
     CategoricalHistogram
 from dae.genomic_resources.testing import \
@@ -17,7 +19,7 @@ from dae.genomic_resources.resource_implementation import \
 from dae.genomic_resources.cli import cli_manage
 from dae.genomic_resources import register_implementation
 
-from dae.task_graph.graph import Task
+from dae.task_graph.graph import TaskGraph, Task
 
 
 class SomeTestImplementation(GenomicResourceImplementation):
@@ -34,7 +36,9 @@ class SomeTestImplementation(GenomicResourceImplementation):
         """
         return b"somehash"
 
-    def add_statistics_build_tasks(self, task_graph, **kwargs) -> List[Task]:
+    def add_statistics_build_tasks(
+        self, task_graph: TaskGraph, **kwargs: Any
+    ) -> list[Task]:
         """Add tasks for calculating resource statistics to a task graph."""
         task = task_graph.create_task(
             "test_resource_sample_statistic",
@@ -44,7 +48,7 @@ class SomeTestImplementation(GenomicResourceImplementation):
         )
         return [task]
 
-    def _do_sample_statistic(self):
+    def _do_sample_statistic(self) -> bool:
         proto = self.resource.proto
         with proto.open_raw_file(
             self.resource, f"{self.STATISTICS_FOLDER}/somestat", mode="wt"
@@ -52,12 +56,12 @@ class SomeTestImplementation(GenomicResourceImplementation):
             outfile.write("test")
         return True
 
-    def get_statistics(self):
+    def get_statistics(self) -> ResourceStatistics:
         return MockStatistics.build_statistics(self)
 
-    def calc_info_hash(self):
+    def calc_info_hash(self) -> bytes:
         """Compute and return the info hash."""
-        return "infohash"
+        return b"infohash"
 
     def get_info(self) -> str:
         """Construct the contents of the implementation's HTML info page."""
@@ -70,20 +74,26 @@ class SomeTestImplementation(GenomicResourceImplementation):
 
 class MockStatistics(ResourceStatistics):
     @staticmethod
-    def build_statistics(genomic_resource):
+    def build_statistics(
+        genomic_resource: GenomicResourceImplementation
+    ) -> ResourceStatistics:
         return MockStatistics(genomic_resource.resource_id)
 
 
-def build_test_implementation(resource):
+def build_test_implementation(
+    resource: GenomicResource
+) -> SomeTestImplementation:
     return SomeTestImplementation(resource)
 
 
 @pytest.fixture(scope="module")
-def register_test_implementation():
+def register_test_implementation() -> None:
     register_implementation("test_resource", build_test_implementation)
 
 
-def test_cli_stats(tmp_path, register_test_implementation):
+def test_cli_stats(
+    tmp_path: pathlib.Path, register_test_implementation: None
+) -> None:
     setup_directories(tmp_path, {
         "one": {
             GR_CONF_FILE_NAME: """
@@ -111,7 +121,7 @@ def test_cli_stats(tmp_path, register_test_implementation):
         assert infile.read() == "somehash"
 
 
-def test_stats_allele_score(tmp_path):
+def test_stats_allele_score(tmp_path: pathlib.Path) -> None:
     setup_directories(tmp_path, {
         "one": {
             GR_CONF_FILE_NAME: """
@@ -179,7 +189,7 @@ def test_stats_allele_score(tmp_path):
     assert freq_hist.bars.sum() == (1 + 3 + 2 + 2)
 
 
-def test_stats_position_score(tmp_path):
+def test_stats_position_score(tmp_path: pathlib.Path) -> None:
     setup_directories(tmp_path, {
         "one": {
             GR_CONF_FILE_NAME: """
@@ -276,7 +286,7 @@ def test_stats_position_score(tmp_path):
     assert phast_cons_5way_hist.bars.sum() == (76 + 2 + 3)
 
 
-def test_stats_np_score(tmp_path):
+def test_stats_np_score(tmp_path: pathlib.Path) -> None:
     setup_directories(tmp_path, {
         "one": {
             GR_CONF_FILE_NAME: """
@@ -376,7 +386,9 @@ def test_stats_np_score(tmp_path):
     assert cadd_test_hist.bars.sum() == (4 + 6 + 22)
 
 
-def test_reference_genome_usage(tmp_path, mocker):
+def test_reference_genome_usage(
+    tmp_path: pathlib.Path, mocker: pytest_mock.MockerFixture
+) -> None:
     setup_directories(tmp_path, {
         "one": {
             GR_CONF_FILE_NAME: """
@@ -482,7 +494,7 @@ def test_reference_genome_usage(tmp_path, mocker):
     assert ref_genome_length_mock.call_count == 6
 
 
-def test_stats_categorical(tmp_path):
+def test_stats_categorical(tmp_path: pathlib.Path) -> None:
     setup_directories(tmp_path, {
         "one": {
             GR_CONF_FILE_NAME: """

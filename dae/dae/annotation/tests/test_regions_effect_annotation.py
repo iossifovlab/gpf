@@ -1,6 +1,7 @@
 # pylint: disable=redefined-outer-name,C0114,C0116,protected-access,fixme
 
 import textwrap
+
 import pytest
 
 from dae.genomic_resources.testing import \
@@ -9,10 +10,13 @@ from dae.genomic_resources.testing import \
 from dae.annotation.annotatable import \
     Region, Position, CNVAllele, Annotatable
 from dae.annotation.annotation_factory import build_annotation_pipeline
+from dae.genomic_resources.repository import GenomicResourceProtocolRepo
 
 
 @pytest.fixture
-def fixture_repo(tmp_path_factory):
+def fixture_repo(
+    tmp_path_factory: pytest.TempPathFactory
+) -> GenomicResourceProtocolRepo:
     root_path = tmp_path_factory.mktemp("regions_effect_annotation")
     setup_directories(root_path, {
         "gene_models": {
@@ -66,7 +70,12 @@ def fixture_repo(tmp_path_factory):
     ]
 )
 def test_effect_annotator(
-        annotatable, gene_list, effect_type, length, txs, fixture_repo):
+        annotatable: Annotatable,
+        gene_list: list[str],
+        effect_type: str, length: int,
+        txs: dict[str, list[str]],
+        fixture_repo: GenomicResourceProtocolRepo
+) -> None:
 
     pipeline_config = textwrap.dedent("""
         - effect_annotator:
@@ -102,7 +111,11 @@ def test_effect_annotator(
      "CNV+", 29),
 ])
 def test_effect_annotator_region_length_cutoff(
-        annotatable, effect_type, length, fixture_repo):
+    annotatable: Annotatable,
+    effect_type: str,
+    length: int,
+    fixture_repo: GenomicResourceProtocolRepo
+) -> None:
 
     pipeline_config = textwrap.dedent("""
         - effect_annotator:

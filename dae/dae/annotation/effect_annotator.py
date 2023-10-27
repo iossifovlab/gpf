@@ -155,7 +155,7 @@ class EffectAnnotatorAdapter(AnnotatorBase):
                     pos=annotatable.position,
                     ref=annotatable.reference,
                     alt=annotatable.alternative,
-                    variant_type=annotatable.type,
+                    variant_type=annotatable.type.name,
                     length=length
                 )
             except Exception:  # pylint: disable=broad-except
