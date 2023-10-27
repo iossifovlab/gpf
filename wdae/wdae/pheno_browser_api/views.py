@@ -136,7 +136,7 @@ class PhenoMeasuresDownload(QueryDatasetView):
         if not dataset or dataset.phenotype_data is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        measure_ids = data.get("measures", None)
+        measure_ids = data.get("measure_ids", None)
         instrument = data.get("instrument", None)
         if instrument is None:
             if measure_ids is None:

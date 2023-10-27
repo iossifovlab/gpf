@@ -146,7 +146,7 @@ def test_download_specific_measures(admin_client):
     data = {
         "dataset_id": "quads_f1",
         "instrument": "instrument1",
-        "measures": ["instrument1.continuous", "instrument1.categorical"]
+        "measure_ids": ["instrument1.continuous", "instrument1.categorical"]
     }
     response = admin_client.post(
         DOWNLOAD_URL, json.dumps(data), "application/json"
@@ -189,7 +189,7 @@ def test_download_all_instruments(admin_client):
 def test_download_all_instruments_specific_measures(admin_client):
     data = {
         "dataset_id": "quads_f1",
-        "measures": ["instrument1.continuous", "instrument1.categorical"]
+        "measure_ids": ["instrument1.continuous", "instrument1.categorical"]
     }
     response = admin_client.post(
         DOWNLOAD_URL, json.dumps(data), "application/json"
