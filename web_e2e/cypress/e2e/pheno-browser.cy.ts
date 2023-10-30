@@ -113,4 +113,8 @@ describe('Pheno browser tests', () => {
       });
     });
   });
+
+  it.skip('should TEST SEARCH + DOWNLOAD BEHAVIOUR', () => {
+    // (phenotype download should download whatever the table is showing at the current time)
+  });
 });
