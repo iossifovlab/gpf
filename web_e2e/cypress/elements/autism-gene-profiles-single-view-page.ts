@@ -110,9 +110,9 @@ export class AutismGeneProfilesSingleViewPage extends BasePage {
   }
 
   public getGeneSets(id: string = null) {
-    let geneSets: any = [];
+    const geneSets: any = [];
 
-    cy.get((id !== null ? (('#' + id + '-single-view')) : 'div.ng-star-inserted >') + ' :nth-child(4) > table')
+    cy.get((id !== null ? '#' + id + '-single-view' : 'div.ng-star-inserted >') + ' :nth-child(4) > table')
       .each((table_iteration, index) => {
         cy.wrap(table_iteration).within(table => {
           geneSets[index] = {
@@ -138,9 +138,11 @@ export class AutismGeneProfilesSingleViewPage extends BasePage {
                 geneSets[index]['scores'][rowIndex]['name'] = name.text();
               });
               cy.wrap(el).get('td').eq(1).then(value => {
-                if (value.text().length === 1 && value.text() === '✓') {
-                  geneSets[index]['scores'][rowIndex]['value'] = true;
-                }
+                cy.wrap(value).within(el => {
+                  if (el.text() === 'check') {
+                    geneSets[index]['scores'][rowIndex]['value'] = true;
+                  }
+                });
               });
             });
           });
@@ -154,15 +156,15 @@ export class AutismGeneProfilesSingleViewPage extends BasePage {
   public getDatasetData(id: string = null) {
     const datasets = [];
 
-    cy.get((id !== null ? (('#' + id + '-single-view')) : 'div.ng-star-inserted >') + ' :nth-child(5) > table')
-      .each((table_iterator,index) => {
+    cy.get((id !== null ? '#' + id + '-single-view' : 'div.ng-star-inserted >') + ' :nth-child(5) > table')
+      .each((table_iterator, index) => {
         datasets[index] = {
           name: '', columns: [], rows: [
             {
               variant_statistics: '', variant_ids: '', affected: '', unaffected: ''
             }
           ]
-        }
+        };
         cy.wrap(table_iterator).within(table => {
           cy.wrap(table).get('thead > :nth-child(1) > th > span').then(name => {
             datasets[index].name = name.text();
@@ -184,10 +186,20 @@ export class AutismGeneProfilesSingleViewPage extends BasePage {
                 datasets[index].rows[table_index].variant_statistics = name.text();
               });
               cy.wrap(row).get('td').eq(1).then(affected => {
-                datasets[index].rows[table_index].affected = affected.text();
+                if (affected.text() !== ' remove ') {
+                  datasets[index].rows[table_index].affected = affected.text();
+                } else {
+                  datasets[index].rows[table_index].affected = '–';
+                }
               });
               cy.wrap(row).get('td').eq(2).then(unaffected => {
-                datasets[index].rows[table_index].unaffected = unaffected.text();
+                if (unaffected.text() !== ' remove ') {
+                  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+                  datasets[index].rows[table_index].unaffected = unaffected.text();
+                } else {
+                  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+                  datasets[index].rows[table_index].unaffected = '–';
+                }
               });
             });
           });
