@@ -319,15 +319,25 @@ describe('Autism gene profiles table functionality tests', () => {
 
     page.columnHeader('Autism Gene Sets').click();
     cy.wait(200); // wait old content to be replaced
+
+
     page.allTableRows.eq(0).invoke('text').then(text => expect(text.split('✓').length-1).equal(0));
     page.allTableRows.eq(1).invoke('text').then(text => expect(text.split('✓').length-1).equal(0));
     page.allTableRows.eq(2).invoke('text').then(text => expect(text.split('✓').length-1).equal(0));
-    page.allTableRows.eq(3).invoke('text').then(text => expect(text.split('✓').length-1).equal(1));
+    page.allTableRows.eq(3).within(el => {
+      cy.wrap(el).get('span.check').invoke('text').then(text => {
+        expect(text).to.deep.eq('check_small');
+      });
+    });
 
     page.columnHeader('Autism Gene Sets').click();
     page.allTableRows.should('have.length', 4);
     cy.wait(200);
-    page.allTableRows.eq(0).invoke('text').then(text => expect(text.split('✓').length-1).equal(1));
+    page.allTableRows.eq(0).within(el => {
+      cy.wrap(el).get('span.check').invoke('text').then(text => {
+        expect(text).to.deep.eq('check_small');
+      });
+    });
     page.allTableRows.eq(1).invoke('text').then(text => expect(text.split('✓').length-1).equal(0));
     page.allTableRows.eq(2).invoke('text').then(text => expect(text.split('✓').length-1).equal(0));
     page.allTableRows.eq(3).invoke('text').then(text => expect(text.split('✓').length-1).equal(0));
@@ -344,22 +354,70 @@ describe('Autism gene profiles table functionality tests', () => {
 
     page.columnHeader('Relevant Gene Sets').click();
     cy.wait(200);
-    page.allTableRows.eq(0).invoke('text').then(text => expect(text.split('✓').length-1).equal(2));
-    page.allTableRows.eq(1).invoke('text').then(text => expect(text.split('✓').length-1).equal(1));
-    page.allTableRows.eq(2).invoke('text').then(text => expect(text.split('✓').length-1).equal(1));
-    page.allTableRows.eq(3).invoke('text').then(text => expect(text.split('✓').length-1).equal(1));
-    page.allTableRows.eq(4).invoke('text').then(text => expect(text.split('✓').length-1).equal(1));
-    page.allTableRows.eq(5).invoke('text').then(text => expect(text.split('✓').length-1).equal(1));
+    page.allTableRows.eq(0).within(el => {
+      cy.wrap(el).get('span.check').then(text => {
+        expect(text).to.have.length(2);
+      });
+    });
+    page.allTableRows.eq(1).within(el => {
+      cy.wrap(el).get('span.check').then(text => {
+        expect(text).to.have.length(1);
+      });
+    });
+    page.allTableRows.eq(2).within(el => {
+      cy.wrap(el).get('span.check').then(text => {
+        expect(text).to.have.length(1);
+      });
+    });
+    page.allTableRows.eq(3).within(el => {
+      cy.wrap(el).get('span.check').then(text => {
+        expect(text).to.have.length(1);
+      });
+    });
+    page.allTableRows.eq(4).within(el => {
+      cy.wrap(el).get('span.check').then(text => {
+        expect(text).to.have.length(1);
+      });
+    });
+    page.allTableRows.eq(5).within(el => {
+      cy.wrap(el).get('span.check').then(text => {
+        expect(text).to.have.length(1);
+      });
+    });
 
 
     page.columnHeader('Relevant Gene Sets').click();
     cy.wait(200);
-    page.allTableRows.eq(0).invoke('text').then(text => expect(text.split('✓').length-1).equal(1));
-    page.allTableRows.eq(1).invoke('text').then(text => expect(text.split('✓').length-1).equal(1));
-    page.allTableRows.eq(2).invoke('text').then(text => expect(text.split('✓').length-1).equal(1));
-    page.allTableRows.eq(3).invoke('text').then(text => expect(text.split('✓').length-1).equal(1));
-    page.allTableRows.eq(4).invoke('text').then(text => expect(text.split('✓').length-1).equal(1));
-    page.allTableRows.eq(5).invoke('text').then(text => expect(text.split('✓').length-1).equal(2));
+    page.allTableRows.eq(0).within(el => {
+      cy.wrap(el).get('span.check').then(text => {
+        expect(text).to.have.length(1);
+      });
+    });
+    page.allTableRows.eq(1).within(el => {
+      cy.wrap(el).get('span.check').then(text => {
+        expect(text).to.have.length(1);
+      });
+    });
+    page.allTableRows.eq(2).within(el => {
+      cy.wrap(el).get('span.check').then(text => {
+        expect(text).to.have.length(1);
+      });
+    });
+    page.allTableRows.eq(3).within(el => {
+      cy.wrap(el).get('span.check').then(text => {
+        expect(text).to.have.length(1);
+      });
+    });
+    page.allTableRows.eq(4).within(el => {
+      cy.wrap(el).get('span.check').then(text => {
+        expect(text).to.have.length(1);
+      });
+    });
+    page.allTableRows.eq(5).within(el => {
+      cy.wrap(el).get('span.check').then(text => {
+        expect(text).to.have.length(2);
+      });
+    });
   });
 
   it('should test autism scores', () => {
