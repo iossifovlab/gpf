@@ -367,6 +367,7 @@ describe('Autism gene profiles table functionality tests', () => {
     page.allTableRows.should('have.length', 15);
 
     page.clickSortButton('SFARI gene score');
+    cy.wait(750);
 
     const dataArr = [3, 1, 1, 1, 1];
     dataArr.forEach((rowData, allRowsIndex) => {
@@ -378,6 +379,7 @@ describe('Autism gene profiles table functionality tests', () => {
 
     dataArr.reverse();
     page.clickSortButton('SFARI gene score');
+    cy.wait(750);
 
     dataArr.forEach((rowData, allRowsIndex) => {
       page.allTableRows.should('have.length', 15);
