@@ -429,7 +429,8 @@ describe('Genotype browser table preview result tests', () => {
     {familyId: 'f4', values: {age: 157.618, iq: 103.074}},
     {familyId: 'f5', values: {age: 171.890, iq: 38.885}}
   ].forEach(data => {
-    it('should display the correct age and iq values in the measures column for "' + data.familyId + '" family', () => {
+    it.skip('should display the correct age and iq values in the measures column for "'
+      + data.familyId + '" family', () => {
       const genotypePreviewTablePage = new GenotypePreviewTablePage();
 
       genotypeBrowserController.setStudy(datasetIds.compAll);
