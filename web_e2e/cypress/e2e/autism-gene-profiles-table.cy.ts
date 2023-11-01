@@ -52,7 +52,7 @@ describe('Autism gene profiles table row data tests', () => {
       page.geneSearchInput.type(data.geneSymbol);
       page.allTableRows.should('have.length', 1);
 
-      page.allTableRows.eq(0).should('have.text', data.expectedRow);
+      page.allTableRows.eq(0).should('have.text', data.expectedRow.replace(/✓/g, 'check_small'));
     });
   });
 });
