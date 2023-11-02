@@ -25,6 +25,7 @@ export class UserProfileComponent implements OnInit, OnDestroy {
   public genotypeQueries: Array<UserSavedQuery>;
   public phenotoolQueries: Array<UserSavedQuery>;
   public enrichmentQueries: Array<UserSavedQuery>;
+  public showTemplate = false;
 
   public constructor(
     private router: Router,
@@ -34,8 +35,7 @@ export class UserProfileComponent implements OnInit, OnDestroy {
 
   public ngOnInit(): void {
     this.subscription = this.usersService.getUserInfoObservable()
-      .subscribe((userInfo: { loggedIn: boolean }) => this.checkUserInfo(userInfo));
-    this.updateQueries();
+      .subscribe((userInfo: { loggedIn: boolean }) => this.loadUserProfile(userInfo));
   }
 
   public ngOnDestroy(): void {
@@ -44,8 +44,11 @@ export class UserProfileComponent implements OnInit, OnDestroy {
     }
   }
 
-  private checkUserInfo(value: { loggedIn: boolean }): void {
-    if (!value.loggedIn) {
+  private loadUserProfile(userInfo: { loggedIn: boolean }): void {
+    if (userInfo.loggedIn) {
+      this.showTemplate = true;
+      this.updateQueries();
+    } else {
       this.router.navigate(['/']);
     }
   }

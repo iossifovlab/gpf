@@ -11,6 +11,7 @@ import { UsersService } from '../users/users.service';
 })
 export class ManagementComponent implements OnInit, OnDestroy {
   private subscription: Subscription;
+  public showTemplate = false;
 
   public constructor(
     private router: Router,
@@ -29,7 +30,9 @@ export class ManagementComponent implements OnInit, OnDestroy {
   }
 
   private checkUserInfo(value): void {
-    if (!value || !value.isAdministrator) {
+    if (value?.isAdministrator) {
+      this.showTemplate = true;
+    } else {
       this.router.navigate(['/']);
     }
   }
