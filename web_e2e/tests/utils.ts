@@ -35,6 +35,10 @@ export const sidenavPageLinks = {
   management: 'management'
 };
 
+export async function logout(page: Page): Promise<void> {
+  await page.getByRole('button', { name: 'Log Out' }).click();
+}
+
 export async function login(page: Page, user = username, pass = password): Promise<void> {
   await page.locator('#log-in-button').click();
   expect(page.url()).toContain('login');
