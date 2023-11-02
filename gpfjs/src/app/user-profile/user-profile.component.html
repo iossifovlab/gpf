@@ -1,4 +1,4 @@
-<div class="profile-container">
+<div *ngIf="showTemplate" class="profile-container">
   <div class="form-block">
     <div class="card">
       <ul ngbNav #nav="ngbNav" (navChange)="updateQueries()" class="navbar bg-light nav-pills" id="user-profile-list">
