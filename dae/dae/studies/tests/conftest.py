@@ -39,17 +39,17 @@ def local_gpf_instance(
 
 @pytest.fixture(scope="session")
 def dae_config_fixture(local_gpf_instance: GPFInstance) -> Box:
-    return cast(Box, local_gpf_instance.dae_config)
+    return local_gpf_instance.dae_config
 
 
 @pytest.fixture(scope="session")
 def variants_db_fixture(local_gpf_instance: GPFInstance) -> VariantsDb:
-    return cast(VariantsDb, local_gpf_instance._variants_db)
+    return local_gpf_instance._variants_db
 
 
 @pytest.fixture(scope="session")
 def pheno_db(local_gpf_instance: GPFInstance) -> PhenoDb:
-    return cast(PhenoDb, local_gpf_instance._pheno_db)
+    return local_gpf_instance._pheno_db
 
 
 @pytest.fixture(scope="session")
@@ -68,7 +68,7 @@ def genotype_storage_factory(
 def genotype_data_study_configs(
     variants_db_fixture: VariantsDb
 ) -> dict[str, Box]:
-    return cast(dict[str, Box], variants_db_fixture._load_study_configs())
+    return variants_db_fixture._load_study_configs()
 
 
 @pytest.fixture(scope="session")
@@ -82,7 +82,7 @@ def quads_f1_config(variants_db_fixture: VariantsDb) -> GenotypeData:
 def genotype_data_group_configs(
     variants_db_fixture: VariantsDb
 ) -> dict[str, Box]:
-    return cast(dict[str, Box], variants_db_fixture._load_group_configs())
+    return variants_db_fixture._load_group_configs()
 
 
 @pytest.fixture(scope="session")

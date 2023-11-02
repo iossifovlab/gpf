@@ -4,7 +4,6 @@ from typing import Any, cast, Optional
 
 from django.contrib.auth import get_user_model
 from django.conf import settings
-# pylint: disable=imported-auth-user
 from django.contrib.auth.models import User
 
 from rest_framework.request import Request
@@ -13,6 +12,7 @@ from rest_framework import status
 
 from query_base.query_base import QueryBaseView
 from studies.study_wrapper import StudyWrapperBase
+from users_api.models import WdaeUser
 
 from groups_api.serializers import GroupSerializer
 from datasets_api.permissions import get_wdae_parents, user_has_permission
@@ -124,21 +124,22 @@ class StudiesView(QueryBaseView):
     def _collect_datasets_summary(
         self, user: User
     ) -> list[dict[str, Any]]:
-        genotype_data = self.gpf_instance.get_genotype_data_ids()
+        genotype_data_ids = self.gpf_instance.get_genotype_data_ids()
 
-        datasets = filter(
-            lambda study: study is not None and study.is_group is False, [
-                self.gpf_instance.get_wdae_wrapper(genotype_data_id)
-                for genotype_data_id in genotype_data
-            ]
-        )
+        datasets: list[StudyWrapperBase] = []
+        for genotype_data_id in genotype_data_ids:
+            study = self.gpf_instance.get_wdae_wrapper(genotype_data_id)
+            if study is None or study.is_group:
+                continue
+            datasets.append(study)
 
-        res = [
-            StudyWrapperBase.build_genotype_data_all_datasets(
-                dataset.config
-            )
-            for dataset in datasets
-        ]
+        res = []
+        for dataset in datasets:
+            assert dataset is not None
+
+            res.append(
+                StudyWrapperBase.build_genotype_data_all_datasets(
+                    dataset.config))
 
         res = [augment_accessibility(ds, user) for ds in res]
         res = [augment_with_groups(ds) for ds in res]
@@ -178,6 +179,7 @@ class PermissionDeniedPromptView(QueryBaseView):
                     self.permission_denied_prompt = infile.read()
 
     def get(self, request: Request) -> Response:
+        # pylint: disable=unused-argument
         return Response({"data": self.permission_denied_prompt})
 
 
@@ -185,6 +187,7 @@ class DatasetDetailsView(QueryBaseView):
     """Provide miscellaneous details for a given dataset."""
 
     def get(self, request: Request, dataset_id: str) -> Response:
+        # pylint: disable=unused-argument
         """Return response for a specific dataset configuration details."""
         genotype_data_config = \
             self.gpf_instance.get_genotype_data_config(dataset_id)
@@ -208,6 +211,7 @@ class DatasetPedigreeView(QueryBaseView):
     """Provide pedigree data for a given dataset."""
 
     def get(self, request: Request, dataset_id: str, column: str) -> Response:
+        # pylint: disable=unused-argument
         """Return response for a pedigree get request for pedigree column."""
         genotype_data = self.gpf_instance.get_genotype_data(dataset_id)
 
@@ -238,6 +242,8 @@ class DatasetConfigView(DatasetView):
     def get(
         self, request: Request, dataset_id: Optional[str] = None
     ) -> Response:
+        if dataset_id is None:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
         genotype_data = self.gpf_instance.get_genotype_data(dataset_id)
 
         if genotype_data is None:
@@ -253,7 +259,8 @@ class DatasetDescriptionView(QueryBaseView):
 
     def get(
         self, request: Request, dataset_id: str
-    ) -> Response:  # pylint: disable=unused-argument
+    ) -> Response:
+        # pylint: disable=unused-argument
         """Collect a dataset's description."""
         if dataset_id is None:
             return Response(
@@ -301,6 +308,7 @@ class BaseDatasetPermissionsView(QueryBaseView):
                 groups__name=group.name
             ).all()
             for user in users:
+                user = cast(WdaeUser, user)
                 if user.email not in users_found:
                     users_list += [
                         {"name": user.name, "email": user.email}
@@ -377,6 +385,7 @@ class DatasetPermissionsSingleView(BaseDatasetPermissionsView):
     page_size = settings.REST_FRAMEWORK["PAGE_SIZE"]
 
     def get(self, request: Request, dataset_id: str) -> Response:
+        # pylint: disable=unused-argument
         """Return dataset permission details."""
         try:
             dataset = Dataset.objects.get(dataset_id=dataset_id)
@@ -432,6 +441,7 @@ class VisibleDatasetsView(QueryBaseView):
 
     def get(self, request: Request) -> Response:
         """Return the list of visible datasets."""
+        # pylint: disable=unused-argument
         res = self.gpf_instance.get_visible_datasets()
         if not res:
             res = sorted(self.gpf_instance.get_genotype_data_ids())
