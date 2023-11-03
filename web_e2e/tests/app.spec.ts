@@ -104,18 +104,19 @@ test.describe('App user access rights tests', () => {
     await utils.navigateToHome(page);
   });
 
-  Object.values(userData).forEach(data => {
-    test('should toggle sidenav bar with the right elements inside', async({ page }) => {
-      if (data.username !== undefined && data.password !== undefined) {
-        await utils.login(page, utils.username, utils.password);
-        await expect(page.locator('div.sidenav a.nav-link')).not.toBeVisible();
+  Object.values(userData).filter(
+    login => login.username !== undefined && login.password !== undefined
+  ).forEach(data => {
+    // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+    test(`should toggle sidenav bar with the right elements inside for ${data.username} user`, async({ page }) => {
+      await utils.login(page, data.username as string, data.password as string);
+      await expect(page.locator('div.sidenav a.nav-link')).not.toBeVisible();
 
-        await page.locator('#sidenav-toggle-button').click();
-        await expect(page.locator('div.sidenav a.nav-link')).toHaveCount(data.sidenavElementsCount);
+      await page.locator('#sidenav-toggle-button').click();
+      await expect(page.locator('div.sidenav a.nav-link')).toHaveCount(data.sidenavElementsCount);
 
-        await page.locator('#sidenav-toggle-button').click();
-        await expect(page.locator('div.sidenav a.nav-link')).not.toBeVisible();
-      }
+      await page.locator('#sidenav-toggle-button').click();
+      await expect(page.locator('div.sidenav a.nav-link').first()).not.toBeVisible();
     });
   });
 
@@ -158,25 +159,14 @@ test.describe('App user access rights tests', () => {
     await expect(page.locator('#permission-denied-prompt')).not.toBeVisible();
   });
 
-  Object.values(userData).forEach(data => {
-    test('should login with accounts with different access rights and check whether the datasets ' +
-         'in the dropdown have the correct opacity value', async({ page }) => {
-      if (data.username !== undefined || data.password !== undefined) {
-        const expectedOpacity = data.hasDatasetRights ? '1' : '0.3';
-
-        await utils.login(page, data.username as string, data.password as string);
-        await page.locator('#datasets-dropdown-menu-button').click();
-
-        const elements = page.locator('.dataset-selector a');
-        for (const element of await elements.all()) {
-          // eslint-disable-next-line no-await-in-loop
-          const opacity = await page.evaluate((
-            el
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-          ) => window.getComputedStyle(el.elementHandles()[0]).opacity, element);
-          expect(opacity).toBe(expectedOpacity);
-        }
-      }
+  Object.values(userData).filter(data => data.username !== undefined && data.password !== undefined).forEach(data => {
+    test(`should login with accounts with different access rights and check whether the datasets for ${
+      data.username as string
+    } in the dropdown have the correct opacity value`, async({ page }) => {
+      await utils.login(page, data.username as string, data.password as string);
+      await page.locator('#datasets-dropdown-menu-button').click();
+      await page.waitForSelector('div.dropdown-menu');
+      await expect(page).toHaveScreenshot();
     });
   });
 
