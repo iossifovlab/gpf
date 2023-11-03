@@ -172,12 +172,23 @@ class WGPFInstance(GPFInstance):
         return wrapper
 
     def get_genotype_data_ids(self, local_only: bool = False) -> list[str]:
-        if local_only:
-            return list(super().get_genotype_data_ids())
+        result = list(super().get_genotype_data_ids())
+        if not local_only:
+            result.extend(self.remote_studies)
 
-        return (
-            list(super().get_genotype_data_ids()) + self.remote_studies
-        )
+        if self.dae_config.gpfjs is None or \
+                not self.dae_config.gpfjs.visible_datasets:
+            return result
+        genotype_data_order = self.dae_config.gpfjs.visible_datasets
+        if genotype_data_order is None:
+            genotype_data_order = []
+
+        def _ordering(st: str) -> int:
+            if st not in genotype_data_order:
+                return 10_000
+            return cast(int, genotype_data_order.index(st))
+
+        return sorted(result, key=_ordering)
 
     def get_genotype_data(
         self, genotype_data_id: str
