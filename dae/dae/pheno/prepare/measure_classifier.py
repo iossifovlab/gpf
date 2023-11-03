@@ -12,7 +12,7 @@ from dae.pheno.common import MeasureType
 from dae.pheno.utils.commons import remove_annoying_characters
 
 
-class ClassifierReport(object):
+class ClassifierReport:
     """Class used to collect clissifier reports."""
 
     MAX_CHARS = 32

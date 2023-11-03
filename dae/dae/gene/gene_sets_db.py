@@ -260,11 +260,11 @@ class SqliteGeneSetCollectionDB(
             Column("syms", String()),
         )
 
-        self.metadata.create_all()
+        self.metadata.create_all(self.engine)
 
     def add_gene_set(self, gene_set: GeneSet):
         """Add a gene set to the database."""
-        with self.engine.connect() as connection:
+        with self.engine.begin() as connection:
             insert_values = {
                 "name": gene_set.name,
                 "desc": gene_set.desc,
@@ -273,6 +273,7 @@ class SqliteGeneSetCollectionDB(
             connection.execute(
                 insert(self.gene_sets_table).values(insert_values)
             )
+            connection.commit()
 
     def get_gene_set(self, gene_set_id):
         """Fetch and construct a GeneSet from the database."""

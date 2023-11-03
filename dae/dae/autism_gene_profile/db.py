@@ -91,7 +91,7 @@ class AutismGeneProfileDB:
         # pylint: disable=too-many-locals
         """Build an AGPStatistic from internal DB row."""
         config = self.configuration
-        row = row._mapping
+        row = row._mapping  # pylint: disable=protected-access
         result = {}
 
         result["geneSymbol"] = row["symbol_name"]
@@ -133,7 +133,7 @@ class AutismGeneProfileDB:
         """Create an AGPStatistic from single view row."""
         # pylint: disable=too-many-locals
         config = self.configuration
-        row = row._mapping
+        row = row._mapping  # pylint: disable=protected-access
         gene_symbol = row["symbol_name"]
         genomic_scores: Dict[str, Dict] = {}
         for gs_category in config["genomic_scores"]:
@@ -303,9 +303,9 @@ class AutismGeneProfileDB:
             connection.execute(query)
             return
 
-        with self.engine.begin() as connection:
-            connection.execute(query)
-            connection.commit()
+        with self.engine.begin() as conn:
+            conn.execute(query)
+            conn.commit()
 
     def insert_agp(self, agp, connection=None):
         """Insert an AGP into the DB."""

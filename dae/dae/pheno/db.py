@@ -372,7 +372,7 @@ class DbManager(object):
         with self.browser_engine.connect() as connection:
             vs = connection.execute(selector).fetchall()
             if vs:
-                return vs[0]._mapping
+                return vs[0]._mapping  # pylint: disable=protected-access
             return None
 
     def get_regression_values(self, measure_id):
@@ -427,7 +427,7 @@ class DbManager(object):
         with self.browser_engine.connect() as connection:
             return bool(
                 connection.execute(
-                    select(func.count())
+                    select(func.count())  # pylint: disable=not-callable
                     .select_from(self.variable_browser)
                     .where(Column("description").isnot(None))  # type: ignore
                 ).scalar()

@@ -943,7 +943,7 @@ class PhenotypeStudy(PhenotypeData):
             with self.db.pheno_engine.connect() as connection:
                 results = connection.execute(query)
                 for row in results:
-                    row = row._mapping
+                    row = row._mapping  # pylint: disable=protected-access
                     person_id = row["person_id"]
                     if person_id not in output:
                         output[person_id] = ["-"] * len(header)
@@ -989,7 +989,7 @@ class PhenotypeStudy(PhenotypeData):
                 measure["measure_id"]) or []
 
             for reg in regressions:
-                reg = reg._mapping
+                reg = reg._mapping  # pylint: disable=protected-access
                 if isnan(reg["pvalue_regression_male"]):
                     reg["pvalue_regression_male"] = "NaN"
                 if isnan(reg["pvalue_regression_female"]):

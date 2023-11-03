@@ -1,19 +1,21 @@
+from __future__ import annotations
 import os
 import re
 import logging
 from collections import defaultdict
-from typing import Dict, Any, Tuple
+from typing import Dict, Any, Tuple, Optional
 
 from multiprocessing import Pool
 
 import numpy as np
 import pandas as pd
 
-from box import Box  # type: ignore
+from box import Box
 
 from dae.pheno.db import DbManager
 from dae.pheno.common import MeasureType
-from dae.pedigrees.loader import FamiliesLoader, PED_COLUMNS_REQUIRED
+from dae.pedigrees.loader import FamiliesLoader, PED_COLUMNS_REQUIRED, \
+    PedigreeIO
 from dae.pheno.prepare.measure_classifier import (
     MeasureClassifier,
     convert_to_string,
@@ -34,14 +36,14 @@ class PrepareCommon:
 class PrepareBase(PrepareCommon):
     """Base class for phenotype data preparation tasks."""
 
-    def __init__(self, config):
+    def __init__(self, config: Box):
         assert config is not None
         self.config = config
         self.db = DbManager(self.config.db.filename)
         self.db.build()
         self.persons = None
 
-    def get_persons(self, force=False):
+    def get_persons(self, force: bool = False):
         if not self.persons or force:
             self.persons = self.db.get_persons()
         return self.persons
@@ -50,11 +52,11 @@ class PrepareBase(PrepareCommon):
 class PreparePersons(PrepareBase):
     """Praparation of individuals DB tables."""
 
-    def __init__(self, config):
+    def __init__(self, config: Box):
         super().__init__(config)
         self.pedigree_df = None
 
-    def _save_families(self, ped_df):
+    def _save_families(self, ped_df: pd.DataFrame) -> None:
         families = [{"family_id": fid} for fid in ped_df["family_id"].unique()]
         ins = self.db.family.insert()
         with self.db.pheno_engine.connect() as connection:
@@ -62,14 +64,14 @@ class PreparePersons(PrepareBase):
             connection.commit()
 
     @staticmethod
-    def _build_sample_id(sample_id):
+    def _build_sample_id(sample_id: Optional[float]) -> Optional[str]:
         if (isinstance(sample_id, float) and np.isnan(sample_id)) \
                 or sample_id is None:
             return None
 
         return str(sample_id)
 
-    def _save_persons(self, ped_df):
+    def _save_persons(self, ped_df: pd.DataFrame) -> None:
         families = self.db.get_families()
         persons = []
         for _index, row in ped_df.iterrows():
@@ -87,11 +89,11 @@ class PreparePersons(PrepareBase):
             connection.execute(ins, persons)
             connection.commit()
 
-    def save_pedigree(self, ped_df):
+    def save_pedigree(self, ped_df: pd.DataFrame) -> None:
         self._save_families(ped_df)
         self._save_persons(ped_df)
 
-    def build_pedigree(self, pedfile):
+    def build_pedigree(self, pedfile: PedigreeIO) -> pd.DataFrame:
         ped_df = FamiliesLoader.flexible_pedigree_read(pedfile)
         # ped_df = self.prepare_pedigree(ped_df)
         self.save_pedigree(ped_df)
@@ -102,13 +104,13 @@ class PreparePersons(PrepareBase):
 class Task(PrepareCommon):
     """Preparation task that can be run in parallel."""
 
-    def run(self):
+    def run(self) -> Task:
         raise NotImplementedError()
 
-    def done(self):
+    def done(self) -> Any:
         raise NotImplementedError()
 
-    def __call__(self):
+    def __call__(self) -> Task:
         return self.run()
 
 
@@ -116,7 +118,13 @@ class ClassifyMeasureTask(Task):
     """Measure classification task."""
 
     def __init__(
-            self, config, instrument_name, measure_name, measure_desc, df):
+            self,
+            config: Box,
+            instrument_name: str,
+            measure_name: str,
+            measure_desc: str,
+            df: pd.DataFrame
+        ):
         self.config = config
         self.mdf = df[[self.PERSON_ID, self.PID_COLUMN, measure_name]].copy()
         self.mdf.rename(columns={measure_name: "value"}, inplace=True)
@@ -127,7 +135,9 @@ class ClassifyMeasureTask(Task):
         self.classifier_report = None
 
     @staticmethod
-    def create_default_measure(instrument_name, measure_name, measure_desc):
+    def create_default_measure(
+        instrument_name: str, measure_name: str, measure_desc: str
+    ) -> Box:
         """Create empty measrue description."""
         measure = {
             "measure_type": MeasureType.other,
@@ -145,7 +155,7 @@ class ClassifyMeasureTask(Task):
         measure = Box(measure)
         return measure
 
-    def build_meta_measure(self):
+    def build_meta_measure(self) -> None:
         """Build measure meta data."""
         measure_type = self.measure.measure_type
         assert self.classifier_report is not None
@@ -168,7 +178,7 @@ class ClassifyMeasureTask(Task):
         self.measure.values_domain = values_domain
         self.rank = self.classifier_report.count_unique_values
 
-    def run(self):
+    def run(self) -> ClassifyMeasureTask:
         try:
             logging.info("classifying measure %s", self.measure.measure_id)
             values = self.mdf["value"]
@@ -185,19 +195,19 @@ class ClassifyMeasureTask(Task):
                 exc_info=True)
         return self
 
-    def done(self):
+    def done(self) -> Any:
         return self.measure, self.classifier_report, self.mdf
 
 
 class MeasureValuesTask(Task):
     """Task to prepare measure values."""
 
-    def __init__(self, measure, mdf):
+    def __init__(self, measure: Box, mdf: pd.DataFrame):
         self.measure = measure
         self.mdf = mdf
         self.values = None
 
-    def run(self):
+    def run(self) -> MeasureValuesTask:
         measure_id = self.measure.db_id
         measure = self.measure
 
@@ -234,23 +244,23 @@ class MeasureValuesTask(Task):
         self.values = values
         return self
 
-    def done(self):
+    def done(self) -> Any:
         return self.measure, self.values
 
 
 class TaskQueue:
     """Queue of preparation tasks."""
 
-    def __init__(self):
-        self.queue = []
+    def __init__(self) -> None:
+        self.queue: list[Task] = []
 
-    def put(self, task):
+    def put(self, task: Task) -> None:
         self.queue.append(task)
 
-    def empty(self):
+    def empty(self) -> bool:
         return len(self.queue) == 0
 
-    def get(self):
+    def get(self) -> Task:
         return self.queue.pop(0)
 
 
