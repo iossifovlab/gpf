@@ -40,6 +40,9 @@ export async function logout(page: Page): Promise<void> {
 }
 
 export async function login(page: Page, user = username, pass = password): Promise<void> {
+  if (user === undefined || pass === undefined) {
+    return;
+  }
   await page.locator('#log-in-button').click();
   expect(page.url()).toContain('login');
 
