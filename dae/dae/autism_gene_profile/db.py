@@ -25,7 +25,7 @@ class AutismGeneProfileDB:
     def __init__(self, configuration, dbfile, clear=False):
         self.dbfile = dbfile
         self.engine = create_engine(f"sqlite:///{dbfile}")
-        self.metadata = MetaData(self.engine)
+        self.metadata = MetaData()
         self.configuration = \
             AutismGeneProfileDB.build_configuration(configuration)
         self._create_agp_table()
@@ -80,7 +80,7 @@ class AutismGeneProfileDB:
         table = self.agp_table
         query = table.select()
         query = query.where(table.c.symbol_name == gene_symbol)
-        with self.engine.connect() as connection:
+        with self.engine.begin() as connection:
             row = connection.execute(query).fetchone()
             if not row:
                 return None
@@ -91,6 +91,7 @@ class AutismGeneProfileDB:
         # pylint: disable=too-many-locals
         """Build an AGPStatistic from internal DB row."""
         config = self.configuration
+        row = row._mapping
         result = {}
 
         result["geneSymbol"] = row["symbol_name"]
@@ -132,6 +133,7 @@ class AutismGeneProfileDB:
         """Create an AGPStatistic from single view row."""
         # pylint: disable=too-many-locals
         config = self.configuration
+        row = row._mapping
         gene_symbol = row["symbol_name"]
         genomic_scores: Dict[str, Dict] = {}
         for gs_category in config["genomic_scores"]:
@@ -230,16 +232,17 @@ class AutismGeneProfileDB:
             query = query.limit(self.PAGE_SIZE).offset(
                 self.PAGE_SIZE * (page - 1)
             )
-        with self.engine.connect() as connection:
+        with self.engine.begin() as connection:
             return connection.execute(query).fetchall()
 
     def drop_agp_table(self):
-        with self.engine.connect() as connection:
+        with self.engine.begin() as connection:
             connection.execute("DROP TABLE IF EXISTS autism_gene_profile")
+            connection.commit()
 
     def agp_table_exists(self):
         insp = inspect(self.engine)
-        with self.engine.connect() as connection:
+        with self.engine.begin() as connection:
             has_agp_table = insp.dialect.has_table(
                 connection, "autism_gene_profile"
             )
@@ -292,7 +295,7 @@ class AutismGeneProfileDB:
             *columns,
         )
 
-        self.metadata.create_all()
+        self.metadata.create_all(self.engine)
 
     def _clear_agp_table(self, connection=None):
         query = self.agp_table.delete()
@@ -300,9 +303,9 @@ class AutismGeneProfileDB:
             connection.execute(query)
             return
 
-        connection = self.engine.connect()
-        with connection:
+        with self.engine.begin() as connection:
             connection.execute(query)
+            connection.commit()
 
     def insert_agp(self, agp, connection=None):
         """Insert an AGP into the DB."""
@@ -313,11 +316,11 @@ class AutismGeneProfileDB:
             )
             return
 
-        connection = self.engine.connect()
-        with connection:
-            connection.execute(
+        with self.engine.begin() as conn:
+            conn.execute(
                 insert(self.agp_table).values(**insert_map)
             )
+            conn.commit()
 
     # FIXME: Too many locals, refactor?
     def _create_insert_map(self, agp):  # pylint: disable=too-many-locals
@@ -357,14 +360,14 @@ class AutismGeneProfileDB:
 
     def insert_agps(self, agps):
         """Insert multiple AGPStatistics into the DB."""
-        with self.engine.connect() as connection:
-            with connection.begin():
-                self._clear_agp_table(connection)
-                agp_count = len(agps)
-                for idx, agp in enumerate(agps, 1):
-                    self.insert_agp(agp, connection)
+        with self.engine.begin() as connection:
+            self._clear_agp_table(connection)
+            agp_count = len(agps)
+            for idx, agp in enumerate(agps, 1):
+                self.insert_agp(agp, connection)
 
-                    if idx % 1000 == 0:
-                        logger.info(
-                            "Inserted %s/%s AGPs into DB", idx, agp_count)
-                logger.info("Done!")
+                if idx % 1000 == 0:
+                    logger.info(
+                        "Inserted %s/%s AGPs into DB", idx, agp_count)
+            logger.info("Done!")
+            connection.commit()

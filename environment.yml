@@ -31,7 +31,7 @@ dependencies:
   - dask=2023.8
   - python-box=7.1
   - setuptools=67
-  - sqlalchemy=1.4.49
+  - sqlalchemy=2.0.21
   - sqlite=3.43
   - django=4.2.3
   - django-cors-headers=4.0
