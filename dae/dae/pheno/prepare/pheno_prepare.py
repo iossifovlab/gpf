@@ -124,7 +124,7 @@ class ClassifyMeasureTask(Task):
             measure_name: str,
             measure_desc: str,
             df: pd.DataFrame
-        ):
+    ):
         self.config = config
         self.mdf = df[[self.PERSON_ID, self.PID_COLUMN, measure_name]].copy()
         self.mdf.rename(columns={measure_name: "value"}, inplace=True)
