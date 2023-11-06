@@ -6,27 +6,23 @@
 .table-toolbar {
   padding-top: 15px;
   display: flex;
-  justify-content: start;
+  justify-content: space-between;
+  margin: 0 15px;
 }
 
-#search-field,
 #name-box,
 #email-box,
 #group-name-box {
-  width: 250px;
+  width: 320px;
   height: 38px;
 }
 
-#search-field,
-#name-box,
-#group-name-box,
-.creation-error {
-  margin-left: 15px;
+#search-field {
+  width: 250px;
 }
 
 #create-user-form-button,
 #create-group-form-button,
-#email-box,
 #create-user-button,
 #create-group-button,
 #cancel-group-creation-button,
@@ -35,8 +31,8 @@
 }
 
 .creation-error {
-  width: fit-content;
-  margin-top: 15px;
+  width: 320px;
+  margin-top: 5px;
   text-align: center;
   padding: 10px;
 }
@@ -49,4 +45,18 @@ input:invalid:focus {
   outline: rgb(255, 0, 0);
   border-color: rgb(255, 0, 0);
   box-shadow: 0 0 0 4px rgba(244, 15, 15, 30%);
+}
+
+.create-container {
+  border: 1px solid #ced4da;
+  border-radius: 0.375rem;
+  background-color: white;
+  padding: 10px;
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  right: 0;
+  position: absolute;
+  gap: 10px;
+  align-items: center;
 }
