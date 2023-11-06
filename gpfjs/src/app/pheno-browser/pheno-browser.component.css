@@ -38,13 +38,15 @@
 }
 
 #instruments-wrapper {
+  width: 95.7vw;
   display: flex;
-  gap: 15px;
+  justify-content: space-between;
 }
 
 .search-input-wrapper {
   border: 1px solid #ddd;
   height: 40px;
+  width: auto;
   align-self: center;
 }
 
@@ -56,9 +58,8 @@
   border: 1px solid #83befc;
 }
 
-.download-link {
-  width: 100%;
-  align-self: center;
+.select-wrapper {
+  width: auto;
 }
 
 #search-term {
@@ -90,4 +91,21 @@
 
 #search-term-label {
   padding-left: 10px;
+}
+
+#download-measures {
+  margin-left: 10px;
+  padding: 1px;
+  width: 35px;
+  height: 30px;
+}
+
+#download-wrapper {
+  display: flex;
+  align-items: center;
+}
+
+#left-side-instruments {
+  display: flex;
+  gap: 15px;
 }
