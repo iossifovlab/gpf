@@ -221,12 +221,12 @@ class GenomicScoreImplementation(
             self.resource.get_labels().get("reference_genome")
         )
         ref_genome = self._get_reference_genome_cached(grr, ref_genome_id)
+        chrom_length: Optional[int]
         for chrom in self.score.get_all_chromosomes():
             if ref_genome is not None and chrom in ref_genome.chromosomes:
                 chrom_length = ref_genome.get_chrom_length(chrom)
             else:
                 if isinstance(self.score.table, InmemoryGenomicPositionTable):
-                    # raise ValueError("In memory tables are not supported")
                     chrom_length = \
                         max(line.pos_end
                             for line in
@@ -239,10 +239,10 @@ class GenomicScoreImplementation(
                     if fchrom is not None:
                         chrom_length = get_chromosome_length_tabix(
                             self.score.table.pysam_file, fchrom)
-                if chrom_length is None:
-                    logger.warning(
-                        "unable to find chromosome length for %s", chrom)
-                    continue
+            if chrom_length is None:
+                logger.warning(
+                    "unable to find chromosome length for %s", chrom)
+                continue
 
             regions.extend(
                 split_into_regions(

@@ -1,22 +1,29 @@
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
+
 import pytest
 
+from enrichment_api.enrichment_builder import EnrichmentBuilder
+from enrichment_api.enrichment_serializer import EnrichmentSerializer
+
 from dae.enrichment_tool.event_counters import EnrichmentResult
+from dae.studies.study import GenotypeData
 
 
 pytestmark = pytest.mark.usefixtures(
     "wdae_gpf_instance", "dae_calc_gene_sets")
 
 
-# @pytest.mark.xfail(reason="[gene models] wrong annotation")
-def test_serialize(enrichment_serializer):
+def test_serialize(enrichment_serializer: EnrichmentSerializer) -> None:
+    # pylint: disable=too-many-statements
     serialize = enrichment_serializer.serialize()
 
     assert len(serialize) == 2
     assert serialize[0]["selector"] == "phenotype 1"
     assert serialize[0]["peopleGroupId"] == "phenotype"
-    assert len(serialize[0]["childrenStats"]) == 2
+    assert len(serialize[0]["childrenStats"]) == 3
     assert serialize[0]["childrenStats"]["M"] == 1
     assert serialize[0]["childrenStats"]["F"] == 1
+    assert serialize[0]["childrenStats"]["U"] == 0
 
     all_serialized = serialize[0]["missense"]["all"]
 
@@ -179,19 +186,14 @@ def test_serialize(enrichment_serializer):
     assert female_serialized["overlapFilter"]["geneSymbols"] == {"SAMD11"}
 
 
-def test_serialize_error(f1_trio, enrichment_builder, enrichment_serializer):
-    male_er = EnrichmentResult("male")
-    male_er.events = [["SAMD11"], ["SAMD11"], ["POGZ"]]
-    male_er.overlapped = [["SAMD11"]]
-    male_er.expected = 3
-    male_er.pvalue = 0.5
-    all_er = EnrichmentResult("all")
-    all_er.events = [["SAMD11"], ["SAMD11"], ["POGZ"]]
-    all_er.overlapped = [["SAMD11"]]
-    all_er.expected = 3
-    all_er.pvalue = 0.5
-
+def test_serialize_error(
+    f1_trio: GenotypeData,
+    enrichment_builder: EnrichmentBuilder,
+    enrichment_serializer: EnrichmentSerializer
+) -> None:
     person_set_collection = f1_trio.get_person_set_collection("phenotype")
+    assert person_set_collection is not None
+
     with pytest.raises(KeyError):
         enrichment_builder.build_people_group_selector(
             ["missense"],
@@ -199,12 +201,16 @@ def test_serialize_error(f1_trio, enrichment_builder, enrichment_serializer):
         )
 
 
-def test_serialize_enrichment_result(db, enrichment_serializer):
-    enrichment_result = EnrichmentResult("all")
-    enrichment_result.events = [["SAMD11"], ["SAMD11"], ["POGZ"]]
-    enrichment_result.overlapped = [["SAMD11"]]
-    enrichment_result.expected = 3
-    enrichment_result.pvalue = 0.5
+def test_serialize_enrichment_result(
+    enrichment_serializer: EnrichmentSerializer
+) -> None:
+    enrichment_result = EnrichmentResult(
+        "all",
+        [["SAMD11"], ["SAMD11"], ["POGZ"]],
+        [["SAMD11"]],
+        3,
+        0.5
+    )
 
     res = enrichment_serializer.serialize_enrichment_result(enrichment_result)
     assert len(res) == 5
@@ -213,6 +219,3 @@ def test_serialize_enrichment_result(db, enrichment_serializer):
     assert res["overlapped"] == 1
     assert res["expected"] == 3
     assert res["pvalue"] == 0.5
-
-    with pytest.raises(AssertionError):
-        enrichment_serializer.serialize_enrichment_result({})

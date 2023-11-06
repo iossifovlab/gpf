@@ -1,26 +1,27 @@
 import logging
+from typing import Any
 
 from rest_framework.response import Response
+from rest_framework.request import Request
+
 from rest_framework import status
 
 
 from query_base.query_base import QueryDatasetView
-
 from utils.expand_gene_set import expand_gene_set
-
-
-# from memory_profiler import profile
-# fp = open('memory_profiler_basic_mean.log', 'w+')
-# precision = 5
 
 LOGGER = logging.getLogger(__name__)
 
 
 class EnrichmentModelsView(QueryDatasetView):
-    def __init__(self):
-        super().__init__()
+    """Select enrichment models view."""
 
-    def get_from_config(self, dataset_id, property_name, selected):
+    def get_from_config(
+        self, dataset_id: str,
+        property_name: str,
+        selected: str
+    ) -> list[dict[str, str]]:
+        """Collect configuration values for a property."""
         enrichment_config = self.gpf_instance.get_study_enrichment_config(
             dataset_id
         )
@@ -35,11 +36,31 @@ class EnrichmentModelsView(QueryDatasetView):
             if el.name in selected_properties
         ]
 
-    def get(self, request, dataset_id=None):  # pylint: disable=unused-argument
+    def get(
+        self, request: Request,  # pylint: disable=unused-argument
+        dataset_id: str
+    ) -> Response:
+        """Return enrichment configuration prepared for choosing."""
+        study = self.gpf_instance.get_genotype_data(dataset_id)
+
+        if study is None:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        background_descriptions = []
+        # pylint: disable=protected-access
+        study_backgrounds = self.gpf_instance \
+            ._background_facade \
+            .get_all_study_backgrounds(study)
+        for background in study_backgrounds:
+            background_descriptions.append({
+                "id": background.background_id,
+                "name": background.name,
+                "type": background.background_type,
+                "summary": background.resource.get_summary(),
+                "description": background.resource.get_description()
+            })
         result = {
-            "background": self.get_from_config(
-                dataset_id, "background", "selected_background_values"
-            ),
+            "background": background_descriptions,
             "counting": self.get_from_config(
                 dataset_id, "counting", "selected_counting_values"
             ),
@@ -48,22 +69,24 @@ class EnrichmentModelsView(QueryDatasetView):
 
 
 class EnrichmentTestView(QueryDatasetView):
-    def __init__(self):
+    """View for running enrichment testing."""
+
+    def __init__(self) -> None:
         super().__init__()
         self.gene_scores_db = self.gpf_instance.gene_scores_db
 
     @staticmethod
-    def _parse_gene_syms(query):
+    def _parse_gene_syms(query: dict[str, Any]) -> set[str]:
         gene_syms = query.get("geneSymbols", None)
         if gene_syms is None:
-            gene_syms = set([])
-        else:
-            if isinstance(gene_syms, str):
-                gene_syms = gene_syms.split(",")
-            gene_syms = {g.strip() for g in gene_syms}
-        return gene_syms
+            return set()
 
-    def enrichment_description(self, query):
+        if isinstance(gene_syms, str):
+            gene_syms = gene_syms.split(",")
+        return {g.strip() for g in gene_syms}
+
+    def enrichment_description(self, query: dict[str, Any]) -> str:
+        """Build enrichment result description."""
         gene_set = query.get("geneSet")
         if gene_set:
             desc = f"Gene Set: {gene_set}"
@@ -90,20 +113,18 @@ class EnrichmentTestView(QueryDatasetView):
                 desc = f"Gene Scores: {gene_scores_id}"
             return desc
 
-        gene_syms = self._parse_gene_syms(query)
-
-        gene_syms = ",".join(gene_syms)
-
+        gene_syms = ",".join(self._parse_gene_syms(query))
         desc = f"Gene Symbols: {gene_syms}"
         return desc
 
-    def post(self, request):
+    def post(self, request: Request) -> Response:
+        """Run the enrichment test and return the result."""
         query = expand_gene_set(request.data, request.user)
-
         dataset_id = query.get("datasetId", None)
         if dataset_id is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
+
         if not dataset:
             return Response(status=status.HTTP_404_NOT_FOUND)
 

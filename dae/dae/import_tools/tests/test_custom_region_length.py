@@ -8,7 +8,6 @@ from copy import deepcopy
 from typing import Optional
 
 import pytest
-import pytest_mock
 
 import pyarrow.parquet as pq
 
@@ -109,7 +108,6 @@ def _assert_variants(
 
 def test_bucket_generation(
     gpf_fixture: GPFInstance,
-    mocker: pytest_mock.MockerFixture
 ) -> None:
     import_config = {
         "input": {
@@ -155,7 +153,6 @@ def test_bucket_generation(
 
 def test_bucket_generation_no_processing_region_length(
     gpf_fixture: GPFInstance,
-    mocker: pytest_mock.MockerFixture
 ) -> None:
     import_config = {
         "input": {
@@ -195,7 +192,6 @@ def test_bucket_generation_no_processing_region_length(
 
 def test_bucket_generation_chrom_mismatch(
     gpf_fixture: GPFInstance,
-    mocker: pytest_mock.MockerFixture
 ) -> None:
     import_config = {
         "input": {
@@ -272,7 +268,6 @@ _denovo_multi_chrom_config = {
 def test_single_bucket_generation(
     add_chrom_prefix: Optional[str],
     gpf_fixture: GPFInstance,
-    mocker: pytest_mock.MockerFixture
 ) -> None:
     import_config = deepcopy(_denovo_multi_chrom_config)
 

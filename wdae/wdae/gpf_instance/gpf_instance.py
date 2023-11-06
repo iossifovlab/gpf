@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 import pathlib
 import os
-from typing import Optional, List, Dict, Any, Union, cast
+from typing import Optional, List, Dict, Any, Union, cast, Iterable
 from threading import Lock
 from functools import cached_property
 from box import Box
@@ -295,7 +295,7 @@ class WGPFInstance(GPFInstance):
             dataset_id: str,
             background_name: Optional[str],
             counting_name: Optional[str],
-            gene_syms: list[str]
+            gene_syms: Iterable[str]
     ) -> Optional[Union[EnrichmentBuilder, RemoteEnrichmentBuilder]]:
         """Create an enrichment builder."""
         builder: Optional[Union[EnrichmentBuilder, RemoteEnrichmentBuilder]] \
@@ -315,6 +315,9 @@ class WGPFInstance(GPFInstance):
                     "requested counting name: %s",
                     dataset_id, background_name, counting_name
                 )
+                return None
+
+            assert dataset.is_remote
             builder = RemoteEnrichmentBuilder(
                 cast(RemoteStudyWrapper, dataset), dataset.rest_client,
                 background_name, counting_name,

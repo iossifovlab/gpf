@@ -1,8 +1,6 @@
 from typing import Any, cast, Optional
 from functools import reduce
 
-from box import Box
-
 from dae.enrichment_tool.event_counters import EnrichmentResult
 from dae.utils.effect_utils import EffectTypesMixin
 
@@ -11,7 +9,7 @@ class EnrichmentSerializer(EffectTypesMixin):
     """Serializer for enrichment tool results."""
 
     def __init__(
-            self, enrichment_config: Box,
+            self, enrichment_config: dict[str, Any],
             results: list[dict[str, Any]]):
         self.enrichment_config = enrichment_config
         self.enrichment_results = results
@@ -32,7 +30,7 @@ class EnrichmentSerializer(EffectTypesMixin):
         output["peopleGroupId"] = grouping_results["peopleGroupId"]
         output["childrenStats"] = grouping_results["childrenStats"]
 
-        for effect_type in self.enrichment_config.effect_types:
+        for effect_type in self.enrichment_config["effect_types"]:
             result = cast(
                 dict[str, EnrichmentResult], grouping_results[effect_type])
             out = {}

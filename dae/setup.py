@@ -56,6 +56,8 @@ setuptools.setup(
     vcf_info=dae.genomic_resources.vcf_info_score:build_vcf_info_from_resource
     gene_models=dae.genomic_resources.gene_models:build_gene_models_from_resource
     cnv_collection=dae.genomic_resources.cnv_collection:CnvCollectionImplementation
+    gene_weights_enrichment_background=dae.enrichment_tool.resource_implementations.enrichment_resource_impl:build_gene_weights_enrichment_background
+    samocha_enrichment_background=dae.enrichment_tool.resource_implementations.enrichment_resource_impl:build_samocha_enrichment_background
 
     [dae.annotation.annotators]
     allele_score=dae.annotation.score_annotator:build_allele_score_annotator
@@ -110,6 +112,8 @@ setuptools.setup(
     generate_autism_gene_profile=dae.autism_gene_profile.generate_autism_gene_profile:main
     generate_common_report=dae.common_reports.generate_common_report:main
     generate_families_cache=dae.pedigrees.generate_families_cache:main
+
+    build_coding_length_enrichment_background=dae.enrichment_tool.build_coding_length_enrichment_background:cli
     """,
     classifiers=[
         "Development Status :: 4 - Beta",

@@ -4,7 +4,8 @@ from box import Box
 from dae.enrichment_tool.tool import EnrichmentTool
 from dae.enrichment_tool.event_counters import EventsCounter
 from dae.enrichment_tool.genotype_helper import GenotypeHelper
-from dae.enrichment_tool.background import CodingLenBackground
+from dae.enrichment_tool.gene_weights_background import \
+    GeneWeightsEnrichmentBackground
 
 from dae.variants.attributes import Inheritance
 from dae.studies.study import GenotypeData
@@ -13,25 +14,26 @@ from dae.studies.study import GenotypeData
 def test_enrichment_tool(
     f1_trio: GenotypeData,
     f1_trio_enrichment_config: Box,
-    f1_trio_coding_len_background: CodingLenBackground
+    coding_len_background: GeneWeightsEnrichmentBackground
 ) -> None:
     variants = list(
         f1_trio.query_variants(inheritance=str(Inheritance.denovo.name))
     )
     event_counter = EventsCounter()
     enrichment_tool = EnrichmentTool(
-        f1_trio_enrichment_config, f1_trio_coding_len_background, event_counter
+        f1_trio_enrichment_config, coding_len_background, event_counter
     )
     psc = f1_trio.get_person_set_collection("phenotype")
+    assert psc is not None
+
     helper = GenotypeHelper(f1_trio, psc)
-    # children_stats = helper.get_children_stats()
     children_by_sex = helper.children_by_sex("phenotype1")
 
     enrichment_events = enrichment_tool.calc(
-        ["missense", "synonymous"],
         ["SAMD11", "PLEKHN1", "POGZ"],
         variants,
-        children_by_sex,
+        effect_types=["missense", "synonymous"],
+        children_by_sex=children_by_sex,
     )
 
     assert enrichment_events["all"].events is not None
@@ -61,5 +63,5 @@ def test_enrichment_tool(
     assert enrichment_events["unspecified"].events is not None
     assert len(enrichment_events["unspecified"].events) == 0
     assert enrichment_events["unspecified"].events == []
-    assert enrichment_events["unspecified"].expected is None
-    assert enrichment_events["unspecified"].pvalue is None
+    assert enrichment_events["unspecified"].expected == 0
+    assert enrichment_events["unspecified"].pvalue == 1.0

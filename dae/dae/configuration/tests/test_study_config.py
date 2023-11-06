@@ -1,5 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import os
+from typing import Any
+
 import pytest
 import yaml
 from dae.configuration.gpf_config_parser import GPFConfigParser
@@ -7,7 +9,7 @@ from dae.configuration.schemas.study_config import study_config_schema
 from dae.configuration.study_config_builder import StudyConfigBuilder
 
 
-def test_study_with_study_filters_fails():
+def test_study_with_study_filters_fails() -> None:
     study_config = {
         "id": "test",
         "genotype_browser": {
@@ -22,7 +24,7 @@ def test_study_with_study_filters_fails():
     print(err)
 
 
-def test_dataset_with_study_filters_passes():
+def test_dataset_with_study_filters_passes() -> None:
     study_config = {
         "id": "test",
         "studies": ["asdf"],
@@ -36,7 +38,7 @@ def test_dataset_with_study_filters_passes():
     )
 
 
-def test_study_with_study_filters_false_passes():
+def test_study_with_study_filters_false_passes() -> None:
     study_config = {
         "id": "test",
         "genotype_browser": {
@@ -50,7 +52,7 @@ def test_study_with_study_filters_false_passes():
 
 
 @pytest.fixture
-def full_study_config():
+def full_study_config() -> dict[str, Any]:
     return {
         "id": "test",
         "name": "test",
@@ -231,15 +233,15 @@ def full_study_config():
         "enrichment": {
             "enabled": True,
             "selected_person_set_collections": ["test"],
-            "selected_background_values": ["test"],
-            "background": {
-                "test": {
-                    "file": "test",
-                    "name": "test",
-                    "kind": "test",
-                    "desc": "test"
-                }
-            },
+            "selected_background_models": ["test"],
+            # "background": {
+            #     "test": {
+            #         "file": "test",
+            #         "name": "test",
+            #         "kind": "test",
+            #         "desc": "test"
+            #     }
+            # },
             "default_background_model": "test",
             "selected_counting_values": ["test"],
             "counting": {
@@ -291,7 +293,10 @@ def full_study_config():
     }
 
 
-def _build_structural_schema_value(output_schema, input_schema):
+def _build_structural_schema_value(
+    output_schema: dict[Any, Any],
+    input_schema: dict[str, Any]
+) -> dict[str, Any]:
     for k, v in input_schema.items():
         if k not in ["type", "schema", "valuesrules", "anyof_schema"]:
             continue
@@ -332,7 +337,10 @@ def _build_structural_schema_value(output_schema, input_schema):
     return output_schema
 
 
-def _build_structural_schema_keys(output_schema, input_schema):
+def _build_structural_schema_keys(
+    output_schema: dict[Any, Any],
+    input_schema: dict[str, Any]
+) -> dict[str, Any]:
     for k, v in input_schema.items():
         output_schema[k] = _build_structural_schema_value(
             {}, v
@@ -340,16 +348,16 @@ def _build_structural_schema_keys(output_schema, input_schema):
     return output_schema
 
 
-def build_structural_schema(schema):
+def build_structural_schema(schema: dict[str, Any]) -> dict[str, Any]:
     return _build_structural_schema_keys({}, schema)
 
 
 @pytest.fixture()
-def study_config_structural():
+def study_config_structural() -> dict[str, dict[str, Any]]:
     return build_structural_schema(study_config_schema)
 
 
-def test_structural_config_generation():
+def test_structural_config_generation() -> None:
     schema = {
         "field1": {"type": "string"},
         "field2": {"type": "string", "dependencies": "field1"},
@@ -384,11 +392,17 @@ def test_structural_config_generation():
         GPFConfigParser.validate_config(temp, structural_schema)
 
 
-def test_study_config_structure(full_study_config, study_config_structural):
+def test_study_config_structure(
+    full_study_config: dict[str, Any],
+    study_config_structural: dict[str, dict[str, Any]]
+) -> None:
     GPFConfigParser.validate_config(full_study_config, study_config_structural)
 
 
-def test_study_config_builder(full_study_config, study_config_structural):
+def test_study_config_builder(
+    full_study_config: dict[str, Any],
+    study_config_structural: dict[str, dict[str, Any]]
+) -> None:
     builder = StudyConfigBuilder(full_study_config)
     config = builder.build_config()
     read_config = yaml.safe_load(config)

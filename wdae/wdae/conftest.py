@@ -18,13 +18,18 @@ from datasets_api.models import Dataset
 
 from remote.rest_api_client import RESTClient
 
-from gpf_instance.gpf_instance import WGPFInstance, get_wgpf_instance,\
+from gpf_instance.gpf_instance import WGPFInstance, get_wgpf_instance, \
     reload_datasets
 
 from users_api.models import WdaeUser
 from dae.autism_gene_profile.db import AutismGeneProfileDB
 from dae.genomic_resources import build_genomic_resource_repository
 from dae.genomic_resources.group_repository import GenomicResourceGroupRepo
+from dae.genomic_resources.testing import \
+    convert_to_tab_separated, build_inmemory_test_repository
+from dae.genomic_resources.repository import GR_CONF_FILE_NAME, \
+    GenomicResourceRepo
+
 from dae.common_reports import generate_common_report
 
 from dae.autism_gene_profile.statistic import AGPStatistic
@@ -163,7 +168,40 @@ def datasets(db):
 
 
 @pytest.fixture(scope="session")
-def wgpf_instance(default_dae_config, fixture_dirname):
+def enrichment_grr() -> GenomicResourceRepo:
+    return build_inmemory_test_repository({
+        "enrichment": {
+            "coding_len_testing": {
+                GR_CONF_FILE_NAME: """
+                    type: gene_weights_enrichment_background
+                    filename: data.mem
+                    name: CodingLenBackground
+                """,
+                "data.mem": convert_to_tab_separated("""
+                    gene     gene_weight
+                    SAMD11   3
+                    PLEKHN1  7
+                    POGZ     13
+                """)
+            },
+            "samocha_testing": {
+                GR_CONF_FILE_NAME: """
+                    type: samocha_enrichment_background
+                    filename: data.mem
+                """,
+                "data.mem": convert_to_tab_separated("""
+"transcript","gene","bp","all","synonymous","missense","nonsense","splice-site","frame-shift","F","M","P_LGDS","P_MISSENSE","P_SYNONYMOUS"
+"NM_017582","SAMD11",3,-1,-5,-4,-6,-6,-6,2,2,1.1,1.4,5.7
+"NM_017582","PLEKHN1",7,-2,-5,-4,-6,-6,-6,2,2,1.2,1.5,5.8
+"NM_014372","POGZ",11,-3,-5,-5,-6,-7,-6,2,2,6.3,4.6,2.9
+                """)
+            }
+        }
+    })
+
+
+@pytest.fixture(scope="session")
+def wgpf_instance(default_dae_config, fixture_dirname, enrichment_grr):
 
     def build(config_filename=None):
         repositories = [
@@ -180,6 +218,7 @@ def wgpf_instance(default_dae_config, fixture_dirname):
                     "type": "directory",
                     "directory": fixture_dirname("genomic_resources")
                 }),
+            enrichment_grr,
             build_genomic_resource_repository(),
         ]
         grr = GenomicResourceGroupRepo(repositories)

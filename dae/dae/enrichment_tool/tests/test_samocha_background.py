@@ -1,5 +1,4 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-from typing import Callable
 
 import pytest
 
@@ -7,20 +6,13 @@ from dae.variants.attributes import Inheritance
 from dae.studies.study import GenotypeData
 from dae.enrichment_tool.event_counters import EventsCounter
 from dae.enrichment_tool.genotype_helper import GenotypeHelper
-from dae.enrichment_tool.background import SamochaBackground
+from dae.enrichment_tool.samocha_background import SamochaEnrichmentBackground
 
 
-def test_filename(
-        f1_trio_samocha_background: SamochaBackground,
-        fixture_dirname: Callable[[str], str]) -> None:
-    assert f1_trio_samocha_background.filename == fixture_dirname(
-        "studies/f1_trio/enrichment/samochaBackgroundModel.csv"
-    )
+def test_load(samocha_background: SamochaEnrichmentBackground) -> None:
+    background = samocha_background._df
+    assert background is not None
 
-
-def test_load(f1_trio_samocha_background: SamochaBackground) -> None:
-    f1_trio_samocha_background.load()
-    background = f1_trio_samocha_background.background
     assert len(background) == 3
 
     assert background.iloc[0]["gene"] == "SAMD11"
@@ -46,7 +38,7 @@ def test_load(f1_trio_samocha_background: SamochaBackground) -> None:
 
 
 def test_calc_stats(
-    f1_trio: GenotypeData, f1_trio_samocha_background: SamochaBackground
+    f1_trio: GenotypeData, samocha_background: SamochaEnrichmentBackground
 ) -> None:
     # pylint: disable=too-many-statements
     variants = list(
@@ -55,6 +47,8 @@ def test_calc_stats(
     event_counter = EventsCounter()
 
     psc = f1_trio.get_person_set_collection("phenotype")
+    assert psc is not None
+
     helper = GenotypeHelper(f1_trio, psc)
     children_by_sex = helper.children_by_sex("phenotype1")
 
@@ -62,44 +56,32 @@ def test_calc_stats(
         variants, children_by_sex, set(["missense", "synonymous"])
     )
 
-    assert enrichment_events["all"].events is not None
-    assert len(enrichment_events["all"].events) == 2
-    assert enrichment_events["all"].events == [["SAMD11"], ["SAMD11"]]
-    assert enrichment_events["all"].expected is None
-    assert enrichment_events["all"].pvalue is None
+    assert enrichment_events.all is not None
+    assert len(enrichment_events.all) == 2
+    assert enrichment_events.all == [["SAMD11"], ["SAMD11"]]
 
-    assert enrichment_events["rec"].events is not None
-    assert len(enrichment_events["rec"].events) == 1
-    assert enrichment_events["rec"].events == [["SAMD11"]]
-    assert enrichment_events["rec"].expected is None
-    assert enrichment_events["rec"].pvalue is None
+    assert enrichment_events.rec is not None
+    assert len(enrichment_events.rec) == 1
+    assert enrichment_events.rec == [["SAMD11"]]
 
-    assert enrichment_events["male"].events is not None
-    assert len(enrichment_events["male"].events) == 1
-    assert enrichment_events["male"].events == [["SAMD11"]]
-    assert enrichment_events["male"].expected is None
-    assert enrichment_events["male"].pvalue is None
+    assert enrichment_events.male is not None
+    assert len(enrichment_events.male) == 1
+    assert enrichment_events.male == [["SAMD11"]]
 
-    assert enrichment_events["female"].events is not None
-    assert len(enrichment_events["female"].events) == 1
-    assert enrichment_events["female"].events == [["SAMD11"]]
-    assert enrichment_events["female"].expected is None
-    assert enrichment_events["female"].pvalue is None
+    assert enrichment_events.female is not None
+    assert len(enrichment_events.female) == 1
+    assert enrichment_events.female == [["SAMD11"]]
 
-    assert enrichment_events["unspecified"].events is not None
-    assert len(enrichment_events["unspecified"].events) == 0
-    assert enrichment_events["unspecified"].events == []
-    assert enrichment_events["unspecified"].expected is None
-    assert enrichment_events["unspecified"].pvalue is None
+    assert enrichment_events.unspecified is not None
+    assert len(enrichment_events.unspecified) == 0
 
-    result = f1_trio_samocha_background.calc_stats(
-        ["missense"],
+    children_stats = helper.get_children_stats("phenotype1")
+    result = samocha_background.calc_enrichment_test(
         enrichment_events,
         ["SAMD11", "PLEKHN1", "POGZ"],
-        children_by_sex,
+        event_types=["missense"],
+        children_stats=children_stats,
     )
-
-    assert result == enrichment_events
 
     assert result["all"].events is not None
     assert len(result["all"].events) == 2
@@ -128,5 +110,5 @@ def test_calc_stats(
     assert result["unspecified"].events is not None
     assert len(result["unspecified"].events) == 0
     assert result["unspecified"].events == []
-    assert result["unspecified"].expected is None
-    assert result["unspecified"].pvalue is None
+    assert result["unspecified"].expected == 0.0
+    assert result["unspecified"].pvalue == 1.0

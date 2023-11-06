@@ -9,7 +9,6 @@ from dae.enrichment_tool.event_counters import \
     get_sym_2_fn, \
     EnrichmentResult, \
     filter_overlapping_events, \
-    overlap_enrichment_result_dict, \
     CounterBase, \
     EventsCounter, \
     GeneEventsCounter
@@ -88,20 +87,22 @@ def test_filter_overlapping_events(f1_trio: GenotypeData) -> None:
 
 
 def test_overlap_enrichment_result_dict(f1_trio: GenotypeData) -> None:
-    enrichment_result = EnrichmentResult("all")
-    enrichment_result.events = [["SAMD11"], ["SAMD11"], ["PLEKHN1"]]
-    enrichment_result.expected = 0.12345
-    enrichment_result.pvalue = 0.54321
+    events = [["SAMD11"], ["SAMD11"], ["PLEKHN1"]]
+    genes = ["PLEKHN1", "POGZ"]
 
-    enrichment_results = {"all": enrichment_result}
+    overlapped = filter_overlapping_events(events, genes)
+    assert overlapped == [["PLEKHN1"]]
 
-    overlap_enrichment_result_dict(enrichment_results, ["PLEKHN1", "POGZ"])
-    assert enrichment_results["all"].overlapped is not None
-    assert len(enrichment_results["all"].overlapped) == 1
-    assert enrichment_results["all"].overlapped == [["PLEKHN1"]]
+    enrichment_result = EnrichmentResult(
+        "all",
+        events,
+        overlapped,
+        0.12345,
+        0.54321
+    )
 
     assert (
-        str(enrichment_results["all"])
+        str(enrichment_result)
         == "EnrichmentResult(all): events=3; overlapped=1; "
         "expected=0.12345; "
         "pvalue=0.54321"
@@ -121,6 +122,8 @@ def test_events_counter(f1_trio: GenotypeData) -> None:
         f1_trio.query_variants(inheritance=str(Inheritance.denovo.name))
     )
     psc = f1_trio.get_person_set_collection("phenotype")
+    assert psc is not None
+
     genotype_helper = GenotypeHelper(f1_trio, psc)
     # children_stats = gh.get_children_stats()
     children_by_sex = genotype_helper.children_by_sex("phenotype1")
@@ -130,24 +133,24 @@ def test_events_counter(f1_trio: GenotypeData) -> None:
     events = event_counter.events(variants, children_by_sex, effect_types)
     print(events)
 
-    assert events["all"].events is not None
-    assert len(events["all"].events) == 2
-    assert events["all"].events == [["SAMD11"], ["SAMD11"]]
+    assert events.all is not None
+    assert len(events.all) == 2
+    assert events.all == [["SAMD11"], ["SAMD11"]]
 
-    assert events["rec"].events is not None
-    assert len(events["rec"].events) == 1
-    assert events["rec"].events == [["SAMD11"]]
+    assert events.rec is not None
+    assert len(events.rec) == 1
+    assert events.rec == [["SAMD11"]]
 
-    assert events["male"].events is not None
-    assert len(events["male"].events) == 1
-    assert events["male"].events == [["SAMD11"]]
+    assert events.male is not None
+    assert len(events.male) == 1
+    assert events.male == [["SAMD11"]]
 
-    assert events["female"].events is not None
-    assert len(events["female"].events) == 1
-    assert events["female"].events == [["SAMD11"]]
+    assert events.female is not None
+    assert len(events.female) == 1
+    assert events.female == [["SAMD11"]]
 
-    assert events["unspecified"].events is not None
-    assert len(events["unspecified"].events) == 0
+    assert events.unspecified is not None
+    assert len(events.unspecified) == 0
 
 
 def test_gene_events_counter(f1_trio: GenotypeData) -> None:
@@ -155,6 +158,8 @@ def test_gene_events_counter(f1_trio: GenotypeData) -> None:
         f1_trio.query_variants(inheritance=str(Inheritance.denovo.name))
     )
     psc = f1_trio.get_person_set_collection("phenotype")
+    assert psc is not None
+
     genotype_helper = GenotypeHelper(f1_trio, psc)
     # children_stats = gh.get_children_stats()
     children_by_sex = genotype_helper.children_by_sex("phenotype1")
@@ -163,22 +168,22 @@ def test_gene_events_counter(f1_trio: GenotypeData) -> None:
 
     events = event_counter.events(variants, children_by_sex, effect_types)
 
-    assert events["all"].events is not None
-    assert len(events["all"].events) == 1
-    assert events["all"].events == [["SAMD11"]]
+    assert events.all is not None
+    assert len(events.all) == 1
+    assert events.all == [["SAMD11"]]
 
-    assert events["rec"].events is not None
-    assert len(events["rec"].events) == 1
-    assert events["rec"].events == [["SAMD11"]]
+    assert events.rec is not None
+    assert len(events.rec) == 1
+    assert events.rec == [["SAMD11"]]
 
-    assert events["male"].events is not None
-    assert len(events["male"].events) == 1
-    assert events["male"].events == [["SAMD11"]]
+    assert events.male is not None
+    assert len(events.male) == 1
+    assert events.male == [["SAMD11"]]
 
-    assert events["female"].events is not None
-    assert len(events["female"].events) == 1
-    assert events["female"].events == [["SAMD11"]]
-    assert len(events["female"].events) == 1
+    assert events.female is not None
+    assert len(events.female) == 1
+    assert events.female == [["SAMD11"]]
+    assert len(events.female) == 1
 
-    assert events["unspecified"].events is not None
-    assert len(events["unspecified"].events) == 0
+    assert events.unspecified is not None
+    assert len(events.unspecified) == 0

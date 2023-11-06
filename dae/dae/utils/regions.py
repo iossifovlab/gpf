@@ -1,15 +1,17 @@
 from __future__ import annotations
+
 import copy
 from collections import defaultdict
-from typing import Union
+from typing import Any, Optional, Union, Iterator
 import logging
 
 import pysam
+import networkx as nx
 
 logger = logging.getLogger(__name__)
 
 
-def bedfile2regions(bed_filename):
+def bedfile2regions(bed_filename: str) -> list[BedRegion]:
     """Transform BED file into list of regions."""
     with open(bed_filename) as infile:
         regions = []
@@ -19,11 +21,11 @@ def bedfile2regions(bed_filename):
             chrom, sbeg, send = line.strip().split("\t")
             beg = int(sbeg)
             end = int(send)
-            regions.append(Region(chrom, beg + 1, end))
+            regions.append(BedRegion(chrom, beg + 1, end))
         return regions
 
 
-def regions2bedfile(regions, bed_filename):
+def regions2bedfile(regions: list[BedRegion], bed_filename: str) -> None:
     """Save list of regions into a BED file."""
     with open(bed_filename, "w") as outfile:
         for reg in regions:
@@ -48,20 +50,20 @@ def split_into_regions(
 
 def get_chromosome_length_tabix(
     tabix_file: Union[pysam.TabixFile, pysam.VariantFile], chrom: str,
-    step=100_000_000, precision=5_000_000
-) -> int:
+    step: int = 100_000_000, precision: int = 5_000_000
+) -> Optional[int]:
     """
     Return the length of a chromosome (or contig).
 
     Returned value is guarnteed to be larget than the actual contig length.
     """
-    def any_records(riter):
+    def any_records(riter: Iterator) -> bool:
         try:
             next(riter)
         except StopIteration:
             return False
         except ValueError:
-            return None
+            return False
 
         return True
     try:
@@ -97,45 +99,56 @@ def get_chromosome_length_tabix(
 class Region:
     """Class representing a genomic region."""
 
-    # REGION_REGEXP2 = re.compile(
-    #     r"^(chr)?(.+)(:([\d]{1,3}(,?[\d]{3})*)(-([\d]{1,3}(,?[\d]{3})*))?)?$"
-    # )  # noqa
-
-    def __init__(self, chrom=None, start=None, stop=None):
+    def __init__(
+        self, chrom: str,
+        start: Optional[int] = None, stop: Optional[int] = None
+    ):
+        if start is not None and stop is not None:
+            assert start <= stop
 
         self.chrom = chrom
-        self.start = start
-        self.stop = stop
+        self._start = start
+        self._stop = stop
 
     @property
-    def begin(self):
+    def start(self) -> Optional[int]:
+        return self._start
+
+    @property
+    def stop(self) -> Optional[int]:
+        return self._stop
+
+    @property
+    def begin(self) -> Optional[int]:
         return self.start
 
     @property
-    def end(self):
+    def end(self) -> Optional[int]:
         return self.stop
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         if self.start is None:
             return self.chrom
         if self.end is None:
             return f"{self.chrom}:{self.start}"
         return f"{self.chrom}:{self.start}-{self.stop}"
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return str(self).__hash__()
 
-    def __eq__(self, other):
-        return (
+    def __eq__(self, other: Any) -> bool:
+        if not isinstance(other, Region):
+            return False
+        return bool(
             self.chrom == other.chrom
             and self.start == other.start
             and self.stop == other.stop
         )
 
-    def __ne__(self, other):
+    def __ne__(self, other: Any) -> bool:
         return not self.__eq__(other)
 
-    def isin(self, chrom, pos):
+    def isin(self, chrom: str, pos: int) -> bool:
         """Check if a genomic position is insde of the region."""
         if chrom != self.chrom:
             return False
@@ -146,29 +159,83 @@ class Region:
             return False
         return True
 
-    def intersection(self, other: Region):
+    @staticmethod
+    def _min(a: Optional[int], b: Optional[int]) -> Optional[int]:
+        if a is None:
+            return b
+        if b is None:
+            return a
+        return min(a, b)
+
+    @staticmethod
+    def _max(a: Optional[int], b: Optional[int]) -> Optional[int]:
+        if a is None:
+            return b
+        if b is None:
+            return a
+        return max(a, b)
+
+    @staticmethod
+    def _make_region(
+        chrom: str, start: Optional[int], stop: Optional[int]
+    ) -> Optional[Region]:
+        if chrom is None:
+            return None
+        if start is not None and stop is not None:
+            if start > stop:
+                return None
+        return Region(chrom, start, stop)
+
+    def intersection(self, other: Region) -> Optional[Region]:
         """Return intersection of the region with other region."""
         if self.chrom != other.chrom:
             return None
-        if self.start > other.stop:
-            return None
-        if other.start > self.stop:
-            return None
-        start = max(self.start, other.start)
-        stop = min(self.stop, other.stop)
-        if start > stop:
-            return None
-        return Region(self.chrom, start, stop)
+        if self.start is None and self.stop is None:
+            return Region(other.chrom, other.start, other.stop)
+        if other.start is None and other.stop is None:
+            return Region(self.chrom, self.start, self.stop)
+        if self.start is None:
+            assert self.stop is not None
+            return self._make_region(
+                self.chrom, other.start, self._min(self.stop, other.stop))
+        if self.stop is None:
+            assert self.start is not None
+            return self._make_region(
+                self.chrom, self._max(self.start, other.start), other.stop)
 
-    def contains(self, other):
-        return self.chrom == other.chrom and self.start <= other.start \
+        assert self.start is not None and self.stop is not None
+        return self._make_region(
+            self.chrom,
+            self._max(self.start, other.start),
+            self._min(self.stop, other.stop)
+        )
+
+    def contains(self, other: Region) -> bool:
+        """Check if the region contains other region."""
+        if self.chrom != other.chrom:
+            return False
+        if self.start is None and self.stop is None:
+            return True
+        if self.start is None:
+            assert self.stop is not None
+            if other.stop is not None:
+                assert other.stop is not None
+                return bool(other.stop <= self.stop)
+            return False
+        if self.stop is None:
+            assert self.start is not None
+            if other.start is not None:
+                return other.start >= self.start
+            return False
+
+        assert self.start is not None and self.stop is not None
+        if other.stop is None or other.start is None:
+            return False
+        return self.start <= other.start \
             and other.stop <= self.stop
 
-    def len(self):
-        return self.stop - self.start + 1
-
-    @classmethod
-    def from_str(cls, region):
+    @staticmethod
+    def from_str(region: str) -> Region:
         """Parse string representation of a region."""
         parts = [p.strip() for p in region.split(":")]
         if len(parts) == 1:
@@ -178,68 +245,64 @@ class Region:
             parts = [p.strip() for p in parts[1].split("-")]
             start = int(parts[0].replace(",", ""))
             if len(parts) == 1:
-                return Region(chrom, start, start)
+                return BedRegion(chrom, start, start)
             if len(parts) == 2:
                 stop = int(parts[1].replace(",", ""))
-                return Region(chrom, start, stop)
-        return None
+                return BedRegion(chrom, start, stop)
 
-        # m = cls.REGION_REGEXP2.match(region_str)
-        # if not m:
-        #     return None
-        # prefix, chrom, start, end = (
-        #     m.group(1),
-        #     m.group(2),
-        #     m.group(3),
-        #     m.group(6),
-        # )
-        # print(prefix, chrom, start, end)
-
-        # if start:
-        #     start = int(start.replace(",", ""))
-        # if not end:
-        #     end = start
-        # else:
-        #     end = int(end.replace(",", ""))
-
-        # if start and end and start > end:
-        #     return None
-
-        # if prefix:
-        #     return f"{prefix}{chrom}", start, end
-        # else:
-        #     return chrom, start, end
-
-    # @staticmethod
-    # def from_str(region_str):
-    #     if region_str is None:
-    #         return None
-    #     parsed = Region.parse_str(region_str)
-    #     if not parsed:
-    #         return None
-
-    #     chromosome, start, end = parsed
-
-    #     return Region(chromosome, start, end)
+        raise ValueError(f"unexpeced format for region {region}")
 
 
-def all_regions_from_chrom(regions, chrom):
+class BedRegion(Region):
+    """Represents proper bed regions."""
+
+    def __init__(
+        self, chrom: str,
+        start: int, stop: int
+    ):
+        assert start is not None
+        assert stop is not None
+        assert stop >= start
+
+        super().__init__(chrom, start, stop)
+
+    @property
+    def start(self) -> int:
+        assert self._start is not None
+        return self._start
+
+    @property
+    def stop(self) -> int:
+        assert self._stop is not None
+        return self._stop
+
+    @property
+    def begin(self) -> int:
+        return self.start
+
+    @property
+    def end(self) -> int:
+        return self.stop
+
+    def __len__(self) -> int:
+        return self.stop - self.start
+
+
+def all_regions_from_chrom(regions: list[Region], chrom: str) -> list[Region]:
     """Subset of regions in R that are from chr."""
     return [r for r in regions if r.chrom == chrom]
 
 
-def unique_regions(regions):
+def unique_regions(regions: list[Region]) -> list[Region]:
     """Remove duplicated regions."""
     return list(set(regions))
 
 
-def connected_component(regions):
+def connected_component(regions: list[BedRegion]) -> Any:
     """Return connected component of regions.
 
     This might be the same as collapse.
     """
-    import networkx as nx  # pylint: disable=import-outside-toplevel
-
     graph = nx.Graph()
 
     graph.add_nodes_from(regions)
@@ -248,7 +311,7 @@ def connected_component(regions):
         regions_by_chrom[reg.chrom].append(reg)
 
     for _chrom, nds in regions_by_chrom.items():
-        nds.sort(key=lambda x: x.stop)  # type: ignore
+        nds.sort(key=lambda x: x.stop)
         for k in range(1, len(nds)):
             for j in range(k - 1, -1, -1):
                 if nds[k].start <= nds[j].stop:
@@ -258,7 +321,10 @@ def connected_component(regions):
     return nx.connected_components(graph)
 
 
-def collapse(source, is_sorted=False):
+def collapse(
+    source: list[BedRegion],
+    is_sorted: bool = False
+) -> list[BedRegion]:
     """Collapse list of regions."""
     if not source:
         return source
@@ -268,7 +334,7 @@ def collapse(source, is_sorted=False):
     if not is_sorted:
         regions.sort(key=lambda x: x.start)
 
-    collapsed = defaultdict(list)
+    collapsed: dict[str, list[BedRegion]] = defaultdict(list)
 
     collapsed[regions[0].chrom].append(regions[0])
 
@@ -281,7 +347,9 @@ def collapse(source, is_sorted=False):
 
         if reg.start <= prev_reg.stop:
             if reg.stop > prev_reg.stop:
-                collapsed[reg.chrom][-1].stop = reg.stop
+                last = collapsed[reg.chrom][-1]
+                collapsed[reg.chrom][-1] = \
+                    BedRegion(last.chrom, last.start, reg.stop)
             continue
 
         collapsed[reg.chrom].append(reg)
@@ -292,7 +360,10 @@ def collapse(source, is_sorted=False):
     return result
 
 
-def collapse_no_chrom(source, is_sorted=False):
+def collapse_no_chrom(
+    source: list[BedRegion],
+    is_sorted: bool = False
+) -> list[BedRegion]:
     """Collapse by ignoring the chromosome.
 
     Useful when the caller knows
@@ -312,7 +383,8 @@ def collapse_no_chrom(source, is_sorted=False):
         prev_reg = collapsed[-1]
         if reg.start <= prev_reg.stop:
             if reg.stop > prev_reg.stop:
-                prev_reg.stop = reg.stop
+                prev_reg = BedRegion(prev_reg.chrom, prev_reg.start, reg.stop)
+                collapsed[-1] = prev_reg
             continue
 
         collapsed.append(reg)
@@ -320,11 +392,13 @@ def collapse_no_chrom(source, is_sorted=False):
     return collapsed
 
 
-def total_length(regions):
-    return sum(regions.len() for x in regions)
+def total_length(regions: list[BedRegion]) -> int:
+    return sum(len(regions) for x in regions)
 
 
-def intersection(regions1, regions2):
+def intersection(
+    regions1: list[BedRegion], regions2: list[BedRegion]
+) -> list[BedRegion]:
     """Compute intersection of two list of regions.
 
     First collapses each for lists of regions s1 and s2 and then find
@@ -356,16 +430,14 @@ def intersection(regions1, regions2):
                     intersect.append(s1_c[k])
                     k += 1
                     continue
-                new_i = copy.copy(i)
-                new_i.start = s1_c[k].start
+                new_i = BedRegion(i.chrom, s1_c[k].start, i.stop)
                 intersect.append(new_i)
                 break
             if i.start > s1_c[k].start:
                 if i.stop <= s1_c[k].stop:
                     intersect.append(i)
                     break
-                new_i = copy.copy(i)
-                new_i.stop = s1_c[k].stop
+                new_i = BedRegion(i.chrom, i.start, s1_c[k].stop)
                 intersect.append(new_i)
                 k += 1
                 continue
@@ -373,13 +445,15 @@ def intersection(regions1, regions2):
     return intersect
 
 
-def union(*r):
+def union(*r: list[BedRegion]) -> list[BedRegion]:
     """Collapse many lists of regions."""
     r_sum = [el for list in r for el in list]
     return collapse(r_sum)
 
 
-def _diff(regions_a, regions_b):
+def _diff(
+    regions_a: list[BedRegion], regions_b: list[BedRegion]
+) -> list[BedRegion]:
     result = []
     k = 0
 
@@ -398,19 +472,22 @@ def _diff(regions_a, regions_b):
                 and regions_b[k].stop <= reg_a.stop \
                 and regions_b[k].chrom == reg_a.chrom:
             if prev < regions_b[k].start:
-                new_a = Region(reg_a.chrom, prev, regions_b[k].start - 1)
+                new_a = BedRegion(reg_a.chrom, prev, regions_b[k].start - 1)
                 result.append(new_a)
             prev = regions_b[k].stop + 1
             k += 1
         if k < len(regions_b) and regions_b[k].chrom != reg_a.chrom:
             continue
         if prev <= reg_a.stop:
-            result.append(Region(reg_a.chrom, prev, reg_a.stop))
+            result.append(BedRegion(reg_a.chrom, prev, reg_a.stop))
 
     return result
 
 
-def difference(regions1, regions2, symmetric=False):
+def difference(
+    regions1: list[BedRegion], regions2: list[BedRegion],
+    symmetric: bool = False
+) -> list[BedRegion]:
     """Compute difference between two list of regions."""
     if not symmetric:
         left = collapse(regions1)

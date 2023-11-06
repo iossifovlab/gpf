@@ -18,7 +18,7 @@ import yaml
 import pandas as pd
 from jinja2 import Template
 
-from dae.utils.regions import Region
+from dae.utils.regions import BedRegion
 from dae.genomic_resources import GenomicResource
 from dae.genomic_resources.resource_implementation import \
     GenomicResourceImplementation, get_base_resource_schema, \
@@ -99,7 +99,7 @@ class TranscriptModel:
             return False
         return True
 
-    def cds_regions(self, ss_extend: int = 0) -> list[Region]:
+    def cds_regions(self, ss_extend: int = 0) -> list[BedRegion]:
         """Compute CDS regions."""
         if self.cds[0] >= self.cds[1]:
             return []
@@ -111,12 +111,13 @@ class TranscriptModel:
 
         if self.cds[1] <= self.exons[k].stop:
             regions.append(
-                Region(chrom=self.chrom, start=self.cds[0], stop=self.cds[1])
+                BedRegion(
+                    chrom=self.chrom, start=self.cds[0], stop=self.cds[1])
             )
             return regions
 
         regions.append(
-            Region(
+            BedRegion(
                 chrom=self.chrom,
                 start=self.cds[0],
                 stop=self.exons[k].stop + ss_extend,
@@ -126,7 +127,7 @@ class TranscriptModel:
         while k < len(self.exons) and self.exons[k].stop <= self.cds[1]:
             if self.exons[k].stop < self.cds[1]:
                 regions.append(
-                    Region(
+                    BedRegion(
                         chrom=self.chrom,
                         start=self.exons[k].start - ss_extend,
                         stop=self.exons[k].stop + ss_extend,
@@ -135,7 +136,7 @@ class TranscriptModel:
                 k += 1
             else:
                 regions.append(
-                    Region(
+                    BedRegion(
                         chrom=self.chrom,
                         start=self.exons[k].start - ss_extend,
                         stop=self.exons[k].stop,
@@ -145,7 +146,7 @@ class TranscriptModel:
 
         if k < len(self.exons) and self.exons[k].start <= self.cds[1]:
             regions.append(
-                Region(
+                BedRegion(
                     chrom=self.chrom,
                     start=self.exons[k].start - ss_extend,
                     stop=self.cds[1],
@@ -154,7 +155,7 @@ class TranscriptModel:
 
         return regions
 
-    def utr5_regions(self) -> list[Region]:
+    def utr5_regions(self) -> list[BedRegion]:
         """Build list of UTR5 regions."""
         if self.cds[0] >= self.cds[1]:
             return []
@@ -164,7 +165,7 @@ class TranscriptModel:
         if self.strand == "+":
             while self.exons[k].stop < self.cds[0]:
                 regions.append(
-                    Region(
+                    BedRegion(
                         chrom=self.chrom,
                         start=self.exons[k].start,
                         stop=self.exons[k].stop,
@@ -173,7 +174,7 @@ class TranscriptModel:
                 k += 1
             if self.exons[k].start < self.cds[0]:
                 regions.append(
-                    Region(
+                    BedRegion(
                         chrom=self.chrom,
                         start=self.exons[k].start,
                         stop=self.cds[0] - 1,
@@ -187,7 +188,7 @@ class TranscriptModel:
                 k += 1
             else:
                 regions.append(
-                    Region(
+                    BedRegion(
                         chrom=self.chrom,
                         start=self.cds[1] + 1,
                         stop=self.exons[k].stop,
@@ -197,12 +198,12 @@ class TranscriptModel:
 
             for exon in self.exons[k:]:
                 regions.append(
-                    Region(chrom=self.chrom, start=exon.start, stop=exon.stop)
+                    BedRegion(chrom=self.chrom, start=exon.start, stop=exon.stop)
                 )
 
         return regions
 
-    def utr3_regions(self) -> list[Region]:
+    def utr3_regions(self) -> list[BedRegion]:
         """Build and return list of UTR3 regions."""
         if self.cds[0] >= self.cds[1]:
             return []
@@ -212,7 +213,7 @@ class TranscriptModel:
         if self.strand == "-":
             while self.exons[k].stop < self.cds[0]:
                 regions.append(
-                    Region(
+                    BedRegion(
                         chrom=self.chrom,
                         start=self.exons[k].start,
                         stop=self.exons[k].stop,
@@ -221,7 +222,7 @@ class TranscriptModel:
                 k += 1
             if self.exons[k].start < self.cds[0]:
                 regions.append(
-                    Region(
+                    BedRegion(
                         chrom=self.chrom,
                         start=self.exons[k].start,
                         stop=self.cds[0] - 1,
@@ -235,7 +236,7 @@ class TranscriptModel:
                 k += 1
             else:
                 regions.append(
-                    Region(
+                    BedRegion(
                         chrom=self.chrom,
                         start=self.cds[1] + 1,
                         stop=self.exons[k].stop,
@@ -245,12 +246,14 @@ class TranscriptModel:
 
             for exon in self.exons[k:]:
                 regions.append(
-                    Region(chrom=self.chrom, start=exon.start, stop=exon.stop)
+                    BedRegion(chrom=self.chrom, start=exon.start, stop=exon.stop)
                 )
 
         return regions
 
-    def all_regions(self, ss_extend: int = 0, prom: int = 0) -> list[Region]:
+    def all_regions(
+        self, ss_extend: int = 0, prom: int = 0
+    ) -> list[BedRegion]:
         """Build and return list of regions."""
         # pylint:disable=too-many-branches
         regions = []
@@ -258,27 +261,27 @@ class TranscriptModel:
         if ss_extend == 0:
             for exon in self.exons:
                 regions.append(
-                    Region(chrom=self.chrom, start=exon.start, stop=exon.stop)
+                    BedRegion(chrom=self.chrom, start=exon.start, stop=exon.stop)
                 )
 
         else:
             for exon in self.exons:
                 if exon.stop <= self.cds[0]:
                     regions.append(
-                        Region(
+                        BedRegion(
                             chrom=self.chrom,
                             start=exon.start, stop=exon.stop)
                     )
                 elif exon.start <= self.cds[0]:
                     if exon.stop >= self.cds[1]:
                         regions.append(
-                            Region(
+                            BedRegion(
                                 chrom=self.chrom,
                                 start=exon.start, stop=exon.stop)
                         )
                     else:
                         regions.append(
-                            Region(
+                            BedRegion(
                                 chrom=self.chrom,
                                 start=exon.start,
                                 stop=exon.stop + ss_extend,
@@ -286,13 +289,13 @@ class TranscriptModel:
                         )
                 elif exon.start > self.cds[1]:
                     regions.append(
-                        Region(
+                        BedRegion(
                             chrom=self.chrom, start=exon.start, stop=exon.stop)
                     )
                 else:
                     if exon.stop >= self.cds[1]:
                         regions.append(
-                            Region(
+                            BedRegion(
                                 chrom=self.chrom,
                                 start=exon.start - ss_extend,
                                 stop=exon.stop,
@@ -300,7 +303,7 @@ class TranscriptModel:
                         )
                     else:
                         regions.append(
-                            Region(
+                            BedRegion(
                                 chrom=self.chrom,
                                 start=exon.start - ss_extend,
                                 stop=exon.stop + ss_extend,
@@ -309,13 +312,13 @@ class TranscriptModel:
 
         if prom != 0:
             if self.strand == "+":
-                regions[0] = Region(
+                regions[0] = BedRegion(
                     chrom=regions[0].chrom,
                     start=regions[0].start - prom,
                     stop=regions[0].stop,
                 )
             else:
-                regions[-1] = Region(
+                regions[-1] = BedRegion(
                     chrom=regions[-1].chrom,
                     start=regions[-1].start,
                     stop=regions[-1].stop + prom,

@@ -454,17 +454,10 @@ study_config_schema = {
                 "schema": {"type": "string"},
                 "default": [],
             },
-            "selected_background_values": {
+            "selected_background_models": {
                 "type": "list",
                 "schema": {"type": "string"},
                 "default": [],
-            },
-            "background": {
-                "type": "dict",
-                "valuesrules": {
-                    "type": "dict",
-                    "schema": background_model_schema,
-                },
             },
             "default_background_model": {"type": "string"},
             "selected_counting_values": {
