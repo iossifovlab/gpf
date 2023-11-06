@@ -74,7 +74,7 @@ class GPFInstance:
     @staticmethod
     def build(
             config_filename: Optional[Union[str, Path]] = None,
-            **kwargs: dict[str, Any]) -> GPFInstance:
+            **kwargs: Any) -> GPFInstance:
         """Construct and return a GPF instance.
 
         If the config_filename is None, tries to discover the GPF instance.

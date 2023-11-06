@@ -1,6 +1,8 @@
 import os
+import io
 import codecs
 import time
+from typing import Optional
 from urllib.parse import urlparse
 
 import requests
@@ -8,6 +10,7 @@ import requests
 from django.conf import settings
 from rest_framework import status
 from rest_framework.response import Response
+from rest_framework.request import Request
 from rest_framework.decorators import api_view, parser_classes
 from rest_framework.exceptions import ParseError
 from rest_framework.parsers import BaseParser
@@ -18,7 +21,11 @@ class PlainTextParser(BaseParser):
 
     media_type = "text/plain"
 
-    def parse(self, stream, media_type=None, parser_context=None):
+    def parse(
+        self, stream: io.IOBase,
+        media_type: Optional[str] = None,
+        parser_context: Optional[dict] = None
+    ) -> str:
         parser_context = parser_context or {}
         encoding = parser_context.get("encoding", settings.DEFAULT_CHARSET)
         try:
@@ -31,7 +38,7 @@ class PlainTextParser(BaseParser):
 
 @api_view(["POST"])
 @parser_classes([PlainTextParser])
-def sentry(request):
+def sentry(request: Request) -> Response:
     """Tunnel Sentry requests from the frontend."""
     expiration_time = 60 * 60  # in seconds
     sentry_token = request.COOKIES.get("sentry_token")

@@ -33,7 +33,7 @@ dependencies:
   - setuptools=67
   - sqlalchemy=2.0.21
   - sqlite=3.43
-  - django=4.2.3
+  - django=4.2.7
   - django-cors-headers=4.0
   - djangorestframework=3.14
   - django-oauth-toolkit=2.2

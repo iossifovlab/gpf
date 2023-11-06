@@ -1,10 +1,9 @@
 import logging
 
-from typing import Any, Optional, List, cast
+from typing import Any, Optional, List, cast, Union
 from rest_framework import permissions
 
 from django.conf import settings
-# pylint: disable=imported-auth-user
 from django.contrib.auth.models import Group, User
 
 from django.utils.encoding import force_str
@@ -12,7 +11,6 @@ from django.http import HttpRequest
 
 from gpf_instance.gpf_instance import get_wgpf_instance
 from utils.datasets import find_dataset_id_in_request
-# from users_api.models import WdaeUser as User
 
 from .models import Dataset, DatasetHierarchy
 
@@ -188,7 +186,7 @@ def user_has_permission(user: User, dataset_id: str) -> bool:
     return False
 
 
-def get_allowed_genotype_studies(user: User, dataset_id: str) -> set[Dataset]:
+def get_allowed_genotype_studies(user: User, dataset_id: str) -> set[str]:
     """Collect and return genotype study IDs the user has access to."""
     allowed_studies = []
     dataset = get_wdae_dataset(dataset_id)
@@ -207,7 +205,7 @@ def get_allowed_genotype_studies(user: User, dataset_id: str) -> set[Dataset]:
     return set(allowed_studies)
 
 
-def get_allowed_genotype_data(user: User, dataset_id: str) -> set[Dataset]:
+def get_allowed_genotype_data(user: User, dataset_id: str) -> set[str]:
     """Collect and return genotype data IDs the user has access to."""
     allowed_genotype_data = []
     dataset = get_wdae_dataset(dataset_id)
@@ -292,7 +290,7 @@ def get_user_groups(user: User) -> set[str]:
     return {g.name for g in user.groups.all()}
 
 
-def get_dataset_groups(dataset: Dataset) -> set[str]:
+def get_dataset_groups(dataset: Union[str, Dataset]) -> set[str]:
     # pylint: disable=no-member
     if not isinstance(dataset, Dataset):
         dataset = Dataset.objects.get(dataset_id=force_str(dataset))

@@ -10,11 +10,12 @@ import pytest
 
 from gpf_instance.gpf_instance import WGPFInstance
 
+from wdae_tests.integration.testing import setup_wgpf_instance, LiveServer
+
 from dae.testing import setup_directories, setup_genome, \
     setup_empty_gene_models, setup_pedigree, setup_vcf, vcf_study
 from dae.genomic_resources.repository_factory import \
     build_genomic_resource_repository
-from wdae_tests.integration.testing import setup_wgpf_instance, LiveServer
 
 
 @pytest.fixture

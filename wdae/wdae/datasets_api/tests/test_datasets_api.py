@@ -2,80 +2,101 @@
 import json
 import pytest
 from rest_framework import status  # type: ignore
+from gpf_instance.gpf_instance import WGPFInstance
+
+from django.test.client import Client
+
 from dae.configuration.gpf_config_parser import FrozenBox
+
 
 pytestmark = pytest.mark.usefixtures(
     "wdae_gpf_instance", "dae_calc_gene_sets")
 
 
-def test_datasets_api_get_all(admin_client):
+def test_datasets_api_get_all(admin_client: Client) -> None:
     response = admin_client.get("/api/v3/datasets")
 
     assert response
     assert response.status_code == 200
-    assert len(response.data["data"]) == 39
+    data = response.data  # type: ignore
+    assert len(data["data"]) == 39
 
 
-def test_datasets_api_get_all_studies(admin_client):
+def test_datasets_api_get_all_studies(admin_client: Client) -> None:
     response = admin_client.get("/api/v3/datasets/studies")
 
     assert response
     assert response.status_code == 200
-    assert len(response.data["data"]) == 21
+    data = response.data  # type: ignore
+    assert len(data["data"]) == 21
 
 
-def test_datasets_api_get_one(admin_client):
+def test_datasets_api_get_one(admin_client: Client) -> None:
     response = admin_client.get("/api/v3/datasets/quads_in_parent")
-    print(response.data)
     assert response
     assert response.status_code == 200
-    assert response.data["data"]["access_rights"] is True
-    assert response.data["data"]["name"] == "QUADS_IN_PARENT"
+
+    data = response.data  # type: ignore
+
+    assert data["data"]["access_rights"] is True
+    assert data["data"]["name"] == "QUADS_IN_PARENT"
 
 
-def test_datasets_default_description_editable(admin_client):
+def test_datasets_default_description_editable(admin_client: Client) -> None:
     response = admin_client.get("/api/v3/datasets/quads_in_parent")
-    print(response.data)
     assert response
     assert response.status_code == 200
-    assert response.data["data"]["description_editable"] is True
-    assert response.data["data"]["name"] == "QUADS_IN_PARENT"
+
+    data = response.data  # type: ignore
+    assert data["data"]["description_editable"] is True
+    assert data["data"]["name"] == "QUADS_IN_PARENT"
 
 
-def test_datasets_api_get_404(admin_client):
+def test_datasets_api_get_404(admin_client: Client) -> None:
     response = admin_client.get("/api/v3/datasets/alabala")
 
     assert response
     assert response.status_code == 404
-    assert response.data["error"] == "Dataset alabala not found"
+
+    data = response.data  # type: ignore
+    assert data["error"] == "Dataset alabala not found"
 
 
-def test_datasets_api_get_forbidden(user_client):
+def test_datasets_api_get_forbidden(user_client: Client) -> None:
     response = user_client.get("/api/v3/datasets/quads_in_parent")
 
     assert response
     assert response.status_code == 200
-    assert response.data["data"]["access_rights"] is False
-    assert response.data["data"]["name"] == "QUADS_IN_PARENT"
+
+    data = response.data  # type: ignore
+    assert data["data"]["access_rights"] is False
+    assert data["data"]["name"] == "QUADS_IN_PARENT"
 
 
-def test_user_client_get_dataset_details(user_client, wdae_gpf_instance):
+def test_user_client_get_dataset_details(
+    user_client: Client, wdae_gpf_instance: WGPFInstance
+) -> None:
     response = user_client.get("/api/v3/datasets/details/inheritance_trio")
 
     assert response
     assert response.status_code == 200
-    assert response.data["hasDenovo"]
+
+    data = response.data  # type: ignore
+    assert data["hasDenovo"]
 
 
 def test_user_client_get_nonexistant_dataset_details(
-        user_client, wdae_gpf_instance):
+    user_client: Client, wdae_gpf_instance: WGPFInstance
+) -> None:
     response = user_client.get("/api/v3/datasets/details/asdfghjkl")
 
     assert response
     assert response.status_code == 404
 
 
-def test_datasets_api_parents(admin_client, wdae_gpf_instance):
+def test_datasets_api_parents(
+    admin_client: Client, wdae_gpf_instance: WGPFInstance
+) -> None:
 
     dataset1_wrapper = wdae_gpf_instance.get_wdae_wrapper("Dataset1")
     assert dataset1_wrapper is not None
@@ -87,73 +108,102 @@ def test_datasets_api_parents(admin_client, wdae_gpf_instance):
     response = admin_client.get("/api/v3/datasets/Study1")
     assert response
     assert response.status_code == 200
-    print(response.data)
-    data = response.data["data"]
 
-    assert "parents" in data
-    assert data["parents"] == ["Dataset1"]
+    data = response.data  # type: ignore
+    assert "parents" in data["data"]
+    assert data["data"]["parents"] == ["Dataset1"]
 
 
-def test_datasets_pedigree_no_such_dataset(admin_client, wdae_gpf_instance):
+def test_datasets_pedigree_no_such_dataset(
+    admin_client: Client, wdae_gpf_instance: WGPFInstance
+) -> None:
     response = admin_client.get("/api/v3/datasets/pedigree/alabala/col")
     assert response
     assert response.status_code == 404
-    assert "error" in response.data
-    assert response.data["error"] == "Dataset alabala not found"
+
+    data = response.data  # type: ignore
+    assert "error" in data
+    assert data["error"] == "Dataset alabala not found"
 
 
-def test_datasets_pedigree_no_such_column(admin_client, wdae_gpf_instance):
+def test_datasets_pedigree_no_such_column(
+    admin_client: Client, wdae_gpf_instance: WGPFInstance
+) -> None:
     response = admin_client.get("/api/v3/datasets/pedigree/Study1/alabala")
     assert response
     assert response.status_code == 404
-    assert "error" in response.data
-    assert response.data["error"] == "No such column alabala"
+
+    data = response.data  # type: ignore
+    assert "error" in data
+    assert data["error"] == "No such column alabala"
 
 
-def test_datasets_pedigree_proper_request(admin_client, wdae_gpf_instance):
+def test_datasets_pedigree_proper_request(
+    admin_client: Client, wdae_gpf_instance: WGPFInstance
+) -> None:
     response = admin_client.get("/api/v3/datasets/pedigree/Study1/phenotype")
     assert response
     assert response.status_code == 200
-    assert "column_name" in response.data and \
-           "values_domain" in response.data
-    assert response.data["column_name"] == "phenotype"
-    assert set(response.data["values_domain"]) == {
+
+    data = response.data  # type: ignore
+    assert "column_name" in data and \
+           "values_domain" in data
+    assert data["column_name"] == "phenotype"
+    assert set(data["values_domain"]) == {
         "unaffected", "phenotype1", "phenotype2", "pheno"
     }
 
 
-def test_datasets_config_no_such_dataset(admin_client, wdae_gpf_instance):
+def test_datasets_config_no_such_dataset(
+    admin_client: Client, wdae_gpf_instance: WGPFInstance
+) -> None:
     response = admin_client.get("/api/v3/datasets/config/alabala")
     assert response
     assert response.status_code == 404
-    assert "error" in response.data
-    assert response.data["error"] == "Dataset alabala not found"
+
+    data = response.data  # type: ignore
+    assert "error" in data
+    assert data["error"] == "Dataset alabala not found"
 
 
-def test_datasets_config_proper_request(admin_client, wdae_gpf_instance):
+def test_datasets_config_proper_request(
+    admin_client: Client, wdae_gpf_instance: WGPFInstance
+) -> None:
     response = admin_client.get("/api/v3/datasets/config/Study1")
     assert response
     assert response.status_code == 200
-    assert response.data
+
+    data = response.data  # type: ignore
+    assert data
 
 
-def test_datasets_description_not_admin(user_client, wdae_gpf_instance):
+def test_datasets_description_not_admin(
+    user_client: Client, wdae_gpf_instance: WGPFInstance
+) -> None:
     response = user_client.post("/api/v3/datasets/description/Study1")
     assert response
     assert response.status_code == 403
-    assert "error" in response.data
-    assert response.data["error"] == \
+
+    data = response.data  # type: ignore
+    assert "error" in data
+    assert data["error"] == \
         "You have no permission to edit the description."
 
 
-def test_datasets_description_get(admin_client, wdae_gpf_instance):
+def test_datasets_description_get(
+    admin_client: Client, wdae_gpf_instance: WGPFInstance
+) -> None:
     response = admin_client.get("/api/v3/datasets/description/Study1")
     assert response
     assert response.status_code == 200
-    assert response.data["description"] == "some new description"
+
+    data = response.data  # type: ignore
+    assert data["description"] == "some new description"
 
 
-def test_datasets_description_post(admin_client, wdae_gpf_instance):
+def test_datasets_description_post(
+    admin_client: Client, wdae_gpf_instance: WGPFInstance
+) -> None:
     url = "/api/v3/datasets/description/Study1"
     args = {
         "description": "some new description"
@@ -165,14 +215,18 @@ def test_datasets_description_post(admin_client, wdae_gpf_instance):
     assert response.status_code == 200
 
 
-def test_datasets_hierarchy(admin_client, wdae_gpf_instance):
+def test_datasets_hierarchy(
+    admin_client: Client, wdae_gpf_instance: WGPFInstance
+) -> None:
     response = admin_client.get("/api/v3/datasets/hierarchy/")
     assert response
     assert response.status_code == 200
-    assert response.data
-    assert len(response.data["data"]) == 22
+
+    data = response.data  # type: ignore
+    assert data
+    assert len(data["data"]) == 22
     dataset1 = next(filter(
-        lambda x: x["dataset"] == "Dataset1", response.data["data"]
+        lambda x: x["dataset"] == "Dataset1", data["data"]
     ))
     assert dataset1 == {
         "dataset": "Dataset1",
@@ -191,27 +245,38 @@ def test_datasets_hierarchy(admin_client, wdae_gpf_instance):
     }
 
 
-def test_datasets_permissions(admin_client, wdae_gpf_instance):
+def test_datasets_permissions(
+    admin_client: Client, wdae_gpf_instance: WGPFInstance
+) -> None:
     response = admin_client.get("/api/v3/datasets/permissions")
-    assert len(response.data) == 25
-    assert set(response.data[0].keys()) == set([
+
+    data = response.data  # type: ignore
+    assert len(data) == 25
+    assert set(data[0].keys()) == set([
         "dataset_id",
         "dataset_name",
         "broken",
         "users",
         "groups"
     ])
+
     response = admin_client.get("/api/v3/datasets/permissions?page=2")
-    assert len(response.data) == 14
+
+    data = response.data  # type: ignore
+    assert len(data) == 14
 
     response = admin_client.get("/api/v3/datasets/permissions?page=3")
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
 
-def test_datasets_permissions_single(admin_client, wdae_gpf_instance):
+def test_datasets_permissions_single(
+    admin_client: Client, wdae_gpf_instance: WGPFInstance
+) -> None:
     response = admin_client.get("/api/v3/datasets/permissions/Dataset1")
     assert response.status_code == status.HTTP_200_OK
-    assert set(response.data.keys()) == set([
+
+    data = response.data  # type: ignore
+    assert set(data.keys()) == set([
         "dataset_id",
         "dataset_name",
         "broken",
@@ -220,18 +285,26 @@ def test_datasets_permissions_single(admin_client, wdae_gpf_instance):
     ])
 
 
-def test_datasets_permissions_single_missing(admin_client, wdae_gpf_instance):
+def test_datasets_permissions_single_missing(
+    admin_client: Client, wdae_gpf_instance: WGPFInstance
+) -> None:
     response = admin_client.get("/api/v3/datasets/permissions/alabala")
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
-def test_datasets_permissions_search(admin_client, wdae_gpf_instance):
+def test_datasets_permissions_search(
+    admin_client: Client, wdae_gpf_instance: WGPFInstance
+) -> None:
     response = admin_client.get("/api/v3/datasets/permissions?search=set1")
-    assert len(response.data) == 1
-    assert response.data[0]["dataset_id"] == "Dataset1"
+
+    data = response.data  # type: ignore
+    assert len(data) == 1
+    assert data[0]["dataset_id"] == "Dataset1"
 
 
-def test_datasets_api_visible_datasets(admin_client, wdae_gpf_instance):
+def test_datasets_api_visible_datasets(
+    admin_client: Client, wdae_gpf_instance: WGPFInstance
+) -> None:
     # FIXME This is a temporary hack to mock the
     # dae_config of wdae_gpf_instance since using the mocker
     # fixture does not work.
@@ -245,6 +318,8 @@ def test_datasets_api_visible_datasets(admin_client, wdae_gpf_instance):
     try:
         response = admin_client.get("/api/v3/datasets/visible")
         assert response and response.status_code == 200
-        assert response.data == ["quads_f1", "quads_f2", "f1_group"]
+
+        data = response.data  # type: ignore
+        assert data == ["quads_f1", "quads_f2", "f1_group"]
     finally:
         wdae_gpf_instance.dae_config = old_conf
