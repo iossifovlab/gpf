@@ -1,19 +1,20 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,C0415,
 
 import textwrap
-import contextlib
-import time
-from typing import Callable, ContextManager, Generator
+# import contextlib
+# import time
+# from typing import Generator, Callable, ContextManager
 
 import pytest
 
 from gpf_instance.gpf_instance import WGPFInstance
 
+from wdae_tests.integration.testing import setup_wgpf_instance  # , LiveServer
+
 from dae.testing import setup_directories, setup_genome, \
     setup_empty_gene_models, setup_pedigree, setup_vcf, vcf_study
 from dae.genomic_resources.repository_factory import \
     build_genomic_resource_repository
-from wdae_tests.integration.testing import setup_wgpf_instance, LiveServer
 
 
 @pytest.fixture
@@ -71,20 +72,20 @@ def alla_wgpf(tmp_path_factory: pytest.TempPathFactory) -> WGPFInstance:
     return gpf
 
 
-@pytest.fixture
-def remote_wgpf_instance(
-    alla_wgpf: WGPFInstance,
-    wdae_django_server: Callable[
-        [WGPFInstance, str], ContextManager[LiveServer]]
-) -> Callable[[], ContextManager[LiveServer]]:
+# @pytest.fixture
+# def remote_wgpf_instance(
+#     alla_wgpf: WGPFInstance,
+#     wdae_django_server: Callable[
+#         [WGPFInstance, str], ContextManager[LiveServer]]
+# ) -> Callable[[], ContextManager[LiveServer]]:
 
-    @contextlib.contextmanager
-    def builder() -> Generator[LiveServer, None, None]:
-        with wdae_django_server(
-                alla_wgpf,
-                "wdae_tests.integration.test_wdae_remote."
-                "remote_settings") as server:
-            time.sleep(0.5)
-            yield server
+#     @contextlib.contextmanager
+#     def builder() -> Generator[LiveServer, None, None]:
+#         with wdae_django_server(
+#                 alla_wgpf,
+#                 "wdae_tests.integration.test_wdae_remote."
+#                 "remote_settings") as server:
+#             time.sleep(0.5)
+#             yield server
 
-    return builder
+#     return builder
