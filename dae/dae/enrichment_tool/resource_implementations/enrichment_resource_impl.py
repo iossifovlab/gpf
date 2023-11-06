@@ -12,6 +12,8 @@ from dae.enrichment_tool.base_enrichment_background import \
     BaseEnrichmentBackground
 from dae.enrichment_tool.gene_weights_background import \
     GeneWeightsEnrichmentBackground
+from dae.enrichment_tool.samocha_background import \
+    SamochaEnrichmentBackground
 
 logger = logging.getLogger(__name__)
 
@@ -57,4 +59,11 @@ def build_gene_weights_enrichment_background(
     resource: GenomicResource
 ) -> EnrichmentBackgroundResourceImplementation:
     background = GeneWeightsEnrichmentBackground(resource)
+    return EnrichmentBackgroundResourceImplementation(resource, background)
+
+
+def build_samocha_enrichment_background(
+    resource: GenomicResource
+) -> EnrichmentBackgroundResourceImplementation:
+    background = SamochaEnrichmentBackground(resource)
     return EnrichmentBackgroundResourceImplementation(resource, background)

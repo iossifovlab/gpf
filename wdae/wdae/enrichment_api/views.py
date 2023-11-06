@@ -42,8 +42,9 @@ class EnrichmentModelsView(QueryDatasetView):
     ) -> Response:
         """Return enrichment configuration prepared for choosing."""
         study = self.gpf_instance.get_genotype_data(dataset_id)
+
         if study is None:
-            return Response(status.HTTP_404_NOT_FOUND)
+            return Response(status=status.HTTP_404_NOT_FOUND)
 
         background_descriptions = []
         # pylint: disable=protected-access
@@ -119,11 +120,11 @@ class EnrichmentTestView(QueryDatasetView):
     def post(self, request: Request) -> Response:
         """Run the enrichment test and return the result."""
         query = expand_gene_set(request.data, request.user)
-
         dataset_id = query.get("datasetId", None)
         if dataset_id is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
+
         if not dataset:
             return Response(status=status.HTTP_404_NOT_FOUND)
 

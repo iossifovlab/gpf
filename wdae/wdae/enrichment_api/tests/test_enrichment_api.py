@@ -52,20 +52,17 @@ def test_enrichment_models(admin_client: Client) -> None:
 
     result = response.data  # type: ignore
     assert result
-    assert len(result) == 2
 
     assert len(result["background"]) == 2
     background = result["background"]
-    background.sort(key=lambda x: x["name"])
-    assert len(background[0]) == 2
-    assert background[0]["name"] == "coding_len_background_model"
-    assert background[0]["desc"] == "Coding Len Background Model"
-    assert len(background[1]) == 2
-    assert background[1]["name"] == "samocha_background_model"
-    assert background[1]["desc"] == "Samocha Background Model"
-    # assert len(background[2]) == 2
-    # assert background[2]["name"] == "synonymous_background_model"
-    # assert background[2]["desc"] == "Synonymous Background Model"
+    background.sort(key=lambda x: x["id"])
+    assert background[0]["id"] == "enrichment/coding_len_testing"
+    assert background[0]["name"] == "CodingLenBackground"
+    assert background[0]["description"] == ""
+
+    assert background[1]["id"] == "enrichment/samocha_testing"
+    assert background[1]["name"] == "Samocha's enrichment background model"
+    assert background[1]["description"] == ""
 
     assert len(result["counting"]) == 2
     counting = result["counting"]
@@ -82,19 +79,13 @@ def test_enrichment_models_missing_study(admin_client: Client) -> None:
     response = admin_client.get("/api/v3/enrichment/models/f1")
 
     assert response
-    assert response.status_code == 200
-
-    result = response.data  # type: ignore
-    assert result
-    assert len(result) == 2
-    assert len(result["background"]) == 0
-    assert len(result["counting"]) == 0
+    assert response.status_code == 404
 
 
 def test_enrichment_test_missing_dataset_id(admin_client: Client) -> None:
     url = "/api/v3/enrichment/test"
     query = {
-        "enrichmentBackgroundModel": "synonymous_background_model",
+        "enrichmentBackgroundModel": "enrichment/coding_len_testing",
         "enrichmentCountingModel": "enrichment_gene_counting",
         "geneSymbols": ["POGZ"],
     }
@@ -110,7 +101,7 @@ def test_enrichment_test_missing_study(admin_client: Client) -> None:
     url = "/api/v3/enrichment/test"
     query = {
         "datasetId": "f1",
-        "enrichmentBackgroundModel": "synonymous_background_model",
+        "enrichmentBackgroundModel": "enrichment/coding_len_testing",
         "enrichmentCountingModel": "enrichment_gene_counting",
         "geneSymbols": ["POGZ"],
     }
@@ -126,7 +117,7 @@ def test_enrichment_test_missing_gene_symbols(admin_client: Client) -> None:
     url = "/api/v3/enrichment/test"
     query = {
         "datasetId": "f1_trio",
-        "enrichmentBackgroundModel": "synonymous_background_model",
+        "enrichmentBackgroundModel": "enrichment/coding_len_testing",
         "enrichmentCountingModel": "enrichment_gene_counting",
     }
     response = admin_client.post(
@@ -142,7 +133,7 @@ def test_enrichment_test_gene_symbols(admin_client: Client) -> None:
     url = "/api/v3/enrichment/test"
     query = {
         "datasetId": "f1_trio",
-        "enrichmentBackgroundModel": "coding_len_background_model",
+        "enrichmentBackgroundModel": "enrichment/coding_len_testing",
         "enrichmentCountingModel": "enrichment_gene_counting",
         "geneSymbols": ["SAMD11", "PLEKHN1", "POGZ"],
     }

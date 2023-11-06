@@ -35,6 +35,9 @@ class EnrichmentTool:
         enrichment_events = self.event_counter.events(
             variants, children_by_sex, requested_effect_types
         )
+        if not self.background.is_loaded():
+            self.background.load()
+
         return self.background.calc_enrichment_test(
             enrichment_events, gene_syms,
             effect_types=effect_types,

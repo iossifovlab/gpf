@@ -315,6 +315,9 @@ class WGPFInstance(GPFInstance):
                     "requested counting name: %s",
                     dataset_id, background_name, counting_name
                 )
+                return None
+
+            assert dataset.is_remote
             builder = RemoteEnrichmentBuilder(
                 cast(RemoteStudyWrapper, dataset), dataset.rest_client,
                 background_name, counting_name,
