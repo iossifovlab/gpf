@@ -113,7 +113,7 @@ setuptools.setup(
     generate_common_report=dae.common_reports.generate_common_report:main
     generate_families_cache=dae.pedigrees.generate_families_cache:main
 
-    build_coding_length_enrichment_background=dae.build_enrichment_tool.coding_length_enrichment_background:cli
+    build_coding_length_enrichment_background=dae.enrichment_tool.build_coding_length_enrichment_background:cli
     """,
     classifiers=[
         "Development Status :: 4 - Beta",
