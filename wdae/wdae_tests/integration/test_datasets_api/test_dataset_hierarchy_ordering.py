@@ -4,6 +4,7 @@ import pathlib
 import textwrap
 from typing import Callable, ContextManager
 
+import pytest
 import requests
 
 from gpf_instance.gpf_instance import WGPFInstance
@@ -255,12 +256,19 @@ def create_dataset(
 
 
 # @pytest.mark.skip
+@pytest.mark.parametrize("datasets_order", [
+    ["dataset", "study_1", "study_2"],
+    ["study_1", "dataset", "study_2"],
+    ["study_1", "study_2", "dataset"],
+    ["dataset", "study_2", "study_1"],
+])
 def test_datasets_order(
     tmp_path: pathlib.Path,
+    datasets_order: list[str],
     wdae_django_server: Callable[
         [WGPFInstance, str], ContextManager[LiveServer]]
 ) -> None:
-    wgpf = create_wgpf_fixture(tmp_path, ["dataset", "study_1", "study_2"])
+    wgpf = create_wgpf_fixture(tmp_path, datasets_order)
     assert wgpf is not None
 
     dataset = create_dataset(tmp_path, wgpf)
@@ -285,4 +293,4 @@ def test_datasets_order(
         assert len(data) == 3
 
         dataset_ids = [st["id"] for st in data]
-        assert dataset_ids == ["dataset", "study_1", "study_2"]
+        assert dataset_ids == datasets_order
