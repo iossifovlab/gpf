@@ -79,7 +79,7 @@ def test_calc_stats(
     result = samocha_background.calc_enrichment_test(
         enrichment_events,
         ["SAMD11", "PLEKHN1", "POGZ"],
-        event_types=["missense"],
+        effect_types=["missense"],
         children_stats=children_stats,
     )
 

@@ -98,11 +98,6 @@ class SamochaEnrichmentBackground(BaseEnrichmentBackground):
 
         assert eff in self._df.columns, (eff, self._df.columns)
 
-        # all_result = enrichment_results["all"]
-        # male_result = enrichment_results["male"]
-        # female_result = enrichment_results["female"]
-        # rec_result = enrichment_results["rec"]
-
         gene_syms = [g.upper() for g in gene_set]
         df = self._df[self._df["gene"].isin(gene_syms)]
 
