@@ -84,7 +84,7 @@ class SamochaEnrichmentBackground(BaseEnrichmentBackground):
     ) -> dict[str, EnrichmentResult]:
         """Calculate enrichment statistics."""
         # pylint: disable=too-many-locals
-        effect_types = list(kwargs["event_types"])
+        effect_types = list(kwargs["effect_types"])
         assert len(effect_types) == 1
         effect_type = effect_types[0]
 
