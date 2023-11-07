@@ -548,6 +548,21 @@ def get_wgpf_instance(
     return _GPF_INSTANCE
 
 
+def reset_wgpf_instance(wgpf: WGPFInstance) -> None:
+    """Reset the WGPFInstance singleton.
+
+    This is used to reset the WGPFInstance singleton when the GPF instance.
+    Usefull in tests.
+    """
+    with _GPF_INSTANCE_LOCK:
+        # pylint: disable=global-statement
+        global _GPF_RECREATED_DATASET_PERM
+        _GPF_RECREATED_DATASET_PERM = None
+
+        global _GPF_INSTANCE
+        _GPF_INSTANCE = wgpf
+
+
 def reload_datasets(gpf_instance: WGPFInstance) -> None:
     """Recreate datasets permissions."""
     # pylint: disable=import-outside-toplevel
@@ -594,6 +609,9 @@ def recreated_dataset_perm(gpf_instance: WGPFInstance) -> None:
 
     if _GPF_RECREATED_DATASET_PERM:
         return
+
+    if _GPF_INSTANCE is None:
+        reset_wgpf_instance(gpf_instance)
 
     with _GPF_INSTANCE_LOCK:
         assert _GPF_INSTANCE is not None

@@ -19,19 +19,19 @@ class WDAEConfig(AppConfig):
         logger.warning("WGPConfig application starting...")
         AppConfig.ready(self)
         config_filename = None
+
         if getattr(settings, "GPF_INSTANCE_CONFIG", None):
             config_filename = pathlib.Path(__file__).parent.joinpath(
                 settings.GPF_INSTANCE_CONFIG)
 
             logger.error("GPF instance config: %s", config_filename)
 
-        gpf_instance = get_wgpf_instance(config_filename)
-
         if not settings.STUDIES_EAGER_LOADING:
             logger.info("skip preloading gpf instance...")
             return
 
         try:
+            gpf_instance = get_wgpf_instance(config_filename)
             logger.warning("eager loading of GPF instance and studies")
             gpf_instance.load()
             result = gpf_instance.get_all_genotype_data()
