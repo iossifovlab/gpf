@@ -40,7 +40,6 @@ export class GpfTableComponent implements AfterViewChecked {
   public showFloatingHeader: boolean;
   public showLegend: boolean;
 
-  public constructor() { }
 
   public ngAfterViewChecked(): void {
     if (this.tableData.length < (this.getScrollIndices()[1] - this.getScrollIndices()[0])) {
