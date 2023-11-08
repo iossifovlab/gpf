@@ -1,10 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { AgpSingleViewConfig } from 'app/autism-gene-profiles-single-view/autism-gene-profile-single-view';
 import { AutismGeneProfilesService } from 'app/autism-gene-profiles-block/autism-gene-profiles.service';
-import { take } from 'rxjs/operators';
+import { map, take } from 'rxjs/operators';
 import { Store } from '@ngxs/store';
 import { QueryService } from 'app/query/query.service';
-import { AgpTableConfig } from 'app/autism-gene-profiles-table/autism-gene-profiles-table';
+import { AgpColumn, AgpTableConfig } from 'app/autism-gene-profiles-table/autism-gene-profiles-table';
 import { AgpTableService } from 'app/autism-gene-profiles-table/autism-gene-profiles-table.service';
 import {
   AutismGeneProfileSingleViewComponent
@@ -28,13 +28,135 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
   ) { }
 
   public ngOnInit(): void {
-    this.agpTableService.getConfig().pipe(take(1)).subscribe(config => {
+    this.autismGeneProfilesService.getConfig().pipe(map(config => this.createTableConfig(config))).subscribe(config => {
       this.agpTableConfig = config;
       this.agpTableSortBy = this.findFirstAgpSortableCategory(config);
     });
     this.autismGeneProfilesService.getConfig().pipe(take(1)).subscribe(config => {
       this.agpSingleViewConfig = config;
     });
+  }
+
+  private createTableConfig(config: AgpSingleViewConfig): AgpTableConfig {
+    const agpTableConfig = new AgpTableConfig();
+    agpTableConfig.defaultDataset = config.defaultDataset;
+    agpTableConfig.columns = [];
+    agpTableConfig.pageSize = 20; // ???????
+
+    const geneColumn = new AgpColumn();
+    geneColumn.clickable = 'createTab';
+    geneColumn.columns = [];
+    geneColumn.displayName = 'Gene';
+    geneColumn.displayVertical = false;
+    geneColumn.id = 'geneSymbol';
+    geneColumn.meta = null;
+    geneColumn.sortable = false;
+    geneColumn.visibility = true;
+    agpTableConfig.columns.push(geneColumn);
+
+    const datasets = config.datasets;
+    const geneSets = config.geneSets;
+    const genomicScores = config.genomicScores;
+
+    geneSets.forEach(geneSet => {
+      const setColumn = new AgpColumn();
+      setColumn.clickable = null;
+      setColumn.columns = [];
+      setColumn.displayName = geneSet.displayName;
+      setColumn.displayVertical = false;
+      setColumn.id = geneSet.category + '_rank';
+      setColumn.meta = null;
+      setColumn.sortable = true;
+
+      geneSet.sets.forEach(set => {
+        const column = new AgpColumn();
+        column.clickable = null;
+        column.columns = [];
+        column.displayName = set.setId;
+        column.displayVertical = true;
+        column.id = setColumn.id + '.' + set.setId;
+        column.meta = null;
+        column.sortable = true;
+        column.visibility = set.defaultVisible;
+
+        setColumn.columns.push(column);
+      });
+
+      setColumn.visibility = geneSet.defaultVisible;
+      agpTableConfig.columns.push(setColumn);
+    });
+
+    genomicScores.forEach(genomicScore => {
+      const scoreColumn = new AgpColumn();
+      scoreColumn.clickable = null;
+      scoreColumn.columns = [];
+      scoreColumn.displayName = genomicScore.displayName;
+      scoreColumn.displayVertical = false;
+      scoreColumn.id = genomicScore.category;
+      scoreColumn.meta = null;
+      scoreColumn.sortable = false;
+
+      genomicScore.scores.forEach(score => {
+        const column = new AgpColumn();
+        column.clickable = null;
+        column.columns = [];
+        column.displayName = score.scoreName;
+        column.displayVertical = true;
+        column.id = scoreColumn.id + '.' + score.scoreName;
+        column.meta = null;
+        column.sortable = true;
+        column.visibility = score.defaultVisible;
+
+        scoreColumn.columns.push(column);
+      });
+
+      scoreColumn.visibility = genomicScore.defaultVisible;
+      agpTableConfig.columns.push(scoreColumn);
+    });
+
+    datasets.forEach(dataset => {
+      const datasetColumn = new AgpColumn();
+      datasetColumn.clickable = null;
+      datasetColumn.columns = [];
+      datasetColumn.displayName = dataset.displayName;
+      datasetColumn.displayVertical = false;
+      datasetColumn.id = dataset.id;
+      datasetColumn.meta = null;
+      datasetColumn.sortable = false;
+
+      dataset.personSets.forEach(set => {
+        const column = new AgpColumn();
+        column.clickable = null;
+        column.columns = [];
+        column.displayName = `${set.displayName} (${set.childrenCount})`;
+        column.displayVertical = false;
+        column.id = dataset.id + '.' + set.id;
+        column.meta = null;
+        column.sortable = false;
+
+        set.statistics.forEach(statistic => {
+          const statisticsColumn = new AgpColumn();
+          statisticsColumn.clickable = 'goToQuery';
+          statisticsColumn.columns = [];
+          statisticsColumn.displayName = statistic.displayName;
+          statisticsColumn.displayVertical = false;
+          statisticsColumn.id = column.id + '.' + statistic.id;
+          statisticsColumn.meta = null;
+          statisticsColumn.sortable = true;
+          statisticsColumn.visibility = statistic.defaultVisible;
+
+          column.columns.push(statisticsColumn);
+        });
+
+        column.visibility = set.defaultVisible;
+        datasetColumn.columns.push(column);
+      });
+
+      datasetColumn.visibility = dataset.defaultVisible;
+      agpTableConfig.columns.push(datasetColumn);
+    });
+
+    return agpTableConfig;
   }
 
   private findFirstAgpSortableCategory(agpTableConfig: AgpTableConfig): string {
