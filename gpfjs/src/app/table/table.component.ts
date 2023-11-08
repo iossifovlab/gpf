@@ -1,6 +1,6 @@
 import {
   ContentChild, ViewChildren, ViewChild, HostListener, Input, Component,
-  ContentChildren, QueryList, AfterViewChecked, ElementRef
+  ContentChildren, QueryList, AfterViewChecked, ElementRef, ChangeDetectorRef
 } from '@angular/core';
 import { GpfTableColumnComponent } from './component/column.component';
 import { GpfTableSubheaderComponent } from './component/subheader.component';
@@ -40,10 +40,12 @@ export class GpfTableComponent implements AfterViewChecked {
   public showFloatingHeader: boolean;
   public showLegend: boolean;
 
+  public constructor(private cdr: ChangeDetectorRef) { }
 
   public ngAfterViewChecked(): void {
     if (this.tableData.length < (this.getScrollIndices()[1] - this.getScrollIndices()[0])) {
       this.tableData = this.getVisibleData();
+      this.cdr.detectChanges();
     }
   }
 
