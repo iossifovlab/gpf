@@ -1,50 +1,46 @@
 <div class="container">
   <div class="card">
-    <div class="pheno-instrument-block">
-      <div id="instruments-wrapper">
-        <div id="left-side-instruments">
-          <div class="select-wrapper">
-            <select
-              class="form-control"
-              id="select-instrument"
-              title="{{ selectedInstrument$.value }}"
-              [ngModel]="selectedInstrument$ | async"
-              (ngModelChange)="emitInstrument($event)">
-              <option value="">All instruments</option>
-              <option *ngFor="let instrument of (instruments | async)?.instruments" [ngValue]="instrument">{{
-                instrument
-              }}</option>
-            </select>
-            <span class="material-symbols-outlined select-dropdown-icon"> arrow_drop_down </span>
-          </div>
-          <div class="search-input-wrapper">
-            <label id="search-term-label" for="search-term">
-              <span class="material-symbols-outlined search-icon"> search </span>
-            </label>
-            <input
-              placeholder="Search"
-              [ngModel]="input$ | async"
-              (input)="search(searchBox.value)"
-              #searchBox
-              id="search-term"
-              class="search-input form-control"
-              type="text"
-              autocomplete="off"
-              spellcheck="false" />
-            <span
-              class="material-symbols-outlined md search-clear-icon"
-              *ngIf="searchBox.value !== ''"
-              (click)="searchBox.value = ''; search(searchBox.value)">
-              close
-            </span>
-          </div>
-        </div>
-        <div id="download-wrapper">
-          <span>Phenotype measures</span>
-          <button id="download-measures" class="btn btn-md btn-primary btn-right" (click)="downloadMeasures()">
-            <span class="material-symbols-outlined">download</span>
-          </button>
-        </div>
+    <div id="pheno-instrument-block">
+      <div class="select-wrapper">
+        <select
+          class="form-control"
+          id="select-instrument"
+          title="{{ selectedInstrument$.value }}"
+          [ngModel]="selectedInstrument$ | async"
+          (ngModelChange)="emitInstrument($event)">
+          <option value="">All instruments</option>
+          <option *ngFor="let instrument of (instruments | async)?.instruments" [ngValue]="instrument">{{
+            instrument
+          }}</option>
+        </select>
+        <span class="material-symbols-outlined select-dropdown-icon"> arrow_drop_down </span>
+      </div>
+      <div class="search-input-wrapper">
+        <label id="search-term-label" for="search-term">
+          <span class="material-symbols-outlined search-icon"> search </span>
+        </label>
+        <input
+          placeholder="Search"
+          [ngModel]="input$ | async"
+          (input)="search(searchBox.value)"
+          #searchBox
+          id="search-term"
+          class="search-input form-control"
+          type="text"
+          autocomplete="off"
+          spellcheck="false" />
+        <span
+          class="material-symbols-outlined md search-clear-icon"
+          *ngIf="searchBox.value !== ''"
+          (click)="searchBox.value = ''; search(searchBox.value)">
+          close
+        </span>
+      </div>
+      <div id="download-wrapper">
+        <span>Phenotype measures</span>
+        <button id="download-measures" class="btn btn-md btn-primary btn-right" (click)="downloadMeasures()">
+          <span class="material-symbols-outlined"> download </span>
+        </button>
       </div>
     </div>
   </div>

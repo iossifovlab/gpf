@@ -1,12 +1,14 @@
-.pheno-instrument-block {
-  width: fit-content;
+#pheno-instrument-block {
+  display: inline-flex;
+  padding: 20px 30px 0;
 }
 
 .container {
+  width: fit-content;
+  display: contents;
   padding-bottom: 0;
   margin-top: 20px;
   margin-left: 15px;
-  width: fit-content;
 }
 
 .card {
@@ -37,17 +39,12 @@
   line-height: 38px;
 }
 
-#instruments-wrapper {
-  width: 95.7vw;
-  display: flex;
-  justify-content: space-between;
-}
-
 .search-input-wrapper {
-  border: 1px solid #ddd;
+  width: 280px;
   height: 40px;
-  width: auto;
+  border: 1px solid #ddd;
   align-self: center;
+  margin-left: 16px;
 }
 
 .search-input-wrapper:hover {
@@ -103,9 +100,5 @@
 #download-wrapper {
   display: flex;
   align-items: center;
-}
-
-#left-side-instruments {
-  display: flex;
-  gap: 15px;
+  margin-left: auto;
 }
