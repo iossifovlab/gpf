@@ -31,7 +31,7 @@ class EnrichmentModelsView(QueryDatasetView):
         selected_properties = enrichment_config[selected]
 
         return [
-            {"name": el.name, "desc": el.desc}
+            {"id": el.name, "name": el.name, "desc": el.desc}
             for el in enrichment_config[property_name].values()
             if el.name in selected_properties
         ]

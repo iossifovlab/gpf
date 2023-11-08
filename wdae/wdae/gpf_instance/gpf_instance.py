@@ -131,7 +131,7 @@ class WGPFInstance(GPFInstance):
 
     def register_genotype_data(
         self, genotype_data: GenotypeData
-    ) -> StudyWrapper:
+    ) -> None:
         super().register_genotype_data(genotype_data)
 
         logger.debug("genotype data config; %s", genotype_data.study_id)
@@ -141,7 +141,7 @@ class WGPFInstance(GPFInstance):
             self._pheno_db,
             self.gene_scores_db
         )
-        return study_wrapper
+        self._study_wrappers[genotype_data.study_id] = study_wrapper
 
     def make_wdae_wrapper(
         self, dataset_id: str
@@ -255,6 +255,9 @@ class WGPFInstance(GPFInstance):
         if not counting_name:
             counting_name = enrichment_config.default_counting_model
 
+        logger.info("resolved background name: %s", background_name)
+        logger.info("resolved counting name: %s", counting_name)
+
         background = self.get_study_background(
             dataset_id, cast(str, background_name)
         )
@@ -273,7 +276,7 @@ class WGPFInstance(GPFInstance):
             self, dataset_id: str,
             background_name: Optional[str],
             counting_name: Optional[str],
-            gene_syms: list[str]
+            gene_syms: Iterable[str]
     ) -> Optional[EnrichmentBuilder]:
         dataset = self.get_genotype_data(dataset_id)
         enrichment_config = GPFInstance.get_study_enrichment_config(
@@ -300,8 +303,7 @@ class WGPFInstance(GPFInstance):
         """Create an enrichment builder."""
         builder: Optional[Union[EnrichmentBuilder, RemoteEnrichmentBuilder]] \
             = self._create_local_enrichment_builder(
-                dataset_id, background_name, counting_name, gene_syms
-        )
+                dataset_id, background_name, counting_name, gene_syms)
         if not builder:
             dataset = self.get_wdae_wrapper(dataset_id)
             if dataset is None:

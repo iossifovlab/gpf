@@ -65,12 +65,15 @@ def test_enrichment_models(admin_client: Client) -> None:
     assert background[1]["description"] == ""
 
     assert len(result["counting"]) == 2
+
     counting = result["counting"]
     counting.sort(key=lambda x: x["name"])
-    assert len(counting[0]) == 2
+
+    assert counting[0]["id"] == "enrichment_events_counting"
     assert counting[0]["name"] == "enrichment_events_counting"
     assert counting[0]["desc"] == "Enrichment Events Counting"
-    assert len(counting[1]) == 2
+
+    assert counting[1]["id"] == "enrichment_gene_counting"
     assert counting[1]["name"] == "enrichment_gene_counting"
     assert counting[1]["desc"] == "Enrichment Gene Counting"
 
