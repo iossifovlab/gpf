@@ -1,8 +1,16 @@
 import { Type } from 'class-transformer';
 
-export class Column {
-  @Type(() => Column)
-  public columns: Column[];
+export class AgpTableConfig {
+  @Type(() => AgpColumn)
+  public columns: AgpColumn[];
+
+  public defaultDataset: string;
+  public pageSize: number;
+}
+
+export class AgpColumn {
+  @Type(() => AgpColumn)
+  public columns: AgpColumn[];
 
   public id: string;
   public displayName: string;
@@ -11,7 +19,7 @@ export class Column {
   public clickable: string | null;
   public meta: string | null;
 
-  public parent?: Column = null;
+  public parent?: AgpColumn = null;
   public gridColumn?: string = null;
   public gridRow?: string = null;
   public depth?: number = null;
@@ -40,17 +48,17 @@ export class Column {
     }
   }
 
-  public get visibleChildren(): Column[] {
+  public get visibleChildren(): AgpColumn[] {
     return this.columns.filter(column => column.visibility);
   }
 
-  public static leaves(columns: Column[], parent?: Column, depth: number = 1): Column[] {
-    const result: Column[] = [];
+  public static leaves(columns: AgpColumn[], parent?: AgpColumn, depth: number = 1): AgpColumn[] {
+    const result: AgpColumn[] = [];
     for (const column of columns.filter(c => c.visibility)) {
       column.parent = parent === null || parent === undefined ? null : parent;
       column.depth = depth;
       if (column.visibleChildren.length > 0) {
-        result.push(...Column.leaves(column.visibleChildren, column, depth + 1));
+        result.push(...AgpColumn.leaves(column.visibleChildren, column, depth + 1));
       } else {
         result.push(column);
       }
@@ -58,8 +66,8 @@ export class Column {
     return result;
   }
 
-  public get leaves(): Column[] {
-    const result: Column[] = [];
+  public get leaves(): AgpColumn[] {
+    const result: AgpColumn[] = [];
     for (const column of this.visibleChildren) {
       if (column.columns.length > 0) {
         result.push(...column.leaves);
@@ -70,19 +78,19 @@ export class Column {
     return result;
   }
 
-  public static calculateGridRow(column: Column, depth: number): void {
+  public static calculateGridRow(column: AgpColumn, depth: number): void {
     if (column.gridRow !== null) {
       return;
     }
     if (column.parent !== null) {
       column.gridRow = column.parent.parent !== null ? depth.toString() : `2 / ${depth + 1}`;
-      Column.calculateGridRow(column.parent, depth - 1);
+      AgpColumn.calculateGridRow(column.parent, depth - 1);
     } else {
       column.gridRow = column.columns.length !== 0 ? '1' : `1 / ${depth + 1}`;
     }
   }
 
-  public static calculateGridColumn(column: Column): void {
+  public static calculateGridColumn(column: AgpColumn): void {
     const leaves = column.leaves.filter(c => c.visibility);
     if (leaves.length === 0) {
       return;
@@ -93,15 +101,7 @@ export class Column {
     }
     column.gridColumn = `${leaves[0].gridColumn} / ${endColIdx}`;
     for (const child of column.visibleChildren.filter(col => col.columns.length > 0)) {
-      Column.calculateGridColumn(child);
+      AgpColumn.calculateGridColumn(child);
     }
   }
-}
-
-export class AgpTableConfig {
-  @Type(() => Column)
-  public columns: Column[];
-
-  public defaultDataset: string;
-  public pageSize: number;
 }

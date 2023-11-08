@@ -7,7 +7,7 @@ import { MultipleSelectMenuComponent } from 'app/multiple-select-menu/multiple-s
 import { SortingButtonsComponent } from 'app/sorting-buttons/sorting-buttons.component';
 import { debounceTime, distinctUntilChanged, take, tap } from 'rxjs/operators';
 import { Subject, Subscription, zip } from 'rxjs';
-import { AgpTableConfig, Column } from './autism-gene-profiles-table';
+import { AgpTableConfig, AgpColumn } from './autism-gene-profiles-table';
 import { AgpTableService } from './autism-gene-profiles-table.service';
 import { environment } from 'environments/environment';
 
@@ -31,7 +31,7 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
   public modalPosition = {top: 0, left: 0};
   public showKeybinds = false;
 
-  public leaves: Column[];
+  public leaves: AgpColumn[];
   public genes = [];
   public shownRows: number[] = []; // indexes
   public highlightedGenes: Set<string> = new Set();
@@ -160,19 +160,19 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   public calculateHeaderLayout(): void {
-    this.leaves = Column.leaves(this.config.columns);
+    this.leaves = AgpColumn.leaves(this.config.columns);
     this.nothingFoundWidth = (this.leaves.length * 110) + 40; // must match .table-row values
     let columnIdx = 0;
     const maxDepth: number = Math.max(...this.leaves.map(leaf => leaf.depth));
 
     for (const leaf of this.leaves) {
       leaf.gridColumn = (columnIdx + 1).toString();
-      Column.calculateGridRow(leaf, maxDepth);
+      AgpColumn.calculateGridRow(leaf, maxDepth);
       columnIdx++;
     }
 
     for (const column of this.config.columns) {
-      Column.calculateGridColumn(column);
+      AgpColumn.calculateGridColumn(column);
     }
   }
 
@@ -200,7 +200,7 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
       });
   }
 
-  public openDropdown(column: Column, $event): void {
+  public openDropdown(column: AgpColumn, $event): void {
     $event.stopPropagation(); // stop propagation to avoid triggering sort
 
     if (this.ngbDropdownMenu.dropdown._open) {
@@ -295,7 +295,7 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
     }
   }
 
-  public handleCellClick($event, row, column: Column): void {
+  public handleCellClick($event, row, column: AgpColumn): void {
     const linkClick: boolean = $event.target.classList.contains('clickable');
     const geneSymbol = row[this.geneSymbolColumnId] as string;
 
