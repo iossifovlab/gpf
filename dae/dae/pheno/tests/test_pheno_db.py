@@ -105,7 +105,7 @@ def test_get_people_measure_values_correct_values(fake_phenotype_data):
 
 
 def test_split_into_groups(fake_phenotype_data):
-    measures = [f"measure_{i}" for i in range (1, 101)]
+    measures = [f"measure_{i}" for i in range(1, 101)]
     groups = fake_phenotype_data._split_measures_into_groups(measures)
     assert len(groups) == 2
     assert len(groups[0]) == 60
