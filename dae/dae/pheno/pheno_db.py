@@ -1,4 +1,5 @@
 # pylint: disable=too-many-lines
+from __future__ import annotations
 import os
 import math
 import logging
@@ -8,6 +9,7 @@ from abc import ABC, abstractmethod
 
 from collections import defaultdict
 from itertools import chain
+from box import Box
 
 import pandas as pd
 from sqlalchemy.sql import select, text, Select
@@ -27,7 +29,7 @@ from dae.utils.helpers import isnan
 logger = logging.getLogger(__name__)
 
 
-def get_pheno_db_dir(dae_config):
+def get_pheno_db_dir(dae_config: Optional[Box]) -> str:
     """Return the directory where phenotype data configurations are located."""
     if dae_config is not None:
         if dae_config.phenotype_data is None or \
@@ -43,7 +45,7 @@ def get_pheno_db_dir(dae_config):
     return pheno_data_dir
 
 
-def get_pheno_browser_images_dir(dae_config=None):
+def get_pheno_browser_images_dir(dae_config: Optional[Box] = None) -> str:
     pheno_db_dir = os.environ.get(
         "DAE_PHENODB_DIR",
         get_pheno_db_dir(dae_config)
@@ -67,7 +69,7 @@ class Instrument:
         self.instrument_name = name
         self.measures: Dict[str, Measure] = {}
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"Instrument({self.instrument_name}, {len(self.measures)})"
 
 
@@ -107,7 +109,7 @@ class Measure:
         self.min_value = None
         self.max_value = None
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"Measure({self.measure_id}, " \
             f"{self.measure_type}, {self.values_domain})"
 
@@ -130,7 +132,7 @@ class Measure:
         return domain_list
 
     @classmethod
-    def _from_record(cls, row):
+    def _from_record(cls, row: dict[str, Any]) -> Measure:
         """Create `Measure` object from pandas data frame row."""
         assert row["measure_type"] is not None
 
@@ -148,7 +150,7 @@ class Measure:
         return mes
 
     @classmethod
-    def from_json(cls, json):
+    def from_json(cls, json: dict[str, Any]) -> Measure:
         """Create `Measure` object from a JSON representation."""
         assert json["measureType"] is not None
 
@@ -164,7 +166,7 @@ class Measure:
 
         return mes
 
-    def to_json(self):
+    def to_json(self) -> dict[str, Any]:
         """Return measure description in JSON freindly format."""
         result: Dict[str, Any] = {}
 
@@ -206,15 +208,15 @@ class PhenotypeData(ABC):
     def instruments(self) -> Dict[str, Instrument]:
         return self._instruments
 
-    def get_instruments(self):
-        return self.instruments.keys()
+    def get_instruments(self) -> list[str]:
+        return cast(list[str], self.instruments.keys())
 
     @abstractmethod
-    def get_regressions(self):
+    def get_regressions(self) -> dict[str, Any]:
         pass
 
     @abstractmethod
-    def get_measures_info(self):
+    def get_measures_info(self) -> dict[str, Any]:
         pass
 
     @abstractmethod
@@ -262,7 +264,9 @@ class PhenotypeData(ABC):
         return persons
 
     @abstractmethod
-    def search_measures(self, instrument, search_term):
+    def search_measures(
+        self, instrument: Optional[str], search_term: Optional[str]
+    ) -> Generator[dict[str, Any], None, None]:
         pass
 
     def has_measure(self, measure_id: str) -> bool:
@@ -310,7 +314,7 @@ class PhenotypeData(ABC):
 
         return result
 
-    def get_measure_description(self, measure_id):
+    def get_measure_description(self, measure_id: str) -> dict[str, Any]:
         """Construct and return a measure description."""
         measure = self.measures[measure_id]
 
@@ -506,11 +510,12 @@ class PhenotypeData(ABC):
         return measure_ids
 
     def get_instrument_values_df(
-            self, instrument_name,
-            person_ids=None,
-            family_ids=None,
-            role=None,
-            measure_ids=None):
+            self,
+            instrument_name: str,
+            person_ids: Optional[Iterable[str]] = None,
+            family_ids: Optional[Iterable[str]] = None,
+            role: Optional[Iterable[Role]] = None,
+            measure_ids: Optional[Iterable[str]] = None) -> pd.DataFrame:
         """
         Return a dataframe with values for measures in given instrument.
 
@@ -524,11 +529,12 @@ class PhenotypeData(ABC):
         return res
 
     def get_instrument_values(
-            self, instrument_name,
-            person_ids=None,
-            family_ids=None,
-            role=None,
-            measure_ids=None):
+        self, instrument_name: str,
+        person_ids: Optional[Iterable[str]] = None,
+        family_ids: Optional[Iterable[str]] = None,
+        role: Optional[Iterable[Role]] = None,
+        measure_ids: Optional[Iterable[str]] = None
+    ) -> Dict[str, Dict[str, Any]]:
         """
         Return a dictionary with values for measures in given instrument.
 
@@ -599,7 +605,11 @@ class PhenotypeStudy(PhenotypeData):
         self.families = self._load_families()
         self._instruments = self._load_instruments()
 
-    def _get_measures_df(self, instrument=None, measure_type=None):
+    def _get_measures_df(
+        self,
+        instrument: Optional[str] = None,
+        measure_type: Optional[str] = None
+    ) -> pd.DataFrame:
         """
         Return data frame containing measures information.
 
@@ -659,7 +669,7 @@ class PhenotypeStudy(PhenotypeData):
         res_df = df[df_columns]
         return res_df
 
-    def _load_instruments(self):
+    def _load_instruments(self) -> dict[str, Instrument]:
         instruments = {}
 
         df = self._get_measures_df()
@@ -681,7 +691,7 @@ class PhenotypeStudy(PhenotypeData):
 
         return instruments
 
-    def _load_families(self):
+    def _load_families(self) -> FamiliesData:
         families = defaultdict(list)
         persons = self.get_persons()
         for person in list(persons.values()):
@@ -1252,7 +1262,9 @@ class PhenotypeGroup(PhenotypeData):
             )
         return result
 
-    def search_measures(self, instrument, search_term):
+    def search_measures(
+        self, instrument: Optional[str], search_term: Optional[str]
+    ) -> Generator[dict[str, Any], None, None]:
         generators = [
             pheno.search_measures(instrument, search_term)
             for pheno in self.phenotype_data

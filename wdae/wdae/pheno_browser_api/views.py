@@ -2,12 +2,15 @@ import logging
 
 import csv
 from io import StringIO
+from typing import Generator, Union, cast
 
+from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework import status
 from django.http.response import StreamingHttpResponse
 
 from query_base.query_base import QueryDatasetView
+from studies.study_wrapper import RemoteStudyWrapper, StudyWrapper
 
 from utils.streaming_response_util import iterator_to_json
 
@@ -16,13 +19,13 @@ logger = logging.getLogger(__name__)
 
 
 class PhenoBrowserBaseView(QueryDatasetView):
-    def __init__(self):
-        super(PhenoBrowserBaseView, self).__init__()
+    def __init__(self) -> None:
+        super().__init__()
         self.pheno_config = self.gpf_instance.get_phenotype_db_config()
 
 
 class PhenoConfigView(PhenoBrowserBaseView):
-    def get(self, request):
+    def get(self, request: Request) -> Response:
         logger.debug(f"pheno_config: {self.pheno_config}")
 
         if "db_name" not in request.query_params:
@@ -39,7 +42,7 @@ class PhenoConfigView(PhenoBrowserBaseView):
 
 
 class PhenoInstrumentsView(QueryDatasetView):
-    def get(self, request):
+    def get(self, request: Request) -> Response:
         if "dataset_id" not in request.query_params:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         dataset_id = request.query_params["dataset_id"]
@@ -57,7 +60,7 @@ class PhenoInstrumentsView(QueryDatasetView):
 
 
 class PhenoMeasuresInfoView(PhenoBrowserBaseView):
-    def get(self, request):
+    def get(self, request: Request) -> Response:
         if "dataset_id" not in request.query_params:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         dataset_id = request.query_params["dataset_id"]
@@ -72,7 +75,7 @@ class PhenoMeasuresInfoView(PhenoBrowserBaseView):
 
 
 class PhenoMeasureDescriptionView(PhenoBrowserBaseView):
-    def get(self, request):
+    def get(self, request: Request) -> Response:
         if "dataset_id" not in request.query_params:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         dataset_id = request.query_params["dataset_id"]
@@ -98,7 +101,7 @@ class PhenoMeasureDescriptionView(PhenoBrowserBaseView):
 
 
 class PhenoMeasuresView(PhenoBrowserBaseView):
-    def get(self, request):
+    def get(self, request: Request) -> Response:
         if "dataset_id" not in request.query_params:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         dataset_id = request.query_params["dataset_id"]
@@ -130,7 +133,11 @@ class PhenoMeasuresView(PhenoBrowserBaseView):
 
 class PhenoMeasuresDownload(QueryDatasetView):
 
-    def csv_value_iterator(self, dataset, measure_ids):
+    def csv_value_iterator(
+        self,
+        dataset: Union[RemoteStudyWrapper, StudyWrapper],
+        measure_ids: list[str]
+    ) -> Generator[str, None, None]:
         header = ["person_id"] + measure_ids
         buffer = StringIO()
         writer = csv.writer(buffer, delimiter=",")
@@ -153,7 +160,7 @@ class PhenoMeasuresDownload(QueryDatasetView):
 
         buffer.close()
 
-    def post(self, request):
+    def post(self, request: Request) -> Response:
         data = request.data
         if "dataset_id" not in data:
             return Response(status=status.HTTP_400_BAD_REQUEST)
@@ -181,8 +188,11 @@ class PhenoMeasuresDownload(QueryDatasetView):
                 return Response(status=status.HTTP_400_BAD_REQUEST)
 
         if dataset.is_remote:
-            values_iterator = dataset.phenotype_data.get_people_measure_values(
-                measure_ids
+            values_iterator = cast(
+                Generator[str, None, None],
+                dataset.phenotype_data.get_people_measure_values(
+                    measure_ids
+                )
             )
         else:
             values_iterator = self.csv_value_iterator(dataset, measure_ids)
