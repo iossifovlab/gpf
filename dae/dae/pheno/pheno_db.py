@@ -9,9 +9,6 @@ from abc import ABC, abstractmethod
 from collections import defaultdict
 from itertools import chain
 
-import csv
-from io import StringIO
-
 import pandas as pd
 from sqlalchemy.sql import select, text
 from sqlalchemy import not_, desc, Column
@@ -544,17 +541,17 @@ class PhenotypeData(ABC):
         return self.get_values(measure_ids, person_ids, family_ids, role)
 
     @abstractmethod
-    def get_values_streaming_csv(
+    def get_people_measure_values(
         self,
         measure_ids: list[str],
         person_ids: Optional[list[str]] = None,
         family_ids: Optional[list[str]] = None,
         roles: Optional[list[str]] = None,
-    ) -> Generator[str, None, None]:
+    ) -> Generator[dict[str, Any], None, None]:
         """
-        Collect and format the values of the given measures in CSV format.
+        Collect and format the values of the given measures in dict format.
 
-        Yields lines.
+        Yields a dict representing every row.
 
         `measure_ids` -- list of measure ids which values should be returned.
 
@@ -937,17 +934,18 @@ class PhenotypeStudy(PhenotypeData):
         for i in range(groups_count):
             begin = i * group_size
             end = (i + 1) * group_size
-            measure_groups.append(measure_ids[begin:end])
+            group = measure_ids[begin:end]
+            if len(group) > 0:
+                measure_groups.append(group)
         return measure_groups
 
-
-    def get_values_streaming_csv(
+    def get_people_measure_values(
         self,
         measure_ids: list[str],
         person_ids: Optional[list[str]] = None,
         family_ids: Optional[list[str]] = None,
         roles: Optional[list[str]] = None,
-    ) -> Generator[str, None, None]:
+    ) -> Generator[dict[str, Any], None, None]:
         assert isinstance(measure_ids, list)
         assert len(measure_ids) >= 1
         assert all(self.has_measure(m) for m in measure_ids)
@@ -961,15 +959,6 @@ class PhenotypeStudy(PhenotypeData):
             for row in results:
                 measure_id_map[row.measure_id] = row.id
 
-        header = ["person_id"] + measure_ids
-
-        buffer = StringIO()
-        writer = csv.writer(buffer, delimiter=",")
-        writer.writerow(header)
-        yield buffer.getvalue()
-        buffer.seek(0)
-        buffer.truncate(0)
-
         measure_groups = self._split_measures_into_groups(measure_ids)
 
         queries = []
@@ -982,48 +971,36 @@ class PhenotypeStudy(PhenotypeData):
                 roles
             ))
 
-
         with self.db.pheno_engine.connect() as connection:
             query_results = []
             for query in queries:
                 query_results.append(connection.execute(query))
             for row in query_results[0]:
-                output = [row.person_id]
-                skip = True
                 row = row._mapping  # pylint: disable=protected-access
+                output = {**row}
+                skip = True
                 for measure_id in measure_groups[0]:
-                    value = row[measure_id]
-                    if value is None or value == "":
-                        value = "-"
-                    else:
+                    if row[measure_id] is not None:
                         skip = False
-                    output.append(value)
                 if len(query_results) > 1:
                     for i in range(1, len(measure_groups)):
                         # pylint: disable=protected-access
                         try:
                             row = next(query_results[i])._mapping
+                            assert row["person_id"] == output["person_id"]
                         except StopIteration:
                             logger.error(
                                 "Subquery %s has different length",
                                 i
                             )
                             continue
+                        output.update({**row})
                         for measure_id in measure_groups[i]:
-                            value = row[measure_id]
-                            if value is None or value == "":
-                                value = "-"
-                            else:
+                            if row[measure_id] is not None:
                                 skip = False
-                            output.append(value)
                 if skip:
                     continue
-                writer.writerow(output)
-                yield buffer.getvalue()
-                buffer.seek(0)
-                buffer.truncate(0)
-
-        buffer.close()
+                yield output
 
     def get_regressions(self) -> dict[str, Any]:
         return cast(dict[str, Any], self.db.regression_display_names_with_ids)
@@ -1283,7 +1260,7 @@ class PhenotypeGroup(PhenotypeData):
         measures = chain(*generators)
         yield from measures
 
-    def get_values_streaming_csv(
+    def get_people_measure_values(
         self,
         measure_ids: list[str],
         person_ids: Optional[list[str]] = None,
