@@ -105,7 +105,7 @@ class SamochaEnrichmentBackground(BaseEnrichmentBackground):
         male_expected = p_boys * children_stats.male
 
         p_girls = (df["F"] * df[eff]).sum()
-        female_expected = p_boys * children_stats.female
+        female_expected = p_girls * children_stats.female
 
         expected = p_boys * (
             children_stats.male + children_stats.unspecified) + female_expected
