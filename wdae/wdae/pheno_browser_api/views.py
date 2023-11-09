@@ -1,5 +1,8 @@
 import logging
 
+import csv
+from io import StringIO
+
 from rest_framework.response import Response
 from rest_framework import status
 from django.http.response import StreamingHttpResponse
@@ -126,6 +129,30 @@ class PhenoMeasuresView(PhenoBrowserBaseView):
 
 
 class PhenoMeasuresDownload(QueryDatasetView):
+
+    def csv_value_iterator(self, dataset, measure_ids):
+        header = ["person_id"] + measure_ids
+        buffer = StringIO()
+        writer = csv.writer(buffer, delimiter=",")
+        writer.writerow(header)
+        yield buffer.getvalue()
+        buffer.seek(0)
+        buffer.truncate(0)
+
+        values_iterator = dataset.phenotype_data.get_people_measure_values(
+            measure_ids)
+
+        for values_dict in values_iterator:
+            output = []
+            for col in header:
+                output.append(values_dict[col])
+            writer.writerow(output)
+            yield buffer.getvalue()
+            buffer.seek(0)
+            buffer.truncate(0)
+
+        buffer.close()
+
     def post(self, request):
         data = request.data
         if "dataset_id" not in data:
@@ -153,8 +180,13 @@ class PhenoMeasuresDownload(QueryDatasetView):
             if not set(measure_ids).issubset(set(instrument_measures)):
                 return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        values_iterator = dataset.phenotype_data.get_values_streaming_csv(
-            measure_ids)
+        if dataset.is_remote:
+            values_iterator = dataset.phenotype_data.get_people_measure_values(
+                measure_ids
+            )
+        else:
+            values_iterator = self.csv_value_iterator(dataset, measure_ids)
+
         response = StreamingHttpResponse(
             values_iterator, content_type="text/csv")
 

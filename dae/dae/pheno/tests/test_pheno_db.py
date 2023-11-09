@@ -31,6 +31,13 @@ def str_check(str_, expected_count, expected_cols):
     assert len(values_lines) == expected_count
 
 
+def dict_list_check(dict_list, expected_count, expected_cols):
+    assert isinstance(dict_list, list)
+    for dict_ in dict_list:
+        assert set(dict_.keys()) == set(expected_cols)
+    assert len(dict_list) == expected_count
+
+
 def dict_check_measure(dict_, expected_count, *args):
     assert isinstance(dict_, dict)
     for _id, measure in dict_.items():
@@ -66,31 +73,96 @@ def test_get_values(fake_phenotype_data, query_cols, get, check):
 
 
 @pytest.mark.parametrize("query_cols", [(["i1.m1"]), (["i1.m1", "i1.m2"])])
-def test_get_values_streaming_csv(fake_phenotype_data, query_cols):
-    result_it = fake_phenotype_data.get_values_streaming_csv(query_cols)
-    result = "".join(list(result_it))
-    str_check(result, 195, query_cols)
+def test_get_people_measure_values(fake_phenotype_data, query_cols):
+    result_it = fake_phenotype_data.get_people_measure_values(query_cols)
+    result = list(result_it)
+    dict_list_check(result, 195, ["person_id"] + query_cols)
 
-    result_it = fake_phenotype_data.get_values_streaming_csv(
+    result_it = fake_phenotype_data.get_people_measure_values(
         query_cols, ["f20.p1"])
-    result = "".join(list(result_it))
-    str_check(result, 1, query_cols)
+    result = list(result_it)
+    dict_list_check(result, 1, ["person_id"] + query_cols)
 
-    result_it = fake_phenotype_data.get_values_streaming_csv(
+    result_it = fake_phenotype_data.get_people_measure_values(
         query_cols, ["f20.p1", "f21.p1"])
-    result = "".join(list(result_it))
-    str_check(result, 2, query_cols)
+    result = list(result_it)
+    dict_list_check(result, 2, ["person_id"] + query_cols)
 
-    result_it = fake_phenotype_data.get_values_streaming_csv(
+    result_it = fake_phenotype_data.get_people_measure_values(
         query_cols, roles=["prb"])
-    result = "".join(list(result_it))
-    str_check(result, 39, query_cols)
+    result = list(result_it)
+    dict_list_check(result, 39, ["person_id"] + query_cols)
 
 
-def test_get_values_streaming_csv_correct_values(fake_phenotype_data):
-    result_list = list(fake_phenotype_data.get_values_streaming_csv(
+def test_get_people_measure_values_correct_values(fake_phenotype_data):
+    result_list = list(fake_phenotype_data.get_people_measure_values(
         ["i1.m1", "i1.m2"], roles=["prb"]))
-    assert result_list[-1] == "f1.p1,34.76285793898369,48.44644402952317\r\n"
+    assert result_list[-1] == {
+        "person_id": "f1.p1",
+        "i1.m1": 34.76285793898369,
+        "i1.m2": 48.44644402952317
+    }
+
+
+def test_split_into_groups(fake_phenotype_data):
+    measures = [f"measure_{i}" for i in range(1, 101)]
+    groups = fake_phenotype_data._split_measures_into_groups(measures)
+    assert len(groups) == 2
+    assert len(groups[0]) == 60
+    assert groups[0][0] == "measure_1"
+    assert groups[0][-1] == "measure_60"
+    assert len(groups[1]) == 40
+    assert groups[1][0] == "measure_61"
+    assert groups[1][-1] == "measure_100"
+
+    groups = fake_phenotype_data._split_measures_into_groups(
+        measures, group_size=25
+    )
+    assert len(groups) == 4
+    assert len(groups[0]) == 25
+    assert groups[0][0] == "measure_1"
+    assert groups[0][-1] == "measure_25"
+    assert len(groups[1]) == 25
+    assert groups[1][0] == "measure_26"
+    assert groups[1][-1] == "measure_50"
+    assert len(groups[2]) == 25
+    assert groups[2][0] == "measure_51"
+    assert groups[2][-1] == "measure_75"
+    assert len(groups[3]) == 25
+    assert groups[3][0] == "measure_76"
+    assert groups[3][-1] == "measure_100"
+
+
+def test_subquery_generation(fake_phenotype_data):
+    fake_measures_ids = {
+        "i1.m1": "1",
+        "i1.m2": "2"
+    }
+    query = str(fake_phenotype_data._build_measures_subquery(
+        fake_measures_ids,
+        fake_measures_ids.keys(),
+        person_ids=["person1", "person2"],
+        family_ids=["family1"],
+        roles=["unaffected"]
+    ))
+
+    print(query)
+    expected = (
+        "SELECT person.person_id, \"i1.m1_value\".value AS 'i1.m1', "
+        "\"i1.m2_value\".value AS 'i1.m2' \n"
+        "FROM person JOIN family ON family.id = person.family_id "
+        'LEFT OUTER JOIN value_continuous as "i1.m1_value" '
+        'ON "i1.m1_value".person_id = person.id '
+        'AND "i1.m1_value".measure_id = 1 '
+        'LEFT OUTER JOIN value_continuous as "i1.m2_value" '
+        'ON "i1.m2_value".person_id = person.id '
+        'AND "i1.m2_value".measure_id = 2 \n'
+        "WHERE person.role IN (__[POSTCOMPILE_role_1]) "
+        "AND person.person_id IN (__[POSTCOMPILE_person_id_1]) "
+        "AND family.family_id IN (__[POSTCOMPILE_family_id_1]) "
+        "ORDER BY person.person_id DESC"
+    )
+    assert query == expected
 
 
 @pytest.mark.parametrize(

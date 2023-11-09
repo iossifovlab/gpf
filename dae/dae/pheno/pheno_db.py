@@ -9,12 +9,9 @@ from abc import ABC, abstractmethod
 from collections import defaultdict
 from itertools import chain
 
-import csv
-from io import StringIO
-
 import pandas as pd
-from sqlalchemy.sql import select, text
-from sqlalchemy import not_, desc
+from sqlalchemy.sql import select, text, Select
+from sqlalchemy import not_, desc, Column
 
 from dae.pedigrees.family import Person
 from dae.pedigrees.families_data import FamiliesData
@@ -280,7 +277,7 @@ class PhenotypeData(ABC):
     def get_measures(
             self,
             instrument_name: Optional[str] = None,
-            measure_type: Optional[str] = None) -> Dict[str, Measure]:
+            measure_type: Optional[MeasureType] = None) -> Dict[str, Measure]:
         """
         Return a dictionary of measures objects.
 
@@ -304,7 +301,7 @@ class PhenotypeData(ABC):
         if measure_type is not None:
             measure_type = MeasureType.from_str(measure_type)
 
-        for instrument_name, instrument in instruments.items():
+        for _, instrument in instruments.items():
             for measure in instrument.measures.values():
                 if measure_type is not None and \
                         measure.measure_type != measure_type:
@@ -493,7 +490,7 @@ class PhenotypeData(ABC):
             value_df.set_index("person_id"),
             on="person_id",
             how="right",
-            rsuffix="_val")  # type: ignore
+            rsuffix="_val")
         df = df.set_index("person_id")
         df = df.reset_index()
 
@@ -544,17 +541,17 @@ class PhenotypeData(ABC):
         return self.get_values(measure_ids, person_ids, family_ids, role)
 
     @abstractmethod
-    def get_values_streaming_csv(
+    def get_people_measure_values(
         self,
         measure_ids: list[str],
         person_ids: Optional[list[str]] = None,
         family_ids: Optional[list[str]] = None,
         roles: Optional[list[str]] = None,
-    ) -> Generator[str, None, None]:
+    ) -> Generator[dict[str, Any], None, None]:
         """
-        Collect and format the values of the given measures in CSV format.
+        Collect and format the values of the given measures in dict format.
 
-        Yields lines.
+        Yields a dict representing every row.
 
         `measure_ids` -- list of measure ids which values should be returned.
 
@@ -857,7 +854,7 @@ class PhenotypeStudy(PhenotypeData):
         """
         assert isinstance(measure_ids, list)
         assert len(measure_ids) >= 1
-        assert all([self.has_measure(m) for m in measure_ids])
+        assert all(self.has_measure(m) for m in measure_ids)
 
         dfs = [
             self.get_measure_values_df(
@@ -877,88 +874,133 @@ class PhenotypeStudy(PhenotypeData):
 
         return res_df
 
-    def get_values_streaming_csv(
+    def _build_measures_subquery(
         self,
+        measure_id_map: dict[str, str],
         measure_ids: list[str],
         person_ids: Optional[list[str]] = None,
         family_ids: Optional[list[str]] = None,
         roles: Optional[list[str]] = None,
-    ) -> Generator[str, None, None]:
-        assert isinstance(measure_ids, list)
-        assert len(measure_ids) >= 1
-        assert all(self.has_measure(m) for m in measure_ids)
-
-        columns = [
-            self.db.measure.c.measure_id,
-            self.db.person.c.person_id,
+    ) -> Select:
+        select_columns = [
+            self.db.person.c.person_id
         ]
-        for measure_id in measure_ids:
-            assert measure_id in self.measures, measure_id
-            measure = self.measures[measure_id]
+        for m_id in measure_ids:
+            measure = self.measures[m_id]
             measure_type = measure.measure_type
             if measure_type is None:
                 raise ValueError(
                     f"bad measure: {measure.measure_id}; unknown value type"
                 )
-        value_tables = [
-            self.db.get_value_table(MeasureType.categorical),
-            self.db.get_value_table(MeasureType.continuous),
-            self.db.get_value_table(MeasureType.ordinal),
-            self.db.get_value_table(MeasureType.raw)
-        ]
+            select_columns.append(cast(Column[Any], text(
+                f"\"{m_id}_value\".value AS '{m_id}'"
+            )))
+        query = select(*select_columns).select_from(
+            self.db.person.join(self.db.family)
+        )
 
-        header = ["person_id"] + measure_ids
-        field_indexes = {field: index for index, field in enumerate(header)}
-
-        buffer = StringIO()
-        writer = csv.writer(buffer, delimiter=",")
-        writer.writerow(header)
-        yield buffer.getvalue()
-        buffer.seek(0)
-        buffer.truncate(0)
-
-        output = {}
-
-        for table in value_tables:
-            query = select(*columns, table.c.value)
-
-            join = (
-                self.db.family.join(self.db.person)
-                .join(table, isouter=True)
-                .join(self.db.measure)
+        for m_id in measure_ids:
+            db_id = measure_id_map[m_id]
+            measure = self.measures[m_id]
+            measure_type = self.measures[m_id].measure_type
+            measure_table = self.db.get_value_table(measure_type)
+            table_alias = f"{m_id}_value"
+            query = query.join(
+                text(f'{measure_table.name} as "{table_alias}"'),
+                text(
+                    f'"{table_alias}".person_id = person.id AND '
+                    f'"{table_alias}".measure_id = {db_id}'
+                ),
+                isouter=True
             )
 
-            query = query.select_from(join).where(
-                self.db.measure.c.measure_id.in_(measure_ids))
+        if roles is not None:
+            query = query.where(self.db.person.c.role.in_(roles))
+        if person_ids is not None:
+            query = query.where(self.db.person.c.person_id.in_(person_ids))
+        if family_ids is not None:
+            query = query.where(self.db.family.c.family_id.in_(family_ids))
 
-            if roles is not None:
-                query = query.where(self.db.person.c.role.in_(roles))
-            if person_ids is not None:
-                query = query.where(self.db.person.c.person_id.in_(person_ids))
-            if family_ids is not None:
-                query = query.where(self.db.family.c.family_id.in_(family_ids))
+        query = query.order_by(desc(self.db.person.c.person_id))
+        return query
 
-            query = query.order_by(desc(self.db.person.c.person_id))
+    def _split_measures_into_groups(
+        self, measure_ids: list[str], group_size: int = 60
+    ) -> list[list[str]]:
+        groups_count = int(len(measure_ids) / group_size) + 1
+        if (groups_count) == 1:
+            return [measure_ids]
+        measure_groups = []
+        for i in range(groups_count):
+            begin = i * group_size
+            end = (i + 1) * group_size
+            group = measure_ids[begin:end]
+            if len(group) > 0:
+                measure_groups.append(group)
+        return measure_groups
 
-            with self.db.pheno_engine.connect() as connection:
-                results = connection.execute(query)
-                for row in results:
-                    row = row._mapping  # pylint: disable=protected-access
-                    person_id = row["person_id"]
-                    if person_id not in output:
-                        output[person_id] = ["-"] * len(header)
-                        output[person_id][field_indexes["person_id"]] = \
-                            person_id
-                    output[person_id][field_indexes[row["measure_id"]]] = \
-                        row["value"]
+    def get_people_measure_values(
+        self,
+        measure_ids: list[str],
+        person_ids: Optional[list[str]] = None,
+        family_ids: Optional[list[str]] = None,
+        roles: Optional[list[str]] = None,
+    ) -> Generator[dict[str, Any], None, None]:
+        assert isinstance(measure_ids, list)
+        assert len(measure_ids) >= 1
+        assert all(self.has_measure(m) for m in measure_ids)
 
-        for value in output.values():
-            writer.writerow(value)
-            yield buffer.getvalue()
-            buffer.seek(0)
-            buffer.truncate(0)
-        buffer.close()
-        del output
+        measure_id_map = {m_id: None for m_id in measure_ids}
+        with self.db.pheno_engine.connect() as connection:
+            query = select(
+                self.db.measure.c.id, self.db.measure.c.measure_id
+            ).where(self.db.measure.c.measure_id.in_(measure_ids))
+            results = connection.execute(query)
+            for result_row in results:
+                measure_id_map[result_row.measure_id] = result_row.id
+
+        measure_groups = self._split_measures_into_groups(measure_ids)
+
+        queries = []
+        for group in measure_groups:
+            queries.append(self._build_measures_subquery(
+                cast(dict[str, str], measure_id_map),
+                group,
+                person_ids,
+                family_ids,
+                roles
+            ))
+
+        with self.db.pheno_engine.connect() as connection:
+            query_results = []
+            for query in queries:
+                query_results.append(connection.execute(query))
+            for result_row in query_results[0]:
+                row = result_row._mapping  # pylint: disable=protected-access
+                output = {**row}
+                skip = True
+                for measure_id in measure_groups[0]:
+                    if row[measure_id] is not None:
+                        skip = False
+                if len(query_results) > 1:
+                    for i in range(1, len(measure_groups)):
+                        # pylint: disable=protected-access
+                        try:
+                            row = next(query_results[i])._mapping
+                            assert row["person_id"] == output["person_id"]
+                        except StopIteration:
+                            logger.error(
+                                "Subquery %s has different length",
+                                i
+                            )
+                            continue
+                        output.update({**row})
+                        for measure_id in measure_groups[i]:
+                            if row[measure_id] is not None:
+                                skip = False
+                if skip:
+                    continue
+                yield output
 
     def get_regressions(self) -> dict[str, Any]:
         return cast(dict[str, Any], self.db.regression_display_names_with_ids)
@@ -1159,7 +1201,7 @@ class PhenotypeGroup(PhenotypeData):
             roles: Optional[Iterable[Role]] = None,
             default_filter: str = "apply") -> pd.DataFrame:
 
-        assert all([self.has_measure(mid) for mid in measure_ids]), measure_ids
+        assert all(self.has_measure(mid) for mid in measure_ids), measure_ids
 
         dfs = []
         for pheno in self.phenotype_data:
@@ -1218,13 +1260,13 @@ class PhenotypeGroup(PhenotypeData):
         measures = chain(*generators)
         yield from measures
 
-    def get_values_streaming_csv(
+    def get_people_measure_values(
         self,
         measure_ids: list[str],
         person_ids: Optional[list[str]] = None,
         family_ids: Optional[list[str]] = None,
         roles: Optional[list[str]] = None,
-    ) -> Generator[str, None, None]:
+    ) -> Generator[dict[str, Any], None, None]:
         raise NotImplementedError()
 
 
