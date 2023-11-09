@@ -9,8 +9,10 @@ gpf-table-view-header-cell {
 
 gpf-table-view-cell {
   display: table-cell;
-  overflow-wrap: break-word;
+  height: 111px;
+  max-height: 111px;
   border: 1px solid #ddd;
+  overflow-wrap: break-word;
   overflow: hidden;
   padding: 8px;
   text-align: center;

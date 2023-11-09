@@ -1,6 +1,6 @@
 import {
   ContentChild, ViewChildren, ViewChild, HostListener, Input, Component,
-  ContentChildren, QueryList, OnChanges, AfterViewChecked, ChangeDetectorRef, ElementRef
+  ContentChildren, QueryList, AfterViewChecked, ElementRef, ChangeDetectorRef
 } from '@angular/core';
 import { GpfTableColumnComponent } from './component/column.component';
 import { GpfTableSubheaderComponent } from './component/subheader.component';
@@ -18,7 +18,7 @@ export class SortInfo {
   templateUrl: './table.component.html',
   styleUrls: ['./table.component.css'],
 })
-export class GpfTableComponent implements OnChanges, AfterViewChecked {
+export class GpfTableComponent implements AfterViewChecked {
   @ViewChild('table') public tableViewChild: any;
   @ViewChild('header', { read: ElementRef }) public tableHeader: ElementRef;
   @ViewChildren('rows') public rowViewChildren: QueryList<any>;
@@ -41,10 +41,6 @@ export class GpfTableComponent implements OnChanges, AfterViewChecked {
   public showLegend: boolean;
 
   public constructor(private cdr: ChangeDetectorRef) { }
-
-  public ngOnChanges(): void {
-    this.tableData = this.getVisibleData();
-  }
 
   public ngAfterViewChecked(): void {
     if (this.tableData.length < (this.getScrollIndices()[1] - this.getScrollIndices()[0])) {
