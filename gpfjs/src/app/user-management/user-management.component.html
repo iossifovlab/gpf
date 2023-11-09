@@ -19,7 +19,10 @@
               [ngModel]="searchText"
               spellcheck="false" />
 
-            <button id="create-user-form-button" class="btn btn-primary" (click)="createMode = !createMode"
+            <button
+              id="create-user-form-button"
+              class="btn btn-primary"
+              (click)="createMode ? cancelCreation() : (createMode = true)"
               >Create user</button
             >
           </div>
@@ -89,7 +92,10 @@
               [ngModel]="searchText"
               spellcheck="false" />
 
-            <button id="create-group-form-button" class="btn btn-primary" (click)="createMode = !createMode"
+            <button
+              id="create-group-form-button"
+              class="btn btn-primary"
+              (click)="createMode ? cancelCreation() : (createMode = true)"
               >Create group</button
             >
           </div>
