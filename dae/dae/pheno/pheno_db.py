@@ -277,7 +277,7 @@ class PhenotypeData(ABC):
     def get_measures(
             self,
             instrument_name: Optional[str] = None,
-            measure_type: Optional[str] = None) -> Dict[str, Measure]:
+            measure_type: Optional[MeasureType] = None) -> Dict[str, Measure]:
         """
         Return a dictionary of measures objects.
 
@@ -301,7 +301,7 @@ class PhenotypeData(ABC):
         if measure_type is not None:
             measure_type = MeasureType.from_str(measure_type)
 
-        for instrument_name, instrument in instruments.items():
+        for _, instrument in instruments.items():
             for measure in instrument.measures.values():
                 if measure_type is not None and \
                         measure.measure_type != measure_type:
@@ -490,7 +490,7 @@ class PhenotypeData(ABC):
             value_df.set_index("person_id"),
             on="person_id",
             how="right",
-            rsuffix="_val")  # type: ignore
+            rsuffix="_val")
         df = df.set_index("person_id")
         df = df.reset_index()
 
@@ -854,7 +854,7 @@ class PhenotypeStudy(PhenotypeData):
         """
         assert isinstance(measure_ids, list)
         assert len(measure_ids) >= 1
-        assert all([self.has_measure(m) for m in measure_ids])
+        assert all(self.has_measure(m) for m in measure_ids)
 
         dfs = [
             self.get_measure_values_df(
@@ -1201,7 +1201,7 @@ class PhenotypeGroup(PhenotypeData):
             roles: Optional[Iterable[Role]] = None,
             default_filter: str = "apply") -> pd.DataFrame:
 
-        assert all([self.has_measure(mid) for mid in measure_ids]), measure_ids
+        assert all(self.has_measure(mid) for mid in measure_ids), measure_ids
 
         dfs = []
         for pheno in self.phenotype_data:
@@ -1266,7 +1266,7 @@ class PhenotypeGroup(PhenotypeData):
         person_ids: Optional[list[str]] = None,
         family_ids: Optional[list[str]] = None,
         roles: Optional[list[str]] = None,
-    ) -> Generator[str, None, None]:
+    ) -> Generator[dict[str, Any], None, None]:
         raise NotImplementedError()
 
 
