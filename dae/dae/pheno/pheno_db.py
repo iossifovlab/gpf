@@ -10,7 +10,7 @@ from collections import defaultdict
 from itertools import chain
 
 import pandas as pd
-from sqlalchemy.sql import select, text
+from sqlalchemy.sql import select, text, Select
 from sqlalchemy import not_, desc, Column
 
 from dae.pedigrees.family import Person
@@ -881,7 +881,7 @@ class PhenotypeStudy(PhenotypeData):
         person_ids: Optional[list[str]] = None,
         family_ids: Optional[list[str]] = None,
         roles: Optional[list[str]] = None,
-    ):
+    ) -> Select:
         select_columns = [
             self.db.person.c.person_id
         ]
@@ -956,8 +956,8 @@ class PhenotypeStudy(PhenotypeData):
                 self.db.measure.c.id, self.db.measure.c.measure_id
             ).where(self.db.measure.c.measure_id.in_(measure_ids))
             results = connection.execute(query)
-            for row in results:
-                measure_id_map[row.measure_id] = row.id
+            for result_row in results:
+                measure_id_map[result_row.measure_id] = result_row.id
 
         measure_groups = self._split_measures_into_groups(measure_ids)
 
@@ -975,8 +975,8 @@ class PhenotypeStudy(PhenotypeData):
             query_results = []
             for query in queries:
                 query_results.append(connection.execute(query))
-            for row in query_results[0]:
-                row = row._mapping  # pylint: disable=protected-access
+            for result_row in query_results[0]:
+                row = result_row._mapping  # pylint: disable=protected-access
                 output = {**row}
                 skip = True
                 for measure_id in measure_groups[0]:
