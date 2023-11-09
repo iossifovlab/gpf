@@ -201,7 +201,7 @@ class RemotePhenotypeData(PhenotypeData):
 
         return instrument_values
 
-    def get_values_streaming_csv(
+    def get_people_measure_values(
         self,
         measure_ids,
         person_ids=None,

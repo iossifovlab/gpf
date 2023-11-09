@@ -180,7 +180,12 @@ class PhenoMeasuresDownload(QueryDatasetView):
             if not set(measure_ids).issubset(set(instrument_measures)):
                 return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        values_iterator = self.csv_value_iterator(dataset, measure_ids)
+        if dataset.is_remote:
+            values_iterator = dataset.phenotype_data.get_people_measure_values(
+                measure_ids
+            )
+        else:
+            values_iterator = self.csv_value_iterator(dataset, measure_ids)
 
         response = StreamingHttpResponse(
             values_iterator, content_type="text/csv")
