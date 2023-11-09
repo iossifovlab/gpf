@@ -156,6 +156,9 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
       agpTableConfig.columns.push(datasetColumn);
     });
 
+    const order = config.order.map(el => el.id);
+    agpTableConfig.columns.sort((col1, col2) => order.indexOf(col1.id) - order.indexOf(col2.id));
+
     return agpTableConfig;
   }
 
