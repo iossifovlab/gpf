@@ -81,8 +81,7 @@ class WGPFInstance(GPFInstance):
                     )
                     self._clients.append(client)
 
-                except ConnectionError as err:
-                    logger.error(err)
+                except ConnectionError:
                     logger.error("Failed to create remote %s", remote["id"])
 
         self._remote_study_db = RemoteStudyDB(self._clients)

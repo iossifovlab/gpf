@@ -2,7 +2,7 @@
 import pathlib
 from typing import Optional
 
-from gpf_instance.gpf_instance import WGPFInstance, reset_wgpf_instance
+from gpf_instance.gpf_instance import WGPFInstance  # , reset_wgpf_instance
 
 from dae.testing import setup_directories
 from dae.genomic_resources.reference_genome import \
@@ -43,6 +43,5 @@ def setup_wgpf_instance(
 
     gpf.instance_dir = out_path  # type: ignore
     gpf.instance_config = out_path / "gpf_instance.yaml"  # type: ignore
-    reset_wgpf_instance(gpf)
 
     return gpf
