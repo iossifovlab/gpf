@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 import math
 import logging
-from typing import Dict, Iterable, Any, List, cast
+from typing import Iterable, Any, cast
 from typing import Optional, Sequence, Union, Generator
 from abc import ABC, abstractmethod
 
@@ -19,7 +19,7 @@ from dae.pedigrees.family import Person
 from dae.pedigrees.families_data import FamiliesData
 from dae.pheno.db import DbManager
 from dae.pheno.common import MeasureType
-from dae.configuration.gpf_config_parser import GPFConfigParser
+from dae.configuration.gpf_config_parser import DefaultBox, GPFConfigParser
 from dae.configuration.schemas.phenotype_data import pheno_conf_schema
 
 from dae.variants.attributes import Sex, Status, Role
@@ -65,9 +65,9 @@ class Instrument:
     * `measures` -- dictionary of all measures in the instrument
     """
 
-    def __init__(self, name: str):
+    def __init__(self, name: str) -> None:
         self.instrument_name = name
-        self.measures: Dict[str, Measure] = {}
+        self.measures: dict[str, Measure] = {}
 
     def __repr__(self) -> str:
         return f"Instrument({self.instrument_name}, {len(self.measures)})"
@@ -97,7 +97,7 @@ class Measure:
 
     """
 
-    def __init__(self, measure_id: str, name: str):
+    def __init__(self, measure_id: str, name: str) -> None:
         self.measure_id = measure_id
         self.name: str = name
         self.measure_name: str = name
@@ -168,7 +168,7 @@ class Measure:
 
     def to_json(self) -> dict[str, Any]:
         """Return measure description in JSON freindly format."""
-        result: Dict[str, Any] = {}
+        result: dict[str, Any] = {}
 
         result["measureName"] = self.measure_name
         result["measureId"] = self.measure_id
@@ -190,10 +190,10 @@ class Measure:
 class PhenotypeData(ABC):
     """Base class for all phenotype data studies and datasets."""
 
-    def __init__(self, pheno_id: str):
+    def __init__(self, pheno_id: str) -> None:
         self._pheno_id: str = pheno_id
-        self._measures: Dict[str, Measure] = {}
-        self._instruments: Dict[str, Instrument] = {}
+        self._measures: dict[str, Measure] = {}
+        self._instruments: dict[str, Instrument] = {}
         self.families: FamiliesData
 
     @property
@@ -201,11 +201,11 @@ class PhenotypeData(ABC):
         return self._pheno_id
 
     @property
-    def measures(self) -> Dict[str, Measure]:
+    def measures(self) -> dict[str, Measure]:
         return self._measures
 
     @property
-    def instruments(self) -> Dict[str, Instrument]:
+    def instruments(self) -> dict[str, Instrument]:
         return self._instruments
 
     def get_instruments(self) -> list[str]:
@@ -221,16 +221,16 @@ class PhenotypeData(ABC):
 
     @abstractmethod
     def get_persons_df(
-            self, roles: Optional[List[Role]] = None,
-            person_ids: Optional[List[str]] = None,
-            family_ids: Optional[List[str]] = None) -> pd.DataFrame:
+            self, roles: Optional[list[Role]] = None,
+            person_ids: Optional[list[str]] = None,
+            family_ids: Optional[list[str]] = None) -> pd.DataFrame:
         pass
 
     def get_persons(
             self,
-            roles: Optional[List[Role]] = None,
-            person_ids: Optional[List[str]] = None,
-            family_ids: Optional[List[str]] = None) -> Dict[str, Person]:
+            roles: Optional[list[Role]] = None,
+            person_ids: Optional[list[str]] = None,
+            family_ids: Optional[list[str]] = None) -> dict[str, Person]:
         """
         Return individuals data from phenotype database.
 
@@ -281,7 +281,7 @@ class PhenotypeData(ABC):
     def get_measures(
             self,
             instrument_name: Optional[str] = None,
-            measure_type: Optional[MeasureType] = None) -> Dict[str, Measure]:
+            measure_type: Optional[MeasureType] = None) -> dict[str, Measure]:
         """
         Return a dictionary of measures objects.
 
@@ -366,7 +366,7 @@ class PhenotypeData(ABC):
             person_ids: Optional[Iterable[str]] = None,
             family_ids: Optional[Iterable[str]] = None,
             roles: Optional[Iterable[Role]] = None,
-            default_filter: str = "apply") -> Dict[str, Any]:
+            default_filter: str = "apply") -> dict[str, Any]:
         """Return a dictionary with values for the specified `measure_id`.
 
         :param measure_id: -- a measure ID which values should be returned.
@@ -434,7 +434,7 @@ class PhenotypeData(ABC):
             person_ids: Optional[Iterable[str]] = None,
             family_ids: Optional[Iterable[str]] = None,
             roles: Optional[Iterable[Role]] = None,
-            default_filter: str = "apply") -> Dict[str, Dict[str, Any]]:
+            default_filter: str = "apply") -> dict[str, dict[str, Any]]:
         """Return dictionary of dictionaries with values for all `measure_ids`.
 
         The returned dictionary uses `person_id` as key. The value for each key
@@ -460,19 +460,19 @@ class PhenotypeData(ABC):
         """
         df = self.get_values_df(
             measure_ids, person_ids, family_ids, roles, default_filter)
-        res: Dict[str, Dict[str, Any]] = {}
+        res: dict[str, dict[str, Any]] = {}
         for row in df.to_dict("records"):
             person_id = str(row["person_id"])
-            res[person_id] = cast(Dict[str, Any], row)
+            res[person_id] = cast(dict[str, Any], row)
 
         return res
 
     def get_persons_values_df(
             self,
             measure_ids: Iterable[str],
-            person_ids: Optional[List[str]] = None,
-            family_ids: Optional[List[str]] = None,
-            roles: Optional[List[Role]] = None,
+            person_ids: Optional[list[str]] = None,
+            family_ids: Optional[list[str]] = None,
+            roles: Optional[list[Role]] = None,
             default_filter: str = "apply") -> pd.DataFrame:
         """
         Return a data frame with measure values and person data.
@@ -500,7 +500,7 @@ class PhenotypeData(ABC):
 
         return df
 
-    def _get_instrument_measures(self, instrument_name: str) -> List[str]:
+    def _get_instrument_measures(self, instrument_name: str) -> list[str]:
         """Return measures for given instrument."""
         assert instrument_name in self.instruments
         instrument = self.instruments[instrument_name]
@@ -534,7 +534,7 @@ class PhenotypeData(ABC):
         family_ids: Optional[Iterable[str]] = None,
         role: Optional[Iterable[Role]] = None,
         measure_ids: Optional[Iterable[str]] = None
-    ) -> Dict[str, Dict[str, Any]]:
+    ) -> dict[str, dict[str, Any]]:
         """
         Return a dictionary with values for measures in given instrument.
 
@@ -595,7 +595,7 @@ class PhenotypeStudy(PhenotypeData):
     def __init__(
             self, pheno_id: str, dbfile: str,
             browser_dbfile: Optional[str] = None,
-            config: Optional[Dict[str, str]] = None):
+            config: Optional[dict[str, str]] = None) -> None:
 
         super().__init__(pheno_id)
 
@@ -698,7 +698,11 @@ class PhenotypeStudy(PhenotypeData):
             families[person.family_id].append(person)
         return FamiliesData.from_family_persons(families)
 
-    def get_persons_df(self, roles=None, person_ids=None, family_ids=None):
+    def get_persons_df(
+        self, roles: Optional[Iterable[Union[str, Role]]] = None,
+        person_ids: Optional[Iterable[str]] = None,
+        family_ids: Optional[Iterable[str]] = None
+    ) -> pd.DataFrame:
         """Return a individuals data from phenotype database as a data frame.
 
         :param roles: -- specifies persons of which role should be returned. If
@@ -735,7 +739,9 @@ class PhenotypeStudy(PhenotypeData):
         # df.rename(columns={'sex': 'sex'}, inplace=True)
         return df[["person_id", "family_id", "role", "sex", "status"]]
 
-    def _build_default_filter_clause(self, measure, default_filter):
+    def _build_default_filter_clause(
+        self, measure: Measure, default_filter: str
+    ) -> Optional[str]:
         if default_filter == "skip" or measure.default_filter is None:
             return None
         if default_filter == "apply":
@@ -749,12 +755,12 @@ class PhenotypeStudy(PhenotypeData):
 
     def _raw_get_measure_values_df(
         self,
-        measure,
-        person_ids=None,
-        family_ids=None,
-        roles=None,
-        default_filter="skip",
-    ):
+        measure: Measure,
+        person_ids: Optional[Iterable[str]] = None,
+        family_ids: Optional[Iterable[str]] = None,
+        roles: Optional[Iterable[Union[str, Role]]] = None,
+        default_filter: str = "skip",
+    ) -> pd.DataFrame:
 
         measure_type = measure.measure_type
         if measure_type is None:
@@ -797,12 +803,13 @@ class PhenotypeStudy(PhenotypeData):
         return df
 
     def get_measure_values_df(
-            self,
-            measure_id,
-            person_ids=None,
-            family_ids=None,
-            roles=None,
-            default_filter="apply"):
+        self,
+        measure_id: str,
+        person_ids: Optional[Iterable[str]] = None,
+        family_ids: Optional[Iterable[str]] = None,
+        roles: Optional[Iterable[Union[str, Role]]] = None,
+        default_filter: str = "apply"
+    ) -> pd.DataFrame:
         """Return a data frame with values for the specified `measure_id`.
 
         :param measure_id: -- a measure ID which values should be returned.
@@ -837,12 +844,13 @@ class PhenotypeStudy(PhenotypeData):
         return df[["person_id", measure_id]]
 
     def get_values_df(
-            self,
-            measure_ids,
-            person_ids=None,
-            family_ids=None,
-            roles=None,
-            default_filter="apply"):
+        self,
+        measure_ids: Iterable[str],
+        person_ids: Optional[Iterable[str]] = None,
+        family_ids: Optional[Iterable[str]] = None,
+        roles: Optional[Iterable[Union[str, Role]]] = None,
+        default_filter: str = "apply"
+    ) -> pd.DataFrame:
         """Return a data frame with values for given list of measures.
 
         Values are loaded using consecutive calls to
@@ -1057,8 +1065,9 @@ class PhenotypeGroup(PhenotypeData):
     """Represents a group of phenotype data studies or groups."""
 
     def __init__(
-            self, pheno_id: str, phenotype_data: List[PhenotypeData],
-            config=None):
+        self, pheno_id: str, phenotype_data: list[PhenotypeData],
+        config: Optional[dict] = None
+    ) -> None:
         super().__init__(pheno_id)
         self.phenotype_data = phenotype_data
         self.families = self._build_families()
@@ -1069,7 +1078,7 @@ class PhenotypeGroup(PhenotypeData):
         self._measures.update(measures)
         self.config = config
 
-    def _build_families(self):
+    def _build_families(self) -> FamiliesData:
         phenos = self.phenotype_data
         logger.info(
             "building combined families from phenotype data: %s",
@@ -1102,9 +1111,10 @@ class PhenotypeGroup(PhenotypeData):
 
     @staticmethod
     def _merge_instruments(
-            phenos_instruments: Iterable[Dict[str, Instrument]]):
-        group_instruments: Dict[str, Instrument] = {}
-        group_measures: Dict[str, Measure] = {}
+        phenos_instruments: Iterable[dict[str, Instrument]]
+    ) -> tuple[dict[str, Instrument], dict[str, Measure]]:
+        group_instruments: dict[str, Instrument] = {}
+        group_measures: dict[str, Measure] = {}
 
         for pheno_instruments in phenos_instruments:
             for instrument_name, instrument in pheno_instruments.items():
@@ -1163,9 +1173,10 @@ class PhenotypeGroup(PhenotypeData):
         return group_instruments, group_measures
 
     def get_persons_df(
-            self, roles: Optional[List[Role]] = None,
-            person_ids: Optional[List[str]] = None,
-            family_ids: Optional[List[str]] = None) -> pd.DataFrame:
+        self, roles: Optional[list[Role]] = None,
+        person_ids: Optional[list[str]] = None,
+        family_ids: Optional[list[str]] = None
+    ) -> pd.DataFrame:
 
         ped_df: pd.DataFrame = self.families.ped_df[[
             "person_id", "family_id", "role", "sex", "status"]]
@@ -1179,12 +1190,13 @@ class PhenotypeGroup(PhenotypeData):
         return ped_df
 
     def get_measure_values_df(
-            self,
-            measure_id: str,
-            person_ids: Optional[Iterable[str]] = None,
-            family_ids: Optional[Iterable[str]] = None,
-            roles: Optional[Iterable[Role]] = None,
-            default_filter: str = "apply") -> pd.DataFrame:
+        self,
+        measure_id: str,
+        person_ids: Optional[Iterable[str]] = None,
+        family_ids: Optional[Iterable[str]] = None,
+        roles: Optional[Iterable[Role]] = None,
+        default_filter: str = "apply"
+    ) -> pd.DataFrame:
 
         assert self.has_measure(measure_id), measure_id
         for pheno in self.phenotype_data:
@@ -1241,13 +1253,13 @@ class PhenotypeGroup(PhenotypeData):
 
         return res_df
 
-    def get_regressions(self):
-        res = []
+    def get_regressions(self) -> dict[str, Any]:
+        res = {}
         for pheno in self.phenotype_data:
-            res += pheno.get_regressions()
+            res.update(pheno.get_regressions())
         return res
 
-    def get_measures_info(self):
+    def get_measures_info(self) -> dict[str, Any]:
         result = {
             "base_image_url": "",
             "has_descriptions": False,
@@ -1257,7 +1269,7 @@ class PhenotypeGroup(PhenotypeData):
             measures_info = pheno.get_measures_info()
             result["has_descriptions"] = \
                 result["has_descriptions"] or measures_info["has_descriptions"]
-            cast(Dict, result["regression_names"]).update(
+            cast(dict, result["regression_names"]).update(
                 measures_info["regression_names"]
             )
         return result
@@ -1285,7 +1297,7 @@ class PhenotypeGroup(PhenotypeData):
 class PhenoDb:
     """Represents a phenotype databases stored in an sqlite database."""
 
-    def __init__(self, dae_config):
+    def __init__(self, dae_config: DefaultBox) -> None:
         super().__init__()
         assert dae_config
         pheno_data_dir = get_pheno_db_dir(dae_config)
@@ -1300,24 +1312,27 @@ class PhenoDb:
             if config.phenotype_data and config.phenotype_data.enabled
         }
 
-        self.pheno_cache: Dict[str, PhenotypeData] = {}
+        self.pheno_cache: dict[str, PhenotypeData] = {}
 
-    def get_dbfile(self, pheno_id):
-        return self.config[pheno_id].dbfile
+    def get_dbfile(self, pheno_id: str) -> str:
+        return cast(str, self.config[pheno_id]["dbfile"])
 
-    def get_browser_dbfile(self, pheno_id):
-        return self.config[pheno_id].browser_dbfile
+    def get_browser_dbfile(self, pheno_id: str) -> Optional[str]:
+        config = self.get_dbconfig(pheno_id)
+        if "browser_dbfile" in config:
+            return cast(str, config["browser_dbfile"])
+        return None
 
-    def get_dbconfig(self, pheno_id):
-        return self.config[pheno_id]
+    def get_dbconfig(self, pheno_id: str) -> dict:
+        return cast(dict, self.config[pheno_id])
 
-    def has_phenotype_data(self, pheno_id):
+    def has_phenotype_data(self, pheno_id: str) -> bool:
         return pheno_id in self.config
 
-    def get_phenotype_data_ids(self):
+    def get_phenotype_data_ids(self) -> list[Union[Any, str]]:
         return list(self.config.keys())
 
-    def get_phenotype_data(self, pheno_id) -> PhenotypeData:
+    def get_phenotype_data(self, pheno_id: str) -> PhenotypeData:
         """Construct and return a phenotype data with the specified ID."""
         if not self.has_phenotype_data(pheno_id):
             raise ValueError(f"phenotype data <{pheno_id}> not found")
@@ -1326,11 +1341,11 @@ class PhenoDb:
 
         phenotype_data: PhenotypeData
         config = self.get_dbconfig(pheno_id)
-        if config.phenotype_data_list is not None:
+        if config.get("phenotype_data_list") is not None:
             logger.info("loading pheno db group <%s>", pheno_id)
             phenotype_studies = [
                 self.get_phenotype_data(ps_id)
-                for ps_id in config.phenotype_data_list
+                for ps_id in config["phenotype_data_list"]
             ]
             phenotype_data = PhenotypeGroup(
                 pheno_id, phenotype_studies, config)
@@ -1345,11 +1360,13 @@ class PhenoDb:
         self.pheno_cache[pheno_id] = phenotype_data
         return phenotype_data
 
-    def get_all_phenotype_data(self):
+    def get_all_phenotype_data(self) -> list[PhenotypeData]:
         return [
             self.get_phenotype_data(pheno_id)
             for pheno_id in self.get_phenotype_data_ids()
         ]
 
-    def get_phenotype_data_config(self, pheno_id):
+    def get_phenotype_data_config(
+        self, pheno_id: str
+    ) -> Optional[dict[str, Any]]:
         return self.config.get(pheno_id)

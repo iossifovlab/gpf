@@ -1,7 +1,10 @@
+from __future__ import annotations
+
 import enum
 from pprint import pprint
 
 from box import Box
+import box.box
 
 
 class MeasureType(enum.Enum):
@@ -17,25 +20,22 @@ class MeasureType(enum.Enum):
     skipped = 1000
 
     @staticmethod
-    def from_str(measure_type):
+    def from_str(measure_type: str) -> "MeasureType":
         if measure_type in MeasureType.__members__:
             return MeasureType[measure_type]
-        else:
-            raise ValueError("unexpected measure type", measure_type)
+
+        raise ValueError("unexpected measure type", measure_type)
 
     @staticmethod
-    def is_numeric(measure_type):
-        return (
-            measure_type == MeasureType.continuous
-            or measure_type == MeasureType.ordinal
-        )
+    def is_numeric(measure_type: MeasureType) -> bool:
+        return measure_type in {MeasureType.continuous, MeasureType.ordinal}
 
     @staticmethod
-    def is_text(measure_type):
+    def is_text(measure_type: MeasureType) -> bool:
         return not MeasureType.is_numeric(measure_type)
 
 
-def default_config():
+def default_config() -> box.box.Box:
     """Construct phenotype database preparation configuration."""
     config = {
         "report_only": False,
@@ -65,7 +65,7 @@ def default_config():
     return Box(config)
 
 
-def check_phenotype_data_config(config):
+def check_phenotype_data_config(config: Box) -> bool:
     """Check phenotype database preparation config for consistency."""
     categorical = config.classification.categorical.min_rank
     if categorical < 1:
@@ -88,7 +88,7 @@ def check_phenotype_data_config(config):
     return True
 
 
-def dump_config(config):
+def dump_config(config: Box) -> None:
     """Print phenotype database preparation configuration."""
     print("--------------------------------------------------------")
     print("CLASSIFICATION BOUNDARIES:")

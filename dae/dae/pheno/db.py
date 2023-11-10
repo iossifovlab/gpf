@@ -1,4 +1,4 @@
-from typing import Optional, Any
+from typing import Dict, Iterator, List, Union, Optional, Any, cast
 
 from sqlalchemy import MetaData, create_engine
 from sqlalchemy import Table, Column, Integer, String, Float, Enum, \
@@ -12,12 +12,14 @@ from dae.variants.attributes import Sex, Status, Role
 from dae.pheno.common import MeasureType
 
 
-class DbManager(object):
+class DbManager:
     """Class that manages access to phenotype databases."""
 
     STREAMING_CHUNK_SIZE = 25
 
-    def __init__(self, dbfile, browser_dbfile=None):
+    def __init__(
+        self, dbfile: str, browser_dbfile: Optional[str] = None
+    ) -> None:
         self.pheno_dbfile = dbfile
         self.pheno_metadata = MetaData()
         self.variable_browser: Table
@@ -37,10 +39,10 @@ class DbManager(object):
 
         self.update_browser_dbfile(browser_dbfile)
 
-    def has_browser_dbfile(self):
+    def has_browser_dbfile(self) -> bool:
         return self.browser_dbfile is not None
 
-    def update_browser_dbfile(self, browser_dbfile):
+    def update_browser_dbfile(self, browser_dbfile: Optional[str]) -> None:
         self.browser_dbfile = browser_dbfile
         self.browser_metadata: Optional[MetaData] = None
         self.browser_engine: Any = None
@@ -48,13 +50,13 @@ class DbManager(object):
             self.browser_metadata = MetaData()
             self.browser_engine = create_engine(f"sqlite:///{browser_dbfile}")
 
-    def build_browser(self):
+    def build_browser(self) -> None:
         if self.has_browser_dbfile():
             assert self.browser_metadata is not None
             self._build_browser_tables()
             self.browser_metadata.create_all(self.browser_engine)
 
-    def build(self):
+    def build(self) -> None:
         """Construct all needed table connections."""
         self._build_person_tables()
         self._build_measure_tables()
@@ -64,7 +66,7 @@ class DbManager(object):
 
         self.build_browser()
 
-    def _build_browser_tables(self):
+    def _build_browser_tables(self) -> None:
         assert self.browser_metadata is not None
 
         self.variable_browser = Table(
@@ -116,7 +118,7 @@ class DbManager(object):
             ),
         )
 
-    def _build_person_tables(self):
+    def _build_person_tables(self) -> None:
         self.family = Table(
             "family",
             self.pheno_metadata,
@@ -147,7 +149,7 @@ class DbManager(object):
             UniqueConstraint("family_id", "person_id", name="person_key"),
         )
 
-    def _build_measure_tables(self):
+    def _build_measure_tables(self) -> None:
         self.measure = Table(
             "measure",
             self.pheno_metadata,
@@ -174,7 +176,7 @@ class DbManager(object):
             ),
         )
 
-    def _build_value_tables(self):
+    def _build_value_tables(self) -> None:
         self.value_continuous = Table(
             "value_continuous",
             self.pheno_metadata,
@@ -208,7 +210,7 @@ class DbManager(object):
             PrimaryKeyConstraint("person_id", "measure_id"),
         )
 
-    def save(self, v):
+    def save(self, v: Dict[str, Optional[str]]) -> None:
         """Save measure values into the database."""
         try:
             insert = self.variable_browser.insert().values(**v)
@@ -227,7 +229,7 @@ class DbManager(object):
                 connection.execute(update)
                 connection.commit()
 
-    def save_regression(self, reg):
+    def save_regression(self, reg: Dict[str, str]) -> None:
         """Save regressions into the database."""
         try:
             insert = self.regressions.insert().values(reg)
@@ -245,7 +247,7 @@ class DbManager(object):
                 connection.execute(update)
                 connection.commit()
 
-    def save_regression_values(self, reg):
+    def save_regression_values(self, reg: Dict[str, str]) -> None:
         """Save regression values into the databases."""
         try:
             insert = self.regression_values.insert().values(reg)
@@ -269,17 +271,20 @@ class DbManager(object):
                 connection.execute(update)
                 connection.commit()
 
-    def get_browser_measure(self, measure_id):
+    def get_browser_measure(self, measure_id: str) -> Optional[str]:
         """Get measrue description from phenotype browser database."""
         sel = select(self.variable_browser)
         sel = sel.where(self.variable_browser.c.measure_id == measure_id)
         with self.browser_engine.connect() as connection:
             vs = connection.execute(sel).fetchall()
             if vs:
-                return vs[0]
+                return cast(str, vs[0])
             return None
 
-    def search_measures(self, instrument_name=None, keyword=None):
+    def search_measures(
+        self, instrument_name: Optional[str] = None,
+        keyword: Optional[str] = None
+    ) -> Iterator[Dict[str, Union[str, MeasureType, None]]]:
         """Find measert by keyword search."""
         query_params = []
 
@@ -329,7 +334,10 @@ class DbManager(object):
                     }
                 rows = cursor.fetchmany(self.STREAMING_CHUNK_SIZE)
 
-    def search_measures_df(self, instrument_name=None, keyword=None):
+    def search_measures_df(
+        self, instrument_name: Optional[str] = None,
+        keyword: Optional[str] = None
+    ) -> pd.DataFrame:
         """Find measures and return a dataframe with values."""
         query_params = []
 
@@ -364,7 +372,7 @@ class DbManager(object):
         df = pd.read_sql(query, self.browser_engine)
         return df
 
-    def get_regression(self, regression_id):
+    def get_regression(self, regression_id: str) -> Any:
         """Return regressions."""
         selector = select(self.regressions)
         selector = selector.where(
@@ -375,7 +383,7 @@ class DbManager(object):
                 return vs[0]._mapping  # pylint: disable=protected-access
             return None
 
-    def get_regression_values(self, measure_id):
+    def get_regression_values(self, measure_id: str) -> Any:
         selector = select(self.regression_values)
         selector = selector.where(
             self.regression_values.c.measure_id == measure_id)
@@ -383,7 +391,7 @@ class DbManager(object):
             return connection.execute(selector).fetchall()
 
     @property
-    def regression_ids(self):
+    def regression_ids(self) -> List[str]:
         selector = select(self.regressions.c.regression_id)
         with self.browser_engine.connect() as connection:
             return list(map(
@@ -391,7 +399,7 @@ class DbManager(object):
                 connection.execute(selector)))
 
     @property
-    def regression_display_names(self):
+    def regression_display_names(self) -> Dict[str, str]:
         """Return regressions display name."""
         res = {}
         selector = select(
@@ -403,7 +411,7 @@ class DbManager(object):
         return res
 
     @property
-    def regression_display_names_with_ids(self):
+    def regression_display_names_with_ids(self) -> dict[str, Any]:
         """Return regression display names with measure IDs."""
         res = {}
         selector = select(
@@ -422,7 +430,7 @@ class DbManager(object):
         return res
 
     @property
-    def has_descriptions(self):
+    def has_descriptions(self) -> bool:
         """Check if the database has a description data."""
         with self.browser_engine.connect() as connection:
             return bool(
@@ -433,9 +441,11 @@ class DbManager(object):
                 ).scalar()
             )
 
-    def get_value_table(self, value_type):
+    def get_value_table(
+        self, value_type: MeasureType
+    ) -> Table:
         """Return the appropriate table for values based on the value type."""
-        if isinstance(value_type, str) or isinstance(value_type, str):
+        if isinstance(value_type, str):
             value_type = MeasureType.from_str(value_type)
 
         if value_type == MeasureType.continuous:
@@ -444,20 +454,19 @@ class DbManager(object):
             return self.value_ordinal
         if value_type == MeasureType.categorical:
             return self.value_categorical
-        if value_type == MeasureType.raw or value_type == MeasureType.text:
+        if value_type in {MeasureType.raw, MeasureType.text}:
             return self.value_other
 
         raise ValueError(f"unsupported value type: {value_type}")
 
-    def get_families(self):
+    def get_families(self) -> dict:
         """Return families in the phenotype database."""
         value_type = select(self.family)
         with self.pheno_engine.connect() as connection:
             families = connection.execute(value_type).fetchall()
-        families = {f.family_id: f for f in families}
-        return families
+        return {f.family_id: f for f in families}
 
-    def get_persons(self):
+    def get_persons(self) -> dict:
         """Return individuals in the phenotype database."""
         selector = select(
             self.person.c.id,
@@ -470,10 +479,9 @@ class DbManager(object):
         selector = selector.select_from(self.person.join(self.family))
         with self.pheno_engine.connect() as connection:
             persons = connection.execute(selector).fetchall()
-        persons = {p.person_id: p for p in persons}
-        return persons
+        return {p.person_id: p for p in persons}
 
-    def get_measures(self):
+    def get_measures(self) -> dict:
         """Return measures in the phenotype database."""
         selector = select(
             self.measure.c.id,
@@ -485,5 +493,4 @@ class DbManager(object):
         selector = selector.select_from(self.measure)
         with self.pheno_engine.begin() as connection:
             measures = connection.execute(selector).fetchall()
-        measures = {m.measure_id: m for m in measures}
-        return measures
+        return {m.measure_id: m for m in measures}

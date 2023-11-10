@@ -1,13 +1,16 @@
 import os
-from typing import Dict, Any
+from typing import Iterator, Optional, Union, Dict, Any
 
+from box import Box
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
 import numpy as np
+import pandas as pd
 
 from dae.variants.attributes import Role
-from dae.pheno.pheno_db import Measure, get_pheno_browser_images_dir
+from dae.pheno.pheno_db import PhenotypeStudy, Measure, \
+    get_pheno_browser_images_dir
 from dae.pheno.db import DbManager
 from dae.pheno.common import MeasureType
 from dae.pheno.graphs import draw_linregres
@@ -21,7 +24,7 @@ mpl.use("PS")
 plt.ioff()  # type: ignore
 
 
-class PreparePhenoBrowserBase(object):
+class PreparePhenoBrowserBase:
     """Prepares phenotype data for the phenotype browser."""
 
     LARGE_DPI = 150
@@ -29,12 +32,12 @@ class PreparePhenoBrowserBase(object):
 
     def __init__(
         self,
-        pheno_name,
-        phenotype_data,
-        output_dir,
-        pheno_regressions=None,
-        images_dir=None,
-    ):
+        pheno_name: str,
+        phenotype_data: PhenotypeStudy,
+        output_dir: str,
+        pheno_regressions: Optional[Box] = None,
+        images_dir: Optional[str] = None,
+    ) -> None:
         assert os.path.exists(output_dir)
         self.output_dir = output_dir
         if images_dir is None:
@@ -53,11 +56,14 @@ class PreparePhenoBrowserBase(object):
             output_dir, f"{pheno_name}_browser.db"
         )
 
-    def load_measure(self, measure):
+    def load_measure(self, measure: Measure) -> pd.DataFrame:
         df = self.phenotype_data.get_persons_values_df([measure.measure_id])
         return df
 
-    def _augment_measure_values_df(self, augment, augment_name, measure):
+    def _augment_measure_values_df(
+        self, augment: Measure, augment_name: str,
+        measure: Measure
+    ) -> Optional[pd.DataFrame]:
         assert augment is not None
         assert isinstance(augment, Measure)
 
@@ -84,7 +90,7 @@ class PreparePhenoBrowserBase(object):
         return df
 
     @staticmethod
-    def _measure_to_dict(measure):
+    def _measure_to_dict(measure: Measure) -> dict[str, Any]:
         return {
             "measure_id": measure.measure_id,
             "instrument_name": measure.instrument_name,
@@ -94,9 +100,11 @@ class PreparePhenoBrowserBase(object):
             "values_domain": measure.values_domain,
         }
 
-    def figure_filepath(self, measure, suffix):
+    def figure_filepath(self, measure: Measure, suffix: str) -> str:
         """Construct file path for storing a measure figures."""
         filename = f"{measure.measure_id}.{suffix}.png"
+
+        assert measure.instrument_name is not None
         outdir = os.path.join(
             self.images_dir,
             self.phenotype_data.pheno_id,
@@ -108,9 +116,10 @@ class PreparePhenoBrowserBase(object):
         filepath = os.path.join(outdir, filename)
         return filepath
 
-    def browsable_figure_path(self, measure, suffix):
+    def browsable_figure_path(self, measure: Measure, suffix: str) -> str:
         """Construct file path for storing a measure figures."""
         filename = f"{measure.measure_id}.{suffix}.png"
+        assert measure.instrument_name is not None
         filepath = os.path.join(
             self.phenotype_data.pheno_id,
             measure.instrument_name,
@@ -118,7 +127,9 @@ class PreparePhenoBrowserBase(object):
         )
         return filepath
 
-    def save_fig(self, measure, suffix):
+    def save_fig(
+        self, measure: Measure, suffix: str
+    ) -> tuple[Optional[str], Optional[str]]:
         """Save measure figures."""
         if "/" in measure.measure_id:
             return (None, None)
@@ -136,7 +147,11 @@ class PreparePhenoBrowserBase(object):
             self.browsable_figure_path(measure, suffix),
         )
 
-    def build_regression(self, dependent_measure, independent_measure, jitter):
+    def build_regression(
+        self, dependent_measure: Measure,
+        independent_measure: Measure,
+        jitter: float
+    ) -> dict[str, Union[str, float]]:
         """Build measure regressiongs."""
         min_number_of_values = 5
         min_number_of_unique_values = 2
@@ -155,10 +170,12 @@ class PreparePhenoBrowserBase(object):
         if aug_df is None:
             return res
 
+        assert aug_df is not None
         aug_df = aug_df[aug_df.role == Role.prb]
         aug_df.loc[:, aug_col_name] = aug_df[aug_col_name].astype(np.float32)
         aug_df = aug_df[np.isfinite(aug_df[aug_col_name])]
 
+        assert aug_df is not None
         if (
             aug_df[dependent_measure.measure_id].nunique()
             < min_number_of_unique_values
@@ -167,7 +184,8 @@ class PreparePhenoBrowserBase(object):
             return res
 
         res_male, res_female = draw_linregres(
-            aug_df, aug_col_name, dependent_measure.measure_id, jitter
+            aug_df, aug_col_name, dependent_measure.measure_id,
+            jitter  # type: ignore
         )
         res["pvalue_regression_male"] = (
             res_male.pvalues[1] if res_male is not None else None
@@ -187,7 +205,7 @@ class PreparePhenoBrowserBase(object):
             )
         return res
 
-    def build_values_violinplot(self, measure):
+    def build_values_violinplot(self, measure: Measure) -> dict[str, Any]:
         """Build a violin plot figure for the measure."""
         df = self.load_measure(measure)
         drawn = draw_measure_violinplot(df, measure.measure_id)
@@ -202,7 +220,9 @@ class PreparePhenoBrowserBase(object):
 
         return res
 
-    def build_values_categorical_distribution(self, measure):
+    def build_values_categorical_distribution(
+        self, measure: Measure
+    ) -> dict[str, Any]:
         """Build a categorical value distribution fiugre."""
         df = self.load_measure(measure)
         drawn = draw_categorical_violin_distribution(df, measure.measure_id)
@@ -216,7 +236,9 @@ class PreparePhenoBrowserBase(object):
 
         return res
 
-    def build_values_other_distribution(self, measure):
+    def build_values_other_distribution(
+        self, measure: Measure
+    ) -> dict[str, Any]:
         """Build an other value distribution figure."""
         df = self.load_measure(measure)
         drawn = draw_categorical_violin_distribution(df, measure.measure_id)
@@ -230,7 +252,9 @@ class PreparePhenoBrowserBase(object):
 
         return res
 
-    def build_values_ordinal_distribution(self, measure):
+    def build_values_ordinal_distribution(
+        self, measure: Measure
+    ) -> dict[str, Any]:
         """Build an ordinal value distribution figure."""
         df = self.load_measure(measure)
         drawn = draw_ordinal_violin_distribution(df, measure.measure_id)
@@ -244,7 +268,7 @@ class PreparePhenoBrowserBase(object):
 
         return res
 
-    def dump_browser_variable(self, var):
+    def dump_browser_variable(self, var: dict[str, Any]) -> None:
         """Print browser measure description."""
         print("-------------------------------------------")
         print(var["measure_id"])
@@ -256,14 +280,16 @@ class PreparePhenoBrowserBase(object):
         print(f"domain:      {var['values_domain']}")
         print("-------------------------------------------")
 
-    def _get_measure_by_name(self, measure_name, instrument_name):
+    def _get_measure_by_name(
+        self, measure_name: str, instrument_name: str
+    ) -> Optional[Measure]:
         if instrument_name:
             measure_id = ".".join([instrument_name, measure_name])
             if self.phenotype_data.has_measure(measure_id):
                 return self.phenotype_data.get_measure(measure_id)
         return None
 
-    def handle_measure(self, measure):
+    def handle_measure(self, measure: Measure) -> dict[str, Any]:
         """Build appropriate figures for a measure."""
         res = PreparePhenoBrowserBase._measure_to_dict(measure)
 
@@ -276,7 +302,14 @@ class PreparePhenoBrowserBase(object):
 
         return res
 
-    def _has_regression_measure(self, measure_name, instrument_name):
+    def _has_regression_measure(
+        self, measure_name: str,
+        instrument_name: Optional[str]
+    ) -> bool:
+        if self.pheno_regressions is None or \
+                self.pheno_regressions.regression is None:
+            return False
+
         for reg in self.pheno_regressions.regression.values():
             if measure_name == reg.measure_name:
                 if (
@@ -288,18 +321,23 @@ class PreparePhenoBrowserBase(object):
                 return True
         return False
 
-    def handle_regressions(self, measure):
+    def handle_regressions(
+        self, measure: Measure
+    ) -> Iterator[dict[str, Any]]:
         """Build appropriate regressions and regression figures."""
         if measure.measure_type not in [
             MeasureType.continuous,
             MeasureType.ordinal,
         ]:
             return
+        if self.pheno_regressions is None or \
+                self.pheno_regressions.regression is None:
+            return
         for reg_id, reg in self.pheno_regressions.regression.items():
             res = {"measure_id": measure.measure_id}
             reg_measure = self._get_measure_by_name(
                 reg.measure_name,
-                reg.instrument_name or measure.instrument_name,
+                reg.instrument_name or measure.instrument_name,  # type: ignore
             )
             if not reg_measure:
                 continue
@@ -316,7 +354,7 @@ class PreparePhenoBrowserBase(object):
             ):
                 yield res
 
-    def run(self):
+    def run(self) -> None:
         """Run browser preparations for all measures in a phenotype data."""
         pheno_dbfile = self.phenotype_data.db.pheno_dbfile
         db = DbManager(pheno_dbfile, browser_dbfile=self.browser_db)
