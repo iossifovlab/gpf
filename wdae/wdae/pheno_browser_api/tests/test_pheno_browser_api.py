@@ -1,8 +1,11 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import json
 import pytest
+from typing import cast
 
+from django.test import Client
 from rest_framework import status
+from rest_framework.response import Response
 
 pytestmark = pytest.mark.usefixtures(
     "wdae_gpf_instance", "dae_calc_gene_sets")
@@ -134,6 +137,24 @@ def test_download(admin_client):
     response = admin_client.post(
         DOWNLOAD_URL, json.dumps(data), "application/json"
     )
+
+    assert response.status_code == 200
+
+    header = list(response.streaming_content)[0].decode("utf-8")
+    header = header.split()[0].split(",")
+    assert header[0] == "person_id"
+
+
+def test_download_form(admin_client: Client) -> None:
+    data = {
+        "queryData": (
+            '{"dataset_id": "quads_f1",'
+            '"instrument": "instrument1"}'
+        )
+    }
+    response = cast(Response, admin_client.post(
+        DOWNLOAD_URL, json.dumps(data), "application/json"
+    ))
 
     assert response.status_code == 200
 
