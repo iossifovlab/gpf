@@ -19,7 +19,11 @@
   <gpf-unique-family-variants-filter></gpf-unique-family-variants-filter>
 
   <div class="form-block">
-    <form id="dl-form" (ngSubmit)="onSubmit($event)" action="{{ configService.baseUrl }}genotype_browser/query" method="post">
+    <form
+      id="dl-form"
+      (ngSubmit)="onSubmit($event)"
+      action="{{ configService.baseUrl }}genotype_browser/query"
+      method="post">
       <input name="queryData" type="hidden" />
       <button
         class="btn btn-md btn-primary btn-right"

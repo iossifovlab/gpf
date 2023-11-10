@@ -118,7 +118,7 @@ export class PhenoBrowserComponent implements OnInit {
     this.selectedInstrument$.next(instrument);
   }
 
-  public downloadMeasures(): void {
+  public downloadMeasures(event: Event): void {
     let filename: string;
 
     this.selectedInstrument$.pipe(take(1)).subscribe(instrument => {
@@ -129,14 +129,25 @@ export class PhenoBrowserComponent implements OnInit {
         filename = `measures_${this.selectedDatasetId}.csv`;
       }
 
-      this.phenoBrowserService.downloadMeasures(
-        this.selectedDatasetId,
-        instrument,
-        this.measuresToShow.measures
-      ).pipe(take(1)).subscribe(data => {
-        saveAs(data, filename);
+      // this.phenoBrowserService.downloadMeasures(
+      //   this.selectedDatasetId,
+      //   instrument,
+      //   this.measuresToShow.measures
+      // ).pipe(take(1)).subscribe(data => {
+      //   saveAs(data, filename);
+      // }
+      // );
+
+      const data = {
+        dataset_id: this.selectedDatasetId,
+        instrument: instrument,
+        measure_ids: this.measuresToShow.measures
+      };
+      console.log(data)
+      if (event.target instanceof HTMLFormElement) {
+        event.target.queryData.value = JSON.stringify(data);
+        event.target.submit();
       }
-      );
     });
   }
 
