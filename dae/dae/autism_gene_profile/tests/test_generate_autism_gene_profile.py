@@ -1,9 +1,9 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
+import re
 import textwrap
 import pytest
 import yaml
-from pytest_mock import MockerFixture
 
 from dae.testing.import_helpers import vcf_study
 from dae.genomic_resources.testing import \
@@ -11,10 +11,8 @@ from dae.genomic_resources.testing import \
 from dae.testing.t4c8_import import t4c8_gpf
 from dae.autism_gene_profile.generate_autism_gene_profile import main
 from dae.autism_gene_profile.db import AutismGeneProfileDB
-from dae.gpf_instance import GPFInstance
 
 
-@pytest.fixture
 def local_agp_config() -> str:
     return yaml.dump({
         "order": [
@@ -83,15 +81,77 @@ def local_agp_config() -> str:
     }, default_flow_style=False)
 
 
-@pytest.fixture
+def bad_agp_config() -> str:
+    return yaml.dump({
+        # No order or default dataset
+        "gene_sets": [
+            {
+                "category": "gene_set",
+                "display_name": "test gene sets",
+                "sets": [
+                    {
+                        "set_id": "test_gene_set_1",
+                        "collection_id": "gene_sets"
+                    },
+                    {
+                        "set_id": "test_gene_set_2",
+                        "collection_id": "gene_sets"
+                    },
+                    {
+                        "set_id": "test_gene_set_3",
+                        "collection_id": "gene_sets"
+                    },
+                ]
+            },
+        ],
+        "genomic_scores": [
+            {
+                "category": "gene_score",
+                "display_name": "Test gene score",
+                "scores": [
+                    {"score_name": "gene_score1", "format": "%%s"},
+                ]
+            }
+        ],
+        "datasets": {
+            "study_1": {
+                "statistics": [
+                    {
+                        "id": "lgds",
+                        "display_name": "LGDs",
+                        "effects": ["lgds"],
+                        "category": "denovo"
+                    },
+                    {
+                        "id": "denovo_missense",
+                        "display_name": "Missense",
+                        "effects": ["missense"],
+                        "category": "denovo"
+                    }
+                ],
+                "person_sets": [
+                    {
+                        "set_name": "autism",
+                        "collection_name": "phenotype"
+                    },
+                    {
+                        "set_name": "unaffected",
+                        "collection_name": "phenotype"
+                    },
+                ]
+            }
+        }
+    }, default_flow_style=False)
+
+
 def local_gpf_instance(
-        local_agp_config: str,
+        agp_config: str,
         tmp_path: pathlib.Path) -> None:
     setup_directories(
         tmp_path,
         {
             "gpf_instance": {
-                "agp_config.yaml": local_agp_config,
+                "agp_config.yaml": agp_config,
                 "gpf_instance.yaml": textwrap.dedent("""
                     autism_gene_tool_config:
                         conf_file: "agp_config.yaml"
@@ -245,22 +305,22 @@ chr1   195 .  C   T   .    .      .    GT     0/0  0/0  0/1 0/0  0/0  0/0
     return instance
 
 
-def test_generate_autism_gene_profile(
-        local_gpf_instance: GPFInstance,
-        tmp_path: pathlib.Path) -> None:
+def test_generate_autism_gene_profile(tmp_path: pathlib.Path) -> None:
     agpdb_filename = str(tmp_path / "agpdb")
     argv = [
         "--dbfile",
         agpdb_filename,
         "-vv",
     ]
-    # local_gpf_instance._autism_gene_profile_config = local_agp_config
-    main(local_gpf_instance, argv)
+
+    gpf_instance = local_gpf_instance(local_agp_config(), tmp_path)
+    main(gpf_instance, argv)
     agpdb = AutismGeneProfileDB(
-        local_gpf_instance._autism_gene_profile_config,
+        gpf_instance._autism_gene_profile_config,
         agpdb_filename,
         clear=False
     )
+
     t4 = agpdb.get_agp("t4")
     c8 = agpdb.get_agp("c8")
 
@@ -340,3 +400,22 @@ def test_generate_autism_gene_profile(
             }
         }
     }
+
+
+def test_generate_autism_gene_profile_with_bad_config(
+        tmp_path: pathlib.Path) -> None:
+    agpdb_filename = str(tmp_path / "agpdb")
+    argv = [
+        "--dbfile",
+        agpdb_filename,
+        "-vv",
+    ]
+
+    gpf_instance = local_gpf_instance(bad_agp_config(), tmp_path)
+    expected_error = re.escape(
+        "/gpf_instance: {'default_dataset': "
+        + "['required field'], 'order': ['required field']}")
+    with pytest.raises(
+            ValueError,
+            match=r"^(.*?)" + expected_error):
+        main(gpf_instance, argv)
