@@ -119,35 +119,23 @@ export class PhenoBrowserComponent implements OnInit {
   }
 
   public downloadMeasures(event: Event): void {
-    let filename: string;
-
     this.selectedInstrument$.pipe(take(1)).subscribe(instrument => {
-      filename = `measures_${this.selectedDatasetId}_${instrument}.csv`;
-
       if (instrument === '') {
         instrument = null;
-        filename = `measures_${this.selectedDatasetId}.csv`;
       }
-
-      // this.phenoBrowserService.downloadMeasures(
-      //   this.selectedDatasetId,
-      //   instrument,
-      //   this.measuresToShow.measures
-      // ).pipe(take(1)).subscribe(data => {
-      //   saveAs(data, filename);
-      // }
-      // );
 
       const measureIds = this.measuresToShow.measures.map(m => m.measureId);
 
+      /* eslint-disable @typescript-eslint/naming-convention */
       const data = {
         dataset_id: this.selectedDatasetId,
         instrument: instrument,
         measure_ids: measureIds
       };
-      console.log(data)
+      /* eslint-enable */
+
       if (event.target instanceof HTMLFormElement) {
-        event.target.queryData.value = JSON.stringify(data);
+        (event.target.queryData as HTMLInputElement).value = JSON.stringify(data);
         event.target.submit();
       }
     });

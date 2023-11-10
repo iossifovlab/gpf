@@ -235,21 +235,23 @@ describe('PhenoBrowserComponent', () => {
   }));
 
   it('should test download', () => {
-    const spyOnQueryService = jest.spyOn<any, any>(phenoBrowserServiceMock, 'downloadMeasures');
-    const blobSaveSpy = jest.spyOn(saveAs, 'saveAs');
-    component.downloadMeasures();
-    expect(blobSaveSpy).toHaveBeenCalledWith([], 'measures_testDatasetId.csv');
-    expect(blobSaveSpy).toHaveBeenCalledTimes(1);
-    expect(spyOnQueryService).toHaveBeenCalledWith('testDatasetId', null,
-      [{base_url: undefined, description: 'a test measure', figureDistribution: 'http://localhost:8000basetest.jpg',
-        figureDistributionSmall: null, index: 1, instrumentName: 'i1', measureId: 'i1.test_measure',
-        measureName: 'test_measure', measureType: 'ordinal',
-        regressions:
-        {age: {figureRegression: 'http://localhost:8000baseimagepath',
-          figureRegressionSmall: 'http://localhost:8000baseimagepathsmall', measureId: 'i1.test_measure',
-          pvalueRegressionFemale: 0.2, pvalueRegressionMale: 0.000001, regressionId: 'age'}
-        }, valuesDomain: '0,1'}]);
-    expect(spyOnQueryService).toHaveBeenCalledTimes(1);
-    expect(spyOnQueryService.mock.results).toMatchObject([{type: 'return', value: {}}]);
+    const mockEvent = {
+      target: document.createElement('form'),
+      preventDefault: jest.fn()
+    };
+    mockEvent.target.queryData = {
+      value: ''
+    };
+
+    jest.spyOn(mockEvent.target, 'submit').mockImplementation();
+    component.downloadMeasures(mockEvent as any);
+    expect((mockEvent.target.queryData as HTMLInputElement).value).toStrictEqual(JSON.stringify({
+      /* eslint-disable @typescript-eslint/naming-convention */
+      dataset_id: component.selectedDataset.id,
+      instrument: null,
+      measure_ids: ['i1.test_measure']
+      /* eslint-enable */
+    }));
+    expect(mockEvent.target.submit).toHaveBeenCalledTimes(1);
   });
 });
