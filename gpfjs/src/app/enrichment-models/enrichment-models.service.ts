@@ -4,12 +4,12 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 import { ConfigService } from '../config/config.service';
-import { IdDescription } from 'app/common/iddescription';
+import { IdDescriptionName } from 'app/common/iddescription';
 import { map } from 'rxjs/operators';
 
 export interface EnrichmentModels {
-  countings: IdDescription[];
-  backgrounds: IdDescription[];
+  countings: IdDescriptionName[];
+  backgrounds: IdDescriptionName[];
 }
 
 @Injectable()
@@ -26,9 +26,13 @@ export class EnrichmentModelsService {
 
     return this.http
       .get(url)
-      .pipe(map((res: {counting: {name: string; desc: string}[]; background: {name: string; desc: string}[]}) => ({
-        countings: res['counting'].map(j => new IdDescription(j.name, j.desc)),
-        backgrounds: res['background'].map(j => new IdDescription(j.name, j.desc)),
+      .pipe(map((res: {counting: {
+        id: string; name: string; desc: string;
+}[]; background: {
+  id: string;name: string; desc: string;
+}[];}) => ({
+        countings: res['counting'].map(j => new IdDescriptionName(j.id, j.desc, j.name)),
+        backgrounds: res['background'].map(j => new IdDescriptionName(j.id, j.desc, j.name)),
       })));
   }
 }

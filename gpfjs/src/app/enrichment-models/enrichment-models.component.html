@@ -1,20 +1,12 @@
 <div
   *ngIf="backgrounds || countings"
-  style="
-    border-top: 1px solid rgba(0, 0, 0, 12.5%);
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-    flex-wrap: nowrap;
-    flex-direction: column-reverse;
-  ">
+  style="border-top: 1px solid rgba(0, 0, 0, 12.5%); display: flex; justify-content: space-evenly">
   <div *ngIf="backgrounds" id="background-models" style="width: 300px; padding: 15px">
     <span>Background Models:</span>
     <div class="select-wrapper">
       <select
         class="form-control"
-        style="width: 100%"
-        title="{{ background.description }}"
+        style="width: 100%; text-overflow: ellipsis"
         [ngModel]="background"
         (ngModelChange)="changeBackground($event)">
         <option *ngFor="let background of backgrounds" [ngValue]="background">{{ background.id }}</option>
@@ -25,7 +17,12 @@
   <div *ngIf="countings" id="counting-models" style="width: 300px; padding: 15px">
     <span>Counting Models:</span>
     <div class="select-wrapper">
-      <select title="{{ background.description }}" class="form-control" style="width: 100%" [ngModel]="counting" (ngModelChange)="changeCounting($event)">
+      <select
+        class="form-control"
+        title="{{ counting.description }}"
+        style="width: 100%; text-overflow: ellipsis"
+        [ngModel]="counting"
+        (ngModelChange)="changeCounting($event)">
         <option *ngFor="let counting of countings" [ngValue]="counting">{{ counting.id }}</option>
       </select>
       <span class="material-symbols-outlined select-dropdown-icon">arrow_drop_down</span>

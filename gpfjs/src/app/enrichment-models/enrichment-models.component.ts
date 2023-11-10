@@ -1,6 +1,6 @@
 import { Component, OnInit, Input } from '@angular/core';
 import { EnrichmentModelsService } from './enrichment-models.service';
-import { IdDescription } from '../common/iddescription';
+import { IdDescriptionName } from '../common/iddescription';
 import { combineLatest, of } from 'rxjs';
 import { Allow } from 'class-validator';
 import { Store } from '@ngxs/store';
@@ -16,11 +16,11 @@ import { environment } from 'environments/environment';
 export class EnrichmentModelsComponent extends StatefulComponent implements OnInit {
   @Input() private selectedDatasetId: string;
 
-  @Allow() public background: IdDescription;
-  @Allow() public counting: IdDescription;
+  @Allow() public background: IdDescriptionName;
+  @Allow() public counting: IdDescriptionName;
 
-  public countings: Array<IdDescription>;
-  public backgrounds: Array<IdDescription>;
+  public countings: Array<IdDescriptionName>;
+  public backgrounds: Array<IdDescriptionName>;
 
   public imgPathPrefix = environment.imgPathPrefix;
 
@@ -51,12 +51,12 @@ export class EnrichmentModelsComponent extends StatefulComponent implements OnIn
     });
   }
 
-  public changeBackground(newValue: IdDescription): void {
+  public changeBackground(newValue: IdDescriptionName): void {
     this.background = newValue;
     this.store.dispatch(new SetEnrichmentModels(this.background.id, this.counting.id));
   }
 
-  public changeCounting(newValue: IdDescription): void {
+  public changeCounting(newValue: IdDescriptionName): void {
     this.counting = newValue;
     this.store.dispatch(new SetEnrichmentModels(this.background.id, this.counting.id));
   }
