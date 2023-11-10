@@ -7,12 +7,13 @@ from typing import Generator, Union, cast
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework import status
-from django.http.response import StreamingHttpResponse
+from django.http.response import StreamingHttpResponse, FileResponse
 
 from query_base.query_base import QueryDatasetView
 from studies.study_wrapper import RemoteStudyWrapper, StudyWrapper
 
 from utils.streaming_response_util import iterator_to_json
+from utils.query_params import parse_query_params
 
 
 logger = logging.getLogger(__name__)
@@ -162,6 +163,8 @@ class PhenoMeasuresDownload(QueryDatasetView):
 
     def post(self, request: Request) -> Response:
         data = request.data
+        if "queryData" in data:
+            data = parse_query_params(data)
         if "dataset_id" not in data:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         dataset_id = data["dataset_id"]
@@ -197,6 +200,10 @@ class PhenoMeasuresDownload(QueryDatasetView):
         else:
             values_iterator = self.csv_value_iterator(dataset, measure_ids)
 
+        # response = FileResponse(
+            # values_iterator, filename="variants.tsv",
+            # as_attachment=True, content_type="text/tsv"
+        # )
         response = StreamingHttpResponse(
             values_iterator, content_type="text/csv")
 
