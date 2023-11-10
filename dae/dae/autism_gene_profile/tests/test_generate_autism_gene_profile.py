@@ -1,58 +1,342 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
-
+import textwrap
 import pytest
+import yaml
 from pytest_mock import MockerFixture
 
+from dae.testing.import_helpers import vcf_study
+from dae.genomic_resources.testing import \
+    setup_directories, setup_pedigree, setup_vcf
+from dae.testing.t4c8_import import t4c8_gpf
 from dae.autism_gene_profile.generate_autism_gene_profile import main
 from dae.autism_gene_profile.db import AutismGeneProfileDB
 from dae.gpf_instance import GPFInstance
 
 
-@pytest.mark.xfail(reason="requires environment setup")
+@pytest.fixture
+def local_agp_config() -> str:
+    return yaml.dump({
+        "order": [
+            "gene_set_rank",
+            "gene_score",
+            "study_1",
+        ],
+        "default_dataset": "study_1",
+        "gene_sets": [
+            {
+                "category": "gene_set",
+                "display_name": "test gene sets",
+                "sets": [
+                    {
+                        "set_id": "test_gene_set_1",
+                        "collection_id": "gene_sets"
+                    },
+                    {
+                        "set_id": "test_gene_set_2",
+                        "collection_id": "gene_sets"
+                    },
+                    {
+                        "set_id": "test_gene_set_3",
+                        "collection_id": "gene_sets"
+                    },
+                ]
+            },
+        ],
+        "genomic_scores": [
+            {
+                "category": "gene_score",
+                "display_name": "Test gene score",
+                "scores": [
+                    {"score_name": "gene_score1", "format": "%%s"},
+                ]
+            }
+        ],
+        "datasets": {
+            "study_1": {
+                "statistics": [
+                    {
+                        "id": "lgds",
+                        "display_name": "LGDs",
+                        "effects": ["lgds"],
+                        "category": "denovo"
+                    },
+                    {
+                        "id": "denovo_missense",
+                        "display_name": "Missense",
+                        "effects": ["missense"],
+                        "category": "denovo"
+                    }
+                ],
+                "person_sets": [
+                    {
+                        "set_name": "autism",
+                        "collection_name": "phenotype"
+                    },
+                    {
+                        "set_name": "unaffected",
+                        "collection_name": "phenotype"
+                    },
+                ]
+            }
+        }
+    }, default_flow_style=False)
+
+
+@pytest.fixture
+def local_gpf_instance(
+        local_agp_config: str,
+        tmp_path: pathlib.Path) -> None:
+    setup_directories(
+        tmp_path,
+        {
+            "gpf_instance": {
+                "agp_config.yaml": local_agp_config,
+                "gpf_instance.yaml": textwrap.dedent("""
+                    autism_gene_tool_config:
+                        conf_file: "agp_config.yaml"
+                    gene_sets_db:
+                        gene_set_collections:
+                        - gene_sets
+                    gene_scores_db:
+                        gene_scores:
+                        - gene_score1
+                """),
+            },
+            "gene_sets": {
+                "genomic_resource.yaml": textwrap.dedent("""
+                    type: gene_set
+                    id: gene_sets
+                    format: directory
+                    directory: test_gene_sets
+                    web_label: test gene sets
+                    web_format_str: "key| (|count|): |desc"
+                """),
+                "test_gene_sets": {
+                    "test_gene_set_1.txt": textwrap.dedent("""
+                        test_gene_set_1
+                        contains t4
+                        t4
+                    """),
+                    "test_gene_set_2.txt": textwrap.dedent("""
+                        test_gene_set_2
+                        contains c8
+                        c8
+                    """),
+                    "test_gene_set_3.txt": textwrap.dedent("""
+                        test_gene_set_3
+                        contains t4 and c8
+                        t4
+                        c8
+                    """),
+                }
+            },
+            "gene_score1": {
+                "genomic_resource.yaml": textwrap.dedent("""
+                    type: gene_score
+                    filename: score.csv
+                    scores:
+                    - id: gene_score1
+                      desc: Test gene score
+                      histogram:
+                        type: number
+                        number_of_bins: 100
+                        view_range:
+                          min: 0.0
+                          max: 30.0
+                """),
+                "score.csv": textwrap.dedent("""
+                    gene,gene_score1
+                    t4,10
+                    c8,20
+                """),
+            },
+        }
+    )
+
+    ped_path = setup_pedigree(
+        tmp_path / "study_1" / "pedigree" / "in.ped",
+        """
+familyId personId dadId momId sex status role
+f1.1     mom1     0     0     2   1      mom
+f1.1     dad1     0     0     1   1      dad
+f1.1     ch1      dad1  mom1  2   2      prb
+f1.3     mom3     0     0     2   1      mom
+f1.3     dad3     0     0     1   1      dad
+f1.3     ch3      dad3  mom3  2   1      prb
+        """)
+    vcf_path = setup_vcf(
+        tmp_path / "study_1" / "vcf" / "in.vcf.gz",
+        """
+##fileformat=VCFv4.2
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##contig=<ID=chr1>
+##contig=<ID=chr2>
+##contig=<ID=chr3>
+#CHROM POS ID REF ALT QUAL FILTER INFO FORMAT mom1 dad1 ch1 mom3 dad3 ch3
+chr1   15  .  AG  A   .    .      .    GT     0/0  0/0  0/1 0/0  0/0  0/0
+chr1   15  .  A   C   .    .      .    GT     0/0  0/0  0/0 0/0  0/0  0/1
+chr1   35  .  G   A   .    .      .    GT     0/0  0/0  0/1 0/0  0/0  0/0
+chr1   35  .  G   C   .    .      .    GT     0/0  0/0  0/0 0/0  0/0  0/1
+chr1   126 .  T   A   .    .      .    GT     0/0  0/0  0/1 0/0  0/0  0/0
+chr1   135 .  T   A   .    .      .    GT     0/0  0/0  0/0 0/0  0/0  0/1
+chr1   165 .  G   T   .    .      .    GT     0/0  0/1  0/1 0/0  0/0  0/0
+chr1   195 .  C   T   .    .      .    GT     0/0  0/0  0/1 0/0  0/0  0/0
+        """)  # noqa
+
+    project_config_update = {
+        "input": {
+            "vcf": {
+                "denovo_mode": "denovo",
+                "omission_mode": "omission",
+            }
+        },
+    }
+
+    instance = t4c8_gpf(tmp_path)
+
+    vcf_study(
+        tmp_path,
+        "study_1", ped_path, [vcf_path],
+        instance,
+        project_config_update=project_config_update,
+        study_config_update={
+            "conf_dir": str(tmp_path / "study_1"),
+            "person_set_collections": {
+                "phenotype": {
+                    "id": "phenotype",
+                    "name": "Phenotype",
+                    "sources": [
+                        {
+                            "from": "pedigree",
+                            "source": "status"
+                        }
+                    ],
+                    "default": {
+                        "color": "#aaaaaa",
+                        "id": "unspecified",
+                        "name": "unspecified",
+                    },
+                    "domain": [
+                        {
+                            "color": "#bbbbbb",
+                            "id": "autism",
+                            "name": "autism",
+                            "values": [
+                                "affected"
+                            ]
+                        },
+                        {
+                            "color": "#00ff00",
+                            "id": "unaffected",
+                            "name": "unaffected",
+                            "values": [
+                                "unaffected"
+                            ]
+                        },
+                    ]
+                },
+                "selected_person_set_collections": [
+                    "phenotype"
+                ]
+            }
+        })
+
+    return instance
+
+
 def test_generate_autism_gene_profile(
         local_gpf_instance: GPFInstance,
-        tmp_path: pathlib.Path, mocker: MockerFixture) -> None:
+        tmp_path: pathlib.Path) -> None:
     agpdb_filename = str(tmp_path / "agpdb")
     argv = [
         "--dbfile",
         agpdb_filename,
         "-vv",
-        "--genes",
-        "PCDHA4",
     ]
-
+    # local_gpf_instance._autism_gene_profile_config = local_agp_config
     main(local_gpf_instance, argv)
     agpdb = AutismGeneProfileDB(
         local_gpf_instance._autism_gene_profile_config,
         agpdb_filename,
         clear=False
     )
-    agp = agpdb.get_agp("PCDHA4")
-    assert agp is not None
+    t4 = agpdb.get_agp("t4")
+    c8 = agpdb.get_agp("c8")
 
-    counts = agp.variant_counts["iossifov_2014"]
-    assert counts is not None
+    assert t4.gene_sets == [
+        "gene_sets_test_gene_set_1",
+        "gene_sets_test_gene_set_3"
+    ]
+    assert c8.gene_sets == [
+        "gene_sets_test_gene_set_2",
+        "gene_sets_test_gene_set_3"
+    ]
 
-    unknown = counts["autism"]
-    assert unknown["denovo_noncoding"] == {
-        "count": 1,
-        "rate": 90.9090909090909
+    assert t4.genomic_scores == {
+        "gene_score": {
+            "gene_score1": {
+                "format": "%s",
+                "value": 10.0
+            }
+        }
     }
-    assert unknown["denovo_missense"] == {
-        "count": 0,
-        "rate": 0.0
+
+    assert c8.genomic_scores == {
+        "gene_score": {
+            "gene_score1": {
+                "format": "%s",
+                "value": 20.0
+            }
+        }
     }
 
-    counts = agp.variant_counts["iossifov_2014"]
-    assert counts is not None
-
-    unaffected = counts["unaffected"]
-    assert unaffected["denovo_noncoding"] == {
-        "count": 0,
-        "rate": 0.0
+    assert t4.variant_counts == {
+        "study_1": {
+            "autism": {
+                "lgds": {
+                    "count": 1.0,
+                    "rate": 1000.0
+                },
+                "denovo_missense": {
+                    "count": 1.0,
+                    "rate": 1000.0
+                }
+            },
+            "unaffected": {
+                "lgds": {
+                    "count": 0.0,
+                    "rate": 0.0
+                },
+                "denovo_missense": {
+                    "count": 2.0,
+                    "rate": 2000.0
+                }
+            }
+        }
     }
-    assert unaffected["denovo_missense"] == {
-        "count": 0,
-        "rate": 0.0
+
+    assert c8.variant_counts == {
+        "study_1": {
+            "autism": {
+                "lgds": {
+                    "count": 1.0,
+                    "rate": 1000.0
+                },
+                "denovo_missense": {
+                    "count": 1.0,
+                    "rate": 1000.0
+                }
+            },
+            "unaffected": {
+                "lgds": {
+                    "count": 1.0,
+                    "rate": 1000.0
+                },
+                "denovo_missense": {
+                    "count": 0.0,
+                    "rate": 0.0
+                }
+            }
+        }
     }
