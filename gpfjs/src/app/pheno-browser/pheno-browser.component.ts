@@ -138,10 +138,12 @@ export class PhenoBrowserComponent implements OnInit {
       // }
       // );
 
+      const measureIds = this.measuresToShow.measures.map(m => m.measureId);
+
       const data = {
         dataset_id: this.selectedDatasetId,
         instrument: instrument,
-        measure_ids: this.measuresToShow.measures
+        measure_ids: measureIds
       };
       console.log(data)
       if (event.target instanceof HTMLFormElement) {
