@@ -4,7 +4,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 import { ConfigService } from '../config/config.service';
-import { IdDescriptionName } from 'app/common/iddescription';
+import { IdDescriptionName } from './iddescription';
 import { map } from 'rxjs/operators';
 
 export interface EnrichmentModels {
@@ -31,8 +31,8 @@ export class EnrichmentModelsService {
 }[]; background: {
   id: string;name: string; desc: string;
 }[];}) => ({
-        countings: res['counting'].map(j => new IdDescriptionName(j.id, j.desc, j.name)),
-        backgrounds: res['background'].map(j => new IdDescriptionName(j.id, j.desc, j.name)),
+        countings: res['counting'].map(j => new IdDescriptionName(j.name, j.desc, j.id)),
+        backgrounds: res['background'].map(j => new IdDescriptionName(j.name, j.desc, j.id)),
       })));
   }
 }

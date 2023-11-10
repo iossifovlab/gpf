@@ -1,6 +1,6 @@
 import { Component, OnInit, Input } from '@angular/core';
 import { EnrichmentModelsService } from './enrichment-models.service';
-import { IdDescriptionName } from '../common/iddescription';
+import { IdDescriptionName } from './iddescription';
 import { combineLatest, of } from 'rxjs';
 import { Allow } from 'class-validator';
 import { Store } from '@ngxs/store';
