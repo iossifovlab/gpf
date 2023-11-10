@@ -475,6 +475,8 @@ class WGPFInstance(GPFInstance):
                 for o in order
             ]
 
+            json_config["pageSize"] = self._autism_gene_profile_db.PAGE_SIZE
+
             self._agp_configuration = json_config
 
         self._agp_table_configuration = {}
