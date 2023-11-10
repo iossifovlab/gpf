@@ -200,10 +200,6 @@ class PhenoMeasuresDownload(QueryDatasetView):
         else:
             values_iterator = self.csv_value_iterator(dataset, measure_ids)
 
-        # response = FileResponse(
-            # values_iterator, filename="variants.tsv",
-            # as_attachment=True, content_type="text/tsv"
-        # )
         response = StreamingHttpResponse(
             values_iterator, content_type="text/csv")
 
