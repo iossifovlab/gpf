@@ -279,9 +279,10 @@ class PhenotypeData(ABC):
         return self._measures[measure_id]
 
     def get_measures(
-            self,
-            instrument_name: Optional[str] = None,
-            measure_type: Optional[MeasureType] = None) -> dict[str, Measure]:
+        self,
+        instrument_name: Optional[str] = None,
+        measure_type: Optional[str] = None
+    ) -> dict[str, Measure]:
         """
         Return a dictionary of measures objects.
 
@@ -302,13 +303,14 @@ class PhenotypeData(ABC):
                 instrument_name: self.instruments[instrument_name]
             }
 
+        type_query = None
         if measure_type is not None:
-            measure_type = MeasureType.from_str(measure_type)
+            type_query = MeasureType.from_str(measure_type)
 
         for _, instrument in instruments.items():
             for measure in instrument.measures.values():
-                if measure_type is not None and \
-                        measure.measure_type != measure_type:
+                if type_query is not None and \
+                        measure.measure_type != type_query:
                     continue
                 result[measure.measure_id] = measure
 
@@ -1021,7 +1023,7 @@ class PhenotypeStudy(PhenotypeData):
                 yield output
 
     def get_regressions(self) -> dict[str, Any]:
-        return cast(dict[str, Any], self.db.regression_display_names_with_ids)
+        return self.db.regression_display_names_with_ids
 
     def _get_pheno_images_base_url(self) -> Optional[str]:
         return None if self.config is None \
@@ -1042,7 +1044,8 @@ class PhenotypeStudy(PhenotypeData):
         for measure in measures:
             if measure["values_domain"] is None:
                 measure["values_domain"] = ""
-            measure["measure_type"] = measure["measure_type"].name
+            measure["measure_type"] = \
+                cast(MeasureType, measure["measure_type"]).name
 
             measure["regressions"] = []
             regressions = self.db.get_regression_values(
@@ -1136,39 +1139,6 @@ class PhenotypeGroup(PhenotypeData):
                     group_instrument.measures[full_name] = measure
                     group_measures[full_name] = measure
                 group_instruments[instrument_name] = group_instrument
-
-        # group_instruments = {}
-        # group_measures = {}
-        # for pheno_instruments in phenos_instruments:
-        #     for instrument_name, instrument in pheno_instruments.items():
-        #         if instrument_name not in group_instruments:
-        #             group_instruments[instrument_name] = instrument
-        #             group_measures.update({
-        #                 f"{instrument_name}.{name}": measure
-        #                 for name, measure in instrument.measures.items()
-        #             })
-        #         else:
-        #             # try to merge instrument
-        #             logger.info(
-        #                 f"trying to merge instrument {instrument_name}")
-
-        #             group_instrument = group_instruments[instrument_name]
-        #             assert group_instrument.instrument_name == \
-        #                 instrument_name
-
-        #             measure_ids = set(instrument.keys())
-        #             group_measure_ids = set(group_instrument.measures.keys())
-
-        #             if measure_ids & group_measure_ids:
-        #                 msg = f"can't merge instruments because of " \
-        #                     f"measures {measure_ids & group_measure_ids}"
-        #                 logger.error(msg)
-        #                 raise ValueError(msg)
-        #             group_instrument.measures.update(instrument.measures)
-        #             group_measures.update({
-        #                 f"{instrument_name}.{name}": measure
-        #                 for name, measure in instrument.measures.items()
-        #             })
 
         return group_instruments, group_measures
 

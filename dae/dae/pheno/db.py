@@ -1,4 +1,4 @@
-from typing import Dict, Iterator, List, Union, Optional, Any, cast
+from typing import Dict, Iterator, Optional, Any, cast
 
 from sqlalchemy import MetaData, create_engine
 from sqlalchemy import Table, Column, Integer, String, Float, Enum, \
@@ -284,7 +284,7 @@ class DbManager:
     def search_measures(
         self, instrument_name: Optional[str] = None,
         keyword: Optional[str] = None
-    ) -> Iterator[Dict[str, Union[str, MeasureType, None]]]:
+    ) -> Iterator[dict[str, Any]]:
         """Find measert by keyword search."""
         query_params = []
 
@@ -391,7 +391,7 @@ class DbManager:
             return connection.execute(selector).fetchall()
 
     @property
-    def regression_ids(self) -> List[str]:
+    def regression_ids(self) -> list[str]:
         selector = select(self.regressions.c.regression_id)
         with self.browser_engine.connect() as connection:
             return list(map(
