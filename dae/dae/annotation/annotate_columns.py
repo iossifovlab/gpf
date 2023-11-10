@@ -57,10 +57,7 @@ def configure_argument_parser() -> argparse.ArgumentParser:
                         help="The column separator in the output")
     parser.add_argument("--reannotate", default=None,
                         help="Old pipeline config to reannotate over")
-    parser.add_argument("-ar", "--allow-repeated-attributes", default=False,
-                        action="store_true",
-                        help="Rename repeated attributes instead of raising"
-                        " an error.")
+
     CLIAnnotationContext.add_context_arguments(parser)
     add_record_to_annotable_arguments(parser)
     TaskGraphCli.add_arguments(parser)

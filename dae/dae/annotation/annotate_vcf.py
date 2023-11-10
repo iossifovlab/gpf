@@ -52,10 +52,7 @@ def configure_argument_parser() -> argparse.ArgumentParser:
                         default=None)
     parser.add_argument("--reannotate", default=None,
                         help="Old pipeline config to reannotate over")
-    parser.add_argument("-ar", "--allow-repeated-attributes", default=False,
-                        action="store_true",
-                        help="Rename repeated attributes instead of raising"
-                        " an error.")
+
     CLIAnnotationContext.add_context_arguments(parser)
     TaskGraphCli.add_arguments(parser)
     VerbosityConfiguration.set_argumnets(parser)
@@ -371,7 +368,6 @@ def cli(raw_args: Optional[list[str]] = None) -> None:
     args.log_dir = os.path.join(args.work_dir, ".tasks-log")
 
     TaskGraphCli.process_graph(task_graph, **vars(args))
-
 
 
 if __name__ == "__main__":
