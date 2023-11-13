@@ -1041,7 +1041,6 @@ class PhenotypeStudy(PhenotypeData):
         self, instrument: Optional[str], search_term: Optional[str]
     ) -> Generator[dict[str, Any], None, None]:
         measures = self.db.search_measures(instrument, search_term)
-
         for measure in measures:
             if measure["values_domain"] is None:
                 measure["values_domain"] = ""
@@ -1053,7 +1052,6 @@ class PhenotypeStudy(PhenotypeData):
                 measure["measure_id"]) or []
 
             for reg in regressions:
-                reg = reg._mapping  # pylint: disable=protected-access
                 if isnan(reg["pvalue_regression_male"]):
                     reg["pvalue_regression_male"] = "NaN"
                 if isnan(reg["pvalue_regression_female"]):
