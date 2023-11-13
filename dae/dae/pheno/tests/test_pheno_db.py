@@ -76,28 +76,29 @@ def test_get_values(fake_phenotype_data, query_cols, get, check):
 def test_get_people_measure_values(fake_phenotype_data, query_cols):
     result_it = fake_phenotype_data.get_people_measure_values(query_cols)
     result = list(result_it)
-    dict_list_check(result, 195, ["person_id"] + query_cols)
+    dict_list_check(result, 195, ["family_id", "person_id"] + query_cols)
 
     result_it = fake_phenotype_data.get_people_measure_values(
         query_cols, ["f20.p1"])
     result = list(result_it)
-    dict_list_check(result, 1, ["person_id"] + query_cols)
+    dict_list_check(result, 1, ["family_id", "person_id"] + query_cols)
 
     result_it = fake_phenotype_data.get_people_measure_values(
         query_cols, ["f20.p1", "f21.p1"])
     result = list(result_it)
-    dict_list_check(result, 2, ["person_id"] + query_cols)
+    dict_list_check(result, 2, ["family_id", "person_id"] + query_cols)
 
     result_it = fake_phenotype_data.get_people_measure_values(
         query_cols, roles=["prb"])
     result = list(result_it)
-    dict_list_check(result, 39, ["person_id"] + query_cols)
+    dict_list_check(result, 39, ["family_id", "person_id"] + query_cols)
 
 
 def test_get_people_measure_values_correct_values(fake_phenotype_data):
     result_list = list(fake_phenotype_data.get_people_measure_values(
         ["i1.m1", "i1.m2"], roles=["prb"]))
     assert result_list[-1] == {
+        "family_id": "f1",
         "person_id": "f1.p1",
         "i1.m1": 34.76285793898369,
         "i1.m2": 48.44644402952317
@@ -148,7 +149,8 @@ def test_subquery_generation(fake_phenotype_data):
 
     print(query)
     expected = (
-        "SELECT person.person_id, \"i1.m1_value\".value AS 'i1.m1', "
+        "SELECT family.family_id, person.person_id, "
+        "\"i1.m1_value\".value AS 'i1.m1', "
         "\"i1.m2_value\".value AS 'i1.m2' \n"
         "FROM person JOIN family ON family.id = person.family_id "
         'LEFT OUTER JOIN value_continuous as "i1.m1_value" '

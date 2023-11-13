@@ -6,8 +6,6 @@ from functools import partial
 from typing import Optional, Any, Union, Generator, Iterator, Iterable, \
     Callable, cast
 
-import pandas as pd
-
 from dae.utils.dae_utils import join_line, split_iterable
 from dae.utils.variant_utils import mat2str, fgt2str
 from dae.utils.effect_utils import ge2str, \
@@ -159,7 +157,7 @@ class ResponseTransformer:
 
         self.study_wrapper = cast(StudyWrapper, study_wrapper)
         self._pheno_columns = study_wrapper.config_columns.phenotype
-        self._pheno_values: Optional[list[tuple[pd.DataFrame, str]]] = None
+        self._pheno_values: Optional[dict[str, Any]] = None
 
         self.gene_scores_dicts = {}
         if not study_wrapper.is_remote \
@@ -182,48 +180,43 @@ class ResponseTransformer:
 
     def _get_all_pheno_values(
         self
-    ) -> Optional[list[tuple[pd.DataFrame, str]]]:
+    ) -> Optional[dict]:
         if self._pheno_values is not None:
             return self._pheno_values
         if not self.study_wrapper.phenotype_data \
            or not self.study_wrapper.config_columns.phenotype:
             return None
 
-        pheno_column_names = []
-        pheno_column_dfs = []
+        pheno_values = {}
+
         for column in self.study_wrapper.config_columns.phenotype.values():
             assert column.role
-            pheno_column_names.append(f"{column.source}.{column.role}")
-            pheno_column_dfs.append(
-                self.study_wrapper.phenotype_data.get_measure_values_df(
-                    column.source
-                )
-            )
+            result = {}
+            column_values_iter = self.study_wrapper\
+                .phenotype_data.get_people_measure_values(
+                    [column.source], roles=[column.role])
+            for column_value in column_values_iter:
+                result[column_value["family_id"]] = column_value[column.source]
 
-        self._pheno_values = list(zip(pheno_column_dfs, pheno_column_names))
+            pheno_column_name = f"{column.source}.{column.role}"
+            pheno_values[pheno_column_name] = result
+        self._pheno_values = pheno_values
         return self._pheno_values
 
     @staticmethod
     def _get_pheno_values_for_variant(
         variant: FamilyVariant,
-        pheno_column_values: Optional[list[tuple[pd.DataFrame, str]]]
+        pheno_column_values: Optional[dict]
     ) -> Optional[dict[str, str]]:
         if not pheno_column_values:
             return None
 
         pheno_values = {}
 
-        for pheno_column_df, pheno_column_name in pheno_column_values:
-            variant_pheno_value_df = pheno_column_df[
-                pheno_column_df["person_id"].isin(variant.members_ids)
-            ]
-            variant_pheno_value_df.set_index("person_id", inplace=True)
-            assert len(variant_pheno_value_df.columns) == 1
-            column = variant_pheno_value_df.columns[0]
-
-            pheno_values[pheno_column_name] = ",".join(
-                variant_pheno_value_df[column].map(str).tolist()
-            )
+        for pheno_column_name in pheno_column_values:
+            family_id = variant.family_id
+            pheno_value = pheno_column_values[pheno_column_name].get(family_id)
+            pheno_values[pheno_column_name] = pheno_value
 
         return pheno_values
 

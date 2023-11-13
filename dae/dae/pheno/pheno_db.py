@@ -903,6 +903,7 @@ class PhenotypeStudy(PhenotypeData):
         roles: Optional[list[str]] = None,
     ) -> Select:
         select_columns = [
+            self.db.family.c.family_id,
             self.db.person.c.person_id
         ]
         for m_id in measure_ids:
