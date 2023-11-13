@@ -82,15 +82,14 @@ describe('pheno measure', () => {
 });
 
 describe('pheno measures', () => {
-  // eslint-disable-next-line @typescript-eslint/naming-convention
-  const base_path = '/test_base_url/';
+  const basePath = '/test_base_url/';
   let phenoMeasure = PhenoMeasure.fromJson(fakeJsonMeasure);
 
-  phenoMeasure = PhenoMeasure.addBasePath(phenoMeasure, base_path);
+  phenoMeasure = PhenoMeasure.addBasePath(phenoMeasure, basePath);
 
   const phenoMeasures = PhenoMeasures.fromJson({
     /* eslint-disable @typescript-eslint/naming-convention */
-    base_image_url: base_path,
+    base_image_url: basePath,
     measures: [fakeJsonMeasure],
     has_descriptions: true
     /* eslint-enable */

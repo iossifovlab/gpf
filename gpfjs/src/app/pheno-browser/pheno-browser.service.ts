@@ -104,21 +104,4 @@ export class PhenoBrowserService {
     return `${this.config.baseUrl}${this.downloadUrl}`
            + `?dataset_id=${datasetId}&instrument=${instrument}`;
   }
-
-  public downloadMeasures(
-    datasetId: string,
-    instrument: PhenoInstrument,
-    selectedMeasures: PhenoMeasure[]
-  ): Observable<Blob> {
-    const measureIds = selectedMeasures.map(m => m.measureId);
-    return this.http.post(
-      this.config.baseUrl + this.downloadUrl,
-      { dataset_id: datasetId, instrument: instrument, measure_ids: measureIds },
-      {
-        responseType: 'blob',
-        headers: new HttpHeaders().append('Content-Type', 'application/json'),
-        withCredentials: true
-      }
-    );
-  }
 }
