@@ -73,7 +73,7 @@ describe('pheno measure', () => {
     expect(phenoMeasure.instrumentName).toBe('test_instrument');
     expect(phenoMeasure.valuesDomain).toBe('0,1');
     expect(phenoMeasure.figureDistribution).toBe('test.jpg');
-    expect(phenoMeasure.figureDistributionSmall).toBe(null);
+    expect(phenoMeasure.figureDistributionSmall).toBeNull();
     expect(phenoMeasure.measureId).toBe('test_instrument.test_measure');
     expect(phenoMeasure.measureName).toBe('test_measure');
     expect(phenoMeasure.measureType).toBe('ordinal');
@@ -82,15 +82,19 @@ describe('pheno measure', () => {
 });
 
 describe('pheno measures', () => {
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   const base_path = '/test_base_url/';
   let phenoMeasure = PhenoMeasure.fromJson(fakeJsonMeasure);
 
   phenoMeasure = PhenoMeasure.addBasePath(phenoMeasure, base_path);
 
   const phenoMeasures = PhenoMeasures.fromJson({
+    /* eslint-disable @typescript-eslint/naming-convention */
     base_image_url: base_path,
     measures: [fakeJsonMeasure],
-    has_descriptions: true,
+    has_descriptions: true
+    /* eslint-enable */
+
   });
 
   it('should be creatable from a given json', () => {
@@ -132,26 +136,28 @@ describe('PhenoRegressions', () => {
   const phenoRegressionsBasePath = new PhenoRegressions(fakeJsonMeasureTwoRegressions.regressions);
 
   it('should be creatable from a given json', () => {
-    expect(phenoRegressions['age'].regressionId).toBe('age');
-    expect(phenoRegressions['age'].measureId).toBe('test_instrument.test_measure');
-    expect(phenoRegressions['age'].figureRegression).toBe('imagepathage');
-    expect(phenoRegressions['age'].figureRegressionSmall).toBe('imagepathagesmall');
-    expect(phenoRegressions['age'].pvalueRegressionMale).toBe(0.01);
-    expect(phenoRegressions['age'].pvalueRegressionFemale).toBe(1.00);
+    expect((phenoRegressions['age'] as PhenoRegression).regressionId).toBe('age');
+    expect((phenoRegressions['age'] as PhenoRegression).measureId).toBe('test_instrument.test_measure');
+    expect((phenoRegressions['age'] as PhenoRegression).figureRegression).toBe('imagepathage');
+    expect((phenoRegressions['age'] as PhenoRegression).figureRegressionSmall).toBe('imagepathagesmall');
+    expect((phenoRegressions['age'] as PhenoRegression).pvalueRegressionMale).toBe(0.01);
+    expect((phenoRegressions['age'] as PhenoRegression).pvalueRegressionFemale).toBe(1.00);
 
-    expect(phenoRegressions['iq'].regressionId).toBe('iq');
-    expect(phenoRegressions['iq'].measureId).toBe('test_instrument.test_measure');
-    expect(phenoRegressions['iq'].figureRegression).toBe('imagepathiq');
-    expect(phenoRegressions['iq'].figureRegressionSmall).toBe('imagepathiqsmall');
-    expect(phenoRegressions['iq'].pvalueRegressionMale).toBe(0.02);
-    expect(phenoRegressions['iq'].pvalueRegressionFemale).toBe(2.00);
+    expect((phenoRegressions['iq'] as PhenoRegression).regressionId).toBe('iq');
+    expect((phenoRegressions['iq'] as PhenoRegression).measureId).toBe('test_instrument.test_measure');
+    expect((phenoRegressions['iq'] as PhenoRegression).figureRegression).toBe('imagepathiq');
+    expect((phenoRegressions['iq'] as PhenoRegression).figureRegressionSmall).toBe('imagepathiqsmall');
+    expect((phenoRegressions['iq'] as PhenoRegression).pvalueRegressionMale).toBe(0.02);
+    expect((phenoRegressions['iq'] as PhenoRegression).pvalueRegressionFemale).toBe(2.00);
   });
 
   it('should be able to add a base path', () => {
     phenoRegressionsBasePath.addBasePath('a_base_path/');
-    expect(phenoRegressionsBasePath['age'].figureRegression).toBe('a_base_path/imagepathage');
-    expect(phenoRegressionsBasePath['age'].figureRegressionSmall).toBe('a_base_path/imagepathagesmall');
-    expect(phenoRegressionsBasePath['iq'].figureRegression).toBe('a_base_path/imagepathiq');
-    expect(phenoRegressionsBasePath['iq'].figureRegressionSmall).toBe('a_base_path/imagepathiqsmall');
+    expect((phenoRegressionsBasePath['age'] as PhenoRegression).figureRegression).toBe('a_base_path/imagepathage');
+    expect((phenoRegressionsBasePath['age'] as PhenoRegression).figureRegressionSmall)
+      .toBe('a_base_path/imagepathagesmall');
+    expect((phenoRegressionsBasePath['iq'] as PhenoRegression).figureRegression).toBe('a_base_path/imagepathiq');
+    expect((phenoRegressionsBasePath['iq'] as PhenoRegression).figureRegressionSmall)
+      .toBe('a_base_path/imagepathiqsmall');
   });
 });

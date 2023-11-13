@@ -9,7 +9,6 @@ import { DatasetsService } from '../datasets/datasets.service';
 import { debounceTime, distinctUntilChanged, map, share, switchMap, take, tap } from 'rxjs/operators';
 import { environment } from 'environments/environment';
 import { ConfigService } from 'app/config/config.service';
-import { saveAs } from 'file-saver';
 
 @Component({
   selector: 'gpf-pheno-browser',

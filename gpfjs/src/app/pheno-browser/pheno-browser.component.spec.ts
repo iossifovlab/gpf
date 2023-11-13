@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { PhenoBrowserComponent } from './pheno-browser.component';
 import { DatasetsService } from '../datasets/datasets.service';
 import { PhenoBrowserService } from './pheno-browser.service';
-import { PhenoInstruments, PhenoInstrument, PhenoMeasures, PhenoMeasure } from './pheno-browser';
+import { PhenoInstruments,PhenoInstrument, PhenoMeasures, PhenoMeasure, PhenoRegressions } from './pheno-browser';
 import { fakeJsonMeasureOneRegression } from './pheno-browser.spec';
 import { environment } from '../../environments/environment';
 import { FormsModule } from '@angular/forms';
@@ -30,13 +30,12 @@ import { ConfigService } from 'app/config/config.service';
 import { RegressionComparePipe } from 'app/utils/regression-compare.pipe';
 import { GetRegressionIdsPipe } from 'app/utils/get-regression-ids.pipe';
 import { BackgroundColorPipe } from 'app/utils/background-color.pipe';
-import * as saveAs from 'file-saver';
 
-const fakeJsonMeasurei1 = JSON.parse(JSON.stringify(fakeJsonMeasureOneRegression));
-fakeJsonMeasurei1.instrument_name = 'i1';
-fakeJsonMeasurei1.measure_id = 'i1.test_measure';
-fakeJsonMeasurei1.measure_name = 'test_measure';
-fakeJsonMeasurei1.regressions[0].measure_id = 'i1.test_measure';
+const fakeJsonMeasurei1 = JSON.parse(JSON.stringify(fakeJsonMeasureOneRegression)) as object;
+fakeJsonMeasurei1['instrument_name'] = 'i1';
+fakeJsonMeasurei1['measure_id'] = 'i1.test_measure';
+fakeJsonMeasurei1['measure_name'] = 'test_measure';
+(fakeJsonMeasurei1['regressions'] as PhenoRegressions[])[0]['measure_id']= 'i1.test_measure';
 
 class MockPhenoBrowserService {
   public getInstruments(): Observable<PhenoInstruments> {
@@ -50,6 +49,7 @@ class MockPhenoBrowserService {
 
   public getMeasuresInfo(): Observable<PhenoMeasures> {
     const measuresInfo = PhenoMeasures.fromJson(
+      // eslint-disable-next-line @typescript-eslint/naming-convention
       {base_image_url: 'base', has_descriptions: true, regression_names: {age: 'age'}}
     );
     return of(measuresInfo);
@@ -78,12 +78,12 @@ class MockActivatedRoute {
 }
 
 class MockRouter {
-  public createUrlTree(commands: any[], navigationExtras: any) {
+  public createUrlTree(commands: any[], navigationExtras: any): string {
     return `${navigationExtras.queryParams.instrument}/${navigationExtras.queryParams.search}`;
   }
 }
 
-function setQuery(fixture: ComponentFixture<PhenoBrowserComponent>, instrument: number, search: string) {
+function setQuery(fixture: ComponentFixture<PhenoBrowserComponent>, instrument: number, search: string): void {
   const selectElem = fixture.nativeElement.querySelector('select');
   const searchElem = fixture.nativeElement.querySelector('input');
   const selectedOptionElem = fixture.debugElement.queryAll(By.css('option'))[instrument];
@@ -129,7 +129,7 @@ describe('PhenoBrowserComponent', () => {
         { provide: PhenoBrowserService, useValue: phenoBrowserServiceMock },
         { provide: ActivatedRoute, useValue: activatedRoute },
         { provide: Router, useClass: MockRouter },
-        { provide: Location, useValue: locationSpy },
+        { provide: Location, useValue: locationSpy as object},
         { provide: PValueIntensityPipe, useClass: PValueIntensityPipe },
         { provide: ResizeService, useValue: resizeSpy },
         ConfigService
@@ -194,8 +194,8 @@ describe('PhenoBrowserComponent', () => {
     jest.spyOn(router, 'createUrlTree');
     setQuery(fixture, 2, 'q12');
     fixture.whenStable().then(() => {
-      expect(router.createUrlTree).toHaveBeenCalledTimes(2);
-      expect(router.createUrlTree).toHaveBeenCalledWith(['.'], {
+      expect((router as Router).createUrlTree).toHaveBeenCalledTimes(2);
+      expect((router as Router).createUrlTree).toHaveBeenCalledWith(['.'], {
         relativeTo: activatedRoute,
         queryParams: {instrument: 'i2', search: 'q12'}
       });
@@ -244,7 +244,7 @@ describe('PhenoBrowserComponent', () => {
     };
 
     jest.spyOn(mockEvent.target, 'submit').mockImplementation();
-    component.downloadMeasures(mockEvent as any);
+    component.downloadMeasures(mockEvent as unknown as Event);
     expect((mockEvent.target.queryData as HTMLInputElement).value).toStrictEqual(JSON.stringify({
       /* eslint-disable @typescript-eslint/naming-convention */
       dataset_id: component.selectedDataset.id,
