@@ -32,10 +32,12 @@ export class PhenoRegression {
 
 export class PhenoRegressions {
   public static emptyRegression = new PhenoRegression({
+    /* eslint-disable @typescript-eslint/naming-convention */
     figure_regression: null,
     figure_regression_small: null,
     pvalue_regression_male: null,
     pvalue_regression_female: null
+    /* eslint-enable */
   });
 
   public constructor(regArr: object[]) {
@@ -109,7 +111,7 @@ export class PhenoMeasure {
 
       measure.regressions,
 
-      measure.base_url
+      measure.baseUrl
     );
     return newMeasure;
   }
@@ -129,15 +131,15 @@ export class PhenoMeasure {
 
     public readonly regressions: PhenoRegressions,
 
-    public readonly base_url: string,
+    public readonly baseUrl: string,
   ) { }
 }
 
 export class PhenoMeasures {
   public addMeasure(measure: PhenoMeasure): void {
     let basePath: string;
-    if (measure.base_url) {
-      basePath = measure.base_url + this.baseImageUrl;
+    if (measure.baseUrl) {
+      basePath = measure.baseUrl + this.baseImageUrl;
     } else {
       basePath = environment.basePath + this.baseImageUrl;
     }
@@ -159,7 +161,7 @@ export class PhenoMeasures {
 
       measure.regressions,
 
-      measure.base_url
+      measure.baseUrl
     );
     this.measures.push(newMeasure);
   }

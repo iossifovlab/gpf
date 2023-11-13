@@ -9,7 +9,6 @@ import { DatasetsService } from '../datasets/datasets.service';
 import { debounceTime, distinctUntilChanged, map, share, switchMap, take, tap } from 'rxjs/operators';
 import { environment } from 'environments/environment';
 import { ConfigService } from 'app/config/config.service';
-import { saveAs } from 'file-saver';
 
 @Component({
   selector: 'gpf-pheno-browser',
@@ -118,25 +117,26 @@ export class PhenoBrowserComponent implements OnInit {
     this.selectedInstrument$.next(instrument);
   }
 
-  public downloadMeasures(): void {
-    let filename: string;
-
+  public downloadMeasures(event: Event): void {
     this.selectedInstrument$.pipe(take(1)).subscribe(instrument => {
-      filename = `measures_${this.selectedDatasetId}_${instrument}.csv`;
-
       if (instrument === '') {
         instrument = null;
-        filename = `measures_${this.selectedDatasetId}.csv`;
       }
 
-      this.phenoBrowserService.downloadMeasures(
-        this.selectedDatasetId,
-        instrument,
-        this.measuresToShow.measures
-      ).pipe(take(1)).subscribe(data => {
-        saveAs(data, filename);
+      const measureIds = this.measuresToShow.measures.map(m => m.measureId);
+
+      /* eslint-disable @typescript-eslint/naming-convention */
+      const data = {
+        dataset_id: this.selectedDatasetId,
+        instrument: instrument,
+        measure_ids: measureIds
+      };
+      /* eslint-enable */
+
+      if (event.target instanceof HTMLFormElement) {
+        (event.target.queryData as HTMLInputElement).value = JSON.stringify(data);
+        event.target.submit();
       }
-      );
     });
   }
 
