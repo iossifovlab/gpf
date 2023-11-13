@@ -6,7 +6,7 @@ from dae.pheno.prepare.measure_classifier import MeasureClassifier
 from dae.pheno.common import default_config, MeasureType
 
 
-def test_classifier_non_numeric():
+def test_classifier_non_numeric() -> None:
     values = pd.Series(data=["1", "2", "3", "4.4", "a"])
 
     res = MeasureClassifier.meta_measures(values)
@@ -22,7 +22,7 @@ def test_classifier_non_numeric():
     print(res.dtype)
 
 
-def test_classifier_nan():
+def test_classifier_nan() -> None:
     values = pd.Series(data=[" ", None, np.nan, "1", "2.2"])
     res = MeasureClassifier.meta_measures(values)
     print(res)
@@ -37,7 +37,7 @@ def test_classifier_nan():
     print(res.dtype)
 
 
-def test_classifier_float():
+def test_classifier_float() -> None:
     values = pd.Series(data=[" ", None, np.nan, 1, 2.2])
     res = MeasureClassifier.meta_measures(values)
     print(res)
@@ -52,7 +52,7 @@ def test_classifier_float():
     print(res.dtype)
 
 
-def test_classifier_all_float():
+def test_classifier_all_float() -> None:
     values = pd.Series(data=[3.3, 1, 2.2])
     res = MeasureClassifier.meta_measures(values)
     print(res)
@@ -67,7 +67,7 @@ def test_classifier_all_float():
     print(res.dtype)
 
 
-def test_classifier_all_float_again():
+def test_classifier_all_float_again() -> None:
     values = pd.Series(data=[3.3, 1, 2.2, 3.3, 1, 1])
     res = MeasureClassifier.meta_measures(values)
     assert res.count_with_values == 6
@@ -80,7 +80,7 @@ def test_classifier_all_float_again():
     print(res.dtype)
 
 
-def test_classifier_all_bool():
+def test_classifier_all_bool() -> None:
     values = pd.Series(data=[True, False, True])
     res = MeasureClassifier.meta_measures(values)
     assert res.count_with_values == 3
@@ -92,7 +92,7 @@ def test_classifier_all_bool():
     assert res.dtype == np.float64
 
 
-def test_classifier_bool_and_nan():
+def test_classifier_bool_and_nan() -> None:
     values = pd.Series(data=[True, False, True, np.nan, None, " "])
     res = MeasureClassifier.meta_measures(values)
     print(res)
@@ -106,7 +106,7 @@ def test_classifier_bool_and_nan():
     print(res.dtype)
 
 
-def test_should_convert_to_numeric_cutoff():
+def test_should_convert_to_numeric_cutoff() -> None:
     values = pd.Series(data=["1", "2", "1", "1", "1", "1", "2", "2", "a"])
     report = MeasureClassifier.meta_measures(values)
 
@@ -124,7 +124,7 @@ def test_should_convert_to_numeric_cutoff():
     assert measure_type == MeasureType.ordinal
 
 
-def test_clasify_minus_values():
+def test_clasify_minus_values() -> None:
     values = pd.Series(data=["-", "-", "-", np.nan, None, " ", "-"])
     report = MeasureClassifier.meta_measures(values)
     assert report.count_with_numeric_values == 0

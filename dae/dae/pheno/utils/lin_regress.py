@@ -1,5 +1,11 @@
+from __future__ import annotations
+
+from typing import Optional, Union, Any
+
 import numpy as np
 import scipy as sp
+import pandas as pd
+
 from sklearn.linear_model import \
     LinearRegression as LinearRegressionSK
 from scipy.stats import t
@@ -8,14 +14,16 @@ from scipy.stats import t
 class LinearRegression(LinearRegressionSK):
     """Class to build linear regression models."""
 
-    def __init__(self, *args, **kwargs):
-
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
 
-        self._pvalues = None
-        self._tvalues = None
+        self._pvalues: Optional[np.ndarray] = None
+        self._tvalues: Optional[np.ndarray] = None
 
-    def fit(self, X, y, sample_weight=None):
+    def fit(
+        self, X: np.ndarray, y: Union[pd.Series, np.ndarray],
+        sample_weight: Optional[float] = None
+    ) -> LinearRegression:
         super().fit(X, y, sample_weight)
         n = len(y)  # pylint: disable=invalid-name
 
@@ -39,12 +47,13 @@ class LinearRegression(LinearRegressionSK):
 
         self._tvalues = tvalues
         self._pvalues = pvalues
+
         return self
 
     @property
-    def tvalues(self):
+    def tvalues(self) -> Optional[np.ndarray]:
         return self._tvalues
 
     @property
-    def pvalues(self):
+    def pvalues(self) -> Optional[np.ndarray]:
         return self._pvalues
