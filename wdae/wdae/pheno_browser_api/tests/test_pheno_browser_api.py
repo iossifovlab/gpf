@@ -1,7 +1,8 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import json
-import pytest
 from typing import cast
+
+import pytest
 
 from django.test import Client
 from rest_framework import status
