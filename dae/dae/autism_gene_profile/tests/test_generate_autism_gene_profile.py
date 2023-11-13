@@ -14,7 +14,7 @@ from dae.autism_gene_profile.db import AutismGeneProfileDB
 
 
 @pytest.fixture
-def bad_agp_config() -> str:
+def incomplete_agp_config() -> str:
     return yaml.dump({
         # No order or default dataset
         "gene_sets": [
@@ -78,8 +78,8 @@ def bad_agp_config() -> str:
 
 
 @pytest.fixture
-def local_agp_config(
-    bad_agp_config: str
+def complete_agp_config(
+    incomplete_agp_config: str
 ) -> str:
     return yaml.dump({
         "order": [
@@ -88,7 +88,21 @@ def local_agp_config(
             "study_1",
         ],
         "default_dataset": "study_1"
-    }, default_flow_style=False) + bad_agp_config
+    }, default_flow_style=False) + incomplete_agp_config
+
+
+@pytest.fixture
+def invalid_agp_config(
+    incomplete_agp_config: str
+) -> str:
+    return yaml.dump({
+        "order": [
+            "gene_set_rank",
+            "gene_scre",  # invalid
+            "study_1",
+        ],
+        "default_dataset": "study_1"
+    }, default_flow_style=False) + incomplete_agp_config
 
 
 def local_gpf_instance(
@@ -253,7 +267,7 @@ chr1   195 .  C   T   .    .      .    GT     0/0  0/0  0/1 0/0  0/0  0/0
 
 
 def test_generate_autism_gene_profile(
-        local_agp_config: str,
+        complete_agp_config: str,
         tmp_path: pathlib.Path) -> None:
     agpdb_filename = str(tmp_path / "agpdb")
     argv = [
@@ -262,7 +276,7 @@ def test_generate_autism_gene_profile(
         "-vv",
     ]
 
-    gpf_instance = local_gpf_instance(local_agp_config, tmp_path)
+    gpf_instance = local_gpf_instance(complete_agp_config, tmp_path)
     main(gpf_instance, argv)
     agpdb = AutismGeneProfileDB(
         gpf_instance._autism_gene_profile_config,
@@ -351,8 +365,8 @@ def test_generate_autism_gene_profile(
     }
 
 
-def test_generate_autism_gene_profile_with_bad_config(
-        bad_agp_config: str,
+def test_generate_autism_gene_profile_with_incomplete_config(
+        incomplete_agp_config: str,
         tmp_path: pathlib.Path) -> None:
     agpdb_filename = str(tmp_path / "agpdb")
     argv = [
@@ -361,11 +375,29 @@ def test_generate_autism_gene_profile_with_bad_config(
         "-vv",
     ]
 
-    gpf_instance = local_gpf_instance(bad_agp_config, tmp_path)
+    gpf_instance = local_gpf_instance(incomplete_agp_config, tmp_path)
     expected_error = re.escape(
         "/gpf_instance: {'default_dataset': "
         + "['required field'], 'order': ['required field']}")
     with pytest.raises(
             ValueError,
             match=r"^(.*?)" + expected_error):
+        main(gpf_instance, argv)
+
+
+def test_generate_autism_gene_profile_with_incomplete_config_order(
+        invalid_agp_config: str,
+        tmp_path: pathlib.Path) -> None:
+    agpdb_filename = str(tmp_path / "agpdb")
+    argv = [
+        "--dbfile",
+        agpdb_filename,
+        "-vv",
+    ]
+
+    gpf_instance = local_gpf_instance(invalid_agp_config, tmp_path)
+
+    with pytest.raises(
+            AssertionError,
+            match="Given AGP order has invalid entries"):
         main(gpf_instance, argv)
