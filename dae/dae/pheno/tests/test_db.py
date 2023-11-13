@@ -1,9 +1,13 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,too-many-lines
 import os
+from typing import Any
+from box import Box
+
 from dae.pheno.db import DbManager
+from dae.pheno.pheno_db import PhenoDb
 
 
-def test_db_save(output_dir):
+def test_db_save(output_dir: str) -> None:
     db = DbManager(
         os.path.join(output_dir, "temp_testing.db"),
         browser_dbfile=os.path.join(output_dir, "temp_testing_browser.db")
@@ -21,17 +25,18 @@ def test_db_save(output_dir):
         "description": "desc",
     }
 
-    db.save(v)
+    db.save(v)  # type: ignore
 
     res = db.get_browser_measure("test.measure")
     assert res is not None
-    assert res.measure_id == "test.measure"
-    assert res.instrument_name == "test"
-    assert res.measure_name == "measure"
-    assert res.figure_distribution is None
+
+    assert res["measure_id"] == "test.measure"
+    assert res["instrument_name"] == "test"
+    assert res["measure_name"] == "measure"
+    assert res["figure_distribution"] is None
 
 
-def test_db_update(output_dir):
+def test_db_update(output_dir: str) -> None:
     db = DbManager(
         os.path.join(output_dir, "temp_testing.db"),
         browser_dbfile=os.path.join(output_dir, "temp_testing_browser.db")
@@ -39,7 +44,7 @@ def test_db_update(output_dir):
     assert db is not None
     db.build()
 
-    v = {
+    v: dict[str, Any] = {
         "measure_id": "test.measure",
         "instrument_name": "test",
         "measure_name": "measure",
@@ -55,13 +60,13 @@ def test_db_update(output_dir):
 
     res = db.get_browser_measure("test.measure")
     assert res is not None
-    assert res.measure_id == "test.measure"
-    assert res.instrument_name == "test"
-    assert res.measure_name == "measure"
-    assert res.figure_distribution == "test_figure.png"
+    assert res["measure_id"] == "test.measure"
+    assert res["instrument_name"] == "test"
+    assert res["measure_name"] == "measure"
+    assert res["figure_distribution"] == "test_figure.png"
 
 
-def test_has_descriptions(output_dir):
+def test_has_descriptions(output_dir: str) -> None:
     db = DbManager(
         os.path.join(output_dir, "temp_testing.db"),
         browser_dbfile=os.path.join(output_dir, "temp_testing_browser.db")
@@ -92,8 +97,8 @@ def test_has_descriptions(output_dir):
 
 
 def test_search_measures_get_all(
-    fake_phenotype_data_dbfile, fake_phenotype_data_browser_dbfile
-):
+    fake_phenotype_data_dbfile: str, fake_phenotype_data_browser_dbfile: str
+) -> None:
     db = DbManager(
         fake_phenotype_data_dbfile,
         fake_phenotype_data_browser_dbfile
@@ -104,8 +109,8 @@ def test_search_measures_get_all(
 
 
 def test_search_measures_get_by_instrument(
-    fake_phenotype_data_dbfile, fake_phenotype_data_browser_dbfile
-):
+    fake_phenotype_data_dbfile: str, fake_phenotype_data_browser_dbfile: str
+) -> None:
     db = DbManager(
         fake_phenotype_data_dbfile,
         fake_phenotype_data_browser_dbfile
@@ -125,8 +130,8 @@ def test_search_measures_get_by_instrument(
 
 
 def test_search_measures_by_keyword_in_description(
-    fake_phenotype_data_dbfile, fake_phenotype_data_browser_dbfile
-):
+    fake_phenotype_data_dbfile: str, fake_phenotype_data_browser_dbfile: str
+) -> None:
     db = DbManager(
         fake_phenotype_data_dbfile,
         fake_phenotype_data_browser_dbfile
@@ -140,8 +145,8 @@ def test_search_measures_by_keyword_in_description(
 
 
 def test_search_measures_by_keyword_in_measure_id(
-    fake_phenotype_data_dbfile, fake_phenotype_data_browser_dbfile
-):
+    fake_phenotype_data_dbfile: str, fake_phenotype_data_browser_dbfile: str
+) -> None:
     db = DbManager(
         fake_phenotype_data_dbfile,
         fake_phenotype_data_browser_dbfile
@@ -155,8 +160,8 @@ def test_search_measures_by_keyword_in_measure_id(
 
 
 def test_search_measures_by_keyword_in_measure_name(
-    fake_phenotype_data_dbfile, fake_phenotype_data_browser_dbfile
-):
+    fake_phenotype_data_dbfile: str, fake_phenotype_data_browser_dbfile: str
+) -> None:
     db = DbManager(
         fake_phenotype_data_dbfile,
         fake_phenotype_data_browser_dbfile
@@ -172,8 +177,8 @@ def test_search_measures_by_keyword_in_measure_name(
 
 
 def test_search_measures_by_keyword_in_instrument_name(
-    fake_phenotype_data_dbfile, fake_phenotype_data_browser_dbfile
-):
+    fake_phenotype_data_dbfile: str, fake_phenotype_data_browser_dbfile: str
+) -> None:
     db = DbManager(
         fake_phenotype_data_dbfile,
         fake_phenotype_data_browser_dbfile
@@ -190,7 +195,7 @@ def test_search_measures_by_keyword_in_instrument_name(
         assert row["instrument_name"] == "i1"
 
 
-def test_db_search_character_escaping(output_dir):
+def test_db_search_character_escaping(output_dir: str) -> None:
     db = DbManager(
         os.path.join(output_dir, "temp_testing.db"),
         browser_dbfile=os.path.join(output_dir, "temp_testing_browser.db")
@@ -198,7 +203,7 @@ def test_db_search_character_escaping(output_dir):
     assert db is not None
     db.build()
 
-    val1 = {
+    val1: dict[str, Any] = {
         "measure_id": "test_one.measure1",
         "instrument_name": "test_one",
         "measure_name": "measure1",
@@ -206,7 +211,7 @@ def test_db_search_character_escaping(output_dir):
         "description": "desc",
     }
 
-    val2 = {
+    val2: dict[str, Any] = {
         "measure_id": "test%two.measure2",
         "instrument_name": "test%two",
         "measure_name": "measure2",
@@ -232,7 +237,7 @@ def test_db_search_character_escaping(output_dir):
     assert res["measure_name"][0] == "measure2"
 
 
-def test_save_and_get_regressions(output_dir):
+def test_save_and_get_regressions(output_dir: str) -> None:
     db = DbManager(
         os.path.join(output_dir, "temp_testing.db"),
         browser_dbfile=os.path.join(output_dir, "temp_testing_browser.db")
@@ -268,7 +273,7 @@ def test_save_and_get_regressions(output_dir):
     assert res["display_name"] is None
 
 
-def test_get_regression_names(output_dir):
+def test_get_regression_names(output_dir: str) -> None:
     db = DbManager(
         os.path.join(output_dir, "temp_testing.db"),
         browser_dbfile=os.path.join(output_dir, "temp_testing_browser.db")
@@ -296,7 +301,7 @@ def test_get_regression_names(output_dir):
     }
 
 
-def test_save_and_get_regression_values(output_dir):
+def test_save_and_get_regression_values(output_dir: str) -> None:
     db = DbManager(
         os.path.join(output_dir, "temp_testing.db"),
         browser_dbfile=os.path.join(output_dir, "temp_testing_browser.db")
@@ -321,28 +326,28 @@ def test_save_and_get_regression_values(output_dir):
     reg["pvalue_regression_female"] = "0.4"
     db.save_regression_values(reg)
 
-    reg = db.get_regression_values("test.measure")
-    assert reg == [
-        (
-            "test_regression_1",
-            "test.measure",
-            "regfigpath",
-            "regfigsmallpath",
-            0.1,
-            0.2,
-        ),
-        (
-            "test_regression_2",
-            "test.measure",
-            "regfigpath",
-            "regfigsmallpath",
-            0.3,
-            0.4,
-        ),
+    res = db.get_regression_values("test.measure")
+    assert res == [
+        Box({
+            "regression_id": "test_regression_1",
+            "measure_id": "test.measure",
+            "figure_regression": "regfigpath",
+            "figure_regression_small": "regfigsmallpath",
+            "pvalue_regression_male": 0.1,
+            "pvalue_regression_female": 0.2
+        }),
+        Box({
+            "regression_id": "test_regression_2",
+            "measure_id": "test.measure",
+            "figure_regression": "regfigpath",
+            "figure_regression_small": "regfigsmallpath",
+            "pvalue_regression_male": 0.3,
+            "pvalue_regression_female": 0.4
+        })
     ]
 
 
-def test_update_regression_values(output_dir):
+def test_update_regression_values(output_dir: str) -> None:
     db = DbManager(
         os.path.join(output_dir, "temp_testing.db"),
         browser_dbfile=os.path.join(output_dir, "temp_testing_browser.db")
@@ -363,35 +368,35 @@ def test_update_regression_values(output_dir):
     db.save_regression_values(reg)
 
     res = db.get_regression_values("test.measure")
+    res = db.get_regression_values("test.measure")
     assert res == [
-        (
-            "test_regression_1",
-            "test.measure",
-            "regfigpath",
-            "regfigsmallpath",
-            0.1,
-            0.2,
-        )
+        Box({
+            "regression_id": "test_regression_1",
+            "measure_id": "test.measure",
+            "figure_regression": "regfigpath",
+            "figure_regression_small": "regfigsmallpath",
+            "pvalue_regression_male": 0.1,
+            "pvalue_regression_female": 0.2
+        }),
     ]
-
     reg["pvalue_regression_male"] = "0.3"
     reg["pvalue_regression_female"] = "0.4"
     db.save_regression_values(reg)
 
     res = db.get_regression_values("test.measure")
     assert res == [
-        (
-            "test_regression_1",
-            "test.measure",
-            "regfigpath",
-            "regfigsmallpath",
-            0.3,
-            0.4,
-        )
+        Box({
+            "regression_id": "test_regression_1",
+            "measure_id": "test.measure",
+            "figure_regression": "regfigpath",
+            "figure_regression_small": "regfigsmallpath",
+            "pvalue_regression_male": 0.3,
+            "pvalue_regression_female": 0.4
+        }),
     ]
 
 
-def test_regression_ids(output_dir):
+def test_regression_ids(output_dir: str) -> None:
     db = DbManager(
         os.path.join(output_dir, "temp_testing.db"),
         browser_dbfile=os.path.join(output_dir, "temp_testing_browser.db")
@@ -415,6 +420,6 @@ def test_regression_ids(output_dir):
     assert reg_ids == ["test_regression_1", "test_regression_2"]
 
 
-def test_pheno_db_disabled(fake_pheno_db):
+def test_pheno_db_disabled(fake_pheno_db: PhenoDb) -> None:
     assert not fake_pheno_db.has_phenotype_data("fake_disabled")
     assert len(fake_pheno_db.config) == 5

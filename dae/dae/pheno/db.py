@@ -1,4 +1,8 @@
+from __future__ import annotations
+
 from typing import Dict, Iterator, Optional, Any, cast
+
+from box import Box
 
 from sqlalchemy import MetaData, create_engine
 from sqlalchemy import Table, Column, Integer, String, Float, Enum, \
@@ -271,14 +275,14 @@ class DbManager:
                 connection.execute(update)
                 connection.commit()
 
-    def get_browser_measure(self, measure_id: str) -> Optional[str]:
+    def get_browser_measure(self, measure_id: str) -> Optional[dict]:
         """Get measrue description from phenotype browser database."""
         sel = select(self.variable_browser)
         sel = sel.where(self.variable_browser.c.measure_id == measure_id)
         with self.browser_engine.connect() as connection:
             vs = connection.execute(sel).fetchall()
             if vs:
-                return cast(str, vs[0])
+                return Box(cast(dict, vs[0]._asdict()))
             return None
 
     def search_measures(
@@ -383,12 +387,15 @@ class DbManager:
                 return vs[0]._mapping  # pylint: disable=protected-access
             return None
 
-    def get_regression_values(self, measure_id: str) -> Any:
+    def get_regression_values(self, measure_id: str) -> list[Box]:
         selector = select(self.regression_values)
         selector = selector.where(
             self.regression_values.c.measure_id == measure_id)
         with self.browser_engine.connect() as connection:
-            return connection.execute(selector).fetchall()
+            return [
+                Box(r._asdict())
+                for r in connection.execute(selector).fetchall()
+            ]
 
     @property
     def regression_ids(self) -> list[str]:

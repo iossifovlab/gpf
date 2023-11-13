@@ -5,7 +5,7 @@ from dae.pheno.graphs import draw_linregres
 from dae.variants.attributes import Role, Sex
 
 
-def test_linregres_notcorrelated():
+def test_linregres_notcorrelated() -> None:
     df = pd.DataFrame(
         {
             "i1.m1": [1, 1, 2, 2, 3, 3],
@@ -36,7 +36,7 @@ def test_linregres_notcorrelated():
     assert res_female.pvalues[1] == pytest.approx(expected_value)
 
 
-def test_linregres_positive():
+def test_linregres_positive() -> None:
     df = pd.DataFrame(
         {
             "i1.m1": [1, 1, 2, 2, 3, 3],
@@ -67,7 +67,7 @@ def test_linregres_positive():
     assert res_female.pvalues[1] == pytest.approx(expected_value)
 
 
-def test_linregres_negative():
+def test_linregres_negative() -> None:
     df = pd.DataFrame(
         {
             "i1.m1": [1, 1, 2, 2, 3, 3],
@@ -98,7 +98,7 @@ def test_linregres_negative():
     assert res_female.pvalues[1] == pytest.approx(expected_value)
 
 
-def test_linregres_m1_male():
+def test_linregres_m1_male() -> None:
     df = pd.DataFrame(
         {
             "i1.m1": [
@@ -255,7 +255,7 @@ def test_linregres_m1_male():
     assert res_male.pvalues[1] == pytest.approx(expected_value)
 
 
-def test_linregres_m1_female():
+def test_linregres_m1_female() -> None:
     df = pd.DataFrame(
         {
             "i1.m1": [

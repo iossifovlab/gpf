@@ -221,16 +221,16 @@ class PhenotypeData(ABC):
 
     @abstractmethod
     def get_persons_df(
-            self, roles: Optional[list[Role]] = None,
-            person_ids: Optional[list[str]] = None,
-            family_ids: Optional[list[str]] = None) -> pd.DataFrame:
+            self, roles: Optional[Iterable[Role]] = None,
+            person_ids: Optional[Iterable[str]] = None,
+            family_ids: Optional[Iterable[str]] = None) -> pd.DataFrame:
         pass
 
     def get_persons(
             self,
-            roles: Optional[list[Role]] = None,
-            person_ids: Optional[list[str]] = None,
-            family_ids: Optional[list[str]] = None) -> dict[str, Person]:
+            roles: Optional[Iterable[Role]] = None,
+            person_ids: Optional[Iterable[str]] = None,
+            family_ids: Optional[Iterable[str]] = None) -> dict[str, Person]:
         """
         Return individuals data from phenotype database.
 
@@ -472,9 +472,9 @@ class PhenotypeData(ABC):
     def get_persons_values_df(
             self,
             measure_ids: Iterable[str],
-            person_ids: Optional[list[str]] = None,
-            family_ids: Optional[list[str]] = None,
-            roles: Optional[list[Role]] = None,
+            person_ids: Optional[Iterable[str]] = None,
+            family_ids: Optional[Iterable[str]] = None,
+            roles: Optional[Iterable[Role]] = None,
             default_filter: str = "apply") -> pd.DataFrame:
         """
         Return a data frame with measure values and person data.
@@ -1144,9 +1144,9 @@ class PhenotypeGroup(PhenotypeData):
         return group_instruments, group_measures
 
     def get_persons_df(
-        self, roles: Optional[list[Role]] = None,
-        person_ids: Optional[list[str]] = None,
-        family_ids: Optional[list[str]] = None
+        self, roles: Optional[Iterable[Role]] = None,
+        person_ids: Optional[Iterable[str]] = None,
+        family_ids: Optional[Iterable[str]] = None
     ) -> pd.DataFrame:
 
         ped_df: pd.DataFrame = self.families.ped_df[[

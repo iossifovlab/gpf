@@ -1,8 +1,10 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,too-many-lines
+import pandas as pd
+
 from dae.pheno.prepare.measure_classifier import MeasureClassifier
 
 
-def test_fi1(fi1_df):
+def test_fi1(fi1_df: pd.DataFrame) -> None:
     for col in fi1_df:
         report = MeasureClassifier.meta_measures(fi1_df[col])
         assert (

@@ -3,7 +3,7 @@ import numpy as np
 from dae.pheno.utils.lin_regress import LinearRegression
 
 
-def test_lin_regress():
+def test_lin_regress() -> None:
     x = np.array([[1], [2], [3], [4], [5], [6], [7]])
     y = np.array([1.5, 3.8, 6.7, 9.0, 11.2, 13.6, 16])
     result = LinearRegression().fit(x, y)

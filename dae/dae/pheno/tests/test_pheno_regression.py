@@ -2,9 +2,10 @@
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.phenotype_data import regression_conf_schema
 from dae.pheno.prepare_data import PreparePhenoBrowserBase
+from dae.pheno.pheno_db import PhenotypeStudy
 
 
-def test_pheno_regressions_from_conf_path(regressions_conf):
+def test_pheno_regressions_from_conf_path(regressions_conf: str) -> None:
     regs = GPFConfigParser.load_config(
         regressions_conf, regression_conf_schema
     )
@@ -37,8 +38,8 @@ def test_pheno_regressions_from_conf_path(regressions_conf):
 
 
 def test_has_regression_measure(
-    fake_phenotype_data, output_dir, regressions_conf
-):
+    fake_phenotype_data: PhenotypeStudy, output_dir: str, regressions_conf: str
+) -> None:
     reg = GPFConfigParser.load_config(regressions_conf, regression_conf_schema)
     prep = PreparePhenoBrowserBase(
         "fake", fake_phenotype_data, output_dir, reg

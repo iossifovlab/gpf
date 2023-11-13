@@ -1,28 +1,6 @@
 import re
 
 
-def calc_race(race1, race2):
-    if race1 == race2:
-        return race1
-    if race1 is None or race2 is None:
-        return "not-specified"
-    if race1 == "not-specified" or race2 == "not-specified":
-        return "not-specified"
-
-    return "more-than-one-race"
-
-
-def role_type(role_id):
-    if role_id == "mo":
-        return "mom"
-    elif role_id == "fa":
-        return "dad"
-    elif role_id[0] == "p":
-        return "prb"
-    elif role_id[0] == "s" or role_id[0] == "x":
-        return "sib"
-
-
 # remove annoying characters
 # https://stackoverflow.com/questions/6609895/efficiently-replace-bad-characters
 ANNOYING_CHARACTERS = {
@@ -62,8 +40,8 @@ ANNOYING_CHARACTERS = {
 }
 
 
-def remove_annoying_characters(text):
-    def replace_chars(match):
+def remove_annoying_characters(text: str) -> str:
+    def replace_chars(match: re.Match) -> str:
         char = match.group(0)
         return ANNOYING_CHARACTERS[char]
 
