@@ -13,74 +13,7 @@ from dae.autism_gene_profile.generate_autism_gene_profile import main
 from dae.autism_gene_profile.db import AutismGeneProfileDB
 
 
-def local_agp_config() -> str:
-    return yaml.dump({
-        "order": [
-            "gene_set_rank",
-            "gene_score",
-            "study_1",
-        ],
-        "default_dataset": "study_1",
-        "gene_sets": [
-            {
-                "category": "gene_set",
-                "display_name": "test gene sets",
-                "sets": [
-                    {
-                        "set_id": "test_gene_set_1",
-                        "collection_id": "gene_sets"
-                    },
-                    {
-                        "set_id": "test_gene_set_2",
-                        "collection_id": "gene_sets"
-                    },
-                    {
-                        "set_id": "test_gene_set_3",
-                        "collection_id": "gene_sets"
-                    },
-                ]
-            },
-        ],
-        "genomic_scores": [
-            {
-                "category": "gene_score",
-                "display_name": "Test gene score",
-                "scores": [
-                    {"score_name": "gene_score1", "format": "%%s"},
-                ]
-            }
-        ],
-        "datasets": {
-            "study_1": {
-                "statistics": [
-                    {
-                        "id": "lgds",
-                        "display_name": "LGDs",
-                        "effects": ["lgds"],
-                        "category": "denovo"
-                    },
-                    {
-                        "id": "denovo_missense",
-                        "display_name": "Missense",
-                        "effects": ["missense"],
-                        "category": "denovo"
-                    }
-                ],
-                "person_sets": [
-                    {
-                        "set_name": "autism",
-                        "collection_name": "phenotype"
-                    },
-                    {
-                        "set_name": "unaffected",
-                        "collection_name": "phenotype"
-                    },
-                ]
-            }
-        }
-    }, default_flow_style=False)
-
-
+@pytest.fixture
 def bad_agp_config() -> str:
     return yaml.dump({
         # No order or default dataset
@@ -142,6 +75,20 @@ def bad_agp_config() -> str:
             }
         }
     }, default_flow_style=False)
+
+
+@pytest.fixture
+def local_agp_config(
+    bad_agp_config: str
+) -> str:
+    return yaml.dump({
+        "order": [
+            "gene_set_rank",
+            "gene_score",
+            "study_1",
+        ],
+        "default_dataset": "study_1"
+    }, default_flow_style=False) + bad_agp_config
 
 
 def local_gpf_instance(
@@ -305,7 +252,9 @@ chr1   195 .  C   T   .    .      .    GT     0/0  0/0  0/1 0/0  0/0  0/0
     return instance
 
 
-def test_generate_autism_gene_profile(tmp_path: pathlib.Path) -> None:
+def test_generate_autism_gene_profile(
+        local_agp_config: str,
+        tmp_path: pathlib.Path) -> None:
     agpdb_filename = str(tmp_path / "agpdb")
     argv = [
         "--dbfile",
@@ -313,7 +262,7 @@ def test_generate_autism_gene_profile(tmp_path: pathlib.Path) -> None:
         "-vv",
     ]
 
-    gpf_instance = local_gpf_instance(local_agp_config(), tmp_path)
+    gpf_instance = local_gpf_instance(local_agp_config, tmp_path)
     main(gpf_instance, argv)
     agpdb = AutismGeneProfileDB(
         gpf_instance._autism_gene_profile_config,
@@ -403,6 +352,7 @@ def test_generate_autism_gene_profile(tmp_path: pathlib.Path) -> None:
 
 
 def test_generate_autism_gene_profile_with_bad_config(
+        bad_agp_config: str,
         tmp_path: pathlib.Path) -> None:
     agpdb_filename = str(tmp_path / "agpdb")
     argv = [
@@ -411,7 +361,7 @@ def test_generate_autism_gene_profile_with_bad_config(
         "-vv",
     ]
 
-    gpf_instance = local_gpf_instance(bad_agp_config(), tmp_path)
+    gpf_instance = local_gpf_instance(bad_agp_config, tmp_path)
     expected_error = re.escape(
         "/gpf_instance: {'default_dataset': "
         + "['required field'], 'order': ['required field']}")
