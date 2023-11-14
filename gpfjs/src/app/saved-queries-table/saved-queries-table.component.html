@@ -9,13 +9,13 @@
 
     <div class="grid-cell actions-cell" [attr.id]="'query-' + query.name + '-actions-cell'">
       <a href="{{ query.url }}" title="Load" id="load-button" class="action-button">
-        <span class="material-symbols-outlined"> open_in_new </span>
+        <span class="material-symbols-outlined">open_in_new</span>
       </a>
       <button [cdkCopyToClipboard]="query.url" title="Copy link" id="copy-link-button" class="action-button">
-        <span class="material-symbols-outlined"> link </span>
+        <span class="material-symbols-outlined">link</span>
       </button>
       <button (click)="deleteQuery(query.uuid)" title="Delete" id="delete-button" class="action-button">
-        <span class="material-symbols-outlined bold"> close </span>
+        <span class="material-symbols-outlined bold">close</span>
       </button>
     </div>
   </ng-container>

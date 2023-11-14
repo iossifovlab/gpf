@@ -92,9 +92,7 @@
               [attr.id]="column.id + '-column-filtering-button'"
               class="header-button column-filtering-button"
               (click)="openDropdown(column, $event)"
-              title="Filter columns"><span class="menu-button material-symbols-outlined">
-                menu
-                </span></button>
+              title="Filter columns"><span class="menu-button material-symbols-outlined">menu</span></button>
           </div>
         </div>
         <ng-container *ngTemplateOutlet="tableHeaderTemplate; context: { columns: column.columns }"></ng-container>
@@ -107,7 +105,7 @@
       <div style="width: 270px">
         <div class="search-input-wrapper">
           <label id="gene-search-label" for="gene-search-input">
-            <span class="material-symbols-outlined search-icon"> search </span>
+            <span class="material-symbols-outlined search-icon">search</span>
           </label>
           <input
             #searchBox
@@ -121,9 +119,9 @@
           <span
             *ngIf="searchBox.value !== '' && !showSearchLoading"
             class="material-symbols-outlined search-clear-icon"
-            (click)="searchBox.value = ''; searchKeystrokes$.next(searchBox.value); showSearchLoading = true">
-            close
-          </span>
+            (click)="searchBox.value = ''; searchKeystrokes$.next(searchBox.value); showSearchLoading = true"
+            >close</span
+          >
           <span *ngIf="showSearchLoading" class="material-symbols-outlined search-loading-icon"
             >progress_activity
           </span>
@@ -139,9 +137,8 @@
           id="category-filtering-button"
           class="btn btn-default"
           (click)="openCategoryFilterDropdown($event)"
-          title="Filter categories"><span id="filter-menu-icon" class="material-symbols-outlined">
-            menu
-            </span></button>
+          title="Filter categories"><span id="filter-menu-icon" class="material-symbols-outlined">menu</span>
+        </button>
       </div>
 
       <div id="keybinds-icon" (mouseover)="showKeybinds = true" (mouseout)="showKeybinds = false">
@@ -189,8 +186,8 @@
           >{{ gene }}</span
         >
         <button (click)="toggleHighlightGene(gene)" class="compare-genes-close font-weight-light" type="button">
-          <span class="material-symbols-outlined sm search-clear-icon"> close </span></button
-        >
+          <span class="material-symbols-outlined sm search-clear-icon">close</span>
+        </button>
       </button>
     </div>
 
