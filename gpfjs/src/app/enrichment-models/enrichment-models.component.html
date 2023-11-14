@@ -6,10 +6,11 @@
     <div class="select-wrapper">
       <select
         class="form-control"
+        title="{{ background.description }}"
         style="width: 100%; text-overflow: ellipsis"
         [ngModel]="background"
         (ngModelChange)="changeBackground($event)">
-        <option *ngFor="let background of backgrounds" [ngValue]="background">{{ background.id }}</option>
+        <option *ngFor="let background of backgrounds" [ngValue]="background">{{ background.name }}</option>
       </select>
       <span class="material-symbols-outlined select-dropdown-icon">arrow_drop_down</span>
     </div>
@@ -23,7 +24,7 @@
         style="width: 100%; text-overflow: ellipsis"
         [ngModel]="counting"
         (ngModelChange)="changeCounting($event)">
-        <option *ngFor="let counting of countings" [ngValue]="counting">{{ counting.id }}</option>
+        <option *ngFor="let counting of countings" [ngValue]="counting">{{ counting.name }}</option>
       </select>
       <span class="material-symbols-outlined select-dropdown-icon">arrow_drop_down</span>
     </div>
