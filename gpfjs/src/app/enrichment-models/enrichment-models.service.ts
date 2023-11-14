@@ -31,8 +31,8 @@ export class EnrichmentModelsService {
 }[]; background: {
   id: string;name: string; desc: string;
 }[];}) => ({
-        countings: res['counting'].map(j => new IdDescriptionName(j.name, j.desc, j.id)),
-        backgrounds: res['background'].map(j => new IdDescriptionName(j.name, j.desc, j.id)),
+        countings: res['counting'].map(j => new IdDescriptionName(j.id, j.desc, j.name)),
+        backgrounds: res['background'].map(j => new IdDescriptionName(j.id, j.desc, j.name)),
       })));
   }
 }
