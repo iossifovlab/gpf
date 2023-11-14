@@ -223,7 +223,7 @@ export class BasePage {
 
   public findButtonInComponentContainingText(componentSelector: string, text: string): element {
     if (text === '×') {
-      return cy.get(componentSelector).contains(' close ');
+      return cy.get(componentSelector).contains('close');
     }
     return cy.get(componentSelector).contains(text);
   }

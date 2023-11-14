@@ -186,14 +186,14 @@ export class AutismGeneProfilesSingleViewPage extends BasePage {
                 datasets[index].rows[table_index].variant_statistics = name.text();
               });
               cy.wrap(row).get('td').eq(1).then(affected => {
-                if (affected.text() !== ' remove ') {
+                if (affected.text() !== 'remove') {
                   datasets[index].rows[table_index].affected = affected.text();
                 } else {
                   datasets[index].rows[table_index].affected = '–';
                 }
               });
               cy.wrap(row).get('td').eq(2).then(unaffected => {
-                if (unaffected.text() !== ' remove ') {
+                if (unaffected.text() !== 'remove') {
                   // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
                   datasets[index].rows[table_index].unaffected = unaffected.text();
                 } else {
