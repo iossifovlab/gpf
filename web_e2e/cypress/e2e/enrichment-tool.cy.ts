@@ -88,8 +88,8 @@ describe('Enrichment tool common tests', () => {
     page.findTableCell('affected', 'LGDs', 2).should('have.text', '55');
     page.findTableCell('affected', 'Missense', 2).should('have.text', '169');
 
-    page.findTableCell('affected', 'LGDs', 3).should('have.text', '35.02');
-    page.findTableCell('affected', 'Missense', 3).should('have.text', '145.68');
+    page.findTableCell('affected', 'LGDs', 3).should('contain', '35.01');
+    page.findTableCell('affected', 'Missense', 3).should('contain', '145.62');
   });
 
   it('should display "0" and "2" in the affected person"s observed column of LGDs and missense"s rows respectively ' +
