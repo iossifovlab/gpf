@@ -58,11 +58,11 @@ def test_enrichment_models(admin_client: Client) -> None:
     background.sort(key=lambda x: x["id"])
     assert background[0]["id"] == "enrichment/coding_len_testing"
     assert background[0]["name"] == "CodingLenBackground"
-    assert background[0]["description"] == ""
+    assert background[0]["desc"] == ""
 
     assert background[1]["id"] == "enrichment/samocha_testing"
     assert background[1]["name"] == "Samocha's enrichment background model"
-    assert background[1]["description"] == ""
+    assert background[1]["desc"] == ""
 
     assert len(result["counting"]) == 2
 
@@ -70,11 +70,11 @@ def test_enrichment_models(admin_client: Client) -> None:
     counting.sort(key=lambda x: x["name"])
 
     assert counting[0]["id"] == "enrichment_events_counting"
-    assert counting[0]["name"] == "enrichment_events_counting"
+    assert counting[0]["name"] == "enrichment_events_counting name"
     assert counting[0]["desc"] == "Enrichment Events Counting"
 
     assert counting[1]["id"] == "enrichment_gene_counting"
-    assert counting[1]["name"] == "enrichment_gene_counting"
+    assert counting[1]["name"] == "enrichment_gene_counting name"
     assert counting[1]["desc"] == "Enrichment Gene Counting"
 
 

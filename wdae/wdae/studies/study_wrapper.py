@@ -31,6 +31,7 @@ class StudyWrapperBase:
     def __init__(self, genotype_data: GenotypeData):
         self.genotype_data = genotype_data
         self.config = self.genotype_data.config
+        assert self.config is not None, self.genotype_data.study_id
 
     @property
     def study_id(self) -> str:
@@ -189,6 +190,10 @@ class StudyWrapperBase:
             study_names = []
             for study_id in result["studies"]:
                 wrapper = gpf_instance.get_wdae_wrapper(study_id)
+                if wrapper is None:
+                    logger.warning(
+                        "no wrapper found for study %s", study_id)
+                    continue
                 name = (
                     wrapper.config.name
                     if wrapper.config.name is not None
