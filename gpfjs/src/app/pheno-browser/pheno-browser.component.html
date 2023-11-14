@@ -13,11 +13,11 @@
             instrument
           }}</option>
         </select>
-        <span class="material-symbols-outlined select-dropdown-icon"> arrow_drop_down </span>
+        <span class="material-symbols-outlined select-dropdown-icon">arrow_drop_down</span>
       </div>
       <div class="search-input-wrapper">
         <label id="search-term-label" for="search-term">
-          <span class="material-symbols-outlined search-icon"> search </span>
+          <span class="material-symbols-outlined search-icon">search</span>
         </label>
         <input
           placeholder="Search"
@@ -32,9 +32,8 @@
         <span
           class="material-symbols-outlined md search-clear-icon"
           *ngIf="searchBox.value !== ''"
-          (click)="searchBox.value = ''; search(searchBox.value)">
-          close
-        </span>
+          (click)="searchBox.value = ''; search(searchBox.value)">close</span
+        >
       </div>
       <div id="download-wrapper">
         <span>Phenotype measures</span>
@@ -45,7 +44,7 @@
           method="post">
           <input name="queryData" type="hidden" />
           <button id="download-measures" class="btn btn-md btn-primary btn-right" type="submit">
-            <span class="material-symbols-outlined"> download </span>
+            <span class="material-symbols-outlined">download</span>
           </button>
         </form>
       </div>
