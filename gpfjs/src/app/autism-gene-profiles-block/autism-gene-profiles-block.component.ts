@@ -9,7 +9,6 @@ import { map, take } from 'rxjs/operators';
 import { Store } from '@ngxs/store';
 import { QueryService } from 'app/query/query.service';
 import { AgpColumn, AgpTableConfig } from 'app/autism-gene-profiles-table/autism-gene-profiles-table';
-import { AgpTableService } from 'app/autism-gene-profiles-table/autism-gene-profiles-table.service';
 import {
   AutismGeneProfileSingleViewComponent
 } from 'app/autism-gene-profiles-single-view/autism-gene-profile-single-view.component';
@@ -25,7 +24,6 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
   public agpSingleViewConfig: AgpSingleViewConfig;
 
   public constructor(
-    private agpTableService: AgpTableService,
     private autismGeneProfilesService: AutismGeneProfilesService,
     private queryService: QueryService,
     private store: Store
