@@ -16,6 +16,8 @@ export class AgpSingleViewConfig {
 
   @Type(() => AgpOrder)
   public order: AgpOrder[];
+
+  public pageSize: number;
 }
 
 export class AgpGeneSetsCategory {

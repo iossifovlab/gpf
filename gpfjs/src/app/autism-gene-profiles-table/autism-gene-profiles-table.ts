@@ -26,6 +26,26 @@ export class AgpColumn {
 
   private visible: boolean;
 
+  public constructor(
+    clickable: string,
+    columns: AgpColumn[],
+    displayName: string,
+    displayVertical: boolean,
+    id: string,
+    meta: string,
+    sortable: boolean,
+    visibility: boolean
+  ) {
+    this.clickable = clickable;
+    this.columns = columns;
+    this.displayName = displayName;
+    this.displayVertical = displayVertical;
+    this.id = id;
+    this.meta = meta;
+    this.sortable = sortable;
+    this.visibility = visibility;
+  }
+
   public get visibility(): boolean {
     return this.visible;
   }
