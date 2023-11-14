@@ -39,7 +39,7 @@ def test_enrichment_config_backgrounds(
 def test_enrichment_config_counting(
         f1_trio_enrichment_config: Box) -> None:
     enrichment_config = f1_trio_enrichment_config
-    assert enrichment_config.selected_counting_values == [
+    assert enrichment_config.selected_counting_models == [
         "enrichment_events_counting",
         "enrichment_gene_counting",
     ]
@@ -49,8 +49,8 @@ def test_enrichment_config_counting(
         len(
             list(
                 filter(
-                    lambda x: x.name
-                    in enrichment_config.selected_counting_values,
+                    lambda x: x.id
+                    in enrichment_config.selected_counting_models,
                     enrichment_config.counting.values(),
                 )
             )
@@ -61,13 +61,11 @@ def test_enrichment_config_counting(
     enrichment_events_counting = (
         enrichment_config.counting.enrichment_events_counting
     )
-    assert enrichment_events_counting.name == "enrichment_events_counting"
-    assert enrichment_events_counting.file is None
+    assert enrichment_events_counting.id == "enrichment_events_counting"
     assert enrichment_events_counting.desc == "Enrichment Events Counting"
 
     enrichment_gene_counting = (
         enrichment_config.counting.enrichment_gene_counting
     )
-    assert enrichment_gene_counting.name == "enrichment_gene_counting"
-    assert enrichment_gene_counting.file is None
+    assert enrichment_gene_counting.id == "enrichment_gene_counting"
     assert enrichment_gene_counting.desc == "Enrichment Gene Counting"

@@ -55,6 +55,7 @@ background_model_schema = {
 }
 
 counting_schema = {
+    "id": {"type": "string"},
     "name": {"type": "string"},
     "desc": {"type": "string"},
 }
@@ -460,7 +461,7 @@ study_config_schema = {
                 "default": [],
             },
             "default_background_model": {"type": "string"},
-            "selected_counting_values": {
+            "selected_counting_models": {
                 "type": "list",
                 "schema": {"type": "string"},
                 "default": [],

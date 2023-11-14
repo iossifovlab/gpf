@@ -243,9 +243,10 @@ def full_study_config() -> dict[str, Any]:
             #     }
             # },
             "default_background_model": "test",
-            "selected_counting_values": ["test"],
+            "selected_counting_models": ["test"],
             "counting": {
                 "test": {
+                    "id": "test",
                     "name": "test",
                     "desc": "test"
                 }

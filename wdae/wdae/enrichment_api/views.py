@@ -10,31 +10,31 @@ from rest_framework import status
 from query_base.query_base import QueryDatasetView
 from utils.expand_gene_set import expand_gene_set
 
-LOGGER = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class EnrichmentModelsView(QueryDatasetView):
     """Select enrichment models view."""
 
-    def get_from_config(
+    def _collect_counting_models(
         self, dataset_id: str,
-        property_name: str,
-        selected: str
     ) -> list[dict[str, str]]:
-        """Collect configuration values for a property."""
+        """Collect counting models."""
         enrichment_config = self.gpf_instance.get_study_enrichment_config(
             dataset_id
         )
         if enrichment_config is None:
             return []
-
-        selected_properties = enrichment_config[selected]
-
-        return [
-            {"id": el.name, "name": el.name, "desc": el.desc}
-            for el in enrichment_config[property_name].values()
-            if el.name in selected_properties
-        ]
+        selected_models = enrichment_config["selected_counting_models"]
+        result = []
+        for counting_model in enrichment_config["counting"].values():
+            if counting_model.id in selected_models:
+                result.append({
+                    "id": counting_model.id,
+                    "name": counting_model.name,
+                    "desc": counting_model.desc
+                })
+        return result
 
     def get(
         self, request: Request,  # pylint: disable=unused-argument
@@ -57,13 +57,12 @@ class EnrichmentModelsView(QueryDatasetView):
                 "name": background.name,
                 "type": background.background_type,
                 "summary": background.resource.get_summary(),
-                "description": background.resource.get_description()
+                "desc": background.resource.get_description()
             })
+        couting_models = self._collect_counting_models(dataset_id)
         result = {
             "background": background_descriptions,
-            "counting": self.get_from_config(
-                dataset_id, "counting", "selected_counting_values"
-            ),
+            "counting": couting_models,
         }
         return Response(result)
 
@@ -165,6 +164,8 @@ class EnrichmentTestView(QueryDatasetView):
 
         background_name = query.get("enrichmentBackgroundModel", None)
         counting_name = query.get("enrichmentCountingModel", None)
+        logger.info("selected background model: %s", background_name)
+        logger.info("selected counting model: %s", counting_name)
 
         builder = self.gpf_instance.create_enrichment_builder(
             dataset_id, background_name, counting_name, gene_syms)
