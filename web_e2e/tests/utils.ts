@@ -34,7 +34,6 @@ export const sidenavPageLinks = {
   autismGeneProfiles: 'autism-gene-profiles',
   management: 'management'
 };
-
 export async function logout(page: Page): Promise<void> {
   await page.getByRole('button', { name: 'Log Out' }).click();
 }
@@ -56,10 +55,6 @@ export async function login(page: Page, user = username, pass = password): Promi
   await page.waitForSelector('#log-out-button');
   await expect(page.getByText('Loading datasets...')).not.toBeVisible();
   await page.waitForLoadState('networkidle');
-}
-
-export async function logout(page: Page): Promise<void> {
-  await page.locator('#log-out-button').click();
 }
 
 export async function loginAdmin(page: Page, user = username, pass = password): Promise<void> {
