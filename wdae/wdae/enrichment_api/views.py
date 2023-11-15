@@ -6,6 +6,8 @@ from rest_framework.request import Request
 
 from rest_framework import status
 
+# from silk.profiling.profiler import silk_profile
+
 
 from query_base.query_base import QueryDatasetView
 from utils.expand_gene_set import expand_gene_set
@@ -116,6 +118,7 @@ class EnrichmentTestView(QueryDatasetView):
         desc = f"Gene Symbols: {gene_syms}"
         return desc
 
+    # @silk_profile(name="Enrichment Test")
     def post(self, request: Request) -> Response:
         """Run the enrichment test and return the result."""
         query = expand_gene_set(request.data, request.user)

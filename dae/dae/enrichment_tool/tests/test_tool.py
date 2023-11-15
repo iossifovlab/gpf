@@ -28,10 +28,10 @@ def test_enrichment_tool(
 
     helper = GenotypeHelper(f1_trio, psc)
     children_by_sex = helper.children_by_sex("phenotype1")
-
+    variant_events = GenotypeHelper.collect_denovo_events(variants)
     enrichment_events = enrichment_tool.calc(
         ["SAMD11", "PLEKHN1", "POGZ"],
-        variants,
+        variant_events,
         effect_types=["missense", "synonymous"],
         children_by_sex=children_by_sex,
     )

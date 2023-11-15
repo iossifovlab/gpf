@@ -21,11 +21,11 @@ def test_filter_denovo_one_event_per_family(
     variants = list(
         f1_trio.query_variants(inheritance=str(Inheritance.denovo.name))
     )
-
     assert len(variants) == 5
+    variant_events = GenotypeHelper.collect_denovo_events(variants)
 
     fv = filter_denovo_one_event_per_family(
-        variants, set(["missense", "synonymous"])
+        variant_events, set(["missense", "synonymous"])
     )
 
     assert len(fv) == 3
@@ -37,11 +37,11 @@ def test_filter_denovo_one_gene_per_recurrent_events(
     variants = list(
         f1_trio.query_variants(inheritance=str(Inheritance.denovo.name))
     )
-
     assert len(variants) == 5
+    variant_events = GenotypeHelper.collect_denovo_events(variants)
 
     fv = filter_denovo_one_gene_per_recurrent_events(
-        variants, set(["missense", "synonymous"])
+        variant_events, set(["missense", "synonymous"])
     )
 
     assert len(fv) == 1
@@ -52,11 +52,11 @@ def test_filter_denovo_one_gene_per_events(f1_trio: GenotypeData) -> None:
     variants = list(
         f1_trio.query_variants(inheritance=str(Inheritance.denovo.name))
     )
-
     assert len(variants) == 5
+    variant_events = GenotypeHelper.collect_denovo_events(variants)
 
     fv = filter_denovo_one_gene_per_events(
-        variants, set(["missense", "synonymous"])
+        variant_events, set(["missense", "synonymous"])
     )
 
     assert len(fv) == 2
@@ -67,10 +67,10 @@ def test_get_sym_2_fn(f1_trio: GenotypeData) -> None:
     variants = list(
         f1_trio.query_variants(inheritance=str(Inheritance.denovo.name))
     )
-
     assert len(variants) == 5
+    variant_events = GenotypeHelper.collect_denovo_events(variants)
 
-    sym_2_fn = get_sym_2_fn(variants, set(["missense", "synonymous"]))
+    sym_2_fn = get_sym_2_fn(variant_events, set(["missense", "synonymous"]))
 
     assert len(sym_2_fn) == 2
     assert sym_2_fn["PLEKHN1"] == 1
@@ -123,6 +123,7 @@ def test_events_counter(f1_trio: GenotypeData) -> None:
     )
     psc = f1_trio.get_person_set_collection("phenotype")
     assert psc is not None
+    variant_events = GenotypeHelper.collect_denovo_events(variants)
 
     genotype_helper = GenotypeHelper(f1_trio, psc)
     # children_stats = gh.get_children_stats()
@@ -130,7 +131,8 @@ def test_events_counter(f1_trio: GenotypeData) -> None:
     effect_types = set(["missense", "synonymous"])
     event_counter = EventsCounter()
     print(children_by_sex)
-    events = event_counter.events(variants, children_by_sex, effect_types)
+    events = event_counter.events(
+        variant_events, children_by_sex, effect_types)
     print(events)
 
     assert events.all is not None
@@ -166,7 +168,9 @@ def test_gene_events_counter(f1_trio: GenotypeData) -> None:
     effect_types = set(["missense", "synonymous"])
     event_counter = GeneEventsCounter()
 
-    events = event_counter.events(variants, children_by_sex, effect_types)
+    variant_events = GenotypeHelper.collect_denovo_events(variants)
+    events = event_counter.events(
+        variant_events, children_by_sex, effect_types)
 
     assert events.all is not None
     assert len(events.all) == 1

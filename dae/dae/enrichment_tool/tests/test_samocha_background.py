@@ -52,8 +52,9 @@ def test_calc_stats(
     helper = GenotypeHelper(f1_trio, psc)
     children_by_sex = helper.children_by_sex("phenotype1")
 
+    variant_events = GenotypeHelper.collect_denovo_events(variants)
     enrichment_events = event_counter.events(
-        variants, children_by_sex, set(["missense", "synonymous"])
+        variant_events, children_by_sex, set(["missense", "synonymous"])
     )
 
     assert enrichment_events.all is not None
