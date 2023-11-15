@@ -326,7 +326,7 @@ class SandwichSolver():
 
         if len(sandwich_instance.required_graph.edges()) == 0:
             return SandwichSolver.try_solve(sandwich_instance)
-        logger.info(
+        logger.debug(
             "sandwich forbidden graph edges: %s; %s",
             len(forbidden_graph.edges()),
             forbidden_graph.edges(),

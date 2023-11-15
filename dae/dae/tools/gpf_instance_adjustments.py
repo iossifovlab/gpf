@@ -139,21 +139,31 @@ class StudyConfigsAdjustmentCommand(AdjustmentsCommand):
                     outfile.write(
                         yaml.safe_dump(result_config, sort_keys=False))
 
-    def _execute_datasets(self):
+    def _execute_datasets(self, config_format="toml"):
         study_configs_dir = os.path.join(self.instance_dir, "datasets")
-        pattern = os.path.join(study_configs_dir, "**/*.conf")
+        if config_format == "toml":
+            pattern = os.path.join(study_configs_dir, "**/*.conf")
+        elif config_format == "yaml":
+            pattern = os.path.join(study_configs_dir, "**/*.yaml")
         config_filenames = glob.glob(pattern, recursive=True)
 
         for config_filename in config_filenames:
             logger.info("processing study %s", config_filename)
             with open(config_filename, "rt", encoding="utf8") as infile:
-                dataset_config = toml.loads(infile.read())
-            dataset_id = dataset_config["id"]
+                if config_format == "toml":
+                    dataset_config = toml.loads(infile.read())
+                elif config_format == "yaml":
+                    dataset_config = yaml.safe_load(infile.read())
 
+            dataset_id = dataset_config["id"]
             result_config = self.adjust_dataset(dataset_id, dataset_config)
 
             with open(config_filename, "w", encoding="utf8") as outfile:
-                outfile.write(toml.dumps(result_config))
+                if config_format == "toml":
+                    outfile.write(toml.dumps(result_config))
+                elif config_format == "yaml":
+                    outfile.write(
+                        yaml.safe_dump(result_config, sort_keys=False))
 
     def adjust_study(self, _study_id, study_config):
         return study_config
@@ -223,7 +233,8 @@ class EnableDisableStudies(StudyConfigsAdjustmentCommand):
             "going to %s following studies: %s", self._msg(), self.study_ids)
         self._execute_studies(config_format="toml")
         self._execute_studies(config_format="yaml")
-        self._execute_datasets()
+        self._execute_datasets(config_format="toml")
+        self._execute_datasets(config_format="yaml")
 
         gpfjs = self.config.get("gpfjs")
         if gpfjs is not None:
