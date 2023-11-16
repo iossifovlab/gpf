@@ -19,7 +19,7 @@ from dae.pedigrees.family import Person
 from dae.pedigrees.families_data import FamiliesData
 from dae.pheno.db import DbManager
 from dae.pheno.common import MeasureType
-from dae.configuration.gpf_config_parser import DefaultBox, GPFConfigParser
+from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.phenotype_data import pheno_conf_schema
 
 from dae.variants.attributes import Sex, Status, Role
@@ -1266,7 +1266,7 @@ class PhenotypeGroup(PhenotypeData):
 class PhenoDb:
     """Represents a phenotype databases stored in an sqlite database."""
 
-    def __init__(self, dae_config: DefaultBox) -> None:
+    def __init__(self, dae_config: Box) -> None:
         super().__init__()
         assert dae_config
         pheno_data_dir = get_pheno_db_dir(dae_config)

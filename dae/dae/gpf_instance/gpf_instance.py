@@ -176,7 +176,7 @@ class GPFInstance:
         return PhenoDb(dae_config=self.dae_config)
 
     @cached_property
-    def gene_scores_db(self):
+    def gene_scores_db(self) -> Any:
         """Load and return gene scores db."""
         from dae.gene.gene_scores import GeneScoresDb, \
             build_gene_score_from_resource
@@ -211,7 +211,7 @@ class GPFInstance:
         return GenomicScoresDb(self.grr, score_annotators)
 
     @cached_property
-    def genotype_storages(self):
+    def genotype_storages(self) -> Any:
         """Construct and return genotype storage registry."""
         # pylint: disable=import-outside-toplevel
         from dae.genotype_storage.genotype_storage_registry import \
@@ -353,9 +353,7 @@ class GPFInstance:
         return self._pheno_db.get_phenotype_data(phenotype_data_id)
 
     def get_all_phenotype_data(self) -> list[PhenotypeData]:
-        return cast(
-            list[PhenotypeData], self._pheno_db.get_all_phenotype_data()
-        )
+        return self._pheno_db.get_all_phenotype_data()
 
     def get_phenotype_data_config(self, phenotype_data_id: str) -> Box:
         return cast(
