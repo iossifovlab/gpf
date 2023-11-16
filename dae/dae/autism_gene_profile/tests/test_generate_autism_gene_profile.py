@@ -14,9 +14,14 @@ from dae.autism_gene_profile.db import AutismGeneProfileDB
 
 
 @pytest.fixture
-def incomplete_agp_config() -> str:
-    return yaml.dump({
-        # No order or default dataset
+def agp_config() -> dict:
+    return {
+        "order": [
+            "gene_set_rank",
+            "gene_score",
+            "study_1",
+        ],
+        "default_dataset": "study_1",
         "gene_sets": [
             {
                 "category": "gene_set",
@@ -74,45 +79,18 @@ def incomplete_agp_config() -> str:
                 ]
             }
         }
-    }, default_flow_style=False)
+    }
 
 
-@pytest.fixture
-def complete_agp_config(
-    incomplete_agp_config: str
-) -> str:
-    return yaml.dump({
-        "order": [
-            "gene_set_rank",
-            "gene_score",
-            "study_1",
-        ],
-        "default_dataset": "study_1"
-    }, default_flow_style=False) + incomplete_agp_config
-
-
-@pytest.fixture
-def invalid_agp_config(
-    incomplete_agp_config: str
-) -> str:
-    return yaml.dump({
-        "order": [
-            "gene_set_rank",
-            "gene_scre",  # invalid
-            "study_1",
-        ],
-        "default_dataset": "study_1"
-    }, default_flow_style=False) + incomplete_agp_config
-
-
-def local_gpf_instance(
+def agpf_gpf_instance(
         agp_config: str,
         tmp_path: pathlib.Path) -> None:
     setup_directories(
         tmp_path,
         {
             "gpf_instance": {
-                "agp_config.yaml": agp_config,
+                "agp_config.yaml": yaml.dump(
+                    agp_config, default_flow_style=False),
                 "gpf_instance.yaml": textwrap.dedent("""
                     autism_gene_tool_config:
                         conf_file: "agp_config.yaml"
@@ -267,7 +245,7 @@ chr1   195 .  C   T   .    .      .    GT     0/0  0/0  0/1 0/0  0/0  0/0
 
 
 def test_generate_autism_gene_profile(
-        complete_agp_config: str,
+        agp_config: dict,
         tmp_path: pathlib.Path) -> None:
     agpdb_filename = str(tmp_path / "agpdb")
     argv = [
@@ -276,7 +254,7 @@ def test_generate_autism_gene_profile(
         "-vv",
     ]
 
-    gpf_instance = local_gpf_instance(complete_agp_config, tmp_path)
+    gpf_instance = agpf_gpf_instance(agp_config, tmp_path)
     main(gpf_instance, argv)
     agpdb = AutismGeneProfileDB(
         gpf_instance._autism_gene_profile_config,
@@ -366,7 +344,7 @@ def test_generate_autism_gene_profile(
 
 
 def test_generate_autism_gene_profile_with_incomplete_config(
-        incomplete_agp_config: str,
+        agp_config: str,
         tmp_path: pathlib.Path) -> None:
     agpdb_filename = str(tmp_path / "agpdb")
     argv = [
@@ -374,8 +352,10 @@ def test_generate_autism_gene_profile_with_incomplete_config(
         agpdb_filename,
         "-vv",
     ]
+    del agp_config["order"]
+    del agp_config["default_dataset"]
 
-    gpf_instance = local_gpf_instance(incomplete_agp_config, tmp_path)
+    gpf_instance = agpf_gpf_instance(agp_config, tmp_path)
     expected_error = re.escape(
         "/gpf_instance: {'default_dataset': "
         + "['required field'], 'order': ['required field']}")
@@ -386,7 +366,7 @@ def test_generate_autism_gene_profile_with_incomplete_config(
 
 
 def test_generate_autism_gene_profile_with_incomplete_config_order(
-        invalid_agp_config: str,
+        agp_config: str,
         tmp_path: pathlib.Path) -> None:
     agpdb_filename = str(tmp_path / "agpdb")
     argv = [
@@ -395,7 +375,12 @@ def test_generate_autism_gene_profile_with_incomplete_config_order(
         "-vv",
     ]
 
-    gpf_instance = local_gpf_instance(invalid_agp_config, tmp_path)
+    agp_config["order"] = [
+        "gene_set_rank",
+        "gene_scr",
+        "study_1",
+    ]
+    gpf_instance = agpf_gpf_instance(agp_config, tmp_path)
 
     with pytest.raises(
             AssertionError,
