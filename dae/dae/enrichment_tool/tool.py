@@ -1,6 +1,6 @@
 from typing import Iterable, Any
 
-from dae.utils.effect_utils import expand_effect_types
+from dae.effect_annotation.effect import expand_effect_types
 
 from dae.enrichment_tool.genotype_helper import children_stats, VariantEvent
 from dae.enrichment_tool.base_enrichment_background import \

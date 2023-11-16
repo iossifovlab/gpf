@@ -5,7 +5,7 @@ from itertools import product
 from dae.variants.attributes import Inheritance
 from dae.gene.denovo_gene_set_collection import DenovoGeneSetCollection
 from dae.variants.attributes import Sex
-from dae.utils.effect_utils import expand_effect_types
+from dae.effect_annotation.effect import expand_effect_types
 
 
 class DenovoGeneSetCollectionFactory:

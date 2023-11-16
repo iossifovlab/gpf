@@ -4,9 +4,8 @@ from __future__ import annotations
 
 import itertools
 
-from typing import Optional, Any
+from typing import Optional, Any, Union, Iterable
 
-from dae.utils.effect_utils import EffectTypesMixin
 from dae.genomic_resources.gene_models import TranscriptModel
 from dae.effect_annotation.annotation_request import \
     AnnotationRequest
@@ -623,3 +622,228 @@ class AlleleEffects:
             worst_effect, gene_effects_out, transcript_effects_out)
         result.all_effects = effects
         return result
+
+
+class EffectTypesMixin:
+    """Helper function to work with variant effects."""
+
+    EFFECT_TYPES = [
+        "3'UTR",
+        "3'UTR-intron",
+        "5'UTR",
+        "5'UTR-intron",
+        "frame-shift",
+        "intergenic",
+        "intron",
+        "missense",
+        "no-frame-shift",
+        "no-frame-shift-newStop",
+        "noEnd",
+        "noStart",
+        "non-coding",
+        "non-coding-intron",
+        "nonsense",
+        "splice-site",
+        "synonymous",
+        "CDS",
+        "CNV+",
+        "CNV-",
+        "cnv+",
+        "cnv-",
+    ]
+
+    EFFECT_TYPES_MAPPING = {
+        "Nonsense": ["nonsense"],
+        "Frame-shift": ["frame-shift"],
+        "Splice-site": ["splice-site"],
+        "Missense": ["missense"],
+        "No-frame-shift": ["no-frame-shift"],
+        "No-frame-shift-newStop": ["no-frame-shift-newStop"],
+        "noStart": ["noStart"],
+        "noEnd": ["noEnd"],
+        "Synonymous": ["synonymous"],
+        "Non coding": ["non-coding"],
+        "Intron": ["intron", "non-coding-intron"],
+        "Intergenic": ["intergenic"],
+        "3'-UTR": ["3'UTR", "3'UTR-intron"],
+        "5'-UTR": ["5'UTR", "5'UTR-intron"],
+        "CNV": ["CNV+", "CNV-"],
+        "CNV+": ["CNV+"],
+        "CNV-": ["CNV-"],
+    }
+
+    EFFECT_TYPES_UI_NAMING = {
+        "nonsense": "Nonsense",
+        "frame-shift": "Frame-shift",
+        "splice-site": "Splice-site",
+        "missense": "Missense",
+        "no-frame-shift": "No-frame-shift",
+        "no-frame-shift-newStop": "No-frame-shift-newStop",
+        "synonymous": "Synonymous",
+        "non-coding": "Non coding",
+        "intron": "Intron",
+        "non-coding-intron": "Intron",
+    }
+    EFFECT_GROUPS = {
+        "coding": [
+            "Nonsense",
+            "Frame-shift",
+            "Splice-site",
+            "No-frame-shift-newStop",
+            "Missense",
+            "No-frame-shift",
+            "noStart",
+            "noEnd",
+            "Synonymous",
+        ],
+        "noncoding": [
+            "Non coding",
+            "Intron",
+            "Intergenic",
+            "3'-UTR",
+            "5'-UTR",
+        ],
+        "cnv": ["CNV+", "CNV-"],
+        "lgds": [
+            "Frame-shift",
+            "Nonsense",
+            "Splice-site",
+            "No-frame-shift-newStop",
+        ],
+        "nonsynonymous": [
+            "Nonsense",
+            "Frame-shift",
+            "Splice-site",
+            "No-frame-shift-newStop",
+            "Missense",
+            "No-frame-shift",
+            "noStart",
+            "noEnd",
+        ],
+        "utrs": [
+            "3'-UTR",
+            "5'-UTR",
+        ],
+    }
+
+    @classmethod
+    def _build_effect_types_groups(cls, effect_types: list[str]) -> list[str]:
+        etl = [
+            cls.EFFECT_GROUPS[et.lower()]
+            if et.lower() in cls.EFFECT_GROUPS
+            else [et]
+            for et in effect_types
+        ]
+        return list(itertools.chain.from_iterable(etl))
+
+    @classmethod
+    def _build_effect_types_list(cls, effect_types: list[str]) -> list[str]:
+        etl = [
+            cls.EFFECT_TYPES_MAPPING[et]
+            if et in cls.EFFECT_TYPES_MAPPING
+            else [et]
+            for et in effect_types
+        ]
+        return list(itertools.chain.from_iterable(etl))
+
+    @classmethod
+    def build_effect_types(
+        cls, effect_types: Union[str, Iterable[str]],
+        safe: bool = True
+    ) -> list[str]:
+        """Build list of effect types."""
+        if isinstance(effect_types, str):
+            effect_types = effect_types.split(",")
+        etl = [et.strip() for et in effect_types]
+        etl = cls._build_effect_types_groups(etl)
+        etl = cls._build_effect_types_list(etl)
+        if safe:
+            assert all(et in cls.EFFECT_TYPES for et in etl), etl
+        else:
+            etl = [et for et in etl if et in cls.EFFECT_TYPES]
+        return etl
+
+    @classmethod
+    def build_effect_types_naming(
+        cls, effect_types: Union[str, Iterable[str]],
+        safe: bool = True
+    ) -> list[str]:
+        """Build list of effect types appropriate for the UI."""
+        if isinstance(effect_types, str):
+            effect_types = effect_types.split(",")
+        assert isinstance(effect_types, list)
+        if safe:
+            assert all(
+                et in cls.EFFECT_TYPES
+                or et in cls.EFFECT_TYPES_MAPPING
+                for et in effect_types
+            )
+        return [cls.EFFECT_TYPES_UI_NAMING.get(et, et) for et in effect_types]
+
+    @classmethod
+    def get_effect_types(
+        cls, safe: bool = True, **kwargs: Any
+    ) -> Optional[list[str]]:
+        """Process effect types from kwargs."""
+        effect_types = kwargs.get("effectTypes", None)
+        if effect_types is None:
+            return None
+
+        return cls.build_effect_types(effect_types, safe)
+
+
+def expand_effect_types(
+    effect_types: Union[str, Iterable[str]]
+) -> list[str]:
+    """Expand effect type groups into list of effect types."""
+    if isinstance(effect_types, str):
+        effect_types = [effect_types]
+
+    effects = []
+    for effect in effect_types:
+        effect_lower = effect.lower()
+        if effect_lower in EffectTypesMixin.EFFECT_GROUPS:
+            effects += EffectTypesMixin.EFFECT_GROUPS[effect_lower]
+        else:
+            effects.append(effect)
+
+    result = []
+    for effect in effects:
+        if effect not in EffectTypesMixin.EFFECT_TYPES_MAPPING:
+            result.append(effect)
+        else:
+            result += EffectTypesMixin.EFFECT_TYPES_MAPPING[effect]
+    return result
+
+
+def ge2str(eff: AlleleEffects) -> str:
+    return "|".join([f"{g.symbol}:{g.effect}" for g in eff.genes])
+
+
+def gd2str(eff: AlleleEffects) -> str:
+    return "|".join(
+        [
+            str(t) for t in eff.transcripts.values()
+        ]
+    )
+
+
+def gene_effect_get_worst_effect(
+    gene_effects: Optional[AlleleEffects]
+) -> str:
+    if gene_effects is None:
+        return ""
+    return ",".join([gene_effects.worst])
+
+
+def gene_effect_get_genes(
+    gene_effects: Optional[AlleleEffects]
+) -> str:
+    """Return command separted list of genes."""
+    if gene_effects is None:
+        return ""
+    genes_set: set[str] = set(
+        x.symbol for x in gene_effects.genes if x.symbol is not None)
+    genes = sorted(list(genes_set))
+
+    return ";".join(genes)

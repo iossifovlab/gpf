@@ -9,7 +9,7 @@ from dae.studies.study import GenotypeData
 from dae.enrichment_tool.genotype_helper import GenotypeHelper
 from dae.enrichment_tool.tool import EnrichmentTool
 
-from dae.utils.effect_utils import expand_effect_types
+from dae.effect_annotation.effect import expand_effect_types
 from dae.person_sets import PersonSet, PersonSetCollection
 
 from .enrichment_serializer import EnrichmentSerializer

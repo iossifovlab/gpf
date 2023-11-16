@@ -8,7 +8,7 @@ from dae.pheno.utils.lin_regress import LinearRegression
 
 from dae.pheno.common import MeasureType
 from dae.variants.attributes import Role, Sex
-from dae.utils.effect_utils import EffectTypesMixin, expand_effect_types
+from dae.effect_annotation.effect import EffectTypesMixin, expand_effect_types
 
 
 LOGGER = logging.getLogger(__name__)

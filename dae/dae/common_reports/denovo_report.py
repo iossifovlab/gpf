@@ -4,7 +4,7 @@ import logging
 from copy import deepcopy
 import numpy as np
 
-from dae.utils.effect_utils import EffectTypesMixin
+from dae.effect_annotation.effect import EffectTypesMixin
 
 
 logger = logging.getLogger(__name__)

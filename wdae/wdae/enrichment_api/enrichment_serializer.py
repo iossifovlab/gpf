@@ -2,7 +2,7 @@ from typing import Any, cast, Optional
 from functools import reduce
 
 from dae.enrichment_tool.event_counters import EnrichmentResult
-from dae.utils.effect_utils import EffectTypesMixin
+from dae.effect_annotation.effect import EffectTypesMixin
 
 
 class EnrichmentSerializer(EffectTypesMixin):
