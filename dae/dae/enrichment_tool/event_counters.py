@@ -45,7 +45,7 @@ def get_sym_2_fn(
     variant_events: list[VariantEvent],
     requested_effect_types: Iterable[str]
 ) -> dict[str, int]:
-    """Count the number of requested effected events in genes."""
+    """Count the number of requested effect types events in genes."""
     gn_sorted = sorted(
         [
             [ge.gene, ve]

@@ -45,7 +45,6 @@ class GenotypeHelper:
 
         self.genotype_data = genotype_data
         self.person_set_collection = person_set_collection
-        # self.person_set = person_set_collection.person_sets[person_set_id]
         self._children_stats: dict[str, ChildrenStats] = {}
         self._children_by_sex: dict[str, dict[str, set[tuple[str, str]]]] = {}
 
@@ -74,15 +73,9 @@ class GenotypeHelper:
                         continue
                     gene_effects.add(GeneEffect(ge.symbol.upper(), ge.effect))
                 persons = set(fa.variant_in_members_fpid)
-                # person_sets = set()
-                # for fpid in persons:
-                #     person_set = \
-                #         person_set_collection.get_person_set_of_person(fpid)
-                #     person_sets.add(person_set.id)
                 allele_events.append(
                     AlleleEvent(
                         persons,
-                        # person_sets,
                         gene_effects
                     ))
             result.append(
