@@ -9,7 +9,7 @@ from dae.studies.study import GenotypeData
 from dae.enrichment_tool.genotype_helper import GenotypeHelper
 from dae.enrichment_tool.tool import EnrichmentTool
 
-from dae.utils.effect_utils import expand_effect_types
+from dae.effect_annotation.effect import expand_effect_types
 from dae.person_sets import PersonSet, PersonSetCollection
 
 from .enrichment_serializer import EnrichmentSerializer
@@ -66,7 +66,7 @@ class EnrichmentBuilder(BaseEnrichmentBuilder):
         for effect_type in effect_types:
             enrichment_results = self.tool.calc(
                 self.gene_syms,
-                self.helper.get_denovo_variants(),
+                self.helper.get_denovo_events(),
                 effect_types=[effect_type],
                 children_by_sex=self.helper.children_by_sex(person_set.id)
             )

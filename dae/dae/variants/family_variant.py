@@ -542,7 +542,7 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
         self._family_alleles = alleles
 
     @property
-    def fvuid(self) -> Optional[str]:
+    def fvuid(self) -> str:
         if self._fvuid is None:
             self._fvuid = f"{self.family_id}.{self.location}" \
                 f".{self.reference}.{self.alternative}"

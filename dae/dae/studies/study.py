@@ -24,7 +24,7 @@ from dae.pedigrees.families_data import FamiliesData
 from dae.pedigrees.loader import FamiliesLoader
 
 from dae.person_sets import PersonSetCollection
-from dae.utils.effect_utils import expand_effect_types
+from dae.effect_annotation.effect import expand_effect_types
 
 
 logger = logging.getLogger(__name__)

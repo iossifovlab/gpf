@@ -1,9 +1,8 @@
 from typing import Iterable, Any
 
-from dae.utils.effect_utils import expand_effect_types
-from dae.variants.family_variant import FamilyVariant
+from dae.effect_annotation.effect import expand_effect_types
 
-from dae.enrichment_tool.genotype_helper import children_stats
+from dae.enrichment_tool.genotype_helper import children_stats, VariantEvent
 from dae.enrichment_tool.base_enrichment_background import \
     BaseEnrichmentBackground
 from dae.enrichment_tool.event_counters import CounterBase, \
@@ -26,14 +25,14 @@ class EnrichmentTool:
     def calc(
         self,
         gene_syms: Iterable[str],
-        variants: list[FamilyVariant],
+        variant_events: list[VariantEvent],
         effect_types: Iterable[str],
         children_by_sex: dict[str, set[tuple[str, str]]]
     ) -> dict[str, EnrichmentResult]:
         """Perform the enrichment tool test."""
         requested_effect_types = expand_effect_types(effect_types)
         enrichment_events = self.event_counter.events(
-            variants, children_by_sex, requested_effect_types
+            variant_events, children_by_sex, requested_effect_types
         )
         if not self.background.is_loaded():
             self.background.load()

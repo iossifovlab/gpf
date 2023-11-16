@@ -8,7 +8,7 @@ from typing import Dict, Any, Set, cast
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.autism_gene_profile.statistic import AGPStatistic
 from dae.autism_gene_profile.db import AutismGeneProfileDB
-from dae.utils.effect_utils import expand_effect_types
+from dae.effect_annotation.effect import expand_effect_types
 from dae.variants.attributes import Role
 from dae.variants.variant import allele_type_from_name
 from dae.studies.study import GenotypeData

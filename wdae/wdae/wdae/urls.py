@@ -1,4 +1,6 @@
 from django.urls import path, re_path, include
+from django.conf import settings
+
 from users_api.views import WdaeLoginView
 
 from gpfjs.views import index, favicon
@@ -35,3 +37,8 @@ urlpatterns = [
     re_path(r"^api/v3/sentry", include("sentry.urls")),
     re_path(r"^api/v3/version/?$", version),
 ]
+
+if getattr(settings, "SILKY_PYTHON_PROFILER", False):
+    urlpatterns.append(
+        path("silk/", include("silk.urls", namespace="silk"))
+    )

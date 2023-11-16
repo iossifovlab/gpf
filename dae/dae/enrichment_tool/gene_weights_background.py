@@ -18,7 +18,8 @@ class GeneWeightsEnrichmentBackground(BaseEnrichmentBackground):
     """Provides class for gene weights enrichment background model."""
 
     def __init__(self, resource: GenomicResource):
-        if resource.get_type() != "gene_weights_enrichment_background":
+        if resource.get_type() not in {
+                "gene_weights_enrichment_background", "gene_score"}:
             raise ValueError(
                 f"unexpected enrichment background resource type: "
                 f"<{resource.get_type()}> for resource "

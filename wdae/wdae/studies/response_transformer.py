@@ -8,7 +8,7 @@ from typing import Optional, Any, Union, Generator, Iterator, Iterable, \
 
 from dae.utils.dae_utils import join_line, split_iterable
 from dae.utils.variant_utils import mat2str, fgt2str
-from dae.utils.effect_utils import ge2str, \
+from dae.effect_annotation.effect import ge2str, \
     gd2str, \
     gene_effect_get_worst_effect, \
     gene_effect_get_genes
@@ -224,6 +224,8 @@ class ResponseTransformer:
         self, allele: FamilyAllele, default: Optional[str] = None
     ) -> dict[str, Any]:
         if not self.study_wrapper.gene_score_column_sources:
+            return {}
+        if allele.effects is None:
             return {}
         genes = gene_effect_get_genes(allele.effects).split(";")
         gene = genes[0]

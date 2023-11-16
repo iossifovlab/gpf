@@ -38,6 +38,7 @@ dependencies:
   - pip=23
   - invoke=2.1
   - gitpython=3.1
+  - django-silk
   - pip:
     - sphinx-autorun==1.1.1
     - rangehttpserver==1.2.0

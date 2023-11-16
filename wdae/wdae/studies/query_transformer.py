@@ -5,7 +5,7 @@ from typing import Optional, cast, Any
 
 from functools import reduce
 
-from dae.utils.effect_utils import EffectTypesMixin
+from dae.effect_annotation.effect import EffectTypesMixin
 from dae.variants.attributes import Role, Inheritance
 from dae.utils.regions import Region
 from dae.pedigrees.family import ALL_FAMILY_TYPES, FamilyType
