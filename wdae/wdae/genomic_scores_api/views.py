@@ -17,7 +17,8 @@ class GenomicScoresView(QueryBaseView):
             if isinstance(score.hist, NumberHistogram):
                 res.append({
                     "score": score_id,
-                    "desc": score.description,
+                    "name": score.name,
+                    "desc": score.name,
                     "bars": score.hist.bars,
                     "bins": score.hist.bins,
                     "xscale":
@@ -25,18 +26,23 @@ class GenomicScoresView(QueryBaseView):
                     "yscale":
                         "log" if score.hist.config.y_log_scale else "linear",
                     "range": score.hist.view_range,
-                    "help": score.help
+                    "help": score.description,
+                    "small_values_desc": score.small_values_desc,
+                    "large_values_desc": score.large_values_desc,
                 })
             else:
                 res.append({
                     "score": score_id,
-                    "desc": score.description,
+                    "name": score.name,
+                    "desc": score.name,
                     "bars": None,
                     "bins": None,
                     "xscale": None,
                     "yscale": None,
                     "range": None,
-                    "help": score.help
+                    "help": score.description,
+                    "small_values_desc": None,
+                    "large_values_desc": None,
                 })
         return Response(res)
 

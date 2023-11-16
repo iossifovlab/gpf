@@ -1,13 +1,16 @@
 from __future__ import annotations
 import logging
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Optional
+
+from jinja2 import Template
 
 from dae.genomic_resources.repository import GenomicResourceRepo
-from dae.genomic_resources.genomic_scores import build_score_from_resource
+from dae.genomic_resources.genomic_scores import build_score_from_resource, \
+    GenomicScore
 from dae.genomic_resources.histogram import NumberHistogram, \
     CategoricalHistogram, NullHistogram, Histogram
-from dae.annotation.annotation_pipeline import AnnotatorInfo
+from dae.annotation.annotation_pipeline import AnnotatorInfo, AttributeInfo
 
 
 logger = logging.getLogger(__name__)
@@ -17,24 +20,26 @@ logger = logging.getLogger(__name__)
 class ScoreDesc:
     """Data class to describe genomic scores in GenomicScoresDb."""
 
-    resource_id: str
-    score_id: str
-    source: str
     name: str
+    resource_id: str
+    source: str
     hist: Histogram
     description: str
     help: str
+    small_values_desc: Optional[str]
+    large_values_desc: Optional[str]
 
     def to_json(self) -> dict[str, Any]:
         hist_data = self.hist.to_dict()
         return {
-            "resource_id": self.resource_id,
-            "score_id": self.score_id,
-            "source": self.source,
             "name": self.name,
+            "resource_id": self.resource_id,
+            "source": self.source,
             "hist": hist_data,
             "description": self.description,
-            "help": self.help
+            "help": self.help,
+            "small_values_desc": self.small_values_desc,
+            "large_values_desc": self.large_values_desc
         }
 
     @staticmethod
@@ -51,15 +56,99 @@ class ScoreDesc:
         else:
             raise ValueError(f"Unknown histogram type {hist_type}")
         return ScoreDesc(
-            data["resource_id"],
-            data["score_id"],
-            data["source"],
             data["name"],
+            data["resource_id"],
+            data["source"],
             hist_data,
             data["description"],
-            data["help"]
-
+            data["help"],
+            data.get("small_values_desc"),
+            data.get("large_values_desc")
         )
+
+
+SCORE_ATTRIBUTE_DESCRIPTION = """
+
+<div class="score_description">
+
+## {{ data.name }}
+
+{{ data.description}}
+
+{{ data.resource_summary }}
+
+{{ data.histogram }}
+
+Genomic resource: [{{ data.resource_id }}]({{ data.resource_url }})
+
+<div class="details">
+
+#### Details
+
+##### Attribute properties:
+
+* **source**: {{ data.source }}
+
+</div>
+
+</div>
+
+"""
+
+SCORE_ATTRIBUTE_HISTOGRAM = """
+<div class="histogram">
+
+<div class="histogram_image">
+
+![HISTOGRAM]({{ hist_url }})
+
+</div>
+
+{%- if score_def.small_values_desc and score_def.large_values_desc %}
+
+<span class="small_values">
+
+**Small values**: {{ score_def.small_values_desc}}
+
+</span>
+
+<span class="large_values">
+
+**Large values**: {{ score_def.large_values_desc}}
+
+</span>
+
+{%- endif %}
+
+</div>
+"""
+
+
+def _build_score_description(
+    attr_info: AttributeInfo,
+    genomic_score: GenomicScore,
+    # annotator_info: AnnotatorInfo
+) -> str:
+    hist_url = genomic_score.get_histogram_image_url(attr_info.source)
+    score_def = genomic_score.get_score_definition(attr_info.source)
+    assert score_def is not None
+
+    histogram = Template(SCORE_ATTRIBUTE_HISTOGRAM).render(
+        hist_url=hist_url,
+        score_def=score_def
+    )
+
+    data = {
+        "name": attr_info.name,
+        "description": attr_info.description,
+        "resource_id": genomic_score.resource_id,
+        "resource_summary": genomic_score.resource.get_summary(),
+        "resource_url": f"{genomic_score.resource.get_url()}/index.html",
+        "histogram": histogram,
+        "source": attr_info.source,
+    }
+    template = Template(SCORE_ATTRIBUTE_DESCRIPTION)
+    return template.render(data=data)
 
 
 class GenomicScoresDb:
@@ -87,7 +176,8 @@ class GenomicScoresDb:
 
     @staticmethod
     def _build_annotator_scores_desc(
-            annotator_info: AnnotatorInfo) -> dict[str, ScoreDesc]:
+        annotator_info: AnnotatorInfo
+    ) -> dict[str, ScoreDesc]:
         resource = annotator_info.resources[0]
         score = build_score_from_resource(resource)
         result = {}
@@ -95,13 +185,16 @@ class GenomicScoresDb:
             if attr.internal:
                 continue
             score_def = score.score_definitions[attr.source]
+            description = _build_score_description(attr, score)
             score_desc = ScoreDesc(
-                resource.resource_id,
-                attr.source, attr.source,
                 attr.name,
+                resource.resource_id,
+                attr.source,
                 score.get_score_histogram(attr.source),
-                score_def.desc,
-                resource.get_description()
+                description,
+                description,
+                score_def.small_values_desc,
+                score_def.large_values_desc
             )
             if score_desc.hist is None:
                 logger.warning(

@@ -1,5 +1,6 @@
 from rest_framework import status
 from rest_framework.response import Response
+from rest_framework.request import Request
 from django.http.response import StreamingHttpResponse
 
 import numpy as np
@@ -10,7 +11,7 @@ from query_base.query_base import QueryBaseView
 class GeneScoresListView(QueryBaseView):
     """Provides list of all gene scores."""
 
-    def get(self, request):
+    def get(self, request: Request) -> Response:
         """Build list of gene scores and return it."""
         ids = request.query_params.get("ids")
         if ids:
@@ -43,7 +44,7 @@ class GeneScoresListView(QueryBaseView):
 class GeneScoresDownloadView(QueryBaseView):
     """Serves gene scores download requests."""
 
-    def get(self, _request, score):
+    def get(self, _request: Request, score: str) -> Response:
         """Serve a gene score download request."""
         score_desc = self.gpf_instance.get_gene_score_desc(score)
         gene_score = score_desc.resource_id
