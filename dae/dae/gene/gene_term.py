@@ -75,7 +75,9 @@ def read_ewa_set_file(set_files):
     r = GeneTerms()
     r.geneNS = "sym"
     for f in set_files:
-        setname = f.readline().strip()
+        setname = ""
+        while setname == "":
+            setname = f.readline().strip()
         line = f.readline()
         r.tDesc[setname] = line.strip()
         for line in f:

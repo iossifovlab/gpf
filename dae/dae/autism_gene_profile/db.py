@@ -52,20 +52,22 @@ class AutismGeneProfileDB:
         if configuration is None:
             return {}
         order = configuration.get("order")
+        order_keys = []
+        for gene_set in configuration["gene_sets"]:
+            order_keys.append(gene_set["category"] + "_rank")
+        for genomic_score in configuration["genomic_scores"]:
+            order_keys.append(genomic_score["category"])
+        for dataset_id in configuration["datasets"].keys():
+            order_keys.append(dataset_id)
         if order is None:
-            order = []
-            for gene_set in configuration["gene_sets"]:
-                order.append(gene_set["category"] + "_rank")
-            for genomic_score in configuration["genomic_scores"]:
-                order.append(genomic_score["category"])
-            for dataset_id in configuration["datasets"].keys():
-                order.append(dataset_id)
-            configuration["order"] = order
+            configuration["order"] = order_keys
         else:
             total_categories_count = \
                 len(configuration["gene_sets"]) + \
                 len(configuration["genomic_scores"]) + \
                 len(configuration["datasets"])
+            assert all(x in order_keys for x in order), "Given AGP order " \
+                "has invalid entries"
             assert len(order) == total_categories_count, "Given AGP order " \
                 "is missing items"
 
