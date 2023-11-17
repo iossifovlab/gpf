@@ -18,12 +18,12 @@ class RemoteGenomicScoresDb(GenomicScoresDb):
                 for score in scores:
                     desc = score.get("description")
                     if desc is None:
-                        desc = score["score_id"]
+                        desc = score["name"]
                     score["description"] = client.prefix_remote_name(
                         desc
                     )
 
-                    self.remote_scores[score["score_id"]] = \
+                    self.remote_scores[score["name"]] = \
                         ScoreDesc.from_json(score)
 
     def get_scores(self) -> list[tuple[str, ScoreDesc]]:
