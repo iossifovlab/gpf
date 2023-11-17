@@ -5,10 +5,10 @@ import { BnNgIdleService } from 'bn-ng-idle';
 import { UsersService } from './users/users.service';
 import { switchMap } from 'rxjs/operators';
 import { NgbNavConfig } from '@ng-bootstrap/ng-bootstrap';
-import { AgpTableConfig } from './autism-gene-profiles-table/autism-gene-profiles-table';
-import { AgpTableService } from './autism-gene-profiles-table/autism-gene-profiles-table.service';
 import { APP_BASE_HREF } from '@angular/common';
 import { AppVersionService } from './app-version.service';
+import { AutismGeneProfilesService } from './autism-gene-profiles-block/autism-gene-profiles.service';
+import { AgpSingleViewConfig } from './autism-gene-profiles-single-view/autism-gene-profile-single-view';
 
 @Component({
   selector: 'gpf-root',
@@ -55,7 +55,7 @@ export class AppComponent implements OnInit {
   public showSidenav = false;
   public title = 'GPF: Genotypes and Phenotypes in Families';
   public imgPathPrefix = environment.imgPathPrefix;
-  public agpConfig: AgpTableConfig;
+  public agpConfig: AgpSingleViewConfig;
   private sessionTimeoutInSeconds = 7 * 24 * 60 * 60; // 1 week
 
   public gpfjsVersion = environment?.version;
@@ -82,7 +82,7 @@ export class AppComponent implements OnInit {
   }
 
   public constructor(
-    private autismGeneProfilesService: AgpTableService,
+    private autismGeneProfilesService: AutismGeneProfilesService,
     private bnIdle: BnNgIdleService,
     private usersService: UsersService,
     private ngbNavConfig: NgbNavConfig,
