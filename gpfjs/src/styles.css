@@ -450,3 +450,32 @@ gpf-genotype-preview-field gpf-pedigree gpf-pedigree-chart .svg-container {
 .material-symbols-outlined.red {
   color: red;
 }
+
+summary > h4 {
+  display: inline;
+}
+
+.details-body {
+  margin-top: 10px;
+  margin-left: 30px;
+}
+
+.values-desc {
+  display: flex;
+  justify-content: space-between;
+  font-style: italic;
+  color: #acacac;
+  font-size: 14px;
+  width: 100%;
+  max-width: 560px;
+  margin: auto;
+  margin-top: -40px;
+  margin-bottom: 10px;
+}
+
+.histogram-image img {
+  width: 100%;
+  height: 100%;
+  max-width: 560px;
+  max-height: 400px;
+}

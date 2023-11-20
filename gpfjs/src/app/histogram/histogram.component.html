@@ -35,6 +35,11 @@
     </g>
   </svg>
 
+  <div *ngIf="smallValuesDesc && largeValuesDesc" id="values-description">
+    <span>{{ smallValuesDesc }}</span>
+    <span>{{ largeValuesDesc }}</span>
+  </div>
+
   <div class="histogram-controls" *ngIf="showMinMaxInputWithDefaultValue" style="justify-content: space-between">
     <div class="histogram-from">
       <label for="from-input-field">From (Min: {{ minValue }})</label>
