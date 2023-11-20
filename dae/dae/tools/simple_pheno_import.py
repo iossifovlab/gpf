@@ -3,16 +3,19 @@
 
 import sys
 import os
+import argparse
 import traceback
-import toml
-from argparse import ArgumentParser
-from argparse import RawDescriptionHelpFormatter
 
-from dae.pheno.common import (
-    default_config,
-    dump_config,
-    check_phenotype_data_config,
-)
+from typing import Any, Optional
+
+from box import Box
+
+import toml
+
+from dae.pheno.common import \
+    default_config, \
+    dump_config, \
+    check_phenotype_data_config
 from dae.pheno.prepare.pheno_prepare import PrepareVariables
 from dae.tools.pheno2browser import build_pheno_browser
 
@@ -21,10 +24,11 @@ from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.phenotype_data import regression_conf_schema
 
 
-def pheno_cli_parser():
-    parser = ArgumentParser(
+def pheno_cli_parser() -> argparse.ArgumentParser:
+    """Construct argument parser for simple phenotype import tool."""
+    parser = argparse.ArgumentParser(
         description="simple phenotype database import tool",
-        formatter_class=RawDescriptionHelpFormatter,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 
     parser.add_argument(
@@ -77,21 +81,22 @@ def pheno_cli_parser():
     return parser
 
 
-def verify_phenotype_data_name(input_name):
+def verify_phenotype_data_name(input_name: str) -> str:
     phenotype_data_name = os.path.normpath(input_name)
     # check that the given pheno name is not a directory path
     split_path = os.path.split(phenotype_data_name)
-    assert not split_path[0], '"{}" is a directory path!'.format(
-        phenotype_data_name
-    )
+    assert not split_path[0], f"'{phenotype_data_name}' is a directory path!"
     return phenotype_data_name
 
 
-def generate_phenotype_data_config(args, regressions):
+def generate_phenotype_data_config(
+    args: argparse.Namespace, regressions: Any
+) -> dict[str, Any]:
+    """Construct phenotype data configuration from command line arguments."""
     dbfile = os.path.join("%(wd)s", os.path.basename(args.pheno_db_filename))
-    pheno_db_path = os.path.dirname("%(wd)s")  # noqa
+    # pheno_db_path = os.path.dirname("%(wd)s")  # noqa
     browser_dbfile = os.path.join(
-        "%(wd)s", "browser", "{}_browser.db".format(args.pheno_name)
+        "%(wd)s", "browser", f"{args.pheno_name}_browser.db"
     )
     config = {
         "vars": {"wd": "."},
@@ -108,7 +113,8 @@ def generate_phenotype_data_config(args, regressions):
     return config
 
 
-def parse_phenotype_data_config(args):
+def parse_phenotype_data_config(args: argparse.Namespace) -> Box:
+    """Construct phenotype data configuration from command line arguments."""
     config = default_config()
     config.verbose = args.verbose
     config.instruments.dir = args.instruments
@@ -123,7 +129,10 @@ def parse_phenotype_data_config(args):
     return config
 
 
-def main(argv):
+def main(argv: Optional[list[str]] = None) -> int:
+    """Run simple phenotype import tool."""
+    if argv is None:
+        argv = sys.argv[1:]
 
     try:
         # Setup argument parser
@@ -152,7 +161,7 @@ def main(argv):
             os.makedirs(pheno_db_dir)
 
         args.pheno_db_filename = os.path.join(
-            pheno_db_dir, "{}.db".format(args.pheno_name)
+            pheno_db_dir, f"{args.pheno_name}.db"
         )
         if os.path.exists(args.pheno_db_filename):
             if not args.force:
@@ -160,8 +169,7 @@ def main(argv):
                     "pheno db filename already exists:", args.pheno_db_filename
                 )
                 raise ValueError()
-            else:
-                os.remove(args.pheno_db_filename)
+            os.remove(args.pheno_db_filename)
 
         args.browser_dir = os.path.join(pheno_db_dir, "browser")
         if not os.path.exists(args.browser_dir):
@@ -187,7 +195,7 @@ def main(argv):
         )
 
         pheno_conf_path = os.path.join(
-            pheno_db_dir, "{}.conf".format(args.pheno_name)
+            pheno_db_dir, f"{args.pheno_name}.conf"
         )
 
         with open(pheno_conf_path, "w") as pheno_conf_file:
