@@ -1,6 +1,9 @@
+from __future__ import annotations
+from typing import Iterator, Generator, Any
+
 import json
 import base64
-from typing import Optional, cast
+from typing import Tuple, Type, Union, Optional, cast
 import django.contrib.auth
 from django import forms
 from django.db import IntegrityError, models
@@ -8,7 +11,8 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import BaseUserManager
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.conf import settings
-from django.http.response import StreamingHttpResponse, HttpResponseRedirect
+from django.http.response import HttpResponse, StreamingHttpResponse, \
+    HttpResponseRedirect
 from django.db.models import Q
 from django.shortcuts import redirect, render
 from django.core.exceptions import ObjectDoesNotExist
@@ -26,15 +30,16 @@ from utils.password_requirements import is_password_valid
 from utils.streaming_response_util import convert
 from utils.authentication import GPFOAuth2Authentication
 
-from .models import ResetPasswordCode, SetPasswordCode
+from .models import ResetPasswordCode, SetPasswordCode, WdaeUser
 from .serializers import UserSerializer, UserWithoutEmailSerializer
 from .forms import WdaePasswordForgottenForm, WdaeResetPasswordForm, \
     WdaeRegisterPasswordForm, WdaeLoginForm
 
 from .utils import csrf_clear, get_default_application
+from rest_framework.request import Request
 
 
-def iterator_to_json(users):
+def iterator_to_json(users: Iterator[WdaeUser]) -> Generator[str, None, int]:
     """Wrap an iterator over WdaeUser models to produce json objects."""
     yield "["
     curr = next(users, None)
@@ -64,21 +69,37 @@ class UserViewSet(viewsets.ModelViewSet):
     search_fields = ("email", "name", "groups__name")
 
     @request_logging(LOGGER)
-    def list(self, request, *args, **kwargs):
+    def list(
+        self, request: Request,
+        *args: Any, **kwargs: Any
+    ) -> Response:
         return super().list(request)
 
     @request_logging(LOGGER)
-    def create(self, request, *args, **kwargs):
+    def create(
+        self, request: Request,
+        *args: Any, **kwargs: Any
+    ) -> Response:
         return super().create(request)
 
     @request_logging(LOGGER)
-    def retrieve(self, request, *args, pk=None, **kwargs):
+    def retrieve(
+        self, request: Request,
+        *args: Any, pk: Optional[int] = None, **kwargs: Any
+    ) -> Response:
+        if pk is not None:
+            pk = int(pk)
         return super().retrieve(request, pk=pk)
 
     @request_logging(LOGGER)
-    def update(self, request, *args, pk=None, **kwargs):
+    def update(
+        self, request: Request,
+        *args: Any, pk: Optional[int] = None, **kwargs: Any
+    ) -> Response:
+        if pk is not None:
+            pk = int(pk)
         if (
-            request.user.pk == int(pk)
+            request.user.pk == pk
             and request.user.is_staff
             and "admin" not in request.data["groups"]
         ):
@@ -86,9 +107,14 @@ class UserViewSet(viewsets.ModelViewSet):
         return super().update(request, pk=pk, *args, **kwargs)
 
     @request_logging(LOGGER)
-    def partial_update(self, request, pk=None):
+    def partial_update(
+        self, request: Request,
+        pk: Optional[int] = None
+    ) -> Response:
+        if pk is not None:
+            pk = int(pk)
         if (
-            request.user.pk == int(pk)
+            request.user.pk == pk
             and request.user.is_staff
             and "admin" not in request.data["groups"]
         ):
@@ -96,12 +122,19 @@ class UserViewSet(viewsets.ModelViewSet):
         return super().partial_update(request, pk=pk)
 
     @request_logging(LOGGER)
-    def destroy(self, request, *args, pk=None, **kwargs):
-        if request.user.pk == int(pk):
+    def destroy(
+        self, request: Request,
+        *args: Any, pk: Optional[int] = None, **kwargs: Any
+    ) -> Response:
+        if pk is not None:
+            pk = int(pk)
+        if request.user.pk == pk:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         return super().destroy(request, pk=pk)
 
-    def get_serializer_class(self):
+    def get_serializer_class(
+        self
+    ) -> Union[Type[UserWithoutEmailSerializer], Type[UserSerializer]]:
         serializer_class = self.serializer_class
 
         if self.action == "update" or self.action == "partial_update":
@@ -111,7 +144,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
     @request_logging(LOGGER)
     @action(detail=False, methods=["get"])
-    def streaming_search(self, request):
+    def streaming_search(self, request: Request) -> StreamingHttpResponse:
         self.check_permissions(request)
         queryset = get_user_model().objects.all()
         search_param = request.GET.get("search", None)
@@ -129,7 +162,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
 class ForgotPassword(views.APIView):
     @request_logging(LOGGER)
-    def get(self, request):
+    def get(self, request: Request) -> HttpResponse:
         form = WdaePasswordForgottenForm()
         return render(
             request,
@@ -138,7 +171,7 @@ class ForgotPassword(views.APIView):
         )
 
     @request_logging(LOGGER)
-    def post(self, request):
+    def post(self, request: Request) -> HttpResponse:
         form = WdaePasswordForgottenForm(request.data)
         is_valid = form.is_valid()
         if not is_valid:
@@ -195,7 +228,9 @@ class BasePasswordView(views.APIView):
     form: Optional[forms.Form] = None
     code_type: Optional[str] = None
 
-    def _check_request_verification_path(self, request):
+    def _check_request_verification_path(
+        self, request: Request
+    ) -> Tuple[Union[ResetPasswordCode, None, SetPasswordCode], Optional[str]]:
         """
         Check, validate and return a verification path from a request.
 
@@ -208,8 +243,11 @@ class BasePasswordView(views.APIView):
         if verification_path is None:
             return None, f"No {self.code_type} code provided"
         try:
-            verif_code = self.verification_code_model.objects.get(
-                path=verification_path)
+            assert verification_path is not None
+            assert self.verification_code_model is not None
+            verif_code = \
+                self.verification_code_model.objects.get(  # type: ignore
+                    path=verification_path)
         except ObjectDoesNotExist:
             return None, f"Invalid {self.code_type} code"
 
@@ -221,25 +259,28 @@ class BasePasswordView(views.APIView):
         return verif_code, None
 
     @request_logging(LOGGER)
-    def get(self, request):
+    def get(self, request: Request) -> HttpResponse:
         verif_code, msg = \
             self._check_request_verification_path(request)
 
         if msg is not None:
             if verif_code is not None:
                 verif_code.delete()
+            assert self.template is not None
             return render(
                 request,
                 self.template,
                 {"message": msg},
                 status=status.HTTP_400_BAD_REQUEST
             )
-
+        assert verif_code is not None
         user = verif_code.user
 
-        form = self.form(user)  # pylint: disable=not-callable
+        assert self.form is not None
+        form = self.form(user)  # type: ignore
         request.session[f"{self.code_type}_code"] = verif_code.path
         request.path = request.path[:request.path.find("?")]
+        assert self.template is not None
         return render(
             request,
             self.template,
@@ -247,10 +288,10 @@ class BasePasswordView(views.APIView):
         )
 
     @request_logging(LOGGER)
-    def post(self, request):
+    def post(self, request: Request) -> HttpResponse:
         verif_code, msg = \
             self._check_request_verification_path(request)
-
+        assert self.template is not None
         if msg is not None:
             if verif_code is not None:
                 verif_code.delete()
@@ -260,10 +301,10 @@ class BasePasswordView(views.APIView):
                 {"message": msg},
                 status=status.HTTP_400_BAD_REQUEST
             )
-
+        assert verif_code is not None
         user = verif_code.user
         # pylint: disable=not-callable
-        form = self.form(user, data=request.data)
+        form = self.form(user, data=request.data)  # type: ignore
         is_valid = form.is_valid()
         if not is_valid:
             return render(
@@ -300,7 +341,7 @@ class SetPassword(BasePasswordView):
 class WdaeLoginView(views.APIView):
 
     @request_logging(LOGGER)
-    def get(self, request):
+    def get(self, request: Request) -> HttpResponse:
         next_uri = request.GET.get("next")
         if next_uri is None:
             next_uri = get_default_application().redirect_uris.split(" ")[0]
@@ -316,7 +357,7 @@ class WdaeLoginView(views.APIView):
         )
 
     @request_logging(LOGGER)
-    def post(self, request):
+    def post(self, request: Request) -> HttpResponse:
         data = request.data
         next_uri = data.get("next")
         if next_uri is None:
@@ -343,7 +384,7 @@ class WdaeLoginView(views.APIView):
 
 @request_logging_function_view(LOGGER)
 @api_view(["POST"])
-def change_password(request):
+def change_password(request: Request) -> Response:
     password = request.data["password"]
     verif_code = request.data["verifPath"]
 
@@ -365,7 +406,7 @@ def change_password(request):
 
 @request_logging_function_view(LOGGER)
 @api_view(["POST"])
-def register(request):
+def register(request: Request) -> Response:
     user_model = get_user_model()
 
     try:
@@ -440,7 +481,7 @@ def register(request):
 @csrf_clear
 @api_view(["POST"])
 @authentication_classes((SessionAuthentication,))
-def logout(request):
+def logout(request: Request) -> Response:
     django.contrib.auth.logout(request)
     return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -449,7 +490,7 @@ def logout(request):
 @ensure_csrf_cookie
 @api_view(["GET"])
 @authentication_classes((GPFOAuth2Authentication,))
-def get_user_info(request):
+def get_user_info(request: Request) -> Response:
     """Get user info for currently logged-in user."""
     user = request.user
     if user.is_authenticated:
@@ -466,7 +507,7 @@ def get_user_info(request):
 
 @request_logging_function_view(LOGGER)
 @api_view(["POST"])
-def check_verif_code(request):
+def check_verif_code(request: Request) -> Response:
     verif_code = request.data["verifPath"]
     try:
         ResetPasswordCode.objects.get(path=verif_code)
@@ -484,7 +525,7 @@ class FederationCredentials(views.APIView):
     authentication_classes = (GPFOAuth2Authentication,)
 
     @request_logging(LOGGER)
-    def get(self, request):
+    def get(self, request: Request) -> Response:
         """List all federation apps for a user."""
         user = request.user
         if not user.is_authenticated:
@@ -502,7 +543,7 @@ class FederationCredentials(views.APIView):
         return Response(res, status=status.HTTP_200_OK)
 
     @request_logging(LOGGER)
-    def post(self, request):
+    def post(self, request: Request) -> Response:
         """Create a new federation application and return its credentials."""
         user = request.user
 
@@ -532,7 +573,7 @@ class FederationCredentials(views.APIView):
         )
 
     @request_logging(LOGGER)
-    def delete(self, request):
+    def delete(self, request: Request) -> Response:
         """Delete a given federation app."""
         user = request.user
         if not user.is_authenticated:
@@ -551,7 +592,7 @@ class FederationCredentials(views.APIView):
         return Response(status=status.HTTP_200_OK)
 
     @request_logging(LOGGER)
-    def put(self, request):
+    def put(self, request: Request) -> Response:
         """Update a given federation token's name."""
         user = request.user
         if not user.is_authenticated:
