@@ -579,14 +579,27 @@ class DenovoLoader(VariantsGenotypesLoader):
                         families.persons[(family_id, pid)].family_id
                         for pid in person_ids}
                 else:
-                    assert all(
-                        len(families.persons_by_person_id[person_id]) == 1
-                        for person_id in person_ids), person_ids
-                    variant_families = {
-                        families.persons_by_person_id[pid][0].family_id
-                        for pid in filter(
-                            lambda p: p in families.persons_by_person_id,
-                            person_ids)}
+                    variant_families = set()
+                    for person_id in person_ids:
+                        if len(families.persons_by_person_id[person_id]) == 0:
+                            continue
+                        if len(families.persons_by_person_id[person_id]) == 1:
+                            variant_families.add(
+                                families.persons_by_person_id[person_id][0].family_id
+                            )
+                        else:
+                            logger.warning(
+                                "person %s is in multiple families: %s",
+                                person_id,
+                                [
+                                    f.family_id
+                                    for f in families.persons_by_person_id[
+                                        person_id
+                                    ]
+                                ],
+                            )
+                            raise ValueError(
+                                f"person {person_id} in multiple families")
 
                 # TODO Implement support for multiallelic variants
                 for family_id in variant_families:
