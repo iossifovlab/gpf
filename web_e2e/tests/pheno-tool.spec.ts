@@ -242,7 +242,7 @@ test.describe('Pheno tool download tests', () => {
     {id: '8', familyFilter: 'i1.iq', familyHistogramfromTo: ['33', '130']},
     {id: '9', familyFilter: 'i1.m1', familyHistogramfromTo: ['84', '107']}
   ].forEach(data => {
-    test('should test advanced family filters', async({ page }) => {
+    test(`should test advanced family filters with ${data.familyFilter}`, async({ page }) => {
       await page.locator('input#search-box').click();
       await page.getByText('i1.age').first().click();
 
@@ -344,7 +344,7 @@ test.describe('Pheno tool download tests', () => {
       measure: 'i1.iq'
     }
   ].forEach(data => {
-    test('should check downloaded report with gene set Denovo', async({ page }) => {
+    test(`should check downloaded report with gene set Denovo and measure${data.measure}`, async({ page }) => {
       await page.getByRole('tab', { name: 'Gene Sets' }).click();
       await page.locator('gpf-gene-sets select.form-control').selectOption('Denovo');
 
