@@ -1,15 +1,14 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import os
 import pathlib
+from typing import Optional
 
 import pytest
 
 from dae.testing import setup_pedigree, setup_vcf, vcf_study, \
-    setup_denovo, denovo_import
-from dae.testing import alla_gpf
+    setup_denovo, denovo_study
+from dae.testing import t4c8_gpf
 from dae.testing.import_helpers import StudyInputLayout
-from dae.import_tools.cli import run_with_project
-from dae.import_tools.import_tools import ImportProject
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.studies.study import GenotypeData
@@ -21,7 +20,7 @@ def vcf_import_data(
     genotype_storage: GenotypeStorage
 ) -> tuple[pathlib.Path, GPFInstance, StudyInputLayout]:
     root_path = tmp_path
-    gpf_instance = alla_gpf(root_path)
+    gpf_instance = t4c8_gpf(root_path)
 
     if genotype_storage:
         gpf_instance\
@@ -46,8 +45,10 @@ def vcf_import_data(
 ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
 ##contig=<ID=chrA>
 #CHROM POS ID REF ALT QUAL FILTER INFO FORMAT m1  d1  p1  m2  d2  p2
-chrA   1   .  A   C   .    .      .    GT     0/1 0/1 0/1 0/0 0/0 0/1
-chrA   2   .  A   G   .    .      .    GT     0/0 0/0 0/1 0/1 0/0 0/1
+chr1   12  .  T   C   .    .      .    GT     0/1 0/1 0/1 0/0 0/0 0/1
+chr1   20  .  G   A   .    .      .    GT     0/0 0/0 0/1 0/1 0/0 0/1
+chr1   129 .  T   C   .    .      .    GT     0/1 0/1 0/1 0/0 0/0 0/1
+chr1   143 .  C   A   .    .      .    GT     0/0 0/0 0/1 0/1 0/0 0/1
         """)
 
     return root_path, gpf_instance, StudyInputLayout(
@@ -71,14 +72,24 @@ def vcf_fixture(
             "storage_id": genotype_storage.storage_id
         },
         "partition_description": {
-            "frequency_bin": {
-                "rare_boundary": 20.0
+            "coding_bin": {
+                "coding_effect_types": "noStart,missense,synonymous"
+            }
+        },
+        "processing_config": {
+            "denovo": {
+                "chromosomes": ["chr1"],
+                "region_length": 100
+            },
+            "vcf": {
+                "chromosomes": ["chr1"],
+                "region_length": 100
             }
         }
     }
     return root_path, vcf_study(
         root_path,
-        "vcf_frequency_bin", layout.pedigree,
+        "vcf_coding_bin", layout.pedigree,
         layout.vcf,
         gpf_instance,
         project_config_update=project_config_update)
@@ -87,73 +98,49 @@ def vcf_fixture(
 @pytest.mark.gs_duckdb(reason="supported for schema2 duckdb")
 @pytest.mark.gs_impala2(reason="supported for schema2 impala")
 @pytest.mark.gs_gcp(reason="supported for gcp")
-@pytest.mark.parametrize(
-    "label,frequency_bin,exists",
-    [
-        ("denovo", 0, True),
-        ("ultra rare", 1, True),
-        ("rare <= 50%", 2, False),
-        ("common >50", 3, True),
-    ]
-)
-def test_family_frequency_bin_for_vcf(
+def test_coding_bin_for_vcf(
     vcf_fixture: tuple[pathlib.Path, GenotypeData],
     genotype_storage: GenotypeStorage,
-    label: str, frequency_bin: int, exists: bool
 ) -> None:
 
     root_path, _ = vcf_fixture
     assert os.path.exists(
         os.path.join(
             root_path / "work_dir",
-            f"vcf_frequency_bin/family/frequency_bin="
-            f"{frequency_bin}")) == exists, label
-
-
-@pytest.mark.gs_duckdb(reason="supported for schema2 duckdb")
-@pytest.mark.gs_impala2(reason="supported for schema2 impala")
-@pytest.mark.gs_gcp(reason="supported for gcp")
-@pytest.mark.parametrize(
-    "label,frequency_bin,exists",
-    [
-        ("denovo", 0, True),
-        ("ultra rare", 1, False),
-        ("rare <= 50%", 2, False),
-        ("common >50", 3, True),
-    ]
-)
-def test_summary_frequency_bin_for_vcf(
-    vcf_fixture: tuple[pathlib.Path, GenotypeData],
-    genotype_storage: GenotypeStorage,
-    label: str, frequency_bin: int, exists: bool
-) -> None:
-
-    root_path, _ = vcf_fixture
+            "vcf_coding_bin/family/coding_bin=1"))
     assert os.path.exists(
         os.path.join(
             root_path / "work_dir",
-            f"vcf_frequency_bin/summary/frequency_bin="
-            f"{frequency_bin}")) == exists, label
+            "vcf_coding_bin/family/coding_bin=0"))
+
+    assert os.path.exists(
+        os.path.join(
+            root_path / "work_dir",
+            "vcf_coding_bin/summary/coding_bin=1"))
+    assert os.path.exists(
+        os.path.join(
+            root_path / "work_dir",
+            "vcf_coding_bin/summary/coding_bin=0"))
 
 
 @pytest.mark.gs_duckdb(reason="supported for schema2 duckdb")
 @pytest.mark.gs_impala2(reason="supported for schema2 impala")
 @pytest.mark.gs_gcp(reason="supported for gcp")
 @pytest.mark.parametrize(
-    "frequency_filter,count",
+    "effect_types,count",
     [
-        (None, 4),
-        ([("af_allele_freq", (0.0, 20.0))], 2),
-        ([("af_allele_freq", (20.0, 100.0))], 2),
+        (None, 8),
+        (["missense", "noStart"], 4),
+        (["intron"], 4),
     ]
 )
-def test_frequency_bin_queries(
-    frequency_filter: list[tuple], count: int,
+def test_vcf_import_coding_bin_queries(
+    effect_types: Optional[list[str]], count: int,
     vcf_fixture: tuple[pathlib.Path, GenotypeData],
     genotype_storage: GenotypeStorage,
 ) -> None:
     _, study = vcf_fixture
-    vs = list(study.query_variants(frequency_filter=frequency_filter))
+    vs = list(study.query_variants(effect_types=effect_types))
     assert len(vs) == count
 
 
@@ -164,7 +151,7 @@ def denovo_import_data(
 ) -> tuple[pathlib.Path, GPFInstance, StudyInputLayout]:
     root_path = tmp_path
 
-    gpf_instance = alla_gpf(root_path)
+    gpf_instance = t4c8_gpf(root_path)
 
     if genotype_storage:
         gpf_instance\
@@ -186,8 +173,10 @@ def denovo_import_data(
         root_path / "denovo_data" / "in.tsv",
         """
         familyId location variant   bestState
-        f1       chrA:1   sub(A->C) 2||2||1/0||0||1
-        f2       chrA:2   sub(A->C) 2||2||1/0||0||1
+        f1       chr1:12  sub(T->C) 2||2||1/0||0||1
+        f2       chr1:20  sub(G->A) 2||2||1/0||0||1
+        f1       chr1:129 sub(T->C) 2||2||1/0||0||1
+        f2       chr1:143 sub(C->A) 2||2||1/0||0||1
         """)
 
     return root_path, gpf_instance, StudyInputLayout(
@@ -195,11 +184,11 @@ def denovo_import_data(
 
 
 @pytest.fixture
-def denovo_project_to_parquet(
+def denovo_fixture(
     tmp_path: pathlib.Path,
     denovo_import_data: tuple[pathlib.Path, GPFInstance, StudyInputLayout],
     genotype_storage: GenotypeStorage
-) -> ImportProject:
+) -> tuple[pathlib.Path, GenotypeData]:
     root_path, gpf_instance, layout = denovo_import_data
 
     project_config_update = {
@@ -207,40 +196,73 @@ def denovo_project_to_parquet(
             "storage_type": genotype_storage.get_storage_type()
         },
         "partition_description": {
-            "frequency_bin": {
-                "rare_boundary": 50.0
+            "coding_bin": {
+                "coding_effect_types": "noStart,missense,synonymous"
+            }
+        },
+        "processing_config": {
+            "denovo": {
+                "chromosomes": ["chr1"],
+                "region_length": 100
+            },
+            "vcf": {
+                "chromosomes": ["chr1"],
+                "region_length": 100
             }
         }
     }
-    project = denovo_import(
+    study = denovo_study(
         root_path,
-        "denovo_frequency_bin", layout.pedigree, layout.denovo,
+        "denovo_coding_bin", layout.pedigree, layout.denovo,
         gpf_instance,
         project_config_update=project_config_update)
-    return project
+    return root_path, study
+
+
+@pytest.mark.gs_duckdb(reason="supported for schema2 duckdb")
+@pytest.mark.gs_impala2(reason="supported for schema2 impala")
+@pytest.mark.gs_gcp(reason="supported for gcp")
+def test_denovo_coding_bin_for_denovo_import(
+    denovo_fixture: tuple[pathlib.Path, GenotypeData],
+    genotype_storage: GenotypeStorage,
+) -> None:
+    root_path, _ = denovo_fixture
+    assert os.path.exists(
+        os.path.join(
+            root_path / "work_dir",
+            "denovo_coding_bin/family/coding_bin=0"))
+    assert os.path.exists(
+        os.path.join(
+            root_path / "work_dir",
+            "denovo_coding_bin/family/coding_bin=1"))
+
+    assert os.path.exists(
+        os.path.join(
+            root_path / "work_dir",
+            "denovo_coding_bin/summary/coding_bin=0"))
+    assert os.path.exists(
+        os.path.join(
+            root_path / "work_dir",
+            "denovo_coding_bin/summary/coding_bin=1"))
 
 
 @pytest.mark.gs_duckdb(reason="supported for schema2 duckdb")
 @pytest.mark.gs_impala2(reason="supported for schema2 impala")
 @pytest.mark.gs_gcp(reason="supported for gcp")
 @pytest.mark.parametrize(
-    "label,frequency_bin,exists",
+    "effect_types,count",
     [
-        ("denovo", 0, True),
-        ("ultra rare", 1, False),
-        ("rare <= 50%", 2, False),
-        ("common >50", 3, False),
+        (None, 4),
+        (["missense", "noStart"], 2),
+        (["intron"], 2),
     ]
 )
-def test_denovo_frequency_bin_for_denovo_import(
-    denovo_project_to_parquet: ImportProject,
+def test_denovo_import_coding_bin_queries(
+    effect_types: Optional[list[str]], count: int,
+    denovo_fixture: tuple[pathlib.Path, GenotypeData],
     genotype_storage: GenotypeStorage,
-    label: str, frequency_bin: int, exists: bool
 ) -> None:
+    _, study = denovo_fixture
 
-    run_with_project(denovo_project_to_parquet)
-    assert os.path.exists(
-        os.path.join(
-            denovo_project_to_parquet.work_dir,
-            f"denovo_frequency_bin/family/frequency_bin="
-            f"{frequency_bin}")) == exists, label
+    vs = list(study.query_variants(effect_types=effect_types))
+    assert len(vs) == count
