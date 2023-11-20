@@ -7,7 +7,7 @@ import re
 from rest_framework import status
 from django.utils import timezone
 
-from users_api.utils import LOCKOUT_THRESHOLD
+from users_api.models import LOCKOUT_THRESHOLD
 from users_api.models import AuthenticationLog, ResetPasswordCode
 
 

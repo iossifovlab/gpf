@@ -17,4 +17,3 @@ class MyConfig(DefaultConfig):
 
 
 CONFIG = MyConfig()
-

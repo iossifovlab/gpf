@@ -1,9 +1,9 @@
 from __future__ import annotations
 from typing import Iterator, Generator, Any
+from typing import Tuple, Type, Union, Optional, cast
 
 import json
 import base64
-from typing import Tuple, Type, Union, Optional, cast
 import django.contrib.auth
 from django import forms
 from django.db import IntegrityError, models
@@ -21,6 +21,8 @@ from rest_framework.decorators import action, api_view, authentication_classes
 from rest_framework import status, viewsets, permissions, filters, views
 from rest_framework.response import Response
 from rest_framework.authentication import SessionAuthentication
+from rest_framework.request import Request
+
 from oauth2_provider.models import get_application_model
 
 from utils.logger import log_filter, LOGGER, request_logging, \
@@ -30,13 +32,11 @@ from utils.password_requirements import is_password_valid
 from utils.streaming_response_util import convert
 from utils.authentication import GPFOAuth2Authentication
 
-from .models import ResetPasswordCode, SetPasswordCode, WdaeUser
+from .models import ResetPasswordCode, SetPasswordCode, WdaeUser, \
+    csrf_clear, get_default_application
 from .serializers import UserSerializer, UserWithoutEmailSerializer
 from .forms import WdaePasswordForgottenForm, WdaeResetPasswordForm, \
     WdaeRegisterPasswordForm, WdaeLoginForm
-
-from .utils import csrf_clear, get_default_application
-from rest_framework.request import Request
 
 
 def iterator_to_json(users: Iterator[WdaeUser]) -> Generator[str, None, int]:
@@ -53,15 +53,17 @@ def iterator_to_json(users: Iterator[WdaeUser]) -> Generator[str, None, int]:
         if post is None:
             yield yieldval
             break
-        else:
-            yield yieldval + ","
+        yield yieldval + ","
+
         curr = post
         post = next(users, None)
     yield "]"
     return 0
 
 
-class UserViewSet(viewsets.ModelViewSet):
+class UserViewSet(viewsets.ModelViewSet):  # pylint: disable=too-many-ancestors
+    """API endpoint that allows users to be viewed or edited."""
+
     serializer_class = UserSerializer
     queryset = get_user_model().objects.order_by("email").all()
     permission_classes = (permissions.IsAdminUser,)
@@ -109,7 +111,7 @@ class UserViewSet(viewsets.ModelViewSet):
     @request_logging(LOGGER)
     def partial_update(
         self, request: Request,
-        pk: Optional[int] = None
+        *args: Any, pk: Optional[int] = None, **kwargs: Any
     ) -> Response:
         if pk is not None:
             pk = int(pk)
@@ -137,7 +139,7 @@ class UserViewSet(viewsets.ModelViewSet):
     ) -> Union[Type[UserWithoutEmailSerializer], Type[UserSerializer]]:
         serializer_class = self.serializer_class
 
-        if self.action == "update" or self.action == "partial_update":
+        if self.action in {"update", "partial_update"}:
             serializer_class = UserWithoutEmailSerializer
 
         return serializer_class
@@ -145,6 +147,7 @@ class UserViewSet(viewsets.ModelViewSet):
     @request_logging(LOGGER)
     @action(detail=False, methods=["get"])
     def streaming_search(self, request: Request) -> StreamingHttpResponse:
+        """Search for users and stream the results."""
         self.check_permissions(request)
         queryset = get_user_model().objects.all()
         search_param = request.GET.get("search", None)
@@ -161,6 +164,8 @@ class UserViewSet(viewsets.ModelViewSet):
 
 
 class ForgotPassword(views.APIView):
+    """View for forgotten password."""
+
     @request_logging(LOGGER)
     def get(self, request: Request) -> HttpResponse:
         form = WdaePasswordForgottenForm()
@@ -172,6 +177,7 @@ class ForgotPassword(views.APIView):
 
     @request_logging(LOGGER)
     def post(self, request: Request) -> HttpResponse:
+        """Send a reset password email to the user."""
         form = WdaePasswordForgottenForm(request.data)
         is_valid = form.is_valid()
         if not is_valid:
@@ -260,6 +266,7 @@ class BasePasswordView(views.APIView):
 
     @request_logging(LOGGER)
     def get(self, request: Request) -> HttpResponse:
+        """Render the password reset form."""
         verif_code, msg = \
             self._check_request_verification_path(request)
 
@@ -277,6 +284,7 @@ class BasePasswordView(views.APIView):
         user = verif_code.user
 
         assert self.form is not None
+        # pylint: disable=not-callable
         form = self.form(user)  # type: ignore
         request.session[f"{self.code_type}_code"] = verif_code.path
         request.path = request.path[:request.path.find("?")]
@@ -289,6 +297,7 @@ class BasePasswordView(views.APIView):
 
     @request_logging(LOGGER)
     def post(self, request: Request) -> HttpResponse:
+        """Handle the password reset form."""
         verif_code, msg = \
             self._check_request_verification_path(request)
         assert self.template is not None
@@ -339,9 +348,11 @@ class SetPassword(BasePasswordView):
 
 
 class WdaeLoginView(views.APIView):
+    """View for logging in."""
 
     @request_logging(LOGGER)
     def get(self, request: Request) -> HttpResponse:
+        """Render the login form."""
         next_uri = request.GET.get("next")
         if next_uri is None:
             next_uri = get_default_application().redirect_uris.split(" ")[0]
@@ -358,6 +369,7 @@ class WdaeLoginView(views.APIView):
 
     @request_logging(LOGGER)
     def post(self, request: Request) -> HttpResponse:
+        """Handle the login form."""
         data = request.data
         next_uri = data.get("next")
         if next_uri is None:
@@ -385,6 +397,7 @@ class WdaeLoginView(views.APIView):
 @request_logging_function_view(LOGGER)
 @api_view(["POST"])
 def change_password(request: Request) -> Response:
+    """Change the password for a user."""
     password = request.data["password"]
     verif_code = request.data["verifPath"]
 
@@ -407,6 +420,7 @@ def change_password(request: Request) -> Response:
 @request_logging_function_view(LOGGER)
 @api_view(["POST"])
 def register(request: Request) -> Response:
+    """Register a new user."""
     user_model = get_user_model()
 
     try:
@@ -508,6 +522,7 @@ def get_user_info(request: Request) -> Response:
 @request_logging_function_view(LOGGER)
 @api_view(["POST"])
 def check_verif_code(request: Request) -> Response:
+    """Check if a verification code is valid."""
     verif_code = request.data["verifPath"]
     try:
         ResetPasswordCode.objects.get(path=verif_code)

@@ -1,3 +1,5 @@
+from typing import Any
+
 from django import forms
 from django.contrib.auth.forms import SetPasswordForm, UsernameField
 from django.contrib.auth import password_validation, get_user_model, \
@@ -8,6 +10,8 @@ from django.utils.text import capfirst
 from utils.password_requirements import is_password_valid
 from users_api.models import AuthenticationLog
 from rest_framework import status
+
+from .models import WdaeUser
 
 
 class WdaeResetPasswordForm(SetPasswordForm):
@@ -23,13 +27,14 @@ class WdaeResetPasswordForm(SetPasswordForm):
         ),
     }
 
-    def clean_new_password2(self):
+    def clean_new_password2(self) -> str:
         password2 = super().clean_new_password2()
         if not is_password_valid(password2):
             raise ValidationError(
                 self.error_messages["password_invalid"],
                 code="password_invalid"
             )
+        return password2
 
 
 class WdaeRegisterPasswordForm(WdaeResetPasswordForm):
@@ -49,6 +54,7 @@ class WdaeRegisterPasswordForm(WdaeResetPasswordForm):
 
 
 class WdaeLoginForm(forms.Form):
+    """A form for users to log in to the system."""
 
     username = UsernameField(
         widget=forms.TextInput(
@@ -81,7 +87,7 @@ class WdaeLoginForm(forms.Form):
         )
     }
 
-    def __init__(self, request=None, **kwargs):
+    def __init__(self, request: Any = None, **kwargs: Any):
         self.request = request
         super().__init__(**kwargs)
 
@@ -89,17 +95,19 @@ class WdaeLoginForm(forms.Form):
         user_model = get_user_model()
         self.username_field = \
             user_model._meta.get_field(user_model.USERNAME_FIELD)
-        username_max_length = self.username_field.max_length or 254
-        self.fields["username"].max_length = username_max_length
+        username_max_length = \
+            self.username_field.max_length or 254  # type: ignore
+        self.fields[
+            "username"].max_length = username_max_length  # type: ignore
         self.fields["username"].widget.attrs["maxlength"] = username_max_length
         if self.fields["username"].label is None:
             self.fields["username"].label = capfirst(
-                self.username_field.verbose_name)
+                self.username_field.verbose_name)  # type: ignore
 
         self.status_code = None
         self.user_cache = None
 
-    def confirm_login_allowed(self, user):
+    def confirm_login_allowed(self, user: WdaeUser) -> None:
         if AuthenticationLog.is_user_locked_out(user.email):
             self.status_code = status.HTTP_403_FORBIDDEN
             raise AuthenticationLog.get_locked_out_error(user.email)
@@ -110,7 +118,7 @@ class WdaeLoginForm(forms.Form):
                 code="inactive",
             )
 
-    def clean(self):
+    def clean(self) -> dict:
         username = self.cleaned_data.get("username")
         user_model = get_user_model()
 
@@ -121,7 +129,7 @@ class WdaeLoginForm(forms.Form):
                 code="no_username"
             )
         try:
-            self.user_cache = user_model.objects.get(
+            self.user_cache = user_model.objects.get(  # type: ignore
                 email__iexact=username
             )
         except ObjectDoesNotExist:
@@ -130,7 +138,7 @@ class WdaeLoginForm(forms.Form):
                 self.error_messages["no_user"],
                 code="no_user"
             ) from None
-
+        assert self.user_cache is not None
         self.confirm_login_allowed(self.user_cache)
 
         password = self.cleaned_data.get("password")
@@ -167,7 +175,7 @@ class WdaeLoginForm(forms.Form):
 
         return self.cleaned_data
 
-    def get_status_code(self):
+    def get_status_code(self) -> Any:
         if self.is_valid():
             return status.HTTP_200_OK
 
