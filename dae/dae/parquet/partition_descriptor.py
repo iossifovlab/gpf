@@ -401,6 +401,11 @@ class PartitionDescriptor:
             names: list[list[tuple[str, str]]],
             to_add: list[tuple[str, str]]) -> list[list[tuple[str, str]]]:
         res = []
+        if len(names) == 0:
+            for name_to_add in to_add:
+                res.append([name_to_add])
+            return res
+
         for name in names:
             for name_to_add in to_add:
                 res.append([*name, name_to_add])

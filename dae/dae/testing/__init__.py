@@ -13,6 +13,7 @@ from .import_helpers import StudyInputLayout, setup_import_project, \
 from .acgt_import import acgt_gpf
 from .alla_import import alla_gpf
 from .foobar_import import foobar_gpf
+from .t4c8_import import t4c8_gpf
 
 
 __all__ = [
@@ -31,4 +32,5 @@ __all__ = [
     "acgt_gpf",
     "alla_gpf",
     "foobar_gpf",
+    "t4c8_gpf",
 ]
