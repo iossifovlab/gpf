@@ -31,7 +31,8 @@ export class GenomicScoresComponent {
       size: 'lg',
       centered: true
     });
-    modalRef.componentInstance.data = this.genomicScoreState.score.help;
+
+    (modalRef.componentInstance as PopupComponent).data = this.genomicScoreState.score.help;
   }
 
   public set rangeStart(range: number) {

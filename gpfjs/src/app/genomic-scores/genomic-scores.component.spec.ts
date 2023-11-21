@@ -74,7 +74,7 @@ describe('GenomicScoresComponent', () => {
       size: 'lg',
       centered: true
     });
-    expect(modalRef.componentInstance.data).toBe('gs help');
+    expect((modalRef.componentInstance as PopupComponent).data).toBe('gs help');
 
     modalRef.close();
   });
