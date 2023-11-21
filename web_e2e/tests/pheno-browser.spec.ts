@@ -12,9 +12,10 @@ test.describe('Pheno browser tests', () => {
 
 
   [
-    {seachQuery: 'the age'}
+    {seachQuery: 'the age'},
+    {seachQuery: 'measure 1'}
   ].forEach(data => {
-    test(`should filter the right rows when typing "${data.seachQuery}" in the sarchbox`, async({ page }) => {
+    test(`should filter the right rows when typing "${data.seachQuery}" in the searchbox`, async({ page }) => {
       await utils.navigateToDatasetPage(page, utils.datasetIds.compAll, 'Phenotype browser');
 
       await expect(page.locator('gpf-table > div > div.ng-star-inserted')).toHaveCount(8);
@@ -82,6 +83,7 @@ test.describe('Pheno browser tests', () => {
       page.locator('gpf-pheno-browser-table > gpf-table > div > div.ng-star-inserted')
         .locator('gpf-table-view-cell').nth(2)).toHaveText('');
   });
+
   test('should have the correct text values in all rows', async({ page }) => {
     await utils.navigateToDatasetPage(page, utils.datasetIds.compAll, 'Phenotype browser');
     const expectedFile = fs.readFileSync(path.join(__dirname + '/../fixtures/pheno-browser/row_values.txt'), 'utf-8');
@@ -90,7 +92,6 @@ test.describe('Pheno browser tests', () => {
 
     for (let i = 0; i < rowValues.length; i++) {
       const row = page.locator('gpf-pheno-browser-table > gpf-table > div > div.ng-star-inserted').nth(i);
-      // eslint-disable-next-line no-await-in-loop
       const text = await row.textContent();
       expect(text).toBe(rowValues[i]);
     }
@@ -99,7 +100,7 @@ test.describe('Pheno browser tests', () => {
     await utils.navigateToDatasetPage(page, utils.datasetIds.compAll, 'Phenotype browser');
     await page.waitForSelector('gpf-pheno-browser-table');
     const downloadBody = page.waitForEvent('download');
-    await page.getByText('Download measures').click();
+    await page.locator('#download-measures').click();
     const downloadBuffer = await downloadBody;
     const streamData = downloadBuffer.createReadStream();
     const data = [];
