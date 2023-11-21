@@ -18,7 +18,7 @@ class GenomicScoresView(QueryBaseView):
                 res.append({
                     "score": score_id,
                     "name": score.name,
-                    "desc": score.name,
+                    "desc": score.description,
                     "bars": score.hist.bars,
                     "bins": score.hist.bins,
                     "xscale":
