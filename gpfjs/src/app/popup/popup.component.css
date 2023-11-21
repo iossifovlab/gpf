@@ -1,0 +1,8 @@
+.modal-body {
+  width: 100%;
+  height: 100%;
+  max-width: 794px;
+  max-height: 675px;
+  overflow-y: auto;
+  overflow-wrap: break-word;
+}

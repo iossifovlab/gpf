@@ -451,6 +451,8 @@ gpf-genotype-preview-field gpf-pedigree gpf-pedigree-chart .svg-container {
   color: red;
 }
 
+/* styles for genomic scores help */
+
 summary > h4 {
   display: inline;
 }
@@ -473,6 +475,7 @@ summary > h4 {
   margin-bottom: 10px;
 }
 
+/* stylelint-disable-next-line no-descending-specificity */
 .histogram-image img {
   width: 100%;
   height: 100%;
