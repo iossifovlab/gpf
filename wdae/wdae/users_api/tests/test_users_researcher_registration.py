@@ -6,37 +6,42 @@ import pytest
 from rest_framework import status
 
 from users_api.models import WdaeUser, SetPasswordCode
+from django.test.client import Client
+from oauth2_provider.models import AccessToken
 
 
-@pytest.mark.skip
-def test_fail_register(client):
-    url = "/api/v3/users/register"
-    data = {
-        "email": "faulthymail@faulthy.com",
-        "name": "bad_name",
-    }
+# @pytest.mark.skip
+# def test_fail_register(client):
+#     url = "/api/v3/users/register"
+#     data = {
+#         "email": "faulthymail@faulthy.com",
+#         "name": "bad_name",
+#     }
 
-    response = client.post(
-        url, json.dumps(data), content_type="application/json", format="json"
-    )
-    assert response.status_code == status.HTTP_201_CREATED
-
-
-@pytest.mark.skip
-def test_fail_register_case_changed_email(client):
-    url = "/api/v3/users/register"
-    data = {
-        "email": "FaKe@fake.com",
-        "name": "ok name",
-    }
-
-    response = client.post(
-        url, json.dumps(data), content_type="application/json", format="json"
-    )
-    assert response.status_code == status.HTTP_201_CREATED
+#     response = client.post(
+#         url, json.dumps(data), content_type="application/json", format="json"
+#     )
+#     assert response.status_code == status.HTTP_201_CREATED
 
 
-def test_fail_register_wrong_id(client, researcher_without_password):
+# @pytest.mark.skip
+# def test_fail_register_case_changed_email(client):
+#     url = "/api/v3/users/register"
+#     data = {
+#         "email": "FaKe@fake.com",
+#         "name": "ok name",
+#     }
+
+#     response = client.post(
+#         url, json.dumps(data), content_type="application/json", format="json"
+#     )
+#     assert response.status_code == status.HTTP_201_CREATED
+
+
+def test_fail_register_wrong_id(
+    client: Client,
+    researcher_without_password: WdaeUser
+) -> None:
     url = "/api/v3/users/register"
     data = {
         "email": researcher_without_password.email,
@@ -49,21 +54,23 @@ def test_fail_register_wrong_id(client, researcher_without_password):
     assert response.status_code == status.HTTP_201_CREATED
 
 
-@pytest.mark.skip
-def test_fail_register_wrong_email(client):
-    url = "/api/v3/users/register"
-    data = {
-        "email": "bad@email.com",
-        "name": "ok name",
-    }
+# @pytest.mark.skip
+# def test_fail_register_wrong_email(client):
+#     url = "/api/v3/users/register"
+#     data = {
+#         "email": "bad@email.com",
+#         "name": "ok name",
+#     }
 
-    response = client.post(
-        url, json.dumps(data), content_type="application/json", format="json"
-    )
-    assert response.status_code == status.HTTP_201_CREATED
+#     response = client.post(
+#         url, json.dumps(data), content_type="application/json", format="json"
+#     )
+#     assert response.status_code == status.HTTP_201_CREATED
 
 
-def test_reset_pass_without_registration(client, researcher_without_password):
+def test_reset_pass_without_registration(
+    client: Client, researcher_without_password: WdaeUser
+) -> None:
     url = "/api/v3/users/forgotten_password"
     data = {"email": researcher_without_password.email}
     pprint(data)
@@ -74,7 +81,10 @@ def test_reset_pass_without_registration(client, researcher_without_password):
     assert response.status_code == status.HTTP_200_OK
 
 
-def test_reset_pass_without_registration_wrong_email(db, client):
+@pytest.mark.django_db()
+def test_reset_pass_without_registration_wrong_email(
+    client: Client
+) -> None:
     url = "/api/v3/users/forgotten_password"
     data = {"email": "wrong@email.com"}
     pprint(data)
@@ -85,7 +95,10 @@ def test_reset_pass_without_registration_wrong_email(db, client):
     assert response.status_code == status.HTTP_200_OK
 
 
-def test_successful_register(client, researcher_without_password):
+def test_successful_register(
+    client: Client,
+    researcher_without_password: WdaeUser
+) -> None:
     name = "NEW_NAME"
     url = "/api/v3/users/register"
     data = {
@@ -102,7 +115,9 @@ def test_successful_register(client, researcher_without_password):
     assert user.name == name
 
 
-def test_successful_register_empty_name(client, researcher_without_password):
+def test_successful_register_empty_name(
+    client: Client, researcher_without_password: WdaeUser
+) -> None:
     old_name = researcher_without_password.name
     url = "/api/v3/users/register"
     data = {"name": "", "email": researcher_without_password.email}
@@ -116,7 +131,9 @@ def test_successful_register_empty_name(client, researcher_without_password):
     assert user.name == old_name
 
 
-def test_successful_register_missing_name(client, researcher_without_password):
+def test_successful_register_missing_name(
+    client: Client, researcher_without_password: WdaeUser
+) -> None:
     old_name = researcher_without_password.name
     url = "/api/v3/users/register"
     data = {
@@ -132,7 +149,9 @@ def test_successful_register_missing_name(client, researcher_without_password):
     assert user.name == old_name
 
 
-def test_register_twice(client, researcher_without_password):
+def test_register_twice(
+    client: Client, researcher_without_password: WdaeUser
+) -> None:
     url = "/api/v3/users/register"
     data = {
         "name": researcher_without_password.name,
@@ -151,7 +170,10 @@ def test_register_twice(client, researcher_without_password):
     assert response.status_code == status.HTTP_201_CREATED
 
 
-def test_registration_all_steps(client, researcher_without_password, tokens):
+def test_registration_all_steps(
+    client: Client, researcher_without_password: WdaeUser,
+    tokens: tuple[AccessToken, AccessToken]
+) -> None:
     url = "/api/v3/users/register"
     data = {
         "name": researcher_without_password.name,
@@ -181,7 +203,7 @@ def test_registration_all_steps(client, researcher_without_password, tokens):
     )
     assert response.status_code == status.HTTP_302_FOUND
 
-    url = "/api/v3/users/login"
+    url = "/accounts/login"
     data = {
         "username": researcher_without_password.email,
         "password": "samplenewpassword",

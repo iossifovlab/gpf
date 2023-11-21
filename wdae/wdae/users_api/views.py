@@ -7,7 +7,7 @@ import base64
 import django.contrib.auth
 from django import forms
 from django.db import IntegrityError, models
-from django.contrib.auth import get_user_model
+from django.contrib.auth import get_user_model, authenticate, login
 from django.contrib.auth.models import BaseUserManager
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.conf import settings
@@ -34,6 +34,7 @@ from utils.authentication import GPFOAuth2Authentication
 
 from .models import ResetPasswordCode, SetPasswordCode, WdaeUser, \
     csrf_clear, get_default_application
+from .models import AuthenticationLog
 from .serializers import UserSerializer, UserWithoutEmailSerializer
 from .forms import WdaePasswordForgottenForm, WdaeResetPasswordForm, \
     WdaeRegisterPasswordForm, WdaeLoginForm
@@ -64,6 +65,7 @@ def iterator_to_json(users: Iterator[WdaeUser]) -> Generator[str, None, int]:
 class UserViewSet(viewsets.ModelViewSet):  # pylint: disable=too-many-ancestors
     """API endpoint that allows users to be viewed or edited."""
 
+    authentication_classes = [SessionAuthentication, GPFOAuth2Authentication]
     serializer_class = UserSerializer
     queryset = get_user_model().objects.order_by("email").all()
     permission_classes = (permissions.IsAdminUser,)
@@ -347,6 +349,38 @@ class SetPassword(BasePasswordView):
     code_type = "set"
 
 
+class RESTLoginView(views.APIView):
+    """View for REST session bases logging in."""
+
+    @request_logging(LOGGER)
+    def post(self, request: Request) -> Response:
+        """Supports a REST login endpoint."""
+        username = request.data.get("username")
+        password = request.data.get("password")
+
+        if not username or not password:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        user = authenticate(
+            username=username, password=password
+        )
+        if user is None:
+            AuthenticationLog.log_authentication_attempt(
+                username, failed=True
+            )
+            if AuthenticationLog.is_user_locked_out(username):
+                return Response(
+                    AuthenticationLog.get_locked_out_error(username),
+                    status=status.HTTP_403_FORBIDDEN
+                )
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+
+        login(request, user)
+        LOGGER.info(log_filter(request, "login success: " + str(username)))
+        AuthenticationLog.log_authentication_attempt(username, failed=False)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
 class WdaeLoginView(views.APIView):
     """View for logging in."""
 
@@ -368,7 +402,7 @@ class WdaeLoginView(views.APIView):
         )
 
     @request_logging(LOGGER)
-    def post(self, request: Request) -> HttpResponse:
+    def post(self, request: Request) -> Union[Response, HttpResponse]:
         """Handle the login form."""
         data = request.data
         next_uri = data.get("next")
@@ -494,7 +528,7 @@ def register(request: Request) -> Response:
 @request_logging_function_view(LOGGER)
 @csrf_clear
 @api_view(["POST"])
-@authentication_classes((SessionAuthentication,))
+@authentication_classes((GPFOAuth2Authentication, SessionAuthentication,))
 def logout(request: Request) -> Response:
     django.contrib.auth.logout(request)
     return Response(status=status.HTTP_204_NO_CONTENT)
@@ -503,7 +537,7 @@ def logout(request: Request) -> Response:
 @request_logging_function_view(LOGGER)
 @ensure_csrf_cookie
 @api_view(["GET"])
-@authentication_classes((GPFOAuth2Authentication,))
+@authentication_classes((GPFOAuth2Authentication, SessionAuthentication))
 def get_user_info(request: Request) -> Response:
     """Get user info for currently logged-in user."""
     user = request.user
