@@ -248,8 +248,8 @@ AUTH_USER_MODEL = "users_api.WdaeUser"
 REST_FRAMEWORK = {
     "PAGINATE_BY": 10,
     "DEFAULT_AUTHENTICATION_CLASSES": (
-        "rest_framework.authentication.SessionAuthentication",
         "utils.authentication.GPFOAuth2Authentication",
+        "utils.authentication.SessionAuthenticationWithoutCSRF",
     ),
     "DEFAULT_PAGINATION_CLASS": (
         "utils.pagination.WdaePageNumberPagination"

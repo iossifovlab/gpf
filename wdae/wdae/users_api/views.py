@@ -20,7 +20,6 @@ from django.core.exceptions import ObjectDoesNotExist
 from rest_framework.decorators import action, api_view, authentication_classes
 from rest_framework import status, viewsets, permissions, filters, views
 from rest_framework.response import Response
-from rest_framework.authentication import SessionAuthentication
 from rest_framework.request import Request
 
 from oauth2_provider.models import get_application_model
@@ -30,7 +29,8 @@ from utils.logger import log_filter, LOGGER, request_logging, \
 from utils.email_regex import is_email_valid
 from utils.password_requirements import is_password_valid
 from utils.streaming_response_util import convert
-from utils.authentication import GPFOAuth2Authentication
+from utils.authentication import GPFOAuth2Authentication, \
+    SessionAuthenticationWithoutCSRF
 
 from .models import ResetPasswordCode, SetPasswordCode, WdaeUser, \
     csrf_clear, get_default_application
@@ -65,7 +65,8 @@ def iterator_to_json(users: Iterator[WdaeUser]) -> Generator[str, None, int]:
 class UserViewSet(viewsets.ModelViewSet):  # pylint: disable=too-many-ancestors
     """API endpoint that allows users to be viewed or edited."""
 
-    authentication_classes = [SessionAuthentication, GPFOAuth2Authentication]
+    authentication_classes = [
+        SessionAuthenticationWithoutCSRF, GPFOAuth2Authentication]
     serializer_class = UserSerializer
     queryset = get_user_model().objects.order_by("email").all()
     permission_classes = (permissions.IsAdminUser,)
@@ -528,8 +529,10 @@ def register(request: Request) -> Response:
 @request_logging_function_view(LOGGER)
 @csrf_clear
 @api_view(["POST"])
-@authentication_classes((GPFOAuth2Authentication, SessionAuthentication,))
+@authentication_classes(
+    (GPFOAuth2Authentication, SessionAuthenticationWithoutCSRF,))
 def logout(request: Request) -> Response:
+    """Log out the currently logged-in user."""
     django.contrib.auth.logout(request)
     return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -537,7 +540,8 @@ def logout(request: Request) -> Response:
 @request_logging_function_view(LOGGER)
 @ensure_csrf_cookie
 @api_view(["GET"])
-@authentication_classes((GPFOAuth2Authentication, SessionAuthentication))
+@authentication_classes(
+    (GPFOAuth2Authentication, SessionAuthenticationWithoutCSRF))
 def get_user_info(request: Request) -> Response:
     """Get user info for currently logged-in user."""
     user = request.user
