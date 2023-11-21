@@ -191,7 +191,7 @@ class GenomicScoresDb:
                 resource.resource_id,
                 attr.source,
                 score.get_score_histogram(attr.source),
-                description,
+                f"{attr.name} - {attr.description}",
                 description,
                 score_def.small_values_desc,
                 score_def.large_values_desc
