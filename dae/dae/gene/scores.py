@@ -69,7 +69,7 @@ class ScoreDesc:
 
 SCORE_ATTRIBUTE_DESCRIPTION = """
 
-<div class="score_description">
+<div class="score-description">
 
 ## {{ data.name }}
 
@@ -81,15 +81,23 @@ SCORE_ATTRIBUTE_DESCRIPTION = """
 
 Genomic resource: [{{ data.resource_id }}]({{ data.resource_url }})
 
-<div class="details">
+<details>
+
+<summary class="details">
 
 #### Details
+
+</summary>
+
+<div class="details-body">
 
 ##### Attribute properties:
 
 * **source**: {{ data.source }}
 
 </div>
+
+</details>
 
 </div>
 
@@ -98,7 +106,7 @@ Genomic resource: [{{ data.resource_id }}]({{ data.resource_url }})
 SCORE_ATTRIBUTE_HISTOGRAM = """
 <div class="histogram">
 
-<div class="histogram_image">
+<div class="histogram-image">
 
 ![HISTOGRAM]({{ hist_url }})
 
@@ -106,17 +114,21 @@ SCORE_ATTRIBUTE_HISTOGRAM = """
 
 {%- if score_def.small_values_desc and score_def.large_values_desc %}
 
-<span class="small_values">
+<div class="values-desc">
 
-**Small values**: {{ score_def.small_values_desc}}
+<span class="small-values">
+
+{{ score_def.small_values_desc}}
+
+</span>
+
+<span class="large-values">
+
+{{ score_def.large_values_desc}}
 
 </span>
 
-<span class="large_values">
-
-**Large values**: {{ score_def.large_values_desc}}
-
-</span>
+</div>
 
 {%- endif %}
 
