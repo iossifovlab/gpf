@@ -26,7 +26,7 @@ CORS_ORIGIN_WHITELIST = [
 
 CORS_ALLOW_CREDENTIALS = True
 
-OPEN_REGISTRATION = True
+OPEN_REGISTRATION = False
 
 ########################################################
 
