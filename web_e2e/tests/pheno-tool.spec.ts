@@ -307,7 +307,8 @@ test.describe('Pheno tool download tests', () => {
       await page.locator('gpf-gene-sets select.form-control').selectOption(data.collection);
       await page.getByLabel('Gene Sets').getByPlaceholder('Select or start typing to search').click();
       await page.getByLabel('Gene Sets')
-        .getByPlaceholder('Select or start typing to search').fill(data.set.substring(0, data.set.indexOf(' (')));
+        .getByPlaceholder('Select or start typing to search').focus();
+      await page.keyboard.type(data.set.substring(0, data.set.indexOf(' (')));
       await page.locator('button.dropdown-item span').filter({ hasText: data.set }).click();
 
       await page.getByRole('textbox', { name: 'Select or start typing to search' }).click();
@@ -349,7 +350,7 @@ test.describe('Pheno tool download tests', () => {
       await page.locator('gpf-gene-sets select.form-control').selectOption('Denovo');
 
       await page.locator('ngb-accordion').filter({ hasText: data.genotype + ': Affected Status' }).click();
-      await page.getByRole('button', { name: 'comp_vcf: Affected Status' }).click();
+      await page.getByRole('button', { name: `${data.genotype}: Affected Status` }).click();
       await page.locator(`#${data.genotype}-checkbox-${data.affectedStatus}`).click();
 
       await page.getByLabel('Gene Sets').getByPlaceholder('Select or start typing to search').click();
