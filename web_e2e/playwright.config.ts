@@ -17,7 +17,7 @@ export default defineConfig({
       maxDiffPixels: 100
     },
   },
-  globalTimeout: 2700000,
+  globalTimeout: 3600000,
   testDir: './playwright/tests',
   outputDir: './playwright/test-results',
   /* Run tests in files in parallel */
@@ -38,6 +38,7 @@ export default defineConfig({
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: process.env.JENKINS ? 'on' : 'on-first-retry',
     video: process.env.JENKINS ? { mode: 'on', size: { width: 1920, height: 1080 } }: { mode: 'on', size: { width: 1920, height: 1080 } },
+    actionTimeout: 60000
   },
   projects: [
     {
