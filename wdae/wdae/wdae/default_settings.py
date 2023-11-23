@@ -16,7 +16,7 @@ SECRET_KEY = os.environ.get(
 
 STUDIES_EAGER_LOADING = False
 
-OPEN_REGISTRATION = True
+OPEN_REGISTRATION = False
 
 DISABLE_PERMISSIONS = False
 
@@ -249,6 +249,7 @@ REST_FRAMEWORK = {
     "PAGINATE_BY": 10,
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "utils.authentication.GPFOAuth2Authentication",
+        "utils.authentication.SessionAuthenticationWithoutCSRF",
     ),
     "DEFAULT_PAGINATION_CLASS": (
         "utils.pagination.WdaePageNumberPagination"

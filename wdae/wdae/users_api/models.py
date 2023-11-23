@@ -1,32 +1,39 @@
+from __future__ import annotations
+
 import uuid
 from datetime import timedelta
+from typing import Any, cast, Callable
+from typing import Optional, Type, Union
+from functools import wraps
 
 from django.db import models, transaction
 from django.core.mail import send_mail
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 
 from django.contrib.auth.models import \
+    User, \
     AbstractBaseUser, \
     BaseUserManager, \
     PermissionsMixin
 
 from django.contrib.sessions.models import Session
 from django.utils import timezone
-from django.conf import settings
 from django.contrib.auth.models import Group
 from django.db.models.signals import m2m_changed, post_delete, pre_delete
 
+from oauth2_provider.models import \
+    get_application_model, Application
+
 from utils.logger import LOGGER
 from datasets_api.permissions import get_directly_allowed_genotype_data
-
-from .utils import send_reset_email, send_already_existing_email, \
-    send_verif_email, LOCKOUT_THRESHOLD
 
 
 class WdaeUserManager(BaseUserManager):
     """User manager for wdae users."""
 
-    def _create_user(self, email, password, **kwargs):
+    def _create_user(
+        self, email: str, password: Optional[str], **kwargs: Any
+    ) -> WdaeUser:
         """Create and save a User with the given email and password."""
         if not email:
             raise ValueError("The given email must be set")
@@ -34,27 +41,35 @@ class WdaeUserManager(BaseUserManager):
         email = self.normalize_email(email)
         email = email.lower()
 
-        user = self.model(email=email, **kwargs)
+        user = cast(WdaeUser, self.model(email=email, **kwargs))
         user.set_password(password)
 
         user.save(using=self._db)
 
         return user
 
-    def get_or_create(self, **kwargs):
+    def get_or_create(  # type: ignore
+        self, **kwargs: Any
+    ) -> tuple[WdaeUser, bool]:
         try:
-            return self.get(**kwargs), False
+            return cast(WdaeUser, self.get(**kwargs)), False
         except WdaeUser.DoesNotExist:  # pylint: disable=no-member
             return self.create_user(**kwargs), True
 
-    def create(self, **kwargs):
+    def create(self, **kwargs: Any) -> WdaeUser:  # type: ignore
         return self.create_user(**kwargs)
 
-    def create_user(self, email, password=None, **kwargs):
+    def create_user(
+        self, email: str, password: Optional[str] = None,
+        **kwargs: Any
+    ) -> WdaeUser:
         user = self._create_user(email, password, **kwargs)
         return user
 
-    def create_superuser(self, email, password, **kwargs):
+    def create_superuser(
+        self, email: str, password: str,
+        **kwargs: Any
+    ) -> WdaeUser:
         """Create and save a superuser."""
         user = self._create_user(email, password, **kwargs)
 
@@ -86,22 +101,28 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
     objects = WdaeUserManager()
 
     @property
-    def has_unlimited_download(self):
+    def has_unlimited_download(self) -> bool:
         return self.groups.filter(  # pylint: disable=no-member
             name=self.UMLIMITED_DOWNLOAD_GROUP).count() > 0
 
     @property
-    def allowed_datasets(self):
-        return get_directly_allowed_genotype_data(self)
+    def allowed_datasets(self) -> list[dict[str, Any]]:
+        return get_directly_allowed_genotype_data(cast(User, self))
 
-    def email_user(self, subject, message, from_email=None):
+    def email_user(
+        self, subject: str, message: str,
+        from_email: Optional[str] = None
+    ) -> int:
         """Send an email to the user."""
+        # pylint: disable=import-outside-toplevel
+        from django.conf import settings
+
         if from_email is None:
-            from_email = settings.DEFAULT_FROM_EMAIL
+            from_email = settings.DEFAULT_FROM_EMAIL  # type: ignore
 
         override = None
         try:
-            override = settings.EMAIL_OVERRIDE
+            override = settings.EMAIL_OVERRIDE  # type: ignore
         except Exception:  # pylint: disable=broad-exception-caught
             LOGGER.debug("no email override; sending email")
             override = None
@@ -118,31 +139,31 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
 
         return mail
 
-    def set_password(self, raw_password):
-        super(WdaeUser, self).set_password(raw_password)
+    def set_password(self, raw_password: Optional[str]) -> None:
+        super().set_password(raw_password)
 
         has_password = bool(raw_password)
         if self.is_active != has_password:
             self.is_active = has_password
 
-    def set_unusable_password(self):
-        super(WdaeUser, self).set_unusable_password()
+    def set_unusable_password(self) -> None:
+        super().set_unusable_password()
 
         if self.is_active:
             self.is_active = False
 
-    def reset_password(self, by_admin=False):
+    def reset_password(self, by_admin: bool = False) -> None:
         verif_code = ResetPasswordCode.create(self)
         send_reset_email(self, verif_code, by_admin)
 
-    def deauthenticate(self):
+    def deauthenticate(self) -> None:
         all_sessions = Session.objects.all()
         for session in all_sessions:
             session_data = session.get_decoded()
             if self.pk == session_data.get("_auth_user_id"):
                 session.delete()
 
-    def register_preexisting_user(self, name):
+    def register_preexisting_user(self, name: Optional[str]) -> None:
         """Register already existing user."""
         if self.is_active:
             send_already_existing_email(self)
@@ -157,7 +178,10 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
             self.save()
 
     @staticmethod
-    def change_password(verification_path, new_password):
+    def change_password(
+        verification_path: Union[SetPasswordCode, ResetPasswordCode],
+        new_password: str
+    ) -> WdaeUser:
         """Initiate password reset for the user."""
         user = verification_path.user
         user.set_password(new_password)
@@ -172,12 +196,12 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
 
         verification_path.delete()
 
-        return user
+        return cast(WdaeUser, user)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return str(self.email)
 
-    class Meta(object):
+    class Meta:  # pylint: disable=too-few-public-methods
         db_table = "users"
 
 
@@ -189,58 +213,68 @@ class BaseVerificationCode(models.Model):
         WdaeUser, on_delete=models.CASCADE)
     created_at: models.Field = models.DateTimeField(auto_now_add=True)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return str(self.path)
 
-    def validate(self):
-        raise NotImplementedError
+    def validate(self) -> bool:
+        raise NotImplementedError()
 
-    class Meta:
+    class Meta:  # pylint: disable=too-few-public-methods
         abstract = True
 
     @classmethod
-    def get_code(cls, user):
+    def get_code(
+        cls, user: WdaeUser
+    ) -> Optional[BaseVerificationCode]:
+        """Get a verification code for a user."""
         try:
-            return cls.objects.get(user=user)  # pylint: disable=no-member
+            # pylint: disable=no-member
+            return cast(
+                BaseVerificationCode,
+                cls.objects.get(user=user))  # type: ignore
         except ObjectDoesNotExist:
             return None
 
     @classmethod
-    def create(cls, user):
+    def create(cls, user: WdaeUser) -> BaseVerificationCode:
         """Create an email verification code."""
         try:
             # pylint: disable=no-member
-            verif_code = cls.objects.get(user=user)
+            verif_code = cls.objects.get(user=user)  # type: ignore
         except ObjectDoesNotExist:
             # pylint: disable=no-member
-            verif_code = cls.objects.create(user=user, path=uuid.uuid4())
-            return verif_code
+            verif_code = cls.objects.create(  # type: ignore
+                user=user, path=uuid.uuid4())
+            return cast(BaseVerificationCode, verif_code)
 
         if verif_code.validate is not True:
             verif_code.delete()
             return cls.create(user)
 
-        return verif_code
+        return cast(BaseVerificationCode, verif_code)
 
 
 class SetPasswordCode(BaseVerificationCode):
     """Base class for temporary paths for verifying user without login."""
 
-    class Meta:
+    class Meta:  # pylint: disable=too-few-public-methods
         db_table = "set_password_verification_codes"
 
-    def validate(self):
+    def validate(self) -> bool:
         return True
 
 
 class ResetPasswordCode(BaseVerificationCode):
     """Class used for verification of password resets."""
 
-    class Meta:
+    class Meta:  # pylint: disable=too-few-public-methods
         db_table = "reset_password_verification_codes"
 
-    def validate(self):
-        max_delta = timedelta(hours=settings.RESET_PASSWORD_TIMEOUT_HOURS)
+    def validate(self) -> bool:
+        # pylint: disable=import-outside-toplevel
+        from django.conf import settings
+        max_delta = timedelta(
+            hours=getattr(settings, "RESET_PASSWORD_TIMEOUT_HOURS", 24))
         if timezone.now() - self.created_at > max_delta:
             return False
         return True
@@ -259,11 +293,11 @@ class AuthenticationLog(models.Model):
     time: models.DateTimeField = models.DateTimeField()
     failed_attempt: models.IntegerField = models.IntegerField()
 
-    class Meta():
+    class Meta:  # pylint: disable=too-few-public-methods
         db_table = "authentication_log"
 
     @staticmethod
-    def get_last_login_for(email: str):
+    def get_last_login_for(email: str) -> Optional[AuthenticationLog]:
         """Get the latest authentication attempt for a specified email."""
         query = AuthenticationLog.objects.filter(  # pylint: disable=no-member
             email__iexact=email
@@ -275,7 +309,7 @@ class AuthenticationLog(models.Model):
         return result
 
     @staticmethod
-    def is_user_locked_out(email: str):
+    def is_user_locked_out(email: str) -> bool:
         last_login = AuthenticationLog.get_last_login_for(email)
         return (
             last_login is not None
@@ -284,7 +318,7 @@ class AuthenticationLog(models.Model):
         )
 
     @staticmethod
-    def get_locked_out_error(email: str):
+    def get_locked_out_error(email: str) -> ValidationError:
         seconds_left = AuthenticationLog.get_remaining_lockout_time(email)
         hours = int(seconds_left / 3600)
         minutes = int(seconds_left / 60) % 60
@@ -296,17 +330,31 @@ class AuthenticationLog(models.Model):
         )
 
     @staticmethod
-    def get_remaining_lockout_time(email: str):
+    def get_remaining_lockout_time(email: str) -> float:
+        """Get the remaining lockout time for a specified email."""
         last_login = AuthenticationLog.get_last_login_for(email)
+        if last_login is None:
+            return 0
+        if last_login.failed_attempt is None:
+            return 0
+        if last_login.time is None:
+            return 0
+
+        assert last_login is not None
+        assert last_login.time is not None
+        assert last_login.failed_attempt is not None
+
         current_time = timezone.now().replace(microsecond=0)
-        lockout_time = pow(2, last_login.failed_attempt - LOCKOUT_THRESHOLD)
-        return (
-            - (current_time - last_login.time)
-            + timedelta(minutes=lockout_time)
-        ).total_seconds()
+        lockout_time = \
+            pow(2, int(last_login.failed_attempt) - LOCKOUT_THRESHOLD)
+        return float(
+            (
+                - (current_time - last_login.time)
+                + timedelta(minutes=lockout_time)
+            ).total_seconds())
 
     @staticmethod
-    def log_authentication_attempt(email: str, failed: bool):
+    def log_authentication_attempt(email: str, failed: bool) -> None:
         """Log an attempt for authentication."""
         last_login = AuthenticationLog.get_last_login_for(email)
 
@@ -324,7 +372,9 @@ class AuthenticationLog(models.Model):
         login_attempt.save()
 
 
-def staff_update(sender, **kwargs):  # pylint: disable=unused-argument
+def staff_update(
+    sender: Any, **kwargs: Any  # pylint: disable=unused-argument
+) -> None:
     """Update if user is part of staff when SUPERUSER_GROUP is added/rmed."""
     for key in ["action", "instance", "reverse"]:
         if key not in kwargs:
@@ -347,7 +397,9 @@ def staff_update(sender, **kwargs):  # pylint: disable=unused-argument
                 user.save()
 
 
-def group_post_delete(sender, **kwargs):  # pylint: disable=unused-argument
+def group_post_delete(
+    sender: Type[Group], **kwargs: Any  # pylint: disable=unused-argument
+) -> None:
     """Automatically remove staff privileges of SUPERUSER_GROUP users.
 
     Automatically remove staff privileges of users belonging to the
@@ -369,7 +421,9 @@ def group_post_delete(sender, **kwargs):  # pylint: disable=unused-argument
 
 
 # a hack to save the users the group had, used in the post_delete signal
-def group_pre_delete(sender, **kwargs):  # pylint: disable=unused-argument
+def group_pre_delete(
+    sender: Type[Group], **kwargs: Any  # pylint: disable=unused-argument
+) -> None:
     """Attach user-ids when a group is being deleted.
 
     When deleting a group, attaches the ids of the users who belonged to it
@@ -389,3 +443,139 @@ m2m_changed.connect(
     weak=False)
 post_delete.connect(group_post_delete, Group, weak=False)
 pre_delete.connect(group_pre_delete, Group, weak=False)
+
+
+LOCKOUT_THRESHOLD = 4
+
+
+def csrf_clear(view_func: Callable) -> Any:
+    """Skips the CSRF checks by setting the 'csrf_processing_done' to true."""
+
+    def wrapped_view(*args: Any, **kwargs: Any) -> Any:
+        request = args[0]
+        request.csrf_processing_done = True
+        return view_func(*args, **kwargs)
+
+    return wraps(view_func)(wrapped_view)
+
+
+def get_default_application() -> Application:
+    # pylint: disable=import-outside-toplevel
+    from django.conf import settings
+    client_id = settings.DEFAULT_OAUTH_APPLICATION_CLIENT
+    model = get_application_model()
+    return model.objects.get(client_id=client_id)
+
+
+def send_verif_email(user: WdaeUser, verif_path: BaseVerificationCode) -> None:
+    """Send a verification email to the user."""
+    # pylint: disable=import-outside-toplevel
+    from django.conf import settings
+    email = _create_verif_email(
+        settings.EMAIL_VERIFICATION_ENDPOINT,  # type: ignore
+        settings.EMAIL_VERIFICATION_SET_PATH,
+        str(verif_path.path),
+    )
+    user.email_user(email["subject"], email["message"])
+
+
+def send_already_existing_email(user: WdaeUser) -> None:
+    """Send an email to already existing user."""
+    subject = "GPF: Attempted registration with email in use"
+    message = (
+        "Hello. Someone has attempted to create an account in GPF "
+        "using an email that your account was registered with.  "
+        "If this was you, you can simply log in to your existing account, "
+        "or if you've forgotten your password, you can reset it "
+        "by using the 'Forgotten password' button on the login window. \n"
+        "Otherwise, please ignore this email."
+    )
+    user.email_user(subject, message)
+
+
+def send_reset_inactive_acc_email(user: WdaeUser) -> None:
+    """Send an email to an inactive user."""
+    subject = "GPF: Password reset for inactive account"
+    message = (
+        "Hello. You've requested a password reset for an inactive account. "
+        "You must first finish your registration by following the "
+        "account validation link in the email you received when registering. "
+        "If you have lost that email or the link in it has expired, you can "
+        "register again to get a new validation email sent. \n"
+        "If you did not request this, please ignore this email."
+    )
+    user.email_user(subject, message)
+
+
+def send_reset_email(
+    user: WdaeUser, verif_path: BaseVerificationCode,
+    by_admin: bool = False
+) -> None:
+    """Return dict with subject and message of the email."""
+    # pylint: disable=import-outside-toplevel
+    from django.conf import settings
+    email = _create_reset_mail(
+        settings.EMAIL_VERIFICATION_ENDPOINT,  # type: ignore
+        settings.EMAIL_VERIFICATION_RESET_PATH,
+        str(verif_path.path),
+        by_admin,
+    )
+
+    user.email_user(email["subject"], email["message"])
+
+
+def _create_verif_email(
+    endpoint: str, path: str, verification_path: str
+) -> dict[str, str]:
+    message = (
+        "Welcome to GPF: Genotype and Phenotype in Families! "
+        "Follow the link below to validate your new account "
+        "and set your password:\n {link}"
+    )
+
+    email_settings = {
+        "subject": "GPF: Registration validation",
+        "initial_message": message,
+        "endpoint": endpoint,
+        "path": path,
+        "verification_path": verification_path,
+    }
+
+    return _build_email_template(email_settings)
+
+
+def _create_reset_mail(
+    endpoint: str, path: str, verification_path: str, by_admin: bool = False
+) -> dict[str, str]:
+    message = (
+        "Hello. You have requested to reset your password for "
+        "your GPF account. To do so, please follow the link below:\n {link}\n"
+        "If you did not request for your GPF account password to be reset, "
+        "please ignore this email."
+    )
+    if by_admin:
+        message = (
+            "Hello. Your password has been reset by an admin. Your old "
+            "password will not work. To set a new password in "
+            "GPF: Genotype and Phenotype in Families "
+            "please follow the link below:\n {link}"
+        )
+    email_settings = {
+        "subject": "GPF: Password reset request",
+        "initial_message": message,
+        "endpoint": endpoint,
+        "path": path,
+        "verification_path": verification_path,
+    }
+
+    return _build_email_template(email_settings)
+
+
+def _build_email_template(email_settings: dict[str, str]) -> dict[str, str]:
+    subject = email_settings["subject"]
+    message = email_settings["initial_message"]
+    path = email_settings["path"].format(email_settings["verification_path"])
+
+    message = message.format(link=f"{email_settings['endpoint']}{path}")
+
+    return {"subject": subject, "message": message}

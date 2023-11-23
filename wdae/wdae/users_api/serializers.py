@@ -1,8 +1,11 @@
+from typing import Any, Optional, Iterable
+
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.db import transaction
 
+from .models import WdaeUser
 from .validators import SomeSuperuserLeftValidator
 
 
@@ -14,7 +17,7 @@ class CreatableSlugRelatedField(serializers.SlugRelatedField):
     given to a user, it will be created and then attached to the user.
     """
 
-    def to_internal_value(self, data):
+    def to_internal_value(self, data: dict) -> Any:
         try:
             return self.get_queryset().get_or_create(
                 **{self.slug_field: data}
@@ -27,23 +30,28 @@ class CreatableSlugRelatedField(serializers.SlugRelatedField):
 
 
 class DatasetSerializer(serializers.BaseSerializer):
-    def to_representation(self, instance):
+    """Dataset serializer."""
+
+    def to_representation(self, instance: Any) -> Any:
+
         return instance
 
-    def to_internal_value(self, data):
+    def to_internal_value(self, data: Any) -> Any:
         """Do nothing, method is for DB objects only."""
         return
 
-    def create(self, validated_data):
+    def create(self, validated_data: Any) -> Any:
         """Do nothing, method is for DB objects only."""
         return
 
-    def update(self, instance, validated_data):
+    def update(self, instance: Any, validated_data: Any) -> Any:
         """Do nothing, method is for DB objects only."""
         return
 
 
 class UserSerializer(serializers.ModelSerializer):
+    """User serializer."""
+
     name = serializers.CharField(required=False, allow_blank=True)
 
     groups = serializers.ListSerializer(
@@ -63,13 +71,15 @@ class UserSerializer(serializers.ModelSerializer):
         child=DatasetSerializer()
     )
 
-    class Meta:
+    class Meta:  # pylint: disable=too-few-public-methods
         model = get_user_model()
         fields = (
             "id", "email", "name",
             "hasPassword", "groups", "allowedDatasets",)
 
-    def run_validation(self, data):
+    def run_validation(self, data: dict) -> Any:  # type: ignore
+        # pylint: disable=signature-differs
+        """Normalize email before validation."""
         email = data.get("email")
         if email:
             email = get_user_model().objects.normalize_email(email).lower()
@@ -77,23 +87,24 @@ class UserSerializer(serializers.ModelSerializer):
 
         return super().run_validation(data=data)
 
-    def validate(self, data):
+    def validate(self, attrs: dict) -> Any:
+        """Validate that no unknown fields are given."""
         unknown_keys = set(self.initial_data.keys()) - set(self.fields.keys())
         if unknown_keys:
             raise serializers.ValidationError(
-                "Got unknown fields: {}".format(unknown_keys)
+                f"Got unknown fields: {unknown_keys}"
             )
 
-        return super(UserSerializer, self).validate(data)
+        return super().validate(attrs)
 
     @staticmethod
-    def _check_groups_exist(groups):
+    def _check_groups_exist(groups: Optional[str]) -> None:
         if groups:
             db_groups_count = Group.objects.filter(name__in=groups).count()
             assert db_groups_count == len(groups), "Not all groups exist."
 
     @staticmethod
-    def _update_groups(user, new_groups):
+    def _update_groups(user: WdaeUser, new_groups: Iterable[Group]) -> None:
         with transaction.atomic():
             to_remove = set()
             for group in user.groups.all():
@@ -109,13 +120,13 @@ class UserSerializer(serializers.ModelSerializer):
             user.groups.add(*to_add)
             user.groups.remove(*to_remove)
 
-    def update(self, instance, validated_data):
+    def update(self, instance: WdaeUser, validated_data: dict) -> WdaeUser:
         groups = validated_data.pop("groups", None)
 
         self._check_groups_exist(groups)
 
         with transaction.atomic():
-            super(UserSerializer, self).update(instance, validated_data)
+            super().update(instance, validated_data)
 
             if groups is not None:
                 db_groups = Group.objects.filter(name__in=groups)
@@ -123,12 +134,12 @@ class UserSerializer(serializers.ModelSerializer):
 
         return instance
 
-    def create(self, validated_data):
+    def create(self, validated_data: dict) -> Any:
         groups = validated_data.pop("groups", None)
         self._check_groups_exist(groups)
 
         with transaction.atomic():
-            instance = super(UserSerializer, self).create(validated_data)
+            instance = super().create(validated_data)
 
             if groups:
                 db_groups = Group.objects.filter(name__in=groups)
@@ -136,7 +147,7 @@ class UserSerializer(serializers.ModelSerializer):
 
         return instance
 
-    def to_representation(self, instance):
+    def to_representation(self, instance: WdaeUser) -> Any:
         response = super().to_representation(instance)
         response["groups"] = sorted(
             response["groups"],
@@ -146,6 +157,6 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class UserWithoutEmailSerializer(UserSerializer):
-    class Meta(object):
+    class Meta:  # pylint: disable=too-few-public-methods
         model = get_user_model()
         fields = tuple(x for x in UserSerializer.Meta.fields if x != "email")

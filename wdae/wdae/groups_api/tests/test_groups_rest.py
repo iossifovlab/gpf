@@ -1,65 +1,71 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import json
+from typing import Optional, cast
+
 import pytest
 
-from django.contrib.auth.models import Group
+from django.contrib.auth.models import Group, User
+from django.test.client import Client
+
 from rest_framework import status
 
 from datasets_api.models import Dataset
 from datasets_api.permissions import user_has_permission
+from users_api.models import WdaeUser
 
 
-def test_admin_can_get_groups(admin_client):
+def test_admin_can_get_groups(admin_client: Client) -> None:
     url = "/api/v3/groups"
     response = admin_client.get(url)
 
     assert response.status_code is status.HTTP_200_OK
-    assert len(response.data) > 0
+    assert len(response.json()) > 0
 
 
-def test_user_cant_see_groups(user_client):
+def test_user_cant_see_groups(user_client: Client) -> None:
     url = "/api/v3/groups"
     response = user_client.get(url)
 
     assert response.status_code is status.HTTP_403_FORBIDDEN
 
 
-def test_groups_have_ids_and_names(admin_client):
+def test_groups_have_ids_and_names(admin_client: Client) -> None:
     url = "/api/v3/groups"
     response = admin_client.get(url)
 
     assert response.status_code is status.HTTP_200_OK
-
-    assert len(response.data) > 0
-    for group in response.data:
+    data = response.json()
+    assert len(data) > 0
+    for group in data:
         assert "id" in group
         assert "name" in group
 
 
-def test_groups_have_users_and_datasets(admin_client):
+def test_groups_have_users_and_datasets(admin_client: Client) -> None:
     url = "/api/v3/groups"
     response = admin_client.get(url)
 
     assert response.status_code is status.HTTP_200_OK
-
-    assert len(response.data) > 0
-    for group in response.data:
+    data = response.json()
+    assert len(data) > 0
+    for group in data:
         assert "users" in group
         assert "datasets" in group
 
 
-def test_single_group_has_users_and_datasets(admin_client):
+def test_single_group_has_users_and_datasets(admin_client: Client) -> None:
     groups = Group.objects.all()
     for group in groups:
         url = f"/api/v3/groups/{group.name}"
         response = admin_client.get(url)
 
         assert response.status_code is status.HTTP_200_OK
-        assert "users" in response.data
-        assert "datasets" in response.data
+        data = response.json()
+        assert "users" in data
+        assert "datasets" in data
 
 
-def test_admin_cant_delete_groups(admin_client):
+def test_admin_cant_delete_groups(admin_client: Client) -> None:
     all_groups = Group.objects.all()
     assert len(all_groups) > 0
 
@@ -75,10 +81,10 @@ def test_admin_cant_delete_groups(admin_client):
     response = admin_client.get(url)
     assert response.status_code is status.HTTP_200_OK
 
-    assert len(response.data) is len(all_groups)
+    assert len(response.json()) is len(all_groups)
 
 
-def test_admin_can_create_groups(admin_client):
+def test_admin_can_create_groups(admin_client: Client) -> None:
     new_group_name = "NewAwesomeGroup"
     data = {"name": new_group_name}
 
@@ -93,7 +99,7 @@ def test_admin_can_create_groups(admin_client):
     assert Group.objects.all().filter(name=new_group_name).exists()
 
 
-def test_user_cant_create_groups(user_client):
+def test_user_cant_create_groups(user_client: Client) -> None:
     new_group_name = "NewAwesomeGroup"
     data = {"name": new_group_name}
 
@@ -108,7 +114,10 @@ def test_user_cant_create_groups(user_client):
     assert not Group.objects.all().filter(name=new_group_name).exists()
 
 
-def test_admin_can_rename_groups(admin_client, group_with_user):
+def test_admin_can_rename_groups(
+    admin_client: Client,
+    group_with_user: tuple[Group, WdaeUser]
+) -> None:
     group, _ = group_with_user
     assert group is not None
 
@@ -124,13 +133,14 @@ def test_admin_can_rename_groups(admin_client, group_with_user):
     )
     print(response)
     assert response.status_code is status.HTTP_200_OK
-    assert response.data["name"] == test_name
+    data = response.json()
+    assert data["name"] == test_name
 
     group.refresh_from_db()
     assert group.name == test_name
 
 
-def test_group_has_all_users(admin_client, group):
+def test_group_has_all_users(admin_client: Client, group: Group) -> None:
     test_emails = ["test@email.com", "other@email.com", "last@example.com"]
     for email in test_emails:
         group.user_set.create(email=email)
@@ -139,25 +149,28 @@ def test_group_has_all_users(admin_client, group):
     response = admin_client.get(url)
 
     assert response.status_code is status.HTTP_200_OK
+    data = response.json()
     for email in test_emails:
-        assert email in response.data["users"]
+        assert email in data["users"]
 
 
-def test_no_empty_groups_are_accessible(admin_client):
+def test_no_empty_groups_are_accessible(admin_client: Client) -> None:
     groups_count = Group.objects.all().count()
     new_group = Group.objects.create(name="New Group")
 
     url = "/api/v3/groups"
     response = admin_client.get(url)
     assert response.status_code is status.HTTP_200_OK
-    assert len(response.data) == groups_count
+    assert len(response.json()) == groups_count
 
     url = f"/api/v3/groups/{new_group.id}"
     response = admin_client.get(url)
     assert response.status_code is status.HTTP_404_NOT_FOUND
 
 
-def test_empty_group_with_permissions_is_shown(admin_client, dataset):
+def test_empty_group_with_permissions_is_shown(
+    admin_client: Client, dataset: Dataset
+) -> None:
     group = Group.objects.create(name="New Group")
 
     dataset.groups.add(group)
@@ -165,11 +178,12 @@ def test_empty_group_with_permissions_is_shown(admin_client, dataset):
     url = "/api/v3/groups"
     response = admin_client.get(url)
     assert response.status_code is status.HTTP_200_OK
-    assert len(response.data) == 25
+    data = response.json()
+    assert len(data) == 25
     new_group_reponse = next(
         (
             response_group
-            for response_group in response.data
+            for response_group in data
             if response_group["name"] == group.name
         ),
         None,
@@ -178,27 +192,37 @@ def test_empty_group_with_permissions_is_shown(admin_client, dataset):
     assert new_group_reponse["datasets"][0]["datasetId"] == dataset.dataset_id
 
 
-def test_group_has_all_datasets(admin_client, group_with_user, dataset):
+def test_group_has_all_datasets(
+    admin_client: Client,
+    group_with_user: tuple[Group, WdaeUser],
+    dataset: Dataset
+) -> None:
     group, _ = group_with_user
 
     url = f"/api/v3/groups/{group.name}"
     response = admin_client.get(url)
     assert response.status_code is status.HTTP_200_OK
-    assert len(response.data["datasets"]) == 0
+    data = response.json()
+    assert len(data["datasets"]) == 0
 
     dataset.groups.add(group)
 
     url = f"/api/v3/groups/{group.name}"
     response = admin_client.get(url)
     assert response.status_code is status.HTTP_200_OK
-    assert len(response.data["datasets"]) == 1
-    assert response.data["datasets"][0]["datasetId"] == dataset.dataset_id
-    assert response.data["datasets"][0]["datasetName"] == "Dataset1"
-    assert response.data["datasets"][0]["broken"] is False
+    data = response.json()
+    assert len(data["datasets"]) == 1
+    assert data["datasets"][0]["datasetId"] == dataset.dataset_id
+    assert data["datasets"][0]["datasetName"] == "Dataset1"
+    assert data["datasets"][0]["broken"] is False
 
 
-def test_grant_permission_for_group(admin_client, group_with_user, dataset):
-    group, user = group_with_user
+def test_grant_permission_for_group(
+    admin_client: Client, group_with_user: tuple[Group, WdaeUser],
+    dataset: Dataset
+) -> None:
+    group, wdae_user = group_with_user
+    user = cast(User, wdae_user)
     data = {"datasetId": dataset.dataset_id, "groupName": group.name}
 
     assert not user_has_permission(user, dataset.dataset_id)
@@ -212,11 +236,13 @@ def test_grant_permission_for_group(admin_client, group_with_user, dataset):
     assert user_has_permission(user, dataset.dataset_id)
 
 
-def test_grant_permission_creates_new_group(admin_client, user, dataset):
+def test_grant_permission_creates_new_group(
+    admin_client: Client, user: WdaeUser, dataset: Dataset
+) -> None:
     group_name = "NewGroup"
     data = {"datasetId": dataset.dataset_id, "groupName": group_name}
 
-    assert not user_has_permission(user, dataset.dataset_id)
+    assert not user_has_permission(cast(User, user), dataset.dataset_id)
 
     url = "/api/v3/groups/grant-permission"
     response = admin_client.post(
@@ -228,12 +254,13 @@ def test_grant_permission_creates_new_group(admin_client, user, dataset):
 
 
 def test_grant_permission_creates_new_group_case_sensitive(
-        admin_client, user, dataset):
+    admin_client: Client, user: WdaeUser, dataset: Dataset
+) -> None:
 
     group_name = "group_name_P"
     data = {"datasetId": dataset.dataset_id, "groupName": group_name}
 
-    assert not user_has_permission(user, dataset.dataset_id)
+    assert not user_has_permission(cast(User, user), dataset.dataset_id)
 
     url = "/api/v3/groups/grant-permission"
     response = admin_client.post(
@@ -246,9 +273,12 @@ def test_grant_permission_creates_new_group_case_sensitive(
 
 
 def test_not_admin_cant_grant_permissions(
-    user_client, group_with_user, dataset
-):
-    group, user = group_with_user
+    user_client: Client, group_with_user: tuple[Group, WdaeUser],
+    dataset: Dataset
+) -> None:
+    group, wdae_user = group_with_user
+    user = cast(User, wdae_user)
+
     data = {"datasetId": dataset.dataset_id, "groupName": group.name}
 
     assert not user_has_permission(user, dataset.dataset_id)
@@ -263,8 +293,8 @@ def test_not_admin_cant_grant_permissions(
 
 
 def test_not_admin_grant_permissions_does_not_create_group(
-    user_client, dataset
-):
+    user_client: Client, dataset: Dataset
+) -> None:
     group_name = "NewGroup"
     data = {"datasetId": dataset.dataset_id, "groupName": group_name}
 
@@ -277,8 +307,13 @@ def test_not_admin_grant_permissions_does_not_create_group(
     assert Group.objects.filter(name=group_name).count() == 0
 
 
-def test_revoke_permission_for_group(admin_client, group_with_user, dataset):
-    group, user = group_with_user
+def test_revoke_permission_for_group(
+    admin_client: Client, group_with_user: tuple[Group, WdaeUser],
+    dataset: Dataset
+) -> None:
+    group, wdae_user = group_with_user
+    user = cast(User, wdae_user)
+
     data = {"datasetId": dataset.dataset_id, "groupId": group.id}
 
     dataset.groups.add(group)
@@ -295,9 +330,12 @@ def test_revoke_permission_for_group(admin_client, group_with_user, dataset):
 
 
 def test_not_admin_cant_revoke_permissions(
-    user_client, group_with_user, dataset
-):
-    group, user = group_with_user
+    user_client: Client, group_with_user: tuple[Group, WdaeUser],
+    dataset: Dataset
+) -> None:
+    group, wdae_user = group_with_user
+    user = cast(User, wdae_user)
+
     data = {"datasetId": dataset.dataset_id, "groupId": group.id}
     dataset.groups.add(group)
 
@@ -312,7 +350,9 @@ def test_not_admin_cant_revoke_permissions(
     assert user_has_permission(user, dataset.dataset_id)
 
 
-def test_cant_revoke_default_permissions(user_client, dataset):
+def test_cant_revoke_default_permissions(
+    user_client: Client, dataset: Dataset
+) -> None:
     Dataset.recreate_dataset_perm(dataset.dataset_id)
 
     url = "/api/v3/groups/revoke-permission"
@@ -346,27 +386,35 @@ def test_cant_revoke_default_permissions(user_client, dataset):
     ]
 )
 def test_groups_pagination(
-        admin_client, hundred_groups, page,
-        status_code, length, first_name, last_name
-):
+        admin_client: Client, hundred_groups: list[Group], page: int,
+        status_code: int, length: Optional[int],
+        first_name: Optional[str], last_name: Optional[str]
+) -> None:
     url = f"/api/v3/groups?page={page}"
     response = admin_client.get(url)
     assert response.status_code == status_code
+    if response.status_code == status.HTTP_204_NO_CONTENT:
+        return
+
+    data = response.json()
 
     if length is not None:
-        assert len(response.data) == length
+        assert len(data) == length
 
     if first_name is not None:
-        assert response.data[0]["name"] == first_name
+        assert data[0]["name"] == first_name
 
     if last_name is not None:
-        assert response.data[length - 1]["name"] == last_name
+        assert length is not None
+        assert data[length - 1]["name"] == last_name
 
 
-def test_groups_search(admin_client, hundred_groups):
+def test_groups_search(
+    admin_client: Client, hundred_groups: list[Group]
+) -> None:
     url = "/api/v3/groups?search=Group1"
     response = admin_client.get(url)
-    assert len(response.data) == 12
+    assert len(response.json()) == 12
 
 
 @pytest.mark.parametrize(
@@ -381,16 +429,22 @@ def test_groups_search(admin_client, hundred_groups):
     ]
 )
 def test_groups_search_pagination(
-        admin_client, hundred_groups, page, status_code, length
-):
+    admin_client: Client,
+    hundred_groups: list[Group],
+    page: int, status_code: int, length: Optional[int]
+) -> None:
     url = f"/api/v3/groups?page={page}&search=Group"
     response = admin_client.get(url)
     assert response.status_code == status_code
+    if response.status_code == status.HTTP_204_NO_CONTENT:
+        return
+
+    data = response.json()
     if length is not None:
-        assert len(response.data) == length
+        assert len(data) == length
 
 
-def test_user_group_routes(admin_client, user):
+def test_user_group_routes(admin_client: Client, user: WdaeUser) -> None:
     assert not user.groups.filter(name="Test group").exists()
 
     group = Group.objects.create(name="Test group")
@@ -413,11 +467,13 @@ def test_user_group_routes(admin_client, user):
     assert not user.groups.filter(name="Test group").exists()
 
 
-def test_group_retrieve(admin_client, hundred_groups):
+def test_group_retrieve(
+    admin_client: Client, hundred_groups: list[Group]
+) -> None:
     url = "/api/v3/groups/Group1"
     response = admin_client.get(url)
     assert response.status_code == status.HTTP_200_OK
-    data = response.data
+    data = response.json()
 
     assert data["name"] == "Group1"
     assert data["users"] == ["user@example.com"]
@@ -428,11 +484,13 @@ def test_group_retrieve(admin_client, hundred_groups):
     }]
 
 
-def test_group_retrieve_alphabetical_order(admin_client, hundred_groups):
+def test_group_retrieve_alphabetical_order(
+    admin_client: Client, hundred_groups: list[Group]
+) -> None:
     url = "/api/v3/groups/any_dataset"
     response = admin_client.get(url)
     assert response.status_code == status.HTTP_200_OK
-    data = response.data
+    data = response.json()
 
     assert data["name"] == "any_dataset"
     assert data["users"] == []
@@ -447,7 +505,7 @@ def test_group_retrieve_alphabetical_order(admin_client, hundred_groups):
     assert data["datasets"][-1]["datasetName"] == "TRIO"
 
 
-def test_group_retrieve_missing(admin_client):
+def test_group_retrieve_missing(admin_client: Client) -> None:
     url = "/api/v3/groups/somegroupthatdoesnotexist"
     response = admin_client.get(url)
     assert response.status_code == status.HTTP_404_NOT_FOUND

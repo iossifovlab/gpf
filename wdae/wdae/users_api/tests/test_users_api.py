@@ -1,15 +1,20 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import json
+from typing import Optional
+
 from pprint import pprint
+
 import pytest
 
 from rest_framework import status  # type: ignore
 
 from utils.email_regex import email_regex, is_email_valid
 from utils.password_requirements import is_password_valid
+from django.test.client import Client
+from users_api.models import WdaeUser
 
 
-def test_invalid_reset_code(client, researcher):
+def test_invalid_reset_code(client: Client, researcher: WdaeUser) -> None:
     url = "/api/v3/users/reset_password"
     session = client.session
     session.update({"reset_code": "asdasfasfgadg"})
@@ -24,7 +29,7 @@ def test_invalid_reset_code(client, researcher):
     assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 
-def test_reset_pass(client, researcher):
+def test_reset_pass(client: Client, researcher: WdaeUser) -> None:
     url = "/api/v3/users/forgotten_password"
     data = {"email": researcher.email}
 
@@ -34,7 +39,7 @@ def test_reset_pass(client, researcher):
     assert response.status_code == status.HTTP_200_OK
 
 
-def test_register_existing_user(client, researcher):
+def test_register_existing_user(client: Client, researcher: WdaeUser) -> None:
     url = "/api/v3/users/register"
     data = {
         "name": researcher.name,
@@ -48,7 +53,7 @@ def test_register_existing_user(client, researcher):
     assert response.status_code == status.HTTP_201_CREATED
 
 
-def test_email_regex_is_posix_compliant():
+def test_email_regex_is_posix_compliant() -> None:
     assert r"+?" not in email_regex
     assert r"*?" not in email_regex
     assert r"(?:" not in email_regex
@@ -56,7 +61,7 @@ def test_email_regex_is_posix_compliant():
     assert r"\d" not in email_regex
 
 
-def test_email_validaiton():
+def test_email_validaiton() -> None:
     assert is_email_valid("test@test.com")
     assert is_email_valid("t3st@t3st.org")
     assert is_email_valid("test@test.uk")
@@ -72,7 +77,7 @@ def test_email_validaiton():
     assert not is_email_valid("invalid@uppercasedomain.Com")
 
 
-def test_password_validation():
+def test_password_validation() -> None:
     generic_password = "esg09dusfd"
 
     # Don't accept passwords shorter than 10 symbols
@@ -111,27 +116,37 @@ def test_password_validation():
     ]
 )
 def test_users_pagination(
-    admin_client, hundred_users, page, status_code,
-    length, first_email, last_email
-):
+    admin_client: Client,
+    hundred_users: list[WdaeUser],
+    page: int, status_code: int,
+    length: int,
+    first_email: Optional[str],
+    last_email: Optional[str]
+) -> None:
     url = f"/api/v3/users?page={page}"
     response = admin_client.get(url)
     assert response.status_code == status_code
 
     if length is not None:
-        assert len(response.data) == length
+        assert len(response.json()) == length
 
     if first_email is not None:
-        assert response.data[0]["email"] == first_email
+        data = response.json()
+        assert data[0]["email"] == first_email
 
     if last_email is not None:
-        assert response.data[length - 1]["email"] == last_email
+        data = response.json()
+
+        assert data[length - 1]["email"] == last_email
 
 
-def test_users_search(admin_client, hundred_users):
+def test_users_search(
+    admin_client: Client,
+    hundred_users: list[WdaeUser]
+) -> None:
     url = "/api/v3/users?search=user9"
     response = admin_client.get(url)
-    assert len(response.data) == 11
+    assert len(response.json()) == 11
 
 
 @pytest.mark.parametrize(
@@ -146,12 +161,17 @@ def test_users_search(admin_client, hundred_users):
     ]
 )
 def test_users_search_pagination(
-    admin_client, hundred_users, page, status_code, length
-):
+    admin_client: Client,
+    hundred_users: list[WdaeUser],
+    page: int,
+    status_code: int,
+    length: Optional[int]
+) -> None:
     url = f"/api/v3/users?page={page}&search=user"
     response = admin_client.get(url)
     assert response.status_code == status_code
     if length is not None:
-        assert len(response.data) == length
-        for idx, user in enumerate(response.data):
+        data = response.json()
+        assert len(data) == length
+        for idx, user in enumerate(data):
             print(f"{idx}: {user['email']}")

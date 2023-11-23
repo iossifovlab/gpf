@@ -3,8 +3,34 @@
 from typing import Optional, Callable
 from django.http.request import HttpRequest
 from django.http.response import HttpResponse
+
 from rest_framework import exceptions
+from rest_framework.authentication import SessionAuthentication
+from rest_framework.request import Request
+
 from oauth2_provider.contrib.rest_framework import OAuth2Authentication
+
+
+class SessionAuthenticationWithoutCSRF(SessionAuthentication):
+
+    def enforce_csrf(self, request: Request) -> None:
+        """Enforce CSRF validation for session based authentication."""
+        return
+
+
+class SessionAuthenticationWithUnauthenticatedCSRF(SessionAuthentication):
+    """Session authentication with unauthenticated CSRF."""
+
+    def authenticate(self, request: Request) -> Optional[tuple]:
+        """Return the currently logged-in user or None otherwise."""
+        # Get the session-based user from the underlying HttpRequest object
+        # pylint: disable=protected-access
+        user = getattr(request._request, "user", None)
+
+        self.enforce_csrf(request)
+
+        # CSRF passed with authenticated user
+        return (user, None)
 
 
 class GPFOAuth2Authentication(OAuth2Authentication):

@@ -1,9 +1,13 @@
 import logging
+from typing import Type
+
 from django.contrib.auth import get_user_model
 from django.db.models import Count, Q
+from django.db.models.query import QuerySet
 from django.contrib.auth.models import Group
 from rest_framework import viewsets, permissions, mixins, status, filters
 from rest_framework.response import Response
+from rest_framework.request import Request
 from rest_framework.decorators import api_view
 
 from datasets_api.models import Dataset
@@ -19,23 +23,28 @@ class GroupsViewSet(
     mixins.UpdateModelMixin,
     viewsets.ReadOnlyModelViewSet,
 ):
+    # pylint: disable=too-many-ancestors
+    """Groups view set."""
+
     serializer_class = GroupSerializer
     permission_classes = (permissions.IsAdminUser,)
     filter_backends = (filters.SearchFilter,)
     search_fields = ("name",)
     lookup_field = "name"
 
-    def get_serializer_class(self):
+    def get_serializer_class(
+        self
+    ) -> Type[GroupSerializer]:
         serializer_class = self.serializer_class
 
-        if self.action == "list" or self.action == "retrieve":
+        if self.action in {"list", "retrieve"}:
             serializer_class = GroupRetrieveSerializer
         elif self.action == "create":
             serializer_class = GroupCreateSerializer
 
         return serializer_class
 
-    def get_queryset(self):
+    def get_queryset(self) -> QuerySet:
         # Get groups that have users or datasets tagged with it
         return Group.objects.annotate(
             users_count=Count("user"), datasets_count=Count("dataset")
@@ -45,7 +54,8 @@ class GroupsViewSet(
 
 
 @api_view(["POST"])
-def add_group_to_dataset(request):
+def add_group_to_dataset(request: Request) -> Response:
+    """Add group to dataset."""
     if not request.user.is_authenticated:
         return Response(status=status.HTTP_401_UNAUTHORIZED)
     if not request.user.is_staff:
@@ -60,7 +70,8 @@ def add_group_to_dataset(request):
 
 
 @api_view(["POST"])
-def remove_group_from_dataset(request):
+def remove_group_from_dataset(request: Request) -> Response:
+    """Remove group from dataset."""
     if not request.user.is_authenticated:
         return Response(status=status.HTTP_401_UNAUTHORIZED)
     if not request.user.is_staff:
@@ -77,7 +88,8 @@ def remove_group_from_dataset(request):
 
 
 @api_view(["POST"])
-def add_user_to_group(request):
+def add_user_to_group(request: Request) -> Response:
+    """Add user to group."""
     if not request.user.is_authenticated:
         return Response(status=status.HTTP_401_UNAUTHORIZED)
     if not request.user.is_staff:
@@ -101,7 +113,8 @@ def add_user_to_group(request):
 
 
 @api_view(["POST"])
-def remove_user_from_group(request):
+def remove_user_from_group(request: Request) -> Response:
+    """Remove user from group."""
     if not request.user.is_authenticated:
         return Response(status=status.HTTP_401_UNAUTHORIZED)
     if not request.user.is_staff:
