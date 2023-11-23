@@ -248,7 +248,7 @@ test.describe('Pheno tool download tests', () => {
 
       await page.getByRole('tab', { name: 'Advanced' }).click();
       await page.getByLabel('Advanced').getByPlaceholder('Select or start typing to search').click();
-      await page.getByRole('button', { name: 'i1.iq' }).click();
+      await page.getByRole('button', { name: data.familyFilter}).click();
 
       await expect(page.locator('gpf-histogram')).toBeVisible();
       await page.locator('#from-input-field').clear();
@@ -301,13 +301,14 @@ test.describe('Pheno tool download tests', () => {
     {id: '12', collection: 'SFARI Genes', set: 'SFARI ALL (910): SFARI Genes (2017-09): All genes', measure: 'i1.age'},
     {id: '13', collection: 'Protein domains', set: 'AMOP (3)', measure: 'i1.iq'}
   ].forEach(data => {
-    test('should check downloaded report with gene sets', async({ page }) => {
+    test(`should check downloaded report with gene sets collection ${data.collection}`, async({ page }) => {
       await page.getByRole('tab', { name: 'Gene Sets' }).click();
 
       await page.locator('gpf-gene-sets select.form-control').selectOption(data.collection);
       await page.getByLabel('Gene Sets').getByPlaceholder('Select or start typing to search').click();
       await page.getByLabel('Gene Sets')
-        .getByPlaceholder('Select or start typing to search').fill(data.set.substring(0, data.set.indexOf(' (')));
+        .getByPlaceholder('Select or start typing to search').focus();
+      await page.keyboard.type(data.set.substring(0, data.set.indexOf(' (')));
       await page.locator('button.dropdown-item span').filter({ hasText: data.set }).click();
 
       await page.getByRole('textbox', { name: 'Select or start typing to search' }).click();
@@ -349,7 +350,7 @@ test.describe('Pheno tool download tests', () => {
       await page.locator('gpf-gene-sets select.form-control').selectOption('Denovo');
 
       await page.locator('ngb-accordion').filter({ hasText: data.genotype + ': Affected Status' }).click();
-      await page.getByRole('button', { name: 'comp_vcf: Affected Status' }).click();
+      await page.getByRole('button', { name: `${data.genotype}: Affected Status` }).click();
       await page.locator(`#${data.genotype}-checkbox-${data.affectedStatus}`).click();
 
       await page.getByLabel('Gene Sets').getByPlaceholder('Select or start typing to search').click();
