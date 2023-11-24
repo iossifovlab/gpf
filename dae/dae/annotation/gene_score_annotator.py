@@ -60,26 +60,22 @@ class GeneScoreAnnotator(Annotator):
         info.resources += [gene_score_resource]
         if not info.attributes:
             info.attributes = AnnotationConfigParser.parse_raw_attributes(
-                list(self.gene_score.score_configs.keys())
+                self.gene_score.get_all_scores()
             )
 
         self.aggregators: list[str] = []
 
         for attribute_config in info.attributes:
-            score_config = self.gene_score.score_configs.get(
+            score_def = self.gene_score.score_definitions.get(
                 attribute_config.source
             )
-            if score_config is None:
+            if score_def is None:
                 message = f"The gene score {attribute_config.source} is " + \
                           f"unknown in {gene_score_resource.get_id()} " + \
                           "resource!"
                 raise ValueError(message)
-            attribute_config.type = "object"
-            description = self.gene_score.get_desc(
-                attribute_config.source
-            )
-            assert description is not None
-            attribute_config.description = description
+            attribute_config.type = "float"
+            attribute_config.description = score_def.desc
 
             aggregator_type = \
                 attribute_config.parameters.get("gene_aggregator")

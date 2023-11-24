@@ -7,7 +7,9 @@ import numpy as np
 from dae.genomic_resources.testing import build_inmemory_test_repository
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME, \
     GenomicResourceRepo
-from dae.gene.gene_scores import build_gene_score_from_resource, \
+from dae.genomic_resources.histogram import NumberHistogram
+from dae.gene.implementations.gene_scores_impl import \
+    build_gene_score_from_resource, \
     GeneScoreImplementation
 
 
@@ -205,8 +207,10 @@ def test_load_linear_gene_scores_from_resource(
     assert result.get_x_scale(score_id) == "linear"
     assert result.get_y_scale(score_id) == "linear"
 
-    hist = result.get_histogram(score_id)
+    hist = result.get_score_histogram(score_id)
     assert hist is not None
+    assert isinstance(hist, NumberHistogram)
+
     assert len(hist.bins) == 4
 
     assert np.all(hist.bars == np.array([2, 2, 2]))
@@ -226,10 +230,11 @@ def test_load_log_gene_scores_from_resource(
     assert result.get_x_scale(score_id) == "log"
     assert result.get_y_scale(score_id) == "linear"
 
-    hist = result.get_histogram(score_id)
+    hist = result.get_score_histogram(score_id)
     assert hist is not None
-    assert len(hist.bins) == 6
+    assert isinstance(hist, NumberHistogram)
 
+    assert len(hist.bins) == 6
     assert np.all(hist.bars == np.array([2, 1, 1, 1, 1]))
 
 
