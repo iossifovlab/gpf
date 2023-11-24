@@ -55,7 +55,8 @@ def build_families_report(families: FamiliesData) -> FamiliesReport:
     status_collection = PersonSetCollection.from_families(
         status_collection_config, families
     )
-    return FamiliesReport.from_families_data(families, [status_collection])
+    return FamiliesReport.from_families_data(
+        families, [status_collection], draw_all_families=False)
 
 
 def draw_pedigree(layout, title, show_family=True, tags=None):
