@@ -447,6 +447,10 @@ gpf-genotype-preview-field gpf-pedigree gpf-pedigree-chart .svg-container {
   font-size: 20px;
 }
 
+.material-symbols-outlined.lg {
+  font-size: 32px;
+}
+
 .material-symbols-outlined.red {
   color: red;
 }
@@ -455,6 +459,10 @@ gpf-genotype-preview-field gpf-pedigree gpf-pedigree-chart .svg-container {
 
 summary > h4 {
   display: inline;
+}
+
+summary.details {
+  width: 100px;
 }
 
 .details-body {
@@ -479,6 +487,26 @@ summary > h4 {
 .histogram-image img {
   width: 100%;
   height: 100%;
-  max-width: 560px;
-  max-height: 400px;
+  max-width: 600px;
+  max-height: 440px;
+}
+
+.modal-histogram {
+  text-align: center;
+  max-width: 745px;
+}
+
+.modal-content {
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+.modal-content a {
+  text-decoration: none;
+  color: #0645ad;
+  cursor: pointer;
+}
+
+.modal-content a:hover {
+  text-decoration: underline;
 }
