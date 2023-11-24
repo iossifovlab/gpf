@@ -20,7 +20,7 @@ from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.utils.fs_utils import find_directory_with_a_file
 from dae.enrichment_tool.background_facade import BackgroundFacade
 from dae.studies.study import GenotypeData
-from dae.gene.scores import GenomicScoresDb, ScoreDesc
+from dae.gene.scores import GenomicScoresRegistry
 from dae.gene.gene_scores import ScoreDesc as GeneScoreDesc
 from dae.gene.gene_sets_db import GeneSet, GeneSetsDb, \
     build_gene_set_collection_from_resource
@@ -117,7 +117,7 @@ class GPFInstance:
         self._pheno_db
         self._variants_db
         self.denovo_gene_sets_db
-        self.genomic_scores_db
+        self.genomic_scores_registry
         self.genotype_storages
         self._background_facade
         return self
@@ -195,20 +195,10 @@ class GPFInstance:
         return GeneScoresDb(collections)
 
     @cached_property
-    def genomic_scores_db(self) -> GenomicScoresDb:
+    def genomic_scores_registry(self) -> GenomicScoresRegistry:
         """Load and return genomic scores db."""
-        score_annotators = []
-
         pipeline = self.get_annotation_pipeline()
-        if pipeline is not None and len(pipeline.annotators) > 0:
-            for annotator in pipeline.annotators:
-                annotator_info = annotator.get_info()
-                if annotator_info.type not in \
-                        {"position_score", "np_score", "allele_score"}:
-                    continue
-                score_annotators.append(annotator_info)
-
-        return GenomicScoresDb(self.grr, score_annotators)
+        return GenomicScoresRegistry.build_genomic_scores_registry(pipeline)
 
     @cached_property
     def genotype_storages(self) -> Any:
@@ -360,15 +350,15 @@ class GPFInstance:
             Box, self._pheno_db.get_phenotype_data_config(phenotype_data_id)
         )
 
-    # Genomic scores
-    def get_genomic_scores(self) -> list[tuple[str, ScoreDesc]]:
-        return self.genomic_scores_db.get_scores()
+    # # Genomic scores
+    # def get_genomic_scores(self) -> list[tuple[str, ScoreDesc]]:
+    #     return self.genomic_scores_db.get_scores()
 
-    def has_genomic_score(self, score_id: str) -> bool:
-        return score_id in self.genomic_scores_db
+    # def has_genomic_score(self, score_id: str) -> bool:
+    #     return score_id in self.genomic_scores_db
 
-    def get_genomic_score(self, score_id: str) -> ScoreDesc:
-        return self.genomic_scores_db[score_id]
+    # def get_genomic_score(self, score_id: str) -> ScoreDesc:
+    #     return self.genomic_scores_db[score_id]
 
     # Gene scores
 

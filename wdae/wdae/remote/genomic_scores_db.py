@@ -1,13 +1,13 @@
 from remote.rest_api_client import RESTClient
-from dae.gene.scores import GenomicScoresDb, ScoreDesc
+from dae.gene.scores import GenomicScoresRegistry, ScoreDesc
 
 
-class RemoteGenomicScoresDb(GenomicScoresDb):
+class RemoteGenomicScoresDb(GenomicScoresRegistry):
     """Class for automatic fetching and usage of remote genomic scores."""
 
     def __init__(
         self, rest_clients: list[RESTClient],
-        local_scores_db: GenomicScoresDb
+        local_scores_db: GenomicScoresRegistry
     ):
         # pylint: disable=super-init-not-called
         self.remote_scores: dict[str, ScoreDesc] = {}

@@ -1,17 +1,22 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import textwrap
+from typing import Callable
+
 import pytest
 
 from dae.genomic_resources.repository_factory import \
     build_genomic_resource_repository, \
     build_genomic_resource_group_repository
+from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.testing import setup_gpf_instance, setup_genome, \
     setup_empty_gene_models, setup_directories
 
 
 @pytest.fixture
-def gpf_fixture(fixture_dirname, tmp_path_factory):
-    def builder(instance_config):
+def gpf_fixture(
+    fixture_dirname: Callable, tmp_path_factory: pytest.TempPathFactory
+) -> Callable:
+    def builder(instance_config: dict) -> GPFInstance:
         root_path = tmp_path_factory.mktemp("genomic_scores_db")
         grr = build_genomic_resource_repository(
             {
@@ -52,7 +57,7 @@ def gpf_fixture(fixture_dirname, tmp_path_factory):
     return builder
 
 
-def test_genomic_scores_db_with_config(gpf_fixture):
+def test_genomic_scores_db_with_config(gpf_fixture: Callable) -> None:
     gpf_instance = gpf_fixture({
         "gpf_instance.yaml": textwrap.dedent("""
             genomic_scores_db:
@@ -65,10 +70,12 @@ def test_genomic_scores_db_with_config(gpf_fixture):
             - np_score: hg19/MPC
         """)
     })
-    assert len(gpf_instance.genomic_scores_db) == 1
+    assert len(gpf_instance.genomic_scores_registry) == 1
 
 
-def test_genomic_scores_db_without_config_with_annotation(gpf_fixture):
+def test_genomic_scores_db_without_config_with_annotation(
+    gpf_fixture: Callable
+) -> None:
     gpf_instance = gpf_fixture({
         "gpf_instance.yaml": textwrap.dedent("""
             annotation:
@@ -78,18 +85,20 @@ def test_genomic_scores_db_without_config_with_annotation(gpf_fixture):
             - np_score: hg19/MPC
         """)
     })
-    assert len(gpf_instance.genomic_scores_db) == 1
+    assert len(gpf_instance.genomic_scores_registry) == 1
 
 
-def test_genomic_scores_db_without_config_without_annotation(gpf_fixture):
+def test_genomic_scores_db_without_config_without_annotation(
+    gpf_fixture: Callable
+) -> None:
     gpf_instance = gpf_fixture({
         "gpf_instance.yaml": textwrap.dedent("""
         """),
     })
-    assert len(gpf_instance.genomic_scores_db) == 0
+    assert len(gpf_instance.genomic_scores_registry) == 0
 
 
-def test_annotation_pipeline_with_config(gpf_fixture):
+def test_annotation_pipeline_with_config(gpf_fixture: Callable) -> None:
     gpf_instance = gpf_fixture({
         "gpf_instance.yaml": textwrap.dedent("""
             annotation:
@@ -103,7 +112,7 @@ def test_annotation_pipeline_with_config(gpf_fixture):
     assert len(gpf_instance.get_annotation_pipeline().annotators) == 1
 
 
-def test_annotation_pipeline_without_config(gpf_fixture):
+def test_annotation_pipeline_without_config(gpf_fixture: Callable) -> None:
     gpf_instance = gpf_fixture({
         "gpf_instance.yaml": textwrap.dedent("""
         """),
@@ -112,7 +121,7 @@ def test_annotation_pipeline_without_config(gpf_fixture):
     assert len(gpf_instance.get_annotation_pipeline().annotators) == 0
 
 
-def test_annotation_pipeline_with_bad_config(gpf_fixture):
+def test_annotation_pipeline_with_bad_config(gpf_fixture: Callable) -> None:
     gpf_instance = gpf_fixture({
         "gpf_instance.yaml": textwrap.dedent("""
             annotation:

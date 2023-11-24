@@ -373,6 +373,9 @@ class AnnotatorDecorator(Annotator):
     def is_open(self) -> bool:
         return self.child.is_open()
 
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self.child, name)
+
 
 class InputAnnotableAnnotatorDecorator(AnnotatorDecorator):
     """Defines annotator decorator to use input annotatable if defined."""

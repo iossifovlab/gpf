@@ -1,6 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 
 import textwrap
+import pathlib
 
 import pytest
 
@@ -8,13 +9,17 @@ from dae.testing import setup_directories, setup_genome, \
     setup_empty_gene_models, setup_gpf_instance
 
 from dae.genomic_resources.testing import build_inmemory_test_repository
-from dae.genomic_resources.repository import GR_CONF_FILE_NAME
+from dae.genomic_resources.repository import GenomicResourceProtocolRepo, \
+    GR_CONF_FILE_NAME
 from dae.genomic_resources.repository_factory import \
     build_genomic_resource_repository, build_genomic_resource_group_repository
+from dae.genomic_resources.histogram import NumberHistogram
+
+from dae.gpf_instance.gpf_instance import GPFInstance
 
 
 @pytest.fixture
-def scores_repo(tmp_path):
+def scores_repo(tmp_path: pathlib.Path) -> GenomicResourceProtocolRepo:
     sets_repo = build_inmemory_test_repository({
         "phastCons": {
             GR_CONF_FILE_NAME: textwrap.dedent("""
@@ -91,7 +96,10 @@ def scores_repo(tmp_path):
 
 
 @pytest.fixture
-def annotation_gpf(scores_repo, tmp_path_factory):
+def annotation_gpf(
+    scores_repo: GenomicResourceProtocolRepo,
+    tmp_path_factory: pytest.TempPathFactory
+) -> GPFInstance:
     root_path = tmp_path_factory.mktemp("genomic_scores_db_gpf")
 
     setup_directories(root_path / "gpf_instance", {
@@ -129,18 +137,23 @@ def annotation_gpf(scores_repo, tmp_path_factory):
     return gpf_instance
 
 
-def test_genomic_scores_db_with_annotation(annotation_gpf):
+def test_genomic_scores_db_with_annotation(
+    annotation_gpf: GPFInstance
+) -> None:
     assert annotation_gpf is not None
     annotaiton_pipeline = annotation_gpf.get_annotation_pipeline()
     assert annotaiton_pipeline is not None
 
-    db = annotation_gpf.genomic_scores_db
-    assert db is not None
-    assert len(db.get_scores()) == 1
-    assert "phastcons100" in db
-    assert db["phastcons100"] is not None
+    registry = annotation_gpf.genomic_scores_registry
+    assert registry is not None
+    assert len(registry.get_scores()) == 1
+    assert "phastcons100" in registry
+    assert registry["phastcons100"] is not None
 
-    score = db["phastcons100"]
+    score = registry["phastcons100"]
+    assert score.hist is not None
+    assert isinstance(score.hist, NumberHistogram)
+
     assert len(score.hist.bars) == 10
     assert len(score.hist.bins) == 11
     assert not score.hist.config.x_log_scale

@@ -98,10 +98,11 @@ small values: {score_def.small_values_desc},
 large_values {score_def.large_values_desc}
         """
 
-    def add_score_aggregator_documentation(
-            self, attribute_info: AttributeInfo,
-            aggregator: str,
-            attribute_conf_agg: Optional[str]) -> None:
+    def _build_score_aggregator_documentation(
+        self, attribute_info: AttributeInfo,
+        aggregator: str,
+        attribute_conf_agg: Optional[str]
+    ) -> str:
         """Collect score aggregator documentation."""
         default_aggregators = {
             "position_aggregator": {
@@ -141,9 +142,25 @@ large_values {score_def.large_values_desc}
                 value_str = f"{value} [type default]"
         else:
             value_str = attribute_conf_agg
+        return f"**{aggregator}**: {value_str}"
+
+    def add_score_aggregator_documentation(
+            self, attribute_info: AttributeInfo,
+            aggregator: str,
+            attribute_conf_agg: Optional[str]) -> None:
+        """Collect score aggregator documentation."""
         # pylint: disable=protected-access
+        aggregator_doc = self._build_score_aggregator_documentation(
+            attribute_info, aggregator, attribute_conf_agg)
+
         attribute_info._documentation = \
-            attribute_info.documentation + f"\n\n**{aggregator}**: {value_str}"
+            f"{attribute_info.documentation}\n\n{aggregator_doc}"
+
+    @abc.abstractmethod
+    def build_score_aggregator_documentation(
+        self, attr_info: AttributeInfo
+    ) -> str:
+        """Construct score aggregator documentation."""
 
 
 class PositionScoreAnnotatorBase(GenomicScoreAnnotatorBase):
@@ -225,6 +242,17 @@ class PositionScoreAnnotator(PositionScoreAnnotatorBase):
             self.add_score_aggregator_documentation(
                 att_info, "position_aggregator", pos_aggregator)
 
+    def build_score_aggregator_documentation(
+        self, attr_info: AttributeInfo
+    ) -> str:
+        """Collect score aggregator documentation."""
+        # pylint: disable=protected-access
+        pos_aggregator = attr_info.parameters.get("position_aggregator")
+
+        doc = self._build_score_aggregator_documentation(
+            attr_info, "position_aggregator", pos_aggregator)
+        return doc
+
     def _fetch_substitution_scores(self, allele: VCFAllele) \
             -> Optional[list[Any]]:
         return self.position_score.fetch_scores(
@@ -266,6 +294,21 @@ class NPScoreAnnotator(PositionScoreAnnotatorBase):
             self.add_score_aggregator_documentation(
                 att_info, "nucleotide_aggregator", nuc_agg)
 
+    def build_score_aggregator_documentation(
+        self, attr_info: AttributeInfo
+    ) -> str:
+        """Collect score aggregator documentation."""
+        # pylint: disable=protected-access
+        pos_aggregator = attr_info.parameters.get("position_aggregator")
+        pos_doc = self._build_score_aggregator_documentation(
+            attr_info, "position_aggregator", pos_aggregator)
+
+        nuc_aggregator = attr_info.parameters.get("nucleotide_aggregator")
+        nuc_doc = self._build_score_aggregator_documentation(
+            attr_info, "nucleotide_aggregator", nuc_aggregator
+        )
+        return f"{pos_doc}\n\n{nuc_doc}"
+
     def _fetch_substitution_scores(
             self, allele: VCFAllele) -> Optional[list[Any]]:
         return self.np_score.fetch_scores(allele.chromosome, allele.position,
@@ -305,6 +348,21 @@ class AlleleScoreAnnotator(GenomicScoreAnnotatorBase):
                 att_info, "position_aggregator", pos_agg)
             self.add_score_aggregator_documentation(
                 att_info, "allele_aggregator", all_agg)
+
+    def build_score_aggregator_documentation(
+        self, attr_info: AttributeInfo
+    ) -> str:
+        """Collect score aggregator documentation."""
+        # pylint: disable=protected-access
+        pos_aggregator = attr_info.parameters.get("position_aggregator")
+        pos_doc = self._build_score_aggregator_documentation(
+            attr_info, "position_aggregator", pos_aggregator)
+
+        allele_aggregator = attr_info.parameters.get("allele_aggregator")
+        allele_doc = self._build_score_aggregator_documentation(
+            attr_info, "allele_aggregator", allele_aggregator
+        )
+        return f"{pos_doc}\n\n{allele_doc}"
 
     def _fetch_vcf_allele_score(self, allele: VCFAllele) \
             -> Optional[list[Any]]:
