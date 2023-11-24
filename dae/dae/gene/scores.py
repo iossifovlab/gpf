@@ -67,7 +67,7 @@ class ScoreDesc:
         )
 
 
-SCORE_ATTRIBUTE_DESCRIPTION = """
+GENOMIC_SCORE_HELP = """
 
 <div class="score-description">
 
@@ -79,7 +79,8 @@ SCORE_ATTRIBUTE_DESCRIPTION = """
 
 {{ data.histogram }}
 
-Genomic resource: <a href={{data.resource_url}} target="_blank">{{ data.resource_id }}</a>
+Genomic resource:
+<a href={{data.resource_url}} target="_blank">{{ data.resource_id }}</a>
 
 <details>
 
@@ -103,7 +104,7 @@ Genomic resource: <a href={{data.resource_url}} target="_blank">{{ data.resource
 
 """
 
-SCORE_ATTRIBUTE_HISTOGRAM = """
+SCORE_HISTOGRAM = """
 <div class="modal-histogram">
 
 <div class="histogram-image">
@@ -145,7 +146,7 @@ def _build_score_description(
     score_def = genomic_score.get_score_definition(attr_info.source)
     assert score_def is not None
 
-    histogram = Template(SCORE_ATTRIBUTE_HISTOGRAM).render(
+    histogram = Template(SCORE_HISTOGRAM).render(
         hist_url=hist_url,
         score_def=score_def
     )
@@ -159,7 +160,7 @@ def _build_score_description(
         "histogram": histogram,
         "source": attr_info.source,
     }
-    template = Template(SCORE_ATTRIBUTE_DESCRIPTION)
+    template = Template(GENOMIC_SCORE_HELP)
     return template.render(data=data)
 
 
