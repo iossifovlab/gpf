@@ -79,7 +79,7 @@ SCORE_ATTRIBUTE_DESCRIPTION = """
 
 {{ data.histogram }}
 
-Genomic resource: [{{ data.resource_id }}]({{ data.resource_url }})
+Genomic resource: <a href={{data.resource_url}} target="_blank">{{ data.resource_id }}</a>
 
 <details>
 
@@ -104,7 +104,7 @@ Genomic resource: [{{ data.resource_id }}]({{ data.resource_url }})
 """
 
 SCORE_ATTRIBUTE_HISTOGRAM = """
-<div class="histogram">
+<div class="modal-histogram">
 
 <div class="histogram-image">
 
