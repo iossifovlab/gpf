@@ -1,15 +1,17 @@
 export class GenomicScores {
   public readonly logScaleX: boolean;
   public readonly logScaleY: boolean;
-  public static fromJson(json): GenomicScores {
+  public static fromJson(json: object): GenomicScores {
     return new GenomicScores(
-      json['bars'],
-      json['score'],
-      json['bins'],
-      json['desc'],
-      json['help'],
-      json['xscale'],
-      json['yscale']
+      json['bars'] as number[],
+      json['bins'] as number[],
+      json['desc'] as string,
+      json['help'] as string,
+      json['large_values_desc'] as string,
+      json['small_values_desc'] as string,
+      json['score'] as string,
+      json['xscale'] as string,
+      json['yscale'] as string
     );
   }
 
@@ -19,10 +21,12 @@ export class GenomicScores {
 
   public constructor(
     public readonly bars: number[],
-    public readonly score: string,
     public readonly bins: number[],
     public readonly desc: string,
     public readonly help: string,
+    public readonly largeValuesDesc: string,
+    public readonly smallValuesDesc: string,
+    public readonly score: string,
     xScale: string,
     yScale: string
   ) {

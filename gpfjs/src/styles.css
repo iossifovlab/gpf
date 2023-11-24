@@ -447,6 +447,66 @@ gpf-genotype-preview-field gpf-pedigree gpf-pedigree-chart .svg-container {
   font-size: 20px;
 }
 
+.material-symbols-outlined.lg {
+  font-size: 32px;
+}
+
 .material-symbols-outlined.red {
   color: red;
+}
+
+/* styles for genomic scores help */
+
+summary > h4 {
+  display: inline;
+}
+
+summary.details {
+  width: 100px;
+}
+
+.details-body {
+  margin-top: 10px;
+  margin-left: 30px;
+}
+
+.values-desc {
+  display: flex;
+  justify-content: space-between;
+  font-style: italic;
+  color: #acacac;
+  font-size: 14px;
+  width: 100%;
+  max-width: 560px;
+  margin: auto;
+  margin-top: -40px;
+  margin-bottom: 10px;
+}
+
+/* stylelint-disable-next-line no-descending-specificity */
+.histogram-image img {
+  width: 100%;
+  height: 100%;
+  max-width: 600px;
+  max-height: 440px;
+}
+
+.modal-histogram {
+  text-align: center;
+  max-width: 745px;
+}
+
+.modal-content {
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+.modal-content a {
+  text-decoration: none;
+  color: #0645ad;
+  cursor: pointer;
+}
+
+.modal-content a:hover {
+  text-decoration: underline;
 }
