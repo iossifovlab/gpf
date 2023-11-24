@@ -26,7 +26,7 @@ class GenomicScoresView(QueryBaseView):
                     "yscale":
                         "log" if score.hist.config.y_log_scale else "linear",
                     "range": score.hist.view_range,
-                    "help": score.description,
+                    "help": score.help,
                     "small_values_desc": score.small_values_desc,
                     "large_values_desc": score.large_values_desc,
                 })

@@ -137,7 +137,7 @@ SCORE_HISTOGRAM = """
 """
 
 
-def _build_score_description(
+def _build_score_help(
     attr_info: AttributeInfo,
     genomic_score: GenomicScore,
     # annotator_info: AnnotatorInfo
@@ -198,14 +198,14 @@ class GenomicScoresDb:
             if attr.internal:
                 continue
             score_def = score.score_definitions[attr.source]
-            description = _build_score_description(attr, score)
+            help_doc = _build_score_help(attr, score)
             score_desc = ScoreDesc(
                 attr.name,
                 resource.resource_id,
                 attr.source,
                 score.get_score_histogram(attr.source),
                 f"{attr.name} - {attr.description}",
-                description,
+                help_doc,
                 score_def.small_values_desc,
                 score_def.large_values_desc
             )
