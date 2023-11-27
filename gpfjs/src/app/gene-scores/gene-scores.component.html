@@ -1,11 +1,20 @@
 <div *ngIf="selectedGeneScores">
   <div class="row panel" id="gene-scores-panel" style="margin-left: 0px; margin-right: 0px">
     <div class="col-sm-3">
-      <div class="select-wrapper">
-        <select class="form-control" [(ngModel)]="selectedGeneScores" required>
-          <option *ngFor="let geneScores of geneScoresArray" [ngValue]="geneScores">{{ geneScores.desc }}</option>
-        </select>
-        <span class="material-symbols-outlined select-dropdown-icon">arrow_drop_down</span>
+      <div id="select-help-wrapper">
+        <div class="select-wrapper">
+          <select class="form-control" [(ngModel)]="selectedGeneScores" required>
+            <option *ngFor="let geneScores of geneScoresArray" [ngValue]="geneScores">{{ geneScores.desc }}</option>
+          </select>
+          <span class="material-symbols-outlined select-dropdown-icon">arrow_drop_down</span>
+        </div>
+        <span
+          [style.visibility]="this.geneScoresLocalState.score.help ? 'visible' : 'hidden'"
+          class="material-symbols-outlined lg"
+          id="help-icon"
+          (click)="showHelp()"
+          >info</span
+        >
       </div>
       <div style="margin-top: 5px">
         <a class="download-link" href="{{ downloadUrl }}">Download</a>
@@ -21,6 +30,8 @@
         [bars]="selectedGeneScores.bars"
         [logScaleX]="selectedGeneScores.logScaleX"
         [logScaleY]="selectedGeneScores.logScaleY"
+        [smallValuesDesc]="selectedGeneScores.smallValuesDesc"
+        [largeValuesDesc]="selectedGeneScores.largeValuesDesc"
         [rangesCounts]="rangesCounts | async"
         [(rangeStart)]="rangeStart"
         [(rangeEnd)]="rangeEnd">
