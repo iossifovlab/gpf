@@ -1,6 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 from pytest_mock import MockerFixture
-from remote.genomic_scores_db import RemoteGenomicScoresDb
+from remote.genomic_scores_registry import RemoteGenomicScoresRegistry
 from remote.rest_api_client import RESTClient
 from gpf_instance.gpf_instance import WGPFInstance
 
@@ -57,9 +57,9 @@ def test_remote_genomic_scores(
         "description": "ala bala",
         "help": "bala ala"
     }]
-    local_db = wdae_gpf_instance.genomic_scores_registry
+    local_db = wdae_gpf_instance.genomic_scores
 
-    db = RemoteGenomicScoresDb([rest_client], local_db)
+    db = RemoteGenomicScoresRegistry([rest_client], local_db)
     assert len(db.remote_scores) == 1
     assert "attr_dest" in db.remote_scores
     score = db.remote_scores["attr_dest"]

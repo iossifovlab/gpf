@@ -70,7 +70,7 @@ def test_genomic_scores_db_with_config(gpf_fixture: Callable) -> None:
             - np_score: hg19/MPC
         """)
     })
-    assert len(gpf_instance.genomic_scores_registry) == 1
+    assert len(gpf_instance.genomic_scores) == 1
 
 
 def test_genomic_scores_db_without_config_with_annotation(
@@ -85,7 +85,7 @@ def test_genomic_scores_db_without_config_with_annotation(
             - np_score: hg19/MPC
         """)
     })
-    assert len(gpf_instance.genomic_scores_registry) == 1
+    assert len(gpf_instance.genomic_scores) == 1
 
 
 def test_genomic_scores_db_without_config_without_annotation(
@@ -95,7 +95,7 @@ def test_genomic_scores_db_without_config_without_annotation(
         "gpf_instance.yaml": textwrap.dedent("""
         """),
     })
-    assert len(gpf_instance.genomic_scores_registry) == 0
+    assert len(gpf_instance.genomic_scores) == 0
 
 
 def test_annotation_pipeline_with_config(gpf_fixture: Callable) -> None:

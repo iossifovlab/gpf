@@ -144,7 +144,7 @@ def test_genomic_scores_db_with_annotation(
     annotaiton_pipeline = annotation_gpf.get_annotation_pipeline()
     assert annotaiton_pipeline is not None
 
-    registry = annotation_gpf.genomic_scores_registry
+    registry = annotation_gpf.genomic_scores
     assert registry is not None
     assert len(registry.get_scores()) == 1
     assert "phastcons100" in registry

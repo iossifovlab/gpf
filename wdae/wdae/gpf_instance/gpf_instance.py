@@ -19,7 +19,7 @@ from enrichment_api.enrichment_builder import \
 from remote.gene_sets_db import RemoteGeneSetsDb
 from remote.denovo_gene_sets_db import RemoteDenovoGeneSetsDb
 from remote.rest_api_client import RESTClient
-from remote.genomic_scores_db import RemoteGenomicScoresDb
+from remote.genomic_scores_registry import RemoteGenomicScoresRegistry
 
 from dae.studies.study import GenotypeData
 from dae.utils.fs_utils import find_directory_with_a_file
@@ -123,11 +123,11 @@ class WGPFInstance(GPFInstance):
         return RemoteDenovoGeneSetsDb(self._clients, denovo_gene_sets_db)
 
     @cached_property
-    def genomic_scores_db(self) -> RemoteGenomicScoresDb:
+    def genomic_scores(self) -> RemoteGenomicScoresRegistry:
         self.load_remotes()
-        genomic_scores_db = super().genomic_scores_db
-        db = RemoteGenomicScoresDb(self._clients, genomic_scores_db)
-        return db
+        genomic_scores = super().genomic_scores
+        registry = RemoteGenomicScoresRegistry(self._clients, genomic_scores)
+        return registry
 
     def register_genotype_data(
         self, genotype_data: GenotypeData
@@ -580,12 +580,12 @@ def column(
     col_id: str,
     display_name: str,
     visible: bool = True,
-    clickable: Optional[bool] = None,
+    clickable: Optional[str] = None,
     display_vertical: bool = False,
     sortable: bool = False,
     columns: Optional[list[dict[str, Any]]] = None,
     meta: Optional[str] = None
-):
+) -> dict[str, Any]:
     """Build columns descriptions."""
     if columns is None:
         columns = []

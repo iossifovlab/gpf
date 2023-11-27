@@ -52,7 +52,7 @@ def test_get_all_gene_scores(alla_instance: GPFInstance) -> None:
 
 
 def test_empty_genomic_scores(alla_instance: GPFInstance) -> None:
-    assert len(alla_instance.genomic_scores_registry) == 0
+    assert len(alla_instance.genomic_scores) == 0
 
 
 def test_empty_gene_sets(alla_instance: GPFInstance) -> None:

@@ -2,7 +2,7 @@ from remote.rest_api_client import RESTClient
 from dae.gene.scores import GenomicScoresRegistry, ScoreDesc
 
 
-class RemoteGenomicScoresDb(GenomicScoresRegistry):
+class RemoteGenomicScoresRegistry(GenomicScoresRegistry):
     """Class for automatic fetching and usage of remote genomic scores."""
 
     def __init__(

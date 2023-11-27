@@ -13,7 +13,7 @@ class GenomicScoresView(QueryBaseView):
     def get(self, _request: Request) -> Response:
         """List all genomic scores used by the GPF instance."""
         res = []
-        registry = self.gpf_instance.genomic_scores_registry
+        registry = self.gpf_instance.genomic_scores
         for score_id, score in registry.get_scores():
             if isinstance(score.hist, NumberHistogram):
                 res.append({
@@ -55,7 +55,7 @@ class GenomicScoreDescsView(QueryBaseView):
         self, _request: Request, score_id: Optional[str] = None
     ) -> Response:
         """Convert all genomic score descs into a JSON list."""
-        registry = self.gpf_instance.genomic_scores_registry
+        registry = self.gpf_instance.genomic_scores
 
         res = []
         if score_id is not None:

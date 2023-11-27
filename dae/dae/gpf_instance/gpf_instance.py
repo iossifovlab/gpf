@@ -117,7 +117,7 @@ class GPFInstance:
         self._pheno_db
         self._variants_db
         self.denovo_gene_sets_db
-        self.genomic_scores_registry
+        self.genomic_scores
         self.genotype_storages
         self._background_facade
         return self
@@ -195,7 +195,7 @@ class GPFInstance:
         return GeneScoresDb(collections)
 
     @cached_property
-    def genomic_scores_registry(self) -> GenomicScoresRegistry:
+    def genomic_scores(self) -> GenomicScoresRegistry:
         """Load and return genomic scores db."""
         pipeline = self.get_annotation_pipeline()
         return GenomicScoresRegistry.build_genomic_scores_registry(pipeline)
@@ -350,18 +350,7 @@ class GPFInstance:
             Box, self._pheno_db.get_phenotype_data_config(phenotype_data_id)
         )
 
-    # # Genomic scores
-    # def get_genomic_scores(self) -> list[tuple[str, ScoreDesc]]:
-    #     return self.genomic_scores_db.get_scores()
-
-    # def has_genomic_score(self, score_id: str) -> bool:
-    #     return score_id in self.genomic_scores_db
-
-    # def get_genomic_score(self, score_id: str) -> ScoreDesc:
-    #     return self.genomic_scores_db[score_id]
-
     # Gene scores
-
     def has_gene_score(self, gene_score_id: str) -> bool:
         return gene_score_id in self.gene_scores_db
 
