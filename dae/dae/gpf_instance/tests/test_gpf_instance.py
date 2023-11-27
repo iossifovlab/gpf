@@ -14,7 +14,7 @@ def test_init(fixtures_gpf_instance: GPFInstance) -> None:
     assert fixtures_gpf_instance.gene_models
     assert fixtures_gpf_instance._pheno_db
     assert fixtures_gpf_instance.gene_scores_db is not None
-    assert fixtures_gpf_instance.genomic_scores_db
+    assert fixtures_gpf_instance.genomic_scores_registry
     assert fixtures_gpf_instance._variants_db
     assert fixtures_gpf_instance.gene_sets_db
     assert fixtures_gpf_instance.denovo_gene_sets_db is not None
@@ -36,7 +36,7 @@ def test_eager_init(
     assert instance.gene_models
     assert instance._pheno_db
     assert instance.gene_scores_db is not None
-    assert instance.genomic_scores_db
+    assert instance.genomic_scores_registry
     assert instance._variants_db
     assert instance.gene_sets_db
     assert instance.denovo_gene_sets_db is not None

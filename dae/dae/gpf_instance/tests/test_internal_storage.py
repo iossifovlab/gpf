@@ -1,13 +1,17 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import textwrap
 
+import pytest
+
 from dae.testing import setup_gpf_instance, setup_genome, \
     setup_empty_gene_models, setup_directories
 from dae.genomic_resources.repository_factory import \
     build_genomic_resource_repository
 
 
-def test_internal_genotype_storage(tmp_path_factory):
+def test_internal_genotype_storage(
+    tmp_path_factory: pytest.TempPathFactory
+) -> None:
     # Given
     root_path = tmp_path_factory.mktemp("internal_storage_test")
 
@@ -43,7 +47,9 @@ def test_internal_genotype_storage(tmp_path_factory):
         internal_storage
 
 
-def test_internal_genotype_storage_with_other_storages(tmp_path_factory):
+def test_internal_genotype_storage_with_other_storages(
+    tmp_path_factory: pytest.TempPathFactory
+) -> None:
     # Given
     root_path = tmp_path_factory.mktemp("internal_storage_test")
 

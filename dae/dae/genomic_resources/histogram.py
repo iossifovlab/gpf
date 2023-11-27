@@ -543,7 +543,7 @@ class CategoricalHistogram(Statistic):
 
     @staticmethod
     def from_dict(data: dict[str, Any]) -> CategoricalHistogram:
-        config = CategoricalHistogramConfig.from_dict(data.get("config"))
+        config = CategoricalHistogramConfig.from_dict(data["config"])
         return CategoricalHistogram(config, data.get("values"))
 
     @staticmethod

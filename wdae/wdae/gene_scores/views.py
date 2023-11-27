@@ -1,3 +1,4 @@
+
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.request import Request
@@ -26,17 +27,20 @@ class GeneScoresListView(QueryBaseView):
                 {
                     "score": score.score_id,
                     "desc": score.description,
-                    "bars": score.number_hist.bars,
-                    "bins": score.number_hist.bins,
+                    "bars": score.hist.bars,
+                    "bins": score.hist.bins,
                     "xscale":
-                        "log" if score.number_hist.config.x_log_scale else
+                        "log" if score.hist.config.x_log_scale else
                         "linear",
                     "yscale":
-                        "log" if score.number_hist.config.y_log_scale else
+                        "log" if score.hist.config.y_log_scale else
                         "linear",
-                    "range": score.number_hist.config.view_range,
+                    "range": score.hist.config.view_range,
+                    "help": score.help,
+                    "small_values_desc": score.small_values_desc,
+                    "large_values_desc": score.large_values_desc,
                 }
-                for score in gene_scores if score.number_hist is not None
+                for score in gene_scores
             ]
         )
 
@@ -60,7 +64,7 @@ class GeneScoresDownloadView(QueryBaseView):
 class GeneScoresGetGenesView(QueryBaseView):
     """Serves request for list of gene in a gene score range."""
 
-    def prepare_data(self, data):
+    def prepare_data(self, data: dict[str, str]) -> set[str]:
         """Prepare list of genes that have a gene score in a range."""
         if "score" not in data:
             raise ValueError("score key not found")
@@ -83,7 +87,7 @@ class GeneScoresGetGenesView(QueryBaseView):
             score_name, score_min=score_min, score_max=score_max
         )
 
-    def post(self, request):
+    def post(self, request: Request) -> Response:
         data = request.data
         genes = self.prepare_data(data)
         return Response(genes)
@@ -92,7 +96,7 @@ class GeneScoresGetGenesView(QueryBaseView):
 class GeneScoresPartitionsView(QueryBaseView):
     """Serves gene scores partitions request."""
 
-    def post(self, request):
+    def post(self, request: Request) -> Response:
         """Calculate and return gene score partitions."""
         data = request.data
 

@@ -57,7 +57,7 @@ def test_remote_genomic_scores(
         "description": "ala bala",
         "help": "bala ala"
     }]
-    local_db = wdae_gpf_instance.genomic_scores_db
+    local_db = wdae_gpf_instance.genomic_scores_registry
 
     db = RemoteGenomicScoresDb([rest_client], local_db)
     assert len(db.remote_scores) == 1

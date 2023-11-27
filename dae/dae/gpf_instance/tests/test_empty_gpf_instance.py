@@ -5,10 +5,11 @@ from dae.testing import setup_gpf_instance, setup_genome, \
     setup_empty_gene_models
 from dae.genomic_resources.repository_factory import \
     build_genomic_resource_repository
+from dae.gpf_instance.gpf_instance import GPFInstance
 
 
 @pytest.fixture
-def alla_instance(tmp_path_factory):
+def alla_instance(tmp_path_factory: pytest.TempPathFactory) -> GPFInstance:
     # Given
     root_path = tmp_path_factory.mktemp("internal_storage_test")
 
@@ -34,37 +35,37 @@ def alla_instance(tmp_path_factory):
     )
 
 
-def test_empty_gene_scores(alla_instance):
+def test_empty_gene_scores(alla_instance: GPFInstance) -> None:
     assert len(alla_instance.gene_scores_db) == 0
 
 
-def test_has_gene_score(alla_instance):
+def test_has_gene_score(alla_instance: GPFInstance) -> None:
     assert not alla_instance.has_gene_score("ala-bala")
 
 
-def test_get_gene_score(alla_instance):
+def test_get_gene_score(alla_instance: GPFInstance) -> None:
     assert alla_instance.get_gene_score("ala-bala") is None
 
 
-def test_get_all_gene_scores(alla_instance):
+def test_get_all_gene_scores(alla_instance: GPFInstance) -> None:
     assert len(alla_instance.get_all_gene_scores()) == 0
 
 
-def test_empty_genomic_scores(alla_instance):
-    assert len(alla_instance.genomic_scores_db) == 0
+def test_empty_genomic_scores(alla_instance: GPFInstance) -> None:
+    assert len(alla_instance.genomic_scores_registry) == 0
 
 
-def test_empty_gene_sets(alla_instance):
+def test_empty_gene_sets(alla_instance: GPFInstance) -> None:
     assert len(alla_instance.gene_sets_db) == 0
 
 
-def test_empty_denovo_gene_sets(alla_instance):
+def test_empty_denovo_gene_sets(alla_instance: GPFInstance) -> None:
     assert len(alla_instance.denovo_gene_sets_db) == 0
 
 
-def test_empty_genotype_data(alla_instance):
+def test_empty_genotype_data(alla_instance: GPFInstance) -> None:
     assert len(alla_instance.get_genotype_data_ids()) == 0
 
 
-def test_empty_phenotype_data(alla_instance):
+def test_empty_phenotype_data(alla_instance: GPFInstance) -> None:
     assert len(alla_instance.get_phenotype_data_ids()) == 0

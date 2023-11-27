@@ -13,7 +13,8 @@ class GenomicScoresView(QueryBaseView):
     def get(self, _request: Request) -> Response:
         """List all genomic scores used by the GPF instance."""
         res = []
-        for score_id, score in self.gpf_instance.get_genomic_scores():
+        registry = self.gpf_instance.genomic_scores_registry
+        for score_id, score in registry.get_scores():
             if isinstance(score.hist, NumberHistogram):
                 res.append({
                     "score": score_id,
@@ -26,7 +27,7 @@ class GenomicScoresView(QueryBaseView):
                     "yscale":
                         "log" if score.hist.config.y_log_scale else "linear",
                     "range": score.hist.view_range,
-                    "help": score.description,
+                    "help": score.help,
                     "small_values_desc": score.small_values_desc,
                     "large_values_desc": score.large_values_desc,
                 })
@@ -54,15 +55,17 @@ class GenomicScoreDescsView(QueryBaseView):
         self, _request: Request, score_id: Optional[str] = None
     ) -> Response:
         """Convert all genomic score descs into a JSON list."""
+        registry = self.gpf_instance.genomic_scores_registry
+
         res = []
         if score_id is not None:
-            if not self.gpf_instance.has_genomic_score(score_id):
+            if score_id not in registry:
                 return Response(status=status.HTTP_404_NOT_FOUND)
             scores = [
-                (score_id, self.gpf_instance.get_genomic_score(score_id))
+                (score_id, registry[score_id])
             ]
         else:
-            scores = self.gpf_instance.get_genomic_scores()
+            scores = registry.get_scores()
 
         for _, score in scores:
             res.append(score.to_json())
