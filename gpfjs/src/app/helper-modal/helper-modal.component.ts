@@ -8,7 +8,7 @@ import { PopupComponent } from 'app/popup/popup.component';
   styleUrls: ['./helper-modal.component.css']
 })
 export class HelperModalComponent {
-  @Input() public modalContent;
+  @Input() public modalContent: string;
 
   public constructor(
     private modalService: NgbModal
