@@ -8,13 +8,9 @@
           </select>
           <span class="material-symbols-outlined select-dropdown-icon">arrow_drop_down</span>
         </div>
-        <span
+        <gpf-helper-modal
           [style.visibility]="this.geneScoresLocalState.score.help ? 'visible' : 'hidden'"
-          class="material-symbols-outlined lg"
-          id="help-icon"
-          (click)="showHelp()"
-          >info</span
-        >
+          [modalContent]="this.geneScoresLocalState.score.help"></gpf-helper-modal>
       </div>
       <div style="margin-top: 5px">
         <a class="download-link" href="{{ downloadUrl }}">Download</a>
