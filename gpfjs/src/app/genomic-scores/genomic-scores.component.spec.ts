@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { BrowserDynamicTestingModule } from '@angular/platform-browser-dynamic/testing';
 import { FormsModule } from '@angular/forms';
-import { NgbModule, NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
+import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { MarkdownModule } from 'ngx-markdown';
 import { GenomicScoresComponent } from './genomic-scores.component';
 import { GenomicScoreState } from './genomic-scores-store';
@@ -13,8 +13,6 @@ import { NO_ERRORS_SCHEMA } from '@angular/core';
 describe('GenomicScoresComponent', () => {
   let component: GenomicScoresComponent;
   let fixture: ComponentFixture<GenomicScoresComponent>;
-  let modalService: NgbModal;
-  let modalRef: NgbModalRef;
 
   const initialGenomicScores: GenomicScores[] = [
     GenomicScores.fromJson({
@@ -46,8 +44,6 @@ describe('GenomicScoresComponent', () => {
         set: {}
       })
       .compileComponents();
-    modalService = TestBed.inject(NgbModal);
-    modalRef = modalService.open(PopupComponent);
 
     fixture = TestBed.createComponent(GenomicScoresComponent);
     component = fixture.componentInstance;
@@ -61,22 +57,6 @@ describe('GenomicScoresComponent', () => {
 
   it('should create', () => {
     expect(component).toBeTruthy();
-  });
-
-  it('should show help', () => {
-    jest.spyOn(modalService, 'open').mockReturnValue(modalRef);
-    component.showHelp();
-    expect(modalService.open).toHaveBeenCalledWith(PopupComponent, {
-      size: 'lg',
-      centered: true
-    });
-    expect(modalService.open).toHaveBeenCalledWith(PopupComponent, {
-      size: 'lg',
-      centered: true
-    });
-    expect((modalRef.componentInstance as PopupComponent).data).toBe('gs help');
-
-    modalRef.close();
   });
 
   it('should get and set range and domain', () => {

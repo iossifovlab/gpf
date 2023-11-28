@@ -9,8 +9,6 @@ import { catchError, debounceTime, distinctUntilChanged, map, switchMap } from '
 import { StatefulComponent } from 'app/common/stateful-component';
 import { ValidateNested } from 'class-validator';
 import { environment } from 'environments/environment';
-import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
-import { PopupComponent } from 'app/popup/popup.component';
 
 @Component({
   encapsulation: ViewEncapsulation.None, // TODO: What is this?
@@ -33,8 +31,7 @@ export class GeneScoresComponent extends StatefulComponent implements OnInit {
   public constructor(
     protected store: Store,
     private geneScoresService: GeneScoresService,
-    private config: ConfigService,
-    private modalService: NgbModal
+    private config: ConfigService
   ) {
     super(store, GeneScoresState, 'geneScores');
     this.partitions = this.rangeChanges.pipe(
@@ -111,15 +108,6 @@ export class GeneScoresComponent extends StatefulComponent implements OnInit {
     this.updateLabels();
     this.downloadUrl = this.getDownloadUrl();
     this.store.dispatch(new SetGeneScore(this.geneScoresLocalState.score));
-  }
-
-  public showHelp(): void {
-    const modalRef = this.modalService.open(PopupComponent, {
-      size: 'lg',
-      centered: true
-    });
-
-    (modalRef.componentInstance as PopupComponent).data = this.geneScoresLocalState.score.help;
   }
 
   public set rangeStart(range: number) {

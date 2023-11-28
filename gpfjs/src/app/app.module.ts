@@ -180,6 +180,7 @@ import { LoginComponent } from './login/login.component';
 import { DatasetsTreeService } from './datasets/datasets-tree.service';
 import { SearchableSelectComponent } from './searchable-select/searchable-select.component';
 import { SearchableSelectTemplateDirective } from './searchable-select/searchable-select-template.directive';
+import { HelperModalComponent } from './helper-modal/helper-modal.component';
 
 const appRoutes: Routes = [
   {
@@ -387,6 +388,7 @@ const appRoutes: Routes = [
     LoginComponent,
     SearchableSelectComponent,
     SearchableSelectTemplateDirective,
+    HelperModalComponent,
   ],
   imports: [
     BrowserModule,

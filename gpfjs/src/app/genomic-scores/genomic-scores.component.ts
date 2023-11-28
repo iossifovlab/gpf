@@ -1,17 +1,14 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
-import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { environment } from 'environments/environment';
 // eslint-disable-next-line no-restricted-imports
 import { ReplaySubject } from 'rxjs';
 
 import { GenomicScores } from '../genomic-scores-block/genomic-scores-block';
-import { PopupComponent } from '../popup/popup.component';
 import { GenomicScoreState } from './genomic-scores-store';
 
 @Component({
   selector: 'gpf-genomic-scores',
   templateUrl: './genomic-scores.component.html',
-  styleUrls: ['./genomic-scores.component.css'],
 })
 export class GenomicScoresComponent {
   @Input() public index: number;
@@ -23,17 +20,6 @@ export class GenomicScoresComponent {
   private rangeChanges = new ReplaySubject<[string, number, number]>(1);
 
   public imgPathPrefix = environment.imgPathPrefix;
-
-  public constructor(private modalService: NgbModal) {}
-
-  public showHelp(): void {
-    const modalRef = this.modalService.open(PopupComponent, {
-      size: 'lg',
-      centered: true
-    });
-
-    (modalRef.componentInstance as PopupComponent).data = this.genomicScoreState.score.help;
-  }
 
   public set rangeStart(range: number) {
     this.genomicScoreState.rangeStart = range;
