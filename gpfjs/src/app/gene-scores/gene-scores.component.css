@@ -1,0 +1,19 @@
+#help-icon {
+  margin-top: 3px;
+  margin-left: 10px;
+  color: #b4b4b4;
+}
+
+#help-icon:hover {
+  cursor: pointer;
+}
+
+#select-help-wrapper {
+  display: flex;
+}
+
+select {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}

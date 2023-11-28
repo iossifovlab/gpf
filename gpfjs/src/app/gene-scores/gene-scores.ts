@@ -5,15 +5,18 @@ import { IsMoreThanOrEqual } from '../utils/is-more-than-validator';
 export class GeneScores {
   public readonly logScaleX: boolean;
   public readonly logScaleY: boolean;
-  public static fromJson(json: any): GeneScores {
+  public static fromJson(json: object): GeneScores {
     return new GeneScores(
-      json['bars'],
-      json['score'],
-      json['bins'],
-      json['desc'],
-      json['range'],
-      json['xscale'],
-      json['yscale']
+      json['bars'] as number[],
+      json['bins'] as number[],
+      json['desc'] as string,
+      json['help'] as string,
+      json['large_values_desc'] as string,
+      json['small_values_desc'] as string,
+      json['score'] as string,
+      json['range'] as number[],
+      json['xscale'] as string,
+      json['yscale'] as string
     );
   }
 
@@ -24,12 +27,16 @@ export class GeneScores {
 
   public constructor(
     public readonly bars: number[],
-    public readonly score: string,
     public readonly bins: number[],
     public readonly desc: string,
+    public readonly help: string,
+    public readonly largeValuesDesc: string,
+    public readonly smallValuesDesc: string,
+    public readonly score: string,
     public readonly domain: number[],
     private xScale: string,
-    private yScale: string
+    private yScale: string,
+
   ) {
     if (bins.length === (bars.length + 1)) {
       bars.push(0);
