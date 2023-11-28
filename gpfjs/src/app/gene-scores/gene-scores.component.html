@@ -3,7 +3,7 @@
     <div class="col-sm-3">
       <div id="select-help-wrapper">
         <div class="select-wrapper">
-          <select class="form-control" [(ngModel)]="selectedGeneScores" required>
+          <select class="form-control" [(ngModel)]="selectedGeneScores" [title]="selectedGeneScores.desc" required>
             <option *ngFor="let geneScores of geneScoresArray" [ngValue]="geneScores">{{ geneScores.desc }}</option>
           </select>
           <span class="material-symbols-outlined select-dropdown-icon">arrow_drop_down</span>
