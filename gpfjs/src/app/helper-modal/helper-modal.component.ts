@@ -13,6 +13,7 @@ export class HelperModalComponent {
   public constructor(
     private modalService: NgbModal
   ) {}
+
   public showHelp(): void {
     const modalRef = this.modalService.open(PopupComponent, {
       size: 'lg',

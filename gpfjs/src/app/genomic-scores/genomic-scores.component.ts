@@ -9,7 +9,6 @@ import { GenomicScoreState } from './genomic-scores-store';
 @Component({
   selector: 'gpf-genomic-scores',
   templateUrl: './genomic-scores.component.html',
-  styleUrls: ['./genomic-scores.component.css'],
 })
 export class GenomicScoresComponent {
   @Input() public index: number;
