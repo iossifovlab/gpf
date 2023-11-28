@@ -139,7 +139,6 @@ class PhenoMeasuresDownload(QueryDatasetView):
     def csv_value_iterator(
         self,
         dataset: Union[RemoteStudyWrapper, StudyWrapper],
-        columns: dict[str, str],
         measure_ids: list[str]
     ) -> Generator[str, None, None]:
         """Create CSV content for people measures data."""
@@ -159,8 +158,7 @@ class PhenoMeasuresDownload(QueryDatasetView):
         for values_dict in values_iterator:
             output = [values_dict[header[0]]]
             for col in header[1:]:
-                col_name = columns[col]
-                output.append(values_dict[col_name])
+                output.append(values_dict[col])
             writer.writerow(output)
             yield buffer.getvalue()
             buffer.seek(0)
@@ -198,27 +196,56 @@ class PhenoMeasuresDownload(QueryDatasetView):
             if not set(measure_ids).issubset(set(instrument_measures)):
                 return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        if len(measure_ids) > 1900:
-            measure_ids = measure_ids[0:1899]
-
-        if dataset.is_remote:
-            values_iterator = cast(
-                Generator[str, None, None],
-                dataset.phenotype_data.get_people_measure_values(
-                    measure_ids
-                )
-            )
-        else:
-            pheno_data = cast(PhenotypeStudy, dataset.phenotype_data)
-            measure_col_names = \
-                pheno_data.db.get_measure_column_names()
-            values_iterator = self.csv_value_iterator(
-                dataset, measure_col_names, measure_ids
-            )
+        values_iterator = self.csv_value_iterator(
+            dataset, measure_ids
+        )
 
         response = StreamingHttpResponse(
             values_iterator, content_type="text/csv")
 
         response["Content-Disposition"] = "attachment; filename=measures.csv"
         response["Expires"] = "0"
+        return response
+
+
+class PhenoMeasureValues(QueryDatasetView):
+
+    def post(self, request: Request) -> Response:
+        """Return a CSV file stream for measures."""
+        data = request.data
+        if "dataset_id" not in data:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        dataset_id = data["dataset_id"]
+
+        dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
+        if not dataset or dataset.phenotype_data is None:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        measure_ids = data.get("measure_ids", None)
+        instrument = data.get("instrument", None)
+        if instrument is None:
+            if measure_ids is None:
+                measure_ids = list(dataset.phenotype_data.measures.keys())
+        else:
+            if instrument not in dataset.phenotype_data.instruments:
+                return Response(status=status.HTTP_404_NOT_FOUND)
+
+            instrument_measures = \
+                dataset.phenotype_data._get_instrument_measures(instrument)
+            if measure_ids is None:
+                measure_ids = instrument_measures
+
+            if not set(measure_ids).issubset(set(instrument_measures)):
+                return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        values_iterator = dataset.phenotype_data.get_people_measure_values(
+            measure_ids
+        )
+
+        response = StreamingHttpResponse(
+            iterator_to_json(values_iterator),
+            status=status.HTTP_200_OK,
+            content_type="text/event-stream",
+        )
+
         return response

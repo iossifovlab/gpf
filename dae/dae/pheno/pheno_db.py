@@ -907,7 +907,9 @@ class PhenotypeStudy(PhenotypeData):
 
         assert len(self.db.instrument_values_tables) > 0
 
-        measure_column_names = self.db.get_measure_column_names(measure_ids)
+        measure_column_names = self.db.get_measure_column_names_reverse(
+            measure_ids
+        )
 
         instrument_tables = {}
         instrument_table_columns = {}
@@ -926,7 +928,8 @@ class PhenotypeStudy(PhenotypeData):
             if first_instrument is None:
                 first_instrument = instrument_name
             table_cols = [
-                c for c in table.c if c.name in measure_column_names.values()
+                c.label(measure_column_names[c.name])
+                for c in table.c if c.name in measure_column_names
             ]
 
             instrument_table_columns[instrument_name] = table_cols

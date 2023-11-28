@@ -215,7 +215,8 @@ class RemotePhenotypeData(PhenotypeData):
         if roles is not None:
             logger.warning("Unsupported argument used: roles")
 
-        return self.rest_client.post_measures_download(measure_ids=measure_ids)
+        return self.rest_client.post_measures_values(
+            self.remote_dataset_id, measure_ids=measure_ids)
 
     @property
     def instruments(self):

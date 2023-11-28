@@ -326,6 +326,27 @@ class DbManager:  # pylint: disable=too-many-instance-attributes
                     result_row.db_column_name
         return measure_column_names
 
+    def get_measure_column_names_reverse(
+        self, measure_ids: Optional[list[str]] = None
+    ) -> dict[str, str]:
+        """Return measure column names mapped to their measure IDs."""
+        query = select(
+            self.measures.c.measure_id,
+            self.measures.c.db_column_name,
+        )
+        if measure_ids is not None:
+            print(measure_ids)
+            query = query.where(self.measures.c.measure_id.in_(measure_ids))
+        with self.pheno_engine.connect() as connection:
+            print(query)
+            results = connection.execute(query)
+
+            measure_column_names = {}
+            for result_row in results:
+                measure_column_names[result_row.db_column_name] = \
+                    result_row.measure_id
+        return measure_column_names
+
     def populate_instrument_values_tables(self) -> None:
         """
         Populate the instrument values tables with values.

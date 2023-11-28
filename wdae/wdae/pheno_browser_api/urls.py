@@ -33,4 +33,9 @@ urlpatterns = [
         views.PhenoMeasuresDownload.as_view(),
         name="pheno_browser_download",
     ),
+    re_path(
+        r"^/measure_values/?$",
+        views.PhenoMeasureValues.as_view(),
+        name="pheno_browser_values",
+    ),
 ]

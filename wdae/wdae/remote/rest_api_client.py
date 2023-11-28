@@ -1,3 +1,4 @@
+import json
 import logging
 from typing import List, Dict, Any, Optional, cast, Generator
 
@@ -138,6 +139,7 @@ class RESTClient:
         response: requests.Response,
         _multiple_values: bool = False
     ) -> Generator[Any, None, None]:
+        assert response.status_code == 200
         stream = response.iter_content()
         objects = ijson.sendable_list()
         coro = ijson.items_coro(
@@ -365,6 +367,25 @@ class RESTClient:
             stream=True
         )
         return response.iter_content()
+
+
+    def post_measures_values(
+            self, dataset_id: str,
+            measure_ids: Optional[list[str]] = None,
+            instrument: Optional[str] = None
+    ) -> Any:
+        """Post download request for pheno measures."""
+        response = self._post(
+            "pheno_browser/measure_values",
+            data={
+                "dataset_id": dataset_id,
+                "measure_ids": measure_ids,
+                "instrument": instrument,
+            },
+            stream=True
+        )
+        return self._read_json_list_stream(response)
+
 
     def post_enrichment_test(self, query: dict) -> Any:
         response = self._post(
