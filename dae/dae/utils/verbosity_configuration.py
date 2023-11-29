@@ -12,12 +12,12 @@ class VerbosityConfiguration:
         parser.add_argument("--verbose", "-v", "-V", action="count", default=0)
 
     @staticmethod
-    def set(args) -> None:
+    def set(args: argparse.Namespace) -> None:
         """Read verbosity settings from parsed arguments and sets logger."""
         VerbosityConfiguration.set_verbosity(args.verbose)
 
     @staticmethod
-    def set_verbosity(verbose):
+    def set_verbosity(verbose: int) -> None:
         """Set logging level according to the verbosity specified."""
         if verbose == 1:
             loglevel = logging.INFO
