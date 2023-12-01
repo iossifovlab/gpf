@@ -545,6 +545,17 @@ def test_admin_can_reset_password(
     assert response.status_code is status.HTTP_204_NO_CONTENT
 
 
+def test_non_admin_can_not_reset_password(
+    user_client: Client, active_user: WdaeUser, user_model: Type[WdaeUser]
+) -> None:
+
+    url = f"/api/v3/users/{active_user.id}/reset_password"
+    response = user_client.post(
+        url, content_type="application/json", format="json"
+    )
+    assert response.status_code is status.HTTP_403_FORBIDDEN
+
+
 def test_admin_reset_password_of_nonexiting_user_fails(
     admin_client: Client, active_user: WdaeUser, user_model: Type[WdaeUser]
 ) -> None:
