@@ -165,6 +165,20 @@ class UserViewSet(viewsets.ModelViewSet):  # pylint: disable=too-many-ancestors
             content_type="text/event-stream",
         )
 
+    @request_logging(LOGGER)
+    @action(detail=True, methods=["get", "post"])
+    def reset_password(self, request: Request, pk: int) -> Response:
+        """Reset the password for a user."""
+        self.check_permissions(request)
+        user_model = get_user_model()
+        try:
+            user = user_model.objects.get(pk=pk)
+            user.reset_password()
+            user.deauthenticate()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except user_model.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
 
 class ForgotPassword(views.APIView):
     """View for forgotten password."""
