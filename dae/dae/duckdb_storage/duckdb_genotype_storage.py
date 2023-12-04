@@ -4,12 +4,12 @@ import os
 import re
 import logging
 from typing import Any, cast, Optional
+from contextlib import closing
 
 import duckdb
 from cerberus import Validator
 
 from dae.utils import fs_utils
-from dae.utils.debug_closing import closing
 from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.genomic_resources.gene_models import GeneModels
 
@@ -130,7 +130,7 @@ class DuckDbGenotypeStorage(GenotypeStorage):
         return self.storage_config.get("db")
 
     def get_read_only(self) -> bool:
-        return self.storage_config.get("read_only", True)
+        return cast(bool, self.storage_config.get("read_only", True))
 
     def get_studies_dir(self) -> Optional[str]:
         return self.storage_config.get("studies_dir")
