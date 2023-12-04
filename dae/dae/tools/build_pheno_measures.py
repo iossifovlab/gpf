@@ -1,0 +1,168 @@
+#!/usr/bin/env python
+# encoding: utf-8
+
+import sys
+from typing import Optional, cast
+import logging
+from argparse import ArgumentParser, RawDescriptionHelpFormatter
+from sqlalchemy.sql import select, insert
+
+from dae.utils.verbosity_configuration import VerbosityConfiguration
+from dae.gpf_instance.gpf_instance import GPFInstance
+from dae.pheno.pheno_db import PhenotypeStudy
+from dae.pheno.db import safe_db_name, generate_instrument_table_name
+
+
+logger = logging.getLogger("generate_common_reports")
+
+
+def measures_cli_parser() -> ArgumentParser:
+    parser = ArgumentParser(
+        description="pheno measures table builder",
+        formatter_class=RawDescriptionHelpFormatter,
+    )
+
+    parser.add_argument(
+        "--show-pheno-dbs",
+        help="This option will print available "
+        "phenotype databases",
+        default=False,
+        action="store_true",
+    )
+
+    parser.add_argument(
+        "--dbs",
+        help="Specify databases for creating measures table, Defaults to all.",
+        default=None,
+        action="append",
+    )
+    return parser
+
+
+def main(
+    argv: Optional[list[str]] = None,
+    gpf_instance: Optional[GPFInstance] = None
+) -> None:
+    """Run the simple study import procedure."""
+    # pylint: disable=too-many-locals,too-many-branches,too-many-statements
+    if gpf_instance is None:
+        try:
+            gpf_instance = GPFInstance.build()
+        except Exception as ex:  # pylint: disable=broad-except
+            logger.error("GPF not configured correctly", exc_info=True)
+            raise ValueError("unable to find configured GPF instance") from ex
+
+    if argv is None:
+        argv = sys.argv[1:]
+
+    parser = measures_cli_parser()
+    VerbosityConfiguration.set_argumnets(parser)
+
+    args = parser.parse_args(argv)
+    VerbosityConfiguration.set(args)
+
+    available_dbs = gpf_instance.get_phenotype_data_ids()
+
+    if args.show_pheno_dbs:
+        for db_name in available_dbs:
+            logger.warning("db: %s", db_name)
+    else:
+        if args.dbs is not None:
+            assert all((db_name in available_dbs) for db_name in args.dbs)
+            available_dbs = args.dbs
+
+        for db_name in available_dbs:
+            pheno_db = cast(
+                PhenotypeStudy, gpf_instance.get_phenotype_data(db_name)
+            )
+            db = pheno_db.db
+
+            print(type(db.instrument_values_tables["adir1"].c))
+            raise NotImplementedError()
+            db.build_instruments_and_measures_table()
+            db.clear_instruments_table(drop=True)
+            db.clear_measures_table(drop=True)
+            db.build_instruments_and_measures_table()
+
+            instruments = pheno_db.instruments.values()
+            query = insert(db.instruments)
+            query_values = []
+            for instrument in instruments:
+                table_name = generate_instrument_table_name(
+                    instrument.instrument_name
+                )
+                query_values.append({
+                    "instrument_name": instrument.instrument_name,
+                    "table_name": safe_db_name(table_name)
+                })
+
+            with pheno_db.db.pheno_engine.begin() as connection:
+                connection.execute(query.values(query_values))
+                connection.commit()
+
+            selector = select(
+                db.measure.c.measure_id,
+                db.measure.c.instrument_name,
+                db.measure.c.measure_name,
+                db.measure.c.measure_type,
+                db.measure.c.description,
+                db.measure.c.individuals,
+                db.measure.c.default_filter,
+                db.measure.c.min_value,
+                db.measure.c.max_value,
+                db.measure.c.values_domain,
+                db.measure.c.rank,
+            )
+            selector = selector.select_from(db.measure)
+            with db.pheno_engine.begin() as connection:
+                measures = connection.execute(selector).fetchall()
+            measures = {m.measure_id: {**m._mapping} for m in measures}
+
+            selector = select(
+                db.instruments.c.id,
+                db.instruments.c.instrument_name
+            )
+            selector = selector.select_from(db.instruments)
+            with db.pheno_engine.begin() as connection:
+                instruments_db = connection.execute(selector).fetchall()
+            instruments_id_map = {
+                instr.instrument_name: instr.id for instr in instruments_db
+            }
+
+            query = insert(db.measures)
+            query_values = []
+            for instrument in instruments_db:
+                instrument_measures = pheno_db.instruments[
+                    instrument.instrument_name
+                ].measures
+                seen_db_names = {}
+                for measure in instrument_measures.values():
+                    measure_mapping = measures[measure.measure_id]
+                    measure_mapping["instrument_id"] = instruments_id_map[
+                        instrument.instrument_name
+                    ]
+                    del measure_mapping["instrument_name"]
+                    db_name = safe_db_name(
+                        measure.measure_id
+                    )
+                    if db_name.lower() in seen_db_names:
+                        seen_db_names[db_name.lower()] += 1
+                        db_name = f"{db_name}_{seen_db_names[db_name.lower()]}"
+                    else:
+                        seen_db_names[db_name.lower()] = 1
+
+                    measure_mapping["db_column_name"] = db_name
+                    query_values.append(measure_mapping)
+
+            with pheno_db.db.pheno_engine.begin() as connection:
+                connection.execute(query.values(query_values))
+                connection.commit()
+
+            db.build_instrument_values_tables()
+            db.clear_instrument_values_tables(drop=True)
+            db.build_instrument_values_tables()
+            db.populate_instrument_values_tables()
+
+
+if __name__ == "__main__":
+    main(sys.argv[1:])

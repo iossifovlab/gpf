@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-from typing import Dict, Iterator, Optional, Any, cast
+from typing import Dict, Iterator, Optional, Any, cast, Union
 
 from box import Box
 
-from sqlalchemy import MetaData, create_engine
+from sqlalchemy import MetaData, create_engine, table
 from sqlalchemy import Table, Column, Integer, String, Float, Enum, \
-    ForeignKey, or_, func
-from sqlalchemy.sql import select
+    ForeignKey, or_, func, desc
+from sqlalchemy.sql import select, Select, text
 from sqlalchemy.sql.schema import UniqueConstraint, PrimaryKeyConstraint
 
 import pandas as pd
@@ -36,6 +36,9 @@ class DbManager:
         self.value_ordinal: Table
         self.value_categorical: Table
         self.value_other: Table
+        self.measures: Table
+        self.instruments: Table
+        self.instrument_values_tables: dict[str, Table] = {}
         if self.pheno_dbfile == "memory":
             self.pheno_engine = create_engine("sqlite://")
         else:
@@ -65,10 +68,348 @@ class DbManager:
         self._build_person_tables()
         self._build_measure_tables()
         self._build_value_tables()
+        self.build_instruments_and_measures_table()
+        self.build_instrument_values_tables()
 
         self.pheno_metadata.create_all(self.pheno_engine)
 
         self.build_browser()
+
+    def build_instruments_and_measures_table(self):
+        if getattr(self, "instruments", None) is None:
+            self.instruments = Table(
+                "instruments",
+                self.pheno_metadata,
+                Column("id", Integer(), primary_key=True),
+                Column("instrument_name", String(64), nullable=False, index=True),
+                Column("table_name", String(64), nullable=False),
+            )
+
+        if getattr(self, "measures", None) is None:
+            self.measures = Table(
+                "measures",
+                self.pheno_metadata,
+                Column("id", Integer(), primary_key=True),
+                Column(
+                    "measure_id",
+                    String(128),
+                    nullable=False,
+                    index=True,
+                    unique=True,
+                ),
+                Column(
+                    "db_column_name",
+                    String(128),
+                    nullable=False,
+                ),
+                Column("measure_name", String(64), nullable=False, index=True),
+                Column("instrument_id", ForeignKey("instruments.id")),
+                Column("description", String(255)),
+                Column("measure_type", Enum(MeasureType), index=True),
+                Column("individuals", Integer()),
+                Column("default_filter", String(255)),
+                Column("min_value", Float(), nullable=True),
+                Column("max_value", Float(), nullable=True),
+                Column("values_domain", String(255), nullable=True),
+                Column("rank", Integer(), nullable=True),
+            )
+
+        self.pheno_metadata.create_all(self.pheno_engine)
+
+    def build_instrument_values_tables(self):
+
+        query = select(
+            self.instruments.c.instrument_name,
+            self.instruments.c.table_name
+        )
+        with self.pheno_engine.connect() as connection:
+            instruments_rows = connection.execute(query)
+        instrument_table_names = {}
+        instrument_measures = {}
+        for row in instruments_rows:
+            instrument_table_names[row.instrument_name] = row.table_name
+            instrument_measures[row.instrument_name] = []
+
+        query = select(
+            self.measures.c.measure_id,
+            self.measures.c.measure_type,
+            self.measures.c.db_column_name,
+            self.instruments.c.instrument_name
+        ).join(self.instruments)
+        with self.pheno_engine.connect() as connection:
+            results = connection.execute(query)
+        measure_columns = {}
+        for result_row in results:
+            instrument_measures[result_row.instrument_name].append(
+                result_row.measure_id
+            )
+            if MeasureType.is_numeric(result_row.measure_type):
+                column_type: Union[Float, String] = Float()
+            else:
+                column_type = String(127)
+            measure_columns[result_row.measure_id] = \
+                Column(
+                    f"{result_row.db_column_name}", column_type, nullable=True
+                )
+
+
+        for instrument_name, table_name in instrument_table_names.items():
+            cols = [
+                measure_columns[m_id]
+                for m_id in
+                instrument_measures[instrument_name]
+            ]
+
+            if instrument_name not in self.instrument_values_tables:
+                self.instrument_values_tables[instrument_name] = Table(
+                    table_name,
+                    self.pheno_metadata,
+                    Column(
+                        "person_id",
+                        String(16),
+                        nullable=False,
+                        index=True,
+                        unique=True,
+                        primary_key=True,
+                    ),
+                    Column(
+                        "family_id", String(64), nullable=False, index=True
+                    ),
+                    Column("role", String(64), nullable=False, index=True),
+                    *cols,
+                    extend_existing=True
+                )
+
+        self.pheno_metadata.create_all(self.pheno_engine)
+
+    def _split_measures_into_groups(
+        self, measure_ids: list[str], group_size: int = 60
+    ) -> list[list[str]]:
+        groups_count = int(len(measure_ids) / group_size) + 1
+        if (groups_count) == 1:
+            return [measure_ids]
+        measure_groups = []
+        for i in range(groups_count):
+            begin = i * group_size
+            end = (i + 1) * group_size
+            group = measure_ids[begin:end]
+            if len(group) > 0:
+                measure_groups.append(group)
+        return measure_groups
+
+    def _build_measures_subquery(
+        self,
+        measure_id_map: dict[str, str],
+        measure_type_map: dict[str, MeasureType],
+        measure_ids: list[str],
+        measure_column_names: dict[str, str] = None
+    ) -> Select:
+        select_columns = [
+            self.person.c.person_id,
+            self.person.c.role,
+            self.family.c.family_id,
+        ]
+        query = select(
+            self.measure.c.measure_id, self.measure.c.measure_type
+        )
+        for m_id in measure_ids:
+            measure_type = measure_type_map[m_id]
+            if measure_type is None:
+                raise ValueError(
+                    f"bad measure: {m_id}; unknown value type"
+                )
+            col_name = m_id
+            if measure_column_names is not None:
+                col_name = measure_column_names[m_id]
+            select_columns.append(cast(Column[Any], text(
+                f"\"{m_id}_value\".value AS '{col_name}'"
+            )))
+        query = select(*select_columns).select_from(
+            self.person.join(self.family)
+        )
+
+        for m_id in measure_ids:
+            db_id = measure_id_map[m_id]
+            measure_type = measure_type_map[m_id]
+            measure_table = self.get_value_table(measure_type)
+            table_alias = f"{m_id}_value"
+            query = query.join(
+                text(f'{measure_table.name} as "{table_alias}"'),
+                text(
+                    f'"{table_alias}".person_id = person.id AND '
+                    f'"{table_alias}".measure_id = {db_id}'
+                ),
+                isouter=True
+            )
+
+        query = query.order_by(desc(self.person.c.person_id))
+        return query
+
+    def clear_instruments_table(self, drop=False):
+        if getattr(self, "instruments", None) is None:
+            return
+        with self.pheno_engine.begin() as connection:
+            connection.execute(self.instruments.delete())
+            if drop:
+                self.instruments.drop(connection, checkfirst=False)
+            connection.commit()
+
+    def clear_measures_table(self, drop=False):
+        if getattr(self, "measures", None) is None:
+            return
+        with self.pheno_engine.begin() as connection:
+            connection.execute(self.measures.delete())
+            if drop:
+                self.measures.drop(connection, checkfirst=False)
+            connection.commit()
+
+    def clear_instrument_values_tables(self, drop=False):
+        if getattr(self, "instrument_values_tables", None) is None:
+            return
+        with self.pheno_engine.begin() as connection:
+            for instrument_table in self.instrument_values_tables.values():
+                connection.execute(instrument_table.delete())
+                if drop:
+                    instrument_table.drop(connection, checkfirst=False)
+            connection.commit()
+
+    def get_instrument_column_names(self) -> dict[str, list[str]]:
+        """
+        Return a dictionary of instruments and their measure column names.
+        """
+        query = select(
+            self.measures.c.db_column_name,
+            self.instruments.c.instrument_name
+        ).join(self.instruments)
+        with self.pheno_engine.connect() as connection:
+            results = connection.execute(query)
+
+        instrument_col_names = {}
+        for result_row in results:
+            if result_row.instrument_name not in instrument_col_names:
+                instrument_col_names[result_row.instrument_name] = [
+                    result_row.db_column_name
+                ]
+            else:
+                instrument_col_names[result_row.instrument_name].append(
+                    result_row.db_column_name
+                )
+        return instrument_col_names
+
+    def get_measure_column_names(
+        self, measure_ids: Optional[list[str]] = None
+    ) -> dict[str, list[str]]:
+        """
+        Return measure column names mapped to their respective measure IDs.
+        """
+        query = select(
+            self.measures.c.measure_id,
+            self.measures.c.db_column_name,
+        )
+        if measure_ids is not None:
+            print(measure_ids)
+            query = query.where(self.measures.c.measure_id.in_(measure_ids))
+        with self.pheno_engine.connect() as connection:
+            print(query)
+            results = connection.execute(query)
+
+            measure_column_names = {}
+            for result_row in results:
+                measure_column_names[result_row.measure_id] = \
+                    result_row.db_column_name
+        return measure_column_names
+
+    def populate_instrument_values_tables(self):
+        if getattr(self, "instrument_values_tables", None) is None:
+            raise ValueError("No instrument values tables prepared")
+
+        measure_id_map = {}
+        measure_type_map = {}
+        instrument_measures = {}
+        measure_column_names = {}
+
+        with self.pheno_engine.connect() as connection:
+            # Very important to use legacy 'measure' table here instead
+            # Measure IDs will be mismatched when collecting values otherwise
+            query = select(
+                self.measure.c.id,
+                self.measure.c.measure_id,
+                self.measure.c.measure_type
+            )
+            results = connection.execute(query)
+            for result_row in results:
+                measure_id_map[result_row.measure_id] = result_row.id
+                measure_type_map[result_row.measure_id] = \
+                    result_row.measure_type
+
+            query = select(
+                self.measures.c.measure_id,
+                self.measures.c.db_column_name,
+                self.instruments.c.instrument_name
+            ).join(self.instruments)
+            results = connection.execute(query)
+            for result_row in results:
+                if result_row.instrument_name not in instrument_measures:
+                    instrument_measures[result_row.instrument_name] = [
+                        result_row.measure_id
+                    ]
+                else:
+                    instrument_measures[result_row.instrument_name].append(
+                        result_row.measure_id
+                    )
+                measure_column_names[result_row.measure_id] = \
+                    result_row.db_column_name
+
+        measure_groups = self._split_measures_into_groups(
+            cast(list[str], list(measure_id_map.keys()))
+        )
+
+        queries = []
+        for group in measure_groups:
+            queries.append(self._build_measures_subquery(
+                cast(dict[str, str], measure_id_map),
+                cast(dict[str, MeasureType], measure_type_map),
+                group,
+                measure_column_names
+            ))
+
+        added_instruments = set()
+        with self.pheno_engine.begin() as connection:
+            query_results = zip(*[
+                connection.execute(query) for query in queries
+            ])
+            for group_idx, subquery_results in enumerate(query_results):
+                row = {}
+                for fetched_row in subquery_results:
+                    row.update(fetched_row._mapping)
+
+                instrument_values = {}
+                for instrument_name, measures in instrument_measures.items():
+                    skip = True
+                    query_values = {
+                        "person_id": row["person_id"],
+                        "role": str(row["role"]),
+                        "family_id": row["family_id"],
+                    }
+                    for measure in measures:
+                        col_name = measure_column_names[measure]
+                        value = row[col_name]
+                        if value is not None:
+                            skip = False
+                        query_values[col_name] = value
+
+                    if not skip:
+                        instrument_values[instrument_name] = query_values
+
+                for instrument_name, i_table in \
+                        self.instrument_values_tables.items():
+                    if instrument_name in instrument_values:
+                        added_instruments.add(instrument_name)
+                        values = instrument_values[instrument_name]
+                        insert = i_table.insert().values(**values)
+                        connection.execute(insert)
+
+            connection.commit()
 
     def _build_browser_tables(self) -> None:
         assert self.browser_metadata is not None
@@ -165,6 +506,7 @@ class DbManager:
                 index=True,
                 unique=True,
             ),
+            Column("db_column_name", String(128), nullable=False, index=True),
             Column("instrument_name", String(64), nullable=False, index=True),
             Column("measure_name", String(64), nullable=False, index=True),
             Column("description", String(255)),
@@ -220,6 +562,7 @@ class DbManager:
             insert = self.variable_browser.insert().values(**v)
             with self.browser_engine.begin() as connection:
                 connection.execute(insert)
+                connection.commit()
         except Exception:  # pylint: disable=broad-except
             measure_id = v["measure_id"]
 
@@ -501,3 +844,14 @@ class DbManager:
         with self.pheno_engine.begin() as connection:
             measures = connection.execute(selector).fetchall()
         return {m.measure_id: m for m in measures}
+
+
+def safe_db_name(name: str) -> str:
+    name = name.replace(".", "_").replace("-", "_").replace(" ", "_").lower()
+    if name[0].isdigit():
+        name = f"_{name}"
+    return name
+
+
+def generate_instrument_table_name(instrument_name: str) -> str:
+    return f"{instrument_name}_measure_values"
