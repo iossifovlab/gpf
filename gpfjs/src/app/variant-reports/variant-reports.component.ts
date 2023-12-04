@@ -31,6 +31,7 @@ export class VariantReportsComponent implements OnInit {
   public currentPedigreeTable: PedigreeTable;
   public currentDenovoReport: EffectTypeTable;
   public selectedTagsHeader = '';
+  public familiesCount = 0;
 
   public modal: NgbModalRef;
   @ViewChild('tagsModal') public tagsModal: ElementRef;
@@ -79,6 +80,7 @@ export class VariantReportsComponent implements OnInit {
       );
       this.currentPeopleCounter = this.variantReport.peopleReport.peopleCounters[0];
       this.currentPedigreeTable = this.pedigreeTables[0];
+      this.updateFamiliesCount();
       if (this.variantReport.denovoReport !== null) {
         this.currentDenovoReport = this.variantReport.denovoReport.tables[0];
         this.calculateDenovoVariantsTableWidth();
@@ -118,6 +120,16 @@ export class VariantReportsComponent implements OnInit {
       this.selectedTagsHeader = '';
     }
     this.updateTagFilters();
+    this.updateFamiliesCount();
+  }
+
+  public updateFamiliesCount(): void {
+    this.familiesCount = 0;
+    this.currentPedigreeTable.pedigrees.forEach(pedigrees => {
+      pedigrees.forEach(pedigree => {
+        this.familiesCount += Number(pedigree.count);
+      });
+    });
   }
 
   public openModal(): void {

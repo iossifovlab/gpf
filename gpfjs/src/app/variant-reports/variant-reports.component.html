@@ -92,7 +92,10 @@
       </div>
 
       <div id="pedigree-toolbar">
-        <button (click)="openModal()" id="open-modal-button">Select tags</button>
+        <div>
+          <button (click)="openModal()" id="open-modal-button">Select tags</button>
+          <span id="families-sum">All families: {{ familiesCount }}</span>
+        </div>
         <span *ngIf="selectedTagsHeader" id="selected-tags-list" [title]="selectedTagsHeader">{{
           selectedTagsHeader
         }}</span>
