@@ -211,7 +211,8 @@ class DuckDbGenotypeStorage(GenotypeStorage):
 
             dataset_path = f"{parquet_path}/{ '*/' * len(partition)}*.parquet"
             query = f"CREATE TABLE {table_name} AS " \
-                f"SELECT * FROM parquet_scan('{dataset_path}')"
+                f"SELECT * FROM " \
+                f"parquet_scan('{dataset_path}', hive_partitioning = 1)"
             connection.sql(query)
 
     def import_dataset(
