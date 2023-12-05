@@ -423,3 +423,73 @@ def test_regression_ids(output_dir: str) -> None:
 def test_pheno_db_disabled(fake_pheno_db: PhenoDb) -> None:
     assert not fake_pheno_db.has_phenotype_data("fake_disabled")
     assert len(fake_pheno_db.config) == 5
+
+
+def test_split_into_groups(output_dir: str) -> None:
+    db = DbManager(
+        os.path.join(output_dir, "temp_testing.db"),
+        browser_dbfile=os.path.join(output_dir, "temp_testing_browser.db")
+    )
+    measures = [f"measure_{i}" for i in range(1, 101)]
+    groups = db._split_measures_into_groups(measures)
+    assert len(groups) == 2
+    assert len(groups[0]) == 60
+    assert groups[0][0] == "measure_1"
+    assert groups[0][-1] == "measure_60"
+    assert len(groups[1]) == 40
+    assert groups[1][0] == "measure_61"
+    assert groups[1][-1] == "measure_100"
+
+    groups = db._split_measures_into_groups(
+        measures, group_size=25
+    )
+    assert len(groups) == 4
+    assert len(groups[0]) == 25
+    assert groups[0][0] == "measure_1"
+    assert groups[0][-1] == "measure_25"
+    assert len(groups[1]) == 25
+    assert groups[1][0] == "measure_26"
+    assert groups[1][-1] == "measure_50"
+    assert len(groups[2]) == 25
+    assert groups[2][0] == "measure_51"
+    assert groups[2][-1] == "measure_75"
+    assert len(groups[3]) == 25
+    assert groups[3][0] == "measure_76"
+    assert groups[3][-1] == "measure_100"
+
+
+def test_subquery_generation(output_dir: str) -> None:
+    db = DbManager(
+        os.path.join(output_dir, "temp_testing.db"),
+        browser_dbfile=os.path.join(output_dir, "temp_testing_browser.db")
+    )
+    db.build()
+    fake_measure_ids = {
+        "i1.m1": "1",
+        "i1.m2": "2"
+    }
+    fake_measure_types = {
+        "i1.m1": "continuous",
+        "i1.m2": "continuous"
+    }
+    query = str(db._build_measures_subquery(
+        fake_measure_ids,
+        fake_measure_types,
+        list(fake_measure_ids.keys()),
+    ))
+
+    print(query)
+    expected = (
+        "SELECT person.person_id, person.role, family.family_id, "
+        "\"i1.m1_value\".value AS 'i1.m1', "
+        "\"i1.m2_value\".value AS 'i1.m2' \n"
+        "FROM person JOIN family ON family.id = person.family_id "
+        'LEFT OUTER JOIN value_continuous as "i1.m1_value" '
+        'ON "i1.m1_value".person_id = person.id '
+        'AND "i1.m1_value".measure_id = 1 '
+        'LEFT OUTER JOIN value_continuous as "i1.m2_value" '
+        'ON "i1.m2_value".person_id = person.id '
+        'AND "i1.m2_value".measure_id = 2 '
+        "ORDER BY person.person_id DESC"
+    )
+    assert query == expected

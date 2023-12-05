@@ -949,6 +949,19 @@ class PhenotypeStudy(PhenotypeData):
                 full=True
             )
 
+        if person_ids is not None:
+            query = query.where(
+                instrument_tables[first_instrument].c.person_id.in_(person_ids)
+            )
+        if family_ids is not None:
+            query = query.where(
+                instrument_tables[first_instrument].c.family_id.in_(family_ids)
+            )
+        if roles is not None:
+            query = query.where(
+                instrument_tables[first_instrument].c.role.in_(roles)
+            )
+
         with self.db.pheno_engine.connect() as connection:
             print(query)
             result = connection.execute(query)

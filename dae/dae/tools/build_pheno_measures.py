@@ -68,7 +68,8 @@ def main(
             logger.warning("db: %s", db_name)
     else:
         if args.dbs is not None:
-            assert all((db_name in available_dbs) for db_name in args.dbs)
+            assert all((db_name in available_dbs) for db_name in args.dbs), \
+                available_dbs
             available_dbs = args.dbs
 
         for db_name in available_dbs:
@@ -77,8 +78,6 @@ def main(
             )
             db = pheno_db.db
 
-            print(type(db.instrument_values_tables["adir1"].c))
-            raise NotImplementedError()
             db.build_instruments_and_measures_table()
             db.clear_instruments_table(drop=True)
             db.clear_measures_table(drop=True)

@@ -506,7 +506,6 @@ class DbManager:
                 index=True,
                 unique=True,
             ),
-            Column("db_column_name", String(128), nullable=False, index=True),
             Column("instrument_name", String(64), nullable=False, index=True),
             Column("measure_name", String(64), nullable=False, index=True),
             Column("description", String(255)),
