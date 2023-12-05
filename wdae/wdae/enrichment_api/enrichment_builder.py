@@ -7,6 +7,7 @@ from studies.study_wrapper import RemoteStudyWrapper
 
 from dae.studies.study import GenotypeData
 from dae.enrichment_tool.genotype_helper import GenotypeHelper
+from dae.enrichment_tool.enrichment_helper import EnrichmentHelper
 from dae.enrichment_tool.tool import EnrichmentTool
 
 from dae.effect_annotation.effect import expand_effect_types
@@ -33,14 +34,17 @@ class EnrichmentBuilder(BaseEnrichmentBuilder):
         self.gene_syms = gene_syms
         self.tool = enrichment_tool
         self.results: list[dict[str, Any]]
-        enrichment_config = self.tool.config
+        enrichment_config = EnrichmentHelper.get_enrichment_config(dataset)
         assert enrichment_config is not None
-        effect_types = expand_effect_types(enrichment_config["effect_types"])
+        self.enrichment_config = enrichment_config
+
+        effect_types = expand_effect_types(
+            self.enrichment_config["effect_types"])
 
         self.person_set_collection = cast(
             PersonSetCollection,
             self.dataset.get_person_set_collection(
-                enrichment_config["selected_person_set_collections"][0]
+                self.enrichment_config["selected_person_set_collections"][0]
             )
         )
 
@@ -88,10 +92,8 @@ class EnrichmentBuilder(BaseEnrichmentBuilder):
 
     def _build_results(self) -> list[dict[str, Any]]:
         results = []
-        enrichment_config = self.tool.config
-        assert enrichment_config is not None
 
-        effect_types = enrichment_config["effect_types"]
+        effect_types = self.enrichment_config["effect_types"]
 
         for person_set in self.person_set_collection.person_sets.values():
             res = self.build_people_group_selector(effect_types, person_set)
@@ -103,7 +105,7 @@ class EnrichmentBuilder(BaseEnrichmentBuilder):
     def build(self) -> list[dict[str, Any]]:
         results = self._build_results()
 
-        serializer = EnrichmentSerializer(self.tool.config, results)
+        serializer = EnrichmentSerializer(self.enrichment_config, results)
         results = serializer.serialize()
 
         self.results = results

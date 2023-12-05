@@ -5,7 +5,6 @@ import pytest
 
 from box import Box
 
-from dae.enrichment_tool.background_facade import BackgroundFacade
 from dae.gpf_instance import GPFInstance
 from dae.studies.study import GenotypeData
 from dae.genomic_resources.testing import \
@@ -48,11 +47,6 @@ def f1_trio_enrichment_config(gpf_fixture: GPFInstance) -> Box:
 def f1_trio(gpf_fixture: GPFInstance) -> GenotypeData:
     result = gpf_fixture.get_genotype_data("f1_trio")
     return result
-
-
-@pytest.fixture(scope="session")
-def background_facade(gpf_fixture: GPFInstance) -> BackgroundFacade:
-    return gpf_fixture._background_facade
 
 
 @pytest.fixture(scope="session")

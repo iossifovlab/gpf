@@ -21,7 +21,7 @@ def test_enrichment_tool(
     )
     event_counter = EventsCounter()
     enrichment_tool = EnrichmentTool(
-        f1_trio_enrichment_config, coding_len_background, event_counter
+        coding_len_background, event_counter
     )
     psc = f1_trio.get_person_set_collection("phenotype")
     assert psc is not None

@@ -10,15 +10,12 @@ from pathlib import Path
 from box import Box
 from dae.annotation.annotation_pipeline import AnnotationPipeline
 from dae.autism_gene_profile.statistic import AGPStatistic
-from dae.enrichment_tool.base_enrichment_background import \
-    BaseEnrichmentBackground
 from dae.gene.gene_scores import GeneScore
 from dae.genomic_resources.gene_models import GeneModels
 from dae.genomic_resources.reference_genome import ReferenceGenome
 
 from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.utils.fs_utils import find_directory_with_a_file
-from dae.enrichment_tool.background_facade import BackgroundFacade
 from dae.studies.study import GenotypeData
 from dae.gene.scores import GenomicScoresRegistry
 from dae.gene.gene_scores import ScoreDesc as GeneScoreDesc
@@ -119,7 +116,6 @@ class GPFInstance:
         self.denovo_gene_sets_db
         self.genomic_scores
         self.genotype_storages
-        self._background_facade
         return self
 
     @cached_property
@@ -290,10 +286,6 @@ class GPFInstance:
     def denovo_gene_sets_db(self) -> DenovoGeneSetsDb:
         return DenovoGeneSetsDb(self)
 
-    @cached_property
-    def _background_facade(self) -> BackgroundFacade:
-        return BackgroundFacade(self.grr)
-
     def get_genotype_data_ids(self, local_only: bool = False) -> list[str]:
         # pylint: disable=unused-argument
         return cast(list[str], (
@@ -449,32 +441,6 @@ class GPFInstance:
     # Variants DB
     def get_dataset(self, dataset_id: str) -> GenotypeData:
         return cast(GenotypeData, self._variants_db.get(dataset_id))
-
-    # Enrichment
-    def get_study_enrichment_config(self, dataset_id: str) -> Optional[Box]:
-        study = self.get_genotype_data(dataset_id)
-        if study is None:
-            return None
-        return cast(
-            Box, self._background_facade.get_study_enrichment_config(study))
-
-    def has_background(self, dataset_id: str, background_name: str) -> bool:
-        study = self.get_genotype_data(dataset_id)
-        if study is None:
-            return False
-        return self._background_facade.has_background(
-            study, background_name)
-
-    def get_study_background(
-        self, dataset_id: str, background_name: str
-    ) -> BaseEnrichmentBackground:
-        study = self.get_genotype_data(dataset_id)
-        return cast(
-            BaseEnrichmentBackground,
-            self._background_facade.get_study_background(
-                study, background_name
-            )
-        )
 
     # AGP
     def get_agp_configuration(self) -> Box:

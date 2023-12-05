@@ -154,13 +154,6 @@ def overlap_enrichment_result_dict(
 class CounterBase:
     """Class to represent enrichement events counter object."""
 
-    @staticmethod
-    def counters() -> dict[str, Type[CounterBase]]:
-        return {
-            "enrichment_events_counting": EventsCounter,
-            "enrichment_gene_counting": GeneEventsCounter,
-        }
-
     def events(
         self, variant_events: list[VariantEvent],
         children_by_sex: dict[str, set[tuple[str, str]]],
@@ -296,3 +289,9 @@ class GeneEventsCounter(CounterBase):
             unspecified_events,
         )
         return result
+
+
+EVENT_COUNTERS: dict[str, Type[CounterBase]] = {
+    "enrichment_events_counting": EventsCounter,
+    "enrichment_gene_counting": GeneEventsCounter,
+}

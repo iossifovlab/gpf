@@ -9,9 +9,9 @@ from dae.enrichment_tool.event_counters import \
     get_sym_2_fn, \
     EnrichmentResult, \
     filter_overlapping_events, \
-    CounterBase, \
     EventsCounter, \
-    GeneEventsCounter
+    GeneEventsCounter, \
+    EVENT_COUNTERS
 
 from dae.enrichment_tool.genotype_helper import GenotypeHelper
 
@@ -110,11 +110,10 @@ def test_overlap_enrichment_result_dict(f1_trio: GenotypeData) -> None:
 
 
 def test_counter_base_counters() -> None:
-    counters = CounterBase.counters()
 
-    assert len(counters) == 2
-    assert counters["enrichment_events_counting"] == EventsCounter
-    assert counters["enrichment_gene_counting"] == GeneEventsCounter
+    assert len(EVENT_COUNTERS) == 2
+    assert EVENT_COUNTERS["enrichment_events_counting"] == EventsCounter
+    assert EVENT_COUNTERS["enrichment_gene_counting"] == GeneEventsCounter
 
 
 def test_events_counter(f1_trio: GenotypeData) -> None:

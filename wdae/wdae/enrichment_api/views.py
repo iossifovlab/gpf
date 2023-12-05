@@ -1,5 +1,5 @@
 import logging
-from typing import Any
+from typing import Any, Optional, Iterable, Union, cast
 
 from rest_framework.response import Response
 from rest_framework.request import Request
@@ -11,6 +11,13 @@ from rest_framework import status
 
 from query_base.query_base import QueryDatasetView
 from utils.expand_gene_set import expand_gene_set
+from enrichment_api.enrichment_builder import EnrichmentBuilder, \
+    RemoteEnrichmentBuilder
+
+from studies.study_wrapper import StudyWrapper, RemoteStudyWrapper
+
+from dae.enrichment_tool.enrichment_helper import EnrichmentHelper
+from dae.studies.study import GenotypeData
 
 logger = logging.getLogger(__name__)
 
@@ -18,13 +25,16 @@ logger = logging.getLogger(__name__)
 class EnrichmentModelsView(QueryDatasetView):
     """Select enrichment models view."""
 
+    def __init__(self) -> None:
+        super().__init__()
+        self.enrichment_helper = EnrichmentHelper(self.gpf_instance.grr)
+
     def _collect_counting_models(
-        self, dataset_id: str,
+        self, study: GenotypeData,
     ) -> list[dict[str, str]]:
         """Collect counting models."""
-        enrichment_config = self.gpf_instance.get_study_enrichment_config(
-            dataset_id
-        )
+        enrichment_config = self.enrichment_helper.get_enrichment_config(
+            study)
         if enrichment_config is None:
             return []
         selected_models = enrichment_config["selected_counting_models"]
@@ -50,9 +60,8 @@ class EnrichmentModelsView(QueryDatasetView):
 
         background_descriptions = []
         # pylint: disable=protected-access
-        study_backgrounds = self.gpf_instance \
-            ._background_facade \
-            .get_all_study_backgrounds(study)
+        study_backgrounds = self.enrichment_helper \
+            .collect_genotype_data_backgrounds(study)
         for background in study_backgrounds:
             background_descriptions.append({
                 "id": background.background_id,
@@ -61,7 +70,7 @@ class EnrichmentModelsView(QueryDatasetView):
                 "summary": background.resource.get_summary(),
                 "desc": background.resource.get_description()
             })
-        couting_models = self._collect_counting_models(dataset_id)
+        couting_models = self._collect_counting_models(study)
         result = {
             "background": background_descriptions,
             "counting": couting_models,
@@ -75,6 +84,7 @@ class EnrichmentTestView(QueryDatasetView):
     def __init__(self) -> None:
         super().__init__()
         self.gene_scores_db = self.gpf_instance.gene_scores_db
+        self.enrichment_helper = EnrichmentHelper(self.gpf_instance.grr)
 
     @staticmethod
     def _parse_gene_syms(query: dict[str, Any]) -> set[str]:
@@ -129,6 +139,7 @@ class EnrichmentTestView(QueryDatasetView):
 
         if not dataset:
             return Response(status=status.HTTP_404_NOT_FOUND)
+        assert dataset is not None
 
         gene_syms = None
         if "geneSymbols" in query:
@@ -170,8 +181,8 @@ class EnrichmentTestView(QueryDatasetView):
         logger.info("selected background model: %s", background_name)
         logger.info("selected counting model: %s", counting_name)
 
-        builder = self.gpf_instance.create_enrichment_builder(
-            dataset_id, background_name, counting_name, gene_syms)
+        builder = self._create_enrichment_builder(
+            dataset, background_name, counting_name, gene_syms)
 
         if builder is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
@@ -180,3 +191,24 @@ class EnrichmentTestView(QueryDatasetView):
 
         enrichment = {"desc": desc, "result": results}
         return Response(enrichment)
+
+    def _create_enrichment_builder(
+        self, study_wrapper: Union[StudyWrapper, RemoteStudyWrapper],
+        background_id: Optional[str],
+        counting_id: Optional[str],
+        gene_syms: Iterable[str]
+    ) -> Union[EnrichmentBuilder, RemoteEnrichmentBuilder]:
+
+        if not study_wrapper.is_remote:
+            study = study_wrapper.genotype_data
+            enrichment_tool = self.enrichment_helper.create_enrichment_tool(
+                study, background_id, counting_id
+            )
+            return EnrichmentBuilder(study, enrichment_tool, gene_syms)
+
+        assert study_wrapper.is_remote
+        remote_study_wrapper = cast(RemoteStudyWrapper, study_wrapper)
+        return RemoteEnrichmentBuilder(
+            remote_study_wrapper,
+            remote_study_wrapper.rest_client,
+            background_id, counting_id, gene_syms)

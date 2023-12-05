@@ -1,4 +1,4 @@
-from typing import Iterable, Any
+from typing import Iterable
 
 from dae.effect_annotation.effect import expand_effect_types
 
@@ -13,12 +13,10 @@ class EnrichmentTool:
     """Construct and run enrichment tool test."""
 
     def __init__(
-        self, config: dict[str, Any],
+        self,
         background: BaseEnrichmentBackground,
         event_counter: CounterBase
     ):
-        self.config = config
-
         self.background = background
         self.event_counter = event_counter
 

@@ -18,7 +18,6 @@ def test_init(fixtures_gpf_instance: GPFInstance) -> None:
     assert fixtures_gpf_instance._variants_db
     assert fixtures_gpf_instance.gene_sets_db
     assert fixtures_gpf_instance.denovo_gene_sets_db is not None
-    assert fixtures_gpf_instance._background_facade
 
 
 def test_eager_init(
@@ -40,7 +39,6 @@ def test_eager_init(
     assert instance._variants_db
     assert instance.gene_sets_db
     assert instance.denovo_gene_sets_db is not None
-    assert instance._background_facade
 
 
 def test_dae_config(
