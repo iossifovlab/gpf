@@ -279,6 +279,10 @@ class WGPFInstance(GPFInstance):
             gene_syms: Iterable[str]
     ) -> Optional[EnrichmentBuilder]:
         dataset = self.get_genotype_data(dataset_id)
+        if dataset is None:
+            return None
+        if dataset.is_remote:
+            return None
         enrichment_config = GPFInstance.get_study_enrichment_config(
             self,
             dataset_id

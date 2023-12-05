@@ -2,6 +2,9 @@
 
 import logging
 from typing import List, Dict, Optional
+
+from box import Box
+
 from remote.rest_api_client import RESTClient, RESTClientRequestError
 from studies.remote_study import RemoteGenotypeData
 
@@ -11,7 +14,7 @@ logger = logging.getLogger(__name__)
 class RemoteStudyDB:
     """Class to manage remote studies."""
 
-    def __init__(self, clients: List[RESTClient]):
+    def __init__(self, clients: List[RESTClient]) -> None:
         self.remote_study_clients: Dict[str, RESTClient] = {}
         self.remote_study_ids: Dict[str, str] = {}
         self.remote_genotype_data: Dict[str, RemoteGenotypeData] = {}
@@ -42,23 +45,27 @@ class RemoteStudyDB:
     def get_genotype_data(self, study_id: str) -> Optional[RemoteGenotypeData]:
         return self.remote_genotype_data.get(study_id)
 
-    def get_genotype_data_config(self, study_id):
+    def get_genotype_data_config(self, study_id: str) -> Optional[Box]:
         rgd = self.remote_genotype_data.get(study_id)
         if rgd is not None:
             return rgd.config
         return None
 
-    def get_genotype_data_ids(self):
-        return self.remote_genotype_data.keys()
+    def get_genotype_data_ids(self) -> list[str]:
+        return list(self.remote_genotype_data.keys())
 
-    def get_all_genotype_datas(self):
-        return [
-            self.get_genotype_data(study_id)
-            for study_id in self.get_genotype_data_ids()
-        ]
+    def get_all_genotype_datas(self) -> list[RemoteGenotypeData]:
+        result = []
+        for study_id in self.get_genotype_data_ids():
+            study = self.get_genotype_data(study_id)
+            if study is not None:
+                result.append(study)
+        return result
 
-    def get_all_genotype_data_configs(self):
-        return [
-            self.get_genotype_data_config(study_id)
-            for study_id in self.get_genotype_data_ids()
-        ]
+    def get_all_genotype_data_configs(self) -> list[Box]:
+        result = []
+        for study_id in self.get_genotype_data_ids():
+            config = self.get_genotype_data_config(study_id)
+            if config is not None:
+                result.append(config)
+        return result

@@ -44,6 +44,7 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
         self._parents: set[str] = set()
         self._executor = None
         self.is_remote = False
+        self.config_dir: str = self.config["work_dir"]
 
     def close(self) -> None:
         logger.error("base genotype data close() called for %s", self.study_id)

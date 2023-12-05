@@ -118,7 +118,7 @@ class DuckDbQueryDialect(Dialect):
 
 
 class DuckDbVariants(SqlSchema2Variants):
-    """Backend for BigQuery."""
+    """Backend for DuckDb storage backend."""
 
     RUNNER_CLASS = DuckDbRunner
 
