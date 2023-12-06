@@ -24,7 +24,7 @@ class SomeSuperuserLeftValidator:
         except Group.DoesNotExist:
             return
 
-        superusers = superuser_group.user_set.all()
+        superusers = superuser_group.user_set.all()  # type: ignore
         assert self.user_instance is not None
 
         if (

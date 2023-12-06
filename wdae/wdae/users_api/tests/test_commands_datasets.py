@@ -6,9 +6,13 @@ from django.contrib.auth.models import Group
 
 from datasets_api.models import Dataset
 from users_api.management.commands.datasets_export import Command
+from gpf_instance.gpf_instance import WGPFInstance
 
 
-def test_datasets_export(wdae_gpf_instance, fixtures_wgpf_instance):
+def test_datasets_export(
+    wdae_gpf_instance: WGPFInstance,
+    fixtures_wgpf_instance: WGPFInstance
+) -> None:
     expected_output = """dataset,groups
 person_sets_study_1,any_dataset;person_sets_study_1
 fake_study,any_dataset;fake_study
@@ -56,7 +60,7 @@ TEST_REMOTE_iossifov_2014,any_dataset;TEST_REMOTE_iossifov_2014
         assert set(temp.read().split()) == set(expected_output.split())
 
 
-def test_datasets_restore(db):
+def test_datasets_restore(db: None) -> None:
     comp, _ = Dataset.objects.get_or_create(dataset_id="comp")
     comp.groups.add(Group.objects.create(name="any_dataset"))
     comp.groups.add(Group.objects.create(name="comp"))

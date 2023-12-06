@@ -10,7 +10,7 @@ from users_api.management.commands.export_base import ExportUsersBase
 
 
 class UsersApiCommandsTests(TestCase):
-    def test_users_export(self):
+    def test_users_export(self) -> None:
         # pylint: disable=invalid-name
         User = get_user_model()
         new_user = User.objects.create_user(
@@ -38,7 +38,7 @@ class UsersApiCommandsTests(TestCase):
             call_command("users_export", file=temp.name)
             self.assertEqual(temp.read(), expected_output)
 
-    def test_users_restore(self):
+    def test_users_restore(self) -> None:
         # pylint: disable=invalid-name
         User = get_user_model()
         input_csv = (
@@ -52,6 +52,9 @@ class UsersApiCommandsTests(TestCase):
             temp.close()
             call_command("users_restore", temp.name)
             second_user = User.objects.last()
+
+            assert second_user is not None
+
             self.assertEqual(len(User.objects.all()), 2)
             self.assertEqual(
                 second_user.email, "shefa@test.abv"

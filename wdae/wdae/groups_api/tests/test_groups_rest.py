@@ -143,7 +143,7 @@ def test_admin_can_rename_groups(
 def test_group_has_all_users(admin_client: Client, group: Group) -> None:
     test_emails = ["test@email.com", "other@email.com", "last@example.com"]
     for email in test_emails:
-        group.user_set.create(email=email)
+        group.user_set.create(email=email)  # type: ignore
 
     url = f"/api/v3/groups/{group.name}"
     response = admin_client.get(url)
