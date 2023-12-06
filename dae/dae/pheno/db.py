@@ -124,11 +124,11 @@ class DbManager:
         )
         with self.pheno_engine.connect() as connection:
             instruments_rows = connection.execute(query)
-        instrument_table_names = {}
-        instrument_measures = {}
-        for row in instruments_rows:
-            instrument_table_names[row.instrument_name] = row.table_name
-            instrument_measures[row.instrument_name] = []
+            instrument_table_names = {}
+            instrument_measures = {}
+            for row in instruments_rows:
+                instrument_table_names[row.instrument_name] = row.table_name
+                instrument_measures[row.instrument_name] = []
 
         query = select(
             self.measures.c.measure_id,
@@ -138,19 +138,20 @@ class DbManager:
         ).join(self.instruments)
         with self.pheno_engine.connect() as connection:
             results = connection.execute(query)
-        measure_columns = {}
-        for result_row in results:
-            instrument_measures[result_row.instrument_name].append(
-                result_row.measure_id
-            )
-            if MeasureType.is_numeric(result_row.measure_type):
-                column_type: Union[Float, String] = Float()
-            else:
-                column_type = String(127)
-            measure_columns[result_row.measure_id] = \
-                Column(
-                    f"{result_row.db_column_name}", column_type, nullable=True
+            measure_columns = {}
+            for result_row in results:
+                instrument_measures[result_row.instrument_name].append(
+                    result_row.measure_id
                 )
+                if MeasureType.is_numeric(result_row.measure_type):
+                    column_type: Union[Float, String] = Float()
+                else:
+                    column_type = String(127)
+                measure_columns[result_row.measure_id] = \
+                    Column(
+                        f"{result_row.db_column_name}",
+                        column_type, nullable=True
+                    )
 
 
         for instrument_name, table_name in instrument_table_names.items():

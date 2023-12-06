@@ -935,6 +935,8 @@ class PhenotypeStudy(PhenotypeData):
 
         query = select(
             instrument_tables[first_instrument].c.person_id,
+            instrument_tables[first_instrument].c.family_id,
+            instrument_tables[first_instrument].c.role,
             *select_cols
         )
 
@@ -1213,10 +1215,8 @@ class PhenotypeGroup(PhenotypeData):
 class PhenoDb:
     """Represents a phenotype databases stored in an sqlite database."""
 
-    def __init__(self, dae_config: Box) -> None:
+    def __init__(self, pheno_data_dir: str) -> None:
         super().__init__()
-        assert dae_config
-        pheno_data_dir = get_pheno_db_dir(dae_config)
 
         configs = GPFConfigParser.load_directory_configs(
             pheno_data_dir, pheno_conf_schema

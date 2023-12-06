@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
+import os
 import sys
 from typing import Optional, cast
 import logging
@@ -8,8 +9,7 @@ from argparse import ArgumentParser, RawDescriptionHelpFormatter
 from sqlalchemy.sql import select, insert
 
 from dae.utils.verbosity_configuration import VerbosityConfiguration
-from dae.gpf_instance.gpf_instance import GPFInstance
-from dae.pheno.pheno_db import PhenotypeStudy
+from dae.pheno.pheno_db import PhenotypeStudy, PhenoDb
 from dae.pheno.db import safe_db_name, generate_instrument_table_name
 
 
@@ -20,6 +20,12 @@ def measures_cli_parser() -> ArgumentParser:
     parser = ArgumentParser(
         description="pheno measures table builder",
         formatter_class=RawDescriptionHelpFormatter,
+    )
+
+    parser.add_argument(
+        "pheno_data_dir",
+        help="Specify pheno data directory.",
+        default=None,
     )
 
     parser.add_argument(
@@ -36,22 +42,14 @@ def measures_cli_parser() -> ArgumentParser:
         default=None,
         action="append",
     )
+
     return parser
 
 
 def main(
-    argv: Optional[list[str]] = None,
-    gpf_instance: Optional[GPFInstance] = None
+    argv: Optional[list[str]] = None
 ) -> None:
-    """Run the simple study import procedure."""
-    # pylint: disable=too-many-locals,too-many-branches,too-many-statements
-    if gpf_instance is None:
-        try:
-            gpf_instance = GPFInstance.build()
-        except Exception as ex:  # pylint: disable=broad-except
-            logger.error("GPF not configured correctly", exc_info=True)
-            raise ValueError("unable to find configured GPF instance") from ex
-
+    """Run the pheno measure tables creation procedure."""
     if argv is None:
         argv = sys.argv[1:]
 
@@ -61,7 +59,9 @@ def main(
     args = parser.parse_args(argv)
     VerbosityConfiguration.set(args)
 
-    available_dbs = gpf_instance.get_phenotype_data_ids()
+    pheno_db = PhenoDb(args.pheno_data_dir)
+
+    available_dbs = pheno_db.get_phenotype_data_ids()
 
     if args.show_pheno_dbs:
         for db_name in available_dbs:
@@ -73,17 +73,16 @@ def main(
             available_dbs = args.dbs
 
         for db_name in available_dbs:
-            pheno_db = cast(
-                PhenotypeStudy, gpf_instance.get_phenotype_data(db_name)
+            pheno_data = cast(
+                PhenotypeStudy, pheno_db.get_phenotype_data(db_name)
             )
-            db = pheno_db.db
+            db = pheno_data.db
 
-            db.build_instruments_and_measures_table()
             db.clear_instruments_table(drop=True)
             db.clear_measures_table(drop=True)
             db.build_instruments_and_measures_table()
 
-            instruments = pheno_db.instruments.values()
+            instruments = pheno_data.instruments.values()
             query = insert(db.instruments)
             query_values = []
             for instrument in instruments:
@@ -95,7 +94,7 @@ def main(
                     "table_name": safe_db_name(table_name)
                 })
 
-            with pheno_db.db.pheno_engine.begin() as connection:
+            with pheno_data.db.pheno_engine.begin() as connection:
                 connection.execute(query.values(query_values))
                 connection.commit()
 
@@ -114,8 +113,11 @@ def main(
             )
             selector = selector.select_from(db.measure)
             with db.pheno_engine.begin() as connection:
-                measures = connection.execute(selector).fetchall()
-            measures = {m.measure_id: {**m._mapping} for m in measures}
+                measure_rows = connection.execute(selector).fetchall()
+            measures = {
+                m.measure_id: {**m._mapping}
+                for m in measure_rows
+            }
 
             selector = select(
                 db.instruments.c.id,
@@ -130,34 +132,34 @@ def main(
 
             query = insert(db.measures)
             query_values = []
-            for instrument in instruments_db:
-                instrument_measures = pheno_db.instruments[
-                    instrument.instrument_name
+            for instrument_row in instruments_db:
+                instrument_measures = pheno_data.instruments[
+                    instrument_row.instrument_name
                 ].measures
-                seen_db_names = {}
+                seen_measure_names: dict[str, int] = {}
                 for measure in instrument_measures.values():
                     measure_mapping = measures[measure.measure_id]
                     measure_mapping["instrument_id"] = instruments_id_map[
-                        instrument.instrument_name
+                        instrument_row.instrument_name
                     ]
                     del measure_mapping["instrument_name"]
                     db_name = safe_db_name(
                         measure.measure_id
                     )
-                    if db_name.lower() in seen_db_names:
-                        seen_db_names[db_name.lower()] += 1
-                        db_name = f"{db_name}_{seen_db_names[db_name.lower()]}"
+                    if db_name.lower() in seen_measure_names:
+                        seen_measure_names[db_name.lower()] += 1
+                        db_name = \
+                            f"{db_name}_{seen_measure_names[db_name.lower()]}"
                     else:
-                        seen_db_names[db_name.lower()] = 1
+                        seen_measure_names[db_name.lower()] = 1
 
                     measure_mapping["db_column_name"] = db_name
                     query_values.append(measure_mapping)
 
-            with pheno_db.db.pheno_engine.begin() as connection:
+            with pheno_data.db.pheno_engine.begin() as connection:
                 connection.execute(query.values(query_values))
                 connection.commit()
 
-            db.build_instrument_values_tables()
             db.clear_instrument_values_tables(drop=True)
             db.build_instrument_values_tables()
             db.populate_instrument_values_tables()

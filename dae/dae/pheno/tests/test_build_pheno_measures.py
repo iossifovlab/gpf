@@ -1,31 +1,26 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,too-many-lines
 import pytest
 from sqlalchemy.sql import select
+from dae.pheno.pheno_db import PhenoDb
 from dae.tools.build_pheno_measures import main
 
 
-@pytest.fixture
-def mock_gpf_instance(mocker, fake_phenotype_data):
-    gpf_instance = mocker.MagicMock()
-    gpf_instance.get_phenotype_data_ids.return_value = ["fake"]
-    gpf_instance.get_phenotype_data.return_value = fake_phenotype_data
-    return gpf_instance
+def test_build_pheno_measures_functions(fake_pheno_db_dir):
+    main([fake_pheno_db_dir, "--dbs", "fake"])
 
-
-def test_build_pheno_measures_functions(mock_gpf_instance):
-    main(["--dbs", "fake"], gpf_instance=mock_gpf_instance)
-
-    pheno_db = mock_gpf_instance.get_phenotype_data("fake")
-    metadata = pheno_db.db.pheno_metadata
+    pheno_db = PhenoDb(fake_pheno_db_dir)
+    pheno_data = pheno_db.get_phenotype_data("fake")
+    metadata = pheno_data.db.pheno_metadata
     assert "measures" in metadata.tables.keys()
     assert "instruments" in metadata.tables.keys()
     assert "i1_measure_values" in metadata.tables.keys()
     assert "i2_measure_values" in metadata.tables.keys()
 
 
-def test_build_pheno_measures_values(mock_gpf_instance):
-    main(["--dbs", "fake"], gpf_instance=mock_gpf_instance)
-    db = mock_gpf_instance.get_phenotype_data("fake").db
+def test_build_pheno_measures_values(fake_pheno_db_dir):
+    main([fake_pheno_db_dir, "--dbs", "fake"])
+    pheno_db = PhenoDb(fake_pheno_db_dir)
+    db = pheno_db.get_phenotype_data("fake").db
 
     with db.pheno_engine.connect() as connection:
         table = db.instrument_values_tables["i1"]
