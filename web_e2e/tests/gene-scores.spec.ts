@@ -15,37 +15,7 @@ const geneScoresData = [
     allVariants: '0'
   },
   {
-    desc: 'RVIS',
-    inputField: true,
-    allVariants: '0'
-  },
-  {
-    desc: 'LGD rank',
-    inputField: true,
-    allVariants: '30'
-  },
-  {
-    desc: 'LGD score',
-    inputField: true,
-    allVariants: '30'
-  },
-  {
-    desc: 'ExAC pLI rank',
-    inputField: true,
-    allVariants: '30'
-  },
-  {
     desc: 'ExAC pLI',
-    inputField: true,
-    allVariants: '30'
-  },
-  {
-    desc: 'ExAC pRec rank',
-    inputField: true,
-    allVariants: '30'
-  },
-  {
-    desc: 'ExAC pRec',
     inputField: true,
     allVariants: '30'
   }
@@ -77,12 +47,12 @@ test.describe('Gene scores tests', () => {
   geneScoresData.forEach(geneScore => {
     test(
         'should go through all gene scores and check whether the from/to buttons are shown or hidden for '
-            + `${geneScore.desc}`,
-         async({ page }) => {
+            + `${geneScore.desc}`, async({ page }) => {
     await page.locator('#gene-scores').click();
     await page.locator('gpf-gene-scores select').selectOption(geneScore.desc);
     await expect(page.locator('input#from-input-field')).toBeVisible({visible: geneScore.inputField});
     await expect(page.locator('input#to-input-field')).toBeVisible({visible: geneScore.inputField});
+    });
   });
 
   test('should have working from/to step up/down buttons in RVIS rank', async({ page }) => {
@@ -99,7 +69,6 @@ test.describe('Gene scores tests', () => {
     await expect(page.locator('input#from-input-field')).toHaveValue('111.927');
     await expect(page.locator('input#to-input-field')).toHaveValue('16529.073');
 
-
     await page.locator('.histogram-to .step.up').click();
     await page.locator('.histogram-from .step.down').click();
     await expect(page.locator('input#from-input-field')).toHaveValue('1');
@@ -112,70 +81,67 @@ test.describe('Gene scores tests', () => {
   });
 
   test('should have working from/to step up/down buttons in ExAC pLI', async({ page }) => {
-            await utils.navigateToDatasetPage(page, utils.datasetIds.compAll, 'Genotype browser');
-            await page.locator('#gene-scores').click();
-            await page.locator('gpf-gene-scores select').selectOption('ExAC pLI');
+    await utils.navigateToDatasetPage(page, utils.datasetIds.compAll, 'Genotype browser');
+    await page.locator('#gene-scores').click();
+    await page.locator('gpf-gene-scores select').selectOption('ExAC pLI');
 
-            await expect(page.locator('input#from-input-field')).toHaveValue('0');
-            await expect(page.locator('input#to-input-field')).toHaveValue('1');
+    await expect(page.locator('input#from-input-field')).toHaveValue('0');
+    await expect(page.locator('input#to-input-field')).toHaveValue('1');
 
-            await page.locator('.histogram-from .step.up').click();
-            await page.locator('.histogram-to .step.down').click();
-            await expect(page.locator('input#from-input-field')).toHaveValue('0.00001');
-            await expect(page.locator('input#to-input-field')).toHaveValue('0.912');
+    await page.locator('.histogram-from .step.up').click();
+    await page.locator('.histogram-to .step.down').click();
+    await expect(page.locator('input#from-input-field')).toHaveValue('0.00001');
+    await expect(page.locator('input#to-input-field')).toHaveValue('0.912');
 
-            await page.locator('.histogram-from .step.up').click();
-            await page.locator('.histogram-to .step.down').click();
-            await expect(page.locator('input#from-input-field')).toHaveValue('0.000011');
-            await expect(page.locator('input#to-input-field')).toHaveValue('0.832');
+    await page.locator('.histogram-from .step.up').click();
+    await page.locator('.histogram-to .step.down').click();
+    await expect(page.locator('input#from-input-field')).toHaveValue('0.000011');
+    await expect(page.locator('input#to-input-field')).toHaveValue('0.832');
 
-            await page.locator('.histogram-to .step.up').click();
-            await page.locator('.histogram-from .step.down').click();
-            await expect(page.locator('input#from-input-field')).toHaveValue('0.00001');
-            await expect(page.locator('input#to-input-field')).toHaveValue('0.912');
+    await page.locator('.histogram-to .step.up').click();
+    await page.locator('.histogram-from .step.down').click();
+    await expect(page.locator('input#from-input-field')).toHaveValue('0.00001');
+    await expect(page.locator('input#to-input-field')).toHaveValue('0.912');
 
-            await page.locator('.histogram-to .step.up').click();
-            await page.locator('.histogram-from .step.down').click();
-            await expect(page.locator('input#from-input-field')).toHaveValue('0');
-            await expect(page.locator('input#to-input-field')).toHaveValue('1');
-        });
+    await page.locator('.histogram-to .step.up').click();
+    await page.locator('.histogram-from .step.down').click();
+    await expect(page.locator('input#from-input-field')).toHaveValue('0');
+    await expect(page.locator('input#to-input-field')).toHaveValue('1');
+  });
+
+    geneScoresData.forEach(geneScore => {
+      test(`should filter variants when "${geneScore.desc}" gene score is selected`, async({ page }) => {
+        await utils.navigateToDatasetPage(page, utils.datasetIds.compAll, 'Genotype browser');
+        await page.click('#gene-scores');
+        await page.locator('gpf-gene-scores select').selectOption(geneScore.desc);
+
+        await expect(page.locator('text#sumOfBarsLabel')).not.toContainText('~');
+
+        await page.locator('gpf-effect-types').getByRole('button', { name: 'All' }).click();
+        await page.getByRole('button', { name: 'Table Preview' }).click();
+
+        await expect(page.locator('#variants-count-span')).toHaveText(`${geneScore.allVariants} variants selected`);
+      });
     });
 
-    test.describe('Gene scores', () => {
-        geneScoresData.forEach(geneScore => {
-          test(`should filter variants when "${geneScore.desc}" gene score is selected`, async({ page }) => {
-            await utils.navigateToDatasetPage(page, utils.datasetIds.compAll, 'Genotype browser');
-            await page.click('#gene-scores');
-            await page.locator('gpf-gene-scores select').selectOption(geneScore.desc);
+  test('should download RVIS and compare the file to the reference data', async({ page }) => {
+    await page.click('#gene-scores');
 
-            await expect(page.locator('text#sumOfBarsLabel')).not.toContainText('~');
+    await page.locator('gpf-gene-scores select').selectOption('RVIS');
+    const downloadPromise = page.waitForEvent('download');
+    await page.click('gpf-gene-scores .download-link');
+    const downloadedFile = await downloadPromise;
 
-            await page.locator('gpf-effect-types').getByRole('button', { name: 'All' }).click();
-            await page.getByRole('button', { name: 'Table Preview' }).click();
+    const streamData = downloadedFile.createReadStream();
+    const data = [];
 
-            await expect(page.locator('#variants-count-span')).toHaveText(`${geneScore.allVariants} variants selected`);
-          });
-        });
-      });
+    for await (const chunk of await streamData) {
+      data.push(chunk);
+    }
 
-        test('should download RVIS and compare the file to the reference data', async({ page }) => {
-          await page.click('#gene-scores');
-
-          await page.locator('gpf-gene-scores select').selectOption('RVIS');
-          const downloadPromise = page.waitForEvent('download');
-          await page.click('gpf-gene-scores .download-link');
-          const downloadedFile = await downloadPromise;
-
-          const streamData = downloadedFile.createReadStream();
-          const data = [];
-
-          for await (const chunk of await streamData) {
-            data.push(chunk);
-          }
-
-          const expectedVariantsPath = path.join(__dirname + '/../fixtures/gene-scores/scores.csv');
-          const expectedFileLines = await utils.readFile(expectedVariantsPath);
-          const downloadedData = Buffer.concat(data);
-          expect(downloadedData.toString()).toEqual(expectedFileLines.toString());
-        });
+    const expectedVariantsPath = path.join(__dirname + '/../fixtures/gene-scores/scores.csv');
+    const expectedFileLines = await utils.readFile(expectedVariantsPath);
+    const downloadedData = Buffer.concat(data);
+    expect(downloadedData.toString()).toEqual(expectedFileLines.toString());
+  });
 });

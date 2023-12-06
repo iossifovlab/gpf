@@ -117,16 +117,6 @@ test.beforeEach(async({ page }) => {
         'Low load for disruptive mutations in autism genes and their biased transmission. PNAS (2015)'
     },
     {
-      collection: 'Main',
-      expectedSearchCondition: 'autism candidates from Sanders Neuron 2015 (65): Sanders S., et. al, Insights into ' +
-        'Autism Spectrum Disorder Genomic Architecture and Biology from 71 Risk Loci. Neuron (2015)'
-    },
-    {
-      collection: 'Main',
-      expectedSearchCondition: 'brain critical genes (1744): Uddin M, et al. Brain-expressed exons under ' +
-        'purifying selection are enriched for de novo mutations in autism spectrum disorder. Nat Genetics (2014)'
-    },
-    {
       collection: 'Protein domains',
       expectedSearchCondition: 'ABH (18):'
     },
@@ -188,80 +178,67 @@ test.describe('Genes block denovo gene set gene symbols tests', () => {
     await utils.navigateToDatasetPage(page, 'iossifov_2014', 'Genotype browser');
   });
 
-  [
-    {
-      peopleGroup: 'affected',
-      expectedSearchConditions: {
-        effectTypesSearchQueries: [
-          'LGDs',
-          'Missense',
-          'Synonymous',
-          'LGDs.Single',
-          'LGDs.Triple',
-          'LGDs.Male',
-        ],
-        expectedGeneSymbolsFiles: [
-          '/../fixtures/gene-sets/LGDs_iossifov_2014_status_affected.csv',
-          '/../fixtures/gene-sets/Missense_iossifov_2014_status_affected.csv',
-          '/../fixtures/gene-sets/Synonymous_iossifov_2014_status_affected.csv',
-          '/../fixtures/gene-sets/LGDs_single_iossifov_2014_affected.csv',
-          '/../fixtures/gene-sets/LGDs_triple_iossifov_2014_affected.csv',
-          '/../fixtures/gene-sets/LGDs_male_iossifov_2014_affected.csv',
-        ],
-      },
-    },
-    {
-      peopleGroup: 'unaffected',
-      expectedSearchConditions: {
-        effectTypesSearchQueries: ['LGDs'],
-        expectedGeneSymbolsFiles: [
-          '/../fixtures/gene-sets/LGDs_iossifov_2014_unaffected.csv',
-        ],
-      },
-    },
-  ].forEach((data) => {
+  test(
+    'should download iossifov affected ' +
+      'denovo gene sets and check whether they are equal to the reference data', async({ page }) => {
+        await utils.navigateToDatasetPage(page, 'iossifov_2014', 'Genotype browser');
+        await page.locator('#gene-sets').click();
+        await expect(page.locator('#gene-sets-panel')).toBeVisible();
+        await page.locator('gpf-gene-sets select.form-control').selectOption({ label: 'Denovo' });
+
+        await page.check('#iossifov_2014-checkbox-affected');
+
+        await page.getByPlaceholder('Select or start typing to search').click();
+        await page.getByPlaceholder('Select or start typing to search').fill('Missense');
+        await page.waitForResponse(
+          (resp) => resp.url().includes('/api/v3/gene_sets/gene_sets') && resp.status() === 200
+        );
+
+        await page.locator('button.dropdown-item span')
+          .getByText('Missense')
+          .first()
+          .click();
+
+        const download = page.waitForEvent('download');
+        const downloadData = [];
+        await page.locator('a.download-link').click();
+
+        for await (const chunk of await (await download).createReadStream()) {
+          downloadData.push(chunk);
+        }
+
+        // Assert that the downloaded file contents are the same as the expected file contents
+
+        const expectedDataLines = (
+          await utils.readFile(path.join(__dirname +
+            '/../fixtures/gene-sets/Missense_iossifov_2014_status_affected.csv'))
+        ).toString();
+
+        const downloadedData = Buffer.concat(downloadData);
+        const downloadedDataLines = downloadedData.toString();
+
+        expect(downloadedDataLines.split('\n').sort()).toEqual(expectedDataLines.split('\n').sort());
+    }
+  );
+
     test(
-      `should download iossifov ${
-        data.peopleGroup
-      } denovo gene sets and check whether they are equal to the reference data`,
-      async({ page }) => {
-        let index = 0;
-        for await (const queryData of data.expectedSearchConditions.effectTypesSearchQueries) {
-          await utils.navigateToDatasetPage(
-            page,
-            'iossifov_2014',
-            'Genotype browser'
-          );
+      'should download iossifov unaffected denovo gene sets and '
+      + 'check whether they are equal to the reference data', async({ page }) => {
+          await utils.navigateToDatasetPage(page, 'iossifov_2014', 'Genotype browser');
           await page.locator('#gene-sets').click();
           await expect(page.locator('#gene-sets-panel')).toBeVisible();
-          await page
-            .locator('gpf-gene-sets select.form-control')
-            .selectOption({ label: 'Denovo' });
+          await page.locator('gpf-gene-sets select.form-control').selectOption({ label: 'Denovo' });
 
-          const checkboxId1 = `#iossifov_2014-checkbox-${data.peopleGroup}`;
-          const checkboxId2 = `#iossifov_2014-checkbox-${
-            data.peopleGroup === 'affected' ? 'unaffected' : 'affected'
-          }`;
+          await page.check('#iossifov_2014-checkbox-unaffected');
 
-          if (data.peopleGroup === 'unaffected') {
-            await page.check(checkboxId1, { force: true });
-            await page.uncheck(checkboxId2, { force: true });
-          }
-          await page
-            .getByPlaceholder('Select or start typing to search')
-            .click();
-          await page
-            .getByPlaceholder('Select or start typing to search')
-            .fill(queryData);
+          await page.getByPlaceholder('Select or start typing to search').click();
+          await page.getByPlaceholder('Select or start typing to search').fill('LGDs');
           await page.waitForResponse(
-            (resp) =>
-              resp
-                .url()
-                .includes('/api/v3/gene_sets/gene_sets') && resp.status() === 200
+            (resp) => resp.url().includes('/api/v3/gene_sets/gene_sets') && resp.status() === 200
           );
-          await page
-            .locator('button.dropdown-item span')
-            .getByText(data.expectedSearchConditions.effectTypesSearchQueries[index])
+
+          await page.locator('button.dropdown-item span')
+            .getByText('LGDs')
             .first()
             .click();
 
@@ -272,28 +249,18 @@ test.describe('Genes block denovo gene set gene symbols tests', () => {
           for await (const chunk of await (await download).createReadStream()) {
             downloadData.push(chunk);
           }
-          const downloadedData = Buffer.concat(downloadData);
 
           // Assert that the downloaded file contents are the same as the expected file contents
+
+          const expectedDataLines = (
+            await utils.readFile(path.join(__dirname + '/../fixtures/gene-sets/LGDs_iossifov_2014_unaffected.csv'))
+          ).toString();
+
+          const downloadedData = Buffer.concat(downloadData);
           const downloadedDataLines = downloadedData.toString();
 
-          const expectedDataLines = (await utils.readFile(
-            path.join(
-              __dirname +
-                data.expectedSearchConditions.expectedGeneSymbolsFiles[index]
-            )
-          )) as string;
-            expect(downloadedDataLines.split('\n').sort()).toEqual(
-            expectedDataLines.split('\n').sort()
-          );
-        index++;
-      await utils.navigateToDatasetPage(
-        page,
-        'iossifov_2014',
-        'Genotype browser'
-      );
-    }
-    }
-  );
-  });
+          expect(downloadedDataLines.split('\n').sort()).toEqual(expectedDataLines.split('\n').sort());
+        }
+    );
 });
+

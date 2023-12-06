@@ -11,23 +11,11 @@ test.describe('Save query common tests', () => {
     await page.locator('#save-query-dropdown-button').click();
   });
 
-  test('should display link input', async({ page }) => {
+  test('should display save query elements', async({ page }) => {
     await expect(page.locator('#link-input')).toBeVisible();
-  });
-
-  test('should display copy link button', async({ page }) => {
     await expect(page.locator('#copy-link-button')).toBeVisible();
-  });
-
-  test('should display name input', async({ page }) => {
     await expect(page.locator('gpf-save-query #name')).toBeVisible();
-  });
-
-  test('should display description input', async({ page }) => {
     await expect(page.locator('gpf-save-query #description')).toBeVisible();
-  });
-
-  test('should display save button', async({ page }) => {
     await expect(page.locator('gpf-save-query #save-button')).toBeVisible();
   });
 });

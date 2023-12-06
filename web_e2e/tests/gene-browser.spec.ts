@@ -1,7 +1,7 @@
 // cypress/integration/example.spec.ts
 import { test, expect, Page, Locator } from '@playwright/test';
 import * as utils from './utils';
-import * as path from 'path';
+import { scanCSV } from 'nodejs-polars';
 
 test.describe('Gene browser basic display tests before query', () => {
   test.beforeEach(async({ page }) => {
@@ -10,31 +10,13 @@ test.describe('Gene browser basic display tests before query', () => {
     await utils.navigateToDatasetPage(page, 'ALL Genotypes', 'Gene browser');
   });
 
-  test('should display "Gene Symbol" card title', async({ page }) => {
+  test('should check if elements in Gene Symbol are shown before query', async({ page }) => {
     await expect(page.getByText('Gene Symbol')).toBeVisible();
-  });
-
-  test('should display search box', async({ page }) => {
     await expect(page.locator('gpf-gene-browser input#search-box')).toBeVisible();
-  });
-
-  test('should display the "Coding only" checkbox', async({ page }) => {
     await expect(page.locator('input#coding-only-checkbox')).toBeVisible();
-  });
-
-  test('should display the "Go" button', async({ page }) => {
     await expect(page.locator('input[value=\'Go\']')).toBeVisible();
-  });
-
-  test('should NOT display the filters', async({ page }) => {
     await expect(page.locator('#filters')).not.toBeVisible();
-  });
-
-  test('should NOT display the gene plot', async({ page }) => {
     await expect(page.locator('gpf-gene-plot')).not.toBeVisible();
-  });
-
-  test('should NOT display the genotype preview table', async({ page }) => {
     await expect(page.locator('gpf-genotype-preview-table')).not.toBeVisible();
   });
 });
@@ -49,52 +31,27 @@ test.describe('Gene browser basic display tests after query', () => {
     await expect(page.locator('gpf-genotype-preview-table')).toBeVisible();
   });
 
-  test('should display the filters', async({ page }) => {
+  test('should check if elements in Gene Symbol are shown after query', async({ page }) => {
     await expect(page.locator('#filters')).toBeVisible();
-  });
-
-  test('should display the gene plot', async({ page }) => {
     await expect(page.locator('gpf-gene-plot')).toBeVisible();
-  });
-
-  test('should display the genotype preview table', async({ page }) => {
     await expect(page.locator('gpf-genotype-preview-table')).toBeVisible();
-  });
-
-
-  test('should have Affected status checkboxes', async({ page }) => {
     await expect(getAffectedStatusFilter(page, 'Affected only')).toBeVisible();
     await expect(getAffectedStatusFilter(page, 'Unaffected only')).toBeVisible();
     await expect(getAffectedStatusFilter(page, 'Affected and unaffected')).toBeVisible();
-  });
-
-  test('should have effect types checkboxes', async({ page }) => {
     await expect(getEffectTypesFilter(page, 'LGDs')).toBeVisible();
     await expect(getEffectTypesFilter(page, 'missense')).toBeVisible();
     await expect(getEffectTypesFilter(page, 'synonymous')).toBeVisible();
     await expect(getEffectTypesFilter(page, 'CNV+')).toBeVisible();
     await expect(getEffectTypesFilter(page, 'CNV-')).toBeVisible();
     await expect(getEffectTypesFilter(page, 'Other')).toBeVisible();
-  });
-
-  test('should have inheritance types checkboxes', async({ page }) => {
     await expect(getInheritanceTypesFilter(page, 'Denovo')).toBeVisible();
     await expect(getInheritanceTypesFilter(page, 'Transmitted')).toBeVisible();
-  });
-
-  test('should have variant types checkboxes', async({ page }) => {
     await expect(getVariantTypesFilter(page, 'del')).toBeVisible();
     await expect(getVariantTypesFilter(page, 'ins')).toBeVisible();
     await expect(getVariantTypesFilter(page, 'del')).toBeVisible();
     await expect(getVariantTypesFilter(page, 'CNV+')).toBeVisible();
     await expect(getVariantTypesFilter(page, 'CNV-')).toBeVisible();
-  });
-
-  test('should have family variants count', async({ page }) => {
     await expect(page.locator('span#family-variants-count')).toBeVisible();
-  });
-
-  test('should have download family varinats button', async({ page }) => {
     await expect(page.locator('#download-family-variants-button')).toBeVisible();
   });
 
@@ -115,7 +72,7 @@ test.describe('Gene browser family alleles count and table tests', () => {
     await expect(page.locator('gpf-genotype-preview-table')).toBeVisible();
   });
 
-  const testCases = [
+  [
     { checkbox: 'Affected only', type: 'affectedStatus', expectedFamilyAllelesCount: '0 / 8' },
     { checkbox: 'Unaffected only', type: 'affectedStatus', expectedFamilyAllelesCount: '8 / 8' },
     { checkbox: 'Affected and unaffected', type: 'affectedStatus', expectedFamilyAllelesCount: '8 / 8' },
@@ -132,11 +89,9 @@ test.describe('Gene browser family alleles count and table tests', () => {
     { checkbox: 'del', type: 'variantTypes', expectedFamilyAllelesCount: '4 / 8' },
     { checkbox: 'CNV+', type: 'variantTypes', expectedFamilyAllelesCount: '8 / 8' },
     { checkbox: 'CNV-', type: 'variantTypes', expectedFamilyAllelesCount: '8 / 8' },
-  ];
-
-  testCases.forEach((testCase) => {
+  ].forEach((testCase) => {
     test('should display the correct value when filtering with the "'
-          + testCase.checkbox + '" checkbox', async({ page }
+          + testCase.checkbox + '" checkbox and ' + testCase.type, async({ page }
     ) => {
       await getAnyFilter(page, testCase.type, testCase.checkbox).click();
       await page.waitForRequest(utils.instanceUrl + '/api/v3/genotype_browser/query');
@@ -203,17 +158,11 @@ test.describe('Gene browser download tests', () => {
       await page.locator('#download-family-variants-button').click();
       const downloadedFile = await downloadPromise;
 
-      const streamData = downloadedFile.createReadStream();
-      const data = [];
-
-      for await (const chunk of await streamData) {
-        data.push(chunk);
-      }
-
-      const expectedVariantsPath = path.join(__dirname + '/../fixtures/gene-browser/' + expectedPath);
-      const expectedFileLines = await utils.readFile(expectedVariantsPath);
-      const downloadedData = Buffer.concat(data);
-      expect(downloadedData.toString()).toEqual(expectedFileLines);
+      const fixtureData = scanCSV(await downloadedFile.path(), {sep: '\t'});
+      const downloadData = scanCSV('playwright/fixtures/gene-browser/' + expectedPath, {sep: '\t'});
+      const fixtureFrame = await fixtureData.collect();
+      const downloadFrame = await downloadData.collect();
+      expect(fixtureFrame.frameEqual(downloadFrame)).toBe(true);
     });
   });
 });
@@ -259,35 +208,14 @@ test.describe('Gene plot tests', () => {
     await page.locator('input[value=\'Go\']').click();
   });
 
-  test('should have undo button', async({ page }) => {
+  test('should test if Gene plot elements are visible', async({ page }) => {
     await expect(page.locator('#undo-button')).toBeVisible();
-  });
-
-  test('should have redo button', async({ page }) => {
     await expect(page.locator('#redo-button')).toBeVisible();
-  });
-
-  test('should have reset button', async({ page }) => {
     await expect(page.locator('#reset-button')).toBeVisible();
-  });
-
-  test('should have hide transcripts checkbox', async({ page }) => {
     await expect(page.getByText('Hide transcripts')).toBeVisible();
-  });
-
-  test('should have condense introns checkbox', async({ page }) => {
     await expect(page.getByText('Condense introns')).toBeVisible();
-  });
-
-  test('should have gene title with the correct text inside', async({ page }) => {
     await expect(page.locator('#gene-title')).toHaveText('CHD8');
-  });
-
-  test('should have summary alleles count field', async({ page }) => {
     await expect(page.locator('#summary-alleles-count')).toBeVisible();
-  });
-
-  test('should have summary download button', async({ page }) => {
     await expect(page.locator('#download-summary-variants-button')).toBeVisible();
   });
 });
@@ -363,17 +291,15 @@ test.describe('Gene plot summary alleles count tests', () => {
     });
   });
 
-  const variantTypesTestCases = [
+  [
     {checkbox: 'sub', expectedSummaryAllelesCount: '5 / 8'},
     {checkbox: 'ins', expectedSummaryAllelesCount: '7 / 8'},
     {checkbox: 'del', expectedSummaryAllelesCount: '4 / 8'},
     {checkbox: 'CNV+', expectedSummaryAllelesCount: '8 / 8'},
     {checkbox: 'CNV-', expectedSummaryAllelesCount: '8 / 8'}
-  ];
-
-  variantTypesTestCases.forEach(testCase => {
+  ].forEach(testCase => {
     test('should display the correct value when filtering with the "'
-    + testCase.checkbox + '" checkbox', async({ page }
+    + testCase.checkbox + '" checkbox and expect ' + testCase.expectedSummaryAllelesCount, async({ page }
     ) => {
       await expect(page.locator('#variant-types-filters')).toBeVisible();
       await expect(page.locator('#summary-alleles-count')).toHaveText('8 / 8');
@@ -431,16 +357,13 @@ test.describe('Gene plot download tests', () => {
 
       const downloadedVariants = page.waitForEvent('download');
       await page.getByTitle('Download summary variants').click();
-      const downloadedData = (await downloadedVariants).createReadStream();
-      const compiledDownloadData = [];
-      for await (const chunk of await downloadedData) {
-        compiledDownloadData.push(chunk);
-      }
-      const expectedFile = await utils.readFile(
-        path.join(__dirname + '/../fixtures/gene-browser/' + testCase.expectedPath)
-      );
 
-      expect(compiledDownloadData.toString()).toEqual(expectedFile);
+      const download = await downloadedVariants;
+      const fixtureData = scanCSV(await download.path(), {sep: '\t'});
+      const downloadData = scanCSV('playwright/fixtures/gene-browser/' + testCase.expectedPath, {sep: '\t'});
+      const fixtureFrame = await fixtureData.collect();
+      const downloadFrame = await downloadData.collect();
+      expect(fixtureFrame.frameEqual(downloadFrame)).toBe(true);
     });
   });
 });
