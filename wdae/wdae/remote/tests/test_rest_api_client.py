@@ -168,8 +168,8 @@ def test_post_measures_download(rest_client: RESTClient) -> None:
     lines = list(csv)
 
     assert lines is not None
-    assert len(lines) == 5021
     print(b"".join(lines).decode())
+    assert len(lines) == 5021
 
 
 def test_post_pheno_tool(rest_client: RESTClient) -> None:

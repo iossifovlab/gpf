@@ -102,23 +102,24 @@ def test_get_people_measure_values(
 ) -> None:
     result_it = fake_phenotype_data.get_people_measure_values(query_cols)
     result = list(result_it)
+    base_cols = ["person_id", "family_id", "role"]
     db_query_cols = [safe_db_name(query_col) for query_col in query_cols]
-    dict_list_check(result, 195, ["person_id"] + db_query_cols)
+    dict_list_check(result, 195, base_cols + db_query_cols)
 
     result_it = fake_phenotype_data.get_people_measure_values(
         query_cols, ["f20.p1"])
     result = list(result_it)
-    dict_list_check(result, 1, ["person_id"] + db_query_cols)
+    dict_list_check(result, 1, base_cols + db_query_cols)
 
     result_it = fake_phenotype_data.get_people_measure_values(
         query_cols, ["f20.p1", "f21.p1"])
     result = list(result_it)
-    dict_list_check(result, 2, ["person_id"] + db_query_cols)
+    dict_list_check(result, 2, base_cols + db_query_cols)
 
     result_it = fake_phenotype_data.get_people_measure_values(
         query_cols, roles=["prb"])
     result = list(result_it)
-    dict_list_check(result, 39, ["person_id"] + db_query_cols)
+    dict_list_check(result, 39, base_cols + db_query_cols)
 
 
 def test_get_people_measure_values_correct_values(
@@ -128,6 +129,8 @@ def test_get_people_measure_values_correct_values(
         ["i1.m1", "i1.m2"], roles=["prb"]))
     assert result_list[-1] == {
         "person_id": "f1.p1",
+        "family_id": "f1",
+        "role": "prb",
         "i1_m1": 34.76285793898369,
         "i1_m2": 48.44644402952317
     }
