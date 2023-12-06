@@ -5,8 +5,6 @@ import pytest
 from enrichment_api.enrichment_builder import EnrichmentBuilder
 from enrichment_api.enrichment_serializer import EnrichmentSerializer
 
-from dae.enrichment_tool.event_counters import EventsCounter
-from dae.enrichment_tool.tool import EnrichmentTool
 from dae.enrichment_tool.enrichment_helper import EnrichmentHelper
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.studies.study import GenotypeData
@@ -27,18 +25,13 @@ def enrichment_builder(
     f1_trio: GenotypeData,
     enrichment_helper: EnrichmentHelper
 ) -> EnrichmentBuilder:
-    enrichment_config = enrichment_helper.get_enrichment_config(f1_trio)
-    assert enrichment_config is not None
 
-    backgorund = enrichment_helper.create_background(
-        "enrichment/coding_len_testing"
-    )
-    assert backgorund is not None
-
-    counter = EventsCounter()
-    enrichment_tool = EnrichmentTool(backgorund, counter)
     builder = EnrichmentBuilder(
-        f1_trio, enrichment_tool, ["SAMD11", "PLEKHN1", "POGZ"]
+        enrichment_helper,
+        f1_trio,
+        ["SAMD11", "PLEKHN1", "POGZ"],
+        "enrichment/coding_len_testing",
+        "enrichment_events_counting"
     )
 
     return builder
@@ -53,7 +46,7 @@ def enrichment_serializer(
     enrichment_config = enrichment_helper.get_enrichment_config(f1_trio)
     assert enrichment_config is not None
 
-    build = enrichment_builder._build_results()
+    build = enrichment_builder.build_results()
     serializer = EnrichmentSerializer(enrichment_config, build)
 
     return serializer

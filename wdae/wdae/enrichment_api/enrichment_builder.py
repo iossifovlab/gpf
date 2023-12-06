@@ -6,12 +6,9 @@ from studies.remote_study import RemoteGenotypeData
 from studies.study_wrapper import RemoteStudyWrapper
 
 from dae.studies.study import GenotypeData
-from dae.enrichment_tool.genotype_helper import GenotypeHelper
 from dae.enrichment_tool.enrichment_helper import EnrichmentHelper
-from dae.enrichment_tool.tool import EnrichmentTool
 
-from dae.effect_annotation.effect import expand_effect_types
-from dae.person_sets import PersonSet, PersonSetCollection
+from dae.person_sets import PersonSetCollection
 
 from .enrichment_serializer import EnrichmentSerializer
 
@@ -27,19 +24,25 @@ class EnrichmentBuilder(BaseEnrichmentBuilder):
     """Build enrichment tool test."""
 
     def __init__(
-            self, dataset: GenotypeData,
-            enrichment_tool: EnrichmentTool,
-            gene_syms: Iterable[str]):
+        self, enrichment_helper: EnrichmentHelper,
+        dataset: GenotypeData,
+        gene_syms: Iterable[str],
+        background_id: Optional[str],
+        counting_id: Optional[str]
+    ):
+        self.enrichment_helper = enrichment_helper
         self.dataset = dataset
         self.gene_syms = gene_syms
-        self.tool = enrichment_tool
+        self.background_id = background_id
+        self.counting_id = counting_id
+
         self.results: list[dict[str, Any]]
         enrichment_config = EnrichmentHelper.get_enrichment_config(dataset)
         assert enrichment_config is not None
         self.enrichment_config = enrichment_config
 
-        effect_types = expand_effect_types(
-            self.enrichment_config["effect_types"])
+        # effect_types = expand_effect_types(
+        #     self.enrichment_config["effect_types"])
 
         self.person_set_collection = cast(
             PersonSetCollection,
@@ -48,62 +51,88 @@ class EnrichmentBuilder(BaseEnrichmentBuilder):
             )
         )
 
-        self.helper = GenotypeHelper(
-            self.dataset, self.person_set_collection,
-            effect_types=effect_types)
+        # self.helper = GenotypeHelper(
+        #     self.dataset, self.person_set_collection,
+        #     effect_types=effect_types)
 
-    def build_people_group_selector(
-        self, effect_types: list[str], person_set: PersonSet
-    ) -> Optional[dict[str, Any]]:
-        """Construct people group selector."""
-        children_stats = self.helper.get_children_stats(person_set.id)
-        children_count = (
-            children_stats.male
-            + children_stats.female
-            + children_stats.unspecified
-        )
+    # def build_people_group_selector(
+    #     self, effect_types: list[str], person_set: PersonSet
+    # ) -> Optional[dict[str, Any]]:
+    #     """Construct people group selector."""
+    #     children_stats = self.helper.get_children_stats(person_set.id)
 
-        if children_count <= 0:
-            return None
+    #     if children_stats.total <= 0:
+    #         return None
 
-        results: dict[str, Any] = {}
-        for effect_type in effect_types:
-            enrichment_results = self.tool.calc(
-                self.gene_syms,
-                self.helper.get_denovo_events(),
-                effect_types=[effect_type],
-                children_by_sex=self.helper.children_by_sex(person_set.id)
-            )
+    #     results: dict[str, Any] = {}
+    #     for effect_type in effect_types:
+    #         enrichment_results = self.tool.calc(
+    #             self.gene_syms,
+    #             self.helper.get_denovo_events(),
+    #             effect_types=[effect_type],
+    #             children_by_sex=self.helper.children_by_sex(person_set.id)
+    #         )
 
-            results[effect_type] = enrichment_results
-        children_stats = self.helper.get_children_stats(person_set.id)
-        results["childrenStats"] = {
-            "M": children_stats.male,
-            "F": children_stats.female,
-            "U": children_stats.unspecified
-        }
-        results["selector"] = person_set.name
-        results["geneSymbols"] = list(self.gene_syms)
-        results["peopleGroupId"] = self.person_set_collection.id
-        results["peopleGroupValue"] = person_set.id
-        results["datasetId"] = self.dataset.study_id
+    #         results[effect_type] = enrichment_results
+    #     children_stats = self.helper.get_children_stats(person_set.id)
+    #     results["childrenStats"] = {
+    #         "M": children_stats.male,
+    #         "F": children_stats.female,
+    #         "U": children_stats.unspecified
+    #     }
+    #     results["selector"] = person_set.name
+    #     results["geneSymbols"] = list(self.gene_syms)
+    #     results["peopleGroupId"] = self.person_set_collection.id
+    #     results["peopleGroupValue"] = person_set.id
+    #     results["datasetId"] = self.dataset.study_id
 
-        return results
+    #     return results
 
-    def _build_results(self) -> list[dict[str, Any]]:
+    def build_results(self) -> list[dict[str, Any]]:
+        """Build and return a list of enrichment results.
+
+        Returns:
+            A list of dictionaries representing the enrichment results.
+        """
         results = []
 
         effect_types = self.enrichment_config["effect_types"]
 
-        for person_set in self.person_set_collection.person_sets.values():
-            res = self.build_people_group_selector(effect_types, person_set)
-            if res:
-                results.append(res)
+        enrichment_result = self.enrichment_helper.calc_enrichment_test(
+            self.dataset,
+            self.person_set_collection.id,
+            self.gene_syms,
+            effect_types,
+            self.background_id,
+            self.counting_id
+        )
+        for ps_id, effect_res in enrichment_result.items():
+            res: dict[str, Any] = {}
+            person_set = self.person_set_collection.person_sets[ps_id]
+            children_stats = person_set.get_children_stats()
+            res["childrenStats"] = {
+                "M": children_stats.male,
+                "F": children_stats.female,
+                "U": children_stats.unspecified
+            }
+            res["selector"] = person_set.name
+            res["geneSymbols"] = list(self.gene_syms)
+            res["peopleGroupId"] = self.person_set_collection.id
+            res["peopleGroupValue"] = ps_id
+            res["datasetId"] = self.dataset.study_id
+            for effect_type, enrichement_res in effect_res.items():
+                res[effect_type] = {}
+                res[effect_type]["all"] = enrichement_res.all
+                res[effect_type]["rec"] = enrichement_res.rec
+                res[effect_type]["female"] = enrichement_res.female
+                res[effect_type]["male"] = enrichement_res.male
+
+            results.append(res)
 
         return results
 
     def build(self) -> list[dict[str, Any]]:
-        results = self._build_results()
+        results = self.build_results()
 
         serializer = EnrichmentSerializer(self.enrichment_config, results)
         results = serializer.serialize()

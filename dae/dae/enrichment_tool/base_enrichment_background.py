@@ -7,7 +7,7 @@ from dae.genomic_resources.repository import GenomicResource
 from dae.genomic_resources.resource_implementation import \
     get_base_resource_schema, \
     ResourceConfigValidationMixin
-from dae.enrichment_tool.event_counters import EventsCounterResult, \
+from dae.enrichment_tool.event_counters import EventCountersResult, \
     EnrichmentResult
 
 
@@ -60,10 +60,11 @@ class BaseEnrichmentBackground(
     @abc.abstractmethod
     def calc_enrichment_test(
         self,
-        events_counts: EventsCounterResult,
+        events_counts: EventCountersResult,
+        overlapped_counts: EventCountersResult,
         gene_set: Iterable[str],
         **kwargs: Any
-    ) -> dict[str, EnrichmentResult]:
+    ) -> EnrichmentResult:
         """Calculate the enrichment test."""
 
     @staticmethod

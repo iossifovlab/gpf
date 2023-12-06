@@ -6,8 +6,8 @@ import pandas as pd
 from scipy import stats
 
 from dae.genomic_resources.repository import GenomicResource
-from dae.enrichment_tool.event_counters import EventsCounterResult, \
-    EnrichmentResult, overlap_enrichment_result_dict
+from dae.enrichment_tool.event_counters import EventCountersResult, \
+    EnrichmentResult, EnrichmentSingleResult
 from dae.enrichment_tool.base_enrichment_background import \
     BaseEnrichmentBackground
 
@@ -80,54 +80,53 @@ class GeneWeightsEnrichmentBackground(BaseEnrichmentBackground):
 
     def calc_enrichment_test(
         self,
-        events_counts: EventsCounterResult,
+        events_counts: EventCountersResult,
+        overlapped_counts: EventCountersResult,
         gene_set: Iterable[str],
         **kwargs: Any
-    ) -> dict[str, EnrichmentResult]:
+    ) -> EnrichmentResult:
         """Calculate enrichment statistics."""
         gene_syms = set(gs.upper() for gs in gene_set)
-        overlapped_counts = overlap_enrichment_result_dict(
-            events_counts, gene_syms)
 
         events_prob = self.genes_prob(gene_syms)
 
         expected, pvalue = self.calc_expected_observed_pvalue(
-            events_prob, len(events_counts.all), len(overlapped_counts.all))
-        all_result = EnrichmentResult(
+            events_prob, events_counts.all, overlapped_counts.all)
+        all_result = EnrichmentSingleResult(
             "all", events_counts.all, overlapped_counts.all,
             expected, pvalue)
 
         expected, pvalue = self.calc_expected_observed_pvalue(
-            events_prob, len(events_counts.rec), len(overlapped_counts.rec))
-        rec_result = EnrichmentResult(
+            events_prob, events_counts.rec, overlapped_counts.rec)
+        rec_result = EnrichmentSingleResult(
             "rec", events_counts.rec, overlapped_counts.rec,
             expected, pvalue)
 
         expected, pvalue = self.calc_expected_observed_pvalue(
-            events_prob, len(events_counts.male), len(overlapped_counts.male))
-        male_result = EnrichmentResult(
+            events_prob, events_counts.male, overlapped_counts.male)
+        male_result = EnrichmentSingleResult(
             "male", events_counts.male, overlapped_counts.male,
             expected, pvalue)
 
         expected, pvalue = self.calc_expected_observed_pvalue(
-            events_prob, len(events_counts.female),
-            len(overlapped_counts.female))
-        female_result = EnrichmentResult(
+            events_prob, events_counts.female,
+            overlapped_counts.female)
+        female_result = EnrichmentSingleResult(
             "female", events_counts.female, overlapped_counts.female,
             expected, pvalue)
 
         expected, pvalue = self.calc_expected_observed_pvalue(
-            events_prob, len(events_counts.unspecified),
-            len(overlapped_counts.unspecified))
-        unspecified_result = EnrichmentResult(
+            events_prob, events_counts.unspecified,
+            overlapped_counts.unspecified)
+        unspecified_result = EnrichmentSingleResult(
             "unspecified", events_counts.unspecified,
             overlapped_counts.unspecified,
             expected, pvalue)
 
-        return {
-            "all": all_result,
-            "rec": rec_result,
-            "male": male_result,
-            "female": female_result,
-            "unspecified": unspecified_result
-        }
+        return EnrichmentResult(
+            all_result,
+            rec_result,
+            male_result,
+            female_result,
+            unspecified_result
+        )

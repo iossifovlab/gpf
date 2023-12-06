@@ -1,11 +1,11 @@
 from __future__ import annotations
-
+import abc
 import itertools
 
 from typing import Type, Iterable
 from dataclasses import dataclass
 
-from dae.variants.attributes import Sex
+from dae.person_sets import ChildrenBySex
 from dae.enrichment_tool.genotype_helper import VariantEvent
 
 
@@ -86,7 +86,16 @@ def filter_denovo_one_gene_per_events(
 
 
 @dataclass
-class EventsCounterResult:
+class VariantEventsResult:
+    all: list[VariantEvent]
+    rec: list[VariantEvent]
+    male: list[VariantEvent]
+    female: list[VariantEvent]
+    unspecified: list[VariantEvent]
+
+
+@dataclass
+class EventsResult:
     all: list[list[str]]
     rec: list[list[str]]
     male: list[list[str]]
@@ -94,7 +103,28 @@ class EventsCounterResult:
     unspecified: list[list[str]]
 
 
-class EnrichmentResult:
+@dataclass
+class EventCountersResult:
+    """Represents result of event counting."""
+
+    all: int
+    rec: int
+    male: int
+    female: int
+    unspecified: int
+
+    @staticmethod
+    def from_events_result(events: EventsResult) -> EventCountersResult:
+        return EventCountersResult(
+            len(events.all),
+            len(events.rec),
+            len(events.male),
+            len(events.female),
+            len(events.unspecified)
+        )
+
+
+class EnrichmentSingleResult:
     """Represents result of enrichment tool calculations.
 
     Supported fields are:
@@ -112,8 +142,8 @@ class EnrichmentResult:
 
     def __init__(
         self, name: str,
-        events: list[list[str]],
-        overlapped: list[list[str]],
+        events: int,
+        overlapped: int,
         expected: float,
         pvalue: float
     ):
@@ -124,11 +154,22 @@ class EnrichmentResult:
         self.pvalue = pvalue
 
     def __repr__(self) -> str:
-        return f"EnrichmentResult({self.name}): " \
-            f"events={len(self.events) if self.events else None}; " \
+        return f"EnrichmentSingleResult({self.name}): " \
+            f"events={self.events}; " \
             f"overlapped=" \
-            f"{len(self.overlapped) if self.overlapped else None}; " \
+            f"{self.overlapped}; " \
             f"expected={self.expected}; pvalue={self.pvalue}"
+
+
+@dataclass
+class EnrichmentResult:
+    """Represents result of calculating enrichment test."""
+
+    all: EnrichmentSingleResult
+    rec: EnrichmentSingleResult
+    male: EnrichmentSingleResult
+    female: EnrichmentSingleResult
+    unspecified: EnrichmentSingleResult
 
 
 def filter_overlapping_events(
@@ -137,11 +178,11 @@ def filter_overlapping_events(
 
 
 def overlap_enrichment_result_dict(
-    events_counts: EventsCounterResult, gene_syms: Iterable[str]
-) -> EventsCounterResult:
+    events_counts: EventsResult, gene_syms: Iterable[str]
+) -> EventsResult:
     """Calculate the overlap between all events and requested gene syms."""
     gene_syms_upper = [gs.upper() for gs in gene_syms]
-    result = EventsCounterResult(
+    result = EventsResult(
         filter_overlapping_events(events_counts.all, gene_syms_upper),
         filter_overlapping_events(events_counts.rec, gene_syms_upper),
         filter_overlapping_events(events_counts.male, gene_syms_upper),
@@ -151,15 +192,101 @@ def overlap_enrichment_result_dict(
     return result
 
 
-class CounterBase:
+def overlap_event_counts(
+    events_counts: EventsResult,
+    gene_syms: Iterable[str]
+) -> EventCountersResult:
+    overlapped_events = overlap_enrichment_result_dict(
+        events_counts, gene_syms)
+    return EventCountersResult(
+        len(overlapped_events.all),
+        len(overlapped_events.rec),
+        len(overlapped_events.male),
+        len(overlapped_events.female),
+        len(overlapped_events.unspecified)
+    )
+
+
+class CounterBase(abc.ABC):
     """Class to represent enrichement events counter object."""
 
+    @abc.abstractmethod
     def events(
         self, variant_events: list[VariantEvent],
-        children_by_sex: dict[str, set[tuple[str, str]]],
+        children_by_sex: ChildrenBySex,
         effect_types: Iterable[str]
-    ) -> EventsCounterResult:
+    ) -> EventsResult:
         raise NotImplementedError()
+
+    def event_counts(
+        self, variant_events: list[VariantEvent],
+        children_by_sex: ChildrenBySex,
+        effect_types: Iterable[str]
+    ) -> EventCountersResult:
+        """Calculate the event counts from the given variant events.
+
+        Args:
+            variant_events (list[VariantEvent]):
+                A list of variant events.
+            children_by_sex (dict[str, set[tuple[str, str]]]):
+                A dictionary mapping sex to a set of child IDs.
+            effect_types (Iterable[str]):
+                An iterable of effect types.
+
+        Returns:
+            EventCountersResult: An object containing the event counters.
+
+        """
+        events_result = self.events(
+            variant_events, children_by_sex, effect_types)
+        return EventCountersResult(
+            len(events_result.all),
+            len(events_result.rec),
+            len(events_result.male),
+            len(events_result.female),
+            len(events_result.unspecified)
+        )
+
+    def select_events_in_person_set(
+        self, variant_events: list[VariantEvent],
+        persons: set[tuple[str, str]]
+    ) -> list[VariantEvent]:
+        """Select variant events that occur in the passed persons."""
+        return [
+            ve
+            for ve in variant_events
+            for ae in ve.allele_events
+            if persons & ae.persons
+        ]
+
+    def split_events(
+        self, variant_events: list[VariantEvent],
+        children_by_sex: ChildrenBySex,
+    ) -> VariantEventsResult:
+        """Split the passed variant events based on the children's sex.
+
+        Args:
+            variant_events (list[VariantEvent]): The list of variant events
+                to be split.
+            children_by_sex (dict[str, set[tuple[str, str]]]): A dictionary
+                containing children grouped by sex.
+
+        Returns:
+            VariantEventsResult: An object containing the split variant events.
+
+        """
+        male = children_by_sex.male
+        female = children_by_sex.female
+        unspecified = children_by_sex.unspecified
+        all_children = male | female | unspecified
+
+        return VariantEventsResult(
+            self.select_events_in_person_set(variant_events, all_children),
+            [],
+            self.select_events_in_person_set(variant_events, male),
+            self.select_events_in_person_set(variant_events, female),
+            self.select_events_in_person_set(variant_events, unspecified)
+        )
 
 
 class EventsCounter(CounterBase):
@@ -167,63 +294,33 @@ class EventsCounter(CounterBase):
 
     def events(
         self, variant_events: list[VariantEvent],
-        children_by_sex: dict[str, set[tuple[str, str]]],
+        children_by_sex: ChildrenBySex,
         effect_types: Iterable[str]
-    ) -> EventsCounterResult:
-        male_children = children_by_sex[Sex.male.name]
-        female_children = children_by_sex[Sex.female.name]
-        unspecified_children = children_by_sex[Sex.unspecified.name]
-        all_children = male_children | female_children | unspecified_children
-
-        all_variants = [
-            ve
-            for ve in variant_events
-            for ae in ve.allele_events
-            if all_children & ae.persons
-        ]
-        male_variants = [
-            ve
-            for ve in variant_events
-            for ae in ve.allele_events
-            if male_children & ae.persons
-        ]
-        female_variants = [
-            ve
-            for ve in variant_events
-            for ae in ve.allele_events
-            if female_children & ae.persons
-        ]
-        unspecified_variants = [
-            ve
-            for ve in variant_events
-            for ae in ve.allele_events
-            if unspecified_children & ae.persons
-        ]
-
+    ) -> EventsResult:
+        events_result = self.split_events(variant_events, children_by_sex)
         all_events = filter_denovo_one_event_per_family(
-            all_variants, effect_types
+            events_result.all, effect_types
         )
         rec_events = filter_denovo_one_gene_per_recurrent_events(
-            all_variants, effect_types
+            events_result.all, effect_types
         )
         male_events = filter_denovo_one_event_per_family(
-            male_variants, effect_types
+            events_result.male, effect_types
         )
         female_events = filter_denovo_one_event_per_family(
-            female_variants, effect_types
+            events_result.female, effect_types
         )
         unspecified_events = filter_denovo_one_event_per_family(
-            unspecified_variants, effect_types
+            events_result.unspecified, effect_types
         )
 
-        result = EventsCounterResult(
+        return EventsResult(
             all_events,
             rec_events,
             male_events,
             female_events,
             unspecified_events,
         )
-        return result
 
 
 class GeneEventsCounter(CounterBase):
@@ -231,57 +328,29 @@ class GeneEventsCounter(CounterBase):
 
     def events(
         self, variant_events: list[VariantEvent],
-        children_by_sex: dict[str, set[tuple[str, str]]],
+        children_by_sex: ChildrenBySex,
         effect_types: Iterable[str]
-    ) -> EventsCounterResult:
+    ) -> EventsResult:
         """Count the events by sex and effect type."""
-        male_children = children_by_sex[Sex.male.name]
-        female_children = children_by_sex[Sex.female.name]
-        unspecified_children = children_by_sex[Sex.unspecified.name]
-        all_children = male_children | female_children | unspecified_children
-
-        all_variants = [
-            ve
-            for ve in variant_events
-            for ae in ve.allele_events
-            if all_children & ae.persons
-        ]
-        male_variants = [
-            ve
-            for ve in variant_events
-            for ae in ve.allele_events
-            if male_children & ae.persons
-        ]
-        female_variants = [
-            ve
-            for ve in variant_events
-            for ae in ve.allele_events
-            if female_children & ae.persons
-        ]
-        unspecified_variants = [
-            ve
-            for ve in variant_events
-            for ae in ve.allele_events
-            if unspecified_children & ae.persons
-        ]
+        events_result = self.split_events(variant_events, children_by_sex)
 
         all_events = filter_denovo_one_gene_per_events(
-            all_variants, effect_types
+            events_result.all, effect_types
         )
         rec_events = filter_denovo_one_gene_per_recurrent_events(
-            all_variants, effect_types
+            events_result.all, effect_types
         )
         male_events = filter_denovo_one_gene_per_events(
-            male_variants, effect_types
+            events_result.male, effect_types
         )
         female_events = filter_denovo_one_gene_per_events(
-            female_variants, effect_types
+            events_result.female, effect_types
         )
         unspecified_events = filter_denovo_one_gene_per_events(
-            unspecified_variants, effect_types
+            events_result.unspecified, effect_types
         )
 
-        result = EventsCounterResult(
+        result = EventsResult(
             all_events,
             rec_events,
             male_events,

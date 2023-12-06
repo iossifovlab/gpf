@@ -201,10 +201,12 @@ class EnrichmentTestView(QueryDatasetView):
 
         if not study_wrapper.is_remote:
             study = study_wrapper.genotype_data
-            enrichment_tool = self.enrichment_helper.create_enrichment_tool(
-                study, background_id, counting_id
-            )
-            return EnrichmentBuilder(study, enrichment_tool, gene_syms)
+            return EnrichmentBuilder(
+                self.enrichment_helper,
+                study,
+                gene_syms,
+                background_id,
+                counting_id)
 
         assert study_wrapper.is_remote
         remote_study_wrapper = cast(RemoteStudyWrapper, study_wrapper)

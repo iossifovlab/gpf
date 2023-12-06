@@ -793,19 +793,23 @@ class EffectTypesMixin:
 
 
 def expand_effect_types(
-    effect_types: Union[str, Iterable[str]]
+    effect_groups: Union[str, Iterable[str], Iterable[Iterable[str]]]
 ) -> list[str]:
     """Expand effect type groups into list of effect types."""
-    if isinstance(effect_types, str):
-        effect_types = [effect_types]
+    if isinstance(effect_groups, str):
+        effect_groups = [effect_groups]
 
     effects = []
-    for effect in effect_types:
-        effect_lower = effect.lower()
-        if effect_lower in EffectTypesMixin.EFFECT_GROUPS:
-            effects += EffectTypesMixin.EFFECT_GROUPS[effect_lower]
-        else:
-            effects.append(effect)
+    for effect_group in effect_groups:
+        if isinstance(effect_group, str):
+            effect_group = [effect_group]
+        for effect in effect_group:
+            assert isinstance(effect, str)
+            effect_lower = effect.lower()
+            if effect_lower in EffectTypesMixin.EFFECT_GROUPS:
+                effects += EffectTypesMixin.EFFECT_GROUPS[effect_lower]
+            else:
+                effects.append(effect)
 
     result = []
     for effect in effects:
