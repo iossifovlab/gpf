@@ -206,7 +206,7 @@ def test_enrichment_test_gene_scores(
     url = "/api/v3/enrichment/test"
     query = {
         "datasetId": "f1_trio",
-        "enrichmentBackgroundModel": "coding_len_background_model",
+        "enrichmentBackgroundModel": "enrichment/coding_len_testing",
         "enrichmentCountingModel": "enrichment_gene_counting",
         "geneScores": {
             "score": "LGD_rank",
@@ -228,7 +228,7 @@ def test_enrichment_test_gene_scores_with_zero_range(
     url = "/api/v3/enrichment/test"
     query = {
         "datasetId": "f1_trio",
-        "enrichmentBackgroundModel": "coding_len_background_model",
+        "enrichmentBackgroundModel": "enrichment/coding_len_testing",
         "enrichmentCountingModel": "enrichment_gene_counting",
         "geneScores": {
             "score": "LGD_rank",
@@ -254,7 +254,7 @@ def test_enrichment_test_gene_set(
     url = "/api/v3/enrichment/test"
     query = {
         "datasetId": "f1_trio",
-        "enrichmentBackgroundModel": "coding_len_background_model",
+        "enrichmentBackgroundModel": "enrichment/coding_len_testing",
         "enrichmentCountingModel": "enrichment_gene_counting",
         "geneSet": {
             "geneSetsCollection": "denovo",

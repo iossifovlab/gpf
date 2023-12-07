@@ -1,10 +1,12 @@
-from builtins import object
 from users_api.models import WdaeUser
 from django.contrib.auth.models import BaseUserManager, Group
 
 
-class ImportUsersBase(object):
-    def handle_user(self, res):
+class ImportUsersBase:
+    """Helper for users import."""
+
+    def handle_user(self, res: dict[str, str]) -> WdaeUser:
+        """Handle creation of user on import."""
         email = BaseUserManager.normalize_email(res["Email"])
         user = WdaeUser.objects.create_user(email=email)
 
@@ -16,7 +18,7 @@ class ImportUsersBase(object):
                 if group_name == "":
                     continue
                 group, _ = Group.objects.get_or_create(name=group_name)
-                group.user_set.add(user)
+                group.user_set.add(user)  # type: ignore
 
             if WdaeUser.SUPERUSER_GROUP in res["Groups"]:
                 user.is_superuser = True

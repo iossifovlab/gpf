@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 import enum
 
-from typing import Optional, Any, Iterable
+from typing import Optional, Any, Iterable, cast
 
 
 from dae.utils.helpers import isnan
@@ -292,11 +292,11 @@ class Person:
 
     @property
     def layout(self) -> Optional[str]:
-        return self._attributes.get("layout", None)
+        return cast(Optional[str], self._attributes.get("layout", None))
 
     @property
     def generated(self) -> bool:
-        return self._attributes.get("generated", False)
+        return cast(bool, self._attributes.get("generated", False))
 
     @property
     def not_sequenced(self) -> bool:
@@ -311,11 +311,11 @@ class Person:
 
     @property
     def family_bin(self) -> Optional[str]:
-        return self._attributes.get("family_bin", None)
+        return cast(Optional[str], self._attributes.get("family_bin", None))
 
     @property
     def sample_index(self) -> Optional[int]:
-        return self._attributes.get("sample_index", None)
+        return cast(Optional[int], self._attributes.get("sample_index", None))
 
     def has_mom(self) -> bool:
         return self.mom is not None

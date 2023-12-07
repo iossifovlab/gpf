@@ -70,7 +70,7 @@ def build_coding_length_background(gene_models: GeneModels) -> pd.DataFrame:
     genes_lengths = {}
     for gene, regions in genes_regions.items():
         gene_len = sum(len(r) for r in regions)
-        genes_lengths[gene] = gene_len
+        genes_lengths[gene.upper()] = gene_len
 
     df = pd.DataFrame.from_records(
         list(genes_lengths.items()), columns=["gene", "gene_weight"])

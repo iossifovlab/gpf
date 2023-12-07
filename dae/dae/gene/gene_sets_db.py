@@ -3,20 +3,15 @@
 import abc
 import logging
 import os
-from typing import Dict, List, Optional, cast, Set
-from urllib.parse import urlparse
-from functools import cached_property
 import copy
 import textwrap
 
-from sqlalchemy import create_engine  # type: ignore
-from sqlalchemy import MetaData, Table, Column, String
-from sqlalchemy.sql import insert
+from typing import Optional, Any
+from functools import cached_property
 
 from jinja2 import Template
 from markdown2 import markdown
 
-from dae.genomic_resources.fsspec_protocol import FsspecReadOnlyProtocol
 from dae.gene.gene_term import read_ewa_set_file, read_gmt_file, \
     read_mapping_file
 from dae.genomic_resources.repository import GenomicResource
@@ -24,7 +19,7 @@ from dae.genomic_resources.resource_implementation import \
     GenomicResourceImplementation, get_base_resource_schema, \
     InfoImplementationMixin, ResourceConfigValidationMixin
 from dae.genomic_resources.fsspec_protocol import build_local_resource
-from dae.task_graph.graph import Task
+from dae.task_graph.graph import Task, TaskGraph
 
 logger = logging.getLogger(__name__)
 
@@ -37,15 +32,15 @@ class GeneSet:
     name: str
     desc: str
     count: int
-    syms: List[str]
+    syms: list[str]
 
-    def __init__(self, name: str, desc: str, syms: List[str]):
+    def __init__(self, name: str, desc: str, syms: list[str]) -> None:
         self.name = name
         self.desc = desc
         self.count = len(syms)
         self.syms = syms
 
-    def __getitem__(self, name):
+    def __getitem__(self, name: str) -> Any:
         # This is done so that GeneSet instances and
         # denovo gene set dictionaries can be accessed in a uniform way
         if name == "name":
@@ -69,7 +64,7 @@ class BaseGeneSetCollection(abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def get_all_gene_sets(self) -> List[GeneSet]:
+    def get_all_gene_sets(self) -> list[GeneSet]:
         """Return list of all gene sets in the collection."""
         raise NotImplementedError()
 
@@ -82,7 +77,7 @@ class GeneSetCollection(
 ):
     """Class representing a collection of gene sets in a resource."""
 
-    def __init__(self, resource: GenomicResource):
+    def __init__(self, resource: GenomicResource) -> None:
         super().__init__(resource)
 
         self.config = self.validate_and_normalize_schema(
@@ -95,15 +90,15 @@ class GeneSetCollection(
         self.web_label = config.get("web_label", None)
         self.web_format_str = config.get("web_format_str", None)
         logger.debug("loading %s: %s", self.collection_id, config)
-        self.gene_sets: Dict[str, GeneSet] = self.load_gene_sets()
+        self.gene_sets: dict[str, GeneSet] = self.load_gene_sets()
 
         assert self.collection_id, self.gene_sets
 
     @property
-    def files(self):
+    def files(self) -> set[str]:
         raise NotImplementedError
 
-    def load_gene_sets(self):
+    def load_gene_sets(self) -> dict[str, GeneSet]:
         """Build a gene set collection from a given GenomicResource."""
         assert self.resource is not None
         gene_sets = {}
@@ -155,10 +150,10 @@ class GeneSetCollection(
             )
         return gene_set
 
-    def get_all_gene_sets(self) -> List[GeneSet]:
+    def get_all_gene_sets(self) -> list[GeneSet]:
         return list(self.gene_sets.values())
 
-    def get_template(self):
+    def get_template(self) -> Template:
         return Template(textwrap.dedent("""
             {% extends base %}
             {% block content %}
@@ -185,14 +180,14 @@ class GeneSetCollection(
             {% endblock %}
         """))
 
-    def _get_template_data(self):
+    def _get_template_data(self) -> dict:
         info = copy.deepcopy(self.config)
         if "meta" in info:
             info["meta"] = markdown(str(info["meta"]))
         return info
 
     @staticmethod
-    def get_schema():
+    def get_schema() -> dict[str, Any]:
         return {
             **get_base_resource_schema(),
             "filename": {"type": "string"},
@@ -204,155 +199,157 @@ class GeneSetCollection(
 
         }
 
-    def get_info(self):
+    def get_info(self) -> str:
         return InfoImplementationMixin.get_info(self)
 
-    def calc_info_hash(self):
-        return "placeholder"
+    def calc_info_hash(self) -> bytes:
+        return b"placeholder"
 
     def calc_statistics_hash(self) -> bytes:
         return b"placeholder"
 
-    def add_statistics_build_tasks(self, task_graph, **kwargs) -> List[Task]:
+    def add_statistics_build_tasks(
+        self, task_graph: TaskGraph, **kwargs: Any
+    ) -> list[Task]:
         return []
 
 
-class SqliteGeneSetCollectionDB(
-    GenomicResourceImplementation,
-    ResourceConfigValidationMixin,
-    InfoImplementationMixin
-):
-    """Collection of gene sets stored in a SQLite database."""
+# class SqliteGeneSetCollectionDB(
+#     GenomicResourceImplementation,
+#     ResourceConfigValidationMixin,
+#     InfoImplementationMixin
+# ):
+#     """Collection of gene sets stored in a SQLite database."""
 
-    def __init__(self, resource):
-        super().__init__(resource)
-        self.config = self.validate_and_normalize_schema(
-            self.config, resource
-        )
-        self.collection_id = self.config["id"]
-        assert self.collection_id != "denovo"
-        assert resource.get_type() == "gene_set", "Invalid resource type"
-        self.web_label = self.config.get("web_label", None)
-        self.web_format_str = self.config.get("web_format_str", None)
-        self.dbfile = self._get_dbfile_path()
-        self.engine = create_engine(f"sqlite:///{self.dbfile}")
-        self.metadata = MetaData(self.engine)
-        self._create_gene_sets_table()
+#     def __init__(self, resource):
+#         super().__init__(resource)
+#         self.config = self.validate_and_normalize_schema(
+#             self.config, resource
+#         )
+#         self.collection_id = self.config["id"]
+#         assert self.collection_id != "denovo"
+#         assert resource.get_type() == "gene_set", "Invalid resource type"
+#         self.web_label = self.config.get("web_label", None)
+#         self.web_format_str = self.config.get("web_format_str", None)
+#         self.dbfile = self._get_dbfile_path()
+#         self.engine = create_engine(f"sqlite:///{self.dbfile}")
+#         self.metadata = MetaData(self.engine)
+#         self._create_gene_sets_table()
 
-    def _get_dbfile_path(self) -> str:
-        dbfile = self.config["dbfile"]
-        proto: FsspecReadOnlyProtocol = \
-            cast(FsspecReadOnlyProtocol, self.resource.proto)
-        if not isinstance(proto, FsspecReadOnlyProtocol) \
-                and proto.scheme != "file":
-            raise ValueError(
-                "sqlite gene sets are supported only on local filesystem")
-        dbfile_url = proto.get_resource_file_url(self.resource, dbfile)
-        dbfile_path = urlparse(dbfile_url).path
-        return dbfile_path
+#     def _get_dbfile_path(self) -> str:
+#         dbfile = self.config["dbfile"]
+#         proto: FsspecReadOnlyProtocol = \
+#             cast(FsspecReadOnlyProtocol, self.resource.proto)
+#         if not isinstance(proto, FsspecReadOnlyProtocol) \
+#                 and proto.scheme != "file":
+#             raise ValueError(
+#                 "sqlite gene sets are supported only on local filesystem")
+#         dbfile_url = proto.get_resource_file_url(self.resource, dbfile)
+#         dbfile_path = urlparse(dbfile_url).path
+#         return dbfile_path
 
-    def _create_gene_sets_table(self):
-        self.gene_sets_table = Table(
-            "gene_sets",
-            self.metadata,
-            Column("name", String(), primary_key=True),
-            Column("desc", String()),
-            Column("syms", String()),
-        )
+#     def _create_gene_sets_table(self):
+#         self.gene_sets_table = Table(
+#             "gene_sets",
+#             self.metadata,
+#             Column("name", String(), primary_key=True),
+#             Column("desc", String()),
+#             Column("syms", String()),
+#         )
 
-        self.metadata.create_all(self.engine)
+#         self.metadata.create_all(self.engine)
 
-    def add_gene_set(self, gene_set: GeneSet):
-        """Add a gene set to the database."""
-        with self.engine.begin() as connection:
-            insert_values = {
-                "name": gene_set.name,
-                "desc": gene_set.desc,
-                "syms": ",".join(gene_set.syms)
-            }
-            connection.execute(
-                insert(self.gene_sets_table).values(insert_values)
-            )
-            connection.commit()
+#     def add_gene_set(self, gene_set: GeneSet):
+#         """Add a gene set to the database."""
+#         with self.engine.begin() as connection:
+#             insert_values = {
+#                 "name": gene_set.name,
+#                 "desc": gene_set.desc,
+#                 "syms": ",".join(gene_set.syms)
+#             }
+#             connection.execute(
+#                 insert(self.gene_sets_table).values(insert_values)
+#             )
+#             connection.commit()
 
-    def get_gene_set(self, gene_set_id):
-        """Fetch and construct a GeneSet from the database."""
-        table = self.gene_sets_table
-        select = table.select().where(table.c.name == gene_set_id)
-        with self.engine.connect() as connection:
-            row = connection.execute(select).fetchone()
-            gene_set = GeneSet(
-                row["name"],
-                row["desc"],
-                row["syms"].split(",")
-            )
-            return gene_set
+#     def get_gene_set(self, gene_set_id):
+#         """Fetch and construct a GeneSet from the database."""
+#         table = self.gene_sets_table
+#         select = table.select().where(table.c.name == gene_set_id)
+#         with self.engine.connect() as connection:
+#             row = connection.execute(select).fetchone()
+#             gene_set = GeneSet(
+#                 row["name"],
+#                 row["desc"],
+#                 row["syms"].split(",")
+#             )
+#             return gene_set
 
-    def get_template(self):
-        return Template(textwrap.dedent("""
-            {% extends base %}
-            {% block content %}
-            <hr>
-            <h3>Gene sets dbfile:</h3>
-            <a href="{{ data["dbfile"] }}">
-            {{ data["dbfile"] }}
-            </a>
-            <p>Format: {{ data["format"] }}</p>
-            {% if data["web_label"] %}
-            <p>Web label: {{ data["web_label"] }}</p>
-            {% endif %}
-            {% if data["web_format_str"] %}
-            <p>Web label: {{ data["web_format_str"] }}</p>
-            {% endif %}
-            {% endblock %}
-        """))
+#     def get_template(self):
+#         return Template(textwrap.dedent("""
+#             {% extends base %}
+#             {% block content %}
+#             <hr>
+#             <h3>Gene sets dbfile:</h3>
+#             <a href="{{ data["dbfile"] }}">
+#             {{ data["dbfile"] }}
+#             </a>
+#             <p>Format: {{ data["format"] }}</p>
+#             {% if data["web_label"] %}
+#             <p>Web label: {{ data["web_label"] }}</p>
+#             {% endif %}
+#             {% if data["web_format_str"] %}
+#             <p>Web label: {{ data["web_format_str"] }}</p>
+#             {% endif %}
+#             {% endblock %}
+#         """))
 
-    def _get_template_data(self):
-        info = copy.deepcopy(self.config)
-        if "meta" in info:
-            info["meta"] = markdown(str(info["meta"]))
-        return info
+#     def _get_template_data(self):
+#         info = copy.deepcopy(self.config)
+#         if "meta" in info:
+#             info["meta"] = markdown(str(info["meta"]))
+#         return info
 
-    @property
-    def files(self):
-        raise NotImplementedError
+#     @property
+#     def files(self):
+#         raise NotImplementedError
 
-    @staticmethod
-    def get_schema():
-        return {
-            **get_base_resource_schema(),
-            "dbfile": {"type": "string"},
-            "id": {"type": "string"},
-            "format": {"type": "string"},
-            "web_label": {"type": "string"},
-            "web_format_str": {"type": "string"}
+#     @staticmethod
+#     def get_schema():
+#         return {
+#             **get_base_resource_schema(),
+#             "dbfile": {"type": "string"},
+#             "id": {"type": "string"},
+#             "format": {"type": "string"},
+#             "web_label": {"type": "string"},
+#             "web_format_str": {"type": "string"}
 
-        }
+#         }
 
-    def get_info(self):
-        return InfoImplementationMixin.get_info(self)
+#     def get_info(self):
+#         return InfoImplementationMixin.get_info(self)
 
-    def calc_info_hash(self):
-        return "placeholder"
+#     def calc_info_hash(self):
+#         return "placeholder"
 
-    def calc_statistics_hash(self) -> bytes:
-        return b"placeholder"
+#     def calc_statistics_hash(self) -> bytes:
+#         return b"placeholder"
 
-    def add_statistics_build_tasks(self, task_graph, **kwargs) -> List[Task]:
-        return []
+#     def add_statistics_build_tasks(self, task_graph, **kwargs) -> list[Task]:
+#         return []
 
 
 class GeneSetsDb:
     """Class that represents a dictionary of gene set collections."""
 
-    def __init__(self, gene_set_collections: List[GeneSetCollection]):
-        self.gene_set_collections: Dict[str, GeneSetCollection] = {
+    def __init__(self, gene_set_collections: list[GeneSetCollection]) -> None:
+        self.gene_set_collections: dict[str, GeneSetCollection] = {
             gsc.collection_id: gsc
             for gsc in gene_set_collections
         }
 
     @cached_property
-    def collections_descriptions(self):
+    def collections_descriptions(self) -> list[dict[str, Any]]:
         """Collect gene set descriptions.
 
         Iterates and creates a list of descriptions
@@ -375,35 +372,38 @@ class GeneSetsDb:
             )
         return gene_sets_collections_desc
 
-    def has_gene_set_collection(self, gsc_id):
+    def has_gene_set_collection(self, gsc_id: str) -> bool:
         """Check the database if contains the specified gene set collection."""
         return gsc_id in self.gene_set_collections
 
-    def get_gene_set_collection_ids(self) -> Set[str]:
+    def get_gene_set_collection_ids(self) -> set[str]:
         """Return all gene set collection ids.
 
         Including the ids of collections which have not been loaded.
         """
         return set(self.gene_set_collections.keys())
 
-    def get_gene_set_ids(self, collection_id) -> Set[str]:
+    def get_gene_set_ids(self, collection_id: str) -> set[str]:
         """Return the IDs of all the gene sets in specified collection."""
         gsc = self.gene_set_collections[collection_id]
         return set(gsc.gene_sets.keys())
 
-    def get_all_gene_sets(self, collection_id) -> List[GeneSet]:
+    def get_all_gene_sets(self, collection_id: str) -> list[GeneSet]:
         """Return all the gene sets in the specified collection."""
         gsc = self.gene_set_collections[collection_id]
         logger.debug(
             "gene sets from %s: %s", collection_id, len(gsc.gene_sets.keys()))
         return list(gsc.gene_sets.values())
 
-    def get_gene_set(self, collection_id, gene_set_id) -> Optional[GeneSet]:
+    def get_gene_set(
+        self, collection_id: str,
+        gene_set_id: str
+    ) -> Optional[GeneSet]:
         """Find and return a gene set in a gene set collection."""
         gsc = self.gene_set_collections[collection_id]
         return gsc.get_gene_set(gene_set_id)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.gene_set_collections)
 
 
@@ -413,7 +413,7 @@ def build_gene_set_collection_from_file(
         collection_format: Optional[str] = None,
         web_label: Optional[str] = None,
         web_format_str: Optional[str] = None
-):
+) -> GeneSetCollection:
     """Return a Gene Set Collection by adapting a file to a local resource."""
     dirname = os.path.dirname(filename)
     basename = os.path.basename(filename)
@@ -452,12 +452,11 @@ def build_gene_set_collection_from_file(
     return build_gene_set_collection_from_resource(resource)
 
 
-def build_gene_set_collection_from_resource(resource: GenomicResource):
+def build_gene_set_collection_from_resource(
+    resource: GenomicResource
+) -> GeneSetCollection:
     """Return a Gene Set Collection built from a resource."""
     if resource is None:
         raise ValueError(f"missing resource {resource}")
-
-    if resource.config["format"] == "sqlite":
-        return SqliteGeneSetCollectionDB(resource)
 
     return GeneSetCollection(resource)

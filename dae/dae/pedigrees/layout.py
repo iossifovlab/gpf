@@ -211,13 +211,16 @@ class Layout:
 
     @staticmethod
     def _build_family_layout(
-            family: Family, family_connections: FamilyConnections) -> "Layout":
+        family: Family,
+        family_connections: Optional[FamilyConnections]
+    ) -> Layout:
 
         if family_connections is None:
             logger.warning(
                 "missing family connections for family: %s", family.family_id)
             return Layout._handle_broken_family_connections(family)
 
+        assert family_connections is not None
         assert family_connections.is_connected()
         sandwich_instance = family_connections.create_sandwich_instance()
         intervals = SandwichSolver.solve(sandwich_instance)
@@ -289,6 +292,7 @@ class Layout:
 
         layout_positions = defaultdict(list)
         for person in family_connections.members:
+            assert person.layout is not None, person
             position = layout_parser(person.layout)
             if position is None:
                 logger.warning(
@@ -296,6 +300,7 @@ class Layout:
                     person, person.layout)
                 return None
             individual = family_connections.get_individual(person.person_id)
+            assert individual is not None
 
             assert isinstance(position["rank"], int), (
                 person,
@@ -326,15 +331,30 @@ class Layout:
 
     @property
     def id_to_position(self) -> dict[str, IndividualWithCoordinates]:
+        assert all(i.member is not None for i in self._id_to_position)
         return {
-            k.member.person_id: v
-            for k, v in list(self._id_to_position.items())
+            k.member.person_id: v  # type: ignore
+            for k, v in self._id_to_position.items()
         }
 
     @property
     def individuals_by_rank(self) -> dict[str, int]:
+        """Return a dictionary mapping individual person IDs to their rank.
+
+        The rank is determined by the order of individuals in the
+        `_individuals_by_rank` list.
+        The higher the rank, the higher the position in the list.
+
+        Returns:
+            A dictionary mapping individual person IDs to their rank.
+        """
+        assert all(
+            i.member is not None
+            for individuals in self._individuals_by_rank
+            for i in individuals)
+
         return {
-            individual.member.person_id: rank
+            individual.member.person_id: rank  # type: ignore
             for rank, individuals in enumerate(
                 self._individuals_by_rank, start=1
             )
@@ -578,12 +598,12 @@ class Layout:
 
             for mu1, mu2 in dual_mating_units:
                 if mu1.father is mu2.father:
-                    ordered_parents = [mu1.mother, mu1.father, mu2.mother]
+                    ordered_parents_ids = [mu1.mother, mu1.father, mu2.mother]
                 else:
-                    ordered_parents = [mu1.father, mu1.mother, mu2.father]
+                    ordered_parents_ids = [mu1.father, mu1.mother, mu2.father]
 
                 ordered_parents = [
-                    self._id_to_position[i] for i in ordered_parents
+                    self._id_to_position[i] for i in ordered_parents_ids
                 ]
 
                 if ordered_parents[0].x > ordered_parents[2].x:
@@ -670,6 +690,7 @@ class Layout:
 
         children_center = (start_x + end_x) / 2.0
 
+        assert some_child.parents is not None
         mother = some_child.parents.mother
         father = some_child.parents.father
 

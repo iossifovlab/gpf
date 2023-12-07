@@ -7,11 +7,11 @@ from dae.enrichment_tool.event_counters import \
     filter_denovo_one_gene_per_recurrent_events, \
     filter_denovo_one_gene_per_events, \
     get_sym_2_fn, \
-    EnrichmentResult, \
+    EnrichmentSingleResult, \
     filter_overlapping_events, \
-    CounterBase, \
     EventsCounter, \
-    GeneEventsCounter
+    GeneEventsCounter, \
+    EVENT_COUNTERS
 
 from dae.enrichment_tool.genotype_helper import GenotypeHelper
 
@@ -93,28 +93,29 @@ def test_overlap_enrichment_result_dict(f1_trio: GenotypeData) -> None:
     overlapped = filter_overlapping_events(events, genes)
     assert overlapped == [["PLEKHN1"]]
 
-    enrichment_result = EnrichmentResult(
+    enrichment_result = EnrichmentSingleResult(
         "all",
-        events,
-        overlapped,
+        len(events),
+        len(overlapped),
         0.12345,
         0.54321
     )
 
     assert (
         str(enrichment_result)
-        == "EnrichmentResult(all): events=3; overlapped=1; "
+        == "EnrichmentSingleResult(all): events=3; overlapped=1; "
         "expected=0.12345; "
         "pvalue=0.54321"
     )
 
 
 def test_counter_base_counters() -> None:
-    counters = CounterBase.counters()
 
-    assert len(counters) == 2
-    assert counters["enrichment_events_counting"] == EventsCounter
-    assert counters["enrichment_gene_counting"] == GeneEventsCounter
+    assert len(EVENT_COUNTERS) == 2
+    assert isinstance(
+        EVENT_COUNTERS["enrichment_events_counting"], EventsCounter)
+    assert isinstance(
+        EVENT_COUNTERS["enrichment_gene_counting"], GeneEventsCounter)
 
 
 def test_events_counter(f1_trio: GenotypeData) -> None:
@@ -125,9 +126,9 @@ def test_events_counter(f1_trio: GenotypeData) -> None:
     assert psc is not None
     variant_events = GenotypeHelper.collect_denovo_events(variants)
 
-    genotype_helper = GenotypeHelper(f1_trio, psc)
+    # genotype_helper = GenotypeHelper(f1_trio, psc)
     # children_stats = gh.get_children_stats()
-    children_by_sex = genotype_helper.children_by_sex("phenotype1")
+    children_by_sex = psc.person_sets["phenotype1"].get_children_by_sex()
     effect_types = set(["missense", "synonymous"])
     event_counter = EventsCounter()
     print(children_by_sex)
@@ -162,9 +163,9 @@ def test_gene_events_counter(f1_trio: GenotypeData) -> None:
     psc = f1_trio.get_person_set_collection("phenotype")
     assert psc is not None
 
-    genotype_helper = GenotypeHelper(f1_trio, psc)
+    # genotype_helper = GenotypeHelper(f1_trio, psc)
     # children_stats = gh.get_children_stats()
-    children_by_sex = genotype_helper.children_by_sex("phenotype1")
+    children_by_sex = psc.person_sets["phenotype1"].get_children_by_sex()
     effect_types = set(["missense", "synonymous"])
     event_counter = GeneEventsCounter()
 

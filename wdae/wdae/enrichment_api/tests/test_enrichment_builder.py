@@ -11,7 +11,7 @@ pytestmark = pytest.mark.usefixtures(
 
 def test_build_results(enrichment_builder: EnrichmentBuilder) -> None:
     assert enrichment_builder
-    build = enrichment_builder._build_results()
+    build = enrichment_builder.build_results()
     print(build)
 
     assert build
@@ -24,7 +24,7 @@ def test_build_results(enrichment_builder: EnrichmentBuilder) -> None:
 
 def test_build(enrichment_builder: EnrichmentBuilder) -> None:
     assert enrichment_builder
-    build = enrichment_builder.build()
+    build = enrichment_builder.build_results()
     print(build)
 
     assert build
@@ -44,12 +44,14 @@ def test_build_people_group_selector(
     assert person_set_collection is not None
     assert len(person_set_collection.person_sets) == 2
 
-    build = enrichment_builder.build_people_group_selector(
-        ["Missense"],
-        person_set_collection.person_sets["phenotype1"],
-    )
+    results = enrichment_builder.build_results()
 
-    assert build
+    build = None
+    for build in results:
+        if build["peopleGroupValue"] == "phenotype1":
+            break
+
+    assert build is not None
     assert len(build["childrenStats"]) == 3
     assert build["childrenStats"]["M"] == 1
     assert build["childrenStats"]["F"] == 1
@@ -59,7 +61,7 @@ def test_build_people_group_selector(
     assert build["peopleGroupId"] == "phenotype"
     assert build["peopleGroupValue"] == "phenotype1"
     assert build["datasetId"] == "f1_trio"
-    assert build["Missense"]["all"].expected == 2
-    assert build["Missense"]["rec"].expected == 1
-    assert build["Missense"]["male"].expected == 1
-    assert build["Missense"]["female"].expected == 1
+    assert build["missense"]["all"].expected == 2
+    assert build["missense"]["rec"].expected == 1
+    assert build["missense"]["male"].expected == 1
+    assert build["missense"]["female"].expected == 1

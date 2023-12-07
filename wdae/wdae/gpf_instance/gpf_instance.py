@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 import pathlib
 import os
-from typing import Optional, List, Dict, Any, Union, cast, Iterable
+from typing import Optional, List, Dict, Any, Union, cast
 from threading import Lock
 from functools import cached_property
 from box import Box
@@ -12,9 +12,6 @@ from box import Box
 from studies.study_wrapper import StudyWrapper, RemoteStudyWrapper
 from studies.remote_study_db import RemoteStudyDB
 from studies.remote_study import RemoteGenotypeData
-
-from enrichment_api.enrichment_builder import \
-    EnrichmentBuilder, RemoteEnrichmentBuilder
 
 from remote.gene_sets_db import RemoteGeneSetsDb
 from remote.denovo_gene_sets_db import RemoteDenovoGeneSetsDb
@@ -25,8 +22,6 @@ from dae.studies.study import GenotypeData
 from dae.utils.fs_utils import find_directory_with_a_file
 from dae.utils.helpers import to_response_json
 from dae.gpf_instance.gpf_instance import GPFInstance
-from dae.enrichment_tool.tool import EnrichmentTool
-from dae.enrichment_tool.event_counters import CounterBase
 from dae.common_reports.common_report import CommonReport
 
 
@@ -226,110 +221,6 @@ class WGPFInstance(GPFInstance):
         remote_study_id = self.remote_study_ids[study_id]
         common_report = client.get_common_report(remote_study_id, full=True)
         return CommonReport(common_report)
-
-    def get_study_enrichment_config(self, dataset_id: str) -> Optional[Box]:
-        result: Optional[Box] = \
-            super().get_study_enrichment_config(dataset_id)
-
-        if not result:
-            study_wrapper = self.get_wdae_wrapper(dataset_id)
-            if study_wrapper is None:
-                return None
-            if "enrichment" in study_wrapper.config:
-                result = study_wrapper.config["enrichment"]
-
-        return result
-
-    def get_enrichment_tool(
-        self, enrichment_config: Box, dataset_id: str,
-        background_name: Optional[str], counting_name: Optional[str] = None
-    ) -> EnrichmentTool:
-        """Build and return enrichment tool."""
-        if (
-            background_name is None
-            or not self.has_background(
-                dataset_id, background_name
-            )
-        ):
-            background_name = enrichment_config.default_background_model
-        if not counting_name:
-            counting_name = enrichment_config.default_counting_model
-
-        logger.info("resolved background name: %s", background_name)
-        logger.info("resolved counting name: %s", counting_name)
-
-        background = self.get_study_background(
-            dataset_id, cast(str, background_name)
-        )
-
-        if background is None:
-            logger.warning("Background %s not found!", background_name)
-
-        counter = CounterBase.counters()[cast(str, counting_name)]()
-        enrichment_tool = EnrichmentTool(
-            enrichment_config, background, counter
-        )
-
-        return enrichment_tool
-
-    def _create_local_enrichment_builder(
-            self, dataset_id: str,
-            background_name: Optional[str],
-            counting_name: Optional[str],
-            gene_syms: Iterable[str]
-    ) -> Optional[EnrichmentBuilder]:
-        dataset = self.get_genotype_data(dataset_id)
-        if dataset is None:
-            return None
-        if dataset.is_remote:
-            return None
-        enrichment_config = GPFInstance.get_study_enrichment_config(
-            self,
-            dataset_id
-        )
-        if enrichment_config is None:
-            return None
-        enrichment_tool = self.get_enrichment_tool(
-            enrichment_config, dataset_id, background_name, counting_name)
-        if enrichment_tool.background is None:
-            return None
-
-        builder = EnrichmentBuilder(dataset, enrichment_tool, gene_syms)
-        return builder
-
-    def create_enrichment_builder(
-            self,
-            dataset_id: str,
-            background_name: Optional[str],
-            counting_name: Optional[str],
-            gene_syms: Iterable[str]
-    ) -> Optional[Union[EnrichmentBuilder, RemoteEnrichmentBuilder]]:
-        """Create an enrichment builder."""
-        builder: Optional[Union[EnrichmentBuilder, RemoteEnrichmentBuilder]] \
-            = self._create_local_enrichment_builder(
-                dataset_id, background_name, counting_name, gene_syms)
-        if not builder:
-            dataset = self.get_wdae_wrapper(dataset_id)
-            if dataset is None:
-                return None
-            if dataset.is_remote is False:
-                logger.warning("WARNING: Using is_remote")
-                logger.warning(
-                    "WARNING: Failed to create local enrichment builder!\n"
-                    "dataset: %s, "
-                    "requested background: %s, "
-                    "requested counting name: %s",
-                    dataset_id, background_name, counting_name
-                )
-                return None
-
-            assert dataset.is_remote
-            builder = RemoteEnrichmentBuilder(
-                cast(RemoteStudyWrapper, dataset), dataset.rest_client,
-                background_name, counting_name,
-                gene_syms)
-
-        return builder
 
     @property
     def remote_studies(self) -> list[str]:

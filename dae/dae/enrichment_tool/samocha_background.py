@@ -5,12 +5,12 @@ from typing import Optional, Any, Iterable, cast
 import pandas as pd
 from scipy import stats
 
+from dae.person_sets import ChildrenStats
 from dae.genomic_resources.repository import GenomicResource
 from dae.genomic_resources.resource_implementation import \
     get_base_resource_schema
-from dae.enrichment_tool.event_counters import EventsCounterResult, \
-    EnrichmentResult, overlap_enrichment_result_dict
-from dae.enrichment_tool.genotype_helper import ChildrenStats
+from dae.enrichment_tool.event_counters import EventCountersResult, \
+    EnrichmentResult, EnrichmentSingleResult
 from dae.enrichment_tool.base_enrichment_background import \
     BaseEnrichmentBackground
 
@@ -78,20 +78,18 @@ class SamochaEnrichmentBackground(BaseEnrichmentBackground):
 
     def calc_enrichment_test(
         self,
-        events_counts: EventsCounterResult,
+        events_counts: EventCountersResult,
+        overlapped_counts: EventCountersResult,
         gene_set: Iterable[str],
         **kwargs: Any
-    ) -> dict[str, EnrichmentResult]:
+    ) -> EnrichmentResult:
         """Calculate enrichment statistics."""
         # pylint: disable=too-many-locals
         effect_types = list(kwargs["effect_types"])
-        assert len(effect_types) == 1
+        assert len(effect_types) == 1, effect_types
         effect_type = effect_types[0]
 
         children_stats = cast(ChildrenStats, kwargs["children_stats"])
-
-        overlapped_counts = overlap_enrichment_result_dict(
-            events_counts, gene_set)
 
         eff = f"P_{effect_type.upper()}"
         assert self._df is not None
@@ -109,34 +107,34 @@ class SamochaEnrichmentBackground(BaseEnrichmentBackground):
 
         expected = p_boys * (
             children_stats.male + children_stats.unspecified) + female_expected
-        all_result = EnrichmentResult(
+        all_result = EnrichmentSingleResult(
             "all",
             events_counts.all,
             overlapped_counts.all,
             expected,
             poisson_test(
-                len(overlapped_counts.all), expected)
+                overlapped_counts.all, expected)
         )
 
-        male_result = EnrichmentResult(
+        male_result = EnrichmentSingleResult(
             "male",
             events_counts.male,
             overlapped_counts.male,
             male_expected,
             poisson_test(
-                len(overlapped_counts.male), male_expected)
+                overlapped_counts.male, male_expected)
         )
 
-        female_result = EnrichmentResult(
+        female_result = EnrichmentSingleResult(
             "female",
             events_counts.female,
             overlapped_counts.female,
             female_expected,
             poisson_test(
-                len(overlapped_counts.female), female_expected)
+                overlapped_counts.female, female_expected)
         )
 
-        if len(events_counts.rec) == 0 or len(events_counts.all) == 0:
+        if events_counts.rec == 0 or events_counts.all == 0:
             expected = 0
         else:
             children_count = (
@@ -149,12 +147,12 @@ class SamochaEnrichmentBackground(BaseEnrichmentBackground):
             expected = (
                 children_count
                 * probability
-                * len(events_counts.rec)
-                / len(events_counts.all)
+                * events_counts.rec
+                / events_counts.all
             )
 
-        pvalue = poisson_test(len(overlapped_counts.rec), expected)
-        rec_result = EnrichmentResult(
+        pvalue = poisson_test(overlapped_counts.rec, expected)
+        rec_result = EnrichmentSingleResult(
             "rec",
             events_counts.rec,
             overlapped_counts.rec,
@@ -162,15 +160,15 @@ class SamochaEnrichmentBackground(BaseEnrichmentBackground):
             pvalue
         )
 
-        return {
-            "all": all_result,
-            "rec": rec_result,
-            "male": male_result,
-            "female": female_result,
-            "unspecified": EnrichmentResult(
-                "unspecified", [], [], 0.0, 1.0
+        return EnrichmentResult(
+            all_result,
+            rec_result,
+            male_result,
+            female_result,
+            EnrichmentSingleResult(
+                "unspecified", 0, 0, 0.0, 1.0
             )
-        }
+        )
 
     @staticmethod
     def get_schema() -> dict[str, Any]:

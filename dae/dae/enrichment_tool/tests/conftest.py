@@ -1,18 +1,24 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+import textwrap
+import pathlib
 from typing import cast, Generator
 
 import pytest
 
 from box import Box
 
-from dae.enrichment_tool.background_facade import BackgroundFacade
 from dae.gpf_instance import GPFInstance
 from dae.studies.study import GenotypeData
 from dae.genomic_resources.testing import \
-    convert_to_tab_separated, build_inmemory_test_repository
+    convert_to_tab_separated, build_inmemory_test_repository, \
+    setup_directories, build_filesystem_test_repository
+from dae.testing.t4c8_import import t4c8_genes, t4c8_genome
+from dae.testing import setup_gpf_instance
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME, \
     GenomicResourceRepo
 from dae.genomic_resources.group_repository import GenomicResourceGroupRepo
+from dae.enrichment_tool.build_coding_length_enrichment_background import \
+    cli as build_coding_len_background_cli
 
 
 from dae.enrichment_tool.gene_weights_background import \
@@ -48,11 +54,6 @@ def f1_trio_enrichment_config(gpf_fixture: GPFInstance) -> Box:
 def f1_trio(gpf_fixture: GPFInstance) -> GenotypeData:
     result = gpf_fixture.get_genotype_data("f1_trio")
     return result
-
-
-@pytest.fixture(scope="session")
-def background_facade(gpf_fixture: GPFInstance) -> BackgroundFacade:
-    return gpf_fixture._background_facade
 
 
 @pytest.fixture(scope="session")
@@ -117,3 +118,43 @@ def grr() -> GenomicResourceRepo:
             }
         }
     })
+
+
+@pytest.fixture
+def t4c8_fixture(tmp_path: pathlib.Path) -> GPFInstance:
+    root_path = tmp_path
+
+    t4c8_genes(root_path / "grr")
+    t4c8_genome(root_path / "grr")
+    setup_directories(root_path, {
+        "grr_definition.yaml": textwrap.dedent(f"""
+        id: t4c8_genes_testing
+        type: dir
+        directory: {root_path / "grr"}
+        """)
+    })
+
+    coding_len_background_path = root_path / "grr" / "coding_len_background"
+    coding_len_background_path.mkdir(parents=True, exist_ok=True)
+
+    build_coding_len_background_cli([
+        "--grr", str(root_path / "grr_definition.yaml"),
+        "-o", str(coding_len_background_path / "coding_len_background.tsv"),
+        "t4c8_genes",
+    ])
+    setup_directories(coding_len_background_path, {
+        "genomic_resource.yaml": textwrap.dedent("""
+        type: gene_weights_enrichment_background
+        filename: coding_len_background.tsv
+        name: t4c8CodingLenBackground
+        """)
+    })
+
+    grr = build_filesystem_test_repository(root_path / "grr")
+    gpf_instance = setup_gpf_instance(
+        root_path / "gpf_instance",
+        reference_genome_id="t4c8_genome",
+        gene_models_id="t4c8_genes",
+        grr=grr)
+
+    return gpf_instance

@@ -1,7 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
 
-from dae.enrichment_tool.genotype_helper import GenotypeHelper
+# from dae.enrichment_tool.genotype_helper import GenotypeHelper
 from dae.studies.study import GenotypeData
 
 
@@ -38,9 +38,9 @@ def test_get_children_stats(
     psc = f1_trio.get_person_set_collection("phenotype")
     assert psc is not None
 
-    helper = GenotypeHelper(f1_trio, psc)
+    # helper = GenotypeHelper(f1_trio, psc)
 
-    children_stats = helper.get_children_stats(person_set_id)
+    children_stats = psc.person_sets[person_set_id].get_children_stats()
 
     assert children_stats.male == male
     assert children_stats.female == female

@@ -12,12 +12,35 @@ import logging
 from typing import Optional, Any, FrozenSet, Generator, cast
 from box import Box
 
+from dae.variants.attributes import Sex
 from dae.pedigrees.family import Person
 from dae.pedigrees.families_data import FamiliesData
 from dae.pheno.pheno_db import PhenotypeData, MeasureType
 
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass
+class ChildrenStats:
+    """Statistics about children in a PersonSet."""
+
+    male: int
+    female: int
+    unspecified: int
+
+    @property
+    def total(self) -> int:
+        return self.male + self.female + self.unspecified
+
+
+@dataclass
+class ChildrenBySex:
+    """Statistics about children in a PersonSet."""
+
+    male: set[tuple[str, str]]
+    female: set[tuple[str, str]]
+    unspecified: set[tuple[str, str]]
 
 
 @dataclass
@@ -34,6 +57,8 @@ class PersonSet:
         self.color: str = color
         assert all(not p.generated for p in persons.values())
         self.persons: dict[tuple[str, str], Person] = persons
+        self._children_by_sex: Optional[ChildrenBySex] = None
+        self._children_stats: Optional[ChildrenStats] = None
 
     def __repr__(self) -> str:
         return f"PersonSet({self.id}: {self.name}, {len(self.persons)})"
@@ -45,6 +70,36 @@ class PersonSet:
         for person in self.persons.values():
             if person.is_child():
                 yield person
+
+    def get_children_by_sex(self) -> ChildrenBySex:
+        """Return all children in the person set splitted by sex."""
+        if self._children_by_sex is None:
+            self._children_by_sex = ChildrenBySex(
+                set(), set(), set()
+            )
+            for child in self.get_children():
+                if child.sex == Sex.M:
+                    self._children_by_sex.male.add(child.fpid)
+                elif child.sex == Sex.F:
+                    self._children_by_sex.female.add(child.fpid)
+                else:
+                    assert child.sex == Sex.U
+                    self._children_by_sex.unspecified.add(child.fpid)
+
+        assert self._children_by_sex is not None
+        return self._children_by_sex
+
+    def get_children_stats(self) -> ChildrenStats:
+        """Return statistics about children in the person set."""
+        if self._children_stats is None:
+            children_by_sex = self.get_children_by_sex()
+            self._children_stats = ChildrenStats(
+                len(children_by_sex.male),
+                len(children_by_sex.female),
+                len(children_by_sex.unspecified)
+            )
+        assert self._children_stats is not None
+        return self._children_stats
 
     def get_parents(self) -> Generator[Person, None, None]:
         for person in self.persons.values():

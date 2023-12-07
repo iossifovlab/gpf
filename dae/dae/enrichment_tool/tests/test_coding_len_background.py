@@ -3,7 +3,8 @@
 from dae.variants.attributes import Inheritance
 from dae.studies.study import GenotypeData
 
-from dae.enrichment_tool.event_counters import EventsCounter
+from dae.enrichment_tool.event_counters import EventsCounter, \
+    EventCountersResult, overlap_event_counts
 from dae.enrichment_tool.genotype_helper import GenotypeHelper
 from dae.enrichment_tool.gene_weights_background import \
     GeneWeightsEnrichmentBackground
@@ -36,9 +37,9 @@ def test_calc_stats(
     psc = f1_trio.get_person_set_collection("phenotype")
     assert psc is not None
 
-    genotype_helper = GenotypeHelper(f1_trio, psc)
+    # genotype_helper = GenotypeHelper(f1_trio, psc)
     # children_stats = genotype_helper.get_children_stats("phenotype1")
-    children_by_sex = genotype_helper.children_by_sex("phenotype1")
+    children_by_sex = psc.person_sets["phenotype1"].get_children_by_sex()
     variant_events = GenotypeHelper.collect_denovo_events(variants)
     enrichment_events = event_counter.events(
         variant_events, children_by_sex, set(["missense", "synonymous"])
@@ -64,26 +65,27 @@ def test_calc_stats(
     assert len(enrichment_events.unspecified) == 0
 
     result = coding_len_background.calc_enrichment_test(
-        enrichment_events,
+        EventCountersResult.from_events_result(enrichment_events),
+        overlap_event_counts(enrichment_events, ["SAMD11", "PLEKHN1", "POGZ"]),
         ["SAMD11", "PLEKHN1", "POGZ"],
     )
 
-    assert len(result["all"].events) == 2
-    assert result["all"].expected == 2.0
-    assert result["all"].pvalue == 1.0
+    assert result.all.events == 2
+    assert result.all.expected == 2.0
+    assert result.all.pvalue == 1.0
 
-    assert len(result["rec"].events) == 1
-    assert result["rec"].expected == 1.0
-    assert result["rec"].pvalue == 1.0
+    assert result.rec.events == 1
+    assert result.rec.expected == 1.0
+    assert result.rec.pvalue == 1.0
 
-    assert len(result["male"].events) == 1
-    assert result["male"].expected == 1.0
-    assert result["male"].pvalue == 1.0
+    assert result.male.events == 1
+    assert result.male.expected == 1.0
+    assert result.male.pvalue == 1.0
 
-    assert len(result["female"].events) == 1
-    assert result["female"].expected == 1.0
-    assert result["female"].pvalue == 1.0
+    assert result.female.events == 1
+    assert result.female.expected == 1.0
+    assert result.female.pvalue == 1.0
 
-    assert len(result["unspecified"].events) == 0
-    assert result["unspecified"].expected == 0.0
-    assert result["unspecified"].pvalue == 1.0
+    assert result.unspecified.events == 0
+    assert result.unspecified.expected == 0.0
+    assert result.unspecified.pvalue == 1.0
