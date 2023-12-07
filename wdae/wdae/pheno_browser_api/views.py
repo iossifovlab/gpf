@@ -194,7 +194,7 @@ class PhenoMeasuresDownload(QueryDatasetView):
                 return Response(status=status.HTTP_400_BAD_REQUEST)
 
         if len(measure_ids) > 1900:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+            measure_ids = measure_ids[0:1899]
 
         if dataset.is_remote:
             values_iterator = cast(

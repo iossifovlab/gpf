@@ -905,6 +905,8 @@ class PhenotypeStudy(PhenotypeData):
         assert len(measure_ids) >= 1
         assert all(self.has_measure(m) for m in measure_ids)
 
+        assert len(self.db.instrument_values_tables) > 0
+
         measure_column_names = self.db.get_measure_column_names(measure_ids)
 
         instrument_tables = {}
@@ -933,12 +935,15 @@ class PhenotypeStudy(PhenotypeData):
         for instrument_name, columns in instrument_table_columns.items():
             select_cols.extend(columns)
 
+        first_table = instrument_tables[cast(str, first_instrument)]
+
         query = select(
-            instrument_tables[first_instrument].c.person_id,
-            instrument_tables[first_instrument].c.family_id,
-            instrument_tables[first_instrument].c.role,
+            first_table.c.person_id,
+            first_table.c.family_id,
+            first_table.c.role,
             *select_cols
         )
+        query = query.select_from(first_table)
 
         for instrument_name in instrument_table_columns:
             if instrument_name == first_instrument:
@@ -946,30 +951,29 @@ class PhenotypeStudy(PhenotypeData):
             table = instrument_tables[instrument_name]
             query = query.join(
                 table,
-                self.db.person.c.person_id == table.c.person_id,
+                first_table.c.person_id == table.c.person_id,
                 isouter=True,
                 full=True
             )
 
         if person_ids is not None:
             query = query.where(
-                instrument_tables[first_instrument].c.person_id.in_(person_ids)
+                first_table.c.person_id.in_(person_ids)
             )
         if family_ids is not None:
             query = query.where(
-                instrument_tables[first_instrument].c.family_id.in_(family_ids)
+                first_table.c.family_id.in_(family_ids)
             )
         if roles is not None:
             query = query.where(
-                instrument_tables[first_instrument].c.role.in_(roles)
+                first_table.c.role.in_(roles)
             )
 
         with self.db.pheno_engine.connect() as connection:
-            print(query)
             result = connection.execute(query)
 
             for row in result:
-                output = {**row._mapping}
+                output = {**row._mapping}  # pylint: disable=protected-access
                 yield output
 
     def get_regressions(self) -> dict[str, Any]:

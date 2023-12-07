@@ -95,7 +95,13 @@ def test_get_values(
     check(vals, 39, query_cols)
 
 
-@pytest.mark.parametrize("query_cols", [(["i1.m1"]), (["i1.m1", "i1.m2"])])
+@pytest.mark.parametrize(
+    "query_cols", [
+        (["i1.m1"]),
+        (["i1.m1", "i1.m2"]),
+        (["i1.m1", "i2.m2"])
+    ]
+)
 def test_get_people_measure_values(
     fake_phenotype_data: PhenotypeStudy,
     query_cols: list[str]

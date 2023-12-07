@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-import os
 import sys
 from typing import Optional, cast
 import logging
@@ -17,6 +16,7 @@ logger = logging.getLogger("generate_common_reports")
 
 
 def measures_cli_parser() -> ArgumentParser:
+    """Create CLI arguments for tool."""
     parser = ArgumentParser(
         description="pheno measures table builder",
         formatter_class=RawDescriptionHelpFormatter,
@@ -114,6 +114,7 @@ def main(
             selector = selector.select_from(db.measure)
             with db.pheno_engine.begin() as connection:
                 measure_rows = connection.execute(selector).fetchall()
+            # pylint: disable=protected-access
             measures = {
                 m.measure_id: {**m._mapping}
                 for m in measure_rows

@@ -4,7 +4,7 @@ from typing import Dict, Iterator, Optional, Any, cast, Union
 
 from box import Box
 
-from sqlalchemy import MetaData, create_engine, table
+from sqlalchemy import MetaData, create_engine
 from sqlalchemy import Table, Column, Integer, String, Float, Enum, \
     ForeignKey, or_, func, desc
 from sqlalchemy.sql import select, Select, text
@@ -16,7 +16,7 @@ from dae.variants.attributes import Sex, Status, Role
 from dae.pheno.common import MeasureType
 
 
-class DbManager:
+class DbManager:  # pylint: disable=too-many-instance-attributes
     """Class that manages access to phenotype databases."""
 
     STREAMING_CHUNK_SIZE = 25
@@ -75,13 +75,16 @@ class DbManager:
 
         self.build_browser()
 
-    def build_instruments_and_measures_table(self):
+    def build_instruments_and_measures_table(self) -> None:
+        """Create tables for instruments and measures."""
         if getattr(self, "instruments", None) is None:
             self.instruments = Table(
                 "instruments",
                 self.pheno_metadata,
                 Column("id", Integer(), primary_key=True),
-                Column("instrument_name", String(64), nullable=False, index=True),
+                Column(
+                    "instrument_name", String(64), nullable=False, index=True
+                ),
                 Column("table_name", String(64), nullable=False),
             )
 
@@ -116,8 +119,13 @@ class DbManager:
 
         self.pheno_metadata.create_all(self.pheno_engine)
 
-    def build_instrument_values_tables(self):
+    def build_instrument_values_tables(self) -> None:
+        """
+        Create instrument values tables.
 
+        Each row is basically a list of every measure value in the instrument
+        for a certain person.
+        """
         query = select(
             self.instruments.c.instrument_name,
             self.instruments.c.table_name
@@ -125,7 +133,7 @@ class DbManager:
         with self.pheno_engine.connect() as connection:
             instruments_rows = connection.execute(query)
             instrument_table_names = {}
-            instrument_measures = {}
+            instrument_measures: dict[str, list[str]] = {}
             for row in instruments_rows:
                 instrument_table_names[row.instrument_name] = row.table_name
                 instrument_measures[row.instrument_name] = []
@@ -151,8 +159,7 @@ class DbManager:
                     Column(
                         f"{result_row.db_column_name}",
                         column_type, nullable=True
-                    )
-
+                )
 
         for instrument_name, table_name in instrument_table_names.items():
             cols = [
@@ -203,7 +210,7 @@ class DbManager:
         measure_id_map: dict[str, str],
         measure_type_map: dict[str, MeasureType],
         measure_ids: list[str],
-        measure_column_names: dict[str, str] = None
+        measure_column_names: Optional[dict[str, str]] = None
     ) -> Select:
         select_columns = [
             self.person.c.person_id,
@@ -246,7 +253,8 @@ class DbManager:
         query = query.order_by(desc(self.person.c.person_id))
         return query
 
-    def clear_instruments_table(self, drop=False):
+    def clear_instruments_table(self, drop: bool = False) -> None:
+        """Clear the instruments table."""
         if getattr(self, "instruments", None) is None:
             return
         with self.pheno_engine.begin() as connection:
@@ -255,7 +263,8 @@ class DbManager:
                 self.instruments.drop(connection, checkfirst=False)
             connection.commit()
 
-    def clear_measures_table(self, drop=False):
+    def clear_measures_table(self, drop: bool = False) -> None:
+        """Clear the measures table."""
         if getattr(self, "measures", None) is None:
             return
         with self.pheno_engine.begin() as connection:
@@ -264,7 +273,8 @@ class DbManager:
                 self.measures.drop(connection, checkfirst=False)
             connection.commit()
 
-    def clear_instrument_values_tables(self, drop=False):
+    def clear_instrument_values_tables(self, drop: bool = False) -> None:
+        """Clear all instrument values tables."""
         if getattr(self, "instrument_values_tables", None) is None:
             return
         with self.pheno_engine.begin() as connection:
@@ -275,9 +285,7 @@ class DbManager:
             connection.commit()
 
     def get_instrument_column_names(self) -> dict[str, list[str]]:
-        """
-        Return a dictionary of instruments and their measure column names.
-        """
+        """Return a map of instruments and their measure column names."""
         query = select(
             self.measures.c.db_column_name,
             self.instruments.c.instrument_name
@@ -299,10 +307,8 @@ class DbManager:
 
     def get_measure_column_names(
         self, measure_ids: Optional[list[str]] = None
-    ) -> dict[str, list[str]]:
-        """
-        Return measure column names mapped to their respective measure IDs.
-        """
+    ) -> dict[str, str]:
+        """Return measure column names mapped to their measure IDs."""
         query = select(
             self.measures.c.measure_id,
             self.measures.c.db_column_name,
@@ -320,7 +326,13 @@ class DbManager:
                     result_row.db_column_name
         return measure_column_names
 
-    def populate_instrument_values_tables(self):
+    def populate_instrument_values_tables(self) -> None:
+        """
+        Populate the instrument values tables with values.
+
+        Dependant on measures and instruments tables being populated and
+        the original value tables being populated.
+        """
         if getattr(self, "instrument_values_tables", None) is None:
             raise ValueError("No instrument values tables prepared")
 
@@ -379,9 +391,10 @@ class DbManager:
             query_results = zip(*[
                 connection.execute(query) for query in queries
             ])
-            for group_idx, subquery_results in enumerate(query_results):
+            for subquery_results in query_results:
                 row = {}
                 for fetched_row in subquery_results:
+                    # pylint: disable=protected-access
                     row.update(fetched_row._mapping)
 
                 instrument_values = {}
@@ -745,7 +758,7 @@ class DbManager:
         selector = select(self.regressions.c.regression_id)
         with self.browser_engine.connect() as connection:
             return list(map(
-                lambda x: x[0],  # type: ignore
+                lambda x: x[0],
                 connection.execute(selector)))
 
     @property
@@ -787,7 +800,7 @@ class DbManager:
                 connection.execute(
                     select(func.count())  # pylint: disable=not-callable
                     .select_from(self.variable_browser)
-                    .where(Column("description").isnot(None))  # type: ignore
+                    .where(Column("description").isnot(None))
                 ).scalar()
             )
 
