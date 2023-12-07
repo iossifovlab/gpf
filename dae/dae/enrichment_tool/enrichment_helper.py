@@ -127,8 +127,6 @@ class EnrichmentHelper:
 
         psc = study.get_person_set_collection(psc_id)
         assert psc is not None
-        if isinstance(effect_groups, str):
-            effect_groups = [effect_groups]
 
         query_effect_types = expand_effect_types(effect_groups)
         gene_syms_query: Optional[list[str]] = None

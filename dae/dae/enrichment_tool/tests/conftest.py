@@ -1,5 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import textwrap
+import pathlib
 from typing import cast, Generator
 
 import pytest
@@ -119,9 +120,9 @@ def grr() -> GenomicResourceRepo:
     })
 
 
-@pytest.fixture(scope="session")
-def t4c8_fixture(tmp_path_factory: pytest.TempPathFactory) -> GPFInstance:
-    root_path = tmp_path_factory.mktemp("t4c8_fixture")
+@pytest.fixture
+def t4c8_fixture(tmp_path: pathlib.Path) -> GPFInstance:
+    root_path = tmp_path
 
     t4c8_genes(root_path / "grr")
     t4c8_genome(root_path / "grr")

@@ -12,8 +12,8 @@ logger = logging.getLogger("enrichment_cache_builder")
 
 
 def cli(
+    argv: Optional[list[str]] = None,
     gpf_instance: Optional[GPFInstance] = None,
-    argv: Optional[list[str]] = None
 ) -> None:
     """Generate enrichment tool cache."""
     description = "Generate enrichment tool cache"

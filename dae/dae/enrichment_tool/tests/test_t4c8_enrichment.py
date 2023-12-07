@@ -8,6 +8,7 @@ from dae.gpf_instance import GPFInstance
 from dae.enrichment_tool.gene_weights_background import \
     GeneWeightsEnrichmentBackground
 from dae.enrichment_tool.enrichment_helper import EnrichmentHelper
+from dae.enrichment_tool.enrichment_cache_builder import cli
 
 from dae.testing import setup_pedigree, setup_denovo, denovo_study
 
@@ -207,3 +208,53 @@ def test_study_1_enrichment_with_caching(
     assert res.all.events == 3
     assert res.all.overlapped == 2
     assert res.all.expected == pytest.approx(1.464, 0.001)
+
+
+def test_build_study_1_enrichment_cache(
+    study_1: GenotypeData,
+    t4c8_fixture: GPFInstance
+) -> None:
+    assert not (
+        pathlib.Path(study_1.config_dir) / "enrichment_cache.json").exists()
+
+    cli(["--studies", "study_1"], t4c8_fixture)
+
+    assert (
+        pathlib.Path(study_1.config_dir) / "enrichment_cache.json").exists()
+
+    enriichment_helper = EnrichmentHelper(t4c8_fixture.grr)
+    assert enriichment_helper is not None
+    cache = enriichment_helper._load_enrichment_event_counts_cache(study_1)
+
+    assert cache is not None
+    assert len(cache) == 2
+
+    events = cache["enrichment_events_counting"]["affected"]["LGDs"]
+    assert events["all"] == 2
+    assert events["rec"] == 1
+    assert events["female"] == 2
+
+    events = cache["enrichment_events_counting"]["affected"]["missense"]
+    assert events["all"] == 2
+    assert events["rec"] == 1
+    assert events["female"] == 2
+
+    events = cache["enrichment_events_counting"]["affected"]["synonymous"]
+    assert events["all"] == 3
+    assert events["rec"] == 1
+    assert events["female"] == 3
+
+    events = cache["enrichment_gene_counting"]["affected"]["LGDs"]
+    assert events["all"] == 1
+    assert events["rec"] == 1
+    assert events["female"] == 1
+
+    events = cache["enrichment_gene_counting"]["affected"]["missense"]
+    assert events["all"] == 1
+    assert events["rec"] == 1
+    assert events["female"] == 1
+
+    events = cache["enrichment_gene_counting"]["affected"]["synonymous"]
+    assert events["all"] == 2
+    assert events["rec"] == 1
+    assert events["female"] == 2
