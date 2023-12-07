@@ -144,7 +144,47 @@ def test_study_1_enrichment(
     results = enriichment_helper.calc_enrichment_test(
         study_1,
         "status",
-        ["T4"],
+        ["t4"],
+        effect_groups=["LGDs", "missense", "synonymous"],
+        background_id="coding_len_background",
+        counter_id="enrichment_events_counting",
+    )
+
+    assert results is not None
+    affected = results["affected"]
+
+    res = affected["LGDs"]
+    assert res.all.events == 2
+    assert res.all.overlapped == 0
+    assert res.all.expected == pytest.approx(0.976, 0.001)
+
+    res = affected["missense"]
+    assert res.all.events == 2
+    assert res.all.overlapped == 2
+    assert res.all.expected == pytest.approx(0.976, 0.001)
+
+    res = affected["synonymous"]
+    assert res.all.events == 3
+    assert res.all.overlapped == 2
+    assert res.all.expected == pytest.approx(1.464, 0.001)
+
+
+def test_study_1_enrichment_with_caching(
+    study_1: GenotypeData,
+    t4c8_fixture: GPFInstance
+) -> None:
+
+    enriichment_helper = EnrichmentHelper(t4c8_fixture.grr)
+    assert enriichment_helper is not None
+
+    enriichment_helper.build_enrichment_event_counts_cache(
+        study_1, "status"
+    )
+
+    results = enriichment_helper.calc_enrichment_test(
+        study_1,
+        "status",
+        ["t4"],
         effect_groups=["LGDs", "missense", "synonymous"],
         background_id="coding_len_background",
         counter_id="enrichment_events_counting",
