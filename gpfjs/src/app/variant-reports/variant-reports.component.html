@@ -96,13 +96,16 @@
         <span *ngIf="selectedTagsHeader" id="selected-tags-list" [title]="selectedTagsHeader">{{
           selectedTagsHeader
         }}</span>
-        <button
-          [disabled]="currentPedigreeTable.pedigrees.length === 0"
-          id="download-button"
-          (click)="downloadTags()"
-          class="btn btn-md btn-primary"
-          >Download</button
-        >
+        <div>
+          <span id="families-sum">All families: {{ familiesCount }}</span>
+          <button
+            [disabled]="currentPedigreeTable.pedigrees.length === 0"
+            id="download-button"
+            (click)="downloadTags()"
+            class="btn btn-md btn-primary"
+            >Download</button
+          >
+        </div>
       </div>
       <ng-template #tagsModal class="tags-modal">
         <div id="tags-modal-content">

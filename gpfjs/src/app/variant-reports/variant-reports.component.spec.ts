@@ -343,15 +343,20 @@ describe('VariantReportsComponent', () => {
     const updatePedigreesTable = jest.spyOn(component, 'updateTagFilters')
       .mockImplementation(() => null);
 
+    const updateFamiliesCountMock = jest.spyOn(component, 'updateFamiliesCount')
+      .mockImplementation(() => null);
+
     component.updateSelectedTags('tag6');
     expect(component.selectedItems).toStrictEqual(['tag1', 'tag2', 'tag3', 'tag4', 'tag5', 'tag6']);
     expect(component.selectedTagsHeader).toBe('tag1, tag2, tag3, tag4, tag5, tag6');
     expect(updatePedigreesTable).toHaveBeenCalledWith();
+    expect(updateFamiliesCountMock).toHaveBeenCalledWith();
 
     component.updateSelectedTags('tag3');
     expect(component.selectedItems).toStrictEqual(['tag1', 'tag2', 'tag4', 'tag5', 'tag6']);
     expect(component.selectedTagsHeader).toBe('tag1, tag2, tag4, tag5, tag6');
     expect(updatePedigreesTable).toHaveBeenCalledWith();
+    expect(updateFamiliesCountMock).toHaveBeenCalledWith();
   });
 
   it('should open modal with pedigree tags', () => {

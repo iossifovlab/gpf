@@ -237,3 +237,7 @@ h5 {
   opacity: 75%;
   font-weight: normal;
 }
+
+#families-sum {
+  margin-right: 15px;
+}
