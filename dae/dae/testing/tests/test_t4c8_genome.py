@@ -97,6 +97,7 @@ def test_t4c8_c8_genome(tmp_path: pathlib.Path) -> None:
     ("chr1", 113, "T", "A", "noEnd"),
 
     ("chr1", 114, "C", "T", "synonymous"),
+    ("chr1", 114, "C", "G", "noEnd"),
 
     ("chr1", 145, "C", "T", "splice-site"),
     ("chr1", 144, "A", "T", "splice-site"),
@@ -108,6 +109,47 @@ def test_t4c8_c8_genome(tmp_path: pathlib.Path) -> None:
     ("chr1", 101, "A", "G", "3'UTR"),
 
     ("chr1", 100, "T", "G", "intergenic"),
+
+    ("chr1", 117, "T", "A", "missense"),
+    ("chr1", 117, "T", "C", "missense"),
+    ("chr1", 117, "T", "G", "missense"),
+
+    ("chr1", 118, "C", "A", "missense"),
+    ("chr1", 118, "C", "G", "missense"),
+    ("chr1", 118, "C", "T", "missense"),
+
+    ("chr1", 119, "A", "C", "missense"),
+    ("chr1", 119, "A", "G", "synonymous"),
+    ("chr1", 119, "A", "T", "missense"),
+
+    ("chr1", 122, "A", "C", "synonymous"),
+    ("chr1", 122, "A", "G", "synonymous"),
+    ("chr1", 122, "A", "T", "synonymous"),
+
+    ("chr1", 52, "C", "A", "missense"),
+    ("chr1", 52, "C", "G", "missense"),
+    ("chr1", 52, "C", "T", "missense"),
+
+    ("chr1", 53, "A", "C", "missense"),
+    ("chr1", 53, "A", "G", "missense"),
+    ("chr1", 53, "A", "T", "missense"),
+
+    ("chr1", 54, "T", "A", "missense"),
+    ("chr1", 54, "T", "C", "synonymous"),
+    ("chr1", 54, "T", "G", "missense"),
+
+    ("chr1", 55, "A", "C", "missense"),
+    ("chr1", 55, "A", "G", "missense"),
+    ("chr1", 55, "A", "T", "missense"),
+
+    ("chr1", 56, "C", "A", "missense"),
+    ("chr1", 56, "C", "G", "missense"),
+    ("chr1", 56, "C", "T", "missense"),
+
+    ("chr1", 57, "A", "C", "synonymous"),
+    ("chr1", 57, "A", "G", "synonymous"),
+    ("chr1", 57, "A", "T", "synonymous"),
+
 ])
 def test_t4c8_c8_gene_effects(
         chrom: str, pos: int, ref: str, alt: str, expected: str,
