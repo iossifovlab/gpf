@@ -2,7 +2,7 @@ from __future__ import annotations
 import abc
 import itertools
 
-from typing import Type, Iterable
+from typing import Iterable, Union
 from dataclasses import dataclass
 
 from dae.person_sets import ChildrenBySex
@@ -210,6 +210,9 @@ def overlap_event_counts(
 class CounterBase(abc.ABC):
     """Class to represent enrichement events counter object."""
 
+    def __init__(self, counter_id: str):
+        self.counter_id = counter_id
+
     @abc.abstractmethod
     def events(
         self, variant_events: list[VariantEvent],
@@ -292,6 +295,9 @@ class CounterBase(abc.ABC):
 class EventsCounter(CounterBase):
     """Events counter class."""
 
+    def __init__(self) -> None:
+        super().__init__("enrichment_events_counting")
+
     def events(
         self, variant_events: list[VariantEvent],
         children_by_sex: ChildrenBySex,
@@ -325,6 +331,9 @@ class EventsCounter(CounterBase):
 
 class GeneEventsCounter(CounterBase):
     """Counts events in genes."""
+
+    def __init__(self) -> None:
+        super().__init__("enrichment_gene_counting")
 
     def events(
         self, variant_events: list[VariantEvent],
@@ -360,7 +369,7 @@ class GeneEventsCounter(CounterBase):
         return result
 
 
-EVENT_COUNTERS: dict[str, Type[CounterBase]] = {
-    "enrichment_events_counting": EventsCounter,
-    "enrichment_gene_counting": GeneEventsCounter,
+EVENT_COUNTERS: dict[str, Union[EventsCounter, GeneEventsCounter]] = {
+    "enrichment_events_counting": EventsCounter(),
+    "enrichment_gene_counting": GeneEventsCounter(),
 }

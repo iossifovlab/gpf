@@ -112,8 +112,10 @@ def test_overlap_enrichment_result_dict(f1_trio: GenotypeData) -> None:
 def test_counter_base_counters() -> None:
 
     assert len(EVENT_COUNTERS) == 2
-    assert EVENT_COUNTERS["enrichment_events_counting"] == EventsCounter
-    assert EVENT_COUNTERS["enrichment_gene_counting"] == GeneEventsCounter
+    assert isinstance(
+        EVENT_COUNTERS["enrichment_events_counting"], EventsCounter)
+    assert isinstance(
+        EVENT_COUNTERS["enrichment_gene_counting"], GeneEventsCounter)
 
 
 def test_events_counter(f1_trio: GenotypeData) -> None:

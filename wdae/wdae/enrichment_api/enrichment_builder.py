@@ -41,52 +41,12 @@ class EnrichmentBuilder(BaseEnrichmentBuilder):
         assert enrichment_config is not None
         self.enrichment_config = enrichment_config
 
-        # effect_types = expand_effect_types(
-        #     self.enrichment_config["effect_types"])
-
         self.person_set_collection = cast(
             PersonSetCollection,
             self.dataset.get_person_set_collection(
                 self.enrichment_config["selected_person_set_collections"][0]
             )
         )
-
-        # self.helper = GenotypeHelper(
-        #     self.dataset, self.person_set_collection,
-        #     effect_types=effect_types)
-
-    # def build_people_group_selector(
-    #     self, effect_types: list[str], person_set: PersonSet
-    # ) -> Optional[dict[str, Any]]:
-    #     """Construct people group selector."""
-    #     children_stats = self.helper.get_children_stats(person_set.id)
-
-    #     if children_stats.total <= 0:
-    #         return None
-
-    #     results: dict[str, Any] = {}
-    #     for effect_type in effect_types:
-    #         enrichment_results = self.tool.calc(
-    #             self.gene_syms,
-    #             self.helper.get_denovo_events(),
-    #             effect_types=[effect_type],
-    #             children_by_sex=self.helper.children_by_sex(person_set.id)
-    #         )
-
-    #         results[effect_type] = enrichment_results
-    #     children_stats = self.helper.get_children_stats(person_set.id)
-    #     results["childrenStats"] = {
-    #         "M": children_stats.male,
-    #         "F": children_stats.female,
-    #         "U": children_stats.unspecified
-    #     }
-    #     results["selector"] = person_set.name
-    #     results["geneSymbols"] = list(self.gene_syms)
-    #     results["peopleGroupId"] = self.person_set_collection.id
-    #     results["peopleGroupValue"] = person_set.id
-    #     results["datasetId"] = self.dataset.study_id
-
-    #     return results
 
     def build_results(self) -> list[dict[str, Any]]:
         """Build and return a list of enrichment results.
@@ -97,7 +57,6 @@ class EnrichmentBuilder(BaseEnrichmentBuilder):
         results = []
 
         effect_types = self.enrichment_config["effect_types"]
-
         enrichment_result = self.enrichment_helper.calc_enrichment_test(
             self.dataset,
             self.person_set_collection.id,

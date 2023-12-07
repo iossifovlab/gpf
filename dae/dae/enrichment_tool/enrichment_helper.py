@@ -1,5 +1,8 @@
+import os
 import logging
+import json
 
+from dataclasses import asdict
 from typing import Optional, cast, Iterable, Union
 
 from box import Box
@@ -87,30 +90,7 @@ class EnrichmentHelper:
 
     def create_counter(self, counter_id: str) -> CounterBase:
         """Create counter for a genotype data."""
-        counter_klass = EVENT_COUNTERS[counter_id]
-        counter = counter_klass()
-        return counter
-
-    # def create_enrichment_tool(
-    #     self, genotype_data: GenotypeData,
-    #     background_id: Optional[str] = None,
-    #     counter_id: Optional[str] = None
-    # ) -> EnrichmentTool:
-    #     """Create enrichment tool for a genotype data."""
-    #     if not self.has_enrichment_config(genotype_data):
-    #         raise ValueError(
-    #             f"no enrichment config for study "
-    #             f"{genotype_data.study_id}")
-    #     enrichment_config = self.get_enrichment_config(genotype_data)
-    #     assert enrichment_config is not None
-    #     if background_id is None:
-    #         background_id = enrichment_config["default_background_model"]
-    #     if counter_id is None:
-    #         counter_id = enrichment_config["default_counting_model"]
-
-    #     background = self.create_background(background_id)
-    #     counter = self.create_counter(counter_id)
-    #     return EnrichmentTool(background, counter)
+        return EVENT_COUNTERS[counter_id]
 
     def calc_enrichment_test(
         self,
@@ -128,43 +108,121 @@ class EnrichmentHelper:
                 f"{study.study_id}")
         enrichment_config = self.get_enrichment_config(study)
         assert enrichment_config is not None
-        if background_id is None:
+        if background_id is None or not background_id:
             background_id = enrichment_config["default_background_model"]
-        if counter_id is None:
+        if counter_id is None or not counter_id:
             counter_id = enrichment_config["default_counting_model"]
+
+        assert background_id is not None, enrichment_config
+        assert counter_id is not None, enrichment_config
 
         background = self.create_background(background_id)
         counter = self.create_counter(counter_id)
 
+        event_counters_cache: Optional[
+            dict[str, dict[str, dict[str, dict[str, int]]]]] = None
+        if self._has_enrichment_cache(study):
+            event_counters_cache = \
+                self._load_enrichment_event_counts_cache(study)
+
         psc = study.get_person_set_collection(psc_id)
         assert psc is not None
+        if isinstance(effect_groups, str):
+            effect_groups = [effect_groups]
 
         query_effect_types = expand_effect_types(effect_groups)
+        gene_syms_query: Optional[list[str]] = None
+        if event_counters_cache is not None:
+            gene_syms_query = list(gene_syms)
         genotype_helper = GenotypeHelper(
-            study, psc, effect_types=query_effect_types)
+            study, psc,
+            effect_types=query_effect_types,
+            genes=gene_syms_query)
 
         results: dict[str, dict[str, EnrichmentResult]] = {}
         for ps_id, person_set in psc.person_sets.items():
             children_stats = person_set.get_children_stats()
             if children_stats.total <= 0:
                 continue
+
             results[ps_id] = {}
             for effect_group in effect_groups:
                 effect_group_expanded = expand_effect_types([effect_group])
-                events = counter.events(
-                    genotype_helper.get_denovo_events(),
-                    person_set.get_children_by_sex(),
-                    effect_group_expanded)
-                event_counts = EventCountersResult.from_events_result(events)
-                overlapped_counts = overlap_event_counts(events, gene_syms)
-
-                result = background.calc_enrichment_test(
-                    event_counts, overlapped_counts,
-                    gene_syms, effect_types=effect_group)
                 if isinstance(effect_group, str):
                     eg_id = effect_group
                 else:
                     eg_id = ",".join(effect_group)
+
+                events = counter.events(
+                    genotype_helper.get_denovo_events(),
+                    person_set.get_children_by_sex(),
+                    effect_group_expanded)
+                if event_counters_cache is not None:
+                    counts = \
+                        event_counters_cache[counter_id][ps_id][eg_id]
+                    event_counts = EventCountersResult(**counts)
+                else:
+                    event_counts = \
+                        EventCountersResult.from_events_result(events)
+                overlapped_counts = overlap_event_counts(events, gene_syms)
+
+                result = background.calc_enrichment_test(
+                    event_counts, overlapped_counts,
+                    gene_syms, effect_types=[effect_group],
+                    children_stats=children_stats)
                 results[ps_id][eg_id] = result
 
         return results
+
+    def _enrichment_cache_path(self, study: GenotypeData) -> str:
+        return os.path.join(study.config_dir, "enrichment_cache.json")
+
+    def _has_enrichment_cache(self, study: GenotypeData) -> bool:
+        cache_path = self._enrichment_cache_path(study)
+        return os.path.exists(cache_path)
+
+    def _load_enrichment_event_counts_cache(
+        self, study: GenotypeData
+    ) -> dict[str, dict[str, dict[str, dict[str, int]]]]:
+        cache_path = self._enrichment_cache_path(study)
+        with open(cache_path, "r") as cache_file:
+            return cast(
+                dict[str, dict[str, dict[str, dict[str, int]]]],
+                json.loads(cache_file.read())
+            )
+
+    def build_enrichment_event_counts_cache(
+        self, study: GenotypeData,
+        psc_id: str
+    ) -> None:
+        """Build enrichment event counts cache for a genotype data."""
+        psc = study.get_person_set_collection(psc_id)
+        assert psc is not None
+
+        enrichment_config = self.get_enrichment_config(study)
+        if enrichment_config is None:
+            return
+
+        assert enrichment_config is not None
+
+        effect_groups = enrichment_config["effect_types"]
+        query_effect_types = expand_effect_types(effect_groups)
+        genotype_helper = GenotypeHelper(
+            study, psc, effect_types=query_effect_types)
+        result: dict[str, dict[str, dict[str, dict[str, int]]]] = {}
+        for counter_id, counter in EVENT_COUNTERS.items():
+            result[counter_id] = {}
+            for ps_id, person_set in psc.person_sets.items():
+                result[counter_id][ps_id] = {}
+                for effect_group in effect_groups:
+                    effect_group_expanded = expand_effect_types(effect_group)
+                    events = counter.events(
+                        genotype_helper.get_denovo_events(),
+                        person_set.get_children_by_sex(),
+                        effect_group_expanded)
+                    counts = EventCountersResult.from_events_result(events)
+                    result[counter_id][ps_id][effect_group] = asdict(counts)
+
+        cache_path = self._enrichment_cache_path(study)
+        with open(cache_path, "w") as cache_file:
+            cache_file.write(json.dumps(result, indent=4))

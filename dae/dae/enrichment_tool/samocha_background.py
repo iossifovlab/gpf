@@ -86,7 +86,7 @@ class SamochaEnrichmentBackground(BaseEnrichmentBackground):
         """Calculate enrichment statistics."""
         # pylint: disable=too-many-locals
         effect_types = list(kwargs["effect_types"])
-        assert len(effect_types) == 1
+        assert len(effect_types) == 1, effect_types
         effect_type = effect_types[0]
 
         children_stats = cast(ChildrenStats, kwargs["children_stats"])

@@ -31,15 +31,18 @@ class GenotypeHelper:
     """Genotype helper for enrichment tools."""
 
     def __init__(
-            self, genotype_data: GenotypeData,
-            person_set_collection: PersonSetCollection,
-            effect_types: Optional[list[str]] = None):
+        self, genotype_data: GenotypeData,
+        person_set_collection: PersonSetCollection,
+        effect_types: Optional[list[str]] = None,
+        genes: Optional[list[str]] = None
+    ):
 
         self.genotype_data = genotype_data
         self.person_set_collection = person_set_collection
 
         denovo_variants = self.genotype_data.query_variants(
             effect_types=effect_types,
+            genes=genes,
             inheritance=str(Inheritance.denovo.name))
 
         self._denovo_events = self.collect_denovo_events(denovo_variants)

@@ -1,12 +1,16 @@
 #!/usr/bin/env python
 import argparse
 import logging
+from typing import Optional
 
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 from dae.gpf_instance.gpf_instance import GPFInstance
 
 
-def main(gpf_instance=None, argv=None):
+def main(
+    gpf_instance: Optional[GPFInstance] = None,
+    argv: Optional[list[str]] = None
+) -> None:
     """Generate denovo gene sets CLI."""
     description = "Generate genovo gene sets tool"
     parser = argparse.ArgumentParser(description=description)
