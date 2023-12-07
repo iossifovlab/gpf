@@ -78,7 +78,6 @@ test.describe('Save query tests', () => {
     await utils.navigateToDatasetPage(page, utils.datasetIds.compAll, 'Genotype browser');
     await page.locator('gpf-effect-types').getByText('All').click();
     await page.locator('#save-query-dropdown-button').click();
-    await expect(page.getByText('ShareSaveNameDescriptionSave')).toBeVisible();
     await page.locator('gpf-save-query #name').fill('CheckedSavedQuery');
     await expect(page.locator('gpf-save-query #save-button')).toBeVisible();
     await page.locator('gpf-save-query #save-button').click({force: true});

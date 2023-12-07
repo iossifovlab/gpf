@@ -207,7 +207,7 @@ test.describe('Autism gene profiles single view dynamic data tests', () => {
 
   test('should compare all data in single view for GRIN2B', async() => {
     const page = singleViewPage;
-    await expect(page).toHaveScreenshot({fullPage: true});
+    await expect(page).toHaveScreenshot('agp-single-view-GRIN2B.png', {fullPage: true});
   });
 });
 

@@ -180,19 +180,21 @@ test.describe('App user access rights tests', () => {
   test('should login admin and give researcher access rights for comp_vcf, ' +
        'then login researcher and verify his rights', async({ page }) => {
     await utils.loginAdmin(page);
-    await utils.createUser(page, 'user_comp_vcf@iossifovlab.com', userData.normal.password);
-    await page.locator('[id="user_comp_vcf\\@iossifovlab\\.com-groups-cell"]').getByRole(
+    const username = utils.getRandomString();
+    const email = `${username}@mail.com`;
+    await utils.createUser(page, email, username);
+    await page.locator(`[id="${email}-groups-cell"]`).getByRole(
       'button', { name: 'Add' }
     ).click();
     await page.getByRole('textbox', { name: 'Search' }).fill('COMP_genotypes');
     await page.locator('button.add-item-button').filter({ hasText: 'COMP_genotypes' }).click();
-    await expect(page.locator('[id="user_comp_vcf@iossifovlab.com-password-cell"]')).toBeEmpty();
+    await expect(page.locator(`[id="${email}-password-cell"]`)).toBeEmpty();
 
-    await page.locator('[id="user_comp_vcf@iossifovlab.com-reset-password-button"] > button').click();
+    await page.locator(`[id="${email}-reset-password-button"] > button`).click();
     await page.locator('button:text("Reset")').click();
 
     await page.goto(utils.mailhogUrl, {waitUntil: 'load'});
-    await page.getByText('user_comp_vcf@iossifovlab.com').first().click();
+    await page.getByText(email).first().click();
     await page.locator('#preview-plain > a').click();
 
     await page.goto(
@@ -205,7 +207,7 @@ test.describe('App user access rights tests', () => {
     await page.locator('.login-button').click();
 
     await utils.logout(page);
-    await utils.login(page, 'user_comp_vcf@iossifovlab.com', userData.normal.password + '!!__3456');
+    await utils.login(page, email, userData.normal.password + '!!__3456');
     await utils.navigateToDatasetPage(page, utils.datasetIds.compVcf, 'Dataset Statistics');
     await expect(page.locator('#permission-denied-prompt')).not.toBeVisible();
     await expect(page.locator('gpf-variant-reports')).toBeVisible();
@@ -234,19 +236,21 @@ test.describe('App user access rights tests', () => {
   test('should login admin and give researcher access rights for ALL Genotypes, ' +
      'then login researcher and verify his rights', async({ page }) => {
     await utils.loginAdmin(page);
-    await utils.createUser(page, 'user_all_genotypes@iossifovlab.com', userData.normal.password);
-    await page.locator('[id="user_all_genotypes\\@iossifovlab\\.com-groups-cell"]').getByRole(
+    const username = utils.getRandomString();
+    const email = `${username}@mail.com`;
+    await utils.createUser(page, email, username);
+    await page.locator(`[id="${email}-groups-cell"]`).getByRole(
       'button', { name: 'Add' }
     ).click();
     await page.getByRole('textbox', { name: 'Search' }).fill('ALL_genotypes');
-    await page.locator('button.add-item-button').filter({ hasText: 'ALL_genotypes' }).click();
-    await expect(page.locator('[id="user_all_genotypes@iossifovlab.com-password-cell"]')).toBeEmpty();
+    await page.getByRole('button', { name: 'ALL_genotypes', exact: true }).click();
+    await expect(page.locator(`[id="${email}-password-cell"]`)).toBeEmpty();
 
-    await page.locator('[id="user_all_genotypes@iossifovlab.com-reset-password-button"] > button').click();
+    await page.locator(`[id="${email}-reset-password-button"] > button`).click();
     await page.locator('button:text("Reset")').click();
 
     await page.goto(utils.mailhogUrl, {waitUntil: 'load'});
-    await page.getByText('user_all_genotypes@iossifovlab.com').first().click();
+    await page.getByText(email).first().click();
     await page.locator('#preview-plain > a').click();
 
     await page.goto(
@@ -260,7 +264,7 @@ test.describe('App user access rights tests', () => {
 
     await utils.navigateToDatasetPage(page, utils.datasetIds.allGenotypes, 'Genotype browser');
     await utils.logout(page);
-    await utils.login(page, 'user_all_genotypes@iossifovlab.com', userData.normal.password + '!!__3456');
+    await utils.login(page, email, userData.normal.password + '!!__3456');
     await expect(page.locator('#permission-denied-prompt')).not.toBeVisible();
 
     await expect(page.locator('#permission-denied-prompt')).not.toBeVisible();

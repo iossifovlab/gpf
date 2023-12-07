@@ -225,6 +225,7 @@ test.describe('Genes block denovo gene set gene symbols tests', () => {
       'should download iossifov unaffected denovo gene sets and '
       + 'check whether they are equal to the reference data', async({ page }) => {
           await utils.navigateToDatasetPage(page, 'iossifov_2014', 'Genotype browser');
+          await page.reload();
           await page.locator('#gene-sets').click();
           await expect(page.locator('#gene-sets-panel')).toBeVisible();
           await page.locator('gpf-gene-sets select.form-control').selectOption({ label: 'Denovo' });
