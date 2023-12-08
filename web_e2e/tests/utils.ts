@@ -54,7 +54,6 @@ export async function login(page: Page, user = username, pass = password): Promi
 
   await page.waitForSelector('#log-out-button');
   await expect(page.getByText('Loading datasets...')).not.toBeVisible();
-  await page.waitForLoadState('networkidle');
 }
 
 export async function loginAdmin(page: Page, user = username, pass = password): Promise<void> {

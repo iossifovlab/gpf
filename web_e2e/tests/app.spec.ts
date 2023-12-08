@@ -159,23 +159,21 @@ test.describe('App user access rights tests', () => {
     await expect(page.locator('#permission-denied-prompt')).not.toBeVisible();
   });
 
-  Object.values(userData).filter(data => data.username !== undefined && data.password !== undefined).forEach(data => {
-    test(`should login with accounts with different access rights and check whether the datasets for ${
-      data.username as string
-    } in the dropdown have the correct opacity value`, async({ page }) => {
-      await utils.login(page, data.username as string, data.password as string);
-      await page.locator('#datasets-dropdown-menu-button').click();
-      await page.waitForSelector('div.dropdown-menu');
-      await expect(page).toHaveScreenshot();
-    });
+
+  test('should login admin and check whether the datasets have the correct opacity value', async({ page }) => {
+    await utils.login(page, userData.admin.username, userData.admin.password);
+    await page.locator('#datasets-dropdown-menu-button').click();
+    await page.waitForSelector('div.dropdown-menu');
+    await expect(page).toHaveScreenshot();
   });
 
-  test('should validate that researcher has no rights', async({ page }) => {
-    await utils.navigateToDatasetPage(page, utils.datasetIds.compVcf, 'Dataset Statistics');
+  test('should login researcher and check whether the datasets have the correct opacity value', async({ page }) => {
     await utils.login(page, userData.normal.username, userData.normal.password);
     await expect(page.locator('#permission-denied-prompt')).toBeVisible();
+    await page.locator('#datasets-dropdown-menu-button').click();
+    await page.waitForSelector('div.dropdown-menu');
+    await expect(page).toHaveScreenshot();
   });
-
 
   test('should login admin and give researcher access rights for comp_vcf, ' +
        'then login researcher and verify his rights', async({ page }) => {
