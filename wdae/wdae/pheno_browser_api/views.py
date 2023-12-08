@@ -137,6 +137,7 @@ class PhenoMeasuresDownload(QueryDatasetView):
     def csv_value_iterator(
         self,
         dataset: Union[RemoteStudyWrapper, StudyWrapper],
+        columns: dict[str, str],
         measure_ids: list[str]
     ) -> Generator[str, None, None]:
         header = ["person_id"] + measure_ids
@@ -151,9 +152,10 @@ class PhenoMeasuresDownload(QueryDatasetView):
             measure_ids)
 
         for values_dict in values_iterator:
-            output = []
-            for col in header:
-                output.append(values_dict[col])
+            output = [values_dict[header[0]]]
+            for col in header[1:]:
+                col_name = columns[col]
+                output.append(values_dict[col_name])
             writer.writerow(output)
             yield buffer.getvalue()
             buffer.seek(0)
@@ -191,6 +193,9 @@ class PhenoMeasuresDownload(QueryDatasetView):
             if not set(measure_ids).issubset(set(instrument_measures)):
                 return Response(status=status.HTTP_400_BAD_REQUEST)
 
+        if len(measure_ids) > 1900:
+            measure_ids = measure_ids[0:1899]
+
         if dataset.is_remote:
             values_iterator = cast(
                 Generator[str, None, None],
@@ -199,8 +204,13 @@ class PhenoMeasuresDownload(QueryDatasetView):
                 )
             )
         else:
-            values_iterator = self.csv_value_iterator(dataset, measure_ids)
+            measure_col_names = \
+                dataset.phenotype_data.db.get_measure_column_names()
+            values_iterator = self.csv_value_iterator(
+                dataset, measure_col_names, measure_ids
+            )
 
+        values_iterator = list(values_iterator)
         response = StreamingHttpResponse(
             values_iterator, content_type="text/csv")
 

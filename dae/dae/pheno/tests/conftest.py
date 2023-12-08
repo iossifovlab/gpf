@@ -13,7 +13,7 @@ from dae.configuration.schemas.dae_conf import dae_conf_schema
 from dae.configuration.schemas.phenotype_data import pheno_conf_schema
 
 from dae.pheno.common import default_config
-from dae.pheno.pheno_db import PhenoDb
+from dae.pheno.pheno_db import PhenoDb, get_pheno_db_dir
 
 
 def relative_to_this_folder(path):
@@ -52,6 +52,11 @@ def fake_dae_conf():
 
 
 @pytest.fixture(scope="session")
+def fake_pheno_db_dir(fake_dae_conf):
+    return get_pheno_db_dir(fake_dae_conf)
+
+
+@pytest.fixture(scope="session")
 def fake_ped_file():
     return relative_to_this_folder("fixtures/pedigree_data/fake_pheno.ped")
 
@@ -70,8 +75,8 @@ def fi1_df(fake_instrument_filename):
 
 
 @pytest.fixture(scope="session")
-def fake_pheno_db(fake_dae_conf):
-    return PhenoDb(fake_dae_conf)
+def fake_pheno_db(fake_pheno_db_dir):
+    return PhenoDb(fake_pheno_db_dir)
 
 
 @pytest.fixture(scope="session")

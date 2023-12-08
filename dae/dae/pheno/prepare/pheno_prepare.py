@@ -59,7 +59,7 @@ class PreparePersons(PrepareBase):
     def _save_families(self, ped_df: pd.DataFrame) -> None:
         families = [{"family_id": fid} for fid in ped_df["family_id"].unique()]
         ins = self.db.family.insert()
-        with self.db.pheno_engine.connect() as connection:
+        with self.db.pheno_engine.begin() as connection:
             connection.execute(ins, families)
             connection.commit()
 
@@ -86,7 +86,7 @@ class PreparePersons(PrepareBase):
             }
             persons.append(person)
         ins = self.db.person.insert()
-        with self.db.pheno_engine.connect() as connection:
+        with self.db.pheno_engine.begin() as connection:
             connection.execute(ins, persons)
             connection.commit()
 

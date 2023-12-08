@@ -26,7 +26,7 @@ from dae.common_reports.common_report import CommonReport
 
 from dae.studies.variants_db import VariantsDb
 
-from dae.pheno.pheno_db import PhenoDb, PhenotypeData
+from dae.pheno.pheno_db import PhenoDb, PhenotypeData, get_pheno_db_dir
 
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.dae_conf import dae_conf_schema
@@ -169,7 +169,8 @@ class GPFInstance:
 
     @cached_property
     def _pheno_db(self) -> PhenoDb:
-        return PhenoDb(dae_config=self.dae_config)
+        pheno_data_dir = get_pheno_db_dir(self.dae_config)
+        return PhenoDb(pheno_data_dir)
 
     @cached_property
     def gene_scores_db(self) -> Any:

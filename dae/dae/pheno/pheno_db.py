@@ -12,8 +12,8 @@ from itertools import chain
 from box import Box
 
 import pandas as pd
-from sqlalchemy.sql import select, text, Select
-from sqlalchemy import not_, desc, Column
+from sqlalchemy.sql import select, text
+from sqlalchemy import not_
 
 from dae.pedigrees.family import Person
 from dae.pedigrees.families_data import FamiliesData
@@ -894,72 +894,6 @@ class PhenotypeStudy(PhenotypeData):
 
         return res_df
 
-    def _build_measures_subquery(
-        self,
-        measure_id_map: dict[str, str],
-        measure_ids: list[str],
-        person_ids: Optional[list[str]] = None,
-        family_ids: Optional[list[str]] = None,
-        roles: Optional[list[str]] = None,
-    ) -> Select:
-        select_columns = [
-            self.db.family.c.family_id,
-            self.db.person.c.person_id
-        ]
-        for m_id in measure_ids:
-            measure = self.measures[m_id]
-            measure_type = measure.measure_type
-            if measure_type is None:
-                raise ValueError(
-                    f"bad measure: {measure.measure_id}; unknown value type"
-                )
-            select_columns.append(cast(Column[Any], text(
-                f"\"{m_id}_value\".value AS '{m_id}'"
-            )))
-        query = select(*select_columns).select_from(
-            self.db.person.join(self.db.family)
-        )
-
-        for m_id in measure_ids:
-            db_id = measure_id_map[m_id]
-            measure = self.measures[m_id]
-            measure_type = self.measures[m_id].measure_type
-            measure_table = self.db.get_value_table(measure_type)
-            table_alias = f"{m_id}_value"
-            query = query.join(
-                text(f'{measure_table.name} as "{table_alias}"'),
-                text(
-                    f'"{table_alias}".person_id = person.id AND '
-                    f'"{table_alias}".measure_id = {db_id}'
-                ),
-                isouter=True
-            )
-
-        if roles is not None:
-            query = query.where(self.db.person.c.role.in_(roles))
-        if person_ids is not None:
-            query = query.where(self.db.person.c.person_id.in_(person_ids))
-        if family_ids is not None:
-            query = query.where(self.db.family.c.family_id.in_(family_ids))
-
-        query = query.order_by(desc(self.db.person.c.person_id))
-        return query
-
-    def _split_measures_into_groups(
-        self, measure_ids: list[str], group_size: int = 60
-    ) -> list[list[str]]:
-        groups_count = int(len(measure_ids) / group_size) + 1
-        if (groups_count) == 1:
-            return [measure_ids]
-        measure_groups = []
-        for i in range(groups_count):
-            begin = i * group_size
-            end = (i + 1) * group_size
-            group = measure_ids[begin:end]
-            if len(group) > 0:
-                measure_groups.append(group)
-        return measure_groups
-
     def get_people_measure_values(
         self,
         measure_ids: list[str],
@@ -971,56 +905,75 @@ class PhenotypeStudy(PhenotypeData):
         assert len(measure_ids) >= 1
         assert all(self.has_measure(m) for m in measure_ids)
 
-        measure_id_map = {m_id: None for m_id in measure_ids}
+        assert len(self.db.instrument_values_tables) > 0
+
+        measure_column_names = self.db.get_measure_column_names(measure_ids)
+
+        instrument_tables = {}
+        instrument_table_columns = {}
+        first_instrument = None
+
+        for instrument_name, table in self.db.instrument_values_tables.items():
+            skip_table = True
+            for m_id in measure_ids:
+                if m_id.startswith(instrument_name):
+                    skip_table = False
+
+            if skip_table:
+                continue
+
+            instrument_tables[instrument_name] = table
+            if first_instrument is None:
+                first_instrument = instrument_name
+            table_cols = [
+                c for c in table.c if c.name in measure_column_names.values()
+            ]
+
+            instrument_table_columns[instrument_name] = table_cols
+
+        select_cols = []
+        for instrument_name, columns in instrument_table_columns.items():
+            select_cols.extend(columns)
+
+        first_table = instrument_tables[cast(str, first_instrument)]
+
+        query = select(
+            first_table.c.person_id,
+            first_table.c.family_id,
+            first_table.c.role,
+            *select_cols
+        )
+        query = query.select_from(first_table)
+
+        for instrument_name in instrument_table_columns:
+            if instrument_name == first_instrument:
+                continue
+            table = instrument_tables[instrument_name]
+            query = query.join(
+                table,
+                first_table.c.person_id == table.c.person_id,
+                isouter=True,
+                full=True
+            )
+
+        if person_ids is not None:
+            query = query.where(
+                first_table.c.person_id.in_(person_ids)
+            )
+        if family_ids is not None:
+            query = query.where(
+                first_table.c.family_id.in_(family_ids)
+            )
+        if roles is not None:
+            query = query.where(
+                first_table.c.role.in_(roles)
+            )
+
         with self.db.pheno_engine.connect() as connection:
-            query = select(
-                self.db.measure.c.id, self.db.measure.c.measure_id
-            ).where(self.db.measure.c.measure_id.in_(measure_ids))
-            results = connection.execute(query)
-            for result_row in results:
-                measure_id_map[result_row.measure_id] = result_row.id
+            result = connection.execute(query)
 
-        measure_groups = self._split_measures_into_groups(measure_ids)
-
-        queries = []
-        for group in measure_groups:
-            queries.append(self._build_measures_subquery(
-                cast(dict[str, str], measure_id_map),
-                group,
-                person_ids,
-                family_ids,
-                roles
-            ))
-
-        with self.db.pheno_engine.connect() as connection:
-            query_results = []
-            for query in queries:
-                query_results.append(connection.execute(query))
-            for result_row in query_results[0]:
-                row = result_row._mapping  # pylint: disable=protected-access
-                output = {**row}
-                skip = True
-                for measure_id in measure_groups[0]:
-                    if row[measure_id] is not None:
-                        skip = False
-                if len(query_results) > 1:
-                    for i in range(1, len(measure_groups)):
-                        # pylint: disable=protected-access
-                        try:
-                            row = next(query_results[i])._mapping
-                            assert row["person_id"] == output["person_id"]
-                        except StopIteration:
-                            logger.error(
-                                "Subquery %s has different length",
-                                i
-                            )
-                            continue
-                        output.update({**row})
-                        for measure_id in measure_groups[i]:
-                            if row[measure_id] is not None:
-                                skip = False
-                if skip:
-                    continue
+            for row in result:
+                output = {**row._mapping}  # pylint: disable=protected-access
                 yield output
 
     def get_regressions(self) -> dict[str, Any]:
@@ -1266,10 +1219,8 @@ class PhenotypeGroup(PhenotypeData):
 class PhenoDb:
     """Represents a phenotype databases stored in an sqlite database."""
 
-    def __init__(self, dae_config: Box) -> None:
+    def __init__(self, pheno_data_dir: str) -> None:
         super().__init__()
-        assert dae_config
-        pheno_data_dir = get_pheno_db_dir(dae_config)
 
         configs = GPFConfigParser.load_directory_configs(
             pheno_data_dir, pheno_conf_schema
