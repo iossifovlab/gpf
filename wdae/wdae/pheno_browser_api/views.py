@@ -12,6 +12,8 @@ from django.http.response import StreamingHttpResponse
 from query_base.query_base import QueryDatasetView
 from studies.study_wrapper import RemoteStudyWrapper, StudyWrapper
 
+from dae.pheno.pheno_db import PhenotypeStudy
+
 from utils.streaming_response_util import iterator_to_json
 from utils.query_params import parse_query_params
 
@@ -148,6 +150,8 @@ class PhenoMeasuresDownload(QueryDatasetView):
         buffer.seek(0)
         buffer.truncate(0)
 
+        assert dataset.phenotype_data is not None
+
         values_iterator = dataset.phenotype_data.get_people_measure_values(
             measure_ids)
 
@@ -204,13 +208,13 @@ class PhenoMeasuresDownload(QueryDatasetView):
                 )
             )
         else:
+            pheno_data = cast(PhenotypeStudy, dataset.phenotype_data)
             measure_col_names = \
-                dataset.phenotype_data.db.get_measure_column_names()
+                pheno_data.db.get_measure_column_names()
             values_iterator = self.csv_value_iterator(
                 dataset, measure_col_names, measure_ids
             )
 
-        values_iterator = list(values_iterator)
         response = StreamingHttpResponse(
             values_iterator, content_type="text/csv")
 

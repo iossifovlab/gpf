@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Dict, Iterator, Optional, Any, cast, Union
+from typing import Dict, Iterator, Optional, Any, cast, Union, Mapping
 
 from box import Box
 
@@ -208,7 +208,7 @@ class DbManager:  # pylint: disable=too-many-instance-attributes
     def _build_measures_subquery(
         self,
         measure_id_map: dict[str, str],
-        measure_type_map: dict[str, MeasureType],
+        measure_type_map: Mapping[str, Union[str, MeasureType]],
         measure_ids: list[str],
         measure_column_names: Optional[dict[str, str]] = None
     ) -> Select:
@@ -805,7 +805,7 @@ class DbManager:  # pylint: disable=too-many-instance-attributes
             )
 
     def get_value_table(
-        self, value_type: MeasureType
+        self, value_type: Union[str, MeasureType]
     ) -> Table:
         """Return the appropriate table for values based on the value type."""
         if isinstance(value_type, str):

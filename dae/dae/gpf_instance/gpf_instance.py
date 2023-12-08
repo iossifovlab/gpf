@@ -389,12 +389,10 @@ class GPFInstance:
 
     # Gene sets
     def get_gene_sets_collections(self) -> list[dict[str, Any]]:
-        return cast(
-            list[dict[str, Any]], self.gene_sets_db.collections_descriptions
-        )
+        return self.gene_sets_db.collections_descriptions
 
     def has_gene_set_collection(self, gsc_id: str) -> bool:
-        return cast(bool, self.gene_sets_db.has_gene_set_collection(gsc_id))
+        return self.gene_sets_db.has_gene_set_collection(gsc_id)
 
     def get_all_gene_sets(self, collection_id: str) -> list[GeneSet]:
         return self.gene_sets_db.get_all_gene_sets(collection_id)
