@@ -129,7 +129,7 @@ def fake_background_df(fake_background_filename: str) -> pd.DataFrame:
 
 
 @pytest.fixture
-def test_config(temp_dbfile: str): Box:
+def test_config(temp_dbfile: str) -> Box:
     config = default_config()
     config.db.filename = temp_dbfile
     return Box(config.to_dict())
