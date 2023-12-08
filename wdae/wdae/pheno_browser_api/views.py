@@ -12,10 +12,10 @@ from django.http.response import StreamingHttpResponse
 from query_base.query_base import QueryDatasetView
 from studies.study_wrapper import RemoteStudyWrapper, StudyWrapper
 
-from dae.pheno.pheno_db import PhenotypeStudy
-
 from utils.streaming_response_util import iterator_to_json
 from utils.query_params import parse_query_params
+
+from dae.pheno.pheno_db import PhenotypeStudy
 
 
 logger = logging.getLogger(__name__)
@@ -142,6 +142,7 @@ class PhenoMeasuresDownload(QueryDatasetView):
         columns: dict[str, str],
         measure_ids: list[str]
     ) -> Generator[str, None, None]:
+        """Create CSV content for people measures data."""
         header = ["person_id"] + measure_ids
         buffer = StringIO()
         writer = csv.writer(buffer, delimiter=",")
