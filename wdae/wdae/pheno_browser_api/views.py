@@ -2,7 +2,7 @@ import logging
 
 import csv
 from io import StringIO
-from typing import Generator, Union, cast
+from typing import Generator, Union
 
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -14,8 +14,6 @@ from studies.study_wrapper import RemoteStudyWrapper, StudyWrapper
 
 from utils.streaming_response_util import iterator_to_json
 from utils.query_params import parse_query_params
-
-from dae.pheno.pheno_db import PhenotypeStudy
 
 
 logger = logging.getLogger(__name__)

@@ -1,4 +1,3 @@
-import json
 import logging
 from typing import List, Dict, Any, Optional, cast, Generator
 
@@ -368,7 +367,6 @@ class RESTClient:
         )
         return response.iter_content()
 
-
     def post_measures_values(
             self, dataset_id: str,
             measure_ids: Optional[list[str]] = None,
@@ -385,7 +383,6 @@ class RESTClient:
             stream=True
         )
         return self._read_json_list_stream(response)
-
 
     def post_enrichment_test(self, query: dict) -> Any:
         response = self._post(
