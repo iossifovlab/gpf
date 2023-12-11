@@ -10,11 +10,13 @@ import configparser
 from typing import Optional, Iterable, Union, Any, cast
 
 import yaml
+import toml
 import jinja2
 
 from dae.variants.variant import SummaryAllele
 from dae.variants.family_variant import FamilyAllele
 from dae.variants.attributes import TransmissionType
+from dae.effect_annotation.effect import expand_effect_types
 
 from dae.utils import fs_utils
 
@@ -39,12 +41,6 @@ class PartitionDescriptor:
         self.coding_effect_types: set[str] = \
             set(coding_effect_types) if coding_effect_types else set()
         self.rare_boundary = rare_boundary
-
-    @staticmethod
-    def _configparser_parse(content: str) -> configparser.ConfigParser:
-        parser = configparser.ConfigParser()
-        parser.read_string(content)
-        return parser
 
     @staticmethod
     def parse(path_name: Union[pathlib.Path, str]) -> PartitionDescriptor:
@@ -111,9 +107,13 @@ class PartitionDescriptor:
         if not content:
             return PartitionDescriptor()
         if content_format == "conf":
-            parsed_data = cast(
-                dict[str, Any],
-                PartitionDescriptor._configparser_parse(content))
+            try:
+                parsed_data = cast(dict[str, Any], toml.loads(content))
+            except toml.TomlDecodeError:
+                parser = configparser.ConfigParser()
+                parser.read_string(content)
+                parsed_data = cast(dict[str, Any], parser)
+
         elif content_format == "yaml":
             parsed_data = yaml.safe_load(content)
         else:
@@ -130,6 +130,7 @@ class PartitionDescriptor:
             config["region_length"] = int(
                 config_dict["region_bin"].get("region_length", sys.maxsize))
             chromosomes = config_dict["region_bin"]["chromosomes"]
+
             if isinstance(chromosomes, str):
                 config["chromosomes"] = [
                     c.strip()
@@ -150,12 +151,17 @@ class PartitionDescriptor:
                 config_dict["frequency_bin"]["rare_boundary"])
 
         if "coding_bin" in config_dict.keys():
-            config["coding_effect_types"] = set(
-                s.strip()
-                for s in config_dict["coding_bin"][
-                    "coding_effect_types"
-                ].split(",")
-            )
+            coding_effect_types = \
+                config_dict["coding_bin"]["coding_effect_types"]
+            if isinstance(coding_effect_types, str):
+                result = set(
+                    s.strip()
+                    for s in coding_effect_types.split(","))
+            else:
+                assert isinstance(coding_effect_types, list)
+                result = set(coding_effect_types)
+            config["coding_effect_types"] = set(expand_effect_types(result))
+
         return PartitionDescriptor(
             chromosomes=config.get("chromosomes"),
             region_length=config.get("region_length", 0),
