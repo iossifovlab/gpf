@@ -150,12 +150,16 @@ class PartitionDescriptor:
                 config_dict["frequency_bin"]["rare_boundary"])
 
         if "coding_bin" in config_dict.keys():
-            config["coding_effect_types"] = set(
-                s.strip()
-                for s in config_dict["coding_bin"][
-                    "coding_effect_types"
-                ].split(",")
-            )
+            coding_effect_types = \
+                config_dict["coding_bin"]["coding_effect_types"]
+            if isinstance(coding_effect_types, str):
+                config["coding_effect_types"] = set(
+                    s.strip()
+                    for s in coding_effect_types.split(","))
+            else:
+                assert isinstance(coding_effect_types, list)
+                config["coding_effect_types"] = set(coding_effect_types)
+
         return PartitionDescriptor(
             chromosomes=config.get("chromosomes"),
             region_length=config.get("region_length", 0),
