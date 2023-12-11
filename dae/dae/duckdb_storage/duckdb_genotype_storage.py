@@ -205,14 +205,23 @@ class DuckDbGenotypeStorage(GenotypeStorage):
             self, parquet_path: str, table_name: str,
             partition: list[tuple[str, str]]) -> None:
         assert self.connection_factory is not None
+
         with self.connection_factory.cursor() as connection:
+            dataset_path = f"{parquet_path}/{ '*/' * len(partition)}*.parquet"
+            logger.debug("creating table %s from %s", table_name, dataset_path)
+
             query = f"DROP TABLE IF EXISTS {table_name}"
+            logger.debug("query: %s", query)
             connection.sql(query)
 
-            dataset_path = f"{parquet_path}/{ '*/' * len(partition)}*.parquet"
+            query = "SET memory_limit='16GB'"
+            logger.debug("query: %s", query)
+            connection.sql(query)
+
             query = f"CREATE TABLE {table_name} AS " \
                 f"SELECT * FROM " \
                 f"parquet_scan('{dataset_path}', hive_partitioning = 1)"
+            logger.debug("query: %s", query)
             connection.sql(query)
 
     def import_dataset(
