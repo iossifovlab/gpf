@@ -135,6 +135,7 @@ class PhenoMeasuresView(PhenoBrowserBaseView):
 
 
 class PhenoMeasuresDownload(QueryDatasetView):
+    """Phenotype measure downloads view."""
 
     def csv_value_iterator(
         self,
@@ -189,7 +190,7 @@ class PhenoMeasuresDownload(QueryDatasetView):
                 return Response(status=status.HTTP_404_NOT_FOUND)
 
             instrument_measures = \
-                dataset.phenotype_data._get_instrument_measures(instrument)
+                dataset.phenotype_data.get_instrument_measures(instrument)
             if measure_ids is None:
                 measure_ids = instrument_measures
 
@@ -209,9 +210,10 @@ class PhenoMeasuresDownload(QueryDatasetView):
 
 
 class PhenoMeasureValues(QueryDatasetView):
+    """Phenotype measure values view."""
 
     def post(self, request: Request) -> Response:
-        """Return a CSV file stream for measures."""
+        """Return measure values as stream."""
         data = request.data
         if "dataset_id" not in data:
             return Response(status=status.HTTP_400_BAD_REQUEST)
@@ -231,7 +233,7 @@ class PhenoMeasureValues(QueryDatasetView):
                 return Response(status=status.HTTP_404_NOT_FOUND)
 
             instrument_measures = \
-                dataset.phenotype_data._get_instrument_measures(instrument)
+                dataset.phenotype_data.get_instrument_measures(instrument)
             if measure_ids is None:
                 measure_ids = instrument_measures
 
