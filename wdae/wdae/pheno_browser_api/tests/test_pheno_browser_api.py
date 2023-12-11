@@ -264,12 +264,14 @@ def test_get_specific_measure_values(admin_client):
     assert content[0] == {
         "family_id": "f1",
         "person_id": "sib2",
+        "role": "sib",
         "instrument1.continuous": 4.56,
         "instrument1.categorical": None
     }
     assert content[1] == {
         "family_id": "f1",
         "person_id": "sib1",
+        "role": "sib",
         "instrument1.continuous": 1.23,
         "instrument1.categorical": None
     }
@@ -291,6 +293,7 @@ def test_get_measure_values(admin_client):
     assert content[0] == {
         "family_id": "f1",
         "person_id": "sib2",
+        "role": "sib",
         "instrument1.continuous": 4.56,
         "instrument1.categorical": None,
         "instrument1.ordinal": None,
@@ -299,6 +302,7 @@ def test_get_measure_values(admin_client):
     assert content[2] == {
         "family_id": "f1",
         "person_id": "prb1",
+        "role": "prb",
         "instrument1.continuous": 3.14,
         "instrument1.categorical": "option2",
         "instrument1.ordinal": 5.0,
@@ -307,6 +311,7 @@ def test_get_measure_values(admin_client):
     assert content[4] == {
         "family_id": "f1",
         "person_id": "dad1",
+        "role": "dad",
         "instrument1.continuous": 2.718,
         "instrument1.categorical": None,
         "instrument1.ordinal": None,
