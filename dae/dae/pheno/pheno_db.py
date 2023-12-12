@@ -13,7 +13,8 @@ from box import Box
 
 import pandas as pd
 from sqlalchemy.sql import select, text
-from sqlalchemy import not_
+from sqlalchemy.sql.functions import coalesce
+from sqlalchemy import not_, Column
 
 from dae.pedigrees.family import Person
 from dae.pedigrees.families_data import FamiliesData
@@ -940,8 +941,19 @@ class PhenotypeStudy(PhenotypeData):
 
         first_table = instrument_tables[cast(str, first_instrument)]
 
+        person_id_cols = [
+            table.c.person_id for table in instrument_tables.values()
+        ]
+
+        if len(person_id_cols) > 1:
+            person_id_col = cast(
+                Column[Any], coalesce(*person_id_cols).label("person_id")
+            )
+        else:
+            person_id_col = first_table.c.person_id
+
         query = select(
-            first_table.c.person_id,
+            person_id_col,
             first_table.c.family_id,
             first_table.c.role,
             *select_cols
