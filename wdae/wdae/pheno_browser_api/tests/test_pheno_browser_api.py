@@ -214,7 +214,9 @@ def test_download_all_instruments(admin_client: Client) -> None:
     }
 
 
-def test_download_all_instruments_specific_measures(admin_client: Client) -> None:
+def test_download_all_instruments_specific_measures(
+    admin_client: Client
+) -> None:
     data = {
         "dataset_id": "quads_f1",
         "measure_ids": ["instrument1.continuous", "instrument1.categorical"]
