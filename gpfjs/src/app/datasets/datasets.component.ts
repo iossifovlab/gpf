@@ -92,15 +92,15 @@ export class DatasetsComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.showNoToolsWarning = !this.findFirstTool(this.selectedDataset);
+    const firstTool = this.findFirstTool(this.selectedDataset);
+    this.showNoToolsWarning = !firstTool;
 
     this.registerAlertVisible = !this.selectedDataset.accessRights;
 
     if (!this.isToolSelected()) {
-      const firstTool = this.findFirstTool(this.selectedDataset);
       if (firstTool) {
         this.router.navigate(
-          ['/', 'datasets', this.selectedDataset.id, this.findFirstTool(this.selectedDataset)],
+          ['/', 'datasets', this.selectedDataset.id, firstTool],
           {replaceUrl: true}
         );
       } else {
@@ -111,7 +111,7 @@ export class DatasetsComponent implements OnInit, OnDestroy {
       const toolName = url[url.indexOf('datasets') + 2];
 
       if (!this.isToolEnabled(this.selectedDataset, toolName)) {
-        this.router.navigate(['/', 'datasets', this.selectedDataset.id, this.findFirstTool(this.selectedDataset)]);
+        this.router.navigate(['/', 'datasets', this.selectedDataset.id, firstTool]);
       }
     }
   }
