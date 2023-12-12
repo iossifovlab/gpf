@@ -7,7 +7,6 @@ import numpy as np
 
 from dae.pheno.common import MeasureType
 from dae.pheno.pheno_db import Measure, PhenotypeStudy
-from dae.pheno.db import safe_db_name
 
 
 def df_check(
@@ -109,7 +108,7 @@ def test_get_people_measure_values(
     result_it = fake_phenotype_data.get_people_measure_values(query_cols)
     result = list(result_it)
     base_cols = ["person_id", "family_id", "role"]
-    db_query_cols = [safe_db_name(query_col) for query_col in query_cols]
+    db_query_cols = [query_col for query_col in query_cols]
     dict_list_check(result, 195, base_cols + db_query_cols)
 
     result_it = fake_phenotype_data.get_people_measure_values(
@@ -137,8 +136,8 @@ def test_get_people_measure_values_correct_values(
         "person_id": "f1.p1",
         "family_id": "f1",
         "role": "prb",
-        "i1_m1": 34.76285793898369,
-        "i1_m2": 48.44644402952317
+        "i1.m1": 34.76285793898369,
+        "i1.m2": 48.44644402952317
     }
 
 

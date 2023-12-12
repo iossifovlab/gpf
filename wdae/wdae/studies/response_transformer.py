@@ -188,8 +188,6 @@ class ResponseTransformer:
             return None
 
         pheno_values = {}
-        measure_column_names = self.study_wrapper.phenotype_data.db\
-            .get_measure_column_names()
 
         for column in self.study_wrapper.config_columns.phenotype.values():
             assert column.role
@@ -198,8 +196,7 @@ class ResponseTransformer:
                 .phenotype_data.get_people_measure_values(
                     [column.source], roles=[column.role])
             for column_value in column_values_iter:
-                col = measure_column_names[column.source]
-                result[column_value["family_id"]] = column_value[col]
+                result[column_value["family_id"]] = column_value[column.source]
 
             pheno_column_name = f"{column.source}.{column.role}"
             pheno_values[pheno_column_name] = result

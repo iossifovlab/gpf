@@ -14,6 +14,7 @@ pytestmark = pytest.mark.usefixtures(
 
 URL = "/api/v3/pheno_browser/instruments"
 MEASURES_URL = "/api/v3/pheno_browser/measures"
+MEASURE_VALUES_URL = "/api/v3/pheno_browser/measure_values"
 MEASURES_INFO_URL = "/api/v3/pheno_browser/measures_info"
 MEASURE_DESCRIPTION_URL = "/api/v3/pheno_browser/measure_description"
 DOWNLOAD_URL = "/api/v3/pheno_browser/download"
@@ -245,3 +246,74 @@ def test_measure_details(admin_client):
     assert response.data["measure_name"] == "categorical"
     assert response.data["measure_type"] == "categorical"
     assert response.data["values_domain"] == ["option1", "option2"]
+
+
+def test_get_specific_measure_values(admin_client):
+    data = {
+        "dataset_id": "quads_f1",
+        "instrument": "instrument1",
+        "measure_ids": ["instrument1.continuous", "instrument1.categorical"]
+    }
+    response = admin_client.post(
+        MEASURE_VALUES_URL, json.dumps(data), "application/json"
+    )
+
+    assert response.status_code == 200
+    content = json.loads(b"".join(list(response.streaming_content)))
+
+    assert content[0] == {
+        "family_id": "f1",
+        "person_id": "sib2",
+        "role": "sib",
+        "instrument1.continuous": 4.56,
+        "instrument1.categorical": None
+    }
+    assert content[1] == {
+        "family_id": "f1",
+        "person_id": "sib1",
+        "role": "sib",
+        "instrument1.continuous": 1.23,
+        "instrument1.categorical": None
+    }
+
+
+def test_get_measure_values(admin_client):
+    data = {
+        "dataset_id": "quads_f1",
+        "instrument": "instrument1",
+    }
+    response = admin_client.post(
+        MEASURE_VALUES_URL, json.dumps(data), "application/json"
+    )
+
+    assert response.status_code == 200
+    content = json.loads(b"".join(list(response.streaming_content)))
+
+    assert len(content) == 5
+    assert content[0] == {
+        "family_id": "f1",
+        "person_id": "sib2",
+        "role": "sib",
+        "instrument1.continuous": 4.56,
+        "instrument1.categorical": None,
+        "instrument1.ordinal": None,
+        "instrument1.raw": None
+    }
+    assert content[2] == {
+        "family_id": "f1",
+        "person_id": "prb1",
+        "role": "prb",
+        "instrument1.continuous": 3.14,
+        "instrument1.categorical": "option2",
+        "instrument1.ordinal": 5.0,
+        "instrument1.raw": "somevalue"
+    }
+    assert content[4] == {
+        "family_id": "f1",
+        "person_id": "dad1",
+        "role": "dad",
+        "instrument1.continuous": 2.718,
+        "instrument1.categorical": None,
+        "instrument1.ordinal": None,
+        "instrument1.raw": "othervalue"
+    }
