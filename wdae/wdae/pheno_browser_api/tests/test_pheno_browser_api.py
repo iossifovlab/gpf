@@ -45,7 +45,12 @@ DOWNLOAD_URL = "/api/v3/pheno_browser/download"
         None
     ),
 ])
-def test_pheno_browser_api_permissions(anonymous_client, url, method, body):
+def test_pheno_browser_api_permissions(
+    anonymous_client: Client,
+    url: str,
+    method: str,
+    body: dict
+) -> None:
     if method == "get":
         response = anonymous_client.get(url)
     else:
@@ -57,19 +62,19 @@ def test_pheno_browser_api_permissions(anonymous_client, url, method, body):
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 
-def test_instruments_missing_dataset_id(admin_client):
+def test_instruments_missing_dataset_id(admin_client: Client) -> None:
     response = admin_client.get(URL)
 
     assert response.status_code == 400
 
 
-def test_instruments_missing_dataset_id_forbidden(user_client):
+def test_instruments_missing_dataset_id_forbidden(user_client: Client) -> None:
     response = user_client.get(URL)
 
     assert response.status_code == 400
 
 
-def test_instruments(admin_client):
+def test_instruments(admin_client: Client) -> None:
     url = "{}?dataset_id=quads_f1_ds".format(URL)
     response = admin_client.get(url)
 
@@ -79,7 +84,7 @@ def test_instruments(admin_client):
     assert len(response.data["instruments"]) == 1
 
 
-def test_instruments_forbidden(user_client):
+def test_instruments_forbidden(user_client: Client) -> None:
     url = "{}?dataset_id=quads_f1_ds".format(URL)
     response = user_client.get(url)
 
@@ -93,7 +98,7 @@ def test_instruments_forbidden(user_client):
     )
 
 
-def test_measures_info(admin_client):
+def test_measures_info(admin_client: Client) -> None:
     url = f"{MEASURES_INFO_URL}?dataset_id=quads_f1_ds"
     response = admin_client.get(url)
 
@@ -102,7 +107,7 @@ def test_measures_info(admin_client):
     assert "has_descriptions" in response.data
 
 
-def test_measures(admin_client):
+def test_measures(admin_client: Client) -> None:
     url = "{}?dataset_id=quads_f1_ds&instrument=instrument1".format(
         MEASURES_URL
     )
@@ -114,7 +119,7 @@ def test_measures(admin_client):
     assert len(res) == 4
 
 
-def test_measures_forbidden(user_client, user):
+def test_measures_forbidden(user_client: Client, user) -> None:
     print(user.groups.all())
     url = "{}?dataset_id=quads_f1_ds&instrument=instrument1".format(
         MEASURES_URL
@@ -131,7 +136,7 @@ def test_measures_forbidden(user_client, user):
     )
 
 
-def test_download(admin_client):
+def test_download(admin_client: Client) -> None:
     data = {
         "dataset_id": "quads_f1",
         "instrument": "instrument1"
@@ -165,7 +170,7 @@ def test_download_form(admin_client: Client) -> None:
     assert header[0] == "person_id"
 
 
-def test_download_specific_measures(admin_client):
+def test_download_specific_measures(admin_client: Client) -> None:
     data = {
         "dataset_id": "quads_f1",
         "instrument": "instrument1",
@@ -185,7 +190,7 @@ def test_download_specific_measures(admin_client):
     assert header[2] == "instrument1.categorical"
 
 
-def test_download_all_instruments(admin_client):
+def test_download_all_instruments(admin_client: Client) -> None:
     data = {
         "dataset_id": "quads_f1"
     }
@@ -209,7 +214,7 @@ def test_download_all_instruments(admin_client):
     }
 
 
-def test_download_all_instruments_specific_measures(admin_client):
+def test_download_all_instruments_specific_measures(admin_client: Client) -> None:
     data = {
         "dataset_id": "quads_f1",
         "measure_ids": ["instrument1.continuous", "instrument1.categorical"]
@@ -232,7 +237,7 @@ def test_download_all_instruments_specific_measures(admin_client):
     }
 
 
-def test_measure_details(admin_client):
+def test_measure_details(admin_client: Client) -> None:
     url = (
         "{}?dataset_id=quads_f1_ds&measure_id=instrument1.categorical"
         .format(MEASURE_DESCRIPTION_URL)
@@ -248,7 +253,7 @@ def test_measure_details(admin_client):
     assert response.data["values_domain"] == ["option1", "option2"]
 
 
-def test_get_specific_measure_values(admin_client):
+def test_get_specific_measure_values(admin_client: Client) -> None:
     data = {
         "dataset_id": "quads_f1",
         "instrument": "instrument1",
@@ -277,7 +282,7 @@ def test_get_specific_measure_values(admin_client):
     }
 
 
-def test_get_measure_values(admin_client):
+def test_get_measure_values(admin_client: Client) -> None:
     data = {
         "dataset_id": "quads_f1",
         "instrument": "instrument1",
