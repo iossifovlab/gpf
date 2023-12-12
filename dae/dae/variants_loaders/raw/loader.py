@@ -1,5 +1,5 @@
 """Base classes and helpers for variant loaders."""
-
+from __future__ import annotations
 import argparse
 import os
 import pathlib
@@ -10,22 +10,26 @@ import logging
 from abc import ABC, abstractmethod
 from enum import Enum
 
-from typing import Iterator, Tuple, List, Dict, Any, Optional, Sequence
+from typing import Type, Tuple, List, Dict, Any, Optional, \
+    Sequence, \
+    Union, Generator, cast
 
 import numpy as np
 import pandas as pd
-from dae.annotation.annotation_pipeline import AnnotationPipeline
+from dae.annotation.annotation_pipeline import AttributeInfo, \
+    AnnotationPipeline
 
 from dae.genomic_resources.reference_genome import ReferenceGenome
 
 from dae.pedigrees.families_data import FamiliesData
+from dae.pedigrees.family import Family
 
 from dae.effect_annotation.effect import AlleleEffects
 from dae.variants.variant import SummaryVariant
-from dae.variants.family_variant import (
-    FamilyVariant,
-    calculate_simple_best_state,
-)
+from dae.variants.family_variant import \
+    FamilyVariant, FamilyAllele, \
+    calculate_simple_best_state
+
 from dae.variants.attributes import Sex, GeneticModel
 from dae.variants.attributes import TransmissionType
 from dae.utils.variant_utils import get_locus_ploidy, best2gt
@@ -49,10 +53,16 @@ class CLIArgument:
     """
 
     def __init__(
-            self, argument_name, has_value=True,
-            default_value=None, destination=None,
-            help_text=None, action=None, value_type=None,
-            metavar=None, nargs=None, raw=False):
+        self, argument_name: str, has_value: bool = True,
+        default_value: Optional[Union[int, str, bool]] = None,
+        destination: Optional[str] = None,
+        help_text: Optional[str] = None,
+        action: Optional[str] = None,
+        value_type: Optional[Type[str]] = None,
+        metavar: Optional[str] = None,
+        nargs: Optional[str] = None,
+        raw: bool = False
+    ) -> None:
         self.argument_name = argument_name
         self.has_value = has_value
         self.default_value = default_value
@@ -68,10 +78,10 @@ class CLIArgument:
         if destination is None:
             self.destination = self._default_destination()
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{self.argument_name} ({self.arg_type})"
 
-    def _default_destination(self):
+    def _default_destination(self) -> Optional[str]:
         if self.argument_name.startswith("--"):
             self.arg_type = ArgumentType.OPTION
         else:
@@ -79,7 +89,7 @@ class CLIArgument:
             return None
         return self.argument_name[2:].replace("-", "_")
 
-    def add_to_parser(self, parser):
+    def add_to_parser(self, parser: argparse.ArgumentParser) -> None:
         """Add this argument to argsparser."""
         kwargs = {
             "type": self.value_type,
@@ -98,9 +108,12 @@ class CLIArgument:
             kwargs["metavar"] = self.metavar
             kwargs["nargs"] = self.nargs
 
-        parser.add_argument(self.argument_name, **kwargs)
+        parser.add_argument(self.argument_name, **kwargs)  # type: ignore
 
-    def build_option(self, params, use_defaults=False) -> Optional[str]:
+    def build_option(
+        self, params: dict,
+        use_defaults: bool = False
+    ) -> Optional[str]:
         """Build an option."""
         if self.arg_type == ArgumentType.ARGUMENT:
             return None
@@ -124,34 +137,51 @@ class CLIArgument:
                     return f"{self.argument_name}"
         return None
 
-    def parse_cli_argument(self, argv, use_defaults=False):
-        if self.destination not in argv:
+    def parse_cli_argument(
+        self, argv: argparse.Namespace,
+        use_defaults: bool = False
+    ) -> None:
+        """Parse the command line argument from the `argv` object.
+
+        Args:
+            argv (argparse.Namespace): The command line arguments.
+            use_defaults (bool, optional): Whether to use default values
+                if the argument is None. Defaults to False.
+        """
+        if self.destination not in argv:  # type: ignore
             return
+        assert self.destination is not None
         argument = getattr(argv, self.destination)
         if argument is None:
             if self.default_value is not None and use_defaults:
                 setattr(argv, self.destination, self.default_value)
 
 
+FamilyGenotypeIterator = Generator[
+    tuple[Family, np.ndarray, Optional[np.ndarray]], None, None]
+
+
 class FamiliesGenotypes(ABC):
     """A base class for family genotypes."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         pass
 
     @abstractmethod
-    def family_genotype_iterator(self):
+    def family_genotype_iterator(self) -> FamilyGenotypeIterator:
         pass
 
 
 class CLILoader(ABC):
     """Base class for loader classes that require cli arguments."""
 
-    def __init__(self, params=None):
+    def __init__(
+        self, params: Optional[dict[str, Any]] = None
+    ) -> None:
         self.arguments = self._arguments()
         self.params: Dict[str, Any] = params if params else {}
 
-    def _add_argument(self, argument):
+    def _add_argument(self, argument: CLIArgument) -> None:
         self.arguments.append(argument)
 
     @classmethod
@@ -159,7 +189,7 @@ class CLILoader(ABC):
         return []
 
     @classmethod
-    def cli_defaults(cls):
+    def cli_defaults(cls) -> dict[str, Any]:
         """Build a dictionary with default values for CLI arguments."""
         argument_destinations = [
             arg.destination for arg in cls._arguments()
@@ -172,14 +202,25 @@ class CLILoader(ABC):
         return dict(zip(argument_destinations, defaults))
 
     @classmethod
-    def cli_arguments(cls, parser, options_only=False):
+    def cli_arguments(
+        cls, parser: argparse.ArgumentParser,
+        options_only: bool = False
+    ) -> None:
+        """Add command-line arguments specific for the CLILoader class.
+
+        Args:
+            parser (argparse.ArgumentParser): The ArgumentParser object to
+                add the arguments to.
+            options_only (bool, optional): If True, only adds options
+            (not arguments) to the parser. Defaults to False.
+        """
         for argument in cls._arguments():
             if options_only and argument.arg_type == ArgumentType.ARGUMENT:
                 continue
             argument.add_to_parser(parser)
 
     @classmethod
-    def build_cli_arguments(cls, params) -> str:
+    def build_cli_arguments(cls, params: dict) -> str:
         """Return a string with cli arguments."""
         built_arguments = []
         for argument in cls._arguments():
@@ -190,7 +231,7 @@ class CLILoader(ABC):
         logger.info("result CLI arguments: %s", result)
         return result
 
-    def build_arguments_dict(self):
+    def build_arguments_dict(self) -> Dict[str, Union[str, bool]]:
         """Build a dictionary with the argument destinations as keys."""
         result = {}
         for argument in self._arguments():
@@ -205,12 +246,20 @@ class CLILoader(ABC):
 
     @classmethod
     def parse_cli_arguments(
-            cls, argv: argparse.Namespace,
-            use_defaults=False) -> Tuple[List[str], Dict[str, Any]]:
+        cls, argv: argparse.Namespace,
+        use_defaults: bool = False
+    ) -> Tuple[List[str], Dict[str, Any]]:
         """Parse cli arguments."""
         for arg in cls._arguments():
             arg.parse_cli_argument(argv, use_defaults=use_defaults)
         return [], {}
+
+
+FullVariantsIterator = Generator[
+    tuple[SummaryVariant, list[FamilyVariant]], None, None]
+
+FamilyVariantsIterator = Generator[
+    FamilyVariant, None, None]
 
 
 class VariantsLoader(CLILoader):
@@ -219,16 +268,18 @@ class VariantsLoader(CLILoader):
     def __init__(
         self,
         families: FamiliesData,
-        filenames: List[str],
+        filenames: Union[str, list[str]],
         genome: ReferenceGenome,
         transmission_type: TransmissionType = TransmissionType.transmitted,
         params: Optional[Dict[str, Any]] = None,
         attributes: Optional[Dict[str, Any]] = None,
-    ):
+    ) -> None:
         params = params if params else {}
         super().__init__(params=params)
         assert isinstance(families, FamiliesData)
         self.families = families
+        if isinstance(filenames, str):
+            filenames = [filenames]
         self.filenames = filenames
 
         assert isinstance(transmission_type, TransmissionType)
@@ -246,11 +297,11 @@ class VariantsLoader(CLILoader):
     def set_attribute(self, key: str, value: Any) -> None:
         self._attributes[key] = value
 
-    def reset_regions(self, regions) -> None:
+    def reset_regions(self, regions: Optional[Union[str, list[str]]]) -> None:
         pass
 
     @property
-    def annotation_schema(self):
+    def annotation_schema(self) -> Optional[list[AttributeInfo]]:
         return None
 
     @classmethod
@@ -258,16 +309,16 @@ class VariantsLoader(CLILoader):
         return []
 
     @abstractmethod
-    def full_variants_iterator(self):
+    def full_variants_iterator(self) -> FullVariantsIterator:
         pass
 
-    def family_variants_iterator(self):
+    def family_variants_iterator(self) -> FamilyVariantsIterator:
         for _, fvs in self.full_variants_iterator():
             for fvariant in fvs:
                 yield fvariant
 
     @abstractmethod
-    def close(self):
+    def close(self) -> None:
         """Close resources used by the loader."""
 
     @property
@@ -279,7 +330,7 @@ class VariantsLoader(CLILoader):
 class VariantsLoaderDecorator(VariantsLoader):
     """Base class for wrapping and decoring a variant loader."""
 
-    def __init__(self, variants_loader: VariantsLoader):
+    def __init__(self, variants_loader: VariantsLoader) -> None:
 
         super().__init__(
             variants_loader.families,
@@ -298,29 +349,32 @@ class VariantsLoaderDecorator(VariantsLoader):
 
         return self.variants_loader.get_attribute(key)
 
-    def __getattr__(self, attr):
+    def __getattr__(self, attr: str) -> Any:
         return getattr(self.variants_loader, attr, None)
 
     @property
-    def annotation_schema(self):
+    def annotation_schema(self) -> Optional[list[AttributeInfo]]:
         return self.variants_loader.annotation_schema
 
     @classmethod
-    def build_cli_arguments(cls, params):
+    def build_cli_arguments(cls, params: dict) -> str:
         return cls.variants_loader.build_cli_arguments(params)
 
     @classmethod
-    def cli_defaults(cls):
+    def cli_defaults(cls) -> dict[str, Any]:
         return cls.variants_loader.cli_defaults()
 
     @classmethod
-    def cli_arguments(cls, parser, options_only=False):
-        return cls.variants_loader.cli_arguments(parser, options_only)
+    def cli_arguments(
+        cls, parser: argparse.ArgumentParser,
+        options_only: bool = False
+    ) -> None:
+        cls.variants_loader.cli_arguments(parser, options_only)
 
-    def build_arguments_dict(self):
+    def build_arguments_dict(self) -> dict:
         return self.variants_loader.build_arguments_dict()
 
-    def close(self):
+    def close(self) -> None:
         self.variants_loader.close()
 
     @property
@@ -356,7 +410,7 @@ class AnnotationDecorator(VariantsLoaderDecorator):
     )
 
     @staticmethod
-    def build_annotation_filename(filename):
+    def build_annotation_filename(filename: str) -> str:
         """Return the corresponding annotation file for filename."""
         path = pathlib.Path(filename)
         suffixes = path.suffixes
@@ -371,13 +425,16 @@ class AnnotationDecorator(VariantsLoaderDecorator):
         return f"{filename}-eff.txt"
 
     @staticmethod
-    def has_annotation_file(variants_filename):
+    def has_annotation_file(variants_filename: str) -> bool:
         annotation_filename = AnnotationDecorator\
             .build_annotation_filename(variants_filename)
         return os.path.exists(annotation_filename)
 
     @staticmethod
-    def save_annotation_file(variants_loader, filename, sep="\t"):
+    def save_annotation_file(
+        variants_loader: AnnotationPipelineDecorator,
+        filename: str, sep: str = "\t"
+    ) -> None:
         """Save annotation file."""
         # def convert_array_of_strings_to_string(a):
         #     if not a:
@@ -438,7 +495,10 @@ class AnnotationDecorator(VariantsLoaderDecorator):
 class EffectAnnotationDecorator(AnnotationDecorator):
     """Annotate variants with an effect."""
 
-    def __init__(self, variants_loader, effect_annotator):
+    def __init__(
+        self, variants_loader: VariantsLoader,
+        effect_annotator: AnnotationPipeline
+    ):
         super().__init__(variants_loader)
 
         self.set_attribute(
@@ -448,7 +508,7 @@ class EffectAnnotationDecorator(AnnotationDecorator):
 
         self.effect_annotator = effect_annotator
 
-    def full_variants_iterator(self):
+    def full_variants_iterator(self) -> FullVariantsIterator:
         self.effect_annotator.open()
 
         for (summary_variant, family_variants) in \
@@ -465,7 +525,7 @@ class EffectAnnotationDecorator(AnnotationDecorator):
                 sallele._effects = allele_effects
             yield summary_variant, family_variants
 
-    def close(self):
+    def close(self) -> None:
         self.effect_annotator.close()
         super().close()
 
@@ -474,7 +534,9 @@ class AnnotationPipelineDecorator(AnnotationDecorator):
     """Annotate variants by processing them through an annotation pipeline."""
 
     def __init__(
-            self, variants_loader, annotation_pipeline: AnnotationPipeline):
+        self, variants_loader: VariantsGenotypesLoader,
+        annotation_pipeline: AnnotationPipeline
+    ) -> None:
         super().__init__(variants_loader)
 
         self.annotation_pipeline = annotation_pipeline
@@ -489,10 +551,12 @@ class AnnotationPipelineDecorator(AnnotationDecorator):
         )
 
     @property
-    def annotation_schema(self):
+    def annotation_schema(self) -> list[AttributeInfo]:
         return self.annotation_pipeline.get_attributes()
 
-    def full_variants_iterator(self):
+    def full_variants_iterator(
+        self
+    ) -> FullVariantsIterator:
         with self.annotation_pipeline.open() as annotation_pipeline:
             internal_attributes = set(
                 attr.name for attr in self.annotation_pipeline.get_attributes()
@@ -518,21 +582,26 @@ class AnnotationPipelineDecorator(AnnotationDecorator):
                     sallele.update_attributes(public_attributes)
                 yield summary_variant, family_variants
 
-    def close(self):
+    def close(self) -> None:
         self.annotation_pipeline.close()
 
 
 class StoredAnnotationDecorator(AnnotationDecorator):
     """Annotate variant using a stored annotator."""
 
-    def __init__(self, variants_loader, annotation_filename):
+    def __init__(
+        self, variants_loader: VariantsGenotypesLoader,
+        annotation_filename: str
+    ) -> None:
         super().__init__(variants_loader)
 
         assert os.path.exists(annotation_filename)
         self.annotation_filename = annotation_filename
 
     @staticmethod
-    def decorate(variants_loader, source_filename):
+    def decorate(
+        variants_loader: VariantsGenotypesLoader, source_filename: str
+    ) -> VariantsLoader:
         """Wrap variants_loader into a StoredAnnotationDecorator."""
         annotation_filename = StoredAnnotationDecorator \
             .build_annotation_filename(
@@ -541,13 +610,12 @@ class StoredAnnotationDecorator(AnnotationDecorator):
         if not os.path.exists(annotation_filename):
             logger.warning("stored annotation missing %s", annotation_filename)
             return variants_loader
-        variants_loader = StoredAnnotationDecorator(
+        return StoredAnnotationDecorator(
             variants_loader, annotation_filename
         )
-        return variants_loader
 
     @classmethod
-    def _convert_array_of_strings(cls, token):
+    def _convert_array_of_strings(cls, token: str) -> Optional[list[str]]:
         if not token:
             return None
         token = token.strip()
@@ -555,13 +623,16 @@ class StoredAnnotationDecorator(AnnotationDecorator):
         return words
 
     @staticmethod
-    def _convert_string(token):
+    def _convert_string(token: str) -> Optional[str]:
         if not token:
             return None
         return token
 
     @classmethod
-    def _load_annotation_file(cls, filename, sep="\t"):
+    def _load_annotation_file(
+        cls, filename: str,
+        sep: str = "\t"
+    ) -> pd.DataFrame:
         assert os.path.exists(filename)
         with open(filename, "r", encoding="utf8") as infile:
             annot_df = pd.read_csv(
@@ -595,7 +666,9 @@ class StoredAnnotationDecorator(AnnotationDecorator):
             )
         return annot_df
 
-    def full_variants_iterator(self):
+    def full_variants_iterator(
+        self
+    ) -> FullVariantsIterator:
         variant_iterator = self.variants_loader.full_variants_iterator()
         start = time.time()
         annot_df = self._load_annotation_file(self.annotation_filename)
@@ -613,6 +686,8 @@ class StoredAnnotationDecorator(AnnotationDecorator):
                 variant_iterator, (None, None))
             if sumary_variant is None:
                 return
+            assert family_variants is not None
+
             variant_records = []
 
             current_record = records[index]
@@ -628,7 +703,7 @@ class StoredAnnotationDecorator(AnnotationDecorator):
 
             for sallele in sumary_variant.alleles:
                 sallele.update_attributes(
-                    variant_records[sallele.allele_index])
+                    variant_records[sallele.allele_index])  # type: ignore
             yield sumary_variant, family_variants
 
         elapsed = time.time() - start
@@ -647,13 +722,13 @@ class VariantsGenotypesLoader(VariantsLoader):
     def __init__(
             self,
             families: FamiliesData,
-            filenames: List[str],
+            filenames: Union[str, list[str]],
             genome: ReferenceGenome,
             transmission_type: TransmissionType = TransmissionType.transmitted,
             regions: Optional[List[str]] = None,
             expect_genotype: bool = True,
             expect_best_state: bool = False,
-            params: Optional[Dict[str, Any]] = None):
+            params: Optional[Dict[str, Any]] = None) -> None:
 
         params = params if params else {}
         super().__init__(
@@ -701,14 +776,14 @@ class VariantsGenotypesLoader(VariantsLoader):
         return arguments
 
     @property
-    def variants_filenames(self):
+    def variants_filenames(self) -> list[str]:
         return self.filenames
 
     @abstractmethod
-    def _full_variants_iterator_impl(self):
+    def _full_variants_iterator_impl(self) -> FullVariantsIterator:
         pass
 
-    def reset_regions(self, regions):
+    def reset_regions(self, regions: Optional[Union[str, list[str]]]) -> None:
         if regions is None:
             self.regions = []
         elif isinstance(regions, str):
@@ -720,6 +795,7 @@ class VariantsGenotypesLoader(VariantsLoader):
     def _get_diploid_males(cls, family_variant: FamilyVariant) -> List[bool]:
         res = []
 
+        assert family_variant.gt is not None
         assert family_variant.gt.shape == (2, len(family_variant.family))
 
         for member_idx, member in enumerate(
@@ -758,6 +834,7 @@ class VariantsGenotypesLoader(VariantsLoader):
             family_variant: FamilyVariant,
             genome: ReferenceGenome,
             force: bool = True) -> Optional[np.ndarray]:
+        assert family_variant.gt is not None
 
         male_ploidy = get_locus_ploidy(
             family_variant.chromosome, family_variant.position, Sex.M, genome
@@ -801,6 +878,7 @@ class VariantsGenotypesLoader(VariantsLoader):
             genome: ReferenceGenome) -> Tuple[np.ndarray, GeneticModel]:
         # pylint: disable=protected-access
         best_state = family_variant._best_state
+        assert best_state is not None
         genotype = best2gt(best_state)
         male_ploidy = get_locus_ploidy(
             family_variant.chromosome, family_variant.position,
@@ -830,7 +908,7 @@ class VariantsGenotypesLoader(VariantsLoader):
 
         return genotype, genetic_model
 
-    def _add_chrom_prefix(self, chrom):
+    def _add_chrom_prefix(self, chrom: str) -> str:
         # there is an important invariant between this and _del_chrom_prefix
         # we don't know if this or _del_chrom_prefix will be executed first so
         # _add_chrom_prefix should undo _del_chrom_prefix
@@ -838,14 +916,14 @@ class VariantsGenotypesLoader(VariantsLoader):
         assert self._chrom_prefix is not None
         return f"{self._chrom_prefix}{chrom}"
 
-    def _del_chrom_prefix(self, chrom):
+    def _del_chrom_prefix(self, chrom: str) -> str:
         assert self._chrom_prefix is not None
         assert chrom.startswith(self._chrom_prefix)
         return chrom[len(self._chrom_prefix):]
 
     def full_variants_iterator(
         self,
-    ) -> Iterator[Tuple[SummaryVariant, List[FamilyVariant]]]:
+    ) -> FullVariantsIterator:
         full_iterator = self._full_variants_iterator_impl()
         for summary_variant, family_variants in full_iterator:
             chrom = self._adjust_chrom_prefix(summary_variant.chromosome)
@@ -869,7 +947,8 @@ class VariantsGenotypesLoader(VariantsLoader):
                     family_variant._best_state = self._calc_best_state(
                         family_variant, self.genome, force=False
                     )
-                    for fallele in family_variant.alleles:
+                    for allele in family_variant.alleles:
+                        fallele = cast(FamilyAllele, allele)
                         fallele._best_state = family_variant.best_state
                         fallele._genetic_model = family_variant.genetic_model
                 elif self.expect_best_state and family_variant.gt is None:
@@ -881,7 +960,8 @@ class VariantsGenotypesLoader(VariantsLoader):
                         family_variant.gt,
                         family_variant._genetic_model,
                     ) = self._calc_genotype(family_variant, self.genome)
-                    for fallele in family_variant.alleles:
+                    for allele in family_variant.alleles:
+                        fallele = cast(FamilyAllele, allele)
                         fallele.gt = family_variant.gt
                         fallele._genetic_model = family_variant.genetic_model
 

@@ -241,7 +241,8 @@ class ImportProject():
         return self._input_filenames_cache[bucket.type]
 
     def get_variant_params(
-            self, loader_type: str) -> tuple[list[str], dict[str, Any]]:
+        self, loader_type: str
+    ) -> tuple[Union[str, list[str]], dict[str, Any]]:
         """Return variant loader filenames and params."""
         assert loader_type in self.import_config["input"], \
             f"No input config for loader {loader_type}"

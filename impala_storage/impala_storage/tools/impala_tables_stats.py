@@ -8,7 +8,8 @@ from contextlib import closing
 
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 from dae.gpf_instance.gpf_instance import GPFInstance
-from dae.impala_storage.schema1.impala_variants import ImpalaVariants
+
+from impala_storage.schema1.impala_variants import ImpalaVariants
 
 
 logger = logging.getLogger("impala_tables_stats")

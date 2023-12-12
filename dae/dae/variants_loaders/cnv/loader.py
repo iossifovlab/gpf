@@ -85,7 +85,7 @@ import pandas as pd
 from dae.variants_loaders.cnv.flexible_cnv_loader import flexible_cnv_loader
 from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.variants_loaders.raw.loader import VariantsGenotypesLoader, \
-    TransmissionType
+    TransmissionType, FullVariantsIterator
 
 from dae.pedigrees.families_data import FamiliesData
 from dae.variants.attributes import Inheritance
@@ -171,7 +171,7 @@ class CNVLoader(VariantsGenotypesLoader):
             families: FamiliesData,
             cnv_filenames: list[Union[str, Path, TextIO]],
             genome: ReferenceGenome,
-            regions: Optional[List[str]] = None,
+            regions: Optional[list[str]] = None,
             params: Optional[Dict[str, Any]] = None):
 
         if params is None:
@@ -183,7 +183,7 @@ class CNVLoader(VariantsGenotypesLoader):
 
         super().__init__(
             families=families,
-            filenames=cnv_filenames,
+            filenames=[str(fn) for fn in cnv_filenames],
             transmission_type=transmission_type,
             genome=genome,
             regions=regions,
@@ -327,7 +327,7 @@ class CNVLoader(VariantsGenotypesLoader):
         ))
         return arguments
 
-    def reset_regions(self, regions: list[Union[str, Region]]) -> None:
+    def reset_regions(self, regions: Optional[Union[str, list[str]]]) -> None:
         super().reset_regions(regions)
 
         result = []
@@ -335,7 +335,7 @@ class CNVLoader(VariantsGenotypesLoader):
             if reg is None:
                 continue
             result.append(Region.from_str(reg))
-        self.regions = result
+        self.regions = result  # type: ignore
 
     def _is_in_regions(self, summary_variant: SummaryVariant) -> bool:
         if len(self.regions) == 0:
@@ -345,7 +345,7 @@ class CNVLoader(VariantsGenotypesLoader):
                 self._adjust_chrom_prefix(summary_variant.chrom),
                 summary_variant.position
             )
-            for r in self.regions
+            for r in self.regions if r is not None
         ]
         return any(isin)
 
@@ -396,10 +396,13 @@ class CNVLoader(VariantsGenotypesLoader):
             for f_idx, family_id in enumerate(
                     values.get("family_id")):  # type: ignore
                 best_state = values.get("best_state")[f_idx]  # type: ignore
+                assert best_state is not None
+
                 family = self.families.get(family_id)
                 if family is None:
                     continue
-                fvar = FamilyVariant(svar, family, None, best_state)
+                fvar = FamilyVariant(
+                    svar, family, None, best_state)  # type: ignore
                 extra_attributes = {}
                 for attr in extra_attributes_keys:
                     attr_val = values.get(attr)[f_idx]  # type: ignore
@@ -408,7 +411,7 @@ class CNVLoader(VariantsGenotypesLoader):
                 fvs.append(fvar)
             yield svar, fvs
 
-    def full_variants_iterator(self):
+    def full_variants_iterator(self) -> FullVariantsIterator:
         full_iterator = super().full_variants_iterator()
 
         for summary_variants, family_variants in full_iterator:

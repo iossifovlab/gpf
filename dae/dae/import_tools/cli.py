@@ -1,16 +1,19 @@
 import argparse
 import sys
 
+from typing import List, Optional
+
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 from dae.import_tools.import_tools import ImportProject
 
-from dae.task_graph.executor import SequentialExecutor, task_graph_run
+from dae.task_graph.executor import SequentialExecutor, \
+    AbstractTaskGraphExecutor, task_graph_run
 from dae.utils import fs_utils
 
 from dae.task_graph import TaskGraphCli
 
 
-def main(argv=None):
+def main(argv: Optional[List[str]] = None) -> int:
     """Entry point for import tools when invoked as a cli tool."""
     parser = argparse.ArgumentParser(
         description="Import datasets into GPF",
@@ -38,7 +41,13 @@ def main(argv=None):
     return 1
 
 
-def run_with_project(project, executor=SequentialExecutor()):
+def run_with_project(
+    project: ImportProject,
+    executor: Optional[AbstractTaskGraphExecutor] = None
+) -> bool:
+    """Run import with the given project."""
+    if executor is None:
+        executor = SequentialExecutor()
     storage = project.get_import_storage()
     task_graph = storage.generate_import_task_graph(project)
     task_graph.input_files.extend(project.config_filenames)

@@ -5,7 +5,7 @@ import gzip
 import warnings
 import logging
 import argparse
-from typing import Iterator, Optional, Any, Generator
+from typing import Optional, Any, Generator, Union
 from contextlib import closing
 
 import numpy as np
@@ -32,12 +32,12 @@ from dae.variants.variant import SummaryVariant, SummaryVariantFactory, \
     allele_type_from_cshl_variant
 from dae.variants.family_variant import FamilyVariant
 
-from dae.variants_loaders.raw.loader import (
-    VariantsGenotypesLoader,
-    TransmissionType,
-    FamiliesGenotypes,
-    CLIArgument
-)
+from dae.variants_loaders.raw.loader import \
+    VariantsGenotypesLoader, \
+    TransmissionType, \
+    FamiliesGenotypes, \
+    CLIArgument, FamilyGenotypeIterator, FullVariantsIterator
+
 
 from dae.utils.variant_utils import get_locus_ploidy
 
@@ -122,7 +122,7 @@ class DenovoLoader(VariantsGenotypesLoader):
     def chromosomes(self) -> list[str]:
         return self._chromosomes
 
-    def reset_regions(self, regions: list[str]) -> None:
+    def reset_regions(self, regions: Optional[Union[str, list[str]]]) -> None:
         super().reset_regions(regions)
 
         result: list[Optional[Region]] = []
@@ -183,7 +183,7 @@ class DenovoLoader(VariantsGenotypesLoader):
                 fvs.append(fvariant)
         return fvs
 
-    def _full_variants_iterator_impl(self) -> Iterator[tuple[SummaryVariant, list[FamilyVariant]]]:
+    def _full_variants_iterator_impl(self) -> FullVariantsIterator:
         group = self.denovo_df.groupby(
             ["chrom", "position", "reference", "alternative"],
             sort=False).agg(list)
@@ -784,7 +784,7 @@ class DaeTransmittedFamiliesGenotypes(FamiliesGenotypes):
 
     def family_genotype_iterator(
         self
-    ) -> Iterator[tuple[Family, np.ndarray, np.ndarray]]:
+    ) -> FamilyGenotypeIterator:
         for family_id, (best_state, read_counts) in self.family_data.items():
             fam = self.families.get(family_id)
             if fam is None:
@@ -1022,7 +1022,7 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
             family_variants.append(fvariant)
         return family_variants
 
-    def _full_variants_iterator_impl(self) -> Iterator[tuple[SummaryVariant, list[FamilyVariant]]]:
+    def _full_variants_iterator_impl(self) -> FullVariantsIterator:
 
         summary_columns = self._load_summary_columns(self.summary_filename)
         toomany_columns = self._load_toomany_columns(self.toomany_filename)

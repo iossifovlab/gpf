@@ -17,7 +17,9 @@ from impala_storage.schema1.impala_variants import ImpalaVariants
 logger = logging.getLogger("impala_tables_summary_variants")
 
 
-def parse_cli_arguments(argv, _gpf_instance):
+def parse_cli_arguments(
+    argv: list[str], _gpf_instance: GPFInstance
+) -> argparse.Namespace:
     """Parse CLI arguments."""
     parser = argparse.ArgumentParser(
         description="loading study parquet files in impala db",
@@ -40,11 +42,13 @@ def parse_cli_arguments(argv, _gpf_instance):
         default=0,
         help="region bin split size in base pairs")
 
-    argv = parser.parse_args(argv)
-    return argv
+    return parser.parse_args(argv)
 
 
-def variants_parition_bins(study_backend, partition):
+def variants_parition_bins(
+    study_backend: ImpalaVariants,
+    partition: str
+) -> list[str]:
     """Return partition bins."""
     # pylint: disable=protected-access
     impala = study_backend._impala_helpers
@@ -62,7 +66,7 @@ def variants_parition_bins(study_backend, partition):
     return partition_bins
 
 
-def collect_summary_schema(impala_variants):
+def collect_summary_schema(impala_variants: ImpalaVariants) -> dict[str, str]:
     """Collect summary schema."""
     # pylint: disable=invalid-name
     FAMILY_FIELDS = set([
@@ -96,11 +100,17 @@ def collect_summary_schema(impala_variants):
     return schema
 
 
-def summary_table_name(study_id, impala_variants):
+def summary_table_name(
+    study_id: str,
+    impala_variants: ImpalaVariants
+) -> str:
     return f"{impala_variants.db}.{study_id.lower()}_summary_variants"
 
 
-def summary_table_name_temp(study_id, impala_variants):
+def summary_table_name_temp(
+    study_id: str,
+    impala_variants: ImpalaVariants
+) -> str:
     return f"{impala_variants.db}.{study_id.lower()}_temp_summary_variants"
 
 
@@ -112,7 +122,10 @@ PARTITIONS = set([
 ])
 
 
-def drop_summary_table(study_id, impala_variants):
+def drop_summary_table(
+    study_id: str,
+    impala_variants: ImpalaVariants
+) -> None:
     """Drop summary table."""
     # pylint: disable=protected-access
     impala = impala_variants._impala_helpers
@@ -129,7 +142,10 @@ def drop_summary_table(study_id, impala_variants):
             cursor.execute(query)
 
 
-def rename_summary_table(study_id, impala_variants):
+def rename_summary_table(
+    study_id: str,
+    impala_variants: ImpalaVariants
+) -> None:
     """Rename summary table."""
     # pylint: disable=protected-access
     impala = impala_variants._impala_helpers
@@ -141,7 +157,9 @@ def rename_summary_table(study_id, impala_variants):
             cursor.execute(qry)
 
 
-def create_summary_table(study_id, impala_variants):
+def create_summary_table(
+    study_id: str, impala_variants: ImpalaVariants
+) -> list[str]:
     """Create summary table."""
     schema = collect_summary_schema(impala_variants)
     partition_bins = []
