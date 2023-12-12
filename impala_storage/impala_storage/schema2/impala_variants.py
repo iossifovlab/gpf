@@ -1,23 +1,30 @@
 import json
 import logging
 from contextlib import closing
-from typing import Any
+from typing import Optional, Any, cast
+
+
 import numpy as np
+import pandas as pd
+from sqlalchemy import pool
+
 from impala.util import as_pandas
 from dae.query_variants.query_runners import QueryRunner
 from dae.variants.attributes import Role, Status, Sex, Inheritance
 from dae.query_variants.sql.schema2.base_variants import SqlSchema2Variants
 from dae.query_variants.sql.schema2.base_query_builder import Dialect
-from dae.variants.variant import SummaryVariantFactory
+from dae.variants.variant import SummaryVariantFactory, SummaryVariant
 from dae.variants.family_variant import FamilyVariant
+from dae.genomic_resources.gene_models import GeneModels
 
 from impala_storage.helpers.impala_query_runner import ImpalaQueryRunner
+from impala_storage.helpers.impala_helpers import ImpalaHelpers
 
 logger = logging.getLogger(__name__)
 
 
 class ImpalaDialect(Dialect):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
     @staticmethod
@@ -32,14 +39,14 @@ class ImpalaVariants(SqlSchema2Variants):
 
     def __init__(
         self,
-        impala_helpers,
-        db,
-        family_variant_table,
-        summary_allele_table,
-        pedigree_table,
-        meta_table,
-        gene_models=None,
-    ):
+        impala_helpers: ImpalaHelpers,
+        db: str,
+        family_variant_table: str,
+        summary_allele_table: str,
+        pedigree_table: str,
+        meta_table: str,
+        gene_models: Optional[GeneModels] = None,
+    ) -> None:
         self._impala_helpers = impala_helpers
         super().__init__(
             ImpalaDialect(),
@@ -50,17 +57,17 @@ class ImpalaVariants(SqlSchema2Variants):
             meta_table,
             gene_models)
 
-    def connection(self):
+    def connection(self) -> pool.PoolProxiedConnection:
         conn = self._impala_helpers.connection()
         logger.debug(
             "getting connection to host %s from impala helpers %s",
             conn.host, id(self._impala_helpers)
         )
-        return conn
+        return cast(pool.PoolProxiedConnection, conn)
 
-    def _fetch_schema(self, table) -> dict[str, str]:
+    def _fetch_schema(self, table: str) -> dict[str, str]:
         with closing(self.connection()) as conn:
-            with conn.cursor() as cursor:
+            with closing(conn.cursor()) as cursor:
                 query = f"""DESCRIBE {self.db}.{table}"""
                 cursor.execute(query)
                 df = as_pandas(cursor)
@@ -72,28 +79,28 @@ class ImpalaVariants(SqlSchema2Variants):
 
     def _fetch_tblproperties(self) -> str:
         with closing(self.connection()) as conn:
-            with conn.cursor() as cursor:
+            with closing(conn.cursor()) as cursor:
                 query = f"""SELECT value FROM {self.db}.{self.meta_table}
                             WHERE key = 'partition_description'
                             LIMIT 1
                 """
 
                 cursor.execute(query)
-
-                for row in cursor:
+                row = cursor.fetchone()
+                if row:
                     return str(row[0])
         return ""
 
-    def _fetch_pedigree(self):
+    def _fetch_pedigree(self) -> pd.DataFrame:
         with closing(self.connection()) as conn:
-            with conn.cursor() as cursor:
+            with closing(conn.cursor()) as cursor:
                 query = f"""SELECT * FROM {self.db}.{self.pedigree_table}"""
                 cursor.execute(query)
-                ped_df = as_pandas(cursor)
+                ped_df = cast(pd.DataFrame, as_pandas(cursor))
 
-        ped_df.role = ped_df.role.apply(Role)
-        ped_df.sex = ped_df.sex.apply(Sex)
-        ped_df.status = ped_df.status.apply(Status)
+        ped_df.role = ped_df.role.apply(Role)  # type: ignore
+        ped_df.sex = ped_df.sex.apply(Sex)  # type: ignore
+        ped_df.status = ped_df.status.apply(Status)  # type: ignore
 
         return ped_df
 
@@ -101,11 +108,11 @@ class ImpalaVariants(SqlSchema2Variants):
         # pylint: disable=protected-access
         return self._impala_helpers._connection_pool
 
-    def _deserialize_summary_variant(self, record):
+    def _deserialize_summary_variant(self, record: tuple) -> SummaryVariant:
         sv_record = json.loads(record[-1])
         return SummaryVariantFactory.summary_variant_from_records(sv_record)
 
-    def _deserialize_family_variant(self, record):
+    def _deserialize_family_variant(self, record: tuple) -> FamilyVariant:
         sv_record = json.loads(record[-2])
         fv_record = json.loads(record[-1])
         inheritance_in_members = {

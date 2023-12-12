@@ -1,9 +1,11 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import os
-from typing import Optional, cast
+from typing import Callable, Iterator, Union, Optional, cast, \
+    Any
 
 import pytest
 from box import Box
+
 from dae.gpf_instance import GPFInstance
 from dae.variants_loaders.vcf.loader import VcfLoader
 from dae.variants_loaders.dae.loader import DenovoLoader
@@ -18,6 +20,7 @@ from dae.import_tools.import_tools import \
 
 from impala_storage.schema2.impala2_genotype_storage import \
     Impala2GenotypeStorage
+from impala_storage.schema2.impala_variants import ImpalaVariants
 
 
 @pytest.fixture(scope="module")
@@ -46,7 +49,7 @@ def storage() -> Impala2GenotypeStorage:
 def import_test_study(
         resources_dir: str,
         gpf_instance_2013: GPFInstance,
-        storage: Impala2GenotypeStorage):
+        storage: Impala2GenotypeStorage) -> Callable:
 
     def importer(
         study_id: str,
@@ -54,8 +57,7 @@ def import_test_study(
         partition_description: PartitionDescriptor,
         variant_files: list[str],
         loader_args: Optional[dict] = None
-    ):
-        partition_description.output = tmpdir
+    ) -> ImpalaVariants:
 
         # generate parquets
         pedigree_parquet = run_ped2parquet(
@@ -90,6 +92,7 @@ def import_test_study(
         backend = storage.build_backend(Box(study_config), None,
                                         gpf_instance_2013.gene_models)
         return backend
+
     return importer
 
 
@@ -108,8 +111,10 @@ def partition_description(
 
 @pytest.fixture(scope="module")
 def testing_study_backend(
-    partition_description, import_test_study, tmp_path_factory
-):
+    partition_description: PartitionDescriptor,
+    import_test_study: Callable,
+    tmp_path_factory: pytest.TempPathFactory
+) -> Iterator[ImpalaVariants]:
     """Import a test study and return the backend used to query it."""
     study_id = "testStudyVcf"
     tmpdir = tmp_path_factory.mktemp("testing_study_backend")
@@ -118,8 +123,12 @@ def testing_study_backend(
     )
 
 
-def run_vcf2schema2(out_dir, ped_file, vcf_file, gpf_instance,
-                    partition_description, loader_args=None):
+def run_vcf2schema2(
+    out_dir: str, ped_file: str, vcf_file: str,
+    gpf_instance: GPFInstance,
+    partition_description: PartitionDescriptor,
+    loader_args: Optional[dict[str, Any]] = None
+) -> None:
     pedigree = FamiliesLoader(ped_file).load()
 
     loader_args = loader_args if loader_args else {}
@@ -133,13 +142,13 @@ def run_vcf2schema2(out_dir, ped_file, vcf_file, gpf_instance,
         genome=gpf_instance.reference_genome,
         **loader_args,
     )
-    variants_loader = build_variants_loader_pipeline(
+    loader = build_variants_loader_pipeline(
         variants_loader, gpf_instance
     )
 
     ParquetWriter.variants_to_parquet(
         out_dir,
-        variants_loader,
+        loader,
         partition_description,
         S2VariantsWriter,
         bucket_index=0,
@@ -147,14 +156,18 @@ def run_vcf2schema2(out_dir, ped_file, vcf_file, gpf_instance,
     )
     ParquetWriter.write_meta(
         out_dir,
-        variants_loader,
+        loader,
         partition_description,
         S2VariantsWriter,
     )
 
 
-def run_denovo2schema2(out_dir, ped_file, denovo_file, gpf_instance,
-                       partition_description, loader_args=None):
+def run_denovo2schema2(
+    out_dir: str, ped_file: str, denovo_file: str,
+    gpf_instance: GPFInstance,
+    partition_description: PartitionDescriptor,
+    loader_args: Optional[dict[str, Any]] = None
+) -> None:
     pedigree = FamiliesLoader(ped_file).load()
 
     loader_args = loader_args if loader_args else {}
@@ -164,13 +177,13 @@ def run_denovo2schema2(out_dir, ped_file, denovo_file, gpf_instance,
         genome=gpf_instance.reference_genome,
         **loader_args,
     )
-    variants_loader = build_variants_loader_pipeline(
+    loader = build_variants_loader_pipeline(
         variants_loader, gpf_instance
     )
 
     ParquetWriter.variants_to_parquet(
         out_dir,
-        variants_loader,
+        loader,
         partition_description,
         S2VariantsWriter,
         bucket_index=100,
@@ -178,24 +191,28 @@ def run_denovo2schema2(out_dir, ped_file, denovo_file, gpf_instance,
     )
     ParquetWriter.write_meta(
         out_dir,
-        variants_loader,
+        loader,
         partition_description,
         S2VariantsWriter,
     )
 
 
-def run_ped2parquet(ped_file, output_dir):
+def run_ped2parquet(ped_file: str, output_dir: str) -> str:
     pedigree = FamiliesLoader(ped_file).load()
     output_filename = os.path.join(output_dir, "pedigree", "pedigree_parquet")
     ParquetWriter.families_to_parquet(pedigree, output_filename)
     return output_filename
 
 
-def build_variants_loader_pipeline(variants_loader, gpf_instance):
+def build_variants_loader_pipeline(
+    variants_loader: Union[DenovoLoader, VcfLoader],
+    gpf_instance: GPFInstance
+) -> AnnotationPipelineDecorator:
     annotation_pipeline = construct_import_annotation_pipeline(gpf_instance)
-    if annotation_pipeline is not None:
-        variants_loader = AnnotationPipelineDecorator(
-            variants_loader, annotation_pipeline
-        )
 
-    return variants_loader
+    if annotation_pipeline is None:
+        return variants_loader
+
+    return AnnotationPipelineDecorator(
+        variants_loader, annotation_pipeline
+    )

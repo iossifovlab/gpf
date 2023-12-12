@@ -106,6 +106,7 @@ class PartitionDescriptor:
         content = content.strip()
         if not content:
             return PartitionDescriptor()
+
         if content_format == "conf":
             try:
                 parsed_data = cast(dict[str, Any], toml.loads(content))
@@ -131,7 +132,9 @@ class PartitionDescriptor:
                 config_dict["region_bin"].get("region_length", sys.maxsize))
             chromosomes = config_dict["region_bin"]["chromosomes"]
 
-            if isinstance(chromosomes, str):
+            if isinstance(chromosomes, int):
+                config["chromosomes"] = [str(chromosomes)]
+            elif isinstance(chromosomes, str):
                 config["chromosomes"] = [
                     c.strip()
                     for c in chromosomes.split(",")]

@@ -1,10 +1,18 @@
-from copy import copy
+from __future__ import annotations
+
 import glob
 import os
 import logging
+import pathlib
+
+from copy import copy
 from dataclasses import dataclass
 from collections.abc import Iterator
-from typing import Dict, Any, Optional
+from typing import Tuple, Union, Dict, Any, Optional, cast
+
+from dae.genomic_resources.gene_models import GeneModels
+from dae.genomic_resources.reference_genome import ReferenceGenome
+from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 
 from impala_storage.helpers.hdfs_helpers import HdfsHelpers
@@ -28,7 +36,7 @@ class HdfsStudyLayout:
 class Impala2GenotypeStorage(GenotypeStorage):
     """A genotype storing implementing the new schema2."""
 
-    def __init__(self, storage_config: Dict[str, Any]):
+    def __init__(self, storage_config: Dict[str, Any]) -> None:
         super().__init__(storage_config)
         self._hdfs_helpers: Optional[HdfsHelpers] = None
         self._impala_helpers: Optional[ImpalaHelpers] = None
@@ -37,16 +45,21 @@ class Impala2GenotypeStorage(GenotypeStorage):
     def get_storage_type(cls) -> str:
         return "impala2"
 
-    def start(self):
+    def start(self) -> Impala2GenotypeStorage:
         return self
 
-    def shutdown(self):
+    def shutdown(self) -> Impala2GenotypeStorage:
         if self._impala_helpers is not None:
             self._impala_helpers.close()
         if self._hdfs_helpers is not None:
             self._hdfs_helpers.close()
+        return self
 
-    def build_backend(self, study_config, genome, gene_models):
+    def build_backend(
+        self, study_config: dict,
+        genome: Optional[ReferenceGenome],
+        gene_models: Optional[GeneModels]
+    ) -> ImpalaVariants:
         assert study_config is not None
 
         family_table, summary_table, pedigree_table, meta_table \
@@ -63,8 +76,11 @@ class Impala2GenotypeStorage(GenotypeStorage):
         return variants
 
     def hdfs_upload_dataset(
-            self, study_id, variants_dir, pedigree_file,
-            meta_file) -> HdfsStudyLayout:
+        self, study_id: str,
+        variants_dir: Union[pathlib.Path, str],
+        pedigree_file: str,
+        meta_file: str
+    ) -> HdfsStudyLayout:
         """Upload local data to hdfs."""
         # Copy pedigree
         base_dir = self.storage_config["hdfs"]["base_dir"]
@@ -111,9 +127,11 @@ class Impala2GenotypeStorage(GenotypeStorage):
         )
 
     @staticmethod
-    def _study_tables(study_config) -> tuple[str, str, str, str]:
-        study_id = study_config.id
-        storage_config = study_config.genotype_storage
+    def _study_tables(
+        study_config: dict
+    ) -> tuple[str, str, str, str]:
+        study_id = study_config["id"]
+        storage_config = study_config["genotype_storage"]
         has_tables = storage_config and storage_config.get("tables")
         tables = storage_config["tables"] if has_tables else None
 
@@ -135,7 +153,10 @@ class Impala2GenotypeStorage(GenotypeStorage):
 
         return family_table, summary_table, pedigree_table, meta_table
 
-    def _copy_variants(self, variants_dir, study_path):
+    def _copy_variants(
+        self, variants_dir: Union[pathlib.Path, str],
+        study_path: str
+    ) -> Tuple[str, str]:
         hdfs_summary_dir = os.path.join(study_path, "summary")
         hdfs_family_dir = os.path.join(study_path, "family")
 
@@ -155,14 +176,15 @@ class Impala2GenotypeStorage(GenotypeStorage):
         # return the first parquet files in the list as sample files
         return sample_summary_file[1], sample_family_file[1]
 
-    def _copy_directory(self, local_dir, remote_dir):
+    def _copy_directory(self, local_dir: str, remote_dir: str) -> None:
         logger.info("copying %s into %s", local_dir, remote_dir)
         self.hdfs_helpers.makedirs(os.path.dirname(remote_dir))
         self.hdfs_helpers.put(local_dir, remote_dir, recursive=True)
 
     @staticmethod
-    def _enum_parquet_files_to_copy(src_variants_dir, dest_dir) \
-            -> Iterator[tuple[str, str]]:
+    def _enum_parquet_files_to_copy(
+        src_variants_dir: str, dest_dir: str
+    ) -> Iterator[tuple[str, str]]:
         parquet_files_glob = glob.iglob(
             os.path.join(src_variants_dir, "**/*.parquet"),
             recursive=True)
@@ -173,7 +195,7 @@ class Impala2GenotypeStorage(GenotypeStorage):
             yield src_file, dst_file
 
     @property
-    def hdfs_helpers(self):
+    def hdfs_helpers(self) -> HdfsHelpers:
         """Return the hdfs helper used to interact with hdfs."""
         if self._hdfs_helpers is None:
             self._hdfs_helpers = HdfsHelpers(
@@ -185,9 +207,10 @@ class Impala2GenotypeStorage(GenotypeStorage):
         return self._hdfs_helpers
 
     def import_dataset(
-            self, study_id,
-            hdfs_study_layout: HdfsStudyLayout,
-            partition_description):
+        self, study_id: str,
+        hdfs_study_layout: HdfsStudyLayout,
+        partition_description: PartitionDescriptor
+    ) -> dict[str, Any]:
         """Load a dataset from HDFS into impala."""
         pedigree_table = self._construct_pedigree_table(study_id)
         summary_variant_table, family_variant_table = \
@@ -242,7 +265,7 @@ class Impala2GenotypeStorage(GenotypeStorage):
             summary_variant_table, family_variant_table, meta_table)
 
     @property
-    def impala_helpers(self):
+    def impala_helpers(self) -> ImpalaHelpers:
         """Return the impala helper object."""
         if self._impala_helpers is None:
             impala_hosts = self.storage_config["impala"]["hosts"]
@@ -256,19 +279,21 @@ class Impala2GenotypeStorage(GenotypeStorage):
         return self._impala_helpers
 
     @staticmethod
-    def _construct_variant_tables(study_id):
+    def _construct_variant_tables(study_id: str) -> Tuple[str, str]:
         return f"{study_id}_summary_alleles", f"{study_id}_family_alleles"
 
     @staticmethod
-    def _construct_pedigree_table(study_id):
+    def _construct_pedigree_table(study_id: str) -> str:
         return f"{study_id}_pedigree"
 
     @staticmethod
-    def _construct_metadata_table(study_id):
+    def _construct_metadata_table(study_id: str) -> str:
         return f"{study_id}_meta"
 
-    def _generate_study_config(self, study_id, pedigree_table,
-                               summary_table, family_table, meta_table):
+    def _generate_study_config(
+        self, study_id: str, pedigree_table: str,
+        summary_table: str, family_table: str, meta_table: str
+    ) -> dict[str, Any]:
 
         assert study_id is not None
 
@@ -285,10 +310,11 @@ class Impala2GenotypeStorage(GenotypeStorage):
 
         if summary_table:
             assert family_table is not None
-            storage_config = study_config["genotype_storage"]
+            storage_config = cast(dict, study_config["genotype_storage"])
             storage_config["tables"]["summary"] = summary_table
             storage_config["tables"]["family"] = family_table
             storage_config["tables"]["meta"] = meta_table
-            study_config["genotype_browser"]["enabled"] = True
+            genotype_browser = cast(dict, study_config["genotype_browser"])
+            genotype_browser["enabled"] = True
 
         return study_config
