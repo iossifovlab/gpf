@@ -1,10 +1,13 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+import pathlib
+from typing import Callable
 
 from dae.utils.regions import Region
 from dae.parquet.partition_descriptor import PartitionDescriptor
+from impala_storage.schema2.impala_variants import ImpalaVariants
 
 
-def test_import_and_query(testing_study_backend):
+def test_import_and_query(testing_study_backend: ImpalaVariants) -> None:
     family_variants = list(testing_study_backend.query_variants())
     summary_variants = list(testing_study_backend.query_summary_variants())
 
@@ -16,8 +19,8 @@ def test_import_and_query(testing_study_backend):
 
 
 def test_import_denovo_with_custome_range(
-    import_test_study, tmpdir
-):
+    import_test_study: Callable, tmpdir: pathlib.Path
+) -> None:
     study_id = "testStudy"
     partition_description = PartitionDescriptor()
     backend = import_test_study(
@@ -36,7 +39,9 @@ def test_import_denovo_with_custome_range(
     assert sum(len(sv.alleles) for sv in summary_variants) == 6
 
 
-def test_query_variants_with_gene_symbols(testing_study_backend):
+def test_query_variants_with_gene_symbols(
+    testing_study_backend: ImpalaVariants
+) -> None:
     effect_types = [
         "frame-shift", "nonsense", "splice-site", "no-frame-shift-newStop",
         "nonsense", "frame-shift", "splice-site", "no-frame-shift-newStop",

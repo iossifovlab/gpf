@@ -1,4 +1,5 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+import pathlib
 from dataclasses import dataclass
 import os
 from box import Box
@@ -18,7 +19,9 @@ class LocalLayout:
 
 
 @pytest.fixture
-def import_layout(resources_dir, tmpdir) -> LocalLayout:
+def import_layout(
+    resources_dir: pathlib.Path, tmpdir: pathlib.Path
+) -> LocalLayout:
     sa_csv = pd.read_csv(resources_dir / "summary_alleles_table.csv")
     fa_csv = pd.read_csv(resources_dir / "family_alleles_table.csv")
     pedigree_csv = pd.read_csv(resources_dir / "pedigree_table.csv")
@@ -34,10 +37,10 @@ def import_layout(resources_dir, tmpdir) -> LocalLayout:
     meta_fn = f"{tmpdir}/meta.parquet"
     meta_df.to_parquet(meta_fn)
 
-    return LocalLayout(pedigree_fn, tmpdir, meta_fn)
+    return LocalLayout(pedigree_fn, str(tmpdir), meta_fn)
 
 
-def test_hdfs_upload_dataset(import_layout):
+def test_hdfs_upload_dataset(import_layout: LocalLayout) -> None:
     base_dir = "/user/test_user/studies"
     hdfs_host = os.environ.get("DAE_HDFS_HOST", "localhost")
     config = {

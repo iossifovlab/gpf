@@ -2,13 +2,13 @@ import logging
 from typing import cast
 
 from dae.configuration.study_config_builder import StudyConfigBuilder
-from dae.import_tools.import_tools import save_study_config
+from dae.import_tools.import_tools import ImportProject, save_study_config
 from dae.task_graph.graph import TaskGraph
 from dae.schema2_storage.schema2_import_storage import Schema2ImportStorage, \
     schema2_dataset_layout
 
 from impala_storage.schema2.impala2_genotype_storage import \
-    Impala2GenotypeStorage
+    HdfsStudyLayout, Impala2GenotypeStorage
 
 
 logger = logging.getLogger(__file__)
@@ -18,7 +18,7 @@ class Impala2ImportStorage(Schema2ImportStorage):
     """Import logic for data in the Impala Schema 2 format."""
 
     @classmethod
-    def _do_load_in_hdfs(cls, project):
+    def _do_load_in_hdfs(cls, project: ImportProject) -> HdfsStudyLayout:
         genotype_storage = project.get_genotype_storage()
         assert isinstance(genotype_storage, Impala2GenotypeStorage)
         layout = schema2_dataset_layout(project.get_parquet_dataset_dir())
@@ -29,7 +29,9 @@ class Impala2ImportStorage(Schema2ImportStorage):
             layout.meta)
 
     @classmethod
-    def _do_load_in_impala(cls, project, hdfs_study_layout):
+    def _do_load_in_impala(
+        cls, project: ImportProject, hdfs_study_layout: HdfsStudyLayout
+    ) -> None:
         genotype_storage = project.get_genotype_storage()
         assert isinstance(genotype_storage, Impala2GenotypeStorage)
 
@@ -43,7 +45,7 @@ class Impala2ImportStorage(Schema2ImportStorage):
         )
 
     @classmethod
-    def _do_study_config(cls, project):
+    def _do_study_config(cls, project: ImportProject) -> None:
         genotype_storage: Impala2GenotypeStorage = \
             cast(Impala2GenotypeStorage, project.get_genotype_storage())
         # pylint: disable=protected-access
@@ -70,11 +72,12 @@ class Impala2ImportStorage(Schema2ImportStorage):
 
         if summary_table:
             assert family_table is not None
-            storage_config = study_config["genotype_storage"]
+            storage_config = cast(dict, study_config["genotype_storage"])
             storage_config["tables"]["summary"] = summary_table
             storage_config["tables"]["family"] = family_table
             storage_config["tables"]["meta"] = meta_table
-            study_config["genotype_browser"]["enabled"] = True
+            genotype_browser = cast(dict, study_config["genotype_browser"])
+            genotype_browser["enabled"] = True
 
         config_builder = StudyConfigBuilder(study_config)
         config = config_builder.build_config()
@@ -84,7 +87,7 @@ class Impala2ImportStorage(Schema2ImportStorage):
             project.study_id,
             config)
 
-    def generate_import_task_graph(self, project) -> TaskGraph:
+    def generate_import_task_graph(self, project: ImportProject) -> TaskGraph:
         graph = TaskGraph()
         all_parquet_tasks = []
         if project.get_processing_parquet_dataset_dir() is None:
