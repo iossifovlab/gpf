@@ -55,6 +55,15 @@ def fake_pheno_db_dir(fake_dae_conf: Box) -> str:
     return get_pheno_db_dir(fake_dae_conf)
 
 
+@pytest.fixture(scope="function")
+def clean_pheno_db_dir(tmp_path_factory: pytest.TempPathFactory) -> str:
+    root_path = tmp_path_factory.mktemp("clean_pheno")
+    destination = os.path.join(root_path, "clean_fake")
+    clean_study = relative_to_this_folder("fixtures/clean_fake")
+    shutil.copytree(clean_study, destination)
+    return str(root_path)
+
+
 @pytest.fixture(scope="session")
 def fake_ped_file() -> str:
     return relative_to_this_folder("fixtures/pedigree_data/fake_pheno.ped")
