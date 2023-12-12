@@ -1,6 +1,6 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { Dataset, toolPageLinks } from 'app/datasets/datasets';
+import { Dataset } from 'app/datasets/datasets';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { Observable } from 'rxjs';
 import { DatasetNode } from './dataset-node';
@@ -25,14 +25,7 @@ export class DatasetNodeComponent implements OnInit {
 
   public select(openInNewTab = false): void {
     if (this.datasetNode !== undefined && this.datasetNode.dataset !== undefined) {
-      let url: string;
-      const firstTool = this.findFirstTool(this.datasetNode.dataset);
-
-      if (firstTool) {
-        url = `/datasets/${this.datasetNode.dataset.id}/${this.findFirstTool(this.datasetNode.dataset)}`;
-      } else {
-        url = `/datasets/${this.datasetNode.dataset.id}`;
-      }
+      const url = `/datasets/${this.datasetNode.dataset.id}`;
 
       if (!openInNewTab) {
         this.router.navigate([url]);
@@ -42,26 +35,6 @@ export class DatasetNodeComponent implements OnInit {
           newWindow.location.assign(url);
         }
       }
-    }
-  }
-
-  public findFirstTool(selectedDataset: Dataset): string {
-    if (selectedDataset.description) {
-      return toolPageLinks.datasetDescription;
-    } else if (selectedDataset.commonReport.enabled) {
-      return toolPageLinks.datasetStatistics;
-    } else if (selectedDataset.geneBrowser.enabled) {
-      return toolPageLinks.geneBrowser;
-    } else if (selectedDataset.genotypeBrowser && selectedDataset.genotypeBrowserConfig) {
-      return toolPageLinks.genotypeBrowser;
-    } else if (selectedDataset.phenotypeBrowser) {
-      return toolPageLinks.phenotypeBrowser;
-    } else if (selectedDataset.enrichmentTool) {
-      return toolPageLinks.enrichmentTool;
-    } else if (selectedDataset.phenotypeTool) {
-      return toolPageLinks.phenotypeTool;
-    } else {
-      return '';
     }
   }
 }
