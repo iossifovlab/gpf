@@ -1,6 +1,6 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { Dataset, toolPageLinks } from 'app/datasets/datasets';
+import { Dataset } from 'app/datasets/datasets';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { Observable } from 'rxjs';
 import { DatasetNode } from './dataset-node';
