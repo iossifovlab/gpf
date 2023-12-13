@@ -1,24 +1,28 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
+import pytest_mock
 
 from impala_storage.helpers.rsync_helpers import RsyncHelpers
 
 
-def test_rsync_helpers_ssh():
+def test_rsync_helpers_ssh() -> None:
     helpers = RsyncHelpers("ssh://root@seqclust0.seqpipe.org:/mnt/hdfs2nfs")
     assert helpers is not None
 
     assert helpers.rsync_remote == "root@seqclust0.seqpipe.org:/mnt/hdfs2nfs/"
 
 
-def test_rsync_helpers_local():
+def test_rsync_helpers_local() -> None:
     helpers = RsyncHelpers("/mnt/hdfs2nfs")
     assert helpers is not None
 
     assert helpers.rsync_remote == "/mnt/hdfs2nfs/"
 
 
-def test_copy_to_remote_ssh_file(temp_filename, mocker):
+def test_copy_to_remote_ssh_file(
+    temp_filename: str,
+    mocker: pytest_mock.MockerFixture
+) -> None:
     helpers = RsyncHelpers("ssh://root@seqclust0.seqpipe.org:/mnt/hdfs2nfs")
     mocker.patch("os.path.isfile", return_value=True)
 
@@ -28,9 +32,11 @@ def test_copy_to_remote_ssh_file(temp_filename, mocker):
     assert cmd[0][-1].endswith("/mnt/hdfs2nfs/")
 
 
-def test_copy_to_remote_ssh_dir(temp_dirname, mocker):
+def test_copy_to_remote_ssh_dir(
+    temp_dirname: str, mocker: pytest.MockerFixture
+) -> None:
     helpers = RsyncHelpers("ssh://root@seqclust0.seqpipe.org:/mnt/hdfs2nfs")
-    mocker.patch("os.path.isdir", return_value=True)
+    mocker.patch("os.path.isdir", return_value=True)  # type: ignore
 
     cmd = helpers._copy_to_remote_cmd(temp_dirname)
 
@@ -39,8 +45,10 @@ def test_copy_to_remote_ssh_dir(temp_dirname, mocker):
     assert f"{temp_dirname}/" in cmd[0]
 
 
-def test_rsync_helpers_ssh_port2022(temp_dirname, mocker):
-    mocker.patch("os.path.isdir", return_value=True)
+def test_rsync_helpers_ssh_port2022(
+    temp_dirname: str, mocker: pytest.MockerFixture
+) -> None:
+    mocker.patch("os.path.isdir", return_value=True)  # type: ignore
 
     helpers = RsyncHelpers(
         "ssh://root@seqclust0.seqpipe.org:2022/mnt/hdfs2nfs")
@@ -57,7 +65,7 @@ def test_rsync_helpers_ssh_port2022(temp_dirname, mocker):
     assert "-e" in cmd[0]
 
 
-def test_exclude_options(temp_dirname):
+def test_exclude_options(temp_dirname: str) -> None:
     helpers = RsyncHelpers("ssh://root@seqclust0.seqpipe.org:/mnt/hdfs2nfs")
     assert not helpers._exclude_options([])
     assert not helpers._exclude_options(None)
@@ -71,7 +79,7 @@ def test_exclude_options(temp_dirname):
     assert ".dvc" in rsync_cmd
 
 
-def test_rsync_remote_subdir(temp_dirname):
+def test_rsync_remote_subdir(temp_dirname: str) -> None:
     helpers = RsyncHelpers("ssh://root@seqclust0.seqpipe.org:/mnt/hdfs2nfs")
     assert helpers is not None
 
@@ -96,6 +104,6 @@ def test_rsync_remote_subdir(temp_dirname):
             ""),
     ],
 )
-def test_rsync_build_location_base(location, expected):
+def test_rsync_build_location_base(location: str, expected: str) -> None:
     helpers = RsyncHelpers(location)
     assert helpers.hosturl() == expected
