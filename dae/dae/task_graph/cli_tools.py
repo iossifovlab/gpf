@@ -24,7 +24,7 @@ class TaskGraphCli:
     @staticmethod
     def add_arguments(parser: argparse.ArgumentParser,
                       force_mode: str = "optional",
-                      default_task_status_dir: str = ".",
+                      default_task_status_dir: Optional[str] = ".",
                       use_commands: bool = True) -> None:
         """Add arguments needed to execute a task graph."""
         executor_group = parser.add_argument_group(title="Task Graph Executor")

@@ -5,7 +5,7 @@ import itertools
 import logging
 from collections import Counter
 from collections.abc import Callable
-from typing import Optional, Any, Generator, Iterator, cast
+from typing import Optional, Any, Generator, Iterator, cast, Union
 
 import argparse
 from urllib.parse import urlparse
@@ -867,7 +867,7 @@ class VcfLoader(VariantsGenotypesLoader):
                     all_chromosomes.append(chrom)
         return all_chromosomes
 
-    def reset_regions(self, regions: list[str]) -> None:
+    def reset_regions(self, regions: Optional[Union[str, list[str]]]) -> None:
         for single_loader in self.vcf_loaders:
             single_loader.reset_regions(regions)
 

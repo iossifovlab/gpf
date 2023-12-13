@@ -8,7 +8,7 @@ from typing import Optional, Any
 
 from impala import dbapi
 from impala.hiveserver2 import HiveServer2Connection
-from sqlalchemy.pool import QueuePool
+from sqlalchemy import pool
 
 from sqlalchemy import exc
 from dae.parquet.partition_descriptor import PartitionDescriptor
@@ -47,7 +47,7 @@ class ImpalaHelpers:
 
         logger.info("impala connection pool size is: %s", pool_size)
 
-        self._connection_pool = QueuePool(
+        self._connection_pool = pool.QueuePool(
             create_connection, pool_size=pool_size,
             reset_on_return=False,
             max_overflow=pool_size,
@@ -62,7 +62,7 @@ class ImpalaHelpers:
 
     def connection(
         self, timeout: Optional[int] = None
-    ) -> HiveServer2Connection:
+    ) -> pool.PoolProxiedConnection:
         """Create a new connection to the impala host."""
         logger.debug("getting impala connection from the pool; %s",
                      self._connection_pool.status())
@@ -201,7 +201,7 @@ class ImpalaHelpers:
     ) -> None:
         """Import pedigree files into impala table."""
         with closing(self.connection()) as conn:
-            with conn.cursor() as cursor:
+            with closing(conn.cursor()) as cursor:
                 cursor.execute(
                     f"CREATE DATABASE IF NOT EXISTS {db}")
 
@@ -269,7 +269,7 @@ class ImpalaHelpers:
         assert variants_schema is not None or variants_sample is not None
 
         with closing(self.connection()) as conn:
-            with conn.cursor() as cursor:
+            with closing(conn.cursor()) as cursor:
                 cursor.execute(
                     f"CREATE DATABASE IF NOT EXISTS {db}")
 
@@ -300,7 +300,7 @@ class ImpalaHelpers:
     ) -> None:
         """Compute impala table stats."""
         with closing(self.connection()) as connection:
-            with connection.cursor() as cursor:
+            with closing(connection.cursor()) as cursor:
                 if region_bin is not None:
                     query = f"COMPUTE INCREMENTAL STATS {db}.{table} " \
                         f"PARTITION (region_bin='{region_bin}')"
@@ -315,12 +315,12 @@ class ImpalaHelpers:
         """Collect region bins from table."""
         region_bins = []
         with closing(self.connection()) as connection:
-            with connection.cursor() as cursor:
+            with closing(connection.cursor()) as cursor:
                 query = f"SELECT DISTINCT(region_bin) FROM " \
                     f"{db}.{table}"
                 logger.info("running %s", query)
                 cursor.execute(query)
-                for row in cursor:
+                for row in cursor:  # type: ignore
                     region_bins.append(row[0])
         region_bins.sort()
         logger.info("collected region bins: %s", region_bins)
@@ -331,12 +331,12 @@ class ImpalaHelpers:
     ) -> Optional[str]:
         """Get the create statement for table."""
         with closing(self.connection()) as conn:
-            with conn.cursor() as cursor:
+            with closing(conn.cursor()) as cursor:
                 statement = f"SHOW CREATE TABLE {db}.{table}"
                 cursor.execute(statement)
 
                 create_statement = None
-                for row in cursor:
+                for row in cursor:  # type: ignore
                     create_statement = row[0]
                     break
                 return create_statement
@@ -383,7 +383,7 @@ class ImpalaHelpers:
             create_statement = create_statement.replace("3'UTR", "3\\'UTR")
             create_statement = create_statement.replace("5'UTR", "5\\'UTR")
 
-            with conn.cursor() as cursor:
+            with closing(conn.cursor()) as cursor:
                 cursor.execute(
                     f"DROP TABLE IF EXISTS {db}.{new_table}"
                 )
@@ -409,16 +409,16 @@ class ImpalaHelpers:
         logger.info("going to execute %s", statement)
 
         with closing(self.connection()) as conn:
-            with conn.cursor() as cursor:
+            with closing(conn.cursor()) as cursor:
                 cursor.execute(statement)
 
     def check_database(self, dbname: str) -> bool:
         """Check if dbname exists."""
         with closing(self.connection()) as conn:
-            with conn.cursor() as cursor:
+            with closing(conn.cursor()) as cursor:
                 query = "SHOW DATABASES"
                 cursor.execute(query)
-                for row in cursor:
+                for row in cursor:  # type: ignore
                     if row[0] == dbname:
                         return True
         return False
@@ -426,28 +426,28 @@ class ImpalaHelpers:
     def check_table(self, dbname: str, tablename: str) -> bool:
         """Check if dbname.tablename exists."""
         with closing(self.connection()) as conn:
-            with conn.cursor() as cursor:
+            with closing(conn.cursor()) as cursor:
                 query = f"SHOW TABLES IN {dbname}"
                 cursor.execute(query)
-                for row in cursor:
+                for row in cursor:  # type: ignore
                     if row[0] == tablename.lower():
                         return True
         return False
 
     def drop_table(self, dbname: str, tablename: str) -> None:
         with closing(self.connection()) as conn:
-            with conn.cursor() as cursor:
+            with closing(conn.cursor()) as cursor:
                 query = f"DROP TABLE IF EXISTS {dbname}.{tablename}"
                 cursor.execute(query)
 
     def create_database(self, dbname: str) -> None:
         with closing(self.connection()) as conn:
-            with conn.cursor() as cursor:
+            with closing(conn.cursor()) as cursor:
                 query = f"CREATE DATABASE IF NOT EXISTS {dbname}"
                 cursor.execute(query)
 
     def drop_database(self, dbname: str) -> None:
         with closing(self.connection()) as conn:
-            with conn.cursor() as cursor:
+            with closing(conn.cursor()) as cursor:
                 cursor.execute(
                     f"DROP DATABASE IF EXISTS {dbname} CASCADE")

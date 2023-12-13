@@ -3,27 +3,37 @@ import time
 
 from concurrent.futures import ThreadPoolExecutor
 from queue import Queue
+from typing import Optional, Callable, Any, cast
 
 import pytest
 
 from dae.query_variants.query_runners import QueryResult
 
 from impala_storage.helpers.impala_query_runner import ImpalaQueryRunner
+from impala_storage.helpers.impala_helpers import ImpalaHelpers
+from impala_storage.schema1.impala_genotype_storage import \
+    ImpalaGenotypeStorage
 
 
 @pytest.fixture(scope="session")
-def impala_helpers(impala_genotype_storage):
-    return impala_genotype_storage.impala_helpers
+def impala_helpers(
+    impala_genotype_storage: ImpalaGenotypeStorage
+) -> ImpalaHelpers:
+    return cast(ImpalaHelpers, impala_genotype_storage.impala_helpers)
 
 
-def create_runner(impala_helpers, query, deserializer=None):
+def create_runner(
+    impala_helpers: ImpalaHelpers,
+    query: str,
+    deserializer: Optional[Callable[[Any], Any]] = None
+) -> ImpalaQueryRunner:
 
     runner = ImpalaQueryRunner(
         impala_helpers._connection_pool, query, deserializer=deserializer)
     return runner
 
 
-def test_impala_runner_simple(impala_helpers):
+def test_impala_runner_simple(impala_helpers: ImpalaHelpers) -> None:
     assert impala_helpers is not None
 
     query = "SELECT * FROM gpf_variant_db.test_study_impala_01_variants"
@@ -48,7 +58,9 @@ def test_impala_runner_simple(impala_helpers):
     executor.shutdown(wait=True)
 
 
-def test_impala_runner_result_with_exception(impala_helpers):
+def test_impala_runner_result_with_exception(
+    impala_helpers: ImpalaHelpers
+) -> None:
     query = "SELECT * FROM gpf_variant_db.test_study_impala_01_variants"
 
     runner = create_runner(impala_helpers, query)
@@ -73,7 +85,9 @@ def test_impala_runner_result_with_exception(impala_helpers):
     assert runner.is_closed()
 
 
-def test_impala_runner_result_experimental_1(impala_helpers):
+def test_impala_runner_result_experimental_1(
+    impala_helpers: ImpalaHelpers
+) -> None:
     query = "SELECT COUNT(" \
         "DISTINCT bucket_index, " \
         "summary_variant_index, " \
@@ -96,7 +110,9 @@ def test_impala_runner_result_experimental_1(impala_helpers):
         result.close()
 
 
-def test_impala_runner_result_experimental_2(impala_helpers):
+def test_impala_runner_result_experimental_2(
+    impala_helpers: ImpalaHelpers
+) -> None:
     query = "SELECT COUNT(" \
         "DISTINCT bucket_index, " \
         "summary_variant_index, " \
@@ -119,7 +135,9 @@ def test_impala_runner_result_experimental_2(impala_helpers):
     time.sleep(0.1)
 
 
-def test_impala_runner_result_experimental(impala_helpers):
+def test_impala_runner_result_experimental(
+    impala_helpers: ImpalaHelpers
+) -> None:
     query = "SELECT COUNT(" \
         "DISTINCT bucket_index, " \
         "summary_variant_index, " \

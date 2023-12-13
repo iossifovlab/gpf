@@ -3,6 +3,7 @@ import subprocess
 import logging
 
 from urllib.parse import urlparse, urlunparse
+from typing import List, Optional, Union
 
 
 logger = logging.getLogger(__name__)
@@ -11,7 +12,7 @@ logger = logging.getLogger(__name__)
 class RsyncHelpers:
     """A class containing helper funcs for working with rsync."""
 
-    def __init__(self, remote):
+    def __init__(self, remote: str) -> None:
         if not remote.endswith("/"):
             remote += "/"
         self.remote = remote
@@ -35,7 +36,7 @@ class RsyncHelpers:
 
         logger.debug("parsed_remote: %s", parsed_remote)
 
-    def hosturl(self):
+    def hosturl(self) -> str:
         logger.debug(self.parsed_remote)
 
         return urlunparse(
@@ -49,7 +50,9 @@ class RsyncHelpers:
             ))
 
     @staticmethod
-    def _exclude_options(exclude=None):
+    def _exclude_options(
+        exclude: Optional[Union[str, List[str]]] = None
+    ) -> List[str]:
         if exclude is None:
             return []
         result = []
@@ -61,10 +64,11 @@ class RsyncHelpers:
         return result
 
     def _copy_to_remote_cmd(
-            self, local_path, remote_subdir=None,
-            exclude=None,
-            ignore_existing=False,
-            clear_remote=True):
+        self, local_path: str, remote_subdir: Optional[str] = None,
+        exclude: Optional[List[str]] = None,
+        ignore_existing: bool = False,
+        clear_remote: bool = True
+    ) -> List[List[str]]:
         # pylint: disable=too-many-branches
         exclude = exclude if exclude is not None else []
         logger.debug("rsync remote: %s", self.rsync_remote)
@@ -125,7 +129,11 @@ class RsyncHelpers:
 
         return cmds
 
-    def _copy_to_local_cmd(self, local_path, remote_subdir=None, exclude=None):
+    def _copy_to_local_cmd(
+        self, local_path: str,
+        remote_subdir: Optional[str] = None,
+        exclude: Optional[list[str]] = None
+    ) -> list[list[str]]:
         exclude = exclude if exclude is not None else []
         os.makedirs(local_path, exist_ok=True)
         cmds = []
@@ -150,7 +158,7 @@ class RsyncHelpers:
         return cmds
 
     @staticmethod
-    def _cmd_execute(commands):
+    def _cmd_execute(commands: list[list[str]]) -> None:
         for cmd in commands:
             logger.info("executing command: %s", cmd)
             logger.debug("executing command: %s", cmd)
@@ -175,7 +183,7 @@ class RsyncHelpers:
                              cmd, proc.returncode)
                 raise ValueError(f"error in {cmd}")
 
-    def clear_remote(self, remote_subdir):
+    def clear_remote(self, remote_subdir: str) -> None:
         """Clear the remote directory."""
         cmds = []
         rsync_path = ""
@@ -202,8 +210,11 @@ class RsyncHelpers:
         self._cmd_execute(cmds)
 
     def copy_to_remote(
-            self, local_path, remote_subdir=None, exclude=None,
-            clear_remote=True):
+        self, local_path: str,
+        remote_subdir: Optional[str] = None,
+        exclude: Optional[list[str]] = None,
+        clear_remote: bool = True
+    ) -> None:
         """Copy from a local dir to a remote one."""
         logger.debug("copying %s to %s", local_path, remote_subdir)
 
@@ -213,7 +224,21 @@ class RsyncHelpers:
 
         self._cmd_execute(cmd)
 
-    def copy_to_local(self, local_path, remote_subdir=None, exclude=None):
+    def copy_to_local(
+        self, local_path: str,
+        remote_subdir: Optional[str] = None,
+        exclude: Optional[list[str]] = None
+    ) -> None:
+        """Copy files from remote server to local machine.
+
+        Args:
+            local_path (str): The local directory where the files will be
+                copied to.
+            remote_subdir (Optional[str], optional): The remote subdirectory
+                to copy files from. Defaults to None.
+            exclude (Optional[list[str]], optional): List of patterns to
+                exclude from the copy. Defaults to None.
+        """
         cmd = self._copy_to_local_cmd(
             local_path, remote_subdir=remote_subdir, exclude=exclude)
         self._cmd_execute(cmd)

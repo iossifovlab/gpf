@@ -54,6 +54,7 @@ def test_parquet_files_are_generated(
     assert "test_import" in files
 
     files = os.listdir(os.path.join(tmp_path, "test_import"))
+
     assert "pedigree" in files
     assert "family" in files
     assert "summary" in files
