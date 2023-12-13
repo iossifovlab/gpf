@@ -440,17 +440,20 @@ def main(
                 index, len(all_partitions), partition, study_id)
 
             part_started = time.time()
-            for qry in insert_into_summary_table(
+            for sub, qry in enumerate(insert_into_summary_table(
                 pedigree_table, variants_table, summary_table,
                 summary_schema, partition,
                 region_bin_helpers.region_bins,
                 args.split_size
-            ):
+            )):
                 repeat = 10
                 while repeat > 0:
                     try:
                         with closing(impala.connection()) as connection:
                             with closing(connection.cursor()) as cursor:
+                                logger.info(
+                                    "executing sub-partition %d of %s",
+                                    sub, partition)
                                 logger.debug(
                                     "going to run partition %s summary query: "
                                     "%s", partition, qry)
