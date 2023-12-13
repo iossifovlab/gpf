@@ -8,9 +8,11 @@ ARG SOURCE_DIR="."
 
 ADD ${SOURCE_DIR}/environment.yml /
 ADD ${SOURCE_DIR}/dev-environment.yml /
+ADD ${SOURCE_DIR}/impala_storage/impala-environment.yml /
 
 RUN /opt/conda/bin/mamba env create --name gpf --file /environment.yml
 RUN /opt/conda/bin/mamba env update --name gpf --file /dev-environment.yml
+RUN /opt/conda/bin/mamba env update --name gpf --file /impala-environment.yml
 
 
 # GPF ENV
