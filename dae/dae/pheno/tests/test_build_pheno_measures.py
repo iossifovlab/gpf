@@ -5,10 +5,10 @@ from dae.pheno.pheno_db import PhenoDb, PhenotypeStudy
 from dae.tools.build_pheno_measures import main
 
 
-def test_build_pheno_measures_functions(fake_pheno_db_dir: str) -> None:
-    main([fake_pheno_db_dir, "--dbs", "fake"])
+def test_build_pheno_measures_functions(clean_pheno_db_dir: str) -> None:
+    main([clean_pheno_db_dir, "--dbs", "fake"])
 
-    pheno_db = PhenoDb(fake_pheno_db_dir)
+    pheno_db = PhenoDb(clean_pheno_db_dir)
     pheno_data = cast(PhenotypeStudy, pheno_db.get_phenotype_data("fake"))
     metadata = pheno_data.db.pheno_metadata
     assert "measures" in metadata.tables.keys()
@@ -17,9 +17,9 @@ def test_build_pheno_measures_functions(fake_pheno_db_dir: str) -> None:
     assert "i2_measure_values" in metadata.tables.keys()
 
 
-def test_build_pheno_measures_values(fake_pheno_db_dir: str) -> None:
-    main([fake_pheno_db_dir, "--dbs", "fake"])
-    pheno_db = PhenoDb(fake_pheno_db_dir)
+def test_build_pheno_measures_values(clean_pheno_db_dir: str) -> None:
+    main([clean_pheno_db_dir, "--dbs", "fake"])
+    pheno_db = PhenoDb(clean_pheno_db_dir)
     db = cast(PhenotypeStudy, pheno_db.get_phenotype_data("fake")).db
 
     with db.pheno_engine.connect() as connection:

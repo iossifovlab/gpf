@@ -159,14 +159,14 @@ def test_pheno_group_get_measure_values(
 
 
 def test_pheno_group_get_measures(fake_group: PhenotypeGroup) -> None:
-    # Total measures are 14
+    # Total measures are 16
     # Current merging will ignore common measures in common instruments,
     # therefore i2.m1, m2 m3 are missing for now
 
     measures = fake_group.get_measures(measure_type="continuous")
     print(measures)
 
-    assert len(measures) == 11, measures  # 14, measures
+    assert len(measures) == 13, measures  # 16, measures
 
     measures = fake_group.get_measures(
         instrument_name="i1", measure_type="continuous")
