@@ -509,25 +509,39 @@ class GeneModels(
     ) -> Optional[list[TranscriptModel]]:
         return self.gene_models.get(name, None)
 
-    # def gene_models_by_location(self, chrom, pos1, pos2=None):
-    #     result = []
+    def gene_models_by_location(
+        self, chrom: str, pos1: int,
+        pos2: Optional[int] = None
+    ) -> list[TranscriptModel]:
+        """Retrieve TranscriptModel objects based on genomic position(s).
 
-    #     if pos2 is None:
-    #         for key in self.utr_models[chrom]:
-    #             if pos1 >= key[0] and pos1 <= key[1]:
-    #                 result.extend(self.utr_models[chrom][key])
+        Args:
+            chrom (str): The chromosome name.
+            pos1 (int): The starting genomic position.
+            pos2 (Optional[int]): The ending genomic position. If not provided,
+                only models that contain pos1 will be returned.
 
-    #     else:
-    #         if pos2 < pos1:
-    #             pos1, pos2 = pos2, pos1
+        Returns:
+            list[TranscriptModel]: A list of TranscriptModel objects that
+                match the given location criteria.
+        """
+        result = []
 
-    #         for key in self.utr_models[chrom]:
-    #             if (pos1 <= key[0] and pos2 >= key[0]) or (
-    #                 pos1 >= key[0] and pos1 <= key[1]
-    #             ):
-    #                 result.extend(self.utr_models[chrom][key])
+        if pos2 is None:
+            key: tuple[int, int]
+            for key in self.utr_models[chrom]:
+                if key[0] <= pos1 <= key[1]:
+                    result.extend(self.utr_models[chrom][key])
 
-    #     return result
+        else:
+            if pos2 < pos1:
+                pos1, pos2 = pos2, pos1
+
+            for key in self.utr_models[chrom]:
+                if pos1 <= key[0] <= pos2 or key[0] <= pos1 <= key[1]:
+                    result.extend(self.utr_models[chrom][key])
+
+        return result
 
     def relabel_chromosomes(
         self, relabel: Optional[dict[str, str]] = None,
