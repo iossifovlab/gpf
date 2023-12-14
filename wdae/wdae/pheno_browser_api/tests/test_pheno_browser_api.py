@@ -1,12 +1,15 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import json
-from typing import cast
+from typing import cast, Any
 
 import pytest
+import pytest_mock
 
 from django.test import Client
 from rest_framework import status
 from rest_framework.response import Response
+
+from dae.pheno.pheno_db import PhenotypeStudy
 
 pytestmark = pytest.mark.usefixtures(
     "wdae_gpf_instance", "dae_calc_gene_sets")
@@ -324,3 +327,44 @@ def test_get_measure_values(admin_client: Client) -> None:
         "instrument1.ordinal": None,
         "instrument1.raw": "othervalue"
     }
+
+
+def test_download_limits_measures(
+    admin_client: Client,
+    mocker: pytest_mock.MockerFixture
+) -> None:
+    data: dict[str, Any] = {
+        "dataset_id": "quads_f1"
+    }
+    data["measure_ids"] = [f"measure{i}" for i in range(2000)]
+    spy = mocker.spy(PhenotypeStudy, "get_people_measure_values")
+
+    with pytest.raises(AssertionError):
+        response = admin_client.post(
+            DOWNLOAD_URL, json.dumps(data), "application/json"
+        )
+
+        list(response.streaming_content)  # type: ignore
+
+    assert spy.call_count == 5
+    call_args = spy.call_args_list[-1][0]
+    assert len((call_args[1])) == 1900
+
+
+def test_measure_values_limits_measures(
+    admin_client: Client,
+    mocker: pytest_mock.MockerFixture
+) -> None:
+    data: dict[str, Any] = {
+        "dataset_id": "quads_f1"
+    }
+    data["measure_ids"] = [f"measure{i}" for i in range(2000)]
+    spy = mocker.spy(PhenotypeStudy, "get_people_measure_values")
+
+    admin_client.post(
+        MEASURE_VALUES_URL, json.dumps(data), "application/json"
+    )
+
+    assert spy.call_count == 5
+    call_args = spy.call_args_list[-1][0]
+    assert len((call_args[1])) == 1900

@@ -241,6 +241,9 @@ class PhenoMeasureValues(QueryDatasetView):
             if not set(measure_ids).issubset(set(instrument_measures)):
                 return Response(status=status.HTTP_400_BAD_REQUEST)
 
+        if len(measure_ids) > 1900:
+            measure_ids = measure_ids[0:1900]
+
         values_iterator = dataset.phenotype_data.get_people_measure_values(
             measure_ids
         )
