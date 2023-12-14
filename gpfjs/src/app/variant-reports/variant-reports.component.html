@@ -131,17 +131,13 @@
               'column-gap': '16px'
             }">
             <div *ngFor="let tag of orderedTagList">
-              <input
-                [disabled]="!tag.toLocaleLowerCase().includes(searchValue.toLocaleLowerCase())"
-                type="checkbox"
-                [id]="tag + '-tag'"
-                [checked]="selectedItems.includes(tag)"
-                (change)="updateSelectedTags(tag)" />
-              <label
+              <span class="material-icons" [id]="tag + '-tag-add'" (click)="addFilter(tag)">add_circle</span>
+              <span class="material-icons" [id]="tag + '-tag-remove'" (click)="removeFilter(tag)">remove_circle</span>
+              <span
                 [attr.for]="tag + '-tag'"
                 id="tag-label"
                 [ngStyle]="!tag.toLocaleLowerCase().includes(searchValue.toLocaleLowerCase()) && { opacity: '30%' }"
-                >{{ tag }}</label
+                >{{ tag }}</span
               >
             </div>
           </div>

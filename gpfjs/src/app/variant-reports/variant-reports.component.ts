@@ -32,6 +32,8 @@ export class VariantReportsComponent implements OnInit {
   public currentDenovoReport: EffectTypeTable;
   public selectedTagsHeader = '';
   public familiesCount = 0;
+  public isAddClicked = false;
+  public isRemoveClicked = false;
 
   public modal: NgbModalRef;
   @ViewChild('tagsModal') public tagsModal: ElementRef;
@@ -51,6 +53,7 @@ export class VariantReportsComponent implements OnInit {
   public imgPathPrefix = environment.imgPathPrefix;
   public orderedTagList = [];
   public selectedItems: string[] = [];
+  public deselectedItems: string[] = [];
 
   public denovoVariantsTableWidth: number;
   private denovoVariantsTableColumnWidth = 140;
@@ -107,6 +110,22 @@ export class VariantReportsComponent implements OnInit {
     );
   }
 
+  public addFilter(tag: string): void {
+    this.isRemoveClicked = false;
+    this.isAddClicked = true;
+    this.updateSelectedTags(tag);
+    this.addTagFilters();
+    this.updateFamiliesCount();
+  }
+
+  public removeFilter(tag: string): void {
+    this.isRemoveClicked = true;
+    this.isAddClicked = false;
+    this.updateDeselectedTags(tag);
+    this.addTagFilters();
+    this.updateFamiliesCount();
+  }
+
   public updateSelectedTags(tag: string): void {
     if (!this.selectedItems.includes(tag)) {
       this.selectedItems.push(tag);
@@ -119,8 +138,20 @@ export class VariantReportsComponent implements OnInit {
     } else {
       this.selectedTagsHeader = '';
     }
-    this.updateTagFilters();
-    this.updateFamiliesCount();
+  }
+
+  public updateDeselectedTags(tag: string): void {
+    if (!this.deselectedItems.includes(tag)) {
+      this.deselectedItems.push(tag);
+    } else {
+      const index = this.deselectedItems.indexOf(tag);
+      this.deselectedItems.splice(index, 1);
+    }
+    if (this.deselectedItems.length > 0) {
+      this.selectedTagsHeader = this.deselectedItems.join(', ');
+    } else {
+      this.selectedTagsHeader = '';
+    }
   }
 
   public updateFamiliesCount(): void {
@@ -157,8 +188,9 @@ export class VariantReportsComponent implements OnInit {
 
   public uncheckAll(): void {
     this.selectedItems = [];
+    this.deselectedItems = [];
     this.selectedTagsHeader = '';
-    this.updateTagFilters();
+    // this.updateTagFilters();
   }
 
   public updatePedigrees(newCounters: Dictionary<PedigreeCounter[]>): void {
@@ -167,14 +199,36 @@ export class VariantReportsComponent implements OnInit {
     }
   }
 
-  public updateTagFilters(): void {
+  public addTagFilters(): void {
     const copiedCounters = this.copyOriginalPedigreeCounters();
-    const filteredCounters = {};
+    const filteredCounters: { [groupName: string]: PedigreeCounter[] } = {};
     for (const [groupName, counters] of Object.entries(copiedCounters)) {
-      filteredCounters[groupName] = counters.filter(x => _.difference(this.selectedItems, x.tags).length === 0);
+      console.log('selected-----')
+      console.log(this.selectedItems)
+      console.log('deselected-----')
+      console.log(this.deselectedItems)
+      console.log(counters)
+      if (this.selectedItems) {
+        filteredCounters[groupName].concat(counters.filter(x => _.difference(this.selectedItems, x.tags).length === 0));
+      }
+      if (this.deselectedItems) {
+        filteredCounters[groupName].concat(counters.filter(x => _.difference(this.deselectedItems, x.tags).length !== this.deselectedItems.length));
+      }
     }
     this.updatePedigrees(filteredCounters);
   }
+
+  // public removeTagFilters(): void {
+  //   const copiedCounters = this.copyOriginalPedigreeCounters();
+  //   const filteredCounters = {};
+  //   for (const [groupName, counters] of Object.entries(copiedCounters)) {
+  //     console.log('remove-----')
+  //     console.log(this.deselectedItems)
+  //     console.log(counters)
+  //     filteredCounters[groupName] = counters.filter(x => _.difference(this.deselectedItems, x.tags).length !== 0);
+  //   }
+  //   this.updatePedigrees(filteredCounters);
+  // }
 
   public calculateDenovoVariantsTableWidth(): void {
     if (!this.currentDenovoReport) {
@@ -220,6 +274,7 @@ export class VariantReportsComponent implements OnInit {
 
   public downloadTags(): void {
     const tags = this.selectedItems.join(',');
+    // to do deselectedItems
     location.href = this.variantReportsService.getDownloadLinkTags(tags);
   }
 
