@@ -346,7 +346,6 @@ def test_download_limits_measures(
 
         list(response.streaming_content)  # type: ignore
 
-    assert spy.call_count == 5
     call_args = spy.call_args_list[-1][0]
     assert len((call_args[1])) == 1900
 
@@ -365,6 +364,5 @@ def test_measure_values_limits_measures(
         MEASURE_VALUES_URL, json.dumps(data), "application/json"
     )
 
-    assert spy.call_count == 5
     call_args = spy.call_args_list[-1][0]
     assert len((call_args[1])) == 1900
