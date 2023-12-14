@@ -314,10 +314,8 @@ class DbManager:  # pylint: disable=too-many-instance-attributes
             self.measures.c.db_column_name,
         )
         if measure_ids is not None:
-            print(measure_ids)
             query = query.where(self.measures.c.measure_id.in_(measure_ids))
         with self.pheno_engine.connect() as connection:
-            print(query)
             results = connection.execute(query)
 
             measure_column_names = {}
@@ -335,10 +333,8 @@ class DbManager:  # pylint: disable=too-many-instance-attributes
             self.measures.c.db_column_name,
         )
         if measure_ids is not None:
-            print(measure_ids)
             query = query.where(self.measures.c.measure_id.in_(measure_ids))
         with self.pheno_engine.connect() as connection:
-            print(query)
             results = connection.execute(query)
 
             measure_column_names = {}
