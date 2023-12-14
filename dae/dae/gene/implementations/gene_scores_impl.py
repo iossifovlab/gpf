@@ -49,20 +49,20 @@ class GeneScoreImplementation(
             </a>
 
             <h3>Gene score definitions:</h2>
-            {% for score_def in score.score_configs.values() %}
+            {% for score_def in score.score_definitions.values() %}
             <div class="score-definition">
             <p>Gene score ID: {{ score_def.score_id }}</p>
             <p>Description: {{ score_def.description }}
             </div>
             {% endfor %}
             <h3>Histograms:</h2>
-            {% for score_id in score.score_configs.keys() %}
-            {% set hist = score.get_histogram(score_id) %}
+            {% for score_id in score.score_definitions.keys() %}
+            {% set hist = score.get_score_histogram(score_id) %}
 
             {% if hist %}
             <div class="histogram">
             <h4>{{ score_id }}</h1>
-            <img src="{{score.get_histogram_image_file(score_id) }}"
+            <img src="{{score.get_histogram_image_filename(score_id) }}"
             width="200px"
             alt={{ score_id }}
             title={{ score_id }}>
@@ -148,7 +148,11 @@ class GeneScoreImplementation(
         score_filename = config["filename"]
         return json.dumps({
             "score_config": [
-                asdict(score_def)
+                {
+                    "id": score_def.score_id,
+                    "hist_conf": asdict(score_def.hist_conf)
+                    if score_def.hist_conf else "null"
+                }
                 for score_def in self.gene_score.score_definitions.values()
             ],
             "score_file": manifest[score_filename].md5
