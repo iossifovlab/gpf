@@ -7,7 +7,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { PerfectlyDrawablePedigreeService } from 'app/perfectly-drawable-pedigree/perfectly-drawable-pedigree.service';
 import { ResizeService } from 'app/table/resize.service';
-import { DenovoReport, PedigreeCounter } from './variant-reports';
+import { DenovoReport, PedigreeCounter, PedigreeTable } from './variant-reports';
 import { PedigreeData } from 'app/genotype-preview-model/genotype-preview';
 import { HttpResponse } from '@angular/common/http';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
@@ -404,5 +404,19 @@ describe('VariantReportsComponent', () => {
     expect(component.selectedItems).toHaveLength(0);
     expect(component.selectedTagsHeader).toBe('');
     expect(updatePedigreesTable).toHaveBeenCalledWith();
+  });
+
+  it('should test count of families in families by pedigree', () => {
+    component.ngOnInit();
+    const pedigresMock = [
+      [new PedigreeCounter(1, 'mock1', [], 12, [])],
+      [null],
+      [new PedigreeCounter(2, 'mock2', [], 8, [])]
+    ];
+    const currentTableMock = new PedigreeTable(pedigresMock, [], '', undefined);
+
+    component.currentPedigreeTable = currentTableMock;
+    component.updateFamiliesCount();
+    expect(component.familiesCount).toBe(20);
   });
 });

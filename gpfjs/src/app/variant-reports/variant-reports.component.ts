@@ -80,11 +80,11 @@ export class VariantReportsComponent implements OnInit {
       );
       this.currentPeopleCounter = this.variantReport.peopleReport.peopleCounters[0];
       this.currentPedigreeTable = this.pedigreeTables[0];
-      this.updateFamiliesCount();
       if (this.variantReport.denovoReport !== null) {
         this.currentDenovoReport = this.variantReport.denovoReport.tables[0];
         this.calculateDenovoVariantsTableWidth();
       }
+      this.updateFamiliesCount();
     });
     if (this.variantReportsService.getTags() !== undefined) {
       this.variantReportsService.getTags().subscribe(data => {
@@ -127,7 +127,9 @@ export class VariantReportsComponent implements OnInit {
     this.familiesCount = 0;
     this.currentPedigreeTable.pedigrees.forEach(pedigrees => {
       pedigrees.forEach(pedigree => {
-        this.familiesCount += Number(pedigree.count);
+        if (pedigree) {
+          this.familiesCount += Number(pedigree.count);
+        }
       });
     });
   }
