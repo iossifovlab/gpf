@@ -78,7 +78,6 @@ export class VariantReportsComponent implements OnInit {
           familiesCounters.legend
         )
       );
-      console.log(this.pedigreeTables)
       this.currentPeopleCounter = this.variantReport.peopleReport.peopleCounters[0];
       this.currentPedigreeTable = this.pedigreeTables[0];
       if (this.variantReport.denovoReport !== null) {

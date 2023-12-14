@@ -1,8 +1,8 @@
 import { PedigreeData } from '../genotype-preview-model/genotype-preview';
 
 export class ChildrenCounter {
-  public static fromJson(json: any, row: string): ChildrenCounter {
-    return new ChildrenCounter(row, json['column'], json[row]);
+  public static fromJson(json: object, row: string): ChildrenCounter {
+    return new ChildrenCounter(row, json['column'] as string, json[row] as number);
   }
 
   public constructor(
@@ -13,9 +13,9 @@ export class ChildrenCounter {
 }
 
 export class GroupCounter {
-  public static fromJson(json: any, rows: string[]): GroupCounter {
+  public static fromJson(json: object, rows: string[]): GroupCounter {
     return new GroupCounter(
-      json['column'],
+      json['column'] as string,
       rows.map((row) => ChildrenCounter.fromJson(json, row))
     );
   }
@@ -27,12 +27,14 @@ export class GroupCounter {
 }
 
 export class PeopleCounter {
-  public static fromJson(json: any): PeopleCounter {
+  public static fromJson(json: object): PeopleCounter {
     return new PeopleCounter(
-      json['counters'].map((childCounter: any) => GroupCounter.fromJson(childCounter, json['rows'])),
-      json['group_name'],
-      json['rows'],
-      json['columns']
+      json['counters'].map(
+        (childCounter: ChildrenCounter) => GroupCounter.fromJson(childCounter, json['rows'] as string[])
+      ) as GroupCounter[],
+      json['group_name'] as string,
+      json['rows'] as string[],
+      json['columns'] as string[]
     );
   }
 
@@ -58,7 +60,7 @@ export class PeopleCounter {
 export class PeopleReport {
   public static fromJson(json: any): PeopleReport {
     return new PeopleReport(
-      json.map((peopleCounter: any) => PeopleCounter.fromJson(peopleCounter))
+      json.map((peopleCounter: PeopleCounter) => PeopleCounter.fromJson(peopleCounter)) as PeopleCounter[]
     );
   }
 
@@ -68,13 +70,15 @@ export class PeopleReport {
 }
 
 export class PedigreeCounter {
-  public static fromJson(json: any, groupName: string): PedigreeCounter {
+  public static fromJson(json: object, groupName: string): PedigreeCounter {
     return new PedigreeCounter(
-      json['counter_id'],
+      json['counter_id'] as number,
       groupName,
-      json['pedigree'].map((pedigreeCounter) => PedigreeData.fromArray(pedigreeCounter)),
-      json['pedigrees_count'],
-      json['tags']
+      json['pedigree'].map(
+        (pedigreeCounter: PedigreeCounter[]) => PedigreeData.fromArray(pedigreeCounter)
+      ) as PedigreeData[],
+      json['pedigrees_count'] as number,
+      json['tags'] as string[]
     );
   }
 
@@ -88,11 +92,13 @@ export class PedigreeCounter {
 }
 
 export class FamilyCounter {
-  public static fromJson(json: any): FamilyCounter {
+  public static fromJson(json: object): FamilyCounter {
     return new FamilyCounter(
-      json['counters'].map((family_counter: any) => PedigreeCounter.fromJson(family_counter, json['group_name'])),
-      json['group_name'],
-      json['phenotypes'],
+      json['counters'].map(
+        (familyCounter: FamilyCounter) => PedigreeCounter.fromJson(familyCounter, json['group_name'] as string)
+      ) as PedigreeCounter[],
+      json['group_name'] as string,
+      json['phenotypes'] as string[],
       Legend.fromList(json['legend'])
     );
   }
@@ -108,7 +114,7 @@ export class FamilyCounter {
 export class FamilyReport {
   public static fromJson(json: any, families = 0): FamilyReport {
     return new FamilyReport(
-      json.map((familyCounters: any) => FamilyCounter.fromJson(familyCounters)),
+      json.map((familyCounters: FamilyCounter) => FamilyCounter.fromJson(familyCounters)) as FamilyCounter[],
       families
     );
   }
@@ -120,13 +126,13 @@ export class FamilyReport {
 }
 
 export class DeNovoData {
-  public static fromJson(json: any): DeNovoData {
+  public static fromJson(json: object): DeNovoData {
     return new DeNovoData(
-      json['column'],
-      json['number_of_observed_events'],
-      json['number_of_children_with_event'],
-      json['observed_rate_per_child'],
-      json['percent_of_children_with_events']
+      json['column'] as string,
+      json['number_of_observed_events'] as number,
+      json['number_of_children_with_event'] as number,
+      json['observed_rate_per_child'] as number,
+      json['percent_of_children_with_events'] as number
     );
   }
 
@@ -142,22 +148,22 @@ export class DeNovoData {
 export class EffectTypeRow {
   public static fromJson(json: any): EffectTypeRow {
     return new EffectTypeRow(
-      json['effect_type'],
-      json['row'].map((data: any) => DeNovoData.fromJson(data))
+      json['effect_type'] as string,
+      json['row'].map((data: DeNovoData) => DeNovoData.fromJson(data)) as DeNovoData[]
     );
   }
 
-  constructor(public readonly effectType: string, public readonly data: DeNovoData[]) {}
+  public constructor(public readonly effectType: string, public readonly data: DeNovoData[]) {}
 }
 
 export class EffectTypeTable {
   public static fromJson(json: any): EffectTypeTable {
     return new EffectTypeTable(
-      json['rows'].map((row: any) => EffectTypeRow.fromJson(row)),
-      json['group_name'],
-      json['columns'],
-      json['effect_groups'],
-      json['effect_types']
+      json['rows'].map((row: EffectTypeRow) => EffectTypeRow.fromJson(row)) as EffectTypeRow[],
+      json['group_name'] as string,
+      json['columns'] as string[],
+      json['effect_groups'] as string[],
+      json['effect_types'] as string[]
     );
   }
 
@@ -176,7 +182,7 @@ export class DenovoReport {
       return null;
     }
     return new DenovoReport(
-      json['tables'].map((table: any) => EffectTypeTable.fromJson(table))
+      json['tables'].map((table: EffectTypeTable) => EffectTypeTable.fromJson(table)) as EffectTypeTable[]
     );
   }
 
@@ -186,11 +192,11 @@ export class DenovoReport {
 }
 
 export class VariantReport {
-  public static fromJson(json: any) {
+  public static fromJson(json: object): VariantReport {
     return new VariantReport(
-      json['id'],
-      json['study_name'],
-      json['study_description'],
+      json['id'] as string,
+      json['study_name'] as string,
+      json['study_description'] as string,
       PeopleReport.fromJson(json['people_report']),
       FamilyReport.fromJson(json['families_report'], json['families'] as number),
       DenovoReport.fromJson(json['denovo_report'])
@@ -217,8 +223,8 @@ export class PedigreeTable {
 }
 
 export class LegendItem {
-  public static fromJson(json: any): LegendItem {
-    return new LegendItem(json['id'], json['name'], json['color']);
+  public static fromJson(json: object): LegendItem {
+    return new LegendItem(json['id'] as string, json['name'] as string, json['color'] as string);
   }
 
   public constructor(
@@ -231,7 +237,7 @@ export class LegendItem {
 export class Legend {
   public static fromList(list: any[]): Legend {
     return new Legend(
-      list.map((legendItem) => LegendItem.fromJson(legendItem))
+      list.map((legendItem) => LegendItem.fromJson(legendItem as object))
     );
   }
 
