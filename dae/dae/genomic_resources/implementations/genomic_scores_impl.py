@@ -4,6 +4,7 @@ import logging
 import textwrap
 import json
 from typing import Any, Optional, cast, Iterable
+from dataclasses import asdict
 
 from jinja2 import Template
 import numpy as np
@@ -509,18 +510,13 @@ class GenomicScoreImplementation(
         recomputed.
         """
         manifest = self.resource.get_manifest()
-        config = self.get_config()
-        histograms = [
-            self.score.get_score_histogram(score_id) for score_id in
-            self.get_config_histograms()
-        ]
-
         return json.dumps({
             "config": {
-                "scores": config.get("scores", {}),
-                "histograms": list(
-                    hist.to_dict()
-                    for hist in histograms if hist is not None),
+                "histograms": [
+                    asdict(hist_conf)
+                    for hist_conf in self.get_config_histograms().values()
+                    if hist_conf is not None
+                ],
                 "table": {
                     "config": self.score.table.definition,
                     "files_md5": {file_name: manifest[file_name].md5
@@ -528,12 +524,13 @@ class GenomicScoreImplementation(
                 }
             },
             "score_config": [
-                (score_def.score_id,
-                 score_def.value_type,
-                 score_def.col_name,
-                 score_def.col_index,
-                 str(sorted(score_def.na_values))
-                 )
+                {
+                    "id": score_def.score_id,
+                    "type": score_def.value_type,
+                    "name": score_def.col_name,
+                    "index": score_def.col_index,
+                    "na_values": str(sorted(score_def.na_values))
+                }
                 for score_def in self.score.score_definitions.values()]
         }, indent=2).encode()
 
