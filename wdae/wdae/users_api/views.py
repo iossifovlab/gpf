@@ -1,4 +1,5 @@
 from __future__ import annotations
+import time
 from typing import Iterator, Generator, Any
 from typing import Tuple, Type, Union, Optional, cast
 
@@ -85,7 +86,22 @@ class UserViewSet(viewsets.ModelViewSet):  # pylint: disable=too-many-ancestors
         self, request: Request,
         *args: Any, **kwargs: Any
     ) -> Response:
-        return super().create(request)
+        response = super().create(request)
+        if response.status_code == status.HTTP_201_CREATED:
+            checks = 0
+            while checks < 10:
+                time.sleep(0.5)
+                try:
+                    user = get_user_model().objects.get(pk=response.data["id"])
+                    LOGGER.info("user created: %s", user)
+                    break
+                except get_user_model().DoesNotExist:
+                    LOGGER.error(
+                        "user <%s> created but could not find them",
+                        response.data)
+                    checks += 1
+
+        return response
 
     @request_logging(LOGGER)
     def retrieve(
