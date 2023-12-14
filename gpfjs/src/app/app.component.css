@@ -118,3 +118,7 @@
   position: absolute;
   bottom: 10px;
 }
+
+.version-text {
+  font-weight: 600;
+}
