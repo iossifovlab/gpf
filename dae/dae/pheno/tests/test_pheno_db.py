@@ -136,41 +136,41 @@ def test_get_people_measure_values_non_overlapping(
     result = list(result_it)
     assert len(result) == 9
 
-    assert result[0]["person_id"] == "f2.s1"
+    assert result[0]["person_id"] == "f1.dad"
     assert result[0]["i3.m1"] == 1.0
     assert result[0]["i4.m1"] is None
 
-    assert result[1]["person_id"] == "f2.dad"
-    assert result[1]["i3.m1"] == 1.0
-    assert result[1]["i4.m1"] is None
+    assert result[1]["person_id"] == "f1.mom"
+    assert result[1]["i3.m1"] is None
+    assert result[1]["i4.m1"] == 1.0
 
-    assert result[2]["person_id"] == "f1.s2"
-    assert result[2]["i3.m1"] == 1.0
-    assert result[2]["i4.m1"] is None
+    assert result[2]["person_id"] == "f1.p1"
+    assert result[2]["i3.m1"] is None
+    assert result[2]["i4.m1"] == 1.0
 
     assert result[3]["person_id"] == "f1.s1"
     assert result[3]["i3.m1"] == 1.0
     assert result[3]["i4.m1"] is None
 
-    assert result[4]["person_id"] == "f1.dad"
+    assert result[4]["person_id"] == "f1.s2"
     assert result[4]["i3.m1"] == 1.0
     assert result[4]["i4.m1"] is None
 
-    assert result[5]["person_id"] == "f2.p1"
-    assert result[5]["i3.m1"] is None
-    assert result[5]["i4.m1"] == 1.0
+    assert result[5]["person_id"] == "f2.dad"
+    assert result[5]["i3.m1"] == 1.0
+    assert result[5]["i4.m1"] is None
 
     assert result[6]["person_id"] == "f2.mom"
     assert result[6]["i3.m1"] is None
     assert result[6]["i4.m1"] == 1.0
 
-    assert result[7]["person_id"] == "f1.p1"
+    assert result[7]["person_id"] == "f2.p1"
     assert result[7]["i3.m1"] is None
     assert result[7]["i4.m1"] == 1.0
 
-    assert result[8]["person_id"] == "f1.mom"
-    assert result[8]["i3.m1"] is None
-    assert result[8]["i4.m1"] == 1.0
+    assert result[8]["person_id"] == "f2.s1"
+    assert result[8]["i3.m1"] == 1.0
+    assert result[8]["i4.m1"] is None
 
 
 def test_get_people_measure_values_correct_values(
