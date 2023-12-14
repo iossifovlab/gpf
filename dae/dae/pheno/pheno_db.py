@@ -12,9 +12,8 @@ from itertools import chain
 from box import Box
 
 import pandas as pd
-from sqlalchemy.sql import select, text
-from sqlalchemy.sql.functions import coalesce
-from sqlalchemy import not_, Column
+from sqlalchemy.sql import select, text, union
+from sqlalchemy import not_
 
 from dae.pedigrees.family import Person
 from dae.pedigrees.families_data import FamiliesData
@@ -905,7 +904,6 @@ class PhenotypeStudy(PhenotypeData):
         assert isinstance(measure_ids, list)
         assert len(measure_ids) >= 1
         assert all(self.has_measure(m) for m in measure_ids)
-
         assert len(self.db.instrument_values_tables) > 0
 
         measure_column_names = self.db.get_measure_column_names_reverse(
@@ -914,7 +912,6 @@ class PhenotypeStudy(PhenotypeData):
 
         instrument_tables = {}
         instrument_table_columns = {}
-        first_instrument = None
 
         for instrument_name, table in self.db.instrument_values_tables.items():
             skip_table = True
@@ -926,8 +923,6 @@ class PhenotypeStudy(PhenotypeData):
                 continue
 
             instrument_tables[instrument_name] = table
-            if first_instrument is None:
-                first_instrument = instrument_name
             table_cols = [
                 c.label(measure_column_names[c.name])
                 for c in table.c if c.name in measure_column_names
@@ -935,53 +930,48 @@ class PhenotypeStudy(PhenotypeData):
 
             instrument_table_columns[instrument_name] = table_cols
 
+        subquery_selects = []
+        for table in instrument_tables.values():
+            subquery_selects.append(
+                select(
+                    table.c.person_id, table.c.family_id, table.c.role
+                ).select_from(table)
+            )
+
+        subquery = union(*subquery_selects).subquery("instruments_people")
+
         select_cols = []
         for instrument_name, columns in instrument_table_columns.items():
             select_cols.extend(columns)
 
-        first_table = instrument_tables[cast(str, first_instrument)]
-
-        person_id_cols = [
-            table.c.person_id for table in instrument_tables.values()
-        ]
-
-        if len(person_id_cols) > 1:
-            person_id_col = cast(
-                Column[Any], coalesce(*person_id_cols).label("person_id")
-            )
-        else:
-            person_id_col = first_table.c.person_id
-
         query = select(
-            person_id_col,
-            first_table.c.family_id,
-            first_table.c.role,
+            subquery.c.person_id,
+            subquery.c.family_id,
+            subquery.c.role,
             *select_cols
         )
-        query = query.select_from(first_table)
+        query = query.select_from(subquery)
 
         for instrument_name in instrument_table_columns:
-            if instrument_name == first_instrument:
-                continue
             table = instrument_tables[instrument_name]
             query = query.join(
                 table,
-                first_table.c.person_id == table.c.person_id,
+                subquery.c.person_id == table.c.person_id,
                 isouter=True,
                 full=True
             )
 
         if person_ids is not None:
             query = query.where(
-                first_table.c.person_id.in_(person_ids)
+                subquery.c.person_id.in_(person_ids)
             )
         if family_ids is not None:
             query = query.where(
-                first_table.c.family_id.in_(family_ids)
+                subquery.c.family_id.in_(family_ids)
             )
         if roles is not None:
             query = query.where(
-                first_table.c.role.in_(roles)
+                subquery.c.role.in_(roles)
             )
 
         with self.db.pheno_engine.connect() as connection:
