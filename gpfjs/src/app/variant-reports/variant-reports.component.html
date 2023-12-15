@@ -93,9 +93,7 @@
 
       <div id="pedigree-toolbar">
         <button (click)="openModal()" id="open-modal-button">Select tags</button>
-        <span *ngIf="selectedTagsHeader" id="selected-tags-list" [title]="selectedTagsHeader">{{
-          selectedTagsHeader
-        }}</span>
+        <span *ngIf="tagsHeader" id="selected-tags-list" [title]="tagsHeader">{{ tagsHeader }}</span>
         <div>
           <span id="families-sum">All families: {{ familiesCount }}</span>
           <button
@@ -110,16 +108,8 @@
       <ng-template #tagsModal class="tags-modal">
         <div id="tags-modal-content">
           <div id="tags-modal-header">
-            <input
-              #searchTag
-              (search)="search(searchTag.value)"
-              (keyup)="search(searchTag.value)"
-              id="search-tags"
-              class="search-input form-control my-0 py-1"
-              type="search"
-              placeholder="Search tags"
-              autocomplete="off" />
-            <a (click)="uncheckAll()" id="uncheck-button">Uncheck all</a>
+            <!-- and / or -->
+            <a (click)="clearFilters()" id="clear-filters-button">Clear filters</a>
           </div>
 
           <div
@@ -130,15 +120,12 @@
               'grid-template-rows': 'repeat(' + tagsModalsNumberOfRows + ', 30px)',
               'column-gap': '16px'
             }">
-            <div *ngFor="let tag of orderedTagList">
-              <span class="material-icons" [id]="tag + '-tag-add'" (click)="addFilter(tag)">add_circle</span>
-              <span class="material-icons" [id]="tag + '-tag-remove'" (click)="removeFilter(tag)">remove_circle</span>
-              <span
-                [attr.for]="tag + '-tag'"
-                id="tag-label"
-                [ngStyle]="!tag.toLocaleLowerCase().includes(searchValue.toLocaleLowerCase()) && { opacity: '30%' }"
-                >{{ tag }}</span
+            <div *ngFor="let tag of orderedTagList" class="modal-content-lines">
+              <span class="material-icons tags" [id]="tag + '-tag-add'" (click)="addFilter(tag)">add_circle</span>
+              <span class="material-icons tags" [id]="tag + '-tag-remove'" (click)="removeFilter(tag)"
+                >remove_circle</span
               >
+              <span [attr.for]="tag + '-tag'" id="tag-label">{{ tag }}</span>
             </div>
           </div>
         </div>

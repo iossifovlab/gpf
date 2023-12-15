@@ -178,7 +178,6 @@ h5 {
 
 ::ng-deep .modal-content {
   width: fit-content;
-  min-width: 500px;
 }
 
 #selected-tags-list {
@@ -201,16 +200,12 @@ h5 {
   margin-bottom: 10px;
 }
 
-.search-input {
-  padding-right: 5px;
-}
-
-#uncheck-button {
+#clear-filters-button {
   white-space: nowrap;
   color: #2a6395;
 }
 
-#uncheck-button:hover {
+#clear-filters-button:hover {
   cursor: pointer;
   color: #163d5f;
 }
@@ -240,4 +235,26 @@ h5 {
 
 #families-sum {
   margin-right: 15px;
+}
+
+.tags {
+  color: #cdcdcd;
+  font-size: 22px;
+}
+
+.tags:hover {
+  cursor: pointer;
+}
+
+.selected-tag {
+  color: green;
+}
+
+.deselected-tag {
+  color: red;
+}
+
+.modal-content-lines {
+  display: flex;
+  align-items: center;
 }

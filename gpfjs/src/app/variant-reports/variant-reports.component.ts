@@ -30,16 +30,13 @@ export class VariantReportsComponent implements OnInit {
   public currentPeopleCounter: PeopleCounter;
   public currentPedigreeTable: PedigreeTable;
   public currentDenovoReport: EffectTypeTable;
-  public selectedTagsHeader = '';
+  public tagsHeader = '';
   public familiesCount = 0;
   public isAddClicked = false;
   public isRemoveClicked = false;
 
   public modal: NgbModalRef;
   @ViewChild('tagsModal') public tagsModal: ElementRef;
-
-  @ViewChild('searchTag') private searchTag: ElementRef;
-  public searchValue = '';
 
   public tagsModalsNumberOfRows = 9;
   public tagsModalsNumberOfCols = 2;
@@ -52,8 +49,9 @@ export class VariantReportsComponent implements OnInit {
 
   public imgPathPrefix = environment.imgPathPrefix;
   public orderedTagList = [];
-  public selectedItems: string[] = [];
-  public deselectedItems: string[] = [];
+  public selectedTags: string[] = [];
+  public deselectedTags: string[] = [];
+  public filtersButtonsState: Record<string, number>;
 
   public denovoVariantsTableWidth: number;
   private denovoVariantsTableColumnWidth = 140;
@@ -94,6 +92,7 @@ export class VariantReportsComponent implements OnInit {
         Object.values(data).forEach((tag: string) => {
           this.tags.push(tag);
           this.orderedTagList.push(tag);
+          this.filtersButtonsState[tag] = 0;
         });
         // Calculate square looking grid for the tags (1 column width === ~5 tags height)
         this.tagsModalsNumberOfCols = Math.ceil(Math.sqrt(Math.ceil(this.tags.length / 5)));
@@ -111,46 +110,56 @@ export class VariantReportsComponent implements OnInit {
   }
 
   public addFilter(tag: string): void {
-    this.isRemoveClicked = false;
-    this.isAddClicked = true;
-    this.updateSelectedTags(tag);
-    this.addTagFilters();
+    if (this.filtersButtonsState[tag] === 1) {
+      this.filtersButtonsState[tag] = 0;
+    }
+    this.updateSelectedTagsList(tag);
+    this.updateTagFilters();
     this.updateFamiliesCount();
   }
 
   public removeFilter(tag: string): void {
-    this.isRemoveClicked = true;
-    this.isAddClicked = false;
-    this.updateDeselectedTags(tag);
-    this.addTagFilters();
+    if (this.filtersButtonsState[tag] === -1) {
+      this.filtersButtonsState[tag] = 0;
+    }
+    this.updateDeselectedTagsList(tag);
+    this.updateTagFilters();
     this.updateFamiliesCount();
   }
 
-  public updateSelectedTags(tag: string): void {
-    if (!this.selectedItems.includes(tag)) {
-      this.selectedItems.push(tag);
+  public updateSelectedTagsList(tag: string): void {
+    if (!this.selectedTags.includes(tag)) {
+      this.selectedTags.push(tag);
     } else {
-      const index = this.selectedItems.indexOf(tag);
-      this.selectedItems.splice(index, 1);
+      const index = this.selectedTags.indexOf(tag);
+      this.selectedTags.splice(index, 1);
     }
-    if (this.selectedItems.length > 0) {
-      this.selectedTagsHeader = this.selectedItems.join(', ');
-    } else {
-      this.selectedTagsHeader = '';
-    }
+    this.updateTagsHeader();
   }
 
-  public updateDeselectedTags(tag: string): void {
-    if (!this.deselectedItems.includes(tag)) {
-      this.deselectedItems.push(tag);
+  public updateDeselectedTagsList(tag: string): void {
+    if (!this.deselectedTags.includes(tag)) {
+      this.deselectedTags.push(tag);
     } else {
-      const index = this.deselectedItems.indexOf(tag);
-      this.deselectedItems.splice(index, 1);
+      const index = this.deselectedTags.indexOf(tag);
+      this.deselectedTags.splice(index, 1);
     }
-    if (this.deselectedItems.length > 0) {
-      this.selectedTagsHeader = this.deselectedItems.join(', ');
-    } else {
-      this.selectedTagsHeader = '';
+    this.updateTagsHeader();
+  }
+
+  public updateTagsHeader(): void {
+    this.tagsHeader = '';
+    if (this.selectedTags.length > 0) {
+      this.tagsHeader += this.selectedTags.join(', ');
+    }
+
+    if (this.deselectedTags.length > 0) {
+      this.tagsHeader += ', ';
+      this.tagsHeader += this.deselectedTags.join(', ');
+    }
+
+    if (this.selectedTags.length === 0 && this.deselectedTags.length === 0) {
+      this.tagsHeader = '';
     }
   }
 
@@ -167,7 +176,6 @@ export class VariantReportsComponent implements OnInit {
 
   public openModal(): void {
     this.orderedTagList = this.tags;
-    this.searchValue = '';
     if (this.modalService.hasOpenModals()) {
       return;
     }
@@ -177,20 +185,11 @@ export class VariantReportsComponent implements OnInit {
     );
   }
 
-  public search(searchValue: string): void {
-    this.searchValue = searchValue.trim();
-    this.orderedTagList = [
-      ...new Set(
-        this.tags.filter(el => el.toLocaleLowerCase().includes(this.searchValue.toLocaleLowerCase())).concat(this.tags)
-      )
-    ];
-  }
-
-  public uncheckAll(): void {
-    this.selectedItems = [];
-    this.deselectedItems = [];
-    this.selectedTagsHeader = '';
-    // this.updateTagFilters();
+  public clearFilters(): void {
+    this.selectedTags = [];
+    this.deselectedTags = [];
+    this.tagsHeader = '';
+    this.updateTagFilters();
   }
 
   public updatePedigrees(newCounters: Dictionary<PedigreeCounter[]>): void {
@@ -199,36 +198,24 @@ export class VariantReportsComponent implements OnInit {
     }
   }
 
-  public addTagFilters(): void {
+  public updateTagFilters(): void {
     const copiedCounters = this.copyOriginalPedigreeCounters();
-    const filteredCounters: { [groupName: string]: PedigreeCounter[] } = {};
+    const filteredCounters = {};
     for (const [groupName, counters] of Object.entries(copiedCounters)) {
-      console.log('selected-----')
-      console.log(this.selectedItems)
-      console.log('deselected-----')
-      console.log(this.deselectedItems)
-      console.log(counters)
-      if (this.selectedItems) {
-        filteredCounters[groupName].concat(counters.filter(x => _.difference(this.selectedItems, x.tags).length === 0));
-      }
-      if (this.deselectedItems) {
-        filteredCounters[groupName].concat(counters.filter(x => _.difference(this.deselectedItems, x.tags).length !== this.deselectedItems.length));
-      }
+      console.log('selected-----');
+      console.log(this.selectedTags);
+      console.log('deselected-----');
+      console.log(this.deselectedTags);
+      console.log(counters);
+
+      filteredCounters[groupName] =
+        counters.filter(x =>
+          this.selectedTags.every(v => x.tags.includes(v))
+            && this.deselectedTags.every(v => !x.tags.includes(v))
+        );
     }
     this.updatePedigrees(filteredCounters);
   }
-
-  // public removeTagFilters(): void {
-  //   const copiedCounters = this.copyOriginalPedigreeCounters();
-  //   const filteredCounters = {};
-  //   for (const [groupName, counters] of Object.entries(copiedCounters)) {
-  //     console.log('remove-----')
-  //     console.log(this.deselectedItems)
-  //     console.log(counters)
-  //     filteredCounters[groupName] = counters.filter(x => _.difference(this.deselectedItems, x.tags).length !== 0);
-  //   }
-  //   this.updatePedigrees(filteredCounters);
-  // }
 
   public calculateDenovoVariantsTableWidth(): void {
     if (!this.currentDenovoReport) {
@@ -273,8 +260,8 @@ export class VariantReportsComponent implements OnInit {
   }
 
   public downloadTags(): void {
-    const tags = this.selectedItems.join(',');
-    // to do deselectedItems
+    const tags = this.selectedTags.join(',');
+    // to do deselectedTags
     location.href = this.variantReportsService.getDownloadLinkTags(tags);
   }
 
