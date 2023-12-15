@@ -62,12 +62,9 @@
         </li>
       </ul>
       <div id="version-container">
-        <span *ngIf="gpfVersion && gpfVersion === gpfjsVersion">
-          <span class="version-text">GPF version:</span> {{ gpfVersion }}
-        </span>
-        <span *ngIf="gpfVersion && gpfVersion !== gpfjsVersion">
-          <span class="version-text">GPF version:</span> {{ gpfVersion }} / {{ gpfjsVersion }}
-        </span>
+        <span class="version-text">GPF version: </span>
+        <span *ngIf="gpfVersion">{{ gpfVersion }}</span>
+        <span *ngIf="gpfVersion !== gpfjsVersion"> / {{ gpfjsVersion }}</span>
       </div>
     </div>
 
