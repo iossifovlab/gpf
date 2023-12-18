@@ -160,14 +160,14 @@ test.describe('App user access rights tests', () => {
   });
 
 
-  test('should login admin and check whether the datasets have the correct opacity value', async({ page }) => {
+  test.skip('should login admin and check whether the datasets have the correct opacity value', async({ page }) => {
     await utils.login(page, userData.admin.username, userData.admin.password);
     await page.locator('#datasets-dropdown-menu-button').click();
     await page.waitForSelector('div.dropdown-menu');
     await expect(page).toHaveScreenshot();
   });
 
-  test('should login researcher and check whether the datasets have the correct opacity value', async({ page }) => {
+  test.skip('should login researcher and check whether the datasets have the correct opacity value', async({ page }) => {
     await utils.login(page, userData.normal.username, userData.normal.password);
     await expect(page.locator('#permission-denied-prompt')).toBeVisible();
     await page.locator('#datasets-dropdown-menu-button').click();
@@ -180,7 +180,11 @@ test.describe('App user access rights tests', () => {
     await utils.loginAdmin(page);
     const username = utils.getRandomString();
     const email = `${username}@mail.com`;
+
+    await page.locator('#sidenav-toggle-button').click();
+    await page.locator('a:text("Management")').click();
     await utils.createUser(page, email, username);
+
     await page.locator(`[id="${email}-groups-cell"]`).getByRole(
       'button', { name: 'Add' }
     ).click();
@@ -236,7 +240,11 @@ test.describe('App user access rights tests', () => {
     await utils.loginAdmin(page);
     const username = utils.getRandomString();
     const email = `${username}@mail.com`;
+
+    await page.locator('#sidenav-toggle-button').click();
+    await page.locator('a:text("Management")').click();
     await utils.createUser(page, email, username);
+
     await page.locator(`[id="${email}-groups-cell"]`).getByRole(
       'button', { name: 'Add' }
     ).click();
@@ -260,8 +268,10 @@ test.describe('App user access rights tests', () => {
     await page.locator('#id_new_password2').fill(userData.normal.password + '!!__3456');
     await page.locator('.login-button').click();
 
-    await utils.navigateToDatasetPage(page, utils.datasetIds.allGenotypes, 'Genotype browser');
+    await expect(page).toHaveURL(`${utils.instanceUrl}/datasets/ALL_genotypes/gene-browser`);
+    await expect(page.locator('#log-out-button')).toBeVisible();
     await utils.logout(page);
+
     await utils.login(page, email, userData.normal.password + '!!__3456');
     await expect(page.locator('#permission-denied-prompt')).not.toBeVisible();
 

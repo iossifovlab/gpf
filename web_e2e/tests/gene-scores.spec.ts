@@ -29,14 +29,10 @@ test.describe('Gene scores tests', () => {
     await utils.navigateToDatasetPage(page, utils.datasetIds.compAll, 'Genotype browser');
   });
 
-  test('should display gene scores panel', async({ page }) => {
+  test('should display gene scores panel and dropdown', async({ page }) => {
     await expect(page.locator('#gene-scores-panel')).not.toBeVisible();
     await page.locator('#gene-scores').click();
     await expect(page.locator('#gene-scores-panel')).toBeVisible();
-  });
-
-  test('should show all the gene scores in the selector dropdown', async({ page }) => {
-    await page.locator('#gene-scores').click();
 
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
     geneScoresData.forEach(async geneScore => {

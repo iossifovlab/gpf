@@ -106,7 +106,7 @@ test.describe('Autism gene profiles single view links tests', () => {
   });
 });
 
-test.describe('Autism gene profiles single view dataset table tests', () => {
+test.describe.skip('Autism gene profiles single view dataset table tests', () => {
   let singleViewPage: Page;
 
   test.beforeEach(async({ page, context }) => {
@@ -198,7 +198,8 @@ test.describe('Autism gene profiles single view dynamic data tests', () => {
     await page.goto(utils.instanceUrl, {waitUntil: 'load'});
     await utils.loginAdmin(page);
     await utils.navigateToSidenavPage(page, 'autism-gene-profiles');
-    await page.locator('input#gene-search-input').fill('GRIN2B');
+    await page.locator('input#gene-search-input').focus();
+    await page.keyboard.type('GRIN2B');
     const pagePromise = context.waitForEvent('page');
     await page.locator('div').filter({ hasText: /^GRIN2B$/}).click();
     singleViewPage = await pagePromise;

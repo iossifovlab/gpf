@@ -73,7 +73,7 @@ export async function navigateToDatasetPage(page: Page, dataset: string, tool: s
 
 export async function navigateToSidenavPage(page: Page, sidenavPageLink: string): Promise<void> {
   await page.locator('#sidenav-toggle-button').click();
-  await page.locator(`div.sidenav a[routerlink="/${sidenavPageLink}"]`).click();
+  await page.locator(`a[routerlink="/${sidenavPageLink}"]`).click();
 }
 
 export function readFile(name): Promise<unknown> {
@@ -94,8 +94,6 @@ export function getRandomString(): string {
 
 // Create user without password
 export async function createUser(page: Page, email: string, name: string): Promise<void> {
-  await page.locator('#sidenav-toggle-button').click();
-  await page.locator('a:text("Management")').click();
   await page.locator('#create-user-form-button').click();
 
   await page.waitForSelector('.grid-container.ng-star-inserted'); // In case of duplicates

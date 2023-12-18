@@ -186,8 +186,6 @@ test.describe('Genes block denovo gene set gene symbols tests', () => {
         await expect(page.locator('#gene-sets-panel')).toBeVisible();
         await page.locator('gpf-gene-sets select.form-control').selectOption({ label: 'Denovo' });
 
-        await page.check('#iossifov_2014-checkbox-affected');
-
         await page.getByPlaceholder('Select or start typing to search').click();
         await page.getByPlaceholder('Select or start typing to search').fill('Missense');
         await page.waitForResponse(
@@ -229,7 +227,9 @@ test.describe('Genes block denovo gene set gene symbols tests', () => {
           await expect(page.locator('#gene-sets-panel')).toBeVisible();
           await page.locator('gpf-gene-sets select.form-control').selectOption({ label: 'Denovo' });
 
-          await page.check('#iossifov_2014-checkbox-unaffected');
+          await page.isChecked('#iossifov_2014-checkbox-affected'); // wait for gpfjs state first
+          await page.locator('#iossifov_2014-checkbox-affected').click();
+          await page.locator('#iossifov_2014-checkbox-unaffected').click();
 
           await page.getByPlaceholder('Select or start typing to search').click();
           await page.getByPlaceholder('Select or start typing to search').fill('LGDs');
