@@ -1,8 +1,9 @@
 from collections import defaultdict
-from typing import Any, Optional
+from typing import Any, Optional, cast
 
 from dae.person_sets import PersonSetCollection
 from dae.pedigrees.family import Family
+from dae.pedigrees.families_data import FamiliesData
 
 
 def get_family_pedigree(
@@ -53,7 +54,7 @@ def get_family_type(
 class FamilyCounter:
     """Class representing a family counter JSON."""
 
-    def __init__(self, json: dict[str, Any]):
+    def __init__(self, json: dict[str, Any]) -> None:
         self.families = json["families"]
         self.pedigree = json["pedigree"]
         self.pedigrees_count = json["pedigrees_count"]
@@ -66,10 +67,13 @@ class FamilyCounter:
 
     @property
     def family(self) -> dict[str, Any]:
-        return self.families[0]
+        return cast(dict[str, Any], self.families[0])
 
     @staticmethod
-    def from_family(family, pedigree, label=None):
+    def from_family(
+        family: Family,
+        pedigree: list, label: Optional[int] = None
+    ) -> "FamilyCounter":
         return FamilyCounter({
             "families": [family.family_id],
             "pedigree": pedigree,
@@ -80,7 +84,7 @@ class FamilyCounter:
             "counter_id": 0
         })
 
-    def to_dict(self, full=False):
+    def to_dict(self, full: bool = False) -> dict[str, Any]:
         """Transform counter to dict."""
         output = {
             "pedigree": self.pedigree,
@@ -98,7 +102,7 @@ class FamilyCounter:
 class FamiliesGroupCounters:
     """Class representing families group counters JSON."""
 
-    def __init__(self, json: dict[str, Any]):
+    def __init__(self, json: dict[str, Any]) -> None:
         self.group_name = json["group_name"]
         self.phenotypes = json["phenotypes"]
         self.legend = json["legend"]
@@ -108,12 +112,12 @@ class FamiliesGroupCounters:
     # FIXME: Too many locals
     @staticmethod
     def from_families(  # pylint: disable=too-many-locals
-        families,
-        person_set_collection,
-        draw_all_families,
-    ):
+        families: FamiliesData,
+        person_set_collection: PersonSetCollection,
+        draw_all_families: bool,
+    ) -> "FamiliesGroupCounters":
         """Create families group counters from a dict of families."""
-        counters = {}
+        counters: dict[tuple, FamilyCounter] = {}
 
         if draw_all_families:
             for idx, family in enumerate(families.values()):
@@ -126,9 +130,9 @@ class FamiliesGroupCounters:
                     "tags": family.tag_labels,
                     "counter_id": idx
                 })
-                counters[family.family_id] = family_counter
+                counters[(family.family_id,)] = family_counter
         else:
-            families_to_types = defaultdict(list)
+            families_to_types: dict[tuple, list[Family]] = defaultdict(list)
 
             person_to_set = {}
             for person_set in person_set_collection.person_sets.values():
@@ -148,12 +152,12 @@ class FamiliesGroupCounters:
             )
 
             for idx, items in enumerate(families_to_types.items()):
-                family_type, families = items
-                pedigree_label = str(len(families))
+                family_type, families_of_type = items
+                pedigree_label = str(len(families_of_type))
 
-                family = families[0]
+                family = families_of_type[0]
                 counter = FamilyCounter({
-                    "families": [f.family_id for f in families],
+                    "families": [f.family_id for f in families_of_type],
                     "pedigree": get_family_pedigree(
                         family, person_set_collection
                     ),
@@ -177,7 +181,7 @@ class FamiliesGroupCounters:
 
         return FamiliesGroupCounters(json)
 
-    def to_dict(self, full=False):
+    def to_dict(self, full: bool = False) -> dict[str, Any]:
         return {
             "group_name": self.group_name,
             "phenotypes": self.phenotypes,
