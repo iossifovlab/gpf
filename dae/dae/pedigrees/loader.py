@@ -360,10 +360,10 @@ class FamiliesLoader(CLILoader):
         ped_generated: str = "generated",
         ped_not_sequenced: str = "not_sequenced",
         ped_sample_id: str = "sample_id",
-        **kwargs: Any,  # pylint: disable=unused-argument
+        **kwargs: Any,
     ) -> pd.DataFrame:
         """Read a pedigree from file."""
-        # pylint: disable=too-many-arguments, too-many-locals
+        # pylint: disable=too-many-arguments,too-many-locals,unused-argument
         if isinstance(ped_no_role, str):
             ped_no_role = str2bool(ped_no_role)
         if isinstance(ped_no_header, str):
