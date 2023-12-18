@@ -409,17 +409,11 @@ class PersonSetCollection:
         Returns:
             Optional[PersonSet]: The PersonSet associated with the given
                 person identifier, or None if not found.
-
-        Raises:
-            ValueError: If the person is not found in the person set
-            collection.
         """
         result = self.get_person_set(fpid)
         if result is not None:
             return result
-        # return None
-        raise ValueError(
-            f"person {fpid} not in person set collection {self.id}")
+        return None
 
     @staticmethod
     def combine(

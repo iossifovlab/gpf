@@ -117,7 +117,7 @@ class FamiliesGroupCounters:
         draw_all_families: bool,
     ) -> "FamiliesGroupCounters":
         """Create families group counters from a dict of families."""
-        counters = {}
+        counters: dict[tuple, FamilyCounter] = {}
 
         if draw_all_families:
             for idx, family in enumerate(families.values()):
@@ -130,7 +130,7 @@ class FamiliesGroupCounters:
                     "tags": family.tag_labels,
                     "counter_id": idx
                 })
-                counters[family.family_id] = family_counter
+                counters[(family.family_id,)] = family_counter
         else:
             families_to_types: dict[tuple, list[Family]] = defaultdict(list)
 
