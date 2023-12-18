@@ -49,7 +49,7 @@ class TaskGraphCli:
         )
         executor_group.add_argument(
             "--tasks-log-dir", dest="log_dir", type=str,
-            default="./.tasks-log",
+            default="./.task-log",
             help="Path to directory where to store tasks' logs"
         )
         # task_cache

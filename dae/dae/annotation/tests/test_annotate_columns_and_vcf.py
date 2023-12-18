@@ -349,8 +349,8 @@ def test_vcf_multiple_chroms(
                       "0.5", "0.6"]
     assert os.path.exists(out_file_tbi)
     assert set(os.listdir(workdir)) == {
-        ".tasks-log",     # default task logs dir
-        ".tasks-status",  # default task status dir
+        ".task-log",     # default task logs dir
+        ".task-status",  # default task status dir
         # part files must be cleaned up
     }
 
@@ -419,8 +419,8 @@ def test_annotate_columns_multiple_chrom(
     assert out_file_content == out_expected_content
     assert os.path.exists(out_file_tbi)
     assert set(os.listdir(workdir)) == {
-        ".tasks-log",     # default task logs dir
-        ".tasks-status",  # default task status dir
+        ".task-log",     # default task logs dir
+        ".task-status",  # default task status dir
         # part files must be cleaned up
     }
 

@@ -562,7 +562,7 @@ def _run_repo_stats_command(
         if modified_kwargs.get("tasks_log_dir") is None:
             repo_url = proto.get_url()
             modified_kwargs["log_dir"] = \
-                fs_utils.join(repo_url, ".tasks-log")
+                fs_utils.join(repo_url, ".task-log")
 
         TaskGraphCli.process_graph(
             graph, force_mode="always", **modified_kwargs)
@@ -617,7 +617,7 @@ def _run_resource_stats_command(
         if modified_kwargs.get("tasks_log_dir") is None:
             repo_url = proto.get_url()
             modified_kwargs["log_dir"] = \
-                fs_utils.join(repo_url, ".tasks-log")
+                fs_utils.join(repo_url, ".task-log")
 
         TaskGraphCli.process_graph(
             graph, force_mode="always", **modified_kwargs
