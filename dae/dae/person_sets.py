@@ -397,10 +397,27 @@ class PersonSetCollection:
                 return person_set
         return None
 
-    def get_person_set_of_person(self, fpid: tuple[str, str]) -> PersonSet:
+    def get_person_set_of_person(
+        self, fpid: tuple[str, str]
+    ) -> Optional[PersonSet]:
+        """Retrieve the PersonSet associated with the given person identifier.
+
+        Args:
+            fpid (tuple[str, str]): The person identifier consisting of two
+                strings - family ID and person ID.
+
+        Returns:
+            Optional[PersonSet]: The PersonSet associated with the given
+                person identifier, or None if not found.
+
+        Raises:
+            ValueError: If the person is not found in the person set
+            collection.
+        """
         result = self.get_person_set(fpid)
         if result is not None:
             return result
+        # return None
         raise ValueError(
             f"person {fpid} not in person set collection {self.id}")
 
