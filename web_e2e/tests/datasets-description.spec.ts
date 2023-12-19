@@ -130,19 +130,14 @@ test.describe('Dataset description access rights tests', () => {
        'create dataset description for iossifov_2014, log researcher user and check ' +
        'whether the newly created description exists and that it cannot be edited', async({ page }) => {
     await utils.navigateToSidenavPage(page, utils.sidenavPageLinks.management);
-    await page.locator('div[id="user_iossifov_2014@iossifovlab.com-groups-cell"] .add-button').click();
-    if (!await page.locator(
-      '[id="user_iossifov_2014\\@iossifovlab\\.com-groups-list"]'
-    ).getByText('iossifov_2014', { exact: true }).isVisible()) {
-      await page.locator('.add-item-button').filter({ hasText: 'iossifov_2014' }).click();
-    }
-    await page.locator('div[id="research@iossifovlab.com-groups-cell"] .add-button').click();
-    if (!await page.locator(
-      '[id="research\\@iossifovlab\\.com-groups-list"]'
-    ).getByText('iossifov_2014', { exact: true }).isVisible()) {
-      await page.locator('.add-item-button').filter({ hasText: 'iossifov_2014' }).click();
-    }
 
+    await page.locator('[id="user_iossifov_2014@iossifovlab.com-groups-cell"]').getByText('Add').click();
+    await page.waitForSelector('.add-item-button');
+    await page.getByRole('textbox', { name: 'Search' }).focus();
+    await page.keyboard.type('iossifov_2014');
+    await page.waitForSelector('button:text("iossifov_2014")');
+    await page.getByRole('button', { name: 'iossifov_2014' }).click();
+    await page.mouse.click(0, 0); // close the menu
 
     await utils.navigateToSidenavPage(page, utils.sidenavPageLinks.datasets);
     await utils.navigateToDatasetPage(page, utils.datasetIds.iossifov2014, 'Dataset description');
@@ -151,7 +146,7 @@ test.describe('Dataset description access rights tests', () => {
     await page.getByText('Save').click();
     await utils.logout(page);
 
-    await utils.login(page, 'research@iossifovlab.com');
+    await utils.login(page, 'user_iossifov_2014@iossifovlab.com');
     await utils.navigateToDatasetPage(page, utils.datasetIds.iossifov2014, 'Dataset description');
     await expect(page.locator('markdown p')).toHaveText('IOSSIFOV TEST DESCRIPTION');
     await expect(page.locator('#edit-icon')).not.toBeVisible();
@@ -162,6 +157,15 @@ test.describe('Dataset description access rights tests', () => {
     await page.locator('#edit-icon').click();
     await page.locator('.editor textarea').fill('');
     await page.getByText('Save').click();
+
+    await utils.navigateToSidenavPage(page, utils.sidenavPageLinks.management);
+    await page.locator(
+      '[id="user_iossifov_2014@iossifovlab.com-groups-cell"] #iossifov_2014-list-item gpf-confirm-button'
+    ).click();
+    await page.getByRole('button', { name: 'Remove', exact: true }).click();
+    await expect(page.locator(
+      '[id="user_iossifov_2014@iossifovlab.com-groups-cell"]')
+    ).not.toContainText('iossifov_2014');
   });
 
   test('should login regular user, try to navigate to a dataset description page without description via the url ' +
