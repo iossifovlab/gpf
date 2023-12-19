@@ -72,8 +72,10 @@ export async function navigateToDatasetPage(page: Page, dataset: string, tool: s
 }
 
 export async function navigateToSidenavPage(page: Page, sidenavPageLink: string): Promise<void> {
-  await page.locator('#sidenav-toggle-button').click();
-  await page.locator(`a[routerlink="/${sidenavPageLink}"]`).click();
+  await page.locator('#sidenav-toggle-button').dispatchEvent('click');
+  await page.locator('.sidenav').locator(`a[routerlink="/${sidenavPageLink}"]`).dispatchEvent('click');
+  await page.locator('#sidenav-toggle-button').dispatchEvent('scroll');
+  await expect(page.locator('.sidenav').first()).not.toBeVisible();
 }
 
 export function readFile(name): Promise<unknown> {

@@ -2,16 +2,12 @@ import { test, expect, Page } from '@playwright/test';
 import * as utils from './utils';
 
 test.describe('Autism gene profiles single view tests', () => {
-  let CHD8Page: Page;
-  test.beforeEach(async({ page, context }) => {
+  test.beforeEach(async({ page }) => {
     await page.goto(utils.instanceUrl, {waitUntil: 'load'});
     await utils.navigateToSidenavPage(page, 'autism-gene-profiles');
-    await page.locator('input#gene-search-input').fill('CHD8');
-    const pagePromise = context.waitForEvent('page');
+    await page.locator('input#gene-search-input').focus();
+    await page.keyboard.type('CHD8');
     await page.locator('div').filter({ hasText: /^CHD8$/}).click();
-
-    CHD8Page = await pagePromise;
-    await CHD8Page.waitForLoadState();
   });
 
 
