@@ -162,7 +162,7 @@ test.describe('Gene browser download tests', () => {
       const downloadData = scanCSV('playwright/fixtures/gene-browser/' + expectedPath, {sep: '\t'});
       const fixtureFrame = await fixtureData.collect();
       const downloadFrame = await downloadData.collect();
-      expect(fixtureFrame.frameEqual(downloadFrame)).toBe(true);
+      expect(fixtureFrame.toString()).toEqual(downloadFrame.toString());
     });
   });
 });
@@ -363,7 +363,7 @@ test.describe('Gene plot download tests', () => {
       const downloadData = scanCSV('playwright/fixtures/gene-browser/' + testCase.expectedPath, {sep: '\t'});
       const fixtureFrame = await fixtureData.collect();
       const downloadFrame = await downloadData.collect();
-      expect(fixtureFrame.frameEqual(downloadFrame)).toBe(true);
+      expect(fixtureFrame.toString()).toEqual(downloadFrame.toString());
     });
   });
 });
