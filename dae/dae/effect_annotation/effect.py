@@ -226,7 +226,7 @@ class AnnotationEffect:  # pylint: disable=too-many-instance-attributes
             genes.append(effect.gene)
             gene_effects.append(effect.effect)
             details.append(effect.create_effect_details())
-        return (transcripts, genes, gene_effects, details)
+        return (transcripts, genes, gene_effects, details)  # type: ignore
 
     @classmethod
     def simplify_effects(
@@ -243,8 +243,8 @@ class AnnotationEffect:  # pylint: disable=too-many-instance-attributes
         if effects[0].effect == "unk_chr":
             return (
                 "unk_chr",
-                ["unk_chr"],
-                ["unk_chr"],
+                [("unk_chr", "unk_chr")],
+                [("unk_chr", "unk_chr", "unk_chr", "unk_chr")],
             )
 
         gene_effects = cls.gene_effects(effects)
@@ -252,7 +252,7 @@ class AnnotationEffect:  # pylint: disable=too-many-instance-attributes
 
         return (
             cls.worst_effect(effects),
-            list(zip(*gene_effects)),
+            list(zip(*gene_effects)),  # type: ignore
             list(zip(*transcript_effects)))
 
     @classmethod
@@ -507,7 +507,7 @@ class EffectTranscript:
         cls, transcript_tuple: tuple[str, Optional[str], Optional[str], str]
     ) -> EffectTranscript:
         (transcript_id, gene, effect, details) = tuple(transcript_tuple)
-        assert transcript_id is not None
+        assert transcript_id is not None, transcript_tuple
         return EffectTranscript(
             transcript_id, gene=gene, effect=effect, details=details)
 
@@ -519,8 +519,10 @@ class EffectTranscript:
         result = {}
         for transcript_id, details in effect_transcripts:
             parts = [p.strip() for p in details.split(":")]
-
-            if len(parts) == 4:
+            if transcript_id is None:
+                result["intergenic"] = EffectTranscript(
+                    "intergenic", "intergenic", "intergenic", "intergenic")
+            elif len(parts) == 4:
                 result[transcript_id] = EffectTranscript(
                     parts[0], gene=parts[1], effect=parts[2], details=parts[3])
             else:

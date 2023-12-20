@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import copy
 from collections import defaultdict
-from typing import Any, Optional, Union, Iterator
+from typing import Any, Optional, Union, Iterator, Sequence
 import logging
 
 import pysam
@@ -322,14 +322,14 @@ def connected_component(regions: list[BedRegion]) -> Any:
 
 
 def collapse(
-    source: list[BedRegion],
+    source: Sequence[BedRegion],
     is_sorted: bool = False
 ) -> list[BedRegion]:
     """Collapse list of regions."""
     if not source:
-        return source
+        return list(source)
 
-    regions = copy.deepcopy(source)
+    regions = copy.deepcopy(list(source))
 
     if not is_sorted:
         regions.sort(key=lambda x: x.start)
