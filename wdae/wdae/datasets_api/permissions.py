@@ -1,6 +1,6 @@
 import logging
 
-from typing import Any, Optional, List, cast, Union
+from typing import Any, Optional, List, cast, Union, Set
 from rest_framework import permissions
 
 from django.conf import settings
@@ -8,6 +8,8 @@ from django.contrib.auth.models import Group, User
 
 from django.utils.encoding import force_str
 from django.http import HttpRequest
+
+from django.db import connection
 
 from gpf_instance.gpf_instance import get_wgpf_instance
 from utils.datasets import find_dataset_id_in_request
@@ -169,38 +171,111 @@ def _user_has_permission_down(user: User, dataset_id: str) -> bool:
     return False
 
 
+def get_all_dataset_groups(dataset: Dataset) -> set[str]:
+    """
+    Retrieve set of all related groups to a given dataset.
+
+    A group is considered related to a dataset if the dataset itself has it,
+    if a child of the dataset has it, or if a parent of the dataset has it.
+    """
+    groups: Set[str] = set()
+
+    with connection.cursor() as cursor:
+        cursor.execute(
+            "SELECT GROUP_CONCAT(gr.name) "
+            "FROM datasets_api_datasethierarchy as hr "
+            "JOIN datasets_api_dataset_groups as dsgr "
+            "ON hr.ancestor_id = dsgr.dataset_id "
+            "OR hr.descendant_id = dsgr.dataset_id "
+            "JOIN auth_group as gr on gr.id = dsgr.group_id "
+            "WHERE ancestor_id = %s OR descendant_id = %s "
+            "GROUP BY ancestor_id, descendant_id;",
+            [dataset.id, dataset.id]
+        )
+        rows = cursor.fetchall()
+
+        for row in rows:
+            groups = groups.union(row[0].split(","))
+
+    return groups
+
+
+def get_dataset_groups_up(dataset: Dataset) -> set[str]:
+    """
+    Return set of groups related to a dataset up the relation tree.
+
+    This includes the dataset's own groups and any groups to parents.
+    """
+    groups: Set[str] = set()
+
+    with connection.cursor() as cursor:
+        cursor.execute(
+            "SELECT GROUP_CONCAT(gr.name) "
+            "FROM datasets_api_datasethierarchy as hr "
+            "JOIN datasets_api_dataset_groups as dsgr "
+            "ON hr.ancestor_id = dsgr.dataset_id "
+            "OR hr.descendant_id = dsgr.dataset_id "
+            "JOIN auth_group as gr on gr.id = dsgr.group_id "
+            "WHERE descendant_id = %s "
+            "GROUP BY ancestor_id, descendant_id;",
+            [dataset.id]
+        )
+        rows = cursor.fetchall()
+
+        for row in rows:
+            groups = groups.union(row[0].split(","))
+
+    return groups
+
+
 def user_has_permission(user: User, dataset_id: str) -> bool:
     """Check if a user has permission to browse the given dataset."""
+    if settings.DISABLE_PERMISSIONS:
+        return True
+    if user.is_superuser or user.is_staff:
+        return True
+    user_groups = get_user_groups(user)
+    if "admin" in user_groups:
+        return True
+
     logger.debug("checking user <%s> permissions on %s", user, dataset_id)
     dataset = get_wdae_dataset(dataset_id)
     if dataset is None:
         return True
 
-    if _user_has_permission_strict(user, dataset.dataset_id):
-        return True
-    if _user_has_permission_up(user, dataset.dataset_id):
-        return True
-    if _user_has_permission_down(user, dataset.dataset_id):
-        return True
+    dataset_groups = get_all_dataset_groups(dataset)
 
-    return False
+    return bool(user_groups & dataset_groups)
 
 
 def get_allowed_genotype_studies(user: User, dataset_id: str) -> set[str]:
     """Collect and return genotype study IDs the user has access to."""
-    allowed_studies = []
+    skip_check = False
+    if settings.DISABLE_PERMISSIONS or user.is_superuser or user.is_staff:
+        skip_check = True
+    user_groups = get_user_groups(user)
+    if "admin" in user_groups:
+        skip_check = True
+    allowed_studies = set()
     dataset = get_wdae_dataset(dataset_id)
     if dataset is None:
         return set()
     if DatasetHierarchy.is_study(dataset):
-        if _user_has_permission_strict(user, dataset.dataset_id) \
-                or _user_has_permission_up(user, dataset.dataset_id):
-            allowed_studies.append(dataset.dataset_id)
+        dataset_groups = get_dataset_groups_up(dataset)
+        if skip_check:
+            allowed_studies.add(dataset.dataset_id)
+        else:
+            if bool(user_groups & dataset_groups):
+                allowed_studies.add(dataset.dataset_id)
+        return allowed_studies
     for child in get_wdae_children(dataset.dataset_id):
         if DatasetHierarchy.is_study(child):
-            if _user_has_permission_strict(user, child.dataset_id) \
-                    or _user_has_permission_up(user, child.dataset_id):
-                allowed_studies.append(child.dataset_id)
+            if skip_check:
+                allowed_studies.add(child.dataset_id)
+            else:
+                dataset_groups = get_dataset_groups_up(child)
+                if bool(user_groups & dataset_groups):
+                    allowed_studies.add(child.dataset_id)
 
     return set(allowed_studies)
 
