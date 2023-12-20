@@ -193,7 +193,7 @@ class SqlSchema2Variants(QueryVariantsBase):
         **kwargs: Any
     ) -> QueryRunner:
         """Build a query selecting the appropriate family variants."""
-        do_join_pedigree = pedigree_fields is not None
+        do_join_pedigree = bool(pedigree_fields)
         do_join_allele_in_members = person_ids is not None
 
         assert self.family_variant_table is not None
