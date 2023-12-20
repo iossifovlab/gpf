@@ -207,6 +207,8 @@ class GeneScore(
                 "schema": {
                     "id": {"type": "string"},
                     "desc": {"type": "string"},
+                    "large_values_desc": {"type": "string"},
+                    "small_values_desc": {"type": "string"},
                     "number_hist": {"type": "dict", "schema": {
                         "number_of_bins": {
                             "type": "number",
