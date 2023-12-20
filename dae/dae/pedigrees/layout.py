@@ -5,12 +5,12 @@ from __future__ import annotations
 import re
 import logging
 from dataclasses import dataclass
-from typing import Any, Optional, Union
+from typing import Any, Optional, Union, cast
 from collections import defaultdict, namedtuple
 from functools import reduce
 
 from dae.pedigrees.pedigrees import MatingUnit, FamilyConnections, Individual
-from dae.pedigrees.interval_sandwich import IntervalForVertex, SandwichSolver
+from dae.pedigrees.pedigrees import IntervalForVertex, SandwichSolver
 from dae.pedigrees.family import Family
 
 
@@ -866,7 +866,8 @@ class Layout:
 
         rank_to_individuals = defaultdict(list)
         for interval in self._intervals:
-            rank_to_individuals[interval.vertex.rank].append(interval)
+            rank_to_individuals[
+                cast(Individual, interval.vertex).rank].append(interval)
 
         for key in sorted(rank_to_individuals.keys()):
             sorted_intervals = sorted(
@@ -875,4 +876,4 @@ class Layout:
             # print(list(map(lambda x: x.vertex, sorted_intervals)))
             result.append([x.vertex for x in sorted_intervals])
 
-        return result
+        return cast(list[list[Individual]], result)

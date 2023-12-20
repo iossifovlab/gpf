@@ -2,19 +2,21 @@
 
 import math
 from copy import deepcopy
-from typing import List
+from typing import Optional, Tuple, List, Any
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
 import matplotlib.patches as mpatches
 import matplotlib.lines as mlines
+from matplotlib.figure import Figure
+from matplotlib.axes import Axes
 from matplotlib.path import Path
 from matplotlib.backends.backend_pdf import PdfPages
 
 from dae.variants.attributes import Sex, Role, Status
-from dae.pedigrees.layout import Layout, Point
-
+from dae.pedigrees.layout import IndividualWithCoordinates, Layout, Point
+from dae.pedigrees.family import Person
 
 mpl.use("PS")  # noqa
 plt.ioff()  # noqa
@@ -23,23 +25,30 @@ plt.ioff()  # noqa
 class PDFLayoutDrawer:
     """Helper class for producing PDF file with multiple pedigrees."""
 
-    def __init__(self, filename):
+    def __init__(self, filename: str) -> None:
         self._filename = filename
-        self._pages = []
-        self.pdf = None
+        self.pdf: Optional[PdfPages] = None
 
-    def __enter__(self):
+    def __enter__(self) -> PdfPages:
         self.pdf = PdfPages(self._filename)
         return self.pdf
 
-    def add_page(self, figure, title=None):
+    def add_page(
+        self, figure: Figure, title: Optional[str] = None
+    ) -> None:
+        """Add a new page to the PDF file."""
+        assert self.pdf is not None
         if title:
             figure.text(0.5, 0.9, title, horizontalalignment="center")
         self.pdf.savefig(figure)
         plt.close(figure)
 
-    def __exit__(self, exc_type, exc_value, exc_traceback):
-        self.pdf.close()
+    def __exit__(
+        self, exc_type: None, exc_value: None, exc_traceback: None
+    ) -> None:
+        if self.pdf is not None:
+            self.pdf.close()
+        self.pdf = None
 
 
 class OffsetLayoutDrawer:
@@ -49,11 +58,12 @@ class OffsetLayoutDrawer:
     GAP = 2.0
 
     def __init__(
-            self,
-            layouts: List[Layout],
-            x_offset=0,
-            y_offset=0,
-            show_family=False):
+        self,
+        layouts: List[Layout],
+        x_offset: int = 0,
+        y_offset: int = 0,
+        show_family: bool = False
+    ) -> None:
 
         assert layouts is not None
 
@@ -68,9 +78,9 @@ class OffsetLayoutDrawer:
         self.show_family = show_family
         self.figsize = (7, 10)
 
-    def _layouts_vertical_inverse(self):
+    def _layouts_vertical_inverse(self) -> None:
         highest_y = max(
-            max([i.y for level in layout.positions for i in level]) + 10
+            max(i.y for level in layout.positions for i in level) + 10
             for layout in self._layouts
         )
 
@@ -83,7 +93,11 @@ class OffsetLayoutDrawer:
                 line.y1 = highest_y - line.y1 + layout.positions[0][0].size
                 line.y2 = highest_y - line.y2 + layout.positions[0][0].size
 
-    def draw(self, figure=None, title=None, tags=None):
+    def draw(
+        self, figure: Optional[Figure] = None,
+        title: Optional[str] = None,
+        tags: Optional[set[str]] = None
+    ) -> Figure:
         """Draw family pedigree."""
         if figure is None:
             figure = plt.figure(figsize=self.figsize)
@@ -105,10 +119,10 @@ class OffsetLayoutDrawer:
 
             self._draw_members(ax_pedigree, layout)
         if tags:
-            tags = "\n".join(sorted(tags))
+            tags_label = "\n".join(sorted(tags))
             props = {"boxstyle": "round", "facecolor": "wheat", "alpha": 0.5}
             ax_pedigree.text(
-                0.99, 0.01, tags,
+                0.99, 0.01, tags_label,
                 transform=ax_pedigree.transAxes,
                 fontsize=5,
                 verticalalignment="bottom",
@@ -125,11 +139,12 @@ class OffsetLayoutDrawer:
             )
             ax_family.autoscale_view()
 
-            family = [
+            family: list[Person] = [
                 member.individual.member
                 for layout in self._layouts
                 for layer in layout.positions
                 for member in layer
+                if member.individual.member is not None
             ]
 
             self._draw_family_table(ax_family, family)
@@ -141,7 +156,7 @@ class OffsetLayoutDrawer:
 
         return figure
 
-    def _draw_lines(self, axes, layout):
+    def _draw_lines(self, axes: Axes, layout: Layout) -> None:
         for line in layout.lines:
             if not line.curved:
                 axes.add_line(
@@ -152,9 +167,11 @@ class OffsetLayoutDrawer:
                     )
                 )
 
-    def _draw_rounded_lines(self, axes, layout):
-        def elementwise_sum(x_pos, y_pos):
-            return tuple([x_pos[0] + y_pos[0], x_pos[1] + y_pos[1]])
+    def _draw_rounded_lines(self, axes: Axes, layout: Layout) -> None:
+        def elementwise_sum(
+            x_pos: tuple[float, float], y_pos: tuple[float, float]
+        ) -> tuple[float, float]:
+            return (x_pos[0] + y_pos[0], x_pos[1] + y_pos[1])
         for line in layout.lines:
             if line.curved:
                 offset = (self._x_offset, self._y_offset)
@@ -172,17 +189,22 @@ class OffsetLayoutDrawer:
                 axes.add_patch(mpatches.PathPatch(path, facecolor="none"))
 
     @staticmethod
-    def _infer_individual_color(individual) -> str:
-        if individual.individual.member.generated or \
-                individual.individual.member.not_sequenced:
+    def _infer_individual_color(individual: IndividualWithCoordinates) -> str:
+        member = individual.individual.member
+        assert member is not None
+        if member.generated or member.not_sequenced:
             return "grey"
-        if individual.individual.member.status == Status.unaffected:
+        if member.status == Status.unaffected:
             return "white"
-        if individual.individual.member.status == Status.affected:
+        if member.status == Status.affected:
             return "red"
         return "purple"
 
-    def _draw_male_individual(self, axes, individual, color):
+    def _draw_male_individual(
+        self, axes: Axes,
+        individual: IndividualWithCoordinates,
+        color: str
+    ) -> Tuple[Point, Point]:
         coords = [
             individual.x + self._x_offset,
             individual.y + self._y_offset,
@@ -205,7 +227,11 @@ class OffsetLayoutDrawer:
 
         return Point(center_x, center_y), Point(dlx, dly)
 
-    def _draw_female_individual(self, axes, individual, color):
+    def _draw_female_individual(
+        self, axes: Axes,
+        individual: IndividualWithCoordinates,
+        color: str
+    ) -> tuple[Point, Point]:
         coords = [
             individual.x_center + self._x_offset,
             individual.y_center + self._y_offset,
@@ -230,7 +256,11 @@ class OffsetLayoutDrawer:
         )
         return Point(center_x, center_y), Point(dlx, dly)
 
-    def _draw_unspecified_sex_individual(self, axes, individual, color):
+    def _draw_unspecified_sex_individual(
+        self, axes: Axes,
+        individual: IndividualWithCoordinates,
+        color: str
+    ) -> tuple[Point, Point]:
         size = math.sqrt((individual.size ** 2) / 2)
         coords = [
             individual.x + self._x_offset + (individual.size / 2),
@@ -255,13 +285,17 @@ class OffsetLayoutDrawer:
 
         return Point(center_x, center_y), Point(dlx, dly)
 
-    def _draw_individual(self, axes, individual):
+    def _draw_individual(
+        self, axes: Axes,
+        individual: IndividualWithCoordinates
+    ) -> None:
         individual_color = self._infer_individual_color(individual)
-
-        if Sex.from_name(individual.individual.member.sex) == Sex.male:
+        member = individual.individual.member
+        assert member is not None
+        if Sex.from_name(member.sex) == Sex.male:  # type: ignore
             center, bottom_left = self._draw_male_individual(
                 axes, individual, individual_color)
-        elif Sex.from_name(individual.individual.member.sex) == Sex.female:
+        elif Sex.from_name(member.sex) == Sex.female:  # type: ignore
             center, bottom_left = self._draw_female_individual(
                 axes, individual, individual_color)
 
@@ -269,7 +303,10 @@ class OffsetLayoutDrawer:
             center, bottom_left = self._draw_unspecified_sex_individual(
                 axes, individual, individual_color)
 
-        if individual.individual.member.role == Role.prb:
+        member = individual.individual.member
+        assert member is not None
+
+        if member.role == Role.prb:
             axes.add_patch(
                 mpatches.FancyArrow(
                     bottom_left.x - self._gap,
@@ -284,7 +321,7 @@ class OffsetLayoutDrawer:
             )
 
         axes.annotate(
-            individual.individual.member.person_id,
+            member.person_id,
             (center.x, center.y),
             color="black",
             weight="bold",
@@ -293,13 +330,17 @@ class OffsetLayoutDrawer:
             va="center",
         )
 
-    def _draw_members(self, axes, layout):
+    def _draw_members(
+        self, axes: Axes, layout: Layout
+    ) -> None:
         for level in layout.positions:
             for individual in level:
                 self._draw_individual(axes, individual)
 
     @staticmethod
-    def _draw_family_table(axes, family):
+    def _draw_family_table(
+        axes: Axes, family: list[Person]
+    ) -> None:
         col_labels = [
             "familyId",
             "individualId",
@@ -321,7 +362,7 @@ class OffsetLayoutDrawer:
                     member.person_id,
                     member.dad_id,
                     member.mom_id,
-                    Sex.from_name(member.sex),
+                    Sex.from_name(member.sex),  # type: ignore
                     member.status,
                     member.role,
                     member.layout,
@@ -335,6 +376,12 @@ class OffsetLayoutDrawer:
         )
 
     @staticmethod
-    def _draw_title(figure, title, x_pos=0.5, y_pos=0.9, **kwargs):
+    def _draw_title(
+        figure: Figure,
+        title: str,
+        x_pos: float = 0.5,
+        y_pos: float = 0.9,
+        **kwargs: Any
+    ) -> None:
         figure.text(
             x_pos, y_pos, title, horizontalalignment="center", **kwargs)

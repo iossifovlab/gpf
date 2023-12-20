@@ -1,6 +1,11 @@
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
+
 import os
+from typing import Callable
+
 import pytest
-from pandas.api.types import is_string_dtype  # type: ignore
+
+from pandas.api.types import is_string_dtype
 
 from dae.variants.attributes import Role
 
@@ -17,7 +22,9 @@ from dae.pedigrees.loader import FamiliesLoader
         ("pedigree_C.ped"),
     ],
 )
-def test_famlies_loader_simple(pedigree, fixture_dirname):
+def test_famlies_loader_simple(
+    pedigree: str, fixture_dirname: Callable
+) -> None:
     filename = fixture_dirname(f"pedigrees/{pedigree}")
     assert os.path.exists(filename)
     loader = FamiliesLoader(filename)
@@ -26,7 +33,7 @@ def test_famlies_loader_simple(pedigree, fixture_dirname):
     assert families is not None
 
 
-def test_families_loader_phenotype(fixture_dirname):
+def test_families_loader_phenotype(fixture_dirname: Callable) -> None:
     filename = fixture_dirname("pedigrees/pedigree_D.ped")
     assert os.path.exists(filename)
 
@@ -38,13 +45,13 @@ def test_families_loader_phenotype(fixture_dirname):
 
     for fam_id, family in families.items():
         print(fam_id, family, family.persons)
-        for person_id, person in family.persons.items():
+        for _person_id, person in family.persons.items():
             print(person)
             print(person.has_attr("phenotype"))
             assert person.has_attr("phenotype")
 
 
-def test_families_loader_phenos(fixture_dirname):
+def test_families_loader_phenos(fixture_dirname: Callable) -> None:
     filename = fixture_dirname("pedigrees/pedigree_phenos.ped")
     assert os.path.exists(filename)
 
@@ -54,8 +61,8 @@ def test_families_loader_phenos(fixture_dirname):
     assert families is not None
     assert isinstance(families, FamiliesData)
 
-    for fam_id, family in families.items():
-        for person_id, person in family.persons.items():
+    for _fam_id, family in families.items():
+        for _person_id, person in family.persons.items():
             assert person.has_attr("phenotype")
             assert person.has_attr("pheno2")
             assert person.has_attr("pheno3")
@@ -75,7 +82,9 @@ def test_families_loader_phenos(fixture_dirname):
         ("pedigree_no_role_C.ped"),
     ],
 )
-def test_families_loader_no_role(pedigree, fixture_dirname):
+def test_families_loader_no_role(
+    pedigree: str, fixture_dirname: Callable
+) -> None:
     filename = fixture_dirname(f"pedigrees/{pedigree}")
     assert os.path.exists(filename)
 
@@ -104,7 +113,7 @@ def test_families_loader_no_role(pedigree, fixture_dirname):
     assert person.person_id == "f1.sib"
 
 
-def test_families_loader_roles_testing(fixture_dirname):
+def test_families_loader_roles_testing(fixture_dirname: Callable) -> None:
     filename = fixture_dirname("pedigrees/pedigree_no_role_C.ped")
     assert os.path.exists(filename)
 
@@ -133,7 +142,9 @@ def test_families_loader_roles_testing(fixture_dirname):
         ("pedigree_C.ped"),
     ],
 )
-def test_families_ped_df(pedigree, temp_filename, fixture_dirname):
+def test_families_ped_df(
+    pedigree: str, temp_filename: str, fixture_dirname: Callable
+) -> None:
     filename = fixture_dirname(f"pedigrees/{pedigree}")
     assert os.path.exists(filename)
 

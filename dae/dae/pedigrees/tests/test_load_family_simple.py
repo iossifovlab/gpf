@@ -1,11 +1,17 @@
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
 import os
+from typing import Callable
+
 import pytest
 
 from dae.pedigrees.loader import FamiliesLoader
 
 
 @pytest.mark.parametrize("fixture_name", ["pedigrees/family_simple.txt"])
-def test_load_family_simple(fixture_name, temp_filename, fixture_dirname):
+def test_load_family_simple(
+    fixture_name: str, temp_filename: str,
+    fixture_dirname: Callable
+) -> None:
     family_filename = fixture_dirname(fixture_name)
     assert os.path.exists(family_filename)
 
