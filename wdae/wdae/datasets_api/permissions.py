@@ -184,8 +184,6 @@ def get_all_dataset_groups(dataset: Dataset) -> set[str]:
         cursor.execute(
             "SELECT GROUP_CONCAT(gr.name) "
             "FROM datasets_api_datasethierarchy as hr "
-            "JOIN datasets_api_dataset as ds "
-            "ON ancestor_id = ds.id "
             "JOIN datasets_api_dataset_groups as dsgr "
             "ON hr.ancestor_id = dsgr.dataset_id "
             "OR hr.descendant_id = dsgr.dataset_id "
@@ -214,8 +212,6 @@ def get_dataset_groups_up(dataset: Dataset) -> set[str]:
         cursor.execute(
             "SELECT GROUP_CONCAT(gr.name) "
             "FROM datasets_api_datasethierarchy as hr "
-            "JOIN datasets_api_dataset as ds "
-            "ON ancestor_id = ds.id "
             "JOIN datasets_api_dataset_groups as dsgr "
             "ON hr.ancestor_id = dsgr.dataset_id "
             "OR hr.descendant_id = dsgr.dataset_id "
