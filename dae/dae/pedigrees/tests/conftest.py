@@ -1,20 +1,19 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-from typing import Callable
+from typing import Callable, cast
 
 import pytest
 
 from dae.pedigrees.family import Family
 from dae.pedigrees.loader import FamiliesLoader
 
-from dae.pedigrees.pedigrees import (
-    Individual,
-    FamilyConnections,
-    MatingUnit,
-    SibshipUnit,
-)
+from dae.pedigrees.pedigrees import \
+    Individual, \
+    FamilyConnections, \
+    MatingUnit, \
+    SibshipUnit
 from dae.pedigrees.family import Person
 
-from dae.pedigrees.interval_sandwich import IntervalForVertex, \
+from dae.pedigrees.pedigrees import IntervalForVertex, \
     SandwichInstance, SandwichSolver
 from dae.pedigrees.layout import IndividualWithCoordinates, Layout
 from dae.pedigrees.families_data import FamiliesData
@@ -167,14 +166,14 @@ def mating_unit2(
     return MatingUnit(individual5, individual6, sibship_unit2)
 
 
-@pytest.fixture(scope="function")
-def people1(member1, member2, member3):
-    return {"fam1;id1": member1, "fam1;mom1": member2, "fam1;dad1": member3}
+# @pytest.fixture(scope="function")
+# def people1(member1, member2, member3):
+#     return {"fam1;id1": member1, "fam1;mom1": member2, "fam1;dad1": member3}
 
 
-@pytest.fixture(scope="function")
-def people2(member4, member5, member6):
-    return {"fam2;id2": member4, "fam2;mom2": member5, "fam2;dad2": member6}
+# @pytest.fixture(scope="function")
+# def people2(member4, member5, member6):
+#     return {"fam2;id2": member4, "fam2;mom2": member5, "fam2;dad2": member6}
 
 
 @pytest.fixture(scope="function")
@@ -195,7 +194,9 @@ def layout2(
 
 @pytest.fixture(scope="function")
 def family_connections_from_family2(family2: Family) -> FamilyConnections:
-    return FamilyConnections.from_family(family2)
+    result = FamilyConnections.from_family(family2)
+    assert result is not None
+    return result
 
 
 @pytest.fixture(scope="function")
@@ -209,7 +210,9 @@ def sandwich_instance_from_family2(
 def intervals_from_family2(
     sandwich_instance_from_family2: SandwichInstance
 ) -> list[IntervalForVertex]:
-    return SandwichSolver.solve(sandwich_instance_from_family2)
+    return cast(
+        list[IntervalForVertex],
+        SandwichSolver.solve(sandwich_instance_from_family2))
 
 
 @pytest.fixture(scope="function")
@@ -244,4 +247,6 @@ def fam1(pedigree_test: FamiliesData) -> Family:
 
 @pytest.fixture(scope="session")
 def fam1_family_connections(fam1: Family) -> FamilyConnections:
-    return FamilyConnections.from_family(fam1)
+    result = FamilyConnections.from_family(fam1)
+    assert result is not None
+    return result

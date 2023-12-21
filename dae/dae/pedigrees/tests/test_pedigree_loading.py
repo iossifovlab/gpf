@@ -1,9 +1,12 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 
 from io import StringIO
+from typing import Callable
 
 import pytest
+
 import pandas as pd
+import numpy as np
 
 from dae.variants.attributes import Sex, Status, Role
 from dae.pedigrees.loader import FamiliesLoader
@@ -108,7 +111,9 @@ familyId\tpersonId\tdadId\tmomId\tsex\tstatus\trole\tlayout\tsampleId
         ),
     ],
 )
-def test_flexible_pedigree_read(infile, pedigree):
+def test_flexible_pedigree_read(
+    infile: StringIO, pedigree: pd.DataFrame
+) -> None:
     loaded_pedigree = FamiliesLoader.flexible_pedigree_read(infile, sep="\t")
     print(loaded_pedigree)
     columns = [
@@ -123,9 +128,8 @@ def test_flexible_pedigree_read(infile, pedigree):
         "sample_id",
     ]
     for column in columns:
-        assert (
-            loaded_pedigree[column].values == pedigree[column].values
-        ).all()
+        assert np.all(
+            loaded_pedigree[column].values == pedigree[column].values)
 
 
 @pytest.mark.parametrize(
@@ -137,7 +141,9 @@ def test_flexible_pedigree_read(infile, pedigree):
         ("pedigree_C.ped"),
     ],
 )
-def test_flexible_pedigree_read_from_filesystem(filepath, fixture_dirname):
+def test_flexible_pedigree_read_from_filesystem(
+    filepath: str, fixture_dirname: Callable
+) -> None:
     expected_df = expected_pedigree_df.copy()
     expected_df["sample_id"] = expected_df["person_id"]
 
@@ -146,7 +152,9 @@ def test_flexible_pedigree_read_from_filesystem(filepath, fixture_dirname):
     assert pedigree_df.equals(expected_df)
 
 
-def test_flexible_pedigree_read_additional_columns(fixture_dirname):
+def test_flexible_pedigree_read_additional_columns(
+    fixture_dirname: Callable
+) -> None:
     expected_df = expected_pedigree_df.copy()
     expected_df["phenotype"] = [
         "healthy",
@@ -167,8 +175,8 @@ def test_flexible_pedigree_read_additional_columns(fixture_dirname):
 
 
 def test_flexible_pedigree_read_do_not_override_sample_id_column(
-    fixture_dirname,
-):
+    fixture_dirname: Callable,
+) -> None:
     expected_df = expected_pedigree_df.copy()
     expected_df["sample_id"] = [
         "f1_father",
@@ -187,7 +195,7 @@ def test_flexible_pedigree_read_do_not_override_sample_id_column(
     assert pedigree_df.equals(expected_df)
 
 
-def test_flexible_pedigree_read_no_header(fixture_dirname):
+def test_flexible_pedigree_read_no_header(fixture_dirname: Callable) -> None:
     expected_df = expected_pedigree_df.copy()
     expected_df["sample_id"] = expected_df["person_id"]
 

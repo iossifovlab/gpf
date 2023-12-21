@@ -6,7 +6,7 @@ from dae.pedigrees.family import FamilyType, Person, Family
 from dae.pedigrees.families_data import FamiliesData
 
 
-def trio_persons(family_id="trio_family"):
+def trio_persons(family_id: str = "trio_family") -> list[Person]:
     return [
         Person(**{
             "family_id": family_id,
@@ -33,7 +33,7 @@ def trio_persons(family_id="trio_family"):
 
 
 @pytest.fixture
-def quad_persons():
+def quad_persons() -> list[Person]:
     persons = trio_persons("quad_family")
     persons.append(Person(**{
         "family_id": "quad_family",
@@ -46,7 +46,7 @@ def quad_persons():
 
 
 @pytest.fixture
-def multigenerational_persons():
+def multigenerational_persons() -> list[Person]:
     persons = trio_persons("multigenerational_family")
     persons.append(Person(**{
         "family_id": "multigenerational_family",
@@ -59,17 +59,17 @@ def multigenerational_persons():
 
 
 @pytest.fixture
-def simplex_persons():
+def simplex_persons() -> list[Person]:
     persons = trio_persons("simplex_family")
-    persons[0]._status = 2
+    persons[0]._status = 2  # type: ignore
     persons[0]._attributes["status"] = 2
     return persons
 
 
 @pytest.fixture
-def simplex_persons_2():
+def simplex_persons_2() -> list[Person]:
     persons = trio_persons("simplex_family")
-    persons[0]._status = 2
+    persons[0]._status = 2  # type: ignore
     persons[0]._attributes["status"] = 2
     persons.append(Person(**{
         "family_id": "simplex_family",
@@ -82,7 +82,7 @@ def simplex_persons_2():
 
 
 @pytest.fixture
-def multiplex_persons():
+def multiplex_persons() -> list[Person]:
     persons = trio_persons("multiplex_family")
     persons.append(Person(**{
         "family_id": "multiplex_family",
@@ -94,12 +94,12 @@ def multiplex_persons():
     return persons
 
 
-def test_family_type_trio():
+def test_family_type_trio() -> None:
     family = Family.from_persons(trio_persons())
     assert family.family_type is FamilyType.TRIO
 
 
-def test_family_type_quad(quad_persons):
+def test_family_type_quad(quad_persons: list[Person]) -> None:
     family = Family.from_persons(quad_persons)
     assert family.family_type is FamilyType.QUAD
 
@@ -110,7 +110,7 @@ def test_family_type_quad(quad_persons):
     (Role.maternal_grandmother),
     (Role.paternal_grandmother),
 ])
-def test_family_type_multigenerational(role):
+def test_family_type_multigenerational(role: Role) -> None:
     persons = list(trio_persons("multigenerational"))
     persons.append(Person(**{
         "family_id": "multigenerational",
@@ -123,27 +123,27 @@ def test_family_type_multigenerational(role):
     assert family.family_type is FamilyType.MULTIGENERATIONAL
 
 
-def test_family_type_simplex(simplex_persons):
+def test_family_type_simplex(simplex_persons: list[Person]) -> None:
     family = Family.from_persons(simplex_persons)
     assert family.family_type is FamilyType.SIMPLEX
 
 
-def test_family_type_simplex_2(simplex_persons_2):
+def test_family_type_simplex_2(simplex_persons_2: list[Person]) -> None:
     family = Family.from_persons(simplex_persons_2)
     assert family.family_type is FamilyType.SIMPLEX
 
 
-def test_family_type_multiplex(multiplex_persons):
+def test_family_type_multiplex(multiplex_persons: list[Person]) -> None:
     family = Family.from_persons(multiplex_persons)
     assert family.family_type is FamilyType.MULTIPLEX
 
 
 def test_families_data_families_by_type(
-    quad_persons,
-    multigenerational_persons,
-    simplex_persons,
-    multiplex_persons
-):
+    quad_persons: list[Person],
+    multigenerational_persons: list[Person],
+    simplex_persons: list[Person],
+    multiplex_persons: list[Person]
+) -> None:
     families_data = FamiliesData.from_families(
         {
             "trio_family": Family.from_persons(trio_persons()),

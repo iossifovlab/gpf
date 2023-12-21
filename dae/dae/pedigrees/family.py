@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 import enum
 
-from typing import Optional, Any, Iterable, cast
+from typing import Optional, Any, Iterable, cast, Union
 
 
 from dae.utils.helpers import isnan
@@ -647,10 +647,11 @@ class Family:
         return self.persons.get(person_id, None)
 
     def get_members_with_roles(
-        self, roles: list[Role]
+        self, roles: list[Union[str, Role]]
     ) -> list[Person]:
         if not isinstance(roles[0], Role):
-            roles = [Role.from_name(role) for role in roles]
+            assert all(isinstance(role, str) for role in roles)
+            roles = [Role.from_name(role) for role in roles]  # type: ignore
         return list(filter(lambda m: m.role in roles, self.members_in_order))
 
     def get_members_with_statuses(
