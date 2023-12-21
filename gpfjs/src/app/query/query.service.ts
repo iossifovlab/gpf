@@ -33,6 +33,8 @@ export class QueryService {
   public streamingFinishedSubject = new Subject();
   public summaryStreamingFinishedSubject = new Subject();
 
+  private familyVariantsSubscription = null;
+
   public constructor(
     private location: Location,
     private router: Router,
@@ -70,6 +72,8 @@ export class QueryService {
       this.streamingFinishedSubject.next(true);
       // Emit null so the loading service can stop the loading overlay even if no variants were received
       this.streamingSubject.next(null);
+      this.familyVariantsSubscription.unsubscribe();
+      this.familyVariantsSubscription = null;
     }).fail(error => {
       console.warn('oboejs encountered a fail event while streaming');
       console.error(error);
@@ -124,7 +128,7 @@ export class QueryService {
     const queryFilter = { ...filter };
     queryFilter['maxVariantsCount'] = maxVariantsCount;
 
-    this.streamPost(this.genotypePreviewVariantsUrl, queryFilter).subscribe(variant => {
+    this.familyVariantsSubscription = this.streamPost(this.genotypePreviewVariantsUrl, queryFilter).subscribe(variant => {
       genotypePreviewVariantsArray.addPreviewVariant(
         <Array<string>> variant,
         dataset.genotypeBrowserConfig.columnIds
