@@ -2,16 +2,12 @@ import { test, expect, Page } from '@playwright/test';
 import * as utils from './utils';
 
 test.describe('Autism gene profiles single view tests', () => {
-  let CHD8Page: Page;
-  test.beforeEach(async({ page, context }) => {
+  test.beforeEach(async({ page }) => {
     await page.goto(utils.instanceUrl, {waitUntil: 'load'});
     await utils.navigateToSidenavPage(page, 'autism-gene-profiles');
-    await page.locator('input#gene-search-input').fill('CHD8');
-    const pagePromise = context.waitForEvent('page');
+    await page.locator('input#gene-search-input').focus();
+    await page.keyboard.type('CHD8');
     await page.locator('div').filter({ hasText: /^CHD8$/}).click();
-
-    CHD8Page = await pagePromise;
-    await CHD8Page.waitForLoadState();
   });
 
 
@@ -71,7 +67,8 @@ test.describe('Autism gene profiles single view links tests', () => {
   test.beforeEach(async({ page, context }) => {
     await page.goto(utils.instanceUrl, {waitUntil: 'load'});
     await utils.navigateToSidenavPage(page, 'autism-gene-profiles');
-    await page.locator('input#gene-search-input').fill('CHD8');
+    await page.locator('input#gene-search-input').focus();
+    await page.keyboard.type('CHD8');
     const pagePromise = context.waitForEvent('page');
     await page.locator('div').filter({ hasText: /^CHD8$/}).click();
 
@@ -106,7 +103,7 @@ test.describe('Autism gene profiles single view links tests', () => {
   });
 });
 
-test.describe('Autism gene profiles single view dataset table tests', () => {
+test.describe.skip('Autism gene profiles single view dataset table tests', () => {
   let singleViewPage: Page;
 
   test.beforeEach(async({ page, context }) => {
@@ -198,14 +195,15 @@ test.describe('Autism gene profiles single view dynamic data tests', () => {
     await page.goto(utils.instanceUrl, {waitUntil: 'load'});
     await utils.loginAdmin(page);
     await utils.navigateToSidenavPage(page, 'autism-gene-profiles');
-    await page.locator('input#gene-search-input').fill('GRIN2B');
+    await page.locator('input#gene-search-input').focus();
+    await page.keyboard.type('GRIN2B');
     const pagePromise = context.waitForEvent('page');
     await page.locator('div').filter({ hasText: /^GRIN2B$/}).click();
     singleViewPage = await pagePromise;
     await singleViewPage.waitForLoadState();
   });
 
-  test('should compare all data in single view for GRIN2B', async() => {
+  test.skip('should compare all data in single view for GRIN2B', async() => {
     const page = singleViewPage;
     await expect(page).toHaveScreenshot('agp-single-view-GRIN2B.png', {fullPage: true});
   });

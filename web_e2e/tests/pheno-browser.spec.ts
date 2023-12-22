@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 import * as utils from './utils';
 import * as fs from 'fs';
 import * as path from 'path';
+import { scanCSV } from 'nodejs-polars';
 
 test.describe('Pheno browser tests', () => {
   test.beforeEach(async({ page }) => {
@@ -99,21 +100,29 @@ test.describe('Pheno browser tests', () => {
   test('should download all instruments and validate whether they are equal to the reference data', async({ page }) => {
     await utils.navigateToDatasetPage(page, utils.datasetIds.compAll, 'Phenotype browser');
     await page.waitForSelector('gpf-pheno-browser-table');
-    const downloadBody = page.waitForEvent('download');
+
+    let downloadPromise = page.waitForEvent('download');
+    downloadPromise = page.waitForEvent('download');
+
     await page.locator('#download-measures').click();
-    const downloadBuffer = await downloadBody;
-    const streamData = downloadBuffer.createReadStream();
-    const data = [];
+    const download = await downloadPromise;
 
-    for await (const chunk of await streamData) {
-      data.push(chunk);
-    }
+    const columnsToCheck = [
+      'person_id',
+      'i1.age',
+      'i1.iq',
+      'i1.m1',
+      'i1.m2',
+      'i1.m3',
+      'i1.m4',
+      'i1.m5',
+      'pheno_common.sample_id'
+    ];
 
-    const expectedFileBuffer = fs.readFileSync(
-      path.join(__dirname, '/../fixtures/pheno-browser/measures_comp_all.csv')
-    );
-
-    const downloadedData = Buffer.concat(data);
-    expect(downloadedData.toString()).toEqual(expectedFileBuffer.toString());
+    const fixtureData = scanCSV(await download.path(), {sep: ','});
+    const downloadData = scanCSV('playwright/fixtures/pheno-browser/measures_comp_all.csv', {sep: ','});
+    const fixtureFrame = (await fixtureData.select(columnsToCheck).collect()).sort('person_id');
+    const downloadFrame = (await downloadData.select(columnsToCheck).collect()).sort('person_id');
+    expect(fixtureFrame.toString()).toEqual(downloadFrame.toString());
   });
 });

@@ -67,13 +67,15 @@ export async function navigateToHome(page: Page, dataset = 'ALL_genotypes'): Pro
 export async function navigateToDatasetPage(page: Page, dataset: string, tool: string): Promise<void> {
   await page.locator('#datasets-dropdown-menu-button').click();
   await page.locator('a').filter({ hasText: dataset }).click();
-  await expect(page.getByRole('button', { name: dataset })).toHaveText(dataset);
+  await expect(page.locator('#datasets-dropdown-menu-button')).toHaveText(dataset);
   await page.locator('a').filter({ hasText: `${tool}`}).click();
 }
 
 export async function navigateToSidenavPage(page: Page, sidenavPageLink: string): Promise<void> {
-  await page.locator('#sidenav-toggle-button').click();
-  await page.locator(`div.sidenav a[routerlink="/${sidenavPageLink}"]`).click();
+  await page.locator('#sidenav-toggle-button').dispatchEvent('click');
+  await page.locator('.sidenav').locator(`a[routerlink="/${sidenavPageLink}"]`).dispatchEvent('click');
+  await page.locator('#sidenav-toggle-button').dispatchEvent('scroll');
+  await expect(page.locator('.sidenav').first()).not.toBeVisible();
 }
 
 export function readFile(name): Promise<unknown> {
@@ -94,8 +96,6 @@ export function getRandomString(): string {
 
 // Create user without password
 export async function createUser(page: Page, email: string, name: string): Promise<void> {
-  await page.locator('#sidenav-toggle-button').click();
-  await page.locator('a:text("Management")').click();
   await page.locator('#create-user-form-button').click();
 
   await page.waitForSelector('.grid-container.ng-star-inserted'); // In case of duplicates

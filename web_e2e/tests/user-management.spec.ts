@@ -13,6 +13,8 @@ test.describe('User management tests for reset password in Users', () => {
     const email = `${username}@mail.com`;
     const password = 'XC^ZF*TZXuUChFsv';
 
+    await page.locator('#sidenav-toggle-button').click();
+    await page.locator('a:text("Management")').click();
     await utils.createUser(page, email, username);
 
     await expect(page.locator(`[id="${email}-password-cell"]`)).toBeEmpty();
@@ -23,7 +25,10 @@ test.describe('User management tests for reset password in Users', () => {
     await page.goto(utils.mailhogUrl, {waitUntil: 'load'});
     await page.getByText(email).click();
     await page.locator('#preview-plain > a').click();
-    await page.goto(await page.locator('#preview-plain > a').getAttribute('href'), {waitUntil: 'load'});
+    await page.goto(
+      utils.instanceUrl + '/'
+      + (await page.locator('#preview-plain > a').getAttribute('href')).split('gpf')[2], {waitUntil: 'load'}
+    );
 
     await page.locator('#id_new_password1').fill(password);
     await page.locator('#id_new_password2').fill(password);
@@ -40,8 +45,14 @@ test.describe('User management tests for reset password in Users', () => {
     const email = `${username}@mail.com`;
     const password = 'XC^ZF*TZXuUChFsv';
 
+    await page.locator('#sidenav-toggle-button').click();
+    await page.locator('a:text("Management")').click();
     await utils.createUser(page, email, username);
-    await page.locator('#log-out-button').click();
+
+    await Promise.all([
+      await page.locator('#log-out-button').click(),
+      await page.waitForResponse(resp => resp.url().includes('logout') && resp.status() === 204)
+    ]);
 
     await page.locator('#log-in-button').click();
     await page.locator('#forgotten-password').click();
@@ -51,13 +62,17 @@ test.describe('User management tests for reset password in Users', () => {
     await page.goto(utils.mailhogUrl, {waitUntil: 'load'});
     await page.getByText(email).click();
     await page.locator('#preview-plain > a').click();
-    await page.goto(await page.locator('#preview-plain > a').getAttribute('href'), {waitUntil: 'load'});
+    await page.goto(
+      utils.instanceUrl + '/'
+      + (await page.locator('#preview-plain > a').getAttribute('href')).split('gpf')[2], {waitUntil: 'load'}
+    );
 
     await page.locator('#id_new_password1').fill(password);
     await page.locator('#id_new_password2').fill(password);
-    await utils.login(page, username, password);
+    await page.getByText('Reset password').click();
+    await utils.login(page, email, password);
 
-    await page.waitForSelector('gpf-gene-browser');
+    await page.waitForSelector('#permission-denied-prompt');
     await expect(page.locator('#log-out-button')).toBeVisible();
     await page.locator('#log-out-button').click();
   });
@@ -69,6 +84,8 @@ test.describe('Users management', () => {
     await utils.loginAdmin(page);
   });
   test('should not create user with already used email', async({ page }) => {
+    await page.locator('#sidenav-toggle-button').click();
+    await page.locator('a:text("Management")').click();
     await utils.createUser(page, 'used_email@email.com', 'used_name');
 
     await page.locator('#create-user-form-button').click();
@@ -128,6 +145,8 @@ test.describe('Users management', () => {
   test('should search and find user', async({ page }) => {
     const username = utils.getRandomString();
     const email = `${username}@mail.com`;
+    await page.locator('#sidenav-toggle-button').click();
+    await page.locator('a:text("Management")').click();
     await utils.createUser(page, email, username);
 
     await searchInTable(page, username);
@@ -140,6 +159,8 @@ test.describe('Users management', () => {
   test('should search and not find user', async({ page }) => {
     const username = utils.getRandomString();
     const email = `${username}@mail.com`;
+    await page.locator('#sidenav-toggle-button').click();
+    await page.locator('a:text("Management")').click();
     await utils.createUser(page, email, username);
 
     await searchInTable(page, username);
@@ -152,6 +173,8 @@ test.describe('Users management', () => {
   test('should edit username', async({ page }) => {
     const username = utils.getRandomString();
     const email = `${username}@mail.com`;
+    await page.locator('#sidenav-toggle-button').click();
+    await page.locator('a:text("Management")').click();
     await utils.createUser(page, email, username);
 
     await page.locator(`[id="${email}-user-cell"]`).getByTitle('Edit').click();
@@ -165,6 +188,8 @@ test.describe('Users management', () => {
   test('should try to delete username', async({ page }) => {
     const username = utils.getRandomString();
     const email = `${username}@mail.com`;
+    await page.locator('#sidenav-toggle-button').click();
+    await page.locator('a:text("Management")').click();
     await utils.createUser(page, email, username);
 
     await page.locator(`[id="${email}-user-cell"]`).getByTitle('Edit').click();
@@ -205,6 +230,8 @@ test.describe('Users management', () => {
   test('should add and remove group', async({ page }) => {
     const username = utils.getRandomString();
     const email = `${username}@mail.com`;
+    await page.locator('#sidenav-toggle-button').click();
+    await page.locator('a:text("Management")').click();
     await utils.createUser(page, email, username);
 
     await page.locator(`[id="${email}-groups-cell"]`).getByText('Add').click();
@@ -235,6 +262,8 @@ test.describe('Groups management', () => {
   test('should create and delete group with user and dataset', async({ page }) => {
     const username = utils.getRandomString();
     const email = `${username}@mail.com`;
+    await page.locator('#sidenav-toggle-button').click();
+    await page.locator('a:text("Management")').click();
     await utils.createUser(page, email, username);
 
     const groupName = utils.getRandomString();
@@ -261,6 +290,8 @@ test.describe('Groups management', () => {
   test('should create and delete group with user only', async({ page }) => {
     const username = utils.getRandomString();
     const email = `${username}@mail.com`;
+    await page.locator('#sidenav-toggle-button').click();
+    await page.locator('a:text("Management")').click();
     await utils.createUser(page, email, username);
 
     const groupName = utils.getRandomString();
@@ -359,6 +390,8 @@ test.describe('Groups management', () => {
   test('should add and remove user and dataset from Group', async({ page }) => {
     const username = utils.getRandomString();
     const email = `${username}@mail.com`;
+    await page.locator('#sidenav-toggle-button').click();
+    await page.locator('a:text("Management")').click();
     await utils.createUser(page, email, username);
 
     const groupName = utils.getRandomString();
@@ -391,6 +424,8 @@ test.describe('Groups management', () => {
   test('should add and remove users and groups from Users and Groups', async({ page }) => {
     const username = utils.getRandomString();
     const email = `${username}@mail.com`;
+    await page.locator('#sidenav-toggle-button').click();
+    await page.locator('a:text("Management")').click();
     await utils.createUser(page, email, username);
 
     const datasetName = 'iossifov_2014';
@@ -438,6 +473,8 @@ test.describe('Groups management', () => {
   test('should check if new groups and any_user group when creating user', async({ page }) => {
     const username1 = utils.getRandomString();
     const email1 = `${username1}@mail.com`;
+    await page.locator('#sidenav-toggle-button').click();
+    await page.locator('a:text("Management")').click();
     await utils.createUser(page, email1, username1);
 
     const username2 = utils.getRandomString();
@@ -471,6 +508,8 @@ test.describe('Groups management', () => {
   test('should check if the new group is deleted after removing it in Users', async({ page }) => {
     const username = utils.getRandomString();
     const email = `${username}@mail.com`;
+    await page.locator('#sidenav-toggle-button').click();
+    await page.locator('a:text("Management")').click();
     await utils.createUser(page, email, username);
 
     const groupName = utils.getRandomString();
@@ -492,6 +531,8 @@ test.describe('Groups management', () => {
   test('should check if the new group is deleted after deleting the user', async({ page }) => {
     const username = utils.getRandomString();
     const email = `${username}@mail.com`;
+    await page.locator('#sidenav-toggle-button').click();
+    await page.locator('a:text("Management")').click();
     await utils.createUser(page, email, username);
 
     const groupName = utils.getRandomString();
@@ -515,6 +556,8 @@ test.describe('Datasets management', () => {
   test('should add group to user and check data in Datasets', async({ page }) => {
     const username = utils.getRandomString();
     const email = `${username}@mail.com`;
+    await page.locator('#sidenav-toggle-button').click();
+    await page.locator('a:text("Management")').click();
     await utils.createUser(page, email, username);
 
     const groupName = 'comp_all';
@@ -570,6 +613,8 @@ test.describe('Datasets management', () => {
   test('should create group, add dataset and users and check data in Datasets', async({ page }) => {
     const username = utils.getRandomString();
     const email = `${username}@mail.com`;
+    await page.locator('#sidenav-toggle-button').click();
+    await page.locator('a:text("Management")').click();
     await utils.createUser(page, email, username);
 
     const datasetName = 'iossifov_2014';
@@ -609,6 +654,8 @@ test.describe('Datasets management', () => {
   test('should add and remove groups in Datasets', async({ page }) => {
     const username = utils.getRandomString();
     const email = `${username}@mail.com`;
+    await page.locator('#sidenav-toggle-button').click();
+    await page.locator('a:text("Management")').click();
     await utils.createUser(page, email, username);
 
     const datasetName = 'comp_denovo';
@@ -645,6 +692,8 @@ test.describe('Datasets management', () => {
   test('should add groups with user to dataset and delete the user', async({ page }) => {
     const username = utils.getRandomString();
     const email = `${username}@mail.com`;
+    await page.locator('#sidenav-toggle-button').click();
+    await page.locator('a:text("Management")').click();
     await utils.createUser(page, email, username);
 
     const datasetName = 'comp_denovo';
@@ -700,7 +749,15 @@ async function deleteGroup(page: Page, name: string): Promise<void> {
   await page.locator('a:text("Groups")').click();
   await searchInTable(page, name);
   await page.locator(`[id="${name}-delete-group-button"]`).click();
-  await page.getByRole('button', { name: 'Delete', exact: true }).click();
+
+  await Promise.all([
+    await page.getByRole('button', { name: 'Delete', exact: true }).click(),
+    await page.waitForResponse(resp =>
+      (resp.url().includes('revoke-permission') && resp.status() === 200)
+      || (resp.url().includes('remove-user') && resp.status() === 204)
+    )
+  ]);
+
   await expect(page.locator(`[id="${name}-group-cell"]`)).not.toBeVisible();
 }
 

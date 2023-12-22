@@ -303,7 +303,7 @@ test.describe('Variant reports download tests', () => {
       const downloadData = scanCSV(`playwright/fixtures/variant-reports/families${cell.index}.ped`, {sep: '\t'});
       const fixtureFrame = await fixtureData.select(cell.columnsToCheck).collect();
       const downloadFrame = await downloadData.select(cell.columnsToCheck).collect();
-      expect(fixtureFrame.frameEqual(downloadFrame)).toBe(true);
+      expect(fixtureFrame.toString()).toEqual(downloadFrame.toString());
     });
   });
 
@@ -317,7 +317,7 @@ test.describe('Variant reports download tests', () => {
     const downloadData = scanCSV('playwright/fixtures/variant-reports/families-all.ped', {sep: '\t'});
     const fixtureFrame = await fixtureData.select(columnsToCheck).collect();
     const downloadFrame = await downloadData.select(columnsToCheck).collect();
-    expect(fixtureFrame.frameEqual(downloadFrame)).toBe(true);
+    expect(fixtureFrame.toString()).toEqual(downloadFrame.toString());
   });
 
   test('downloading in families by pedigree', async({ page }) => {
@@ -336,7 +336,7 @@ test.describe('Variant reports download tests', () => {
     const downloadData = scanCSV('playwright/fixtures/variant-reports/families-pedigrees.ped', {sep: '\t'});
     const fixtureFrame = await fixtureData.select(columnsToCheck).collect();
     const downloadFrame = await downloadData.select(columnsToCheck).collect();
-    expect(fixtureFrame.frameEqual(downloadFrame)).toBe(true);
+    expect(fixtureFrame.toString()).toEqual(downloadFrame.toString());
   });
 });
 

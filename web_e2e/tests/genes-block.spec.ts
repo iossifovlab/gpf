@@ -146,10 +146,12 @@ test.beforeEach(async({ page }) => {
 
     await page.locator('gpf-gene-sets select.form-control').selectOption(data.collection);
     await page.getByPlaceholder('Select or start typing to search').click();
-    await page.getByPlaceholder('Select or start typing to search').pressSequentially(geneSetName);
+    await page.getByPlaceholder('Select or start typing to search').focus();
+    await page.keyboard.type(geneSetName);
     await page.waitForResponse(
-        resp => resp.url().includes('/api/v3/gene_sets/gene_sets') && resp.status() === 200
-    );
+      resp => resp.url().includes('/api/v3/gene_sets/gene_sets') && resp.status() === 200
+  );
+
     await page.waitForLoadState('load');
     await page.locator('gpf-gene-sets .dropdown-menu').first().click();
 
@@ -186,10 +188,9 @@ test.describe('Genes block denovo gene set gene symbols tests', () => {
         await expect(page.locator('#gene-sets-panel')).toBeVisible();
         await page.locator('gpf-gene-sets select.form-control').selectOption({ label: 'Denovo' });
 
-        await page.check('#iossifov_2014-checkbox-affected');
-
         await page.getByPlaceholder('Select or start typing to search').click();
-        await page.getByPlaceholder('Select or start typing to search').fill('Missense');
+        await page.getByPlaceholder('Select or start typing to search').focus();
+        await page.keyboard.type('Missense');
         await page.waitForResponse(
           (resp) => resp.url().includes('/api/v3/gene_sets/gene_sets') && resp.status() === 200
         );
@@ -229,10 +230,13 @@ test.describe('Genes block denovo gene set gene symbols tests', () => {
           await expect(page.locator('#gene-sets-panel')).toBeVisible();
           await page.locator('gpf-gene-sets select.form-control').selectOption({ label: 'Denovo' });
 
-          await page.check('#iossifov_2014-checkbox-unaffected');
+          await page.isChecked('#iossifov_2014-checkbox-affected'); // wait for gpfjs state first
+          await page.locator('#iossifov_2014-checkbox-affected').click();
+          await page.locator('#iossifov_2014-checkbox-unaffected').click();
 
           await page.getByPlaceholder('Select or start typing to search').click();
-          await page.getByPlaceholder('Select or start typing to search').fill('LGDs');
+          await page.getByPlaceholder('Select or start typing to search').focus();
+          await page.keyboard.type('LGDs');
           await page.waitForResponse(
             (resp) => resp.url().includes('/api/v3/gene_sets/gene_sets') && resp.status() === 200
           );

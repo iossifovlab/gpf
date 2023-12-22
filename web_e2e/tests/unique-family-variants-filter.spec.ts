@@ -5,7 +5,6 @@ test.describe('Unique family variants filter tests', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.instanceUrl, {waitUntil: 'load'});
     await utils.loginAdmin(page);
-    await utils.navigateToHome(page);
   });
 
   test('should make unique family variants filter on a single study disabled', async({ page }) => {
