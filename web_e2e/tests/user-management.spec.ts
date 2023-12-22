@@ -25,7 +25,10 @@ test.describe('User management tests for reset password in Users', () => {
     await page.goto(utils.mailhogUrl, {waitUntil: 'load'});
     await page.getByText(email).click();
     await page.locator('#preview-plain > a').click();
-    await page.goto(await page.locator('#preview-plain > a').getAttribute('href'), {waitUntil: 'load'});
+    await page.goto(
+      utils.instanceUrl + '/'
+      + (await page.locator('#preview-plain > a').getAttribute('href')).split('gpf')[2], {waitUntil: 'load'}
+    );
 
     await page.locator('#id_new_password1').fill(password);
     await page.locator('#id_new_password2').fill(password);
@@ -59,13 +62,17 @@ test.describe('User management tests for reset password in Users', () => {
     await page.goto(utils.mailhogUrl, {waitUntil: 'load'});
     await page.getByText(email).click();
     await page.locator('#preview-plain > a').click();
-    await page.goto(await page.locator('#preview-plain > a').getAttribute('href'), {waitUntil: 'load'});
+    await page.goto(
+      utils.instanceUrl + '/'
+      + (await page.locator('#preview-plain > a').getAttribute('href')).split('gpf')[2], {waitUntil: 'load'}
+    );
 
     await page.locator('#id_new_password1').fill(password);
     await page.locator('#id_new_password2').fill(password);
-    await utils.login(page, username, password);
+    await page.getByText('Reset password').click();
+    await utils.login(page, email, password);
 
-    await page.waitForSelector('gpf-gene-browser');
+    await page.waitForSelector('#permission-denied-prompt');
     await expect(page.locator('#log-out-button')).toBeVisible();
     await page.locator('#log-out-button').click();
   });
