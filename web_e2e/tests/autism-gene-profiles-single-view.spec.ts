@@ -67,7 +67,8 @@ test.describe('Autism gene profiles single view links tests', () => {
   test.beforeEach(async({ page, context }) => {
     await page.goto(utils.instanceUrl, {waitUntil: 'load'});
     await utils.navigateToSidenavPage(page, 'autism-gene-profiles');
-    await page.locator('input#gene-search-input').fill('CHD8');
+    await page.locator('input#gene-search-input').focus();
+    await page.keyboard.type('CHD8');
     const pagePromise = context.waitForEvent('page');
     await page.locator('div').filter({ hasText: /^CHD8$/}).click();
 
