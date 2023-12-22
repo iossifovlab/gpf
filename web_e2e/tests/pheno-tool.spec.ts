@@ -238,6 +238,10 @@ test.describe('Pheno tool download tests', () => {
       await page.locator('#to-input-field').clear();
       await page.locator('#to-input-field').fill(data.familyHistogramfromTo[1]);
 
+      await page.waitForResponse(
+        resp => resp.url().includes('/api/v3/measures/partitions') && resp.status() === 200
+      );
+
       const expectedVariantsPath = path.join(__dirname + `/../fixtures/pheno-tool/pheno_report${data.id}.csv`);
 
       const [download] = await Promise.all([
