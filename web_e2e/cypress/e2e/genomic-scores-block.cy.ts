@@ -39,7 +39,8 @@ describe('Genomic scores panel tests', () => {
     page.histogramRangeSelectors.eq(2).should('have.text', '~35798106 (53.49%)');
 
     page.addFilterButton.click();
-    page.filterSelect.eq(1).select('exome_gnomad_af_percent - gnomAD exome allele frequency in %');
+    page.filterSelect.eq(1).select('exome_gnomad_af_percent - ' +
+      'Alternative allele frequency in the whole gnomAD exome samples v2.1.1 as percent');
     page.fromInputField.eq(1).clear().type('9.7944').type('{enter}');
     page.histogramRangeSelectors.eq(3).should('have.text', '~17113188 (99.46%)');
 
