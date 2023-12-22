@@ -25,8 +25,7 @@ test.describe('App tests', () => {
 
   test('should toggle sidenav, click on the "Datasets" button and ' +
      'navigate to "/datasets/ALL_genotypes/gene-browser"', async({ page }) => {
-    const baseUrl = page.url();
-    const expectedUrl = `${baseUrl}/ALL_genotypes/${utils.toolPageLinks.geneBrowser}`;
+    const expectedUrl = `${utils.instanceUrl}/datasets/ALL_genotypes/${utils.toolPageLinks.geneBrowser}`;
 
     await utils.loginAdmin(page);
     await utils.navigateToDatasetPage(page, utils.datasetIds.allGenotypes, 'Gene browser');
