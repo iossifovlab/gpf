@@ -138,6 +138,15 @@ def test_dataset1_rights(
     assert user_has_permission(user, dataset_wrapper.study_id)
 
 
+def test_dataset_rights_any_user(
+    dataset_wrapper: StudyWrapper
+) -> None:
+    user = cast(User, AnonymousUser())
+    assert not user_has_permission(user, dataset_wrapper.study_id)
+    add_group_perm_to_dataset("any_user", dataset_wrapper.study_id)
+    assert user_has_permission(user, dataset_wrapper.study_id)
+
+
 def test_dataset1_rights_allowed_datasets(
     user: User, dataset_wrapper: StudyWrapper
 ) -> None:
