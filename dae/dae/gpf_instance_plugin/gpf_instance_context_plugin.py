@@ -14,10 +14,16 @@ logger = logging.getLogger(__name__)
 class GPFInstanceGenomicContext(GenomicContext):
     """Defines GPFInstance genomic context."""
 
-    def __init__(self, gpf_instance):
+    def __init__(self, gpf_instance: Any) -> None:
+        # pylint: disable=import-outside-toplevel
+        from dae.gpf_instance.gpf_instance import GPFInstance
+        if not isinstance(gpf_instance, GPFInstance):
+            raise ValueError(
+                f"invalid gpf instance type: {type(gpf_instance)}")
+
         self.gpf_instance = gpf_instance
 
-    def get_context_object(self, key) -> Optional[Any]:
+    def get_context_object(self, key: str) -> Optional[Any]:
         if key == GC_GENE_MODELS_KEY:
             return self.gpf_instance.gene_models
         if key == GC_REFERENCE_GENOME_KEY:
@@ -46,7 +52,7 @@ class GPFInstanceGenomicContextProvider(SimpleGenomicContextProvider):
     """Defines GPFInstance genomic context provider."""
 
     @staticmethod
-    def context_builder():
+    def context_builder() -> Optional[GenomicContext]:
         """Build GPF instance genomic context."""
         try:
             # pylint: disable=import-outside-toplevel
@@ -57,12 +63,12 @@ class GPFInstanceGenomicContextProvider(SimpleGenomicContextProvider):
                 "unable to create default gpf instance context: %s", ex)
             return None
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(
             GPFInstanceGenomicContextProvider.context_builder,
             "GPFInstanceProvider",
             100)
 
 
-def init_gpf_instance_genomic_context_plugin():
+def init_gpf_instance_genomic_context_plugin() -> None:
     register_context_provider(GPFInstanceGenomicContextProvider())

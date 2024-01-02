@@ -841,42 +841,13 @@ def construct_import_annotation_pipeline(
         assert os.path.exists(annotation_configfile), annotation_configfile
         with open(annotation_configfile, "rt", encoding="utf8") as infile:
             pipeline_config = yaml.safe_load(infile.read())
-    else:
-        if gpf_instance.dae_config.annotation is not None:
-            config_filename = gpf_instance.dae_config.annotation.conf_file
-            assert os.path.exists(config_filename), config_filename
-            with open(config_filename, "rt", encoding="utf8") as infile:
-                pipeline_config = yaml.safe_load(infile.read())
+        grr = gpf_instance.grr
+        pipeline = build_annotation_pipeline(
+            pipeline_config_raw=pipeline_config, grr_repository=grr)
+        return pipeline
 
-        pipeline_config.insert(
-            0, _construct_import_effect_annotator_config(gpf_instance))
-
-    grr = gpf_instance.grr
-    pipeline = build_annotation_pipeline(
-        pipeline_config_raw=pipeline_config, grr_repository=grr)
+    pipeline = gpf_instance.get_annotation_pipeline()
     return pipeline
-
-
-def _construct_import_effect_annotator_config(
-        gpf_instance: GPFInstance) -> dict[str, Any]:
-    """Construct import effect annotator."""
-    genome = gpf_instance.reference_genome
-    gene_models = gpf_instance.gene_models
-
-    config = {
-        "effect_annotator": {
-            "genome": genome.resource_id,
-            "gene_models": gene_models.resource_id,
-            "attributes": [
-                {
-                    "source": "allele_effects",
-                    "destination": "allele_effects",
-                    "internal": True
-                }
-            ]
-        }
-    }
-    return config
 
 
 class MakefilePartitionHelper:

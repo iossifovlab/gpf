@@ -60,9 +60,6 @@ def gpf_fixture(
 def test_genomic_scores_db_with_config(gpf_fixture: Callable) -> None:
     gpf_instance = gpf_fixture({
         "gpf_instance.yaml": textwrap.dedent("""
-            genomic_scores_db:
-            - resource: hg19/MPC
-              score: mpc
             annotation:
               conf_file: annotation.yaml
         """),
@@ -109,7 +106,7 @@ def test_annotation_pipeline_with_config(gpf_fixture: Callable) -> None:
         """)
     })
     assert gpf_instance.get_annotation_pipeline() is not None
-    assert len(gpf_instance.get_annotation_pipeline().annotators) == 1
+    assert len(gpf_instance.get_annotation_pipeline().annotators) == 2
 
 
 def test_annotation_pipeline_without_config(gpf_fixture: Callable) -> None:
@@ -118,7 +115,7 @@ def test_annotation_pipeline_without_config(gpf_fixture: Callable) -> None:
         """),
     })
     assert gpf_instance.get_annotation_pipeline() is not None
-    assert len(gpf_instance.get_annotation_pipeline().annotators) == 0
+    assert len(gpf_instance.get_annotation_pipeline().annotators) == 1
 
 
 def test_annotation_pipeline_with_bad_config(gpf_fixture: Callable) -> None:
@@ -130,5 +127,5 @@ def test_annotation_pipeline_with_bad_config(gpf_fixture: Callable) -> None:
     })
     with pytest.raises(
             ValueError,
-            match="missing annotaiton config file"):
+            match="annotation config file not found"):
         gpf_instance.get_annotation_pipeline()

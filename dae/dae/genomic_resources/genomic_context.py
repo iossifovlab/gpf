@@ -120,7 +120,7 @@ class SimpleGenomicContextProvider(GenomicContextProvider):
 
     def __init__(
             self,
-            context_builder: Callable[[], GenomicContext],
+            context_builder: Callable[[], Optional[GenomicContext]],
             provider_type: str,
             priority: int):
         self._type: str = provider_type
