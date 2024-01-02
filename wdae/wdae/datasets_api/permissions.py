@@ -368,6 +368,8 @@ def add_group_perm_to_dataset(group_name: str, dataset_id: str) -> None:
 
 
 def get_user_groups(user: User) -> set[str]:
+    if user.is_anonymous:
+        return {"any_user"}
     return {g.name for g in user.groups.all()}
 
 
