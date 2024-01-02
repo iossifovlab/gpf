@@ -220,9 +220,7 @@ def check_permissions_up(
 
     groups = list(groups)
 
-    groups_in = "%s"
-    for _ in range(len(groups) - 1):
-        groups_in += ", %s"
+    groups_in = ", ".join(["%s" for _ in groups])
 
     with connection.cursor() as cursor:
         cursor.execute(
