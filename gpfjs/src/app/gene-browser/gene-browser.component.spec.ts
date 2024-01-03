@@ -238,7 +238,7 @@ describe('GeneBrowserComponent', () => {
       ],
       inheritanceTypeFilter: ['denovo', 'mendelian', 'omission', 'missing'],
       affectedStatus: ['Affected only', 'Unaffected only', 'Affected and unaffected'],
-      variantTypes: ['sub', 'ins', 'del', 'CNV+', 'CNV-']
+      variantTypes: ['sub', 'ins', 'del', 'CNV+', 'CNV-', 'complex']
     });
   });
 
@@ -279,7 +279,7 @@ describe('GeneBrowserComponent', () => {
       ],
       inheritanceTypeFilter: ['denovo', 'mendelian', 'omission', 'missing'],
       affectedStatus: ['Affected only', 'Unaffected only', 'Affected and unaffected'],
-      variantTypes: ['sub', 'ins', 'del', 'CNV+', 'CNV-'],
+      variantTypes: ['sub', 'ins', 'del', 'CNV+', 'CNV-', 'complex'],
       geneSymbols: ['POGZ'],
       datasetId: 'testDatasetId',
       regions: '',
