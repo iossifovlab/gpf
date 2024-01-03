@@ -28,7 +28,10 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class ScoreDef:
+    """Class used to represent a gene score definition."""
+
     score_id: str
+    name: str
     desc: str
 
     hist_conf: Optional[NumberHistogramConfig]
@@ -69,6 +72,7 @@ class GeneScore(
 
         for score_conf in self.config["scores"]:
             score_id = score_conf["id"]
+            score_name = score_conf.get("name", score_id)
             hist_conf = build_histogram_config(score_conf)
 
             if not isinstance(hist_conf, NumberHistogramConfig):
@@ -83,6 +87,7 @@ class GeneScore(
 
             self.score_definitions[score_conf["id"]] = ScoreDef(
                 score_id,
+                score_name,
                 score_conf.get("desc", ""),
                 hist_conf,
                 score_conf.get("small_values_desc"),
@@ -206,6 +211,7 @@ class GeneScore(
                 "type": "dict",
                 "schema": {
                     "id": {"type": "string"},
+                    "name": {"type": "string"},
                     "desc": {"type": "string"},
                     "large_values_desc": {"type": "string"},
                     "small_values_desc": {"type": "string"},
@@ -332,6 +338,7 @@ class ScoreDesc:
 
     resource_id: str
     score_id: str
+    name: str
     hist: NumberHistogram
     description: str
     help: str
@@ -410,6 +417,7 @@ class GeneScoresDb:
             result.append(ScoreDesc(
                 resource_id=gene_score.resource.resource_id,
                 score_id=score_id,
+                name=score_def.name,
                 hist=gene_score.get_score_histogram(score_id),
                 description=score_def.desc,
                 help=help_doc,
