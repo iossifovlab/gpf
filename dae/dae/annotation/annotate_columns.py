@@ -14,9 +14,11 @@ from dae.annotation.record_to_annotatable import build_record_to_annotatable, \
     add_record_to_annotable_arguments, \
     RecordToRegion, RecordToCNVAllele, \
     RecordToVcfAllele, RecordToPosition
-from dae.annotation.annotate_vcf import produce_regions, produce_partfile_paths
+from dae.annotation.annotate_vcf import produce_regions, \
+    produce_partfile_paths, \
+    build_pipeline
 from dae.annotation.annotation_pipeline import ReannotationPipeline
-from dae.annotation.annotation_factory import build_annotation_pipeline
+from dae.annotation.annotation_pipeline import AnnotatorInfo
 from dae.annotation.annotation_pipeline import AnnotationPipeline
 from dae.genomic_resources import build_genomic_resource_repository
 from dae.genomic_resources.cli import VerbosityConfiguration
@@ -125,7 +127,8 @@ def cache_pipeline(
 
 
 def annotate(
-    args: Any,
+    args: argparse.Namespace,
+    pipeline_config: list[AnnotatorInfo],
     grr_definition: Optional[dict],
     ref_genome_id: Optional[str],
     out_file_path: str,
@@ -138,18 +141,12 @@ def annotate(
 
     # TODO Insisting on having the pipeline config passed in args
     # prevents the finding of a default annotation config. Consider fixing
-    pipeline = build_annotation_pipeline(
-        pipeline_config_file=args.pipeline,
-        grr_repository=grr,
-        allow_repeated_attributes=args.allow_repeated_attributes)
-
-    if args.reannotate:
-        pipeline_old = build_annotation_pipeline(
-            pipeline_config_file=args.reannotate,
-            grr_repository=grr,
-            allow_repeated_attributes=args.allow_repeated_attributes)
-        pipeline_new = pipeline
-        pipeline = ReannotationPipeline(pipeline_new, pipeline_old)
+    pipeline, pipeline_old = build_pipeline(
+        pipeline_config=pipeline_config,
+        grr=grr,
+        allow_repeated_attributes=args.allow_repeated_attributes,
+        reannotate=args.reannotate
+    )
 
     ref_genome = cast(ReferenceGenome, grr.find_resource(ref_genome_id)) \
         if ref_genome_id else None
@@ -173,6 +170,7 @@ def annotate(
     pipeline.open()
     with pipeline, in_file, out_file:
         if isinstance(pipeline, ReannotationPipeline):
+            assert pipeline_old is not None
             old_annotation_columns = {
                 attr.name for attr in pipeline_old.get_attributes()
                 if not attr.internal
@@ -255,6 +253,7 @@ def cli(raw_args: Optional[list[str]] = None) -> None:
     CLIAnnotationContext.register(args)
 
     context = get_genomic_context()
+    pipeline = CLIAnnotationContext.get_pipeline(context)
     grr = CLIAnnotationContext.get_genomic_resources_repository(context)
     ref_genome = context.get_reference_genome()
     ref_genome_id = ref_genome.resource_id if ref_genome is not None else None
@@ -289,7 +288,8 @@ def cli(raw_args: Optional[list[str]] = None) -> None:
             region_tasks.append(task_graph.create_task(
                 f"part-{index}",
                 annotate,
-                [args, grr.definition,
+                [args, pipeline.get_info(),
+                 grr.definition,
                  ref_genome_id, file_path, region, True],
                 []))
 
@@ -303,7 +303,7 @@ def cli(raw_args: Optional[list[str]] = None) -> None:
         task_graph.create_task(
             "annotate_all",
             annotate,
-            [args, grr.definition, ref_genome_id, output,
+            [args, pipeline.get_info(), grr.definition, ref_genome_id, output,
              tuple(), output.endswith(".gz")],
             [])
         # annotate(args, grr.definition,
