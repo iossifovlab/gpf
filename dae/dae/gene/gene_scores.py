@@ -268,34 +268,6 @@ class GeneScore(
             }},
         }
 
-    # def get_histogram(self, score_id: str) -> Optional[NumberHistogram]:
-    #     """Return gene score histogram."""
-    #     if self.histograms[score_id] is None:
-    #         filename = f"statistics/histogram_{score_id}.yaml"
-    #         hist = load_histogram(self.resource, filename)
-    #         self.histograms[score_id] = hist
-    #     result = self.histograms[score_id]
-    #     if not isinstance(result, NumberHistogram):
-    #         logger.warning(
-    #             "histogram for %s in gene score %s is not a number "
-    #             "histogram",
-    #             score_id, self.resource.resource_id)
-    #         return None
-    #     return result
-
-    # def get_histogram_image_file(self, score_id: str) -> Optional[str]:
-    #     histogram = self.get_histogram(score_id)
-    #     if histogram is None:
-    #         return None
-    #     return f"statistics/histogram_{score_id}.png"
-
-    # def get_histogram_file(self, score_id: str) -> Optional[str]:
-    #     histogram = self.get_histogram(score_id)
-    #     if histogram is None:
-    #         return None
-    #     return f"statistics/histogram_{score_id}.yaml"
-
-    ###############################################
     @lru_cache(maxsize=64)
     def get_number_range(
             self, score_id: str) -> Optional[tuple[float, float]]:
