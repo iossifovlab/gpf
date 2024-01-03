@@ -5,7 +5,7 @@ import sys
 import argparse
 import logging
 from contextlib import closing
-from typing import List, Optional, Any, Union, Tuple
+from typing import List, Optional, Any, Union
 
 from pysam import VariantFile, TabixFile, \
     tabix_index  # pylint: disable=no-name-in-module
@@ -19,8 +19,10 @@ from dae.annotation.annotation_pipeline import AnnotationPipeline, \
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 from dae.utils.fs_utils import tabix_index_filename
 from dae.genomic_resources import build_genomic_resource_repository
-from dae.genomic_resources.genomic_context import get_genomic_context
 from dae.genomic_resources.cached_repository import cache_resources
+from dae.genomic_resources.repository import GenomicResourceRepo
+
+from dae.genomic_resources.genomic_context import get_genomic_context
 from dae.task_graph import TaskGraphCli
 from dae.task_graph.graph import TaskGraph
 
@@ -100,24 +102,29 @@ def update_header(
         header.info.add(attribute.name, "A", "String", description)
 
 
-def annotate(  # pylint: disable=too-many-locals,too-many-branches
-    input_file: str,
-    region: Optional[Tuple[str, int, int]],
-    pipeline_config: Optional[list[AnnotatorInfo]],
-    grr_definition: Optional[dict],
-    out_file_path: str,
-    allow_repeated_attributes: bool,
-    reannotate: Optional[str] = None,
+def cache_pipeline(
+    grr: GenomicResourceRepo, pipeline: AnnotationPipeline
 ) -> None:
-    # flake8: noqa: C901
-    """Annotate a region from a given input VCF file using a pipeline."""
-    grr = build_genomic_resource_repository(definition=grr_definition)
+    """Cache the resources used by the pipeline."""
+    resource_ids: set[str] = set()
+    for annotator in pipeline.annotators:
+        resource_ids = resource_ids | \
+            set(res.resource_id for res in annotator.resources)
+    cache_resources(grr, resource_ids)
 
+
+def build_pipeline(
+    pipeline_config: list[AnnotatorInfo],
+    allow_repeated_attributes: bool,
+    grr: GenomicResourceRepo,
+    reannotate: Optional[str] = None,
+) -> tuple[AnnotationPipeline, Optional[AnnotationPipeline]]:
+    """Build an annotation pipeline from a pipeline config."""
     pipeline = build_annotation_pipeline(
         pipeline_config=pipeline_config,
         grr_repository=grr,
         allow_repeated_attributes=allow_repeated_attributes)
-
+    pipeline_old = None
     if reannotate:
         pipeline_old = build_annotation_pipeline(
             pipeline_config_file=reannotate,
@@ -127,11 +134,27 @@ def annotate(  # pylint: disable=too-many-locals,too-many-branches
         pipeline_new = pipeline
         pipeline = ReannotationPipeline(pipeline_new, pipeline_old)
 
-    # cache pipeline
-    resources: set[str] = set()
-    for annotator in pipeline.annotators:
-        resources = resources | {res.get_id() for res in annotator.resources}
-    cache_resources(grr, list(resources))
+    return pipeline, pipeline_old
+
+
+def annotate(  # pylint: disable=too-many-locals,too-many-branches
+    input_file: str,
+    region: Optional[tuple[str, int, int]],
+    pipeline_config: list[AnnotatorInfo],
+    grr_definition: Optional[dict],
+    out_file_path: str,
+    allow_repeated_attributes: bool,
+    reannotate: Optional[str] = None,
+) -> None:
+    # flake8: noqa: C901
+    """Annotate a region from a given input VCF file using a pipeline."""
+    grr = build_genomic_resource_repository(definition=grr_definition)
+    pipeline, _ = build_pipeline(
+        pipeline_config=pipeline_config,
+        grr=grr,
+        allow_repeated_attributes=allow_repeated_attributes,
+        reannotate=reannotate
+    )
 
     with closing(VariantFile(input_file)) as in_file:
         update_header(in_file, pipeline)
@@ -313,6 +336,8 @@ def cli(raw_args: Optional[list[str]] = None) -> None:
     context = get_genomic_context()
     pipeline = CLIAnnotationContext.get_pipeline(context)
     grr = CLIAnnotationContext.get_genomic_resources_repository(context)
+    if grr is None:
+        raise ValueError("No valid GRR configured. Aborting.")
 
     if args.output:
         output = args.output
@@ -321,6 +346,9 @@ def cli(raw_args: Optional[list[str]] = None) -> None:
 
     if not os.path.exists(args.work_dir):
         os.mkdir(args.work_dir)
+
+    # cache pipeline
+    cache_pipeline(grr, pipeline)
 
     task_graph = TaskGraph()
 
