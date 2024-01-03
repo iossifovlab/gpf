@@ -152,8 +152,6 @@ def annotate(
         if ref_genome_id else None
     errors = []
 
-    cache_pipeline(grr, pipeline)
-
     in_file, line_iterator, header_columns = read_input(args, region)
     record_to_annotatable = build_record_to_annotatable(
         vars(args), set(header_columns), ref_genome=ref_genome)
@@ -270,6 +268,9 @@ def cli(raw_args: Optional[list[str]] = None) -> None:
             output = f"{input_name[:idx]}_annotated{input_name[idx:]}"
         else:
             output = f"{input_name}_annotated"
+
+    # cache pipeline
+    cache_pipeline(grr, pipeline)
 
     task_graph = TaskGraph()
 

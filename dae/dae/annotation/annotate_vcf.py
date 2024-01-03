@@ -156,9 +156,6 @@ def annotate(  # pylint: disable=too-many-locals,too-many-branches
         reannotate=reannotate
     )
 
-    # cache pipeline
-    cache_pipeline(grr, pipeline)
-
     with closing(VariantFile(input_file)) as in_file:
         update_header(in_file, pipeline)
         with pipeline.open(), closing(VariantFile(
@@ -339,6 +336,8 @@ def cli(raw_args: Optional[list[str]] = None) -> None:
     context = get_genomic_context()
     pipeline = CLIAnnotationContext.get_pipeline(context)
     grr = CLIAnnotationContext.get_genomic_resources_repository(context)
+    if grr is None:
+        raise ValueError("No valid GRR configured. Aborting.")
 
     if args.output:
         output = args.output
@@ -347,6 +346,9 @@ def cli(raw_args: Optional[list[str]] = None) -> None:
 
     if not os.path.exists(args.work_dir):
         os.mkdir(args.work_dir)
+
+    # cache pipeline
+    cache_pipeline(grr, pipeline)
 
     task_graph = TaskGraph()
 
