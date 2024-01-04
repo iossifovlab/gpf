@@ -15,27 +15,19 @@ logger = logging.getLogger(__name__)
 
 
 class BaseEnrichmentBackground(
-    abc.ABC,
-    ResourceConfigValidationMixin,
+    abc.ABC
 ):
-    """Provides class for gene models."""
+    """Provides class for enrichment background models."""
 
     def __init__(
         self, resource: GenomicResource
     ):
         self.resource = resource
 
-        self.config = self.validate_and_normalize_schema(
-            resource.get_config(), resource
-        )
-
     @property
-    def filename(self) -> str:
-        return cast(str, self.config["filename"])
-
-    @property
+    @abc.abstractmethod
     def name(self) -> str:
-        return cast(str, self.config["name"])
+        """Get the background name."""
 
     @property
     def resource_id(self) -> str:
@@ -66,6 +58,30 @@ class BaseEnrichmentBackground(
         **kwargs: Any
     ) -> EnrichmentResult:
         """Calculate the enrichment test."""
+
+
+class BaseEnrichmentResourceBackground(
+    BaseEnrichmentBackground,
+    ResourceConfigValidationMixin,
+):
+    """Provides class for enrichment resource background models."""
+
+    def __init__(
+        self, resource: GenomicResource
+    ):
+        super().__init__(resource)
+
+        self.config = self.validate_and_normalize_schema(
+            resource.get_config(), resource
+        )
+
+    @property
+    def filename(self) -> str:
+        return cast(str, self.config["filename"])
+
+    @property
+    def name(self) -> str:
+        return cast(str, self.config["name"])
 
     @staticmethod
     def get_schema() -> dict[str, Any]:
