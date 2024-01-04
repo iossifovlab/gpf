@@ -13,7 +13,7 @@ from dae.studies.study import GenotypeData
 from dae.enrichment_tool.base_enrichment_background import \
     BaseEnrichmentBackground, EnrichmentResult
 from dae.enrichment_tool.gene_weights_background import \
-    GeneWeightsEnrichmentBackground
+    GeneWeightsEnrichmentBackground, GeneScoreEnrichmentBackground
 from dae.enrichment_tool.samocha_background import \
     SamochaEnrichmentBackground
 from dae.enrichment_tool.event_counters import EVENT_COUNTERS, CounterBase, \
@@ -66,6 +66,10 @@ class EnrichmentHelper:
         resource = self.grr.get_resource(resource_id)
         if resource.get_type() == "gene_weights_enrichment_background":
             return GeneWeightsEnrichmentBackground(resource)
+
+        if resource.get_type() == "gene_score":
+            return GeneScoreEnrichmentBackground(resource)
+
         if resource.get_type() == "samocha_enrichment_background":
             return SamochaEnrichmentBackground(resource)
 

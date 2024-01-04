@@ -2,18 +2,23 @@
 
 import os
 import logging
+import pathlib
 from datetime import timedelta
+from typing import Callable, Iterator, Optional
 
 import pytest
 
 from box import Box
+
+from pytest_mock import MockerFixture
+
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.test import Client
 from django.utils import timezone
 from oauth2_provider.models import \
-    get_access_token_model, get_application_model
+    AccessToken, Application, get_access_token_model, get_application_model
 from datasets_api.models import Dataset
 
 from remote.rest_api_client import RESTClient
@@ -41,7 +46,7 @@ pytest_plugins = ["dae_conftests.dae_conftests"]
 
 
 @pytest.fixture()
-def user(db):
+def user(db: None) -> WdaeUser:
     user_model = get_user_model()
     new_user = user_model.objects.create(
         email="user@example.com",
@@ -57,7 +62,7 @@ def user(db):
 
 
 @pytest.fixture()
-def hundred_users(db, user):
+def hundred_users(db: None, user: WdaeUser) -> list[WdaeUser]:
     user_model = get_user_model()
     users_data = []
     for i in range(100):
@@ -73,7 +78,7 @@ def hundred_users(db, user):
 
 
 @pytest.fixture()
-def user_without_password(db):
+def user_without_password(db: None) -> WdaeUser:
     user_model = get_user_model()
     new_user = user_model.objects.create(
         email="user_without_password@example.com",
@@ -88,7 +93,7 @@ def user_without_password(db):
 
 
 @pytest.fixture()
-def admin(db):
+def admin(db: None) -> WdaeUser:
     user_model = get_user_model()
     new_user = user_model.objects.create(
         email="admin@example.com",
@@ -107,7 +112,7 @@ def admin(db):
 
 
 @pytest.fixture()
-def oauth_app(admin):
+def oauth_app(admin: WdaeUser) -> Application:
     application = get_application_model()
     new_application = application(**{
         "name": "testing client app",
@@ -123,7 +128,9 @@ def oauth_app(admin):
 
 
 @pytest.fixture()
-def tokens(admin, user, oauth_app):
+def tokens(
+    admin: WdaeUser, user: WdaeUser, oauth_app: Application
+) -> tuple[AccessToken, AccessToken]:
     access_token = get_access_token_model()
     user_access_token = access_token(
         user=user,
@@ -145,25 +152,31 @@ def tokens(admin, user, oauth_app):
 
 
 @pytest.fixture()
-def user_client(user, tokens):
+def user_client(
+    user: WdaeUser, tokens: tuple[AccessToken, AccessToken]
+) -> Client:
     client = Client(HTTP_AUTHORIZATION="Bearer user-token")
     return client
 
 
 @pytest.fixture()
-def anonymous_client(client, db):
+def anonymous_client(
+    client: Client, db: None
+) -> Client:
     client.logout()
     return client
 
 
 @pytest.fixture()
-def admin_client(admin, tokens):
+def admin_client(
+    admin: WdaeUser, tokens: tuple[AccessToken, AccessToken]
+) -> Client:
     client = Client(HTTP_AUTHORIZATION="Bearer admin-token")
     return client
 
 
 @pytest.fixture
-def datasets(db):
+def datasets(db: None) -> None:
     reload_datasets(get_wgpf_instance())
 
 
@@ -173,9 +186,20 @@ def enrichment_grr() -> GenomicResourceRepo:
         "enrichment": {
             "coding_len_testing": {
                 GR_CONF_FILE_NAME: """
-                    type: gene_weights_enrichment_background
+                    type: gene_score
                     filename: data.mem
-                    name: CodingLenBackground
+                    separator: "\t"
+                    scores:
+                    - id: gene_weight
+                      name: CodingLenBackground
+                      desc: Gene coding length enrichment background model
+                      histogram:
+                        type: number
+                        number_of_bins: 10
+                        view_range:
+                          min: 0
+                          max: 20
+
                 """,
                 "data.mem": convert_to_tab_separated("""
                     gene     gene_weight
@@ -201,9 +225,15 @@ def enrichment_grr() -> GenomicResourceRepo:
 
 
 @pytest.fixture(scope="session")
-def wgpf_instance(default_dae_config, fixture_dirname, enrichment_grr):
+def wgpf_instance(
+    default_dae_config: Box,
+    fixture_dirname: Callable,
+    enrichment_grr: GenomicResourceRepo
+) -> Callable[[Optional[str]], WGPFInstance]:
 
-    def build(config_filename=None):
+    def build(
+        config_filename: Optional[str] = None
+    ) -> WGPFInstance:
         repositories = [
             build_genomic_resource_repository(
                 {
@@ -245,15 +275,21 @@ def wgpf_instance(default_dae_config, fixture_dirname, enrichment_grr):
 
 
 @pytest.fixture(scope="session")
-def fixtures_wgpf_instance(wgpf_instance, global_dae_fixtures_dir):
+def fixtures_wgpf_instance(
+    wgpf_instance: Callable[[Optional[str]], WGPFInstance],
+    global_dae_fixtures_dir: str
+) -> WGPFInstance:
     return wgpf_instance(
         os.path.join(global_dae_fixtures_dir, "gpf_instance.yaml"))
 
 
 @pytest.fixture(scope="function")
 def wdae_gpf_instance(
-    db, mocker, admin_client, fixtures_wgpf_instance, fixture_dirname
-):
+    db: None, mocker: MockerFixture,
+    admin_client: Client,
+    fixtures_wgpf_instance: WGPFInstance,
+    fixture_dirname: Callable
+) -> WGPFInstance:
     reload_datasets(fixtures_wgpf_instance)
     mocker.patch(
         "query_base.query_base.get_wgpf_instance",
@@ -279,8 +315,13 @@ def wdae_gpf_instance(
 
 @pytest.fixture(scope="function")
 def agp_wgpf_instance(  # pylint: disable=too-many-arguments
-        db, mocker, admin_client, wgpf_instance, sample_agp,
-        agp_config, tmp_path):
+    db: None, mocker: MockerFixture,
+    admin_client: Client,
+    wgpf_instance: Callable,
+    sample_agp: AGPStatistic,
+    agp_config: Box,
+    tmp_path: pathlib.Path
+) -> Iterator[WGPFInstance]:
 
     wdae_gpf_instance = wgpf_instance(
         os.path.join(
@@ -443,7 +484,7 @@ def sample_agp() -> AGPStatistic:
 
 
 @pytest.fixture(scope="function")
-def remote_config(fixtures_wgpf_instance):
+def remote_config(fixtures_wgpf_instance: WGPFInstance) -> dict[str, str]:
     host = os.environ.get("TEST_REMOTE_HOST", "localhost")
     remote = {
         "id": "TEST_REMOTE",
@@ -458,13 +499,15 @@ def remote_config(fixtures_wgpf_instance):
 
 
 @pytest.fixture(scope="function")
-def rest_client(admin_client, remote_config) -> RESTClient:
+def rest_client(
+    admin_client: Client, remote_config: dict[str, str]
+) -> RESTClient:
     client = RESTClient(
         remote_config["id"],
         remote_config["host"],
         remote_config["credentials"],
         base_url=remote_config["base_url"],
-        port=remote_config["port"]
+        port=int(remote_config["port"])
     )
 
     assert client.token is not None, \
@@ -474,7 +517,7 @@ def rest_client(admin_client, remote_config) -> RESTClient:
 
 
 @pytest.fixture(scope="function")
-def use_common_reports(wdae_gpf_instance):
+def use_common_reports(wdae_gpf_instance: WGPFInstance) -> Iterator[None]:
     all_configs = wdae_gpf_instance.get_all_common_report_configs()
     temp_files = [config.file_path for config in all_configs]
 
@@ -494,12 +537,14 @@ def use_common_reports(wdae_gpf_instance):
 
 
 @pytest.fixture()
-def sample_dataset(db, wdae_gpf_instance):
+def sample_dataset(db: None, wdae_gpf_instance: WGPFInstance) -> Dataset:
     return Dataset.objects.get(dataset_id="Dataset1")
 
 
 @pytest.fixture()
-def hundred_groups(db, sample_dataset, user):
+def hundred_groups(
+    db: None, sample_dataset: Dataset, user: WdaeUser
+) -> list[Group]:
     groups_data = []
     for i in range(100):
         groups_data.append(Group(

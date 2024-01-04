@@ -4,8 +4,6 @@ import logging
 from typing import Optional, Any, Iterable, cast
 from functools import cached_property
 
-from deprecation import deprecated
-
 import pandas as pd
 from scipy import stats
 
@@ -23,7 +21,6 @@ logger = logging.getLogger(__name__)
 class GeneWeightsEnrichmentBackground(BaseEnrichmentResourceBackground):
     """Provides class for gene weights enrichment background model."""
 
-    @deprecated(details="use GeneScoreEnrichmentBackground instead")
     def __init__(self, resource: GenomicResource):
         if resource.get_type() != "gene_weights_enrichment_background":
             raise ValueError(
