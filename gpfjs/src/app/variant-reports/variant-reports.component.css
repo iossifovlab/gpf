@@ -188,7 +188,7 @@ h5 {
 }
 
 #tags-modal-content {
-  padding: 20px;
+  padding: 8px 20px;
   height: fit-content;
   width: fit-content;
 }
@@ -240,21 +240,39 @@ h5 {
 .tags {
   color: #cdcdcd;
   font-size: 22px;
+  user-select: none;
 }
 
 .tags:hover {
   cursor: pointer;
 }
 
-.selected-tag {
-  color: green;
-}
-
-.deselected-tag {
-  color: red;
-}
-
 .modal-content-lines {
   display: flex;
   align-items: center;
+}
+
+.and-toggle-button {
+  color: #2a6395;
+  width: 70px;
+  padding: 0 20px;
+  border-radius: 5px 0 0 5px;
+  border: 1px solid #2a6395;
+}
+
+.or-toggle-button {
+  color: #2a6395;
+  width: 70px;
+  padding: 0 20px;
+  border-radius: 0 5px 5px 0;
+  border: 1px solid #2a6395;
+}
+
+#mode-label {
+  margin-right: 10px;
+}
+
+.selected-mode {
+  background-color: #2a6395;
+  color: white;
 }

@@ -108,7 +108,21 @@
       <ng-template #tagsModal class="tags-modal">
         <div id="tags-modal-content">
           <div id="tags-modal-header">
-            <!-- and / or -->
+            <div>
+              <span id="mode-label">Choose mode: </span>
+              <button
+                class="and-toggle-button"
+                (click)="tagIntersection = true; updateTagFilters()"
+                [ngClass]="{ 'selected-mode': tagIntersection }"
+                >And</button
+              >
+              <button
+                class="or-toggle-button"
+                (click)="tagIntersection = false; updateTagFilters()"
+                [ngClass]="{ 'selected-mode': !tagIntersection }"
+                >Or</button
+              >
+            </div>
             <a (click)="clearFilters()" id="clear-filters-button">Clear filters</a>
           </div>
 
@@ -121,8 +135,18 @@
               'column-gap': '16px'
             }">
             <div *ngFor="let tag of orderedTagList" class="modal-content-lines">
-              <span class="material-icons tags" [id]="tag + '-tag-add'" (click)="addFilter(tag)">add_circle</span>
-              <span class="material-icons tags" [id]="tag + '-tag-remove'" (click)="removeFilter(tag)"
+              <span
+                class="material-icons tags"
+                [id]="tag + '-tag-add'"
+                (click)="addFilter(tag)"
+                [ngStyle]="{ color: filtersButtonsState[tag] === 1 ? 'green' : '#cdcdcd' }"
+                >add_circle</span
+              >
+              <span
+                class="material-icons tags"
+                [id]="tag + '-tag-remove'"
+                (click)="removeFilter(tag)"
+                [ngStyle]="{ color: filtersButtonsState[tag] === -1 ? 'red' : '#cdcdcd' }"
                 >remove_circle</span
               >
               <span [attr.for]="tag + '-tag'" id="tag-label">{{ tag }}</span>
