@@ -62,7 +62,12 @@ class GeneScore(
         assert "filename" in self.config
         self.filename = self.config["filename"]
 
-        with resource.open_raw_file(self.filename) as file:
+        compression = False
+        if self.filename.endswith(".gz"):
+            compression = True
+
+        with resource.open_raw_file(
+                self.filename, compression=compression) as file:
             self.df = pd.read_csv(file, sep=self.config["separator"])
 
         if self.config.get("scores") is None:
