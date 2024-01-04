@@ -1,7 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 from dae.studies.study import GenotypeData
 from dae.enrichment_tool.gene_weights_background import \
-    GeneWeightsEnrichmentBackground
+    GeneScoreEnrichmentBackground
 from dae.enrichment_tool.samocha_background import \
     SamochaEnrichmentBackground
 from dae.enrichment_tool.enrichment_helper import EnrichmentHelper
@@ -26,7 +26,7 @@ def test_get_study_background(
         helper.create_background(
             "enrichment/coding_len_testing"
         ),
-        GeneWeightsEnrichmentBackground,
+        GeneScoreEnrichmentBackground,
     )
 
     assert isinstance(

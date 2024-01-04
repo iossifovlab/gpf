@@ -6,7 +6,7 @@ import pytest
 from dae.studies.study import GenotypeData
 from dae.gpf_instance import GPFInstance
 from dae.enrichment_tool.gene_weights_background import \
-    GeneWeightsEnrichmentBackground
+    GeneScoreEnrichmentBackground
 from dae.enrichment_tool.enrichment_helper import EnrichmentHelper
 from dae.enrichment_tool.enrichment_cache_builder import cli
 
@@ -104,7 +104,7 @@ def test_t4c8_coding_len_background(t4c8_fixture: GPFInstance) -> None:
     resource = grr.get_resource("coding_len_background")
     assert resource is not None
 
-    background = GeneWeightsEnrichmentBackground(resource)
+    background = GeneScoreEnrichmentBackground(resource)
     assert background is not None
     background.load()
 
