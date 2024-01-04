@@ -38,7 +38,6 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
   public selectedDataset: Dataset;
   public showResults: boolean;
   public showError = false;
-  public showFamilyVariants = false;
   public familyVariantsLoaded = false;
   public geneBrowserConfig: GeneBrowser;
 
@@ -94,12 +93,8 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
 
     this.subscriptions.push(
       this.queryService.streamingStartSubject.subscribe(() => {
-        this.showFamilyVariants = false;
         this.familyVariantsLoaded = false;
         this.variantsCountDisplay = 'Loading variants...';
-      }),
-      this.queryService.streamingUpdateSubject.subscribe(() => {
-        this.showFamilyVariants = true;
       }),
       this.queryService.streamingFinishedSubject.subscribe(() => {
         this.familyVariantsLoaded = true;
