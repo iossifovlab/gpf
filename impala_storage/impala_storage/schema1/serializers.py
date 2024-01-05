@@ -450,7 +450,8 @@ class AlleleParquetSerializer:
         "frequency_data",
         "alternative",
         "variant_data",
-        "family_variant_index"
+        "family_variant_index",
+        "gene_effects",
     ]
 
     def __init__(
