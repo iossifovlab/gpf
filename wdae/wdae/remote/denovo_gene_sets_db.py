@@ -69,12 +69,12 @@ class RemoteDenovoGeneSetsDb:
 
     def __init__(
         self,
-        remote_clients: List[RESTClient],
+        remote_clients: Dict[str, RESTClient],
         local_denovo_gene_sets_db: DenovoGeneSetsDb
     ):
         self.remote_denovo_gene_set_collections = dict()
         self._local_dgsdb = local_denovo_gene_sets_db
-        self.remote_clients = remote_clients
+        self.remote_clients = list(remote_clients.values())
 
         self._load_remote_collections()
 
