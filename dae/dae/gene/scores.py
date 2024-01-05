@@ -137,10 +137,12 @@ Genomic resource:
 
 ##### Resource properties:
 
-* **resource type:**: {{ data.resource_type }}
+* **resource_type**: `{{ data.resource_type }}`
 
 
 ##### Annotator documentation:
+
+* **annotator_type**: `{{ data.annotator_type }}`
 
 {{ data.annotator_doc }}
 
@@ -179,6 +181,7 @@ def _build_score_help(
         "aggregators": score_annotator.build_score_aggregator_documentation(
             attr_info
         ),
+        "annotator_type": score_annotator.get_info().type,
         "annotator_doc": score_annotator.get_info().documentation,
     }
     template = Template(GENOMIC_SCORE_HELP)

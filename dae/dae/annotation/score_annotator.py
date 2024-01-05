@@ -139,10 +139,10 @@ large_values {score_def.large_values_desc}
             value = aggregators_score_def_att[aggregator](
                 cast(ScoreDef, score_def))
             if value is not None:
-                value_str = f"{value} [default]"
+                value_str = f"`{value}`"
             else:
                 value = default_aggregators[aggregator][score_def.value_type]
-                value_str = f"{value} [type default]"
+                value_str = f"`{value}` [type default]"
         else:
             value_str = attribute_conf_agg
         return f"**{aggregator}**: {value_str}"
@@ -233,7 +233,6 @@ class PositionScoreAnnotator(PositionScoreAnnotatorBase):
 
         self.position_score_queries = []
         info.documentation += textwrap.dedent("""
-* **annotator type**: position_score
 
 * Annotator to use with genomic scores depending on genomic position like
   phastCons, phyloP, FitCons2, etc.
@@ -291,7 +290,6 @@ class NPScoreAnnotator(PositionScoreAnnotatorBase):
 
         self.np_score_queries = []
         info.documentation += textwrap.dedent("""
-* **annotator type**: np_score
 
 * Annotator to use with genomic scores depending on genomic position and
   nucleotide change like CADD, MPC, etc.
@@ -356,7 +354,6 @@ class AlleleScoreAnnotator(GenomicScoreAnnotatorBase):
         super().__init__(pipeline, info, self.allele_score)
         self.allele_score_queries = []
         info.documentation += textwrap.dedent("""
-* **annotator type**: allele_score
 
 * Annotator to use with scores that depend on allele like
   variant frequencies, etc.

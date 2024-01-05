@@ -411,7 +411,7 @@ class InputAnnotableAnnotatorDecorator(AnnotatorDecorator):
             raise ValueError(f"The attribute '{self.input_annotatable_name}' "
                              "is expected to be of type annotatable.")
         self.child._info.documentation += \
-            f"\n* **input_annotatable**: {self.input_annotatable_name}"
+            f"\n* **input_annotatable**: `{self.input_annotatable_name}`"
 
     @property
     def used_context_attributes(self) -> tuple[str, ...]:
