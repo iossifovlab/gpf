@@ -242,12 +242,18 @@ class RemotePhenotypeData(PhenotypeData):
     def get_regressions(self):
         return self.rest_client.get_regressions(self.remote_dataset_id)
 
+    @staticmethod
+    def _extract_pheno_dir(url: str) -> str:
+        """Extract the pheno directory from a measures info URL."""
+        url = url.strip("/")
+        pheno_folder = url[url.rindex("/") + 1:]
+        return pheno_folder
+
     def get_measures_info(self):
         output = self.rest_client.get_browser_measures_info(
             self.remote_dataset_id
         )
-        remote_base = output["base_image_url"][:-1]
-        pheno_folder = remote_base[remote_base.rindex("/") + 1:]
+        pheno_folder = self._extract_pheno_dir(output["base_image_url"])
         output["base_image_url"] = (
             "/api/v3/pheno_browser/remote_images/"
             f"{self.rest_client.remote_id}/{pheno_folder}/"
