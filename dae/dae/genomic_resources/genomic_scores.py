@@ -52,9 +52,9 @@ class ScoreDef:
     score_id: str
     desc: str  # string that will be interpretted as md
     value_type: str  # "str", "int", "float"
-    pos_aggregator: Optional[str]     # a valid aggregatory type
-    nuc_aggregator: Optional[str]     # a valid aggregatory type
-    allele_aggregator: Optional[str]  # a valid aggregatory type
+    pos_aggregator: Optional[str]     # a valid aggregator type
+    nuc_aggregator: Optional[str]     # a valid aggregator type
+    allele_aggregator: Optional[str]  # a valid aggregator type
 
     small_values_desc: Optional[str]
     large_values_desc: Optional[str]
@@ -70,9 +70,9 @@ class _ScoreDef:
     score_id: str
     desc: str  # string that will be interpretted as md
     value_type: str  # "str", "int", "float"
-    pos_aggregator: Optional[str]     # a valid aggregatory type
-    nuc_aggregator: Optional[str]     # a valid aggregatory type
-    allele_aggregator: Optional[str]  # a valid aggregatory type
+    pos_aggregator: Optional[str]     # a valid aggregator type
+    nuc_aggregator: Optional[str]     # a valid aggregator type
+    allele_aggregator: Optional[str]  # a valid aggregator type
 
     small_values_desc: Optional[str]
     large_values_desc: Optional[str]
@@ -507,17 +507,6 @@ class GenomicScore(ResourceConfigValidationMixin):
             return list(
                 {"source": attr, "name": attr}
                 for attr in self.score_definitions)
-
-        # TODO: to remove when all the default_annotation in the main GRR have
-        # their "attributes" level removed.
-        if isinstance(default_annotation, dict) and \
-            len(default_annotation) == 1 and \
-                "attributes" in default_annotation:
-            logger.warning(
-                "The resrouce %s has 'attributes' "
-                "in it's default_annotation section. These are "
-                "depricated and should be removed", self.resource_id)
-            default_annotation = default_annotation["attributes"]
 
         if not isinstance(default_annotation, list):
             raise ValueError("The default_annotation in the "

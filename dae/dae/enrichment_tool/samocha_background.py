@@ -12,7 +12,7 @@ from dae.genomic_resources.resource_implementation import \
 from dae.enrichment_tool.event_counters import EventCountersResult, \
     EnrichmentResult, EnrichmentSingleResult
 from dae.enrichment_tool.base_enrichment_background import \
-    BaseEnrichmentBackground
+    BaseEnrichmentResourceBackground
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +34,7 @@ def poisson_test(observed: float, expected: float) -> float:
     return cast(float, min(p_value, 1.0))
 
 
-class SamochaEnrichmentBackground(BaseEnrichmentBackground):
+class SamochaEnrichmentBackground(BaseEnrichmentResourceBackground):
     """Represents Samocha's enrichment background model."""
 
     def __init__(self, resource: GenomicResource):

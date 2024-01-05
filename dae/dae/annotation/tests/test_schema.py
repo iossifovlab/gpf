@@ -15,7 +15,7 @@ def genomic_resources_repo() -> GenomicResourceRepo:
             """\
             type: position_score
             table:
-                filename: data.mem
+              filename: data.mem
             scores:
             - id: test100way
               type: float
@@ -30,13 +30,12 @@ def genomic_resources_repo() -> GenomicResourceRepo:
               desc: "test score 2"
               name: t2
             default_annotation:
-                attributes:
-                - source: test100way
-                  name: test100
-                - source: t1
-                  name: t1
-                - source: t2
-                  name: t2
+            - source: test100way
+              name: test100
+            - source: t1
+              name: t1
+            - source: t2
+              name: t2
             """,
             "data.mem": """
                 chrom  pos_begin  pos_end  100way   t1   t2

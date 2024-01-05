@@ -115,6 +115,7 @@ setuptools.setup(
     generate_families_cache=dae.pedigrees.generate_families_cache:main
 
     build_coding_length_enrichment_background=dae.enrichment_tool.build_coding_length_enrichment_background:cli
+    build_ur_synonymous_enrichment_background=dae.enrichment_tool.build_ur_synonymous_enrichment_background:cli
     enrichment_cache_builder=dae.enrichment_tool.enrichment_cache_builder:cli
     """,
     classifiers=[

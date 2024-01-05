@@ -7,7 +7,10 @@ import logging
 from functools import cached_property
 from typing import Optional, Union, Any, cast
 from pathlib import Path
+
+import yaml
 from box import Box
+
 from dae.annotation.annotation_pipeline import AnnotationPipeline
 from dae.autism_gene_profile.statistic import AGPStatistic
 from dae.gene.gene_scores import GeneScore
@@ -467,26 +470,48 @@ class GPFInstance:
         ))
         return cast(list[AGPStatistic], statistics)
 
+    def _construct_import_effect_annotator_config(
+        self
+    ) -> dict[str, Any]:
+        """Construct import effect annotator."""
+        genome = self.reference_genome
+        gene_models = self.gene_models
+
+        config = {
+            "effect_annotator": {
+                "genome": genome.resource_id,
+                "gene_models": gene_models.resource_id,
+                "attributes": [
+                    {
+                        "source": "allele_effects",
+                        "destination": "allele_effects",
+                        "internal": True
+                    }
+                ]
+            }
+        }
+        return config
+
     def get_annotation_pipeline(self) -> AnnotationPipeline:
         """Return the annotation pipeline configured in the GPF instance."""
         if self._annotation_pipeline is None:
-            if self.dae_config.annotation is None:
-                self._annotation_pipeline = build_annotation_pipeline(
-                    [], grr_repository=self.grr)
-                return self._annotation_pipeline
-                # TODO: write a test to check that this (or the correct
-                # version) works.
+            pipeline_config = []
+            if self.dae_config.annotation is not None:
+                config_filename = self.dae_config.annotation.conf_file
+                if not os.path.exists(config_filename):
+                    raise ValueError(
+                        f"annotation config file not found: {config_filename}")
 
-            config_filename = self.dae_config.annotation.conf_file
-            if not os.path.exists(config_filename):
-                logger.error(
-                    "missing annotation configuration: %s",
-                    config_filename)
-                raise ValueError(
-                    f"missing annotaiton config file <{config_filename}>")
+                with open(config_filename, "rt", encoding="utf8") as infile:
+                    pipeline_config = yaml.safe_load(infile.read())
 
-            self._annotation_pipeline = \
-                build_annotation_pipeline(
-                    pipeline_config_file=config_filename,
-                    grr_repository=self.grr)
+            pipeline_config.insert(
+                0, self._construct_import_effect_annotator_config())
+
+            pipeline = build_annotation_pipeline(
+                pipeline_config_raw=pipeline_config,
+                grr_repository=self.grr)
+
+            self._annotation_pipeline = pipeline
+
         return self._annotation_pipeline

@@ -335,8 +335,8 @@ class NumberHistogram(Statistic):
             "bins": self.bins.tolist(),
             "bars": self.bars.tolist(),
             "out_of_range_bins": self.out_of_range_bins,
-            "min_value": self.min_value,
-            "max_value": self.max_value
+            "min_value": float(self.min_value),
+            "max_value": float(self.max_value)
         }
 
     def serialize(self) -> str:

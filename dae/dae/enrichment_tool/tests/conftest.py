@@ -22,7 +22,7 @@ from dae.enrichment_tool.build_coding_length_enrichment_background import \
 
 
 from dae.enrichment_tool.gene_weights_background import \
-    GeneWeightsEnrichmentBackground
+    GeneScoreEnrichmentBackground
 from dae.enrichment_tool.samocha_background import \
     SamochaEnrichmentBackground
 
@@ -59,11 +59,11 @@ def f1_trio(gpf_fixture: GPFInstance) -> GenotypeData:
 @pytest.fixture(scope="session")
 def coding_len_background(
     grr: GenomicResourceRepo
-) -> GeneWeightsEnrichmentBackground:
+) -> GeneScoreEnrichmentBackground:
     res = grr.get_resource("enrichment/coding_len_testing")
-    assert res.get_type() == "gene_weights_enrichment_background"
+    assert res.get_type() == "gene_score"
 
-    background = GeneWeightsEnrichmentBackground(res)
+    background = GeneScoreEnrichmentBackground(res)
     assert background is not None
     assert background.name == "CodingLenBackground"
 
@@ -91,11 +91,35 @@ def samocha_background(
 def grr() -> GenomicResourceRepo:
     return build_inmemory_test_repository({
         "enrichment": {
-            "coding_len_testing": {
+            "coding_len_testing_deprecated": {
                 GR_CONF_FILE_NAME: """
                     type: gene_weights_enrichment_background
                     filename: data.mem
                     name: CodingLenBackground
+                """,
+                "data.mem": convert_to_tab_separated("""
+                    gene     gene_weight
+                    SAMD11   3
+                    PLEKHN1  7
+                    POGZ     13
+                """)
+            },
+            "coding_len_testing": {
+                GR_CONF_FILE_NAME: """
+                    type: gene_score
+                    filename: data.mem
+                    separator: "\t"
+                    scores:
+                    - id: gene_weight
+                      name: CodingLenBackground
+                      desc: Gene coding length enrichment background model
+                      histogram:
+                        type: number
+                        number_of_bins: 10
+                        view_range:
+                          min: 0
+                          max: 20
+
                 """,
                 "data.mem": convert_to_tab_separated("""
                     gene     gene_weight
@@ -144,9 +168,19 @@ def t4c8_fixture(tmp_path: pathlib.Path) -> GPFInstance:
     ])
     setup_directories(coding_len_background_path, {
         "genomic_resource.yaml": textwrap.dedent("""
-        type: gene_weights_enrichment_background
+        type: gene_score
         filename: coding_len_background.tsv
-        name: t4c8CodingLenBackground
+        separator: "\t"
+        scores:
+        - id: gene_weight
+          name: t4c8CodingLenBackground
+          desc: Gene coding length enrichment background model
+          histogram:
+            type: number
+            number_of_bins: 10
+            view_range:
+              min: 0
+              max: 20
         """)
     })
 

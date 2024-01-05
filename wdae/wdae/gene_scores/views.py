@@ -26,7 +26,7 @@ class GeneScoresListView(QueryBaseView):
             [
                 {
                     "score": score.score_id,
-                    "desc": score.description,
+                    "desc": f"{score.name} - {score.description}",
                     "bars": score.hist.bars,
                     "bins": score.hist.bins,
                     "xscale":

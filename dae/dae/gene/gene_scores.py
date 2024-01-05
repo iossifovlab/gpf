@@ -28,7 +28,10 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class ScoreDef:
+    """Class used to represent a gene score definition."""
+
     score_id: str
+    name: str
     desc: str
 
     hist_conf: Optional[NumberHistogramConfig]
@@ -59,8 +62,13 @@ class GeneScore(
         assert "filename" in self.config
         self.filename = self.config["filename"]
 
-        with resource.open_raw_file(self.filename) as file:
-            self.df = pd.read_csv(file)
+        compression = False
+        if self.filename.endswith(".gz"):
+            compression = True
+
+        with resource.open_raw_file(
+                self.filename, compression=compression) as file:
+            self.df = pd.read_csv(file, sep=self.config["separator"])
 
         if self.config.get("scores") is None:
             raise ValueError(f"missing scores config in {resource.get_id()}")
@@ -69,6 +77,7 @@ class GeneScore(
 
         for score_conf in self.config["scores"]:
             score_id = score_conf["id"]
+            score_name = score_conf.get("name", score_id)
             hist_conf = build_histogram_config(score_conf)
 
             if not isinstance(hist_conf, NumberHistogramConfig):
@@ -83,6 +92,7 @@ class GeneScore(
 
             self.score_definitions[score_conf["id"]] = ScoreDef(
                 score_id,
+                score_name,
                 score_conf.get("desc", ""),
                 hist_conf,
                 score_conf.get("small_values_desc"),
@@ -202,10 +212,12 @@ class GeneScore(
         return {
             **get_base_resource_schema(),
             "filename": {"type": "string"},
+            "separator": {"type": "string", "default": ","},
             "scores": {"type": "list", "schema": {
                 "type": "dict",
                 "schema": {
                     "id": {"type": "string"},
+                    "name": {"type": "string"},
                     "desc": {"type": "string"},
                     "large_values_desc": {"type": "string"},
                     "small_values_desc": {"type": "string"},
@@ -262,34 +274,6 @@ class GeneScore(
             }},
         }
 
-    # def get_histogram(self, score_id: str) -> Optional[NumberHistogram]:
-    #     """Return gene score histogram."""
-    #     if self.histograms[score_id] is None:
-    #         filename = f"statistics/histogram_{score_id}.yaml"
-    #         hist = load_histogram(self.resource, filename)
-    #         self.histograms[score_id] = hist
-    #     result = self.histograms[score_id]
-    #     if not isinstance(result, NumberHistogram):
-    #         logger.warning(
-    #             "histogram for %s in gene score %s is not a number "
-    #             "histogram",
-    #             score_id, self.resource.resource_id)
-    #         return None
-    #     return result
-
-    # def get_histogram_image_file(self, score_id: str) -> Optional[str]:
-    #     histogram = self.get_histogram(score_id)
-    #     if histogram is None:
-    #         return None
-    #     return f"statistics/histogram_{score_id}.png"
-
-    # def get_histogram_file(self, score_id: str) -> Optional[str]:
-    #     histogram = self.get_histogram(score_id)
-    #     if histogram is None:
-    #         return None
-    #     return f"statistics/histogram_{score_id}.yaml"
-
-    ###############################################
     @lru_cache(maxsize=64)
     def get_number_range(
             self, score_id: str) -> Optional[tuple[float, float]]:
@@ -332,6 +316,7 @@ class ScoreDesc:
 
     resource_id: str
     score_id: str
+    name: str
     hist: NumberHistogram
     description: str
     help: str
@@ -410,6 +395,7 @@ class GeneScoresDb:
             result.append(ScoreDesc(
                 resource_id=gene_score.resource.resource_id,
                 score_id=score_id,
+                name=score_def.name,
                 hist=gene_score.get_score_histogram(score_id),
                 description=score_def.desc,
                 help=help_doc,
