@@ -63,7 +63,7 @@ class EffectAnnotatorAdapter(AnnotatorBase):
             info.attributes = AnnotationConfigParser.parse_raw_attributes([
                 "worst_effect",
                 "effect_details",
-                {"name": "gene_effects", "internal": True},
+                "gene_effects",
                 {"name": "gene_list", "internal": True}
             ])
         super().__init__(pipeline, info, {

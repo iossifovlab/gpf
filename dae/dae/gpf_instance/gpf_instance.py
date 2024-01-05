@@ -486,7 +486,10 @@ class GPFInstance:
                         "source": "allele_effects",
                         "destination": "allele_effects",
                         "internal": True
-                    }
+                    },
+                    "worst_effect",
+                    "gene_effects",
+                    "effect_details"
                 ]
             }
         }
