@@ -2,6 +2,9 @@ import logging
 from collections import OrderedDict
 
 import pandas as pd
+
+from remote.rest_api_client import RESTClient
+
 from dae.pheno.pheno_db import PhenotypeData, Measure, Instrument
 from dae.pedigrees.family import Person
 
@@ -12,11 +15,13 @@ logger = logging.getLogger(__name__)
 class RemotePhenotypeData(PhenotypeData):
     """Phenotype data adapter for accessing remote instance phenotype data."""
 
-    def __init__(self, pheno_id, remote_dataset_id, rest_client):
+    def __init__(
+        self, pheno_id: str, remote_dataset_id: str, rest_client: RESTClient
+    ):
         self._remote_pheno_id = pheno_id
         self.rest_client = rest_client
         pheno_id = self.rest_client.prefix_remote_identifier(pheno_id)
-        super(RemotePhenotypeData, self).__init__(pheno_id)
+        super().__init__(pheno_id)
 
         self.remote_dataset_id = remote_dataset_id
         self._instruments = None
@@ -241,8 +246,12 @@ class RemotePhenotypeData(PhenotypeData):
         output = self.rest_client.get_browser_measures_info(
             self.remote_dataset_id
         )
-        output["base_image_url"] = \
-            f"/{self.rest_client.gpf_prefix}/{output['base_image_url']}"
+        remote_base = output["base_image_url"][:-1]
+        pheno_folder = remote_base[remote_base.rindex("/") + 1:]
+        output["base_image_url"] = (
+            "/api/v3/pheno_browser/remote_images/"
+            f"{self.rest_client.remote_id}/{pheno_folder}/"
+        )
         return output
 
     def search_measures(self, instrument, search_term):
@@ -251,7 +260,5 @@ class RemotePhenotypeData(PhenotypeData):
             instrument,
             search_term
         )
-        base = self.rest_client.build_host_url()
         for m in measures:
-            m["measure"]["base_url"] = base
             yield m

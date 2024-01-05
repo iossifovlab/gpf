@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 import pathlib
 import os
-from typing import Optional, List, Dict, Any, Union, cast
+from typing import Optional, Dict, Any, Union, cast
 from threading import Lock
 from functools import cached_property
 from box import Box
@@ -43,7 +43,7 @@ class WGPFInstance(GPFInstance):
         **kwargs: dict[str, Any]
     ) -> None:
         self._remote_study_db: Optional[RemoteStudyDB] = None
-        self._clients: List[RESTClient] = []
+        self._clients: Dict[str, RESTClient] = {}
         self._study_wrappers: Dict[
             str, Union[StudyWrapper, RemoteStudyWrapper]
         ] = {}
@@ -79,13 +79,16 @@ class WGPFInstance(GPFInstance):
                         protocol=remote.get("protocol", None),
                         gpf_prefix=remote.get("gpf_prefix", None)
                     )
-                    self._clients.append(client)
+                    self._clients[client.remote_id] = client
 
                 except ConnectionError as err:
                     logger.error(err)
                     logger.error("Failed to create remote %s", remote["id"])
 
         self._remote_study_db = RemoteStudyDB(self._clients)
+
+    def get_remote_client(self, remote_id) -> Optional[RESTClient]:
+        return self._clients.get(remote_id)
 
     @property
     def remote_study_clients(self) -> Dict[str, RESTClient]:

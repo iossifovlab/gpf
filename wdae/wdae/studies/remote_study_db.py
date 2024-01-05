@@ -1,7 +1,7 @@
 """Provides class for handling of remote studies."""
 
 import logging
-from typing import List, Dict, Optional
+from typing import Dict, Optional
 
 from box import Box
 
@@ -14,12 +14,12 @@ logger = logging.getLogger(__name__)
 class RemoteStudyDB:
     """Class to manage remote studies."""
 
-    def __init__(self, clients: List[RESTClient]) -> None:
+    def __init__(self, clients: Dict[str, RESTClient]) -> None:
         self.remote_study_clients: Dict[str, RESTClient] = {}
         self.remote_study_ids: Dict[str, str] = {}
         self.remote_genotype_data: Dict[str, RemoteGenotypeData] = {}
 
-        for client in clients:
+        for client in clients.values():
             try:
                 self._fetch_remote_studies(client)
             except RESTClientRequestError as err:

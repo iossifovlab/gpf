@@ -1,5 +1,5 @@
 import logging
-from typing import List, Dict, Any, Optional, cast, Generator
+from typing import List, Dict, Any, Optional, cast, Generator, Tuple
 
 import requests
 import ijson
@@ -73,6 +73,13 @@ class RESTClient:
         if self.gpf_prefix:
             return f"{host_url}/{self.gpf_prefix}{self.base_url}"
         return f"{host_url}{self.base_url}"
+
+    def build_image_url(self, url: str):
+        """Build a url for accessing remote GPF static images."""
+        host_url = self.build_host_url()
+        if self.gpf_prefix:
+            return f"{host_url}/{self.gpf_prefix}/static/images/{url}"
+        return f"{host_url}/static/images/{url}"
 
     def _build_url(
         self, url: str, query_values: Optional[dict] = None
@@ -687,3 +694,13 @@ class RESTClient:
         if response.status_code != 200:
             return None
         return cast(dict[str, Any], response.json()[0])
+
+    def get_pheno_image(
+        self, image_path: str
+    ) -> Tuple[Optional[bytes], Optional[str]]:
+        url = self.build_image_url(image_path)
+        response = requests.get(url, timeout=self.DEFAULT_TIMEOUT)
+        if response.status_code != 200:
+            return None, None
+
+        return response.content, response.headers["content-type"]

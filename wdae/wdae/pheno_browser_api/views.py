@@ -7,7 +7,7 @@ from typing import Generator, Union
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework import status
-from django.http.response import StreamingHttpResponse
+from django.http.response import StreamingHttpResponse, HttpResponse
 
 from query_base.query_base import QueryDatasetView
 from studies.study_wrapper import RemoteStudyWrapper, StudyWrapper
@@ -255,3 +255,19 @@ class PhenoMeasureValues(QueryDatasetView):
         )
 
         return response
+
+
+class PhenoRemoteImages(QueryDatasetView):
+    """Remote pheno images view."""
+
+    def get(
+        self, request: Request, remote_id: str, image_path: str
+    ) -> HttpResponse:
+        if image_path == "":
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        client = self.gpf_instance.get_remote_client(remote_id)
+
+        image, mimetype = client.get_pheno_image(image_path)
+
+        return HttpResponse(image, content_type=mimetype)
