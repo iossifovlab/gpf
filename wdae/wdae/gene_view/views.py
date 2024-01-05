@@ -4,12 +4,12 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.request import Request
 from django.http.response import FileResponse
+from django.contrib.auth.models import User
 from query_base.query_base import QueryDatasetView
 from studies.study_wrapper import StudyWrapper
 from utils.logger import request_logging
 from utils.query_params import parse_query_params
 from utils.expand_gene_set import expand_gene_set
-from django.contrib.auth.models import User
 
 from datasets_api.permissions import \
     handle_partial_permissions
@@ -67,6 +67,8 @@ class QueryVariantsView(QueryDatasetView):
 
 
 class DownloadSummaryVariantsView(QueryDatasetView):
+    """Summary download view."""
+
     DOWNLOAD_LIMIT = 10000
 
     def generate_variants(
@@ -76,6 +78,7 @@ class DownloadSummaryVariantsView(QueryDatasetView):
             dataset: StudyWrapper,
             dataset_id: str
     ) -> Generator[str, None, None]:
+        """Summary variants generator."""
         # Return a response instantly and make download more responsive
         yield ""
         handle_partial_permissions(user, dataset_id, data)
@@ -95,7 +98,8 @@ class DownloadSummaryVariantsView(QueryDatasetView):
             yield variant
 
     @request_logging(LOGGER)
-    def post(self, request: Request) -> Request:
+    def post(self, request: Request) -> Response:
+        """Summary variants download."""
         data = expand_gene_set(parse_query_params(request.data), request.user)
         dataset_id = data.pop("datasetId", None)
         if dataset_id is None:

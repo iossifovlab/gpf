@@ -111,11 +111,14 @@ class PhenoToolView(QueryDatasetView):
 
 
 class PhenoToolDownload(PhenoToolView):
+    """Pheno tool download view."""
+
     def generate_columns(
             self,
             adapter: PhenoToolAdapter,
             data: dict
     ) -> Generator[str, None, None]:
+        """Pheno tool download generator function."""
         # Return a response instantly and make download more responsive
         yield ""
         effect_groups = [effect for effect in data["effectTypes"]]
@@ -161,10 +164,9 @@ class PhenoToolDownload(PhenoToolView):
         csv_buffer.seek(0)
         for row in csv_buffer.readlines():
             yield row
-        # for row in result_df.to_csv(index=False, columns=columns).splitlines():
-        #     yield row + "\n"
 
     def post(self, request: Request) -> Response:
+        """Pheno tool download."""
         data = expand_gene_set(parse_query_params(request.data), request.user)
 
         if not user_has_permission(request.user, data["datasetId"]):
