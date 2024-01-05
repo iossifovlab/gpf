@@ -139,7 +139,7 @@ large_values {score_def.large_values_desc}
             value = aggregators_score_def_att[aggregator](
                 cast(ScoreDef, score_def))
             if value is not None:
-                value_str = f"`{value}`"
+                value_str = f"`{value}` [default]"
             else:
                 value = default_aggregators[aggregator][score_def.value_type]
                 value_str = f"`{value}` [type default]"
