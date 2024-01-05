@@ -366,8 +366,17 @@ test.describe('Pheno tool download tests', () => {
   });
 
   [
-    {id: '16', measure: 'i1.age', geneScore: 'LGD rank', geneScoresHistogramFromTo: ['2944', '14716']},
-    {id: '17', measure: 'i1.m1', geneScore: 'ExAC pRec', geneScoresHistogramFromTo: ['0.000012', '0.832']}
+    {
+      id: '16', measure: 'i1.age',
+      geneScore: 'LGD rank - The rank of the gene after sorting based of the LGD vulnerability score.',
+      geneScoresHistogramFromTo: ['2944', '14716']
+    },
+    {
+      id: '17',
+      measure: 'i1.m1',
+      geneScore: 'pRec - ExAC pRec',
+      geneScoresHistogramFromTo: ['0.000012', '0.832']
+    }
   ].forEach(data => {
     test(`should check downloaded report with gene score ${data.geneScore}`, async({ page }) => {
       await page.getByRole('tab', { name: 'Gene Scores' }).click();

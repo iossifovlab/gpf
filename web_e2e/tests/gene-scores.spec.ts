@@ -5,17 +5,17 @@ import * as path from 'path';
 
 const geneScoresData = [
   {
-    desc: 'SFARI gene score',
+    desc: 'SFARI gene score - SFARI gene score',
     inputField: false,
     allVariants: '30'
   },
   {
-    desc: 'RVIS rank',
+    desc: 'RVIS rank - The rank of the gene after sorting based of RVIS score.',
     inputField: true,
     allVariants: '0'
   },
   {
-    desc: 'ExAC pLI',
+    desc: 'pLI - ExAC pLI',
     inputField: true,
     allVariants: '30'
   }
@@ -53,7 +53,8 @@ test.describe('Gene scores tests', () => {
 
   test('should have working from/to step up/down buttons in RVIS rank', async({ page }) => {
     await page.locator('#gene-scores').click();
-    await page.locator('gpf-gene-scores select').selectOption('RVIS rank');
+    await page.locator('gpf-gene-scores select')
+    .selectOption('RVIS rank - The rank of the gene after sorting based of RVIS score.');
 
     await expect(page.locator('input#from-input-field')).toHaveValue('1');
     await expect(page.locator('input#to-input-field')).toHaveValue('16640');
@@ -79,7 +80,7 @@ test.describe('Gene scores tests', () => {
   test('should have working from/to step up/down buttons in ExAC pLI', async({ page }) => {
     await utils.navigateToDatasetPage(page, utils.datasetIds.compAll, 'Genotype browser');
     await page.locator('#gene-scores').click();
-    await page.locator('gpf-gene-scores select').selectOption('ExAC pLI');
+    await page.locator('gpf-gene-scores select').selectOption('pLI - ExAC pLI');
 
     await expect(page.locator('input#from-input-field')).toHaveValue('0');
     await expect(page.locator('input#to-input-field')).toHaveValue('1');
@@ -120,10 +121,11 @@ test.describe('Gene scores tests', () => {
       });
     });
 
-  test('should download RVIS and compare the file to the reference data', async({ page }) => {
+  test('should download RVIS score and compare the file to the reference data', async({ page }) => {
     await page.click('#gene-scores');
 
-    await page.locator('gpf-gene-scores select').selectOption('RVIS');
+    await page.locator('gpf-gene-scores select')
+    .selectOption('RVIS score - The score reflects the intolerance of a gene to genetic variants (RVIS)');
     const downloadPromise = page.waitForEvent('download');
     await page.click('gpf-gene-scores .download-link');
     const downloadedFile = await downloadPromise;
