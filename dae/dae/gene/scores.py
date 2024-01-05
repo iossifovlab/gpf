@@ -128,7 +128,12 @@ Genomic resource:
 ##### Attribute properties:
 
 * **source**: {{ data.source }}
-* {{ data.aggregators }}
+{% for aggregator in data.aggregators %}
+
+* {{ aggregator }}
+
+{% endfor %}
+
 
 ##### Resource properties:
 
