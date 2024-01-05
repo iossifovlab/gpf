@@ -10,6 +10,6 @@ channels:
   - bioconda
   - iossifovlab
 dependencies:
-  - google-cloud-sdk=424
-  - google-cloud-bigquery=3.9
-  - gcsfs=2023.3.0
+  - google-cloud-sdk
+  - google-cloud-bigquery
+  - gcsfs
