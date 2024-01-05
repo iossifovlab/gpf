@@ -59,7 +59,7 @@ def test_remote_genomic_scores(
     }]
     local_db = wdae_gpf_instance.genomic_scores
 
-    db = RemoteGenomicScoresRegistry([rest_client], local_db)
+    db = RemoteGenomicScoresRegistry({"remote": rest_client}, local_db)
     assert len(db.remote_scores) == 1
     assert "attr_dest" in db.remote_scores
     score = db.remote_scores["attr_dest"]
