@@ -5,6 +5,7 @@ and allele_score.
 """
 import logging
 import abc
+import textwrap
 from typing import Callable, Optional, Any, cast
 
 from dae.annotation.annotatable import Annotatable, VCFAllele
@@ -138,10 +139,10 @@ large_values {score_def.large_values_desc}
             value = aggregators_score_def_att[aggregator](
                 cast(ScoreDef, score_def))
             if value is not None:
-                value_str = f"{value} [default]"
+                value_str = f"`{value}` [default]"
             else:
                 value = default_aggregators[aggregator][score_def.value_type]
-                value_str = f"{value} [type default]"
+                value_str = f"`{value}` [type default]"
         else:
             value_str = attribute_conf_agg
         return f"**{aggregator}**: {value_str}"
@@ -161,7 +162,7 @@ large_values {score_def.large_values_desc}
     @abc.abstractmethod
     def build_score_aggregator_documentation(
         self, attr_info: AttributeInfo
-    ) -> str:
+    ) -> list[str]:
         """Construct score aggregator documentation."""
 
 
@@ -231,9 +232,15 @@ class PositionScoreAnnotator(PositionScoreAnnotatorBase):
         super().__init__(pipeline, info, self.position_score)
 
         self.position_score_queries = []
-        info.documentation += \
-            "[More info](https://www.iossifovlab.com/gpfuserdocs/" \
-            "administration/annotation_tools.html#position-score)"
+        info.documentation += textwrap.dedent("""
+
+* Annotator to use with genomic scores depending on genomic position like
+  phastCons, phyloP, FitCons2, etc.
+
+* <a href="https://www.iossifovlab.com/gpfuserdocs/administration/annotation_tools.html#position-score" target="_blank">More info</a>
+
+""")  # noqa
+
         for att_info in info.attributes:
             pos_aggregator = att_info.parameters.get("position_aggregator")
             if pos_aggregator:
@@ -246,14 +253,14 @@ class PositionScoreAnnotator(PositionScoreAnnotatorBase):
 
     def build_score_aggregator_documentation(
         self, attr_info: AttributeInfo
-    ) -> str:
+    ) -> list[str]:
         """Collect score aggregator documentation."""
         # pylint: disable=protected-access
         pos_aggregator = attr_info.parameters.get("position_aggregator")
 
         doc = self._build_score_aggregator_documentation(
             attr_info, "position_aggregator", pos_aggregator)
-        return doc
+        return [doc]
 
     def _fetch_substitution_scores(self, allele: VCFAllele) \
             -> Optional[list[Any]]:
@@ -282,6 +289,15 @@ class NPScoreAnnotator(PositionScoreAnnotatorBase):
         super().__init__(pipeline, info, self.np_score)
 
         self.np_score_queries = []
+        info.documentation += textwrap.dedent("""
+
+* Annotator to use with genomic scores depending on genomic position and
+  nucleotide change like CADD, MPC, etc.
+
+* <a href="https://www.iossifovlab.com/gpfuserdocs/administration/annotation_tools.html#np-score" target="_blank">More info</a>
+
+""")  # noqa
+
         for att_info in info.attributes:
             pos_agg = att_info.parameters.get("position_aggregator")
             nuc_agg = att_info.parameters.get("nucleotide_aggregator")
@@ -298,7 +314,7 @@ class NPScoreAnnotator(PositionScoreAnnotatorBase):
 
     def build_score_aggregator_documentation(
         self, attr_info: AttributeInfo
-    ) -> str:
+    ) -> list[str]:
         """Collect score aggregator documentation."""
         # pylint: disable=protected-access
         pos_aggregator = attr_info.parameters.get("position_aggregator")
@@ -309,7 +325,7 @@ class NPScoreAnnotator(PositionScoreAnnotatorBase):
         nuc_doc = self._build_score_aggregator_documentation(
             attr_info, "nucleotide_aggregator", nuc_aggregator
         )
-        return f"{pos_doc}\n\n{nuc_doc}"
+        return [pos_doc, nuc_doc]
 
     def _fetch_substitution_scores(
             self, allele: VCFAllele) -> Optional[list[Any]]:
@@ -337,6 +353,15 @@ class AlleleScoreAnnotator(GenomicScoreAnnotatorBase):
         self.allele_score = AlleleScore(resource)
         super().__init__(pipeline, info, self.allele_score)
         self.allele_score_queries = []
+        info.documentation += textwrap.dedent("""
+
+* Annotator to use with scores that depend on allele like
+  variant frequencies, etc.
+
+* <a href="https://www.iossifovlab.com/gpfuserdocs/administration/annotation_tools.html#allele-score" target="_blank">More info</a>
+
+""")  # noqa
+
         for att_info in info.attributes:
             pos_agg = att_info.parameters.get("position_aggregator")
             all_agg = att_info.parameters.get("allele_aggregator")
@@ -353,7 +378,7 @@ class AlleleScoreAnnotator(GenomicScoreAnnotatorBase):
 
     def build_score_aggregator_documentation(
         self, attr_info: AttributeInfo
-    ) -> str:
+    ) -> list[str]:
         """Collect score aggregator documentation."""
         # pylint: disable=protected-access
         pos_aggregator = attr_info.parameters.get("position_aggregator")
@@ -364,7 +389,7 @@ class AlleleScoreAnnotator(GenomicScoreAnnotatorBase):
         allele_doc = self._build_score_aggregator_documentation(
             attr_info, "allele_aggregator", allele_aggregator
         )
-        return f"{pos_doc}\n\n{allele_doc}"
+        return [pos_doc, allele_doc]
 
     def _fetch_vcf_allele_score(self, allele: VCFAllele) \
             -> Optional[list[Any]]:

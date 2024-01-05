@@ -304,7 +304,7 @@ def test_deleted_attributes(
     assert len(reannotation.annotators_rerun) == 0
     assert len(reannotation.attributes_reused) == 0
     assert reannotation.attributes_deleted == [
-        "worst_effect", "effect_details",
+        "worst_effect", "effect_details", "gene_effects"
     ]
 
 
@@ -601,6 +601,7 @@ def test_annotate_vcf_reannotation(
         ##INFO=<ID=score,Number=A,Type=Float,Description="">
         ##INFO=<ID=worst_effect,Number=A,Type=String,Description="">
         ##INFO=<ID=effect_details,Number=A,Type=String,Description="">
+        ##INFO=<ID=gene_effects,Number=A,Type=String,Description="">
         ##INFO=<ID=gene_list,Number=A,Type=String,Description="">
         ##INFO=<ID=gene_score1,Number=A,Type=String,Description="">
         ##INFO=<ID=gene_score2,Number=A,Type=String,Description="">
@@ -610,7 +611,7 @@ def test_annotate_vcf_reannotation(
 INFO                                                  \
                                                FORMAT m1  d1  c1
         foo    12  .  C   T   .    .      \
-score=0.1;worst_effect=splice-site;effect_details=bla;\
+score=0.1;worst_effect=splice-site;effect_details=bla;gene_effects=bla;\
 gene_list=g1;gene_score1=10.1;gene_score2=20.2 GT     0/1 0/0 0/0
     """)
 
