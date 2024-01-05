@@ -90,7 +90,7 @@ class RemoteGeneSetsDb(GeneSetsDb):
         super().__init__([])
         self._local_gsdb: GeneSetsDb = local_gene_sets_db
         self.gene_set_collections: Dict[str, GeneSetCollection] = {}
-        self.remote_clients: List[RESTClient] = remote_clients
+        self.remote_clients: List[RESTClient] = list(remote_clients.values())
         self._load_remote_collections()
 
     def _load_remote_collections(self):
