@@ -312,7 +312,7 @@ class RESTClient:
         self, common_report_id: str
     ) -> Any:
         """Get families part of the common report for a study."""
-        response = self._get(
+        response = self._post(
             f"common_reports/families_data/{common_report_id}",
             stream=True
         )
