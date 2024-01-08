@@ -43,7 +43,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
 
   public readonly affectedStatusValues = ['Affected only', 'Unaffected only', 'Affected and unaffected'];
   public readonly effectTypeValues = ['LGDs', 'missense', 'synonymous', 'CNV+', 'CNV-', 'Other'];
-  public readonly variantTypeValues = ['sub', 'ins', 'del', 'CNV+', 'CNV-'];
+  public readonly variantTypeValues = ['sub', 'ins', 'del', 'CNV+', 'CNV-', 'comp'];
 
   public genotypePreviewVariantsArray: GenotypePreviewVariantsArray;
   public summaryVariantsArray: SummaryAllelesArray;

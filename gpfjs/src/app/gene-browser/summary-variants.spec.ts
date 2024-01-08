@@ -86,14 +86,23 @@ describe('SummaryAllele', () => {
   it('should get variant type', () => {
     const summaryAllele = new SummaryAllele('l1', 1, 20, 'chr', 'v1', 'lgds', 1.00003, 2, true, false, true);
 
-    summaryAllele.variant = 'sub???';
+    summaryAllele.variant = 'comp(CTCTTGCACGTCCCATCACAGTAGCAAGGAGTACTCACTTGAGCTTGC->A)';
+    expect(summaryAllele.variantType).toBe('comp');
+
+    summaryAllele.variant = 'sub(A->C)';
     expect(summaryAllele.variantType).toBe('sub');
-    summaryAllele.variant = 'ins???';
+
+    summaryAllele.variant = 'del(3)';
+    expect(summaryAllele.variantType).toBe('del');
+
+    summaryAllele.variant = 'ins(T)';
     expect(summaryAllele.variantType).toBe('ins');
-    summaryAllele.variant = 'CNV+???';
+
+    summaryAllele.variant = 'CNV+(149511687-149515015)';
     summaryAllele.effect = 'CNV+';
     expect(summaryAllele.variantType).toBe('CNV+');
-    summaryAllele.variant = 'CNV-???';
+
+    summaryAllele.variant = 'CNV-(249511687-249515015)';
     summaryAllele.effect = 'CNV-';
     expect(summaryAllele.variantType).toBe('CNV-');
   });
@@ -399,7 +408,7 @@ describe('SummaryAllelesFilter', () => {
           is_denovo: false, //eslint-disable-line
           seen_in_affected: true, //eslint-disable-line
           seen_in_unaffected: false, //eslint-disable-line
-          variant: 'sub',
+          variant: 'sub(G->A)',
           effect: 'frame-shift',
           frequency: 10,
           position: 30,
@@ -445,7 +454,7 @@ describe('SummaryAllelesFilter', () => {
           seen_in_affected: false, //eslint-disable-line
           seen_in_unaffected: true, //eslint-disable-line
           //
-          variant: 'sub',
+          variant: 'sub(G->T)',
           effect: 'CNV+',
           frequency: 5,
           position: 25,
@@ -460,7 +469,7 @@ describe('SummaryAllelesFilter', () => {
           seen_in_affected: true, //eslint-disable-line
           seen_in_unaffected: false, //eslint-disable-line
           // filtered out because:
-          variant: 'fake',
+          variant: 'fake(A->T)',
           //
           effect: 'CNV+',
           frequency: 5,
@@ -475,7 +484,7 @@ describe('SummaryAllelesFilter', () => {
           is_denovo: false, //eslint-disable-line
           seen_in_affected: true, //eslint-disable-line
           seen_in_unaffected: false, //eslint-disable-line
-          variant: 'sub',
+          variant: 'sub(G->T)',
           // filtered out because:
           effect: 'fake',
           //
@@ -491,7 +500,7 @@ describe('SummaryAllelesFilter', () => {
           is_denovo: false, //eslint-disable-line
           seen_in_affected: true, //eslint-disable-line
           seen_in_unaffected: false, //eslint-disable-line
-          variant: 'sub',
+          variant: 'sub(T->G)',
           effect: 'lgds',
           // filtered out because:
           frequency: 4,
@@ -507,7 +516,7 @@ describe('SummaryAllelesFilter', () => {
           is_denovo: false, //eslint-disable-line
           seen_in_affected: true, //eslint-disable-line
           seen_in_unaffected: false, //eslint-disable-line
-          variant: 'sub',
+          variant: 'sub(C->T)',
           effect: 'lgds',
           // filtered out because:
           frequency: 16,
@@ -555,7 +564,7 @@ describe('SummaryAllelesFilter', () => {
           is_denovo: false, //eslint-disable-line
           seen_in_affected: true, //eslint-disable-line
           seen_in_unaffected: false, //eslint-disable-line
-          variant: 'sub',
+          variant: 'sub(T->C)',
           effect: 'lgds',
           frequency: 10,
           // filtered out because:
@@ -572,7 +581,7 @@ describe('SummaryAllelesFilter', () => {
     summaryAllelesFilter.denovo = false;
     summaryAllelesFilter.selectedAffectedStatus = new Set(['Affected only']);
     summaryAllelesFilter.selectedEffectTypes = new Set([...LGDS, ...CODING, ...CNV]);
-    summaryAllelesFilter.selectedVariantTypes = new Set(['sub', 'ins', 'del', 'CNV+', 'CNV-']);
+    summaryAllelesFilter.selectedVariantTypes = new Set(['sub', 'ins', 'del', 'CNV+', 'CNV-', 'comp']);
     summaryAllelesFilter.selectedFrequencies = [5, 15];
     summaryAllelesFilter.selectedRegion = [25, 35];
 

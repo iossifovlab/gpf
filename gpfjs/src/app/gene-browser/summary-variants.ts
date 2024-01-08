@@ -64,7 +64,13 @@ export class SummaryAllele {
   }
 
   public get variantType(): string {
-    return this.variant.substring(0, this.isCNV() ? 4 : 3);
+    let result: string;
+    if (this.isCNV()) {
+      result = this.variant.substring(0, 4);
+    } else {
+      result = this.variant.substring(0, this.variant.indexOf('('));
+    }
+    return result;
   }
 
   public isLGDs(): boolean {
