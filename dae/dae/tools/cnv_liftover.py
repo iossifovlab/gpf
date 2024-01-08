@@ -116,8 +116,8 @@ def main(
     with open(args.output, "wt") as output:
 
         header = [
-            "chrom38", "pos38", "pos_end38", "cnv_type38",
-            "chrom19", "pos19", "pos_end19", "cnv_type19",
+            "location38", "cnv_type38",
+            "location19", "cnv_type19",
             "size_change",
             "familyId", "personId",
         ]
@@ -136,22 +136,20 @@ def main(
 
             if liftover_annotatable is None:
                 logger.error("can't liftover %s", aa)
-                stats["no_liftover", ] += 1
+                stats.inc(("no_liftover", ))
                 continue
-            stats["liftover", ] += 1
-            stats[
-                annotatable.type.name,
-                liftover_annotatable.type.name
-            ] += 1
-            size19 = len(annotatable)
-            size38 = len(liftover_annotatable)
-
-            size_diff = (100.0 * abs(size19 - size38)) / size19
-            stats[
-                (f"size_diff: {int(size_diff / 10) * 10}", )
-            ] += 1
 
             for fv in fvs:
+                stats.inc(("liftover", ))
+                stats.inc((
+                    annotatable.type.name,
+                    liftover_annotatable.type.name))
+                size19 = len(annotatable)
+                size38 = len(liftover_annotatable)
+
+                size_diff = (100.0 * abs(size19 - size38)) / size19
+                stats.inc((f"size_diff: {int(size_diff / 10) * 10}", ))
+
                 for aa in fv.alt_alleles:
                     fa = cast(FamilyAllele, aa)
                     line: list[str] = []
@@ -161,20 +159,22 @@ def main(
                             person_ids.append(person_id)
                     assert len(person_ids) >= 1
                     line = [
-                        liftover_annotatable.chrom,
-                        str(liftover_annotatable.pos),
-                        str(liftover_annotatable.pos_end),
+                        f"{liftover_annotatable.chrom}:"
+                        f"{liftover_annotatable.pos}-"
+                        f"{liftover_annotatable.pos_end}",
                         liftover_annotatable.type.name,
 
-                        annotatable.chrom,
-                        str(annotatable.pos),
-                        str(annotatable.pos_end),
+                        f"{annotatable.chrom}:"
+                        f"{annotatable.pos}-"
+                        f"{annotatable.pos_end}",
                         annotatable.type.name,
                         str(size_diff),
                         fa.family_id,
                         ";".join(person_ids),
                     ]
+
                     output.write("\t".join(line))
                     output.write("\n")
+                    stats.inc(("output", ))
 
     stats.save(args.stats)

@@ -1,4 +1,4 @@
-from typing import Dict, Any, Tuple, Iterator
+from typing import Dict, Any, Tuple, Iterator, Union
 from collections.abc import MutableMapping
 
 
@@ -40,11 +40,11 @@ class StatsCollection(MutableMapping):
         self._stats[key] = value
 
     def __getitem__(
-        self, key: Tuple[str, ...],
+        self, key: tuple[str, ...],
         default: int = 0
-    ) -> int:
+    ) -> Union[int, dict[tuple[str, ...], int]]:
         """Get stats value corresponding to key or default if not found."""
-        result = {}
+        result: dict[tuple[str, ...], int] = {}
         for k, v in self._stats.items():
             if k[:len(key)] == key:
                 result[k] = v
@@ -62,6 +62,10 @@ class StatsCollection(MutableMapping):
 
     def __repr__(self) -> str:
         return str(self._stats)
+
+    def inc(self, key: Tuple[str, ...]) -> None:
+        """Increment stats value for the specified key."""
+        self._stats[key] = self._stats.get(key, 0) + 1
 
     def save(self, filename: str) -> None:
         """Save stats to a file."""

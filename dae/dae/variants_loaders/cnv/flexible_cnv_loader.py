@@ -154,10 +154,17 @@ def _cnv_person_id_to_best_state(
             family_id = result["family_id"]
             family = families[family_id]
             person = family.persons[person_id]
+            persons = [person]
         else:
-            assert len(families.persons_by_person_id[person_id]) == 1
-            person = families.persons_by_person_id[person_id][0]
-            family = families[person.family_id]
+            persons = []
+            family_ids = set()
+            for pid in person_id.split(";"):
+                assert len(families.persons_by_person_id[pid]) == 1, pid
+                person = families.persons_by_person_id[pid][0]
+                persons.append(person)
+                family_ids.add(person.family_id)
+            assert len(family_ids) == 1, family_ids
+            family = families[list(family_ids)[0]]
 
         chrom = result["chrom"]
         pos = result["pos"]
@@ -169,7 +176,8 @@ def _cnv_person_id_to_best_state(
             ) for p in family.members_in_order
         ])
         alt_row = np.zeros(len(family.members_in_order), dtype=np.int8)
-        alt_row[person.member_index] = 1
+        for person in persons:
+            alt_row[person.member_index] = 1
 
         ref_row = expected_ploidy - alt_row
         best_state = np.stack((ref_row, alt_row)).astype(np.int8)

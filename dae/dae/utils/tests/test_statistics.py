@@ -84,3 +84,16 @@ def test_stats_get_multi2(stats_fixture: StatsCollection) -> None:
         ("a", "3"): 3,
         ("a", "4"): 4,
     }
+
+
+def test_stats_default_0(stats_fixture: StatsCollection) -> None:
+    stats = stats_fixture
+
+    stats.inc(("tttt",))
+    assert stats[("tttt",)] == 1
+
+    stats.inc(("tttt",))
+    assert stats[("tttt",)] == 2
+
+    stats.inc(("tttt", "tttt"))
+    assert stats[("tttt", "tttt")] == 1
