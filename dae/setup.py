@@ -107,6 +107,7 @@ setuptools.setup(
     gpf_instance_adjustments=dae.tools.gpf_instance_adjustments:cli
     denovo_liftover=dae.tools.denovo_liftover:main
     dae_liftover=dae.tools.dae_liftover:main
+    cnv_liftover=dae.tools.cnv_liftover:main
     stats_liftover=dae.tools.stats_liftover:main
 
     import_tools=dae.import_tools.cli:main

@@ -1,4 +1,4 @@
-from typing import Dict, Any, Tuple
+from typing import Dict, Any, Tuple, Iterator
 from collections.abc import MutableMapping
 
 
@@ -29,8 +29,8 @@ class StatsCollection(MutableMapping):
     {('b', '1'): 42, ('b', '2'): 43}
     """
 
-    def __init__(self):
-        self._stats: Dict[Tuple[str, ...], Any] = {}
+    def __init__(self) -> None:
+        self._stats: Dict[Tuple[str, ...], int] = {}
 
     def __delitem__(self, key: Tuple[str, ...]) -> None:
         pass
@@ -39,7 +39,10 @@ class StatsCollection(MutableMapping):
         """Store stats value for the specified key."""
         self._stats[key] = value
 
-    def __getitem__(self, key: Tuple[str, ...], default=None) -> Any:
+    def __getitem__(
+        self, key: Tuple[str, ...],
+        default: int = 0
+    ) -> int:
         """Get stats value corresponding to key or default if not found."""
         result = {}
         for k, v in self._stats.items():
@@ -48,14 +51,21 @@ class StatsCollection(MutableMapping):
         if result:
             if len(result) == 1 and key in result:
                 return result[key]
-            return result
+            return result  # type: ignore
         return default
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[Tuple[str, ...]]:
         return iter(self._stats)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._stats)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return str(self._stats)
+
+    def save(self, filename: str) -> None:
+        """Save stats to a file."""
+        with open(filename, "wt") as output:
+            for k, v in self._stats.items():
+                key = ".".join(k)
+                output.write(f"{key}\t{v}\n")

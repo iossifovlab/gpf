@@ -4,11 +4,8 @@ import sys
 import argparse
 import logging
 import textwrap
-from typing import cast, Any, Optional
+from typing import cast, Optional
 
-from collections import defaultdict, Counter
-
-from dae.utils.variant_utils import mat2str
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 from dae.genomic_resources.repository_factory import \
     build_genomic_resource_repository
@@ -17,24 +14,24 @@ from dae.genomic_resources.reference_genome import \
 from dae.annotation.annotation_factory import \
     build_annotation_pipeline
 
-from dae.annotation.annotatable import VCFAllele
+from dae.annotation.annotatable import CNVAllele
 from dae.variants.family_variant import FamilyAllele
 
 from dae.gpf_instance.gpf_instance import GPFInstance
-from dae.variants_loaders.dae.loader import DenovoLoader
+from dae.variants_loaders.cnv.loader import CNVLoader
 from dae.pedigrees.loader import FamiliesLoader
-from dae.tools.stats_liftover import save_liftover_stats
+from dae.utils.statistics import StatsCollection
 
 logger = logging.getLogger("denovo_liftover")
 
 
 def parse_cli_arguments(argv: list[str]) -> argparse.Namespace:
     """Create CLI parser."""
-    parser = argparse.ArgumentParser(description="liftover denovo variants")
+    parser = argparse.ArgumentParser(description="liftover CNV variants")
 
     VerbosityConfiguration.set_argumnets(parser)
     FamiliesLoader.cli_arguments(parser)
-    DenovoLoader.cli_arguments(parser)
+    CNVLoader.cli_arguments(parser)
 
     parser.add_argument(
         "-c", "--chain", help="chain resource id",
@@ -43,16 +40,10 @@ def parse_cli_arguments(argv: list[str]) -> argparse.Namespace:
     parser.add_argument(
         "-t", "--target-genome", help="target genome",
         default="hg38/genomes/GRCh38-hg38")
-    parser.add_argument(
-        "--target-gene-models", "--tgm", help="target gene models",
-        default="hg38/gene_models/refGene_v20170601")
 
     parser.add_argument(
         "-s", "--source-genome", help="source genome",
         default="hg19/genomes/GATK_ResourceBundle_5777_b37_phiX174")
-    parser.add_argument(
-        "--source-gene-models", "--sgm", help="source gene models",
-        default="hg19/gene_models/refGene_v20190211")
 
     parser.add_argument(
         "--stats", help="filename to store liftover statistics",
@@ -61,7 +52,7 @@ def parse_cli_arguments(argv: list[str]) -> argparse.Namespace:
 
     parser.add_argument(
         "-o", "--output", help="output filename",
-        default="denovo_liftover.txt")
+        default="cnv_liftover.txt")
 
     return parser.parse_args(argv)
 
@@ -95,9 +86,9 @@ def main(
     families = families_loader.load()
 
     variants_filenames, variants_params = \
-        DenovoLoader.parse_cli_arguments(args)
+        CNVLoader.parse_cli_arguments(args)
 
-    variants_loader = DenovoLoader(
+    variants_loader = CNVLoader(
         families,
         variants_filenames,  # type: ignore
         params=variants_params,
@@ -106,36 +97,12 @@ def main(
 
     pipeline_config = textwrap.dedent(
         f"""
-        - effect_annotator:
-            gene_models: {args.source_gene_models}
-            genome: {args.source_genome}
-            attributes:
-            - source: "worst_effect"
-              name: "source_worst_effect"
-            - source: "gene_effects"
-              name: "source_gene_effects"
-            - source: "effect_details"
-              name: "source_effect_details"
-
         - liftover_annotator:
             chain: {args.chain}
             target_genome: {args.target_genome}
             attributes:
             - source: liftover_annotatable
               name: target_annotatable
-
-        - effect_annotator:
-            gene_models: {args.target_gene_models}
-            genome: {args.target_genome}
-            input_annotatable: target_annotatable
-            attributes:
-            - source: "worst_effect"
-              name: "target_worst_effect"
-            - source: "gene_effects"
-              name: "target_gene_effects"
-            - source: "effect_details"
-              name: "target_effect_details"
-
         """
     )
 
@@ -144,14 +111,15 @@ def main(
         grr_repository=gpf_instance.grr)
     pipeline.open()
 
-    target_stats: dict[str, Any] = defaultdict(Counter)
+    stats: StatsCollection = StatsCollection()
 
     with open(args.output, "wt") as output:
 
         header = [
-            "chrom38", "pos38", "ref38", "alt38",  # "location38", "variant38",
-            "chrom19", "pos19", "ref19", "alt19",  # "location19", "variant19",
-            "familyId", "bestSt",
+            "chrom38", "pos38", "pos_end38", "cnv_type38",
+            "chrom19", "pos19", "pos_end19", "cnv_type19",
+            "size_change",
+            "familyId", "personId",
         ]
 
         output.write("\t".join(header))
@@ -161,36 +129,52 @@ def main(
             assert len(sv.alt_alleles) == 1
 
             aa = sv.alt_alleles[0]
-            annotatable: VCFAllele = cast(VCFAllele, aa.get_annotatable())
+            annotatable: CNVAllele = cast(CNVAllele, aa.get_annotatable())
             result = pipeline.annotate(annotatable)
-            liftover_annotatable: VCFAllele = \
-                cast(VCFAllele, result.get("target_annotatable"))
-
-            source_worst_effect = cast(str, result.get("source_worst_effect"))
-            target_worst_effect = cast(str, result.get("target_worst_effect"))
-            target_stats[source_worst_effect]["source"] += 1
+            liftover_annotatable: CNVAllele = \
+                cast(CNVAllele, result.get("target_annotatable"))
 
             if liftover_annotatable is None:
                 logger.error("can't liftover %s", aa)
-                target_stats[source_worst_effect]["no_liftover"] += 1
+                stats["no_liftover", ] += 1
                 continue
+            stats["liftover", ] += 1
+            stats[
+                annotatable.type.name,
+                liftover_annotatable.type.name
+            ] += 1
+            size19 = len(annotatable)
+            size38 = len(liftover_annotatable)
 
-            target_stats[source_worst_effect][target_worst_effect] += 1
+            size_diff = (100.0 * abs(size19 - size38)) / size19
+            stats[
+                (f"size_diff: {int(size_diff / 10) * 10}", )
+            ] += 1
 
             for fv in fvs:
-                fa = cast(FamilyAllele, fv.alt_alleles[0])
+                for aa in fv.alt_alleles:
+                    fa = cast(FamilyAllele, aa)
+                    line: list[str] = []
+                    person_ids = []
+                    for person_id in fa.variant_in_members:
+                        if person_id is not None:
+                            person_ids.append(person_id)
+                    assert len(person_ids) >= 1
+                    line = [
+                        liftover_annotatable.chrom,
+                        str(liftover_annotatable.pos),
+                        str(liftover_annotatable.pos_end),
+                        liftover_annotatable.type.name,
 
-                line = [
-                    liftover_annotatable.chrom, str(liftover_annotatable.pos),
-                    liftover_annotatable.ref, liftover_annotatable.alt,
+                        annotatable.chrom,
+                        str(annotatable.pos),
+                        str(annotatable.pos_end),
+                        annotatable.type.name,
+                        str(size_diff),
+                        fa.family_id,
+                        ";".join(person_ids),
+                    ]
+                    output.write("\t".join(line))
+                    output.write("\n")
 
-                    annotatable.chrom, str(annotatable.pos),
-                    annotatable.ref, annotatable.alt,
-
-                    fa.family_id,
-                    mat2str(fa.best_state, col_sep=" "),
-                ]
-                output.write("\t".join(line))
-                output.write("\n")
-
-    save_liftover_stats(target_stats, args.stats)
+    stats.save(args.stats)

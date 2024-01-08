@@ -176,9 +176,16 @@ class LiftOverAnnotator(AnnotatorBase):
         )
 
         if lo_start is None or lo_end is None:
+            logger.error(
+                "unable to liftover start or end of the region: %s", region)
             return None
+
         if lo_start[0] != lo_end[0]:
+            logger.error(
+                "lifted over region spans multiple chroms: %s -> (%s, %s)",
+                region, lo_start[0], lo_end[0])
             return None
+
         result = Region(
             lo_start[0],
             min(lo_start[1], lo_end[1]),
