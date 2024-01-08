@@ -191,6 +191,8 @@ class FamiliesDataDownloadView(QueryDatasetView):
     def post(self, request: Request, dataset_id: str) -> Response:
         """Return full family data for a specified study and tags."""
         data = request.data
+        if "queryData" in data:
+            data = parse_query_params(data)
 
         tags_query = data.get("tagsQuery")
 
