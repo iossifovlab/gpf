@@ -1,20 +1,22 @@
+from typing import Optional, Any
 from django.http.response import StreamingHttpResponse
 from rest_framework import status
+from rest_framework.request import Request
 from rest_framework.response import Response
 
 from query_base.query_base import QueryDatasetView
 
 from utils.query_params import parse_query_params
-from dae.pedigrees.family import FamilyTag
+from dae.pedigrees.family import FamilyTag, Family
 from dae.pedigrees.families_data import FamiliesData
-from dae.pedigrees.family_tag_builder import check_tag
+from dae.pedigrees.family_tag_builder import check_tag, check_family_tags_query
 from dae.pedigrees.loader import FamiliesLoader
 
 
 class VariantReportsView(QueryDatasetView):
     """Variant reports view class."""
 
-    def get(self, _request, common_report_id):
+    def get(self, _request: Request, common_report_id: str) -> Response:
         """Return a variant report when requested."""
         assert common_report_id
 
@@ -33,7 +35,7 @@ class VariantReportsView(QueryDatasetView):
 class VariantReportsFullView(QueryDatasetView):
     """Variants report full view class."""
 
-    def get(self, _request, common_report_id):
+    def get(self, _request: Request, common_report_id: str) -> Response:
         """Return full variant report when requested."""
         assert common_report_id
 
@@ -52,7 +54,7 @@ class VariantReportsFullView(QueryDatasetView):
 class FamilyCounterListView(QueryDatasetView):
     """Family couters list view class."""
 
-    def post(self, request):
+    def post(self, request: Request) -> Response:
         """Return family counters for specified study and group name."""
         data = request.data
 
@@ -82,7 +84,7 @@ class FamilyCounterListView(QueryDatasetView):
 class FamilyCounterDownloadView(QueryDatasetView):
     """Family counters download view class."""
 
-    def post(self, request):
+    def post(self, request: Request) -> Response:
         """Return family couters for a specified study and group name."""
         data = parse_query_params(request.data)
 
@@ -129,9 +131,68 @@ class FamilyCounterDownloadView(QueryDatasetView):
 class FamiliesDataDownloadView(QueryDatasetView):
     """Families data download view class."""
 
-    def get(self, request, dataset_id):
+    @classmethod
+    def check_family(
+            cls,
+            family: Family, or_mode: bool,
+            include_tags: set[FamilyTag],
+            exclude_tags: set[FamilyTag]
+    ) -> bool:
+        """Check if a family passes specified filters."""
+        if or_mode:
+            for tag in include_tags:
+                if check_tag(family, tag):
+                    return True
+            for tag in exclude_tags:
+                if not check_tag(family, tag):
+                    return True
+            return False
+
+        for tag in include_tags:
+            if not check_tag(family, tag):
+                return False
+        for tag in exclude_tags:
+            if check_tag(family, tag):
+                return False
+        return True
+
+    @classmethod
+    def collect_families(
+        cls,
+        study_families: FamiliesData,
+        tags_query: Optional[dict[str, Any]]
+    ) -> FamiliesData:
+        """Collect and filter families by tags."""
+        if tags_query is None:
+            return study_families
+
+        result = {}
+
+        or_mode = tags_query.get("orMode")
+        if or_mode is None or not isinstance(or_mode, bool):
+            raise ValueError("Invalid mode or none specified")
+        include_tags = tags_query.get("includeTags")
+        if include_tags is None or not isinstance(include_tags, list):
+            raise ValueError("Invalid include or none specified")
+        include_tags = {FamilyTag.from_label(label) for label in include_tags}
+        exclude_tags = tags_query.get("excludeTags")
+        if exclude_tags is None or not isinstance(exclude_tags, list):
+            raise ValueError("Invalid exclude or none specified")
+        exclude_tags = {FamilyTag.from_label(label) for label in exclude_tags}
+
+        for family_id, family in study_families.items():
+            if check_family_tags_query(
+                family, or_mode, include_tags, exclude_tags
+            ):
+                result[family_id] = family
+
+        return FamiliesData.from_families(result)
+
+    def post(self, request: Request, dataset_id: str) -> Response:
         """Return full family data for a specified study and tags."""
-        tags_query = request.GET.get("tags")
+        data = request.data
+
+        tags_query = data.get("tagsQuery")
 
         if not dataset_id:
             return Response(status=status.HTTP_400_BAD_REQUEST)
@@ -143,28 +204,11 @@ class FamiliesDataDownloadView(QueryDatasetView):
 
         study_families = study.families
 
-        if tags_query is None or len(tags_query) == 0:
-            result = study_families
-        else:
-            result = {}
-            tag_labels = set(tags_query.split(","))
-            tags = {FamilyTag.from_label(label) for label in tag_labels}
-            for family_id, family in study_families.items():
-                has_tags = True
-                for tag in tags:
-                    try:
-                        tagged = check_tag(family, tag)
-                        if not tagged:
-                            has_tags = False
-                            break
-                    except ValueError as err:
-                        print(err)
-                        return Response(status=status.HTTP_400_BAD_REQUEST)
-
-                if has_tags:
-                    result[family_id] = family
-
-            result = FamiliesData.from_families(result)
+        try:
+            result = self.collect_families(study_families, tags_query)
+        except ValueError as err:
+            print(err)
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
         tsv = FamiliesLoader.to_tsv(result)
         lines = map(lambda x: x + "\n", tsv.strip().split("\n"))

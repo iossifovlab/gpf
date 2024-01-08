@@ -58,6 +58,30 @@ def check_tag(family: Family, tag: FamilyTag) -> bool:
     return True
 
 
+def check_family_tags_query(
+    family: Family, or_mode: bool,
+    include_tags: set[FamilyTag],
+    exclude_tags: set[FamilyTag]
+) -> bool:
+    """Check if a family passes specified filters."""
+    if or_mode:
+        for tag in include_tags:
+            if check_tag(family, tag):
+                return True
+        for tag in exclude_tags:
+            if not check_tag(family, tag):
+                return True
+        return False
+
+    for tag in include_tags:
+        if not check_tag(family, tag):
+            return False
+    for tag in exclude_tags:
+        if check_tag(family, tag):
+            return False
+    return True
+
+
 def check_nuclear_family(family: Family) -> bool:
     """Check if the family is a nuclear family."""
     mom = _get_mom(family)

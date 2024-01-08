@@ -119,11 +119,17 @@ def test_family_counters_download(admin_client: Client) -> None:
 
 def test_families_tags_download(admin_client: Client) -> None:
     url = (
-        "/api/v3/common_reports/families_data/Study1?"
-        "tags=tag_nuclear_family,tag_trio_family"
+        "/api/v3/common_reports/families_data/Study1"
     )
-    response = admin_client.get(
-        url, content_type="application/json"
+    body = {
+        "tagsQuery": {
+            "orMode": False,
+            "includeTags": ["tag_nuclear_family", "tag_trio_family"],
+            "excludeTags": []
+        }
+    }
+    response = admin_client.post(
+        url, json.dumps(body), content_type="application/json"
     )
 
     assert response
@@ -134,16 +140,58 @@ def test_families_tags_download(admin_client: Client) -> None:
     assert len(res) == 24
 
 
-def test_families_tags_download_succeeds_on_empty_tags(
-        admin_client: Client) -> None:
-    url = "/api/v3/common_reports/families_data/Study1?tags="
-
-    response = admin_client.get(
-        url, content_type="application/json"
+@pytest.mark.parametrize(
+    "body",
+    [
+        {
+            "tagsQuery": {
+                "orMode": False,
+                "includeTags": ["tag_nuclear_family", "tag_trio_family"],
+            }
+        },
+        {
+            "tagsQuery": {
+                "orMode": False,
+                "excludeTags": []
+            }
+        },
+        {
+            "tagsQuery": {
+                "includeTags": ["tag_nuclear_family", "tag_trio_family"],
+                "excludeTags": []
+            }
+        },
+        {
+            "tagsQuery": {
+                "orMode": "test",
+                "includeTags": ["tag_nuclear_family", "tag_trio_family"],
+                "excludeTags": []
+            }
+        },
+        {
+            "tagsQuery": {
+                "orMode": False,
+                "includeTags": "asfag",
+                "excludeTags": []
+            }
+        },
+        {
+            "tagsQuery": {}
+        },
+    ]
+)
+def test_families_tags_download_errors_on_bad_body(
+    admin_client: Client, body: dict[str, Any]
+) -> None:
+    url = (
+        "/api/v3/common_reports/families_data/Study1"
+    )
+    response = admin_client.post(
+        url, json.dumps(body), content_type="application/json"
     )
 
     assert response
-    assert response.status_code == status.HTTP_200_OK
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 
 def test_variant_reports_no_permissions(user_client: Client) -> None:
@@ -176,7 +224,7 @@ def test_autogenerate_common_report(
 
 def test_families_data_download(admin_client: Client) -> None:
     url = "/api/v3/common_reports/families_data/Study1"
-    response = admin_client.get(url)
+    response = admin_client.post(url)
 
     assert response
     assert response.status_code == status.HTTP_200_OK
@@ -189,7 +237,7 @@ def test_families_data_download(admin_client: Client) -> None:
 
 def test_families_data_download_no_permissions(user_client: Client) -> None:
     url = "/api/v3/common_reports/families_data/study4"
-    response = user_client.get(url)
+    response = user_client.post(url)
 
     assert response
     assert response.status_code == status.HTTP_403_FORBIDDEN
