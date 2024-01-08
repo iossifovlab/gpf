@@ -1,5 +1,5 @@
-<div style="display: flex; flex-wrap: wrap">
-  <div class="col-sm-9" style="margin-left: 12%">
+<div class="panel" style="display: flex; flex-wrap: wrap; justify-content: center; border-top: 0">
+  <div class="col-sm-9" style="display: flex; padding: 0 12px 0 12px; align-items: center">
     <div class="select-wrapper">
       <select class="form-control" [(ngModel)]="selectedGenomicScores" required>
         <option *ngFor="let genomicScores of genomicScoresArray" [ngValue]="genomicScores">
@@ -8,13 +8,12 @@
       </select>
       <span class="material-symbols-outlined select-dropdown-icon">arrow_drop_down</span>
     </div>
-  </div>
-  <div>
     <gpf-helper-modal
+      style="height: 32px; margin-left: 4px"
       [style.visibility]="this.genomicScoreState.score.help ? 'visible' : 'hidden'"
       [modalContent]="this.genomicScoreState.score.help"></gpf-helper-modal>
   </div>
-  <div class="col-sm-12">
+  <div class="col-sm-11">
     <gpf-histogram
       *ngIf="selectedGenomicScores"
       [width]="800"
