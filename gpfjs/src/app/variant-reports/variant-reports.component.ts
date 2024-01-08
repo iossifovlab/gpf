@@ -10,6 +10,7 @@ import { environment } from 'environments/environment';
 import { Dictionary } from 'lodash';
 import * as _ from 'lodash';
 import { NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
+import { ConfigService } from 'app/config/config.service';
 
 @Pipe({ name: 'getPeopleCounterRow' })
 export class PeopleCounterRowPipe implements PipeTransform {
@@ -59,6 +60,7 @@ export class VariantReportsComponent implements OnInit {
 
   public constructor(
     public modalService: NgbModal,
+    public config: ConfigService,
     private variantReportsService: VariantReportsService,
     private datasetsService: DatasetsService
   ) { }
@@ -277,10 +279,23 @@ export class VariantReportsComponent implements OnInit {
     return this.variantReportsService.getDownloadLink();
   }
 
-  public downloadTags(): void {
-    const tags = this.selectedTags.join(',');
-    // to do deselectedTags
-    location.href = this.variantReportsService.getDownloadLinkTags(tags);
+  public downloadTags(event): void {
+    let body = {};
+    if (this.selectedTags.length || this.deselectedTags.length) {
+      body = {
+        tagsQuery: {
+          orMode: !this.tagIntersection,
+          includeTags: this.selectedTags,
+          excludeTags: this.deselectedTags
+        }
+      };
+    }
+
+    /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+    event.target.queryData.value = JSON.stringify(body);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+    event.target.submit();
+    /* eslint-enable */
   }
 
   private orderByColumnOrder(childrenCounters: DeNovoData[], columns: string[], strict = false): DeNovoData[] {

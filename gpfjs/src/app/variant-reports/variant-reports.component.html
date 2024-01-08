@@ -94,16 +94,21 @@
       <div id="pedigree-toolbar">
         <button (click)="openModal()" id="open-modal-button">Select tags</button>
         <span *ngIf="tagsHeader" id="selected-tags-list" [title]="tagsHeader">{{ tagsHeader }}</span>
-        <div>
+        <form
+          id="dl-form"
+          (ngSubmit)="downloadTags($event)"
+          action="{{ config.baseUrl }}common_reports/families_data/{{ selectedDataset.id }}"
+          method="post">
           <span id="families-sum">All families: {{ familiesCount }}</span>
+          <input name="queryData" type="hidden" />
           <button
-            [disabled]="currentPedigreeTable.pedigrees.length === 0"
+            class="btn btn-md btn-primary btn-right"
             id="download-button"
-            (click)="downloadTags()"
-            class="btn btn-md btn-primary"
+            [disabled]="currentPedigreeTable.pedigrees.length === 0"
+            type="submit"
             >Download</button
           >
-        </div>
+        </form>
       </div>
       <ng-template #tagsModal class="tags-modal">
         <div id="tags-modal-content">
