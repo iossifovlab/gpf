@@ -261,12 +261,16 @@ class PhenoRemoteImages(QueryDatasetView):
     """Remote pheno images view."""
 
     def get(
-        self, request: Request, remote_id: str, image_path: str
-    ) -> HttpResponse:
+        self, _request: Request, remote_id: str, image_path: str
+    ) -> Union[Response, HttpResponse]:
+        """Return raw image data from a remote GPF instance."""
         if image_path == "":
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
         client = self.gpf_instance.get_remote_client(remote_id)
+
+        if client is None:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
         image, mimetype = client.get_pheno_image(image_path)
 

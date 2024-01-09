@@ -1,4 +1,5 @@
 import logging
+from typing import Optional, Iterable, Union, cast, Any, Generator
 from collections import OrderedDict
 
 import pandas as pd
@@ -7,6 +8,7 @@ from remote.rest_api_client import RESTClient
 
 from dae.pheno.pheno_db import PhenotypeData, Measure, Instrument
 from dae.pedigrees.family import Person
+from dae.variants.attributes import Role
 
 
 logger = logging.getLogger(__name__)
@@ -24,20 +26,24 @@ class RemotePhenotypeData(PhenotypeData):
         super().__init__(pheno_id)
 
         self.remote_dataset_id = remote_dataset_id
-        self._instruments = None
-        self._measures = None
         # self.measures = self.get_measures()
 
     @property
-    def measures(self):
+    def measures(self) -> dict[str, Measure]:
         if not self._measures:
             self._measures = self.get_measures()
         return self._measures
 
-    def get_persons_df(self, roles=None, person_ids=None, family_ids=None):
+    def get_persons_df(
+        self,
+        roles: Union[Iterable[Role], Iterable[str], None] = None,
+        person_ids: Optional[Iterable[str]] = None,
+        family_ids: Optional[Iterable[str]] = None
+    ) -> pd.DataFrame:
+
         persons = self.rest_client.post_pheno_persons(
             self.remote_dataset_id,
-            roles,
+            cast(Iterable[str], roles),
             person_ids,
             family_ids
         )
@@ -45,71 +51,86 @@ class RemotePhenotypeData(PhenotypeData):
         return pd.DataFrame.from_records(persons.values())
 
     def get_persons_values_df(
-        self, measure_ids, person_ids=None, family_ids=None, roles=None
-    ):
+        self,
+        measure_ids: Iterable[str],
+        person_ids: Optional[Iterable[str]] = None,
+        family_ids: Optional[Iterable[str]] = None,
+        roles: Optional[Iterable[Role]] = None,
+        default_filter: str = "apply"
+    ) -> pd.DataFrame:
         persons = self.rest_client.post_pheno_persons_values(
             self.remote_dataset_id,
-            roles,
+            measure_ids,
+            cast(Iterable[str], roles),
             person_ids,
             family_ids
         )
 
         return pd.DataFrame.from_records(persons.values())
 
-    def get_persons(self, roles=None, person_ids=None, family_ids=None):
+    def get_persons(
+        self,
+        roles: Union[Iterable[Role], Iterable[str], None] = None,
+        person_ids: Optional[Iterable[str]] = None,
+        family_ids: Optional[Iterable[str]] = None
+    ) -> dict[str, Person]:
         persons = self.rest_client.post_pheno_persons(
             self.remote_dataset_id,
-            roles,
+            cast(Optional[Iterable[str]], roles),
             person_ids,
             family_ids
         )
         for k, v in persons.items():
             persons[k] = Person(**v)
 
-        return persons
+        return cast(dict[str, Person], persons)
 
-    def has_measure(self, measure_id):
+    def has_measure(self, measure_id: str) -> bool:
         measure = self.rest_client.get_measure(
             self.remote_dataset_id, measure_id
         )
 
         return measure is not None
 
-    def get_measure(self, measure_id):
+    def get_measure(self, measure_id: str) -> Measure:
         measure = self.rest_client.get_measure(
             self.remote_dataset_id, measure_id
         )
 
         return Measure.from_json(measure)
 
-    def get_measure_description(self, measure_id):
+    def get_measure_description(self, measure_id: str) -> dict[str, Any]:
         measure_description = self.rest_client.get_measure_description(
             self.remote_dataset_id, measure_id)
 
-        return measure_description
+        return cast(dict[str, Any], measure_description)
 
-    def get_measures(self, instrument=None, measure_type=None):
+    def get_measures(
+        self,
+        instrument_name: Optional[str] = None,
+        measure_type: Optional[str] = None
+    ) -> dict[str, Measure]:
         measures = self.rest_client.get_measures(
             self.remote_dataset_id,
-            instrument,
+            instrument_name,
             measure_type
         )
         return {m["measureName"]: Measure.from_json(m) for m in measures}
 
     def get_measure_values_df(
         self,
-        measure_id,
-        person_ids=None,
-        family_ids=None,
-        roles=None,
-        default_filter="apply",
-    ):
+        measure_id: str,
+        person_ids: Optional[Iterable[str]] = None,
+        family_ids: Optional[Iterable[str]] = None,
+        roles: Union[Iterable[Role], Iterable[str], None] = None,
+        default_filter: str = "apply",
+    ) -> pd.DataFrame:
         measure_values = self.rest_client.post_measure_values(
             self.remote_dataset_id,
             measure_id,
             person_ids,
             family_ids,
-            roles,
+            cast(Iterable[str], roles),
             default_filter
         )
         data = {
@@ -121,37 +142,37 @@ class RemotePhenotypeData(PhenotypeData):
 
     def get_measure_values(
         self,
-        measure_id,
-        person_ids=None,
-        family_ids=None,
-        roles=None,
-        default_filter="apply",
-    ):
+        measure_id: str,
+        person_ids: Optional[Iterable[str]] = None,
+        family_ids: Optional[Iterable[str]] = None,
+        roles: Union[Iterable[Role], Iterable[str], None] = None,
+        default_filter: str = "apply",
+    ) -> dict[str, Any]:
         measure_values = self.rest_client.post_measure_values(
             self.remote_dataset_id,
             measure_id,
             person_ids,
             family_ids,
-            roles,
+            cast(Iterable[str], roles),
             default_filter
         )
 
-        return measure_values
+        return cast(dict[str, Any], measure_values)
 
     def get_values_df(
         self,
-        measure_ids,
-        person_ids=None,
-        family_ids=None,
-        roles=None,
-        default_filter="apply",
-    ):
+        measure_ids: str,  # type: ignore
+        person_ids: Optional[Iterable[str]] = None,
+        family_ids: Optional[Iterable[str]] = None,
+        roles: Union[Iterable[Role], Iterable[str], None] = None,
+        default_filter: str = "apply",
+    ) -> pd.DataFrame:
         values = self.rest_client.post_measure_values(
             self.remote_dataset_id,
             measure_ids,
             person_ids,
             family_ids,
-            roles,
+            cast(Iterable[str], roles),
             default_filter
         )
 
@@ -159,60 +180,68 @@ class RemotePhenotypeData(PhenotypeData):
 
     def get_values(
         self,
-        measure_ids,
-        person_ids=None,
-        family_ids=None,
-        roles=None,
-        default_filter="apply",
-    ):
+        measure_ids: str,  # type: ignore
+        person_ids: Optional[Iterable[str]] = None,
+        family_ids: Optional[Iterable[str]] = None,
+        roles: Union[Iterable[Role], Iterable[str], None] = None,
+        default_filter: str = "apply",
+    ) -> dict[str, Any]:
         values = self.rest_client.post_measure_values(
             self.remote_dataset_id,
             measure_ids,
             person_ids,
             family_ids,
-            roles,
+            cast(Iterable[str], roles),
             default_filter
         )
 
-        return values
+        return cast(dict[str, Any], values)
 
     def get_instrument_values_df(
-        self, instrument_name, person_ids=None,
-        family_ids=None, role=None, measure_ids=None
-    ):
+        self,
+        instrument_name: str,
+        person_ids: Optional[Iterable[str]] = None,
+        family_ids: Optional[Iterable[str]] = None,
+        role: Union[Iterable[Role], Iterable[str], None] = None,
+        measure_ids: Optional[Iterable[str]] = None
+    ) -> pd.DataFrame:
         instrument_values = self.rest_client.post_instrument_values(
             self.remote_dataset_id,
             instrument_name,
             person_ids,
             family_ids,
-            role,
+            cast(Iterable[str], role),
             measure_ids,
         )
 
         return pd.DataFrame.from_records(instrument_values.values())
 
     def get_instrument_values(
-        self, instrument_name, person_ids=None,
-        family_ids=None, role=None, measure_ids=None
-    ):
+        self,
+        instrument_name: str,
+        person_ids: Optional[Iterable[str]] = None,
+        family_ids: Optional[Iterable[str]] = None,
+        role: Union[Iterable[Role], Iterable[str], None] = None,
+        measure_ids: Optional[Iterable[str]] = None
+    ) -> dict[str, Any]:
         instrument_values = self.rest_client.post_instrument_values(
             self.remote_dataset_id,
             instrument_name,
             person_ids,
             family_ids,
-            role,
+            cast(Iterable[str], role),
             measure_ids,
         )
 
-        return instrument_values
+        return cast(dict[str, Any], instrument_values)
 
-    def get_people_measure_values(
+    def get_people_measure_values(  # type: ignore
         self,
-        measure_ids,
-        person_ids=None,
-        family_ids=None,
-        roles=None,
-    ):
+        measure_ids: Iterable[str],
+        person_ids: Optional[Iterable[str]] = None,
+        family_ids: Optional[Iterable[str]] = None,
+        roles: Optional[Iterable[str]] = None,
+    ) -> dict[str, Any]:
         if person_ids is not None:
             logger.warning("Unsupported argument used: person_ids")
         if family_ids is not None:
@@ -220,11 +249,11 @@ class RemotePhenotypeData(PhenotypeData):
         if roles is not None:
             logger.warning("Unsupported argument used: roles")
 
-        return self.rest_client.post_measures_values(
-            self.remote_dataset_id, measure_ids=measure_ids)
+        return cast(dict[str, Any], self.rest_client.post_measures_values(
+            self.remote_dataset_id, measure_ids=measure_ids))
 
     @property
-    def instruments(self):
+    def instruments(self) -> dict[str, Instrument]:
         if self._instruments is None:
             self._instruments = OrderedDict()
             instruments = self.rest_client.get_instrument_details(
@@ -233,14 +262,22 @@ class RemotePhenotypeData(PhenotypeData):
                 measures = [
                     Measure.from_json(m) for m in instrument["measures"]
                 ]
-                self._instruments[name] = Instrument(name, measures)
+                instrument = Instrument(name)
+                instrument.measures = {m.measure_id: m for m in measures}
+                self._instruments[name] = instrument
         return self._instruments
 
-    def get_instruments(self):
-        return self.rest_client.get_instruments(self.remote_dataset_id)
+    def get_instruments(self) -> list[str]:
+        return cast(
+            list[str],
+            self.rest_client.get_instruments(self.remote_dataset_id)
+        )
 
-    def get_regressions(self):
-        return self.rest_client.get_regressions(self.remote_dataset_id)
+    def get_regressions(self) -> dict[str, Any]:
+        return cast(
+            dict[str, Any],
+            self.rest_client.get_regressions(self.remote_dataset_id)
+        )
 
     @staticmethod
     def _extract_pheno_dir(url: str) -> str:
@@ -249,7 +286,7 @@ class RemotePhenotypeData(PhenotypeData):
         pheno_folder = url[url.rindex("/") + 1:]
         return pheno_folder
 
-    def get_measures_info(self):
+    def get_measures_info(self) -> dict[str, Any]:
         output = self.rest_client.get_browser_measures_info(
             self.remote_dataset_id
         )
@@ -258,9 +295,11 @@ class RemotePhenotypeData(PhenotypeData):
             "/api/v3/pheno_browser/remote_images/"
             f"{self.rest_client.remote_id}/{pheno_folder}/"
         )
-        return output
+        return cast(dict[str, Any], output)
 
-    def search_measures(self, instrument, search_term):
+    def search_measures(
+        self, instrument: Optional[str], search_term: Optional[str]
+    ) -> Generator[dict[str, Any], None, None]:
         measures = self.rest_client.get_browser_measures(
             self.remote_dataset_id,
             instrument,

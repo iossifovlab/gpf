@@ -1,5 +1,6 @@
 import logging
-from typing import List, Dict, Any, Optional, cast, Generator, Tuple
+from typing import List, Dict, Any, Optional, cast, Generator, Tuple, \
+    Iterable
 
 import requests
 import ijson
@@ -74,7 +75,7 @@ class RESTClient:
             return f"{host_url}/{self.gpf_prefix}{self.base_url}"
         return f"{host_url}{self.base_url}"
 
-    def build_image_url(self, url: str):
+    def build_image_url(self, url: str) -> str:
         """Build a url for accessing remote GPF static images."""
         host_url = self.build_host_url()
         if self.gpf_prefix:
@@ -334,7 +335,7 @@ class RESTClient:
         return response.json()
 
     def get_browser_measures(
-        self, dataset_id: str, instrument: str,
+        self, dataset_id: str, instrument: Optional[str],
         search_term: Optional[str]
     ) -> Any:
         """Get pheno measures that correspond to a search."""
@@ -376,7 +377,7 @@ class RESTClient:
 
     def post_measures_values(
             self, dataset_id: str,
-            measure_ids: Optional[list[str]] = None,
+            measure_ids: Optional[Iterable[str]] = None,
             instrument: Optional[str] = None
     ) -> Any:
         """Post download request for pheno measures."""
@@ -400,15 +401,13 @@ class RESTClient:
 
     def post_pheno_persons(
         self, dataset_id: str,
-        measure_ids: list[str],
-        roles: Optional[list[str]],
-        person_ids: Optional[list[str]],
-        family_ids: Optional[list[str]]
+        roles: Optional[Iterable[str]],
+        person_ids: Optional[Iterable[str]],
+        family_ids: Optional[Iterable[str]]
     ) -> Any:
         """Post a pheno measures person query request."""
         data = {
             "datasetId": dataset_id,
-            "measureIds": measure_ids,
             "roles": roles,
             "personIds": person_ids,
             "familyIds": family_ids,
@@ -421,10 +420,10 @@ class RESTClient:
 
     def post_pheno_persons_values(
         self, dataset_id: str,
-        measure_ids: list[str],
-        roles: Optional[list[str]],
-        person_ids: Optional[list[str]],
-        family_ids: Optional[list[str]]
+        measure_ids: Iterable[str],
+        roles: Optional[Iterable[str]],
+        person_ids: Optional[Iterable[str]],
+        family_ids: Optional[Iterable[str]]
     ) -> Any:
         """Post a pheno measures persons values request."""
         data = {
@@ -480,8 +479,8 @@ class RESTClient:
 
     def get_measures(
         self, dataset_id: str,
-        instrument_name: str,
-        measure_type: str
+        instrument_name: Optional[str],
+        measure_type: Optional[str]
     ) -> Any:
         """Get measures for a dataset."""
         response = self._get(
@@ -515,9 +514,9 @@ class RESTClient:
     def post_measure_values(
         self, dataset_id: str,
         measure_id: str,
-        person_ids: Optional[list[str]],
-        family_ids: Optional[list[str]],
-        roles: Optional[list[str]],
+        person_ids: Optional[Iterable[str]],
+        family_ids: Optional[Iterable[str]],
+        roles: Optional[Iterable[str]],
         default_filter: Optional[str]
     ) -> Any:
         """Post pheno measure values request."""
@@ -563,10 +562,10 @@ class RESTClient:
     def post_instrument_values(
         self, dataset_id: str,
         instrument_name: str,
-        person_ids: Optional[list[str]],
-        family_ids: Optional[list[str]],
-        roles: Optional[list[str]],
-        measures: Optional[list[str]]
+        person_ids: Optional[Iterable[str]],
+        family_ids: Optional[Iterable[str]],
+        roles: Optional[Iterable[str]],
+        measures: Optional[Iterable[str]]
     ) -> Any:
         """Post pheno instrument measures query request."""
         data = {
@@ -698,6 +697,11 @@ class RESTClient:
     def get_pheno_image(
         self, image_path: str
     ) -> Tuple[Optional[bytes], Optional[str]]:
+        """
+        Return tuple of image bytes and image type from remote.
+
+        Accesses static files on the remote GPF instance.
+        """
         url = self.build_image_url(image_path)
         response = requests.get(url, timeout=self.DEFAULT_TIMEOUT)
         if response.status_code != 200:

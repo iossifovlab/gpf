@@ -93,7 +93,6 @@ def test_post_enrichment_test(rest_client: RESTClient) -> None:
 def test_post_pheno_persons(rest_client: RESTClient) -> None:
     pheno_persons = rest_client.post_pheno_persons(
         "iossifov_2014",
-        ["i1.m1"],
         None,
         None,
         None

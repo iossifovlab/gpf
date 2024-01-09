@@ -87,7 +87,7 @@ class WGPFInstance(GPFInstance):
 
         self._remote_study_db = RemoteStudyDB(self._clients)
 
-    def get_remote_client(self, remote_id) -> Optional[RESTClient]:
+    def get_remote_client(self, remote_id: str) -> Optional[RESTClient]:
         return self._clients.get(remote_id)
 
     @property

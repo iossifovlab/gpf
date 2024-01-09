@@ -85,7 +85,8 @@ class RemoteGeneSetsDb(GeneSetsDb):
     """Class for handling remote gene sets."""
 
     def __init__(
-        self, remote_clients: Dict[str, RESTClient], local_gene_sets_db: GeneSetsDb
+        self, remote_clients: Dict[str, RESTClient],
+        local_gene_sets_db: GeneSetsDb
     ):
         super().__init__([])
         self._local_gsdb: GeneSetsDb = local_gene_sets_db
