@@ -1,9 +1,10 @@
 import logging
-from typing import Optional
+from typing import Optional, cast
 from dataclasses import dataclass
 
 from dae.pedigrees.families_data import FamiliesData
 from dae.genomic_resources.gene_models import GeneModels
+from dae.utils.regions import BedRegion, Region, collapse
 
 
 logger = logging.getLogger(__name__)
@@ -34,6 +35,9 @@ class Db2Layout:
 class SqlQueryBuilder:
     """Class that abstracts away the process of building a query."""
 
+    GENE_REGIONS_HEURISTIC_CUTOFF = 20
+    GENE_REGIONS_HEURISTIC_EXTEND = 20000
+
     def __init__(
         self,
         db_layout: Db2Layout,
@@ -49,5 +53,76 @@ class SqlQueryBuilder:
 
     def build_summary_query(
         self,
+        regions: Optional[list[Region]] = None,
+        genes: Optional[list[str]] = None,
+        effect_types: Optional[list[str]] = None,
+        variant_type: Optional[str] = None,
+        real_attr_filter: Optional[RealAttrFilterType] = None,
+        ultra_rare: Optional[bool] = None,
+        frequency_filter: Optional[RealAttrFilterType] = None,
+        return_reference: Optional[bool] = None,
+        return_unknown: Optional[bool] = None,
+        limit: Optional[int] = None,
     ) -> str:
-        return ""
+        summary_where: list[str] = ["ha"]
+        return " ".join(summary_where)
+
+    def _build_gene_regions_heuristic(
+        self, genes: list[str], regions: Optional[list[BedRegion]]
+    ) -> Optional[list[BedRegion]]:
+        assert genes is not None
+        assert self.gene_models is not None
+
+        if len(genes) == 0 or len(genes) > self.GENE_REGIONS_HEURISTIC_CUTOFF:
+            return regions
+
+        gene_regions = []
+        for gene_name in genes:
+            gene_model = self.gene_models.gene_models_by_gene_name(gene_name)
+            if gene_model is None:
+                logger.warning("gene model for %s not found", gene_name)
+                continue
+            for gm in gene_model:
+                gene_regions.append(
+                    BedRegion(
+                        gm.chrom,
+                        max(1, gm.tx[0] - self.GENE_REGIONS_HEURISTIC_EXTEND),
+                        gm.tx[1] + self.GENE_REGIONS_HEURISTIC_EXTEND,
+                    )
+                )
+        gene_regions = collapse(gene_regions)
+        if not regions:
+            regions = gene_regions
+        else:
+            result = []
+            for gene_region in gene_regions:
+                for region in regions:
+                    intersection = cast(
+                        BedRegion, gene_region.intersection(region))
+                    if intersection:
+                        result.append(intersection)
+            result = collapse(result)
+            logger.info("original regions: %s; result: %s", regions, result)
+            regions = result
+
+        return regions
+
+    def _build_regions_where(
+        self, regions: list[BedRegion]
+    ) -> str:
+
+        where: list[str] = []
+        for reg in regions:
+            reg_where = (
+                f"sa.chromosome = '{reg.chrom}'"
+                f" AND ( "
+                f"({reg.start} <= sa.position AND "
+                f"sa.position <= {reg.end}) OR "
+                f"(COALESCE(sa.end_position, -1) >= {reg.start} AND "
+                f"COALESCE(sa.end_position, -1) <= {reg.end}) OR "
+                f"(sa.position <= {reg.start} AND "
+                f"COALESCE(sa.end_position, -1) >= {reg.end}) "
+                f")"
+            )
+            where.append(f"( {reg_where} )")
+        return " OR ".join(where)

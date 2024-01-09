@@ -52,6 +52,7 @@ class SqlSchema2Variants(QueryVariantsBase):
 
         self.summary_allele_schema = self._fetch_summary_schema()
         self.family_variant_schema = self._fetch_family_schema()
+
         self.combined_columns = {
             **self.family_variant_schema,
             **self.summary_allele_schema,
