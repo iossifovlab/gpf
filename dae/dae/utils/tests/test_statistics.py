@@ -5,7 +5,7 @@ from dae.utils.statistics import StatsCollection
 
 
 @pytest.fixture
-def stats_fixture():
+def stats_fixture() -> StatsCollection:
     stats = StatsCollection()
     assert stats is not None
 
@@ -15,7 +15,7 @@ def stats_fixture():
     return stats
 
 
-def test_stats_simple(stats_fixture):
+def test_stats_simple(stats_fixture: StatsCollection) -> None:
     stats = stats_fixture
 
     assert stats.get(("a", )) == 1
@@ -23,24 +23,23 @@ def test_stats_simple(stats_fixture):
     assert stats.get(("b", "2")) == 2
 
 
-def test_stats_get(stats_fixture):
+def test_stats_get(stats_fixture: StatsCollection) -> None:
     stats = stats_fixture
 
     assert stats[("b", "1")] == 1
-    assert stats.get(("b", "3")) is None
+    assert stats.get(("b", "3")) == 0
 
-    assert stats.get(("c",)) is None
+    assert stats.get(("c",)) == 0
 
 
-def test_stats_len(stats_fixture):
+def test_stats_len(stats_fixture: StatsCollection) -> None:
     stats = stats_fixture
     assert len(stats) == 3
 
 
-def test_stats_items(stats_fixture):
+def test_stats_items(stats_fixture: StatsCollection) -> None:
     stats = stats_fixture
     result = list(stats.items())
-
     assert result == [
         (("a", ), 1),
         (("b", "1"), 1),
@@ -48,7 +47,7 @@ def test_stats_items(stats_fixture):
     ]
 
 
-def test_stats_values(stats_fixture):
+def test_stats_values(stats_fixture: StatsCollection) -> None:
     stats = stats_fixture
     assert list(stats.values()) == [
         1,
@@ -57,7 +56,7 @@ def test_stats_values(stats_fixture):
     ]
 
 
-def test_stats_keys(stats_fixture):
+def test_stats_keys(stats_fixture: StatsCollection) -> None:
     stats = stats_fixture
     assert list(stats.keys()) == [
         ("a", ),
@@ -66,7 +65,7 @@ def test_stats_keys(stats_fixture):
     ]
 
 
-def test_stats_get_multi(stats_fixture):
+def test_stats_get_multi(stats_fixture: StatsCollection) -> None:
     stats = stats_fixture
 
     assert stats[("b",)] == {
@@ -75,7 +74,7 @@ def test_stats_get_multi(stats_fixture):
     }
 
 
-def test_stats_get_multi2(stats_fixture):
+def test_stats_get_multi2(stats_fixture: StatsCollection) -> None:
     stats = stats_fixture
     stats[("a", "3")] = 3
     stats[("a", "4")] = 4
@@ -85,3 +84,16 @@ def test_stats_get_multi2(stats_fixture):
         ("a", "3"): 3,
         ("a", "4"): 4,
     }
+
+
+def test_stats_default_0(stats_fixture: StatsCollection) -> None:
+    stats = stats_fixture
+
+    stats.inc(("tttt",))
+    assert stats[("tttt",)] == 1
+
+    stats.inc(("tttt",))
+    assert stats[("tttt",)] == 2
+
+    stats.inc(("tttt", "tttt"))
+    assert stats[("tttt", "tttt")] == 1

@@ -17,10 +17,12 @@ from dae.variants_loaders.cnv.flexible_cnv_loader import \
     _cnv_person_id_to_best_state, \
     _cnv_vcf_to_vcf_trasformer, \
     flexible_cnv_loader
+from dae.gpf_instance.gpf_instance import GPFInstance
+from dae.pedigrees.families_data import FamiliesData
 
 
 @pytest.fixture
-def cnv_dae():
+def cnv_dae() -> io.StringIO:
     content = io.StringIO(convert_to_tab_separated(textwrap.dedent(
         """
         family_id  location               variant  best_state
@@ -33,7 +35,7 @@ def cnv_dae():
     return content
 
 
-def test_cnv_dae_location(cnv_dae):
+def test_cnv_dae_location(cnv_dae: io.StringIO) -> None:
     next(cnv_dae)  # skip the header
 
     transformers = [
@@ -61,7 +63,7 @@ def test_cnv_dae_location(cnv_dae):
     assert v["pos_end"] == 28369279
 
 
-def test_cnv_dae_variant_type(cnv_dae):
+def test_cnv_dae_variant_type(cnv_dae: io.StringIO) -> None:
     next(cnv_dae)  # skip header
 
     transformers = [
@@ -102,7 +104,11 @@ def test_cnv_dae_variant_type(cnv_dae):
     ]
 )
 def test_cnv_variant_to_variant_type(
-        cnv_plus_values, cnv_minus_values, variant, expected):
+    cnv_plus_values: list[str],
+    cnv_minus_values: list[str],
+    variant: str,
+    expected: Allele.Type
+) -> None:
 
     transformer = _cnv_variant_to_variant_type(
         cnv_plus_values, cnv_minus_values)
@@ -118,7 +124,10 @@ def test_cnv_variant_to_variant_type(
     ]
 )
 def test_cnv_unexpeced_variant_to_variant_type(
-        cnv_plus_values, cnv_minus_values, variant):
+    cnv_plus_values: list[str],
+    cnv_minus_values: list[str],
+    variant: str
+) -> None:
 
     transformer = _cnv_variant_to_variant_type(
         cnv_plus_values, cnv_minus_values)
@@ -135,8 +144,12 @@ def test_cnv_unexpeced_variant_to_variant_type(
     ]
 )
 def test_cnv_dae_best_state(
-        families, cnv_dae, gpf_instance_2013,
-        index, expected):
+    families: FamiliesData,
+    cnv_dae: io.StringIO,
+    gpf_instance_2013: GPFInstance,
+    index: int,
+    expected: str
+) -> None:
 
     genome = gpf_instance_2013.reference_genome
     next(cnv_dae)
@@ -163,14 +176,15 @@ def test_cnv_dae_best_state(
 
 
 @pytest.fixture
-def cnv_person_id():
+def cnv_person_id() -> io.StringIO:
     content = io.StringIO(convert_to_tab_separated(textwrap.dedent(
         """
-        person_id  location               variant
-        f1.s2      1:1590681-1628197      CNV+
-        f2.p1      1:28298951-28369279    CNV-
-        f1.s2      X:22944530-23302214    CNV-
-        f1.p1      X:153576690-153779907  CNV+
+        person_id    location               variant
+        f1.s2        1:1590681-1628197      CNV+
+        f1.p1;f1.s2  2:1590681-1628197      CNV+
+        f2.p1        1:28298951-28369279    CNV-
+        f1.s2        X:22944530-23302214    CNV-
+        f1.p1        X:153576690-153779907  CNV+
         """
     )))
     return content
@@ -179,14 +193,19 @@ def cnv_person_id():
 @pytest.mark.parametrize(
     "index,expected", [
         (0, "2221/0001"),
-        (1, "221/001"),
-        (2, "2111/0001"),
-        (3, "2102/0010"),
+        (1, "2211/0011"),
+        (2, "221/001"),
+        (3, "2111/0001"),
+        (4, "2102/0010"),
     ]
 )
 def test_cnv_person_id_best_state(
-        families, cnv_person_id, gpf_instance_2013,
-        index, expected):
+    families: FamiliesData,
+    cnv_person_id: io.StringIO,
+    gpf_instance_2013: GPFInstance,
+    index: int,
+    expected: str
+) -> None:
 
     genome = gpf_instance_2013.reference_genome
     next(cnv_person_id)
@@ -205,7 +224,7 @@ def test_cnv_person_id_best_state(
         filters=[])
 
     results = list(generator)
-    assert len(results) == 4
+    assert len(results) == 5
 
     result = results[index]
 
@@ -213,7 +232,7 @@ def test_cnv_person_id_best_state(
 
 
 @pytest.fixture
-def cnv_vcf():
+def cnv_vcf() -> io.StringIO:
     content = io.StringIO(convert_to_tab_separated(textwrap.dedent(
         """
         person_id  chr  pos         pos_end      variant
@@ -235,8 +254,12 @@ def cnv_vcf():
     ]
 )
 def test_cnv_vcf_position(
-        families, cnv_vcf, gpf_instance_2013,
-        index, expected):
+    families: FamiliesData,
+    cnv_vcf: io.StringIO,
+    gpf_instance_2013: GPFInstance,
+    index: int,
+    expected: str
+) -> None:
 
     genome = gpf_instance_2013.reference_genome
     next(cnv_vcf)
@@ -262,7 +285,11 @@ def test_cnv_vcf_position(
     assert mat2str(result["best_state"]) == expected
 
 
-def test_cnv_loader_simple(families, cnv_dae, gpf_instance_2013):
+def test_cnv_loader_simple(
+    families: FamiliesData,
+    cnv_dae: io.StringIO,
+    gpf_instance_2013: GPFInstance
+) -> None:
 
     generator = flexible_cnv_loader(
         cnv_dae, families, gpf_instance_2013.reference_genome,
