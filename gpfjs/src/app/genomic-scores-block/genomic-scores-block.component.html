@@ -10,16 +10,17 @@
       </li>
     </ul>
     <div *ngIf="genomicScoresArray?.length > 0" class="card-block">
-      <div style="padding: 5px" *ngFor="let score of genomicScoresState.genomicScoresState; let i = index">
-        <span style="padding: 5px; display: block; overflow: hidden">
-          <gpf-remove-button [field]="score" (removeFilter)="removeFilter($event)"></gpf-remove-button>
+      <div *ngFor="let score of genomicScoresState.genomicScoresState; let i = index">
+        <span style="display: block; position: relative; overflow: hidden; border-top: 1px solid rgba(0, 0, 0, 0.17)">
+          <div style="position: absolute; right: 0px; top: 18px; height: 30px">
+            <gpf-remove-button [field]="score" (removeFilter)="removeFilter($event)"></gpf-remove-button>
+          </div>
           <gpf-genomic-scores
             [genomicScoreState]="score"
             [errors]="errors"
             [genomicScoresArray]="genomicScoresArray"
             (updateGenomicScoreEvent)="updateState()">
           </gpf-genomic-scores>
-          <hr *ngIf="genomicScoresState.genomicScoresState.length - 1 !== i" width="100%" />
         </span>
       </div>
     </div>
