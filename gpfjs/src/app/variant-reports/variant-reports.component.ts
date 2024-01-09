@@ -112,7 +112,7 @@ export class VariantReportsComponent implements OnInit {
     );
   }
 
-  public addFilter(tag: string): void {
+  public selectFilter(tag: string): void {
     if (this.filtersButtonsState[tag] === 1) {
       this.filtersButtonsState[tag] = 0;
     } else {
@@ -123,7 +123,7 @@ export class VariantReportsComponent implements OnInit {
     this.updateFamiliesCount();
   }
 
-  public removeFilter(tag: string): void {
+  public deselectFilter(tag: string): void {
     if (this.filtersButtonsState[tag] === -1) {
       this.filtersButtonsState[tag] = 0;
     } else {
@@ -168,17 +168,18 @@ export class VariantReportsComponent implements OnInit {
       this.tagsHeader += this.selectedTags.join(', ');
     }
 
-    if (this.deselectedTags.length > 0 && this.selectedTags.length > 0) {
-      this.tagsHeader += ', ';
-      this.tagsHeader += this.deselectedTags.join(', ');
-    } else {
-      this.tagsHeader += this.deselectedTags.join(', ');
+    if (this.deselectedTags.length > 0) {
+      if (this.tagsHeader !== '') {
+        this.tagsHeader += ', ';
+      }
+      this.tagsHeader += 'not ' + this.deselectedTags.join(', not ');
     }
 
     if (this.selectedTags.length === 0 && this.deselectedTags.length === 0) {
       this.tagsHeader = '';
     }
   }
+
 
   public updateFamiliesCount(): void {
     this.familiesCount = 0;
@@ -220,8 +221,6 @@ export class VariantReportsComponent implements OnInit {
     const copiedCounters = this.copyOriginalPedigreeCounters();
     const filteredCounters = {};
     for (const [groupName, counters] of Object.entries(copiedCounters)) {
-      console.log(counters);
-
       filteredCounters[groupName] =
         counters.filter(x => {
           if (this.tagIntersection) {

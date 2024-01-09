@@ -7,11 +7,11 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { PerfectlyDrawablePedigreeService } from 'app/perfectly-drawable-pedigree/perfectly-drawable-pedigree.service';
 import { ResizeService } from 'app/table/resize.service';
-import { DenovoReport, PedigreeCounter, PedigreeTable } from './variant-reports';
+import { DenovoReport, FamilyCounter, PedigreeCounter, PedigreeTable } from './variant-reports';
 import { PedigreeData } from 'app/genotype-preview-model/genotype-preview';
 import { HttpResponse } from '@angular/common/http';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
-import * as lodash from 'lodash';
+import { ConfigService } from 'app/config/config.service';
 
 class MockDatasetsService {
   public getSelectedDataset(): object {
@@ -61,7 +61,7 @@ class MockActivatedRoute {
 
   public constructor(datasetId: string = 'test_dataset') {
     this.datasetId = datasetId;
-    this.params = {dataset: this.datasetId, get: () => { return '' }};
+    this.params = {dataset: this.datasetId, get: () => ''};
     this.parent = {params: of(this.params)};
     this.queryParamMap = of(this.params);
   }
@@ -214,7 +214,9 @@ class VariantReportsServiceMock {
             groupName: 'Role',
             rows: ['people_male', 'people_female', 'people_total'],
             columns: ['prb', 'mom', 'sib', 'dad'],
-            getChildrenCounter: function() { return 0 }
+            getChildrenCounter: function() {
+              return 0;
+            }
           }
         ],
       },
@@ -303,6 +305,7 @@ describe('VariantReportsComponent', () => {
       declarations: [VariantReportsComponent, PeopleCounterRowPipe],
       imports: [FormsModule],
       providers: [
+        ConfigService,
         { provide: VariantReportsService, useValue: variantReportsServiceMock },
         { provide: ActivatedRoute, useValue: activatedRouteMock },
         { provide: Router, useValue: {} },
@@ -317,7 +320,9 @@ describe('VariantReportsComponent', () => {
     component = fixture.componentInstance;
 
     //Stubbing the function to reduce mock test data
-    component['chunkPedigrees'] = function(a, b) { return null; };
+    component['chunkPedigrees'] = function(a, b) {
+      return null;
+    };
   });
 
   it('should create', () => {
@@ -339,24 +344,130 @@ describe('VariantReportsComponent', () => {
   });
 
   it('should update selected pedigree tags', () => {
-    component.selectedItems = ['tag1', 'tag2', 'tag3', 'tag4', 'tag5'];
+    component.selectedTags = ['tag1', 'tag2', 'tag3'];
     const updatePedigreesTable = jest.spyOn(component, 'updateTagFilters')
       .mockImplementation(() => null);
 
     const updateFamiliesCountMock = jest.spyOn(component, 'updateFamiliesCount')
       .mockImplementation(() => null);
 
-    component.updateSelectedTags('tag6');
-    expect(component.selectedItems).toStrictEqual(['tag1', 'tag2', 'tag3', 'tag4', 'tag5', 'tag6']);
-    expect(component.selectedTagsHeader).toBe('tag1, tag2, tag3, tag4, tag5, tag6');
-    expect(updatePedigreesTable).toHaveBeenCalledWith();
-    expect(updateFamiliesCountMock).toHaveBeenCalledWith();
+    const updateSelectedTagsListMock = jest.spyOn(component, 'updateSelectedTagsList');
 
-    component.updateSelectedTags('tag3');
-    expect(component.selectedItems).toStrictEqual(['tag1', 'tag2', 'tag4', 'tag5', 'tag6']);
-    expect(component.selectedTagsHeader).toBe('tag1, tag2, tag4, tag5, tag6');
+    component.selectFilter('tag4');
+    expect(component.filtersButtonsState['tag4']).toBe(1);
+    expect(updateSelectedTagsListMock).toHaveBeenCalledWith('tag4');
     expect(updatePedigreesTable).toHaveBeenCalledWith();
     expect(updateFamiliesCountMock).toHaveBeenCalledWith();
+    expect(component.selectedTags).toStrictEqual(['tag1', 'tag2', 'tag3', 'tag4']);
+    expect(component.tagsHeader).toBe('tag1, tag2, tag3, tag4');
+
+    component.selectFilter('tag4');
+    expect(component.filtersButtonsState['tag4']).toBe(0);
+    expect(updateSelectedTagsListMock).toHaveBeenCalledWith('tag4');
+    expect(updatePedigreesTable).toHaveBeenCalledWith();
+    expect(updateFamiliesCountMock).toHaveBeenCalledWith();
+    expect(component.selectedTags).toStrictEqual(['tag1', 'tag2', 'tag3']);
+    expect(component.tagsHeader).toBe('tag1, tag2, tag3');
+  });
+
+  it('should update deselected pedigree tags', () => {
+    component.deselectedTags = ['tag1', 'tag2'];
+    const updatePedigreesTable = jest.spyOn(component, 'updateTagFilters')
+      .mockImplementation(() => null);
+
+    const updateFamiliesCountMock = jest.spyOn(component, 'updateFamiliesCount')
+      .mockImplementation(() => null);
+
+    const updateDeselectedTagsListMock = jest.spyOn(component, 'updateDeselectedTagsList');
+
+    component.deselectFilter('tag3');
+    expect(component.filtersButtonsState['tag3']).toBe(-1);
+    expect(updateDeselectedTagsListMock).toHaveBeenCalledWith('tag3');
+    expect(updatePedigreesTable).toHaveBeenCalledWith();
+    expect(updateFamiliesCountMock).toHaveBeenCalledWith();
+    expect(component.deselectedTags).toStrictEqual(['tag1', 'tag2', 'tag3']);
+    expect(component.tagsHeader).toBe('not tag1, not tag2, not tag3');
+
+    component.deselectFilter('tag3');
+    expect(component.filtersButtonsState['tag3']).toBe(0);
+    expect(updateDeselectedTagsListMock).toHaveBeenCalledWith('tag3');
+    expect(updatePedigreesTable).toHaveBeenCalledWith();
+    expect(updateFamiliesCountMock).toHaveBeenCalledWith();
+    expect(component.deselectedTags).toStrictEqual(['tag1', 'tag2']);
+    expect(component.tagsHeader).toBe('not tag1, not tag2');
+  });
+
+  it('should test mixing selecting and deselecting pedigree tags', () => {
+    const updatePedigreesTable = jest.spyOn(component, 'updateTagFilters')
+      .mockImplementation(() => null);
+
+    const updateFamiliesCountMock = jest.spyOn(component, 'updateFamiliesCount')
+      .mockImplementation(() => null);
+
+    component.selectFilter('tag1');
+    component.deselectFilter('tag2');
+    component.selectFilter('tag3');
+    component.deselectFilter('tag4');
+    expect(component.selectedTags).toStrictEqual(['tag1', 'tag3']);
+    expect(component.deselectedTags).toStrictEqual(['tag2', 'tag4']);
+    expect(component.tagsHeader).toBe('tag1, tag3, not tag2, not tag4');
+  });
+
+  it('should test mode "Or" and "And"', () => {
+    const pedigreeCounters: PedigreeCounter[] = [];
+    pedigreeCounters.push(new PedigreeCounter(null, null, null, null, ['tag1', 'tag2', 'tag3', 'tag4']));
+    pedigreeCounters.push(new PedigreeCounter(null, null, null, null, ['tag2', 'tag3']));
+    pedigreeCounters.push(new PedigreeCounter(null, null, null, null, ['tag1', 'tag5']));
+
+    component.familiesCounters = [new FamilyCounter(pedigreeCounters, null, null, null)];
+
+    component.pedigreeTables = [
+      new PedigreeTable([pedigreeCounters], null, null, null)];
+
+    component.currentPedigreeTable = new PedigreeTable([pedigreeCounters], null, null, null);
+
+    const updatePedigreesMock = jest.spyOn(component, 'updatePedigrees');
+
+    // mode And
+    component.selectFilter('tag1');
+    expect(updatePedigreesMock).toHaveBeenCalledWith(
+      {
+        null: [
+          new PedigreeCounter(null, null, null, null, ['tag1', 'tag2', 'tag3', 'tag4']),
+          new PedigreeCounter(null, null, null, null, ['tag1', 'tag5'])
+        ]
+      }
+    );
+
+    component.deselectFilter('tag4');
+    expect(updatePedigreesMock).toHaveBeenLastCalledWith(
+      {
+        null: [new PedigreeCounter(null, null, null, null, ['tag1', 'tag5'])]
+      }
+    );
+
+    // mode Or
+    component.clearFilters();
+    component.tagIntersection = false;
+    component.selectFilter('tag5');
+    expect(updatePedigreesMock).toHaveBeenCalledWith(
+      {
+        null: [
+          new PedigreeCounter(null, null, null, null, ['tag1', 'tag5'])
+        ]
+      }
+    );
+
+    component.deselectFilter('tag4');
+    expect(updatePedigreesMock).toHaveBeenLastCalledWith(
+      {
+        null: [
+          new PedigreeCounter(null, null, null, null, ['tag2', 'tag3']),
+          new PedigreeCounter(null, null, null, null, ['tag1', 'tag5'])
+
+        ]
+      }
+    );
   });
 
   it('should open modal with pedigree tags', () => {
@@ -370,39 +481,16 @@ describe('VariantReportsComponent', () => {
     );
   });
 
-  it('should search in modal with pedigree tags', () => {
-    const tagsArr = ['ABC', 'BCA', 'CAB'];
-    component.tags = lodash.cloneDeep(tagsArr);
-    component.search(' ab   ');
-    expect(component.searchValue).toBe('ab');
-    expect(component.tags).toStrictEqual(tagsArr);
-    expect(component.orderedTagList).toStrictEqual(['ABC', 'CAB', 'BCA']);
-
-    component.search(' bc   ');
-    expect(component.searchValue).toBe('bc');
-    expect(component.tags).toStrictEqual(tagsArr);
-    expect(component.orderedTagList).toStrictEqual(['ABC', 'BCA', 'CAB']);
-
-    component.search(' ca   ');
-    expect(component.searchValue).toBe('ca');
-    expect(component.tags).toStrictEqual(tagsArr);
-    expect(component.orderedTagList).toStrictEqual(['BCA', 'CAB', 'ABC']);
-
-    component.search('    ');
-    expect(component.searchValue).toBe('');
-    expect(component.tags).toStrictEqual(tagsArr);
-    expect(component.orderedTagList).toStrictEqual(['ABC', 'BCA', 'CAB']);
-  });
-
-  it('should uncheck all checked tags in modal with pedigree tags', () => {
+  it('should remove all filters in modal with pedigree tags', () => {
     const updatePedigreesTable = jest.spyOn(component, 'updateTagFilters')
       .mockImplementation(() => null);
-    component.selectedItems = ['tag1', 'tag2', 'tag3'];
-    component.selectedTagsHeader = 'tag1, tag2, tag3';
-    component.uncheckAll();
+    component.selectedTags = ['tag1', 'tag2'];
+    component.deselectedTags = ['tag3', 'tag4'];
+    component.tagsHeader = 'tag1, tag2, not tag3, not tag4';
+    component.clearFilters();
 
-    expect(component.selectedItems).toHaveLength(0);
-    expect(component.selectedTagsHeader).toBe('');
+    expect(component.selectedTags).toHaveLength(0);
+    expect(component.tagsHeader).toBe('');
     expect(updatePedigreesTable).toHaveBeenCalledWith();
   });
 

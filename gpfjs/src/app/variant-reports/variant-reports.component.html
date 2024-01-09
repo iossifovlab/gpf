@@ -143,14 +143,14 @@
               <span
                 class="material-icons tags"
                 [id]="tag + '-tag-add'"
-                (click)="addFilter(tag)"
+                (click)="selectFilter(tag)"
                 [ngStyle]="{ color: filtersButtonsState[tag] === 1 ? 'green' : '#cdcdcd' }"
                 >add_circle</span
               >
               <span
                 class="material-icons tags"
                 [id]="tag + '-tag-remove'"
-                (click)="removeFilter(tag)"
+                (click)="deselectFilter(tag)"
                 [ngStyle]="{ color: filtersButtonsState[tag] === -1 ? 'red' : '#cdcdcd' }"
                 >remove_circle</span
               >
