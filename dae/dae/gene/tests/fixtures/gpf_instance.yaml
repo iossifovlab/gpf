@@ -1,4 +1,6 @@
 
+instance_id: "test_instance"
+
 reference_genome:
   resource_id: "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/genome"
 

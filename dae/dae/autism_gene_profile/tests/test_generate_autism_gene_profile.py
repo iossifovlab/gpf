@@ -11,6 +11,7 @@ from dae.genomic_resources.testing import \
 from dae.testing.t4c8_import import t4c8_gpf
 from dae.autism_gene_profile.generate_autism_gene_profile import main
 from dae.autism_gene_profile.db import AutismGeneProfileDB
+from dae.gpf_instance.gpf_instance import GPFInstance
 
 
 @pytest.fixture
@@ -84,7 +85,7 @@ def agp_config() -> dict:
 
 def agpf_gpf_instance(
         agp_config: str,
-        tmp_path: pathlib.Path) -> None:
+        tmp_path: pathlib.Path) -> GPFInstance:
     setup_directories(
         tmp_path,
         {
@@ -92,6 +93,7 @@ def agpf_gpf_instance(
                 "agp_config.yaml": yaml.dump(
                     agp_config, default_flow_style=False),
                 "gpf_instance.yaml": textwrap.dedent("""
+                    instance_id: test_instance
                     autism_gene_tool_config:
                         conf_file: "agp_config.yaml"
                     gene_sets_db:

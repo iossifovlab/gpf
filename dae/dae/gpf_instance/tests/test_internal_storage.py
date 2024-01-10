@@ -65,6 +65,7 @@ def test_internal_genotype_storage_with_other_storages(
 
     setup_directories(root_path / "gpf_instance", {
         "gpf_instance.yaml": textwrap.dedent("""
+        instance_id: test_instance
         genotype_storage:
             default: alabala
             storages:

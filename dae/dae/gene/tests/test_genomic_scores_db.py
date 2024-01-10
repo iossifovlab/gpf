@@ -104,6 +104,7 @@ def annotation_gpf(
 
     setup_directories(root_path / "gpf_instance", {
         "gpf_instance.yaml": textwrap.dedent("""
+        instance_id: test_instance
         annotation:
             conf_file: annotation.yaml
         """),

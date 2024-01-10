@@ -1,6 +1,8 @@
 vars:
   instance_id: test_data
 
+instance_id: '%(instance_id)s'
+
 reference_genome:
   resource_id: "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/genome"
 
