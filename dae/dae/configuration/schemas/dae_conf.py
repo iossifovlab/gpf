@@ -112,6 +112,11 @@ genomic_score_schema = {
 }
 
 dae_conf_schema = {
+    "instance_id": {
+        "type": "string",
+        "required": True
+    },
+
     "dae_data_dir": {
         "type": "string",
         "check_with": validate_existing_path,

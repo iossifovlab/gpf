@@ -98,6 +98,10 @@ class GPFInstance:
         self.dae_config = dae_config
         self.dae_dir = str(dae_dir)
 
+        self.instance_id = self.dae_config.get("instance_id")
+
+        assert self.instance_id is not None, "No instance ID provided."
+
         self._grr = cast(GenomicResourceRepo, kwargs.get("grr"))
         self._reference_genome = cast(
             ReferenceGenome, kwargs.get("reference_genome")

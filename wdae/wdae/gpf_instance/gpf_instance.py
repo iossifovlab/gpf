@@ -572,7 +572,7 @@ def reload_datasets(gpf_instance: WGPFInstance) -> None:
                 continue
             Dataset.recreate_dataset_perm(study_id)
 
-    DatasetHierarchy.clear()
+    DatasetHierarchy.clear(gpf_instance.instance_id)
     datasets = gpf_instance.get_genotype_data_ids()
     for genotype_data_id in datasets:
         genotype_data = gpf_instance.get_genotype_data(genotype_data_id)
@@ -586,7 +586,7 @@ def reload_datasets(gpf_instance: WGPFInstance) -> None:
                 continue
             is_direct = study_id in direct_descendants
             DatasetHierarchy.add_relation(
-                genotype_data_id, study_id, is_direct
+                gpf_instance.instance_id, genotype_data_id, study_id, is_direct
             )
 
 
