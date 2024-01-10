@@ -66,6 +66,7 @@ class DuckDbGenotypeStorage(GenotypeStorage):
 
     def __init__(self, storage_config: dict[str, Any]):
         super().__init__(storage_config)
+        self._read_only = self.get_read_only()
         self.connection_factory: Optional[duckdb.DuckDBPyConnection] = None
 
     @classmethod
@@ -109,6 +110,26 @@ class DuckDbGenotypeStorage(GenotypeStorage):
         self.connection_factory = duckdb_connect(
             db_name=db_name, read_only=read_only)
         return self
+
+    def restart(self, read_only: bool) -> DuckDbGenotypeStorage:
+        """Restart the genotype storage with a new read_only flag."""
+        if read_only == self._read_only:
+            return self
+        self.shutdown()
+
+        db_name = self.get_db()
+        if db_name is not None:
+            db_name = self._base_dir_join(db_name)
+            dirname = os.path.dirname(db_name)
+            os.makedirs(dirname, exist_ok=True)
+        self._read_only = read_only
+
+        self.connection_factory = duckdb_connect(
+            db_name=db_name, read_only=read_only)
+        return self
+
+    def is_read_only(self) -> bool:
+        return self._read_only
 
     def shutdown(self) -> DuckDbGenotypeStorage:
         if self.connection_factory is None:
@@ -332,6 +353,17 @@ class DuckDbGenotypeStorage(GenotypeStorage):
                 f"duckdb genotype storage not started: "
                 f"{self.storage_config}")
         assert self.connection_factory is not None
+        # if not self.is_read_only():
+        #     self.restart(read_only=True)
+        # if self.connection_factory is None:
+        #     raise ValueError(
+        #         f"duckdb genotype storage not started: "
+        #         f"{self.storage_config}")
+        # if not self.is_read_only():
+        #     raise ValueError(
+        #         f"duckdb genotype storage not started in read-only mode: "
+        #         f"{self.storage_config}")
+
         return DuckDbVariants(
             self.connection_factory,
             db_name,

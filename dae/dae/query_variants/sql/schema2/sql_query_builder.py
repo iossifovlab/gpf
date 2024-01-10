@@ -126,3 +126,53 @@ class SqlQueryBuilder:
             )
             where.append(f"( {reg_where} )")
         return " OR ".join(where)
+
+    def _build_real_attr_where(
+        self, real_attr_filter: RealAttrFilterType,
+        is_frequency: bool = False
+    ) -> str:
+
+        where = []
+        for attr_name, attr_range in real_attr_filter:
+            if attr_name not in self.db_layout.summary_schema:
+                where.append("false")
+                continue
+
+            left, right = attr_range
+
+            if left is None and right is None:
+                # if the filter is frequency and we have no range, we
+                # we want to include all variants - don't add filter to query
+                # otherwise we want to exclude variants that have no value
+                if not is_frequency:
+                    where.append(f"sa.{attr_name} is not null")
+            elif left is None:
+                assert right is not None
+                if is_frequency:
+                    where.append(
+                        f"sa.{attr_name} <= {right} or sa.{attr_name} is null"
+                    )
+                else:
+                    where.append(
+                        f"sa.{attr_name} <= {right}"
+                    )
+            elif right is None:
+                assert left is not None
+                where.append(f"sa.{attr_name} >= {left}")
+            else:
+                where.append(
+                    f"sa.{attr_name} >= {left} AND sa.{attr_name} <= {right}"
+                )
+        return " AND ".join(f"( {w} )" for w in where)
+
+    def _build_ultra_rare_where(self) -> str:
+        """Create ultra rare variants filter.
+
+        Ultra rare variants are variants that are present in only one family.
+        Given ultra rare filter we return ultra rare variants and de novo
+        that have no frequency information.
+        """
+        return self._build_real_attr_where(
+            real_attr_filter=[("af_allele_count", (None, 1))],
+            is_frequency=True,
+        )

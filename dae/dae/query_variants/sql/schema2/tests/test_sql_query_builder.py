@@ -15,7 +15,8 @@ from dae.pedigrees.families_data import FamiliesData
 from dae.pedigrees.loader import FamiliesLoader
 
 from dae.query_variants.sql.schema2.sql_query_builder import \
-    SqlQueryBuilder
+    SqlQueryBuilder, \
+    RealAttrFilterType
 
 
 def test_summary_query_builder() -> None:
@@ -215,3 +216,69 @@ def test_build_regions_where(
         tables=tables)
 
     assert len(result) == expected
+
+
+@pytest.mark.parametrize(
+    "real_attr_filter,is_frequency,expected", [
+        ([("af_allele_freq", (0.0, 1.0))], True, 1),
+        ([("af_allele_freq", (None, 1.0))], True, 2),
+        ([("af_allele_freq", (0.5, None))], True, 2),
+        ([("af_allele_freq", (None, None))], True, 3),
+
+        ([("af_allele_freq", (0.0, 1.0))], False, 1),
+        ([("af_allele_freq", (None, 1.0))], False, 1),
+        ([("af_allele_freq", (0.5, None))], False, 2),
+        ([("af_allele_freq", (None, None))], False, 2),
+    ]
+)
+def test_build_real_attr_where(
+    sql_query_builder_simple: SqlQueryBuilder,
+    real_attr_filter: RealAttrFilterType,
+    is_frequency: bool,
+    expected: int,
+) -> None:
+    tables = {
+        "summary_allele": [
+            {"af_allele_freq": 0.5, },
+            {"af_allele_freq": None, },
+            {"af_allele_freq": 50.0, },
+
+        ],
+    }
+    where = sql_query_builder_simple._build_real_attr_where(
+        real_attr_filter, is_frequency
+    )
+    if not is_frequency:
+        assert where
+
+    if where:
+        query = f"SELECT * FROM summary_allele sa WHERE {where}"
+    else:
+        query = "SELECT * FROM summary_allele sa"
+
+    result = execute(
+        query,
+        tables=tables)
+
+    assert len(result) == expected
+
+
+def test_build_ultra_rare_where(
+    sql_query_builder_simple: SqlQueryBuilder
+) -> None:
+    tables = {
+        "summary_allele": [
+            {"af_allele_count": 1, },
+            {"af_allele_count": None, },
+            {"af_allele_count": 50, },
+
+        ],
+    }
+    where = sql_query_builder_simple._build_ultra_rare_where()
+    query = f"SELECT * FROM summary_allele sa WHERE {where}"
+
+    result = execute(
+        query,
+        tables=tables)
+
+    assert len(result) == 2
