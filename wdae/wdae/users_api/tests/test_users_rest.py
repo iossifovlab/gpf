@@ -534,33 +534,33 @@ def test_admin_cannot_delete_own_user(
     assert user_model.objects.filter(pk=admin.id).exists()
 
 
-def test_admin_can_reset_password(
+def test_admin_can_password_reset(
     admin_client: Client, active_user: WdaeUser, user_model: Type[WdaeUser]
 ) -> None:
 
-    url = f"/api/v3/users/{active_user.id}/reset_password"
+    url = f"/api/v3/users/{active_user.id}/password_reset"
     response = admin_client.post(
         url, content_type="application/json", format="json"
     )
     assert response.status_code is status.HTTP_204_NO_CONTENT
 
 
-def test_non_admin_can_not_reset_password(
+def test_non_admin_can_not_password_reset(
     user_client: Client, active_user: WdaeUser, user_model: Type[WdaeUser]
 ) -> None:
 
-    url = f"/api/v3/users/{active_user.id}/reset_password"
+    url = f"/api/v3/users/{active_user.id}/password_reset"
     response = user_client.post(
         url, content_type="application/json", format="json"
     )
     assert response.status_code is status.HTTP_403_FORBIDDEN
 
 
-def test_admin_reset_password_of_nonexiting_user_fails(
+def test_admin_password_reset_of_nonexiting_user_fails(
     admin_client: Client, active_user: WdaeUser, user_model: Type[WdaeUser]
 ) -> None:
 
-    url = "/api/v3/users/0/reset_password"
+    url = "/api/v3/users/0/password_reset"
     response = admin_client.post(
         url, content_type="application/json", format="json"
     )
