@@ -1,6 +1,8 @@
 vars:
   instance_id: data_hg19_local
 
+instance_id: '%(instance_id)s'
+
 genotype_storage:
   default: local_duckdb
 

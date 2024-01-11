@@ -34,19 +34,23 @@ class IsDatasetAllowed(permissions.BasePermission):
     def has_object_permission(
             self, request: HttpRequest, view: Any, obj: str
     ) -> bool:
-        if user_has_permission(cast(User, request.user), obj):
+        wgpf_instance = get_wgpf_instance()
+        if user_has_permission(
+            wgpf_instance.instance_id, cast(User, request.user), obj
+        ):
             return True
 
         return False
 
     @staticmethod
     def permitted_datasets(user: User) -> list[str]:
-        dataset_ids = get_wgpf_instance().get_genotype_data_ids()
+        wgpf_instance = get_wgpf_instance()
+        dataset_ids = wgpf_instance.get_genotype_data_ids()
 
         return list(
             filter(
                 lambda dataset_id: user_has_permission(
-                    user, dataset_id
+                    wgpf_instance.instance_id, user, dataset_id
                 ),
                 dataset_ids,
             )
@@ -70,7 +74,9 @@ def get_wdae_dataset(
     return Dataset.objects.get(dataset_id=dataset_id)
 
 
-def get_wdae_parents(dataset_id: str, direct: bool = False) -> List[Dataset]:
+def get_wdae_parents(
+    instance_id: str, dataset_id: str, direct: bool = False
+) -> List[Dataset]:
     """
     Return list of parent wdae dataset objects.
 
@@ -81,12 +87,12 @@ def get_wdae_parents(dataset_id: str, direct: bool = False) -> List[Dataset]:
     if dataset is None:
         return []
     if direct:
-        return DatasetHierarchy.get_parents(dataset, True)
+        return DatasetHierarchy.get_parents(instance_id, dataset, True)
 
-    return DatasetHierarchy.get_parents(dataset)
+    return DatasetHierarchy.get_parents(instance_id, dataset)
 
 
-def get_wdae_children(dataset_id: str) -> List[Dataset]:
+def get_wdae_children(instance_id: str, dataset_id: str) -> List[Dataset]:
     """
     Return list of child wdae dataset objects.
 
@@ -98,7 +104,7 @@ def get_wdae_children(dataset_id: str) -> List[Dataset]:
     dataset = get_wdae_dataset(dataset_id)
     if dataset is None:
         return []
-    return DatasetHierarchy.get_children(dataset)
+    return DatasetHierarchy.get_children(instance_id, dataset)
 
 
 def _user_has_permission_strict(user: User, dataset_id: str) -> bool:
@@ -133,7 +139,9 @@ def _user_has_permission_strict(user: User, dataset_id: str) -> bool:
     return bool(user_groups & dataset_groups)
 
 
-def _user_has_permission_up(user: User, dataset_id: str) -> bool:
+def _user_has_permission_up(
+    instance_id: str, user: User, dataset_id: str
+) -> bool:
     """
     Check user permissions on a dataset's parents.
 
@@ -143,7 +151,7 @@ def _user_has_permission_up(user: User, dataset_id: str) -> bool:
     if dataset is None:
         return True
 
-    for parent in get_wdae_parents(dataset.dataset_id):
+    for parent in get_wdae_parents(instance_id, dataset.dataset_id):
         if parent is None:
             logger.error("%s has missing parent!", dataset.dataset_id)
             continue
@@ -152,7 +160,9 @@ def _user_has_permission_up(user: User, dataset_id: str) -> bool:
     return False
 
 
-def _user_has_permission_down(user: User, dataset_id: str) -> bool:
+def _user_has_permission_down(
+    instance_id: str, user: User, dataset_id: str
+) -> bool:
     """
     Check user permissions on a dataset's children.
 
@@ -162,7 +172,7 @@ def _user_has_permission_down(user: User, dataset_id: str) -> bool:
     if dataset is None:
         return True
 
-    for child in get_wdae_children(dataset.dataset_id):
+    for child in get_wdae_children(instance_id, dataset.dataset_id):
         if child is None:
             logger.error("%s has missing parent!", dataset.dataset_id)
             continue
@@ -172,7 +182,7 @@ def _user_has_permission_down(user: User, dataset_id: str) -> bool:
 
 
 def check_permissions(
-    dataset: Dataset, groups: Union[list[str], set[str]]
+    instance_id: str, dataset: Dataset, groups: Union[list[str], set[str]]
 ) -> bool:
     """
     Check whether a set of groups has access to a dataset.
@@ -196,9 +206,10 @@ def check_permissions(
             "OR hr.descendant_id = dsgr.dataset_id "
             "JOIN auth_group as gr on gr.id = dsgr.group_id "
             "WHERE (ancestor_id = %s OR descendant_id = %s) "
+            "AND instance_id = %s"
             f"AND gr.name IN ({groups_in}) "
             "GROUP BY ancestor_id, descendant_id;",
-            [dataset.id, dataset.id, *groups]
+            [dataset.id, dataset.id, instance_id, *groups]
         )
         rows = list(cursor.fetchall())
 
@@ -206,7 +217,7 @@ def check_permissions(
 
 
 def check_permissions_up(
-    dataset: Dataset, groups: Union[list[str], set[str]]
+    instance_id: str, dataset: Dataset, groups: Union[list[str], set[str]]
 ) -> bool:
     """
     Check whether a set of groups has access to a dataset only through parents.
@@ -229,16 +240,17 @@ def check_permissions_up(
             "OR hr.descendant_id = dsgr.dataset_id "
             "JOIN auth_group as gr on gr.id = dsgr.group_id "
             "WHERE descendant_id = %s "
+            "AND instance_id = %s"
             f"AND gr.name IN ({groups_in}) "
             "GROUP BY ancestor_id, descendant_id;",
-            [dataset.id, *groups]
+            [dataset.id, instance_id, *groups]
         )
         rows = list(cursor.fetchall())
 
     return len(rows) > 0
 
 
-def user_has_permission(user: User, dataset_id: str) -> bool:
+def user_has_permission(instance_id: str, user: User, dataset_id: str) -> bool:
     """Check if a user has permission to browse the given dataset."""
     if settings.DISABLE_PERMISSIONS:
         return True
@@ -253,10 +265,12 @@ def user_has_permission(user: User, dataset_id: str) -> bool:
     if dataset is None:
         return True
 
-    return check_permissions(dataset, user_groups)
+    return check_permissions(instance_id, dataset, user_groups)
 
 
-def get_allowed_genotype_studies(user: User, dataset_id: str) -> set[str]:
+def get_allowed_genotype_studies(
+    instance_id: str, user: User, dataset_id: str
+) -> set[str]:
     """Collect and return genotype study IDs the user has access to."""
     skip_check = False
     if settings.DISABLE_PERMISSIONS or user.is_superuser or user.is_staff:
@@ -269,28 +283,36 @@ def get_allowed_genotype_studies(user: User, dataset_id: str) -> set[str]:
     if dataset is None:
         return set()
 
-    if DatasetHierarchy.is_study(dataset):
-        if skip_check or check_permissions_up(dataset, user_groups):
+    if DatasetHierarchy.is_study(instance_id, dataset):
+        if skip_check or check_permissions_up(
+            instance_id, dataset, user_groups
+        ):
             allowed_studies.add(dataset.dataset_id)
         return allowed_studies
 
-    for child in get_wdae_children(dataset.dataset_id):
-        if DatasetHierarchy.is_study(child):
-            if skip_check or check_permissions_up(child, user_groups):
+    for child in get_wdae_children(instance_id, dataset.dataset_id):
+        if DatasetHierarchy.is_study(instance_id, child):
+            if skip_check or check_permissions_up(
+                instance_id, child, user_groups
+            ):
                 allowed_studies.add(child.dataset_id)
 
     return set(allowed_studies)
 
 
-def get_allowed_genotype_data(user: User, dataset_id: str) -> set[str]:
+def get_allowed_genotype_data(
+    instance_id: str, user: User, dataset_id: str
+) -> set[str]:
     """Collect and return genotype data IDs the user has access to."""
     allowed_genotype_data = []
     dataset = get_wdae_dataset(dataset_id)
     if dataset is None:
         return set()
-    for child in get_wdae_children(dataset.dataset_id):
-        if _user_has_permission_strict(user, child.dataset_id) \
-                or _user_has_permission_up(user, child.dataset_id):
+    for child in get_wdae_children(instance_id, dataset.dataset_id):
+        if (
+            _user_has_permission_strict(user, child.dataset_id)
+            or _user_has_permission_up(instance_id, user, child.dataset_id)
+        ):
             allowed_genotype_data.append(child.dataset_id)
     if len(allowed_genotype_data) > 0:
         allowed_genotype_data.append(dataset.dataset_id)
@@ -377,7 +399,7 @@ def get_dataset_groups(dataset: Union[str, Dataset]) -> set[str]:
 
 
 def handle_partial_permissions(
-    user: User, dataset_id: str, request_data: dict
+        instance_id: str, user: User, dataset_id: str, request_data: dict
 ) -> None:
     """Handle partial permission on a dataset.
 
@@ -387,4 +409,4 @@ def handle_partial_permissions(
     in order to filter variants from studies the user cannot access.
     """
     request_data["allowed_studies"] = \
-        get_allowed_genotype_studies(user, dataset_id)
+        get_allowed_genotype_studies(instance_id, user, dataset_id)

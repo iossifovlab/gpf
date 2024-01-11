@@ -1,6 +1,8 @@
 vars:
   wd: "."
 
+instance_id: "test_instance"
+
 annotation:
   conf_file: "annotation.yaml"
 

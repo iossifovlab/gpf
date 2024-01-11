@@ -25,6 +25,7 @@ def gpf_instance(tmp_path_factory):
 
     setup_directories(root_path / "gpf_instance", {
         "gpf_instance.yaml": textwrap.dedent("""
+        instance_id: test_instance
         genotype_storage:
             default: alabala
             storages:

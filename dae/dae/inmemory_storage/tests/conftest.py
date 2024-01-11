@@ -52,6 +52,7 @@ def simple_project(tmp_path_factory):
         },
         "gpf_instance": {
             "gpf_instance.yaml": textwrap.dedent(f"""
+                instance_id: "test_instance"
                 grr:
                     id: "minimal"
                     type: "file"

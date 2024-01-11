@@ -21,8 +21,9 @@ def setup_wgpf_instance(
     grr: Optional[GenomicResourceRepo] = None
 ) -> WGPFInstance:
     """Set up a GPF instance using prebuild genome, gene models, etc."""
+    print(out_path)
     if not (out_path / "gpf_instance.yaml").exists():
-        setup_directories(out_path, {"gpf_instance.yaml": ""})
+        setup_directories(out_path, {"gpf_instance.yaml": "instance_id: test"})
     if reference_genome is None:
         if reference_genome_id is not None:
             assert grr is not None

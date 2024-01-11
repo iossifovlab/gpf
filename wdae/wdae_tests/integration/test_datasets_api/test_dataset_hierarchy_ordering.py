@@ -28,6 +28,7 @@ def create_wgpf_fixture(
     setup_directories(
         root_path / "gpf_instance", {
             "gpf_instance.yaml": textwrap.dedent(f"""
+                instance_id: test
                 gpfjs:
                   visible_datasets: { visible_datasets}
             """)

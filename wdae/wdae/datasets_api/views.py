@@ -12,7 +12,6 @@ from rest_framework import status
 
 from query_base.query_base import QueryBaseView
 from studies.study_wrapper import StudyWrapperBase
-from users_api.models import WdaeUser
 
 from groups_api.serializers import GroupSerializer
 from datasets_api.permissions import get_wdae_parents, user_has_permission
@@ -24,10 +23,13 @@ logger = logging.getLogger(__name__)
 
 
 def augment_accessibility(
-    dataset: dict[str, Any], user: User
+    instance_id: str, dataset: dict[str, Any], user: User
 ) -> dict[str, Any]:
+    """Augment a dataset response JSON with access_rights section."""
     # pylint: disable=no-member
-    dataset["access_rights"] = user_has_permission(user, dataset["id"])
+    dataset["access_rights"] = user_has_permission(
+        instance_id, user, dataset["id"]
+    )
     return dataset
 
 
@@ -39,9 +41,14 @@ def augment_with_groups(dataset: dict[str, Any]) -> dict[str, Any]:
     return dataset
 
 
-def augment_with_parents(dataset: dict[str, Any]) -> dict[str, Any]:
+def augment_with_parents(
+    instance_id: str, dataset: dict[str, Any]
+) -> dict[str, Any]:
+    """Augment a dataset response JSON with parents section."""
     dataset["parents"] = [
-        ds.dataset_id for ds in get_wdae_parents(dataset["id"], direct=True)
+        ds.dataset_id for ds in get_wdae_parents(
+            instance_id, dataset["id"], direct=True
+        )
     ]
     return dataset
 
@@ -73,9 +80,9 @@ class DatasetView(QueryBaseView):
             for dataset in datasets
         ]
 
-        res = [augment_accessibility(ds, user) for ds in res]
+        res = [augment_accessibility(self.instance_id, ds, user) for ds in res]
         res = [augment_with_groups(ds) for ds in res]
-        res = [augment_with_parents(ds) for ds in res]
+        res = [augment_with_parents(self.instance_id, ds) for ds in res]
         return res
 
     def get(
@@ -95,7 +102,9 @@ class DatasetView(QueryBaseView):
 
         dataset_object = Dataset.objects.get(dataset_id=dataset_id)
 
-        if user_has_permission(user, dataset_object.dataset_id):
+        if user_has_permission(
+            self.instance_id, user, dataset_object.dataset_id
+        ):
             person_set_collection_configs = {
                 psc.id: psc.domain_json()
                 for psc in dataset.person_set_collections.values()
@@ -111,9 +120,9 @@ class DatasetView(QueryBaseView):
                 dataset.config
             )
 
-        res = augment_accessibility(res, user)
+        res = augment_accessibility(self.instance_id, res, user)
         res = augment_with_groups(res)
-        res = augment_with_parents(res)
+        res = augment_with_parents(self.instance_id, res)
 
         return Response({"data": res})
 
@@ -141,9 +150,9 @@ class StudiesView(QueryBaseView):
                 StudyWrapperBase.build_genotype_data_all_datasets(
                     dataset.config))
 
-        res = [augment_accessibility(ds, user) for ds in res]
+        res = [augment_accessibility(self.instance_id, ds, user) for ds in res]
         res = [augment_with_groups(ds) for ds in res]
-        res = [augment_with_parents(ds) for ds in res]
+        res = [augment_with_parents(self.instance_id, ds) for ds in res]
         return res
 
     def get(self, request: Request) -> Response:
@@ -251,7 +260,9 @@ class DatasetConfigView(DatasetView):
                 {"error": f"Dataset {dataset_id} not found"},
                 status=status.HTTP_404_NOT_FOUND,
             )
-        return Response(augment_with_parents(genotype_data.config.to_dict()))
+        return Response(augment_with_parents(
+            self.instance_id, genotype_data.config.to_dict()
+        ))
 
 
 class DatasetDescriptionView(QueryBaseView):
@@ -308,7 +319,6 @@ class BaseDatasetPermissionsView(QueryBaseView):
                 groups__name=group.name
             ).all()
             for user in users:
-                user = cast(WdaeUser, user)
                 if user.email not in users_found:
                     users_list += [
                         {"name": user.name, "email": user.email}
@@ -405,13 +415,16 @@ class DatasetHierarchyView(QueryBaseView):
 
     @staticmethod
     def produce_tree(
-        dataset: GenotypeData, user: User, selected: list[str]
+        instance_id: str, dataset: GenotypeData,
+        user: User, selected: list[str]
     ) -> dict[str, Any]:
         """Recursively collect a dataset's id, children and access rights."""
         children = None
         if dataset.is_group:
             children = [
-                DatasetHierarchyView.produce_tree(child, user, selected)
+                DatasetHierarchyView.produce_tree(
+                    instance_id, child, user, selected
+                )
                 for child in dataset.studies
                 if child.study_id in selected
             ]
@@ -419,7 +432,9 @@ class DatasetHierarchyView(QueryBaseView):
             "dataset": dataset.study_id,
             "name": dataset.name,
             "children": children,
-            "access_rights": user_has_permission(user, dataset.study_id)
+            "access_rights": user_has_permission(
+                instance_id, user, dataset.study_id
+            )
         }
 
     def get(self, request: Request) -> Response:
@@ -431,7 +446,9 @@ class DatasetHierarchyView(QueryBaseView):
             for genotype_data_id in genotype_data_ids
         ])
         return Response({"data": [
-            DatasetHierarchyView.produce_tree(gd, user, genotype_data_ids)
+            DatasetHierarchyView.produce_tree(
+                self.instance_id, gd, user, genotype_data_ids
+            )
             for gd in genotype_data
         ]}, status=status.HTTP_200_OK)
 

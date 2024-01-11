@@ -60,6 +60,7 @@ def gpf_fixture(
 def test_genomic_scores_db_with_config(gpf_fixture: Callable) -> None:
     gpf_instance = gpf_fixture({
         "gpf_instance.yaml": textwrap.dedent("""
+            instance_id: test_instance
             annotation:
               conf_file: annotation.yaml
         """),
@@ -75,6 +76,7 @@ def test_genomic_scores_db_without_config_with_annotation(
 ) -> None:
     gpf_instance = gpf_fixture({
         "gpf_instance.yaml": textwrap.dedent("""
+            instance_id: test_instance
             annotation:
               conf_file: annotation.yaml
         """),
@@ -90,6 +92,7 @@ def test_genomic_scores_db_without_config_without_annotation(
 ) -> None:
     gpf_instance = gpf_fixture({
         "gpf_instance.yaml": textwrap.dedent("""
+            instance_id: test_instance
         """),
     })
     assert len(gpf_instance.genomic_scores) == 0
@@ -98,6 +101,7 @@ def test_genomic_scores_db_without_config_without_annotation(
 def test_annotation_pipeline_with_config(gpf_fixture: Callable) -> None:
     gpf_instance = gpf_fixture({
         "gpf_instance.yaml": textwrap.dedent("""
+            instance_id: test_instance
             annotation:
               conf_file: annotation.yaml
         """),
@@ -112,6 +116,7 @@ def test_annotation_pipeline_with_config(gpf_fixture: Callable) -> None:
 def test_annotation_pipeline_without_config(gpf_fixture: Callable) -> None:
     gpf_instance = gpf_fixture({
         "gpf_instance.yaml": textwrap.dedent("""
+            instance_id: test_instance
         """),
     })
     assert gpf_instance.get_annotation_pipeline() is not None
@@ -121,6 +126,7 @@ def test_annotation_pipeline_without_config(gpf_fixture: Callable) -> None:
 def test_annotation_pipeline_with_bad_config(gpf_fixture: Callable) -> None:
     gpf_instance = gpf_fixture({
         "gpf_instance.yaml": textwrap.dedent("""
+            instance_id: test_instance
             annotation:
               conf_file: annotation.yaml
         """),

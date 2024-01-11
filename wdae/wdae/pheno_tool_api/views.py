@@ -121,7 +121,7 @@ class PhenoToolDownload(PhenoToolView):
         """Pheno tool download generator function."""
         # Return a response instantly and make download more responsive
         yield ""
-        effect_groups = [effect for effect in data["effectTypes"]]
+        effect_groups = list(data["effectTypes"])
 
         data = adapter.helper.genotype_data.transform_request(data)
         tool = adapter.pheno_tool
@@ -169,7 +169,9 @@ class PhenoToolDownload(PhenoToolView):
         """Pheno tool download."""
         data = expand_gene_set(parse_query_params(request.data), request.user)
 
-        if not user_has_permission(request.user, data["datasetId"]):
+        if not user_has_permission(
+            self.instance_id, request.user, data["datasetId"]
+        ):
             return Response(status=status.HTTP_403_FORBIDDEN)
 
         adapter = self.prepare_pheno_tool_adapter(data)

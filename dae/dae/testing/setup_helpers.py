@@ -18,7 +18,9 @@ def setup_gpf_instance(
     # from dae.gpf_instance import GPFInstance
 
     if not (out_path / "gpf_instance.yaml").exists():
-        setup_directories(out_path, {"gpf_instance.yaml": ""})
+        setup_directories(
+            out_path, {"gpf_instance.yaml": 'instance_id: "test_instance"'}
+        )
     # pylint: disable=import-outside-toplevel
     reference_genome = None
     if reference_genome_id is not None:

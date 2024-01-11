@@ -67,6 +67,7 @@ class Dataset(models.Model):
 class DatasetHierarchy(models.Model):
     """Data for dataset hierarchy and inheritance."""
 
+    instance_id: models.TextField = models.TextField()
     ancestor: models.ForeignKey = models.ForeignKey(
         Dataset, on_delete=models.CASCADE, related_name="ancestor"
     )
@@ -76,49 +77,61 @@ class DatasetHierarchy(models.Model):
     direct: models.BooleanField = models.BooleanField()
 
     @classmethod
-    def clear(cls) -> None:
+    def clear(cls, instance_id: str) -> None:
         """Clear the model's records."""
-        cls.objects.all().delete()
+        cls.objects.filter(instance_id=instance_id).delete()
 
     @classmethod
     def add_relation(
-        cls, ancestor_id: str,
+        cls, instance_id: str, ancestor_id: str,
         descendant_id: str, direct: bool = False
     ) -> None:
         """Add a relation to the hierarchy with provided dataset IDs."""
         ancestor = Dataset.objects.get(dataset_id=ancestor_id)
         descendant = Dataset.objects.get(dataset_id=descendant_id)
         cls.objects.create(
-            ancestor=ancestor, descendant=descendant, direct=direct
+            instance_id=instance_id,
+            ancestor=ancestor, descendant=descendant,
+            direct=direct
         )
 
     @classmethod
-    def is_study(cls, dataset: Dataset):
+    def is_study(cls, instance_id: str, dataset: Dataset) -> bool:
         """
         Return whether a dataset is a study.
 
         A dataset without children is a study and not a group.
         """
-        return len(cls.objects.filter(ancestor_id=dataset.id)) == 0
+        return len(cls.objects.filter(
+            instance_id=instance_id, ancestor_id=dataset.id
+        )) == 0
 
     @classmethod
     def get_parents(
-        cls, dataset: Dataset, direct: Optional[bool] = None
+        cls, instance_id: str, dataset: Dataset, direct: Optional[bool] = None
     ) -> List[Dataset]:
+        """Return all parents of a given dataset."""
         if direct is True:
             relations = cls.objects.filter(
-                descendant_id=dataset.id, direct=True
+                instance_id=instance_id, descendant_id=dataset.id, direct=True
             )
         else:
-            relations = cls.objects.filter(descendant_id=dataset.id)
+            relations = cls.objects.filter(
+                instance_id=instance_id, descendant_id=dataset.id
+            )
         return [relation.ancestor for relation in relations]
 
     @classmethod
     def get_children(
-        cls, dataset: Dataset, direct: Optional[bool] = None
+        cls, instance_id: str, dataset: Dataset, direct: Optional[bool] = None
     ) -> List[Dataset]:
+        """Return all children of a given dataset."""
         if direct is True:
-            relations = cls.objects.filter(ancestor_id=dataset.id, direct=True)
+            relations = cls.objects.filter(
+                instance_id=instance_id, ancestor_id=dataset.id, direct=True
+            )
         else:
-            relations = cls.objects.filter(ancestor_id=dataset.id)
+            relations = cls.objects.filter(
+                instance_id=instance_id, ancestor_id=dataset.id
+            )
         return [relation.descendant for relation in relations]

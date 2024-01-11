@@ -18,6 +18,7 @@ def wgpf_fixture(tmp_path_factory: pytest.TempPathFactory) -> WGPFInstance:
 
     setup_directories(root_path / "gpf_instance", {
         "gpf_instance.yaml": textwrap.dedent("""
+            instance_id: test
         """),
     })
     setup_genome(

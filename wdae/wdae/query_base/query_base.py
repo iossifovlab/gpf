@@ -22,6 +22,7 @@ class QueryBaseView(views.APIView):
     def __init__(self) -> None:
         super().__init__()
         self.gpf_instance = get_wgpf_instance()
+        self.instance_id = self.gpf_instance.instance_id
         recreated_dataset_perm(self.gpf_instance)
         self.variants_db = self.gpf_instance._variants_db
         self.pheno_db = self.gpf_instance._pheno_db

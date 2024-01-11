@@ -1,6 +1,8 @@
 vars:
   instance_id: data_hg19_remote
 
+instance_id: '%(instance_id)s'
+
 genotype_storage:
   default: remote_duckdb
 
