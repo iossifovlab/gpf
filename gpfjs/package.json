@@ -39,7 +39,7 @@
     "bootstrap": "5.2.3",
     "bootstrap-markdown": "github:toopay/bootstrap-markdown#a496d34b9bd34451c8315a850472f794c8df7d53",
     "class-transformer": "0.5.1",
-    "class-validator": "0.14.0",
+    "class-validator": "0.13.2",
     "core-js": "3.27.1",
     "d3": "7.8.1",
     "dompurify": "2.4.3",
