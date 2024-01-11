@@ -31,7 +31,7 @@ def test_serialize(enrichment_serializer: EnrichmentSerializer) -> None:
     assert all_serialized["expected"] == 2
     assert all_serialized["pvalue"] == 1
     assert all_serialized["countFilter"]["datasetId"] == "f1_trio"
-    assert all_serialized["countFilter"]["effectTypes"] == ["Missense"]
+    assert all_serialized["countFilter"]["effectTypes"] == ["missense"]
     assert all_serialized["countFilter"]["gender"] == [
         "male",
         "female",
@@ -49,7 +49,7 @@ def test_serialize(enrichment_serializer: EnrichmentSerializer) -> None:
         "del",
     ]
     assert all_serialized["overlapFilter"]["datasetId"] == "f1_trio"
-    assert all_serialized["overlapFilter"]["effectTypes"] == ["Missense"]
+    assert all_serialized["overlapFilter"]["effectTypes"] == ["missense"]
     assert all_serialized["overlapFilter"]["gender"] == [
         "male",
         "female",
@@ -76,7 +76,7 @@ def test_serialize(enrichment_serializer: EnrichmentSerializer) -> None:
     assert rec_serialized["expected"] == 1
     assert rec_serialized["pvalue"] == 1
     assert rec_serialized["countFilter"]["datasetId"] == "f1_trio"
-    assert rec_serialized["countFilter"]["effectTypes"] == ["Missense"]
+    assert rec_serialized["countFilter"]["effectTypes"] == ["missense"]
     assert rec_serialized["countFilter"]["gender"] == ["male", "female"]
     assert rec_serialized["countFilter"]["peopleGroup"]["id"] == "phenotype"
     assert rec_serialized["countFilter"]["peopleGroup"]["checkedValues"] == [
@@ -90,8 +90,9 @@ def test_serialize(enrichment_serializer: EnrichmentSerializer) -> None:
         "del",
     ]
     assert rec_serialized["overlapFilter"]["datasetId"] == "f1_trio"
-    assert rec_serialized["overlapFilter"]["effectTypes"] == ["Missense"]
-    assert rec_serialized["overlapFilter"]["gender"] == ["male", "female"]
+    assert rec_serialized["overlapFilter"]["effectTypes"] == ["missense"]
+    assert rec_serialized["overlapFilter"]["gender"] == \
+        ["male", "female", "unspecified"]
     assert rec_serialized["overlapFilter"]["peopleGroup"]["id"] == "phenotype"
     assert rec_serialized["overlapFilter"]["peopleGroup"]["checkedValues"] == [
         "phenotype1"
@@ -103,7 +104,7 @@ def test_serialize(enrichment_serializer: EnrichmentSerializer) -> None:
         "sub",
         "del",
     ]
-    # assert rec_serialized["overlapFilter"]["geneSymbols"] == {"SAMD11"}
+    assert rec_serialized["overlapFilter"]["overlappedGenes"] == {"SAMD11"}
 
     male_serialized = serialize[0]["missense"]["male"]
 
@@ -113,7 +114,7 @@ def test_serialize(enrichment_serializer: EnrichmentSerializer) -> None:
     assert male_serialized["expected"] == 1
     assert male_serialized["pvalue"] == 1
     assert male_serialized["countFilter"]["datasetId"] == "f1_trio"
-    assert male_serialized["countFilter"]["effectTypes"] == ["Missense"]
+    assert male_serialized["countFilter"]["effectTypes"] == ["missense"]
     assert male_serialized["countFilter"]["gender"] == ["male"]
     assert male_serialized["countFilter"]["peopleGroup"]["id"] == "phenotype"
     assert male_serialized["countFilter"]["peopleGroup"]["checkedValues"] == [
@@ -127,7 +128,7 @@ def test_serialize(enrichment_serializer: EnrichmentSerializer) -> None:
         "del",
     ]
     assert male_serialized["overlapFilter"]["datasetId"] == "f1_trio"
-    assert male_serialized["overlapFilter"]["effectTypes"] == ["Missense"]
+    assert male_serialized["overlapFilter"]["effectTypes"] == ["missense"]
     assert male_serialized["overlapFilter"]["gender"] == ["male"]
     assert male_serialized["overlapFilter"]["peopleGroup"]["id"] == "phenotype"
     assert male_serialized["overlapFilter"]["peopleGroup"][
@@ -150,7 +151,7 @@ def test_serialize(enrichment_serializer: EnrichmentSerializer) -> None:
     assert female_serialized["expected"] == 1
     assert female_serialized["pvalue"] == 1
     assert female_serialized["countFilter"]["datasetId"] == "f1_trio"
-    assert female_serialized["countFilter"]["effectTypes"] == ["Missense"]
+    assert female_serialized["countFilter"]["effectTypes"] == ["missense"]
     assert female_serialized["countFilter"]["gender"] == ["female"]
     assert female_serialized["countFilter"]["peopleGroup"]["id"] == "phenotype"
     assert female_serialized["countFilter"]["peopleGroup"][
@@ -164,7 +165,7 @@ def test_serialize(enrichment_serializer: EnrichmentSerializer) -> None:
         "del",
     ]
     assert female_serialized["overlapFilter"]["datasetId"] == "f1_trio"
-    assert female_serialized["overlapFilter"]["effectTypes"] == ["Missense"]
+    assert female_serialized["overlapFilter"]["effectTypes"] == ["missense"]
     assert female_serialized["overlapFilter"]["gender"] == ["female"]
     assert (
         female_serialized["overlapFilter"]["peopleGroup"]["id"] == "phenotype"

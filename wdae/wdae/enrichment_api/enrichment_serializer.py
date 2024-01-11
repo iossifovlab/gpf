@@ -61,7 +61,6 @@ class EnrichmentSerializer(EffectTypesMixin):
             gender = ["male", "female", "unspecified"]
 
         effect_types_fixed = self.build_effect_types(effect_type)
-        effect_types_fixed = self.build_effect_types_naming(effect_types_fixed)
         common_filter = {
             "datasetId": grouping_results["datasetId"],
             "effectTypes": effect_types_fixed,
@@ -93,29 +92,25 @@ class EnrichmentSerializer(EffectTypesMixin):
         rec_filter = self.serialize_common_filter(
             grouping_results, effect_type, result, gender
         )
-        assert result.events is not None
-        # rec_filter["geneSymbols"] = self.serialize_events_gene_symbols(
-        #     result.events
-        # )
         return rec_filter
 
     def serialize_overlap_filter(
         self, grouping_results: dict[str, Any],
         effect_type: str,
         result: EnrichmentSingleResult,
-        gender: Optional[list[str]] = None
+        gender: Optional[list[str]] = None,
+        overlapped_genes: bool = False
     ) -> dict[str, Any]:
         """Serialize overlapped events filter."""
         if gender is None:
-            gender = ["male", "female"]
+            gender = ["male", "female", "unspecified"]
 
         overlap_filter = self.serialize_common_filter(
             grouping_results, effect_type, result, gender=gender
         )
-        assert result.overlapped is not None
-        # overlap_filter["geneSymbols"] = self.serialize_events_gene_symbols(
-        #     result.overlapped
-        # )
+        if overlapped_genes:
+            assert result.overlapped_genes is not None
+            overlap_filter["overlappedGenes"] = result.overlapped_genes
 
         return overlap_filter
 
@@ -183,7 +178,7 @@ class EnrichmentSerializer(EffectTypesMixin):
             grouping_results, effect_type, result
         )
         output["overlapFilter"] = self.serialize_overlap_filter(
-            grouping_results, effect_type, result
+            grouping_results, effect_type, result, overlapped_genes=True
         )
         return output
 

@@ -263,8 +263,8 @@ class AnnotationEffect:  # pylint: disable=too-many-instance-attributes
         gene_effects = zip(*cls.gene_effects(effects))
         result = []
         for gene_effect in gene_effects:
-            for lgd_effect in EffectTypesMixin.EFFECT_GROUPS["lgds"]:
-                if gene_effect[1] == lgd_effect.lower():
+            for lgd_effect in EffectTypesMixin.EFFECT_GROUPS["LGDs"]:
+                if gene_effect[1] == lgd_effect:
                     result.append(gene_effect)
 
         return [[str(r[0]) for r in result], [str(r[1]) for r in result]]
@@ -688,58 +688,60 @@ class EffectTypesMixin:
     }
     EFFECT_GROUPS = {
         "coding": [
-            "Nonsense",
-            "Frame-shift",
-            "Splice-site",
-            "No-frame-shift-newStop",
-            "Missense",
-            "No-frame-shift",
+            "nonsense",
+            "frame-shift",
+            "splice-site",
+            "no-frame-shift-newStop",
+            "missense",
+            "no-frame-shift",
             "noStart",
             "noEnd",
-            "Synonymous",
+            "synonymous",
         ],
         "noncoding": [
-            "Non coding",
-            "Intron",
-            "Intergenic",
-            "3'-UTR",
-            "5'-UTR",
+            "non coding",
+            "intron",
+            "intergenic",
+            "3'UTR",
+            "5'UTR",
         ],
-        "cnv": ["CNV+", "CNV-"],
-        "lgds": [
-            "Frame-shift",
-            "Nonsense",
-            "Splice-site",
-            "No-frame-shift-newStop",
+        "CNV": ["CNV+", "CNV-"],
+        "LGDs": [
+            "frame-shift",
+            "nonsense",
+            "splice-site",
+            "no-frame-shift-newStop",
         ],
         "nonsynonymous": [
-            "Nonsense",
-            "Frame-shift",
-            "Splice-site",
-            "No-frame-shift-newStop",
-            "Missense",
-            "No-frame-shift",
+            "nonsense",
+            "frame-shift",
+            "splice-site",
+            "no-frame-shift-newStop",
+            "missense",
+            "no-frame-shift",
             "noStart",
             "noEnd",
         ],
-        "utrs": [
-            "3'-UTR",
-            "5'-UTR",
+        "UTRs": [
+            "3'UTR",
+            "5'UTR",
         ],
     }
 
     @classmethod
-    def _build_effect_types_groups(cls, effect_types: list[str]) -> list[str]:
+    def build_effect_types_groups(cls, effect_types: list[str]) -> list[str]:
+        """Expand effect groups into effect types."""
         etl = [
-            cls.EFFECT_GROUPS[et.lower()]
-            if et.lower() in cls.EFFECT_GROUPS
+            cls.EFFECT_GROUPS[et]
+            if et in cls.EFFECT_GROUPS
             else [et]
             for et in effect_types
         ]
         return list(itertools.chain.from_iterable(etl))
 
     @classmethod
-    def _build_effect_types_list(cls, effect_types: list[str]) -> list[str]:
+    def build_effect_types_list(cls, effect_types: list[str]) -> list[str]:
+        """Fix naming of effect types coming from the UI."""
         etl = [
             cls.EFFECT_TYPES_MAPPING[et]
             if et in cls.EFFECT_TYPES_MAPPING
@@ -756,9 +758,10 @@ class EffectTypesMixin:
         """Build list of effect types."""
         if isinstance(effect_types, str):
             effect_types = effect_types.split(",")
+
         etl = [et.strip() for et in effect_types]
-        etl = cls._build_effect_types_groups(etl)
-        etl = cls._build_effect_types_list(etl)
+        etl = cls.build_effect_types_groups(etl)
+        etl = cls.build_effect_types_list(etl)
         if safe:
             assert all(et in cls.EFFECT_TYPES for et in etl), etl
         else:
@@ -807,9 +810,8 @@ def expand_effect_types(
             effect_group = [effect_group]
         for effect in effect_group:
             assert isinstance(effect, str)
-            effect_lower = effect.lower()
-            if effect_lower in EffectTypesMixin.EFFECT_GROUPS:
-                effects += EffectTypesMixin.EFFECT_GROUPS[effect_lower]
+            if effect in EffectTypesMixin.EFFECT_GROUPS:
+                effects += EffectTypesMixin.EFFECT_GROUPS[effect]
             else:
                 effects.append(effect)
 
@@ -818,7 +820,7 @@ def expand_effect_types(
         if effect not in EffectTypesMixin.EFFECT_TYPES_MAPPING:
             result.append(effect)
         else:
-            result += EffectTypesMixin.EFFECT_TYPES_MAPPING[effect]
+            result.extend(EffectTypesMixin.EFFECT_TYPES_MAPPING[effect])
     return result
 
 

@@ -58,12 +58,12 @@ def agp_config() -> dict:
                     {
                         "id": "lgds",
                         "display_name": "LGDs",
-                        "effects": ["lgds"],
+                        "effects": ["LGDs"],
                         "category": "denovo"
                     },
                     {
                         "id": "denovo_missense",
-                        "display_name": "Missense",
+                        "display_name": "missense",
                         "effects": ["missense"],
                         "category": "denovo"
                     }

@@ -103,7 +103,7 @@ class GeneWeightsEnrichmentBackground(BaseEnrichmentResourceBackground):
             events_prob, events_counts.rec, overlapped_counts.rec)
         rec_result = EnrichmentSingleResult(
             "rec", events_counts.rec, overlapped_counts.rec,
-            expected, pvalue)
+            expected, pvalue, overlapped_counts.rec_genes)
 
         expected, pvalue = self.calc_expected_observed_pvalue(
             events_prob, events_counts.male, overlapped_counts.male)
@@ -245,7 +245,7 @@ class GeneScoreEnrichmentBackground(BaseEnrichmentBackground):
             events_prob, events_counts.rec, overlapped_counts.rec)
         rec_result = EnrichmentSingleResult(
             "rec", events_counts.rec, overlapped_counts.rec,
-            expected, pvalue)
+            expected, pvalue, overlapped_counts.rec_genes)
 
         expected, pvalue = self.calc_expected_observed_pvalue(
             events_prob, events_counts.male, overlapped_counts.male)
