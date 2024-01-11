@@ -160,9 +160,9 @@ class EnrichmentHelper:
                     person_set.get_children_by_sex(),
                     effect_group_expanded)
                 if event_counters_cache is not None:
-                    counts = \
+                    cache = \
                         event_counters_cache[counter_id][ps_id][eg_id]
-                    event_counts = EventCountersResult(**counts)
+                    event_counts = EventCountersResult(**cache)  # type: ignore
                 else:
                     event_counts = \
                         EventCountersResult.from_events_result(events)

@@ -2,7 +2,7 @@ from __future__ import annotations
 import abc
 import itertools
 
-from typing import Iterable, Union
+from typing import Iterable, Union, Optional
 from dataclasses import dataclass
 
 from dae.person_sets import ChildrenBySex
@@ -112,6 +112,7 @@ class EventCountersResult:
     male: int
     female: int
     unspecified: int
+    rec_genes: Optional[set[str]] = None
 
     @staticmethod
     def from_events_result(events: EventsResult) -> EventCountersResult:
@@ -145,13 +146,15 @@ class EnrichmentSingleResult:
         events: int,
         overlapped: int,
         expected: float,
-        pvalue: float
+        pvalue: float,
+        overlapped_genes: Optional[set[str]] = None,
     ):
         self.name: str = name
         self.events = events
         self.overlapped = overlapped
         self.expected = expected
         self.pvalue = pvalue
+        self.overlapped_genes = overlapped_genes
 
     def __repr__(self) -> str:
         return f"EnrichmentSingleResult({self.name}): " \
@@ -170,6 +173,7 @@ class EnrichmentResult:
     male: EnrichmentSingleResult
     female: EnrichmentSingleResult
     unspecified: EnrichmentSingleResult
+    rec_genes: Optional[set[str]] = None
 
 
 def filter_overlapping_events(
@@ -203,7 +207,8 @@ def overlap_event_counts(
         len(overlapped_events.rec),
         len(overlapped_events.male),
         len(overlapped_events.female),
-        len(overlapped_events.unspecified)
+        len(overlapped_events.unspecified),
+        {g for gs in overlapped_events.rec for g in gs},
     )
 
 
