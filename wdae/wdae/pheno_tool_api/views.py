@@ -1,8 +1,9 @@
+from io import StringIO
 import math
 import logging
-from typing import cast, Any
-
-from rest_framework.response import Response  # type: ignore
+from typing import Generator, cast, Any
+from rest_framework.request import Request
+from rest_framework.response import Response
 from rest_framework import status  # type: ignore
 
 from django.http.response import StreamingHttpResponse
@@ -110,15 +111,16 @@ class PhenoToolView(QueryDatasetView):
 
 
 class PhenoToolDownload(PhenoToolView):
-    def post(self, request):
-        data = expand_gene_set(parse_query_params(request.data), request.user)
-        adapter = self.prepare_pheno_tool_adapter(data)
-        if not adapter:
-            return Response(status=status.HTTP_404_NOT_FOUND)
+    """Pheno tool download view."""
 
-        if not user_has_permission(request.user, data["datasetId"]):
-            return Response(status=status.HTTP_403_FORBIDDEN)
-
+    def generate_columns(
+            self,
+            adapter: PhenoToolAdapter,
+            data: dict
+    ) -> Generator[str, None, None]:
+        """Pheno tool download generator function."""
+        # Return a response instantly and make download more responsive
+        yield ""
         effect_groups = [effect for effect in data["effectTypes"]]
 
         data = adapter.helper.genotype_data.transform_request(data)
@@ -157,8 +159,27 @@ class PhenoToolDownload(PhenoToolView):
             + columns[3:-effect_types_count]
         )
 
+        csv_buffer = StringIO()
+        result_df.to_csv(csv_buffer, index=False, columns=columns)
+        csv_buffer.seek(0)
+        for row in csv_buffer.readlines():
+            yield row
+
+    def post(self, request: Request) -> Response:
+        """Pheno tool download."""
+        data = expand_gene_set(parse_query_params(request.data), request.user)
+
+        if not user_has_permission(request.user, data["datasetId"]):
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+        adapter = self.prepare_pheno_tool_adapter(data)
+        print("adapter finished")
+
+        if not adapter:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
         response = StreamingHttpResponse(
-            result_df.to_csv(index=False, columns=columns),
+            self.generate_columns(adapter, data),
             content_type="text/csv",
         )
         response[
