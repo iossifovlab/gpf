@@ -56,7 +56,7 @@ class QueryVariantsView(QueryDatasetView):
         dataset = cast(StudyWrapper, dataset)
 
         user = request.user
-        handle_partial_permissions(user, dataset_id, data)
+        handle_partial_permissions(self.instance_id, user, dataset_id, data)
 
         config = dataset.config.gene_browser
         freq_col = config.frequency_column
@@ -81,7 +81,7 @@ class DownloadSummaryVariantsView(QueryDatasetView):
         """Summary variants generator."""
         # Return a response instantly and make download more responsive
         yield ""
-        handle_partial_permissions(user, dataset_id, data)
+        handle_partial_permissions(self.instance_id, user, dataset_id, data)
 
         download_limit = None
         if not (user.is_authenticated and user.has_unlimited_download):

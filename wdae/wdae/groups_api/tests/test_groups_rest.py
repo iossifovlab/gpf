@@ -225,7 +225,7 @@ def test_grant_permission_for_group(
     user = cast(User, wdae_user)
     data = {"datasetId": dataset.dataset_id, "groupName": group.name}
 
-    assert not user_has_permission(user, dataset.dataset_id)
+    assert not user_has_permission("test_data", user, dataset.dataset_id)
 
     url = "/api/v3/groups/grant-permission"
     response = admin_client.post(
@@ -233,7 +233,7 @@ def test_grant_permission_for_group(
     )
 
     assert response.status_code == status.HTTP_200_OK
-    assert user_has_permission(user, dataset.dataset_id)
+    assert user_has_permission("test_data", user, dataset.dataset_id)
 
 
 def test_grant_permission_creates_new_group(
@@ -242,7 +242,9 @@ def test_grant_permission_creates_new_group(
     group_name = "NewGroup"
     data = {"datasetId": dataset.dataset_id, "groupName": group_name}
 
-    assert not user_has_permission(cast(User, user), dataset.dataset_id)
+    assert not user_has_permission(
+        "test_data", cast(User, user), dataset.dataset_id
+    )
 
     url = "/api/v3/groups/grant-permission"
     response = admin_client.post(
@@ -260,7 +262,9 @@ def test_grant_permission_creates_new_group_case_sensitive(
     group_name = "group_name_P"
     data = {"datasetId": dataset.dataset_id, "groupName": group_name}
 
-    assert not user_has_permission(cast(User, user), dataset.dataset_id)
+    assert not user_has_permission(
+        "test_data", cast(User, user), dataset.dataset_id
+    )
 
     url = "/api/v3/groups/grant-permission"
     response = admin_client.post(
@@ -281,7 +285,7 @@ def test_not_admin_cant_grant_permissions(
 
     data = {"datasetId": dataset.dataset_id, "groupName": group.name}
 
-    assert not user_has_permission(user, dataset.dataset_id)
+    assert not user_has_permission("test_data", user, dataset.dataset_id)
 
     url = "/api/v3/groups/grant-permission"
     response = user_client.post(
@@ -289,7 +293,7 @@ def test_not_admin_cant_grant_permissions(
     )
 
     assert response.status_code == status.HTTP_403_FORBIDDEN
-    assert not user_has_permission(user, dataset.dataset_id)
+    assert not user_has_permission("test_data", user, dataset.dataset_id)
 
 
 def test_not_admin_grant_permissions_does_not_create_group(
@@ -318,7 +322,7 @@ def test_revoke_permission_for_group(
 
     dataset.groups.add(group)
 
-    assert user_has_permission(user, dataset.dataset_id)
+    assert user_has_permission("test_data", user, dataset.dataset_id)
 
     url = "/api/v3/groups/revoke-permission"
     response = admin_client.post(
@@ -326,7 +330,7 @@ def test_revoke_permission_for_group(
     )
 
     assert response.status_code == status.HTTP_200_OK
-    assert not user_has_permission(user, dataset.dataset_id)
+    assert not user_has_permission("test_data", user, dataset.dataset_id)
 
 
 def test_not_admin_cant_revoke_permissions(
@@ -339,7 +343,7 @@ def test_not_admin_cant_revoke_permissions(
     data = {"datasetId": dataset.dataset_id, "groupId": group.id}
     dataset.groups.add(group)
 
-    assert user_has_permission(user, dataset.dataset_id)
+    assert user_has_permission("test_data", user, dataset.dataset_id)
 
     url = "/api/v3/groups/revoke-permission"
     response = user_client.post(
@@ -347,7 +351,7 @@ def test_not_admin_cant_revoke_permissions(
     )
 
     assert response.status_code == status.HTTP_403_FORBIDDEN
-    assert user_has_permission(user, dataset.dataset_id)
+    assert user_has_permission("test_data", user, dataset.dataset_id)
 
 
 def test_cant_revoke_default_permissions(

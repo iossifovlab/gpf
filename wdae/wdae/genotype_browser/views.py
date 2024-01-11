@@ -110,7 +110,7 @@ class GenotypeBrowserQueryView(QueryDatasetView):
 
         if dataset_id is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        if not user_has_permission(request.user, dataset_id):
+        if not user_has_permission(self.instance_id, request.user, dataset_id):
             return Response(status=status.HTTP_403_FORBIDDEN)
 
         if "genomicScores" in data:
@@ -159,7 +159,7 @@ class GenotypeBrowserQueryView(QueryDatasetView):
                 dataset.config, cols
             )
 
-        handle_partial_permissions(user, dataset_id, data)
+        handle_partial_permissions(self.instance_id, user, dataset_id, data)
 
         response: Union[FileResponse, StreamingHttpResponse, None] = None
         if is_download:
