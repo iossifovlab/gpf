@@ -221,6 +221,7 @@ class PhenoToolPersons(QueryDatasetView):
 
 class PhenoToolPersonsValues(QueryDatasetView):
     """View for returning person phenotype data."""
+
     def post(self, request):
         data = request.data
         dataset_id = data["datasetId"]
