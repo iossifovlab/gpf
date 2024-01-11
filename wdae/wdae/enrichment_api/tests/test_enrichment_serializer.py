@@ -77,7 +77,8 @@ def test_serialize(enrichment_serializer: EnrichmentSerializer) -> None:
     assert rec_serialized["pvalue"] == 1
     assert rec_serialized["countFilter"]["datasetId"] == "f1_trio"
     assert rec_serialized["countFilter"]["effectTypes"] == ["missense"]
-    assert rec_serialized["countFilter"]["gender"] == ["male", "female"]
+    assert rec_serialized["countFilter"]["gender"] == [
+        "male", "female", "unspecified"]
     assert rec_serialized["countFilter"]["peopleGroup"]["id"] == "phenotype"
     assert rec_serialized["countFilter"]["peopleGroup"]["checkedValues"] == [
         "phenotype1"
