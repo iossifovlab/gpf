@@ -19,7 +19,7 @@ def setup_gpf_instance(
 
     if not (out_path / "gpf_instance.yaml").exists():
         setup_directories(
-            out_path, {"gpf_instance.yaml": "instance_id: \"test_instance\""}
+            out_path, {"gpf_instance.yaml": 'instance_id: "test_instance"'}
         )
     # pylint: disable=import-outside-toplevel
     reference_genome = None

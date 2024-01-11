@@ -121,7 +121,7 @@ class PhenoToolDownload(PhenoToolView):
         """Pheno tool download generator function."""
         # Return a response instantly and make download more responsive
         yield ""
-        effect_groups = [effect for effect in data["effectTypes"]]
+        effect_groups = list(data["effectTypes"])
 
         data = adapter.helper.genotype_data.transform_request(data)
         tool = adapter.pheno_tool

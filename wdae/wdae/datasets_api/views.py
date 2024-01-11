@@ -12,7 +12,6 @@ from rest_framework import status
 
 from query_base.query_base import QueryBaseView
 from studies.study_wrapper import StudyWrapperBase
-from users_api.models import WdaeUser
 
 from groups_api.serializers import GroupSerializer
 from datasets_api.permissions import get_wdae_parents, user_has_permission
