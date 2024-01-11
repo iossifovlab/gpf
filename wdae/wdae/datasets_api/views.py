@@ -320,7 +320,6 @@ class BaseDatasetPermissionsView(QueryBaseView):
                 groups__name=group.name
             ).all()
             for user in users:
-                user = cast(WdaeUser, user)
                 if user.email not in users_found:
                     users_list += [
                         {"name": user.name, "email": user.email}

@@ -169,7 +169,9 @@ class PhenoToolDownload(PhenoToolView):
         """Pheno tool download."""
         data = expand_gene_set(parse_query_params(request.data), request.user)
 
-        if not user_has_permission(request.user, data["datasetId"]):
+        if not user_has_permission(
+            self.instance_id, request.user, data["datasetId"]
+        ):
             return Response(status=status.HTTP_403_FORBIDDEN)
 
         adapter = self.prepare_pheno_tool_adapter(data)
@@ -219,7 +221,6 @@ class PhenoToolPersons(QueryDatasetView):
 
 class PhenoToolPersonsValues(QueryDatasetView):
     """View for returning person phenotype data."""
-
     def post(self, request):
         data = request.data
         dataset_id = data["datasetId"]

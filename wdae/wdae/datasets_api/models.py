@@ -96,7 +96,7 @@ class DatasetHierarchy(models.Model):
         )
 
     @classmethod
-    def is_study(cls, instance_id: str, dataset: Dataset):
+    def is_study(cls, instance_id: str, dataset: Dataset) -> bool:
         """
         Return whether a dataset is a study.
 
