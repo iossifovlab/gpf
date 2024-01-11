@@ -87,7 +87,7 @@ class EnrichmentSerializer(EffectTypesMixin):
     ) -> dict[str, Any]:
         """Serialize recurrent events filter."""
         if gender is None:
-            gender = ["male", "female"]
+            gender = ["male", "female", "unspecified"]
 
         rec_filter = self.serialize_common_filter(
             grouping_results, effect_type, result, gender
