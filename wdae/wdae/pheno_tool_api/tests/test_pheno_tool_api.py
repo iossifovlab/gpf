@@ -5,6 +5,7 @@ import json
 import pytest
 
 from rest_framework import status  # type: ignore
+from django.test.client import Client
 
 
 pytestmark = pytest.mark.usefixtures(
@@ -71,7 +72,12 @@ QUERY = {
         }
     ),
 ])
-def test_pheno_tool_api_permissions(anonymous_client, url, method, body):
+def test_pheno_tool_api_permissions(
+    anonymous_client: Client,
+    url: str,
+    method: str,
+    body: dict
+) -> None:
     if method == "get":
         response = anonymous_client.get(url)
     else:
@@ -83,7 +89,7 @@ def test_pheno_tool_api_permissions(anonymous_client, url, method, body):
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 
-def test_pheno_tool_view_valid_request(admin_client):
+def test_pheno_tool_view_valid_request(admin_client: Client) -> None:
     query = copy.deepcopy(QUERY)
 
     response = admin_client.post(
@@ -95,9 +101,9 @@ def test_pheno_tool_view_valid_request(admin_client):
     assert response.status_code == status.HTTP_200_OK
 
 
-def test_pheno_tool_view_missense(admin_client):
+def test_pheno_tool_view_missense(admin_client: Client) -> None:
     query = copy.deepcopy(QUERY)
-    query["effectTypes"] = ["Missense"]
+    query["effectTypes"] = ["missense"]
 
     response = admin_client.post(
         TOOL_URL,
@@ -106,10 +112,11 @@ def test_pheno_tool_view_missense(admin_client):
         content_type="application/json",
     )
     assert response.status_code == status.HTTP_200_OK
-    result = response.data["results"][0]
-    assert len(response.data["results"]) == 1
+    results = response.json()["results"]
+    assert len(results) == 1
+    result = results[0]
 
-    assert result["effect"] == "Missense"
+    assert result["effect"] == "missense"
     assert result["maleResults"]["positive"]["count"] == 0
     assert result["maleResults"]["positive"]["deviation"] == 0
     assert result["maleResults"]["positive"]["mean"] == \
@@ -130,9 +137,9 @@ def test_pheno_tool_view_missense(admin_client):
         pytest.approx(69.0976, abs=1e-3)
 
 
-def test_pheno_tool_view_cnv_on_non_cnv_study(admin_client):
+def test_pheno_tool_view_cnv_on_non_cnv_study(admin_client: Client) -> None:
     query = copy.deepcopy(QUERY)
-    query["effectTypes"] = ["Missense", "CNV+"]
+    query["effectTypes"] = ["missense", "CNV+"]
 
     response = admin_client.post(
         TOOL_URL,
@@ -143,9 +150,9 @@ def test_pheno_tool_view_cnv_on_non_cnv_study(admin_client):
     assert response.status_code == status.HTTP_200_OK
 
 
-def test_pheno_tool_view_normalize(admin_client):
+def test_pheno_tool_view_normalize(admin_client: Client) -> None:
     query = copy.deepcopy(QUERY)
-    query["effectTypes"] = ["Missense"]
+    query["effectTypes"] = ["missense"]
 
     response = admin_client.post(
         TOOL_URL,
@@ -154,9 +161,12 @@ def test_pheno_tool_view_normalize(admin_client):
         content_type="application/json",
     )
     assert response.status_code == status.HTTP_200_OK
-    result = response.data["results"][0]
+    results = response.json()["results"]
+    assert len(results) == 1
+    result = results[0]
 
-    query["normalizeBy"] = [{"measure_name": "age", "instrument_name": "i1"}]
+    query["normalizeBy"] = [
+        {"measure_name": "age", "instrument_name": "i1"}]  # type: ignore
     response_normalized = admin_client.post(
         TOOL_URL,
         json.dumps(query),
@@ -164,10 +174,10 @@ def test_pheno_tool_view_normalize(admin_client):
         content_type="application/json",
     )
     assert response_normalized.status_code == status.HTTP_200_OK
-    result_normalized = response_normalized.data["results"][0]
+    result_normalized = response_normalized.json()["results"][0]
 
-    assert result["effect"] == "Missense"
-    assert result_normalized["effect"] == "Missense"
+    assert result["effect"] == "missense"
+    assert result_normalized["effect"] == "missense"
 
     assert result["maleResults"]["negative"]["count"] == 2
     assert result_normalized["maleResults"]["negative"]["count"] == 2
@@ -194,7 +204,7 @@ def test_pheno_tool_view_normalize(admin_client):
     )
 
 
-def test_pheno_tool_view_family_ids_filter(admin_client):
+def test_pheno_tool_view_family_ids_filter(admin_client: Client) -> None:
     query = copy.deepcopy(QUERY)
     query["effectTypes"] = ["LGDs"]
     query["familyIds"] = ["f1", "f4"]
@@ -206,14 +216,14 @@ def test_pheno_tool_view_family_ids_filter(admin_client):
         content_type="application/json",
     )
     assert response.status_code == status.HTTP_200_OK
-    result = response.data["results"][0]
+    result = response.json()["results"][0]
     assert result["maleResults"]["positive"]["count"] == 0
     assert result["femaleResults"]["positive"]["count"] == 0
     assert result["maleResults"]["negative"]["count"] == 1
     assert result["femaleResults"]["negative"]["count"] == 1
 
 
-def test_pheno_tool_view_na_values(admin_client):
+def test_pheno_tool_view_na_values(admin_client: Client) -> None:
     query = copy.deepcopy(QUERY)
     query["effectTypes"] = ["frame-shift"]
     query["familyIds"] = ["f4"]
@@ -225,7 +235,7 @@ def test_pheno_tool_view_na_values(admin_client):
         content_type="application/json",
     )
     assert response.status_code == status.HTTP_200_OK
-    result = response.data["results"][0]
+    result = response.json()["results"][0]
 
     assert result["effect"] == "frame-shift"
     assert result["femaleResults"]["negative"]["count"] == 1
@@ -237,11 +247,11 @@ def test_pheno_tool_view_na_values(admin_client):
     )
 
 
-def test_pheno_tool_view_pheno_filter(admin_client):
+def test_pheno_tool_view_pheno_filter(admin_client: Client) -> None:
     query = copy.deepcopy(QUERY)
     query["effectTypes"] = ["frame-shift"]
     query["familyFilters"] = [
-        {
+        {  # type: ignore
             "id": "Proband Continuous",
             "from": "phenodb",
             "source": "i1.m2",
@@ -263,7 +273,7 @@ def test_pheno_tool_view_pheno_filter(admin_client):
         content_type="application/json",
     )
     assert response.status_code == status.HTTP_200_OK
-    result = response.data["results"][0]
+    result = response.json()["results"][0]
 
     assert result["effect"] == "frame-shift"
     assert result["femaleResults"]["negative"]["count"] == 1
@@ -281,7 +291,7 @@ def test_pheno_tool_view_pheno_filter(admin_client):
     )
 
 
-def test_pheno_tool_view_missing_dataset(admin_client):
+def test_pheno_tool_view_missing_dataset(admin_client: Client) -> None:
     query = copy.deepcopy(QUERY)
     query["datasetId"] = "???"
 
@@ -294,7 +304,7 @@ def test_pheno_tool_view_missing_dataset(admin_client):
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
-def test_pheno_tool_view_missing_measure(admin_client):
+def test_pheno_tool_view_missing_measure(admin_client: Client) -> None:
     query = copy.deepcopy(QUERY)
     query["measureId"] = "???"
 
@@ -307,10 +317,11 @@ def test_pheno_tool_view_missing_measure(admin_client):
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
-def test_pheno_tool_download_valid_request(admin_client):
+def test_pheno_tool_download_valid_request(admin_client: Client) -> None:
     query = copy.deepcopy(QUERY)
-    query["effectTypes"] = ["Missense"]
-    query["normalizeBy"] = [{"measure_name": "age", "instrument_name": "i1"}]
+    query["effectTypes"] = ["missense"]
+    query["normalizeBy"] = [
+        {"measure_name": "age", "instrument_name": "i1"}]  # type: ignore
 
     response = admin_client.post(
         TOOL_URL,
@@ -319,12 +330,12 @@ def test_pheno_tool_download_valid_request(admin_client):
         content_type="application/json",
     )
     assert response.status_code == status.HTTP_200_OK
-    assert response.data["description"] == "i1.m1 ~ i1.age"
-    assert response.data["results"]
-    assert len(response.data["results"]) == 1
+    assert response.json()["description"] == "i1.m1 ~ i1.age"
+    assert response.json()["results"]
+    assert len(response.json()["results"]) == 1
 
-    result = response.data["results"][0]
-    assert result["effect"] == "Missense"
+    result = response.json()["results"][0]
+    assert result["effect"] == "missense"
     assert result["maleResults"]["positive"]["count"] == 0
     assert result["maleResults"]["positive"]["deviation"] == 0
     assert result["maleResults"]["positive"]["mean"] == \
