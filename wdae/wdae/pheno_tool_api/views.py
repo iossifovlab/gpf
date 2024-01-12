@@ -3,6 +3,7 @@ import math
 import logging
 
 from typing import Dict, List, Optional, Union, cast, Any, Generator
+from dae.effect_annotation.effect import EffectTypesMixin
 
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -144,6 +145,12 @@ class PhenoToolDownload(PhenoToolView):
         # Return a response instantly and make download more responsive
         yield ""
 
+        data["effectTypes"] = EffectTypesMixin.build_effect_types_list(
+            data["effectTypes"]
+        )
+        data["effectTypes"] = EffectTypesMixin.build_effect_types_groups(
+            data["effectTypes"]
+        )
         effect_groups = list(data["effectTypes"])
 
         data = cast(StudyWrapper, adapter.helper.genotype_data) \
