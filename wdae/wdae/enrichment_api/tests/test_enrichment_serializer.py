@@ -47,6 +47,7 @@ def test_serialize(enrichment_serializer: EnrichmentSerializer) -> None:
         "ins",
         "sub",
         "del",
+        "complex",
     ]
     assert all_serialized["overlapFilter"]["datasetId"] == "f1_trio"
     assert all_serialized["overlapFilter"]["effectTypes"] == ["missense"]
@@ -65,6 +66,7 @@ def test_serialize(enrichment_serializer: EnrichmentSerializer) -> None:
         "ins",
         "sub",
         "del",
+        "complex",
     ]
     # assert all_serialized["overlapFilter"]["geneSymbols"] == {"SAMD11"}
 
@@ -89,6 +91,7 @@ def test_serialize(enrichment_serializer: EnrichmentSerializer) -> None:
         "ins",
         "sub",
         "del",
+        "complex",
     ]
     assert rec_serialized["overlapFilter"]["datasetId"] == "f1_trio"
     assert rec_serialized["overlapFilter"]["effectTypes"] == ["missense"]
@@ -104,6 +107,7 @@ def test_serialize(enrichment_serializer: EnrichmentSerializer) -> None:
         "ins",
         "sub",
         "del",
+        "complex",
     ]
     assert rec_serialized["overlapFilter"]["overlappedGenes"] == {"SAMD11"}
 
@@ -127,6 +131,7 @@ def test_serialize(enrichment_serializer: EnrichmentSerializer) -> None:
         "ins",
         "sub",
         "del",
+        "complex",
     ]
     assert male_serialized["overlapFilter"]["datasetId"] == "f1_trio"
     assert male_serialized["overlapFilter"]["effectTypes"] == ["missense"]
@@ -141,6 +146,7 @@ def test_serialize(enrichment_serializer: EnrichmentSerializer) -> None:
         "ins",
         "sub",
         "del",
+        "complex",
     ]
     # assert male_serialized["overlapFilter"]["geneSymbols"] == {"SAMD11"}
 
@@ -164,6 +170,7 @@ def test_serialize(enrichment_serializer: EnrichmentSerializer) -> None:
         "ins",
         "sub",
         "del",
+        "complex",
     ]
     assert female_serialized["overlapFilter"]["datasetId"] == "f1_trio"
     assert female_serialized["overlapFilter"]["effectTypes"] == ["missense"]
@@ -182,6 +189,7 @@ def test_serialize(enrichment_serializer: EnrichmentSerializer) -> None:
         "ins",
         "sub",
         "del",
+        "complex",
     ]
     # assert female_serialized["overlapFilter"]["geneSymbols"] == {"SAMD11"}
 
