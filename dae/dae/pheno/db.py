@@ -16,7 +16,7 @@ from dae.variants.attributes import Sex, Status, Role
 from dae.pheno.common import MeasureType
 
 
-class DbManager:  # pylint: disable=too-many-instance-attributes
+class PhenoDb:  # pylint: disable=too-many-instance-attributes
     """Class that manages access to phenotype databases."""
 
     STREAMING_CHUNK_SIZE = 25

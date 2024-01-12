@@ -17,7 +17,7 @@ from sqlalchemy import not_
 
 from dae.pedigrees.family import Person
 from dae.pedigrees.families_data import FamiliesData
-from dae.pheno.db import DbManager
+from dae.pheno.db import PhenoDb
 from dae.pheno.common import MeasureType
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.phenotype_data import pheno_conf_schema
@@ -601,7 +601,7 @@ class PhenotypeStudy(PhenotypeData):
 
         super().__init__(pheno_id)
 
-        self.db = DbManager(dbfile=dbfile, browser_dbfile=browser_dbfile)
+        self.db = PhenoDb(dbfile=dbfile, browser_dbfile=browser_dbfile)
         self.config = config
         self.db.build()
         self.families = self._load_families()
@@ -1219,79 +1219,3 @@ class PhenotypeGroup(PhenotypeData):
         roles: Optional[list[str]] = None,
     ) -> Generator[dict[str, Any], None, None]:
         raise NotImplementedError()
-
-
-class PhenoDb:
-    """Represents a phenotype databases stored in an sqlite database."""
-
-    def __init__(self, pheno_data_dir: str) -> None:
-        super().__init__()
-
-        configs = GPFConfigParser.load_directory_configs(
-            pheno_data_dir, pheno_conf_schema
-        )
-
-        self.config = {
-            config.phenotype_data.name: config.phenotype_data
-            for config in configs
-            if config.phenotype_data and config.phenotype_data.enabled
-        }
-
-        self.pheno_cache: dict[str, PhenotypeData] = {}
-
-    def get_dbfile(self, pheno_id: str) -> str:
-        return cast(str, self.config[pheno_id]["dbfile"])
-
-    def get_browser_dbfile(self, pheno_id: str) -> Optional[str]:
-        config = self.get_dbconfig(pheno_id)
-        if "browser_dbfile" in config:
-            return cast(str, config["browser_dbfile"])
-        return None
-
-    def get_dbconfig(self, pheno_id: str) -> dict:
-        return cast(dict, self.config[pheno_id])
-
-    def has_phenotype_data(self, pheno_id: str) -> bool:
-        return pheno_id in self.config
-
-    def get_phenotype_data_ids(self) -> list[Union[Any, str]]:
-        return list(self.config.keys())
-
-    def get_phenotype_data(self, pheno_id: str) -> PhenotypeData:
-        """Construct and return a phenotype data with the specified ID."""
-        if not self.has_phenotype_data(pheno_id):
-            raise ValueError(f"phenotype data <{pheno_id}> not found")
-        if pheno_id in self.pheno_cache:
-            return self.pheno_cache[pheno_id]
-
-        phenotype_data: PhenotypeData
-        config = self.get_dbconfig(pheno_id)
-        if config.get("phenotype_data_list") is not None:
-            logger.info("loading pheno db group <%s>", pheno_id)
-            phenotype_studies = [
-                self.get_phenotype_data(ps_id)
-                for ps_id in config["phenotype_data_list"]
-            ]
-            phenotype_data = PhenotypeGroup(
-                pheno_id, phenotype_studies, config)
-        else:
-            logger.info("loading pheno db <%s>", pheno_id)
-            phenotype_data = PhenotypeStudy(
-                pheno_id,
-                dbfile=self.get_dbfile(pheno_id),
-                browser_dbfile=self.get_browser_dbfile(pheno_id),
-                config=config
-            )
-        self.pheno_cache[pheno_id] = phenotype_data
-        return phenotype_data
-
-    def get_all_phenotype_data(self) -> list[PhenotypeData]:
-        return [
-            self.get_phenotype_data(pheno_id)
-            for pheno_id in self.get_phenotype_data_ids()
-        ]
-
-    def get_phenotype_data_config(
-        self, pheno_id: str
-    ) -> Optional[dict[str, Any]]:
-        return self.config.get(pheno_id)

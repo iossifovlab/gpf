@@ -102,7 +102,7 @@ class GPFConfigParser:
     }
 
     @classmethod
-    def _collect_directory_configs(cls, dirname: str) -> List[str]:
+    def collect_directory_configs(cls, dirname: str) -> List[str]:
         config_files: List[str] = []
         for filetype in cls.filetype_parsers:
             config_files += glob.glob(
@@ -264,7 +264,7 @@ class GPFConfigParser:
             default_config: Optional[dict] = None) -> List[Box]:
         """Find and load all configs in a given root directory."""
         result = []
-        for config_path in cls._collect_directory_configs(dirname):
+        for config_path in cls.collect_directory_configs(dirname):
             if config_path.endswith(".conf") or config_path.endswith(".toml"):
                 logger.warning(
                     "TOML configurations have been deprecated - %s",

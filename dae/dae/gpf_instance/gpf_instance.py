@@ -29,7 +29,8 @@ from dae.common_reports.common_report import CommonReport
 
 from dae.studies.variants_db import VariantsDb
 
-from dae.pheno.pheno_db import PhenoDb, PhenotypeData, get_pheno_db_dir
+from dae.pheno.registry import PhenoRegistry
+from dae.pheno.pheno_data import PhenotypeData, get_pheno_db_dir
 
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.dae_conf import dae_conf_schema
@@ -175,9 +176,21 @@ class GPFInstance:
         return result
 
     @cached_property
-    def _pheno_db(self) -> PhenoDb:
+    def _pheno_db(self) -> PhenoRegistry:
         pheno_data_dir = get_pheno_db_dir(self.dae_config)
-        return PhenoDb(pheno_data_dir)
+        registry = PhenoRegistry()
+
+        pheno_configs = GPFConfigParser.collect_directory_configs(
+            pheno_data_dir
+        )
+
+        with PhenoRegistry.CACHE_LOCK:
+            for config in pheno_configs:
+                registry.register_phenotype_data(
+                    PhenoRegistry.load_pheno_data(config),
+                    lock=False
+                )
+        return registry
 
     @cached_property
     def gene_scores_db(self) -> Any:
