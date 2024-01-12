@@ -19,6 +19,7 @@ from datasets_api.permissions import user_has_permission
 
 from dae.pheno.pheno_db import Measure
 from dae.pheno_tool.tool import PhenoResult, PhenoTool, PhenoToolHelper
+from dae.effect_annotation.effect import EffectTypesMixin
 
 from .pheno_tool_adapter import PhenoToolAdapter, RemotePhenoToolAdapter
 
@@ -144,6 +145,12 @@ class PhenoToolDownload(PhenoToolView):
         # Return a response instantly and make download more responsive
         yield ""
 
+        data["effectTypes"] = EffectTypesMixin.build_effect_types_list(
+            data["effectTypes"]
+        )
+        data["effectTypes"] = EffectTypesMixin.build_effect_types_groups(
+            data["effectTypes"]
+        )
         effect_groups = list(data["effectTypes"])
 
         data = cast(StudyWrapper, adapter.helper.genotype_data) \

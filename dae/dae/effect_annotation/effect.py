@@ -672,6 +672,7 @@ class EffectTypesMixin:
         "CNV": ["CNV+", "CNV-"],
         "CNV+": ["CNV+"],
         "CNV-": ["CNV-"],
+        "Nonsynonymous": ["nonsynonymous"]
     }
 
     EFFECT_TYPES_UI_NAMING = {
