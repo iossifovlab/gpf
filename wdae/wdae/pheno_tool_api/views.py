@@ -3,7 +3,6 @@ import math
 import logging
 
 from typing import Dict, List, Optional, Union, cast, Any, Generator
-from dae.effect_annotation.effect import EffectTypesMixin
 
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -20,6 +19,7 @@ from datasets_api.permissions import user_has_permission
 
 from dae.pheno.pheno_db import Measure
 from dae.pheno_tool.tool import PhenoResult, PhenoTool, PhenoToolHelper
+from dae.effect_annotation.effect import EffectTypesMixin
 
 from .pheno_tool_adapter import PhenoToolAdapter, RemotePhenoToolAdapter
 
