@@ -85,7 +85,7 @@ class EffectAnnotatorAdapter(AnnotatorBase):
         self.gene_models = gene_models
         self._promoter_len = info.parameters.get("promoter_len", 0)
         self._region_length_cutoff = info.parameters.get(
-            "region_length_cutoff", 500_000)
+            "region_length_cutoff", 15_000_000)
         self.effect_annotator = EffectAnnotator(
             self.genome,
             self.gene_models,
@@ -165,6 +165,9 @@ class EffectAnnotatorAdapter(AnnotatorBase):
                 return self._not_found(result)
 
         elif length > self._region_length_cutoff:
+            logger.warning(
+                "region length %s is longer than cutoff %s; %s",
+                length, self._region_length_cutoff, annotatable)
             return self._region_length_cutoff_effect(result, annotatable)
         elif isinstance(annotatable, CNVAllele):
             effects = self.effect_annotator.annotate_cnv(
