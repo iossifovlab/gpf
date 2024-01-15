@@ -652,6 +652,7 @@ class EffectTypesMixin:
         "CNV-",
         "cnv+",
         "cnv-",
+        "nonsynonymous"
     ]
 
     EFFECT_TYPES_MAPPING = {
