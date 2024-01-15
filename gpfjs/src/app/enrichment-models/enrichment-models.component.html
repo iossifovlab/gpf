@@ -1,7 +1,5 @@
-<div
-  *ngIf="backgrounds || countings"
-  style="border-top: 1px solid rgba(0, 0, 0, 12.5%); display: flex; justify-content: space-evenly">
-  <div *ngIf="backgrounds" id="background-models" style="width: 300px; padding: 15px; flex: 1">
+<div *ngIf="backgrounds || countings" style="display: flex; justify-content: space-evenly">
+  <div *ngIf="backgrounds" id="background-models" style="width: 300px; flex: 1; padding-right: 16px">
     <span>Background Models:</span>
     <div class="select-wrapper">
       <select
@@ -15,7 +13,7 @@
       <span class="material-symbols-outlined select-dropdown-icon">arrow_drop_down</span>
     </div>
   </div>
-  <div *ngIf="countings" id="counting-models" style="width: 300px; padding: 15px; flex: 1">
+  <div *ngIf="countings" id="counting-models" style="width: 300px; flex: 1">
     <span>Counting Models:</span>
     <div class="select-wrapper">
       <select

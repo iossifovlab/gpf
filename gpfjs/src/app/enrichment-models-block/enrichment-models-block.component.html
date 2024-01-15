@@ -1,24 +1,3 @@
-<div class="form-block">
-  <div class="card">
-    <ul
-      ngbNav
-      #nav="ngbNav"
-      (navChange)="onNavChange()"
-      class="navbar bg-light nav-pills"
-      style="justify-content: flex-start">
-      <div class="nav-title-custom">
-        <span>Enrichment Models</span>
-      </div>
-      <li [ngbNavItem]="'default'" id="default-models">
-        <a ngbNavLink>Default</a>
-      </li>
-      <li [ngbNavItem]="'models'" id="select-models">
-        <a ngbNavLink>Select Models</a>
-        <ng-template ngbNavContent>
-          <gpf-enrichment-models [selectedDatasetId]="selectedDatasetId"></gpf-enrichment-models>
-        </ng-template>
-      </li>
-    </ul>
-    <div [ngbNavOutlet]="nav" class="card-block"></div>
-  </div>
+<div class="form-block" style="padding: 20px; border: 1px solid rgba(0, 0, 0, 12.5%); background-color: #fafafa;">
+  <gpf-enrichment-models [selectedDatasetId]="selectedDatasetId"></gpf-enrichment-models>
 </div>
