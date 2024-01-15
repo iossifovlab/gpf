@@ -117,7 +117,6 @@ class PhenoToolHelper:
 
         effect_types = set(data["effect_types"])
         queried_effect_types = set(expand_effect_types(effect_types))
-
         variants_by_effect: dict[str, Counter] = {
             effect: Counter() for effect in queried_effect_types
         }

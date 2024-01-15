@@ -9,7 +9,7 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.request import Request
 
-from utils.logger import LOGGER, request_logging
+from utils.logger import request_logging
 from utils.streaming_response_util import iterator_to_json
 from utils.query_params import parse_query_params
 from utils.expand_gene_set import expand_gene_set, expand_gene_syms
@@ -30,7 +30,7 @@ class GenotypeBrowserQueryView(QueryDatasetView):
 
     MAX_SHOWN_VARIANTS = 1000
 
-    @request_logging(LOGGER)
+    @request_logging(logger)
     def post(self, request: Request) -> Response:
         """
         Query for variants from a dataset.
@@ -99,7 +99,7 @@ class GenotypeBrowserQueryView(QueryDatasetView):
             affectedStatus (list): Filter by affected status.
         """
         # pylint: disable=too-many-branches
-        LOGGER.info("query v3 variants request: %s", str(request.data))
+        logger.info("query v3 variants request: %s", str(request.data))
         data = request.data
         user = request.user
 

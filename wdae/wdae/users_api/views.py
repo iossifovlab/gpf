@@ -5,6 +5,8 @@ from typing import Tuple, Type, Union, Optional, cast
 
 import json
 import base64
+import logging
+
 import django.contrib.auth
 from django import forms
 from django.db import IntegrityError, models
@@ -25,7 +27,7 @@ from rest_framework.request import Request
 
 from oauth2_provider.models import get_application_model
 
-from utils.logger import log_filter, LOGGER, request_logging, \
+from utils.logger import log_filter, request_logging, \
     request_logging_function_view
 from utils.email_regex import is_email_valid
 from utils.password_requirements import is_password_valid
@@ -39,6 +41,8 @@ from .models import AuthenticationLog
 from .serializers import UserSerializer, UserWithoutEmailSerializer
 from .forms import WdaePasswordForgottenForm, WdaeResetPasswordForm, \
     WdaeRegisterPasswordForm, WdaeLoginForm
+
+logger = logging.getLogger(__name__)
 
 
 def iterator_to_json(users: Iterator[WdaeUser]) -> Generator[str, None, int]:
@@ -74,14 +78,14 @@ class UserViewSet(viewsets.ModelViewSet):  # pylint: disable=too-many-ancestors
     filter_backends = (filters.SearchFilter,)
     search_fields = ("email", "name", "groups__name")
 
-    @request_logging(LOGGER)
+    @request_logging(logger)
     def list(
         self, request: Request,
         *args: Any, **kwargs: Any
     ) -> Response:
         return super().list(request)
 
-    @request_logging(LOGGER)
+    @request_logging(logger)
     def create(
         self, request: Request,
         *args: Any, **kwargs: Any
@@ -89,7 +93,7 @@ class UserViewSet(viewsets.ModelViewSet):  # pylint: disable=too-many-ancestors
         response = super().create(request)
         return response
 
-    @request_logging(LOGGER)
+    @request_logging(logger)
     def retrieve(
         self, request: Request,
         *args: Any, pk: Optional[int] = None, **kwargs: Any
@@ -98,7 +102,7 @@ class UserViewSet(viewsets.ModelViewSet):  # pylint: disable=too-many-ancestors
             pk = int(pk)
         return super().retrieve(request, pk=pk)
 
-    @request_logging(LOGGER)
+    @request_logging(logger)
     def update(
         self, request: Request,
         *args: Any, pk: Optional[int] = None, **kwargs: Any
@@ -113,7 +117,7 @@ class UserViewSet(viewsets.ModelViewSet):  # pylint: disable=too-many-ancestors
             return Response(status=status.HTTP_400_BAD_REQUEST)
         return super().update(request, pk=pk, *args, **kwargs)
 
-    @request_logging(LOGGER)
+    @request_logging(logger)
     def partial_update(
         self, request: Request,
         *args: Any, pk: Optional[int] = None, **kwargs: Any
@@ -128,7 +132,7 @@ class UserViewSet(viewsets.ModelViewSet):  # pylint: disable=too-many-ancestors
             return Response(status=status.HTTP_400_BAD_REQUEST)
         return super().partial_update(request, pk=pk)
 
-    @request_logging(LOGGER)
+    @request_logging(logger)
     def destroy(
         self, request: Request,
         *args: Any, pk: Optional[int] = None, **kwargs: Any
@@ -149,7 +153,7 @@ class UserViewSet(viewsets.ModelViewSet):  # pylint: disable=too-many-ancestors
 
         return serializer_class
 
-    @request_logging(LOGGER)
+    @request_logging(logger)
     @action(detail=False, methods=["get"])
     def streaming_search(self, request: Request) -> StreamingHttpResponse:
         """Search for users and stream the results."""
@@ -167,7 +171,7 @@ class UserViewSet(viewsets.ModelViewSet):  # pylint: disable=too-many-ancestors
             content_type="text/event-stream",
         )
 
-    @request_logging(LOGGER)
+    @request_logging(logger)
     @action(detail=True, methods=["get", "post"])
     def password_reset(self, request: Request, pk: int) -> Response:
         """Reset the password for a user."""
@@ -185,7 +189,7 @@ class UserViewSet(viewsets.ModelViewSet):  # pylint: disable=too-many-ancestors
 class ForgotPassword(views.APIView):
     """View for forgotten password."""
 
-    @request_logging(LOGGER)
+    @request_logging(logger)
     def get(self, request: Request) -> HttpResponse:
         form = WdaePasswordForgottenForm()
         return render(
@@ -194,7 +198,7 @@ class ForgotPassword(views.APIView):
             {"form": form, "show_form": True}
         )
 
-    @request_logging(LOGGER)
+    @request_logging(logger)
     def post(self, request: Request) -> HttpResponse:
         """Send a reset password email to the user."""
         form = WdaePasswordForgottenForm(request.data)
@@ -283,7 +287,7 @@ class BasePasswordView(views.APIView):
 
         return verif_code, None
 
-    @request_logging(LOGGER)
+    @request_logging(logger)
     def get(self, request: Request) -> HttpResponse:
         """Render the password reset form."""
         verif_code, msg = \
@@ -314,7 +318,7 @@ class BasePasswordView(views.APIView):
             {"form": form}
         )
 
-    @request_logging(LOGGER)
+    @request_logging(logger)
     def post(self, request: Request) -> HttpResponse:
         """Handle the password reset form."""
         verif_code, msg = \
@@ -369,7 +373,7 @@ class SetPassword(BasePasswordView):
 class RESTLoginView(views.APIView):
     """View for REST session bases logging in."""
 
-    @request_logging(LOGGER)
+    @request_logging(logger)
     def post(self, request: Request) -> Response:
         """Supports a REST login endpoint."""
         username = request.data.get("username")
@@ -393,7 +397,7 @@ class RESTLoginView(views.APIView):
             return Response(status=status.HTTP_401_UNAUTHORIZED)
 
         login(request, user)
-        LOGGER.info(log_filter(request, "login success: " + str(username)))
+        logger.info(log_filter(request, "login success: " + str(username)))
         AuthenticationLog.log_authentication_attempt(username, failed=False)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -401,7 +405,7 @@ class RESTLoginView(views.APIView):
 class WdaeLoginView(views.APIView):
     """View for logging in."""
 
-    @request_logging(LOGGER)
+    @request_logging(logger)
     def get(self, request: Request) -> HttpResponse:
         """Render the login form."""
         next_uri = request.GET.get("next")
@@ -418,7 +422,7 @@ class WdaeLoginView(views.APIView):
             }
         )
 
-    @request_logging(LOGGER)
+    @request_logging(logger)
     def post(self, request: Request) -> Union[Response, HttpResponse]:
         """Handle the login form."""
         data = request.data
@@ -445,7 +449,7 @@ class WdaeLoginView(views.APIView):
         )
 
 
-@request_logging_function_view(LOGGER)
+@request_logging_function_view(logger)
 @api_view(["POST"])
 def change_password(request: Request) -> Response:
     """Change the password for a user."""
@@ -453,7 +457,7 @@ def change_password(request: Request) -> Response:
     verif_code = request.data["verifPath"]
 
     if not is_password_valid(password):
-        LOGGER.error(log_filter(
+        logger.error(log_filter(
             request,
             "Password change failed: Invalid password: '%s'",
             str(password)
@@ -468,7 +472,7 @@ def change_password(request: Request) -> Response:
     return Response({}, status.HTTP_201_CREATED)
 
 
-@request_logging_function_view(LOGGER)
+@request_logging_function_view(logger)
 @api_view(["POST"])
 def register(request: Request) -> Response:
     """Register a new user."""
@@ -487,7 +491,7 @@ def register(request: Request) -> Response:
             )
 
         preexisting_user.register_preexisting_user(request.data.get("name"))
-        LOGGER.info(
+        logger.info(
             log_filter(
                 request,
                 "registration succeeded; email: '%s'",
@@ -496,7 +500,7 @@ def register(request: Request) -> Response:
         )
         return Response({}, status=status.HTTP_201_CREATED)
     except IntegrityError:
-        LOGGER.error(
+        logger.error(
             log_filter(
                 request,
                 "Registration failed: IntegrityError; email: '%s'",
@@ -505,7 +509,7 @@ def register(request: Request) -> Response:
         )
         return Response({}, status=status.HTTP_201_CREATED)
     except user_model.DoesNotExist:
-        LOGGER.error(
+        logger.error(
             log_filter(
                 request,
                 "Registration failed: Email or Researcher Id not found; "
@@ -519,7 +523,7 @@ def register(request: Request) -> Response:
             status=status.HTTP_403_FORBIDDEN
         )
     except KeyError:
-        LOGGER.error(
+        logger.error(
             log_filter(
                 request,
                 "Registration failed: KeyError; %s",
@@ -528,7 +532,7 @@ def register(request: Request) -> Response:
         )
         return Response({}, status=status.HTTP_201_CREATED)
     except ValueError:
-        LOGGER.error(
+        logger.error(
             log_filter(
                 request,
                 "Registration failed: Invalid email; email: '%s'",
@@ -542,7 +546,7 @@ def register(request: Request) -> Response:
         )
 
 
-@request_logging_function_view(LOGGER)
+@request_logging_function_view(logger)
 @csrf_clear
 @api_view(["POST"])
 @authentication_classes(
@@ -553,7 +557,7 @@ def logout(request: Request) -> Response:
     return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-@request_logging_function_view(LOGGER)
+@request_logging_function_view(logger)
 @ensure_csrf_cookie
 @api_view(["GET"])
 @authentication_classes(
@@ -573,7 +577,7 @@ def get_user_info(request: Request) -> Response:
     return Response({"loggedIn": False}, status.HTTP_200_OK)
 
 
-@request_logging_function_view(LOGGER)
+@request_logging_function_view(logger)
 @api_view(["POST"])
 def check_verif_code(request: Request) -> Response:
     """Check if a verification code is valid."""
@@ -593,7 +597,7 @@ class FederationCredentials(views.APIView):
 
     authentication_classes = (GPFOAuth2Authentication,)
 
-    @request_logging(LOGGER)
+    @request_logging(logger)
     def get(self, request: Request) -> Response:
         """List all federation apps for a user."""
         user = request.user
@@ -611,7 +615,7 @@ class FederationCredentials(views.APIView):
             })
         return Response(res, status=status.HTTP_200_OK)
 
-    @request_logging(LOGGER)
+    @request_logging(logger)
     def post(self, request: Request) -> Response:
         """Create a new federation application and return its credentials."""
         user = request.user
@@ -641,7 +645,7 @@ class FederationCredentials(views.APIView):
             {"credentials": credentials}, status=status.HTTP_200_OK
         )
 
-    @request_logging(LOGGER)
+    @request_logging(logger)
     def delete(self, request: Request) -> Response:
         """Delete a given federation app."""
         user = request.user
@@ -660,7 +664,7 @@ class FederationCredentials(views.APIView):
         app.delete()
         return Response(status=status.HTTP_200_OK)
 
-    @request_logging(LOGGER)
+    @request_logging(logger)
     def put(self, request: Request) -> Response:
         """Update a given federation token's name."""
         user = request.user

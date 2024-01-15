@@ -650,9 +650,9 @@ class EffectTypesMixin:
         "CDS",
         "CNV+",
         "CNV-",
-        "cnv+",
-        "cnv-",
-        "nonsynonymous"
+        # "cnv+",
+        # "cnv-",
+        # "nonsynonymous"
     ]
 
     EFFECT_TYPES_MAPPING = {
@@ -670,7 +670,7 @@ class EffectTypesMixin:
         "Intergenic": ["intergenic"],
         "3'-UTR": ["3'UTR", "3'UTR-intron"],
         "5'-UTR": ["5'UTR", "5'UTR-intron"],
-        "CNV": ["CNV+", "CNV-"],
+        "CNV": ["CNV"],
         "CNV+": ["CNV+"],
         "CNV-": ["CNV-"],
         "Nonsynonymous": ["nonsynonymous"]
@@ -760,10 +760,9 @@ class EffectTypesMixin:
         """Build list of effect types."""
         if isinstance(effect_types, str):
             effect_types = effect_types.split(",")
-
         etl = [et.strip() for et in effect_types]
-        etl = cls.build_effect_types_groups(etl)
         etl = cls.build_effect_types_list(etl)
+        etl = cls.build_effect_types_groups(etl)
         if safe:
             assert all(et in cls.EFFECT_TYPES for et in etl), etl
         else:

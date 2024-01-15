@@ -249,7 +249,7 @@ REST_FRAMEWORK = {
     "PAGINATE_BY": 10,
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "utils.authentication.GPFOAuth2Authentication",
-        "utils.authentication.SessionAuthenticationWithoutCSRF",
+        # "utils.authentication.SessionAuthenticationWithoutCSRF",
     ),
     "DEFAULT_PAGINATION_CLASS": (
         "utils.pagination.WdaePageNumberPagination"
