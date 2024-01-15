@@ -148,9 +148,6 @@ class PhenoToolDownload(PhenoToolView):
         data["effectTypes"] = EffectTypesMixin.build_effect_types_list(
             data["effectTypes"]
         )
-        data["effectTypes"] = EffectTypesMixin.build_effect_types_groups(
-            data["effectTypes"]
-        )
         effect_groups = list(data["effectTypes"])
 
         data = cast(StudyWrapper, adapter.helper.genotype_data) \
@@ -176,19 +173,11 @@ class PhenoToolDownload(PhenoToolView):
         result_df[tool.measure_id] = \
             result_df[tool.measure_id].round(decimals=5)
 
-        # Select & sort columns for output
-        effect_types_count = len(data["effect_types"])
         columns = [
             col
             for col in result_df.columns.tolist()
             if col not in {"normalized", "role"}
         ]
-        columns[0], columns[1] = columns[1], columns[0]
-        columns = (
-            columns[:3]
-            + columns[-effect_types_count:]
-            + columns[3:-effect_types_count]
-        )
 
         csv_buffer = StringIO()
         result_df.to_csv(csv_buffer, index=False, columns=columns)
