@@ -8,9 +8,12 @@ from django.contrib.auth.models import Group
 from rest_framework import viewsets, permissions, mixins, status, filters
 from rest_framework.response import Response
 from rest_framework.request import Request
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, authentication_classes
 
 from datasets_api.models import Dataset
+from utils.authentication import GPFOAuth2Authentication, \
+    SessionAuthenticationWithoutCSRF
+
 from .serializers import GroupSerializer, GroupRetrieveSerializer, \
     GroupCreateSerializer
 
@@ -25,6 +28,9 @@ class GroupsViewSet(
 ):
     # pylint: disable=too-many-ancestors
     """Groups view set."""
+
+    authentication_classes = [
+        SessionAuthenticationWithoutCSRF, GPFOAuth2Authentication]
 
     serializer_class = GroupSerializer
     permission_classes = (permissions.IsAdminUser,)
@@ -54,6 +60,8 @@ class GroupsViewSet(
 
 
 @api_view(["POST"])
+@authentication_classes(
+    (GPFOAuth2Authentication, SessionAuthenticationWithoutCSRF,))
 def add_group_to_dataset(request: Request) -> Response:
     """Add group to dataset."""
     if not request.user.is_authenticated:
@@ -70,6 +78,8 @@ def add_group_to_dataset(request: Request) -> Response:
 
 
 @api_view(["POST"])
+@authentication_classes(
+    (GPFOAuth2Authentication, SessionAuthenticationWithoutCSRF,))
 def remove_group_from_dataset(request: Request) -> Response:
     """Remove group from dataset."""
     if not request.user.is_authenticated:
