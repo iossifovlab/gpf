@@ -36,7 +36,7 @@ export class EnrichmentTestResult {
     public readonly overlapped: number,
     public readonly pvalue: number,
     public readonly countFilter: BrowserQueryFilter,
-    public readonly overlapFilter: BrowserQueryFilter,
+    public readonly overlapFilter: BrowserQueryFilter
   ) { }
 }
 
@@ -45,16 +45,14 @@ export class EnrichmentEffectResult {
     return new EnrichmentEffectResult(
       EnrichmentTestResult.fromJson(json['all'] as object),
       EnrichmentTestResult.fromJson(json['male'] as object),
-      EnrichmentTestResult.fromJson(json['female'] as object),
-      EnrichmentTestResult.fromJson(json['rec'] as object)
+      EnrichmentTestResult.fromJson(json['female'] as object)
     );
   }
 
   public constructor(
     public readonly all: EnrichmentTestResult,
     public readonly male: EnrichmentTestResult,
-    public readonly female: EnrichmentTestResult,
-    public readonly rec: EnrichmentTestResult
+    public readonly female: EnrichmentTestResult
   ) { }
 }
 

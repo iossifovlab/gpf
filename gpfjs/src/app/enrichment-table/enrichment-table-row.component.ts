@@ -1,6 +1,5 @@
 import { Component, Input } from '@angular/core';
 import { EnrichmentEffectResult } from '../enrichment-query/enrichment-result';
-import { PValueIntensityPipe } from '../utils/p-value-intensity.pipe';
 import { QueryService } from '../query/query.service';
 import { BrowserQueryFilter } from 'app/genotype-browser/genotype-browser';
 import { Store } from '@ngxs/store';
@@ -10,6 +9,7 @@ import { SetPedigreeSelector } from 'app/pedigree-selector/pedigree-selector.sta
 import { SetStudyTypes } from 'app/study-types/study-types.state';
 import { SetVariantTypes } from 'app/variant-types/variant-types.state';
 import { take } from 'rxjs/operators';
+import { cloneDeep } from 'lodash';
 
 @Component({
   selector: '[gpf-enrichment-table-row]',
@@ -21,12 +21,11 @@ export class EnrichmentTableRowComponent {
   @Input() public effectResult: EnrichmentEffectResult;
 
   public constructor(
-    private pValueIntensityPipe: PValueIntensityPipe,
     private queryService: QueryService,
     private store: Store,
   ) {}
 
-  public goToQuery(browserQueryFilter: BrowserQueryFilter): void {
+  public goToQuery(browserQueryFilter: BrowserQueryFilter, skipGenes = false): void {
     // Create new window now because we are in a 'click' event callback, update
     // it's url later. Otherwise this window.open is treated as a pop-up and
     // being blocked by most browsers.
@@ -45,8 +44,18 @@ export class EnrichmentTableRowComponent {
     ]);
 
     this.store.selectOnce(state => state as object).subscribe(state => {
-      state['datasetId'] = browserQueryFilter['datasetId'];
-      this.queryService.saveQuery(state, 'genotype')
+      const queryData = cloneDeep(state);
+
+      const datasetId = browserQueryFilter['datasetId'];
+      queryData['datasetId'] = datasetId;
+
+      if (skipGenes) {
+        delete queryData['geneSymbolsState'];
+        delete queryData['geneSetsState'];
+        delete queryData['geneScoresState'];
+      }
+
+      this.queryService.saveQuery(queryData, 'genotype')
         .pipe(take(1))
         .subscribe(urlObject => {
           const url = this.queryService.getLoadUrlFromResponse(urlObject);
