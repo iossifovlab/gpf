@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import uuid
+import logging
+
 from datetime import timedelta
 from typing import Any, cast, Callable
 from typing import Optional, Type, Union
@@ -24,8 +26,9 @@ from django.db.models.signals import m2m_changed, post_delete, pre_delete
 from oauth2_provider.models import \
     get_application_model, Application
 
-from utils.logger import LOGGER
 from datasets_api.permissions import get_directly_allowed_genotype_data
+
+logger = logging.getLogger(__name__)
 
 
 class WdaeUserManager(BaseUserManager):
@@ -124,7 +127,7 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
         try:
             override = settings.EMAIL_OVERRIDE  # type: ignore
         except Exception:  # pylint: disable=broad-exception-caught
-            LOGGER.debug("no email override; sending email")
+            logger.debug("no email override; sending email")
             override = None
         if override:
             to_email = override
@@ -132,10 +135,10 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
             to_email = self.email
 
         mail = send_mail(subject, message, from_email, [to_email])
-        LOGGER.info("email sent: to:      <%s>", str(self.email))
-        LOGGER.info("email sent: from:    <%s>", str(from_email))
-        LOGGER.info("email sent: subject:  %s", str(subject))
-        LOGGER.info("email sent: message:  %s", str(message))
+        logger.info("email sent: to:      <%s>", str(self.email))
+        logger.info("email sent: from:    <%s>", str(from_email))
+        logger.info("email sent: subject:  %s", str(subject))
+        logger.info("email sent: message:  %s", str(message))
 
         return mail
 
