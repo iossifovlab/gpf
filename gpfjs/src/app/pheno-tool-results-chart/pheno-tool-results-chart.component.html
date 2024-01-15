@@ -1,5 +1,9 @@
 <div class="description">{{ phenoToolResults.description }}</div>
-<svg [attr.width]="width" [attr.height]="height">
+<svg
+  [attr.width]="width > 4 ? width * 300 : 1100"
+  [attr.height]="height"
+  [style.margin-left]="width > 4 ? width * width * -4 : 0"
+  [attr.transform]="'scale(' + (1 - width * 0.02) + ')'">
   <text x="0" y="45">with hit</text>
   <text x="0" y="65">without hit</text>
 
@@ -12,7 +16,7 @@
       [yScale]="yScale"></g>
   </g>
 
-  <g transform="translate(800, 550)">
+  <g [attr.transform]="'translate(' + width * 220 + ', 600)'">
     <rect x="0" y="0" width="150" height="65" fill-opacity="0" stroke-width="2" stroke="black"></rect>
     <circle cx="10" cy="10" r="3" stroke="blue" fill="blue" stroke-width="2"></circle>
     <text x="20" y="15">male with hit</text>
