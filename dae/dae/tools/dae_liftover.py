@@ -110,11 +110,12 @@ def main(
 
     variants_filenames, variants_params = \
         DaeTransmittedLoader.parse_cli_arguments(args)
-    assert len(variants_filenames) == 1
+
+    # assert len(variants_filenames) == 1
 
     variants_loader = DaeTransmittedLoader(
         families,
-        variants_filenames,
+        variants_filenames,  # type: ignore
         params=variants_params,
         genome=source_genome,
     )

@@ -148,6 +148,12 @@ def main(
                 size38 = len(liftover_annotatable)
 
                 size_diff = (100.0 * abs(size19 - size38)) / size19
+                if size_diff >= 50:
+                    logger.warning(
+                        "CNV variant changed more than 50 percent: %s; "
+                        "%s -> %s",
+                        size_diff, annotatable, liftover_annotatable)
+
                 stats.inc((f"size_diff: {int(size_diff / 10) * 10}", ))
 
                 for aa in fv.alt_alleles:
