@@ -14,7 +14,7 @@ describe('PhenoToolResultsChartComponent', () => {
     component = fixture.componentInstance;
     component.phenoToolResults = {
       description: undefined,
-      results: undefined
+      results: []
     };
     fixture.detectChanges();
   }));
