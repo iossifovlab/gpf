@@ -70,7 +70,7 @@ class EnrichmentSerializer(EffectTypesMixin):
                 "checkedValues": [grouping_results["peopleGroupValue"]],
             },
             "studyTypes": ["we"],
-            "variantTypes": ["ins", "sub", "del"],
+            "variantTypes": ["ins", "sub", "del", "complex"],
         }
         return common_filter
 
