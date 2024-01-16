@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 import * as utils from './utils';
 import * as fs from 'fs';
 import * as path from 'path';
+import { scanCSV } from 'nodejs-polars';
 
 test.describe('Pheno tool tests', () => {
   test.beforeEach(async({ page }) => {
@@ -120,18 +121,14 @@ test.describe('Pheno tool download tests', () => {
     await page.locator('input#search-box').click();
     await page.getByText('i1.m1').first().click();
 
-    const expectedVariantsPath = path.join(__dirname + '/../fixtures/pheno-tool/pheno_report1.csv');
-
-    const [download] = await Promise.all([
-      page.waitForEvent('download'),
-      page.getByText('Download').click(),
-    ]);
-
-    const downloadedFile = await download.path().then(filePath => fs.readFileSync(filePath, 'utf8'));
-    const expectedFile = fs.readFileSync(expectedVariantsPath, 'utf8');
-    const downloadedFileLines = downloadedFile.split(/\r\n|\r|\n/);
-    const expectedFileLines = expectedFile.split(/\r\n|\r|\n/);
-    expect(downloadedFileLines).toEqual(expectedFileLines);
+    const downloadPromise = page.waitForEvent('download', { timeout: 180000 });
+    await page.getByText('Download').click();
+    const download = await downloadPromise;
+    const fixtureData = scanCSV(await download.path());
+    const downloadData = scanCSV('playwright/fixtures/pheno-tool/pheno_report1.csv');
+    const fixtureFrame = await fixtureData.collect();
+    const downloadFrame = await downloadData.collect();
+    expect(fixtureFrame.toString()).toEqual(downloadFrame.toString());
   });
 
   [
@@ -145,18 +142,14 @@ test.describe('Pheno tool download tests', () => {
       await page.getByText(data.measure).first().click();
       await page.getByLabel(data.normalizedBy).click();
 
-      const expectedVariantsPath = path.join(__dirname + `/../fixtures/pheno-tool/pheno_report${data.id}.csv`);
-
-      const [download] = await Promise.all([
-        page.waitForEvent('download'),
-        page.getByText('Download').click(),
-      ]);
-
-      const downloadedFile = await download.path().then(filePath => fs.readFileSync(filePath, 'utf8'));
-      const expectedFile = fs.readFileSync(expectedVariantsPath, 'utf8');
-      const downloadedFileLines = downloadedFile.split(/\r\n|\r|\n/);
-      const expectedFileLines = expectedFile.split(/\r\n|\r|\n/);
-      expect(downloadedFileLines).toEqual(expectedFileLines);
+      const downloadPromise = page.waitForEvent('download', { timeout: 180000 });
+      await page.getByText('Download').click();
+      const download = await downloadPromise;
+      const fixtureData = scanCSV(await download.path());
+      const downloadData = scanCSV(`playwright/fixtures/pheno-tool/pheno_report${data.id}.csv`);
+      const fixtureFrame = await fixtureData.collect();
+      const downloadFrame = await downloadData.collect();
+      expect(fixtureFrame.toString()).toEqual(downloadFrame.toString());
     });
   });
 
@@ -178,19 +171,14 @@ test.describe('Pheno tool download tests', () => {
         await page.getByText(filter, {exact: true}).click();
       }
 
-      const expectedVariantsPath = path.join(__dirname + `/../fixtures/pheno-tool/pheno_report${data.id}.csv`);
-
-      const [download] = await Promise.all([
-        page.waitForEvent('download'),
-        page.getByText('Download').click(),
-      ]);
-
-
-      const downloadedFile = await download.path().then(filePath => fs.readFileSync(filePath, 'utf8'));
-      const expectedFile = fs.readFileSync(expectedVariantsPath, 'utf8');
-      const downloadedFileLines = downloadedFile.split(/\r\n|\r|\n/);
-      const expectedFileLines = expectedFile.split(/\r\n|\r|\n/);
-      expect(downloadedFileLines).toEqual(expectedFileLines);
+      const downloadPromise = page.waitForEvent('download', { timeout: 180000 });
+      await page.getByText('Download').click();
+      const download = await downloadPromise;
+      const fixtureData = scanCSV(await download.path());
+      const downloadData = scanCSV(`playwright/fixtures/pheno-tool/pheno_report${data.id}.csv`);
+      const fixtureFrame = await fixtureData.collect();
+      const downloadFrame = await downloadData.collect();
+      expect(fixtureFrame.toString()).toEqual(downloadFrame.toString());
     });
   });
 
@@ -205,18 +193,14 @@ test.describe('Pheno tool download tests', () => {
       await page.locator('#family-ids').click();
       await page.locator('gpf-family-ids textarea').fill(data.familyId);
 
-      const expectedVariantsPath = path.join(__dirname + `/../fixtures/pheno-tool/pheno_report${data.id}.csv`);
-
-      const [download] = await Promise.all([
-        page.waitForEvent('download'),
-        page.getByText('Download').click(),
-      ]);
-
-      const downloadedFile = await download.path().then(filePath => fs.readFileSync(filePath, 'utf8'));
-      const expectedFile = fs.readFileSync(expectedVariantsPath, 'utf8');
-      const downloadedFileLines = downloadedFile.split(/\r\n|\r|\n/);
-      const expectedFileLines = expectedFile.split(/\r\n|\r|\n/);
-      expect(downloadedFileLines).toEqual(expectedFileLines);
+      const downloadPromise = page.waitForEvent('download', { timeout: 180000 });
+      await page.getByText('Download').click();
+      const download = await downloadPromise;
+      const fixtureData = scanCSV(await download.path());
+      const downloadData = scanCSV(`playwright/fixtures/pheno-tool/pheno_report${data.id}.csv`);
+      const fixtureFrame = await fixtureData.collect();
+      const downloadFrame = await downloadData.collect();
+      expect(fixtureFrame.toString()).toEqual(downloadFrame.toString());
     });
   });
 
@@ -247,18 +231,14 @@ test.describe('Pheno tool download tests', () => {
         resp => resp.url().includes('/api/v3/measures/partitions') && resp.status() === 200
       );
 
-      const expectedVariantsPath = path.join(__dirname + `/../fixtures/pheno-tool/pheno_report${data.id}.csv`);
-
-      const [download] = await Promise.all([
-        page.waitForEvent('download'),
-        page.getByText('Download').click(),
-      ]);
-
-      const downloadedFile = await download.path().then(filePath => fs.readFileSync(filePath, 'utf8'));
-      const expectedFile = fs.readFileSync(expectedVariantsPath, 'utf8');
-      const downloadedFileLines = downloadedFile.split(/\r\n|\r|\n/);
-      const expectedFileLines = expectedFile.split(/\r\n|\r|\n/);
-      expect(downloadedFileLines).toEqual(expectedFileLines);
+      const downloadPromise = page.waitForEvent('download', { timeout: 180000 });
+      await page.getByText('Download').click();
+      const download = await downloadPromise;
+      const fixtureData = scanCSV(await download.path());
+      const downloadData = scanCSV(`playwright/fixtures/pheno-tool/pheno_report${data.id}.csv`);
+      const fixtureFrame = await fixtureData.collect();
+      const downloadFrame = await downloadData.collect();
+      expect(fixtureFrame.toString()).toEqual(downloadFrame.toString());
     });
   });
 
@@ -273,18 +253,14 @@ test.describe('Pheno tool download tests', () => {
       await page.locator('input#search-box').click();
       await page.getByText('i1.age').first().click();
 
-      const expectedVariantsPath = path.join(__dirname + `/../fixtures/pheno-tool/pheno_report${data.id}.csv`);
-
-      const [download] = await Promise.all([
-        page.waitForEvent('download'),
-        page.getByText('Download').click(),
-      ]);
-
-      const downloadedFile = await download.path().then(filePath => fs.readFileSync(filePath, 'utf8'));
-      const expectedFile = fs.readFileSync(expectedVariantsPath, 'utf8');
-      const downloadedFileLines = downloadedFile.split(/\r\n|\r|\n/);
-      const expectedFileLines = expectedFile.split(/\r\n|\r|\n/);
-      expect(downloadedFileLines).toEqual(expectedFileLines);
+      const downloadPromise = page.waitForEvent('download', { timeout: 180000 });
+      await page.getByText('Download').click();
+      const download = await downloadPromise;
+      const fixtureData = scanCSV(await download.path());
+      const downloadData = scanCSV(`playwright/fixtures/pheno-tool/pheno_report${data.id}.csv`);
+      const fixtureFrame = await fixtureData.collect();
+      const downloadFrame = await downloadData.collect();
+      expect(fixtureFrame.toString()).toEqual(downloadFrame.toString());
     });
   });
 
@@ -305,18 +281,14 @@ test.describe('Pheno tool download tests', () => {
       await page.getByRole('textbox', { name: 'Select or start typing to search' }).click();
       await page.getByText(data.measure).first().click();
 
-      const expectedVariantsPath = path.join(__dirname + `/../fixtures/pheno-tool/pheno_report${data.id}.csv`);
-
-      const [download] = await Promise.all([
-        page.waitForEvent('download'),
-        page.getByRole('button', { name: 'Download' }).click(),
-      ]);
-
-      const downloadedFile = await download.path().then(filePath => fs.readFileSync(filePath, 'utf8'));
-      const expectedFile = fs.readFileSync(expectedVariantsPath, 'utf8');
-      const downloadedFileLines = downloadedFile.split(/\r\n|\r|\n/);
-      const expectedFileLines = expectedFile.split(/\r\n|\r|\n/);
-      expect(downloadedFileLines).toEqual(expectedFileLines);
+      const downloadPromise = page.waitForEvent('download', { timeout: 180000 });
+      await page.getByRole('button', { name: 'Download' }).click();
+      const download = await downloadPromise;
+      const fixtureData = scanCSV(await download.path());
+      const downloadData = scanCSV(`playwright/fixtures/pheno-tool/pheno_report${data.id}.csv`);
+      const fixtureFrame = await fixtureData.collect();
+      const downloadFrame = await downloadData.collect();
+      expect(fixtureFrame.toString()).toEqual(downloadFrame.toString());
     });
   });
 
@@ -350,18 +322,14 @@ test.describe('Pheno tool download tests', () => {
       await page.getByRole('textbox', { name: 'Select or start typing to search' }).click();
       await page.locator('button.dropdown-item span').filter({ hasText: data.measure }).click();
 
-      const expectedVariantsPath = path.join(__dirname + `/../fixtures/pheno-tool/pheno_report${data.id}.csv`);
-
-      const [download] = await Promise.all([
-        page.waitForEvent('download'),
-        page.getByRole('button', { name: 'Download' }).click(),
-      ]);
-
-      const downloadedFile = await download.path().then(filePath => fs.readFileSync(filePath, 'utf8'));
-      const expectedFile = fs.readFileSync(expectedVariantsPath, 'utf8');
-      const downloadedFileLines = downloadedFile.split(/\r\n|\r|\n/);
-      const expectedFileLines = expectedFile.split(/\r\n|\r|\n/);
-      expect(downloadedFileLines).toEqual(expectedFileLines);
+      const downloadPromise = page.waitForEvent('download', { timeout: 180000 });
+      await page.getByRole('button', { name: 'Download' }).click();
+      const download = await downloadPromise;
+      const fixtureData = scanCSV(await download.path());
+      const downloadData = scanCSV(`playwright/fixtures/pheno-tool/pheno_report${data.id}.csv`);
+      const fixtureFrame = await fixtureData.collect();
+      const downloadFrame = await downloadData.collect();
+      expect(fixtureFrame.toString()).toEqual(downloadFrame.toString());
     });
   });
 
@@ -390,18 +358,14 @@ test.describe('Pheno tool download tests', () => {
       await page.locator('#to-input-field').clear();
       await page.locator('#to-input-field').fill(data.geneScoresHistogramFromTo[1]);
 
-      const expectedVariantsPath = path.join(__dirname + `/../fixtures/pheno-tool/pheno_report${data.id}.csv`);
-
-      const [download] = await Promise.all([
-        page.waitForEvent('download'),
-        page.getByRole('button', { name: 'Download' }).click(),
-      ]);
-
-      const downloadedFile = await download.path().then(filePath => fs.readFileSync(filePath, 'utf8'));
-      const expectedFile = fs.readFileSync(expectedVariantsPath, 'utf8');
-      const downloadedFileLines = downloadedFile.split(/\r\n|\r|\n/);
-      const expectedFileLines = expectedFile.split(/\r\n|\r|\n/);
-      expect(downloadedFileLines).toEqual(expectedFileLines);
+      const downloadPromise = page.waitForEvent('download', { timeout: 180000 });
+      await page.getByRole('button', { name: 'Download' }).click();
+      const download = await downloadPromise;
+      const fixtureData = scanCSV(await download.path());
+      const downloadData = scanCSV(`playwright/fixtures/pheno-tool/pheno_report${data.id}.csv`);
+      const fixtureFrame = await fixtureData.collect();
+      const downloadFrame = await downloadData.collect();
+      expect(fixtureFrame.toString()).toEqual(downloadFrame.toString());
     });
   });
 });

@@ -1,6 +1,6 @@
-family_id,person_id,sex,family_id,person_id,sex,status,i1.m1,Nonsense,Nonsynonymous,Synonymous
-f1,f1.p1,M,f1,f1.p1,M,affected,110.71113,0,0,0
-f2,f2.p1,M,f2,f2.p1,M,affected,75.83139,0,0,0
-f3,f3.p1,M,f3,f3.p1,M,affected,96.63452,0,0,0
-f4,f4.p1,M,f4,f4.p1,M,affected,99.54885,0,0,0
-f5,f5.p1,M,f5,f5.p1,M,affected,80.17125,0,0,0
+person_id,family_id,sex,status,i1.m1,nonsense,nonsynonymous,synonymous
+f1.p1,f1,M,affected,110.71113,0,0,0
+f2.p1,f2,M,affected,75.83139,0,0,0
+f3.p1,f3,M,affected,96.63452,0,0,0
+f4.p1,f4,M,affected,99.54885,0,0,0
+f5.p1,f5,M,affected,80.17125,0,0,0

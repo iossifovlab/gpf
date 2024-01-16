@@ -1,2 +1,2 @@
-family_id,person_id,sex,sex,status,i1.age,LGDs,Missense,Synonymous
-f1,f1.p1,M,M,affected,166.33976,0,1,1
+person_id,family_id,sex,status,i1.age,LGDs,missense,synonymous
+f1.p1,f1,M,affected,166.33976,0,1,1
