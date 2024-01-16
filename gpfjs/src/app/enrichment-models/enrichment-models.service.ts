@@ -10,6 +10,8 @@ import { map } from 'rxjs/operators';
 export interface EnrichmentModels {
   countings: IdDescriptionName[];
   backgrounds: IdDescriptionName[];
+  defaultBackground: string;
+  defaultCounting: string;
 }
 
 @Injectable()
@@ -23,16 +25,18 @@ export class EnrichmentModelsService {
 
   public getBackgroundModels(datasetId: string): Observable<EnrichmentModels> {
     const url = `${this.config.baseUrl}${this.enrichmentModelsUrl}/${datasetId}`;
-
     return this.http
       .get(url)
-      .pipe(map((res: {counting: {
-        id: string; name: string; desc: string;
-}[]; background: {
-  id: string;name: string; desc: string;
-}[];}) => ({
+      .pipe(map((res: {
+        counting: { id: string; name: string; desc: string } [];
+        background: { id: string;name: string;desc: string } [];
+        defaultBackground: string;
+        defaultCounting: string;
+      }) => ({
         countings: res['counting'].map(j => new IdDescriptionName(j.id, j.desc, j.name)),
         backgrounds: res['background'].map(j => new IdDescriptionName(j.id, j.desc, j.name)),
+        defaultBackground: res['defaultBackground'],
+        defaultCounting: res['defaultCounting']
       })));
   }
 }

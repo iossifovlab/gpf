@@ -32,7 +32,9 @@ describe('EnrichmentModelsService', () => {
       background: [
         { id: '3', name: 'Background 1', desc: 'Description 3' },
         { id: '4', name: 'Background 2', desc: 'Description 4' }
-      ]
+      ],
+      defaultCounting: '2',
+      defaultBackground: '3'
     };
     const expectedResult: EnrichmentModels = {
       countings: [
@@ -42,7 +44,9 @@ describe('EnrichmentModelsService', () => {
       backgrounds: [
         { id: '3', name: 'Background 1', description: 'Description 3' },
         { id: '4', name: 'Background 2', description: 'Description 4' }
-      ]
+      ],
+      defaultCounting: '2',
+      defaultBackground: '3'
     };
 
     const mockDatasetId = 'test';
