@@ -38,7 +38,6 @@ export class EnrichmentToolComponent implements OnInit, OnDestroy {
   public ngOnInit(): void {
     this.selectedDataset = this.datasetsService.getSelectedDataset();
     this.state$.subscribe(state => {
-
       this.enrichmentToolState = {
         datasetId: this.selectedDataset.id,
         ...state

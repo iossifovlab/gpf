@@ -44,10 +44,9 @@ export class EnrichmentModelsComponent extends StatefulComponent implements OnIn
         this.background = res.backgrounds.find(bg => bg.id === state.enrichmentBackgroundModel);
         this.counting = res.countings.find(ct => ct.id === state.enrichmentCountingModel);
       } else {
-        this.background = res.backgrounds[0];
-        this.counting = res.countings[0];
+        this.background = res.backgrounds.find(bg => bg.id === res.defaultBackground);
+        this.counting = res.countings.find(ct => ct.id === res.defaultCounting);
       }
-
       this.store.dispatch(new SetEnrichmentModels(this.background.id, this.counting.id));
     });
   }
