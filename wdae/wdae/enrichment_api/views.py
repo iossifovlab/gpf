@@ -62,6 +62,11 @@ class EnrichmentModelsView(QueryDatasetView):
         # pylint: disable=protected-access
         study_backgrounds = self.enrichment_helper \
             .collect_genotype_data_backgrounds(study)
+        default_background_model = self.enrichment_helper \
+            .get_default_background_model(study)
+        default_counting_model = self.enrichment_helper \
+            .get_default_counting_model(study)
+
         for background in study_backgrounds:
             background_descriptions.append({
                 "id": background.background_id,
@@ -74,6 +79,8 @@ class EnrichmentModelsView(QueryDatasetView):
         result = {
             "background": background_descriptions,
             "counting": couting_models,
+            "defaultBackground": default_background_model,
+            "defaultCounting": default_counting_model
         }
         return Response(result)
 

@@ -46,6 +46,20 @@ class EnrichmentHelper:
         return EnrichmentHelper\
             .get_enrichment_config(genotype_data) is not None
 
+    @staticmethod
+    def get_default_background_model(genotype_data: GenotypeData) -> str:
+        enrichment_config = EnrichmentHelper.get_enrichment_config(
+            genotype_data)
+        assert enrichment_config is not None
+        return cast(str, enrichment_config["default_background_model"])
+
+    @staticmethod
+    def get_default_counting_model(genotype_data: GenotypeData) -> str:
+        enrichment_config = EnrichmentHelper.get_enrichment_config(
+            genotype_data)
+        assert enrichment_config is not None
+        return cast(str, enrichment_config["default_counting_model"])
+
     def collect_genotype_data_backgrounds(
         self, genotype_data: GenotypeData
     ) -> list[BaseEnrichmentBackground]:
