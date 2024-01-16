@@ -5,10 +5,11 @@ import pytest
 
 from dae.testing import convert_to_tab_separated
 from dae.pedigrees.loader import FamiliesLoader
+from dae.pedigrees.families_data import FamiliesData
 
 
 @pytest.fixture
-def families():
+def families() -> FamiliesData:
     ped_content = io.StringIO(convert_to_tab_separated(textwrap.dedent(
         """
             familyId personId dadId	 momId	sex status role

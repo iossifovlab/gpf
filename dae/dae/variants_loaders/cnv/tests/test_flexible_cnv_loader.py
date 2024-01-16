@@ -1,6 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import io
 import textwrap
+
 import pytest
 
 from dae.utils.variant_utils import mat2str
@@ -8,10 +9,13 @@ from dae.testing import convert_to_tab_separated
 
 from dae.variants.core import Allele
 from dae.variants_loaders.cnv.flexible_cnv_loader import flexible_cnv_loader
+from dae.genomic_resources.reference_genome import ReferenceGenome
+from dae.gpf_instance.gpf_instance import GPFInstance
+from dae.pedigrees.families_data import FamiliesData
 
 
 @pytest.fixture
-def genome(gpf_instance_2013):
+def genome(gpf_instance_2013: GPFInstance) -> ReferenceGenome:
     return gpf_instance_2013.reference_genome
 
 
@@ -38,7 +42,12 @@ def genome(gpf_instance_2013):
         ),
     ]
 )
-def test_legacy_dae_cnv_variants(families, genome, content, params):
+def test_legacy_dae_cnv_variants(
+    families: FamiliesData,
+    genome: ReferenceGenome,
+    content: str,
+    params: tuple
+) -> None:
     data = io.StringIO(convert_to_tab_separated(textwrap.dedent(content)))
     cnv_family_id, cnv_locatioin, cnv_variant_type, cnv_best_state = params
 
@@ -83,7 +92,12 @@ def test_legacy_dae_cnv_variants(families, genome, content, params):
         ),
     ]
 )
-def test_vcf_like_cnv_variants(families, genome, content, params):
+def test_vcf_like_cnv_variants(
+    families: FamiliesData,
+    genome: ReferenceGenome,
+    content: str,
+    params: tuple
+) -> None:
     data = io.StringIO(convert_to_tab_separated(textwrap.dedent(content)))
     (cnv_person_id, cnv_chrom, cnv_start, cnv_end, cnv_variant_type) = params
 
@@ -217,7 +231,12 @@ def test_vcf_like_cnv_variants(families, genome, content, params):
 
     ]
 )
-def test_flexible_cnv_variants_bad_configs(header, params, families, genome):
+def test_flexible_cnv_variants_bad_configs(
+    header: str,
+    params: dict[str, str],
+    families: FamiliesData,
+    genome: ReferenceGenome
+) -> None:
     content = io.StringIO(convert_to_tab_separated(header))
     with pytest.raises(ValueError):
         next(
@@ -226,5 +245,5 @@ def test_flexible_cnv_variants_bad_configs(header, params, families, genome):
                 families,
                 genome,
                 regions=[],
-                **params)
+                **params)  # type: ignore
         )

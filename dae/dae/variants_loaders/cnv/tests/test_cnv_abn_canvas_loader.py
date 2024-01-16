@@ -1,12 +1,15 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import io
 import textwrap
-from typing import TextIO, Optional
+from typing import TextIO, Optional, cast
+
 import pytest
 
 from dae.variants_loaders.cnv.loader import CNVLoader
 from dae.variants.attributes import Inheritance
 from dae.variants.core import Allele
+from dae.variants.family_variant import FamilyAllele
+
 from dae.gpf_instance import GPFInstance
 
 from dae.testing import convert_to_tab_separated
@@ -70,7 +73,8 @@ def test_cnv_loader_expected_inheritance(
     assert len(variants) == 2
     for _sv, fvs in variants:
         for fv in fvs:
-            for fa in fv.alt_alleles:
+            for aa in fv.alt_alleles:
+                fa = cast(FamilyAllele, aa)
                 assert expected_inheritance in fa.inheritance_in_members
 
 
@@ -143,8 +147,8 @@ def test_cnv_loader_regions(
     assert len(variants) == 2
 
     loader.reset_regions([region])
-    variants = list(loader.family_variants_iterator())
-    assert len(variants) == expected
+    family_variants = list(loader.family_variants_iterator())
+    assert len(family_variants) == expected
 
 
 @pytest.mark.parametrize(
@@ -226,5 +230,5 @@ def test_cnv_loader_del_chrom_prefix_regions(
     assert len(variants) == 2
 
     loader.reset_regions([region])
-    variants = list(loader.family_variants_iterator())
-    assert len(variants) == expected
+    family_variants = list(loader.family_variants_iterator())
+    assert len(family_variants) == expected

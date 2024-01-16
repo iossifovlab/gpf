@@ -1,6 +1,8 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import io
 import textwrap
+from typing import Callable
+
 import pytest
 
 from dae.testing import convert_to_tab_separated
@@ -9,10 +11,12 @@ from dae.pedigrees.loader import FamiliesLoader
 from dae.variants_loaders.cnv.flexible_cnv_loader import \
     _configure_cnv_location, \
     _configure_cnv_best_state
+from dae.gpf_instance.gpf_instance import GPFInstance
+from dae.pedigrees.families_data import FamiliesData
 
 
 @pytest.fixture
-def families():
+def families() -> FamiliesData:
     ped_content = io.StringIO(convert_to_tab_separated(textwrap.dedent(
         """
             familyId personId dadId	 momId	sex status role
@@ -29,9 +33,9 @@ def families():
     return families
 
 
-def test_configure_cnv_loader_vcf_like_pos():
+def test_configure_cnv_loader_vcf_like_pos() -> None:
     header = ["person_id", "Chr", "Start", "End", "variant", "extra"]
-    transformers = []
+    transformers: list[Callable] = []
 
     _configure_cnv_location(
         header, transformers,
@@ -44,10 +48,10 @@ def test_configure_cnv_loader_vcf_like_pos():
         "person_id", "chrom", "pos", "pos_end", "variant", "extra"]
 
 
-def test_configure_cnv_loader_vcf_like_pos_missmatch():
+def test_configure_cnv_loader_vcf_like_pos_missmatch() -> None:
 
     header = ["person_id", "Chr", "Start", "End", "variant", "extra"]
-    transformers = []
+    transformers: list[Callable] = []
 
     with pytest.raises(ValueError):
         _configure_cnv_location(
@@ -58,42 +62,42 @@ def test_configure_cnv_loader_vcf_like_pos_missmatch():
         )
 
 
-def test_configure_cnv_loader_location():
+def test_configure_cnv_loader_location() -> None:
     header = ["person_id", "location", "variant", "extra"]
-    transformers = []
+    transformers: list[Callable] = []
     _configure_cnv_location(header, transformers)
     assert header == [
         "person_id", "location", "variant", "extra"]
 
 
-def test_configure_cnv_loader_location_mismatch():
+def test_configure_cnv_loader_location_mismatch() -> None:
     header = ["person_id", "location", "variant", "extra"]
-    transformers = []
+    transformers: list[Callable] = []
     with pytest.raises(ValueError):
         _configure_cnv_location(
             header, transformers, cnv_location="Location")
 
 
-def test_configure_cnv_loader_dae_best_state_default(
-        families, gpf_instance_2013):
-    # TODO this test doesn't seem to test anything
-    header = ["family_id", "location", "variant", "best_state", "extra"]
-    # transformers = []
+# def test_configure_cnv_loader_dae_best_state_default(
+#         families: FamiliesData, gpf_instance_2013: GPFInstance) -> None:
+#     # TODO this test doesn't seem to test anything
+#     header = ["family_id", "location", "variant", "best_state", "extra"]
+#     # transformers = []
 
-    # (
-    #     header, transformers,
-    #     families, gpf_instance_2013.reference_genome,
-    # )
+#     # (
+#     #     header, transformers,
+#     #     families, gpf_instance_2013.reference_genome,
+#     # )
 
-    assert header == [
-        "family_id", "location", "variant", "best_state", "extra"]
+#     assert header == [
+#         "family_id", "location", "variant", "best_state", "extra"]
 
 
 def test_configure_cnv_loader_dae_best_state(
-        families, gpf_instance_2013):
+        families: FamiliesData, gpf_instance_2013: GPFInstance) -> None:
 
     header = ["familyId", "location", "variant", "bestState", "extra"]
-    transformers = []
+    transformers: list[Callable] = []
 
     _configure_cnv_best_state(
         header, transformers,
@@ -107,10 +111,10 @@ def test_configure_cnv_loader_dae_best_state(
 
 
 def test_configure_cnv_loader_person_id(
-        families, gpf_instance_2013):
+        families: FamiliesData, gpf_instance_2013: GPFInstance) -> None:
 
     header = ["personId", "location", "variant", "extra"]
-    transformers = []
+    transformers: list[Callable] = []
 
     _configure_cnv_best_state(
         header, transformers,
@@ -138,10 +142,10 @@ def test_configure_cnv_loader_person_id(
 
 
 def test_configure_cnv_loader_best_state_person_id_not_found(
-        families, gpf_instance_2013):
+        families: FamiliesData, gpf_instance_2013: GPFInstance) -> None:
 
     header = ["personId", "location", "variant", "extra"]
-    transformers = []
+    transformers: list[Callable] = []
 
     with pytest.raises(ValueError):
         _configure_cnv_best_state(
@@ -152,10 +156,10 @@ def test_configure_cnv_loader_best_state_person_id_not_found(
 
 
 def test_configure_cnv_loader_best_state_best_state_not_found(
-        families, gpf_instance_2013):
+        families: FamiliesData, gpf_instance_2013: GPFInstance) -> None:
 
     header = ["familyId", "location", "variant", "bestState", "extra"]
-    transformers = []
+    transformers: list[Callable] = []
 
     with pytest.raises(ValueError):
         _configure_cnv_best_state(
@@ -167,10 +171,10 @@ def test_configure_cnv_loader_best_state_best_state_not_found(
 
 
 def test_configure_cnv_loader_best_state_family_id_not_found(
-        families, gpf_instance_2013):
+        families: FamiliesData, gpf_instance_2013: GPFInstance) -> None:
 
     header = ["familyId", "location", "variant", "bestState", "extra"]
-    transformers = []
+    transformers: list[Callable] = []
 
     with pytest.raises(ValueError):
         _configure_cnv_best_state(
