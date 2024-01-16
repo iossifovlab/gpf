@@ -1,8 +1,8 @@
 <td>{{ label }}</td>
 <td
   class="link-td"
-  (click)="goToQuery(effectResult.all.countFilter)"
-  (middleclick)="goToQuery(effectResult.all.countFilter)"
+  (click)="goToQuery(effectResult.all.countFilter, true)"
+  (middleclick)="goToQuery(effectResult.all.countFilter, true)"
   [style.background-color]="effectResult.all | getEnrichmentBackgroundColor">
   <a class="link" [style.color]="effectResult.all | getEnrichmentBackgroundColor | contrastAdjust">{{
     effectResult.all.count | numberWithExp : '1.0-2'
@@ -25,32 +25,8 @@
 </td>
 <td
   class="link-td"
-  (click)="goToQuery(effectResult.rec.countFilter)"
-  (middleclick)="goToQuery(effectResult.rec.countFilter)"
-  [style.background-color]="effectResult.rec | getEnrichmentBackgroundColor">
-  <a class="link" [style.color]="effectResult.rec | getEnrichmentBackgroundColor | contrastAdjust">{{
-    effectResult.rec.count | numberWithExp : '1.0-2'
-  }}</a>
-</td>
-<td
-  class="link-td"
-  (click)="goToQuery(effectResult.rec.overlapFilter)"
-  (middleclick)="goToQuery(effectResult.rec.overlapFilter)"
-  [style.background-color]="effectResult.rec | getEnrichmentBackgroundColor">
-  <a class="link" [style.color]="effectResult.rec | getEnrichmentBackgroundColor | contrastAdjust">{{
-    effectResult.rec.overlapped | numberWithExp : '1.0-2'
-  }}</a>
-</td>
-<td [style.background-color]="effectResult.rec | getEnrichmentBackgroundColor">
-  <span>{{ effectResult.rec.expected | numberWithExp : '1.2-2' }}</span>
-</td>
-<td [style.background-color]="effectResult.rec | getEnrichmentBackgroundColor">
-  <span>{{ effectResult.rec.pvalue | numberWithExp : '1.2-4' }}</span>
-</td>
-<td
-  class="link-td"
-  (click)="goToQuery(effectResult.male.countFilter)"
-  (middleclick)="goToQuery(effectResult.male.countFilter)"
+  (click)="goToQuery(effectResult.male.countFilter, true)"
+  (middleclick)="goToQuery(effectResult.male.countFilter, true)"
   [style.background-color]="effectResult.male | getEnrichmentBackgroundColor">
   <a class="link" [style.color]="effectResult.male | getEnrichmentBackgroundColor | contrastAdjust">{{
     effectResult.male.count | numberWithExp : '1.0-2'
@@ -73,8 +49,8 @@
 </td>
 <td
   class="link-td"
-  (click)="goToQuery(effectResult.female.countFilter)"
-  (middleclick)="goToQuery(effectResult.female.countFilter)"
+  (click)="goToQuery(effectResult.female.countFilter, true)"
+  (middleclick)="goToQuery(effectResult.female.countFilter, true)"
   [style.background-color]="effectResult.female | getEnrichmentBackgroundColor">
   <a class="link" [style.color]="effectResult.female | getEnrichmentBackgroundColor | contrastAdjust">{{
     effectResult.female.count | numberWithExp : '1.0-2'
