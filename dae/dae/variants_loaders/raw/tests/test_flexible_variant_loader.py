@@ -14,10 +14,12 @@ from dae.variants_loaders.raw.flexible_variant_loader import \
     flexible_variant_loader, \
     location_variant_to_vcf_transformer, \
     variant_to_variant_type
+from dae.gpf_instance.gpf_instance import GPFInstance
+from dae.pedigrees.families_data import FamiliesData
 
 
 @pytest.fixture
-def families():
+def families() -> FamiliesData:
     ped_content = io.StringIO(convert_to_tab_separated(textwrap.dedent(
         """
             familyId personId dadId	 momId	sex status role
@@ -35,7 +37,7 @@ def families():
 
 
 @pytest.fixture
-def denovo_short():
+def denovo_short() -> io.StringIO:
     content = io.StringIO(convert_to_tab_separated(textwrap.dedent(
         """
         family_id  location      variant    bestState
@@ -47,7 +49,7 @@ def denovo_short():
     return content
 
 
-def test_families_simple(families):
+def test_families_simple(families: FamiliesData) -> None:
 
     assert families.persons[("f1", "f1.m")].sex == Sex.female
     assert families.persons[("f1", "f1.d")].sex == Sex.male
@@ -56,7 +58,7 @@ def test_families_simple(families):
     assert families.persons[("f1", "f1.d")].role == Role.dad
 
 
-def test_denovo_short_simple(denovo_short):
+def test_denovo_short_simple(denovo_short: io.StringIO) -> None:
     next(denovo_short)
 
     generator = flexible_variant_loader(
@@ -71,7 +73,7 @@ def test_denovo_short_simple(denovo_short):
 
 
 def test_denovo_short_location_variant_transformation(
-        denovo_short, gpf_instance_2013):
+        denovo_short: io.StringIO, gpf_instance_2013: GPFInstance) -> None:
 
     next(denovo_short)
 
@@ -108,7 +110,9 @@ def test_denovo_short_location_variant_transformation(
     assert v["alt"] == "T"
 
 
-def test_denovo_short_variant_type_transformation(denovo_short):
+def test_denovo_short_variant_type_transformation(
+    denovo_short: io.StringIO
+) -> None:
 
     next(denovo_short)
 
