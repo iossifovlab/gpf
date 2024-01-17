@@ -138,7 +138,7 @@ test.describe.skip('Autism gene profiles single view dataset table tests', () =>
   });
 });
 
-export const geneData = [
+export const geneData =
   {
     geneSymbols: 'GRIN2B',
     genomicScores: [
@@ -186,26 +186,49 @@ export const geneData = [
         ]
       }
     ]
-  }
-];
+  };
 
 test.describe('Autism gene profiles single view dynamic data tests', () => {
-  let singleViewPage: Page;
-  test.beforeEach(async({ page, context }) => {
+  test.beforeEach(async({ page }) => {
     await page.goto(utils.instanceUrl, {waitUntil: 'load'});
     await utils.loginAdmin(page);
     await utils.navigateToSidenavPage(page, 'autism-gene-profiles');
-    await page.locator('input#gene-search-input').focus();
-    await page.keyboard.type('GRIN2B');
-    const pagePromise = context.waitForEvent('page');
-    await page.locator('div').filter({ hasText: /^GRIN2B$/}).click();
-    singleViewPage = await pagePromise;
-    await singleViewPage.waitForLoadState();
   });
 
-  test.skip('should compare all data in single view for GRIN2B', async() => {
-    const page = singleViewPage;
-    await expect(page).toHaveScreenshot('agp-single-view-GRIN2B.png', {fullPage: true});
+  test('should compare all data in single view for GRIN2B', async({ page, context }) => {
+    await page.locator('input#gene-search-input').focus();
+    await page.keyboard.type('GRIN2B');
+    await page.waitForLoadState();
+
+    const pr = context.waitForEvent('page');
+
+    await page.locator('div').filter({ hasText: /^GRIN2B$/}).click();
+    const singleViewPage = await pr;
+
+    await expect(singleViewPage.locator('#autism_gene_sets').locator('th')).toHaveText('Autism Gene Sets');
+    await expect(
+      singleViewPage.locator('.gene-sets-table').locator('tr').nth(0)
+    ).toHaveText('autism candidates from Iossifov PNAS 2015check');
+    await expect(
+      singleViewPage.locator('.gene-sets-table').locator('tr').nth(1)
+    ).toHaveText('autism candidates from Sanders Neuron 2015check');
+
+
+    await expect(singleViewPage.locator('.datasets-table').locator('th').nth(0)).toHaveText('iossifov_2014');
+    await expect(
+      singleViewPage.locator('.datasets-table').locator('tr').nth(1)
+    ).toHaveText('Variant Statisticsaffected (2507)unaffected (1910)');
+    await expect(singleViewPage.locator('.datasets-table').locator('tr').nth(2)).toHaveText('LGDsremoveremove');
+    await expect(singleViewPage.locator('.datasets-table').locator('tr').nth(3)).toHaveText('missense1 (0.399)remove');
+    await expect(singleViewPage.locator('.datasets-table').locator('tr').nth(4)).toHaveText('intronremoveremove');
+
+    await expect(singleViewPage.locator('#relevant_gene_sets').locator('th')).toHaveText('Relevant Gene Sets');
+    await expect(singleViewPage.locator('#relevant_gene_sets').locator('tr').nth(0)).toHaveText('CHD8 target genes');
+    await expect(singleViewPage.locator('#relevant_gene_sets').locator('tr').nth(1)).toHaveText('chromatin modifiers');
+    await expect(singleViewPage.locator('#relevant_gene_sets').locator('tr').nth(2)).toHaveText('essential genescheck');
+    await expect(singleViewPage.locator('#relevant_gene_sets').locator('tr').nth(3)).toHaveText('FMRP Darnellcheck');
+
+    await expect(singleViewPage).toHaveScreenshot('agp-single-view-GRIN2B.png', {fullPage: true});
   });
 });
 
