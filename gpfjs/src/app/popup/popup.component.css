@@ -5,3 +5,9 @@
   overflow-y: auto;
   overflow-wrap: break-word;
 }
+
+#close-button {
+  float: right;
+  border: none;
+  background-color: transparent;
+}
