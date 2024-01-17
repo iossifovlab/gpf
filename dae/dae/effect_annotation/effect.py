@@ -727,6 +727,8 @@ class EffectTypesMixin:
         "UTRs": [
             "3'UTR",
             "5'UTR",
+            "3'UTR-intron",
+            "5'UTR-intron"
         ],
     }
 
