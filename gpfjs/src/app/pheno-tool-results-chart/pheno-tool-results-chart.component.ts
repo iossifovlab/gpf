@@ -12,11 +12,12 @@ export class PhenoToolResultsChartComponent implements OnInit, OnChanges {
   @Input() public phenoToolResults: PhenoToolResults;
   @Input() public width = 1060;
   @Input() public height = 700;
+  public columnCount: number;
   @Input() public innerHeight = 450;
   public yScale: d3.ScaleLinear<number, number>;
 
   public ngOnInit(): void {
-    this.width = this.phenoToolResults.results.length;
+    this.columnCount = this.phenoToolResults.results.length;
   }
 
   public ngOnChanges(): void {
@@ -57,5 +58,9 @@ export class PhenoToolResultsChartComponent implements OnInit, OnChanges {
       return 0;
     }
     return (this.width - 200) / this.phenoToolResults.results.length;
+  }
+
+  public getViewBox(): string {
+    return `0 0 ${this.columnCount > 4 ? this.columnCount * 260 : this.width} ${this.height}`;
   }
 }
