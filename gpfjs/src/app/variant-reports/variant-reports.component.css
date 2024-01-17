@@ -203,6 +203,7 @@ h5 {
 #clear-filters-button {
   white-space: nowrap;
   color: #2a6395;
+  user-select: none;
 }
 
 #clear-filters-button:hover {
@@ -235,6 +236,7 @@ h5 {
 
 #families-sum {
   margin-right: 15px;
+  min-width: 100px;
 }
 
 .tags {

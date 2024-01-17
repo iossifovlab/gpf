@@ -98,7 +98,8 @@
           id="dl-form"
           (ngSubmit)="downloadTags($event)"
           action="{{ config.baseUrl }}common_reports/families_data/{{ selectedDataset.id }}"
-          method="post">
+          method="post"
+          style="display: flex; align-items: center">
           <span id="families-sum">All families: {{ familiesCount }}</span>
           <input name="queryData" type="hidden" />
           <button
@@ -117,13 +118,13 @@
               <span id="mode-label">Choose mode: </span>
               <button
                 class="and-toggle-button"
-                (click)="tagIntersection = true; updateTagFilters()"
+                (click)="tagIntersection = true; updateTagsHeader()"
                 [ngClass]="{ 'selected-mode': tagIntersection }"
                 >And</button
               >
               <button
                 class="or-toggle-button"
-                (click)="tagIntersection = false; updateTagFilters()"
+                (click)="tagIntersection = false; updateTagsHeader()"
                 [ngClass]="{ 'selected-mode': !tagIntersection }"
                 >Or</button
               >

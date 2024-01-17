@@ -119,8 +119,6 @@ export class VariantReportsComponent implements OnInit {
       this.filtersButtonsState[tag] = 1;
     }
     this.updateSelectedTagsList(tag);
-    this.updateTagFilters();
-    this.updateFamiliesCount();
   }
 
   public deselectFilter(tag: string): void {
@@ -130,8 +128,6 @@ export class VariantReportsComponent implements OnInit {
       this.filtersButtonsState[tag] = -1;
     }
     this.updateDeselectedTagsList(tag);
-    this.updateTagFilters();
-    this.updateFamiliesCount();
   }
 
   public updateSelectedTagsList(tag: string): void {
@@ -163,21 +159,24 @@ export class VariantReportsComponent implements OnInit {
   }
 
   public updateTagsHeader(): void {
+    const separator = this.tagIntersection ? ' and ' : ' or ';
     this.tagsHeader = '';
     if (this.selectedTags.length > 0) {
-      this.tagsHeader += this.selectedTags.join(', ');
+      this.tagsHeader += this.selectedTags.join(separator);
     }
 
     if (this.deselectedTags.length > 0) {
       if (this.tagsHeader !== '') {
-        this.tagsHeader += ', ';
+        this.tagsHeader += separator;
       }
-      this.tagsHeader += 'not ' + this.deselectedTags.join(', not ');
+      this.tagsHeader += 'not ' + this.deselectedTags.join(separator + ' not ');
     }
 
     if (this.selectedTags.length === 0 && this.deselectedTags.length === 0) {
       this.tagsHeader = '';
     }
+    this.updateTagFilters();
+    this.updateFamiliesCount();
   }
 
 
@@ -209,6 +208,7 @@ export class VariantReportsComponent implements OnInit {
     this.tagsHeader = '';
     this.filtersButtonsState = _.mapValues(this.filtersButtonsState, () => 0);
     this.updateTagFilters();
+    this.updateFamiliesCount();
   }
 
   public updatePedigrees(newCounters: Dictionary<PedigreeCounter[]>): void {
