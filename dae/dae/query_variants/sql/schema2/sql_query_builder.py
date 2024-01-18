@@ -93,11 +93,19 @@ class SqlQueryBuilder:
                     {eg_where}
             """)
 
+        limit_clause = ""
+        if limit is not None:
+            limit_clause = f"LIMIT {limit}"
+
         query = textwrap.dedent(f"""
-{summary_subclause}
-SELECT bucket_index, summary_index, allele_index, summary_variant_data
-FROM summary
-{eg_join_clause}
+            {summary_subclause}
+            SELECT
+                bucket_index, summary_index,
+                list(allele_index), first(summary_variant_data)
+            FROM summary
+            {eg_join_clause}
+            GROUP BY bucket_index, summary_index
+            {limit_clause}
         """)
 
         return query
@@ -106,14 +114,12 @@ FROM summary
         self,
         regions: Optional[list[Region]] = None,
         genes: Optional[list[str]] = None,
-        effect_types: Optional[list[str]] = None,
         variant_type: Optional[str] = None,
         real_attr_filter: Optional[RealAttrFilterType] = None,
         ultra_rare: Optional[bool] = None,
         frequency_filter: Optional[RealAttrFilterType] = None,
         return_reference: Optional[bool] = None,
         return_unknown: Optional[bool] = None,
-        limit: Optional[int] = None,
         **kwargs: Any
     ) -> str:
         """Build a subclause for the summary table.
@@ -137,6 +143,10 @@ FROM summary
             )
         if ultra_rare is not None and ultra_rare:
             where_parts.append(self._build_ultra_rare_where())
+
+        # Do not look into reference alleles
+        where_parts.append("sa.allele_index > 0")
+
         summary_where = ""
         if where_parts:
             where = " AND ".join(where_parts)
@@ -202,16 +212,18 @@ WITH summary AS (
             if reg.start is None and reg.stop is None:
                 reg_where = f"sa.chromosome = '{reg.chrom}'"
             elif reg.start is None:
+                assert reg.stop is not None
+                reg_where = (
+                    f"sa.chromosome = '{reg.chrom}'"
+                    f" AND NOT ( "
+                    f"sa.position > {reg.stop} )"
+                )
+            elif reg.stop is None:
+                assert reg.start is not None
                 reg_where = (
                     f"sa.chromosome = '{reg.chrom}'"
                     f" AND ( "
-                    f"(1 <= sa.position AND "
-                    f"sa.position <= {reg.end}) OR "
-                    f"(COALESCE(sa.end_position, -1) >= 1 AND "
-                    f"COALESCE(sa.end_position, -1) <= {reg.end}) OR "
-                    f"(sa.position <= 1 AND "
-                    f"COALESCE(sa.end_position, -1) >= {reg.end}) "
-                    f")"
+                    f"COALESCE(sa.end_position, sa.position) > {reg.start} )"
                 )
             else:
                 assert reg.stop is not None
@@ -219,14 +231,9 @@ WITH summary AS (
 
                 reg_where = (
                     f"sa.chromosome = '{reg.chrom}'"
-                    f" AND ( "
-                    f"({reg.start} <= sa.position AND "
-                    f"sa.position <= {reg.end}) OR "
-                    f"(COALESCE(sa.end_position, -1) >= {reg.start} AND "
-                    f"COALESCE(sa.end_position, -1) <= {reg.end}) OR "
-                    f"(sa.position <= {reg.start} AND "
-                    f"COALESCE(sa.end_position, -1) >= {reg.end}) "
-                    f")"
+                    f" AND NOT ( "
+                    f"COALESCE(sa.end_position, sa.position) < {reg.start} OR "
+                    f"sa.position > {reg.stop} )"
                 )
             where.append(f"( {reg_where} )")
         return " OR ".join(where)

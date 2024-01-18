@@ -23,9 +23,10 @@ from dae.testing import setup_pedigree, setup_vcf, vcf_study
 from dae.testing.t4c8_import import t4c8_gpf
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def duckdb_storage(
-        tmp_path_factory: pytest.TempPathFactory) -> DuckDbGenotypeStorage:
+    tmp_path_factory: pytest.TempPathFactory
+) -> DuckDbGenotypeStorage:
     storage_path = tmp_path_factory.mktemp("duckdb_storage")
     storage_config = {
         "id": "duckdb_test",
@@ -41,17 +42,17 @@ def duckdb_storage(
     return storage
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def t4c8_instance(
-    tmp_path: pathlib.Path,
+    tmp_path_factory: pytest.TempPathFactory,
     duckdb_storage: DuckDbGenotypeStorage,
 ) -> GPFInstance:
-    root_path = tmp_path
+    root_path = tmp_path_factory.mktemp("t4c8_instance")
     gpf_instance = t4c8_gpf(root_path, duckdb_storage)
     return gpf_instance
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def t4c8_study_1(
     t4c8_instance: GPFInstance,
     duckdb_storage: DuckDbGenotypeStorage
@@ -92,7 +93,7 @@ chr1   122  .  A   C   .    .      .    GT     0/0  1/0  0/0 0/0  0/0  0/0
     return study
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def query_builder(
     t4c8_study_1: GenotypeData,
     duckdb_storage: DuckDbGenotypeStorage,
@@ -171,6 +172,16 @@ def test_query_summary_variants_simple(
     ({"regions": [Region("chr1")]}, 3),
     ({"regions": [Region("chr1", None, 55)]}, 1),
     ({"regions": [Region("chr1", 55, None)]}, 2),
+    ({"frequency_filter": [("af_allele_freq", (None, 15.0))]}, 3),
+    ({"frequency_filter": [("af_allele_freq", (15.0, None))]}, 1),
+    ({"frequency_filter": [("af_allele_freq", (15.0, None))]}, 1),
+    ({"real_attr_filter": [("af_allele_count", (None, 1))]}, 3),
+    ({"real_attr_filter": [("af_allele_count", (1, None))]}, 3),
+    ({"real_attr_filter": [("af_allele_count", (1, 1))]}, 3),
+    ({"real_attr_filter": [("af_allele_count", (2, None))]}, 1),
+    ({"real_attr_filter": [("af_allele_count", (2, 2))]}, 1),
+    ({"limit": 1}, 1),
+    ({"limit": 2}, 2),
 ])
 def test_query_summary_variants_counting(
     params: dict[str, Any],
