@@ -22,7 +22,8 @@ from dae.pedigrees.family_tag_builder import check_tag, \
     tag_male_prb_family, \
     tag_female_prb_family, \
     tag_missing_mom_family, \
-    tag_missing_dad_family
+    tag_missing_dad_family, \
+    check_family_tags_query
 from dae.pedigrees.testing import build_family
 
 
@@ -427,3 +428,52 @@ def test_tag_missing_dad_family_again() -> None:
 
     assert tag_missing_dad_family(fam)
     assert check_tag(fam, FamilyTag.MISSING_DAD)
+
+
+@pytest.mark.parametrize(
+    "or_mode,included_tags,excluded_tags,expected",
+    [
+        (False, {FamilyTag.NUCLEAR}, {}, True),
+        (False, {FamilyTag.QUAD}, {}, True),
+        (False, {FamilyTag.NUCLEAR, FamilyTag.QUAD}, {}, True),
+        (
+            False, 
+            {FamilyTag.NUCLEAR, FamilyTag.QUAD, FamilyTag.MALE_PRB},
+            {},
+            False
+        ),
+        (False, {FamilyTag.NUCLEAR}, {FamilyTag.QUAD}, False),
+        (False, {}, {FamilyTag.MISSING_DAD}, True),
+        (False, {FamilyTag.NUCLEAR}, {FamilyTag.MISSING_DAD}, True),
+        (True, {FamilyTag.QUAD}, {FamilyTag.TRIO}, True),
+        (True, {FamilyTag.QUAD}, {}, True),
+        (True, {FamilyTag.QUAD, FamilyTag.NUCLEAR}, {}, True),
+        (True, {FamilyTag.QUAD}, {FamilyTag.NUCLEAR}, True),
+        (True, {}, {FamilyTag.TRIO}, True),
+        (True, {}, {FamilyTag.QUAD}, False),
+        (True, {FamilyTag.MISSING_DAD}, {FamilyTag.QUAD}, False),
+        (
+            True, 
+            {FamilyTag.NUCLEAR, FamilyTag.QUAD, FamilyTag.MALE_PRB},
+            {},
+            True
+        ),
+    ]
+)
+def test_tag_query(
+    fam1_fixture: Family,
+    or_mode: bool,
+    included_tags: set[FamilyTag],
+    excluded_tags: set[FamilyTag],
+    expected: bool
+) -> None:
+
+    assert tag_nuclear_family(fam1_fixture)
+    assert tag_quad_family(fam1_fixture)
+
+    assert check_family_tags_query(
+        fam1_fixture,
+        or_mode,
+        included_tags,
+        excluded_tags
+    ) == expected

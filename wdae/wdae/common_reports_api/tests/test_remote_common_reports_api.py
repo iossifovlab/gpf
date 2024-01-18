@@ -21,7 +21,7 @@ def test_remote_variant_reports(admin_client: Client) -> None:
 
 def test_remote_families_data_download(admin_client: Client) -> None:
     url = "/api/v3/common_reports/families_data/TEST_REMOTE_iossifov_2014"
-    response = admin_client.get(url)
+    response = admin_client.post(url)
 
     assert response
     assert response.status_code == status.HTTP_200_OK
