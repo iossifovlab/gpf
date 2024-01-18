@@ -85,15 +85,14 @@ class SqlQueryBuilder:
                 where_parts.append(self._build_gene_where(genes))
             if effect_types is not None:
                 where_parts.append(self._build_effect_type_where(effect_types))
-            eg_where = textwrap.dedent(f"""
-                AND\n".join({where_parts})
-            """)
+            eg_where = " AND ".join(where_parts)
             eg_join_clause = textwrap.dedent(f"""
                 CROSS JOIN
-                    (SELECT UNNEST (summary.effect_gene) as eg)
+                    (SELECT UNNEST (effect_gene) as eg)
                 WHERE
                     {eg_where}
             """)
+
         query = textwrap.dedent(f"""
 {summary_subclause}
 SELECT bucket_index, summary_index, allele_index, summary_variant_data
@@ -140,20 +139,19 @@ FROM summary
             where_parts.append(self._build_ultra_rare_where())
         summary_where = ""
         if where_parts:
-            where = " AND\n".join(where_parts)
-            summary_where = textwrap.dedent(f"""
-                WHERE 
-                    {where}
-            """)
+            where = " AND ".join(where_parts)
+            summary_where = textwrap.dedent(f"""WHERE
+        {where}
+""")
         query = textwrap.dedent(f"""
-            WITH summary AS (
-            SELECT
-                sa.*
-            FROM
-                {self.db_layout.summary} sa
-            {summary_where}
-            )
-        """)
+WITH summary AS (
+    SELECT
+        *
+    FROM
+        {self.db_layout.summary} sa
+    {summary_where}
+)
+""")
         return query
 
     def _build_gene_regions_heuristic(

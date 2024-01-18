@@ -3,8 +3,9 @@ import pathlib
 
 import pytest
 
-from sqlglot import parse_one
+from sqlglot import parse_one, exp
 from sqlglot.executor import execute
+from sqlglot.schema import ensure_schema
 
 from dae.utils.regions import Region
 from dae.genomic_resources.gene_models import GeneModels
@@ -284,3 +285,67 @@ def test_build_ultra_rare_where(
         tables=tables)
 
     assert len(result) == 2
+
+
+def test_build_gene_query_where(
+    sql_query_builder_simple: SqlQueryBuilder
+) -> None:
+    query = sql_query_builder_simple.build_summary_variants_query(
+        genes=["t4"], effect_types=["missense"]
+    )
+    print(query)
+
+    expr = parse_one(query, read="duckdb")
+    assert expr
+
+    # tables = {
+    #     "test_vcf_summary": [
+    #         {
+    #             "bucket_index": 1,
+    #             "summary_index": 1,
+    #             "allele_index": 1,
+    #             "chromosome": "chr1",
+    #             "position": 10,
+    #             "end_position": None,
+    #             "effect_gene": [
+    #                 {"effect_gene_symbols": "t4", "effect_types": "missense"}
+    #             ],
+    #             "summary_variant_data": "summary_1",
+    #         },
+
+    #         {
+    #             "bucket_index": 1,
+    #             "summary_index": 2,
+    #             "allele_index": 1,
+    #             "chromosome": "chr1",
+    #             "position": 120,
+    #             "end_position": None,
+    #             "effect_gene": [
+    #                 {"effect_gene_symbols": "c8", "effect_types": "missense"}
+    #             ],
+    #             "summary_variant_data": "summary_2",
+    #         },
+    #     ],
+    # }
+    # result = execute(
+    #     query,
+    #     read="duckdb",
+    #     tables=tables)
+
+    # assert len(result) == 1
+
+
+def test_sqlglot_nested_schema_experiments() -> None:
+    table_schema = {
+        "test": {
+            "a": "int64",
+            "b": exp.DataType.Type.ARRAY,
+            "c": exp.DataType.Type.STRUCT,
+        }
+    }
+    schema = ensure_schema(table_schema)
+    assert schema
+    assert schema.column_names("test") == ["a", "b", "c"]
+
+    # assert schema.get_column_type("test", "a") == exp.DataType.Type.BIGINT
+    # assert schema.get_column_type("test", "b") == exp.DataType.Type.ARRAY
