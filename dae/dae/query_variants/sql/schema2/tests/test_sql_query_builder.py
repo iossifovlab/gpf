@@ -6,7 +6,7 @@ import pytest
 from sqlglot import parse_one
 from sqlglot.executor import execute
 
-from dae.utils.regions import BedRegion
+from dae.utils.regions import Region
 from dae.genomic_resources.gene_models import GeneModels
 from dae.query_variants.sql.schema2.sql_query_builder import Db2Layout
 from dae.testing import setup_pedigree
@@ -156,8 +156,10 @@ def sql_query_builder_simple(
 def test_summary_query_builder_simple(
     sql_query_builder_simple: SqlQueryBuilder
 ) -> None:
-    query = sql_query_builder_simple.build_summary_query()
+    query = sql_query_builder_simple.build_summary_variants_query()
     assert query
+    expr = parse_one(query)
+    assert expr
 
 
 @pytest.mark.parametrize(
@@ -186,19 +188,19 @@ def test_build_gene_regions_heuristic(
 
 @pytest.mark.parametrize(
     "regions,expected", [
-        ([BedRegion("chr1", 10, 20)], 1),
-        ([BedRegion("chr1", 12, 20)], 1),
-        ([BedRegion("chr1", 5, 12)], 1),
-        ([BedRegion("chr1", 49, 51)], 1),
-        ([BedRegion("chr1", 50, 51)], 1),
-        ([BedRegion("chr1", 49, 50)], 1),
-        ([BedRegion("chr1", 10, 30)], 2),
-        ([BedRegion("chr1", 10, 30), BedRegion("chr1", 40, 50)], 3),
+        ([Region("chr1", 10, 20)], 1),
+        ([Region("chr1", 12, 20)], 1),
+        ([Region("chr1", 5, 12)], 1),
+        ([Region("chr1", 49, 51)], 1),
+        ([Region("chr1", 50, 51)], 1),
+        ([Region("chr1", 49, 50)], 1),
+        ([Region("chr1", 10, 30)], 2),
+        ([Region("chr1", 10, 30), Region("chr1", 40, 50)], 3),
     ]
 )
 def test_build_regions_where(
     sql_query_builder_simple: SqlQueryBuilder,
-    regions: list[BedRegion],
+    regions: list[Region],
     expected: int,
 ) -> None:
     tables = {

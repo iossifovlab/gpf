@@ -1,10 +1,11 @@
 import logging
-from typing import Optional, cast
+import textwrap
+from typing import Optional, Any
 from dataclasses import dataclass
 
 from dae.pedigrees.families_data import FamiliesData
 from dae.genomic_resources.gene_models import GeneModels
-from dae.utils.regions import BedRegion, Region, collapse
+from dae.utils.regions import Region, collapse
 
 
 logger = logging.getLogger(__name__)
@@ -51,7 +52,7 @@ class SqlQueryBuilder:
         self.families = families
         self.gene_models = gene_models
 
-    def build_summary_query(
+    def build_summary_variants_query(
         self,
         regions: Optional[list[Region]] = None,
         genes: Optional[list[str]] = None,
@@ -64,12 +65,100 @@ class SqlQueryBuilder:
         return_unknown: Optional[bool] = None,
         limit: Optional[int] = None,
     ) -> str:
-        summary_where: list[str] = ["ha"]
-        return " ".join(summary_where)
+        """Build a query for summary variants."""
+        summary_subclause = self._build_summary_subclause(
+            regions=regions,
+            genes=genes,
+            effect_types=effect_types,
+            variant_type=variant_type,
+            real_attr_filter=real_attr_filter,
+            ultra_rare=ultra_rare,
+            frequency_filter=frequency_filter,
+            return_reference=return_reference,
+            return_unknown=return_unknown,
+            limit=limit,
+        )
+        eg_join_clause = ""
+        if genes is not None or effect_types is not None:
+            where_parts: list[str] = []
+            if genes is not None:
+                where_parts.append(self._build_gene_where(genes))
+            if effect_types is not None:
+                where_parts.append(self._build_effect_type_where(effect_types))
+            eg_where = textwrap.dedent(f"""
+                AND\n".join({where_parts})
+            """)
+            eg_join_clause = textwrap.dedent(f"""
+                CROSS JOIN
+                    (SELECT UNNEST (summary.effect_gene) as eg)
+                WHERE
+                    {eg_where}
+            """)
+        query = textwrap.dedent(f"""
+{summary_subclause}
+SELECT bucket_index, summary_index, allele_index, summary_variant_data
+FROM summary
+{eg_join_clause}
+        """)
+
+        return query
+
+    def _build_summary_subclause(
+        self,
+        regions: Optional[list[Region]] = None,
+        genes: Optional[list[str]] = None,
+        effect_types: Optional[list[str]] = None,
+        variant_type: Optional[str] = None,
+        real_attr_filter: Optional[RealAttrFilterType] = None,
+        ultra_rare: Optional[bool] = None,
+        frequency_filter: Optional[RealAttrFilterType] = None,
+        return_reference: Optional[bool] = None,
+        return_unknown: Optional[bool] = None,
+        limit: Optional[int] = None,
+        **kwargs: Any
+    ) -> str:
+        """Build a subclause for the summary table.
+
+        This is the part of the query that is specific to the summary table.
+        """
+        where_parts: list[str] = []
+        if genes is not None:
+            regions = self._build_gene_regions_heuristic(genes, regions)
+        if regions is not None:
+            where_parts.append(self._build_regions_where(regions))
+        if frequency_filter is not None:
+            where_parts.append(
+                self._build_real_attr_where(
+                    frequency_filter, is_frequency=True)
+            )
+        if real_attr_filter is not None:
+            where_parts.append(
+                self._build_real_attr_where(
+                    real_attr_filter, is_frequency=False)
+            )
+        if ultra_rare is not None and ultra_rare:
+            where_parts.append(self._build_ultra_rare_where())
+        summary_where = ""
+        if where_parts:
+            where = " AND\n".join(where_parts)
+            summary_where = textwrap.dedent(f"""
+                WHERE 
+                    {where}
+            """)
+        query = textwrap.dedent(f"""
+            WITH summary AS (
+            SELECT
+                sa.*
+            FROM
+                {self.db_layout.summary} sa
+            {summary_where}
+            )
+        """)
+        return query
 
     def _build_gene_regions_heuristic(
-        self, genes: list[str], regions: Optional[list[BedRegion]]
-    ) -> Optional[list[BedRegion]]:
+        self, genes: list[str], regions: Optional[list[Region]]
+    ) -> Optional[list[Region]]:
         assert genes is not None
         assert self.gene_models is not None
 
@@ -84,7 +173,7 @@ class SqlQueryBuilder:
                 continue
             for gm in gene_model:
                 gene_regions.append(
-                    BedRegion(
+                    Region(
                         gm.chrom,
                         max(1, gm.tx[0] - self.GENE_REGIONS_HEURISTIC_EXTEND),
                         gm.tx[1] + self.GENE_REGIONS_HEURISTIC_EXTEND,
@@ -97,8 +186,7 @@ class SqlQueryBuilder:
             result = []
             for gene_region in gene_regions:
                 for region in regions:
-                    intersection = cast(
-                        BedRegion, gene_region.intersection(region))
+                    intersection = gene_region.intersection(region)
                     if intersection:
                         result.append(intersection)
             result = collapse(result)
@@ -108,22 +196,40 @@ class SqlQueryBuilder:
         return regions
 
     def _build_regions_where(
-        self, regions: list[BedRegion]
+        self, regions: list[Region]
     ) -> str:
 
         where: list[str] = []
         for reg in regions:
-            reg_where = (
-                f"sa.chromosome = '{reg.chrom}'"
-                f" AND ( "
-                f"({reg.start} <= sa.position AND "
-                f"sa.position <= {reg.end}) OR "
-                f"(COALESCE(sa.end_position, -1) >= {reg.start} AND "
-                f"COALESCE(sa.end_position, -1) <= {reg.end}) OR "
-                f"(sa.position <= {reg.start} AND "
-                f"COALESCE(sa.end_position, -1) >= {reg.end}) "
-                f")"
-            )
+            if reg.start is None and reg.stop is None:
+                reg_where = f"sa.chromosome = '{reg.chrom}'"
+            elif reg.start is None:
+                reg_where = (
+                    f"sa.chromosome = '{reg.chrom}'"
+                    f" AND ( "
+                    f"(1 <= sa.position AND "
+                    f"sa.position <= {reg.end}) OR "
+                    f"(COALESCE(sa.end_position, -1) >= 1 AND "
+                    f"COALESCE(sa.end_position, -1) <= {reg.end}) OR "
+                    f"(sa.position <= 1 AND "
+                    f"COALESCE(sa.end_position, -1) >= {reg.end}) "
+                    f")"
+                )
+            else:
+                assert reg.stop is not None
+                assert reg.start is not None
+
+                reg_where = (
+                    f"sa.chromosome = '{reg.chrom}'"
+                    f" AND ( "
+                    f"({reg.start} <= sa.position AND "
+                    f"sa.position <= {reg.end}) OR "
+                    f"(COALESCE(sa.end_position, -1) >= {reg.start} AND "
+                    f"COALESCE(sa.end_position, -1) <= {reg.end}) OR "
+                    f"(sa.position <= {reg.start} AND "
+                    f"COALESCE(sa.end_position, -1) >= {reg.end}) "
+                    f")"
+                )
             where.append(f"( {reg_where} )")
         return " OR ".join(where)
 
@@ -176,3 +282,13 @@ class SqlQueryBuilder:
             real_attr_filter=[("af_allele_count", (None, 1))],
             is_frequency=True,
         )
+
+    def _build_gene_where(self, genes: list[str]) -> str:
+        gene_set = ",".join(f"'{g}'" for g in genes)
+        where = f"eg.effect_gene_symbols in ({gene_set})"
+        return where
+
+    def _build_effect_type_where(self, effect_types: list[str]) -> str:
+        effect_set = ",".join(f"'{g}'" for g in effect_types)
+        where = f"eg.effect_types in ({effect_set})"
+        return where
