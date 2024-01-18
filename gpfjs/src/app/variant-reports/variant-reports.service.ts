@@ -31,15 +31,6 @@ export class VariantReportsService {
     return `${environment.apiPath}${this.downloadUrl}${selectedDatasetId}`;
   }
 
-  public getDownloadLinkTags(tags: string): string {
-    const selectedDatasetId = this.datasetsService.getSelectedDataset().id;
-    let url = `${this.config.baseUrl}${this.downloadUrl}${selectedDatasetId}`;
-    if (tags) {
-      url = `${url}?${new URLSearchParams({'tags': tags})}`;
-    }
-    return url;
-  }
-
   public getFamilies(datasetId: string, groupName: string, counterId: number): Observable<string[]> {
     const options = { withCredentials: true };
     const data = { study_id: datasetId, group_name: groupName, counter_id: counterId };

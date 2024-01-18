@@ -10,6 +10,7 @@ import { environment } from 'environments/environment';
 import { Dictionary } from 'lodash';
 import * as _ from 'lodash';
 import { NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
+import { ConfigService } from 'app/config/config.service';
 
 @Pipe({ name: 'getPeopleCounterRow' })
 export class PeopleCounterRowPipe implements PipeTransform {
@@ -30,14 +31,13 @@ export class VariantReportsComponent implements OnInit {
   public currentPeopleCounter: PeopleCounter;
   public currentPedigreeTable: PedigreeTable;
   public currentDenovoReport: EffectTypeTable;
-  public selectedTagsHeader = '';
+  public tagsHeader = '';
   public familiesCount = 0;
+  public isAddClicked = false;
+  public isRemoveClicked = false;
 
   public modal: NgbModalRef;
   @ViewChild('tagsModal') public tagsModal: ElementRef;
-
-  @ViewChild('searchTag') private searchTag: ElementRef;
-  public searchValue = '';
 
   public tagsModalsNumberOfRows = 9;
   public tagsModalsNumberOfCols = 2;
@@ -50,13 +50,17 @@ export class VariantReportsComponent implements OnInit {
 
   public imgPathPrefix = environment.imgPathPrefix;
   public orderedTagList = [];
-  public selectedItems: string[] = [];
+  public selectedTags: string[] = [];
+  public deselectedTags: string[] = [];
+  public filtersButtonsState: Record<string, number> = {};
+  public tagIntersection = true; // mode "And"
 
   public denovoVariantsTableWidth: number;
   private denovoVariantsTableColumnWidth = 140;
 
   public constructor(
     public modalService: NgbModal,
+    public config: ConfigService,
     private variantReportsService: VariantReportsService,
     private datasetsService: DatasetsService
   ) { }
@@ -91,6 +95,7 @@ export class VariantReportsComponent implements OnInit {
         Object.values(data).forEach((tag: string) => {
           this.tags.push(tag);
           this.orderedTagList.push(tag);
+          this.filtersButtonsState[tag] = 0;
         });
         // Calculate square looking grid for the tags (1 column width === ~5 tags height)
         this.tagsModalsNumberOfCols = Math.ceil(Math.sqrt(Math.ceil(this.tags.length / 5)));
@@ -107,21 +112,73 @@ export class VariantReportsComponent implements OnInit {
     );
   }
 
-  public updateSelectedTags(tag: string): void {
-    if (!this.selectedItems.includes(tag)) {
-      this.selectedItems.push(tag);
+  public selectFilter(tag: string): void {
+    if (this.filtersButtonsState[tag] === 1) {
+      this.filtersButtonsState[tag] = 0;
     } else {
-      const index = this.selectedItems.indexOf(tag);
-      this.selectedItems.splice(index, 1);
+      this.filtersButtonsState[tag] = 1;
     }
-    if (this.selectedItems.length > 0) {
-      this.selectedTagsHeader = this.selectedItems.join(', ');
+    this.updateSelectedTagsList(tag);
+  }
+
+  public deselectFilter(tag: string): void {
+    if (this.filtersButtonsState[tag] === -1) {
+      this.filtersButtonsState[tag] = 0;
     } else {
-      this.selectedTagsHeader = '';
+      this.filtersButtonsState[tag] = -1;
+    }
+    this.updateDeselectedTagsList(tag);
+  }
+
+  public updateSelectedTagsList(tag: string): void {
+    if (!this.selectedTags.includes(tag)) {
+      this.selectedTags.push(tag);
+    } else {
+      const index = this.selectedTags.indexOf(tag);
+      this.selectedTags.splice(index, 1);
+    }
+    if (this.deselectedTags.includes(tag)) {
+      const index = this.deselectedTags.indexOf(tag);
+      this.deselectedTags.splice(index, 1);
+    }
+    this.updateTagsHeader();
+  }
+
+  public updateDeselectedTagsList(tag: string): void {
+    if (!this.deselectedTags.includes(tag)) {
+      this.deselectedTags.push(tag);
+    } else {
+      const index = this.deselectedTags.indexOf(tag);
+      this.deselectedTags.splice(index, 1);
+    }
+    if (this.selectedTags.includes(tag)) {
+      const index = this.selectedTags.indexOf(tag);
+      this.selectedTags.splice(index, 1);
+    }
+    this.updateTagsHeader();
+  }
+
+  public updateTagsHeader(): void {
+    const separator = this.tagIntersection ? ' and ' : ' or ';
+    this.tagsHeader = '';
+    if (this.selectedTags.length > 0) {
+      this.tagsHeader += this.selectedTags.join(separator);
+    }
+
+    if (this.deselectedTags.length > 0) {
+      if (this.tagsHeader !== '') {
+        this.tagsHeader += separator;
+      }
+      this.tagsHeader += 'not ' + this.deselectedTags.join(separator + ' not ');
+    }
+
+    if (this.selectedTags.length === 0 && this.deselectedTags.length === 0) {
+      this.tagsHeader = '';
     }
     this.updateTagFilters();
     this.updateFamiliesCount();
   }
+
 
   public updateFamiliesCount(): void {
     this.familiesCount = 0;
@@ -136,7 +193,6 @@ export class VariantReportsComponent implements OnInit {
 
   public openModal(): void {
     this.orderedTagList = this.tags;
-    this.searchValue = '';
     if (this.modalService.hasOpenModals()) {
       return;
     }
@@ -146,19 +202,13 @@ export class VariantReportsComponent implements OnInit {
     );
   }
 
-  public search(searchValue: string): void {
-    this.searchValue = searchValue.trim();
-    this.orderedTagList = [
-      ...new Set(
-        this.tags.filter(el => el.toLocaleLowerCase().includes(this.searchValue.toLocaleLowerCase())).concat(this.tags)
-      )
-    ];
-  }
-
-  public uncheckAll(): void {
-    this.selectedItems = [];
-    this.selectedTagsHeader = '';
+  public clearFilters(): void {
+    this.selectedTags = [];
+    this.deselectedTags = [];
+    this.tagsHeader = '';
+    this.filtersButtonsState = _.mapValues(this.filtersButtonsState, () => 0);
     this.updateTagFilters();
+    this.updateFamiliesCount();
   }
 
   public updatePedigrees(newCounters: Dictionary<PedigreeCounter[]>): void {
@@ -171,7 +221,17 @@ export class VariantReportsComponent implements OnInit {
     const copiedCounters = this.copyOriginalPedigreeCounters();
     const filteredCounters = {};
     for (const [groupName, counters] of Object.entries(copiedCounters)) {
-      filteredCounters[groupName] = counters.filter(x => _.difference(this.selectedItems, x.tags).length === 0);
+      filteredCounters[groupName] =
+        counters.filter(x => {
+          if (this.tagIntersection) {
+            return this.selectedTags.every(v => x.tags.includes(v))
+            && this.deselectedTags.every(v => !x.tags.includes(v));
+          } else if (this.selectedTags.length || this.deselectedTags.length) {
+            return this.selectedTags.some(v => x.tags.includes(v))
+            || this.deselectedTags.some(v => !x.tags.includes(v));
+          }
+          return true;
+        });
     }
     this.updatePedigrees(filteredCounters);
   }
@@ -218,9 +278,23 @@ export class VariantReportsComponent implements OnInit {
     return this.variantReportsService.getDownloadLink();
   }
 
-  public downloadTags(): void {
-    const tags = this.selectedItems.join(',');
-    location.href = this.variantReportsService.getDownloadLinkTags(tags);
+  public downloadTags(event): void {
+    let body = {};
+    if (this.selectedTags.length || this.deselectedTags.length) {
+      body = {
+        tagsQuery: {
+          orMode: !this.tagIntersection,
+          includeTags: this.selectedTags,
+          excludeTags: this.deselectedTags
+        }
+      };
+    }
+
+    /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+    event.target.queryData.value = JSON.stringify(body);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+    event.target.submit();
+    /* eslint-enable */
   }
 
   private orderByColumnOrder(childrenCounters: DeNovoData[], columns: string[], strict = false): DeNovoData[] {
