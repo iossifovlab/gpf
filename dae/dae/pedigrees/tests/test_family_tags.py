@@ -437,7 +437,7 @@ def test_tag_missing_dad_family_again() -> None:
         (False, {FamilyTag.QUAD}, {}, True),
         (False, {FamilyTag.NUCLEAR, FamilyTag.QUAD}, {}, True),
         (
-            False, 
+            False,
             {FamilyTag.NUCLEAR, FamilyTag.QUAD, FamilyTag.MALE_PRB},
             {},
             False
@@ -453,7 +453,7 @@ def test_tag_missing_dad_family_again() -> None:
         (True, {}, {FamilyTag.QUAD}, False),
         (True, {FamilyTag.MISSING_DAD}, {FamilyTag.QUAD}, False),
         (
-            True, 
+            True,
             {FamilyTag.NUCLEAR, FamilyTag.QUAD, FamilyTag.MALE_PRB},
             {},
             True
