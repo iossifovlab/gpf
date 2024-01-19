@@ -359,7 +359,7 @@ describe('VariantReportsComponent', () => {
     expect(updatePedigreesTable).toHaveBeenCalledWith();
     expect(updateFamiliesCountMock).toHaveBeenCalledWith();
     expect(component.selectedTags).toStrictEqual(['tag1', 'tag2', 'tag3', 'tag4']);
-    expect(component.tagsHeader).toBe('tag1, tag2, tag3, tag4');
+    expect(component.tagsHeader).toBe('tag1 and tag2 and tag3 and tag4');
 
     component.selectFilter('tag4');
     expect(component.filtersButtonsState['tag4']).toBe(0);
@@ -367,7 +367,7 @@ describe('VariantReportsComponent', () => {
     expect(updatePedigreesTable).toHaveBeenCalledWith();
     expect(updateFamiliesCountMock).toHaveBeenCalledWith();
     expect(component.selectedTags).toStrictEqual(['tag1', 'tag2', 'tag3']);
-    expect(component.tagsHeader).toBe('tag1, tag2, tag3');
+    expect(component.tagsHeader).toBe('tag1 and tag2 and tag3');
   });
 
   it('should update deselected pedigree tags', () => {
@@ -386,7 +386,7 @@ describe('VariantReportsComponent', () => {
     expect(updatePedigreesTable).toHaveBeenCalledWith();
     expect(updateFamiliesCountMock).toHaveBeenCalledWith();
     expect(component.deselectedTags).toStrictEqual(['tag1', 'tag2', 'tag3']);
-    expect(component.tagsHeader).toBe('not tag1, not tag2, not tag3');
+    expect(component.tagsHeader).toBe('not tag1 and not tag2 and not tag3');
 
     component.deselectFilter('tag3');
     expect(component.filtersButtonsState['tag3']).toBe(0);
@@ -394,7 +394,7 @@ describe('VariantReportsComponent', () => {
     expect(updatePedigreesTable).toHaveBeenCalledWith();
     expect(updateFamiliesCountMock).toHaveBeenCalledWith();
     expect(component.deselectedTags).toStrictEqual(['tag1', 'tag2']);
-    expect(component.tagsHeader).toBe('not tag1, not tag2');
+    expect(component.tagsHeader).toBe('not tag1 and not tag2');
   });
 
   it('should test mixing selecting and deselecting pedigree tags', () => {
@@ -410,7 +410,7 @@ describe('VariantReportsComponent', () => {
     component.deselectFilter('tag4');
     expect(component.selectedTags).toStrictEqual(['tag1', 'tag3']);
     expect(component.deselectedTags).toStrictEqual(['tag2', 'tag4']);
-    expect(component.tagsHeader).toBe('tag1, tag3, not tag2, not tag4');
+    expect(component.tagsHeader).toBe('tag1 and tag3 and not tag2 and not tag4');
   });
 
   it('should test mode "Or" and "And"', () => {
@@ -484,9 +484,22 @@ describe('VariantReportsComponent', () => {
   it('should remove all filters in modal with pedigree tags', () => {
     const updatePedigreesTable = jest.spyOn(component, 'updateTagFilters')
       .mockImplementation(() => null);
+
+    const pedigreeCounters: PedigreeCounter[] = [];
+    pedigreeCounters.push(new PedigreeCounter(null, null, null, null, ['tag1', 'tag2', 'tag3', 'tag4']));
+    pedigreeCounters.push(new PedigreeCounter(null, null, null, null, ['tag2', 'tag3']));
+    pedigreeCounters.push(new PedigreeCounter(null, null, null, null, ['tag1', 'tag5']));
+
+    component.familiesCounters = [new FamilyCounter(pedigreeCounters, null, null, null)];
+
+    component.pedigreeTables = [
+      new PedigreeTable([pedigreeCounters], null, null, null)];
+
+    component.currentPedigreeTable = new PedigreeTable([pedigreeCounters], null, null, null);
+
     component.selectedTags = ['tag1', 'tag2'];
     component.deselectedTags = ['tag3', 'tag4'];
-    component.tagsHeader = 'tag1, tag2, not tag3, not tag4';
+    component.tagsHeader = 'tag1 and tag2 and not tag3 and not tag4';
     component.clearFilters();
 
     expect(component.selectedTags).toHaveLength(0);
