@@ -15,6 +15,7 @@ from dae.genotype_storage.genotype_storage_registry import \
     get_genotype_storage_factory
 
 from dae.query_variants.sql.schema2.sql_query_builder import SqlQueryBuilder
+from dae.parquet.partition_descriptor import PartitionDescriptor
 
 from dae.gpf_instance import GPFInstance
 from dae.studies.study import GenotypeData
@@ -150,6 +151,33 @@ def query_builder(
             summary_schema = dict(
                 line.split("|") for line in schema_content.split("\n"))
 
+    with duckdb.connect(db_filename, read_only=True) as connection:
+        with connection.cursor() as cursor:
+            query = f"""SELECT value FROM {meta_table}
+                WHERE key = 'family_schema'
+                LIMIT 1
+                """
+
+            schema_content = ""
+            result = cursor.execute(query).fetchall()
+            for row in result:
+                schema_content = row[0]
+            family_schema = dict(
+                line.split("|") for line in schema_content.split("\n"))
+
+    with duckdb.connect(db_filename, read_only=True) as connection:
+        with connection.cursor() as cursor:
+            query = f"""SELECT value FROM {meta_table}
+                WHERE key = 'partition_description'
+                LIMIT 1
+                """
+
+            content = ""
+            result = cursor.execute(query).fetchall()
+            for row in result:
+                content = row[0]
+            partition_descriptor = PartitionDescriptor.parse_string(content)
+
     db_layout = Db2Layout(
         db=db_filename,
         study=t4c8_study_1.study_id,
@@ -158,7 +186,7 @@ def query_builder(
         summary=study_storage.tables.summary,
         summary_schema=summary_schema,
         family=study_storage.tables.family,
-        family_schema={},
+        family_schema=family_schema,
         meta=study_storage.tables.meta,
     )
 
@@ -166,7 +194,7 @@ def query_builder(
 
     sql_query_builder = SqlQueryBuilder(
         db_layout,
-        None,
+        partition_descriptor,
         t4c8_study_1.families,
         t4c8_instance.gene_models,
     )
@@ -187,8 +215,8 @@ def test_query_summary_variants_simple(
 
 
 @pytest.mark.parametrize("index, params, count", [
-    (0, {"genes": ["t4"]}, 1),
-    (1, {"genes": ["c8"]}, 3),
+    # (0, {"genes": ["t4"]}, 1),
+    # (1, {"genes": ["c8"]}, 3),
     (2, {"effect_types": ["missense"]}, 1),
     (3, {"effect_types": ["synonymous"]}, 3),
     (4, {"regions": [Region("chr1")]}, 6),

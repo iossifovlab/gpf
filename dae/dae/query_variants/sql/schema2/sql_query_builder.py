@@ -1,11 +1,12 @@
 import logging
 import textwrap
-from typing import Optional, Any
+from typing import Optional, Any, Sequence
 from dataclasses import dataclass
 
 import sqlglot
 
 from dae.pedigrees.families_data import FamiliesData
+from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.genomic_resources.gene_models import GeneModels
 from dae.utils.regions import Region, collapse
 
@@ -44,7 +45,7 @@ class SqlQueryBuilder:
     def __init__(
         self,
         db_layout: Db2Layout,
-        partition_descriptor: Optional[dict],
+        partition_descriptor: Optional[PartitionDescriptor],
         families: FamiliesData,
         gene_models: Optional[GeneModels] = None,
     ):
@@ -119,6 +120,7 @@ class SqlQueryBuilder:
         self,
         regions: Optional[list[Region]] = None,
         genes: Optional[list[str]] = None,
+        effect_types: Optional[list[str]] = None,
         variant_type: Optional[str] = None,
         real_attr_filter: Optional[RealAttrFilterType] = None,
         ultra_rare: Optional[bool] = None,
@@ -149,6 +151,11 @@ class SqlQueryBuilder:
         if ultra_rare is not None and ultra_rare:
             where_parts.append(self._build_ultra_rare_where())
 
+        where_parts = self._add_coding_bin_heuristic(
+            where_parts,
+            effect_types=effect_types
+        )
+
         # Do not look into reference alleles
         where_parts.append("sa.allele_index > 0")
 
@@ -156,17 +163,17 @@ class SqlQueryBuilder:
         if where_parts:
             where = " AND ".join(where_parts)
             summary_where = textwrap.dedent(f"""WHERE
-        {where}
-""")
+                {where}
+            """)
         query = textwrap.dedent(f"""
-WITH summary AS (
-    SELECT
-        *
-    FROM
-        {self.db_layout.summary} sa
-    {summary_where}
-)
-""")
+            WITH summary AS (
+                SELECT
+                    *
+                FROM
+                    {self.db_layout.summary} sa
+                {summary_where}
+            )
+            """)
         return query
 
     def _build_gene_regions_heuristic(
@@ -302,3 +309,39 @@ WITH summary AS (
         effect_set = ",".join(f"'{g}'" for g in effect_types)
         where = f"eg.effect_types in ({effect_set})"
         return where
+
+    def _add_coding_bin_heuristic(
+        self, where_parts: list[str],
+        effect_types: Optional[Sequence[str]]
+    ) -> list[str]:
+        assert self.partition_descriptor is not None
+        if effect_types is None:
+            return where_parts
+        if "coding_bin" not in self.db_layout.summary_schema:
+            return where_parts
+        assert "coding_bin" in self.db_layout.summary_schema
+        assert "coding_bin" in self.db_layout.family_schema
+
+        assert effect_types is not None
+        query_effect_types = set(effect_types)
+        intersection = query_effect_types & set(
+            self.partition_descriptor.coding_effect_types
+        )
+
+        logger.debug(
+            "coding bin heuristic: query effect types: %s; "
+            "coding_effect_types: %s; => %s",
+            effect_types, self.partition_descriptor.coding_effect_types,
+            intersection == query_effect_types
+        )
+
+        coding_bin = ""
+
+        if intersection == query_effect_types:
+            coding_bin = "1"
+        elif not intersection:
+            coding_bin = "0"
+
+        if coding_bin:
+            where_parts.append(f"sa.coding_bin = {coding_bin}")
+        return where_parts
