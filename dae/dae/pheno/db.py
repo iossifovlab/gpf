@@ -39,8 +39,6 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
         self.measures: Table
         self.instruments: Table
         self.instrument_values_tables: dict[str, Table] = {}
-        print(self.pheno_dbfile)
-        print(browser_dbfile)
         if self.pheno_dbfile == "memory":
             self.pheno_engine = create_engine("sqlite://")
         else:

@@ -45,7 +45,7 @@ class PhenoRegistry:
         phenotype_data = PhenotypeStudy(
             pheno_id,
             dbfile=config["phenotype_data"]["dbfile"],
-            browser_dbfile=config["phenotype_data"]["dbfile"],
+            browser_dbfile=config["phenotype_data"]["browser_dbfile"],
             config=config["phenotype_data"]
         )
 
