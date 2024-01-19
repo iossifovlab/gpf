@@ -197,3 +197,52 @@ def test_query_summary_variants_counting(
         with connection.cursor() as cursor:
             result = cursor.execute(query).fetchall()
             assert len(result) == count
+
+
+def test_query_family_variants_simple(
+    query_builder: SqlQueryBuilder
+) -> None:
+    query = query_builder.build_family_variants_query()
+    assert query is not None
+
+    db_layout = query_builder.db_layout
+    with duckdb.connect(db_layout.db, read_only=True) as connection:
+        with connection.cursor() as cursor:
+            result = cursor.execute(query).fetchall()
+            assert len(result) == 4
+
+
+@pytest.mark.parametrize("index, params, count", [
+    (0, {"genes": ["t4"]}, 1),
+    (1, {"genes": ["c8"]}, 3),
+    (2, {"effect_types": ["missense"]}, 2),
+    (3, {"effect_types": ["synonymous"]}, 3),
+    (4, {"regions": [Region("chr1")]}, 4),
+    (5, {"regions": [Region("chr1", None, 55)]}, 1),
+    (6, {"regions": [Region("chr1", 55, None)]}, 3),
+    (7, {"frequency_filter": [("af_allele_freq", (None, 15.0))]}, 3),
+    (8, {"frequency_filter": [("af_allele_freq", (15.0, None))]}, 2),
+    (9, {"frequency_filter": [("af_allele_freq", (15.0, None))]}, 2),
+    (10, {"real_attr_filter": [("af_allele_count", (None, 1))]}, 3),
+    (11, {"real_attr_filter": [("af_allele_count", (1, None))]}, 4),
+    (12, {"real_attr_filter": [("af_allele_count", (1, 1))]}, 3),
+    (13, {"real_attr_filter": [("af_allele_count", (2, None))]}, 2),
+    (14, {"real_attr_filter": [("af_allele_count", (2, 2))]}, 2),
+    (15, {"limit": 1}, 1),
+    (16, {"limit": 2}, 2),
+])
+def test_query_family_variants_counting(
+    index: int,
+    params: dict[str, Any],
+    count: int,
+    query_builder: SqlQueryBuilder
+) -> None:
+    query_builder.GENE_REGIONS_HEURISTIC_EXTEND = 2
+    query = query_builder.build_family_variants_query(**params)
+    assert query is not None
+
+    db_layout = query_builder.db_layout
+    with duckdb.connect(db_layout.db, read_only=True) as connection:
+        with connection.cursor() as cursor:
+            result = cursor.execute(query).fetchall()
+            assert len(result) == count
