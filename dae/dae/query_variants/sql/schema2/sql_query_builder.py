@@ -164,10 +164,12 @@ class SqlQueryBuilder:
         if ultra_rare is not None and ultra_rare:
             where_parts.append(self._build_ultra_rare_where())
 
-        where_parts = self._add_region_bin_heuristic(where_parts, regions)
-        where_parts = self._add_coding_bin_heuristic(where_parts, effect_types)
+        where_parts = self._add_region_bin_heuristic(
+            where_parts, regions, "sa")
+        where_parts = self._add_coding_bin_heuristic(
+            where_parts, effect_types, "sa")
         where_parts = self._add_frequency_bin_heuristic(
-            where_parts, ultra_rare, frequency_filter)
+            where_parts, ultra_rare, frequency_filter, "sa")
 
         # Do not look into reference alleles
         where_parts.append("sa.allele_index > 0")
@@ -546,10 +548,12 @@ class SqlQueryBuilder:
         if genes is not None:
             regions = self._build_gene_regions_heuristic(genes, regions)
 
-        where_parts = self._add_region_bin_heuristic(where_parts, regions)
-        where_parts = self._add_coding_bin_heuristic(where_parts, effect_types)
+        where_parts = self._add_region_bin_heuristic(
+            where_parts, regions, "fa")
+        where_parts = self._add_coding_bin_heuristic(
+            where_parts, effect_types, "fa")
         where_parts = self._add_frequency_bin_heuristic(
-            where_parts, ultra_rare, frequency_filter)
+            where_parts, ultra_rare, frequency_filter, "fa")
 
         # Do not look into reference alleles
         where_parts.append("fa.allele_index > 0")
