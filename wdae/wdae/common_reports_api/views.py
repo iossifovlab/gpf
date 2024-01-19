@@ -132,31 +132,6 @@ class FamiliesDataDownloadView(QueryDatasetView):
     """Families data download view class."""
 
     @classmethod
-    def check_family(
-            cls,
-            family: Family, or_mode: bool,
-            include_tags: set[FamilyTag],
-            exclude_tags: set[FamilyTag]
-    ) -> bool:
-        """Check if a family passes specified filters."""
-        if or_mode:
-            for tag in include_tags:
-                if check_tag(family, tag):
-                    return True
-            for tag in exclude_tags:
-                if not check_tag(family, tag):
-                    return True
-            return False
-
-        for tag in include_tags:
-            if not check_tag(family, tag):
-                return False
-        for tag in exclude_tags:
-            if check_tag(family, tag):
-                return False
-        return True
-
-    @classmethod
     def collect_families(
         cls,
         study_families: FamiliesData,
