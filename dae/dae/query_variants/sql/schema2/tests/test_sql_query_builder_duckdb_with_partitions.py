@@ -201,6 +201,7 @@ def query_builder(
         partition_descriptor,
         t4c8_study_1.families,
         t4c8_instance.gene_models,
+        t4c8_instance.reference_genome
     )
     return sql_query_builder
 
@@ -277,3 +278,28 @@ def test_coding_bin_heuristics_query(
         assert "coding_bin" not in query
     else:
         assert f"coding_bin = {coding_bin}" in query
+
+
+@pytest.mark.parametrize("index, params, region_bins", [
+    (0, {"regions": [Region("chr1", 2, 20)]}, ["chr1_0"]),
+    (1, {"regions": [Region("chr1", 2, 120)]}, ["chr1_0", "chr1_1"]),
+    (2, {"regions": [Region("chr1")]}, ["chr1_0", "chr1_1", "chr1_2"]),
+    (3, {"regions": [Region("chr1", 105)]}, ["chr1_1", "chr1_2"]),
+    (4, {"regions": [Region("chr1", None, 105)]}, ["chr1_0", "chr1_1"]),
+])
+def test_region_bin_heuristics_query(
+    index: int,
+    params: dict[str, Any],
+    region_bins: Optional[list[str]],
+    query_builder: SqlQueryBuilder
+) -> None:
+    query_builder.GENE_REGIONS_HEURISTIC_EXTEND = 0
+    query = query_builder.build_summary_variants_query(**params)
+    assert query is not None
+
+    if region_bins is None:
+        assert "region_bin" not in query
+    else:
+        assert "region_bin" in query
+        for region_bin in region_bins:
+            assert f"'{region_bin}'" in query

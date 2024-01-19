@@ -5,10 +5,11 @@ from dataclasses import dataclass
 
 import sqlglot
 
-from dae.pedigrees.families_data import FamiliesData
-from dae.parquet.partition_descriptor import PartitionDescriptor
-from dae.genomic_resources.gene_models import GeneModels
 from dae.utils.regions import Region, collapse
+from dae.genomic_resources.gene_models import GeneModels
+from dae.genomic_resources.reference_genome import ReferenceGenome
+from dae.parquet.partition_descriptor import PartitionDescriptor
+from dae.pedigrees.families_data import FamiliesData
 
 
 logger = logging.getLogger(__name__)
@@ -41,6 +42,7 @@ class SqlQueryBuilder:
 
     GENE_REGIONS_HEURISTIC_CUTOFF = 20
     GENE_REGIONS_HEURISTIC_EXTEND = 20000
+    REGION_BINS_HEURISTIC_CUTOFF = 20
 
     def __init__(
         self,
@@ -48,12 +50,14 @@ class SqlQueryBuilder:
         partition_descriptor: Optional[PartitionDescriptor],
         families: FamiliesData,
         gene_models: Optional[GeneModels] = None,
+        reference_genome: Optional[ReferenceGenome] = None,
     ):
         self.db_layout = db_layout
         self.partition_descriptor = partition_descriptor
 
         self.families = families
         self.gene_models = gene_models
+        self.reference_genome = reference_genome
 
     def build_summary_variants_query(
         self,
@@ -151,10 +155,8 @@ class SqlQueryBuilder:
         if ultra_rare is not None and ultra_rare:
             where_parts.append(self._build_ultra_rare_where())
 
-        where_parts = self._add_coding_bin_heuristic(
-            where_parts,
-            effect_types=effect_types
-        )
+        where_parts = self._add_region_bin_heuristic(where_parts, regions)
+        where_parts = self._add_coding_bin_heuristic(where_parts, effect_types)
 
         # Do not look into reference alleles
         where_parts.append("sa.allele_index > 0")
@@ -314,7 +316,8 @@ class SqlQueryBuilder:
         self, where_parts: list[str],
         effect_types: Optional[Sequence[str]]
     ) -> list[str]:
-        assert self.partition_descriptor is not None
+        if self.partition_descriptor is None:
+            return where_parts
         if effect_types is None:
             return where_parts
         if "coding_bin" not in self.db_layout.summary_schema:
@@ -344,4 +347,45 @@ class SqlQueryBuilder:
 
         if coding_bin:
             where_parts.append(f"sa.coding_bin = {coding_bin}")
+        return where_parts
+
+    def _add_region_bin_heuristic(
+        self, where_parts: list[str],
+        regions: Optional[list[Region]]
+    ) -> list[str]:
+        if self.partition_descriptor is None:
+            return where_parts
+        if not regions or self.partition_descriptor.region_length == 0:
+            return where_parts
+
+        chroms = set(self.partition_descriptor.chromosomes)
+        region_length = self.partition_descriptor.region_length
+        region_bins = set()
+        for region in regions:
+            if region.chrom in chroms:
+                chrom_bin = region.chrom
+            else:
+                chrom_bin = "other"
+            stop = region.stop
+            if stop is None:
+                if self.reference_genome is None:
+                    continue
+                stop = self.reference_genome.get_chrom_length(region.chrom)
+
+            start = region.start
+            if start is None:
+                start = 1
+
+            start = start // region_length
+            stop = stop // region_length
+            for position_bin in range(start, stop + 1):
+                region_bins.add(f"{chrom_bin}_{position_bin}")
+        if len(region_bins) == 0:
+            return where_parts
+        if len(region_bins) > self.REGION_BINS_HEURISTIC_CUTOFF:
+            return where_parts
+        region_bins_set = ", ".join(f"'{rb}'" for rb in region_bins)
+        where_parts.append(
+            f"sa.region_bin in ({region_bins_set})"
+        )
         return where_parts
