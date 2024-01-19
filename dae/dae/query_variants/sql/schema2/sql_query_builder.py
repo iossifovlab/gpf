@@ -3,6 +3,8 @@ import textwrap
 from typing import Optional, Any
 from dataclasses import dataclass
 
+import sqlglot
+
 from dae.pedigrees.families_data import FamiliesData
 from dae.genomic_resources.gene_models import GeneModels
 from dae.utils.regions import Region, collapse
@@ -108,7 +110,10 @@ class SqlQueryBuilder:
             {limit_clause}
         """)
 
-        return query
+        sqlglot.pretty = True
+        tr_query = sqlglot.transpile(query, "duckdb", "duckdb")
+        assert len(tr_query) == 1
+        return tr_query[0]
 
     def _build_summary_subclause(
         self,
