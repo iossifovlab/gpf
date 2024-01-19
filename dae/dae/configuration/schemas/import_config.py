@@ -144,7 +144,17 @@ import_config_schema: dict[str, Any] = {
             "coding_bin": {
                 "type": "dict",
                 "schema": {
-                    "coding_effect_types": {"type": "string"},
+                    "coding_effect_types": {
+                        "anyof": [
+                            {
+                                "type": "list",
+                                "schema": {"type": "string"},
+                            },
+                            {
+                                "type": "string"
+                            }
+                        ]
+                    },
                 }
             },
         }
