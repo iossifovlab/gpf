@@ -32,16 +32,3 @@
   display: inline-block;
   width: 100px;
 }
-
-#values-description {
-  display: flex;
-  justify-content: space-between;
-  font-style: italic;
-  color: #acacac;
-  font-size: 14px;
-  width: 100%;
-  max-width: 600px;
-  margin: auto;
-  margin-top: -12px;
-  margin-bottom: 22px;
-}

@@ -2,7 +2,6 @@
   <ng-container *ngIf="$autismGeneToolConfig | async as config">
     <ng-container *ngFor="let geneSymbol of geneSymbols">
       <gpf-autism-gene-profile-single-view
-        id="view"
         [config]="config"
         [geneSymbol]="geneSymbol"
         [isInGeneCompare]="geneSymbols.size > 1">
