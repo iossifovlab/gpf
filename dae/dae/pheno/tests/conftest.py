@@ -2,6 +2,7 @@
 import os
 import tempfile
 import shutil
+import pathlib
 
 import pytest
 
@@ -12,7 +13,8 @@ from dae.configuration.schemas.dae_conf import dae_conf_schema
 from dae.configuration.schemas.phenotype_data import pheno_conf_schema
 
 from dae.pheno.common import default_config
-from dae.pheno.pheno_db import PhenoDb, PhenotypeData, get_pheno_db_dir
+from dae.pheno.pheno_data import PhenotypeData, get_pheno_db_dir
+from dae.pheno.registry import PhenoRegistry
 
 
 def relative_to_this_folder(path: str) -> str:
@@ -83,8 +85,20 @@ def fi1_df(fake_instrument_filename: str) -> pd.DataFrame:
 
 
 @pytest.fixture(scope="session")
-def fake_pheno_db(fake_pheno_db_dir: str) -> PhenoDb:
-    return PhenoDb(fake_pheno_db_dir)
+def fake_pheno_db(fake_pheno_db_dir: str) -> PhenoRegistry:
+    pheno_configs = GPFConfigParser.collect_directory_configs(
+        fake_pheno_db_dir
+    )
+
+    pheno_registry = PhenoRegistry()
+
+    with PhenoRegistry.CACHE_LOCK:
+        for config in pheno_configs:
+            pheno_registry.register_phenotype_data(
+                PhenoRegistry.load_pheno_data(pathlib.Path(config)),
+                lock=False
+            )
+    return pheno_registry
 
 
 @pytest.fixture(scope="session")
@@ -93,7 +107,7 @@ def fake_phenotype_data_config() -> str:
 
 
 @pytest.fixture(scope="session")
-def fake_phenotype_data(fake_pheno_db: PhenoDb) -> PhenotypeData:
+def fake_phenotype_data(fake_pheno_db: PhenoRegistry) -> PhenotypeData:
     data = fake_pheno_db.get_phenotype_data("fake")
     return data
 

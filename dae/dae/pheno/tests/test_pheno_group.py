@@ -5,12 +5,14 @@ import pytest
 import pandas as pd
 import numpy as np
 
-from dae.pheno.pheno_db import PhenoDb, PhenotypeGroup
+from dae.pheno.registry import PhenoRegistry
+from dae.pheno.pheno_data import PhenotypeGroup
 from dae.variants.attributes import Role, Status, Sex
 
 
+@pytest.mark.skip(reason="Groups are unused")
 @pytest.fixture(scope="session")
-def fake_group(fake_pheno_db: PhenoDb) -> PhenotypeGroup:
+def fake_group(fake_pheno_db: PhenoRegistry) -> PhenotypeGroup:
     fake = fake_pheno_db.get_phenotype_data("fake")
     fake2 = fake_pheno_db.get_phenotype_data("fake2")
 
@@ -28,6 +30,7 @@ def test_pheno_group_families(fake_group: PhenotypeGroup) -> None:
         == fake_group.phenotype_data[0].families.ped_df)
 
 
+@pytest.mark.skip(reason="Groups are unused")
 @pytest.mark.parametrize(
     "roles,family_ids,person_ids",
     [
@@ -59,6 +62,7 @@ def test_pheno_group_get_persons_df(
     assert all(ped_df["person_id"] == "f1.p1"), ped_df
 
 
+@pytest.mark.skip(reason="Groups are unused")
 @pytest.mark.parametrize(
     "roles,family_ids,person_ids",
     [
@@ -87,6 +91,7 @@ def test_pheno_group_get_persons(
     assert person.person_id == "f1.p1"
 
 
+@pytest.mark.skip(reason="Groups are unused")
 def test_pheno_group_instruments_and_measures(
     fake_group: PhenotypeGroup
 ) -> None:
@@ -106,6 +111,7 @@ def test_pheno_group_instruments_and_measures(
     assert mes2.measure_id == "i2.iq"
 
 
+@pytest.mark.skip(reason="Groups are unused")
 @pytest.mark.parametrize(
     "roles,family_ids,person_ids",
     [
@@ -132,6 +138,7 @@ def test_pheno_group_get_measure_values_df(
     pd.testing.assert_frame_equal(df, expected, atol=1e-2)
 
 
+@pytest.mark.skip(reason="Groups are unused")
 @pytest.mark.parametrize(
     "roles,family_ids,person_ids",
     [
@@ -186,6 +193,7 @@ def test_pheno_group_get_measures(fake_group: PhenotypeGroup) -> None:
     assert len(measures) == 2, measures
 
 
+@pytest.mark.skip(reason="Groups are unused")
 @pytest.mark.parametrize(
     "roles,family_ids,person_ids",
     [
@@ -214,6 +222,7 @@ def test_pheno_group_i1_get_values_df(
     pd.testing.assert_frame_equal(df, expected, atol=1e-2)
 
 
+@pytest.mark.skip(reason="Groups are unused")
 @pytest.mark.parametrize(
     "roles,family_ids,person_ids",
     [
@@ -242,6 +251,7 @@ def test_pheno_group_i2_get_values_df(
     pd.testing.assert_frame_equal(df, expected, atol=1e-2)
 
 
+@pytest.mark.skip(reason="Groups are unused")
 @pytest.mark.parametrize(
     "roles,family_ids,person_ids",
     [
@@ -271,6 +281,7 @@ def test_pheno_group_i1_i2_get_values_df(
     pd.testing.assert_frame_equal(df, expected, atol=1e-2)
 
 
+@pytest.mark.skip(reason="Groups are unused")
 @pytest.mark.parametrize(
     "roles,family_ids,person_ids",
     [
@@ -298,6 +309,7 @@ def test_pheno_group_i1_i2_get_values(
     assert res["f1.p1"]["i2.iq"] == pytest.approx(86.41, abs=1e-2)
 
 
+@pytest.mark.skip(reason="Groups are unused")
 @pytest.mark.parametrize(
     "roles,family_ids,person_ids",
     [

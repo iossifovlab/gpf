@@ -6,7 +6,7 @@ import pandas as pd
 
 from remote.rest_api_client import RESTClient
 
-from dae.pheno.pheno_db import PhenotypeData, Measure, Instrument
+from dae.pheno.pheno_data import PhenotypeData, Measure, Instrument
 from dae.pedigrees.family import Person
 from dae.variants.attributes import Role
 

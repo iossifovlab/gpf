@@ -27,7 +27,7 @@ def iossifov_2014_local(
 
     return StudyWrapper(
         data_study,
-        local_gpf_instance._pheno_db,
+        local_gpf_instance._pheno_registry,
         local_gpf_instance.gene_scores_db
     )
 

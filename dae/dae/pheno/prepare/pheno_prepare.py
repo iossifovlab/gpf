@@ -12,7 +12,7 @@ import pandas as pd
 
 from box import Box
 
-from dae.pheno.db import DbManager
+from dae.pheno.db import PhenoDb
 from dae.pheno.common import MeasureType
 from dae.pedigrees.loader import FamiliesLoader, PED_COLUMNS_REQUIRED, \
     PedigreeIO
@@ -39,7 +39,7 @@ class PrepareBase(PrepareCommon):
     def __init__(self, config: Box) -> None:
         assert config is not None
         self.config = config
-        self.db = DbManager(self.config.db.filename)
+        self.db = PhenoDb(self.config.db.filename)
         self.db.build()
         self.persons = None
 

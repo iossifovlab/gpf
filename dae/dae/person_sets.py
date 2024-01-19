@@ -15,7 +15,7 @@ from box import Box
 from dae.variants.attributes import Sex
 from dae.pedigrees.family import Person
 from dae.pedigrees.families_data import FamiliesData
-from dae.pheno.pheno_db import PhenotypeData, MeasureType
+from dae.pheno.pheno_data import PhenotypeData, MeasureType
 
 
 logger = logging.getLogger(__name__)

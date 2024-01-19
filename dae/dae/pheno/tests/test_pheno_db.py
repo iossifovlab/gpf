@@ -6,7 +6,7 @@ import pandas as pd
 import numpy as np
 
 from dae.pheno.common import MeasureType
-from dae.pheno.pheno_db import Measure, PhenotypeStudy
+from dae.pheno.pheno_data import Measure, PhenotypeStudy
 
 
 def df_check(

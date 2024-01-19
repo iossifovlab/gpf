@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 from dae.pedigrees.families_data import FamiliesData
 from dae.pheno.common import MeasureType
-from dae.pheno.pheno_db import Measure, PhenotypeData
+from dae.pheno.pheno_data import Measure, PhenotypeData
 
 
 class PersonFilter():

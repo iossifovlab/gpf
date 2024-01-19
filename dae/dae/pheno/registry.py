@@ -28,15 +28,17 @@ class PhenoRegistry:
         self, phenotype_data: PhenotypeStudy, lock: bool = True
     ) -> None:
         if lock:
-            with self._cache_lock:
+            with self.CACHE_LOCK:
                 self._register_study(phenotype_data)
         else:
             self._register_study(phenotype_data)
 
     @classmethod
     def load_pheno_data(cls, path: pathlib.Path) -> PhenotypeStudy:
-        if not path.is_file() or not path.name.endswith(".yaml") \
-                or not path.name.endswith(".conf"):
+        if not path.is_file() or (
+            not path.name.endswith(".yaml")
+            and not path.name.endswith(".conf")
+        ):
             raise ValueError("Invalid PhenotypeStudy path")
         config = GPFConfigParser.load_config(str(path), pheno_conf_schema)
         pheno_id = config["phenotype_data"]["name"]
@@ -50,13 +52,16 @@ class PhenoRegistry:
         return phenotype_data
 
     def has_phenotype_data(self, data_id: str) -> bool:
-        with self._cache_lock:
+        with self.CACHE_LOCK:
             return data_id in self._cache
 
     def get_phenotype_data(self, data_id: str) -> Optional[PhenotypeStudy]:
-        with self._cache_lock:
+        with self.CACHE_LOCK:
             return self._cache[data_id]
 
     def get_phenotype_data_config(self, data_id: str) -> Optional[Box]:
-        with self._cache_lock:
+        with self.CACHE_LOCK:
             return cast(Box, self._cache[data_id].config)
+
+    def get_phenotype_data_ids(self) -> list[str]:
+        return list(self._cache.keys())

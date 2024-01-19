@@ -9,9 +9,9 @@ import numpy as np
 import pandas as pd
 
 from dae.variants.attributes import Role
-from dae.pheno.pheno_db import PhenotypeStudy, Measure, \
+from dae.pheno.pheno_data import PhenotypeStudy, Measure, \
     get_pheno_browser_images_dir
-from dae.pheno.db import DbManager
+from dae.pheno.db import PhenoDb
 from dae.pheno.common import MeasureType
 from dae.pheno.graphs import draw_linregres
 from dae.pheno.graphs import draw_measure_violinplot
@@ -357,7 +357,7 @@ class PreparePhenoBrowserBase:
     def run(self) -> None:
         """Run browser preparations for all measures in a phenotype data."""
         pheno_dbfile = self.phenotype_data.db.pheno_dbfile
-        db = DbManager(pheno_dbfile, browser_dbfile=self.browser_db)
+        db = PhenoDb(pheno_dbfile, browser_dbfile=self.browser_db)
         db.build()
 
         if self.pheno_regressions:

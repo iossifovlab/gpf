@@ -1,6 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,too-many-lines
 import pytest
-from dae.pheno.pheno_db import PhenotypeStudy
+from dae.pheno.pheno_data import PhenotypeStudy
 from dae.person_filters import \
     FamilyFilter, \
     PhenoFilterSet, \

@@ -18,7 +18,8 @@ from dae.person_sets import PersonSetCollection
 from dae.variants.attributes import Role
 from dae.variants.family_variant import FamilyAllele
 from dae.studies.study import GenotypeData
-from dae.pheno.pheno_db import PhenotypeData, PhenoDb
+from dae.pheno.registry import PhenoRegistry
+from dae.pheno.pheno_data import PhenotypeData
 from dae.gene.gene_scores import GeneScoresDb
 
 
@@ -236,7 +237,7 @@ class StudyWrapper(StudyWrapperBase):
     # pylint: disable=too-many-instance-attributes
     def __init__(
         self, genotype_data_study: GenotypeData,
-        pheno_db: PhenoDb,
+        pheno_db: PhenoRegistry,
         gene_scores_db: GeneScoresDb
     ):
 
@@ -314,7 +315,7 @@ class StudyWrapper(StudyWrapperBase):
         self.summary_download_columns = \
             genotype_browser_config.summary_download_columns
 
-    def _init_pheno(self, pheno_db: Optional[PhenoDb]) -> None:
+    def _init_pheno(self, pheno_db: Optional[PhenoRegistry]) -> None:
         self.phenotype_data: Optional[PhenotypeData] = None
         if pheno_db is None:
             return

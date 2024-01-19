@@ -1,15 +1,30 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,too-many-lines
+import pathlib
 from typing import cast
 from sqlalchemy.sql import select
-from dae.pheno.pheno_db import PhenoDb, PhenotypeStudy
+from dae.configuration.gpf_config_parser import GPFConfigParser
+from dae.pheno.pheno_data import PhenotypeStudy
+from dae.pheno.registry import PhenoRegistry
 from dae.tools.build_pheno_measures import main
 
 
 def test_build_pheno_measures_functions(clean_pheno_db_dir: str) -> None:
     main([clean_pheno_db_dir, "--dbs", "fake"])
 
-    pheno_db = PhenoDb(clean_pheno_db_dir)
-    pheno_data = cast(PhenotypeStudy, pheno_db.get_phenotype_data("fake"))
+    pheno_registry = PhenoRegistry()
+
+    pheno_configs = GPFConfigParser.collect_directory_configs(
+        clean_pheno_db_dir
+    )
+
+    with PhenoRegistry.CACHE_LOCK:
+        for config in pheno_configs:
+            pheno_registry.register_phenotype_data(
+                PhenoRegistry.load_pheno_data(pathlib.Path(config)),
+                lock=False
+            )
+
+    pheno_data = cast(PhenotypeStudy, pheno_registry.get_phenotype_data("fake"))
     metadata = pheno_data.db.pheno_metadata
     assert "measures" in metadata.tables.keys()
     assert "instruments" in metadata.tables.keys()
@@ -19,8 +34,20 @@ def test_build_pheno_measures_functions(clean_pheno_db_dir: str) -> None:
 
 def test_build_pheno_measures_values(clean_pheno_db_dir: str) -> None:
     main([clean_pheno_db_dir, "--dbs", "fake"])
-    pheno_db = PhenoDb(clean_pheno_db_dir)
-    db = cast(PhenotypeStudy, pheno_db.get_phenotype_data("fake")).db
+
+    pheno_configs = GPFConfigParser.collect_directory_configs(
+        clean_pheno_db_dir
+    )
+
+    pheno_registry = PhenoRegistry()
+
+    with PhenoRegistry.CACHE_LOCK:
+        for config in pheno_configs:
+            pheno_registry.register_phenotype_data(
+                PhenoRegistry.load_pheno_data(pathlib.Path(config)),
+                lock=False
+            )
+    db = cast(PhenotypeStudy, pheno_registry.get_phenotype_data("fake")).db
 
     with db.pheno_engine.connect() as connection:
         table = db.instrument_values_tables["i1"]

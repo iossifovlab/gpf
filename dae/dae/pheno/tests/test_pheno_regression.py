@@ -2,7 +2,7 @@
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.phenotype_data import regression_conf_schema
 from dae.pheno.prepare_data import PreparePhenoBrowserBase
-from dae.pheno.pheno_db import PhenotypeStudy
+from dae.pheno.pheno_data import PhenotypeStudy
 
 
 def test_pheno_regressions_from_conf_path(regressions_conf: str) -> None:

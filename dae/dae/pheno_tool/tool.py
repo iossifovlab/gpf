@@ -15,7 +15,7 @@ from dae.variants.attributes import Role, Sex
 from dae.variants.family_variant import FamilyAllele
 from dae.effect_annotation.effect import EffectTypesMixin, expand_effect_types
 from dae.studies.study import GenotypeData
-from dae.pheno.pheno_db import PhenotypeData
+from dae.pheno.pheno_data import PhenotypeData
 
 
 logger = logging.getLogger(__name__)

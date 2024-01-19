@@ -1,7 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,too-many-lines
 from dae.pheno.common import default_config, MeasureType
 from dae.pheno.prepare.measure_classifier import MeasureClassifier
-from dae.pheno.pheno_db import PhenotypeStudy
+from dae.pheno.pheno_data import PhenotypeStudy
 
 
 def test_fake_phenotype_data_ordinal_m4(

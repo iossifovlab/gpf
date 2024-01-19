@@ -10,7 +10,7 @@ import numpy as np
 
 from dae.pheno_tool.tool import PhenoResult, PhenoTool
 from dae.variants.attributes import Sex
-from dae.pheno.pheno_db import PhenotypeStudy
+from dae.pheno.pheno_data import PhenotypeStudy
 
 
 def test_init_pheno_df(fake_phenotype_data: PhenotypeStudy) -> None:

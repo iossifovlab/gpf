@@ -136,8 +136,13 @@ class PhenoMeasureRegressionsView(QueryDatasetView):
         dataset_id = data["datasetId"]
         dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
 
-        if dataset is None:
+        if dataset is None or dataset.phenotype_data is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
+
+        print(dataset_id)
+        print(dataset)
+        print(dataset.phenotype_data)
+        print(dataset.phenotype_data.get_regressions())
 
         regressions = dataset.phenotype_data.get_regressions()
 

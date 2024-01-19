@@ -17,7 +17,7 @@ from utils.query_params import parse_query_params
 from query_base.query_base import QueryDatasetView
 from datasets_api.permissions import user_has_permission
 
-from dae.pheno.pheno_db import Measure
+from dae.pheno.pheno_data import Measure
 from dae.pheno_tool.tool import PhenoResult, PhenoTool, PhenoToolHelper
 from dae.effect_annotation.effect import EffectTypesMixin
 

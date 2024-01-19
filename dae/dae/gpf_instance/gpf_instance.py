@@ -16,6 +16,7 @@ from dae.autism_gene_profile.statistic import AGPStatistic
 from dae.gene.gene_scores import GeneScore
 from dae.genomic_resources.gene_models import GeneModels
 from dae.genomic_resources.reference_genome import ReferenceGenome
+from dae.configuration.schemas.phenotype_data import pheno_conf_schema
 
 from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.utils.fs_utils import find_directory_with_a_file
@@ -119,7 +120,7 @@ class GPFInstance:
         self.reference_genome
         self.gene_models
         self.gene_sets_db
-        self._pheno_db
+        self._pheno_registry
         self._variants_db
         self.denovo_gene_sets_db
         self.genomic_scores
@@ -176,7 +177,7 @@ class GPFInstance:
         return result
 
     @cached_property
-    def _pheno_db(self) -> PhenoRegistry:
+    def _pheno_registry(self) -> PhenoRegistry:
         pheno_data_dir = get_pheno_db_dir(self.dae_config)
         registry = PhenoRegistry()
 
@@ -187,7 +188,7 @@ class GPFInstance:
         with PhenoRegistry.CACHE_LOCK:
             for config in pheno_configs:
                 registry.register_phenotype_data(
-                    PhenoRegistry.load_pheno_data(config),
+                    PhenoRegistry.load_pheno_data(Path(config)),
                     lock=False
                 )
         return registry
@@ -346,21 +347,32 @@ class GPFInstance:
         self._variants_db.unregister_genotype_data(genotype_data)
 
     # Phenotype data
+
     def get_phenotype_db_config(self) -> Box:
-        return cast(Box, self._pheno_db.config)
+        pheno_data_dir = get_pheno_db_dir(self.dae_config)
+        configs = GPFConfigParser.load_directory_configs(
+            pheno_data_dir, pheno_conf_schema
+        )
+
+        return Box({
+            config.phenotype_data.name: config.phenotype_data
+            for config in configs
+            if config.phenotype_data and config.phenotype_data.enabled
+        })
 
     def get_phenotype_data_ids(self) -> list[str]:
-        return cast(list[str], self._pheno_db.get_phenotype_data_ids())
+        return self._pheno_registry.get_phenotype_data_ids()
 
     def get_phenotype_data(self, phenotype_data_id: str) -> PhenotypeData:
-        return self._pheno_db.get_phenotype_data(phenotype_data_id)
+        return self._pheno_registry.get_phenotype_data(phenotype_data_id)
 
     def get_all_phenotype_data(self) -> list[PhenotypeData]:
-        return self._pheno_db.get_all_phenotype_data()
+        return self._pheno_registry.get_all_phenotype_data()
 
     def get_phenotype_data_config(self, phenotype_data_id: str) -> Box:
         return cast(
-            Box, self._pheno_db.get_phenotype_data_config(phenotype_data_id)
+            Box,
+            self._pheno_registry.get_phenotype_data_config(phenotype_data_id)
         )
 
     # Gene scores

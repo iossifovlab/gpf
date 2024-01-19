@@ -14,7 +14,7 @@ from dae.pheno.graphs import violinplot, stripplot, gender_palette
 from dae.variants.attributes import Role, Sex
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.phenotype_data import pheno_conf_schema
-from dae.pheno.pheno_db import PhenotypeStudy
+from dae.pheno.pheno_data import PhenotypeStudy
 
 
 def test_augment_measure(

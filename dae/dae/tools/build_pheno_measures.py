@@ -2,13 +2,16 @@
 # encoding: utf-8
 
 import sys
+import pathlib
 from typing import Optional, cast
 import logging
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
 from sqlalchemy.sql import select, insert
 
+from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.utils.verbosity_configuration import VerbosityConfiguration
-from dae.pheno.pheno_db import PhenotypeStudy, PhenoDb
+from dae.pheno.pheno_data import PhenotypeStudy
+from dae.pheno.registry import PhenoRegistry
 from dae.pheno.db import safe_db_name, generate_instrument_table_name
 
 
@@ -59,9 +62,21 @@ def main(
     args = parser.parse_args(argv)
     VerbosityConfiguration.set(args)
 
-    pheno_db = PhenoDb(args.pheno_data_dir)
+    pheno_registry = PhenoRegistry()
 
-    available_dbs = pheno_db.get_phenotype_data_ids()
+    pheno_configs = GPFConfigParser.collect_directory_configs(
+        args.pheno_data_dir
+    )
+
+    with PhenoRegistry.CACHE_LOCK:
+        for config in pheno_configs:
+            path = pathlib.Path(config)
+            pheno_registry.register_phenotype_data(
+                PhenoRegistry.load_pheno_data(path),
+                lock=False
+            )
+
+    available_dbs = pheno_registry.get_phenotype_data_ids()
 
     if args.show_pheno_dbs:
         for db_name in available_dbs:
@@ -74,7 +89,7 @@ def main(
 
         for db_name in available_dbs:
             pheno_data = cast(
-                PhenotypeStudy, pheno_db.get_phenotype_data(db_name)
+                PhenotypeStudy, pheno_registry.get_phenotype_data(db_name)
             )
             db = pheno_data.db
 

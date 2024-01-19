@@ -10,7 +10,7 @@ from rest_framework import status
 from rest_framework.response import Response
 from users_api.models import User
 
-from dae.pheno.pheno_db import PhenotypeStudy
+from dae.pheno.pheno_data import PhenotypeStudy
 
 pytestmark = pytest.mark.usefixtures(
     "wdae_gpf_instance", "dae_calc_gene_sets")
