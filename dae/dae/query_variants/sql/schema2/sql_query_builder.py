@@ -157,6 +157,8 @@ class SqlQueryBuilder:
 
         where_parts = self._add_region_bin_heuristic(where_parts, regions)
         where_parts = self._add_coding_bin_heuristic(where_parts, effect_types)
+        where_parts = self._add_frequency_bin_heuristic(
+            where_parts, ultra_rare, frequency_filter)
 
         # Do not look into reference alleles
         where_parts.append("sa.allele_index > 0")
@@ -388,4 +390,38 @@ class SqlQueryBuilder:
         where_parts.append(
             f"sa.region_bin in ({region_bins_set})"
         )
+        return where_parts
+
+    def _add_frequency_bin_heuristic(
+        self, where_parts: list[str],
+        ultra_rare: Optional[bool],
+        frequency_filter: Optional[RealAttrFilterType]
+    ) -> list[str]:
+        if self.partition_descriptor is None:
+            return where_parts
+        if not ultra_rare and frequency_filter is None:
+            return where_parts
+        if "frequency_bin" not in self.db_layout.summary_schema:
+            return where_parts
+        assert "frequency_bin" in self.db_layout.summary_schema
+        assert "frequency_bin" in self.db_layout.family_schema
+
+        frequency_bins: set[int] = set([0])  # always search de Novo variants
+        if ultra_rare is not None and ultra_rare:
+            frequency_bins.add(1)
+        if frequency_filter is not None:
+            for freq, (_, right) in frequency_filter:
+                if freq != "af_allele_freq":
+                    continue
+                if right is None:
+                    return where_parts
+                assert right is not None
+                if right <= self.partition_descriptor.rare_boundary:
+                    frequency_bins.add(2)
+                elif right > self.partition_descriptor.rare_boundary:
+                    return where_parts
+        if frequency_bins and len(frequency_bins) < 4:
+            frequency_bins_set = ", ".join(
+                str(fb) for fb in range(0, max(frequency_bins) + 1))
+            where_parts.append(f"sa.frequency_bin in ({frequency_bins_set})")
         return where_parts

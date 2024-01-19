@@ -303,3 +303,28 @@ def test_region_bin_heuristics_query(
         assert "region_bin" in query
         for region_bin in region_bins:
             assert f"'{region_bin}'" in query
+
+
+@pytest.mark.parametrize("index, params, frequency_bins", [
+    (0, {"ultra_rare": True}, "(0, 1)"),
+    (1, {"ultra_rare": False}, None),
+    (2, {}, None),
+    (3, {"frequency_filter": [("af_allele_freq", (None, 15.0))]}, "(0, 1, 2)"),
+    (4, {"frequency_filter": [("af_allele_freq", (None, 25.0))]}, "(0, 1, 2)"),
+    (5, {"frequency_filter": [("af_allele_freq", (None, 25.1))]}, None),
+])
+def test_frequency_bin_heuristics_query(
+    index: int,
+    params: dict[str, Any],
+    frequency_bins: Optional[str],
+    query_builder: SqlQueryBuilder
+) -> None:
+    query_builder.GENE_REGIONS_HEURISTIC_EXTEND = 0
+    query = query_builder.build_summary_variants_query(**params)
+    assert query is not None
+
+    if frequency_bins is None:
+        assert "frequency_bin" not in query
+    else:
+        assert "frequency_bin" in query
+        assert f"frequency_bin IN {frequency_bins}" in query
