@@ -1,7 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import os
 import pathlib
-from typing import Any
+from typing import Any, Optional
 
 import pytest
 
@@ -89,6 +89,10 @@ chr1   122  .  A   C,AC .    .      .    GT     0/1  0/1  0/1 0/2  0/2  0/2
 
     project_config_update = {
         "partition_description": {
+            "region_bin": {
+                "chromosomes": ["chr1"],
+                "region_length": 100,
+            },
             "frequency_bin": {
                 "rare_boundary": 25.0,
             },
@@ -215,8 +219,8 @@ def test_query_summary_variants_simple(
 
 
 @pytest.mark.parametrize("index, params, count", [
-    # (0, {"genes": ["t4"]}, 1),
-    # (1, {"genes": ["c8"]}, 3),
+    (0, {"genes": ["t4"]}, 1),
+    (1, {"genes": ["c8"]}, 3),
     (2, {"effect_types": ["missense"]}, 1),
     (3, {"effect_types": ["synonymous"]}, 3),
     (4, {"regions": [Region("chr1")]}, 6),
@@ -250,3 +254,26 @@ def test_query_summary_variants_counting(
         with connection.cursor() as cursor:
             result = cursor.execute(query).fetchall()
             assert len(result) == count
+
+
+@pytest.mark.parametrize("index, params, coding_bin", [
+    (0, {"effect_types": ["missense"]}, 1),
+    (1, {"effect_types": ["synonymous"]}, 1),
+    (2, {"effect_types": ["intergenic"]}, 0),
+    (3, {"effect_types": ["intergenic", "synonymous"]}, None),
+    (4, {}, None),
+])
+def test_coding_bin_heuristics_query(
+    index: int,
+    params: dict[str, Any],
+    coding_bin: Optional[int],
+    query_builder: SqlQueryBuilder
+) -> None:
+    query_builder.GENE_REGIONS_HEURISTIC_EXTEND = 0
+    query = query_builder.build_summary_variants_query(**params)
+    assert query is not None
+
+    if coding_bin is None:
+        assert "coding_bin" not in query
+    else:
+        assert f"coding_bin = {coding_bin}" in query
