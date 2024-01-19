@@ -169,7 +169,7 @@ export class VariantReportsComponent implements OnInit {
       if (this.tagsHeader !== '') {
         this.tagsHeader += separator;
       }
-      this.tagsHeader += 'not ' + this.deselectedTags.join(separator + ' not ');
+      this.tagsHeader += 'not ' + this.deselectedTags.join(separator + 'not ');
     }
 
     if (this.selectedTags.length === 0 && this.deselectedTags.length === 0) {
