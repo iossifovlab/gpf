@@ -4,7 +4,9 @@
     [ngClass]="{ 'compare-div': isInGeneCompare }"
     [style.height]="showTemplate ? '100%' : '100vh'">
     <ng-container *ngIf="isInGeneCompare">
-      <div style="position: relative" [style.width]="showTemplate ? 'unset' : '30px'">
+      <div
+        style="position: relative; width: 30px; display: flex; flex-direction: column"
+        [style.width]="showTemplate ? 'unset' : '30px'">
         <div [attr.title]="geneSymbol" (click)="showTemplate = !showTemplate" class="minimize-elements-wrapper">
           <button class="minimize-button"><span class="material-symbols-outlined">remove</span></button>
           <span *ngIf="!showTemplate" class="minimize-gene-symbol">{{ geneSymbol }}</span>
@@ -13,40 +15,32 @@
     </ng-container>
 
     <ng-container *ngIf="showTemplate">
-      <div style="padding: 25px">
+      <div style="padding-left: 8px">
         <div
           #stickySpan
           [ngClass]="isInGeneCompare && isHeaderSticky ? 'sticky' : ''"
           [ngStyle]="{ width: isInGeneCompare ? '100%' : '1455px' }"
-          style="display: flex; align-items: baseline; height: 58px">
-          <h2>{{ geneSymbol }}</h2>
+          style="padding-bottom: 8px; padding-top: 4px">
+          <h2 style="padding-left: 0">{{ geneSymbol }}</h2>
         </div>
         <div class="wrapper" [ngClass]="{ 'compare-wrapper': isInGeneCompare }" #wrapperElement>
           <table id="links-table">
             <tr>
-              <td style="border-right: 1px solid #dee2e6; padding-right: 25px">Links</td>
+              <td style="border-right: 1px solid #dee2e6; padding: 0 24px; text-align: center">Links</td>
               <td>
-                <a class="link-external-page" [attr.href]="links.geneBrowser" id="gene-browser-link" target="_blank"
-                  >Gene Browser</a
-                >
+                <a [attr.href]="links.geneBrowser" id="gene-browser-link" target="_blank">Gene Browser</a>
               </td>
               <td>
-                <a class="link-external-page" [attr.href]="links.ucsc" target="_blank">UCSC genome browser</a>
+                <a [attr.href]="links.ucsc" target="_blank">UCSC genome browser</a>
               </td>
               <td>
-                <a class="link-external-page" [attr.href]="links.geneCards" target="_blank">GeneCards</a>
+                <a [attr.href]="links.geneCards" target="_blank">GeneCards</a>
               </td>
               <td>
-                <a class="link-external-page" [attr.href]="links.pubmed" target="_blank">Pubmed</a>
+                <a [attr.href]="links.pubmed" target="_blank">Pubmed</a>
               </td>
               <td>
-                <a
-                  *ngIf="links.sfariGene !== ''"
-                  class="link-external-page"
-                  [attr.href]="links.sfariGene"
-                  target="_blank"
-                  >SFARI gene</a
-                >
+                <a [ngClass]="{ 'disabled-link': !links.sfariGene }" [attr.href]="links.sfariGene" target="_blank">SFARI gene</a>
               </td>
             </tr>
           </table>
@@ -58,9 +52,16 @@
             [attr.id]="genomicScoreCategory.category"
             class="gpf-basic-table genomic-scores-table">
             <th [attr.colspan]="2">{{ genomicScoreCategory.displayName }}</th>
-            <tr *ngFor="let score of genomicScoreCategory.scores" class="card-block">
+            <tr *ngFor="let score of genomicScoreCategory.scores" class="card-block" style="height: 200px">
               <td
-                style="height: 135px; max-height: 135px; width: 135px; max-width: 135px; overflow-wrap: break-word"
+                style="
+                  height: 135px;
+                  max-height: 135px;
+                  width: 135px;
+                  max-width: 135px;
+                  overflow-wrap: break-word;
+                  text-align: center;
+                "
                 [attr.title]="score.scoreName"
                 >{{ score.scoreName }}</td
               >
@@ -85,7 +86,9 @@
                       getSingleScoreValue(gene.genomicScores, genomicScoreCategory.category, score.scoreName)
                     "
                     [marginLeft]="histogramOptions.marginLeft"
-                    [marginTop]="histogramOptions.marginTop">
+                    [marginTop]="histogramOptions.marginTop"
+                    [smallValuesDesc]="geneScore.smallValuesDesc"
+                    [largeValuesDesc]="geneScore.largeValuesDesc">
                   </gpf-histogram>
                 </td>
               </ng-container>
