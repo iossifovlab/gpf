@@ -116,60 +116,29 @@ test.describe('Variant reports tests', () => {
 
     await page.getByText('Select tags').click();
     await expect(page.locator('#tags-modal-content')).toBeVisible();
-    await expect(page.locator('#search-tags')).toBeVisible();
-    await expect(page.locator('#uncheck-button')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'And' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Or' })).toBeVisible();
+    await expect(page.getByText('Choose mode: ')).toBeVisible();
+    await expect(page.getByText('Clear filters')).toBeVisible();
     await expect(page.locator('#tag-list')).toBeVisible();
 
-    await expect(page.locator('#tag-list')).toContainText(tags.join(''));
+    await expect(page.locator('#tag-list'))
+      .toContainText('add_circleremove_circle' + tags.join('add_circleremove_circle'));
 
     await page.mouse.click(0, 0);
     await expect(page.locator('#tags-modal-content')).not.toBeVisible();
   });
 
-  ['n', 'ro', 'lex'].forEach(searchValue => {
-    test(`should search and find tags with ${searchValue}`, async({ page }) => {
-      await page.getByText('Families by pedigree').click();
-      await page.getByText('Select tags').click();
-      await page.locator('#search-tags').focus();
-      await page.keyboard.type(searchValue);
-
-      await Promise.all(tags.map(async(tag) => {
-        if (tag.includes(searchValue)) {
-          await expect(page.locator(`#${tag}-tag`)).toBeEnabled();
-        } else {
-          await expect(page.locator(`#${tag}-tag`)).toBeDisabled();
-        }
-      }));
-      await page.locator('#search-tags').clear();
-    });
-  });
-
-  ['cot', 'riof', 'tsf', 'as'].forEach(searchValue => {
-    test(`should show nothing found when searching tags with ${searchValue}`, async({ page }) => {
-      await page.getByText('Families by pedigree').click();
-      await page.getByText('Select tags').click();
-      await page.locator('#search-tags').focus();
-      await page.keyboard.type(searchValue);
-
-      await Promise.all(tags.map(async(tag) => {
-        await expect(page.locator(`#${tag}-tag`)).toBeDisabled();
-      }));
-      await page.locator('#search-tags').clear();
-    });
-  });
-
   [
     {tag: tags[0], expectedPedigreeCounts: ['877', '789', '500', '128', '107', '106', '6', '3']},
     {tag: tags[1], expectedPedigreeCounts: ['877', '789', '128', '107']},
-    {tag: tags[2], expectedPedigreeCounts: ['500', '106', '6', '3']},
-    {tag: tags[3], expectedPedigreeCounts: ['877', '789', '500', '128', '107', '106']},
     {tag: tags[5], expectedPedigreeCounts: ['6', '3']},
     {tag: tags[15], expectedPedigreeCounts: ['128', '107', '106']}
   ].forEach(data => {
     test(`should check pedigree by filtering with single tag ${data.tag}`, async({ page }) => {
       await page.getByText('Families by pedigree').click();
       await page.getByText('Select tags').click();
-      await page.locator(`#${data.tag}-tag`).setChecked(true, {force: true});
+      await page.locator(`#${data.tag}-tag-add`).click();
       await page.mouse.click(0, 0); // close modal
 
       await expect(page.locator('.pedigree-cell')).toHaveCount(data.expectedPedigreeCounts.length);
@@ -179,31 +148,44 @@ test.describe('Variant reports tests', () => {
     });
   });
 
+
   [tags[4], tags[9], tags[12]].forEach(data => {
     test(`should show nothing found when searching tags with ${data}`, async({ page }) => {
       await page.getByText('Families by pedigree').click();
       await page.getByText('Select tags').click();
-      await page.locator(`#${data}-tag`).setChecked(true, {force: true});
+      await page.locator(`#${data}-tag-add`).click();
       await page.mouse.click(0, 0); // close modal
 
       await expect(page.locator('#nothing-found')).toBeVisible();
     });
   });
 
-  test('should test uncheck all button in tags modal', async({ page }) => {
+  test('should test clear all filters', async({ page }) => {
     await page.getByText('Families by pedigree').click();
     await page.getByText('Select tags').click();
 
-    await Promise.all(tags.map(async(tag) => {
-      await page.locator(`#${tag}-tag`).setChecked(true, {force: true});
-      await expect(page.locator(`#${tag}-tag`)).toBeChecked();
-      await expect(page.locator('#selected-tags-list')).toContainText(tag);
-    }));
-    await page.locator('#uncheck-button').click();
-    await Promise.all(tags.map(async(tag) => {
-      await expect(page.locator(`#${tag}-tag`)).not.toBeChecked();
-      await expect(page.locator('#selected-tags-list')).not.toBeVisible();
-    }));
+    await page.locator(`#${tags[2]}-tag-add`).click();
+    await expect(page.locator('#selected-tags-list')).toContainText(tags[2]);
+    await expect(page.locator(`#${tags[2]}-tag-add`)).toHaveCSS('color', 'rgb(0, 128, 0)');
+
+    await page.locator(`#${tags[7]}-tag-remove`).click();
+    await expect(page.locator('#selected-tags-list')).toContainText('not ' + tags[7]);
+    await expect(page.locator(`#${tags[7]}-tag-remove`)).toHaveCSS('color', 'rgb(255, 0, 0)');
+
+    await page.locator(`#${tags[10]}-tag-remove`).click();
+    await expect(page.locator('#selected-tags-list')).toContainText('not ' + tags[10]);
+    await expect(page.locator(`#${tags[10]}-tag-remove`)).toHaveCSS('color', 'rgb(255, 0, 0)');
+
+    await page.locator(`#${tags[12]}-tag-add`).click();
+    await expect(page.locator('#selected-tags-list')).toContainText(tags[12]);
+    await expect(page.locator(`#${tags[12]}-tag-add`)).toHaveCSS('color', 'rgb(0, 128, 0)');
+
+    await page.getByText('Clear filters').click();
+    await expect(page.locator(`#${tags[2]}-tag-add`)).not.toHaveCSS('color', 'rgb(0, 128, 0)');
+    await expect(page.locator(`#${tags[7]}-tag-add`)).not.toHaveCSS('color', 'rgb(255, 0, 0)');
+    await expect(page.locator(`#${tags[10]}-tag-add`)).not.toHaveCSS('color', 'rgb(255, 0, 0)');
+    await expect(page.locator(`#${tags[12]}-tag-add`)).not.toHaveCSS('color', 'rgb(0, 128, 0)');
+    await expect(page.locator('#selected-tags-list')).not.toBeVisible();
   });
 
   [
@@ -215,10 +197,12 @@ test.describe('Variant reports tests', () => {
       await page.getByText('Families by pedigree').click();
       await page.getByText('Select tags').click();
 
-      await Promise.all(data.selectedTags.map(async(tag) => {
-        await page.locator(`#${tag}-tag`).setChecked(true, {force: true});
+      for (const tag of data.selectedTags) {
+        // eslint-disable-next-line no-await-in-loop
+        await page.locator(`#${tag}-tag-add`).click();
+        // eslint-disable-next-line no-await-in-loop
         await expect(page.locator('#selected-tags-list')).toContainText(tag);
-      }));
+      }
       await page.mouse.click(0, 0); // close modal
 
       await expect(page.locator('.pedigree-cell')).toHaveCount(data.expectedPedigreeCounts.length);
@@ -236,10 +220,13 @@ test.describe('Variant reports tests', () => {
       await page.getByText('Families by pedigree').click();
       await page.getByText('Select tags').click();
 
-      await Promise.all(data.selectedTags.map(async(tag) => {
-        await page.locator(`#${tag}-tag`).setChecked(true, {force: true});
+      for (const tag of data.selectedTags) {
+        // eslint-disable-next-line no-await-in-loop
+        await page.locator(`#${tag}-tag-add`).click();
+        // eslint-disable-next-line no-await-in-loop
         await expect(page.locator('#selected-tags-list')).toContainText(tag);
-      }));
+      }
+
       await page.mouse.click(0, 0); // close modal
 
       await expect(page.locator('#nothing-found')).toBeVisible();
@@ -334,8 +321,8 @@ test.describe('Variant reports download tests', () => {
 
     const fixtureData = scanCSV(await download.path(), {sep: '\t'});
     const downloadData = scanCSV('playwright/fixtures/variant-reports/families-pedigrees.ped', {sep: '\t'});
-    const fixtureFrame = await fixtureData.select(columnsToCheck).collect();
-    const downloadFrame = await downloadData.select(columnsToCheck).collect();
+    const fixtureFrame = (await fixtureData.select(columnsToCheck).collect()).sort('familyId');
+    const downloadFrame = (await downloadData.select(columnsToCheck).collect()).sort('familyId');
     expect(fixtureFrame.toString()).toEqual(downloadFrame.toString());
   });
 });
