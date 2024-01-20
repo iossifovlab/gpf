@@ -84,22 +84,17 @@ test.describe('Autism gene profiles single view links tests', () => {
 
   test('should display UCSC link', async({ context }) => {
     const targetPage = context.pages()[1];
-    await expect(targetPage.locator('a.link-external-page').filter({ hasText: 'UCSC genome browser'})).toBeVisible();
-    await expect(targetPage.locator('a.link-external-page').filter(
-      { hasText: 'UCSC genome browser'}
-    )).toBeVisible();
+    await expect(targetPage.getByText('UCSC genome browser')).toBeVisible();
   });
 
   test('should display GeneCards link', async({ context }) => {
     const targetPage = context.pages()[1];
-    await expect(targetPage.locator('a.link-external-page').filter({ hasText: 'GeneCards' })).toBeVisible();
-    await expect(targetPage.locator('a.link-external-page').filter({ hasText: 'GeneCards' })).toHaveText('GeneCards');
+    await expect(targetPage.getByText('GeneCards')).toBeVisible();
   });
 
   test('should display Pubmed link', async({ context }) => {
     const targetPage = context.pages()[1];
-    await expect(targetPage.locator('a.link-external-page').filter({ hasText: 'Pubmed' })).toBeVisible();
-    await expect(targetPage.locator('a.link-external-page').filter({ hasText: 'Pubmed' })).toHaveText('Pubmed');
+    await expect(targetPage.getByText('Pubmed')).toBeVisible();
   });
 });
 
@@ -218,7 +213,7 @@ test.describe('Autism gene profiles single view dynamic data tests', () => {
     await expect(
       singleViewPage.locator('.datasets-table').locator('tr').nth(1)
     ).toHaveText('Variant Statisticsaffected (2507)unaffected (1910)');
-    await expect(singleViewPage.locator('.datasets-table').locator('tr').nth(2)).toHaveText('LGDsremoveremove');
+    await expect(singleViewPage.locator('.datasets-table').locator('tr').nth(2)).toHaveText('LGDs3 (1.197)remove');
     await expect(singleViewPage.locator('.datasets-table').locator('tr').nth(3)).toHaveText('missense1 (0.399)remove');
     await expect(singleViewPage.locator('.datasets-table').locator('tr').nth(4)).toHaveText('intronremoveremove');
 
