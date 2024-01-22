@@ -45,8 +45,8 @@ class DuckDbRunner(QueryRunner):
                 self._finalize(started)
                 return
 
-            with self.connection as connection:
-                for record in connection.execute(self.query).fetchall():
+            with self.connection.cursor() as cursor:
+                for record in cursor.execute(self.query).fetchall():
                     val = self.deserializer(record)
                     if val is None:
                         continue
