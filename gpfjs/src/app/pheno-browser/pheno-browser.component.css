@@ -102,3 +102,11 @@
   align-items: center;
   margin-left: auto;
 }
+
+.warning-modal div {
+  background-color: #ffecb5;
+}
+
+.modal {
+  background: #0000007b;
+}

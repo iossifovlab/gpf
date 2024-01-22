@@ -55,3 +55,19 @@
 <div *ngIf="measuresToShow$ | async as measuresToShow" class="col-lg-12" style="padding: 0 30px">
   <gpf-pheno-browser-table [measures]="measuresToShow"></gpf-pheno-browser-table>
 </div>
+
+<div *ngIf="errorModal">
+  <div style="display: flex; align-items: center" class="modal" role="dialog" aria-hidden="true">
+    <div class="modal-dialog warning-modal">
+      <div class="modal-content">
+        <div class="modal-header" style="border-bottom: 0">
+          <h5 class="modal-title">Warning</h5>
+        </div>
+        <div class="modal-body">Too many instruments, select less than 1900!</div>
+        <div class="modal-footer" style="border-top: 0">
+          <button type="button" class="btn btn-secondary" (click)="errorModalBack()">Back</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

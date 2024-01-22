@@ -1,7 +1,7 @@
 import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { ActivatedRoute, Router, Params } from '@angular/router';
 import { Location } from '@angular/common';
-import { Observable, BehaviorSubject, ReplaySubject, combineLatest, of } from 'rxjs';
+import { Observable, BehaviorSubject, ReplaySubject, combineLatest, of, zip } from 'rxjs';
 import { PhenoBrowserService } from './pheno-browser.service';
 import { PhenoInstruments, PhenoInstrument, PhenoMeasures, PhenoMeasure } from './pheno-browser';
 import { Dataset } from 'app/datasets/datasets';
@@ -9,6 +9,7 @@ import { DatasetsService } from '../datasets/datasets.service';
 import { debounceTime, distinctUntilChanged, map, share, switchMap, take, tap } from 'rxjs/operators';
 import { environment } from 'environments/environment';
 import { ConfigService } from 'app/config/config.service';
+import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'gpf-pheno-browser',
@@ -17,8 +18,10 @@ import { ConfigService } from 'app/config/config.service';
 })
 export class PhenoBrowserComponent implements OnInit {
   public selectedInstrument$: BehaviorSubject<PhenoInstrument> = new BehaviorSubject<PhenoInstrument>(undefined);
+  private searchTermObs$: Observable<string>;
   private measuresToShow: PhenoMeasures;
   public measuresToShow$: Observable<PhenoMeasures>;
+  public errorModal = false;
 
   public instruments: Observable<PhenoInstruments>;
 
@@ -32,6 +35,7 @@ export class PhenoBrowserComponent implements OnInit {
   public imgPathPrefix = environment.imgPathPrefix;
 
   public constructor(
+    private http: HttpClient,
     private route: ActivatedRoute,
     private router: Router,
     private phenoBrowserService: PhenoBrowserService,
@@ -53,13 +57,13 @@ export class PhenoBrowserComponent implements OnInit {
   }
 
   private initMeasuresToShow(datasetId: string): void {
-    const searchTermObs$ = this.input$.pipe(
+    this.searchTermObs$ = this.input$.pipe(
       map((searchTerm: string) => searchTerm.trim()),
       debounceTime(300),
       distinctUntilChanged()
     );
 
-    this.measuresToShow$ = combineLatest([searchTermObs$, this.selectedInstrument$]).pipe(
+    this.measuresToShow$ = combineLatest([this.searchTermObs$, this.selectedInstrument$]).pipe(
       tap(([searchTerm, newSelection]) => {
         this.measuresToShow = null;
         const queryParamsObject: any = {};
@@ -118,26 +122,34 @@ export class PhenoBrowserComponent implements OnInit {
   }
 
   public downloadMeasures(event: Event): void {
-    this.selectedInstrument$.pipe(take(1)).subscribe(instrument => {
-      if (instrument === '') {
-        instrument = null;
-      }
-
-      const measureIds = this.measuresToShow.measures.map(m => m.measureId);
-
-      /* eslint-disable @typescript-eslint/naming-convention */
-      const data = {
-        dataset_id: this.selectedDatasetId,
-        instrument: instrument,
-        measure_ids: measureIds
-      };
-      /* eslint-enable */
-
-      if (event.target instanceof HTMLFormElement) {
-        (event.target.queryData as HTMLInputElement).value = JSON.stringify(data);
-        event.target.submit();
-      }
-    });
+    combineLatest([this.searchTermObs$, this.selectedInstrument$])
+      .pipe(
+        take(1),
+        switchMap(([searchTerm, instrument]) => {
+          if (instrument === '') {
+            instrument = null;
+          }
+          /* eslint-disable @typescript-eslint/naming-convention */
+          const data = {
+            dataset_id: this.selectedDatasetId,
+            instrument: instrument,
+            search_term: searchTerm
+          };
+          /* eslint-enable */
+          return zip(of(data), this.http
+            .head(`${this.configService.baseUrl}pheno_browser/download`, {params: data})
+            .pipe(map(response => response as PhenoInstruments)))
+        })
+      ).subscribe(([data, validity]) => {
+        if (validity.status === 200) {
+          if (event.target instanceof HTMLFormElement) {
+            (event.target.queryData as HTMLInputElement).value = JSON.stringify(data);
+            event.target.submit();
+          }
+        } else if (validity.status === 413) {
+          errorModal = true;
+        }
+      });
   }
 
   public search(value: string): void {
@@ -159,5 +171,9 @@ export class PhenoBrowserComponent implements OnInit {
     this.waitForSearchBoxToLoad().then(() => {
       this.searchBox.nativeElement.focus();
     });
+  }
+
+  public errorModalBack(): void {
+    this.errorModal = false;
   }
 }
