@@ -171,6 +171,37 @@ class PhenoMeasuresDownload(QueryDatasetView):
 
         buffer.close()
 
+    def head(self, request: Request) -> Response:
+        data = request.data
+        if "queryData" in data:
+            data = parse_query_params(data)
+        if "dataset_id" not in data:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        dataset_id = data["dataset_id"]
+
+        dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
+        if not dataset or dataset.phenotype_data is None:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        search_term = data.get("search_term", None)
+        instrument = data.get("instrument", None)
+
+        if (instrument is not None
+                and instrument not in dataset.phenotype_data.instruments):
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        measures = dataset.phenotype_data.search_measures(
+            instrument, search_term
+        )
+        measure_ids = [
+            measure["measure"]["measure_id"] for measure in measures
+        ]
+
+        if len(measure_ids) > 1900:
+            return Response(status=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE)
+
+        return Response(status=status.HTTP_200_OK)
+
     def post(self, request: Request) -> Response:
         """Return a CSV file stream for measures."""
         data = request.data
@@ -184,25 +215,23 @@ class PhenoMeasuresDownload(QueryDatasetView):
         if not dataset or dataset.phenotype_data is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        measure_ids = data.get("measure_ids", None)
+        search_term = data.get("search_term", None)
         instrument = data.get("instrument", None)
-        if instrument is None:
-            if measure_ids is None:
-                measure_ids = list(dataset.phenotype_data.measures.keys())
-        else:
-            if instrument not in dataset.phenotype_data.instruments:
-                return Response(status=status.HTTP_404_NOT_FOUND)
 
-            instrument_measures = \
-                dataset.phenotype_data.get_instrument_measures(instrument)
-            if measure_ids is None:
-                measure_ids = instrument_measures
+        if (instrument is not None
+                and instrument not in dataset.phenotype_data.instruments):
+            return Response(status=status.HTTP_404_NOT_FOUND)
 
-            if not set(measure_ids).issubset(set(instrument_measures)):
-                return Response(status=status.HTTP_400_BAD_REQUEST)
+        measures = dataset.phenotype_data.search_measures(
+            instrument, search_term
+        )
+        measure_ids = [
+            measure["measure"]["measure_id"] for measure in measures
+        ]
 
         if len(measure_ids) > 1900:
-            measure_ids = measure_ids[0:1900]
+            # measure_ids = measure_ids[0:1900]
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
         values_iterator = self.csv_value_iterator(
             dataset, measure_ids
