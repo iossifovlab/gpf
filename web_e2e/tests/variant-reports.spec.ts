@@ -343,7 +343,7 @@ test.describe('Variant reports download tests', () => {
   test('downloading in families by pedigree', async({ page }) => {
     await page.getByText('Families by pedigree').click();
     await page.getByText('Select tags').click();
-    await page.getByText('tag_trio_family').click();
+    await page.locator('#tag_trio_family-tag-add').click();
     await page.keyboard.press('Escape');
 
     const downloadPromise = page.waitForEvent('download');
