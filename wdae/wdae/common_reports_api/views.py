@@ -188,6 +188,28 @@ class FamiliesDataDownloadView(QueryDatasetView):
 
         return FamiliesData.from_families(result)
 
+    def get(self, _request: Request, dataset_id: str) -> Response:
+        """Return full family data for a specified study."""
+        if not dataset_id:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        study = self.gpf_instance.get_genotype_data(dataset_id)
+
+        if study is None:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        tsv = FamiliesLoader.to_tsv(study.families)
+        lines = map(lambda x: x + "\n", tsv.strip().split("\n"))
+
+        response = StreamingHttpResponse(
+            lines,
+            content_type="text/tab-separated-values"
+        )
+        response["Content-Disposition"] = "attachment; filename=families.ped"
+        response["Expires"] = "0"
+
+        return response
+
     def post(self, request: Request, dataset_id: str) -> Response:
         """Return full family data for a specified study and tags."""
         data = request.data
