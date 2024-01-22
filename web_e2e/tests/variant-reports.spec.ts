@@ -129,37 +129,6 @@ test.describe('Variant reports tests', () => {
     await expect(page.locator('#tags-modal-content')).not.toBeVisible();
   });
 
-  [
-    {tag: tags[0], expectedPedigreeCounts: ['877', '789', '500', '128', '107', '106', '6', '3']},
-    {tag: tags[1], expectedPedigreeCounts: ['877', '789', '128', '107']},
-    {tag: tags[5], expectedPedigreeCounts: ['6', '3']},
-    {tag: tags[15], expectedPedigreeCounts: ['128', '107', '106']}
-  ].forEach(data => {
-    test(`should check pedigree by filtering with single tag ${data.tag}`, async({ page }) => {
-      await page.getByText('Families by pedigree').click();
-      await page.getByText('Select tags').click();
-      await page.locator(`#${data.tag}-tag-add`).click();
-      await page.mouse.click(0, 0); // close modal
-
-      await expect(page.locator('.pedigree-cell')).toHaveCount(data.expectedPedigreeCounts.length);
-      await Promise.all(data.expectedPedigreeCounts.map(async(count, i) => {
-        await expect(page.locator('.pedigree-cell').nth(i)).toHaveText(count);
-      }));
-    });
-  });
-
-
-  [tags[4], tags[9], tags[12]].forEach(data => {
-    test(`should show nothing found when searching tags with ${data}`, async({ page }) => {
-      await page.getByText('Families by pedigree').click();
-      await page.getByText('Select tags').click();
-      await page.locator(`#${data}-tag-add`).click();
-      await page.mouse.click(0, 0); // close modal
-
-      await expect(page.locator('#nothing-found')).toBeVisible();
-    });
-  });
-
   test('should test clear all filters', async({ page }) => {
     await page.getByText('Families by pedigree').click();
     await page.getByText('Select tags').click();
@@ -189,11 +158,11 @@ test.describe('Variant reports tests', () => {
   });
 
   [
-    {selectedTags: [tags[2], tags[3]], expectedPedigreeCounts: ['500', '106']},
-    {selectedTags: [tags[0], tags[3], tags[15]], expectedPedigreeCounts: ['128', '107', '106']},
-    {selectedTags: [tags[3], tags[8], tags[13], tags[14]], expectedPedigreeCounts: ['877', '789']}
+    {selectedTags: [tags[14]], deselectedTags: [tags[2]], expectedPedigreeCounts: ['877', '789']},
+    {selectedTags: [tags[8], tags[13]], deselectedTags: [tags[14]], expectedPedigreeCounts: ['128', '107']}
   ].forEach(data => {
-    test(`should select tags ${data.selectedTags.join()} and check pedigrees`, async({ page }) => {
+    test(`should select tags ${data.selectedTags.join()} and
+      deselect tags ${data.deselectedTags.join()}`, async({ page }) => {
       await page.getByText('Families by pedigree').click();
       await page.getByText('Select tags').click();
 
@@ -202,6 +171,13 @@ test.describe('Variant reports tests', () => {
         await page.locator(`#${tag}-tag-add`).click();
         // eslint-disable-next-line no-await-in-loop
         await expect(page.locator('#selected-tags-list')).toContainText(tag);
+      }
+
+      for (const tag of data.deselectedTags) {
+        // eslint-disable-next-line no-await-in-loop
+        await page.locator(`#${tag}-tag-remove`).click();
+        // eslint-disable-next-line no-await-in-loop
+        await expect(page.locator('#selected-tags-list')).toContainText('not ' + tag);
       }
       await page.mouse.click(0, 0); // close modal
 
@@ -213,10 +189,11 @@ test.describe('Variant reports tests', () => {
   });
 
   [
-    {selectedTags: [tags[5], tags[9]], expectedPedigreeCounts: []},
-    {selectedTags: [tags[3], tags[7], tags[8], tags[13], tags[14]], expectedPedigreeCounts: []}
+    {selectedTags: [tags[8], tags[14]], deselectedTags: [tags[6], tags[10]]},
+    {selectedTags: [tags[5], tags[9]], deselectedTags: [tags[1], tags[7]]},
   ].forEach(data => {
-    test(`should select tags ${data.selectedTags.join()} and check if nothing found is shown`, async({ page }) => {
+    test(`should select tags ${data.selectedTags.join()} and 
+      deselect tags ${data.deselectedTags.join()} and check if nothing found is shown`, async({ page }) => {
       await page.getByText('Families by pedigree').click();
       await page.getByText('Select tags').click();
 
@@ -226,6 +203,62 @@ test.describe('Variant reports tests', () => {
         // eslint-disable-next-line no-await-in-loop
         await expect(page.locator('#selected-tags-list')).toContainText(tag);
       }
+
+      for (const tag of data.deselectedTags) {
+        // eslint-disable-next-line no-await-in-loop
+        await page.locator(`#${tag}-tag-remove`).click();
+        // eslint-disable-next-line no-await-in-loop
+        await expect(page.locator('#selected-tags-list')).toContainText('not ' + tag);
+      }
+
+      await page.mouse.click(0, 0); // close modal
+
+      await expect(page.locator('#nothing-found')).toBeVisible();
+    });
+  });
+
+  [
+    {selectedTag: tags[14], deselectedTag: tags[1], expectedPedigreeCounts: ['877', '789', '500', '106', '6', '3']},
+    {selectedTag: tags[2], deselectedTag: tags[3], expectedPedigreeCounts: ['500', '106', '6', '3']},
+  ].forEach(data => {
+    test(`should check Or mode with selected ${data.selectedTag}
+      and deselected ${data.deselectedTag}`, async({ page }) => {
+      await page.getByText('Families by pedigree').click();
+      await page.getByText('Select tags').click();
+      await page.getByText('Or').click();
+
+
+      await page.locator(`#${data.selectedTag}-tag-add`).click();
+      await expect(page.locator('#selected-tags-list')).toContainText(data.selectedTag);
+
+      await page.locator(`#${data.deselectedTag}-tag-remove`).click();
+      await expect(page.locator('#selected-tags-list')).toContainText('not ' + data.deselectedTag);
+
+      await page.mouse.click(0, 0); // close modal
+
+      await expect(page.locator('.pedigree-cell')).toHaveCount(data.expectedPedigreeCounts.length);
+      await Promise.all(data.expectedPedigreeCounts.map(async(count, i) => {
+        await expect(page.locator('.pedigree-cell').nth(i)).toHaveText(count);
+      }));
+    });
+  });
+
+  [
+    {selectedTag: tags[4], deselectedTag: tags[0]},
+    {selectedTag: tags[17], deselectedTag: tags[11]},
+  ].forEach(data => {
+    test(`should check Or mode with selected ${data.selectedTag}
+    and deselected ${data.deselectedTag} and check if nothing found is shown`, async({ page }) => {
+      await page.getByText('Families by pedigree').click();
+      await page.getByText('Select tags').click();
+
+      await page.locator(`#${data.selectedTag}-tag-add`).click();
+      await expect(page.locator('#selected-tags-list')).toContainText(data.selectedTag);
+
+      await page.locator(`#${data.deselectedTag}-tag-remove`).click();
+      await expect(page.locator('#selected-tags-list')).toContainText('not ' + data.deselectedTag);
+
+      await page.getByText('Or').click();
 
       await page.mouse.click(0, 0); // close modal
 
@@ -288,8 +321,8 @@ test.describe('Variant reports download tests', () => {
 
       const fixtureData = scanCSV(await download.path(), {sep: '\t'});
       const downloadData = scanCSV(`playwright/fixtures/variant-reports/families${cell.index}.ped`, {sep: '\t'});
-      const fixtureFrame = await fixtureData.select(cell.columnsToCheck).collect();
-      const downloadFrame = await downloadData.select(cell.columnsToCheck).collect();
+      const fixtureFrame = (await fixtureData.select(cell.columnsToCheck).collect()).sort('familyId');
+      const downloadFrame = (await downloadData.select(cell.columnsToCheck).collect()).sort('familyId');
       expect(fixtureFrame.toString()).toEqual(downloadFrame.toString());
     });
   });
