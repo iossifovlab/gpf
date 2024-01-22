@@ -399,7 +399,8 @@ class StudyWrapper(StudyWrapperBase):
                 "study wrapper (%s) creating query_result_variants...",
                 self.name)
             variants_result = \
-                self.genotype_data_study.query_result_variants(**kwargs)
+                self.genotype_data_study.query_result_variants(
+                    limit=max_variants_count, **kwargs)
             if variants_result is None:
                 return
 

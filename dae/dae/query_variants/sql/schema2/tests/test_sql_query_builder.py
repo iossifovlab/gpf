@@ -101,20 +101,13 @@ def family_schema_simple() -> dict[str, str]:
 
 
 @pytest.fixture
-def db_layout_simple(
-    pedigree_schema_simple: dict[str, str],
-    summary_schema_simple: dict[str, str],
-    family_schema_simple: dict[str, str],
-) -> Db2Layout:
+def db_layout_simple() -> Db2Layout:
     db_layout = Db2Layout(
         db="test_db",
         study="test_vcf",
         pedigree="test_vcf_pedigree",
-        pedigree_schema=pedigree_schema_simple,
         summary="test_vcf_summary",
-        summary_schema=summary_schema_simple,
         family="test_vcf_family",
-        family_schema=family_schema_simple,
         meta="test_vcf_meta",
     )
     return db_layout
@@ -142,11 +135,17 @@ def t4c8_gene_models(tmp_path: pathlib.Path) -> GeneModels:
 @pytest.fixture
 def sql_query_builder_simple(
     db_layout_simple: Db2Layout,
+    pedigree_schema_simple: dict[str, str],
+    summary_schema_simple: dict[str, str],
+    family_schema_simple: dict[str, str],
     families_simple: FamiliesData,
     t4c8_gene_models: GeneModels,
 ) -> SqlQueryBuilder:
     sql_query_builder = SqlQueryBuilder(
         db_layout_simple,
+        pedigree_schema_simple,
+        summary_schema_simple,
+        family_schema_simple,
         None,
         families_simple,
         t4c8_gene_models,
@@ -298,42 +297,6 @@ def test_build_gene_query_where(
     expr = parse_one(query, read="duckdb")
     assert expr
 
-    # tables = {
-    #     "test_vcf_summary": [
-    #         {
-    #             "bucket_index": 1,
-    #             "summary_index": 1,
-    #             "allele_index": 1,
-    #             "chromosome": "chr1",
-    #             "position": 10,
-    #             "end_position": None,
-    #             "effect_gene": [
-    #                 {"effect_gene_symbols": "t4", "effect_types": "missense"}
-    #             ],
-    #             "summary_variant_data": "summary_1",
-    #         },
-
-    #         {
-    #             "bucket_index": 1,
-    #             "summary_index": 2,
-    #             "allele_index": 1,
-    #             "chromosome": "chr1",
-    #             "position": 120,
-    #             "end_position": None,
-    #             "effect_gene": [
-    #                 {"effect_gene_symbols": "c8", "effect_types": "missense"}
-    #             ],
-    #             "summary_variant_data": "summary_2",
-    #         },
-    #     ],
-    # }
-    # result = execute(
-    #     query,
-    #     read="duckdb",
-    #     tables=tables)
-
-    # assert len(result) == 1
-
 
 def test_sqlglot_nested_schema_experiments() -> None:
     table_schema = {
@@ -346,6 +309,3 @@ def test_sqlglot_nested_schema_experiments() -> None:
     schema = ensure_schema(table_schema)
     assert schema
     assert schema.column_names("test") == ["a", "b", "c"]
-
-    # assert schema.get_column_type("test", "a") == exp.DataType.Type.BIGINT
-    # assert schema.get_column_type("test", "b") == exp.DataType.Type.ARRAY

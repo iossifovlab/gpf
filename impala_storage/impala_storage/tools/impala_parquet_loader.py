@@ -89,7 +89,7 @@ def main(argv=None, gpf_instance=None):
     )
     if not genotype_storage or \
             (genotype_storage
-             and genotype_storage.get_storage_type() != "impala"):
+             and genotype_storage.storage_type != "impala"):
         print("missing or non-impala genotype storage")
         return
 

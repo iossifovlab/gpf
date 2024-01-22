@@ -193,7 +193,7 @@ def denovo_fixture(
 
     project_config_update = {
         "destination": {
-            "storage_type": genotype_storage.get_storage_type()
+            "storage_type": genotype_storage.storage_type
         },
         "partition_description": {
             "coding_bin": {

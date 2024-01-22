@@ -15,7 +15,7 @@ class ImpalaDatasetHelpers(DatasetHelpers):
     def is_impala_genotype_storage(self, dataset_id):
         """Check if genotype storage is an impala genotype storage."""
         genotype_storage = self.get_genotype_storage(dataset_id)
-        return "impala" in genotype_storage.get_storage_type()
+        return "impala" in genotype_storage.get_storage_types()
 
     def check_dataset_hdfs_directories(self, genotype_storage, dataset_id):
         """Check if a dataset HDFS directories are OK.
@@ -25,8 +25,8 @@ class ImpalaDatasetHelpers(DatasetHelpers):
         # pylint: disable=too-many-return-statements
         logger.info(
             "genotype storage of study %s should be impala: %s",
-            dataset_id, genotype_storage.get_storage_type())
-        if "impala" not in genotype_storage.get_storage_type():
+            dataset_id, genotype_storage.get_storage_types())
+        if "impala" not in genotype_storage.get_storage_types():
             return None
 
         hdfs_helpers = genotype_storage.hdfs_helpers
@@ -155,7 +155,7 @@ class ImpalaDatasetHelpers(DatasetHelpers):
         """Recreate impala tables for a dataset."""
         genotype_storage = self.get_genotype_storage(old_id)
 
-        assert genotype_storage.get_storage_type() == "impala"
+        assert genotype_storage.storage_type == "impala"
         if not dry_run:
             assert self.check_dataset_hdfs_directories(
                 genotype_storage, new_id)

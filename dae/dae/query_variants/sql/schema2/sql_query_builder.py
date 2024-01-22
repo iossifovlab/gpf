@@ -29,11 +29,8 @@ class Db2Layout:
     db: str
     study: str
     pedigree: str
-    pedigree_schema: dict[str, str]
     summary: str
-    summary_schema: dict[str, str]
     family: str
-    family_schema: dict[str, str]
     meta: str
 
 
@@ -47,12 +44,18 @@ class SqlQueryBuilder:
     def __init__(
         self,
         db_layout: Db2Layout,
+        pedigree_schema: dict[str, str],
+        summary_schema: dict[str, str],
+        family_schema: dict[str, str],
         partition_descriptor: Optional[PartitionDescriptor],
         families: FamiliesData,
         gene_models: Optional[GeneModels] = None,
         reference_genome: Optional[ReferenceGenome] = None,
     ):
         self.db_layout = db_layout
+        self.pedigree_schema = pedigree_schema
+        self.summary_schema = summary_schema
+        self.family_schema = family_schema
         self.partition_descriptor = partition_descriptor
 
         self.families = families
@@ -120,7 +123,7 @@ class SqlQueryBuilder:
                 where_parts.append(self._build_gene_where(genes))
             if effect_types is not None:
                 where_parts.append(self._build_effect_type_where(effect_types))
-            eg_where = " AND ".join(where_parts)
+            eg_where = " AND ".join([wp for wp in where_parts if wp])
             eg_join_clause = textwrap.dedent(f"""
                 CROSS JOIN
                     (SELECT UNNEST (effect_gene) as eg)
@@ -176,7 +179,7 @@ class SqlQueryBuilder:
 
         summary_where = ""
         if where_parts:
-            where = " AND ".join(where_parts)
+            where = " AND ".join([wp for wp in where_parts if wp])
             summary_where = textwrap.dedent(f"""WHERE
                 {where}
             """)
@@ -272,7 +275,7 @@ class SqlQueryBuilder:
 
         where = []
         for attr_name, attr_range in real_attr_filter:
-            if attr_name not in self.db_layout.summary_schema:
+            if attr_name not in self.summary_schema:
                 where.append("false")
                 continue
 
@@ -334,10 +337,10 @@ class SqlQueryBuilder:
             return where_parts
         if effect_types is None:
             return where_parts
-        if "coding_bin" not in self.db_layout.summary_schema:
+        if "coding_bin" not in self.summary_schema:
             return where_parts
-        assert "coding_bin" in self.db_layout.summary_schema
-        assert "coding_bin" in self.db_layout.family_schema
+        assert "coding_bin" in self.summary_schema
+        assert "coding_bin" in self.family_schema
 
         assert effect_types is not None
         query_effect_types = set(effect_types)
@@ -416,10 +419,10 @@ class SqlQueryBuilder:
             return where_parts
         if not ultra_rare and frequency_filter is None:
             return where_parts
-        if "frequency_bin" not in self.db_layout.summary_schema:
+        if "frequency_bin" not in self.summary_schema:
             return where_parts
-        assert "frequency_bin" in self.db_layout.summary_schema
-        assert "frequency_bin" in self.db_layout.family_schema
+        assert "frequency_bin" in self.summary_schema
+        assert "frequency_bin" in self.family_schema
 
         frequency_bins: set[int] = set([0])  # always search de Novo variants
         if ultra_rare is not None and ultra_rare:
@@ -459,6 +462,7 @@ class SqlQueryBuilder:
         return_reference: Optional[bool] = None,
         return_unknown: Optional[bool] = None,
         limit: Optional[int] = None,
+        **kwargs: Any
     ) -> str:
         summary_subclause = self._build_summary_subclause(
             regions=regions,
@@ -501,9 +505,9 @@ class SqlQueryBuilder:
             {family_subclause}
             SELECT
                 fa.bucket_index, fa.summary_index, fa.family_index,
-                list(sa.allele_index),
-                first(sa.summary_variant_data),
-                first(fa.family_variant_data)
+                sa.allele_index,
+                sa.summary_variant_data,
+                fa.family_variant_data
             FROM
                 summary as sa
             JOIN
@@ -513,7 +517,6 @@ class SqlQueryBuilder:
                 fa.bucket_index = sa.bucket_index AND
                 fa.allele_index = sa.allele_index)
             {effect_gene_join_clause}
-            GROUP BY fa.bucket_index, fa.summary_index, fa.family_index
             {limit_clause}
         """
         sqlglot.pretty = True
@@ -560,7 +563,7 @@ class SqlQueryBuilder:
 
         family_where = ""
         if where_parts:
-            where = " AND ".join(where_parts)
+            where = " AND ".join([wp for wp in where_parts if wp])
             family_where = textwrap.dedent(f"""WHERE
                 {where}
             """)

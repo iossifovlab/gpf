@@ -42,8 +42,8 @@ class Impala2GenotypeStorage(GenotypeStorage):
         self._impala_helpers: Optional[ImpalaHelpers] = None
 
     @classmethod
-    def get_storage_type(cls) -> str:
-        return "impala2"
+    def get_storage_types(cls) -> set[str]:
+        return {"impala2"}
 
     def start(self) -> Impala2GenotypeStorage:
         return self

@@ -34,7 +34,7 @@ def impala_genotype_storage():
 
 
 def test_storage_type(impala_genotype_storage):
-    assert impala_genotype_storage.get_storage_type() == "impala"
+    assert impala_genotype_storage.storage_type == "impala"
 
 
 def test_impala_helpers(impala_genotype_storage):

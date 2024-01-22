@@ -204,7 +204,7 @@ def denovo_project_to_parquet(
 
     project_config_update = {
         "destination": {
-            "storage_type": genotype_storage.get_storage_type()
+            "storage_type": genotype_storage.storage_type
         },
         "partition_description": {
             "frequency_bin": {

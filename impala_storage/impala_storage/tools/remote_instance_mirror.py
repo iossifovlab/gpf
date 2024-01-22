@@ -86,7 +86,7 @@ def update_genotype_storage_config(config_dict, rsync_helpers, **kwargs):
     default_storage = storage_registry.get_default_genotype_storage()
     if default_storage is None:
         raise ValueError("default genotype storage not configured")
-    if default_storage.get_storage_type() != "impala":
+    if default_storage.storage_type != "impala":
         raise ValueError("this works only for impala storage")
     storage = copy.deepcopy(default_storage.storage_config)
 

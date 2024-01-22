@@ -304,7 +304,7 @@ def _select_storages_by_type(
     storages = {}
     for storage_id in GENOTYPE_STORAGE_REGISTRY.get_all_genotype_storage_ids():
         storage = GENOTYPE_STORAGE_REGISTRY.get_genotype_storage(storage_id)
-        if storage.get_storage_type() in storage_types:
+        if storage.storage_type in storage_types:
             storages[storage_id] = storage
     return storages
 
@@ -439,7 +439,7 @@ def _generate_genotype_storage_fixtures(metafunc: pytest.Metafunc) -> None:
         if marked_types:
             result = {}
             for storage_id, storage in GENOTYPE_STORAGES.items():
-                if storage.get_storage_type() in marked_types:
+                if storage.storage_type in marked_types:
                     result[storage_id] = storage
 
             storages = result

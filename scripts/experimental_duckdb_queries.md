@@ -446,3 +446,79 @@ WHERE
 └──────────────┘
 Run Time (s): real 0.064 user 0.428915 sys 0.479439
 ```
+
+## Experimental summary variants query
+
+```sql
+WITH summary AS (
+    SELECT
+        *
+    FROM
+        AGRE_WG38_CSHL_859_SCHEMA2_summary sa
+    WHERE
+        ( sa.region_bin IN ('chr14_0')) AND
+        ( sa.chromosome = 'chr14' AND NOT ( COALESCE(sa.end_position, sa.position) < 21365194 OR sa.position > 21457298 ) ) AND sa.allele_index > 0
+)
+
+SELECT
+    bucket_index, summary_index,
+    list(allele_index), first(summary_variant_data)
+FROM summary
+
+CROSS JOIN
+    (SELECT UNNEST (effect_gene) as eg)
+WHERE
+    eg.effect_gene_symbols in ('CHD8')
+GROUP BY bucket_index, summary_index
+LIMIT 5;
+```
+
+```sql
+WITH summary AS (
+    SELECT
+        *
+    FROM
+        AGRE_WG38_CSHL_859_SCHEMA2_summary sa
+    WHERE
+        ( sa.region_bin IN ('chr14_0')) AND
+        ( sa.chromosome = 'chr14' AND NOT ( COALESCE(sa.end_position, sa.position) < 21365194 OR sa.position > 21457298 ) ) AND sa.allele_index > 0
+)
+
+SELECT
+    bucket_index, summary_index,
+    list(allele_index), first(summary_variant_data)
+FROM summary
+
+CROSS JOIN
+    (SELECT UNNEST (effect_gene) as eg)
+WHERE
+    eg.effect_gene_symbols in ('CHD8')
+GROUP BY bucket_index, summary_index
+LIMIT 500;
+```
+
+
+```sql
+WITH summary AS (
+    SELECT
+        *
+    FROM
+        AGRE_WG38_CSHL_859_SCHEMA2_summary sa
+    WHERE
+        ( sa.region_bin IN ('chr14_0')) AND
+        ( sa.coding_bin IN (1)) AND
+        ( sa.chromosome = 'chr14' AND NOT ( COALESCE(sa.end_position, sa.position) < 21365194 OR sa.position > 21457298 ) ) AND sa.allele_index > 0
+)
+
+SELECT
+    bucket_index, summary_index,
+    list(allele_index), first(summary_variant_data)
+FROM summary
+
+CROSS JOIN
+    (SELECT UNNEST (effect_gene) as eg)
+WHERE
+    eg.effect_gene_symbols in ('CHD8')
+GROUP BY bucket_index, summary_index
+LIMIT 500;
+```

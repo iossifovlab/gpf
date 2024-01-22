@@ -49,7 +49,7 @@ def test_query_summary_variants(
 
 
 def test_storage_type(filesystem_genotype_storage):
-    assert filesystem_genotype_storage.get_storage_type() == "inmemory"
+    assert filesystem_genotype_storage.storage_type == "inmemory"
 
 
 @pytest.mark.parametrize(
@@ -109,7 +109,7 @@ def test_create_wrong_storage_type():
             ValueError,
             match=re.escape(
                 "storage configuration for <filesystem2> passed to "
-                "genotype storage class type <inmemory>")):
+                "genotype storage class type <{'inmemory'}>")):
         InmemoryGenotypeStorage(config)
 
 

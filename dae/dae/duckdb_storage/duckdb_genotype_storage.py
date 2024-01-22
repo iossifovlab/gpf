@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 import re
 import logging
-from typing import Any, cast, Optional
+from typing import Any, cast, Optional, Union
 from contextlib import closing
 
 import duckdb
@@ -17,6 +17,7 @@ from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.schema2_storage.schema2_import_storage import Schema2DatasetLayout
 from dae.duckdb_storage.duckdb_variants import DuckDbVariants
+from dae.duckdb_storage.duckdb2_variants import DuckDb2Variants, Db2Layout
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +46,7 @@ class DuckDbGenotypeStorage(GenotypeStorage):
     """Defines DuckDb genotype storage."""
 
     VALIDATION_SCHEMA = {
-        "storage_type": {"type": "string", "allowed": ["duckdb"]},
+        "storage_type": {"type": "string", "allowed": ["duckdb", "duckdb2"]},
         "id": {
             "type": "string", "required": True
         },
@@ -90,8 +91,8 @@ class DuckDbGenotypeStorage(GenotypeStorage):
         return result
 
     @classmethod
-    def get_storage_type(cls) -> str:
-        return "duckdb"
+    def get_storage_types(cls) -> set[str]:
+        return {"duckdb", "duckdb2"}
 
     def start(self) -> DuckDbGenotypeStorage:
         if self.connection_factory:
@@ -329,7 +330,7 @@ class DuckDbGenotypeStorage(GenotypeStorage):
     def build_backend(
             self, study_config: dict,
             genome: ReferenceGenome,
-            gene_models: GeneModels) -> DuckDbVariants:
+            gene_models: GeneModels) -> Union[DuckDbVariants, DuckDb2Variants]:
         tables = study_config["genotype_storage"]["tables"]
         pedigree = self._base_dir_join_parquet_scan_or_table(
             tables["pedigree"])
@@ -364,11 +365,34 @@ class DuckDbGenotypeStorage(GenotypeStorage):
         #         f"duckdb genotype storage not started in read-only mode: "
         #         f"{self.storage_config}")
 
-        return DuckDbVariants(
-            self.connection_factory,
-            db_name,
-            tables_layout.family,
-            tables_layout.summary,
-            tables_layout.pedigree,
-            tables_layout.meta,
-            gene_models)
+        if self.storage_type == "duckdb":
+            return DuckDbVariants(
+                self.connection_factory,
+                db_name,
+                tables_layout.family,
+                tables_layout.summary,
+                tables_layout.pedigree,
+                tables_layout.meta,
+                gene_models)
+
+        if self.storage_type == "duckdb2":
+            db_layout = Db2Layout(
+                db=db_name,
+                study=study_config["id"],
+                pedigree=tables_layout.pedigree,
+                summary=tables_layout.summary,
+                family=tables_layout.family,
+                meta=tables_layout.meta,
+            )
+
+            assert db_layout is not None
+            connection = duckdb.connect(db_name, read_only=True)
+            return DuckDb2Variants(
+                connection,
+                db_layout,
+                gene_models,
+                genome,
+            )
+
+        raise ValueError(
+            f"Unsuported DuckDb storage type: {self.storage_type}")

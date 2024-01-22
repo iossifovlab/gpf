@@ -437,7 +437,7 @@ class ImportProject():
             gpf_instance = self.get_gpf_instance()
             storage: GenotypeStorage = gpf_instance\
                 .genotype_storages.get_default_genotype_storage()
-            return storage.get_storage_type()
+            return storage.storage_type
 
         destination = self.import_config["destination"]
         if "storage_id" in destination:
@@ -446,7 +446,7 @@ class ImportProject():
             storage = gpf_instance\
                 .genotype_storages\
                 .get_genotype_storage(storage_id)
-            return storage.get_storage_type()
+            return storage.storage_type
 
         return cast(str, destination["storage_type"])
 
