@@ -189,7 +189,7 @@ class FamiliesDataDownloadView(QueryDatasetView):
         return FamiliesData.from_families(result)
 
     def get(self, _request: Request, dataset_id: str) -> Response:
-        """Return full family data for a specified study and tags."""
+        """Return full family data for a specified study."""
         if not dataset_id:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
