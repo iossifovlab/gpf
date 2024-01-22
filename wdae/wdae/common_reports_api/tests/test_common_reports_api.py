@@ -241,3 +241,26 @@ def test_families_data_download_no_permissions(user_client: Client) -> None:
 
     assert response
     assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+def test_families_data_all_download(admin_client: Client) -> None:
+    url = "/api/v3/common_reports/families_data/Study1"
+    response = admin_client.get(url)
+
+    assert response
+    assert response.status_code == status.HTTP_200_OK
+
+    streaming_content = list(response.streaming_content)  # type: ignore
+    assert streaming_content
+
+    assert len(streaming_content) == 34
+
+
+def test_families_data_all_download_no_permissions(
+    user_client: Client
+) -> None:
+    url = "/api/v3/common_reports/families_data/study4"
+    response = user_client.get(url)
+
+    assert response
+    assert response.status_code == status.HTTP_403_FORBIDDEN
