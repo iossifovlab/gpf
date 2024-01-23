@@ -14,15 +14,15 @@ th {
   vertical-align: middle;
 }
 
-.datasets-table th {
-  height: unset;
-  vertical-align: unset;
-}
-
 th,
 td {
   text-align: left;
   padding: 12px;
+}
+
+.datasets-table th {
+  height: unset;
+  vertical-align: unset;
 }
 
 .datasets-table th,
