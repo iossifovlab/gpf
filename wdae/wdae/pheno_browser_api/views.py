@@ -156,8 +156,14 @@ class PhenoMeasuresDownload(QueryDatasetView):
 
         for values_dict in values_iterator:
             output = [values_dict[header[0]]]
+            all_null = True
             for col in header[1:]:
-                output.append(values_dict[col])
+                value = values_dict[col]
+                if value is not None:
+                    all_null = False
+                output.append(value)
+            if all_null:
+                continue
             writer.writerow(output)
             yield buffer.getvalue()
             buffer.seek(0)
