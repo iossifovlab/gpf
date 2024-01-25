@@ -3,6 +3,7 @@ import logging
 import csv
 from io import StringIO
 from typing import Generator, Union
+from django.http import QueryDict
 
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -172,20 +173,25 @@ class PhenoMeasuresDownload(QueryDatasetView):
         buffer.close()
 
     def head(self, request: Request) -> Response:
-        data = request.data
-        if "queryData" in data:
-            data = parse_query_params(data)
+        data = dict(
+            zip(
+                request.query_params.keys(),
+                request.query_params.values()
+            )
+        )
+        data = {key: value for key, value in data.items() if value}
+
         if "dataset_id" not in data:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         dataset_id = data["dataset_id"]
 
         dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
+
         if not dataset or dataset.phenotype_data is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         search_term = data.get("search_term", None)
         instrument = data.get("instrument", None)
-
         if (instrument is not None
                 and instrument not in dataset.phenotype_data.instruments):
             return Response(status=status.HTTP_404_NOT_FOUND)
