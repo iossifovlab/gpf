@@ -20,34 +20,6 @@ from dae.query_variants.sql.schema2.sql_query_builder import \
     RealAttrFilterType
 
 
-def test_summary_query_builder() -> None:
-    sql = """
-WITH summary AS (
-SELECT *
-  FROM
-    summary_table AS sa
-  WHERE
-    ( sa.region_bin IN ('chr14_0')) AND
-    ( ( sa.chromosome = 'chr14' AND
-      ((sa.position >= 21365194 AND sa.position <= 21457298) OR
-       (COALESCE(sa.end_position, -1) >= 21365194 AND
-        COALESCE(sa.end_position, -1) <= 21457298) OR
-       (21365194 >= sa.position AND
-        21457298 <= COALESCE(sa.end_position, -1)))
-    ) ) AND
-    ( sa.allele_index > 0 )
-)
-SELECT count(*)
-FROM summary
-CROSS JOIN
-    (SELECT UNNEST (summary.effect_gene) as eg)
-WHERE
-    eg.effect_gene_symbols in ('CHD8');
-    """
-    expr = parse_one(sql)
-    assert expr
-
-
 @pytest.fixture
 def pedigree_schema_simple() -> dict[str, str]:
     schema: dict[str, str] = {}
@@ -164,8 +136,8 @@ def test_summary_query_builder_simple(
 
 @pytest.mark.parametrize(
     "gene,expected", [
-        ("t4", "chr1:4-86"),
-        ("c8", "chr1:99-206"),
+        ("t4", "chr1:5-85"),
+        ("c8", "chr1:100-205"),
     ]
 )
 def test_build_gene_regions_heuristic(
@@ -175,7 +147,7 @@ def test_build_gene_regions_heuristic(
 ) -> None:
     genes = [gene]
     regions = None
-    sql_query_builder_simple.GENE_REGIONS_HEURISTIC_EXTEND = 2
+    sql_query_builder_simple.GENE_REGIONS_HEURISTIC_EXTEND = 0
     result = sql_query_builder_simple._build_gene_regions_heuristic(
         genes, regions
     )
@@ -293,7 +265,6 @@ def test_build_gene_query_where(
         genes=["t4"], effect_types=["missense"]
     )
     print(query)
-
     expr = parse_one(query, read="duckdb")
     assert expr
 

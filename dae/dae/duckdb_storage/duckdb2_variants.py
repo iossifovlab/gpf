@@ -22,6 +22,8 @@ from dae.variants.variant import SummaryVariantFactory, SummaryVariant
 from dae.variants.family_variant import FamilyVariant
 from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.query_variants.query_runners import QueryRunner, QueryResult
+from dae.inmemory_storage.raw_variants import RawFamilyVariants
+
 from dae.query_variants.sql.schema2.sql_query_builder import Db2Layout, \
     SqlQueryBuilder
 
@@ -231,6 +233,12 @@ class DuckDb2Variants(QueryVariantsBase):
         **kwargs: Any
     ) -> QueryRunner:
         """Create query runner for searching summary variants."""
+        if limit is None or limit < 0:
+            query_limit = None
+            limit = -1
+        else:
+            query_limit = 10 * limit
+
         query = self.query_builder.build_summary_variants_query(
             regions=regions,
             genes=genes,
@@ -241,12 +249,27 @@ class DuckDb2Variants(QueryVariantsBase):
             frequency_filter=frequency_filter,
             return_reference=return_reference,
             return_unknown=return_unknown,
-            limit=limit,
+            limit=query_limit,
         )
         runner = self.RUNNER_CLASS(
             connection_factory=self.connection,
             query=query,
             deserializer=self._deserialize_summary_variant)
+
+        filter_func = RawFamilyVariants.summary_variant_filter_function(
+            regions=regions,
+            genes=genes,
+            effect_types=effect_types,
+            variant_type=variant_type,
+            real_attr_filter=real_attr_filter,
+            ultra_rare=ultra_rare,
+            frequency_filter=frequency_filter,
+            return_reference=return_reference,
+            return_unknown=return_unknown,
+            limit=limit,
+            seen=set())
+
+        runner.adapt(filter_func)
 
         return runner
 
@@ -265,6 +288,12 @@ class DuckDb2Variants(QueryVariantsBase):
         **kwargs: Any
     ) -> Generator[SummaryVariant, None, None]:
         """Execute the summary variants query and yields summary variants."""
+        if limit is None or limit < 0:
+            query_limit = None
+            limit = -1
+        else:
+            query_limit = 10 * limit
+
         runner = self.build_summary_variants_query_runner(
             regions=regions,
             genes=genes,
@@ -275,7 +304,7 @@ class DuckDb2Variants(QueryVariantsBase):
             frequency_filter=frequency_filter,
             return_reference=return_reference,
             return_unknown=return_unknown,
-            limit=limit,
+            limit=query_limit,
         )
 
         result = QueryResult(runners=[runner], limit=limit)
@@ -286,6 +315,9 @@ class DuckDb2Variants(QueryVariantsBase):
                 if v is None:
                     continue
                 yield v
+                limit -= 1
+                if limit == 0:
+                    break
 
     def build_family_variants_query_runner(
         self,
@@ -311,6 +343,12 @@ class DuckDb2Variants(QueryVariantsBase):
     ) -> QueryRunner:
         # pylint: disable=too-many-arguments
         """Create a query runner for searching family variants."""
+        if limit is None or limit < 0:
+            query_limit = None
+            limit = -1
+        else:
+            query_limit = 10 * limit
+
         query = self.query_builder.build_family_variants_query(
             regions=regions,
             genes=genes,
@@ -326,7 +364,7 @@ class DuckDb2Variants(QueryVariantsBase):
             frequency_filter=frequency_filter,
             return_reference=return_reference,
             return_unknown=return_unknown,
-            limit=limit,
+            limit=query_limit,
             pedigree_fields=pedigree_fields
         )
         logger.info("FAMILY VARIANTS QUERY:\n%s", query)
@@ -337,6 +375,26 @@ class DuckDb2Variants(QueryVariantsBase):
             connection_factory=self.connection,
             query=query,
             deserializer=deserialize_row)
+
+        filter_func = RawFamilyVariants.family_variant_filter_function(
+            regions=regions,
+            genes=genes,
+            effect_types=effect_types,
+            family_ids=family_ids,
+            person_ids=person_ids,
+            inheritance=inheritance,
+            roles=roles,
+            sexes=sexes,
+            variant_type=variant_type,
+            real_attr_filter=real_attr_filter,
+            ultra_rare=ultra_rare,
+            frequency_filter=frequency_filter,
+            return_reference=return_reference,
+            return_unknown=return_unknown,
+            limit=limit,
+            seen=set())
+
+        runner.adapt(filter_func)
         return runner
 
     def query_variants(
@@ -362,6 +420,12 @@ class DuckDb2Variants(QueryVariantsBase):
     ) -> Generator[FamilyVariant, None, None]:
         # pylint: disable=too-many-arguments
         """Execute the family variants query and yields family variants."""
+        if limit is None or limit < 0:
+            query_limit = None
+            limit = -1
+        else:
+            query_limit = 10 * limit
+
         runner = self.build_family_variants_query_runner(
             regions=regions,
             genes=genes,
@@ -377,7 +441,7 @@ class DuckDb2Variants(QueryVariantsBase):
             frequency_filter=frequency_filter,
             return_reference=return_reference,
             return_unknown=return_unknown,
-            limit=limit,
+            limit=query_limit,
             pedigree_fields=pedigree_fields
         )
         result = QueryResult(runners=[runner], limit=limit)
@@ -388,6 +452,9 @@ class DuckDb2Variants(QueryVariantsBase):
                 if v is None:
                     continue
                 yield v
+                limit -= 1
+                if limit == 0:
+                    break
 
     @staticmethod
     def build_person_set_collection_query(

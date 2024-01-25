@@ -768,3 +768,20 @@ WHERE
 eg.effect_types = 'missense'
 LIMIT 10;
 ```
+
+
+```sql
+SELECT COUNT(*) FROM AGRE_WG38_CSHL_859_SCHEMA2_summary
+CROSS JOIN (
+  SELECT
+    UNNEST(effect_gene) AS eg
+)
+```
+
+```sql
+SELECT effect_gene FROM AGRE_WG38_CSHL_859_SCHEMA2_summary WHERE length(effect_gene) > 10 LIMIT 10;
+```
+
+```sql
+select count(*) from AGRE_WG38_CSHL_859_SCHEMA2_summary where length(effect_gene) = 0;
+```

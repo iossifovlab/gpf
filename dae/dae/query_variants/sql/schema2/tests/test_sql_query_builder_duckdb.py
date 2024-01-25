@@ -8,13 +8,14 @@ import pytest
 import duckdb
 
 from dae.utils.regions import Region
+
 from dae.query_variants.sql.schema2.sql_query_builder import Db2Layout
+from dae.query_variants.sql.schema2.sql_query_builder import SqlQueryBuilder
 
 from dae.duckdb_storage.duckdb_genotype_storage import DuckDbGenotypeStorage
 from dae.genotype_storage.genotype_storage_registry import \
     get_genotype_storage_factory
-
-from dae.query_variants.sql.schema2.sql_query_builder import SqlQueryBuilder
+from dae.duckdb_storage.duckdb2_variants import DuckDb2Variants
 
 from dae.gpf_instance import GPFInstance
 from dae.studies.study import GenotypeData
@@ -94,11 +95,11 @@ chr1   122  .  A   C   .    .      .    GT     0/0  1/0  0/0 0/0  0/0  0/0
 
 
 @pytest.fixture(scope="module")
-def query_builder(
+def duckdb2_variants(
     t4c8_study_1: GenotypeData,
     duckdb_storage: DuckDbGenotypeStorage,
     t4c8_instance: GPFInstance,
-) -> SqlQueryBuilder:
+) -> DuckDb2Variants:
     base_dir = duckdb_storage.get_base_dir()
     db_file = duckdb_storage.get_db()
     assert base_dir is not None
@@ -114,20 +115,6 @@ def query_builder(
     meta_table = study_storage.tables.meta
     assert meta_table is not None
 
-    with duckdb.connect(db_filename, read_only=True) as connection:
-        with connection.cursor() as cursor:
-            query = f"""SELECT value FROM {meta_table}
-                WHERE key = 'summary_schema'
-                LIMIT 1
-                """
-
-            schema_content = ""
-            result = cursor.execute(query).fetchall()
-            for row in result:
-                schema_content = row[0]
-            summary_schema = dict(
-                line.split("|") for line in schema_content.split("\n"))
-
     db_layout = Db2Layout(
         db=db_filename,
         study=t4c8_study_1.study_id,
@@ -138,30 +125,24 @@ def query_builder(
     )
 
     assert db_layout is not None
-
-    sql_query_builder = SqlQueryBuilder(
+    connection = duckdb.connect(db_filename, read_only=True)
+    duckdb_variants = DuckDb2Variants(
+        connection,
         db_layout,
-        {},
-        summary_schema,
-        {},
-        None,
-        t4c8_study_1.families,
         t4c8_instance.gene_models,
+        t4c8_instance.reference_genome,
     )
+    duckdb_variants.query_builder.GENE_REGIONS_HEURISTIC_EXTEND = 0
+    return duckdb_variants
+
+
+@pytest.fixture(scope="module")
+def query_builder(
+    duckdb2_variants: DuckDb2Variants,
+) -> SqlQueryBuilder:
+    sql_query_builder = duckdb2_variants.query_builder
+    assert sql_query_builder.GENE_REGIONS_HEURISTIC_EXTEND == 0
     return sql_query_builder
-
-
-def test_query_summary_variants_simple(
-    query_builder: SqlQueryBuilder
-) -> None:
-    query = query_builder.build_summary_variants_query()
-    assert query is not None
-
-    db_layout = query_builder.db_layout
-    with duckdb.connect(db_layout.db, read_only=True) as connection:
-        with connection.cursor() as cursor:
-            result = cursor.execute(query).fetchall()
-            assert len(result) == 3
 
 
 @pytest.mark.parametrize("params, count", [
@@ -186,34 +167,12 @@ def test_query_summary_variants_simple(
 def test_query_summary_variants_counting(
     params: dict[str, Any],
     count: int,
-    query_builder: SqlQueryBuilder
+    duckdb2_variants: DuckDb2Variants,
 ) -> None:
-    query_builder.GENE_REGIONS_HEURISTIC_EXTEND = 2
-    query = query_builder.build_summary_variants_query(**params)
-    assert query is not None
-
-    db_layout = query_builder.db_layout
-    with duckdb.connect(db_layout.db, read_only=True) as connection:
-        with connection.cursor() as cursor:
-            result = cursor.execute(query).fetchall()
-            assert len(result) == count
+    svs = list(duckdb2_variants.query_summary_variants(**params))
+    assert len(svs) == count
 
 
-@pytest.mark.xfail(reason="missing group by clause")
-def test_query_family_variants_simple(
-    query_builder: SqlQueryBuilder
-) -> None:
-    query = query_builder.build_family_variants_query()
-    assert query is not None
-
-    db_layout = query_builder.db_layout
-    with duckdb.connect(db_layout.db, read_only=True) as connection:
-        with connection.cursor() as cursor:
-            result = cursor.execute(query).fetchall()
-            assert len(result) == 4
-
-
-@pytest.mark.xfail(reason="missing group by clause")
 @pytest.mark.parametrize("index, params, count", [
     (0, {"genes": ["t4"]}, 1),
     (1, {"genes": ["c8"]}, 3),
@@ -237,14 +196,7 @@ def test_query_family_variants_counting(
     index: int,
     params: dict[str, Any],
     count: int,
-    query_builder: SqlQueryBuilder
+    duckdb2_variants: DuckDb2Variants,
 ) -> None:
-    query_builder.GENE_REGIONS_HEURISTIC_EXTEND = 2
-    query = query_builder.build_family_variants_query(**params)
-    assert query is not None
-
-    db_layout = query_builder.db_layout
-    with duckdb.connect(db_layout.db, read_only=True) as connection:
-        with connection.cursor() as cursor:
-            result = cursor.execute(query).fetchall()
-            assert len(result) == count
+    fvs = list(duckdb2_variants.query_variants(**params))
+    assert len(fvs) == count

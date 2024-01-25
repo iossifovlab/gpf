@@ -88,21 +88,22 @@ class SqlQueryBuilder:
             return_unknown=return_unknown,
             limit=limit,
         )
-        eg_join_clause = self._build_gene_effect_clause(genes, effect_types)
+        eg_summary_clause = self._build_gene_effect_clause(genes, effect_types)
 
         limit_clause = ""
         if limit is not None:
             limit_clause = f"LIMIT {limit}"
-
+        summary_source = "summary"
+        if eg_summary_clause:
+            summary_source = "effect_gene_summary"
         query = textwrap.dedent(f"""
             WITH
             {summary_subclause}
+            {eg_summary_clause}
             SELECT
                 bucket_index, summary_index,
-                list(allele_index), first(summary_variant_data)
-            FROM summary
-            {eg_join_clause}
-            GROUP BY bucket_index, summary_index
+                allele_index, summary_variant_data
+            FROM {summary_source}
             {limit_clause}
         """)
 
@@ -124,11 +125,17 @@ class SqlQueryBuilder:
             if effect_types is not None:
                 where_parts.append(self._build_effect_type_where(effect_types))
             eg_where = " AND ".join([wp for wp in where_parts if wp])
-            eg_join_clause = textwrap.dedent(f"""
-                CROSS JOIN
-                    (SELECT UNNEST (effect_gene) as eg)
-                WHERE
-                    {eg_where}
+            eg_join_clause = textwrap.dedent(f""",
+                effect_gene AS (
+                    SELECT *, UNNEST(effect_gene) as eg
+                    FROM summary
+                ),
+                effect_gene_summary AS (
+                    SELECT *
+                    FROM effect_gene
+                    WHERE
+                        {eg_where}
+                )
             """)
         return eg_join_clause
 
@@ -213,8 +220,9 @@ class SqlQueryBuilder:
                 gene_regions.append(
                     Region(
                         gm.chrom,
-                        max(1, gm.tx[0] - self.GENE_REGIONS_HEURISTIC_EXTEND),
-                        gm.tx[1] + self.GENE_REGIONS_HEURISTIC_EXTEND,
+                        max(1,
+                            gm.tx[0] - 1 - self.GENE_REGIONS_HEURISTIC_EXTEND),
+                        gm.tx[1] + 1 + self.GENE_REGIONS_HEURISTIC_EXTEND,
                     )
                 )
         gene_regions = collapse(gene_regions)
@@ -492,7 +500,7 @@ class SqlQueryBuilder:
             return_unknown=return_unknown,
             limit=limit,
         )
-        effect_gene_join_clause = self._build_gene_effect_clause(
+        effect_gene_subclause = self._build_gene_effect_clause(
             genes, effect_types)
 
         limit_clause = ""
@@ -501,7 +509,9 @@ class SqlQueryBuilder:
 
         query = f"""
             WITH
-            {summary_subclause},
+            {summary_subclause}
+            {effect_gene_subclause}
+            ,
             {family_subclause}
             SELECT
                 fa.bucket_index, fa.summary_index, fa.family_index,
@@ -516,7 +526,6 @@ class SqlQueryBuilder:
                 fa.summary_index = sa.summary_index AND
                 fa.bucket_index = sa.bucket_index AND
                 fa.allele_index = sa.allele_index)
-            {effect_gene_join_clause}
             {limit_clause}
         """
         sqlglot.pretty = True
