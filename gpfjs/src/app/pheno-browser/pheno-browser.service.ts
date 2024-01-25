@@ -1,10 +1,10 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { Observable, Subject } from 'rxjs';
+import { HttpClient, HttpHeaders, HttpParams, HttpResponse } from '@angular/common/http';
+import { Observable, Subject, of } from 'rxjs';
 import { CookieService } from 'ngx-cookie-service';
 import { PhenoInstruments, PhenoInstrument, PhenoMeasures, PhenoMeasure } from './pheno-browser';
 import { ConfigService } from '../config/config.service';
-import { map } from 'rxjs/operators';
+import { catchError, map } from 'rxjs/operators';
 import { AuthService } from 'app/auth.service';
 
 const oboe = require('oboe');
@@ -103,5 +103,24 @@ export class PhenoBrowserService {
   public getDownloadLink(instrument: PhenoInstrument, datasetId: string): string {
     return `${this.config.baseUrl}${this.downloadUrl}`
            + `?dataset_id=${datasetId}&instrument=${instrument}`;
+  }
+
+  public validateMeasureDownload(
+    datasetId: string, instrument: string, searchTerm: string
+  ): Observable<HttpResponse<object>> {
+    const headers = this.getHeaders();
+    const params =
+      new HttpParams()
+        .set('dataset_id', datasetId)
+        .set('instrument', instrument)
+        .set('search_term', searchTerm);
+
+    return this.http
+      .head<HttpResponse<object>>(
+        this.config.baseUrl + 'pheno_browser/download',
+        {headers: headers, withCredentials: true, params: params, observe: 'response'}
+      ).pipe(
+        catchError((err: HttpResponse<object>) => of(err))
+      );
   }
 }

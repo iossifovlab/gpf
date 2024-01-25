@@ -30,6 +30,7 @@ import { ConfigService } from 'app/config/config.service';
 import { RegressionComparePipe } from 'app/utils/regression-compare.pipe';
 import { GetRegressionIdsPipe } from 'app/utils/get-regression-ids.pipe';
 import { BackgroundColorPipe } from 'app/utils/background-color.pipe';
+import { HttpClient, HttpHandler } from '@angular/common/http';
 
 const fakeJsonMeasurei1 = JSON.parse(JSON.stringify(fakeJsonMeasureOneRegression)) as object;
 fakeJsonMeasurei1['instrument_name'] = 'i1';
@@ -125,6 +126,8 @@ describe('PhenoBrowserComponent', () => {
         PhenoBrowserComponent, GetRegressionIdsPipe, BackgroundColorPipe],
       providers: [
         PhenoBrowserComponent,
+        HttpClient,
+        HttpHandler,
         { provide: DatasetsService, useValue: datasetServiceMock },
         { provide: PhenoBrowserService, useValue: phenoBrowserServiceMock },
         { provide: ActivatedRoute, useValue: activatedRoute },

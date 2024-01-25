@@ -126,9 +126,6 @@ export class PhenoBrowserComponent implements OnInit {
       .pipe(
         take(1),
         switchMap(([searchTerm, instrument]) => {
-          if (instrument === '') {
-            instrument = null;
-          }
           /* eslint-disable @typescript-eslint/naming-convention */
           const data = {
             dataset_id: this.selectedDatasetId,
@@ -136,9 +133,14 @@ export class PhenoBrowserComponent implements OnInit {
             search_term: searchTerm
           };
           /* eslint-enable */
-          return zip(of(data), this.http
-            .head(`${this.configService.baseUrl}pheno_browser/download`, {params: data})
-            .pipe(map(response => response as PhenoInstruments)))
+          return zip(
+            of(data),
+            this.phenoBrowserService.validateMeasureDownload(
+              this.selectedDatasetId,
+              instrument,
+              searchTerm
+            )
+          );
         })
       ).subscribe(([data, validity]) => {
         if (validity.status === 200) {
@@ -147,7 +149,7 @@ export class PhenoBrowserComponent implements OnInit {
             event.target.submit();
           }
         } else if (validity.status === 413) {
-          errorModal = true;
+          this.errorModal = true;
         }
       });
   }
