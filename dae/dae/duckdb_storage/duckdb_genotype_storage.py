@@ -386,9 +386,9 @@ class DuckDbGenotypeStorage(GenotypeStorage):
             )
 
             assert db_layout is not None
-            connection = duckdb.connect(db_name, read_only=True)
+            # connection = duckdb.connect(db_name, read_only=True)
             return DuckDb2Variants(
-                connection,
+                self.connection_factory,
                 db_layout,
                 gene_models,
                 genome,

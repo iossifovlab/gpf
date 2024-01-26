@@ -44,6 +44,7 @@ def summary_schema_simple() -> dict[str, str]:
         "af_allele_freq": "float",
         "af_parents_called_count": "int32",
         "af_parents_called_percent": "float",
+        "tt": "float",
         "seen_as_denovo": "bool",
         "seen_in_status": "int8",
         "family_variants_count": "int32",
@@ -280,3 +281,66 @@ def test_sqlglot_nested_schema_experiments() -> None:
     schema = ensure_schema(table_schema)
     assert schema
     assert schema.column_names("test") == ["a", "b", "c"]
+
+
+def test_sql_query_builder_effect_types(
+    sql_query_builder_simple: SqlQueryBuilder
+) -> None:
+    effect_types = ["5'UTR", "3'UTR"]
+    result = sql_query_builder_simple._build_effect_type_where(effect_types)
+    assert result == "eg.effect_types in ('5''UTR','3''UTR')"
+
+
+@pytest.mark.parametrize(
+    "real_attr_filter,is_frequency,expected", [
+        (
+            [("tt", (None, 1.0))],
+            True,
+            "( sa.tt <= 1.0 OR sa.tt IS NULL )"
+        ),
+        (
+            [("tt", (None, 1.0))],
+            False,
+            "( sa.tt <= 1.0 )"
+        ),
+        (
+            [("tt", (0.0, 1.0))],
+            True,
+            "( sa.tt >= 0.0 AND sa.tt <= 1.0 )"
+        ),
+        (
+            [("tt", (0.0, 1.0))],
+            False,
+            "( sa.tt >= 0.0 AND sa.tt <= 1.0 )"
+        ),
+        (
+            [("tt", (0.0, None))],
+            True,
+            "( sa.tt >= 0.0 )"
+        ),
+        (
+            [("tt", (0.0, None))],
+            False,
+            "( sa.tt >= 0.0 )"
+        ),
+        (
+            [("tt", (None, None))],
+            True,
+            ""
+        ),
+        (
+            [("tt", (None, None))],
+            False,
+            "( sa.tt IS NOT NULL )"
+        ),
+    ]
+)
+def test_sql_query_builder_real_attr_where(
+    real_attr_filter: RealAttrFilterType,
+    is_frequency: bool,
+    expected: str,
+    sql_query_builder_simple: SqlQueryBuilder
+) -> None:
+    result = sql_query_builder_simple._build_real_attr_where(
+        real_attr_filter, is_frequency)  # type: ignore
+    assert result == expected

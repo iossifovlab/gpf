@@ -15,6 +15,14 @@ pytest_plugins = ["dae_conftests.dae_conftests"]
 
 def default_genotype_storage_configs(root_path: pathlib.Path) -> list[dict]:
     return [
+        # DuckDb2 Storage
+        {
+            "id": "duckdb2",
+            "storage_type": "duckdb2",
+            "db": "duckdb_storage/dev_storage.db",
+            "base_dir": str(root_path)
+        },
+
         # DuckDb Storage
         {
             "id": "duckdb",

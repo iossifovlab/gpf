@@ -118,13 +118,20 @@ class SqlQueryBuilder:
         effect_types: Optional[list[str]] = None,
     ) -> str:
         eg_join_clause = ""
-        if genes is not None or effect_types is not None:
+        if genes or effect_types:
             where_parts: list[str] = []
-            if genes is not None:
-                where_parts.append(self._build_gene_where(genes))
-            if effect_types is not None:
-                where_parts.append(self._build_effect_type_where(effect_types))
+            if genes:
+                genes = [g for g in genes if g]
+                if genes:
+                    where_parts.append(self._build_gene_where(genes))
+            if effect_types:
+                effect_types = [et for et in effect_types if et]
+                if effect_types:
+                    where_parts.append(
+                        self._build_effect_type_where(effect_types))
             eg_where = " AND ".join([wp for wp in where_parts if wp])
+            if not eg_where:
+                return ""
             eg_join_clause = textwrap.dedent(f""",
                 effect_gene AS (
                     SELECT *, UNNEST(effect_gene) as eg
@@ -181,8 +188,8 @@ class SqlQueryBuilder:
         where_parts = self._add_frequency_bin_heuristic(
             where_parts, ultra_rare, frequency_filter, "sa")
 
-        # Do not look into reference alleles
-        where_parts.append("sa.allele_index > 0")
+        if not return_reference and not return_unknown:
+            where_parts.append("sa.allele_index > 0")
 
         summary_where = ""
         if where_parts:
@@ -294,12 +301,12 @@ class SqlQueryBuilder:
                 # we want to include all variants - don't add filter to query
                 # otherwise we want to exclude variants that have no value
                 if not is_frequency:
-                    where.append(f"sa.{attr_name} is not null")
+                    where.append(f"sa.{attr_name} IS NOT NULL")
             elif left is None:
                 assert right is not None
                 if is_frequency:
                     where.append(
-                        f"sa.{attr_name} <= {right} or sa.{attr_name} is null"
+                        f"sa.{attr_name} <= {right} OR sa.{attr_name} IS NULL"
                     )
                 else:
                     where.append(
@@ -332,6 +339,7 @@ class SqlQueryBuilder:
         return where
 
     def _build_effect_type_where(self, effect_types: list[str]) -> str:
+        effect_types = [et.replace("'", "''") for et in effect_types]
         effect_set = ",".join(f"'{g}'" for g in effect_types)
         where = f"eg.effect_types in ({effect_set})"
         return where
@@ -568,7 +576,8 @@ class SqlQueryBuilder:
             where_parts, ultra_rare, frequency_filter, "fa")
 
         # Do not look into reference alleles
-        where_parts.append("fa.allele_index > 0")
+        if not return_reference and not return_unknown:
+            where_parts.append("fa.allele_index > 0")
 
         family_where = ""
         if where_parts:
