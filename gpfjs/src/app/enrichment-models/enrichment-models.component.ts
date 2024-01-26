@@ -1,13 +1,14 @@
 import { Component, OnInit, Input } from '@angular/core';
 import { EnrichmentModelsService } from './enrichment-models.service';
 import { IdDescriptionName } from './iddescription';
-import { combineLatest, of } from 'rxjs';
+import { Subscription, combineLatest, of } from 'rxjs';
 import { Allow } from 'class-validator';
 import { Store } from '@ngxs/store';
 import { SetEnrichmentModels, EnrichmentModelsState, EnrichmentModelsModel } from './enrichment-models.state';
 import { switchMap, take } from 'rxjs/operators';
 import { StatefulComponent } from 'app/common/stateful-component';
 import { environment } from 'environments/environment';
+import { FullscreenLoadingService } from 'app/fullscreen-loading/fullscreen-loading.service';
 
 @Component({
   selector: 'gpf-enrichment-models',
@@ -15,6 +16,7 @@ import { environment } from 'environments/environment';
 })
 export class EnrichmentModelsComponent extends StatefulComponent implements OnInit {
   @Input() private selectedDatasetId: string;
+  private modelsSubscription: Subscription = null;
 
   @Allow() public background: IdDescriptionName;
   @Allow() public counting: IdDescriptionName;
@@ -27,13 +29,24 @@ export class EnrichmentModelsComponent extends StatefulComponent implements OnIn
   public constructor(
     protected store: Store,
     private enrichmentModelsService: EnrichmentModelsService,
+    private loadingService: FullscreenLoadingService
   ) {
     super(store, EnrichmentModelsState, 'enrichmentModels');
   }
 
   public ngOnInit(): void {
+    this.loadingService.setLoadingStart();
+
+    this.loadingService.interruptEvent.subscribe(_ => {
+      if (this.modelsSubscription !== null) {
+        this.modelsSubscription.unsubscribe();
+        this.modelsSubscription = null;
+        this.loadingService.setLoadingStop();
+      }
+    });
+
     super.ngOnInit();
-    this.enrichmentModelsService.getBackgroundModels(this.selectedDatasetId).pipe(
+    this.modelsSubscription = this.enrichmentModelsService.getBackgroundModels(this.selectedDatasetId).pipe(
       take(1),
       switchMap(res => combineLatest([of(res), this.store.selectOnce(EnrichmentModelsState)]))
     ).subscribe(([res, enrichmentState]) => {
@@ -47,6 +60,7 @@ export class EnrichmentModelsComponent extends StatefulComponent implements OnIn
         this.background = res.backgrounds.find(bg => bg.id === res.defaultBackground);
         this.counting = res.countings.find(ct => ct.id === res.defaultCounting);
       }
+      this.loadingService.setLoadingStop();
       this.store.dispatch(new SetEnrichmentModels(this.background.id, this.counting.id));
     });
   }

@@ -5,6 +5,7 @@ import { NgxsModule } from '@ngxs/store';
 import { of } from 'rxjs/internal/observable/of';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { ConfigService } from 'app/config/config.service';
+import { FullscreenLoadingService } from 'app/fullscreen-loading/fullscreen-loading.service';
 
 describe('EnrichmentModelsComponent', () => {
   let component: EnrichmentModelsComponent;
@@ -15,7 +16,7 @@ describe('EnrichmentModelsComponent', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       declarations: [EnrichmentModelsComponent],
-      providers: [EnrichmentModelsService, ConfigService],
+      providers: [EnrichmentModelsService, ConfigService, FullscreenLoadingService],
       imports: [NgxsModule.forRoot([], {developmentMode: true}), HttpClientTestingModule]
     });
     fixture = TestBed.createComponent(EnrichmentModelsComponent);
