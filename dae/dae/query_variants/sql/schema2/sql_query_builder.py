@@ -657,7 +657,7 @@ class SqlQueryBuilder:
             result.append(str(transformer.transform(parsed)))
         if not result:
             return ""
-        return " AND ".join(result)        
+        return " AND ".join(result)
 
     def _check_inheritance_query_value(
         self, inheritance_query: Sequence[str], value: int
