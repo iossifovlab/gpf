@@ -185,8 +185,8 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
         regions: Optional[list[Region]] = None,
         genes: Optional[list[str]] = None,
         effect_types: Optional[list[str]] = None,
-        family_ids: Optional[list[str]] = None,
-        person_ids: Optional[list[str]] = None,
+        family_ids: Optional[Iterable[str]] = None,
+        person_ids: Optional[Iterable[str]] = None,
         person_set_collection: Optional[tuple[str, list[str]]] = None,
         inheritance: Optional[str] = None,
         roles: Optional[str] = None,
@@ -208,7 +208,7 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
         del pedigree_fields  # Unused argument
         psc_query = person_set_collection
 
-        if person_ids is not None and len(person_ids) == 0:
+        if person_ids is not None and not person_ids:
             return None
 
         if effect_types:
@@ -234,7 +234,7 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
         logger.debug("query leaf studies...")
         for genotype_study in self._get_query_leaf_studies(study_filters):
             person_sets_query = None
-            query_person_ids = set(person_ids.copy()) \
+            query_person_ids = set(person_ids) \
                 if person_ids is not None else None
 
             if psc_query is not None:
@@ -308,8 +308,8 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
         regions: Optional[list[Region]] = None,
         genes: Optional[list[str]] = None,
         effect_types: Optional[list[str]] = None,
-        family_ids: Optional[list[str]] = None,
-        person_ids: Optional[list[str]] = None,
+        family_ids: Optional[Iterable[str]] = None,
+        person_ids: Optional[Iterable[str]] = None,
         person_set_collection: Optional[tuple[str, list[str]]] = None,
         inheritance: Optional[str] = None,
         roles: Optional[str] = None,
@@ -547,7 +547,7 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
 
     def _transform_person_set_collection_query(
         self, collection_query: tuple[str, list[str]],
-        person_ids: Optional[list[str]]
+        person_ids: Optional[Iterable[str]]
     ) -> Optional[set[str]]:
         assert collection_query is not None
 
@@ -853,6 +853,7 @@ class GenotypeDataGroup(GenotypeData):
         psc = PersonSetCollection.combine(studies_psc, families)
         for fpid, person in families.real_persons.items():
             person_set_value = psc.get_person_set_of_person(fpid)
+            assert person_set_value is not None
             person.set_attr(psc_id, person_set_value.id)
         return psc
 
@@ -894,5 +895,6 @@ class GenotypeDataStudy(GenotypeData):
 
         for fpid, person in families.real_persons.items():
             person_set_value = psc.get_person_set_of_person(fpid)
+            assert person_set_value is not None
             person.set_attr(psc.id, person_set_value.id)
         return psc
