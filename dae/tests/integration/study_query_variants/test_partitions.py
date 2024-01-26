@@ -1,5 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import textwrap
+from typing import Optional, Set
+
 import pytest
 
 from dae.testing import setup_pedigree, setup_vcf, vcf_study
@@ -8,10 +10,15 @@ from dae.testing import \
 from dae.utils.regions import Region
 from dae.genomic_resources.repository_factory import \
     build_genomic_resource_repository
+from dae.studies.study import GenotypeData
+from dae.genotype_storage import GenotypeStorage
 
 
 @pytest.fixture(scope="module")
-def imported_study(tmp_path_factory, genotype_storage):
+def imported_study(
+    tmp_path_factory: pytest.TempPathFactory,
+    genotype_storage: GenotypeStorage
+) -> GenotypeData:
     root_path = tmp_path_factory.mktemp(
         f"vcf_path_{genotype_storage.storage_id}")
     setup_genome(
@@ -117,9 +124,11 @@ def imported_study(tmp_path_factory, genotype_storage):
         (set(["f2"]), 3),
     ],
 )
-def test_query_family_id(family_ids, count, imported_study):
-    vs = imported_study.query_variants(family_ids=family_ids)
-    vs = list(vs)
+def test_query_family_id(
+    family_ids: Optional[Set[str]], count: int,
+    imported_study: GenotypeData
+) -> None:
+    vs = list(imported_study.query_variants(family_ids=family_ids))
     assert len(vs) == count
 
 
@@ -137,9 +146,9 @@ def test_query_family_id(family_ids, count, imported_study):
     ],
 )
 def test_query_person_id(
-        person_ids, count, imported_study):
-    vs = imported_study.query_variants(person_ids=person_ids)
-    vs = list(vs)
+    person_ids: Optional[Set[str]], count: int, imported_study: GenotypeData
+) -> None:
+    vs = list(imported_study.query_variants(person_ids=person_ids))
     assert len(vs) == count
 
 
@@ -150,7 +159,10 @@ def test_query_person_id(
         (Region("bar", 1, 20), 6, 3)
     ],
 )
-def test_query_region(region, family_count, summary_count, imported_study):
+def test_query_region(
+    region: Region, family_count: int, summary_count: int,
+    imported_study: GenotypeData
+) -> None:
     assert len(list(imported_study.
                     query_variants(regions=[region]))) == family_count
 
@@ -158,7 +170,7 @@ def test_query_region(region, family_count, summary_count, imported_study):
                     query_summary_variants(regions=[region]))) == summary_count
 
 
-def test_query_ultra_rare(imported_study):
+def test_query_ultra_rare(imported_study: GenotypeData) -> None:
     assert len(list(
         imported_study.query_summary_variants(ultra_rare=True))) == 2
     assert len(list(imported_study.query_variants(ultra_rare=True))) == 2
@@ -168,12 +180,16 @@ def test_query_ultra_rare(imported_study):
     "effect,family_count,summary_count",
     [
         (None, 8, 5),
-        ("missense", 4, 2),
-        ("intron", 1, 1),
+        (["missense"], 4, 2),
+        (["intron"], 1, 1),
         (["missense", "intron"], 5, 3)
     ]
 )
-def test_query_effect(effect, family_count, summary_count, imported_study):
+def test_query_effect(
+    effect: Optional[list[str]],
+    family_count: int, summary_count: int,
+    imported_study: GenotypeData
+) -> None:
     assert len(list(imported_study.
                     query_variants(effect_types=effect))) == family_count
 
@@ -182,10 +198,10 @@ def test_query_effect(effect, family_count, summary_count, imported_study):
         summary_count
 
 
-def test_query_complex(imported_study):
+def test_query_complex(imported_study: GenotypeData) -> None:
     assert len(list(imported_study.
                     query_variants(
-                        effect_types="missense",
+                        effect_types=["missense"],
                         person_ids={"s1"},
                         frequency_filter=[("af_allele_freq", (10, 27))],
                         regions=[Region("bar", 3, 17)],
@@ -195,24 +211,26 @@ def test_query_complex(imported_study):
                ) == 1
 
 
-def test_query_pedigree_fields(imported_study):
+def test_query_pedigree_fields(imported_study: GenotypeData) -> None:
     assert len(list(
         imported_study.query_variants(
             person_set_collection=(
                 "status", ["affected", "unaffected", "unspecified"])))) == 8
 
 
-def test_af_parent_count(imported_study):
+def test_af_parent_count(imported_study: GenotypeData) -> None:
     for v in imported_study.query_variants():
         assert v.get_attribute("af_parents_called_count") == [4]
 
 
-def test_query_denovo(imported_study):
+def test_query_denovo(imported_study: GenotypeData) -> None:
     assert len(list(
         imported_study.query_variants(inheritance=["denovo"]))) == 0
 
 
-def test_wdae_get_all_from_genotype_browser(imported_study):
+def test_wdae_get_all_from_genotype_browser(
+    imported_study: GenotypeData
+) -> None:
     res = list(imported_study.query_variants(
         effect_types=["3'UTR", "3'UTR-intron", "5'UTR", "5'UTR-intron",
                       "frame-shift", "intergenic", "intron", "missense",

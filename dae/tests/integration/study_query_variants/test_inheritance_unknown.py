@@ -1,6 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
-
+from typing import cast
 import pytest
 
 from dae.utils.regions import Region
@@ -10,6 +10,7 @@ from dae.testing.alla_import import alla_gpf
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.studies.study import GenotypeData
 from dae.variants.attributes import Inheritance
+from dae.variants.family_variant import FamilyAllele
 
 
 @pytest.fixture(scope="module")
@@ -90,5 +91,5 @@ def test_inheritance_nontrio(
     assert len(vs) == 1
     for v in vs:
         for aa in v.alt_alleles:
-            print(aa.inheritance_in_members)
-            assert set(aa.inheritance_in_members) == set([Inheritance.unknown])
+            fa = cast(FamilyAllele, aa)
+            assert set(fa.inheritance_in_members) == set([Inheritance.unknown])

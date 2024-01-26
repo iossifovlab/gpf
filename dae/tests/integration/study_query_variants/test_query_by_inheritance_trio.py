@@ -1,6 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
-from typing import Union
+from typing import Union, cast
 
 import pytest
 
@@ -11,6 +11,7 @@ from dae.testing.alla_import import alla_gpf
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.studies.study import GenotypeData
 from dae.variants.attributes import Inheritance
+from dae.variants.family_variant import FamilyAllele
 
 
 @pytest.fixture(scope="module")
@@ -94,8 +95,6 @@ def test_inheritance_query_trio(
             inheritance=inheritance,
             return_reference=False)
     )
-    for v in vs:
-        print(v, "->", [a.inheritance_in_members for a in v.alt_alleles])
     assert len(vs) == count
 
 
@@ -117,14 +116,10 @@ def test_inheritance_trio_full(
     vs = list(trio_study.query_variants(
         regions=[region], return_reference=False, return_unknown=False))
 
-    for v in vs:
-        for aa in v.alt_alleles:
-            print(aa, aa.inheritance_in_members)
-
     expected = Inheritance.from_name(inheritance)
     for v in vs:
         for aa in v.alt_alleles:
-            print(aa, aa.inheritance_in_members)
-            assert expected in aa.inheritance_in_members
+            fa = cast(FamilyAllele, aa)
+            assert expected in fa.inheritance_in_members
 
     assert len(vs) == count
