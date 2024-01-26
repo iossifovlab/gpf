@@ -173,7 +173,7 @@ def query_builder(
 @pytest.mark.parametrize("index, params, coding_bin", [
     (0, {"effect_types": ["missense"]}, 1),
     (1, {"effect_types": ["synonymous"]}, 1),
-    (2, {"effect_types": ["intergenic"]}, 0),
+    (2, {"effect_types": ["intergenic"]}, None),
     (3, {"effect_types": ["intergenic", "synonymous"]}, None),
     (4, {}, None),
 ])
@@ -246,7 +246,7 @@ def test_frequency_bin_heuristics_query(
 @pytest.mark.parametrize("index, params, coding_bin", [
     (0, {"effect_types": ["missense"]}, 1),
     (1, {"effect_types": ["synonymous"]}, 1),
-    (2, {"effect_types": ["intergenic"]}, 0),
+    (2, {"effect_types": ["intergenic"]}, None),
     (3, {"effect_types": ["intergenic", "synonymous"]}, None),
     (4, {}, None),
 ])
@@ -389,3 +389,21 @@ def test_query_summary_variants_counting(
 ) -> None:
     svs = list(duckdb2_variants.query_summary_variants(**params))
     assert len(svs) == count
+
+
+@pytest.mark.parametrize("index, params, count", [
+    (0, {}, 12),
+    (1, {"roles": "prb"}, 9),
+    (2, {"roles": "not prb"}, 7),
+    (3, {"roles": "mom and not prb"}, 5),
+    (4, {"roles": "mom and dad and not prb"}, 3),
+    (5, {"roles": "prb and not mom and not dad"}, 0),
+])
+def test_query_family_variants_by_role(
+    index: int,
+    params: dict[str, Any],
+    count: int,
+    duckdb2_variants: DuckDb2Variants
+) -> None:
+    fvs = list(duckdb2_variants.query_variants(**params))
+    assert len(fvs) == count

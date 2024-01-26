@@ -1,15 +1,18 @@
 import logging
 import textwrap
-from typing import Optional, Any, Sequence
+from typing import Optional, Any, Sequence, cast
 from dataclasses import dataclass
 
 import sqlglot
+import duckdb
 
 from dae.utils.regions import Region, collapse
 from dae.genomic_resources.gene_models import GeneModels
 from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.pedigrees.families_data import FamiliesData
+from dae.query_variants.attributes_query import role_query, \
+    QueryTreeToSQLBitwiseTransformer
 
 
 logger = logging.getLogger(__name__)
@@ -375,8 +378,8 @@ class SqlQueryBuilder:
 
         if intersection == query_effect_types:
             coding_bin = "1"
-        elif not intersection:
-            coding_bin = "0"
+        # elif not intersection:
+        #     coding_bin = "0"
 
         if coding_bin:
             where_parts.append(
@@ -567,6 +570,8 @@ class SqlQueryBuilder:
         where_parts: list[str] = []
         if genes is not None:
             regions = self._build_gene_regions_heuristic(genes, regions)
+        if roles is not None:
+            where_parts.append(self._build_roles_query_where(roles))
 
         where_parts = self._add_region_bin_heuristic(
             where_parts, regions, "fa")
@@ -595,3 +600,21 @@ class SqlQueryBuilder:
             )
             """)
         return query
+
+    def _build_roles_query(self, roles_query: str, attr: str) -> str:
+        parsed = role_query.transform_query_string_to_tree(roles_query)
+        transformer = QueryTreeToSQLBitwiseTransformer(attr, False)
+        return cast(str, transformer.transform(parsed))
+
+    def _check_roles_query_value(self, roles_query: str, value: int) -> bool:
+        with duckdb.connect(":memory:") as con:
+            query = self._build_roles_query(
+                roles_query, str(value))
+            res = con.execute(f"SELECT {query}").fetchall()
+            assert len(res) == 1
+            assert len(res[0]) == 1
+
+            return cast(bool, res[0][0])
+
+    def _build_roles_query_where(self, roles_query: str) -> str:
+        return self._build_roles_query(roles_query, "fa.allele_in_roles")

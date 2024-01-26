@@ -2,12 +2,14 @@
 import pathlib
 
 import pytest
+import duckdb
 
 from sqlglot import parse_one, exp
 from sqlglot.executor import execute
 from sqlglot.schema import ensure_schema
 
 from dae.utils.regions import Region
+from dae.variants.attributes import Role
 from dae.genomic_resources.gene_models import GeneModels
 from dae.query_variants.sql.schema2.sql_query_builder import Db2Layout
 from dae.testing import setup_pedigree
@@ -344,3 +346,47 @@ def test_sql_query_builder_real_attr_where(
     result = sql_query_builder_simple._build_real_attr_where(
         real_attr_filter, is_frequency)  # type: ignore
     assert result == expected
+
+
+@pytest.mark.parametrize(
+    "role_query,value,expected", [
+        ("prb and not mom and not dad", Role.prb.value, True),
+        ("prb and not mom and not dad", Role.sib.value, False),
+        ("prb and not mom and not dad",
+         Role.prb.value | Role.mom.value, False),
+        ("prb and not mom and not dad",
+         Role.prb.value | Role.dad.value, False),
+        ("prb and not mom and not dad",
+         Role.prb.value | Role.sib.value, True),
+        ("(prb or sib) and (mom or dad)",
+         Role.prb.value | Role.mom.value, True),
+        ("(prb or sib) and (mom or dad)",
+         Role.prb.value | Role.mom.value | Role.dad.value, True),
+        ("(prb or sib) and (mom or dad)",
+         Role.sib.value | Role.mom.value | Role.dad.value, True),
+        ("(prb or sib) and (mom or dad)",
+         Role.mom.value | Role.dad.value, False),
+        ("not prb", Role.prb.value, False),
+        ("not prb", Role.prb.value | Role.sib.value, False),
+        ("not prb", Role.sib.value, True),
+        ("not prb", Role.dad.value | Role.mom.value, True),
+        ("prb and (mom or dad)", Role.prb.value | Role.mom.value, True),
+        ("prb and (mom or dad)", Role.prb.value | Role.dad.value, True),
+        ("prb and (mom or dad)",
+         Role.prb.value | Role.sib.value | Role.dad.value, True),
+        ("prb and (mom or dad)",
+         Role.sib.value | Role.dad.value | Role.mom.value, False),
+    ]
+)
+def test_role_query_duckdb(
+    role_query: str,
+    value: int,
+    expected: int,
+    sql_query_builder_simple: SqlQueryBuilder,
+) -> None:
+    with duckdb.connect(":memory:") as con:
+        query = sql_query_builder_simple._build_roles_query(
+            role_query, str(value))
+        res = con.execute(f"SELECT {query}").fetchall()
+        assert len(res) == 1
+        assert res[0][0] == expected
