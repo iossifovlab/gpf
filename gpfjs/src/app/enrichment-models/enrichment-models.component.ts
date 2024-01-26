@@ -37,7 +37,7 @@ export class EnrichmentModelsComponent extends StatefulComponent implements OnIn
   public ngOnInit(): void {
     this.loadingService.setLoadingStart();
 
-    this.loadingService.interruptEvent.subscribe(_ => {
+    this.loadingService.interruptEvent.subscribe(() => {
       if (this.modelsSubscription !== null) {
         this.modelsSubscription.unsubscribe();
         this.modelsSubscription = null;
