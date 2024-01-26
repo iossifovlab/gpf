@@ -2,14 +2,13 @@
 import pathlib
 
 import pytest
-import duckdb
 
 from sqlglot import parse_one, exp
 from sqlglot.executor import execute
 from sqlglot.schema import ensure_schema
 
 from dae.utils.regions import Region
-from dae.variants.attributes import Role
+from dae.variants.attributes import Role, Sex, Inheritance
 from dae.genomic_resources.gene_models import GeneModels
 from dae.query_variants.sql.schema2.sql_query_builder import Db2Layout
 from dae.testing import setup_pedigree
@@ -384,9 +383,44 @@ def test_role_query_duckdb(
     expected: int,
     sql_query_builder_simple: SqlQueryBuilder,
 ) -> None:
-    with duckdb.connect(":memory:") as con:
-        query = sql_query_builder_simple._build_roles_query(
-            role_query, str(value))
-        res = con.execute(f"SELECT {query}").fetchall()
-        assert len(res) == 1
-        assert res[0][0] == expected
+    res = sql_query_builder_simple._check_roles_query_value(role_query, value)
+    assert res == expected
+
+
+@pytest.mark.parametrize(
+    "sex_query,value,expected", [
+        ("male", Sex.male.value, True),
+        ("male", Sex.male.value | Sex.female.value, True),
+        ("male", Sex.female.value | Sex.unspecified.value, False),
+        ("female", Sex.male.value | Sex.female.value, True),
+        ("female and not male", Sex.male.value | Sex.female.value, False),
+        ("female and not male",
+         Sex.unspecified.value | Sex.female.value, True),
+    ]
+)
+def test_sex_query_duckdb(
+    sex_query: str,
+    value: int,
+    expected: int,
+    sql_query_builder_simple: SqlQueryBuilder,
+) -> None:
+    res = sql_query_builder_simple._check_sexes_query_value(sex_query, value)
+    assert res == expected
+
+
+@pytest.mark.parametrize(
+    "inheritance_query,value,expected", [
+        (["denovo"], Inheritance.denovo.value, True),
+        (["denovo", "mendelian"], Inheritance.denovo.value, False),
+        (["denovo or mendelian"], Inheritance.denovo.value, True),
+    ]
+)
+def test_inheritance_query_duckdb(
+    inheritance_query: list[str],
+    value: int,
+    expected: int,
+    sql_query_builder_simple: SqlQueryBuilder,
+) -> None:
+    res = sql_query_builder_simple._check_inheritance_query_value(
+        inheritance_query, value)
+    assert res == expected

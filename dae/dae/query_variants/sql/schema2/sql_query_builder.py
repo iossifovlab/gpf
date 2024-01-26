@@ -1,6 +1,6 @@
 import logging
 import textwrap
-from typing import Optional, Any, Sequence, cast
+from typing import Optional, Any, Sequence, cast, Union
 from dataclasses import dataclass
 
 import sqlglot
@@ -11,9 +11,11 @@ from dae.genomic_resources.gene_models import GeneModels
 from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.pedigrees.families_data import FamiliesData
-from dae.query_variants.attributes_query import role_query, \
+from dae.query_variants.attributes_query import role_query, sex_query, \
     QueryTreeToSQLBitwiseTransformer
-
+from dae.query_variants.attributes_query_inheritance import \
+    InheritanceTransformer, \
+    inheritance_parser
 
 logger = logging.getLogger(__name__)
 
@@ -551,7 +553,7 @@ class SqlQueryBuilder:
         effect_types: Optional[list[str]] = None,
         family_ids: Optional[Sequence[str]] = None,
         person_ids: Optional[Sequence[str]] = None,
-        inheritance: Optional[Sequence[str]] = None,
+        inheritance: Optional[Union[str, Sequence[str]]] = None,
         roles: Optional[str] = None,
         sexes: Optional[str] = None,
         variant_type: Optional[str] = None,
@@ -572,6 +574,14 @@ class SqlQueryBuilder:
             regions = self._build_gene_regions_heuristic(genes, regions)
         if roles is not None:
             where_parts.append(self._build_roles_query_where(roles))
+        if sexes is not None:
+            where_parts.append(self._build_sexes_query_where(sexes))
+        if inheritance is not None:
+            if isinstance(inheritance, str):
+                inheritance = [inheritance]
+            where_parts.append(
+                self._build_inheritance_query_where(inheritance)
+            )
 
         where_parts = self._add_region_bin_heuristic(
             where_parts, regions, "fa")
@@ -618,3 +628,51 @@ class SqlQueryBuilder:
 
     def _build_roles_query_where(self, roles_query: str) -> str:
         return self._build_roles_query(roles_query, "fa.allele_in_roles")
+
+    def _build_sexes_query(self, sexes_query: str, attr: str) -> str:
+        parsed = sex_query.transform_query_string_to_tree(sexes_query)
+        transformer = QueryTreeToSQLBitwiseTransformer(attr, False)
+        return cast(str, transformer.transform(parsed))
+
+    def _check_sexes_query_value(self, sexes_query: str, value: int) -> bool:
+        with duckdb.connect(":memory:") as con:
+            query = self._build_sexes_query(
+                sexes_query, str(value))
+            res = con.execute(f"SELECT {query}").fetchall()
+            assert len(res) == 1
+            assert len(res[0]) == 1
+
+            return cast(bool, res[0][0])
+
+    def _build_sexes_query_where(self, sexes_query: str) -> str:
+        return self._build_sexes_query(sexes_query, "fa.allele_in_sexes")
+
+    def _build_inheritance_query(
+        self, inheritance_query: Sequence[str], attr: str
+    ) -> str:
+        result = []
+        transformer = InheritanceTransformer(attr, use_bit_and_function=False)
+        for query in inheritance_query:
+            parsed = inheritance_parser.parse(query)
+            result.append(str(transformer.transform(parsed)))
+        if not result:
+            return ""
+        return " AND ".join(result)        
+
+    def _check_inheritance_query_value(
+        self, inheritance_query: Sequence[str], value: int
+    ) -> bool:
+        with duckdb.connect(":memory:") as con:
+            query = self._build_inheritance_query(
+                inheritance_query, str(value))
+            res = con.execute(f"SELECT {query}").fetchall()
+            assert len(res) == 1
+            assert len(res[0]) == 1
+
+            return cast(bool, res[0][0])
+
+    def _build_inheritance_query_where(
+        self, inheritance_query: Sequence[str]
+    ) -> str:
+        return self._build_inheritance_query(
+            inheritance_query, "fa.inheritance_in_members")

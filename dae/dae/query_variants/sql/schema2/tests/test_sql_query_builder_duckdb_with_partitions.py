@@ -407,3 +407,37 @@ def test_query_family_variants_by_role(
 ) -> None:
     fvs = list(duckdb2_variants.query_variants(**params))
     assert len(fvs) == count
+
+
+@pytest.mark.parametrize("index, params, count", [
+    (0, {}, 12),
+    (1, {"sexes": "M"}, 11),
+    (2, {"sexes": "M and not F"}, 2),
+    (3, {"sexes": "female and not male"}, 5),
+])
+def test_query_family_variants_by_sex(
+    index: int,
+    params: dict[str, Any],
+    count: int,
+    duckdb2_variants: DuckDb2Variants
+) -> None:
+    fvs = list(duckdb2_variants.query_variants(**params))
+    assert len(fvs) == count
+
+
+@pytest.mark.parametrize("index, params, count", [
+    (0, {}, 12),
+    (1, {"inheritance": ["missing"]}, 7),
+    (2, {"inheritance": ["mendelian"]}, 9),
+    (3, {"inheritance": ["denovo"]}, 0),
+    (4, {"inheritance": ["mendelian or missing"]}, 12),
+    (4, {"inheritance": ["mendelian and missing"]}, 0),
+])
+def test_query_family_variants_by_inheritance(
+    index: int,
+    params: dict[str, Any],
+    count: int,
+    duckdb2_variants: DuckDb2Variants
+) -> None:
+    fvs = list(duckdb2_variants.query_variants(**params))
+    assert len(fvs) == count
