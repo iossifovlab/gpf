@@ -348,46 +348,6 @@ def test_sql_query_builder_real_attr_where(
 
 
 @pytest.mark.parametrize(
-    "role_query,value,expected", [
-        ("prb and not mom and not dad", Role.prb.value, True),
-        ("prb and not mom and not dad", Role.sib.value, False),
-        ("prb and not mom and not dad",
-         Role.prb.value | Role.mom.value, False),
-        ("prb and not mom and not dad",
-         Role.prb.value | Role.dad.value, False),
-        ("prb and not mom and not dad",
-         Role.prb.value | Role.sib.value, True),
-        ("(prb or sib) and (mom or dad)",
-         Role.prb.value | Role.mom.value, True),
-        ("(prb or sib) and (mom or dad)",
-         Role.prb.value | Role.mom.value | Role.dad.value, True),
-        ("(prb or sib) and (mom or dad)",
-         Role.sib.value | Role.mom.value | Role.dad.value, True),
-        ("(prb or sib) and (mom or dad)",
-         Role.mom.value | Role.dad.value, False),
-        ("not prb", Role.prb.value, False),
-        ("not prb", Role.prb.value | Role.sib.value, False),
-        ("not prb", Role.sib.value, True),
-        ("not prb", Role.dad.value | Role.mom.value, True),
-        ("prb and (mom or dad)", Role.prb.value | Role.mom.value, True),
-        ("prb and (mom or dad)", Role.prb.value | Role.dad.value, True),
-        ("prb and (mom or dad)",
-         Role.prb.value | Role.sib.value | Role.dad.value, True),
-        ("prb and (mom or dad)",
-         Role.sib.value | Role.dad.value | Role.mom.value, False),
-    ]
-)
-def test_role_query_duckdb(
-    role_query: str,
-    value: int,
-    expected: int,
-    sql_query_builder_simple: SqlQueryBuilder,
-) -> None:
-    res = sql_query_builder_simple._check_roles_query_value(role_query, value)
-    assert res == expected
-
-
-@pytest.mark.parametrize(
     "sex_query,value,expected", [
         ("male", Sex.male.value, True),
         ("male", Sex.male.value | Sex.female.value, True),
@@ -423,4 +383,97 @@ def test_inheritance_query_duckdb(
 ) -> None:
     res = sql_query_builder_simple._check_inheritance_query_value(
         inheritance_query, value)
+    assert res == expected
+
+
+@pytest.mark.parametrize(
+    "role_query,value,expected", [
+        ("prb and not mom and not dad", Role.prb.value, True),
+        ("prb and not mom and not dad", Role.sib.value, False),
+        ("prb and not mom and not dad",
+         Role.prb.value | Role.mom.value, False),
+        ("prb and not mom and not dad",
+         Role.prb.value | Role.dad.value, False),
+        ("prb and not mom and not dad",
+         Role.prb.value | Role.sib.value, True),
+        ("(prb or sib) and (mom or dad)",
+         Role.prb.value | Role.mom.value, True),
+        ("(prb or sib) and (mom or dad)",
+         Role.prb.value | Role.mom.value | Role.dad.value, True),
+        ("(prb or sib) and (mom or dad)",
+         Role.sib.value | Role.mom.value | Role.dad.value, True),
+        ("(prb or sib) and (mom or dad)",
+         Role.mom.value | Role.dad.value, False),
+        ("not prb", Role.prb.value, False),
+        ("not prb", Role.prb.value | Role.sib.value, False),
+        ("not prb", Role.sib.value, True),
+        ("not prb", Role.dad.value | Role.mom.value, True),
+        ("prb and (mom or dad)", Role.prb.value | Role.mom.value, True),
+        ("prb and (mom or dad)", Role.prb.value | Role.dad.value, True),
+        ("prb and (mom or dad)",
+         Role.prb.value | Role.sib.value | Role.dad.value, True),
+        ("prb and (mom or dad)",
+         Role.sib.value | Role.dad.value | Role.mom.value, False),
+        ("prb",
+         Role.not_role(Role.prb.value), False),
+        ("prb",
+         Role.not_role(Role.prb.value | Role.sib.value), False),
+        ("mom",
+         Role.not_role(Role.prb.value | Role.sib.value), True),
+        ("(prb or sib) and not (mom or dad)",
+         Role.prb.value | Role.sib.value, True),
+        ("(prb or sib) and not (mom or dad)",
+         Role.dad.value, False),
+        ("(prb or sib) and not (mom or dad)",
+         Role.dad.value | Role.mom.value, False),
+        ("prb", Role.not_role(Role.dad.value | Role.mom.value), True),
+    ]
+)
+def test_role_query_duckdb(
+    role_query: str,
+    value: int,
+    expected: int,
+    sql_query_builder_simple: SqlQueryBuilder,
+) -> None:
+    res = sql_query_builder_simple._check_roles_query_value(role_query, value)
+    assert res == expected
+
+
+@pytest.mark.parametrize(
+    "roles_query,expected", [
+        ("prb", False),
+        ("sib", False),
+        ("prb or sib", False),
+        ("prb and not (mom or dad)", True),
+        ("sib and not (mom or dad)", True),
+        ("prb and mom", False),
+        ("prb and (mom or dad)", False),
+    ]
+)
+def test_role_query_denovo_only(
+    roles_query: str,
+    expected: int,
+    sql_query_builder_simple: SqlQueryBuilder,
+) -> None:
+    res = sql_query_builder_simple._check_roles_denovo_only(roles_query)
+    assert res == expected
+
+
+@pytest.mark.parametrize(
+    "inheritance_query,expected", [
+        (["denovo"], True),
+        (["mendelian"], False),
+        (["missing"], False),
+        (["denovo or mendelian"], False),
+        (["denovo and not mendelian"], True),
+        (["denovo or possible_denovo"], False),
+    ]
+)
+def test_inheritance_query_denovo_only(
+    inheritance_query: str,
+    expected: int,
+    sql_query_builder_simple: SqlQueryBuilder,
+) -> None:
+    res = sql_query_builder_simple._check_inheritance_denovo_only(
+        inheritance_query)
     assert res == expected

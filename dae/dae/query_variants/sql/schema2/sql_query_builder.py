@@ -11,6 +11,7 @@ from dae.genomic_resources.gene_models import GeneModels
 from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.pedigrees.families_data import FamiliesData
+from dae.variants.attributes import Role, Inheritance
 from dae.query_variants.attributes_query import role_query, sex_query, \
     QueryTreeToSQLBitwiseTransformer
 from dae.query_variants.attributes_query_inheritance import \
@@ -81,6 +82,13 @@ class SqlQueryBuilder:
         limit: Optional[int] = None,
     ) -> str:
         """Build a query for summary variants."""
+        heuristics = self._calc_heuristic_bins(
+            regions=regions,
+            genes=genes,
+            effect_types=effect_types,
+            ultra_rare=ultra_rare,
+            frequency_filter=frequency_filter,
+        )
         summary_subclause = self._build_summary_subclause(
             regions=regions,
             genes=genes,
@@ -91,7 +99,7 @@ class SqlQueryBuilder:
             frequency_filter=frequency_filter,
             return_reference=return_reference,
             return_unknown=return_unknown,
-            limit=limit,
+            heuristics=heuristics,
         )
         eg_summary_clause = self._build_gene_effect_clause(genes, effect_types)
 
@@ -162,6 +170,7 @@ class SqlQueryBuilder:
         frequency_filter: Optional[RealAttrFilterType] = None,
         return_reference: Optional[bool] = None,
         return_unknown: Optional[bool] = None,
+        heuristics: Optional[dict[str, list[str]]] = None,
         **kwargs: Any
     ) -> str:
         """Build a subclause for the summary table.
@@ -186,12 +195,14 @@ class SqlQueryBuilder:
         if ultra_rare is not None and ultra_rare:
             where_parts.append(self._build_ultra_rare_where())
 
-        where_parts = self._add_region_bin_heuristic(
-            where_parts, regions, "sa")
-        where_parts = self._add_coding_bin_heuristic(
-            where_parts, effect_types, "sa")
-        where_parts = self._add_frequency_bin_heuristic(
-            where_parts, ultra_rare, frequency_filter, "sa")
+        if heuristics is not None:
+            for heuristic, bins in heuristics.items():
+                if len(bins) == 1:
+                    where_parts.append(f"sa.{heuristic} = {bins[0]}")
+                else:
+                    where_parts.append(
+                        f"sa.{heuristic} IN ({', '.join(bins)})"
+                    )
 
         if not return_reference and not return_unknown:
             where_parts.append("sa.allele_index > 0")
@@ -349,17 +360,16 @@ class SqlQueryBuilder:
         where = f"eg.effect_types in ({effect_set})"
         return where
 
-    def _add_coding_bin_heuristic(
-        self, where_parts: list[str],
-        effect_types: Optional[Sequence[str]],
-        table_alias: str = "sa"
+    def _calc_coding_bins(
+        self,
+        effect_types: Optional[Sequence[str]]
     ) -> list[str]:
         if self.partition_descriptor is None:
-            return where_parts
+            return []
         if effect_types is None:
-            return where_parts
+            return []
         if "coding_bin" not in self.summary_schema:
-            return where_parts
+            return []
         assert "coding_bin" in self.summary_schema
         assert "coding_bin" in self.family_schema
 
@@ -369,34 +379,18 @@ class SqlQueryBuilder:
             self.partition_descriptor.coding_effect_types
         )
 
-        logger.debug(
-            "coding bin heuristic: query effect types: %s; "
-            "coding_effect_types: %s; => %s",
-            effect_types, self.partition_descriptor.coding_effect_types,
-            intersection == query_effect_types
-        )
-
-        coding_bin = ""
-
+        coding_bins = []
         if intersection == query_effect_types:
-            coding_bin = "1"
-        # elif not intersection:
-        #     coding_bin = "0"
+            coding_bins.append("1")
+        return coding_bins
 
-        if coding_bin:
-            where_parts.append(
-                f"{table_alias}.coding_bin = {coding_bin}")
-        return where_parts
-
-    def _add_region_bin_heuristic(
-        self, where_parts: list[str],
-        regions: Optional[list[Region]],
-        table_alias: str = "sa"
+    def _calc_region_bins(
+        self, regions: Optional[list[Region]]
     ) -> list[str]:
         if self.partition_descriptor is None:
-            return where_parts
+            return []
         if not regions or self.partition_descriptor.region_length == 0:
-            return where_parts
+            return []
 
         chroms = set(self.partition_descriptor.chromosomes)
         region_length = self.partition_descriptor.region_length
@@ -419,52 +413,13 @@ class SqlQueryBuilder:
             start = start // region_length
             stop = stop // region_length
             for position_bin in range(start, stop + 1):
-                region_bins.add(f"{chrom_bin}_{position_bin}")
+                region_bins.add(f"'{chrom_bin}_{position_bin}'")
         if len(region_bins) == 0:
-            return where_parts
+            return []
         if len(region_bins) > self.REGION_BINS_HEURISTIC_CUTOFF:
-            return where_parts
-        region_bins_set = ", ".join(f"'{rb}'" for rb in region_bins)
-        where_parts.append(
-            f"{table_alias}.region_bin in ({region_bins_set})"
-        )
-        return where_parts
+            return []
 
-    def _add_frequency_bin_heuristic(
-        self, where_parts: list[str],
-        ultra_rare: Optional[bool],
-        frequency_filter: Optional[RealAttrFilterType],
-        table_alias: str = "sa"
-    ) -> list[str]:
-        if self.partition_descriptor is None:
-            return where_parts
-        if not ultra_rare and frequency_filter is None:
-            return where_parts
-        if "frequency_bin" not in self.summary_schema:
-            return where_parts
-        assert "frequency_bin" in self.summary_schema
-        assert "frequency_bin" in self.family_schema
-
-        frequency_bins: set[int] = set([0])  # always search de Novo variants
-        if ultra_rare is not None and ultra_rare:
-            frequency_bins.add(1)
-        if frequency_filter is not None:
-            for freq, (_, right) in frequency_filter:
-                if freq != "af_allele_freq":
-                    continue
-                if right is None:
-                    return where_parts
-                assert right is not None
-                if right <= self.partition_descriptor.rare_boundary:
-                    frequency_bins.add(2)
-                elif right > self.partition_descriptor.rare_boundary:
-                    return where_parts
-        if frequency_bins and len(frequency_bins) < 4:
-            frequency_bins_set = ", ".join(
-                str(fb) for fb in range(0, max(frequency_bins) + 1))
-            where_parts.append(
-                f"{table_alias}.frequency_bin in ({frequency_bins_set})")
-        return where_parts
+        return list(region_bins)
 
     def build_family_variants_query(
         self,
@@ -485,6 +440,21 @@ class SqlQueryBuilder:
         limit: Optional[int] = None,
         **kwargs: Any
     ) -> str:
+        """Build a query for family variants."""
+        print(100 * "=")
+        print("roles:", roles)
+        print("inheritance:", inheritance)
+        print(100 * "=")
+
+        heuristics = self._calc_heuristic_bins(
+            regions=regions,
+            genes=genes,
+            effect_types=effect_types,
+            inheritance=inheritance,
+            roles=roles,
+            ultra_rare=ultra_rare,
+            frequency_filter=frequency_filter,
+        )
         summary_subclause = self._build_summary_subclause(
             regions=regions,
             genes=genes,
@@ -495,6 +465,7 @@ class SqlQueryBuilder:
             frequency_filter=frequency_filter,
             return_reference=return_reference,
             return_unknown=return_unknown,
+            heuristics=heuristics,
         )
         family_subclause = self._build_family_subclause(
             regions=regions,
@@ -511,7 +482,7 @@ class SqlQueryBuilder:
             frequency_filter=frequency_filter,
             return_reference=return_reference,
             return_unknown=return_unknown,
-            limit=limit,
+            heuristics=heuristics,
         )
         effect_gene_subclause = self._build_gene_effect_clause(
             genes, effect_types)
@@ -562,7 +533,7 @@ class SqlQueryBuilder:
         frequency_filter: Optional[RealAttrFilterType] = None,
         return_reference: Optional[bool] = None,
         return_unknown: Optional[bool] = None,
-        limit: Optional[int] = None,
+        heuristics: Optional[dict[str, list[str]]] = None,
         **kwargs: Any
     ) -> str:
         """Build a subclause for the summary table.
@@ -583,12 +554,15 @@ class SqlQueryBuilder:
                 self._build_inheritance_query_where(inheritance)
             )
 
-        where_parts = self._add_region_bin_heuristic(
-            where_parts, regions, "fa")
-        where_parts = self._add_coding_bin_heuristic(
-            where_parts, effect_types, "fa")
-        where_parts = self._add_frequency_bin_heuristic(
-            where_parts, ultra_rare, frequency_filter, "fa")
+        if heuristics is not None:
+            for heuristic, bins in heuristics.items():
+                # bins = [f"'{b}'" for b in bins]
+                if len(bins) == 1:
+                    where_parts.append(f"fa.{heuristic} = {bins[0]}")
+                else:
+                    where_parts.append(
+                        f"fa.{heuristic} IN ({', '.join(bins)})"
+                    )
 
         # Do not look into reference alleles
         if not return_reference and not return_unknown:
@@ -676,3 +650,96 @@ class SqlQueryBuilder:
     ) -> str:
         return self._build_inheritance_query(
             inheritance_query, "fa.inheritance_in_members")
+
+    def _check_roles_denovo_only(self, roles_query: str) -> bool:
+        return self._check_roles_query_value(
+            roles_query,
+            Role.prb.value | Role.sib.value) and \
+            not self._check_roles_query_value(
+                roles_query,
+                Role.prb.value | Role.sib.value |
+                Role.dad.value | Role.mom.value)
+
+    def _check_inheritance_denovo_only(
+        self, inheritance_query: Sequence[str]
+    ) -> bool:
+        return not self._check_inheritance_query_value(
+            inheritance_query,
+            Inheritance.mendelian.value | Inheritance.possible_denovo.value |
+            Inheritance.possible_omission.value | Inheritance.missing.value)
+
+    def _calc_frequency_bins(
+        self,
+        inheritance: Optional[Sequence[str]] = None,
+        roles: Optional[str] = None,
+        ultra_rare: Optional[bool] = None,
+        frequency_filter: Optional[RealAttrFilterType] = None,
+    ) -> list[str]:
+        if self.partition_descriptor is None:
+            return []
+        if "frequency_bin" not in self.summary_schema:
+            return []
+        assert "frequency_bin" in self.summary_schema
+        assert "frequency_bin" in self.family_schema
+
+        if not ultra_rare and frequency_filter is None:
+            return []
+
+        if roles and self._check_roles_denovo_only(roles):
+            return ["0"]
+        if inheritance and self._check_inheritance_denovo_only(inheritance):
+            return ["0"]
+
+        frequency_bins: set[int] = set([0])  # always search de Novo variants
+        if ultra_rare is not None and ultra_rare:
+            frequency_bins.add(1)
+        if frequency_filter is not None:
+            for freq, (_, right) in frequency_filter:
+                if freq != "af_allele_freq":
+                    continue
+                if right is None:
+                    return []
+                assert right is not None
+                if right <= self.partition_descriptor.rare_boundary:
+                    frequency_bins.add(2)
+                elif right > self.partition_descriptor.rare_boundary:
+                    return []
+        result: list[str] = []
+        if frequency_bins and len(frequency_bins) < 4:
+            result = [
+                str(fb) for fb in range(0, max(frequency_bins) + 1)
+            ]
+
+        return result
+
+    def _calc_heuristic_bins(
+        self,
+        regions: Optional[list[Region]] = None,
+        genes: Optional[list[str]] = None,
+        effect_types: Optional[list[str]] = None,
+        inheritance: Optional[Sequence[str]] = None,
+        roles: Optional[str] = None,
+        ultra_rare: Optional[bool] = None,
+        frequency_filter: Optional[RealAttrFilterType] = None,
+        **kwargs: Any
+    ) -> dict[str, list[str]]:
+        heuristics = {}
+        if genes is not None:
+            regions = self._build_gene_regions_heuristic(genes, regions)
+
+        region_bins = self._calc_region_bins(regions)
+        if region_bins:
+            heuristics["region_bin"] = region_bins
+        coding_bins = self._calc_coding_bins(effect_types)
+        if coding_bins:
+            heuristics["coding_bin"] = coding_bins
+        frequency_bins = self._calc_frequency_bins(
+            inheritance=inheritance,
+            roles=roles,
+            ultra_rare=ultra_rare,
+            frequency_filter=frequency_filter,
+        )
+        if frequency_bins:
+            heuristics["frequency_bin"] = frequency_bins
+
+        return heuristics
