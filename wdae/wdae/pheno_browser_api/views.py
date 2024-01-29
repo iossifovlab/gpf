@@ -172,14 +172,12 @@ class PhenoMeasuresDownload(QueryDatasetView):
 
         buffer.close()
 
+
+
     def head(self, request: Request) -> Response:
-        data = dict(
-            zip(
-                request.query_params.keys(),
-                request.query_params.values()
-            )
-        )
-        data = {key: value for key, value in data.items() if value}
+        """Return a status code validating if measures can be downloaded."""
+        data = request.query_params
+        data = {k: str(v) for k, v in data.items()}
 
         if "dataset_id" not in data:
             return Response(status=status.HTTP_400_BAD_REQUEST)
@@ -192,7 +190,9 @@ class PhenoMeasuresDownload(QueryDatasetView):
 
         search_term = data.get("search_term", None)
         instrument = data.get("instrument", None)
+
         if (instrument is not None
+                and instrument != ""
                 and instrument not in dataset.phenotype_data.instruments):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -208,11 +208,11 @@ class PhenoMeasuresDownload(QueryDatasetView):
 
         return Response(status=status.HTTP_200_OK)
 
-    def post(self, request: Request) -> Response:
+    def get(self, request: Request) -> Response:
         """Return a CSV file stream for measures."""
-        data = request.data
-        if "queryData" in data:
-            data = parse_query_params(data)
+        data = request.query_params
+        data = {k: str(v) for k, v in data.items()}
+
         if "dataset_id" not in data:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         dataset_id = data["dataset_id"]
@@ -225,6 +225,7 @@ class PhenoMeasuresDownload(QueryDatasetView):
         instrument = data.get("instrument", None)
 
         if (instrument is not None
+                and instrument != ""
                 and instrument not in dataset.phenotype_data.instruments):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -236,8 +237,7 @@ class PhenoMeasuresDownload(QueryDatasetView):
         ]
 
         if len(measure_ids) > 1900:
-            # measure_ids = measure_ids[0:1900]
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+            return Response(status=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE)
 
         values_iterator = self.csv_value_iterator(
             dataset, measure_ids
