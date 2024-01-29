@@ -121,7 +121,7 @@ export class PhenoBrowserComponent implements OnInit {
     this.selectedInstrument$.next(instrument);
   }
 
-  public downloadMeasures(event: Event): void {
+  public downloadMeasures(): void {
     combineLatest([this.searchTermObs$, this.selectedInstrument$])
       .pipe(
         take(1),
@@ -135,19 +135,13 @@ export class PhenoBrowserComponent implements OnInit {
           /* eslint-enable */
           return zip(
             of(data),
-            this.phenoBrowserService.validateMeasureDownload(
-              this.selectedDatasetId,
-              instrument,
-              searchTerm
-            )
+            this.phenoBrowserService.validateMeasureDownload(data)
           );
         })
       ).subscribe(([data, validity]) => {
         if (validity.status === 200) {
-          if (event.target instanceof HTMLFormElement) {
-            (event.target.queryData as HTMLInputElement).value = JSON.stringify(data);
-            event.target.submit();
-          }
+          // this.phenoBrowserService.getDownloadMeasuresLink(data)
+          window.open(this.phenoBrowserService.getDownloadMeasuresLink(data));
         } else if (validity.status === 413) {
           this.errorModal = true;
         }

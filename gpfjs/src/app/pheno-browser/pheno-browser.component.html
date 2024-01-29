@@ -37,16 +37,10 @@
       </div>
       <div id="download-wrapper">
         <span>Phenotype measures</span>
-        <form
-          id="dl-form"
-          (ngSubmit)="downloadMeasures($event)"
-          action="{{ configService.baseUrl }}pheno_browser/download"
-          method="post">
-          <input name="queryData" type="hidden" />
-          <button id="download-measures" class="btn btn-md btn-primary btn-right" type="submit">
-            <span class="material-symbols-outlined">download</span>
-          </button>
-        </form>
+        <input name="queryData" type="hidden" />
+        <button (click)="downloadMeasures()" id="download-measures" class="btn btn-md btn-primary btn-right">
+          <span class="material-symbols-outlined">download</span>
+        </button>
       </div>
     </div>
   </div>
