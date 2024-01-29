@@ -172,42 +172,6 @@ class PhenoMeasuresDownload(QueryDatasetView):
 
         buffer.close()
 
-
-
-    def head(self, request: Request) -> Response:
-        """Return a status code validating if measures can be downloaded."""
-        data = request.query_params
-        data = {k: str(v) for k, v in data.items()}
-
-        if "dataset_id" not in data:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-        dataset_id = data["dataset_id"]
-
-        dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
-
-        if not dataset or dataset.phenotype_data is None:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-
-        search_term = data.get("search_term", None)
-        instrument = data.get("instrument", None)
-
-        if (instrument is not None
-                and instrument != ""
-                and instrument not in dataset.phenotype_data.instruments):
-            return Response(status=status.HTTP_404_NOT_FOUND)
-
-        measures = dataset.phenotype_data.search_measures(
-            instrument, search_term
-        )
-        measure_ids = [
-            measure["measure"]["measure_id"] for measure in measures
-        ]
-
-        if len(measure_ids) > 1900:
-            return Response(status=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE)
-
-        return Response(status=status.HTTP_200_OK)
-
     def get(self, request: Request) -> Response:
         """Return a CSV file stream for measures."""
         data = request.query_params
@@ -249,6 +213,15 @@ class PhenoMeasuresDownload(QueryDatasetView):
         response["Content-Disposition"] = "attachment; filename=measures.csv"
         response["Expires"] = "0"
         return response
+   
+    def head(self, request: Request) -> Response:
+        """Return a status code validating if measures can be downloaded."""
+        response = self.get(request)
+
+        if isinstance(response, StreamingHttpResponse):
+            return Response(status=status.HTTP_200_OK)
+        else:
+            return response
 
 
 class PhenoMeasureValues(QueryDatasetView):
