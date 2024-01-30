@@ -451,10 +451,11 @@ class PhenotypeStudy(PhenotypeData):
             ["continuous", "ordinal", "categorical", "unknown"]
         )
 
-        measure = self.db.measure
+        measure = self.db.measures
+        instruments = self.db.instruments
         columns = [
             measure.c.measure_id,
-            measure.c.instrument_name,
+            instruments.c.instrument_name,
             measure.c.measure_name,
             measure.c.description,
             measure.c.measure_type,
@@ -464,7 +465,7 @@ class PhenotypeStudy(PhenotypeData):
             measure.c.min_value,
             measure.c.max_value,
         ]
-        query = select(*columns)
+        query = select(*columns).select_from(measure.join(instruments))
         query = query.where(not_(measure.c.measure_type.is_(None)))
         if instrument is not None:
             query = query.where(measure.c.instrument_name == instrument)

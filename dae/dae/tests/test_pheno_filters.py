@@ -16,7 +16,7 @@ def fake_phenotype_data(fixture_dirname):
 
 
 def test_pheno_filter_set_apply(fake_phenotype_data):
-    df = fake_phenotype_data.get_persons_values_df(["i1.m5"])
+    df = fake_phenotype_data.get_people_measure_values_df(["i1.m5"])
     assert len(df) == 195
 
     measure = fake_phenotype_data.get_measure("i1.m5")
@@ -61,7 +61,7 @@ def test_pheno_filter_min_max_assignment(fake_phenotype_data, values_range):
 
 
 def test_pheno_filter_range_apply(fake_phenotype_data):
-    df = fake_phenotype_data.get_persons_values_df(["i1.m1"])
+    df = fake_phenotype_data.get_people_measure_values_df(["i1.m1"])
     assert len(df) == 195
 
     measure = fake_phenotype_data.get_measure("i1.m1")

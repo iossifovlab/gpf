@@ -178,7 +178,7 @@ def main(
 
             db.clear_instrument_values_tables(drop=True)
             db.build_instrument_values_tables()
-            db.populate_instrument_values_tables()
+            db.populate_instrument_values_tables(use_old=True)
 
 
 if __name__ == "__main__":

@@ -541,7 +541,7 @@ class PrepareVariables(PreparePersons):
 
             with self.db.pheno_engine.begin() as connection:
                 result = connection.execute(query.values(query_values))
-                instrument_id = result.inserted_primary_key[0]
+                instrument_id = result.lastrowid
                 connection.commit()
 
             values_queue = TaskQueue()

@@ -418,27 +418,6 @@ class RESTClient:
         )
         return response.json()
 
-    def post_pheno_persons_values(
-        self, dataset_id: str,
-        measure_ids: Iterable[str],
-        roles: Optional[Iterable[str]],
-        person_ids: Optional[Iterable[str]],
-        family_ids: Optional[Iterable[str]]
-    ) -> Any:
-        """Post a pheno measures persons values request."""
-        data = {
-            "datasetId": dataset_id,
-            "measureIds": measure_ids,
-            "roles": roles,
-            "personIds": person_ids,
-            "familyIds": family_ids,
-        }
-        response = self._post(
-            "pheno_tool/persons_values",
-            data=data
-        )
-        return response.json()
-
     def get_instruments_details(self, dataset_id: str) -> Any:
         response = self._get(
             "pheno_tool/instruments",
@@ -521,7 +500,7 @@ class RESTClient:
         """Post pheno measure values request."""
         data = {
             "datasetId": dataset_id,
-            "measureId": measure_id,
+            "measureIds": [measure_id],
             "personIds": person_ids,
             "familyIds": family_ids,
             "roles": roles
@@ -531,54 +510,6 @@ class RESTClient:
             data=data
         )
 
-        return response.json()
-
-    def post_pheno_values(
-        self, dataset_id: str,
-        measure_ids: list[str],
-        person_ids: Optional[list[str]],
-        family_ids: Optional[list[str]],
-        roles: Optional[list[str]],
-        default_filter: Optional[str]
-    ) -> Any:
-        """Post pheno measures values query request."""
-        data = {
-            "datasetId": dataset_id,
-            "measureIds": measure_ids,
-            "personIds": person_ids,
-            "familyIds": family_ids,
-            "roles": roles,
-            "defaultFilter": default_filter
-        }
-        response = self._post(
-            "pheno_tool/values",
-            data=data
-        )
-
-        return response.json()
-
-    def post_instrument_values(
-        self, dataset_id: str,
-        instrument_name: str,
-        person_ids: Optional[Iterable[str]],
-        family_ids: Optional[Iterable[str]],
-        roles: Optional[Iterable[str]],
-        measures: Optional[Iterable[str]]
-    ) -> Any:
-        """Post pheno instrument measures query request."""
-        data = {
-            "datasetId": dataset_id,
-            "instrumentName": instrument_name,
-            "personIds": person_ids,
-            "familyIds": family_ids,
-            "roles": roles,
-            "measures": measures,
-        }
-
-        response = self._post(
-            "pheno_tool/instrument_values",
-            data=data
-        )
         return response.json()
 
     def post_pheno_tool(self, data: dict) -> Any:

@@ -62,16 +62,6 @@ def test_get_browser_measures_info(rest_client: RESTClient) -> None:
     assert isinstance(measures_info, dict)
 
 
-def test_get_browser_measures(rest_client: RESTClient) -> None:
-    measures = rest_client.get_browser_measures("iossifov_2014", "i1", None)
-
-    measures = list(measures)
-
-    assert measures is not None
-    assert isinstance(measures, list)
-    assert len(measures) == 7
-
-
 def test_get_instruments(rest_client: RESTClient) -> None:
     instruments = rest_client.get_instruments("iossifov_2014")
 
@@ -102,19 +92,6 @@ def test_post_pheno_persons(rest_client: RESTClient) -> None:
     assert isinstance(pheno_persons, dict)
 
 
-def test_post_pheno_persons_values(rest_client: RESTClient) -> None:
-    pheno_persons_values = rest_client.post_pheno_persons_values(
-        "iossifov_2014",
-        ["i1.m1"],
-        None,
-        None,
-        None
-    )
-
-    assert pheno_persons_values is not None
-    assert isinstance(pheno_persons_values, list)
-
-
 def test_get_instruments_details(rest_client: RESTClient) -> None:
     instrument_details = rest_client.get_instruments_details("iossifov_2014")
 
@@ -138,26 +115,10 @@ def test_get_measures(rest_client: RESTClient) -> None:
 
 def test_post_measure_values(rest_client: RESTClient) -> None:
     measure_values = rest_client.post_measure_values(
-        "iossifov_2014", "i1.m1", None, None, None, None)
+        "iossifov_2014", "i1.m1", None, None, None)
 
     assert measure_values is not None
-    assert isinstance(measure_values, dict)
-
-
-def test_post_pheno_values(rest_client: RESTClient) -> None:
-    pheno_values = rest_client.post_pheno_values(
-        "iossifov_2014", ["i1.m1"], None, None, None, None)
-
-    assert pheno_values is not None
-    assert isinstance(pheno_values, list)
-
-
-def test_post_instrument_values(rest_client: RESTClient) -> None:
-    instrument_values = rest_client.post_instrument_values(
-        "iossifov_2014", "i1", None, None, None, None)
-
-    assert instrument_values is not None
-    assert isinstance(instrument_values, dict)
+    assert isinstance(measure_values, list)
 
 
 def test_get_measures_download(rest_client: RESTClient) -> None:

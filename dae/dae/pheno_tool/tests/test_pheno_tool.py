@@ -565,7 +565,7 @@ def test_calc_empty_variants(fake_phenotype_data: PhenotypeStudy) -> None:
 
 
 def test_normalize_df_by_empty_df(fake_phenotype_data: PhenotypeStudy) -> None:
-    pheno_df = fake_phenotype_data.get_persons_values_df(
+    pheno_df = fake_phenotype_data.get_people_measure_values_df(
         ["i1.m1", "i1.m2"], person_ids=[]
     )
 

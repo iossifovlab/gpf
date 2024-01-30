@@ -352,7 +352,7 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
                     result_row.measure_id
         return measure_column_names
 
-    def populate_instrument_values_tables(self) -> None:
+    def populate_instrument_values_tables(self, use_old=False) -> None:
         """
         Populate the instrument values tables with values.
 
@@ -368,13 +368,20 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
         measure_column_names = {}
 
         with self.pheno_engine.connect() as connection:
-            # Very important to use legacy 'measure' table here instead
-            # Measure IDs will be mismatched when collecting values otherwise
-            query = select(
-                self.measure.c.id,
-                self.measure.c.measure_id,
-                self.measure.c.measure_type
-            )
+            if use_old:
+                # Very important to use legacy 'measure' table here instead
+                # Measure IDs will be mismatched when collecting values otherwise
+                query = select(
+                    self.measure.c.id,
+                    self.measure.c.measure_id,
+                    self.measure.c.measure_type
+                )
+            else:
+                query = select(
+                    self.measures.c.id,
+                    self.measures.c.measure_id,
+                    self.measures.c.measure_type
+                )
             results = connection.execute(query)
             for result_row in results:
                 measure_id_map[result_row.measure_id] = result_row.id
