@@ -18,14 +18,14 @@ import { HttpClient } from '@angular/common/http';
 })
 export class PhenoBrowserComponent implements OnInit {
   public selectedInstrument$: BehaviorSubject<PhenoInstrument> = new BehaviorSubject<PhenoInstrument>(undefined);
-  private searchTermObs$: Observable<string>;
+  public searchTermObs$: Observable<string>;
   private measuresToShow: PhenoMeasures;
   public measuresToShow$: Observable<PhenoMeasures>;
   public errorModal = false;
 
   public instruments: Observable<PhenoInstruments>;
 
-  private selectedDatasetId: string;
+  public selectedDatasetId: string;
   public selectedDataset: Dataset;
 
   public input$ = new ReplaySubject<string>(1);
