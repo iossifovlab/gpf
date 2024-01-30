@@ -61,7 +61,9 @@ class PhenoMeasureHistogramView(QueryDatasetView):
         if measure.measure_type is not MeasureType.continuous:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        df = dataset.phenotype_data.get_measure_values_df(pheno_measure)
+        df = dataset.phenotype_data.get_people_measure_values_df(
+            [pheno_measure]
+        )
 
         m = df[pheno_measure]
         bars, bins = np.histogram(
@@ -92,7 +94,9 @@ class PhenoMeasurePartitionsView(QueryDatasetView):
 
         assert dataset.phenotype_data.has_measure(pheno_measure)
 
-        df = dataset.phenotype_data.get_measure_values_df(pheno_measure)
+        df = dataset.phenotype_data.get_people_measure_values_df(
+            [pheno_measure]
+        )
 
         try:
             mmin = float(data["min"])

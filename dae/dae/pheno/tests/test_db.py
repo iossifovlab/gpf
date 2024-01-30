@@ -480,6 +480,7 @@ def test_subquery_generation(output_dir: str) -> None:
     print(query)
     expected = (
         "SELECT person.person_id, person.role, family.family_id, "
+        "person.status, person.sex, "
         "\"i1.m1_value\".value AS 'i1.m1', "
         "\"i1.m2_value\".value AS 'i1.m2' \n"
         "FROM person JOIN family ON family.id = person.family_id "

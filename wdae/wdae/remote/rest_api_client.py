@@ -517,7 +517,6 @@ class RESTClient:
         person_ids: Optional[Iterable[str]],
         family_ids: Optional[Iterable[str]],
         roles: Optional[Iterable[str]],
-        default_filter: Optional[str]
     ) -> Any:
         """Post pheno measure values request."""
         data = {
@@ -525,11 +524,10 @@ class RESTClient:
             "measureId": measure_id,
             "personIds": person_ids,
             "familyIds": family_ids,
-            "roles": roles,
-            "defaultFilter": default_filter
+            "roles": roles
         }
         response = self._post(
-            "pheno_tool/measure_values",
+            "pheno_tool/people_values",
             data=data
         )
 

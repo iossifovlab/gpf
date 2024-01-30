@@ -190,11 +190,11 @@ class PhenoTool:
         # options via PeopleGroup
         all_measures = [self.measure_id] + self.normalize_by
 
-        pheno_df = self.phenotype_data.get_persons_values_df(
+        pheno_df = self.phenotype_data.get_people_measure_values_df(
             all_measures,
             person_ids=person_ids,
             family_ids=family_ids,
-            roles=[Role.prb]
+            roles=["prb"]
         )
 
         self.pheno_df = pheno_df.dropna()

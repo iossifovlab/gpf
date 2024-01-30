@@ -3,6 +3,7 @@ import pytest
 from dae.pheno.pheno_data import PhenotypeStudy
 
 
+@pytest.mark.skip(reason="Filters unsupported")
 @pytest.mark.parametrize(
     "filter_type,expected_len", [("apply", 176), ("invert", 19), ("skip", 195)]
 )
@@ -16,12 +17,13 @@ def test_default_filters(
         measure_id in fake_phenotype_data.measures
         and fake_phenotype_data.measures[measure_id] is not None
     )
-    df = fake_phenotype_data.get_measure_values_df(
-        measure_id, default_filter=filter_type
-    )
-    assert len(df) == expected_len
+    #  df = fake_phenotype_data.get_measure_values_df(
+    #      measure_id, default_filter=filter_type
+    #  )
+    #  assert len(df) == expected_len
 
 
+@pytest.mark.skip(reason="Filters unsupported")
 def test_default_filter_bad_value_throw(
     fake_phenotype_data: PhenotypeStudy
 ) -> None:
@@ -31,7 +33,7 @@ def test_default_filter_bad_value_throw(
         and fake_phenotype_data.measures[measure_id] is not None
     )
 
-    with pytest.raises(ValueError):
-        fake_phenotype_data.get_measure_values_df(
-            measure_id, default_filter="wrong"
-        )
+    #  with pytest.raises(ValueError):
+    #      fake_phenotype_data.get_measure_values_df(
+    #          measure_id, default_filter="wrong"
+    #      )

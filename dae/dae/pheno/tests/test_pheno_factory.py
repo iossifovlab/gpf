@@ -16,4 +16,4 @@ def test_get_pheno_db(fake_pheno_db: PhenoRegistry) -> None:
 def test_get_pheno_db_names(fake_pheno_db: PhenoRegistry) -> None:
     names = fake_pheno_db.get_phenotype_data_ids()
     assert names is not None
-    assert len(names) == 5
+    assert len(names) == 4

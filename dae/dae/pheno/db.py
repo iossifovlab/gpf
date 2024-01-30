@@ -184,6 +184,13 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
                         "family_id", String(64), nullable=False, index=True
                     ),
                     Column("role", String(64), nullable=False, index=True),
+                Column(
+                    "status",
+                    Enum(Status),
+                    nullable=False,
+                    default=Status.unaffected,
+                ),
+                    Column("sex", Enum(Sex), nullable=False),
                     *cols,
                     extend_existing=True
                 )
@@ -216,6 +223,8 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
             self.person.c.person_id,
             self.person.c.role,
             self.family.c.family_id,
+            self.person.c.status,
+            self.person.c.sex
         ]
         query = select(
             self.measure.c.measure_id, self.measure.c.measure_type
@@ -421,6 +430,8 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
                         "person_id": row["person_id"],
                         "role": str(row["role"]),
                         "family_id": row["family_id"],
+                        "status": row["status"],
+                        "sex": row["sex"]
                     }
                     for measure in measures:
                         col_name = measure_column_names[measure]

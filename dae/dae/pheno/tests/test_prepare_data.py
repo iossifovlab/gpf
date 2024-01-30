@@ -29,15 +29,15 @@ def test_augment_measure(
     assert df is not None
 
     roles = list(df["role"].unique())
-    assert len(roles) == 3
-    for role in [Role.parent, Role.sib, Role.prb]:
+    assert len(roles) == 4
+    for role in ["mom", "dad", "sib", "prb"]:
         assert role in roles
     assert list(df) == [
         "person_id",
         "family_id",
         "role",
-        "sex",
         "status",
+        "sex",
         "test regression",
         "i1.m1",
     ]
@@ -65,8 +65,8 @@ def test_augment_measure_regressor_no_instrument_name(
         "person_id",
         "family_id",
         "role",
-        "sex",
         "status",
+        "sex",
         "test regression",
         "i1.m1",
     ]
@@ -408,7 +408,7 @@ def test_draw_violinplot(
     temp_dirname_figures: str
 ) -> None:
 
-    df = fake_phenotype_data.get_persons_values_df(["i1.m5", "i1.m6"])
+    df = fake_phenotype_data.get_people_measure_values_df(["i1.m5", "i1.m6"])
     for i in range(len(df)):
         df["i1.m5"][i] = i
         df["i1.m6"][i] = i * 2
@@ -435,7 +435,7 @@ def test_draw_stripplot(
     temp_dirname_figures: str
 ) -> None:
 
-    df = fake_phenotype_data.get_persons_values_df(["i1.m5", "i1.m6"])
+    df = fake_phenotype_data.get_people_measure_values_df(["i1.m5", "i1.m6"])
     for i in range(len(df)):
         df["i1.m5"][i] = i
         df["i1.m6"][i] = i * 2

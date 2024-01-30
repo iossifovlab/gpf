@@ -35,7 +35,7 @@ QUERY = {
         }
     ),
     (
-        "/api/v3/pheno_tool/persons_values",
+        "/api/v3/pheno_tool/people_values",
         "post",
         {
             "datasetId": "f1_trio",
@@ -54,23 +54,7 @@ QUERY = {
         "/api/v3/pheno_tool/measures?datasetId=f1_trio&instrument=i1",
         "get", None
     ),
-    (
-        "/api/v3/pheno_tool/measure_values",
-        "post",
-        {
-            "datasetId": "f1_trio",
-            "measureId": "i1.m1"
-        }
-    ),
     ("/api/v3/pheno_tool/instruments?datasetId=f1_trio", "get", None),
-    (
-        "/api/v3/pheno_tool/instrument_values",
-        "post",
-        {
-            "datasetId": "f1_trio",
-            "instrumentName": "i1"
-        }
-    ),
 ])
 def test_pheno_tool_api_permissions(
     anonymous_client: Client,

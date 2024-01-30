@@ -259,6 +259,8 @@ def test_get_specific_measure_values(admin_client: Client) -> None:
         "family_id": "f1",
         "person_id": "sib2",
         "role": "sib",
+        "sex": "F",
+        "status": "unaffected",
         "instrument1.continuous": 4.56,
         "instrument1.categorical": None
     }
@@ -266,6 +268,8 @@ def test_get_specific_measure_values(admin_client: Client) -> None:
         "family_id": "f1",
         "person_id": "sib1",
         "role": "sib",
+        "sex": "F",
+        "status": "unaffected",
         "instrument1.continuous": 1.23,
         "instrument1.categorical": None
     }
@@ -288,6 +292,8 @@ def test_get_measure_values(admin_client: Client) -> None:
         "family_id": "f1",
         "person_id": "sib2",
         "role": "sib",
+        "sex": "F",
+        "status": "unaffected",
         "instrument1.continuous": 4.56,
         "instrument1.categorical": None,
         "instrument1.ordinal": None,
@@ -297,6 +303,8 @@ def test_get_measure_values(admin_client: Client) -> None:
         "family_id": "f1",
         "person_id": "prb1",
         "role": "prb",
+        "sex": "M",
+        "status": "affected",
         "instrument1.continuous": 3.14,
         "instrument1.categorical": "option2",
         "instrument1.ordinal": 5.0,
@@ -306,6 +314,8 @@ def test_get_measure_values(admin_client: Client) -> None:
         "family_id": "f1",
         "person_id": "dad1",
         "role": "dad",
+        "sex": "M",
+        "status": "unaffected",
         "instrument1.continuous": 2.718,
         "instrument1.categorical": None,
         "instrument1.ordinal": None,

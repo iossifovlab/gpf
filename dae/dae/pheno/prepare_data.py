@@ -57,7 +57,9 @@ class PreparePhenoBrowserBase:
         )
 
     def load_measure(self, measure: Measure) -> pd.DataFrame:
-        df = self.phenotype_data.get_persons_values_df([measure.measure_id])
+        df = self.phenotype_data.get_people_measure_values_df(
+            [measure.measure_id]
+        )
         return df
 
     def _augment_measure_values_df(
@@ -80,7 +82,7 @@ class PreparePhenoBrowserBase:
         if not self.phenotype_data.has_measure(augment_id):
             return None
 
-        df = self.phenotype_data.get_persons_values_df(
+        df = self.phenotype_data.get_people_measure_values_df(
             [augment_id, measure.measure_id]
         )
         df.loc[df.role == Role.mom, "role"] = Role.parent
