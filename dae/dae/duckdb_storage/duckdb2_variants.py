@@ -271,6 +271,8 @@ class DuckDb2Variants(QueryVariantsBase):
             limit=limit,
             seen=set())
 
+        # filter_func = \
+        #     RawFamilyVariants.summary_variant_filter_duplicate_function()
         runner.adapt(filter_func)
 
         return runner
@@ -396,6 +398,8 @@ class DuckDb2Variants(QueryVariantsBase):
             limit=limit,
             seen=set())
 
+        # filter_func = \
+        #     RawFamilyVariants.family_variant_filter_duplicate_function()
         runner.adapt(filter_func)
         return runner
 

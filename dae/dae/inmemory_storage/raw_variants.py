@@ -393,6 +393,24 @@ class RawFamilyVariants(abc.ABC):
 
         return filter_func
 
+    @classmethod
+    def summary_variant_filter_duplicate_function(
+        cls, **kwargs: Any
+    ) -> Callable[[SummaryVariant], Optional[SummaryVariant]]:
+        """Return a filter function that checks the conditions in kwargs."""
+        seen = kwargs.get("seen", set())
+
+        def filter_func(sv: SummaryVariant) -> Optional[SummaryVariant]:
+            if sv is None:
+                return None
+            if sv.svuid in seen:
+                return None
+
+            seen.add(sv.svuid)
+            return sv
+
+        return filter_func
+
     def build_summary_variants_query_runner(
         self, **kwargs: Any
     ) -> RawVariantsQueryRunner:
@@ -430,6 +448,21 @@ class RawFamilyVariants(abc.ABC):
                     yield sv
         finally:
             pass
+
+    @classmethod
+    def family_variant_filter_duplicate_function(
+        cls, **kwargs: Any
+    ) -> Callable[[FamilyVariant], Optional[FamilyVariant]]:
+        """Return a filter function that checks the conditions in kwargs."""
+        seen = kwargs.get("seen", set())
+
+        def filter_func(fv: FamilyVariant) -> Optional[FamilyVariant]:
+            if fv is None or fv.fvuid in seen:
+                return None
+            seen.add(fv.fvuid)
+            return fv
+
+        return filter_func
 
     @classmethod
     def family_variant_filter_function(  # noqa: C901

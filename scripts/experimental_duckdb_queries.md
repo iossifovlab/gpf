@@ -1098,3 +1098,114 @@ JOIN family AS fa
     AND fa.allele_index = sa.allele_index
   );
 ```
+
+```sql
+EXPLAIN ANALYZE WITH summary AS (
+  SELECT
+    *
+  FROM AGRE_WG38_CSHL_859_SCHEMA2_summary AS sa
+  WHERE
+    (
+      sa.chromosome = 'chr1'
+      AND NOT (
+        COALESCE(sa.end_position, sa.position) < 151402724 OR sa.position > 151459465
+      )
+    )
+    AND (
+      sa.af_allele_freq <= 100
+    )
+    AND sa.region_bin = 'chr1_3'
+    AND sa.allele_index > 0
+), effect_gene AS (
+  SELECT
+    *,
+    UNNEST(effect_gene) AS eg
+  FROM summary
+), effect_gene_summary AS (
+  SELECT
+    *
+  FROM effect_gene
+  WHERE
+    eg.effect_gene_symbols IN ('POGZ')
+    AND eg.effect_types IN ('frame-shift', 'nonsense', 'splice-site', 'no-frame-shift-newStop', 'missense', 'synonymous', 'CNV+', 'CNV-', 'no-frame-shift', 'noEnd', 'noStart', 'CDS')
+), family_bins AS (
+  SELECT
+    *
+  FROM AGRE_WG38_CSHL_859_SCHEMA2_family AS fa
+  WHERE
+    fa.region_bin = 'chr1_3'
+), family AS (
+  SELECT
+    *
+  FROM family_bins AS fa
+  WHERE
+    (
+      8 & fa.inheritance_in_members
+    ) = 0
+    AND (
+      32 & fa.inheritance_in_members
+    ) = 0
+    AND (
+      150 & fa.inheritance_in_members
+    ) <> 0
+    AND fa.allele_index > 0
+)
+SELECT
+  fa.bucket_index,
+  fa.summary_index,
+  fa.family_index,
+  sa.allele_index,
+  sa.summary_variant_data,
+  fa.family_variant_data
+FROM effect_gene_summary AS sa
+JOIN family AS fa
+  ON (
+    fa.summary_index = sa.summary_index
+    AND fa.bucket_index = sa.bucket_index
+    AND fa.allele_index = sa.allele_index
+  )
+```
+
+```sql
+EXPLAIN ANALYZE WITH summary AS (
+  SELECT
+    *
+  FROM AGRE_WG38_CSHL_859_SCHEMA2_summary AS sa
+  WHERE
+    sa.allele_index > 0 AND sa.region_bin = 'chr1_0'
+), family AS (
+  SELECT
+    *
+  FROM AGRE_WG38_CSHL_859_SCHEMA2_family AS fa
+  WHERE
+    fa.region_bin = 'chr1_0'
+    AND (
+      8 & fa.inheritance_in_members
+    ) = 0
+    AND (
+      32 & fa.inheritance_in_members
+    ) = 0
+    AND (
+      150 & fa.inheritance_in_members
+    ) <> 0
+    AND fa.allele_index > 0
+)
+SELECT
+  fa.bucket_index,
+  fa.summary_index,
+  fa.family_index,
+  sa.allele_index,
+  sa.summary_variant_data,
+  fa.family_variant_data
+FROM summary AS sa
+LEFT JOIN family AS fa
+  ON (
+    fa.region_bin = sa.region_bin
+    AND fa.coding_bin = sa.coding_bin
+    AND fa.frequency_bin = sa.frequency_bin
+    AND fa.summary_index = sa.summary_index
+    AND fa.bucket_index = sa.bucket_index
+    AND fa.allele_index = sa.allele_index
+  )
+LIMIT 10010
+```

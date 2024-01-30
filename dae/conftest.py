@@ -441,9 +441,12 @@ def _generate_genotype_storage_fixtures(metafunc: pytest.Metafunc) -> None:
         marked_types = set()
         for mark in getattr(metafunc.function, "pytestmark", []):
             if mark.name.startswith("gs_"):
-                marked_types.add(mark.name[3:])
+                storage_type = mark.name[3:]
+                marked_types.add(storage_type)
+                if storage_type == "duckdb":
+                    marked_types.add("duckdb2")
         marked_types = marked_types & {
-            "impala", "impala2", "duckdb", "inmemory", "gcp"}
+            "impala", "impala2", "duckdb", "duckdb2", "inmemory", "gcp"}
         if marked_types:
             result = {}
             for storage_id, storage in GENOTYPE_STORAGES.items():
