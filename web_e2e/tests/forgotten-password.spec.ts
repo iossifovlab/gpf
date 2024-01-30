@@ -7,7 +7,7 @@ test.describe('Forgotten password tests', () => {
   });
 
   test('should open forgotten password window', async({ page }) => {
-    await page.getByText('Log In').click();
+    await page.getByRole('button', { name: 'Log In' }).click();
     await expect(page.getByRole('link', {name: 'forgotten password'})).toBeVisible();
     await page.getByText('forgotten password').click();
 
