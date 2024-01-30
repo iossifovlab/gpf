@@ -130,7 +130,7 @@ class SqlQueryBuilder:
         genes: Optional[list[str]] = None,
         effect_types: Optional[list[str]] = None,
     ) -> str:
-        eg_join_clause = ""
+        eg_subclause = ""
         if genes or effect_types:
             where_parts: list[str] = []
             if genes:
@@ -145,7 +145,7 @@ class SqlQueryBuilder:
             eg_where = " AND ".join([wp for wp in where_parts if wp])
             if not eg_where:
                 return ""
-            eg_join_clause = textwrap.dedent(f""",
+            eg_subclause = textwrap.dedent(f""",
                 effect_gene AS (
                     SELECT *, UNNEST(effect_gene) as eg
                     FROM summary
@@ -157,7 +157,7 @@ class SqlQueryBuilder:
                         {eg_where}
                 )
             """)
-        return eg_join_clause
+        return eg_subclause
 
     def _build_summary_subclause(
         self,
@@ -488,6 +488,10 @@ class SqlQueryBuilder:
         effect_gene_subclause = self._build_gene_effect_clause(
             genes, effect_types)
 
+        summary_from = "summary"
+        if effect_gene_subclause:
+            summary_from = "effect_gene_summary"
+
         limit_clause = ""
         if limit is not None:
             limit_clause = f"LIMIT {limit}"
@@ -504,7 +508,7 @@ class SqlQueryBuilder:
                 sa.summary_variant_data,
                 fa.family_variant_data
             FROM
-                summary as sa
+                {summary_from} as sa
             JOIN
                 family as fa
             ON (
@@ -537,11 +541,39 @@ class SqlQueryBuilder:
         heuristics: Optional[dict[str, list[str]]] = None,
         **kwargs: Any
     ) -> str:
-        """Build a subclause for the summary table.
+        """Build a subclause for the family table.
 
-        This is the part of the query that is specific to the summary table.
+        This is the part of the query that is specific to the family table.
         """
+        query: list[str] = []
         where_parts: list[str] = []
+        from_clause = f"{self.db_layout.family} AS fa"
+        if heuristics:
+            for heuristic, bins in heuristics.items():
+                # bins = [f"'{b}'" for b in bins]
+                if len(bins) == 1:
+                    where_parts.append(f"fa.{heuristic} = {bins[0]}")
+                else:
+                    where_parts.append(
+                        f"fa.{heuristic} IN ({', '.join(bins)})"
+                    )
+            assert where_parts
+            where = " AND ".join([wp for wp in where_parts if wp])
+            family_where = textwrap.dedent(f"""WHERE
+                {where}
+            """)
+
+            query.append(f"""
+                family_bins AS (
+                    SELECT
+                        *
+                    FROM {from_clause}
+                    {family_where}
+                )
+            """)
+            from_clause = "family_bins AS fa"
+
+        where_parts = []
         if genes is not None:
             regions = self._build_gene_regions_heuristic(genes, regions)
         if roles is not None:
@@ -555,16 +587,6 @@ class SqlQueryBuilder:
                 self._build_inheritance_query_where(inheritance)
             )
 
-        if heuristics is not None:
-            for heuristic, bins in heuristics.items():
-                # bins = [f"'{b}'" for b in bins]
-                if len(bins) == 1:
-                    where_parts.append(f"fa.{heuristic} = {bins[0]}")
-                else:
-                    where_parts.append(
-                        f"fa.{heuristic} IN ({', '.join(bins)})"
-                    )
-
         # Do not look into reference alleles
         if not return_reference and not return_unknown:
             where_parts.append("fa.allele_index > 0")
@@ -575,16 +597,18 @@ class SqlQueryBuilder:
             family_where = textwrap.dedent(f"""WHERE
                 {where}
             """)
-        query = textwrap.dedent(f"""
-            family AS (
-                SELECT
-                    *
-                FROM
-                    {self.db_layout.family} fa
-                {family_where}
-            )
+        query.append(
+            textwrap.dedent(f"""
+                family AS (
+                    SELECT
+                        *
+                    FROM
+                        {from_clause}
+                    {family_where}
+                )
             """)
-        return query
+        )
+        return ",".join(query)
 
     def _build_roles_query(self, roles_query: str, attr: str) -> str:
         parsed = role_query.transform_query_string_to_tree(roles_query)
@@ -737,7 +761,6 @@ class SqlQueryBuilder:
         roles: Optional[str] = None,
         ultra_rare: Optional[bool] = None,
         frequency_filter: Optional[RealAttrFilterType] = None,
-        **kwargs: Any
     ) -> dict[str, list[str]]:
         heuristics = {}
         if genes is not None:

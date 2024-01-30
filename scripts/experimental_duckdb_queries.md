@@ -788,7 +788,7 @@ select count(*) from AGRE_WG38_CSHL_859_SCHEMA2_summary where length(effect_gene
 
 
 ```sql
-WITH summary AS (
+EXPLAIN ANALYZE WITH summary AS (
   SELECT
     *
   FROM AGRE_WG38_CSHL_859_SCHEMA2_summary AS sa
@@ -925,4 +925,176 @@ SELECT count(*) FROM family_bins AS fa WHERE
     ) <> 0
     AND fa.allele_index > 0
 
+```
+
+
+```sql
+WITH summary AS (
+  SELECT
+    *
+  FROM AGRE_WG38_CSHL_859_SCHEMA2_summary AS sa
+  WHERE
+    (
+      sa.af_allele_count <= 1 OR sa.af_allele_count IS NULL
+    )
+    AND sa.coding_bin = 1
+    AND sa.frequency_bin IN (0, 1)
+    AND sa.allele_index > 0
+), effect_gene AS (
+  SELECT
+    *,
+    UNNEST(effect_gene) AS eg
+  FROM summary
+), effect_gene_summary AS (
+  SELECT
+    *
+  FROM effect_gene
+  WHERE
+    eg.effect_types IN ('frame-shift', 'nonsense', 'splice-site', 'no-frame-shift-newStop')
+), family_bins AS (
+  SELECT
+    *
+  FROM AGRE_WG38_CSHL_859_SCHEMA2_family AS fa
+  WHERE
+    fa.coding_bin = 1 AND fa.frequency_bin IN (0, 1)
+), family AS (
+  SELECT
+    *
+  FROM family_bins AS fa
+  WHERE
+    (
+      (
+        (
+          fa.allele_in_roles & 128
+        ) <> 0
+      )
+      AND (
+        (
+          NOT (
+            (
+              fa.allele_in_roles & 256
+            ) <> 0
+          )
+        )
+      )
+    )
+    OR (
+      (
+        (
+          fa.allele_in_roles & 128
+        ) <> 0
+      )
+      AND (
+        (
+          fa.allele_in_roles & 256
+        ) <> 0
+      )
+    )
+    AND (
+      8 & fa.inheritance_in_members
+    ) = 0
+    AND (
+      32 & fa.inheritance_in_members
+    ) = 0
+    AND (
+      150 & fa.inheritance_in_members
+    ) <> 0
+    AND fa.allele_index > 0
+)
+SELECT
+  fa.bucket_index,
+  fa.summary_index,
+  fa.family_index,
+  sa.allele_index
+FROM effect_gene_summary AS sa
+JOIN family AS fa
+  ON (
+    fa.summary_index = sa.summary_index
+    AND fa.bucket_index = sa.bucket_index
+    AND fa.allele_index = sa.allele_index
+  )
+```
+
+```sql
+WITH summary AS (
+  SELECT
+    *
+  FROM AGRE_WG38_CSHL_859_SCHEMA2_summary AS sa
+  WHERE
+    (
+      sa.af_allele_count <= 1 OR sa.af_allele_count IS NULL
+    )
+    AND sa.coding_bin = 1
+    AND sa.frequency_bin IN (0, 1)
+    AND sa.allele_index > 0
+), effect_gene AS (
+  SELECT
+    *,
+    UNNEST(effect_gene) AS eg
+  FROM summary
+), effect_gene_summary AS (
+  SELECT
+    *
+  FROM effect_gene
+  WHERE
+    eg.effect_types IN ('frame-shift', 'nonsense', 'splice-site', 'no-frame-shift-newStop')
+), family_bins AS (
+  SELECT
+    *
+  FROM AGRE_WG38_CSHL_859_SCHEMA2_family AS fa
+  WHERE
+    fa.coding_bin = 1 AND fa.frequency_bin IN (0, 1)
+), family AS (
+  SELECT
+    *
+  FROM family_bins AS fa
+  WHERE
+    (
+      (
+        (
+          fa.allele_in_roles & 128
+        ) <> 0
+      )
+      AND (
+        (
+          NOT (
+            (
+              fa.allele_in_roles & 256
+            ) <> 0
+          )
+        )
+      )
+    )
+    OR (
+      (
+        (
+          fa.allele_in_roles & 128
+        ) <> 0
+      )
+      AND (
+        (
+          fa.allele_in_roles & 256
+        ) <> 0
+      )
+    )
+    AND (
+      8 & fa.inheritance_in_members
+    ) = 0
+    AND (
+      32 & fa.inheritance_in_members
+    ) = 0
+    AND (
+      150 & fa.inheritance_in_members
+    ) <> 0
+    AND fa.allele_index > 0
+)
+SELECT
+    count(*)
+FROM effect_gene_summary AS sa
+JOIN family AS fa
+  ON (
+    fa.summary_index = sa.summary_index
+    AND fa.bucket_index = sa.bucket_index
+    AND fa.allele_index = sa.allele_index
+  );
 ```

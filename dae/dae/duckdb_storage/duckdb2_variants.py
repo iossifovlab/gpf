@@ -251,6 +251,8 @@ class DuckDb2Variants(QueryVariantsBase):
             return_unknown=return_unknown,
             limit=query_limit,
         )
+        logger.info("SUMMARY VARIANTS QUERY:\n%s", query)
+
         runner = self.RUNNER_CLASS(
             connection_factory=self.connection,
             query=query,
