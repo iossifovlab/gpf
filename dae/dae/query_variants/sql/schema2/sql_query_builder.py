@@ -441,11 +441,6 @@ class SqlQueryBuilder:
         **kwargs: Any
     ) -> str:
         """Build a query for family variants."""
-        print(100 * "=")
-        print("roles:", roles)
-        print("inheritance:", inheritance)
-        print(100 * "=")
-
         heuristics = self._calc_heuristic_bins(
             regions=regions,
             genes=genes,
@@ -455,6 +450,12 @@ class SqlQueryBuilder:
             ultra_rare=ultra_rare,
             frequency_filter=frequency_filter,
         )
+        print(100 * "=")
+        print("roles:", roles)
+        print("inheritance:", inheritance)
+        print("heuristics:", heuristics)
+        print(100 * "=")
+
         summary_subclause = self._build_summary_subclause(
             regions=regions,
             genes=genes,
@@ -657,16 +658,24 @@ class SqlQueryBuilder:
             Role.prb.value | Role.sib.value) and \
             not self._check_roles_query_value(
                 roles_query,
-                Role.prb.value | Role.sib.value |
-                Role.dad.value | Role.mom.value)
+                Role.prb.value | Role.sib.value
+                | Role.dad.value | Role.mom.value)
 
     def _check_inheritance_denovo_only(
         self, inheritance_query: Sequence[str]
     ) -> bool:
         return not self._check_inheritance_query_value(
             inheritance_query,
-            Inheritance.mendelian.value | Inheritance.possible_denovo.value |
-            Inheritance.possible_omission.value | Inheritance.missing.value)
+            Inheritance.mendelian.value) \
+            and not self._check_inheritance_query_value(
+                inheritance_query,
+                Inheritance.possible_denovo.value) \
+            and not self._check_inheritance_query_value(
+                inheritance_query,
+                Inheritance.possible_omission.value) \
+            and not self._check_inheritance_query_value(
+                inheritance_query,
+                Inheritance.missing.value)
 
     def _calc_frequency_bins(
         self,
@@ -682,13 +691,20 @@ class SqlQueryBuilder:
         assert "frequency_bin" in self.summary_schema
         assert "frequency_bin" in self.family_schema
 
-        if not ultra_rare and frequency_filter is None:
-            return []
+        print(100 * "=")
+        print("inheritance:", inheritance)
+        print("roles:", roles)
+        print("ultra_rare:", ultra_rare)
+        print("frequency_filter:", frequency_filter)
+        print(100 * "=")
 
         if roles and self._check_roles_denovo_only(roles):
             return ["0"]
         if inheritance and self._check_inheritance_denovo_only(inheritance):
             return ["0"]
+
+        if not ultra_rare and frequency_filter is None:
+            return []
 
         frequency_bins: set[int] = set([0])  # always search de Novo variants
         if ultra_rare is not None and ultra_rare:

@@ -6,16 +6,13 @@ from typing import Optional, cast, Any
 from functools import reduce
 
 from dae.effect_annotation.effect import EffectTypesMixin
-from dae.variants.attributes import Role, Inheritance
+from dae.variants.attributes import Inheritance
 from dae.utils.regions import Region
 from dae.pedigrees.family import ALL_FAMILY_TYPES, FamilyType
 from dae.query_variants.attributes_query import \
-    QNode, \
     role_query, \
     variant_type_converter, \
     sex_converter, \
-    AndNode, \
-    NotNode, \
     OrNode, \
     ContainsNode
 
@@ -103,17 +100,16 @@ class QueryTransformer:
     @staticmethod
     def _transform_present_in_child_and_parent_roles(
         present_in_child: set[str], present_in_parent: set[str]
-    ) -> Optional[QNode]:
+    ) -> Optional[str]:
         roles_query = []
         roles_query.append(
             QueryTransformer._present_in_child_to_roles(present_in_child))
         roles_query.append(
             QueryTransformer._present_in_parent_to_roles(present_in_parent))
-        result = cast(
-            list[QNode], list(filter(lambda rq: rq is not None, roles_query)))
+        result = [role for role in roles_query if role is not None]
 
         if len(result) == 2:
-            return AndNode(result)
+            return f"({result[0]}) and ({result[1]})"
 
         if len(result) == 1:
             return result[0]
@@ -171,72 +167,48 @@ class QueryTransformer:
     @staticmethod
     def _present_in_child_to_roles(
         present_in_child: set[str]
-    ) -> Optional[QNode]:
+    ) -> Optional[str]:
         roles_query = []
 
         if "proband only" in present_in_child:
-            roles_query.append(AndNode(
-                [ContainsNode(Role.prb),  # type: ignore
-                 NotNode(ContainsNode(Role.sib))]  # type: ignore
-            ))
+            roles_query.append("prb and not sib")
 
         if "sibling only" in present_in_child:
-            roles_query.append(AndNode(
-                [NotNode(ContainsNode(Role.prb)),  # type: ignore
-                 ContainsNode(Role.sib)]  # type: ignore
-            ))
+            roles_query.append("sib and not prb")
 
         if "proband and sibling" in present_in_child:
-            roles_query.append(AndNode(
-                [ContainsNode(Role.prb),  # type: ignore
-                 ContainsNode(Role.sib)]  # type: ignore
-            ))
+            roles_query.append("prb and sib")
 
         if "neither" in present_in_child:
-            roles_query.append(AndNode(
-                [NotNode(ContainsNode(Role.prb)),  # type: ignore
-                 NotNode(ContainsNode(Role.sib))]  # type: ignore
-            ))
+            roles_query.append("not prb and not sib")
         if len(roles_query) == 4 or len(roles_query) == 0:
             return None
         if len(roles_query) == 1:
             return roles_query[0]
-        return OrNode(roles_query)
+        return " or ".join(f"( {r} )" for r in roles_query)
 
     @staticmethod
     def _present_in_parent_to_roles(
         present_in_parent: set[str]
-    ) -> Optional[QNode]:
+    ) -> Optional[str]:
         roles_query = []
 
         if "mother only" in present_in_parent:
-            roles_query.append(AndNode(
-                [NotNode(ContainsNode(Role.dad)),  # type: ignore
-                 ContainsNode(Role.mom)]  # type: ignore
-            ))
+            roles_query.append("mom and not dad")
 
         if "father only" in present_in_parent:
-            roles_query.append(AndNode(
-                [ContainsNode(Role.dad),  # type: ignore
-                 NotNode(ContainsNode(Role.mom))]  # type: ignore
-            ))
+            roles_query.append("dad and not mom")
 
         if "mother and father" in present_in_parent:
-            roles_query.append(AndNode(
-                [ContainsNode(Role.dad),  # type: ignore
-                 ContainsNode(Role.mom)]  # type: ignore
-            ))
+            roles_query.append("mom and dad")
 
         if "neither" in present_in_parent:
-            roles_query.append(AndNode(
-                [NotNode(ContainsNode(Role.dad)),  # type: ignore
-                 NotNode(ContainsNode(Role.mom))]  # type: ignore
-            ))
+            roles_query.append("not mom and not dad")
         if len(roles_query) == 4 or len(roles_query) == 0:
             return None
         if len(roles_query) == 1:
             return roles_query[0]
-        return OrNode(roles_query)
+        return " or ".join(f"( {r} )" for r in roles_query)
 
     def _transform_filters_to_ids(self, filters: list[dict]) -> set[str]:
         result = []
@@ -269,7 +241,7 @@ class QueryTransformer:
 
     @staticmethod
     def _add_roles_to_query(
-        query: Optional[QNode], kwargs: dict[str, Any]
+        query: Optional[str], kwargs: dict[str, Any]
     ) -> None:
         if not query:
             return
@@ -280,7 +252,7 @@ class QueryTransformer:
                 original_roles = role_query.transform_query_string_to_tree(
                     original_roles
                 )
-            kwargs["roles"] = AndNode([original_roles, query])
+            kwargs["roles"] = f"{original_roles} and {query}"
         else:
             kwargs["roles"] = query
 
@@ -347,6 +319,10 @@ class QueryTransformer:
             roles_query = self._transform_present_in_child_and_parent_roles(
                 present_in_child, present_in_parent
             )
+            print(100 * "=")
+            print("roles query: ", roles_query)
+            print(100 * "=")
+
             self._add_roles_to_query(roles_query, kwargs)
 
             if present_in_parent != {"neither"} and rarity is not None:

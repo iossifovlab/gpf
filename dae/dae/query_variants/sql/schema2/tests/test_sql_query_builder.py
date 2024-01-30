@@ -427,6 +427,8 @@ def test_inheritance_query_duckdb(
         ("(prb or sib) and not (mom or dad)",
          Role.dad.value | Role.mom.value, False),
         ("prb", Role.not_role(Role.dad.value | Role.mom.value), True),
+        ("(prb and not sib) and (mom and not dad)",
+         Role.prb.value | Role.mom.value, True),
     ]
 )
 def test_role_query_duckdb(
@@ -448,6 +450,10 @@ def test_role_query_duckdb(
         ("sib and not (mom or dad)", True),
         ("prb and mom", False),
         ("prb and (mom or dad)", False),
+        ("(prb and not sib) or (prb and sib)", False),
+        ("((prb and not sib) or (prb and sib)) and (not mom and not dad)",
+         True),
+        ("( prb and not sib ) or ( prb and sib )", False),
     ]
 )
 def test_role_query_denovo_only(
@@ -467,6 +473,10 @@ def test_role_query_denovo_only(
         (["denovo or mendelian"], False),
         (["denovo and not mendelian"], True),
         (["denovo or possible_denovo"], False),
+        (["any(denovo,mendelian,missing,omission)"], False),
+        (["not possible_denovo and not possible_omission"], False),
+        (["any(denovo,mendelian,missing,omission)",
+          "not possible_denovo and not possible_omission"], False),
     ]
 )
 def test_inheritance_query_denovo_only(

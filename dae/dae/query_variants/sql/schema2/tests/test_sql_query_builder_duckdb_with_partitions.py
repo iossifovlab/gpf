@@ -441,3 +441,39 @@ def test_query_family_variants_by_inheritance(
 ) -> None:
     fvs = list(duckdb2_variants.query_variants(**params))
     assert len(fvs) == count
+
+
+@pytest.mark.parametrize(
+    "params,expected", [
+        (
+            {
+                "roles": "( prb and not sib ) or ( prb and sib )",
+                "inheritance": [
+                    "not possible_denovo and not possible_omission",
+                    "any(denovo,mendelian,missing,omission)"
+                ],
+                "ultra_rare": True,
+            },
+            ["0", "1"]
+        ),
+        (
+            {
+                "roles": "( prb and not sib ) or ( prb and sib )",
+                "inheritance": [
+                    "not possible_denovo and not possible_omission",
+                    "any(denovo,mendelian,missing,omission)"
+                ],
+                "ultra_rare": False,
+                "frequency_filter": [("af_allele_freq", (None, 1.0))],
+            },
+            ["0", "1", "2"]
+        ),
+    ]
+)
+def test_calc_frequency_bin_heuristics(
+    params: dict[str, Any],
+    expected: list[str],
+    query_builder: SqlQueryBuilder,
+) -> None:
+    frequency_bins = query_builder._calc_frequency_bins(**params)
+    assert frequency_bins == expected
