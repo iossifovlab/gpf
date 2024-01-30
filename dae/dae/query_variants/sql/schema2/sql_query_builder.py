@@ -163,15 +163,13 @@ class SqlQueryBuilder:
         self,
         regions: Optional[list[Region]] = None,
         genes: Optional[list[str]] = None,
-        effect_types: Optional[list[str]] = None,
-        variant_type: Optional[str] = None,
         real_attr_filter: Optional[RealAttrFilterType] = None,
         ultra_rare: Optional[bool] = None,
         frequency_filter: Optional[RealAttrFilterType] = None,
         return_reference: Optional[bool] = None,
         return_unknown: Optional[bool] = None,
         heuristics: Optional[dict[str, list[str]]] = None,
-        **kwargs: Any
+        **_kwargs: Any
     ) -> str:
         """Build a subclause for the summary table.
 
@@ -438,9 +436,10 @@ class SqlQueryBuilder:
         return_reference: Optional[bool] = None,
         return_unknown: Optional[bool] = None,
         limit: Optional[int] = None,
-        **kwargs: Any
+        **_kwargs: Any
     ) -> str:
         """Build a query for family variants."""
+        # pylint: disable=too-many-arguments
         heuristics = self._calc_heuristic_bins(
             regions=regions,
             genes=genes,
@@ -526,25 +525,21 @@ class SqlQueryBuilder:
         self,
         regions: Optional[list[Region]] = None,
         genes: Optional[list[str]] = None,
-        effect_types: Optional[list[str]] = None,
-        family_ids: Optional[Sequence[str]] = None,
-        person_ids: Optional[Sequence[str]] = None,
+        _family_ids: Optional[Sequence[str]] = None,
+        _person_ids: Optional[Sequence[str]] = None,
         inheritance: Optional[Union[str, Sequence[str]]] = None,
         roles: Optional[str] = None,
         sexes: Optional[str] = None,
-        variant_type: Optional[str] = None,
-        real_attr_filter: Optional[RealAttrFilterType] = None,
-        ultra_rare: Optional[bool] = None,
-        frequency_filter: Optional[RealAttrFilterType] = None,
         return_reference: Optional[bool] = None,
         return_unknown: Optional[bool] = None,
         heuristics: Optional[dict[str, list[str]]] = None,
-        **kwargs: Any
+        **_kwargs: Any
     ) -> str:
         """Build a subclause for the family table.
 
         This is the part of the query that is specific to the family table.
         """
+        # pylint: disable=too-many-arguments
         query: list[str] = []
         where_parts: list[str] = []
         from_clause = f"{self.db_layout.family} AS fa"
