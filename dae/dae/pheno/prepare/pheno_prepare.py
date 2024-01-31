@@ -42,10 +42,10 @@ class PrepareBase(PrepareCommon):
         self.config = config
         self.db = PhenoDb(self.config.db.filename)
         self.db.build()
-        self.persons = None
+        self.persons: dict[str, Any] = {}
 
     def get_persons(self, force: bool = False) -> Optional[dict[str, Any]]:
-        if not self.persons or force:
+        if not self.persons or len(self.persons) == 0 or force:
             self.persons = self.db.get_persons()
         return self.persons
 
@@ -370,7 +370,9 @@ class PrepareVariables(PreparePersons):
             log.write(classifier_report.log_line())
             log.write("\n")
 
-    def save_measure(self, measure: Box, db_name, instrument_id: int) -> int:
+    def save_measure(
+        self, measure: Box, db_name: str, instrument_id: int
+    ) -> int:
         """Save measure into sqlite database."""
         to_save = measure.to_dict()
         to_save["instrument_id"] = instrument_id
@@ -511,11 +513,11 @@ class PrepareVariables(PreparePersons):
                     measure_desc, df
                 )
                 fut = pool.apply_async(classify_task)
-                classify_queue.put(fut)  # type: ignore
+                classify_queue.put(fut)
 
             while not classify_queue.empty():
                 res = classify_queue.get()
-                task = res.get()  # type: ignore
+                task = res.get()
                 measure, classifier_report, _mdf = task.done()
                 self.log_measure(measure, classifier_report)
                 if measure.measure_type == MeasureType.skipped:
@@ -563,7 +565,7 @@ class PrepareVariables(PreparePersons):
                 measure_id = self.save_measure(measure, db_name, instrument_id)
                 measure.db_id = measure_id
                 values_task = MeasureValuesTask(measure, mdf)
-                res = pool.apply_async(values_task)  # type: ignore
+                res = pool.apply_async(values_task)
                 values_queue.put(res)
 
             while not values_queue.empty():

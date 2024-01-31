@@ -184,12 +184,12 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
                         "family_id", String(64), nullable=False, index=True
                     ),
                     Column("role", String(64), nullable=False, index=True),
-                Column(
-                    "status",
-                    Enum(Status),
-                    nullable=False,
-                    default=Status.unaffected,
-                ),
+                    Column(
+                        "status",
+                        Enum(Status),
+                        nullable=False,
+                        default=Status.unaffected,
+                    ),
                     Column("sex", Enum(Sex), nullable=False),
                     *cols,
                     extend_existing=True
@@ -352,7 +352,8 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
                     result_row.measure_id
         return measure_column_names
 
-    def populate_instrument_values_tables(self, use_old=False) -> None:
+    #  pylint: disable=too-many-branches
+    def populate_instrument_values_tables(self, use_old: bool = False) -> None:
         """
         Populate the instrument values tables with values.
 
@@ -370,7 +371,8 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
         with self.pheno_engine.connect() as connection:
             if use_old:
                 # Very important to use legacy 'measure' table here instead
-                # Measure IDs will be mismatched when collecting values otherwise
+                # Measure IDs will be mismatched when
+                # collecting values otherwise
                 query = select(
                     self.measure.c.id,
                     self.measure.c.measure_id,

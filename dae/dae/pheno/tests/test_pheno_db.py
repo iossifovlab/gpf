@@ -1,5 +1,5 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,too-many-lines
-from typing import Any, Callable, List, Generator
+from typing import Any, Callable, Generator
 
 import pytest
 import pandas as pd
@@ -21,9 +21,9 @@ def df_check(
 
 def dict_gen_check(
     dict_gen: Generator[dict[str, Any], None, None],
-    expected_count,
-    expected_cols
-):
+    expected_count: int,
+    expected_cols: list[str]
+) -> None:
     dict_check(next(dict_gen), expected_count, expected_cols)
 
 

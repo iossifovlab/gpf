@@ -12,15 +12,13 @@ from itertools import chain
 from box import Box
 
 import pandas as pd
-from sqlalchemy.sql import select, text, union
+from sqlalchemy.sql import select, union
 from sqlalchemy import not_, Select
 
 from dae.pedigrees.family import Person
 from dae.pedigrees.families_data import FamiliesData
 from dae.pheno.db import PhenoDb
 from dae.pheno.common import MeasureType
-from dae.configuration.gpf_config_parser import GPFConfigParser
-from dae.configuration.schemas.phenotype_data import pheno_conf_schema
 
 from dae.variants.attributes import Sex, Status, Role
 from dae.utils.helpers import isnan

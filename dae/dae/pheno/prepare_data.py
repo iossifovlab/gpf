@@ -85,8 +85,8 @@ class PreparePhenoBrowserBase:
         df = self.phenotype_data.get_people_measure_values_df(
             [augment_id, measure.measure_id]
         )
-        df.loc[df.role == Role.mom, "role"] = Role.parent
-        df.loc[df.role == Role.dad, "role"] = Role.parent
+        df.loc[df.role == Role.mom, "role"] = Role.parent  # type: ignore
+        df.loc[df.role == Role.dad, "role"] = Role.parent  # type: ignore
 
         df.rename(columns={augment_id: augment_name}, inplace=True)
         return df
@@ -349,7 +349,10 @@ class PreparePhenoBrowserBase:
                 continue
 
             res["regression_id"] = reg_id
-            res.update(self.build_regression(measure, reg_measure, reg.jitter))
+            regression = self.build_regression(
+                measure, reg_measure, reg.jitter
+            )
+            res.update(regression)  # type: ignore
             if (
                 res.get("pvalue_regression_male") is not None
                 or res.get("pvalue_regression_female") is not None

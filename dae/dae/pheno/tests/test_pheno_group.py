@@ -3,11 +3,10 @@ from typing import Optional
 
 import pytest
 import pandas as pd
-import numpy as np
 
 from dae.pheno.registry import PhenoRegistry
 from dae.pheno.pheno_data import PhenotypeGroup
-from dae.variants.attributes import Role, Status, Sex
+from dae.variants.attributes import Role
 
 
 @pytest.mark.skip(reason="Groups are unused")
@@ -212,7 +211,7 @@ def test_pheno_group_i1_get_values_df(
     person_ids: Optional[set[str]]
 ) -> None:
 
-    df = fake_group.get_values_df(
+    df = fake_group.get_values_df(  # type: ignore
         ["i1.iq"], person_ids=person_ids,
         family_ids=family_ids, roles=roles)
     print(df)
@@ -241,7 +240,7 @@ def test_pheno_group_i2_get_values_df(
     person_ids: Optional[set[str]]
 ) -> None:
 
-    df = fake_group.get_values_df(
+    df = fake_group.get_values_df(  # type: ignore
         ["i2.iq"], person_ids=person_ids,
         family_ids=family_ids, roles=roles)
     print(df)
@@ -270,7 +269,7 @@ def test_pheno_group_i1_i2_get_values_df(
     person_ids: Optional[set[str]]
 ) -> None:
 
-    df = fake_group.get_values_df(
+    df = fake_group.get_values_df(  # type: ignore
         ["i1.iq", "i2.iq"], person_ids=person_ids,
         family_ids=family_ids, roles=roles)
     print(df)
@@ -300,7 +299,7 @@ def test_pheno_group_i1_i2_get_values(
     person_ids: Optional[set[str]]
 ) -> None:
 
-    res = fake_group.get_values(
+    res = fake_group.get_values(  # type: ignore
         ["i1.iq", "i2.iq"], person_ids=person_ids,
         family_ids=family_ids, roles=roles)
     print(res)

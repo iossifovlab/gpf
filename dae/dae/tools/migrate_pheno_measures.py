@@ -50,7 +50,7 @@ def measures_cli_parser() -> ArgumentParser:
     return parser
 
 
-def main(
+def main(  # pylint: disable=too-many-locals
     argv: Optional[list[str]] = None
 ) -> None:
     """Run the pheno measure tables creation procedure."""
@@ -93,23 +93,25 @@ def main(
                 PhenotypeStudy, pheno_registry.get_phenotype_data(db_name)
             )
 
-            measure = pheno_data.db.measure
+            measure_table = pheno_data.db.measure
             columns = [
-                measure.c.measure_id,
-                measure.c.instrument_name,
-                measure.c.measure_name,
-                measure.c.description,
-                measure.c.measure_type,
-                measure.c.individuals,
-                measure.c.default_filter,
-                measure.c.values_domain,
-                measure.c.min_value,
-                measure.c.max_value,
+                measure_table.c.measure_id,
+                measure_table.c.instrument_name,
+                measure_table.c.measure_name,
+                measure_table.c.description,
+                measure_table.c.measure_type,
+                measure_table.c.individuals,
+                measure_table.c.default_filter,
+                measure_table.c.values_domain,
+                measure_table.c.min_value,
+                measure_table.c.max_value,
             ]
-            query = select(*columns)
-            query = query.where(not_(measure.c.measure_type.is_(None)))
+            select_query = select(*columns)
+            select_query = select_query.where(
+                not_(measure_table.c.measure_type.is_(None))
+            )
 
-            df = pd.read_sql(query, pheno_data.db.pheno_engine)
+            df = pd.read_sql(select_query, pheno_data.db.pheno_engine)
             # pylint: disable=protected-access
             pheno_data._instruments = pheno_data._load_instruments(df)
 

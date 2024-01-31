@@ -5,10 +5,10 @@ from sqlalchemy.sql import select
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.pheno.pheno_data import PhenotypeStudy
 from dae.pheno.registry import PhenoRegistry
-from dae.tools.build_pheno_measures import main
+from dae.tools.migrate_pheno_measures import main
 
 
-def test_build_pheno_measures_functions(clean_pheno_db_dir: str) -> None:
+def test_migrate_pheno_measures_functions(clean_pheno_db_dir: str) -> None:
     main([clean_pheno_db_dir, "--dbs", "fake"])
 
     pheno_registry = PhenoRegistry()
@@ -24,7 +24,9 @@ def test_build_pheno_measures_functions(clean_pheno_db_dir: str) -> None:
                 lock=False
             )
 
-    pheno_data = cast(PhenotypeStudy, pheno_registry.get_phenotype_data("fake"))
+    pheno_data = cast(
+        PhenotypeStudy, pheno_registry.get_phenotype_data("fake")
+    )
     metadata = pheno_data.db.pheno_metadata
     assert "measures" in metadata.tables.keys()
     assert "instruments" in metadata.tables.keys()
@@ -32,7 +34,7 @@ def test_build_pheno_measures_functions(clean_pheno_db_dir: str) -> None:
     assert "i2_measure_values" in metadata.tables.keys()
 
 
-def test_build_pheno_measures_values(clean_pheno_db_dir: str) -> None:
+def test_migrate_pheno_measures_values(clean_pheno_db_dir: str) -> None:
     main([clean_pheno_db_dir, "--dbs", "fake"])
 
     pheno_configs = GPFConfigParser.collect_directory_configs(
