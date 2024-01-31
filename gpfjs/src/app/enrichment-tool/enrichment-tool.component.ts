@@ -45,7 +45,7 @@ export class EnrichmentToolComponent implements OnInit, OnDestroy {
       this.enrichmentResults = null;
     });
 
-    this.loadingService.interruptEvent.subscribe(_ => {
+    this.loadingService.interruptEvent.subscribe(() => {
       if (this.enrichmentQuerySubscription !== null) {
         this.enrichmentQuerySubscription.unsubscribe();
         this.enrichmentResults = null;

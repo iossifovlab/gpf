@@ -21,12 +21,13 @@ export class EnrichmentModelsComponent extends StatefulComponent implements OnIn
 
   public countings: Array<IdDescriptionName>;
   public backgrounds: Array<IdDescriptionName>;
+  public modelsLoaded = false;
 
   public imgPathPrefix = environment.imgPathPrefix;
 
   public constructor(
     protected store: Store,
-    private enrichmentModelsService: EnrichmentModelsService,
+    private enrichmentModelsService: EnrichmentModelsService
   ) {
     super(store, EnrichmentModelsState, 'enrichmentModels');
   }
@@ -47,6 +48,7 @@ export class EnrichmentModelsComponent extends StatefulComponent implements OnIn
         this.background = res.backgrounds.find(bg => bg.id === res.defaultBackground);
         this.counting = res.countings.find(ct => ct.id === res.defaultCounting);
       }
+      this.modelsLoaded = true;
       this.store.dispatch(new SetEnrichmentModels(this.background.id, this.counting.id));
     });
   }
