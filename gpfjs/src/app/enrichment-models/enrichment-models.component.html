@@ -1,3 +1,12 @@
+<div *ngIf="!modelsLoaded">
+  <div class="form-block" style="display: contents">
+    <ul ngbNav #nav="ngbNav" class="bg-light nav-pills" style="justify-content: center">
+      <li ngbNavItem>
+        <span style="opacity: 75%"><i>Loading models...</i></span>
+      </li>
+    </ul>
+  </div>
+</div>
 <div *ngIf="backgrounds || countings" style="display: flex; justify-content: space-evenly">
   <div *ngIf="backgrounds" id="background-models" style="width: 300px; flex: 1; padding-right: 16px">
     <span>Background Models:</span>
