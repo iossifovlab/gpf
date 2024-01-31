@@ -6,7 +6,8 @@ import pathlib
 from typing import Optional, cast
 import logging
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
-from sqlalchemy.sql import select, insert
+from sqlalchemy.sql import select, insert, not_
+import pandas as pd
 
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.utils.verbosity_configuration import VerbosityConfiguration
@@ -91,6 +92,27 @@ def main(
             pheno_data = cast(
                 PhenotypeStudy, pheno_registry.get_phenotype_data(db_name)
             )
+
+            measure = pheno_data.db.measure
+            columns = [
+                measure.c.measure_id,
+                measure.c.instrument_name,
+                measure.c.measure_name,
+                measure.c.description,
+                measure.c.measure_type,
+                measure.c.individuals,
+                measure.c.default_filter,
+                measure.c.values_domain,
+                measure.c.min_value,
+                measure.c.max_value,
+            ]
+            query = select(*columns)
+            query = query.where(not_(measure.c.measure_type.is_(None)))
+
+            df = pd.read_sql(query, pheno_data.db.pheno_engine)
+            # pylint: disable=protected-access
+            pheno_data._instruments = pheno_data._load_instruments(df)
+
             db = pheno_data.db
 
             db.clear_instruments_table(drop=True)

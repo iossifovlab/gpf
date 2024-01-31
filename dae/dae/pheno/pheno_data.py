@@ -422,7 +422,8 @@ class PhenotypeStudy(PhenotypeData):
         self.config = config
         self.db.build()
         self.families = self._load_families()
-        self._instruments = self._load_instruments()
+        df = self._get_measures_df()
+        self._instruments = self._load_instruments(df)
 
     def _get_measures_df(
         self,
@@ -489,10 +490,9 @@ class PhenotypeStudy(PhenotypeData):
         res_df = df[df_columns]
         return res_df
 
-    def _load_instruments(self) -> dict[str, Instrument]:
+    def _load_instruments(self, df: pd.DataFrame) -> dict[str, Instrument]:
         instruments = {}
 
-        df = self._get_measures_df()
         instrument_names = list(df.instrument_name.unique())
         instrument_names = sorted(instrument_names)
 
