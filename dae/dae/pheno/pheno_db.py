@@ -903,7 +903,7 @@ class PhenotypeStudy(PhenotypeData):
     ) -> Generator[dict[str, Any], None, None]:
         assert isinstance(measure_ids, list)
         assert len(measure_ids) >= 1
-        assert all(self.has_measure(m) for m in measure_ids)
+        assert all(self.has_measure(m) for m in measure_ids), self.measures
         assert len(self.db.instrument_values_tables) > 0
 
         measure_column_names = self.db.get_measure_column_names_reverse(
