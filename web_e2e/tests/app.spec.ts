@@ -159,19 +159,25 @@ test.describe('App user access rights tests', () => {
   });
 
 
-  test.skip('should login admin and check whether the datasets have the correct opacity value', async({ page }) => {
+  test('should login admin and check whether the datasets have the correct opacity value', async({ page }) => {
     await utils.login(page, userData.admin.username, userData.admin.password);
     await page.locator('#datasets-dropdown-menu-button').click();
     await page.waitForSelector('div.dropdown-menu');
-    await expect(page).toHaveScreenshot();
+
+    for (let i = 0; i < Object.keys(utils.datasetIds).length; i++) {
+      await expect(page.locator('.dataset-dropdown-item').nth(i)).toHaveCSS('opacity', '1');
+    }
   });
 
-  test.skip('should login researcher and check whether the datasets have the correct opacity value', async({ page }) => {
+  test('should login researcher and check whether the datasets have the correct opacity value', async({ page }) => {
     await utils.login(page, userData.normal.username, userData.normal.password);
     await expect(page.locator('#permission-denied-prompt')).toBeVisible();
     await page.locator('#datasets-dropdown-menu-button').click();
     await page.waitForSelector('div.dropdown-menu');
-    await expect(page).toHaveScreenshot();
+
+    for (let i = 0; i < Object.keys(utils.datasetIds).length; i++) {
+      await expect(page.locator('a.dataset-dropdown-item').nth(i)).toHaveCSS('opacity', '0.3');
+    }
   });
 
   test('should login admin and give researcher access rights for comp_vcf, ' +
