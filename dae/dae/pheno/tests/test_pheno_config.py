@@ -1,9 +1,5 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,too-many-lines
-import pytest
-import os
 from box import Box
-
-from dae.pheno.registry import PhenoRegistry
 
 
 def test_pheno_config_loading(fake_pheno_config: list[Box]) -> None:
