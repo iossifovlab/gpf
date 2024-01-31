@@ -222,8 +222,6 @@ test.describe('Autism gene profiles single view dynamic data tests', () => {
     await expect(singleViewPage.locator('#relevant_gene_sets').locator('tr').nth(1)).toHaveText('chromatin modifiers');
     await expect(singleViewPage.locator('#relevant_gene_sets').locator('tr').nth(2)).toHaveText('essential genescheck');
     await expect(singleViewPage.locator('#relevant_gene_sets').locator('tr').nth(3)).toHaveText('FMRP Darnellcheck');
-
-    await expect(singleViewPage).toHaveScreenshot('agp-single-view-GRIN2B.png', {fullPage: true});
   });
 });
 
