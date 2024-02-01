@@ -68,41 +68,6 @@
   background-color: white;
 }
 
-.sidenav {
-  padding: 20px;
-  width: 250px;
-  position: absolute;
-  background-color: #fafafa;
-  z-index: 200;
-  height: calc(100% - 58px);
-  box-shadow: 2px 2px 2px rgba(0, 0, 0, 20%);
-}
-
-.sidenav .nav-item {
-  text-align: left;
-  padding-bottom: 8px;
-}
-
-.nav-link {
-  padding-left: 8px;
-}
-
-.navbar-toggler-icon {
-  height: 24px;
-  color: #9b9b9b;
-}
-
-.navbar-toggler {
-  border: 1px solid rgba(0, 0, 0, 10%);
-  border-radius: 0.25rem;
-  height: 34px;
-}
-
-.navbar-button {
-  padding: 0.25rem 0.55rem;
-  padding-left: 0;
-}
-
 .blackscreen {
   position: fixed;
   top: 0;
@@ -121,4 +86,8 @@
 
 .version-text {
   font-weight: 600;
+}
+
+.container-fluid a {
+  padding-left: 16px;
 }
