@@ -3,7 +3,6 @@ import { environment } from '../environments/environment';
 import { BnNgIdleService } from 'bn-ng-idle';
 import { UsersService } from './users/users.service';
 import { switchMap } from 'rxjs/operators';
-import { AppVersionService } from './app-version.service';
 import { GeneProfilesService } from './gene-profiles-block/gene-profiles.service';
 import { GeneProfilesSingleViewConfig } from './gene-profiles-single-view/gene-profiles-single-view';
 
@@ -17,9 +16,6 @@ export class AppComponent implements OnInit {
   public imgPathPrefix = environment.imgPathPrefix;
   public geneProfilesConfig: GeneProfilesSingleViewConfig;
   private sessionTimeoutInSeconds = 7 * 24 * 60 * 60; // 1 week
-
-  public gpfjsVersion = environment?.version;
-  public gpfVersion = '';
 
   @HostListener('window:keydown.home')
   public scrollToTop(): void {
@@ -35,7 +31,6 @@ export class AppComponent implements OnInit {
     private geneProfilesService: GeneProfilesService,
     private bnIdle: BnNgIdleService,
     private usersService: UsersService,
-    private appVersionService: AppVersionService,
   ) {
   }
 
@@ -48,10 +43,6 @@ export class AppComponent implements OnInit {
 
     this.geneProfilesService.getConfig().subscribe(res => {
       this.geneProfilesConfig = res;
-    });
-
-    this.appVersionService.getGpfVersion().subscribe(res => {
-      this.gpfVersion = res;
     });
   }
 }
