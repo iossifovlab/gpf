@@ -1,10 +1,10 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { Observable, Subject } from 'rxjs';
+import { HttpClient, HttpHeaders, HttpParams, HttpResponse } from '@angular/common/http';
+import { Observable, Subject, of } from 'rxjs';
 import { CookieService } from 'ngx-cookie-service';
 import { PhenoInstruments, PhenoInstrument, PhenoMeasures, PhenoMeasure } from './pheno-browser';
 import { ConfigService } from '../config/config.service';
-import { map } from 'rxjs/operators';
+import { catchError, map } from 'rxjs/operators';
 import { AuthService } from 'app/auth.service';
 
 const oboe = require('oboe');
@@ -103,5 +103,45 @@ export class PhenoBrowserService {
   public getDownloadLink(instrument: PhenoInstrument, datasetId: string): string {
     return `${this.config.baseUrl}${this.downloadUrl}`
            + `?dataset_id=${datasetId}&instrument=${instrument}`;
+  }
+
+  public validateMeasureDownload(data: {
+      dataset_id: string;
+      instrument: string;
+      search_term: string;
+  }): Observable<HttpResponse<object>> {
+    const headers = this.getHeaders();
+    const params =
+      new HttpParams()
+        .set('dataset_id', data.dataset_id)
+        .set('instrument', data.instrument)
+        .set('search_term', data.search_term);
+
+    return this.http
+      .head<HttpResponse<object>>(
+        this.config.baseUrl + 'pheno_browser/download',
+        {headers: headers, withCredentials: true, params: params, observe: 'response'}
+      ).pipe(
+        catchError((err: HttpResponse<object>) => of(err))
+      );
+  }
+
+  public getDownloadMeasuresLink(data: {
+    dataset_id: string;
+    instrument: string;
+    search_term: string;
+  }): string {
+    const headers = this.getHeaders();
+    const params =
+      new HttpParams()
+        .set('dataset_id', data.dataset_id)
+        .set('instrument', data.instrument)
+        .set('search_term', data.search_term);
+
+    return this.config.baseUrl
+      + 'pheno_browser/download?'
+      + `dataset_id=${data.dataset_id}`
+      + `&instrument=${data.instrument}`
+      + `&search_term=${data.search_term}`;
   }
 }

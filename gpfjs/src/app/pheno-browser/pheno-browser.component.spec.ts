@@ -23,13 +23,14 @@ import { NumberWithExpPipe } from '../utils/number-with-exp.pipe';
 import { PValueIntensityPipe } from '../utils/p-value-intensity.pipe';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Location } from '@angular/common';
-import { Observable, of } from 'rxjs';
+import { BehaviorSubject, Observable, of } from 'rxjs';
 import { ResizeService } from '../table/resize.service';
 import { By } from '@angular/platform-browser';
 import { ConfigService } from 'app/config/config.service';
 import { RegressionComparePipe } from 'app/utils/regression-compare.pipe';
 import { GetRegressionIdsPipe } from 'app/utils/get-regression-ids.pipe';
 import { BackgroundColorPipe } from 'app/utils/background-color.pipe';
+import { HttpClient, HttpHandler } from '@angular/common/http';
 
 const fakeJsonMeasurei1 = JSON.parse(JSON.stringify(fakeJsonMeasureOneRegression)) as object;
 fakeJsonMeasurei1['instrument_name'] = 'i1';
@@ -60,8 +61,12 @@ class MockPhenoBrowserService {
            + `?dataset_id=${datasetId}&instrument=${instrument}`;
   }
 
-  public downloadMeasures(): Observable<Blob> {
-    return of([] as any);
+  public validateMeasureDownload(): Observable<{status: number}> {
+    return of({status: undefined});
+  }
+
+  public getDownloadMeasuresLink(): string {
+    return '';
   }
 }
 
@@ -125,6 +130,8 @@ describe('PhenoBrowserComponent', () => {
         PhenoBrowserComponent, GetRegressionIdsPipe, BackgroundColorPipe],
       providers: [
         PhenoBrowserComponent,
+        HttpClient,
+        HttpHandler,
         { provide: DatasetsService, useValue: datasetServiceMock },
         { provide: PhenoBrowserService, useValue: phenoBrowserServiceMock },
         { provide: ActivatedRoute, useValue: activatedRoute },
@@ -235,23 +242,38 @@ describe('PhenoBrowserComponent', () => {
   }));
 
   it('should test download', () => {
-    const mockEvent = {
-      target: document.createElement('form'),
-      preventDefault: jest.fn()
-    };
-    mockEvent.target.queryData = {
-      value: ''
-    };
-
-    jest.spyOn(mockEvent.target, 'submit').mockImplementation();
-    component.downloadMeasures(mockEvent as unknown as Event);
-    expect((mockEvent.target.queryData as HTMLInputElement).value).toStrictEqual(JSON.stringify({
+    const data = {
       /* eslint-disable @typescript-eslint/naming-convention */
-      dataset_id: component.selectedDataset.id,
-      instrument: null,
-      measure_ids: ['i1.test_measure']
+      dataset_id: 'datasetId',
+      instrument: 'instrument',
+      search_term: 'search'
       /* eslint-enable */
-    }));
-    expect(mockEvent.target.submit).toHaveBeenCalledTimes(1);
+    };
+    component.selectedDatasetId = data.dataset_id;
+    component.selectedInstrument$ = new BehaviorSubject(data.instrument);
+    component.searchTermObs$ = of(data.search_term);
+
+    const validateSpy = jest.spyOn(phenoBrowserServiceMock, 'validateMeasureDownload');
+    const downloadSpy = jest.spyOn(phenoBrowserServiceMock, 'getDownloadMeasuresLink');
+
+    validateSpy.mockReturnValue(of({ status: 404 }));
+    component.downloadMeasures();
+    expect(validateSpy).toHaveBeenCalledWith(data);
+    expect(downloadSpy).not.toHaveBeenCalled();
+    expect(component.errorModal).toBe(false);
+
+    validateSpy.mockReturnValue(of({ status: 413 }));
+    component.downloadMeasures();
+    expect(validateSpy).toHaveBeenCalledWith(data);
+    expect(downloadSpy).not.toHaveBeenCalled();
+    expect(component.errorModal).toBe(true);
+
+    component.errorModal = false;
+
+    validateSpy.mockReturnValue(of({ status: 200 }));
+    component.downloadMeasures();
+    expect(validateSpy).toHaveBeenCalledWith(data);
+    expect(downloadSpy).toHaveBeenCalledWith(data);
+    expect(component.errorModal).toBe(false);
   });
 });
