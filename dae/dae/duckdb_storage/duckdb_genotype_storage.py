@@ -168,7 +168,7 @@ class DuckDbGenotypeStorage(GenotypeStorage):
         return cast(bool, self.storage_config.get("read_only", True))
 
     def get_memory_limit(self) -> str:
-        return cast(bool, self.storage_config.get("memory_limit", "32GB"))
+        return cast(str, self.storage_config.get("memory_limit", "32GB"))
 
     def get_studies_dir(self) -> Optional[str]:
         return self.storage_config.get("studies_dir")

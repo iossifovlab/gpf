@@ -1413,3 +1413,21 @@ JOIN family AS fa
     AND fa.allele_index = sa.allele_index
   )
 ```
+
+```sql
+BEGIN TRANSACTION;
+ALTER TABLE AGRE_WG38_CSHL_859_SCHEMA2_summary
+ADD COLUMN sindex BIGINT;
+UPDATE AGRE_WG38_CSHL_859_SCHEMA2_summary as sa
+SET sindex = ((bucket_index // 2000000) * 1000 + bucket_index % 2000000) * 100000000000 + summary_index * 10 + allele_index;
+COMMIT;
+
+ALTER TABLE AGRE_WG38_CSHL_859_SCHEMA2_family
+ADD COLUMN sindex BIGINT;
+
+BEGIN TRANSACTION;
+UPDATE AGRE_WG38_CSHL_859_SCHEMA2_family as sa
+SET sindex = ((bucket_index // 2000000) * 1000 + bucket_index % 2000000) * 100000000000 + summary_index * 10 + allele_index;
+COMMIT;
+
+```
