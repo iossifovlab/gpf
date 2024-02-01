@@ -1,7 +1,5 @@
 import { test, expect } from '@playwright/test';
 import * as utils from './utils';
-import * as fs from 'fs';
-import * as path from 'path';
 import { scanCSV } from 'nodejs-polars';
 
 test.describe('Pheno tool tests', () => {
