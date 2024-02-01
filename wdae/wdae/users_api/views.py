@@ -561,7 +561,7 @@ def logout(request: Request) -> Response:
 @ensure_csrf_cookie
 @api_view(["GET"])
 @authentication_classes(
-    (GPFOAuth2Authentication, SessionAuthenticationWithoutCSRF))
+    (GPFOAuth2Authentication, ))
 def get_user_info(request: Request) -> Response:
     """Get user info for currently logged-in user."""
     user = request.user
