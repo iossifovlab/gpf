@@ -181,6 +181,7 @@ import { DatasetsTreeService } from './datasets/datasets-tree.service';
 import { SearchableSelectComponent } from './searchable-select/searchable-select.component';
 import { SearchableSelectTemplateDirective } from './searchable-select/searchable-select-template.directive';
 import { HelperModalComponent } from './helper-modal/helper-modal.component';
+import { HomeComponent } from './home/home.component';
 import { AboutComponent } from './about/about.component';
 
 const appRoutes: Routes = [
@@ -188,6 +189,10 @@ const appRoutes: Routes = [
     path: 'login',
     component: LoginComponent,
     resolve: { _: AuthResolverService},
+  },
+  {
+    path: 'home',
+    component: HomeComponent,
   },
   {
     path: 'datasets',
