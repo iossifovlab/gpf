@@ -57,6 +57,10 @@ class DuckDbGenotypeStorage(GenotypeStorage):
             "type": "boolean",
             "default": False,
         },
+        "memory_limit": {
+            "type": "string",
+            "default": "32GB",
+        },
         "studies_dir": {
             "type": "string",
         },
@@ -107,9 +111,13 @@ class DuckDbGenotypeStorage(GenotypeStorage):
             db_name = self._base_dir_join(db_name)
             dirname = os.path.dirname(db_name)
             os.makedirs(dirname, exist_ok=True)
-
         self.connection_factory = duckdb_connect(
             db_name=db_name, read_only=read_only)
+        memory_limit = self.get_memory_limit()
+        if memory_limit:
+            self.connection_factory.sql(
+                f"SET memory_limit='{memory_limit}'"
+            )
         return self
 
     def restart(self, read_only: bool) -> DuckDbGenotypeStorage:
@@ -127,6 +135,11 @@ class DuckDbGenotypeStorage(GenotypeStorage):
 
         self.connection_factory = duckdb_connect(
             db_name=db_name, read_only=read_only)
+        memory_limit = self.get_memory_limit()
+        if memory_limit:
+            self.connection_factory.sql(
+                f"SET memory_limit='{memory_limit}'"
+            )
         return self
 
     def is_read_only(self) -> bool:
@@ -153,6 +166,9 @@ class DuckDbGenotypeStorage(GenotypeStorage):
 
     def get_read_only(self) -> bool:
         return cast(bool, self.storage_config.get("read_only", True))
+
+    def get_memory_limit(self) -> str:
+        return cast(bool, self.storage_config.get("memory_limit", "32GB"))
 
     def get_studies_dir(self) -> Optional[str]:
         return self.storage_config.get("studies_dir")
@@ -231,18 +247,20 @@ class DuckDbGenotypeStorage(GenotypeStorage):
         with self.connection_factory.cursor() as connection:
             dataset_path = f"{parquet_path}/{ '*/' * len(partition)}*.parquet"
             logger.debug("creating table %s from %s", table_name, dataset_path)
+            memory_limit = self.get_memory_limit()
+            if memory_limit:
+                query = f"SET memory_limit='{memory_limit}'"
+                logger.debug("query: %s", query)
+                connection.sql(query)
 
             query = f"DROP TABLE IF EXISTS {table_name}"
             logger.debug("query: %s", query)
             connection.sql(query)
 
-            query = "SET memory_limit='16GB'"
-            logger.debug("query: %s", query)
-            connection.sql(query)
-
             query = f"CREATE TABLE {table_name} AS " \
                 f"SELECT * FROM " \
-                f"parquet_scan('{dataset_path}', hive_partitioning = 1)"
+                f"parquet_scan('{dataset_path}', hive_partitioning = 1) " \
+                f"ORDER BY bucket_index, summary_index, allele_index"
             logger.debug("query: %s", query)
             connection.sql(query)
 
