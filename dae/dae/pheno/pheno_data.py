@@ -103,6 +103,7 @@ class Measure:
         self.values_domain: Optional[str] = None
         self.instrument_name: Optional[str] = None
         self.description: Optional[str] = None
+        self.default_filter = None
         self.min_value = None
         self.max_value = None
 
@@ -139,6 +140,7 @@ class Measure:
         mes.measure_type = row["measure_type"]
 
         mes.description = row["description"]
+        mes.default_filter = row["default_filter"]
         mes.values_domain = row.get("values_domain")
         mes.min_value = row.get("min_value")
         mes.max_value = row.get("max_value")
@@ -155,6 +157,7 @@ class Measure:
         mes.measure_name = json["measureName"]
         mes.measure_type = MeasureType.from_str(json["measureType"])
         mes.description = json["description"]
+        mes.default_filter = json["defaultFilter"]
         mes.values_domain = json.get("valuesDomain")
         mes.min_value = json.get("minValue")
         mes.max_value = json.get("maxValue")
@@ -170,6 +173,7 @@ class Measure:
         result["instrumentName"] = self.instrument_name
         result["measureType"] = self.measure_type.name
         result["description"] = self.description
+        result["defaultFilter"] = self.default_filter
         result["valuesDomain"] = self.values_domain
         result["minValue"] = \
             None if self.min_value is None or math.isnan(self.min_value) \
@@ -438,7 +442,8 @@ class PhenotypeStudy(PhenotypeData):
 
         Columns in the returned data frame are: `measure_id`, `measure_name`,
         `instrument_name`, `description`, `stats`, `min_value`, `max_value`,
-        `value_domain`, `has_probands`, `has_siblings`, `has_parents`.
+        `value_domain`, `has_probands`, `has_siblings`, `has_parents`,
+        `default_filter`.
         """
         assert instrument is None or instrument in self.instruments
         assert measure_type is None or measure_type in set(
@@ -454,6 +459,7 @@ class PhenotypeStudy(PhenotypeData):
             measure.c.description,
             measure.c.measure_type,
             measure.c.individuals,
+            measure.c.default_filter,
             measure.c.values_domain,
             measure.c.min_value,
             measure.c.max_value,
@@ -474,6 +480,7 @@ class PhenotypeStudy(PhenotypeData):
             "description",
             "individuals",
             "measure_type",
+            "default_filter",
             "values_domain",
             "min_value",
             "max_value",
@@ -549,6 +556,20 @@ class PhenotypeStudy(PhenotypeData):
         df = pd.read_sql(query, self.db.pheno_engine)
         # df.rename(columns={'sex': 'sex'}, inplace=True)
         return df[["person_id", "family_id", "role", "sex", "status"]]
+
+    def _build_default_filter_clause(
+        self, measure: Measure, default_filter: str
+    ) -> Optional[str]:
+        if default_filter == "skip" or measure.default_filter is None:
+            return None
+        if default_filter == "apply":
+            return f"value {measure.default_filter}"
+        if default_filter == "invert":
+            return f"NOT (value {measure.default_filter})"
+
+        raise ValueError(
+            f"bad default_filter value: {default_filter}"
+        )
 
     def _get_measure_values_query(
         self,

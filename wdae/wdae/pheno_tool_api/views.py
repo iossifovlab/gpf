@@ -328,6 +328,7 @@ class PhenoToolInstruments(QueryDatasetView):
             "measureName": measure.measure_name,
             "measureType": str(measure.measure_type),
             "description": measure.description,
+            "defaultFilter": measure.default_filter,
             "valuesDomain": measure.values_domain,
             "minValue":
                 None if math.isnan(measure.min_value)  # type: ignore
