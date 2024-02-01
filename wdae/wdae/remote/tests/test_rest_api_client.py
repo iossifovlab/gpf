@@ -160,9 +160,9 @@ def test_post_instrument_values(rest_client: RESTClient) -> None:
     assert isinstance(instrument_values, dict)
 
 
-def test_post_measures_download(rest_client: RESTClient) -> None:
-    csv = rest_client.post_measures_download(
-        "iossifov_2014", measure_ids=["i1.m1"]
+def test_get_measures_download(rest_client: RESTClient) -> None:
+    csv = rest_client.get_measures_download(
+        "iossifov_2014", search_term="i1.m1"
     )
     lines = list(csv)
 

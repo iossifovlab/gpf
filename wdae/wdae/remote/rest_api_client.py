@@ -358,17 +358,17 @@ class RESTClient:
         )
         return response.json()["instruments"]
 
-    def post_measures_download(
+    def get_measures_download(
             self, dataset_id: str,
-            measure_ids: Optional[list[str]] = None,
+            search_term: Optional[str] = None,
             instrument: Optional[str] = None
     ) -> Any:
         """Post download request for pheno measures."""
-        response = self._post(
+        response = self._get(
             "pheno_browser/download",
-            data={
+            query_values={
                 "dataset_id": dataset_id,
-                "measure_ids": measure_ids,
+                "search_term": search_term,
                 "instrument": instrument,
             },
             stream=True

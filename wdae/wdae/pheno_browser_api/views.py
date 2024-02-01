@@ -13,8 +13,6 @@ from query_base.query_base import QueryDatasetView
 from studies.study_wrapper import RemoteStudyWrapper, StudyWrapper
 
 from utils.streaming_response_util import iterator_to_json
-from utils.query_params import parse_query_params
-
 
 logger = logging.getLogger(__name__)
 
@@ -76,7 +74,10 @@ class PhenoMeasuresInfoView(PhenoBrowserBaseView):
 
 
 class PhenoMeasureDescriptionView(PhenoBrowserBaseView):
+    """Phenotype measures description view."""
+
     def get(self, request: Request) -> Response:
+        """Get pheno measures description."""
         if "dataset_id" not in request.query_params:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         dataset_id = request.query_params["dataset_id"]
@@ -102,7 +103,10 @@ class PhenoMeasureDescriptionView(PhenoBrowserBaseView):
 
 
 class PhenoMeasuresView(PhenoBrowserBaseView):
+    """Phenotype measures view."""
+
     def get(self, request: Request) -> Response:
+        """Stream pheno measures."""
         if "dataset_id" not in request.query_params:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         dataset_id = request.query_params["dataset_id"]
@@ -130,6 +134,10 @@ class PhenoMeasuresView(PhenoBrowserBaseView):
         )
         response["Cache-Control"] = "no-cache"
         return response
+
+
+class CountError(Exception):
+    pass
 
 
 class PhenoMeasuresDownload(QueryDatasetView):
@@ -171,49 +179,71 @@ class PhenoMeasuresDownload(QueryDatasetView):
 
         buffer.close()
 
-    def post(self, request: Request) -> Response:
-        """Return a CSV file stream for measures."""
-        data = request.data
-        if "queryData" in data:
-            data = parse_query_params(data)
+    def get_measure_ids(self, request: Request) -> Generator[str, None, None]:
+        """Get measure ids."""
+        data = request.query_params
+        data = {k: str(v) for k, v in data.items()}
+
         if "dataset_id" not in data:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+            raise ValueError()
         dataset_id = data["dataset_id"]
 
         dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
         if not dataset or dataset.phenotype_data is None:
-            return Response(status=status.HTTP_404_NOT_FOUND)
+            raise KeyError()
 
-        measure_ids = data.get("measure_ids", None)
+        search_term = data.get("search_term", None)
         instrument = data.get("instrument", None)
-        if instrument is None:
-            if measure_ids is None:
-                measure_ids = list(dataset.phenotype_data.measures.keys())
-        else:
-            if instrument not in dataset.phenotype_data.instruments:
-                return Response(status=status.HTTP_404_NOT_FOUND)
 
-            instrument_measures = \
-                dataset.phenotype_data.get_instrument_measures(instrument)
-            if measure_ids is None:
-                measure_ids = instrument_measures
+        if (instrument is not None
+                and instrument != ""
+                and instrument not in dataset.phenotype_data.instruments):
+            raise KeyError()
 
-            if not set(measure_ids).issubset(set(instrument_measures)):
-                return Response(status=status.HTTP_400_BAD_REQUEST)
+        measures = dataset.phenotype_data.search_measures(
+            instrument, search_term
+        )
+        measure_ids = [
+            measure["measure"]["measure_id"] for measure in measures
+        ]
 
         if len(measure_ids) > 1900:
-            measure_ids = measure_ids[0:1900]
+            raise CountError()
 
-        values_iterator = self.csv_value_iterator(
+        return self.csv_value_iterator(
             dataset, measure_ids
         )
 
-        response = StreamingHttpResponse(
-            values_iterator, content_type="text/csv")
+    def get(self, request: Request) -> Response:
+        """Return a CSV file stream for measures."""
+        try:
+            values_iterator = self.get_measure_ids(request)
+            response = StreamingHttpResponse(
+                values_iterator, content_type="text/csv")
 
-        response["Content-Disposition"] = "attachment; filename=measures.csv"
-        response["Expires"] = "0"
-        return response
+            response["Content-Disposition"] = \
+                "attachment; filename=measures.csv"
+            response["Expires"] = "0"
+            return response
+        except ValueError:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        except KeyError:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        except CountError:
+            return Response(status=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE)
+
+    #  pylint:disable=method-hidden
+    def head(self, request: Request) -> Response:
+        """Return a status code validating if measures can be downloaded."""
+        try:
+            self.get_measure_ids(request)
+            return Response(status=status.HTTP_200_OK)
+        except ValueError:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        except KeyError:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        except CountError:
+            return Response(status=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE)
 
 
 class PhenoMeasureValues(QueryDatasetView):

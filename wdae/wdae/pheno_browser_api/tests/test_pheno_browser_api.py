@@ -8,6 +8,7 @@ import pytest_mock
 from django.test import Client
 from rest_framework import status
 from rest_framework.response import Response
+from users_api.models import User
 
 from dae.pheno.pheno_db import PhenotypeStudy
 
@@ -122,12 +123,10 @@ def test_measures(admin_client: Client) -> None:
     assert len(res) == 4
 
 
-def test_measures_forbidden(user_client: Client, user) -> None:
+def test_measures_forbidden(user_client: Client, user: User) -> None:
     print(user.groups.all())
-    url = "{}?dataset_id=quads_f1_ds&instrument=instrument1".format(
-        MEASURES_URL
-    )
-    response = user_client.get(url)
+    url = f"{MEASURES_URL}?dataset_id=quads_f1_ds&instrument=instrument1"
+    response = cast(Response, user_client.get(url))
 
     assert response.status_code == 403
 
@@ -144,26 +143,8 @@ def test_download(admin_client: Client) -> None:
         "dataset_id": "quads_f1",
         "instrument": "instrument1"
     }
-    response = admin_client.post(
-        DOWNLOAD_URL, json.dumps(data), "application/json"
-    )
-
-    assert response.status_code == 200
-
-    header = list(response.streaming_content)[0].decode("utf-8")
-    header = header.split()[0].split(",")
-    assert header[0] == "person_id"
-
-
-def test_download_form(admin_client: Client) -> None:
-    data = {
-        "queryData": (
-            '{"dataset_id": "quads_f1",'
-            '"instrument": "instrument1"}'
-        )
-    }
-    response = cast(Response, admin_client.post(
-        DOWNLOAD_URL, json.dumps(data), "application/json"
+    response = cast(Response, admin_client.get(
+        DOWNLOAD_URL, data
     ))
 
     assert response.status_code == 200
@@ -177,29 +158,30 @@ def test_download_specific_measures(admin_client: Client) -> None:
     data = {
         "dataset_id": "quads_f1",
         "instrument": "instrument1",
-        "measure_ids": ["instrument1.continuous", "instrument1.categorical"]
+        "search_term": "instrument1.continuous"
     }
-    response = admin_client.post(
-        DOWNLOAD_URL, json.dumps(data), "application/json"
-    )
+    response = cast(Response, admin_client.get(
+        DOWNLOAD_URL, data
+    ))
 
     assert response.status_code == 200
 
     content = list(response.streaming_content)[0].decode("utf-8")
     header = content.split()[0].split(",")
-    assert len(header) == 3
+    assert len(header) == 2
     assert header[0] == "person_id"
     assert header[1] == "instrument1.continuous"
-    assert header[2] == "instrument1.categorical"
 
 
 def test_download_all_instruments(admin_client: Client) -> None:
     data = {
-        "dataset_id": "quads_f1"
+        "dataset_id": "quads_f1",
+        "instrument": "",
+        "search_term": ""
     }
-    response = admin_client.post(
-        DOWNLOAD_URL, json.dumps(data), "application/json"
-    )
+    response = cast(Response, admin_client.get(
+        DOWNLOAD_URL, data
+    ))
 
     assert response.status_code == 200
 
@@ -222,11 +204,11 @@ def test_download_all_instruments_specific_measures(
 ) -> None:
     data = {
         "dataset_id": "quads_f1",
-        "measure_ids": ["instrument1.continuous", "instrument1.categorical"]
+        "search_term": "instrument1"
     }
-    response = admin_client.post(
-        DOWNLOAD_URL, json.dumps(data), "application/json"
-    )
+    response = cast(Response, admin_client.get(
+        DOWNLOAD_URL, data
+    ))
 
     assert response.status_code == 200
 
@@ -234,18 +216,20 @@ def test_download_all_instruments_specific_measures(
     header = header.split()[0].split(",")
 
     print("header:\n", header)
-    assert len(header) == 3
+    assert len(header) == 5
     assert set(header) == {
         "person_id",
         "instrument1.continuous",
         "instrument1.categorical",
+        "instrument1.ordinal",
+        "instrument1.raw"
     }
 
 
 def test_measure_details(admin_client: Client) -> None:
     url = (
-        "{}?dataset_id=quads_f1_ds&measure_id=instrument1.categorical"
-        .format(MEASURE_DESCRIPTION_URL)
+        f"{MEASURE_DESCRIPTION_URL}?dataset_id=quads_f1_ds"
+        "&measure_id=instrument1.categorical"
     )
     response = admin_client.get(url)
 
@@ -264,9 +248,9 @@ def test_get_specific_measure_values(admin_client: Client) -> None:
         "instrument": "instrument1",
         "measure_ids": ["instrument1.continuous", "instrument1.categorical"]
     }
-    response = admin_client.post(
+    response = cast(Response, admin_client.post(
         MEASURE_VALUES_URL, json.dumps(data), "application/json"
-    )
+    ))
 
     assert response.status_code == 200
     content = json.loads(b"".join(list(response.streaming_content)))
@@ -292,9 +276,9 @@ def test_get_measure_values(admin_client: Client) -> None:
         "dataset_id": "quads_f1",
         "instrument": "instrument1",
     }
-    response = admin_client.post(
+    response = cast(Response, admin_client.post(
         MEASURE_VALUES_URL, json.dumps(data), "application/json"
-    )
+    ))
 
     assert response.status_code == 200
     content = json.loads(b"".join(list(response.streaming_content)))
@@ -327,27 +311,6 @@ def test_get_measure_values(admin_client: Client) -> None:
         "instrument1.ordinal": None,
         "instrument1.raw": "othervalue"
     }
-
-
-def test_download_limits_measures(
-    admin_client: Client,
-    mocker: pytest_mock.MockerFixture
-) -> None:
-    data: dict[str, Any] = {
-        "dataset_id": "quads_f1"
-    }
-    data["measure_ids"] = [f"measure{i}" for i in range(2000)]
-    spy = mocker.spy(PhenotypeStudy, "get_people_measure_values")
-
-    with pytest.raises(AssertionError):
-        response = admin_client.post(
-            DOWNLOAD_URL, json.dumps(data), "application/json"
-        )
-
-        list(response.streaming_content)  # type: ignore
-
-    call_args = spy.call_args_list[-1][0]
-    assert len((call_args[1])) == 1900
 
 
 def test_measure_values_limits_measures(
