@@ -9,6 +9,7 @@ import duckdb
 from dae.utils.regions import Region, collapse
 from dae.genomic_resources.gene_models import GeneModels
 from dae.genomic_resources.reference_genome import ReferenceGenome
+from dae.effect_annotation.effect import EffectTypesMixin
 from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.pedigrees.families_data import FamiliesData
 from dae.variants.attributes import Role, Inheritance
@@ -139,7 +140,9 @@ class SqlQueryBuilder:
                     where_parts.append(self._build_gene_where(genes))
             if effect_types:
                 effect_types = [et for et in effect_types if et]
-                if effect_types:
+                if effect_types and \
+                        (set(effect_types)
+                         != set(EffectTypesMixin.EFFECT_TYPES)):
                     where_parts.append(
                         self._build_effect_type_where(effect_types))
             eg_where = " AND ".join([wp for wp in where_parts if wp])

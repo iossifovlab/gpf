@@ -1209,3 +1209,207 @@ LEFT JOIN family AS fa
   )
 LIMIT 10010
 ```
+
+
+Get all variants query:
+
+```sql
+EXPLAIN WITH summary AS (
+  SELECT
+    *
+  FROM AGRE_WG38_CSHL_859_SCHEMA2_summary AS sa
+  WHERE
+    sa.allele_index > 0
+), effect_gene AS (
+  SELECT
+    *,
+    UNNEST(effect_gene) AS eg
+  FROM summary
+), effect_gene_summary AS (
+  SELECT
+    *
+  FROM effect_gene
+  WHERE
+    eg.effect_types IN ('3''UTR', '3''UTR-intron', '5''UTR', '5''UTR-intron', 'frame-shift', 'intergenic', 'intron', 'missense', 'no-frame-shift', 'no-frame-shift-newStop', 'noEnd', 'noStart', 'non-coding', 'non-coding-intron', 'nonsense', 'splice-site', 'synonymous', 'CDS', 'CNV+', 'CNV-')
+), family AS (
+  SELECT
+    *
+  FROM AGRE_WG38_CSHL_859_SCHEMA2_family AS fa
+  WHERE
+    (
+      8 & fa.inheritance_in_members
+    ) = 0
+    AND (
+      32 & fa.inheritance_in_members
+    ) = 0
+    AND (
+      150 & fa.inheritance_in_members
+    ) <> 0
+    AND fa.allele_index > 0
+)
+SELECT
+  fa.bucket_index,
+  fa.summary_index,
+  fa.family_index,
+  sa.allele_index,
+  sa.summary_variant_data,
+  fa.family_variant_data
+FROM effect_gene_summary AS sa
+JOIN family AS fa
+  ON (
+    fa.summary_index = sa.summary_index
+    AND fa.bucket_index = sa.bucket_index
+    AND fa.allele_index = sa.allele_index
+  )
+```
+
+```
+┌─────────────────────────────┐                                                        
+│┌───────────────────────────┐│                                                        
+││       Physical Plan       ││                                                        
+│└───────────────────────────┘│                                                        
+└─────────────────────────────┘                                                        
+┌───────────────────────────┐                                                          
+│         PROJECTION        │                                                          
+│   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │                                                          
+│        bucket_index       │                                                          
+│       summary_index       │                                                          
+│        family_index       │                                                          
+│        allele_index       │                                                                                                                                                                                         
+│    summary_variant_data   │                                                          
+│    family_variant_data    │                                                          
+└─────────────┬─────────────┘                                                                                        
+┌─────────────┴─────────────┐                                                          
+│         HASH_JOIN         │                                                          
+│   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │                                                          
+│           INNER           │                                                          
+│allele_index = allele_index│                                                          
+│bucket_index = bucket_index├──────────────┐                                           
+│      summary_index =      │              │                                           
+│        summary_index      │              │                                           
+│   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │              │                                           
+│      EC: 72278842322      │              │                                           
+└─────────────┬─────────────┘              │                                                                         
+┌─────────────┴─────────────┐┌─────────────┴─────────────┐                             
+│         PROJECTION        ││         PROJECTION        │                             
+│   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   ││   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │                             
+│        bucket_index       ││             #0            │                             
+│       summary_index       ││             #1            │                             
+│        allele_index       ││             #2            │                             
+│        family_index       ││             #3            │                             
+│    family_variant_data    ││                           │                             
+└─────────────┬─────────────┘└─────────────┬─────────────┘                                                           
+┌─────────────┴─────────────┐┌─────────────┴─────────────┐                             
+│           FILTER          ││           FILTER          │                             
+│   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   ││   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │                             
+│        (((8 & CAST        ││    (allele_index >= 1)    │                             
+│(inheritance_in_member...  ││   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │                             
+│       AND ((32 & CAST     ││        EC: 29419412       │                             
+│(inheritance_in_member...  ││                           │                             
+│     ) AND ((150 & CAST    ││                           │                             
+│(inheritance_in_member...  ││                           │                             
+│           != 0))          ││                           │                             
+│   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   ││                           │                             
+│       EC: 875011592       ││                           │                             
+└─────────────┬─────────────┘└─────────────┬─────────────┘                                                           
+┌─────────────┴─────────────┐┌─────────────┴─────────────┐                             
+│         SEQ_SCAN          ││         PROJECTION        │                             
+│   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   ││   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │                             
+│AGRE_WG38_CSHL_859_SCHEMA2_││             #0            │                             
+│           family          ││             #1            │                             
+│   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   ││             #2            │                             
+│   inheritance_in_members  ││             #4            │                             
+│        allele_index       ││             #6            │                             
+│        bucket_index       ││                           │                             
+│       summary_index       ││                           │                             
+│        family_index       ││                           │                             
+│    family_variant_data    ││                           │                             
+│   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   ││                           │                             
+│       EC: 875011592       ││                           │                             
+└───────────────────────────┘└─────────────┬─────────────┘                                                           
+                             ┌─────────────┴─────────────┐                             
+                             │           FILTER          │                             
+                             │   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │                             
+                             │(IN (...) AND (allele_index│                             
+                             │            > 0))          │                             
+                             │   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │                             
+                             │        EC: 29419412       │                             
+                             └─────────────┬─────────────┘                                                           
+                             ┌─────────────┴─────────────┐                             
+                             │         HASH_JOIN         │                             
+                             │   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │                             
+                             │            MARK           │                             
+                             │    struct_extract(eg,     ├──────────────┐              
+                             │    'effect_types') = #0   │              │              
+                             │   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │              │              
+                             │        EC: 29419412       │              │              
+                             └─────────────┬─────────────┘                     │                                            
+                             ┌─────────────┴─────────────┐┌─────────────┴─────────────┐
+                             │           UNNEST          ││      COLUMN_DATA_SCAN     │
+                             └─────────────┬─────────────┘└───────────────────────────┘    
+                             ┌─────────────┴─────────────┐                             
+                             │         PROJECTION        │                             
+                             │   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │                             
+                             │        bucket_index       │                             
+                             │       summary_index       │                             
+                             │        allele_index       │                             
+                             │        effect_gene        │                             
+                             │    summary_variant_data   │                             
+                             └─────────────┬─────────────┘                                                           
+                             ┌─────────────┴─────────────┐                             
+                             │         SEQ_SCAN          │                             
+                             │   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │                             
+                             │AGRE_WG38_CSHL_859_SCHEMA2_│                             
+                             │          summary          │                             
+                             │   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │                             
+                             │        allele_index       │                             
+                             │        bucket_index       │                             
+                             │       summary_index       │                             
+                             │        effect_gene        │                             
+                             │    summary_variant_data   │                             
+                             │   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │                             
+                             │Filters: allele_index>0 AND│                             
+                             │  allele_index IS NOT NULL │                             
+                             │   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │                             
+                             │        EC: 29419412       │                             
+                             └───────────────────────────┘           
+```
+
+```sql
+EXPLAIN WITH summary AS (
+  SELECT
+    *
+  FROM AGRE_WG38_CSHL_859_SCHEMA2_summary AS sa
+  WHERE
+    sa.allele_index > 0
+),family AS (
+  SELECT
+    *
+  FROM AGRE_WG38_CSHL_859_SCHEMA2_family AS fa
+  WHERE
+    (
+      8 & fa.inheritance_in_members
+    ) = 0
+    AND (
+      32 & fa.inheritance_in_members
+    ) = 0
+    AND (
+      150 & fa.inheritance_in_members
+    ) <> 0
+    AND fa.allele_index > 0
+)
+SELECT
+  fa.bucket_index,
+  fa.summary_index,
+  fa.family_index,
+  sa.allele_index,
+  sa.summary_variant_data,
+  fa.family_variant_data
+FROM summary AS sa
+JOIN family AS fa
+  ON (
+    fa.summary_index = sa.summary_index
+    AND fa.bucket_index = sa.bucket_index
+    AND fa.allele_index = sa.allele_index
+  )
+```
