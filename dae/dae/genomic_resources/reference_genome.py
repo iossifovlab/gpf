@@ -65,6 +65,14 @@ class ReferenceGenome(
         """Return a list of all chromosomes of the reference genome."""
         return self._chromosomes
 
+    @property
+    def chrom_prefix(self) -> str:
+        """Return a prefix of all chromosomes of the reference genome."""
+        chrom = self._chromosomes[0]
+        if chrom.startswith("chr"):
+            return "chr"
+        return ""
+
     def _load_genome_index(self) -> None:
         config = self.resource.get_config()
         file_name = config["filename"]

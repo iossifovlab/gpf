@@ -38,6 +38,7 @@ class QueryTransformer:
     def __init__(self, study_wrapper):  # type: ignore
         self.study_wrapper = study_wrapper
         self.effect_types_mixin = EffectTypesMixin()
+        self.gpf_instance = study_wrapper.gpf_instance
 
     def _transform_genomic_scores(
         self, genomic_scores: list[dict]
@@ -278,6 +279,24 @@ class QueryTransformer:
             kwargs["person_set_collection"] = collection_id, selected_sets
         return kwargs
 
+    def _transform_regions(self, regions: list[str]) -> list[Region]:
+        result = list(map(Region.from_str, regions))
+        chrom_prefix = self.gpf_instance.reference_genome.chrom_prefix
+        chromosomes = set(self.gpf_instance.reference_genome.chromosomes)
+        for region in result:
+            if region.chrom not in chromosomes:
+                if chrom_prefix == "chr":
+                    region.chrom = f"{chrom_prefix}{region.chrom}"
+                    if chrom_prefix not in chromosomes:
+                        continue
+                elif chrom_prefix == "":
+                    region.chrom = region.chrom.lstrip("chr")
+                    if region.chrom not in chromosomes:
+                        continue
+                else:
+                    continue
+        return result
+
     def transform_kwargs(self, **kwargs: Any) -> dict[str, Any]:
         """Transform WEB query variants params into genotype data params."""
         # flake8: noqa: C901
@@ -300,7 +319,7 @@ class QueryTransformer:
             del kwargs["uniqueFamilyVariants"]
 
         if "regions" in kwargs:
-            kwargs["regions"] = list(map(Region.from_str, kwargs["regions"]))
+            kwargs["regions"] = self._transform_regions(kwargs["regions"])
 
         present_in_child = set()
         present_in_parent = set()

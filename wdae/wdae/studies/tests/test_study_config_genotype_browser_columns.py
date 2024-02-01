@@ -120,7 +120,7 @@ def test_study_wrapper_preview_columns_ext(trio_study, gpf_fixture):
                 - aaa
         """))
     )
-    wrapper = StudyWrapper(study, None, None)
+    wrapper = StudyWrapper(study, None, None, None)
     assert wrapper.preview_columns == [
         "family", "variant", "genotype", "effect", "gene_scores", "freq", "aaa"
     ]
@@ -139,7 +139,7 @@ def test_study_wrapper_download_columns_ext(trio_study, gpf_fixture):
                 - aaa
         """))
     )
-    wrapper = StudyWrapper(study, None, None)
+    wrapper = StudyWrapper(study, None, None, None)
     assert wrapper.download_columns == [
         "family", "study_phenotype", "variant", "variant_extra",
         "family_person_ids", "family_structure", "best", "family_genotype",

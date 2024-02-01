@@ -153,15 +153,16 @@ class DuckDb2Variants(QueryVariantsBase):
         return family_schema
 
     def _fetch_pedigree_schema(self) -> dict[str, str]:
-        query = f"""DESCRIBE {self.layout.pedigree}"""
+        # query = f"""DESCRIBE {self.layout.pedigree}"""
 
-        with self.connection.cursor() as cursor:
-            schema: dict[str, str] = {}
-            rows = cursor.execute(query).fetchall()
-            for row in rows:
-                schema[row[0]] = row[1]
+        # with self.connection.cursor() as cursor:
+        #     schema: dict[str, str] = {}
+        #     rows = cursor.execute(query).fetchall()
+        #     for row in rows:
+        #         schema[row[0]] = row[1]
 
-        return schema
+        # return schema
+        return {}
 
     def _fetch_pedigree(self) -> pd.DataFrame:
         query = f"SELECT * FROM {self.layout.pedigree}"

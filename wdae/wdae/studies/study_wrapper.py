@@ -235,11 +235,12 @@ class StudyWrapper(StudyWrapperBase):
     """Genotype data study wrapper class for WDAE."""
 
     # pylint: disable=too-many-instance-attributes
-    def __init__(
+    def __init__(  # type: ignore
         self, genotype_data_study: GenotypeData,
         pheno_db: PhenoRegistry,
-        gene_scores_db: GeneScoresDb
-    ):
+        gene_scores_db: GeneScoresDb,
+        gpf_instance
+    ) -> None:
 
         assert genotype_data_study is not None
 
@@ -254,6 +255,7 @@ class StudyWrapper(StudyWrapperBase):
         self._init_pheno(self.pheno_db)
 
         self.gene_scores_db = gene_scores_db
+        self.gpf_instance = gpf_instance
         self.query_transformer = QueryTransformer(self)
         self.response_transformer = ResponseTransformer(self)
 

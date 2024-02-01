@@ -115,9 +115,9 @@ class DuckDbGenotypeStorage(GenotypeStorage):
             db_name=db_name, read_only=read_only)
         memory_limit = self.get_memory_limit()
         if memory_limit:
-            self.connection_factory.sql(
-                f"SET memory_limit='{memory_limit}'"
-            )
+            query = f"SET memory_limit='{memory_limit}'"
+            logger.info("memory limit: %s", query)
+            self.connection_factory.sql(query)
         return self
 
     def restart(self, read_only: bool) -> DuckDbGenotypeStorage:
@@ -137,9 +137,9 @@ class DuckDbGenotypeStorage(GenotypeStorage):
             db_name=db_name, read_only=read_only)
         memory_limit = self.get_memory_limit()
         if memory_limit:
-            self.connection_factory.sql(
-                f"SET memory_limit='{memory_limit}'"
-            )
+            query = f"SET memory_limit='{memory_limit}'"
+            logger.info("memory limit: %s", query)
+            self.connection_factory.sql(query)
         return self
 
     def is_read_only(self) -> bool:
@@ -250,7 +250,7 @@ class DuckDbGenotypeStorage(GenotypeStorage):
             memory_limit = self.get_memory_limit()
             if memory_limit:
                 query = f"SET memory_limit='{memory_limit}'"
-                logger.debug("query: %s", query)
+                logger.info("memory limit: %s", query)
                 connection.sql(query)
 
             query = f"DROP TABLE IF EXISTS {table_name}"
