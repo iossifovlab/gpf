@@ -30,9 +30,6 @@ mkdir -p $DAE_DB_DIR/pheno/images
 cp -r $DAE_DB_DIR/pheno/comp_pheno/browser/images/comp_pheno \
     $DAE_DB_DIR/pheno/
 
-/opt/conda/bin/conda run --no-capture-output -n gpf \
-    build_pheno_measures.py $DAE_DB_DIR/pheno
-
 cd /wd
 
 cd /wd/integration/fixtures/hg19/micro_iossifov2014

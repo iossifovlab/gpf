@@ -25,7 +25,7 @@ class QueryBaseView(views.APIView):
         self.instance_id = self.gpf_instance.instance_id
         recreated_dataset_perm(self.gpf_instance)
         self.variants_db = self.gpf_instance._variants_db
-        self.pheno_db = self.gpf_instance._pheno_db
+        self.pheno_registry = self.gpf_instance._pheno_registry
 
     @staticmethod
     def get_permitted_datasets(user: User) -> list[str]:

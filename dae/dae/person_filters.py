@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 from dae.pedigrees.families_data import FamiliesData
 from dae.pheno.common import MeasureType
-from dae.pheno.pheno_db import Measure, PhenotypeData
+from dae.pheno.pheno_data import Measure, PhenotypeData
 
 
 class PersonFilter():
@@ -83,7 +83,7 @@ class PhenoFilter(CriteriaFilter):  # pylint: disable=abstract-method
     ):
         super().__init__(criteria, values)
         self.measure_df = self.apply_to_df(
-            phenotype_data.get_measure_values_df(self.criteria)
+            phenotype_data.get_people_measure_values_df([self.criteria])
         )
 
     def apply(

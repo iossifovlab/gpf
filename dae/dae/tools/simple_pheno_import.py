@@ -187,6 +187,10 @@ def main(argv: Optional[list[str]] = None) -> int:
         prep.build_pedigree(args.pedigree)
         prep.build_variables(args.instruments, args.data_dictionary)
 
+        prep.db.clear_instrument_values_tables(drop=True)
+        prep.db.build_instrument_values_tables()
+        prep.db.populate_instrument_values_tables()
+
         build_pheno_browser(
             args.pheno_db_filename,
             args.pheno_name,

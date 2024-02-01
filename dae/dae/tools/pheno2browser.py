@@ -6,7 +6,7 @@ import os
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
 import traceback
 
-from dae.pheno import pheno_db
+from dae.pheno import pheno_data
 from dae.pheno.prepare_data import PreparePhenoBrowserBase
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.phenotype_data import regression_conf_schema
@@ -17,14 +17,14 @@ from dae.utils.filehash import sha256sum
 class CLIError(Exception):
     """Generic exception to raise and log different fatal errors."""
 
-    def __init__(self, msg):
-        super(CLIError).__init__(type(self))
-        self.msg = "E: %s" % msg
+    def __init__(self, msg: str):
+        super().__init__(type(self))
+        self.msg = f"E: {msg}"
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.msg
 
-    def __unicode__(self):
+    def __unicode__(self) -> str:
         return self.msg
 
 
@@ -53,7 +53,7 @@ def calc_dbfile_hashsum(dbfilename):
 def build_pheno_browser(
     dbfile, pheno_name, output_dir, pheno_regressions=None
 ):
-    phenodb = pheno_db.PhenotypeStudy(pheno_name, dbfile=dbfile)
+    phenodb = pheno_data.PhenotypeStudy(pheno_name, dbfile=dbfile)
 
     images_dir = os.path.join(output_dir, "images")
     os.makedirs(images_dir, exist_ok=True)

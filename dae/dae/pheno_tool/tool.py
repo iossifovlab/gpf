@@ -15,7 +15,7 @@ from dae.variants.attributes import Role, Sex
 from dae.variants.family_variant import FamilyAllele
 from dae.effect_annotation.effect import EffectTypesMixin, expand_effect_types
 from dae.studies.study import GenotypeData
-from dae.pheno.pheno_db import PhenotypeData
+from dae.pheno.pheno_data import PhenotypeData
 
 
 logger = logging.getLogger(__name__)
@@ -190,11 +190,11 @@ class PhenoTool:
         # options via PeopleGroup
         all_measures = [self.measure_id] + self.normalize_by
 
-        pheno_df = self.phenotype_data.get_persons_values_df(
+        pheno_df = self.phenotype_data.get_people_measure_values_df(
             all_measures,
             person_ids=person_ids,
             family_ids=family_ids,
-            roles=[Role.prb]
+            roles=["prb"]
         )
 
         self.pheno_df = pheno_df.dropna()

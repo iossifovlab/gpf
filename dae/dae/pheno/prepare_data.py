@@ -9,9 +9,9 @@ import numpy as np
 import pandas as pd
 
 from dae.variants.attributes import Role
-from dae.pheno.pheno_db import PhenotypeStudy, Measure, \
+from dae.pheno.pheno_data import PhenotypeStudy, Measure, \
     get_pheno_browser_images_dir
-from dae.pheno.db import DbManager
+from dae.pheno.db import PhenoDb
 from dae.pheno.common import MeasureType
 from dae.pheno.graphs import draw_linregres
 from dae.pheno.graphs import draw_measure_violinplot
@@ -57,7 +57,9 @@ class PreparePhenoBrowserBase:
         )
 
     def load_measure(self, measure: Measure) -> pd.DataFrame:
-        df = self.phenotype_data.get_persons_values_df([measure.measure_id])
+        df = self.phenotype_data.get_people_measure_values_df(
+            [measure.measure_id]
+        )
         return df
 
     def _augment_measure_values_df(
@@ -80,11 +82,11 @@ class PreparePhenoBrowserBase:
         if not self.phenotype_data.has_measure(augment_id):
             return None
 
-        df = self.phenotype_data.get_persons_values_df(
+        df = self.phenotype_data.get_people_measure_values_df(
             [augment_id, measure.measure_id]
         )
-        df.loc[df.role == Role.mom, "role"] = Role.parent
-        df.loc[df.role == Role.dad, "role"] = Role.parent
+        df.loc[df.role == Role.mom, "role"] = Role.parent  # type: ignore
+        df.loc[df.role == Role.dad, "role"] = Role.parent  # type: ignore
 
         df.rename(columns={augment_id: augment_name}, inplace=True)
         return df
@@ -347,7 +349,10 @@ class PreparePhenoBrowserBase:
                 continue
 
             res["regression_id"] = reg_id
-            res.update(self.build_regression(measure, reg_measure, reg.jitter))
+            regression = self.build_regression(
+                measure, reg_measure, reg.jitter
+            )
+            res.update(regression)  # type: ignore
             if (
                 res.get("pvalue_regression_male") is not None
                 or res.get("pvalue_regression_female") is not None
@@ -357,7 +362,7 @@ class PreparePhenoBrowserBase:
     def run(self) -> None:
         """Run browser preparations for all measures in a phenotype data."""
         pheno_dbfile = self.phenotype_data.db.pheno_dbfile
-        db = DbManager(pheno_dbfile, browser_dbfile=self.browser_db)
+        db = PhenoDb(pheno_dbfile, browser_dbfile=self.browser_db)
         db.build()
 
         if self.pheno_regressions:

@@ -8,7 +8,7 @@ import pytest
 
 from dae.genotype_storage.genotype_storage_registry import \
     GenotypeStorageRegistry
-from dae.pheno.pheno_db import PhenoDb
+from dae.pheno.registry import PhenoRegistry
 from dae.gene.gene_scores import GeneScoresDb
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.studies.study import GenotypeData
@@ -48,8 +48,8 @@ def variants_db_fixture(local_gpf_instance: GPFInstance) -> VariantsDb:
 
 
 @pytest.fixture(scope="session")
-def pheno_db(local_gpf_instance: GPFInstance) -> PhenoDb:
-    return local_gpf_instance._pheno_db
+def pheno_db(local_gpf_instance: GPFInstance) -> PhenoRegistry:
+    return local_gpf_instance._pheno_registry
 
 
 @pytest.fixture(scope="session")

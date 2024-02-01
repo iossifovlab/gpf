@@ -6,7 +6,7 @@ import pandas as pd
 
 from remote.rest_api_client import RESTClient
 
-from dae.pheno.pheno_db import PhenotypeData, Measure, Instrument
+from dae.pheno.pheno_data import PhenotypeData, Measure, Instrument
 from dae.pedigrees.family import Person
 from dae.variants.attributes import Role
 
@@ -116,124 +116,6 @@ class RemotePhenotypeData(PhenotypeData):
             measure_type
         )
         return {m["measureName"]: Measure.from_json(m) for m in measures}
-
-    def get_measure_values_df(
-        self,
-        measure_id: str,
-        person_ids: Optional[Iterable[str]] = None,
-        family_ids: Optional[Iterable[str]] = None,
-        roles: Union[Iterable[Role], Iterable[str], None] = None,
-        default_filter: str = "apply",
-    ) -> pd.DataFrame:
-        measure_values = self.rest_client.post_measure_values(
-            self.remote_dataset_id,
-            measure_id,
-            person_ids,
-            family_ids,
-            cast(Iterable[str], roles),
-            default_filter
-        )
-        data = {
-            "person_id": measure_values.keys(),
-            measure_id: measure_values.values()
-        }
-
-        return pd.DataFrame(data)
-
-    def get_measure_values(
-        self,
-        measure_id: str,
-        person_ids: Optional[Iterable[str]] = None,
-        family_ids: Optional[Iterable[str]] = None,
-        roles: Union[Iterable[Role], Iterable[str], None] = None,
-        default_filter: str = "apply",
-    ) -> dict[str, Any]:
-        measure_values = self.rest_client.post_measure_values(
-            self.remote_dataset_id,
-            measure_id,
-            person_ids,
-            family_ids,
-            cast(Iterable[str], roles),
-            default_filter
-        )
-
-        return cast(dict[str, Any], measure_values)
-
-    def get_values_df(
-        self,
-        measure_ids: str,  # type: ignore
-        person_ids: Optional[Iterable[str]] = None,
-        family_ids: Optional[Iterable[str]] = None,
-        roles: Union[Iterable[Role], Iterable[str], None] = None,
-        default_filter: str = "apply",
-    ) -> pd.DataFrame:
-        values = self.rest_client.post_measure_values(
-            self.remote_dataset_id,
-            measure_ids,
-            person_ids,
-            family_ids,
-            cast(Iterable[str], roles),
-            default_filter
-        )
-
-        return pd.DataFrame.from_records(values.values())
-
-    def get_values(
-        self,
-        measure_ids: str,  # type: ignore
-        person_ids: Optional[Iterable[str]] = None,
-        family_ids: Optional[Iterable[str]] = None,
-        roles: Union[Iterable[Role], Iterable[str], None] = None,
-        default_filter: str = "apply",
-    ) -> dict[str, Any]:
-        values = self.rest_client.post_measure_values(
-            self.remote_dataset_id,
-            measure_ids,
-            person_ids,
-            family_ids,
-            cast(Iterable[str], roles),
-            default_filter
-        )
-
-        return cast(dict[str, Any], values)
-
-    def get_instrument_values_df(
-        self,
-        instrument_name: str,
-        person_ids: Optional[Iterable[str]] = None,
-        family_ids: Optional[Iterable[str]] = None,
-        role: Union[Iterable[Role], Iterable[str], None] = None,
-        measure_ids: Optional[Iterable[str]] = None
-    ) -> pd.DataFrame:
-        instrument_values = self.rest_client.post_instrument_values(
-            self.remote_dataset_id,
-            instrument_name,
-            person_ids,
-            family_ids,
-            cast(Iterable[str], role),
-            measure_ids,
-        )
-
-        return pd.DataFrame.from_records(instrument_values.values())
-
-    def get_instrument_values(
-        self,
-        instrument_name: str,
-        person_ids: Optional[Iterable[str]] = None,
-        family_ids: Optional[Iterable[str]] = None,
-        role: Union[Iterable[Role], Iterable[str], None] = None,
-        measure_ids: Optional[Iterable[str]] = None
-    ) -> dict[str, Any]:
-        instrument_values = self.rest_client.post_instrument_values(
-            self.remote_dataset_id,
-            instrument_name,
-            person_ids,
-            family_ids,
-            cast(Iterable[str], role),
-            measure_ids,
-        )
-
-        return cast(dict[str, Any], instrument_values)
 
     def get_people_measure_values(  # type: ignore
         self,

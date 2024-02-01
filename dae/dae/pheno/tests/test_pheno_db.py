@@ -1,12 +1,12 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,too-many-lines
-from typing import Any, Callable, List
+from typing import Any, Callable, Generator
 
 import pytest
 import pandas as pd
 import numpy as np
 
 from dae.pheno.common import MeasureType
-from dae.pheno.pheno_db import Measure, PhenotypeStudy
+from dae.pheno.pheno_data import Measure, PhenotypeStudy
 
 
 def df_check(
@@ -17,6 +17,14 @@ def df_check(
     # df = df.dropna()
     assert all(col in df for col in expected_cols)
     assert expected_count == len(df)
+
+
+def dict_gen_check(
+    dict_gen: Generator[dict[str, Any], None, None],
+    expected_count: int,
+    expected_cols: list[str]
+) -> None:
+    dict_check(next(dict_gen), expected_count, expected_cols)
 
 
 def dict_check(
@@ -67,33 +75,6 @@ def test_get_measure_type(fake_phenotype_data: PhenotypeStudy) -> None:
     assert mes.measure_type == MeasureType.continuous
 
 
-@pytest.mark.parametrize("query_cols", [(["i1.m1"]), (["i1.m1", "i1.m2"])])
-@pytest.mark.parametrize(
-    "get,check",
-    [
-        (PhenotypeStudy.get_values, dict_check),
-        (PhenotypeStudy.get_values_df, df_check),
-    ],
-)
-def test_get_values(
-    fake_phenotype_data: PhenotypeStudy,
-    query_cols: List[str],
-    get: Callable,
-    check: Callable
-) -> None:
-    vals = get(fake_phenotype_data, query_cols)
-    check(vals, 195, query_cols)
-
-    vals = get(fake_phenotype_data, query_cols, ["f20.p1"])
-    check(vals, 1, query_cols)
-
-    vals = get(fake_phenotype_data, query_cols, ["f20.p1", "f21.p1"])
-    check(vals, 2, query_cols)
-
-    vals = get(fake_phenotype_data, query_cols, roles=["prb"])
-    check(vals, 39, query_cols)
-
-
 @pytest.mark.parametrize(
     "query_cols", [
         (["i1.m1"]),
@@ -107,7 +88,7 @@ def test_get_people_measure_values(
 ) -> None:
     result_it = fake_phenotype_data.get_people_measure_values(query_cols)
     result = list(result_it)
-    base_cols = ["person_id", "family_id", "role"]
+    base_cols = ["person_id", "family_id", "role", "sex", "status"]
     db_query_cols = [query_col for query_col in query_cols]
     dict_list_check(result, 195, base_cols + db_query_cols)
 
@@ -182,40 +163,11 @@ def test_get_people_measure_values_correct_values(
         "person_id": "f1.p1",
         "family_id": "f1",
         "role": "prb",
+        "sex": "M",
+        "status": "affected",
         "i1.m1": 34.76285793898369,
         "i1.m2": 48.44644402952317
     }
-
-
-@pytest.mark.parametrize(
-    "get,check",
-    [
-        (PhenotypeStudy.get_instrument_values, dict_check),
-        (PhenotypeStudy.get_instrument_values_df, df_check),
-    ],
-)
-def test_get_instrument_values(
-    fake_phenotype_data: PhenotypeStudy,
-    get: Callable,
-    check: Callable
-) -> None:
-    values = get(fake_phenotype_data, "i1")
-    check(
-        values,
-        195,
-        [
-            "i1.m1",
-            "i1.m2",
-            "i1.m3",
-            "i1.m4",
-            "i1.m5",
-            "i1.m6",
-            "i1.m7",
-            "i1.m8",
-            "i1.m9",
-            "i1.m10",
-        ],
-    )
 
 
 def test_has_measure(fake_phenotype_data: PhenotypeStudy) -> None:
@@ -274,11 +226,6 @@ def test_get_persons_df(fake_phenotype_data: PhenotypeStudy) -> None:
     df_check(prbs, 39, ["person_id", "family_id", "role", "sex", "status"])
 
 
-def test_get_persons_values_df(fake_phenotype_data: PhenotypeStudy) -> None:
-    pvdf = fake_phenotype_data.get_persons_values_df(["i1.m1"])
-    assert len(pvdf) > 0
-
-
 @pytest.mark.parametrize(
     "families,expected_count", [(["f20"], 5), (["f20", "f21"], 10)]
 )
@@ -290,10 +237,14 @@ def test_get_values_families_filter(
     query_cols: list[str]
 ) -> None:
     personlist = ["{}.dad", "{}.mom", "{}.p1"]
-    vals = fake_phenotype_data.get_values(query_cols, family_ids=families)
+    vals = list(fake_phenotype_data.get_people_measure_values(
+        query_cols, family_ids=families
+    ))
+    all_people = [v["person_id"] for v in vals]
     for fam in families:
-        assert all(p.format(fam) in vals for p in personlist)
-    dict_check(vals, expected_count, query_cols)
+        assert all(p.format(fam) in all_people for p in personlist)
+    base_cols = ["person_id", "family_id", "role", "sex", "status"]
+    dict_list_check(vals, expected_count, base_cols + query_cols)
 
 
 def test_min_max_measure_values(fake_phenotype_data: PhenotypeStudy) -> None:
@@ -304,8 +255,8 @@ def test_min_max_measure_values(fake_phenotype_data: PhenotypeStudy) -> None:
             continue
         mmin = measure.min_value
         mmax = measure.max_value
-        df = fake_phenotype_data.get_measure_values_df(
-            measure.measure_id, default_filter="skip"
+        df = fake_phenotype_data.get_people_measure_values_df(
+            [measure.measure_id]
         )
         df = df[
             pd.to_numeric(df[measure.measure_id], errors="coerce").notnull()
@@ -339,45 +290,6 @@ def test_get_persons_df_roles(
     fake_phenotype_data: PhenotypeStudy
 ) -> None:
     res = fake_phenotype_data.get_persons_df(
-        person_ids=["f1.p1", "f2.p1", "f3.p1"],
-        family_ids=["f1", "f2", "f3"],
-        roles=[],
-    )
-    assert res.empty
-
-
-def test_raw_get_measure_values_df_person_ids(
-    fake_phenotype_data: PhenotypeStudy
-) -> None:
-    test_measure = fake_phenotype_data.get_measure("i1.m1")
-    res = fake_phenotype_data._raw_get_measure_values_df(
-        test_measure,
-        person_ids=[],
-        family_ids=["f1", "f2", "f3"],
-        roles=["prb"],
-    )
-    assert res.empty
-
-
-def test_raw_get_measure_values_df_family_ids(
-    fake_phenotype_data: PhenotypeStudy
-) -> None:
-    test_measure = fake_phenotype_data.get_measure("i1.m1")
-    res = fake_phenotype_data._raw_get_measure_values_df(
-        test_measure,
-        person_ids=["f1.p1", "f2.p1", "f3.p1"],
-        family_ids=[],
-        roles=["prb"],
-    )
-    assert res.empty
-
-
-def test_raw_get_measure_values_df_roles(
-    fake_phenotype_data: PhenotypeStudy
-) -> None:
-    test_measure = fake_phenotype_data.get_measure("i1.m1")
-    res = fake_phenotype_data._raw_get_measure_values_df(
-        test_measure,
         person_ids=["f1.p1", "f2.p1", "f3.p1"],
         family_ids=["f1", "f2", "f3"],
         roles=[],

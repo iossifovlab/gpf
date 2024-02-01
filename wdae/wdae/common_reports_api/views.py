@@ -7,9 +7,9 @@ from rest_framework.response import Response
 from query_base.query_base import QueryDatasetView
 
 from utils.query_params import parse_query_params
-from dae.pedigrees.family import FamilyTag, Family
+from dae.pedigrees.family import FamilyTag
 from dae.pedigrees.families_data import FamiliesData
-from dae.pedigrees.family_tag_builder import check_tag, check_family_tags_query
+from dae.pedigrees.family_tag_builder import check_family_tags_query
 from dae.pedigrees.loader import FamiliesLoader
 
 
@@ -130,31 +130,6 @@ class FamilyCounterDownloadView(QueryDatasetView):
 
 class FamiliesDataDownloadView(QueryDatasetView):
     """Families data download view class."""
-
-    @classmethod
-    def check_family(
-            cls,
-            family: Family, or_mode: bool,
-            include_tags: set[FamilyTag],
-            exclude_tags: set[FamilyTag]
-    ) -> bool:
-        """Check if a family passes specified filters."""
-        if or_mode:
-            for tag in include_tags:
-                if check_tag(family, tag):
-                    return True
-            for tag in exclude_tags:
-                if not check_tag(family, tag):
-                    return True
-            return False
-
-        for tag in include_tags:
-            if not check_tag(family, tag):
-                return False
-        for tag in exclude_tags:
-            if check_tag(family, tag):
-                return False
-        return True
 
     @classmethod
     def collect_families(

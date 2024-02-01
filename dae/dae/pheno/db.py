@@ -16,7 +16,7 @@ from dae.variants.attributes import Sex, Status, Role
 from dae.pheno.common import MeasureType
 
 
-class DbManager:  # pylint: disable=too-many-instance-attributes
+class PhenoDb:  # pylint: disable=too-many-instance-attributes
     """Class that manages access to phenotype databases."""
 
     STREAMING_CHUNK_SIZE = 25
@@ -184,6 +184,13 @@ class DbManager:  # pylint: disable=too-many-instance-attributes
                         "family_id", String(64), nullable=False, index=True
                     ),
                     Column("role", String(64), nullable=False, index=True),
+                    Column(
+                        "status",
+                        Enum(Status),
+                        nullable=False,
+                        default=Status.unaffected,
+                    ),
+                    Column("sex", Enum(Sex), nullable=False),
                     *cols,
                     extend_existing=True
                 )
@@ -216,6 +223,8 @@ class DbManager:  # pylint: disable=too-many-instance-attributes
             self.person.c.person_id,
             self.person.c.role,
             self.family.c.family_id,
+            self.person.c.status,
+            self.person.c.sex
         ]
         query = select(
             self.measure.c.measure_id, self.measure.c.measure_type
@@ -343,7 +352,8 @@ class DbManager:  # pylint: disable=too-many-instance-attributes
                     result_row.measure_id
         return measure_column_names
 
-    def populate_instrument_values_tables(self) -> None:
+    #  pylint: disable=too-many-branches
+    def populate_instrument_values_tables(self, use_old: bool = False) -> None:
         """
         Populate the instrument values tables with values.
 
@@ -359,13 +369,21 @@ class DbManager:  # pylint: disable=too-many-instance-attributes
         measure_column_names = {}
 
         with self.pheno_engine.connect() as connection:
-            # Very important to use legacy 'measure' table here instead
-            # Measure IDs will be mismatched when collecting values otherwise
-            query = select(
-                self.measure.c.id,
-                self.measure.c.measure_id,
-                self.measure.c.measure_type
-            )
+            if use_old:
+                # Very important to use legacy 'measure' table here instead
+                # Measure IDs will be mismatched when
+                # collecting values otherwise
+                query = select(
+                    self.measure.c.id,
+                    self.measure.c.measure_id,
+                    self.measure.c.measure_type
+                )
+            else:
+                query = select(
+                    self.measures.c.id,
+                    self.measures.c.measure_id,
+                    self.measures.c.measure_type
+                )
             results = connection.execute(query)
             for result_row in results:
                 measure_id_map[result_row.measure_id] = result_row.id
@@ -421,6 +439,8 @@ class DbManager:  # pylint: disable=too-many-instance-attributes
                         "person_id": row["person_id"],
                         "role": str(row["role"]),
                         "family_id": row["family_id"],
+                        "status": row["status"],
+                        "sex": row["sex"]
                     }
                     for measure in measures:
                         col_name = measure_column_names[measure]

@@ -3,7 +3,7 @@
 
 import os
 import logging
-from dae.pheno.pheno_db import get_pheno_browser_images_dir
+from dae.pheno.pheno_data import get_pheno_browser_images_dir
 
 DEBUG = os.environ.get("WDAE_DEBUG", "False") == "True"
 

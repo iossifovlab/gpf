@@ -4,7 +4,7 @@ from typing import Callable
 
 import pytest
 
-from dae.pheno.pheno_db import PhenotypeStudy, PhenotypeData
+from dae.pheno.pheno_data import PhenotypeStudy, PhenotypeData
 
 
 @pytest.fixture

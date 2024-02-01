@@ -9,10 +9,11 @@ from multiprocessing import Pool
 from multiprocessing.pool import AsyncResult
 import numpy as np
 import pandas as pd
+from sqlalchemy.sql import insert
 
 from box import Box
 
-from dae.pheno.db import DbManager
+from dae.pheno.db import PhenoDb, generate_instrument_table_name, safe_db_name
 from dae.pheno.common import MeasureType
 from dae.pedigrees.loader import FamiliesLoader, PED_COLUMNS_REQUIRED, \
     PedigreeIO
@@ -39,12 +40,12 @@ class PrepareBase(PrepareCommon):
     def __init__(self, config: Box) -> None:
         assert config is not None
         self.config = config
-        self.db = DbManager(self.config.db.filename)
+        self.db = PhenoDb(self.config.db.filename)
         self.db.build()
-        self.persons = None
+        self.persons: dict[str, Any] = {}
 
     def get_persons(self, force: bool = False) -> Optional[dict[str, Any]]:
-        if not self.persons or force:
+        if not self.persons or len(self.persons) == 0 or force:
             self.persons = self.db.get_persons()
         return self.persons
 
@@ -369,11 +370,16 @@ class PrepareVariables(PreparePersons):
             log.write(classifier_report.log_line())
             log.write("\n")
 
-    def save_measure(self, measure: Box) -> int:
+    def save_measure(
+        self, measure: Box, db_name: str, instrument_id: int
+    ) -> int:
         """Save measure into sqlite database."""
         to_save = measure.to_dict()
+        to_save["instrument_id"] = instrument_id
+        del to_save["instrument_name"]
+        to_save["db_column_name"] = db_name
         assert "db_id" not in to_save, to_save
-        ins = self.db.measure.insert().values(**to_save)
+        ins = self.db.measures.insert().values(**to_save)
         with self.db.pheno_engine.begin() as connection:
             result = connection.execute(ins)
             measure_id = cast(int, result.inserted_primary_key[0])
@@ -507,11 +513,11 @@ class PrepareVariables(PreparePersons):
                     measure_desc, df
                 )
                 fut = pool.apply_async(classify_task)
-                classify_queue.put(fut)  # type: ignore
+                classify_queue.put(fut)
 
             while not classify_queue.empty():
                 res = classify_queue.get()
-                task = res.get()  # type: ignore
+                task = res.get()
                 measure, classifier_report, _mdf = task.done()
                 self.log_measure(measure, classifier_report)
                 if measure.measure_type == MeasureType.skipped:
@@ -525,15 +531,41 @@ class PrepareVariables(PreparePersons):
             if self.config.report_only:
                 return None
 
+            table_name = generate_instrument_table_name(
+                instrument_name
+            )
+            query_values = [{
+                "instrument_name": instrument_name,
+                "table_name": safe_db_name(table_name)
+            }]
+
+            query = insert(self.db.instruments)
+
+            with self.db.pheno_engine.begin() as connection:
+                result = connection.execute(query.values(query_values))
+                instrument_id = result.lastrowid
+                connection.commit()
+
             values_queue = TaskQueue()
+            seen_measure_names: dict[str, int] = {}
             while not save_queue.empty():
                 task = save_queue.get()
                 measure, classifier_report, mdf = task.done()
 
-                measure_id = self.save_measure(measure)
+                db_name = safe_db_name(
+                    measure.measure_id
+                )
+                if db_name.lower() in seen_measure_names:
+                    seen_measure_names[db_name.lower()] += 1
+                    db_name = \
+                        f"{db_name}_{seen_measure_names[db_name.lower()]}"
+                else:
+                    seen_measure_names[db_name.lower()] = 1
+
+                measure_id = self.save_measure(measure, db_name, instrument_id)
                 measure.db_id = measure_id
                 values_task = MeasureValuesTask(measure, mdf)
-                res = pool.apply_async(values_task)  # type: ignore
+                res = pool.apply_async(values_task)
                 values_queue.put(res)
 
             while not values_queue.empty():

@@ -15,9 +15,9 @@ urlpatterns = [
         name="pheno_tool_persons"
     ),
     re_path(
-        r"^/persons_values/?$",
-        views.PhenoToolPersonsValues.as_view(),
-        name="pheno_tool_persons_values"
+        r"^/people_values/?$",
+        views.PhenoToolPeopleValues.as_view(),
+        name="pheno_tool_people_values"
     ),
     re_path(
         r"^/measure/?$",
@@ -30,23 +30,8 @@ urlpatterns = [
         name="pheno_tool_measures"
     ),
     re_path(
-        r"^/measure_values/?$",
-        views.PhenoToolMeasureValues.as_view(),
-        name="pheno_tool_measure_values"
-    ),
-    re_path(
-        r"^/values/?$",
-        views.PhenoToolValues.as_view(),
-        name="pheno_tool_values"
-    ),
-    re_path(
         r"^/instruments/?$",
         views.PhenoToolInstruments.as_view(),
         name="pheno_tool_instruments"
-    ),
-    re_path(
-        r"^/instrument_values/?$",
-        views.PhenoToolInstrumentValues.as_view(),
-        name="pheno_tool_instrument_values"
     ),
 ]

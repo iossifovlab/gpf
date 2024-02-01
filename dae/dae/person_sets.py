@@ -15,7 +15,7 @@ from box import Box
 from dae.variants.attributes import Sex
 from dae.pedigrees.family import Person
 from dae.pedigrees.families_data import FamiliesData
-from dae.pheno.pheno_db import PhenotypeData, MeasureType
+from dae.pheno.pheno_data import PhenotypeData, MeasureType
 
 
 logger = logging.getLogger(__name__)
@@ -273,12 +273,14 @@ class PersonSetCollection:
                     f"Continuous measures not allowed in person sets! " \
                     f"({source.ssource})"
 
-                pheno_values = pheno_db.get_values(
-                    measure_ids=[source.ssource],
+                pheno_values = list(pheno_db.get_people_measure_values(
+                    [source.ssource],
                     person_ids=[person.person_id],
-                )
-                value = pheno_values[person.person_id][source.ssource] \
-                    if person.person_id in pheno_values else None
+                ))
+                if len(pheno_values) == 0:
+                    value = None
+                else:
+                    value = pheno_values[0][source.ssource]
             else:
                 raise ValueError(f"Invalid source type {source.sfrom}!")
             values.append(value)

@@ -3,12 +3,12 @@ import os
 from typing import Any
 from box import Box
 
-from dae.pheno.db import DbManager
-from dae.pheno.pheno_db import PhenoDb
+from dae.pheno.db import PhenoDb
+from dae.pheno.registry import PhenoRegistry
 
 
 def test_db_save(output_dir: str) -> None:
-    db = DbManager(
+    db = PhenoDb(
         os.path.join(output_dir, "temp_testing.db"),
         browser_dbfile=os.path.join(output_dir, "temp_testing_browser.db")
     )
@@ -37,7 +37,7 @@ def test_db_save(output_dir: str) -> None:
 
 
 def test_db_update(output_dir: str) -> None:
-    db = DbManager(
+    db = PhenoDb(
         os.path.join(output_dir, "temp_testing.db"),
         browser_dbfile=os.path.join(output_dir, "temp_testing_browser.db")
     )
@@ -67,7 +67,7 @@ def test_db_update(output_dir: str) -> None:
 
 
 def test_has_descriptions(output_dir: str) -> None:
-    db = DbManager(
+    db = PhenoDb(
         os.path.join(output_dir, "temp_testing.db"),
         browser_dbfile=os.path.join(output_dir, "temp_testing_browser.db")
     )
@@ -99,7 +99,7 @@ def test_has_descriptions(output_dir: str) -> None:
 def test_search_measures_get_all(
     fake_phenotype_data_dbfile: str, fake_phenotype_data_browser_dbfile: str
 ) -> None:
-    db = DbManager(
+    db = PhenoDb(
         fake_phenotype_data_dbfile,
         fake_phenotype_data_browser_dbfile
     )
@@ -111,7 +111,7 @@ def test_search_measures_get_all(
 def test_search_measures_get_by_instrument(
     fake_phenotype_data_dbfile: str, fake_phenotype_data_browser_dbfile: str
 ) -> None:
-    db = DbManager(
+    db = PhenoDb(
         fake_phenotype_data_dbfile,
         fake_phenotype_data_browser_dbfile
     )
@@ -132,7 +132,7 @@ def test_search_measures_get_by_instrument(
 def test_search_measures_by_keyword_in_description(
     fake_phenotype_data_dbfile: str, fake_phenotype_data_browser_dbfile: str
 ) -> None:
-    db = DbManager(
+    db = PhenoDb(
         fake_phenotype_data_dbfile,
         fake_phenotype_data_browser_dbfile
     )
@@ -147,7 +147,7 @@ def test_search_measures_by_keyword_in_description(
 def test_search_measures_by_keyword_in_measure_id(
     fake_phenotype_data_dbfile: str, fake_phenotype_data_browser_dbfile: str
 ) -> None:
-    db = DbManager(
+    db = PhenoDb(
         fake_phenotype_data_dbfile,
         fake_phenotype_data_browser_dbfile
     )
@@ -162,7 +162,7 @@ def test_search_measures_by_keyword_in_measure_id(
 def test_search_measures_by_keyword_in_measure_name(
     fake_phenotype_data_dbfile: str, fake_phenotype_data_browser_dbfile: str
 ) -> None:
-    db = DbManager(
+    db = PhenoDb(
         fake_phenotype_data_dbfile,
         fake_phenotype_data_browser_dbfile
     )
@@ -179,7 +179,7 @@ def test_search_measures_by_keyword_in_measure_name(
 def test_search_measures_by_keyword_in_instrument_name(
     fake_phenotype_data_dbfile: str, fake_phenotype_data_browser_dbfile: str
 ) -> None:
-    db = DbManager(
+    db = PhenoDb(
         fake_phenotype_data_dbfile,
         fake_phenotype_data_browser_dbfile
     )
@@ -196,7 +196,7 @@ def test_search_measures_by_keyword_in_instrument_name(
 
 
 def test_db_search_character_escaping(output_dir: str) -> None:
-    db = DbManager(
+    db = PhenoDb(
         os.path.join(output_dir, "temp_testing.db"),
         browser_dbfile=os.path.join(output_dir, "temp_testing_browser.db")
     )
@@ -238,7 +238,7 @@ def test_db_search_character_escaping(output_dir: str) -> None:
 
 
 def test_save_and_get_regressions(output_dir: str) -> None:
-    db = DbManager(
+    db = PhenoDb(
         os.path.join(output_dir, "temp_testing.db"),
         browser_dbfile=os.path.join(output_dir, "temp_testing_browser.db")
     )
@@ -274,7 +274,7 @@ def test_save_and_get_regressions(output_dir: str) -> None:
 
 
 def test_get_regression_names(output_dir: str) -> None:
-    db = DbManager(
+    db = PhenoDb(
         os.path.join(output_dir, "temp_testing.db"),
         browser_dbfile=os.path.join(output_dir, "temp_testing_browser.db")
     )
@@ -302,7 +302,7 @@ def test_get_regression_names(output_dir: str) -> None:
 
 
 def test_save_and_get_regression_values(output_dir: str) -> None:
-    db = DbManager(
+    db = PhenoDb(
         os.path.join(output_dir, "temp_testing.db"),
         browser_dbfile=os.path.join(output_dir, "temp_testing_browser.db")
     )
@@ -348,7 +348,7 @@ def test_save_and_get_regression_values(output_dir: str) -> None:
 
 
 def test_update_regression_values(output_dir: str) -> None:
-    db = DbManager(
+    db = PhenoDb(
         os.path.join(output_dir, "temp_testing.db"),
         browser_dbfile=os.path.join(output_dir, "temp_testing_browser.db")
     )
@@ -397,7 +397,7 @@ def test_update_regression_values(output_dir: str) -> None:
 
 
 def test_regression_ids(output_dir: str) -> None:
-    db = DbManager(
+    db = PhenoDb(
         os.path.join(output_dir, "temp_testing.db"),
         browser_dbfile=os.path.join(output_dir, "temp_testing_browser.db")
     )
@@ -420,13 +420,12 @@ def test_regression_ids(output_dir: str) -> None:
     assert reg_ids == ["test_regression_1", "test_regression_2"]
 
 
-def test_pheno_db_disabled(fake_pheno_db: PhenoDb) -> None:
+def test_pheno_db_disabled(fake_pheno_db: PhenoRegistry) -> None:
     assert not fake_pheno_db.has_phenotype_data("fake_disabled")
-    assert len(fake_pheno_db.config) == 5
 
 
 def test_split_into_groups(output_dir: str) -> None:
-    db = DbManager(
+    db = PhenoDb(
         os.path.join(output_dir, "temp_testing.db"),
         browser_dbfile=os.path.join(output_dir, "temp_testing_browser.db")
     )
@@ -459,7 +458,7 @@ def test_split_into_groups(output_dir: str) -> None:
 
 
 def test_subquery_generation(output_dir: str) -> None:
-    db = DbManager(
+    db = PhenoDb(
         os.path.join(output_dir, "temp_testing.db"),
         browser_dbfile=os.path.join(output_dir, "temp_testing_browser.db")
     )
@@ -481,6 +480,7 @@ def test_subquery_generation(output_dir: str) -> None:
     print(query)
     expected = (
         "SELECT person.person_id, person.role, family.family_id, "
+        "person.status, person.sex, "
         "\"i1.m1_value\".value AS 'i1.m1', "
         "\"i1.m2_value\".value AS 'i1.m2' \n"
         "FROM person JOIN family ON family.id = person.family_id "
