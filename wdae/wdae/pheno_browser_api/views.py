@@ -3,7 +3,6 @@ import logging
 import csv
 from io import StringIO
 from typing import Generator, Union
-from django.http import QueryDict
 
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -14,8 +13,6 @@ from query_base.query_base import QueryDatasetView
 from studies.study_wrapper import RemoteStudyWrapper, StudyWrapper
 
 from utils.streaming_response_util import iterator_to_json
-from utils.query_params import parse_query_params
-
 
 logger = logging.getLogger(__name__)
 
@@ -77,7 +74,10 @@ class PhenoMeasuresInfoView(PhenoBrowserBaseView):
 
 
 class PhenoMeasureDescriptionView(PhenoBrowserBaseView):
+    """Phenotype measures description view."""
+
     def get(self, request: Request) -> Response:
+        """Get pheno measures description."""
         if "dataset_id" not in request.query_params:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         dataset_id = request.query_params["dataset_id"]
@@ -103,7 +103,10 @@ class PhenoMeasureDescriptionView(PhenoBrowserBaseView):
 
 
 class PhenoMeasuresView(PhenoBrowserBaseView):
+    """Phenotype measures view."""
+
     def get(self, request: Request) -> Response:
+        """Stream pheno measures."""
         if "dataset_id" not in request.query_params:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         dataset_id = request.query_params["dataset_id"]
@@ -308,3 +311,4 @@ class PhenoRemoteImages(QueryDatasetView):
         image, mimetype = client.get_pheno_image(image_path)
 
         return HttpResponse(image, content_type=mimetype)
+    
