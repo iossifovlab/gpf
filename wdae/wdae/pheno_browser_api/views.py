@@ -311,4 +311,3 @@ class PhenoRemoteImages(QueryDatasetView):
         image, mimetype = client.get_pheno_image(image_path)
 
         return HttpResponse(image, content_type=mimetype)
-    
