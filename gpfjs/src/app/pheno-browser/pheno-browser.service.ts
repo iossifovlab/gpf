@@ -106,9 +106,11 @@ export class PhenoBrowserService {
   }
 
   public validateMeasureDownload(data: {
-      dataset_id: string;
-      instrument: string;
-      search_term: string;
+    /* eslint-disable @typescript-eslint/naming-convention */
+    dataset_id: string;
+    instrument: string;
+    search_term: string;
+    /* eslint-enable */
   }): Observable<HttpResponse<object>> {
     const headers = this.getHeaders();
     const params =
@@ -127,20 +129,15 @@ export class PhenoBrowserService {
   }
 
   public getDownloadMeasuresLink(data: {
+    /* eslint-disable @typescript-eslint/naming-convention */
     dataset_id: string;
     instrument: string;
     search_term: string;
+     /* eslint-enable */
   }): string {
-    const headers = this.getHeaders();
-    const params =
-      new HttpParams()
-        .set('dataset_id', data.dataset_id)
-        .set('instrument', data.instrument)
-        .set('search_term', data.search_term);
-
     return this.config.baseUrl
       + 'pheno_browser/download?'
-      + `dataset_id=${data.dataset_id}`
+      + `dataset_id=${data.search_term}`
       + `&instrument=${data.instrument}`
       + `&search_term=${data.search_term}`;
   }

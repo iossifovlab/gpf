@@ -66,7 +66,13 @@ export class PhenoBrowserComponent implements OnInit {
     this.measuresToShow$ = combineLatest([this.searchTermObs$, this.selectedInstrument$]).pipe(
       tap(([searchTerm, newSelection]) => {
         this.measuresToShow = null;
-        const queryParamsObject: any = {};
+        const queryParamsObject: {
+            instrument: string;
+            search: string;
+        } = {
+          instrument: undefined,
+          search: undefined
+        };
         if (newSelection) {
           queryParamsObject.instrument = newSelection;
         }
@@ -165,7 +171,7 @@ export class PhenoBrowserComponent implements OnInit {
 
   private focusSearchBox(): void {
     this.waitForSearchBoxToLoad().then(() => {
-      this.searchBox.nativeElement.focus();
+      (this.searchBox.nativeElement as HTMLInputElement).focus();
     });
   }
 
