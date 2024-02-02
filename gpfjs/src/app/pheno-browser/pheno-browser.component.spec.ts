@@ -23,7 +23,7 @@ import { NumberWithExpPipe } from '../utils/number-with-exp.pipe';
 import { PValueIntensityPipe } from '../utils/p-value-intensity.pipe';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Location } from '@angular/common';
-import { BehaviorSubject, Observable, of } from 'rxjs';
+import { BehaviorSubject, Observable, lastValueFrom, of, take } from 'rxjs';
 import { ResizeService } from '../table/resize.service';
 import { By } from '@angular/platform-browser';
 import { ConfigService } from 'app/config/config.service';
@@ -83,12 +83,19 @@ class MockActivatedRoute {
 }
 
 class MockRouter {
-  public createUrlTree(commands: any[], navigationExtras: any): string {
+  public createUrlTree(
+    commands: unknown,
+    navigationExtras: {
+      queryParams: {
+        instrument: string;
+        search: string;
+      };
+    }): string {
     return `${navigationExtras.queryParams.instrument}/${navigationExtras.queryParams.search}`;
   }
 }
 
-function setQuery(fixture: ComponentFixture<PhenoBrowserComponent>, instrument: number, search: string): void {
+const setQuery = (fixture: ComponentFixture<PhenoBrowserComponent>, instrument: number, search: string): void => {
   const selectElem = fixture.nativeElement.querySelector('select');
   const searchElem = fixture.nativeElement.querySelector('input');
   const selectedOptionElem = fixture.debugElement.queryAll(By.css('option'))[instrument];
@@ -163,28 +170,18 @@ describe('PhenoBrowserComponent', () => {
 
     const receivedInstruments = [];
     for (const option of selectElemOptions) {
-      receivedInstruments.push(option.nativeElement.textContent);
+      receivedInstruments.push((option.nativeElement as HTMLInputElement).textContent);
     }
     expect(receivedInstruments).toStrictEqual(expect.arrayContaining(expectedInstruments));
   }));
 
-  it('should set the selected instrument to all instruments by default', (done) => {
-    fixture.whenStable().then(() => {
-      component.selectedInstrument$.subscribe(value => {
-        expect(value).toBe(''),
-        done();
-      });
-    });
+  it('should set the selected instrument to all instruments by default', async() => {
+    await expect(lastValueFrom(component.selectedInstrument$.pipe(take(1)))).resolves.toBe('');
   });
 
-  it('should set the selected instrument in the component correctly', (done) => {
+  it('should set the selected instrument in the component correctly', async() => {
     setQuery(fixture, 2, '');
-    fixture.whenStable().then(() => {
-      component.selectedInstrument$.subscribe(value => {
-        expect(value).toBe('i2');
-        done();
-      });
-    });
+    await expect(lastValueFrom(component.selectedInstrument$.pipe(take(1)))).resolves.toBe('i2');
   });
 
   it('should pass search terms to the service correctly', waitForAsync(() => {
@@ -214,30 +211,6 @@ describe('PhenoBrowserComponent', () => {
     fixture.whenStable().then(() => {
       expect(location.replaceState).toHaveBeenCalledTimes(3);
       expect(location.replaceState).toHaveBeenCalledWith('i3/q20');
-    });
-  }));
-
-  it.skip('should fetch and display all fields of a measure', waitForAsync(() => {
-    fixture.detectChanges();
-    fixture.whenStable().then(() => {
-      expect(fixture.nativeElement.textContent).toEqual(expect.stringMatching('i1'));
-      expect(fixture.nativeElement.textContent).toEqual(expect.stringMatching('1.00e-6'));
-      expect(fixture.nativeElement.textContent).toEqual(expect.stringMatching('0.2'));
-      expect(fixture.nativeElement.textContent).toEqual(expect.stringMatching('test_measure'));
-      expect(fixture.nativeElement.textContent).toEqual(expect.stringMatching('ordinal'));
-      expect(fixture.nativeElement.textContent).toEqual(expect.stringMatching('a test measure'));
-    });
-  }));
-
-  it.skip('should color p values appropriately', waitForAsync(() => {
-    fixture.detectChanges();
-    fixture.whenStable().then(() => {
-      const lowPValueElement = fixture.debugElement.queryAll(
-        (dE) => dE.nativeElement.innerText === '1.00e-6')[0].children[0];
-      const highPValueElement = fixture.debugElement.queryAll(
-        (dE) => dE.nativeElement.innerText === '0.20')[0].children[0];
-      expect(lowPValueElement.nativeElement.style.backgroundColor).toEqual('rgba(255, 0, 0, 0.8)');
-      expect(highPValueElement.nativeElement.style.backgroundColor).toEqual('rgba(255, 255, 255, 0.8)');
     });
   }));
 

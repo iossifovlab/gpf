@@ -3,7 +3,7 @@ import { PhenoBrowserService } from './pheno-browser.service';
 import { PhenoInstruments, PhenoMeasure } from './pheno-browser';
 import { ConfigService } from '../config/config.service';
 import { CookieService } from 'ngx-cookie-service';
-import { of } from 'rxjs';
+import { lastValueFrom, of } from 'rxjs';
 import { fakeJsonMeasure } from './pheno-browser.spec';
 import { HttpClient } from '@angular/common/http';
 import { RouterTestingModule } from '@angular/router/testing';
