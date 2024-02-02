@@ -190,6 +190,15 @@ def test_study1_and_dataset2_rights_allowed_datasets(
     assert result == set(["Study1", "Study2"])
 
 
+def test_top_level_study_access(
+    user: User,
+    wdae_gpf_instance: WGPFInstance
+) -> None:
+    assert not user_has_permission("test_data", user, "comp")
+    add_group_perm_to_user("comp", user)
+    assert user_has_permission("test_data", user, "comp")
+
+
 def test_dataset_group_rights(
     user: User, dataset_wrapper: StudyWrapper
 ) -> None:
