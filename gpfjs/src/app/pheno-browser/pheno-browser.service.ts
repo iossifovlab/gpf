@@ -106,16 +106,18 @@ export class PhenoBrowserService {
   }
 
   public validateMeasureDownload(data: {
-    datasetId: string;
+    /* eslint-disable @typescript-eslint/naming-convention */
+    dataset_id: string;
     instrument: string;
-    searchTerm: string;
+    search_term: string;
+    /* eslint-enable */
   }): Observable<HttpResponse<object>> {
     const headers = this.getHeaders();
     const params =
       new HttpParams()
-        .set('dataset_id', data.datasetId)
+        .set('dataset_id', data.dataset_id)
         .set('instrument', data.instrument)
-        .set('search_term', data.searchTerm);
+        .set('search_term', data.search_term);
 
     return this.http
       .head<HttpResponse<object>>(
@@ -127,14 +129,16 @@ export class PhenoBrowserService {
   }
 
   public getDownloadMeasuresLink(data: {
-    datasetId: string;
+    /* eslint-disable @typescript-eslint/naming-convention */
+    dataset_id: string;
     instrument: string;
-    searchTerm: string;
+    search_term: string;
+     /* eslint-enable */
   }): string {
     return this.config.baseUrl
       + 'pheno_browser/download?'
-      + `dataset_id=${data.datasetId}`
+      + `dataset_id=${data.search_term}`
       + `&instrument=${data.instrument}`
-      + `&search_term=${data.searchTerm}`;
+      + `&search_term=${data.search_term}`;
   }
 }

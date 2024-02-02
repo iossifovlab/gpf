@@ -104,7 +104,7 @@ const setQuery = (fixture: ComponentFixture<PhenoBrowserComponent>, instrument: 
   searchElem.value = search;
   searchElem.dispatchEvent(new Event('input'));
   fixture.detectChanges();
-}
+};
 
 describe('PhenoBrowserComponent', () => {
   let component: PhenoBrowserComponent;
