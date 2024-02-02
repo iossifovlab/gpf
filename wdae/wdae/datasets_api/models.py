@@ -104,7 +104,7 @@ class DatasetHierarchy(models.Model):
         """
         return len(cls.objects.filter(
             instance_id=instance_id, ancestor_id=dataset.id
-        )) == 0
+        ).exclude(descendant_id=dataset.id)) == 0
 
     @classmethod
     def get_parents(
@@ -114,11 +114,11 @@ class DatasetHierarchy(models.Model):
         if direct is True:
             relations = cls.objects.filter(
                 instance_id=instance_id, descendant_id=dataset.id, direct=True
-            )
+            ).exclude(ancestor_id=dataset.id)
         else:
             relations = cls.objects.filter(
                 instance_id=instance_id, descendant_id=dataset.id
-            )
+            ).exclude(ancestor_id=dataset.id)
         return [relation.ancestor for relation in relations]
 
     @classmethod
@@ -129,9 +129,9 @@ class DatasetHierarchy(models.Model):
         if direct is True:
             relations = cls.objects.filter(
                 instance_id=instance_id, ancestor_id=dataset.id, direct=True
-            )
+            ).exclude(descendant_id=dataset.id)
         else:
             relations = cls.objects.filter(
                 instance_id=instance_id, ancestor_id=dataset.id
-            )
+            ).exclude(descendant_id=dataset.id)
         return [relation.descendant for relation in relations]

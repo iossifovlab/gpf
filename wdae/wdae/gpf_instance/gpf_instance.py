@@ -580,6 +580,9 @@ def reload_datasets(gpf_instance: WGPFInstance) -> None:
             logger.error(
                 "unable to find study %s; skipping...", genotype_data_id)
             continue
+        DatasetHierarchy.add_relation(
+            gpf_instance.instance_id, genotype_data_id, genotype_data_id
+        )
         direct_descendants = genotype_data.get_studies_ids(leaves=False)
         for study_id in genotype_data.get_studies_ids():
             if study_id == genotype_data_id:
