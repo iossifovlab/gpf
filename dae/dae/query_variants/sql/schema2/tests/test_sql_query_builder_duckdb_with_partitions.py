@@ -493,3 +493,21 @@ def test_query_family_variants_by_variant_type(
 ) -> None:
     fvs = list(duckdb2_variants.query_variants(**params))
     assert len(fvs) == count
+
+
+@pytest.mark.parametrize("index, params, count", [
+    (0, {}, 12),
+    (1, {"person_ids": ["ch3"]}, 5),
+    (2, {"person_ids": ["ch3"], "family_ids": ["f1.1"]}, 0),
+    (3, {"person_ids": ["ch3"], "family_ids": ["f1.3"]}, 5),
+    (4, {"family_ids": ["f1.1"]}, 6),
+    (5, {"family_ids": ["f1.1"], "person_ids": ["ch1"]}, 4),
+])
+def test_query_family_variants_by_family_and_person_ids(
+    index: int,
+    params: dict[str, Any],
+    count: int,
+    duckdb2_variants: DuckDb2Variants
+) -> None:
+    fvs = list(duckdb2_variants.query_variants(**params))
+    assert len(fvs) == count

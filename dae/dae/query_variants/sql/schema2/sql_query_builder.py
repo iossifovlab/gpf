@@ -428,6 +428,58 @@ class SqlQueryBuilder:
 
         return list(region_bins)
 
+    def _adapt_family_and_person_ids(
+        self, family_ids: Optional[Sequence[str]],
+        person_ids: Optional[Sequence[str]]
+    ) -> tuple[Optional[Sequence[str]], Optional[Sequence[str]]]:
+        if family_ids is None:
+            return None, person_ids
+        if person_ids is None:
+            return family_ids, person_ids
+        result = set()
+        person_ids_set = set()
+        family_ids_set = set(family_ids)
+        for pid in person_ids:
+            persons = self.families.persons_by_person_id.get(pid)
+            if persons is None:
+                continue
+            for person in persons:
+                if person.family_id not in family_ids_set:
+                    continue
+                result.add(person.family_id)
+                person_ids_set.add(pid)
+        family_ids = list(result & family_ids_set)
+        return family_ids, list(person_ids_set)
+
+    def _build_person_subclause(
+        self, person_ids: Optional[Sequence[str]]
+    ) -> str:
+        if person_ids is None:
+            return ""
+        if len(person_ids) == 0:
+            person_where = "fa.aim IS NULL"
+        else:
+            person_ids = [f"'{pid}'" for pid in person_ids]
+            person_where = f"fa.aim IN ({', '.join(person_ids)})"
+
+        return f"""
+            ,
+            allele_in_member AS (
+                SELECT
+                    *,
+                    UNNEST(allele_in_members) as aim
+                FROM
+                    family
+            ),
+            family_person AS (
+                SELECT
+                    *
+                FROM allele_in_member as fa
+                WHERE
+                    {person_where}
+            )
+        """
+
     def build_family_variants_query(
         self,
         regions: Optional[list[Region]] = None,
@@ -470,6 +522,9 @@ class SqlQueryBuilder:
             return_unknown=return_unknown,
             heuristics=heuristics,
         )
+        family_ids, person_ids = self._adapt_family_and_person_ids(
+            family_ids, person_ids
+        )
         family_subclause = self._build_family_subclause(
             regions=regions,
             genes=genes,
@@ -487,12 +542,17 @@ class SqlQueryBuilder:
             return_unknown=return_unknown,
             heuristics=heuristics,
         )
+
         effect_gene_subclause = self._build_gene_effect_clause(
             genes, effect_types)
-
         summary_from = "summary"
         if effect_gene_subclause:
             summary_from = "effect_gene_summary"
+
+        person_subclause = self._build_person_subclause(person_ids=person_ids)
+        family_from = "family"
+        if person_subclause:
+            family_from = "family_person"
 
         limit_clause = ""
         if limit is not None:
@@ -504,6 +564,7 @@ class SqlQueryBuilder:
             {effect_gene_subclause}
             ,
             {family_subclause}
+            {person_subclause}
             SELECT
                 fa.bucket_index, fa.summary_index, fa.family_index,
                 sa.allele_index,
@@ -512,7 +573,7 @@ class SqlQueryBuilder:
             FROM
                 {summary_from} as sa
             JOIN
-                family as fa
+                {family_from} as fa
             ON (
                 fa.summary_index = sa.summary_index AND
                 fa.bucket_index = sa.bucket_index AND
