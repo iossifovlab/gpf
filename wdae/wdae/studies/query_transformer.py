@@ -338,10 +338,6 @@ class QueryTransformer:
             roles_query = self._transform_present_in_child_and_parent_roles(
                 present_in_child, present_in_parent
             )
-            print(100 * "=")
-            print("roles query: ", roles_query)
-            print(100 * "=")
-
             self._add_roles_to_query(roles_query, kwargs)
 
             if present_in_parent != {"neither"} and rarity is not None:

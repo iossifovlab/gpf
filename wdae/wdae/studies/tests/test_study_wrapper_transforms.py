@@ -78,9 +78,6 @@ def test_transform_present_in_child_and_present_in_parent(
 
     assert inheritance_q is not None
 
-    print("roles query:      ", roles_q)
-    print("inheritance query:", inheritance_q)
-
     inheritance_m = inheritance_query.transform_tree_to_matcher(
         inheritance_query.transform_query_string_to_tree(inheritance_q))
 
