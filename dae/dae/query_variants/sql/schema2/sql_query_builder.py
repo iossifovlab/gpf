@@ -14,6 +14,7 @@ from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.pedigrees.families_data import FamiliesData
 from dae.variants.attributes import Role, Inheritance
 from dae.query_variants.attributes_query import role_query, sex_query, \
+    variant_type_query as VARIANT_TYPE_PARSER, \
     QueryTreeToSQLBitwiseTransformer
 from dae.query_variants.attributes_query_inheritance import \
     InheritanceTransformer, \
@@ -166,6 +167,7 @@ class SqlQueryBuilder:
         self,
         regions: Optional[list[Region]] = None,
         genes: Optional[list[str]] = None,
+        variant_type: Optional[str] = None,
         real_attr_filter: Optional[RealAttrFilterType] = None,
         ultra_rare: Optional[bool] = None,
         frequency_filter: Optional[RealAttrFilterType] = None,
@@ -195,7 +197,10 @@ class SqlQueryBuilder:
             )
         if ultra_rare is not None and ultra_rare:
             where_parts.append(self._build_ultra_rare_where())
-
+        if variant_type is not None:
+            where_parts.append(
+                self._build_variant_types_where(variant_type)
+            )
         if heuristics is not None:
             for heuristic, bins in heuristics.items():
                 if len(bins) == 1:
@@ -452,12 +457,6 @@ class SqlQueryBuilder:
             ultra_rare=ultra_rare,
             frequency_filter=frequency_filter,
         )
-        print(100 * "=")
-        print("roles:", roles)
-        print("inheritance:", inheritance)
-        print("heuristics:", heuristics)
-        print(100 * "=")
-
         summary_subclause = self._build_summary_subclause(
             regions=regions,
             genes=genes,
@@ -643,6 +642,32 @@ class SqlQueryBuilder:
 
     def _build_sexes_query_where(self, sexes_query: str) -> str:
         return self._build_sexes_query(sexes_query, "fa.allele_in_sexes")
+
+    def _build_variant_types_query(
+        self, variant_types_query: str, attr: str
+    ) -> str:
+        parsed = VARIANT_TYPE_PARSER.transform_query_string_to_tree(
+            variant_types_query)
+        transformer = QueryTreeToSQLBitwiseTransformer(attr, False)
+        return cast(str, transformer.transform(parsed))
+
+    def _check_variant_types_value(
+        self, variant_types_query: str, value: int
+    ) -> bool:
+        with duckdb.connect(":memory:") as con:
+            query = self._build_variant_types_query(
+                variant_types_query, str(value))
+            res = con.execute(f"SELECT {query}").fetchall()
+            assert len(res) == 1
+            assert len(res[0]) == 1
+
+            return cast(bool, res[0][0])
+
+    def _build_variant_types_where(
+        self, variant_types_query: str
+    ) -> str:
+        return self._build_variant_types_query(
+            variant_types_query, "sa.variant_type")
 
     def _build_inheritance_query(
         self, inheritance_query: Sequence[str], attr: str

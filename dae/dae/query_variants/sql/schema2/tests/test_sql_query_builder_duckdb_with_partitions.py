@@ -477,3 +477,19 @@ def test_calc_frequency_bin_heuristics(
 ) -> None:
     frequency_bins = query_builder._calc_frequency_bins(**params)
     assert frequency_bins == expected
+
+
+@pytest.mark.parametrize("index, params, count", [
+    (0, {}, 12),
+    (1, {"variant_type": "sub"}, 10),
+    (2, {"variant_type": "ins"}, 5),
+    (3, {"variant_type": "del"}, 0),
+])
+def test_query_family_variants_by_variant_type(
+    index: int,
+    params: dict[str, Any],
+    count: int,
+    duckdb2_variants: DuckDb2Variants
+) -> None:
+    fvs = list(duckdb2_variants.query_variants(**params))
+    assert len(fvs) == count

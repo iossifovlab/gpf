@@ -9,6 +9,7 @@ from sqlglot.schema import ensure_schema
 
 from dae.utils.regions import Region
 from dae.variants.attributes import Role, Sex, Inheritance
+from dae.variants.core import Allele
 from dae.genomic_resources.gene_models import GeneModels
 from dae.query_variants.sql.schema2.sql_query_builder import Db2Layout
 from dae.testing import setup_pedigree
@@ -486,4 +487,48 @@ def test_inheritance_query_denovo_only(
 ) -> None:
     res = sql_query_builder_simple._check_inheritance_denovo_only(
         inheritance_query)
+    assert res == expected
+
+
+@pytest.mark.parametrize(
+    "variant_types_query,value,expected", [
+        ("ins or del", Allele.Type.small_deletion.value, True),
+        ("ins or del", Allele.Type.small_insertion.value, True),
+        ("ins or del",
+         Allele.Type.small_insertion.value
+         | Allele.Type.small_deletion.value, True),
+        ("sub",
+         Allele.Type.small_insertion.value
+         | Allele.Type.small_deletion.value, False),
+        ("sub or complex",
+         Allele.Type.small_insertion.value
+         | Allele.Type.small_deletion.value, False),
+        ("sub or complex",
+         Allele.Type.substitution.value
+         | Allele.Type.small_deletion.value, True),
+        ("sub or complex",
+         Allele.Type.complex.value
+         | Allele.Type.small_deletion.value, True),
+        ("cnv+",
+         Allele.Type.large_duplication.value
+         | Allele.Type.large_deletion.value, True),
+        ("cnv-",
+         Allele.Type.large_duplication.value
+         | Allele.Type.large_deletion.value, True),
+        ("cnv-",
+         Allele.Type.small_insertion.value
+         | Allele.Type.small_deletion.value, False),
+        ("CNV+",
+         Allele.Type.small_insertion.value
+         | Allele.Type.small_deletion.value, False),
+    ]
+)
+def test_variant_types_query_duckdb(
+    variant_types_query: str,
+    value: int,
+    expected: bool,
+    sql_query_builder_simple: SqlQueryBuilder,
+) -> None:
+    res = sql_query_builder_simple._check_variant_types_value(
+        variant_types_query, value)
     assert res == expected
