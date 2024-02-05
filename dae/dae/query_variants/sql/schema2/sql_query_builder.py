@@ -528,7 +528,7 @@ class SqlQueryBuilder:
         self,
         regions: Optional[list[Region]] = None,
         genes: Optional[list[str]] = None,
-        _family_ids: Optional[Sequence[str]] = None,
+        family_ids: Optional[Sequence[str]] = None,
         _person_ids: Optional[Sequence[str]] = None,
         inheritance: Optional[Union[str, Sequence[str]]] = None,
         roles: Optional[str] = None,
@@ -584,8 +584,10 @@ class SqlQueryBuilder:
             where_parts.append(
                 self._build_inheritance_query_where(inheritance)
             )
+        if family_ids is not None:
+            where_parts.append(self._build_family_ids_query_where(family_ids))
 
-        # Do not look into reference alleles
+        # Do not look into reference alleles if not requested
         if not return_reference and not return_unknown:
             where_parts.append("fa.allele_index > 0")
 
@@ -607,6 +609,12 @@ class SqlQueryBuilder:
             """)
         )
         return ",".join(query)
+
+    def _build_family_ids_query_where(self, family_ids: Sequence[str]) -> str:
+        if not family_ids:
+            return "fa.family_id IS NULL"
+        family_ids = [f"'{fid}'" for fid in family_ids]
+        return f"fa.family_id IN ({', '.join(family_ids)})"
 
     def _build_roles_query(self, roles_query: str, attr: str) -> str:
         parsed = role_query.transform_query_string_to_tree(roles_query)
