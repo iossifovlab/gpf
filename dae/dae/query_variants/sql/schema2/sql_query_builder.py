@@ -133,17 +133,14 @@ class SqlQueryBuilder:
         effect_types: Optional[list[str]] = None,
     ) -> str:
         eg_subclause = ""
-        if genes or effect_types:
+        if genes is not None or effect_types is not None:
             where_parts: list[str] = []
-            if genes:
+            if genes is not None:
                 genes = [g for g in genes if g]
-                if genes:
-                    where_parts.append(self._build_gene_where(genes))
-            if effect_types:
+                where_parts.append(self._build_gene_where(genes))
+            if effect_types is not None:
                 effect_types = [et for et in effect_types if et]
-                if effect_types and \
-                        (set(effect_types)
-                         != set(EffectTypesMixin.EFFECT_TYPES)):
+                if set(effect_types) != set(EffectTypesMixin.EFFECT_TYPES):
                     where_parts.append(
                         self._build_effect_type_where(effect_types))
             eg_where = " AND ".join([wp for wp in where_parts if wp])
@@ -356,12 +353,16 @@ class SqlQueryBuilder:
         )
 
     def _build_gene_where(self, genes: list[str]) -> str:
+        if len(genes) == 0:
+            return "eg.effect_gene_symbols IS NULL"
         gene_set = ",".join(f"'{g}'" for g in genes)
         where = f"eg.effect_gene_symbols in ({gene_set})"
         return where
 
     def _build_effect_type_where(self, effect_types: list[str]) -> str:
         effect_types = [et.replace("'", "''") for et in effect_types]
+        if len(effect_types) == 0:
+            return "eg.effect_types IS NULL"
         effect_set = ",".join(f"'{g}'" for g in effect_types)
         where = f"eg.effect_types in ({effect_set})"
         return where
