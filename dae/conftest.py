@@ -22,6 +22,18 @@ def default_genotype_storage_configs(root_path: pathlib.Path) -> list[dict]:
             "db": "duckdb_storage/dev_storage.db",
             "base_dir": str(root_path)
         },
+        # DuckDb2 Parquet Storage
+        {
+            "id": "duckdb2_parquet",
+            "storage_type": "duckdb2",
+            "studies_dir": "duckdb_parquet",
+            "base_dir": str(root_path)
+        },
+        # DuckDb2 Parquet Inplace Storage
+        {
+            "id": "duckdb2_inplace",
+            "storage_type": "duckdb2",
+        },
 
         # DuckDb Storage
         {
@@ -30,7 +42,6 @@ def default_genotype_storage_configs(root_path: pathlib.Path) -> list[dict]:
             "db": "duckdb_storage/dev_storage.db",
             "base_dir": str(root_path)
         },
-
         # DuckDb Parquet Storage
         {
             "id": "duckdb_parquet",
@@ -38,7 +49,6 @@ def default_genotype_storage_configs(root_path: pathlib.Path) -> list[dict]:
             "studies_dir": "duckdb_parquet",
             "base_dir": str(root_path)
         },
-
         # DuckDb Parquet Inplace Storage
         {
             "id": "duckdb_inplace",
