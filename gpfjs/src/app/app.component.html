@@ -1,8 +1,8 @@
 <gpf-fullscreen-loading></gpf-fullscreen-loading>
 <div>
-  <div class="container-fluid" id="logo">
+  <div class="container-fluid" id="header">
     <div class="row">
-      <div class="col-10">
+      <div class="col-10" style="display: flex; align-items: center; padding-left: 0">
         <img src="{{ imgPathPrefix }}logo-64x64.png" />
         <h3 id="title">{{ title }}</h3>
         <a routerLink="/home" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: false }">Home</a>
@@ -12,7 +12,7 @@
         <a *ngIf="('' | userInfo)?.loggedIn" routerLink="/user-profile" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: false }">User Profile</a>
         <a routerLink="/about" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: false }">About</a>
       </div>
-      <div class="col-2">
+      <div class="col-2" style="padding-right: 0">
         <gpf-users></gpf-users>
       </div>
     </div>

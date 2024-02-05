@@ -11,17 +11,17 @@ body {
   overflow-y: scroll;
 }
 
-#logo {
-  padding: 10px 20px;
+#header {
+  padding: 10px 26px;
 }
 
-#logo h3 {
+#header h3 {
   font-size: 20px;
   display: inline;
   vertical-align: -3px;
 }
 
-#logo img {
+#header img {
   display: inline-block;
   height: 32px;
   width: 32px;

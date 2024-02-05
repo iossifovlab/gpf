@@ -4,10 +4,12 @@
   height: 100%;
 }
 
-#logo {
-  min-height: 58px;
+#title {
+  margin-bottom: 0;
+}
+
+#header {
   z-index: 199;
-  position: relative;
   background-color: white;
 }
 
