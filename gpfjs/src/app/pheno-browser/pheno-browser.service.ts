@@ -137,7 +137,7 @@ export class PhenoBrowserService {
   }): string {
     return this.config.baseUrl
       + 'pheno_browser/download?'
-      + `dataset_id=${data.search_term}`
+      + `dataset_id=${data.dataset_id}`
       + `&instrument=${data.instrument}`
       + `&search_term=${data.search_term}`;
   }
