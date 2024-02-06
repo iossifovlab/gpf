@@ -558,6 +558,18 @@ class SqlQueryBuilder:
         if limit is not None:
             limit_clause = f"LIMIT {limit}"
 
+        join_on_clause = textwrap.dedent("""
+            ON (
+                fa.summary_index = sa.summary_index AND
+                fa.bucket_index = sa.bucket_index AND
+                fa.allele_index = sa.allele_index)
+        """)
+        if "sj_index" in self.summary_schema and \
+                "sj_index" in self.family_schema:
+            join_on_clause = textwrap.dedent("""
+                ON fa.sj_index = sa.sj_index
+            """)
+
         query = f"""
             WITH
             {summary_subclause}
@@ -574,10 +586,7 @@ class SqlQueryBuilder:
                 {summary_from} as sa
             JOIN
                 {family_from} as fa
-            ON (
-                fa.summary_index = sa.summary_index AND
-                fa.bucket_index = sa.bucket_index AND
-                fa.allele_index = sa.allele_index)
+            {join_on_clause}
             {limit_clause}
         """
         sqlglot.pretty = True
