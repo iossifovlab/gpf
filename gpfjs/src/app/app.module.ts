@@ -273,7 +273,7 @@ const appRoutes: Routes = [
   },
   {
     path: '**',
-    redirectTo: 'datasets'
+    redirectTo: 'home'
   },
 ];
 
