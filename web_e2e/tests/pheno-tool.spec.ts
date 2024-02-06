@@ -124,8 +124,8 @@ test.describe('Pheno tool download tests', () => {
     const download = await downloadPromise;
     const fixtureData = scanCSV(await download.path());
     const downloadData = scanCSV('playwright/fixtures/pheno-tool/pheno_report1.csv');
-    const fixtureFrame = await fixtureData.collect();
-    const downloadFrame = await downloadData.collect();
+    const fixtureFrame = (await fixtureData.select(fixtureData.columns.sort()).collect()).sort('person_id');
+    const downloadFrame = (await downloadData.select(downloadData.columns.sort()).collect()).sort('person_id');
     expect(fixtureFrame.toString()).toEqual(downloadFrame.toString());
   });
 
@@ -145,8 +145,8 @@ test.describe('Pheno tool download tests', () => {
       const download = await downloadPromise;
       const fixtureData = scanCSV(await download.path());
       const downloadData = scanCSV(`playwright/fixtures/pheno-tool/pheno_report${data.id}.csv`);
-      const fixtureFrame = await fixtureData.collect();
-      const downloadFrame = await downloadData.collect();
+      const fixtureFrame = (await fixtureData.select(fixtureData.columns.sort()).collect()).sort('person_id');
+      const downloadFrame = (await downloadData.select(downloadData.columns.sort()).collect()).sort('person_id');
       expect(fixtureFrame.toString()).toEqual(downloadFrame.toString());
     });
   });
@@ -174,8 +174,8 @@ test.describe('Pheno tool download tests', () => {
       const download = await downloadPromise;
       const fixtureData = scanCSV(await download.path());
       const downloadData = scanCSV(`playwright/fixtures/pheno-tool/pheno_report${data.id}.csv`);
-      const fixtureFrame = await fixtureData.collect();
-      const downloadFrame = await downloadData.collect();
+      const fixtureFrame = (await fixtureData.select(fixtureData.columns.sort()).collect()).sort('person_id');
+      const downloadFrame = (await downloadData.select(downloadData.columns.sort()).collect()).sort('person_id');
       expect(fixtureFrame.toString()).toEqual(downloadFrame.toString());
     });
   });
@@ -196,8 +196,8 @@ test.describe('Pheno tool download tests', () => {
       const download = await downloadPromise;
       const fixtureData = scanCSV(await download.path());
       const downloadData = scanCSV(`playwright/fixtures/pheno-tool/pheno_report${data.id}.csv`);
-      const fixtureFrame = await fixtureData.collect();
-      const downloadFrame = await downloadData.collect();
+      const fixtureFrame = (await fixtureData.select(fixtureData.columns.sort()).collect()).sort('person_id');
+      const downloadFrame = (await downloadData.select(downloadData.columns.sort()).collect()).sort('person_id');
       expect(fixtureFrame.toString()).toEqual(downloadFrame.toString());
     });
   });
@@ -234,8 +234,8 @@ test.describe('Pheno tool download tests', () => {
       const download = await downloadPromise;
       const fixtureData = scanCSV(await download.path());
       const downloadData = scanCSV(`playwright/fixtures/pheno-tool/pheno_report${data.id}.csv`);
-      const fixtureFrame = await fixtureData.collect();
-      const downloadFrame = await downloadData.collect();
+      const fixtureFrame = (await fixtureData.select(fixtureData.columns.sort()).collect()).sort('person_id');
+      const downloadFrame = (await downloadData.select(downloadData.columns.sort()).collect()).sort('person_id');
       expect(fixtureFrame.toString()).toEqual(downloadFrame.toString());
     });
   });
@@ -256,8 +256,8 @@ test.describe('Pheno tool download tests', () => {
       const download = await downloadPromise;
       const fixtureData = scanCSV(await download.path());
       const downloadData = scanCSV(`playwright/fixtures/pheno-tool/pheno_report${data.id}.csv`);
-      const fixtureFrame = await fixtureData.collect();
-      const downloadFrame = await downloadData.collect();
+      const fixtureFrame = (await fixtureData.select(fixtureData.columns.sort()).collect()).sort('person_id');
+      const downloadFrame = (await downloadData.select(downloadData.columns.sort()).collect()).sort('person_id');
       expect(fixtureFrame.toString()).toEqual(downloadFrame.toString());
     });
   });
@@ -284,8 +284,8 @@ test.describe('Pheno tool download tests', () => {
       const download = await downloadPromise;
       const fixtureData = scanCSV(await download.path());
       const downloadData = scanCSV(`playwright/fixtures/pheno-tool/pheno_report${data.id}.csv`);
-      const fixtureFrame = await fixtureData.collect();
-      const downloadFrame = await downloadData.collect();
+      const fixtureFrame = (await fixtureData.select(fixtureData.columns.sort()).collect()).sort('person_id');
+      const downloadFrame = (await downloadData.select(downloadData.columns.sort()).collect()).sort('person_id');
       expect(fixtureFrame.toString()).toEqual(downloadFrame.toString());
     });
   });
@@ -325,8 +325,8 @@ test.describe('Pheno tool download tests', () => {
       const download = await downloadPromise;
       const fixtureData = scanCSV(await download.path());
       const downloadData = scanCSV(`playwright/fixtures/pheno-tool/pheno_report${data.id}.csv`);
-      const fixtureFrame = await fixtureData.collect();
-      const downloadFrame = await downloadData.collect();
+      const fixtureFrame = (await fixtureData.select(fixtureData.columns.sort()).collect()).sort('person_id');
+      const downloadFrame = (await downloadData.select(downloadData.columns.sort()).collect()).sort('person_id');
       expect(fixtureFrame.toString()).toEqual(downloadFrame.toString());
     });
   });
@@ -361,8 +361,8 @@ test.describe('Pheno tool download tests', () => {
       const download = await downloadPromise;
       const fixtureData = scanCSV(await download.path());
       const downloadData = scanCSV(`playwright/fixtures/pheno-tool/pheno_report${data.id}.csv`);
-      const fixtureFrame = await fixtureData.collect();
-      const downloadFrame = await downloadData.collect();
+      const fixtureFrame = (await fixtureData.select(fixtureData.columns.sort()).collect()).sort('person_id');
+      const downloadFrame = (await downloadData.select(downloadData.columns.sort()).collect()).sort('person_id');
       expect(fixtureFrame.toString()).toEqual(downloadFrame.toString());
     });
   });
