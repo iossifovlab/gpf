@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, Observable } from 'rxjs';
 import { ConfigService } from '../config/config.service';
 import { DatasetNode } from 'app/dataset-node/dataset-node';
 
@@ -84,5 +84,9 @@ export class DatasetsTreeService {
     } else {
       leafNodes.add(node['dataset'] as string);
     }
+  }
+
+  public getDatasetHierarchy(): Observable<object> {
+    return this.http.get(`${this.config.baseUrl}${this.datasetHierarchyUrl}`);
   }
 }

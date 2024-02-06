@@ -1,9 +1,65 @@
-<div id="version-container">
-  <span class="version-text">GPF version: </span>
-  <span *ngIf="gpfVersion">{{ gpfVersion }}</span>
-  <span *ngIf="gpfVersion !== gpfjsVersion"> / {{ gpfjsVersion }}</span>
-</div>
+<div *ngIf="content && loadingFinished" id="home-wrapper">
+  <table>
+    <thead>
+      <tr>
+        <th scope="col" class="big-title">Dataset</th>
+        <th scope="col" class="big-title" style="font-size: 16px; font-weight: bold; width: 79px; text-align: center">Access</th>
+      </tr>
+    </thead>
+    <tbody>
+      <ng-container *ngTemplateOutlet="datasetsTemplate; context: { entries: content['data'], nesting: 0 }">
+      </ng-container>
+    </tbody>
+  </table>
 
-<div id="documentation-link">
-  <a href="https://www.iossifovlab.com/gpfuserdocs/" target="_blank">User documentation</a>
+  <div id="version-container">
+    <span class="version-text">GPF version: </span>
+    <span *ngIf="gpfVersion">{{ gpfVersion }}</span>
+    <span *ngIf="gpfVersion !== gpfjsVersion"> / {{ gpfjsVersion }}</span>
+  </div>
+
+  <div id="documentation-link">
+    <a href="https://www.iossifovlab.com/gpfuserdocs/" target="_blank">User documentation</a>
+  </div>
+
+  <span *ngIf="agpConfig"><a [attr.href]="'/autism-gene-profiles'" target="_blank">Autism gene profiles</a></span>
 </div>
+<ng-template #datasetsTemplate let-entries="entries" let-nesting="nesting">
+  <ng-container *ngFor="let entry of entries">
+    <ng-container *ngIf="datasets.includes(entry.dataset)">
+      <tr>
+        <td [ngStyle]="{ 'padding-left': (nesting * 80 || 36) + 'px' }" style="position: relative">
+          <div style="position: absolute; display: inline-block; top: 50%">
+            <span
+              #collapseIcon
+              *ngIf="entry.children && datasetHasVisibleChildren(entry.children)"
+              class="collapse-dataset-icon material-icons material-symbols-outlined"
+              [ngClass]="{ rotate: nesting === 0 }"
+              (click)="toggleDatasetCollapse(entry); collapseIcon.classList.toggle('rotate')"
+              >expand_more</span
+            >
+          </div>
+          <h4>
+            <a
+              [attr.href]="'datasets/' + entry.dataset"
+              [style.font-size]="nesting ? 24 - 2 * nesting + 'px' : '24px'"
+              target="_blank"
+              >{{ entry.name }}</a
+            >
+          </h4>
+          <markdown>{{ entry.description }}</markdown>
+        </td>
+        <td class="access-td">
+          <i
+            [ngClass]="{ fa: true, 'fa-lock': !entry.access_rights, 'fa-unlock': entry.access_rights }"
+            aria-hidden="true">
+          </i>
+        </td>
+      </tr>
+    </ng-container>
+    <ng-container *ngIf="entry.children">
+      <ng-container *ngTemplateOutlet="datasetsTemplate; context: { entries: entry.children, nesting: nesting + 1 }">
+      </ng-container>
+    </ng-container>
+  </ng-container>
+</ng-template>

@@ -1,8 +1,63 @@
+td {
+  padding: 8px;
+}
+
+table,
+th,
+td {
+  border: 1px solid rgb(218, 218, 218) !important;
+}
+
+h4 {
+  display: inline;
+  margin-right: 5px;
+}
+
+table {
+  margin-bottom: 44px;
+}
+
+table,
 #documentation-link {
-  width: 100%;
-  text-align: left;
-  text-decoration: underline;
-  font-style: italic;
+  max-width: 1200px;
+  min-width: 100%;
+}
+
+.big-title {
+  margin-bottom: 0.5rem;
+  font-family: inherit;
+  font-weight: 500;
+  line-height: 1.1;
+  color: inherit;
+  font-size: 24px;
+  vertical-align: middle;
+  padding: 10px 8px;
+  background-color: #eee;
+}
+
+.fa-lock {
+  color: #c22727;
+}
+
+.fa-unlock {
+  color: #3ea658;
+}
+
+.access-td {
+  text-align: center;
+  padding-bottom: 1px;
+}
+
+.collapse-dataset-icon {
+  position: absolute;
+  right: 3px;
+  padding: 3px;
+  user-select: none;
+  transform: translateY(-50%) rotate(270deg);
+}
+
+.rotate {
+  transform: translateY(-50%);
 }
 
 #version-container {
@@ -11,4 +66,22 @@
 
 .version-text {
   font-weight: 600;
+}
+
+#home-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: auto;
+  max-width: 1200px;
+  width: 60%;
+}
+
+a {
+  color: #0645ad;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
 }

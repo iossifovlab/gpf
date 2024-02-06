@@ -510,3 +510,22 @@ summary.details {
 .modal-content a:hover {
   text-decoration: underline;
 }
+
+markdown h1,
+markdown h2,
+markdown h3,
+markdown h4,
+markdown h5,
+markdown h6 {
+  font-size: 1rem;
+}
+
+markdown a {
+  color: #0645ad;
+  text-decoration: none;
+}
+
+markdown a:hover {
+  color: #0645ad;
+  text-decoration: underline;
+}
