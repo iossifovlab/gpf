@@ -3,7 +3,7 @@ import time
 import logging
 import json
 from functools import reduce
-from typing import Any, Optional
+from typing import Any, Optional, cast
 import toml
 
 import fsspec
@@ -145,6 +145,8 @@ class VariantsParquetWriter(AbstractVariantsParquetWriter):
         self.full_variants_iterator = variants_loader.full_variants_iterator()
 
         self.bucket_index = bucket_index
+        assert self.bucket_index < 1_000_000, "bad bucket index"
+
         self.rows = rows
         self.filesystem = filesystem
 
@@ -243,6 +245,13 @@ class VariantsParquetWriter(AbstractVariantsParquetWriter):
 
         return self.data_writers[filename]
 
+    def _calc_sj_index(self, summary_index: int, allele_index: int) -> int:
+        assert allele_index < 10_000, "too many alleles"
+        sj_index = (
+            self.bucket_index * 1_000_000_000
+            + summary_index) * 10_000 + allele_index
+        return sj_index
+
     def _write_internal(self) -> list[str]:
         # pylint: disable=too-many-locals,too-many-branches
         family_variant_index = 0
@@ -251,6 +260,8 @@ class VariantsParquetWriter(AbstractVariantsParquetWriter):
             summary_variant,
             family_variants,
         ) in enumerate(self.full_variants_iterator):
+            assert summary_variant_index < 1_000_000_000, \
+                "too many summary variants"
             num_fam_alleles_written = 0
             seen_in_status = summary_variant.allele_count * [0]
             seen_as_denovo = summary_variant.allele_count * [False]
@@ -258,6 +269,7 @@ class VariantsParquetWriter(AbstractVariantsParquetWriter):
 
             for fv in family_variants:
                 family_variant_index += 1
+                assert fv.gt is not None
 
                 if is_all_reference_genotype(fv.gt) and \
                         not self.include_reference:
@@ -267,9 +279,12 @@ class VariantsParquetWriter(AbstractVariantsParquetWriter):
                 fv.family_index = family_variant_index
 
                 for fa in fv.alleles:
+                    sj_index = self._calc_sj_index(
+                        summary_variant_index, fa.allele_index)
                     extra_atts = {
                         "bucket_index": self.bucket_index,
                         "family_index": family_variant_index,
+                        "sj_index": sj_index,
                     }
                     fa.update_attributes(extra_atts)
 
@@ -286,7 +301,8 @@ class VariantsParquetWriter(AbstractVariantsParquetWriter):
                     family_alleles.append(fv.ref_allele)
 
                 family_alleles.extend(fv.alt_alleles)
-                for fa in family_alleles:
+                for aa in family_alleles:
+                    fa = cast(FamilyAllele, aa)
                     seen_in_status[fa.allele_index] = reduce(
                         lambda t, s: t | s.value,  # type: ignore
                         filter(None, fa.allele_in_statuses),
@@ -325,8 +341,11 @@ class VariantsParquetWriter(AbstractVariantsParquetWriter):
                     summary_variant.to_record(), sort_keys=True
                 )
                 for summary_allele in summary_variant.alleles:
+                    sj_index = self._calc_sj_index(
+                        summary_variant_index, fa.allele_index)
                     extra_atts = {
                         "bucket_index": self.bucket_index,
+                        "sj_index": sj_index,
                     }
                     summary_allele.summary_index = summary_variant_index
                     summary_allele.update_attributes(extra_atts)

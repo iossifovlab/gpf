@@ -511,3 +511,10 @@ def test_query_family_variants_by_family_and_person_ids(
 ) -> None:
     fvs = list(duckdb2_variants.query_variants(**params))
     assert len(fvs) == count
+
+
+def test_sj_index(
+    query_builder: SqlQueryBuilder
+) -> None:
+    assert "sj_index" in query_builder.summary_schema
+    assert "sj_index" in query_builder.family_schema
