@@ -19,7 +19,8 @@ from dae.utils.variant_utils import is_all_reference_genotype, \
     is_unknown_genotype
 
 from dae.variants.variant import SummaryAllele
-from dae.parquet.parquet_writer import AbstractVariantsParquetWriter
+from dae.parquet.parquet_writer import AbstractVariantsParquetWriter, \
+    collect_pedigree_parquet_schema, ParquetWriter
 from dae.parquet.schema2.serializers import AlleleParquetSerializer
 from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.variants_loaders.raw.loader import VariantsLoader
@@ -156,6 +157,8 @@ class VariantsParquetWriter(AbstractVariantsParquetWriter):
         self.data_writers: dict[str, ContinuousParquetFileWriter] = {}
         assert isinstance(partition_descriptor, PartitionDescriptor)
         self.partition_descriptor = partition_descriptor
+        ParquetWriter.fill_family_bins(
+            self.families, self.partition_descriptor)
 
         annotation_schema = self.variants_loader.get_attribute(
             "annotation_schema"
@@ -435,18 +438,25 @@ class VariantsParquetWriter(AbstractVariantsParquetWriter):
 
         extra_attributes = self.serializer.extra_attributes
 
+        pedigree_schema = collect_pedigree_parquet_schema(
+            self.families.ped_df)
+        schema_pedigree = "\n".join([
+            f"{f.name}|{f.type}" for f in pedigree_schema])
+
         metadata_table = pa.Table.from_pydict(
             {
                 "key": [
                     "partition_description",
                     "summary_schema",
                     "family_schema",
+                    "pedigree_schema",
                     "extra_attributes",
                 ],
                 "value": [
                     self.partition_descriptor.serialize(),
                     str(schema_summary),
                     str(schema_family),
+                    str(schema_pedigree),
                     str(extra_attributes),
                 ],
             },

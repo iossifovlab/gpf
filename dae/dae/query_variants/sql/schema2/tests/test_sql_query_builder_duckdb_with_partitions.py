@@ -518,3 +518,15 @@ def test_sj_index(
 ) -> None:
     assert "sj_index" in query_builder.summary_schema
     assert "sj_index" in query_builder.family_schema
+
+
+def test_pedigree_schema(
+    duckdb2_variants: DuckDb2Variants
+) -> None:
+    pedigree_schema = duckdb2_variants.query_builder.pedigree_schema
+    assert pedigree_schema
+    assert "family_id" in pedigree_schema
+    assert "person_id" in pedigree_schema
+    assert "family_bin" in pedigree_schema
+    assert "tag_simplex_family" in pedigree_schema
+    assert "tag_multiplex_family" in pedigree_schema
