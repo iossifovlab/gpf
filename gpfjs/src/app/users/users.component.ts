@@ -43,6 +43,7 @@ export class UsersComponent implements OnInit {
       + `&code_challenge=${codeChallenge}`
       + `&scope=read`
       + `&client_id=${this.config.oauthClientId}`
+      + `&redirect_uri=${window.location.origin}${this.baseHref}login`
       + `&state=${btoa(JSON.stringify(state))}`;
   }
 
