@@ -17,7 +17,7 @@
         </div>
 
         <div class="grid-cell list-cell" [attr.id]="group.name + '-users-cell'">
-          <div [attr.id]="group.name + '-users-list'">
+          <div class="item-list" [attr.id]="group.name + '-users-list'">
             <div class="item-wrapper" *ngFor="let user of group.users" [attr.id]="user + '-list-item'">
               <span class="item" [title]="user">{{ user }}</span>
               <gpf-confirm-button
@@ -38,7 +38,7 @@
         </div>
 
         <div class="grid-cell list-cell" [attr.id]="group.name + '-datasets-cell'">
-          <div [attr.id]="group.name + '-datasets-list'">
+          <div class="item-list" [attr.id]="group.name + '-datasets-list'">
             <div
               class="item-wrapper"
               *ngFor="let dataset of group.datasets"
@@ -50,7 +50,7 @@
                 confirmText="Remove"
                 title="Remove dataset"
                 message="Remove dataset?"
-                [iconStyle]="{ name: 'close', class: 'material-symbols-outlined' }">
+                [iconStyle]="{ name: 'close', class: 'material-symbols-outlined sm bold' }">
               </gpf-confirm-button>
             </div>
           </div>

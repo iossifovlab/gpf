@@ -10,7 +10,7 @@
         </div>
 
         <div class="grid-cell list-cell" [attr.id]="dataset.name + '-groups-cell'">
-          <div [attr.id]="dataset.name + '-groups-list'">
+          <div class="item-list" [attr.id]="dataset.name + '-groups-list'">
             <div class="item-wrapper" *ngFor="let group of dataset.groups" [attr.id]="group + '-list-item'">
               <span class="item" [title]="group">{{ group }}</span>
               <gpf-confirm-button
@@ -30,7 +30,7 @@
         </div>
 
         <div class="grid-cell list-cell" [attr.id]="dataset.name + '-users-cell'">
-          <div [attr.id]="dataset.name + '-users-list-cell'">
+          <div class="item-list" [attr.id]="dataset.name + '-users-list-cell'">
             <div
               class="item"
               [title]="user.name ? user.name + ' ' + user.email : user.email"
