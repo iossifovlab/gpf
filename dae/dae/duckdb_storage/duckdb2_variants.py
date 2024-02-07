@@ -154,6 +154,8 @@ class DuckDb2Variants(QueryVariantsBase):
 
     def _fetch_pedigree_schema(self) -> dict[str, str]:
         schema_content = self._fetch_meta_property("pedigree_schema")
+        if not schema_content:
+            return {}
         pedigree_schema = dict(
             line.split("|") for line in schema_content.split("\n"))
         return pedigree_schema

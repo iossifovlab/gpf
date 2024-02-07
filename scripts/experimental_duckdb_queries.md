@@ -1427,3 +1427,69 @@ UPDATE AGRE_WG38_CSHL_859_SCHEMA2_family as sa
 SET sindex = ((bucket_index // 2000000) * 1000 + bucket_index % 2000000) * 100000000000 + summary_index * 10 + allele_index;
 
 ```
+
+
+```sql
+with
+buckets as (
+    select distinct bucket_index from AGRE_WG38_CSHL_859_SCHEMA2_summary order by bucket_index
+),
+summary as (
+    select sa.bucket_index, sa.summary_index, sa.allele_index from AGRE_WG38_CSHL_859_SCHEMA2_summary as sa
+),
+family as (
+    select fa.bucket_index, fa.summary_index, fa.allele_index, fa.family_index from AGRE_WG38_CSHL_859_SCHEMA2_family as fa
+),
+summary_family as (
+    select sa.bucket_index, sa.summary_index, sa.allele_index, fa.family_index 
+    from summary as sa
+    join family as fa
+    on (sa.bucket_index = fa.bucket_index and sa.summary_index = fa.summary_index and sa.allele_index = fa.allele_index)    
+)
+select * 
+from buckets as bi
+join summary_family as sfa
+on (bi.bucket_index = sfa.bucket_index)
+```
+
+```sql
+with
+buckets as (
+    select distinct bucket_index from AGRE_WG38_CSHL_859_SCHEMA2_summary order by bucket_index
+),
+summary as (
+    select sa.bucket_index, sa.summary_index, sa.allele_index, sa.summary_variant_data from AGRE_WG38_CSHL_859_SCHEMA2_summary as sa
+),
+family as (
+    select fa.bucket_index, fa.summary_index, fa.allele_index, fa.family_index, fa.family_variant_data from AGRE_WG38_CSHL_859_SCHEMA2_family as fa
+),
+summary_family as (
+    select sa.bucket_index, sa.summary_index, sa.allele_index, fa.family_index , sa.summary_variant_data, fa.family_variant_data
+    from summary as sa
+    join family as fa
+    on (sa.bucket_index = fa.bucket_index and sa.summary_index = fa.summary_index and sa.allele_index = fa.allele_index)    
+)
+select * 
+from buckets as bi
+join summary_family as sfa
+on (bi.bucket_index = sfa.bucket_index)
+limit 1000;
+```
+
+```sql
+with
+buckets as (
+    select distinct bucket_index from AGRE_WG38_CSHL_859_SCHEMA2_summary order by bucket_index
+),
+summary as (
+    select sa.bucket_index, sa.summary_index, sa.allele_index, sa.summary_variant_data from AGRE_WG38_CSHL_859_SCHEMA2_summary as sa
+),
+family as (
+    select fa.bucket_index, fa.summary_index, fa.allele_index, fa.family_index, fa.family_variant_data from AGRE_WG38_CSHL_859_SCHEMA2_family as fa
+)
+select sa.bucket_index, sa.summary_index, sa.allele_index, fa.family_index, sa.summary_variant_data, fa.family_variant_data
+from summary as sa
+join family as fa
+on (sa.bucket_index = fa.bucket_index and sa.summary_index = fa.summary_index and sa.allele_index = fa.allele_index)    
+limit 1000;
+```

@@ -504,3 +504,60 @@ def test_query_gene_scores_formatting(
         source_pli.update({"format": float_format})
     assert source_pli in columns
     assert v[0] == [float_val]
+
+
+@pytest.mark.parametrize(
+    "wrapper_type",
+    [
+        "remote",
+        "local",
+    ]
+)
+def test_query_complex_query(
+    iossifov_2014_wrappers: dict[str, StudyWrapperBase],
+    wrapper_type: str,
+) -> None:
+    study_wrapper = iossifov_2014_wrappers[wrapper_type]
+
+    query = {
+        "variantTypes": ["sub", "ins", "del"],
+        "effectTypes": [
+            "frame-shift", "nonsense", "splice-site",
+            "no-frame-shift-newStop"
+        ],
+        "gender": [
+            "female", "male"
+        ],
+        "inheritanceTypeFilter": [],
+        "presentInChild": [
+            "proband only", "proband and sibling"
+        ],
+        "presentInParent": {
+            "presentInParent": ["neither"]
+        },
+        "studyTypes": ["we", "wg", "tg"],
+        "personSetCollection": {
+            "id": "phenotype",
+            "checkedValues": [
+                "autism",
+                "congenital_heart_disease",
+                "developmental_disorder",
+                "epilepsy",
+                "intellectual_disability",
+                "schizophrenia",
+                "unaffected"
+            ]
+        },
+        "familyTypes": [
+            "trio", "quad", "multigenerational", "simplex",
+            "multiplex", "other"
+        ],
+        "genomicScores": [],
+        "uniqueFamilyVariants": False,
+        "studyFilters": [],
+        "datasetId": "sequencing_de_novo",
+        "maxVariantsCount": 1001
+    }
+    vs = list(study_wrapper.query_variants_wdae(
+        query, [{"source": "location"}]))
+    assert len(vs) == 9

@@ -10,12 +10,7 @@ from dae.variants.attributes import Inheritance
 from dae.utils.regions import Region
 from dae.pedigrees.family import ALL_FAMILY_TYPES, FamilyType
 from dae.query_variants.attributes_query import \
-    role_query, \
-    variant_type_converter, \
-    sex_converter, \
-    OrNode, \
-    ContainsNode
-
+    role_query
 from dae.person_filters import make_pedigree_filter, make_pheno_filter
 
 
@@ -389,27 +384,21 @@ class QueryTransformer:
         if "gender" in kwargs:
             sexes = set(kwargs["gender"])
             if sexes != set(["female", "male", "unspecified"]):
-                qnodes = [
-                    ContainsNode(sex_converter(sex))  # type: ignore
-                    for sex in sexes]
-                kwargs["gender"] = OrNode(qnodes)
+                sexes_query = f"any({','.join(sexes)})"
+                kwargs["gender"] = sexes_query
             else:
                 kwargs["gender"] = None
 
         if "variantTypes" in kwargs:
             variant_types = set(kwargs["variantTypes"])
 
-            if variant_types != {"ins", "del", "sub", "CNV"}:
+            if variant_types != {"ins", "del", "sub", "CNV", "complex"}:
                 if "CNV" in variant_types:
                     variant_types.remove("CNV")
                     variant_types.add("CNV+")
                     variant_types.add("CNV-")
-
-                qnodes = [
-                    ContainsNode(variant_type_converter(t))  # type: ignore
-                    for t in variant_types
-                ]
-                kwargs["variantTypes"] = OrNode(qnodes)
+                variant_types_query = f"any({','.join(variant_types)})"
+                kwargs["variantTypes"] = variant_types_query
             else:
                 del kwargs["variantTypes"]
 

@@ -8,7 +8,7 @@ genotype_storage:
 
   storages:
   - id: local_duckdb
-    storage_type: duckdb
+    storage_type: duckdb2
     studies_dir: "genotype_storage/local_duckdb"
     base_dir: "%(wd)s"
 
