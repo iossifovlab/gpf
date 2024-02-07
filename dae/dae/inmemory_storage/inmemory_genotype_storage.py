@@ -44,8 +44,8 @@ class InmemoryGenotypeStorage(GenotypeStorage):
         self.data_dir = self.storage_config["dir"]
 
     @classmethod
-    def get_storage_type(cls) -> str:
-        return "inmemory"
+    def get_storage_types(cls) -> set[str]:
+        return {"inmemory"}
 
     @classmethod
     def validate_and_normalize_config(cls, config: Dict) -> Dict:

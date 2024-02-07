@@ -634,8 +634,8 @@ class Family:
         return FamilyType.OTHER
 
     def members_index(
-        self, person_ids: list[str]
-    ) -> list[Optional[int]]:
+        self, person_ids: Iterable[str]
+    ) -> list[int]:
         index = []
         for pid in person_ids:
             index.append(self.persons[pid].member_index)

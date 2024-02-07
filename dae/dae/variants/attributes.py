@@ -138,6 +138,10 @@ class Role(enum.Enum):
     def from_value(val: int) -> Role:
         return Role(int(val))
 
+    @staticmethod
+    def not_role(value: int) -> int:
+        return (1 << 24) - 1 - value
+
 
 class Sex(enum.Enum):
     """Enumerator for a person's sex."""

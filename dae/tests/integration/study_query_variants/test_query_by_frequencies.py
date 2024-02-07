@@ -123,5 +123,5 @@ def imported_denovo_study(
 def test_query_denovo_variants_by_allele_frequency(
         imported_denovo_study: GenotypeData) -> None:
     vs = list(imported_denovo_study.query_variants(
-        real_attr_filter=[("af_allele_freq", (None, 100))]))
+        frequency_filter=[("af_allele_freq", (None, 100))]))
     assert len(vs) == 4

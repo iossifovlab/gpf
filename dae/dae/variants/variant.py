@@ -442,13 +442,13 @@ class SummaryAllele(core.Allele):
     @property
     def worst_effect(self) -> Optional[str]:
         if self.effects:
-            return cast(str, self.effects.worst)
+            return self.effects.worst
         return None
 
     @property
     def effect_types(self) -> List[str]:
         if self.effects:
-            return cast(List[str], self.effects.types)
+            return self.effects.types
         return []
 
     @property
@@ -459,7 +459,7 @@ class SummaryAllele(core.Allele):
 
     @property
     def effect_gene_symbols(self) -> List[str]:
-        return [eg.symbol for eg in self.effect_genes]
+        return [eg.symbol for eg in self.effect_genes if eg.symbol]
 
     @property
     def frequency(self) -> Optional[float]:

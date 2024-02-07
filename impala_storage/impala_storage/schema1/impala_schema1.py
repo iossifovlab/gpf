@@ -113,7 +113,7 @@ class ImpalaSchema1ImportStorage(ImportStorage):
         start = time.time()
         genotype_storage = project.get_genotype_storage()
         if genotype_storage is None \
-                or genotype_storage.get_storage_type() != "impala":
+                or genotype_storage.storage_type != "impala":
             logger.error("missing or non-impala genotype storage")
             return
 
@@ -134,7 +134,7 @@ class ImpalaSchema1ImportStorage(ImportStorage):
         start = time.time()
         genotype_storage = project.get_genotype_storage()
         if genotype_storage is None \
-                or genotype_storage.get_storage_type() != "impala":
+                or genotype_storage.storage_type != "impala":
             logger.error("missing or non-impala genotype storage")
             return
 

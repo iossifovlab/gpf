@@ -137,7 +137,8 @@ class WGPFInstance(GPFInstance):
         study_wrapper = StudyWrapper(
             genotype_data,
             self._pheno_registry,
-            self.gene_scores_db
+            self.gene_scores_db,
+            self
         )
         self._study_wrappers[genotype_data.study_id] = study_wrapper
 
@@ -152,7 +153,7 @@ class WGPFInstance(GPFInstance):
         if genotype_data.is_remote:
             return RemoteStudyWrapper(cast(RemoteGenotypeData, genotype_data))
         return StudyWrapper(
-            genotype_data, self._pheno_registry, self.gene_scores_db
+            genotype_data, self._pheno_registry, self.gene_scores_db, self
         )
 
     def get_wdae_wrapper(

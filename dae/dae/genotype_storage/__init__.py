@@ -66,7 +66,7 @@ def _load_genotype_storage_factory_plugins() -> None:
         if storage_type in _REGISTERED_GENOTYPE_STORAGE_FACTORIES:
             logger.warning(
                 "overwriting genotype storage type: %s", storage_type)
-        if storage_type != factory.get_storage_type():
+        if storage_type not in factory.get_storage_types():
             raise ValueError("missmatch genotype storage types")
 
         _REGISTERED_GENOTYPE_STORAGE_FACTORIES[storage_type] = factory

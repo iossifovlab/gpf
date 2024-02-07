@@ -11,6 +11,16 @@ import networkx as nx
 logger = logging.getLogger(__name__)
 
 
+MAX_POSITION = 3_000_000_000
+
+
+def coalesce(v1: Optional[int], v2: int) -> int:
+    """Return first non-None value."""
+    if v1 is not None:
+        return v1
+    return v2
+
+
 def bedfile2regions(bed_filename: str) -> list[BedRegion]:
     """Transform BED file into list of regions."""
     with open(bed_filename) as infile:
@@ -322,9 +332,9 @@ def connected_component(regions: list[BedRegion]) -> Any:
 
 
 def collapse(
-    source: Sequence[BedRegion],
+    source: Sequence[Region],
     is_sorted: bool = False
-) -> list[BedRegion]:
+) -> list[Region]:
     """Collapse list of regions."""
     if not source:
         return list(source)
@@ -332,9 +342,9 @@ def collapse(
     regions = copy.deepcopy(list(source))
 
     if not is_sorted:
-        regions.sort(key=lambda x: x.start)
+        regions.sort(key=lambda x: x.start if x.start is not None else -1)
 
-    collapsed: dict[str, list[BedRegion]] = defaultdict(list)
+    collapsed: dict[str, list[Region]] = defaultdict(list)
 
     collapsed[regions[0].chrom].append(regions[0])
 
@@ -345,11 +355,11 @@ def collapse(
             continue
         prev_reg = chrom_collapsed[-1]
 
-        if reg.start <= prev_reg.stop:
-            if reg.stop > prev_reg.stop:
+        if coalesce(reg.start, 1) <= coalesce(prev_reg.stop, 1):
+            if coalesce(reg.stop, 1) > coalesce(prev_reg.stop, 1):
                 last = collapsed[reg.chrom][-1]
                 collapsed[reg.chrom][-1] = \
-                    BedRegion(last.chrom, last.start, reg.stop)
+                    Region(last.chrom, last.start, reg.stop)
             continue
 
         collapsed[reg.chrom].append(reg)
@@ -397,8 +407,8 @@ def total_length(regions: list[BedRegion]) -> int:
 
 
 def intersection(
-    regions1: list[BedRegion], regions2: list[BedRegion]
-) -> list[BedRegion]:
+    regions1: list[Region], regions2: list[Region]
+) -> list[Region]:
     """Compute intersection of two list of regions.
 
     First collapses each for lists of regions s1 and s2 and then find
@@ -420,24 +430,26 @@ def intersection(
                     k += 1
                     continue
                 break
-            if i.stop < s1_c[k].start:
+            if coalesce(i.stop, 1) < coalesce(s1_c[k].start, 1):
                 break
-            if i.start > s1_c[k].stop:
+            if coalesce(i.start, 1) > coalesce(s1_c[k].stop, MAX_POSITION):
                 k += 1
                 continue
-            if i.start <= s1_c[k].start:
-                if i.stop >= s1_c[k].stop:
+            if coalesce(i.start, 1) <= coalesce(s1_c[k].start, 1):
+                if coalesce(i.stop, MAX_POSITION) >= \
+                        coalesce(s1_c[k].stop, MAX_POSITION):
                     intersect.append(s1_c[k])
                     k += 1
                     continue
-                new_i = BedRegion(i.chrom, s1_c[k].start, i.stop)
+                new_i = Region(i.chrom, s1_c[k].start, i.stop)
                 intersect.append(new_i)
                 break
-            if i.start > s1_c[k].start:
-                if i.stop <= s1_c[k].stop:
+            if coalesce(i.start, 1) > coalesce(s1_c[k].start, 1):
+                if coalesce(i.stop, MAX_POSITION) <= \
+                        coalesce(s1_c[k].stop, MAX_POSITION):
                     intersect.append(i)
                     break
-                new_i = BedRegion(i.chrom, i.start, s1_c[k].stop)
+                new_i = Region(i.chrom, i.start, s1_c[k].stop)
                 intersect.append(new_i)
                 k += 1
                 continue
@@ -445,15 +457,15 @@ def intersection(
     return intersect
 
 
-def union(*r: list[BedRegion]) -> list[BedRegion]:
+def union(*r: list[Region]) -> list[Region]:
     """Collapse many lists of regions."""
     r_sum = [el for list in r for el in list]
     return collapse(r_sum)
 
 
 def _diff(
-    regions_a: list[BedRegion], regions_b: list[BedRegion]
-) -> list[BedRegion]:
+    regions_a: list[Region], regions_b: list[Region]
+) -> list[Region]:
     result = []
     k = 0
 
@@ -464,30 +476,34 @@ def _diff(
         if reg_a.chrom < regions_b[k].chrom:
             result.append(reg_a)
             continue
-        if reg_a.stop < regions_b[k].start:
+        if coalesce(reg_a.stop, MAX_POSITION) < \
+                coalesce(regions_b[k].start, 1):
             result.append(reg_a)
             continue
-        prev = reg_a.start
+        prev = coalesce(reg_a.start, 1)
         while k < len(regions_b) \
-                and regions_b[k].stop <= reg_a.stop \
+                and coalesce(regions_b[k].stop, MAX_POSITION) <= \
+                coalesce(reg_a.stop, MAX_POSITION) \
                 and regions_b[k].chrom == reg_a.chrom:
-            if prev < regions_b[k].start:
-                new_a = BedRegion(reg_a.chrom, prev, regions_b[k].start - 1)
+            if prev < coalesce(regions_b[k].start, 1):
+                new_a = Region(
+                    reg_a.chrom, prev,
+                    coalesce(regions_b[k].start, 1) - 1)
                 result.append(new_a)
-            prev = regions_b[k].stop + 1
+            prev = coalesce(regions_b[k].stop, 1) + 1
             k += 1
         if k < len(regions_b) and regions_b[k].chrom != reg_a.chrom:
             continue
-        if prev <= reg_a.stop:
-            result.append(BedRegion(reg_a.chrom, prev, reg_a.stop))
+        if prev <= coalesce(reg_a.stop, MAX_POSITION):
+            result.append(Region(reg_a.chrom, prev, reg_a.stop))
 
     return result
 
 
 def difference(
-    regions1: list[BedRegion], regions2: list[BedRegion],
+    regions1: list[Region], regions2: list[Region],
     symmetric: bool = False
-) -> list[BedRegion]:
+) -> list[Region]:
     """Compute difference between two list of regions."""
     if not symmetric:
         left = collapse(regions1)

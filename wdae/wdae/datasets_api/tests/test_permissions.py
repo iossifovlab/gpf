@@ -58,7 +58,8 @@ def dataset_wrapper(
     assert dataset is not None
     assert dataset.study_id == "Dataset"
 
-    dataset_wrapper = StudyWrapper(dataset, None, None)  # type: ignore
+    dataset_wrapper = StudyWrapper(
+        dataset, None, None, wdae_gpf_instance)  # type: ignore
     assert dataset_wrapper is not None
     assert dataset_wrapper.is_group
 
@@ -420,7 +421,8 @@ def test_unregistered_dataset_does_not_propagate_permissions(
     assert dataset is not None
     assert dataset.study_id == "Dataset"
 
-    dataset_wrapper = StudyWrapper(dataset, None, None)  # type: ignore
+    dataset_wrapper = StudyWrapper(
+        dataset, None, None, wdae_gpf_instance)  # type: ignore
     assert dataset_wrapper is not None
     assert dataset_wrapper.is_group
 

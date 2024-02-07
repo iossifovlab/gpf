@@ -69,16 +69,14 @@ def test_transform_present_in_child_and_present_in_parent(
     roles_q = QueryTransformer._transform_present_in_child_and_parent_roles(
         present_in_child, present_in_parent)
     assert roles_q is not None
-    roles_m = role_query.transform_tree_to_matcher(roles_q)
+    roles_m = role_query.transform_tree_to_matcher(
+        role_query.transform_query_string_to_tree(roles_q))
 
     inheritance_q = QueryTransformer\
         ._transform_present_in_child_and_parent_inheritance(
             present_in_child, present_in_parent)
 
     assert inheritance_q is not None
-
-    print("roles query:      ", roles_q)
-    print("inheritance query:", inheritance_q)
 
     inheritance_m = inheritance_query.transform_tree_to_matcher(
         inheritance_query.transform_query_string_to_tree(inheritance_q))

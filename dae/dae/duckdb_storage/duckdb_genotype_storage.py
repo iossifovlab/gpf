@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 import re
 import logging
-from typing import Any, cast, Optional
+from typing import Any, cast, Optional, Union
 from contextlib import closing
 
 import duckdb
@@ -17,6 +17,7 @@ from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.schema2_storage.schema2_import_storage import Schema2DatasetLayout
 from dae.duckdb_storage.duckdb_variants import DuckDbVariants
+from dae.duckdb_storage.duckdb2_variants import DuckDb2Variants, Db2Layout
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +46,7 @@ class DuckDbGenotypeStorage(GenotypeStorage):
     """Defines DuckDb genotype storage."""
 
     VALIDATION_SCHEMA = {
-        "storage_type": {"type": "string", "allowed": ["duckdb"]},
+        "storage_type": {"type": "string", "allowed": ["duckdb", "duckdb2"]},
         "id": {
             "type": "string", "required": True
         },
@@ -55,6 +56,10 @@ class DuckDbGenotypeStorage(GenotypeStorage):
         "read_only": {
             "type": "boolean",
             "default": False,
+        },
+        "memory_limit": {
+            "type": "string",
+            "default": "32GB",
         },
         "studies_dir": {
             "type": "string",
@@ -66,6 +71,7 @@ class DuckDbGenotypeStorage(GenotypeStorage):
 
     def __init__(self, storage_config: dict[str, Any]):
         super().__init__(storage_config)
+        self._read_only = self.get_read_only()
         self.connection_factory: Optional[duckdb.DuckDBPyConnection] = None
 
     @classmethod
@@ -89,8 +95,8 @@ class DuckDbGenotypeStorage(GenotypeStorage):
         return result
 
     @classmethod
-    def get_storage_type(cls) -> str:
-        return "duckdb"
+    def get_storage_types(cls) -> set[str]:
+        return {"duckdb", "duckdb2"}
 
     def start(self) -> DuckDbGenotypeStorage:
         if self.connection_factory:
@@ -105,10 +111,39 @@ class DuckDbGenotypeStorage(GenotypeStorage):
             db_name = self._base_dir_join(db_name)
             dirname = os.path.dirname(db_name)
             os.makedirs(dirname, exist_ok=True)
+        self.connection_factory = duckdb_connect(
+            db_name=db_name, read_only=read_only)
+        memory_limit = self.get_memory_limit()
+        if memory_limit:
+            query = f"SET memory_limit='{memory_limit}'"
+            logger.info("memory limit: %s", query)
+            self.connection_factory.sql(query)
+        return self
+
+    def restart(self, read_only: bool) -> DuckDbGenotypeStorage:
+        """Restart the genotype storage with a new read_only flag."""
+        if read_only == self._read_only:
+            return self
+        self.shutdown()
+
+        db_name = self.get_db()
+        if db_name is not None:
+            db_name = self._base_dir_join(db_name)
+            dirname = os.path.dirname(db_name)
+            os.makedirs(dirname, exist_ok=True)
+        self._read_only = read_only
 
         self.connection_factory = duckdb_connect(
             db_name=db_name, read_only=read_only)
+        memory_limit = self.get_memory_limit()
+        if memory_limit:
+            query = f"SET memory_limit='{memory_limit}'"
+            logger.info("memory limit: %s", query)
+            self.connection_factory.sql(query)
         return self
+
+    def is_read_only(self) -> bool:
+        return self._read_only
 
     def shutdown(self) -> DuckDbGenotypeStorage:
         if self.connection_factory is None:
@@ -131,6 +166,9 @@ class DuckDbGenotypeStorage(GenotypeStorage):
 
     def get_read_only(self) -> bool:
         return cast(bool, self.storage_config.get("read_only", True))
+
+    def get_memory_limit(self) -> str:
+        return cast(str, self.storage_config.get("memory_limit", "32GB"))
 
     def get_studies_dir(self) -> Optional[str]:
         return self.storage_config.get("studies_dir")
@@ -209,19 +247,20 @@ class DuckDbGenotypeStorage(GenotypeStorage):
         with self.connection_factory.cursor() as connection:
             dataset_path = f"{parquet_path}/{ '*/' * len(partition)}*.parquet"
             logger.debug("creating table %s from %s", table_name, dataset_path)
+            memory_limit = self.get_memory_limit()
+            if memory_limit:
+                query = f"SET memory_limit='{memory_limit}'"
+                logger.info("memory limit: %s", query)
+                connection.sql(query)
 
             query = f"DROP TABLE IF EXISTS {table_name}"
-            logger.debug("query: %s", query)
-            connection.sql(query)
-
-            query = "SET memory_limit='16GB'"
             logger.debug("query: %s", query)
             connection.sql(query)
 
             query = f"CREATE TABLE {table_name} AS " \
                 f"SELECT * FROM " \
                 f"parquet_scan('{dataset_path}', hive_partitioning = 1)"
-            logger.debug("query: %s", query)
+            logger.info("query: %s", query)
             connection.sql(query)
 
     def import_dataset(
@@ -308,7 +347,7 @@ class DuckDbGenotypeStorage(GenotypeStorage):
     def build_backend(
             self, study_config: dict,
             genome: ReferenceGenome,
-            gene_models: GeneModels) -> DuckDbVariants:
+            gene_models: GeneModels) -> Union[DuckDbVariants, DuckDb2Variants]:
         tables = study_config["genotype_storage"]["tables"]
         pedigree = self._base_dir_join_parquet_scan_or_table(
             tables["pedigree"])
@@ -332,11 +371,45 @@ class DuckDbGenotypeStorage(GenotypeStorage):
                 f"duckdb genotype storage not started: "
                 f"{self.storage_config}")
         assert self.connection_factory is not None
-        return DuckDbVariants(
-            self.connection_factory,
-            db_name,
-            tables_layout.family,
-            tables_layout.summary,
-            tables_layout.pedigree,
-            tables_layout.meta,
-            gene_models)
+        # if not self.is_read_only():
+        #     self.restart(read_only=True)
+        # if self.connection_factory is None:
+        #     raise ValueError(
+        #         f"duckdb genotype storage not started: "
+        #         f"{self.storage_config}")
+        # if not self.is_read_only():
+        #     raise ValueError(
+        #         f"duckdb genotype storage not started in read-only mode: "
+        #         f"{self.storage_config}")
+
+        if self.storage_type == "duckdb":
+            return DuckDbVariants(
+                self.connection_factory,
+                db_name,
+                tables_layout.family,
+                tables_layout.summary,
+                tables_layout.pedigree,
+                tables_layout.meta,
+                gene_models)
+
+        if self.storage_type == "duckdb2":
+            db_layout = Db2Layout(
+                db=db_name,
+                study=study_config["id"],
+                pedigree=tables_layout.pedigree,
+                summary=tables_layout.summary,
+                family=tables_layout.family,
+                meta=tables_layout.meta,
+            )
+
+            assert db_layout is not None
+            # connection = duckdb.connect(db_name, read_only=True)
+            return DuckDb2Variants(
+                self.connection_factory,
+                db_layout,
+                gene_models,
+                genome,
+            )
+
+        raise ValueError(
+            f"Unsuported DuckDb storage type: {self.storage_type}")

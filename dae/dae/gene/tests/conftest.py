@@ -81,7 +81,7 @@ def gene_info_cache_dir() -> Iterator[None]:
     for val in change_environment(new_envs):
         yield val
 
-    shutil.rmtree(cache_dir)
+    shutil.rmtree(cache_dir, ignore_errors=True)
 
 
 @pytest.fixture(scope="session")

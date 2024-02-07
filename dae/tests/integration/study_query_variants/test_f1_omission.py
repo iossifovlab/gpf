@@ -90,11 +90,6 @@ def test_f1_non_cannonical_omission(
         inheritance=inheritance,
         return_unknown=True,
         return_reference=True))
-    gefs = [(v, v.effects) for v in vs]
-    print(gefs)
-    for v in vs:
-        for aa in v.alt_alleles:
-            print(aa, aa.inheritance_in_members)
 
     assert len(vs) == count
 
@@ -128,8 +123,6 @@ def test_f1_cannonical_omission(
         inheritance=inheritance,
         return_unknown=True,
         return_reference=True))
-    gefs = [(v, v.effects) for v in vs]
-    print(gefs)
 
     assert len(vs) == count
 
@@ -170,11 +163,6 @@ def test_f1_canonical_omission_return_reference_or_unknown(
         inheritance=inheritance,
         return_unknown=return_unknown,
         return_reference=return_reference))
-    for v in vs:
-        print(100 * "-")
-        for aa in v.alleles:
-            print(aa, aa.inheritance_in_members)
-
     assert len(vs) == count
 
 
@@ -203,9 +191,4 @@ def test_f1_non_canonical_omission_return_reference_or_unknown(
         inheritance=inheritance,
         return_unknown=return_unknown,
         return_reference=return_reference))
-    for v in vs:
-        print(100 * "-")
-        for aa in v.alleles:
-            print(aa, aa.inheritance_in_members)
-
     assert len(vs) == count

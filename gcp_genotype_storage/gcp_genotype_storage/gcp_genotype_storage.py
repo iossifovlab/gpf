@@ -64,8 +64,8 @@ class GcpGenotypeStorage(GenotypeStorage):
         return cast(Dict, validator.document)
 
     @classmethod
-    def get_storage_type(cls) -> str:
-        return "gcp"
+    def get_storage_types(cls) -> set[str]:
+        return {"gcp"}
 
     def start(self):
         project_id = self.storage_config["project_id"]

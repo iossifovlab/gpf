@@ -716,7 +716,7 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
 
     def _serialize_inheritance_in_members(
         self
-    ) -> dict[int, list[Inheritance]]:
+    ) -> dict[int, list[int]]:
         result = {}
         for allele in self.family_alleles:
             result[allele.allele_index] = [

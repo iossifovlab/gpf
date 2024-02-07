@@ -48,7 +48,7 @@ def test_validate_config_wrong_storage_type():
             ValueError,
             match=re.escape(
                 "storage configuration for <filesystem2> passed to "
-                "genotype storage class type <inmemory>")):
+                "genotype storage class type <{'inmemory'}>")):
         InmemoryGenotypeStorage.validate_and_normalize_config(config)
 
 

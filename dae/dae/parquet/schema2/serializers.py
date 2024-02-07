@@ -1,7 +1,7 @@
 import functools
 import operator
 import logging
-from typing import Any
+from typing import List, Optional, Union, Any
 
 import pyarrow as pa
 from dae.variants.core import Allele
@@ -12,6 +12,9 @@ from dae.variants.attributes import (
     Role,
     Status,
 )
+from dae.annotation.annotation_pipeline import AttributeInfo
+from dae.variants.family_variant import FamilyAllele
+from dae.variants.variant import SummaryAllele
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +26,7 @@ class AlleleParquetSerializer:
         "bucket_index": pa.int32(),
         "summary_index": pa.int32(),
         "allele_index": pa.int32(),
+        "sj_index": pa.uint64(),
         "chromosome": pa.string(),
         "position": pa.int32(),
         "end_position": pa.int32(),
@@ -49,6 +53,7 @@ class AlleleParquetSerializer:
         "bucket_index": pa.int32(),
         "summary_index": pa.int32(),
         "allele_index": pa.int32(),
+        "sj_index": pa.uint64(),
         "family_index": pa.int32(),
         "family_id": pa.string(),
         "is_denovo": pa.int8(),
@@ -68,7 +73,10 @@ class AlleleParquetSerializer:
         "inheritance_in_members": Inheritance,
     }
 
-    def __init__(self, annotation_schema, extra_attributes=None):
+    def __init__(
+        self, annotation_schema: List[AttributeInfo],
+        extra_attributes: Optional[List[str]] = None
+    ) -> None:
         self.annotation_schema = annotation_schema
         self._schema_summary = None
         self._schema_family = None
@@ -79,7 +87,7 @@ class AlleleParquetSerializer:
                 self.extra_attributes.append(attribute_name)
 
     @property
-    def schema_summary(self):
+    def schema_summary(self) -> pa.Schema:
         """Lazy construct and return the schema for the summary alleles."""
         if self._schema_summary is None:
             fields = [
@@ -111,7 +119,7 @@ class AlleleParquetSerializer:
         return self._schema_summary
 
     @property
-    def schema_family(self):
+    def schema_family(self) -> pa.Schema:
         """Lazy construct and return the schema for the family alleles."""
         if self._schema_family is None:
             fields = []
@@ -123,7 +131,10 @@ class AlleleParquetSerializer:
             self._schema_family = pa.schema(fields)
         return self._schema_family
 
-    def _get_searchable_prop_value(self, allele, spr):
+    def _get_searchable_prop_value(
+        self, allele: Union[SummaryAllele, FamilyAllele],
+        spr: str
+    ) -> Any:
         prop_value = getattr(allele, spr, None)
         if prop_value is None:
             prop_value = allele.get_attribute(spr)
@@ -138,8 +149,10 @@ class AlleleParquetSerializer:
                 prop_value = prop_value.value
         return prop_value
 
-    def build_family_allele_batch_dict(self, allele, family_variant_data) \
-            -> dict[str, list[Any]]:
+    def build_family_allele_batch_dict(
+        self, allele: FamilyAllele,
+        family_variant_data: str
+    ) -> dict[str, list[Any]]:
         """Build a batch of family allele data in the form of a dict."""
         family_header = []
         family_properties = []
@@ -163,8 +176,10 @@ class AlleleParquetSerializer:
         allele_data["family_variant_data"] = [family_variant_data]
         return allele_data
 
-    def build_summary_allele_batch_dict(self, allele, summary_variant_data) \
-            -> dict[str, list[Any]]:
+    def build_summary_allele_batch_dict(
+        self, allele: SummaryAllele,
+        summary_variant_data: str
+    ) -> dict[str, list[Any]]:
         """Build a batch of summary allele data in the form of a dict."""
         allele_data = {"summary_variant_data": [summary_variant_data]}
 
@@ -186,7 +201,7 @@ class AlleleParquetSerializer:
             else:
                 prop_value = self._get_searchable_prop_value(allele, spr)
 
-            allele_data[spr] = [prop_value]
+            allele_data[spr] = [prop_value]  # type: ignore
 
         if self.annotation_schema is not None:
             for attr in self.annotation_schema:

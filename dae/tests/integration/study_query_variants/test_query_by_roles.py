@@ -1,12 +1,19 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+from typing import Optional
+
 import pytest
 
 from dae.testing import setup_pedigree, setup_vcf, vcf_study
 from dae.testing.foobar_import import foobar_gpf
+from dae.genotype_storage.genotype_storage import GenotypeStorage
+from dae.studies.study import GenotypeData
 
 
 @pytest.fixture(scope="module")
-def imported_study(tmp_path_factory, genotype_storage):
+def imported_study(
+    tmp_path_factory: pytest.TempPathFactory,
+    genotype_storage: GenotypeStorage
+) -> GenotypeData:
     root_path = tmp_path_factory.mktemp(
         f"vcf_path_{genotype_storage.storage_id}")
     gpf_instance = foobar_gpf(root_path, genotype_storage)
@@ -55,9 +62,9 @@ def imported_study(tmp_path_factory, genotype_storage):
     ],
 )
 def test_query_by_roles(
-        roles, count, imported_study):
-    vs = imported_study.query_variants(roles=roles)
-    vs = list(vs)
+    roles: Optional[str], count: int, imported_study: GenotypeData
+) -> None:
+    vs = list(imported_study.query_variants(roles=roles))
     assert len(vs) == count
 
 
@@ -65,16 +72,17 @@ def test_query_by_roles(
     "person_ids,count",
     [
         (None, 5),
-        (set(["m1"]), 2),
-        (set(["d1"]), 3),
-        (set(["p1"]), 4),
-        (set(["s1"]), 2),
+        ({"m1"}, 2),
+        ({"d1"}, 3),
+        ({"p1"}, 4),
+        ({"s1"}, 2),
     ],
 )
 def test_query_person_id(
-        person_ids, count, imported_study):
-    vs = imported_study.query_variants(person_ids=person_ids)
-    vs = list(vs)
+    person_ids: Optional[set[str]], count: int,
+    imported_study: GenotypeData
+) -> None:
+    vs = list(imported_study.query_variants(person_ids=person_ids))
     assert len(vs) == count
 
 
@@ -82,12 +90,14 @@ def test_query_person_id(
     "family_ids,count",
     [
         (None, 5),
-        (set(["f1"]), 5)
+        ({"f1"}, 5)
     ],
 )
-def test_query_family_id(family_ids, count, imported_study):
-    vs = imported_study.query_variants(family_ids=family_ids)
-    vs = list(vs)
+def test_query_family_id(
+    family_ids: Optional[set[str]], count: int,
+    imported_study: GenotypeData
+) -> None:
+    vs = list(imported_study.query_variants(family_ids=family_ids))
     assert len(vs) == count
 
 # TODO: add _status

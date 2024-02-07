@@ -5,20 +5,24 @@ import abc
 
 from contextlib import closing
 from functools import reduce
+from typing import Any, Callable, Iterator, List, Optional, Tuple, \
+    cast, Sequence
 
 from dae.variants.attributes import Inheritance
-from dae.variants.variant import SummaryAllele
-from dae.variants.family_variant import FamilyAllele
+from dae.variants.variant import SummaryVariant, SummaryAllele
+from dae.variants.family_variant import FamilyVariant, FamilyAllele
 
 from dae.query_variants.query_runners import QueryRunner, QueryResult
-from dae.query_variants.attributes_query import (
-    role_query,
-    sex_query,
-    inheritance_query,
-    variant_type_query,
-)
+from dae.query_variants.attributes_query import \
+    role_query, sex_query, inheritance_query, \
+    variant_type_query, Matcher
+from dae.pedigrees.families_data import FamiliesData
+from dae.person_sets import PersonSetCollection
+from dae.utils.regions import Region
+from dae.variants_loaders.raw.loader import VariantsGenotypesLoader
 
 
+RealAttrFilterType = list[tuple[str, tuple[Optional[float], Optional[float]]]]
 logger = logging.getLogger(__name__)
 
 
@@ -26,8 +30,9 @@ class RawVariantsQueryRunner(QueryRunner):
     """Run a variant iterator as a query."""
 
     def __init__(
-            self, variants_iterator=None,
-            deserializer=None):
+        self, variants_iterator: Iterator[Any],
+        deserializer: Optional[Callable] = None
+    ) -> None:
         super().__init__(deserializer=deserializer)
         self.variants_iterator = variants_iterator
         assert self.variants_iterator is not None
@@ -76,19 +81,21 @@ class RawVariantsQueryRunner(QueryRunner):
 class RawFamilyVariants(abc.ABC):
     """Base class that stores a reference to the families data."""
 
-    def __init__(self, families):
+    def __init__(self, families: FamiliesData) -> None:
         self.families = families
 
     @abc.abstractmethod
-    def full_variants_iterator(self):
+    def full_variants_iterator(
+        self
+    ) -> Iterator[Tuple[SummaryVariant, List[FamilyVariant]]]:
         pass
 
-    def family_variants_iterator(self):
+    def family_variants_iterator(self) -> Iterator[FamilyVariant]:
         for _, variants in self.full_variants_iterator():
             for v in variants:
                 yield v
 
-    def summary_variants_iterator(self):
+    def summary_variants_iterator(self) -> Iterator[SummaryVariant]:
         """Create a generator to iterate over summary variants."""
         for sv, fvs in self.full_variants_iterator():
             seen_in_status = sv.allele_count * [0]
@@ -96,7 +103,8 @@ class RawFamilyVariants(abc.ABC):
             family_variants_count = sv.allele_count * [0]
 
             for fv in fvs:
-                for fa in fv.alt_alleles:
+                for aa in fv.alt_alleles:
+                    fa = cast(FamilyAllele, aa)
                     seen_in_status[fa.allele_index] = reduce(
                         lambda t, s: t | s.value,  # type: ignore
                         filter(None, fa.allele_in_statuses),
@@ -115,40 +123,56 @@ class RawFamilyVariants(abc.ABC):
             yield sv
 
     @staticmethod
-    def filter_regions(v, regions):
+    def filter_regions(
+        v: SummaryVariant, regions: list[Region]
+    ) -> bool:
         """Return True if v is in regions."""
+        pos = v.position
+        assert pos is not None
         if v.end_position is None:
-            end_position = -1
+            end_pos = v.position
         else:
-            end_position = v.end_position
+            end_pos = v.end_position
 
         for reg in regions:
+            if reg.chrom != v.chromosome:
+                continue
             if reg.start is None and reg.stop is None:
-                return reg.chrom == v.chromosome
-            if (
-                reg.chrom == v.chromosome
-                and (
-                    reg.start <= v.position <= reg.stop
-                    or reg.start <= end_position <= reg.stop
-                    or (reg.start >= v.position and reg.stop <= end_position)
-                )
-            ):
                 return True
+            if reg.start is None:
+                assert reg.stop is not None
+                if pos <= reg.stop:
+                    return True
+            if reg.stop is None:
+                assert reg.start is not None
+                if end_pos >= reg.start:
+                    return True
+            if reg.start is not None and reg.stop is not None:
+                if (
+                    reg.start <= pos <= reg.stop
+                    or reg.start <= end_pos <= reg.stop
+                    or (reg.start >= pos and reg.stop <= end_pos)
+                ):
+                    return True
         return False
 
     @staticmethod
-    def filter_real_attr(variant, real_attr_filter, is_frequency=False):
+    def filter_real_attr(
+        allele: SummaryAllele,
+        real_attr_filter: RealAttrFilterType,
+        is_frequency: bool = False
+    ) -> bool:
         # pylint: disable=unused-argument
-        """Return True if variant's attrs are within bounds.
+        """Return True if allele's attrs are within bounds.
 
         The bounds are specified in real_attr_filter.
         """
         result = []
         for key, ranges in real_attr_filter:
-            if not variant.has_attribute(key):
+            if not allele.has_attribute(key):
                 return False
 
-            val = variant.get_attribute(key)
+            val = allele.get_attribute(key)
             rmin, rmax = ranges
             if rmin is None and rmax is None:
                 result.append(True)
@@ -165,7 +189,11 @@ class RawFamilyVariants(abc.ABC):
         return False
 
     @staticmethod
-    def filter_gene_effects(v, effect_types, genes):
+    def filter_gene_effects(
+        v: SummaryAllele,
+        effect_types: Optional[Sequence[str]],
+        genes: Optional[Sequence[str]]
+    ) -> bool:
         """Return True if variant's effects are in effect types and genes."""
         assert effect_types is not None or genes is not None
         if v.effects is None:
@@ -174,6 +202,7 @@ class RawFamilyVariants(abc.ABC):
         gene_effects = v.effects.genes
 
         if effect_types is None:
+            assert genes is not None
             result = [ge for ge in gene_effects if ge.symbol in genes]
             if result:
                 v.matched_gene_effects = result
@@ -195,22 +224,23 @@ class RawFamilyVariants(abc.ABC):
         return False
 
     @classmethod
-    def filter_allele(  # NOQA
-            cls,
-            allele,
-            inheritance=None,
-            real_attr_filter=None,
-            frequency_filter=None,
-            ultra_rare=None,
-            genes=None,
-            effect_types=None,
-            variant_type=None,
-            person_ids=None,
-            roles=None,
-            sexes=None,
-            **_kwargs):
+    def filter_allele(  # noqa: C901
+        cls,
+        allele: FamilyAllele,
+        genes: Optional[list[str]] = None,
+        effect_types: Optional[list[str]] = None,
+        person_ids: Optional[Sequence[str]] = None,
+        inheritance: Optional[Sequence[Matcher]] = None,
+        roles: Optional[Matcher] = None,
+        sexes: Optional[Matcher] = None,
+        variant_type: Optional[Matcher] = None,
+        real_attr_filter: Optional[RealAttrFilterType] = None,
+        ultra_rare: Optional[bool] = None,
+        frequency_filter: Optional[RealAttrFilterType] = None,
+        **kwargs: Any
+    ) -> bool:
         # pylint: disable=too-many-arguments,too-many-return-statements
-        # pylint: disable=too-many-branches
+        # pylint: disable=too-many-branches,unused-argument
         """Return True if a family allele meets the required conditions."""
         assert isinstance(allele, FamilyAllele)
         if inheritance is not None:
@@ -256,16 +286,18 @@ class RawFamilyVariants(abc.ABC):
 
     @classmethod
     def filter_summary_allele(
-            cls,
-            allele,
-            real_attr_filter=None,
-            frequency_filter=None,
-            ultra_rare=None,
-            genes=None,
-            effect_types=None,
-            variant_type=None,
-            **_kwargs):
+        cls,
+        allele: SummaryAllele,
+        genes: Optional[list[str]] = None,
+        effect_types: Optional[list[str]] = None,
+        variant_type: Optional[Matcher] = None,
+        real_attr_filter: Optional[RealAttrFilterType] = None,
+        ultra_rare: Optional[bool] = None,
+        frequency_filter: Optional[RealAttrFilterType] = None,
+        **kwargs: Any
+    ) -> bool:
         # pylint: disable=too-many-return-statements,too-many-branches
+        # pylint: disable=unused-argument
         """Return True if a summary allele meets the required conditions."""
         assert isinstance(allele, SummaryAllele)
         if real_attr_filter is not None:
@@ -288,13 +320,15 @@ class RawFamilyVariants(abc.ABC):
         return True
 
     @classmethod
-    def filter_family_variant(cls, v, **kwargs):
+    def filter_family_variant(
+        cls, v: FamilyVariant, **kwargs: Any
+    ) -> bool:
         """Return true if variant meets conditions in kwargs."""
         if kwargs.get("regions") is not None:
             if not cls.filter_regions(v, kwargs["regions"]):
                 return False
-        if "family_ids" in kwargs and kwargs["family_ids"] is not None:
-            family_ids = kwargs["family_ids"]
+        family_ids = kwargs.get("family_ids")
+        if family_ids is not None:
             if v.family_id not in family_ids:
                 return False
         if "filter" in kwargs:
@@ -304,7 +338,9 @@ class RawFamilyVariants(abc.ABC):
         return True
 
     @classmethod
-    def filter_summary_variant(cls, v, **kwargs):
+    def filter_summary_variant(
+        cls, v: SummaryVariant, **kwargs: Any
+    ) -> bool:
         """Return true if variant meets conditions in kwargs."""
         if kwargs.get("regions") is not None:
             if not cls.filter_regions(v, kwargs["regions"]):
@@ -316,7 +352,9 @@ class RawFamilyVariants(abc.ABC):
         return True
 
     @classmethod
-    def summary_variant_filter_function(cls, **kwargs):
+    def summary_variant_filter_function(
+        cls, **kwargs: Any
+    ) -> Callable[[SummaryVariant], Optional[SummaryVariant]]:
         """Return a filter function that checks the conditions in kwargs."""
         if kwargs.get("variant_type") is not None:
             parsed = kwargs["variant_type"]
@@ -331,7 +369,7 @@ class RawFamilyVariants(abc.ABC):
         return_reference = kwargs.get("return_reference", False)
         seen = kwargs.get("seen", set())
 
-        def filter_func(sv):
+        def filter_func(sv: SummaryVariant) -> Optional[SummaryVariant]:
             if sv is None:
                 return None
             if sv.svuid in seen:
@@ -355,7 +393,27 @@ class RawFamilyVariants(abc.ABC):
 
         return filter_func
 
-    def build_summary_variants_query_runner(self, **kwargs):
+    @classmethod
+    def summary_variant_filter_duplicate_function(
+        cls, **kwargs: Any
+    ) -> Callable[[SummaryVariant], Optional[SummaryVariant]]:
+        """Return a filter function that checks the conditions in kwargs."""
+        seen = kwargs.get("seen", set())
+
+        def filter_func(sv: SummaryVariant) -> Optional[SummaryVariant]:
+            if sv is None:
+                return None
+            if sv.svuid in seen:
+                return None
+
+            seen.add(sv.svuid)
+            return sv
+
+        return filter_func
+
+    def build_summary_variants_query_runner(
+        self, **kwargs: Any
+    ) -> RawVariantsQueryRunner:
         """Return a query runner for the summary variants."""
         filter_func = RawFamilyVariants\
             .summary_variant_filter_function(**kwargs)
@@ -365,7 +423,9 @@ class RawFamilyVariants(abc.ABC):
 
         return runner
 
-    def query_summary_variants(self, **kwargs):
+    def query_summary_variants(
+        self, **kwargs: Any
+    ) -> Iterator[SummaryVariant]:
         """Run a sammary variant query and yields the results."""
         runner = self.build_summary_variants_query_runner(**kwargs)
 
@@ -390,7 +450,24 @@ class RawFamilyVariants(abc.ABC):
             pass
 
     @classmethod
-    def family_variant_filter_function(cls, **kwargs):  # noqa
+    def family_variant_filter_duplicate_function(
+        cls, **kwargs: Any
+    ) -> Callable[[FamilyVariant], Optional[FamilyVariant]]:
+        """Return a filter function that checks the conditions in kwargs."""
+        seen = kwargs.get("seen", set())
+
+        def filter_func(fv: FamilyVariant) -> Optional[FamilyVariant]:
+            if fv is None or fv.fvuid in seen:
+                return None
+            seen.add(fv.fvuid)
+            return fv
+
+        return filter_func
+
+    @classmethod
+    def family_variant_filter_function(  # noqa: C901
+        cls, **kwargs: Any
+    ) -> Callable[[FamilyVariant], Optional[FamilyVariant]]:
         """Return a function that filters variants."""
         if kwargs.get("roles") is not None:
             parsed = kwargs["roles"]
@@ -440,16 +517,20 @@ class RawFamilyVariants(abc.ABC):
         return_unknown = kwargs.get("return_unknown", False)
         seen = kwargs.get("seen", set())
 
-        def filter_func(v):
+        def filter_func(v: FamilyVariant) -> Optional[FamilyVariant]:
             try:
                 if v is None or v.fvuid in seen:
                     return None
                 seen.add(v.fvuid)
 
                 if v.is_unknown() and not return_unknown:
+                    logger.error(
+                        "unknown variants selected but not requested %s", v)
                     return None
 
                 if not cls.filter_family_variant(v, **kwargs):
+                    logger.error(
+                        "family variants selected but not requested %s", v)
                     return None
 
                 alleles = v.alleles
@@ -457,11 +538,13 @@ class RawFamilyVariants(abc.ABC):
                 for allele in alleles:
                     if allele.allele_index == 0 and not return_reference:
                         continue
-                    if cls.filter_allele(allele, **kwargs):
+                    fa = cast(FamilyAllele, allele)
+                    if cls.filter_allele(fa, **kwargs):
                         alleles_matched.append(allele.allele_index)
                 if alleles_matched:
                     v.set_matched_alleles(alleles_matched)
                     return v
+                logger.error("no matched alleles for family variant: %s", v)
                 return None
             except Exception as ex:  # pylint: disable=broad-except
                 logger.warning("unexpected error: %s", ex, exc_info=True)
@@ -471,28 +554,29 @@ class RawFamilyVariants(abc.ABC):
 
     @staticmethod
     def build_person_set_collection_query(
-            person_set_collection, person_set_collection_query):
+            person_set_collection: PersonSetCollection,
+            person_set_collection_query: Tuple[str, List[str]]) -> None:
         # pylint: disable=unused-argument
         return None
 
     def build_family_variants_query_runner(
-            self,
-            regions=None,
-            genes=None,
-            effect_types=None,
-            family_ids=None,
-            person_ids=None,
-            inheritance=None,
-            roles=None,
-            sexes=None,
-            variant_type=None,
-            real_attr_filter=None,
-            ultra_rare=None,
-            frequency_filter=None,
-            return_reference=None,
-            return_unknown=None,
-            limit=None,
-            pedigree_fields=None):
+        self,
+        regions: Optional[list[Region]] = None,
+        genes: Optional[list[str]] = None,
+        effect_types: Optional[list[str]] = None,
+        family_ids: Optional[Sequence[str]] = None,
+        person_ids: Optional[Sequence[str]] = None,
+        inheritance: Optional[Sequence[str]] = None,
+        roles: Optional[str] = None,
+        sexes: Optional[str] = None,
+        variant_type: Optional[str] = None,
+        real_attr_filter: Optional[RealAttrFilterType] = None,
+        ultra_rare: Optional[bool] = None,
+        frequency_filter: Optional[RealAttrFilterType] = None,
+        return_reference: Optional[bool] = None,
+        return_unknown: Optional[bool] = None,
+        **kwargs: Any
+    ) -> RawVariantsQueryRunner:
         # pylint: disable=too-many-arguments,unused-argument
         """Return a query runner for the family variants."""
         filter_func = RawFamilyVariants.family_variant_filter_function(
@@ -509,8 +593,7 @@ class RawFamilyVariants(abc.ABC):
             ultra_rare=ultra_rare,
             frequency_filter=frequency_filter,
             return_reference=return_reference,
-            return_unknown=return_unknown,
-            limit=limit)
+            return_unknown=return_unknown)
 
         runner = RawVariantsQueryRunner(
             variants_iterator=self.family_variants_iterator(),
@@ -518,7 +601,7 @@ class RawFamilyVariants(abc.ABC):
 
         return runner
 
-    def query_variants(self, **kwargs):
+    def query_variants(self, **kwargs: Any) -> Iterator[FamilyVariant]:
         """Query family variants and yield the results."""
         runner = self.build_family_variants_query_runner(**kwargs)
 
@@ -546,17 +629,23 @@ class RawFamilyVariants(abc.ABC):
 class RawMemoryVariants(RawFamilyVariants):
     """Store variants in memory."""
 
-    def __init__(self, loaders, families):
+    def __init__(
+        self, loaders: List[VariantsGenotypesLoader],
+        families: FamiliesData
+    ) -> None:
         super().__init__(families)
         self.variants_loaders = loaders
         if len(loaders) > 0:
-            self._full_variants = None
+            self._full_variants: Optional[list[
+                tuple[SummaryVariant, list[FamilyVariant]]]] = None
         else:
             logger.debug("no variants to load")
             self._full_variants = []
 
     @property
-    def full_variants(self):
+    def full_variants(
+        self
+    ) -> List[Tuple[SummaryVariant, List[FamilyVariant]]]:
         """Return the full list of variants."""
         if self._full_variants is None:
             start = time.time()
@@ -569,6 +658,8 @@ class RawMemoryVariants(RawFamilyVariants):
             logger.debug("variants loaded in in %.2f sec", elapsed)
         return self._full_variants
 
-    def full_variants_iterator(self):
+    def full_variants_iterator(
+        self
+    ) -> Iterator[Tuple[SummaryVariant, List[FamilyVariant]]]:
         for sv, fvs in self.full_variants:
             yield sv, fvs

@@ -76,11 +76,13 @@ setuptools.setup(
     [dae.genotype_storage.factories]
     inmemory=dae.inmemory_storage.inmemory_genotype_storage:InmemoryGenotypeStorage
     duckdb=dae.duckdb_storage.duckdb_genotype_storage:DuckDbGenotypeStorage
+    duckdb2=dae.duckdb_storage.duckdb_genotype_storage:DuckDbGenotypeStorage
 
     [dae.import_tools.storages]
     schema2=dae.schema2_storage.schema2_import_storage:Schema2ImportStorage
     inmemory=dae.inmemory_storage.inmemory_import_storage:InmemoryImportStorage
     duckdb=dae.duckdb_storage.duckdb_import_storage:DuckDbImportStorage
+    duckdb2=dae.duckdb_storage.duckdb_import_storage:DuckDbImportStorage
 
     [console_scripts]
     demo_graphs_cli=dae.task_graph.demo_graphs_cli:main

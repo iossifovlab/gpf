@@ -15,6 +15,26 @@ pytest_plugins = ["dae_conftests.dae_conftests"]
 
 def default_genotype_storage_configs(root_path: pathlib.Path) -> list[dict]:
     return [
+        # DuckDb2 Storage
+        {
+            "id": "duckdb2",
+            "storage_type": "duckdb2",
+            "db": "duckdb_storage/dev_storage.db",
+            "base_dir": str(root_path)
+        },
+        # DuckDb2 Parquet Storage
+        {
+            "id": "duckdb2_parquet",
+            "storage_type": "duckdb2",
+            "studies_dir": "duckdb_parquet",
+            "base_dir": str(root_path)
+        },
+        # DuckDb2 Parquet Inplace Storage
+        {
+            "id": "duckdb2_inplace",
+            "storage_type": "duckdb2",
+        },
+
         # DuckDb Storage
         {
             "id": "duckdb",
@@ -22,7 +42,6 @@ def default_genotype_storage_configs(root_path: pathlib.Path) -> list[dict]:
             "db": "duckdb_storage/dev_storage.db",
             "base_dir": str(root_path)
         },
-
         # DuckDb Parquet Storage
         {
             "id": "duckdb_parquet",
@@ -30,7 +49,6 @@ def default_genotype_storage_configs(root_path: pathlib.Path) -> list[dict]:
             "studies_dir": "duckdb_parquet",
             "base_dir": str(root_path)
         },
-
         # DuckDb Parquet Inplace Storage
         {
             "id": "duckdb_inplace",
@@ -304,7 +322,7 @@ def _select_storages_by_type(
     storages = {}
     for storage_id in GENOTYPE_STORAGE_REGISTRY.get_all_genotype_storage_ids():
         storage = GENOTYPE_STORAGE_REGISTRY.get_genotype_storage(storage_id)
-        if storage.get_storage_type() in storage_types:
+        if storage.storage_type in storage_types:
             storages[storage_id] = storage
     return storages
 
@@ -433,13 +451,16 @@ def _generate_genotype_storage_fixtures(metafunc: pytest.Metafunc) -> None:
         marked_types = set()
         for mark in getattr(metafunc.function, "pytestmark", []):
             if mark.name.startswith("gs_"):
-                marked_types.add(mark.name[3:])
+                storage_type = mark.name[3:]
+                marked_types.add(storage_type)
+                if storage_type == "duckdb":
+                    marked_types.add("duckdb2")
         marked_types = marked_types & {
-            "impala", "impala2", "duckdb", "inmemory", "gcp"}
+            "impala", "impala2", "duckdb", "duckdb2", "inmemory", "gcp"}
         if marked_types:
             result = {}
             for storage_id, storage in GENOTYPE_STORAGES.items():
-                if storage.get_storage_type() in marked_types:
+                if storage.storage_type in marked_types:
                     result[storage_id] = storage
 
             storages = result

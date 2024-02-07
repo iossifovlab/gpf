@@ -246,7 +246,7 @@ class PartitionDescriptor:
             return "0"
         if int(allele_count) <= 1:  # Ultra rare
             return "1"
-        if allele_freq < self.rare_boundary:  # Rare
+        if allele_freq <= self.rare_boundary:  # Rare
             return "2"
 
         return "3"

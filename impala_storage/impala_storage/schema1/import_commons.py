@@ -509,7 +509,7 @@ class BatchImporter:
             raise ValueError(
                 f"genotype storage {genotype_storage_id} not found"
             )
-        if genotype_storage.get_storage_type() != "impala":
+        if genotype_storage.storage_type != "impala":
             raise ValueError(
                 f"genotype storage {genotype_storage_id} is not "
                 f"Impala Genotype Storage"

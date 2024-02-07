@@ -66,6 +66,13 @@ def add_missing_parquet_fields(
     return ped_df, pps
 
 
+def collect_pedigree_parquet_schema(ped_df: pd.DataFrame) -> pa.Schema:
+    """Build the pedigree parquet schema."""
+    pps = pedigree_parquet_schema()
+    _ped_df, pps = add_missing_parquet_fields(pps, ped_df)
+    return pps
+
+
 def save_ped_df_to_parquet(
         ped_df: pd.DataFrame, filename: str,
         filesystem: Optional[fsspec.AbstractFileSystem] = None) -> None:
@@ -154,6 +161,20 @@ class ParquetWriter:
         partition_descriptor: Optional[PartitionDescriptor] = None
     ) -> None:
         """Save families data into a parquet file."""
+        ParquetWriter.fill_family_bins(families, partition_descriptor)
+
+        dirname = os.path.dirname(pedigree_filename)
+        if dirname:
+            os.makedirs(dirname, exist_ok=True)
+
+        save_ped_df_to_parquet(families.ped_df, pedigree_filename)
+
+    @staticmethod
+    def fill_family_bins(
+        families: FamiliesData,
+        partition_descriptor: Optional[PartitionDescriptor] = None
+    ) -> None:
+        """Save families data into a parquet file."""
         if partition_descriptor is not None \
                 and partition_descriptor.has_family_bins():
             for family in families.values():
@@ -162,12 +183,6 @@ class ParquetWriter:
                 for person in family.persons.values():
                     person.set_attr("family_bin", family_bin)
             families._ped_df = None  # pylint: disable=protected-access
-
-        dirname = os.path.dirname(pedigree_filename)
-        if dirname:
-            os.makedirs(dirname, exist_ok=True)
-
-        save_ped_df_to_parquet(families.ped_df, pedigree_filename)
 
     @staticmethod
     def variants_to_parquet(

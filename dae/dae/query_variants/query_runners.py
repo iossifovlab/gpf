@@ -116,7 +116,7 @@ class QueryResult:
     The result of the queries is enqueued on result_queue
     """
 
-    def __init__(self, runners: list[QueryRunner], limit: int = -1):
+    def __init__(self, runners: list[QueryRunner], limit: Optional[int] = -1):
         self.result_queue: queue.Queue = queue.Queue(maxsize=1_000)
 
         if limit is None:

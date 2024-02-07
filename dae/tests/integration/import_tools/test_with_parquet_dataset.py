@@ -61,7 +61,7 @@ def vcf_project_to_parquet(
 
     project_config_overwrite = {
         "destination": {
-            "storage_type": genotype_storage.get_storage_type()
+            "storage_type": genotype_storage.storage_type
         }
     }
     project = vcf_import(

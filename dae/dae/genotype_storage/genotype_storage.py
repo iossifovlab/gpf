@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import abc
 import logging
-from typing import Dict, Any
+from typing import Any, cast
 
 from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.genomic_resources.gene_models import GeneModels
@@ -14,13 +14,14 @@ logger = logging.getLogger(__file__)
 class GenotypeStorage(abc.ABC):
     """Base class for genotype storages."""
 
-    def __init__(self, storage_config: Dict[str, Any]):
+    def __init__(self, storage_config: dict[str, Any]):
         self.storage_config = \
             self.validate_and_normalize_config(storage_config)
         self.storage_id = self.storage_config["id"]
+        self.storage_type = cast(str, self.storage_config["storage_type"])
 
     @classmethod
-    def validate_and_normalize_config(cls, config: Dict) -> Dict:
+    def validate_and_normalize_config(cls, config: dict) -> dict:
         """Normalize and validate the genotype storage configuration.
 
         When validation passes returns the normalized and validated
@@ -42,15 +43,15 @@ class GenotypeStorage(abc.ABC):
             raise ValueError(
                 f"genotype storage without type; 'storage_type' is required: "
                 f"{config}")
-        if config["storage_type"] != cls.get_storage_type():
+        if config["storage_type"] not in cls.get_storage_types():
             raise ValueError(
                 f"storage configuration for <{config['storage_type']}> passed "
-                f"to genotype storage class type <{cls.get_storage_type()}>")
+                f"to genotype storage class type <{cls.get_storage_types()}>")
         return config
 
     @classmethod
     @abc.abstractmethod
-    def get_storage_type(cls) -> str:
+    def get_storage_types(cls) -> set[str]:
         """Return the genotype storage type."""
 
     @abc.abstractmethod

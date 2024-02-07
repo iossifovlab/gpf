@@ -247,6 +247,16 @@ EOT
           > /wd/results/mypy_dae_report || true'
 
     build_run_container bash -c '
+      cd /wd/dae;
+      /opt/conda/bin/conda run --no-capture-output -n gpf mypy tests \
+          --exclude dae/docs/ \
+          --exclude dae/docs/conf.py \
+          --pretty \
+          --show-error-context \
+          --no-incremental \
+          > /wd/results/mypy_dae_tests_report || true'
+
+    build_run_container bash -c '
       cd /wd/wdae;
       /opt/conda/bin/conda run --no-capture-output -n gpf mypy wdae \
           --exclude wdae/docs/ \
@@ -265,7 +275,7 @@ EOT
           --no-incremental \
           > /wd/results/mypy_impala_report || true'
 
-      build_run_local cp ./results/mypy_dae_report ./results/mypy_wdae_report ./results/mypy_impala_report ./test-results/
+      build_run_local cp ./results/mypy_dae_report ./results/mypy_dae_tests_report ./results/mypy_wdae_report ./results/mypy_impala_report ./test-results/
 
   }
 

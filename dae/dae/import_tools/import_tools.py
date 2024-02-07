@@ -21,7 +21,7 @@ from dae.variants_loaders.cnv.loader import CNVLoader
 from dae.variants_loaders.dae.loader import DaeTransmittedLoader, DenovoLoader
 from dae.variants_loaders.vcf.loader import VcfLoader
 from dae.variants_loaders.raw.loader import AnnotationPipelineDecorator, \
-    VariantsLoader
+    VariantsGenotypesLoader
 from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.genotype_storage.genotype_storage_registry import \
@@ -220,7 +220,7 @@ class ImportProject():
         self,
         bucket: Optional[Bucket] = None, loader_type: Optional[str] = None,
         reference_genome: Optional[ReferenceGenome] = None
-    ) -> VariantsLoader:
+    ) -> VariantsGenotypesLoader:
         """Get the appropriate variant loader for the specified bucket."""
         if bucket is None and loader_type is None:
             raise ValueError("loader_type or bucket is required")
@@ -268,7 +268,7 @@ class ImportProject():
     def _get_variant_loader(
         self, loader_type: str,
         reference_genome: Optional[ReferenceGenome] = None
-    ) -> VariantsLoader:
+    ) -> VariantsGenotypesLoader:
         assert loader_type in self.import_config["input"], \
             f"No input config for loader {loader_type}"
         if reference_genome is None:
@@ -281,7 +281,7 @@ class ImportProject():
             "cnv": CNVLoader,
             "dae": DaeTransmittedLoader,
         }[loader_type]
-        loader: VariantsLoader = loader_cls(
+        loader: VariantsGenotypesLoader = loader_cls(
             self.get_pedigree(),
             variants_filenames,
             params=variants_params,
@@ -421,14 +421,16 @@ class ImportProject():
         return cast(int, res)
 
     def build_variants_loader_pipeline(
-            self, variants_loader: VariantsLoader,
-            gpf_instance: GPFInstance) -> VariantsLoader:
+            self, variants_loader: VariantsGenotypesLoader,
+            gpf_instance: GPFInstance) -> VariantsGenotypesLoader:
         """Create an annotation pipeline around variants_loader."""
         annotation_pipeline = self._build_annotation_pipeline(gpf_instance)
         if annotation_pipeline is not None:
-            variants_loader = AnnotationPipelineDecorator(
-                variants_loader, annotation_pipeline
-            )
+            variants_loader = cast(
+                VariantsGenotypesLoader,
+                AnnotationPipelineDecorator(
+                    variants_loader, annotation_pipeline
+                ))
         return variants_loader
 
     def _storage_type(self) -> str:
@@ -437,7 +439,7 @@ class ImportProject():
             gpf_instance = self.get_gpf_instance()
             storage: GenotypeStorage = gpf_instance\
                 .genotype_storages.get_default_genotype_storage()
-            return storage.get_storage_type()
+            return storage.storage_type
 
         destination = self.import_config["destination"]
         if "storage_id" in destination:
@@ -446,7 +448,7 @@ class ImportProject():
             storage = gpf_instance\
                 .genotype_storages\
                 .get_genotype_storage(storage_id)
-            return storage.get_storage_type()
+            return storage.storage_type
 
         return cast(str, destination["storage_type"])
 
@@ -454,9 +456,9 @@ class ImportProject():
     def _get_default_bucket_index(loader_type: str) -> int:
         return {
             "denovo": 0,
-            "vcf": 1_000_000,
-            "dae": 2_000_000,
-            "cnv": 3_000_000
+            "vcf": 100_000,
+            "dae": 200_000,
+            "cnv": 300_000
         }[loader_type]
 
     @staticmethod
@@ -525,6 +527,7 @@ class ImportProject():
         default_bucket_index = self._get_default_bucket_index(loader_type)
         index = 0
         for region_bin, regions in variants_targets.items():
+            assert index <= 100_000, f"Too many buckets {loader_type}"
             bucket_index = default_bucket_index + index
             yield Bucket(loader_type, region_bin, regions, bucket_index)
             index += 1
@@ -552,7 +555,7 @@ class ImportProject():
 
     @staticmethod
     def _check_chrom_prefix(
-            loader: VariantsLoader,
+            loader: VariantsGenotypesLoader,
             variants_params: dict[str, Any]) -> None:
         prefix = variants_params.get("add_chrom_prefix")
         if prefix:

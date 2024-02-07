@@ -40,7 +40,7 @@ def test_internal_genotype_storage(
     internal_storage = gpf.genotype_storages.get_genotype_storage("internal")
 
     # Then
-    assert internal_storage.get_storage_type() == "inmemory"
+    assert internal_storage.storage_type == "inmemory"
     assert internal_storage.storage_config["dir"] == \
         str(root_path / "gpf_instance" / "internal_storage")
     assert gpf.genotype_storages.get_default_genotype_storage() == \
@@ -91,7 +91,7 @@ def test_internal_genotype_storage_with_other_storages(
     internal_storage = gpf.genotype_storages.get_genotype_storage("internal")
 
     # Then
-    assert internal_storage.get_storage_type() == "inmemory"
+    assert internal_storage.storage_type == "inmemory"
     assert internal_storage.storage_config["dir"] == \
         str(root_path / "gpf_instance" / "internal_storage")
     assert gpf.genotype_storages.get_default_genotype_storage() != \
