@@ -1779,3 +1779,113 @@ JOIN family AS fa
                              │          (0.02s)          │
                              └───────────────────────────┘
 ```
+
+
+```sql
+WITH summary AS (
+  SELECT
+    *
+  FROM w1202s766e611_liftover_summary AS sa
+  WHERE
+    sa.allele_index > 0
+), family AS (
+  SELECT
+    *
+  FROM w1202s766e611_liftover_family AS fa
+  WHERE  fa.family_id IN ('13560')
+    AND fa.allele_index > 0
+)
+SELECT
+  fa.bucket_index,
+  fa.summary_index,
+  fa.family_index,
+  sa.allele_index,
+  fa.family_id,
+  fa.family_variant_data
+FROM summary AS sa
+JOIN family AS fa
+  ON fa.sj_index = sa.sj_index
+LIMIT 10;
+```
+
+```sql
+WITH summary AS (
+  SELECT
+    *
+  FROM w1202s766e611_liftover_summary AS sa
+  WHERE                            
+    (    
+      (  
+        (                           
+          sa.variant_type & 1
+        ) <> 0
+      ) OR (                         
+        ( 
+          sa.variant_type & 4    
+        ) <> 0             
+      )
+    ) 
+    OR (          
+      (            
+        sa.variant_type & 2
+      ) <> 0      
+    )                     
+    AND sa.allele_index > 0
+), family AS (    
+  SELECT         
+    *                         
+  FROM w1202s766e611_liftover_family AS fa
+  WHERE                                                                                                
+    ((
+      (
+        (
+          fa.allele_in_roles & 128
+        ) <> 0
+      )
+      AND (
+        (
+          NOT (
+            (
+              fa.allele_in_roles & 256
+            ) <> 0
+          )
+        )
+      )
+    )
+    OR (
+      (
+        (
+          fa.allele_in_roles & 128
+        ) <> 0
+      )
+      AND (
+        (
+          fa.allele_in_roles & 256
+        ) <> 0
+      )
+    ))
+    AND (
+      8 & fa.inheritance_in_members
+    ) = 0
+    AND (
+      32 & fa.inheritance_in_members
+    ) = 0
+    AND (
+      150 & fa.inheritance_in_members
+    ) <> 0
+    AND fa.family_id IN ('13560')
+    AND fa.allele_index > 0
+)
+SELECT
+  fa.bucket_index,
+  fa.summary_index,
+  fa.family_index,
+  sa.allele_index,
+  fa.family_id,
+  sa.summary_variant_data,
+  fa.family_variant_data
+FROM summary AS sa
+JOIN family AS fa
+  ON fa.sj_index = sa.sj_index
+LIMIT 10
+```

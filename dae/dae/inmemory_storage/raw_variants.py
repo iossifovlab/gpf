@@ -327,8 +327,8 @@ class RawFamilyVariants(abc.ABC):
         if kwargs.get("regions") is not None:
             if not cls.filter_regions(v, kwargs["regions"]):
                 return False
-        if "family_ids" in kwargs and kwargs["family_ids"] is not None:
-            family_ids = kwargs["family_ids"]
+        family_ids = kwargs.get("family_ids")
+        if family_ids is not None:
             if v.family_id not in family_ids:
                 return False
         if "filter" in kwargs:

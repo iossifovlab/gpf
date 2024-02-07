@@ -1,6 +1,6 @@
 import logging
 import textwrap
-from typing import Optional, Any, Sequence, cast, Union
+from typing import Optional, Any, Sequence, cast, Union, Iterable
 from dataclasses import dataclass
 
 import sqlglot
@@ -200,6 +200,8 @@ class SqlQueryBuilder:
             )
         if heuristics is not None:
             for heuristic, bins in heuristics.items():
+                if heuristic == "family_bin":
+                    continue
                 if len(bins) == 1:
                     where_parts.append(f"sa.{heuristic} = {bins[0]}")
                 else:
@@ -509,6 +511,7 @@ class SqlQueryBuilder:
             roles=roles,
             ultra_rare=ultra_rare,
             frequency_filter=frequency_filter,
+            family_ids=family_ids,
         )
         summary_subclause = self._build_summary_subclause(
             regions=regions,
@@ -702,7 +705,8 @@ class SqlQueryBuilder:
             return cast(bool, res[0][0])
 
     def _build_roles_query_where(self, roles_query: str) -> str:
-        return self._build_roles_query(roles_query, "fa.allele_in_roles")
+        subquery = self._build_roles_query(roles_query, "fa.allele_in_roles")
+        return f"({subquery})"
 
     def _build_sexes_query(self, sexes_query: str, attr: str) -> str:
         parsed = sex_query.transform_query_string_to_tree(sexes_query)
@@ -720,7 +724,8 @@ class SqlQueryBuilder:
             return cast(bool, res[0][0])
 
     def _build_sexes_query_where(self, sexes_query: str) -> str:
-        return self._build_sexes_query(sexes_query, "fa.allele_in_sexes")
+        subquery = self._build_sexes_query(sexes_query, "fa.allele_in_sexes")
+        return f"({subquery})"
 
     def _build_variant_types_query(
         self, variant_types_query: str, attr: str
@@ -745,8 +750,9 @@ class SqlQueryBuilder:
     def _build_variant_types_where(
         self, variant_types_query: str
     ) -> str:
-        return self._build_variant_types_query(
+        subquery = self._build_variant_types_query(
             variant_types_query, "sa.variant_type")
+        return f"({subquery})"
 
     def _build_inheritance_query(
         self, inheritance_query: Sequence[str], attr: str
@@ -775,8 +781,9 @@ class SqlQueryBuilder:
     def _build_inheritance_query_where(
         self, inheritance_query: Sequence[str]
     ) -> str:
-        return self._build_inheritance_query(
+        subquery = self._build_inheritance_query(
             inheritance_query, "fa.inheritance_in_members")
+        return f"({subquery})"
 
     def _check_roles_denovo_only(self, roles_query: str) -> bool:
         return self._check_roles_query_value(
@@ -817,13 +824,6 @@ class SqlQueryBuilder:
         assert "frequency_bin" in self.summary_schema
         assert "frequency_bin" in self.family_schema
 
-        print(100 * "=")
-        print("inheritance:", inheritance)
-        print("roles:", roles)
-        print("ultra_rare:", ultra_rare)
-        print("frequency_filter:", frequency_filter)
-        print(100 * "=")
-
         if roles and self._check_roles_denovo_only(roles):
             return ["0"]
         if inheritance and self._check_inheritance_denovo_only(inheritance):
@@ -863,17 +863,19 @@ class SqlQueryBuilder:
         roles: Optional[str] = None,
         ultra_rare: Optional[bool] = None,
         frequency_filter: Optional[RealAttrFilterType] = None,
+        family_ids: Optional[Iterable[str]] = None,
     ) -> dict[str, list[str]]:
         heuristics = {}
         if genes is not None:
             regions = self._build_gene_regions_heuristic(genes, regions)
-
         region_bins = self._calc_region_bins(regions)
         if region_bins:
             heuristics["region_bin"] = region_bins
+
         coding_bins = self._calc_coding_bins(effect_types)
         if coding_bins:
             heuristics["coding_bin"] = coding_bins
+
         frequency_bins = self._calc_frequency_bins(
             inheritance=inheritance,
             roles=roles,
@@ -883,4 +885,31 @@ class SqlQueryBuilder:
         if frequency_bins:
             heuristics["frequency_bin"] = frequency_bins
 
+        family_bins = self._calc_family_bins(family_ids)
+        if family_bins:
+            heuristics["family_bin"] = family_bins
+
         return heuristics
+
+    def _calc_family_bins(
+        self,
+        family_ids: Optional[Iterable[str]]
+    ) -> list[str]:
+        if self.partition_descriptor is None:
+            return []
+        if not self.partition_descriptor.has_family_bins():
+            return []
+        if "family_bin" not in self.family_schema:
+            return []
+        if family_ids is None:
+            return []
+
+        assert family_ids is not None
+        family_ids = set(family_ids)
+
+        family_bins = []
+        for family_id in family_ids:
+            family_bins.append(
+                str(self.partition_descriptor.make_family_bin(family_id))
+            )
+        return family_bins
