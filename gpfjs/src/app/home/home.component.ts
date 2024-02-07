@@ -144,4 +144,8 @@ export class HomeComponent implements OnInit {
         : acc
       , [])
   }
+
+  public writeDescription(markdown: string): void {
+    // to do
+  }
 }

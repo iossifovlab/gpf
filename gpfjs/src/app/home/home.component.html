@@ -1,4 +1,5 @@
 <div *ngIf="content && loadingFinished" id="home-wrapper">
+  <gpf-markdown-editor (writeEvent)="writeDescription($event)"></gpf-markdown-editor>
   <table>
     <thead>
       <tr>
