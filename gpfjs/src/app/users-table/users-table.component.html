@@ -49,7 +49,7 @@
         </div>
 
         <div class="grid-cell list-cell" [attr.id]="user.email + '-groups-cell'">
-          <div [attr.id]="user.email + '-groups-list'">
+          <div class="item-list" [attr.id]="user.email + '-groups-list'">
             <div class="item-wrapper" *ngFor="let group of user.groups" [attr.id]="group + '-list-item'">
               <span class="item" [title]="group">{{ group }}</span>
               <gpf-confirm-button
@@ -69,7 +69,7 @@
         </div>
 
         <div class="grid-cell list-cell" [attr.id]="user.email + '-datasets-cell'">
-          <div [attr.id]="user.email + '-datasets-list'">
+          <div class="item-list" [attr.id]="user.email + '-datasets-list'">
             <div
               class="item"
               [title]="dataset.datasetName"

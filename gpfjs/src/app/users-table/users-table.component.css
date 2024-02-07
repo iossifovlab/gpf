@@ -41,6 +41,11 @@
   justify-content: center;
 }
 
+.item-list {
+  max-height: 18rem;
+  overflow-y: auto;
+}
+
 .list-cell {
   justify-content: space-between;
 }
