@@ -1,0 +1,49 @@
+<div class="container">
+  <div id="edit-container" *ngIf="!editMode">
+    <div *ngIf="!initialMarkdown" id="empty-description">
+      <span>Empty description. Write a description using the pencil button to the right.</span>
+    </div>
+    <div id="edit-description">
+      <markdown id="markdown-id" [data]="initialMarkdown || ''"></markdown>
+      <div *ngIf="!editMode && editable">
+        <div style="position: relative">
+          <span
+            *ngIf="('' | userInfo)?.isAdministrator"
+            (click)="editMode = true"
+            id="edit-icon"
+            class="material-symbols-outlined"
+            title="Edit"
+            >edit</span
+          >
+        </div>
+      </div>
+
+      <div *ngIf="editMode">
+        <div class="editor">
+          <angular-markdown-editor textareaId="editor1" [options]="editorOptions" [(ngModel)]="markdown">
+          </angular-markdown-editor>
+          <button (click)="save()" id="save-btn" class="btn btn-success" title="Save (ctrl+enter)">Save</button>
+          <button (click)="close()" id="close-btn" class="btn" title="Close">Close</button>
+        </div>
+      </div>
+
+      <hr *ngIf="!initialMarkdown && !editMode" style="margin-top: 5px" />
+    </div>
+  </div>
+
+  <div *ngIf="editMode">
+    <div class="editor">
+      <angular-markdown-editor
+        textareaId="editor1"
+        [options]="editorOptions"
+        [(ngModel)]="markdown"
+        (onChange)="togglePreview()"
+        (onShow)="disablePreviewOnLoad(!initialMarkdown)">
+      </angular-markdown-editor>
+      <button (click)="save()" id="save-button" class="btn btn-success" title="Save (ctrl+enter)">Save</button>
+      <button (click)="close()" id="close-button" class="btn" title="Close">Close</button>
+    </div>
+  </div>
+
+  <hr *ngIf="!initialMarkdown && !editMode" style="margin-top: 5px" />
+</div>

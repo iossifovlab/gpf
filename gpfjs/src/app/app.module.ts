@@ -183,6 +183,7 @@ import { SearchableSelectTemplateDirective } from './searchable-select/searchabl
 import { HelperModalComponent } from './helper-modal/helper-modal.component';
 import { HomeComponent } from './home/home.component';
 import { AboutComponent } from './about/about.component';
+import { MarkdownEditorComponent } from './markdown-editor/markdown-editor.component';
 
 const appRoutes: Routes = [
   {
@@ -401,6 +402,7 @@ const appRoutes: Routes = [
     HelperModalComponent,
     HomeComponent,
     AboutComponent,
+    MarkdownEditorComponent,
   ],
   imports: [
     BrowserModule,
