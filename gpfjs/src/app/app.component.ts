@@ -15,6 +15,7 @@ export class AppComponent implements OnInit {
   public title = 'GPF: Genotypes and Phenotypes in Families';
   public imgPathPrefix = environment.imgPathPrefix;
   public geneProfilesConfig: GeneProfilesSingleViewConfig;
+  public currentRoute = '';
   private sessionTimeoutInSeconds = 7 * 24 * 60 * 60; // 1 week
 
   @HostListener('window:keydown.home')
@@ -31,8 +32,7 @@ export class AppComponent implements OnInit {
     private geneProfilesService: GeneProfilesService,
     private bnIdle: BnNgIdleService,
     private usersService: UsersService,
-  ) {
-  }
+  ) { }
 
   public ngOnInit(): void {
     this.bnIdle.startWatching(this.sessionTimeoutInSeconds)
@@ -44,5 +44,11 @@ export class AppComponent implements OnInit {
     this.geneProfilesService.getConfig().subscribe(res => {
       this.geneProfilesConfig = res;
     });
+    // First route depends on which tool the user navigates
+    this.currentRoute = window.location.pathname.split('/')[1];
+    // If the initial url is empty set route to home
+    if (!this.currentRoute) {
+      this.currentRoute = 'home';
+    }
   }
 }
