@@ -1493,3 +1493,289 @@ join family as fa
 on (sa.bucket_index = fa.bucket_index and sa.summary_index = fa.summary_index and sa.allele_index = fa.allele_index)    
 limit 1000;
 ```
+
+```sql
+WITH summary AS (
+  SELECT
+    *
+  FROM w1202s766e611_liftover_summary AS sa
+  WHERE
+    sa.allele_index > 0
+), family AS (
+  SELECT
+    *
+  FROM w1202s766e611_liftover_family AS fa
+  WHERE  fa.family_id IN ('13560')
+    AND fa.allele_index > 0
+)
+SELECT
+  fa.bucket_index,
+  fa.summary_index,
+  fa.family_index,
+  sa.allele_index,
+FROM summary AS sa
+JOIN family AS fa
+  ON fa.sj_index = sa.sj_index
+LIMIT 10010
+```
+
+```sql
+EXPLAIN ANALYZE WITH summary AS (
+  SELECT
+    *
+  FROM w1202s766e611_liftover_summary AS sa
+  WHERE
+    sa.allele_index > 0
+), family AS (
+  SELECT
+    *
+  FROM w1202s766e611_liftover_family AS fa
+  WHERE  fa.family_id IN ('13560')
+    AND fa.allele_index > 0
+)
+SELECT
+  fa.bucket_index,
+  fa.summary_index,
+  fa.family_index,
+  sa.allele_index,
+FROM summary AS sa
+JOIN family AS fa
+  ON fa.sj_index = sa.sj_index
+
+```
+
+```sql
+EXPLAIN ANALYZE WITH summary AS (
+  SELECT
+    *
+  FROM w1202s766e611_liftover_summary AS sa
+  WHERE
+    sa.allele_index > 0
+), family AS (
+  SELECT
+    *
+  FROM w1202s766e611_liftover_family AS fa
+  WHERE  fa.family_id IN ('13560')
+    AND fa.allele_index > 0
+)
+SELECT
+  fa.bucket_index,
+  fa.summary_index,
+  fa.family_index,
+  sa.allele_index,
+FROM summary AS sa
+JOIN family AS fa
+  ON (
+    fa.summary_index = sa.summary_index
+    AND fa.bucket_index = sa.bucket_index
+    AND fa.allele_index = sa.allele_index
+  )
+```
+
+
+```sql
+EXPLAIN ANALYZE WITH summary AS (
+  SELECT
+    *
+  FROM w1202s766e611_liftover_summary AS sa
+  WHERE
+    sa.allele_index > 0
+), family AS (
+  SELECT
+    *
+  FROM w1202s766e611_liftover_family AS fa
+  WHERE fa.allele_index > 0
+)
+SELECT
+  fa.bucket_index,
+  fa.summary_index,
+  fa.family_index,
+  sa.allele_index,
+FROM summary AS sa
+JOIN family AS fa
+  ON fa.sj_index = sa.sj_index
+
+```
+
+
+```
+┌─────────────────────────────────────┐
+│┌───────────────────────────────────┐│
+││        Total Time: 0.0871s        ││
+│└───────────────────────────────────┘│
+└─────────────────────────────────────┘
+┌───────────────────────────┐                             
+│      EXPLAIN_ANALYZE      │                             
+│   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │                             
+│             0             │                             
+│          (0.00s)          │                             
+└─────────────┬─────────────┘                                                          
+┌─────────────┴─────────────┐                             
+│         PROJECTION        │                             
+│   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │                             
+│        bucket_index       │                             
+│       summary_index       │                             
+│        family_index       │                             
+│        allele_index       │                             
+│   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │                             
+│          77392294         │                             
+│          (0.02s)          │                             
+└─────────────┬─────────────┘                                                          
+┌─────────────┴─────────────┐                             
+│         HASH_JOIN         │                             
+│   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │                             
+│           INNER           │                             
+│    sj_index = sj_index    │                             
+│   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   ├──────────────┐              
+│        EC: 3227439        │              │              
+│   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │              │              
+│          77392294         │              │              
+│          (1.53s)          │              │              
+└─────────────┬─────────────┘              │                                           
+┌─────────────┴─────────────┐┌─────────────┴─────────────┐
+│         SEQ_SCAN          ││           FILTER          │
+│   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   ││   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │
+│w1202s766e611_liftover_fami││        (sj_index >=       │
+│             ly            ││    2000000000000000001)   │
+│   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   ││   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │
+│        bucket_index       ││         EC: 565582        │
+│       summary_index       ││   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │
+│          sj_index         ││          1413957          │
+│        family_index       ││          (0.01s)          │
+│   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   ││                           │
+│        EC: 15478458       ││                           │
+│   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   ││                           │
+│          77392294         ││                           │
+│          (0.43s)          ││                           │
+└───────────────────────────┘└─────────────┬─────────────┘                             
+                             ┌─────────────┴─────────────┐
+                             │         SEQ_SCAN          │
+                             │   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │
+                             │w1202s766e611_liftover_summ│
+                             │            ary            │
+                             │   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │
+                             │        allele_index       │
+                             │          sj_index         │
+                             │   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │
+                             │Filters: allele_index>0 AND│
+                             │  allele_index IS NOT NULL │
+                             │   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │
+                             │         EC: 565582        │
+                             │   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │
+                             │          1413957          │
+                             │          (0.02s)          │
+                             └───────────────────────────┘
+```
+
+
+```sql
+EXPLAIN ANALYZE WITH summary AS (
+  SELECT
+    *
+  FROM w1202s766e611_liftover_summary AS sa
+  WHERE
+    sa.allele_index > 0
+), family AS (
+  SELECT
+    *
+  FROM w1202s766e611_liftover_family AS fa
+  WHERE fa.allele_index > 0
+)
+SELECT
+  fa.bucket_index,
+  fa.summary_index,
+  fa.family_index,
+  sa.allele_index,
+FROM summary AS sa
+JOIN family AS fa
+  ON (
+    fa.summary_index = sa.summary_index
+    AND fa.bucket_index = sa.bucket_index
+    AND fa.allele_index = sa.allele_index
+  )
+```
+
+
+```
+┌─────────────────────────────────────┐
+│┌───────────────────────────────────┐│
+││         Total Time: 0.102s        ││
+│└───────────────────────────────────┘│
+└─────────────────────────────────────┘
+┌───────────────────────────┐                             
+│      EXPLAIN_ANALYZE      │                             
+│   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │                             
+│             0             │                             
+│          (0.00s)          │                             
+└─────────────┬─────────────┘                                                          
+┌─────────────┴─────────────┐                             
+│         PROJECTION        │                             
+│   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │                             
+│        bucket_index       │                             
+│       summary_index       │                             
+│        family_index       │                             
+│        allele_index       │                             
+│   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │                             
+│          77392294         │                             
+│          (0.02s)          │                             
+└─────────────┬─────────────┘                                                          
+┌─────────────┴─────────────┐                             
+│         HASH_JOIN         │                             
+│   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │                             
+│           INNER           │                             
+│bucket_index = bucket_index│                             
+│      summary_index =      │                             
+│        summary_index      │                             
+│allele_index = allele_index├──────────────┐              
+│   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │              │              
+│        EC: 60341447       │              │              
+│   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │              │              
+│          77392294         │              │              
+│          (2.17s)          │              │              
+└─────────────┬─────────────┘              │                                           
+┌─────────────┴─────────────┐┌─────────────┴─────────────┐
+│         PROJECTION        ││         PROJECTION        │
+│   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   ││   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │
+│        bucket_index       ││        bucket_index       │
+│       summary_index       ││       summary_index       │
+│        allele_index       ││        allele_index       │
+│        family_index       ││   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │
+│   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   ││          1413957          │
+│          77392294         ││          (0.00s)          │
+│          (0.01s)          ││                           │
+└─────────────┬─────────────┘└─────────────┬─────────────┘                             
+┌─────────────┴─────────────┐┌─────────────┴─────────────┐
+│         SEQ_SCAN          ││           FILTER          │
+│   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   ││   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │
+│w1202s766e611_liftover_fami││    (allele_index >= 1)    │
+│             ly            ││   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │
+│   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   ││         EC: 565582        │
+│        allele_index       ││   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │
+│        bucket_index       ││          1413957          │
+│       summary_index       ││          (0.01s)          │
+│        family_index       ││                           │
+│   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   ││                           │
+│        EC: 15478458       ││                           │
+│   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   ││                           │
+│          77392294         ││                           │
+│          (0.28s)          ││                           │
+└───────────────────────────┘└─────────────┬─────────────┘                             
+                             ┌─────────────┴─────────────┐
+                             │         SEQ_SCAN          │
+                             │   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │
+                             │w1202s766e611_liftover_summ│
+                             │            ary            │
+                             │   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │
+                             │        allele_index       │
+                             │        bucket_index       │
+                             │       summary_index       │
+                             │   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │
+                             │Filters: allele_index>0 AND│
+                             │  allele_index IS NOT NULL │
+                             │   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │
+                             │         EC: 565582        │
+                             │   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │
+                             │          1413957          │
+                             │          (0.02s)          │
+                             └───────────────────────────┘
+```
