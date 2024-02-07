@@ -259,9 +259,8 @@ class DuckDbGenotypeStorage(GenotypeStorage):
 
             query = f"CREATE TABLE {table_name} AS " \
                 f"SELECT * FROM " \
-                f"parquet_scan('{dataset_path}', hive_partitioning = 1) " \
-                f"ORDER BY bucket_index, summary_index, allele_index"
-            logger.debug("query: %s", query)
+                f"parquet_scan('{dataset_path}', hive_partitioning = 1)"
+            logger.info("query: %s", query)
             connection.sql(query)
 
     def import_dataset(
