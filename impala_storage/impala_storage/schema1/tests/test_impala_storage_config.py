@@ -100,7 +100,7 @@ def test_impala_config_validation_wrong_type():
             ValueError,
             match=re.escape(
                 "storage configuration for <impala2> passed to "
-                "genotype storage class type <impala>")):
+                "genotype storage class type <{'impala'}>")):
         ImpalaGenotypeStorage.validate_and_normalize_config(config)
 
 

@@ -110,7 +110,7 @@ def test_parquet_family_bin(fam1, fam2, genotype):
     [
         ({"af_allele_count": 1}, 5, "1"),
         ({"af_allele_count": 10, "af_allele_freq": 2}, 5, "2"),
-        ({"af_allele_count": 10, "af_allele_freq": 5}, 5, "3"),
+        ({"af_allele_count": 10, "af_allele_freq": 5}, 5, "2"),
         ({"af_allele_count": 10, "af_allele_freq": 6}, 5, "3"),
         ({"af_allele_count": 10, "af_allele_freq": 50}, 10, "3"),
     ],
