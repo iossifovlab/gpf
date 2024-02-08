@@ -1,9 +1,9 @@
 from typing import List
 
 
-class AGPStatistic:
+class GPStatistic:
     """
-    Class representing AGP statistics.
+    Class representing GP statistics.
 
     Used as a medium between the DB and the API.
     """

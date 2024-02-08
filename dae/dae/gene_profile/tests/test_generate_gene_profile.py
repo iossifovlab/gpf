@@ -9,13 +9,13 @@ from dae.testing.import_helpers import vcf_study
 from dae.genomic_resources.testing import \
     setup_directories, setup_pedigree, setup_vcf
 from dae.testing.t4c8_import import t4c8_gpf
-from dae.autism_gene_profile.generate_autism_gene_profile import main
-from dae.autism_gene_profile.db import AutismGeneProfileDB
+from dae.gene_profile.generate_gene_profile import main
+from dae.gene_profile.db import GeneProfileDB
 from dae.gpf_instance.gpf_instance import GPFInstance
 
 
 @pytest.fixture
-def agp_config() -> dict:
+def gp_config() -> dict:
     return {
         "order": [
             "gene_set_rank",
@@ -83,19 +83,19 @@ def agp_config() -> dict:
     }
 
 
-def agpf_gpf_instance(
-        agp_config: str,
+def gp_gpf_instance(
+        gp_config: str,
         tmp_path: pathlib.Path) -> GPFInstance:
     setup_directories(
         tmp_path,
         {
             "gpf_instance": {
-                "agp_config.yaml": yaml.dump(
-                    agp_config, default_flow_style=False),
+                "gp_config.yaml": yaml.dump(
+                    gp_config, default_flow_style=False),
                 "gpf_instance.yaml": textwrap.dedent("""
                     instance_id: test_instance
-                    autism_gene_tool_config:
-                        conf_file: "agp_config.yaml"
+                    gene_profiles_config:
+                        conf_file: "gp_config.yaml"
                     gene_sets_db:
                         gene_set_collections:
                         - gene_sets
@@ -246,26 +246,26 @@ chr1   195 .  C   T   .    .      .    GT     0/0  0/0  0/1 0/0  0/0  0/0
     return instance
 
 
-def test_generate_autism_gene_profile(
-        agp_config: dict,
+def test_generate_gene_profile(
+        gp_config: dict,
         tmp_path: pathlib.Path) -> None:
-    agpdb_filename = str(tmp_path / "agpdb")
+    gpdb_filename = str(tmp_path / "gpdb")
     argv = [
         "--dbfile",
-        agpdb_filename,
+        gpdb_filename,
         "-vv",
     ]
 
-    gpf_instance = agpf_gpf_instance(agp_config, tmp_path)
+    gpf_instance = gp_gpf_instance(gp_config, tmp_path)
     main(gpf_instance, argv)
-    agpdb = AutismGeneProfileDB(
-        gpf_instance._autism_gene_profile_config,
-        agpdb_filename,
+    gpdb = GeneProfileDB(
+        gpf_instance._gene_profile_config,
+        gpdb_filename,
         clear=False
     )
 
-    t4 = agpdb.get_agp("t4")
-    c8 = agpdb.get_agp("c8")
+    t4 = gpdb.get_gp("t4")
+    c8 = gpdb.get_gp("c8")
 
     assert t4.gene_sets == [
         "gene_sets_test_gene_set_1",
@@ -345,19 +345,19 @@ def test_generate_autism_gene_profile(
     }
 
 
-def test_generate_autism_gene_profile_with_incomplete_config(
-        agp_config: str,
+def test_generate_gene_profile_with_incomplete_config(
+        gp_config: str,
         tmp_path: pathlib.Path) -> None:
-    agpdb_filename = str(tmp_path / "agpdb")
+    gpdb_filename = str(tmp_path / "gpdb")
     argv = [
         "--dbfile",
-        agpdb_filename,
+        gpdb_filename,
         "-vv",
     ]
-    del agp_config["order"]
-    del agp_config["default_dataset"]
+    del gp_config["order"]
+    del gp_config["default_dataset"]
 
-    gpf_instance = agpf_gpf_instance(agp_config, tmp_path)
+    gpf_instance = gp_gpf_instance(gp_config, tmp_path)
     expected_error = re.escape(
         "/gpf_instance: {'default_dataset': "
         + "['required field'], 'order': ['required field']}")
@@ -367,24 +367,24 @@ def test_generate_autism_gene_profile_with_incomplete_config(
         main(gpf_instance, argv)
 
 
-def test_generate_autism_gene_profile_with_incomplete_config_order(
-        agp_config: str,
+def test_generate_gene_profile_with_incomplete_config_order(
+        gp_config: str,
         tmp_path: pathlib.Path) -> None:
-    agpdb_filename = str(tmp_path / "agpdb")
+    gpdb_filename = str(tmp_path / "gpdb")
     argv = [
         "--dbfile",
-        agpdb_filename,
+        gpdb_filename,
         "-vv",
     ]
 
-    agp_config["order"] = [
+    gp_config["order"] = [
         "gene_set_rank",
         "gene_scr",
         "study_1",
     ]
-    gpf_instance = agpf_gpf_instance(agp_config, tmp_path)
+    gpf_instance = gp_gpf_instance(gp_config, tmp_path)
 
     with pytest.raises(
             AssertionError,
-            match="Given AGP order has invalid entries"):
+            match="Given GP order has invalid entries"):
         main(gpf_instance, argv)

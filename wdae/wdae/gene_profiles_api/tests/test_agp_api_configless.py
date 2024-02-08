@@ -6,11 +6,11 @@ pytestmark = pytest.mark.usefixtures(
     # "agp_gpf_instance",
 )
 
-route_prefix = "/api/v3/autism_gene_tool"
+ROUTE_PREFIX = "/api/v3/gene_profiles"
 
 
 def test_configuration(admin_client):
-    response = admin_client.get(f"{route_prefix}/single-view/configuration")
+    response = admin_client.get(f"{ROUTE_PREFIX}/single-view/configuration")
 
     assert response.status_code == 200
     print(response.data)

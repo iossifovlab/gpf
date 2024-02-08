@@ -167,7 +167,7 @@ dae_conf_schema = {
         "type": "list",
         "valuesrules": {"type": "dict", "schema": genomic_score_schema}
     },
-    "autism_gene_tool_config": {
+    "gene_profiles_config": {
         "type": "dict", "schema": config_reference_schema
     },
     "annotation": {"type": "dict", "schema": config_reference_schema},

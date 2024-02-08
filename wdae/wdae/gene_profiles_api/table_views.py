@@ -10,7 +10,7 @@ LOGGER = logging.getLogger(__name__)
 
 class TableConfigurationView(QueryBaseView):
     def get(self, _request):
-        configuration = self.gpf_instance.get_wdae_agp_table_configuration()
+        configuration = self.gpf_instance.get_wdae_gp_table_configuration()
         if configuration is None:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -26,8 +26,8 @@ class TableRowsView(QueryBaseView):
         symbol_like = data.get("symbol", None)
         sort_by = data.get("sortBy", None)
         order = data.get("order", None)
-        agps = self.gpf_instance.query_agp_statistics(
+        gps = self.gpf_instance.query_gp_statistics(
             page, symbol_like, sort_by, order)
-        if agps is None:
+        if gps is None:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        return Response(agps)
+        return Response(gps)

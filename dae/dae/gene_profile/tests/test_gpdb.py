@@ -3,24 +3,24 @@ import pathlib
 import box
 
 from sqlalchemy import inspect
-from dae.autism_gene_profile.db import AutismGeneProfileDB
-from dae.autism_gene_profile.statistic import AGPStatistic
+from dae.gene_profile.db import GeneProfileDB
+from dae.gene_profile.statistic import GPStatistic
 from dae.gpf_instance import GPFInstance
 
 
-def test_agpdb_table_building(
+def test_gpdb_table_building(
     tmp_path: pathlib.Path,
-    agp_config: box.Box
+    gp_config: box.Box
 ) -> None:
-    agpdb_filename = str(tmp_path / "agpdb")
-    agpdb = AutismGeneProfileDB(
-        agp_config,
-        agpdb_filename
+    gpdb_filename = str(tmp_path / "gpdb")
+    gpdb = GeneProfileDB(
+        gp_config,
+        gpdb_filename
     )
-    inspector = inspect(agpdb.engine)
+    inspector = inspect(gpdb.engine)
 
     cols = []
-    for column in inspector.get_columns("autism_gene_profile"):
+    for column in inspector.get_columns("gene_profile"):
         cols.append(column["name"])
     print(cols)
 
@@ -48,37 +48,37 @@ def test_agpdb_table_building(
     ) == set()
 
 
-def test_agpdb_insert_and_get_agp(
+def test_gpdb_insert_and_get_gp(
         tmp_path: pathlib.Path,
-        agp_gpf_instance: GPFInstance,
-        sample_agp: AGPStatistic,
-        agp_config: box.Box) -> None:
+        gp_gpf_instance: GPFInstance,
+        sample_gp: GPStatistic,
+        gp_config: box.Box) -> None:
 
-    agpdb_filename = str(tmp_path / "agpdb")
-    agpdb = AutismGeneProfileDB(
-        agp_config, agpdb_filename, clear=True)
-    agpdb.insert_agp(sample_agp)
-    agp = agpdb.get_agp("CHD8")
+    gpdb_filename = str(tmp_path / "gpdb")
+    gpdb = GeneProfileDB(
+        gp_config, gpdb_filename, clear=True)
+    gpdb.insert_gp(sample_gp)
+    gp = gpdb.get_gp("CHD8")
 
-    assert agp is not None
+    assert gp is not None
 
-    assert agp.gene_sets == [
+    assert gp.gene_sets == [
         "main_CHD8 target genes"
     ]
 
-    assert agp.genomic_scores["autism_scores"] == {
+    assert gp.genomic_scores["autism_scores"] == {
         "SFARI gene score": {"value": 1.0, "format": "%s"},
         "RVIS_rank": {"value": 193.0, "format": "%s"},
         "RVIS": {"value": -2.34, "format": "%s"}
     }
 
-    assert agp.genomic_scores["protection_scores"] == {
+    assert gp.genomic_scores["protection_scores"] == {
         "SFARI gene score": {"value": 1.0, "format": "%s"},
         "RVIS_rank": {"value": 193.0, "format": "%s"},
         "RVIS": {"value": -2.34, "format": "%s"}
     }
 
-    assert agp.variant_counts == {
+    assert gp.variant_counts == {
         "iossifov_2014": {
             "autism": {
                 "denovo_noncoding": {"count": 53, "rate": 1},
@@ -92,15 +92,15 @@ def test_agpdb_insert_and_get_agp(
     }
 
 
-def test_agpdb_sort(
-        agp_gpf_instance: GPFInstance,
-        sample_agp: AGPStatistic) -> None:
-    sample_agp.gene_symbol = "CHD7"
-    sample_scores = sample_agp.genomic_scores
+def test_gpdb_sort(
+        gp_gpf_instance: GPFInstance,
+        sample_gp: GPStatistic) -> None:
+    sample_gp.gene_symbol = "CHD7"
+    sample_scores = sample_gp.genomic_scores
     sample_scores["protection_scores"]["SFARI gene score"] = -11
-    agp_gpf_instance._autism_gene_profile_db.insert_agp(sample_agp)
-    stats_unsorted = agp_gpf_instance.query_agp_statistics(1)
-    stats_sorted = agp_gpf_instance.query_agp_statistics(
+    gp_gpf_instance._gene_profile_db.insert_gp(sample_gp)
+    stats_unsorted = gp_gpf_instance.query_gp_statistics(1)
+    stats_sorted = gp_gpf_instance.query_gp_statistics(
         1, sort_by="protection_scores_SFARI gene score", order="asc"
     )
     assert stats_unsorted[0]["geneSymbol"] == "CHD8"
@@ -109,13 +109,13 @@ def test_agpdb_sort(
     assert stats_sorted[0]["geneSymbol"] == "CHD7"
     assert stats_sorted[1]["geneSymbol"] == "CHD8"
 
-    stats_sorted = agp_gpf_instance.query_agp_statistics(
+    stats_sorted = gp_gpf_instance.query_gp_statistics(
         1, sort_by="autism_scores_SFARI gene score", order="desc"
     )
-    stats_sorted = agp_gpf_instance.query_agp_statistics(
+    stats_sorted = gp_gpf_instance.query_gp_statistics(
         1,
         sort_by="iossifov_2014_autism_denovo_noncoding", order="desc"
     )
-    stats_sorted = agp_gpf_instance.query_agp_statistics(
+    stats_sorted = gp_gpf_instance.query_gp_statistics(
         1, sort_by="main_CHD8 target genes", order="desc"
     )
