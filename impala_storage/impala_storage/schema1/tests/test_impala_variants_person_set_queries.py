@@ -3,6 +3,7 @@ import io
 import textwrap
 from typing import cast, Any, Dict
 
+from box import Box
 import toml
 import pytest
 
@@ -10,13 +11,14 @@ from dae.testing import convert_to_tab_separated
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.person_sets import person_set_collections_schema
 from dae.pedigrees.loader import FamiliesLoader
+from dae.pedigrees.families_data import FamiliesData
 from dae.person_sets import PersonSetCollection
 
 from impala_storage.schema1.impala_variants import ImpalaVariants
 
 
 @pytest.fixture
-def families_fixture():
+def families_fixture() -> FamiliesData:
     ped_content = io.StringIO(convert_to_tab_separated(
         """
             familyId personId dadId	 momId	sex status role
@@ -37,15 +39,17 @@ def families_fixture():
     return families
 
 
-def get_person_set_collections_config(content: str):
-    return GPFConfigParser.process_config(
-        cast(Dict[str, Any], toml.loads(content)),
-        {"person_set_collections": person_set_collections_schema},
-    ).person_set_collections
+def get_person_set_collections_config(content: str) -> Box:
+    return cast(
+        Box,
+        GPFConfigParser.process_config(
+            cast(Dict[str, Any], toml.loads(content)),
+            {"person_set_collections": person_set_collections_schema},
+        ).person_set_collections)
 
 
 @pytest.fixture
-def status_collection(families_fixture):
+def status_collection(families_fixture: FamiliesData) -> PersonSetCollection:
     content = textwrap.dedent(
         """
         [person_set_collections]
@@ -78,7 +82,9 @@ def status_collection(families_fixture):
     return collection
 
 
-def test_status_person_set_collection(status_collection):
+def test_status_person_set_collection(
+    status_collection: PersonSetCollection
+) -> None:
     assert status_collection is not None
     psc = status_collection
 
@@ -89,7 +95,8 @@ def test_status_person_set_collection(status_collection):
 
 
 def test_status_person_set_collection_all_selected(
-        status_collection):
+    status_collection: PersonSetCollection
+) -> None:
 
     query = ImpalaVariants.build_person_set_collection_query(
         status_collection,
@@ -100,7 +107,7 @@ def test_status_person_set_collection_all_selected(
 
 
 def test_status_person_set_collection_some_selected_no_default(
-        status_collection):
+        status_collection: PersonSetCollection) -> None:
 
     query = ImpalaVariants.build_person_set_collection_query(
         status_collection,
@@ -111,7 +118,7 @@ def test_status_person_set_collection_some_selected_no_default(
 
 
 def test_status_person_set_collection_some_selected_and_default(
-        status_collection):
+        status_collection: PersonSetCollection) -> None:
 
     query = ImpalaVariants.build_person_set_collection_query(
         status_collection,
@@ -122,7 +129,9 @@ def test_status_person_set_collection_some_selected_and_default(
 
 
 @pytest.fixture
-def status_sex_collection(families_fixture):
+def status_sex_collection(
+    families_fixture: FamiliesData
+) -> PersonSetCollection:
     config = get_person_set_collections_config(textwrap.dedent("""
         [person_set_collections]
         selected_person_set_collections = ["status_sex"]
@@ -152,7 +161,7 @@ def status_sex_collection(families_fixture):
 
 
 def test_status_sex_person_set_collection_all_selected(
-        status_sex_collection):
+        status_sex_collection: PersonSetCollection) -> None:
 
     query = ImpalaVariants.build_person_set_collection_query(
         status_sex_collection,
@@ -166,7 +175,7 @@ def test_status_sex_person_set_collection_all_selected(
 
 
 def test_status_sex_person_set_collection_some_selected_no_default(
-        status_sex_collection):
+        status_sex_collection: PersonSetCollection) -> None:
 
     query = ImpalaVariants.build_person_set_collection_query(
         status_sex_collection,
@@ -205,7 +214,7 @@ def test_status_sex_person_set_collection_some_selected_no_default(
 
 
 def test_status_sex_person_set_collection_some_selected_with_default(
-        status_sex_collection):
+        status_sex_collection: PersonSetCollection) -> None:
 
     query = ImpalaVariants.build_person_set_collection_query(
         status_sex_collection,

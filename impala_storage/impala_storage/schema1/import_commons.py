@@ -1,11 +1,13 @@
 # pylint: disable=too-many-lines
+from __future__ import annotations
+
 import abc
 import os
 import sys
 import argparse
 import logging
 from urllib.parse import urlparse
-from typing import Optional, Dict, Any, Type
+from typing import List, Optional, Dict, Any, Type, cast
 
 import fsspec
 
@@ -15,6 +17,8 @@ from dae.import_tools.import_tools import MakefilePartitionHelper, \
     construct_import_annotation_pipeline
 
 from dae.pedigrees.loader import FamiliesLoader
+from dae.pedigrees.families_data import FamiliesData
+
 from dae.variants_loaders.raw.loader import AnnotationPipelineDecorator, \
     VariantsLoader
 from dae.variants_loaders.dae.loader import DenovoLoader, DaeTransmittedLoader
@@ -26,6 +30,7 @@ from dae.parquet.parquet_writer import ParquetWriter
 from dae.configuration.study_config_builder import StudyConfigBuilder
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.utils.dict_utils import recursive_dict_update
+from dae.gpf_instance.gpf_instance import GPFInstance
 
 from impala_storage.helpers.rsync_helpers import RsyncHelpers
 from impala_storage.schema1.parquet_io import VariantsParquetWriter
@@ -38,14 +43,16 @@ class BatchGenerator:
     """Generate a Makefile which when executed imports a study."""
 
     @abc.abstractmethod
-    def generate(self, context):
+    def generate(self, context: dict[str, Any]) -> str:
         """Generate a Makefile/Snakemakefile."""
 
 
 class SnakefileGenerator(BatchGenerator):
     """Generate a Snakefile which when executed imports a study."""
 
-    def generate(self, context):
+    def generate(
+        self, context: dict[str, Any]
+    ) -> str:
         return self.TEMPLATE.render(context)
 
     TEMPLATE = Template(
@@ -262,7 +269,7 @@ rule setup_remote:
 
 class SnakefileKubernetesGenerator(BatchGenerator):
 
-    def generate(self, context):
+    def generate(self, context: dict[str, Any]) -> str:
         return SnakefileKubernetesGenerator.TEMPLATE.render(context)
 
     TEMPLATE = Template(
@@ -360,32 +367,32 @@ rule parquet:
 class BatchImporter:
     """Class that should run tasks for importing of a study."""
 
-    def __init__(self, gpf_instance):
+    def __init__(self, gpf_instance: GPFInstance) -> None:
         self.gpf_instance = gpf_instance
         assert self.gpf_instance is not None
 
         self.study_id = None
-        self.partition_helper = None
+        self.partition_helper: Optional[MakefilePartitionHelper] = None
 
-        self.families_loader = None
-        self._families = None
+        self.families_loader: Optional[FamiliesLoader] = None
+        self._families: Optional[FamiliesData] = None
 
-        self.variants_loaders = {}
+        self.variants_loaders: dict[str, VariantsLoader] = {}
 
-        self.vcf_loader = None
-        self.denovo_loader = None
-        self.cnv_loader = None
-        self.dae_loader = None
+        self.vcf_loader: Optional[VcfLoader] = None
+        self.denovo_loader: Optional[DenovoLoader] = None
+        self.cnv_loader: Optional[CNVLoader] = None
+        self.dae_loader: Optional[DaeTransmittedLoader] = None
         self.genotype_storage_id = None
 
     @property
-    def families(self):
+    def families(self) -> FamiliesData:
         if self._families is None:
             assert self.families_loader is not None
             self._families = self.families_loader.load()
         return self._families
 
-    def build_familes_loader(self, argv):
+    def build_familes_loader(self, argv: argparse.Namespace) -> BatchImporter:
         """Construct a family loader based on CLI arguments."""
         families_filenames, families_params = \
             FamiliesLoader.parse_cli_arguments(argv)
@@ -397,7 +404,7 @@ class BatchImporter:
         self.families_loader = families_loader
         return self
 
-    def build_vcf_loader(self, argv):
+    def build_vcf_loader(self, argv: argparse.Namespace) -> BatchImporter:
         """Construct a VCF loader based on the CLI arguments."""
         variants_filenames, variants_params = \
             VcfLoader.parse_cli_arguments(argv)
@@ -415,7 +422,7 @@ class BatchImporter:
         self.variants_loaders["vcf"] = variants_loader
         return self
 
-    def build_denovo_loader(self, argv):
+    def build_denovo_loader(self, argv: argparse.Namespace) -> BatchImporter:
         """Construct a de Novo variants loader based on the CLI arguments."""
         variants_filename, variants_params = \
             DenovoLoader.parse_cli_arguments(argv)
@@ -424,7 +431,7 @@ class BatchImporter:
             return self
         variants_loader = DenovoLoader(
             self.families,
-            variants_filename,
+            variants_filename,  # type: ignore
             params=variants_params,
             genome=self.gpf_instance.reference_genome,
         )
@@ -432,7 +439,7 @@ class BatchImporter:
         self.variants_loaders["denovo"] = variants_loader
         return self
 
-    def build_cnv_loader(self, argv):
+    def build_cnv_loader(self, argv: argparse.Namespace) -> BatchImporter:
         """Construct a CNV loader based on the CLI arguments."""
         variants_filenames, variants_params = \
             CNVLoader.parse_cli_arguments(argv)
@@ -441,7 +448,7 @@ class BatchImporter:
             return self
         variants_loader = CNVLoader(
             self.families,
-            variants_filenames,
+            variants_filenames,  # type: ignore
             params=variants_params,
             genome=self.gpf_instance.reference_genome,
         )
@@ -449,7 +456,7 @@ class BatchImporter:
         self.variants_loaders["cnv"] = variants_loader
         return self
 
-    def build_dae_loader(self, argv):
+    def build_dae_loader(self, argv: argparse.Namespace) -> BatchImporter:
         """Construct a DAE loader based on the CLI arguments."""
         variants_filename, variants_params = \
             DaeTransmittedLoader.parse_cli_arguments(argv)
@@ -458,7 +465,7 @@ class BatchImporter:
             return self
         variants_loader = DaeTransmittedLoader(
             self.families,
-            variants_filename,
+            variants_filename,  # type: ignore
             params=variants_params,
             genome=self.gpf_instance.reference_genome,
         )
@@ -466,18 +473,21 @@ class BatchImporter:
         self.variants_loaders["dae"] = variants_loader
         return self
 
-    def build_study_id(self, argv):
+    def build_study_id(self, argv: argparse.Namespace) -> BatchImporter:
         """Construct a study_id from CLI arguments."""
         assert self.families_loader is not None
         if argv.study_id is not None:
             study_id = argv.study_id
         else:
             families_filename = self.families_loader.filename
+            assert isinstance(families_filename, str)
             study_id, _ = os.path.splitext(os.path.basename(families_filename))
         self.study_id = study_id
         return self
 
-    def build_partition_helper(self, argv):
+    def build_partition_helper(
+        self, argv: argparse.Namespace
+    ) -> BatchImporter:
         """Load and adjust the parition description."""
         if argv.partition_description is not None:
             partition_description = PartitionDescriptor.parse(
@@ -492,7 +502,9 @@ class BatchImporter:
 
         return self
 
-    def build_genotype_storage(self, argv):
+    def build_genotype_storage(
+        self, argv: argparse.Namespace
+    ) -> BatchImporter:
         """Construct a genotype storage."""
         if argv.genotype_storage is None:
             genotype_storage_id = self.gpf_instance.dae_config.get(
@@ -517,7 +529,7 @@ class BatchImporter:
         self.genotype_storage_id = genotype_storage_id
         return self
 
-    def build(self, argv):
+    def build(self, argv: argparse.Namespace) -> BatchImporter:
         """Construct a study importer based on CLI aruments."""
         self.build_familes_loader(argv) \
             .build_denovo_loader(argv) \
@@ -529,7 +541,7 @@ class BatchImporter:
             .build_genotype_storage(argv)
         return self
 
-    def generate_instructions(self, argv):
+    def generate_instructions(self, argv: argparse.Namespace) -> None:
         """Generate instruction for importing a study using CLI arguments."""
         dirname = argv.generator_output or argv.output
         context = self.build_context(argv)
@@ -547,12 +559,16 @@ class BatchImporter:
         with fsspec.open(filename, "w") as outfile:
             outfile.write(content)
 
-    def build_context(self, argv):
+    def build_context(
+        self, argv: argparse.Namespace
+    ) -> dict[str, Any]:
         if urlparse(argv.output).scheme:
             return self._build_context_remote(argv)
         return self._build_context_local(argv)
 
-    def _build_context_remote(self, argv):
+    def _build_context_remote(
+        self, argv: argparse.Namespace
+    ) -> dict[str, Any]:
         context = self._build_context_local(argv)
 
         out_url = urlparse(argv.output)
@@ -573,6 +589,7 @@ class BatchImporter:
             outdir, f"{study_id}_pedigree", "pedigree.parquet")
 
         assert self.families_loader is not None
+        assert isinstance(self.families_loader.filename, str)
         pedigree_pedigree = urlparse(self.families_loader.filename).path[1:]
         context["pedigree"].update({
             "pedigree": pedigree_pedigree,
@@ -582,7 +599,7 @@ class BatchImporter:
         for prefix, variants_loader in self.variants_loaders.items():
             variants_context = context["variants"][prefix]
             variants_context["variants"] = " ".join(
-                list(variants_loader.variants_filenames))
+                list(variants_loader.variants_filenames))  # type: ignore
 
         if self.variants_loaders:
             context["variants_output"] = \
@@ -590,7 +607,9 @@ class BatchImporter:
 
         return context
 
-    def _build_context_local(self, argv):
+    def _build_context_local(
+        self, argv: argparse.Namespace
+    ) -> dict[str, Any]:
         outdir = argv.output
         study_id = self.study_id
 
@@ -613,6 +632,7 @@ class BatchImporter:
         pedigree_params_dict = self.families_loader.build_arguments_dict()
         pedigree_params = self.families_loader.build_cli_arguments(
             pedigree_params_dict)
+        assert isinstance(self.families_loader.filename, str)
         pedigree_pedigree = os.path.abspath(
             self.families_loader.filename)
         pedigree_output = os.path.abspath(os.path.join(
@@ -643,29 +663,31 @@ class BatchImporter:
             )
 
             variants_context["bins"] = list(variants_targets.keys())
-            variants_context["variants"] = " ".join(
-                [
-                    os.path.abspath(fn)
-                    for fn in variants_loader.variants_filenames
-                ])
+            variants_context["variants"] = " ".join([
+                os.path.abspath(fn)
+                for fn in variants_loader.variants_filenames  # type: ignore
+            ])
             variants_params_dict = variants_loader.build_arguments_dict()
             variants_context["params"] = variants_loader.build_cli_arguments(
                 variants_params_dict)
             variants_context["verbose"] = verbose
 
-            context["variants"][prefix] = variants_context
+            context["variants"][prefix] = variants_context  # type: ignore
 
         context["mirror_of"] = {}
         if self.gpf_instance.dae_config.mirror_of:
             rsync_helper = RsyncHelpers(
                 self.gpf_instance.dae_config.mirror_of)
-            context["mirror_of"]["location"] = rsync_helper.rsync_remote
-            context["mirror_of"]["path"] = rsync_helper.parsed_remote.path
-            context["mirror_of"]["netloc"] = rsync_helper.parsed_remote.netloc
+            context["mirror_of"][
+                "location"] = rsync_helper.rsync_remote  # type: ignore
+            context["mirror_of"][
+                "path"] = rsync_helper.parsed_remote.path  # type: ignore
+            context["mirror_of"][
+                "netloc"] = rsync_helper.parsed_remote.netloc  # type: ignore
 
         return context
 
-    def generate_study_config(self, argv):
+    def generate_study_config(self, argv: argparse.Namespace) -> None:
         """Generate a study config for imported study."""
         dirname = argv.output
 
@@ -703,7 +725,9 @@ class BatchImporter:
             outfile.write(config)
 
     @classmethod
-    def cli_arguments_parser(cls, gpf_instance):
+    def cli_arguments_parser(
+        cls, gpf_instance: GPFInstance
+    ) -> argparse.ArgumentParser:
         """Parse CLI arguments."""
         parser = argparse.ArgumentParser(
             description="Convert variants file to parquet",
@@ -846,35 +870,39 @@ class BatchImporter:
         return parser
 
     @staticmethod
-    def main(argv=None, gpf_instance=None):
+    def main(
+        argv: Optional[list[str]] = None,
+        gpf_instance: Optional[GPFInstance] = None
+    ) -> None:
         """Construct and run the importer based on CLI arguments.
 
         Main function called from CLI tools.
         """
         if gpf_instance is None:
             try:
-                # pylint: disable=import-outside-toplevel
-                from dae.gpf_instance.gpf_instance import GPFInstance
                 gpf_instance = GPFInstance.build()
             except Exception:  # pylint: disable=broad-except
                 logger.warning("GPF not configured properly...", exc_info=True)
 
+        assert gpf_instance is not None
         parser = BatchImporter.cli_arguments_parser(gpf_instance)
-        argv = parser.parse_args(argv or sys.argv[1:])
+        if argv is None:
+            argv = sys.argv[1:]
+        args = parser.parse_args(argv)
 
-        if argv.verbose == 1:
+        if args.verbose == 1:
             logging.basicConfig(level=logging.WARNING)
-        elif argv.verbose == 2:
+        elif args.verbose == 2:
             logging.basicConfig(level=logging.INFO)
-        elif argv.verbose >= 3:
+        elif args.verbose >= 3:
             logging.basicConfig(level=logging.DEBUG)
         else:
             logging.basicConfig(level=logging.WARNING)
 
         importer = BatchImporter(gpf_instance)
-        importer.build(argv)
-        importer.generate_instructions(argv)
-        importer.generate_study_config(argv)
+        importer.build(args)
+        importer.generate_instructions(args)
+        importer.generate_study_config(args)
 
 
 class Variants2ParquetTool:
@@ -887,7 +915,9 @@ class Variants2ParquetTool:
     BUCKET_INDEX_DEFAULT = 1000
 
     @classmethod
-    def cli_arguments_parser(cls, _gpf_instance):
+    def cli_arguments_parser(
+        cls, _gpf_instance: GPFInstance
+    ) -> argparse.ArgumentParser:
         """Parse CLI arguments."""
         parser = argparse.ArgumentParser(
             description="Convert variants file to parquet",
@@ -992,36 +1022,40 @@ class Variants2ParquetTool:
         return parser
 
     @classmethod
-    def main(cls, argv=None, gpf_instance=None):
+    def main(
+        cls, argv: Optional[List[str]] = None,
+        gpf_instance: Optional[GPFInstance] = None
+    ) -> None:
         """Construct and run importer to transform variants into parquet.
 
         Called from CLI tools.
         """
         if gpf_instance is None:
-            # pylint: disable=import-outside-toplevel
-            from dae.gpf_instance.gpf_instance import GPFInstance
             gpf_instance = GPFInstance.build()
 
         parser = cls.cli_arguments_parser(gpf_instance)
 
-        argv = parser.parse_args(argv or sys.argv[1:])
-        if argv.verbose == 1:
+        if argv is None:
+            argv = sys.argv[1:]
+        args = parser.parse_args(argv)
+        if args.verbose == 1:
             logging.basicConfig(level=logging.WARNING)
-        elif argv.verbose == 2:
+        elif args.verbose == 2:
             logging.basicConfig(level=logging.INFO)
-        elif argv.verbose >= 3:
+        elif args.verbose >= 3:
             logging.basicConfig(level=logging.DEBUG)
         else:
             logging.basicConfig(level=logging.ERROR)
 
-        cls.run(argv, gpf_instance)
+        cls.run(args, gpf_instance)
 
     @classmethod
-    def run(cls, argv, gpf_instance=None):
+    def run(
+        cls, argv: argparse.Namespace,
+        gpf_instance: Optional[GPFInstance] = None
+    ) -> None:
         """Run actual variants import into parquet dataset."""
         if gpf_instance is None:
-            # pylint: disable=import-outside-toplevel
-            from dae.gpf_instance.gpf_instance import GPFInstance
             gpf_instance = GPFInstance.build()
 
         families_filenames, families_params = \
@@ -1102,7 +1136,10 @@ class Variants2ParquetTool:
 
     @classmethod
     def _build_variants_loader_pipeline(
-            cls, gpf_instance, argv, variants_loader):
+        cls, gpf_instance: GPFInstance,
+        argv: argparse.Namespace,
+        variants_loader: VariantsLoader
+    ) -> VariantsLoader:
 
         annotation_pipeline = construct_import_annotation_pipeline(
             gpf_instance, annotation_configfile=argv.annotation_config,
@@ -1110,13 +1147,17 @@ class Variants2ParquetTool:
 
         if annotation_pipeline is not None:
             variants_loader = AnnotationPipelineDecorator(
-                variants_loader, annotation_pipeline
+                variants_loader, annotation_pipeline  # type: ignore
             )
 
         return variants_loader
 
     @classmethod
-    def _load_variants(cls, argv, families, gpf_instance):
+    def _load_variants(
+        cls, argv: argparse.Namespace,
+        families: FamiliesData,
+        gpf_instance: GPFInstance
+    ) -> VariantsLoader:
         if cls.VARIANTS_LOADER_CLASS is None:
             raise ValueError("VARIANTS_LOADER_CLASS not set")
 
@@ -1133,7 +1174,9 @@ class Variants2ParquetTool:
         return variants_loader
 
     @staticmethod
-    def _build_partition_description(argv):
+    def _build_partition_description(
+        argv: argparse.Namespace
+    ) -> PartitionDescriptor:
         if argv.partition_description is not None:
             partition_description = PartitionDescriptor.parse(
                 argv.partition_description)
@@ -1142,7 +1185,10 @@ class Variants2ParquetTool:
         return partition_description
 
     @staticmethod
-    def _build_partition_helper(gpf_instance, partition_description):
+    def _build_partition_helper(
+        gpf_instance: GPFInstance,
+        partition_description: PartitionDescriptor
+    ) -> MakefilePartitionHelper:
 
         generator = MakefilePartitionHelper(
             partition_description,
@@ -1151,7 +1197,10 @@ class Variants2ParquetTool:
         return generator
 
     @staticmethod
-    def _collect_target_chromosomes(argv, variants_loader):
+    def _collect_target_chromosomes(
+        argv: argparse.Namespace,
+        variants_loader: VariantsLoader
+    ) -> List[str]:
         if (
             "target_chromosomes" in argv
             and argv.target_chromosomes is not None
@@ -1159,4 +1208,4 @@ class Variants2ParquetTool:
             target_chromosomes = argv.target_chromosomes
         else:
             target_chromosomes = variants_loader.chromosomes
-        return target_chromosomes
+        return cast(list[str], target_chromosomes)

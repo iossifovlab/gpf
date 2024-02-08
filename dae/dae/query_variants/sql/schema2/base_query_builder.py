@@ -22,8 +22,6 @@ from dae.query_variants.attributes_query_inheritance import \
 
 
 logger = logging.getLogger(__name__)
-
-
 RealAttrFilterType = list[tuple[str, tuple[Optional[float], Optional[float]]]]
 
 

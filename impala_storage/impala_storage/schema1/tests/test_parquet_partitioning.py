@@ -1,5 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import os
+from typing import Callable
+
 from dae.parquet.partition_descriptor import PartitionDescriptor
 
 from impala_storage.schema1.parquet_io import VariantsParquetWriter
@@ -8,7 +10,10 @@ from impala_storage.schema1.parquet_io import VariantsParquetWriter
 PARTITION_STUDY_DATA = "backends/partition"
 
 
-def test_region_partition(vcf_variants_loaders, temp_dirname):
+def test_region_partition(
+    vcf_variants_loaders: Callable,
+    temp_dirname: str
+) -> None:
     fvars = vcf_variants_loaders(PARTITION_STUDY_DATA)[0]
 
     partition_desc = PartitionDescriptor(
@@ -41,7 +46,7 @@ def test_region_partition(vcf_variants_loaders, temp_dirname):
 
 
 def test_region_partition_chromosome_filter(
-        vcf_variants_loaders, temp_dirname):
+        vcf_variants_loaders: Callable, temp_dirname: str) -> None:
 
     fvars = vcf_variants_loaders(PARTITION_STUDY_DATA)[0]
 
@@ -72,7 +77,10 @@ def test_region_partition_chromosome_filter(
     )
 
 
-def test_region_partition_small_region(vcf_variants_loaders, temp_dirname):
+def test_region_partition_small_region(
+    vcf_variants_loaders: Callable,
+    temp_dirname: str
+) -> None:
     fvars = vcf_variants_loaders(PARTITION_STUDY_DATA)[0]
 
     partition_desc = PartitionDescriptor(["1", "2"], 10)
@@ -110,7 +118,10 @@ def test_region_partition_small_region(vcf_variants_loaders, temp_dirname):
     )
 
 
-def test_region_partition_large_region(vcf_variants_loaders, temp_dirname):
+def test_region_partition_large_region(
+    vcf_variants_loaders: Callable,
+    temp_dirname: str
+) -> None:
     fvars = vcf_variants_loaders(PARTITION_STUDY_DATA)[0]
 
     partition_desc = PartitionDescriptor(["1", "2"], 10000000)
@@ -132,7 +143,10 @@ def test_region_partition_large_region(vcf_variants_loaders, temp_dirname):
     )
 
 
-def test_family_partition(vcf_variants_loaders, temp_dirname):
+def test_family_partition(
+    vcf_variants_loaders: Callable,
+    temp_dirname: str
+) -> None:
     fvars = vcf_variants_loaders(PARTITION_STUDY_DATA)[0]
 
     partition_desc = PartitionDescriptor(
@@ -181,7 +195,10 @@ def test_family_partition(vcf_variants_loaders, temp_dirname):
     )
 
 
-def test_coding_partition_1(vcf_variants_loaders, temp_dirname):
+def test_coding_partition_1(
+    vcf_variants_loaders: Callable,
+    temp_dirname: str
+) -> None:
     fvars = vcf_variants_loaders(PARTITION_STUDY_DATA)[0]
 
     partition_desc = PartitionDescriptor(
@@ -228,7 +245,9 @@ def test_coding_partition_1(vcf_variants_loaders, temp_dirname):
     )
 
 
-def test_coding_partition_2(vcf_variants_loaders, temp_dirname):
+def test_coding_partition_2(
+    vcf_variants_loaders: Callable, temp_dirname: str
+) -> None:
 
     fvars = vcf_variants_loaders(PARTITION_STUDY_DATA)[0]
     partition_desc = PartitionDescriptor(
@@ -269,7 +288,9 @@ def test_coding_partition_2(vcf_variants_loaders, temp_dirname):
     )
 
 
-def test_coding_partition_3(vcf_variants_loaders, temp_dirname):
+def test_coding_partition_3(
+    vcf_variants_loaders: Callable, temp_dirname: str
+) -> None:
     fvars = vcf_variants_loaders(PARTITION_STUDY_DATA)[0]
 
     partition_desc = PartitionDescriptor(
@@ -305,7 +326,10 @@ def test_coding_partition_3(vcf_variants_loaders, temp_dirname):
     )
 
 
-def test_frequency_partition_1(vcf_variants_loaders, temp_dirname):
+def test_frequency_partition_1(
+    vcf_variants_loaders: Callable,
+    temp_dirname: str
+) -> None:
     fvars = vcf_variants_loaders(PARTITION_STUDY_DATA)[0]
 
     partition_desc = PartitionDescriptor(
@@ -360,7 +384,10 @@ def test_frequency_partition_1(vcf_variants_loaders, temp_dirname):
     )
 
 
-def test_frequency_partition_2(vcf_variants_loaders, temp_dirname):
+def test_frequency_partition_2(
+    vcf_variants_loaders: Callable,
+    temp_dirname: str
+) -> None:
     fvars = vcf_variants_loaders(PARTITION_STUDY_DATA)[0]
 
     partition_desc = PartitionDescriptor(
@@ -394,7 +421,10 @@ def test_frequency_partition_2(vcf_variants_loaders, temp_dirname):
     )
 
 
-def test_frequency_partition_3(vcf_variants_loaders, temp_dirname):
+def test_frequency_partition_3(
+    vcf_variants_loaders: Callable,
+    temp_dirname: str
+) -> None:
     fvars = vcf_variants_loaders(PARTITION_STUDY_DATA)[0]
 
     partition_desc = PartitionDescriptor(
@@ -428,7 +458,7 @@ def test_frequency_partition_3(vcf_variants_loaders, temp_dirname):
     )
 
 
-def test_all(vcf_variants_loaders, temp_dirname):
+def test_all(vcf_variants_loaders: Callable, temp_dirname: str) -> None:
     fvars = vcf_variants_loaders(PARTITION_STUDY_DATA)[0]
 
     partition_desc = PartitionDescriptor(
@@ -579,7 +609,10 @@ def test_all(vcf_variants_loaders, temp_dirname):
     )
 
 
-def test_region_family_frequency(vcf_variants_loaders, temp_dirname):
+def test_region_family_frequency(
+    vcf_variants_loaders: Callable,
+    temp_dirname: str
+) -> None:
     fvars = vcf_variants_loaders(PARTITION_STUDY_DATA)[0]
 
     partition_desc = PartitionDescriptor(

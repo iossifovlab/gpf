@@ -6,7 +6,7 @@ from impala_storage.schema1.impala_genotype_storage import \
     ImpalaGenotypeStorage
 
 
-def test_impala_config_validation():
+def test_impala_config_validation() -> None:
     config = {
         "id": "genotype_impala",
         "storage_type": "impala",
@@ -29,7 +29,7 @@ def test_impala_config_validation():
     assert res is not None
 
 
-def test_impala_config_validation_missing_id():
+def test_impala_config_validation_missing_id() -> None:
     config = {
         "storage_type": "impala",
         "hdfs": {
@@ -53,7 +53,7 @@ def test_impala_config_validation_missing_id():
         ImpalaGenotypeStorage.validate_and_normalize_config(config)
 
 
-def test_impala_config_validation_missing_type():
+def test_impala_config_validation_missing_type() -> None:
     config = {
         "id": "aaaa",
         "hdfs": {
@@ -77,7 +77,7 @@ def test_impala_config_validation_missing_type():
         ImpalaGenotypeStorage.validate_and_normalize_config(config)
 
 
-def test_impala_config_validation_wrong_type():
+def test_impala_config_validation_wrong_type() -> None:
     config = {
         "id": "aaaa",
         "storage_type": "impala2",
@@ -104,7 +104,7 @@ def test_impala_config_validation_wrong_type():
         ImpalaGenotypeStorage.validate_and_normalize_config(config)
 
 
-def test_impala_config_validation_missing_hdfs():
+def test_impala_config_validation_missing_hdfs() -> None:
     config = {
         "id": "genotype_impala",
         "storage_type": "impala",
@@ -131,7 +131,7 @@ def test_impala_config_validation_missing_hdfs():
         ImpalaGenotypeStorage.validate_and_normalize_config(config)
 
 
-def test_impala_config_validation_missing_hdfs_base_dir():
+def test_impala_config_validation_missing_hdfs_base_dir() -> None:
     config = {
         "id": "genotype_impala",
         "storage_type": "impala",
@@ -158,7 +158,7 @@ def test_impala_config_validation_missing_hdfs_base_dir():
         ImpalaGenotypeStorage.validate_and_normalize_config(config)
 
 
-def test_impala_config_validation_bad_hdfs_path():
+def test_impala_config_validation_bad_hdfs_path() -> None:
     config = {
         "id": "genotype_impala",
         "storage_type": "impala",
@@ -186,7 +186,7 @@ def test_impala_config_validation_bad_hdfs_path():
         ImpalaGenotypeStorage.validate_and_normalize_config(config)
 
 
-def test_impala_config_validation_missing_hdfs_host():
+def test_impala_config_validation_missing_hdfs_host() -> None:
     config = {
         "id": "genotype_impala",
         "storage_type": "impala",
@@ -213,7 +213,7 @@ def test_impala_config_validation_missing_hdfs_host():
         ImpalaGenotypeStorage.validate_and_normalize_config(config)
 
 
-def test_impala_config_validation_missing_hdfs_port():
+def test_impala_config_validation_missing_hdfs_port() -> None:
     config = {
         "id": "genotype_impala",
         "storage_type": "impala",
@@ -236,7 +236,7 @@ def test_impala_config_validation_missing_hdfs_port():
     assert res["hdfs"]["port"] == 8020
 
 
-def test_impala_config_validation_missing_hdfs_replication():
+def test_impala_config_validation_missing_hdfs_replication() -> None:
     config = {
         "id": "genotype_impala",
         "storage_type": "impala",
@@ -259,7 +259,7 @@ def test_impala_config_validation_missing_hdfs_replication():
     assert res["hdfs"]["replication"] == 1
 
 
-def test_impala_config_validation_missing_impala():
+def test_impala_config_validation_missing_impala() -> None:
     config = {
         "id": "genotype_impala",
         "storage_type": "impala",
@@ -278,7 +278,7 @@ def test_impala_config_validation_missing_impala():
         ImpalaGenotypeStorage.validate_and_normalize_config(config)
 
 
-def test_impala_config_validation_missing_impala_db():
+def test_impala_config_validation_missing_impala_db() -> None:
     config = {
         "id": "genotype_impala",
         "storage_type": "impala",
@@ -305,7 +305,7 @@ def test_impala_config_validation_missing_impala_db():
         ImpalaGenotypeStorage.validate_and_normalize_config(config)
 
 
-def test_impala_config_validation_missing_impala_hosts():
+def test_impala_config_validation_missing_impala_hosts() -> None:
     config = {
         "id": "genotype_impala",
         "storage_type": "impala",
@@ -332,7 +332,7 @@ def test_impala_config_validation_missing_impala_hosts():
         ImpalaGenotypeStorage.validate_and_normalize_config(config)
 
 
-def test_impala_config_validation_missing_impala_port():
+def test_impala_config_validation_missing_impala_port() -> None:
     config = {
         "id": "genotype_impala",
         "storage_type": "impala",
@@ -355,7 +355,7 @@ def test_impala_config_validation_missing_impala_port():
     assert res["impala"]["port"] == 21050
 
 
-def test_impala_config_validation_missing_impala_pool_size():
+def test_impala_config_validation_missing_impala_pool_size() -> None:
     config = {
         "id": "genotype_impala",
         "storage_type": "impala",
