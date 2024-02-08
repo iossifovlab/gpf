@@ -2,8 +2,10 @@
 import re
 import os
 from contextlib import closing
+from typing import Callable
 
 import pytest
+import pytest_mock
 from box import Box
 
 from impala_storage.schema1.impala_genotype_storage import \
@@ -11,7 +13,7 @@ from impala_storage.schema1.impala_genotype_storage import \
 
 
 @pytest.fixture(scope="session")
-def impala_genotype_storage():
+def impala_genotype_storage() -> ImpalaGenotypeStorage:
     storage_config = Box({
         "id": "genotype_impala",
         "storage_type": "impala",
@@ -33,11 +35,13 @@ def impala_genotype_storage():
     return ImpalaGenotypeStorage(storage_config)
 
 
-def test_storage_type(impala_genotype_storage):
+def test_storage_type(impala_genotype_storage: ImpalaGenotypeStorage) -> None:
     assert impala_genotype_storage.storage_type == "impala"
 
 
-def test_impala_helpers(impala_genotype_storage):
+def test_impala_helpers(
+    impala_genotype_storage: ImpalaGenotypeStorage
+) -> None:
     impala_helpers = impala_genotype_storage.impala_helpers
 
     assert impala_helpers is not None
@@ -45,7 +49,9 @@ def test_impala_helpers(impala_genotype_storage):
 
 
 def test_impala_partition_import(
-        impala_genotype_storage, fixture_dirname):
+    impala_genotype_storage: ImpalaGenotypeStorage,
+    fixture_dirname: Callable
+) -> None:
 
     ped_file = fixture_dirname(
         "backends/test_partition2/pedigree/pedigree.parquet")
@@ -56,7 +62,7 @@ def test_impala_partition_import(
         "test_study", variants_path, ped_file)
 
     hdfs = impala_genotype_storage.hdfs_helpers
-    root = impala_genotype_storage.storage_config.hdfs.base_dir
+    root = impala_genotype_storage.storage_config.hdfs.base_dir  # type: ignore
 
     assert hdfs.exists(
         os.path.join(
@@ -124,10 +130,10 @@ def test_impala_partition_import(
     # )
 
     impala_helpers = impala_genotype_storage.impala_helpers
-    db = impala_genotype_storage.storage_config.impala.db
+    db = impala_genotype_storage.storage_config.impala.db  # type: ignore
 
     with closing(impala_helpers.connection()) as conn:
-        with conn.cursor() as cursor:
+        with conn.cursor() as cursor:  # type: ignore
             cursor.execute(f"DESCRIBE EXTENDED {db}.test_study_variants")
             rows = list(cursor)
             assert any(
@@ -161,7 +167,9 @@ def test_impala_partition_import(
             )
 
 
-def test_impala_genotype_storate_has_rsync_helpers(mocker):
+def test_impala_genotype_storate_has_rsync_helpers(
+    mocker: pytest_mock.MockerFixture
+) -> None:
     config = {
         "id": "genotype_impala",
         "storage_type": "impala",
@@ -186,7 +194,9 @@ def test_impala_genotype_storate_has_rsync_helpers(mocker):
     assert storage.rsync_helpers is not None
 
 
-def test_impala_genotype_storate_no_rsync_helpers(mocker):
+def test_impala_genotype_storate_no_rsync_helpers(
+    mocker: pytest_mock.MockerFixture
+) -> None:
     config = {
         "id": "genotype_impala",
         "storage_type": "impala",
@@ -208,7 +218,7 @@ def test_impala_genotype_storate_no_rsync_helpers(mocker):
     assert storage.rsync_helpers is None
 
 
-def test_create_impala_genotype_storage():
+def test_create_impala_genotype_storage() -> None:
     config = {
         "id": "genotype_impala",
         "storage_type": "impala",
@@ -231,7 +241,7 @@ def test_create_impala_genotype_storage():
     assert res is not None
 
 
-def test_create_impala_genotype_storage_missing_id():
+def test_create_impala_genotype_storage_missing_id() -> None:
     config = {
         "storage_type": "impala",
         "hdfs": {
@@ -255,7 +265,7 @@ def test_create_impala_genotype_storage_missing_id():
         ImpalaGenotypeStorage(config)
 
 
-def test_create_impala_genotype_storage_missing_type():
+def test_create_impala_genotype_storage_missing_type() -> None:
     config = {
         "id": "aaaa",
         "hdfs": {
@@ -279,7 +289,7 @@ def test_create_impala_genotype_storage_missing_type():
         ImpalaGenotypeStorage(config)
 
 
-def test_create_impala_genotype_storage_wrong_type():
+def test_create_impala_genotype_storage_wrong_type() -> None:
     config = {
         "id": "aaaa",
         "storage_type": "impala2",
@@ -302,11 +312,11 @@ def test_create_impala_genotype_storage_wrong_type():
             ValueError,
             match=re.escape(
                 "storage configuration for <impala2> passed to genotype "
-                "storage class type <impala>")):
+                "storage class type <{'impala'}>")):
         ImpalaGenotypeStorage(config)
 
 
-def test_create_impala_genotype_storage_missing_hdfs():
+def test_create_impala_genotype_storage_missing_hdfs() -> None:
     config = {
         "id": "genotype_impala",
         "storage_type": "impala",
@@ -333,7 +343,7 @@ def test_create_impala_genotype_storage_missing_hdfs():
         ImpalaGenotypeStorage(config)
 
 
-def test_create_impala_genotype_storage_missing_hdfs_base_dir():
+def test_create_impala_genotype_storage_missing_hdfs_base_dir() -> None:
     config = {
         "id": "genotype_impala",
         "storage_type": "impala",
@@ -360,7 +370,7 @@ def test_create_impala_genotype_storage_missing_hdfs_base_dir():
         ImpalaGenotypeStorage(config)
 
 
-def test_create_impala_genotype_storage_bad_hdfs_path():
+def test_create_impala_genotype_storage_bad_hdfs_path() -> None:
     config = {
         "id": "genotype_impala",
         "storage_type": "impala",
@@ -388,7 +398,7 @@ def test_create_impala_genotype_storage_bad_hdfs_path():
         ImpalaGenotypeStorage(config)
 
 
-def test_create_impala_genotype_storage_missing_hdfs_host():
+def test_create_impala_genotype_storage_missing_hdfs_host() -> None:
     config = {
         "id": "genotype_impala",
         "storage_type": "impala",
@@ -415,7 +425,7 @@ def test_create_impala_genotype_storage_missing_hdfs_host():
         ImpalaGenotypeStorage(config)
 
 
-def test_create_impala_genotype_storage_missing_hdfs_port():
+def test_create_impala_genotype_storage_missing_hdfs_port() -> None:
     config = {
         "id": "genotype_impala",
         "storage_type": "impala",
@@ -438,7 +448,7 @@ def test_create_impala_genotype_storage_missing_hdfs_port():
     assert res.storage_config["hdfs"]["port"] == 8020
 
 
-def test_create_impala_genotype_storage_missing_hdfs_replication():
+def test_create_impala_genotype_storage_missing_hdfs_replication() -> None:
     config = {
         "id": "genotype_impala",
         "storage_type": "impala",
@@ -461,7 +471,7 @@ def test_create_impala_genotype_storage_missing_hdfs_replication():
     assert res.storage_config["hdfs"]["replication"] == 1
 
 
-def test_create_impala_genotype_storage_missing_impala():
+def test_create_impala_genotype_storage_missing_impala() -> None:
     config = {
         "id": "genotype_impala",
         "storage_type": "impala",
@@ -488,7 +498,7 @@ def test_create_impala_genotype_storage_missing_impala():
         ImpalaGenotypeStorage(config)
 
 
-def test_create_impala_genotype_storage_missing_impala_db():
+def test_create_impala_genotype_storage_missing_impala_db() -> None:
     config = {
         "id": "genotype_impala",
         "storage_type": "impala",
@@ -515,7 +525,7 @@ def test_create_impala_genotype_storage_missing_impala_db():
         ImpalaGenotypeStorage(config)
 
 
-def test_create_impala_genotype_storage_missing_impala_hosts():
+def test_create_impala_genotype_storage_missing_impala_hosts() -> None:
     config = {
         "id": "genotype_impala",
         "storage_type": "impala",
@@ -542,7 +552,7 @@ def test_create_impala_genotype_storage_missing_impala_hosts():
         ImpalaGenotypeStorage(config)
 
 
-def test_create_impala_genotype_storage_missing_impala_port():
+def test_create_impala_genotype_storage_missing_impala_port() -> None:
     config = {
         "id": "genotype_impala",
         "storage_type": "impala",
@@ -565,7 +575,7 @@ def test_create_impala_genotype_storage_missing_impala_port():
     assert res.storage_config["impala"]["port"] == 21050
 
 
-def test_create_impala_genotype_storage_missing_impala_pool_size():
+def test_create_impala_genotype_storage_missing_impala_pool_size() -> None:
     config = {
         "id": "genotype_impala",
         "storage_type": "impala",
