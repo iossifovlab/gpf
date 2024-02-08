@@ -61,12 +61,28 @@ def add_variant_count(
     variant: FamilyVariant,
     variant_counts: dict[str, Any],
     person_set: str,
-    statistic_id: str
+    statistic_id: str,
+    effect_types: Optional[set[str]]
 ) -> None:
     """Increment count for specific variant."""
     # pylint: disable=invalid-name
     for gs in variant.effect_gene_symbols:
         if gs not in variant_counts:
+            continue
+
+        skip = False
+        if effect_types is not None:
+            skip = True
+            for allele in variant.alt_alleles:
+                allele_gene_effects = {
+                    eg.symbol: eg.effect for eg in allele.effect_genes
+                }
+                allele_effect = allele_gene_effects.get(gs)
+                if allele_effect and allele_effect in effect_types:
+                    skip = False
+                    break
+
+        if skip:
             continue
 
         vc = variant_counts[gs]
@@ -140,18 +156,14 @@ def count_variant(
                 continue
 
             stat_id = statistic.id
-            do_count = True
 
             in_members = len(pids.intersection(members)) > 0
 
-            do_count = do_count and in_members
-
-            if statistic.get("effects"):
-                ets = set(expand_effect_types(statistic.effects))
-                in_effect_types = len(ets.intersection(v.effect_types)) > 0
-                do_count = do_count and in_effect_types
+            if not in_members:
+                continue
 
             if statistic.get("scores"):
+                do_count = True
                 for score in statistic.scores:
                     score_name = score["name"]
                     score_min = score.get("min")
@@ -165,6 +177,8 @@ def count_variant(
                         do_count = do_count and score_value >= score_min
                     if score_max:
                         do_count = do_count and score_value <= score_max
+                if not do_count:
+                    continue
 
             if statistic.get("category") == "rare":
                 match = False
@@ -173,15 +187,16 @@ def count_variant(
 
                     if freq is not None and freq <= 1.0:
                         match = True
-                do_count = do_count and match
+                if not match:
+                    continue
 
             if statistic.get("variant_types"):
                 variant_types = {
                     allele_type_from_name(t)
                     for t in statistic.variant_types
                 }
-                do_count = do_count and \
-                    (len(variant_types.intersection(v.variant_types)) > 0)
+                if not len(variant_types.intersection(v.variant_types)) > 0:
+                    continue
 
             if statistic.get("roles"):
                 roles = {
@@ -191,13 +206,16 @@ def count_variant(
                 v_roles = set(
                     cast(FamilyAllele, v.alt_alleles[0]).variant_in_roles
                 )
-                do_count = do_count and \
-                    (len(v_roles.intersection(roles)) > 0)
+                if not len(v_roles.intersection(roles)) > 0:
+                    continue
 
-            if do_count:
-                add_variant_count(
-                    v, variant_counts, ps.set_name, stat_id
-                )
+            ets = None
+            if statistic.get("effects"):
+                ets = set(expand_effect_types(statistic.effects))
+
+            add_variant_count(
+                v, variant_counts, ps.set_name, stat_id, ets
+            )
 
 
 def collect_variant_counts(

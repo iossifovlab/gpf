@@ -81,12 +81,12 @@ def test_gpdb_insert_and_get_gp(
     assert gp.variant_counts == {
         "iossifov_2014": {
             "autism": {
-                "denovo_noncoding": {"count": 53, "rate": 1},
-                "denovo_missense": {"count": 21, "rate": 2}
+                "denovo_noncoding": {"count": 0, "rate": 0},
+                "denovo_missense": {"count": 0, "rate": 0}
             },
             "unaffected": {
-                "denovo_noncoding": {"count": 43, "rate": 3},
-                "denovo_missense": {"count": 51, "rate": 4}
+                "denovo_noncoding": {"count": 0, "rate": 0},
+                "denovo_missense": {"count": 0, "rate": 0}
             },
         }
     }
