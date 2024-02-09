@@ -173,7 +173,7 @@ class PreparePhenoBrowserBase:
             return res
 
         assert aug_df is not None
-        aug_df = aug_df[aug_df.role == "prb"]
+        aug_df = aug_df[aug_df.role == Role.prb]
         aug_df.loc[:, aug_col_name] = aug_df[aug_col_name].astype(np.float32)
         aug_df = aug_df[np.isfinite(aug_df[aug_col_name])]
 

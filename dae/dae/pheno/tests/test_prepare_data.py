@@ -30,7 +30,7 @@ def test_augment_measure(
 
     roles = list(df["role"].unique())
     assert len(roles) == 4
-    for role in ["mom", "dad", "sib", "prb"]:
+    for role in [Role.parent, Role.sib, Role.prb]:
         assert role in roles
     assert list(df) == [
         "person_id",

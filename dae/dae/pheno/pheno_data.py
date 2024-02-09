@@ -704,7 +704,9 @@ class PhenotypeStudy(PhenotypeData):
         )
 
         with self.db.pheno_engine.connect() as connection:
-            return pd.read_sql(query, connection)
+            df = pd.read_sql(query, connection)
+            df["role"] = df["role"].transform(Role.from_name)
+            return df
 
     def get_regressions(self) -> dict[str, Any]:
         return self.db.regression_display_names_with_ids
