@@ -10,7 +10,7 @@ from dae.variants.variant import SummaryVariant, SummaryVariantFactory
 
 
 class ParquetLoader:
-    RECORD_COLUMN = "summary_variant_data"
+    DATA_COLUMN = "summary_variant_data"
 
     def __init__(self, data_dir: str):
         self.data_dir: str = data_dir
@@ -36,7 +36,9 @@ class ParquetLoader:
         assert self.families is not None
         for path in glob.glob(f"{self.layout.summary}/*.parquet"):
             parquet_file = pq.ParquetFile(path)
-            for batch in parquet_file.iter_batches(columns=[self.RECORD_COLUMN]):
-                for rec in batch.column(self.RECORD_COLUMN):
-                    yield self._deserialize_summary_variant(rec.as_py())
+            for batch in parquet_file.iter_batches(columns=[self.DATA_COLUMN, "variant_type"]):
+                for rec in batch.to_pylist():
+                    if rec["variant_type"] == 0:  # skip ref alleles
+                        continue
+                    yield self._deserialize_summary_variant(rec[self.DATA_COLUMN])
             parquet_file.close()
