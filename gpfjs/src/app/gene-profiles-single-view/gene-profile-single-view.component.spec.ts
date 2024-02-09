@@ -7,7 +7,7 @@ import { DatasetsService } from 'app/datasets/datasets.service';
 import { GeneScoresService } from 'app/gene-scores/gene-scores.service';
 import { UsersService } from 'app/users/users.service';
 import { of } from 'rxjs';
-import { GeneProfileSingleViewComponent } from './autism-gene-profile-single-view.component';
+import { GeneProfileSingleViewComponent } from './gene-profiles-single-view.component';
 import { QueryService } from 'app/query/query.service';
 import { APP_BASE_HREF } from '@angular/common';
 

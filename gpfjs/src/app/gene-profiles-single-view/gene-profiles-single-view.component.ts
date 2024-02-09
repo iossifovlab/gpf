@@ -2,12 +2,12 @@ import { Component, ElementRef, HostListener, Input, OnInit, ViewChild } from '@
 import {
   GeneProfilesDatasetPersonSet, GeneProfilesDatasetStatistic, GeneProfilesGene,
   GeneProfilesGenomicScores, GeneProfilesSingleViewConfig, GeneProfilesEffectType
-} from 'app/autism-gene-profiles-single-view/autism-gene-profile-single-view';
+} from 'app/gene-profiles-single-view/gene-profiles-single-view';
 // eslint-disable-next-line no-restricted-imports
 import { Observable, of, zip } from 'rxjs';
 import { GeneScoresService } from '../gene-scores/gene-scores.service';
 import { GeneScores } from 'app/gene-scores/gene-scores';
-import { GeneProfilesService } from 'app/autism-gene-profiles-block/autism-gene-profiles.service';
+import { GeneProfilesService } from 'app/gene-profiles-block/gene-profiles.service';
 import { switchMap, take } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { Location } from '@angular/common';
@@ -28,9 +28,9 @@ import { SetVariantTypes } from 'app/variant-types/variant-types.state';
 import { EffectTypes } from 'app/effect-types/effect-types';
 
 @Component({
-  selector: 'gpf-gene-profile-single-view',
-  templateUrl: './autism-gene-profile-single-view.component.html',
-  styleUrls: ['./autism-gene-profile-single-view.component.css']
+  selector: 'gpf-gene-profiles-single-view',
+  templateUrl: './gene-profiles-single-view.component.html',
+  styleUrls: ['./gene-profiles-single-view.component.css']
 })
 export class GeneProfileSingleViewComponent implements OnInit {
   @ViewChild('stickySpan', {static: false}) public menuElement: ElementRef;

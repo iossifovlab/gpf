@@ -3,8 +3,8 @@ import { TestBed } from '@angular/core/testing';
 import { ConfigService } from 'app/config/config.service';
 // eslint-disable-next-line no-restricted-imports
 import { lastValueFrom, of } from 'rxjs';
-import { GeneProfilesService } from './autism-gene-profiles.service';
-import { GeneProfilesSingleViewConfig, GeneProfilesGene } from 'app/autism-gene-profiles-single-view/autism-gene-profile-single-view';
+import { GeneProfilesService } from './gene-profiles.service';
+import { GeneProfilesSingleViewConfig, GeneProfilesGene } from 'app/gene-profiles-single-view/gene-profiles-single-view';
 import { take } from 'rxjs/operators';
 
 describe('GeneProfilesService', () => {

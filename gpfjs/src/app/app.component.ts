@@ -7,8 +7,8 @@ import { switchMap } from 'rxjs/operators';
 import { NgbNavConfig } from '@ng-bootstrap/ng-bootstrap';
 import { APP_BASE_HREF } from '@angular/common';
 import { AppVersionService } from './app-version.service';
-import { GeneProfilesService } from './autism-gene-profiles-block/autism-gene-profiles.service';
-import { GeneProfilesSingleViewConfig } from './autism-gene-profiles-single-view/autism-gene-profile-single-view';
+import { GeneProfilesService } from './gene-profiles-block/gene-profiles.service';
+import { GeneProfilesSingleViewConfig } from './gene-profiles-single-view/gene-profiles-single-view';
 
 @Component({
   selector: 'gpf-root',

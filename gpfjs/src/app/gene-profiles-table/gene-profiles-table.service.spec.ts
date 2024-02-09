@@ -3,7 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { ConfigService } from 'app/config/config.service';
 // eslint-disable-next-line no-restricted-imports
 import { of } from 'rxjs';
-import { GeneProfilesTableService } from './autism-gene-profiles-table.service';
+import { GeneProfilesTableService } from './gene-profiles-table.service';
 
 describe('GeneProfilesTableService', () => {
   let service: GeneProfilesTableService;

@@ -3,8 +3,8 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ConfigService } from 'app/config/config.service';
 import { ActivatedRoute } from '@angular/router';
 import { lastValueFrom, Observable, of } from 'rxjs';
-import { GeneProfileSingleViewWrapperComponent } from './autism-gene-profiles-single-view-wrapper.component';
-import { GeneProfilesService } from 'app/autism-gene-profiles-block/autism-gene-profiles.service';
+import { GeneProfileSingleViewWrapperComponent } from './gene-profiles-single-view-wrapper.component';
+import { GeneProfilesService } from 'app/gene-profiles-block/gene-profiles.service';
 
 class MockActivatedRoute {
   public params = {dataset: 'testDatasetId', get: (): string => ''};

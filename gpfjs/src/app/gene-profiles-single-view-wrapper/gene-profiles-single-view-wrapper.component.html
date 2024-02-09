@@ -1,11 +1,11 @@
 <div class="container">
   <ng-container *ngIf="$geneProfilesConfig | async as config">
     <ng-container *ngFor="let geneSymbol of geneSymbols">
-      <gpf-gene-profile-single-view
+      <gpf-gene-profiles-single-view
         [config]="config"
         [geneSymbol]="geneSymbol"
         [isInGeneCompare]="geneSymbols.size > 1">
-      </gpf-gene-profile-single-view>
+      </gpf-gene-profiles-single-view>
     </ng-container>
   </ng-container>
 </div>

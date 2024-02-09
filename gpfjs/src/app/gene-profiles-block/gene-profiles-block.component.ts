@@ -3,19 +3,19 @@ import {
   GeneProfilesDataset,
   GeneProfilesGeneSetsCategory,
   GeneProfilesGenomicScoresCategory,
-  GeneProfilesSingleViewConfig} from 'app/autism-gene-profiles-single-view/autism-gene-profile-single-view';
-import { GeneProfilesService } from 'app/autism-gene-profiles-block/autism-gene-profiles.service';
+  GeneProfilesSingleViewConfig} from 'app/gene-profiles-single-view/gene-profiles-single-view';
+import { GeneProfilesService } from 'app/gene-profiles-block/gene-profiles.service';
 import { map, take } from 'rxjs/operators';
 import { Store } from '@ngxs/store';
 import { QueryService } from 'app/query/query.service';
-import { GeneProfilesColumn, GeneProfilesTableConfig } from 'app/autism-gene-profiles-table/autism-gene-profiles-table';
+import { GeneProfilesColumn, GeneProfilesTableConfig } from 'app/gene-profiles-table/gene-profiles-table';
 import {
   GeneProfileSingleViewComponent
-} from 'app/autism-gene-profiles-single-view/autism-gene-profile-single-view.component';
+} from 'app/gene-profiles-single-view/gene-profiles-single-view.component';
 
 @Component({
   selector: 'gpf-gene-profiles-block',
-  templateUrl: './autism-gene-profiles-block.component.html'
+  templateUrl: './gene-profiles-block.component.html'
 })
 export class GeneProfilesBlockComponent implements OnInit {
   public geneProfilesTableConfig: GeneProfilesTableConfig;

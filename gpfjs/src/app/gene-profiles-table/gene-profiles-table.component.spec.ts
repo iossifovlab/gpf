@@ -1,9 +1,9 @@
-import { GeneProfilesTableComponent } from './autism-gene-profiles-table.component';
-import { GeneProfilesTableConfig } from './autism-gene-profiles-table';
+import { GeneProfilesTableComponent } from './gene-profiles-table.component';
+import { GeneProfilesTableConfig } from './gene-profiles-table';
 import { plainToClass } from 'class-transformer';
 import { Observable, of } from 'rxjs';
 import { cloneDeep } from 'lodash';
-import { GeneProfilesTableService } from './autism-gene-profiles-table.service';
+import { GeneProfilesTableService } from './gene-profiles-table.service';
 import { TestBed } from '@angular/core/testing';
 
 const column1 = {

@@ -1,6 +1,6 @@
 import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { Component, ElementRef, EventEmitter, Input, OnChanges, Output, ViewChild } from '@angular/core';
-import { GeneProfilesColumn } from 'app/autism-gene-profiles-table/autism-gene-profiles-table';
+import { GeneProfilesColumn } from 'app/gene-profiles-table/gene-profiles-table';
 import { environment } from 'environments/environment';
 
 @Component({

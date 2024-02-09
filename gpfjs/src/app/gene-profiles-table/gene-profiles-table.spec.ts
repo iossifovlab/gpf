@@ -1,5 +1,5 @@
 import { plainToClass } from 'class-transformer';
-import { GeneProfilesTableConfig, GeneProfilesColumn } from './autism-gene-profiles-table';
+import { GeneProfilesTableConfig, GeneProfilesColumn } from './gene-profiles-table';
 
 const column1 = {
   clickable: 'createTab',

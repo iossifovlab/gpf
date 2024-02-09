@@ -1,14 +1,14 @@
 import { AfterViewInit, Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { GeneProfilesService } from 'app/autism-gene-profiles-block/autism-gene-profiles.service';
-import { GeneProfilesSingleViewConfig } from 'app/autism-gene-profiles-single-view/autism-gene-profile-single-view';
+import { GeneProfilesService } from 'app/gene-profiles-block/gene-profiles.service';
+import { GeneProfilesSingleViewConfig } from 'app/gene-profiles-single-view/gene-profiles-single-view';
 import { Observable } from 'rxjs';
 import { Location } from '@angular/common';
 
 @Component({
   selector: 'gpf-gene-profiles-single-view-wrapper',
-  templateUrl: './autism-gene-profiles-single-view-wrapper.component.html',
-  styleUrls: ['./autism-gene-profiles-single-view-wrapper.component.css']
+  templateUrl: './gene-profiles-single-view-wrapper.component.html',
+  styleUrls: ['./gene-profiles-single-view-wrapper.component.css']
 })
 export class GeneProfileSingleViewWrapperComponent implements OnInit, AfterViewInit {
   public $geneProfilesConfig: Observable<GeneProfilesSingleViewConfig>;

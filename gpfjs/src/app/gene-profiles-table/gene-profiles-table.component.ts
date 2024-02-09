@@ -7,14 +7,14 @@ import { MultipleSelectMenuComponent } from 'app/multiple-select-menu/multiple-s
 import { SortingButtonsComponent } from 'app/sorting-buttons/sorting-buttons.component';
 import { debounceTime, distinctUntilChanged, take, tap } from 'rxjs/operators';
 import { Subject, Subscription, zip } from 'rxjs';
-import { GeneProfilesTableConfig, GeneProfilesColumn } from './autism-gene-profiles-table';
-import { GeneProfilesTableService } from './autism-gene-profiles-table.service';
+import { GeneProfilesTableConfig, GeneProfilesColumn } from './gene-profiles-table';
+import { GeneProfilesTableService } from './gene-profiles-table.service';
 import { environment } from 'environments/environment';
 
 @Component({
   selector: 'gpf-gene-profiles-table',
-  templateUrl: './autism-gene-profiles-table.component.html',
-  styleUrls: ['./autism-gene-profiles-table.component.css']
+  templateUrl: './gene-profiles-table.component.html',
+  styleUrls: ['./gene-profiles-table.component.css']
 })
 export class GeneProfilesTableComponent implements OnInit, OnChanges, OnDestroy {
   @Input() public config: GeneProfilesTableConfig;

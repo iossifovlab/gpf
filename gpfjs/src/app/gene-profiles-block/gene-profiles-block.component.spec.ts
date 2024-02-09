@@ -4,19 +4,19 @@ import { NgbNavModule } from '@ng-bootstrap/ng-bootstrap';
 import { ConfigService } from 'app/config/config.service';
 import { QueryService } from 'app/query/query.service';
 import { RouterTestingModule } from '@angular/router/testing';
-import { GeneProfilesBlockComponent } from './autism-gene-profiles-block.component';
-import { GeneProfilesTableComponent } from 'app/autism-gene-profiles-table/autism-gene-profiles-table.component';
+import { GeneProfilesBlockComponent } from './gene-profiles-block.component';
+import { GeneProfilesTableComponent } from 'app/gene-profiles-table/gene-profiles-table.component';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { UsersService } from 'app/users/users.service';
 import { NgxsModule } from '@ngxs/store';
 import { MultipleSelectMenuComponent } from 'app/multiple-select-menu/multiple-select-menu.component';
 import { FormsModule } from '@angular/forms';
 import { APP_BASE_HREF } from '@angular/common';
-import { GeneProfilesService } from './autism-gene-profiles.service';
+import { GeneProfilesService } from './gene-profiles.service';
 import { Observable, of } from 'rxjs';
-import { GeneProfilesSingleViewConfig } from 'app/autism-gene-profiles-single-view/autism-gene-profile-single-view';
+import { GeneProfilesSingleViewConfig } from 'app/gene-profiles-single-view/gene-profiles-single-view';
 import { TruncatePipe } from '../utils/truncate.pipe';
-import { GeneProfilesColumn, GeneProfilesTableConfig } from 'app/autism-gene-profiles-table/autism-gene-profiles-table';
+import { GeneProfilesColumn, GeneProfilesTableConfig } from 'app/gene-profiles-table/gene-profiles-table';
 
 const config = {
   shown: [],
