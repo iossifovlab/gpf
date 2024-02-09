@@ -1,27 +1,27 @@
 import { AfterViewInit, Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { AutismGeneProfilesService } from 'app/autism-gene-profiles-block/autism-gene-profiles.service';
-import { AgpSingleViewConfig } from 'app/autism-gene-profiles-single-view/autism-gene-profile-single-view';
+import { GeneProfilesService } from 'app/autism-gene-profiles-block/autism-gene-profiles.service';
+import { GeneProfilesSingleViewConfig } from 'app/autism-gene-profiles-single-view/autism-gene-profile-single-view';
 import { Observable } from 'rxjs';
 import { Location } from '@angular/common';
 
 @Component({
-  selector: 'gpf-autism-gene-profiles-single-view-wrapper',
+  selector: 'gpf-gene-profiles-single-view-wrapper',
   templateUrl: './autism-gene-profiles-single-view-wrapper.component.html',
   styleUrls: ['./autism-gene-profiles-single-view-wrapper.component.css']
 })
-export class AutismGeneProfileSingleViewWrapperComponent implements OnInit, AfterViewInit {
-  public $autismGeneToolConfig: Observable<AgpSingleViewConfig>;
+export class GeneProfileSingleViewWrapperComponent implements OnInit, AfterViewInit {
+  public $geneProfilesConfig: Observable<GeneProfilesSingleViewConfig>;
   public geneSymbols = new Set<string>();
 
   public constructor(
-    private autismGeneProfilesService: AutismGeneProfilesService,
+    private geneProfilesService: GeneProfilesService,
     private route: ActivatedRoute,
     private location: Location
   ) { }
 
   public ngOnInit(): void {
-    this.$autismGeneToolConfig = this.autismGeneProfilesService.getConfig();
+    this.$geneProfilesConfig = this.geneProfilesService.getConfig();
   }
 
   public ngAfterViewInit(): void {
@@ -31,6 +31,6 @@ export class AutismGeneProfileSingleViewWrapperComponent implements OnInit, Afte
         .filter(p => p)
         .map(p => p.trim())
     );
-    this.location.replaceState('autism-gene-profiles/' + Array.from(this.geneSymbols).toString());
+    this.location.replaceState('gene-profiles/' + Array.from(this.geneSymbols).toString());
   }
 }

@@ -1,81 +1,80 @@
 import { Component, OnInit } from '@angular/core';
 import {
-  AgpDataset,
-  AgpGeneSetsCategory,
-  AgpGenomicScoresCategory,
-  AgpSingleViewConfig} from 'app/autism-gene-profiles-single-view/autism-gene-profile-single-view';
-import { AutismGeneProfilesService } from 'app/autism-gene-profiles-block/autism-gene-profiles.service';
+  GeneProfilesDataset,
+  GeneProfilesGeneSetsCategory,
+  GeneProfilesGenomicScoresCategory,
+  GeneProfilesSingleViewConfig} from 'app/autism-gene-profiles-single-view/autism-gene-profile-single-view';
+import { GeneProfilesService } from 'app/autism-gene-profiles-block/autism-gene-profiles.service';
 import { map, take } from 'rxjs/operators';
 import { Store } from '@ngxs/store';
 import { QueryService } from 'app/query/query.service';
-import { AgpColumn, AgpTableConfig } from 'app/autism-gene-profiles-table/autism-gene-profiles-table';
+import { GeneProfilesColumn, GeneProfilesTableConfig } from 'app/autism-gene-profiles-table/autism-gene-profiles-table';
 import {
-  AutismGeneProfileSingleViewComponent
+  GeneProfileSingleViewComponent
 } from 'app/autism-gene-profiles-single-view/autism-gene-profile-single-view.component';
 
 @Component({
-  selector: 'gpf-autism-gene-profiles-block',
-  templateUrl: './autism-gene-profiles-block.component.html',
-  styleUrls: ['./autism-gene-profiles-block.component.css']
+  selector: 'gpf-gene-profiles-block',
+  templateUrl: './autism-gene-profiles-block.component.html'
 })
-export class AutismGeneProfilesBlockComponent implements OnInit {
-  public agpTableConfig: AgpTableConfig;
-  public agpTableSortBy: string;
-  public agpSingleViewConfig: AgpSingleViewConfig;
+export class GeneProfilesBlockComponent implements OnInit {
+  public geneProfilesTableConfig: GeneProfilesTableConfig;
+  public geneProfilesTableSortBy: string;
+  public geneProfilesSingleViewConfig: GeneProfilesSingleViewConfig;
 
   public constructor(
-    private autismGeneProfilesService: AutismGeneProfilesService,
+    private geneProfilesService: GeneProfilesService,
     private queryService: QueryService,
     private store: Store
   ) { }
 
   public ngOnInit(): void {
-    this.autismGeneProfilesService.getConfig().pipe(map(config => this.createTableConfig(config))).subscribe(config => {
-      this.agpTableConfig = config;
-      this.agpTableSortBy = this.findFirstAgpSortableCategory(config);
+    this.geneProfilesService.getConfig().pipe(map(config => this.createTableConfig(config))).subscribe(config => {
+      this.geneProfilesTableConfig = config;
+      this.geneProfilesTableSortBy = this.findFirstSortableCategory(config);
     });
-    this.autismGeneProfilesService.getConfig().pipe(take(1)).subscribe(config => {
-      this.agpSingleViewConfig = config;
+    this.geneProfilesService.getConfig().pipe(take(1)).subscribe(config => {
+      this.geneProfilesSingleViewConfig = config;
     });
   }
 
-  private createTableConfig(config: AgpSingleViewConfig): AgpTableConfig {
-    const agpTableConfig = new AgpTableConfig();
-    agpTableConfig.defaultDataset = config.defaultDataset;
-    agpTableConfig.columns = [];
-    agpTableConfig.pageSize = config.pageSize;
+  private createTableConfig(config: GeneProfilesSingleViewConfig): GeneProfilesTableConfig {
+    const geneProfilesTableConfig = new GeneProfilesTableConfig();
+    geneProfilesTableConfig.defaultDataset = config.defaultDataset;
+    geneProfilesTableConfig.columns = [];
+    geneProfilesTableConfig.pageSize = config.pageSize;
 
     const datasets = config.datasets;
     const geneSets = config.geneSets;
     const genomicScores = config.genomicScores;
 
-    agpTableConfig.columns.push(
-      new AgpColumn('createTab', [], 'Gene', false, 'geneSymbol', null, false, true)
+    geneProfilesTableConfig.columns.push(
+      new GeneProfilesColumn('createTab', [], 'Gene', false, 'geneSymbol', null, false, true)
     );
 
     geneSets.forEach(geneSet => {
-      agpTableConfig.columns.push(this.createTableGeneSet(geneSet));
+      geneProfilesTableConfig.columns.push(this.createTableGeneSet(geneSet));
     });
 
     genomicScores.forEach(genomicScore => {
-      agpTableConfig.columns.push(this.createTableGenomicScore(genomicScore));
+      geneProfilesTableConfig.columns.push(this.createTableGenomicScore(genomicScore));
     });
 
     datasets.forEach(dataset => {
-      agpTableConfig.columns.push(this.createTableDataset(dataset));
+      geneProfilesTableConfig.columns.push(this.createTableDataset(dataset));
     });
 
     const order = config.order.map(el => el.id);
-    agpTableConfig.columns.sort((col1, col2) => order.indexOf(col1.id) - order.indexOf(col2.id));
+    geneProfilesTableConfig.columns.sort((col1, col2) => order.indexOf(col1.id) - order.indexOf(col2.id));
 
-    return agpTableConfig;
+    return geneProfilesTableConfig;
   }
 
-  private createTableGeneSet(geneSet: AgpGeneSetsCategory): AgpColumn {
-    const innerColumns: AgpColumn[] = [];
+  private createTableGeneSet(geneSet: GeneProfilesGeneSetsCategory): GeneProfilesColumn {
+    const innerColumns: GeneProfilesColumn[] = [];
     geneSet.sets.forEach(set => {
       innerColumns.push(
-        new AgpColumn(
+        new GeneProfilesColumn(
           null,
           [],
           set.setId,
@@ -88,7 +87,7 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
       );
     });
 
-    return new AgpColumn(
+    return new GeneProfilesColumn(
       null,
       innerColumns,
       geneSet.displayName,
@@ -100,11 +99,11 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
     );
   }
 
-  private createTableGenomicScore(genomicScore: AgpGenomicScoresCategory): AgpColumn {
-    const innerColumns: AgpColumn[] = [];
+  private createTableGenomicScore(genomicScore: GeneProfilesGenomicScoresCategory): GeneProfilesColumn {
+    const innerColumns: GeneProfilesColumn[] = [];
     genomicScore.scores.forEach(score => {
       innerColumns.push(
-        new AgpColumn(
+        new GeneProfilesColumn(
           null,
           [],
           score.scoreName,
@@ -116,7 +115,7 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
         ));
     });
 
-    return new AgpColumn(
+    return new GeneProfilesColumn(
       null,
       innerColumns,
       genomicScore.displayName,
@@ -128,13 +127,13 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
     );
   }
 
-  private createTableDataset(dataset: AgpDataset): AgpColumn {
-    const personSetsColumns: AgpColumn[] = [];
+  private createTableDataset(dataset: GeneProfilesDataset): GeneProfilesColumn {
+    const personSetsColumns: GeneProfilesColumn[] = [];
     dataset.personSets.forEach(set => {
-      const statisticsColumns: AgpColumn[] = [];
+      const statisticsColumns: GeneProfilesColumn[] = [];
       set.statistics.forEach(statistic => {
         statisticsColumns.push(
-          new AgpColumn(
+          new GeneProfilesColumn(
             'goToQuery',
             [],
             statistic.displayName,
@@ -148,7 +147,7 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
       });
 
       personSetsColumns.push(
-        new AgpColumn(
+        new GeneProfilesColumn(
           null,
           statisticsColumns,
           `${set.displayName} (${set.childrenCount})`,
@@ -161,23 +160,23 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
       );
     });
 
-    return new AgpColumn(
+    return new GeneProfilesColumn(
       null, personSetsColumns, dataset.displayName, false, dataset.id, dataset.meta, false, dataset.defaultVisible
     );
   }
 
-  private findFirstAgpSortableCategory(agpTableConfig: AgpTableConfig): string {
-    return agpTableConfig.columns.filter(column => column.sortable)[0].id;
+  private findFirstSortableCategory(geneProfilesTableConfig: GeneProfilesTableConfig): string {
+    return geneProfilesTableConfig.columns.filter(column => column.sortable)[0].id;
   }
 
   public goToQueryEventHandler($event: { geneSymbol: string; statisticId: string }): void {
     const tokens: string[] = $event.statisticId.split('.');
     const datasetId = tokens[0];
-    const personSet = this.agpSingleViewConfig.datasets
+    const personSet = this.geneProfilesSingleViewConfig.datasets
       .find(ds => ds.id === datasetId).personSets
       .find(ps => ps.id === tokens[1]);
     const statistic = personSet.statistics.find(st => st.id === tokens[2]);
-    AutismGeneProfileSingleViewComponent.goToQuery(
+    GeneProfileSingleViewComponent.goToQuery(
       this.store, this.queryService, $event.geneSymbol, personSet, datasetId, statistic
     );
   }

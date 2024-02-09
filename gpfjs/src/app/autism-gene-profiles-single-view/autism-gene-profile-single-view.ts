@@ -1,71 +1,71 @@
 import { GenomicScore } from 'app/genotype-browser/genotype-browser';
 import { Type } from 'class-transformer';
 
-export class AgpSingleViewConfig {
+export class GeneProfilesSingleViewConfig {
   public shown: Array<{category: any; section: string; id: string}>;
   public defaultDataset: string;
 
-  @Type(() => AgpGeneSetsCategory)
-  public geneSets: AgpGeneSetsCategory[];
+  @Type(() => GeneProfilesGeneSetsCategory)
+  public geneSets: GeneProfilesGeneSetsCategory[];
 
-  @Type(() => AgpGenomicScoresCategory)
-  public genomicScores: AgpGenomicScoresCategory[];
+  @Type(() => GeneProfilesGenomicScoresCategory)
+  public genomicScores: GeneProfilesGenomicScoresCategory[];
 
-  @Type(() => AgpDataset)
-  public datasets: AgpDataset[];
+  @Type(() => GeneProfilesDataset)
+  public datasets: GeneProfilesDataset[];
 
-  @Type(() => AgpOrder)
-  public order: AgpOrder[];
+  @Type(() => GeneProfilesOrder)
+  public order: GeneProfilesOrder[];
 
   public pageSize: number;
 }
 
-export class AgpGeneSetsCategory {
+export class GeneProfilesGeneSetsCategory {
   public category: string;
   public displayName: string;
   public defaultVisible: boolean;
 
-  @Type(() => AgpGeneSet)
-  public sets: AgpGeneSet[];
+  @Type(() => GeneProfilesGeneSet)
+  public sets: GeneProfilesGeneSet[];
 }
 
-export class AgpGeneSet {
+export class GeneProfilesGeneSet {
   public setId: string;
   public collectionId: string;
   public meta: string;
   public defaultVisible: boolean;
 }
 
-export class AgpGenomicScoresCategory {
+export class GeneProfilesGenomicScoresCategory {
   public category: string;
   public displayName: string;
   public defaultVisible: boolean;
 
-  @Type(() => AgpGenomicScore)
-  public scores: AgpGenomicScore[];
+  @Type(() => GeneProfilesGenomicScore)
+  public scores: GeneProfilesGenomicScore[];
 }
 
-export class AgpGenomicScore {
+export class GeneProfilesGenomicScore {
   public scoreName: string;
   public format: string;
   public meta: string;
   public defaultVisible: boolean;
 }
 
-export class AgpDataset {
+export class GeneProfilesDataset {
   public id: string;
   public displayName: string;
   public meta: string;
   public defaultVisible: boolean;
 
-  public shown: AgpDatasetPersonSet[];
-  public statistics: AgpDatasetStatistic[];
+  public shown: GeneProfilesDatasetPersonSet[];
+  public statistics: GeneProfilesDatasetStatistic[];
 
-  @Type(() => AgpDatasetPersonSet)
-  public personSets: AgpDatasetPersonSet[];
+  @Type(() => GeneProfilesDatasetPersonSet)
+  public personSets: GeneProfilesDatasetPersonSet[];
 }
 
-export class AgpDatasetPersonSet {
+export class GeneProfilesDatasetPersonSet {
   public id: string;
   public displayName: string;
   public collectionId: string;
@@ -74,13 +74,13 @@ export class AgpDatasetPersonSet {
   public childrenCount: number;
   public defaultVisible = true;
 
-  public shown: AgpDatasetStatistic[];
+  public shown: GeneProfilesDatasetStatistic[];
 
-  @Type(() => AgpDatasetStatistic)
-  public statistics: AgpDatasetStatistic[];
+  @Type(() => GeneProfilesDatasetStatistic)
+  public statistics: GeneProfilesDatasetStatistic[];
 }
 
-export class AgpDatasetStatistic {
+export class GeneProfilesDatasetStatistic {
   public id: string;
   public displayName: string;
   public effects: string[];
@@ -91,55 +91,55 @@ export class AgpDatasetStatistic {
   public defaultVisible: boolean;
 }
 
-export class AgpOrder {
+export class GeneProfilesOrder {
   public section: string;
   public id: string;
 }
 
-export class AgpGene {
+export class GeneProfilesGene {
   public geneSymbol: string;
   public geneSets: string[];
 
-  @Type(() => AgpGenomicScores)
-  public genomicScores: AgpGenomicScores[];
+  @Type(() => GeneProfilesGenomicScores)
+  public genomicScores: GeneProfilesGenomicScores[];
 
-  @Type(() => AgpStudy)
-  public studies: AgpStudy[];
+  @Type(() => GeneProfilesStudy)
+  public studies: GeneProfilesStudy[];
 }
 
-export class AgpGenomicScores {
+export class GeneProfilesGenomicScores {
   public id: string;
 
-  @Type(() => AgpGenomicScoreWithValue)
-  public scores: AgpGenomicScoreWithValue[];
+  @Type(() => GeneProfilesGenomicScoreWithValue)
+  public scores: GeneProfilesGenomicScoreWithValue[];
 }
 
-export class AgpGenomicScoreWithValue {
+export class GeneProfilesGenomicScoreWithValue {
   public id: string;
   public value: number;
   public format: string;
 }
 
-export class AgpStudy {
+export class GeneProfilesStudy {
   public id: string;
 
-  @Type(() => AgpPersonSet)
-  public personSets: AgpPersonSet[];
+  @Type(() => GeneProfilesPersonSet)
+  public personSets: GeneProfilesPersonSet[];
 }
 
-export class AgpPersonSet {
+export class GeneProfilesPersonSet {
   public id: string;
 
-  @Type(() => AgpEffectType)
-  public effectTypes: AgpEffectType[];
+  @Type(() => GeneProfilesEffectType)
+  public effectTypes: GeneProfilesEffectType[];
 }
 
-export class AgpEffectType {
+export class GeneProfilesEffectType {
   public id: string;
-  public value: AgpEffectTypeValue;
+  public value: GeneProfilesEffectTypeValue;
 }
 
-export class AgpEffectTypeValue {
+export class GeneProfilesEffectTypeValue {
   public count: number;
   public rate: number;
 }

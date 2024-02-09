@@ -7,17 +7,17 @@ import { DatasetsService } from 'app/datasets/datasets.service';
 import { GeneScoresService } from 'app/gene-scores/gene-scores.service';
 import { UsersService } from 'app/users/users.service';
 import { of } from 'rxjs';
-import { AutismGeneProfileSingleViewComponent } from './autism-gene-profile-single-view.component';
+import { GeneProfileSingleViewComponent } from './autism-gene-profile-single-view.component';
 import { QueryService } from 'app/query/query.service';
 import { APP_BASE_HREF } from '@angular/common';
 
-describe('AutismGeneProfileSingleViewComponent', () => {
-  let component: AutismGeneProfileSingleViewComponent;
-  let fixture: ComponentFixture<AutismGeneProfileSingleViewComponent>;
+describe('GeneProfileSingleViewComponent', () => {
+  let component: GeneProfileSingleViewComponent;
+  let fixture: ComponentFixture<GeneProfileSingleViewComponent>;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      declarations: [AutismGeneProfileSingleViewComponent],
+      declarations: [GeneProfileSingleViewComponent],
       providers: [
         ConfigService, GeneScoresService, DatasetsService,
         UsersService, QueryService, { provide: APP_BASE_HREF, useValue: '' }
@@ -25,7 +25,7 @@ describe('AutismGeneProfileSingleViewComponent', () => {
       imports: [HttpClientTestingModule, RouterTestingModule, NgxsModule.forRoot([], {developmentMode: true})]
     }).compileComponents();
 
-    fixture = TestBed.createComponent(AutismGeneProfileSingleViewComponent);
+    fixture = TestBed.createComponent(GeneProfileSingleViewComponent);
     component = fixture.componentInstance;
     component.config = {geneSets: ['mockGeneSet']} as any;
     fixture.detectChanges();
@@ -37,7 +37,7 @@ describe('AutismGeneProfileSingleViewComponent', () => {
 
   it('should initialize', () => {
     (component as any).geneSymbol = 'mockGeneSymbol';
-    const getGeneSpy = jest.spyOn(component['autismGeneProfilesService'], 'getGene');
+    const getGeneSpy = jest.spyOn(component['geneProfilesService'], 'getGene');
     const fakeScores1 = [{id: 'fakeScore1', value: 1, format: ''}];
     const fakeScores2 = [{id: 'fakeScore2', value: 1, format: ''}];
     const mockGenomicScores = [

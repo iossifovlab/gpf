@@ -1,16 +1,16 @@
 import { Type } from 'class-transformer';
 
-export class AgpTableConfig {
-  @Type(() => AgpColumn)
-  public columns: AgpColumn[];
+export class GeneProfilesTableConfig {
+  @Type(() => GeneProfilesColumn)
+  public columns: GeneProfilesColumn[];
 
   public defaultDataset: string;
   public pageSize: number;
 }
 
-export class AgpColumn {
-  @Type(() => AgpColumn)
-  public columns: AgpColumn[];
+export class GeneProfilesColumn {
+  @Type(() => GeneProfilesColumn)
+  public columns: GeneProfilesColumn[];
 
   public id: string;
   public displayName: string;
@@ -19,7 +19,7 @@ export class AgpColumn {
   public clickable: string | null;
   public meta: string | null;
 
-  public parent?: AgpColumn = null;
+  public parent?: GeneProfilesColumn = null;
   public gridColumn?: string = null;
   public gridRow?: string = null;
   public depth?: number = null;
@@ -28,7 +28,7 @@ export class AgpColumn {
 
   public constructor(
     clickable: string,
-    columns: AgpColumn[],
+    columns: GeneProfilesColumn[],
     displayName: string,
     displayVertical: boolean,
     id: string,
@@ -68,17 +68,17 @@ export class AgpColumn {
     }
   }
 
-  public get visibleChildren(): AgpColumn[] {
+  public get visibleChildren(): GeneProfilesColumn[] {
     return this.columns.filter(column => column.visibility);
   }
 
-  public static leaves(columns: AgpColumn[], parent?: AgpColumn, depth: number = 1): AgpColumn[] {
-    const result: AgpColumn[] = [];
+  public static leaves(columns: GeneProfilesColumn[], parent?: GeneProfilesColumn, depth: number = 1): GeneProfilesColumn[] {
+    const result: GeneProfilesColumn[] = [];
     for (const column of columns.filter(c => c.visibility)) {
       column.parent = parent === null || parent === undefined ? null : parent;
       column.depth = depth;
       if (column.visibleChildren.length > 0) {
-        result.push(...AgpColumn.leaves(column.visibleChildren, column, depth + 1));
+        result.push(...GeneProfilesColumn.leaves(column.visibleChildren, column, depth + 1));
       } else {
         result.push(column);
       }
@@ -86,8 +86,8 @@ export class AgpColumn {
     return result;
   }
 
-  public get leaves(): AgpColumn[] {
-    const result: AgpColumn[] = [];
+  public get leaves(): GeneProfilesColumn[] {
+    const result: GeneProfilesColumn[] = [];
     for (const column of this.visibleChildren) {
       if (column.columns.length > 0) {
         result.push(...column.leaves);
@@ -98,19 +98,19 @@ export class AgpColumn {
     return result;
   }
 
-  public static calculateGridRow(column: AgpColumn, depth: number): void {
+  public static calculateGridRow(column: GeneProfilesColumn, depth: number): void {
     if (column.gridRow !== null) {
       return;
     }
     if (column.parent !== null) {
       column.gridRow = column.parent.parent !== null ? depth.toString() : `2 / ${depth + 1}`;
-      AgpColumn.calculateGridRow(column.parent, depth - 1);
+      GeneProfilesColumn.calculateGridRow(column.parent, depth - 1);
     } else {
       column.gridRow = column.columns.length !== 0 ? '1' : `1 / ${depth + 1}`;
     }
   }
 
-  public static calculateGridColumn(column: AgpColumn): void {
+  public static calculateGridColumn(column: GeneProfilesColumn): void {
     const leaves = column.leaves.filter(c => c.visibility);
     if (leaves.length === 0) {
       return;
@@ -121,7 +121,7 @@ export class AgpColumn {
     }
     column.gridColumn = `${leaves[0].gridColumn} / ${endColIdx}`;
     for (const child of column.visibleChildren.filter(col => col.columns.length > 0)) {
-      AgpColumn.calculateGridColumn(child);
+      GeneProfilesColumn.calculateGridColumn(child);
     }
   }
 }
