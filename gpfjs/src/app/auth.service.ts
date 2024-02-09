@@ -41,6 +41,7 @@ export class AuthService {
       client_id: this.config.oauthClientId,
       code: code,
       grant_type: 'authorization_code',
+      redirect_uri: `${window.location.origin}${this.baseHref}login`,
       code_verifier: localStorage.getItem('code_verifier'),
     }, this.options).pipe(take(1), tap(res => {
       this.setTokens(res);
