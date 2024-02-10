@@ -5,7 +5,7 @@ import sys
 import gzip
 import argparse
 from contextlib import closing
-from typing import Optional, cast, Any
+from typing import Optional, Any
 
 from pysam import TabixFile, tabix_index
 
@@ -24,7 +24,8 @@ from dae.genomic_resources import build_genomic_resource_repository
 from dae.genomic_resources.cli import VerbosityConfiguration
 from dae.genomic_resources.genomic_context import get_genomic_context
 from dae.genomic_resources.cached_repository import cache_resources
-from dae.genomic_resources.reference_genome import ReferenceGenome, build_reference_genome_from_resource
+from dae.genomic_resources.reference_genome import ReferenceGenome, \
+    build_reference_genome_from_resource
 from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.task_graph import TaskGraphCli
 from dae.task_graph.graph import TaskGraph
@@ -147,10 +148,11 @@ def annotate(
         allow_repeated_attributes=args.allow_repeated_attributes,
         reannotate=args.reannotate
     )
-    ref_genome = build_reference_genome_from_resource(
-        grr.find_resource(ref_genome_id)).open() \
-        if ref_genome_id else None
-
+    ref_genome = None
+    if ref_genome_id:
+        res = grr.find_resource(ref_genome_id)
+        if res is not None:
+            ref_genome = build_reference_genome_from_resource(res).open()
     errors = []
 
     in_file, line_iterator, header_columns = read_input(args, region)
