@@ -4,6 +4,6 @@ FROM ${REGISTRY}gpf-dev:${BASE_IMAGE_TAG}
 
 ARG SOURCE_DIR="."
 
-ADD ${SOURCE_DIR}/impala-environment.yml /
+ADD ${SOURCE_DIR}/impala2-environment.yml /
 
-RUN /opt/conda/bin/mamba env update --name gpf --file /impala-environment.yml
+RUN /opt/conda/bin/mamba env update --name gpf --file /impala2-environment.yml

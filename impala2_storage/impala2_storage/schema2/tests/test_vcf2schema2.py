@@ -10,7 +10,6 @@ from dae.parquet.partition_descriptor import \
 from impala2_storage.schema2.tests.conftest import run_vcf2schema2
 
 
-
 @pytest.mark.parametrize("partition_description", [
     PartitionDescriptor(),
     PartitionDescriptor(chromosomes=["1"], region_length=5, family_bin_size=2),
