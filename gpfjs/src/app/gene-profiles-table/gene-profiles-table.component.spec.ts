@@ -1,9 +1,9 @@
-import { AgpTableComponent } from './autism-gene-profiles-table.component';
-import { AgpTableConfig } from './autism-gene-profiles-table';
+import { GeneProfilesTableComponent } from './gene-profiles-table.component';
+import { GeneProfilesTableConfig } from './gene-profiles-table';
 import { plainToClass } from 'class-transformer';
 import { Observable, of } from 'rxjs';
 import { cloneDeep } from 'lodash';
-import { AgpTableService } from './autism-gene-profiles-table.service';
+import { GeneProfilesTableService } from './gene-profiles-table.service';
 import { TestBed } from '@angular/core/testing';
 
 const column1 = {
@@ -126,7 +126,7 @@ const column3 = {
   visible: true
 };
 
-const configMock = plainToClass(AgpTableConfig, {
+const configMock = plainToClass(GeneProfilesTableConfig, {
   defaultDataset: 'dataset1',
   pageSize: 3,
   columns: [
@@ -229,7 +229,7 @@ const genesMock = [
 ];
 /* eslint-enable */
 
-class AgpTableServiceMock {
+class GeneProfilesTableServiceMock {
   public getGenes(pageIndex: number, geneInput: string): Observable<Record<string, any>> {
     const res = cloneDeep(genesMock);
     if (geneInput) {
@@ -241,17 +241,17 @@ class AgpTableServiceMock {
   }
 }
 
-describe('AgpTableComponent', () => {
-  let component: AgpTableComponent;
-  const agpTableServiceMock = new AgpTableServiceMock();
+describe('GeneProfilesTableComponent', () => {
+  let component: GeneProfilesTableComponent;
+  const geneProfilesTableServiceMock = new GeneProfilesTableServiceMock();
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      declarations: [AgpTableComponent],
-      providers: [{provide: AgpTableService, useValue: agpTableServiceMock}],
+      declarations: [GeneProfilesTableComponent],
+      providers: [{provide: GeneProfilesTableService, useValue: geneProfilesTableServiceMock}],
     }).compileComponents();
 
-    const fixture = TestBed.createComponent(AgpTableComponent);
+    const fixture = TestBed.createComponent(GeneProfilesTableComponent);
     component = fixture.componentInstance;
 
     component.sortingButtonsComponents = [];

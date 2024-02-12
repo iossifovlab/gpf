@@ -8,8 +8,8 @@ import { map } from 'rxjs/operators';
 @Injectable({
   providedIn: 'root'
 })
-export class AgpTableService {
-  private readonly genesUrl = 'autism_gene_tool/table/rows';
+export class GeneProfilesTableService {
+  private readonly genesUrl = 'gene_profiles/table/rows';
 
   public constructor(
     private http: HttpClient,

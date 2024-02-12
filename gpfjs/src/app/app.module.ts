@@ -125,8 +125,8 @@ import { CommonReportsPedigreeCellComponent } from './variant-reports/common-rep
 import { LoadingSpinnerComponent } from './loading-spinner/loading-spinner.component';
 import { DatasetNodeComponent } from './dataset-node/dataset-node.component';
 import { MultipleSelectMenuComponent } from './multiple-select-menu/multiple-select-menu.component';
-import { AutismGeneProfilesBlockComponent } from './autism-gene-profiles-block/autism-gene-profiles-block.component';
-import { AutismGeneProfileSingleViewComponent } from './autism-gene-profiles-single-view/autism-gene-profile-single-view.component';
+import { GeneProfilesBlockComponent } from './gene-profiles-block/gene-profiles-block.component';
+import { GeneProfileSingleViewComponent } from './gene-profiles-single-view/gene-profiles-single-view.component';
 import { PersonFiltersBlockComponent } from './person-filters-block/person-filters-block.component';
 import { PersonIdsComponent } from './person-ids/person-ids.component';
 import { PersonIdsState } from './person-ids/person-ids.state';
@@ -147,9 +147,9 @@ import { GenePlotComponent } from './gene-plot/gene-plot.component';
 import { DragDropModule } from '@angular/cdk/drag-drop';
 import { ClipboardModule } from '@angular/cdk/clipboard';
 import { SplitPipe } from './utils/split.pipe';
-import { MiddleClickDirective } from './autism-gene-profiles-table/middle-click.directive';
-import { AgpTableComponent } from './autism-gene-profiles-table/autism-gene-profiles-table.component';
-import { AutismGeneProfileSingleViewWrapperComponent } from './autism-gene-profiles-single-view-wrapper/autism-gene-profiles-single-view-wrapper.component';
+import { MiddleClickDirective } from './gene-profiles-table/middle-click.directive';
+import { GeneProfilesTableComponent } from './gene-profiles-table/gene-profiles-table.component';
+import { GeneProfileSingleViewWrapperComponent } from './gene-profiles-single-view-wrapper/gene-profiles-single-view-wrapper.component';
 import { TruncatePipe } from './utils/truncate.pipe';
 import { UniqueFamilyVariantsFilterComponent } from './unique-family-variants-filter/unique-family-variants-filter.component';
 import { UniqueFamilyVariantsFilterState } from './unique-family-variants-filter/unique-family-variants-filter.state';
@@ -231,12 +231,12 @@ const appRoutes: Routes = [
     ]
   },
   {
-    path: 'autism-gene-profiles',
-    component: AutismGeneProfilesBlockComponent
+    path: 'gene-profiles',
+    component: GeneProfilesBlockComponent
   },
   {
-    path: 'autism-gene-profiles/:genes',
-    component: AutismGeneProfileSingleViewWrapperComponent
+    path: 'gene-profiles/:genes',
+    component: GeneProfileSingleViewWrapperComponent
   },
   {
     path: 'management',
@@ -353,21 +353,21 @@ const appRoutes: Routes = [
     LoadingSpinnerComponent,
     DatasetNodeComponent,
     MultipleSelectMenuComponent,
-    AutismGeneProfilesBlockComponent,
-    AutismGeneProfileSingleViewComponent,
+    GeneProfilesBlockComponent,
+    GeneProfileSingleViewComponent,
     MiddleClickDirective,
     PersonFiltersBlockComponent,
     PersonIdsComponent,
     FamilyTypeFilterComponent,
     SortingButtonsComponent,
-    AutismGeneProfileSingleViewWrapperComponent,
+    GeneProfileSingleViewWrapperComponent,
     CheckboxListComponent,
     DisplayNamePipe,
     GenePlotComponent,
     PeopleCounterRowPipe,
     SplitPipe,
     ContrastAdjustPipe,
-    AgpTableComponent,
+    GeneProfilesTableComponent,
     TruncatePipe,
     ComparePipe,
     BackgroundColorPipe,

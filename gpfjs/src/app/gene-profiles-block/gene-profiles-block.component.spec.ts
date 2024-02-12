@@ -4,19 +4,19 @@ import { NgbNavModule } from '@ng-bootstrap/ng-bootstrap';
 import { ConfigService } from 'app/config/config.service';
 import { QueryService } from 'app/query/query.service';
 import { RouterTestingModule } from '@angular/router/testing';
-import { AutismGeneProfilesBlockComponent } from './autism-gene-profiles-block.component';
-import { AgpTableComponent } from 'app/autism-gene-profiles-table/autism-gene-profiles-table.component';
+import { GeneProfilesBlockComponent } from './gene-profiles-block.component';
+import { GeneProfilesTableComponent } from 'app/gene-profiles-table/gene-profiles-table.component';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { UsersService } from 'app/users/users.service';
 import { NgxsModule } from '@ngxs/store';
 import { MultipleSelectMenuComponent } from 'app/multiple-select-menu/multiple-select-menu.component';
 import { FormsModule } from '@angular/forms';
 import { APP_BASE_HREF } from '@angular/common';
-import { AutismGeneProfilesService } from './autism-gene-profiles.service';
+import { GeneProfilesService } from './gene-profiles.service';
 import { Observable, of } from 'rxjs';
-import { AgpSingleViewConfig } from 'app/autism-gene-profiles-single-view/autism-gene-profile-single-view';
+import { GeneProfilesSingleViewConfig } from 'app/gene-profiles-single-view/gene-profiles-single-view';
 import { TruncatePipe } from '../utils/truncate.pipe';
-import { AgpColumn, AgpTableConfig } from 'app/autism-gene-profiles-table/autism-gene-profiles-table';
+import { GeneProfilesColumn, GeneProfilesTableConfig } from 'app/gene-profiles-table/gene-profiles-table';
 
 const config = {
   shown: [],
@@ -85,43 +85,43 @@ const config = {
   pageSize: 5
 };
 
-class AutismGeneProfilesServiceMock {
-  public getConfig(): Observable<AgpSingleViewConfig> {
+class GeneProfilesServiceMock {
+  public getConfig(): Observable<GeneProfilesSingleViewConfig> {
     return of(config);
   }
 }
 
 /* eslint-disable max-len */
-const geneColumn = new AgpColumn('createTab', [], 'Gene', false, 'geneSymbol', null, false, true);
-const geneSetSetsCol = new AgpColumn(null, [], 'SFARI ALL', true, 'autism_gene_sets_rank.SFARI ALL', null, true, true);
-const geneSetCol = new AgpColumn(null, [geneSetSetsCol], 'Autism Gene Sets', false, 'autism_gene_sets_rank', null, true, true);
-const geneScoreScoresCol = new AgpColumn(null, [], 'SFARI gene score', true, 'autism_scores.SFARI gene score', null, true, true);
-const geneScoreCol = new AgpColumn(null, [geneScoreScoresCol], 'Autism Scores', false, 'autism_scores', null, false, true);
-const datasetPersonSetsStatisticsCol = new AgpColumn('goToQuery', [], 'dn LGDs', false, 'sequencing_de_novo.autism.denovo_lgds', null, true, true);
-const datasetPersonSetsCol = new AgpColumn(null, [datasetPersonSetsStatisticsCol], 'autism (21775)', false, 'sequencing_de_novo.autism', null, false, true);
-const datasetCol = new AgpColumn(null, [datasetPersonSetsCol], 'Sequencing de Novo', false, 'sequencing_de_novo', null, false, true);
+const geneColumn = new GeneProfilesColumn('createTab', [], 'Gene', false, 'geneSymbol', null, false, true);
+const geneSetSetsCol = new GeneProfilesColumn(null, [], 'SFARI ALL', true, 'autism_gene_sets_rank.SFARI ALL', null, true, true);
+const geneSetCol = new GeneProfilesColumn(null, [geneSetSetsCol], 'Autism Gene Sets', false, 'autism_gene_sets_rank', null, true, true);
+const geneScoreScoresCol = new GeneProfilesColumn(null, [], 'SFARI gene score', true, 'autism_scores.SFARI gene score', null, true, true);
+const geneScoreCol = new GeneProfilesColumn(null, [geneScoreScoresCol], 'Autism Scores', false, 'autism_scores', null, false, true);
+const datasetPersonSetsStatisticsCol = new GeneProfilesColumn('goToQuery', [], 'dn LGDs', false, 'sequencing_de_novo.autism.denovo_lgds', null, true, true);
+const datasetPersonSetsCol = new GeneProfilesColumn(null, [datasetPersonSetsStatisticsCol], 'autism (21775)', false, 'sequencing_de_novo.autism', null, false, true);
+const datasetCol = new GeneProfilesColumn(null, [datasetPersonSetsCol], 'Sequencing de Novo', false, 'sequencing_de_novo', null, false, true);
 /* eslint-enable max-len */
 
-const agpTableConfigMock= new AgpTableConfig();
-agpTableConfigMock.columns = [geneColumn, geneSetCol, geneScoreCol, datasetCol];
-agpTableConfigMock.defaultDataset = 'mockDataset';
-agpTableConfigMock.pageSize = 5;
+const geneProfilesTableConfigMock= new GeneProfilesTableConfig();
+geneProfilesTableConfigMock.columns = [geneColumn, geneSetCol, geneScoreCol, datasetCol];
+geneProfilesTableConfigMock.defaultDataset = 'mockDataset';
+geneProfilesTableConfigMock.pageSize = 5;
 
-describe('AutismGeneProfilesBlockComponent', () => {
-  let component: AutismGeneProfilesBlockComponent;
-  let fixture: ComponentFixture<AutismGeneProfilesBlockComponent>;
-  const autismGeneProfilesServiceMock = new AutismGeneProfilesServiceMock();
+describe('GeneProfilesBlockComponent', () => {
+  let component: GeneProfilesBlockComponent;
+  let fixture: ComponentFixture<GeneProfilesBlockComponent>;
+  const geneProfilesServiceMock = new GeneProfilesServiceMock();
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      declarations: [AutismGeneProfilesBlockComponent, AgpTableComponent, MultipleSelectMenuComponent, TruncatePipe],
+      declarations: [GeneProfilesBlockComponent, GeneProfilesTableComponent, MultipleSelectMenuComponent, TruncatePipe],
       providers: [
         ConfigService,
         QueryService,
         DatasetsService,
         UsersService,
         { provide: APP_BASE_HREF, useValue: '' },
-        { provide: AutismGeneProfilesService, useValue: autismGeneProfilesServiceMock }
+        { provide: GeneProfilesService, useValue: geneProfilesServiceMock }
       ],
       imports: [
         HttpClientTestingModule, NgbNavModule, RouterTestingModule, FormsModule,
@@ -129,7 +129,7 @@ describe('AutismGeneProfilesBlockComponent', () => {
       ]
     }).compileComponents();
 
-    fixture = TestBed.createComponent(AutismGeneProfilesBlockComponent);
+    fixture = TestBed.createComponent(GeneProfilesBlockComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });
@@ -138,10 +138,10 @@ describe('AutismGeneProfilesBlockComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should create agp table configuration', () => {
+  it('should create gene profiles table configuration', () => {
     component.ngOnInit();
-    expect(component.agpTableConfig).toStrictEqual(agpTableConfigMock);
-    expect(component.agpTableSortBy).toBe('autism_gene_sets_rank');
-    expect(component.agpSingleViewConfig).toStrictEqual(config);
+    expect(component.geneProfilesTableConfig).toStrictEqual(geneProfilesTableConfigMock);
+    expect(component.geneProfilesTableSortBy).toBe('autism_gene_sets_rank');
+    expect(component.geneProfilesSingleViewConfig).toStrictEqual(config);
   });
 });

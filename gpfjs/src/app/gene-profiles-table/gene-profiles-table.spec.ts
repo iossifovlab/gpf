@@ -1,5 +1,5 @@
 import { plainToClass } from 'class-transformer';
-import { AgpTableConfig, AgpColumn } from './autism-gene-profiles-table';
+import { GeneProfilesTableConfig, GeneProfilesColumn } from './gene-profiles-table';
 
 const column1 = {
   clickable: 'createTab',
@@ -122,8 +122,8 @@ const column3 = {
   visible: true
 };
 
-describe('AgpTableConfig', () => {
-  let config: AgpTableConfig;
+describe('GeneProfilesTableConfig', () => {
+  let config: GeneProfilesTableConfig;
   /*
    *  Column1
    *
@@ -146,7 +146,7 @@ describe('AgpTableConfig', () => {
    */
 
   beforeEach(() => {
-    config = plainToClass(AgpTableConfig, {
+    config = plainToClass(GeneProfilesTableConfig, {
       defaultDataset: 'dataset1',
       pageSize: 3,
       columns: [
@@ -158,7 +158,7 @@ describe('AgpTableConfig', () => {
   });
 
   it('should set column visibility', () => {
-    AgpColumn.leaves(config.columns);
+    GeneProfilesColumn.leaves(config.columns);
 
     // Basic visibility
     config.columns[0].visibility = false;
@@ -183,7 +183,7 @@ describe('AgpTableConfig', () => {
   });
 
   it('should get visible children', () => {
-    AgpColumn.leaves(config.columns);
+    GeneProfilesColumn.leaves(config.columns);
 
     // 2 children visible
     config.columns[2].columns[0].columns[0].visibility = true;
@@ -226,7 +226,7 @@ describe('AgpTableConfig', () => {
   });
 
   it('should set column parent and depth and get leaves', () => {
-    const leaves = AgpColumn.leaves(config.columns);
+    const leaves = GeneProfilesColumn.leaves(config.columns);
 
     expect(config.columns[0].parent).toBeNull();
     expect(config.columns[0].depth).toBe(1);
@@ -280,10 +280,10 @@ describe('AgpTableConfig', () => {
   });
 
   it('should calculate grid row', () => {
-    const leaves = AgpColumn.leaves(config.columns);
+    const leaves = GeneProfilesColumn.leaves(config.columns);
     const maxDepth = Math.max(...leaves.map(leaf => leaf.depth));
 
-    leaves.forEach(leaf => AgpColumn.calculateGridRow(leaf, maxDepth));
+    leaves.forEach(leaf => GeneProfilesColumn.calculateGridRow(leaf, maxDepth));
 
     expect(config.columns[0].gridRow).toBe('1 / 4');
     expect(config.columns[1].gridRow).toBe('1');
@@ -299,7 +299,7 @@ describe('AgpTableConfig', () => {
   });
 
   it('should calculate grid column', () => {
-    const leaves = AgpColumn.leaves(config.columns);
+    const leaves = GeneProfilesColumn.leaves(config.columns);
 
     let columnIdx = 0;
     for (const leaf of leaves) {
@@ -307,7 +307,7 @@ describe('AgpTableConfig', () => {
       columnIdx++;
     }
 
-    config.columns.forEach(col => AgpColumn.calculateGridColumn(col));
+    config.columns.forEach(col => GeneProfilesColumn.calculateGridColumn(col));
 
     expect(config.columns[0].gridColumn).toBe('1');
     expect(config.columns[1].gridColumn).toBe('2 / 4');

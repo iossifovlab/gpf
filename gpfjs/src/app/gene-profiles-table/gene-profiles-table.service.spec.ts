@@ -3,17 +3,17 @@ import { TestBed } from '@angular/core/testing';
 import { ConfigService } from 'app/config/config.service';
 // eslint-disable-next-line no-restricted-imports
 import { of } from 'rxjs';
-import { AgpTableService } from './autism-gene-profiles-table.service';
+import { GeneProfilesTableService } from './gene-profiles-table.service';
 
-describe('AgpTableService', () => {
-  let service: AgpTableService;
+describe('GeneProfilesTableService', () => {
+  let service: GeneProfilesTableService;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
       providers: [ConfigService],
       imports: [HttpClientTestingModule]
     });
-    service = TestBed.inject(AgpTableService);
+    service = TestBed.inject(GeneProfilesTableService);
   });
 
   it('should be created', () => {

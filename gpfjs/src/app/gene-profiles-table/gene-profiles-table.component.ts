@@ -7,17 +7,17 @@ import { MultipleSelectMenuComponent } from 'app/multiple-select-menu/multiple-s
 import { SortingButtonsComponent } from 'app/sorting-buttons/sorting-buttons.component';
 import { debounceTime, distinctUntilChanged, take, tap } from 'rxjs/operators';
 import { Subject, Subscription, zip } from 'rxjs';
-import { AgpTableConfig, AgpColumn } from './autism-gene-profiles-table';
-import { AgpTableService } from './autism-gene-profiles-table.service';
+import { GeneProfilesTableConfig, GeneProfilesColumn } from './gene-profiles-table';
+import { GeneProfilesTableService } from './gene-profiles-table.service';
 import { environment } from 'environments/environment';
 
 @Component({
-  selector: 'gpf-autism-gene-profiles-table',
-  templateUrl: './autism-gene-profiles-table.component.html',
-  styleUrls: ['./autism-gene-profiles-table.component.css']
+  selector: 'gpf-gene-profiles-table',
+  templateUrl: './gene-profiles-table.component.html',
+  styleUrls: ['./gene-profiles-table.component.css']
 })
-export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
-  @Input() public config: AgpTableConfig;
+export class GeneProfilesTableComponent implements OnInit, OnChanges, OnDestroy {
+  @Input() public config: GeneProfilesTableConfig;
   @Input() public sortBy: string;
   public defaultSortBy: string;
   @Output() public goToQueryEvent = new EventEmitter();
@@ -31,7 +31,7 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
   public modalPosition = {top: 0, left: 0};
   public showKeybinds = false;
 
-  public leaves: AgpColumn[];
+  public leaves: GeneProfilesColumn[];
   public genes = [];
   public shownRows: number[] = []; // indexes
   public highlightedGenes: Set<string> = new Set();
@@ -58,7 +58,7 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
   public imgPathPrefix = environment.imgPathPrefix;
 
   public constructor(
-    private autismGeneProfilesService: AgpTableService
+    private geneProfilesService: GeneProfilesTableService
   ) { }
 
   public ngOnInit(): void {
@@ -130,7 +130,7 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   private fillTable(): void {
-    const agpRequests = [];
+    const geneProfilesRequests = [];
     this.pageIndex = 1;
     this.loadMoreGenes = true;
     this.showNothingFound = false;
@@ -138,8 +138,8 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
     const initialPageCount = 4 * this.viewportPageCount;
 
     for (let i = 1; i <= initialPageCount; i++) {
-      agpRequests.push(
-        this.autismGeneProfilesService
+      geneProfilesRequests.push(
+        this.geneProfilesService
           .getGenes(this.pageIndex, this.geneInput, this.sortBy, this.orderBy)
           .pipe(take(1))
       );
@@ -147,7 +147,7 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
     }
     this.pageIndex = initialPageCount;
     this.getGenesSubscription.unsubscribe();
-    this.getGenesSubscription = zip(agpRequests).subscribe(res => {
+    this.getGenesSubscription = zip(geneProfilesRequests).subscribe(res => {
       this.genes = [];
       for (const genes of res) {
         this.genes = this.genes.concat(genes);
@@ -160,19 +160,19 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   public calculateHeaderLayout(): void {
-    this.leaves = AgpColumn.leaves(this.config.columns);
+    this.leaves = GeneProfilesColumn.leaves(this.config.columns);
     this.nothingFoundWidth = (this.leaves.length * 110) + 40; // must match .table-row values
     let columnIdx = 0;
     const maxDepth: number = Math.max(...this.leaves.map(leaf => leaf.depth));
 
     for (const leaf of this.leaves) {
       leaf.gridColumn = (columnIdx + 1).toString();
-      AgpColumn.calculateGridRow(leaf, maxDepth);
+      GeneProfilesColumn.calculateGridRow(leaf, maxDepth);
       columnIdx++;
     }
 
     for (const column of this.config.columns) {
-      AgpColumn.calculateGridColumn(column);
+      GeneProfilesColumn.calculateGridColumn(column);
     }
   }
 
@@ -191,7 +191,7 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
   public updateGenes(): void {
     this.pageIndex++;
     this.loadMoreGenes = false;
-    this.autismGeneProfilesService
+    this.geneProfilesService
       .getGenes(this.pageIndex, this.geneInput, this.sortBy, this.orderBy)
       .pipe(take(1))
       .subscribe(res => {
@@ -200,7 +200,7 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
       });
   }
 
-  public openDropdown(column: AgpColumn, $event): void {
+  public openDropdown(column: GeneProfilesColumn, $event): void {
     $event.stopPropagation(); // stop propagation to avoid triggering sort
 
     if (this.ngbDropdownMenu.dropdown._open) {
@@ -295,7 +295,7 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
     }
   }
 
-  public handleCellClick($event, row, column: AgpColumn): void {
+  public handleCellClick($event, row, column: GeneProfilesColumn): void {
     const linkClick: boolean = $event.target.classList.contains('clickable');
     const geneSymbol = row[this.geneSymbolColumnId] as string;
 
@@ -311,7 +311,7 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   public openSingleView(geneSymbols: string | Set<string>): void {
-    const agpBaseUrl = window.location.href;
+    const geneProfilesBaseUrl = window.location.href;
     let genes: string;
 
     if (typeof geneSymbols === 'string') {
@@ -322,7 +322,7 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
 
     const newWindow = window.open('', '_blank');
     if (newWindow) {
-      newWindow.location.assign(`${agpBaseUrl}/${genes}`);
+      newWindow.location.assign(`${geneProfilesBaseUrl}/${genes}`);
     }
   }
 

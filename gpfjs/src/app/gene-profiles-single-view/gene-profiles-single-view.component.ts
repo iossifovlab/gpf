@@ -1,13 +1,13 @@
 import { Component, ElementRef, HostListener, Input, OnInit, ViewChild } from '@angular/core';
 import {
-  AgpDatasetPersonSet, AgpDatasetStatistic, AgpGene,
-  AgpGenomicScores, AgpSingleViewConfig, AgpEffectType
-} from 'app/autism-gene-profiles-single-view/autism-gene-profile-single-view';
+  GeneProfilesDatasetPersonSet, GeneProfilesDatasetStatistic, GeneProfilesGene,
+  GeneProfilesGenomicScores, GeneProfilesSingleViewConfig, GeneProfilesEffectType
+} from 'app/gene-profiles-single-view/gene-profiles-single-view';
 // eslint-disable-next-line no-restricted-imports
 import { Observable, of, zip } from 'rxjs';
 import { GeneScoresService } from '../gene-scores/gene-scores.service';
 import { GeneScores } from 'app/gene-scores/gene-scores';
-import { AutismGeneProfilesService } from 'app/autism-gene-profiles-block/autism-gene-profiles.service';
+import { GeneProfilesService } from 'app/gene-profiles-block/gene-profiles.service';
 import { switchMap, take } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { Location } from '@angular/common';
@@ -28,21 +28,21 @@ import { SetVariantTypes } from 'app/variant-types/variant-types.state';
 import { EffectTypes } from 'app/effect-types/effect-types';
 
 @Component({
-  selector: 'gpf-autism-gene-profile-single-view',
-  templateUrl: './autism-gene-profile-single-view.component.html',
-  styleUrls: ['./autism-gene-profile-single-view.component.css']
+  selector: 'gpf-gene-profiles-single-view',
+  templateUrl: './gene-profiles-single-view.component.html',
+  styleUrls: ['./gene-profiles-single-view.component.css']
 })
-export class AutismGeneProfileSingleViewComponent implements OnInit {
+export class GeneProfileSingleViewComponent implements OnInit {
   @ViewChild('stickySpan', {static: false}) public menuElement: ElementRef;
   @ViewChild('wrapperElement') public wrapperElement: ElementRef;
 
   @Input() public readonly geneSymbol: string;
-  @Input() public config: AgpSingleViewConfig;
+  @Input() public config: GeneProfilesSingleViewConfig;
   @Input() public isInGeneCompare = false;
   public showTemplate = true;
 
   public genomicScoresGeneScores: {category: string; scores: GeneScores[]}[] = [];
-  public gene$: Observable<AgpGene>;
+  public gene$: Observable<GeneProfilesGene>;
 
   public histogramOptions = {
     width: 525,
@@ -64,7 +64,7 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
   public isHeaderSticky: boolean;
 
   public constructor(
-    private autismGeneProfilesService: AutismGeneProfilesService,
+    private geneProfilesService: GeneProfilesService,
     private geneScoresService: GeneScoresService,
     private geneService: GeneService,
     private datasetsService: DatasetsService,
@@ -88,7 +88,7 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
   }
 
   public ngOnInit(): void {
-    this.gene$ = this.autismGeneProfilesService.getGene(this.geneSymbol);
+    this.gene$ = this.geneProfilesService.getGene(this.geneSymbol);
     this.gene$.pipe(
       switchMap(gene => {
         gene.geneSets.forEach(element => {
@@ -162,27 +162,27 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
       .find(score => score.score === key);
   }
 
-  public getSingleScoreValue(genomicScores: AgpGenomicScores[], categoryId: string, scoreId: string): number {
+  public getSingleScoreValue(genomicScores: GeneProfilesGenomicScores[], categoryId: string, scoreId: string): number {
     return genomicScores.find(category => category.id === categoryId).scores.find(score => score.id === scoreId).value;
   }
 
-  public getGeneDatasetValue(gene: AgpGene, studyId: string, personSetId: string, statisticId: string): AgpEffectType {
+  public getGeneDatasetValue(gene: GeneProfilesGene, studyId: string, personSetId: string, statisticId: string): GeneProfilesEffectType {
     return gene.studies.find(study => study.id === studyId).personSets
       .find(genePersonSet => genePersonSet.id === personSetId).effectTypes
       .find(effectType => effectType.id === statisticId);
   }
 
   public goToQuery(
-    geneSymbol: string, personSet: AgpDatasetPersonSet, datasetId: string, statistic: AgpDatasetStatistic
+    geneSymbol: string, personSet: GeneProfilesDatasetPersonSet, datasetId: string, statistic: GeneProfilesDatasetStatistic
   ): void {
-    AutismGeneProfileSingleViewComponent.goToQuery(
+    GeneProfileSingleViewComponent.goToQuery(
       this.store, this.queryService, geneSymbol, personSet, datasetId, statistic
     );
   }
 
   public static goToQuery(
     store: Store, queryService: QueryService, geneSymbol: string,
-    personSet: AgpDatasetPersonSet, datasetId: string, statistic: AgpDatasetStatistic
+    personSet: GeneProfilesDatasetPersonSet, datasetId: string, statistic: GeneProfilesDatasetStatistic
   ): void {
     const effectTypes = {
       lgds: EffectTypes['LGDS'],
@@ -235,6 +235,6 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
 
   public errorModalBack(): void {
     this.errorModal = false;
-    this.router.navigate(['/autism-gene-profiles']);
+    this.router.navigate(['/gene-profiles']);
   }
 }

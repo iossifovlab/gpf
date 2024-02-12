@@ -3,19 +3,19 @@ import { TestBed } from '@angular/core/testing';
 import { ConfigService } from 'app/config/config.service';
 // eslint-disable-next-line no-restricted-imports
 import { lastValueFrom, of } from 'rxjs';
-import { AutismGeneProfilesService } from './autism-gene-profiles.service';
-import { AgpSingleViewConfig, AgpGene } from 'app/autism-gene-profiles-single-view/autism-gene-profile-single-view';
+import { GeneProfilesService } from './gene-profiles.service';
+import { GeneProfilesSingleViewConfig, GeneProfilesGene } from 'app/gene-profiles-single-view/gene-profiles-single-view';
 import { take } from 'rxjs/operators';
 
-describe('AutismGeneProfilesService', () => {
-  let service: AutismGeneProfilesService;
+describe('GeneProfilesService', () => {
+  let service: GeneProfilesService;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
       providers: [ConfigService],
       imports: [HttpClientTestingModule]
     });
-    service = TestBed.inject(AutismGeneProfilesService);
+    service = TestBed.inject(GeneProfilesService);
   });
 
   it('should be created', () => {
@@ -31,7 +31,7 @@ describe('AutismGeneProfilesService', () => {
     expect(getConfigSpy).toHaveBeenCalledWith(service['config'].baseUrl + service['configUrl']);
     const res = await lastValueFrom(resultConfig.pipe(take(1)));
     expect(res['mockConfigProperty']).toBe('mockConfigValue');
-    expect(res).toBeInstanceOf(AgpSingleViewConfig);
+    expect(res).toBeInstanceOf(GeneProfilesSingleViewConfig);
   });
 
   it('should get single gene', async() => {
@@ -43,6 +43,6 @@ describe('AutismGeneProfilesService', () => {
     expect(getGeneSpy).toHaveBeenCalledWith(service['config'].baseUrl + service['genesUrl'] + 'geneMock1');
     const res = await lastValueFrom(resultGene.pipe(take(1)));
     expect(res['mockGeneProperty']).toBe('mockGeneValue');
-    expect(res).toBeInstanceOf(AgpGene);
+    expect(res).toBeInstanceOf(GeneProfilesGene);
   });
 });

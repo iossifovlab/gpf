@@ -7,8 +7,8 @@ import { switchMap } from 'rxjs/operators';
 import { NgbNavConfig } from '@ng-bootstrap/ng-bootstrap';
 import { APP_BASE_HREF } from '@angular/common';
 import { AppVersionService } from './app-version.service';
-import { AutismGeneProfilesService } from './autism-gene-profiles-block/autism-gene-profiles.service';
-import { AgpSingleViewConfig } from './autism-gene-profiles-single-view/autism-gene-profile-single-view';
+import { GeneProfilesService } from './gene-profiles-block/gene-profiles.service';
+import { GeneProfilesSingleViewConfig } from './gene-profiles-single-view/gene-profiles-single-view';
 
 @Component({
   selector: 'gpf-root',
@@ -55,7 +55,7 @@ export class AppComponent implements OnInit {
   public showSidenav = false;
   public title = 'GPF: Genotypes and Phenotypes in Families';
   public imgPathPrefix = environment.imgPathPrefix;
-  public agpConfig: AgpSingleViewConfig;
+  public geneProfilesConfig: GeneProfilesSingleViewConfig;
   private sessionTimeoutInSeconds = 7 * 24 * 60 * 60; // 1 week
 
   public gpfjsVersion = environment?.version;
@@ -82,7 +82,7 @@ export class AppComponent implements OnInit {
   }
 
   public constructor(
-    private autismGeneProfilesService: AutismGeneProfilesService,
+    private geneProfilesService: GeneProfilesService,
     private bnIdle: BnNgIdleService,
     private usersService: UsersService,
     private ngbNavConfig: NgbNavConfig,
@@ -99,8 +99,8 @@ export class AppComponent implements OnInit {
         switchMap(() => this.usersService.getUserInfo()),
       ).subscribe();
 
-    this.autismGeneProfilesService.getConfig().subscribe(res => {
-      this.agpConfig = res;
+    this.geneProfilesService.getConfig().subscribe(res => {
+      this.geneProfilesConfig = res;
     });
 
     this.appVersionService.getGpfVersion().subscribe(res => {

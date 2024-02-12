@@ -1,6 +1,6 @@
 import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { Component, ElementRef, EventEmitter, Input, OnChanges, Output, ViewChild } from '@angular/core';
-import { AgpColumn } from 'app/autism-gene-profiles-table/autism-gene-profiles-table';
+import { GeneProfilesColumn } from 'app/gene-profiles-table/gene-profiles-table';
 import { environment } from 'environments/environment';
 
 @Component({
@@ -9,14 +9,14 @@ import { environment } from 'environments/environment';
   styleUrls: ['./multiple-select-menu.component.css']
 })
 export class MultipleSelectMenuComponent implements OnChanges {
-  @Input() public columns: AgpColumn[];
+  @Input() public columns: GeneProfilesColumn[];
   @Output() public applyEvent = new EventEmitter<void>();
   @Output() public reorderEvent = new EventEmitter<string[]>();
   @ViewChild('searchInput') public searchInput: ElementRef;
 
   public buttonLabel = 'Uncheck all';
   public searchText: string;
-  public filteredColumns: AgpColumn[];
+  public filteredColumns: GeneProfilesColumn[];
   public searchPlaceholder: string;
 
   public imgPathPrefix = environment.imgPathPrefix;
@@ -51,7 +51,7 @@ export class MultipleSelectMenuComponent implements OnChanges {
     this.apply();
   }
 
-  public toggleItem(column: AgpColumn, $event: Event): void {
+  public toggleItem(column: GeneProfilesColumn, $event: Event): void {
     if (!($event.target instanceof HTMLInputElement)) {
       return;
     }
