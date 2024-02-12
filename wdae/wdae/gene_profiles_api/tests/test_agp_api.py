@@ -3,10 +3,10 @@
 import pytest
 
 pytestmark = pytest.mark.usefixtures(
-    "agp_wgpf_instance"
+    "gp_wgpf_instance"
 )
 
-ROUTE_PREFIX = "/api/v3/autism_gene_tool"
+ROUTE_PREFIX = "/api/v3/gene_profiles"
 
 
 def test_configuration(admin_client):

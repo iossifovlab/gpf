@@ -47,8 +47,8 @@ class WGPFInstance(GPFInstance):
         self._study_wrappers: Dict[
             str, Union[StudyWrapper, RemoteStudyWrapper]
         ] = {}
-        self._agp_configuration: Optional[dict[str, Any]] = None
-        self._agp_table_configuration: Optional[dict[str, Any]] = None
+        self._gp_configuration: Optional[dict[str, Any]] = None
+        self._gp_table_configuration: Optional[dict[str, Any]] = None
         super().__init__(cast(Box, dae_config), dae_dir, **kwargs)
 
     @staticmethod
@@ -270,7 +270,7 @@ class WGPFInstance(GPFInstance):
             if dataset_id in all_datasets
         ]
 
-    def _agp_find_category_section(
+    def _gp_find_category_section(
         self, configuration: dict[str, Any], category: str
     ) -> Optional[str]:
         for gene_set in configuration["geneSets"]:
@@ -284,29 +284,29 @@ class WGPFInstance(GPFInstance):
                 return "datasets"
         return None
 
-    def get_wdae_agp_configuration(self) -> Optional[dict[str, Any]]:
-        if self._agp_configuration is None:
-            self.prepare_agp_configuration()
-        return self._agp_configuration
+    def get_wdae_gp_configuration(self) -> Optional[dict[str, Any]]:
+        if self._gp_configuration is None:
+            self.prepare_gp_configuration()
+        return self._gp_configuration
 
-    def get_wdae_agp_table_configuration(self) -> Optional[dict[str, Any]]:
-        if self._agp_table_configuration is None:
-            self.prepare_agp_configuration()
-        return self._agp_table_configuration
+    def get_wdae_gp_table_configuration(self) -> Optional[dict[str, Any]]:
+        if self._gp_table_configuration is None:
+            self.prepare_gp_configuration()
+        return self._gp_table_configuration
 
-    def prepare_agp_configuration(self) -> None:
-        """Prepare AGP configuration for response ahead of time."""
+    def prepare_gp_configuration(self) -> None:
+        """Prepare GP configuration for response ahead of time."""
         # pylint: disable=too-many-branches
-        configuration = self.get_agp_configuration()
+        configuration = self.get_gp_configuration()
         if configuration is None:
-            self._agp_configuration = {}
-            self._agp_table_configuration = {}
+            self._gp_configuration = {}
+            self._gp_table_configuration = {}
             return
 
         # Camelize snake_cased keys, excluding "datasets"
         # since its keys are dataset IDs
         json_config = to_response_json(configuration)
-        self._agp_configuration = json_config
+        self._gp_configuration = json_config
         # pylint: disable=too-many-nested-blocks
         if len(configuration) > 0:
             if "datasets" in configuration:
@@ -368,22 +368,22 @@ class WGPFInstance(GPFInstance):
             order = json_config["order"]
             json_config["order"] = [
                 {
-                    "section": self._agp_find_category_section(json_config, o),
+                    "section": self._gp_find_category_section(json_config, o),
                     "id": o
                 }
                 for o in order
             ]
 
-            json_config["pageSize"] = self._autism_gene_profile_db.PAGE_SIZE
+            json_config["pageSize"] = self._gene_profile_db.PAGE_SIZE
 
-            self._agp_configuration = json_config
+            self._gp_configuration = json_config
 
-        self._agp_table_configuration = {}
+        self._gp_table_configuration = {}
         if len(configuration) > 0:
             table_config = {
                 "defaultDataset": configuration.get("default_dataset"),
                 "columns": [],
-                "pageSize": self._autism_gene_profile_db.PAGE_SIZE,
+                "pageSize": self._gene_profile_db.PAGE_SIZE,
             }
 
             table_config["columns"].append(
@@ -472,7 +472,7 @@ class WGPFInstance(GPFInstance):
                     key=lambda col: category_order.index(col["id"])
                 )
 
-            self._agp_table_configuration = table_config
+            self._gp_table_configuration = table_config
 
 
 def column(

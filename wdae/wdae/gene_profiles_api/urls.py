@@ -1,5 +1,5 @@
 from django.urls import re_path
-from autism_gene_profiles_api import views, table_views
+from gene_profiles_api import views, table_views
 
 urlpatterns = [
     re_path(

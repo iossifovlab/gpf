@@ -27,7 +27,7 @@ from gpf_instance.gpf_instance import WGPFInstance, get_wgpf_instance, \
     reload_datasets
 
 from users_api.models import WdaeUser
-from dae.autism_gene_profile.db import AutismGeneProfileDB
+from dae.gene_profile.db import GeneProfileDB
 from dae.genomic_resources import build_genomic_resource_repository
 from dae.genomic_resources.group_repository import GenomicResourceGroupRepo
 from dae.genomic_resources.testing import \
@@ -37,7 +37,7 @@ from dae.genomic_resources.repository import GR_CONF_FILE_NAME, \
 
 from dae.common_reports import generate_common_report
 
-from dae.autism_gene_profile.statistic import AGPStatistic
+from dae.gene_profile.statistic import GPStatistic
 
 
 logger = logging.getLogger(__name__)
@@ -307,19 +307,19 @@ def wdae_gpf_instance(
         "datasets_api.permissions.get_wgpf_instance",
         return_value=fixtures_wgpf_instance,
     )
-    fixtures_wgpf_instance._autism_gene_profile_config = None
-    fixtures_wgpf_instance.prepare_agp_configuration()
+    fixtures_wgpf_instance._gene_profile_config = None
+    fixtures_wgpf_instance.prepare_gp_configuration()
 
     return fixtures_wgpf_instance
 
 
 @pytest.fixture(scope="function")
-def agp_wgpf_instance(  # pylint: disable=too-many-arguments
+def gp_wgpf_instance(  # pylint: disable=too-many-arguments
     db: None, mocker: MockerFixture,
     admin_client: Client,
     wgpf_instance: Callable,
-    sample_agp: AGPStatistic,
-    agp_config: Box,
+    sample_gp: GPStatistic,
+    gp_config: Box,
     tmp_path: pathlib.Path
 ) -> Iterator[WGPFInstance]:
 
@@ -347,7 +347,7 @@ def agp_wgpf_instance(  # pylint: disable=too-many-arguments
         return_value=wdae_gpf_instance,
     )
 
-    wdae_gpf_instance._autism_gene_profile_config = agp_config
+    wdae_gpf_instance._gene_profile_config = gp_config
     main_gene_sets = {
         "CHD8 target genes",
         "FMRP Darnell",
@@ -370,26 +370,26 @@ def agp_wgpf_instance(  # pylint: disable=too-many-arguments
         "get_gene_set_ids",
         return_value=main_gene_sets
     )
-    wdae_gpf_instance._autism_gene_profile_db = \
-        AutismGeneProfileDB(
-            agp_config,
-            str(tmp_path / "agpdb"),
+    wdae_gpf_instance._gene_profile_db = \
+        GeneProfileDB(
+            gp_config,
+            str(tmp_path / "gpdb"),
             clear=True
         )
-    wdae_gpf_instance._autism_gene_profile_db.insert_agp(sample_agp)
-    wdae_gpf_instance.prepare_agp_configuration()
+    wdae_gpf_instance._gene_profile_db.insert_gp(sample_gp)
+    wdae_gpf_instance.prepare_gp_configuration()
 
     yield wdae_gpf_instance
 
-    wdae_gpf_instance._agp_configuration = {}
-    wdae_gpf_instance._agp_table_configuration = {}
+    wdae_gpf_instance._gp_configuration = {}
+    wdae_gpf_instance._gp_table_configuration = {}
 
-    wdae_gpf_instance.__autism_gene_profile_config = None
-    wdae_gpf_instance.__autism_gene_profile_db = None
+    wdae_gpf_instance.__gene_profile_config = None
+    wdae_gpf_instance.__gene_profile_db = None
 
 
 @pytest.fixture
-def agp_config() -> Box:
+def gp_config() -> Box:
     return Box({
         "gene_sets": [
             {
@@ -456,7 +456,7 @@ def agp_config() -> Box:
 
 
 @pytest.fixture
-def sample_agp() -> AGPStatistic:
+def sample_gp() -> GPStatistic:
     gene_sets = ["main_CHD8 target genes"]
     genomic_scores = {
         "protection_scores": {
@@ -478,7 +478,7 @@ def sample_agp() -> AGPStatistic:
             },
         }
     }
-    return AGPStatistic(
+    return GPStatistic(
         "CHD8", gene_sets, genomic_scores, variant_counts
     )
 

@@ -12,7 +12,7 @@ import yaml
 from box import Box
 
 from dae.annotation.annotation_pipeline import AnnotationPipeline
-from dae.autism_gene_profile.statistic import AGPStatistic
+from dae.gene_profile.statistic import GPStatistic
 from dae.gene.gene_scores import GeneScore
 from dae.genomic_resources.gene_models import GeneModels
 from dae.genomic_resources.reference_genome import ReferenceGenome
@@ -35,10 +35,9 @@ from dae.pheno.pheno_data import PhenotypeData, get_pheno_db_dir
 
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.dae_conf import dae_conf_schema
-from dae.configuration.schemas.autism_gene_profile import \
-    autism_gene_tool_config
+from dae.configuration.schemas.gene_profile import gene_profiles_config
 
-from dae.autism_gene_profile.db import AutismGeneProfileDB
+from dae.gene_profile.db import GeneProfileDB
 from dae.annotation.annotation_factory import build_annotation_pipeline
 
 
@@ -247,15 +246,15 @@ class GPFInstance:
         )
 
     @cached_property
-    def _autism_gene_profile_db(self) -> AutismGeneProfileDB:
-        config = None if self._autism_gene_profile_config is None else\
-            self._autism_gene_profile_config.to_dict()
+    def _gene_profile_db(self) -> GeneProfileDB:
+        config = None if self._gene_profile_config is None else\
+            self._gene_profile_config.to_dict()
 
-        agpdb = AutismGeneProfileDB(
+        gpdb = GeneProfileDB(
             config,
-            os.path.join(self.dae_dir, "agpdb")
+            os.path.join(self.dae_dir, "gpdb")
         )
-        return agpdb
+        return gpdb
 
     def reload(self) -> None:
         """Reload GPF instance studies, de Novo gene sets, etc."""
@@ -263,24 +262,24 @@ class GPFInstance:
         self.denovo_gene_sets_db.reload()
 
     @cached_property
-    def _autism_gene_profile_config(self) -> Optional[Box]:
-        agp_config = self.dae_config.autism_gene_tool_config
+    def _gene_profile_config(self) -> Optional[Box]:
+        gp_config = self.dae_config.gene_profiles_config
         config_filename = None
 
-        if agp_config is None:
+        if gp_config is None:
             config_filename = os.path.join(
-                self.dae_dir, "autismGeneTool.conf")
+                self.dae_dir, "geneProfiles.conf")
             if not os.path.exists(config_filename):
                 return None
         else:
-            if not os.path.exists(agp_config.conf_file):
+            if not os.path.exists(gp_config.conf_file):
                 return None
-            config_filename = agp_config.conf_file
+            config_filename = gp_config.conf_file
 
         assert config_filename is not None
         return GPFConfigParser.load_config(
             config_filename,
-            autism_gene_tool_config
+            gene_profiles_config
         )
 
     @cached_property
@@ -473,31 +472,31 @@ class GPFInstance:
     def get_dataset(self, dataset_id: str) -> GenotypeData:
         return cast(GenotypeData, self._variants_db.get(dataset_id))
 
-    # AGP
-    def get_agp_configuration(self) -> Box:
-        return cast(Box, self._autism_gene_profile_db.configuration)
+    # GP
+    def get_gp_configuration(self) -> Box:
+        return cast(Box, self._gene_profile_db.configuration)
 
-    def get_agp_statistic(self, gene_symbol: str) -> AGPStatistic:
+    def get_gp_statistic(self, gene_symbol: str) -> GPStatistic:
         return cast(
-            AGPStatistic, self._autism_gene_profile_db.get_agp(gene_symbol)
+            GPStatistic, self._gene_profile_db.get_gp(gene_symbol)
         )
 
-    def query_agp_statistics(
+    def query_gp_statistics(
         self,
         page: int,
         symbol_like: Optional[str] = None,
         sort_by: Optional[str] = None,
         order: Optional[str] = None
-    ) -> list[AGPStatistic]:
+    ) -> list[GPStatistic]:
         """Query AGR statistics and return results."""
-        rows = self._autism_gene_profile_db.query_agps(
+        rows = self._gene_profile_db.query_gps(
             page, symbol_like, sort_by, order
         )
         statistics = list(map(
-            self._autism_gene_profile_db.agp_from_table_row,
+            self._gene_profile_db.gp_from_table_row,
             rows
         ))
-        return cast(list[AGPStatistic], statistics)
+        return cast(list[GPStatistic], statistics)
 
     def _construct_import_effect_annotator_config(
         self

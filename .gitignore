@@ -61,7 +61,7 @@ genotype-comp-*latest.tar.gz
 phenotype-comp-data-*latest.tar.gz
 comp-data/
 comp
-dae_conftests/dae_conftests/tests/fixtures/agpdb
+dae_conftests/dae_conftests/tests/fixtures/gpdb
 builds
 downloads
 results

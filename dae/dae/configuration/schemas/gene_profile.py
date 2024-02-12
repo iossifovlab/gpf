@@ -70,7 +70,7 @@ variant_statistic_schema = {
     }
 }
 
-autism_gene_tool_config = {
+gene_profiles_config = {
     "conf_dir": {
         "type": "string",
         "check_with": validate_existing_path,
@@ -91,6 +91,7 @@ autism_gene_tool_config = {
             },
         }
     },
+    "description": {"type": "string"},
     "genomic_scores": {
         "type": "list",
         "required": True,

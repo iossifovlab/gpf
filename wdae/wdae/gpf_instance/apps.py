@@ -37,7 +37,7 @@ class WDAEConfig(AppConfig):
             result = gpf_instance.get_all_genotype_data()
             logger.info("preloading studies: %s", result)
 
-            gpf_instance.prepare_agp_configuration()
+            gpf_instance.prepare_gp_configuration()
 
         except Exception:  # pylint: disable=broad-except
             logger.error(

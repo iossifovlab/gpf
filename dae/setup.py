@@ -99,7 +99,7 @@ setuptools.setup(
     annotate_doc=dae.annotation.annotate_doc:cli
 
 
-    agp_exporter=dae.autism_gene_profile.exporter:cli_export
+    agp_exporter=dae.gene_profile.exporter:cli_export
 
     ped2ped=dae.tools.ped2ped:main
     draw_pedigree=dae.tools.draw_pedigree:main
@@ -114,7 +114,7 @@ setuptools.setup(
     stats_liftover=dae.tools.stats_liftover:main
 
     import_tools=dae.import_tools.cli:main
-    generate_autism_gene_profile=dae.autism_gene_profile.generate_autism_gene_profile:main
+    generate_gene_profile=dae.gene_profile.generate_gene_profile:main
     generate_common_report=dae.common_reports.generate_common_report:main
     generate_families_cache=dae.pedigrees.generate_families_cache:main
 

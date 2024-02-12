@@ -10,12 +10,12 @@ from dae.testing.alla_import import alla_gpf
 
 from dae.gpf_instance import GPFInstance
 from dae.gene.gene_sets_db import GeneSet
-from dae.autism_gene_profile.statistic import AGPStatistic
-from dae.autism_gene_profile.db import AutismGeneProfileDB
+from dae.gene_profile.statistic import GPStatistic
+from dae.gene_profile.db import GeneProfileDB
 
 
 @pytest.fixture
-def agp_config() -> Box:
+def gp_config() -> Box:
     return Box({
         "gene_sets": [
             {
@@ -82,7 +82,7 @@ def agp_config() -> Box:
 
 
 @pytest.fixture
-def sample_agp() -> AGPStatistic:
+def sample_gp() -> GPStatistic:
     gene_sets = ["main_CHD8 target genes"]
     genomic_scores = {
         "protection_scores": {
@@ -104,25 +104,25 @@ def sample_agp() -> AGPStatistic:
             },
         }
     }
-    return AGPStatistic(
+    return GPStatistic(
         "CHD8", gene_sets, genomic_scores, variant_counts
     )
 
 
 @pytest.fixture
-def agp_gpf_instance(
+def gp_gpf_instance(
         tmp_path: pathlib.Path,
-        agp_config: Box,
-        sample_agp: AGPStatistic,
+        gp_config: Box,
+        sample_gp: GPStatistic,
         mocker: MockerFixture) -> GPFInstance:
     root_path = tmp_path
     gpf_instance = alla_gpf(root_path)
-    agpdb_filename = str(root_path / "agpdb")
+    gpdb_filename = str(root_path / "gpdb")
 
     mocker.patch.object(
         GPFInstance,
-        "_autism_gene_profile_config",
-        return_value=agp_config,
+        "_gene_profile_config",
+        return_value=gp_config,
         new_callable=mocker.PropertyMock
     )
     main_gene_sets = {
@@ -142,14 +142,14 @@ def agp_gpf_instance(
             "autism candidates",
             ["CHD8"]))
 
-    gpf_instance._autism_gene_profile_db = \
-        AutismGeneProfileDB(
-            gpf_instance._autism_gene_profile_config,
-            agpdb_filename,
+    gpf_instance._gene_profile_db = \
+        GeneProfileDB(
+            gpf_instance._gene_profile_config,
+            gpdb_filename,
             clear=True
         )
-    print(agpdb_filename)
-    gpf_instance._autism_gene_profile_db.insert_agp(sample_agp)
+    print(gpdb_filename)
+    gpf_instance._gene_profile_db.insert_gp(sample_gp)
 
     return gpf_instance
 
@@ -157,20 +157,20 @@ def agp_gpf_instance(
 @pytest.fixture
 def local_gpf_instance(
         tmp_path: pathlib.Path,
-        agp_config: Box,
-        sample_agp: AGPStatistic,
+        gp_config: Box,
+        sample_gp: GPStatistic,
         mocker: MockerFixture) -> GPFInstance:
     root_path = tmp_path
     gpf_instance = GPFInstance.build(
         os.path.join(
             os.path.dirname(__file__),
             "../../../../data/data-hg19-local/gpf_instance.yaml"))
-    agpdb_filename = str(root_path / "agpdb")
+    gpdb_filename = str(root_path / "gpdb")
 
     mocker.patch.object(
         GPFInstance,
-        "_autism_gene_profile_config",
-        return_value=agp_config,
+        "_gene_profile_config",
+        return_value=gp_config,
         new_callable=mocker.PropertyMock
     )
     main_gene_sets = {
@@ -195,13 +195,13 @@ def local_gpf_instance(
         "get_gene_set_ids",
         return_value=main_gene_sets
     )
-    gpf_instance._autism_gene_profile_db = \
-        AutismGeneProfileDB(
-            gpf_instance._autism_gene_profile_config,
-            agpdb_filename,
+    gpf_instance._gene_profile_db = \
+        GeneProfileDB(
+            gpf_instance._gene_profile_config,
+            gpdb_filename,
             clear=True
         )
-    print(agpdb_filename)
-    gpf_instance._autism_gene_profile_db.insert_agp(sample_agp)
+    print(gpdb_filename)
+    gpf_instance._gene_profile_db.insert_gp(sample_gp)
 
     return gpf_instance

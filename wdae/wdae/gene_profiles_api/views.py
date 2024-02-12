@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 class ConfigurationView(QueryBaseView):
     def get(self, _request: Request) -> Response:
-        configuration = self.gpf_instance.get_wdae_agp_configuration()
+        configuration = self.gpf_instance.get_wdae_gp_configuration()
         if configuration is None:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         return Response(configuration)
@@ -19,7 +19,7 @@ class ConfigurationView(QueryBaseView):
 
 class ProfileView(QueryBaseView):
     def get(self, _request: Request, gene_symbol: str) -> Response:
-        agp = self.gpf_instance.get_agp_statistic(gene_symbol)
-        if not agp:
+        gp = self.gpf_instance.get_gp_statistic(gene_symbol)
+        if not gp:
             return Response(status=status.HTTP_404_NOT_FOUND)
-        return Response(agp.to_json())
+        return Response(gp.to_json())

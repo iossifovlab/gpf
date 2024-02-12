@@ -1,18 +1,18 @@
 import logging
-from typing import Optional, Dict
+from typing import Optional, Dict, Any
 from copy import copy
 
 from sqlalchemy import create_engine, inspect, nullslast  # type: ignore
 from sqlalchemy import MetaData, Table, Column, Integer, String, Float
 from sqlalchemy.sql import insert, desc, asc
-from dae.autism_gene_profile.statistic import AGPStatistic
+from dae.gene_profile.statistic import GPStatistic
 
 logger = logging.getLogger(__name__)
 
 
-class AutismGeneProfileDB:
+class GeneProfileDB:
     """
-    Class for managing the autism gene profile database.
+    Class for managing the gene profile database.
 
     Uses SQLite for DB management and supports loading
     and storing to filesystem.
@@ -27,11 +27,11 @@ class AutismGeneProfileDB:
         self.engine = create_engine(f"sqlite:///{dbfile}")
         self.metadata = MetaData()
         self.configuration = \
-            AutismGeneProfileDB.build_configuration(configuration)
-        self._create_agp_table()
+            GeneProfileDB.build_configuration(configuration)
+        self._create_gp_table()
         self.gene_sets_categories = {}
         if clear:
-            self._clear_agp_table()
+            self._clear_gp_table()
         if len(self.configuration.keys()):
             for category in self.configuration["gene_sets"]:
                 category_name = category["category"]
@@ -66,32 +66,32 @@ class AutismGeneProfileDB:
                 len(configuration["gene_sets"]) + \
                 len(configuration["genomic_scores"]) + \
                 len(configuration["datasets"])
-            assert all(x in order_keys for x in order), "Given AGP order " \
+            assert all(x in order_keys for x in order), "Given GP order " \
                 "has invalid entries"
-            assert len(order) == total_categories_count, "Given AGP order " \
+            assert len(order) == total_categories_count, "Given GP order " \
                 "is missing items"
 
         return copy(configuration)
 
-    def get_agp(self, gene_symbol) -> Optional[AGPStatistic]:
+    def get_gp(self, gene_symbol) -> Optional[GPStatistic]:
         """
-        Query an AGP by gene_symbol and return the row as statistic.
+        Query a GP by gene_symbol and return the row as statistic.
 
         Returns None if gene_symbol is not found within the DB.
         """
-        table = self.agp_table
+        table = self.gp_table
         query = table.select()
         query = query.where(table.c.symbol_name == gene_symbol)
         with self.engine.begin() as connection:
             row = connection.execute(query).fetchone()
             if not row:
                 return None
-            return self.agp_from_table_row_single_view(row)
+            return self.gp_from_table_row_single_view(row)
 
     # FIXME: Too many locals, refactor?
-    def agp_from_table_row(self, row) -> dict:
+    def gp_from_table_row(self, row) -> dict:
         # pylint: disable=too-many-locals
-        """Build an AGPStatistic from internal DB row."""
+        """Build an GPStatistic from internal DB row."""
         config = self.configuration
         row = row._mapping  # pylint: disable=protected-access
         result = {}
@@ -131,8 +131,8 @@ class AutismGeneProfileDB:
         return result
 
     # FIXME: Too many locals, refactor?
-    def agp_from_table_row_single_view(self, row) -> AGPStatistic:
-        """Create an AGPStatistic from single view row."""
+    def gp_from_table_row_single_view(self, row) -> GPStatistic:
+        """Create an GPStatistic from single view row."""
         # pylint: disable=too-many-locals
         config = self.configuration
         row = row._mapping  # pylint: disable=protected-access
@@ -184,7 +184,7 @@ class AutismGeneProfileDB:
                     }
             variant_counts[dataset_id] = current_counts
 
-        return AGPStatistic(
+        return GPStatistic(
             gene_symbol, gene_sets,
             genomic_scores, variant_counts
         )
@@ -206,9 +206,9 @@ class AutismGeneProfileDB:
                 sort_by = ".".join((collection_id, sort_by_tokens[1]))
         return sort_by.replace(".", "_")
 
-    def query_agps(self, page, symbol_like=None, sort_by=None, order=None):
+    def query_gps(self, page, symbol_like=None, sort_by=None, order=None):
         """
-        Perform paginated query and return list of AGPs.
+        Perform paginated query and return list of GPs.
 
         Parameters:
             page - Which page to fetch.
@@ -217,7 +217,7 @@ class AutismGeneProfileDB:
             sort_by - Column to sort by
             order - "asc" or "desc"
         """
-        table = self.agp_table
+        table = self.gp_table
 
         query = table.select()
         if symbol_like:
@@ -237,21 +237,21 @@ class AutismGeneProfileDB:
         with self.engine.begin() as connection:
             return connection.execute(query).fetchall()
 
-    def drop_agp_table(self):
+    def drop_gp_table(self):
         with self.engine.begin() as connection:
-            connection.execute("DROP TABLE IF EXISTS autism_gene_profile")
+            connection.execute("DROP TABLE IF EXISTS gene_profile")
             connection.commit()
 
-    def agp_table_exists(self):
+    def gp_table_exists(self):
         insp = inspect(self.engine)
         with self.engine.begin() as connection:
-            has_agp_table = insp.dialect.has_table(
-                connection, "autism_gene_profile"
+            has_gp_table = insp.dialect.has_table(
+                connection, "gene_profile"
             )
-            return has_agp_table
+            return has_gp_table
 
     # FIXME: Too many locals, refactor?
-    def _agp_table_columns(self):  # pylint: disable=too-many-locals
+    def _gp_table_columns(self):  # pylint: disable=too-many-locals
         columns = {}
         columns["symbol_name"] = \
             Column("symbol_name", String(64), primary_key=True)
@@ -288,19 +288,19 @@ class AutismGeneProfileDB:
                     columns[rate_col_name] = Column(rate_col_name, Float())
         return columns
 
-    def _create_agp_table(self):
-        columns = self._agp_table_columns().values()
+    def _create_gp_table(self):
+        columns = self._gp_table_columns().values()
 
-        self.agp_table = Table(
-            "autism_gene_profile",
+        self.gp_table = Table(
+            "gene_profile",
             self.metadata,
             *columns,
         )
 
         self.metadata.create_all(self.engine)
 
-    def _clear_agp_table(self, connection=None):
-        query = self.agp_table.delete()
+    def _clear_gp_table(self, connection=None):
+        query = self.gp_table.delete()
         if connection is not None:
             connection.execute(query)
             return
@@ -309,25 +309,25 @@ class AutismGeneProfileDB:
             conn.execute(query)
             conn.commit()
 
-    def insert_agp(self, agp, connection=None):
-        """Insert an AGP into the DB."""
-        insert_map = self._create_insert_map(agp)
+    def insert_gp(self, gp, connection=None):
+        """Insert a GP into the DB."""
+        insert_map = self._create_insert_map(gp)
         if connection is not None:
             connection.execute(
-                insert(self.agp_table).values(**insert_map)
+                insert(self.gp_table).values(**insert_map)
             )
             return
 
         with self.engine.begin() as conn:
             conn.execute(
-                insert(self.agp_table).values(**insert_map)
+                insert(self.gp_table).values(**insert_map)
             )
             conn.commit()
 
     # FIXME: Too many locals, refactor?
-    def _create_insert_map(self, agp):  # pylint: disable=too-many-locals
+    def _create_insert_map(self, gp):  # pylint: disable=too-many-locals
         insert_map = {
-            "symbol_name": agp.gene_symbol,
+            "symbol_name": gp.gene_symbol,
         }
         gs_categories_count = {
             c["category"]: 0
@@ -339,7 +339,7 @@ class AutismGeneProfileDB:
                 collection_id = gene_set["collection_id"]
                 gs_id = gene_set["set_id"]
                 set_col = f"{collection_id}_{gs_id}"
-                if set_col in agp.gene_sets:
+                if set_col in gp.gene_sets:
                     insert_map[set_col] = 1
                     gs_categories_count[category] += 1
                 else:
@@ -348,28 +348,37 @@ class AutismGeneProfileDB:
         for category, count in gs_categories_count.items():
             insert_map[f"{category}_rank"] = count
 
-        for category, scores in agp.genomic_scores.items():
+        for category, scores in gp.genomic_scores.items():
             for score_id, score in scores.items():
                 insert_map[f"{category}_{score_id}"] = score
 
-        for study_id, ps_counts in agp.variant_counts.items():
+        for study_id, ps_counts in gp.variant_counts.items():
             for person_set_id, eff_type_counts in ps_counts.items():
                 for eff_type, count in eff_type_counts.items():
                     count_col = f"{study_id}_{person_set_id}_{eff_type}"
-                    insert_map[count_col] = count["count"]
-                    insert_map[f"{count_col}_rate"] = count["rate"]
+                    insert_map[count_col] = 0
+                    insert_map[f"{count_col}_rate"] = 0
         return insert_map
 
-    def insert_agps(self, agps):
-        """Insert multiple AGPStatistics into the DB."""
+    def insert_gps(self, gps):
+        """Insert multiple GPStatistics into the DB."""
         with self.engine.begin() as connection:
-            self._clear_agp_table(connection)
-            agp_count = len(agps)
-            for idx, agp in enumerate(agps, 1):
-                self.insert_agp(agp, connection)
+            self._clear_gp_table(connection)
+            gp_count = len(gps)
+            for idx, gp in enumerate(gps, 1):
+                self.insert_gp(gp, connection)
 
                 if idx % 1000 == 0:
                     logger.info(
-                        "Inserted %s/%s AGPs into DB", idx, agp_count)
+                        "Inserted %s/%s GPs into DB", idx, gp_count)
             logger.info("Done!")
+            connection.commit()
+
+    def update_gps_with_values(self, gs_values: dict[str, Any]) -> None:
+        with self.engine.begin() as connection:
+            for gs, values in gs_values.items():
+                update = self.gp_table.update().values(**values).where(
+                    self.gp_table.c.symbol_name == gs
+                )
+                connection.execute(update)
             connection.commit()
