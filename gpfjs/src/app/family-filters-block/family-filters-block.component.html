@@ -11,6 +11,12 @@
           <gpf-family-ids></gpf-family-ids>
         </ng-template>
       </li>
+      <li [ngbNavItem]="'familyTags'" id="family-tags">
+        <a ngbNavLink>Family Tags</a>
+        <ng-template ngbNavContent>
+          <gpf-family-tags [numOfCols]="numOfCols" [tags]="orderedTagList"></gpf-family-tags>
+        </ng-template>
+      </li>
       <li [ngbNavItem]="'advanced'" *ngIf="showAdvancedButton" id="advanced">
         <a ngbNavLink>Advanced</a>
         <ng-template ngbNavContent>

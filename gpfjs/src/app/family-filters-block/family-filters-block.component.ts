@@ -5,6 +5,7 @@ import { FamilyIdsModel, FamilyIdsState } from 'app/family-ids/family-ids.state'
 import { PersonFiltersModel, PersonFiltersState, SetFamilyFilters } from 'app/person-filters/person-filters.state';
 import { StateReset } from 'ngxs-reset-plugin';
 import { NgbNav } from '@ng-bootstrap/ng-bootstrap';
+import { VariantReportsService } from 'app/variant-reports/variant-reports.service';
 
 @Component({
   selector: 'gpf-family-filters-block',
@@ -18,8 +19,17 @@ export class FamilyFiltersBlockComponent implements OnInit, AfterViewInit {
   public showFamilyTypeFilter: boolean;
   public showAdvancedButton: boolean;
 
+  public tags: Array<string> = new Array<string>();
+  public orderedTagList = [];
+  public selectedTags: string[] = [];
+  public deselectedTags: string[] = [];
+  public tagIntersection = true; // mode "And"
+  public numOfCols: number;
+  public numOfRows: string;
+
   public constructor(
     private store: Store,
+    private variantReportsService: VariantReportsService,
   ) { }
 
   public ngOnInit(): void {
@@ -27,6 +37,18 @@ export class FamilyFiltersBlockComponent implements OnInit, AfterViewInit {
     this.showAdvancedButton =
       this.dataset.genotypeBrowserConfig.familyFilters.length !== 0 ||
       this.dataset.genotypeBrowserConfig.hasFamilyStructureFilter;
+
+    if (this.variantReportsService.getTags() !== undefined) {
+      this.variantReportsService.getTags().subscribe(data => {
+        Object.values(data).forEach((tag: string) => {
+          this.tags.push(tag);
+          this.orderedTagList.push(tag);
+        });
+        // Calculate grid for the tags (1 column width === ~5 tags height)
+        this.numOfCols = 4;
+        this.numOfRows = 'auto-fill';
+      });
+    }
   }
 
   public ngAfterViewInit(): void {

@@ -187,34 +187,6 @@ h5 {
   text-overflow: ellipsis;
 }
 
-#tags-modal-content {
-  padding: 8px 20px;
-  height: fit-content;
-  width: fit-content;
-}
-
-#tags-modal-header {
-  display: flex;
-  column-gap: 20px;
-  align-items: baseline;
-  margin-bottom: 10px;
-}
-
-#clear-filters-button {
-  white-space: nowrap;
-  color: #2a6395;
-  user-select: none;
-}
-
-#clear-filters-button:hover {
-  cursor: pointer;
-  color: #163d5f;
-}
-
-#tag-label {
-  margin-left: 5px;
-}
-
 .download-link {
   cursor: pointer;
   user-select: none;
@@ -237,44 +209,4 @@ h5 {
 #families-sum {
   margin-right: 15px;
   min-width: 100px;
-}
-
-.tags {
-  color: #cdcdcd;
-  font-size: 22px;
-  user-select: none;
-}
-
-.tags:hover {
-  cursor: pointer;
-}
-
-.modal-content-lines {
-  display: flex;
-  align-items: center;
-}
-
-.and-toggle-button {
-  color: #2a6395;
-  width: 70px;
-  padding: 0 20px;
-  border-radius: 5px 0 0 5px;
-  border: 1px solid #2a6395;
-}
-
-.or-toggle-button {
-  color: #2a6395;
-  width: 70px;
-  padding: 0 20px;
-  border-radius: 0 5px 5px 0;
-  border: 1px solid #2a6395;
-}
-
-#mode-label {
-  margin-right: 10px;
-}
-
-.selected-mode {
-  background-color: #2a6395;
-  color: white;
 }

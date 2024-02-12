@@ -184,6 +184,7 @@ import { HelperModalComponent } from './helper-modal/helper-modal.component';
 import { HomeComponent } from './home/home.component';
 import { AboutComponent } from './about/about.component';
 import { MarkdownEditorComponent } from './markdown-editor/markdown-editor.component';
+import { FamilyTagsComponent } from './family-tags/family-tags.component';
 
 const appRoutes: Routes = [
   {
@@ -403,6 +404,7 @@ const appRoutes: Routes = [
     HomeComponent,
     AboutComponent,
     MarkdownEditorComponent,
+    FamilyTagsComponent,
   ],
   imports: [
     BrowserModule,

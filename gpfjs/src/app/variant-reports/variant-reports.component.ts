@@ -8,7 +8,6 @@ import { DatasetsService } from 'app/datasets/datasets.service';
 import { take } from 'rxjs/operators';
 import { environment } from 'environments/environment';
 import { Dictionary } from 'lodash';
-import * as _ from 'lodash';
 import { NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
 import { ConfigService } from 'app/config/config.service';
 
@@ -39,7 +38,6 @@ export class VariantReportsComponent implements OnInit {
   public modal: NgbModalRef;
   @ViewChild('tagsModal') public tagsModal: ElementRef;
 
-  public tagsModalsNumberOfRows = 9;
   public tagsModalsNumberOfCols = 2;
 
   public variantReport: VariantReport;
@@ -52,7 +50,6 @@ export class VariantReportsComponent implements OnInit {
   public orderedTagList = [];
   public selectedTags: string[] = [];
   public deselectedTags: string[] = [];
-  public filtersButtonsState: Record<string, number> = {};
   public tagIntersection = true; // mode "And"
 
   public denovoVariantsTableWidth: number;
@@ -95,11 +92,9 @@ export class VariantReportsComponent implements OnInit {
         Object.values(data).forEach((tag: string) => {
           this.tags.push(tag);
           this.orderedTagList.push(tag);
-          this.filtersButtonsState[tag] = 0;
         });
         // Calculate square looking grid for the tags (1 column width === ~5 tags height)
         this.tagsModalsNumberOfCols = Math.ceil(Math.sqrt(Math.ceil(this.tags.length / 5)));
-        this.tagsModalsNumberOfRows = Math.ceil(this.tags.length / this.tagsModalsNumberOfCols);
       });
     }
   }
@@ -112,49 +107,14 @@ export class VariantReportsComponent implements OnInit {
     );
   }
 
-  public selectFilter(tag: string): void {
-    if (this.filtersButtonsState[tag] === 1) {
-      this.filtersButtonsState[tag] = 0;
-    } else {
-      this.filtersButtonsState[tag] = 1;
-    }
-    this.updateSelectedTagsList(tag);
-  }
-
-  public deselectFilter(tag: string): void {
-    if (this.filtersButtonsState[tag] === -1) {
-      this.filtersButtonsState[tag] = 0;
-    } else {
-      this.filtersButtonsState[tag] = -1;
-    }
-    this.updateDeselectedTagsList(tag);
-  }
-
-  public updateSelectedTagsList(tag: string): void {
-    if (!this.selectedTags.includes(tag)) {
-      this.selectedTags.push(tag);
-    } else {
-      const index = this.selectedTags.indexOf(tag);
-      this.selectedTags.splice(index, 1);
-    }
-    if (this.deselectedTags.includes(tag)) {
-      const index = this.deselectedTags.indexOf(tag);
-      this.deselectedTags.splice(index, 1);
-    }
+  public setTagIntersection(intersected: boolean): void {
+    this.tagIntersection = intersected;
     this.updateTagsHeader();
   }
 
-  public updateDeselectedTagsList(tag: string): void {
-    if (!this.deselectedTags.includes(tag)) {
-      this.deselectedTags.push(tag);
-    } else {
-      const index = this.deselectedTags.indexOf(tag);
-      this.deselectedTags.splice(index, 1);
-    }
-    if (this.selectedTags.includes(tag)) {
-      const index = this.selectedTags.indexOf(tag);
-      this.selectedTags.splice(index, 1);
-    }
+  public setTags(tags: {selected: []; deselected: []}): void {
+    this.selectedTags = tags.selected;
+    this.deselectedTags = tags.deselected;
     this.updateTagsHeader();
   }
 
@@ -200,15 +160,6 @@ export class VariantReportsComponent implements OnInit {
       this.tagsModal,
       {animation: false, centered: true, windowClass: 'tags-modal'}
     );
-  }
-
-  public clearFilters(): void {
-    this.selectedTags = [];
-    this.deselectedTags = [];
-    this.tagsHeader = '';
-    this.filtersButtonsState = _.mapValues(this.filtersButtonsState, () => 0);
-    this.updateTagFilters();
-    this.updateFamiliesCount();
   }
 
   public updatePedigrees(newCounters: Dictionary<PedigreeCounter[]>): void {
