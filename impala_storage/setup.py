@@ -1,4 +1,4 @@
-"""Setup for GPF genotype storage on the GCP."""
+"""Setup for GPF schema1 genotype storage on the Apache Impala v3.x."""
 
 import setuptools
 import versioneer
@@ -32,11 +32,9 @@ setuptools.setup(
     entry_points="""
     [dae.genotype_storage.factories]
     impala=impala_storage.schema1.impala_genotype_storage:ImpalaGenotypeStorage
-    impala2=impala_storage.schema2.impala2_genotype_storage:Impala2GenotypeStorage
 
     [dae.import_tools.storages]
     impala=impala_storage.schema1.impala_schema1:ImpalaSchema1ImportStorage
-    impala2=impala_storage.schema2.impala2_import_storage:Impala2ImportStorage
 
     [console_scripts]
     dae2parquet.py=impala_storage.tools.dae2parquet:main

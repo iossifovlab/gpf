@@ -17,8 +17,8 @@ from dae.variants.variant import SummaryVariantFactory, SummaryVariant
 from dae.variants.family_variant import FamilyVariant
 from dae.genomic_resources.gene_models import GeneModels
 
-from impala_storage.helpers.impala_query_runner import ImpalaQueryRunner
-from impala_storage.helpers.impala_helpers import ImpalaHelpers
+from impala2_storage.helpers.impala_query_runner import ImpalaQueryRunner
+from impala2_storage.helpers.impala_helpers import ImpalaHelpers
 
 logger = logging.getLogger(__name__)
 

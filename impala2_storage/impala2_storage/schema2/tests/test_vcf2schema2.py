@@ -3,9 +3,12 @@
 from glob import glob
 import pandas as pd
 import pytest
-from impala_storage.schema2.tests.conftest import run_vcf2schema2
+
 from dae.parquet.partition_descriptor import \
     PartitionDescriptor
+
+from impala2_storage.schema2.tests.conftest import run_vcf2schema2
+
 
 
 @pytest.mark.parametrize("partition_description", [

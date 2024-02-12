@@ -7,7 +7,7 @@ import pytest
 import pandas as pd
 from fsspec.core import url_to_fs
 
-from impala_storage.schema2.impala2_genotype_storage import \
+from impala2_storage.schema2.impala2_genotype_storage import \
     Impala2GenotypeStorage
 
 

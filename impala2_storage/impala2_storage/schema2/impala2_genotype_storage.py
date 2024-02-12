@@ -15,9 +15,9 @@ from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 
-from impala_storage.helpers.hdfs_helpers import HdfsHelpers
-from impala_storage.helpers.impala_helpers import ImpalaHelpers
-from impala_storage.schema2.impala_variants import ImpalaVariants
+from impala2_storage.helpers.hdfs_helpers import HdfsHelpers
+from impala2_storage.helpers.impala_helpers import ImpalaHelpers
+from impala2_storage.schema2.impala_variants import ImpalaVariants
 
 
 logger = logging.getLogger(__name__)

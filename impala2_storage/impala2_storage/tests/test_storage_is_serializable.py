@@ -1,12 +1,12 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import cloudpickle  # type: ignore
 import pytest
-from impala_storage.schema1.impala_genotype_storage import \
-    ImpalaGenotypeStorage
+from impala2_storage.schema2.impala2_genotype_storage import \
+    Impala2GenotypeStorage
 
 
 @pytest.mark.parametrize("storage_cls, storage_type", [
-    (ImpalaGenotypeStorage, "impala"),
+    (Impala2GenotypeStorage, "impala2"),
 ])
 def test_genotype_storage_is_cpickle_serializable(storage_cls, storage_type):
     storage = storage_cls({
