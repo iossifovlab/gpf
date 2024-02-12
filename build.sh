@@ -275,7 +275,15 @@ EOT
           --no-incremental \
           > /wd/results/mypy_impala_report || true'
 
-      build_run_local cp ./results/mypy_dae_report ./results/mypy_dae_tests_report ./results/mypy_wdae_report ./results/mypy_impala_report ./test-results/
+    build_run_container bash -c '
+      cd /wd/impala2_storage;
+      /opt/conda/bin/conda run --no-capture-output -n gpf mypy impala2_storage \
+          --pretty \
+          --show-error-context \
+          --no-incremental \
+          > /wd/results/mypy_impala2_report || true'
+
+      build_run_local cp ./results/mypy_dae_report ./results/mypy_dae_tests_report ./results/mypy_wdae_report ./results/mypy_impala_report ./results/mypy_impala2_report ./test-results/
 
   }
 
@@ -288,8 +296,6 @@ EOT
       --env DAE_DB_DIR="/wd/data/data-hg19-local/" \
       --env GRR_DEFINITION_FILE="/wd/cache/grr_definition.yaml" \
       --env TEST_REMOTE_HOST="gpfremote" \
-      --env DAE_HDFS_HOST="impala" \
-      --env DAE_IMPALA_HOST="impala" \
       --env LOCALSTACK_HOST="localstack" \
       --env WDAE_EMAIL_HOST="mailhog"
 
@@ -324,8 +330,6 @@ EOT
       --env DAE_DB_DIR="/wd/data/data-hg19-local/" \
       --env GRR_DEFINITION_FILE="/wd/cache/grr_definition.yaml" \
       --env TEST_REMOTE_HOST="gpfremote" \
-      --env DAE_HDFS_HOST="impala" \
-      --env DAE_IMPALA_HOST="impala" \
       --env LOCALSTACK_HOST="localstack" \
       --env WDAE_EMAIL_HOST="mailhog"
 
@@ -364,8 +368,6 @@ EOT
       --env DAE_DB_DIR="/wd/data/data-hg19-local/" \
       --env GRR_DEFINITION_FILE="/wd/cache/grr_definition.yaml" \
       --env TEST_REMOTE_HOST="gpfremote" \
-      --env DAE_HDFS_HOST="impala" \
-      --env DAE_IMPALA_HOST="impala" \
       --env LOCALSTACK_HOST="localstack" \
       --env WDAE_EMAIL_HOST="mailhog"
 
@@ -405,8 +407,6 @@ EOT
       --env DAE_DB_DIR="/wd/data/data-hg19-local/" \
       --env GRR_DEFINITION_FILE="/wd/cache/grr_definition.yaml" \
       --env TEST_REMOTE_HOST="gpfremote" \
-      --env DAE_HDFS_HOST="impala" \
-      --env DAE_IMPALA_HOST="impala" \
       --env LOCALSTACK_HOST="localstack" \
       --env WDAE_EMAIL_HOST="mailhog"
 
@@ -479,6 +479,7 @@ EOT
     build_run cp BUILD dae/dae/__build__.py
     build_run cp BUILD wdae/wdae/wdae/__build__.py
     build_run cp BUILD impala_storage/impala_storage/__build__.py
+    build_run cp BUILD impala2_storage/impala2_storage/__build__.py
 
     local image_name="gpf-package"
     build_docker_data_image_create_from_tarball "${image_name}" <(
@@ -508,7 +509,7 @@ EOT
           --exclude mypy.ini \
           --exclude pylintrc \
           --transform "s,^,gpf/," \
-          dae/ wdae/ impala_storage/ \
+          dae/ wdae/ impala_storage/ impala2_storage \
           environment.yml dev-environment.yml VERSION BUILD
     )
   }
@@ -521,6 +522,7 @@ EOT
     build_run rm -rf ./data/ ./import/ ./downloads ./results
     build_run rm -rf dae/dae/__build__.py wdae/wdae/__build__.py VERSION
     build_run rm -rf impala_storage/impala_storage/__build__.py BUILD
+    build_run rm -rf impala2_storage/impala2_storage/__build__.py BUILD
   }
 
 }
