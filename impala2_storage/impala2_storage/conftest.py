@@ -28,8 +28,8 @@ def impala_genotype_storage(
         impala_host: str) -> GenotypeStorage:
 
     storage_config = {
-        "id": "impala_test_storage",
-        "storage_type": "impala",
+        "id": "impala2_test_storage",
+        "storage_type": "impala2",
         "impala": {
             "hosts": [impala_host],
             "port": 21050,
@@ -49,7 +49,7 @@ def impala_genotype_storage(
 
     request.addfinalizer(fin)
 
-    return registry.get_genotype_storage("impala_test_storage")
+    return registry.get_genotype_storage("impala2_test_storage")
 
 
 # def collect_vcf(dirname: str) -> list[str]:

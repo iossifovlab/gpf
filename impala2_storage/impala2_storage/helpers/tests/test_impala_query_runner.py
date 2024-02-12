@@ -3,23 +3,23 @@ import time
 
 from concurrent.futures import ThreadPoolExecutor
 from queue import Queue
-from typing import Optional, Callable, Any, cast
+from typing import Optional, Callable, Any
 
 import pytest
 
 from dae.query_variants.query_runners import QueryResult
 
-from impala_storage.helpers.impala_query_runner import ImpalaQueryRunner
-from impala_storage.helpers.impala_helpers import ImpalaHelpers
-from impala_storage.schema1.impala_genotype_storage import \
-    ImpalaGenotypeStorage
+from impala2_storage.helpers.impala_query_runner import ImpalaQueryRunner
+from impala2_storage.helpers.impala_helpers import ImpalaHelpers
+from impala2_storage.schema2.impala2_genotype_storage import \
+    Impala2GenotypeStorage
 
 
 @pytest.fixture(scope="session")
 def impala_helpers(
-    impala_genotype_storage: ImpalaGenotypeStorage
+    impala_genotype_storage: Impala2GenotypeStorage
 ) -> ImpalaHelpers:
-    return cast(ImpalaHelpers, impala_genotype_storage.impala_helpers)
+    return impala_genotype_storage.impala_helpers
 
 
 def create_runner(
