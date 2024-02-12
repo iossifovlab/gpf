@@ -3,6 +3,7 @@ import os
 import sys
 import argparse
 import logging
+from typing import Optional
 
 import toml
 
@@ -13,7 +14,9 @@ from dae.parquet.partition_descriptor import PartitionDescriptor
 logger = logging.getLogger(__name__)
 
 
-def parse_cli_arguments(argv, gpf_instance):
+def parse_cli_arguments(
+    argv: list[str], gpf_instance: GPFInstance
+) -> argparse.Namespace:
     """Configure and create a CLI arguments parser."""
     parser = argparse.ArgumentParser(
         description="loading study parquet files in impala db",
@@ -86,22 +89,24 @@ def parse_cli_arguments(argv, gpf_instance):
         default=default_genotype_storage_id,
     )
 
-    argv = parser.parse_args(argv)
-    return argv
+    return parser.parse_args(argv)
 
 
-def main(argv=None, gpf_instance=None):
+def main(
+    argv: Optional[list[str]] = None,
+    gpf_instance: Optional[GPFInstance] = None
+) -> None:
     """Import parquet dataset into Impala genotype storage."""
     if gpf_instance is None:
         gpf_instance = GPFInstance.build()
 
-    argv = parse_cli_arguments(argv or sys.argv[1:], gpf_instance)
+    args = parse_cli_arguments(argv or sys.argv[1:], gpf_instance)
 
-    if argv.verbose == 1:
+    if args.verbose == 1:
         logging.basicConfig(level=logging.WARNING)
-    elif argv.verbose == 2:
+    elif args.verbose == 2:
         logging.basicConfig(level=logging.INFO)
-    elif argv.verbose >= 3:
+    elif args.verbose >= 3:
         logging.basicConfig(level=logging.DEBUG)
     else:
         logging.basicConfig(level=logging.ERROR)
@@ -110,18 +115,18 @@ def main(argv=None, gpf_instance=None):
 
     genotype_storages = gpf_instance.genotype_storages
     genotype_storage = genotype_storages.get_genotype_storage(
-        argv.genotype_storage)
+        args.genotype_storage)
 
     if not genotype_storage or \
             genotype_storage.storage_type != "impala":
         logger.error("missing or non-impala genotype storage")
         return
 
-    study_id = argv.study_id
+    study_id = args.study_id
 
-    if argv.variants is not None:
-        hdfs_variants_dir = argv.variants
-    elif argv.variants_sample or argv.variants_schema:
+    if args.variants is not None:
+        hdfs_variants_dir = args.variants
+    elif args.variants_sample or args.variants_schema:
         hdfs_variants_dir = \
             genotype_storage.default_variants_hdfs_dirname(study_id)
         # if not genotype_storage.hdfs_helpers.exists(hdfs_variants_dir):
@@ -129,8 +134,8 @@ def main(argv=None, gpf_instance=None):
     else:
         hdfs_variants_dir = None
 
-    if argv.pedigree is not None:
-        hdfs_pedigree_file = argv.pedigree
+    if args.pedigree is not None:
+        hdfs_pedigree_file = args.pedigree
     else:
         hdfs_pedigree_file = \
             genotype_storage.default_pedigree_hdfs_filename(study_id)
@@ -139,8 +144,8 @@ def main(argv=None, gpf_instance=None):
     logger.info("HDFS pedigree file: %s", hdfs_pedigree_file)
 
     partition_config_file = None
-    if argv.partition_description is not None:
-        partition_config_file = argv.partition_description
+    if args.partition_description is not None:
+        partition_config_file = args.partition_description
         assert os.path.isfile(partition_config_file), partition_config_file
     logger.info("partition_config_file: %s", partition_config_file)
 
@@ -152,20 +157,20 @@ def main(argv=None, gpf_instance=None):
         partition_description = PartitionDescriptor()
 
     variants_schema = None
-    if argv.variants_schema is not None:
-        assert os.path.exists(argv.variants_schema), argv.variants_schema
-        assert os.path.isfile(argv.variants_schema), argv.variants_schema
-        with open(argv.variants_schema) as infile:
+    if args.variants_schema is not None:
+        assert os.path.exists(args.variants_schema), args.variants_schema
+        assert os.path.isfile(args.variants_schema), args.variants_schema
+        with open(args.variants_schema) as infile:
             content = infile.read()
             schema = toml.loads(content)
             variants_schema = schema["variants_schema"]
 
     genotype_storage.impala_import_dataset(
-        argv.study_id,
+        args.study_id,
         hdfs_pedigree_file,
         hdfs_variants_dir,
         partition_description=partition_description,
-        variants_sample=argv.variants_sample,
+        variants_sample=args.variants_sample,
         variants_schema=variants_schema)
 
 

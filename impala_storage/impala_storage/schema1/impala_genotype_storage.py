@@ -268,6 +268,7 @@ class ImpalaGenotypeStorage(GenotypeStorage):
         local_basedir = variants_filename_basedir(
             partition_description,
             local_variants_files[0])
+        assert local_basedir is not None
         assert local_basedir.endswith("/")
 
         hdfs_variants_files = []

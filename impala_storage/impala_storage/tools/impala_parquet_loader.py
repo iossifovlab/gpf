@@ -2,6 +2,7 @@
 import os
 import sys
 import argparse
+from typing import Optional
 
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.configuration.gpf_config_parser import GPFConfigParser
@@ -11,7 +12,10 @@ from dae.utils.dict_utils import recursive_dict_update
 from dae.import_tools.import_tools import save_study_config
 
 
-def parse_cli_arguments(argv, gpf_instance):
+def parse_cli_arguments(
+    argv: list[str],
+    gpf_instance: GPFInstance
+) -> argparse.Namespace:
     """Configure and create an CLI argument parser."""
     parser = argparse.ArgumentParser(
         description="loading study parquet files in impala db",
@@ -72,20 +76,22 @@ def parse_cli_arguments(argv, gpf_instance):
         default=False
     )
 
-    argv = parser.parse_args(argv)
-    return argv
+    return parser.parse_args(argv)
 
 
-def main(argv=None, gpf_instance=None):
+def main(
+    argv: Optional[list[str]] = None,
+    gpf_instance: Optional[GPFInstance] = None
+) -> None:
     """Upload parquet dataset into Impala."""
     if gpf_instance is None:
         gpf_instance = GPFInstance.build()
 
-    argv = parse_cli_arguments(argv or sys.argv[1:], gpf_instance)
+    args = parse_cli_arguments(argv or sys.argv[1:], gpf_instance)
 
     genotype_storages = gpf_instance.genotype_storages
     genotype_storage = genotype_storages.get_genotype_storage(
-        argv.genotype_storage
+        args.genotype_storage
     )
     if not genotype_storage or \
             (genotype_storage
@@ -93,20 +99,20 @@ def main(argv=None, gpf_instance=None):
         print("missing or non-impala genotype storage")
         return
 
-    assert os.path.exists(argv.variants)
+    assert os.path.exists(args.variants)
 
     study_config = genotype_storage.impala_load_dataset(
-        argv.study_id, argv.variants, argv.pedigree)
+        args.study_id, args.variants, args.pedigree)
 
-    if argv.study_config:
-        input_config = GPFConfigParser.load_config_raw(argv.study_config)
+    if args.study_config:
+        input_config = GPFConfigParser.load_config_raw(args.study_config)
         study_config = recursive_dict_update(study_config, input_config)
 
     study_config = StudyConfigBuilder(study_config).build_config()
     assert study_config is not None
     save_study_config(
-        gpf_instance.dae_config, argv.study_id, study_config,
-        force=argv.force)
+        gpf_instance.dae_config, args.study_id, study_config,
+        force=args.force)
 
 
 if __name__ == "__main__":
