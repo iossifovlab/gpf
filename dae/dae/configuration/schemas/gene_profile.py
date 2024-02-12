@@ -91,6 +91,7 @@ gene_profiles_config = {
             },
         }
     },
+    "description": {"type": "string"},
     "genomic_scores": {
         "type": "list",
         "required": True,

@@ -1,4 +1,5 @@
 import pytest
+from django.test.client import Client
 
 pytestmark = pytest.mark.usefixtures(
     "wdae_gpf_instance",
@@ -9,9 +10,8 @@ pytestmark = pytest.mark.usefixtures(
 ROUTE_PREFIX = "/api/v3/gene_profiles"
 
 
-def test_configuration(admin_client):
+def test_configuration(admin_client: Client) -> None:
     response = admin_client.get(f"{ROUTE_PREFIX}/single-view/configuration")
 
     assert response.status_code == 200
-    print(response.data)
-    assert response.data == dict()
+    assert response.data == dict()  # type: ignore
