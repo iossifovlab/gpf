@@ -50,6 +50,12 @@ class WGPFInstance(GPFInstance):
         self._gp_configuration: Optional[dict[str, Any]] = None
         self._gp_table_configuration: Optional[dict[str, Any]] = None
         super().__init__(cast(Box, dae_config), dae_dir, **kwargs)
+        description = self.dae_config.gpfjs.main_description_file
+        if not os.path.exists(description):
+            open(
+                description,
+                "w"
+            ).close()
 
     @staticmethod
     def build(
@@ -86,6 +92,9 @@ class WGPFInstance(GPFInstance):
                     logger.error("Failed to create remote %s", remote["id"])
 
         self._remote_study_db = RemoteStudyDB(self._clients)
+
+    def get_main_description_path(self) -> str:
+        return self.dae_config.gpfjs.main_description_file
 
     def get_remote_client(self, remote_id: str) -> Optional[RESTClient]:
         return self._clients.get(remote_id)

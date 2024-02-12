@@ -212,6 +212,11 @@ dae_conf_schema = {
                 "type": "string",
                 # "check_with": validate_existing_path,
                 "coerce": "abspath",
+            },
+            "main_description_file": {
+                "type": "string",
+                "coerce": "abspath",
+                "default": "main_description.md"
             }
         },
     },

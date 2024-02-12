@@ -4,7 +4,8 @@ from django.conf import settings
 from users_api.views import WdaeLoginView
 
 from gpfjs.views import index, favicon
-from gpf_instance.views import version
+from gpf_instance import views as instance_views
+
 
 urlpatterns = [
     re_path(r"^$", index),
@@ -35,7 +36,12 @@ urlpatterns = [
     path("o/", include("oauth2_provider.urls", namespace="oauth2_provider")),
     re_path(r"^accounts/login/?$", WdaeLoginView.as_view(), name="login_user"),
     re_path(r"^api/v3/sentry", include("sentry.urls")),
-    re_path(r"^api/v3/version/?$", version),
+    re_path(r"^api/v3/version/?$", instance_views.version),
+    re_path(
+        r"^api/v3/description/?$",
+        instance_views.DescriptionView.as_view(),
+        name="description"
+    )
 ]
 
 if getattr(settings, "SILKY_PYTHON_PROFILER", False):
