@@ -5,7 +5,7 @@ import { AgpSingleViewConfig } from 'app/autism-gene-profiles-single-view/autism
 import { DatasetsTreeService } from 'app/datasets/datasets-tree.service';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { environment } from 'environments/environment';
-import { combineLatest, take } from 'rxjs';
+import { combineLatest, switchMap, take } from 'rxjs';
 
 @Component({
   selector: 'gpf-home',
@@ -25,19 +25,19 @@ export class HomeComponent implements OnInit {
   public studiesLoaded = 0;
 
   public agpConfig: AgpSingleViewConfig;
+  public homeDescription: string;
 
   public constructor(
     private appVersionService: AppVersionService,
-    private datasetService: DatasetsService,
+    private datasetsService: DatasetsService,
     private datasetsTreeService: DatasetsTreeService,
     private autismGeneProfilesService: AutismGeneProfilesService,
-
   ) {}
 
   public ngOnInit(): void {
     combineLatest({
       datasets: this.datasetsTreeService.getDatasetHierarchy(),
-      visibleDatasets: this.datasetService.getVisibleDatasets()
+      visibleDatasets: this.datasetsService.getVisibleDatasets()
     }).subscribe(({datasets, visibleDatasets}) => {
       datasets['data'].forEach((d: object) => {
         this.attachDatasetDescription(d); this.collectAllStudies(d);
@@ -68,11 +68,15 @@ export class HomeComponent implements OnInit {
     this.autismGeneProfilesService.getConfig().subscribe(res => {
       this.agpConfig = res;
     });
+
+    this.datasetsService.getHomeDescription().subscribe((res: {description: string}) => {
+      this.homeDescription = res.description;
+    });
   }
 
   public attachDatasetDescription(entry: object): void {
     entry['children']?.forEach((d: object) => this.attachDatasetDescription(d));
-    this.datasetService.getDatasetDescription(entry['dataset']).pipe(take(1)).subscribe(res => {
+    this.datasetsService.getDatasetDescription(entry['dataset']).pipe(take(1)).subscribe(res => {
       if (res['description']) {
         entry['description'] = this.getFirstParagraph(res['description']);
       }
@@ -146,6 +150,11 @@ export class HomeComponent implements OnInit {
   }
 
   public writeDescription(markdown: string): void {
-    // to do
+    this.datasetsService.writeHomeDescription(markdown).pipe(
+      take(1),
+      switchMap(() => this.datasetsService.getHomeDescription())
+    ).subscribe((res: {description: string}) => {
+      this.homeDescription = res.description;
+    });
   }
 }

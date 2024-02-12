@@ -156,6 +156,23 @@ export class DatasetsService {
     );
   }
 
+  public writeHomeDescription(description: string): Observable<object> {
+    const options = { headers: this.headers, withCredentials: true };
+    return this.http.post(
+      `${this.config.baseUrl}description`,
+      {description: description},
+      options
+    );
+  }
+
+  public getHomeDescription(): Observable<object> {
+    const options = { headers: this.headers, withCredentials: true };
+    return this.http.get(
+      `${this.config.baseUrl}description`,
+      options
+    );
+  }
+
   public getVisibleDatasets(): Observable<object> {
     const options = { headers: this.headers, withCredentials: true };
     return this.http.get(`${this.config.baseUrl}${this.visibleDatasetsUrl}`, options);
