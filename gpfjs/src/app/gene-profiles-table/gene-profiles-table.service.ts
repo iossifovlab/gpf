@@ -9,7 +9,7 @@ import { map } from 'rxjs/operators';
   providedIn: 'root'
 })
 export class GeneProfilesTableService {
-  private readonly genesUrl = 'autism_gene_tool/table/rows';
+  private readonly genesUrl = 'gene_profiles/table/rows';
 
   public constructor(
     private http: HttpClient,

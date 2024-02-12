@@ -11,8 +11,8 @@ import { catchError, map } from 'rxjs/operators';
   providedIn: 'root'
 })
 export class GeneProfilesService {
-  private readonly configUrl = 'autism_gene_tool/single-view/configuration';
-  private readonly genesUrl = 'autism_gene_tool/single-view/gene/';
+  private readonly configUrl = 'gene_profiles/single-view/configuration';
+  private readonly genesUrl = 'gene_profiles/single-view/gene/';
 
   public constructor(
     private http: HttpClient,
