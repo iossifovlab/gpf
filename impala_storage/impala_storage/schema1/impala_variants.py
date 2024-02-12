@@ -127,6 +127,7 @@ class ImpalaVariants:
         # pylint: disable=too-many-arguments,too-many-locals
         if not self.variants_table:
             return None
+        assert self.schema is not None
 
         sv_table = None
         if self.has_summary_variants_table:
@@ -250,6 +251,8 @@ class ImpalaVariants:
             logger.debug(
                 "missing varants table... skipping")
             return None
+        assert self.schema is not None
+
         do_join = False
         if pedigree_fields is not None:
             do_join = True

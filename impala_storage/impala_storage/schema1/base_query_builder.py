@@ -245,7 +245,7 @@ class BaseQueryBuilder(ABC):
     def build_group_by(self) -> None:
         pass
 
-    def build_limit(self, limit: None) -> None:
+    def build_limit(self, limit: Optional[int] = None) -> None:
         if limit is not None:
             self._add_to_product(f"LIMIT {limit}")
 

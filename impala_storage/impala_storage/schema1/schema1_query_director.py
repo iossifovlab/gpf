@@ -1,27 +1,41 @@
+from typing import List, Optional, Set, Union
+
+from dae.utils.regions import Region
+from impala_storage.schema1.family_variants_query_builder import \
+    FamilyVariantsQueryBuilder
+from impala_storage.schema1.summary_variants_query_builder import \
+    SummaryVariantsQueryBuilder, RealAttrFilterType
+
+
 class ImpalaQueryDirector:
     """Build a query in the right order."""
 
-    def __init__(self, query_builder):
+    def __init__(
+        self,
+        query_builder: Union[
+            FamilyVariantsQueryBuilder, SummaryVariantsQueryBuilder]
+    ) -> None:
         self.query_builder = query_builder
 
     def build_query(
             self,
-            regions=None,
-            genes=None,
-            effect_types=None,
-            family_ids=None,
-            person_ids=None,
-            inheritance=None,
-            roles=None,
-            sexes=None,
-            variant_type=None,
-            real_attr_filter=None,
-            ultra_rare=None,
-            frequency_filter=None,
-            return_reference=None,
-            return_unknown=None,
-            limit=None,
-            pedigree_fields=None):
+            regions: Optional[List[Region]] = None,
+            genes: Optional[List[str]] = None,
+            effect_types: Optional[List[str]] = None,
+            family_ids: Optional[Union[Set[str], List[str]]] = None,
+            person_ids: Optional[Set[str]] = None,
+            inheritance: Optional[Union[List[str], str]] = None,
+            roles: Optional[str] = None,
+            sexes: Optional[str] = None,
+            variant_type: Optional[str] = None,
+            real_attr_filter: Optional[RealAttrFilterType] = None,
+            ultra_rare: Optional[bool] = None,
+            frequency_filter: Optional[RealAttrFilterType] = None,
+            return_reference: Optional[bool] = None,
+            return_unknown: Optional[bool] = None,
+            limit: Optional[int] = None,
+            pedigree_fields: Optional[tuple[list[str], list[str]]] = None
+    ) -> None:
         # pylint: disable=too-many-arguments
         """Build a query in the right order."""
         self.query_builder.reset_product()

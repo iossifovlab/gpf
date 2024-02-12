@@ -3,8 +3,8 @@ import tempfile
 import logging
 from typing import Optional, cast
 
-from pyarrow import fs  # type: ignore
-from fsspec.implementations.arrow import ArrowFSWrapper  # type: ignore
+from pyarrow import fs
+from fsspec.implementations.arrow import ArrowFSWrapper
 
 
 logger = logging.getLogger(__name__)

@@ -3,7 +3,7 @@
 from dae.parquet.partition_descriptor import PartitionDescriptor
 
 
-def test_normalize_tblproperties():
+def test_normalize_tblproperties() -> None:
     props_str = """
     [region_bin]
     chromosomes = chr1, chr2, chr3, chr4, chr5, chr6, chr7, chr8, chr9

@@ -5,7 +5,7 @@ import pathlib
 from typing import Callable, Any
 
 import pytest
-import cloudpickle  # type: ignore
+import cloudpickle
 
 from dae.import_tools.import_tools import ImportProject
 from dae.gpf_instance.gpf_instance import GPFInstance
