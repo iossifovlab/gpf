@@ -29,13 +29,14 @@ describe('RegionsFilterValidator', () => {
     expect(component.validate('  Y:76710815 ', args)).toBe(true);
     expect(component.validate('  9:76710815 ', args)).toBe(true);
     expect(component.validate('  9:76710815-76710830 ', args)).toBe(true);
+    expect(component.validate('10:113,141,317', args)).toBe(true);
+    expect(component.validate('10:113,141,317-113,141,318 ', args)).toBe(true);
     expect(component.validate('  9:76710815-76710830 \n11:10169163-10169314  ' +
       '\n\n\n12:50344524-50352664', args)).toBe(true);
     expect(component.validate('  9:76710815-76710830, X:10169163-10169314, Y:50344524-50352664', args)).toBe(true);
     expect(component.validate('  9:76710815-76710830, 11:10169163-10169314, 12:50344524-50352664', args)).toBe(true);
     expect(component.validate('  9:76710815-76710830, 11:10169,163-10169,314,12:50344524-50352664', args)).toBe(true);
     expect(component.validate('  9:76710,815-76710830, 11:10,169,163-10169,314,12:50344524-50352664', args)).toBe(true);
-
 
     expect(component.validate('  9:76710833-76710830 ', args)).toBe(false);
     expect(component.validate('  9:76710833-76710830:320-345 ', args)).toBe(false);
@@ -68,18 +69,24 @@ describe('RegionsFilterValidator', () => {
     expect(component.validate('  chrY:76710815 ', args)).toBe(true);
     expect(component.validate('  chr9:76710815 ', args)).toBe(true);
     expect(component.validate('  chr9:76710815-76710830 ', args)).toBe(true);
+    expect(component.validate('chr10:113,141,317', args)).toBe(true);
+    expect(component.validate('chr10:113,141,317-113,141,318 ', args)).toBe(true);
     expect(component.validate('chr9', args)).toBe(true);
     expect(component.validate('  chr9:76710815-76710830 \nchr11:10169163-10169314  ' +
       '\nchr12:50344524-50352664', args)).toBe(true);
+
     expect(component.validate('  chr9:76710815-76710830 , chrX:10169163-10169314,  ' +
       'chrY:50344524-50352664', args)).toBe(true);
+
     expect(component.validate('  chr9:76710815-76710830, ' +
       'chr11:10169,163-10169,314,chr12:50344524-50352664', args)).toBe(true);
+
     expect(component.validate('  chr9:76710,815-76710830, ' +
       'chr11:10,169,163-10169,314,chr12:50344524-50352664', args)).toBe(true);
 
     expect(component.validate('  chr9:76710815-76710830 \n11:10169163-10169314  ' +
       '\nchr12:50344524-50352664', args)).toBe(false);
+
     expect(component.validate('  chr9:76710844-76710830 ', args)).toBe(false);
     expect(component.validate('chr23', args)).toBe(false);
     expect(component.validate('chr9:', args)).toBe(false);
@@ -89,8 +96,10 @@ describe('RegionsFilterValidator', () => {
 
     expect(component.validate('chr9:76710815-76710830, ' +
       'chr11:10169,163-101693,14,chr12:50344524-50352664', args)).toBe(false);
+
     expect(component.validate('chr9:76710815-76710830, ' +
       '11:10169,163-101,69314,12:50344524-50352664', args)).toBe(false);
+
     expect(component.validate('  chr9:76710815-76710830, ' +
       'chr11:10169,163-101,69314,,chr12:50344524-50352664', args)).toBe(false);
   });

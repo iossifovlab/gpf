@@ -8,6 +8,7 @@ export class RegionsFilterValidator implements ValidatorConstraintInterface {
     }
 
     let valid = true;
+    text += '\n'; // Expression needs to read symbol after regions
     text = text.replace(/,(?![0-9]{3}\D{1})/g, '\n');
     const regions = text.split('\n')
       .map(t => t.trim())
