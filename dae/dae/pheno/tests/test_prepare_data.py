@@ -29,8 +29,8 @@ def test_augment_measure(
     assert df is not None
 
     roles = list(df["role"].unique())
-    assert len(roles) == 4
-    for role in ["mom", "dad", "sib", "prb"]:
+    assert len(roles) == 3
+    for role in [Role.parent, Role.sib, Role.prb]:
         assert role in roles
     assert list(df) == [
         "person_id",
