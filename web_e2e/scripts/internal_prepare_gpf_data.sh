@@ -231,12 +231,12 @@ EOT
 
 cat <<EOT >> ${DAE_DB_DIR}/DAE.conf
 
-[autism_gene_tool_config]
-conf_file = "%(wd)s/autismGeneTool.conf"
+[gene_profiles_config]
+conf_file = "%(wd)s/geneProfiles.conf"
 
 EOT
 
-cat << EOT >> ${DAE_DB_DIR}/autismGeneTool.conf
+cat << EOT >> ${DAE_DB_DIR}/geneProfiles.conf
 
 
 default_dataset = "ALL_genotypes"
