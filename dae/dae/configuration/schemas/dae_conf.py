@@ -217,6 +217,11 @@ dae_conf_schema = {
                 "type": "string",
                 "coerce": "abspath",
                 "default": "main_description.md"
+            },
+            "about_description_file": {
+                "type": "string",
+                "coerce": "abspath",
+                "default": "about_description.md"
             }
         },
     },
