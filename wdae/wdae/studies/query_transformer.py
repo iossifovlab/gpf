@@ -369,9 +369,15 @@ class QueryTransformer:
             genomic_scores = kwargs.pop("genomicScores", [])
             if "real_attr_filter" not in kwargs:
                 kwargs["real_attr_filter"] = []
-            kwargs["real_attr_filter"] += self._transform_genomic_scores(
-                genomic_scores
-            )
+            kwargs["real_attr_filter"].extend(
+                self._transform_genomic_scores(genomic_scores))
+
+        if "frequencyScores" in kwargs:
+            frequency_scores = kwargs.pop("frequencyScores", [])
+            if "frequency_filter" not in kwargs:
+                kwargs["frequency_filter"] = []
+            kwargs["frequency_filter"].extend(
+                self._transform_genomic_scores(frequency_scores))
 
         if "geneScores" in kwargs:
             gene_scores = kwargs.pop("geneScores", {})

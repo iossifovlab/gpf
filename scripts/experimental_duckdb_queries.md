@@ -1889,3 +1889,106 @@ JOIN family AS fa
   ON fa.sj_index = sa.sj_index
 LIMIT 10
 ```
+
+
+```sql
+WITH summary AS (
+  SELECT
+    *
+  FROM SD_iWES_v1_1_genotypes_DENOVO_summary AS sa
+  WHERE
+    (
+      sa.chromosome = 'chr14'
+      AND NOT (
+        COALESCE(sa.end_position, sa.position) < 21385194 OR sa.position > 21437298
+      )
+    )
+    AND (
+      sa.genome_gnomad_v3_af_percent <= 100 or sa.genome_gnomad_v3_af_percent is null
+    )
+    AND (
+      (
+        (
+          (
+            (
+              (
+                (
+                  sa.variant_type & 4
+                ) <> 0
+              ) OR (
+                (
+                  sa.variant_type & 2
+                ) <> 0
+              )
+            )
+            OR (
+              (
+                sa.variant_type & 8
+              ) <> 0
+            )
+          )
+          OR (
+            (
+              sa.variant_type & 1
+            ) <> 0
+          )
+        )
+        OR (
+          (
+            sa.variant_type & 16
+          ) <> 0
+        )
+      )
+      OR (
+        (
+          sa.variant_type & 32
+        ) <> 0
+      )
+    )
+    AND sa.allele_index > 0
+), effect_gene AS (
+  SELECT
+    *,
+    UNNEST(effect_gene) AS eg
+  FROM summary
+), effect_gene_summary AS (
+  SELECT
+    *
+  FROM effect_gene
+  WHERE
+    eg.effect_gene_symbols IN ('CHD8')
+    AND eg.effect_types IN ('frame-shift', 'nonsense', 'splice-site', 'no-frame-shift-newStop', 'missense', 'synonymous', 'CNV+', 'CNV-', 'no-frame-shift', 'noEnd', 'noStart', 'CDS')
+), family AS (
+  SELECT
+    *
+  FROM SD_iWES_v1_1_genotypes_DENOVO_family AS fa
+  WHERE
+    (
+      (
+        8 & fa.inheritance_in_members
+      ) = 0
+      AND (
+        32 & fa.inheritance_in_members
+      ) = 0
+      AND (
+        150 & fa.inheritance_in_members
+      ) <> 0
+    )
+    AND fa.allele_index > 0
+)
+SELECT
+  fa.bucket_index,
+  fa.summary_index,
+  fa.family_index,
+  sa.allele_index,
+  sa.summary_variant_data,
+  fa.family_variant_data
+FROM effect_gene_summary AS sa
+JOIN family AS fa
+  ON (
+    fa.summary_index = sa.summary_index
+    AND fa.bucket_index = sa.bucket_index
+    AND fa.allele_index = sa.allele_index
+  )
+LIMIT 10010
+```

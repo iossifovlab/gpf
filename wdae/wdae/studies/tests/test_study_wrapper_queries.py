@@ -553,6 +553,7 @@ def test_query_complex_query(
             "multiplex", "other"
         ],
         "genomicScores": [],
+        "frequencyScores": [],
         "uniqueFamilyVariants": False,
         "studyFilters": [],
         "datasetId": "sequencing_de_novo",
