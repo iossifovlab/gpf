@@ -89,9 +89,11 @@ class Impala2GenotypeStorage(GenotypeStorage):
             logger.info("deleting %s directory", study_path)
             self.hdfs_helpers.delete(study_path, recursive=True)
 
+        pedigree_hdfs_dir = os.path.join(study_path, "pedigree")
         pedigree_hdfs_path = os.path.join(
-            study_path, "pedigree", "pedigree.parquet"
+            pedigree_hdfs_dir, "pedigree.parquet"
         )
+        self.hdfs_helpers.makedirs(pedigree_hdfs_dir)
         self.hdfs_helpers.put(pedigree_file, pedigree_hdfs_path)
 
         meta_hdfs_file = os.path.join(
