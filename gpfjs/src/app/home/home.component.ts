@@ -1,9 +1,9 @@
 import { Component, OnInit } from '@angular/core';
-import { AppVersionService } from 'app/app-version.service';
 import { AutismGeneProfilesService } from 'app/autism-gene-profiles-block/autism-gene-profiles.service';
 import { AgpSingleViewConfig } from 'app/autism-gene-profiles-single-view/autism-gene-profile-single-view';
 import { DatasetsTreeService } from 'app/datasets/datasets-tree.service';
 import { DatasetsService } from 'app/datasets/datasets.service';
+import { InstanceService } from 'app/instance.service';
 import { environment } from 'environments/environment';
 import { combineLatest, switchMap, take } from 'rxjs';
 
@@ -28,7 +28,7 @@ export class HomeComponent implements OnInit {
   public homeDescription: string;
 
   public constructor(
-    private appVersionService: AppVersionService,
+    private instanceService: InstanceService,
     private datasetsService: DatasetsService,
     private datasetsTreeService: DatasetsTreeService,
     private autismGeneProfilesService: AutismGeneProfilesService,
@@ -61,7 +61,7 @@ export class HomeComponent implements OnInit {
       });
     });
 
-    this.appVersionService.getGpfVersion().subscribe(res => {
+    this.instanceService.getGpfVersion().subscribe(res => {
       this.gpfVersion = res;
     });
 
@@ -69,7 +69,7 @@ export class HomeComponent implements OnInit {
       this.agpConfig = res;
     });
 
-    this.datasetsService.getHomeDescription().subscribe((res: {description: string}) => {
+    this.instanceService.getHomeDescription().subscribe((res: {description: string}) => {
       this.homeDescription = res.description;
     });
   }
@@ -150,9 +150,9 @@ export class HomeComponent implements OnInit {
   }
 
   public writeDescription(markdown: string): void {
-    this.datasetsService.writeHomeDescription(markdown).pipe(
+    this.instanceService.writeHomeDescription(markdown).pipe(
       take(1),
-      switchMap(() => this.datasetsService.getHomeDescription())
+      switchMap(() => this.instanceService.getHomeDescription())
     ).subscribe((res: {description: string}) => {
       this.homeDescription = res.description;
     });
