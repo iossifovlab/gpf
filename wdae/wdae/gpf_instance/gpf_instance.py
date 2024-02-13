@@ -50,10 +50,16 @@ class WGPFInstance(GPFInstance):
         self._gp_configuration: Optional[dict[str, Any]] = None
         self._gp_table_configuration: Optional[dict[str, Any]] = None
         super().__init__(cast(Box, dae_config), dae_dir, **kwargs)
-        description = self.dae_config.gpfjs.main_description_file
-        if not os.path.exists(description):
+        main_description = self.dae_config.gpfjs.main_description_file
+        if not os.path.exists(main_description):
             open(
-                description,
+                main_description,
+                "w"
+            ).close()
+        about_description = self.dae_config.gpfjs.about_description_file
+        if not os.path.exists(about_description):
+            open(
+                about_description,
                 "w"
             ).close()
 
@@ -95,6 +101,9 @@ class WGPFInstance(GPFInstance):
 
     def get_main_description_path(self) -> str:
         return self.dae_config.gpfjs.main_description_file
+    
+    def get_about_description_path(self) -> str:
+        return self.dae_config.gpfjs.about_description_file
 
     def get_remote_client(self, remote_id: str) -> Optional[RESTClient]:
         return self._clients.get(remote_id)
