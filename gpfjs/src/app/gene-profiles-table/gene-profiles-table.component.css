@@ -123,14 +123,10 @@
   line-height: 25px;
 }
 
-.sorting-button {
-  position: relative;
-  top: -2px;
-  user-select: none;
-}
-
 .column-filtering-button {
   min-width: 35px;
+  padding-top: 0;
+  padding-bottom: 0;
   user-select: none;
   outline: none;
   border: none;

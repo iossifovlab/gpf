@@ -291,7 +291,7 @@ export class GeneProfilesTableComponent implements OnInit, OnChanges, OnDestroy 
     );
 
     if (sortButton) {
-      sortButton.resetHideState();
+      sortButton.resetSortState();
     }
   }
 

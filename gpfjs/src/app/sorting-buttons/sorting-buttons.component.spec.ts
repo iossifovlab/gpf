@@ -19,43 +19,31 @@ describe('SortingButtonsComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should emit sort event', () => {
-    const emitSpy = jest.spyOn(component.sortEvent, 'emit');
-
-    component.id = 'id1';
-    component.emitSortEvent('order1');
-    expect(emitSpy).toHaveBeenCalledWith({ id: 'id1', order: 'order1'});
-
-    component.id = 'id2';
-    component.emitSortEvent('order2');
-    expect(emitSpy).toHaveBeenCalledWith({ id: 'id2', order: 'order2'});
-  });
-
   it('should emit sort', () => {
     const emitSpy = jest.spyOn(component.sortEvent, 'emit');
-    component.hideState = 0;
+    component.sortState = 0;
     component.id = 'id1';
 
     component.emitSort();
-    expect(component.hideState).toBe(1);
+    expect(component.sortState).toBe(1);
     expect(emitSpy).toHaveBeenCalledWith({id: 'id1', order: 'desc'});
 
     component.emitSort();
-    expect(component.hideState).toBe(-1);
+    expect(component.sortState).toBe(-1);
     expect(emitSpy).toHaveBeenCalledWith({id: 'id1', order: 'asc'});
   });
 
   it('should reset hide state', () => {
-    component.hideState = 0;
-    component.resetHideState();
-    expect(component.hideState).toBe(0);
+    component.sortState = 0;
+    component.resetSortState();
+    expect(component.sortState).toBe(0);
 
-    component.hideState = -1;
-    component.resetHideState();
-    expect(component.hideState).toBe(0);
+    component.sortState = -1;
+    component.resetSortState();
+    expect(component.sortState).toBe(0);
 
-    component.hideState = 1;
-    component.resetHideState();
-    expect(component.hideState).toBe(0);
+    component.sortState = 1;
+    component.resetSortState();
+    expect(component.sortState).toBe(0);
   });
 });

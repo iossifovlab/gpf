@@ -1,21 +1,8 @@
-#bg,
-#asc,
-#desc {
-  padding-top: 7px;
-  font-weight: normal;
+.sorting-button {
+  display: flex;
 }
 
-#asc,
-#desc {
+.sorting-button span {
   font-size: 17px;
   font-weight: 600;
-  margin-top: 7px;
-  padding-left: 3.5px;
-  padding-right: 3.5px;
-}
-
-#sorting-buttons {
-  display: table-cell;
-  vertical-align: middle;
-  text-align: right;
 }

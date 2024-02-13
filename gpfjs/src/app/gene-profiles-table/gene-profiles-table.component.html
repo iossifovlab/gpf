@@ -82,8 +82,7 @@
               *ngIf="column.sortable"
               [id]="column.id"
               class="header-button sorting-button"
-              style="pointer-events: none; margin-top: 3px"
-              [hideState]="column.id !== sortBy ? 0 : orderBy === 'asc' ? -1 : 1">
+              [sortState]="column.id !== sortBy ? 0 : orderBy === 'asc' ? -1 : 1">
             </gpf-sorting-buttons>
             <!-- prettier-ignore -->
             <button
