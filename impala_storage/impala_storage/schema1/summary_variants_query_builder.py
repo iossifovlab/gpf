@@ -1,5 +1,5 @@
 import logging
-from typing import Callable, Dict, List, Optional, Any, Union, Set
+from typing import Callable, Dict, List, Optional, Any, Union, Iterable
 
 from dae.utils.regions import Region
 from dae.annotation.annotation_pipeline import AttributeInfo
@@ -96,8 +96,8 @@ class SummaryVariantsQueryBuilder(BaseQueryBuilder):
         regions: Optional[List[Region]] = None,
         genes: Optional[List[str]] = None,
         effect_types: Optional[List[str]] = None,
-        family_ids: Optional[Union[Set[str], List[str]]] = None,
-        person_ids: Optional[Set[str]] = None,
+        family_ids: Optional[Iterable[str]] = None,
+        person_ids: Optional[Iterable[str]] = None,
         inheritance: Optional[Union[List[str], str]] = None,
         roles: Optional[str] = None,
         sexes: Optional[str] = None,

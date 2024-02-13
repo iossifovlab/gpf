@@ -1,4 +1,4 @@
-from typing import List, Optional, Set, Union
+from typing import List, Optional, Union, Iterable
 
 from dae.utils.regions import Region
 from impala_storage.schema1.family_variants_query_builder import \
@@ -22,8 +22,8 @@ class ImpalaQueryDirector:
             regions: Optional[List[Region]] = None,
             genes: Optional[List[str]] = None,
             effect_types: Optional[List[str]] = None,
-            family_ids: Optional[Union[Set[str], List[str]]] = None,
-            person_ids: Optional[Set[str]] = None,
+            family_ids: Optional[Iterable[str]] = None,
+            person_ids: Optional[Iterable[str]] = None,
             inheritance: Optional[Union[List[str], str]] = None,
             roles: Optional[str] = None,
             sexes: Optional[str] = None,

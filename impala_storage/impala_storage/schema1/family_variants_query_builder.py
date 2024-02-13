@@ -1,5 +1,6 @@
 import logging
-from typing import Any, Callable, Dict, List, Optional, Set, Union
+from typing import Any, Callable, Dict, List, Optional, Union, \
+    Iterable
 
 from dae.variants.attributes import Status, Role, Sex
 from dae.annotation.annotation_pipeline import AttributeInfo
@@ -142,8 +143,8 @@ class FamilyVariantsQueryBuilder(BaseQueryBuilder):
         regions: Optional[List[Region]] = None,
         genes: Optional[List[str]] = None,
         effect_types: Optional[List[str]] = None,
-        family_ids: Optional[Union[Set[str], List[str]]] = None,
-        person_ids: Optional[Set[str]] = None,
+        family_ids: Optional[Iterable[str]] = None,
+        person_ids: Optional[Iterable[str]] = None,
         inheritance: Optional[Union[List[str], str]] = None,
         roles: Optional[str] = None,
         sexes: Optional[str] = None,

@@ -1,7 +1,8 @@
 import logging
 
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional, Set, Union, cast, Callable
+from typing import Any, Dict, List, Optional, Set, Union, cast, Callable, \
+    Iterable
 
 from dae.variants.attributes import Inheritance
 from dae.utils.regions import Region
@@ -134,8 +135,8 @@ class BaseQueryBuilder(ABC):
         regions: Optional[List[dae.utils.regions.Region]] = None,
         genes: Optional[List[str]] = None,
         effect_types: Optional[List[str]] = None,
-        family_ids: Optional[Union[Set[str], List[str]]] = None,
-        person_ids: Optional[Set[str]] = None,
+        family_ids: Optional[Iterable[str]] = None,
+        person_ids: Optional[Iterable[str]] = None,
         inheritance: Optional[Union[List[str], str]] = None,
         roles: Optional[str] = None,
         sexes: Optional[str] = None,
