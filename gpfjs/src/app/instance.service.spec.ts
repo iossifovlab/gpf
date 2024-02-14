@@ -29,7 +29,7 @@ describe('InstanceService', () => {
     httpGetSpy.mockReturnValue(of({ version: 'v1'}));
 
     const response = await lastValueFrom(service.getGpfVersion().pipe(take(1)));
-    expect(httpGetSpy.mock.calls[0][0]).toStrictEqual(environment.apiPath + 'version');
+    expect(httpGetSpy.mock.calls[0][0]).toStrictEqual(environment.apiPath + 'instance/version');
     expect(response).toBe('v1');
   });
 });
