@@ -2,7 +2,7 @@
   <div *ngIf="config" class="table-container">
     <div id="table-top">
       <ng-container *ngTemplateOutlet="aboveTableBar"></ng-container>
-      <div id="header" class="table-row">
+      <div id="table-header" class="table-row">
         <ng-container *ngTemplateOutlet="tableHeaderTemplate; context: { columns: config.columns }"></ng-container>
       </div>
     </div>

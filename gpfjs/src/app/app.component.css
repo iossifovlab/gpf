@@ -4,121 +4,52 @@
   height: 100%;
 }
 
-.app-content {
-  padding: 20px;
+#title {
+  margin-bottom: 0;
 }
 
-.app-toolbar-filler {
-  flex: 1 1 auto;
-}
-
-.app-toolbar-menu {
-  padding: 0 14px;
-  color: white;
-}
-
-.app-icon-button {
-  box-shadow: none;
-  user-select: none;
-  background: none;
-  border: none;
-  cursor: pointer;
-  filter: none;
-  font-weight: normal;
-  height: auto;
-  line-height: inherit;
-  margin: 0;
-  min-width: 0;
-  padding: 0;
-  text-align: left;
-  text-decoration: none;
-}
-
-.app-action {
-  display: inline-block;
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-}
-
-.app-spinner {
-  height: 30px;
-  width: 30px;
-  display: inline-block;
-}
-
-.app-input-icon {
-  font-size: 16px;
-}
-
-.app-list {
-  border: 1px solid rgba(0, 0, 0, 12%);
-  width: 350px;
-  margin: 20px;
-}
-
-.app-progress {
-  margin: 20px;
-}
-
-#logo {
-  min-height: 58px;
+#header {
   z-index: 199;
-  position: relative;
   background-color: white;
+  padding-bottom: 0;
 }
 
-.sidenav {
-  padding: 20px;
-  width: 250px;
-  position: absolute;
-  background-color: #fafafa;
-  z-index: 200;
-  height: calc(100% - 58px);
-  box-shadow: 2px 2px 2px rgba(0, 0, 0, 20%);
+.container-fluid {
+  padding-bottom: 0;
 }
 
-.sidenav .nav-item {
-  text-align: left;
-  padding-bottom: 8px;
+.container-fluid a, h3 {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.nav-link {
-  padding-left: 8px;
+.container-fluid a {
+  min-width: 90px;
+  max-width: 210px;
+  width: 8.3vw;
+  padding: 8px 10px 5px;
+  text-align: center;
+  font-weight: 500;
+  text-decoration: none;
+  background-color: #eee;
+  border: 2px solid #eee;
+  color: #8b8b8b;
+  border-radius: 5px 5px 0 0;
+  margin-left: 8px;
 }
 
-.navbar-toggler-icon {
-  height: 24px;
-  color: #9b9b9b;
+.highlighted-route {
+  background-color: white !important;
+  border: 2px solid #2a6395 !important;
+  border-bottom: 1px solid white !important;
+  color: #2a6395 !important;
+  height: 42px;
+  position: relative;
+  top: 2px;
 }
 
-.navbar-toggler {
-  border: 1px solid rgba(0, 0, 0, 10%);
-  border-radius: 0.25rem;
-  height: 34px;
-}
-
-.navbar-button {
-  padding: 0.25rem 0.55rem;
-  padding-left: 0;
-}
-
-.blackscreen {
-  position: fixed;
-  top: 0;
-  right: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 50%);
-  z-index: 190;
-}
-
-#version-container {
-  color: #9b9b9b;
-  position: absolute;
-  bottom: 10px;
-}
-
-.version-text {
-  font-weight: 600;
+#separator {
+  border-top: 2px solid #2a6395;
+  height: 15px;
 }

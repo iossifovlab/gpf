@@ -1,0 +1,84 @@
+h4 {
+  display: inline;
+  margin-right: 5px;
+}
+
+:host::ng-deep p {
+  display: inline;
+}
+
+.big-title {
+  margin-bottom: 0.5rem;
+  font-family: inherit;
+  font-weight: 500;
+  line-height: 1.1;
+  color: inherit;
+  font-size: 24px;
+  vertical-align: middle;
+  padding: 10px 8px;
+  background-color: #eee;
+}
+
+.collapse-dataset-icon {
+  right: 3px;
+  padding: 3px;
+  user-select: none;
+  transform: translateY(-50%) rotate(270deg);
+  vertical-align: middle;
+  line-height: 1px;
+}
+
+.rotate {
+  transform: translateY(-50%);
+}
+
+#version-container {
+  color: #9b9b9b;
+}
+
+.version-text {
+  font-weight: 600;
+}
+
+#home-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: auto;
+  max-width: 1200px;
+  width: 60%;
+}
+
+a {
+  color: #0645ad;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+#dataset-header {
+  align-self: flex-start;
+}
+
+.separator {
+  border-top: 2px solid #9c9c9c;
+  height: 15px;
+  width: 100%;
+}
+
+.material-symbols-outlined {
+  font-variation-settings:
+    "FILL" 1,
+    "wght" 400,
+    "GRAD" 0,
+    "opsz" 24;
+}
+
+#footer {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: 20px;
+}

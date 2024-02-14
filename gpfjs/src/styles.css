@@ -11,17 +11,17 @@ body {
   overflow-y: scroll;
 }
 
-#logo {
-  padding: 10px 20px;
+#header {
+  padding: 10px 26px;
 }
 
-#logo h3 {
+#header h3 {
   font-size: 20px;
   display: inline;
   vertical-align: -3px;
 }
 
-#logo img {
+#header img {
   display: inline-block;
   height: 32px;
   width: 32px;
@@ -508,5 +508,24 @@ summary.details {
 }
 
 .modal-content a:hover {
+  text-decoration: underline;
+}
+
+markdown h1,
+markdown h2,
+markdown h3,
+markdown h4,
+markdown h5,
+markdown h6 {
+  font-size: 1rem;
+}
+
+markdown a {
+  color: #0645ad;
+  text-decoration: none;
+}
+
+markdown a:hover {
+  color: #0645ad;
   text-decoration: underline;
 }

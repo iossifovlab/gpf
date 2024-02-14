@@ -181,12 +181,19 @@ import { DatasetsTreeService } from './datasets/datasets-tree.service';
 import { SearchableSelectComponent } from './searchable-select/searchable-select.component';
 import { SearchableSelectTemplateDirective } from './searchable-select/searchable-select-template.directive';
 import { HelperModalComponent } from './helper-modal/helper-modal.component';
+import { HomeComponent } from './home/home.component';
+import { AboutComponent } from './about/about.component';
+import { MarkdownEditorComponent } from './markdown-editor/markdown-editor.component';
 
 const appRoutes: Routes = [
   {
     path: 'login',
     component: LoginComponent,
     resolve: { _: AuthResolverService},
+  },
+  {
+    path: 'home',
+    component: HomeComponent,
   },
   {
     path: 'datasets',
@@ -259,11 +266,15 @@ const appRoutes: Routes = [
   },
   {
     path: 'user-profile',
-    component: UserProfileComponent
+    component: UserProfileComponent,
+  },
+  {
+    path: 'about',
+    component: AboutComponent,
   },
   {
     path: '**',
-    redirectTo: 'datasets'
+    redirectTo: 'home'
   },
 ];
 
@@ -389,6 +400,9 @@ const appRoutes: Routes = [
     SearchableSelectComponent,
     SearchableSelectTemplateDirective,
     HelperModalComponent,
+    HomeComponent,
+    AboutComponent,
+    MarkdownEditorComponent,
   ],
   imports: [
     BrowserModule,

@@ -1,76 +1,75 @@
 <gpf-fullscreen-loading></gpf-fullscreen-loading>
 <div>
-  <div class="container-fluid" id="logo">
+  <div class="container-fluid" id="header">
     <div class="row">
-      <div class="col-10">
-        <span class="navbar-button">
-          <button id="sidenav-toggle-button" class="navbar-toggler" (click)="toggleSidenav()">
-            <span class="material-symbols-outlined navbar-toggler-icon">menu</span>
-          </button>
-        </span>
+      <div class="col-10" style="display: flex; align-items: center; padding-left: 0">
         <img src="{{ imgPathPrefix }}logo-64x64.png" />
-        <h3 id="title">{{ title }}</h3>
+        <h3 id="title" [title]="title">{{ title }}</h3>
+        <a
+          [routerLink]="'/' + toolRoutes.home"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{ exact: false }"
+          (click)="currentRoute = toolRoutes.home"
+          [ngClass]="{ 'highlighted-route': currentRoute === toolRoutes.home }"
+          title="Home"
+          >Home</a
+        >
+        <a
+          [routerLink]="'/' + toolRoutes.datasets"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{ exact: false }"
+          (click)="currentRoute = toolRoutes.datasets"
+          [ngClass]="{ 'highlighted-route': currentRoute === toolRoutes.datasets }"
+          title="Datasets"
+          >Datasets</a
+        >
+        <a
+          *ngIf="geneProfilesConfig"
+          [routerLink]="'/' + toolRoutes.geneProfiles"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{ exact: false }"
+          (click)="currentRoute = toolRoutes.geneProfiles"
+          [ngClass]="{ 'highlighted-route': currentRoute === toolRoutes.geneProfiles }"
+          title="Gene Profiles"
+          >Gene Profiles</a
+        >
+        <a
+          *ngIf="('' | userInfo)?.isAdministrator"
+          [routerLink]="'/' + toolRoutes.userManagement"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{ exact: false }"
+          (click)="currentRoute = toolRoutes.userManagement"
+          [ngClass]="{ 'highlighted-route': currentRoute === toolRoutes.userManagement }"
+          title="User Management"
+          >User Management</a
+        >
+        <a
+          *ngIf="('' | userInfo)?.loggedIn"
+          [routerLink]="'/' + toolRoutes.userProfile"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{ exact: false }"
+          (click)="currentRoute = toolRoutes.userProfile"
+          [ngClass]="{ 'highlighted-route': currentRoute === toolRoutes.userProfile }"
+          title="User Profile"
+          >User Profile</a
+        >
+        <a
+          [routerLink]="'/' + toolRoutes.about"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{ exact: false }"
+          (click)="currentRoute = toolRoutes.about"
+          [ngClass]="{ 'highlighted-route': currentRoute === toolRoutes.about }"
+          title="About"
+          >About</a
+        >
       </div>
-      <div class="col-2">
+      <div class="col-2" style="padding-right: 0">
         <gpf-users></gpf-users>
       </div>
     </div>
   </div>
-
+  <div id="separator"></div>
   <div class="sidenav-container">
-    <div *ngIf="showSidenav" class="sidenav flex-column" [@fromLeft]="showSidenav">
-      <ul class="nav navbar-nav navbar-custom">
-        <li class="nav-item">
-          <a
-            class="nav-link"
-            routerLink="/datasets"
-            routerLinkActive="active"
-            [routerLinkActiveOptions]="{ exact: false }"
-            (click)="hideSidenav()"
-            >Datasets</a
-          >
-        </li>
-        <li class="nav-item" *ngIf="geneProfilesConfig">
-          <a
-            class="nav-link"
-            routerLink="/gene-profiles"
-            routerLinkActive="active"
-            [routerLinkActiveOptions]="{ exact: false }"
-            (click)="hideSidenav()"
-            >Gene profiles</a
-          >
-        </li>
-        <li class="nav-item" *ngIf="('' | userInfo)?.loggedIn">
-          <a
-            class="nav-link"
-            routerLink="/user-profile"
-            routerLinkActive="active"
-            [routerLinkActiveOptions]="{ exact: false }"
-            (click)="hideSidenav()"
-            >User profile</a
-          >
-        </li>
-        <li class="nav-item" *ngIf="('' | userInfo)?.isAdministrator">
-          <a
-            class="nav-link"
-            routerLink="/management"
-            routerLinkActive="active"
-            [routerLinkActiveOptions]="{ exact: false }"
-            (click)="hideSidenav()"
-            >Management</a
-          >
-        </li>
-      </ul>
-      <div id="version-container">
-        <span class="version-text">GPF version: </span>
-        <span *ngIf="gpfVersion">{{ gpfVersion }}</span>
-        <span *ngIf="gpfVersion !== gpfjsVersion"> / {{ gpfjsVersion }}</span>
-      </div>
-    </div>
-
-    <div *ngIf="showSidenav" (click)="hideSidenav()" [@fadeInOut]="showSidenav" class="blackscreen"></div>
-
     <router-outlet style="display: flex; flex-direction: row"></router-outlet>
   </div>
-  <router-outlet name="popup"></router-outlet>
 </div>

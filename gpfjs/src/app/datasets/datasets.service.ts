@@ -15,6 +15,7 @@ export class DatasetsService {
   private readonly datasetsDetailsUrl = 'datasets/details';
   private readonly datasetPedigreeUrl = 'datasets/pedigree';
   private readonly visibleDatasetsUrl = 'datasets/visible';
+  private readonly descriptionUrl = 'datasets/description';
 
   // eslint-disable-next-line @typescript-eslint/naming-convention
   private readonly headers = new HttpHeaders({ 'Content-Type': 'application/json' });
@@ -158,5 +159,10 @@ export class DatasetsService {
   public getVisibleDatasets(): Observable<object> {
     const options = { headers: this.headers, withCredentials: true };
     return this.http.get(`${this.config.baseUrl}${this.visibleDatasetsUrl}`, options);
+  }
+
+  public getDatasetDescription(datasetId: string): Observable<object> {
+    const options = { headers: this.headers, withCredentials: true };
+    return this.http.get(`${this.config.baseUrl}${this.descriptionUrl}/${datasetId}`, options);
   }
 }
