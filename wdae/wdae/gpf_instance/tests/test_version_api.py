@@ -1,9 +1,38 @@
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
+import os
+from typing import Generator
 import pytest
 from rest_framework import status
 from django.test import Client
+from gpf_instance.gpf_instance import WGPFInstance
 
 
-@pytest.mark.django_db
+@pytest.fixture()
+def reset_main_description(
+    wdae_gpf_instance: WGPFInstance,
+    global_dae_fixtures_dir: str
+) -> Generator[None, None, None]:
+    file_path = os.path.join(global_dae_fixtures_dir, "main_description.md")
+    with open(file_path, "r") as infile:
+        content = infile.read()
+    yield None
+    with open(file_path, "w") as infile:
+        infile.write(content)
+
+
+@pytest.fixture()
+def reset_about_description(
+    wdae_gpf_instance: WGPFInstance,
+    global_dae_fixtures_dir: str
+) -> Generator[None, None, None]:
+    file_path = os.path.join(global_dae_fixtures_dir, "about_description.md")
+    with open(file_path, "r") as infile:
+        content = infile.read()
+    yield None
+    with open(file_path, "w") as infile:
+        infile.write(content)
+
+
 def test_get_gpf_version(
     anonymous_client: Client
 ) -> None:
@@ -16,27 +45,61 @@ def test_get_gpf_version(
     assert response.json().get("version") is not None
 
 
-@pytest.mark.django_db
-def test_get_gpf_main_description(
-    anonymous_client: Client
+def test_update_gpf_main_description_anonymous(
+    anonymous_client: Client,
+    reset_main_description: Generator[None, None, None]
 ) -> None:
     """Try to get gpf version."""
     url = "/api/v3/instance/description"
 
-    response = anonymous_client.get(url)
+    response = anonymous_client.post(url, {"content": "blagalkebgab"})
+    assert response.status_code is status.HTTP_403_FORBIDDEN
 
+
+def test_gpf_main_description(
+    admin_client: Client,
+    reset_main_description: Generator[None, None, None]
+) -> None:
+    """Try to get gpf version."""
+    url = "/api/v3/instance/description"
+
+    response = admin_client.get(url)
     assert response.status_code is status.HTTP_200_OK
-    assert response.json().get("content") is not None
+    assert response.json().get("content") == "main description"
+
+    response = admin_client.post(url, {"content": "blagalkebgab"})
+    assert response.status_code is status.HTTP_200_OK
+
+    response = admin_client.get(url)
+    assert response.status_code is status.HTTP_200_OK
+    assert response.json().get("content") == "blagalkebgab"
 
 
-@pytest.mark.django_db
-def test_get_gpf_about_description(
-    anonymous_client: Client
+def test_update_gpf_about_description_anonymous(
+    anonymous_client: Client,
+    reset_about_description: Generator[None, None, None]
 ) -> None:
     """Try to get gpf version."""
     url = "/api/v3/instance/about"
 
-    response = anonymous_client.get(url)
+    response = anonymous_client.post(url, {"content": "blagalkebgab"})
+    assert response.status_code is status.HTTP_403_FORBIDDEN
 
+
+def test_gpf_about_description(
+    admin_client: Client,
+    reset_about_description: Generator[None, None, None]
+) -> None:
+    """Try to get gpf version."""
+    url = "/api/v3/instance/about"
+
+    response = admin_client.get(url)
     assert response.status_code is status.HTTP_200_OK
-    assert response.json().get("content") is not None
+    assert response.json().get("content") == "about description"
+
+    response = admin_client.post(url, {"content": "blagalkebgab"})
+    assert response.status_code is status.HTTP_200_OK
+
+    response = admin_client.get(url)
+    assert response.status_code is status.HTTP_200_OK
+    assert response.json().get("content") == "blagalkebgab"
