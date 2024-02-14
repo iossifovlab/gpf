@@ -21,6 +21,7 @@ import { UsersComponent } from './users/users.component';
 import { FullscreenLoadingService } from './fullscreen-loading/fullscreen-loading.service';
 import { FormsModule } from '@angular/forms';
 import { APP_BASE_HREF } from '@angular/common';
+import { UserInfoPipe } from './users/user-info.pipe';
 
 class MockDatasetsService {
   public getSelectedDataset(): object {
@@ -45,7 +46,8 @@ describe('AppComponent', () => {
         GenesBlockComponent,
         PedigreeSelectorComponent,
         FullscreenLoadingComponent,
-        UsersComponent
+        UsersComponent,
+        UserInfoPipe
       ],
       imports: [
         NgbModule,
