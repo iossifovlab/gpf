@@ -512,7 +512,7 @@ class GPFInstance:
                 "attributes": [
                     {
                         "source": "allele_effects",
-                        "destination": "allele_effects",
+                        "name": "allele_effects",
                         "internal": True
                     },
                     "worst_effect",
