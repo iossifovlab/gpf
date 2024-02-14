@@ -69,8 +69,8 @@ export class HomeComponent implements OnInit {
       this.agpConfig = res;
     });
 
-    this.instanceService.getHomeDescription().subscribe((res: {description: string}) => {
-      this.homeDescription = res.description;
+    this.instanceService.getHomeDescription().subscribe((res: {content: string}) => {
+      this.homeDescription = res.content;
     });
   }
 
@@ -153,8 +153,8 @@ export class HomeComponent implements OnInit {
     this.instanceService.writeHomeDescription(markdown).pipe(
       take(1),
       switchMap(() => this.instanceService.getHomeDescription())
-    ).subscribe((res: {description: string}) => {
-      this.homeDescription = res.description;
+    ).subscribe((res: {content: string}) => {
+      this.homeDescription = res.content;
     });
   }
 }

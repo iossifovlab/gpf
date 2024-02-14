@@ -25,7 +25,7 @@ export class InstanceService {
     const options = { headers: this.headers, withCredentials: true };
     return this.http.post(
       `${this.config.baseUrl}${this.instanceUrl}/description`,
-      {description: description},
+      {content: description},
       options
     );
   }
@@ -42,7 +42,7 @@ export class InstanceService {
     const options = { headers: this.headers, withCredentials: true };
     return this.http.post(
       `${this.config.baseUrl}${this.instanceUrl}/about`,
-      {description: description},
+      {content: description},
       options
     );
   }

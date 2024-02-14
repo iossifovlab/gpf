@@ -15,8 +15,8 @@ export class AboutComponent implements OnInit {
   ) {}
 
   public ngOnInit(): void {
-    this.instanceService.getAboutDescription().subscribe((res: {description: string}) => {
-      this.aboutDescription = res.description;
+    this.instanceService.getAboutDescription().subscribe((res: {content: string}) => {
+      this.aboutDescription = res.content;
     });
   }
 
@@ -24,8 +24,8 @@ export class AboutComponent implements OnInit {
     this.instanceService.writeAboutDescription(markdown).pipe(
       take(1),
       switchMap(() => this.instanceService.getAboutDescription())
-    ).subscribe((res: {description: string}) => {
-      this.aboutDescription = res.description;
+    ).subscribe((res: {content: string}) => {
+      this.aboutDescription = res.content;
     });
   }
 }
