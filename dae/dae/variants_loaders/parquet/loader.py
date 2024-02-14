@@ -4,6 +4,7 @@ import numpy as np
 import pyarrow as pa
 from typing import Generator, Optional
 from pyarrow import parquet as pq
+from pyarrow import dataset as ds
 from dae.schema2_storage.schema2_import_storage import Schema2DatasetLayout, schema2_dataset_layout
 from dae.pedigrees.loader import FamiliesLoader
 from dae.pedigrees.families_data import FamiliesData
@@ -15,8 +16,9 @@ from dae.variants.family_variant import FamilyVariant
 class ParquetLoader:
     DATA_COLUMN = "summary_variant_data"
 
-    def __init__(self, data_dir: str):
+    def __init__(self, data_dir: str, partitioned: bool = False):
         self.data_dir: str = data_dir
+        self.partitioned: bool = partitioned
         self.layout: Schema2DatasetLayout = schema2_dataset_layout(data_dir)
         self.families: Optional[FamiliesData] = None
 
@@ -30,6 +32,11 @@ class ParquetLoader:
         self.families = FamiliesLoader.build_families_data_from_pedigree(ped_df)
         parquet_file.close()
 
+    @staticmethod
+    def _fv_matches_sv(fv_rec: dict, sv_rec: dict) -> bool:
+        return (fv_rec["bucket_index"] == sv_rec["bucket_index"]
+                and fv_rec["summary_index"] == sv_rec["summary_index"])
+
     def _get_pq_filepaths(self) -> tuple[str, str]:
         summary_pq_file = os.listdir(self.layout.summary)[0]
         family_pq_file = summary_pq_file.replace("summary", "family")
@@ -37,6 +44,24 @@ class ParquetLoader:
             f"{self.layout.summary}/{summary_pq_file}",
             f"{self.layout.family}/{family_pq_file}"
         )
+
+    def _get_partitioned_pq_filepaths(self):
+        summary_files = ds.dataset(f"{self.layout.summary}").files
+        family_files = ds.dataset(f"{self.layout.family}").files
+        result = {}
+        family_idx = 0
+        for summary in summary_files:
+            summary_rel = os.path.relpath(summary, self.layout.summary)
+            summary_bins = os.path.split(summary_rel)[0]
+            while family_idx < len(family_files):
+                family = family_files[family_idx]
+                family_rel = os.path.relpath(family, self.layout.family)
+                if os.path.commonpath([summary_rel, family_rel]) == summary_bins:
+                    result.setdefault(summary, list()).append(family)
+                    family_idx += 1
+                else:
+                    break
+        return result
 
     def _deserialize_summary_variant(self, record: str) -> SummaryVariant:
         return SummaryVariantFactory.summary_variant_from_records(
@@ -59,11 +84,64 @@ class ParquetLoader:
             inheritance_in_members=inheritance_in_members
         )
 
-    @staticmethod
-    def _fv_matches_sv(fv_rec: dict, sv_rec: dict) -> bool:
-        return (fv_rec["bucket_index"] == sv_rec["bucket_index"]
-                and fv_rec["summary_index"] == sv_rec["summary_index"])
-        
+    def _read_batch_from_partitioned_family(self, pq_filepaths: list[str]) -> list[dict]:
+        pq_files = [pq.ParquetFile(path) for path in pq_filepaths]
+        columns = ("bucket_index", "summary_index", "allele_index", "family_variant_data")
+        batches = [pq_file.iter_batches(columns=columns) for pq_file in pq_files]
+
+        exhausted = set()
+
+        while True:
+            megabatch = []
+            for idx in range(0, len(batches)):
+                if idx in exhausted:
+                    continue
+                try:
+                    megabatch.extend(next(batches[idx]).to_pylist())
+                except StopIteration:
+                    exhausted.add(idx)
+            if len(exhausted) == len(batches):
+                break
+            yield sorted(megabatch, key=lambda a: a["summary_index"])
+
+        for pq_file in pq_files:
+            pq_file.close()
+
+        return
+
+    def fetch_variants_partitioned(self) -> Generator[tuple[SummaryVariant, list[FamilyVariant]], None, None]:
+        assert self.families is not None
+
+        for s_path, f_paths in self._get_partitioned_pq_filepaths().items():
+            summary_parquet = pq.ParquetFile(s_path)
+            columns = ("summary_variant_data", "bucket_index", "summary_index", "allele_index")
+
+            family_batches = self._read_batch_from_partitioned_family(f_paths)
+            f_batch = list()
+            f_batch_idx = 0
+
+            for batch in summary_parquet.iter_batches(columns=columns):
+                for sv_rec in batch.to_pylist():
+                    if sv_rec["allele_index"] == 0 or sv_rec["allele_index"] > 1:
+                        continue
+                    sv = self._deserialize_summary_variant(sv_rec[self.DATA_COLUMN])
+                    fvs = []
+                    while f_batch is not None:
+                        if f_batch_idx == len(f_batch):
+                            f_batch_idx = 0
+                            try:
+                                f_batch = next(family_batches)
+                            except StopIteration:
+                                f_batch = None
+                                break
+                        fv_rec = f_batch[f_batch_idx]
+                        if not ParquetLoader._fv_matches_sv(fv_rec, sv_rec):
+                            break
+                        fvs.append(self._deserialize_family_variant(fv_rec["family_variant_data"], sv))
+                        f_batch_idx += 1
+                    yield sv, fvs
+            summary_parquet.close()
+
     def fetch_variants(self) -> Generator[tuple[SummaryVariant, list[FamilyVariant]], None, None]:
         assert self.families is not None
 
