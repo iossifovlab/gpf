@@ -6,6 +6,7 @@ import { PersonFiltersModel, PersonFiltersState, SetFamilyFilters } from 'app/pe
 import { StateReset } from 'ngxs-reset-plugin';
 import { NgbNav } from '@ng-bootstrap/ng-bootstrap';
 import { VariantReportsService } from 'app/variant-reports/variant-reports.service';
+import { FamilyTagsModel, FamilyTagsState } from 'app/family-tags/family-tags.state';
 
 @Component({
   selector: 'gpf-family-filters-block',
@@ -55,6 +56,8 @@ export class FamilyFiltersBlockComponent implements OnInit, AfterViewInit {
     this.store.selectOnce(FamilyFiltersBlockComponent.familyFiltersBlockState).subscribe(state => {
       if (state['familyIds']) {
         setTimeout(() => this.ngbNav.select('familyIds'));
+      } else if (state['selectedFamilyTags'] || state['deselectedFamilyTags'] || state['tagIntersection']) {
+        setTimeout(() => this.ngbNav.select('familyTags'));
       } else if (state['familyFilters']) {
         setTimeout(() => this.ngbNav.select('advanced'));
       }
@@ -64,15 +67,25 @@ export class FamilyFiltersBlockComponent implements OnInit, AfterViewInit {
   public onNavChange(): void {
     this.store.dispatch(new SetFamilyFilters([]));
     this.store.dispatch(new StateReset(FamilyIdsState));
+    this.store.dispatch(new StateReset(FamilyTagsState));
   }
 
-  @Selector([FamilyIdsState, PersonFiltersState])
+  @Selector([FamilyIdsState, FamilyTagsState, PersonFiltersState])
   public static familyFiltersBlockState(
-    familyIdsState: FamilyIdsModel, personFiltersState: PersonFiltersModel
+    familyIdsState: FamilyIdsModel, familyTagsState: FamilyTagsModel, personFiltersState: PersonFiltersModel
   ): object {
     const res = {};
     if (familyIdsState.familyIds.length) {
       res['familyIds'] = familyIdsState.familyIds;
+    }
+    if (familyTagsState.selectedFamilyTags.length) {
+      res['selectedFamilyTags'] = familyTagsState.selectedFamilyTags;
+    }
+    if (familyTagsState.deselectedFamilyTags.length) {
+      res['deselectedFamilyTags'] = familyTagsState.deselectedFamilyTags;
+    }
+    if (!familyTagsState.tagIntersection) {
+      res['tagIntersection'] = familyTagsState.tagIntersection;
     }
     if (personFiltersState.familyFilters.length) {
       res['familyFilters'] = personFiltersState.familyFilters;
