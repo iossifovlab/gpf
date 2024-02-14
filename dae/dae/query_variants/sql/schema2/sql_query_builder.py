@@ -324,9 +324,15 @@ class SqlQueryBuilder:
                 if not is_frequency:
                     where.append(f"sa.{attr_name} IS NOT NULL")
             elif left is None:
-                where.append(
-                    f"sa.{attr_name} <= {right} OR sa.{attr_name} IS NULL"
-                )
+                assert right is not None
+                if is_frequency:
+                    where.append(
+                        f"sa.{attr_name} <= {right} OR sa.{attr_name} IS NULL"
+                    )
+                else:
+                    where.append(
+                        f"sa.{attr_name} <= {right}"
+                    )
             elif right is None:
                 assert left is not None
                 where.append(f"sa.{attr_name} >= {left}")

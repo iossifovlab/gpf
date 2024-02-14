@@ -195,11 +195,6 @@ def test_build_regions_where(
     assert len(result) == expected
 
 
-@pytest.mark.xfail(
-    reason="temporary changed handling of non-frequency filters; "
-    "this test should be restored after the gnomad frequency in gene browser "
-    "is passed as a frequency filter"
-)
 @pytest.mark.parametrize(
     "real_attr_filter,is_frequency,expected", [
         ([("af_allele_freq", (0.0, 1.0))], True, 1),
@@ -298,11 +293,6 @@ def test_sql_query_builder_effect_types(
     assert result == "eg.effect_types in ('5''UTR','3''UTR')"
 
 
-@pytest.mark.xfail(
-    reason="temporary changed handling of non-frequency filters; "
-    "this test should be restored after the gnomad frequency in gene browser "
-    "is passed as a frequency filter"
-)
 @pytest.mark.parametrize(
     "real_attr_filter,is_frequency,expected", [
         (
