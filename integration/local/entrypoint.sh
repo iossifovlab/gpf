@@ -44,3 +44,7 @@ cd /wd
 
 /opt/conda/bin/conda run --no-capture-output -n gpf \
     generate_denovo_gene_sets.py
+
+chmod -R 0777 $DAE_DB_DIR
+echo "sample description" > $DAE_DB_DIR/main_description.md
+echo "about description" > $DAE_DB_DIR/about_description.md

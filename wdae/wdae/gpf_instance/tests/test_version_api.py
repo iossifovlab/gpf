@@ -15,8 +15,9 @@ def test_get_gpf_version(
     assert response.status_code is status.HTTP_200_OK
     assert response.json().get("version") is not None
 
+
 @pytest.mark.django_db
-def test_get_gpf_description(
+def test_get_gpf_main_description(
     anonymous_client: Client
 ) -> None:
     """Try to get gpf version."""
@@ -25,4 +26,17 @@ def test_get_gpf_description(
     response = anonymous_client.get(url)
 
     assert response.status_code is status.HTTP_200_OK
-    assert response.json().get("description") is not None
+    assert response.json().get("content") is not None
+
+
+@pytest.mark.django_db
+def test_get_gpf_about_description(
+    anonymous_client: Client
+) -> None:
+    """Try to get gpf version."""
+    url = "/api/v3/instance/about"
+
+    response = anonymous_client.get(url)
+
+    assert response.status_code is status.HTTP_200_OK
+    assert response.json().get("content") is not None

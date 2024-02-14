@@ -1,3 +1,4 @@
+from typing import Optional
 from query_base.query_base import QueryBaseView
 from rest_framework import status
 from rest_framework.request import Request
@@ -15,85 +16,70 @@ def version(_request: Request) -> Response:
     )
 
 
-class DescriptionView(QueryBaseView):
-    """Provide fetching and editing the main application description."""
+class MarkdownFileView(QueryBaseView):
+    """Provide fetching and editing markdown files."""
 
-    def get(
-        self, request: Request
-    ) -> Response:
+    def __init__(self) -> None:
+        super().__init__()
+        self.filepath: Optional[str] = None
+
+    def get(self, _request: Request) -> Response:
         # pylint: disable=unused-argument
         """Collect the application description."""
-        description_file = open(
-            self.gpf_instance.get_main_description_path(),
-            "r"
-        )
-        description = description_file.read()
-        description_file.close()
-        if description is None:
+        if self.filepath is None:
             return Response(
-                {"error": "Description not found"},
+                {"error": "Route incorrectly configured"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+        try:
+            with open(self.filepath, "r") as markdown_file:
+                content = markdown_file.read()
+        except FileNotFoundError:
+            return Response(
+                {"error": "File not found"},
                 status=status.HTTP_404_NOT_FOUND,
             )
         return Response(
-            {"description": description},
+            {"content": content},
             status=status.HTTP_200_OK
         )
 
     def post(self, request: Request) -> Response:
         """Overwrite the application description."""
-        if not request.user.is_staff:
+        if self.filepath is None:
             return Response(
-                {"error": "You have no permission to edit the description."},
-                status=status.HTTP_403_FORBIDDEN
+                {"error": "Route incorrectly configured"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
-        description_file = open(
-            self.gpf_instance.get_main_description_path(),
-            "w"
-        )
-        description_file.write(request.data.get("description"))
-        description_file.close()
+        if not request.user.is_staff:
+            return Response(
+                {"error": "You have no permission to edit the content."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        try:
+            with open(self.filepath, "w") as markdown_file:
+                markdown_file.write(request.data.get("content"))
+        except PermissionError:
+            return Response(
+                {"error": "Failed to write to file"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
         return Response(status=status.HTTP_200_OK)
 
 
-class AboutDescriptionView(QueryBaseView):
+class DescriptionView(MarkdownFileView):
     """Provide fetching and editing the main application description."""
 
-    def get(
-        self, request: Request
-    ) -> Response:
-        # pylint: disable=unused-argument
-        """Collect the application description."""
-        description_file = open(
-            self.gpf_instance.get_about_description_path(),
-            "r"
-        )
-        description = description_file.read()
-        description_file.close()
-        if description is None:
-            return Response(
-                {"error": "Description not found"},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-        return Response(
-            {"description": description},
-            status=status.HTTP_200_OK
-        )
+    def __init__(self) -> None:
+        super().__init__()
+        self.filepath = self.gpf_instance.get_main_description_path()
 
-    def post(self, request: Request) -> Response:
-        """Overwrite the application description."""
-        if not request.user.is_staff:
-            return Response(
-                {"error": "You have no permission to edit the description."},
-                status=status.HTTP_403_FORBIDDEN
-            )
 
-        description_file = open(
-            self.gpf_instance.get_about_description_path(),
-            "w"
-        )
-        description_file.write(request.data.get("description"))
-        description_file.close()
+class AboutDescriptionView(MarkdownFileView):
+    """Provide fetching and editing the main application description."""
 
-        return Response(status=status.HTTP_200_OK)
+    def __init__(self) -> None:
+        super().__init__()
+        self.filepath = self.gpf_instance.get_about_description_path()

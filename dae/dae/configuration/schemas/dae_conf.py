@@ -203,6 +203,7 @@ dae_conf_schema = {
     },
     "gpfjs": {
         "type": "dict",
+        "default": {},
         "schema": {
             "visible_datasets": {
                 "type": "list",
