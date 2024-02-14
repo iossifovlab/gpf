@@ -1,8 +1,8 @@
 import { Component, OnInit } from '@angular/core';
-import { AutismGeneProfilesService } from 'app/autism-gene-profiles-block/autism-gene-profiles.service';
-import { AgpSingleViewConfig } from 'app/autism-gene-profiles-single-view/autism-gene-profile-single-view';
 import { DatasetsTreeService } from 'app/datasets/datasets-tree.service';
 import { DatasetsService } from 'app/datasets/datasets.service';
+import { GeneProfilesService } from 'app/gene-profiles-block/gene-profiles.service';
+import { GeneProfilesSingleViewConfig } from 'app/gene-profiles-single-view/gene-profiles-single-view';
 import { InstanceService } from 'app/instance.service';
 import { environment } from 'environments/environment';
 import { combineLatest, switchMap, take } from 'rxjs';
@@ -24,14 +24,14 @@ export class HomeComponent implements OnInit {
   public loadingFinished = false;
   public studiesLoaded = 0;
 
-  public agpConfig: AgpSingleViewConfig;
+  public geneProfilesConfig: GeneProfilesSingleViewConfig;
   public homeDescription: string;
 
   public constructor(
     private instanceService: InstanceService,
     private datasetsService: DatasetsService,
     private datasetsTreeService: DatasetsTreeService,
-    private autismGeneProfilesService: AutismGeneProfilesService,
+    private geneProfilesService: GeneProfilesService,
   ) {}
 
   public ngOnInit(): void {
@@ -65,8 +65,8 @@ export class HomeComponent implements OnInit {
       this.gpfVersion = res;
     });
 
-    this.autismGeneProfilesService.getConfig().subscribe(res => {
-      this.agpConfig = res;
+    this.geneProfilesService.getConfig().subscribe(res => {
+      this.geneProfilesConfig = res;
     });
 
     this.instanceService.getHomeDescription().subscribe((res: {content: string}) => {

@@ -30,8 +30,8 @@
           [routerLinkActiveOptions]="{ exact: false }"
           (click)="currentRoute = toolRoutes.geneProfiles"
           [ngClass]="{ 'highlighted-route': currentRoute === toolRoutes.geneProfiles }"
-          title="Autism Gene Profiles"
-          >Autism Gene Profiles</a
+          title="Gene Profiles"
+          >Gene Profiles</a
         >
         <a
           *ngIf="('' | userInfo)?.isAdministrator"
