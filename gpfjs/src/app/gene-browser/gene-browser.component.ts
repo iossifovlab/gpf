@@ -312,7 +312,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
       datasetId: this.selectedDatasetId,
       regions: this.selectedGene.getRegionString(...this.summaryVariantsFilter.selectedRegion),
       summaryVariantIds: this.summaryVariantsArrayFiltered.summaryAlleleIds,
-      genomicScores: [{
+      frequencyScores: [{
         metric: this.geneBrowserConfig.frequencyColumn,
         rangeStart: this.summaryVariantsFilter.minFreq,
         rangeEnd: this.summaryVariantsFilter.maxFreq,
