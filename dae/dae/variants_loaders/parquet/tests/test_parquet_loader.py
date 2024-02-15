@@ -121,7 +121,7 @@ def test_fetch_variants_count_nonpartitioned(t4c8_study_1):
     # summary variants
     assert len(vs) == 3
     # family variants
-    assert sum(len(fvs) for _, fvs in vs) == 4
+    assert sum([len(fvs) for _, fvs in vs]) == 4
 
 
 def test_fetch_variants_count_partitioned(t4c8_study_2):
@@ -131,4 +131,4 @@ def test_fetch_variants_count_partitioned(t4c8_study_2):
     # summary variants
     assert len(vs) == 6
     # family variants
-    assert sum(len(fvs) for _, fvs in vs) == 12
+    assert sum([len(fvs) for _, fvs in vs]) == 12
