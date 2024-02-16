@@ -1,4 +1,6 @@
+import os
 import pathlib
+from dae.utils.regions import Region
 import pytest
 
 from dae.gpf_instance import GPFInstance
@@ -114,9 +116,86 @@ chr1   122  .  A   C,AC .    .      .    GT     0/1  0/1  0/1 0/2  0/2  0/2
     return f"{root_path}/work_dir/study_2"
 
 
+def test_get_pq_filepaths_nonpartitioned(t4c8_study_1):
+    loader = ParquetLoader(t4c8_study_1)
+    summary_filepaths, family_filepaths = loader._get_pq_filepaths()
+    assert list(map(os.path.basename, summary_filepaths)) == [
+        "summary_bucket_index_100000.parquet"
+    ]
+    assert list(map(os.path.basename, family_filepaths)) == [
+        "family_bucket_index_100000.parquet"
+    ]
+
+
+def test_get_pq_filepaths_partitioned(t4c8_study_2):
+    loader = ParquetLoader(t4c8_study_2, partitioned=True)
+    summary_filepaths, family_filepaths = loader._get_pq_filepaths()
+    assert set(map(os.path.basename, summary_filepaths)) == {
+        "summary_region_bin_chr1_0_frequency_bin_1_coding_bin_0_bucket_index_100000.parquet",
+        "summary_region_bin_chr1_0_frequency_bin_2_coding_bin_0_bucket_index_100000.parquet",
+        "summary_region_bin_chr1_0_frequency_bin_3_coding_bin_1_bucket_index_100000.parquet",
+        "summary_region_bin_chr1_0_frequency_bin_3_coding_bin_0_bucket_index_100000.parquet",
+        "summary_region_bin_chr1_1_frequency_bin_1_coding_bin_1_bucket_index_100000.parquet",
+        "summary_region_bin_chr1_1_frequency_bin_2_coding_bin_0_bucket_index_100000.parquet",
+        "summary_region_bin_chr1_1_frequency_bin_2_coding_bin_1_bucket_index_100000.parquet",
+        "summary_region_bin_chr1_1_frequency_bin_3_coding_bin_0_bucket_index_100000.parquet"
+    }
+    assert set(map(os.path.basename, family_filepaths)) == {
+        "family_region_bin_chr1_0_frequency_bin_1_coding_bin_0_family_bin_1_bucket_index_100000.parquet",
+        "family_region_bin_chr1_0_frequency_bin_2_coding_bin_0_family_bin_0_bucket_index_100000.parquet",
+        "family_region_bin_chr1_0_frequency_bin_2_coding_bin_0_family_bin_1_bucket_index_100000.parquet",
+        "family_region_bin_chr1_0_frequency_bin_3_coding_bin_0_family_bin_0_bucket_index_100000.parquet",
+        "family_region_bin_chr1_0_frequency_bin_3_coding_bin_0_family_bin_1_bucket_index_100000.parquet",
+        "family_region_bin_chr1_0_frequency_bin_3_coding_bin_1_family_bin_0_bucket_index_100000.parquet",
+        "family_region_bin_chr1_0_frequency_bin_3_coding_bin_1_family_bin_1_bucket_index_100000.parquet",
+        "family_region_bin_chr1_1_frequency_bin_1_coding_bin_1_family_bin_1_bucket_index_100000.parquet",
+        "family_region_bin_chr1_1_frequency_bin_2_coding_bin_0_family_bin_0_bucket_index_100000.parquet",
+        "family_region_bin_chr1_1_frequency_bin_2_coding_bin_0_family_bin_1_bucket_index_100000.parquet",
+        "family_region_bin_chr1_1_frequency_bin_2_coding_bin_1_family_bin_0_bucket_index_100000.parquet",
+        "family_region_bin_chr1_1_frequency_bin_2_coding_bin_1_family_bin_1_bucket_index_100000.parquet",
+    }
+
+
+def test_get_pq_filepaths_partitioned_region(t4c8_study_2):
+    loader = ParquetLoader(t4c8_study_2, partitioned=True)
+
+    region = Region("chr1", 0, 99)
+    summary_filepaths, family_filepaths = loader._get_pq_filepaths(region)
+    assert set(map(os.path.basename, summary_filepaths)) == {
+        "summary_region_bin_chr1_0_frequency_bin_1_coding_bin_0_bucket_index_100000.parquet",
+        "summary_region_bin_chr1_0_frequency_bin_2_coding_bin_0_bucket_index_100000.parquet",
+        "summary_region_bin_chr1_0_frequency_bin_3_coding_bin_1_bucket_index_100000.parquet",
+        "summary_region_bin_chr1_0_frequency_bin_3_coding_bin_0_bucket_index_100000.parquet",
+    }
+    assert set(map(os.path.basename, family_filepaths)) == {
+        "family_region_bin_chr1_0_frequency_bin_1_coding_bin_0_family_bin_1_bucket_index_100000.parquet",
+        "family_region_bin_chr1_0_frequency_bin_2_coding_bin_0_family_bin_0_bucket_index_100000.parquet",
+        "family_region_bin_chr1_0_frequency_bin_2_coding_bin_0_family_bin_1_bucket_index_100000.parquet",
+        "family_region_bin_chr1_0_frequency_bin_3_coding_bin_0_family_bin_0_bucket_index_100000.parquet",
+        "family_region_bin_chr1_0_frequency_bin_3_coding_bin_0_family_bin_1_bucket_index_100000.parquet",
+        "family_region_bin_chr1_0_frequency_bin_3_coding_bin_1_family_bin_0_bucket_index_100000.parquet",
+        "family_region_bin_chr1_0_frequency_bin_3_coding_bin_1_family_bin_1_bucket_index_100000.parquet",
+    }
+
+    region = Region("chr1", 100, 200)
+    summary_filepaths, family_filepaths = loader._get_pq_filepaths(region)
+    assert set(map(os.path.basename, summary_filepaths)) == {
+        "summary_region_bin_chr1_1_frequency_bin_1_coding_bin_1_bucket_index_100000.parquet",
+        "summary_region_bin_chr1_1_frequency_bin_2_coding_bin_0_bucket_index_100000.parquet",
+        "summary_region_bin_chr1_1_frequency_bin_2_coding_bin_1_bucket_index_100000.parquet",
+        "summary_region_bin_chr1_1_frequency_bin_3_coding_bin_0_bucket_index_100000.parquet"
+    }
+    assert set(map(os.path.basename, family_filepaths)) == {
+        "family_region_bin_chr1_1_frequency_bin_1_coding_bin_1_family_bin_1_bucket_index_100000.parquet",
+        "family_region_bin_chr1_1_frequency_bin_2_coding_bin_0_family_bin_0_bucket_index_100000.parquet",
+        "family_region_bin_chr1_1_frequency_bin_2_coding_bin_0_family_bin_1_bucket_index_100000.parquet",
+        "family_region_bin_chr1_1_frequency_bin_2_coding_bin_1_family_bin_0_bucket_index_100000.parquet",
+        "family_region_bin_chr1_1_frequency_bin_2_coding_bin_1_family_bin_1_bucket_index_100000.parquet",
+    }
+
+
 def test_fetch_variants_count_nonpartitioned(t4c8_study_1):
     loader = ParquetLoader(t4c8_study_1)
-    loader.load_families()
     vs = list(loader.fetch_variants())
     # summary variants
     assert len(vs) == 3
@@ -126,9 +205,38 @@ def test_fetch_variants_count_nonpartitioned(t4c8_study_1):
 
 def test_fetch_variants_count_partitioned(t4c8_study_2):
     loader = ParquetLoader(t4c8_study_2, partitioned=True)
-    loader.load_families()
     vs = list(loader.fetch_variants())
     # summary variants
     assert len(vs) == 6
     # family variants
     assert sum([len(fvs) for _, fvs in vs]) == 12
+
+
+def test_fetch_variants_count_nonpartitioned_region(t4c8_study_1):
+    loader = ParquetLoader(t4c8_study_1)
+    vs = list(loader.fetch_variants(region="chr1:119"))
+    # summary variants
+    assert len(vs) == 1
+    # family variants
+    assert sum([len(fvs) for _, fvs in vs]) == 2
+
+    vs = list(loader.fetch_variants(region="chr1:119-122"))
+    # summary variants
+    assert len(vs) == 2
+    # family variants
+    assert sum([len(fvs) for _, fvs in vs]) == 3
+
+
+def test_fetch_variants_count_partitioned_region(t4c8_study_2):
+    loader = ParquetLoader(t4c8_study_2, partitioned=True)
+    vs = list(loader.fetch_variants(region="chr1:1-89"))
+    # summary variants
+    assert len(vs) == 2
+    # family variants
+    assert sum([len(fvs) for _, fvs in vs]) == 4
+
+    vs = list(loader.fetch_variants(region="chr1:90-200"))
+    # summary variants
+    assert len(vs) == 4
+    # family variants
+    assert sum([len(fvs) for _, fvs in vs]) == 8
