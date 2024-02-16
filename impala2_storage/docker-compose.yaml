@@ -1,6 +1,6 @@
 services:
-  seqpipe-impala4:
-    image: "registry.seqpipe.org/seqpipe-impala4:latest"
+  impala4:
+    image: "iossifovlab/iossifovlab-impala4:latest"
     ports:
     - "35000:25000"
     - "8020:8020"

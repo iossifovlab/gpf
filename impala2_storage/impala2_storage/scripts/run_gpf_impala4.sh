@@ -4,7 +4,7 @@ set -e
 
 
 export HAS_GPF_IMPALA4=`docker ps -a | grep gpf_impala4 | sed -e "s/\s\{2,\}/\t/g" | cut -f 1`
-export GPF_IMPALA4_IMAGE='registry.seqpipe.org/seqpipe-impala4:latest'
+export GPF_IMPALA4_IMAGE='iossifovlab/iossifovlab-impala4:latest'
 
 docker pull ${GPF_IMPALA4_IMAGE}
 
@@ -18,6 +18,7 @@ if [[ -z $HAS_GPF_IMPALA4 ]]; then
         -p 9870:9870 \
         -p 9864:9864 \
         -p 21050:21050 \
+        -p 35000:25000 \
         ${GPF_IMPALA4_IMAGE}
 fi
 
