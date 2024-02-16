@@ -214,6 +214,7 @@ class ImpalaHelpers:
             "int32": "INT",
             "int16": "SMALLINT",
             "int8": "TINYINT",
+            "int64": "BIGINT",
             "float": "FLOAT",
             "string": "STRING",
             "binary": "STRING",
