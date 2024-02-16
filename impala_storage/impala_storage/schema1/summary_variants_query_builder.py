@@ -156,6 +156,8 @@ class SummaryVariantsQueryBuilder(BaseQueryBuilder):
                 self.select_accessors["family_variants_count"]]
             seen_in_status = cols[self.select_accessors["seen_in_status"]]
             seen_as_denovo = cols[self.select_accessors["seen_as_denovo"]]
+
+            extra_attributes = None
             if "extra_attributes" in self.select_accessors:
                 extra_attributes = cols.get(
                     self.select_accessors["extra_attributes"], None)
