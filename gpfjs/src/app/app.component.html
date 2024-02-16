@@ -6,60 +6,48 @@
         <img src="{{ imgPathPrefix }}logo-64x64.png" />
         <h3 id="title" [title]="title">{{ title }}</h3>
         <a
-          [routerLink]="'/' + toolRoutes.home"
-          routerLinkActive="active"
-          [routerLinkActiveOptions]="{ exact: false }"
-          (click)="currentRoute = toolRoutes.home"
-          [ngClass]="{ 'highlighted-route': currentRoute === toolRoutes.home }"
+          [routerLink]="'/home'"
+          routerLinkActive="highlighted-route"
           title="Home"
+          id="home"
           >Home</a
         >
         <a
-          [routerLink]="'/' + toolRoutes.datasets"
-          routerLinkActive="active"
-          [routerLinkActiveOptions]="{ exact: false }"
-          (click)="currentRoute = toolRoutes.datasets"
-          [ngClass]="{ 'highlighted-route': currentRoute === toolRoutes.datasets }"
+          [routerLink]="'/datasets'"
+          routerLinkActive="highlighted-route"
           title="Datasets"
+          id="datasets"
           >Datasets</a
         >
         <a
           *ngIf="geneProfilesConfig"
-          [routerLink]="'/' + toolRoutes.geneProfiles"
-          routerLinkActive="active"
-          [routerLinkActiveOptions]="{ exact: false }"
-          (click)="currentRoute = toolRoutes.geneProfiles"
-          [ngClass]="{ 'highlighted-route': currentRoute === toolRoutes.geneProfiles }"
+          [routerLink]="'/gene-profiles'"
+          routerLinkActive="highlighted-route"
           title="Gene Profiles"
+          id="gene-profiles"
           >Gene Profiles</a
         >
         <a
           *ngIf="('' | userInfo)?.isAdministrator"
-          [routerLink]="'/' + toolRoutes.userManagement"
-          routerLinkActive="active"
-          [routerLinkActiveOptions]="{ exact: false }"
-          (click)="currentRoute = toolRoutes.userManagement"
-          [ngClass]="{ 'highlighted-route': currentRoute === toolRoutes.userManagement }"
+          [routerLink]="'/management'"
+          routerLinkActive="highlighted-route"
           title="User Management"
+          id="user-management"
           >User Management</a
         >
         <a
           *ngIf="('' | userInfo)?.loggedIn"
-          [routerLink]="'/' + toolRoutes.userProfile"
-          routerLinkActive="active"
-          [routerLinkActiveOptions]="{ exact: false }"
-          (click)="currentRoute = toolRoutes.userProfile"
-          [ngClass]="{ 'highlighted-route': currentRoute === toolRoutes.userProfile }"
+          [routerLink]="'/user-profile'"
+          routerLinkActive="highlighted-route"
           title="User Profile"
+          id="user-profile"
           >User Profile</a
         >
         <a
-          [routerLink]="'/' + toolRoutes.about"
-          routerLinkActive="active"
-          [routerLinkActiveOptions]="{ exact: false }"
-          (click)="currentRoute = toolRoutes.about"
-          [ngClass]="{ 'highlighted-route': currentRoute === toolRoutes.about }"
+          [routerLink]="'/about'"
+          routerLinkActive="highlighted-route"
           title="About"
+          id="about"
           >About</a
         >
       </div>

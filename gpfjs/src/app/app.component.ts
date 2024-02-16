@@ -15,15 +15,6 @@ export class AppComponent implements OnInit {
   public title = 'GPF: Genotypes and Phenotypes in Families';
   public imgPathPrefix = environment.imgPathPrefix;
   public geneProfilesConfig: GeneProfilesSingleViewConfig;
-  public currentRoute = '';
-  public toolRoutes = {
-    home: 'home',
-    datasets: 'datasets',
-    geneProfiles: 'gene-profiles',
-    userManagement: 'management',
-    userProfile: 'user-profile',
-    about: 'about'
-  };
   private sessionTimeoutInSeconds = 7 * 24 * 60 * 60; // 1 week
 
   @HostListener('window:keydown.home')
@@ -52,12 +43,5 @@ export class AppComponent implements OnInit {
     this.geneProfilesService.getConfig().subscribe(res => {
       this.geneProfilesConfig = res;
     });
-    // First route depends on which tool the user navigates
-    this.currentRoute = window.location.pathname.split('/')[1];
-
-    // If the initial url is empty set route to home
-    if (!Object.values(this.toolRoutes).includes(this.currentRoute)) {
-      this.currentRoute = 'home';
-    }
   }
 }
