@@ -468,6 +468,7 @@ class BaseQueryBuilder(ABC):
 
         frequency_bin = set()
         frequency_bin_col = self.where_accessors["frequency_bin"]
+
         matchers = []
         if inheritance is not None:
             logger.debug(
@@ -485,7 +486,7 @@ class BaseQueryBuilder(ABC):
             if any(m.match([Inheritance.denovo]) for m in matchers):
                 frequency_bin.add(f"{frequency_bin_col} = 0")
 
-        has_transmitted_query = all(
+        has_transmitted_query_1 = [
             any(
                 m.match([inh]) for inh in [
                     Inheritance.mendelian,
@@ -495,7 +496,15 @@ class BaseQueryBuilder(ABC):
                     Inheritance.missing
                 ]
             ) for m in matchers
-        )
+        ]
+        has_transmitted_query = all(has_transmitted_query_1)
+
+        has_frequency_query = False
+        if real_attr_filter:
+            for name, (begin, end) in real_attr_filter:
+                if name == "af_allele_freq":
+                    has_frequency_query = True
+                    break
 
         if inheritance is None or has_transmitted_query:
             if ultra_rare:
@@ -503,7 +512,8 @@ class BaseQueryBuilder(ABC):
                     f"{frequency_bin_col} = 0",
                     f"{frequency_bin_col} = 1",
                 ])
-            elif real_attr_filter:
+            elif has_frequency_query:
+                assert real_attr_filter is not None
                 for name, (begin, end) in real_attr_filter:
                     if name == "af_allele_freq":
 

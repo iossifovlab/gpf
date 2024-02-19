@@ -243,7 +243,7 @@ class ImpalaVariants:
         return_reference: Optional[bool] = None,
         return_unknown: Optional[bool] = None,
         limit: Optional[int] = None,
-        pedigree_fields: Optional[tuple] = None
+        pedigree_fields: Optional[tuple[list[str], list[str]]] = None
     ) -> Optional[ImpalaQueryRunner]:
         """Build a query selecting the appropriate family variants."""
         # pylint: disable=too-many-arguments,too-many-locals
@@ -269,7 +269,7 @@ class ImpalaVariants:
         elif limit < 0:
             request_limit = None
         else:
-            request_limit = limit
+            request_limit = limit * 10
 
         director.build_query(
             regions=regions,
@@ -399,7 +399,7 @@ class ImpalaVariants:
         return_reference: Optional[bool] = None,
         return_unknown: Optional[bool] = None,
         limit: Optional[int] = None,
-        pedigree_fields: Optional[tuple] = None,
+        pedigree_fields: Optional[tuple[list[str], list[str]]] = None,
         **kwargs: Any
     ) -> Generator[FamilyVariant, None, None]:
         """Query family variants."""

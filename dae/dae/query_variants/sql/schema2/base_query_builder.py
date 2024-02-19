@@ -677,6 +677,13 @@ class BaseQueryBuilder(ABC):
             if any(m.match([Inheritance.denovo]) for m in matchers):
                 frequency_bins.add("0")
 
+        has_frequency_filter = False
+        if frequency_filter:
+            for name, (begin, end) in frequency_filter:
+                if name == "af_allele_freq":
+                    has_frequency_filter = True
+                    break
+
         if inheritance is None or any(
             m.match(
                 [
@@ -689,7 +696,8 @@ class BaseQueryBuilder(ABC):
         ):
             if ultra_rare:
                 frequency_bins |= set(["0", "1"])
-            elif frequency_filter:
+            elif has_frequency_filter:
+                assert frequency_filter is not None
                 for name, (begin, end) in frequency_filter:
                     if name == "af_allele_freq":
 
