@@ -4,6 +4,8 @@ import sys
 import argparse
 import logging
 
+from typing import Optional
+
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.parquet.partition_descriptor import PartitionDescriptor
 
@@ -11,7 +13,9 @@ from dae.parquet.partition_descriptor import PartitionDescriptor
 logger = logging.getLogger("hdfs_parquet_loader")
 
 
-def parse_cli_arguments(argv, gpf_instance):
+def parse_cli_arguments(
+    argv: list[str], gpf_instance: GPFInstance
+) -> argparse.Namespace:
     """Configure and create CLI arguments parser."""
     parser = argparse.ArgumentParser(
         description="loading study parquet files in impala db",
@@ -57,22 +61,24 @@ def parse_cli_arguments(argv, gpf_instance):
         default=default_genotype_storage_id,
     )
 
-    argv = parser.parse_args(argv)
-    return argv
+    return parser.parse_args(argv)
 
 
-def main(argv=None, gpf_instance=None):
+def main(
+    argv: Optional[list[str]] = None,
+    gpf_instance: Optional[GPFInstance] = None
+) -> None:
     """Upload parquet dataset into HDFS storage."""
     if gpf_instance is None:
         gpf_instance = GPFInstance.build()
 
-    argv = parse_cli_arguments(argv or sys.argv[1:], gpf_instance)
+    args = parse_cli_arguments(argv or sys.argv[1:], gpf_instance)
 
-    if argv.verbose == 1:
+    if args.verbose == 1:
         logging.basicConfig(level=logging.WARNING)
-    elif argv.verbose == 2:
+    elif args.verbose == 2:
         logging.basicConfig(level=logging.INFO)
-    elif argv.verbose >= 3:
+    elif args.verbose >= 3:
         logging.basicConfig(level=logging.DEBUG)
     else:
         logging.basicConfig(level=logging.ERROR)
@@ -81,7 +87,7 @@ def main(argv=None, gpf_instance=None):
 
     genotype_storages = gpf_instance.genotype_storages
     genotype_storage = genotype_storages.get_genotype_storage(
-        argv.genotype_storage
+        args.genotype_storage
     )
     if not genotype_storage or \
             (genotype_storage
@@ -90,11 +96,11 @@ def main(argv=None, gpf_instance=None):
         return
 
     partition_descriptor = None
-    if argv.variants and os.path.exists(argv.variants):
+    if args.variants and os.path.exists(args.variants):
         partition_config_file = os.path.join(
-            argv.variants, "_PARTITION_DESCRIPTION")
+            args.variants, "_PARTITION_DESCRIPTION")
 
-        if os.path.isdir(argv.variants) and \
+        if os.path.isdir(args.variants) and \
                 os.path.exists(partition_config_file):
             partition_descriptor = PartitionDescriptor.parse(
                 partition_config_file)
@@ -103,7 +109,7 @@ def main(argv=None, gpf_instance=None):
         partition_descriptor = PartitionDescriptor()
 
     genotype_storage.hdfs_upload_dataset(
-        argv.study_id, argv.variants, argv.pedigree, partition_descriptor)
+        args.study_id, args.variants, args.pedigree, partition_descriptor)
 
 
 if __name__ == "__main__":

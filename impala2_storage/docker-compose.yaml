@@ -1,0 +1,8 @@
+services:
+  impala4:
+    image: "iossifovlab/iossifovlab-impala4:latest"
+    ports:
+    - "35000:25000"
+    - "8020:8020"
+    - "21050:21050"
+    - "9870:9870"

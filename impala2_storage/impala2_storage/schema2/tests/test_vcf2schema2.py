@@ -1,21 +1,29 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 
 from glob import glob
+import pathlib
+
 import pandas as pd
 import pytest
-from impala_storage.schema2.tests.conftest import run_vcf2schema2
+
 from dae.parquet.partition_descriptor import \
     PartitionDescriptor
+from dae.gpf_instance.gpf_instance import GPFInstance
+
+from impala2_storage.schema2.tests.conftest import run_vcf2schema2
 
 
 @pytest.mark.parametrize("partition_description", [
     PartitionDescriptor(),
     PartitionDescriptor(chromosomes=["1"], region_length=5, family_bin_size=2),
 ])
-def test_vcf2schema2(resources_dir, tmpdir, gpf_instance_2013,
-                     partition_description):
-    variants_dir = str(tmpdir)
-    partition_description.output = variants_dir
+def test_vcf2schema2(
+    resources_dir: pathlib.Path,
+    tmp_path: pathlib.Path,
+    gpf_instance_2013: GPFInstance,
+    partition_description: PartitionDescriptor
+) -> None:
+    variants_dir = str(tmp_path)
 
     # generate parquets
     run_vcf2schema2(

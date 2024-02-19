@@ -46,6 +46,7 @@ pipeline {
               myPy(pattern: 'test-results/mypy_dae_tests_report', reportEncoding: 'UTF-8', id: 'mypy-dae-tests', name: 'MyPy - dae integration'),
               myPy(pattern: 'test-results/mypy_wdae_report', reportEncoding: 'UTF-8', id: 'mypy-wdae', name: 'MyPy - wdae'),
               myPy(pattern: 'test-results/mypy_impala_report', reportEncoding: 'UTF-8', id: 'mypy-impala', name: 'MyPy - impala'),
+              myPy(pattern: 'test-results/mypy_impala2_report', reportEncoding: 'UTF-8', id: 'mypy-impala2', name: 'MyPy - impala2'),
               pyLint(pattern: 'test-results/pylint_gpf_report', reportEncoding: 'UTF-8')
             ],
             qualityGates: [[threshold: 1, type: 'DELTA', unstable: true]]

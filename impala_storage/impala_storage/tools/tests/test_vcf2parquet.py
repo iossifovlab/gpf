@@ -2,19 +2,22 @@
 
 import os
 import glob
+from typing import Callable
 
 import pyarrow.parquet as pq
+
+from dae.gpf_instance.gpf_instance import GPFInstance
 
 from impala_storage.tools.vcf2parquet import main
 
 
 def test_vcf2parquet_vcf(
-    fixture_dirname,
-    annotation_pipeline_no_effects_config,
-    annotation_scores_dirname,
-    temp_filename,
-    gpf_instance_2013,
-):
+    fixture_dirname: Callable,
+    annotation_pipeline_no_effects_config: str,
+    annotation_scores_dirname: str,
+    temp_filename: str,
+    gpf_instance_2013: GPFInstance,
+) -> None:
 
     prefix = fixture_dirname("vcf_import/effects_trio")
     argv = [
@@ -49,12 +52,12 @@ def test_vcf2parquet_vcf(
 
 
 def test_vcf2parquet_vcf_partition(
-    fixture_dirname,
-    annotation_pipeline_no_effects_config,
-    annotation_scores_dirname,
-    temp_dirname,
-    gpf_instance_2013,
-):
+    fixture_dirname: Callable,
+    annotation_pipeline_no_effects_config: str,
+    annotation_scores_dirname: str,
+    temp_dirname: str,
+    gpf_instance_2013: GPFInstance,
+) -> None:
 
     partition_description = fixture_dirname(
         "backends/example_partition_configuration.conf"

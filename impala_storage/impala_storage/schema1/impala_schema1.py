@@ -1,17 +1,22 @@
 import logging
 import time
+from typing import Iterator, List, Tuple, Optional, cast
 
 import toml
 
 from dae.configuration.study_config_builder import StudyConfigBuilder
 from dae.utils import fs_utils
-from dae.import_tools.import_tools import save_study_config
+from dae.import_tools.import_tools import Bucket, ImportProject, \
+    save_study_config
 from dae.import_tools.import_tools import ImportStorage
 from dae.task_graph.graph import TaskGraph
 from dae.parquet.parquet_writer import ParquetWriter
+from dae.parquet.partition_descriptor import PartitionDescriptor
 
 from impala_storage.schema1.parquet_io import \
     VariantsParquetWriter as S1VariantsWriter
+from impala_storage.schema1.impala_genotype_storage import \
+    ImpalaGenotypeStorage
 
 
 logger = logging.getLogger(__file__)
@@ -21,22 +26,25 @@ class ImpalaSchema1ImportStorage(ImportStorage):
     """Import logic for data in the Impala Schema 1 format."""
 
     @staticmethod
-    def _pedigree_filename(project):
+    def _pedigree_filename(project: ImportProject) -> str:
         return fs_utils.join(
             project.work_dir, f"{project.study_id}_pedigree",
             "pedigree.parquet")
 
     @staticmethod
-    def _variants_dir(project):
+    def _variants_dir(project: ImportProject) -> str:
         return fs_utils.join(project.work_dir, f"{project.study_id}_variants")
 
     @staticmethod
-    def _get_partition_description(project, out_dir=None):
+    def _get_partition_description(
+        project: ImportProject,
+        out_dir: Optional[str] = None
+    ) -> PartitionDescriptor:
         out_dir = out_dir if out_dir else project.work_dir
         return project.get_partition_descriptor()
 
     @classmethod
-    def _do_write_pedigree(cls, project):
+    def _do_write_pedigree(cls, project: ImportProject) -> None:
         start = time.time()
         ped_filename = cls._pedigree_filename(project)
         ParquetWriter.write_pedigree(
@@ -47,7 +55,7 @@ class ImpalaSchema1ImportStorage(ImportStorage):
         project.stats[("elapsed", "pedigree")] = elapsed
 
     @classmethod
-    def _do_write_meta(cls, project):
+    def _do_write_meta(cls, project: ImportProject) -> None:
         out_dir = cls._variants_dir(project)
         gpf_instance = project.get_gpf_instance()
         loader_type = next(iter(project.get_variant_loader_types()))
@@ -65,12 +73,16 @@ class ImpalaSchema1ImportStorage(ImportStorage):
             S1VariantsWriter)
 
     @classmethod
-    def _do_write_variants(cls, project, bucket):
+    def _do_write_variants(
+        cls, project: ImportProject,
+        bucket: Bucket
+    ) -> None:
         start = time.time()
         out_dir = cls._variants_dir(project)
         gpf_instance = project.get_gpf_instance()
+        loader_type = next(iter(project.get_variant_loader_types()))
         variants_loader = project.get_variant_loader(
-            bucket, gpf_instance.reference_genome)
+            bucket, loader_type, gpf_instance.reference_genome)
         variants_loader = project.build_variants_loader_pipeline(
             variants_loader, gpf_instance
         )
@@ -88,7 +100,9 @@ class ImpalaSchema1ImportStorage(ImportStorage):
         project.stats[("elapsed", f"variants {bucket}")] = elapsed
 
     @classmethod
-    def _variant_partitions(cls, project):
+    def _variant_partitions(
+        cls, project: ImportProject
+    ) -> Iterator[Tuple[str, List[Tuple[str, str]]]]:
         part_desc = cls._get_partition_description(project)
         chromosomes = project.get_variant_loader_chromosomes()
         chromosome_lengths = dict(filter(
@@ -102,14 +116,17 @@ class ImpalaSchema1ImportStorage(ImportStorage):
             yield part_desc.partition_directory("", part), part
 
     @classmethod
-    def _merge_parquets(cls, project, out_dir, partitions):
+    def _merge_parquets(
+        cls, project: ImportProject, out_dir: str,
+        partitions: List[Tuple[str, str]]
+    ) -> None:
         full_out_dir = fs_utils.join(cls._variants_dir(project), out_dir)
         ParquetWriter.merge_parquets(
             cls._get_partition_description(project), full_out_dir, partitions
         )
 
     @classmethod
-    def _do_load_in_hdfs(cls, project):
+    def _do_load_in_hdfs(cls, project: ImportProject) -> None:
         start = time.time()
         genotype_storage = project.get_genotype_storage()
         if genotype_storage is None \
@@ -120,7 +137,7 @@ class ImpalaSchema1ImportStorage(ImportStorage):
         partition_description = cls._get_partition_description(project)
 
         pedigree_file = cls._pedigree_filename(project)
-        genotype_storage.hdfs_upload_dataset(
+        cast(ImpalaGenotypeStorage, genotype_storage).hdfs_upload_dataset(
             project.study_id,
             cls._variants_dir(project),
             pedigree_file,
@@ -130,7 +147,7 @@ class ImpalaSchema1ImportStorage(ImportStorage):
         project.stats[("elapsed", "hdfs")] = elapsed
 
     @classmethod
-    def _do_load_in_impala(cls, project):
+    def _do_load_in_impala(cls, project: ImportProject) -> None:
         start = time.time()
         genotype_storage = project.get_genotype_storage()
         if genotype_storage is None \
@@ -139,10 +156,12 @@ class ImpalaSchema1ImportStorage(ImportStorage):
             return
 
         hdfs_variants_dir = \
-            genotype_storage.default_variants_hdfs_dirname(project.study_id)
+            cast(ImpalaGenotypeStorage, genotype_storage) \
+            .default_variants_hdfs_dirname(project.study_id)
 
         hdfs_pedigree_file = \
-            genotype_storage.default_pedigree_hdfs_filename(project.study_id)
+            cast(ImpalaGenotypeStorage, genotype_storage) \
+            .default_pedigree_hdfs_filename(project.study_id)
 
         logger.info("HDFS variants dir: %s", hdfs_variants_dir)
         logger.info("HDFS pedigree file: %s", hdfs_pedigree_file)
@@ -156,7 +175,7 @@ class ImpalaSchema1ImportStorage(ImportStorage):
             schema = toml.loads(content)
             variants_schema = schema["variants_schema"]
 
-        genotype_storage.impala_import_dataset(
+        cast(ImpalaGenotypeStorage, genotype_storage).impala_import_dataset(
             project.study_id,
             hdfs_pedigree_file,
             hdfs_variants_dir,
@@ -167,15 +186,15 @@ class ImpalaSchema1ImportStorage(ImportStorage):
         project.stats[("elapsed", "impala")] = elapsed
 
     @staticmethod
-    def _construct_variants_table(study_id):
+    def _construct_variants_table(study_id: str) -> str:
         return f"{study_id}_variants"
 
     @staticmethod
-    def _construct_pedigree_table(study_id):
+    def _construct_pedigree_table(study_id: str) -> str:
         return f"{study_id}_pedigree"
 
     @classmethod
-    def _do_study_config(cls, project):
+    def _do_study_config(cls, project: ImportProject) -> None:
         start = time.time()
         pedigree_table = cls._construct_pedigree_table(project.study_id)
         variants_types = project.get_variant_loader_types()
@@ -195,8 +214,9 @@ class ImpalaSchema1ImportStorage(ImportStorage):
         if project.has_variants():
             variants_table = cls._construct_variants_table(project.study_id)
             storage_config = study_config["genotype_storage"]
-            storage_config["tables"]["variants"] = variants_table
-            study_config["genotype_browser"]["enabled"] = True
+            storage_config["tables"][  # type: ignore
+                "variants"] = variants_table
+            study_config["genotype_browser"]["enabled"] = True  # type: ignore
 
         config_builder = StudyConfigBuilder(study_config)
         config = config_builder.build_config()
@@ -209,7 +229,7 @@ class ImpalaSchema1ImportStorage(ImportStorage):
         logger.info("study config elapsed %.2f sec", elapsed)
         project.stats[("elapsed", "study_config")] = elapsed
 
-    def generate_import_task_graph(self, project) -> TaskGraph:
+    def generate_import_task_graph(self, project: ImportProject) -> TaskGraph:
         graph = TaskGraph()
 
         pedigree_task = graph.create_task(

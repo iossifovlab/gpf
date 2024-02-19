@@ -1324,3 +1324,10 @@ WHERE
   AND ( BITAND(8, inheritance_in_members) = 0 AND BITAND(32, inheritance_in_members) = 0 ) AND ( BITAND(134, inheritance_in_members) != 0 ) 
   AND ( (((BITAND(variant_type, 4) != 0)) OR ((BITAND(variant_type, 2) != 0))) OR ((BITAND(variant_type, 1) != 0)) ) 
   AND ( (af_allele_count <= 1 or af_allele_count is null) ) AND ( allele_index > 0 ) AND ( frequency_bin = 0 OR frequency_bin = 1 );
+
+
+
+CREATE EXTERNAL TABLE cshl_collection.w1202s766e611_liftover_summary_alleles
+LIKE PARQUET '/studies/cshl_collection/studies/w1202s766e611_liftover/summary/region_bin=chr4_0/frequency_bin=1/coding_bin=1/summary_region_bin_chr4_0_frequency_bin_1_coding_bin_1_bucket_index_200017.parquet' 
+PARTITIONED BY (region_bin STRING, frequency_bin TINYINT, coding_bin TINYINT) 
+STORED AS PARQUET LOCATION '/studies/cshl_collection/studies/w1202s766e611_liftover/summary'

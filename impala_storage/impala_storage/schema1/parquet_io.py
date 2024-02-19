@@ -3,7 +3,7 @@ import os
 import sys
 import time
 import logging
-from typing import Dict, Any, Optional
+from typing import List, Union, Dict, Any, Optional
 
 from copy import copy
 from urllib.parse import urlparse
@@ -27,6 +27,7 @@ from dae.variants.variant import SummaryVariant, SummaryAllele
 from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.parquet.parquet_writer import AbstractVariantsParquetWriter
 from dae.variants_loaders.raw.loader import VariantsLoader
+from dae.pedigrees.family import Family
 
 from impala_storage.schema1.serializers import AlleleParquetSerializer
 
@@ -42,7 +43,11 @@ class ContinuousParquetFileWriter:
     """
 
     def __init__(
-            self, filepath, variant_loader, filesystem=None, rows=100_000):
+        self, filepath: str,
+        variant_loader: VariantsLoader,
+        filesystem: Optional[fsspec.AbstractFileSystem] = None,
+        rows: int = 100_000
+    ) -> None:
 
         self.filepath = filepath
         extra_attributes = variant_loader.get_attribute("extra_attributes")
@@ -71,27 +76,29 @@ class ContinuousParquetFileWriter:
             version="1.0"
         )
         self.rows = rows
-        self._data = None
+        self._data: Optional[dict[str, list]] = None
         self.data_reset()
 
-    def data_reset(self):
+    def data_reset(self) -> None:
         self._data = {name: [] for name in self.schema.names}
 
-    def size(self):
+    def size(self) -> int:
         assert self._data is not None
         return len(self._data["chromosome"])
 
-    def build_table(self):
+    def build_table(self) -> pa.Table:
         table = pa.Table.from_pydict(self._data, self.schema)
         return table
 
-    def _write_table(self):
+    def _write_table(self) -> None:
         self._writer.write_table(self.build_table())
         self.data_reset()
 
     def append_allele(
-            self, allele, variant_data,
-            extra_attributes_data, summary_vectors):
+        self, allele: FamilyAllele, variant_data: bytes,
+        extra_attributes_data: bytes,
+        summary_vectors: dict[int, list]
+    ) -> None:
         """Append the data for an entire variant to the buffer.
 
         :param list attributes: List of key-value tuples containing the data
@@ -109,7 +116,7 @@ class ContinuousParquetFileWriter:
                 self.filepath, self.size())
             self._write_table()
 
-    def close(self):
+    def close(self) -> None:
         logger.info(
             "closing parquet writer %s at len %s", self.dirname, self.size())
 
@@ -122,13 +129,14 @@ class VariantsParquetWriter(AbstractVariantsParquetWriter):
     """Provide functions for storing variants into parquet dataset."""
 
     def __init__(
-            self,
-            out_dir,
-            variants_loader,
-            partition_descriptor,
-            bucket_index=None,
-            rows=100_000,
-            include_reference=True):
+        self,
+        out_dir: str,
+        variants_loader: VariantsLoader,
+        partition_descriptor: PartitionDescriptor,
+        bucket_index: Optional[int] = None,
+        rows: int = 100_000,
+        include_reference: bool = True
+    ) -> None:
         self.out_dir = out_dir
         self.variants_loader = variants_loader
         self.families = variants_loader.families
@@ -140,7 +148,7 @@ class VariantsParquetWriter(AbstractVariantsParquetWriter):
         self.include_reference = include_reference
 
         self.start = time.time()
-        self.data_writers = {}
+        self.data_writers: dict[str, ContinuousParquetFileWriter] = {}
         assert isinstance(partition_descriptor, PartitionDescriptor)
         self.partition_descriptor = partition_descriptor
         extra_attributes = self.variants_loader.get_attribute(
@@ -168,7 +176,10 @@ class VariantsParquetWriter(AbstractVariantsParquetWriter):
         )
 
     @staticmethod
-    def _setup_reference_allele(summary_variant, family):
+    def _setup_reference_allele(
+        summary_variant: SummaryVariant,
+        family: Family
+    ) -> FamilyAllele:
         genotype = -1 * np.ones(shape=(2, len(family)), dtype=GenotypeType)
         best_state = calculate_simple_best_state(
             genotype, summary_variant.allele_count
@@ -180,7 +191,10 @@ class VariantsParquetWriter(AbstractVariantsParquetWriter):
         return reference_allele
 
     @staticmethod
-    def _setup_all_unknown_allele(summary_variant, family):
+    def _setup_all_unknown_allele(
+        summary_variant: SummaryVariant,
+        family: Family
+    ) -> FamilyAllele:
         genotype = -1 * np.ones(shape=(2, len(family)), dtype=GenotypeType)
         best_state = calculate_simple_best_state(
             genotype, summary_variant.allele_count
@@ -204,7 +218,10 @@ class VariantsParquetWriter(AbstractVariantsParquetWriter):
         )
         return unknown_allele
 
-    def _setup_all_unknown_variant(self, summary_variant, family_id):
+    def _setup_all_unknown_variant(
+        self, summary_variant: SummaryVariant,
+        family_id: str
+    ) -> FamilyVariant:
         family = self.families[family_id]
         genotype = -1 * np.ones(shape=(2, len(family)), dtype=GenotypeType)
         alleles = [
@@ -215,10 +232,11 @@ class VariantsParquetWriter(AbstractVariantsParquetWriter):
             shape=(len(alleles), len(family)), dtype=GenotypeType
         )
         return FamilyVariant(
-            SummaryVariant(alleles), family, genotype, best_state
+            SummaryVariant(alleles),  # type: ignore
+            family, genotype, best_state
         )
 
-    def _build_family_filename(self, allele):
+    def _build_family_filename(self, allele: FamilyAllele) -> str:
         partition = self.partition_descriptor.schema1_partition(allele)
         partition_directory = self.partition_descriptor.partition_directory(
             self.out_dir, partition)
@@ -226,7 +244,9 @@ class VariantsParquetWriter(AbstractVariantsParquetWriter):
             "variants", partition, self.bucket_index)
         return fs_utils.join(partition_directory, partition_filename)
 
-    def _get_bin_writer(self, family_allele):
+    def _get_bin_writer(
+        self, family_allele: FamilyAllele
+    ) -> ContinuousParquetFileWriter:
         filename = self._build_family_filename(family_allele)
 
         if filename not in self.data_writers:
@@ -243,7 +263,7 @@ class VariantsParquetWriter(AbstractVariantsParquetWriter):
             )
         return self.data_writers[filename]
 
-    def _write_internal(self):
+    def _write_internal(self) -> List[Union[str, Any]]:
         # pylint: disable=too-many-locals
         family_variant_index = 0
         report = False
@@ -300,16 +320,19 @@ class VariantsParquetWriter(AbstractVariantsParquetWriter):
                     alleles = fv.alleles
 
                 variant_data = self.serializer.serialize_family_variant(
-                    alleles, summary_blobs, scores_blob)
+                    alleles, summary_blobs, scores_blob)  # type: ignore
                 assert variant_data is not None
 
                 extra_attributes_data = \
                     self.serializer.serialize_extra_attributes(fv)
                 for family_allele in alleles:
-                    bin_writer = self._get_bin_writer(family_allele)
+                    bin_writer = self._get_bin_writer(
+                        family_allele)  # type: ignore
                     bin_writer.append_allele(
-                        family_allele, variant_data,
-                        extra_attributes_data, summary_vectors)
+                        family_allele,  # type: ignore
+                        variant_data,
+                        extra_attributes_data,  # type: ignore
+                        summary_vectors)
 
             if summary_variant_index % 1000 == 0:
                 report = True
@@ -345,7 +368,7 @@ class VariantsParquetWriter(AbstractVariantsParquetWriter):
 
         return filenames
 
-    def write_schema(self):
+    def write_schema(self) -> None:
         """Write the schema to a separate file."""
         config: Dict[str, Any] = {}
 
@@ -372,20 +395,20 @@ class VariantsParquetWriter(AbstractVariantsParquetWriter):
             content = toml.dumps(config)
             configfile.write(content)
 
-    def write_partition(self):
+    def write_partition(self) -> None:
         """Write dataset metadata."""
         filename = os.path.join(self.out_dir, "_PARTITION_DESCRIPTION")
 
         with fsspec.open(filename, "w") as configfile:
             configfile.write(self.partition_descriptor.serialize())
 
-    def write_dataset(self):
+    def write_dataset(self) -> List[Union[str, Any]]:
         """Write the variants, parittion description and schema."""
         filenames = self._write_internal()
         self.variants_loader.close()
         return filenames
 
-    def write_meta(self):
+    def write_meta(self) -> None:
         # TODO: This should be move to a different place so that these are
         # not written with every bucket.
         self.write_partition()

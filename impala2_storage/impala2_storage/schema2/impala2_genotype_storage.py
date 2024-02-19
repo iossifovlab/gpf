@@ -15,9 +15,9 @@ from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 
-from impala_storage.helpers.hdfs_helpers import HdfsHelpers
-from impala_storage.helpers.impala_helpers import ImpalaHelpers
-from impala_storage.schema2.impala_variants import ImpalaVariants
+from impala2_storage.helpers.hdfs_helpers import HdfsHelpers
+from impala2_storage.helpers.impala_helpers import ImpalaHelpers
+from impala2_storage.schema2.impala_variants import ImpalaVariants
 
 
 logger = logging.getLogger(__name__)
@@ -89,9 +89,11 @@ class Impala2GenotypeStorage(GenotypeStorage):
             logger.info("deleting %s directory", study_path)
             self.hdfs_helpers.delete(study_path, recursive=True)
 
+        pedigree_hdfs_dir = os.path.join(study_path, "pedigree")
         pedigree_hdfs_path = os.path.join(
-            study_path, "pedigree", "pedigree.parquet"
+            pedigree_hdfs_dir, "pedigree.parquet"
         )
+        self.hdfs_helpers.makedirs(pedigree_hdfs_dir)
         self.hdfs_helpers.put(pedigree_file, pedigree_hdfs_path)
 
         meta_hdfs_file = os.path.join(
@@ -135,11 +137,11 @@ class Impala2GenotypeStorage(GenotypeStorage):
         has_tables = storage_config and storage_config.get("tables")
         tables = storage_config["tables"] if has_tables else None
 
-        family_table = f"{study_id}_family_alleles"
+        family_table = f"{study_id}_family"
         if has_tables and tables.get("family"):
             family_table = tables["family"]
 
-        summary_table = f"{study_id}_summary_alleles"
+        summary_table = f"{study_id}_summary"
         if has_tables and tables.get("summary"):
             summary_table = tables["summary"]
 
@@ -280,7 +282,7 @@ class Impala2GenotypeStorage(GenotypeStorage):
 
     @staticmethod
     def _construct_variant_tables(study_id: str) -> Tuple[str, str]:
-        return f"{study_id}_summary_alleles", f"{study_id}_family_alleles"
+        return f"{study_id}_summary", f"{study_id}_family"
 
     @staticmethod
     def _construct_pedigree_table(study_id: str) -> str:

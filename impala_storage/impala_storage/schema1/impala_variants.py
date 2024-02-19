@@ -127,6 +127,7 @@ class ImpalaVariants:
         # pylint: disable=too-many-arguments,too-many-locals
         if not self.variants_table:
             return None
+        assert self.schema is not None
 
         sv_table = None
         if self.has_summary_variants_table:
@@ -242,7 +243,7 @@ class ImpalaVariants:
         return_reference: Optional[bool] = None,
         return_unknown: Optional[bool] = None,
         limit: Optional[int] = None,
-        pedigree_fields: Optional[tuple] = None
+        pedigree_fields: Optional[tuple[list[str], list[str]]] = None
     ) -> Optional[ImpalaQueryRunner]:
         """Build a query selecting the appropriate family variants."""
         # pylint: disable=too-many-arguments,too-many-locals
@@ -250,6 +251,8 @@ class ImpalaVariants:
             logger.debug(
                 "missing varants table... skipping")
             return None
+        assert self.schema is not None
+
         do_join = False
         if pedigree_fields is not None:
             do_join = True
@@ -266,7 +269,7 @@ class ImpalaVariants:
         elif limit < 0:
             request_limit = None
         else:
-            request_limit = limit
+            request_limit = limit * 10
 
         director.build_query(
             regions=regions,
@@ -396,7 +399,7 @@ class ImpalaVariants:
         return_reference: Optional[bool] = None,
         return_unknown: Optional[bool] = None,
         limit: Optional[int] = None,
-        pedigree_fields: Optional[tuple] = None,
+        pedigree_fields: Optional[tuple[list[str], list[str]]] = None,
         **kwargs: Any
     ) -> Generator[FamilyVariant, None, None]:
         """Query family variants."""

@@ -1,13 +1,5 @@
 version: "3.9"
 services:
-    
-  # impala:
-  #   image: seqpipe/seqpipe-docker-impala:latest
-  #   hostname: impala
-  #   restart: "no"
-  #   ports:
-  #     - "21050:21050"
-  #     - "8020:8020"
 
   localstack:
     container_name: "${LOCALSTACK_DOCKER_NAME-localstack_main}"
@@ -15,12 +7,6 @@ services:
     ports:
       - "127.0.0.1:4566:4566"            # LocalStack Gateway
       - "127.0.0.1:4510-4559:4510-4559"  # external services port range
-    # environment:
-    #   # - DEBUG=${DEBUG-}
-    #   - DOCKER_HOST=unix:///var/run/docker.sock
-    # volumes:
-    #   # - "${LOCALSTACK_VOLUME_DIR:-./.test_volume}:/var/lib/localstack"
-    #   - "/var/run/docker.sock:/var/run/docker.sock"
 
   mail:
     image: mailhog/mailhog
@@ -58,9 +44,6 @@ services:
     environment:
       DAE_DB_DIR: /wd/data/data-hg19-remote
       GRR_DEFINITION_FILE: /wd/integration/grr_definition.yaml
-      # DAE_IMPALA_HOST: impala
-      # DAE_HDFS_HOST: impala
-      # TEST_REMOTE_HOST: gpfremote
     volumes:
       - .:/wd
 

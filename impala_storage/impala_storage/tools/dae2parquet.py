@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 import logging
-
 import sys
+from typing import Optional
+
+from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.variants_loaders.dae.loader import DaeTransmittedLoader
 from impala_storage.schema1.import_commons import Variants2ParquetTool
 
@@ -16,7 +18,10 @@ class Dae2ParquetTool(Variants2ParquetTool):
     VARIANTS_FREQUENCIES = False
 
 
-def main(argv=None, gpf_instance=None):
+def main(
+    argv: Optional[list[str]] = None,
+    gpf_instance: Optional[GPFInstance] = None
+) -> None:
     argv = argv or sys.argv[1:]
     Dae2ParquetTool.main(
         argv,

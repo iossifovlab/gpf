@@ -2,16 +2,23 @@
 
 import os
 import glob
+from typing import Callable
+
+from box import Box
 import pyarrow.parquet as pq
 
 from dae.parquet.partition_descriptor import PartitionDescriptor
+from dae.gpf_instance.gpf_instance import GPFInstance
 
 from impala_storage.tools.denovo2parquet import main
 from impala_storage.schema1.utils import generate_file_access_glob
 
 
 def test_denovo2parquet_denovo(
-        dae_denovo_config, temp_filename, gpf_instance_2019):
+    dae_denovo_config: Box,
+    temp_filename: str,
+    gpf_instance_2019: GPFInstance
+) -> None:
 
     argv = [
         "--ped-file-format",
@@ -39,7 +46,11 @@ def test_denovo2parquet_denovo(
 
 
 def test_denovo2parquet_denovo_partition(
-        fixture_dirname, dae_denovo_config, temp_dirname, gpf_instance_2019):
+    fixture_dirname: Callable,
+    dae_denovo_config: Box,
+    temp_dirname: str,
+    gpf_instance_2019: GPFInstance
+) -> None:
 
     partition_description = fixture_dirname(
         "backends/example_partition_configuration.conf"

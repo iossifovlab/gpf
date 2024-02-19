@@ -18,9 +18,9 @@ from dae.variants_loaders.raw.loader import AnnotationPipelineDecorator
 from dae.import_tools.import_tools import \
     construct_import_annotation_pipeline
 
-from impala_storage.schema2.impala2_genotype_storage import \
+from impala2_storage.schema2.impala2_genotype_storage import \
     Impala2GenotypeStorage
-from impala_storage.schema2.impala_variants import ImpalaVariants
+from impala2_storage.schema2.impala_variants import ImpalaVariants
 
 
 @pytest.fixture(scope="module")

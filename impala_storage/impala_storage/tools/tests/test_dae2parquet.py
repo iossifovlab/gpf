@@ -2,15 +2,21 @@
 
 import os
 import glob
+from typing import Callable
+
+from box import Box
 
 import pyarrow.parquet as pq
 
+from dae.gpf_instance.gpf_instance import GPFInstance
 from impala_storage.tools.dae2parquet import main
 
 
 def test_dae2parquet_transmitted(
-    dae_transmitted_config, temp_filename, gpf_instance_2019
-):
+    dae_transmitted_config: Box,
+    temp_filename: str,
+    gpf_instance_2019: GPFInstance
+) -> None:
 
     argv = [
         dae_transmitted_config.family_filename,
@@ -39,8 +45,11 @@ def test_dae2parquet_transmitted(
 
 
 def test_dae2parquet_dae_partition(
-        fixture_dirname, dae_transmitted_config, temp_dirname,
-        gpf_instance_2019):
+    fixture_dirname: Callable,
+    dae_transmitted_config: Box,
+    temp_dirname: str,
+    gpf_instance_2019: GPFInstance
+) -> None:
 
     partition_description = fixture_dirname(
         "backends/example_partition_configuration.conf"

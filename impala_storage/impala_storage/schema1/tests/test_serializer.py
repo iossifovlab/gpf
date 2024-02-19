@@ -1,5 +1,8 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+from typing import Callable
+
 import pytest
+import pytest_mock
 
 # from dae.annotation.schema import Schema
 from dae.variants_loaders.dae.loader import DenovoLoader
@@ -9,16 +12,20 @@ from dae.annotation.annotation_pipeline import AttributeInfo
 from dae.import_tools.import_tools import ImportProject
 from dae.import_tools.cli import run_with_project
 from dae.configuration.gpf_config_parser import FrozenBox
+from dae.gpf_instance.gpf_instance import GPFInstance
 
 from impala_storage.schema1.serializers import AlleleParquetSerializer
+from impala_storage.schema1.impala_genotype_storage import \
+    ImpalaGenotypeStorage
+from impala_storage.schema1.impala_variants import ImpalaVariants
 
 
 @pytest.fixture(scope="session")
 def extra_attrs_impala(
-        fixture_dirname,
-        tmp_path_factory,
-        gpf_instance_2013,
-        impala_genotype_storage):
+        fixture_dirname: Callable,
+        tmp_path_factory: pytest.TempPathFactory,
+        gpf_instance_2013: GPFInstance,
+        impala_genotype_storage: ImpalaGenotypeStorage) -> ImpalaVariants:
     study_id = f"denovo_extra_attrs_{impala_genotype_storage.storage_id}"
     families_filename = fixture_dirname("backends/iossifov_extra_attrs.ped")
     variants_filename = fixture_dirname("backends/iossifov_extra_attrs.tsv")
@@ -58,7 +65,10 @@ def extra_attrs_impala(
     return fvars
 
 
-def test_all_properties_in_blob(vcf_variants_loaders, impala_genotype_storage):
+def test_all_properties_in_blob(
+    vcf_variants_loaders: Callable,
+    impala_genotype_storage: ImpalaGenotypeStorage
+) -> None:
     loader = vcf_variants_loaders("backends/quads_f1")[0]
 
     fv = list(loader.full_variants_iterator())[0][1][0]
@@ -99,7 +109,7 @@ def test_all_properties_in_blob(vcf_variants_loaders, impala_genotype_storage):
 
 
 def test_extra_attributes_serialization_deserialization(
-        fixtures_gpf_instance, fixture_dirname):
+        fixtures_gpf_instance: GPFInstance, fixture_dirname: Callable) -> None:
     families_data = FamiliesLoader.load_simple_families_file(
         fixture_dirname("backends/iossifov_extra_attrs.ped"))
 
@@ -130,7 +140,7 @@ def test_extra_attributes_serialization_deserialization(
 
 
 def test_extra_attributes_loading_with_person_id(
-        fixtures_gpf_instance, fixture_dirname):
+        fixtures_gpf_instance: GPFInstance, fixture_dirname: Callable) -> None:
     families_loader = FamiliesLoader(
         fixture_dirname("backends/denovo-db-person-id.ped"))
     families_data = families_loader.load()
@@ -161,14 +171,17 @@ def test_extra_attributes_loading_with_person_id(
         print(variant)
 
 
-def test_extra_attributes_impala(extra_attrs_impala):
+def test_extra_attributes_impala(extra_attrs_impala: ImpalaVariants) -> None:
     variants = extra_attrs_impala.query_variants()
     first_variant = list(variants)[0]
     assert first_variant.get_attribute("someAttr")[0] == "asdf"
 
 
 def test_build_allele_batch_dict(
-        vcf_variants_loaders, impala_genotype_storage, mocker):
+    vcf_variants_loaders: Callable,
+    impala_genotype_storage: ImpalaGenotypeStorage,
+    mocker: pytest_mock.MockerFixture
+) -> None:
     loader = vcf_variants_loaders("backends/effects_trio")[-1]
 
     fv = list(loader.full_variants_iterator())[0][1][0]

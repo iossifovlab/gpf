@@ -4,7 +4,7 @@ from typing import Callable
 
 from dae.utils.regions import Region
 from dae.parquet.partition_descriptor import PartitionDescriptor
-from impala_storage.schema2.impala_variants import ImpalaVariants
+from impala2_storage.schema2.impala_variants import ImpalaVariants
 
 
 def test_import_and_query(testing_study_backend: ImpalaVariants) -> None:

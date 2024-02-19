@@ -64,7 +64,7 @@ chr1   2   .  C   G   .    .      .    GT     0/0 0/1 0/1 0/0
     return study
 
 
-def test_best_state_genetic_model(quads_f1: GenotypeStorage) -> None:
+def test_best_state_genetic_model(quads_f1: GenotypeData) -> None:
 
     best_state_expecteds = {
         1: np.array([[1, 2, 1, 2], [1, 0, 1, 0]], dtype=np.int8),

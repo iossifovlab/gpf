@@ -907,9 +907,11 @@ class SqlQueryBuilder:
         assert family_ids is not None
         family_ids = set(family_ids)
 
-        family_bins = []
+        family_bins = set()
         for family_id in family_ids:
-            family_bins.append(
+            family_bins.add(
                 str(self.partition_descriptor.make_family_bin(family_id))
             )
-        return family_bins
+        if len(family_bins) >= self.partition_descriptor.family_bin_size // 2:
+            return []
+        return list(family_bins)

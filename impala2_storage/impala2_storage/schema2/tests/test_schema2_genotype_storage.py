@@ -7,7 +7,7 @@ import pytest
 import pandas as pd
 from fsspec.core import url_to_fs
 
-from impala_storage.schema2.impala2_genotype_storage import \
+from impala2_storage.schema2.impala2_genotype_storage import \
     Impala2GenotypeStorage
 
 
@@ -41,7 +41,7 @@ def import_layout(
 
 
 def test_hdfs_upload_dataset(import_layout: LocalLayout) -> None:
-    base_dir = "/user/test_user/studies"
+    base_dir = "/test/studies"
     hdfs_host = os.environ.get("DAE_HDFS_HOST", "localhost")
     config = {
         "id": "genotype_impala",

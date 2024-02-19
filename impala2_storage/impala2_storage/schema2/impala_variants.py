@@ -17,8 +17,8 @@ from dae.variants.variant import SummaryVariantFactory, SummaryVariant
 from dae.variants.family_variant import FamilyVariant
 from dae.genomic_resources.gene_models import GeneModels
 
-from impala_storage.helpers.impala_query_runner import ImpalaQueryRunner
-from impala_storage.helpers.impala_helpers import ImpalaHelpers
+from impala2_storage.helpers.impala_query_runner import ImpalaQueryRunner
+from impala2_storage.helpers.impala_helpers import ImpalaHelpers
 
 logger = logging.getLogger(__name__)
 
@@ -61,9 +61,9 @@ class ImpalaVariants(SqlSchema2Variants):
         conn = self._impala_helpers.connection()
         logger.debug(
             "getting connection to host %s from impala helpers %s",
-            conn.host, id(self._impala_helpers)
+            conn.host, id(self._impala_helpers)  # type: ignore
         )
-        return cast(pool.PoolProxiedConnection, conn)
+        return conn
 
     def _fetch_schema(self, table: str) -> dict[str, str]:
         with closing(self.connection()) as conn:

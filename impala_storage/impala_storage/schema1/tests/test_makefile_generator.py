@@ -1,14 +1,19 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import os
+import argparse
+
+from typing import Callable
+
 import pytest
 
 from impala_storage.schema1.import_commons import BatchImporter, \
     SnakefileGenerator
+from dae.gpf_instance.gpf_instance import GPFInstance
 
 
 @pytest.fixture
-def cli_parse(gpf_instance_2013):
-    def parser(argv):
+def cli_parse(gpf_instance_2013: GPFInstance) -> Callable:
+    def parser(argv: list[str]) -> argparse.Namespace:
         parser = BatchImporter.cli_arguments_parser(gpf_instance_2013)
         return parser.parse_args(argv)
 
@@ -16,7 +21,10 @@ def cli_parse(gpf_instance_2013):
 
 
 @pytest.fixture
-def importer(gpf_instance_2013, hdfs_host, impala_host):
+def importer(
+    gpf_instance_2013: GPFInstance,
+    hdfs_host: str, impala_host: str
+) -> BatchImporter:
 
     storage_config = {
         "id": "genotype_impala",
@@ -42,7 +50,9 @@ def importer(gpf_instance_2013, hdfs_host, impala_host):
 
 
 def test_makefile_generator_simple(
-        fixture_dirname, cli_parse, importer, temp_dirname):
+    fixture_dirname: Callable, cli_parse: Callable,
+    importer: BatchImporter, temp_dirname: str
+) -> None:
     prefix = fixture_dirname("vcf_import/effects_trio")
     argv = cli_parse(
         [
@@ -65,7 +75,9 @@ def test_makefile_generator_simple(
 
 
 def test_makefile_generator_multivcf_simple(
-        fixture_dirname, cli_parse, importer, temp_dirname):
+    fixture_dirname: Callable, cli_parse: Callable,
+    importer: BatchImporter, temp_dirname: str
+) -> None:
 
     vcf_file1 = fixture_dirname("multi_vcf/multivcf_missing1.vcf.gz")
     vcf_file2 = fixture_dirname("multi_vcf/multivcf_missing2.vcf.gz")
@@ -100,7 +112,9 @@ def test_makefile_generator_multivcf_simple(
 
 
 def test_snakefile_generator_denovo_and_dae(
-        fixture_dirname, cli_parse, importer, temp_dirname):
+    fixture_dirname: Callable, cli_parse: Callable,
+    importer: BatchImporter, temp_dirname: str
+) -> None:
 
     denovo_file = fixture_dirname("dae_denovo/denovo.txt")
     dae_file = fixture_dirname("dae_transmitted/transmission.txt.gz")
@@ -183,7 +197,7 @@ CONTEXT = {
 }
 
 
-def test_snakefile_generator(temp_dirname):
+def test_snakefile_generator(temp_dirname: str) -> None:
 
     generator = SnakefileGenerator()
     result = generator.generate(CONTEXT)
@@ -194,7 +208,9 @@ def test_snakefile_generator(temp_dirname):
 
 
 def test_generator_context_denovo_and_dae(
-        fixture_dirname, cli_parse, importer, temp_dirname):
+    fixture_dirname: Callable, cli_parse: Callable,
+    importer: BatchImporter, temp_dirname: str
+) -> None:
 
     denovo_file = fixture_dirname("dae_denovo/denovo.txt")
     dae_file = fixture_dirname("dae_transmitted/transmission.txt.gz")
@@ -244,7 +260,9 @@ def test_generator_context_denovo_and_dae(
 
 
 def test_generator_context_multivcf(
-        fixture_dirname, cli_parse, importer, temp_dirname):
+    fixture_dirname: Callable, cli_parse: Callable,
+    importer: BatchImporter, temp_dirname: str
+) -> None:
 
     vcf_file1 = fixture_dirname("multi_vcf/multivcf_missing1.vcf.gz")
     vcf_file2 = fixture_dirname("multi_vcf/multivcf_missing2.vcf.gz")

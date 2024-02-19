@@ -7,6 +7,7 @@ import argparse
 import subprocess
 import logging
 import copy
+from typing import Any, cast, Optional
 
 import yaml
 
@@ -18,7 +19,7 @@ from impala_storage.helpers.rsync_helpers import RsyncHelpers
 logger = logging.getLogger("remote_instance_mirror")
 
 
-def parse_cli_arguments(argv):
+def parse_cli_arguments(argv: list[str]) -> argparse.Namespace:
     """Parse CLI arguments."""
     parser = argparse.ArgumentParser(
         description="mirrors remote GPF data instance",
@@ -68,18 +69,21 @@ def parse_cli_arguments(argv):
         dest="hdfs2nfs",
         help="HDFS-to-NFS mount point on remote host",
     )
-    argv = parser.parse_args(argv)
-    return argv
+    return parser.parse_args(argv)
 
 
-def load_mirror_config(filename):
+def load_mirror_config(filename: str) -> dict[str, Any]:
     """Load mirrored instance configuration."""
     with open(filename, "rt", encoding="utf8") as infile:
         config = yaml.safe_load(infile)
-    return config
+    return cast(dict[str, Any], config)
 
 
-def update_genotype_storage_config(config_dict, rsync_helpers, **kwargs):
+def update_genotype_storage_config(
+    config_dict: dict[str, Any],
+    rsync_helpers: RsyncHelpers,
+    **kwargs: Any
+) -> str:
     """Update default genotype storage config."""
     storage_registry = GenotypeStorageRegistry()
     storage_registry.register_storages_configs(config_dict["genotype_storage"])
@@ -111,10 +115,14 @@ def update_genotype_storage_config(config_dict, rsync_helpers, **kwargs):
         if storage_config["id"] == default_storage.storage_id:
             config_dict["genotype_storage"]["storages"][index] = storage
 
-    return remote_impala_host
+    return cast(str, remote_impala_host)
 
 
-def update_mirror_config(rsync_helpers, work_dir, argv):
+def update_mirror_config(
+    rsync_helpers: RsyncHelpers,
+    work_dir: str,
+    argv: argparse.Namespace
+) -> dict[str, Any]:
     """Update mirrored GPF instance configuration."""
     config_filename = os.path.join(work_dir, "gpf_instance.yaml")
     config_dict = load_mirror_config(config_filename)
@@ -140,7 +148,7 @@ def update_mirror_config(rsync_helpers, work_dir, argv):
     return config_dict
 
 
-def get_active_conda_environment():
+def get_active_conda_environment() -> Optional[str]:
     """Detect activate conda environment."""
     try:
         result = subprocess.run(
@@ -163,7 +171,7 @@ def get_active_conda_environment():
     return None
 
 
-def build_setenv(work_dir):
+def build_setenv(work_dir: str) -> None:
     """Prepare 'setenv.sh' script."""
     conda_environment = get_active_conda_environment()
     conda_activate = ""
@@ -198,7 +206,7 @@ export PS1
         outfile.write(content)
 
 
-def run_wdae_bootstrap(work_dir):
+def run_wdae_bootstrap(work_dir: str) -> None:
     """Run wdae migrations and create default users."""
     os.environ["DAE_DB_DIR"] = work_dir
     commands = [
@@ -223,26 +231,26 @@ def run_wdae_bootstrap(work_dir):
             logger.error(result.stderr)
 
 
-def main(argv=None):
+def main(argv: Optional[list[str]] = None) -> None:
     """Entry point for the remote instance mirroring tool."""
     if argv is None:
         argv = sys.argv[1:]
 
-    argv = parse_cli_arguments(argv)
+    args = parse_cli_arguments(argv)
 
-    if argv.verbose == 1:
+    if args.verbose == 1:
         logging.basicConfig(level=logging.WARNING)
-    elif argv.verbose == 2:
+    elif args.verbose == 2:
         logging.basicConfig(level=logging.INFO)
-    elif argv.verbose >= 3:
+    elif args.verbose >= 3:
         logging.basicConfig(level=logging.DEBUG)
     else:
         logging.basicConfig(level=logging.WARNING)
     logging.getLogger("impala").setLevel(logging.WARNING)
 
-    rsync_helpers = RsyncHelpers(argv.remote_instance)
+    rsync_helpers = RsyncHelpers(args.remote_instance)
 
-    output = argv.output
+    output = args.output
     if not output.endswith("/"):
         output += "/"
     output = os.path.abspath(output)
@@ -250,12 +258,12 @@ def main(argv=None):
     os.makedirs(output, exist_ok=True)
 
     exclude = []
-    if argv.exclude is not None:
-        exclude = [ex.strip() for ex in argv.exclude.split(",")]
+    if args.exclude is not None:
+        exclude = [ex.strip() for ex in args.exclude.split(",")]
         exclude = [ex for ex in exclude if ex]
 
     rsync_helpers.copy_to_local(output, exclude=exclude)
 
-    update_mirror_config(rsync_helpers, output, argv)
+    update_mirror_config(rsync_helpers, output, args)
     build_setenv(output)
     run_wdae_bootstrap(output)

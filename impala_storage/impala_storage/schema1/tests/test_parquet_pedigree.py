@@ -1,6 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,no-member
 import os
 import pytest
+import pytest_mock
 
 import dae
 from dae.pedigrees.loader import FamiliesLoader
@@ -16,7 +17,10 @@ from dae.parquet.parquet_writer import ParquetWriter
         ("pedigree_C.ped"),
     ],
 )
-def test_ped2parquet(pedigree, temp_dirname, global_dae_fixtures_dir):
+def test_ped2parquet(
+    pedigree: str, temp_dirname: str,
+    global_dae_fixtures_dir: str
+) -> None:
     pedigree_filename = f"{global_dae_fixtures_dir}/pedigrees/{pedigree}"
     assert os.path.exists(pedigree_filename)
 
@@ -41,8 +45,9 @@ def test_ped2parquet(pedigree, temp_dirname, global_dae_fixtures_dir):
     ],
 )
 def test_ped2parquet_mock(
-    mocker, pedigree, outfile, dirname, global_dae_fixtures_dir
-):
+    mocker: pytest_mock.MockerFixture,
+    pedigree: str, outfile: str, dirname: str, global_dae_fixtures_dir: str
+) -> None:
 
     pedigree_filename = f"{global_dae_fixtures_dir}/pedigrees/{pedigree}"
     assert os.path.exists(pedigree_filename)
