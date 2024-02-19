@@ -206,7 +206,8 @@
         "jest/valid-describe-callback": 1,
         "jest/valid-expect": 1,
         "jest/valid-expect-in-promise": 1,
-        "jest/valid-title": 1
+        "jest/valid-title": 1,
+        "jest/no-disabled-tests": 0
       }
     }
   ]

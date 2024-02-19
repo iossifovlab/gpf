@@ -7,8 +7,7 @@ import { StatefulComponent } from 'app/common/stateful-component';
 
 @Component({
   selector: 'gpf-inheritancetypes',
-  templateUrl: './inheritancetypes.component.html',
-  styleUrls: ['./inheritancetypes.component.css'],
+  templateUrl: './inheritancetypes.component.html'
 })
 export class InheritancetypesComponent extends StatefulComponent implements OnChanges {
   @Input()

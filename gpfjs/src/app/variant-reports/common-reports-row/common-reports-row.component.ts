@@ -9,8 +9,7 @@ import {
 
 @Component({
   selector: '[gpf-common-reports-row]',
-  templateUrl: './common-reports-row.component.html',
-  styleUrls: ['./common-reports-row.component.css']
+  templateUrl: './common-reports-row.component.html'
 })
 export class CommonReportsRowComponent implements OnInit, AfterViewInit {
   @Input() public pedigreeGroup: PedigreeCounter[];

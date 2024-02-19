@@ -35,6 +35,7 @@ export class UsersComponent implements OnInit {
   public login(): void {
     const codeChallenge = this.authService.generatePKCE();
     const state = {
+      // eslint-disable-next-line @typescript-eslint/naming-convention
       came_from: this.router.url
     };
     window.location.href = `${this.config.rootUrl}${this.baseHref}`

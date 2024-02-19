@@ -8,8 +8,7 @@ import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 
 @Component({
   selector: 'gpf-continuous-filter',
-  templateUrl: './continuous-filter.component.html',
-  styleUrls: ['./continuous-filter.component.css']
+  templateUrl: './continuous-filter.component.html'
 })
 export class ContinuousFilterComponent implements OnInit, OnChanges {
   private rangeChanges = new Subject<[string, string, number, number]>();

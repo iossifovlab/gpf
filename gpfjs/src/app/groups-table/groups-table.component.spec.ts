@@ -27,19 +27,19 @@ const groupMock = new UserGroup(
 );
 
 class UsersGroupsServiceMock {
-  public removeUser(email: string, group: string): Observable<null> {
+  public removeUser(): Observable<null> {
     return of(null);
   }
 
-  public addUser(email: string, group: string): Observable<null> {
+  public addUser(): Observable<null> {
     return of(null);
   }
 
-  public revokePermissionToDataset(groupId: number, datasetID: string): Observable<null> {
+  public revokePermissionToDataset(): Observable<null> {
     return of(null);
   }
 
-  public grantPermissionToDataset(groupName: string, datasetID: string): Observable<null> {
+  public grantPermissionToDataset(): Observable<null> {
     return of(null);
   }
 
@@ -68,7 +68,7 @@ class UsersGroupsServiceMock {
 }
 
 class UsersServiceMock {
-  public getUsers(page: number, searchTerm: string): Observable<User[]> {
+  public getUsers(page: number): Observable<User[]> {
     let pageBody: User[];
     if (page === 1) {
       pageBody = [
@@ -90,7 +90,7 @@ class UsersServiceMock {
 }
 
 class DatasetsServiceMock {
-  public getManagementDatasets(page: number, searchTerm: string): Observable<DatasetPermissions[]> {
+  public getManagementDatasets(page: number): Observable<DatasetPermissions[]> {
     let pageBody: DatasetPermissions[];
     if (page === 1) {
       pageBody = [

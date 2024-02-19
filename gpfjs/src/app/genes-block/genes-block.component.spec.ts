@@ -21,10 +21,8 @@ describe('GenesBlockComponent', () => {
     fixture = TestBed.createComponent(GenesBlockComponent);
     component = fixture.componentInstance;
     component['store'] = {
-      selectOnce: function() {
-        return of({geneSymbols: ['value1', 'value2']});
-      },
-      dispatch: function() {}
+      selectOnce: () => of({geneSymbols: ['value1', 'value2']}),
+      dispatch: () => ({})
     } as never;
     fixture.detectChanges();
   }));

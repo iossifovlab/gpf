@@ -11,12 +11,10 @@ export class GeneSetsLocalState {
   public select(datasetId: string, personSetCollectionId: string, phenotype: string): void {
     if (datasetId in this.geneSetsTypes && personSetCollectionId in this.geneSetsTypes[datasetId]) {
       this.geneSetsTypes[datasetId][personSetCollectionId].push(phenotype);
+    } else if (datasetId in this.geneSetsTypes) {
+      Object.assign(this.geneSetsTypes[datasetId], { [personSetCollectionId]: [phenotype] });
     } else {
-      if (datasetId in this.geneSetsTypes) {
-        Object.assign(this.geneSetsTypes[datasetId], { [personSetCollectionId]: [phenotype] });
-      } else {
-        Object.assign(this.geneSetsTypes, { [datasetId]: { [personSetCollectionId]: [phenotype] } });
-      }
+      Object.assign(this.geneSetsTypes, { [datasetId]: { [personSetCollectionId]: [phenotype] } });
     }
   }
 
@@ -37,7 +35,7 @@ export class GeneSetsLocalState {
 
   public isSelected(datasetId: string, personSetCollectionId: string, phenotype: string): boolean {
     return datasetId in this.geneSetsTypes &&
-        personSetCollectionId in this.geneSetsTypes[datasetId] &&
-        this.geneSetsTypes[datasetId][personSetCollectionId].indexOf(phenotype) !== -1;
+      personSetCollectionId in this.geneSetsTypes[datasetId] &&
+      this.geneSetsTypes[datasetId][personSetCollectionId].indexOf(phenotype) !== -1;
   }
 }

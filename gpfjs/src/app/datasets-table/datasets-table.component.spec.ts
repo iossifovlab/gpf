@@ -29,7 +29,7 @@ class UsersGroupsServiceMock {
     return of(new UserGroup(1, groupName, [], []));
   }
 
-  public getGroups(page: number, searchTerm: string): Observable<UserGroup[]> {
+  public getGroups(page: number): Observable<UserGroup[]> {
     let pageBody: UserGroup[];
     if (page === 1) {
       pageBody = [

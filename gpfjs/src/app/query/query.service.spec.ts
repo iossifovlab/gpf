@@ -23,7 +23,7 @@ describe('QueryService', () => {
     expect(service).toBeTruthy();
   });
 
-  xit('should test downloadVariants', () => {
+  it.skip('should test downloadVariants', () => {
     // TODO
   });
 });

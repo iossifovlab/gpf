@@ -1,5 +1,4 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
 
 import { Observable, Subscription } from 'rxjs';
 
@@ -31,7 +30,6 @@ export class EnrichmentToolComponent implements OnInit, OnDestroy {
   public constructor(
     private enrichmentQueryService: EnrichmentQueryService,
     private loadingService: FullscreenLoadingService,
-    private route: ActivatedRoute,
     private datasetsService: DatasetsService,
   ) { }
 

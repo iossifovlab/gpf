@@ -9,8 +9,7 @@ import { StatefulComponent } from 'app/common/stateful-component';
 
 @Component({
   selector: 'gpf-effect-types',
-  templateUrl: './effect-types.component.html',
-  styleUrls: ['./effect-types.component.css'],
+  templateUrl: './effect-types.component.html'
 })
 export class EffectTypesComponent extends StatefulComponent implements OnInit {
   @Input() public variantTypes: Set<string> = new Set();

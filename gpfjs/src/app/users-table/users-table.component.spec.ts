@@ -39,7 +39,7 @@ const userMockConstructorArgs: [
 const userMock = new User(...userMockConstructorArgs);
 
 class UsersGroupsServiceMock {
-  public getGroups(page: number, searchTerm: string): Observable<UserGroup[]> {
+  public getGroups(page: number): Observable<UserGroup[]> {
     let pageBody: UserGroup[];
     if (page === 1) {
       pageBody = [
@@ -59,17 +59,17 @@ class UsersGroupsServiceMock {
     return of(pageBody);
   }
 
-  public removeUser(email: string, group: string): Observable<null> {
+  public removeUser(): Observable<null> {
     return of(null);
   }
 
-  public addUser(email: string, group: string): Observable<null> {
+  public addUser(): Observable<null> {
     return of(null);
   }
 }
 
 class UsersServiceMock {
-  public getUsers(page: number, email: string): Observable<User[]> {
+  public getUsers(): Observable<User[]> {
     return of([
       new User(
         userMock.id,

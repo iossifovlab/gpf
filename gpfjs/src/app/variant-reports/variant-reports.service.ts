@@ -33,6 +33,7 @@ export class VariantReportsService {
 
   public getFamilies(datasetId: string, groupName: string, counterId: number): Observable<string[]> {
     const options = { withCredentials: true };
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     const data = { study_id: datasetId, group_name: groupName, counter_id: counterId };
     const url = `${this.config.baseUrl}${this.familiesUrl}`;
     const response = this.http.post(url, data, options).pipe(map(response => response as Array<string>));

@@ -10,7 +10,7 @@
       <div class="checkbox">
         <label>
           <input type="checkbox" [checked]="selectedItems.has(item)" (change)="toggleItem(item)" />
-          <span id="item">{{ item | displayName : displayNames }}</span>
+          <span id="item" style="margin-left: 5px">{{ item | displayName : displayNames }}</span>
         </label>
       </div>
     </ng-container>

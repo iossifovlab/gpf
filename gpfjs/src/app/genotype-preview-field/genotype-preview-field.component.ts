@@ -3,8 +3,7 @@ import { sprintf } from 'sprintf-js';
 
 @Component({
   selector: 'gpf-genotype-preview-field',
-  templateUrl: './genotype-preview-field.component.html',
-  styleUrls: ['./genotype-preview-field.component.css']
+  templateUrl: './genotype-preview-field.component.html'
 })
 export class GenotypePreviewFieldComponent implements OnInit, OnChanges {
   @Input() public value;
@@ -13,6 +12,7 @@ export class GenotypePreviewFieldComponent implements OnInit, OnChanges {
   @Input() public genome: string;
 
   public formattedValue: string;
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   public UCSCLink: string;
   public pedigreeMaxHeight = 75;
 
@@ -25,7 +25,7 @@ export class GenotypePreviewFieldComponent implements OnInit, OnChanges {
   }
 
   private doFormat(format, value) {
-    if(value === 'nan') {
+    if (value === 'nan') {
       return value;
     }
     return sprintf(format, value);

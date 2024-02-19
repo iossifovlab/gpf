@@ -8,8 +8,7 @@ import { UsersService } from 'app/users/users.service';
 
 @Component({
   selector: 'gpf-dataset-description',
-  templateUrl: './dataset-description.component.html',
-  styleUrls: ['./dataset-description.component.css']
+  templateUrl: './dataset-description.component.html'
 })
 export class DatasetDescriptionComponent implements OnInit {
   public dataset$: Observable<Dataset>;

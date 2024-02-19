@@ -9,8 +9,7 @@ export class DisplayNamePipe implements PipeTransform {
 
 @Component({
   selector: 'gpf-checkbox-list',
-  templateUrl: './checkbox-list.component.html',
-  styleUrls: ['./checkbox-list.component.css']
+  templateUrl: './checkbox-list.component.html'
 })
 export class CheckboxListComponent implements OnInit {
   @Input() public title: string;

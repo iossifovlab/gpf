@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { PhenoBrowserComponent } from './pheno-browser.component';
 import { DatasetsService } from '../datasets/datasets.service';
 import { PhenoBrowserService } from './pheno-browser.service';
-import { PhenoInstruments,PhenoInstrument, PhenoMeasures, PhenoMeasure, PhenoRegressions } from './pheno-browser';
+import { PhenoInstruments, PhenoInstrument, PhenoMeasures, PhenoMeasure, PhenoRegressions } from './pheno-browser';
 import { fakeJsonMeasureOneRegression } from './pheno-browser.spec';
 import { environment } from '../../environments/environment';
 import { FormsModule } from '@angular/forms';

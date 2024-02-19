@@ -7,8 +7,7 @@ import { StatefulComponent } from '../common/stateful-component';
 
 @Component({
   selector: 'gpf-variant-types',
-  templateUrl: './variant-types.component.html',
-  styleUrls: ['./variant-types.component.css'],
+  templateUrl: './variant-types.component.html'
 })
 export class VariantTypesComponent extends StatefulComponent implements OnChanges {
   @Input() public variantTypes: Set<string> = new Set<string>([]);

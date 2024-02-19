@@ -1,7 +1,7 @@
 import { registerDecorator, ValidationOptions, ValidationArguments } from 'class-validator';
 
 export function IsLessThanOrEqual(property: string, validationOptions?: ValidationOptions) {
-   return function (object: Object, propertyName: string) {
+  return function(object: Object, propertyName: string) {
     registerDecorator({
       name: 'isLessThanOrEqual',
       target: object.constructor,
@@ -9,12 +9,12 @@ export function IsLessThanOrEqual(property: string, validationOptions?: Validati
       options: validationOptions,
       constraints: [property],
       validator: {
-        validate(value: any, args: ValidationArguments): boolean {
+        validate: function(value: any, args: ValidationArguments): boolean {
           const [relatedPropertyName] = args.constraints;
           try {
-            const relatedValue = relatedPropertyName.split('.').reduce((a, b) => a[b], (args.object as any));
+            const relatedValue = relatedPropertyName.split('.').reduce((a, b) => a[b], args.object as any);
             if (relatedValue === null) {
-            return true;
+              return true;
             }
             return typeof value === 'number' &&
                typeof relatedValue === 'number' &&
@@ -23,11 +23,11 @@ export function IsLessThanOrEqual(property: string, validationOptions?: Validati
             return false;
           }
         },
-        defaultMessage(args: ValidationArguments): string {
+        defaultMessage: function(args: ValidationArguments): string {
           const [relatedPropertyName] = args.constraints;
           return `${propertyName} should be less than or equal to ${relatedPropertyName}`;
         }
       }
     });
-   };
+  };
 }

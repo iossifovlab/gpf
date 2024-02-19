@@ -1,4 +1,4 @@
-import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NgxsModule } from '@ngxs/store';
 import { CheckboxListComponent, DisplayNamePipe } from 'app/checkbox-list/checkbox-list.component';
 import { ErrorsAlertComponent } from 'app/errors-alert/errors-alert.component';

@@ -3,8 +3,7 @@ import { ActivatedRoute, Params } from '@angular/router';
 
 @Component({
   selector: 'gpf-genotype-browser-single-view',
-  templateUrl: './genotype-browser-single-view.component.html',
-  styleUrls: ['./genotype-browser-single-view.component.css']
+  templateUrl: './genotype-browser-single-view.component.html'
 })
 export class GenotypeBrowserSingleViewComponent implements OnInit {
   public selectedDatasetId: string;

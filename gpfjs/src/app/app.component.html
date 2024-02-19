@@ -5,20 +5,8 @@
       <div class="col-10" style="display: flex; align-items: center; padding-left: 0">
         <img src="{{ imgPathPrefix }}logo-64x64.png" />
         <h3 id="title" [title]="title">{{ title }}</h3>
-        <a
-          [routerLink]="'/home'"
-          routerLinkActive="highlighted-route"
-          title="Home"
-          id="home"
-          >Home</a
-        >
-        <a
-          [routerLink]="'/datasets'"
-          routerLinkActive="highlighted-route"
-          title="Datasets"
-          id="datasets"
-          >Datasets</a
-        >
+        <a [routerLink]="'/home'" routerLinkActive="highlighted-route" title="Home" id="home">Home</a>
+        <a [routerLink]="'/datasets'" routerLinkActive="highlighted-route" title="Datasets" id="datasets">Datasets</a>
         <a
           *ngIf="geneProfilesConfig"
           [routerLink]="'/gene-profiles'"
@@ -43,13 +31,7 @@
           id="user-profile"
           >User Profile</a
         >
-        <a
-          [routerLink]="'/about'"
-          routerLinkActive="highlighted-route"
-          title="About"
-          id="about"
-          >About</a
-        >
+        <a [routerLink]="'/about'" routerLinkActive="highlighted-route" title="About" id="about">About</a>
       </div>
       <div class="col-2" style="padding-right: 0">
         <gpf-users></gpf-users>

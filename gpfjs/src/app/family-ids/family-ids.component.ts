@@ -7,8 +7,7 @@ import { StatefulComponent } from 'app/common/stateful-component';
 
 @Component({
   selector: 'gpf-family-ids',
-  templateUrl: './family-ids.component.html',
-  styleUrls: ['./family-ids.component.css'],
+  templateUrl: './family-ids.component.html'
 })
 export class FamilyIdsComponent extends StatefulComponent implements OnInit {
   @ValidateNested()
