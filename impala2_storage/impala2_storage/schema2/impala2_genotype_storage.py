@@ -137,11 +137,11 @@ class Impala2GenotypeStorage(GenotypeStorage):
         has_tables = storage_config and storage_config.get("tables")
         tables = storage_config["tables"] if has_tables else None
 
-        family_table = f"{study_id}_family_alleles"
+        family_table = f"{study_id}_family"
         if has_tables and tables.get("family"):
             family_table = tables["family"]
 
-        summary_table = f"{study_id}_summary_alleles"
+        summary_table = f"{study_id}_summary"
         if has_tables and tables.get("summary"):
             summary_table = tables["summary"]
 
@@ -282,7 +282,7 @@ class Impala2GenotypeStorage(GenotypeStorage):
 
     @staticmethod
     def _construct_variant_tables(study_id: str) -> Tuple[str, str]:
-        return f"{study_id}_summary_alleles", f"{study_id}_family_alleles"
+        return f"{study_id}_summary", f"{study_id}_family"
 
     @staticmethod
     def _construct_pedigree_table(study_id: str) -> str:
