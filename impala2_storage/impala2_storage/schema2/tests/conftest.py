@@ -200,7 +200,9 @@ def run_denovo2schema2(
 def run_ped2parquet(ped_file: str, output_dir: str) -> str:
     pedigree = FamiliesLoader(ped_file).load()
     output_filename = os.path.join(output_dir, "pedigree", "pedigree_parquet")
-    ParquetWriter.families_to_parquet(pedigree, output_filename)
+    ParquetWriter.families_to_parquet(
+        pedigree, output_filename,
+        S2VariantsWriter)
     return output_filename
 
 
