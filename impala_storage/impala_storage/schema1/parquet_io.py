@@ -3,7 +3,8 @@ import os
 import sys
 import time
 import logging
-from typing import List, Union, Dict, Any, Optional
+import functools
+from typing import List, Union, Dict, Any, Optional, Callable
 
 from copy import copy
 from urllib.parse import urlparse
@@ -11,7 +12,7 @@ from urllib.parse import urlparse
 import toml
 
 import numpy as np
-
+import pandas as pd
 import pyarrow as pa
 from pyarrow import fs as pa_fs
 import pyarrow.parquet as pq
@@ -25,7 +26,8 @@ from dae.variants.family_variant import FamilyAllele, FamilyVariant, \
     calculate_simple_best_state
 from dae.variants.variant import SummaryVariant, SummaryAllele
 from dae.parquet.partition_descriptor import PartitionDescriptor
-from dae.parquet.parquet_writer import AbstractVariantsParquetWriter
+from dae.parquet.parquet_writer import AbstractVariantsParquetWriter, \
+    save_ped_df_to_parquet
 from dae.variants_loaders.raw.loader import VariantsLoader
 from dae.pedigrees.family import Family
 
@@ -157,7 +159,7 @@ class VariantsParquetWriter(AbstractVariantsParquetWriter):
             self.variants_loader.annotation_schema, extra_attributes)
 
     @staticmethod
-    def build(
+    def build_variants_writer(
         out_dir: str,
         variants_loader: VariantsLoader,
         partition_descriptor: PartitionDescriptor,
@@ -174,6 +176,14 @@ class VariantsParquetWriter(AbstractVariantsParquetWriter):
             rows=rows,
             include_reference=include_reference,
         )
+
+    @staticmethod
+    def build_pedigree_writer() -> Callable[
+            [pd.DataFrame, str, Optional[fsspec.AbstractFileSystem]], None]:
+        """Build a variants parquet writer object."""
+        return functools.partial(
+            save_ped_df_to_parquet,
+            parquet_version="1.0")
 
     @staticmethod
     def _setup_reference_allele(

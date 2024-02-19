@@ -54,7 +54,9 @@ class Schema2ImportStorage(ImportStorage):
         layout = schema2_project_dataset_layout(project)
         ParquetWriter.write_pedigree(
             layout.pedigree, project.get_pedigree(),
-            cls._get_partition_description(project))
+            cls._get_partition_description(project),
+            VariantsParquetWriter,
+        )
 
     @classmethod
     def _do_write_meta(cls, project: ImportProject) -> None:

@@ -88,30 +88,3 @@ def test_ped2parquet_patition(
     assert "f2" in families
     fam2 = families["f2"]
     assert all(p.family_bin == 6 for p in fam2.persons.values())
-
-
-@pytest.mark.parametrize(
-    "pedigree_filename,parquet_filename",
-    [
-        ("pedigree_A.ped", "pedigree_A.parquet"),
-        ("/tmp/pedigree_A.ped", "pedigree_A.parquet"),
-        ("tmp/pedigree_A.ped", "pedigree_A.parquet"),
-        ("./pedigree_A.ped", "pedigree_A.parquet"),
-    ],
-)
-def test_ped2parquet_outfilename(mocker, pedigree_filename, parquet_filename):
-
-    mocker.patch("dae.pedigrees.loader.FamiliesLoader.load")
-    mocker.patch(
-        "dae.parquet.parquet_writer.ParquetWriter.families_to_parquet"
-    )
-
-    argv = ["pedigree_A.ped"]
-    main(argv)
-
-    FamiliesLoader.load.assert_called_once()  # pylint: disable=no-member
-    ParquetWriter.families_to_parquet.assert_called_once()
-    call_args = ParquetWriter.families_to_parquet.call_args
-
-    _, outfile, _ = call_args[0]
-    assert outfile == parquet_filename

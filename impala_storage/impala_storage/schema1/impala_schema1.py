@@ -49,7 +49,8 @@ class ImpalaSchema1ImportStorage(ImportStorage):
         ped_filename = cls._pedigree_filename(project)
         ParquetWriter.write_pedigree(
             ped_filename, project.get_pedigree(),
-            cls._get_partition_description(project))
+            cls._get_partition_description(project),
+            S1VariantsWriter)
         elapsed = time.time() - start
         logger.info("prepare pedigree elapsed %.2f sec", elapsed)
         project.stats[("elapsed", "pedigree")] = elapsed

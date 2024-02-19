@@ -2,12 +2,13 @@ import os
 import time
 import logging
 import json
-from functools import reduce
-from typing import Any, Optional, cast
+import functools
+from typing import Any, Optional, cast, Callable
 import toml
 
 import fsspec
 
+import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
 
@@ -20,7 +21,7 @@ from dae.utils.variant_utils import is_all_reference_genotype, \
 
 from dae.variants.variant import SummaryAllele
 from dae.parquet.parquet_writer import AbstractVariantsParquetWriter, \
-    collect_pedigree_parquet_schema, ParquetWriter
+    collect_pedigree_parquet_schema, ParquetWriter, save_ped_df_to_parquet
 from dae.parquet.schema2.serializers import AlleleParquetSerializer
 from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.variants_loaders.raw.loader import VariantsLoader
@@ -61,7 +62,8 @@ class ContinuousParquetFileWriter:
         filesystem, filepath = url_to_pyarrow_fs(filepath, filesystem)
         self._writer = pq.ParquetWriter(
             filepath, self.schema, compression="snappy", filesystem=filesystem,
-            version="1.0", use_compliant_nested_type=True
+            # version="1.0",
+            use_compliant_nested_type=True
         )
         self.rows = rows
         self._data: Optional[dict[str, Any]] = None
@@ -171,7 +173,7 @@ class VariantsParquetWriter(AbstractVariantsParquetWriter):
         )
 
     @staticmethod
-    def build(
+    def build_variants_writer(
         out_dir: str,
         variants_loader: VariantsLoader,
         partition_descriptor: PartitionDescriptor,
@@ -189,6 +191,14 @@ class VariantsParquetWriter(AbstractVariantsParquetWriter):
             include_reference=include_reference,
             filesystem=filesystem,
         )
+
+    @staticmethod
+    def build_pedigree_writer() -> Callable[
+            [pd.DataFrame, str, Optional[fsspec.AbstractFileSystem]], None]:
+        """Build a variants parquet writer object."""
+        return functools.partial(
+            save_ped_df_to_parquet,
+            parquet_version=None)
 
     def _build_family_filename(
         self, allele: FamilyAllele,
@@ -318,7 +328,7 @@ class VariantsParquetWriter(AbstractVariantsParquetWriter):
 
                 for aa in family_alleles:
                     fa = cast(FamilyAllele, aa)
-                    seen_in_status[fa.allele_index] = reduce(
+                    seen_in_status[fa.allele_index] = functools.reduce(
                         lambda t, s: t | s.value,  # type: ignore
                         filter(None, fa.allele_in_statuses),
                         seen_in_status[fa.allele_index])
@@ -481,7 +491,7 @@ class VariantsParquetWriter(AbstractVariantsParquetWriter):
         pq.write_table(
             metadata_table,
             metapath,
-            version="1.0"
+            # version="1.0"
         )
 
     def write_dataset(self) -> list[str]:

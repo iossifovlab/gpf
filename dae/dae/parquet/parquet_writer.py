@@ -3,7 +3,7 @@ from __future__ import annotations
 import abc
 import os
 import logging
-from typing import Optional
+from typing import Optional, Callable
 from typing_extensions import Protocol
 
 import fsspec
@@ -75,7 +75,8 @@ def collect_pedigree_parquet_schema(ped_df: pd.DataFrame) -> pa.Schema:
 
 def save_ped_df_to_parquet(
         ped_df: pd.DataFrame, filename: str,
-        filesystem: Optional[fsspec.AbstractFileSystem] = None) -> None:
+        filesystem: Optional[fsspec.AbstractFileSystem] = None,
+        parquet_version: Optional[str] = None) -> None:
     """Save ped_df as a parquet file named filename."""
     ped_df = ped_df.copy()
 
@@ -95,7 +96,11 @@ def save_ped_df_to_parquet(
     table = pa.Table.from_pandas(ped_df, schema=pps)
     filesystem, filename = url_to_pyarrow_fs(filename, filesystem)
 
-    pq.write_table(table, filename, filesystem=filesystem, version="1.0")
+    pq.write_table(
+        table, filename,
+        filesystem=filesystem,
+        version=parquet_version
+    )
 
 
 class AbstractVariantsParquetWriter(abc.ABC):
@@ -123,7 +128,7 @@ class AbstractVariantsParquetWriter(abc.ABC):
 
     @staticmethod
     @abc.abstractmethod
-    def build(
+    def build_variants_writer(
         out_dir: str,
         variants_loader: VariantsLoader,
         partition_descriptor: PartitionDescriptor,
@@ -134,12 +139,18 @@ class AbstractVariantsParquetWriter(abc.ABC):
     ) -> AbstractVariantsParquetWriter:
         """Build a variants parquet writed."""
 
+    @staticmethod
+    @abc.abstractmethod
+    def build_pedigree_writer() -> Callable[
+            [pd.DataFrame, str, Optional[fsspec.AbstractFileSystem]], None]:
+        """Build a variants parquet writer object."""
+
 
 class ParquetWriterBuilder(Protocol):
     """Defines a parquet writer builder type protocol."""
 
     @staticmethod
-    def build(
+    def build_variants_writer(
         out_dir: str,
         variants_loader: VariantsLoader,
         partition_descriptor: PartitionDescriptor,
@@ -150,6 +161,11 @@ class ParquetWriterBuilder(Protocol):
     ) -> AbstractVariantsParquetWriter:
         """Build a variants parquet writer object."""
 
+    @staticmethod
+    def build_pedigree_writer() -> Callable[
+            [pd.DataFrame, str, Optional[fsspec.AbstractFileSystem]], None]:
+        """Build a variants parquet writer object."""
+
 
 class ParquetWriter:
     """Implement writing variants and pedigrees parquet files."""
@@ -158,7 +174,8 @@ class ParquetWriter:
     def families_to_parquet(
         families: FamiliesData,
         pedigree_filename: str,
-        partition_descriptor: Optional[PartitionDescriptor] = None
+        parquet_writer_builder: ParquetWriterBuilder,
+        partition_descriptor: Optional[PartitionDescriptor] = None,
     ) -> None:
         """Save families data into a parquet file."""
         ParquetWriter.fill_family_bins(families, partition_descriptor)
@@ -166,8 +183,8 @@ class ParquetWriter:
         dirname = os.path.dirname(pedigree_filename)
         if dirname:
             os.makedirs(dirname, exist_ok=True)
-
-        save_ped_df_to_parquet(families.ped_df, pedigree_filename)
+        pedigree_writer = parquet_writer_builder.build_pedigree_writer()
+        pedigree_writer(families.ped_df, pedigree_filename, None)
 
     @staticmethod
     def fill_family_bins(
@@ -189,13 +206,13 @@ class ParquetWriter:
         out_dir: str,
         variants_loader: VariantsLoader,
         partition_descriptor: PartitionDescriptor,
-        variants_writer_builder: ParquetWriterBuilder,
+        parquet_writer_builder: ParquetWriterBuilder,
         bucket_index: int = 1,
         rows: int = 100_000,
         include_reference: bool = False,
     ) -> None:
         """Read variants from variant_loader and store them in parquet."""
-        variants_writer = variants_writer_builder.build(
+        variants_writer = parquet_writer_builder.build_variants_writer(
             out_dir,
             variants_loader,
             partition_descriptor,
@@ -213,7 +230,7 @@ class ParquetWriter:
         partition_description: PartitionDescriptor,
         bucket: Bucket,
         project: ImportProject,
-        variants_writer_builder: ParquetWriterBuilder
+        parquet_writer_builder: ParquetWriterBuilder
     ) -> None:
         """Write variants to the corresponding parquet files."""
         if bucket.region_bin is not None and bucket.region_bin != "none":
@@ -228,7 +245,7 @@ class ParquetWriter:
             out_dir,
             variants_loader,
             partition_description,
-            variants_writer_builder,
+            parquet_writer_builder,
             bucket_index=bucket.index,
             rows=rows,
             include_reference=project.include_reference,
@@ -239,10 +256,10 @@ class ParquetWriter:
         out_dir: str,
         variants_loader: VariantsLoader,
         partition_description: PartitionDescriptor,
-        variants_writer_builder: ParquetWriterBuilder
+        parquet_writer_builder: ParquetWriterBuilder
     ) -> None:
         """Write dataset metadata."""
-        variants_writer = variants_writer_builder.build(
+        variants_writer = parquet_writer_builder.build_variants_writer(
             out_dir,
             variants_loader,
             partition_description,
@@ -253,11 +270,14 @@ class ParquetWriter:
     def write_pedigree(
         output_filename: str,
         families: FamiliesData,
-        partition_descriptor: PartitionDescriptor
+        partition_descriptor: PartitionDescriptor,
+        parquet_writer_builder: ParquetWriterBuilder
     ) -> None:
         """Write FamiliesData to a pedigree parquet file."""
         ParquetWriter.families_to_parquet(
-            families, output_filename, partition_descriptor)
+            families, output_filename,
+            parquet_writer_builder,
+            partition_descriptor,)
 
     @staticmethod
     def merge_parquets(

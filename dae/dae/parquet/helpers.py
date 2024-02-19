@@ -72,7 +72,9 @@ def _try_merge_parquets(
                     out_filesystem, out_filename = url_to_pyarrow_fs(out_file)
                     out_parquet = pq.ParquetWriter(
                         out_filename, parq_file.schema_arrow,
-                        filesystem=out_filesystem, version="1.0")
+                        filesystem=out_filesystem,
+                        # version="1.0"
+                    )
 
                 for batch in parq_file.iter_batches():
                     out_parquet.write_batch(batch)
