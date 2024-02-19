@@ -82,10 +82,11 @@ test.describe('Dataset description access rights tests', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.instanceUrl, {waitUntil: 'load'});
     await utils.loginAdmin(page);
-    await utils.navigateToDatasetPage(page, utils.datasetIds.compAll, 'Dataset description');
+    // await utils.navigateToDatasetPage(page, utils.datasetIds.compAll, 'Dataset description');
   });
 
   test('should always show the dataset description button if the user is admin', async({ page }) => {
+    await page.locator('#header a:text("Datasets")').click();
     await utils.navigateToDatasetPage(page, utils.datasetIds.allGenotypes, 'Gene browser');
     await expect(page.getByText('Dataset Description')).toBeVisible();
     await utils.navigateToDatasetPage(page, utils.datasetIds.compGenotypes, 'Gene browser');
@@ -129,7 +130,7 @@ test.describe('Dataset description access rights tests', () => {
   test('should log admin, give researcher user access rights for iossifov_2014,' +
        'create dataset description for iossifov_2014, log researcher user and check ' +
        'whether the newly created description exists and that it cannot be edited', async({ page }) => {
-    await utils.navigateToSidenavPage(page, utils.sidenavPageLinks.management);
+    await page.locator('a:text("Management")').click();
 
     await page.locator('[id="user_iossifov_2014@iossifovlab.com-groups-cell"]').getByText('Add').click();
     await page.waitForSelector('.add-item-button');
@@ -139,7 +140,7 @@ test.describe('Dataset description access rights tests', () => {
     await page.getByRole('button', { name: 'iossifov_2014' }).click();
     await page.mouse.click(0, 0); // close the menu
 
-    await utils.navigateToSidenavPage(page, utils.sidenavPageLinks.datasets);
+    await page.locator('#header a:text("Datasets")').click();
     await utils.navigateToDatasetPage(page, utils.datasetIds.iossifov2014, 'Dataset description');
     await page.locator('#edit-icon').click();
     await page.locator('.editor textarea').fill('IOSSIFOV TEST DESCRIPTION');
@@ -158,7 +159,7 @@ test.describe('Dataset description access rights tests', () => {
     await page.locator('.editor textarea').fill('');
     await page.getByText('Save').click();
 
-    await utils.navigateToSidenavPage(page, utils.sidenavPageLinks.management);
+    await page.locator('a:text("User Management")').click();
     await page.locator(
       '[id="user_iossifov_2014@iossifovlab.com-groups-cell"] #iossifov_2014-list-item gpf-confirm-button'
     ).click();

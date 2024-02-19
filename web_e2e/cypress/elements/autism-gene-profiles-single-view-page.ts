@@ -3,7 +3,7 @@ import { BasePage, sidenavPageLinks } from './utils';
 
 export class AutismGeneProfilesSingleViewPage extends BasePage {
   public get window(): element {
-    return cy.get('gpf-autism-gene-profile-single-view');
+    return cy.get('gpf-gene-profiles-single-view');
   }
 
   public openSingleViewPage(geneSymbol: string): void {
@@ -18,7 +18,7 @@ export class AutismGeneProfilesSingleViewPage extends BasePage {
   }
 
   public get header(): element {
-    return cy.get('gpf-autism-gene-profile-single-view h2');
+    return cy.get('gpf-gene-profiles-single-view h2');
   }
 
   public get geneBrowserLink(): element {

@@ -4,7 +4,7 @@ import * as utils from './utils';
 test.describe('Gene profiles single view tests', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.instanceUrl, {waitUntil: 'load'});
-    await utils.navigateToSidenavPage(page, 'gene-profiles');
+    await page.locator('#header a:text("Gene Profiles")').click();
     await page.locator('input#gene-search-input').focus();
     await page.keyboard.type('CHD8');
     await page.locator('div').filter({ hasText: /^CHD8$/}).click();
@@ -13,8 +13,8 @@ test.describe('Gene profiles single view tests', () => {
 
   test('should display header', async({ context }) => {
     const targetPage = context.pages()[1];
-    expect(targetPage.locator('gpf-gene-profile-single-view h2')).toBeTruthy();
-    await expect(targetPage.locator('gpf-gene-profile-single-view h2')).toHaveText('CHD8');
+    expect(targetPage.locator('gpf-gene-profiles-single-view h2')).toBeTruthy();
+    await expect(targetPage.locator('gpf-gene-profiles-single-view h2')).toHaveText('CHD8');
   });
 
   test('should display the autism scores table', async({ context }) => {
@@ -66,7 +66,7 @@ test.describe('Gene profiles single view links tests', () => {
   let CHD8Page: Page;
   test.beforeEach(async({ page, context }) => {
     await page.goto(utils.instanceUrl, {waitUntil: 'load'});
-    await utils.navigateToSidenavPage(page, 'gene-profiles');
+    await page.locator('#header a:text("Gene Profiles")').click();
     await page.locator('input#gene-search-input').focus();
     await page.keyboard.type('CHD8');
     const pagePromise = context.waitForEvent('page');
@@ -104,7 +104,7 @@ test.describe.skip('Gene profiles single view dataset table tests', () => {
   test.beforeEach(async({ page, context }) => {
     await page.goto(utils.instanceUrl, {waitUntil: 'load'});
     await utils.loginAdmin(page);
-    await utils.navigateToSidenavPage(page, 'gene-profiles');
+    await page.locator('#header a:text("Gene Profiles")').click();
     await page.locator('input#gene-search-input').fill('GRIN2B');
     const pagePromise = context.waitForEvent('page');
     await page.locator('div').filter({ hasText: /^GRIN2B$/}).click();
@@ -187,7 +187,7 @@ test.describe('Gene profiles single view dynamic data tests', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.instanceUrl, {waitUntil: 'load'});
     await utils.loginAdmin(page);
-    await utils.navigateToSidenavPage(page, 'gene-profiles');
+    await page.locator('#header a:text("Gene Profiles")').click();
   });
 
   test('should compare all data in single view for GRIN2B', async({ page, context }) => {

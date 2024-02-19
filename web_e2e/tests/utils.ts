@@ -28,12 +28,6 @@ export const toolPageLinks = {
   geneBrowser: 'gene-browser'
 };
 
-export const sidenavPageLinks = {
-  datasets: 'datasets',
-  userProfile: 'user-profile',
-  autismGeneProfiles: 'autism-gene-profiles',
-  management: 'management'
-};
 export async function logout(page: Page): Promise<void> {
   await page.getByRole('button', { name: 'Log Out' }).click();
 }
@@ -53,7 +47,6 @@ export async function login(page: Page, user = username, pass = password): Promi
   ]);
 
   await page.waitForSelector('#log-out-button');
-  await expect(page.getByText('Loading datasets...')).not.toBeVisible();
 }
 
 export async function loginAdmin(page: Page, user = username, pass = password): Promise<void> {
@@ -65,17 +58,13 @@ export async function navigateToHome(page: Page, dataset = 'ALL_genotypes'): Pro
 }
 
 export async function navigateToDatasetPage(page: Page, dataset: string, tool: string): Promise<void> {
+  await page.locator('#header a:text("Datasets")').click();
+  await page.waitForSelector('gpf-datasets');
+  await expect(page.getByText('Loading datasets...')).not.toBeVisible();
   await page.locator('#datasets-dropdown-menu-button').click();
   await page.locator('a').filter({ hasText: dataset }).click();
   await expect(page.locator('#datasets-dropdown-menu-button')).toHaveText(dataset);
   await page.locator('a').filter({ hasText: `${tool}`}).click();
-}
-
-export async function navigateToSidenavPage(page: Page, sidenavPageLink: string): Promise<void> {
-  await page.locator('#sidenav-toggle-button').dispatchEvent('click');
-  await page.locator('.sidenav').locator(`a[routerlink="/${sidenavPageLink}"]`).dispatchEvent('click');
-  await page.locator('#sidenav-toggle-button').dispatchEvent('scroll');
-  await expect(page.locator('.sidenav').first()).not.toBeVisible();
 }
 
 export function readFile(name): Promise<unknown> {
@@ -98,7 +87,7 @@ export function getRandomString(): string {
 export async function createUser(page: Page, email: string, name: string): Promise<void> {
   await page.locator('#create-user-form-button').click();
 
-  await page.waitForSelector('.grid-container.ng-star-inserted'); // In case of duplicates
+  await page.waitForSelector('.grid-container'); // In case of duplicates
   if (await page.locator(`[id="${email}-user-cell"]`).isVisible() === true) {
     await page.locator(`[id="${email}-delete-user-button"]`).click();
     await page.locator('button:text("Delete")').click();

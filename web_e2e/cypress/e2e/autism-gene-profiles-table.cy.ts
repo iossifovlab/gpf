@@ -1,14 +1,14 @@
-import { AutismGeneProfilesTablePage } from 'cypress/elements/autism-gene-profiles-table-page';
+import { GeneProfilesTablePage } from 'cypress/elements/autism-gene-profiles-table-page';
 import { GenotypeBlockPage } from 'cypress/elements/genotype-block-page';
 import { sidenavPageLinks } from 'cypress/elements/utils';
 
 describe('Autism gene profiles table tests', () => {
-  const page = new AutismGeneProfilesTablePage();
+  const page = new GeneProfilesTablePage();
 
   before(() => {
     page.cleanup();
     page.navigateToHome(false);
-    page.navigateToSidenavPage(sidenavPageLinks.autismGeneProfiles);
+    page.navigateToSidenavPage(sidenavPageLinks.geneProfiles);
   });
 
   it('should display table', () => {
@@ -30,7 +30,7 @@ describe('Autism gene profiles table tests', () => {
 });
 
 describe('Autism gene profiles table row data tests', () => {
-  const page = new AutismGeneProfilesTablePage();
+  const page = new GeneProfilesTablePage();
 
   before(() => {
     page.cleanup();
@@ -38,7 +38,7 @@ describe('Autism gene profiles table row data tests', () => {
 
   beforeEach(() => {
     page.navigateToHome(false);
-    page.navigateToSidenavPage(sidenavPageLinks.autismGeneProfiles);
+    page.navigateToSidenavPage(sidenavPageLinks.geneProfiles);
   });
 
   [
@@ -58,11 +58,11 @@ describe('Autism gene profiles table row data tests', () => {
 });
 
 describe('Autism gene profiles table column filtering tests', {scrollBehavior: false}, () => {
-  const page = new AutismGeneProfilesTablePage();
+  const page = new GeneProfilesTablePage();
 
   beforeEach(() => {
     page.navigateToHome(false);
-    page.navigateToSidenavPage(sidenavPageLinks.autismGeneProfiles);
+    page.navigateToSidenavPage(sidenavPageLinks.geneProfiles);
   });
 
   it('should open autism gene sets dropdown after clicking on the autism gene sets columns filtering button', () => {
@@ -199,7 +199,7 @@ describe('Autism gene profiles table column filtering tests', {scrollBehavior: f
 });
 
 describe('Autism gene profiles gene comparison tests', {scrollBehavior: false}, () => {
-  const page = new AutismGeneProfilesTablePage();
+  const page = new GeneProfilesTablePage();
   const oddHighlightColor = 'rgb(247, 247, 203)';
   const evenHighlightColor = 'rgb(255, 255, 214)';
 
@@ -209,7 +209,7 @@ describe('Autism gene profiles gene comparison tests', {scrollBehavior: false}, 
 
   beforeEach(() => {
     page.navigateToHome(false);
-    page.navigateToSidenavPage(sidenavPageLinks.autismGeneProfiles);
+    page.navigateToSidenavPage(sidenavPageLinks.geneProfiles);
   });
 
   it('should highlight a row using control+click and change it\'s background color', () => {
@@ -297,7 +297,7 @@ describe('Autism gene profiles gene comparison tests', {scrollBehavior: false}, 
 });
 
 describe('Autism gene profiles table functionality tests', () => {
-  const page = new AutismGeneProfilesTablePage();
+  const page = new GeneProfilesTablePage();
 
   before(() => {
     page.cleanup();
@@ -305,7 +305,7 @@ describe('Autism gene profiles table functionality tests', () => {
 
   beforeEach(() => {
     page.navigateToHome(false);
-    page.navigateToSidenavPage(sidenavPageLinks.autismGeneProfiles);
+    page.navigateToSidenavPage(sidenavPageLinks.geneProfiles);
   });
 
   it('should sort genes by autism gene sets', () => {
@@ -516,7 +516,7 @@ describe('Autism gene profiles table functionality tests', () => {
     });
   });
 
-  it.only('should test statistic to genotype browser test', () => {
+  it('should test statistic to genotype browser test', () => {
     page.loginAdmin(true);
 
     cy.intercept({

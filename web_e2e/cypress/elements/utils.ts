@@ -43,13 +43,14 @@ export const toolPageLinks = {
   phenotypeBrowser: 'phenotype-browser',
   phenotypeTool: 'phenotype-tool',
   enrichmentTool: 'enrichment-tool',
-  geneBrowser: 'gene-browser'
+  geneBrowser: 'gene-browser',
+  home: 'home'
 };
 
 export const sidenavPageLinks = {
   datasets: 'datasets',
   userProfile: 'user-profile',
-  autismGeneProfiles: 'autism-gene-profiles',
+  geneProfiles: 'gene-profiles',
   management: 'management'
 };
 
@@ -126,13 +127,10 @@ export class BasePage {
 
   public logout(hasAccessRights = false): void {
     const usersPage = new UsersPage();
-    cy.intercept('GET', '/gpf/api/v3/datasets/ALL_genotypes').as('allGenotypesRequest');
 
     usersPage.logOutButton.click();
 
-    cy.location('pathname').should('eq', `/gpf/datasets/ALL_genotypes/${toolPageLinks.geneBrowser}`);
-    cy.wait('@allGenotypesRequest');
-    this.waitForPageToLoad(toolPageLinks.geneBrowser, hasAccessRights);
+    cy.location('pathname').should('eq', `/gpf/${toolPageLinks.home}`);
   }
 
   public navigateToDatasetPage(dataset: string, page: string, hasAccessRights = true): void {
@@ -171,7 +169,7 @@ export class BasePage {
         case sidenavPageLinks.userProfile:
           cy.get('gpf-user-profile').should('be.visible');
           break;
-        case sidenavPageLinks.autismGeneProfiles:
+        case sidenavPageLinks.geneProfiles:
           cy.get('.row-cell').eq(0).should('be.visible');
           break;
         case sidenavPageLinks.management:
@@ -214,10 +212,7 @@ export class BasePage {
   }
 
   public navigateToSidenavPage(sidenavPageLink: string): void {
-    this.sidenavTogglerButton.scrollIntoView().then(() => {
-      this.toggleSidenav();
-    });
-    cy.get(`div.sidenav a[routerlink="/${sidenavPageLink}"]`).click({scrollBehavior: false});
+    cy.get(`a[href="/gpf/${sidenavPageLink}"]`).click();
     this.waitForPageToLoad(sidenavPageLink);
   }
 

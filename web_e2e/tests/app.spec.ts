@@ -23,7 +23,7 @@ test.describe('App tests', () => {
     expect(titleText).toBe('GPF: Genotypes and Phenotypes in Families');
   });
 
-  test('should toggle sidenav, click on the "Datasets" button and ' +
+  test('should click on the "Datasets" button and ' +
      'navigate to "/datasets/ALL_genotypes/gene-browser"', async({ page }) => {
     const expectedUrl = `${utils.instanceUrl}/datasets/ALL_genotypes/${utils.toolPageLinks.geneBrowser}`;
 
@@ -35,41 +35,41 @@ test.describe('App tests', () => {
     expect(currentUrl).toBe(expectedUrl);
   });
 
-  test('should toggle sidenav, click on the "User profile" button and navigate to "/user-profile"', async({
+  test('should click on the "User profile" button and navigate to "/user-profile"', async({
     page
   }) => {
     const savedQueriesUrl = `${utils.instanceUrl}/user-profile`;
 
     await utils.loginAdmin(page);
-    await utils.navigateToSidenavPage(page, utils.sidenavPageLinks.userProfile);
+    await page.locator('a:text("User Profile")').click();
 
     const currentUrl = page.url();
 
     expect(currentUrl).toBe(savedQueriesUrl);
   });
 
-  test('should toggle sidenav, click on the "Management" button and navigate to "/management"', async({ page }) => {
+  test('should click on the "User Management" button and navigate to "/management"', async({ page }) => {
     const managementUrl = `${utils.instanceUrl}/management`;
 
     await utils.loginAdmin(page);
 
-    await utils.navigateToSidenavPage(page, utils.sidenavPageLinks.management);
+    await page.locator('a:text("User Management")').click();
 
     const currentUrl = page.url();
 
     expect(currentUrl).toBe(managementUrl);
   });
 
-  test('should toggle sidenav, click on the "Autism gene profiles" button and ' +
+  test('should click on the "Gene profiles" button and ' +
      'navigate to "/autism-gene-profiles"', async({ page }) => {
-    const autismGeneProfilesUrl = `${utils.instanceUrl}/autism-gene-profiles`;
+    const geneProfilesUrl = `${utils.instanceUrl}/gene-profiles`;
 
     await utils.loginAdmin(page);
-    await utils.navigateToSidenavPage(page, utils.sidenavPageLinks.autismGeneProfiles);
+    await page.locator('a:text("Gene Profiles")').click();
 
     const currentUrl = page.url();
 
-    expect(currentUrl).toBe(autismGeneProfilesUrl);
+    expect(currentUrl).toBe(geneProfilesUrl);
   });
 });
 
@@ -79,22 +79,22 @@ test.describe('App user access rights tests', () => {
       username: undefined,
       password: undefined,
       hasDatasetRights: false,
-      sidenavElementsCount: 2,
-      sidenavElements: ['Datasets', 'Autism gene profiles']
+      navigationTabsCount: 2,
+      navigationTabs: ['Datasets', 'Gene profiles']
     },
     normal: {
       username: 'research@iossifovlab.com',
       password: 'secret',
       hasDatasetRights: false,
-      sidenavElementsCount: 3,
-      sidenavElements: ['Datasets', 'Autism gene profiles', 'User profile']
+      navigationTabsCount: 5,
+      navigationTabs: ['Home', 'Datasets', 'Gene profiles', 'User profile', 'About']
     },
     admin: {
       username: 'admin@iossifovlab.com',
       password: 'secret',
       hasDatasetRights: true,
-      sidenavElementsCount: 4,
-      sidenavElements: ['Datasets', 'Autism gene profiles', 'User profile', 'Management']
+      navigationTabsCount: 6,
+      navigationTabs: ['Home', 'Datasets', 'Gene profiles', 'User profile', 'User Management', 'About']
     }
   };
 
@@ -106,16 +106,14 @@ test.describe('App user access rights tests', () => {
   Object.values(userData).filter(
     login => login.username !== undefined && login.password !== undefined
   ).forEach(data => {
-    // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-    test(`should toggle sidenav bar with the right elements inside for ${data.username} user`, async({ page }) => {
+    test(`should check navigation bar for the right elements for ${data.username} user`, async({ page }) => {
       await utils.login(page, data.username as string, data.password as string);
-      await expect(page.locator('div.sidenav a.nav-link')).not.toBeVisible();
 
-      await page.locator('#sidenav-toggle-button').click();
-      await expect(page.locator('div.sidenav a.nav-link')).toHaveCount(data.sidenavElementsCount);
+      await expect(page.locator('#header a')).toHaveCount(data.navigationTabsCount);
 
-      await page.locator('#sidenav-toggle-button').click();
-      await expect(page.locator('div.sidenav a.nav-link').first()).not.toBeVisible();
+      for (const tab of data.navigationTabs) {
+        await expect(page.locator('#header a').getByText(tab)).toBeVisible();
+      }
     });
   });
 
@@ -161,6 +159,7 @@ test.describe('App user access rights tests', () => {
 
   test('should login admin and check whether the datasets have the correct opacity value', async({ page }) => {
     await utils.login(page, userData.admin.username, userData.admin.password);
+    await page.locator('a:text("Datasets")').click();
     await page.locator('#datasets-dropdown-menu-button').click();
     await page.waitForSelector('div.dropdown-menu');
 
@@ -171,6 +170,7 @@ test.describe('App user access rights tests', () => {
 
   test('should login researcher and check whether the datasets have the correct opacity value', async({ page }) => {
     await utils.login(page, userData.normal.username, userData.normal.password);
+    await page.locator('a:text("Datasets")').click();
     await expect(page.locator('#permission-denied-prompt')).toBeVisible();
     await page.locator('#datasets-dropdown-menu-button').click();
     await page.waitForSelector('div.dropdown-menu');
@@ -186,8 +186,7 @@ test.describe('App user access rights tests', () => {
     const username = utils.getRandomString();
     const email = `${username}@mail.com`;
 
-    await page.locator('#sidenav-toggle-button').click();
-    await page.locator('a:text("Management")').click();
+    await page.locator('a:text("User Management")').click();
     await utils.createUser(page, email, username);
 
     await page.locator(`[id="${email}-groups-cell"]`).getByRole(
@@ -246,8 +245,7 @@ test.describe('App user access rights tests', () => {
     const username = utils.getRandomString();
     const email = `${username}@mail.com`;
 
-    await page.locator('#sidenav-toggle-button').click();
-    await page.locator('a:text("Management")').click();
+    await page.locator('a:text("User Management")').click();
     await utils.createUser(page, email, username);
 
     await page.locator(`[id="${email}-groups-cell"]`).getByRole(

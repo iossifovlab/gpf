@@ -1,9 +1,9 @@
 import { GenotypeBlockPage } from './genotype-block-page';
 import { BasePage } from './utils';
 
-export class AutismGeneProfilesTablePage extends BasePage {
+export class GeneProfilesTablePage extends BasePage {
   public get window(): element {
-    return cy.get('gpf-autism-gene-profiles-table');
+    return cy.get('gpf-gene-profiles-table');
   }
 
   public get table(): element {
@@ -101,7 +101,7 @@ export class AutismGeneProfilesTablePage extends BasePage {
   public clickSortButton(columnName: string): void {
     cy.get('div').contains(columnName).then(column => {
       cy.wrap(column).parent().within(button => {
-        cy.wrap(button).get('.clickable').click({ multiple: true, force: true});
+        cy.wrap(button).get('.sorting-button').eq(1).click();
       });
     });
   }

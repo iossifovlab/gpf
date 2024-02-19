@@ -27,6 +27,7 @@ test.describe('Variant reports tests', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.instanceUrl, {waitUntil: 'load'});
     await utils.login(page);
+    await page.locator('a:text("Datasets")').click();
     await page.locator('#datasets-dropdown-menu-button').click();
     await page.getByText(utils.datasetIds.iossifov2014, {exact: true}).click();
     await page.getByText('Dataset Statistics').click();
@@ -298,6 +299,7 @@ test.describe('Variant reports download tests', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.instanceUrl, {waitUntil: 'load'});
     await utils.login(page);
+    await page.locator('a:text("Datasets")').click();
     await page.locator('#datasets-dropdown-menu-button').click();
     await page.getByText(utils.datasetIds.iossifov2014, {exact: true}).click();
     await page.getByText('Dataset Statistics').click();
@@ -364,6 +366,7 @@ test.describe('Variant reports Iossifov count tests', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.instanceUrl, {waitUntil: 'load'});
     await utils.login(page);
+    await page.locator('a:text("Datasets")').click();
     await page.locator('#datasets-dropdown-menu-button').click();
     await page.getByText(utils.datasetIds.iossifov2014, {exact: true}).click();
     await page.getByText('Dataset Statistics').click();

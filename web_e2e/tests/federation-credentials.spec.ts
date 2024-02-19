@@ -5,7 +5,7 @@ test.describe('Federation token tests', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.instanceUrl, {waitUntil: 'load'});
     await utils.loginAdmin(page);
-    await utils.navigateToSidenavPage(page, 'user-profile');
+    await page.locator('a:text("User Profile")').click();
     await page.getByText('Federation tokens').click();
   });
 

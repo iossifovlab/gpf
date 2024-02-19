@@ -19,35 +19,35 @@ test.describe('Pheno browser tests', () => {
     test(`should filter the right rows when typing "${data.seachQuery}" in the searchbox`, async({ page }) => {
       await utils.navigateToDatasetPage(page, utils.datasetIds.compAll, 'Phenotype browser');
 
-      await expect(page.locator('gpf-table > div > div.ng-star-inserted')).toHaveCount(8);
+      await expect(page.locator('gpf-table .table-row')).toHaveCount(8);
 
       await page.locator('input.form-control').fill(data.seachQuery);
-      await expect(page.locator('gpf-table > div > div.ng-star-inserted')).toHaveCount(1);
+      await expect(page.locator('gpf-table .table-row')).toHaveCount(1);
     });
   });
 
   test('should filter the right rows when typing "1" in the sarchbox', async({ page }) => {
     await utils.navigateToDatasetPage(page, utils.datasetIds.compAll, 'Phenotype browser');
 
-    await expect(page.locator('gpf-table > div > div.ng-star-inserted')).toHaveCount(8);
+    await expect(page.locator('gpf-table .table-row')).toHaveCount(8);
 
     await page.locator('input.form-control').fill('1');
-    await expect(page.locator('gpf-table > div > div.ng-star-inserted')).toHaveCount(7);
+    await expect(page.locator('gpf-table .table-row')).toHaveCount(7);
   });
 
   test('should filter the right rows using the instruments dropdown', async({ page }) => {
     await utils.navigateToDatasetPage(page, utils.datasetIds.compAll, 'Phenotype browser');
 
-    await expect(page.locator('gpf-table > div > div.ng-star-inserted')).toHaveCount(8);
+    await expect(page.locator('gpf-table .table-row')).toHaveCount(8);
 
     await page.locator('select.form-control').selectOption('i1');
-    await expect(page.locator('gpf-table > div > div.ng-star-inserted')).toHaveCount(7);
+    await expect(page.locator('gpf-table .table-row')).toHaveCount(7);
 
     await page.locator('select.form-control').selectOption('pheno_common');
-    await expect(page.locator('gpf-table > div > div.ng-star-inserted')).toHaveCount(1);
+    await expect(page.locator('gpf-table .table-row')).toHaveCount(1);
 
     await page.locator('select.form-control').selectOption('All instruments');
-    await expect(page.locator('gpf-table > div > div.ng-star-inserted')).toHaveCount(8);
+    await expect(page.locator('gpf-table .table-row')).toHaveCount(8);
   });
 
   test('should have working table header sorting buttons', async({ page }) => {
@@ -66,22 +66,22 @@ test.describe('Pheno browser tests', () => {
 
     await page.locator('gpf-table-view-header-cell').nth(1).click();
     await expect(
-      page.locator('gpf-pheno-browser-table > gpf-table > div > div.ng-star-inserted')
+      page.locator('gpf-pheno-browser-table > gpf-table .table-row')
         .locator('gpf-table-view-cell').nth(1)).toHaveText('age');
 
     await page.locator('gpf-table-view-header-cell').nth(1).click();
     await expect(
-      page.locator('gpf-pheno-browser-table > gpf-table > div > div.ng-star-inserted')
+      page.locator('gpf-pheno-browser-table > gpf-table .table-row')
         .locator('gpf-table-view-cell').nth(1)).toHaveText('sample_id');
 
     await page.locator('gpf-table-view-header-cell').nth(2).click();
     await expect(
-      page.locator('gpf-pheno-browser-table > gpf-table > div > div.ng-star-inserted')
+      page.locator('gpf-pheno-browser-table > gpf-table .table-row')
         .locator('gpf-table-view-cell').nth(2)).toHaveText('The IQ of the individual');
 
     await page.locator('gpf-table-view-header-cell').nth(2).click();
     await expect(
-      page.locator('gpf-pheno-browser-table > gpf-table > div > div.ng-star-inserted')
+      page.locator('gpf-pheno-browser-table > gpf-table .table-row')
         .locator('gpf-table-view-cell').nth(2)).toHaveText('');
   });
 
@@ -92,7 +92,7 @@ test.describe('Pheno browser tests', () => {
     const rowValues = expectedFile.split(',\n');
 
     for (let i = 0; i < rowValues.length; i++) {
-      const row = page.locator('gpf-pheno-browser-table > gpf-table > div > div.ng-star-inserted').nth(i);
+      const row = page.locator('gpf-pheno-browser-table > gpf-table .table-row').nth(i);
       const text = await row.textContent();
       expect(text).toBe(rowValues[i]);
     }
