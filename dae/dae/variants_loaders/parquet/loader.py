@@ -49,7 +49,7 @@ class ParquetLoader:
         )
 
     def _pq_file_in_region(self, path: str, region: Region) -> bool:
-        file_region_bin = path[path.find("region_bin=")+11:path.find("frequency_bin=") - 1]
+        file_region_bin = path[path.find("region_bin=")+11:path.find("frequency_bin=")-1]
         region_start_bin = self.partition_descriptor.make_region_bin(region.chrom, region.start)
         region_stop_bin = self.partition_descriptor.make_region_bin(region.chrom, region.stop)
         return (region_start_bin == file_region_bin
@@ -86,10 +86,24 @@ class ParquetLoader:
             inheritance_in_members=inheritance_in_members
         )
 
-    def fetch_summary_variants(self):
-        # TODO implement region filter
-        # TODO don't use fetch_variants
-        pass
+    def fetch_summary_variants(self, region: str = None):
+        assert self.families is not None
+
+        if region is not None:
+            region = Region.from_str(region)
+
+        summary_paths, _ = self._get_pq_filepaths()
+        columns = ("summary_variant_data", "allele_index")
+
+        for s_path in summary_paths:
+            summary_parquet = pq.ParquetFile(s_path)
+            for rec in summary_parquet.read(columns=columns).to_pylist():
+                if rec["allele_index"] == 1:
+                    variant = self._deserialize_summary_variant(rec["summary_variant_data"])
+                    if region is None or region.contains(Region(variant.chrom, variant.position, variant.end_position)):
+                        yield variant
+
+            summary_parquet.close()
 
     def fetch_variants(
         self, region: str = None
@@ -101,7 +115,7 @@ class ParquetLoader:
 
         filepaths = self._get_pq_filepaths()
 
-        idx_columns = ("bucket_index", "summary_index", "allele_index")
+        idx_columns = ("summary_index", "allele_index")
         summary_columns = ("summary_variant_data", *idx_columns)
         family_columns = ("family_variant_data", "family_id", *idx_columns)
 
