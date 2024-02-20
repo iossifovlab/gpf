@@ -65,7 +65,7 @@ test.describe('App tests', () => {
     const geneProfilesUrl = `${utils.instanceUrl}/gene-profiles`;
 
     await utils.loginAdmin(page);
-    await page.locator('a:text("Gene Profiles")').click();
+    await page.locator('#header a:text("Gene Profiles")').click();
 
     const currentUrl = page.url();
 

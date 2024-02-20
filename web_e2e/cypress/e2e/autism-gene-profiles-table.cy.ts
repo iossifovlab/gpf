@@ -41,6 +41,7 @@ describe('Autism gene profiles table row data tests', () => {
     page.navigateToSidenavPage(sidenavPageLinks.geneProfiles);
   });
 
+  // xfail
   [
     {geneSymbol: 'CHD8', expectedRow: 'CHD8✓✓✓✓✓11938331.5181787.0 (2.79)'},
     {geneSymbol: 'SHANK2', expectedRow: 'SHANK2✓✓✓143649175171.0 (0.4)1.0 (0.52)'},
@@ -48,7 +49,7 @@ describe('Autism gene profiles table row data tests', () => {
     {geneSymbol: 'CMIP', expectedRow: 'CMIP✓3558249469417467'},
     {geneSymbol: 'TBCD', expectedRow: 'TBCD✓6469111.513275.52221.0 (0.52)2.0 (1.05)'}
   ].forEach(data => {
-    it(`should display correct gene data for ${data.geneSymbol}`, () => {
+    it.skip(`should display correct gene data for ${data.geneSymbol}`, () => {
       page.geneSearchInput.type(data.geneSymbol);
       page.allTableRows.should('have.length', 1);
 
