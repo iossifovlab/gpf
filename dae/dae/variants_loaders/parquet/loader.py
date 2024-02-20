@@ -3,6 +3,7 @@ import numpy as np
 from typing import Generator, Optional
 from pyarrow import parquet as pq
 from pyarrow import dataset as ds
+from pyarrow import compute as pc
 from dae.schema2_storage.schema2_import_storage import Schema2DatasetLayout, schema2_dataset_layout
 from dae.pedigrees.loader import FamiliesLoader
 from dae.pedigrees.families_data import FamiliesData
@@ -91,19 +92,26 @@ class ParquetLoader:
     def fetch_summary_variants(self, region: str = None):
         assert self.families is not None
 
+        region_filter = None
         if region is not None:
             region = Region.from_str(region)
+            region_filter = (
+                (pc.field("position") >= region.start)
+                & (pc.field("position") <= region.stop)
+                & (pc.field("chromosome") == region.chrom)
+            )
 
         summary_paths, _ = self._get_pq_filepaths()
-        columns = ("summary_variant_data", "allele_index")
+        columns = ("summary_variant_data", "chromosome", "position", "allele_index")
 
         for s_path in summary_paths:
             summary_parquet = pq.ParquetFile(s_path)
-            for rec in summary_parquet.read(columns=columns).to_pylist():
+            table = summary_parquet.read(columns=columns)
+            if region_filter is not None:
+                table = table.filter(region_filter)
+            for rec in table.to_pylist():
                 if rec["allele_index"] == 1:
-                    variant = self._deserialize_summary_variant(rec["summary_variant_data"])
-                    if region is None or region.contains(Region(variant.chrom, variant.position, variant.end_position)):
-                        yield variant
+                    yield self._deserialize_summary_variant(rec["summary_variant_data"])
 
             summary_parquet.close()
 
@@ -112,13 +120,19 @@ class ParquetLoader:
     ) -> Generator[tuple[SummaryVariant, list[FamilyVariant]], None, None]:
         assert self.families is not None
 
+        region_filter = None
         if region is not None:
             region = Region.from_str(region)
+            region_filter = (
+                (pc.field("position") >= region.start)
+                & (pc.field("position") <= region.stop)
+                & (pc.field("chromosome") == region.chrom)
+            )
 
         filepaths = self._get_pq_filepaths()
 
         idx_columns = ("summary_index", "allele_index")
-        summary_columns = ("summary_variant_data", *idx_columns)
+        summary_columns = ("summary_variant_data", "chromosome", "position", *idx_columns)
         family_columns = ("family_variant_data", "family_id", *idx_columns)
 
         summary_variants = []
@@ -126,11 +140,13 @@ class ParquetLoader:
 
         for s_path in filepaths[0]:
             summary_parquet = pq.ParquetFile(s_path)
-            for rec in summary_parquet.read(columns=summary_columns).to_pylist():
+            table = summary_parquet.read(columns=summary_columns)
+            if region_filter is not None:
+                table = table.filter(region_filter)
+            for rec in table.to_pylist():
                 if rec["allele_index"] == 1:
                     variant = self._deserialize_summary_variant(rec["summary_variant_data"])
-                    if region is None or region.contains(Region(variant.chrom, variant.position, variant.end_position)):
-                        summary_variants.append((rec["summary_index"], variant))
+                    summary_variants.append((rec["summary_index"], variant))
 
             summary_parquet.close()
 
