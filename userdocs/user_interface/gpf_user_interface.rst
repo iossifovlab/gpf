@@ -173,28 +173,28 @@ Additional :ref:`filters<Filters>` are also provided. The results are available 
 .. figure:: imgs/gpf_screenshots/pheno-tool.png
    :align: center
 
-Autism Gene Profiles
+Gene Profiles
 --------------------
 
-The Autism Gene Profiles tool can be used to view a table of statistics about genes in the configured datasets.
+The Gene Profiles tool can be used to view a table of statistics about genes in the configured datasets.
 The table is interactive - columns can be sorted, toggled and reordered (see video below).
 Each gene symbol can be clicked to open the single view for that gene.
 Some of the columns represent a statistic for a dataset - their cells can be clicked to open the corresponding genotype browser query.
 Rows can be highlighted using the middle mouse button or CTRL / ⌘ + click. Highlighted genes are listed in the bottom right
 and can be opened for comparison (see fig. 5).
 
-.. video:: ../_static/agp.mp4
+.. video:: ../_static/gene-profiles.mp4
    :width: 100%
 
 |
 
-.. figure:: imgs/gpf_screenshots/agp-1.png
+.. figure:: imgs/gpf_screenshots/gene-profiles-1.png
    :align: center
 
    Figure 5
 
 
-Autism Gene Profiles - single view
+Gene Profiles - single view
 ##################################
 
 The single view is a dedicated view for one or more genes. It contains the information you'd find in the table, but presented in more detail.
@@ -202,7 +202,7 @@ For example, scores are presented in the context of the histogram for the whole 
 There are also useful links for external resources such as the UCSC Genome Browser.
 
 
-.. figure:: imgs/gpf_screenshots/agp.png
+.. figure:: imgs/gpf_screenshots/gene-profiles.png
    :align: center
 
 Filters
