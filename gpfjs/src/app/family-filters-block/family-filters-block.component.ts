@@ -1,4 +1,4 @@
-import { Component, AfterViewInit, Input, ViewChild, OnInit } from '@angular/core';
+import { Component, AfterViewInit, Input, ViewChild, OnInit, HostListener } from '@angular/core';
 import { Dataset } from '../datasets/datasets';
 import { Store, Selector } from '@ngxs/store';
 import { FamilyIdsModel, FamilyIdsState } from 'app/family-ids/family-ids.state';
@@ -6,7 +6,7 @@ import { PersonFiltersModel, PersonFiltersState, SetFamilyFilters } from 'app/pe
 import { StateReset } from 'ngxs-reset-plugin';
 import { NgbNav } from '@ng-bootstrap/ng-bootstrap';
 import { VariantReportsService } from 'app/variant-reports/variant-reports.service';
-import { FamilyTagsModel, FamilyTagsState } from 'app/family-tags/family-tags.state';
+import { FamilyTagsModel, FamilyTagsState, SetFamilyTags } from 'app/family-tags/family-tags.state';
 
 @Component({
   selector: 'gpf-family-filters-block',
@@ -26,7 +26,6 @@ export class FamilyFiltersBlockComponent implements OnInit, AfterViewInit {
   public deselectedTags: string[] = [];
   public tagIntersection = true; // mode "And"
   public numOfCols: number;
-  public numOfRows: string;
 
   public constructor(
     private store: Store,
@@ -45,11 +44,16 @@ export class FamilyFiltersBlockComponent implements OnInit, AfterViewInit {
           this.tags.push(tag);
           this.orderedTagList.push(tag);
         });
-        // Calculate grid for the tags (1 column width === ~5 tags height)
-        this.numOfCols = 4;
-        this.numOfRows = 'auto-fill';
+        // Calculate grid for the tags
+        this.onResize();
       });
     }
+  }
+
+  @HostListener('window:resize')
+  public onResize(): void {
+    const containerWidth = document.getElementsByClassName('family-filters-block')[0].clientWidth;
+    this.numOfCols = Math.floor(Math.sqrt(containerWidth/(2.4*this.tags.length)) - 1);
   }
 
   public ngAfterViewInit(): void {
@@ -67,7 +71,7 @@ export class FamilyFiltersBlockComponent implements OnInit, AfterViewInit {
   public onNavChange(): void {
     this.store.dispatch(new SetFamilyFilters([]));
     this.store.dispatch(new StateReset(FamilyIdsState));
-    this.store.dispatch(new StateReset(FamilyTagsState));
+    this.store.dispatch(new SetFamilyTags([], [], true));
   }
 
   @Selector([FamilyIdsState, FamilyTagsState, PersonFiltersState])

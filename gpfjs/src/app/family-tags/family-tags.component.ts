@@ -4,7 +4,6 @@ import _ from 'lodash';
 import { FamilyTagsState, SetFamilyTags } from './family-tags.state';
 import { Store } from '@ngxs/store';
 import { FamilyTags } from './family-tags';
-import { ValidateNested } from 'class-validator';
 
 @Component({
   selector: 'gpf-family-tags',
@@ -12,8 +11,7 @@ import { ValidateNested } from 'class-validator';
   styleUrls: ['./family-tags.component.css']
 })
 export class FamilyTagsComponent extends StatefulComponent implements OnInit {
-  @Input() public numOfRows: number | string;
-  @Input() public numOfCols: number;
+  @Input() public numOfCols: number | string;
   @Input() public tags = [];
   @Output() public chooseMode = new EventEmitter<boolean>();
   @Output() public updateTagsLists = new EventEmitter();
@@ -22,7 +20,6 @@ export class FamilyTagsComponent extends StatefulComponent implements OnInit {
   public deselectedTags: string[] = [];
   public filtersButtonsState: Record<string, number> = {};
   public tagIntersection = true; // mode "And"
-  // @ValidateNested()
   public familyTags = new FamilyTags();
 
   public constructor(protected store: Store) {
@@ -30,24 +27,25 @@ export class FamilyTagsComponent extends StatefulComponent implements OnInit {
   }
 
   public ngOnInit(): void {
-    // super.ngOnInit();
-
     this.tags.forEach((tag: string) => {
       this.filtersButtonsState[tag] = 0;
     });
 
-    this.store.selectOnce(state => state.familyTagsState).subscribe(state => {
-      // restore state
-      this.setFamilyTags(state.selectedFamilyTags, state.deselectedFamilyTags, state.tagIntersection);
+    this.store.selectOnce(state => state.familyTagsState).subscribe((state: SetFamilyTags) => {
+      this.restoreFamilyTags(state.selectedFamilyTags, state.deselectedFamilyTags, state.tagIntersection);
     });
   }
 
-  public setFamilyTags(selectedTags: string[], deselectedTags: string[], intersection: boolean): void {
+  public restoreFamilyTags(selectedTags: string[], deselectedTags: string[], intersection: boolean): void {
     this.selectedTags = selectedTags;
-    this.selectedTags.forEach(tag => this.filtersButtonsState[tag] = 1);
+    this.selectedTags.forEach(tag => {
+      this.filtersButtonsState[tag] = 1;
+    });
 
     this.deselectedTags = deselectedTags;
-    this.deselectedTags.forEach(tag => this.filtersButtonsState[tag] = -1);
+    this.deselectedTags.forEach(tag => {
+      this.filtersButtonsState[tag] = -1;
+    });
 
     this.tagIntersection = intersection;
 

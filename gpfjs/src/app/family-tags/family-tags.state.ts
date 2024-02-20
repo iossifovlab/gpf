@@ -11,9 +11,9 @@ export class SetFamilyTags {
 }
 
 export interface FamilyTagsModel {
-    selectedFamilyTags: string[];
-    deselectedFamilyTags: string[];
-    tagIntersection: boolean;
+  selectedFamilyTags: string[];
+  deselectedFamilyTags: string[];
+  tagIntersection: boolean;
 }
 
 @State<FamilyTagsModel>({
