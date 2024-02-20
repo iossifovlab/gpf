@@ -75,10 +75,12 @@ def add_variant_count(
             skip = True
             for allele in variant.alt_alleles:
                 allele_gene_effects = {
-                    eg.symbol: eg.effect for eg in allele.effect_genes
+                    eg.symbol: set() for eg in allele.effect_genes
                 }
-                allele_effect = allele_gene_effects.get(gs)
-                if allele_effect and allele_effect in effect_types:
+                for eg in allele.effect_genes:
+                    allele_gene_effects[eg.symbol].add(eg.effect)
+                allele_effects = allele_gene_effects.get(gs)
+                if allele_effects.intersection(effect_types):
                     skip = False
                     break
 
