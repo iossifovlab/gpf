@@ -1,7 +1,5 @@
-import os
 import json
 import numpy as np
-import pyarrow as pa
 from typing import Generator, Optional
 from pyarrow import parquet as pq
 from pyarrow import dataset as ds
@@ -18,12 +16,21 @@ from dae.utils.regions import Region
 class ParquetLoader:
     DATA_COLUMN = "summary_variant_data"
 
-    def __init__(self, data_dir: str, partitioned: bool = False):
+    def __init__(self, data_dir: str):
         self.data_dir: str = data_dir
-        self.partitioned: bool = partitioned
+        self.partitioned: bool = False # this is set in _load_pd
         self.layout: Schema2DatasetLayout = schema2_dataset_layout(data_dir)
         self.families: FamiliesData = self._load_families()
-        self.partition_descriptor: PartitionDescriptor = self._load_pd()
+
+        meta_file = pq.ParquetFile(self.layout.meta)
+        raw = { row["key"]: row["value"]
+                for row in meta_file.read().to_pylist() }
+        meta_file.close()
+
+        self.partitioned = "partition_description" in raw
+        self.partition_descriptor = PartitionDescriptor.parse_string(
+            raw["partition_description"]
+        ) if self.partitioned else None
 
     def _load_families(self) -> FamiliesData:
         parquet_file = pq.ParquetFile(self.layout.pedigree)
@@ -35,21 +42,16 @@ class ParquetLoader:
         ped_df.loc[ped_df.layout.isna(), "layout"] = None
         return FamiliesLoader.build_families_data_from_pedigree(ped_df)
 
-    def _load_pd(self) -> PartitionDescriptor:
-        if not self.partitioned:
-            return None
-        parquet_file = pq.ParquetFile(self.layout.meta)
-        raw = {
-            row["key"]: row["value"]
-            for row in parquet_file.read().to_pylist()
-        }
-        parquet_file.close()
-        return PartitionDescriptor.parse_string(
-            raw["partition_description"]
-        )
-
     def _pq_file_in_region(self, path: str, region: Region) -> bool:
+        assert self.partition_descriptor is not None
+
+        # (...)/region_bin=chr1_0/frequency_bin=(...)
+        #                  ^~~~~^
+        # extract the region bin by finding where it begins in the path
+        # and moving 11 characters forward (the length of "region_bin=")
+        # analogous for the end index by finding "frequency_bin=".
         file_region_bin = path[path.find("region_bin=")+11:path.find("frequency_bin=")-1]
+        # afterwards, check if the input region's start or stop positions fall inside the given region bin
         region_start_bin = self.partition_descriptor.make_region_bin(region.chrom, region.start)
         region_stop_bin = self.partition_descriptor.make_region_bin(region.chrom, region.stop)
         return (region_start_bin == file_region_bin
