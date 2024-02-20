@@ -3,7 +3,7 @@
     (writeEvent)="writeDescription($event)"
     [initialMarkdown]="homeDescription"></gpf-markdown-editor>
 
-  <span *ngIf="geneProfilesConfig"><a [attr.href]="'/gene-profiles'" target="_blank">Gene profiles</a></span>
+  <span *ngIf="geneProfilesConfig"><a [routerLink]="'/gene-profiles'" target="_blank">Gene profiles</a></span>
 
   <h3 id="dataset-header">Dataset</h3>
   <div class="separator"></div>
