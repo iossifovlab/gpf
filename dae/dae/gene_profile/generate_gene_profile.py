@@ -74,11 +74,16 @@ def add_variant_count(
         if effect_types is not None:
             skip = True
             for allele in variant.alt_alleles:
-                allele_gene_effects: dict[str, set[str]] = {
-                    eg.symbol: set() for eg in allele.effect_genes
-                }
+                allele_gene_effects: dict[str, set[str]] = {}
                 for eg in allele.effect_genes:
-                    allele_gene_effects[eg.symbol].add(eg.effect)
+                    if eg.symbol is None or eg.effect is None:
+                        continue
+
+                    if eg.symbol in allele_gene_effects:
+                        allele_gene_effects[eg.symbol].add(eg.effect)
+                    else:
+                        allele_gene_effects[eg.symbol] = {eg.effect}
+
                 allele_effects = allele_gene_effects.get(gs)
                 if allele_effects \
                         and allele_effects.intersection(effect_types):
