@@ -139,7 +139,7 @@ class Schema2ImportStorage(ImportStorage):
             variants_loader=variants_loader,
             partition_descriptor=cls._get_partition_description(project),
             bucket_index=bucket.index,
-            rows=rows,
+            batch_rows=1_000,
             include_reference=project.include_reference,
         )
         variants_writer.write_dataset()
