@@ -3,7 +3,7 @@ import time
 import logging
 import json
 import functools
-from typing import Any, Optional, cast
+from typing import Any, Optional, cast, Union
 
 import fsspec
 
@@ -61,7 +61,7 @@ class ContinuousParquetFileWriter:
         self.dirname = dirname
 
         filesystem, filepath = url_to_pyarrow_fs(filepath, filesystem)
-        compression = "SNAPPY"
+        compression: Union[str, dict[str, str]] = "SNAPPY"
         if blob_column is not None:
             compression = {
                 blob_column: "ZSTD",
@@ -314,7 +314,7 @@ class VariantsParquetWriter:
                 for aa in family_alleles:
                     fa = cast(FamilyAllele, aa)
                     seen_in_status[fa.allele_index] = functools.reduce(
-                        lambda t, s: t | s.value,  # type: ignore
+                        lambda t, s: t | s.value,
                         filter(None, fa.allele_in_statuses),
                         seen_in_status[fa.allele_index])
                     inheritance = list(

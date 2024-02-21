@@ -150,7 +150,6 @@ def run_vcf2schema2(
         variants_loader=loader,
         partition_descriptor=partition_description,
         bucket_index=100,
-        rows=20_000,
     )
     writer.write_dataset()
     writer.write_metadata()
@@ -180,7 +179,6 @@ def run_denovo2schema2(
         variants_loader=loader,
         partition_descriptor=partition_description,
         bucket_index=100,
-        rows=20_000,
     )
     writer.write_dataset()
     writer.write_metadata()
