@@ -14,7 +14,7 @@
           spellcheck="false"
           [(ngModel)]="geneSymbol"
           (keyup)="openDropdown(); searchBoxInput$.next(geneSymbol)"
-          (click)="reset(); geneSymbol = ''; showError = false"
+          (focus)="reset(); geneSymbol = ''; showError = false"
           (keydown.enter)="submitGeneRequest()"
           (keydown.escape)="closeDropdown()" />
 
