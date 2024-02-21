@@ -90,10 +90,30 @@ class Schema2ImportStorage(ImportStorage):
             gpf_instance
         )
         annotation_pipeline = yaml.dump(annotation_pipeline_config)
+        variants_types = project.get_variant_loader_types()
+        study_config = {
+            "conf_dir": ".",
+            "has_denovo": project.has_denovo_variants(),
+            "has_cnv": "cnv" in variants_types,
+            "has_transmitted": bool({"dae", "vcf"} & variants_types),
+            "genotype_browser": {"enabled": True},
+        }
+        study = yaml.dump(study_config)
+
         append_meta_to_parquet(
             layout.meta,
-            ["reference_genome", "gene_models", "annotation_pipeline"],
-            [reference_genome, gene_models, annotation_pipeline])
+            [
+                "reference_genome",
+                "gene_models",
+                "annotation_pipeline",
+                "study"
+            ],
+            [
+                reference_genome,
+                gene_models,
+                annotation_pipeline,
+                study
+            ])
 
     @classmethod
     def _do_write_variant(
