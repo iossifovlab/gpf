@@ -136,6 +136,7 @@ class AlleleParquetSerializer:
         spr: str
     ) -> Any:
         prop_value = getattr(allele, spr, None)
+
         if prop_value is None:
             prop_value = allele.get_attribute(spr)
         if prop_value and spr in self.ENUM_PROPERTIES:
@@ -200,7 +201,6 @@ class AlleleParquetSerializer:
                     ]
             else:
                 prop_value = self._get_searchable_prop_value(allele, spr)
-
             allele_data[spr] = [prop_value]  # type: ignore
 
         if self.annotation_schema is not None:

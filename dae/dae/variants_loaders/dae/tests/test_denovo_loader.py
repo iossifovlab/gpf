@@ -71,3 +71,8 @@ def test_reset_regions_with_adjusted_chrom(simple_denovo_loader,
     assert len(variants) > 0
     unique_chroms = np.unique([sv.chromosome for sv, _ in variants])
     assert (unique_chroms == regions).all()
+
+    for sv, _ in variants:
+        assert sv.position is not None
+        assert sv.end_position is not None
+        assert sv.position == sv.end_position

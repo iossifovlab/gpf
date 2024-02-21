@@ -135,3 +135,20 @@ def test_reset_regions_with_adjusted_chrom(
     unique_chroms = np.unique([sv.chromosome for sv, _ in variants])
     assert unique_chroms is not None
     assert (unique_chroms == ["chrbar"]).all()
+
+
+def test_end_position(
+    gpf_instance: GPFInstance, families_data: FamiliesData, summary_data: str
+) -> None:
+    variants_loader = DaeTransmittedLoader(
+        families_data,
+        summary_data,
+        genome=gpf_instance.reference_genome,
+        params={"add_chrom_prefix": "chr"},
+        regions=None,
+    )
+    variants = list(variants_loader.full_variants_iterator())
+    for sv, fvs in variants:
+        assert sv.position is not None
+        assert sv.end_position is not None
+        assert sv.position == sv.end_position
