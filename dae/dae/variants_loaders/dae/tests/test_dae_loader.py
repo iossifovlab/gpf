@@ -148,7 +148,7 @@ def test_end_position(
         regions=None,
     )
     variants = list(variants_loader.full_variants_iterator())
-    for sv, fvs in variants:
+    for sv, _fvs in variants:
         assert sv.position is not None
         assert sv.end_position is not None
         assert sv.position == sv.end_position

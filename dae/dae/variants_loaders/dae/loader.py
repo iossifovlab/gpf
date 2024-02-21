@@ -1020,7 +1020,7 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
             fvariant = FamilyVariant(
                 summary_variant, fam, None, best_state)
             fvariant.gt, fvariant._genetic_model = \
-                self._calc_genotype(  # type: ignore
+                self._calc_genotype(
                     fvariant, self.genome)
             for fallele in fvariant.alleles:
                 fallele.gt = fvariant.gt  # type: ignore

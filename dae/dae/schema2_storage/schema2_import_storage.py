@@ -3,12 +3,14 @@ import logging
 from dataclasses import dataclass
 from typing import Optional, Generator
 
+import yaml
+
 from dae.utils import fs_utils
 from dae.import_tools.import_tools import ImportStorage, ImportProject, \
     Bucket
 from dae.task_graph.graph import TaskGraph, Task
 from dae.parquet.parquet_writer import fill_family_bins, \
-    save_ped_df_to_parquet, merge_parquets  # , append_meta_to_parquet
+    save_ped_df_to_parquet, merge_parquets, append_meta_to_parquet
 from dae.parquet.schema2.parquet_io import VariantsParquetWriter
 from dae.parquet.partition_descriptor import PartitionDescriptor
 
@@ -81,6 +83,17 @@ class Schema2ImportStorage(ImportStorage):
             partition_descriptor=cls._get_partition_description(project)
         )
         writer.write_metadata()
+
+        reference_genome = gpf_instance.reference_genome.resource_id
+        gene_models = gpf_instance.gene_models.resource_id
+        annotation_pipeline_config = project.get_annotation_pipeline_config(
+            gpf_instance
+        )
+        annotation_pipeline = yaml.dump(annotation_pipeline_config)
+        append_meta_to_parquet(
+            layout.meta,
+            ["reference_genome", "gene_models", "annotation_pipeline"],
+            [reference_genome, gene_models, annotation_pipeline])
 
     @classmethod
     def _do_write_variant(
