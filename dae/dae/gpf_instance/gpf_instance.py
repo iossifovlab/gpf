@@ -523,22 +523,26 @@ class GPFInstance:
         }
         return config
 
+    def get_annotation_pipeline_config(self) -> list[dict[str, Any]]:
+        """Return the annotation pipeline config."""
+        pipeline_config = []
+        if self.dae_config.annotation is not None:
+            config_filename = self.dae_config.annotation.conf_file
+            if not os.path.exists(config_filename):
+                raise ValueError(
+                    f"annotation config file not found: {config_filename}")
+
+            with open(config_filename, "rt", encoding="utf8") as infile:
+                pipeline_config = yaml.safe_load(infile.read())
+
+        pipeline_config.insert(
+            0, self._construct_import_effect_annotator_config())
+        return pipeline_config
+
     def get_annotation_pipeline(self) -> AnnotationPipeline:
         """Return the annotation pipeline configured in the GPF instance."""
         if self._annotation_pipeline is None:
-            pipeline_config = []
-            if self.dae_config.annotation is not None:
-                config_filename = self.dae_config.annotation.conf_file
-                if not os.path.exists(config_filename):
-                    raise ValueError(
-                        f"annotation config file not found: {config_filename}")
-
-                with open(config_filename, "rt", encoding="utf8") as infile:
-                    pipeline_config = yaml.safe_load(infile.read())
-
-            pipeline_config.insert(
-                0, self._construct_import_effect_annotator_config())
-
+            pipeline_config = self.get_annotation_pipeline_config()
             pipeline = build_annotation_pipeline(
                 pipeline_config_raw=pipeline_config,
                 grr_repository=self.grr)

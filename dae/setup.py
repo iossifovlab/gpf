@@ -34,7 +34,6 @@ setuptools.setup(
         "dae/tools/simple_pheno_import.py",
         "dae/tools/simple_study_import.py",
         "dae/tools/simple_family2pedigree.py",
-        "dae/tools/ped2parquet.py",
         "dae/tools/ped2ped.py",
         "dae/tools/draw_pedigree.py",
         "dae/tools/vcfinfo_extractor.py",

@@ -1,11 +1,10 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,no-member
 import os
 import pytest
-import pytest_mock
 
-import dae
 from dae.pedigrees.loader import FamiliesLoader
-from dae.parquet.parquet_writer import ParquetWriter
+from impala_storage.schema1.parquet_io import VariantsParquetWriter, \
+    ParquetWriter
 
 
 @pytest.mark.parametrize(
@@ -31,42 +30,7 @@ def test_ped2parquet(
 
     parquet_filename = os.path.join(temp_dirname, "pedigree.parquet")
 
-    ParquetWriter.families_to_parquet(families, parquet_filename)
+    ParquetWriter.families_to_parquet(
+        families, parquet_filename, VariantsParquetWriter)
 
     assert os.path.exists(parquet_filename)
-
-
-@pytest.mark.parametrize(
-    "pedigree, outfile, dirname",
-    [
-        ("pedigree_A.ped", "./pedigree.parquet", "."),
-        ("pedigree_A.ped", "/tmp/pedigree.parquet", "/tmp"),
-        ("pedigree_A.ped", "tmp/pedigree.parquet", "tmp"),
-    ],
-)
-def test_ped2parquet_mock(
-    mocker: pytest_mock.MockerFixture,
-    pedigree: str, outfile: str, dirname: str, global_dae_fixtures_dir: str
-) -> None:
-
-    pedigree_filename = f"{global_dae_fixtures_dir}/pedigrees/{pedigree}"
-    assert os.path.exists(pedigree_filename)
-
-    families_loader = FamiliesLoader(pedigree_filename)
-    families = families_loader.load()
-
-    assert families is not None
-
-    mocker.patch("os.makedirs")
-    mocker.patch("dae.parquet.parquet_writer.save_ped_df_to_parquet")
-
-    ParquetWriter.families_to_parquet(families, outfile)
-
-    os.makedirs.assert_called_once_with(dirname, exist_ok=True)  # type: ignore
-    dae.parquet.parquet_writer\
-        .save_ped_df_to_parquet.assert_called_once()  # type: ignore
-
-    call_args = dae.parquet.parquet_writer\
-        .save_ped_df_to_parquet.call_args  # type: ignore
-    _, filename = call_args[0]
-    assert filename == outfile

@@ -10,9 +10,10 @@ from dae.import_tools.import_tools import Bucket, ImportProject, \
     save_study_config
 from dae.import_tools.import_tools import ImportStorage
 from dae.task_graph.graph import TaskGraph
-from dae.parquet.parquet_writer import ParquetWriter
+from dae.parquet.parquet_writer import merge_parquets
 from dae.parquet.partition_descriptor import PartitionDescriptor
 
+from impala_storage.schema1.parquet_io import ParquetWriter
 from impala_storage.schema1.parquet_io import \
     VariantsParquetWriter as S1VariantsWriter
 from impala_storage.schema1.impala_genotype_storage import \
@@ -49,7 +50,8 @@ class ImpalaSchema1ImportStorage(ImportStorage):
         ped_filename = cls._pedigree_filename(project)
         ParquetWriter.write_pedigree(
             ped_filename, project.get_pedigree(),
-            cls._get_partition_description(project))
+            cls._get_partition_description(project),
+            S1VariantsWriter)
         elapsed = time.time() - start
         logger.info("prepare pedigree elapsed %.2f sec", elapsed)
         project.stats[("elapsed", "pedigree")] = elapsed
@@ -121,7 +123,7 @@ class ImpalaSchema1ImportStorage(ImportStorage):
         partitions: List[Tuple[str, str]]
     ) -> None:
         full_out_dir = fs_utils.join(cls._variants_dir(project), out_dir)
-        ParquetWriter.merge_parquets(
+        merge_parquets(
             cls._get_partition_description(project), full_out_dir, partitions
         )
 

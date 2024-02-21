@@ -99,4 +99,4 @@ impala_storage/impala_storage/__build__.py
 in.vcf.gz.tbi
 test.txt.gz.tbi
 monkeytype.sqlite3
-
+monkeytype_config.py

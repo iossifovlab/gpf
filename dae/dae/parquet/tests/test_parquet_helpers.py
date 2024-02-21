@@ -35,7 +35,11 @@ def test_merge_parquets(tmp_path: pathlib.Path) -> None:
     for i in range(0, len(full_data), 2):
         table = pa.table(full_data.iloc[i:i + 2])
         in_files.append(str(tmp_path / f"p{i}.parquet"))
-        writer = pq.ParquetWriter(in_files[-1], table.schema, version="1.0")
+        writer = pq.ParquetWriter(
+            in_files[-1],
+            table.schema,
+            # version="1.0"
+        )
         writer.write_table(table)
         writer.close()
 
@@ -60,7 +64,10 @@ def test_merge_parquets_single_file(tmp_path: pathlib.Path) -> None:
         ]
     })
     in_file = str(tmp_path / "in.parquet")
-    writer = pq.ParquetWriter(in_file, table.schema, version="1.0")
+    writer = pq.ParquetWriter(
+        in_file, table.schema,
+        # version="1.0"
+    )
     writer.write_table(table)
     writer.close()
 
@@ -87,7 +94,10 @@ def test_merge_parquets_broken_input_file(tmp_path: pathlib.Path) -> None:
         ]
     })
     writer = pq.ParquetWriter(
-        str(tmp_path / "p1.parquet"), table.schema, version="1.0")
+        str(tmp_path / "p1.parquet"),
+        table.schema,
+        # version="1.0"
+    )
     writer.write_table(table)
     writer.close()
 

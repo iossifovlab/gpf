@@ -25,7 +25,6 @@ from dae.variants_loaders.dae.loader import DenovoLoader, DaeTransmittedLoader
 from dae.variants_loaders.vcf.loader import VcfLoader
 from dae.variants_loaders.cnv.loader import CNVLoader
 from dae.parquet.partition_descriptor import PartitionDescriptor
-from dae.parquet.parquet_writer import ParquetWriter
 
 from dae.configuration.study_config_builder import StudyConfigBuilder
 from dae.configuration.gpf_config_parser import GPFConfigParser
@@ -33,7 +32,8 @@ from dae.utils.dict_utils import recursive_dict_update
 from dae.gpf_instance.gpf_instance import GPFInstance
 
 from impala_storage.helpers.rsync_helpers import RsyncHelpers
-from impala_storage.schema1.parquet_io import VariantsParquetWriter
+from impala_storage.schema1.parquet_io import VariantsParquetWriter, \
+    ParquetWriter
 
 
 logger = logging.getLogger(__name__)

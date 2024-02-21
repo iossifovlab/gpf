@@ -11,9 +11,8 @@ from dae.variants_loaders.vcf.loader import VcfLoader
 from dae.variants_loaders.dae.loader import DenovoLoader
 from dae.pedigrees.loader import FamiliesLoader
 from dae.parquet.partition_descriptor import PartitionDescriptor
-from dae.parquet.parquet_writer import ParquetWriter
-from dae.parquet.schema2.parquet_io import \
-    VariantsParquetWriter as S2VariantsWriter
+from dae.parquet.parquet_writer import save_ped_df_to_parquet
+from dae.parquet.schema2.parquet_io import VariantsParquetWriter
 from dae.variants_loaders.raw.loader import AnnotationPipelineDecorator
 from dae.import_tools.import_tools import \
     construct_import_annotation_pipeline
@@ -146,20 +145,14 @@ def run_vcf2schema2(
         variants_loader, gpf_instance
     )
 
-    ParquetWriter.variants_to_parquet(
-        out_dir,
-        loader,
-        partition_description,
-        S2VariantsWriter,
-        bucket_index=0,
-        rows=20_000,
+    writer = VariantsParquetWriter(
+        out_dir=out_dir,
+        variants_loader=loader,
+        partition_descriptor=partition_description,
+        bucket_index=100,
     )
-    ParquetWriter.write_meta(
-        out_dir,
-        loader,
-        partition_description,
-        S2VariantsWriter,
-    )
+    writer.write_dataset()
+    writer.write_metadata()
 
 
 def run_denovo2schema2(
@@ -181,26 +174,25 @@ def run_denovo2schema2(
         variants_loader, gpf_instance
     )
 
-    ParquetWriter.variants_to_parquet(
-        out_dir,
-        loader,
-        partition_description,
-        S2VariantsWriter,
+    writer = VariantsParquetWriter(
+        out_dir=out_dir,
+        variants_loader=loader,
+        partition_descriptor=partition_description,
         bucket_index=100,
-        rows=20_000,
     )
-    ParquetWriter.write_meta(
-        out_dir,
-        loader,
-        partition_description,
-        S2VariantsWriter,
-    )
+    writer.write_dataset()
+    writer.write_metadata()
 
 
 def run_ped2parquet(ped_file: str, output_dir: str) -> str:
-    pedigree = FamiliesLoader(ped_file).load()
+    families = FamiliesLoader(ped_file).load()
     output_filename = os.path.join(output_dir, "pedigree", "pedigree_parquet")
-    ParquetWriter.families_to_parquet(pedigree, output_filename)
+
+    dirname = os.path.dirname(output_filename)
+    if dirname:
+        os.makedirs(dirname, exist_ok=True)
+    save_ped_df_to_parquet(
+        families.ped_df, output_filename)
     return output_filename
 
 

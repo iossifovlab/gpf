@@ -27,7 +27,7 @@ from dae.utils.dae_utils import dae2vcf_variant
 from dae.pedigrees.family import Family
 from dae.pedigrees.families_data import FamiliesData
 from dae.variants.attributes import Inheritance, Role
-
+from dae.variants.core import Allele
 from dae.variants.variant import SummaryVariant, SummaryVariantFactory, \
     allele_type_from_cshl_variant
 from dae.variants.family_variant import FamilyVariant
@@ -909,15 +909,21 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
         self, summary_index: int, rec: dict[str, Any]
     ) -> SummaryVariant:
         rec["cshl_position"] = int(rec["cshl_position"])
+        chrom = rec["chrom"]
+        # chrom = self._adjust_chrom_prefix(rec["chrom"])
         position, reference, alternative = dae2vcf_variant(
-            self._adjust_chrom_prefix(rec["chrom"]),
+            chrom,
             rec["cshl_position"],
             rec["cshl_variant"],
             self.genome,
         )
-        rec["position"] = position
-        rec["reference"] = reference
-        rec["alternative"] = alternative
+        allele = Allele.build_vcf_allele(
+            chrom, position, reference, alternative)
+        rec["chrom"] = allele.chrom
+        rec["position"] = allele.position
+        rec["end_position"] = allele.end_position
+        rec["reference"] = allele.reference
+        rec["alternative"] = allele.alternative
         rec["all.nParCalled"] = int(rec["all.nParCalled"])
         rec["all.nAltAlls"] = int(rec["all.nAltAlls"])
         rec["all.prcntParCalled"] = float(rec["all.prcntParCalled"])
@@ -934,6 +940,7 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
         ref = {
             "chrom": rec["chrom"],
             "position": rec["position"],
+            "end_position": rec["position"],
             "reference": rec["reference"],
             "alternative": None,
             "variant_type": None,
@@ -953,6 +960,7 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
         alt = {
             "chrom": rec["chrom"],
             "position": rec["position"],
+            "end_position": rec["end_position"],
             "reference": rec["reference"],
             "alternative": rec["alternative"],
             "variant_type": allele_type_from_cshl_variant(rec["cshl_variant"]),
@@ -1012,7 +1020,7 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
             fvariant = FamilyVariant(
                 summary_variant, fam, None, best_state)
             fvariant.gt, fvariant._genetic_model = \
-                self._calc_genotype(  # type: ignore
+                self._calc_genotype(
                     fvariant, self.genome)
             for fallele in fvariant.alleles:
                 fallele.gt = fvariant.gt  # type: ignore

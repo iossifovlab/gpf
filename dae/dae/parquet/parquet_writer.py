@@ -1,10 +1,8 @@
 from __future__ import annotations
 
-import abc
 import os
 import logging
 from typing import Optional
-from typing_extensions import Protocol
 
 import fsspec
 import pandas as pd
@@ -16,8 +14,6 @@ from dae.parquet import helpers as parquet_helpers
 from dae.pedigrees.families_data import FamiliesData
 from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.parquet.helpers import url_to_pyarrow_fs
-from dae.variants_loaders.raw.loader import VariantsLoader
-from dae.import_tools.import_tools import ImportProject, Bucket
 
 logger = logging.getLogger(__file__)
 
@@ -73,9 +69,25 @@ def collect_pedigree_parquet_schema(ped_df: pd.DataFrame) -> pa.Schema:
     return pps
 
 
+def fill_family_bins(
+    families: FamiliesData,
+    partition_descriptor: Optional[PartitionDescriptor] = None
+) -> None:
+    """Save families data into a parquet file."""
+    if partition_descriptor is not None \
+            and partition_descriptor.has_family_bins():
+        for family in families.values():
+            family_bin = partition_descriptor.make_family_bin(
+                family.family_id)
+            for person in family.persons.values():
+                person.set_attr("family_bin", family_bin)
+        families._ped_df = None  # pylint: disable=protected-access
+
+
 def save_ped_df_to_parquet(
         ped_df: pd.DataFrame, filename: str,
-        filesystem: Optional[fsspec.AbstractFileSystem] = None) -> None:
+        filesystem: Optional[fsspec.AbstractFileSystem] = None,
+        parquet_version: Optional[str] = None) -> None:
     """Save ped_df as a parquet file named filename."""
     ped_df = ped_df.copy()
 
@@ -95,199 +107,66 @@ def save_ped_df_to_parquet(
     table = pa.Table.from_pandas(ped_df, schema=pps)
     filesystem, filename = url_to_pyarrow_fs(filename, filesystem)
 
-    pq.write_table(table, filename, filesystem=filesystem, version="1.0")
+    pq.write_table(
+        table, filename,
+        filesystem=filesystem,
+        version=parquet_version
+    )
 
 
-class AbstractVariantsParquetWriter(abc.ABC):
-    """Abstract base class for parquet writes."""
-
-    @abc.abstractmethod
-    def write_schema(self) -> None:
-        """Store the schema. Obsolete."""
-
-    @abc.abstractmethod
-    def write_partition(self) -> None:
-        """Store the partition. Obsolete."""
-
-    @abc.abstractmethod
-    def write_metadata(self) -> None:
-        """Store the dataset metadata into a meta parquet file."""
-
-    @abc.abstractmethod
-    def write_dataset(self) -> list[str]:
-        """Store the variants parquet dataset."""
-
-    @abc.abstractmethod
-    def write_meta(self) -> None:
-        """Store all the metadata. Obsolete."""
-
-    @staticmethod
-    @abc.abstractmethod
-    def build(
-        out_dir: str,
-        variants_loader: VariantsLoader,
-        partition_descriptor: PartitionDescriptor,
-        bucket_index: int = 1,
-        rows: int = 100_000,
-        include_reference: bool = True,
-        filesystem: Optional[fsspec.AbstractFileSystem] = None,
-    ) -> AbstractVariantsParquetWriter:
-        """Build a variants parquet writed."""
-
-
-class ParquetWriterBuilder(Protocol):
-    """Defines a parquet writer builder type protocol."""
-
-    @staticmethod
-    def build(
-        out_dir: str,
-        variants_loader: VariantsLoader,
-        partition_descriptor: PartitionDescriptor,
-        bucket_index: int = 1,
-        rows: int = 100_000,
-        include_reference: bool = True,
-        filesystem: Optional[fsspec.AbstractFileSystem] = None,
-    ) -> AbstractVariantsParquetWriter:
-        """Build a variants parquet writer object."""
-
-
-class ParquetWriter:
-    """Implement writing variants and pedigrees parquet files."""
-
-    @staticmethod
-    def families_to_parquet(
-        families: FamiliesData,
-        pedigree_filename: str,
-        partition_descriptor: Optional[PartitionDescriptor] = None
-    ) -> None:
-        """Save families data into a parquet file."""
-        ParquetWriter.fill_family_bins(families, partition_descriptor)
-
-        dirname = os.path.dirname(pedigree_filename)
-        if dirname:
-            os.makedirs(dirname, exist_ok=True)
-
-        save_ped_df_to_parquet(families.ped_df, pedigree_filename)
-
-    @staticmethod
-    def fill_family_bins(
-        families: FamiliesData,
-        partition_descriptor: Optional[PartitionDescriptor] = None
-    ) -> None:
-        """Save families data into a parquet file."""
-        if partition_descriptor is not None \
-                and partition_descriptor.has_family_bins():
-            for family in families.values():
-                family_bin = partition_descriptor.make_family_bin(
-                    family.family_id)
-                for person in family.persons.values():
-                    person.set_attr("family_bin", family_bin)
-            families._ped_df = None  # pylint: disable=protected-access
-
-    @staticmethod
-    def variants_to_parquet(
-        out_dir: str,
-        variants_loader: VariantsLoader,
-        partition_descriptor: PartitionDescriptor,
-        variants_writer_builder: ParquetWriterBuilder,
-        bucket_index: int = 1,
-        rows: int = 100_000,
-        include_reference: bool = False,
-    ) -> None:
-        """Read variants from variant_loader and store them in parquet."""
-        variants_writer = variants_writer_builder.build(
-            out_dir,
-            variants_loader,
-            partition_descriptor,
-            bucket_index=bucket_index,
-            rows=rows,
-            include_reference=include_reference,
+def merge_parquets(
+    partition_descriptor: PartitionDescriptor,
+    variants_dir: str,
+    partitions: list[tuple[str, str]]
+) -> None:
+    """Mergee parquet files in variants_dir."""
+    output_parquet_file = fs_utils.join(
+        variants_dir,
+        partition_descriptor.partition_filename(
+            "merged", partitions, bucket_index=None
         )
+    )
+    parquet_files = fs_utils.glob(
+        fs_utils.join(variants_dir, "*.parquet")
+    )
 
-        variants_writer.write_dataset()
+    is_output_in_input = \
+        any(fn.endswith(output_parquet_file) for fn in parquet_files)
+    if is_output_in_input:
+        # a leftover file from a previous run. Remove from list of files.
+        # we use endswith instead of == because of path normalization
+        for i, filename in enumerate(parquet_files):
+            if filename.endswith(output_parquet_file):
+                parquet_files.pop(i)
+                break
 
-    @staticmethod
-    def write_variants(
-        out_dir: str,
-        variants_loader: VariantsLoader,
-        partition_description: PartitionDescriptor,
-        bucket: Bucket,
-        project: ImportProject,
-        variants_writer_builder: ParquetWriterBuilder
-    ) -> None:
-        """Write variants to the corresponding parquet files."""
-        if bucket.region_bin is not None and bucket.region_bin != "none":
-            logger.info(
-                "resetting regions (rb: %s): %s",
-                bucket.region_bin, bucket.regions)
-            variants_loader.reset_regions(bucket.regions)
-
-        rows = project.get_row_group_size(bucket)
-        logger.debug("argv.rows: %s", rows)
-        ParquetWriter.variants_to_parquet(
-            out_dir,
-            variants_loader,
-            partition_description,
-            variants_writer_builder,
-            bucket_index=bucket.index,
-            rows=rows,
-            include_reference=project.include_reference,
+    if len(parquet_files) > 1:
+        logger.info(
+            "Merging %d files in %s", len(parquet_files), variants_dir
         )
+        parquet_helpers.merge_parquets(parquet_files, output_parquet_file)
 
-    @staticmethod
-    def write_meta(
-        out_dir: str,
-        variants_loader: VariantsLoader,
-        partition_description: PartitionDescriptor,
-        variants_writer_builder: ParquetWriterBuilder
-    ) -> None:
-        """Write dataset metadata."""
-        variants_writer = variants_writer_builder.build(
-            out_dir,
-            variants_loader,
-            partition_description,
-        )
-        variants_writer.write_meta()
 
-    @staticmethod
-    def write_pedigree(
-        output_filename: str,
-        families: FamiliesData,
-        partition_descriptor: PartitionDescriptor
-    ) -> None:
-        """Write FamiliesData to a pedigree parquet file."""
-        ParquetWriter.families_to_parquet(
-            families, output_filename, partition_descriptor)
+def append_meta_to_parquet(
+    meta_filename: str,
+    key: list[str], value: list[str]
+) -> None:
+    """Append key-value pair to meta data parquet file."""
+    dirname = os.path.dirname(meta_filename)
+    if dirname and not os.path.exists(dirname):
+        os.makedirs(dirname, exist_ok=True)
 
-    @staticmethod
-    def merge_parquets(
-        partition_descriptor: PartitionDescriptor,
-        variants_dir: str,
-        partitions: list[tuple[str, str]]
-    ) -> None:
-        """Mergee parquet files in variants_dir."""
-        output_parquet_file = fs_utils.join(
-            variants_dir,
-            partition_descriptor.partition_filename(
-                "merged", partitions, bucket_index=None
-            )
-        )
-        parquet_files = fs_utils.glob(
-            fs_utils.join(variants_dir, "*.parquet")
-        )
+    append_table = pa.table(
+        {
+            "key": key,
+            "value": value
+        },
+        schema=pa.schema({"key": pa.string(), "value": pa.string()})
+    )
+    if not os.path.isfile(meta_filename):
+        pq.write_table(append_table, meta_filename)
+        return
 
-        is_output_in_input = \
-            any(fn.endswith(output_parquet_file) for fn in parquet_files)
-        if is_output_in_input:
-            # a leftover file from a previous run. Remove from list of files.
-            # we use endswith instead of == because of path normalization
-            for i, filename in enumerate(parquet_files):
-                if filename.endswith(output_parquet_file):
-                    parquet_files.pop(i)
-                    break
-
-        if len(parquet_files) > 1:
-            logger.info(
-                "Merging %d files in %s", len(parquet_files), variants_dir
-            )
-            parquet_helpers.merge_parquets(parquet_files, output_parquet_file)
+    meta_table = pq.read_table(meta_filename)
+    meta_table = pa.concat_tables([meta_table, append_table])
+    pq.write_table(meta_table, meta_filename)

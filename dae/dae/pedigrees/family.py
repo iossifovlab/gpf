@@ -310,8 +310,8 @@ class Person:
             or self._attributes.get("missing", False))
 
     @property
-    def family_bin(self) -> Optional[str]:
-        return cast(Optional[str], self._attributes.get("family_bin", None))
+    def family_bin(self) -> Optional[int]:
+        return cast(Optional[int], self._attributes.get("family_bin", None))
 
     @property
     def sample_index(self) -> Optional[int]:

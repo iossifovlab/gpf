@@ -46,8 +46,6 @@ def test_import_task_bin_size(
 
     study_dir = join(tmp_path, "test_import")
     assert set(os.listdir(study_dir)) == {
-        "_PARTITION_DESCRIPTION",
-        "_VARIANTS_SCHEMA",
         "family", "summary",
         "meta", "pedigree",
     }

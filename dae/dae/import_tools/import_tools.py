@@ -57,7 +57,7 @@ class Bucket:
         return f"Bucket({self.type},{self.region_bin},{regions},{self.index})"
 
 
-class ImportProject():
+class ImportProject:
     """Encapsulate the import configuration.
 
     This class creates the necessary objects needed to import a study
@@ -585,11 +585,13 @@ class ImportProject():
                     "Consider removing del_chrom_prefix."
                 ) from exp
 
-    def _build_annotation_pipeline(
-            self, gpf_instance: GPFInstance) -> AnnotationPipeline:
+    def get_annotation_pipeline_config(
+        self, gpf_instance: GPFInstance,
+    ) -> list[dict]:
+        """Return the annotation pipeline configuration."""
         if "annotation" not in self.import_config:
             # build default annotation pipeline as described in the gpf
-            return construct_import_annotation_pipeline(gpf_instance)
+            return construct_import_annotation_pipeline_config(gpf_instance)
 
         annotation_config = self.import_config["annotation"]
         if "file" in annotation_config:
@@ -598,12 +600,15 @@ class ImportProject():
             annotation_config_file = fs_utils.join(
                 self._base_config_dir, annotation_config["file"]
             )
-            return construct_import_annotation_pipeline(
+            return construct_import_annotation_pipeline_config(
                 gpf_instance, annotation_configfile=annotation_config_file
             )
+        return annotation_config
 
-        # embedded annotation
-        annotation_config = AnnotationConfigParser.parse_raw(annotation_config)
+    def _build_annotation_pipeline(
+            self, gpf_instance: GPFInstance) -> AnnotationPipeline:
+        config = self.get_annotation_pipeline_config(gpf_instance)
+        annotation_config = AnnotationConfigParser.parse_raw(config)
         return build_annotation_pipeline(
             pipeline_config=annotation_config, grr_repository=gpf_instance.grr
         )
@@ -835,21 +840,29 @@ def save_study_config(
         outfile.write(study_config)
 
 
-def construct_import_annotation_pipeline(
-        gpf_instance: GPFInstance,
-        annotation_configfile: Optional[str] = None) -> AnnotationPipeline:
-    """Construct annotation pipeline for importing data."""
+def construct_import_annotation_pipeline_config(
+    gpf_instance: GPFInstance,
+    annotation_configfile: Optional[str] = None
+) -> list[dict]:
+    """Construct annotation pipeline config for importing data."""
     pipeline_config = []
     if annotation_configfile is not None:
         assert os.path.exists(annotation_configfile), annotation_configfile
         with open(annotation_configfile, "rt", encoding="utf8") as infile:
             pipeline_config = yaml.safe_load(infile.read())
-        grr = gpf_instance.grr
-        pipeline = build_annotation_pipeline(
-            pipeline_config_raw=pipeline_config, grr_repository=grr)
-        return pipeline
+            return pipeline_config
+    return gpf_instance.get_annotation_pipeline_config()
 
-    pipeline = gpf_instance.get_annotation_pipeline()
+
+def construct_import_annotation_pipeline(
+        gpf_instance: GPFInstance,
+        annotation_configfile: Optional[str] = None) -> AnnotationPipeline:
+    """Construct annotation pipeline for importing data."""
+    pipeline_config = construct_import_annotation_pipeline_config(
+        gpf_instance, annotation_configfile)
+    grr = gpf_instance.grr
+    pipeline = build_annotation_pipeline(
+        pipeline_config_raw=pipeline_config, grr_repository=grr)
     return pipeline
 
 

@@ -7,7 +7,8 @@ import argparse
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 from dae.pedigrees.loader import FamiliesLoader
 from dae.parquet.partition_descriptor import PartitionDescriptor
-from dae.parquet.parquet_writer import ParquetWriter
+from impala_storage.schema1.parquet_io import VariantsParquetWriter, \
+    ParquetWriter
 
 
 def main(argv: list[str]) -> None:
@@ -65,7 +66,9 @@ def run(args: argparse.Namespace) -> None:
         output_filename = args.output_filename
 
     ParquetWriter.families_to_parquet(
-        families, output_filename, partition_description)
+        families, output_filename,
+        VariantsParquetWriter,
+        partition_description)
 
 
 if __name__ == "__main__":
