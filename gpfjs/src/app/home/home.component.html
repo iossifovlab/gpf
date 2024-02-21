@@ -3,7 +3,13 @@
     (writeEvent)="writeDescription($event)"
     [initialMarkdown]="homeDescription"></gpf-markdown-editor>
 
-  <span *ngIf="geneProfilesConfig"><a [routerLink]="'/gene-profiles'" target="_blank">Gene profiles</a></span>
+  <div id="gene-profiles-section" *ngIf="geneProfilesConfig">
+    <a [routerLink]="'/gene-profiles'"><h4>Gene profiles</h4></a>
+    <gpf-markdown-editor
+      *ngIf="geneProfilesConfig.description"
+      [initialMarkdown]="geneProfilesConfig.description"
+      [editable]="false"></gpf-markdown-editor>
+  </div>
 
   <h3 id="dataset-header">Datasets</h3>
   <div class="separator"></div>

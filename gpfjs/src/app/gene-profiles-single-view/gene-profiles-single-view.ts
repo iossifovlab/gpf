@@ -4,6 +4,7 @@ import { Type } from 'class-transformer';
 export class GeneProfilesSingleViewConfig {
   public shown: Array<{category: any; section: string; id: string}>;
   public defaultDataset: string;
+  public description: string;
 
   @Type(() => GeneProfilesGeneSetsCategory)
   public geneSets: GeneProfilesGeneSetsCategory[];

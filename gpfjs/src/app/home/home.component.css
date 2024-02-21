@@ -60,6 +60,7 @@ a:hover {
 
 #dataset-header {
   align-self: flex-start;
+  margin-top: 8px;
 }
 
 .separator {
@@ -81,4 +82,25 @@ a:hover {
   justify-content: space-between;
   width: 100%;
   margin-bottom: 20px;
+}
+
+#gene-profiles-section {
+  display: flex;
+  width: 100%;
+  align-items: center;
+}
+
+#gene-profiles-section h4 {
+  display: flex;
+  width: max-content;
+  margin: 0;
+}
+
+:host ::ng-deep #gene-profiles-section markdown {
+  width: 955px;
+}
+
+:host ::ng-deep #gene-profiles-section .container {
+  margin-top: 0;
+  padding-bottom: 0;
 }

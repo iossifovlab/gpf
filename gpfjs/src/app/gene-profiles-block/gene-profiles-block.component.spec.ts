@@ -21,6 +21,7 @@ import { GeneProfilesColumn, GeneProfilesTableConfig } from 'app/gene-profiles-t
 const config = {
   shown: [],
   defaultDataset: 'mockDataset',
+  description: 'mock description',
   geneSets: [
     {
       category: 'autism_gene_sets',
