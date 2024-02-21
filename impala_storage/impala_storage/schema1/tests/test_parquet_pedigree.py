@@ -3,8 +3,8 @@ import os
 import pytest
 
 from dae.pedigrees.loader import FamiliesLoader
-from dae.parquet.parquet_writer import ParquetWriter
-from impala_storage.schema1.parquet_io import VariantsParquetWriter
+from impala_storage.schema1.parquet_io import VariantsParquetWriter, \
+    ParquetWriter
 
 
 @pytest.mark.parametrize(

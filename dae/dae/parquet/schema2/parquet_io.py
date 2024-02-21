@@ -3,12 +3,10 @@ import time
 import logging
 import json
 import functools
-from typing import Any, Optional, cast, Callable
-import toml
+from typing import Any, Optional, cast
 
 import fsspec
 
-import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
 
@@ -20,8 +18,10 @@ from dae.utils.variant_utils import is_all_reference_genotype, \
     is_unknown_genotype
 
 from dae.variants.variant import SummaryAllele
-from dae.parquet.parquet_writer import AbstractVariantsParquetWriter, \
-    collect_pedigree_parquet_schema, ParquetWriter, save_ped_df_to_parquet
+from dae.parquet.parquet_writer import \
+    collect_pedigree_parquet_schema, \
+    fill_family_bins, \
+    append_meta_to_parquet
 from dae.parquet.schema2.serializers import AlleleParquetSerializer
 from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.variants_loaders.raw.loader import VariantsLoader
@@ -129,7 +129,7 @@ class ContinuousParquetFileWriter:
         self._writer.close()
 
 
-class VariantsParquetWriter(AbstractVariantsParquetWriter):
+class VariantsParquetWriter:
     """Provide functions for storing variants into parquet dataset."""
 
     def __init__(
@@ -159,7 +159,7 @@ class VariantsParquetWriter(AbstractVariantsParquetWriter):
         self.data_writers: dict[str, ContinuousParquetFileWriter] = {}
         assert isinstance(partition_descriptor, PartitionDescriptor)
         self.partition_descriptor = partition_descriptor
-        ParquetWriter.fill_family_bins(
+        fill_family_bins(
             self.families, self.partition_descriptor)
 
         annotation_schema = self.variants_loader.get_attribute(
@@ -171,34 +171,6 @@ class VariantsParquetWriter(AbstractVariantsParquetWriter):
         self.serializer = AlleleParquetSerializer(
             annotation_schema, extra_attributes
         )
-
-    @staticmethod
-    def build_variants_writer(
-        out_dir: str,
-        variants_loader: VariantsLoader,
-        partition_descriptor: PartitionDescriptor,
-        bucket_index: int = 1,
-        rows: int = 100_000,
-        include_reference: bool = True,
-        filesystem: Optional[fsspec.AbstractFileSystem] = None,
-    ) -> AbstractVariantsParquetWriter:
-        return VariantsParquetWriter(
-            out_dir=out_dir,
-            variants_loader=variants_loader,
-            partition_descriptor=partition_descriptor,
-            bucket_index=bucket_index,
-            rows=rows,
-            include_reference=include_reference,
-            filesystem=filesystem,
-        )
-
-    @staticmethod
-    def build_pedigree_writer() -> Callable[
-            [pd.DataFrame, str, Optional[fsspec.AbstractFileSystem]], None]:
-        """Build a variants parquet writer object."""
-        return functools.partial(
-            save_ped_df_to_parquet,
-            parquet_version=None)
 
     def _build_family_filename(
         self, allele: FamilyAllele,
@@ -402,40 +374,6 @@ class VariantsParquetWriter(AbstractVariantsParquetWriter):
             elapsed)
         return filenames
 
-    def write_schema(self) -> None:
-        """Write the schema to a separate file."""
-        config: dict[str, Any] = {}
-
-        schema_summary = self.serializer.schema_summary
-        schema_family = self.serializer.schema_family
-        config["summary_schema"] = {}
-        config["family_schema"] = {}
-
-        for k in schema_summary.names:
-            v = schema_summary.field(k)
-            config["summary_schema"][k] = str(v.type)
-
-        for k in schema_family.names:
-            v = schema_family.field(k)
-            config["family_schema"][k] = str(v.type)
-
-        filename = os.path.join(self.out_dir, "_VARIANTS_SCHEMA")
-
-        config["extra_attributes"] = {}
-        extra_attributes = self.serializer.extra_attributes
-        for attr in extra_attributes:
-            config["extra_attributes"][attr] = "string"
-
-        with open(filename, "w") as configfile:
-            content = toml.dumps(config)
-            configfile.write(content)
-
-    def write_partition(self) -> None:
-        filename = os.path.join(self.out_dir, "_PARTITION_DESCRIPTION")
-        with open(filename, "wt") as output:
-            output.write(self.partition_descriptor.serialize())
-            output.write("\n")
-
     def write_metadata(self) -> None:
         """Write dataset metadata."""
         schema = [
@@ -464,41 +402,25 @@ class VariantsParquetWriter(AbstractVariantsParquetWriter):
         schema_pedigree = "\n".join([
             f"{f.name}|{f.type}" for f in pedigree_schema])
 
-        metadata_table = pa.Table.from_pydict(
-            {
-                "key": [
-                    "partition_description",
-                    "summary_schema",
-                    "family_schema",
-                    "pedigree_schema",
-                    "extra_attributes",
-                ],
-                "value": [
-                    self.partition_descriptor.serialize(),
-                    str(schema_summary),
-                    str(schema_family),
-                    str(schema_pedigree),
-                    str(extra_attributes),
-                ],
-            },
-            schema=pa.schema({"key": pa.string(), "value": pa.string()}),
-        )
         metapath = fs_utils.join(self.out_dir, "meta", "meta.parquet")
-        dirname = os.path.dirname(metapath)
-        if dirname and not os.path.exists(dirname):
-            os.makedirs(dirname, exist_ok=True)
-
-        pq.write_table(
-            metadata_table,
+        append_meta_to_parquet(
             metapath,
-            # version="1.0"
+            key=[
+                "partition_description",
+                "summary_schema",
+                "family_schema",
+                "pedigree_schema",
+                "extra_attributes",
+            ],
+            value=[
+                self.partition_descriptor.serialize(),
+                str(schema_summary),
+                str(schema_family),
+                str(schema_pedigree),
+                str(extra_attributes),
+            ]
         )
 
     def write_dataset(self) -> list[str]:
         filenames = self._write_internal()
         return filenames
-
-    def write_meta(self) -> None:
-        self.write_metadata()
-        self.write_schema()
-        self.write_partition()

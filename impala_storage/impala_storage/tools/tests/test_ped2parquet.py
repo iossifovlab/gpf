@@ -7,7 +7,7 @@ import pyarrow.parquet as pq
 from dae.pedigrees.families_data import FamiliesData
 from dae.parquet.partition_descriptor import PartitionDescriptor
 
-from dae.tools.ped2parquet import main
+from impala_storage.tools.ped2parquet import main
 
 
 def test_partition_descriptor(global_dae_fixtures_dir: str) -> None:

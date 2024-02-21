@@ -57,7 +57,7 @@ class Bucket:
         return f"Bucket({self.type},{self.region_bin},{regions},{self.index})"
 
 
-class ImportProject():
+class ImportProject:
     """Encapsulate the import configuration.
 
     This class creates the necessary objects needed to import a study

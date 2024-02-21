@@ -7,8 +7,8 @@ import argparse
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 from dae.pedigrees.loader import FamiliesLoader
 from dae.parquet.partition_descriptor import PartitionDescriptor
-from dae.parquet.parquet_writer import ParquetWriter
-from dae.parquet.schema2.parquet_io import VariantsParquetWriter
+from impala_storage.schema1.parquet_io import VariantsParquetWriter, \
+    ParquetWriter
 
 
 def main(argv: list[str]) -> None:

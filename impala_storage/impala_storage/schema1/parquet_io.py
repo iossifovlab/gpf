@@ -1,13 +1,17 @@
 """Provides Apache Parquet storage of genotype data."""
+from __future__ import annotations
+
 import os
 import sys
+import abc
 import time
 import logging
 import functools
-from typing import List, Union, Dict, Any, Optional, Callable
-
 from copy import copy
 from urllib.parse import urlparse
+
+from typing import List, Union, Dict, Any, Optional, Callable
+from typing_extensions import Protocol
 
 import toml
 
@@ -22,19 +26,184 @@ import fsspec
 from dae.parquet.helpers import url_to_pyarrow_fs
 from dae.utils import fs_utils
 from dae.utils.variant_utils import GenotypeType
+from dae.pedigrees.families_data import FamiliesData
+
 from dae.variants.family_variant import FamilyAllele, FamilyVariant, \
     calculate_simple_best_state
 from dae.variants.variant import SummaryVariant, SummaryAllele
 from dae.parquet.partition_descriptor import PartitionDescriptor
-from dae.parquet.parquet_writer import AbstractVariantsParquetWriter, \
-    save_ped_df_to_parquet
+from dae.parquet.parquet_writer import \
+    save_ped_df_to_parquet, fill_family_bins
 from dae.variants_loaders.raw.loader import VariantsLoader
 from dae.pedigrees.family import Family
+from dae.import_tools.import_tools import ImportProject, Bucket
 
 from impala_storage.schema1.serializers import AlleleParquetSerializer
 
 
 logger = logging.getLogger(__name__)
+
+
+class AbstractVariantsParquetWriter(abc.ABC):
+    """Abstract base class for parquet writes."""
+
+    @abc.abstractmethod
+    def write_schema(self) -> None:
+        """Store the schema. Obsolete."""
+
+    @abc.abstractmethod
+    def write_partition(self) -> None:
+        """Store the partition. Obsolete."""
+
+    @abc.abstractmethod
+    def write_metadata(self) -> None:
+        """Store the dataset metadata into a meta parquet file."""
+
+    @abc.abstractmethod
+    def write_dataset(self) -> list[str]:
+        """Store the variants parquet dataset."""
+
+    @abc.abstractmethod
+    def write_meta(self) -> None:
+        """Store all the metadata. Obsolete."""
+
+    @staticmethod
+    @abc.abstractmethod
+    def build_variants_writer(
+        out_dir: str,
+        variants_loader: VariantsLoader,
+        partition_descriptor: PartitionDescriptor,
+        bucket_index: int = 1,
+        rows: int = 100_000,
+        include_reference: bool = True,
+        filesystem: Optional[fsspec.AbstractFileSystem] = None,
+    ) -> AbstractVariantsParquetWriter:
+        """Build a variants parquet writed."""
+
+    @staticmethod
+    @abc.abstractmethod
+    def build_pedigree_writer() -> Callable[
+            [pd.DataFrame, str, Optional[fsspec.AbstractFileSystem]], None]:
+        """Build a variants parquet writer object."""
+
+
+class ParquetWriterBuilder(Protocol):
+    """Defines a parquet writer builder type protocol."""
+
+    @staticmethod
+    def build_variants_writer(
+        out_dir: str,
+        variants_loader: VariantsLoader,
+        partition_descriptor: PartitionDescriptor,
+        bucket_index: int = 1,
+        rows: int = 100_000,
+        include_reference: bool = True,
+        filesystem: Optional[fsspec.AbstractFileSystem] = None,
+    ) -> AbstractVariantsParquetWriter:
+        """Build a variants parquet writer object."""
+
+    @staticmethod
+    def build_pedigree_writer() -> Callable[
+            [pd.DataFrame, str, Optional[fsspec.AbstractFileSystem]], None]:
+        """Build a variants parquet writer object."""
+
+
+class ParquetWriter:
+    """Implement writing variants and pedigrees parquet files."""
+
+    @staticmethod
+    def families_to_parquet(
+        families: FamiliesData,
+        pedigree_filename: str,
+        parquet_writer_builder: ParquetWriterBuilder,
+        partition_descriptor: Optional[PartitionDescriptor] = None,
+    ) -> None:
+        """Save families data into a parquet file."""
+        fill_family_bins(families, partition_descriptor)
+
+        dirname = os.path.dirname(pedigree_filename)
+        if dirname:
+            os.makedirs(dirname, exist_ok=True)
+        pedigree_writer = parquet_writer_builder.build_pedigree_writer()
+        pedigree_writer(families.ped_df, pedigree_filename, None)
+
+    @staticmethod
+    def variants_to_parquet(
+        out_dir: str,
+        variants_loader: VariantsLoader,
+        partition_descriptor: PartitionDescriptor,
+        parquet_writer_builder: ParquetWriterBuilder,
+        bucket_index: int = 1,
+        rows: int = 100_000,
+        include_reference: bool = False,
+    ) -> None:
+        """Read variants from variant_loader and store them in parquet."""
+        variants_writer = parquet_writer_builder.build_variants_writer(
+            out_dir,
+            variants_loader,
+            partition_descriptor,
+            bucket_index=bucket_index,
+            rows=rows,
+            include_reference=include_reference,
+        )
+
+        variants_writer.write_dataset()
+
+    @staticmethod
+    def write_variants(
+        out_dir: str,
+        variants_loader: VariantsLoader,
+        partition_description: PartitionDescriptor,
+        bucket: Bucket,
+        project: ImportProject,
+        parquet_writer_builder: ParquetWriterBuilder
+    ) -> None:
+        """Write variants to the corresponding parquet files."""
+        if bucket.region_bin is not None and bucket.region_bin != "none":
+            logger.info(
+                "resetting regions (rb: %s): %s",
+                bucket.region_bin, bucket.regions)
+            variants_loader.reset_regions(bucket.regions)
+
+        rows = project.get_row_group_size(bucket)
+        logger.debug("argv.rows: %s", rows)
+        ParquetWriter.variants_to_parquet(
+            out_dir,
+            variants_loader,
+            partition_description,
+            parquet_writer_builder,
+            bucket_index=bucket.index,
+            rows=rows,
+            include_reference=project.include_reference,
+        )
+
+    @staticmethod
+    def write_meta(
+        out_dir: str,
+        variants_loader: VariantsLoader,
+        partition_description: PartitionDescriptor,
+        parquet_writer_builder: ParquetWriterBuilder
+    ) -> None:
+        """Write dataset metadata."""
+        variants_writer = parquet_writer_builder.build_variants_writer(
+            out_dir,
+            variants_loader,
+            partition_description,
+        )
+        variants_writer.write_meta()
+
+    @staticmethod
+    def write_pedigree(
+        output_filename: str,
+        families: FamiliesData,
+        partition_descriptor: PartitionDescriptor,
+        parquet_writer_builder: ParquetWriterBuilder
+    ) -> None:
+        """Write FamiliesData to a pedigree parquet file."""
+        ParquetWriter.families_to_parquet(
+            families, output_filename,
+            parquet_writer_builder,
+            partition_descriptor,)
 
 
 class ContinuousParquetFileWriter:

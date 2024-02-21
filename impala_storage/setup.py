@@ -21,6 +21,7 @@ setuptools.setup(
         "impala_storage": ["py.typed"],
     },
     scripts=[
+        "impala_storage/tools/ped2parquet.py",
         "impala_storage/tools/impala_parquet_loader.py",
         "impala_storage/tools/impala_tables_loader.py",
         "impala_storage/tools/impala_tables_stats.py",
