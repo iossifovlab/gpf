@@ -97,6 +97,9 @@ class GenotypeBrowserQueryView(QueryDatasetView):
             familyTypes (list): Filter by family type.
             familyIds (list): Filter by family IDs.
             affectedStatus (list): Filter by affected status.
+            tagIntersection (boolean): Change Family tags interesection mode
+            selectedFamilyTags (list): Family tags to include
+            deselectedFamilyTags (list): Family tags to exlude
         """
         # pylint: disable=too-many-branches
         logger.info("query v3 variants request: %s", str(request.data))

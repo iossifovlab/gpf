@@ -8,10 +8,11 @@ from functools import reduce
 from dae.effect_annotation.effect import EffectTypesMixin
 from dae.variants.attributes import Inheritance
 from dae.utils.regions import Region
-from dae.pedigrees.family import ALL_FAMILY_TYPES, FamilyType
+from dae.pedigrees.family import ALL_FAMILY_TYPES, FamilyTag, FamilyType
 from dae.query_variants.attributes_query import \
     role_query
 from dae.person_filters import make_pedigree_filter, make_pheno_filter
+from dae.pedigrees.family_tag_builder import check_family_tags_query
 
 
 logger = logging.getLogger(__name__)
@@ -304,6 +305,38 @@ class QueryTransformer:
         )
 
         kwargs = self._handle_person_set_collection(kwargs)
+
+        if "selectedFamilyTags" in kwargs or "deselectedFamilyTags" in kwargs:
+            or_mode = False if bool(kwargs.get("tagIntersection")) is True \
+                or kwargs.get("tagIntersection") is None \
+                else True
+            include_tags = kwargs.get("selectedFamilyTags")
+            if isinstance(include_tags, list):
+                include_tags = {
+                    FamilyTag.from_label(label)
+                    for label
+                    in include_tags
+                }
+            else:
+                include_tags = set[FamilyTag]()
+            exclude_tags = kwargs.get("deselectedFamilyTags")
+            if isinstance(exclude_tags, list):
+                exclude_tags = {
+                    FamilyTag.from_label(label)
+                    for label
+                    in exclude_tags
+                }
+            else:
+                exclude_tags = set[FamilyTag]()
+
+            family_ids: set[str] = set()
+            for family_id, family in self.study_wrapper.families.items():
+              if check_family_tags_query(
+                  family, or_mode, include_tags, exclude_tags
+              ):
+                family_ids.add(family_id)
+
+            kwargs['familyIds'] = family_ids
 
         if "querySummary" in kwargs:
             kwargs["query_summary"] = kwargs["querySummary"]
