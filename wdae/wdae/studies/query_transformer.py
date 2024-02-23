@@ -331,10 +331,10 @@ class QueryTransformer:
 
             family_ids: set[str] = set()
             for family_id, family in self.study_wrapper.families.items():
-              if check_family_tags_query(
-                  family, or_mode, include_tags, exclude_tags
-              ):
-                family_ids.add(family_id)
+                if check_family_tags_query(
+                    family, or_mode, include_tags, exclude_tags
+                ):
+                    family_ids.add(family_id)
 
             kwargs['familyIds'] = family_ids
 
