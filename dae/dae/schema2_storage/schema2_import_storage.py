@@ -131,15 +131,15 @@ class Schema2ImportStorage(ImportStorage):
                 bucket.region_bin, bucket.regions)
             variants_loader.reset_regions(bucket.regions)
 
-        rows = project.get_row_group_size(bucket)
-        logger.debug("argv.rows: %s", rows)
+        row_groups_size = project.get_row_group_size(bucket)
+        logger.debug("argv.rows: %s", row_groups_size)
 
         variants_writer = VariantsParquetWriter(
             out_dir=layout.study,
             variants_loader=variants_loader,
             partition_descriptor=cls._get_partition_description(project),
             bucket_index=bucket.index,
-            batch_rows=1_000,
+            row_groups_size=row_groups_size,
             include_reference=project.include_reference,
         )
         variants_writer.write_dataset()
