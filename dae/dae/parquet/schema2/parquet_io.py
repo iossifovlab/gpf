@@ -37,6 +37,7 @@ class ContinuousParquetFileWriter:
     """
 
     BATCH_ROWS = 1_000
+    DEFAULT_COMPRESSION = "SNAPPY"
 
     def __init__(
         self,
@@ -63,11 +64,12 @@ class ContinuousParquetFileWriter:
         self.dirname = dirname
 
         filesystem, filepath = url_to_pyarrow_fs(filepath, filesystem)
-        compression: Union[str, dict[str, str]] = "SNAPPY"
+        compression: Union[str, dict[str, str]] = self.DEFAULT_COMPRESSION
         if blob_column is not None:
-            compression = {
-                blob_column: "ZSTD",
-            }
+            compression = {}
+            for name in self.schema.names:
+                compression[name] = self.DEFAULT_COMPRESSION
+            compression[blob_column] = "ZSTD"
         self._writer = pq.ParquetWriter(
             filepath, self.schema,
             compression=compression,
