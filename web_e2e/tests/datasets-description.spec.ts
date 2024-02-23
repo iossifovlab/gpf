@@ -159,7 +159,7 @@ test.describe('Dataset description access rights tests', () => {
     await page.locator('.editor textarea').fill('');
     await page.getByText('Save').click();
 
-    await page.locator('a:text("User Management")').click();
+    await page.locator('a:text("Management")').click();
     await page.locator(
       '[id="user_iossifov_2014@iossifovlab.com-groups-cell"] #iossifov_2014-list-item gpf-confirm-button'
     ).click();

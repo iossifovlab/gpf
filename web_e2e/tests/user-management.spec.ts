@@ -1,7 +1,7 @@
 import { test, expect, Page } from '@playwright/test';
 import * as utils from './utils';
 
-test.describe('User management tests for reset password in Users', () => {
+test.describe('Management tests for reset password in Users', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.instanceUrl, {waitUntil: 'load'});
   });
@@ -12,7 +12,7 @@ test.describe('User management tests for reset password in Users', () => {
     const email = `${username}@mail.com`;
     const password = 'XC^ZF*TZXuUChFsv';
 
-    await page.locator('a:text("User Management")').click();
+    await page.locator('a:text("Management")').click();
     await utils.createUser(page, email, username);
 
     await expect(page.locator(`[id="${email}-password-cell"]`)).toBeEmpty();
@@ -43,7 +43,7 @@ test.describe('User management tests for reset password in Users', () => {
     const email = `${username}@mail.com`;
     const password = 'XC^ZF*TZXuUChFsv';
 
-    await page.locator('a:text("User Management")').click();
+    await page.locator('a:text("Management")').click();
     await utils.createUser(page, email, username);
 
     await Promise.all([
@@ -81,7 +81,7 @@ test.describe('Users management', () => {
     await utils.loginAdmin(page);
   });
   test('should not create user with already used email', async({ page }) => {
-    await page.locator('a:text("User Management")').click();
+    await page.locator('a:text("Management")').click();
     await utils.createUser(page, 'used_email@email.com', 'used_name');
 
     await page.locator('#create-user-form-button').click();
@@ -94,7 +94,7 @@ test.describe('Users management', () => {
   });
 
   test('should not create user with no email or name', async({ page }) => {
-    await page.locator('a:text("User Management")').click();
+    await page.locator('a:text("Management")').click();
 
     await page.locator('#create-user-form-button').click();
     await page.locator('#name-box').fill('no_username');
@@ -110,7 +110,7 @@ test.describe('Users management', () => {
   });
 
   test('should not create user with invalid email or name', async({ page }) => {
-    await page.locator('a:text("User Management")').click();
+    await page.locator('a:text("Management")').click();
 
     await page.locator('#create-user-form-button').click();
 
@@ -139,7 +139,7 @@ test.describe('Users management', () => {
   test('should search and find user', async({ page }) => {
     const username = utils.getRandomString();
     const email = `${username}@mail.com`;
-    await page.locator('a:text("User Management")').click();
+    await page.locator('a:text("Management")').click();
     await utils.createUser(page, email, username);
 
     await searchInTable(page, username);
@@ -152,7 +152,7 @@ test.describe('Users management', () => {
   test('should search and not find user', async({ page }) => {
     const username = utils.getRandomString();
     const email = `${username}@mail.com`;
-    await page.locator('a:text("User Management")').click();
+    await page.locator('a:text("Management")').click();
     await utils.createUser(page, email, username);
 
     await searchInTable(page, username);
@@ -165,7 +165,7 @@ test.describe('Users management', () => {
   test('should edit username', async({ page }) => {
     const username = utils.getRandomString();
     const email = `${username}@mail.com`;
-    await page.locator('a:text("User Management")').click();
+    await page.locator('a:text("Management")').click();
     await utils.createUser(page, email, username);
 
     await page.locator(`[id="${email}-user-cell"]`).getByTitle('Edit').click();
@@ -179,7 +179,7 @@ test.describe('Users management', () => {
   test('should try to delete username', async({ page }) => {
     const username = utils.getRandomString();
     const email = `${username}@mail.com`;
-    await page.locator('a:text("User Management")').click();
+    await page.locator('a:text("Management")').click();
     await utils.createUser(page, email, username);
 
     await page.locator(`[id="${email}-user-cell"]`).getByTitle('Edit').click();
@@ -195,7 +195,7 @@ test.describe('Users management', () => {
     const username = utils.getRandomString();
     const email = `${username}@mail.com`;
 
-    await page.locator('a:text("User Management")').click();
+    await page.locator('a:text("Management")').click();
     await page.locator('#create-user-form-button').click();
 
     await page.locator('#name-box').fill(username);
@@ -206,7 +206,7 @@ test.describe('Users management', () => {
   });
 
   test('should check admin', async({ page }) => {
-    await page.locator('a:text("User Management")').click();
+    await page.locator('a:text("Management")').click();
     await searchInTable(page, 'admin@iossifovlab.com');
     await expect(page.locator('#admin-list-item gpf-confirm-button')).not.toBeVisible();
     await expect(page.locator('[id="admin@iossifovlab.com-datasets-cell"]'))
@@ -218,7 +218,7 @@ test.describe('Users management', () => {
   test('should add and remove group', async({ page }) => {
     const username = utils.getRandomString();
     const email = `${username}@mail.com`;
-    await page.locator('a:text("User Management")').click();
+    await page.locator('a:text("Management")').click();
     await utils.createUser(page, email, username);
 
     await page.locator(`[id="${email}-groups-cell"]`).getByText('Add').click();
@@ -244,7 +244,7 @@ test.describe('Groups management', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.instanceUrl, {waitUntil: 'load'});
     await utils.loginAdmin(page);
-    await page.locator('a:text("User Management")').click();
+    await page.locator('a:text("Management")').click();
   });
 
   test('should create and delete group with user and dataset', async({ page }) => {
@@ -525,7 +525,7 @@ test.describe('Datasets management', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.instanceUrl, {waitUntil: 'load'});
     await utils.loginAdmin(page);
-    await page.locator('a:text("User Management")').click();
+    await page.locator('a:text("Management")').click();
   });
 
   test('should add group to user and check data in Datasets', async({ page }) => {

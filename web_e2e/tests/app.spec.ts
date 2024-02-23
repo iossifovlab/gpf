@@ -48,12 +48,12 @@ test.describe('App tests', () => {
     expect(currentUrl).toBe(savedQueriesUrl);
   });
 
-  test('should click on the "User Management" button and navigate to "/management"', async({ page }) => {
+  test('should click on the "Management" button and navigate to "/management"', async({ page }) => {
     const managementUrl = `${utils.instanceUrl}/management`;
 
     await utils.loginAdmin(page);
 
-    await page.locator('a:text("User Management")').click();
+    await page.locator('a:text("Management")').click();
 
     const currentUrl = page.url();
 
@@ -94,7 +94,7 @@ test.describe('App user access rights tests', () => {
       password: 'secret',
       hasDatasetRights: true,
       navigationTabsCount: 6,
-      navigationTabs: ['Home', 'Datasets', 'Gene profiles', 'User profile', 'User Management', 'About']
+      navigationTabs: ['Home', 'Datasets', 'Gene profiles', 'User profile', 'Management', 'About']
     }
   };
 
@@ -186,7 +186,7 @@ test.describe('App user access rights tests', () => {
     const username = utils.getRandomString();
     const email = `${username}@mail.com`;
 
-    await page.locator('a:text("User Management")').click();
+    await page.locator('a:text("Management")').click();
     await utils.createUser(page, email, username);
 
     await page.locator(`[id="${email}-groups-cell"]`).getByRole(
@@ -245,7 +245,7 @@ test.describe('App user access rights tests', () => {
     const username = utils.getRandomString();
     const email = `${username}@mail.com`;
 
-    await page.locator('a:text("User Management")').click();
+    await page.locator('a:text("Management")').click();
     await utils.createUser(page, email, username);
 
     await page.locator(`[id="${email}-groups-cell"]`).getByRole(
