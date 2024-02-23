@@ -112,7 +112,7 @@ export class VariantReportsComponent implements OnInit {
     this.updateTagsHeader();
   }
 
-  public setTags(tags: {selected: []; deselected: []}): void {
+  public setTags(tags: {selected: string[]; deselected: string[]}): void {
     this.selectedTags = tags.selected;
     this.deselectedTags = tags.deselected;
     this.updateTagsHeader();

@@ -86,7 +86,9 @@ export class FamilyTagsComponent extends StatefulComponent implements OnInit {
   public clearFilters(): void {
     this.selectedTags = [];
     this.deselectedTags = [];
-    this.filtersButtonsState = _.mapValues(this.filtersButtonsState, () => 0);
+    this.tags.forEach((tag: string) => {
+      this.filtersButtonsState[tag] = 0;
+    });
 
     this.onUpdateTags();
     this.store.dispatch(new SetFamilyTags(this.selectedTags, this.deselectedTags, this.tagIntersection));
