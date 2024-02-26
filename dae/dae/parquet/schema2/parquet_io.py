@@ -44,7 +44,7 @@ class ContinuousParquetFileWriter:
         filepath: str,
         variant_loader: VariantsLoader,
         filesystem: Optional[fsspec.AbstractFileSystem] = None,
-        row_groups_size: int = 50_000,
+        row_group_size: int = 50_000,
         schema: str = "schema",
         blob_column: Optional[str] = None,
     ) -> None:
@@ -77,7 +77,7 @@ class ContinuousParquetFileWriter:
             use_compliant_nested_type=True,
             write_page_index=True,
         )
-        self.row_groups_size = row_groups_size
+        self.row_group_size = row_group_size
         self._batches: list[pa.RecordBatch] = []
         self._data: Optional[dict[str, Any]] = None
         self.data_reset()
@@ -100,7 +100,7 @@ class ContinuousParquetFileWriter:
         batch = self.build_batch()
         self._batches.append(batch)
         self.data_reset()
-        if len(self._batches) >= self.row_groups_size // self.BATCH_ROWS:
+        if len(self._batches) >= self.row_group_size // self.BATCH_ROWS:
             self._flush_batches()
 
     def _flush_batches(self) -> None:
@@ -166,7 +166,7 @@ class VariantsParquetWriter:
         variants_loader: VariantsLoader,
         partition_descriptor: PartitionDescriptor,
         bucket_index: int = 1,
-        row_groups_size: int = 50_000,
+        row_group_size: int = 50_000,
         include_reference: bool = True,
         filesystem: Optional[fsspec.AbstractFileSystem] = None,
     ) -> None:
@@ -178,7 +178,7 @@ class VariantsParquetWriter:
         self.bucket_index = bucket_index
         assert self.bucket_index < 1_000_000, "bad bucket index"
 
-        self.row_groups_size = row_groups_size
+        self.row_group_size = row_group_size
         self.filesystem = filesystem
 
         self.include_reference = include_reference
@@ -235,7 +235,7 @@ class VariantsParquetWriter:
                 filename,
                 self.variants_loader,
                 filesystem=self.filesystem,
-                row_groups_size=self.row_groups_size,
+                row_group_size=self.row_group_size,
                 schema="schema_family",
                 blob_column="family_variant_data",
             )
@@ -253,7 +253,7 @@ class VariantsParquetWriter:
                 filename,
                 self.variants_loader,
                 filesystem=self.filesystem,
-                row_groups_size=self.row_groups_size,
+                row_group_size=self.row_group_size,
                 schema="schema_summary",
                 blob_column="summary_variant_data",
             )

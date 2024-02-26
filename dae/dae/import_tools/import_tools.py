@@ -415,9 +415,10 @@ class ImportProject:
         """Return if there is a *destination* section in the import config."""
         return "destination" in self.import_config
 
-    def get_row_group_size(self, bucket: Bucket) -> int:
-        res = self.import_config.get("parquet_row_group_size", {})\
-            .get(bucket.type, 20_000)
+    def get_row_group_size(self) -> int:
+        res = self.import_config \
+            .get("processing_config", {}) \
+            .get("parquet_row_group_size", 50_000)
         return cast(int, res)
 
     def build_variants_loader_pipeline(
@@ -603,7 +604,7 @@ class ImportProject:
             return construct_import_annotation_pipeline_config(
                 gpf_instance, annotation_configfile=annotation_config_file
             )
-        return annotation_config
+        return cast(list[dict], annotation_config)
 
     def _build_annotation_pipeline(
             self, gpf_instance: GPFInstance) -> AnnotationPipeline:
@@ -656,11 +657,14 @@ class ImportConfigNormalizer:
 
         self._map_for_key(config, "region_length", self._int_shorthand)
         self._map_for_key(config, "chromosomes", self._normalize_chrom_list)
-        if "parquet_row_group_size" in config:
-            group_size_config = config["parquet_row_group_size"]
-            for loader in ["vcf", "denovo", "dae", "cnv"]:
-                self._map_for_key(group_size_config, loader,
-                                  self._int_shorthand)
+        if "parquet_row_group_size" in config.get("processing_config", {}):
+            group_size_config = \
+                config["processing_config"]["parquet_row_group_size"]
+            if group_size_config is None:
+                del config["processing_config"]["parquet_row_group_size"]
+            else:
+                config["processing_config"]["parquet_row_group_size"] = \
+                    self._int_shorthand(group_size_config)
         return config, base_input_dir, external_files
 
     @classmethod
@@ -716,13 +720,15 @@ class ImportConfigNormalizer:
         if isinstance(obj, int):
             return obj
         assert isinstance(obj, str)
-
+        val = obj.strip()
         unit_suffixes = {
             "K": 1_000,
             "M": 1_000_000,
             "G": 1_000_000_000,
         }
-        return int(obj[:-1]) * unit_suffixes[obj[-1].upper()]
+        if val[-1].upper() not in unit_suffixes:
+            return int(val)
+        return int(val[:-1]) * unit_suffixes[val[-1].upper()]
 
     @classmethod
     def _normalize_chrom_list(cls, obj: Union[str, list[str]]) -> list[str]:

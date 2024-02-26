@@ -114,10 +114,12 @@ def save_ped_df_to_parquet(
     )
 
 
-def merge_parquets(
+def merge_variants_parquets(
     partition_descriptor: PartitionDescriptor,
     variants_dir: str,
-    partitions: list[tuple[str, str]]
+    partitions: list[tuple[str, str]],
+    row_group_size: int = 50_000,
+    parquet_version: Optional[str] = None
 ) -> None:
     """Mergee parquet files in variants_dir."""
     output_parquet_file = fs_utils.join(
@@ -144,7 +146,10 @@ def merge_parquets(
         logger.info(
             "Merging %d files in %s", len(parquet_files), variants_dir
         )
-        parquet_helpers.merge_parquets(parquet_files, output_parquet_file)
+        parquet_helpers.merge_parquets(
+            parquet_files, output_parquet_file,
+            row_group_size=row_group_size,
+            parquet_version=parquet_version)
 
 
 def append_meta_to_parquet(

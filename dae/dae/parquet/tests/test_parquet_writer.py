@@ -7,7 +7,7 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 
 from dae.parquet.partition_descriptor import PartitionDescriptor
-from dae.parquet.parquet_writer import merge_parquets
+from dae.parquet.parquet_writer import merge_variants_parquets
 
 
 def test_merge_parquets(tmp_path: pathlib.Path) -> None:
@@ -38,7 +38,7 @@ def test_merge_parquets(tmp_path: pathlib.Path) -> None:
 
     # run and assert files are merged
     write_parquets()
-    merge_parquets(
+    merge_variants_parquets(
         part_desc, str(tmp_path),
         [("region_bin", "foo_0"), ("family_bin", "1")]
     )
@@ -46,7 +46,7 @@ def test_merge_parquets(tmp_path: pathlib.Path) -> None:
     assert len(out_files) == 1
 
     # run again and assert dir is unchanged
-    merge_parquets(
+    merge_variants_parquets(
         part_desc, str(tmp_path),
         [("region_bin", "foo_0"), ("family_bin", "1")]
     )
@@ -55,7 +55,7 @@ def test_merge_parquets(tmp_path: pathlib.Path) -> None:
 
     # generate files and run again
     write_parquets()
-    merge_parquets(
+    merge_variants_parquets(
         part_desc, str(tmp_path),
         [("region_bin", "foo_0"), ("family_bin", "1")]
     )

@@ -43,11 +43,16 @@ def url_to_pyarrow_fs(
 
 
 def merge_parquets(
-        in_files: list[str], out_file: str,
-        delete_in_files: bool = True) -> None:
+    in_files: list[str], out_file: str,
+    delete_in_files: bool = True,
+    row_group_size: int = 50_000,
+    parquet_version: Optional[str] = None
+) -> None:
     """Merge `in_files` into one large file called `out_file`."""
     try:
-        _try_merge_parquets(in_files, out_file, delete_in_files)
+        _try_merge_parquets(
+            in_files, out_file, delete_in_files,
+            row_group_size, parquet_version)
     except Exception:  # pylint: disable=broad-except
         # unsuccessfull conversion. Remove the partially generated file.
         fs, path = url_to_fs(out_file)
@@ -56,11 +61,26 @@ def merge_parquets(
         raise
 
 
+def _merge_flush_batches(
+    batches: list[pa.RecordBatch],
+    out_parquet: pq.ParquetWriter
+) -> None:
+    if len(batches) == 0:
+        return
+    table = pa.Table.from_batches(batches)
+    out_parquet.write_table(table)
+
+
 def _try_merge_parquets(
-        in_files: list[str], out_file: str, delete_in_files: bool) -> None:
+    in_files: list[str], out_file: str, delete_in_files: bool,
+    row_group_size: int = 50_000,
+    parqet_version: Optional[str] = None
+) -> None:
     assert len(in_files) > 0
     out_parquet = None
 
+    batches = []
+    batches_row_count = 0
     for in_file in in_files:
         in_fs, in_fn = url_to_pyarrow_fs(in_file)
         if in_fs is None:
@@ -73,11 +93,16 @@ def _try_merge_parquets(
                     out_parquet = pq.ParquetWriter(
                         out_filename, parq_file.schema_arrow,
                         filesystem=out_filesystem,
-                        # version="1.0"
+                        version=parqet_version
                     )
-
                 for batch in parq_file.iter_batches():
-                    out_parquet.write_batch(batch)
+                    batches.append(batch)
+                    batches_row_count += batch.num_rows
+                    if batches_row_count >= row_group_size:
+                        _merge_flush_batches(batches, out_parquet)
+                        batches = []
+                        batches_row_count = 0
+
         except pa.ArrowInvalid:
             logger.error(
                 "invalid chunk parquet file: %s", in_file, exc_info=True)
@@ -85,6 +110,10 @@ def _try_merge_parquets(
         except FileNotFoundError:
             logger.warning(
                 "missing chunk parquet file: %s", in_file)
+
+    _merge_flush_batches(batches, out_parquet)
+    batches = []
+    batches_row_count = 0
 
     cast(pq.ParquetWriter, out_parquet).close()
 

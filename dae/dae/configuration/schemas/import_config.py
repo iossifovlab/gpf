@@ -1,6 +1,7 @@
-from typing import Any
-from dae.variants_loaders.dae.loader import DenovoLoader, DaeTransmittedLoader
+from typing import Type, Any
+from dae.variants_loaders.raw.loader import VariantsLoader
 from dae.variants_loaders.vcf.loader import VcfLoader
+from dae.variants_loaders.dae.loader import DenovoLoader, DaeTransmittedLoader
 from dae.variants_loaders.cnv.loader import CNVLoader
 from dae.pedigrees.loader import FamiliesLoader
 from dae.configuration.schemas.dae_conf import storage_schema
@@ -80,21 +81,25 @@ import_config_schema: dict[str, Any] = {
             "work_dir": {"type": "string"},
             "parquet_dataset_dir": {"type": "string"},
             "include_reference": {"type": "boolean", "default": False},
+            "parquet_row_group_size": {
+                "anyof_type": ["integer", "string"],
+                "default": 50_000
+            },
             "vcf": _loader_processing_schema,
             "denovo": _loader_processing_schema,
             "cnv": _loader_processing_schema,
             "dae": _loader_processing_schema,
         },
     },
-    "parquet_row_group_size": {
-        "type": "dict",
-        "schema": {
-            "vcf": {"anyof_type": ["integer", "string"]},
-            "denovo": {"anyof_type": ["integer", "string"]},
-            "dae": {"anyof_type": ["integer", "string"]},
-            "cnv": {"anyof_type": ["integer", "string"]},
-        },
-    },
+    # "parquet_row_group_size": {
+    #     "type": "dict",
+    #     "schema": {
+    #         "vcf": {"anyof_type": ["integer", "string"]},
+    #         "denovo": {"anyof_type": ["integer", "string"]},
+    #         "dae": {"anyof_type": ["integer", "string"]},
+    #         "cnv": {"anyof_type": ["integer", "string"]},
+    #     },
+    # },
     "annotation": {
         "anyof": [
             {
@@ -162,7 +167,7 @@ import_config_schema: dict[str, Any] = {
 }
 
 
-def _fill_with_loader_arguments():
+def _fill_with_loader_arguments() -> None:
     _set_loader_args(
         VcfLoader,
         import_config_schema["input"]["anyof_schema"][1]["vcf"]["schema"],
@@ -185,7 +190,11 @@ def _fill_with_loader_arguments():
         "ped_")
 
 
-def _set_loader_args(loader_cls, schema, prefix):
+def _set_loader_args(
+    loader_cls: Type[VariantsLoader],
+    schema: dict,
+    prefix: str
+) -> None:
     schema["files"] = {
         "type": "list",
         "required": True,
@@ -194,7 +203,11 @@ def _set_loader_args(loader_cls, schema, prefix):
     _copy_loader_args(loader_cls, schema, prefix)
 
 
-def _copy_loader_args(loader_cls, schema, prefix):
+def _copy_loader_args(
+    loader_cls: Type[VariantsLoader],
+    schema: dict,
+    prefix: str
+) -> None:
     # FIXME: Fix use of private _arguments of loaders
     for arg in loader_cls._arguments():  # pylint: disable=protected-access
         if not arg.argument_name.startswith("--"):

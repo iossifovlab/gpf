@@ -23,7 +23,17 @@ def test_url_to_pyarrow_fs_s3_url() -> None:
     assert path == "bucket/file.txt"
 
 
-def test_merge_parquets(tmp_path: pathlib.Path) -> None:
+@pytest.mark.parametrize("row_group_size, expected", [
+    (50_000, 1),
+    (2, 3),
+    (3, 2),
+    (4, 2),
+    (5, 1),
+])
+def test_merge_parquets(
+    tmp_path: pathlib.Path,
+    row_group_size: int, expected: int
+) -> None:
     full_data = pd.DataFrame({
         "n_legs": [2, 2, 4, 4, 5, 100],
         "animal": [
@@ -44,7 +54,7 @@ def test_merge_parquets(tmp_path: pathlib.Path) -> None:
         writer.close()
 
     out_file = str(tmp_path / "merged.parquet")
-    merge_parquets(in_files, out_file)
+    merge_parquets(in_files, out_file, row_group_size=row_group_size)
 
     merged = pq.ParquetFile(out_file)
     assert merged.schema_arrow == table.schema
@@ -54,6 +64,8 @@ def test_merge_parquets(tmp_path: pathlib.Path) -> None:
     # assert input files get deleted
     for in_file in in_files:
         assert not os.path.exists(in_file)
+
+    assert merged.num_row_groups == expected
 
 
 def test_merge_parquets_single_file(tmp_path: pathlib.Path) -> None:
@@ -96,7 +108,6 @@ def test_merge_parquets_broken_input_file(tmp_path: pathlib.Path) -> None:
     writer = pq.ParquetWriter(
         str(tmp_path / "p1.parquet"),
         table.schema,
-        # version="1.0"
     )
     writer.write_table(table)
     writer.close()

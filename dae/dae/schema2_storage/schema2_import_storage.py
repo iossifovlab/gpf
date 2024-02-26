@@ -10,7 +10,7 @@ from dae.import_tools.import_tools import ImportStorage, ImportProject, \
     Bucket
 from dae.task_graph.graph import TaskGraph, Task
 from dae.parquet.parquet_writer import fill_family_bins, \
-    save_ped_df_to_parquet, merge_parquets, append_meta_to_parquet
+    save_ped_df_to_parquet, merge_variants_parquets, append_meta_to_parquet
 from dae.parquet.schema2.parquet_io import VariantsParquetWriter
 from dae.parquet.partition_descriptor import PartitionDescriptor
 
@@ -131,15 +131,15 @@ class Schema2ImportStorage(ImportStorage):
                 bucket.region_bin, bucket.regions)
             variants_loader.reset_regions(bucket.regions)
 
-        row_groups_size = project.get_row_group_size(bucket)
-        logger.debug("argv.rows: %s", row_groups_size)
+        row_group_size = project.get_row_group_size()
+        logger.debug("argv.rows: %s", row_group_size)
 
         variants_writer = VariantsParquetWriter(
             out_dir=layout.study,
             variants_loader=variants_loader,
             partition_descriptor=cls._get_partition_description(project),
             bucket_index=bucket.index,
-            row_groups_size=row_groups_size,
+            row_group_size=row_group_size,
             include_reference=project.include_reference,
         )
         variants_writer.write_dataset()
@@ -177,8 +177,13 @@ class Schema2ImportStorage(ImportStorage):
     ) -> None:
         layout = schema2_project_dataset_layout(project)
         full_out_dir = fs_utils.join(layout.study, out_dir)
-        merge_parquets(
-            cls._get_partition_description(project), full_out_dir, partitions
+
+        row_group_size = project.get_row_group_size()
+        logger.debug("argv.rows: %s", row_group_size)
+
+        merge_variants_parquets(
+            cls._get_partition_description(project), full_out_dir, partitions,
+            row_group_size=row_group_size
         )
 
     def _build_all_parquet_tasks(
