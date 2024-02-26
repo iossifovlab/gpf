@@ -3,7 +3,7 @@
 import os
 import pathlib
 from glob import glob
-from typing import Callable, Any
+from typing import Callable, Any, Optional
 
 import yaml
 import pytest
@@ -113,26 +113,22 @@ def test_add_chrom_prefix_is_propagated_to_the_loader(
     assert loader._chrom_prefix == "chr"  # type: ignore
 
 
-def test_row_group_size() -> None:
+@pytest.mark.parametrize("row_group_size, expected", [
+    ("10000", 10_000),
+    ("10k", 10_000),
+    (None, 50_000),
+])
+def test_row_group_size(row_group_size: Optional[str], expected: int) -> None:
     import_config = {
         "input": {},
         "processing_config": {
             "work_dir": "",
             "denovo": {},
+            "parquet_row_group_size": row_group_size
         },
-        "parquet_row_group_size": {
-            "denovo": 10000,
-            "dae": "10k",
-        }
     }
     project = import_tools.ImportProject.build_from_config(import_config)
-    assert project.get_row_group_size(
-        import_tools.Bucket("denovo", "", [""], 0)) == 10_000
-    assert project.get_row_group_size(
-        import_tools.Bucket("dae", "", [""], 0)) == 10_000
-    # 20_000 is the default value
-    assert project.get_row_group_size(
-        import_tools.Bucket("vcf", "", [""], 0)) == 20_000
+    assert project.get_row_group_size() == expected
 
 
 def test_row_group_size_short_config() -> None:
@@ -145,8 +141,7 @@ def test_row_group_size_short_config() -> None:
     }
     project = import_tools.ImportProject.build_from_config(import_config)
     # 20_000 is the default value
-    assert project.get_row_group_size(
-        import_tools.Bucket("denovo", "", [""], 0)) == 20_000
+    assert project.get_row_group_size() == 50_000
 
 
 def test_shorthand_for_large_integers() -> None:

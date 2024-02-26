@@ -36,12 +36,15 @@ class ContinuousParquetFileWriter:
     enough data. Automatically dumps leftover data when closing into the file
     """
 
+    BATCH_ROWS = 1_000
+    DEFAULT_COMPRESSION = "SNAPPY"
+
     def __init__(
         self,
         filepath: str,
         variant_loader: VariantsLoader,
         filesystem: Optional[fsspec.AbstractFileSystem] = None,
-        batch_rows: int = 1_000,
+        row_group_size: int = 50_000,
         schema: str = "schema",
         blob_column: Optional[str] = None,
     ) -> None:
@@ -61,11 +64,13 @@ class ContinuousParquetFileWriter:
         self.dirname = dirname
 
         filesystem, filepath = url_to_pyarrow_fs(filepath, filesystem)
-        compression: Union[str, dict[str, str]] = "SNAPPY"
+        compression: Union[str, dict[str, str]] = self.DEFAULT_COMPRESSION
         if blob_column is not None:
-            compression = {
-                blob_column: "ZSTD",
-            }
+            compression = {}
+            for name in self.schema.names:
+                compression[name] = self.DEFAULT_COMPRESSION
+            compression[blob_column] = "ZSTD"
+
         self._writer = pq.ParquetWriter(
             filepath, self.schema,
             compression=compression,
@@ -73,7 +78,8 @@ class ContinuousParquetFileWriter:
             use_compliant_nested_type=True,
             write_page_index=True,
         )
-        self.batch_rows = batch_rows
+        self.row_group_size = row_group_size
+        self._batches: list[pa.RecordBatch] = []
         self._data: Optional[dict[str, Any]] = None
         self.data_reset()
 
@@ -84,16 +90,26 @@ class ContinuousParquetFileWriter:
         assert self._data is not None
         return max(len(val) for val in self._data.values())
 
-    # def build_table(self) -> pa.Table:
-    #     table = pa.Table.from_pydict(self._data, self.schema)
-    #     return table
+    def build_table(self) -> pa.Table:
+        table = pa.Table.from_batches(self._batches, self.schema)
+        return table
 
     def build_batch(self) -> pa.RecordBatch:
         return pa.RecordBatch.from_pydict(self._data, self.schema)
 
     def _write_batch(self) -> None:
-        self._writer.write_batch(self.build_batch(), row_group_size=50_000)
+        batch = self.build_batch()
+        self._batches.append(batch)
         self.data_reset()
+        if len(self._batches) >= self.row_group_size // self.BATCH_ROWS:
+            self._flush_batches()
+
+    def _flush_batches(self) -> None:
+        if len(self._batches) == 0:
+            return
+        logger.info("flushing batches at batches len %s", len(self._batches))
+        self._writer.write_table(self.build_table())
+        self._batches = []
 
     def append_summary_allele(
             self, allele: SummaryAllele, json_data: str) -> None:
@@ -107,9 +123,9 @@ class ContinuousParquetFileWriter:
         for k, v in self._data.items():
             v.extend(data[k])
 
-        if self.size() >= self.batch_rows:
-            logger.info(
-                "parquet writer %s data flushing at len %s",
+        if self.size() >= self.BATCH_ROWS:
+            logger.debug(
+                "parquet writer %s create summary batch at len %s",
                 self.filepath, self.size())
             self._write_batch()
 
@@ -125,18 +141,21 @@ class ContinuousParquetFileWriter:
         for k, v in self._data.items():
             v.extend(data[k])
 
-        if self.size() >= self.batch_rows:
-            logger.info(
-                "parquet writer %s data flushing at len %s",
+        if self.size() >= self.BATCH_ROWS:
+            logger.debug(
+                "parquet writer %s create family batch at len %s",
                 self.filepath, self.size())
             self._write_batch()
 
     def close(self) -> None:
+        """Close the parquet writer and write any remaining data."""
         logger.info(
             "closing parquet writer %s at len %d", self.dirname, self.size())
 
         if self.size() > 0:
             self._write_batch()
+            self._flush_batches()
+
         self._writer.close()
 
 
@@ -149,7 +168,7 @@ class VariantsParquetWriter:
         variants_loader: VariantsLoader,
         partition_descriptor: PartitionDescriptor,
         bucket_index: int = 1,
-        batch_rows: int = 1_000,
+        row_group_size: int = 50_000,
         include_reference: bool = True,
         filesystem: Optional[fsspec.AbstractFileSystem] = None,
     ) -> None:
@@ -161,7 +180,7 @@ class VariantsParquetWriter:
         self.bucket_index = bucket_index
         assert self.bucket_index < 1_000_000, "bad bucket index"
 
-        self.batch_rows = batch_rows
+        self.row_group_size = row_group_size
         self.filesystem = filesystem
 
         self.include_reference = include_reference
@@ -218,7 +237,7 @@ class VariantsParquetWriter:
                 filename,
                 self.variants_loader,
                 filesystem=self.filesystem,
-                batch_rows=self.batch_rows,
+                row_group_size=self.row_group_size,
                 schema="schema_family",
                 blob_column="family_variant_data",
             )
@@ -236,7 +255,7 @@ class VariantsParquetWriter:
                 filename,
                 self.variants_loader,
                 filesystem=self.filesystem,
-                batch_rows=self.batch_rows,
+                row_group_size=self.row_group_size,
                 schema="schema_summary",
                 blob_column="summary_variant_data",
             )

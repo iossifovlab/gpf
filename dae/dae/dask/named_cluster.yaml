@@ -22,7 +22,7 @@ dae_named_cluster:
     - name: local
       type: local
       params:
-        memory_limit: 4GB
+        memory_limit: 6GB
         threads_per_worker: 1
     - name: sge_small
       type: sge
