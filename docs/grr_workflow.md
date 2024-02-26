@@ -195,7 +195,7 @@ From the root GRR directory:
       default_annotation:
       attributes:
         - source: score9
-          destination: score9
+          name: score9
         meta: |
       ## score9
         TODO
