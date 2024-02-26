@@ -107,6 +107,7 @@ class ContinuousParquetFileWriter:
     def _flush_batches(self) -> None:
         if len(self._batches) == 0:
             return
+        logger.info("flushing batches at batches len %s", len(self._batches))
         self._writer.write_table(self.build_table())
         self._batches = []
 
@@ -123,8 +124,8 @@ class ContinuousParquetFileWriter:
             v.extend(data[k])
 
         if self.size() >= self.BATCH_ROWS:
-            logger.info(
-                "parquet writer %s data flushing at len %s",
+            logger.debug(
+                "parquet writer %s create summary batch at len %s",
                 self.filepath, self.size())
             self._write_batch()
 
@@ -141,8 +142,8 @@ class ContinuousParquetFileWriter:
             v.extend(data[k])
 
         if self.size() >= self.BATCH_ROWS:
-            logger.info(
-                "parquet writer %s data flushing at len %s",
+            logger.debug(
+                "parquet writer %s create family batch at len %s",
                 self.filepath, self.size())
             self._write_batch()
 
