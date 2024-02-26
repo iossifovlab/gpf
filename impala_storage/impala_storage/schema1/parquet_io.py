@@ -165,7 +165,7 @@ class ParquetWriter:
                 bucket.region_bin, bucket.regions)
             variants_loader.reset_regions(bucket.regions)
 
-        rows = project.get_row_group_size(bucket)
+        rows = project.get_row_group_size()
         logger.debug("argv.rows: %s", rows)
         ParquetWriter.variants_to_parquet(
             out_dir,
