@@ -1,5 +1,5 @@
 from typing import Type, Any
-from dae.variants_loaders.raw.loader import VariantsLoader
+from dae.variants_loaders.raw.loader import CLILoader
 from dae.variants_loaders.vcf.loader import VcfLoader
 from dae.variants_loaders.dae.loader import DenovoLoader, DaeTransmittedLoader
 from dae.variants_loaders.cnv.loader import CNVLoader
@@ -191,7 +191,7 @@ def _fill_with_loader_arguments() -> None:
 
 
 def _set_loader_args(
-    loader_cls: Type[VariantsLoader],
+    loader_cls: Type[CLILoader],
     schema: dict,
     prefix: str
 ) -> None:
@@ -204,7 +204,7 @@ def _set_loader_args(
 
 
 def _copy_loader_args(
-    loader_cls: Type[VariantsLoader],
+    loader_cls: Type[CLILoader],
     schema: dict,
     prefix: str
 ) -> None:
@@ -214,7 +214,7 @@ def _copy_loader_args(
             # ignore positional arguments as they are explicitly
             # specified in the schema
             continue
-        arg_config = {}
+        arg_config: dict[str, Any] = {}
         arg_name = arg.argument_name.strip("-")\
             .replace("-", "_").removeprefix(prefix)
         if arg.value_type is not None:
