@@ -1,6 +1,6 @@
 import logging
 
-from typing import cast, Optional
+from typing import cast, Optional, Union
 from urllib.parse import urlparse
 from fsspec.spec import AbstractFileSystem
 from fsspec.core import url_to_fs
@@ -79,6 +79,20 @@ def _try_merge_parquets(
     assert len(in_files) > 0
     out_parquet = None
 
+    compression: Union[str, dict[str, str]] = "SNAPPY"
+    if len(in_files) > 0:
+        fs, path = url_to_fs(in_files[0])
+        if fs.exists(path):
+            compression = {}
+            parq_file = pq.ParquetFile(path)
+            row_group = parq_file.metadata.row_group(0)
+            schema = parq_file.schema_arrow
+            for index, name in enumerate(schema.names):
+                column_compression = row_group.column(index).compression
+                if column_compression.upper() == "UNCOMPRESSED":
+                    continue
+                compression[name] = column_compression
+
     batches = []
     batches_row_count = 0
     for in_file in in_files:
@@ -93,6 +107,7 @@ def _try_merge_parquets(
                     out_parquet = pq.ParquetWriter(
                         out_filename, parq_file.schema_arrow,
                         filesystem=out_filesystem,
+                        compression=compression,
                         version=parqet_version
                     )
                 for batch in parq_file.iter_batches():

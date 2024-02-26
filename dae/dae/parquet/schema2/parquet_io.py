@@ -70,6 +70,7 @@ class ContinuousParquetFileWriter:
             for name in self.schema.names:
                 compression[name] = self.DEFAULT_COMPRESSION
             compression[blob_column] = "ZSTD"
+
         self._writer = pq.ParquetWriter(
             filepath, self.schema,
             compression=compression,
