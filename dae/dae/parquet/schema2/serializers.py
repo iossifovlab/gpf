@@ -97,7 +97,7 @@ class AlleleParquetSerializer:
 
     @classmethod
     def build_summary_schema(
-        cls, annotation_schema: List[AttributeInfo]
+        cls, annotation_schema: list[AttributeInfo]
     ) -> pa.Schema:
         """Build the schema for the summary alleles."""
         fields = [

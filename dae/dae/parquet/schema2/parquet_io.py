@@ -17,13 +17,11 @@ from dae.variants.family_variant import FamilyAllele, FamilyVariant
 from dae.variants.variant import SummaryVariant
 from dae.utils.variant_utils import is_all_reference_genotype, \
     is_unknown_genotype
+from dae.annotation.annotation_pipeline import AttributeInfo
 
 from dae.variants.variant import SummaryAllele
-from dae.parquet.parquet_writer import \
-    fill_family_bins
 from dae.parquet.schema2.serializers import AlleleParquetSerializer
 from dae.parquet.partition_descriptor import PartitionDescriptor
-from dae.variants_loaders.raw.loader import VariantsLoader
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +39,7 @@ class ContinuousParquetFileWriter:
     def __init__(
         self,
         filepath: str,
-        variant_loader: VariantsLoader,
+        annotation_schema: list[AttributeInfo],
         filesystem: Optional[fsspec.AbstractFileSystem] = None,
         row_group_size: int = 50_000,
         schema: str = "schema",
@@ -49,10 +47,9 @@ class ContinuousParquetFileWriter:
     ) -> None:
 
         self.filepath = filepath
-        annotation_schema = variant_loader.get_attribute("annotation_schema")
-        extra_attributes = variant_loader.get_attribute("extra_attributes")
+        self.annotation_schema = annotation_schema
         self.serializer = AlleleParquetSerializer(
-            annotation_schema, extra_attributes
+            self.annotation_schema
         )
 
         self.schema = getattr(self.serializer, schema)
@@ -164,7 +161,7 @@ class VariantsParquetWriter:
     def __init__(
         self,
         out_dir: str,
-        variants_loader: VariantsLoader,
+        annotation_schema: list[AttributeInfo],
         partition_descriptor: PartitionDescriptor,
         bucket_index: int = 1,
         row_group_size: int = 50_000,
@@ -172,9 +169,6 @@ class VariantsParquetWriter:
         filesystem: Optional[fsspec.AbstractFileSystem] = None,
     ) -> None:
         self.out_dir = out_dir
-        self.variants_loader = variants_loader
-        self.families = variants_loader.families
-
         self.bucket_index = bucket_index
         assert self.bucket_index < 1_000_000, "bad bucket index"
 
@@ -187,19 +181,7 @@ class VariantsParquetWriter:
         self.data_writers: dict[str, ContinuousParquetFileWriter] = {}
         assert isinstance(partition_descriptor, PartitionDescriptor)
         self.partition_descriptor = partition_descriptor
-        fill_family_bins(
-            self.families, self.partition_descriptor)
-
-        annotation_schema = self.variants_loader.get_attribute(
-            "annotation_schema"
-        )
-        extra_attributes = self.variants_loader.get_attribute(
-            "extra_attributes"
-        )
-
-        self.serializer = AlleleParquetSerializer(
-            annotation_schema, extra_attributes
-        )
+        self.annotation_schema = annotation_schema
 
     def _build_family_filename(
         self, allele: FamilyAllele,
@@ -234,7 +216,7 @@ class VariantsParquetWriter:
         if filename not in self.data_writers:
             self.data_writers[filename] = ContinuousParquetFileWriter(
                 filename,
-                self.variants_loader,
+                self.annotation_schema,
                 filesystem=self.filesystem,
                 row_group_size=self.row_group_size,
                 schema="schema_family",
@@ -252,7 +234,7 @@ class VariantsParquetWriter:
         if filename not in self.data_writers:
             self.data_writers[filename] = ContinuousParquetFileWriter(
                 filename,
-                self.variants_loader,
+                self.annotation_schema,
                 filesystem=self.filesystem,
                 row_group_size=self.row_group_size,
                 schema="schema_summary",

@@ -170,10 +170,10 @@ class Schema2ImportStorage(ImportStorage):
 
         row_group_size = project.get_row_group_size()
         logger.debug("argv.rows: %s", row_group_size)
-
+        annotation_pipeline = project.build_annotation_pipeline()
         variants_writer = VariantsParquetWriter(
             out_dir=layout.study,
-            variants_loader=variants_loader,
+            annotation_schema=annotation_pipeline.get_attributes(),
             partition_descriptor=cls._get_partition_description(project),
             bucket_index=bucket.index,
             row_group_size=row_group_size,
