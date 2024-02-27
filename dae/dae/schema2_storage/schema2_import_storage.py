@@ -228,16 +228,16 @@ class Schema2ImportStorage(ImportStorage):
     def _build_all_parquet_tasks(
             self, project: ImportProject, graph: TaskGraph) -> list[Task]:
         pedigree_task = graph.create_task(
-            "Generating Pedigree", self._do_write_pedigree, [project], [],
+            "write_pedigree", self._do_write_pedigree, [project], [],
             input_files=[project.get_pedigree_filename()]
         )
         meta_task = graph.create_task(
-            "Write Meta", self._do_write_meta, [project], [])
+            "write_meta", self._do_write_meta, [project], [])
 
         bucket_tasks = []
         for bucket in project.get_import_variants_buckets():
             task = graph.create_task(
-                f"Converting Variants {bucket}", self._do_write_variant,
+                f"write_variants_{bucket}", self._do_write_variant,
                 [project, bucket], [],
                 input_files=project.get_input_filenames(bucket)
             )
@@ -245,18 +245,19 @@ class Schema2ImportStorage(ImportStorage):
 
         # merge small parquet files into larger ones
         bucket_sync = graph.create_task(
-            "Sync Parquet Generation", lambda: None, [], bucket_tasks
+            "sync_parquet_write", lambda: None, [], bucket_tasks
         )
         output_dir_tasks = []
         for output_dir, partitions in self._variant_partitions(project):
             output_dir_tasks.append(graph.create_task(
-                f"Merging {output_dir}", self._merge_parquets,
+                f"merge_parquet_files_{output_dir}", self._merge_parquets,
                 [project, output_dir, partitions], [bucket_sync]
             ))
 
-        # dummy task used for running the parquet generation w/o impala import
+        # dummy task used for running the parquet generation
         all_parquet_task = graph.create_task(
-            "Parquet Tasks", lambda: None, [], output_dir_tasks + [bucket_sync]
+            "all_parquet_tasks", lambda: None, [],
+            output_dir_tasks + [bucket_sync]
         )
         return [pedigree_task, meta_task, all_parquet_task]
 
