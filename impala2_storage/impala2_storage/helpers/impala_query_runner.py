@@ -62,8 +62,6 @@ class ImpalaQueryRunner(QueryRunner):
                     "(%s) unexpected exception", self.study_id, exc_info=True)
                 return None
 
-    NO_DATA_LIMIT = 1_000
-
     def run(self) -> None:
         """Execute the query and enqueue the resulting rows."""
         started = time.time()
