@@ -3,7 +3,7 @@ import time
 import logging
 import json
 import functools
-from typing import Any, Optional, cast, Union
+from typing import Any, Optional, cast, Union, Iterator
 
 import fsspec
 
@@ -13,7 +13,8 @@ import pyarrow.parquet as pq
 from dae.utils import fs_utils
 from dae.parquet.helpers import url_to_pyarrow_fs
 from dae.variants.attributes import Inheritance
-from dae.variants.family_variant import FamilyAllele
+from dae.variants.family_variant import FamilyAllele, FamilyVariant
+from dae.variants.variant import SummaryVariant
 from dae.utils.variant_utils import is_all_reference_genotype, \
     is_unknown_genotype
 
@@ -175,7 +176,6 @@ class VariantsParquetWriter:
         self.out_dir = out_dir
         self.variants_loader = variants_loader
         self.families = variants_loader.families
-        self.full_variants_iterator = variants_loader.full_variants_iterator()
 
         self.bucket_index = bucket_index
         assert self.bucket_index < 1_000_000, "bad bucket index"
@@ -198,6 +198,7 @@ class VariantsParquetWriter:
         extra_attributes = self.variants_loader.get_attribute(
             "extra_attributes"
         )
+
         self.serializer = AlleleParquetSerializer(
             annotation_schema, extra_attributes
         )
@@ -275,14 +276,66 @@ class VariantsParquetWriter:
             + summary_index) * 10_000
         return sj_index
 
-    def _write_internal(self) -> list[str]:
+    def write_metadata(self) -> None:
+        """Write dataset metadata."""
+        schema = [
+            (f.name, f.type) for f in self.serializer.schema_summary
+        ]
+        schema.extend(
+            list(self.partition_descriptor.dataset_summary_partition()))
+        schema_summary = "\n".join([
+            f"{n}|{t}" for n, t in schema
+        ])
+
+        schema = [
+            (f.name, f.type) for f in self.serializer.schema_family
+        ]
+        schema.extend(
+            list(self.partition_descriptor.dataset_family_partition())
+        )
+        schema_family = "\n".join([
+            f"{n}|{t}" for n, t in schema
+        ])
+
+        extra_attributes = self.serializer.extra_attributes
+
+        pedigree_schema = collect_pedigree_parquet_schema(
+            self.families.ped_df)
+        schema_pedigree = "\n".join([
+            f"{f.name}|{f.type}" for f in pedigree_schema])
+
+        metapath = fs_utils.join(self.out_dir, "meta", "meta.parquet")
+        append_meta_to_parquet(
+            metapath,
+            key=[
+                "partition_description",
+                "summary_schema",
+                "family_schema",
+                "pedigree_schema",
+                "extra_attributes",
+            ],
+            value=[
+                self.partition_descriptor.serialize(),
+                str(schema_summary),
+                str(schema_family),
+                str(schema_pedigree),
+                str(extra_attributes),
+            ]
+        )
+
+    def write_dataset(
+        self,
+        full_variants_iterator: Iterator[
+            tuple[SummaryVariant, list[FamilyVariant]]]
+    ) -> list[str]:
+        """Write variant to partitioned parquet dataset."""
         # pylint: disable=too-many-locals,too-many-branches
         family_variant_index = 0
         summary_variant_index = 0
         for summary_variant_index, (
             summary_variant,
             family_variants,
-        ) in enumerate(self.full_variants_iterator):
+        ) in enumerate(full_variants_iterator):
             assert summary_variant_index < 1_000_000_000, \
                 "too many summary variants"
             num_fam_alleles_written = 0
@@ -404,55 +457,4 @@ class VariantsParquetWriter:
             "elapsed time: %0.2f sec",
             self.bucket_index, summary_variant_index, family_variant_index,
             elapsed)
-        return filenames
-
-    def write_metadata(self) -> None:
-        """Write dataset metadata."""
-        schema = [
-            (f.name, f.type) for f in self.serializer.schema_summary
-        ]
-        schema.extend(
-            list(self.partition_descriptor.dataset_summary_partition()))
-        schema_summary = "\n".join([
-            f"{n}|{t}" for n, t in schema
-        ])
-
-        schema = [
-            (f.name, f.type) for f in self.serializer.schema_family
-        ]
-        schema.extend(
-            list(self.partition_descriptor.dataset_family_partition())
-        )
-        schema_family = "\n".join([
-            f"{n}|{t}" for n, t in schema
-        ])
-
-        extra_attributes = self.serializer.extra_attributes
-
-        pedigree_schema = collect_pedigree_parquet_schema(
-            self.families.ped_df)
-        schema_pedigree = "\n".join([
-            f"{f.name}|{f.type}" for f in pedigree_schema])
-
-        metapath = fs_utils.join(self.out_dir, "meta", "meta.parquet")
-        append_meta_to_parquet(
-            metapath,
-            key=[
-                "partition_description",
-                "summary_schema",
-                "family_schema",
-                "pedigree_schema",
-                "extra_attributes",
-            ],
-            value=[
-                self.partition_descriptor.serialize(),
-                str(schema_summary),
-                str(schema_family),
-                str(schema_pedigree),
-                str(extra_attributes),
-            ]
-        )
-
-    def write_dataset(self) -> list[str]:
-        filenames = self._write_internal()
         return filenames

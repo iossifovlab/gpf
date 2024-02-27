@@ -142,7 +142,9 @@ class Schema2ImportStorage(ImportStorage):
             row_group_size=row_group_size,
             include_reference=project.include_reference,
         )
-        variants_writer.write_dataset()
+        variants_writer.write_dataset(
+            variants_loader.full_variants_iterator()
+        )
 
     @classmethod
     def _variant_partitions(

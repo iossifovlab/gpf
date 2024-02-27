@@ -90,46 +90,59 @@ class AlleleParquetSerializer:
     def schema_summary(self) -> pa.Schema:
         """Lazy construct and return the schema for the summary alleles."""
         if self._schema_summary is None:
-            fields = [
-                pa.field(spr, pat)
-                for spr, pat in (
-                    self.SUMMARY_ALLELE_BASE_SCHEMA.items()
-                )
-            ]
-            fields.append(pa.field("summary_variant_data", pa.string()))
-
-            annotation_type_to_pa_type = {
-                "float": pa.float32(),
-                "int": pa.int32(),
-            }
-
-            if self.annotation_schema is not None:
-                for attr in self.annotation_schema:
-                    if attr.internal:
-                        continue
-                    if attr.type in annotation_type_to_pa_type:
-                        fields.append(
-                            pa.field(
-                                attr.name,
-                                annotation_type_to_pa_type[attr.type],
-                            )
-                        )
-
-            self._schema_summary = pa.schema(fields)
+            self._schema_summary = self.build_summary_schema(
+                self.annotation_schema
+            )
         return self._schema_summary
+
+    @classmethod
+    def build_summary_schema(
+        cls, annotation_schema: List[AttributeInfo]
+    ) -> pa.Schema:
+        """Build the schema for the summary alleles."""
+        fields = [
+            pa.field(spr, pat)
+            for spr, pat in (
+                cls.SUMMARY_ALLELE_BASE_SCHEMA.items()
+            )
+        ]
+        fields.append(pa.field("summary_variant_data", pa.string()))
+
+        annotation_type_to_pa_type = {
+            "float": pa.float32(),
+            "int": pa.int32(),
+        }
+
+        if annotation_schema is not None:
+            for attr in annotation_schema:
+                if attr.internal:
+                    continue
+                if attr.type in annotation_type_to_pa_type:
+                    fields.append(
+                        pa.field(
+                            attr.name,
+                            annotation_type_to_pa_type[attr.type],
+                        )
+                    )
+
+        return pa.schema(fields)
 
     @property
     def schema_family(self) -> pa.Schema:
         """Lazy construct and return the schema for the family alleles."""
         if self._schema_family is None:
-            fields = []
-            for spr, ftype in self.FAMILY_ALLELE_BASE_SCHEMA.items():
-                field = pa.field(spr, ftype)
-                fields.append(field)
-
-            fields.append(pa.field("family_variant_data", pa.string()))
-            self._schema_family = pa.schema(fields)
+            self._schema_family = self.build_family_schema()
         return self._schema_family
+
+    @classmethod
+    def build_family_schema(cls) -> pa.Schema:
+        """Build the schema for the family alleles."""
+        fields = [
+            pa.field(spr, pat)
+            for spr, pat in cls.FAMILY_ALLELE_BASE_SCHEMA.items()
+        ]
+        fields.append(pa.field("family_variant_data", pa.string()))
+        return pa.schema(fields)
 
     def _get_searchable_prop_value(
         self, allele: Union[SummaryAllele, FamilyAllele],
