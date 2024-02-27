@@ -71,6 +71,36 @@ def _merge_flush_batches(
     out_parquet.write_table(table)
 
 
+def _collect_in_files_compression(
+    in_files: list[str]
+) -> Union[str, dict[str, str]]:
+    compression: Union[str, dict[str, str]] = "SNAPPY"
+    if len(in_files) > 0:
+        for in_file in in_files:
+            fs, path = url_to_fs(in_file)
+            if not fs.exists(path):
+                continue
+
+            parq_file = pq.ParquetFile(path)
+            if parq_file.metadata.num_row_groups == 0:
+                continue
+
+            compression = {}
+            row_group = parq_file.metadata.row_group(0)
+            schema = parq_file.schema_arrow
+
+            for name in schema.names:
+                for index in range(row_group.num_columns):
+                    column = row_group.column(index)
+                    if column.path_in_schema != name:
+                        continue
+                    column_compression = column.compression
+                    if column_compression.upper() == "UNCOMPRESSED":
+                        continue
+                    compression[name] = column_compression
+    return compression
+
+
 def _try_merge_parquets(
     in_files: list[str], out_file: str, delete_in_files: bool,
     row_group_size: int = 50_000,
@@ -79,19 +109,7 @@ def _try_merge_parquets(
     assert len(in_files) > 0
     out_parquet = None
 
-    compression: Union[str, dict[str, str]] = "SNAPPY"
-    if len(in_files) > 0:
-        fs, path = url_to_fs(in_files[0])
-        if fs.exists(path):
-            compression = {}
-            parq_file = pq.ParquetFile(path)
-            row_group = parq_file.metadata.row_group(0)
-            schema = parq_file.schema_arrow
-            for index, name in enumerate(schema.names):
-                column_compression = row_group.column(index).compression
-                if column_compression.upper() == "UNCOMPRESSED":
-                    continue
-                compression[name] = column_compression
+    compression = _collect_in_files_compression(in_files)
 
     batches = []
     batches_row_count = 0
