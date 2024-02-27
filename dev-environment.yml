@@ -40,6 +40,7 @@ dependencies:
   - gitpython=3.1
   - django-silk
   - monkeytype
+  - parquet-tools
   - pip:
     - sphinx-autorun==1.1.1
     - rangehttpserver==1.2.0
