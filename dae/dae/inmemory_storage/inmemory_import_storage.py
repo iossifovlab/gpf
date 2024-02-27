@@ -55,8 +55,7 @@ class InmemoryImportStorage(ImportStorage):
             cls, project: ImportProject,
             variants_loader: VariantsLoader) -> VariantsLoader:
         result_loader = project.build_variants_loader_pipeline(
-            variants_loader,
-            project.get_gpf_instance())
+            variants_loader)
         return result_loader
 
     @classmethod

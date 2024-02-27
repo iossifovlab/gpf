@@ -20,9 +20,7 @@ from dae.utils.variant_utils import is_all_reference_genotype, \
 
 from dae.variants.variant import SummaryAllele
 from dae.parquet.parquet_writer import \
-    collect_pedigree_parquet_schema, \
-    fill_family_bins, \
-    append_meta_to_parquet
+    fill_family_bins
 from dae.parquet.schema2.serializers import AlleleParquetSerializer
 from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.variants_loaders.raw.loader import VariantsLoader
@@ -275,53 +273,6 @@ class VariantsParquetWriter:
             self.bucket_index * 1_000_000_000
             + summary_index) * 10_000
         return sj_index
-
-    def write_metadata(self) -> None:
-        """Write dataset metadata."""
-        schema = [
-            (f.name, f.type) for f in self.serializer.schema_summary
-        ]
-        schema.extend(
-            list(self.partition_descriptor.dataset_summary_partition()))
-        schema_summary = "\n".join([
-            f"{n}|{t}" for n, t in schema
-        ])
-
-        schema = [
-            (f.name, f.type) for f in self.serializer.schema_family
-        ]
-        schema.extend(
-            list(self.partition_descriptor.dataset_family_partition())
-        )
-        schema_family = "\n".join([
-            f"{n}|{t}" for n, t in schema
-        ])
-
-        extra_attributes = self.serializer.extra_attributes
-
-        pedigree_schema = collect_pedigree_parquet_schema(
-            self.families.ped_df)
-        schema_pedigree = "\n".join([
-            f"{f.name}|{f.type}" for f in pedigree_schema])
-
-        metapath = fs_utils.join(self.out_dir, "meta", "meta.parquet")
-        append_meta_to_parquet(
-            metapath,
-            key=[
-                "partition_description",
-                "summary_schema",
-                "family_schema",
-                "pedigree_schema",
-                "extra_attributes",
-            ],
-            value=[
-                self.partition_descriptor.serialize(),
-                str(schema_summary),
-                str(schema_family),
-                str(schema_pedigree),
-                str(extra_attributes),
-            ]
-        )
 
     def write_dataset(
         self,

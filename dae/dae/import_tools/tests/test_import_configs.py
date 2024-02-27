@@ -334,7 +334,7 @@ def test_embedded_annotation_pipeline(fixture_dirname: Callable) -> None:
         }
     }
     project = import_tools.ImportProject.build_from_config(import_config)
-    pipeline = project._build_annotation_pipeline(project.get_gpf_instance())
+    pipeline = project.build_annotation_pipeline()
     assert pipeline is not None
     assert len(pipeline.get_info()) == 1
 
@@ -370,7 +370,7 @@ def test_annotation_file(
         yaml.safe_dump(import_config, out_file)
 
     project = import_tools.ImportProject.build_from_file(config_fn)
-    pipeline = project._build_annotation_pipeline(project.get_gpf_instance())
+    pipeline = project.build_annotation_pipeline()
     assert pipeline is not None
     assert len(pipeline.get_info()) == 1
 
@@ -410,7 +410,7 @@ def test_annotation_file_and_external_input_config(
         yaml.safe_dump(import_config, out_file)
 
     project = import_tools.ImportProject.build_from_file(config_fn)
-    pipeline = project._build_annotation_pipeline(project.get_gpf_instance())
+    pipeline = project.build_annotation_pipeline()
     assert pipeline is not None
     assert len(pipeline.get_info()) == 1
 
