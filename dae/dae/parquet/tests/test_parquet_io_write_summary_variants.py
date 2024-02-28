@@ -207,7 +207,7 @@ def test_summary_variants_deserialization(
 def test_summary_alleles_deserialization(
     t4c8_study_partitioned: GenotypeData,
     region: Region,
-    attrs: dict[str, Any]
+    attrs: list[dict[str, Any]]
 ) -> None:
     svs = list(t4c8_study_partitioned.query_summary_variants(regions=[region]))
     assert len(svs) == 1
