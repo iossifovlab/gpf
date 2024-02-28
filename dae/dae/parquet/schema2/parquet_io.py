@@ -346,28 +346,19 @@ class VariantsParquetWriter:
 
             # don't store summary alleles withouth family ones
             if num_fam_alleles_written > 0:
+                summary_variant.summary_index = summary_variant_index
+                summary_variant.ref_allele.update_attributes(
+                    {"bucket_index": self.bucket_index})
                 summary_variant.update_attributes({
                     "seen_in_status": seen_in_status[1:],
                     "seen_as_denovo": seen_as_denovo[1:],
                     "family_variants_count": family_variants_count[1:],
                     "family_alleles_count": family_variants_count[1:],
+                    "bucket_index": [self.bucket_index],
                 })
-                summary_blobs_json = json.dumps(
-                    summary_variant.to_record(), sort_keys=True
+                self.write_summary_variant(
+                    summary_variant, sj_base_index=sj_base_index
                 )
-                for summary_allele in summary_variant.alleles:
-                    sj_index = sj_base_index + summary_allele.allele_index
-                    extra_atts = {
-                        "bucket_index": self.bucket_index,
-                        "sj_index": sj_index,
-                    }
-                    summary_allele.summary_index = summary_variant_index
-                    summary_allele.update_attributes(extra_atts)
-                    summary_writer = self._get_bin_writer_summary(
-                        summary_allele,
-                        seen_as_denovo[summary_allele.allele_index])
-                    summary_writer.append_summary_allele(
-                        summary_allele, summary_blobs_json)
 
             if summary_variant_index % 1000 == 0 and summary_variant_index > 0:
                 elapsed = time.time() - self.start
@@ -391,3 +382,28 @@ class VariantsParquetWriter:
             self.bucket_index, summary_variant_index, family_variant_index,
             elapsed)
         return filenames
+
+    def write_summary_variant(
+        self, summary_variant: SummaryVariant,
+        attributes: Optional[dict[str, Any]] = None,
+        sj_base_index: Optional[int] = None
+    ) -> None:
+        """Write a single summary variant to the correct parquet file."""
+        if attributes is not None:
+            summary_variant.update_attributes(attributes)
+        summary_blobs_json = json.dumps(
+            summary_variant.to_record(), sort_keys=True
+        )
+        for summary_allele in summary_variant.alleles:
+            extra_atts = {}
+            if sj_base_index is not None:
+                sj_index = sj_base_index + summary_allele.allele_index
+                extra_atts = {
+                    "sj_index": sj_index,
+                }
+            summary_allele.update_attributes(extra_atts)
+            seen_as_denovo = summary_allele.get_attribute("seen_as_denovo")
+            summary_writer = self._get_bin_writer_summary(
+                summary_allele, seen_as_denovo)
+            summary_writer.append_summary_allele(
+                summary_allele, summary_blobs_json)

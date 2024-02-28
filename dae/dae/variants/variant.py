@@ -601,7 +601,7 @@ class SummaryVariant:
         if len(alleles) > 1:
             self._end_position = alleles[1].end_position
         else:
-            self._end_position = None
+            self._end_position = self.ref_allele.position
 
         for allele_index, allele in enumerate(alleles):
             if allele.allele_index == 0:
