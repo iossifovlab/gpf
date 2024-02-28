@@ -391,17 +391,17 @@ class VariantsParquetWriter:
         """Write a single summary variant to the correct parquet file."""
         if attributes is not None:
             summary_variant.update_attributes(attributes)
-        summary_blobs_json = json.dumps(
-            summary_variant.to_record(), sort_keys=True
-        )
-        for summary_allele in summary_variant.alleles:
-            extra_atts = {}
-            if sj_base_index is not None:
+        if sj_base_index is not None:
+            for summary_allele in summary_variant.alleles:
                 sj_index = sj_base_index + summary_allele.allele_index
                 extra_atts = {
                     "sj_index": sj_index,
                 }
-            summary_allele.update_attributes(extra_atts)
+                summary_allele.update_attributes(extra_atts)
+        summary_blobs_json = json.dumps(
+            summary_variant.to_record(), sort_keys=True
+        )
+        for summary_allele in summary_variant.alleles:
             seen_as_denovo = summary_allele.get_attribute("seen_as_denovo")
             summary_writer = self._get_bin_writer_summary(
                 summary_allele, seen_as_denovo)
