@@ -3,7 +3,7 @@ import time
 import logging
 import json
 import functools
-from typing import Any, Optional, cast, Union
+from typing import Any, Optional, cast, Union, Iterator
 
 import fsspec
 
@@ -13,18 +13,15 @@ import pyarrow.parquet as pq
 from dae.utils import fs_utils
 from dae.parquet.helpers import url_to_pyarrow_fs
 from dae.variants.attributes import Inheritance
-from dae.variants.family_variant import FamilyAllele
+from dae.variants.family_variant import FamilyAllele, FamilyVariant
+from dae.variants.variant import SummaryVariant
 from dae.utils.variant_utils import is_all_reference_genotype, \
     is_unknown_genotype
+from dae.annotation.annotation_pipeline import AttributeInfo
 
 from dae.variants.variant import SummaryAllele
-from dae.parquet.parquet_writer import \
-    collect_pedigree_parquet_schema, \
-    fill_family_bins, \
-    append_meta_to_parquet
 from dae.parquet.schema2.serializers import AlleleParquetSerializer
 from dae.parquet.partition_descriptor import PartitionDescriptor
-from dae.variants_loaders.raw.loader import VariantsLoader
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +39,7 @@ class ContinuousParquetFileWriter:
     def __init__(
         self,
         filepath: str,
-        variant_loader: VariantsLoader,
+        annotation_schema: list[AttributeInfo],
         filesystem: Optional[fsspec.AbstractFileSystem] = None,
         row_group_size: int = 50_000,
         schema: str = "schema",
@@ -50,10 +47,9 @@ class ContinuousParquetFileWriter:
     ) -> None:
 
         self.filepath = filepath
-        annotation_schema = variant_loader.get_attribute("annotation_schema")
-        extra_attributes = variant_loader.get_attribute("extra_attributes")
+        self.annotation_schema = annotation_schema
         self.serializer = AlleleParquetSerializer(
-            annotation_schema, extra_attributes
+            self.annotation_schema
         )
 
         self.schema = getattr(self.serializer, schema)
@@ -165,7 +161,7 @@ class VariantsParquetWriter:
     def __init__(
         self,
         out_dir: str,
-        variants_loader: VariantsLoader,
+        annotation_schema: list[AttributeInfo],
         partition_descriptor: PartitionDescriptor,
         bucket_index: int = 1,
         row_group_size: int = 50_000,
@@ -173,10 +169,6 @@ class VariantsParquetWriter:
         filesystem: Optional[fsspec.AbstractFileSystem] = None,
     ) -> None:
         self.out_dir = out_dir
-        self.variants_loader = variants_loader
-        self.families = variants_loader.families
-        self.full_variants_iterator = variants_loader.full_variants_iterator()
-
         self.bucket_index = bucket_index
         assert self.bucket_index < 1_000_000, "bad bucket index"
 
@@ -189,18 +181,7 @@ class VariantsParquetWriter:
         self.data_writers: dict[str, ContinuousParquetFileWriter] = {}
         assert isinstance(partition_descriptor, PartitionDescriptor)
         self.partition_descriptor = partition_descriptor
-        fill_family_bins(
-            self.families, self.partition_descriptor)
-
-        annotation_schema = self.variants_loader.get_attribute(
-            "annotation_schema"
-        )
-        extra_attributes = self.variants_loader.get_attribute(
-            "extra_attributes"
-        )
-        self.serializer = AlleleParquetSerializer(
-            annotation_schema, extra_attributes
-        )
+        self.annotation_schema = annotation_schema
 
     def _build_family_filename(
         self, allele: FamilyAllele,
@@ -235,7 +216,7 @@ class VariantsParquetWriter:
         if filename not in self.data_writers:
             self.data_writers[filename] = ContinuousParquetFileWriter(
                 filename,
-                self.variants_loader,
+                self.annotation_schema,
                 filesystem=self.filesystem,
                 row_group_size=self.row_group_size,
                 schema="schema_family",
@@ -253,7 +234,7 @@ class VariantsParquetWriter:
         if filename not in self.data_writers:
             self.data_writers[filename] = ContinuousParquetFileWriter(
                 filename,
-                self.variants_loader,
+                self.annotation_schema,
                 filesystem=self.filesystem,
                 row_group_size=self.row_group_size,
                 schema="schema_summary",
@@ -275,14 +256,19 @@ class VariantsParquetWriter:
             + summary_index) * 10_000
         return sj_index
 
-    def _write_internal(self) -> list[str]:
+    def write_dataset(
+        self,
+        full_variants_iterator: Iterator[
+            tuple[SummaryVariant, list[FamilyVariant]]]
+    ) -> list[str]:
+        """Write variant to partitioned parquet dataset."""
         # pylint: disable=too-many-locals,too-many-branches
         family_variant_index = 0
         summary_variant_index = 0
         for summary_variant_index, (
             summary_variant,
             family_variants,
-        ) in enumerate(self.full_variants_iterator):
+        ) in enumerate(full_variants_iterator):
             assert summary_variant_index < 1_000_000_000, \
                 "too many summary variants"
             num_fam_alleles_written = 0
@@ -360,28 +346,19 @@ class VariantsParquetWriter:
 
             # don't store summary alleles withouth family ones
             if num_fam_alleles_written > 0:
+                summary_variant.summary_index = summary_variant_index
+                summary_variant.ref_allele.update_attributes(
+                    {"bucket_index": self.bucket_index})
                 summary_variant.update_attributes({
                     "seen_in_status": seen_in_status[1:],
                     "seen_as_denovo": seen_as_denovo[1:],
                     "family_variants_count": family_variants_count[1:],
                     "family_alleles_count": family_variants_count[1:],
+                    "bucket_index": [self.bucket_index],
                 })
-                summary_blobs_json = json.dumps(
-                    summary_variant.to_record(), sort_keys=True
+                self.write_summary_variant(
+                    summary_variant, sj_base_index=sj_base_index
                 )
-                for summary_allele in summary_variant.alleles:
-                    sj_index = sj_base_index + summary_allele.allele_index
-                    extra_atts = {
-                        "bucket_index": self.bucket_index,
-                        "sj_index": sj_index,
-                    }
-                    summary_allele.summary_index = summary_variant_index
-                    summary_allele.update_attributes(extra_atts)
-                    summary_writer = self._get_bin_writer_summary(
-                        summary_allele,
-                        seen_as_denovo[summary_allele.allele_index])
-                    summary_writer.append_summary_allele(
-                        summary_allele, summary_blobs_json)
 
             if summary_variant_index % 1000 == 0 and summary_variant_index > 0:
                 elapsed = time.time() - self.start
@@ -406,53 +383,27 @@ class VariantsParquetWriter:
             elapsed)
         return filenames
 
-    def write_metadata(self) -> None:
-        """Write dataset metadata."""
-        schema = [
-            (f.name, f.type) for f in self.serializer.schema_summary
-        ]
-        schema.extend(
-            list(self.partition_descriptor.dataset_summary_partition()))
-        schema_summary = "\n".join([
-            f"{n}|{t}" for n, t in schema
-        ])
-
-        schema = [
-            (f.name, f.type) for f in self.serializer.schema_family
-        ]
-        schema.extend(
-            list(self.partition_descriptor.dataset_family_partition())
+    def write_summary_variant(
+        self, summary_variant: SummaryVariant,
+        attributes: Optional[dict[str, Any]] = None,
+        sj_base_index: Optional[int] = None
+    ) -> None:
+        """Write a single summary variant to the correct parquet file."""
+        if attributes is not None:
+            summary_variant.update_attributes(attributes)
+        if sj_base_index is not None:
+            for summary_allele in summary_variant.alleles:
+                sj_index = sj_base_index + summary_allele.allele_index
+                extra_atts = {
+                    "sj_index": sj_index,
+                }
+                summary_allele.update_attributes(extra_atts)
+        summary_blobs_json = json.dumps(
+            summary_variant.to_record(), sort_keys=True
         )
-        schema_family = "\n".join([
-            f"{n}|{t}" for n, t in schema
-        ])
-
-        extra_attributes = self.serializer.extra_attributes
-
-        pedigree_schema = collect_pedigree_parquet_schema(
-            self.families.ped_df)
-        schema_pedigree = "\n".join([
-            f"{f.name}|{f.type}" for f in pedigree_schema])
-
-        metapath = fs_utils.join(self.out_dir, "meta", "meta.parquet")
-        append_meta_to_parquet(
-            metapath,
-            key=[
-                "partition_description",
-                "summary_schema",
-                "family_schema",
-                "pedigree_schema",
-                "extra_attributes",
-            ],
-            value=[
-                self.partition_descriptor.serialize(),
-                str(schema_summary),
-                str(schema_family),
-                str(schema_pedigree),
-                str(extra_attributes),
-            ]
-        )
-
-    def write_dataset(self) -> list[str]:
-        filenames = self._write_internal()
-        return filenames
+        for summary_allele in summary_variant.alleles:
+            seen_as_denovo = summary_allele.get_attribute("seen_as_denovo")
+            summary_writer = self._get_bin_writer_summary(
+                summary_allele, seen_as_denovo)
+            summary_writer.append_summary_allele(
+                summary_allele, summary_blobs_json)

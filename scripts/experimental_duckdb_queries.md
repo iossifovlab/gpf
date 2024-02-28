@@ -1992,3 +1992,375 @@ JOIN family AS fa
   )
 LIMIT 10010
 ```
+
+
+```sql
+EXPLAIN ANALYZE WITH summary AS (
+  SELECT
+    *
+  FROM PARQUET_SCAN(
+    '/data/lubo/seq-pipeline/sequencing-de-novo/gpf_validation_data/data_hg38/studies_liftover/w1202s766e611_liftover/OUTPUT2.4/w1202s766e611_liftover/summary/*/*/*/*.parquet', hive_partitioning=1
+  ) AS sa
+  WHERE
+    sa.allele_index > 0
+), family AS (
+  SELECT
+    *
+  FROM PARQUET_SCAN(
+    '/data/lubo/seq-pipeline/sequencing-de-novo/gpf_validation_data/data_hg38/studies_liftover/w1202s766e611_liftover/OUTPUT2.4/w1202s766e611_liftover/family/*/*/*/*/*.parquet', hive_partitioning=1
+  ) AS fa
+  WHERE
+    fa.allele_index > 0
+)
+SELECT
+  fa.bucket_index,
+  fa.summary_index,
+  fa.family_index,
+  sa.allele_index,
+  sa.summary_variant_data,
+  fa.family_variant_data
+FROM summary AS sa
+JOIN family AS fa
+  USING (sj_index, region_bin, frequency_bin, coding_bin)
+LIMIT 10
+```
+
+```
+┌─────────────────────────────────────┐
+│┌───────────────────────────────────┐│
+││    Query Profiling Information    ││
+│└───────────────────────────────────┘│
+└─────────────────────────────────────┘
+ LIMIT 10;sj_index, region_bin, frequency_bin, coding_bin)ation_data/data_hg38/studies_liftover/w1202s766e611_liftover/OUTPUT2.4/w1202s766e611_liftover/family/*/*/*/*/*.parquet', hive_partitioning=1
+┌─────────────────────────────────────┐
+│┌───────────────────────────────────┐│
+││         Total Time: 5.93s         ││
+│└───────────────────────────────────┘│
+└─────────────────────────────────────┘
+┌───────────────────────────┐                             
+│      RESULT_COLLECTOR     │                             
+│   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │                             
+│             0             │                             
+│          (0.00s)          │                             
+└─────────────┬─────────────┘                                                          
+┌─────────────┴─────────────┐                             
+│      EXPLAIN_ANALYZE      │                             
+│   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │                             
+│             0             │                             
+│          (0.00s)          │                             
+└─────────────┬─────────────┘                                                          
+┌─────────────┴─────────────┐                             
+│      STREAMING_LIMIT      │                             
+│   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │                             
+│             10            │                             
+│          (0.00s)          │                             
+└─────────────┬─────────────┘                                                          
+┌─────────────┴─────────────┐                             
+│         PROJECTION        │                             
+│   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │                             
+│        bucket_index       │                             
+│       summary_index       │                             
+│        family_index       │                             
+│        allele_index       │                             
+│    summary_variant_data   │                             
+│    family_variant_data    │                             
+│   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │                             
+│           43479           │                             
+│          (0.00s)          │                             
+└─────────────┬─────────────┘                                                          
+┌─────────────┴─────────────┐                             
+│         HASH_JOIN         │                             
+│   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │                             
+│           INNER           │                             
+│  coding_bin = coding_bin  │                             
+│      frequency_bin =      │                             
+│        frequency_bin      │                             
+│  region_bin = region_bin  ├──────────────┐              
+│    sj_index = sj_index    │              │              
+│   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │              │              
+│         EC: 44593         │              │              
+│   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │              │              
+│           43479           │              │              
+│          (58.03s)         │              │              
+└─────────────┬─────────────┘              │                                           
+┌─────────────┴─────────────┐┌─────────────┴─────────────┐
+│       PARQUET_SCAN        ││       PARQUET_SCAN        │
+│   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   ││   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │
+│        allele_index       ││        bucket_index       │
+│          sj_index         ││       summary_index       │
+│    summary_variant_data   ││          sj_index         │
+│         coding_bin        ││        family_index       │
+│       frequency_bin       ││    family_variant_data    │
+│         region_bin        ││         coding_bin        │
+│   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   ││       frequency_bin       │
+│Filters: allele_index>0 AND││         region_bin        │
+│  allele_index IS NOT NULL ││   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │
+│   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   ││Filters: allele_index>0 AND│
+│         EC: 222969        ││  allele_index IS NOT NULL │
+│   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   ││   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │
+│           42645           ││         EC: 217440        │
+│          (0.51s)          ││   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │
+│                           ││          77363294         │
+│                           ││         (101.24s)         │
+└───────────────────────────┘└───────────────────────────┘                             
+Run Time (s): real 6.284 user 82.452370 sys 31.718727
+```
+
+
+```sql
+EXPLAIN ANALYZE WITH summary AS (
+  SELECT
+    *
+  FROM PARQUET_SCAN(
+    '/data/lubo/seq-pipeline/sequencing-de-novo/gpf_validation_data/data_hg38/studies_liftover/w1202s766e611_liftover/OUTPUT2.4/w1202s766e611_liftover/summary/*/*/*/*.parquet', hive_partitioning=1
+  ) AS sa
+  WHERE
+    sa.allele_index > 0
+), family AS (
+  SELECT
+    *
+  FROM PARQUET_SCAN(
+    '/data/lubo/seq-pipeline/sequencing-de-novo/gpf_validation_data/data_hg38/studies_liftover/w1202s766e611_liftover/OUTPUT2.4/w1202s766e611_liftover/family/*/*/*/*/*.parquet', hive_partitioning=1
+  ) AS fa
+  WHERE
+    fa.allele_index > 0
+)
+SELECT
+  fa.bucket_index,
+  fa.summary_index,
+  fa.family_index,
+  sa.allele_index,
+  sa.summary_variant_data,
+  fa.family_variant_data
+FROM summary AS sa
+JOIN family AS fa
+  USING (sj_index)
+LIMIT 10
+```
+
+```
+┌─────────────────────────────────────┐
+│┌───────────────────────────────────┐│
+││    Query Profiling Information    ││
+│└───────────────────────────────────┘│
+└─────────────────────────────────────┘
+ LIMIT 10;sj_index)t_dataa,ne/sequencing-de-novo/gpf_validation_data/data_hg38/studies_liftover/w1202s766e611_liftover/OUTPUT2.4/w1202s766e611_liftover/family/*/*/*/*/*.parquet', hive_partitioning=1
+┌─────────────────────────────────────┐
+│┌───────────────────────────────────┐│
+││         Total Time: 5.76s         ││
+│└───────────────────────────────────┘│
+└─────────────────────────────────────┘
+┌───────────────────────────┐                             
+│      RESULT_COLLECTOR     │                             
+│   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │                             
+│             0             │                             
+│          (0.00s)          │                             
+└─────────────┬─────────────┘                                                          
+┌─────────────┴─────────────┐                             
+│      EXPLAIN_ANALYZE      │                             
+│   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │                             
+│             0             │                             
+│          (0.00s)          │                             
+└─────────────┬─────────────┘                                                          
+┌─────────────┴─────────────┐                             
+│      STREAMING_LIMIT      │                             
+│   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │                             
+│             10            │                             
+│          (0.00s)          │                             
+└─────────────┬─────────────┘                                                          
+┌─────────────┴─────────────┐                             
+│         PROJECTION        │                             
+│   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │                             
+│        bucket_index       │                             
+│       summary_index       │                             
+│        family_index       │                             
+│        allele_index       │                             
+│    summary_variant_data   │                             
+│    family_variant_data    │                             
+│   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │                             
+│           43480           │                             
+│          (0.00s)          │                             
+└─────────────┬─────────────┘                                                          
+┌─────────────┴─────────────┐                             
+│         HASH_JOIN         │                             
+│   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │                             
+│           INNER           │                             
+│    sj_index = sj_index    │                             
+│   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   ├──────────────┐              
+│         EC: 44593         │              │              
+│   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │              │              
+│           43480           │              │              
+│          (52.39s)         │              │              
+└─────────────┬─────────────┘              │                                           
+┌─────────────┴─────────────┐┌─────────────┴─────────────┐
+│       PARQUET_SCAN        ││       PARQUET_SCAN        │
+│   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   ││   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │
+│        allele_index       ││        bucket_index       │
+│          sj_index         ││       summary_index       │
+│    summary_variant_data   ││          sj_index         │
+│   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   ││        family_index       │
+│Filters: allele_index>0 AND││    family_variant_data    │
+│  allele_index IS NOT NULL ││   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │
+│   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   ││Filters: allele_index>0 AND│
+│         EC: 222969        ││  allele_index IS NOT NULL │
+│   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   ││   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │
+│           42645           ││         EC: 217440        │
+│          (0.43s)          ││   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │
+│                           ││          77363294         │
+│                           ││         (106.38s)         │
+└───────────────────────────┘└───────────────────────────┘                             
+Run Time (s): real 6.084 user 73.551320 sys 29.822817
+```
+
+
+```sql
+EXPLAIN ANALYZE WITH summary AS (
+  SELECT
+    *
+  FROM PARQUET_SCAN(
+    '/data/lubo/seq-pipeline/sequencing-de-novo/gpf_validation_data/data_hg38/studies_liftover/w1202s766e611_liftover/OUTPUT2.4/w1202s766e611_liftover/summary/*/*/*/*.parquet', hive_partitioning=1
+  ) AS sa
+  WHERE
+    sa.allele_index > 0
+), family AS (
+  SELECT
+    *
+  FROM PARQUET_SCAN(
+    '/data/lubo/seq-pipeline/sequencing-de-novo/gpf_validation_data/data_hg38/studies_liftover/w1202s766e611_liftover/OUTPUT2.4/w1202s766e611_liftover/family/*/*/*/*/*.parquet', hive_partitioning=1
+  ) AS fa
+  WHERE
+    fa.allele_index > 0
+)
+SELECT
+  fa.bucket_index,
+  fa.summary_index,
+  fa.family_index,
+  sa.allele_index,
+  sa.summary_variant_data,
+  fa.family_variant_data
+FROM summary AS sa
+JOIN family AS fa
+  USING (bucket_index, summary_index, allele_index)
+LIMIT 10
+```
+
+```
+┌─────────────────────────────────────┐
+│┌───────────────────────────────────┐│
+││    Query Profiling Information    ││
+│└───────────────────────────────────┘│
+└─────────────────────────────────────┘
+ ;IMIT 10(bucket_index, summary_index, allele_index)_validation_data/data_hg38/studies_liftover/w1202s766e611_liftover/OUTPUT2.4/w1202s766e611_liftover/family/*/*/*/*/*.parquet', hive_partitioning=1
+┌─────────────────────────────────────┐
+│┌───────────────────────────────────┐│
+││         Total Time: 5.81s         ││
+│└───────────────────────────────────┘│
+└─────────────────────────────────────┘
+┌───────────────────────────┐                             
+│      RESULT_COLLECTOR     │                             
+│   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │                             
+│             0             │                             
+│          (0.00s)          │                             
+└─────────────┬─────────────┘                                                          
+┌─────────────┴─────────────┐                             
+│      EXPLAIN_ANALYZE      │                             
+│   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │                             
+│             0             │                             
+│          (0.00s)          │                             
+└─────────────┬─────────────┘                                                          
+┌─────────────┴─────────────┐                             
+│      STREAMING_LIMIT      │                             
+│   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │                             
+│             10            │                             
+│          (0.00s)          │                             
+└─────────────┬─────────────┘                                                          
+┌─────────────┴─────────────┐                             
+│         PROJECTION        │                             
+│   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │                             
+│        bucket_index       │                             
+│       summary_index       │                             
+│        family_index       │                             
+│        allele_index       │                             
+│    summary_variant_data   │                             
+│    family_variant_data    │                             
+│   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │                             
+│           43478           │                             
+│          (0.00s)          │                             
+└─────────────┬─────────────┘                                                          
+┌─────────────┴─────────────┐                             
+│         HASH_JOIN         │                             
+│   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │                             
+│           INNER           │                             
+│      summary_index =      │                             
+│        summary_index      │                             
+│bucket_index = bucket_index│                             
+│allele_index = allele_index├──────────────┐              
+│   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │              │              
+│         EC: 44593         │              │              
+│   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │              │              
+│           43478           │              │              
+│          (54.99s)         │              │              
+└─────────────┬─────────────┘              │                                           
+┌─────────────┴─────────────┐┌─────────────┴─────────────┐
+│         PROJECTION        ││         PROJECTION        │
+│   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   ││   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │
+│        bucket_index       ││        bucket_index       │
+│       summary_index       ││       summary_index       │
+│        allele_index       ││        allele_index       │
+│    summary_variant_data   ││        family_index       │
+│   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   ││    family_variant_data    │
+│           42645           ││   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │
+│          (0.00s)          ││          77363294         │
+│                           ││          (0.10s)          │
+└─────────────┬─────────────┘└─────────────┬─────────────┘                             
+┌─────────────┴─────────────┐┌─────────────┴─────────────┐
+│       PARQUET_SCAN        ││       PARQUET_SCAN        │
+│   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   ││   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │
+│        allele_index       ││        allele_index       │
+│        bucket_index       ││        bucket_index       │
+│       summary_index       ││       summary_index       │
+│    summary_variant_data   ││        family_index       │
+│   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   ││    family_variant_data    │
+│Filters: allele_index>0 AND││   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │
+│  allele_index IS NOT NULL ││Filters: allele_index>0 AND│
+│   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   ││  allele_index IS NOT NULL │
+│         EC: 222969        ││   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │
+│   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   ││         EC: 217440        │
+│           42645           ││   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │
+│          (0.44s)          ││          77363294         │
+│                           ││         (106.18s)         │
+└───────────────────────────┘└───────────────────────────┘                             
+Run Time (s): real 6.135 user 73.436646 sys 29.553628
+```
+
+
+```sql
+EXPLAIN ANALYZE WITH summary AS (
+  SELECT
+    *
+  FROM PARQUET_SCAN(
+    '/data/lubo/seq-pipeline/sequencing-de-novo/gpf_validation_data/data_hg38/studies_liftover/w1202s766e611_liftover/OUTPUT/w1202s766e611_liftover/summary/*/*/*/*.parquet', hive_partitioning=1
+  ) AS sa
+  WHERE
+    sa.allele_index > 0
+), family AS (
+  SELECT
+    *
+  FROM PARQUET_SCAN(
+    '/data/lubo/seq-pipeline/sequencing-de-novo/gpf_validation_data/data_hg38/studies_liftover/w1202s766e611_liftover/OUTPUT/w1202s766e611_liftover/family/*/*/*/*/*.parquet', hive_partitioning=1
+  ) AS fa
+  WHERE
+    fa.allele_index > 0
+)
+SELECT
+  fa.bucket_index,
+  fa.summary_index,
+  fa.family_index,
+  sa.allele_index,
+  sa.summary_variant_data,
+  fa.family_variant_data
+FROM summary AS sa
+JOIN family AS fa
+  USING (bucket_index, summary_index, allele_index)
+LIMIT 10
+```

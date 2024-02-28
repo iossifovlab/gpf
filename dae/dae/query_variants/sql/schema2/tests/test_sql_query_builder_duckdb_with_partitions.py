@@ -32,11 +32,11 @@ def duckdb_storage(
     storage_path = tmp_path_factory.mktemp("duckdb_storage")
     storage_config = {
         "id": "duckdb_test",
-        "storage_type": "duckdb",
+        "storage_type": "duckdb2",
         "db": "duckdb_storage/test.duckdb",
         "base_dir": str(storage_path)
     }
-    storage_factory = get_genotype_storage_factory("duckdb")
+    storage_factory = get_genotype_storage_factory("duckdb2")
     assert storage_factory is not None
     storage = storage_factory(storage_config)
     assert storage is not None

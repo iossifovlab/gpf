@@ -80,7 +80,7 @@ def t4c8_instance(
         # DuckDb Storage
         "duckdb": {
             "id": "duckdb",
-            "storage_type": "duckdb",
+            "storage_type": "duckdb2",
             "db": "duckdb_storage/dev_storage.db",
             "base_dir": str(root_path)
         },
@@ -316,6 +316,7 @@ def t4c8_dataset(
                     name: unspecified
                 selected_person_set_collections:
                 - phenotype"""))
+
 
 def _select_storages_by_type(
         storage_types: list[str]) -> dict[str, GenotypeStorage]:

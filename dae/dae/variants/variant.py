@@ -553,15 +553,23 @@ class SummaryAllele(core.Allele):
     def create_reference_allele(allele: SummaryAllele) -> SummaryAllele:
         """Given an allele creates the corresponding reference allele."""
         allele_type = core.Allele.Type.position
+        sj_index = allele.attributes.get("sj_index")
+        if sj_index is not None:
+            sj_index = sj_index - allele.allele_index
 
         new_attributes = {
             "chrom": allele.attributes.get("chrom"),
             "position": allele.attributes.get("position"),
-            "end_position": allele.attributes.get("end_position"),
+            "end_position": allele.attributes.get("position"),
             "reference": allele.attributes.get("reference"),
             "summary_variant_index": allele.attributes.get(
                 "summary_variant_index"),
             "allele_count": allele.attributes.get("allele_count"),
+            "allele_index": 0,
+            "summary_index": allele.attributes.get("summary_index"),
+            "bucket_index": allele.attributes.get("bucket_index"),
+            "sj_index": sj_index
+
             # FIXME uncomment when ref allele count/freq computation is fixed
             # for schema1. At the moment all ref allles will have a freq of
             # None. To emulate that behavior following lines are commented out.
@@ -601,7 +609,7 @@ class SummaryVariant:
         if len(alleles) > 1:
             self._end_position = alleles[1].end_position
         else:
-            self._end_position = None
+            self._end_position = self.ref_allele.position
 
         for allele_index, allele in enumerate(alleles):
             if allele.allele_index == 0:
@@ -859,6 +867,7 @@ class SummaryVariantFactory:
 
         if "summary_variant_index" in record:
             summary_index = record["summary_variant_index"]
+            attributes["summary_index"] = summary_index
         else:
             summary_index = record.get("summary_index")
 
@@ -902,7 +911,6 @@ class SummaryVariantFactory:
             attr_filter: Optional[set[str]] = None) -> SummaryVariant:
         """Build summary variant from a list of dictionaries (records)."""
         assert len(records) > 0
-
         alleles = []
         for record in records:
             allele = SummaryVariantFactory.summary_allele_from_record(

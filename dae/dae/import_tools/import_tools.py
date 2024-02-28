@@ -422,10 +422,10 @@ class ImportProject:
         return cast(int, res)
 
     def build_variants_loader_pipeline(
-            self, variants_loader: VariantsGenotypesLoader,
-            gpf_instance: GPFInstance) -> VariantsGenotypesLoader:
+        self, variants_loader: VariantsGenotypesLoader,
+    ) -> VariantsGenotypesLoader:
         """Create an annotation pipeline around variants_loader."""
-        annotation_pipeline = self._build_annotation_pipeline(gpf_instance)
+        annotation_pipeline = self.build_annotation_pipeline()
         if annotation_pipeline is not None:
             variants_loader = cast(
                 VariantsGenotypesLoader,
@@ -587,9 +587,10 @@ class ImportProject:
                 ) from exp
 
     def get_annotation_pipeline_config(
-        self, gpf_instance: GPFInstance,
+        self
     ) -> list[dict]:
         """Return the annotation pipeline configuration."""
+        gpf_instance = self.get_gpf_instance()
         if "annotation" not in self.import_config:
             # build default annotation pipeline as described in the gpf
             return construct_import_annotation_pipeline_config(gpf_instance)
@@ -606,9 +607,9 @@ class ImportProject:
             )
         return cast(list[dict], annotation_config)
 
-    def _build_annotation_pipeline(
-            self, gpf_instance: GPFInstance) -> AnnotationPipeline:
-        config = self.get_annotation_pipeline_config(gpf_instance)
+    def build_annotation_pipeline(self) -> AnnotationPipeline:
+        config = self.get_annotation_pipeline_config()
+        gpf_instance = self.get_gpf_instance()
         annotation_config = AnnotationConfigParser.parse_raw(config)
         return build_annotation_pipeline(
             pipeline_config=annotation_config, grr_repository=gpf_instance.grr

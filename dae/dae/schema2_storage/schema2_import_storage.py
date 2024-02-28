@@ -10,8 +10,11 @@ from dae.import_tools.import_tools import ImportStorage, ImportProject, \
     Bucket
 from dae.task_graph.graph import TaskGraph, Task
 from dae.parquet.parquet_writer import fill_family_bins, \
-    save_ped_df_to_parquet, merge_variants_parquets, append_meta_to_parquet
+    save_ped_df_to_parquet, merge_variants_parquets, append_meta_to_parquet, \
+    collect_pedigree_parquet_schema
+
 from dae.parquet.schema2.parquet_io import VariantsParquetWriter
+from dae.parquet.schema2.serializers import AlleleParquetSerializer
 from dae.parquet.partition_descriptor import PartitionDescriptor
 
 
@@ -66,29 +69,53 @@ class Schema2ImportStorage(ImportStorage):
             families.ped_df, layout.pedigree)
 
     @classmethod
+    def _serialize_summary_schema(cls, project: ImportProject) -> str:
+        annotation_pipeline = project.build_annotation_pipeline()
+        summary_schema = AlleleParquetSerializer.build_summary_schema(
+            annotation_pipeline.get_attributes()
+        )
+        schema = [
+            (f.name, f.type) for f in summary_schema
+        ]
+        partition_descriptor = cls._get_partition_description(project)
+        schema.extend(
+            list(partition_descriptor.dataset_summary_partition()))
+        return "\n".join([
+            f"{n}|{t}" for n, t in schema
+        ])
+
+    @classmethod
+    def _serialize_family_schema(cls, project: ImportProject) -> str:
+        summary_schema = AlleleParquetSerializer.build_family_schema()
+        schema = [
+            (f.name, f.type) for f in summary_schema
+        ]
+        partition_descriptor = cls._get_partition_description(project)
+        schema.extend(
+            list(partition_descriptor.dataset_family_partition()))
+        return "\n".join([
+            f"{n}|{t}" for n, t in schema
+        ])
+
+    @classmethod
+    def _serialize_pedigree_schema(cls, project: ImportProject) -> str:
+        families = project.get_pedigree()
+        partition_descriptor = cls._get_partition_description(project)
+        fill_family_bins(families, partition_descriptor)
+
+        pedigree_schema = collect_pedigree_parquet_schema(
+            families.ped_df)
+        return "\n".join([
+            f"{f.name}|{f.type}" for f in pedigree_schema])
+
+    @classmethod
     def _do_write_meta(cls, project: ImportProject) -> None:
         layout = schema2_project_dataset_layout(project)
         gpf_instance = project.get_gpf_instance()
-        loader_type = next(iter(project.get_variant_loader_types()))
-        gpf_instance = project.get_gpf_instance()
-        variants_loader = project.get_variant_loader(
-            loader_type=loader_type,
-            reference_genome=gpf_instance.reference_genome)
-        variants_loader = project.build_variants_loader_pipeline(
-            variants_loader, gpf_instance
-        )
-        writer = VariantsParquetWriter(
-            out_dir=layout.study,
-            variants_loader=variants_loader,
-            partition_descriptor=cls._get_partition_description(project)
-        )
-        writer.write_metadata()
 
         reference_genome = gpf_instance.reference_genome.resource_id
         gene_models = gpf_instance.gene_models.resource_id
-        annotation_pipeline_config = project.get_annotation_pipeline_config(
-            gpf_instance
-        )
+        annotation_pipeline_config = project.get_annotation_pipeline_config()
         annotation_pipeline = yaml.dump(annotation_pipeline_config)
         variants_types = project.get_variant_loader_types()
         study_config = {
@@ -103,12 +130,22 @@ class Schema2ImportStorage(ImportStorage):
         append_meta_to_parquet(
             layout.meta,
             [
+                "partition_description",
+                "summary_schema",
+                "family_schema",
+                "pedigree_schema",
+
                 "reference_genome",
                 "gene_models",
                 "annotation_pipeline",
                 "study"
             ],
             [
+                cls._get_partition_description(project).serialize(),
+                cls._serialize_summary_schema(project),
+                cls._serialize_family_schema(project),
+                cls._serialize_pedigree_schema(project),
+
                 reference_genome,
                 gene_models,
                 annotation_pipeline,
@@ -123,7 +160,7 @@ class Schema2ImportStorage(ImportStorage):
         variants_loader = project.get_variant_loader(
             bucket, reference_genome=gpf_instance.reference_genome)
         variants_loader = project.build_variants_loader_pipeline(
-            variants_loader, gpf_instance
+            variants_loader
         )
         if bucket.region_bin is not None and bucket.region_bin != "none":
             logger.info(
@@ -133,16 +170,18 @@ class Schema2ImportStorage(ImportStorage):
 
         row_group_size = project.get_row_group_size()
         logger.debug("argv.rows: %s", row_group_size)
-
+        annotation_pipeline = project.build_annotation_pipeline()
         variants_writer = VariantsParquetWriter(
             out_dir=layout.study,
-            variants_loader=variants_loader,
+            annotation_schema=annotation_pipeline.get_attributes(),
             partition_descriptor=cls._get_partition_description(project),
             bucket_index=bucket.index,
             row_group_size=row_group_size,
             include_reference=project.include_reference,
         )
-        variants_writer.write_dataset()
+        variants_writer.write_dataset(
+            variants_loader.full_variants_iterator()
+        )
 
     @classmethod
     def _variant_partitions(
@@ -189,16 +228,16 @@ class Schema2ImportStorage(ImportStorage):
     def _build_all_parquet_tasks(
             self, project: ImportProject, graph: TaskGraph) -> list[Task]:
         pedigree_task = graph.create_task(
-            "Generating Pedigree", self._do_write_pedigree, [project], [],
+            "write_pedigree", self._do_write_pedigree, [project], [],
             input_files=[project.get_pedigree_filename()]
         )
         meta_task = graph.create_task(
-            "Write Meta", self._do_write_meta, [project], [])
+            "write_meta", self._do_write_meta, [project], [])
 
         bucket_tasks = []
         for bucket in project.get_import_variants_buckets():
             task = graph.create_task(
-                f"Converting Variants {bucket}", self._do_write_variant,
+                f"write_variants_{bucket}", self._do_write_variant,
                 [project, bucket], [],
                 input_files=project.get_input_filenames(bucket)
             )
@@ -206,18 +245,19 @@ class Schema2ImportStorage(ImportStorage):
 
         # merge small parquet files into larger ones
         bucket_sync = graph.create_task(
-            "Sync Parquet Generation", lambda: None, [], bucket_tasks
+            "sync_parquet_write", lambda: None, [], bucket_tasks
         )
         output_dir_tasks = []
         for output_dir, partitions in self._variant_partitions(project):
             output_dir_tasks.append(graph.create_task(
-                f"Merging {output_dir}", self._merge_parquets,
+                f"merge_parquet_files_{output_dir}", self._merge_parquets,
                 [project, output_dir, partitions], [bucket_sync]
             ))
 
-        # dummy task used for running the parquet generation w/o impala import
+        # dummy task used for running the parquet generation
         all_parquet_task = graph.create_task(
-            "Parquet Tasks", lambda: None, [], output_dir_tasks + [bucket_sync]
+            "all_parquet_tasks", lambda: None, [],
+            output_dir_tasks + [bucket_sync]
         )
         return [pedigree_task, meta_task, all_parquet_task]
 
