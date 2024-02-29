@@ -3,8 +3,6 @@ data
 downloads
 import
 package-lock.json
-cypress/screenshots
-cypress/videos
 results
 /build-env/*
 Jenkinsfile.generated-stages.all

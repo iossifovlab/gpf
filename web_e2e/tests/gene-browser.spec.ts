@@ -1,4 +1,3 @@
-// cypress/integration/example.spec.ts
 import { test, expect, Page, Locator } from '@playwright/test';
 import * as utils from './utils';
 import { scanCSV } from 'nodejs-polars';

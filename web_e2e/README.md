@@ -1,5 +1,3 @@
-
-
 ## Setup GPF e2e tests
 
 Clear the previous e2e test instance:
@@ -40,7 +38,7 @@ docker inspect \
     0352bc66baa5
 ```
 
-This command shoud return an IP address. In our case it is `172.31.0.5`. You can browse 
+This command shoud return an IP address. In our case it is `172.31.0.5`. You can browse
 the GPF system setup by the scripts using following URL:
 
 ```
@@ -48,7 +46,6 @@ http://172.31.0.5/gpf/
 ```
 
 ## Run GPF e2e tests
-
 
 ```
 sudo rm -rf node_modules
@@ -62,23 +59,22 @@ npm install .
 To run the tests in the terminal:
 
 ```
-npm run test -- --config baseUrl=http://<instance ip>/gpf/
+npx playwright test
 ```
 
-To run the tests using the cypress UI:
+To run the tests using the playwright UI:
 
 ```
-./node_modules/.bin/cypress open --config baseUrl=http://<instance ip>/gpf/
+npx playwright test --ui
 ```
 
 To run a specific spec:
 
 ```
-./node_modules/.bin/cypress open --config baseUrl=http://<instance ip>/gpf/ --spec <path to the spec>
+npx playwright test --ui <path to the spec>
 ```
 
 ## Run GPF e2e instance on live GPFJS ng serve
-
 
 Change `gpfjs/src/environments/environment.ts` line:
 
