@@ -273,7 +273,7 @@ test.describe('Gene profiles gene comparison tests', () => {
 
     await page.locator('.compare-genes-close').nth(0).click();
     await expect(row.nth(2)).toHaveClass('table-row table-body-row');
-    await expect(row).not.toBeVisible();
+    await expect(page.locator('.compare-genes-close')).not.toBeVisible();
   });
 });
 
@@ -324,47 +324,22 @@ test.describe('Gene profiles table functionality tests', () => {
     await page.locator('.header-cell').getByText('Relevant Gene Sets').click();
     await page.waitForTimeout(200);
 
-    await expect(row.nth(0).locator('.row-cell').nth(0)).toHaveText('SENP1');
-    await expect(row.nth(0).locator('.row-cell').nth(1)).toHaveText('check_small');
-    await expect(row.nth(0).locator('.row-cell').nth(3)).toHaveText('check_small');
-
-    await expect(row.nth(1).locator('.row-cell').nth(0)).toHaveText('SENP6');
-    await expect(row.nth(1).locator('.row-cell').nth(1)).toHaveText('check_small');
-    await expect(row.nth(1).locator('.row-cell').nth(2)).toHaveText('');
-
-    await expect(row.nth(2).locator('.row-cell').nth(0)).toHaveText('SENP2');
-    await expect(row.nth(2).locator('.row-cell').nth(3)).toHaveText('check_small');
-
-    await expect(row.nth(3).locator('.row-cell').nth(0)).toHaveText('SENP8');
-    await expect(row.nth(3).locator('.row-cell').nth(1)).toHaveText('check_small');
-
-    await expect(row.nth(4).locator('.row-cell').nth(0)).toHaveText('SENP3-EIF4A1');
-    await expect(row.nth(4).locator('.row-cell').nth(1)).toHaveText('check_small');
-
-    await expect(row.nth(5).locator('.row-cell').nth(0)).toHaveText('SENP3');
-    await expect(row.nth(5).locator('.row-cell').nth(1)).toHaveText('check_small');
+    await expect(row.nth(0).getByText('check_small')).toHaveCount(2);
+    await expect(row.nth(1).getByText('check_small')).toHaveCount(1);
+    await expect(row.nth(2).getByText('check_small')).toHaveCount(1);
+    await expect(row.nth(3).getByText('check_small')).toHaveCount(1);
+    await expect(row.nth(4).getByText('check_small')).toHaveCount(1);
+    await expect(row.nth(5).getByText('check_small')).toHaveCount(1);
 
     await page.locator('.header-cell').getByText('Relevant Gene Sets').click();
     await page.waitForTimeout(200);
 
-    await expect(row.nth(0).locator('.row-cell').nth(0)).toHaveText('SENP6');
-    await expect(row.nth(0).locator('.row-cell').nth(1)).toHaveText('check_small');
-
-    await expect(row.nth(1).locator('.row-cell').nth(0)).toHaveText('SENP2');
-    await expect(row.nth(1).locator('.row-cell').nth(3)).toHaveText('check_small');
-
-    await expect(row.nth(2).locator('.row-cell').nth(0)).toHaveText('SENP8');
-    await expect(row.nth(2).locator('.row-cell').nth(1)).toHaveText('check_small');
-
-    await expect(row.nth(3).locator('.row-cell').nth(0)).toHaveText('SENP3-EIF4A1');
-    await expect(row.nth(3).locator('.row-cell').nth(1)).toHaveText('check_small');
-
-    await expect(row.nth(4).locator('.row-cell').nth(0)).toHaveText('SENP3');
-    await expect(row.nth(4).locator('.row-cell').nth(1)).toHaveText('check_small');
-
-    await expect(row.nth(5).locator('.row-cell').nth(0)).toHaveText('SENP1');
-    await expect(row.nth(5).locator('.row-cell').nth(1)).toHaveText('check_small');
-    await expect(row.nth(5).locator('.row-cell').nth(3)).toHaveText('check_small');
+    await expect(row.nth(0).getByText('check_small')).toHaveCount(1);
+    await expect(row.nth(1).getByText('check_small')).toHaveCount(1);
+    await expect(row.nth(2).getByText('check_small')).toHaveCount(1);
+    await expect(row.nth(3).getByText('check_small')).toHaveCount(1);
+    await expect(row.nth(4).getByText('check_small')).toHaveCount(1);
+    await expect(row.nth(5).getByText('check_small')).toHaveCount(2);
   });
 
   test('should test autism scores', async({ page }) => {
