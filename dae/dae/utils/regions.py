@@ -65,7 +65,7 @@ def get_chromosome_length_tabix(
     """
     Return the length of a chromosome (or contig).
 
-    Returned value is guarnteed to be larget than the actual contig length.
+    Returned value is guarnteed to be larger than the actual contig length.
     """
     def any_records(riter: Iterator) -> bool:
         try:

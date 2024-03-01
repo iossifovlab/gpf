@@ -75,7 +75,7 @@ def build_pipeline(
         pipeline_old = build_annotation_pipeline(
             pipeline_config_file=reannotate,
             grr_repository=grr,
-            allow_repeated_attributes=allow_repeated_attributes
+            allow_repeated_attributes=allow_repeated_attributes  # FIXME Is this correct? How do we know whether the old pipeline was made with this as true or false?
         )
         pipeline_new = pipeline
         pipeline = ReannotationPipeline(pipeline_new, pipeline_old)
@@ -114,11 +114,14 @@ class AnnotationTool:
         pass
 
     def run(self) -> None:
+        # FIXME Is this too eager? What if a reannotation pipeline is created
+        # inside work() and the only caching that must be done is far smaller
+        # than the entire new annotation config suggests?
         cache_pipeline(self.grr, self.pipeline)
 
         self.task_graph.input_files.append(self.args.input)
         self.task_graph.input_files.append(self.args.pipeline)
-        if self.args.reannotate:
+        if hasattr(self.args, "reannotate") and self.args.reannotate:
             self.task_graph.input_files.append(self.args.reannotate)
 
         self.work()
