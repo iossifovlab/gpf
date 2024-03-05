@@ -4,7 +4,14 @@
     [initialMarkdown]="homeDescription"></gpf-markdown-editor>
 
   <div id="gene-profiles-section" *ngIf="geneProfilesConfig">
-    <a [routerLink]="'/gene-profiles'"><h4>Gene profiles</h4></a>
+    <h3>Gene profiles</h3>
+    <div class="separator"></div>
+
+    <div id="all-genes-wrapper">
+      <span class="material-symbols-outlined sm" style="color: #3ea658">lock_open_right</span>
+      <h4><a [routerLink]="'/gene-profiles'">All genes</a></h4>
+    </div>
+
     <gpf-markdown-editor
       *ngIf="geneProfilesConfig.description"
       [initialMarkdown]="geneProfilesConfig.description"

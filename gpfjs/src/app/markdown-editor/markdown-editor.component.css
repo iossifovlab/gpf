@@ -1,5 +1,9 @@
 .container {
   margin-top: 20px;
+  width: 100%;
+  padding-left: 0;
+  padding-right: 0;
+  padding-bottom: 0;
 }
 
 #edit-container {
@@ -30,6 +34,25 @@
 #edit-icon {
   padding: 6px;
   cursor: pointer;
+}
+
+:host::ng-deep markdown h1 {
+  font-size: 1.75rem;
+  border-bottom: 2px solid #9c9c9c;
+  padding-bottom: 8px;
+  margin-bottom: 15px;
+}
+
+:host::ng-deep markdown h2 {
+  font-size: 1.3rem;
+  border-bottom: 2px solid #9c9c9c;
+  padding-bottom: 8px;
+  margin-bottom: 15px;
+}
+
+:host ::ng-deep markdown li {
+  list-style-type: none;
+  margin-bottom: 15px;
 }
 
 :host::ng-deep.md-header {

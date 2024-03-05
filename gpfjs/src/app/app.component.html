@@ -14,18 +14,18 @@
           >Home</a
         >
         <a
-          [routerLink]="'/datasets'"
-          routerLinkActive="highlighted-route"
-          title="Datasets"
-          id="datasets">Datasets</a
-        >
-        <a
           *ngIf="geneProfilesConfig"
           [routerLink]="'/gene-profiles'"
           routerLinkActive="highlighted-route"
           title="Gene Profiles"
           id="gene-profiles"
           >Gene Profiles</a
+        >
+        <a
+        [routerLink]="'/datasets'"
+        routerLinkActive="highlighted-route"
+        title="Datasets"
+        id="datasets">Datasets</a
         >
         <a
           [routerLink]="'/about'"
