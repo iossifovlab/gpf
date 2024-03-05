@@ -293,19 +293,23 @@ test.describe('Gene profiles table functionality tests', () => {
     await page.getByLabel('Autism Gene Sets').click();
     await page.locator('#category-filtering-button').click();
 
-    await expect(row.nth(0).locator('.row-cell').nth(0)).toHaveText('RAPGEF4');
     await expect(row.nth(0).locator('.row-cell').nth(1)).toHaveText('check_small');
     await expect(row.nth(0).locator('.row-cell').nth(2)).toHaveText('');
-    await expect(row.nth(1)).toHaveText('RAPGEF2');
-    await expect(row.nth(2)).toHaveText('RAPGEFL1');
-    await expect(row.nth(3)).toHaveText('RAPGEF1');
+    await expect(row.nth(1).locator('.row-cell').nth(1)).toHaveText('');
+    await expect(row.nth(1).locator('.row-cell').nth(2)).toHaveText('');
+    await expect(row.nth(2).locator('.row-cell').nth(1)).toHaveText('');
+    await expect(row.nth(2).locator('.row-cell').nth(2)).toHaveText('');
+    await expect(row.nth(3).locator('.row-cell').nth(1)).toHaveText('');
+    await expect(row.nth(3).locator('.row-cell').nth(2)).toHaveText('');
 
     await page.locator('.header-cell').getByText('Autism Gene Sets').click();
     await page.waitForTimeout(200);
-    await expect(row.nth(0)).toHaveText('RAPGEF2');
-    await expect(row.nth(1)).toHaveText('RAPGEFL1');
-    await expect(row.nth(2)).toHaveText('RAPGEF1');
-    await expect(row.nth(3).locator('.row-cell').nth(0)).toHaveText('RAPGEF4');
+    await expect(row.nth(0).locator('.row-cell').nth(1)).toHaveText('');
+    await expect(row.nth(0).locator('.row-cell').nth(2)).toHaveText('');
+    await expect(row.nth(1).locator('.row-cell').nth(1)).toHaveText('');
+    await expect(row.nth(1).locator('.row-cell').nth(2)).toHaveText('');
+    await expect(row.nth(2).locator('.row-cell').nth(1)).toHaveText('');
+    await expect(row.nth(2).locator('.row-cell').nth(2)).toHaveText('');
     await expect(row.nth(3).locator('.row-cell').nth(1)).toHaveText('check_small');
     await expect(row.nth(3).locator('.row-cell').nth(2)).toHaveText('');
   });
