@@ -295,7 +295,7 @@ export class GeneProfilesTableComponent implements OnInit, OnChanges, OnDestroy 
     }
   }
 
-  public handleCellClick($event, row, column: GeneProfilesColumn): void {
+  public handleCellClick($event, row: object, column: GeneProfilesColumn): void {
     const linkClick: boolean = $event.target.classList.contains('clickable');
     const geneSymbol = row[this.geneSymbolColumnId] as string;
 
@@ -350,7 +350,7 @@ export class GeneProfilesTableComponent implements OnInit, OnChanges, OnDestroy 
 
   private focusSearchBox(): void {
     this.waitForSearchBoxToLoad().then(() => {
-      this.searchBox.nativeElement.focus();
+      (this.searchBox.nativeElement as HTMLInputElement).focus();
     });
   }
 }

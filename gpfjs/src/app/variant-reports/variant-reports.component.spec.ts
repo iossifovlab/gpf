@@ -20,8 +20,8 @@ class MockDatasetsService {
   public getSelectedDatasetObservable(): object {
     return of({accessRights: true, commonReport: {enabled: true}});
   }
-  public getDatasetsLoadedObservable = (): Observable<any> => of();
-  public getDataset(): Observable<any> {
+  public getDatasetsLoadedObservable = (): Observable<null> => of();
+  public getDataset(): Observable<object> {
     return of({accessRights: true, commonReport: {enabled: true}});
   }
 }
@@ -33,8 +33,8 @@ class MockDatasetsDenovoService {
   public getSelectedDatasetObservable(): object {
     return of({id: 'Denovo', accessRights: true, commonReport: {enabled: true}});
   }
-  public getDatasetsLoadedObservable = (): Observable<any> => of();
-  public getDataset(): Observable<any> {
+  public getDatasetsLoadedObservable = (): Observable<null> => of();
+  public getDataset(): Observable<object> {
     return of({id: 'Denovo', accessRights: true, commonReport: {enabled: true}});
   }
 }
@@ -72,7 +72,7 @@ class VariantReportsServiceMock {
     this.datasetId = datasetId;
   }
 
-  public getVariantReport(datasetId: string): Observable<any> {
+  public getVariantReport(datasetId: string): Observable<object> {
     const pedigreeCounter: PedigreeCounter = new PedigreeCounter(1, 'groupName',
       [
         new PedigreeData('identifier', 'id', 'mother', 'father',

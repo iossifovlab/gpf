@@ -13,7 +13,7 @@ class MockDatasetsService {
   public getSelectedDataset(): object {
     return {id: 'test_dataset'};
   }
-  public getDataset(): Observable<any> {
+  public getDataset(): Observable<object> {
     return of({accessRights: true});
   }
 }

@@ -1,4 +1,4 @@
-import { NgxsModule, Store } from '@ngxs/store';
+import { NgxsModule } from '@ngxs/store';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { FamilyTagsComponent } from './family-tags.component';

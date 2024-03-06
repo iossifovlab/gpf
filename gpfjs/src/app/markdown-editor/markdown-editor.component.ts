@@ -25,7 +25,7 @@ export class MarkdownEditorComponent implements OnInit {
     resize: 'both',
     fullscreen: {enable: false, icons: undefined},
     parser: (val: string) => {
-      const sanitizedText = DOMPurify.sanitize(val.trim());
+      const sanitizedText = DOMPurify.sanitize(val.trim()) as string;
       return this.markdownService.parse(sanitizedText);
     }
   };

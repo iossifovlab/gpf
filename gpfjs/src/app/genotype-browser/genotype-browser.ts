@@ -9,15 +9,15 @@ export class BrowserQueryFilter {
     private variantTypes: string[]
   ) { }
 
-  public static fromJson(json): BrowserQueryFilter {
+  public static fromJson(json: object): BrowserQueryFilter {
     return new BrowserQueryFilter(
-      json['datasetId'],
-      json['geneSymbols'],
-      json['effectTypes'],
-      json['gender'],
-      PersonSetCollection.fromJson(json['peopleGroup']),
-      json['studyTypes'],
-      json['variantTypes']
+      json['datasetId'] as string,
+      json['geneSymbols'] as string[],
+      json['effectTypes'] as string[],
+      json['gender'] as string[],
+      PersonSetCollection.fromJson(json['peopleGroup'] as PersonSetCollection),
+      json['studyTypes'] as string[],
+      json['variantTypes'] as string[]
     );
   }
 }
@@ -28,10 +28,10 @@ export class PersonSetCollection {
     public checkedValues: string[],
   ) { }
 
-  public static fromJson(json): PersonSetCollection {
+  public static fromJson(json: object): PersonSetCollection {
     return new PersonSetCollection(
-      json['id'],
-      json['checkedValues']
+      json['id'] as string,
+      json['checkedValues'] as string[]
     );
   }
 }
@@ -43,11 +43,11 @@ export class GenomicScore {
     private rangeEnd: number,
   ) {}
 
-  public static fromJson(json): GenomicScore {
+  public static fromJson(json: object): GenomicScore {
     return new GenomicScore(
-      json['metric'],
-      json['rangeStart'],
-      json['rangeEnd'],
+      json['metric'] as string,
+      json['rangeStart'] as number,
+      json['rangeEnd'] as number,
     );
   }
 

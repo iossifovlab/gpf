@@ -8,7 +8,7 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
 export class SortingButtonsComponent {
   @Input() public id: string;
   @Input() public sortState = 0;
-  @Output() public sortEvent = new EventEmitter<{id: string, order: string}>();
+  @Output() public sortEvent = new EventEmitter<{id: string; order: string}>();
   private order = 'desc';
 
   public emitSort(): void {

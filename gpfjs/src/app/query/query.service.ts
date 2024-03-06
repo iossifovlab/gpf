@@ -22,6 +22,7 @@ export class QueryService {
   private readonly userSaveQueryEndpoint = 'user_queries/save';
   private readonly userCollectQueriesEndpoint = 'user_queries/collect';
 
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   private readonly headers = new HttpHeaders({ 'Content-Type': 'application/json' });
 
   private oboeInstance = null;
@@ -128,24 +129,25 @@ export class QueryService {
     const queryFilter = { ...filter };
     queryFilter['maxVariantsCount'] = maxVariantsCount;
 
-    this.familyVariantsSubscription = this.streamPost(this.genotypePreviewVariantsUrl, queryFilter).subscribe(variant => {
-      genotypePreviewVariantsArray.addPreviewVariant(
-        <Array<string>> variant,
-        dataset.genotypeBrowserConfig.columnIds
-      );
+    this.familyVariantsSubscription = this.streamPost(this.genotypePreviewVariantsUrl, queryFilter)
+      .subscribe(variant => {
+        genotypePreviewVariantsArray.addPreviewVariant(
+          <Array<string>> variant,
+          dataset.genotypeBrowserConfig.columnIds
+        );
 
-      if (callback !== undefined) {
-        callback();
-      }
+        if (callback !== undefined) {
+          callback();
+        }
 
-      if (variant) {
-        // Attach the genome version to each variant
-        // This is done so that the table can construct the correct UCSC link for the variant
-        genotypePreviewVariantsArray.genotypePreviews[
-          genotypePreviewVariantsArray.genotypePreviews.length - 1
-        ].data.set('genome', dataset.genome);
-      }
-    });
+        if (variant) {
+          // Attach the genome version to each variant
+          // This is done so that the table can construct the correct UCSC link for the variant
+          genotypePreviewVariantsArray.genotypePreviews[
+            genotypePreviewVariantsArray.genotypePreviews.length - 1
+          ].data.set('genome', dataset.genome);
+        }
+      });
 
     return genotypePreviewVariantsArray;
   }
@@ -154,7 +156,7 @@ export class QueryService {
     return this.http.post(this.config.baseUrl + this.geneViewVariantsUrl, filter);
   }
 
-  public saveQuery(queryData: {}, page: string): Observable<object> {
+  public saveQuery(queryData: object, page: string): Observable<object> {
     const options = { headers: this.headers };
 
     queryData = {...queryData};
@@ -193,7 +195,7 @@ export class QueryService {
     return window.location.origin + pathname;
   }
 
-  public getLoadUrlFromResponse(response: {}): string {
+  public getLoadUrlFromResponse(response: object): string {
     return this.getLoadUrl(response['uuid']);
   }
 
@@ -201,6 +203,7 @@ export class QueryService {
     const options = { headers: this.headers, withCredentials: true };
 
     const data = {
+      // eslint-disable-next-line @typescript-eslint/naming-convention
       query_uuid: uuid,
       name: query_name,
       description: query_description

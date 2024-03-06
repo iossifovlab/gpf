@@ -21,7 +21,7 @@ export class FamilyIdsComponent extends StatefulComponent implements OnInit {
   public ngOnInit(): void {
     super.ngOnInit();
     this.focusTextInputArea();
-    this.store.selectOnce(state => state.familyIdsState).subscribe(state => {
+    this.store.selectOnce(state => state.familyIdsState).subscribe((state: SetFamilyIds) => {
       // restore state
       this.setFamilyIds(state.familyIds.join('\n'));
     });

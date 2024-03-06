@@ -72,7 +72,11 @@ export class GeneProfilesColumn {
     return this.columns.filter(column => column.visibility);
   }
 
-  public static leaves(columns: GeneProfilesColumn[], parent?: GeneProfilesColumn, depth: number = 1): GeneProfilesColumn[] {
+  public static leaves(
+    columns: GeneProfilesColumn[],
+    parent?: GeneProfilesColumn,
+    depth: number = 1
+  ): GeneProfilesColumn[] {
     const result: GeneProfilesColumn[] = [];
     for (const column of columns.filter(c => c.visibility)) {
       column.parent = parent === null || parent === undefined ? null : parent;
