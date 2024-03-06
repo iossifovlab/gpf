@@ -6,6 +6,7 @@ import logging
 from typing import Dict, Any, Set, cast, Iterable, Optional
 from box import Box
 
+from dae.utils.verbosity_configuration import VerbosityConfiguration
 from dae.gene.gene_sets_db import GeneSet
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.gene_profile.statistic import GPStatistic
@@ -117,7 +118,7 @@ def calculate_table_values(
             set_name = ps.set_name
             person_set = psc.person_sets[set_name]
 
-            children_count = len(list(person_set.get_children()))
+            children_count = person_set.get_children_count()
 
             for statistic in filters.statistics:
                 stat_id = statistic["id"]
@@ -254,7 +255,7 @@ def main(
     # pylint: disable=too-many-locals,too-many-branches,too-many-statements
     description = "Generate gene profile statistics tool"
     parser = argparse.ArgumentParser(description=description)
-    parser.add_argument("--verbose", "-V", "-v", action="count", default=0)
+    VerbosityConfiguration.set_arguments(parser)
     default_dbfile = os.path.join(os.getenv("DAE_DB_DIR", "./"), "gpdb")
     parser.add_argument("--dbfile", default=default_dbfile)
     parser.add_argument(
@@ -269,15 +270,7 @@ def main(
     parser.add_argument("--drop", action="store_true")
 
     args = parser.parse_args(argv)
-    if args.verbose == 1:
-        logging.basicConfig(level=logging.WARNING)
-    elif args.verbose == 2:
-        logging.basicConfig(level=logging.INFO)
-    elif args.verbose >= 3:
-        logging.basicConfig(level=logging.DEBUG)
-    else:
-        logging.basicConfig(level=logging.ERROR)
-    logging.getLogger("impala").setLevel(logging.WARNING)
+    VerbosityConfiguration.set(args)
 
     start = time.time()
     if gpf_instance is None:
