@@ -912,7 +912,7 @@ def main(argv: Optional[list[str]] = None) -> None:
         help="Comma separated list of columns to skip when comparing with "
         "expectations")
 
-    VerbosityConfiguration.set_argumnets(parser)
+    VerbosityConfiguration.set_arguments(parser)
 
     args = parser.parse_args(argv)
     if args.skip_columns is None:

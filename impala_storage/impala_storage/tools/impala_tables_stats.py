@@ -24,7 +24,7 @@ def parse_cli_arguments(argv: list[str]) -> argparse.Namespace:
         conflict_handler="resolve",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
-    VerbosityConfiguration.set_argumnets(parser)
+    VerbosityConfiguration.set_arguments(parser)
 
     parser.add_argument(
         "--studies",

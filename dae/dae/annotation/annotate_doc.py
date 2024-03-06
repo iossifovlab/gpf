@@ -29,7 +29,7 @@ def configure_argument_parser() -> argparse.ArgumentParser:
                         help="Filename of the output VCF result",
                         default=None)
     CLIAnnotationContext.add_context_arguments(parser)
-    VerbosityConfiguration.set_argumnets(parser)
+    VerbosityConfiguration.set_arguments(parser)
     return parser
 
 

@@ -18,7 +18,7 @@ def cli(
     """Generate enrichment tool cache."""
     description = "Generate enrichment tool cache"
     parser = argparse.ArgumentParser(description=description)
-    VerbosityConfiguration.set_argumnets(parser)
+    VerbosityConfiguration.set_arguments(parser)
 
     parser.add_argument(
         "--show-studies",

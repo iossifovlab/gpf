@@ -149,7 +149,7 @@ def cli(argv: Optional[list[str]] = None) -> None:
     parser.add_argument(
         "--version", action="store_true", default=False,
         help="Prints GPF version and exists.")
-    VerbosityConfiguration.set_argumnets(parser)
+    VerbosityConfiguration.set_arguments(parser)
 
     commands_parser = parser.add_subparsers(
         dest="command", help="Command to execute")

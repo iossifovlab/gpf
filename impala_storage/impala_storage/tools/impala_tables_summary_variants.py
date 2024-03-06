@@ -29,7 +29,7 @@ def parse_cli_arguments(
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 
-    VerbosityConfiguration.set_argumnets(parser)
+    VerbosityConfiguration.set_arguments(parser)
     parser.add_argument(
         "--studies",
         type=str,

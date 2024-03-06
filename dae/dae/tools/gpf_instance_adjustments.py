@@ -332,7 +332,7 @@ def cli(argv: Optional[list[str]] = None) -> None:
     argv = argv or sys.argv[1:]
     parser = argparse.ArgumentParser(
         description="adjustments in GPF instance configuration")
-    VerbosityConfiguration.set_argumnets(parser)
+    VerbosityConfiguration.set_arguments(parser)
     parser.add_argument("-i", "--instance", type=str, default=None)
 
     subparsers = parser.add_subparsers(dest="command",

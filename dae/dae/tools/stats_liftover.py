@@ -21,7 +21,7 @@ def parse_cli_arguments():
     parser = argparse.ArgumentParser(
         description="merge liftover stats")
 
-    VerbosityConfiguration.set_argumnets(parser)
+    VerbosityConfiguration.set_arguments(parser)
 
     parser.add_argument(
         "--stats", help="filename to store liftover statistics",

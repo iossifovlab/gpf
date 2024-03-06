@@ -66,7 +66,7 @@ def main(argv: Optional[list[str]] = None) -> None:
     It should be called from the command line.
     """
     parser = argparse.ArgumentParser()
-    VerbosityConfiguration.set_argumnets(parser)
+    VerbosityConfiguration.set_arguments(parser)
     FamiliesLoader.cli_arguments(parser)
     VcfLoader.cli_arguments(parser, options_only=True)
     CLIGenomicContext.add_context_arguments(parser)

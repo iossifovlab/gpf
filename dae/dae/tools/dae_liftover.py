@@ -33,7 +33,7 @@ def parse_cli_arguments() -> argparse.ArgumentParser:
     """Create CLI parser."""
     parser = argparse.ArgumentParser(
         description="liftover denovo variants to hg38")
-    VerbosityConfiguration.set_argumnets(parser)
+    VerbosityConfiguration.set_arguments(parser)
     FamiliesLoader.cli_arguments(parser)
     DaeTransmittedLoader.cli_arguments(parser)
 

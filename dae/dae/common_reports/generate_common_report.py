@@ -20,7 +20,7 @@ def main(
     """Command line tool to generate dataset statistics."""
     description = "Generate common reports tool"
     parser = argparse.ArgumentParser(description=description)
-    VerbosityConfiguration.set_argumnets(parser)
+    VerbosityConfiguration.set_arguments(parser)
 
     parser.add_argument(
         "--show-studies",

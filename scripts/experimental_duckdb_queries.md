@@ -2364,3 +2364,227 @@ JOIN family AS fa
   USING (bucket_index, summary_index, allele_index)
 LIMIT 10
 ```
+
+
+```sql
+EXPLAIN ANALYZE WITH summary AS (
+  SELECT
+    *
+  FROM PARQUET_SCAN(
+    '/data/lubo/seq-pipeline/sequencing-de-novo/gpf_validation_data/data_hg38/studies/AGRE_WG38_859/OUTPUT2.2/AGRE_WG38_CSHL_859_SCHEMA2/summary/*/*/*/*.parquet'
+  ) AS sa
+  WHERE
+    sa.allele_index > 0
+), family_bins AS (
+  SELECT
+    *
+  FROM PARQUET_SCAN(
+    '/data/lubo/seq-pipeline/sequencing-de-novo/gpf_validation_data/data_hg38/studies/AGRE_WG38_859/OUTPUT2.2/AGRE_WG38_CSHL_859_SCHEMA2/family/*/*/*/*/*.parquet'
+  ) AS fa
+  WHERE
+    fa.family_bin = 2
+), family AS (
+  SELECT
+    *
+  FROM family_bins AS fa
+  WHERE
+    fa.family_id IN ('AU1213202_AU1213201')
+    AND fa.allele_index > 0
+)
+SELECT
+  fa.bucket_index,
+  fa.summary_index,
+  fa.family_index,
+  sa.allele_index,
+  sa.summary_variant_data,
+  fa.family_variant_data
+FROM summary AS sa
+JOIN family AS fa
+  USING (sj_index, region_bin)
+WHERE region_bin = 'chr1_0'
+LIMIT 10010
+```
+
+
+```sql
+EXPLAIN ANALYZE WITH summary AS (
+  SELECT
+    *
+  FROM PARQUET_SCAN(
+    '/data/lubo/seq-pipeline/sequencing-de-novo/gpf_validation_data/data_hg38/studies/AGRE_WG38_859/OUTPUT2.2/AGRE_WG38_CSHL_859_SCHEMA2/summary/*/*/*/*.parquet'
+  ) AS sa
+  WHERE
+    sa.allele_index > 0
+), family_bins AS (
+  SELECT
+    *
+  FROM PARQUET_SCAN(
+    '/data/lubo/seq-pipeline/sequencing-de-novo/gpf_validation_data/data_hg38/studies/AGRE_WG38_859/OUTPUT2.2/AGRE_WG38_CSHL_859_SCHEMA2/family/*/*/*/*/*.parquet'
+  ) AS fa
+), family AS (
+  SELECT
+    *
+  FROM family_bins AS fa
+  WHERE
+    fa.allele_index > 0
+)
+SELECT
+  fa.bucket_index,
+  fa.summary_index,
+  fa.family_index,
+  sa.allele_index,
+  sa.summary_variant_data,
+  fa.family_variant_data
+FROM summary AS sa
+JOIN family AS fa
+  USING (sj_index, region_bin)
+WHERE region_bin = 'chr1_0'
+LIMIT 10010
+```
+
+```sql
+EXPLAIN WITH summary AS (
+  SELECT
+    *
+  FROM PARQUET_SCAN(
+    '/data/lubo/seq-pipeline/sequencing-de-novo/gpf_validation_data/data_hg38/studies/AGRE_WG38_859/OUTPUT2.2/AGRE_WG38_CSHL_859_SCHEMA2/summary/*/*/*/*.parquet'
+  ) AS sa
+  WHERE
+    sa.allele_index > 0
+), family AS (
+  SELECT
+    *
+  FROM PARQUET_SCAN(
+    '/data/lubo/seq-pipeline/sequencing-de-novo/gpf_validation_data/data_hg38/studies/AGRE_WG38_859/OUTPUT2.2/AGRE_WG38_CSHL_859_SCHEMA2/family/*/*/*/*/*.parquet'
+  ) AS fa
+  WHERE fa.allele_index > 0
+)
+SELECT
+  fa.bucket_index,
+  fa.summary_index,
+  fa.family_index,
+  sa.allele_index,
+  sa.summary_variant_data,
+  fa.family_variant_data
+FROM summary AS sa
+JOIN family AS fa
+  USING (region_bin, sj_index)
+LIMIT 10
+```
+
+```sql
+EXPLAIN WITH summary AS (
+  SELECT
+    *
+  FROM PARQUET_SCAN(
+    '/data/lubo/seq-pipeline/sequencing-de-novo/gpf_validation_data/data_hg38/studies_liftover/w1202s766e611_liftover/OUTPUT2.4/w1202s766e611_liftover/summary/*/*/*/*.parquet'
+  ) AS sa
+  WHERE
+    sa.allele_index > 0
+), family AS (
+  SELECT
+    *
+  FROM PARQUET_SCAN(
+    '/data/lubo/seq-pipeline/sequencing-de-novo/gpf_validation_data/data_hg38/studies_liftover/w1202s766e611_liftover/OUTPUT2.4/w1202s766e611_liftover/family/*/*/*/*/*.parquet'
+  ) AS fa
+  WHERE fa.allele_index > 0
+)
+SELECT
+  fa.bucket_index,
+  fa.summary_index,
+  fa.family_index,
+  sa.allele_index,
+  sa.summary_variant_data,
+  fa.family_variant_data
+FROM summary AS sa
+JOIN family AS fa
+  USING (region_bin, sj_index)
+LIMIT 10
+```
+
+```sql
+EXPLAIN WITH summary AS (
+  SELECT
+    *
+  FROM PARQUET_SCAN(
+    '/data/lubo/seq-pipeline/sequencing-de-novo/gpf_validation_data/data_hg38/studies_liftover/w1202s766e611_liftover/OUTPUT2.4/w1202s766e611_liftover/summary/*/*/*/*.parquet'
+  ) AS sa
+  WHERE
+    sa.allele_index > 0
+), family AS (
+  SELECT
+    *
+  FROM PARQUET_SCAN(
+    '/data/lubo/seq-pipeline/sequencing-de-novo/gpf_validation_data/data_hg38/studies_liftover/w1202s766e611_liftover/OUTPUT2.4/w1202s766e611_liftover/family/*/*/*/*/*.parquet'
+  ) AS fa
+  WHERE fa.allele_index > 0
+), family_variants(sv_data, fv_data) AS (
+    SELECT
+        sa.summary_variant_data,
+        fa.family_variant_data,
+    FROM summary AS sa
+    JOIN family AS fa
+    USING (region_bin, sj_index)
+    WHERE region_bin = 'chr1_0'
+)
+SELECT sv_data, fv_data 
+FROM family_variants
+LIMIT 10;
+```
+
+```sql
+WITH RECURSIVE cte_numbers(n, weekday) 
+AS (
+    SELECT 
+        0, 
+        't'
+    UNION ALL
+    SELECT    
+        n + 1, 
+        't'
+    FROM    
+        cte_numbers
+    WHERE n < 6
+)
+SELECT 
+    weekday
+FROM 
+    cte_numbers;
+```
+
+
+```sql
+WITH summary AS (
+  SELECT
+    *
+  FROM PARQUET_SCAN(
+    '/data/lubo/seq-pipeline/sequencing-de-novo/gpf_validation_data/data_hg38/studies_liftover/w1202s766e611_liftover/OUTPUT2.4/w1202s766e611_liftover/summary/*/*/*/*.parquet'
+  ) AS sa
+  WHERE
+    sa.allele_index > 0
+), family AS (
+  SELECT
+    *
+  FROM PARQUET_SCAN(
+    '/data/lubo/seq-pipeline/sequencing-de-novo/gpf_validation_data/data_hg38/studies_liftover/w1202s766e611_liftover/OUTPUT2.4/w1202s766e611_liftover/family/*/*/*/*/*.parquet'
+  ) AS fa
+  WHERE fa.allele_index > 0
+), RECURSIVE family_variants(sv_data, fv_data, regions) AS (
+    SELECT
+        sa.summary_variant_data as sv_data,
+        fa.family_variant_data as fv_data,
+        (select (['chr1_0', 'chr2_0', 'chr3_0'])) as regions
+    FROM summary AS sa
+    JOIN family AS fa
+    USING (region_bin, sj_index)
+    WHERE region_bin = regions[1]
+    UNION ALL
+    SELECT sv_data, fv_data, regions[2:]
+    FROM family_variants
+    WHERE length(regions) > 0
+)
+SELECT sv_data, fv_data 
+FROM family_variants
+LIMIT 10;
+
+```

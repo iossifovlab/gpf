@@ -57,7 +57,7 @@ def configure_argument_parser() -> argparse.ArgumentParser:
 
     CLIAnnotationContext.add_context_arguments(parser)
     TaskGraphCli.add_arguments(parser)
-    VerbosityConfiguration.set_argumnets(parser)
+    VerbosityConfiguration.set_arguments(parser)
     return parser
 
 

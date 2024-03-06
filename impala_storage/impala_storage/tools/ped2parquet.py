@@ -15,7 +15,7 @@ def main(argv: list[str]) -> None:
     """Entry point for ped2parquet."""
     parser = argparse.ArgumentParser()
 
-    VerbosityConfiguration.set_argumnets(parser)
+    VerbosityConfiguration.set_arguments(parser)
 
     FamiliesLoader.cli_arguments(parser)
     parser.add_argument(

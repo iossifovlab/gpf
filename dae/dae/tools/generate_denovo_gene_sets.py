@@ -14,7 +14,7 @@ def main(
     """Generate denovo gene sets CLI."""
     description = "Generate genovo gene sets tool"
     parser = argparse.ArgumentParser(description=description)
-    VerbosityConfiguration.set_argumnets(parser)
+    VerbosityConfiguration.set_arguments(parser)
 
     parser.add_argument(
         "--show-studies",

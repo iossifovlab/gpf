@@ -29,7 +29,7 @@ def parse_cli_arguments(argv: list[str]) -> argparse.Namespace:
     """Create CLI parser."""
     parser = argparse.ArgumentParser(description="liftover CNV variants")
 
-    VerbosityConfiguration.set_argumnets(parser)
+    VerbosityConfiguration.set_arguments(parser)
     FamiliesLoader.cli_arguments(parser)
     CNVLoader.cli_arguments(parser)
 

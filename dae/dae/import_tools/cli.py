@@ -22,7 +22,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     parser.add_argument("config", type=str,
                         help="Path to the import configuration")
     TaskGraphCli.add_arguments(parser, default_task_status_dir=None)
-    VerbosityConfiguration.set_argumnets(parser)
+    VerbosityConfiguration.set_arguments(parser)
     args = parser.parse_args(argv or sys.argv[1:])
     VerbosityConfiguration.set(args)
 
