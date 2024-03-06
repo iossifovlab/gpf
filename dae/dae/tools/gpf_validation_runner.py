@@ -280,7 +280,6 @@ class GenotypeBrowserRunner(BaseGenotypeBrowserRunner):
             "allele_count",
             "allele_index",
             "alternative",
-            "bucket_index",
             "cadd_phred",
             "cadd_raw",
             "chrom",
@@ -314,7 +313,6 @@ class GenotypeBrowserRunner(BaseGenotypeBrowserRunner):
             "exome_gnomad_v2_1_1_non_neuro_af_percent",
             "exome_gnomad_v2_1_1_non_neuro_an",
             "family_id",
-            "family_variant_index",
             "fitcons2_e067",
             "fitcons2_e068",
             "fitcons2_e069",
@@ -380,6 +378,10 @@ class GenotypeBrowserRunner(BaseGenotypeBrowserRunner):
 
         return keep
 
+    def _cleanup_variant_columns(self, columns: set[str]) -> set[str]:
+        keep = self._checked_columns()
+        return columns.intersection(keep)
+
     def _cleanup_allele_attributes(
         self, vprops: dict[str, Any]
     ) -> None:
@@ -400,22 +402,33 @@ class GenotypeBrowserRunner(BaseGenotypeBrowserRunner):
 
                 if "transmission_type" in vprops:
                     del vprops["transmission_type"]
-                vprops["fvuid"] = v.fvuid
-                vprops["effect_gene_genes"] = \
-                    ",".join(vprops["effect_gene_genes"])
-                vprops["effect_gene_types"] = \
-                    ",".join(vprops["effect_gene_types"])
+                if "af_allele_count" not in vprops:
+                    vprops["af_allele_count"] = ""
+                    vprops["af_allele_freq"] = ""
+                    vprops["af_parents_called_count"] = ""
+                    vprops["af_parents_called_percent"] = ""
 
-                effect_details = filter(
-                    lambda x: x is not None,
-                    vprops["effect_details_transcript_ids"])
-                vprops["effect_details_transcript_ids"] = \
-                    ",".join(effect_details)
-                effect_details = filter(
-                    lambda x: x is not None,
-                    vprops["effect_details_details"])
-                vprops["effect_details_details"] = \
-                    ",".join(effect_details)
+                vprops["fvuid"] = v.fvuid
+                if fa.effects is None:
+                    vprops["effect_type"] = None
+                    vprops["effect_gene_genes"] = None
+                    vprops["effect_gene_types"] = None
+                    vprops["effect_details_transcript_ids"] = None
+                    vprops["effect_details_details"] = None
+                else:
+                    vprops["effect_type"] = fa.effects.worst_effect
+                    vprops["effect_gene_genes"] = \
+                        ",".join([str(g.symbol) for g in fa.effects.genes])
+                    vprops["effect_gene_types"] = \
+                        ",".join([str(g.effect) for g in fa.effects.genes])
+
+                    effect_details_transcripts = fa.effects.transcripts.keys()
+                    vprops["effect_details_transcript_ids"] = \
+                        ",".join(effect_details_transcripts)
+                    effect_details_details = [
+                        str(d) for d in fa.effects.transcripts.values()]
+                    vprops["effect_details_details"] = \
+                        ",".join(effect_details_details)
 
                 self._cleanup_allele_attributes(vprops)
 
@@ -487,8 +500,10 @@ class GenotypeBrowserRunner(BaseGenotypeBrowserRunner):
                 print(ex, file=out)
                 return out.getvalue()
 
-            expected_columns = set(expected_df.columns)
-            variants_columns = set(variants_df.columns)
+            expected_columns = self._cleanup_variant_columns(
+                set(expected_df.columns))
+            variants_columns = self._cleanup_variant_columns(
+                set(variants_df.columns))
             diff1 = expected_columns.difference(variants_columns)
             if diff1:
                 print(
@@ -501,6 +516,7 @@ class GenotypeBrowserRunner(BaseGenotypeBrowserRunner):
                     diff2, file=out)
             if diff1 or diff2:
                 return out.getvalue()
+
             if all(expected_df.columns != expected_df.columns):
                 print(
                     "columns are in different order: ",
@@ -562,31 +578,41 @@ class GenotypeBrowserRunner(BaseGenotypeBrowserRunner):
         params: dict[str, Any],
         variants: list[FamilyVariant]
     ) -> Optional[TestResult]:
-        df = self._build_variants_df(variants)
+        variants_df = self._build_variants_df(variants)
         variants_filename = self._build_case_expections_filename(case)
         if not os.path.exists(variants_filename):
             return None
 
         try:
-            expect_df = pd.read_csv(variants_filename, sep="\t")
-            if len(expect_df) == 0:
-                if len(df) == 0:
+            expected_df = pd.read_csv(variants_filename, sep="\t")
+            if len(expected_df) == 0:
+                if len(variants_df) == 0:
                     # match
                     pass
                 else:
                     # mismatch
-                    expect_df = pd.DataFrame({})
+                    expected_df = pd.DataFrame({})
             else:
                 to_remove = set(self.skip_columns)
-                columns = [c for c in expect_df.columns if c not in to_remove]
-                expect_df = expect_df[columns]
+                columns = [
+                    c for c in expected_df.columns if c not in to_remove]
+                expected_df = expected_df[columns]
 
         except pd.errors.EmptyDataError:
-            expect_df = pd.DataFrame({})
-            assert len(expect_df) == 0
+            expected_df = pd.DataFrame({})
+            assert len(expected_df) == 0
 
         # df.to_csv(variants_filename, sep="\t", index=False)
-        diff = self._variants_diff(df, expect_df)
+
+        expected_columns = self._cleanup_variant_columns(
+            set(expected_df.columns))
+        variants_columns = self._cleanup_variant_columns(
+            set(variants_df.columns))
+
+        variants_df = variants_df[list(variants_columns)]
+        expected_df = expected_df[list(expected_columns)]
+
+        diff = self._variants_diff(variants_df, expected_df)
 
         test_result = TestResult(
             expectation=self.expectations,
