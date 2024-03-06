@@ -19,7 +19,7 @@ def main(
     """Command line tool to create genotype groups families cache."""
     description = "Create genotype groups families cache"
     parser = argparse.ArgumentParser(description=description)
-    VerbosityConfiguration.set_argumnets(parser)
+    VerbosityConfiguration.set_arguments(parser)
 
     parser.add_argument(
         "--show-groups",

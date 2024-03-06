@@ -24,7 +24,7 @@ def cli_export(
     parser.add_argument(
         "--version", action="store_true", default=False,
         help="Prints GPF version and exists.")
-    VerbosityConfiguration.set_argumnets(parser)
+    VerbosityConfiguration.set_arguments(parser)
     parser.add_argument(
         "--gpf", "-G", type=str, default=None,
         help="Path to GPF instance configuration file.")

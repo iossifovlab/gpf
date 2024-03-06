@@ -130,7 +130,7 @@ def _configure_list_subparser(subparsers: argparse._SubParsersAction) -> None:
         "--hr", default=False, action="store_true",
         help="Projects the size in human-readable format.")
     _add_repository_resource_parameters_group(parser, use_resource=False)
-    VerbosityConfiguration.set_argumnets(parser)
+    VerbosityConfiguration.set_arguments(parser)
 
 
 def _run_list_command(
@@ -167,7 +167,7 @@ def _configure_repo_init_subparser(
 
     _add_repository_resource_parameters_group(parser, use_resource=False)
     _add_dry_run_and_force_parameters_group(parser)
-    VerbosityConfiguration.set_argumnets(parser)
+    VerbosityConfiguration.set_arguments(parser)
 
 
 def _run_repo_init_command(**kwargs: str) -> None:
@@ -201,7 +201,7 @@ def _configure_repo_manifest_subparser(
     _add_repository_resource_parameters_group(parser, use_resource=False)
     _add_dry_run_and_force_parameters_group(parser)
     _add_dvc_parameters_group(parser)
-    VerbosityConfiguration.set_argumnets(parser)
+    VerbosityConfiguration.set_arguments(parser)
 
 
 def _configure_resource_manifest_subparser(
@@ -212,7 +212,7 @@ def _configure_resource_manifest_subparser(
     _add_repository_resource_parameters_group(parser)
     _add_dry_run_and_force_parameters_group(parser)
     _add_dvc_parameters_group(parser)
-    VerbosityConfiguration.set_argumnets(parser)
+    VerbosityConfiguration.set_arguments(parser)
 
 
 def _configure_repo_stats_subparser(
@@ -225,7 +225,7 @@ def _configure_repo_stats_subparser(
     _add_dry_run_and_force_parameters_group(parser)
     _add_dvc_parameters_group(parser)
     _add_hist_parameters_group(parser)
-    VerbosityConfiguration.set_argumnets(parser)
+    VerbosityConfiguration.set_arguments(parser)
 
     TaskGraphCli.add_arguments(parser, use_commands=False, force_mode="always")
 
@@ -240,7 +240,7 @@ def _configure_resource_stats_subparser(
     _add_dry_run_and_force_parameters_group(parser)
     _add_dvc_parameters_group(parser)
     _add_hist_parameters_group(parser)
-    VerbosityConfiguration.set_argumnets(parser)
+    VerbosityConfiguration.set_arguments(parser)
 
     TaskGraphCli.add_arguments(parser, use_commands=False, force_mode="always")
 
@@ -254,7 +254,7 @@ def _configure_repo_repair_subparser(
     _add_dry_run_and_force_parameters_group(parser)
     _add_dvc_parameters_group(parser)
     _add_hist_parameters_group(parser)
-    VerbosityConfiguration.set_argumnets(parser)
+    VerbosityConfiguration.set_arguments(parser)
 
     TaskGraphCli.add_arguments(parser, use_commands=False, force_mode="always")
 
@@ -268,7 +268,7 @@ def _configure_resource_repair_subparser(
     _add_dry_run_and_force_parameters_group(parser)
     _add_dvc_parameters_group(parser)
     _add_hist_parameters_group(parser)
-    VerbosityConfiguration.set_argumnets(parser)
+    VerbosityConfiguration.set_arguments(parser)
 
     TaskGraphCli.add_arguments(parser, use_commands=False, force_mode="always")
 
@@ -279,7 +279,7 @@ def _configure_repo_info_subparser(
         "repo-info", help="Build the index.html for the whole GRR"
     )
     _add_repository_resource_parameters_group(parser)
-    VerbosityConfiguration.set_argumnets(parser)
+    VerbosityConfiguration.set_arguments(parser)
 
     TaskGraphCli.add_arguments(parser, use_commands=False, force_mode="always")
 
@@ -290,7 +290,7 @@ def _configure_resource_info_subparser(
         "resource-info", help="Build the index.html for the specific resource"
     )
     _add_repository_resource_parameters_group(parser)
-    VerbosityConfiguration.set_argumnets(parser)
+    VerbosityConfiguration.set_arguments(parser)
 
     TaskGraphCli.add_arguments(parser, use_commands=False, force_mode="always")
 
@@ -703,7 +703,7 @@ def cli_manage(cli_args: Optional[list[str]] = None) -> None:
     parser.add_argument(
         "--version", action="store_true", default=False,
         help="Prints GPF version and exists.")
-    VerbosityConfiguration.set_argumnets(parser)
+    VerbosityConfiguration.set_arguments(parser)
 
     commands_parser: argparse._SubParsersAction = parser.add_subparsers(
         dest="command", help="Command to execute")
@@ -830,7 +830,7 @@ def cli_browse(cli_args: Optional[list[str]] = None) -> None:
     parser.add_argument(
         "--version", action="store_true", default=False,
         help="Prints GPF version and exists.")
-    VerbosityConfiguration.set_argumnets(parser)
+    VerbosityConfiguration.set_arguments(parser)
 
     group = parser.add_argument_group(title="Repository/Resource")
     group.add_argument(

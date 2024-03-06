@@ -59,6 +59,8 @@ class PersonSet:
         self.persons: dict[tuple[str, str], Person] = persons
         self._children_by_sex: Optional[ChildrenBySex] = None
         self._children_stats: Optional[ChildrenStats] = None
+        self._children: Optional[list[Person]] = None
+        self._children_count: Optional[int] = None
 
     def __repr__(self) -> str:
         return f"PersonSet({self.id}: {self.name}, {len(self.persons)})"
@@ -66,10 +68,19 @@ class PersonSet:
     def __len__(self) -> int:
         return len(self.persons)
 
-    def get_children(self) -> Generator[Person, None, None]:
-        for person in self.persons.values():
-            if person.is_child():
-                yield person
+    def get_children(self) -> list[Person]:
+        """Return all children in the person set."""
+        if self._children is None:
+            self._children = []
+            for person in self.persons.values():
+                if person.is_child():
+                    self._children.append(person)
+        return self._children
+
+    def get_children_count(self) -> int:
+        if self._children_count is None:
+            self._children_count = len(self.get_children())
+        return self._children_count
 
     def get_children_by_sex(self) -> ChildrenBySex:
         """Return all children in the person set splitted by sex."""

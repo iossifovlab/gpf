@@ -25,7 +25,7 @@ def cli(argv: Optional[list[str]] = None) -> None:
     description = "Command line tool to create coding length enrichment " \
         "background"
     parser = argparse.ArgumentParser(description=description)
-    VerbosityConfiguration.set_argumnets(parser)
+    VerbosityConfiguration.set_arguments(parser)
 
     parser.add_argument(
         "--grr", "--definition", "-g", type=str,

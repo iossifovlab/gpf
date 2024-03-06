@@ -22,7 +22,7 @@ def cli(
     description = "Command line tool to create UR synonymous enrichment " \
         "background."
     parser = argparse.ArgumentParser(description=description)
-    VerbosityConfiguration.set_argumnets(parser)
+    VerbosityConfiguration.set_arguments(parser)
 
     parser.add_argument(
         dest="study_id",

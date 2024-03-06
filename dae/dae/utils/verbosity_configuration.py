@@ -7,7 +7,7 @@ class VerbosityConfiguration:
     """Defines common configuration of verbosity for loggers."""
 
     @staticmethod
-    def set_argumnets(parser: argparse.ArgumentParser) -> None:
+    def set_arguments(parser: argparse.ArgumentParser) -> None:
         """Add verbosity arguments to argument parser."""
         parser.add_argument("--verbose", "-v", "-V", action="count", default=0)
 

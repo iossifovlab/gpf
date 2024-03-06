@@ -44,7 +44,7 @@ def cli_cache_repo(argv: Optional[list[str]] = None) -> None:
         "--annotation", "-a", default=None,
         help="annotation.yaml to use for selective cache"
     )
-    VerbosityConfiguration.set_argumnets(parser)
+    VerbosityConfiguration.set_arguments(parser)
 
     args = parser.parse_args(argv)
     VerbosityConfiguration.set(args)

@@ -58,7 +58,7 @@ def main(  # pylint: disable=too-many-locals
         argv = sys.argv[1:]
 
     parser = measures_cli_parser()
-    VerbosityConfiguration.set_argumnets(parser)
+    VerbosityConfiguration.set_arguments(parser)
 
     args = parser.parse_args(argv)
     VerbosityConfiguration.set(args)

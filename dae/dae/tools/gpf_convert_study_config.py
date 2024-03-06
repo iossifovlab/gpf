@@ -28,7 +28,7 @@ def main(
     """Convert GPF genotype data configuration to YAML."""
     description = "Tool to convert GPF genotype data configuration to YAML"
     parser = argparse.ArgumentParser(description=description)
-    VerbosityConfiguration.set_argumnets(parser)
+    VerbosityConfiguration.set_arguments(parser)
 
     parser.add_argument(
         "--show-studies",

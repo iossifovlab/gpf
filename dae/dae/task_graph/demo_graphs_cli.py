@@ -168,7 +168,7 @@ def main(argv: Optional[list[str]] = None) -> None:
 
     parser.add_argument("graph", type=str, help="Demo graph",
                         default="A", nargs="?")
-    VerbosityConfiguration.set_argumnets(parser)
+    VerbosityConfiguration.set_arguments(parser)
 
     parser.add_argument("--graph-params", "-gp", type=str, nargs="+")
 

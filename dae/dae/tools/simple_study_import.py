@@ -49,7 +49,7 @@ def cli_arguments(
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 
-    VerbosityConfiguration.set_argumnets(parser)
+    VerbosityConfiguration.set_arguments(parser)
     FamiliesLoader.cli_arguments(parser)
 
     parser.add_argument(

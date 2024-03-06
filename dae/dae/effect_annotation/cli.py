@@ -298,7 +298,7 @@ def cli_columns():
     parser = ArgumentParser(
         description="Annotate Variant Effects in a Column File.")
 
-    VerbosityConfiguration.set_argumnets(parser)
+    VerbosityConfiguration.set_arguments(parser)
     EffectAnnotatorBuilder.set_arguments(parser)
     VariantColumnInputFile.set_argument(parser)
     VariantColumnOutputFile.set_argument(parser)
@@ -329,7 +329,7 @@ def cli_vcf():
     parser = ArgumentParser(
         description="Annotate Variant Effects in a VCF file.")
 
-    VerbosityConfiguration.set_argumnets(parser)
+    VerbosityConfiguration.set_arguments(parser)
     EffectAnnotatorBuilder.set_arguments(parser)
     AnnotationAttributes.set_argument(
         parser,
