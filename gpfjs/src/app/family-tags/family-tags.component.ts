@@ -1,6 +1,5 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { StatefulComponent } from 'app/common/stateful-component';
-import _ from 'lodash';
 import { FamilyTagsState, SetFamilyTags } from './family-tags.state';
 import { Store } from '@ngxs/store';
 import { FamilyTags } from './family-tags';
@@ -11,7 +10,7 @@ import { FamilyTags } from './family-tags';
   styleUrls: ['./family-tags.component.css']
 })
 export class FamilyTagsComponent extends StatefulComponent implements OnInit {
-  @Input() public numOfCols: number | string;
+  @Input() public numOfCols: number;
   @Input() public tags = [];
   @Output() public chooseMode = new EventEmitter<boolean>();
   @Output() public updateTagsLists = new EventEmitter();
@@ -55,7 +54,7 @@ export class FamilyTagsComponent extends StatefulComponent implements OnInit {
     this.store.dispatch(new SetFamilyTags(this.selectedTags, this.deselectedTags, this.tagIntersection));
   }
 
-  public onChooseMode(intersected: boolean = true): void {
+  public onChooseMode(intersected = true): void {
     this.tagIntersection = intersected;
     this.store.dispatch(new SetFamilyTags(this.selectedTags, this.deselectedTags, this.tagIntersection));
     this.chooseMode.emit(intersected);

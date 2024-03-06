@@ -1,24 +1,30 @@
 <div class="family-filters-block form-block">
   <div class="card">
-    <ul ngbNav #nav="ngbNav" (navChange)="onNavChange()" class="navbar bg-light nav-pills" id="list">
+    <ul
+      ngbNav
+      #nav="ngbNav"
+      (navChange)="onNavChange()"
+      class="navbar bg-light nav-pills"
+      [ngClass]="{ 'panel-bottom': hasContent }"
+      id="list">
       <div class="nav-title-custom">Family filters</div>
       <li [ngbNavItem]="'allFamilies'" id="all-families">
-        <a ngbNavLink>All</a>
+        <a ngbNavLink (click)="hasContent = false">All</a>
       </li>
       <li [ngbNavItem]="'familyIds'" id="family-ids">
-        <a ngbNavLink>Family Ids</a>
+        <a ngbNavLink (click)="hasContent = true">Family Ids</a>
         <ng-template ngbNavContent>
           <gpf-family-ids></gpf-family-ids>
         </ng-template>
       </li>
       <li [ngbNavItem]="'familyTags'" id="family-tags">
-        <a ngbNavLink>Family Tags</a>
+        <a ngbNavLink (click)="hasContent = true">Family Tags</a>
         <ng-template ngbNavContent>
           <gpf-family-tags [numOfCols]="numOfCols" [tags]="orderedTagList"></gpf-family-tags>
         </ng-template>
       </li>
       <li [ngbNavItem]="'advanced'" *ngIf="showAdvancedButton" id="advanced">
-        <a ngbNavLink>Advanced</a>
+        <a ngbNavLink (click)="hasContent = true">Advanced</a>
         <ng-template ngbNavContent>
           <div id="filters">
             <gpf-family-type-filter *ngIf="showFamilyTypeFilter" id="family-filter"></gpf-family-type-filter>

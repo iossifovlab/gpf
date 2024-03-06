@@ -19,6 +19,7 @@ export class FamilyFiltersBlockComponent implements OnInit, AfterViewInit {
   @ViewChild('nav') public ngbNav: NgbNav;
   public showFamilyTypeFilter: boolean;
   public showAdvancedButton: boolean;
+  public hasContent = false;
 
   public tags: Array<string> = new Array<string>();
   public orderedTagList = [];
@@ -59,11 +60,20 @@ export class FamilyFiltersBlockComponent implements OnInit, AfterViewInit {
   public ngAfterViewInit(): void {
     this.store.selectOnce(FamilyFiltersBlockComponent.familyFiltersBlockState).subscribe(state => {
       if (state['familyIds']) {
-        setTimeout(() => this.ngbNav.select('familyIds'));
+        setTimeout(() => {
+          this.ngbNav.select('familyIds');
+          this.hasContent = true;
+        });
       } else if (state['selectedFamilyTags'] || state['deselectedFamilyTags'] || state['tagIntersection']) {
-        setTimeout(() => this.ngbNav.select('familyTags'));
+        setTimeout(() => {
+          this.ngbNav.select('familyTags');
+          this.hasContent = true;
+        });
       } else if (state['familyFilters']) {
-        setTimeout(() => this.ngbNav.select('advanced'));
+        setTimeout(() => {
+          this.ngbNav.select('advanced');
+          this.hasContent = true;
+        });
       }
     });
   }
