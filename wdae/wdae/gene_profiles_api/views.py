@@ -18,8 +18,49 @@ class ConfigurationView(QueryBaseView):
 
 
 class ProfileView(QueryBaseView):
-    def get(self, _request: Request, gene_symbol: str) -> Response:
+    def get(self, request: Request, gene_symbol: str) -> Response:
+        result = {}
+
+        gp_config = self.gpf_instance \
+            .get_wdae_gp_configuration()
+        print("++++++++++++++++++++++++++++++++++++++++++")
+        print(gp_config)
+        print("++++++++++++++++++++++++++++++++++++++++++")
+        if isinstance(gp_config, dict):
+            gene_link_templates = gp_config.get("geneLinks")
+            transcript_models = self.gpf_instance.get_transcript_models(
+                gene_symbol
+            )
+            chromosome = transcript_models[0].chrom
+            gene_start_position = transcript_models[0].exons[0].start
+            gene_stop_position = transcript_models[-1].exons[-1].stop
+            genome = self.gpf_instance.get_genotype_data_config(
+                gp_config["defaultDataset"]
+            ).genome
+            chromosome_prefix = "" if genome == "hg38" else "chr"
+            domain = request.get_host()
+
+            gene_links = []
+            for template in gene_link_templates:
+                gene_links.append({
+                    "name": template["name"],
+                    "url": template["url"].format(
+                        instance=domain,
+                        gene=gene_symbol,
+                        genome=genome,
+                        chromosome_prefix=chromosome_prefix,
+                        chromosome=chromosome,
+                        gene_start_position=gene_start_position,
+                        gene_stop_position=gene_stop_position,
+                    )
+                })
+            result = {
+                "gene_links": gene_links
+            }
+
         gp = self.gpf_instance.get_gp_statistic(gene_symbol)
         if not gp:
             return Response(status=status.HTTP_404_NOT_FOUND)
-        return Response(gp.to_json())
+        result["statistic"] = gp.to_json()
+
+        return Response(result)

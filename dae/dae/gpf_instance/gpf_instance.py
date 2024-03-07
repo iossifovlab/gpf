@@ -13,7 +13,7 @@ from box import Box
 
 from dae.annotation.annotation_pipeline import AnnotationPipeline
 from dae.gene_profile.statistic import GPStatistic
-from dae.genomic_resources.gene_models import GeneModels
+from dae.genomic_resources.gene_models import GeneModels, TranscriptModel
 from dae.genomic_resources.reference_genome import ReferenceGenome
 
 from dae.genomic_resources.repository import GenomicResourceRepo
@@ -174,6 +174,19 @@ class GPFInstance:
         result.load()
         return result
 
+    def get_transcript_models(
+        self, gene_symbol: str
+    ) -> Optional[list[TranscriptModel]]:
+        """Get gene model by gene symbol."""
+        gene_symbol = gene_symbol.lower()
+        gene_models = self.gene_models.gene_models
+
+        for k, v in gene_models.items():
+            if gene_symbol == k.lower():
+                return v
+
+        return None
+
     @cached_property
     def _pheno_registry(self) -> PhenoRegistry:
         pheno_data_dir = get_pheno_db_dir(self.dae_config)
@@ -268,7 +281,7 @@ class GPFInstance:
 
         if gp_config is None:
             config_filename = os.path.join(
-                self.dae_dir, "geneProfiles.conf")
+                self.dae_dir, "geneProfiles.yaml")
             if not os.path.exists(config_filename):
                 return None
         else:
