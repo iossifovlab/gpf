@@ -526,8 +526,8 @@ class DenovoLoader(VariantsGenotypesLoader):
         else:
             assert denovo_ref is not None
             assert denovo_alt is not None
-            ref_col = raw_df.loc[:, denovo_ref]
-            alt_col = raw_df.loc[:, denovo_alt]
+            ref_col = raw_df.loc[:, denovo_ref]  # type: ignore
+            alt_col = raw_df.loc[:, denovo_alt]  # type: ignore
 
         extra_attributes_cols = raw_df.columns.difference([
             denovo_location, denovo_variant, denovo_chrom, denovo_pos,
@@ -910,9 +910,8 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
     ) -> SummaryVariant:
         rec["cshl_position"] = int(rec["cshl_position"])
         chrom = rec["chrom"]
-        # chrom = self._adjust_chrom_prefix(rec["chrom"])
         position, reference, alternative = dae2vcf_variant(
-            chrom,
+            self._adjust_chrom_prefix(chrom),
             rec["cshl_position"],
             rec["cshl_variant"],
             self.genome,
