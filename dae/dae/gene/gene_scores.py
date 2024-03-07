@@ -198,7 +198,7 @@ class GeneScore(
         df = None
         if score_id is not None:
             df = self.get_score_df(score_id)
-        return list(map(join_line, self._to_list(df)))
+        return list(map(join_line, self._to_list(df)))  # type: ignore
 
     def get_score_df(self, score_id: str) -> pd.DataFrame:
         return self.df[["gene", score_id]].dropna()
