@@ -170,7 +170,7 @@ class GenotypeBrowserQueryView(QueryDatasetView):
             )
             columns = [s.get("name", s["source"]) for s in sources]
             result = map(
-                join_line, itertools.chain([columns], result))
+                join_line, itertools.chain([columns], result))  # type: ignore
             response = FileResponse(
                 result, filename="variants.tsv",
                 as_attachment=True, content_type="text/tsv"
