@@ -2,8 +2,8 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { PeopleCounterRowPipe, VariantReportsComponent } from './variant-reports.component';
 import { FormsModule } from '@angular/forms';
 import { VariantReportsService } from './variant-reports.service';
-import { Observable, lastValueFrom, of } from 'rxjs';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Observable, ReplaySubject, lastValueFrom, of } from 'rxjs';
+import { ActivatedRoute, NavigationEnd, Router, RouterEvent } from '@angular/router';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { PerfectlyDrawablePedigreeService } from 'app/perfectly-drawable-pedigree/perfectly-drawable-pedigree.service';
 import { ResizeService } from 'app/table/resize.service';
@@ -12,6 +12,8 @@ import { PedigreeData } from 'app/genotype-preview-model/genotype-preview';
 import { HttpResponse } from '@angular/common/http';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { ConfigService } from 'app/config/config.service';
+import { NgxsModule } from '@ngxs/store';
+import { RouterTestingModule } from '@angular/router/testing';
 
 class MockDatasetsService {
   public getSelectedDataset(): object {
@@ -287,6 +289,14 @@ class VariantReportsServiceMock {
   }
 }
 
+class MockRouter {
+  public nav = new NavigationEnd(0, '', '');
+  public events = new Observable(observer => {
+    observer.next(this.nav);
+    observer.complete();
+  });
+}
+
 describe('VariantReportsComponent', () => {
   let component: VariantReportsComponent;
   let fixture: ComponentFixture<VariantReportsComponent>;
@@ -297,12 +307,12 @@ describe('VariantReportsComponent', () => {
     const datasetsServiceMock = new MockDatasetsService();
     TestBed.configureTestingModule({
       declarations: [VariantReportsComponent, PeopleCounterRowPipe],
-      imports: [FormsModule],
+      imports: [FormsModule, NgxsModule.forRoot([], {developmentMode: true}), RouterTestingModule.withRoutes([])],
       providers: [
         ConfigService,
         { provide: VariantReportsService, useValue: variantReportsServiceMock },
         { provide: ActivatedRoute, useValue: activatedRouteMock },
-        { provide: Router, useValue: {} },
+        { provide: Router, useClass: MockRouter },
         { provide: DatasetsService, useValue: datasetsServiceMock },
         { provide: PerfectlyDrawablePedigreeService },
         { provide: ResizeService, useClass: ResizeServiceMock },

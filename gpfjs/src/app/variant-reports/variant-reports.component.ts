@@ -10,6 +10,9 @@ import { environment } from 'environments/environment';
 import { Dictionary } from 'lodash';
 import { NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
 import { ConfigService } from 'app/config/config.service';
+import { Store } from '@ngxs/store';
+import { SetFamilyTags } from 'app/family-tags/family-tags.state';
+import { Router } from '@angular/router';
 
 @Pipe({ name: 'getPeopleCounterRow' })
 export class PeopleCounterRowPipe implements PipeTransform {
@@ -59,8 +62,14 @@ export class VariantReportsComponent implements OnInit {
     public modalService: NgbModal,
     public config: ConfigService,
     private variantReportsService: VariantReportsService,
-    private datasetsService: DatasetsService
-  ) { }
+    private datasetsService: DatasetsService,
+    protected store: Store,
+    private router: Router
+  ) {
+    router.events.subscribe(() => {
+      this.store.dispatch(new SetFamilyTags([], [], true));
+    });
+  }
 
   @HostListener('window:resize')
   public onResize(): void {
