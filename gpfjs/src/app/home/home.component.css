@@ -87,20 +87,39 @@ a:hover {
 #gene-profiles-section {
   display: flex;
   width: 100%;
-  align-items: center;
+  flex-direction: column;
+  justify-content: flex-start;
+  margin-bottom: 40px;
+  margin-top: 40px;
 }
 
-#gene-profiles-section h4 {
-  display: flex;
-  width: max-content;
-  margin: 0;
+:host ::ng-deep gpf-markdown-editor markdown {
+  width: 955px;
+}
+
+:host ::ng-deep gpf-markdown-editor #edit-wrapper {
+  margin-left: -35px;
+}
+
+gpf-markdown-editor {
+  width: 100%;
 }
 
 :host ::ng-deep #gene-profiles-section markdown {
-  width: 955px;
+  width: 100%;
 }
 
 :host ::ng-deep #gene-profiles-section .container {
   margin-top: 0;
   padding-bottom: 0;
+}
+
+#all-genes-wrapper {
+  display: flex;
+  align-items: baseline;
+  padding-left: 80px;
+}
+
+#all-genes-wrapper a {
+  margin-left: 7px;
 }
