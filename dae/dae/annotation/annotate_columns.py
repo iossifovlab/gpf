@@ -224,7 +224,7 @@ class AnnotateColumnsTool(AnnotationTool):
         CLIAnnotationContext.add_context_arguments(parser)
         add_record_to_annotable_arguments(parser)
         TaskGraphCli.add_arguments(parser)
-        VerbosityConfiguration.set_argumnets(parser)
+        VerbosityConfiguration.set_arguments(parser)
         return parser
 
     def work(self) -> None:

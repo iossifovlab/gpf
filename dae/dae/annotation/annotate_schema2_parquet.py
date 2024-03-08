@@ -1,9 +1,9 @@
 import argparse
 import os
 import sys
-from dae.genomic_resources.repository_factory import build_genomic_resource_repository
-import yaml
 from typing import Optional
+from dae.genomic_resources.reference_genome import ReferenceGenome
+from dae.genomic_resources.repository_factory import build_genomic_resource_repository
 from dae.annotation.annotate_utils import AnnotationTool
 from dae.annotation.annotation_factory import build_annotation_pipeline
 from dae.annotation.context import CLIAnnotationContext
@@ -39,8 +39,23 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
 
         CLIAnnotationContext.add_context_arguments(parser)
         TaskGraphCli.add_arguments(parser)
-        VerbosityConfiguration.set_argumnets(parser)
+        VerbosityConfiguration.set_arguments(parser)
         return parser
+
+    @staticmethod
+    def get_contig_lengths(ref_genome: ReferenceGenome) -> list[tuple[str, int]]:
+        result = []
+        prefix = ref_genome.chrom_prefix
+        contigs = {f"{prefix}{i}" for i in (*range(1, 23), "X")}
+        other_contigs = set(ref_genome.chromosomes) - contigs
+        max_len = 0
+        for contig in contigs:
+            if contig in ref_genome.chromosomes:
+                result.append((contig, ref_genome.get_chrom_length(contig)))
+        for contig in other_contigs:
+            max_len = max(max_len, ref_genome.get_chrom_length(contig))
+        result.append(("other", max_len))
+        return result
 
     @staticmethod
     def annotate(
@@ -112,9 +127,12 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
         )
         os.symlink(loader.layout.family, layout.family, target_is_directory=True)
 
+        contig_lens = AnnotateSchema2ParquetTool.get_contig_lengths(
+            self.context.get_reference_genome())
+
         regions = [
             f"{contig}:{start}-{start + self.args.region_size}"
-            for contig, length in loader.get_contig_lengths().items()
+            for contig, length in contig_lens
             for start in range(1, length, self.args.region_size)
         ]
         for idx, region in enumerate(regions):
