@@ -36,29 +36,6 @@ class ParquetLoader:
     def _extract_region_bin(path: str) -> str:
         return path[path.find("region_bin=")+11:path.find("frequency_bin=")-1]
 
-    def get_contig_lengths(self) -> dict:
-        result = {}
-        summary_paths = ds.dataset(f"{self.layout.summary}").files
-
-        if self.partitioned:
-            all_region_bins = {ParquetLoader._extract_region_bin(path) for path in summary_paths}
-            for contig in [*self.partition_descriptor.chromosomes, "other"]:
-                contig_bins = {
-                    bin.split("_")[1] for bin in all_region_bins if contig in bin
-                }
-                result[contig] = max(contig_bins) * self.partition_descriptor.region_length
-        else:
-            summary_parquet = pq.ParquetFile(summary_paths[0])
-            table = summary_parquet.read(columns=["chromosome", "position"])
-            contigs = set(table.column("chromosome").unique().to_pylist())
-            for contig in contigs:
-                largest = table.filter(pc.field("chromosome") == contig) \
-                               .column("position") \
-                               .sort(order="descending") \
-                               .to_pylist()[0]
-                result[contig] = largest + 1
-        return result
-
     def _load_families(self) -> FamiliesData:
         parquet_file = pq.ParquetFile(self.layout.pedigree)
         ped_df = parquet_file.read().to_pandas()
