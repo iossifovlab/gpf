@@ -27,8 +27,9 @@ logger = logging.getLogger(__name__)
 DEFAULT_DEFINITION = {
     "id": "default",
     "type": "http",
-    "url": "https://storage.googleapis.com/iossifovlab-grr",
+    "url": "https://grr.iossifovlab.com",
 
+    # "url": "https://storage.googleapis.com/iossifovlab-grr",
     # "url": "https://www.iossifovlab.com/distribution/"
     #        "public/genomic-resources-repository/",
     # "url": "https://grr.seqpipe.org/",
