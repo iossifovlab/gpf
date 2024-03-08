@@ -1,11 +1,14 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { NgbDropdown } from '@ng-bootstrap/ng-bootstrap';
 import { DatasetsTreeService } from 'app/datasets/datasets-tree.service';
 import { DatasetsService } from 'app/datasets/datasets.service';
+import { Gene } from 'app/gene-browser/gene';
+import { GeneService } from 'app/gene-browser/gene.service';
 import { GeneProfilesService } from 'app/gene-profiles-block/gene-profiles.service';
 import { GeneProfilesSingleViewConfig } from 'app/gene-profiles-single-view/gene-profiles-single-view';
 import { InstanceService } from 'app/instance.service';
 import { environment } from 'environments/environment';
-import { combineLatest, switchMap, take } from 'rxjs';
+import { Subject, combineLatest, debounceTime, distinctUntilChanged, switchMap, take } from 'rxjs';
 
 @Component({
   selector: 'gpf-home',
@@ -27,11 +30,19 @@ export class HomeComponent implements OnInit {
   public geneProfilesConfig: GeneProfilesSingleViewConfig;
   public homeDescription: string;
 
+  @ViewChild(NgbDropdown) private dropdown: NgbDropdown;
+  @ViewChild('searchBox') private searchBox: ElementRef;
+  public selectedGene: Gene;
+  public geneSymbol = '';
+  public geneSymbolSuggestions: string[] = [];
+  public searchBoxInput$: Subject<string> = new Subject();
+
   public constructor(
     private instanceService: InstanceService,
     private datasetsService: DatasetsService,
     private datasetsTreeService: DatasetsTreeService,
     private geneProfilesService: GeneProfilesService,
+    private geneService: GeneService
   ) {}
 
   public ngOnInit(): void {
@@ -72,6 +83,49 @@ export class HomeComponent implements OnInit {
     this.instanceService.getHomeDescription().subscribe((res: {content: string}) => {
       this.homeDescription = res.content;
     });
+
+    this.searchBoxInput$.pipe(debounceTime(100), distinctUntilChanged()).subscribe(() => {
+      if (!this.geneSymbol) {
+        this.geneSymbolSuggestions = [];
+        return;
+      }
+      this.geneService
+        .searchGenes(this.geneSymbol)
+        .pipe(take(1))
+        // eslint-disable-next-line @typescript-eslint/naming-convention
+        .subscribe((response: { 'gene_symbols': string[] }) => {
+          this.geneSymbolSuggestions = response.gene_symbols;
+        });
+    });
+  }
+
+  public openSingleView(geneSymbols: string | Set<string>): void {
+    const geneProfilesBaseUrl = window.location.origin + '/gene-profiles';
+    let genes: string;
+
+    if (typeof geneSymbols === 'string') {
+      genes = geneSymbols;
+    } else {
+      genes = [...geneSymbols].join(',');
+    }
+
+    const newWindow = window.open('', '_blank');
+    if (newWindow) {
+      newWindow.location.assign(`${geneProfilesBaseUrl}/${genes}`);
+    }
+  }
+
+  public openDropdown(): void {
+    if (this.dropdown && !this.dropdown.isOpen()) {
+      this.dropdown.open();
+    }
+  }
+
+  public closeDropdown(): void {
+    if (this.dropdown && this.dropdown.isOpen()) {
+      this.dropdown.close();
+      (this.searchBox.nativeElement as HTMLElement).blur();
+    }
   }
 
   public attachDatasetDescription(entry: object): void {
@@ -141,12 +195,12 @@ export class HomeComponent implements OnInit {
 
   public findAllByKey(obj, keyToFind): string[] {
     return Object.entries(obj)
-      .reduce((acc, [key, value]) => (key === keyToFind)
+      .reduce((acc, [key, value]) => key === keyToFind
         ? acc.concat(value)
-        : (typeof value === 'object' && value)
-        ? acc.concat(this.findAllByKey(value, keyToFind))
-        : acc
-      , [])
+        : typeof value === 'object' && value
+          ? acc.concat(this.findAllByKey(value, keyToFind))
+          : acc
+      , []);
   }
 
   public writeDescription(markdown: string): void {
