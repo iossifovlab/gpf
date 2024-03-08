@@ -54,7 +54,7 @@ export class HomeComponent implements OnInit {
       visibleDatasets: this.datasetsService.getVisibleDatasets()
     }).subscribe(({datasets, visibleDatasets}) => {
       datasets['data'].forEach((d: object) => {
-        this.attachDatasetDescription(d); this.collectAllStudies(d);
+        this.collectAllStudies(d); this.attachDatasetDescription(d);
       });
 
       this.content = datasets;

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { Observable, ReplaySubject, BehaviorSubject, zip, Subject } from 'rxjs';
+import { Observable, ReplaySubject, BehaviorSubject, zip, Subject, of } from 'rxjs';
 
 import { Dataset } from '../datasets/datasets';
 import { UsersService } from '../users/users.service';
@@ -25,6 +25,8 @@ export class DatasetsService {
   public datasetsLoading = false;
 
   public static genomeVersion = '';
+
+  public static descriptionCache = [];
 
   public constructor(
     private http: HttpClient,
@@ -162,7 +164,16 @@ export class DatasetsService {
   }
 
   public getDatasetDescription(datasetId: string): Observable<object> {
+    if (DatasetsService.descriptionCache.length !== 0) {
+      return of(DatasetsService.descriptionCache.find(d => d['datasetId'] === datasetId));
+    }
+
     const options = { headers: this.headers, withCredentials: true };
-    return this.http.get(`${this.config.baseUrl}${this.descriptionUrl}/${datasetId}`, options);
+    const description$ = this.http.get(`${this.config.baseUrl}${this.descriptionUrl}/${datasetId}`, options);
+    description$.pipe(take(1)).subscribe(description => {
+      DatasetsService.descriptionCache.push({datasetId: datasetId, description: description['description']});
+    });
+
+    return description$;
   }
 }
