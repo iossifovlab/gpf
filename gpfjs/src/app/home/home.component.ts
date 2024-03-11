@@ -8,7 +8,7 @@ import { GeneProfilesService } from 'app/gene-profiles-block/gene-profiles.servi
 import { GeneProfilesSingleViewConfig } from 'app/gene-profiles-single-view/gene-profiles-single-view';
 import { InstanceService } from 'app/instance.service';
 import { environment } from 'environments/environment';
-import { Subject, combineLatest, debounceTime, distinctUntilChanged, first, switchMap, take } from 'rxjs';
+import { Subject, combineLatest, debounceTime, distinctUntilChanged, switchMap, take } from 'rxjs';
 
 @Component({
   selector: 'gpf-home',
@@ -100,7 +100,7 @@ export class HomeComponent implements OnInit {
     });
   }
 
-  public async openSingleView(geneSymbols: string): Promise<void> {
+  public openSingleView(geneSymbols: string): void {
     if (this.showError) {
       return;
     }
@@ -115,19 +115,18 @@ export class HomeComponent implements OnInit {
 
     this.closeDropdown();
 
-    try {
-      this.selectedGene = await this.geneService.getGene(
-        this.geneSymbol.trim()
-      ).pipe(first()).toPromise();
-      this.geneSymbol = this.selectedGene.geneSymbol;
-    } catch (error) {
-      console.error(error);
-      this.showError = true;
-      return;
-    }
-
-    const geneProfilesBaseUrl = window.location.origin + '/gene-profiles';
-    window.location.assign(`${geneProfilesBaseUrl}/${this.geneSymbol}`);
+    this.geneService.getGene(this.geneSymbol.trim())
+      .subscribe({
+        next: gene => {
+          this.geneSymbol = gene.geneSymbol;
+          const geneProfilesBaseUrl = window.location.origin + '/gene-profiles';
+          window.location.assign(`${geneProfilesBaseUrl}/${this.geneSymbol}`);
+        },
+        error: error => {
+          console.error(error);
+          this.showError = true;
+        }
+      });
   }
 
   public openDropdown(): void {
