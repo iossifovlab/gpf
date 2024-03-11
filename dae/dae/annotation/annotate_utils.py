@@ -9,6 +9,7 @@ from dae.annotation.context import CLIAnnotationContext
 from dae.genomic_resources.cached_repository import cache_resources
 from dae.genomic_resources.genomic_context import get_genomic_context
 from dae.genomic_resources.repository import GenomicResourceRepo
+from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.task_graph import TaskGraphCli
 from dae.task_graph.graph import TaskGraph
 from dae.utils.verbosity_configuration import VerbosityConfiguration
@@ -84,7 +85,7 @@ def build_pipeline(
 
 
 class AnnotationTool:
-    def __init__(self, raw_args: Optional[list[str]] = None) -> None:
+    def __init__(self, raw_args: Optional[list[str]] = None, gpf_instance: Optional[GPFInstance] = None) -> None:
         if not raw_args:
             raw_args = sys.argv[1:]
 
@@ -93,6 +94,7 @@ class AnnotationTool:
         VerbosityConfiguration.set(self.args)
         CLIAnnotationContext.register(self.args)
 
+        self.gpf_instance = gpf_instance
         self.context = get_genomic_context()
         self.pipeline = CLIAnnotationContext.get_pipeline(self.context)
         self.grr = CLIAnnotationContext.get_genomic_resources_repository(self.context)

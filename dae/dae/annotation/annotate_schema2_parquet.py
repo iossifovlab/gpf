@@ -7,6 +7,7 @@ from dae.genomic_resources.repository_factory import build_genomic_resource_repo
 from dae.annotation.annotate_utils import AnnotationTool
 from dae.annotation.annotation_factory import build_annotation_pipeline
 from dae.annotation.context import CLIAnnotationContext
+from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.parquet.parquet_writer import append_meta_to_parquet
 from dae.schema2_storage.schema2_import_storage import schema2_dataset_layout
 from dae.task_graph.cli_tools import TaskGraphCli
@@ -52,9 +53,10 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
         for contig in contigs:
             if contig in ref_genome.chromosomes:
                 result.append((contig, ref_genome.get_chrom_length(contig)))
-        for contig in other_contigs:
-            max_len = max(max_len, ref_genome.get_chrom_length(contig))
-        result.append(("other", max_len))
+        if other_contigs:
+            for contig in other_contigs:
+                max_len = max(max_len, ref_genome.get_chrom_length(contig))
+            result.append(("other", max_len))
         return result
 
     @staticmethod
@@ -127,8 +129,12 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
         )
         os.symlink(loader.layout.family, layout.family, target_is_directory=True)
 
-        contig_lens = AnnotateSchema2ParquetTool.get_contig_lengths(
-            self.context.get_reference_genome())
+        if self.gpf_instance is not None:
+            genome = self.gpf_instance.reference_genome
+        else:
+            genome = self.context.get_reference_genome()
+
+        contig_lens = AnnotateSchema2ParquetTool.get_contig_lengths(genome)
 
         regions = [
             f"{contig}:{start}-{start + self.args.region_size}"
@@ -148,9 +154,8 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
         del loader
 
 
-
-def cli(raw_args: Optional[list[str]] = None) -> None:
-    tool = AnnotateSchema2ParquetTool(raw_args)
+def cli(raw_args: Optional[list[str]] = None, gpf_instance: Optional[GPFInstance] = None) -> None:
+    tool = AnnotateSchema2ParquetTool(raw_args, gpf_instance)
     tool.run()
 
 
