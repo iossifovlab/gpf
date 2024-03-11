@@ -181,8 +181,8 @@ export class GeneProfileSingleViewComponent implements OnInit {
   }
 
   public static goToQuery(
-    store: Store, queryService: QueryService, geneSymbol: string,
-    personSet: GeneProfilesDatasetPersonSet, datasetId: string, statistic: GeneProfilesDatasetStatistic
+    store: Store, queryService: QueryService, geneSymbol: string, personSet: GeneProfilesDatasetPersonSet,
+    datasetId: string, statistic: GeneProfilesDatasetStatistic, newTab: boolean = true
   ): void {
     const effectTypes = {
       lgds: EffectTypes['LGDS'],
@@ -190,7 +190,6 @@ export class GeneProfileSingleViewComponent implements OnInit {
       missense: ['missense'],
       synonymous: ['synonymous'],
     };
-    const newWindow = window.open('', '_blank');
 
     const genomicScores: GenomicScore[] = [];
     if (statistic.scores) {
@@ -228,7 +227,13 @@ export class GeneProfileSingleViewComponent implements OnInit {
         .pipe(take(1))
         .subscribe(urlObject => {
           const url = queryService.getLoadUrlFromResponse(urlObject);
-          newWindow.location.assign(url);
+
+          if (newTab) {
+            const newWindow = window.open('', '_blank');
+            newWindow.location.assign(url);
+          } else {
+            window.location.assign(url);
+          }
         });
     });
   }

@@ -169,7 +169,7 @@ export class GeneProfilesBlockComponent implements OnInit {
     return geneProfilesTableConfig.columns.filter(column => column.sortable)[0].id;
   }
 
-  public goToQueryEventHandler($event: { geneSymbol: string; statisticId: string }): void {
+  public goToQueryEventHandler($event: { geneSymbol: string; statisticId: string; newTab: boolean }): void {
     const tokens: string[] = $event.statisticId.split('.');
     const datasetId = tokens[0];
     const personSet = this.geneProfilesSingleViewConfig.datasets
@@ -177,7 +177,7 @@ export class GeneProfilesBlockComponent implements OnInit {
       .find(ps => ps.id === tokens[1]);
     const statistic = personSet.statistics.find(st => st.id === tokens[2]);
     GeneProfileSingleViewComponent.goToQuery(
-      this.store, this.queryService, $event.geneSymbol, personSet, datasetId, statistic
+      this.store, this.queryService, $event.geneSymbol, personSet, datasetId, statistic, $event.newTab
     );
   }
 }

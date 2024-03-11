@@ -299,20 +299,21 @@ export class GeneProfilesTableComponent implements OnInit, OnChanges, OnDestroy 
     const linkClick: boolean = $event.target.classList.contains('clickable');
     const geneSymbol = row[this.geneSymbolColumnId] as string;
 
-    if (!linkClick) {
-      if ($event.which === 2 || ($event.ctrlKey || $event.metaKey)) {
-        this.toggleHighlightGene(geneSymbol);
-      }
+    const middleClick: boolean = $event.which === 2;
+    const altAction: boolean = middleClick || $event.ctrlKey || $event.metaKey;
+
+    if (!linkClick && altAction) {
+      this.toggleHighlightGene(geneSymbol);
     } else if (column.clickable === 'goToQuery') {
-      this.goToQueryEvent.emit({geneSymbol, statisticId: column.id});
+      this.goToQueryEvent.emit({geneSymbol: geneSymbol, statisticId: column.id, newTab: altAction});
     } else if (column.clickable === 'createTab' && linkClick) {
-      this.openSingleView(geneSymbol);
+      this.openSingleView(geneSymbol, altAction);
     }
   }
 
-  public openSingleView(geneSymbols: string | Set<string>): void {
-    const geneProfilesBaseUrl = window.location.href;
+  public openSingleView(geneSymbols: string | Set<string>, newTab: boolean = false): void {
     let genes: string;
+    const geneProfilesBaseUrl = window.location.href;
 
     if (typeof geneSymbols === 'string') {
       genes = geneSymbols;
@@ -320,9 +321,11 @@ export class GeneProfilesTableComponent implements OnInit, OnChanges, OnDestroy 
       genes = [...geneSymbols].join(',');
     }
 
-    const newWindow = window.open('', '_blank');
-    if (newWindow) {
+    if (newTab) {
+      const newWindow = window.open('', '_blank');
       newWindow.location.assign(`${geneProfilesBaseUrl}/${genes}`);
+    } else {
+      window.location.assign(`${geneProfilesBaseUrl}/${genes}`);
     }
   }
 
