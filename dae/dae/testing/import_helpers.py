@@ -49,7 +49,8 @@ def setup_import_project_config(
     root_path: pathlib.Path, study: StudyInputLayout,
     gpf_instance: GPFInstance,
     project_config_update: Optional[dict[str, Any]] = None,
-    project_config_overwrite: Optional[dict[str, Any]] = None
+    project_config_overwrite: Optional[dict[str, Any]] = None,
+    project_config_replace: Optional[dict[str, Any]] = None
 ) -> pathlib.Path:
     """Set up import project config."""
     params = asdict(study)
@@ -98,6 +99,9 @@ def setup_import_project_config(
     if project_config_update:
         project_config = recursive_dict_update(
             project_config, project_config_update)
+    if project_config_replace:
+        project_config = project_config_replace
+
     setup_directories(
         root_path / "import_project" / "import_config.yaml",
         yaml.dump(project_config, default_flow_style=False))
@@ -108,13 +112,15 @@ def setup_import_project(
     root_path: pathlib.Path, study: StudyInputLayout,
     gpf_instance: GPFInstance,
     project_config_update: Optional[dict[str, Any]] = None,
-    project_config_overwrite: Optional[dict[str, Any]] = None
+    project_config_overwrite: Optional[dict[str, Any]] = None,
+    project_config_replace: Optional[dict[str, Any]] = None
 ) -> ImportProject:
     """Set up an import project for a study and imports it."""
     project_config = setup_import_project_config(
         root_path, study, gpf_instance,
         project_config_update=project_config_update,
-        project_config_overwrite=project_config_overwrite)
+        project_config_overwrite=project_config_overwrite,
+        project_config_replace=project_config_replace)
 
     # pylint: disable=import-outside-toplevel
     project = ImportProject.build_from_file(
@@ -129,14 +135,16 @@ def vcf_import(
     ped_path: pathlib.Path, vcf_paths: list[pathlib.Path],
     gpf_instance: GPFInstance,
     project_config_update: Optional[dict[str, Any]] = None,
-    project_config_overwrite: Optional[dict[str, Any]] = None
+    project_config_overwrite: Optional[dict[str, Any]] = None,
+    project_config_replace: Optional[dict[str, Any]] = None
 ) -> ImportProject:
     """Import a VCF study and return the import project."""
     study = StudyInputLayout(study_id, ped_path, vcf_paths, [], [], [])
     project = setup_import_project(
         root_path, study, gpf_instance,
         project_config_update=project_config_update,
-        project_config_overwrite=project_config_overwrite)
+        project_config_overwrite=project_config_overwrite,
+        project_config_replace=project_config_replace)
     return project
 
 

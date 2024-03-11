@@ -5,6 +5,8 @@ from typing import Optional, Generator
 
 import yaml
 
+from pyarrow import parquet as pq
+
 from dae.utils import fs_utils
 from dae.import_tools.import_tools import ImportStorage, ImportProject, \
     Bucket
@@ -268,3 +270,17 @@ class Schema2ImportStorage(ImportStorage):
             self._build_all_parquet_tasks(project, graph)
 
         return graph
+
+    @staticmethod
+    def load_meta(project: ImportProject) -> dict[str, str]:
+        """Load meta data from the parquet dataset."""
+        parquet_dir = project.get_parquet_dataset_dir()
+        if parquet_dir is None:
+            raise ValueError("parquet dataset not stored: {project.study_id}")
+        layout = schema2_dataset_layout(parquet_dir)
+
+        table = pq.read_table(layout.meta)
+        result = {}
+        for rec in table.to_pandas().to_dict(orient="records"):
+            result[rec["key"]] = rec["value"]
+        return result

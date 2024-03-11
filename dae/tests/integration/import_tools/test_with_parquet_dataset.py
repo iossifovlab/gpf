@@ -80,18 +80,18 @@ def vcf_project_from_parquet(
 ) -> ImportProject:
     root_path, gpf_instance, layout = vcf_import_data
 
-    project_config_update = {
+    project_config_replace = {
+        "id": "from_parquet_dataset",
         "processing_config": {
-            "work_dir": str(root_path / "work_dir2"),
             "parquet_dataset_dir": str(
                 root_path / "work_dir" / "parquet_dataset")
         }
     }
     project = vcf_import(
         root_path,
-        "parquet_dataset", layout.pedigree, layout.vcf,
+        "from_parquet_dataset", layout.pedigree, layout.vcf,
         gpf_instance,
-        project_config_update=project_config_update)
+        project_config_replace=project_config_replace)
     return project
 
 
@@ -114,7 +114,7 @@ def test_with_destination_storage_type(
 
     gpf_instance = vcf_project_from_parquet.get_gpf_instance()
     gpf_instance.reload()
-    study = gpf_instance.get_genotype_data("parquet_dataset")
+    study = gpf_instance.get_genotype_data("from_parquet_dataset")
     assert study is not None
 
     assert len(list(study.query_variants())) == 2
