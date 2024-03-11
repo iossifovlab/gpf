@@ -99,84 +99,93 @@ def t4c8_instance(tmp_path: pathlib.Path) -> GPFInstance:
 
 
 @pytest.fixture
-def t4c8_study_1(t4c8_instance: GPFInstance) -> str:
-    root_path = pathlib.Path(t4c8_instance.dae_dir)
-    ped_path = setup_pedigree(
-        root_path / "study_1" / "pedigree" / "in.ped",
-        """
-familyId personId dadId momId sex status role
-f1.1     mom1     0     0     2   1      mom
-f1.1     dad1     0     0     1   1      dad
-f1.1     ch1      dad1  mom1  2   2      prb
-f1.3     mom3     0     0     2   1      mom
-f1.3     dad3     0     0     1   1      dad
-f1.3     ch3      dad3  mom3  2   2      prb
-        """)
-    vcf_path1 = setup_vcf(
-        root_path / "study_1" / "vcf" / "in.vcf.gz",
-        """
-##fileformat=VCFv4.2
-##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
-##contig=<ID=chr1>
-##contig=<ID=chr2>
-##contig=<ID=chr3>
-#CHROM POS  ID REF ALT QUAL FILTER INFO FORMAT mom1 dad1 ch1 mom3 dad3 ch3
-chr1   54   .  T   C   .    .      .    GT     0/1  0/0  0/1 0/0  0/0  0/0
-chr1   119  .  A   G,C .    .      .    GT     0/0  0/2  0/2 0/1  0/2  0/1
-chr1   122  .  A   C   .    .      .    GT     0/0  1/0  0/0 0/0  0/0  0/0
-        """)  # noqa
-
-    vcf_study(
-        root_path,
-        "study_1", ped_path, [vcf_path1],
-        t4c8_instance,
-        project_config_overwrite={
-            "destination": {"storage_type": "schema2"},
-            "annotation": [
-                {"position_score": {
-                    "resource_id": "one",
-                    "attributes": [{
-                        "source": "score_one",
-                        "name": "score_A",
-                    }]
-                }},
-                {"position_score": "two"}
-            ]
-        }
-    )
-    return f"{root_path}/work_dir/study_1"
+def t4c8_study_pedigree() -> str:
+    return textwrap.dedent("""
+        familyId personId dadId momId sex status role
+        f1.1     mom1     0     0     2   1      mom
+        f1.1     dad1     0     0     1   1      dad
+        f1.1     ch1      dad1  mom1  2   2      prb
+        f1.3     mom3     0     0     2   1      mom
+        f1.3     dad3     0     0     1   1      dad
+        f1.3     ch3      dad3  mom3  2   2      prb
+    """)
 
 
 @pytest.fixture
-def t4c8_study_2(t4c8_instance: GPFInstance) -> str:
+def t4c8_study_variants() -> str:
+    return textwrap.dedent("""
+        ##fileformat=VCFv4.2
+        ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+        ##contig=<ID=chr1>
+        ##contig=<ID=chr2>
+        ##contig=<ID=chr3>
+        #CHROM POS  ID REF ALT QUAL FILTER INFO FORMAT mom1 dad1 ch1 mom3 dad3 ch3
+        chr1   4    .  T   G,TA .    .      .    GT     0/1  0/1  0/0 0/1  0/2  0/2
+        chr1   54   .  T   C    .    .      .    GT     0/1  0/0  0/1 0/0  0/0  0/0
+        chr1   90   .  G   C,GA .    .      .    GT     0/1  0/2  0/2 0/1  0/2  0/1
+        chr1   100  .  T   G,TA .    .      .    GT     0/1  0/1  0/0 0/2  0/2  0/0
+        chr1   119  .  A   G,C  .    .      .    GT     0/0  0/2  0/2 0/1  0/2  0/1
+        chr1   122  .  A   C    .    .      .    GT     0/0  1/0  0/0 0/0  0/0  0/0
+        chr1   122  .  A   C,AC .    .      .    GT     0/1  0/1  0/1 0/2  0/2  0/2
+    """)
+
+@pytest.fixture
+def t4c8_project_config() -> dict:
+    return {
+        "destination": {"storage_type": "schema2"},
+        "annotation": [
+            {"position_score": {
+                "resource_id": "one",
+                "attributes": [{
+                    "source": "score_one",
+                    "name": "score_A",
+                }]
+            }},
+            {"position_score": "two"}
+        ]
+    }
+
+@pytest.fixture
+def t4c8_study_nonpartitioned(
+    t4c8_instance: GPFInstance,
+    t4c8_study_pedigree: str,
+    t4c8_study_variants: str,
+    t4c8_project_config: dict,
+) -> str:
     root_path = pathlib.Path(t4c8_instance.dae_dir)
     ped_path = setup_pedigree(
-        root_path / "study_2" / "pedigree" / "in.ped",
-        """
-familyId personId dadId momId sex status role
-f1.1     mom1     0     0     2   1      mom
-f1.1     dad1     0     0     1   1      dad
-f1.1     ch1      dad1  mom1  2   2      prb
-f1.3     mom3     0     0     2   1      mom
-f1.3     dad3     0     0     1   1      dad
-f1.3     ch3      dad3  mom3  2   2      prb
-        """)
-    vcf_path1 = setup_vcf(
-        root_path / "study_2" / "vcf" / "in.vcf.gz",
-        """
-##fileformat=VCFv4.2
-##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
-##contig=<ID=chr1>
-##contig=<ID=chr2>
-##contig=<ID=chr3>
-#CHROM POS  ID REF ALT  QUAL FILTER INFO FORMAT mom1 dad1 ch1 mom3 dad3 ch3
-chr1   4    .  T   G,TA .    .      .    GT     0/1  0/1  0/0 0/1  0/2  0/2
-chr1   54   .  T   C    .    .      .    GT     0/1  0/1  0/1 0/1  0/0  0/1
-chr1   90   .  G   C,GA .    .      .    GT     0/1  0/2  0/2 0/1  0/2  0/1
-chr1   100  .  T   G,TA .    .      .    GT     0/1  0/1  0/0 0/2  0/2  0/0
-chr1   119  .  A   G,C  .    .      .    GT     0/0  0/2  0/2 0/1  0/2  0/1
-chr1   122  .  A   C,AC .    .      .    GT     0/1  0/1  0/1 0/2  0/2  0/2
-        """)  # noqa
+        root_path / "study_nonpartitioned" / "pedigree" / "in.ped",
+        t4c8_study_pedigree
+    )
+    vcf_path = setup_vcf(
+        root_path / "study_nonpartitioned" / "vcf" / "in.vcf.gz",
+        t4c8_study_variants
+    )
+    vcf_study(
+        root_path, "study_nonpartitioned",
+        ped_path, [vcf_path],
+        t4c8_instance,
+        project_config_overwrite=t4c8_project_config
+    )
+    return f"{root_path}/work_dir/study_nonpartitioned"
+
+
+@pytest.fixture
+def t4c8_study_partitioned(
+    t4c8_instance: GPFInstance,
+    t4c8_study_pedigree: str,
+    t4c8_study_variants: str,
+    t4c8_project_config: dict,
+) -> str:
+    root_path = pathlib.Path(t4c8_instance.dae_dir)
+    ped_path = setup_pedigree(
+        root_path / "study_partitioned" / "pedigree" / "in.ped",
+        t4c8_study_pedigree
+    )
+    vcf_path = setup_vcf(
+        root_path / "study_partitioned" / "vcf" / "in.vcf.gz",
+        t4c8_study_variants
+    )
 
     project_config_update = {
         "partition_description": {
@@ -201,41 +210,28 @@ chr1   122  .  A   C,AC .    .      .    GT     0/1  0/1  0/1 0/2  0/2  0/2
         },
     }
     vcf_study(
-        root_path,
-        "study_2", ped_path, [vcf_path1],
+        root_path, "study_partitioned",
+        ped_path, [vcf_path],
         t4c8_instance,
         project_config_update=project_config_update,
-        project_config_overwrite={
-            "destination": {"storage_type": "schema2"},
-            "annotation": [
-                {"position_score": {
-                    "resource_id": "one",
-                    "attributes": [{
-                        "source": "score_one",
-                        "name": "score_A",
-                    }]
-                }},
-                {"position_score": "two"}
-            ]
-        }
+        project_config_overwrite=t4c8_project_config
     )
-    return f"{root_path}/work_dir/study_2"
+    return f"{root_path}/work_dir/study_partitioned"
 
 
-@pytest.mark.parametrize("study, expected", [
-    ("t4c8_study_1", {0.22, 0.25, 0.26}),
-    ("t4c8_study_2", {0.21, 0.22, 0.23, 0.24, 0.25, 0.26}),
-])
-def test_reannotate_parquet(
+@pytest.mark.parametrize("study", [("t4c8_study_nonpartitioned"),
+                                   ("t4c8_study_partitioned")])
+def test_reannotate_parquet_metadata(
     tmp_path: pathlib.Path,
     t4c8_instance: GPFInstance,
-    study: str, expected: list[int],
-    t4c8_study_1,
-    t4c8_study_2,
+    study: str,
+    t4c8_study_nonpartitioned,
+    t4c8_study_partitioned,
 ) -> None:
-
     root_path = pathlib.Path(t4c8_instance.dae_dir) / ".."
-    input_dir = t4c8_study_1 if study == "t4c8_study_1" else t4c8_study_2
+    input_dir = t4c8_study_nonpartitioned \
+        if study == "t4c8_study_nonpartitioned" \
+        else t4c8_study_partitioned
     annotation_file_new = root_path / "new_annotation.yaml"
     grr_file = root_path / "grr.yaml"
     output_dir = tmp_path / "out"
@@ -265,6 +261,38 @@ def test_reannotate_parquet(
     """)
     assert loader_result.meta == expected_meta
 
+
+@pytest.mark.parametrize("study", [("t4c8_study_nonpartitioned"),
+                                   ("t4c8_study_partitioned")])
+def test_reannotate_parquet_symlinking(
+    tmp_path: pathlib.Path,
+    t4c8_instance: GPFInstance,
+    study: str,
+    t4c8_study_nonpartitioned,
+    t4c8_study_partitioned,
+) -> None:
+    root_path = pathlib.Path(t4c8_instance.dae_dir) / ".."
+    input_dir = t4c8_study_nonpartitioned \
+        if study == "t4c8_study_nonpartitioned" \
+        else t4c8_study_partitioned
+    annotation_file_new = root_path / "new_annotation.yaml"
+    grr_file = root_path / "grr.yaml"
+    output_dir = tmp_path / "out"
+    work_dir = tmp_path / "work"
+
+    cli([
+        str(a) for a in [
+            input_dir, annotation_file_new,
+            "-o", output_dir,
+            "-w", work_dir,
+            "--grr", grr_file,
+            "-j", 1
+        ]
+    ], gpf_instance=t4c8_instance)
+
+    loader_old = ParquetLoader(input_dir)
+    loader_result = ParquetLoader(output_dir)
+
     # check pedigree is symlinked
     pedigree_path = pathlib.Path(loader_result.layout.pedigree)
     assert pedigree_path.parent.is_symlink()
@@ -275,10 +303,41 @@ def test_reannotate_parquet(
     assert family_vs_path.is_symlink()
     assert family_vs_path.samefile(loader_old.layout.family)
 
+
+@pytest.mark.parametrize("study", [("t4c8_study_nonpartitioned"),
+                                   ("t4c8_study_partitioned")])
+def test_reannotate_parquet_variants(
+    tmp_path: pathlib.Path,
+    t4c8_instance: GPFInstance,
+    study: str,
+    t4c8_study_nonpartitioned,
+    t4c8_study_partitioned,
+) -> None:
+    root_path = pathlib.Path(t4c8_instance.dae_dir) / ".."
+    input_dir = t4c8_study_nonpartitioned \
+        if study == "t4c8_study_nonpartitioned" \
+        else t4c8_study_partitioned
+    annotation_file_new = root_path / "new_annotation.yaml"
+    grr_file = root_path / "grr.yaml"
+    output_dir = tmp_path / "out"
+    work_dir = tmp_path / "work"
+
+    cli([
+        str(a) for a in [
+            input_dir, annotation_file_new,
+            "-o", output_dir,
+            "-w", work_dir,
+            "--grr", grr_file,
+            "-j", 1
+        ]
+    ], gpf_instance=t4c8_instance)
+
+    loader_result = ParquetLoader(output_dir)
+
     # check variants are correctly reannotated 
     result = set()
     for sv in loader_result.fetch_summary_variants():
         assert not sv.has_attribute("score_two")
         assert sv.has_attribute("score_A")
         result.add(sv.get_attribute("score_A").pop())
-    assert result == expected
+    assert result == {0.21, 0.22, 0.23, 0.24, 0.25, 0.26}
