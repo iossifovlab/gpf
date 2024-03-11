@@ -8,7 +8,7 @@ import { GeneProfilesService } from 'app/gene-profiles-block/gene-profiles.servi
 import { GeneProfilesSingleViewConfig } from 'app/gene-profiles-single-view/gene-profiles-single-view';
 import { InstanceService } from 'app/instance.service';
 import { environment } from 'environments/environment';
-import { Subject, combineLatest, debounceTime, distinctUntilChanged, switchMap, take } from 'rxjs';
+import { Subject, combineLatest, debounceTime, distinctUntilChanged, first, switchMap, take } from 'rxjs';
 
 @Component({
   selector: 'gpf-home',
@@ -36,6 +36,7 @@ export class HomeComponent implements OnInit {
   public geneSymbol = '';
   public geneSymbolSuggestions: string[] = [];
   public searchBoxInput$: Subject<string> = new Subject();
+  public showError = false;
 
   public constructor(
     private instanceService: InstanceService,
@@ -99,20 +100,34 @@ export class HomeComponent implements OnInit {
     });
   }
 
-  public openSingleView(geneSymbols: string | Set<string>): void {
+  public async openSingleView(geneSymbols: string): Promise<void> {
+    if (this.showError) {
+      return;
+    }
+
+    if (geneSymbols) {
+      this.geneSymbol = geneSymbols.trim();
+    }
+
+    if (!this.geneSymbol) {
+      return;
+    }
+
+    this.closeDropdown();
+
+    try {
+      this.selectedGene = await this.geneService.getGene(
+        this.geneSymbol.trim()
+      ).pipe(first()).toPromise();
+      this.geneSymbol = this.selectedGene.geneSymbol;
+    } catch (error) {
+      console.error(error);
+      this.showError = true;
+      return;
+    }
+
     const geneProfilesBaseUrl = window.location.origin + '/gene-profiles';
-    let genes: string;
-
-    if (typeof geneSymbols === 'string') {
-      genes = geneSymbols;
-    } else {
-      genes = [...geneSymbols].join(',');
-    }
-
-    const newWindow = window.open('', '_blank');
-    if (newWindow) {
-      newWindow.location.assign(`${geneProfilesBaseUrl}/${genes}`);
-    }
+    window.location.assign(`${geneProfilesBaseUrl}/${this.geneSymbol}`);
   }
 
   public openDropdown(): void {

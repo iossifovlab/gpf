@@ -144,4 +144,12 @@ gpf-markdown-editor {
 
 #genes-dropdown {
   width: 270px;
+  max-height: 265px;
+  overflow-y: scroll;
+}
+
+#no-gene-found {
+  margin-left: 15px;
+  padding: 6px 15px;
+  border-radius: 0.375rem;
 }

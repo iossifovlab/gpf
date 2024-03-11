@@ -26,7 +26,7 @@
             spellcheck="false"
             [(ngModel)]="geneSymbol"
             (keyup)="openDropdown(); searchBoxInput$.next(geneSymbol)"
-            (focus)="geneSymbol = ''"
+            (focus)="geneSymbol = ''; showError = false"
             (keydown.enter)="openSingleView(geneSymbol); closeDropdown()"
             (keydown.escape)="closeDropdown()" />
 
@@ -39,6 +39,9 @@
               (keydown.enter)="openSingleView(suggestion); closeDropdown()">
               <span>{{ suggestion }}</span>
             </button>
+          </div>
+          <div id="no-gene-found" [hidden]="!showError" class="alert alert-danger" role="alert">
+            <span>No such gene found!</span>
           </div>
         </div>
       </div>
