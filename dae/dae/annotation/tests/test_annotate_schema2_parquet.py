@@ -11,9 +11,9 @@ from dae.testing.t4c8_import import t4c8_gpf
 from dae.annotation.annotate_schema2_parquet import cli
 
 
-@pytest.fixture(scope="module")
-def t4c8_instance(tmp_path_factory: pytest.TempPathFactory) -> GPFInstance:
-    root_path = tmp_path_factory.mktemp("t4c8_instance")
+@pytest.fixture
+def t4c8_instance(tmp_path: pathlib.Path) -> GPFInstance:
+    root_path = tmp_path
     setup_directories(
         root_path,
         {
@@ -98,7 +98,7 @@ def t4c8_instance(tmp_path_factory: pytest.TempPathFactory) -> GPFInstance:
     return gpf_instance
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture
 def t4c8_study_1(t4c8_instance: GPFInstance) -> str:
     root_path = pathlib.Path(t4c8_instance.dae_dir)
     ped_path = setup_pedigree(
@@ -147,7 +147,7 @@ chr1   122  .  A   C   .    .      .    GT     0/0  1/0  0/0 0/0  0/0  0/0
     return f"{root_path}/work_dir/study_1"
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture
 def t4c8_study_2(t4c8_instance: GPFInstance) -> str:
     root_path = pathlib.Path(t4c8_instance.dae_dir)
     ped_path = setup_pedigree(
@@ -230,11 +230,12 @@ def test_reannotate_parquet(
     tmp_path: pathlib.Path,
     t4c8_instance: GPFInstance,
     study: str, expected: list[int],
-    request
+    t4c8_study_1,
+    t4c8_study_2,
 ) -> None:
 
     root_path = pathlib.Path(t4c8_instance.dae_dir) / ".."
-    input_dir = request.getfixturevalue(study)
+    input_dir = t4c8_study_1 if study == "t4c8_study_1" else t4c8_study_2
     annotation_file_new = root_path / "new_annotation.yaml"
     grr_file = root_path / "grr.yaml"
     output_dir = tmp_path / "out"
@@ -248,7 +249,7 @@ def test_reannotate_parquet(
             "--grr", grr_file,
             "-j", 1
         ]
-    ])
+    ], gpf_instance=t4c8_instance)
 
     loader_old = ParquetLoader(input_dir)
     loader_result = ParquetLoader(output_dir)
