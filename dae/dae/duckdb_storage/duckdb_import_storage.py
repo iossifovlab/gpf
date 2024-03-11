@@ -1,5 +1,7 @@
 from typing import cast, Any
 
+import yaml
+
 from dae.configuration.study_config_builder import StudyConfigBuilder
 from dae.import_tools.import_tools import save_study_config, ImportProject
 
@@ -28,20 +30,26 @@ class DuckDbImportStorage(Schema2ImportStorage):
     ) -> None:
         genotype_storage: DuckDbGenotypeStorage = \
             cast(DuckDbGenotypeStorage, project.get_genotype_storage())
-        # pylint: disable=protected-access
-        variants_types = project.get_variant_loader_types()
-        study_config = {
-            "id": project.study_id,
-            "conf_dir": ".",
-            "has_denovo": project.has_denovo_variants(),
-            "has_cnv": "cnv" in variants_types,
-            "has_transmitted": bool({"dae", "vcf"} & variants_types),
+        if project.get_processing_parquet_dataset_dir() is not None:
+            meta = cls.load_meta(project)
+            study_config = yaml.load(meta["study"], yaml.Loader)
+            study_config["id"] = project.study_id
+        else:
+            variants_types = project.get_variant_loader_types()
+            study_config = {
+                "id": project.study_id,
+                "conf_dir": ".",
+                "has_denovo": project.has_denovo_variants(),
+                "has_cnv": "cnv" in variants_types,
+                "has_transmitted": bool({"dae", "vcf"} & variants_types),
+            }
+        study_config.update({
             "genotype_storage": {
                 "id": genotype_storage.storage_id,
                 "tables": {"pedigree": study_tables.pedigree},
             },
             "genotype_browser": {"enabled": False},
-        }
+        })
 
         if study_tables.summary:
             assert study_tables.family is not None

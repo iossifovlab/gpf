@@ -1,6 +1,8 @@
 import logging
 from typing import cast
 
+import yaml
+
 from dae.configuration.study_config_builder import StudyConfigBuilder
 from dae.import_tools.import_tools import ImportProject, save_study_config
 from dae.task_graph.graph import TaskGraph
@@ -56,19 +58,27 @@ class Impala2ImportStorage(Schema2ImportStorage):
         meta_table = genotype_storage\
             ._construct_metadata_table(project.study_id)
 
-        variants_types = project.get_variant_loader_types()
-        study_config = {
-            "id": project.study_id,
-            "conf_dir": ".",
-            "has_denovo": project.has_denovo_variants(),
-            "has_cnv": "cnv" in variants_types,
-            "has_transmitted": bool({"dae", "vcf"} & variants_types),
+        if project.get_processing_parquet_dataset_dir() is not None:
+            meta = cls.load_meta(project)
+            study_config = yaml.load(meta["study"], yaml.Loader)
+            study_config["id"] = project.study_id
+        else:
+            variants_types = project.get_variant_loader_types()
+            study_config = {
+                "id": project.study_id,
+                "conf_dir": ".",
+                "has_denovo": project.has_denovo_variants(),
+                "has_cnv": "cnv" in variants_types,
+                "has_transmitted": bool({"dae", "vcf"} & variants_types),
+            }
+
+        study_config.update({
             "genotype_storage": {
                 "id": genotype_storage.storage_id,
                 "tables": {"pedigree": pedigree_table},
             },
             "genotype_browser": {"enabled": False},
-        }
+        })
 
         if summary_table:
             assert family_table is not None

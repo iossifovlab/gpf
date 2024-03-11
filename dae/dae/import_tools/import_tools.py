@@ -81,7 +81,7 @@ class ImportProject:
         testing.
         """
         self.import_config: dict[str, Any] = import_config
-        if "denovo" in import_config["input"]:
+        if "denovo" in import_config.get("input", {}):
             len_files = len(import_config["input"]["denovo"]["files"])
             assert len_files == 1, "Support for multiple denovo files is NYI"
 
