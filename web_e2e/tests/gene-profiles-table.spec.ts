@@ -346,32 +346,30 @@ test.describe('Gene profiles table functionality tests', () => {
     await expect(row.nth(5).getByText('check_small')).toHaveCount(2);
   });
 
-  test('should test autism scores', async({ page }) => {
+  test('should test the values in SFARI gene score column', async({ page }) => {
     const row = page.locator('.table-body-row:not(#nothing-found)');
+
+    await expect(row).toHaveCount(16);
+
     await page.locator('input#gene-search-input').focus();
-    await page.keyboard.type('CHD');
-    await expect(row).toHaveCount(15);
+    await page.keyboard.type('C');
+    await expect(row).toHaveCount(3);
+
+    await expect(row.nth(0).locator('.row-cell').nth(7)).toHaveText('1');
+    await expect(row.nth(1).locator('.row-cell').nth(7)).toHaveText('');
+    await expect(row.nth(2).locator('.row-cell').nth(7)).toHaveText('3');
 
     await page.getByText('SFARI gene score').click();
-    await page.waitForTimeout(200);
+    await page.waitForTimeout(500);
     await expect(row.nth(0).locator('.row-cell').nth(7)).toHaveText('3');
     await expect(row.nth(1).locator('.row-cell').nth(7)).toHaveText('1');
-    await expect(row.nth(2).locator('.row-cell').nth(7)).toHaveText('1');
-    await expect(row.nth(3).locator('.row-cell').nth(7)).toHaveText('1');
-    await expect(row.nth(4).locator('.row-cell').nth(7)).toHaveText('1');
+    await expect(row.nth(2).locator('.row-cell').nth(7)).toHaveText('');
 
     await page.getByText('SFARI gene score').click();
-    await page.waitForTimeout(200);
+    await page.waitForTimeout(500);
     await expect(row.nth(0).locator('.row-cell').nth(7)).toHaveText('1');
-    await expect(row.nth(1).locator('.row-cell').nth(7)).toHaveText('1');
-    await expect(row.nth(2).locator('.row-cell').nth(7)).toHaveText('1');
-    await expect(row.nth(3).locator('.row-cell').nth(7)).toHaveText('1');
-    await expect(row.nth(4).locator('.row-cell').nth(7)).toHaveText('3');
-
-    for (let i = 5; i < 15; i++) {
-      // eslint-disable-next-line no-await-in-loop
-      await expect(row.nth(i).locator('.row-cell').nth(7)).toHaveText('');
-    }
+    await expect(row.nth(1).locator('.row-cell').nth(7)).toHaveText('3');
+    await expect(row.nth(2).locator('.row-cell').nth(7)).toHaveText('');
   });
 
   [

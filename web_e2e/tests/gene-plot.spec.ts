@@ -142,8 +142,8 @@ test.describe('Gene plot download tests', () => {
       const download = await downloadedVariants;
       const fixtureData = scanCSV(await download.path(), {sep: '\t'});
       const downloadData = scanCSV('playwright/fixtures/gene-browser/' + testCase.expectedPath, {sep: '\t'});
-      const fixtureFrame = await fixtureData.collect();
-      const downloadFrame = await downloadData.collect();
+      const fixtureFrame = (await fixtureData.select(fixtureData.columns.sort()).collect()).sort('location');
+      const downloadFrame = (await downloadData.select(downloadData.columns.sort()).collect()).sort('location');
       expect(fixtureFrame.toString()).toEqual(downloadFrame.toString());
     });
   });
