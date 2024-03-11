@@ -33,7 +33,7 @@ export default defineConfig({
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
-    baseURL: process.env.JENKINS ? 'http://gpf/gpf' : 'http://127.0.0.1:8080/gpf',
+    baseURL: process.env.JENKINS ? 'http://gpf:8080/gpf' : 'http://127.0.0.1:8080/gpf',
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: process.env.JENKINS ? 'on' : 'on-first-retry',
