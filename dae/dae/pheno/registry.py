@@ -71,3 +71,6 @@ class PhenoRegistry:
 
     def get_phenotype_data_ids(self) -> list[str]:
         return list(self._cache.keys())
+
+    def get_all_phenotype_data(self) -> list[PhenotypeStudy]:
+        return list(self._cache.values())
