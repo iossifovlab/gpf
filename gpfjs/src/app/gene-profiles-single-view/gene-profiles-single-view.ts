@@ -5,6 +5,7 @@ export class GeneProfilesSingleViewConfig {
   public shown: Array<{category: any; section: string; id: string}>;
   public defaultDataset: string;
   public description: string;
+  public geneLinkTemplates: {name: string; url: string}[];
 
   @Type(() => GeneProfilesGeneSetsCategory)
   public geneSets: GeneProfilesGeneSetsCategory[];
@@ -100,6 +101,7 @@ export class GeneProfilesOrder {
 export class GeneProfilesGene {
   public geneSymbol: string;
   public geneSets: string[];
+  public geneLinks: {name: string; url: string}[];
 
   @Type(() => GeneProfilesGenomicScores)
   public genomicScores: GeneProfilesGenomicScores[];
