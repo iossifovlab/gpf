@@ -273,6 +273,7 @@ def test_reannotate_parquet_symlinking(
     study: str,
     t4c8_study_nonpartitioned,
     t4c8_study_partitioned,
+    gpf_instance_genomic_context_fixture
 ) -> None:
     root_path = pathlib.Path(t4c8_instance.dae_dir) / ".."
     input_dir = t4c8_study_nonpartitioned \
@@ -283,6 +284,8 @@ def test_reannotate_parquet_symlinking(
     output_dir = tmp_path / "out"
     work_dir = tmp_path / "work"
 
+    gpf_instance_genomic_context_fixture(t4c8_instance)
+
     cli([
         str(a) for a in [
             input_dir, annotation_file_new,
@@ -291,7 +294,7 @@ def test_reannotate_parquet_symlinking(
             "--grr", grr_file,
             "-j", 1
         ]
-    ], gpf_instance=t4c8_instance)
+    ])
 
     loader_old = ParquetLoader(input_dir)
     loader_result = ParquetLoader(output_dir)
@@ -315,6 +318,7 @@ def test_reannotate_parquet_variants(
     study: str,
     t4c8_study_nonpartitioned,
     t4c8_study_partitioned,
+    gpf_instance_genomic_context_fixture
 ) -> None:
     root_path = pathlib.Path(t4c8_instance.dae_dir) / ".."
     input_dir = t4c8_study_nonpartitioned \
@@ -325,6 +329,8 @@ def test_reannotate_parquet_variants(
     output_dir = tmp_path / "out"
     work_dir = tmp_path / "work"
 
+    gpf_instance_genomic_context_fixture(t4c8_instance)
+
     cli([
         str(a) for a in [
             input_dir, annotation_file_new,
@@ -333,7 +339,7 @@ def test_reannotate_parquet_variants(
             "--grr", grr_file,
             "-j", 1
         ]
-    ], gpf_instance=t4c8_instance)
+    ])
 
     loader_result = ParquetLoader(output_dir)
 
