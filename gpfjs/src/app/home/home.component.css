@@ -136,10 +136,11 @@ gpf-markdown-editor {
 #single-gene-wrapper {
   display: flex;
   align-items: baseline;
+  flex-wrap: wrap;
 }
 
-#single-gene-wrapper h4 {
-  width: 185px;
+#single-gene-title-wrapper {
+  width: 160px;
 }
 
 #genes-dropdown {
@@ -150,6 +151,6 @@ gpf-markdown-editor {
 
 #no-gene-found {
   margin-left: 15px;
-  padding: 6px 15px;
+  padding: 5px 15px;
   border-radius: 0.375rem;
 }

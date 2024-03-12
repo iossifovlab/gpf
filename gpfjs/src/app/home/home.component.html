@@ -13,10 +13,12 @@
         <h4><a [routerLink]="'/gene-profiles'">All genes</a></h4>
       </div>
       <div id="single-gene-wrapper">
-        <span class="material-symbols-outlined sm" style="color: #3ea658">lock_open_right</span>
-        <h4>Single gene</h4>
+        <div id="single-gene-title-wrapper">
+          <span class="material-symbols-outlined sm" style="color: #3ea658">lock_open_right</span>
+          <h4>Single gene</h4>
+        </div>
 
-        <div ngbDropdown class="input-group" style="padding: 15px; align-items: baseline">
+        <div ngbDropdown style="padding: 15px; align-items: baseline">
           <input
             ngbDropdownAnchor
             #searchBox
@@ -40,9 +42,9 @@
               <span>{{ suggestion }}</span>
             </button>
           </div>
-          <div id="no-gene-found" [hidden]="!showError" class="alert alert-danger" role="alert">
-            <span>No such gene found!</span>
-          </div>
+        </div>
+        <div id="no-gene-found" [hidden]="!showError" class="alert alert-danger" role="alert">
+          <span>No such gene found!</span>
         </div>
       </div>
 
@@ -51,27 +53,27 @@
         [initialMarkdown]="geneProfilesConfig.description"
         [editable]="false"></gpf-markdown-editor>
     </div>
+  </div>
+  <h3 id="dataset-header">Datasets</h3>
+  <div class="separator"></div>
 
-    <h3 id="dataset-header">Datasets</h3>
-    <div class="separator"></div>
-
-    <div style="width: 100%">
-      <ng-container *ngTemplateOutlet="datasetsTemplate; context: { entries: content['data'], nesting: 0 }">
-      </ng-container>
+  <div style="width: 100%">
+    <ng-container *ngTemplateOutlet="datasetsTemplate; context: { entries: content['data'], nesting: 0 }">
+    </ng-container>
+  </div>
+  <div class="separator"></div>
+  <div id="footer">
+    <div id="version-container">
+      <span class="version-text">GPF version: </span>
+      <span *ngIf="gpfVersion">{{ gpfVersion }}</span>
+      <span *ngIf="gpfVersion !== gpfjsVersion"> / {{ gpfjsVersion }}</span>
     </div>
-    <div class="separator"></div>
-    <div id="footer">
-      <div id="version-container">
-        <span class="version-text">GPF version: </span>
-        <span *ngIf="gpfVersion">{{ gpfVersion }}</span>
-        <span *ngIf="gpfVersion !== gpfjsVersion"> / {{ gpfjsVersion }}</span>
-      </div>
 
-      <div id="documentation-link">
-        <a href="https://www.iossifovlab.com/gpfuserdocs/" target="_blank">User documentation</a>
-      </div>
+    <div id="documentation-link">
+      <a href="https://www.iossifovlab.com/gpfuserdocs/" target="_blank">User documentation</a>
     </div>
   </div>
+
   <ng-template #datasetsTemplate let-entries="entries" let-nesting="nesting">
     <ng-container *ngFor="let entry of entries">
       <ng-container *ngIf="datasets.includes(entry.dataset)">

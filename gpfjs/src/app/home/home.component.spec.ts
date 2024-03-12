@@ -54,25 +54,6 @@ describe('HomeComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should show error message when searching gene', () => {
-    const closeDropdownSpy = jest.spyOn(component, 'closeDropdown');
-
-    component.showError = true;
-    expect(closeDropdownSpy).not.toHaveBeenCalledWith();
-
-    let geneSymbols = '   ';
-    component.openSingleView(geneSymbols);
-    expect(component.geneSymbol).toBe('');
-    expect(closeDropdownSpy).not.toHaveBeenCalledWith();
-
-    jest.spyOn(mockGeneService, 'getGene').mockImplementation(() => throwError(() => new Error()));
-
-    geneSymbols = 'CHD';
-    component.showError = false;
-    component.openSingleView(geneSymbols);
-    expect(component.showError).toBe(true);
-  });
-
   it('should open sinle view', () => {
     const closeDropdownSpy = jest.spyOn(component, 'closeDropdown');
 
@@ -90,6 +71,25 @@ describe('HomeComponent', () => {
     component.openSingleView(geneSymbols);
     expect(closeDropdownSpy).toHaveBeenCalledWith();
     expect(component.geneSymbol).toBe('CHD8');
+  });
+
+  it('should show error message when searching gene', () => {
+    const closeDropdownSpy = jest.spyOn(component, 'closeDropdown');
+
+    component.showError = true;
+    expect(closeDropdownSpy).not.toHaveBeenCalledWith();
+
+    let geneSymbols = '   ';
+    component.openSingleView(geneSymbols);
+    expect(component.geneSymbol).toBe('');
+    expect(closeDropdownSpy).not.toHaveBeenCalledWith();
+
+    jest.spyOn(mockGeneService, 'getGene').mockImplementation(() => throwError(() => new Error()));
+
+    geneSymbols = 'CHD';
+    component.showError = false;
+    component.openSingleView(geneSymbols);
+    expect(component.showError).toBe(true);
   });
 
   it('should get first parapraph of description when title and description are separated by new line', () => {
