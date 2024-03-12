@@ -1,4 +1,5 @@
-import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { APP_BASE_HREF } from '@angular/common';
+import { Component, ElementRef, Inject, OnInit, ViewChild } from '@angular/core';
 import { NgbDropdown } from '@ng-bootstrap/ng-bootstrap';
 import { DatasetsTreeService } from 'app/datasets/datasets-tree.service';
 import { DatasetsService } from 'app/datasets/datasets.service';
@@ -43,7 +44,8 @@ export class HomeComponent implements OnInit {
     private datasetsService: DatasetsService,
     private datasetsTreeService: DatasetsTreeService,
     private geneProfilesService: GeneProfilesService,
-    private geneService: GeneService
+    private geneService: GeneService,
+    @Inject(APP_BASE_HREF) private baseHref: string,
   ) {}
 
   public ngOnInit(): void {
@@ -119,7 +121,7 @@ export class HomeComponent implements OnInit {
       .subscribe({
         next: gene => {
           this.geneSymbol = gene.geneSymbol;
-          const geneProfilesBaseUrl = window.location.origin + '/gene-profiles';
+          const geneProfilesBaseUrl = `${window.location.origin}${this.baseHref}/gene-profiles`;
           window.location.assign(`${geneProfilesBaseUrl}/${this.geneSymbol}`);
         },
         error: error => {
