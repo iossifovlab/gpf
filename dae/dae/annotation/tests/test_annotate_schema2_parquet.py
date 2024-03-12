@@ -227,6 +227,7 @@ def test_reannotate_parquet_metadata(
     study: str,
     t4c8_study_nonpartitioned,
     t4c8_study_partitioned,
+    gpf_instance_genomic_context_fixture
 ) -> None:
     root_path = pathlib.Path(t4c8_instance.dae_dir) / ".."
     input_dir = t4c8_study_nonpartitioned \
@@ -237,6 +238,8 @@ def test_reannotate_parquet_metadata(
     output_dir = tmp_path / "out"
     work_dir = tmp_path / "work"
 
+    gpf_instance_genomic_context_fixture(t4c8_instance)
+
     cli([
         str(a) for a in [
             input_dir, annotation_file_new,
@@ -245,7 +248,7 @@ def test_reannotate_parquet_metadata(
             "--grr", grr_file,
             "-j", 1
         ]
-    ], gpf_instance=t4c8_instance)
+    ])
 
     loader_old = ParquetLoader(input_dir)
     loader_result = ParquetLoader(output_dir)
