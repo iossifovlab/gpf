@@ -56,8 +56,9 @@ class RemotePhenotypeData(PhenotypeData):
         person_ids: Optional[Iterable[str]] = None,
         family_ids: Optional[Iterable[str]] = None,
         roles: Optional[Iterable[Role]] = None,
-        default_filter: str = "apply"
+        default_filter: str = "apply"  # pylint: disable=unused-argument
     ) -> pd.DataFrame:
+        """Get values for a list of measures for a list of persons."""
         roles_los: Optional[Iterable[str]] = None
         if roles:
             roles_los = [r.name for r in roles]
