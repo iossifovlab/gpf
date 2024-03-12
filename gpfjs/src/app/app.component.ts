@@ -5,6 +5,7 @@ import { UsersService } from './users/users.service';
 import { switchMap } from 'rxjs/operators';
 import { GeneProfilesService } from './gene-profiles-block/gene-profiles.service';
 import { GeneProfilesSingleViewConfig } from './gene-profiles-single-view/gene-profiles-single-view';
+import { NgbConfig } from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
   selector: 'gpf-root',
@@ -31,7 +32,10 @@ export class AppComponent implements OnInit {
     private geneProfilesService: GeneProfilesService,
     private bnIdle: BnNgIdleService,
     private usersService: UsersService,
-  ) { }
+    private ngbConfig: NgbConfig
+  ) {
+    ngbConfig.animation = false;
+  }
 
   public ngOnInit(): void {
     this.bnIdle.startWatching(this.sessionTimeoutInSeconds)
