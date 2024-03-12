@@ -18,30 +18,31 @@ logger = logging.getLogger(__name__)
 
 
 class PhenoBrowserBaseView(QueryDatasetView):
-    def __init__(self) -> None:
-        super().__init__()
-        self.pheno_config = self.gpf_instance.get_phenotype_db_config()
+    pass
 
 
 class PhenoConfigView(PhenoBrowserBaseView):
-    def get(self, request: Request) -> Response:
-        logger.debug(f"pheno_config: {self.pheno_config}")
+    """Phenotype data configuration view."""
 
+    def get(self, request: Request) -> Response:
+        """Get the phenotype data configuration."""
         if "db_name" not in request.query_params:
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        logger.debug(f"self.pheno_config: {self.pheno_config}")
-
-        if not self.pheno_config:
-            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         dbname = request.query_params["db_name"]
-        logger.debug(f"dbname: {dbname}")
+        logger.debug("dbname: %s", dbname)
 
-        return Response(self.pheno_config[dbname])
+        if dbname not in self.gpf_instance.get_phenotype_data_ids():
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        return Response(self.gpf_instance.get_phenotype_data_config(dbname))
 
 
 class PhenoInstrumentsView(QueryDatasetView):
+    """Phenotype instruments view."""
+
     def get(self, request: Request) -> Response:
+        """Get phenotype instruments."""
         if "dataset_id" not in request.query_params:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         dataset_id = request.query_params["dataset_id"]
@@ -59,7 +60,10 @@ class PhenoInstrumentsView(QueryDatasetView):
 
 
 class PhenoMeasuresInfoView(PhenoBrowserBaseView):
+    """Phenotype measures info view."""
+
     def get(self, request: Request) -> Response:
+        """Get pheno measures info."""
         if "dataset_id" not in request.query_params:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         dataset_id = request.query_params["dataset_id"]

@@ -422,6 +422,7 @@ class PhenotypeStudy(PhenotypeData):
         self.families = self._load_families()
         df = self._get_measures_df()
         self._instruments = self._load_instruments(df)
+        logger.warning("phenotype study %s fully loaded", pheno_id)
 
     def _get_measures_df(
         self,

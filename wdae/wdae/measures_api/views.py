@@ -137,16 +137,10 @@ class PhenoMeasurePartitionsView(QueryDatasetView):
 
 
 class PhenoMeasureRegressionsView(QueryDatasetView):
-    def __init__(self) -> None:
-        super(PhenoMeasureRegressionsView, self).__init__()
-        self.pheno_config = self.gpf_instance.get_phenotype_db_config()
-
-    def get_browser_dbfile(self, dbname) -> str:
-        browser_dbfile = self.pheno_config[dbname].browser_dbfile
-        assert browser_dbfile is not None
-        return browser_dbfile
+    """View for phenotype measure regressions."""
 
     def get(self, request: Request) -> Response:
+        """Get phenotype measure regressions."""
         data = request.query_params
 
         dataset_id = data["datasetId"]
@@ -154,11 +148,6 @@ class PhenoMeasureRegressionsView(QueryDatasetView):
 
         if dataset is None or dataset.phenotype_data is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
-
-        print(dataset_id)
-        print(dataset)
-        print(dataset.phenotype_data)
-        print(dataset.phenotype_data.get_regressions())
 
         regressions = dataset.phenotype_data.get_regressions()
 

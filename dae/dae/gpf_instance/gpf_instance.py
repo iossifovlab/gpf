@@ -16,7 +16,6 @@ from dae.gene_profile.statistic import GPStatistic
 from dae.gene.gene_scores import GeneScore
 from dae.genomic_resources.gene_models import GeneModels
 from dae.genomic_resources.reference_genome import ReferenceGenome
-from dae.configuration.schemas.phenotype_data import pheno_conf_schema
 
 from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.utils.fs_utils import find_directory_with_a_file
@@ -179,13 +178,14 @@ class GPFInstance:
     def _pheno_registry(self) -> PhenoRegistry:
         pheno_data_dir = get_pheno_db_dir(self.dae_config)
         registry = PhenoRegistry()
-
+        logger.error("pheno registry created: %s", id(registry))
         pheno_configs = GPFConfigParser.collect_directory_configs(
             pheno_data_dir
         )
 
         with PhenoRegistry.CACHE_LOCK:
             for config in pheno_configs:
+                logger.info("loading phenotype data from config: %s", config)
                 registry.register_phenotype_data(
                     PhenoRegistry.load_pheno_data(Path(config)),
                     lock=False
@@ -346,23 +346,12 @@ class GPFInstance:
         self._variants_db.unregister_genotype_data(genotype_data)
 
     # Phenotype data
-
-    def get_phenotype_db_config(self) -> Box:
-        pheno_data_dir = get_pheno_db_dir(self.dae_config)
-        configs = GPFConfigParser.load_directory_configs(
-            pheno_data_dir, pheno_conf_schema
-        )
-
-        return Box({
-            config.phenotype_data.name: config.phenotype_data
-            for config in configs
-            if config.phenotype_data and config.phenotype_data.enabled
-        })
-
     def get_phenotype_data_ids(self) -> list[str]:
         return self._pheno_registry.get_phenotype_data_ids()
 
-    def get_phenotype_data(self, phenotype_data_id: str) -> PhenotypeData:
+    def get_phenotype_data(
+        self, phenotype_data_id: str
+    ) -> PhenotypeData:
         return self._pheno_registry.get_phenotype_data(phenotype_data_id)
 
     def get_all_phenotype_data(self) -> list[PhenotypeData]:

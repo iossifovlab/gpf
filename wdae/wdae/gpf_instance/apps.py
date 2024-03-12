@@ -34,8 +34,11 @@ class WDAEConfig(AppConfig):
         try:
             logger.warning("eager loading of GPF instance and studies")
             gpf_instance.load()
-            result = gpf_instance.get_all_genotype_data()
-            logger.info("preloading studies: %s", result)
+            pheno = gpf_instance.get_all_phenotype_data()
+            logger.info("preloading phenotype studies: %s", pheno)
+
+            geno = gpf_instance.get_all_genotype_data()
+            logger.info("preloading genotype studies: %s", geno)
 
             gpf_instance.prepare_gp_configuration()
 
