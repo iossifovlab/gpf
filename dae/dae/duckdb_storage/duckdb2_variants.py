@@ -2,7 +2,7 @@ import time
 import json
 import logging
 from contextlib import closing
-from typing import Optional, Any, Generator, Iterable, Union
+from typing import Optional, Any, Generator, Union
 
 import duckdb
 import numpy as np
@@ -325,7 +325,6 @@ class DuckDb2Variants(QueryVariantsBase):
         effect_types: Optional[list[str]] = None,
         family_ids: Optional[list[str]] = None,
         person_ids: Optional[list[str]] = None,
-        person_set_collection: Optional[tuple[str, list[str]]] = None,
         inheritance: Optional[list[str]] = None,
         roles: Optional[str] = None,
         sexes: Optional[str] = None,
@@ -403,7 +402,6 @@ class DuckDb2Variants(QueryVariantsBase):
         effect_types: Optional[list[str]] = None,
         family_ids: Optional[list[str]] = None,
         person_ids: Optional[list[str]] = None,
-        person_set_collection: Optional[tuple[str, list[str]]] = None,
         inheritance: Optional[list[str]] = None,
         roles: Optional[str] = None,
         sexes: Optional[str] = None,
@@ -457,45 +455,46 @@ class DuckDb2Variants(QueryVariantsBase):
 
     @staticmethod
     def build_person_set_collection_query(
-            person_set_collection: PersonSetCollection,
-            person_set_collection_query: tuple[str, set[str]]
+            _person_set_collection: PersonSetCollection,
+            _person_set_collection_query: tuple[str, set[str]]
     ) -> Optional[Union[tuple, tuple[list[str], list[str]]]]:
         """No idea what it does. If you know please edit."""
-        collection_id, selected_person_sets = person_set_collection_query
-        assert collection_id == person_set_collection.id
-        selected_person_sets = set(selected_person_sets)
-        assert isinstance(selected_person_sets, set)
+        return None
+        # collection_id, selected_person_sets = person_set_collection_query
+        # assert collection_id == person_set_collection.id
+        # selected_person_sets = set(selected_person_sets)
+        # assert isinstance(selected_person_sets, set)
 
-        if not person_set_collection.is_pedigree_only():
-            return None
+        # if not person_set_collection.is_pedigree_only():
+        #     return None
 
-        available_person_sets = set(person_set_collection.person_sets.keys())
-        if (available_person_sets & selected_person_sets) == \
-                available_person_sets:
-            return ()
+        # available_person_sets = set(person_set_collection.person_sets.keys())
+        # if (available_person_sets & selected_person_sets) == \
+        #         available_person_sets:
+        #     return ()
 
-        def pedigree_columns(
-            selected_person_sets: Iterable[str]
-        ) -> list[dict[str, str]]:
-            result = []
-            for person_set_id in sorted(selected_person_sets):
-                if person_set_id not in person_set_collection.person_sets:
-                    continue
-                person_set = person_set_collection.person_sets[person_set_id]
-                assert len(person_set.values) == \
-                    len(person_set_collection.sources)
-                person_set_query = {}
-                for source, value in zip(
-                        person_set_collection.sources, person_set.values):
-                    person_set_query[source.ssource] = value
-                result.append(person_set_query)
-            return result
+        # def pedigree_columns(
+        #     selected_person_sets: Iterable[str]
+        # ) -> list[dict[str, str]]:
+        #     result = []
+        #     for person_set_id in sorted(selected_person_sets):
+        #         if person_set_id not in person_set_collection.person_sets:
+        #             continue
+        #         person_set = person_set_collection.person_sets[person_set_id]
+        #         assert len(person_set.values) == \
+        #             len(person_set_collection.sources)
+        #         person_set_query = {}
+        #         for source, value in zip(
+        #                 person_set_collection.sources, person_set.values):
+        #             person_set_query[source.ssource] = value
+        #         result.append(person_set_query)
+        #     return result
 
-        if person_set_collection.default.id not in selected_person_sets:
-            return (list(pedigree_columns(selected_person_sets)), [])
-        return (
-            [],
-            list(
-                pedigree_columns(
-                    available_person_sets - selected_person_sets))
-        )
+        # if person_set_collection.default.id not in selected_person_sets:
+        #     return (list(pedigree_columns(selected_person_sets)), [])
+        # return (
+        #     [],
+        #     list(
+        #         pedigree_columns(
+        #             available_person_sets - selected_person_sets))
+        # )
