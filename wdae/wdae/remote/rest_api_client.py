@@ -493,9 +493,9 @@ class RESTClient:
     def post_measures_values(
         self, dataset_id: str,
         measure_ids: Iterable[str],
-        person_ids: Optional[Iterable[str]],
-        family_ids: Optional[Iterable[str]],
-        roles: Optional[Iterable[str]],
+        person_ids: Optional[Iterable[str]] = None,
+        family_ids: Optional[Iterable[str]] = None,
+        roles: Optional[Iterable[str]] = None,
     ) -> Any:
         """Post pheno measure values request."""
         data = {
@@ -511,6 +511,17 @@ class RESTClient:
         )
 
         return response.json()
+
+    def post_measure_values(
+        self, dataset_id: str,
+        measure_id: str,
+        person_ids: Optional[Iterable[str]],
+        family_ids: Optional[Iterable[str]],
+        roles: Optional[Iterable[str]],
+    ) -> Any:
+        return self.post_measures_values(
+            dataset_id, [measure_id], person_ids, family_ids, roles
+        )
 
     def post_pheno_tool(self, data: dict) -> Any:
         """Post pheno tool request."""
