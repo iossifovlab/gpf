@@ -6,15 +6,18 @@ from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
 
-from dae.pheno.common import MeasureType
-
 from query_base.query_base import QueryDatasetView
+
+from dae.pheno.common import MeasureType
 
 logger = logging.getLogger(__name__)
 
 
 class PhenoMeasuresView(QueryDatasetView):
+    """View for phenotype measures."""
+
     def get(self, request: Request, measure_type: str) -> Response:
+        """Get phenotype measures."""
         data = request.query_params
 
         dataset_id = data["datasetId"]
@@ -24,7 +27,7 @@ class PhenoMeasuresView(QueryDatasetView):
         if dataset.phenotype_data is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        assert measure_type == "continuous" or measure_type == "categorical"
+        assert measure_type in {"continuous", "categorical"}
 
         measures = dataset.phenotype_data.get_measures(
             measure_type=measure_type
@@ -51,7 +54,10 @@ class PhenoMeasuresView(QueryDatasetView):
 
 
 class PhenoMeasureHistogramView(QueryDatasetView):
+    """View for phenotype measure histograms."""
+
     def post(self, request: Request) -> Response:
+        """Get phenotype measure histograms."""
         data = request.data
         dataset_id = data["datasetId"]
         dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
@@ -95,7 +101,10 @@ class PhenoMeasureHistogramView(QueryDatasetView):
 
 
 class PhenoMeasurePartitionsView(QueryDatasetView):
+    """View for phenotype measure partitions."""
+
     def post(self, request: Request) -> Response:
+        """Get phenotype measure partitions."""
         data = request.data
         dataset_id = data["datasetId"]
         dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
