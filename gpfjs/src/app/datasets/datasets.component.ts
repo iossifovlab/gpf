@@ -152,11 +152,7 @@ export class DatasetsComponent implements OnInit, OnDestroy {
   public findFirstTool(selectedDataset: Dataset): string {
     let firstTool = '';
 
-    if (selectedDataset.description) {
-      firstTool = toolPageLinks.datasetDescription;
-    } else if (selectedDataset.commonReport.enabled) {
-      firstTool = toolPageLinks.datasetStatistics;
-    } else if (selectedDataset.geneBrowser.enabled) {
+    if (selectedDataset.geneBrowser.enabled) {
       firstTool = toolPageLinks.geneBrowser;
     } else if (selectedDataset.genotypeBrowser && selectedDataset.genotypeBrowserConfig) {
       firstTool = toolPageLinks.genotypeBrowser;
@@ -166,6 +162,10 @@ export class DatasetsComponent implements OnInit, OnDestroy {
       firstTool = toolPageLinks.enrichmentTool;
     } else if (selectedDataset.phenotypeTool) {
       firstTool = toolPageLinks.phenotypeTool;
+    } else if (selectedDataset.description) {
+      firstTool = toolPageLinks.datasetDescription;
+    } else if (selectedDataset.commonReport.enabled) {
+      firstTool = toolPageLinks.datasetStatistics;
     }
 
     return firstTool;

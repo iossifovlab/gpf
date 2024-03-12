@@ -7,17 +7,53 @@
     <h3>Gene profiles</h3>
     <div class="separator"></div>
 
-    <div id="all-genes-wrapper">
-      <span class="material-symbols-outlined sm" style="color: #3ea658">lock_open_right</span>
-      <h4><a [routerLink]="'/gene-profiles'">All genes</a></h4>
+    <div id="gene-profiles-wrapper">
+      <div id="all-genes-wrapper">
+        <span class="material-symbols-outlined sm" style="color: #3ea658">lock_open_right</span>
+        <h4><a [routerLink]="'/gene-profiles'">All genes</a></h4>
+      </div>
+      <div id="single-gene-wrapper">
+        <div id="single-gene-title-wrapper">
+          <span class="material-symbols-outlined sm" style="color: #3ea658">lock_open_right</span>
+          <h4>Single gene</h4>
+        </div>
+
+        <div ngbDropdown style="padding: 15px; align-items: baseline">
+          <input
+            ngbDropdownAnchor
+            #searchBox
+            id="search-box"
+            placeholder="Search gene"
+            autocomplete="off"
+            spellcheck="false"
+            [(ngModel)]="geneSymbol"
+            (keyup)="openDropdown(); searchBoxInput$.next(geneSymbol)"
+            (focus)="geneSymbol = ''; showError = false"
+            (keydown.enter)="openSingleView(geneSymbol); closeDropdown()"
+            (keydown.escape)="closeDropdown()" />
+
+          <div ngbDropdownMenu id="genes-dropdown">
+            <button
+              *ngFor="let suggestion of geneSymbolSuggestions"
+              class="dropdown-item"
+              type="button"
+              (click)="openSingleView(suggestion)"
+              (keydown.enter)="openSingleView(suggestion); closeDropdown()">
+              <span>{{ suggestion }}</span>
+            </button>
+          </div>
+        </div>
+        <div id="no-gene-found" [hidden]="!showError" class="alert alert-danger" role="alert">
+          <span>No such gene found!</span>
+        </div>
+      </div>
+
+      <gpf-markdown-editor
+        *ngIf="geneProfilesConfig.description"
+        [initialMarkdown]="geneProfilesConfig.description"
+        [editable]="false"></gpf-markdown-editor>
     </div>
-
-    <gpf-markdown-editor
-      *ngIf="geneProfilesConfig.description"
-      [initialMarkdown]="geneProfilesConfig.description"
-      [editable]="false"></gpf-markdown-editor>
   </div>
-
   <h3 id="dataset-header">Datasets</h3>
   <div class="separator"></div>
 
@@ -37,44 +73,45 @@
       <a href="https://www.iossifovlab.com/gpfuserdocs/" target="_blank">User documentation</a>
     </div>
   </div>
-</div>
-<ng-template #datasetsTemplate let-entries="entries" let-nesting="nesting">
-  <ng-container *ngFor="let entry of entries">
-    <ng-container *ngIf="datasets.includes(entry.dataset)">
-      <div>
-        <div
-          [ngStyle]="{ 'padding-left': (nesting * 80 || 36) + 'px' }"
-          style="position: relative; margin-bottom: 15px">
-          <div style="display: inline-block; margin-right: 7px">
-            <span
-              #collapseIcon
-              *ngIf="entry.children && datasetHasVisibleChildren(entry.children)"
-              class="collapse-dataset-icon material-icons material-symbols-outlined"
-              [ngClass]="{ rotate: nesting === 0 }"
-              (click)="toggleDatasetCollapse(entry); collapseIcon.classList.toggle('rotate')"
-              >expand_more</span
-            >
 
-            <span
-              class="material-symbols-outlined sm"
-              [ngStyle]="{ color: !entry.access_rights ? 'red' : '#3ea658' }"
-              >{{ !entry.access_rights ? 'lock' : 'lock_open_right' }}</span
-            >
+  <ng-template #datasetsTemplate let-entries="entries" let-nesting="nesting">
+    <ng-container *ngFor="let entry of entries">
+      <ng-container *ngIf="datasets.includes(entry.dataset)">
+        <div>
+          <div
+            [ngStyle]="{ 'padding-left': (nesting * 80 || 36) + 'px' }"
+            style="position: relative; margin-bottom: 15px">
+            <div style="display: inline-block; margin-right: 7px">
+              <span
+                #collapseIcon
+                *ngIf="entry.children && datasetHasVisibleChildren(entry.children)"
+                class="collapse-dataset-icon material-icons material-symbols-outlined"
+                [ngClass]="{ rotate: nesting === 0 }"
+                (click)="toggleDatasetCollapse(entry); collapseIcon.classList.toggle('rotate')"
+                >expand_more</span
+              >
+
+              <span
+                class="material-symbols-outlined sm"
+                [ngStyle]="{ color: !entry.access_rights ? 'red' : '#3ea658' }"
+                >{{ !entry.access_rights ? 'lock' : 'lock_open_right' }}</span
+              >
+            </div>
+            <h4>
+              <a
+                [attr.href]="'datasets/' + entry.dataset"
+                [style.font-size]="nesting ? 24 - 2 * nesting + 'px' : '24px'"
+                >{{ entry.name }}</a
+              >
+            </h4>
+            <markdown>{{ entry.description }}</markdown>
           </div>
-          <h4>
-            <a
-              [attr.href]="'datasets/' + entry.dataset"
-              [style.font-size]="nesting ? 24 - 2 * nesting + 'px' : '24px'"
-              >{{ entry.name }}</a
-            >
-          </h4>
-          <markdown>{{ entry.description }}</markdown>
         </div>
-      </div>
-    </ng-container>
-    <ng-container *ngIf="entry.children">
-      <ng-container *ngTemplateOutlet="datasetsTemplate; context: { entries: entry.children, nesting: nesting + 1 }">
+      </ng-container>
+      <ng-container *ngIf="entry.children">
+        <ng-container *ngTemplateOutlet="datasetsTemplate; context: { entries: entry.children, nesting: nesting + 1 }">
+        </ng-container>
       </ng-container>
     </ng-container>
-  </ng-container>
-</ng-template>
+  </ng-template>
+</div>
