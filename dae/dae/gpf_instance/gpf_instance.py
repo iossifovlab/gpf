@@ -349,6 +349,11 @@ class GPFInstance:
     def get_phenotype_data_ids(self) -> list[str]:
         return self._pheno_registry.get_phenotype_data_ids()
 
+    def has_phenotype_data(
+        self, phenotype_data_id: str
+    ) -> bool:
+        return self._pheno_registry.has_phenotype_data(phenotype_data_id)
+
     def get_phenotype_data(
         self, phenotype_data_id: str
     ) -> PhenotypeData:
@@ -357,11 +362,11 @@ class GPFInstance:
     def get_all_phenotype_data(self) -> list[PhenotypeData]:
         return self._pheno_registry.get_all_phenotype_data()
 
-    def get_phenotype_data_config(self, phenotype_data_id: str) -> Box:
-        return cast(
-            Box,
-            self._pheno_registry.get_phenotype_data_config(phenotype_data_id)
-        )
+    def get_phenotype_data_config(
+        self, phenotype_data_id: str
+    ) -> Optional[Box]:
+        return self._pheno_registry.get_phenotype_data_config(
+            phenotype_data_id)
 
     # Gene scores
     def has_gene_score(self, gene_score_id: str) -> bool:

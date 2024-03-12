@@ -375,22 +375,22 @@ class RESTClient:
         )
         return response.iter_content()
 
-    def post_measures_values(
-            self, dataset_id: str,
-            measure_ids: Optional[Iterable[str]] = None,
-            instrument: Optional[str] = None
-    ) -> Any:
-        """Post download request for pheno measures."""
-        response = self._post(
-            "pheno_browser/measure_values",
-            data={
-                "dataset_id": dataset_id,
-                "measure_ids": measure_ids,
-                "instrument": instrument,
-            },
-            stream=True
-        )
-        return self._read_json_list_stream(response)
+    # def post_measures_values(
+    #         self, dataset_id: str,
+    #         measure_ids: Optional[Iterable[str]] = None,
+    #         instrument: Optional[str] = None
+    # ) -> Any:
+    #     """Post download request for pheno measures."""
+    #     response = self._post(
+    #         "pheno_browser/measure_values",
+    #         data={
+    #             "dataset_id": dataset_id,
+    #             "measure_ids": measure_ids,
+    #             "instrument": instrument,
+    #         },
+    #         stream=True
+    #     )
+    #     return self._read_json_list_stream(response)
 
     def post_enrichment_test(self, query: dict) -> Any:
         response = self._post(
@@ -490,9 +490,9 @@ class RESTClient:
 
         return response.json()
 
-    def post_measure_values(
+    def post_measures_values(
         self, dataset_id: str,
-        measure_id: str,
+        measure_ids: Iterable[str],
         person_ids: Optional[Iterable[str]],
         family_ids: Optional[Iterable[str]],
         roles: Optional[Iterable[str]],
@@ -500,7 +500,7 @@ class RESTClient:
         """Post pheno measure values request."""
         data = {
             "datasetId": dataset_id,
-            "measureIds": [measure_id],
+            "measureIds": measure_ids,
             "personIds": person_ids,
             "familyIds": family_ids,
             "roles": roles

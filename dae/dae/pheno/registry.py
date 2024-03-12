@@ -1,11 +1,11 @@
 import pathlib
 import logging
-from typing import Optional, cast
 from threading import Lock
+from typing import Optional
 
 from box import Box
 
-from dae.pheno.pheno_data import PhenotypeStudy
+from dae.pheno.pheno_data import PhenotypeData, PhenotypeStudy
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.phenotype_data import pheno_conf_schema
 
@@ -18,9 +18,9 @@ class PhenoRegistry:
     CACHE_LOCK = Lock()
 
     def __init__(self) -> None:
-        self._cache: dict[str, PhenotypeStudy] = {}
+        self._cache: dict[str, PhenotypeData] = {}
 
-    def _register_study(self, study: PhenotypeStudy) -> None:
+    def _register_study(self, study: PhenotypeData) -> None:
         if study.pheno_id in self._cache:
             raise ValueError(
                 f"Pheno ID {study.pheno_id} already loaded."
@@ -29,7 +29,7 @@ class PhenoRegistry:
         self._cache[study.pheno_id] = study
 
     def register_phenotype_data(
-        self, phenotype_data: PhenotypeStudy, lock: bool = True
+        self, phenotype_data: PhenotypeData, lock: bool = True
     ) -> None:
         """Register a phenotype data study."""
         if lock:
@@ -39,7 +39,7 @@ class PhenoRegistry:
             self._register_study(phenotype_data)
 
     @classmethod
-    def load_pheno_data(cls, path: pathlib.Path) -> PhenotypeStudy:
+    def load_pheno_data(cls, path: pathlib.Path) -> PhenotypeData:
         """Create a PhenotypeStudy object from a configuration file."""
         if not path.is_file() or (
             not path.name.endswith(".yaml")
@@ -61,16 +61,16 @@ class PhenoRegistry:
         with self.CACHE_LOCK:
             return data_id in self._cache
 
-    def get_phenotype_data(self, data_id: str) -> Optional[PhenotypeStudy]:
+    def get_phenotype_data(self, data_id: str) -> PhenotypeData:
         with self.CACHE_LOCK:
             return self._cache[data_id]
 
     def get_phenotype_data_config(self, data_id: str) -> Optional[Box]:
         with self.CACHE_LOCK:
-            return cast(Box, self._cache[data_id].config)
+            return self._cache[data_id].config
 
     def get_phenotype_data_ids(self) -> list[str]:
         return list(self._cache.keys())
 
-    def get_all_phenotype_data(self) -> list[PhenotypeStudy]:
+    def get_all_phenotype_data(self) -> list[PhenotypeData]:
         return list(self._cache.values())

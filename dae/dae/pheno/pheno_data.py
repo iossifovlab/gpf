@@ -188,8 +188,9 @@ class Measure:
 class PhenotypeData(ABC):
     """Base class for all phenotype data studies and datasets."""
 
-    def __init__(self, pheno_id: str) -> None:
+    def __init__(self, pheno_id: str, config: Optional[Box]) -> None:
         self._pheno_id: str = pheno_id
+        self.config = config
         self._measures: dict[str, Measure] = {}
         self._instruments: dict[str, Instrument] = {}
         self.families: FamiliesData
@@ -412,12 +413,11 @@ class PhenotypeStudy(PhenotypeData):
     def __init__(
             self, pheno_id: str, dbfile: str,
             browser_dbfile: Optional[str] = None,
-            config: Optional[dict[str, str]] = None) -> None:
+            config: Optional[Box] = None) -> None:
 
-        super().__init__(pheno_id)
+        super().__init__(pheno_id, config)
 
         self.db = PhenoDb(dbfile=dbfile, browser_dbfile=browser_dbfile)
-        self.config = config
         self.db.build()
         self.families = self._load_families()
         df = self._get_measures_df()
@@ -754,9 +754,9 @@ class PhenotypeGroup(PhenotypeData):
 
     def __init__(
         self, pheno_id: str, phenotype_data: list[PhenotypeData],
-        config: Optional[dict] = None
+        config: Optional[Box] = None
     ) -> None:
-        super().__init__(pheno_id)
+        super().__init__(pheno_id, config)
         self.phenotype_data = phenotype_data
         self.families = self._build_families()
         instruments, measures = self._merge_instruments(
@@ -764,7 +764,6 @@ class PhenotypeGroup(PhenotypeData):
         self._instruments.update(instruments)
 
         self._measures.update(measures)
-        self.config = config
 
     def _build_families(self) -> FamiliesData:
         phenos = self.phenotype_data

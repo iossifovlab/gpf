@@ -23,7 +23,7 @@ class RemotePhenotypeData(PhenotypeData):
         self._remote_pheno_id = pheno_id
         self.rest_client = rest_client
         pheno_id = self.rest_client.prefix_remote_identifier(pheno_id)
-        super().__init__(pheno_id)
+        super().__init__(pheno_id, None)
 
         self.remote_dataset_id = remote_dataset_id
         # self.measures = self.get_measures()
@@ -58,14 +58,16 @@ class RemotePhenotypeData(PhenotypeData):
         roles: Optional[Iterable[Role]] = None,
         default_filter: str = "apply"
     ) -> pd.DataFrame:
-        persons = self.rest_client.post_pheno_persons_values(
+        roles_los: Optional[Iterable[str]] = None
+        if roles:
+            roles_los = [r.name for r in roles]
+        persons = self.rest_client.post_measures_values(
             self.remote_dataset_id,
-            measure_ids,
-            cast(Iterable[str], roles),
-            person_ids,
-            family_ids
+            measure_ids=measure_ids,
+            person_ids=person_ids,
+            family_ids=family_ids,
+            roles=roles_los,
         )
-
         return pd.DataFrame.from_records(persons.values())
 
     def get_persons(
