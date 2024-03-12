@@ -34,7 +34,7 @@ export class DatasetsService {
     private usersService: UsersService
   ) {
     this.usersService.getUserInfoObservable().pipe(
-      map(user => user.email || ''),
+      map(user => user['email'] as string || ''),
       distinctUntilChanged()
     ).subscribe(() => {
       this.reloadAllDatasets();
@@ -165,13 +165,13 @@ export class DatasetsService {
 
   public getDatasetDescription(datasetId: string): Observable<object> {
     if (DatasetsService.descriptionCache.length !== 0) {
-      return of(DatasetsService.descriptionCache.find(d => d['datasetId'] === datasetId));
+      return of(DatasetsService.descriptionCache.find(d => d['datasetId'] === datasetId) as object);
     }
 
     const options = { headers: this.headers, withCredentials: true };
     const description$ = this.http.get(`${this.config.baseUrl}${this.descriptionUrl}/${datasetId}`, options);
     description$.pipe(take(1)).subscribe(description => {
-      DatasetsService.descriptionCache.push({datasetId: datasetId, description: description['description']});
+      DatasetsService.descriptionCache.push({datasetId: datasetId, description: description['description'] as string});
     });
 
     return description$;
