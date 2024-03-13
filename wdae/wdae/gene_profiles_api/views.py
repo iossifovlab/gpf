@@ -40,7 +40,7 @@ class ProfileView(QueryBaseView):
                 )
                 if not transcript_models:
                     return Response(status=status.HTTP_404_NOT_FOUND)
-                gpf_prefix = os.environ["wdae_prefix"]
+                gpf_prefix = os.environ.get("WDAE_PREFIX", "")
                 chromosome = transcript_models[0].chrom
                 gene_start_position = transcript_models[0].exons[0].start
                 gene_stop_position = transcript_models[-1].exons[-1].stop
@@ -48,7 +48,6 @@ class ProfileView(QueryBaseView):
                     gp_config["defaultDataset"]
                 ).genome
                 chromosome_prefix = "" if genome == "hg38" else "chr"
-                domain = request.get_host()
 
                 gene_links = []
                 for template in gene_link_templates:
@@ -56,7 +55,6 @@ class ProfileView(QueryBaseView):
                         "name": template["name"],
                         "url": template["url"].format(
                             gpf_prefix=gpf_prefix,
-                            instance=domain,
                             gene=gene_symbol,
                             genome=genome,
                             chromosome_prefix=chromosome_prefix,
