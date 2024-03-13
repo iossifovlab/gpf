@@ -48,14 +48,14 @@ def test_transform_family_tags_kwargs(
         "f9"
     }
 
-    # Test and mode between two filters 
+    # Test and mode between two filters
     kwargs = query_transformer.transform_kwargs(
         selectedFamilyTags=[
             "tag_missing_dad_family",
             "tag_missing_mom_family"
         ]
     )
-    assert kwargs["family_ids"] == {"f9", "f10",}
+    assert kwargs["family_ids"] == {"f9", "f10"}
 
     # Test selection with deselection
     kwargs = query_transformer.transform_kwargs(

@@ -307,9 +307,8 @@ class QueryTransformer:
         kwargs = self._handle_person_set_collection(kwargs)
 
         if "selectedFamilyTags" in kwargs or "deselectedFamilyTags" in kwargs:
-            or_mode = False if bool(kwargs.get("tagIntersection")) is True \
-                or kwargs.get("tagIntersection") is None \
-                else True
+            or_mode = not (bool(kwargs.get("tagIntersection")) is True \
+                or kwargs.get("tagIntersection") is None)
             include_tags = kwargs.get("selectedFamilyTags")
             if isinstance(include_tags, list):
                 include_tags = {
