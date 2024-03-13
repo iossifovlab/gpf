@@ -178,7 +178,7 @@ class GPFInstance:
     def _pheno_registry(self) -> PhenoRegistry:
         pheno_data_dir = get_pheno_db_dir(self.dae_config)
         registry = PhenoRegistry()
-        logger.error("pheno registry created: %s", id(registry))
+        logger.info("pheno registry created: %s", id(registry))
         pheno_configs = GPFConfigParser.collect_directory_configs(
             pheno_data_dir
         )
