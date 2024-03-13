@@ -101,7 +101,7 @@ export class UserEditComponent implements OnInit {
 
   private focusNameInputArea(): void {
     this.waitForNameInputAreaToLoad().then(() => {
-      this.nameInput.nativeElement.focus();
+      (this.nameInput.nativeElement as HTMLInputElement).focus();
     });
   }
 }

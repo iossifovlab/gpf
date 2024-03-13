@@ -9,3 +9,7 @@
 #family-filter {
   padding: 10px;
 }
+
+::ng-deep #tag-list {
+  column-gap: 50px !important;
+}

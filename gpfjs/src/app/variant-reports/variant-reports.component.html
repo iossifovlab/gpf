@@ -112,53 +112,11 @@
         </form>
       </div>
       <ng-template #tagsModal class="tags-modal">
-        <div id="tags-modal-content">
-          <div id="tags-modal-header">
-            <div>
-              <span id="mode-label">Choose mode: </span>
-              <button
-                class="and-toggle-button"
-                (click)="tagIntersection = true; updateTagsHeader()"
-                [ngClass]="{ 'selected-mode': tagIntersection }"
-                >And</button
-              >
-              <button
-                class="or-toggle-button"
-                (click)="tagIntersection = false; updateTagsHeader()"
-                [ngClass]="{ 'selected-mode': !tagIntersection }"
-                >Or</button
-              >
-            </div>
-            <a (click)="clearFilters()" id="clear-filters-button">Clear filters</a>
-          </div>
-
-          <div
-            id="tag-list"
-            [ngStyle]="{
-              display: 'grid',
-              'grid-template-columns': 'repeat(' + tagsModalsNumberOfCols + ', max-content)',
-              'grid-template-rows': 'repeat(' + tagsModalsNumberOfRows + ', 30px)',
-              'column-gap': '16px'
-            }">
-            <div *ngFor="let tag of orderedTagList" class="modal-content-lines">
-              <span
-                class="material-icons tags"
-                [id]="tag + '-tag-add'"
-                (click)="selectFilter(tag)"
-                [ngStyle]="{ color: filtersButtonsState[tag] === 1 ? 'green' : '#cdcdcd' }"
-                >add_circle</span
-              >
-              <span
-                class="material-icons tags"
-                [id]="tag + '-tag-remove'"
-                (click)="deselectFilter(tag)"
-                [ngStyle]="{ color: filtersButtonsState[tag] === -1 ? 'red' : '#cdcdcd' }"
-                >remove_circle</span
-              >
-              <span [attr.for]="tag + '-tag'" id="tag-label">{{ tag }}</span>
-            </div>
-          </div>
-        </div>
+        <gpf-family-tags
+          [numOfCols]="tagsModalsNumberOfCols"
+          [tags]="orderedTagList"
+          (chooseMode)="setTagIntersection($event)"
+          (updateTagsLists)="setTags($event)"></gpf-family-tags>
       </ng-template>
     </div>
 

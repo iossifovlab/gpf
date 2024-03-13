@@ -146,7 +146,7 @@ export class DeNovoData {
 }
 
 export class EffectTypeRow {
-  public static fromJson(json: any): EffectTypeRow {
+  public static fromJson(json: object): EffectTypeRow {
     return new EffectTypeRow(
       json['effect_type'] as string,
       json['row'].map((data: DeNovoData) => DeNovoData.fromJson(data)) as DeNovoData[]
@@ -157,7 +157,7 @@ export class EffectTypeRow {
 }
 
 export class EffectTypeTable {
-  public static fromJson(json: any): EffectTypeTable {
+  public static fromJson(json: object): EffectTypeTable {
     return new EffectTypeTable(
       json['rows'].map((row: EffectTypeRow) => EffectTypeRow.fromJson(row)) as EffectTypeRow[],
       json['group_name'] as string,

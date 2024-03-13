@@ -1,9 +1,11 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { GeneProfilesSingleViewConfig, GeneProfilesGene } from 'app/gene-profiles-single-view/gene-profiles-single-view';
+import {
+  GeneProfilesSingleViewConfig,
+  GeneProfilesGene
+} from 'app/gene-profiles-single-view/gene-profiles-single-view';
 import { ConfigService } from 'app/config/config.service';
 import { plainToClass } from 'class-transformer';
-// eslint-disable-next-line no-restricted-imports
 import { Observable, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 

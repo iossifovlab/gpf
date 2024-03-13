@@ -23,7 +23,5 @@ describe('QueryService', () => {
     expect(service).toBeTruthy();
   });
 
-  it.skip('should test downloadVariants', () => {
-    // TODO
-  });
+  it.todo('should test downloadVariants');
 });

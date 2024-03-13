@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/naming-convention */
 import { PedigreeData } from 'app/genotype-preview-model/genotype-preview';
 import {
   ChildrenCounter,
@@ -26,7 +27,7 @@ describe('ChildrenCounter', () => {
       'row1'
     );
 
-    expect(childrenCounter).toEqual(
+    expect(childrenCounter).toStrictEqual(
       new ChildrenCounter('row1', 'fakeColumn', 7)
     );
   });
@@ -46,7 +47,7 @@ describe('GroupCounter', () => {
 
     expect(groupCounter.column).toBe('fakeColumn');
 
-    expect(groupCounter.childrenCounters as ChildrenCounter[]).toStrictEqual([
+    expect(groupCounter.childrenCounters).toStrictEqual([
       new ChildrenCounter('row1', 'fakeColumn', 7),
       new ChildrenCounter('row2', 'fakeColumn', 13),
       new ChildrenCounter('row3', 'fakeColumn', 17),

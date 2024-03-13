@@ -3,12 +3,12 @@ export class UserGroup {
     return jsonArray.map(v => UserGroup.fromJson(v));
   }
 
-  public static fromJson(json): UserGroup {
+  public static fromJson(json: object): UserGroup {
     return new UserGroup(
-      json['id'],
-      json['name'],
-      json['users'],
-      json['datasets'],
+      json['id'] as number,
+      json['name'] as string,
+      json['users'] as string[],
+      json['datasets'] as Array<{datasetName: string; datasetId: string}>,
     );
   }
 

@@ -53,20 +53,20 @@ export class HomeComponent implements OnInit {
       datasets: this.datasetsTreeService.getDatasetHierarchy(),
       visibleDatasets: this.datasetsService.getVisibleDatasets()
     }).subscribe(({datasets, visibleDatasets}) => {
-      datasets['data'].forEach((d: object) => {
+      (datasets['data'] as Array<object>).forEach((d: object) => {
         this.collectAllStudies(d); this.attachDatasetDescription(d);
       });
 
       this.content = datasets;
       this.visibleDatasets = visibleDatasets as string[];
 
-      this.content['data'].forEach(d => {
-        if (this.visibleDatasets.includes(d.dataset)) {
-          this.datasets.push(d.dataset);
+      (this.content['data'] as Array<object>).forEach(d => {
+        if (this.visibleDatasets.includes(d['dataset'] as string)) {
+          this.datasets.push(d['dataset'] as string);
         }
 
-        if (d.children) {
-          d.children.map(c => c.dataset).forEach(c => {
+        if (d['children'] as Array<object>) {
+          (d['children'] as Array<object>).map(c => c['dataset'] as string).forEach(c => {
             if (this.visibleDatasets.includes(c)) {
               this.datasets.push(c);
             }
@@ -146,9 +146,9 @@ export class HomeComponent implements OnInit {
 
   public attachDatasetDescription(entry: object): void {
     entry['children']?.forEach((d: object) => this.attachDatasetDescription(d));
-    this.datasetsService.getDatasetDescription(entry['dataset']).pipe(take(1)).subscribe(res => {
+    this.datasetsService.getDatasetDescription(entry['dataset'] as string).pipe(take(1)).subscribe(res => {
       if (res['description']) {
-        entry['description'] = this.getFirstParagraph(res['description']);
+        entry['description'] = this.getFirstParagraph(res['description'] as string);
       }
 
       this.studiesLoaded++;
@@ -170,8 +170,8 @@ export class HomeComponent implements OnInit {
 
   public collectAllStudies(data: object): void {
     this.allStudies.add(data['dataset']);
-    if (data['children'] && data['children'].length !== 0) {
-      data['children'].forEach(dataset => {
+    if (data['children'] && (data['children'] as Array<object>).length !== 0) {
+      (data['children'] as Array<object>).forEach(dataset => {
         this.collectAllStudies(dataset);
       });
     }
@@ -185,7 +185,7 @@ export class HomeComponent implements OnInit {
     }
 
     children.forEach(c => {
-      if (this.visibleDatasets.includes(c['dataset'])) {
+      if (this.visibleDatasets.includes(c['dataset'] as string)) {
         result = true;
       }
     });
@@ -209,7 +209,7 @@ export class HomeComponent implements OnInit {
     }
   }
 
-  public findAllByKey(obj, keyToFind): string[] {
+  public findAllByKey(obj, keyToFind: string): string[] {
     return Object.entries(obj)
       .reduce((acc, [key, value]) => key === keyToFind
         ? acc.concat(value)

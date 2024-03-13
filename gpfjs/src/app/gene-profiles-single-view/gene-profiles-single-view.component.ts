@@ -166,14 +166,22 @@ export class GeneProfileSingleViewComponent implements OnInit {
     return genomicScores.find(category => category.id === categoryId).scores.find(score => score.id === scoreId).value;
   }
 
-  public getGeneDatasetValue(gene: GeneProfilesGene, studyId: string, personSetId: string, statisticId: string): GeneProfilesEffectType {
+  public getGeneDatasetValue(
+    gene: GeneProfilesGene,
+    studyId: string,
+    personSetId: string,
+    statisticId: string
+  ): GeneProfilesEffectType {
     return gene.studies.find(study => study.id === studyId).personSets
       .find(genePersonSet => genePersonSet.id === personSetId).effectTypes
       .find(effectType => effectType.id === statisticId);
   }
 
   public goToQuery(
-    geneSymbol: string, personSet: GeneProfilesDatasetPersonSet, datasetId: string, statistic: GeneProfilesDatasetStatistic
+    geneSymbol: string,
+    personSet: GeneProfilesDatasetPersonSet,
+    datasetId: string, 
+    statistic: GeneProfilesDatasetStatistic
   ): void {
     GeneProfileSingleViewComponent.goToQuery(
       this.store, this.queryService, geneSymbol, personSet, datasetId, statistic
@@ -194,9 +202,9 @@ export class GeneProfileSingleViewComponent implements OnInit {
     const genomicScores: GenomicScore[] = [];
     if (statistic.scores) {
       genomicScores[0] = new GenomicScore(
-        statistic.scores[0]['name'],
-        statistic.scores[0]['min'],
-        statistic.scores[0]['max'],
+        statistic.scores[0]['name'] as string,
+        statistic.scores[0]['min'] as number,
+        statistic.scores[0]['max'] as number,
       );
     }
 

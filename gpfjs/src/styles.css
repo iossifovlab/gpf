@@ -105,6 +105,11 @@ label {
   border-top: 1px solid rgba(0, 0, 0, 12.5%);
 }
 
+.panel-bottom {
+  padding: 20px;
+  border-bottom: 1px solid rgba(0, 0, 0, 12.5%);
+}
+
 .btn {
   cursor: pointer;
 }
@@ -497,7 +502,6 @@ summary.details {
 }
 
 .modal-content {
-  padding-top: 10px;
   padding-bottom: 10px;
 }
 
@@ -511,6 +515,7 @@ summary.details {
   text-decoration: underline;
 }
 
+/* stylelint-disable-next-line no-descending-specificity */
 markdown h1,
 markdown h2,
 markdown h3,
@@ -520,11 +525,13 @@ markdown h6 {
   font-size: 1rem;
 }
 
+/* stylelint-disable-next-line no-descending-specificity */
 markdown a {
   color: #0645ad;
   text-decoration: none;
 }
 
+/* stylelint-disable-next-line no-descending-specificity */
 markdown a:hover {
   color: #0645ad;
   text-decoration: underline;

@@ -36,7 +36,7 @@ export class VariantReportsService {
     // eslint-disable-next-line @typescript-eslint/naming-convention
     const data = { study_id: datasetId, group_name: groupName, counter_id: counterId };
     const url = `${this.config.baseUrl}${this.familiesUrl}`;
-    const response = this.http.post(url, data, options).pipe(map(response => response as Array<string>));
+    const response = this.http.post(url, data, options).pipe(map(res => res as Array<string>));
     return response;
   }
 

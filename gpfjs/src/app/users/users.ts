@@ -3,14 +3,14 @@ export class User {
     return json.map(user => User.fromJson(user));
   }
 
-  public static fromJson(json): User {
+  public static fromJson(json: object): User {
     return new User(
-      json['id'],
-      json['name'],
-      json['email'],
-      json['groups'],
-      json['hasPassword'],
-      json['allowedDatasets'],
+      json['id'] as number,
+      json['name'] as string,
+      json['email'] as string,
+      json['groups'] as Array<string>,
+      json['hasPassword'] as boolean,
+      json['allowedDatasets'] as Array<{datasetName: string; datasetId: string}>,
     );
   }
 

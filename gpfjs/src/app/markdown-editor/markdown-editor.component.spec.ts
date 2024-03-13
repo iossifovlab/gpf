@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { MarkdownEditorComponent } from './markdown-editor.component';
-import { MarkdownService, SECURITY_CONTEXT } from 'ngx-markdown';
+import { MarkdownService } from 'ngx-markdown';
 
 describe('MarkdownEditorComponent', () => {
   let component: MarkdownEditorComponent;

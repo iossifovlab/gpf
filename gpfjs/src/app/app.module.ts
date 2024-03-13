@@ -184,6 +184,8 @@ import { HelperModalComponent } from './helper-modal/helper-modal.component';
 import { HomeComponent } from './home/home.component';
 import { AboutComponent } from './about/about.component';
 import { MarkdownEditorComponent } from './markdown-editor/markdown-editor.component';
+import { FamilyTagsComponent } from './family-tags/family-tags.component';
+import { FamilyTagsState } from './family-tags/family-tags.state';
 
 const appRoutes: Routes = [
   {
@@ -403,6 +405,7 @@ const appRoutes: Routes = [
     HomeComponent,
     AboutComponent,
     MarkdownEditorComponent,
+    FamilyTagsComponent,
   ],
   imports: [
     BrowserModule,
@@ -421,7 +424,7 @@ const appRoutes: Routes = [
     NgxsModule.forRoot([
       VarianttypesState, EffecttypesState, GenderState,
       InheritancetypesState, PersonIdsState, PresentInChildState, PresentInParentState,
-      GeneSymbolsState, FamilyIdsState, RegionsFilterState, StudyTypesState, GeneSetsState,
+      GeneSymbolsState, FamilyIdsState, FamilyTagsState, RegionsFilterState, StudyTypesState, GeneSetsState,
       GeneScoresState, EnrichmentModelsState, PedigreeSelectorState, FamilyTypeFilterState,
       StudyFiltersState, PersonFiltersState, GenomicScoresBlockState, PhenoToolMeasureState,
       UniqueFamilyVariantsFilterState, ErrorsState
