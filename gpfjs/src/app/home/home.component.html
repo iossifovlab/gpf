@@ -9,12 +9,12 @@
 
     <div id="gene-profiles-wrapper">
       <div id="all-genes-wrapper">
-        <span class="material-symbols-outlined sm" style="color: #3ea658">lock_open_right</span>
+        <span class="material-symbols-outlined sm unlock-icon">lock_open_right</span>
         <h4><a [routerLink]="'/gene-profiles'">All genes</a></h4>
       </div>
       <div id="single-gene-wrapper">
         <div id="single-gene-title-wrapper">
-          <span class="material-symbols-outlined sm" style="color: #3ea658">lock_open_right</span>
+          <span class="material-symbols-outlined sm unlock-icon">lock_open_right</span>
           <h4>Single gene</h4>
         </div>
 
@@ -93,7 +93,7 @@
 
               <span
                 class="material-symbols-outlined sm"
-                [ngStyle]="{ color: !entry.access_rights ? 'red' : '#3ea658' }"
+                [ngClass]="!entry.access_rights ? 'lock-icon' : 'unlock-icon'"
                 >{{ !entry.access_rights ? 'lock' : 'lock_open_right' }}</span
               >
             </div>

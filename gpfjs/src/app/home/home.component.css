@@ -154,3 +154,13 @@ gpf-markdown-editor {
   padding: 5px 15px;
   border-radius: 0.375rem;
 }
+
+:host::ng-deep.lock-icon {
+  color: red;
+  font-variation-settings: "FILL" 1, "wght" 400, "GRAD" 0, "opsz" 24;
+}
+
+:host::ng-deep.unlock-icon {
+  color: #3ea658;
+  font-variation-settings: "FILL" 1, "wght" 400, "GRAD" 0, "opsz" 24;
+}
