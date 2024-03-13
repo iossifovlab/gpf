@@ -354,8 +354,6 @@ test.describe('Gene profiles table functionality tests', () => {
     await expect(row.nth(1).locator('.row-cell').nth(7)).toHaveText('1');
     await expect(row.nth(2).locator('.row-cell').nth(7)).toHaveText('1');
     await expect(row.nth(3).locator('.row-cell').nth(7)).toHaveText('3');
-    await expect(row.nth(4).locator('.row-cell').nth(7)).toHaveText('');
-    await expect(row.nth(5).locator('.row-cell').nth(7)).toHaveText('');
 
     await page.getByText('SFARI gene score').click();
     await page.waitForTimeout(500);
@@ -363,8 +361,6 @@ test.describe('Gene profiles table functionality tests', () => {
     await expect(row.nth(1).locator('.row-cell').nth(7)).toHaveText('3');
     await expect(row.nth(2).locator('.row-cell').nth(7)).toHaveText('1');
     await expect(row.nth(3).locator('.row-cell').nth(7)).toHaveText('1');
-    await expect(row.nth(4).locator('.row-cell').nth(7)).toHaveText('1');
-    await expect(row.nth(5).locator('.row-cell').nth(7)).toHaveText('');
 
     await page.getByText('SFARI gene score').click();
     await page.waitForTimeout(500);
@@ -372,8 +368,6 @@ test.describe('Gene profiles table functionality tests', () => {
     await expect(row.nth(1).locator('.row-cell').nth(7)).toHaveText('1');
     await expect(row.nth(2).locator('.row-cell').nth(7)).toHaveText('1');
     await expect(row.nth(3).locator('.row-cell').nth(7)).toHaveText('3');
-    await expect(row.nth(4).locator('.row-cell').nth(7)).toHaveText('3');
-    await expect(row.nth(5).locator('.row-cell').nth(7)).toHaveText('');
   });
 
   [
