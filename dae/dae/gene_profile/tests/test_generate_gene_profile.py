@@ -17,6 +17,16 @@ from dae.gpf_instance.gpf_instance import GPFInstance
 @pytest.fixture
 def gp_config() -> dict:
     return {
+        "gene_links": [
+            {
+                "name": "Link with prefix",
+                "url": "{gpf_prefix}/datasets/{gene}"
+            },
+            {
+                "name": "Link with gene info",
+                "url": "https://site.com/{gene}?db={genome}&position={chromosome_prefix}{chromosome}/{gene_start_position}-{gene_stop_position}"
+            },
+        ],
         "order": [
             "gene_set_rank",
             "gene_score",

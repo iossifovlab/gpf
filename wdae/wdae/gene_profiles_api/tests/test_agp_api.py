@@ -83,6 +83,32 @@ def test_get_statistic(admin_client):
     print(response.data)
 
 
+def test_get_links(admin_client, monkeypatch):
+    """Test gene profile links"""
+
+    response = admin_client.get(f"{ROUTE_PREFIX}/single-view/gene/CHD8")
+    assert response.status_code == 200
+    assert response.data["geneLinks"] == [
+        {
+            "name": "Link with prefix",
+            "url": "/datasets/CHD8"
+        },
+        {
+            "name": "Link with gene info",
+            "url": "https://site.com/CHD8?db=hg19&position=chr14/21853353-21905457"
+        }
+    ]
+
+    monkeypatch.setenv("WDAE_PREFIX", "hg38")
+    response = admin_client.get(f"{ROUTE_PREFIX}/single-view/gene/CHD8")
+    assert response.status_code == 200
+    assert response.data["geneLinks"][0] == {
+        "name": "Link with prefix",
+        "url": "hg38/datasets/CHD8"
+    }
+    print(response.data["geneLinks"])
+
+
 def test_get_table_config(admin_client):
     response = admin_client.get(f"{ROUTE_PREFIX}/table/configuration")
     assert response.status_code == 200
