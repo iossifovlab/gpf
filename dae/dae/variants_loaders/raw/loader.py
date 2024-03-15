@@ -534,7 +534,7 @@ class AnnotationPipelineDecorator(AnnotationDecorator):
     """Annotate variants by processing them through an annotation pipeline."""
 
     def __init__(
-        self, variants_loader: VariantsGenotypesLoader,
+        self, variants_loader: VariantsLoader,
         annotation_pipeline: AnnotationPipeline
     ) -> None:
         super().__init__(variants_loader)

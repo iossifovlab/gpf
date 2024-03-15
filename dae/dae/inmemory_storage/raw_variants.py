@@ -19,7 +19,7 @@ from dae.query_variants.attributes_query import \
 from dae.pedigrees.families_data import FamiliesData
 from dae.person_sets import PersonSetCollection
 from dae.utils.regions import Region
-from dae.variants_loaders.raw.loader import VariantsGenotypesLoader
+from dae.variants_loaders.raw.loader import VariantsLoader
 
 
 RealAttrFilterType = list[tuple[str, tuple[Optional[float], Optional[float]]]]
@@ -630,7 +630,7 @@ class RawMemoryVariants(RawFamilyVariants):
     """Store variants in memory."""
 
     def __init__(
-        self, loaders: List[VariantsGenotypesLoader],
+        self, loaders: List[VariantsLoader],
         families: FamiliesData
     ) -> None:
         super().__init__(families)

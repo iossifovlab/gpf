@@ -21,7 +21,7 @@ from dae.variants_loaders.cnv.loader import CNVLoader
 from dae.variants_loaders.dae.loader import DaeTransmittedLoader, DenovoLoader
 from dae.variants_loaders.vcf.loader import VcfLoader
 from dae.variants_loaders.raw.loader import AnnotationPipelineDecorator, \
-    VariantsGenotypesLoader
+    VariantsLoader
 from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.genotype_storage.genotype_storage_registry import \
@@ -220,7 +220,7 @@ class ImportProject:
         self,
         bucket: Optional[Bucket] = None, loader_type: Optional[str] = None,
         reference_genome: Optional[ReferenceGenome] = None
-    ) -> VariantsGenotypesLoader:
+    ) -> VariantsLoader:
         """Get the appropriate variant loader for the specified bucket."""
         if bucket is None and loader_type is None:
             raise ValueError("loader_type or bucket is required")
@@ -268,7 +268,7 @@ class ImportProject:
     def _get_variant_loader(
         self, loader_type: str,
         reference_genome: Optional[ReferenceGenome] = None
-    ) -> VariantsGenotypesLoader:
+    ) -> VariantsLoader:
         assert loader_type in self.import_config["input"], \
             f"No input config for loader {loader_type}"
         if reference_genome is None:
@@ -281,7 +281,7 @@ class ImportProject:
             "cnv": CNVLoader,
             "dae": DaeTransmittedLoader,
         }[loader_type]
-        loader: VariantsGenotypesLoader = loader_cls(
+        loader: VariantsLoader = loader_cls(
             self.get_pedigree(),
             variants_filenames,
             params=variants_params,
@@ -422,13 +422,13 @@ class ImportProject:
         return cast(int, res)
 
     def build_variants_loader_pipeline(
-        self, variants_loader: VariantsGenotypesLoader,
-    ) -> VariantsGenotypesLoader:
+        self, variants_loader: VariantsLoader,
+    ) -> VariantsLoader:
         """Create an annotation pipeline around variants_loader."""
         annotation_pipeline = self.build_annotation_pipeline()
         if annotation_pipeline is not None:
             variants_loader = cast(
-                VariantsGenotypesLoader,
+                VariantsLoader,
                 AnnotationPipelineDecorator(
                     variants_loader, annotation_pipeline
                 ))
@@ -556,7 +556,7 @@ class ImportProject:
 
     @staticmethod
     def _check_chrom_prefix(
-            loader: VariantsGenotypesLoader,
+            loader: VariantsLoader,
             variants_params: dict[str, Any]) -> None:
         prefix = variants_params.get("add_chrom_prefix")
         if prefix:
