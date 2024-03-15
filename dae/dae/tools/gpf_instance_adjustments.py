@@ -74,11 +74,12 @@ class AdjustImpalaStorageCommand(AdjustmentsCommand):
     """Adjusts impala storage."""
 
     def __init__(
-        self, instance_dir: str, storage_id: str,
+        self, instance_dir: str, storage_id: str, read_only: bool,
         hdfs_host: str, impala_hosts: list[str]
     ) -> None:
         super().__init__(instance_dir)
         self.storage_id = storage_id
+        self.read_only = read_only
         self.hdfs_host = hdfs_host
         self.impala_hosts = impala_hosts
 
@@ -101,6 +102,7 @@ class AdjustImpalaStorageCommand(AdjustmentsCommand):
                 "storage %s is not Impala", self.storage_id)
             raise ValueError(f"storage {self.storage_id} is not Impala")
 
+        storage["read_only"] = self.read_only
         storage["hdfs"]["host"] = self.hdfs_host
         storage["impala"]["hosts"] = self.impala_hosts
 
@@ -350,6 +352,9 @@ def cli(argv: Optional[list[str]] = None) -> None:
         "storage_id", type=str,
         help="impala storage ID")
     parser_impala_storage.add_argument(
+        "--read-only", type=str, default="true",
+        help="read-only flag for impala storage")
+    parser_impala_storage.add_argument(
         "--impala-hosts", type=str, nargs="+",
         help="list of impala hosts")
     parser_impala_storage.add_argument(
@@ -362,7 +367,7 @@ def cli(argv: Optional[list[str]] = None) -> None:
         "storage_id", type=str,
         help="DuckDb storage ID")
     parser_duckdb_storage.add_argument(
-        "--read-only", type=str,
+        "--read-only", type=str, default="true",
         help="DuckDb storage read only flag")
 
     parser_genotype_storage = subparsers.add_parser(
@@ -399,8 +404,9 @@ def cli(argv: Optional[list[str]] = None) -> None:
             cmd.execute()
 
     elif args.command == "impala-storage":
+        read_only = args.read_only.lower() != "false"
         with AdjustImpalaStorageCommand(
-                instance_dir, args.storage_id,
+                instance_dir, args.storage_id, read_only,
                 args.hdfs_host, args.impala_hosts) as cmd:
             cmd.execute()
 

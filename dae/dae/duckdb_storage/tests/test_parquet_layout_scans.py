@@ -24,7 +24,6 @@ def duckdb_storage_db(
         "read_only": False,
         "storage_type": "duckdb",
         "db": "duckdb_genotype_storage/dev_storage.db",
-        "read_only": False,
         "base_dir": storage_path
     }
     storage_factory = get_genotype_storage_factory("duckdb")
