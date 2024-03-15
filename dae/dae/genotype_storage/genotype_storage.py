@@ -19,6 +19,8 @@ class GenotypeStorage(abc.ABC):
             self.validate_and_normalize_config(storage_config)
         self.storage_id = self.storage_config["id"]
         self.storage_type = cast(str, self.storage_config["storage_type"])
+        self._read_only = cast(
+            bool, self.storage_config.get("read_only", True))
 
     @classmethod
     def validate_and_normalize_config(cls, config: dict) -> dict:
@@ -48,6 +50,13 @@ class GenotypeStorage(abc.ABC):
                 f"storage configuration for <{config['storage_type']}> passed "
                 f"to genotype storage class type <{cls.get_storage_types()}>")
         return config
+
+    def is_read_only(self) -> bool:
+        return self._read_only
+
+    @property
+    def read_only(self) -> bool:
+        return self._read_only
 
     @classmethod
     @abc.abstractmethod
