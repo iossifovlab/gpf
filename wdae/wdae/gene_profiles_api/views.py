@@ -21,13 +21,12 @@ class ConfigurationView(QueryBaseView):
 class ProfileView(QueryBaseView):
     """Gene profiles single gene view."""
 
-    def get(self, request: Request, gene_symbol: str) -> Response:
+    def get(self, _request: Request, gene_symbol: str) -> Response:
         """Get gene statistic and links to other information about the gene."""
         gp = self.gpf_instance.get_gp_statistic(gene_symbol)
         if not gp:
             return Response(status=status.HTTP_404_NOT_FOUND)
         result = gp.to_json()
-        print(result)
 
         gp_config = self.gpf_instance \
             .get_wdae_gp_configuration()
@@ -64,5 +63,4 @@ class ProfileView(QueryBaseView):
                         )
                     })
                 result["geneLinks"] = gene_links
-        print(result)
         return Response(result)

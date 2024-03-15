@@ -147,6 +147,7 @@ gene_profiles_config = {
     },
     "gene_links": {
         "type": "list",
+        "default": [],
         "valuesrules": {
             "type": "dict",
             "schema": gene_profile_link_schema,
