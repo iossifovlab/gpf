@@ -121,7 +121,7 @@ def merge_variants_parquets(
     row_group_size: int = 50_000,
     parquet_version: Optional[str] = None
 ) -> None:
-    """Mergee parquet files in variants_dir."""
+    """Merge parquet files in variants_dir."""
     output_parquet_file = fs_utils.join(
         variants_dir,
         partition_descriptor.partition_filename(

@@ -1,6 +1,7 @@
 import pathlib
 import textwrap
 import pytest
+from glob import glob
 
 from dae.gpf_instance import GPFInstance
 from dae.variants_loaders.parquet.loader import ParquetLoader
@@ -125,7 +126,6 @@ def t4c8_study_variants() -> str:
         chr1   90   .  G   C,GA .    .      .    GT     0/1  0/2  0/2 0/1  0/2  0/1
         chr1   100  .  T   G,TA .    .      .    GT     0/1  0/1  0/0 0/2  0/2  0/0
         chr1   119  .  A   G,C  .    .      .    GT     0/0  0/2  0/2 0/1  0/2  0/1
-        chr1   122  .  A   C    .    .      .    GT     0/0  1/0  0/0 0/0  0/0  0/0
         chr1   122  .  A   C,AC .    .      .    GT     0/1  0/1  0/1 0/2  0/2  0/2
     """)
 
@@ -350,3 +350,47 @@ def test_reannotate_parquet_variants(
         assert sv.has_attribute("score_A")
         result.add(sv.get_attribute("score_A").pop())
     assert result == {0.21, 0.22, 0.23, 0.24, 0.25, 0.26}
+
+
+@pytest.mark.parametrize("study", [("t4c8_study_nonpartitioned"),
+                                   ("t4c8_study_partitioned")])
+def test_reannotate_parquet_merging(
+    tmp_path: pathlib.Path,
+    t4c8_instance: GPFInstance,
+    study: str,
+    t4c8_study_nonpartitioned,
+    t4c8_study_partitioned,
+    gpf_instance_genomic_context_fixture,
+) -> None:
+    root_path = pathlib.Path(t4c8_instance.dae_dir) / ".."
+    input_dir = t4c8_study_nonpartitioned \
+        if study == "t4c8_study_nonpartitioned" \
+        else t4c8_study_partitioned
+    annotation_file_new = root_path / "new_annotation.yaml"
+    grr_file = root_path / "grr.yaml"
+    output_dir = tmp_path / "out"
+    work_dir = tmp_path / "work"
+
+    gpf_instance_genomic_context_fixture(t4c8_instance)
+
+    cli([
+        str(a) for a in [
+            input_dir, annotation_file_new,
+            "-o", output_dir,
+            "-w", work_dir,
+            "--grr", grr_file,
+            "-j", 1,
+            "--region-size", 25,
+        ]
+    ])
+
+    expected_pq_files = 5 if study == "t4c8_study_partitioned" \
+                          else 1
+
+    # check only merged parquet files are left
+    parquets_glob = str(output_dir / "summary" / "**" / "*.parquet")
+    assert len(glob(parquets_glob, recursive=True)) == expected_pq_files
+
+    # check all variants present
+    loader_result = ParquetLoader(output_dir)
+    assert len(list(loader_result.fetch_summary_variants())) == 6
