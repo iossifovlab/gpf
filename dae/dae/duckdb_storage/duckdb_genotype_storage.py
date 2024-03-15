@@ -71,7 +71,6 @@ class DuckDbGenotypeStorage(GenotypeStorage):
 
     def __init__(self, storage_config: dict[str, Any]):
         super().__init__(storage_config)
-        self._read_only = self.get_read_only()
         self.connection_factory: Optional[duckdb.DuckDBPyConnection] = None
 
     @classmethod
@@ -106,44 +105,18 @@ class DuckDbGenotypeStorage(GenotypeStorage):
             return self
 
         db_name = self.get_db()
-        read_only = self.get_read_only()
         if db_name is not None:
             db_name = self._base_dir_join(db_name)
             dirname = os.path.dirname(db_name)
             os.makedirs(dirname, exist_ok=True)
         self.connection_factory = duckdb_connect(
-            db_name=db_name, read_only=read_only)
+            db_name=db_name, read_only=self.read_only)
         memory_limit = self.get_memory_limit()
         if memory_limit:
             query = f"SET memory_limit='{memory_limit}'"
             logger.info("memory limit: %s", query)
             self.connection_factory.sql(query)
         return self
-
-    def restart(self, read_only: bool) -> DuckDbGenotypeStorage:
-        """Restart the genotype storage with a new read_only flag."""
-        if read_only == self._read_only:
-            return self
-        self.shutdown()
-
-        db_name = self.get_db()
-        if db_name is not None:
-            db_name = self._base_dir_join(db_name)
-            dirname = os.path.dirname(db_name)
-            os.makedirs(dirname, exist_ok=True)
-        self._read_only = read_only
-
-        self.connection_factory = duckdb_connect(
-            db_name=db_name, read_only=read_only)
-        memory_limit = self.get_memory_limit()
-        if memory_limit:
-            query = f"SET memory_limit='{memory_limit}'"
-            logger.info("memory limit: %s", query)
-            self.connection_factory.sql(query)
-        return self
-
-    def is_read_only(self) -> bool:
-        return self._read_only
 
     def shutdown(self) -> DuckDbGenotypeStorage:
         if self.connection_factory is None:
@@ -163,9 +136,6 @@ class DuckDbGenotypeStorage(GenotypeStorage):
 
     def get_db(self) -> Optional[str]:
         return self.storage_config.get("db")
-
-    def get_read_only(self) -> bool:
-        return cast(bool, self.storage_config.get("read_only", True))
 
     def get_memory_limit(self) -> str:
         return cast(str, self.storage_config.get("memory_limit", "32GB"))
@@ -371,16 +341,6 @@ class DuckDbGenotypeStorage(GenotypeStorage):
                 f"duckdb genotype storage not started: "
                 f"{self.storage_config}")
         assert self.connection_factory is not None
-        # if not self.is_read_only():
-        #     self.restart(read_only=True)
-        # if self.connection_factory is None:
-        #     raise ValueError(
-        #         f"duckdb genotype storage not started: "
-        #         f"{self.storage_config}")
-        # if not self.is_read_only():
-        #     raise ValueError(
-        #         f"duckdb genotype storage not started in read-only mode: "
-        #         f"{self.storage_config}")
 
         if self.storage_type == "duckdb":
             return DuckDbVariants(
@@ -401,9 +361,7 @@ class DuckDbGenotypeStorage(GenotypeStorage):
                 family=tables_layout.family,
                 meta=tables_layout.meta,
             )
-
             assert db_layout is not None
-            # connection = duckdb.connect(db_name, read_only=True)
             return DuckDb2Variants(
                 self.connection_factory,
                 db_layout,

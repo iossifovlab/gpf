@@ -17,7 +17,7 @@ g2        tx3  bar   -      10      20    12       18     1         12         1
 
 
 @pytest.fixture(scope="module")
-def simple_project(tmp_path_factory):
+def simple_project(tmp_path_factory: pytest.TempPathFactory) -> ImportProject:
     root_path = tmp_path_factory.mktemp("root_path") / "simple_project"
     setup_directories(root_path, {
         "grr": {
@@ -65,6 +65,7 @@ def simple_project(tmp_path_factory):
                   default: genotype_inmemory
                   storages:
                   - id: genotype_inmemory
+                    read_only: false
                     storage_type: inmemory
                     dir: "{root_path}/storage"
             """)

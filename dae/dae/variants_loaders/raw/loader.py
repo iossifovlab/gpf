@@ -291,6 +291,10 @@ class VariantsLoader(CLILoader):
             self._attributes = copy.deepcopy(attributes)
         self.arguments = []
 
+    @property
+    def variants_filenames(self) -> list[str]:
+        return self.filenames
+
     def get_attribute(self, key: str) -> Any:
         return self._attributes.get(key, None)
 
@@ -534,7 +538,7 @@ class AnnotationPipelineDecorator(AnnotationDecorator):
     """Annotate variants by processing them through an annotation pipeline."""
 
     def __init__(
-        self, variants_loader: VariantsGenotypesLoader,
+        self, variants_loader: VariantsLoader,
         annotation_pipeline: AnnotationPipeline
     ) -> None:
         super().__init__(variants_loader)
@@ -774,10 +778,6 @@ class VariantsGenotypesLoader(VariantsLoader):
             "variants file",
         ))
         return arguments
-
-    @property
-    def variants_filenames(self) -> list[str]:
-        return self.filenames
 
     @abstractmethod
     def _full_variants_iterator_impl(self) -> FullVariantsIterator:

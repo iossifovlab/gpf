@@ -13,6 +13,7 @@ from dae.studies.study import GenotypeData, GenotypeDataGroup
 
 pytest_plugins = ["dae_conftests.dae_conftests"]
 
+
 def default_genotype_storage_configs(root_path: pathlib.Path) -> list[dict]:
     return [
         # DuckDb2 Storage
@@ -67,6 +68,7 @@ def default_genotype_storage_configs(root_path: pathlib.Path) -> list[dict]:
 
 GENOTYPE_STORAGE_REGISTRY = GenotypeStorageRegistry()
 GENOTYPE_STORAGES: Optional[dict[str, Any]] = None
+
 
 @pytest.fixture(scope="module", params=["duckdb", "inmemory"])
 def t4c8_instance(

@@ -1,10 +1,11 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-from typing import Callable
+from typing import Callable, cast
 
 import pytest
 import pytest_mock
 
 # from dae.annotation.schema import Schema
+from dae.variants.family_variant import FamilyAllele
 from dae.variants_loaders.dae.loader import DenovoLoader
 from dae.pedigrees.loader import FamiliesLoader
 from dae.annotation.annotation_pipeline import AttributeInfo
@@ -128,7 +129,8 @@ def test_extra_attributes_serialization_deserialization(
     summary_blobs = serializer.serialize_summary_data(variant.alleles)
     scores_blob = serializer.serialize_scores_data(variant.alleles)
     variant_blob = serializer.serialize_family_variant(
-        variant.alleles, summary_blobs, scores_blob
+        cast(list[FamilyAllele], variant.alleles),
+        summary_blobs, scores_blob
     )
     extra_blob = serializer.serialize_extra_attributes(variant)
     family = variant.family
@@ -198,6 +200,7 @@ def test_build_allele_batch_dict(
     blob = serializer.serialize_family_variant(
         fv.alleles, summary_blobs, scores_blob)
     extra_blob = serializer.serialize_extra_attributes(fv)
+    assert extra_blob is not None
     chain = serializer.build_searchable_vectors_summary(fv)
     batch = serializer.build_allele_batch_dict(
         fv.alleles[1], blob, extra_blob, chain)

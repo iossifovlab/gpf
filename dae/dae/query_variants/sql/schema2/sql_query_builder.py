@@ -34,11 +34,11 @@ RealAttrFilterType = list[tuple[str, tuple[Optional[float], Optional[float]]]]
 class Db2Layout:
     """Genotype data layout in the database."""
 
-    db: str
+    db: Optional[str]
     study: str
     pedigree: str
-    summary: str
-    family: str
+    summary: Optional[str]
+    family: Optional[str]
     meta: str
 
 

@@ -82,6 +82,8 @@ class Impala2GenotypeStorage(GenotypeStorage):
         meta_file: str
     ) -> HdfsStudyLayout:
         """Upload local data to hdfs."""
+        if self.read_only:
+            raise IOError(f"impala2 storage <{self.storage_id} is read only")
         # Copy pedigree
         base_dir = self.storage_config["hdfs"]["base_dir"]
         study_path = os.path.join(base_dir, study_id)
@@ -100,20 +102,6 @@ class Impala2GenotypeStorage(GenotypeStorage):
             study_path, "meta", "meta.parquet"
         )
         self.hdfs_helpers.put(meta_file, meta_hdfs_file)
-
-        # Copy optional files
-        optional_files = [
-            "_PARTITION_DESCRIPTION",
-            "_VARIANTS_SCHEMA",
-        ]
-        for optional_file in optional_files:
-            optional_filename = os.path.join(variants_dir, optional_file)
-            logger.debug("checking for: %s", optional_filename)
-            if os.path.exists(optional_filename):
-                logger.info("copying %s into %s",
-                            optional_filename, study_path)
-                self.hdfs_helpers.put_in_directory(optional_filename,
-                                                   study_path)
 
         # Copy variants if any
         summary_sample_hdfs_file, family_sample_hdfs_file = \
@@ -214,6 +202,9 @@ class Impala2GenotypeStorage(GenotypeStorage):
         partition_description: PartitionDescriptor
     ) -> dict[str, Any]:
         """Load a dataset from HDFS into impala."""
+        if self.read_only:
+            raise IOError(f"impala2 storage <{self.storage_id} is read only")
+
         pedigree_table = self._construct_pedigree_table(study_id)
         summary_variant_table, family_variant_table = \
             self._construct_variant_tables(study_id)

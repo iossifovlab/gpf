@@ -4,7 +4,7 @@ import logging
 from typing import Any, Optional
 
 from dae.variants_loaders.raw.loader import StoredAnnotationDecorator, \
-    VariantsLoader
+    VariantsLoader, VariantsGenotypesLoader
 from dae.configuration.study_config_builder import StudyConfigBuilder
 from dae.import_tools.import_tools import ImportProject, ImportStorage, \
     save_study_config
@@ -42,6 +42,12 @@ class InmemoryImportStorage(ImportStorage):
     @classmethod
     def _do_copy_pedigree(
             cls, project: ImportProject) -> dict[str, Any]:
+        genotype_storage = project.get_genotype_storage()
+        if genotype_storage.read_only:
+            raise IOError(
+                f"genotype storage is read-only: "
+                f"{genotype_storage.storage_id}")
+
         pedigree_filename, pedigree_params = project.get_pedigree_params()
         dest_filename = cls._copy_to_filesystem_storage(
             project, pedigree_filename)
@@ -52,8 +58,9 @@ class InmemoryImportStorage(ImportStorage):
 
     @classmethod
     def _decorate_variants_loader(
-            cls, project: ImportProject,
-            variants_loader: VariantsLoader) -> VariantsLoader:
+        cls, project: ImportProject,
+        variants_loader: VariantsGenotypesLoader
+    ) -> VariantsLoader:
         result_loader = project.build_variants_loader_pipeline(
             variants_loader)
         return result_loader
@@ -62,6 +69,12 @@ class InmemoryImportStorage(ImportStorage):
     def _do_copy_variants(
             cls, project: ImportProject,
             loader_type: Optional[str] = None) -> list[dict[str, Any]]:
+        genotype_storage = project.get_genotype_storage()
+        if genotype_storage.read_only:
+            raise IOError(
+                f"genotype storage is read-only: "
+                f"{genotype_storage.storage_id}")
+
         if loader_type is None:
             loader_types = project.get_variant_loader_types()
         else:
@@ -90,7 +103,8 @@ class InmemoryImportStorage(ImportStorage):
             annotation_filename = StoredAnnotationDecorator\
                 .build_annotation_filename(dest_filenames[0])
             StoredAnnotationDecorator.save_annotation_file(
-                cls._decorate_variants_loader(project, variants_loader),
+                cls._decorate_variants_loader(
+                    project, variants_loader),  # type: ignore
                 annotation_filename)
 
             config_filenames = list(map(
@@ -105,6 +119,11 @@ class InmemoryImportStorage(ImportStorage):
 
     @classmethod
     def _do_study_import(cls, project: ImportProject) -> None:
+        genotype_storage = project.get_genotype_storage()
+        if genotype_storage.read_only:
+            raise IOError(
+                f"genotype storage is read-only: "
+                f"{genotype_storage.storage_id}")
         pedigree_config = cls._do_copy_pedigree(project)
         variants_config = cls._do_copy_variants(project)
         variants_types = project.get_variant_loader_types()

@@ -35,6 +35,7 @@ class ImpalaGenotypeStorage(GenotypeStorage):
         "id": {
             "type": "string",
         },
+        "read_only": {"type": "boolean", "default": False},
         "impala": {
             "type": "dict",
             "schema": {
@@ -394,6 +395,9 @@ class ImpalaGenotypeStorage(GenotypeStorage):
         partition_description: PartitionDescriptor
     ) -> tuple[str, str, str]:
         """Upload a variants dir and pedigree file to hdfs."""
+        if self.read_only:
+            raise IOError(f"impala storage <{self.storage_id}> is read only")
+
         if self.rsync_helpers is not None:
             return self._rsync_hdfs_upload_dataset(
                 study_id, variants_dir,
@@ -411,6 +415,9 @@ class ImpalaGenotypeStorage(GenotypeStorage):
         variants_schema: Optional[dict[str, str]] = None
     ) -> dict[str, Any]:
         """Create pedigree and variant tables for a study."""
+        if self.read_only:
+            raise IOError(f"impala storage <{self.storage_id}> is read only")
+
         pedigree_table = self._construct_pedigree_table(study_id)
         variants_table = self._construct_variants_table(study_id)
 
@@ -441,6 +448,9 @@ class ImpalaGenotypeStorage(GenotypeStorage):
         pedigree_file: str
     ) -> dict[str, Any]:
         """Load a study data into impala genotype storage."""
+        if self.read_only:
+            raise IOError(f"impala storage <{self.storage_id}> is read only")
+
         if variants_dir is None:
             partition_description = None
             variants_schema = None
