@@ -1,6 +1,5 @@
 id: impala
 storage_type: impala
-read_only: false
 hdfs:
   base_dir: "/tmp/genotype_impala1_data"
   host: "localhost"
