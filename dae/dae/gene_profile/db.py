@@ -81,7 +81,7 @@ class GeneProfileDB:
         """
         table = self.gp_table
         query = table.select()
-        query = query.where(table.c.symbol_name == gene_symbol)
+        query = query.where(table.c.symbol_name.ilike(gene_symbol))
         with self.engine.begin() as connection:
             row = connection.execute(query).fetchone()
             if not row:

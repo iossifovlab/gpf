@@ -34,9 +34,8 @@ class ProfileView(QueryBaseView):
         if isinstance(gp_config, dict):
             gene_link_templates = gp_config.get("geneLinks")
             if gene_link_templates:
-                transcript_models = self.gpf_instance.get_transcript_models(
-                    gene_symbol
-                )
+                gene_symbol, transcript_models = \
+                    self.gpf_instance.get_transcript_models(gene_symbol)
                 if not transcript_models:
                     return Response(status=status.HTTP_404_NOT_FOUND)
                 gpf_prefix = os.environ.get("WDAE_PREFIX", "")

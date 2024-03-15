@@ -176,16 +176,16 @@ class GPFInstance:
 
     def get_transcript_models(
         self, gene_symbol: str
-    ) -> Optional[list[TranscriptModel]]:
+    ) -> tuple[Optional[str], Optional[list[TranscriptModel]]]:
         """Get gene model by gene symbol."""
         gene_symbol = gene_symbol.lower()
         gene_models = self.gene_models.gene_models
 
         for k, v in gene_models.items():
             if gene_symbol == k.lower():
-                return v
+                return k, v
 
-        return None
+        return None, None
 
     @cached_property
     def _pheno_registry(self) -> PhenoRegistry:

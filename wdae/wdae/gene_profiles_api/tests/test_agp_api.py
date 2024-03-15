@@ -84,9 +84,8 @@ def test_get_statistic(admin_client):
 
 
 def test_get_links(admin_client, monkeypatch):
-    """Test gene profile links"""
-
-    response = admin_client.get(f"{ROUTE_PREFIX}/single-view/gene/CHD8")
+    """Test gene profile links."""
+    response = admin_client.get(f"{ROUTE_PREFIX}/single-view/gene/chd8")
     assert response.status_code == 200
     assert response.data["geneLinks"] == [
         {
@@ -107,7 +106,6 @@ def test_get_links(admin_client, monkeypatch):
         "url": "hg38/datasets/CHD8"
     }
     print(response.data["geneLinks"])
-
 
 def test_get_table_config(admin_client):
     response = admin_client.get(f"{ROUTE_PREFIX}/table/configuration")
