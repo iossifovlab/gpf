@@ -144,4 +144,4 @@ class InmemoryGenotypeStorage(GenotypeStorage):
             )
             loaders.append(variants_loader)
 
-        return RawMemoryVariants(loaders, families)  # type: ignore
+        return RawMemoryVariants(loaders, families)

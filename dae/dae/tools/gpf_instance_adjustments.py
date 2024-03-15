@@ -222,7 +222,7 @@ class DefaultGenotypeStorage(StudyConfigsAdjustmentCommand):
         genotype_storage_config = self.config["genotype_storage"]
         default_storage = genotype_storage_config["default"]
         storages = genotype_storage_config["storages"]
-        storage_ids = set(map(lambda s: s["id"], storages))  # type: ignore
+        storage_ids = set(map(lambda s: s["id"], storages))
 
         if default_storage not in storage_ids:
             logger.error(

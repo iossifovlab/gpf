@@ -291,6 +291,10 @@ class VariantsLoader(CLILoader):
             self._attributes = copy.deepcopy(attributes)
         self.arguments = []
 
+    @property
+    def variants_filenames(self) -> list[str]:
+        return self.filenames
+
     def get_attribute(self, key: str) -> Any:
         return self._attributes.get(key, None)
 
@@ -774,10 +778,6 @@ class VariantsGenotypesLoader(VariantsLoader):
             "variants file",
         ))
         return arguments
-
-    @property
-    def variants_filenames(self) -> list[str]:
-        return self.filenames
 
     @abstractmethod
     def _full_variants_iterator_impl(self) -> FullVariantsIterator:

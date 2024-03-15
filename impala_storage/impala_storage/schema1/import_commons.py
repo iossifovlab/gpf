@@ -599,7 +599,7 @@ class BatchImporter:
         for prefix, variants_loader in self.variants_loaders.items():
             variants_context = context["variants"][prefix]
             variants_context["variants"] = " ".join(
-                list(variants_loader.variants_filenames))  # type: ignore
+                list(variants_loader.variants_filenames))
 
         if self.variants_loaders:
             context["variants_output"] = \
@@ -665,7 +665,7 @@ class BatchImporter:
             variants_context["bins"] = list(variants_targets.keys())
             variants_context["variants"] = " ".join([
                 os.path.abspath(fn)
-                for fn in variants_loader.variants_filenames  # type: ignore
+                for fn in variants_loader.variants_filenames
             ])
             variants_params_dict = variants_loader.build_arguments_dict()
             variants_context["params"] = variants_loader.build_cli_arguments(
@@ -1147,7 +1147,7 @@ class Variants2ParquetTool:
 
         if annotation_pipeline is not None:
             variants_loader = AnnotationPipelineDecorator(
-                variants_loader, annotation_pipeline  # type: ignore
+                variants_loader, annotation_pipeline
             )
 
         return variants_loader
