@@ -29,7 +29,6 @@ def importer(
     storage_config = {
         "id": "genotype_impala",
         "storage_type": "impala",
-        "read_only": False,
         "impala": {
             "hosts": [impala_host],
             "port": 21050,

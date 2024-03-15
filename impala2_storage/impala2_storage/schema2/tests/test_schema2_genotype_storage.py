@@ -46,7 +46,6 @@ def test_hdfs_upload_dataset(import_layout: LocalLayout) -> None:
     config = {
         "id": "genotype_impala",
         "storage_type": "impala2",
-        "read_only": False,
         "impala": {
             "db": "genotype_impala_db",
             "hosts": ["localhost"],

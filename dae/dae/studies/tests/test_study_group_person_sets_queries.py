@@ -29,7 +29,6 @@ def gpf_fixture(
         # DuckDb Storage
         "duckdb": {
             "id": "duckdb",
-            "read_only": False,
             "storage_type": "duckdb",
             "db": "duckdb_storage/dev_storage.db",
             "base_dir": str(root_path)
@@ -38,7 +37,6 @@ def gpf_fixture(
         # Filesystem InMemory
         "inmemory": {
             "id": "inmemory",
-            "read_only": False,
             "storage_type": "inmemory",
             "dir": f"{root_path}/genotype_filesystem_data"
         },

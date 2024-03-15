@@ -10,7 +10,6 @@ def test_impala_config_validation() -> None:
     config = {
         "id": "genotype_impala",
         "storage_type": "impala",
-        "read_only": False,
         "hdfs": {
             "base_dir": "/tmp/test_data",
             "host": "localhost",
@@ -33,7 +32,6 @@ def test_impala_config_validation() -> None:
 def test_impala_config_validation_missing_id() -> None:
     config = {
         "storage_type": "impala",
-        "read_only": False,
         "hdfs": {
             "base_dir": "/tmp/test_data",
             "host": "localhost",
@@ -58,7 +56,6 @@ def test_impala_config_validation_missing_id() -> None:
 def test_impala_config_validation_missing_type() -> None:
     config = {
         "id": "aaaa",
-        "read_only": False,
         "hdfs": {
             "base_dir": "/tmp/test_data",
             "host": "localhost",
@@ -84,7 +81,6 @@ def test_impala_config_validation_wrong_type() -> None:
     config = {
         "id": "aaaa",
         "storage_type": "impala2",
-        "read_only": False,
         "hdfs": {
             "base_dir": "/tmp/test_data",
             "host": "localhost",
@@ -111,7 +107,6 @@ def test_impala_config_validation_wrong_type() -> None:
 def test_impala_config_validation_missing_hdfs() -> None:
     config = {
         "id": "genotype_impala",
-        "read_only": False,
         "storage_type": "impala",
         # "hdfs": {
         #     "base_dir": "/tmp/test_data",
@@ -139,7 +134,6 @@ def test_impala_config_validation_missing_hdfs() -> None:
 def test_impala_config_validation_missing_hdfs_base_dir() -> None:
     config = {
         "id": "genotype_impala",
-        "read_only": False,
         "storage_type": "impala",
         "hdfs": {
             # "base_dir": "/tmp/test_data",
@@ -167,7 +161,6 @@ def test_impala_config_validation_missing_hdfs_base_dir() -> None:
 def test_impala_config_validation_bad_hdfs_path() -> None:
     config = {
         "id": "genotype_impala",
-        "read_only": False,
         "storage_type": "impala",
         "hdfs": {
             "base_dir": "tmp/test_data",
@@ -196,7 +189,6 @@ def test_impala_config_validation_bad_hdfs_path() -> None:
 def test_impala_config_validation_missing_hdfs_host() -> None:
     config = {
         "id": "genotype_impala",
-        "read_only": False,
         "storage_type": "impala",
         "hdfs": {
             "base_dir": "/tmp/test_data",
@@ -224,7 +216,6 @@ def test_impala_config_validation_missing_hdfs_host() -> None:
 def test_impala_config_validation_missing_hdfs_port() -> None:
     config = {
         "id": "genotype_impala",
-        "read_only": False,
         "storage_type": "impala",
         "hdfs": {
             "base_dir": "/tmp/test_data",
@@ -249,7 +240,6 @@ def test_impala_config_validation_missing_hdfs_replication() -> None:
     config = {
         "id": "genotype_impala",
         "storage_type": "impala",
-        "read_only": False,
         "hdfs": {
             "base_dir": "/tmp/test_data",
             "host": "localhost",
@@ -272,7 +262,6 @@ def test_impala_config_validation_missing_hdfs_replication() -> None:
 def test_impala_config_validation_missing_impala() -> None:
     config = {
         "id": "genotype_impala",
-        "read_only": False,
         "storage_type": "impala",
         "hdfs": {
             "base_dir": "/tmp/test_data",
@@ -292,7 +281,6 @@ def test_impala_config_validation_missing_impala() -> None:
 def test_impala_config_validation_missing_impala_db() -> None:
     config = {
         "id": "genotype_impala",
-        "read_only": False,
         "storage_type": "impala",
         "hdfs": {
             "base_dir": "/tmp/test_data",
@@ -320,7 +308,6 @@ def test_impala_config_validation_missing_impala_db() -> None:
 def test_impala_config_validation_missing_impala_hosts() -> None:
     config = {
         "id": "genotype_impala",
-        "read_only": False,
         "storage_type": "impala",
         "hdfs": {
             "base_dir": "/tmp/test_data",
@@ -348,7 +335,6 @@ def test_impala_config_validation_missing_impala_hosts() -> None:
 def test_impala_config_validation_missing_impala_port() -> None:
     config = {
         "id": "genotype_impala",
-        "read_only": False,
         "storage_type": "impala",
         "hdfs": {
             "base_dir": "/tmp/test_data",
@@ -372,7 +358,6 @@ def test_impala_config_validation_missing_impala_port() -> None:
 def test_impala_config_validation_missing_impala_pool_size() -> None:
     config = {
         "id": "genotype_impala",
-        "read_only": False,
         "storage_type": "impala",
         "hdfs": {
             "base_dir": "/tmp/test_data",

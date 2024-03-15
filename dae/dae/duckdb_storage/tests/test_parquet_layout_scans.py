@@ -21,7 +21,6 @@ def duckdb_storage_db(
     storage_path = tmp_path_factory.mktemp("duckdb_storage")
     storage_config = {
         "id": "dev_duckdb_storage",
-        "read_only": False,
         "storage_type": "duckdb",
         "db": "duckdb_genotype_storage/dev_storage.db",
         "base_dir": storage_path

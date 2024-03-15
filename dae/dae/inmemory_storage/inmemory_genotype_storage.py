@@ -34,7 +34,7 @@ class InmemoryGenotypeStorage(GenotypeStorage):
         },
         "read_only": {
             "type": "boolean",
-            "default": True,
+            "default": False,
         },
         "dir": {
             "type": "string",

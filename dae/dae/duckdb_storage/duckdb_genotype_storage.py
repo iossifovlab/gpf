@@ -55,7 +55,7 @@ class DuckDbGenotypeStorage(GenotypeStorage):
         },
         "read_only": {
             "type": "boolean",
-            "default": True,
+            "default": False,
         },
         "memory_limit": {
             "type": "string",

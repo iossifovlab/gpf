@@ -226,7 +226,6 @@ class GPFInstance:
         registry = GenotypeStorageRegistry()
         internal_storage = registry.register_storage_config({
             "id": "internal",
-            "read_only": False,
             "storage_type": "inmemory",
             "dir": os.path.join(self.dae_dir, "internal_storage"),
         })

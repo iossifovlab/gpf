@@ -23,7 +23,6 @@ def impala_storage() -> ImpalaGenotypeStorage:
     storage_config = Box({
         "id": "genotype_impala",
         "storage_type": "impala",
-        "read_only": False,
         "hdfs": {
             "base_dir": "/tmp/test_data",
             "host": "localhost",

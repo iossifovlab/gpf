@@ -30,7 +30,6 @@ def impala_genotype_storage(
     storage_config = {
         "id": "impala2_test_storage",
         "storage_type": "impala2",
-        "read_only": False,
         "impala": {
             "hosts": [impala_host],
             "port": 21050,

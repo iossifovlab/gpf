@@ -35,7 +35,7 @@ class ImpalaGenotypeStorage(GenotypeStorage):
         "id": {
             "type": "string",
         },
-        "read_only": {"type": "boolean", "default": True},
+        "read_only": {"type": "boolean", "default": False},
         "impala": {
             "type": "dict",
             "schema": {
