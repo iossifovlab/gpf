@@ -14,7 +14,7 @@ from dae.genomic_resources.gene_models import GeneModels
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 
 from dae.variants_loaders.raw.loader import StoredAnnotationDecorator, \
-    VariantsLoader
+    VariantsLoader, VariantsGenotypesLoader
 from dae.inmemory_storage.raw_variants import RawMemoryVariants
 
 from dae.variants_loaders.vcf.loader import VcfLoader
@@ -31,6 +31,10 @@ class InmemoryGenotypeStorage(GenotypeStorage):
         "storage_type": {"type": "string", "allowed": ["inmemory"]},
         "id": {
             "type": "string",
+        },
+        "read_only": {
+            "type": "boolean",
+            "default": True,
         },
         "dir": {
             "type": "string",
@@ -71,13 +75,14 @@ class InmemoryGenotypeStorage(GenotypeStorage):
         return os.path.join(self.data_dir, *path)
 
     def build_backend(
-            self, study_config: Box,
+            self, study_config: dict[str, Any],
             genome: ReferenceGenome,
             gene_models: Optional[GeneModels]) -> Any:
         start = time.time()
+        config = Box(study_config)
         ped_params = \
-            study_config.genotype_storage.files.pedigree.params.to_dict()
-        ped_filename = study_config.genotype_storage.files.pedigree.path
+            config.genotype_storage.files.pedigree.params.to_dict()
+        ped_filename = config.genotype_storage.files.pedigree.path
         logger.debug("pedigree params: %s; %s", ped_filename, ped_params)
 
         families_loader = FamiliesLoader(ped_filename, **ped_params)
@@ -86,7 +91,7 @@ class InmemoryGenotypeStorage(GenotypeStorage):
         logger.info("families loaded in in %.2f sec", elapsed)
 
         loaders = []
-        for file_conf in study_config.genotype_storage.files.variants:
+        for file_conf in config.genotype_storage.files.variants:
             start = time.time()
             variants_filename = file_conf.path
             variants_params = file_conf.params.to_dict()
@@ -134,8 +139,9 @@ class InmemoryGenotypeStorage(GenotypeStorage):
                 )
 
             variants_loader = StoredAnnotationDecorator.decorate(
-                variants_loader, annotation_filename
+                cast(VariantsGenotypesLoader, variants_loader),
+                annotation_filename
             )
             loaders.append(variants_loader)
 
-        return RawMemoryVariants(loaders, families)
+        return RawMemoryVariants(loaders, families)  # type: ignore

@@ -13,11 +13,13 @@ from dae.studies.study import GenotypeData, GenotypeDataGroup
 
 pytest_plugins = ["dae_conftests.dae_conftests"]
 
+
 def default_genotype_storage_configs(root_path: pathlib.Path) -> list[dict]:
     return [
         # DuckDb2 Storage
         {
             "id": "duckdb2",
+            "read_only": False,
             "storage_type": "duckdb2",
             "db": "duckdb_storage/dev_storage.db",
             "base_dir": str(root_path)
@@ -25,6 +27,7 @@ def default_genotype_storage_configs(root_path: pathlib.Path) -> list[dict]:
         # DuckDb2 Parquet Storage
         {
             "id": "duckdb2_parquet",
+            "read_only": False,
             "storage_type": "duckdb2",
             "studies_dir": "duckdb_parquet",
             "base_dir": str(root_path)
@@ -32,12 +35,14 @@ def default_genotype_storage_configs(root_path: pathlib.Path) -> list[dict]:
         # DuckDb2 Parquet Inplace Storage
         {
             "id": "duckdb2_inplace",
+            "read_only": False,
             "storage_type": "duckdb2",
         },
 
         # DuckDb Storage
         {
             "id": "duckdb",
+            "read_only": False,
             "storage_type": "duckdb",
             "db": "duckdb_storage/dev_storage.db",
             "base_dir": str(root_path)
@@ -45,6 +50,7 @@ def default_genotype_storage_configs(root_path: pathlib.Path) -> list[dict]:
         # DuckDb Parquet Storage
         {
             "id": "duckdb_parquet",
+            "read_only": False,
             "storage_type": "duckdb",
             "studies_dir": "duckdb_parquet",
             "base_dir": str(root_path)
@@ -52,12 +58,14 @@ def default_genotype_storage_configs(root_path: pathlib.Path) -> list[dict]:
         # DuckDb Parquet Inplace Storage
         {
             "id": "duckdb_inplace",
+            "read_only": False,
             "storage_type": "duckdb",
         },
 
         # Filesystem InMemory
         {
             "id": "inmemory",
+            "read_only": False,
             "storage_type": "inmemory",
             "dir": f"{root_path}/genotype_filesystem_data"
         },
@@ -67,6 +75,7 @@ def default_genotype_storage_configs(root_path: pathlib.Path) -> list[dict]:
 
 GENOTYPE_STORAGE_REGISTRY = GenotypeStorageRegistry()
 GENOTYPE_STORAGES: Optional[dict[str, Any]] = None
+
 
 @pytest.fixture(scope="module", params=["duckdb", "inmemory"])
 def t4c8_instance(

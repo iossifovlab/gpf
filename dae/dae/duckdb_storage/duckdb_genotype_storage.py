@@ -55,7 +55,7 @@ class DuckDbGenotypeStorage(GenotypeStorage):
         },
         "read_only": {
             "type": "boolean",
-            "default": False,
+            "default": True,
         },
         "memory_limit": {
             "type": "string",
@@ -361,9 +361,7 @@ class DuckDbGenotypeStorage(GenotypeStorage):
                 family=tables_layout.family,
                 meta=tables_layout.meta,
             )
-
             assert db_layout is not None
-            # connection = duckdb.connect(db_name, read_only=True)
             return DuckDb2Variants(
                 self.connection_factory,
                 db_layout,

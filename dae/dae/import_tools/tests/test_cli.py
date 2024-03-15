@@ -25,6 +25,7 @@ def simple_study_dir(tmpdir, gpf_instance, mocker, resources_dir):
         config = yaml.safe_load(file.read())
     config["destination"] = {
         "id": "genotype_inmemory",
+        "read_only": False,
         "storage_type": "inmemory",
         "dir": str(tmpdir),
     }  # don't import into impala
