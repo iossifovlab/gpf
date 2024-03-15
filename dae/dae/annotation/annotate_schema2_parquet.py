@@ -2,13 +2,17 @@ import argparse
 import os
 import sys
 from typing import Optional
+from glob import glob
 from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.genomic_resources.repository_factory import build_genomic_resource_repository
 from dae.annotation.annotate_utils import AnnotationTool
 from dae.annotation.annotation_factory import build_annotation_pipeline
 from dae.annotation.context import CLIAnnotationContext
 from dae.gpf_instance.gpf_instance import GPFInstance
-from dae.parquet.parquet_writer import append_meta_to_parquet
+from dae.parquet.parquet_writer import append_meta_to_parquet, \
+    merge_variants_parquets
+from dae.parquet.helpers import merge_parquets
+from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.schema2_storage.schema2_import_storage import schema2_dataset_layout
 from dae.task_graph.cli_tools import TaskGraphCli
 from dae.genomic_resources.cli import VerbosityConfiguration
@@ -135,20 +139,48 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
             genome = self.context.get_reference_genome()
 
         contig_lens = AnnotateSchema2ParquetTool.get_contig_lengths(genome)
-
         regions = [
             f"{contig}:{start}-{start + self.args.region_size}"
             for contig, length in contig_lens
             for start in range(1, length, self.args.region_size)
         ]
+
+        annotation_tasks = []
         for idx, region in enumerate(regions):
-            self.task_graph.create_task(
+            annotation_tasks.append(self.task_graph.create_task(
                 f"part-{idx}",
                 AnnotateSchema2ParquetTool.annotate,
                 [self.args.input, self.args.output,
                 self.pipeline.get_info(), region, self.grr.definition,
                 idx, self.args.allow_repeated_attributes],
                 []
+            ))
+
+        if loader.partitioned:
+            partitions, _ = loader.partition_descriptor.get_variant_partitions(
+                {c[0]: c[1] for c in contig_lens}
+            )
+            for idx, partition in enumerate(partitions):
+                variants_dir = PartitionDescriptor.partition_directory(
+                    layout.summary, partition
+                )
+                self.task_graph.create_task(
+                    f"merge-{idx}",
+                    merge_variants_parquets,
+                    [loader.partition_descriptor, variants_dir, partition],
+                    annotation_tasks
+                )
+        else:
+            def merge(output_dir, output_filename):
+                to_merge = glob(os.path.join(output_dir, "*.parquet"))
+                output_path = os.path.join(output_dir, output_filename)
+                merge_parquets(to_merge, output_path)
+
+            self.task_graph.create_task(
+                "merge", merge,
+                [os.path.join(self.args.output, "summary"),
+                 os.path.basename(loader._get_pq_filepaths()[0][0])],
+                annotation_tasks
             )
 
         del loader
