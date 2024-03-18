@@ -20,7 +20,7 @@ from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.utils.fs_utils import find_directory_with_a_file
 from dae.studies.study import GenotypeData
-from dae.gene.scores import GenomicScoresRegistry
+from dae.genomic_scores.scores import GenomicScoresRegistry
 from dae.gene.gene_scores import ScoreDesc as GeneScoreDesc
 from dae.gene.gene_sets_db import GeneSet, GeneSetsDb, \
     build_gene_set_collection_from_resource

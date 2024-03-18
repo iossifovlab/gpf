@@ -21,7 +21,7 @@ def scores_repo(tmp_path: pathlib.Path) -> GenomicResourceRepo:
                 type: gene_score
                 filename: linear.csv
                 scores:
-                - id: linear
+                - id: linear score
                   desc: linear gene score
                   histogram:
                     type: number
@@ -30,7 +30,7 @@ def scores_repo(tmp_path: pathlib.Path) -> GenomicResourceRepo:
                     y_log_scale: false
                 """,
             "linear.csv": textwrap.dedent("""
-                gene,linear
+                gene,linear score
                 G1,1
                 G2,2
                 G3,3
@@ -39,7 +39,7 @@ def scores_repo(tmp_path: pathlib.Path) -> GenomicResourceRepo:
                 G6,3
             """),
             "statistics": {
-                "histogram_linear.yaml": textwrap.dedent("""
+                "histogram_linear score.yaml": textwrap.dedent("""
                     bars:
                     - 2
                     - 2
@@ -52,7 +52,7 @@ def scores_repo(tmp_path: pathlib.Path) -> GenomicResourceRepo:
                     config:
                       type: number
                       number_of_bins: 3
-                      score: linear
+                      score: linear score
                       view_range:
                         max: 3.0
                         min: 1.0
@@ -270,8 +270,8 @@ def test_gene_score(scores_repo: GenomicResourceRepo) -> None:
 
     assert gene_score is not None
 
-    assert gene_score.get_gene_value("linear", "G2") == 2
-    assert gene_score.get_gene_value("linear", "G3") == 3
+    assert gene_score.get_gene_value("linear score", "G2") == 2
+    assert gene_score.get_gene_value("linear score", "G3") == 3
 
 
 def test_gene_score_nan(scores_repo: GenomicResourceRepo) -> None:
@@ -288,8 +288,22 @@ def test_calculate_histogram(scores_repo: GenomicResourceRepo) -> None:
     result = build_gene_score_from_resource(res)
     assert result is not None
 
-    histogram = GeneScoreImplementation._calc_histogram(res, "linear")
+    histogram = GeneScoreImplementation._calc_histogram(res, "linear score")
     assert histogram is not None
     print(histogram.config.view_range[0])
     print(type(histogram.config.view_range[0]))
     print(histogram.serialize())
+
+
+def test_get_histogram_image_url(scores_repo: GenomicResourceRepo) -> None:
+    res = scores_repo.get_resource("LinearHist")
+    result = build_gene_score_from_resource(res)
+    assert result is not None
+
+    histogram = result.get_score_histogram("linear score")
+    assert histogram is not None
+
+    url = result.get_histogram_image_url("linear score")
+    assert url is not None
+
+    assert url.endswith("histogram_linear%20score.png")
