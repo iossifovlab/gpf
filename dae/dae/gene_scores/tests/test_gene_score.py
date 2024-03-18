@@ -8,7 +8,7 @@ from dae.genomic_resources.testing import build_inmemory_test_repository
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME, \
     GenomicResourceRepo
 from dae.genomic_resources.histogram import NumberHistogram
-from dae.gene.implementations.gene_scores_impl import \
+from dae.gene_scores.implementations.gene_scores_impl import \
     build_gene_score_from_resource, \
     GeneScoreImplementation
 

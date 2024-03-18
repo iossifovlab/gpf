@@ -9,7 +9,7 @@ from dae.annotation.annotation_pipeline import AnnotationPipeline
 from dae.annotation.annotation_pipeline import Annotator
 from dae.annotation.annotation_pipeline import AnnotatorInfo
 
-from dae.gene.gene_scores import build_gene_score_from_resource
+from dae.gene_scores.gene_scores import build_gene_score_from_resource
 from dae.genomic_resources import GenomicResource
 from dae.genomic_resources.aggregators import build_aggregator
 from dae.genomic_resources.aggregators import validate_aggregator
