@@ -13,15 +13,15 @@ from box import Box
 
 from dae.annotation.annotation_pipeline import AnnotationPipeline
 from dae.gene_profile.statistic import GPStatistic
-from dae.gene.gene_scores import GeneScore
 from dae.genomic_resources.gene_models import GeneModels
 from dae.genomic_resources.reference_genome import ReferenceGenome
 
 from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.utils.fs_utils import find_directory_with_a_file
 from dae.studies.study import GenotypeData
-from dae.gene.scores import GenomicScoresRegistry
-from dae.gene.gene_scores import ScoreDesc as GeneScoreDesc
+from dae.genomic_scores.scores import GenomicScoresRegistry
+from dae.gene_scores.gene_scores import GeneScore
+from dae.gene_scores.gene_scores import ScoreDesc as GeneScoreDesc
 from dae.gene.gene_sets_db import GeneSet, GeneSetsDb, \
     build_gene_set_collection_from_resource
 from dae.gene.denovo_gene_sets_db import DenovoGeneSetsDb
@@ -195,7 +195,7 @@ class GPFInstance:
     @cached_property
     def gene_scores_db(self) -> Any:
         """Load and return gene scores db."""
-        from dae.gene.gene_scores import GeneScoresDb, \
+        from dae.gene_scores.gene_scores import GeneScoresDb, \
             build_gene_score_from_resource
         if self.dae_config.gene_scores_db is None:
             return GeneScoresDb([])

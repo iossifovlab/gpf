@@ -1,6 +1,6 @@
 from typing import cast
 import pytest
-from dae.gene.gene_scores import GeneScoresDb
+from dae.gene_scores.gene_scores import GeneScoresDb
 from dae.gpf_instance.gpf_instance import GPFInstance
 
 

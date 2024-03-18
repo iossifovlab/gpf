@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import itertools
 import logging
+from urllib.parse import quote
 from functools import lru_cache
 from dataclasses import dataclass
 from typing import Optional, Any, cast
@@ -21,7 +22,7 @@ from dae.genomic_resources.histogram import \
     NumberHistogramConfig, \
     load_histogram, build_histogram_config
 
-from .scores import SCORE_HISTOGRAM
+from dae.genomic_scores.scores import SCORE_HISTOGRAM
 
 logger = logging.getLogger(__name__)
 
@@ -307,7 +308,7 @@ class GeneScore(
 
     def get_histogram_image_url(self, score_id: str) -> Optional[str]:
         return f"{self.resource.get_url()}/" \
-            f"{self.get_histogram_image_filename(score_id)}"
+            f"{quote(self.get_histogram_image_filename(score_id))}"
 
 
 @dataclass

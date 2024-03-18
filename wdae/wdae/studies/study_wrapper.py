@@ -20,7 +20,7 @@ from dae.variants.family_variant import FamilyAllele
 from dae.studies.study import GenotypeData
 from dae.pheno.registry import PhenoRegistry
 from dae.pheno.pheno_data import PhenotypeData
-from dae.gene.gene_scores import GeneScoresDb
+from dae.gene_scores.gene_scores import GeneScoresDb
 
 
 logger = logging.getLogger(__name__)

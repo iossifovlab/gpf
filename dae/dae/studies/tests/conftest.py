@@ -9,7 +9,7 @@ import pytest
 from dae.genotype_storage.genotype_storage_registry import \
     GenotypeStorageRegistry
 from dae.pheno.registry import PhenoRegistry
-from dae.gene.gene_scores import GeneScoresDb
+from dae.gene_scores.gene_scores import GeneScoresDb
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.studies.study import GenotypeData
 from dae.studies.variants_db import VariantsDb

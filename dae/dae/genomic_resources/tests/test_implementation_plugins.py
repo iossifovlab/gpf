@@ -1,4 +1,4 @@
-from dae.gene.implementations.gene_scores_impl import \
+from dae.gene_scores.implementations.gene_scores_impl import \
     build_gene_score_implementation_from_resource
 from dae.genomic_resources import get_resource_implementation_builder, \
     register_implementation

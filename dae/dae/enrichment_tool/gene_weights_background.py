@@ -8,7 +8,7 @@ import pandas as pd
 from scipy import stats
 
 from dae.genomic_resources.repository import GenomicResource
-from dae.gene.implementations.gene_scores_impl import \
+from dae.gene_scores.implementations.gene_scores_impl import \
     build_gene_score_from_resource
 from dae.enrichment_tool.event_counters import EventCountersResult, \
     EnrichmentResult, EnrichmentSingleResult

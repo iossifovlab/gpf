@@ -18,7 +18,8 @@ from dae.genomic_resources.histogram import NumberHistogram, \
     NumberHistogramConfig, \
     NullHistogramConfig
 
-from dae.gene.gene_scores import GeneScore, build_gene_score_from_resource
+from dae.gene_scores.gene_scores import \
+    GeneScore, build_gene_score_from_resource
 
 from dae.task_graph.graph import Task, TaskGraph
 

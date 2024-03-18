@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import logging
 import copy
+from urllib.parse import quote
 from types import TracebackType
 
 from typing import Iterator, Optional, cast, Any, Union, Callable, Type, \
@@ -690,7 +691,7 @@ class GenomicScore(ResourceConfigValidationMixin):
 
     def get_histogram_image_url(self, score_id: str) -> Optional[str]:
         return f"{self.resource.get_url()}/" \
-            f"{self.get_histogram_image_filename(score_id)}"
+            f"{quote(self.get_histogram_image_filename(score_id))}"
 
 
 class PositionScore(GenomicScore):

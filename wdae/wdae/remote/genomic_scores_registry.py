@@ -1,5 +1,5 @@
 from remote.rest_api_client import RESTClient
-from dae.gene.scores import GenomicScoresRegistry, ScoreDesc
+from dae.genomic_scores.scores import GenomicScoresRegistry, ScoreDesc
 
 
 class RemoteGenomicScoresRegistry(GenomicScoresRegistry):

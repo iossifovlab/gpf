@@ -1,16 +1,19 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,W0104
 
 import textwrap
+import pathlib
+
 import pytest
 
-from dae.gene.gene_scores import GeneScoresDb, \
+from dae.gene_scores.gene_scores import GeneScoresDb, \
     build_gene_score_from_resource
 from dae.genomic_resources.testing import build_inmemory_test_repository
-from dae.genomic_resources.repository import GR_CONF_FILE_NAME
+from dae.genomic_resources.repository import GR_CONF_FILE_NAME, \
+    GenomicResourceRepo
 
 
 @pytest.fixture
-def scores_repo(tmp_path):
+def scores_repo(tmp_path: pathlib.Path) -> GenomicResourceRepo:
     scores_repo = build_inmemory_test_repository({
         "RVIS_rank": {
             GR_CONF_FILE_NAME: """
@@ -75,7 +78,7 @@ def scores_repo(tmp_path):
 
 
 @pytest.fixture
-def gene_scores_db(scores_repo):
+def gene_scores_db(scores_repo: GenomicResourceRepo) -> GeneScoresDb:
     resources = [
         scores_repo.get_resource("LGD_rank"),
         scores_repo.get_resource("RVIS_rank"),
@@ -86,46 +89,49 @@ def gene_scores_db(scores_repo):
     return GeneScoresDb(gene_scores)
 
 
-def test_scores_rvis_rank(gene_scores_db):
+def test_scores_rvis_rank(gene_scores_db: GeneScoresDb) -> None:
     assert gene_scores_db["RVIS_rank"] is not None
 
     rvis = gene_scores_db.get_gene_score("RVIS_rank")
+    assert rvis is not None
     assert rvis.df is not None
 
     assert "RVIS_rank" in rvis.df.columns
 
 
-def test_scores_has_rvis_rank(gene_scores_db):
+def test_scores_has_rvis_rank(gene_scores_db: GeneScoresDb) -> None:
     assert "RVIS_rank" in gene_scores_db
 
 
-def test_missing_gene_score(gene_scores_db):
+def test_missing_gene_score(gene_scores_db: GeneScoresDb) -> None:
     with pytest.raises(ValueError, match="score bad_score not found"):
         gene_scores_db["bad_score"]
 
 
-def test_loaded_scores(gene_scores_db):
+def test_loaded_scores(gene_scores_db: GeneScoresDb) -> None:
     assert len(gene_scores_db) == 2
 
 
-def test_gene_scores_ids(gene_scores_db):
+def test_gene_scores_ids(gene_scores_db: GeneScoresDb) -> None:
     assert gene_scores_db.get_gene_score_ids() == ["LGD_rank", "RVIS_rank"]
 
 
-def test_gene_scores(gene_scores_db):
+def test_gene_scores(gene_scores_db: GeneScoresDb) -> None:
     gene_scores = gene_scores_db.get_scores()
     assert sorted(gs.score_id for gs in gene_scores) == \
         ["LGD_rank", "RVIS_rank"]
 
 
-def test_create_score_from_repository(scores_repo):
+def test_create_score_from_repository(
+    scores_repo: GenomicResourceRepo
+) -> None:
     resource = scores_repo.get_resource("RVIS_rank")
     score = build_gene_score_from_resource(resource)
     assert score
     print(score)
 
 
-def test_scores_default(scores_repo):
+def test_scores_default(scores_repo: GenomicResourceRepo) -> None:
     resource = scores_repo.get_resource("RVIS_rank")
     score = build_gene_score_from_resource(resource)
     assert score.df is not None
@@ -133,7 +139,7 @@ def test_scores_default(scores_repo):
     assert "RVIS_rank" in score.df.columns
 
 
-def test_scores_min_max(scores_repo):
+def test_scores_min_max(scores_repo: GenomicResourceRepo) -> None:
     resource = scores_repo.get_resource("LGD_rank")
     score = build_gene_score_from_resource(resource)
 
@@ -141,7 +147,7 @@ def test_scores_min_max(scores_repo):
     assert score.get_max("LGD_rank") == 59.0
 
 
-def test_scores_get_genes(scores_repo):
+def test_scores_get_genes(scores_repo: GenomicResourceRepo) -> None:
     resource = scores_repo.get_resource("LGD_rank")
     score = build_gene_score_from_resource(resource)
 
@@ -158,7 +164,7 @@ def test_scores_get_genes(scores_repo):
     assert len(genes) == 2
 
 
-def test_scores_to_tsv(scores_repo):
+def test_scores_to_tsv(scores_repo: GenomicResourceRepo) -> None:
     resource = scores_repo.get_resource("LGD_rank")
     score = build_gene_score_from_resource(resource)
     tsv = list(score.to_tsv("LGD_rank"))

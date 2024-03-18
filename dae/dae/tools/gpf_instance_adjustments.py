@@ -102,9 +102,12 @@ class AdjustImpalaStorageCommand(AdjustmentsCommand):
                 "storage %s is not Impala", self.storage_id)
             raise ValueError(f"storage {self.storage_id} is not Impala")
 
-        storage["read_only"] = self.read_only
-        storage["hdfs"]["host"] = self.hdfs_host
-        storage["impala"]["hosts"] = self.impala_hosts
+        if self.read_only is not None:
+            storage["read_only"] = self.read_only
+        if self.hdfs_host is not None:
+            storage["hdfs"]["host"] = self.hdfs_host
+        if self.impala_hosts is not None:
+            storage["impala"]["hosts"] = self.impala_hosts
 
 
 class AdjustDuckDbStorageCommand(AdjustmentsCommand):
