@@ -9,7 +9,7 @@ from typing import Optional, Any, Union, Generator, Iterator, Iterable, \
 from dae.utils.dae_utils import join_line, split_iterable
 from dae.utils.variant_utils import mat2str, fgt2str
 from dae.effect_annotation.effect import ge2str, \
-    gd2str, \
+    gd2str, gene_effect_get_genes_worst, \
     gene_effect_get_worst_effect, \
     gene_effect_get_genes
 from dae.variants.attributes import Inheritance
@@ -117,7 +117,7 @@ class ResponseTransformer:
         lambda v: [repr(e) for e in v.effects],
 
         "genes":
-        lambda v: [gene_effect_get_genes(e) for e in v.effects],
+        lambda v: [gene_effect_get_genes_worst(e) for e in v.effects],
 
         "worst_effect":
         lambda v: [gene_effect_get_worst_effect(e) for e in v.effects],

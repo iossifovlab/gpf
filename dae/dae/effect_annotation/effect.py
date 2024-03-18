@@ -847,6 +847,21 @@ def gene_effect_get_worst_effect(
     return ",".join([gene_effects.worst])
 
 
+def gene_effect_get_genes_worst(
+    gene_effects: Optional[AlleleEffects]
+) -> str:
+    """Return command separted list of genes."""
+    if gene_effects is None:
+        return ""
+    genes_set: set[str] = set(
+        x.symbol for x in gene_effects.genes
+        if x.symbol is not None and x.effect == gene_effects.worst
+    )
+    genes = sorted(list(genes_set))
+
+    return ";".join(genes)
+
+
 def gene_effect_get_genes(
     gene_effects: Optional[AlleleEffects]
 ) -> str:
