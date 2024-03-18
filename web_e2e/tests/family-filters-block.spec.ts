@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import * as utils from './utils';
 import { datasetIds } from './utils';
+import { scanCSV } from 'nodejs-polars';
 
 test.describe('Family filters block tests', () => {
   test.beforeEach(async({ page }) => {
@@ -21,6 +22,111 @@ test.describe('Family filters block tests', () => {
 
     await page.locator('gpf-family-ids textarea').fill('f1');
     await expect(page.getByText('Please insert at least one family id.')).not.toBeVisible();
+  });
+
+  test('should preview table and download filtered by Family Tags', async({ page }) => {
+    await utils.navigateToDatasetPage(page, datasetIds.iossifov2014, 'Genotype browser');
+    await expect(page.locator('gpf-family-filters-block').getByText('Family Tags')).toBeVisible();
+    await page.locator('gpf-family-filters-block').getByText('Family Tags').click();
+
+    await expect(page.locator('gpf-family-filters-block').locator('gpf-family-tags')).toBeVisible();
+
+    await page.locator('#tag_nuclear_family-tag-add').click();
+    await page.locator('#tag_quad_family-tag-remove').click();
+
+    await page.locator('#table-preview-button').click();
+    await expect(page.locator('#variants-count-span > span')).toHaveText('77 variants selected', { timeout: 120000 });
+
+
+    const downloadPromise = page.waitForEvent('download', { timeout: 180000 });
+    await page.locator('#download-button').click();
+    const download = await downloadPromise;
+    const fixtureData = scanCSV(await download.path());
+    const downloadData = scanCSV('playwright/fixtures/genotype-browser/variants-2.tsv');
+    const fixtureFrame = await fixtureData.collect();
+    const downloadFrame = await downloadData.collect();
+    expect(fixtureFrame.toString()).toEqual(downloadFrame.toString());
+  });
+
+  test('should preview table and download filtered by Family Tags and mode "Or"', async({ page }) => {
+    await utils.navigateToDatasetPage(page, datasetIds.iossifov2014, 'Genotype browser');
+    await expect(page.locator('gpf-family-filters-block').getByText('Family Tags')).toBeVisible();
+    await page.locator('gpf-family-filters-block').getByText('Family Tags').click();
+
+    await expect(page.locator('gpf-family-filters-block').locator('gpf-family-tags')).toBeVisible();
+
+    await page.locator('.or-toggle-button').click();
+
+    await page.locator('#tag_nuclear_family-tag-remove').click();
+    await page.locator('#tag_quad_family-tag-add').click();
+    await page.locator('#tag_missing_dad_family-tag-add').click();
+
+    await page.locator('#table-preview-button').click();
+    await expect(page.locator('#variants-count-span > span')).toHaveText('492 variants selected', { timeout: 120000 });
+
+
+    const downloadPromise = page.waitForEvent('download', { timeout: 180000 });
+    await page.locator('#download-button').click();
+    const download = await downloadPromise;
+    const fixtureData = scanCSV(await download.path());
+    const downloadData = scanCSV('playwright/fixtures/genotype-browser/variants-3.tsv');
+    const fixtureFrame = await fixtureData.collect();
+    const downloadFrame = await downloadData.collect();
+    expect(fixtureFrame.toString()).toEqual(downloadFrame.toString());
+  });
+
+  test('should test save/share query after selecting Family tags', async({ page }) => {
+    await utils.navigateToDatasetPage(page, datasetIds.iossifov2014, 'Genotype browser');
+    await expect(page.locator('gpf-family-filters-block').getByText('Family Tags')).toBeVisible();
+    await page.locator('gpf-family-filters-block').getByText('Family Tags').click();
+
+    await page.locator('.or-toggle-button').click();
+
+    await page.locator('#tag_nuclear_family-tag-remove').click();
+    await page.locator('#tag_affected_dad_family-tag-add').click();
+    await page.locator('#tag_quad_family-tag-add').click();
+    await page.locator('#tag_affected_mom_family-tag-add').click();
+    await page.locator('#tag_affected_prb_family-tag-remove').click();
+    await page.locator('#tag_affected_sib_family-tag-remove').click();
+    await page.locator('#tag_unaffected_prb_family-tag-add').click();
+    await page.locator('#tag_missing_dad_family-tag-add').click();
+
+    await page.locator('#save-query-dropdown-button').click();
+
+    await expect(page.locator('#link-input')).not.toHaveValue('');
+    const url = await page.locator('#link-input').inputValue();
+    await page.goto(url);
+    await page.waitForSelector('gpf-genotype-browser');
+
+    await expect(page.locator('#tag_nuclear_family-tag-remove')).toHaveCSS('color', 'rgb(255, 0, 0)');
+    await expect(page.locator('#tag_affected_dad_family-tag-add')).toHaveCSS('color', 'rgb(0, 128, 0)');
+    await expect(page.locator('#tag_quad_family-tag-add')).toHaveCSS('color', 'rgb(0, 128, 0)');
+    await expect(page.locator('#tag_affected_mom_family-tag-add')).toHaveCSS('color', 'rgb(0, 128, 0)');
+    await expect(page.locator('#tag_affected_prb_family-tag-remove')).toHaveCSS('color', 'rgb(255, 0, 0)');
+    await expect(page.locator('#tag_affected_sib_family-tag-remove')).toHaveCSS('color', 'rgb(255, 0, 0)');
+    await expect(page.locator('#tag_unaffected_prb_family-tag-add')).toHaveCSS('color', 'rgb(0, 128, 0)');
+    await expect(page.locator('#tag_missing_dad_family-tag-add')).toHaveCSS('color', 'rgb(0, 128, 0)');
+  });
+
+  test('should clear all tags that are selected in Family Tags', async({ page }) => {
+    await utils.navigateToDatasetPage(page, datasetIds.iossifov2014, 'Genotype browser');
+    await expect(page.locator('gpf-family-filters-block').getByText('Family Tags')).toBeVisible();
+    await page.locator('gpf-family-filters-block').getByText('Family Tags').click();
+
+    await expect(page.locator('gpf-family-filters-block').locator('gpf-family-tags')).toBeVisible();
+
+    await page.locator('#tag_nuclear_family-tag-add').click();
+    await page.locator('#tag_quad_family-tag-remove').click();
+
+    await page.locator('#table-preview-button').click();
+    await expect(page.locator('#variants-count-span > span')).toHaveText('77 variants selected', { timeout: 120000 });
+
+    await page.locator('#clear-filters-button').click();
+    await expect(page.locator('#tag_nuclear_family-tag-add')).not.toHaveCSS('color', 'rgb(0, 128, 0)');
+    await expect(page.locator('#tag_quad_family-tag-remove')).not.toHaveCSS('color', 'rgb(255, 0, 0)');
+
+    await page.locator('#table-preview-button').click();
+    await expect(page.locator('#variants-count-span > span')).toHaveText('569 variants selected', { timeout: 120000 });
   });
 
   test('should display pheno filters panel after "Advanced" button click', async({ page }) => {
