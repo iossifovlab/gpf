@@ -305,5 +305,4 @@ def test_get_histogram_image_url(scores_repo: GenomicResourceRepo) -> None:
 
     url = result.get_histogram_image_url("linear score")
     assert url is not None
-
     assert url.endswith("histogram_linear%20score.png")

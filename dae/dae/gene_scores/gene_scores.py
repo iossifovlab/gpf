@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import itertools
 import logging
-import urllib.parse
+from urllib.parse import quote
 from functools import lru_cache
 from dataclasses import dataclass
 from typing import Optional, Any, cast
@@ -307,9 +307,8 @@ class GeneScore(
         return f"statistics/histogram_{score_id}.png"
 
     def get_histogram_image_url(self, score_id: str) -> Optional[str]:
-        return urllib.parse.quote(
-            f"{self.resource.get_url()}/"
-            f"{self.get_histogram_image_filename(score_id)}")
+        return f"{self.resource.get_url()}/" \
+            f"{quote(self.get_histogram_image_filename(score_id))}"
 
 
 @dataclass
