@@ -55,18 +55,19 @@
             class="gpf-basic-table genomic-scores-table">
             <th [attr.colspan]="2">{{ genomicScoreCategory.displayName }}</th>
             <tr *ngFor="let score of genomicScoreCategory.scores" class="card-block" style="height: 200px">
-              <td
-                style="
-                  height: 135px;
-                  max-height: 135px;
-                  width: 135px;
-                  max-width: 135px;
-                  overflow-wrap: break-word;
-                  text-align: center;
-                "
-                [attr.title]="score.scoreName"
-                >{{ score.scoreName }}</td
-              >
+              <td style="overflow-wrap: break-word; text-align: center" [attr.title]="score.scoreName">
+                <div style="display: flex; align-items: center; justify-content: center">
+                  <span>{{ score.scoreName }}</span>
+                  <gpf-helper-modal
+                    style="height: 32px; margin-left: 4px"
+                    [style.visibility]="
+                      getGeneScoreByKey(genomicScoreCategory.category, score.scoreName).help ? 'visible' : 'hidden'
+                    "
+                    [modalContent]="
+                      getGeneScoreByKey(genomicScoreCategory.category, score.scoreName).help
+                    "></gpf-helper-modal>
+                </div>
+              </td>
               <ng-container *ngIf="genomicScoresGeneScores.length === gene.genomicScores.length">
                 <td>
                   <gpf-histogram
