@@ -167,18 +167,4 @@ describe('GeneProfileSingleViewComponent', () => {
     expect(component.getGeneDatasetValue(mockGene as any, 'studyId2', 'personSetId4', 'effectTypeId8'))
       .toStrictEqual({id: 'effectTypeId8'} as any);
   });
-
-  it('should get browser url', () => {
-    component.config = undefined;
-    let link = component.getGeneBrowserLink();
-    expect(link).toBeUndefined();
-
-    component.config = {defaultDataset: 'fakeDataset'} as any;
-    (component as any).geneSymbol = 'fakeGeneSymbol';
-
-    link = component.getGeneBrowserLink();
-    expect(link.substring(link.indexOf('/datasets'))).toBe(
-      '/datasets/fakeDataset/gene-browser/fakeGeneSymbol'
-    );
-  });
 });

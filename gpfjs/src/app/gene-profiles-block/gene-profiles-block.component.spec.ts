@@ -19,6 +19,16 @@ import { TruncatePipe } from '../utils/truncate.pipe';
 import { GeneProfilesColumn, GeneProfilesTableConfig } from 'app/gene-profiles-table/gene-profiles-table';
 
 const config = {
+  geneLinkTemplates: [
+    {
+      name: 'link1',
+      url: 'url1'
+    },
+    {
+      name: 'link2',
+      url: 'url2'
+    }
+  ],
   shown: [],
   defaultDataset: 'mockDataset',
   description: 'mock description',
