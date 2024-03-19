@@ -576,40 +576,40 @@ class SingleVcfLoader(VariantsGenotypesLoader):
                         "some alleles will be skipped: %s",
                         current_summary_variant)
 
-                else:
+                # else:
 
-                    assert len(current_summary_variant.alt_alleles) < 128, (
-                        len(current_summary_variant.alt_alleles),
-                        current_summary_variant
-                    )
+                #     assert len(current_summary_variant.alt_alleles) < 128, (
+                #         len(current_summary_variant.alt_alleles),
+                #         current_summary_variant
+                #     )
 
-                    family_genotypes = VcfFamiliesGenotypes(
-                        self, vcf_gt_variants)
-                    family_variants = []
+                family_genotypes = VcfFamiliesGenotypes(
+                    self, vcf_gt_variants)
+                family_variants = []
 
-                    for fam, genotype, best_state in family_genotypes \
-                            .family_genotype_iterator():
+                for fam, genotype, best_state in family_genotypes \
+                        .family_genotype_iterator():
 
-                        fvariant = FamilyVariant(
-                            current_summary_variant, fam, genotype, best_state)
-                        if self._denovo_handler(fvariant):
-                            continue
-                        if self._omission_handler(fvariant):
-                            continue
-                        family_variants.append(fvariant)
+                    fvariant = FamilyVariant(
+                        current_summary_variant, fam, genotype, best_state)
+                    if self._denovo_handler(fvariant):
+                        continue
+                    if self._omission_handler(fvariant):
+                        continue
+                    family_variants.append(fvariant)
 
-                    known_independent_genotypes = \
-                        family_genotypes.known_independent_genotypes
-                    assert known_independent_genotypes is not None
+                known_independent_genotypes = \
+                    family_genotypes.known_independent_genotypes
+                assert known_independent_genotypes is not None
 
-                    independent_genotypes = np.array(
-                        known_independent_genotypes, np.int8).T
+                independent_genotypes = np.array(
+                    known_independent_genotypes, np.int8).T
 
-                    self._calc_allele_frequencies(
-                        current_summary_variant,
-                        independent_genotypes)
+                self._calc_allele_frequencies(
+                    current_summary_variant,
+                    independent_genotypes)
 
-                    yield current_summary_variant, family_variants
+                yield current_summary_variant, family_variants
 
                 for idx in vcf_iterator_idexes_to_advance:
                     vcf_variants[idx] = next(vcf_iterators[idx], None)
