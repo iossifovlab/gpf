@@ -12,7 +12,6 @@ from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.parquet.parquet_writer import append_meta_to_parquet, \
     merge_variants_parquets
 from dae.parquet.helpers import merge_parquets
-from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.schema2_storage.schema2_import_storage import schema2_dataset_layout
 from dae.task_graph.cli_tools import TaskGraphCli
 from dae.genomic_resources.cli import VerbosityConfiguration
@@ -156,7 +155,7 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
         annotation_tasks = []
         for idx, region in enumerate(regions):
             annotation_tasks.append(self.task_graph.create_task(
-                f"part-{idx}",
+                f"part_{region}",
                 AnnotateSchema2ParquetTool.annotate,
                 [self.args.input, self.args.output,
                 self.pipeline.get_info(), region, self.grr.definition,
@@ -165,17 +164,25 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
             ))
 
         if loader.partitioned:
-            partitions, _ = loader.partition_descriptor.get_variant_partitions(
-                {c[0]: c[1] for c in contig_lens}
-            )
-            for idx, partition in enumerate(partitions):
-                variants_dir = PartitionDescriptor.partition_directory(
-                    layout.summary, partition
-                )
+            def merge(summary_dir, partition_dir, partition_descriptor):
+                partitions = [
+                    tuple(partition.split("="))
+                    for partition in partition_dir.split("/")
+                ]
+                output_dir = os.path.join(summary_dir, partition_dir)
+                merge_variants_parquets(partition_descriptor, output_dir, partitions)
+
+            to_join = [
+                os.path.relpath(dirpath, loader.layout.summary)
+                for dirpath, subdirs, _ in os.walk(loader.layout.summary)
+                if not subdirs
+            ]
+
+            for path in to_join:
                 self.task_graph.create_task(
-                    f"merge-{idx}",
-                    merge_variants_parquets,
-                    [loader.partition_descriptor, variants_dir, partition],
+                    f"merge_{path}",
+                    merge,
+                    [layout.summary, path, loader.partition_descriptor],
                     annotation_tasks
                 )
         else:
