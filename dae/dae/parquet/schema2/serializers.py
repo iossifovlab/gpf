@@ -193,9 +193,9 @@ class AlleleParquetSerializer:
     def build_summary_allele_batch_dict(
         self, allele: SummaryAllele,
         summary_variant_data: str
-    ) -> dict[str, list[Any]]:
+    ) -> dict[str, Any]:
         """Build a batch of summary allele data in the form of a dict."""
-        allele_data = {"summary_variant_data": [summary_variant_data]}
+        allele_data = {"summary_variant_data": summary_variant_data}
 
         for spr in self.SUMMARY_ALLELE_BASE_SCHEMA:
 
@@ -214,12 +214,13 @@ class AlleleParquetSerializer:
                     ]
             else:
                 prop_value = self._get_searchable_prop_value(allele, spr)
-            allele_data[spr] = [prop_value]  # type: ignore
+
+            allele_data[spr] = prop_value  # type: ignore
 
         if self.annotation_schema is not None:
             for attr in self.annotation_schema:
                 if attr.internal:
                     continue
-                allele_data[attr.name] = [allele.get_attribute(attr.name)]
+                allele_data[attr.name] = allele.get_attribute(attr.name)
 
         return allele_data

@@ -64,11 +64,14 @@ def vcf_fixture(
     project_config_update = {
         "input": {
             "vcf": {
-                "denovo_mode": "denovo"
+                "denovo_mode": "denovo",
             }
         },
         "destination": {
             "storage_id": genotype_storage.storage_id
+        },
+        "processing_config": {
+            "include_reference": True,
         },
         "partition_description": {
             "frequency_bin": {
