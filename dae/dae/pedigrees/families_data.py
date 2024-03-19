@@ -398,5 +398,6 @@ class FamiliesData(Mapping[str, Family]):
 def tag_families_data(families: FamiliesData) -> None:
     builder = FamilyTagsBuilder()
     for family in families.values():
+        builder.clear_tags(family)
         builder.tag_family(family)
         builder.tag_family_type(family)

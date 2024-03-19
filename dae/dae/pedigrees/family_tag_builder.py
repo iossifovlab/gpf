@@ -84,10 +84,21 @@ def check_family_tags_query(
 
 def check_nuclear_family(family: Family) -> bool:
     """Check if the family is a nuclear family."""
+    if len(family) < 3:
+        return False
     mom = _get_mom(family)
     dad = _get_dad(family)
 
     if mom is None or dad is None:
+        return False
+    children = [
+        person for person in family.members_in_order
+        if person.is_child()
+    ]
+    if not children:
+        return False
+
+    if not _get_prb(family) and not _get_sibs(family):
         return False
 
     for person in family.persons.values():
@@ -438,3 +449,7 @@ class FamilyTagsBuilder:
         """Tag a family with family type tags - short and full."""
         full_type = _build_family_type_full(family)
         set_attr(family, "tag_family_type_full", full_type)
+
+    def clear_tags(self, family: Family) -> None:
+        for tag in self._taggers:
+            unset_tag(family, tag)
