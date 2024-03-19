@@ -399,7 +399,11 @@ def gp_config() -> Box:
             },
             {
                 "name": "Link with gene info",
-                "url": "https://site.com/{gene}?db={genome}&position={chromosome_prefix}{chromosome}/{gene_start_position}-{gene_stop_position}"
+                "url": (
+                    "https://site.com/{gene}?db={genome}&"
+                    "position={chromosome_prefix}{chromosome}/"
+                    "{gene_start_position}-{gene_stop_position}"
+                )
             },
         ],
         "gene_sets": [
