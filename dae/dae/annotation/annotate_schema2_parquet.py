@@ -94,6 +94,11 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
             loader.partition_descriptor, bucket_idx
         )
 
+        internal_attributes = [
+            attr.name for attr in pipeline.get_attributes()
+            if attr.internal
+        ]
+
         for variant in loader.fetch_summary_variants(region=region):
             for allele in variant.alt_alleles:
                 if isinstance(pipeline, ReannotationPipeline):
@@ -102,6 +107,8 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
                         del allele.attributes[attr]
                 else:
                     result = pipeline.annotate(allele.get_annotatable())
+                for attr in internal_attributes:
+                    del result[attr]
                 allele.update_attributes(result)
             writer.write_summary_variant(variant)
 
@@ -110,7 +117,8 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
     def work(self) -> None:
         loader = ParquetLoader(self.args.input)
 
-        os.mkdir(self.args.output)
+        if not os.path.exists(self.args.output):
+            os.mkdir(self.args.output)
         layout = schema2_dataset_layout(self.args.output)
 
         # Write metadata
