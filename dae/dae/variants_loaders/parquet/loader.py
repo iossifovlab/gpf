@@ -113,7 +113,7 @@ class ParquetLoader:
             if region_filter is not None:
                 table = table.filter(region_filter)
             for rec in table.to_pylist():
-                if rec["allele_index"] == 1:
+                if rec["allele_index"] == 0:
                     yield self._deserialize_summary_variant(rec["summary_variant_data"])
 
             summary_parquet.close()
