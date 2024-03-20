@@ -42,9 +42,14 @@ class ProfileView(QueryBaseView):
                 chromosome = transcript_models[0].chrom
                 gene_start_position = transcript_models[0].exons[0].start
                 gene_stop_position = transcript_models[-1].exons[-1].stop
-                genome = self.gpf_instance.get_genotype_data_config(
+
+                data_config = self.gpf_instance.get_genotype_data_config(
                     gp_config["defaultDataset"]
-                ).genome
+                )
+                genome = None
+                if data_config is not None:
+                    genome = data_config.genome
+
                 chromosome_prefix = "" if genome == "hg38" else "chr"
 
                 gene_links = []
