@@ -36,6 +36,11 @@ genomic_score_schema = {
     }
 }
 
+gene_profile_link_schema = {
+    "name": {"type": "string"},
+    "url": {"type": "string"}
+}
+
 variant_statistic_schema = {
     "type": "dict",
     "schema": {
@@ -138,6 +143,15 @@ gene_profiles_config = {
         "required": True,
         "schema": {
             "type": "string",
+        }
+    },
+    "gene_links": {
+        "type": "list",
+        "default": [],
+        "valuesrules": {
+            "type": "dict",
+            "schema": gene_profile_link_schema,
+            "allow_unknown": True,
         }
     },
 }

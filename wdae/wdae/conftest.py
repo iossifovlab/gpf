@@ -391,6 +391,21 @@ def gp_wgpf_instance(  # pylint: disable=too-many-arguments
 @pytest.fixture
 def gp_config() -> Box:
     return Box({
+        "default_dataset": "iossifov_2014",
+        "gene_links": [
+            {
+                "name": "Link with prefix",
+                "url": "{gpf_prefix}/datasets/{gene}"
+            },
+            {
+                "name": "Link with gene info",
+                "url": (
+                    "https://site.com/{gene}?db={genome}&"
+                    "position={chromosome_prefix}{chromosome}/"
+                    "{gene_start_position}-{gene_stop_position}"
+                )
+            },
+        ],
         "gene_sets": [
             {
                 "category": "relevant_gene_sets",

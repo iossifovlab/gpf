@@ -23,24 +23,27 @@ class GeneModels(QueryBaseView):
 
     def get(self, _request: Request, gene_symbol: str) -> Response:
         """Return gene mode corresponding to a gene symbol."""
-        gene_symbol = gene_symbol.lower()
-        gene_models = self.gpf_instance.gene_models.gene_models
-        for k, v in gene_models.items():
-            if gene_symbol == k.lower():
-                transcripts = v
-                response_data = {
-                    "gene": k,
-                    "transcripts": [],
-                }
-                for transcript in transcripts:
-                    response_data["transcripts"].append(
-                        self.transcript_to_dict(transcript)
-                    )
+        gene_symbol, transcript_models = \
+            self.gpf_instance.get_transcript_models(gene_symbol)
 
-                return Response(
-                    response_data,
-                    status=status.HTTP_200_OK,
-                )
+        if not transcript_models:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        response_data = {
+            "gene": gene_symbol,
+            "transcripts": [],
+        }
+        for transcript in transcript_models:
+            response_data["transcripts"].append(
+                self.transcript_to_dict(transcript)
+            )
+
+        if response_data["transcripts"]:
+            return Response(
+                response_data,
+                status=status.HTTP_200_OK,
+            )
+
         return Response(None, status=status.HTTP_404_NOT_FOUND)
 
     def transcript_to_dict(
