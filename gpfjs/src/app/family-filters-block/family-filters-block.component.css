@@ -13,3 +13,11 @@
 ::ng-deep #tag-list {
   column-gap: 50px !important;
 }
+
+#families-count {
+  float: right;
+  top: 15px;
+  margin-right: 25px;
+  position: relative;
+  font-weight: bold;
+}

@@ -7,6 +7,9 @@ import { StateReset } from 'ngxs-reset-plugin';
 import { NgbNav } from '@ng-bootstrap/ng-bootstrap';
 import { VariantReportsService } from 'app/variant-reports/variant-reports.service';
 import { FamilyTagsModel, FamilyTagsState, SetFamilyTags } from 'app/family-tags/family-tags.state';
+import { FamilyCounter, PedigreeCounter, VariantReport } from 'app/variant-reports/variant-reports';
+import { take } from 'rxjs';
+import { DatasetsService } from 'app/datasets/datasets.service';
 
 @Component({
   selector: 'gpf-family-filters-block',
@@ -27,10 +30,13 @@ export class FamilyFiltersBlockComponent implements OnInit, AfterViewInit {
   public deselectedTags: string[] = [];
   public tagIntersection = true; // mode "And"
   public numOfCols: number;
+  public familiesCounters: FamilyCounter[];
+  public familiesCount: number;
 
   public constructor(
     private store: Store,
     private variantReportsService: VariantReportsService,
+    private datasetsService: DatasetsService
   ) { }
 
   public ngOnInit(): void {
@@ -49,6 +55,15 @@ export class FamilyFiltersBlockComponent implements OnInit, AfterViewInit {
         this.onResize();
       });
     }
+
+
+    const selectedDataset = this.datasetsService.getSelectedDataset();
+    this.variantReportsService.getVariantReport(selectedDataset.id)
+      .pipe(take(1))
+      .subscribe((variantReport: VariantReport) => {
+        this.familiesCounters = variantReport.familyReport.familiesCounters;
+        this.setFamiliesCount();
+      });
   }
 
   @HostListener('window:resize')
@@ -82,6 +97,36 @@ export class FamilyFiltersBlockComponent implements OnInit, AfterViewInit {
     this.store.dispatch(new SetFamilyFilters([]));
     this.store.dispatch(new StateReset(FamilyIdsState));
     this.store.dispatch(new SetFamilyTags([], [], true));
+  }
+
+  public updateTags(tags: {selected: string[]; deselected: string[]}): void {
+    this.selectedTags = tags.selected;
+    this.deselectedTags = tags.deselected;
+    this.setFamiliesCount();
+  }
+
+  public setFamiliesCount(): void {
+    const pedigrees = this.familiesCounters?.map(f => f.pedigreeCounters);
+    if (pedigrees) {
+      let filteredCounters = new Array<PedigreeCounter>();
+      this.familiesCount = 0;
+      for (const pedigree of pedigrees) {
+        filteredCounters = pedigree.filter(x => {
+          if (this.tagIntersection) {
+            return this.selectedTags.every(v => x.tags.includes(v))
+            && this.deselectedTags.every(v => !x.tags.includes(v));
+          } else if (this.selectedTags.length || this.deselectedTags.length) {
+            return this.selectedTags.some(v => x.tags.includes(v))
+            || this.deselectedTags.some(v => !x.tags.includes(v));
+          }
+          return true;
+        });
+      }
+
+      filteredCounters.forEach((counter: PedigreeCounter) => {
+        this.familiesCount += Number(counter.count);
+      });
+    }
   }
 
   @Selector([FamilyIdsState, FamilyTagsState, PersonFiltersState])
