@@ -84,9 +84,16 @@ class ContinuousParquetFileWriter:
 
     def size(self) -> int:
         assert self._data is not None
-        return max(len(val) for val in self._data.values())
+        # min_len = min(len(val) for val in self._data.values())
+        # max_len = max(len(val) for val in self._data.values())
+        # assert min_len == max_len
+        return len(self._data["bucket_index"])
 
     def build_table(self) -> pa.Table:
+        logger.info(
+            "writing %s rows to parquet %s",
+            sum(len(b) for b in self._batches),
+            self.filepath)
         table = pa.Table.from_batches(self._batches, self.schema)
         return table
 
@@ -94,6 +101,8 @@ class ContinuousParquetFileWriter:
         return pa.RecordBatch.from_pydict(self._data, self.schema)
 
     def _write_batch(self) -> None:
+        if self.size() == 0:
+            return
         batch = self.build_batch()
         self._batches.append(batch)
         self.data_reset()
@@ -103,7 +112,8 @@ class ContinuousParquetFileWriter:
     def _flush_batches(self) -> None:
         if len(self._batches) == 0:
             return
-        logger.info("flushing batches at batches len %s", len(self._batches))
+        logger.debug(
+            "flushing %s batches", len(self._batches))
         self._writer.write_table(self.build_table())
         self._batches = []
 
@@ -117,7 +127,7 @@ class ContinuousParquetFileWriter:
         )
 
         for k, v in self._data.items():
-            v.extend(data[k])
+            v.append(data[k])
 
         if self.size() >= self.BATCH_ROWS:
             logger.debug(
@@ -145,13 +155,12 @@ class ContinuousParquetFileWriter:
 
     def close(self) -> None:
         """Close the parquet writer and write any remaining data."""
-        logger.info(
-            "closing parquet writer %s at len %d", self.dirname, self.size())
+        logger.debug(
+            "closing parquet writer %s with %d rows",
+            self.filepath, self.size())
 
-        if self.size() > 0:
-            self._write_batch()
-            self._flush_batches()
-
+        self._write_batch()
+        self._flush_batches()
         self._writer.close()
 
 
@@ -401,7 +410,12 @@ class VariantsParquetWriter:
         summary_blobs_json = json.dumps(
             summary_variant.to_record(), sort_keys=True
         )
-        for summary_allele in summary_variant.alleles:
+        if self.include_reference:
+            stored_alleles = summary_variant.alleles
+        else:
+            stored_alleles = summary_variant.alt_alleles
+
+        for summary_allele in stored_alleles:
             seen_as_denovo = summary_allele.get_attribute("seen_as_denovo")
             summary_writer = self._get_bin_writer_summary(
                 summary_allele, seen_as_denovo)

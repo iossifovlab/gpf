@@ -4,7 +4,7 @@ dae_named_cluster:
     - name: local_small
       type: local
       params:
-        memory_limit: 2GB
+        memory_limit: 4GB
         threads_per_worker: 1
       # By default, the local cluster will allocate by default as many threads 
       # as the number of cores on the host, spread accross several workers each
@@ -22,7 +22,12 @@ dae_named_cluster:
     - name: local
       type: local
       params:
-        memory_limit: 6GB
+        memory_limit: 10GB
+        threads_per_worker: 1
+    - name: local_large
+      type: local
+      params:
+        memory_limit: 16GB
         threads_per_worker: 1
     - name: sge_small
       type: sge

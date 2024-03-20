@@ -117,6 +117,8 @@ def main(argv: Optional[list[str]] = None) -> None:
                     "family %s does not contain sequenced members "
                     "and is removed from the pedigree: %s", family_id, family)
 
+    families.redefine()
+
     output_filename: PedigreeIO
     if not args.output_filename:
         output_filename, _ = os.path.splitext(os.path.basename(filename))
