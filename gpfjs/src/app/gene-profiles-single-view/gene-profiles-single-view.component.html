@@ -27,22 +27,8 @@
           <table id="links-table">
             <tr>
               <td style="border-right: 1px solid #dee2e6; padding: 0 24px; text-align: center">Links</td>
-              <td>
-                <a [attr.href]="links.geneBrowser" id="gene-browser-link" target="_blank">Gene Browser</a>
-              </td>
-              <td>
-                <a [attr.href]="links.ucsc" target="_blank">UCSC genome browser</a>
-              </td>
-              <td>
-                <a [attr.href]="links.geneCards" target="_blank">GeneCards</a>
-              </td>
-              <td>
-                <a [attr.href]="links.pubmed" target="_blank">Pubmed</a>
-              </td>
-              <td>
-                <a [ngClass]="{ 'disabled-link': !links.sfariGene }" [attr.href]="links.sfariGene" target="_blank"
-                  >SFARI gene</a
-                >
+              <td *ngFor="let links of gene.geneLinks">
+                <a [attr.href]="links.url" [id]="links.name + '-link'" target="_blank">{{ links.name }}</a>
               </td>
             </tr>
           </table>

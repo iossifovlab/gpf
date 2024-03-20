@@ -33,7 +33,7 @@ export class GpfTableComponent implements OnChanges, AfterViewChecked {
   private lastRowHeight = 80;
   private drawOutsideVisibleCount = 5;
   private tableTopPosition = 0;
-
+ 
   public tableWidth: string;
   public tableData: Array<any> = [];
 

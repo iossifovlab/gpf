@@ -105,56 +105,27 @@ export class GeneProfileSingleViewComponent implements OnInit {
             this.geneScoresService.getGeneScores(scores)
           );
         }
-        zip(...geneScoresObservables).subscribe(geneScoresArray => {
-          for (let k = 0; k < geneScoresArray.length; k++) {
-            this.genomicScoresGeneScores.push({
-              category: gene.genomicScores[k].id,
-              scores: geneScoresArray[k]
-            });
-          }
-        });
-        return this.geneService.getGene(this.geneSymbol);
+        const genomicScoresObservables: Observable<[string, GeneScores[]]>[] = [];
+        for (let k = 0; k < geneScoresObservables.length; k++) {
+          genomicScoresObservables.push(
+            zip(
+              of(gene.genomicScores[k].id),
+              geneScoresObservables[k]
+            )
+          );
+        }
+        return zip(...genomicScoresObservables);
       }),
-      switchMap(gene => zip(of(gene), this.datasetsService.getDataset(this.config.defaultDataset)))
-    ).subscribe(([gene, dataset]) => {
-      this.setLinks(this.geneSymbol, gene, dataset.genome);
-    }, () => {
-      this.errorModal = true;
+    ).subscribe(genomicScores => {
+      for (const genomicScore of genomicScores) {
+        this.genomicScoresGeneScores.push({
+          category: genomicScore[0],
+          scores: genomicScore[1]
+        });
+      }
     });
   }
 
-  public setLinks(geneSymbol: string, gene: Gene, datasetGenome: string): void {
-    this.links.geneBrowser = this.getGeneBrowserLink();
-    this.links.ucsc = this.getUCSCLink(gene, datasetGenome);
-    this.links.geneCards = 'https://www.genecards.org/cgi-bin/carddisp.pl?gene=' + geneSymbol;
-    this.links.pubmed = 'https://pubmed.ncbi.nlm.nih.gov/?term=' + geneSymbol + '%20AND%20(autism%20OR%20asd)';
-
-    if (this.isGeneInSFARI) {
-      this.links.sfariGene = 'https://gene.sfari.org/database/human-gene/' + geneSymbol;
-    }
-  }
-
-  public getUCSCLink(gene: Gene, datasetGenome: string): string {
-    const genome: string = datasetGenome;
-    const chromosomePrefix: string = genome === 'hg38' ? '' : 'chr';
-    const chromosome: string = gene.transcripts[0].chromosome;
-    const geneStartPosition: number = gene.transcripts[0].start;
-    const geneStopPosition: number = gene.transcripts[gene.transcripts.length - 1].stop;
-
-    // eslint-disable-next-line max-len
-    return `https://genome.ucsc.edu/cgi-bin/hgTracks?db=${ genome }&position=${ chromosomePrefix }${ chromosome }%3A${ geneStartPosition }-${ geneStopPosition }`;
-  }
-
-  public getGeneBrowserLink(): string {
-    if (!this.config) {
-      return;
-    }
-
-    const dataset = this.config.defaultDataset;
-    let pathname = this.router.createUrlTree(['datasets', dataset, 'gene-browser', this.geneSymbol]).toString();
-    pathname = this.location.prepareExternalUrl(pathname);
-    return window.location.origin + pathname;
-  }
 
   public getGeneScoreByKey(category: string, key: string): GeneScores {
     return this.genomicScoresGeneScores
