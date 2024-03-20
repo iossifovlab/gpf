@@ -1,12 +1,15 @@
 from __future__ import annotations
 
 from typing import Dict, Iterator, Optional, Any, cast, Union, Mapping
+from pathlib import Path
 
 from box import Box
 
+import duckdb
+
 from sqlalchemy import MetaData, create_engine
 from sqlalchemy import Table, Column, Integer, String, Float, Enum, \
-    ForeignKey, or_, func, desc
+    or_, func, desc
 from sqlalchemy.sql import select, Select, text
 from sqlalchemy.sql.schema import UniqueConstraint, PrimaryKeyConstraint
 
@@ -22,9 +25,11 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
     STREAMING_CHUNK_SIZE = 25
 
     def __init__(
-        self, dbfile: str, browser_dbfile: Optional[str] = None
+            self, dbfile: str
     ) -> None:
-        self.pheno_dbfile = dbfile
+        # self.verify_pheno_folder(folder)
+        self.dbfile = dbfile
+        self.engine = create_engine(f"duckdb:///{dbfile}")
         self.pheno_metadata = MetaData()
         self.variable_browser: Table
         self.regressions: Table
@@ -32,19 +37,54 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
         self.family: Table
         self.person: Table
         self.measure: Table
-        self.value_continuous: Table
-        self.value_ordinal: Table
-        self.value_categorical: Table
-        self.value_other: Table
-        self.measures: Table
-        self.instruments: Table
+        self.instrument: Table
         self.instrument_values_tables: dict[str, Table] = {}
-        if self.pheno_dbfile == "memory":
-            self.pheno_engine = create_engine("sqlite://")
-        else:
-            self.pheno_engine = create_engine(f"sqlite:///{dbfile}")
 
-        self.update_browser_dbfile(browser_dbfile)
+    def _attach_parquet_files(self):
+        duckdb.sql(f"ATTACH ':memory:' AS {self.pheno_id}")
+        family_file = self.folder / "family.parquet"
+        duckdb.sql(
+            f"CREATE TABLE {self.pheno_id}.family "
+            f"AS FROM '{family_file.absolute()}'"
+        )
+        person_file = self.folder / "person.parquet"
+        duckdb.sql(
+            f"CREATE TABLE {self.pheno_id}.person "
+            f"AS FROM '{person_file.absolute()}'")
+        instrument_file = self.folder / "instrument.parquet"
+        duckdb.sql(
+            f"CREATE TABLE {self.pheno_id}.instrument "
+            f"AS FROM '{instrument_file.absolute()}'"
+        )
+        measure_file = self.folder / "measure.parquet"
+        duckdb.sql(
+            f"CREATE TABLE {self.pheno_id}.measure "
+            f"AS FROM '{measure_file.absolute()}'"
+        )
+        instruments_dir = self.folder / "instruments"
+        instruments_files = instruments_dir.glob("*")
+        for file in instruments_files:
+            duckdb.sql(
+                f"CREATE TABLE {self.pheno_id}.{file.stem} "
+                f"AS FROM '{file.absolute()}'"
+            )
+
+    @staticmethod
+    def verify_pheno_folder(folder: Path):
+        family_file = folder / "family.parquet"
+        assert family_file.exists()
+        person_file = folder / "person.parquet"
+        assert person_file.exists()
+        instrument_file = folder / "instrument.parquet"
+        assert instrument_file.exists()
+        measure_file = folder / "measure.parquet"
+        assert measure_file.exists()
+        instruments_dir = folder / "instruments"
+        dbfile = folder / "pheno.db"
+        assert dbfile.exists()
+        assert instruments_dir.exists()
+        assert instruments_dir.is_dir()
+        assert len(list(instruments_dir.glob("*"))) > 0
 
     def has_browser_dbfile(self) -> bool:
         return self.browser_dbfile is not None
@@ -52,47 +92,43 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
     def update_browser_dbfile(self, browser_dbfile: Optional[str]) -> None:
         self.browser_dbfile = browser_dbfile
         self.browser_metadata: Optional[MetaData] = None
-        self.browser_engine: Any = None
+        self.engine: Any = None
         if browser_dbfile is not None:
             self.browser_metadata = MetaData()
-            self.browser_engine = create_engine(f"sqlite:///{browser_dbfile}")
+            self.engine = create_engine(f"sqlite:///{browser_dbfile}")
 
     def build_browser(self) -> None:
         if self.has_browser_dbfile():
             assert self.browser_metadata is not None
             self._build_browser_tables()
-            self.browser_metadata.create_all(self.browser_engine)
+            self.browser_metadata.create_all(self.engine)
 
     def build(self) -> None:
         """Construct all needed table connections."""
         self._build_person_tables()
-        self._build_measure_tables()
-        self._build_value_tables()
         self.build_instruments_and_measures_table()
         self.build_instrument_values_tables()
 
-        self.pheno_metadata.create_all(self.pheno_engine)
+        # self.build_browser()
 
-        self.build_browser()
+        self.pheno_metadata.create_all(self.engine)
 
     def build_instruments_and_measures_table(self) -> None:
         """Create tables for instruments and measures."""
         if getattr(self, "instruments", None) is None:
-            self.instruments = Table(
-                "instruments",
+            self.instrument = Table(
+                "instrument",
                 self.pheno_metadata,
-                Column("id", Integer(), primary_key=True),
                 Column(
                     "instrument_name", String(64), nullable=False, index=True
                 ),
                 Column("table_name", String(64), nullable=False),
             )
 
-        if getattr(self, "measures", None) is None:
-            self.measures = Table(
-                "measures",
+        if getattr(self, "measure", None) is None:
+            self.measure = Table(
+                "measure",
                 self.pheno_metadata,
-                Column("id", Integer(), primary_key=True),
                 Column(
                     "measure_id",
                     String(128),
@@ -106,9 +142,9 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
                     nullable=False,
                 ),
                 Column("measure_name", String(64), nullable=False, index=True),
-                Column("instrument_id", ForeignKey("instruments.id")),
+                Column("instrument_name", String(64), nullable=False),
                 Column("description", String(255)),
-                Column("measure_type", Enum(MeasureType), index=True),
+                Column("measure_type", Integer(), index=True),
                 Column("individuals", Integer()),
                 Column("default_filter", String(255)),
                 Column("min_value", Float(), nullable=True),
@@ -116,8 +152,6 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
                 Column("values_domain", String(255), nullable=True),
                 Column("rank", Integer(), nullable=True),
             )
-
-        self.pheno_metadata.create_all(self.pheno_engine)
 
     def build_instrument_values_tables(self) -> None:
         """
@@ -127,10 +161,10 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
         for a certain person.
         """
         query = select(
-            self.instruments.c.instrument_name,
-            self.instruments.c.table_name
+            self.instrument.c.instrument_name,
+            self.instrument.c.table_name
         )
-        with self.pheno_engine.connect() as connection:
+        with self.engine.connect() as connection:
             instruments_rows = connection.execute(query)
             instrument_table_names = {}
             instrument_measures: dict[str, list[str]] = {}
@@ -139,12 +173,15 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
                 instrument_measures[row.instrument_name] = []
 
         query = select(
-            self.measures.c.measure_id,
-            self.measures.c.measure_type,
-            self.measures.c.db_column_name,
-            self.instruments.c.instrument_name
-        ).join(self.instruments)
-        with self.pheno_engine.connect() as connection:
+            self.measure.c.measure_id,
+            self.measure.c.measure_type,
+            self.measure.c.db_column_name,
+            self.instrument.c.instrument_name
+        ).join(
+            self.instrument,
+            self.measure.c.instrument_name == self.instrument.c.instrument_name
+        )
+        with self.engine.connect() as connection:
             results = connection.execute(query)
             measure_columns = {}
             for result_row in results:
@@ -186,16 +223,15 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
                     Column("role", String(64), nullable=False, index=True),
                     Column(
                         "status",
-                        Enum(Status),
+                        Integer(),
                         nullable=False,
                         default=Status.unaffected,
                     ),
-                    Column("sex", Enum(Sex), nullable=False),
+                    Column("sex", Integer(), nullable=False),
                     *cols,
                     extend_existing=True
                 )
 
-        self.pheno_metadata.create_all(self.pheno_engine)
 
     def _split_measures_into_groups(
         self, measure_ids: list[str], group_size: int = 60
@@ -266,27 +302,27 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
         """Clear the instruments table."""
         if getattr(self, "instruments", None) is None:
             return
-        with self.pheno_engine.begin() as connection:
-            connection.execute(self.instruments.delete())
+        with self.engine.begin() as connection:
+            connection.execute(self.instrument.delete())
             if drop:
-                self.instruments.drop(connection, checkfirst=False)
+                self.instrument.drop(connection, checkfirst=False)
             connection.commit()
 
     def clear_measures_table(self, drop: bool = False) -> None:
         """Clear the measures table."""
         if getattr(self, "measures", None) is None:
             return
-        with self.pheno_engine.begin() as connection:
-            connection.execute(self.measures.delete())
+        with self.engine.begin() as connection:
+            connection.execute(self.measure.delete())
             if drop:
-                self.measures.drop(connection, checkfirst=False)
+                self.measure.drop(connection, checkfirst=False)
             connection.commit()
 
     def clear_instrument_values_tables(self, drop: bool = False) -> None:
         """Clear all instrument values tables."""
         if getattr(self, "instrument_values_tables", None) is None:
             return
-        with self.pheno_engine.begin() as connection:
+        with self.engine.begin() as connection:
             for instrument_table in self.instrument_values_tables.values():
                 connection.execute(instrument_table.delete())
                 if drop:
@@ -296,10 +332,10 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
     def get_instrument_column_names(self) -> dict[str, list[str]]:
         """Return a map of instruments and their measure column names."""
         query = select(
-            self.measures.c.db_column_name,
-            self.instruments.c.instrument_name
-        ).join(self.instruments)
-        with self.pheno_engine.connect() as connection:
+            self.measure.c.db_column_name,
+            self.instrument.c.instrument_name
+        ).join(self.instrument)
+        with self.engine.connect() as connection:
             results = connection.execute(query)
 
         instrument_col_names = {}
@@ -319,12 +355,12 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
     ) -> dict[str, str]:
         """Return measure column names mapped to their measure IDs."""
         query = select(
-            self.measures.c.measure_id,
-            self.measures.c.db_column_name,
+            self.measure.c.measure_id,
+            self.measure.c.db_column_name,
         )
         if measure_ids is not None:
-            query = query.where(self.measures.c.measure_id.in_(measure_ids))
-        with self.pheno_engine.connect() as connection:
+            query = query.where(self.measure.c.measure_id.in_(measure_ids))
+        with self.engine.connect() as connection:
             results = connection.execute(query)
 
             measure_column_names = {}
@@ -338,12 +374,12 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
     ) -> dict[str, str]:
         """Return measure column names mapped to their measure IDs."""
         query = select(
-            self.measures.c.measure_id,
-            self.measures.c.db_column_name,
+            self.measure.c.measure_id,
+            self.measure.c.db_column_name,
         )
         if measure_ids is not None:
-            query = query.where(self.measures.c.measure_id.in_(measure_ids))
-        with self.pheno_engine.connect() as connection:
+            query = query.where(self.measure.c.measure_id.in_(measure_ids))
+        with self.engine.connect() as connection:
             results = connection.execute(query)
 
             measure_column_names = {}
@@ -368,7 +404,7 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
         instrument_measures = {}
         measure_column_names = {}
 
-        with self.pheno_engine.connect() as connection:
+        with self.engine.connect() as connection:
             if use_old:
                 # Very important to use legacy 'measure' table here instead
                 # Measure IDs will be mismatched when
@@ -380,9 +416,9 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
                 )
             else:
                 query = select(
-                    self.measures.c.id,
-                    self.measures.c.measure_id,
-                    self.measures.c.measure_type
+                    self.measure.c.id,
+                    self.measure.c.measure_id,
+                    self.measure.c.measure_type
                 )
             results = connection.execute(query)
             for result_row in results:
@@ -391,10 +427,10 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
                     result_row.measure_type
 
             query = select(
-                self.measures.c.measure_id,
-                self.measures.c.db_column_name,
-                self.instruments.c.instrument_name
-            ).join(self.instruments)
+                self.measure.c.measure_id,
+                self.measure.c.db_column_name,
+                self.instrument.c.instrument_name
+            ).join(self.instrument)
             results = connection.execute(query)
             for result_row in results:
                 if result_row.instrument_name not in instrument_measures:
@@ -422,7 +458,7 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
             ))
 
         added_instruments = set()
-        with self.pheno_engine.begin() as connection:
+        with self.engine.begin() as connection:
             query_results = zip(*[
                 connection.execute(query) for query in queries
             ])
@@ -478,7 +514,7 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
             ),
             Column("instrument_name", String(64), nullable=False, index=True),
             Column("measure_name", String(64), nullable=False, index=True),
-            Column("measure_type", Enum(MeasureType), nullable=False),
+            Column("measure_type", Integer(), nullable=False),
             Column("description", String(256)),
             Column("values_domain", String(256)),
             Column("figure_distribution_small", String(256)),
@@ -518,7 +554,6 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
         self.family = Table(
             "family",
             self.pheno_metadata,
-            Column("id", Integer(), primary_key=True),
             Column(
                 "family_id",
                 String(64),
@@ -530,87 +565,25 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
         self.person = Table(
             "person",
             self.pheno_metadata,
-            Column("id", Integer(), primary_key=True),
-            Column("family_id", ForeignKey("family.id")),
+            Column("family_id", String(64), nullable=False),
             Column("person_id", String(16), nullable=False, index=True),
-            Column("role", Enum(Role), nullable=False),
+            Column("role", Integer(), nullable=False),
             Column(
                 "status",
-                Enum(Status),
+                Integer(),
                 nullable=False,
                 default=Status.unaffected,
             ),
-            Column("sex", Enum(Sex), nullable=False),
+            Column("sex", Integer(), nullable=False),
             Column("sample_id", String(16), nullable=True),
             UniqueConstraint("family_id", "person_id", name="person_key"),
-        )
-
-    def _build_measure_tables(self) -> None:
-        self.measure = Table(
-            "measure",
-            self.pheno_metadata,
-            Column("id", Integer(), primary_key=True),
-            Column(
-                "measure_id",
-                String(128),
-                nullable=False,
-                index=True,
-                unique=True,
-            ),
-            Column("instrument_name", String(64), nullable=False, index=True),
-            Column("measure_name", String(64), nullable=False, index=True),
-            Column("description", String(255)),
-            Column("measure_type", Enum(MeasureType), index=True),
-            Column("individuals", Integer()),
-            Column("default_filter", String(255)),
-            Column("min_value", Float(), nullable=True),
-            Column("max_value", Float(), nullable=True),
-            Column("values_domain", String(255), nullable=True),
-            Column("rank", Integer(), nullable=True),
-            UniqueConstraint(
-                "instrument_name", "measure_name", name="measure_key"
-            ),
-        )
-
-    def _build_value_tables(self) -> None:
-        self.value_continuous = Table(
-            "value_continuous",
-            self.pheno_metadata,
-            Column("person_id", ForeignKey("person.id")),
-            Column("measure_id", ForeignKey("measure.id")),
-            Column("value", Float(), nullable=False),
-            PrimaryKeyConstraint("person_id", "measure_id"),
-        )
-        self.value_ordinal = Table(
-            "value_ordinal",
-            self.pheno_metadata,
-            Column("person_id", ForeignKey("person.id")),
-            Column("measure_id", ForeignKey("measure.id")),
-            Column("value", Float(), nullable=False),
-            PrimaryKeyConstraint("person_id", "measure_id"),
-        )
-        self.value_categorical = Table(
-            "value_categorical",
-            self.pheno_metadata,
-            Column("person_id", ForeignKey("person.id")),
-            Column("measure_id", ForeignKey("measure.id")),
-            Column("value", String(127), nullable=False),
-            PrimaryKeyConstraint("person_id", "measure_id"),
-        )
-        self.value_other = Table(
-            "value_other",
-            self.pheno_metadata,
-            Column("person_id", ForeignKey("person.id")),
-            Column("measure_id", ForeignKey("measure.id")),
-            Column("value", String(127), nullable=False),
-            PrimaryKeyConstraint("person_id", "measure_id"),
         )
 
     def save(self, v: Dict[str, Optional[str]]) -> None:
         """Save measure values into the database."""
         try:
             insert = self.variable_browser.insert().values(**v)
-            with self.browser_engine.begin() as connection:
+            with self.engine.begin() as connection:
                 connection.execute(insert)
                 connection.commit()
         except Exception:  # pylint: disable=broad-except
@@ -622,7 +595,7 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
                 .values(**v)
                 .where(self.variable_browser.c.measure_id == measure_id)
             )
-            with self.browser_engine.begin() as connection:
+            with self.engine.begin() as connection:
                 connection.execute(update)
                 connection.commit()
 
@@ -630,7 +603,7 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
         """Save regressions into the database."""
         try:
             insert = self.regressions.insert().values(reg)
-            with self.browser_engine.begin() as connection:
+            with self.engine.begin() as connection:
                 connection.execute(insert)
         except Exception:  # pylint: disable=broad-except
             regression_id = reg["regression_id"]
@@ -640,7 +613,7 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
                 .values(reg)
                 .where(self.regressions.c.regression_id == regression_id)
             )
-            with self.browser_engine.begin() as connection:
+            with self.engine.begin() as connection:
                 connection.execute(update)
                 connection.commit()
 
@@ -648,7 +621,7 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
         """Save regression values into the databases."""
         try:
             insert = self.regression_values.insert().values(reg)
-            with self.browser_engine.begin() as connection:
+            with self.engine.begin() as connection:
                 connection.execute(insert)
         except Exception:  # pylint: disable=broad-except
             regression_id = reg["regression_id"]
@@ -664,7 +637,7 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
                     & (self.regression_values.c.measure_id == measure_id)
                 )
             )
-            with self.browser_engine.begin() as connection:
+            with self.engine.begin() as connection:
                 connection.execute(update)
                 connection.commit()
 
@@ -672,7 +645,7 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
         """Get measrue description from phenotype browser database."""
         sel = select(self.variable_browser)
         sel = sel.where(self.variable_browser.c.measure_id == measure_id)
-        with self.browser_engine.connect() as connection:
+        with self.engine.connect() as connection:
             vs = connection.execute(sel).fetchall()
             if vs:
                 return Box(cast(dict, vs[0]._asdict()))
@@ -713,7 +686,7 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
                 self.variable_browser.c.instrument_name == instrument_name
             )
 
-        with self.browser_engine.connect() as connection:
+        with self.engine.connect() as connection:
             cursor = connection.execution_options(stream_results=True)\
                 .execute(query)
             rows = cursor.fetchmany(self.STREAMING_CHUNK_SIZE)
@@ -766,7 +739,7 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
                 self.variable_browser.c.instrument_name == instrument_name
             )
 
-        df = pd.read_sql(query, self.browser_engine)
+        df = pd.read_sql(query, self.engine)
         return df
 
     def get_regression(self, regression_id: str) -> Any:
@@ -774,7 +747,7 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
         selector = select(self.regressions)
         selector = selector.where(
             self.regressions.c.regression_id == regression_id)
-        with self.browser_engine.connect() as connection:
+        with self.engine.connect() as connection:
             vs = connection.execute(selector).fetchall()
             if vs:
                 return vs[0]._mapping  # pylint: disable=protected-access
@@ -784,7 +757,7 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
         selector = select(self.regression_values)
         selector = selector.where(
             self.regression_values.c.measure_id == measure_id)
-        with self.browser_engine.connect() as connection:
+        with self.engine.connect() as connection:
             return [
                 Box(r._asdict())
                 for r in connection.execute(selector).fetchall()
@@ -793,7 +766,7 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
     @property
     def regression_ids(self) -> list[str]:
         selector = select(self.regressions.c.regression_id)
-        with self.browser_engine.connect() as connection:
+        with self.engine.connect() as connection:
             return list(map(
                 lambda x: x[0],
                 connection.execute(selector)))
@@ -805,7 +778,7 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
         selector = select(
             self.regressions.c.regression_id, self.regressions.c.display_name
         )
-        with self.browser_engine.connect() as connection:
+        with self.engine.connect() as connection:
             for row in connection.execute(selector):
                 res[row[0]] = row[1]
         return res
@@ -820,7 +793,7 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
             self.regressions.c.instrument_name,
             self.regressions.c.measure_name,
         )
-        with self.browser_engine.connect() as connection:
+        with self.engine.connect() as connection:
             for row in connection.execute(selector):
                 res[row[0]] = {
                     "display_name": row[1],
@@ -832,7 +805,7 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
     @property
     def has_descriptions(self) -> bool:
         """Check if the database has a description data."""
-        with self.browser_engine.connect() as connection:
+        with self.engine.connect() as connection:
             return bool(
                 connection.execute(
                     select(func.count())  # pylint: disable=not-callable
@@ -862,36 +835,33 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
     def get_families(self) -> dict:
         """Return families in the phenotype database."""
         value_type = select(self.family)
-        with self.pheno_engine.connect() as connection:
+        with self.engine.connect() as connection:
             families = connection.execute(value_type).fetchall()
         return {f.family_id: f for f in families}
 
     def get_persons(self) -> dict:
         """Return individuals in the phenotype database."""
         selector = select(
-            self.person.c.id,
             self.person.c.person_id,
-            self.family.c.family_id,
+            self.person.c.family_id,
             self.person.c.role,
             self.person.c.status,
             self.person.c.sex,
         )
-        selector = selector.select_from(self.person.join(self.family))
-        with self.pheno_engine.connect() as connection:
+        with self.engine.connect() as connection:
             persons = connection.execute(selector).fetchall()
         return {p.person_id: p for p in persons}
 
     def get_measures(self) -> dict:
         """Return measures in the phenotype database."""
         selector = select(
-            self.measure.c.id,
             self.measure.c.measure_id,
             self.measure.c.instrument_name,
             self.measure.c.measure_name,
             self.measure.c.measure_type,
         )
         selector = selector.select_from(self.measure)
-        with self.pheno_engine.begin() as connection:
+        with self.engine.begin() as connection:
             measures = connection.execute(selector).fetchall()
         return {m.measure_id: m for m in measures}
 
@@ -904,4 +874,5 @@ def safe_db_name(name: str) -> str:
 
 
 def generate_instrument_table_name(instrument_name: str) -> str:
+    instrument_name = safe_db_name(instrument_name)
     return f"{instrument_name}_measure_values"

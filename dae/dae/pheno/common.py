@@ -60,6 +60,7 @@ def default_config() -> box.box.Box:
             "ordinal": {"min_rank": 1},
             "categorical": {"min_rank": 1, "max_rank": 15},
         },
+        "output": "output"
     }
 
     return Box(config)
