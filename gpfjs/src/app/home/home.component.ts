@@ -1,5 +1,5 @@
 import { APP_BASE_HREF } from '@angular/common';
-import { Component, ElementRef, Inject, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, Inject, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { NgbDropdown } from '@ng-bootstrap/ng-bootstrap';
 import { DatasetsTreeService } from 'app/datasets/datasets-tree.service';
 import { DatasetsService } from 'app/datasets/datasets.service';
@@ -7,16 +7,17 @@ import { Gene } from 'app/gene-browser/gene';
 import { GeneService } from 'app/gene-browser/gene.service';
 import { GeneProfilesService } from 'app/gene-profiles-block/gene-profiles.service';
 import { GeneProfilesSingleViewConfig } from 'app/gene-profiles-single-view/gene-profiles-single-view';
+import { GeneProfilesTableService } from 'app/gene-profiles-table/gene-profiles-table.service';
 import { InstanceService } from 'app/instance.service';
 import { environment } from 'environments/environment';
-import { Subject, combineLatest, debounceTime, distinctUntilChanged, switchMap, take } from 'rxjs';
+import { Subject, Subscription, combineLatest, debounceTime, distinctUntilChanged, of, switchMap, take } from 'rxjs';
 
 @Component({
   selector: 'gpf-home',
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.css']
 })
-export class HomeComponent implements OnInit {
+export class HomeComponent implements OnInit, OnDestroy {
   public gpfVersion = '';
   public gpfjsVersion = environment?.version;
 
@@ -37,6 +38,7 @@ export class HomeComponent implements OnInit {
   public geneSymbol = '';
   public geneSymbolSuggestions: string[] = [];
   public searchBoxInput$: Subject<string> = new Subject();
+  private keystrokeSubscription: Subscription;
   public showError = false;
 
   public constructor(
@@ -44,6 +46,7 @@ export class HomeComponent implements OnInit {
     private datasetsService: DatasetsService,
     private datasetsTreeService: DatasetsTreeService,
     private geneProfilesService: GeneProfilesService,
+    private geneProfilesTableService: GeneProfilesTableService,
     private geneService: GeneService,
     @Inject(APP_BASE_HREF) private baseHref: string,
   ) {}
@@ -87,28 +90,35 @@ export class HomeComponent implements OnInit {
       this.homeDescription = res.content;
     });
 
-    this.searchBoxInput$.pipe(debounceTime(100), distinctUntilChanged()).subscribe(() => {
-      if (!this.geneSymbol) {
+    this.keystrokeSubscription = this.searchBoxInput$.pipe(
+      distinctUntilChanged(),
+      debounceTime(250),
+      switchMap(searchTerm => {
+        if (!searchTerm) {
+          return of(null);
+        }
+        return this.geneProfilesTableService.getGenes(1, searchTerm);
+      })
+    ).subscribe((response: {geneSymbol: string}[]) => {
+      if (!response) {
         this.geneSymbolSuggestions = [];
         return;
       }
-      this.geneService
-        .searchGenes(this.geneSymbol)
-        .pipe(take(1))
-        // eslint-disable-next-line @typescript-eslint/naming-convention
-        .subscribe((response: { 'gene_symbols': string[] }) => {
-          this.geneSymbolSuggestions = response.gene_symbols;
-        });
+      this.geneSymbolSuggestions = response.map(gene => gene.geneSymbol);
     });
   }
 
-  public openSingleView(geneSymbols: string): void {
+  public ngOnDestroy(): void {
+    this.keystrokeSubscription.unsubscribe();
+  }
+
+  public openSingleView(searchTerm: string): void {
     if (this.showError) {
       return;
     }
 
-    if (geneSymbols) {
-      this.geneSymbol = geneSymbols.trim();
+    if (searchTerm) {
+      this.geneSymbol = searchTerm.trim();
     }
 
     if (!this.geneSymbol) {
