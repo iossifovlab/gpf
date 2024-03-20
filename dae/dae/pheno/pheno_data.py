@@ -250,6 +250,9 @@ class PhenotypeData(ABC):
 
         for row in df.to_dict("records"):
             person_id = row["person_id"]
+            row["role"] = Role.from_value(row["role"])
+            row["sex"] = Sex.from_value(row["sex"])
+            row["status"] = Status.from_value(row["status"])
 
             person = Person(**row)  # type: ignore
             assert row["role"] in Role, f"{row['role']} not a valid role"
@@ -410,12 +413,11 @@ class PhenotypeStudy(PhenotypeData):
 
     def __init__(
             self, pheno_id: str, dbfile: str,
-            browser_dbfile: Optional[str] = None,
             config: Optional[Box] = None) -> None:
-
         super().__init__(pheno_id, config)
 
-        self.db = PhenoDb(dbfile=dbfile, browser_dbfile=browser_dbfile)
+        self.db = PhenoDb(dbfile)
+        self.config = config
         self.db.build()
         self.families = self._load_families()
         df = self._get_measures_df()
@@ -449,11 +451,10 @@ class PhenotypeStudy(PhenotypeData):
             ["continuous", "ordinal", "categorical", "unknown"],
         )
 
-        measure = self.db.measures
-        instruments = self.db.instruments
+        measure = self.db.measure
         columns = [
             measure.c.measure_id,
-            instruments.c.instrument_name,
+            measure.c.instrument_name,
             measure.c.measure_name,
             measure.c.description,
             measure.c.measure_type,
@@ -463,14 +464,14 @@ class PhenotypeStudy(PhenotypeData):
             measure.c.min_value,
             measure.c.max_value,
         ]
-        query = select(*columns).select_from(measure.join(instruments))
+        query = select(*columns)
         query = query.where(not_(measure.c.measure_type.is_(None)))
         if instrument is not None:
             query = query.where(measure.c.instrument_name == instrument)
         if measure_type is not None:
             query = query.where(measure.c.measure_type == measure_type)
 
-        df = pd.read_sql(query, self.db.pheno_engine)
+        df = pd.read_sql(query, self.db.engine)
 
         df_columns = [
             "measure_id",
@@ -538,21 +539,20 @@ class PhenotypeStudy(PhenotypeData):
         Columns returned are: `person_id`, `family_id`, `role`, `sex`.
         """
         columns = [
-            self.db.family.c.family_id,
+            self.db.person.c.family_id,
             self.db.person.c.person_id,
             self.db.person.c.role,
             self.db.person.c.status,
             self.db.person.c.sex,
         ]
         query = select(*columns)
-        query = query.select_from(self.db.family.join(self.db.person))
         if roles is not None:
             query = query.where(self.db.person.c.role.in_(roles))
         if person_ids is not None:
             query = query.where(self.db.person.c.person_id.in_(person_ids))
         if family_ids is not None:
-            query = query.where(self.db.family.c.family_id.in_(family_ids))
-        df = pd.read_sql(query, self.db.pheno_engine)
+            query = query.where(self.db.person.c.family_id.in_(family_ids))
+        df = pd.read_sql(query, self.db.engine)
         # df.rename(columns={'sex': 'sex'}, inplace=True)
         return df[["person_id", "family_id", "role", "sex", "status"]]
 
