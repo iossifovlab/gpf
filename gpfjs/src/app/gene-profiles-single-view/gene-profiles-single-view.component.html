@@ -23,7 +23,7 @@
           style="padding-bottom: 8px; padding-top: 4px">
           <h2 style="padding-left: 0">{{ geneSymbol }}</h2>
         </div>
-        <div class="wrapper" [ngClass]="{ 'compare-wrapper': isInGeneCompare }" #wrapperElement>
+        <div class="wrapper" [ngClass]="{ 'compare-wrapper': isInGeneCompare, compact: compactView }" #wrapperElement>
           <table id="links-table">
             <tr>
               <td style="border-right: 1px solid #dee2e6; padding: 0 24px; text-align: center">Links</td>
@@ -34,7 +34,7 @@
           </table>
         </div>
 
-        <div [ngClass]="{ 'compare-wrapper': isInGeneCompare }" class="wrapper">
+        <div [ngClass]="{ 'compare-wrapper': isInGeneCompare, 'compact': compactView }" class="wrapper">
           <table
             *ngFor="let genomicScoreCategory of config.genomicScores"
             [attr.id]="genomicScoreCategory.category"
@@ -84,7 +84,7 @@
           </table>
         </div>
 
-        <div [ngClass]="{ 'compare-wrapper': isInGeneCompare }" class="wrapper">
+        <div [ngClass]="{ 'compare-wrapper': isInGeneCompare, 'compact': compactView }" class="wrapper">
           <table
             *ngFor="let geneSetCategory of config.geneSets"
             [attr.id]="geneSetCategory.category"
@@ -110,7 +110,7 @@
 
         <div
           style="display: inline-flex; align-items: stretch; flex-wrap: wrap"
-          [ngClass]="{ 'compare-wrapper': isInGeneCompare }"
+          [ngClass]="{ 'compare-wrapper': isInGeneCompare, 'compact': compactView }"
           class="wrapper">
           <ng-container *ngFor="let dataset of config.datasets">
             <table style="width: 100%" class="gpf-basic-table datasets-table">

@@ -11,9 +11,6 @@ import { GeneProfilesService } from 'app/gene-profiles-block/gene-profiles.servi
 import { switchMap, take } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { Location } from '@angular/common';
-import { GeneService } from 'app/gene-browser/gene.service';
-import { Gene } from 'app/gene-browser/gene';
-import { DatasetsService } from 'app/datasets/datasets.service';
 import { Store } from '@ngxs/store';
 import { QueryService } from 'app/query/query.service';
 import { GenomicScore } from 'app/genotype-browser/genotype-browser';
@@ -39,6 +36,7 @@ export class GeneProfileSingleViewComponent implements OnInit {
   @Input() public readonly geneSymbol: string;
   @Input() public config: GeneProfilesSingleViewConfig;
   @Input() public isInGeneCompare = false;
+  public compactView = false;
   public showTemplate = true;
 
   public genomicScoresGeneScores: {category: string; scores: GeneScores[]}[] = [];
@@ -66,8 +64,6 @@ export class GeneProfileSingleViewComponent implements OnInit {
   public constructor(
     private geneProfilesService: GeneProfilesService,
     private geneScoresService: GeneScoresService,
-    private geneService: GeneService,
-    private datasetsService: DatasetsService,
     private location: Location,
     private router: Router,
     private queryService: QueryService,
@@ -84,6 +80,16 @@ export class GeneProfileSingleViewComponent implements OnInit {
       } else {
         this.isHeaderSticky = false;
       }
+    }
+  }
+
+  @HostListener('window:resize')
+  public onResize(): void {
+    const viewWidth = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
+    if (viewWidth < 1250) {
+      this.compactView = true;
+    } else {
+      this.compactView = false;
     }
   }
 
@@ -124,6 +130,7 @@ export class GeneProfileSingleViewComponent implements OnInit {
         });
       }
     });
+    this.onResize();
   }
 
 

@@ -73,6 +73,10 @@ td {
   max-height: 80%;
 }
 
+.compact {
+  flex-direction: column;
+}
+
 .compare-wrapper {
   flex-direction: column;
 }
