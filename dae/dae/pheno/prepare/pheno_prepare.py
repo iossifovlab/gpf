@@ -599,7 +599,7 @@ class PrepareVariables(PreparePersons):
 
                 measure_reports[measure.measure_id] = classifier_report
 
-                db_name = safe_db_name(measure.measure_id)
+                db_name = safe_db_name(measure.measure_name)
                 if db_name.lower() in seen_measure_names:
                     seen_measure_names[db_name.lower()] += 1
                     db_name = \

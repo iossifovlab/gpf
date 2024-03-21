@@ -86,22 +86,9 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
         assert instruments_dir.is_dir()
         assert len(list(instruments_dir.glob("*"))) > 0
 
-    def has_browser_dbfile(self) -> bool:
-        return self.browser_dbfile is not None
-
-    def update_browser_dbfile(self, browser_dbfile: Optional[str]) -> None:
-        self.browser_dbfile = browser_dbfile
-        self.browser_metadata: Optional[MetaData] = None
-        self.engine: Any = None
-        if browser_dbfile is not None:
-            self.browser_metadata = MetaData()
-            self.engine = create_engine(f"sqlite:///{browser_dbfile}")
-
     def build_browser(self) -> None:
-        if self.has_browser_dbfile():
-            assert self.browser_metadata is not None
-            self._build_browser_tables()
-            self.browser_metadata.create_all(self.engine)
+        self._build_browser_tables()
+        self.pheno_metadata.create_all(self.engine)
 
     def build(self) -> None:
         """Construct all needed table connections."""
@@ -109,7 +96,7 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
         self.build_instruments_and_measures_table()
         self.build_instrument_values_tables()
 
-        # self.build_browser()
+        self.build_browser()
 
         self.pheno_metadata.create_all(self.engine)
 
@@ -499,11 +486,9 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
             connection.commit()
 
     def _build_browser_tables(self) -> None:
-        assert self.browser_metadata is not None
-
         self.variable_browser = Table(
             "variable_browser",
-            self.browser_metadata,
+            self.pheno_metadata,
             Column(
                 "measure_id",
                 String(128),
@@ -523,7 +508,7 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
 
         self.regressions = Table(
             "regressions",
-            self.browser_metadata,
+            self.pheno_metadata,
             Column(
                 "regression_id",
                 String(128),
@@ -538,7 +523,7 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
 
         self.regression_values = Table(
             "regression_values",
-            self.browser_metadata,
+            self.pheno_metadata,
             Column("regression_id", String(128), nullable=False, index=True),
             Column("measure_id", String(128), nullable=False, index=True),
             Column("figure_regression", String(256)),
