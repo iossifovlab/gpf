@@ -10,6 +10,7 @@ import { FamilyTagsModel, FamilyTagsState, SetFamilyTags } from 'app/family-tags
 import { FamilyCounter, PedigreeCounter, VariantReport } from 'app/variant-reports/variant-reports';
 import { take } from 'rxjs';
 import { DatasetsService } from 'app/datasets/datasets.service';
+import { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
   selector: 'gpf-family-filters-block',
@@ -31,7 +32,8 @@ export class FamilyFiltersBlockComponent implements OnInit, AfterViewInit {
   public tagIntersection = true; // mode "And"
   public numOfCols: number;
   public familiesCounters: FamilyCounter[];
-  public familiesCount: number;
+  public selectedFamiliesCount: number;
+  public showSelectedFamilies = true;
 
   public constructor(
     private store: Store,
@@ -56,13 +58,21 @@ export class FamilyFiltersBlockComponent implements OnInit, AfterViewInit {
       });
     }
 
-
     const selectedDataset = this.datasetsService.getSelectedDataset();
     this.variantReportsService.getVariantReport(selectedDataset.id)
       .pipe(take(1))
-      .subscribe((variantReport: VariantReport) => {
-        this.familiesCounters = variantReport.familyReport.familiesCounters;
-        this.setFamiliesCount();
+      .subscribe({
+        next: (variantReport: VariantReport) => {
+          this.familiesCounters = variantReport.familyReport.familiesCounters;
+          this.setFamiliesCount();
+        },
+        error: (err: HttpErrorResponse) => {
+          if (err.status === 404) {
+            this.showSelectedFamilies = false;
+          } else {
+            throw err;
+          }
+        }
       });
   }
 
@@ -109,7 +119,7 @@ export class FamilyFiltersBlockComponent implements OnInit, AfterViewInit {
     const pedigrees = this.familiesCounters?.map(f => f.pedigreeCounters);
     if (pedigrees) {
       let filteredCounters = new Array<PedigreeCounter>();
-      this.familiesCount = 0;
+      this.selectedFamiliesCount = 0;
       for (const pedigree of pedigrees) {
         filteredCounters = pedigree.filter(x => {
           if (this.tagIntersection) {
@@ -124,7 +134,7 @@ export class FamilyFiltersBlockComponent implements OnInit, AfterViewInit {
       }
 
       filteredCounters.forEach((counter: PedigreeCounter) => {
-        this.familiesCount += Number(counter.count);
+        this.selectedFamiliesCount += Number(counter.count);
       });
     }
   }

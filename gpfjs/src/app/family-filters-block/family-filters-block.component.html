@@ -20,7 +20,7 @@
       <li [ngbNavItem]="'familyTags'" id="family-tags">
         <a ngbNavLink (click)="hasContent = true">Family Tags</a>
         <ng-template ngbNavContent>
-          <span id="families-count">All families: {{ familiesCount }}</span>
+          <span *ngIf="showSelectedFamilies" id="families-count">Selected families: {{ selectedFamiliesCount }}</span>
           <gpf-family-tags
             [numOfCols]="numOfCols"
             [tags]="orderedTagList"
