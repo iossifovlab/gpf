@@ -67,6 +67,13 @@ def pheno_cli_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--regression", help="absolute path to a regression configuration file",
     )
+    parser.add_argument(
+        "--person-column",
+        dest="person_column",
+        default="person_id",
+        help="The column in instruments files containing the person ID",
+        metavar="<person column>"
+    )
 
     parser.add_argument(
         "--force",
@@ -119,6 +126,7 @@ def parse_phenotype_data_config(args: argparse.Namespace) -> Box:
     config.pedigree = args.pedigree
 
     config.db.filename = args.pheno_db_filename
+    config.person.column = args.person_column
 
     dump_config(config)
     check_phenotype_data_config(config)
@@ -173,6 +181,7 @@ def main(argv: Optional[list[str]] = None) -> int:
             os.makedirs(args.browser_dir)
 
         config = parse_phenotype_data_config(args)
+        os.makedirs(config.output, exist_ok=True)
         if args.regression:
             regressions = GPFConfigParser.load_config(
                 args.regression, regression_conf_schema,
@@ -184,12 +193,14 @@ def main(argv: Optional[list[str]] = None) -> int:
         prep.build_pedigree(args.pedigree)
         prep.build_variables(args.instruments, args.data_dictionary)
 
-        prep.db.clear_instrument_values_tables(drop=True)
-        prep.db.build_instrument_values_tables()
-        prep.db.populate_instrument_values_tables()
+        # prep.db.clear_instrument_values_tables(drop=True)
+        # prep.db.build_instrument_values_tables()
+        # prep.db.populate_instrument_values_tables()
+
+        pheno_db_filename = os.path.join("./output", "pheno.db")
 
         build_pheno_browser(
-            args.pheno_db_filename,
+            pheno_db_filename,
             args.pheno_name,
             args.browser_dir,
             regressions,
