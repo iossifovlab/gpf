@@ -107,7 +107,6 @@ def generate_phenotype_data_config(
         "phenotype_data": {
             "name": args.pheno_name,
             "dbfile": dbfile,
-            "browser_dbfile": browser_dbfile,
             "browser_images_url": f"/static/images/{args.pheno_name}/",
         },
     }
@@ -197,10 +196,9 @@ def main(argv: Optional[list[str]] = None) -> int:
         # prep.db.build_instrument_values_tables()
         # prep.db.populate_instrument_values_tables()
 
-        pheno_db_filename = os.path.join("./output", "pheno.db")
 
         build_pheno_browser(
-            pheno_db_filename,
+            args.pheno_db_filename,
             args.pheno_name,
             args.browser_dir,
             regressions,

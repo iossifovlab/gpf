@@ -43,7 +43,7 @@ class PrepareBase(PrepareCommon):
         assert config is not None
         self.config = config
         self.persons: dict[str, Any] = {}
-        self.dbfile = os.path.join(self.config.output, "pheno.db")
+        self.dbfile = self.config.db.filename
         self.connection = duckdb.connect(self.dbfile)
 
     def get_persons(self, force: bool = False) -> Optional[dict[str, Any]]:
