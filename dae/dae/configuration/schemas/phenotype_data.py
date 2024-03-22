@@ -23,11 +23,6 @@ phenotype_data_schema = {
         "check_with": validate_existing_path,
         "coerce": "abspath",
     },
-    "browser_dbfile": {
-        "type": "string",
-        "check_with": validate_existing_path,
-        "coerce": "abspath",
-    },
     "browser_images_url": {"type": "string"},
 }
 
