@@ -41,10 +41,15 @@ test.describe('Family filters block tests', () => {
     const downloadPromise = page.waitForEvent('download', { timeout: 180000 });
     await page.locator('#download-button').click();
     const download = await downloadPromise;
-    const fixtureData = scanCSV(await download.path());
-    const downloadData = scanCSV('playwright/fixtures/genotype-browser/variants-2.tsv');
-    const fixtureFrame = await fixtureData.collect();
-    const downloadFrame = await downloadData.collect();
+    const fixtureData = scanCSV(
+      'playwright/fixtures/genotype-browser/variants-2.tsv',
+      {
+        sep: '\t',
+        inferSchemaLength: 0
+      });
+    const downloadData = scanCSV(await download.path(), {sep: '\t', inferSchemaLength: 0});
+    const fixtureFrame = (await fixtureData.select(fixtureData.columns.sort()).collect()).sort('family id');
+    const downloadFrame = (await downloadData.select(downloadData.columns.sort()).collect()).sort('family id');
     expect(fixtureFrame.toString()).toEqual(downloadFrame.toString());
   });
 
@@ -68,10 +73,15 @@ test.describe('Family filters block tests', () => {
     const downloadPromise = page.waitForEvent('download', { timeout: 180000 });
     await page.locator('#download-button').click();
     const download = await downloadPromise;
-    const fixtureData = scanCSV(await download.path());
-    const downloadData = scanCSV('playwright/fixtures/genotype-browser/variants-3.tsv');
-    const fixtureFrame = await fixtureData.collect();
-    const downloadFrame = await downloadData.collect();
+    const fixtureData = scanCSV(
+      'playwright/fixtures/genotype-browser/variants-3.tsv',
+      {
+        sep: '\t',
+        inferSchemaLength: 0
+      });
+    const downloadData = scanCSV(await download.path(), {sep: '\t', inferSchemaLength: 0});
+    const fixtureFrame = (await fixtureData.select(fixtureData.columns.sort()).collect()).sort('family id');
+    const downloadFrame = (await downloadData.select(downloadData.columns.sort()).collect()).sort('family id');
     expect(fixtureFrame.toString()).toEqual(downloadFrame.toString());
   });
 
