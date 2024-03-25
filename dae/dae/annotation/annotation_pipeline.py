@@ -75,7 +75,7 @@ class AnnotatorInfo:
         else:
             self.resources = resources
 
-    annotator_id: str
+    annotator_id: str = field(compare=False, hash=None)
     type: str
     attributes: list[AttributeInfo]
     parameters: ParamsUsageMonitor
