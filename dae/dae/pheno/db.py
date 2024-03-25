@@ -681,7 +681,7 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
                         "measure_id": row[0],
                         "instrument_name": row[1],
                         "measure_name": row[2],
-                        "measure_type": MeasureType.from_str(row[3]),
+                        "measure_type": MeasureType(row[3]),
                         "description": row[4],
                         "values_domain": row[5],
                         "figure_distribution_small": row[6],
