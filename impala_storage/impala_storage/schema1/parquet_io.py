@@ -450,6 +450,13 @@ class VariantsParquetWriter(AbstractVariantsParquetWriter):
                 enumerate(self.full_variants_iterator):
             summary_alleles = summary_variant.alleles
 
+            if len(summary_alleles) > 127:
+                logger.warning(
+                    "more than 127 alternative alleles; "
+                    "some alleles will be skipped: %s",
+                    summary_alleles)
+                continue
+
             summary_blobs = self.serializer.serialize_summary_data(
                 summary_alleles
             )
