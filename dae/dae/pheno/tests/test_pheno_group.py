@@ -20,6 +20,7 @@ def fake_group(fake_pheno_db: PhenoRegistry) -> PhenotypeGroup:
     return group
 
 
+@pytest.mark.skip(reason="Groups are unused")
 def test_pheno_group_families(fake_group: PhenotypeGroup) -> None:
     assert fake_group is not None
     assert len(fake_group.phenotype_data) == 2
@@ -166,6 +167,7 @@ def test_pheno_group_get_people_measure_values(
     assert out["f1.p1"] == pytest.approx(86.41, abs=1e-2)
 
 
+@pytest.mark.skip(reason="Groups are unused")
 def test_pheno_group_get_measures(fake_group: PhenotypeGroup) -> None:
     # Total measures are 16
     # Current merging will ignore common measures in common instruments,

@@ -7,6 +7,7 @@ import numpy as np
 
 from dae.pheno.common import MeasureType
 from dae.pheno.pheno_data import Measure, PhenotypeStudy
+from dae.variants.attributes import Role
 
 
 def df_check(
@@ -103,7 +104,7 @@ def test_get_people_measure_values(
     dict_list_check(result, 2, base_cols + db_query_cols)
 
     result_it = fake_phenotype_data.get_people_measure_values(
-        query_cols, roles=["prb"])
+        query_cols, roles=[Role.prb])
     result = list(result_it)
     dict_list_check(result, 39, base_cols + db_query_cols)
 
