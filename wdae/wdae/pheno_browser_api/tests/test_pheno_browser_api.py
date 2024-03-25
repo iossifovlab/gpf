@@ -261,7 +261,7 @@ def test_get_specific_measure_values(admin_client: Client) -> None:
         "role": "sib",
         "sex": "F",
         "status": "unaffected",
-        "instrument1.continuous": 4.56,
+        "instrument1.continuous": pytest.approx(4.56),
         "instrument1.categorical": None
     }
     assert content[1] == {
@@ -270,7 +270,7 @@ def test_get_specific_measure_values(admin_client: Client) -> None:
         "role": "sib",
         "sex": "F",
         "status": "unaffected",
-        "instrument1.continuous": 1.23,
+        "instrument1.continuous": pytest.approx(1.23),
         "instrument1.categorical": None
     }
 
@@ -294,7 +294,7 @@ def test_get_measure_values(admin_client: Client) -> None:
         "role": "sib",
         "sex": "F",
         "status": "unaffected",
-        "instrument1.continuous": 4.56,
+        "instrument1.continuous": pytest.approx(4.56),
         "instrument1.categorical": None,
         "instrument1.ordinal": None,
         "instrument1.raw": None
@@ -305,9 +305,9 @@ def test_get_measure_values(admin_client: Client) -> None:
         "role": "prb",
         "sex": "M",
         "status": "affected",
-        "instrument1.continuous": 3.14,
+        "instrument1.continuous": pytest.approx(3.14),
         "instrument1.categorical": "option2",
-        "instrument1.ordinal": 5.0,
+        "instrument1.ordinal": pytest.approx(5.0),
         "instrument1.raw": "somevalue"
     }
     assert content[4] == {
@@ -316,7 +316,7 @@ def test_get_measure_values(admin_client: Client) -> None:
         "role": "dad",
         "sex": "M",
         "status": "unaffected",
-        "instrument1.continuous": 2.718,
+        "instrument1.continuous": pytest.approx(2.718),
         "instrument1.categorical": None,
         "instrument1.ordinal": None,
         "instrument1.raw": "othervalue"

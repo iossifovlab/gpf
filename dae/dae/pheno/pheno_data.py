@@ -349,7 +349,7 @@ class PhenotypeData(ABC):
         measure_ids: list[str],
         person_ids: Optional[list[str]] = None,
         family_ids: Optional[list[str]] = None,
-        roles: Optional[list[str]] = None,
+        roles: Optional[list[Role]] = None,
     ) -> Generator[dict[str, Any], None, None]:
         """
         Collect and format the values of the given measures in dict format.
@@ -375,7 +375,7 @@ class PhenotypeData(ABC):
         measure_ids: list[str],
         person_ids: Optional[list[str]] = None,
         family_ids: Optional[list[str]] = None,
-        roles: Optional[list[str]] = None,
+        roles: Optional[list[Role]] = None,
     ) -> pd.DataFrame:
         """
         Collect and format the values of the given measures in a dataframe.
@@ -577,7 +577,7 @@ class PhenotypeStudy(PhenotypeData):
         measure_ids: list[str],
         person_ids: Optional[list[str]] = None,
         family_ids: Optional[list[str]] = None,
-        roles: Optional[list[str]] = None,
+        roles: Optional[list[Role]] = None,
     ) -> Select:
         assert isinstance(measure_ids, list)
         assert len(measure_ids) >= 1
@@ -651,8 +651,9 @@ class PhenotypeStudy(PhenotypeData):
                 subquery.c.family_id.in_(family_ids)
             )
         if roles is not None:
+            query_roles = [role.value for role in roles]
             query = query.where(
-                subquery.c.role.in_(roles)
+                subquery.c.role.in_(query_roles)
             )
 
         return query
@@ -662,7 +663,7 @@ class PhenotypeStudy(PhenotypeData):
         measure_ids: list[str],
         person_ids: Optional[list[str]] = None,
         family_ids: Optional[list[str]] = None,
-        roles: Optional[list[str]] = None,
+        roles: Optional[list[Role]] = None,
     ) -> Generator[dict[str, Any], None, None]:
         assert isinstance(measure_ids, list)
         assert len(measure_ids) >= 1
@@ -681,8 +682,9 @@ class PhenotypeStudy(PhenotypeData):
 
             for row in result:
                 output = {**row._mapping}  # pylint: disable=protected-access
-                output["status"] = str(output["status"])
-                output["sex"] = str(output["sex"])
+                output["role"] = Role.to_name(output["role"])
+                output["status"] = Status.to_name(output["status"])
+                output["sex"] = Sex.to_name(output["sex"])
                 yield output
 
     def get_people_measure_values_df(
@@ -690,7 +692,7 @@ class PhenotypeStudy(PhenotypeData):
         measure_ids: list[str],
         person_ids: Optional[list[str]] = None,
         family_ids: Optional[list[str]] = None,
-        roles: Optional[list[str]] = None,
+        roles: Optional[list[Role]] = None,
     ) -> pd.DataFrame:
         assert isinstance(measure_ids, list)
         assert len(measure_ids) >= 1
@@ -881,6 +883,6 @@ class PhenotypeGroup(PhenotypeData):
         measure_ids: list[str],
         person_ids: Optional[list[str]] = None,
         family_ids: Optional[list[str]] = None,
-        roles: Optional[list[str]] = None,
+        roles: Optional[list[Role]] = None,
     ) -> Generator[dict[str, Any], None, None]:
         raise NotImplementedError()

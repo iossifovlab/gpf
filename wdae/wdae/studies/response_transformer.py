@@ -12,7 +12,7 @@ from dae.effect_annotation.effect import ge2str, \
     gd2str, \
     gene_effect_get_worst_effect, \
     gene_effect_get_genes
-from dae.variants.attributes import Inheritance
+from dae.variants.attributes import Inheritance, Role
 from dae.variants.variant import SummaryVariant, VariantDesc
 from dae.variants.family_variant import FamilyVariant, FamilyAllele
 from dae.pedigrees.family import Person
@@ -194,7 +194,7 @@ class ResponseTransformer:
             result = {}
             column_values_iter = self.study_wrapper\
                 .phenotype_data.get_people_measure_values(
-                    [column.source], roles=[column.role])
+                    [column.source], roles=[Role.from_name(column.role)])
             for column_value in column_values_iter:
                 result[column_value["family_id"]] = column_value[column.source]
 
