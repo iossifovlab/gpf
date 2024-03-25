@@ -53,32 +53,13 @@ test.describe('Gene profiles single view tests', () => {
     await expect(page.locator('.datasets-table th').first()).toHaveText('iossifov_2014');
     await expect(page.locator('.datasets-table tr')).toHaveCount(5);
   });
-});
 
-test.describe('Gene profiles single view links tests', () => {
-  test.beforeEach(async({ page }) => {
-    await page.goto(utils.instanceUrl, {waitUntil: 'load'});
-    await page.locator('#header a:text("Gene Profiles")').click();
-    await page.locator('input#gene-search-input').focus();
-    await page.keyboard.type('CHD8');
-    await page.locator('div').filter({ hasText: /^CHD8$/}).click();
-  });
-
-  test('should display gene browser link', async({ page }) => {
-    await expect(page.locator('#gene-browser-link')).toBeVisible();
-    await expect(page.locator('#gene-browser-link')).toHaveText('Gene Browser');
-  });
-
-  test('should display UCSC link', async({ page }) => {
-    await expect(page.getByText('UCSC genome browser')).toBeVisible();
-  });
-
-  test('should display GeneCards link', async({ page }) => {
-    await expect(page.getByText('GeneCards')).toBeVisible();
-  });
-
-  test('should display Pubmed link', async({ page }) => {
-    await expect(page.getByText('Pubmed')).toBeVisible();
+  test('should display links', async({ page }) => {
+    await expect(page.getByRole('link', { name: 'Gene Browser' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'UCSC genome browser' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'GeneCards' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Pubmed' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'SFARI gene' })).toBeVisible();
   });
 });
 
