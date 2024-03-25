@@ -66,7 +66,7 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
     def annotate(
         input_dir: str,
         output_dir: str,
-        pipeline_config: list[AnnotatorInfo],
+        pipeline_config: str,
         region: str,
         grr_definition: dict,
         bucket_idx: int,
@@ -76,7 +76,7 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
         grr = build_genomic_resource_repository(definition=grr_definition)
 
         pipeline = build_annotation_pipeline(
-            pipeline_config=pipeline_config,
+            pipeline_config_str=pipeline_config,
             grr_repository=grr,
             allow_repeated_attributes=allow_repeated_attributes
         )
@@ -93,10 +93,19 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
             loader.partition_descriptor, bucket_idx
         )
 
-        internal_attributes = [
-            attr.name for attr in pipeline.get_attributes()
-            if attr.internal
-        ]
+        if isinstance(pipeline, ReannotationPipeline):
+            internal_attributes = [
+                attribute.name
+                for annotator in pipeline.annotators_new | pipeline.annotators_rerun
+                for attribute in annotator.attributes
+                if attribute.internal
+            ]
+        else:
+            internal_attributes = [
+                attribute.name
+                for attribute in pipeline.get_attributes()
+                if attribute.internal
+            ]
 
         for variant in loader.fetch_summary_variants(region=region):
             for allele in variant.alt_alleles:
@@ -158,7 +167,7 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
                 f"part_{region}",
                 AnnotateSchema2ParquetTool.annotate,
                 [self.args.input, self.args.output,
-                self.pipeline.get_info(), region, self.grr.definition,
+                raw_annotation, region, self.grr.definition,
                 idx, self.args.allow_repeated_attributes],
                 []
             ))
