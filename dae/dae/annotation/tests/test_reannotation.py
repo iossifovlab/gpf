@@ -274,8 +274,7 @@ def test_new_annotators_detection(
     assert len(reannotation.attributes_deleted) == 0
 
 
-def test_deleted_attributes(
-        reannotation_grr: GenomicResourceRepo) -> None:
+def test_deleted_attributes(reannotation_grr: GenomicResourceRepo) -> None:
     old_pipeline_config = """
     - liftover_annotator:
         chain: foobar_chain
@@ -284,11 +283,13 @@ def test_deleted_attributes(
         genome: foobar_genome
         gene_models: foobar_genes
         input_annotatable: liftover_annotatable
+    - position_score: one
     """
     new_pipeline_config = """
     - liftover_annotator:
         chain: foobar_chain
         target_genome: foobar_genome
+    - position_score: one
     """
     old_pipeline = build_annotation_pipeline(
         pipeline_config_str=old_pipeline_config,

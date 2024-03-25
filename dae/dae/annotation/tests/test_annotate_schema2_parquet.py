@@ -29,6 +29,9 @@ def t4c8_instance(tmp_path: pathlib.Path) -> GPFInstance:
                     attributes:
                     - source: score_three
                       name: score_A
+                    - source: score_three
+                      name: score_A_internal
+                      internal: true
             """),
             "one": {
                 "genomic_resource.yaml": textwrap.dedent("""
@@ -261,6 +264,9 @@ def test_reannotate_parquet_metadata(
             attributes:
             - source: score_three
               name: score_A
+            - source: score_three
+              name: score_A_internal
+              internal: true
     """)
     assert loader_result.meta == expected_meta
 
@@ -394,3 +400,39 @@ def test_reannotate_parquet_merging(
     # check all variants present
     loader_result = ParquetLoader(output_dir)
     assert len(list(loader_result.fetch_summary_variants())) == 6
+
+
+@pytest.mark.parametrize("study", [("t4c8_study_nonpartitioned"),
+                                   ("t4c8_study_partitioned")])
+def test_internal_attributes_reannotation(
+    tmp_path: pathlib.Path,
+    t4c8_instance: GPFInstance,
+    study: str,
+    t4c8_study_nonpartitioned,
+    t4c8_study_partitioned,
+    gpf_instance_genomic_context_fixture
+) -> None:
+    root_path = pathlib.Path(t4c8_instance.dae_dir) / ".."
+    input_dir = t4c8_study_nonpartitioned \
+        if study == "t4c8_study_nonpartitioned" \
+        else t4c8_study_partitioned
+    annotation_file_new = root_path / "new_annotation.yaml"
+    grr_file = root_path / "grr.yaml"
+    output_dir = tmp_path / "out"
+    work_dir = tmp_path / "work"
+
+    gpf_instance_genomic_context_fixture(t4c8_instance)
+
+    cli([
+        str(a) for a in [
+            input_dir, annotation_file_new,
+            "-o", output_dir,
+            "-w", work_dir,
+            "--grr", grr_file,
+            "-j", 1
+        ]
+    ])
+
+    # check internal attributes are not saved
+    for sv in ParquetLoader(output_dir).fetch_summary_variants():
+        assert not sv.has_attribute("score_A_internal")
