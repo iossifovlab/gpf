@@ -94,6 +94,7 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
         """Construct all needed table connections."""
         self._build_person_tables()
         self.build_instruments_and_measures_table()
+        self.pheno_metadata.create_all(self.engine)
         self.build_instrument_values_tables()
 
         self.build_browser()
@@ -235,56 +236,6 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
                 measure_groups.append(group)
         return measure_groups
 
-    def _build_measures_subquery(
-        self,
-        measure_id_map: dict[str, str],
-        measure_type_map: Mapping[str, Union[str, MeasureType]],
-        measure_ids: list[str],
-        measure_column_names: Optional[dict[str, str]] = None
-    ) -> Select:
-        select_columns = [
-            self.person.c.person_id,
-            self.person.c.role,
-            self.family.c.family_id,
-            self.person.c.status,
-            self.person.c.sex
-        ]
-        query = select(
-            self.measure.c.measure_id, self.measure.c.measure_type
-        )
-        for m_id in measure_ids:
-            measure_type = measure_type_map[m_id]
-            if measure_type is None:
-                raise ValueError(
-                    f"bad measure: {m_id}; unknown value type"
-                )
-            col_name = m_id
-            if measure_column_names is not None:
-                col_name = measure_column_names[m_id]
-            select_columns.append(cast(Column[Any], text(
-                f"\"{m_id}_value\".value AS '{col_name}'"
-            )))
-        query = select(*select_columns).select_from(
-            self.person.join(self.family)
-        )
-
-        for m_id in measure_ids:
-            db_id = measure_id_map[m_id]
-            measure_type = measure_type_map[m_id]
-            measure_table = self.get_value_table(measure_type)
-            table_alias = f"{m_id}_value"
-            query = query.join(
-                text(f'{measure_table.name} as "{table_alias}"'),
-                text(
-                    f'"{table_alias}".person_id = person.id AND '
-                    f'"{table_alias}".measure_id = {db_id}'
-                ),
-                isouter=True
-            )
-
-        query = query.order_by(desc(self.person.c.person_id))
-        return query
-
     def clear_instruments_table(self, drop: bool = False) -> None:
         """Clear the instruments table."""
         if getattr(self, "instruments", None) is None:
@@ -375,116 +326,6 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
                     result_row.measure_id
         return measure_column_names
 
-    #  pylint: disable=too-many-branches
-    def populate_instrument_values_tables(self, use_old: bool = False) -> None:
-        """
-        Populate the instrument values tables with values.
-
-        Dependant on measures and instruments tables being populated and
-        the original value tables being populated.
-        """
-        if getattr(self, "instrument_values_tables", None) is None:
-            raise ValueError("No instrument values tables prepared")
-
-        measure_id_map = {}
-        measure_type_map = {}
-        instrument_measures = {}
-        measure_column_names = {}
-
-        with self.engine.connect() as connection:
-            if use_old:
-                # Very important to use legacy 'measure' table here instead
-                # Measure IDs will be mismatched when
-                # collecting values otherwise
-                query = select(
-                    self.measure.c.id,
-                    self.measure.c.measure_id,
-                    self.measure.c.measure_type
-                )
-            else:
-                query = select(
-                    self.measure.c.id,
-                    self.measure.c.measure_id,
-                    self.measure.c.measure_type
-                )
-            results = connection.execute(query)
-            for result_row in results:
-                measure_id_map[result_row.measure_id] = result_row.id
-                measure_type_map[result_row.measure_id] = \
-                    result_row.measure_type
-
-            query = select(
-                self.measure.c.measure_id,
-                self.measure.c.db_column_name,
-                self.instrument.c.instrument_name
-            ).join(self.instrument)
-            results = connection.execute(query)
-            for result_row in results:
-                if result_row.instrument_name not in instrument_measures:
-                    instrument_measures[result_row.instrument_name] = [
-                        result_row.measure_id
-                    ]
-                else:
-                    instrument_measures[result_row.instrument_name].append(
-                        result_row.measure_id
-                    )
-                measure_column_names[result_row.measure_id] = \
-                    result_row.db_column_name
-
-        measure_groups = self._split_measures_into_groups(
-            cast(list[str], list(measure_id_map.keys()))
-        )
-
-        queries = []
-        for group in measure_groups:
-            queries.append(self._build_measures_subquery(
-                cast(dict[str, str], measure_id_map),
-                cast(dict[str, MeasureType], measure_type_map),
-                group,
-                measure_column_names
-            ))
-
-        added_instruments = set()
-        with self.engine.begin() as connection:
-            query_results = zip(*[
-                connection.execute(query) for query in queries
-            ])
-            for subquery_results in query_results:
-                row = {}
-                for fetched_row in subquery_results:
-                    # pylint: disable=protected-access
-                    row.update(fetched_row._mapping)
-
-                instrument_values = {}
-                for instrument_name, measures in instrument_measures.items():
-                    skip = True
-                    query_values = {
-                        "person_id": row["person_id"],
-                        "role": str(row["role"]),
-                        "family_id": row["family_id"],
-                        "status": row["status"],
-                        "sex": row["sex"]
-                    }
-                    for measure in measures:
-                        col_name = measure_column_names[measure]
-                        value = row[col_name]
-                        if value is not None:
-                            skip = False
-                        query_values[col_name] = value
-
-                    if not skip:
-                        instrument_values[instrument_name] = query_values
-
-                for instrument_name, i_table in \
-                        self.instrument_values_tables.items():
-                    if instrument_name in instrument_values:
-                        added_instruments.add(instrument_name)
-                        values = instrument_values[instrument_name]
-                        insert = i_table.insert().values(**values)
-                        connection.execute(insert)
-
-            connection.commit()
-
     def _build_browser_tables(self) -> None:
         self.variable_browser = Table(
             "variable_browser",
@@ -571,17 +412,22 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
             with self.engine.begin() as connection:
                 connection.execute(insert)
                 connection.commit()
-        except Exception:  # pylint: disable=broad-except
+        except Exception as e:  # pylint: disable=broad-except
             measure_id = v["measure_id"]
 
-            del v["measure_id"]
-            update = (
-                self.variable_browser.update()
-                .values(**v)
+            delete = (
+                self.variable_browser.delete()
                 .where(self.variable_browser.c.measure_id == measure_id)
             )
-            with self.engine.begin() as connection:
-                connection.execute(update)
+            update = (
+                self.variable_browser.insert()
+                .values(**v)
+            )
+            with self.engine.connect() as connection:
+                connection.execute(delete)
+                connection.commit()
+            with self.engine.connect() as connection:
+                connection.execute(insert)
                 connection.commit()
 
     def save_regression(self, reg: Dict[str, str]) -> None:

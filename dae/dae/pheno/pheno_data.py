@@ -655,6 +655,7 @@ class PhenotypeStudy(PhenotypeData):
             query = query.where(
                 subquery.c.role.in_(query_roles)
             )
+        query = query.order_by(subquery.c.person_id)
 
         return query
 

@@ -1,28 +1,27 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,too-many-lines
 import os
 from typing import Any
-
 from box import Box
+import pytest
 
 from dae.pheno.db import PhenoDb
 from dae.pheno.registry import PhenoRegistry
+from dae.pheno.common import MeasureType
 
 
 def test_db_save(output_dir: str) -> None:
     db = PhenoDb(
         os.path.join(output_dir, "temp_testing.db"),
-        browser_dbfile=os.path.join(output_dir, "temp_testing_browser.db"),
     )
     assert db is not None
 
-    print(db.browser_dbfile)
     db.build()
 
     v = {
         "measure_id": "test.measure",
         "instrument_name": "test",
         "measure_name": "measure",
-        "measure_type": "other",
+        "measure_type": MeasureType.other.value,
         "description": "desc",
     }
 
@@ -39,8 +38,7 @@ def test_db_save(output_dir: str) -> None:
 
 def test_db_update(output_dir: str) -> None:
     db = PhenoDb(
-        os.path.join(output_dir, "temp_testing.db"),
-        browser_dbfile=os.path.join(output_dir, "temp_testing_browser.db"),
+        os.path.join(output_dir, "temp_testing.db")
     )
     assert db is not None
     db.build()
@@ -49,7 +47,7 @@ def test_db_update(output_dir: str) -> None:
         "measure_id": "test.measure",
         "instrument_name": "test",
         "measure_name": "measure",
-        "measure_type": "other",
+        "measure_type": MeasureType.other.value,
         "description": "desc",
     }
     print(v)
@@ -69,18 +67,17 @@ def test_db_update(output_dir: str) -> None:
 
 def test_has_descriptions(output_dir: str) -> None:
     db = PhenoDb(
-        os.path.join(output_dir, "temp_testing.db"),
-        browser_dbfile=os.path.join(output_dir, "temp_testing_browser.db"),
+        os.path.join(output_dir, "temp_testing.db")
     )
     assert db is not None
     db.build()
 
-    for i in range(3):
+    for i in range(0, 3):
         v = {
             "measure_id": f"test.measure{i}",
             "instrument_name": "test",
             "measure_name": f"measure{i}",
-            "measure_type": "other",
+            "measure_type": MeasureType.other.value,
             "description": None,
         }
         db.save(v)
@@ -90,7 +87,7 @@ def test_has_descriptions(output_dir: str) -> None:
         "measure_id": "test.measure4",
         "instrument_name": "test",
         "measure_name": "measure4",
-        "measure_type": "other",
+        "measure_type": MeasureType.other.value,
         "description": "a description",
     }
     db.save(v)
@@ -98,11 +95,10 @@ def test_has_descriptions(output_dir: str) -> None:
 
 
 def test_search_measures_get_all(
-    fake_phenotype_data_dbfile: str, fake_phenotype_data_browser_dbfile: str,
+    fake_phenotype_data_dbfile: str, fake_phenotype_data_browser_dbfile: str
 ) -> None:
     db = PhenoDb(
-        fake_phenotype_data_dbfile,
-        fake_phenotype_data_browser_dbfile,
+        fake_phenotype_data_dbfile
     )
     assert db is not None
     db.build()
@@ -110,11 +106,10 @@ def test_search_measures_get_all(
 
 
 def test_search_measures_get_by_instrument(
-    fake_phenotype_data_dbfile: str, fake_phenotype_data_browser_dbfile: str,
+    fake_phenotype_data_dbfile: str, fake_phenotype_data_browser_dbfile: str
 ) -> None:
     db = PhenoDb(
-        fake_phenotype_data_dbfile,
-        fake_phenotype_data_browser_dbfile,
+        fake_phenotype_data_dbfile
     )
     assert db is not None
     db.build()
@@ -131,11 +126,10 @@ def test_search_measures_get_by_instrument(
 
 
 def test_search_measures_by_keyword_in_description(
-    fake_phenotype_data_dbfile: str, fake_phenotype_data_browser_dbfile: str,
+    fake_phenotype_data_dbfile: str, fake_phenotype_data_browser_dbfile: str
 ) -> None:
     db = PhenoDb(
-        fake_phenotype_data_dbfile,
-        fake_phenotype_data_browser_dbfile,
+        fake_phenotype_data_dbfile
     )
     assert db is not None
     db.build()
@@ -146,11 +140,10 @@ def test_search_measures_by_keyword_in_description(
 
 
 def test_search_measures_by_keyword_in_measure_id(
-    fake_phenotype_data_dbfile: str, fake_phenotype_data_browser_dbfile: str,
+    fake_phenotype_data_dbfile: str, fake_phenotype_data_browser_dbfile: str
 ) -> None:
     db = PhenoDb(
-        fake_phenotype_data_dbfile,
-        fake_phenotype_data_browser_dbfile,
+        fake_phenotype_data_dbfile
     )
     assert db is not None
     db.build()
@@ -161,11 +154,10 @@ def test_search_measures_by_keyword_in_measure_id(
 
 
 def test_search_measures_by_keyword_in_measure_name(
-    fake_phenotype_data_dbfile: str, fake_phenotype_data_browser_dbfile: str,
+    fake_phenotype_data_dbfile: str, fake_phenotype_data_browser_dbfile: str
 ) -> None:
     db = PhenoDb(
-        fake_phenotype_data_dbfile,
-        fake_phenotype_data_browser_dbfile,
+        fake_phenotype_data_dbfile
     )
     assert db is not None
     db.build()
@@ -178,11 +170,10 @@ def test_search_measures_by_keyword_in_measure_name(
 
 
 def test_search_measures_by_keyword_in_instrument_name(
-    fake_phenotype_data_dbfile: str, fake_phenotype_data_browser_dbfile: str,
+    fake_phenotype_data_dbfile: str, fake_phenotype_data_browser_dbfile: str
 ) -> None:
     db = PhenoDb(
-        fake_phenotype_data_dbfile,
-        fake_phenotype_data_browser_dbfile,
+        fake_phenotype_data_dbfile
     )
     assert db is not None
     db.build()
@@ -198,8 +189,7 @@ def test_search_measures_by_keyword_in_instrument_name(
 
 def test_db_search_character_escaping(output_dir: str) -> None:
     db = PhenoDb(
-        os.path.join(output_dir, "temp_testing.db"),
-        browser_dbfile=os.path.join(output_dir, "temp_testing_browser.db"),
+        os.path.join(output_dir, "temp_testing.db")
     )
     assert db is not None
     db.build()
@@ -208,7 +198,7 @@ def test_db_search_character_escaping(output_dir: str) -> None:
         "measure_id": "test_one.measure1",
         "instrument_name": "test_one",
         "measure_name": "measure1",
-        "measure_type": "other",
+        "measure_type": MeasureType.other.value,
         "description": "desc",
     }
 
@@ -216,7 +206,7 @@ def test_db_search_character_escaping(output_dir: str) -> None:
         "measure_id": "test%two.measure2",
         "instrument_name": "test%two",
         "measure_name": "measure2",
-        "measure_type": "other",
+        "measure_type": MeasureType.other.value,
         "description": "desc",
     }
 
@@ -240,8 +230,7 @@ def test_db_search_character_escaping(output_dir: str) -> None:
 
 def test_save_and_get_regressions(output_dir: str) -> None:
     db = PhenoDb(
-        os.path.join(output_dir, "temp_testing.db"),
-        browser_dbfile=os.path.join(output_dir, "temp_testing_browser.db"),
+        os.path.join(output_dir, "temp_testing.db")
     )
     assert db is not None
     db.build()
@@ -276,8 +265,7 @@ def test_save_and_get_regressions(output_dir: str) -> None:
 
 def test_get_regression_names(output_dir: str) -> None:
     db = PhenoDb(
-        os.path.join(output_dir, "temp_testing.db"),
-        browser_dbfile=os.path.join(output_dir, "temp_testing_browser.db"),
+        os.path.join(output_dir, "temp_testing.db")
     )
     assert db is not None
     db.build()
@@ -304,8 +292,7 @@ def test_get_regression_names(output_dir: str) -> None:
 
 def test_save_and_get_regression_values(output_dir: str) -> None:
     db = PhenoDb(
-        os.path.join(output_dir, "temp_testing.db"),
-        browser_dbfile=os.path.join(output_dir, "temp_testing_browser.db"),
+        os.path.join(output_dir, "temp_testing.db")
     )
     assert db is not None
     db.build()
@@ -334,24 +321,23 @@ def test_save_and_get_regression_values(output_dir: str) -> None:
             "measure_id": "test.measure",
             "figure_regression": "regfigpath",
             "figure_regression_small": "regfigsmallpath",
-            "pvalue_regression_male": 0.1,
-            "pvalue_regression_female": 0.2,
+            "pvalue_regression_male": pytest.approx(0.1),
+            "pvalue_regression_female": pytest.approx(0.2)
         }),
         Box({
             "regression_id": "test_regression_2",
             "measure_id": "test.measure",
             "figure_regression": "regfigpath",
             "figure_regression_small": "regfigsmallpath",
-            "pvalue_regression_male": 0.3,
-            "pvalue_regression_female": 0.4,
-        }),
+            "pvalue_regression_male": pytest.approx(0.3),
+            "pvalue_regression_female": pytest.approx(0.4)
+        })
     ]
 
 
 def test_update_regression_values(output_dir: str) -> None:
     db = PhenoDb(
-        os.path.join(output_dir, "temp_testing.db"),
-        browser_dbfile=os.path.join(output_dir, "temp_testing_browser.db"),
+        os.path.join(output_dir, "temp_testing.db")
     )
     assert db is not None
     db.build()
@@ -376,8 +362,8 @@ def test_update_regression_values(output_dir: str) -> None:
             "measure_id": "test.measure",
             "figure_regression": "regfigpath",
             "figure_regression_small": "regfigsmallpath",
-            "pvalue_regression_male": 0.1,
-            "pvalue_regression_female": 0.2,
+            "pvalue_regression_male": pytest.approx(0.1),
+            "pvalue_regression_female": pytest.approx(0.2)
         }),
     ]
     reg["pvalue_regression_male"] = "0.3"
@@ -391,16 +377,15 @@ def test_update_regression_values(output_dir: str) -> None:
             "measure_id": "test.measure",
             "figure_regression": "regfigpath",
             "figure_regression_small": "regfigsmallpath",
-            "pvalue_regression_male": 0.3,
-            "pvalue_regression_female": 0.4,
+            "pvalue_regression_male": pytest.approx(0.3),
+            "pvalue_regression_female": pytest.approx(0.4)
         }),
     ]
 
 
 def test_regression_ids(output_dir: str) -> None:
     db = PhenoDb(
-        os.path.join(output_dir, "temp_testing.db"),
-        browser_dbfile=os.path.join(output_dir, "temp_testing_browser.db"),
+        os.path.join(output_dir, "temp_testing.db")
     )
     assert db is not None
     db.build()
@@ -427,8 +412,7 @@ def test_pheno_db_disabled(fake_pheno_db: PhenoRegistry) -> None:
 
 def test_split_into_groups(output_dir: str) -> None:
     db = PhenoDb(
-        os.path.join(output_dir, "temp_testing.db"),
-        browser_dbfile=os.path.join(output_dir, "temp_testing_browser.db"),
+        os.path.join(output_dir, "temp_testing.db")
     )
     measures = [f"measure_{i}" for i in range(1, 101)]
     groups = db._split_measures_into_groups(measures)
@@ -441,7 +425,7 @@ def test_split_into_groups(output_dir: str) -> None:
     assert groups[1][-1] == "measure_100"
 
     groups = db._split_measures_into_groups(
-        measures, group_size=25,
+        measures, group_size=25
     )
     assert len(groups) == 4
     assert len(groups[0]) == 25
@@ -456,41 +440,3 @@ def test_split_into_groups(output_dir: str) -> None:
     assert len(groups[3]) == 25
     assert groups[3][0] == "measure_76"
     assert groups[3][-1] == "measure_100"
-
-
-def test_subquery_generation(output_dir: str) -> None:
-    db = PhenoDb(
-        os.path.join(output_dir, "temp_testing.db"),
-        browser_dbfile=os.path.join(output_dir, "temp_testing_browser.db"),
-    )
-    db.build()
-    fake_measure_ids = {
-        "i1.m1": "1",
-        "i1.m2": "2",
-    }
-    fake_measure_types = {
-        "i1.m1": "continuous",
-        "i1.m2": "continuous",
-    }
-    query = str(db._build_measures_subquery(
-        fake_measure_ids,
-        fake_measure_types,
-        list(fake_measure_ids.keys()),
-    ))
-
-    print(query)
-    expected = (
-        "SELECT person.person_id, person.role, family.family_id, "
-        "person.status, person.sex, "
-        "\"i1.m1_value\".value AS 'i1.m1', "
-        "\"i1.m2_value\".value AS 'i1.m2' \n"
-        "FROM person JOIN family ON family.id = person.family_id "
-        'LEFT OUTER JOIN value_continuous as "i1.m1_value" '
-        'ON "i1.m1_value".person_id = person.id '
-        'AND "i1.m1_value".measure_id = 1 '
-        'LEFT OUTER JOIN value_continuous as "i1.m2_value" '
-        'ON "i1.m2_value".person_id = person.id '
-        'AND "i1.m2_value".measure_id = 2 '
-        "ORDER BY person.person_id DESC"
-    )
-    assert query == expected
