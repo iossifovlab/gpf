@@ -52,6 +52,7 @@ export class FamilyTagsComponent extends StatefulComponent implements OnInit {
     this.familyTags.selectedTags = selectedTags;
     this.familyTags.tagIntersection = intersection;
     this.store.dispatch(new SetFamilyTags(this.selectedTags, this.deselectedTags, this.tagIntersection));
+    this.onUpdateTags();
   }
 
   public onChooseMode(intersected = true): void {
