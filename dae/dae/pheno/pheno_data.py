@@ -283,7 +283,7 @@ class PhenotypeData(ABC):
     def get_measures(
         self,
         instrument_name: Optional[str] = None,
-        measure_type: Optional[str] = None
+        measure_type: Optional[MeasureType] = None
     ) -> dict[str, Measure]:
         """
         Return a dictionary of measures objects.
@@ -307,12 +307,12 @@ class PhenotypeData(ABC):
 
         type_query = None
         if measure_type is not None:
-            type_query = MeasureType.from_str(measure_type)
+            assert isinstance(measure_type, MeasureType)
 
         for _, instrument in instruments.items():
             for measure in instrument.measures.values():
-                if type_query is not None and \
-                        measure.measure_type != type_query:
+                if measure_type is not None and \
+                        measure.measure_type != measure_type:
                     continue
                 result[measure.measure_id] = measure
 
@@ -429,7 +429,7 @@ class PhenotypeStudy(PhenotypeData):
     def _get_measures_df(
         self,
         instrument: Optional[str] = None,
-        measure_type: Optional[str] = None
+        measure_type: Optional[MeasureType] = None
     ) -> pd.DataFrame:
         """
         Return data frame containing measures information.
@@ -449,9 +449,7 @@ class PhenotypeStudy(PhenotypeData):
         `default_filter`.
         """
         assert instrument is None or instrument in self.instruments
-        assert measure_type is None or measure_type in set(
-            ["continuous", "ordinal", "categorical", "unknown"]
-        )
+        assert measure_type is None or isinstance(measure_type, MeasureType)
 
         measure = self.db.measure
         columns = [
@@ -471,7 +469,7 @@ class PhenotypeStudy(PhenotypeData):
         if instrument is not None:
             query = query.where(measure.c.instrument_name == instrument)
         if measure_type is not None:
-            query = query.where(measure.c.measure_type == measure_type)
+            query = query.where(measure.c.measure_type == measure_type.value)
 
         df = pd.read_sql(query, self.db.engine)
 
@@ -519,7 +517,7 @@ class PhenotypeStudy(PhenotypeData):
         return FamiliesData.from_family_persons(families)
 
     def get_persons_df(
-        self, roles: Optional[Iterable[Union[str, Role]]] = None,
+        self, roles: Optional[Iterable[Role]] = None,
         person_ids: Optional[Iterable[str]] = None,
         family_ids: Optional[Iterable[str]] = None
     ) -> pd.DataFrame:
@@ -549,7 +547,8 @@ class PhenotypeStudy(PhenotypeData):
         ]
         query = select(*columns)
         if roles is not None:
-            query = query.where(self.db.person.c.role.in_(roles))
+            query_roles = [role.value for role in roles]
+            query = query.where(self.db.person.c.role.in_(query_roles))
         if person_ids is not None:
             query = query.where(self.db.person.c.person_id.in_(person_ids))
         if family_ids is not None:

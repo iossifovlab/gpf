@@ -312,7 +312,8 @@ class PrepareVariables(PreparePersons):
         tables = connection.sql("SHOW TABLES")
         for table_row in tables.fetchall():
             if table_row[0] == "rejects":
-                result = connection.sql("SELECT COUNT(*) from rejects").fetchone()
+                result = \
+                    connection.sql("SELECT COUNT(*) from rejects").fetchone()
                 if result and result[0] == 0:
                     return False
                 return True
@@ -490,8 +491,6 @@ class PrepareVariables(PreparePersons):
         self.connection.sql(
             f"COPY measure TO '{measure_file}' (FORMAT PARQUET)"
         )
-        for instrument_name in instruments.keys():
-            table_name = self._instrument_tmp_table_name(instrument_name)
 
     def _instrument_tmp_table_name(self, instrument_name: str):
         return safe_db_name(f"{instrument_name}_data")

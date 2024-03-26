@@ -310,15 +310,14 @@ class MeasureClassifier:
         report.count_with_non_numeric_values = result[0]
         report.count_with_values += result[0]
 
-        rows = cursor.sql(
+        rows = list(cursor.sql(
             f"SELECT DISTINCT {measure_name} FROM ("
             f"SELECT {measure_name}, "
             f"TRY_CAST({measure_name} AS FLOAT) as casted "
-            f"from {table_name} WHERE casted != 'nan' AND "
-            f"{measure_name} IS NOT NULL"
+            f"from {table_name} WHERE {measure_name} IS NOT NULL"
             ")"
-        ).fetchall()
-        assert result is not None
+        ).fetchall())
+        assert rows is not None
         report.unique_values = [row[0] for row in rows]
         report.count_unique_values = len(report.unique_values)
 
@@ -441,8 +440,7 @@ class MeasureClassifier:
         if non_numeric <= conf.non_numeric_cutoff:
             if rep.count_unique_numeric_values >= conf.continuous.min_rank:
                 return MeasureType.continuous
-
-         
+            if rep.count_unique_numeric_values >= conf.ordinal.min_rank:
                 return MeasureType.ordinal
 
             return MeasureType.raw

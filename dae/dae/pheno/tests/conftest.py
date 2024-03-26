@@ -1,16 +1,21 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,too-many-lines
 import os
-import pathlib
-import shutil
 import tempfile
+import shutil
+import pathlib
+
+from typing import Generator
+
+import duckdb
+
+import pytest
 
 import pandas as pd
-import pytest
 from box import Box
-
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.dae_conf import dae_conf_schema
 from dae.configuration.schemas.phenotype_data import pheno_conf_schema
+
 from dae.pheno.common import default_config
 from dae.pheno.pheno_data import PhenotypeData, get_pheno_db_dir
 from dae.pheno.registry import PhenoRegistry
@@ -23,7 +28,7 @@ def relative_to_this_folder(path: str) -> str:
 @pytest.fixture(scope="session")
 def family_roles_file() -> str:
     return relative_to_this_folder(
-        "fixtures/pedigree_data/various_families/roles/family.csv",
+        "fixtures/pedigree_data/various_families/roles/family.csv"
     )
 
 
@@ -35,7 +40,7 @@ def family_roles(csv_individuals_reader, family_roles_file):
 @pytest.fixture(scope="session")
 def family_pedigree_file() -> str:
     return relative_to_this_folder(
-        "fixtures/pedigree_data/various_families/pedigrees/family.ped",
+        "fixtures/pedigree_data/various_families/pedigrees/family.ped"
     )
 
 
@@ -47,7 +52,7 @@ def family_pedigree(csv_pedigree_reader, family_pedigree_file):
 @pytest.fixture(scope="session")
 def fake_dae_conf() -> Box:
     return GPFConfigParser.load_config(
-        relative_to_this_folder("fixtures/DAE.conf"), dae_conf_schema,
+        relative_to_this_folder("fixtures/DAE.conf"), dae_conf_schema
     )
 
 
@@ -78,15 +83,25 @@ def fake_instrument_filename() -> str:
 @pytest.fixture(scope="session")
 def fi1_df(fake_instrument_filename: str) -> pd.DataFrame:
     df = pd.read_csv(
-        fake_instrument_filename, low_memory=False, encoding="utf-8",
+        fake_instrument_filename, low_memory=False, encoding="utf-8"
     )
     return df
 
 
 @pytest.fixture(scope="session")
+def fi1_db(
+        fi1_df: pd.DataFrame
+) -> Generator[tuple[duckdb.DuckDBPyConnection, str], None, None]:
+    connection = duckdb.connect(":memory:")
+    connection.sql("CREATE TABLE fi1_data AS FROM (SELECT * FROM fi1_df)")
+    yield connection, "fi1_data"
+    connection.sql("DROP TABLE fi1_data")
+
+
+@pytest.fixture(scope="session")
 def fake_pheno_db(fake_pheno_db_dir: str) -> PhenoRegistry:
     pheno_configs = GPFConfigParser.collect_directory_configs(
-        fake_pheno_db_dir,
+        fake_pheno_db_dir
     )
 
     pheno_registry = PhenoRegistry()
@@ -95,7 +110,7 @@ def fake_pheno_db(fake_pheno_db_dir: str) -> PhenoRegistry:
         for config in pheno_configs:
             pheno_registry.register_phenotype_data(
                 PhenoRegistry.load_pheno_data(pathlib.Path(config)),
-                lock=False,
+                lock=False
             )
     return pheno_registry
 
@@ -114,14 +129,14 @@ def fake_phenotype_data(fake_pheno_db: PhenoRegistry) -> PhenotypeData:
 @pytest.fixture(scope="session")
 def fake_phenotype_data_dbfile() -> str:
     return relative_to_this_folder(
-        "fixtures/fake_phenoDB/main_fake/fake.db",
+        "fixtures/fake_phenoDB/main_fake/fake.db"
     )
 
 
 @pytest.fixture(scope="session")
 def fake_phenotype_data_browser_dbfile() -> str:
     return relative_to_this_folder(
-        "fixtures/fake_phenoDB/main_fake/fake_browser.db",
+        "fixtures/fake_phenoDB/main_fake/fake_browser.db"
     )
 
 
@@ -133,7 +148,7 @@ def dummy_pheno_missing_files_conf() -> str:
 @pytest.fixture(scope="session")
 def fake_pheno_config(fake_dae_conf: str) -> Box:
     return GPFConfigParser.load_directory_configs(
-        fake_dae_conf.phenotype_data.dir, pheno_conf_schema,
+        fake_dae_conf.phenotype_data.dir, pheno_conf_schema
     )
 
 
@@ -145,19 +160,32 @@ def fake_background_filename() -> str:
 @pytest.fixture(scope="session")
 def fake_background_df(fake_background_filename: str) -> pd.DataFrame:
     df = pd.read_csv(
-        fake_background_filename, low_memory=False, encoding="utf-8",
+        fake_background_filename, low_memory=False, encoding="utf-8"
     )
     return df
 
 
-@pytest.fixture()
+@pytest.fixture(scope="session")
+def fake_background_db(
+    fake_background_df: pd.DataFrame
+) -> Generator[tuple[duckdb.DuckDBPyConnection, str], None, None]:
+    connection = duckdb.connect(":memory:")
+    connection.sql(
+        "CREATE TABLE fake_background_data AS FROM "
+        "(SELECT * FROM fake_background_df)"
+    )
+    yield connection, "fake_background_data"
+    connection.sql("DROP TABLE fake_background_data")
+
+
+@pytest.fixture
 def test_config(temp_dbfile: str) -> Box:
     config = default_config()
     config.db.filename = temp_dbfile
     return Box(config.to_dict())
 
 
-@pytest.fixture()
+@pytest.fixture
 def temp_dbfile(request) -> str:
     dirname = tempfile.mkdtemp(suffix="_ped", prefix="pheno_db_")
 
@@ -170,17 +198,17 @@ def temp_dbfile(request) -> str:
     return output
 
 
-@pytest.fixture()
+@pytest.fixture
 def valid_descriptions() -> str:
     return relative_to_this_folder("fixtures/descriptions_valid.tsv")
 
 
-@pytest.fixture()
+@pytest.fixture
 def invalid_descriptions() -> str:
     return relative_to_this_folder("fixtures/descriptions_invalid.tsv")
 
 
-@pytest.fixture()
+@pytest.fixture
 def output_dir(request) -> str:
     tmpdir = tempfile.mkdtemp(prefix="pheno_browser")
 
@@ -196,7 +224,7 @@ def regressions_conf() -> str:
     return relative_to_this_folder("fixtures/regressions.conf")
 
 
-@pytest.fixture()
+@pytest.fixture
 def temp_dirname_figures(request) -> str:
     dirname = tempfile.mkdtemp(suffix="_plots", prefix="figures_")
 
