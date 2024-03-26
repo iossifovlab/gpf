@@ -3,7 +3,8 @@ import { sprintf } from 'sprintf-js';
 
 @Component({
   selector: 'gpf-genotype-preview-field',
-  templateUrl: './genotype-preview-field.component.html'
+  templateUrl: './genotype-preview-field.component.html',
+  styleUrls: ['./genotype-preview-field.component.css']
 })
 export class GenotypePreviewFieldComponent implements OnInit, OnChanges {
   @Input() public value;
@@ -14,14 +15,27 @@ export class GenotypePreviewFieldComponent implements OnInit, OnChanges {
   public formattedValue: string;
   // eslint-disable-next-line @typescript-eslint/naming-convention
   public UCSCLink: string;
+  public showEffectDetails = false;
   public pedigreeMaxHeight = 75;
 
   public ngOnInit(): void {
     this.UCSCLink = this.getUCSCLink();
+    if (this.field === 'effect_details') {
+      this.formatEffectDetails();
+    }
   }
 
   public ngOnChanges(): void {
     this.formattedValue = this.formatValue();
+  }
+
+  private formatEffectDetails(): void {
+    if (this.value instanceof Array && typeof this.value[0] === 'string') {
+      let formattedDetails = this.value[0];
+      formattedDetails = formattedDetails.replaceAll('|', '\n');
+      formattedDetails = formattedDetails.replaceAll(':', ': ');
+      this.value[0] = formattedDetails;
+    }
   }
 
   private doFormat(format, value) {

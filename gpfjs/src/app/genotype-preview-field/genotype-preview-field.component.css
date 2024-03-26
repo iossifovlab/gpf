@@ -1,0 +1,20 @@
+#help-icon {
+  color: #b4b4b4;
+  font-size: x-large;
+}
+
+#help-icon:hover {
+  cursor: pointer;
+}
+
+.keybinds-tooltip {
+  border: 1px solid #ddd;
+  text-align: left;
+  position: absolute;
+  padding: 3px 10px;
+  background-color: #fff;
+  border-radius: 0.25rem;
+  line-height: 190%;
+  overflow-wrap: break-word;
+  white-space: pre-wrap;
+}

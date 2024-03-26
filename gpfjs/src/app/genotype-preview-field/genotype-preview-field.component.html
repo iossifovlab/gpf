@@ -6,4 +6,15 @@
   <a target="_blank" [attr.href]="UCSCLink">{{ formattedValue }}</a>
 </span>
 
-<span *ngIf="field !== 'pedigree' && field !== 'location'">{{ formattedValue }}</span>
+<span *ngIf="field === 'effect_details'">
+  <span
+    class="material-symbols-outlined lg"
+    id="help-icon"
+    (mouseover)="showEffectDetails = true"
+    (mouseout)="showEffectDetails = false"
+    >info</span
+  >
+  <div *ngIf="showEffectDetails" class="keybinds-tooltip">{{ value }}</div>
+</span>
+
+<span *ngIf="field !== 'pedigree' && field !== 'location' && field !== 'effect_details'">{{ formattedValue }}</span>
