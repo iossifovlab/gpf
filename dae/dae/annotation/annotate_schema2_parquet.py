@@ -16,7 +16,7 @@ from dae.schema2_storage.schema2_import_storage import schema2_dataset_layout
 from dae.task_graph.cli_tools import TaskGraphCli
 from dae.genomic_resources.cli import VerbosityConfiguration
 from dae.variants_loaders.parquet.loader import ParquetLoader
-from dae.annotation.annotation_pipeline import AnnotatorInfo, ReannotationPipeline
+from dae.annotation.annotation_pipeline import ReannotationPipeline
 from dae.parquet.schema2.parquet_io import VariantsParquetWriter
 
 
@@ -40,6 +40,9 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
                             default="annotate_schema2_output")
         parser.add_argument("-o", "--output",
                             help="Path of the directory to hold the output")
+        parser.add_argument("-i", "--full-reannotation",
+                            help="Ignore any previous annotation and run "
+                            " a full reannotation.")
 
         CLIAnnotationContext.add_context_arguments(parser)
         TaskGraphCli.add_arguments(parser)
@@ -73,21 +76,13 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
         allow_repeated_attributes: bool,
     ):
         loader = ParquetLoader(input_dir)
-        grr = build_genomic_resource_repository(definition=grr_definition)
-
-        pipeline = build_annotation_pipeline(
-            pipeline_config_str=pipeline_config,
-            grr_repository=grr,
-            allow_repeated_attributes=allow_repeated_attributes
+        pipeline = AnnotateSchema2ParquetTool._produce_annotation_pipeline(
+            pipeline_config,
+            loader.meta["annotation_pipeline"] \
+                if loader.has_annotation else None,
+            grr_definition,
+            allow_repeated_attributes
         )
-        pipeline_old = None
-        if "annotation_pipeline" in loader.meta:
-            pipeline_old = build_annotation_pipeline(
-                pipeline_config_str=loader.meta.get("annotation_pipeline"),
-                grr_repository=grr,
-            )
-            pipeline = ReannotationPipeline(pipeline, pipeline_old)
-
         writer = VariantsParquetWriter(
             output_dir, pipeline.get_attributes(),
             loader.partition_descriptor, bucket_idx
