@@ -4,6 +4,10 @@ import tempfile
 import shutil
 import pathlib
 
+from typing import Generator
+
+import duckdb
+
 import pytest
 
 import pandas as pd
@@ -85,6 +89,16 @@ def fi1_df(fake_instrument_filename: str) -> pd.DataFrame:
 
 
 @pytest.fixture(scope="session")
+def fi1_db(
+        fi1_df: pd.DataFrame
+) -> Generator[tuple[duckdb.DuckDBPyConnection, str], None, None]:
+    connection = duckdb.connect(":memory:")
+    connection.sql("CREATE TABLE fi1_data AS FROM (SELECT * FROM fi1_df)")
+    yield connection, "fi1_data"
+    connection.sql("DROP TABLE fi1_data")
+
+
+@pytest.fixture(scope="session")
 def fake_pheno_db(fake_pheno_db_dir: str) -> PhenoRegistry:
     pheno_configs = GPFConfigParser.collect_directory_configs(
         fake_pheno_db_dir
@@ -149,6 +163,19 @@ def fake_background_df(fake_background_filename: str) -> pd.DataFrame:
         fake_background_filename, low_memory=False, encoding="utf-8"
     )
     return df
+
+
+@pytest.fixture(scope="session")
+def fake_background_db(
+    fake_background_df: pd.DataFrame
+) -> Generator[tuple[duckdb.DuckDBPyConnection, str], None, None]:
+    connection = duckdb.connect(":memory:")
+    connection.sql(
+        "CREATE TABLE fake_background_data AS FROM "
+        "(SELECT * FROM fake_background_df)"
+    )
+    yield connection, "fake_background_data"
+    connection.sql("DROP TABLE fake_background_data")
 
 
 @pytest.fixture
