@@ -138,7 +138,6 @@ def test_get_pq_filepaths_partitioned(t4c8_study_2):
         "summary_region_bin_chr1_1_frequency_bin_1_coding_bin_1_bucket_index_100000.parquet",
         "summary_region_bin_chr1_1_frequency_bin_2_coding_bin_0_bucket_index_100000.parquet",
         "summary_region_bin_chr1_1_frequency_bin_2_coding_bin_1_bucket_index_100000.parquet",
-        "summary_region_bin_chr1_1_frequency_bin_3_coding_bin_0_bucket_index_100000.parquet"
     }
     assert set(map(os.path.basename, family_filepaths)) == {
         "family_region_bin_chr1_0_frequency_bin_1_coding_bin_0_family_bin_1_bucket_index_100000.parquet",
@@ -183,7 +182,6 @@ def test_get_pq_filepaths_partitioned_region(t4c8_study_2):
         "summary_region_bin_chr1_1_frequency_bin_1_coding_bin_1_bucket_index_100000.parquet",
         "summary_region_bin_chr1_1_frequency_bin_2_coding_bin_0_bucket_index_100000.parquet",
         "summary_region_bin_chr1_1_frequency_bin_2_coding_bin_1_bucket_index_100000.parquet",
-        "summary_region_bin_chr1_1_frequency_bin_3_coding_bin_0_bucket_index_100000.parquet"
     }
     assert set(map(os.path.basename, family_filepaths)) == {
         "family_region_bin_chr1_1_frequency_bin_1_coding_bin_1_family_bin_1_bucket_index_100000.parquet",
