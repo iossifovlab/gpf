@@ -1,6 +1,8 @@
 import pathlib
 import textwrap
+from dae.annotation.annotation_pipeline import ReannotationPipeline
 import pytest
+import pytest_mock
 from glob import glob
 
 from dae.gpf_instance import GPFInstance
@@ -222,6 +224,33 @@ def t4c8_study_partitioned(
     return f"{root_path}/work_dir/study_partitioned"
 
 
+@pytest.fixture
+def t4c8_annotationless_study(
+    t4c8_instance: GPFInstance,
+    t4c8_study_pedigree: str,
+    t4c8_study_variants: str,
+) -> str:
+    root_path = pathlib.Path(t4c8_instance.dae_dir)
+    ped_path = setup_pedigree(
+        root_path / "annotationless_study" / "pedigree" / "in.ped",
+        t4c8_study_pedigree
+    )
+    vcf_path = setup_vcf(
+        root_path / "annotationless_study" / "vcf" / "in.vcf.gz",
+        t4c8_study_variants
+    )
+    vcf_study(
+        root_path, "annotationless_study",
+        ped_path, [vcf_path],
+        t4c8_instance,
+        project_config_overwrite={
+            "destination": {"storage_type": "schema2"},
+            "annotation": []
+        }
+    )
+    return f"{root_path}/work_dir/annotationless_study"
+
+
 @pytest.mark.parametrize("study", [("t4c8_study_nonpartitioned"),
                                    ("t4c8_study_partitioned")])
 def test_reannotate_parquet_metadata(
@@ -436,3 +465,133 @@ def test_internal_attributes_reannotation(
     # check internal attributes are not saved
     for sv in ParquetLoader(output_dir).fetch_summary_variants():
         assert not sv.has_attribute("score_A_internal")
+
+
+def test_annotationless_study_autodetection(
+    mocker: pytest_mock.MockerFixture,
+    tmp_path: pathlib.Path,
+    t4c8_instance: GPFInstance,
+    t4c8_annotationless_study,
+    gpf_instance_genomic_context_fixture
+) -> None:
+    root_path = pathlib.Path(t4c8_instance.dae_dir) / ".."
+    input_dir = t4c8_annotationless_study
+    annotation_file_new = root_path / "new_annotation.yaml"
+    grr_file = root_path / "grr.yaml"
+    output_dir = tmp_path / "out"
+    work_dir = tmp_path / "work"
+
+    gpf_instance_genomic_context_fixture(t4c8_instance)
+
+    mocker.spy(ReannotationPipeline, "__init__")
+
+    cli([
+        str(a) for a in [
+            input_dir, annotation_file_new,
+            "-o", output_dir,
+            "-w", work_dir,
+            "--grr", grr_file,
+            "-j", 1
+        ]
+    ])
+
+    # check auto-detection by asserting reannotation pipeline is NOT constructed
+    assert ReannotationPipeline.__init__.call_count == 0
+
+
+def test_annotationless_study_variants(
+    tmp_path: pathlib.Path,
+    t4c8_instance: GPFInstance,
+    t4c8_annotationless_study,
+    gpf_instance_genomic_context_fixture
+) -> None:
+    root_path = pathlib.Path(t4c8_instance.dae_dir) / ".."
+    input_dir = t4c8_annotationless_study
+    annotation_file_new = root_path / "new_annotation.yaml"
+    grr_file = root_path / "grr.yaml"
+    output_dir = tmp_path / "out"
+    work_dir = tmp_path / "work"
+
+    gpf_instance_genomic_context_fixture(t4c8_instance)
+
+    cli([
+        str(a) for a in [
+            input_dir, annotation_file_new,
+            "-o", output_dir,
+            "-w", work_dir,
+            "--grr", grr_file,
+            "-j", 1
+        ]
+    ])
+
+    loader_result = ParquetLoader(output_dir)
+
+    # check variants are correctly reannotated 
+    result = set()
+    for sv in loader_result.fetch_summary_variants():
+        assert sv.has_attribute("score_A")
+        result.add(sv.get_attribute("score_A").pop())
+    assert result == {0.21, 0.22, 0.23, 0.24, 0.25, 0.26}
+
+
+def test_internal_attributes_without_reannotation(
+    tmp_path: pathlib.Path,
+    t4c8_instance: GPFInstance,
+    t4c8_annotationless_study,
+    gpf_instance_genomic_context_fixture
+) -> None:
+    root_path = pathlib.Path(t4c8_instance.dae_dir) / ".."
+    input_dir = t4c8_annotationless_study
+    annotation_file_new = root_path / "new_annotation.yaml"
+    grr_file = root_path / "grr.yaml"
+    output_dir = tmp_path / "out"
+    work_dir = tmp_path / "work"
+    # check internal attributes are not saved
+
+    gpf_instance_genomic_context_fixture(t4c8_instance)
+
+    cli([
+        str(a) for a in [
+            input_dir, annotation_file_new,
+            "-o", output_dir,
+            "-w", work_dir,
+            "--grr", grr_file,
+            "-j", 1
+        ]
+    ])
+
+    # check internal attributes are not saved
+    for sv in ParquetLoader(output_dir).fetch_summary_variants():
+        assert not sv.has_attribute("score_A_internal")
+
+
+def test_autodetection_reannotate(
+    mocker: pytest_mock.MockerFixture,
+    tmp_path: pathlib.Path,
+    t4c8_instance: GPFInstance,
+    t4c8_study_nonpartitioned,
+    gpf_instance_genomic_context_fixture
+) -> None:
+    root_path = pathlib.Path(t4c8_instance.dae_dir) / ".."
+    input_dir = t4c8_study_nonpartitioned
+    annotation_file_new = root_path / "new_annotation.yaml"
+    grr_file = root_path / "grr.yaml"
+    output_dir = tmp_path / "out"
+    work_dir = tmp_path / "work"
+
+    gpf_instance_genomic_context_fixture(t4c8_instance)
+
+    mocker.spy(ReannotationPipeline, "__init__")
+
+    cli([
+        str(a) for a in [
+            input_dir, annotation_file_new,
+            "-o", output_dir,
+            "-w", work_dir,
+            "--grr", grr_file,
+            "-j", 1
+        ]
+    ])
+
+    # check auto-detection by asserting reannotation pipeline is constructed
+    assert ReannotationPipeline.__init__.call_count == 1
