@@ -337,11 +337,66 @@ def test_reannotate_parquet_symlinking(
     # check pedigree is symlinked
     pedigree_path = pathlib.Path(loader_result.layout.pedigree)
     assert pedigree_path.parent.is_symlink()
+    assert pedigree_path.parent.exists()
     assert pedigree_path.samefile(loader_old.layout.pedigree)
 
     # check family variants are symlinked
     family_vs_path = pathlib.Path(loader_result.layout.family)
     assert family_vs_path.is_symlink()
+    assert family_vs_path.exists()
+    assert family_vs_path.samefile(loader_old.layout.family)
+
+
+@pytest.mark.parametrize("study", [("t4c8_study_nonpartitioned"),
+                                   ("t4c8_study_partitioned")])
+def test_reannotate_parquet_symlinking_relative(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: pathlib.Path,
+    t4c8_instance: GPFInstance,
+    study: str,
+    t4c8_study_nonpartitioned,
+    t4c8_study_partitioned,
+    gpf_instance_genomic_context_fixture
+) -> None:
+    root_path = pathlib.Path(t4c8_instance.dae_dir) / ".."
+    input_dir = t4c8_study_nonpartitioned \
+        if study == "t4c8_study_nonpartitioned" \
+        else t4c8_study_partitioned
+    annotation_file_new = root_path / "new_annotation.yaml"
+    grr_file = root_path / "grr.yaml"
+    output_dir = tmp_path / "out"
+    work_dir = tmp_path / "work"
+
+    # Use relative path instead of absolute
+    input_dir_parent = pathlib.Path(input_dir).parent.absolute()
+    input_dir = pathlib.Path(input_dir).relative_to(input_dir_parent)
+    monkeypatch.chdir(input_dir_parent)
+
+    gpf_instance_genomic_context_fixture(t4c8_instance)
+
+    cli([
+        str(a) for a in [
+            input_dir, annotation_file_new,
+            "-o", output_dir,
+            "-w", work_dir,
+            "--grr", grr_file,
+            "-j", 1
+        ]
+    ])
+
+    loader_old = ParquetLoader(input_dir)
+    loader_result = ParquetLoader(output_dir)
+
+    # check pedigree is symlinked
+    pedigree_path = pathlib.Path(loader_result.layout.pedigree)
+    assert pedigree_path.parent.is_symlink()
+    assert pedigree_path.parent.exists()
+    assert pedigree_path.samefile(loader_old.layout.pedigree)
+
+    # check family variants are symlinked
+    family_vs_path = pathlib.Path(loader_result.layout.family)
+    assert family_vs_path.is_symlink()
+    assert family_vs_path.exists()
     assert family_vs_path.samefile(loader_old.layout.family)
 
 

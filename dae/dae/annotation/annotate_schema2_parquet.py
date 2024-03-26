@@ -118,11 +118,14 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
         writer.close()
 
     def work(self) -> None:
-        loader = ParquetLoader(self.args.input)
+        input_dir = os.path.abspath(self.args.input)
+        output_dir = os.path.abspath(self.args.output)
 
-        if not os.path.exists(self.args.output):
-            os.mkdir(self.args.output)
-        layout = schema2_dataset_layout(self.args.output)
+        loader = ParquetLoader(input_dir)
+
+        if not os.path.exists(output_dir):
+            os.mkdir(output_dir)
+        layout = schema2_dataset_layout(output_dir)
 
         # Write metadata
         with open(self.args.pipeline, "r") as infile:
@@ -161,7 +164,7 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
             annotation_tasks.append(self.task_graph.create_task(
                 f"part_{region}",
                 AnnotateSchema2ParquetTool.annotate,
-                [self.args.input, self.args.output,
+                [input_dir, output_dir,
                 raw_annotation, region, self.grr.definition,
                 idx, self.args.allow_repeated_attributes],
                 []
@@ -197,7 +200,7 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
 
             self.task_graph.create_task(
                 "merge", merge,
-                [os.path.join(self.args.output, "summary"),
+                [os.path.join(output_dir, "summary"),
                  os.path.basename(loader._get_pq_filepaths()[0][0])],
                 annotation_tasks
             )
