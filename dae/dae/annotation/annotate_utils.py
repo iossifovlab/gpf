@@ -9,6 +9,7 @@ from dae.annotation.context import CLIAnnotationContext
 from dae.genomic_resources.cached_repository import cache_resources
 from dae.genomic_resources.genomic_context import get_genomic_context
 from dae.genomic_resources.repository import GenomicResourceRepo
+from dae.genomic_resources.repository_factory import build_genomic_resource_repository
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.task_graph import TaskGraphCli
 from dae.task_graph.graph import TaskGraph
@@ -60,30 +61,6 @@ def cache_pipeline(
     cache_resources(grr, resource_ids)
 
 
-def build_pipeline(
-    pipeline_config: list[AnnotatorInfo],
-    allow_repeated_attributes: bool,
-    grr: GenomicResourceRepo,
-    reannotate: Optional[str] = None,
-) -> tuple[AnnotationPipeline, Optional[AnnotationPipeline]]:
-    """Build an annotation pipeline from a pipeline config."""
-    pipeline = build_annotation_pipeline(
-        pipeline_config=pipeline_config,
-        grr_repository=grr,
-        allow_repeated_attributes=allow_repeated_attributes)
-    pipeline_old = None
-    if reannotate:
-        pipeline_old = build_annotation_pipeline(
-            pipeline_config_file=reannotate,
-            grr_repository=grr,
-            allow_repeated_attributes=allow_repeated_attributes  # FIXME Is this correct? How do we know whether the old pipeline was made with this as true or false?
-        )
-        pipeline_new = pipeline
-        pipeline = ReannotationPipeline(pipeline_new, pipeline_old)
-
-    return pipeline, pipeline_old
-
-
 class AnnotationTool:
     def __init__(self, raw_args: Optional[list[str]] = None, gpf_instance: Optional[GPFInstance] = None) -> None:
         if not raw_args:
@@ -107,8 +84,34 @@ class AnnotationTool:
         self.args.task_status_dir = os.path.join(self.args.work_dir, ".task-status")
         self.args.log_dir = os.path.join(self.args.work_dir, ".task-log")
 
+    @staticmethod
+    def _produce_annotation_pipeline(
+        pipeline_config: str,
+        pipeline_config_old: Optional[str],
+        grr_definition: dict,
+        allow_repeated_attributes: bool,
+    ) -> AnnotationPipeline:
+        grr = build_genomic_resource_repository(definition=grr_definition)
+        pipeline = build_annotation_pipeline(
+            pipeline_config_str=pipeline_config,
+            grr_repository=grr,
+            allow_repeated_attributes=allow_repeated_attributes
+        )
+        if pipeline_config_old is not None:
+            pipeline_old = build_annotation_pipeline(
+                pipeline_config_str=pipeline_config_old,
+                grr_repository=grr,
+            )
+            pipeline = ReannotationPipeline(pipeline, pipeline_old)
+        return pipeline
+
     @abstractmethod
     def get_argument_parser() -> argparse.ArgumentParser:
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def annotate() -> None:
         pass
 
     @abstractmethod

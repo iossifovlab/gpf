@@ -1,3 +1,4 @@
+import yaml
 import json
 import numpy as np
 from typing import Generator, Optional
@@ -26,6 +27,9 @@ class ParquetLoader:
         self.meta = { row["key"]: row["value"]
                       for row in meta_file.read().to_pylist() }
         meta_file.close()
+
+        self.has_annotation = bool(
+            yaml.safe_load(self.meta.get("annotation_pipeline")))
 
         self.partitioned: bool = self.meta.get("partition_description").strip()
         self.partition_descriptor = PartitionDescriptor.parse_string(
