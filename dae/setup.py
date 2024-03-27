@@ -38,7 +38,6 @@ setuptools.setup(
         "dae/tools/draw_pedigree.py",
         "dae/tools/vcfinfo_extractor.py",
         "dae/tools/to_gpf_gene_models_format.py",
-        "dae/tools/migrate_pheno_measures.py"
     ],
     entry_points="""
     [dae.genomic_resources.plugins]
