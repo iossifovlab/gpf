@@ -88,18 +88,18 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
 
     def build_browser(self) -> None:
         self._build_browser_tables()
-        self.pheno_metadata.create_all(self.engine)
+        # self.pheno_metadata.create_all(self.engine)
 
     def build(self) -> None:
         """Construct all needed table connections."""
         self._build_person_tables()
         self.build_instruments_and_measures_table()
-        self.pheno_metadata.create_all(self.engine)
+        # self.pheno_metadata.create_all(self.engine)
         self.build_instrument_values_tables()
 
         self.build_browser()
 
-        self.pheno_metadata.create_all(self.engine)
+        # self.pheno_metadata.create_all(self.engine)
 
     def build_instruments_and_measures_table(self) -> None:
         """Create tables for instruments and measures."""
@@ -152,7 +152,7 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
             self.instrument.c.instrument_name,
             self.instrument.c.table_name
         )
-        with self.engine.connect() as connection:
+        with self.engine.connect(read_only=True) as connection:
             instruments_rows = connection.execute(query)
             instrument_table_names = {}
             instrument_measures: dict[str, list[str]] = {}
