@@ -152,7 +152,7 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
             self.instrument.c.instrument_name,
             self.instrument.c.table_name
         )
-        with self.engine.connect(read_only=True) as connection:
+        with self.engine.connect() as connection:
             instruments_rows = connection.execute(query)
             instrument_table_names = {}
             instrument_measures: dict[str, list[str]] = {}
