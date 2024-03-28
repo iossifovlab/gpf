@@ -90,18 +90,19 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
 
     def build_browser(self) -> None:
         self._build_browser_tables()
-        # self.pheno_metadata.create_all(self.engine)
 
-    def build(self) -> None:
+    def build(self, create=False) -> None:
         """Construct all needed table connections."""
         self._build_person_tables()
         self.build_instruments_and_measures_table()
-        # self.pheno_metadata.create_all(self.engine)
+        if create:
+            self.pheno_metadata.create_all(self.engine)
         self.build_instrument_values_tables()
 
         self.build_browser()
 
-        # self.pheno_metadata.create_all(self.engine)
+        if create:
+            self.pheno_metadata.create_all(self.engine)
 
     def create_all_tables(self) -> None:
         self.pheno_metadata.create_all(self.engine)
