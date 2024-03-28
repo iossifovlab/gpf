@@ -52,10 +52,6 @@ class PreparePhenoBrowserBase:
         self.phenotype_data = phenotype_data
         self.pheno_regressions = pheno_regressions
 
-        self.browser_db = os.path.join(
-            output_dir, f"{pheno_name}_browser.db"
-        )
-
     def load_measure(self, measure: Measure) -> pd.DataFrame:
         df = self.phenotype_data.get_people_measure_values_df(
             [measure.measure_id]

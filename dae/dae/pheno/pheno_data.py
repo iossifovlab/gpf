@@ -415,10 +415,10 @@ class PhenotypeStudy(PhenotypeData):
 
     def __init__(
             self, pheno_id: str, dbfile: str,
-            config: Optional[Box] = None) -> None:
+            config: Optional[Box] = None, read_only: bool = True) -> None:
         super().__init__(pheno_id, config)
 
-        self.db = PhenoDb(dbfile)
+        self.db = PhenoDb(dbfile, read_only=read_only)
         self.config = config
         self.db.build()
         self.families = self._load_families()
