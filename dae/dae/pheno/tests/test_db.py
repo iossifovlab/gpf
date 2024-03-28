@@ -12,10 +12,11 @@ from dae.pheno.common import MeasureType
 def test_db_save(output_dir: str) -> None:
     db = PhenoDb(
         os.path.join(output_dir, "temp_testing.db"),
+        read_only=False
     )
     assert db is not None
 
-    db.build()
+    db.build(create=True)
 
     v = {
         "measure_id": "test.measure",
@@ -38,10 +39,11 @@ def test_db_save(output_dir: str) -> None:
 
 def test_db_update(output_dir: str) -> None:
     db = PhenoDb(
-        os.path.join(output_dir, "temp_testing.db")
+        os.path.join(output_dir, "temp_testing.db"),
+        read_only=False
     )
     assert db is not None
-    db.build()
+    db.build(create=True)
 
     v: dict[str, Any] = {
         "measure_id": "test.measure",
@@ -67,10 +69,11 @@ def test_db_update(output_dir: str) -> None:
 
 def test_has_descriptions(output_dir: str) -> None:
     db = PhenoDb(
-        os.path.join(output_dir, "temp_testing.db")
+        os.path.join(output_dir, "temp_testing.db"),
+        read_only=False
     )
     assert db is not None
-    db.build()
+    db.build(create=True)
 
     for i in range(0, 3):
         v = {
@@ -189,10 +192,11 @@ def test_search_measures_by_keyword_in_instrument_name(
 
 def test_db_search_character_escaping(output_dir: str) -> None:
     db = PhenoDb(
-        os.path.join(output_dir, "temp_testing.db")
+        os.path.join(output_dir, "temp_testing.db"),
+        read_only=False
     )
     assert db is not None
-    db.build()
+    db.build(create=True)
 
     val1: dict[str, Any] = {
         "measure_id": "test_one.measure1",
@@ -230,10 +234,11 @@ def test_db_search_character_escaping(output_dir: str) -> None:
 
 def test_save_and_get_regressions(output_dir: str) -> None:
     db = PhenoDb(
-        os.path.join(output_dir, "temp_testing.db")
+        os.path.join(output_dir, "temp_testing.db"),
+        read_only=False
     )
     assert db is not None
-    db.build()
+    db.build(create=True)
 
     reg = {}
     reg["regression_id"] = "test_regression"
@@ -265,10 +270,11 @@ def test_save_and_get_regressions(output_dir: str) -> None:
 
 def test_get_regression_names(output_dir: str) -> None:
     db = PhenoDb(
-        os.path.join(output_dir, "temp_testing.db")
+        os.path.join(output_dir, "temp_testing.db"),
+        read_only=False
     )
     assert db is not None
-    db.build()
+    db.build(create=True)
 
     reg = {}
     reg["regression_id"] = "test_regression"
@@ -292,10 +298,11 @@ def test_get_regression_names(output_dir: str) -> None:
 
 def test_save_and_get_regression_values(output_dir: str) -> None:
     db = PhenoDb(
-        os.path.join(output_dir, "temp_testing.db")
+        os.path.join(output_dir, "temp_testing.db"),
+        read_only=False
     )
     assert db is not None
-    db.build()
+    db.build(create=True)
 
     regression_template = {
         "measure_id": "test.measure",
@@ -337,10 +344,11 @@ def test_save_and_get_regression_values(output_dir: str) -> None:
 
 def test_update_regression_values(output_dir: str) -> None:
     db = PhenoDb(
-        os.path.join(output_dir, "temp_testing.db")
+        os.path.join(output_dir, "temp_testing.db"),
+        read_only=False
     )
     assert db is not None
-    db.build()
+    db.build(create=True)
 
     regression_template = {
         "measure_id": "test.measure",
@@ -385,10 +393,11 @@ def test_update_regression_values(output_dir: str) -> None:
 
 def test_regression_ids(output_dir: str) -> None:
     db = PhenoDb(
-        os.path.join(output_dir, "temp_testing.db")
+        os.path.join(output_dir, "temp_testing.db"),
+        read_only=False
     )
     assert db is not None
-    db.build()
+    db.build(create=True)
 
     reg = {}
 
