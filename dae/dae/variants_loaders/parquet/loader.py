@@ -58,17 +58,21 @@ class ParquetLoader:
         # extract the region bin by finding where it begins in the path
         # and moving 11 characters forward (the length of "region_bin=")
         # analogous for the end index by finding "frequency_bin=".
-        file_region_bin = ParquetLoader._extract_region_bin(path)
-        # afterwards, check if the input region's start or stop positions fall inside the given region bin
-        region_start_bin = self.partition_descriptor.make_region_bin(region.chrom, region.start)
-        region_stop_bin = self.partition_descriptor.make_region_bin(region.chrom, region.stop)
-        return (region_start_bin == file_region_bin
-                or region_stop_bin == file_region_bin)
+        file_region_bin = ParquetLoader._extract_region_bin(path).split('_')
+        # afterwards, check if the file's bin is inside the given region
+        bin_chrom = file_region_bin[0]
+        bin_region_idx = int(file_region_bin[1])
+        bin_region = Region(
+            bin_chrom,
+            (bin_region_idx * self.partition_descriptor.region_length) + 1,
+            (bin_region_idx+1) * self.partition_descriptor.region_length,
+        )
+        return bin_region.intersects(region)
 
     def _get_pq_filepaths(self, region: Optional[Region] = None) -> tuple[list[str], list[str]]:
         summary_files = ds.dataset(f"{self.layout.summary}").files
         family_files = ds.dataset(f"{self.layout.family}").files
-        if region is not None:
+        if region is not None and self.partitioned:
             summary_files = [path for path in summary_files
                              if self._pq_file_in_region(path, region)]
             family_files = [path for path in family_files
@@ -108,7 +112,7 @@ class ParquetLoader:
                 & (pc.field("chromosome") == region.chrom)
             )
 
-        summary_paths, _ = self._get_pq_filepaths()
+        summary_paths, _ = self._get_pq_filepaths(region)
         columns = (
             "bucket_index", "summary_index", "allele_index",
             "summary_variant_data", "chromosome", "position",
@@ -143,7 +147,7 @@ class ParquetLoader:
                 & (pc.field("chromosome") == region.chrom)
             )
 
-        filepaths = self._get_pq_filepaths()
+        filepaths = self._get_pq_filepaths(region)
 
         idx_columns = ("summary_index", "allele_index")
         summary_columns = ("summary_variant_data", "chromosome", "position", *idx_columns)
