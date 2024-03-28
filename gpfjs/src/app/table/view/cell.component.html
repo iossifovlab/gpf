@@ -1,4 +1,4 @@
-<div [ngClass]="{ 'fixed-height': !noScrollOptimization }">
+<div [ngClass]="{ 'fixed-height': !noScrollOptimization }" style="overflow-y: hidden">
   <ng-template [ngTemplateOutlet]="cellContent.contentTemplateRef" [ngTemplateOutletContext]="{ $implicit: data }">
   </ng-template>
   <span *ngIf="!cellContent.contentTemplateRef" [attr.title]="data[cellContent.field]">{{

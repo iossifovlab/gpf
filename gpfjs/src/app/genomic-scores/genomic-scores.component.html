@@ -16,7 +16,8 @@
     <gpf-helper-modal
       style="height: 32px; margin-left: 4px"
       [style.visibility]="this.genomicScoreState.score.help ? 'visible' : 'hidden'"
-      [modalContent]="this.genomicScoreState.score.help"></gpf-helper-modal>
+      [modalContent]="this.genomicScoreState.score.help"
+      [isMarkdown]="true"></gpf-helper-modal>
   </div>
   <div class="col-sm-11">
     <gpf-histogram

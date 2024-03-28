@@ -7,14 +7,21 @@
 </span>
 
 <span *ngIf="field === 'effect_details'">
-  <span
-    class="material-symbols-outlined lg"
-    id="help-icon"
-    (mouseover)="showEffectDetails = true"
-    (mouseout)="showEffectDetails = false"
-    >info</span
-  >
-  <div *ngIf="showEffectDetails" class="keybinds-tooltip">{{ value }}</div>
+  <gpf-helper-modal title="Effect details" [modalContent]="effectDetailsModal"></gpf-helper-modal>
+  <ng-template #effectDetailsModal>
+    <div class="grid-container">
+      <div class="grid-header">Gene</div>
+      <div class="grid-header">Transript</div>
+      <div class="grid-header">Effect</div>
+      <div class="grid-header">Details</div>
+      <ng-container *ngFor="let effectDetails of effectDetailsTable">
+        <div class="grid-cell">{{ effectDetails.gene }}</div>
+        <div class="grid-cell">{{ effectDetails.transcript }}</div>
+        <div class="grid-cell">{{ effectDetails.effect }}</div>
+        <div class="grid-cell">{{ effectDetails.details }}</div>
+      </ng-container>
+    </div>
+  </ng-template>
 </span>
 
 <span *ngIf="field !== 'pedigree' && field !== 'location' && field !== 'effect_details'">{{ formattedValue }}</span>

@@ -1,5 +1,12 @@
-import { Component, Input, OnChanges, OnInit } from '@angular/core';
+import { Component, ElementRef, Input, OnChanges, OnInit, TemplateRef, ViewChild } from '@angular/core';
 import { sprintf } from 'sprintf-js';
+
+interface EffectDetail {
+  gene: string;
+  transcript: string;
+  effect: string;
+  details: string;
+}
 
 @Component({
   selector: 'gpf-genotype-preview-field',
@@ -15,7 +22,7 @@ export class GenotypePreviewFieldComponent implements OnInit, OnChanges {
   public formattedValue: string;
   // eslint-disable-next-line @typescript-eslint/naming-convention
   public UCSCLink: string;
-  public showEffectDetails = false;
+  public effectDetailsTable: EffectDetail[];
   public pedigreeMaxHeight = 75;
 
   public ngOnInit(): void {
@@ -31,10 +38,23 @@ export class GenotypePreviewFieldComponent implements OnInit, OnChanges {
 
   private formatEffectDetails(): void {
     if (this.value instanceof Array && typeof this.value[0] === 'string') {
-      let formattedDetails = this.value[0];
-      formattedDetails = formattedDetails.replaceAll('|', '\n');
-      formattedDetails = formattedDetails.replaceAll(':', ': ');
-      this.value[0] = formattedDetails;
+      this.effectDetailsTable = this.value[0].split('|').map(detail => {
+        const details = detail.split(':');
+        return {
+          gene: details[1],
+          transcript: details[0],
+          effect: details[2],
+          details: details[3],
+        };
+      }).sort((e1, e2) => {
+        if (e1.gene < e2.gene) {
+          return -1;
+        }
+        if (e1.gene > e2.gene) {
+          return 1;
+        }
+        return 0;
+      });
     }
   }
 
