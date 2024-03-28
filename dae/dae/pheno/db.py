@@ -25,11 +25,13 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
     STREAMING_CHUNK_SIZE = 25
 
     def __init__(
-            self, dbfile: str
+            self, dbfile: str, read_only: bool = True
     ) -> None:
         # self.verify_pheno_folder(folder)
         self.dbfile = dbfile
-        self.engine = create_engine(f"duckdb:///{dbfile}")
+        self.engine = create_engine(
+            f"duckdb:///{dbfile}", connect_args={"read_only": read_only}
+        )
         self.pheno_metadata = MetaData()
         self.variable_browser: Table
         self.regressions: Table
@@ -88,17 +90,20 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
 
     def build_browser(self) -> None:
         self._build_browser_tables()
-        self.pheno_metadata.create_all(self.engine)
+        # self.pheno_metadata.create_all(self.engine)
 
     def build(self) -> None:
         """Construct all needed table connections."""
         self._build_person_tables()
         self.build_instruments_and_measures_table()
-        self.pheno_metadata.create_all(self.engine)
+        # self.pheno_metadata.create_all(self.engine)
         self.build_instrument_values_tables()
 
         self.build_browser()
 
+        # self.pheno_metadata.create_all(self.engine)
+
+    def create_all_tables(self) -> None:
         self.pheno_metadata.create_all(self.engine)
 
     def build_instruments_and_measures_table(self) -> None:
@@ -418,10 +423,6 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
             delete = (
                 self.variable_browser.delete()
                 .where(self.variable_browser.c.measure_id == measure_id)
-            )
-            update = (
-                self.variable_browser.insert()
-                .values(**v)
             )
             with self.engine.connect() as connection:
                 connection.execute(delete)
