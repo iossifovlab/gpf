@@ -158,7 +158,7 @@ def test_get_pq_filepaths_partitioned(t4c8_study_2):
 def test_get_pq_filepaths_partitioned_region(t4c8_study_2):
     loader = ParquetLoader(t4c8_study_2)
 
-    region = Region("chr1", 0, 99)
+    region = Region("chr1", 1, 100)
     summary_filepaths, family_filepaths = loader._get_pq_filepaths(region)
     assert set(map(os.path.basename, summary_filepaths)) == {
         "summary_region_bin_chr1_0_frequency_bin_1_coding_bin_0_bucket_index_100000.parquet",
@@ -176,7 +176,7 @@ def test_get_pq_filepaths_partitioned_region(t4c8_study_2):
         "family_region_bin_chr1_0_frequency_bin_3_coding_bin_1_family_bin_1_bucket_index_100000.parquet",
     }
 
-    region = Region("chr1", 100, 200)
+    region = Region("chr1", 101, 200)
     summary_filepaths, family_filepaths = loader._get_pq_filepaths(region)
     assert set(map(os.path.basename, summary_filepaths)) == {
         "summary_region_bin_chr1_1_frequency_bin_1_coding_bin_1_bucket_index_100000.parquet",
