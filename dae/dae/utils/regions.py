@@ -244,6 +244,22 @@ class Region:
         return self.start <= other.start \
             and other.stop <= self.stop
 
+    def intersects(self, other: Region) -> bool:
+        """Check if the region intersects another."""
+        if self.chrom != other.chrom:
+            return False
+        elif self.start is None and self.stop is None:
+            return True
+        elif self.start is None:
+            return other.start is None or self.stop >= other.start 
+        elif self.stop is None:
+            return other.stop is None or self.start <= other.stop
+        else:
+            if other.start is None or other.stop is None:
+                return other.intersects(self)
+            else:
+                return not (self.stop < other.start or self.start > other.stop)
+
     @staticmethod
     def from_str(region: str) -> Region:
         """Parse string representation of a region."""
