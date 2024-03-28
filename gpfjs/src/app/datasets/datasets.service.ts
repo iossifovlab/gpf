@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { Observable, ReplaySubject, BehaviorSubject, zip, Subject, of } from 'rxjs';
+import { Observable, ReplaySubject, BehaviorSubject, zip, Subject, of, Subscription } from 'rxjs';
 
 import { Dataset } from '../datasets/datasets';
 import { UsersService } from '../users/users.service';
@@ -21,6 +21,7 @@ export class DatasetsService {
   private readonly headers = new HttpHeaders({ 'Content-Type': 'application/json' });
   private datasets$ = new ReplaySubject<Array<Dataset>>(1);
   private selectedDataset$ = new BehaviorSubject<Dataset>(null);
+  private getDatasetSubscription = new Subscription();
   private datasetLoaded$ = new Subject<void>();
   public datasetsLoading = false;
 
@@ -96,7 +97,8 @@ export class DatasetsService {
     if (!force && this.selectedDataset$.getValue()?.id === datasetId) {
       return;
     }
-    this.getDataset(datasetId).pipe(
+    this.getDatasetSubscription.unsubscribe();
+    this.getDatasetSubscription = this.getDataset(datasetId).pipe(
       take(1),
       tap(dataset => {
         DatasetsService.genomeVersion = dataset.genome;
