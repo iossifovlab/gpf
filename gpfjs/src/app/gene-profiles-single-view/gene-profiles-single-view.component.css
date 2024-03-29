@@ -1,8 +1,8 @@
 table {
   width: 600px;
   max-width: 600px;
-  margin-bottom: 15px;
-  margin-right: 15px;
+  margin-bottom: 16px;
+  margin-right: 16px;
 }
 
 td {
@@ -20,15 +20,62 @@ td {
   padding: 12px;
 }
 
+a {
+  color: #0645ad;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+.datasets-table {
+  width: 0 !important;
+  max-width: unset !important;
+  min-width: 600px;
+}
+
 .datasets-table th {
   height: unset;
   vertical-align: unset;
+  padding: 4px;
 }
 
 .datasets-table th,
 .datasets-table tr,
 .datasets-table td {
   border: 1px solid #dee2e6;
+}
+
+.datasets-table a {
+  padding: 0;
+  width: unset;
+}
+
+.datasets-table td {
+  padding: 4px;
+}
+
+.datasets-table tr td:first-of-type {
+  min-width: 160px;
+}
+
+.datasets-table thead span {
+  word-break: break-word;
+  writing-mode: vertical-rl;
+  transform-origin: center center;
+  transform: rotate(180deg);
+  width: 100%;
+  float: left;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  max-height: 80%;
+}
+
+.compact {
+  flex-direction: column !important;
 }
 
 .gene-sets-table tr,
@@ -39,13 +86,13 @@ td {
 }
 
 #links-table td {
-  padding: 0 16px;
+  padding: 0 8px;
+  height: 16px;
 }
 
 #links-table {
   display: block;
   margin-bottom: 18px;
-  border: 1px solid #dee2e6;
   white-space: nowrap;
 }
 
@@ -60,23 +107,6 @@ td {
   padding: 15px;
 }
 
-.vertical-text {
-  word-break: break-word;
-  writing-mode: vertical-rl;
-  transform-origin: center center;
-  transform: rotate(180deg);
-  width: 100%;
-  float: left;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  max-height: 80%;
-}
-
-.compact {
-  flex-direction: column;
-}
-
 .compare-wrapper {
   flex-direction: column;
 }
@@ -86,9 +116,10 @@ td {
 }
 
 .compare-wrapper .datasets-table {
+  border: 0;
   display: block;
-  overflow-x: auto;
-  white-space: nowrap;
+  overflow: auto;
+  width: 600px !important;
 }
 
 .compare-div {
@@ -145,16 +176,6 @@ td {
 h2 {
   margin: 0;
   padding-left: 10px;
-}
-
-a {
-  color: #0645ad;
-  cursor: pointer;
-  text-decoration: none;
-}
-
-a:hover {
-  text-decoration: underline;
 }
 
 :host::ng-deep#values-description {

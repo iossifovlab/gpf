@@ -20,13 +20,13 @@
           #stickySpan
           [ngClass]="isInGeneCompare && isHeaderSticky ? 'sticky' : ''"
           [ngStyle]="{ width: isInGeneCompare ? '100%' : '1455px' }"
-          style="padding-bottom: 8px; padding-top: 4px">
+          style="padding-bottom: 12px; padding-top: 4px">
           <h2 style="padding-left: 0">{{ geneSymbol }}</h2>
         </div>
-        <div class="wrapper" [ngClass]="{ 'compare-wrapper': isInGeneCompare, compact: compactView }" #wrapperElement>
+        <div class="wrapper" [ngClass]="{ 'compact': compactView }">
           <table id="links-table">
             <tr>
-              <td style="border-right: 1px solid #dee2e6; padding: 0 24px; text-align: center">Links</td>
+              <td style="border-right: 1px solid #dee2e6; padding-left: 2px; text-align: center">Links</td>
               <td *ngFor="let links of gene.geneLinks">
                 <a [attr.href]="links.url" [id]="links.name + '-link'" target="_blank">{{ links.name }}</a>
               </td>
@@ -109,22 +109,21 @@
         </div>
 
         <div
-          style="display: inline-flex; align-items: stretch; flex-wrap: wrap"
+          style="max-width: 1252px; display: flex; flex-direction: row; flex-wrap: wrap; align-items: stretch"
           [ngClass]="{ 'compare-wrapper': isInGeneCompare, 'compact': compactView }"
           class="wrapper">
           <ng-container *ngFor="let dataset of config.datasets">
-            <table style="width: 100%" class="gpf-basic-table datasets-table">
+            <table class="gpf-basic-table datasets-table">
               <thead>
                 <tr class="card-block">
                   <th style="border-bottom: none" [attr.colspan]="dataset.personSets.length + 1">
-                    <span>{{ dataset.displayName }}</span>
+                    <span style="all: unset">{{ dataset.displayName }}</span>
                   </th>
                 </tr>
                 <tr class="card-block">
                   <th style="border-bottom: none">Variant Statistics</th>
                   <th *ngFor="let personSet of dataset.personSets" style="text-align: center; border-bottom: none">
                     <span
-                      class="vertical-text"
                       [attr.title]="'children with this phenotype: ' + personSet.childrenCount"
                       >{{ personSet.displayName }} ({{ personSet.childrenCount }})</span
                     >

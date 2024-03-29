@@ -10,7 +10,6 @@ import { GeneScores } from 'app/gene-scores/gene-scores';
 import { GeneProfilesService } from 'app/gene-profiles-block/gene-profiles.service';
 import { switchMap, take } from 'rxjs/operators';
 import { Router } from '@angular/router';
-import { Location } from '@angular/common';
 import { Store } from '@ngxs/store';
 import { QueryService } from 'app/query/query.service';
 import { GenomicScore } from 'app/genotype-browser/genotype-browser';
@@ -31,7 +30,6 @@ import { EffectTypes } from 'app/effect-types/effect-types';
 })
 export class GeneProfileSingleViewComponent implements OnInit {
   @ViewChild('stickySpan', {static: false}) public menuElement: ElementRef;
-  @ViewChild('wrapperElement') public wrapperElement: ElementRef;
 
   @Input() public readonly geneSymbol: string;
   @Input() public config: GeneProfilesSingleViewConfig;
@@ -64,7 +62,6 @@ export class GeneProfileSingleViewComponent implements OnInit {
   public constructor(
     private geneProfilesService: GeneProfilesService,
     private geneScoresService: GeneScoresService,
-    private location: Location,
     private router: Router,
     private queryService: QueryService,
     private store: Store
@@ -86,7 +83,7 @@ export class GeneProfileSingleViewComponent implements OnInit {
   @HostListener('window:resize')
   public onResize(): void {
     const viewWidth = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
-    if (viewWidth < 1250) {
+    if (viewWidth < 1252) {
       this.compactView = true;
     } else {
       this.compactView = false;
@@ -130,9 +127,7 @@ export class GeneProfileSingleViewComponent implements OnInit {
         });
       }
     });
-    this.onResize();
   }
-
 
   public getGeneScoreByKey(category: string, key: string): GeneScores {
     return this.genomicScoresGeneScores
@@ -158,7 +153,7 @@ export class GeneProfileSingleViewComponent implements OnInit {
   public goToQuery(
     geneSymbol: string,
     personSet: GeneProfilesDatasetPersonSet,
-    datasetId: string, 
+    datasetId: string,
     statistic: GeneProfilesDatasetStatistic
   ): void {
     GeneProfileSingleViewComponent.goToQuery(
