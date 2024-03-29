@@ -38,7 +38,11 @@ class ParquetLoader:
 
     @staticmethod
     def _extract_region_bin(path: str) -> str:
-        return path[path.find("region_bin=")+11:path.find("frequency_bin=")-1]
+        # (...)/region_bin=chr1_0/(...)
+        #                  ^~~~~^
+        start = path.find("region_bin=") + 11
+        end = path.find("/", start)
+        return path[start:end]
 
     def _load_families(self) -> FamiliesData:
         parquet_file = pq.ParquetFile(self.layout.pedigree)
@@ -52,14 +56,12 @@ class ParquetLoader:
 
     def _pq_file_in_region(self, path: str, region: Region) -> bool:
         assert self.partition_descriptor is not None
-
-        # (...)/region_bin=chr1_0/frequency_bin=(...)
-        #                  ^~~~~^
-        # extract the region bin by finding where it begins in the path
-        # and moving 11 characters forward (the length of "region_bin=")
-        # analogous for the end index by finding "frequency_bin=".
+        normalized_region = Region(
+            (region.chrom
+             if region.chrom in self.partition_descriptor.chromosomes
+             else "other"), region.start, region.stop
+        )
         file_region_bin = ParquetLoader._extract_region_bin(path).split('_')
-        # afterwards, check if the file's bin is inside the given region
         bin_chrom = file_region_bin[0]
         bin_region_idx = int(file_region_bin[1])
         bin_region = Region(
@@ -67,12 +69,14 @@ class ParquetLoader:
             (bin_region_idx * self.partition_descriptor.region_length) + 1,
             (bin_region_idx+1) * self.partition_descriptor.region_length,
         )
-        return bin_region.intersects(region)
+        return bin_region.intersects(normalized_region)
 
     def _get_pq_filepaths(self, region: Optional[Region] = None) -> tuple[list[str], list[str]]:
         summary_files = ds.dataset(f"{self.layout.summary}").files
         family_files = ds.dataset(f"{self.layout.family}").files
-        if region is not None and self.partitioned:
+        if region is not None \
+           and self.partitioned \
+           and self.partition_descriptor.has_region_bins:
             summary_files = [path for path in summary_files
                              if self._pq_file_in_region(path, region)]
             family_files = [path for path in family_files
@@ -109,8 +113,10 @@ class ParquetLoader:
             region_filter = (
                 (pc.field("position") >= region.start)
                 & (pc.field("position") <= region.stop)
-                & (pc.field("chromosome") == region.chrom)
             )
+            if region.chrom != "other":
+                region_filter = region_filter \
+                    & (pc.field("chromosome") == region.chrom)
 
         summary_paths, _ = self._get_pq_filepaths(region)
         columns = (
@@ -144,8 +150,10 @@ class ParquetLoader:
             region_filter = (
                 (pc.field("position") >= region.start)
                 & (pc.field("position") <= region.stop)
-                & (pc.field("chromosome") == region.chrom)
             )
+            if region.chrom != "other":
+                region_filter = region_filter \
+                    & (pc.field("chromosome") == region.chrom)
 
         filepaths = self._get_pq_filepaths(region)
 
