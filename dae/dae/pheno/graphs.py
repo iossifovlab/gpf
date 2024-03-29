@@ -453,7 +453,6 @@ def draw_categorical_violin_distribution(
             )
 
     ax.set_yticks(y_locations)
-    print(values_domain)
     ax.set_yticklabels([
         textwrap.fill(x, 20) if x is not None else
         textwrap.fill("None", 20)
