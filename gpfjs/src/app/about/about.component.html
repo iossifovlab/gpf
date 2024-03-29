@@ -1,1 +1,4 @@
-<gpf-markdown-editor (writeEvent)="writeDescription($event)" [initialMarkdown]="aboutDescription"></gpf-markdown-editor>
+<gpf-markdown-editor
+  *ngIf="aboutDescription"
+  (writeEvent)="writeDescription($event)"
+  [initialMarkdown]="aboutDescription"></gpf-markdown-editor>
