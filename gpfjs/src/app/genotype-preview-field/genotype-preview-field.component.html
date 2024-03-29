@@ -6,15 +6,16 @@
   <a target="_blank" [attr.href]="UCSCLink">{{ formattedValue }}</a>
 </span>
 
-<span *ngIf="field === 'effect_details'">
-  <gpf-helper-modal title="Effect details" [modalContent]="effectDetailsModal"></gpf-helper-modal>
+<span *ngIf="field === 'full_effect_details'">
+  <gpf-helper-modal title="Full effect details" [modalContent]="effectDetailsModal"></gpf-helper-modal>
   <ng-template #effectDetailsModal>
+    <span>{{ fullEffectDetails.familyId + ' ' + fullEffectDetails.location }}</span>
     <div class="grid-container">
       <div class="grid-header">Gene</div>
       <div class="grid-header">Transript</div>
       <div class="grid-header">Effect</div>
       <div class="grid-header">Details</div>
-      <ng-container *ngFor="let effectDetails of effectDetailsTable">
+      <ng-container *ngFor="let effectDetails of fullEffectDetails.effectDetails">
         <div class="grid-cell">{{ effectDetails.gene }}</div>
         <div class="grid-cell">{{ effectDetails.transcript }}</div>
         <div class="grid-cell">{{ effectDetails.effect }}</div>
@@ -24,4 +25,4 @@
   </ng-template>
 </span>
 
-<span *ngIf="field !== 'pedigree' && field !== 'location' && field !== 'effect_details'">{{ formattedValue }}</span>
+<span *ngIf="field !== 'pedigree' && field !== 'location' && field !== 'full_effect_details'">{{ formattedValue }}</span>

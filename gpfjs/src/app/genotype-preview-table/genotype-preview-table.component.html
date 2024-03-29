@@ -9,7 +9,7 @@
         <gpf-table-header>
           <ng-container *ngFor="let slot of column.columns">
             <gpf-table-subheader
-              *ngIf="slot.source !== 'pedigree' && slot.source !== 'effect_details'"
+              *ngIf="slot.source !== 'pedigree' && slot.source !== 'full_effect_details'"
               caption="{{ slot.name }}"
               [comparator]="slot.source | compare">
             </gpf-table-subheader>

@@ -1,5 +1,11 @@
-import { Component, ElementRef, Input, OnChanges, OnInit, TemplateRef, ViewChild } from '@angular/core';
+import { Component, Input, OnChanges, OnInit } from '@angular/core';
 import { sprintf } from 'sprintf-js';
+
+interface FullEffectDetails {
+  familyId: string;
+  location: string;
+  effectDetails: EffectDetail[];
+}
 
 interface EffectDetail {
   gene: string;
@@ -22,12 +28,12 @@ export class GenotypePreviewFieldComponent implements OnInit, OnChanges {
   public formattedValue: string;
   // eslint-disable-next-line @typescript-eslint/naming-convention
   public UCSCLink: string;
-  public effectDetailsTable: EffectDetail[];
+  public fullEffectDetails: FullEffectDetails;
   public pedigreeMaxHeight = 75;
 
   public ngOnInit(): void {
     this.UCSCLink = this.getUCSCLink();
-    if (this.field === 'effect_details') {
+    if (this.field === 'full_effect_details') {
       this.formatEffectDetails();
     }
   }
@@ -37,8 +43,19 @@ export class GenotypePreviewFieldComponent implements OnInit, OnChanges {
   }
 
   private formatEffectDetails(): void {
-    if (this.value instanceof Array && typeof this.value[0] === 'string') {
-      this.effectDetailsTable = this.value[0].split('|').map(detail => {
+    if (this.value instanceof Array
+      && typeof this.value[0] === 'string'
+      && typeof this.value[1] === 'string'
+      && typeof this.value[2] === 'string'
+    ) {
+      this.fullEffectDetails = {
+        familyId: '',
+        location: '',
+        effectDetails: [],
+      };
+      this.fullEffectDetails.familyId = this.value[0];
+      this.fullEffectDetails.location = this.value[1];
+      this.fullEffectDetails.effectDetails = this.value[2].split('|').map(detail => {
         const details = detail.split(':');
         return {
           gene: details[1],
