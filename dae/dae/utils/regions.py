@@ -113,6 +113,10 @@ class Region:
         self, chrom: str,
         start: Optional[int] = None, stop: Optional[int] = None
     ):
+        if start is not None and not isinstance(start, int):
+            raise TypeError(f"Invalid type for start position - {type(start)}")
+        if stop is not None and not isinstance(stop, int):
+            raise TypeError(f"Invalid type for stop position - {type(stop)}")
         if start is not None and stop is not None:
             assert start <= stop
 
