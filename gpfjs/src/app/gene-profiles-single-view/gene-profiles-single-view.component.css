@@ -10,14 +10,13 @@ td {
 }
 
 th {
-  height: 54px;
   vertical-align: middle;
 }
 
 th,
 td {
   text-align: left;
-  padding: 12px;
+  padding: 4px;
 }
 
 a {
@@ -39,7 +38,6 @@ a:hover {
 .datasets-table th {
   height: unset;
   vertical-align: unset;
-  padding: 4px;
 }
 
 .datasets-table th,
@@ -51,10 +49,6 @@ a:hover {
 .datasets-table a {
   padding: 0;
   width: unset;
-}
-
-.datasets-table td {
-  padding: 4px;
 }
 
 .datasets-table tr td:first-of-type {
@@ -76,13 +70,6 @@ a:hover {
 
 .compact {
   flex-direction: column !important;
-}
-
-.gene-sets-table tr,
-.gene-sets-table td,
-#links-table td {
-  height: 54px;
-  max-height: 54px;
 }
 
 #links-table td {
