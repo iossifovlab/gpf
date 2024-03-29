@@ -608,7 +608,7 @@ class BaseQueryBuilder(ABC):
                 gene_regions.append(
                     Region(
                         gm.chrom,
-                        gm.tx[0] - self.GENE_REGIONS_HEURISTIC_EXTEND,
+                        max(1, gm.tx[0] - self.GENE_REGIONS_HEURISTIC_EXTEND),
                         gm.tx[1] + self.GENE_REGIONS_HEURISTIC_EXTEND,
                     )
                 )
