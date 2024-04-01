@@ -125,6 +125,14 @@ class ResponseTransformer:
         "effect_details":
         lambda v: [gd2str(e) for e in v.effects],
 
+        "full_effect_details":
+        lambda v: (
+            [v.family_id]
+            + v.cshl_location
+            + [gd2str(e) for e in v.effects]
+            + [ge2str(e) for e in v.effects]
+        ),
+
         "seen_in_affected":
         lambda v: bool(v.get_attribute("seen_in_status") in {2, 3}),
 
