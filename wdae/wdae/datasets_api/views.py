@@ -178,6 +178,7 @@ class DatasetView(QueryBaseView):
             res = StudyWrapperBase.build_genotype_data_all_datasets(
                 dataset.config,
             )
+            res["description"] = dataset.description
 
         res = augment_accessibility(self.instance_id, res, user)
         res = augment_with_groups(res)
