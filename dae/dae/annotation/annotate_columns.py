@@ -17,7 +17,6 @@ from dae.annotation.record_to_annotatable import build_record_to_annotatable, \
 from dae.annotation.annotate_utils import AnnotationTool, \
     produce_regions, produce_partfile_paths
 from dae.annotation.annotation_pipeline import ReannotationPipeline
-from dae.annotation.annotation_pipeline import AnnotatorInfo
 from dae.genomic_resources.cli import VerbosityConfiguration
 from dae.genomic_resources.genomic_context import get_genomic_context
 from dae.genomic_resources.reference_genome import ReferenceGenome, \
@@ -103,32 +102,42 @@ def combine(args: Any, partfile_paths: list[str], out_file_path: str) -> None:
 
 
 class AnnotateColumnsTool(AnnotationTool):
+    """Annotation tool for TSV-style text files."""
+
     def get_argument_parser(self) -> argparse.ArgumentParser:
         """Configure argument parser."""
         parser = argparse.ArgumentParser(
             description="Annotate columns",
             formatter_class=argparse.ArgumentDefaultsHelpFormatter
         )
-        parser.add_argument("input", default="-", nargs="?",
-                            help="the input column file")
-        parser.add_argument("pipeline", default="context", nargs="?",
-                            help="The pipeline definition file. By default, or if "
-                            "the value is gpf_instance, the annotation pipeline "
-                            "from the configured gpf instance will be used.")
-        parser.add_argument("-r", "--region-size", default=300_000_000,
-                            type=int, help="region size to parallelize by")
-        parser.add_argument("-w", "--work-dir",
-                            help="Directory to store intermediate output files in",
-                            default="annotate_columns_output")
-        parser.add_argument("-o", "--output",
-                            help="Filename of the output result",
-                            default=None)
-        parser.add_argument("-in_sep", "--input-separator", default="\t",
-                            help="The column separator in the input")
-        parser.add_argument("-out_sep", "--output-separator", default="\t",
-                            help="The column separator in the output")
-        parser.add_argument("--reannotate", default=None,
-                            help="Old pipeline config to reannotate over")
+        parser.add_argument(
+            "input", default="-", nargs="?",
+            help="the input column file")
+        parser.add_argument(
+            "pipeline", default="context", nargs="?",
+            help="The pipeline definition file. By default, or if "
+            "the value is gpf_instance, the annotation pipeline "
+            "from the configured gpf instance will be used.")
+        parser.add_argument(
+            "-r", "--region-size", default=300_000_000,
+            type=int, help="region size to parallelize by")
+        parser.add_argument(
+            "-w", "--work-dir",
+            help="Directory to store intermediate output files in",
+            default="annotate_columns_output")
+        parser.add_argument(
+            "-o", "--output",
+            help="Filename of the output result",
+            default=None)
+        parser.add_argument(
+            "-in_sep", "--input-separator", default="\t",
+            help="The column separator in the input")
+        parser.add_argument(
+            "-out_sep", "--output-separator", default="\t",
+            help="The column separator in the output")
+        parser.add_argument(
+            "--reannotate", default=None,
+            help="Old pipeline config to reannotate over")
 
         CLIAnnotationContext.add_context_arguments(parser)
         add_record_to_annotable_arguments(parser)
@@ -241,7 +250,8 @@ class AnnotateColumnsTool(AnnotationTool):
                 output = f"{input_name}_annotated"
 
         ref_genome = self.context.get_reference_genome()
-        ref_genome_id = ref_genome.resource_id if ref_genome is not None else None
+        ref_genome_id = ref_genome.resource_id \
+            if ref_genome is not None else None
 
         with open(self.args.pipeline, "r") as infile:
             raw_pipeline_config = infile.read()
@@ -249,16 +259,17 @@ class AnnotateColumnsTool(AnnotationTool):
         if tabix_index_filename(self.args.input):
             with closing(TabixFile(self.args.input)) as pysam_file:
                 regions = produce_regions(pysam_file, self.args.region_size)
-            file_paths = produce_partfile_paths(self.args.input, regions, self.args.work_dir)
+            file_paths = produce_partfile_paths(
+                self.args.input, regions, self.args.work_dir)
 
             region_tasks = []
-            for index, (region, file_path) in enumerate(zip(regions, file_paths)):
+            for index, (region, path) in enumerate(zip(regions, file_paths)):
                 region_tasks.append(self.task_graph.create_task(
                     f"part-{index}",
                     AnnotateColumnsTool.annotate,
                     [self.args, raw_pipeline_config,
-                    self.grr.definition,
-                    ref_genome_id, file_path, region, True],
+                     self.grr.definition,
+                     ref_genome_id, path, region, True],
                     []))
 
             self.task_graph.create_task(
@@ -270,8 +281,9 @@ class AnnotateColumnsTool(AnnotationTool):
             self.task_graph.create_task(
                 "annotate_all",
                 AnnotateColumnsTool.annotate,
-                [self.args, raw_pipeline_config, self.grr.definition, ref_genome_id, output,
-                tuple(), output.endswith(".gz")],
+                [self.args, raw_pipeline_config, self.grr.definition,
+                 ref_genome_id, output,
+                 tuple(), output.endswith(".gz")],
                 [])
 
 

@@ -1,12 +1,13 @@
 import os
-import yaml
 import json
-import numpy as np
 from typing import Generator, Optional
+import yaml
+import numpy as np
 from pyarrow import parquet as pq
 from pyarrow import dataset as ds
 from pyarrow import compute as pc
-from dae.schema2_storage.schema2_import_storage import Schema2DatasetLayout, schema2_dataset_layout
+from dae.schema2_storage.schema2_import_storage import Schema2DatasetLayout, \
+    schema2_dataset_layout
 from dae.pedigrees.loader import FamiliesLoader
 from dae.pedigrees.families_data import FamiliesData
 from dae.variants.attributes import Inheritance, Role, Status, Sex
@@ -21,6 +22,8 @@ class ParquetLoaderException(Exception):
 
 
 class ParquetLoader:
+    """Variants loader implementation for the Parquet format."""
+
     DATA_COLUMN = "summary_variant_data"
 
     def __init__(self, data_dir: str):
@@ -37,8 +40,8 @@ class ParquetLoader:
         self.families: FamiliesData = self._load_families(self.layout.pedigree)
 
         meta_file = pq.ParquetFile(self.layout.meta)
-        self.meta = { row["key"]: row["value"]
-                      for row in meta_file.read().to_pylist() }
+        self.meta = {row["key"]: row["value"]
+                     for row in meta_file.read().to_pylist()}
         meta_file.close()
 
         self.has_annotation = bool(
@@ -55,8 +58,8 @@ class ParquetLoader:
         #                  ^~~~~^
         start = path.find("region_bin=") + 11
         end = path.find("/", start)
-        bin = path[start:end].split('_')
-        return bin[0], int(bin[1])
+        rbin = path[start:end].split("_")
+        return rbin[0], int(rbin[1])
 
     @staticmethod
     def _load_families(path: str) -> FamiliesData:
@@ -79,15 +82,22 @@ class ParquetLoader:
              if region.chrom in self.partition_descriptor.chromosomes
              else "other"), region.start, region.stop
         )
-        bin = ParquetLoader._extract_region_bin(path)
+        rbin = ParquetLoader._extract_region_bin(path)
         bin_region = Region(
-            bin[0],
-            (bin[1] * self.partition_descriptor.region_length) + 1,
-            (bin[1]+1) * self.partition_descriptor.region_length,
+            rbin[0],
+            (rbin[1] * self.partition_descriptor.region_length) + 1,
+            (rbin[1] + 1) * self.partition_descriptor.region_length,
         )
         return bin_region.intersects(normalized_region)
 
-    def _get_pq_filepaths(self, region: Optional[Region] = None) -> tuple[list[str], list[str]]:
+    def get_pq_filepaths(
+        self, region: Optional[Region] = None
+    ) -> tuple[list[str], list[str]]:
+        """
+        Produce a list of paths to available Parquet files.
+
+        May filter by region (if region bins are configured).
+        """
         summary_files = ds.dataset(f"{self.layout.summary}").files
         family_files = ds.dataset(f"{self.layout.family}").files
         if region is not None \
@@ -121,6 +131,7 @@ class ParquetLoader:
         )
 
     def get_contigs(self) -> Optional[dict[str, int]]:
+        """Produce a dict of all contigs and their lengths."""
         summary_paths = ds.dataset(f"{self.layout.summary}").files
         if not self.partitioned:
             summary_parquet = pq.ParquetFile(summary_paths[0])
@@ -132,15 +143,18 @@ class ParquetLoader:
         elif self.partition_descriptor.has_region_bins():
             result = {}
             for path in summary_paths:
-                bin = ParquetLoader._extract_region_bin(path)
-                result[bin[0]] = max(
-                    (bin[1]+1) * self.partition_descriptor.region_length,
-                    result.get(bin[0], 0)
+                rbin = ParquetLoader._extract_region_bin(path)
+                result[rbin[0]] = max(
+                    (rbin[1] + 1) * self.partition_descriptor.region_length,
+                    result.get(rbin[0], 0)
                 )
             return result
         return None
 
-    def fetch_summary_variants(self, region: str = None) -> Generator[SummaryVariant, None, None]:
+    def fetch_summary_variants(
+        self, region: str = None
+    ) -> Generator[SummaryVariant, None, None]:
+        """Iterate over summary variants."""
         region_filter = None
         if region is not None:
             region = Region.from_str(region)
@@ -152,7 +166,7 @@ class ParquetLoader:
                 region_filter = region_filter \
                     & (pc.field("chromosome") == region.chrom)
 
-        summary_paths, _ = self._get_pq_filepaths(region)
+        summary_paths, _ = self.get_pq_filepaths(region)
         columns = (
             "bucket_index", "summary_index", "allele_index",
             "summary_variant_data", "chromosome", "position",
@@ -169,13 +183,16 @@ class ParquetLoader:
                 v_id = (rec["bucket_index"], rec["summary_index"])
                 if v_id not in seen:
                     seen.add(v_id)
-                    yield self._deserialize_summary_variant(rec["summary_variant_data"])
+                    yield self._deserialize_summary_variant(
+                        rec["summary_variant_data"]
+                    )
 
             summary_parquet.close()
 
     def fetch_variants(
         self, region: str = None
     ) -> Generator[tuple[SummaryVariant, list[FamilyVariant]], None, None]:
+        """Iterate over summary and family variants."""
         region_filter = None
         if region is not None:
             region = Region.from_str(region)
@@ -187,38 +204,44 @@ class ParquetLoader:
                 region_filter = region_filter \
                     & (pc.field("chromosome") == region.chrom)
 
-        filepaths = self._get_pq_filepaths(region)
+        filepaths = self.get_pq_filepaths(region)
 
         idx_columns = ("summary_index", "allele_index")
-        summary_columns = ("summary_variant_data", "chromosome", "position", *idx_columns)
-        family_columns = ("family_variant_data", "family_id", *idx_columns)
+        s_columns = ("summary_variant_data",
+                     "chromosome", "position",
+                     *idx_columns)
+        f_columns = ("family_variant_data", "family_id", *idx_columns)
 
         summary_variants = []
         family_variant_recs = dict()
 
         for s_path in filepaths[0]:
-            summary_parquet = pq.ParquetFile(s_path)
-            table = summary_parquet.read(columns=summary_columns)
+            s_parquet = pq.ParquetFile(s_path)
+            table = s_parquet.read(columns=s_columns)
             if region_filter is not None:
                 table = table.filter(region_filter)
             for rec in table.to_pylist():
                 if rec["allele_index"] == 1:
-                    variant = self._deserialize_summary_variant(rec["summary_variant_data"])
+                    variant = self._deserialize_summary_variant(
+                        rec["summary_variant_data"]
+                    )
                     summary_variants.append((rec["summary_index"], variant))
 
-            summary_parquet.close()
+            s_parquet.close()
 
         seen_fvs = set()  # TODO Is there a better way?
         for f_path in filepaths[1]:
-            family_parquet = pq.ParquetFile(f_path)
-            for f_rec in family_parquet.read(columns=family_columns).to_pylist():
+            f_parquet = pq.ParquetFile(f_path)
+            for f_rec in f_parquet.read(columns=f_columns).to_pylist():
                 a = (f_rec["summary_index"], f_rec["family_id"])
                 if a not in seen_fvs:
                     seen_fvs.add(a)
-                    family_variant_recs.setdefault(f_rec["summary_index"], list()).append(
+                    family_variant_recs.setdefault(
+                        f_rec["summary_index"], list()
+                    ).append(
                         f_rec["family_variant_data"]
                     )
-            family_parquet.close()
+            f_parquet.close()
 
         for summary_index, summary_variant in summary_variants:
             if summary_index in family_variant_recs:

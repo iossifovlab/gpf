@@ -1,10 +1,10 @@
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
+from glob import glob
 import textwrap
-from dae.annotation.annotation_pipeline import ReannotationPipeline
 import pytest
 import pytest_mock
-from glob import glob
-
+from dae.annotation.annotation_pipeline import ReannotationPipeline
 from dae.gpf_instance import GPFInstance
 from dae.variants_loaders.parquet.loader import ParquetLoader
 from dae.testing import setup_pedigree, setup_vcf, setup_directories, \
@@ -120,19 +120,20 @@ def t4c8_study_pedigree() -> str:
 @pytest.fixture
 def t4c8_study_variants() -> str:
     return textwrap.dedent("""
-        ##fileformat=VCFv4.2
-        ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
-        ##contig=<ID=chr1>
-        ##contig=<ID=chr2>
-        ##contig=<ID=chr3>
-        #CHROM POS  ID REF ALT QUAL FILTER INFO FORMAT mom1 dad1 ch1 mom3 dad3 ch3
-        chr1   4    .  T   G,TA .    .      .    GT     0/1  0/1  0/0 0/1  0/2  0/2
-        chr1   54   .  T   C    .    .      .    GT     0/1  0/0  0/1 0/0  0/0  0/0
-        chr1   90   .  G   C,GA .    .      .    GT     0/1  0/2  0/2 0/1  0/2  0/1
-        chr1   100  .  T   G,TA .    .      .    GT     0/1  0/1  0/0 0/2  0/2  0/0
-        chr1   119  .  A   G,C  .    .      .    GT     0/0  0/2  0/2 0/1  0/2  0/1
-        chr1   122  .  A   C,AC .    .      .    GT     0/1  0/1  0/1 0/2  0/2  0/2
+    ##fileformat=VCFv4.2
+    ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+    ##contig=<ID=chr1>
+    ##contig=<ID=chr2>
+    ##contig=<ID=chr3>
+    #CHROM POS  ID REF ALT QUAL FILTER INFO FORMAT mom1 dad1 ch1 mom3 dad3 ch3
+    chr1   4    .  T   G,TA .    .      .    GT     0/1  0/1  0/0 0/1  0/2  0/2
+    chr1   54   .  T   C    .    .      .    GT     0/1  0/0  0/1 0/0  0/0  0/0
+    chr1   90   .  G   C,GA .    .      .    GT     0/1  0/2  0/2 0/1  0/2  0/1
+    chr1   100  .  T   G,TA .    .      .    GT     0/1  0/1  0/0 0/2  0/2  0/0
+    chr1   119  .  A   G,C  .    .      .    GT     0/0  0/2  0/2 0/1  0/2  0/1
+    chr1   122  .  A   C,AC .    .      .    GT     0/1  0/1  0/1 0/2  0/2  0/2
     """)
+
 
 @pytest.fixture
 def t4c8_project_config() -> dict:
@@ -149,6 +150,7 @@ def t4c8_project_config() -> dict:
             {"position_score": "two"}
         ]
     }
+
 
 @pytest.fixture
 def t4c8_study_nonpartitioned(
@@ -433,7 +435,7 @@ def test_reannotate_parquet_variants(
 
     loader_result = ParquetLoader(output_dir)
 
-    # check variants are correctly reannotated 
+    # check variants are correctly reannotated
     result = set()
     for sv in loader_result.fetch_summary_variants():
         assert not sv.has_attribute("score_two")
@@ -474,8 +476,8 @@ def test_reannotate_parquet_merging(
         ]
     ])
 
-    expected_pq_files = 5 if study == "t4c8_study_partitioned" \
-                          else 1
+    expected_pq_files = \
+        5 if study == "t4c8_study_partitioned" else 1
 
     # check only merged parquet files are left
     parquets_glob = str(output_dir / "summary" / "**" / "*.parquet")
@@ -550,7 +552,8 @@ def test_annotationless_study_autodetection(
         ]
     ])
 
-    # check auto-detection by asserting reannotation pipeline is NOT constructed
+    # check auto-detection by asserting
+    # reannotation pipeline is NOT constructed
     assert ReannotationPipeline.__init__.call_count == 0
 
 
@@ -581,7 +584,7 @@ def test_annotationless_study_variants(
 
     loader_result = ParquetLoader(output_dir)
 
-    # check variants are correctly reannotated 
+    # check variants are correctly reannotated
     result = set()
     for sv in loader_result.fetch_summary_variants():
         assert sv.has_attribute("score_A")

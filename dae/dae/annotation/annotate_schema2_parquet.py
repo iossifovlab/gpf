@@ -19,28 +19,37 @@ from dae.parquet.schema2.parquet_io import VariantsParquetWriter
 
 
 class AnnotateSchema2ParquetTool(AnnotationTool):
+    """Annotation tool for the Parquet file format."""
+
     def get_argument_parser(self) -> argparse.ArgumentParser:
         """Construct and configure argument parser."""
         parser = argparse.ArgumentParser(
             description="Annotate Schema2 Parquet",
             formatter_class=argparse.ArgumentDefaultsHelpFormatter
         )
-        parser.add_argument("input", default="-", nargs="?",
-                            help="the directory containing Parquet files")
-        parser.add_argument("pipeline", default="context", nargs="?",
-                            help="The pipeline definition file. By default, or if "
-                            "the value is gpf_instance, the annotation pipeline "
-                            "from the configured gpf instance will be used.")
-        parser.add_argument("-r", "--region-size", default=300_000_000,
-                            type=int, help="region size to parallelize by")
-        parser.add_argument("-w", "--work-dir",
-                            help="Directory to store intermediate output files in",
-                            default="annotate_schema2_output")
-        parser.add_argument("-o", "--output",
-                            help="Path of the directory to hold the output")
-        parser.add_argument("-i", "--full-reannotation",
-                            help="Ignore any previous annotation and run "
-                            " a full reannotation.")
+        parser.add_argument(
+            "input", default="-", nargs="?",
+            help="the directory containing Parquet files")
+        parser.add_argument(
+            "pipeline", default="context", nargs="?",
+            help="The pipeline definition file. By default,"
+            " or if the value is gpf_instance, the annotation"
+            " pipeline from the configured gpf instance will"
+            " be used.")
+        parser.add_argument(
+            "-r", "--region-size", default=300_000_000,
+            type=int, help="region size to parallelize by")
+        parser.add_argument(
+            "-w", "--work-dir",
+            help="Directory to store intermediate output files in",
+            default="annotate_schema2_output")
+        parser.add_argument(
+            "-o", "--output",
+            help="Path of the directory to hold the output")
+        parser.add_argument(
+            "-i", "--full-reannotation",
+            help="Ignore any previous annotation and run "
+            " a full reannotation.")
 
         CLIAnnotationContext.add_context_arguments(parser)
         TaskGraphCli.add_arguments(parser)
@@ -49,6 +58,7 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
 
     @staticmethod
     def get_contig_lengths(ref_genome: ReferenceGenome) -> dict[str, int]:
+        """Collect all contigs and their lengths from the ref genome."""
         result = {}
         prefix = ref_genome.chrom_prefix
         contigs = {f"{prefix}{i}" for i in (*range(1, 23), "X")}
@@ -73,11 +83,12 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
         bucket_idx: int,
         allow_repeated_attributes: bool,
     ):
+        """Run annotation over a given directory of Parquet files."""
         loader = ParquetLoader(input_dir)
         pipeline = AnnotateSchema2ParquetTool._produce_annotation_pipeline(
             pipeline_config,
-            loader.meta["annotation_pipeline"] \
-                if loader.has_annotation else None,
+            (loader.meta["annotation_pipeline"]
+             if loader.has_annotation else None),
             grr_definition,
             allow_repeated_attributes
         )
@@ -89,7 +100,8 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
         if isinstance(pipeline, ReannotationPipeline):
             internal_attributes = [
                 attribute.name
-                for annotator in pipeline.annotators_new | pipeline.annotators_rerun
+                for annotator in (pipeline.annotators_new
+                                  | pipeline.annotators_rerun)
                 for attribute in annotator.attributes
                 if attribute.internal
             ]
@@ -143,7 +155,11 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
             os.path.split(layout.pedigree)[0],
             target_is_directory=True
         )
-        os.symlink(loader.layout.family, layout.family, target_is_directory=True)
+        os.symlink(
+            loader.layout.family,
+            layout.family,
+            target_is_directory=True
+        )
 
         if self.gpf_instance is not None:
             genome = self.gpf_instance.reference_genome
@@ -164,8 +180,8 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
                 f"part_{region}",
                 AnnotateSchema2ParquetTool.annotate,
                 [input_dir, output_dir,
-                raw_annotation, region, self.grr.definition,
-                idx, self.args.allow_repeated_attributes],
+                 raw_annotation, region, self.grr.definition,
+                 idx, self.args.allow_repeated_attributes],
                 []
             ))
 
@@ -176,7 +192,8 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
                     for partition in partition_dir.split("/")
                 ]
                 output_dir = os.path.join(summary_dir, partition_dir)
-                merge_variants_parquets(partition_descriptor, output_dir, partitions)
+                merge_variants_parquets(
+                    partition_descriptor, output_dir, partitions)
 
             to_join = [
                 os.path.relpath(dirpath, loader.layout.summary)
@@ -200,14 +217,17 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
             self.task_graph.create_task(
                 "merge", merge,
                 [os.path.join(output_dir, "summary"),
-                 os.path.basename(loader._get_pq_filepaths()[0][0])],
+                 os.path.basename(loader.get_pq_filepaths()[0][0])],
                 annotation_tasks
             )
 
         del loader
 
 
-def cli(raw_args: Optional[list[str]] = None, gpf_instance: Optional[GPFInstance] = None) -> None:
+def cli(
+    raw_args: Optional[list[str]] = None,
+    gpf_instance: Optional[GPFInstance] = None
+) -> None:
     tool = AnnotateSchema2ParquetTool(raw_args, gpf_instance)
     tool.run()
 
