@@ -12,6 +12,9 @@ import { FamilyFiltersBlockComponent } from 'app/family-filters-block/family-fil
 import { PhenoToolMeasureState } from 'app/pheno-tool-measure/pheno-tool-measure.state';
 import { Select, Selector } from '@ngxs/store';
 import { ErrorsState, ErrorsModel } from 'app/common/errors.state';
+import {
+  PHENO_TOOL_CNV, PHENO_TOOL_LGDS, PHENO_TOOL_OTHERS
+} from 'app/pheno-tool-effect-types/pheno-tool-effect-types';
 
 @Component({
   selector: 'gpf-pheno-tool',
@@ -90,6 +93,14 @@ export class PhenoToolComponent implements OnInit, OnDestroy {
       {datasetId: this.selectedDataset.id, ...this.phenoToolState}
     ).subscribe((phenoToolResults) => {
       this.phenoToolResults = phenoToolResults;
+
+      const columnSortOrder = [
+        ...PHENO_TOOL_LGDS, ...PHENO_TOOL_OTHERS, ...PHENO_TOOL_CNV
+      ].map(effect => effect.toLowerCase());
+      this.phenoToolResults.results.sort((a, b) =>
+        columnSortOrder.indexOf(a.effect.toLowerCase()) - columnSortOrder.indexOf(b.effect.toLowerCase())
+      );
+
       this.loadingService.setLoadingStop();
     }, () => {
       this.loadingService.setLoadingStop();
