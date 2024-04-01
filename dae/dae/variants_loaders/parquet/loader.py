@@ -1,3 +1,4 @@
+import os
 import yaml
 import json
 import numpy as np
@@ -15,13 +16,25 @@ from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.utils.regions import Region
 
 
+class ParquetLoaderException(Exception):
+    pass
+
+
 class ParquetLoader:
     DATA_COLUMN = "summary_variant_data"
 
     def __init__(self, data_dir: str):
         self.data_dir: str = data_dir
         self.layout: Schema2DatasetLayout = schema2_dataset_layout(data_dir)
-        self.families: FamiliesData = self._load_families()
+
+        if not os.path.exists(self.layout.pedigree):
+            raise ParquetLoaderException(
+                f"No pedigree file exists in {self.data_dir}!")
+        if len(ds.dataset(f"{self.layout.summary}").files) <= 0:
+            raise ParquetLoaderException(
+                f"No summary variants exists in {self.data_dir}!")
+
+        self.families: FamiliesData = self._load_families(self.layout.pedigree)
 
         meta_file = pq.ParquetFile(self.layout.meta)
         self.meta = { row["key"]: row["value"]
@@ -37,15 +50,17 @@ class ParquetLoader:
         )
 
     @staticmethod
-    def _extract_region_bin(path: str) -> str:
+    def _extract_region_bin(path: str) -> tuple[str, int]:
         # (...)/region_bin=chr1_0/(...)
         #                  ^~~~~^
         start = path.find("region_bin=") + 11
         end = path.find("/", start)
-        return path[start:end]
+        bin = path[start:end].split('_')
+        return bin[0], int(bin[1])
 
-    def _load_families(self) -> FamiliesData:
-        parquet_file = pq.ParquetFile(self.layout.pedigree)
+    @staticmethod
+    def _load_families(path: str) -> FamiliesData:
+        parquet_file = pq.ParquetFile(path)
         ped_df = parquet_file.read().to_pandas()
         parquet_file.close()
         ped_df.role = ped_df.role.apply(Role.from_value)
@@ -55,19 +70,20 @@ class ParquetLoader:
         return FamiliesLoader.build_families_data_from_pedigree(ped_df)
 
     def _pq_file_in_region(self, path: str, region: Region) -> bool:
-        assert self.partition_descriptor is not None
+        if not self.partition_descriptor.has_region_bins:
+            raise ParquetLoaderException(
+                f"No region bins exist in {self.data_dir}!")
+
         normalized_region = Region(
             (region.chrom
              if region.chrom in self.partition_descriptor.chromosomes
              else "other"), region.start, region.stop
         )
-        file_region_bin = ParquetLoader._extract_region_bin(path).split('_')
-        bin_chrom = file_region_bin[0]
-        bin_region_idx = int(file_region_bin[1])
+        bin = ParquetLoader._extract_region_bin(path)
         bin_region = Region(
-            bin_chrom,
-            (bin_region_idx * self.partition_descriptor.region_length) + 1,
-            (bin_region_idx+1) * self.partition_descriptor.region_length,
+            bin[0],
+            (bin[1] * self.partition_descriptor.region_length) + 1,
+            (bin[1]+1) * self.partition_descriptor.region_length,
         )
         return bin_region.intersects(normalized_region)
 
@@ -104,9 +120,27 @@ class ParquetLoader:
             inheritance_in_members=inheritance_in_members
         )
 
-    def fetch_summary_variants(self, region: str = None) -> Generator[SummaryVariant, None, None]:
-        assert self.families is not None
+    def get_contigs(self) -> Optional[list[tuple[str, int]]]:
+        summary_paths = ds.dataset(f"{self.layout.summary}").files
+        if not self.partitioned:
+            summary_parquet = pq.ParquetFile(summary_paths[0])
+            result = summary_parquet.read(columns=["chromosome", "position"]) \
+                .group_by("chromosome") \
+                .aggregate([("position", "max")]) \
+                .to_pydict()
+            return dict(zip(result["chromosome"], result["position_max"]))
+        elif self.partition_descriptor.has_region_bins():
+            result = {}
+            for path in summary_paths:
+                bin = ParquetLoader._extract_region_bin(path)
+                result[bin[0]] = max(
+                    (bin[1]+1) * self.partition_descriptor.region_length,
+                    result.get(bin[0], 0)
+                )
+            return result
+        return None
 
+    def fetch_summary_variants(self, region: str = None) -> Generator[SummaryVariant, None, None]:
         region_filter = None
         if region is not None:
             region = Region.from_str(region)
@@ -142,8 +176,6 @@ class ParquetLoader:
     def fetch_variants(
         self, region: str = None
     ) -> Generator[tuple[SummaryVariant, list[FamilyVariant]], None, None]:
-        assert self.families is not None
-
         region_filter = None
         if region is not None:
             region = Region.from_str(region)
