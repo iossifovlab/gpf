@@ -23,4 +23,4 @@ export const PHENO_TOOL_INITIAL_VALUES: Set<string> = new Set([
   'Synonymous',
 ]);
 
-export const PHENO_TOOL_ALL: Set<string> = new Set([...PHENO_TOOL_OTHERS, ...PHENO_TOOL_LGDS]);
+export const PHENO_TOOL_ALL: Set<string> = new Set([...PHENO_TOOL_OTHERS, ...PHENO_TOOL_CNV, ...PHENO_TOOL_LGDS]);
