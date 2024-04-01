@@ -11,3 +11,16 @@
 ::ng-deep .modal-content {
   width: fit-content;
 }
+
+#help-button {
+  border: none;
+  background: none;
+  font-weight: 500;
+  color: steelblue;
+}
+
+#help-button:hover {
+  border: none;
+  background-color: transparent;
+  color: #b4b4b4;
+}

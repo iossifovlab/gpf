@@ -10,6 +10,7 @@ import { PopupComponent } from 'app/popup/popup.component';
 export class HelperModalComponent {
   @Input() public modalContent: TemplateRef<unknown> | string;
   @Input() public isMarkdown = false;
+  @Input() public buttonText = '';
 
   public constructor(
     private modalService: NgbModal
@@ -31,7 +32,7 @@ export class HelperModalComponent {
           centered: true,
           modalDialogClass: 'modal-dialog-centered'
         }
-      );
+      ); 
     } else {
       this.modalService.open('Error: invalid modal content!', {
         size: 'lg',

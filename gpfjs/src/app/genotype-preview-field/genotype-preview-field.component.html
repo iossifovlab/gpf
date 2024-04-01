@@ -7,18 +7,32 @@
 </span>
 
 <span *ngIf="field === 'full_effect_details'">
-  <gpf-helper-modal title="Full effect details" [modalContent]="effectDetailsModal"></gpf-helper-modal>
+  <gpf-helper-modal
+    title="Full effect details"
+    [modalContent]="effectDetailsModal"
+    [buttonText]="'Show details'"></gpf-helper-modal>
   <ng-template #effectDetailsModal>
-    <span>{{ fullEffectDetails.familyId + ' ' + fullEffectDetails.location }}</span>
-    <div class="grid-container">
+    <span class="details-header">{{ 'Family id: ' + fullEffectDetails.familyId }}</span>
+    <span class="details-header">{{ 'Location: ' + fullEffectDetails.location }}</span>
+    <div class="grid-container" *ngIf="fullEffectDetails.areIncomplete" style="grid-template-columns: repeat(2, auto)">
       <div class="grid-header">Gene</div>
-      <div class="grid-header">Transript</div>
       <div class="grid-header">Effect</div>
+      <ng-container *ngFor="let geneEffect of fullEffectDetails.geneEffects">
+        <div class="grid-cell">{{ geneEffect.gene }}</div>
+        <div class="grid-cell">{{ geneEffect.effect }}</div>
+      </ng-container>
+    </div>
+    <div
+      class="grid-container"
+      [ngStyle]="fullEffectDetails.areIncomplete ? { 'grid-template-columns': 'repeat(2, auto)' } : {}">
+      <div *ngIf="!fullEffectDetails.areIncomplete" class="grid-header">Gene</div>
+      <div class="grid-header">Transript</div>
+      <div *ngIf="!fullEffectDetails.areIncomplete" class="grid-header">Effect</div>
       <div class="grid-header">Details</div>
       <ng-container *ngFor="let effectDetails of fullEffectDetails.effectDetails">
-        <div class="grid-cell">{{ effectDetails.gene }}</div>
+        <div *ngIf="!fullEffectDetails.areIncomplete" class="grid-cell">{{ effectDetails.gene }}</div>
         <div class="grid-cell">{{ effectDetails.transcript }}</div>
-        <div class="grid-cell">{{ effectDetails.effect }}</div>
+        <div *ngIf="!fullEffectDetails.areIncomplete" class="grid-cell">{{ effectDetails.effect }}</div>
         <div class="grid-cell">{{ effectDetails.details }}</div>
       </ng-container>
     </div>

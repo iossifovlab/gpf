@@ -5,6 +5,8 @@ interface FullEffectDetails {
   familyId: string;
   location: string;
   effectDetails: EffectDetail[];
+  geneEffects: GeneEffects[];
+  areIncomplete: boolean;
 }
 
 interface EffectDetail {
@@ -12,6 +14,11 @@ interface EffectDetail {
   transcript: string;
   effect: string;
   details: string;
+}
+
+interface GeneEffects {
+  gene: string;
+  effect: string;
 }
 
 @Component({
@@ -47,11 +54,14 @@ export class GenotypePreviewFieldComponent implements OnInit, OnChanges {
       && typeof this.value[0] === 'string'
       && typeof this.value[1] === 'string'
       && typeof this.value[2] === 'string'
+      && typeof this.value[3] === 'string'
     ) {
       this.fullEffectDetails = {
         familyId: '',
         location: '',
         effectDetails: [],
+        geneEffects: [],
+        areIncomplete: true
       };
       this.fullEffectDetails.familyId = this.value[0];
       this.fullEffectDetails.location = this.value[1];
@@ -71,6 +81,23 @@ export class GenotypePreviewFieldComponent implements OnInit, OnChanges {
           return 1;
         }
         return 0;
+      });
+
+      // Check if gene and effect columns are both empty
+      for (const ed of this.fullEffectDetails.effectDetails) {
+        // Equal only when both are 'None'
+        if (ed.gene !== ed.effect) {
+          this.fullEffectDetails.areIncomplete = false;
+          break;
+        }
+      }
+
+      this.fullEffectDetails.geneEffects = this.value[3].split('|').map(geneEffect => {
+        const effect = geneEffect.split(':');
+        return {
+          gene: effect[0],
+          effect: effect[1],
+        };
       });
     }
   }

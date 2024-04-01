@@ -1,7 +1,14 @@
+.details-header {
+  padding-top: 10px;
+  text-align: center;
+  font-size: large;
+  font-weight: bold;
+}
+
 .grid-container {
   display: grid;
   grid-template-columns: repeat(4, auto);
-  margin: 15px 15px 5px;
+  margin: 25px 25px 15px;
 }
 
 .grid-header {
