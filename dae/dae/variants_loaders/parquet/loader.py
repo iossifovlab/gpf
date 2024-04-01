@@ -120,7 +120,7 @@ class ParquetLoader:
             inheritance_in_members=inheritance_in_members
         )
 
-    def get_contigs(self) -> Optional[list[tuple[str, int]]]:
+    def get_contigs(self) -> Optional[dict[str, int]]:
         summary_paths = ds.dataset(f"{self.layout.summary}").files
         if not self.partitioned:
             summary_parquet = pq.ParquetFile(summary_paths[0])

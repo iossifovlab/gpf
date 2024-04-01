@@ -4,9 +4,7 @@ import sys
 from typing import Optional
 from glob import glob
 from dae.genomic_resources.reference_genome import ReferenceGenome
-from dae.genomic_resources.repository_factory import build_genomic_resource_repository
 from dae.annotation.annotate_utils import AnnotationTool
-from dae.annotation.annotation_factory import build_annotation_pipeline
 from dae.annotation.context import CLIAnnotationContext
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.parquet.parquet_writer import append_meta_to_parquet, \
@@ -50,19 +48,19 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
         return parser
 
     @staticmethod
-    def get_contig_lengths(ref_genome: ReferenceGenome) -> list[tuple[str, int]]:
-        result = []
+    def get_contig_lengths(ref_genome: ReferenceGenome) -> dict[str, int]:
+        result = {}
         prefix = ref_genome.chrom_prefix
         contigs = {f"{prefix}{i}" for i in (*range(1, 23), "X")}
         other_contigs = set(ref_genome.chromosomes) - contigs
         max_len = 0
         for contig in contigs:
             if contig in ref_genome.chromosomes:
-                result.append((contig, ref_genome.get_chrom_length(contig)))
+                result[contig] = ref_genome.get_chrom_length(contig)
         if other_contigs:
             for contig in other_contigs:
                 max_len = max(max_len, ref_genome.get_chrom_length(contig))
-            result.append(("other", max_len))
+            result["other"] = max_len
         return result
 
     @staticmethod
@@ -152,10 +150,11 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
         else:
             genome = self.context.get_reference_genome()
 
-        contig_lens = AnnotateSchema2ParquetTool.get_contig_lengths(genome)
+        contig_lens = loader.get_contigs() \
+            or AnnotateSchema2ParquetTool.get_contig_lengths(genome)
         regions = [
             f"{contig}:{start}-{start + self.args.region_size}"
-            for contig, length in contig_lens
+            for contig, length in contig_lens.items()
             for start in range(1, length, self.args.region_size)
         ]
 
