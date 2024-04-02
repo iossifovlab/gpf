@@ -59,7 +59,8 @@ export class GeneProfilesTableComponent implements OnInit, OnChanges, OnDestroy 
 
   public tabs: string[] = [];
   public hideTable = false;
-  public currentTab = new Set<string>();
+  public currentTabSymbols = new Set<string>();
+  public currentTab = '';
 
   public constructor(
     private geneProfilesService: GeneProfilesTableService
@@ -343,13 +344,15 @@ export class GeneProfilesTableComponent implements OnInit, OnChanges, OnDestroy 
 
   public openTab(tab: string): void {
     this.hideTable = true;
-    this.currentTab.clear();
-    tab.split(',').map(t => this.currentTab.add(t));
+    this.currentTabSymbols.clear();
+    tab.split(',').map(t => this.currentTabSymbols.add(t));
+    this.currentTab = tab;
   }
 
   public closeTab(tab: string): void {
     this.tabs = this.tabs.filter(t => t !== tab);
     this.hideTable = false;
+    this.currentTab = 'table';
   }
 
   public toggleHighlightGene(geneSymbol: string): void {

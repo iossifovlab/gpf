@@ -325,6 +325,7 @@
   border-radius: 0.25rem;
   user-select: none;
   line-height: 190%;
+  width: 440px;
 }
 
 .keybinds-tooltip-key {
@@ -364,4 +365,52 @@
 .menu-button {
   margin-top: 6px;
   font-size: 20px;
+}
+
+#tabs-wrapper {
+  display: flex;
+  flex-direction: row;
+  gap: 15px;
+}
+
+#search-tabs-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding-bottom: 20px;
+  background: #fff;
+}
+
+.tab-name {
+  background-color: transparent;
+  border: none;
+  color: #2a6395;
+  font-size: 18px;
+  padding-bottom: 0;
+  padding-right: 0;
+}
+
+.active-tab {
+  font-weight: bold;
+}
+
+.separator {
+  border-bottom: 2px solid white;
+}
+
+.active-separator {
+  border-bottom: 2px solid #2a6395;
+}
+
+.close-tab-button {
+  background-color: transparent;
+  border: none;
+  color: #2a6395;
+  vertical-align: middle;
+  padding: 0;
+  padding-top: 4px;
+}
+
+.close-tab-button:hover {
+  color: rgb(87, 155, 211);
 }

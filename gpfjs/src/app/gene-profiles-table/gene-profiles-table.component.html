@@ -101,68 +101,77 @@
 
   <gpf-gene-profiles-single-view-wrapper
     *ngIf="hideTable"
-    [geneSymbols]="currentTab"></gpf-gene-profiles-single-view-wrapper>
+    [geneSymbols]="currentTabSymbols"></gpf-gene-profiles-single-view-wrapper>
 
   <ng-template #aboveTableBar>
-    <div id="above-table-bar">
-      <div style="width: 270px">
-        <div class="search-input-wrapper">
-          <label id="gene-search-label" for="gene-search-input">
-            <span class="material-symbols-outlined search-icon">search</span>
-          </label>
-          <input
-            #searchBox
-            (keyup)="searchKeystrokes$.next(searchBox.value)"
-            (click)="hideTable = false"
-            id="gene-search-input"
-            class="search-input form-control"
-            autocomplete="off"
-            placeholder="Search gene"
-            type="text"
-            spellcheck="false" />
-          <span
-            *ngIf="searchBox.value !== '' && !showSearchLoading"
-            class="material-symbols-outlined search-clear-icon"
-            (click)="searchBox.value = ''; searchKeystrokes$.next(searchBox.value); showSearchLoading = true"
-            >close</span
-          >
-          <span *ngIf="showSearchLoading" class="material-symbols-outlined search-loading-icon"
-            >progress_activity
-          </span>
+    <div id="search-tabs-wrapper">
+      <div id="above-table-bar">
+        <div style="width: 270px">
+          <div class="search-input-wrapper">
+            <label id="gene-search-label" for="gene-search-input">
+              <span class="material-symbols-outlined search-icon">search</span>
+            </label>
+            <input
+              #searchBox
+              (keyup)="searchKeystrokes$.next(searchBox.value)"
+              (click)="hideTable = false; currentTab = 'table'"
+              id="gene-search-input"
+              class="search-input form-control"
+              autocomplete="off"
+              placeholder="Search gene"
+              type="text"
+              spellcheck="false" />
+            <span
+              *ngIf="searchBox.value !== '' && !showSearchLoading"
+              class="material-symbols-outlined search-clear-icon"
+              (click)="searchBox.value = ''; searchKeystrokes$.next(searchBox.value); showSearchLoading = true"
+              >close</span
+            >
+            <span *ngIf="showSearchLoading" class="material-symbols-outlined search-loading-icon"
+              >progress_activity
+            </span>
+          </div>
         </div>
-      </div>
 
-      <div class="vertical-line"></div>
+        <div class="vertical-line"></div>
 
-      <div class="above-table-bar-item">
-        <!-- prettier-ignore -->
-        <button
+        <div class="above-table-bar-item">
+          <!-- prettier-ignore -->
+          <button
           #columnFilteringButton
           id="category-filtering-button"
           class="btn btn-default"
-          (click)="openCategoryFilterDropdown($event); hideTable = false"
+          (click)="openCategoryFilterDropdown($event); hideTable = false; currentTab = 'table'"
           title="Filter categories"><span id="filter-menu-icon" class="material-symbols-outlined">menu</span>
         </button>
+        </div>
+
+        <div id="keybinds-icon" (mouseover)="showKeybinds = true" (mouseout)="showKeybinds = false">
+          <span>?</span>
+        </div>
+
+        <div *ngIf="showKeybinds" class="keybinds-tooltip">
+          <span class="keybinds-tooltip-command">Highlight row</span>
+          <span class="keybinds-tooltip-key">Middleclick</span> or
+          <span class="keybinds-tooltip-key">CTRL / ⌘</span>+<span class="keybinds-tooltip-key">Click</span><br />
+          <span class="keybinds-tooltip-command">Clear highlights</span><span class="keybinds-tooltip-key">Escape</span
+          ><br />
+          <span class="keybinds-tooltip-command">Compare highlights</span><span class="keybinds-tooltip-key">C</span
+          ><br />
+        </div>
       </div>
 
-      <div id="keybinds-icon" (mouseover)="showKeybinds = true" (mouseout)="showKeybinds = false">
-        <span>?</span>
+      <div id="tabs-wrapper">
+        <div *ngFor="let tab of tabs">
+          <button class="tab-name" (click)="openTab(tab)" [ngClass]="{ 'active-tab': currentTab === tab }">{{
+            tab
+          }}</button>
+          <button class="close-tab-button" (click)="closeTab(tab)">
+            <span class="material-symbols-outlined md" title="Close">close</span>
+          </button>
+          <div class="separator" [ngClass]="{ 'active-separator': currentTab === tab }"></div>
+        </div>
       </div>
-
-      <div *ngIf="showKeybinds" class="keybinds-tooltip">
-        <span class="keybinds-tooltip-command">Highlight row</span>
-        <span class="keybinds-tooltip-key">Middleclick</span> or
-        <span class="keybinds-tooltip-key">CTRL / ⌘</span>+<span class="keybinds-tooltip-key">Click</span><br />
-        <span class="keybinds-tooltip-command">Clear highlights</span><span class="keybinds-tooltip-key">Escape</span
-        ><br />
-        <span class="keybinds-tooltip-command">Compare highlights</span><span class="keybinds-tooltip-key">C</span
-        ><br />
-      </div>
-    </div>
-
-    <div id="tabs-wrapper" *ngFor="let tab of tabs">
-      <button (click)="openTab(tab)">{{ tab }}</button>
-      <button (click)="closeTab(tab)">X</button>
     </div>
   </ng-template>
 
