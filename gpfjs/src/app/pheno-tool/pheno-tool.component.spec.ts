@@ -19,10 +19,11 @@ import { GeneSymbolsState, SetGeneSymbols } from 'app/gene-symbols/gene-symbols.
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { HttpResponse } from '@angular/common/http';
+import { PhenoToolResults } from './pheno-tool-results';
 
 class PhenoToolServiceMock {
-  public getPhenoToolResults(): Observable<string> {
-    return of('fakeValue');
+  public getPhenoToolResults(): Observable<PhenoToolResults> {
+    return of(new PhenoToolResults('asdf', []));
   }
 
   public downloadPhenoToolResults(): Observable<HttpResponse<Blob>> {
@@ -108,13 +109,13 @@ describe('PhenoToolComponent', () => {
   it('should test submit query', () => {
     fixture.detectChanges();
     component.submitQuery();
-    expect(component.phenoToolResults).toBe('fakeValue' as any);
+    expect(component.phenoToolResults).toStrictEqual(new PhenoToolResults('asdf', []));
   });
 
   it('should hide results on a state change', () => {
     fixture.detectChanges();
     component.submitQuery();
-    expect(component.phenoToolResults).toBe('fakeValue' as any);
+    expect(component.phenoToolResults).toStrictEqual(new PhenoToolResults('asdf', []));
     store.dispatch(new SetGeneSymbols(['POGZ']));
     expect(component.phenoToolResults).toBeNull();
   });
