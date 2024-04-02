@@ -25,12 +25,13 @@ export class GeneProfileSingleViewWrapperComponent implements OnInit, AfterViewI
   }
 
   public ngAfterViewInit(): void {
-    this.geneSymbols = new Set(
-      (this.route.snapshot.params.genes as string)
-        .split(',')
-        .filter(p => p)
-        .map(p => p.trim())
-    );
+    // this.geneSymbols = new Set(
+    //   (this.route.snapshot.params.genes as string)
+    //     .split(',')
+    //     .filter(p => p)
+    //     .map(p => p.trim())
+    // );
+
     this.location.replaceState('gene-profiles/' + Array.from(this.geneSymbols).toString());
   }
 }

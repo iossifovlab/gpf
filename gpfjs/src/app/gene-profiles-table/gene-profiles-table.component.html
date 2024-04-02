@@ -190,8 +190,8 @@
       <button class="compare-gene-item" [attr.title]="gene" type="button">
         <span
           class="compare-genes-gene-name clickable"
-          (click)="openSingleView(gene)"
-          (middleclick)="openSingleView(gene)"
+          (click)="loadSingleView(gene)"
+          (middleclick)="loadSingleView(gene, true)"
           >{{ gene }}</span
         >
         <button (click)="toggleHighlightGene(gene)" class="compare-genes-close font-weight-light" type="button">
@@ -205,8 +205,8 @@
     <button
       id="compare-genes-compare-button"
       class="btn btn-default"
-      (click)="openSingleView(highlightedGenes)"
-      (middleclick)="openSingleView(highlightedGenes)"
+      (click)="loadSingleView(highlightedGenes)"
+      (middleclick)="loadSingleView(highlightedGenes, true)"
       title="Compare highlighted genes">
       Compare
     </button>

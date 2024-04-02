@@ -92,6 +92,7 @@ export class GeneProfileSingleViewComponent implements OnInit {
 
   public ngOnInit(): void {
     this.gene$ = this.geneProfilesService.getGene(this.geneSymbol);
+
     this.gene$.pipe(
       switchMap(gene => {
         gene.geneSets.forEach(element => {

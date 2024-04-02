@@ -105,7 +105,7 @@ export class GeneProfilesTableComponent implements OnInit, OnChanges, OnDestroy 
   public keybindCompareGenes(): void {
     if (this.highlightedGenes.size
         && (document.activeElement === document.body || document.activeElement.nodeName === 'BUTTON')) {
-      this.openSingleView(this.highlightedGenes);
+      this.loadSingleView(this.highlightedGenes);
     }
   }
 
@@ -311,43 +311,45 @@ export class GeneProfilesTableComponent implements OnInit, OnChanges, OnDestroy 
     } else if (column.clickable === 'goToQuery') {
       this.goToQueryEvent.emit({geneSymbol: geneSymbol, statisticId: column.id, newTab: altAction});
     } else if (column.clickable === 'createTab' && linkClick) {
-      this.openSingleView(geneSymbol, altAction);
+      this.loadSingleView(geneSymbol, altAction);
     }
   }
 
-  public openSingleView(geneSymbols: string | Set<string>, newTab: boolean = false): void {
-    // let genes: string;
-    // const geneProfilesBaseUrl = window.location.href;
+  public loadSingleView(geneSymbols: string | Set<string>, newTab: boolean = false): void {
+    let genes: string;
+    const geneProfilesBaseUrl = window.location.href;
 
-    // if (typeof geneSymbols === 'string') {
-    //   genes = geneSymbols;
-    // } else {
-    //   genes = [...geneSymbols].join(',');
-    // }
+    if (typeof geneSymbols === 'string') {
+      genes = geneSymbols;
+      if (this.tabs.indexOf(geneSymbols) === -1) {
+        this.tabs.push(genes);
+      }
+    } else {
+      genes = [...geneSymbols].join(',');
+      if (this.tabs.indexOf(genes) === -1) {
+        this.tabs.push(genes);
+      }
+    }
 
-    // if (newTab) {
-    //   const newWindow = window.open('', '_blank');
-    //   newWindow.location.assign(`${geneProfilesBaseUrl}/${genes}`);
-    // } else {
-    //   window.location.assign(`${geneProfilesBaseUrl}/${genes}`);
-    // }
+    if (genes) {
+      this.openTab(genes);
+    }
 
-    if (typeof geneSymbols === 'string' && this.tabs.indexOf(geneSymbols) === -1) {
-      this.tabs.push(geneSymbols);
+    if (newTab) {
+      const newWindow = window.open('', '_blank');
+      newWindow.location.assign(`${geneProfilesBaseUrl}/${genes}`);
     }
   }
 
   public openTab(tab: string): void {
     this.hideTable = true;
     this.currentTab.clear();
-    this.currentTab.add(tab);
-    // window.location.assign(`${window.location.href}/${tab}`);
+    tab.split(',').map(t => this.currentTab.add(t));
   }
 
   public closeTab(tab: string): void {
     this.tabs = this.tabs.filter(t => t !== tab);
     this.hideTable = false;
-    // window.location.assign(`${window.location.href}`);
   }
 
   public toggleHighlightGene(geneSymbol: string): void {
