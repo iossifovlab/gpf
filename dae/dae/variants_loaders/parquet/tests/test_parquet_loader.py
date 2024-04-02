@@ -2,6 +2,7 @@
 import os
 import pathlib
 import pytest
+import pytest_mock
 from dae.utils.regions import Region
 from dae.gpf_instance import GPFInstance
 from dae.variants_loaders.parquet.loader import ParquetLoader
@@ -171,7 +172,9 @@ chr3   75   .  G   C,GA .    .      .    GT     0/1  0/2  0/2
     return f"{root_path}/work_dir/study_3"
 
 
-def test_get_pq_filepaths_nonpartitioned(t4c8_study_nonpartitioned):
+def test_get_pq_filepaths_nonpartitioned(
+    t4c8_study_nonpartitioned: str
+) -> None:
     loader = ParquetLoader(t4c8_study_nonpartitioned)
     summary_filepaths, family_filepaths = loader.get_pq_filepaths()
     assert list(map(os.path.basename, summary_filepaths)) == [
@@ -182,7 +185,9 @@ def test_get_pq_filepaths_nonpartitioned(t4c8_study_nonpartitioned):
     ]
 
 
-def test_get_pq_filepaths_partitioned(t4c8_study_partitioned):
+def test_get_pq_filepaths_partitioned(
+    t4c8_study_partitioned: str
+) -> None:
     loader = ParquetLoader(t4c8_study_partitioned)
     summary_filepaths, family_filepaths = loader.get_pq_filepaths()
     assert set(map(os.path.basename, summary_filepaths)) == {
@@ -210,7 +215,9 @@ def test_get_pq_filepaths_partitioned(t4c8_study_partitioned):
     }
 
 
-def test_get_pq_filepaths_partitioned_region(t4c8_study_partitioned):
+def test_get_pq_filepaths_partitioned_region(
+    t4c8_study_partitioned: str
+) -> None:
     loader = ParquetLoader(t4c8_study_partitioned)
 
     region = Region("chr1", 1, 100)
@@ -247,7 +254,9 @@ def test_get_pq_filepaths_partitioned_region(t4c8_study_partitioned):
     }
 
 
-def test_fetch_variants_count_nonpartitioned(t4c8_study_nonpartitioned):
+def test_fetch_variants_count_nonpartitioned(
+    t4c8_study_nonpartitioned: str
+) -> None:
     loader = ParquetLoader(t4c8_study_nonpartitioned)
     vs = list(loader.fetch_variants())
     # summary variants
@@ -256,7 +265,9 @@ def test_fetch_variants_count_nonpartitioned(t4c8_study_nonpartitioned):
     assert sum([len(fvs) for _, fvs in vs]) == 4
 
 
-def test_fetch_variants_count_partitioned(t4c8_study_partitioned):
+def test_fetch_variants_count_partitioned(
+    t4c8_study_partitioned: str
+) -> None:
     loader = ParquetLoader(t4c8_study_partitioned)
     vs = list(loader.fetch_variants())
     # summary variants
@@ -265,7 +276,9 @@ def test_fetch_variants_count_partitioned(t4c8_study_partitioned):
     assert sum([len(fvs) for _, fvs in vs]) == 12
 
 
-def test_fetch_variants_count_nonpartitioned_region(t4c8_study_nonpartitioned):
+def test_fetch_variants_count_nonpartitioned_region(
+    t4c8_study_nonpartitioned: str
+) -> None:
     loader = ParquetLoader(t4c8_study_nonpartitioned)
     vs = list(loader.fetch_variants(region="chr1:119"))
     # summary variants
@@ -280,7 +293,9 @@ def test_fetch_variants_count_nonpartitioned_region(t4c8_study_nonpartitioned):
     assert sum([len(fvs) for _, fvs in vs]) == 3
 
 
-def test_fetch_variants_count_partitioned_region(t4c8_study_partitioned):
+def test_fetch_variants_count_partitioned_region(
+    t4c8_study_partitioned: str
+) -> None:
     loader = ParquetLoader(t4c8_study_partitioned)
     vs = list(loader.fetch_variants(region="chr1:1-89"))
     # summary variants
@@ -295,21 +310,25 @@ def test_fetch_variants_count_partitioned_region(t4c8_study_partitioned):
     assert sum([len(fvs) for _, fvs in vs]) == 8
 
 
-def test_fetch_summary_variants_nonpartitioned(t4c8_study_nonpartitioned):
+def test_fetch_summary_variants_nonpartitioned(
+    t4c8_study_nonpartitioned: str
+) -> None:
     loader = ParquetLoader(t4c8_study_nonpartitioned)
     vs = list(loader.fetch_summary_variants())
     assert len(vs) == 3
 
 
-def test_fetch_summary_variants_partitioned(t4c8_study_partitioned):
+def test_fetch_summary_variants_partitioned(
+    t4c8_study_partitioned: str
+) -> None:
     loader = ParquetLoader(t4c8_study_partitioned)
     vs = list(loader.fetch_summary_variants())
     assert len(vs) == 6
 
 
 def test_fetch_summary_variants_nonpartitioned_region(
-    t4c8_study_nonpartitioned
-):
+    t4c8_study_nonpartitioned: str
+) -> None:
     loader = ParquetLoader(t4c8_study_nonpartitioned)
     vs = list(loader.fetch_summary_variants(region="chr1:119"))
     assert len(vs) == 1
@@ -317,7 +336,9 @@ def test_fetch_summary_variants_nonpartitioned_region(
     assert len(vs) == 2
 
 
-def test_fetch_summary_variants_partitioned_region(t4c8_study_partitioned):
+def test_fetch_summary_variants_partitioned_region(
+    t4c8_study_partitioned: str
+) -> None:
     loader = ParquetLoader(t4c8_study_partitioned)
     vs = list(loader.fetch_summary_variants(region="chr1:1-89"))
     assert len(vs) == 2
@@ -325,7 +346,9 @@ def test_fetch_summary_variants_partitioned_region(t4c8_study_partitioned):
     assert len(vs) == 4
 
 
-def test_fetch_variants_count_acgt(acgt_study_partitioned):
+def test_fetch_variants_count_acgt(
+    acgt_study_partitioned: str
+) -> None:
     loader = ParquetLoader(acgt_study_partitioned)
     assert len(list(loader.fetch_summary_variants())) == 9
     assert len(list(loader.fetch_summary_variants(region="chr1:1-100"))) == 3
@@ -334,25 +357,31 @@ def test_fetch_variants_count_acgt(acgt_study_partitioned):
     assert len(list(loader.fetch_summary_variants(region="chr3:1-100"))) == 3
 
 
-def test_get_contigs_nonpartitioned(t4c8_study_nonpartitioned):
+def test_get_contigs_nonpartitioned(
+    t4c8_study_nonpartitioned: str
+) -> None:
     loader = ParquetLoader(t4c8_study_nonpartitioned)
     assert loader.get_contigs() == {"chr1": 122}
 
 
-def test_get_contigs_partitioned_no_other(t4c8_study_partitioned):
+def test_get_contigs_partitioned_no_other(
+    t4c8_study_partitioned: str
+) -> None:
     loader = ParquetLoader(t4c8_study_partitioned)
     assert loader.get_contigs() == {"chr1": 200}
 
 
-def test_get_contigs_partitioned_has_other(acgt_study_partitioned):
+def test_get_contigs_partitioned_has_other(
+    acgt_study_partitioned: str
+) -> None:
     loader = ParquetLoader(acgt_study_partitioned)
     assert loader.get_contigs() == {"chr1": 100, "other": 100}
 
 
 def test_get_contigs_nonpartitioned_no_region_bins(
-    mocker, acgt_study_partitioned
-):
+    mocker: pytest_mock.MockerFixture, acgt_study_partitioned: str
+) -> None:
     loader = ParquetLoader(acgt_study_partitioned)
     mocker.patch.object(loader.partition_descriptor, "has_region_bins")
-    loader.partition_descriptor.has_region_bins.return_value = False
+    loader.partition_descriptor.has_region_bins.return_value = False  # type: ignore # noqa: E501
     assert loader.get_contigs() is None

@@ -94,6 +94,8 @@ def combine(
 
 
 class AnnotateVCFTool(AnnotationTool):
+    """Annotation tool for the VCF file format."""
+
     def get_argument_parser(self) -> argparse.ArgumentParser:
         """Construct and configure argument parser."""
         parser = argparse.ArgumentParser(
@@ -209,7 +211,7 @@ class AnnotateVCFTool(AnnotationTool):
                         if has_value.get(attribute.name, False):
                             vcf_var.info[attribute.name] = buff
                     out_file.write(vcf_var)
-    
+
     def work(self) -> None:
         if self.args.output:
             output = self.args.output

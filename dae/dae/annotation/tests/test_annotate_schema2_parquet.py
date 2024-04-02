@@ -1,9 +1,11 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
-from glob import glob
 import textwrap
+from glob import glob
+from typing import Callable
 import pytest
 import pytest_mock
+from dae.genomic_resources.genomic_context import GenomicContext
 from dae.annotation.annotation_pipeline import ReannotationPipeline
 from dae.gpf_instance import GPFInstance
 from dae.variants_loaders.parquet.loader import ParquetLoader
@@ -259,29 +261,27 @@ def test_reannotate_parquet_metadata(
     tmp_path: pathlib.Path,
     t4c8_instance: GPFInstance,
     study: str,
-    t4c8_study_nonpartitioned,
-    t4c8_study_partitioned,
-    gpf_instance_genomic_context_fixture
+    t4c8_study_nonpartitioned: str,
+    t4c8_study_partitioned: str,
+    gpf_instance_genomic_context_fixture: Callable[[GPFInstance], GenomicContext]  # noqa: E501
 ) -> None:
     root_path = pathlib.Path(t4c8_instance.dae_dir) / ".."
     input_dir = t4c8_study_nonpartitioned \
         if study == "t4c8_study_nonpartitioned" \
         else t4c8_study_partitioned
-    annotation_file_new = root_path / "new_annotation.yaml"
-    grr_file = root_path / "grr.yaml"
-    output_dir = tmp_path / "out"
-    work_dir = tmp_path / "work"
+    annotation_file_new = str(root_path / "new_annotation.yaml")
+    grr_file = str(root_path / "grr.yaml")
+    output_dir = str(tmp_path / "out")
+    work_dir = str(tmp_path / "work")
 
     gpf_instance_genomic_context_fixture(t4c8_instance)
 
     cli([
-        str(a) for a in [
-            input_dir, annotation_file_new,
-            "-o", output_dir,
-            "-w", work_dir,
-            "--grr", grr_file,
-            "-j", 1
-        ]
+        input_dir, annotation_file_new,
+        "-o", output_dir,
+        "-w", work_dir,
+        "--grr", grr_file,
+        "-j", "1"
     ])
 
     loader_old = ParquetLoader(input_dir)
@@ -308,29 +308,27 @@ def test_reannotate_parquet_symlinking(
     tmp_path: pathlib.Path,
     t4c8_instance: GPFInstance,
     study: str,
-    t4c8_study_nonpartitioned,
-    t4c8_study_partitioned,
-    gpf_instance_genomic_context_fixture
+    t4c8_study_nonpartitioned: str,
+    t4c8_study_partitioned: str,
+    gpf_instance_genomic_context_fixture: Callable[[GPFInstance], GenomicContext]  # noqa: E501
 ) -> None:
     root_path = pathlib.Path(t4c8_instance.dae_dir) / ".."
     input_dir = t4c8_study_nonpartitioned \
         if study == "t4c8_study_nonpartitioned" \
         else t4c8_study_partitioned
-    annotation_file_new = root_path / "new_annotation.yaml"
-    grr_file = root_path / "grr.yaml"
-    output_dir = tmp_path / "out"
-    work_dir = tmp_path / "work"
+    annotation_file_new = str(root_path / "new_annotation.yaml")
+    grr_file = str(root_path / "grr.yaml")
+    output_dir = str(tmp_path / "out")
+    work_dir = str(tmp_path / "work")
 
     gpf_instance_genomic_context_fixture(t4c8_instance)
 
     cli([
-        str(a) for a in [
-            input_dir, annotation_file_new,
-            "-o", output_dir,
-            "-w", work_dir,
-            "--grr", grr_file,
-            "-j", 1
-        ]
+        input_dir, annotation_file_new,
+        "-o", output_dir,
+        "-w", work_dir,
+        "--grr", grr_file,
+        "-j", "1"
     ])
 
     loader_old = ParquetLoader(input_dir)
@@ -343,6 +341,8 @@ def test_reannotate_parquet_symlinking(
     assert pedigree_path.samefile(loader_old.layout.pedigree)
 
     # check family variants are symlinked
+    assert loader_result.layout.family is not None
+    assert loader_old.layout.family is not None
     family_vs_path = pathlib.Path(loader_result.layout.family)
     assert family_vs_path.is_symlink()
     assert family_vs_path.exists()
@@ -356,34 +356,32 @@ def test_reannotate_parquet_symlinking_relative(
     tmp_path: pathlib.Path,
     t4c8_instance: GPFInstance,
     study: str,
-    t4c8_study_nonpartitioned,
-    t4c8_study_partitioned,
-    gpf_instance_genomic_context_fixture
+    t4c8_study_nonpartitioned: str,
+    t4c8_study_partitioned: str,
+    gpf_instance_genomic_context_fixture: Callable[[GPFInstance], GenomicContext]  # noqa: E501
 ) -> None:
     root_path = pathlib.Path(t4c8_instance.dae_dir) / ".."
     input_dir = t4c8_study_nonpartitioned \
         if study == "t4c8_study_nonpartitioned" \
         else t4c8_study_partitioned
-    annotation_file_new = root_path / "new_annotation.yaml"
-    grr_file = root_path / "grr.yaml"
-    output_dir = tmp_path / "out"
-    work_dir = tmp_path / "work"
+    annotation_file_new = str(root_path / "new_annotation.yaml")
+    grr_file = str(root_path / "grr.yaml")
+    output_dir = str(tmp_path / "out")
+    work_dir = str(tmp_path / "work")
 
     # Use relative path instead of absolute
     input_dir_parent = pathlib.Path(input_dir).parent.absolute()
-    input_dir = pathlib.Path(input_dir).relative_to(input_dir_parent)
+    input_dir = str(pathlib.Path(input_dir).relative_to(input_dir_parent))
     monkeypatch.chdir(input_dir_parent)
 
     gpf_instance_genomic_context_fixture(t4c8_instance)
 
     cli([
-        str(a) for a in [
-            input_dir, annotation_file_new,
-            "-o", output_dir,
-            "-w", work_dir,
-            "--grr", grr_file,
-            "-j", 1
-        ]
+        input_dir, annotation_file_new,
+        "-o", output_dir,
+        "-w", work_dir,
+        "--grr", grr_file,
+        "-j", "1"
     ])
 
     loader_old = ParquetLoader(input_dir)
@@ -396,6 +394,8 @@ def test_reannotate_parquet_symlinking_relative(
     assert pedigree_path.samefile(loader_old.layout.pedigree)
 
     # check family variants are symlinked
+    assert loader_result.layout.family is not None
+    assert loader_old.layout.family is not None
     family_vs_path = pathlib.Path(loader_result.layout.family)
     assert family_vs_path.is_symlink()
     assert family_vs_path.exists()
@@ -408,29 +408,27 @@ def test_reannotate_parquet_variants(
     tmp_path: pathlib.Path,
     t4c8_instance: GPFInstance,
     study: str,
-    t4c8_study_nonpartitioned,
-    t4c8_study_partitioned,
-    gpf_instance_genomic_context_fixture
+    t4c8_study_nonpartitioned: str,
+    t4c8_study_partitioned: str,
+    gpf_instance_genomic_context_fixture: Callable[[GPFInstance], GenomicContext]  # noqa: E501
 ) -> None:
     root_path = pathlib.Path(t4c8_instance.dae_dir) / ".."
     input_dir = t4c8_study_nonpartitioned \
         if study == "t4c8_study_nonpartitioned" \
         else t4c8_study_partitioned
-    annotation_file_new = root_path / "new_annotation.yaml"
-    grr_file = root_path / "grr.yaml"
-    output_dir = tmp_path / "out"
-    work_dir = tmp_path / "work"
+    annotation_file_new = str(root_path / "new_annotation.yaml")
+    grr_file = str(root_path / "grr.yaml")
+    output_dir = str(tmp_path / "out")
+    work_dir = str(tmp_path / "work")
 
     gpf_instance_genomic_context_fixture(t4c8_instance)
 
     cli([
-        str(a) for a in [
-            input_dir, annotation_file_new,
-            "-o", output_dir,
-            "-w", work_dir,
-            "--grr", grr_file,
-            "-j", 1
-        ]
+        input_dir, annotation_file_new,
+        "-o", output_dir,
+        "-w", work_dir,
+        "--grr", grr_file,
+        "-j", "1"
     ])
 
     loader_result = ParquetLoader(output_dir)
@@ -450,30 +448,28 @@ def test_reannotate_parquet_merging(
     tmp_path: pathlib.Path,
     t4c8_instance: GPFInstance,
     study: str,
-    t4c8_study_nonpartitioned,
-    t4c8_study_partitioned,
-    gpf_instance_genomic_context_fixture,
+    t4c8_study_nonpartitioned: str,
+    t4c8_study_partitioned: str,
+    gpf_instance_genomic_context_fixture: Callable[[GPFInstance], GenomicContext]  # noqa: E501
 ) -> None:
     root_path = pathlib.Path(t4c8_instance.dae_dir) / ".."
     input_dir = t4c8_study_nonpartitioned \
         if study == "t4c8_study_nonpartitioned" \
         else t4c8_study_partitioned
-    annotation_file_new = root_path / "new_annotation.yaml"
-    grr_file = root_path / "grr.yaml"
+    annotation_file_new = str(root_path / "new_annotation.yaml")
+    grr_file = str(root_path / "grr.yaml")
     output_dir = tmp_path / "out"
-    work_dir = tmp_path / "work"
+    work_dir = str(tmp_path / "work")
 
     gpf_instance_genomic_context_fixture(t4c8_instance)
 
     cli([
-        str(a) for a in [
-            input_dir, annotation_file_new,
-            "-o", output_dir,
-            "-w", work_dir,
-            "--grr", grr_file,
-            "-j", 1,
-            "--region-size", 25,
-        ]
+        input_dir, annotation_file_new,
+        "-o", str(output_dir),
+        "-w", work_dir,
+        "--grr", grr_file,
+        "-j", "1",
+        "--region-size", "25"
     ])
 
     expected_pq_files = \
@@ -484,7 +480,7 @@ def test_reannotate_parquet_merging(
     assert len(glob(parquets_glob, recursive=True)) == expected_pq_files
 
     # check all variants present
-    loader_result = ParquetLoader(output_dir)
+    loader_result = ParquetLoader(str(output_dir))
     assert len(list(loader_result.fetch_summary_variants())) == 6
 
 
@@ -494,29 +490,27 @@ def test_internal_attributes_reannotation(
     tmp_path: pathlib.Path,
     t4c8_instance: GPFInstance,
     study: str,
-    t4c8_study_nonpartitioned,
-    t4c8_study_partitioned,
-    gpf_instance_genomic_context_fixture
+    t4c8_study_nonpartitioned: str,
+    t4c8_study_partitioned: str,
+    gpf_instance_genomic_context_fixture: Callable[[GPFInstance], GenomicContext]  # noqa: E501
 ) -> None:
     root_path = pathlib.Path(t4c8_instance.dae_dir) / ".."
     input_dir = t4c8_study_nonpartitioned \
         if study == "t4c8_study_nonpartitioned" \
         else t4c8_study_partitioned
-    annotation_file_new = root_path / "new_annotation.yaml"
-    grr_file = root_path / "grr.yaml"
-    output_dir = tmp_path / "out"
-    work_dir = tmp_path / "work"
+    annotation_file_new = str(root_path / "new_annotation.yaml")
+    grr_file = str(root_path / "grr.yaml")
+    output_dir = str(tmp_path / "out")
+    work_dir = str(tmp_path / "work")
 
     gpf_instance_genomic_context_fixture(t4c8_instance)
 
     cli([
-        str(a) for a in [
-            input_dir, annotation_file_new,
-            "-o", output_dir,
-            "-w", work_dir,
-            "--grr", grr_file,
-            "-j", 1
-        ]
+        input_dir, annotation_file_new,
+        "-o", output_dir,
+        "-w", work_dir,
+        "--grr", grr_file,
+        "-j", "1"
     ])
 
     # check internal attributes are not saved
@@ -528,58 +522,54 @@ def test_annotationless_study_autodetection(
     mocker: pytest_mock.MockerFixture,
     tmp_path: pathlib.Path,
     t4c8_instance: GPFInstance,
-    t4c8_annotationless_study,
-    gpf_instance_genomic_context_fixture
+    t4c8_annotationless_study: str,
+    gpf_instance_genomic_context_fixture: Callable[[GPFInstance], GenomicContext]  # noqa: E501
 ) -> None:
     root_path = pathlib.Path(t4c8_instance.dae_dir) / ".."
     input_dir = t4c8_annotationless_study
-    annotation_file_new = root_path / "new_annotation.yaml"
-    grr_file = root_path / "grr.yaml"
-    output_dir = tmp_path / "out"
-    work_dir = tmp_path / "work"
+    annotation_file_new = str(root_path / "new_annotation.yaml")
+    grr_file = str(root_path / "grr.yaml")
+    output_dir = str(tmp_path / "out")
+    work_dir = str(tmp_path / "work")
 
     gpf_instance_genomic_context_fixture(t4c8_instance)
 
     mocker.spy(ReannotationPipeline, "__init__")
 
     cli([
-        str(a) for a in [
-            input_dir, annotation_file_new,
-            "-o", output_dir,
-            "-w", work_dir,
-            "--grr", grr_file,
-            "-j", 1
-        ]
+        input_dir, annotation_file_new,
+        "-o", output_dir,
+        "-w", work_dir,
+        "--grr", grr_file,
+        "-j", "1"
     ])
 
     # check auto-detection by asserting
     # reannotation pipeline is NOT constructed
-    assert ReannotationPipeline.__init__.call_count == 0
+    assert ReannotationPipeline.__init__.call_count == 0  # type: ignore
 
 
 def test_annotationless_study_variants(
     tmp_path: pathlib.Path,
     t4c8_instance: GPFInstance,
-    t4c8_annotationless_study,
-    gpf_instance_genomic_context_fixture
+    t4c8_annotationless_study: str,
+    gpf_instance_genomic_context_fixture: Callable[[GPFInstance], GenomicContext]  # noqa: E501
 ) -> None:
     root_path = pathlib.Path(t4c8_instance.dae_dir) / ".."
     input_dir = t4c8_annotationless_study
-    annotation_file_new = root_path / "new_annotation.yaml"
-    grr_file = root_path / "grr.yaml"
-    output_dir = tmp_path / "out"
-    work_dir = tmp_path / "work"
+    annotation_file_new = str(root_path / "new_annotation.yaml")
+    grr_file = str(root_path / "grr.yaml")
+    output_dir = str(tmp_path / "out")
+    work_dir = str(tmp_path / "work")
 
     gpf_instance_genomic_context_fixture(t4c8_instance)
 
     cli([
-        str(a) for a in [
-            input_dir, annotation_file_new,
-            "-o", output_dir,
-            "-w", work_dir,
-            "--grr", grr_file,
-            "-j", 1
-        ]
+        input_dir, annotation_file_new,
+        "-o", output_dir,
+        "-w", work_dir,
+        "--grr", grr_file,
+        "-j", "1"
     ])
 
     loader_result = ParquetLoader(output_dir)
@@ -595,27 +585,25 @@ def test_annotationless_study_variants(
 def test_internal_attributes_without_reannotation(
     tmp_path: pathlib.Path,
     t4c8_instance: GPFInstance,
-    t4c8_annotationless_study,
-    gpf_instance_genomic_context_fixture
+    t4c8_annotationless_study: str,
+    gpf_instance_genomic_context_fixture: Callable[[GPFInstance], GenomicContext]  # noqa: E501
 ) -> None:
     root_path = pathlib.Path(t4c8_instance.dae_dir) / ".."
     input_dir = t4c8_annotationless_study
-    annotation_file_new = root_path / "new_annotation.yaml"
-    grr_file = root_path / "grr.yaml"
-    output_dir = tmp_path / "out"
-    work_dir = tmp_path / "work"
+    annotation_file_new = str(root_path / "new_annotation.yaml")
+    grr_file = str(root_path / "grr.yaml")
+    output_dir = str(tmp_path / "out")
+    work_dir = str(tmp_path / "work")
     # check internal attributes are not saved
 
     gpf_instance_genomic_context_fixture(t4c8_instance)
 
     cli([
-        str(a) for a in [
-            input_dir, annotation_file_new,
-            "-o", output_dir,
-            "-w", work_dir,
-            "--grr", grr_file,
-            "-j", 1
-        ]
+        input_dir, annotation_file_new,
+        "-o", output_dir,
+        "-w", work_dir,
+        "--grr", grr_file,
+        "-j", "1"
     ])
 
     # check internal attributes are not saved
@@ -627,29 +615,27 @@ def test_autodetection_reannotate(
     mocker: pytest_mock.MockerFixture,
     tmp_path: pathlib.Path,
     t4c8_instance: GPFInstance,
-    t4c8_study_nonpartitioned,
-    gpf_instance_genomic_context_fixture
+    t4c8_study_nonpartitioned: str,
+    gpf_instance_genomic_context_fixture: Callable[[GPFInstance], GenomicContext]  # noqa: E501
 ) -> None:
     root_path = pathlib.Path(t4c8_instance.dae_dir) / ".."
     input_dir = t4c8_study_nonpartitioned
-    annotation_file_new = root_path / "new_annotation.yaml"
-    grr_file = root_path / "grr.yaml"
-    output_dir = tmp_path / "out"
-    work_dir = tmp_path / "work"
+    annotation_file_new = str(root_path / "new_annotation.yaml")
+    grr_file = str(root_path / "grr.yaml")
+    output_dir = str(tmp_path / "out")
+    work_dir = str(tmp_path / "work")
 
     gpf_instance_genomic_context_fixture(t4c8_instance)
 
     mocker.spy(ReannotationPipeline, "__init__")
 
     cli([
-        str(a) for a in [
-            input_dir, annotation_file_new,
-            "-o", output_dir,
-            "-w", work_dir,
-            "--grr", grr_file,
-            "-j", 1
-        ]
+        input_dir, annotation_file_new,
+        "-o", output_dir,
+        "-w", work_dir,
+        "--grr", grr_file,
+        "-j", "1"
     ])
 
     # check auto-detection by asserting reannotation pipeline is constructed
-    assert ReannotationPipeline.__init__.call_count == 1
+    assert ReannotationPipeline.__init__.call_count == 1  # type: ignore

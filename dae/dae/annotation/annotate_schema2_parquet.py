@@ -10,6 +10,7 @@ from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.parquet.parquet_writer import append_meta_to_parquet, \
     merge_variants_parquets
 from dae.parquet.helpers import merge_parquets
+from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.schema2_storage.schema2_import_storage import schema2_dataset_layout
 from dae.task_graph.cli_tools import TaskGraphCli
 from dae.genomic_resources.cli import VerbosityConfiguration
@@ -82,7 +83,7 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
         grr_definition: dict,
         bucket_idx: int,
         allow_repeated_attributes: bool,
-    ):
+    ) -> None:
         """Run annotation over a given directory of Parquet files."""
         loader = ParquetLoader(input_dir)
         pipeline = AnnotateSchema2ParquetTool._produce_annotation_pipeline(
@@ -137,6 +138,15 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
             os.mkdir(output_dir)
         layout = schema2_dataset_layout(output_dir)
 
+        if loader.layout.summary is None:
+            raise ValueError("Invalid summary dir in input layout!")
+        if loader.layout.family is None:
+            raise ValueError("Invalid family dir in input layout!")
+        if layout.summary is None:
+            raise ValueError("Invalid summary dir in output layout!")
+        if layout.family is None:
+            raise ValueError("Invalid family dir in output layout!")
+
         # Write metadata
         with open(self.args.pipeline, "r") as infile:
             raw_annotation = infile.read()
@@ -161,10 +171,12 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
             target_is_directory=True
         )
 
-        if self.gpf_instance is not None:
-            genome = self.gpf_instance.reference_genome
-        else:
+        if self.gpf_instance is None:
             genome = self.context.get_reference_genome()
+            if genome is None:
+                raise ValueError("Could not get a valid reference genome!")
+        else:
+            genome = self.gpf_instance.reference_genome
 
         contig_lens = loader.get_contigs() \
             or AnnotateSchema2ParquetTool.get_contig_lengths(genome)
@@ -186,11 +198,14 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
             ))
 
         if loader.partitioned:
-            def merge(summary_dir, partition_dir, partition_descriptor):
-                partitions = [
-                    tuple(partition.split("="))
-                    for partition in partition_dir.split("/")
-                ]
+            def merge_partitioned(
+                summary_dir: str, partition_dir: str,
+                partition_descriptor: PartitionDescriptor
+            ) -> None:
+                partitions = []
+                for partition in partition_dir.split("/"):
+                    key, value = partition.split("=", maxsplit=1)
+                    partitions.append((key, value))
                 output_dir = os.path.join(summary_dir, partition_dir)
                 merge_variants_parquets(
                     partition_descriptor, output_dir, partitions)
@@ -204,12 +219,12 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
             for path in to_join:
                 self.task_graph.create_task(
                     f"merge_{path}",
-                    merge,
+                    merge_partitioned,
                     [layout.summary, path, loader.partition_descriptor],
                     annotation_tasks
                 )
         else:
-            def merge(output_dir, output_filename):
+            def merge(output_dir: str, output_filename: str) -> None:
                 to_merge = glob(os.path.join(output_dir, "*.parquet"))
                 output_path = os.path.join(output_dir, output_filename)
                 merge_parquets(to_merge, output_path)

@@ -391,7 +391,7 @@ class VariantsParquetWriter:
             elapsed)
         return filenames
 
-    def close(self):
+    def close(self) -> None:
         for bin_writer in self.data_writers.values():
             bin_writer.close()
 

@@ -27,10 +27,12 @@ def produce_regions(
     pysam_file: TabixFile, region_size: int
 ) -> list[tuple[str, int, int]]:
     """Given a region size, produce contig regions to annotate by."""
-    contig_lengths = {}
+    contig_lengths: dict[str, int] = {}
     for contig in map(str, pysam_file.contigs):
-        contig_lengths[contig] = get_chromosome_length_tabix(
-            pysam_file, contig)
+        length = get_chromosome_length_tabix(pysam_file, contig)
+        if length is None:
+            raise ValueError(f"unable to find length of contig '{contig}'")
+        contig_lengths[contig] = length
     return [
         (contig, start, start + region_size)
         for contig, length in contig_lengths.items()
@@ -83,10 +85,11 @@ class AnnotationTool:
         self.gpf_instance = gpf_instance
         self.context = get_genomic_context()
         self.pipeline = CLIAnnotationContext.get_pipeline(self.context)
-        self.grr = CLIAnnotationContext.get_genomic_resources_repository(
-            self.context)
-        if self.grr is None:
+        grr = \
+            CLIAnnotationContext.get_genomic_resources_repository(self.context)
+        if grr is None:
             raise ValueError("No valid GRR configured. Aborting.")
+        self.grr = grr
 
         self.task_graph = TaskGraph()
         if not os.path.exists(self.args.work_dir):
@@ -99,7 +102,7 @@ class AnnotationTool:
     def _produce_annotation_pipeline(
         pipeline_config: str,
         pipeline_config_old: Optional[str],
-        grr_definition: dict,
+        grr_definition: Optional[dict],
         allow_repeated_attributes: bool,
     ) -> AnnotationPipeline:
         grr = build_genomic_resource_repository(definition=grr_definition)

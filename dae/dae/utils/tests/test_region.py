@@ -192,10 +192,10 @@ def test_region_contains(reg1: Region, reg2: Region, expected: bool) -> None:
         (Region("1", 1, 20), Region("1", 5, 10), True),
         # Partial overlap, left side
         (Region("1", 1, 5), Region("1", 1, 10), True),
-        (Region("1", 1, 1), Region("1", 1, 10), True), # single base
+        (Region("1", 1, 1), Region("1", 1, 10), True),  # single base
         # Partial overlap, right side
         (Region("1", 5, 10), Region("1", 1, 10), True),
-        (Region("1", 10, 10), Region("1", 1, 10), True), # single base
+        (Region("1", 10, 10), Region("1", 1, 10), True),  # single base
         # No overlap, left side
         (Region("1", 1, 5), Region("1", 6, 10), False),
         # No overlap, right side

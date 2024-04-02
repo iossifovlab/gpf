@@ -45,11 +45,12 @@ class ParquetLoader:
         meta_file.close()
 
         self.has_annotation = bool(
-            yaml.safe_load(self.meta.get("annotation_pipeline")))
+            yaml.safe_load(self.meta.get("annotation_pipeline", "").strip()))
 
-        self.partitioned: bool = self.meta.get("partition_description").strip()
+        self.partitioned: bool = \
+            self.meta.get("partition_description", "").strip()
         self.partition_descriptor = PartitionDescriptor.parse_string(
-            self.meta.get("partition_description")
+            self.meta.get("partition_description", "").strip()
         )
 
     @staticmethod
@@ -73,7 +74,7 @@ class ParquetLoader:
         return FamiliesLoader.build_families_data_from_pedigree(ped_df)
 
     def _pq_file_in_region(self, path: str, region: Region) -> bool:
-        if not self.partition_descriptor.has_region_bins:
+        if not self.partition_descriptor.has_region_bins():
             raise ParquetLoaderException(
                 f"No region bins exist in {self.data_dir}!")
 
@@ -102,7 +103,7 @@ class ParquetLoader:
         family_files = ds.dataset(f"{self.layout.family}").files
         if region is not None \
            and self.partitioned \
-           and self.partition_descriptor.has_region_bins:
+           and self.partition_descriptor.has_region_bins():
             summary_files = [path for path in summary_files
                              if self._pq_file_in_region(path, region)]
             family_files = [path for path in family_files
@@ -140,33 +141,34 @@ class ParquetLoader:
                 .aggregate([("position", "max")]) \
                 .to_pydict()
             return dict(zip(result["chromosome"], result["position_max"]))
-        elif self.partition_descriptor.has_region_bins():
-            result = {}
+        if self.partition_descriptor.has_region_bins():
+            contigs: dict[str, int] = {}
             for path in summary_paths:
                 rbin = ParquetLoader._extract_region_bin(path)
-                result[rbin[0]] = max(
+                contigs[rbin[0]] = max(
                     (rbin[1] + 1) * self.partition_descriptor.region_length,
-                    result.get(rbin[0], 0)
+                    contigs.get(rbin[0], 0)
                 )
-            return result
+            return contigs
         return None
 
     def fetch_summary_variants(
-        self, region: str = None
+        self, region: Optional[str] = None
     ) -> Generator[SummaryVariant, None, None]:
         """Iterate over summary variants."""
+        region_obj = None
         region_filter = None
         if region is not None:
-            region = Region.from_str(region)
+            region_obj = Region.from_str(region)
             region_filter = (
-                (pc.field("position") >= region.start)
-                & (pc.field("position") <= region.stop)
+                (pc.field("position") >= region_obj.start)
+                & (pc.field("position") <= region_obj.stop)
             )
-            if region.chrom != "other":
+            if region_obj.chrom != "other":
                 region_filter = region_filter \
-                    & (pc.field("chromosome") == region.chrom)
+                    & (pc.field("chromosome") == region_obj.chrom)
 
-        summary_paths, _ = self.get_pq_filepaths(region)
+        summary_paths, _ = self.get_pq_filepaths(region_obj)
         columns = (
             "bucket_index", "summary_index", "allele_index",
             "summary_variant_data", "chromosome", "position",
@@ -186,25 +188,25 @@ class ParquetLoader:
                     yield self._deserialize_summary_variant(
                         rec["summary_variant_data"]
                     )
-
             summary_parquet.close()
 
     def fetch_variants(
-        self, region: str = None
+        self, region: Optional[str] = None
     ) -> Generator[tuple[SummaryVariant, list[FamilyVariant]], None, None]:
         """Iterate over summary and family variants."""
+        region_obj = None
         region_filter = None
         if region is not None:
-            region = Region.from_str(region)
+            region_obj = Region.from_str(region)
             region_filter = (
-                (pc.field("position") >= region.start)
-                & (pc.field("position") <= region.stop)
+                (pc.field("position") >= region_obj.start)
+                & (pc.field("position") <= region_obj.stop)
             )
-            if region.chrom != "other":
+            if region_obj.chrom != "other":
                 region_filter = region_filter \
-                    & (pc.field("chromosome") == region.chrom)
+                    & (pc.field("chromosome") == region_obj.chrom)
 
-        filepaths = self.get_pq_filepaths(region)
+        filepaths = self.get_pq_filepaths(region_obj)
 
         idx_columns = ("summary_index", "allele_index")
         s_columns = ("summary_variant_data",
@@ -212,8 +214,8 @@ class ParquetLoader:
                      *idx_columns)
         f_columns = ("family_variant_data", "family_id", *idx_columns)
 
-        summary_variants = []
-        family_variant_recs = dict()
+        summary_variants: list[tuple[str, SummaryVariant]] = []
+        family_variant_recs: dict[str, list[str]] = {}
 
         for s_path in filepaths[0]:
             s_parquet = pq.ParquetFile(s_path)
@@ -237,7 +239,7 @@ class ParquetLoader:
                 if a not in seen_fvs:
                     seen_fvs.add(a)
                     family_variant_recs.setdefault(
-                        f_rec["summary_index"], list()
+                        f_rec["summary_index"], []
                     ).append(
                         f_rec["family_variant_data"]
                     )
@@ -252,5 +254,3 @@ class ParquetLoader:
             else:
                 family_variants = []
             yield (summary_variant, family_variants)
-
-        return
