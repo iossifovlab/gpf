@@ -2,11 +2,11 @@
   <div *ngIf="config" class="table-container">
     <div id="table-top">
       <ng-container *ngTemplateOutlet="aboveTableBar"></ng-container>
-      <div id="table-header" class="table-row">
+      <div [hidden]="hideTable" id="table-header" class="table-row">
         <ng-container *ngTemplateOutlet="tableHeaderTemplate; context: { columns: config.columns }"></ng-container>
       </div>
     </div>
-    <div id="table-body">
+    <div [hidden]="hideTable" id="table-body">
       <div
         *ngFor="let row of genes; let i = index"
         class="table-row table-body-row"
@@ -99,6 +99,10 @@
     </ng-container>
   </ng-template>
 
+  <gpf-gene-profiles-single-view-wrapper
+    *ngIf="hideTable"
+    [geneSymbols]="currentTab"></gpf-gene-profiles-single-view-wrapper>
+
   <ng-template #aboveTableBar>
     <div id="above-table-bar">
       <div style="width: 270px">
@@ -109,6 +113,7 @@
           <input
             #searchBox
             (keyup)="searchKeystrokes$.next(searchBox.value)"
+            (click)="hideTable = false"
             id="gene-search-input"
             class="search-input form-control"
             autocomplete="off"
@@ -135,7 +140,7 @@
           #columnFilteringButton
           id="category-filtering-button"
           class="btn btn-default"
-          (click)="openCategoryFilterDropdown($event)"
+          (click)="openCategoryFilterDropdown($event); hideTable = false"
           title="Filter categories"><span id="filter-menu-icon" class="material-symbols-outlined">menu</span>
         </button>
       </div>
@@ -154,6 +159,11 @@
         ><br />
       </div>
     </div>
+
+    <div id="tabs-wrapper" *ngFor="let tab of tabs">
+      <button (click)="openTab(tab)">{{ tab }}</button>
+      <button (click)="closeTab(tab)">X</button>
+    </div>
   </ng-template>
 
   <span
@@ -171,7 +181,7 @@
     </gpf-multiple-select-menu>
   </span>
 
-  <div id="compare-genes-modal" *ngIf="highlightedGenes.size >= 1">
+  <div id="compare-genes-modal" *ngIf="!hideTable && highlightedGenes.size >= 1">
     <div
       *ngFor="let gene of highlightedGenes"
       class="btn-group"

@@ -57,6 +57,10 @@ export class GeneProfilesTableComponent implements OnInit, OnChanges, OnDestroy 
   private getGenesSubscription: Subscription = new Subscription();
   public imgPathPrefix = environment.imgPathPrefix;
 
+  public tabs: string[] = [];
+  public hideTable = false;
+  public currentTab = new Set<string>();
+
   public constructor(
     private geneProfilesService: GeneProfilesTableService
   ) { }
@@ -312,21 +316,38 @@ export class GeneProfilesTableComponent implements OnInit, OnChanges, OnDestroy 
   }
 
   public openSingleView(geneSymbols: string | Set<string>, newTab: boolean = false): void {
-    let genes: string;
-    const geneProfilesBaseUrl = window.location.href;
+    // let genes: string;
+    // const geneProfilesBaseUrl = window.location.href;
 
-    if (typeof geneSymbols === 'string') {
-      genes = geneSymbols;
-    } else {
-      genes = [...geneSymbols].join(',');
-    }
+    // if (typeof geneSymbols === 'string') {
+    //   genes = geneSymbols;
+    // } else {
+    //   genes = [...geneSymbols].join(',');
+    // }
 
-    if (newTab) {
-      const newWindow = window.open('', '_blank');
-      newWindow.location.assign(`${geneProfilesBaseUrl}/${genes}`);
-    } else {
-      window.location.assign(`${geneProfilesBaseUrl}/${genes}`);
+    // if (newTab) {
+    //   const newWindow = window.open('', '_blank');
+    //   newWindow.location.assign(`${geneProfilesBaseUrl}/${genes}`);
+    // } else {
+    //   window.location.assign(`${geneProfilesBaseUrl}/${genes}`);
+    // }
+
+    if (typeof geneSymbols === 'string' && this.tabs.indexOf(geneSymbols) === -1) {
+      this.tabs.push(geneSymbols);
     }
+  }
+
+  public openTab(tab: string): void {
+    this.hideTable = true;
+    this.currentTab.clear();
+    this.currentTab.add(tab);
+    // window.location.assign(`${window.location.href}/${tab}`);
+  }
+
+  public closeTab(tab: string): void {
+    this.tabs = this.tabs.filter(t => t !== tab);
+    this.hideTable = false;
+    // window.location.assign(`${window.location.href}`);
   }
 
   public toggleHighlightGene(geneSymbol: string): void {
