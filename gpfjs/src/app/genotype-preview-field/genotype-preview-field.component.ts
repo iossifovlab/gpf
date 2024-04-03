@@ -1,25 +1,6 @@
 import { Component, Input, OnChanges, OnInit } from '@angular/core';
 import { sprintf } from 'sprintf-js';
-
-interface FullEffectDetails {
-  familyId: string;
-  location: string;
-  effectDetails: EffectDetail[];
-  geneEffects: GeneEffects[];
-  areIncomplete: boolean;
-}
-
-interface EffectDetail {
-  gene: string;
-  transcript: string;
-  effect: string;
-  details: string;
-}
-
-interface GeneEffects {
-  gene: string;
-  effect: string;
-}
+import { FullEffectDetails } from './genotype-preview-field';
 
 @Component({
   selector: 'gpf-genotype-preview-field',
@@ -50,56 +31,7 @@ export class GenotypePreviewFieldComponent implements OnInit, OnChanges {
   }
 
   private formatEffectDetails(): void {
-    if (this.value instanceof Array
-      && typeof this.value[0] === 'string'
-      && typeof this.value[1] === 'string'
-      && typeof this.value[2] === 'string'
-      && typeof this.value[3] === 'string'
-    ) {
-      this.fullEffectDetails = {
-        familyId: '',
-        location: '',
-        effectDetails: [],
-        geneEffects: [],
-        areIncomplete: true
-      };
-      this.fullEffectDetails.familyId = this.value[0];
-      this.fullEffectDetails.location = this.value[1];
-      this.fullEffectDetails.effectDetails = this.value[2].split('|').map(detail => {
-        const details = detail.split(':');
-        return {
-          gene: details[1],
-          transcript: details[0],
-          effect: details[2],
-          details: details[3],
-        };
-      }).sort((e1, e2) => {
-        if (e1.gene < e2.gene) {
-          return -1;
-        }
-        if (e1.gene > e2.gene) {
-          return 1;
-        }
-        return 0;
-      });
-
-      // Check if gene and effect columns are both empty
-      for (const ed of this.fullEffectDetails.effectDetails) {
-        // Equal only when both are 'None'
-        if (ed.gene !== ed.effect) {
-          this.fullEffectDetails.areIncomplete = false;
-          break;
-        }
-      }
-
-      this.fullEffectDetails.geneEffects = this.value[3].split('|').map(geneEffect => {
-        const effect = geneEffect.split(':');
-        return {
-          gene: effect[0],
-          effect: effect[1],
-        };
-      });
-    }
+    this.fullEffectDetails = FullEffectDetails.fromGenotypeValue(this.value);
   }
 
   private doFormat(format, value) {

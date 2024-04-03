@@ -1,4 +1,4 @@
-import { Component, ElementRef, Input, TemplateRef } from '@angular/core';
+import { Component, Input, TemplateRef } from '@angular/core';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { PopupComponent } from 'app/popup/popup.component';
 
@@ -32,7 +32,7 @@ export class HelperModalComponent {
           centered: true,
           modalDialogClass: 'modal-dialog-centered'
         }
-      ); 
+      );
     } else {
       this.modalService.open('Error: invalid modal content!', {
         size: 'lg',

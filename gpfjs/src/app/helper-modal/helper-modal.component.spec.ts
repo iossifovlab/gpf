@@ -26,15 +26,31 @@ describe('HelperModalComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should show help', () => {
-    component.modalContent = 'modalContentTest';
+  it('should show help content made from markdown', () => {
+    component.modalContent = '<markdown><markdown/>';
+    component.isMarkdown = true;
+    fixture.detectChanges();
     jest.spyOn(modalService, 'open').mockReturnValue(modalRef);
     component.showHelp();
     expect(modalService.open).toHaveBeenCalledWith(PopupComponent, {
       size: 'lg',
       centered: true
     });
-    expect((modalRef.componentInstance as PopupComponent).data).toBe('modalContentTest');
+    expect((modalRef.componentInstance as PopupComponent).data).toBe('<markdown><markdown/>');
+
+    modalRef.close();
+  });
+
+  it('should not show invalid help content', () => {
+    component.modalContent = '<div><div/>';
+    component.isMarkdown = false;
+    fixture.detectChanges();
+    jest.spyOn(modalService, 'open').mockReturnValue(modalRef);
+    component.showHelp();
+    expect(modalService.open).toHaveBeenCalledWith('Error: invalid modal content!', {
+      size: 'lg',
+      centered: true
+    });
 
     modalRef.close();
   });
