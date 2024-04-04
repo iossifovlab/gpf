@@ -112,8 +112,8 @@ export class GeneProfilesTableComponent implements OnInit, OnChanges, OnDestroy 
       const topRowIdx = Math.floor(Math.max(window.scrollY - tableBodyOffset, 0) / this.baseRowHeight);
       const bottomRowIdx = Math.floor(window.innerHeight / this.baseRowHeight) + topRowIdx;
       this.prevVerticalScroll = $event.srcElement.scrollingElement.scrollTop;
-      this.updateShownGenes(topRowIdx - 200, bottomRowIdx + 200);
-      if (bottomRowIdx + 400 >= this.genes.length && this.loadMoreGenes) {
+      this.updateShownGenes(topRowIdx - 20, bottomRowIdx + 20);
+      if (bottomRowIdx + 40 >= this.genes.length && this.loadMoreGenes) {
         this.updateGenes();
       }
     }
