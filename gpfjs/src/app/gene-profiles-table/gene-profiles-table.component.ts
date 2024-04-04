@@ -1,5 +1,4 @@
 import {
-  AfterViewInit,
   Component, ElementRef, EventEmitter, HostListener, Input, OnChanges,
   OnDestroy, OnInit, Output, ViewChild, ViewChildren
 } from '@angular/core';
@@ -19,7 +18,7 @@ import { ActivatedRoute } from '@angular/router';
   templateUrl: './gene-profiles-table.component.html',
   styleUrls: ['./gene-profiles-table.component.css']
 })
-export class GeneProfilesTableComponent implements OnInit, OnChanges, OnDestroy, AfterViewInit {
+export class GeneProfilesTableComponent implements OnInit, OnChanges, OnDestroy {
   @Input() public config: GeneProfilesTableConfig;
   @Input() public sortBy: string;
   public defaultSortBy: string;
@@ -85,9 +84,7 @@ export class GeneProfilesTableComponent implements OnInit, OnChanges, OnDestroy,
     });
 
     this.focusSearchBox();
-  }
 
-  public ngAfterViewInit(): void {
     if (this.route.snapshot.params.genes as string) {
       this.currentTabGeneSet = new Set(
         (this.route.snapshot.params.genes as string)
