@@ -178,8 +178,7 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
         else:
             genome = self.gpf_instance.reference_genome
 
-        contig_lens = loader.get_contigs() \
-            or AnnotateSchema2ParquetTool.get_contig_lengths(genome)
+        contig_lens = AnnotateSchema2ParquetTool.get_contig_lengths(genome)
         regions = [
             f"{contig}:{start}-{start + self.args.region_size}"
             for contig, length in contig_lens.items()

@@ -2,7 +2,6 @@
 import os
 import pathlib
 import pytest
-import pytest_mock
 from dae.utils.regions import Region
 from dae.gpf_instance import GPFInstance
 from dae.variants_loaders.parquet.loader import ParquetLoader
@@ -352,36 +351,5 @@ def test_fetch_variants_count_acgt(
     loader = ParquetLoader(acgt_study_partitioned)
     assert len(list(loader.fetch_summary_variants())) == 9
     assert len(list(loader.fetch_summary_variants(region="chr1:1-100"))) == 3
-    assert len(list(loader.fetch_summary_variants(region="other:1-100"))) == 6
     assert len(list(loader.fetch_summary_variants(region="chr2:1-100"))) == 3
     assert len(list(loader.fetch_summary_variants(region="chr3:1-100"))) == 3
-
-
-def test_get_contigs_nonpartitioned(
-    t4c8_study_nonpartitioned: str
-) -> None:
-    loader = ParquetLoader(t4c8_study_nonpartitioned)
-    assert loader.get_contigs() == {"chr1": 122}
-
-
-def test_get_contigs_partitioned_no_other(
-    t4c8_study_partitioned: str
-) -> None:
-    loader = ParquetLoader(t4c8_study_partitioned)
-    assert loader.get_contigs() == {"chr1": 200}
-
-
-def test_get_contigs_partitioned_has_other(
-    acgt_study_partitioned: str
-) -> None:
-    loader = ParquetLoader(acgt_study_partitioned)
-    assert loader.get_contigs() == {"chr1": 100, "other": 100}
-
-
-def test_get_contigs_nonpartitioned_no_region_bins(
-    mocker: pytest_mock.MockerFixture, acgt_study_partitioned: str
-) -> None:
-    loader = ParquetLoader(acgt_study_partitioned)
-    mocker.patch.object(loader.partition_descriptor, "has_region_bins")
-    loader.partition_descriptor.has_region_bins.return_value = False  # type: ignore # noqa: E501
-    assert loader.get_contigs() is None

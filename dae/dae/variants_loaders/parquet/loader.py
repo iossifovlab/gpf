@@ -131,27 +131,6 @@ class ParquetLoader:
             inheritance_in_members=inheritance_in_members
         )
 
-    def get_contigs(self) -> Optional[dict[str, int]]:
-        """Produce a dict of all contigs and their lengths."""
-        summary_paths = ds.dataset(f"{self.layout.summary}").files
-        if not self.partitioned:
-            summary_parquet = pq.ParquetFile(summary_paths[0])
-            result = summary_parquet.read(columns=["chromosome", "position"]) \
-                .group_by("chromosome") \
-                .aggregate([("position", "max")]) \
-                .to_pydict()
-            return dict(zip(result["chromosome"], result["position_max"]))
-        if self.partition_descriptor.has_region_bins():
-            contigs: dict[str, int] = {}
-            for path in summary_paths:
-                rbin = ParquetLoader._extract_region_bin(path)
-                contigs[rbin[0]] = max(
-                    (rbin[1] + 1) * self.partition_descriptor.region_length,
-                    contigs.get(rbin[0], 0)
-                )
-            return contigs
-        return None
-
     def fetch_summary_variants(
         self, region: Optional[str] = None
     ) -> Generator[SummaryVariant, None, None]:
@@ -161,12 +140,10 @@ class ParquetLoader:
         if region is not None:
             region_obj = Region.from_str(region)
             region_filter = (
-                (pc.field("position") >= region_obj.start)
+                (pc.field("chromosome") == region_obj.chrom)
+                & (pc.field("position") >= region_obj.start)
                 & (pc.field("position") <= region_obj.stop)
             )
-            if region_obj.chrom != "other":
-                region_filter = region_filter \
-                    & (pc.field("chromosome") == region_obj.chrom)
 
         summary_paths, _ = self.get_pq_filepaths(region_obj)
         columns = (
@@ -199,12 +176,10 @@ class ParquetLoader:
         if region is not None:
             region_obj = Region.from_str(region)
             region_filter = (
-                (pc.field("position") >= region_obj.start)
+                (pc.field("chromosome") == region_obj.chrom)
+                & (pc.field("position") >= region_obj.start)
                 & (pc.field("position") <= region_obj.stop)
             )
-            if region_obj.chrom != "other":
-                region_filter = region_filter \
-                    & (pc.field("chromosome") == region_obj.chrom)
 
         filepaths = self.get_pq_filepaths(region_obj)
 
