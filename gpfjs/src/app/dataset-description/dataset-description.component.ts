@@ -1,10 +1,9 @@
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute, Params, Router } from '@angular/router';
+import { ActivatedRoute, Params } from '@angular/router';
 import { Observable } from 'rxjs';
 import { DatasetsService } from '../datasets/datasets.service';
 import { Dataset } from '../datasets/datasets';
 import { filter, map, switchMap, take } from 'rxjs/operators';
-import { UsersService } from 'app/users/users.service';
 
 @Component({
   selector: 'gpf-dataset-description',
@@ -16,9 +15,7 @@ export class DatasetDescriptionComponent implements OnInit {
 
   public constructor(
     private route: ActivatedRoute,
-    private router: Router,
-    private datasetsService: DatasetsService,
-    private usersService: UsersService
+    private datasetsService: DatasetsService
   ) { }
 
   public ngOnInit(): void {
@@ -30,9 +27,6 @@ export class DatasetDescriptionComponent implements OnInit {
 
     this.dataset$.pipe(take(1)).subscribe(dataset => {
       this.datasetId = dataset.id;
-      if (!dataset.description && !this.usersService.cachedUserInfo().isAdministrator) {
-        this.router.navigate(['..', 'browser'], {relativeTo: this.route});
-      }
     });
   }
 

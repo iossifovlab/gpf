@@ -26,33 +26,37 @@
           </div>
         </div>
       </li>
-      <li [class.disabled-tool]="!selectedDataset.geneBrowser.enabled" class="nav-item">
+      <li
+        [class.disabled-tool]="!(selectedDataset.geneBrowser.enabled && selectedDataset.accessRights)"
+        class="nav-item">
         <a class="nav-link" routerLink="{{ toolPageLinks.geneBrowser }}" routerLinkActive="active">Gene Browser</a>
       </li>
-      <li [class.disabled-tool]="!selectedDataset.genotypeBrowser" class="nav-item">
+      <li [class.disabled-tool]="!(selectedDataset.genotypeBrowser && selectedDataset.accessRights)" class="nav-item">
         <a class="nav-link" routerLink="{{ toolPageLinks.genotypeBrowser }}" routerLinkActive="active"
           >Genotype Browser</a
         >
       </li>
-      <li [class.disabled-tool]="!selectedDataset.phenotypeBrowser" class="nav-item">
+      <li [class.disabled-tool]="!(selectedDataset.phenotypeBrowser && selectedDataset.accessRights)" class="nav-item">
         <a class="nav-link" routerLink="{{ toolPageLinks.phenotypeBrowser }}" routerLinkActive="active"
           >Phenotype Browser</a
         >
       </li>
-      <li [class.disabled-tool]="!selectedDataset.enrichmentTool" class="nav-item">
+      <li [class.disabled-tool]="!(selectedDataset.enrichmentTool && selectedDataset.accessRights)" class="nav-item">
         <a class="nav-link" routerLink="{{ toolPageLinks.enrichmentTool }}" routerLinkActive="active"
           >Enrichment Tool</a
         >
       </li>
-      <li [class.disabled-tool]="!selectedDataset.phenotypeTool" class="nav-item">
+      <li [class.disabled-tool]="!(selectedDataset.phenotypeTool && selectedDataset.accessRights)" class="nav-item">
         <a class="nav-link" routerLink="{{ toolPageLinks.phenotypeTool }}" routerLinkActive="active">Phenotype Tool</a>
       </li>
-      <li [class.disabled-tool]="!(selectedDataset.description || ('' | userInfo)?.isAdministrator)" class="nav-item">
+      <li class="nav-item">
         <a class="nav-link" routerLink="{{ toolPageLinks.datasetDescription }}" routerLinkActive="active"
           >Dataset Description</a
         >
       </li>
-      <li [class.disabled-tool]="!selectedDataset.commonReport.enabled" class="nav-item">
+      <li
+        [class.disabled-tool]="!(selectedDataset.commonReport.enabled && selectedDataset.accessRights)"
+        class="nav-item">
         <a class="nav-link" routerLink="{{ toolPageLinks.datasetStatistics }}" routerLinkActive="active"
           >Dataset Statistics</a
         >
@@ -76,5 +80,8 @@
     <span>No tools have been configured for this dataset.</span>
   </div>
 
-  <router-outlet *ngIf="selectedDataset.accessRights" (activate)="routeChange()" class="content"></router-outlet>
+  <router-outlet
+    *ngIf="selectedDataset.accessRights || selectedTool === toolPageLinks.datasetDescription"
+    (activate)="routeChange()"
+    class="content"></router-outlet>
 </div>

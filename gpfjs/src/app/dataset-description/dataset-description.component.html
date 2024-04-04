@@ -3,4 +3,10 @@
     [initialMarkdown]="dataset.description"
     [editable]="dataset.descriptionEditable"
     (writeEvent)="writeDataset($event)"></gpf-markdown-editor>
+
+  <span
+    *ngIf="!dataset.description && !('' | userInfo)?.isAdministrator"
+    style="display: block; font-style: italic; opacity: 75%; text-align: center; padding-top: 15px"
+    >No dataset description available</span
+  >
 </ng-container>

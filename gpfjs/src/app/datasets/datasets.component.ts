@@ -26,6 +26,7 @@ export class DatasetsComponent implements OnInit, OnDestroy {
   private subscriptions: Subscription[] = [];
 
   public showNoToolsWarning: boolean;
+  public selectedTool: string;
 
   public constructor(
     private usersService: UsersService,
@@ -114,6 +115,7 @@ export class DatasetsComponent implements OnInit, OnDestroy {
         this.router.navigate(['/', 'datasets', this.selectedDataset.id, firstTool]);
       }
     }
+    this.selectedTool = firstTool;
   }
 
   private isToolEnabled(dataset: Dataset, toolName: string): boolean {
@@ -152,7 +154,9 @@ export class DatasetsComponent implements OnInit, OnDestroy {
   public findFirstTool(selectedDataset: Dataset): string {
     let firstTool = '';
 
-    if (selectedDataset.geneBrowser.enabled) {
+    if (!selectedDataset.accessRights) {
+      firstTool = toolPageLinks.datasetDescription;
+    } else if (selectedDataset.geneBrowser.enabled) {
       firstTool = toolPageLinks.geneBrowser;
     } else if (selectedDataset.genotypeBrowser && selectedDataset.genotypeBrowserConfig) {
       firstTool = toolPageLinks.genotypeBrowser;
@@ -177,6 +181,9 @@ export class DatasetsComponent implements OnInit, OnDestroy {
     if (DatasetsComponent.previousUrl !== this.router.url && DatasetsComponent.previousUrl.startsWith('/datasets')) {
       this.store.dispatch(new StateResetAll());
     }
+
+    const urlSegments = this.router.url.split('/');
+    this.selectedTool = urlSegments[urlSegments.length - 1];
     DatasetsComponent.previousUrl = this.router.url;
   }
 }
