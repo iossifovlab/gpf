@@ -1,4 +1,5 @@
 import {
+  AfterViewInit,
   Component, ElementRef, EventEmitter, HostListener, Input, OnChanges,
   OnDestroy, OnInit, Output, ViewChild, ViewChildren
 } from '@angular/core';
@@ -10,13 +11,15 @@ import { Subject, Subscription, zip } from 'rxjs';
 import { GeneProfilesTableConfig, GeneProfilesColumn } from './gene-profiles-table';
 import { GeneProfilesTableService } from './gene-profiles-table.service';
 import { environment } from 'environments/environment';
+import { Location } from '@angular/common';
+import { ActivatedRoute } from '@angular/router';
 
 @Component({
   selector: 'gpf-gene-profiles-table',
   templateUrl: './gene-profiles-table.component.html',
   styleUrls: ['./gene-profiles-table.component.css']
 })
-export class GeneProfilesTableComponent implements OnInit, OnChanges, OnDestroy {
+export class GeneProfilesTableComponent implements OnInit, OnChanges, OnDestroy, AfterViewInit {
   @Input() public config: GeneProfilesTableConfig;
   @Input() public sortBy: string;
   public defaultSortBy: string;
@@ -59,11 +62,13 @@ export class GeneProfilesTableComponent implements OnInit, OnChanges, OnDestroy 
 
   public tabs: string[] = [];
   public hideTable = false;
-  public currentTabSymbols = new Set<string>();
-  public currentTab = '';
+  public currentTabGeneSet= new Set<string>();
+  public currentTabString = '';
 
   public constructor(
-    private geneProfilesService: GeneProfilesTableService
+    private geneProfilesService: GeneProfilesTableService,
+    private location: Location,
+    private route: ActivatedRoute
   ) { }
 
   public ngOnInit(): void {
@@ -80,6 +85,18 @@ export class GeneProfilesTableComponent implements OnInit, OnChanges, OnDestroy 
     });
 
     this.focusSearchBox();
+  }
+
+  public ngAfterViewInit(): void {
+    if (this.route.snapshot.params.genes as string) {
+      this.currentTabGeneSet = new Set(
+        (this.route.snapshot.params.genes as string)
+          .split(',')
+          .filter(p => p)
+          .map(p => p.trim())
+      );
+      this.loadSingleView(this.currentTabGeneSet);
+    }
   }
 
   public ngOnChanges(): void {
@@ -317,42 +334,41 @@ export class GeneProfilesTableComponent implements OnInit, OnChanges, OnDestroy 
   }
 
   public loadSingleView(geneSymbols: string | Set<string>, newTab: boolean = false): void {
-    let genes: string;
-    const geneProfilesBaseUrl = window.location.href;
-
-    if (typeof geneSymbols === 'string') {
-      genes = geneSymbols;
-      if (this.tabs.indexOf(geneSymbols) === -1) {
-        this.tabs.push(genes);
-      }
-    } else {
-      genes = [...geneSymbols].join(',');
+    const genes = this.formatGeneSymbols(geneSymbols);
+    if (!newTab) {
       if (this.tabs.indexOf(genes) === -1) {
         this.tabs.push(genes);
       }
-    }
 
-    if (genes) {
       this.openTab(genes);
+    } else {
+      this.currentTabGeneSet.clear();
+      this.currentTabGeneSet.add(genes);
+      window.open(`${window.location.href}/${genes}`, '_blank');
     }
+  }
 
-    if (newTab) {
-      const newWindow = window.open('', '_blank');
-      newWindow.location.assign(`${geneProfilesBaseUrl}/${genes}`);
-    }
+  private formatGeneSymbols(geneSymbols: string | Set<string>): string {
+    return typeof geneSymbols === 'string' ? geneSymbols : [...geneSymbols].sort().join(',');
   }
 
   public openTab(tab: string): void {
     this.hideTable = true;
-    this.currentTabSymbols.clear();
-    tab.split(',').map(t => this.currentTabSymbols.add(t));
-    this.currentTab = tab;
+    this.currentTabGeneSet.clear();
+    tab.split(',').map(t => this.currentTabGeneSet.add(t));
+    this.currentTabString = tab;
+    this.location.replaceState('gene-profiles/' + this.currentTabString);
   }
 
   public closeTab(tab: string): void {
     this.tabs = this.tabs.filter(t => t !== tab);
+    this.backToTable();
+  }
+
+  public backToTable(): void {
     this.hideTable = false;
-    this.currentTab = 'table';
+    this.currentTabString = 'table';
+    this.location.replaceState('gene-profiles');
   }
 
   public toggleHighlightGene(geneSymbol: string): void {

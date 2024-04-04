@@ -101,7 +101,7 @@
 
   <gpf-gene-profiles-single-view-wrapper
     *ngIf="hideTable"
-    [geneSymbols]="currentTabSymbols"></gpf-gene-profiles-single-view-wrapper>
+    [geneSymbols]="currentTabGeneSet"></gpf-gene-profiles-single-view-wrapper>
 
   <ng-template #aboveTableBar>
     <div id="search-tabs-wrapper">
@@ -113,11 +113,12 @@
             </label>
             <input
               #searchBox
-              (keyup)="searchKeystrokes$.next(searchBox.value)"
-              (click)="hideTable = false; currentTab = 'table'"
+              (keyup)="searchKeystrokes$.next(searchBox.value); backToTable()"
+              (click)="backToTable()"
               id="gene-search-input"
               class="search-input form-control"
               autocomplete="off"
+              autofocus="false"
               placeholder="Search gene"
               type="text"
               spellcheck="false" />
@@ -141,7 +142,7 @@
           #columnFilteringButton
           id="category-filtering-button"
           class="btn btn-default"
-          (click)="openCategoryFilterDropdown($event); hideTable = false; currentTab = 'table'"
+          (click)="openCategoryFilterDropdown($event); backToTable()"
           title="Filter categories"><span id="filter-menu-icon" class="material-symbols-outlined">menu</span>
         </button>
         </div>
@@ -163,13 +164,13 @@
 
       <div id="tabs-wrapper">
         <div *ngFor="let tab of tabs">
-          <button class="tab-name" (click)="openTab(tab)" [ngClass]="{ 'active-tab': currentTab === tab }">{{
+          <button class="tab-name" (click)="openTab(tab)" [ngClass]="{ 'active-tab': currentTabString === tab }">{{
             tab
           }}</button>
           <button class="close-tab-button" (click)="closeTab(tab)">
             <span class="material-symbols-outlined md" title="Close">close</span>
           </button>
-          <div class="separator" [ngClass]="{ 'active-separator': currentTab === tab }"></div>
+          <div class="separator" [ngClass]="{ 'active-separator': currentTabString === tab }"></div>
         </div>
       </div>
     </div>
