@@ -25,7 +25,6 @@ export class DatasetsComponent implements OnInit, OnDestroy {
 
   private subscriptions: Subscription[] = [];
 
-  public showNoToolsWarning: boolean;
   public selectedTool: string;
 
   public constructor(
@@ -94,7 +93,6 @@ export class DatasetsComponent implements OnInit, OnDestroy {
     }
 
     const firstTool = this.findFirstTool(this.selectedDataset);
-    this.showNoToolsWarning = !firstTool;
 
     this.registerAlertVisible = !this.selectedDataset.accessRights;
 
@@ -176,14 +174,15 @@ export class DatasetsComponent implements OnInit, OnDestroy {
   }
 
   public routeChange(): void {
+    const url = this.router.url;
+
     /* In order to have state separation between the dataset tools,
     we clear the state if the previous url is from a different dataset tool */
-    if (DatasetsComponent.previousUrl !== this.router.url && DatasetsComponent.previousUrl.startsWith('/datasets')) {
+    if (DatasetsComponent.previousUrl !== url && DatasetsComponent.previousUrl.startsWith('/datasets')) {
       this.store.dispatch(new StateResetAll());
     }
 
-    const urlSegments = this.router.url.split('/');
-    this.selectedTool = urlSegments[urlSegments.length - 1];
-    DatasetsComponent.previousUrl = this.router.url;
+    this.selectedTool = url.split('/').pop();
+    DatasetsComponent.previousUrl = url;
   }
 }

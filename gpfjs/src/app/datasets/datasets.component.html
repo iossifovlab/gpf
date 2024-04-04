@@ -72,14 +72,6 @@
     <markdown [data]="permissionDeniedPrompt"></markdown>
   </div>
 
-  <div
-    *ngIf="showNoToolsWarning && !registerAlertVisible"
-    class="alert alert-warning"
-    role="alert"
-    style="margin: 10px">
-    <span>No tools have been configured for this dataset.</span>
-  </div>
-
   <router-outlet
     *ngIf="selectedDataset.accessRights || selectedTool === toolPageLinks.datasetDescription"
     (activate)="routeChange()"
