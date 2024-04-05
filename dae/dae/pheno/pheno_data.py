@@ -583,29 +583,18 @@ class PhenotypeStudy(PhenotypeData):
         assert all(self.has_measure(m) for m in measure_ids), self.measures
         assert len(self.db.instrument_values_tables) > 0
 
-        measure_column_names = self.db.get_measure_column_names_reverse(
-            measure_ids
-        )
-
         instrument_tables = {}
-        instrument_table_columns = {}
-
-        for instrument_name, table in self.db.instrument_values_tables.items():
-            skip_table = True
-            for m_id in measure_ids:
-                if m_id.startswith(f"{instrument_name}."):
-                    skip_table = False
-
-            if skip_table:
-                continue
-
+        instrument_table_columns: dict[str, Any] = {}
+        for measure_id in measure_ids:
+            measure = self.get_measure(measure_id)
+            instrument_name = measure_id.split(".")[0]
+            table = self.db.instrument_values_tables[instrument_name]
             instrument_tables[instrument_name] = table
-            table_cols = [
-                c.label(f"{instrument_name}.{c.name}")
-                for c in table.c if c.name in measure_column_names
-            ]
-
-            instrument_table_columns[instrument_name] = table_cols
+            if instrument_name not in instrument_table_columns:
+                instrument_table_columns[instrument_name] = []
+            instrument_table_columns[instrument_name].append(
+                table.c[measure.measure_name].label(measure_id)
+            )
 
         subquery_selects = []
         for table in instrument_tables.values():
