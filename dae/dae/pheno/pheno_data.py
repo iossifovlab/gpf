@@ -12,7 +12,7 @@ from itertools import chain
 from box import Box
 
 import pandas as pd
-from sqlalchemy.sql import select, union
+from sqlalchemy.sql import select, union, text
 from sqlalchemy import not_, Select
 
 from dae.pedigrees.family import Person
@@ -593,7 +593,7 @@ class PhenotypeStudy(PhenotypeData):
         for instrument_name, table in self.db.instrument_values_tables.items():
             skip_table = True
             for m_id in measure_ids:
-                if m_id.startswith(instrument_name):
+                if m_id.startswith(f"{instrument_name}."):
                     skip_table = False
 
             if skip_table:

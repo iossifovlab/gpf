@@ -203,16 +203,16 @@ class MeasureClassifier:
 
         if column_type in ["FLOAT", "DOUBLE"]:
             result = cursor.sql(
-                f"SELECT COUNT({measure_name}) FROM {table_name} WHERE "
-                f"{measure_name} != 'NaN' AND "
-                f"{measure_name} IS NOT NULL"
+                f"SELECT COUNT(\"{measure_name}\") FROM {table_name} WHERE "
+                f"\"{measure_name}\" != 'NaN' AND "
+                f"\"{measure_name}\" IS NOT NULL"
             ).fetchone()
             assert result is not None
             real_count = result[0]
         else:
             result = cursor.sql(
-                f"SELECT COUNT({measure_name}) FROM {table_name} WHERE "
-                f"{measure_name} IS NOT NULL"
+                f"SELECT COUNT(\"{measure_name}\") FROM {table_name} WHERE "
+                f"\"{measure_name}\" IS NOT NULL"
             ).fetchone()
             assert result is not None
             real_count = result[0]
@@ -224,18 +224,18 @@ class MeasureClassifier:
 
         if column_type in ["FLOAT", "DOUBLE"]:
             result = cursor.sql(
-                f"SELECT COUNT(DISTINCT {measure_name}) "
+                f"SELECT COUNT(DISTINCT \"{measure_name}\") "
                 f"FROM {table_name} WHERE "
-                f"{measure_name} != 'NaN' AND "
-                f"{measure_name} IS NOT NULL"
+                f"\"{measure_name}\" != 'NaN' AND "
+                f"\"{measure_name}\" IS NOT NULL"
             ).fetchone()
             assert result is not None
             unique_count = result[0]
         else:
             result = cursor.sql(
-                f"SELECT COUNT(DISTINCT {measure_name}) "
+                f"SELECT COUNT(DISTINCT \"{measure_name}\") "
                 f"FROM {table_name} WHERE "
-                f"{measure_name} IS NOT NULL"
+                f"\"{measure_name}\" IS NOT NULL"
             ).fetchone()
             assert result is not None
             unique_count = result[0]
@@ -244,15 +244,15 @@ class MeasureClassifier:
         report.count_unique_numeric_values = unique_count
 
         rows = cursor.sql(
-            f"SELECT DISTINCT {measure_name} FROM {table_name} WHERE "
-            f"{measure_name} IS NOT NULL"
+            f"SELECT DISTINCT \"{measure_name}\" FROM {table_name} WHERE "
+            f"\"{measure_name}\" IS NOT NULL"
         ).fetchall()
         unique_values = [row[0] for row in rows]
         report.unique_values = unique_values
 
         rows = cursor.sql(
-            f"SELECT {measure_name} FROM {table_name} WHERE "
-            f"{measure_name} IS NOT NULL"
+            f"SELECT \"{measure_name}\" FROM {table_name} WHERE "
+            f"\"{measure_name}\" IS NOT NULL"
         ).fetchall()
         real_values = [row[0] for row in rows]
         report.numeric_values = real_values
@@ -280,9 +280,9 @@ class MeasureClassifier:
 
         result = cursor.sql(
             "SELECT COUNT(*) FROM ("
-            f"SELECT {measure_name}, "
-            f"TRY_CAST({measure_name} AS FLOAT) as casted "
-            f"from {table_name} WHERE {measure_name} IS NULL OR casted = 'nan'"
+            f"SELECT \"{measure_name}\", "
+            f"TRY_CAST(\"{measure_name}\" AS FLOAT) as casted "
+            f"from {table_name} WHERE \"{measure_name}\" IS NULL OR casted = 'nan'"
             ")"
         ).fetchone()
         assert result is not None
@@ -290,7 +290,7 @@ class MeasureClassifier:
 
         result = cursor.sql(
             "SELECT COUNT(casted) FROM ("
-            f"SELECT TRY_CAST({measure_name} AS FLOAT) as casted "
+            f"SELECT TRY_CAST(\"{measure_name}\" AS FLOAT) as casted "
             f"from {table_name} WHERE casted IS NOT NULL AND casted != 'nan'"
             ")"
         ).fetchone()
@@ -299,11 +299,11 @@ class MeasureClassifier:
         report.count_with_values += result[0]
 
         result = cursor.sql(
-            f"SELECT COUNT({measure_name}) FROM ("
-            f"SELECT {measure_name}, "
-            f"TRY_CAST({measure_name} AS FLOAT) as casted "
+            f"SELECT COUNT(\"{measure_name}\") FROM ("
+            f"SELECT \"{measure_name}\", "
+            f"TRY_CAST(\"{measure_name}\" AS FLOAT) as casted "
             f"from {table_name} WHERE casted IS NULL AND "
-            f"{measure_name} IS NOT NULL"
+            f"\"{measure_name}\" IS NOT NULL"
             ")"
         ).fetchone()
         assert result is not None
@@ -311,10 +311,10 @@ class MeasureClassifier:
         report.count_with_values += result[0]
 
         rows = list(cursor.sql(
-            f"SELECT DISTINCT {measure_name} FROM ("
-            f"SELECT {measure_name}, "
-            f"TRY_CAST({measure_name} AS FLOAT) as casted "
-            f"from {table_name} WHERE {measure_name} IS NOT NULL"
+            f"SELECT DISTINCT \"{measure_name}\" FROM ("
+            f"SELECT \"{measure_name}\", "
+            f"TRY_CAST(\"{measure_name}\" AS FLOAT) as casted "
+            f"from {table_name} WHERE \"{measure_name}\" IS NOT NULL"
             ")"
         ).fetchall())
         assert rows is not None
@@ -323,8 +323,8 @@ class MeasureClassifier:
 
         rows = cursor.sql(
             f"SELECT casted FROM ("
-            f"SELECT {measure_name}, "
-            f"TRY_CAST({measure_name} AS FLOAT) as casted "
+            f"SELECT \"{measure_name}\", "
+            f"TRY_CAST(\"{measure_name}\" AS FLOAT) as casted "
             f"from {table_name} WHERE casted IS NOT NULL AND casted != 'nan'"
             ")"
         ).fetchall()
@@ -358,7 +358,7 @@ class MeasureClassifier:
         report.count_total = result[0]
 
         result = cursor.sql(
-            f"SELECT COUNT({measure_name}) FROM {table_name}"
+            f"SELECT COUNT(\"{measure_name}\") FROM {table_name}"
         ).fetchone()
         assert result is not None
 

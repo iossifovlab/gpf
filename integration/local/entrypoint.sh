@@ -19,7 +19,8 @@ cd /wd/integration/fixtures/pheno/comp-data
 /opt/conda/bin/conda run --no-capture-output -n gpf \
     simple_pheno_import.py --force -p comp_pheno.ped \
     -i instruments/ -d comp_pheno_data_dictionary.tsv -o comp_pheno \
-    --regression comp_pheno_regressions.conf
+    --regression comp_pheno_regressions.conf \
+    --person-column personId
 
 mkdir -p $DAE_DB_DIR/pheno/images
 cp -r $DAE_DB_DIR/pheno/comp_pheno/browser/images/comp_pheno \

@@ -45,6 +45,13 @@ def pheno_cli_parser() -> argparse.ArgumentParser:
     )
 
     parser.add_argument(
+        "--tab-separated",
+        dest="tab_separated",
+        action="store_true",
+        help="flag whether the instrument files are tab separated"
+    )
+
+    parser.add_argument(
         "-p",
         "--pedigree",
         dest="pedigree",
@@ -121,6 +128,7 @@ def parse_phenotype_data_config(args: argparse.Namespace) -> Box:
     config = default_config()
     config.verbose = args.verbose
     config.instruments.dir = args.instruments
+    config.instruments.tab_separated = args.tab_separated
 
     config.pedigree = args.pedigree
 

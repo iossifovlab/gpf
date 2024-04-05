@@ -179,7 +179,11 @@ class ClassifyMeasureTask(Task):
 
         if measure_type in set([MeasureType.continuous, MeasureType.ordinal]):
             min_value = np.min(self.classifier_report.numeric_values)
+            if isinstance(min_value, np.bool_):
+                min_value = np.int8(min_value)
             max_value = np.max(self.classifier_report.numeric_values)
+            if isinstance(max_value, np.bool_):
+                max_value = np.int8(max_value)
         else:
             min_value = None
             max_value = None
@@ -365,23 +369,13 @@ class PrepareVariables(PreparePersons):
         self.connection.sql("DROP TABLE rejects")
 
         self._clean_missing_person_ids(instrument_name)
-        # move to preprocess?
-        # df = self._adjust_instrument_measure_names(instrument_name, df)
 
-    def _adjust_instrument_measure_names(
-        self, instrument_name: str, df: pd.DataFrame
-    ) -> pd.DataFrame:
-        if len(df) == 0:
-            return df
-
-        columns = {}
-        for index in range(1, len(df.columns)):
-            name = df.columns[index]
-            parts = [p.strip() for p in name.split(".")]
-            parts = [p for p in parts if p != instrument_name]
-            columns[name] = ".".join(parts)
-        df.rename(columns=columns, inplace=True)
-        return df
+    def _adjust_instrument_measure_name(
+        self, instrument_name: str, measure_name: str
+    ) -> str:
+        parts = [p.strip() for p in measure_name.split(".")]
+        parts = [p for p in parts if p != instrument_name]
+        return ".".join(parts)
 
     @property
     def log_filename(self) -> str:
@@ -499,9 +493,10 @@ class PrepareVariables(PreparePersons):
 
         table_name = self._instrument_tmp_table_name(instrument_name)
 
+
         self.connection.sql(
             f"DELETE FROM {table_name} "
-            f"WHERE {self.config.person.column} NOT IN "
+            f"WHERE \"{self.config.person.column}\" NOT IN "
             "(SELECT person_id from person)"
         )
 
@@ -510,7 +505,9 @@ class PrepareVariables(PreparePersons):
         assert self.pedigree_df is not None
 
         pheno_common_measures = set(self.pedigree_df.columns) - (
-            set(self.PED_COLUMNS_REQUIRED) | set(["sampleId", "role"])
+            set(self.PED_COLUMNS_REQUIRED) | set(
+                ["sampleId", "role", "generated", "not_sequenced"]
+            )
         )
         pheno_common_measures = set(filter(
             lambda m: not m.startswith("tag"), pheno_common_measures
@@ -598,7 +595,11 @@ class PrepareVariables(PreparePersons):
 
                 measure_reports[measure.measure_id] = classifier_report
 
-                db_name = safe_db_name(measure.measure_name)
+                m_name = self._adjust_instrument_measure_name(
+                    instrument_name, measure.measure_name
+                )
+
+                db_name = safe_db_name(m_name)
                 if db_name.lower() in seen_measure_names:
                     seen_measure_names[db_name.lower()] += 1
                     db_name = \
@@ -630,12 +631,16 @@ class PrepareVariables(PreparePersons):
             else:
                 output_table_cols[db_name] = "VARCHAR"
 
+            description = measure.description
+            if isinstance(description, str):
+                description = description.replace("'", "''")
+
             values = [
                 measure.measure_id,
                 measure.measure_name,
                 measure.instrument_name,
                 db_name,
-                measure.description,
+                description,
                 measure.measure_type.value,
                 measure.individuals,
                 measure.default_filter,
@@ -662,20 +667,20 @@ class PrepareVariables(PreparePersons):
             m_name = measure.measure_name
             if col_type == "FLOAT":
                 select_measures.append(
-                    f"TRY_CAST(i.{m_name} as FLOAT) as {db_name}"
+                    f"TRY_CAST(i.\"{m_name}\" as FLOAT) as {db_name}"
                 )
             else:
-                select_measures.append(f"i.{m_name}")
+                select_measures.append(f"i.\"{m_name}\" as {db_name}")
 
         select_measure_cols = ", ".join(select_measures)
 
         cursor.sql(
             f"CREATE TABLE {output_table_name} AS FROM ("
-            f"SELECT i.{self.config.person.column} as person_id, "
+            f"SELECT i.\"{self.config.person.column}\" as person_id, "
             "p.family_id, p.role, p.status, p.sex, "
             f"{select_measure_cols} "
             f"FROM {tmp_table_name} AS i JOIN person AS p "
-            f"ON i.{self.config.person.column} = p.person_id"
+            f"ON i.\"{self.config.person.column}\" = p.person_id"
             ")"
         )
         instruments_dir = os.path.join(self.config.output, "instruments")
