@@ -119,41 +119,24 @@ test.describe('App user access rights tests', () => {
 
   test('should go through all tools and check whether the permission denied prompt ' +
        'is displayed when not logged in and not displayed when logged in with admin account', async({ page }) => {
-    await utils.navigateToDatasetPage(page, utils.datasetIds.compAll, 'Dataset Statistics');
+    await utils.navigateToDatasetPage(page, utils.datasetIds.compAll, 'Dataset Description');
     await expect(page.locator('#permission-denied-prompt')).toBeVisible();
 
-    await page.getByText('Gene Browser').click();
-    await expect(page.locator('#permission-denied-prompt')).toBeVisible();
+    await expect(page.locator('li').filter({hasText: 'Gene Browser'})).toHaveClass('nav-item disabled-tool');
+    await expect(page.locator('li').filter({hasText: 'Phenotype Tool'})).toHaveClass('nav-item disabled-tool');
+    await expect(page.locator('li').filter({hasText: 'Phenotype Browser'})).toHaveClass('nav-item disabled-tool');
+    await expect(page.locator('li').filter({hasText: 'Genotype Browser'})).toHaveClass('nav-item disabled-tool');
+    await expect(page.locator('li').filter({hasText: 'Dataset Statistics'})).toHaveClass('nav-item disabled-tool');
 
-    await page.getByText('Phenotype Tool').click();
-    await expect(page.locator('#permission-denied-prompt')).toBeVisible();
-
-    await page.getByText('Phenotype Browser').click();
-    await expect(page.locator('#permission-denied-prompt')).toBeVisible();
-
-    await page.getByText('Genotype Browser').click();
-    await expect(page.locator('#permission-denied-prompt')).toBeVisible();
-
-    await page.getByText('Dataset Statistics').click();
-    await expect(page.locator('#permission-denied-prompt')).toBeVisible();
 
     await utils.loginAdmin(page);
     await expect(page.locator('#permission-denied-prompt')).not.toBeVisible();
 
-    await page.getByText('Gene Browser').click();
-    await expect(page.locator('#permission-denied-prompt')).not.toBeVisible();
-
-    await page.getByText('Phenotype Tool').click();
-    await expect(page.locator('#permission-denied-prompt')).not.toBeVisible();
-
-    await page.getByText('Phenotype Browser').click();
-    await expect(page.locator('#permission-denied-prompt')).not.toBeVisible();
-
-    await page.getByText('Genotype Browser').click();
-    await expect(page.locator('#permission-denied-prompt')).not.toBeVisible();
-
-    await page.getByText('Dataset Statistics').click();
-    await expect(page.locator('#permission-denied-prompt')).not.toBeVisible();
+    await expect(page.locator('li').filter({hasText: 'Gene Browser'})).not.toHaveClass('nav-item disabled-tool');
+    await expect(page.locator('li').filter({hasText: 'Phenotype Tool'})).not.toHaveClass('nav-item disabled-tool');
+    await expect(page.locator('li').filter({hasText: 'Phenotype Browser'})).not.toHaveClass('nav-item disabled-tool');
+    await expect(page.locator('li').filter({hasText: 'Genotype Browser'})).not.toHaveClass('nav-item disabled-tool');
+    await expect(page.locator('li').filter({hasText: 'Dataset Statistics'})).not.toHaveClass('nav-item disabled-tool');
   });
 
 
@@ -214,29 +197,28 @@ test.describe('App user access rights tests', () => {
 
     await utils.logout(page);
     await utils.login(page, email, userData.normal.password + '!!__3456');
-    await utils.navigateToDatasetPage(page, utils.datasetIds.compVcf, 'Dataset Statistics');
-    await expect(page.locator('#permission-denied-prompt')).not.toBeVisible();
-    await expect(page.locator('gpf-variant-reports')).toBeVisible();
 
-    await expect(page.locator('#permission-denied-prompt')).not.toBeVisible();
 
-    await utils.navigateToDatasetPage(page, utils.datasetIds.allGenotypes, 'Genotype Browser');
-    await expect(page.locator('#permission-denied-prompt')).not.toBeVisible();
+    await utils.navigateToDataset(page, utils.datasetIds.compVcf);
+    await expect(page.locator('li').filter({hasText: 'Dataset Statistics'})).not.toHaveClass('nav-item disabled-tool');
 
-    await utils.navigateToDatasetPage(page, utils.datasetIds.compDenovo, 'Dataset Statistics');
-    await expect(page.locator('#permission-denied-prompt')).not.toBeVisible();
+    await utils.navigateToDataset(page, utils.datasetIds.allGenotypes);
+    await expect(page.locator('li').filter({hasText: 'Genotype Browser'})).not.toHaveClass('nav-item disabled-tool');
 
-    await utils.navigateToDatasetPage(page, utils.datasetIds.iossifov2014, 'Dataset Statistics');
-    await expect(page.locator('#permission-denied-prompt')).toBeVisible();
+    await utils.navigateToDataset(page, utils.datasetIds.compDenovo);
+    await expect(page.locator('li').filter({hasText: 'Dataset Statistics'})).not.toHaveClass('nav-item disabled-tool');
 
-    await utils.navigateToDatasetPage(page, utils.datasetIds.compGenotypes, 'Genotype Browser');
-    await expect(page.locator('#permission-denied-prompt')).not.toBeVisible();
+    await utils.navigateToDataset(page, utils.datasetIds.iossifov2014);
+    await expect(page.locator('li').filter({hasText: 'Dataset Statistics'})).toHaveClass('nav-item disabled-tool');
 
-    await utils.navigateToDatasetPage(page, utils.datasetIds.compAll, 'Dataset Statistics');
-    await expect(page.locator('#permission-denied-prompt')).toBeVisible();
+    await utils.navigateToDataset(page, utils.datasetIds.compGenotypes);
+    await expect(page.locator('li').filter({hasText: 'Genotype Browser'})).not.toHaveClass('nav-item disabled-tool');
 
-    await utils.navigateToDatasetPage(page, utils.datasetIds.multi, 'Dataset Statistics');
-    await expect(page.locator('#permission-denied-prompt')).toBeVisible();
+    await utils.navigateToDataset(page, utils.datasetIds.compAll);
+    await expect(page.locator('li').filter({hasText: 'Dataset Statistics'})).toHaveClass('nav-item disabled-tool');
+
+    await utils.navigateToDataset(page, utils.datasetIds.multi);
+    await expect(page.locator('li').filter({hasText: 'Dataset Statistics'})).toHaveClass('nav-item disabled-tool');
   });
 
   test('should login admin and give researcher access rights for ALL Genotypes, ' +
@@ -276,8 +258,6 @@ test.describe('App user access rights tests', () => {
     await utils.logout(page);
 
     await utils.login(page, email, userData.normal.password + '!!__3456');
-    await expect(page.locator('#permission-denied-prompt')).not.toBeVisible();
-
     await expect(page.locator('#permission-denied-prompt')).not.toBeVisible();
 
     await utils.navigateToDatasetPage(page, utils.datasetIds.allGenotypes, 'Genotype Browser');
