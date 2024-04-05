@@ -629,7 +629,14 @@ class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
             manifest.add(entry)
             state = self.load_resource_file_state(resource, entry.name)
             if state is None:
-                state = self.build_resource_file_state(resource, entry.name)
+                md5 = None
+                size = None
+                if prebuild_entries and entry.name in prebuild_entries:
+                    md5 = prebuild_entries[entry.name].md5
+                    size = prebuild_entries[entry.name].size
+                state = self.build_resource_file_state(
+                    resource, entry.name,
+                    md5=md5, size=size)
                 self.save_resource_file_state(resource, state)
             if state.filename not in current_manifest:
                 entries_to_update.add(entry.name)
