@@ -601,7 +601,7 @@ class PhenotypeStudy(PhenotypeData):
 
             instrument_tables[instrument_name] = table
             table_cols = [
-                c.label(measure_column_names[c.name])
+                c.label(f"{instrument_name}.{c.name}")
                 for c in table.c if c.name in measure_column_names
             ]
 
