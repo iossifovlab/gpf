@@ -392,7 +392,7 @@ class MeasureClassifier:
                 cursor, table_name, measure_name, column_type, report
             )
 
-        if column_type == "VARCHAR":
+        if column_type == "VARCHAR" or column_type == "DATE":
             return MeasureClassifier._meta_measures_text(
                 cursor, table_name, measure_name, report
             )

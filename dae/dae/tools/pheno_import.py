@@ -1,30 +1,32 @@
 #!/usr/bin/env python
+# encoding: utf-8
 
-import argparse
-import os
 import sys
+import os
+import argparse
 import traceback
+
 from typing import Any, Optional
 
-import toml
 from box import Box
 
-from dae.configuration.gpf_config_parser import GPFConfigParser
-from dae.configuration.schemas.phenotype_data import regression_conf_schema
-from dae.gpf_instance.gpf_instance import GPFInstance
-from dae.pheno.common import (
-    check_phenotype_data_config,
-    default_config,
-    dump_config,
-)
+import toml
+
+from dae.pheno.common import \
+    default_config, \
+    dump_config, \
+    check_phenotype_data_config
 from dae.pheno.prepare.pheno_prepare import PrepareVariables
 from dae.tools.pheno2browser import build_pheno_browser
 
+from dae.configuration.gpf_config_parser import GPFConfigParser
+from dae.configuration.schemas.phenotype_data import regression_conf_schema
+
 
 def pheno_cli_parser() -> argparse.ArgumentParser:
-    """Construct argument parser for simple phenotype import tool."""
+    """Construct argument parser for phenotype import tool."""
     parser = argparse.ArgumentParser(
-        description="simple phenotype database import tool",
+        description="phenotype database import tool",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 
@@ -68,11 +70,16 @@ def pheno_cli_parser() -> argparse.ArgumentParser:
     )
 
     parser.add_argument(
-        "-o", "--pheno", dest="pheno_name", help="output pheno database name",
+        "-o", "--output", dest="output",
+        help="output directory", default="./output"
     )
 
     parser.add_argument(
-        "--regression", help="absolute path to a regression configuration file",
+        "--pheno-id", dest="pheno_name", help="output pheno database name"
+    )
+
+    parser.add_argument(
+        "--regression", help="absolute path to a regression configuration file"
     )
     parser.add_argument(
         "--person-column",
@@ -101,13 +108,13 @@ def verify_phenotype_data_name(input_name: str) -> str:
 
 
 def generate_phenotype_data_config(
-    args: argparse.Namespace, regressions: Any,
+    args: argparse.Namespace, regressions: Any
 ) -> dict[str, Any]:
     """Construct phenotype data configuration from command line arguments."""
     dbfile = os.path.join("%(wd)s", os.path.basename(args.pheno_db_filename))
     # pheno_db_path = os.path.dirname("%(wd)s")  # noqa
     browser_dbfile = os.path.join(
-        "%(wd)s", "browser", f"{args.pheno_name}_browser.db",
+        "%(wd)s", "browser", f"{args.pheno_name}_browser.db"
     )
     config = {
         "vars": {"wd": "."},
@@ -142,48 +149,41 @@ def parse_phenotype_data_config(args: argparse.Namespace) -> Box:
 
 
 def main(argv: Optional[list[str]] = None) -> int:
-    """Run simple phenotype import tool."""
+    """Run phenotype import tool."""
     if argv is None:
         argv = sys.argv[1:]
 
     try:
         # Setup argument parser
 
-        gpf_instance = GPFInstance.build()
-        dae_conf = gpf_instance.dae_config
-
         parser = pheno_cli_parser()
         args = parser.parse_args(argv)
         if args.instruments is None:
             print("missing instruments directory parameter", sys.stderr)
-            raise ValueError
+            raise ValueError()
         if args.pedigree is None:
             print("missing pedigree filename", sys.stderr)
-            raise ValueError
+            raise ValueError()
         if args.pheno_name is None:
             print("missing pheno db name", sys.stderr)
-            raise ValueError
+            raise ValueError()
 
-        args.pheno_name = verify_phenotype_data_name(args.pheno_name)
+        output_dir = args.output
 
-        pheno_db_dir = os.path.join(
-            dae_conf.phenotype_data.dir, args.pheno_name,
-        )
-        if not os.path.exists(pheno_db_dir):
-            os.makedirs(pheno_db_dir)
+        os.makedirs(output_dir, exist_ok=True)
 
         args.pheno_db_filename = os.path.join(
-            pheno_db_dir, f"{args.pheno_name}.db",
+            output_dir, f"{args.pheno_name}.db"
         )
         if os.path.exists(args.pheno_db_filename):
             if not args.force:
                 print(
-                    "pheno db filename already exists:", args.pheno_db_filename,
+                    "pheno db filename already exists:", args.pheno_db_filename
                 )
-                raise ValueError
+                raise ValueError()
             os.remove(args.pheno_db_filename)
 
-        args.browser_dir = os.path.join(pheno_db_dir, "browser")
+        args.browser_dir = os.path.join(output_dir, "browser")
         if not os.path.exists(args.browser_dir):
             os.makedirs(args.browser_dir)
 
@@ -191,7 +191,7 @@ def main(argv: Optional[list[str]] = None) -> int:
         os.makedirs(config.output, exist_ok=True)
         if args.regression:
             regressions = GPFConfigParser.load_config(
-                args.regression, regression_conf_schema,
+                args.regression, regression_conf_schema
             )
         else:
             regressions = None
@@ -199,11 +199,6 @@ def main(argv: Optional[list[str]] = None) -> int:
         prep = PrepareVariables(config)
         prep.build_pedigree(args.pedigree)
         prep.build_variables(args.instruments, args.data_dictionary)
-
-        # prep.db.clear_instrument_values_tables(drop=True)
-        # prep.db.build_instrument_values_tables()
-        # prep.db.populate_instrument_values_tables()
-
 
         build_pheno_browser(
             args.pheno_db_filename,
@@ -213,12 +208,12 @@ def main(argv: Optional[list[str]] = None) -> int:
         )
 
         pheno_conf_path = os.path.join(
-            pheno_db_dir, f"{args.pheno_name}.conf",
+            output_dir, f"{args.pheno_name}.conf"
         )
 
         with open(pheno_conf_path, "w") as pheno_conf_file:
             pheno_conf_file.write(
-                toml.dumps(generate_phenotype_data_config(args, regressions)),
+                toml.dumps(generate_phenotype_data_config(args, regressions))
             )
 
         return 0
@@ -227,7 +222,7 @@ def main(argv: Optional[list[str]] = None) -> int:
     except Exception as e:
         traceback.print_exc()
 
-        program_name = "simple_pheno_import.py"
+        program_name = "pheno_import.py"
         indent = len(program_name) * " "
         sys.stderr.write(program_name + ": " + repr(e) + "\n")
         sys.stderr.write(indent + "  for help use --help")
