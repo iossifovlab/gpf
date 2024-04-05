@@ -1,7 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
 
-from dae.tools.simple_pheno_import import verify_phenotype_data_name
+from dae.tools.pheno_import import verify_phenotype_data_name
 
 
 def test_verify_valid_pheno_db_name() -> None:
