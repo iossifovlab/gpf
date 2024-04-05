@@ -10,7 +10,11 @@ from query_base.query_base import QueryBaseView
 from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
-from studies.study_wrapper import StudyWrapperBase
+from studies.study_wrapper import (
+    RemoteStudyWrapper,
+    StudyWrapper,
+    StudyWrapperBase,
+)
 
 from dae.studies.study import GenotypeData
 from datasets_api.permissions import get_wdae_parents, user_has_permission
@@ -49,6 +53,29 @@ def augment_with_parents(
         )
     ]
     return dataset
+
+
+def produce_description_hierarchy(
+    dataset: GenotypeData,
+    selected: list[str],
+    tab: int = 0
+) -> str:
+    if dataset.is_group:
+        pprint([study.study_id for study in dataset.studies])
+        res = ""
+        tab_spacing = "\t" * tab
+        for child in dataset.studies:
+            if child.study_id in selected:
+                res = res + (
+                    "\n"
+                    f"{tab_spacing}"
+                    f'- **<a href="datasets/{child.study_id}">'
+                    f"{child.study_id}</a>**"
+                    f"{produce_description_hierarchy(child, selected, tab+1)}"
+                )
+        return res
+
+    return ""
 
 
 class DatasetView(QueryBaseView):
@@ -121,6 +148,25 @@ class DatasetView(QueryBaseView):
         res = augment_accessibility(self.instance_id, res, user)
         res = augment_with_groups(res)
         res = augment_with_parents(self.instance_id, res)
+
+        genotype_data_ids = self.gpf_instance.get_genotype_data_ids()
+
+
+        desc = "" if res.get("description") == None else res.get("description")
+        if isinstance(dataset, StudyWrapper):
+            res["description"] = desc + (
+                produce_description_hierarchy(
+                    dataset.genotype_data_study,
+                    genotype_data_ids
+                )
+            )
+        elif isinstance(dataset, RemoteStudyWrapper):
+            res["description"] = desc + (
+                produce_description_hierarchy(
+                    dataset.remote_genotype_data,
+                    genotype_data_ids
+                )
+            )
 
         return Response({"data": res})
 

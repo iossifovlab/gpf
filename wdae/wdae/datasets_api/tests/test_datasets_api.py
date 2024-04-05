@@ -1,5 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import json
+from pprint import pprint
 
 import pytest
 from django.test.client import Client
@@ -59,6 +60,27 @@ def test_datasets_api_get_404(admin_client: Client) -> None:
 
     data = response.data  # type: ignore
     assert data["error"] == "Dataset alabala not found"
+
+
+def test_datasets_api_get_dataset_with_hierarchy_description(admin_client: Client) -> None:
+    response = admin_client.get("/api/v3/datasets/Dataset1")
+
+    assert response
+    data = response.data  # type: ignore
+    pprint(data["data"]["description"])
+    assert data["data"]["description"] == (
+         '\n- **<a href="datasets/Study1">Study1</a>**'
+         '\n- **<a href="datasets/Study3">Study3</a>**'
+    )
+
+    response = admin_client.get("/api/v3/datasets/Study1")
+
+    assert response
+    data = response.data  # type: ignore
+    pprint(data["data"]["description"])
+    assert data["data"]["description"] == (
+        "some new description"
+    )
 
 
 def test_datasets_api_get_forbidden(user_client: Client) -> None:
