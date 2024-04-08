@@ -235,8 +235,6 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
                 annotation_tasks
             )
 
-        del loader
-
 
 def cli(
     raw_args: Optional[list[str]] = None,
