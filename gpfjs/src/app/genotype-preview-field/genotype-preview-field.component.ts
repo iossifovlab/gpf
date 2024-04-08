@@ -1,9 +1,11 @@
 import { Component, Input, OnChanges, OnInit } from '@angular/core';
 import { sprintf } from 'sprintf-js';
+import { FullEffectDetails } from './genotype-preview-field';
 
 @Component({
   selector: 'gpf-genotype-preview-field',
-  templateUrl: './genotype-preview-field.component.html'
+  templateUrl: './genotype-preview-field.component.html',
+  styleUrls: ['./genotype-preview-field.component.css']
 })
 export class GenotypePreviewFieldComponent implements OnInit, OnChanges {
   @Input() public value;
@@ -11,27 +13,35 @@ export class GenotypePreviewFieldComponent implements OnInit, OnChanges {
   @Input() public format: string;
   @Input() public genome: string;
 
-  public formattedValue: string;
+  public formattedValue: string | string[];
   // eslint-disable-next-line @typescript-eslint/naming-convention
   public UCSCLink: string;
+  public fullEffectDetails: FullEffectDetails;
   public pedigreeMaxHeight = 75;
 
   public ngOnInit(): void {
     this.UCSCLink = this.getUCSCLink();
+    if (this.field === 'full_effect_details') {
+      this.formatEffectDetails();
+    }
   }
 
   public ngOnChanges(): void {
     this.formattedValue = this.formatValue();
   }
 
-  private doFormat(format, value) {
+  private formatEffectDetails(): void {
+    this.fullEffectDetails = FullEffectDetails.fromGenotypeValue(this.value);
+  }
+
+  private doFormat(format: string, value: unknown): string {
     if (value === 'nan') {
       return value;
     }
     return sprintf(format, value);
   }
 
-  public formatValue() {
+  public formatValue(): string | string[] {
     if (this.value) {
       if (this.format) {
         if (this.value.constructor === Array) {

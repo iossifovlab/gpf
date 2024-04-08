@@ -11,7 +11,8 @@
         <gpf-helper-modal
           style="height: 32px; margin-left: 4px"
           [style.visibility]="this.geneScoresLocalState.score.help ? 'visible' : 'hidden'"
-          [modalContent]="this.geneScoresLocalState.score.help"></gpf-helper-modal>
+          [modalContent]="this.geneScoresLocalState.score.help"
+          [isMarkdown]="true"></gpf-helper-modal>
       </div>
       <div style="margin-top: 5px">
         <a class="download-link" href="{{ downloadUrl }}">Download</a>
