@@ -9,8 +9,8 @@ channels:
   - bioconda
   - iossifovlab
 dependencies:
-  - versioneer=0.28
-  - dask-kubernetes=2023.8
+  - versioneer=0.29
+  - dask-kubernetes=2024.4
   - dask-jobqueue=0.8
   - sphinx=6.1
   - sphinx_rtd_theme=1.2
