@@ -756,8 +756,13 @@ async function deleteUser(page: Page, email: string): Promise<void> {
   await page.waitForSelector('gpf-users-table');
   await searchInTable(page, email);
   await page.locator(`[id="${email}-delete-user-button"]`).click();
-  await page.getByRole('button', { name: 'Delete', exact: true }).click();
-  await expect(page.locator(`[id="${email}-user-cell"]`)).not.toBeVisible();
+
+  await Promise.all([
+    await page.getByRole('button', { name: 'Delete', exact: true }).click(),
+    await page.waitForResponse(
+      resp => resp.request().method() === 'DELETE' && resp.status() === 204
+    )
+  ]);
 }
 
 async function searchInTable(page: Page, name: string): Promise<void> {
