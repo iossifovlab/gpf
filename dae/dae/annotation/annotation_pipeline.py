@@ -41,7 +41,7 @@ class AttributeInfo:
     name: str
     source: str
     internal: bool
-    parameters: ParamsUsageMonitor = field(compare=False, hash=None)
+    parameters: ParamsUsageMonitor
     type: str = "str"           # str, int, float, annotatable, or object
     description: str = ""       # interpreted as md
     _documentation: Optional[str] = None
@@ -85,7 +85,8 @@ class AnnotatorInfo:
     def __hash__(self) -> int:
         attrs_hash = "".join(str(hash(attr)) for attr in self.attributes)
         resources_hash = "".join(str(hash(res)) for res in self.resources)
-        return hash(f"{self.type}{attrs_hash}{resources_hash}")
+        params_hash = "".join(str(hash(self.parameters)))
+        return hash(f"{self.type}{attrs_hash}{resources_hash}{params_hash}")
 
 
 class Annotator(abc.ABC):
@@ -485,8 +486,11 @@ class ParamsUsageMonitor(Mapping):
     """Class to monitor usage of annotator parameters."""
 
     def __init__(self, data: dict[str, Any]):
-        self._data = data
+        self._data = dict(data)
         self._used_keys: set[str] = set([])
+
+    def __hash__(self) -> int:
+        return hash(tuple(sorted(self._data.items())))
 
     def __getitem__(self, key: str) -> Any:
         self._used_keys.add(key)

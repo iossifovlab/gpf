@@ -146,18 +146,16 @@ class ParquetLoader:
             )
 
         summary_paths, _ = self.get_pq_filepaths(region_obj)
-        columns = (
+        columns = [
             "bucket_index", "summary_index", "allele_index",
             "summary_variant_data", "chromosome", "position",
-        )
+        ]
 
         seen = set()
 
         for s_path in summary_paths:
-            summary_parquet = pq.ParquetFile(s_path)
-            table = summary_parquet.read(columns=columns)
-            if region_filter is not None:
-                table = table.filter(region_filter)
+            table = pq.read_table(
+                s_path, columns=columns, filters=region_filter)
             for rec in table.to_pylist():
                 v_id = (rec["bucket_index"], rec["summary_index"])
                 if v_id not in seen:
@@ -165,7 +163,6 @@ class ParquetLoader:
                     yield self._deserialize_summary_variant(
                         rec["summary_variant_data"]
                     )
-            summary_parquet.close()
 
     def fetch_variants(
         self, region: Optional[str] = None
