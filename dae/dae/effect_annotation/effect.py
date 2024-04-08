@@ -850,7 +850,7 @@ def gene_effect_get_worst_effect(
 def gene_effect_get_genes_worst(
     gene_effects: Optional[AlleleEffects]
 ) -> str:
-    """Return command separted list of genes."""
+    """Return comma separted list of genes."""
     if gene_effects is None:
         return ""
     genes_set: set[str] = set(
@@ -865,7 +865,7 @@ def gene_effect_get_genes_worst(
 def gene_effect_get_genes(
     gene_effects: Optional[AlleleEffects]
 ) -> str:
-    """Return command separted list of genes."""
+    """Return comma separted list of genes."""
     if gene_effects is None:
         return ""
     genes_set: set[str] = set(
