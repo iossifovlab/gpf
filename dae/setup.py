@@ -96,6 +96,7 @@ setuptools.setup(
     annotate_columns=dae.annotation.annotate_columns:cli
     annotate_vcf=dae.annotation.annotate_vcf:cli
     annotate_doc=dae.annotation.annotate_doc:cli
+    annotate_schema2_parquet=dae.annotation.annotate_schema2_parquet:cli
 
 
     agp_exporter=dae.gene_profile.exporter:cli_export

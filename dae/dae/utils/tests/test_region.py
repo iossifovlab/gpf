@@ -171,6 +171,46 @@ def test_region_contains(reg1: Region, reg2: Region, expected: bool) -> None:
 @pytest.mark.parametrize(
     "reg1,reg2,expected",
     [
+        # None variations, overlapping
+        (Region("1", None, None), Region("1", None, None), True),
+        (Region("1", None, None), Region("1", 1, None), True),
+        (Region("1", None, None), Region("1", None, 10), True),
+        (Region("1", None, None), Region("1", 1, 10), True),
+        (Region("1", 1, None), Region("1", 1, None), True),
+        (Region("1", 1, None), Region("1", None, 10), True),
+        (Region("1", 1, None), Region("1", 1, 10), True),
+        (Region("1", 1, None), Region("1", 1, 1), True),
+        (Region("1", None, 10), Region("1", None, 10), True),
+        (Region("1", None, 10), Region("1", 1, 10), True),
+        (Region("1", None, 10), Region("1", 10, 20), True),
+        # None variations, non-overlapping
+        (Region("1", None, 10), Region("1", 11, 20), False),
+        (Region("1", 10, 20), Region("1", 21, None), False),
+        # Same region
+        (Region("1", 1, 10), Region("1", 1, 10), True),
+        # Subregion
+        (Region("1", 1, 20), Region("1", 5, 10), True),
+        # Partial overlap, left side
+        (Region("1", 1, 5), Region("1", 1, 10), True),
+        (Region("1", 1, 1), Region("1", 1, 10), True),  # single base
+        # Partial overlap, right side
+        (Region("1", 5, 10), Region("1", 1, 10), True),
+        (Region("1", 10, 10), Region("1", 1, 10), True),  # single base
+        # No overlap, left side
+        (Region("1", 1, 5), Region("1", 6, 10), False),
+        # No overlap, right side
+        (Region("1", 6, 10), Region("1", 1, 5), False),
+    ]
+)
+def test_region_intersects(
+    reg1: Region, reg2: Region, expected: Region
+) -> None:
+    assert reg1.intersects(reg2) == expected
+
+
+@pytest.mark.parametrize(
+    "reg1,reg2,expected",
+    [
         (Region("1", 1, 10), Region("1", 2, 9), Region("1", 2, 9)),
         (Region("1", 1, 10), Region("1", 1, 10), Region("1", 1, 10)),
         (Region("1", 2, 10), Region("1", 1, 10), Region("1", 2, 10)),

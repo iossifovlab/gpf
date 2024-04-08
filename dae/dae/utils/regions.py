@@ -65,7 +65,7 @@ def get_chromosome_length_tabix(
     """
     Return the length of a chromosome (or contig).
 
-    Returned value is guarnteed to be larget than the actual contig length.
+    Returned value is guarnteed to be larger than the actual contig length.
     """
     def any_records(riter: Iterator) -> bool:
         try:
@@ -113,6 +113,10 @@ class Region:
         self, chrom: str,
         start: Optional[int] = None, stop: Optional[int] = None
     ):
+        if start is not None and not isinstance(start, int):
+            raise TypeError(f"Invalid type for start position - {type(start)}")
+        if stop is not None and not isinstance(stop, int):
+            raise TypeError(f"Invalid type for stop position - {type(stop)}")
         if start is not None and stop is not None:
             assert start <= stop
 
@@ -243,6 +247,22 @@ class Region:
             return False
         return self.start <= other.start \
             and other.stop <= self.stop
+
+    def intersects(self, other: Region) -> bool:
+        """Check if the region intersects another."""
+        if self.chrom != other.chrom:
+            return False
+        if self.start is not None and self.stop is not None:
+            if other.start is None or other.stop is None:
+                return other.intersects(self)
+            else:
+                return not (self.stop < other.start or self.start > other.stop)
+        elif self.stop is not None:
+            return other.start is None or self.stop >= other.start
+        elif self.start is not None:
+            return other.stop is None or self.start <= other.stop
+        else:
+            return True
 
     @staticmethod
     def from_str(region: str) -> Region:

@@ -14,6 +14,7 @@ from dae.genomic_resources.repository import GenomicResource
 from dae.genomic_resources.repository import GenomicResourceRepo
 
 from dae.annotation.annotatable import Annotatable
+from dae.variants.variant import SummaryAllele
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +41,7 @@ class AttributeInfo:
     name: str
     source: str
     internal: bool
-    parameters: ParamsUsageMonitor = field(compare=False, hash=None)
+    parameters: ParamsUsageMonitor
     type: str = "str"           # str, int, float, annotatable, or object
     description: str = ""       # interpreted as md
     _documentation: Optional[str] = None
@@ -74,7 +75,7 @@ class AnnotatorInfo:
         else:
             self.resources = resources
 
-    annotator_id: str
+    annotator_id: str = field(compare=False, hash=None)
     type: str
     attributes: list[AttributeInfo]
     parameters: ParamsUsageMonitor
@@ -84,7 +85,8 @@ class AnnotatorInfo:
     def __hash__(self) -> int:
         attrs_hash = "".join(str(hash(attr)) for attr in self.attributes)
         resources_hash = "".join(str(hash(res)) for res in self.resources)
-        return hash(f"{self.type}{attrs_hash}{resources_hash}")
+        params_hash = "".join(str(hash(self.parameters)))
+        return hash(f"{self.type}{attrs_hash}{resources_hash}{params_hash}")
 
 
 class Annotator(abc.ABC):
@@ -353,6 +355,13 @@ class ReannotationPipeline(AnnotationPipeline):
             reused_context[attr_name] = converted_value
         return super().annotate(annotatable, reused_context)
 
+    def annotate_summary_allele(self, allele: SummaryAllele) -> dict:
+        annotatable = allele.get_annotatable()
+        reused_context: dict[str, Any] = {}
+        for attr_name, _ in self.attributes_reused.items():
+            reused_context[attr_name] = allele.get_attribute(attr_name)
+        return super().annotate(annotatable, reused_context)
+
     def get_attributes(self) -> list[AttributeInfo]:
         return self.pipeline_new.get_attributes()
 
@@ -477,8 +486,11 @@ class ParamsUsageMonitor(Mapping):
     """Class to monitor usage of annotator parameters."""
 
     def __init__(self, data: dict[str, Any]):
-        self._data = data
+        self._data = dict(data)
         self._used_keys: set[str] = set([])
+
+    def __hash__(self) -> int:
+        return hash(tuple(sorted(self._data.items())))
 
     def __getitem__(self, key: str) -> Any:
         self._used_keys.add(key)

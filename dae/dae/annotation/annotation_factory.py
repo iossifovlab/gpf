@@ -13,7 +13,8 @@ import yaml
 from dae.genomic_resources import build_genomic_resource_repository
 from dae.genomic_resources.repository import GenomicResourceRepo
 
-from dae.annotation.annotation_pipeline import AnnotationPipeline
+from dae.annotation.annotation_pipeline import AnnotationPipeline, \
+    ReannotationPipeline
 from dae.annotation.annotation_pipeline import AnnotatorInfo, AttributeInfo
 from dae.annotation.annotation_pipeline import Annotator
 from dae.annotation.annotation_pipeline import ValueTransformAnnotatorDecorator
@@ -418,6 +419,48 @@ def build_annotation_pipeline(
     )
 
     return pipeline
+
+
+def copy_annotation_pipeline(
+    pipeline: AnnotationPipeline
+) -> AnnotationPipeline:
+    """Copy an annotation pipeline instance."""
+    infos = []
+    for annotator in pipeline.annotators:
+        src = annotator.get_info()
+        attributes = []
+        for src_attr in src.attributes:
+            attributes.append(AttributeInfo(
+                src_attr.name,
+                src_attr.source,
+                src_attr.internal,
+                src_attr.parameters._data,  # pylint: disable=W0212
+                src_attr.type,
+                src_attr.description,
+                src_attr.documentation
+            ))
+        infos.append(AnnotatorInfo(
+            src.type,
+            attributes,
+            src.parameters._data,  # pylint: disable=W0212
+            "",
+            None,
+            src.annotator_id
+        ))
+    return build_annotation_pipeline(
+        pipeline_config=infos,
+        grr_repository=pipeline.repository
+    )
+
+
+def copy_reannotation_pipeline(
+    pipeline: ReannotationPipeline
+) -> ReannotationPipeline:
+    """Copy a reannotation pipeline instance."""
+    return ReannotationPipeline(
+        copy_annotation_pipeline(pipeline.pipeline_new),
+        copy_annotation_pipeline(pipeline.pipeline_old)
+    )
 
 
 def check_for_repeated_attributes_in_annotator(

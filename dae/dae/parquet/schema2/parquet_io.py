@@ -381,8 +381,7 @@ class VariantsParquetWriter:
 
         filenames = list(self.data_writers.keys())
 
-        for bin_writer in self.data_writers.values():
-            bin_writer.close()
+        self.close()
 
         elapsed = time.time() - self.start
         logger.info(
@@ -391,6 +390,10 @@ class VariantsParquetWriter:
             self.bucket_index, summary_variant_index, family_variant_index,
             elapsed)
         return filenames
+
+    def close(self) -> None:
+        for bin_writer in self.data_writers.values():
+            bin_writer.close()
 
     def write_summary_variant(
         self, summary_variant: SummaryVariant,
