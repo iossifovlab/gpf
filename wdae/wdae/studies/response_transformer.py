@@ -9,7 +9,7 @@ from typing import Optional, Any, Union, Generator, Iterator, Iterable, \
 from dae.utils.dae_utils import join_line, split_iterable
 from dae.utils.variant_utils import mat2str, fgt2str
 from dae.effect_annotation.effect import ge2str, \
-    gd2str, \
+    gd2str, gene_effect_get_genes_worst, \
     gene_effect_get_worst_effect, \
     gene_effect_get_genes
 from dae.variants.attributes import Inheritance
@@ -117,13 +117,21 @@ class ResponseTransformer:
         lambda v: [repr(e) for e in v.effects],
 
         "genes":
-        lambda v: [gene_effect_get_genes(e) for e in v.effects],
+        lambda v: [gene_effect_get_genes_worst(e) for e in v.effects],
 
         "worst_effect":
         lambda v: [gene_effect_get_worst_effect(e) for e in v.effects],
 
         "effect_details":
         lambda v: [gd2str(e) for e in v.effects],
+
+        "full_effect_details":
+        lambda v: (
+            [v.family_id]
+            + v.cshl_location
+            + [gd2str(e) for e in v.effects]
+            + [ge2str(e) for e in v.effects]
+        ),
 
         "seen_in_affected":
         lambda v: bool(v.get_attribute("seen_in_status") in {2, 3}),
