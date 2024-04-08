@@ -4,13 +4,14 @@ import os
 import time
 import logging
 import json
-from typing import Optional
+from typing import Any, Optional, cast
 
 from dae.variants.attributes import Role
 
 from dae.common_reports.family_report import FamiliesReport
 from dae.common_reports.people_counter import PeopleReport
 from dae.common_reports.denovo_report import DenovoReport
+from dae.studies.study import GenotypeData
 
 
 logger = logging.getLogger(__name__)
@@ -19,11 +20,12 @@ logger = logging.getLogger(__name__)
 class CommonReport:
     """Class representing a common report JSON."""
 
-    def __init__(self, data):
+    def __init__(self, data: dict[str, Any]) -> None:
         self.study_id = data["id"]
         self.people_report = PeopleReport(data["people_report"])
         self.families_report = FamiliesReport(data["families_report"])
-        self.denovo_report = DenovoReport(data.get("denovo_report"))
+        self.denovo_report = DenovoReport(
+            cast(dict[str, Any], data.get("denovo_report")))
         self.study_name = data["study_name"]
         self.phenotype = data["phenotype"]
         self.study_type = data["study_type"]
@@ -37,7 +39,7 @@ class CommonReport:
         self.study_description = data["study_description"]
 
     @staticmethod
-    def build_report(genotype_data_study):
+    def build_report(genotype_data_study: GenotypeData) -> CommonReport:
         """Generate common report JSON from genotpye data study."""
         config = genotype_data_study.config.common_report
 
@@ -53,7 +55,7 @@ class CommonReport:
             ]
         else:
             families_report_collections = \
-                genotype_data_study.person_set_collections.values()
+                list(genotype_data_study.person_set_collections.values())
 
         families_report = FamiliesReport.from_genotype_study(
             genotype_data_study,
@@ -79,7 +81,7 @@ class CommonReport:
             ]
         else:
             denovo_report_collections = \
-                genotype_data_study.person_set_collections.values()
+                list(genotype_data_study.person_set_collections.values())
 
         denovo_report = DenovoReport.from_genotype_study(
             genotype_data_study,
@@ -99,7 +101,8 @@ class CommonReport:
         collection = genotype_data_study.get_person_set_collection(
             person_sets_config.selected_person_set_collections[0]
         )
-        phenotype = []
+        phenotype: list[str] = []
+        assert collection is not None
         for person_set in collection.person_sets.values():
             if len(person_set.persons) > 0:
                 phenotype += person_set.values
@@ -141,7 +144,7 @@ class CommonReport:
             "study_description": genotype_data_study.description,
         })
 
-    def to_dict(self, full=False):
+    def to_dict(self, full: bool = False) -> dict[str, Any]:
         return {
             "id": self.study_id,
             "people_report": self.people_report.to_dict(),
@@ -183,7 +186,10 @@ class CommonReport:
         return CommonReport(cr_json)
 
     @staticmethod
-    def build_and_save(study, force=False):
+    def build_and_save(
+        study: GenotypeData,
+        force: bool = False
+    ) -> Optional[CommonReport]:
         """Build a common report for a study, saves it and returns the report.
 
         If the common reports are disabled for the study, the function skips

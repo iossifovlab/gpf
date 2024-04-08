@@ -2,9 +2,14 @@ from __future__ import annotations
 import time
 import logging
 from copy import deepcopy
+from typing import Any, Dict, List, Union, cast, Iterator
+
 import numpy as np
 
 from dae.effect_annotation.effect import EffectTypesMixin
+from dae.person_sets import PersonSet, PersonSetCollection
+from dae.studies.study import GenotypeData
+from dae.variants.family_variant import FamilyAllele, FamilyVariant
 
 
 logger = logging.getLogger(__name__)
@@ -14,16 +19,18 @@ logger = logging.getLogger(__name__)
 class EffectCell:  # pylint: disable=too-many-instance-attributes
     """Class representing a cell in the denovo report table."""
 
-    def __init__(self, person_set, effect):
+    def __init__(self, person_set: PersonSet, effect: str) -> None:
         assert len(person_set.persons) > 0
         self.person_set = person_set
         self.effect = effect
-        self.effect_types = set(
+        expanded_effect_types = \
             EffectTypesMixin().get_effect_types(effectTypes=effect)
-        )
+        self.effect_types = set()
+        if expanded_effect_types is not None:
+            self.effect_types = set(expanded_effect_types)
 
-        self.observed_variants_ids = set()
-        self.observed_people_with_event = set([])
+        self.observed_variants_ids: set[str] = set()
+        self.observed_people_with_event: set[str] = set([])
         self.person_set_persons = set(self.person_set.persons.keys())
 
         self.person_set_children = {
@@ -39,21 +46,21 @@ class EffectCell:  # pylint: disable=too-many-instance-attributes
         )
 
     @property
-    def number_of_observed_events(self):
+    def number_of_observed_events(self) -> int:
         return len(self.observed_variants_ids)
 
     @property
-    def number_of_children_with_event(self):
+    def number_of_children_with_event(self) -> int:
         return len(self.observed_people_with_event)
 
     @property
-    def observed_rate_per_child(self):
+    def observed_rate_per_child(self) -> Union[int, float]:
         if self.number_of_observed_events == 0:
             return 0
         return self.number_of_observed_events / len(self.person_set_children)
 
     @property
-    def percent_of_children_with_events(self):
+    def percent_of_children_with_events(self) -> Union[int, float]:
         if self.number_of_children_with_event == 0:
             return 0
         return self.number_of_children_with_event / len(
@@ -61,10 +68,10 @@ class EffectCell:  # pylint: disable=too-many-instance-attributes
         )
 
     @property
-    def column_name(self):
+    def column_name(self) -> str:
         return f"{self.person_set.name} ({len(self.person_set_children)})"
 
-    def to_dict(self):
+    def to_dict(self) -> Dict[str, Union[int, float, str]]:
         return {
             "number_of_observed_events":
             self.number_of_observed_events,
@@ -78,7 +85,10 @@ class EffectCell:  # pylint: disable=too-many-instance-attributes
             self.column_name,
         }
 
-    def count_variant(self, family_variant, family_allele):
+    def count_variant(
+        self, family_variant: FamilyVariant,
+        family_allele: FamilyAllele
+    ) -> None:
         """Count given variant in the cell data."""
         if not set(family_allele.variant_in_members) & \
                 self.person_set_children:
@@ -104,7 +114,7 @@ class EffectCell:  # pylint: disable=too-many-instance-attributes
         self.observed_people_with_event.update(
             set(family_allele.variant_in_members) & self.person_set_children)
 
-    def is_empty(self):
+    def is_empty(self) -> bool:
         return (
             self.number_of_observed_events == 0
             and self.number_of_children_with_event == 0
@@ -116,19 +126,19 @@ class EffectCell:  # pylint: disable=too-many-instance-attributes
 class EffectRow:
     """Class representing a row in the denovo report table."""
 
-    def __init__(self, effect, person_sets):
+    def __init__(self, effect: str, person_sets: List[PersonSet]) -> None:
         self.person_sets = person_sets
 
         self.effect_type = effect
         self.row = self._build_row()
 
-    def to_dict(self):
+    def to_dict(self) -> dict[str, Any]:
         return {
             "effect_type": self.effect_type,
             "row": [r.to_dict() for r in self.row],
         }
 
-    def _build_row(self):
+    def _build_row(self) -> List[EffectCell]:
         return [
             EffectCell(
                 person_set,
@@ -137,18 +147,19 @@ class EffectRow:
             for person_set in self.person_sets
         ]
 
-    def count_variant(self, fv) -> None:
+    def count_variant(self, fv: FamilyVariant) -> None:
         for cell in self.row:
-            for fa in fv.alt_alleles:
+            for aa in fv.alt_alleles:
+                fa = cast(FamilyAllele, aa)
                 cell.count_variant(fv, fa)
 
-    def is_row_empty(self):
+    def is_row_empty(self) -> bool:
         return all(value.is_empty() for value in self.row)
 
-    def get_empty(self):
+    def get_empty(self) -> List[bool]:
         return [value.is_empty() for value in self.row]
 
-    def remove_elements(self, indexes):
+    def remove_elements(self, indexes: list[int]) -> None:
         for index in sorted(indexes, reverse=True):
             cell = self.row[index]
             assert cell.is_empty()
@@ -159,7 +170,9 @@ class EffectRow:
 class DenovoReportTable:
     """Class representing a denovo report table JSON."""
 
-    def __init__(self, json):
+    def __init__(
+        self, json: dict[str, Any]
+    ) -> None:
         self.rows = json["rows"]
         self.group_name = json["group_name"]
         self.columns = json["columns"]
@@ -169,10 +182,10 @@ class DenovoReportTable:
     # FIXME: Too many locals
     @staticmethod
     def from_variants(  # pylint: disable=too-many-locals
-        denovo_variants,
-        effect_groups,
-        effect_types,
-        person_set_collection
+        denovo_variants: Iterator[FamilyVariant],
+        effect_groups: list[str],
+        effect_types: list[str],
+        person_set_collection: PersonSetCollection
     ) -> DenovoReportTable:
         """Construct a denovo report table from variants."""
         person_sets = []
@@ -253,7 +266,7 @@ class DenovoReportTable:
             "effect_types": effect_types
         })
 
-    def to_dict(self):
+    def to_dict(self) -> dict[str, Any]:
         return {
             "rows": self.rows,
             "group_name": self.group_name,
@@ -262,9 +275,9 @@ class DenovoReportTable:
             "effect_types": self.effect_types,
         }
 
-    def is_empty(self):
+    def is_empty(self) -> bool:
         """Return whether the table does not have a single counted variant."""
-        def _is_row_empty(row):
+        def _is_row_empty(row: dict[str, Any]) -> bool:
             for cell in row["row"]:
                 if cell["number_of_observed_events"] > 0 \
                         or cell["number_of_children_with_event"] > 0 \
@@ -278,13 +291,16 @@ class DenovoReportTable:
 class DenovoReport:
     """Class representing a denovo report JSON."""
 
-    def __init__(self, json):
+    def __init__(self, json: dict[str, Any]) -> None:
         self.tables = []
         if json is not None:
             self.tables = [DenovoReportTable(d) for d in json["tables"]]
 
     @staticmethod
-    def from_genotype_study(genotype_data, person_set_collections):
+    def from_genotype_study(
+        genotype_data: GenotypeData,
+        person_set_collections: List[PersonSetCollection]
+    ) -> DenovoReport:
         """Create a denovo report JSON from a genotype data study."""
         config = genotype_data.config.common_report
         effect_groups = config.effect_groups
@@ -318,8 +334,8 @@ class DenovoReport:
             "tables": [t.to_dict() for t in denovo_report_tables]
         })
 
-    def to_dict(self):
+    def to_dict(self) -> dict[str, Any]:
         return {"tables": [t.to_dict() for t in self.tables]}
 
-    def is_empty(self):
+    def is_empty(self) -> bool:
         return len(self.tables) == 0

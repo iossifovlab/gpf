@@ -1,6 +1,6 @@
 """Provides family report class."""
 from __future__ import annotations
-from typing import Any
+from typing import Any, Iterable
 
 from dae.pedigrees.families_data import FamiliesData
 from dae.person_sets import PersonSetCollection
@@ -23,7 +23,7 @@ class FamiliesReport:
     @staticmethod
     def from_genotype_study(
         genotype_data_study: GenotypeData,
-        person_set_collections: dict[str, PersonSetCollection]
+        person_set_collections: Iterable[PersonSetCollection]
     ) -> FamiliesReport:
         """Create a family report from a genotype study."""
         config = genotype_data_study.config.common_report
@@ -34,7 +34,7 @@ class FamiliesReport:
     @staticmethod
     def from_families_data(
         families: FamiliesData,
-        person_set_collections: dict[str, PersonSetCollection],
+        person_set_collections: Iterable[PersonSetCollection],
         draw_all_families: bool = True
     ) -> FamiliesReport:
         """Create a family report from families data."""
