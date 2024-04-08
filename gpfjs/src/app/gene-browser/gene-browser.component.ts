@@ -75,6 +75,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
   }
 
   public variantsCountDisplay: string;
+  public variantsCount: number;
 
   public async ngOnInit(): Promise<void> {
     this.selectedDataset = this.datasetsService.getSelectedDataset();
@@ -98,6 +99,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
       }),
       this.queryService.streamingFinishedSubject.subscribe(() => {
         this.familyVariantsLoaded = true;
+        this.displayVariantsCount();
       }),
       this.route.parent.params.subscribe((params: Params) => {
         this.selectedDatasetId = params['dataset'] as string;
@@ -243,6 +245,14 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
     this.variantUpdate$.next();
   }
 
+  public displayVariantsCount(): string {
+    if (this.familyVariantsLoaded && this.variantsCount !== -1) {
+      return this.variantsCount.toString();
+    }
+    const count = this.summaryVariantsArrayFiltered?.totalFamilyVariantsCount;
+    return count < 1000 && count !== 0 ? '~' + count.toString() : count.toString();
+  }
+
   public checkAffectedStatus(affectedStatus: string, value: boolean): void {
     if (value) {
       this.summaryVariantsFilter.selectedAffectedStatus.add(affectedStatus);
@@ -341,7 +351,9 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
     };
     this.genotypePreviewVariantsArray = this.queryService.getGenotypePreviewVariantsByFilter(
       this.selectedDataset, params, this.maxFamilyVariants + 1, () => {
-        this.variantsCountDisplay = this.genotypePreviewVariantsArray?.getVariantsCount(this.maxFamilyVariants);
+        this.variantsCountDisplay =
+          this.genotypePreviewVariantsArray?.getVariantsCountFormatted(this.maxFamilyVariants);
+        this.variantsCount = this.genotypePreviewVariantsArray?.getVariantsCount(this.maxFamilyVariants);
       }
     );
   }

@@ -80,7 +80,7 @@ export class GenotypePreviewVariantsArray {
     }
   }
 
-  public getVariantsCount(maxVariantsCount: number): string {
+  public getVariantsCountFormatted(maxVariantsCount: number): string {
     let variantsCount: string;
 
     if (this.genotypePreviews.length > maxVariantsCount) {
@@ -92,6 +92,15 @@ export class GenotypePreviewVariantsArray {
     }
 
     return variantsCount;
+  }
+
+  public getVariantsCount(maxVariantsCount: number): number {
+    let count =-1;
+
+    if (this.genotypePreviews.length <= maxVariantsCount) {
+      count = this.genotypePreviews.length;
+    }
+    return count;
   }
 
   public setGenotypePreviews(genotypePreviews: GenotypePreview[]): void {

@@ -15,7 +15,7 @@ import { GeneBrowserComponent } from './gene-browser.component';
 import { SearchableSelectComponent } from '../searchable-select/searchable-select.component';
 import { FormsModule } from '@angular/forms';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
-import { SummaryAllelesArray, SummaryAllelesFilter } from './summary-variants';
+import { SummaryAllele, SummaryAllelesArray, SummaryAllelesFilter } from './summary-variants';
 import { GenePlotComponent } from 'app/gene-plot/gene-plot.component';
 import { GenotypePreviewTableComponent } from 'app/genotype-preview-table/genotype-preview-table.component';
 import { APP_BASE_HREF } from '@angular/common';
@@ -240,6 +240,54 @@ describe('GeneBrowserComponent', () => {
       affectedStatus: ['Affected only', 'Unaffected only', 'Affected and unaffected'],
       variantTypes: ['sub', 'ins', 'del', 'CNV+', 'CNV-', 'comp']
     });
+  });
+
+  it('should get family variants count when count is less than 1000', () => {
+    component.familyVariantsLoaded = false;
+    jest.spyOn(SummaryAllelesArray.prototype, 'totalFamilyVariantsCount', 'get').mockReturnValue(5);
+    expect(component.displayVariantsCount()).toBe('~5');
+  });
+
+  it('should get family variants count when count is more than 1000', () => {
+    component.familyVariantsLoaded = false;
+    jest.spyOn(SummaryAllelesArray.prototype, 'totalFamilyVariantsCount', 'get').mockReturnValue(9635);
+    expect(component.displayVariantsCount()).toBe('9635');
+  });
+
+  it('should get family variants count when count is 0', () => {
+    component.familyVariantsLoaded = false;
+    jest.spyOn(SummaryAllelesArray.prototype, 'totalFamilyVariantsCount', 'get').mockReturnValue(0);
+    expect(component.displayVariantsCount()).toBe('0');
+  });
+
+  it('should get family variants count after loading variants is finished', () => {
+    component.familyVariantsLoaded = false;
+    jest.spyOn(SummaryAllelesArray.prototype, 'totalFamilyVariantsCount', 'get').mockReturnValue(35);
+    expect(component.displayVariantsCount()).toBe('~35');
+
+    component.familyVariantsLoaded = true;
+    component.variantsCount = 20;
+    expect(component.displayVariantsCount()).toBe('20');
+  });
+
+  it('should get family variants count when loaded count is 0', () => {
+    component.familyVariantsLoaded = false;
+    jest.spyOn(SummaryAllelesArray.prototype, 'totalFamilyVariantsCount', 'get').mockReturnValue(7412);
+    expect(component.displayVariantsCount()).toBe('7412');
+
+    component.familyVariantsLoaded = true;
+    component.variantsCount = 0;
+    expect(component.displayVariantsCount()).toBe('0');
+  });
+
+  it('should get family variants count when loaded count is more than 1000', () => {
+    component.familyVariantsLoaded = false;
+    jest.spyOn(SummaryAllelesArray.prototype, 'totalFamilyVariantsCount', 'get').mockReturnValue(7412);
+    expect(component.displayVariantsCount()).toBe('7412');
+
+    component.familyVariantsLoaded = true;
+    component.variantsCount = -1;
+    expect(component.displayVariantsCount()).toBe('7412');
   });
 
   it.skip('should test download', () => {
