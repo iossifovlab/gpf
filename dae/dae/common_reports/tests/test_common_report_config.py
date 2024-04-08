@@ -3,10 +3,11 @@ import pytest
 
 from dae.testing import setup_pedigree, setup_denovo, denovo_study
 from dae.testing.foobar_import import foobar_gpf
+from dae.studies.study import GenotypeData
 
 
 @pytest.fixture
-def trios2_study(tmp_path_factory):
+def trios2_study(tmp_path_factory: pytest.TempPathFactory) -> GenotypeData:
     root_path = tmp_path_factory.mktemp(
         "common_reports_trios2")
     gpf_instance = foobar_gpf(root_path)
@@ -44,7 +45,9 @@ def trios2_study(tmp_path_factory):
     return study
 
 
-def test_trios2_study_common_reports_enabled(trios2_study):
+def test_trios2_study_common_reports_enabled(
+    trios2_study: GenotypeData
+) -> None:
     config = trios2_study.config
 
     assert config is not None
@@ -53,7 +56,9 @@ def test_trios2_study_common_reports_enabled(trios2_study):
     assert config.common_report.enabled
 
 
-def test_trios2_study_denovo_report_effect_groups(trios2_study):
+def test_trios2_study_denovo_report_effect_groups(
+    trios2_study: GenotypeData
+) -> None:
     common_report = trios2_study.config.common_report
     assert common_report.enabled
     assert common_report.effect_groups == [
@@ -61,7 +66,9 @@ def test_trios2_study_denovo_report_effect_groups(trios2_study):
     ]
 
 
-def test_trios2_study_denovo_report_effect_types(trios2_study):
+def test_trios2_study_denovo_report_effect_types(
+    trios2_study: GenotypeData
+) -> None:
     common_report = trios2_study.config.common_report
     assert common_report.enabled
     assert common_report.effect_types == [

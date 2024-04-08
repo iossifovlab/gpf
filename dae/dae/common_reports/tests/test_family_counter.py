@@ -1,15 +1,17 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-import pytest
 
 from dae.common_reports.family_counter import (
     get_family_pedigree,
     FamilyCounter,
     FamiliesGroupCounters,
 )
+from dae.studies.study import GenotypeDataStudy
 
 
-def test_family_counter(study1):
+def test_family_counter(study1: GenotypeDataStudy) -> None:
     person_set_collection = study1.get_person_set_collection("phenotype")
+    assert person_set_collection is not None
+
     family = study1.families["f5"]
     pedigree = get_family_pedigree(family, person_set_collection)
     family_counter = FamilyCounter.from_family(family, pedigree, 1)
@@ -71,8 +73,10 @@ def test_family_counter(study1):
     assert len(family_counter.to_dict().keys()) == 4
 
 
-def test_family_counter_tags(study1):
+def test_family_counter_tags(study1: GenotypeDataStudy) -> None:
     person_set_collection = study1.get_person_set_collection("phenotype")
+    assert person_set_collection is not None
+
     family = study1.families["f6"]
     pedigree = get_family_pedigree(family, person_set_collection)
     family_counter = FamilyCounter.from_family(family, pedigree, 1)
@@ -91,46 +95,39 @@ def test_family_counter_tags(study1):
     ])
 
 
-@pytest.mark.xfail
-def test_families_group_counter(study1):
-    families_group_counter = FamiliesGroupCounters.from_families(
-        study1.families,
-        study1.get_person_set_collection("phenotype"),
-        False,
-    )
+def test_families_group_counter_draw_all(study1: GenotypeDataStudy) -> None:
+    collection = study1.get_person_set_collection("phenotype")
+    assert collection is not None
 
-    assert len(families_group_counter.counters) == 8
-    assert len(families_group_counter.counters[0].pedigree) == 3
-    assert len(families_group_counter.counters[1].pedigree) == 3
-    assert len(families_group_counter.counters[2].pedigree) == 4
-
-    assert len(families_group_counter.to_dict().keys()) == 4
-
-
-def test_families_group_counter_draw_all(study1):
     counter = FamiliesGroupCounters.from_families(
         study1.families,
-        study1.get_person_set_collection("phenotype"),
+        collection,
         True,
     )
     assert len(counter.to_dict().keys()) == 4
     assert len(counter.counters) == len(study1.families)
 
 
-def test_families_group_counter_same(study1):
+def test_families_group_counter_same(study1: GenotypeDataStudy) -> None:
+    collection = study1.get_person_set_collection("phenotype")
+    assert collection is not None
+
     families_group_counter = FamiliesGroupCounters.from_families(
         study1.families,
-        study1.get_person_set_collection("phenotype"),
+        collection,
         False,
     )
     assert len(families_group_counter.counters) == 8
     assert len(families_group_counter.to_dict().keys()) == 4
 
 
-def test_families_group_counters(study1):
+def test_families_group_counters(study1: GenotypeDataStudy) -> None:
+    collection = study1.get_person_set_collection("phenotype")
+    assert collection is not None
+
     families_group_counters = FamiliesGroupCounters.from_families(
         study1.families,
-        study1.get_person_set_collection("phenotype"),
+        collection,
         False,
     )
 
@@ -146,10 +143,13 @@ def test_families_group_counters(study1):
     )
 
 
-def test_families_group_counter_study2(study2):
+def test_families_group_counter_study2(study2: GenotypeDataStudy) -> None:
+    collection = study2.get_person_set_collection("phenotype")
+    assert collection is not None
+
     families_group_counters = FamiliesGroupCounters.from_families(
         study2.families,
-        study2.get_person_set_collection("phenotype"),
+        collection,
         False,
     )
     assert len(families_group_counters.counters) == 4

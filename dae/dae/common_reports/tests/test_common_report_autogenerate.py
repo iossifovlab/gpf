@@ -5,10 +5,14 @@ import pytest
 
 from dae.testing import setup_pedigree, setup_denovo, denovo_study
 from dae.testing.foobar_import import foobar_gpf
+from dae.gpf_instance.gpf_instance import GPFInstance
+from dae.studies.study import GenotypeData
 
 
 @pytest.fixture
-def trios2_fixture(tmp_path_factory):
+def trios2_fixture(
+    tmp_path_factory: pytest.TempPathFactory
+) -> tuple[GPFInstance, GenotypeData]:
     root_path = tmp_path_factory.mktemp(
         "common_reports_trios2")
     gpf_instance = foobar_gpf(root_path)
@@ -46,7 +50,9 @@ def trios2_fixture(tmp_path_factory):
     return gpf_instance, study
 
 
-def test_trios2_study_common_reports_enabled(trios2_fixture):
+def test_trios2_study_common_reports_enabled(
+    trios2_fixture: tuple[GPFInstance, GenotypeData]
+) -> None:
     _gpf_instance, study = trios2_fixture
     config = study.config
 
@@ -56,7 +62,9 @@ def test_trios2_study_common_reports_enabled(trios2_fixture):
     assert config.common_report.enabled
 
 
-def test_missing_common_report(trios2_fixture):
+def test_missing_common_report(
+    trios2_fixture: tuple[GPFInstance, GenotypeData]
+) -> None:
     gpf_instance, study = trios2_fixture
     report_filename = study.config.common_report.file_path
     assert os.path.exists(report_filename)
