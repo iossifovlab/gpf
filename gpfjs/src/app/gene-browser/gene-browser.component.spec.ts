@@ -115,7 +115,7 @@ describe('GeneBrowserComponent', () => {
     component = fixture.componentInstance;
     loadingService = TestBed.inject(FullscreenLoadingService);
     component.summaryVariantsArray = new SummaryAllelesArray();
-    jest.spyOn<any, any>(component['queryService'], 'getSummaryVariants');
+    jest.spyOn(component['queryService'], 'getSummaryVariants');
     fixture.detectChanges();
   });
 
@@ -130,9 +130,9 @@ describe('GeneBrowserComponent', () => {
     jest.spyOn<any, any>(component, 'drawTransmittedIcons').mockImplementation(() => null);
     jest.spyOn<any, any>(component, 'drawEffectTypesIcons').mockImplementation(() => null);
     component.filters = null;
-    expect(component['drawDenovoIcons']).toHaveBeenCalled();
-    expect(component['drawTransmittedIcons']).toHaveBeenCalled();
-    expect(component['drawEffectTypesIcons']).toHaveBeenCalled();
+    expect(component['drawDenovoIcons']).toHaveBeenCalledWith();
+    expect(component['drawTransmittedIcons']).toHaveBeenCalledWith();
+    expect(component['drawEffectTypesIcons']).toHaveBeenCalledWith();
   });
 
   it('should select affected status', () => {
@@ -175,14 +175,14 @@ describe('GeneBrowserComponent', () => {
   });
 
   it('should set selected region', () => {
-    jest.spyOn<any, any>(component, 'updateVariants');
+    jest.spyOn(component, 'updateVariants');
     component.setSelectedRegion([1, 2]);
     expect(component.summaryVariantsFilter.selectedRegion).toStrictEqual([1, 2]);
     expect(component['updateVariants']).toHaveBeenCalledWith();
   });
 
   it('should set selected frequencies', () => {
-    jest.spyOn<any, any>(component, 'updateVariants');
+    jest.spyOn(component, 'updateVariants');
     component.setSelectedFrequencies([3, 4]);
     expect(component.summaryVariantsFilter.selectedFrequencies).toStrictEqual([3, 4]);
     expect(component['updateVariants']).toHaveBeenCalledWith();
@@ -242,6 +242,54 @@ describe('GeneBrowserComponent', () => {
     });
   });
 
+  it('should get family variants count when count is less than 1000', () => {
+    component.familyVariantsLoaded = false;
+    jest.spyOn(SummaryAllelesArray.prototype, 'totalFamilyVariantsCount', 'get').mockReturnValue(5);
+    expect(component.displayVariantsCount()).toBe('~5');
+  });
+
+  it('should get family variants count when count is more than 1000', () => {
+    component.familyVariantsLoaded = false;
+    jest.spyOn(SummaryAllelesArray.prototype, 'totalFamilyVariantsCount', 'get').mockReturnValue(9635);
+    expect(component.displayVariantsCount()).toBe('9635');
+  });
+
+  it('should get family variants count when count is 0', () => {
+    component.familyVariantsLoaded = false;
+    jest.spyOn(SummaryAllelesArray.prototype, 'totalFamilyVariantsCount', 'get').mockReturnValue(0);
+    expect(component.displayVariantsCount()).toBe('0');
+  });
+
+  it('should get family variants count after loading variants is finished', () => {
+    component.familyVariantsLoaded = false;
+    jest.spyOn(SummaryAllelesArray.prototype, 'totalFamilyVariantsCount', 'get').mockReturnValue(35);
+    expect(component.displayVariantsCount()).toBe('~35');
+
+    component.familyVariantsLoaded = true;
+    component.variantsCount = 20;
+    expect(component.displayVariantsCount()).toBe('20');
+  });
+
+  it('should get family variants count when loaded count is 0', () => {
+    component.familyVariantsLoaded = false;
+    jest.spyOn(SummaryAllelesArray.prototype, 'totalFamilyVariantsCount', 'get').mockReturnValue(7412);
+    expect(component.displayVariantsCount()).toBe('7412');
+
+    component.familyVariantsLoaded = true;
+    component.variantsCount = 0;
+    expect(component.displayVariantsCount()).toBe('0');
+  });
+
+  it('should get family variants count when loaded count is more than 1000', () => {
+    component.familyVariantsLoaded = false;
+    jest.spyOn(SummaryAllelesArray.prototype, 'totalFamilyVariantsCount', 'get').mockReturnValue(7412);
+    expect(component.displayVariantsCount()).toBe('7412');
+
+    component.familyVariantsLoaded = true;
+    component.variantsCount = -1;
+    expect(component.displayVariantsCount()).toBe('7412');
+  });
+
   it.skip('should test download', () => {
     const mockEvent = {
       target: {
@@ -252,7 +300,7 @@ describe('GeneBrowserComponent', () => {
       }
     };
 
-    component.onSubmit(mockEvent as any);
+    component.onSubmit(mockEvent as unknown as Event);
 
     expect(mockEvent.target.queryData.value).toStrictEqual(JSON.stringify({
       effectTypes: [

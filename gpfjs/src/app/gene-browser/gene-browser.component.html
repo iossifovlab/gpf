@@ -187,10 +187,7 @@
             <span class="d-none d-xl-inline">Family variants:</span>
             <span class="d-none d-md-inline d-xl-none d-xxl-none">FV:</span>
             <span id="family-variants-count">
-              <span
-                >{{ this.summaryVariantsArrayFiltered?.totalFamilyVariantsCount }} /
-                {{ this.summaryVariantsArray.totalFamilyVariantsCount }}</span
-              >
+              <span>{{ displayVariantsCount() }} / {{ this.summaryVariantsArray.totalFamilyVariantsCount }}</span>
             </span>
           </span>
           <div *ngIf="selectedGene">
