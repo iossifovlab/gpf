@@ -13,7 +13,7 @@ export class GenotypePreviewFieldComponent implements OnInit, OnChanges {
   @Input() public format: string;
   @Input() public genome: string;
 
-  public formattedValue: string;
+  public formattedValue: string | string[];
   // eslint-disable-next-line @typescript-eslint/naming-convention
   public UCSCLink: string;
   public fullEffectDetails: FullEffectDetails;
@@ -34,14 +34,14 @@ export class GenotypePreviewFieldComponent implements OnInit, OnChanges {
     this.fullEffectDetails = FullEffectDetails.fromGenotypeValue(this.value);
   }
 
-  private doFormat(format, value) {
+  private doFormat(format: string, value: unknown): string {
     if (value === 'nan') {
       return value;
     }
     return sprintf(format, value);
   }
 
-  public formatValue() {
+  public formatValue(): string | string[] {
     if (this.value) {
       if (this.format) {
         if (this.value.constructor === Array) {
