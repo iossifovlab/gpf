@@ -393,7 +393,8 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
       '#Other': draw.dot
       // eslint-enable
     };
-    let svgElement;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let svgElement: d3.Selection<HTMLElement, undefined, HTMLElement, any>;
     for (const [effect, drawFunc] of Object.entries(effectIcons)) {
       svgElement = d3.select(effect);
       drawFunc(svgElement, 10, 8, '#000000', effect);

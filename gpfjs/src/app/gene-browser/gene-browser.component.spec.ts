@@ -15,7 +15,7 @@ import { GeneBrowserComponent } from './gene-browser.component';
 import { SearchableSelectComponent } from '../searchable-select/searchable-select.component';
 import { FormsModule } from '@angular/forms';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
-import { SummaryAllele, SummaryAllelesArray, SummaryAllelesFilter } from './summary-variants';
+import { SummaryAllelesArray, SummaryAllelesFilter } from './summary-variants';
 import { GenePlotComponent } from 'app/gene-plot/gene-plot.component';
 import { GenotypePreviewTableComponent } from 'app/genotype-preview-table/genotype-preview-table.component';
 import { APP_BASE_HREF } from '@angular/common';
@@ -115,7 +115,7 @@ describe('GeneBrowserComponent', () => {
     component = fixture.componentInstance;
     loadingService = TestBed.inject(FullscreenLoadingService);
     component.summaryVariantsArray = new SummaryAllelesArray();
-    jest.spyOn<any, any>(component['queryService'], 'getSummaryVariants');
+    jest.spyOn(component['queryService'], 'getSummaryVariants');
     fixture.detectChanges();
   });
 
@@ -130,9 +130,9 @@ describe('GeneBrowserComponent', () => {
     jest.spyOn<any, any>(component, 'drawTransmittedIcons').mockImplementation(() => null);
     jest.spyOn<any, any>(component, 'drawEffectTypesIcons').mockImplementation(() => null);
     component.filters = null;
-    expect(component['drawDenovoIcons']).toHaveBeenCalled();
-    expect(component['drawTransmittedIcons']).toHaveBeenCalled();
-    expect(component['drawEffectTypesIcons']).toHaveBeenCalled();
+    expect(component['drawDenovoIcons']).toHaveBeenCalledWith();
+    expect(component['drawTransmittedIcons']).toHaveBeenCalledWith();
+    expect(component['drawEffectTypesIcons']).toHaveBeenCalledWith();
   });
 
   it('should select affected status', () => {
@@ -175,14 +175,14 @@ describe('GeneBrowserComponent', () => {
   });
 
   it('should set selected region', () => {
-    jest.spyOn<any, any>(component, 'updateVariants');
+    jest.spyOn(component, 'updateVariants');
     component.setSelectedRegion([1, 2]);
     expect(component.summaryVariantsFilter.selectedRegion).toStrictEqual([1, 2]);
     expect(component['updateVariants']).toHaveBeenCalledWith();
   });
 
   it('should set selected frequencies', () => {
-    jest.spyOn<any, any>(component, 'updateVariants');
+    jest.spyOn(component, 'updateVariants');
     component.setSelectedFrequencies([3, 4]);
     expect(component.summaryVariantsFilter.selectedFrequencies).toStrictEqual([3, 4]);
     expect(component['updateVariants']).toHaveBeenCalledWith();
@@ -300,7 +300,7 @@ describe('GeneBrowserComponent', () => {
       }
     };
 
-    component.onSubmit(mockEvent as any);
+    component.onSubmit(mockEvent as unknown as Event);
 
     expect(mockEvent.target.queryData.value).toStrictEqual(JSON.stringify({
       effectTypes: [
