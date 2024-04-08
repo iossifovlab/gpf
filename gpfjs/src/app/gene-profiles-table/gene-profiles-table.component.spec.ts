@@ -5,6 +5,7 @@ import { Observable, of } from 'rxjs';
 import { cloneDeep } from 'lodash';
 import { GeneProfilesTableService } from './gene-profiles-table.service';
 import { TestBed } from '@angular/core/testing';
+import { ActivatedRoute } from '@angular/router';
 
 const column1 = {
   clickable: 'createTab',
@@ -241,14 +242,21 @@ class GeneProfilesTableServiceMock {
   }
 }
 
+class MockActivatedRoute {
+  public snapshot = {params: {genes: ''}};
+}
+
 describe('GeneProfilesTableComponent', () => {
   let component: GeneProfilesTableComponent;
   const geneProfilesTableServiceMock = new GeneProfilesTableServiceMock();
-
+  const mockActivatedRoute = new MockActivatedRoute();
   beforeEach(() => {
     TestBed.configureTestingModule({
       declarations: [GeneProfilesTableComponent],
-      providers: [{provide: GeneProfilesTableService, useValue: geneProfilesTableServiceMock}],
+      providers: [
+        {provide: ActivatedRoute, useValue: mockActivatedRoute},
+        {provide: GeneProfilesTableService, useValue: geneProfilesTableServiceMock}
+      ],
     }).compileComponents();
 
     const fixture = TestBed.createComponent(GeneProfilesTableComponent);
@@ -358,5 +366,93 @@ describe('GeneProfilesTableComponent', () => {
     expect(component.highlightedGenes.has('gene3')).toBeTruthy();
     component.toggleHighlightGene('gene5');
     expect(component.highlightedGenes.has('gene5')).toBeTruthy();
+  });
+
+  it('should load single view tab for gene', () => {
+    const openTabSpy = jest.spyOn(component, 'openTab');
+
+    expect(component.hideTable).toBe(false);
+    expect(component.currentTabString).toBe('');
+
+    component.loadSingleView('POGZ');
+    expect(component.tabs).toStrictEqual(['POGZ']);
+
+    expect(openTabSpy).toHaveBeenCalledWith('POGZ');
+  });
+
+  it('should load single view tab when comparing', () => {
+    const openTabSpy = jest.spyOn(component, 'openTab');
+
+    expect(component.hideTable).toBe(false);
+    expect(component.currentTabString).toBe('');
+
+    mockActivatedRoute.snapshot = {params: {genes: 'SPAST,DYRK1A,FOXP1'}};
+
+    component.loadSingleView(new Set(['SPAST', 'DYRK1A', 'FOXP1']));
+    expect(component.tabs).toStrictEqual(['DYRK1A,FOXP1,SPAST']);
+
+    expect(openTabSpy).toHaveBeenCalledWith('DYRK1A,FOXP1,SPAST');
+  });
+
+  it('should go to already existing tab when opening single view', () => {
+    const openTabSpy = jest.spyOn(component, 'openTab');
+
+    mockActivatedRoute.snapshot = {params: {genes: 'SPAST,FOXP1,DYRK1A'}};
+
+    component.loadSingleView(new Set(['SPAST', 'FOXP1', 'DYRK1A']));
+    expect(component.tabs).toStrictEqual(['DYRK1A,FOXP1,SPAST']);
+    expect(openTabSpy).toHaveBeenCalledWith('DYRK1A,FOXP1,SPAST');
+
+    component.loadSingleView(new Set(['SPAST', 'DYRK1A', 'FOXP1']));
+    expect(component.tabs).toStrictEqual(['DYRK1A,FOXP1,SPAST']);
+    expect(openTabSpy).toHaveBeenCalledWith('DYRK1A,FOXP1,SPAST');
+  });
+
+  it('should open tab for single view', () => {
+    component.openTab('POGZ');
+    expect(component.hideTable).toBe(true);
+    expect(component.currentTabGeneSet).toStrictEqual(new Set(['POGZ']));
+    expect(component.currentTabString).toBe('POGZ');
+    expect(window.location.pathname).toBe('/gene-profiles/POGZ');
+  });
+
+  it('should open tab for single view when comparing', () => {
+    component.openTab('DYRK1A,FOXP1,SPAST');
+    expect(component.hideTable).toBe(true);
+    expect(component.currentTabGeneSet).toStrictEqual(new Set(['DYRK1A', 'FOXP1', 'SPAST']));
+    expect(component.currentTabString).toBe('DYRK1A,FOXP1,SPAST');
+    expect(window.location.pathname).toBe('/gene-profiles/DYRK1A,FOXP1,SPAST');
+  });
+
+  it('should close tab', () => {
+    const backToTableSpy = jest.spyOn(component, 'backToTable');
+
+    component.tabs = ['DYRK1A,FOXP1,SPAST', 'POGZ'];
+    component.closeTab('POGZ');
+    expect(component.tabs).toStrictEqual(['DYRK1A,FOXP1,SPAST']);
+    expect(backToTableSpy).toHaveBeenCalledWith();
+  });
+
+  it('should back to table when closing tab', () => {
+    component.loadSingleView('POGZ');
+    expect(component.currentTabString).toBe('POGZ');
+
+    component.backToTable();
+    expect(component.hideTable).toBe(false);
+    expect(component.currentTabString).toBe('table');
+    expect(window.location.pathname).toBe('/gene-profiles');
+  });
+
+  it('should new browser tab when middleclick', () => {
+    const openTabSpy = jest.spyOn(component, 'openTab');
+    const windowSpy = jest.spyOn(window, 'open');
+
+    component.loadSingleView('POGZ', true);
+    expect(component.tabs).not.toContain('POGZ');
+
+    expect(openTabSpy).not.toHaveBeenCalledWith();
+
+    expect(component.currentTabGeneSet).toStrictEqual(new Set(['POGZ']));
+    expect(windowSpy).toHaveBeenCalledWith(`${window.location.href}/POGZ`, '_blank');
   });
 });

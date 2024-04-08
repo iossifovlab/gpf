@@ -245,7 +245,7 @@ const appRoutes: Routes = [
   },
   {
     path: 'gene-profiles/:genes',
-    component: GeneProfileSingleViewWrapperComponent
+    component: GeneProfilesBlockComponent
   },
   {
     path: 'autism-gene-profiles/:genes',

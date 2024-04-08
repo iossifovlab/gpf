@@ -10,6 +10,8 @@ import { Subject, Subscription, zip } from 'rxjs';
 import { GeneProfilesTableConfig, GeneProfilesColumn } from './gene-profiles-table';
 import { GeneProfilesTableService } from './gene-profiles-table.service';
 import { environment } from 'environments/environment';
+import { Location } from '@angular/common';
+import { ActivatedRoute } from '@angular/router';
 
 @Component({
   selector: 'gpf-gene-profiles-table',
@@ -57,8 +59,15 @@ export class GeneProfilesTableComponent implements OnInit, OnChanges, OnDestroy 
   private getGenesSubscription: Subscription = new Subscription();
   public imgPathPrefix = environment.imgPathPrefix;
 
+  public tabs: string[] = [];
+  public hideTable = false;
+  public currentTabGeneSet= new Set<string>();
+  public currentTabString = '';
+
   public constructor(
-    private geneProfilesService: GeneProfilesTableService
+    private geneProfilesService: GeneProfilesTableService,
+    private location: Location,
+    private route: ActivatedRoute
   ) { }
 
   public ngOnInit(): void {
@@ -75,6 +84,16 @@ export class GeneProfilesTableComponent implements OnInit, OnChanges, OnDestroy 
     });
 
     this.focusSearchBox();
+
+    if (this.route.snapshot.params.genes as string) {
+      this.currentTabGeneSet = new Set(
+        (this.route.snapshot.params.genes as string)
+          .split(',')
+          .filter(p => p)
+          .map(p => p.trim())
+      );
+      this.loadSingleView(this.currentTabGeneSet);
+    }
   }
 
   public ngOnChanges(): void {
@@ -101,7 +120,7 @@ export class GeneProfilesTableComponent implements OnInit, OnChanges, OnDestroy 
   public keybindCompareGenes(): void {
     if (this.highlightedGenes.size
         && (document.activeElement === document.body || document.activeElement.nodeName === 'BUTTON')) {
-      this.openSingleView(this.highlightedGenes);
+      this.loadSingleView(this.highlightedGenes);
     }
   }
 
@@ -307,26 +326,46 @@ export class GeneProfilesTableComponent implements OnInit, OnChanges, OnDestroy 
     } else if (column.clickable === 'goToQuery') {
       this.goToQueryEvent.emit({geneSymbol: geneSymbol, statisticId: column.id, newTab: altAction});
     } else if (column.clickable === 'createTab' && linkClick) {
-      this.openSingleView(geneSymbol, altAction);
+      this.loadSingleView(geneSymbol, altAction);
     }
   }
 
-  public openSingleView(geneSymbols: string | Set<string>, newTab: boolean = false): void {
-    let genes: string;
-    const geneProfilesBaseUrl = window.location.href;
+  public loadSingleView(geneSymbols: string | Set<string>, newTab: boolean = false): void {
+    const genes = this.formatGeneSymbols(geneSymbols);
+    if (!newTab) {
+      if (this.tabs.indexOf(genes) === -1) {
+        this.tabs.push(genes);
+      }
 
-    if (typeof geneSymbols === 'string') {
-      genes = geneSymbols;
+      this.openTab(genes);
     } else {
-      genes = [...geneSymbols].join(',');
+      this.currentTabGeneSet.clear();
+      this.currentTabGeneSet.add(genes);
+      window.open(`${window.location.href}/${genes}`, '_blank');
     }
+  }
 
-    if (newTab) {
-      const newWindow = window.open('', '_blank');
-      newWindow.location.assign(`${geneProfilesBaseUrl}/${genes}`);
-    } else {
-      window.location.assign(`${geneProfilesBaseUrl}/${genes}`);
-    }
+  private formatGeneSymbols(geneSymbols: string | Set<string>): string {
+    return typeof geneSymbols === 'string' ? geneSymbols : [...geneSymbols].sort().join(',');
+  }
+
+  public openTab(tab: string): void {
+    this.hideTable = true;
+    this.currentTabGeneSet.clear();
+    tab.split(',').map(t => this.currentTabGeneSet.add(t));
+    this.currentTabString = tab;
+    this.location.replaceState('gene-profiles/' + this.currentTabString);
+  }
+
+  public closeTab(tab: string): void {
+    this.tabs = this.tabs.filter(t => t !== tab);
+    this.backToTable();
+  }
+
+  public backToTable(): void {
+    this.hideTable = false;
+    this.currentTabString = 'table';
+    this.location.replaceState('gene-profiles');
   }
 
   public toggleHighlightGene(geneSymbol: string): void {
