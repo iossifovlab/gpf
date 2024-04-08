@@ -237,8 +237,9 @@ class WGPFInstance(GPFInstance):
 
         client = self.remote_study_clients[study_id]
         remote_study_id = self.remote_study_ids[study_id]
-        common_report = client.get_common_report(remote_study_id, full=True)
-        return CommonReport(common_report)
+        remote_common_report = client.get_common_report(
+            remote_study_id, full=True)
+        return CommonReport(remote_common_report)
 
     @property
     def remote_studies(self) -> list[str]:

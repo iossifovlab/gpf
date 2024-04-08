@@ -1,12 +1,21 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+
+from typing import List, cast
+
 from dae.common_reports.denovo_report import \
     DenovoReportTable, \
     DenovoReport, \
     EffectRow, \
     EffectCell
+from dae.person_sets import PersonSet, PersonSetCollection
+from dae.studies.study import GenotypeDataGroup, GenotypeDataStudy
+from dae.variants.family_variant import FamilyVariant, FamilyAllele
 
 
-def test_denovo_report_table(denovo_variants_ds1, phenotype_role_collection):
+def test_denovo_report_table(
+    denovo_variants_ds1: List[FamilyVariant],
+    phenotype_role_collection: PersonSetCollection
+) -> None:
 
     denovo_report_table = DenovoReportTable.from_variants(
         denovo_variants_ds1,
@@ -14,7 +23,6 @@ def test_denovo_report_table(denovo_variants_ds1, phenotype_role_collection):
         ["Frame-shift", "Nonsense"],
         phenotype_role_collection,
     )
-
     assert denovo_report_table.group_name == "Diagnosis"
     assert sorted(denovo_report_table.columns) == \
         ["phenotype 1 (6)", "phenotype 2 (2)", ]
@@ -29,7 +37,10 @@ def test_denovo_report_table(denovo_variants_ds1, phenotype_role_collection):
 
 
 def test_denovo_report(
-        genotype_data_group1, phenotype_role_collection, denovo_variants_ds1):
+    genotype_data_group1: GenotypeDataGroup,
+    phenotype_role_collection: PersonSetCollection,
+    denovo_variants_ds1: List[FamilyVariant]
+) -> None:
 
     denovo_report = DenovoReport.from_genotype_study(
         genotype_data_group1,
@@ -45,7 +56,10 @@ def test_denovo_report(
     print(denovo_report.to_dict())
 
 
-def test_denovo_report_empty(study2, phenotype_role_collection):
+def test_denovo_report_empty(
+    study2: GenotypeDataStudy,
+    phenotype_role_collection: PersonSetCollection
+) -> None:
     denovo_report = DenovoReport.from_genotype_study(
         study2, [phenotype_role_collection]
     )
@@ -57,7 +71,10 @@ def test_denovo_report_empty(study2, phenotype_role_collection):
     assert len(denovo_report.to_dict()) == 1
 
 
-def test_effect_row(denovo_variants_ds1, phenotype_role_sets):
+def test_effect_row(
+    denovo_variants_ds1: List[FamilyVariant],
+    phenotype_role_sets: List[PersonSet]
+) -> None:
     effect_row = EffectRow(
         "Missense", phenotype_role_sets
     )
@@ -96,12 +113,16 @@ def test_effect_row(denovo_variants_ds1, phenotype_role_sets):
     }
 
 
-def test_effect_cell(denovo_variants_ds1, phenotype_role_sets):
+def test_effect_cell(
+    denovo_variants_ds1: List[FamilyVariant],
+    phenotype_role_sets: List[PersonSet]
+) -> None:
     effect_cell1 = EffectCell(
         phenotype_role_sets[0], "Missense"
     )
     for fv in denovo_variants_ds1:
-        for fa in fv.alt_alleles:
+        for aa in fv.alt_alleles:
+            fa = cast(FamilyAllele, aa)
             effect_cell1.count_variant(fv, fa)
     assert effect_cell1.to_dict() == {
         "number_of_observed_events": 3,
@@ -115,7 +136,8 @@ def test_effect_cell(denovo_variants_ds1, phenotype_role_sets):
         phenotype_role_sets[1], "Missense"
     )
     for fv in denovo_variants_ds1:
-        for fa in fv.alt_alleles:
+        for aa in fv.alt_alleles:
+            fa = cast(FamilyAllele, aa)
             effect_cell2.count_variant(fv, fa)
     assert effect_cell2.to_dict() == {
         "number_of_observed_events": 2,
@@ -129,7 +151,8 @@ def test_effect_cell(denovo_variants_ds1, phenotype_role_sets):
         phenotype_role_sets[2], "Missense"
     )
     for fv in denovo_variants_ds1:
-        for fa in fv.alt_alleles:
+        for aa in fv.alt_alleles:
+            fa = cast(FamilyAllele, aa)
             effect_cell3.count_variant(fv, fa)
     assert effect_cell3.to_dict() == {
         "number_of_observed_events": 0,
@@ -143,7 +166,8 @@ def test_effect_cell(denovo_variants_ds1, phenotype_role_sets):
         phenotype_role_sets[3], "Missense"
     )
     for fv in denovo_variants_ds1:
-        for fa in fv.alt_alleles:
+        for aa in fv.alt_alleles:
+            fa = cast(FamilyAllele, aa)
             effect_cell4.count_variant(fv, fa)
     assert effect_cell4.to_dict() == {
         "number_of_observed_events": 0,

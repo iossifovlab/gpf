@@ -2,7 +2,7 @@ from __future__ import annotations
 import time
 import logging
 from copy import deepcopy
-from typing import Any, Dict, List, Union, cast, Iterator
+from typing import Any, Dict, List, Union, cast, Iterable
 
 import numpy as np
 
@@ -182,7 +182,7 @@ class DenovoReportTable:
     # FIXME: Too many locals
     @staticmethod
     def from_variants(  # pylint: disable=too-many-locals
-        denovo_variants: Iterator[FamilyVariant],
+        denovo_variants: Iterable[FamilyVariant],
         effect_groups: list[str],
         effect_types: list[str],
         person_set_collection: PersonSetCollection
