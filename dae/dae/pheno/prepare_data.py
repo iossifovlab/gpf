@@ -207,7 +207,7 @@ class PreparePhenoBrowserBase:
     def build_values_violinplot(self, measure: Measure) -> dict[str, Any]:
         """Build a violin plot figure for the measure."""
         df = self.load_measure(measure)
-        drawn = draw_measure_violinplot(df, measure.measure_id)
+        drawn = draw_measure_violinplot(df.dropna(), measure.measure_id)
 
         res = {}
 
@@ -224,7 +224,9 @@ class PreparePhenoBrowserBase:
     ) -> dict[str, Any]:
         """Build a categorical value distribution fiugre."""
         df = self.load_measure(measure)
-        drawn = draw_categorical_violin_distribution(df, measure.measure_id)
+        drawn = draw_categorical_violin_distribution(
+            df.dropna(), measure.measure_id
+        )
 
         res = {}
         if drawn:
@@ -240,7 +242,9 @@ class PreparePhenoBrowserBase:
     ) -> dict[str, Any]:
         """Build an other value distribution figure."""
         df = self.load_measure(measure)
-        drawn = draw_categorical_violin_distribution(df, measure.measure_id)
+        drawn = draw_categorical_violin_distribution(
+            df.dropna(), measure.measure_id
+        )
 
         res = {}
         if drawn:
@@ -256,7 +260,9 @@ class PreparePhenoBrowserBase:
     ) -> dict[str, Any]:
         """Build an ordinal value distribution figure."""
         df = self.load_measure(measure)
-        drawn = draw_ordinal_violin_distribution(df, measure.measure_id)
+        drawn = draw_ordinal_violin_distribution(
+            df.dropna(), measure.measure_id
+        )
 
         res = {}
         if drawn:
