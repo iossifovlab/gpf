@@ -1,0 +1,57 @@
+exclude = [
+    # Default values
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".git-rewrite",
+    ".hg",
+    ".ipynb_checkpoints",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".pyenv",
+    ".pytest_cache",
+    ".pytype",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    ".vscode",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "site-packages",
+    "venv",
+    # Custom values
+    "old",
+    "*tmp*",
+    "*temp*",
+    "data-hg19*",
+    "docs",
+    "migrations"
+]
+
+line-length = 80
+indent-width = 4
+
+target-version = "py310"
+
+[lint]
+select = ["E", "F", "W", "C90"]
+fixable = ["ALL"]
+preview = true
+
+[lint.mccabe]
+max-complexity = 20
+
+[lint.flake8-quotes]
+inline-quotes = "double"
+docstring-quotes = "double"
+multiline-quotes = "double"
+
+[lint.pydocstyle]
+convention = "pep257"
