@@ -11,7 +11,6 @@ import pandas as pd
 from dae.variants.attributes import Role
 from dae.pheno.pheno_data import PhenotypeStudy, Measure, \
     get_pheno_browser_images_dir
-from dae.pheno.db import PhenoDb
 from dae.pheno.common import MeasureType
 from dae.pheno.graphs import draw_linregres
 from dae.pheno.graphs import draw_measure_violinplot
@@ -21,7 +20,7 @@ from dae.utils.progress import progress, progress_nl
 
 
 mpl.use("PS")
-plt.ioff()  # type: ignore
+plt.ioff()
 
 
 class PreparePhenoBrowserBase:
@@ -46,6 +45,8 @@ class PreparePhenoBrowserBase:
             os.makedirs(images_dir)
 
         assert os.path.exists(images_dir)
+
+        self.pheno_id = pheno_name
 
         self.images_dir = images_dir
 

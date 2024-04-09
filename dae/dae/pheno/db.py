@@ -1,21 +1,18 @@
 from __future__ import annotations
 
-from typing import Dict, Iterator, Optional, Any, cast, Union, Mapping
+from typing import Dict, Iterator, Optional, Any, cast, Union
 from pathlib import Path
 
 from box import Box
 
-import duckdb
-
 from sqlalchemy import MetaData, create_engine
-from sqlalchemy import Table, Column, Integer, String, Float, Enum, \
-    or_, func, desc
-from sqlalchemy.sql import select, Select, text
+from sqlalchemy import Table, Column, Integer, String, Float, or_, func
+from sqlalchemy.sql import select
 from sqlalchemy.sql.schema import UniqueConstraint, PrimaryKeyConstraint
 
 import pandas as pd
 
-from dae.variants.attributes import Sex, Status, Role
+from dae.variants.attributes import Status
 from dae.pheno.common import MeasureType
 
 
@@ -42,48 +39,20 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
         self.instrument: Table
         self.instrument_values_tables: dict[str, Table] = {}
 
-    def _attach_parquet_files(self):
-        duckdb.sql(f"ATTACH ':memory:' AS {self.pheno_id}")
-        family_file = self.folder / "family.parquet"
-        duckdb.sql(
-            f"CREATE TABLE {self.pheno_id}.family "
-            f"AS FROM '{family_file.absolute()}'"
-        )
-        person_file = self.folder / "person.parquet"
-        duckdb.sql(
-            f"CREATE TABLE {self.pheno_id}.person "
-            f"AS FROM '{person_file.absolute()}'")
-        instrument_file = self.folder / "instrument.parquet"
-        duckdb.sql(
-            f"CREATE TABLE {self.pheno_id}.instrument "
-            f"AS FROM '{instrument_file.absolute()}'"
-        )
-        measure_file = self.folder / "measure.parquet"
-        duckdb.sql(
-            f"CREATE TABLE {self.pheno_id}.measure "
-            f"AS FROM '{measure_file.absolute()}'"
-        )
-        instruments_dir = self.folder / "instruments"
-        instruments_files = instruments_dir.glob("*")
-        for file in instruments_files:
-            duckdb.sql(
-                f"CREATE TABLE {self.pheno_id}.{file.stem} "
-                f"AS FROM '{file.absolute()}'"
-            )
-
     @staticmethod
-    def verify_pheno_folder(folder: Path):
-        family_file = folder / "family.parquet"
+    def verify_pheno_folder(folder: Path) -> None:
+        """Verify integrity of a pheno db folder."""
+        parquet_folder = folder / "parquet"
+        assert parquet_folder.exists()
+        family_file = parquet_folder / "family.parquet"
         assert family_file.exists()
-        person_file = folder / "person.parquet"
+        person_file = parquet_folder / "person.parquet"
         assert person_file.exists()
-        instrument_file = folder / "instrument.parquet"
+        instrument_file = parquet_folder / "instrument.parquet"
         assert instrument_file.exists()
-        measure_file = folder / "measure.parquet"
+        measure_file = parquet_folder / "measure.parquet"
         assert measure_file.exists()
-        instruments_dir = folder / "instruments"
-        dbfile = folder / "pheno.db"
-        assert dbfile.exists()
+        instruments_dir = parquet_folder / "instruments"
         assert instruments_dir.exists()
         assert instruments_dir.is_dir()
         assert len(list(instruments_dir.glob("*"))) > 0
@@ -91,7 +60,7 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
     def build_browser(self) -> None:
         self._build_browser_tables()
 
-    def build(self, create=False) -> None:
+    def build(self, create: bool = False) -> None:
         """Construct all needed table connections."""
         self._build_person_tables()
         self.build_instruments_and_measures_table()
@@ -225,7 +194,6 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
                     *cols,
                     extend_existing=True
                 )
-
 
     def _split_measures_into_groups(
         self, measure_ids: list[str], group_size: int = 60
@@ -418,7 +386,7 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
             with self.engine.begin() as connection:
                 connection.execute(insert)
                 connection.commit()
-        except Exception as e:  # pylint: disable=broad-except
+        except Exception:  # pylint: disable=broad-except
             measure_id = v["measure_id"]
 
             delete = (
@@ -492,9 +460,8 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
         query_params = []
 
         if keyword:
-            keyword = "%{}%".format(
-                keyword.replace("%", r"/%").replace("_", r"/_")
-            )
+            keyword = keyword.replace("%", r"/%").replace("_", r"/_")
+            keyword = f"%{keyword}%"
             if not instrument_name:
                 query_params.append(
                     self.variable_browser.c.instrument_name.like(
@@ -545,9 +512,8 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
         query_params = []
 
         if keyword:
-            keyword = "%{}%".format(
-                keyword.replace("%", r"/%").replace("_", r"/_")
-            )
+            keyword = keyword.replace("%", r"/%").replace("_", r"/_")
+            keyword = f"%{keyword}%"
             if not instrument_name:
                 query_params.append(
                     self.variable_browser.c.instrument_name.like(
@@ -646,24 +612,6 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
                     .where(Column("description").isnot(None))
                 ).scalar()
             )
-
-    def get_value_table(
-        self, value_type: Union[str, MeasureType]
-    ) -> Table:
-        """Return the appropriate table for values based on the value type."""
-        if isinstance(value_type, str):
-            value_type = MeasureType.from_str(value_type)
-
-        if value_type == MeasureType.continuous:
-            return self.value_continuous
-        if value_type == MeasureType.ordinal:
-            return self.value_ordinal
-        if value_type == MeasureType.categorical:
-            return self.value_categorical
-        if value_type in {MeasureType.raw, MeasureType.text}:
-            return self.value_other
-
-        raise ValueError(f"unsupported value type: {value_type}")
 
     def get_families(self) -> dict:
         """Return families in the phenotype database."""

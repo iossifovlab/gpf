@@ -38,7 +38,7 @@ def test_fake_phenotype_data_ordinal_m4(
 ) -> None:
     measure_id = "i1.m4"
     df = fake_phenotype_data.get_people_measure_values_df([measure_id])
-    df.rename(columns=lambda c: safe_db_name(c), inplace=True)
+    df.rename(columns=safe_db_name, inplace=True)
     measure_id = safe_db_name("i1.m4")
     rank = len(df[measure_id].unique())
     assert rank == 9

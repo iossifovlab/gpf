@@ -10,11 +10,10 @@ from multiprocessing.pool import AsyncResult
 import numpy as np
 import pandas as pd
 import duckdb
-from sqlalchemy.sql import insert
 
 from box import Box
 
-from dae.pheno.db import PhenoDb, generate_instrument_table_name, safe_db_name
+from dae.pheno.db import generate_instrument_table_name, safe_db_name
 from dae.pheno.common import MeasureType
 from dae.pedigrees.loader import FamiliesLoader, PED_COLUMNS_REQUIRED, \
     PedigreeIO
@@ -24,7 +23,6 @@ from dae.pheno.prepare.measure_classifier import (
     convert_to_numeric,
     ClassifierReport,
 )
-from dae.variants.attributes import Role, Sex, Status
 
 logger = logging.getLogger(__name__)
 
@@ -45,9 +43,10 @@ class PrepareBase(PrepareCommon):
         self.persons: dict[str, Any] = {}
         self.dbfile = self.config.db.filename
         self.connection = duckdb.connect(self.dbfile)
-        self.parquet_dir = os.path.join(self.config.output, "parquet") 
+        self.parquet_dir = os.path.join(self.config.output, "parquet")
 
     def get_persons(self, force: bool = False) -> Optional[dict[str, Any]]:
+        """Return dictionary of all people in the pheno DB."""
         if not self.persons or len(self.persons) == 0 or force:
             self.persons = {}
             result = self.connection.sql(
@@ -109,6 +108,7 @@ class PreparePersons(PrepareBase):
         self._save_persons(ped_df)
 
     def build_pedigree(self, pedfile: PedigreeIO) -> pd.DataFrame:
+        """Import pedigree data into the pheno DB."""
         ped_df = FamiliesLoader.flexible_pedigree_read(
             pedfile, enums_as_values=True
         )
@@ -148,8 +148,8 @@ class ClassifyMeasureTask(Task):
             instrument_name, measure_name, measure_desc
         )
         self.instrument_table_name = instrument_table_name
-        self.rank = None
-        self.classifier_report = None
+        self.rank: Optional[int] = None
+        self.classifier_report: Optional[ClassifierReport] = None
         self.dbfile = dbfile
 
     @staticmethod
@@ -179,10 +179,14 @@ class ClassifyMeasureTask(Task):
         assert self.classifier_report is not None
 
         if measure_type in set([MeasureType.continuous, MeasureType.ordinal]):
-            min_value = np.min(self.classifier_report.numeric_values)
+            min_value = np.min(
+                cast(np.ndarray, self.classifier_report.numeric_values)
+            )
             if isinstance(min_value, np.bool_):
                 min_value = np.int8(min_value)
-            max_value = np.max(self.classifier_report.numeric_values)
+            max_value = np.max(
+                cast(np.ndarray, self.classifier_report.numeric_values)
+            )
             if isinstance(max_value, np.bool_):
                 max_value = np.int8(max_value)
         else:
@@ -192,7 +196,7 @@ class ClassifyMeasureTask(Task):
             values_domain = f"[{min_value}, {max_value}]"
         else:
             # distribution = self.classifier_report.calc_distribution_report()
-            distribution = []
+            distribution: list[Any] = []
             unique_values = [v for (v, _) in distribution if v.strip() != ""]
             values_domain = ", ".join(sorted(unique_values))
 
@@ -356,7 +360,7 @@ class PrepareVariables(PreparePersons):
                 "SELECT DISTINCT column_name FROM rejects"
             )
             for row in reject_columns.fetchall():
-                columns[row[0].strip('"')] = 'VARCHAR'
+                columns[row[0].strip('"')] = "VARCHAR"
             self.connection.sql(f"DROP TABLE {table_name}")
             columns_string = ", ".join([
                 f"'{k}': '{v}'" for k, v in columns.items()
@@ -401,12 +405,11 @@ class PrepareVariables(PreparePersons):
         classifier_report: ClassifierReport
     ) -> None:
         """Log measure classification."""
-        return
         classifier_report.set_measure(measure)
         logging.info(classifier_report.log_line(short=True))
 
         with open(self.log_filename, "a", encoding="utf8") as log:
-            log.write(classifier_report.log_line())
+            log.write(classifier_report.log_line(short=True))
             log.write("\n")
 
     @staticmethod
@@ -437,7 +440,6 @@ class PrepareVariables(PreparePersons):
         """Build and store phenotype data into an sqlite database."""
         self.log_header()
 
-
         instruments = self._collect_instruments(instruments_dirname)
         descriptions = PrepareVariables.load_descriptions(description_path)
         self.connection.sql(
@@ -462,7 +464,6 @@ class PrepareVariables(PreparePersons):
             "rank INTEGER"
             ")"
         )
-        total = len(instruments)
 
         self.build_pheno_common()
 
@@ -487,17 +488,16 @@ class PrepareVariables(PreparePersons):
             f"COPY measure TO '{measure_file}' (FORMAT PARQUET)"
         )
 
-    def _instrument_tmp_table_name(self, instrument_name: str):
+    def _instrument_tmp_table_name(self, instrument_name: str) -> str:
         return safe_db_name(f"{instrument_name}_data")
 
-    def _clean_missing_person_ids(self, instrument_name: str) -> pd.DataFrame:
+    def _clean_missing_person_ids(self, instrument_name: str) -> None:
 
         table_name = self._instrument_tmp_table_name(instrument_name)
 
-
         self.connection.sql(
             f"DELETE FROM {table_name} "
-            f"WHERE \"{self.config.person.column}\" NOT IN "
+            f'WHERE "{self.config.person.column}" NOT IN '
             "(SELECT person_id from person)"
         )
 
@@ -544,9 +544,8 @@ class PrepareVariables(PreparePersons):
     def build_instrument(
         self, instrument_name: str,
         descriptions: Optional[Callable] = None
-    ) -> Optional[pd.DataFrame]:
+    ) -> None:
         """Build and store all measures in an instrument."""
-
         classify_queue = TaskQueue()
         measures: list[Box] = []
         measure_reports: dict[str, ClassifierReport] = {}
@@ -610,7 +609,7 @@ class PrepareVariables(PreparePersons):
                 measure_col_names[measure.measure_id] = db_name
 
         if self.config.report_only:
-            return None
+            return
 
         cursor.sql(
             "INSERT INTO instrument VALUES "
@@ -668,20 +667,20 @@ class PrepareVariables(PreparePersons):
             m_name = measure.measure_name
             if col_type == "FLOAT":
                 select_measures.append(
-                    f"TRY_CAST(i.\"{m_name}\" as FLOAT) as {db_name}"
+                    f'TRY_CAST(i."{m_name}" as FLOAT) as {db_name}'
                 )
             else:
-                select_measures.append(f"i.\"{m_name}\" as {db_name}")
+                select_measures.append(f'i."{m_name}" as {db_name}')
 
         select_measure_cols = ", ".join(select_measures)
 
         cursor.sql(
             f"CREATE TABLE {output_table_name} AS FROM ("
-            f"SELECT i.\"{self.config.person.column}\" as person_id, "
+            f'SELECT i."{self.config.person.column}" as person_id, '
             "p.family_id, p.role, p.status, p.sex, "
             f"{select_measure_cols} "
             f"FROM {tmp_table_name} AS i JOIN person AS p "
-            f"ON i.\"{self.config.person.column}\" = p.person_id"
+            f'ON i."{self.config.person.column}" = p.person_id'
             ")"
         )
         instruments_dir = os.path.join(self.parquet_dir, "instruments")
@@ -706,19 +705,6 @@ class PrepareVariables(PreparePersons):
         }
         measure = Box(measure)
         return measure
-
-    def classify_measure(
-        self, instrument_name: str, measure_name: str, df: pd.DataFrame
-    ) -> tuple[ClassifierReport, Box]:
-        """Classify a measure into a measure type."""
-        measure = self.create_default_measure(instrument_name, measure_name)
-        values = df["value"]
-
-        classifier_report = self.classifier.meta_measures(values)
-        measure.individuals = classifier_report.count_with_values
-        measure.measure_type = self.classifier.classify(classifier_report)
-
-        return classifier_report, measure
 
     @staticmethod
     def load_descriptions(

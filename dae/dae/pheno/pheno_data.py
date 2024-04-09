@@ -12,7 +12,7 @@ from itertools import chain
 from box import Box
 
 import pandas as pd
-from sqlalchemy.sql import select, union, text
+from sqlalchemy.sql import select, union
 from sqlalchemy import not_, Select
 
 from dae.pedigrees.family import Person
@@ -305,7 +305,6 @@ class PhenotypeData(ABC):
                 instrument_name: self.instruments[instrument_name]
             }
 
-        type_query = None
         if measure_type is not None:
             assert isinstance(measure_type, MeasureType)
 

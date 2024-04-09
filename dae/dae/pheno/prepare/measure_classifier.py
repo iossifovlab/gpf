@@ -1,15 +1,12 @@
-import itertools
 import enum
-import copy
+from typing import Optional, Any, Union, cast
 import duckdb
-from collections import Counter
-from typing import Optional, List
-from numbers import Number
+from box import Box
 
 import numpy as np
-import pandas as pd
 
 from dae.pheno.common import MeasureType
+from dae.pheno.pheno_data import Measure
 from dae.pheno.utils.commons import remove_annoying_characters
 
 
@@ -19,33 +16,32 @@ class ClassifierReport:
     MAX_CHARS = 32
     DISTRIBUTION_CUTOFF = 20
 
-    def __init__(self):
-        self.instrument_name = None
-        self.measure_name = None
-        self.measure_type = None
-        self.count_total = None
-        self.count_with_values = None
-        self.count_without_values = None
-        self.count_with_numeric_values = None
-        self.count_with_non_numeric_values = None
-        self.count_unique_values = None
-        self.count_unique_numeric_values = None
+    def __init__(self) -> None:
+        self.instrument_name: Optional[str] = None
+        self.measure_name: Optional[str] = None
+        self.measure_type: Optional[str] = None
+        self.count_total: Optional[int] = None
+        self.count_with_values: Optional[int] = None
+        self.count_without_values: Optional[int] = None
+        self.count_with_numeric_values: Optional[int] = None
+        self.count_with_non_numeric_values: Optional[int] = None
+        self.count_unique_values: Optional[int] = None
+        self.count_unique_numeric_values: Optional[int] = None
 
-        self.value_max_len = None
+        self.value_max_len: Optional[int] = None
 
-        self.unique_values = None
-        self.numeric_values = None
-        self.string_values: Optional[np.ndarray] = None
-        self.distribution = None
+        self.unique_values: Optional[list[Any]] = None
+        self.numeric_values: Union[list[int], np.ndarray, None] = None
+        self.distribution: Any = None
 
-    def set_measure(self, measure):
+    def set_measure(self, measure: Box) -> "ClassifierReport":
         self.instrument_name = measure.instrument_name
         self.measure_name = measure.measure_name
         self.measure_type = measure.measure_type.name
         return self
 
     @staticmethod
-    def short_attributes():
+    def short_attributes() -> list[str]:
         return [
             "instrument_name",
             "measure_name",
@@ -60,10 +56,10 @@ class ClassifierReport:
             "value_max_len",
         ]
 
-    def __repr__(self):
-        return "temp"#self.log_line()
+    def __repr__(self) -> str:
+        return self.log_line(short=True)
 
-    def log_line(self, short=False):
+    def log_line(self, short: bool = False) -> str:
         """Construct a log line in clissifier report."""
         attributes = self.short_attributes()
         values = [str(getattr(self, attr)).strip() for attr in attributes]
@@ -75,12 +71,12 @@ class ClassifierReport:
         return "\t".join(values)
 
     @staticmethod
-    def short_header_line():
+    def short_header_line() -> str:
         attributes = ClassifierReport.short_attributes()
         return "\t".join(attributes)
 
     @staticmethod
-    def header_line(short=False):
+    def header_line(short: bool = False) -> str:
         """Construct clissifier report header line."""
         attributes = ClassifierReport.short_attributes()
         if not short:
@@ -91,34 +87,36 @@ class ClassifierReport:
             attributes.extend(distribution)
         return "\t".join(attributes)
 
-    def calc_distribution_report(self):
+    def calc_distribution_report(self) -> list[Any]:
         """Construct measure distribution report."""
-        if self.distribution:
-            return copy.deepcopy(self.distribution)
-        counts: Counter = Counter()
+        # Write workaround for string_values as they are not collected anymore
+        raise NotImplementedError()
+        # if self.distribution:
+        #     return copy.deepcopy(self.distribution)
+        # counts: Counter = Counter()
 
-        assert self.string_values is not None
-        for val in self.string_values:  # pylint: disable=not-an-iterable
-            counts[val] += 1
-        distribution = list(counts.items())
-        distribution = sorted(
-            distribution, key=lambda _val_count: -_val_count[1]
-        )
-        distribution = distribution[: self.DISTRIBUTION_CUTOFF]
-        distribution = [
-            (val[: self.MAX_CHARS], count) for (val, count) in distribution
-        ]
-        if len(distribution) < self.DISTRIBUTION_CUTOFF:
-            ext = [
-                (" ", " ")
-                for _i in range(self.DISTRIBUTION_CUTOFF - len(distribution))
-            ]
-            distribution.extend(ext)  # type: ignore
-        self.distribution = distribution
-        return copy.deepcopy(self.distribution)
+        # assert self.string_values is not None
+        # for val in self.string_values:  # pylint: disable=not-an-iterable
+        #     counts[val] += 1
+        # distribution = list(counts.items())
+        # distribution = sorted(
+        #     distribution, key=lambda _val_count: -_val_count[1]
+        # )
+        # distribution = distribution[: self.DISTRIBUTION_CUTOFF]
+        # distribution = [
+        #     (val[: self.MAX_CHARS], count) for (val, count) in distribution
+        # ]
+        # if len(distribution) < self.DISTRIBUTION_CUTOFF:
+        #     ext = [
+        #         (" ", " ")
+        #         for _i in range(self.DISTRIBUTION_CUTOFF - len(distribution))
+        #     ]
+        #     distribution.extend(ext)  # type: ignore
+        # self.distribution = distribution
+        # return copy.deepcopy(self.distribution)
 
 
-def is_nan(val):
+def is_nan(val: Any) -> bool:
     """Check if the passed value is a NaN."""
     if val is None:
         return True
@@ -137,7 +135,7 @@ class Convertible(enum.Enum):
     non_numeric = 2
 
 
-def is_convertible_to_numeric(val):
+def is_convertible_to_numeric(val: Any) -> Convertible:
     """Check if the passed string is convertible to number."""
     if val is None:
         return Convertible.nan
@@ -162,32 +160,28 @@ def is_convertible_to_numeric(val):
     return Convertible.non_numeric
 
 
-def convert_to_numeric(val):
+def convert_to_numeric(val: Any) -> Union[float, np.float_]:
     """Convert passed value to float."""
     if is_convertible_to_numeric(val) == Convertible.numeric:
         return float(val)
     return np.nan
 
 
-def convert_to_string(val):
+def convert_to_string(val: Any) -> Optional[str]:
     """Convert passed value to string."""
     if is_nan(val):
         return None
 
-    if (
-        type(val) in set([str, str])
-        or isinstance(val, str)
-        or isinstance(val, str)
-    ):
+    if isinstance(val, str):
         return str(remove_annoying_characters(val))
-    else:
-        return str(val)
+
+    return str(val)
 
 
 class MeasureClassifier:
     """Defines a measure classification report."""
 
-    def __init__(self, config):
+    def __init__(self, config: Box):
         self.config = config
 
     @staticmethod
@@ -195,47 +189,47 @@ class MeasureClassifier:
         cursor: duckdb.DuckDBPyConnection,
         table_name: str, measure_name: str,
         column_type: str, report: ClassifierReport
-    ):
+    ) -> ClassifierReport:
         """Collect measure classification report for numeric values."""
         result = cursor.sql(f"SELECT COUNT(*) FROM {table_name}").fetchone()
         assert result is not None
-        total = result[0]
+        total = cast(int, result[0])
 
         if column_type in ["FLOAT", "DOUBLE"]:
             result = cursor.sql(
-                f"SELECT COUNT(\"{measure_name}\") FROM {table_name} WHERE "
-                f"\"{measure_name}\" != 'NaN' AND "
-                f"\"{measure_name}\" IS NOT NULL"
+                f'SELECT COUNT("{measure_name}") FROM {table_name} WHERE '
+                f'"{measure_name}" != \'NaN\' AND '
+                f'"{measure_name}" IS NOT NULL'
             ).fetchone()
             assert result is not None
             real_count = result[0]
         else:
             result = cursor.sql(
-                f"SELECT COUNT(\"{measure_name}\") FROM {table_name} WHERE "
-                f"\"{measure_name}\" IS NOT NULL"
+                f'SELECT COUNT("{measure_name}") FROM {table_name} WHERE '
+                f'"{measure_name}" IS NOT NULL'
             ).fetchone()
             assert result is not None
             real_count = result[0]
 
-        report.count_with_values = real_count
-        report.count_with_numeric_values = real_count
+        report.count_with_values = cast(int, real_count)
+        report.count_with_numeric_values = cast(int, real_count)
         report.count_with_non_numeric_values = 0
         report.count_without_values = total - report.count_with_values
 
         if column_type in ["FLOAT", "DOUBLE"]:
             result = cursor.sql(
-                f"SELECT COUNT(DISTINCT \"{measure_name}\") "
+                f'SELECT COUNT(DISTINCT "{measure_name}") '
                 f"FROM {table_name} WHERE "
-                f"\"{measure_name}\" != 'NaN' AND "
-                f"\"{measure_name}\" IS NOT NULL"
+                f'"{measure_name}" != \'NaN\' AND '
+                f'"{measure_name}" IS NOT NULL'
             ).fetchone()
             assert result is not None
             unique_count = result[0]
         else:
             result = cursor.sql(
-                f"SELECT COUNT(DISTINCT \"{measure_name}\") "
+                f'SELECT COUNT(DISTINCT "{measure_name}") '
                 f"FROM {table_name} WHERE "
-                f"\"{measure_name}\" IS NOT NULL"
+                f'"{measure_name}" IS NOT NULL'
             ).fetchone()
             assert result is not None
             unique_count = result[0]
@@ -244,15 +238,15 @@ class MeasureClassifier:
         report.count_unique_numeric_values = unique_count
 
         rows = cursor.sql(
-            f"SELECT DISTINCT \"{measure_name}\" FROM {table_name} WHERE "
-            f"\"{measure_name}\" IS NOT NULL"
+            f'SELECT DISTINCT "{measure_name}" FROM {table_name} WHERE '
+            f'"{measure_name}" IS NOT NULL'
         ).fetchall()
         unique_values = [row[0] for row in rows]
         report.unique_values = unique_values
 
         rows = cursor.sql(
-            f"SELECT \"{measure_name}\" FROM {table_name} WHERE "
-            f"\"{measure_name}\" IS NOT NULL"
+            f'SELECT "{measure_name}" FROM {table_name} WHERE '
+            f'"{measure_name}" IS NOT NULL'
         ).fetchall()
         real_values = [row[0] for row in rows]
         report.numeric_values = real_values
@@ -274,15 +268,16 @@ class MeasureClassifier:
         cursor: duckdb.DuckDBPyConnection,
         table_name: str, measure_name: str,
         report: ClassifierReport
-    ):
+    ) -> ClassifierReport:
         """Collect measure classification report for text values."""
         report.count_with_values = 0
 
         result = cursor.sql(
             "SELECT COUNT(*) FROM ("
-            f"SELECT \"{measure_name}\", "
-            f"TRY_CAST(\"{measure_name}\" AS FLOAT) as casted "
-            f"from {table_name} WHERE \"{measure_name}\" IS NULL OR casted = 'nan'"
+            f'SELECT "{measure_name}", '
+            f'TRY_CAST("{measure_name}" AS FLOAT) as casted '
+            f"from {table_name} "
+            f'WHERE "{measure_name}" IS NULL OR casted = \'nan\''
             ")"
         ).fetchone()
         assert result is not None
@@ -290,7 +285,7 @@ class MeasureClassifier:
 
         result = cursor.sql(
             "SELECT COUNT(casted) FROM ("
-            f"SELECT TRY_CAST(\"{measure_name}\" AS FLOAT) as casted "
+            f'SELECT TRY_CAST("{measure_name}" AS FLOAT) as casted '
             f"from {table_name} WHERE casted IS NOT NULL AND casted != 'nan'"
             ")"
         ).fetchone()
@@ -299,11 +294,11 @@ class MeasureClassifier:
         report.count_with_values += result[0]
 
         result = cursor.sql(
-            f"SELECT COUNT(\"{measure_name}\") FROM ("
-            f"SELECT \"{measure_name}\", "
-            f"TRY_CAST(\"{measure_name}\" AS FLOAT) as casted "
+            f'SELECT COUNT("{measure_name}") FROM ('
+            f'SELECT "{measure_name}", '
+            f'TRY_CAST("{measure_name}" AS FLOAT) as casted '
             f"from {table_name} WHERE casted IS NULL AND "
-            f"\"{measure_name}\" IS NOT NULL"
+            f'"{measure_name}" IS NOT NULL'
             ")"
         ).fetchone()
         assert result is not None
@@ -311,10 +306,10 @@ class MeasureClassifier:
         report.count_with_values += result[0]
 
         rows = list(cursor.sql(
-            f"SELECT DISTINCT \"{measure_name}\" FROM ("
-            f"SELECT \"{measure_name}\", "
-            f"TRY_CAST(\"{measure_name}\" AS FLOAT) as casted "
-            f"from {table_name} WHERE \"{measure_name}\" IS NOT NULL"
+            f'SELECT DISTINCT "{measure_name}" FROM ('
+            f'SELECT "{measure_name}", '
+            f'TRY_CAST("{measure_name}" AS FLOAT) as casted '
+            f'from {table_name} WHERE "{measure_name}" IS NOT NULL'
             ")"
         ).fetchall())
         assert rows is not None
@@ -323,8 +318,8 @@ class MeasureClassifier:
 
         rows = cursor.sql(
             f"SELECT casted FROM ("
-            f"SELECT \"{measure_name}\", "
-            f"TRY_CAST(\"{measure_name}\" AS FLOAT) as casted "
+            f'SELECT "{measure_name}", '
+            f'TRY_CAST("{measure_name}" AS FLOAT) as casted '
             f"from {table_name} WHERE casted IS NOT NULL AND casted != 'nan'"
             ")"
         ).fetchall()
@@ -335,20 +330,24 @@ class MeasureClassifier:
 
         assert (
             report.count_total
-            == report.count_with_values + report.count_without_values
+            == cast(int, report.count_with_values)
+            + cast(int, report.count_without_values)
         )
         assert (
             report.count_with_values
-            == report.count_with_numeric_values
-            + report.count_with_non_numeric_values
+            == cast(int, report.count_with_numeric_values)
+            + cast(int, report.count_with_non_numeric_values)
         )
 
         return report
 
     @staticmethod
-    def meta_measures(cursor, table_name, measure_name, report=None):
+    def meta_measures(
+            cursor: duckdb.DuckDBPyConnection,
+            table_name: str, measure_name: str,
+            report: Optional[ClassifierReport] = None
+    ) -> ClassifierReport:
         """Build classifier meta report."""
-
         if report is None:
             report = ClassifierReport()
 
@@ -358,7 +357,7 @@ class MeasureClassifier:
         report.count_total = result[0]
 
         result = cursor.sql(
-            f"SELECT COUNT(\"{measure_name}\") FROM {table_name}"
+            f'SELECT COUNT("{measure_name}") FROM {table_name}'
         ).fetchone()
         assert result is not None
 
@@ -392,7 +391,7 @@ class MeasureClassifier:
                 cursor, table_name, measure_name, column_type, report
             )
 
-        if column_type == "VARCHAR" or column_type == "DATE":
+        if column_type in ["VARCHAR", "DATE"]:
             return MeasureClassifier._meta_measures_text(
                 cursor, table_name, measure_name, report
             )
@@ -400,7 +399,7 @@ class MeasureClassifier:
         assert False, f"NOT SUPPORTED VALUES TYPES {column_type}"
 
     @staticmethod
-    def convert_to_numeric(values):
+    def convert_to_numeric(values: np.ndarray) -> np.ndarray:
         """Convert value to numeric."""
         if values.dtype in set(
             [
@@ -421,12 +420,12 @@ class MeasureClassifier:
         return result
 
     @staticmethod
-    def convert_to_string(values) -> np.ndarray:
+    def convert_to_string(values: np.ndarray) -> np.ndarray:
         if len(values) == 0:
             return np.array([])
         return np.array([convert_to_string(val) for val in values])
 
-    def classify(self, rep):
+    def classify(self, rep: ClassifierReport) -> MeasureType:
         """Classify a measure based on classification report."""
         conf = self.config.classification
 
@@ -434,8 +433,8 @@ class MeasureClassifier:
             return MeasureType.raw
 
         non_numeric = (
-            1.0 * rep.count_with_non_numeric_values
-        ) / rep.count_with_values
+            1.0 * cast(int, rep.count_with_non_numeric_values)
+        ) / cast(int, rep.count_with_values)
 
         if non_numeric <= conf.non_numeric_cutoff:
             if rep.count_unique_numeric_values >= conf.continuous.min_rank:
@@ -444,12 +443,12 @@ class MeasureClassifier:
                 return MeasureType.ordinal
 
             return MeasureType.raw
-        else:
-            if (
-                rep.count_unique_values >= conf.categorical.min_rank
-                and rep.count_unique_values <= conf.categorical.max_rank
-                # and rep.value_max_len <= conf.value_max_len
-            ):
-                return MeasureType.categorical
 
-            return MeasureType.raw
+        if (
+            rep.count_unique_values >= conf.categorical.min_rank
+            and rep.count_unique_values <= conf.categorical.max_rank
+            # and rep.value_max_len <= conf.value_max_len
+        ):
+            return MeasureType.categorical
+
+        return MeasureType.raw

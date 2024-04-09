@@ -113,9 +113,6 @@ def generate_phenotype_data_config(
     """Construct phenotype data configuration from command line arguments."""
     dbfile = os.path.join("%(wd)s", os.path.basename(args.pheno_db_filename))
     # pheno_db_path = os.path.dirname("%(wd)s")  # noqa
-    browser_dbfile = os.path.join(
-        "%(wd)s", "browser", f"{args.pheno_name}_browser.db"
-    )
     config = {
         "vars": {"wd": "."},
         "phenotype_data": {
