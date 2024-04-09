@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 
 def _duckdb_global_connect() -> duckdb.DuckDBPyConnection:
-    logger.info("connection to gloabl duckdb")
+    logger.info("connection to global duckdb")
     return cast(duckdb.DuckDBPyConnection, duckdb)
 
 
