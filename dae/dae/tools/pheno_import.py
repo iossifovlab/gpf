@@ -185,7 +185,8 @@ def main(argv: Optional[list[str]] = None) -> int:
             os.makedirs(args.browser_dir)
 
         config = parse_phenotype_data_config(args)
-        os.makedirs(config.output, exist_ok=True)
+        os.makedirs(os.path.join(config.output, "parquet"), exist_ok=True)
+
         if args.regression:
             regressions = GPFConfigParser.load_config(
                 args.regression, regression_conf_schema
