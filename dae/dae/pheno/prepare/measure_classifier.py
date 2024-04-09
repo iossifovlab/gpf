@@ -1,4 +1,6 @@
 import enum
+import copy
+from collections import Counter
 from typing import Optional, Any, Union, cast
 import duckdb
 from box import Box
@@ -6,6 +8,7 @@ from box import Box
 import numpy as np
 
 from dae.pheno.common import MeasureType
+from dae.pheno.db import safe_db_name
 from dae.pheno.utils.commons import remove_annoying_characters
 
 
@@ -64,7 +67,8 @@ class ClassifierReport:
         values = [str(getattr(self, attr)).strip() for attr in attributes]
         values = [v.replace("\n", " ") for v in values]
         if not short:
-            distribution = self.calc_distribution_report()
+            distribution = self.distribution
+            assert distribution is not None
             distribution = [f"{v}\t{c}" for (v, c) in distribution]
             values.extend(distribution)
         return "\t".join(values)
@@ -86,33 +90,45 @@ class ClassifierReport:
             attributes.extend(distribution)
         return "\t".join(attributes)
 
-    def calc_distribution_report(self) -> list[Any]:
+    def calc_distribution_report(
+        self, cursor: Optional[duckdb.DuckDBPyConnection] = None,
+        instrument_table_name: Optional[str] = None
+    ) -> list[Any]:
         """Construct measure distribution report."""
-        # Write workaround for string_values as they are not collected anymore
-        raise NotImplementedError()
-        # if self.distribution:
-        #     return copy.deepcopy(self.distribution)
-        # counts: Counter = Counter()
+        if self.distribution:
+            return copy.deepcopy(self.distribution)
+        assert cursor is not None
+        assert instrument_table_name is not None
 
-        # assert self.string_values is not None
-        # for val in self.string_values:  # pylint: disable=not-an-iterable
-        #     counts[val] += 1
-        # distribution = list(counts.items())
-        # distribution = sorted(
-        #     distribution, key=lambda _val_count: -_val_count[1]
-        # )
-        # distribution = distribution[: self.DISTRIBUTION_CUTOFF]
-        # distribution = [
-        #     (val[: self.MAX_CHARS], count) for (val, count) in distribution
-        # ]
-        # if len(distribution) < self.DISTRIBUTION_CUTOFF:
-        #     ext = [
-        #         (" ", " ")
-        #         for _i in range(self.DISTRIBUTION_CUTOFF - len(distribution))
-        #     ]
-        #     distribution.extend(ext)  # type: ignore
-        # self.distribution = distribution
-        # return copy.deepcopy(self.distribution)
+        measure_col = safe_db_name(cast(str, self.measure_name))
+
+        rows = cursor.sql(
+            f'SELECT "{measure_col}", COUNT(*) as count '
+            f"FROM {instrument_table_name} WHERE "
+            f'"{measure_col}" IS NOT NULL '
+            f'GROUP BY "{measure_col}"'
+        ).fetchall()
+        counts: Counter = Counter()
+
+        for row in rows:
+            counts[str(row[0])] = row[1]
+
+        distribution = list(counts.items())
+        distribution = sorted(
+            distribution, key=lambda _val_count: -_val_count[1]
+        )
+        distribution = distribution[: self.DISTRIBUTION_CUTOFF]
+        distribution = [
+            (val[: self.MAX_CHARS], count) for (val, count) in distribution
+        ]
+        if len(distribution) < self.DISTRIBUTION_CUTOFF:
+            ext = [
+                (" ", " ")
+                for _i in range(self.DISTRIBUTION_CUTOFF - len(distribution))
+            ]
+            distribution.extend(ext)  # type: ignore
+        self.distribution = distribution
+        return copy.deepcopy(self.distribution)
 
 
 def is_nan(val: Any) -> bool:

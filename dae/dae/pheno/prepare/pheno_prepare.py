@@ -173,7 +173,7 @@ class ClassifyMeasureTask(Task):
         measure = Box(measure)
         return measure
 
-    def build_meta_measure(self) -> None:
+    def build_meta_measure(self, cursor: duckdb.DuckDBPyConnection) -> None:
         """Build measure meta data."""
         measure_type = self.measure.measure_type
         assert self.classifier_report is not None
@@ -192,11 +192,14 @@ class ClassifyMeasureTask(Task):
         else:
             min_value = None
             max_value = None
+
+        distribution = self.classifier_report.calc_distribution_report(
+            cursor, self.instrument_table_name
+        )
+
         if measure_type in set([MeasureType.continuous, MeasureType.ordinal]):
             values_domain = f"[{min_value}, {max_value}]"
         else:
-            # distribution = self.classifier_report.calc_distribution_report()
-            distribution: list[Any] = []
             unique_values = [v for (v, _) in distribution if v.strip() != ""]
             values_domain = ", ".join(sorted(unique_values))
 
@@ -209,18 +212,20 @@ class ClassifyMeasureTask(Task):
         try:
             logging.info("classifying measure %s", self.measure.measure_id)
             classifier = MeasureClassifier(self.config)
+            cursor = duckdb.connect(self.dbfile).cursor()
             self.classifier_report = classifier.meta_measures(
-                duckdb.connect(self.dbfile),
+                cursor,
                 self.instrument_table_name,
                 self.measure.measure_name
             )
             assert self.classifier_report is not None
+            self.classifier_report.set_measure(self.measure)
 
             self.measure.individuals = self.classifier_report.count_with_values
             self.measure.measure_type = classifier.classify(
                 self.classifier_report
             )
-            self.build_meta_measure()
+            self.build_meta_measure(cursor)
         except Exception:  # pylint: disable=broad-except
             logger.error(
                 "problem processing measure: %s", self.measure.measure_id,
