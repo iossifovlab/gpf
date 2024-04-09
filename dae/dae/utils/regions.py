@@ -255,14 +255,14 @@ class Region:
         if self.start is not None and self.stop is not None:
             if other.start is None or other.stop is None:
                 return other.intersects(self)
-            else:
-                return not (self.stop < other.start or self.start > other.stop)
-        elif self.stop is not None:
+            return not (self.stop < other.start or self.start > other.stop)
+        if self.stop is not None:
             return other.start is None or self.stop >= other.start
-        elif self.start is not None:
+
+        if self.start is not None:
             return other.stop is None or self.start <= other.stop
-        else:
-            return True
+
+        return True
 
     @staticmethod
     def from_str(region: str) -> Region:
