@@ -280,6 +280,7 @@ test.describe('Gene profiles gene comparison tests', () => {
 test.describe('Gene profiles table functionality tests', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.instanceUrl, {waitUntil: 'load'});
+    await utils.loginAdmin(page);
     await page.locator('#header a:text("Gene Profiles")').click();
   });
   test('should sort genes by autism gene sets', async({ page }) => {
@@ -410,5 +411,26 @@ test.describe('Gene profiles table functionality tests', () => {
     await expect(page.locator('#nothing-found')).not.toBeVisible();
     const rowCount = await page.locator('.table-body-row:not(#nothing-found)').count();
     expect(rowCount).toBeGreaterThan(1);
+  });
+
+  test('should navigate to genotype browser', async({ page }) => {
+    await page.getByTitle('2.0 (1.05)\nTBCD').click();
+    await page.waitForSelector('gpf-genotype-browser');
+    expect(page.url()).toEqual(`${utils.instanceUrl}/datasets/iossifov_2014/genotype-browser`);
+
+    await expect(page.locator('#gene-symbols-panel textarea')).toHaveValue('TBCD');
+    await expect(page.locator('gpf-pedigree-selector').getByLabel('unaffected')).toBeChecked();
+    await expect(page.locator('gpf-pedigree-selector').getByLabel('affected', { exact: true })).not.toBeChecked();
+
+    await expect(page.locator('gpf-effect-types').getByLabel('intron')).toBeChecked();
+    await expect(page.locator('gpf-effect-types').getByLabel('nonsense')).not.toBeChecked();
+    await expect(page.locator('gpf-effect-types').getByLabel('frame-shift', { exact: true })).not.toBeChecked();
+    await expect(page.locator('gpf-effect-types').getByLabel('splice-site')).not.toBeChecked();
+    await expect(page.locator('gpf-effect-types').getByLabel('no-frame-shift-newStop')).not.toBeChecked();
+    await expect(page.locator('gpf-effect-types').getByLabel('missense')).not.toBeChecked();
+    await expect(page.locator('gpf-effect-types').getByLabel('no-frame-shift', { exact: true })).not.toBeChecked();
+    await expect(page.locator('gpf-effect-types').getByLabel('noStart')).not.toBeChecked();
+    await expect(page.locator('gpf-effect-types').getByLabel('noEnd')).not.toBeChecked();
+    await expect(page.locator('gpf-effect-types').getByLabel('synonymous')).not.toBeChecked();
   });
 });

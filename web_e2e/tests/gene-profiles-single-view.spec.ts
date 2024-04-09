@@ -1,7 +1,7 @@
-import { test, expect, Page } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 import * as utils from './utils';
 
-test.describe('Gene profiles single view tests', () => {
+test.describe('Gene profiles single view basic tests', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.instanceUrl, {waitUntil: 'load'});
     await page.locator('#header a:text("Gene Profiles")').click();
@@ -63,35 +63,153 @@ test.describe('Gene profiles single view tests', () => {
   });
 });
 
-test.describe.skip('Gene profiles single view dataset table tests', () => {
-  let singleViewPage: Page;
-
+test.describe('Gene profiles navigation to single view tests', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.instanceUrl, {waitUntil: 'load'});
     await utils.loginAdmin(page);
     await page.locator('#header a:text("Gene Profiles")').click();
-    await page.locator('input#gene-search-input').fill('GRIN2B');
-    await page.locator('div').filter({ hasText: /^GRIN2B$/}).click();
   });
 
-  test('should test redirect logic', async() => {
-    const page = singleViewPage;
-    const queryResponse = page.waitForResponse(
-      response => response.url() === utils.instanceUrl + '/api/v3/query_state/save'
-    );
-    const genotypeBrowserLink = page.locator('#denovo_missense > :nth-child(2) > .link-genotype-browser > span');
-    await genotypeBrowserLink.click();
+  test('should open single view', async({ page }) => {
+    await page.locator('input#gene-search-input').fill('GRIN2B');
+    await page.locator('div').filter({ hasText: /^GRIN2B$/}).click();
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const queryResponseBody = await (await queryResponse).json();
+    expect(page.url()).toEqual(`${utils.instanceUrl}/gene-profiles/GRIN2B`);
+    await expect(page.locator('#above-table-bar')).toBeVisible();
+    await expect(page.getByRole('button', {name: 'GRIN2B'})).toBeVisible();
+    await expect(page.getByRole('button', {name: 'GRIN2B'})).toHaveClass('tab-name active-tab');
+    await expect(page.locator('gpf-gene-profiles-single-view').locator('h2:text("GRIN2B")')).toBeVisible();
+  });
 
-    // eslint-disable-next-line max-len
-    // eslint-disable-next-line @typescript-eslint/restrict-template-expressions, @typescript-eslint/no-unsafe-member-access
-    await page.goto(`${utils.instanceUrl}/load-query/${queryResponseBody.uuid}`, {waitUntil: 'load'});
-    await page.waitForSelector('gpf-genotype-browser');
+  test('should open multiple single views, test closing and navigation', async({ page }) => {
+    await page.locator('input#gene-search-input').fill('GRIN2B');
+    await page.locator('div').filter({ hasText: /^GRIN2B$/}).click();
 
-    await expect(page.locator('label').filter({ hasText: 'missense' })).toBeChecked();
-    await expect(page.locator('label').filter({ hasText: /^affected$/ })).toBeChecked();
+    await page.locator('#gene-search-input').click();
+    await expect(page.locator('gpf-gene-profiles-single-view')).not.toBeVisible();
+    await expect(page.locator('#table-header')).toBeVisible();
+    expect(page.url()).toEqual(`${utils.instanceUrl}/gene-profiles`);
+
+    await page.locator('div').filter({ hasText: /^CHD8$/}).click();
+    expect(page.url()).toEqual(`${utils.instanceUrl}/gene-profiles/CHD8`);
+    await expect(page.locator('gpf-gene-profiles-single-view')).toBeVisible();
+    await expect(page.locator('#table-header')).not.toBeVisible();
+
+    await page.locator('#category-filtering-button').click();
+    await expect(page.locator('gpf-gene-profiles-single-view')).not.toBeVisible();
+    await expect(page.locator('#table-header')).toBeVisible();
+    expect(page.url()).toEqual(`${utils.instanceUrl}/gene-profiles`);
+
+    await expect(page.locator('#tabs-wrapper')).toContainText('GRIN2B');
+    await expect(page.locator('#tabs-wrapper')).toContainText('CHD8');
+    await expect(page.getByRole('button', {name: 'GRIN2B'})).toHaveClass('tab-name');
+    await expect(page.getByRole('button', {name: 'CHD8'})).toHaveClass('tab-name');
+
+    await page.locator('#tabs-wrapper').getByText('GRIN2B').click();
+    await expect(page.getByRole('button', {name: 'GRIN2B'})).toHaveClass('tab-name active-tab');
+    await expect(page.locator('gpf-gene-profiles-single-view')).toBeVisible();
+    expect(page.url()).toEqual(`${utils.instanceUrl}/gene-profiles/GRIN2B`);
+
+    await page.locator('#tabs-wrapper').getByText('CHD8').click();
+    await expect(page.getByRole('button', {name: 'CHD8'})).toHaveClass('tab-name active-tab');
+    await expect(page.getByRole('button', {name: 'GRIN2B'})).toHaveClass('tab-name');
+    await expect(page.locator('gpf-gene-profiles-single-view')).toBeVisible();
+    expect(page.url()).toEqual(`${utils.instanceUrl}/gene-profiles/CHD8`);
+
+    await page.locator('#tabs-wrapper').locator('.close-tab-button').nth(1).click();
+    await expect(page.locator('#table-header')).toBeVisible();
+    expect(page.url()).toEqual(`${utils.instanceUrl}/gene-profiles`);
+    await expect(page.locator('#tabs-wrapper').getByText('CHD8')).not.toBeVisible();
+
+    await page.locator('#tabs-wrapper').locator('.close-tab-button').nth(0).click();
+    await expect(page.locator('#tabs-wrapper').getByText('GRIN2B')).not.toBeVisible();
+  });
+
+  test('should open single view of a gene multiple times', async({ page }) => {
+    await page.locator('div').filter({ hasText: /^GRIN2B$/}).click();
+    await page.locator('#gene-search-input').click();
+
+    await page.locator('div').filter({ hasText: /^GRIN2B$/}).click();
+    await expect(page.locator('#tabs-wrapper').getByText('GRIN2B')).toHaveCount(1);
+    await expect(page.locator('#table-header')).not.toBeVisible();
+    await expect(page.locator('gpf-gene-profiles-single-view')).toBeVisible();
+  });
+
+  test('should open single view on new browser tab', async({ page }) => {
+    await page.locator('div').filter({ hasText: /^CHD8$/}).click();
+    await page.locator('#gene-search-input').click();
+
+    await page.locator('div').filter({ hasText: /^GRIN2B$/}).click({button: 'middle'});
+
+    const newPage = page.context().pages()[1];
+    expect(newPage.url()).toEqual(`${utils.instanceUrl}/gene-profiles/GRIN2B`);
+    await expect(newPage.locator('#tabs-wrapper').getByText('CHD8')).not.toBeVisible();
+    await expect(newPage.getByRole('button', {name: 'GRIN2B'})).toHaveClass('tab-name active-tab');
+    await expect(newPage.locator('gpf-gene-profiles-single-view').locator('h2:text("GRIN2B")')).toBeVisible();
+
+    await expect(page.locator('#tabs-wrapper').getByText('GRIN2B')).not.toBeVisible();
+    await expect(page.locator('#tabs-wrapper').getByText('CHD8')).toBeVisible();
+    await expect(page.locator('#table-header')).toBeVisible();
+  });
+
+  test('should open single view when comparing genes', async({ page }) => {
+    await page.locator('.table-body-row').filter({ hasText: 'SHANK2' }).click({button: 'middle'});
+    await page.locator('.table-body-row').filter({ hasText: 'CHD8' }).click({button: 'middle'});
+    await expect(page.locator('#compare-genes-modal')).toBeVisible();
+
+    await page.locator('#compare-genes-compare-button').click();
+
+    expect(page.url()).toEqual(`${utils.instanceUrl}/gene-profiles/CHD8,SHANK2`);
+    await expect(page.locator('gpf-gene-profiles-single-view')).toHaveCount(2);
+
+    await expect(page.locator('#tabs-wrapper').getByText('CHD8,SHANK2')).toBeVisible();
+    await expect(page.getByRole('button', {name: 'CHD8,SHANK2'})).toHaveClass('tab-name active-tab');
+  });
+
+  test('should open single view and check table\'s state', async({ page }) => {
+    await page.locator('input#gene-search-input').fill('GRIN2B');
+    await page.locator('div').filter({ hasText: /^GRIN2B$/}).click();
+    await expect(page.locator('input#gene-search-input')).toHaveValue('GRIN2B');
+
+    await page.locator('.search-clear-icon').click();
+    await page.locator('#category-filtering-button').click();
+    await page.getByLabel('Relevant Gene Sets').click();
+    await page.locator('.table-body-row').filter({ hasText: 'SHANK2' }).click({button: 'middle'});
+    await page.locator('.table-body-row').filter({ hasText: 'CHD8' }).click({button: 'middle'});
+
+    await page.locator('#tabs-wrapper').getByText('GRIN2B').click();
+    await page.locator('input#gene-search-input').click();
+
+    await expect(page.getByTitle('Relevant Gene Sets')).not.toBeVisible();
+    await expect(page.locator('.table-body-row').filter({ hasText: 'SHANK2' }))
+      .toHaveClass('table-row table-body-row row-highlight');
+    await expect(page.locator('.table-body-row').filter({ hasText: 'CHD8' }))
+      .toHaveClass('table-row table-body-row row-highlight');
+  });
+
+  test('should open single view for the same genes when comparing', async({ page }) => {
+    await page.locator('.table-body-row').filter({ hasText: 'SHANK2' }).click({button: 'middle'});
+    await page.locator('.table-body-row').filter({ hasText: 'CHD8' }).click({button: 'middle'});
+
+    await page.locator('#compare-genes-compare-button').click();
+
+    await page.locator('input#gene-search-input').click();
+
+    await page.locator('#compare-genes-compare-button').click();
+    expect(page.url()).toEqual(`${utils.instanceUrl}/gene-profiles/CHD8,SHANK2`);
+
+    await expect(page.locator('#tabs-wrapper').getByText('CHD8,SHANK2')).toHaveCount(1);
+    await expect(page.getByRole('button', {name: 'CHD8,SHANK2'})).toHaveClass('tab-name active-tab');
+  });
+
+
+  test('should navigate to single view with url', async({ page }) => {
+    await page.goto(`${utils.instanceUrl}/gene-profiles/CHD8`);
+
+    await expect(page.locator('#tabs-wrapper').getByText('CHD8')).toBeVisible();
+    await expect(page.locator('#table-header')).not.toBeVisible();
+    await expect(page.locator('gpf-gene-profiles-single-view')).toBeVisible();
+    await expect(page.locator('gpf-gene-profiles-single-view').locator('h2:text("CHD8")')).toBeVisible();
   });
 });
 
@@ -145,20 +263,19 @@ export const geneData =
     ]
   };
 
-test.describe('Gene profiles single view dynamic data tests', () => {
+test.describe('Gene profiles single view dynamic data and links tests', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.instanceUrl, {waitUntil: 'load'});
     await utils.loginAdmin(page);
     await page.locator('#header a:text("Gene Profiles")').click();
-  });
-
-  test('should compare all data in single view for GRIN2B', async({ page }) => {
     await page.locator('input#gene-search-input').focus();
     await page.keyboard.type('GRIN2B');
     await page.waitForLoadState();
 
     await page.locator('div').filter({ hasText: /^GRIN2B$/}).click();
+  });
 
+  test('should compare all data in single view for GRIN2B', async({ page }) => {
     await expect(page.locator('#autism_gene_sets').locator('th')).toHaveText('Autism Gene Sets');
     await expect(
       page.locator('.gene-sets-table').locator('tr').nth(0)
@@ -182,6 +299,60 @@ test.describe('Gene profiles single view dynamic data tests', () => {
     await expect(page.locator('#relevant_gene_sets').locator('tr').nth(2)).toHaveText('essential genescheck');
     await expect(page.locator('#relevant_gene_sets').locator('tr').nth(3)).toHaveText('FMRP Darnellcheck');
   });
-});
 
+  test('should navigate to Gene Browser from single view', async({ page, context }) => {
+    const pagePromise = context.waitForEvent('page');
+
+    await page.getByRole('link', { name: 'Gene Browser' }).click();
+
+    const newPage = await pagePromise;
+    await newPage.waitForLoadState();
+
+    expect(newPage.url()).toContain('/gene-browser/GRIN2B');
+  });
+
+  test('should navigate to UCSC genome browser from single view', async({ page, context }) => {
+    const pagePromise = context.waitForEvent('page');
+
+    await page.getByRole('link', { name: 'UCSC genome browser' }).click();
+
+    const newPage = await pagePromise;
+    await newPage.waitForLoadState();
+
+    expect(newPage.url()).toContain('https://genome.ucsc.edu/');
+  });
+
+  test('should navigate to GeneCards from single view', async({ page, context }) => {
+    const pagePromise = context.waitForEvent('page');
+
+    await page.getByRole('link', { name: 'GeneCards' }).click();
+
+    const newPage = await pagePromise;
+    await newPage.waitForLoadState();
+
+    expect(newPage.url()).toContain('https://www.genecards.org/');
+  });
+
+  test('should navigate to Pubmed from single view', async({ page, context }) => {
+    const pagePromise = context.waitForEvent('page');
+
+    await page.getByRole('link', { name: 'Pubmed' }).click();
+
+    const newPage = await pagePromise;
+    await newPage.waitForLoadState();
+
+    expect(newPage.url()).toContain('pubmed.ncbi.nlm.nih.gov/');
+  });
+
+  test('should navigate to SFARI gene from single view', async({ page, context }) => {
+    const pagePromise = context.waitForEvent('page');
+
+    await page.getByRole('link', { name: 'SFARI gene' }).click();
+
+    const newPage = await pagePromise;
+    await newPage.waitForLoadState();
+
+    expect(newPage.url()).toContain('https://gene.sfari.org/');
+  });
+});
 
