@@ -6,7 +6,6 @@ from box import Box
 import numpy as np
 
 from dae.pheno.common import MeasureType
-from dae.pheno.pheno_data import Measure
 from dae.pheno.utils.commons import remove_annoying_characters
 
 
