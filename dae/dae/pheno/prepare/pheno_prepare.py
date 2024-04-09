@@ -45,6 +45,7 @@ class PrepareBase(PrepareCommon):
         self.persons: dict[str, Any] = {}
         self.dbfile = self.config.db.filename
         self.connection = duckdb.connect(self.dbfile)
+        self.parquet_dir = os.path.join(self.config.output, "parquet") 
 
     def get_persons(self, force: bool = False) -> Optional[dict[str, Any]]:
         if not self.persons or len(self.persons) == 0 or force:
@@ -76,7 +77,7 @@ class PreparePersons(PrepareBase):
             "CREATE TABLE family AS "
             "SELECT DISTINCT family_id FROM ped_df"
         )
-        family_file = f"{self.config.output}/family.parquet"
+        family_file = f"{self.parquet_dir}/family.parquet"
         self.connection.sql(
             f"COPY family TO '{family_file}' (FORMAT PARQUET)"
         )
@@ -90,7 +91,7 @@ class PreparePersons(PrepareBase):
         return str(sample_id)
 
     def _save_persons(self, ped_df: pd.DataFrame) -> None:
-        person_file = f"{self.config.output}/person.parquet"
+        person_file = f"{self.parquet_dir}/person.parquet"
         ped_df["sample_id"] = ped_df["sample_id"].transform(
             self._build_sample_id
         )
@@ -477,11 +478,11 @@ class PrepareVariables(PreparePersons):
             self.build_instrument(instrument_name, descriptions)
             self.connection.sql(f"DROP TABLE {table_name}")
 
-        instrument_file = f"{self.config.output}/instrument.parquet"
+        instrument_file = f"{self.parquet_dir}/instrument.parquet"
         self.connection.sql(
             f"COPY instrument TO '{instrument_file}' (FORMAT PARQUET)"
         )
-        measure_file = f"{self.config.output}/measure.parquet"
+        measure_file = f"{self.parquet_dir}/measure.parquet"
         self.connection.sql(
             f"COPY measure TO '{measure_file}' (FORMAT PARQUET)"
         )
@@ -683,7 +684,7 @@ class PrepareVariables(PreparePersons):
             f"ON i.\"{self.config.person.column}\" = p.person_id"
             ")"
         )
-        instruments_dir = os.path.join(self.config.output, "instruments")
+        instruments_dir = os.path.join(self.parquet_dir, "instruments")
         os.makedirs(instruments_dir, exist_ok=True)
         output_file = f"{instruments_dir}/{output_table_name}.parquet"
         self.connection.sql(
