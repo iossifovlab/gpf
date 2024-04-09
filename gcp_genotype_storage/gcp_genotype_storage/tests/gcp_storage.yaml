@@ -1,0 +1,6 @@
+id: gcp_test
+storage_type: gcp
+project_id: "seqpipe-gcp-storage-testing"
+import_bucket: gs://seqpipe-gcp-storage-testing-bucket
+bigquery:
+  db: seqpipe_gcp_storage_testing_db

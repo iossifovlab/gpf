@@ -14,12 +14,12 @@ from gcp_genotype_storage.gcp_genotype_storage import GcpGenotypeStorage
 @pytest.fixture(scope="session")
 def gcp_storage_config(tmp_path_factory):
     return {
-        "id": "dev_gcp_genotype_storage",
+        "id": "gcp_test",
         "storage_type": "gcp",
-        "project_id": "gcp-genotype-storage",
-        "import_bucket": "gs://gcp-genotype-storage-input",
+        "project_id": "seqpipe-gcp-storage-testing",
+        "import_bucket": "gs://seqpipe-gcp-storage-testing-bucket",
         "bigquery": {
-            "db": "gpf_genotype_storage_dev_lubo",
+            "db": "seqpipe_gcp_storage_testing_db",
         }
     }
 
