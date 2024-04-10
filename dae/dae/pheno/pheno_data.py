@@ -17,7 +17,7 @@ from sqlalchemy import not_, Select
 
 from dae.pedigrees.family import Person
 from dae.pedigrees.families_data import FamiliesData
-from dae.pheno.db import PhenoDb
+from dae.pheno.db import PhenoDb, safe_db_name
 from dae.pheno.common import MeasureType
 
 from dae.variants.attributes import Sex, Status, Role
@@ -592,7 +592,7 @@ class PhenotypeStudy(PhenotypeData):
             if instrument_name not in instrument_table_columns:
                 instrument_table_columns[instrument_name] = []
             instrument_table_columns[instrument_name].append(
-                table.c[measure.measure_name].label(measure_id)
+                table.c[safe_db_name(measure.measure_name)].label(measure_id)
             )
 
         subquery_selects = []

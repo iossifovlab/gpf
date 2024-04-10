@@ -640,9 +640,13 @@ class PrepareVariables(PreparePersons):
             if isinstance(description, str):
                 description = description.replace("'", "''")
 
+            m_name = self._adjust_instrument_measure_name(
+                instrument_name, measure.measure_name
+            )
+
             values = [
                 measure.measure_id,
-                measure.measure_name,
+                m_name,
                 measure.instrument_name,
                 db_name,
                 description,
@@ -651,7 +655,7 @@ class PrepareVariables(PreparePersons):
                 measure.default_filter,
                 measure.min_value,
                 measure.max_value,
-                measure.values_domain,
+                measure.values_domain.replace("'", "''"),
                 measure.rank
             ]
             values = [

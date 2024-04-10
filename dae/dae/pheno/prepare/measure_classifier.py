@@ -8,7 +8,6 @@ from box import Box
 import numpy as np
 
 from dae.pheno.common import MeasureType
-from dae.pheno.db import safe_db_name
 from dae.pheno.utils.commons import remove_annoying_characters
 
 
@@ -100,7 +99,7 @@ class ClassifierReport:
         assert cursor is not None
         assert instrument_table_name is not None
 
-        measure_col = safe_db_name(cast(str, self.measure_name))
+        measure_col = self.measure_name
 
         rows = cursor.sql(
             f'SELECT "{measure_col}", COUNT(*) as count '
