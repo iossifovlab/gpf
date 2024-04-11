@@ -135,6 +135,7 @@ def parse_phenotype_data_config(args: argparse.Namespace) -> Box:
     config.instruments.tab_separated = args.tab_separated
 
     config.pedigree = args.pedigree
+    config.output = args.output
 
     config.db.filename = args.pheno_db_filename
     config.person.column = args.person_column
