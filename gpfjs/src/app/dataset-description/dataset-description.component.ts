@@ -7,7 +7,8 @@ import { filter, map, switchMap, take } from 'rxjs/operators';
 
 @Component({
   selector: 'gpf-dataset-description',
-  templateUrl: './dataset-description.component.html'
+  templateUrl: './dataset-description.component.html',
+  styleUrls: ['./dataset-description.component.css']
 })
 export class DatasetDescriptionComponent implements OnInit {
   public dataset$: Observable<Dataset>;
