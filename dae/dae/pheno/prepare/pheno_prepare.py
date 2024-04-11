@@ -351,6 +351,11 @@ class PrepareVariables(PreparePersons):
 
         filenames_list = f"[{', '.join(filenames)}]"
 
+        # This print should be kept until the import build is stable
+        # Some files when loaded with the next SQL query can cause a
+        # segmentation fault due to faulty formatting
+        print(f"{table_name} - {filenames_list}")
+
         self.connection.sql(
             f"CREATE TABLE {table_name} AS SELECT * FROM "
             f"read_csv({filenames_list}, delim='{sep}', header=true, "
