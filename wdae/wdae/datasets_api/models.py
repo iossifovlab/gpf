@@ -1,5 +1,5 @@
 import logging
-from typing import List, Optional
+from typing import List, Optional, Iterable
 
 from django.contrib.auth.models import Group
 from django.db import models
@@ -119,6 +119,21 @@ class DatasetHierarchy(models.Model):
                 instance_id=instance_id, descendant_id=dataset.id,
             ).exclude(ancestor_id=dataset.id)
         return [relation.ancestor for relation in relations]
+
+    @classmethod
+    def get_direct_datasets_parents(
+        cls, instance_id: str, datasets: Iterable[Dataset]
+    ) -> dict[str, Dataset]:
+        """Return dictionary of parents for a list of DB datasets."""
+        dataset_ids = [ds.id for ds in datasets]
+        relations = cls.objects.filter(
+            instance_id=instance_id, descendant_id__in=dataset_ids
+        )
+        return {
+            relation.descendant.dataset_id: relation.ancestor
+            for relation in relations
+            if relation.ancestor.id != relation.descendant.id
+        }
 
     @classmethod
     def get_children(
