@@ -186,6 +186,7 @@ import { AboutComponent } from './about/about.component';
 import { MarkdownEditorComponent } from './markdown-editor/markdown-editor.component';
 import { FamilyTagsComponent } from './family-tags/family-tags.component';
 import { FamilyTagsState } from './family-tags/family-tags.state';
+import { GeneProfilesState } from './gene-profiles-table/gene-profiles-table.state';
 
 const appRoutes: Routes = [
   {
@@ -431,7 +432,7 @@ const appRoutes: Routes = [
       GeneSymbolsState, FamilyIdsState, FamilyTagsState, RegionsFilterState, StudyTypesState, GeneSetsState,
       GeneScoresState, EnrichmentModelsState, PedigreeSelectorState, FamilyTypeFilterState,
       StudyFiltersState, PersonFiltersState, GenomicScoresBlockState, PhenoToolMeasureState,
-      UniqueFamilyVariantsFilterState, ErrorsState
+      UniqueFamilyVariantsFilterState, ErrorsState, GeneProfilesState
     ], {compatibility: { strictContentSecurityPolicy: true }}
     ),
     NgxsResetPluginModule.forRoot(),

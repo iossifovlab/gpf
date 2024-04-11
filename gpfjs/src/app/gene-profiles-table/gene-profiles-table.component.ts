@@ -12,13 +12,16 @@ import { GeneProfilesTableService } from './gene-profiles-table.service';
 import { environment } from 'environments/environment';
 import { Location } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
+import { Store } from '@ngxs/store';
+import { GeneProfilesState, SetGeneProfiles } from './gene-profiles-table.state';
+import { StatefulComponent } from 'app/common/stateful-component';
 
 @Component({
   selector: 'gpf-gene-profiles-table',
   templateUrl: './gene-profiles-table.component.html',
   styleUrls: ['./gene-profiles-table.component.css']
 })
-export class GeneProfilesTableComponent implements OnInit, OnChanges, OnDestroy {
+export class GeneProfilesTableComponent extends StatefulComponent implements OnInit, OnChanges, OnDestroy {
   @Input() public config: GeneProfilesTableConfig;
   @Input() public sortBy: string;
   public defaultSortBy: string;
@@ -59,7 +62,7 @@ export class GeneProfilesTableComponent implements OnInit, OnChanges, OnDestroy 
   private getGenesSubscription: Subscription = new Subscription();
   public imgPathPrefix = environment.imgPathPrefix;
 
-  public tabs: string[] = [];
+  public tabs = new Set<string>();
   public hideTable = false;
   public currentTabGeneSet= new Set<string>();
   public currentTabString = '';
@@ -67,8 +70,11 @@ export class GeneProfilesTableComponent implements OnInit, OnChanges, OnDestroy 
   public constructor(
     private geneProfilesService: GeneProfilesTableService,
     private location: Location,
-    private route: ActivatedRoute
-  ) { }
+    private route: ActivatedRoute,
+    protected store: Store
+  ) {
+    super(store, GeneProfilesState, 'geneProfiles');
+  }
 
   public ngOnInit(): void {
     this.defaultSortBy = this.sortBy;
@@ -94,6 +100,8 @@ export class GeneProfilesTableComponent implements OnInit, OnChanges, OnDestroy 
       );
       this.loadSingleView(this.currentTabGeneSet);
     }
+
+    this.loadTabs();
   }
 
   public ngOnChanges(): void {
@@ -175,6 +183,12 @@ export class GeneProfilesTableComponent implements OnInit, OnChanges, OnDestroy 
       this.showNothingFound = !this.genes.length;
       this.showInitialLoading = false;
       this.showSearchLoading = false;
+    });
+  }
+
+  public loadTabs(): void {
+    this.store.selectOnce(state => state.geneProfilesState).subscribe((state: SetGeneProfiles) => {
+      this.tabs = state.openedTabs;
     });
   }
 
@@ -333,9 +347,9 @@ export class GeneProfilesTableComponent implements OnInit, OnChanges, OnDestroy 
   public loadSingleView(geneSymbols: string | Set<string>, newTab: boolean = false): void {
     const genes = this.formatGeneSymbols(geneSymbols);
     if (!newTab) {
-      if (this.tabs.indexOf(genes) === -1) {
-        this.tabs.push(genes);
-      }
+      this.loadTabs();
+      this.tabs.add(genes);
+      this.store.dispatch(new SetGeneProfiles(this.tabs));
 
       this.openTab(genes);
     } else {
@@ -358,7 +372,8 @@ export class GeneProfilesTableComponent implements OnInit, OnChanges, OnDestroy 
   }
 
   public closeTab(tab: string): void {
-    this.tabs = this.tabs.filter(t => t !== tab);
+    this.tabs.delete(tab);
+    this.store.dispatch(new SetGeneProfiles(this.tabs));
     this.backToTable();
   }
 
