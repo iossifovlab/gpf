@@ -82,15 +82,16 @@ def produce_description_hierarchy(
 def get_first_paragraph(
     text: str,
 ) -> str:
-    if not text:
-        return ""
-
-    paragraphs = text.split("\n\n")
-    if "#" in paragraphs[0]:
-        title_match = re.match("^##((?:\n|.)*?)$\n", paragraphs[0])
-        return re.sub("^##((?:\n|.)*?)$\n", paragraphs[0]) if title_match else paragraphs[1]
-
-    return paragraphs[0]
+    result = ""
+    if text:
+        paragraphs = text.split("\n\n")
+        if "#" in paragraphs[0]:
+            title_match = re.match("^##((?:\n|.)*?)$\n", paragraphs[0])
+            result = re.sub("^##((?:\n|.)*?)$\n", paragraphs[0]) if title_match else paragraphs[1]
+        else: 
+            result = paragraphs[0]
+    
+    return result.replace("\n", " ")
 
 
 class DatasetView(QueryBaseView):
@@ -169,7 +170,7 @@ class DatasetView(QueryBaseView):
             else dataset.remote_genotype_data
         if dataset.is_group:
             genotype_data_ids = self.gpf_instance.get_genotype_data_ids()
-            res["children_description"] = "\n\nThis dataset includes:" \
+            res["children_description"] = "\nThis dataset includes:" \
                 + produce_description_hierarchy(
                     rawStudy,
                     genotype_data_ids
