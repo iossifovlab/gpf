@@ -1,5 +1,7 @@
 import logging
 import os
+import re
+from pprint import pprint
 from typing import Any, Optional, cast
 
 from django.conf import settings
@@ -11,7 +13,6 @@ from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
 from studies.study_wrapper import (
-    RemoteStudyWrapper,
     StudyWrapper,
     StudyWrapperBase,
 )
@@ -68,14 +69,28 @@ def produce_description_hierarchy(
             if child.study_id in selected:
                 res = res + (
                     "\n"
-                    f"{tab_spacing}"
-                    f'- **<a href="datasets/{child.study_id}">'
+                    f'{tab_spacing}- **<a href="datasets/{child.study_id}">'
                     f"{child.study_id}</a>**"
+                    f"{tab_spacing}\t{get_first_paragraph(child.description)}"
                     f"{produce_description_hierarchy(child, selected, tab+1)}"
                 )
         return res
 
     return ""
+
+
+def get_first_paragraph(
+    text: str,
+) -> str:
+    if not text:
+        return ""
+
+    paragraphs = text.split("\n\n")
+    if "#" in paragraphs[0]:
+        title_match = re.match("^##((?:\n|.)*?)$\n", paragraphs[0])
+        return re.sub("^##((?:\n|.)*?)$\n", paragraphs[0]) if title_match else paragraphs[1]
+
+    return paragraphs[0]
 
 
 class DatasetView(QueryBaseView):
@@ -149,24 +164,16 @@ class DatasetView(QueryBaseView):
         res = augment_with_groups(res)
         res = augment_with_parents(self.instance_id, res)
 
-        genotype_data_ids = self.gpf_instance.get_genotype_data_ids()
-
-
-        desc = "" if res.get("description") == None else res.get("description")
-        if isinstance(dataset, StudyWrapper):
-            res["description"] = desc + (
-                produce_description_hierarchy(
-                    dataset.genotype_data_study,
+        rawStudy = dataset.genotype_data_study \
+            if isinstance(dataset, StudyWrapper) \
+            else dataset.remote_genotype_data
+        if dataset.is_group:
+            genotype_data_ids = self.gpf_instance.get_genotype_data_ids()
+            res["children_description"] = "\n\nThis dataset includes:" \
+                + produce_description_hierarchy(
+                    rawStudy,
                     genotype_data_ids
                 )
-            )
-        elif isinstance(dataset, RemoteStudyWrapper):
-            res["description"] = desc + (
-                produce_description_hierarchy(
-                    dataset.remote_genotype_data,
-                    genotype_data_ids
-                )
-            )
 
         return Response({"data": res})
 
