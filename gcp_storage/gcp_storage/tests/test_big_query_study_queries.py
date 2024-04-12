@@ -1,12 +1,10 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+from typing import Any
+
 import pytest
 
 from dae.utils.regions import Region
-
-
-@pytest.fixture(scope="session")
-def bq_backend(imported_study):
-    return imported_study._backend
+from dae.studies.study import GenotypeDataStudy
 
 
 @pytest.mark.parametrize("index,query,ecount", [
@@ -17,7 +15,12 @@ def bq_backend(imported_study):
     (5, {"effect_types": ["splice-site"]}, 1),
     (6, {"regions": [Region("foo", 10, 10)]}, 1),
 ])
-def test_family_queries(imported_study, index, query, ecount):
+def test_family_queries(
+    imported_study: GenotypeDataStudy,
+    index: int,
+    query: dict[str, Any],
+    ecount: int
+) -> None:
     vs = list(imported_study.query_variants(**query))
     assert len(vs) == ecount
 
@@ -30,7 +33,12 @@ def test_family_queries(imported_study, index, query, ecount):
     (5, {"effect_types": ["splice-site"]}, 1),
     (6, {"regions": [Region("foo", 10, 10)]}, 1),
 ])
-def test_summary_queries(imported_study, index, query, ecount):
+def test_summary_queries(
+    imported_study: GenotypeDataStudy,
+    index: int,
+    query: dict[str, Any],
+    ecount: int
+) -> None:
 
     vs = list(imported_study.query_summary_variants(**query))
 

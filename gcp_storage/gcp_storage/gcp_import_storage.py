@@ -1,8 +1,8 @@
 import logging
-from typing import cast
+from typing import cast, Any
 
 from dae.configuration.study_config_builder import StudyConfigBuilder
-from dae.import_tools.import_tools import save_study_config
+from dae.import_tools.import_tools import ImportProject, save_study_config
 from dae.task_graph.graph import TaskGraph
 from dae.schema2_storage.schema2_import_storage import Schema2ImportStorage, \
     schema2_dataset_layout
@@ -16,7 +16,7 @@ class GcpImportStorage(Schema2ImportStorage):
     """Import logic for data in the GCP Schema 2."""
 
     @classmethod
-    def _do_import_dataset(cls, project):
+    def _do_import_dataset(cls, project: ImportProject) -> None:
         layout = schema2_dataset_layout(project.get_parquet_dataset_dir())
         genotype_storage = cast(
             GcpGenotypeStorage, project.get_genotype_storage())
@@ -25,7 +25,7 @@ class GcpImportStorage(Schema2ImportStorage):
             project.study_id, layout)
 
     @classmethod
-    def _do_study_config(cls, project):
+    def _do_study_config(cls, project: ImportProject) -> None:
         genotype_storage: GcpGenotypeStorage = \
             cast(GcpGenotypeStorage, project.get_genotype_storage())
         # pylint: disable=protected-access
@@ -47,11 +47,14 @@ class GcpImportStorage(Schema2ImportStorage):
 
         if study_tables.summary:
             assert study_tables.family is not None
-            storage_config = study_config["genotype_storage"]
+            storage_config = cast(
+                dict[str, Any], study_config["genotype_storage"])
             storage_config["tables"]["summary"] = study_tables.summary
             storage_config["tables"]["family"] = study_tables.family
             storage_config["tables"]["meta"] = study_tables.meta
-            study_config["genotype_browser"]["enabled"] = True
+            genotype_browser_config = cast(
+                dict[str, Any], study_config["genotype_browser"])
+            genotype_browser_config["enabled"] = True
 
         config_builder = StudyConfigBuilder(study_config)
         config = config_builder.build_config()
@@ -61,7 +64,7 @@ class GcpImportStorage(Schema2ImportStorage):
             project.study_id,
             config)
 
-    def generate_import_task_graph(self, project) -> TaskGraph:
+    def generate_import_task_graph(self, project: ImportProject) -> TaskGraph:
         graph = TaskGraph()
         all_parquet_tasks = []
         if project.get_processing_parquet_dataset_dir() is None:

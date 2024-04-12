@@ -1,6 +1,10 @@
 import time
 import queue
 import logging
+from typing import Callable, Optional, Any
+
+from google.cloud.bigquery.client import Client
+
 from dae.query_variants.query_runners import QueryRunner
 
 logger = logging.getLogger(__name__)
@@ -9,13 +13,16 @@ logger = logging.getLogger(__name__)
 class BigQueryQueryRunner(QueryRunner):
     """Run a Impala query in a separate thread."""
 
-    def __init__(self, connection_factory, query, deserializer=None):
+    def __init__(
+        self, connection_factory: Client,
+        query: str, deserializer: Optional[Callable] = None
+    ) -> None:
         super().__init__(deserializer=deserializer)
 
         self.client = connection_factory
         self.query = query
 
-    def run(self):
+    def run(self) -> None:
         """Execute the query and enqueue the resulting rows."""
         started = time.time()
         logger.debug(
@@ -51,7 +58,7 @@ class BigQueryQueryRunner(QueryRunner):
         self.close()
         self._finalize(started)
 
-    def _put_value_in_result_queue(self, val):
+    def _put_value_in_result_queue(self, val: Any) -> None:
         assert self._result_queue is not None
 
         no_interest = 0
@@ -79,7 +86,7 @@ class BigQueryQueryRunner(QueryRunner):
                     self.close()
                     break
 
-    def _finalize(self, started):
+    def _finalize(self, started: float) -> None:
         with self._status_lock:
             self._done = True
         elapsed = time.time() - started

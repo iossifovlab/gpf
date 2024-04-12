@@ -1,5 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import textwrap
+from typing import Any
+
 import yaml
 import pytest
 
@@ -7,12 +9,15 @@ from dae.testing import setup_pedigree, setup_vcf, vcf_study
 from dae.testing.foobar_import import foobar_gpf
 from dae.genotype_storage.genotype_storage_registry import \
     get_genotype_storage_factory
+from dae.studies.study import GenotypeData
 
 from gcp_storage.gcp_genotype_storage import GcpGenotypeStorage
 
 
 @pytest.fixture(scope="session")
-def gcp_storage_config(tmp_path_factory):
+def gcp_storage_config(
+    tmp_path_factory: pytest.TempPathFactory
+) -> dict[str, Any]:
     return {
         "id": "gcp_test",
         "storage_type": "gcp",
@@ -25,7 +30,9 @@ def gcp_storage_config(tmp_path_factory):
 
 
 @pytest.fixture(scope="session")
-def gcp_storage_fixture(gcp_storage_config):
+def gcp_storage_fixture(
+    gcp_storage_config: dict[str, Any]
+) -> GcpGenotypeStorage:
     storage_factory = get_genotype_storage_factory("gcp")
     assert storage_factory is not None
     storage = storage_factory(gcp_storage_config)
@@ -35,7 +42,10 @@ def gcp_storage_fixture(gcp_storage_config):
 
 
 @pytest.fixture(scope="session")
-def imported_study(tmp_path_factory, gcp_storage_fixture):
+def imported_study(
+    tmp_path_factory: pytest.TempPathFactory,
+    gcp_storage_fixture: GcpGenotypeStorage
+) -> GenotypeData:
     root_path = tmp_path_factory.mktemp(
         f"vcf_path_{gcp_storage_fixture.storage_id}")
     gpf_instance = foobar_gpf(root_path, gcp_storage_fixture)
@@ -66,7 +76,10 @@ def imported_study(tmp_path_factory, gcp_storage_fixture):
 
 
 @pytest.fixture(scope="session")
-def partition_study(tmp_path_factory, gcp_storage_fixture):
+def partition_study(
+    tmp_path_factory: pytest.TempPathFactory,
+    gcp_storage_fixture: GcpGenotypeStorage
+) -> GenotypeData:
     root_path = tmp_path_factory.mktemp(
         f"vcf_path_partition_{gcp_storage_fixture.storage_id}")
     gpf_instance = foobar_gpf(root_path, gcp_storage_fixture)
