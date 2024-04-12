@@ -70,7 +70,7 @@ the Google BigQuery for querying variants you need to install more dependencies
 in your development environment:
 
 ```bash
-mamba env update --name gpf --file ./gcp_storage/environment.yml
+mamba env update --name gpf --file ./gcp_storage/gcp-environment.yml
 ```
 
 and install `gcp_genotype_storage` package using:
