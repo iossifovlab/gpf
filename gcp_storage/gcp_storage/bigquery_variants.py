@@ -101,8 +101,6 @@ class BigQueryVariants(SqlSchema2Variants):
 
     def _fetch_pedigree(self) -> pd.DataFrame:
         query = f"SELECT * FROM {self.db}.{self.pedigree_table}"
-
-        # ped_df = pandas_gbq.read_gbq(q, project_id=self.gcp_project_id)
         ped_df = self.client.query(query).result().to_dataframe()
 
         columns = {

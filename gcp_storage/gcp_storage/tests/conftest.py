@@ -15,14 +15,13 @@ from gcp_storage.gcp_genotype_storage import GcpGenotypeStorage
 
 
 @pytest.fixture(scope="session")
-def gcp_storage_config(
-    tmp_path_factory: pytest.TempPathFactory
-) -> dict[str, Any]:
+def gcp_storage_config() -> dict[str, Any]:
     return {
         "id": "gcp_test",
         "storage_type": "gcp",
         "project_id": "seqpipe-gcp-storage-testing",
-        "import_bucket": "gs://seqpipe-gcp-storage-testing-bucket",
+        "import_bucket":
+        "gs://seqpipe-gcp-storage-testing-bucket",
         "bigquery": {
             "db": "seqpipe_gcp_storage_testing_db",
         }
@@ -70,7 +69,7 @@ def imported_study(
 
     study = vcf_study(
         root_path,
-        "minimal_vcf", ped_path, [vcf_path],
+        "bq_test_minimal_vcf", ped_path, [vcf_path],
         gpf_instance)
     return study
 
@@ -109,7 +108,7 @@ def partition_study(
 
     study = vcf_study(
         root_path,
-        "partition_vcf", ped_path, [vcf_path],
+        "bq_partition_vcf", ped_path, [vcf_path],
         gpf_instance, project_config_update=yaml.safe_load(textwrap.dedent("""
           partition_description:
             region_bin:

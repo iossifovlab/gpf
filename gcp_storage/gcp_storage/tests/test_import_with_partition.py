@@ -17,7 +17,7 @@ def bq_backend(partition_study: GenotypeDataStudy) -> BigQueryVariants:
     (1, {}, 8),
     (2, {"genes": ["g1"]}, 4),
     (3, {"genes": ["g2"]}, 4),
-    (4, {"effect_types": ["missense"]}, 4),
+    (4, {"effect_types": ["missense"]}, 2),
     (5, {"effect_types": ["splice-site"]}, 2),
     (6, {"regions": [Region("foo", 10, 10)]}, 2),
 ])
@@ -35,7 +35,7 @@ def test_family_queries(
     (1, {}, 4),
     (2, {"genes": ["g1"]}, 2),
     (3, {"genes": ["g2"]}, 2),
-    (4, {"effect_types": ["missense"]}, 2),
+    (4, {"effect_types": ["missense"]}, 1),
     (5, {"effect_types": ["splice-site"]}, 1),
     (6, {"regions": [Region("foo", 10, 10)]}, 1),
 ])
