@@ -7,8 +7,8 @@ from dae.genotype_storage.genotype_storage_registry import \
     get_genotype_storage_factory
 from dae.import_tools.import_tools import get_import_storage_factory
 
-from gcp_genotype_storage.gcp_genotype_storage import GcpGenotypeStorage
-from gcp_genotype_storage.gcp_import_storage import GcpImportStorage
+from gcp_storage.gcp_genotype_storage import GcpGenotypeStorage
+from gcp_storage.gcp_import_storage import GcpImportStorage
 
 
 def test_genotype_storage_config(gcp_storage_config):

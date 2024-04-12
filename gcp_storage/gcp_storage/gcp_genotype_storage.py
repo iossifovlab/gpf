@@ -12,7 +12,7 @@ from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.schema2_storage.schema2_import_storage import Schema2DatasetLayout
 from dae.parquet.partition_descriptor import PartitionDescriptor
 
-from gcp_genotype_storage.bigquery_variants import BigQueryVariants
+from gcp_storage.bigquery_variants import BigQueryVariants
 
 
 logger = logging.getLogger(__name__)

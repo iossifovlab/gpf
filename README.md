@@ -70,13 +70,13 @@ the Google BigQuery for querying variants you need to install more dependencies
 in your development environment:
 
 ```bash
-mamba env update --name gpf --file ./gcp_genotype_storage/environment.yml
+mamba env update --name gpf --file ./gcp_storage/environment.yml
 ```
 
 and install `gcp_genotype_storage` package using:
 
 ```bash
-pip install -e gcp_genotype_storage
+pip install -e gcp_storage
 ```
 
 To run the tests you need to authenticate for `seqpipe-gcp-storage-testing`
@@ -100,14 +100,14 @@ gcloud auth application-default login
 ```
 
 To run the GCP storge tests you should enter into the
-`gpf/gcp_genotype_storage` directory and run:
+`gpf/gcp_storage` directory and run:
 
 ```bash
-py.test -v gcp_genotype_storage/tests/
+py.test -v gcp_storage/tests/
 ```
 
 To run the intergration tests use:
 
 ```bash
-py.test -v ../dae/tests/ gcp_genotype_storage/tests/gpf_storage.yaml
+py.test -v ../dae/tests/ gcp_storage/tests/gpf_storage.yaml
 ```

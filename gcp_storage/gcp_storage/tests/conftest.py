@@ -8,7 +8,7 @@ from dae.testing.foobar_import import foobar_gpf
 from dae.genotype_storage.genotype_storage_registry import \
     get_genotype_storage_factory
 
-from gcp_genotype_storage.gcp_genotype_storage import GcpGenotypeStorage
+from gcp_storage.gcp_genotype_storage import GcpGenotypeStorage
 
 
 @pytest.fixture(scope="session")

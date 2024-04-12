@@ -12,7 +12,7 @@ from dae.query_variants.sql.schema2.base_variants import SqlSchema2Variants
 from dae.query_variants.sql.schema2.base_query_builder import Dialect
 from dae.variants.variant import SummaryVariantFactory
 from dae.variants.family_variant import FamilyVariant
-from gcp_genotype_storage.bigquery_query_runner import BigQueryQueryRunner
+from gcp_storage.bigquery_query_runner import BigQueryQueryRunner
 
 logger = logging.getLogger(__name__)
 
