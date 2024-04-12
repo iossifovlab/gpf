@@ -22,8 +22,6 @@ def t4c8_study_odd(t4c8_instance: GPFInstance) -> str:
     - sv1       - sv2       - sv2
     - sv2                   - sv3
     - sv3
-
-    The fifth summary variant (sv4) is not found in any family.
     """
     root_path = pathlib.Path(t4c8_instance.dae_dir)
     ped_path = setup_pedigree(
@@ -51,7 +49,6 @@ chr1   4    .  T   G    .    .      .    GT     0/1  0/1  0/1 0/1  0/1  0/1 0/1 
 chr1   54   .  T   C    .    .      .    GT     0/1  0/1  0/1 0/0  0/0  0/0 0/0  0/0  0/0
 chr1   90   .  G   C    .    .      .    GT     0/1  0/1  0/1 0/1  0/1  0/1 0/1  0/1  0/1
 chr1   100  .  T   G    .    .      .    GT     0/1  0/1  0/1 0/0  0/0  0/0 0/1  0/1  0/1
-chr1   119  .  A   G    .    .      .    GT     0/0  0/0  0/0 0/0  0/0  0/0 0/0  0/0  0/0
         """)  # noqa
 
     project_config_update = {
@@ -81,9 +78,9 @@ def test_fetch_variants_count_nonpartitioned(
     loader = ParquetLoader(t4c8_study_nonpartitioned)
     vs = list(loader.fetch_variants())
     # summary variants
-    assert len(vs) == 3
+    assert len(vs) == 4
     # family variants
-    assert sum(len(fvs) for _, fvs in vs) == 4
+    assert sum(len(fvs) for _, fvs in vs) == 5
 
 
 def test_fetch_variants_count_partitioned(
@@ -92,9 +89,9 @@ def test_fetch_variants_count_partitioned(
     loader = ParquetLoader(t4c8_study_partitioned)
     vs = list(loader.fetch_variants())
     # summary variants
-    assert len(vs) == 6
+    assert len(vs) == 11
     # family variants
-    assert sum(len(fvs) for _, fvs in vs) == 12
+    assert sum(len(fvs) for _, fvs in vs) == 16
 
 
 def test_fetch_variants_count_nonpartitioned_region(
@@ -103,15 +100,15 @@ def test_fetch_variants_count_nonpartitioned_region(
     loader = ParquetLoader(t4c8_study_nonpartitioned)
     vs = list(loader.fetch_variants(region="chr1:119"))
     # summary variants
-    assert len(vs) == 1
-    # family variants
-    assert sum(len(fvs) for _, fvs in vs) == 2
-
-    vs = list(loader.fetch_variants(region="chr1:119-122"))
-    # summary variants
     assert len(vs) == 2
     # family variants
     assert sum(len(fvs) for _, fvs in vs) == 3
+
+    vs = list(loader.fetch_variants(region="chr1:119-122"))
+    # summary variants
+    assert len(vs) == 3
+    # family variants
+    assert sum(len(fvs) for _, fvs in vs) == 4
 
 
 def test_fetch_variants_count_partitioned_region(
@@ -120,15 +117,15 @@ def test_fetch_variants_count_partitioned_region(
     loader = ParquetLoader(t4c8_study_partitioned)
     vs = list(loader.fetch_variants(region="chr1:1-89"))
     # summary variants
-    assert len(vs) == 2
+    assert len(vs) == 3
     # family variants
-    assert sum(len(fvs) for _, fvs in vs) == 4
+    assert sum(len(fvs) for _, fvs in vs) == 5
 
     vs = list(loader.fetch_variants(region="chr1:90-200"))
     # summary variants
-    assert len(vs) == 4
+    assert len(vs) == 8
     # family variants
-    assert sum(len(fvs) for _, fvs in vs) == 8
+    assert sum(len(fvs) for _, fvs in vs) == 11
 
 
 def test_fetch_variants_odd_study(
@@ -137,6 +134,6 @@ def test_fetch_variants_odd_study(
     loader = ParquetLoader(t4c8_study_odd)
     vs = list(loader.fetch_variants())
     # summary variants
-    assert len(vs) == 5
+    assert len(vs) == 4
     # family variants
     assert sum(len(fvs) for _, fvs in vs) == 9

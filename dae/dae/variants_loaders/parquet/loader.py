@@ -1,7 +1,8 @@
 import os
 import json
 import glob
-from typing import Generator, Optional
+from collections.abc import Generator
+from typing import Optional
 import yaml
 import numpy as np
 from pyarrow import parquet as pq
@@ -22,10 +23,76 @@ class ParquetLoaderException(Exception):
     pass
 
 
+class ParquetHelper:
+    """
+    Helper class to incrementally fetch family variants.
+
+    Important - this class assumes variants are ordered by their summary index.
+    """
+
+    columns = ("summary_index", "family_variant_data", "family_id")
+
+    def __init__(self, path: str):
+        self.pq_file = pq.ParquetFile(path)
+        self.iterator = self.pq_file.iter_batches(
+            columns=ParquetHelper.columns)
+        self.batch: list[dict] = []
+        self.exhausted = False
+
+    @property
+    def _current_idx(self) -> int:
+        if not self.batch:
+            return -1
+        return int(self.batch[0]["summary_index"])
+
+    def _advance(self) -> None:
+        if self.exhausted:
+            return
+        try:
+            self.batch = next(self.iterator).to_pylist()
+        except StopIteration:
+            self.exhausted = True
+
+    def _pop(self) -> Optional[dict]:
+        if self.exhausted:
+            return None
+        if not self.batch:
+            self._advance()
+        return self.batch.pop(0)
+
+    def get(self, summary_idx: int) -> list[dict]:
+        """Fetch all family variants matching the given summary index."""
+        result: list[dict] = []
+
+        if self.exhausted:
+            return result
+        if not self.batch:
+            self._advance()
+
+        if summary_idx < self._current_idx:
+            return []
+        while summary_idx > self._current_idx:
+            rec = self._pop()  # seek forward
+            if rec is None:
+                return result
+        while self._current_idx == summary_idx:
+            rec = self._pop()
+            if rec is None:
+                return result
+            result.append(rec)
+        return result
+
+    def close(self) -> None:
+        self.pq_file.close()
+
+
 class ParquetLoader:
     """Variants loader implementation for the Parquet format."""
 
-    DATA_COLUMN = "summary_variant_data"
+    SUMMARY_COLUMNS = [
+        "bucket_index", "summary_index", "allele_index",
+        "summary_variant_data", "chromosome", "position",
+    ]
 
     def __init__(self, data_dir: str):
         self.data_dir: str = data_dir
@@ -164,16 +231,12 @@ class ParquetLoader:
             )
 
         summary_paths = self.get_summary_pq_filepaths(region_obj)
-        columns = [
-            "bucket_index", "summary_index", "allele_index",
-            "summary_variant_data", "chromosome", "position",
-        ]
 
         seen = set()
 
         for s_path in summary_paths:
             table = pq.read_table(
-                s_path, columns=columns, filters=region_filter)
+                s_path, columns=self.SUMMARY_COLUMNS, filters=region_filter)
             for rec in table.to_pylist():
                 v_id = (rec["bucket_index"], rec["summary_index"])
                 if v_id not in seen:
@@ -187,60 +250,35 @@ class ParquetLoader:
     ) -> Generator[tuple[SummaryVariant, list[FamilyVariant]], None, None]:
         """Iterate over summary and family variants."""
         region_obj = None
-        region_filter = None
         if region is not None:
             region_obj = Region.from_str(region)
-            region_filter = (
-                (pc.field("chromosome") == region_obj.chrom)
-                & (pc.field("position") >= region_obj.start)
-                & (pc.field("position") <= region_obj.stop)
-            )
 
-        filepaths = self.get_summary_pq_filepaths(region_obj)
+        for s_path in self.get_summary_pq_filepaths(region_obj):
+            s_pq = pq.ParquetFile(s_path)
+            f_pqs = [ParquetHelper(path) for path
+                     in self.get_family_pq_filepaths(s_path)]
+            for batch in s_pq.iter_batches(columns=self.SUMMARY_COLUMNS):
+                for rec in batch.to_pylist():
+                    if region_obj is not None \
+                       and not region_obj.contains(Region(rec["chromosome"],
+                                                          rec["position"],
+                                                          rec["position"])):
+                        continue
 
-        idx_columns = ("summary_index", "allele_index")
-        s_columns = ("summary_variant_data",
-                     "chromosome", "position",
-                     *idx_columns)
-        f_columns = ("family_variant_data", "family_id", *idx_columns)
+                    sv_idx = rec["summary_index"]
+                    sv = self._deserialize_summary_variant(
+                        rec["summary_variant_data"])
 
-        summary_variants: list[tuple[str, SummaryVariant]] = []
-        family_variant_recs: dict[str, list[str]] = {}
+                    fvs: list[dict] = []
+                    for f_pq in f_pqs:
+                        fvs.extend(f_pq.get(sv_idx))
 
-        for s_path in filepaths[0]:
-            s_parquet = pq.ParquetFile(s_path)
-            table = s_parquet.read(columns=s_columns)
-            if region_filter is not None:
-                table = table.filter(region_filter)
-            for rec in table.to_pylist():
-                if rec["allele_index"] == 1:
-                    variant = self._deserialize_summary_variant(
-                        rec["summary_variant_data"]
-                    )
-                    summary_variants.append((rec["summary_index"], variant))
+                    to_yield = []
+                    for fv in fvs:
+                        to_yield.append(self._deserialize_family_variant(
+                            fv["family_variant_data"], sv))
+                    yield (sv, to_yield)
 
-            s_parquet.close()
-
-        seen_fvs = set()  # TODO Is there a better way?
-        for f_path in filepaths[1]:
-            f_parquet = pq.ParquetFile(f_path)
-            for f_rec in f_parquet.read(columns=f_columns).to_pylist():
-                a = (f_rec["summary_index"], f_rec["family_id"])
-                if a not in seen_fvs:
-                    seen_fvs.add(a)
-                    family_variant_recs.setdefault(
-                        f_rec["summary_index"], []
-                    ).append(
-                        f_rec["family_variant_data"]
-                    )
-            f_parquet.close()
-
-        for summary_index, summary_variant in summary_variants:
-            if summary_index in family_variant_recs:
-                family_variants = [
-                    self._deserialize_family_variant(f_rec, summary_variant)
-                    for f_rec in family_variant_recs[summary_index]
-                ]
-            else:
-                family_variants = []
-            yield (summary_variant, family_variants)
+            s_pq.close()
+            for f_pq in f_pqs:
+                f_pq.close()
