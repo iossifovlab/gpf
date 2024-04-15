@@ -41,9 +41,14 @@ indent-width = 4
 target-version = "py310"
 
 [lint]
-select = ["E", "F", "W", "C90"]
+select = ["E", "F", "W", "C90", "I", "UP", "ASYNC", "S", "BLE", "FBT", "B", "A", "COM", "C4", "T10", "EXE", "ISC", "LOG", "G", "INP", "PIE", "T20", "PT", "Q", "RSE", "RET", "SLF", "SIM", "ARG", "PTH", "FIX", "ERA", "PD", "TRY", "PERF", "FURB", "RUF"]
+ignore = ["D105", "D107", "D417", "UP015", "UP038"]
 fixable = ["ALL"]
 preview = true
+
+[lint.per-file-ignores]
+"test*.py" = ["S101", "SLF"]
+"conftest.py" = ["D"]
 
 [lint.mccabe]
 max-complexity = 20
