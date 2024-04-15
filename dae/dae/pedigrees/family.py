@@ -201,11 +201,6 @@ class Person:
 
         self.family: Optional[Family] = None
         self.sample_id = self._attributes.get("sample_id", None)
-        index = self._attributes.get("index", None)
-        if index is not None:
-            self.set_attr("member_index", index)
-            del self._attributes["index"]
-        self.member_index = self._attributes.get("member_index", None)
 
         self._sex = Sex.from_name(self._attributes["sex"])
         if "role" not in self._attributes:
@@ -277,6 +272,10 @@ class Person:
             "not_sequenced": self.not_sequenced,
             "missing": self.missing,
         }
+
+    @property
+    def member_index(self) -> int:
+        return int(self._attributes.get("member_index", -1))
 
     @property
     def role(self) -> Optional[Role]:
@@ -476,9 +475,9 @@ class Family:
             member.mom = self.get_member(member.mom_id)
             member.dad = self.get_member(member.dad_id)
             if member.missing:
-                member.member_index = -1
+                member.set_attr("member_index", -1)
             else:
-                member.member_index = index
+                member.set_attr("member_index", index)
                 index += 1
 
     @staticmethod
