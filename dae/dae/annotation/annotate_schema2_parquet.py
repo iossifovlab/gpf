@@ -1,25 +1,22 @@
 import argparse
 import os
 import sys
-from glob import glob
 from typing import Optional
-
-from dae.annotation.annotate_utils import AnnotationTool
-from dae.annotation.annotation_pipeline import ReannotationPipeline
-from dae.annotation.context import CLIAnnotationContext
-from dae.genomic_resources.cli import VerbosityConfiguration
+from glob import glob
 from dae.genomic_resources.reference_genome import ReferenceGenome
+from dae.annotation.annotate_utils import AnnotationTool
+from dae.annotation.context import CLIAnnotationContext
 from dae.gpf_instance.gpf_instance import GPFInstance
+from dae.parquet.parquet_writer import append_meta_to_parquet, \
+    merge_variants_parquets
 from dae.parquet.helpers import merge_parquets
-from dae.parquet.parquet_writer import (
-    append_meta_to_parquet,
-    merge_variants_parquets,
-)
 from dae.parquet.partition_descriptor import PartitionDescriptor
-from dae.parquet.schema2.parquet_io import VariantsParquetWriter
 from dae.schema2_storage.schema2_import_storage import schema2_dataset_layout
 from dae.task_graph.cli_tools import TaskGraphCli
+from dae.genomic_resources.cli import VerbosityConfiguration
 from dae.variants_loaders.parquet.loader import ParquetLoader
+from dae.annotation.annotation_pipeline import ReannotationPipeline
+from dae.parquet.schema2.parquet_io import VariantsParquetWriter
 
 
 class AnnotateSchema2ParquetTool(AnnotationTool):
@@ -29,7 +26,7 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
         """Construct and configure argument parser."""
         parser = argparse.ArgumentParser(
             description="Annotate Schema2 Parquet",
-            formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+            formatter_class=argparse.ArgumentDefaultsHelpFormatter
         )
         parser.add_argument(
             "input", default="-", nargs="?",
@@ -94,11 +91,11 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
             (loader.meta["annotation_pipeline"]
              if loader.has_annotation else None),
             grr_definition,
-            allow_repeated_attributes,
+            allow_repeated_attributes
         )
         writer = VariantsParquetWriter(
             output_dir, pipeline.get_attributes(),
-            loader.partition_descriptor, bucket_idx,
+            loader.partition_descriptor, bucket_idx
         )
 
         if isinstance(pipeline, ReannotationPipeline):
@@ -166,12 +163,12 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
         os.symlink(
             os.path.split(loader.layout.pedigree)[0],
             os.path.split(layout.pedigree)[0],
-            target_is_directory=True,
+            target_is_directory=True
         )
         os.symlink(
             loader.layout.family,
             layout.family,
-            target_is_directory=True,
+            target_is_directory=True
         )
 
         if self.gpf_instance is None:
@@ -196,13 +193,13 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
                 [input_dir, output_dir,
                  raw_annotation, region, self.grr.definition,
                  idx, self.args.allow_repeated_attributes],
-                [],
+                []
             ))
 
         if loader.partitioned:
             def merge_partitioned(
                 summary_dir: str, partition_dir: str,
-                partition_descriptor: PartitionDescriptor,
+                partition_descriptor: PartitionDescriptor
             ) -> None:
                 partitions = []
                 for partition in partition_dir.split("/"):
@@ -223,7 +220,7 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
                     f"merge_{path}",
                     merge_partitioned,
                     [layout.summary, path, loader.partition_descriptor],
-                    annotation_tasks,
+                    annotation_tasks
                 )
         else:
             def merge(output_dir: str, output_filename: str) -> None:
@@ -234,14 +231,14 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
             self.task_graph.create_task(
                 "merge", merge,
                 [os.path.join(output_dir, "summary"),
-                 os.path.basename(loader.get_pq_filepaths()[0][0])],
-                annotation_tasks,
+                 os.path.basename(loader.get_summary_pq_filepaths()[0])],
+                annotation_tasks
             )
 
 
 def cli(
     raw_args: Optional[list[str]] = None,
-    gpf_instance: Optional[GPFInstance] = None,
+    gpf_instance: Optional[GPFInstance] = None
 ) -> None:
     tool = AnnotateSchema2ParquetTool(raw_args, gpf_instance)
     tool.run()
