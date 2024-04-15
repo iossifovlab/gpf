@@ -16,14 +16,14 @@ class WDAEConfig(AppConfig):
     name = "gpf_instance"
 
     def ready(self) -> None:
-        logger.warning("WGPConfig application starting...")
+        logger.info("WGPConfig application starting...")
         AppConfig.ready(self)
         config_filename = None
         if getattr(settings, "GPF_INSTANCE_CONFIG", None):
             config_filename = pathlib.Path(__file__).parent.joinpath(
                 settings.GPF_INSTANCE_CONFIG)
 
-            logger.error("GPF instance config: %s", config_filename)
+            logger.info("GPF instance config: %s", config_filename)
 
         gpf_instance = get_wgpf_instance(config_filename)
 
@@ -32,7 +32,7 @@ class WDAEConfig(AppConfig):
             return
 
         try:
-            logger.warning("eager loading of GPF instance and studies")
+            logger.info("eager loading of GPF instance and studies")
             gpf_instance.load()
             pheno = gpf_instance.get_all_phenotype_data()
             logger.info("preloading phenotype studies: %s", pheno)
@@ -45,4 +45,4 @@ class WDAEConfig(AppConfig):
         except Exception:  # pylint: disable=broad-except
             logger.error(
                 "problem while eager loading of studies", exc_info=True)
-        logger.warning("Eager loading DONE")
+        logger.info("Eager loading DONE")
