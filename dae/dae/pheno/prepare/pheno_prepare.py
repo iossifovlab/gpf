@@ -568,7 +568,9 @@ class PrepareVariables(PreparePersons):
         with Pool(processes=self.config.parallel) as pool:
             data_measures = []
             for row in cursor.sql(f"DESCRIBE {tmp_table_name}").fetchall():
-                if row[0] not in {self.PID_COLUMN, self.PERSON_ID}:
+                if row[0] not in {
+                    self.PID_COLUMN, self.PERSON_ID, self.config.person.column
+                }:
                     data_measures.append(row[0])
             for measure_name in data_measures:
 

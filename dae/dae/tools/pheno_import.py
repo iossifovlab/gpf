@@ -164,6 +164,7 @@ def parse_phenotype_data_config(args: argparse.Namespace) -> Box:
 def build_browser(
     args: argparse.Namespace, regressions: Optional[Box]
 ) -> None:
+    """Perform browser data build step."""
     output_dir = args.output
     if not os.path.exists(args.browser_dir):
         os.makedirs(args.browser_dir)
@@ -222,10 +223,9 @@ def main(argv: Optional[list[str]] = None) -> int:
         else:
             regressions = None
 
-
         if args.browser_only:
             assert os.path.exists(args.pheno_db_filename), \
-                    f"{args.pheno_db_filename} does not exist!"
+                f"{args.pheno_db_filename} does not exist!"
             build_browser(args, regressions)
             return 0
 
@@ -236,7 +236,6 @@ def main(argv: Optional[list[str]] = None) -> int:
                 )
                 raise ValueError()
             os.remove(args.pheno_db_filename)
-
 
         config = parse_phenotype_data_config(args)
         os.makedirs(os.path.join(config.output, "parquet"), exist_ok=True)
