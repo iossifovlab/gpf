@@ -1,9 +1,11 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
+from typing import cast
 
 import pytest
 
 from dae.variants.attributes import Inheritance
+from dae.variants.family_variant import FamilyAllele
 
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.studies.study import GenotypeData
@@ -49,4 +51,5 @@ def test_query_denovo_variants(denovo_broken_pedigrees: GenotypeData) -> None:
     assert len(vs) == 5
     for v in vs:
         for aa in v.alt_alleles:
-            assert Inheritance.denovo in aa.inheritance_in_members
+            fa = cast(FamilyAllele, aa)
+            assert Inheritance.denovo in fa.inheritance_in_members

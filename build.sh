@@ -270,7 +270,7 @@ EOT
           --no-incremental \
           > /wd/results/mypy_impala2_report || true'
 
-    build_run_container bash -c '
+    build_run_detached bash -c '
       cd /wd/gcp_storage;
       /opt/conda/bin/conda run --no-capture-output -n gpf mypy gcp_storage \
           --pretty \
