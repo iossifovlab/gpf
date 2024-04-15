@@ -61,6 +61,7 @@ def produce_description_hierarchy(
     selected: list[str],
     tab: int = 0
 ) -> str:
+    """Create dataset description hierarchy from dataset children."""
     if dataset.is_group:
         pprint([study.study_id for study in dataset.studies])
         res = ""
@@ -70,7 +71,7 @@ def produce_description_hierarchy(
                 res = res + (
                     "\n"
                     f'{tab_spacing}- **<a href="datasets/{child.study_id}">'
-                    f"{child.study_id}</a>**"
+                    f"{child.name}</a>**"
                     f"{tab_spacing}\t{get_first_paragraph(child.description)}"
                     f"{produce_description_hierarchy(child, selected, tab+1)}"
                 )
@@ -80,15 +81,17 @@ def produce_description_hierarchy(
 
 
 def get_first_paragraph(
-    text: str,
+    text: str | None,
 ) -> str:
+    """Get first paragraph of text."""
     result = ""
-    if text:
+    if text is not None:
         paragraphs = text.split("\n\n")
         if "#" in paragraphs[0]:
             title_match = re.match("^##((?:\n|.)*?)$\n", paragraphs[0])
-            result = re.sub("^##((?:\n|.)*?)$\n", paragraphs[0]) if title_match else paragraphs[1]
-        else: 
+            result = re.sub("^##((?:\n|.)*?)$\n", "", paragraphs[0]) \
+                if title_match else paragraphs[1]
+        else:
             result = paragraphs[0]
     
     return result.replace("\n", " ")
@@ -165,16 +168,18 @@ class DatasetView(QueryBaseView):
         res = augment_with_groups(res)
         res = augment_with_parents(self.instance_id, res)
 
-        rawStudy = dataset.genotype_data_study \
+        raw_study = dataset.genotype_data_study \
             if isinstance(dataset, StudyWrapper) \
             else dataset.remote_genotype_data
         if dataset.is_group:
-            genotype_data_ids = self.gpf_instance.get_genotype_data_ids()
+            visible_datasets = self.gpf_instance.get_visible_datasets()
+            visible_datasets = visible_datasets if visible_datasets else []
+            genotype_data_ids = [
+                id for id in self.gpf_instance.get_genotype_data_ids() \
+                if id in visible_datasets
+            ]
             res["children_description"] = "\nThis dataset includes:" \
-                + produce_description_hierarchy(
-                    rawStudy,
-                    genotype_data_ids
-                )
+                + produce_description_hierarchy(raw_study, genotype_data_ids)
 
         return Response({"data": res})
 
