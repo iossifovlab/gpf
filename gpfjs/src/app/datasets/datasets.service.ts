@@ -5,7 +5,7 @@ import { Observable, ReplaySubject, BehaviorSubject, zip, Subject, of, Subscript
 import { Dataset } from '../datasets/datasets';
 import { UsersService } from '../users/users.service';
 import { ConfigService } from '../config/config.service';
-import { distinctUntilChanged, map, take, tap } from 'rxjs/operators';
+import { distinctUntilChanged, map, share, take, tap } from 'rxjs/operators';
 import { DatasetPermissions } from 'app/datasets-table/datasets-table';
 
 @Injectable()
@@ -171,8 +171,8 @@ export class DatasetsService {
     }
 
     const options = { headers: this.headers, withCredentials: true };
-    const description$ = this.http.get(`${this.config.baseUrl}${this.descriptionUrl}/${datasetId}`, options);
-    description$.pipe(take(1)).subscribe(description => {
+    const description$ = this.http.get(`${this.config.baseUrl}${this.descriptionUrl}/${datasetId}`, options).pipe(take(1), share());
+    description$.subscribe(description => {
       DatasetsService.descriptionCache.push({datasetId: datasetId, description: description['description'] as string});
     });
 
