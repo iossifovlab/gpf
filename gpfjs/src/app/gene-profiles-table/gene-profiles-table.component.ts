@@ -66,6 +66,7 @@ export class GeneProfilesTableComponent extends StatefulComponent implements OnI
   public hideTable = false;
   public currentTabGeneSet= new Set<string>();
   public currentTabString = '';
+  public isStateLoaded = false;
 
   public constructor(
     private geneProfilesService: GeneProfilesTableService,
@@ -101,7 +102,7 @@ export class GeneProfilesTableComponent extends StatefulComponent implements OnI
       this.loadSingleView(this.currentTabGeneSet);
     }
 
-    this.loadTabs();
+    this.loadState();
   }
 
   public ngOnChanges(): void {
@@ -109,6 +110,9 @@ export class GeneProfilesTableComponent extends StatefulComponent implements OnI
       this.viewportPageCount = Math.ceil(window.innerHeight / (this.baseRowHeight * this.config.pageSize));
       this.calculateHeaderLayout();
       this.fillTable();
+      if (this.isStateLoaded) {
+        this.saveToState();
+      }
     }
   }
 
@@ -186,10 +190,30 @@ export class GeneProfilesTableComponent extends StatefulComponent implements OnI
     });
   }
 
-  public loadTabs(): void {
+  private loadState(): void {
     this.store.selectOnce(state => state.geneProfilesState).subscribe((state: SetGeneProfiles) => {
       this.tabs = state.openedTabs;
+      this.geneInput = state.searchValue;
+      this.highlightedGenes = state.highlightedRows;
+      this.sortBy = state.sortBy;
+      this.orderBy = state.orderBy;
+      this.config = state.config;
     });
+    this.search(this.geneInput);
+    this.isStateLoaded = true;
+  }
+
+  private saveToState(): void {
+    this.store.dispatch(
+      new SetGeneProfiles(
+        this.tabs,
+        this.geneInput,
+        this.highlightedGenes,
+        this.sortBy,
+        this.orderBy,
+        this.config
+      )
+    );
   }
 
   public calculateHeaderLayout(): void {
@@ -211,6 +235,7 @@ export class GeneProfilesTableComponent extends StatefulComponent implements OnI
 
   public search(value: string): void {
     this.geneInput = value;
+    this.saveToState();
     this.fillTable();
   }
 
@@ -314,8 +339,8 @@ export class GeneProfilesTableComponent extends StatefulComponent implements OnI
     if (sortButton) {
       sortButton.emitSort();
     }
-
     this.fillTable();
+    this.saveToState();
   }
 
   private resetSortButtons(): void {
@@ -347,9 +372,9 @@ export class GeneProfilesTableComponent extends StatefulComponent implements OnI
   public loadSingleView(geneSymbols: string | Set<string>, newTab: boolean = false): void {
     const genes = this.formatGeneSymbols(geneSymbols);
     if (!newTab) {
-      this.loadTabs();
+      this.loadState();
       this.tabs.add(genes);
-      this.store.dispatch(new SetGeneProfiles(this.tabs));
+      this.saveToState();
 
       this.openTab(genes);
     } else {
@@ -373,7 +398,7 @@ export class GeneProfilesTableComponent extends StatefulComponent implements OnI
 
   public closeTab(tab: string): void {
     this.tabs.delete(tab);
-    this.store.dispatch(new SetGeneProfiles(this.tabs));
+    this.saveToState();
     this.backToTable();
   }
 
@@ -389,6 +414,7 @@ export class GeneProfilesTableComponent extends StatefulComponent implements OnI
     } else {
       this.highlightedGenes.add(geneSymbol);
     }
+    this.saveToState();
   }
 
   private async waitForSearchBoxToLoad(): Promise<void> {

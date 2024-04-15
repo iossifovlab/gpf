@@ -5,13 +5,15 @@ import {
   GeneProfilesGenomicScoresCategory,
   GeneProfilesSingleViewConfig} from 'app/gene-profiles-single-view/gene-profiles-single-view';
 import { GeneProfilesService } from 'app/gene-profiles-block/gene-profiles.service';
-import { map, take } from 'rxjs/operators';
+import { map, switchMap, take } from 'rxjs/operators';
 import { Store } from '@ngxs/store';
 import { QueryService } from 'app/query/query.service';
 import { GeneProfilesColumn, GeneProfilesTableConfig } from 'app/gene-profiles-table/gene-profiles-table';
 import {
   GeneProfileSingleViewComponent
 } from 'app/gene-profiles-single-view/gene-profiles-single-view.component';
+import { SetGeneProfiles } from 'app/gene-profiles-table/gene-profiles-table.state';
+import { of } from 'rxjs';
 
 @Component({
   selector: 'gpf-gene-profiles-block',
@@ -29,10 +31,19 @@ export class GeneProfilesBlockComponent implements OnInit {
   ) { }
 
   public ngOnInit(): void {
-    this.geneProfilesService.getConfig().pipe(map(config => this.createTableConfig(config))).subscribe(config => {
+    this.store.selectOnce(state => state.geneProfilesState).pipe(
+      switchMap((state: SetGeneProfiles) => {
+        if (state.config) {
+          return of(state.config);
+        } else {
+          return this.geneProfilesService.getConfig().pipe(map(config => this.createTableConfig(config)));
+        }
+      })
+    ).subscribe((config: GeneProfilesTableConfig) => {
       this.geneProfilesTableConfig = config;
       this.geneProfilesTableSortBy = this.findFirstSortableCategory(config);
     });
+
     this.geneProfilesService.getConfig().pipe(take(1)).subscribe(config => {
       this.geneProfilesSingleViewConfig = config;
     });
