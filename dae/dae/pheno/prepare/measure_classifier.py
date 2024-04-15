@@ -100,12 +100,12 @@ class ClassifierReport:
         assert instrument_table_name is not None
 
         measure_col = self.measure_name
-
         rows = cursor.sql(
             f'SELECT "{measure_col}", COUNT(*) as count '
             f"FROM {instrument_table_name} WHERE "
             f'"{measure_col}" IS NOT NULL '
-            f'GROUP BY "{measure_col}"'
+            f'GROUP BY "{measure_col}" '
+            f'ORDER BY count, "{measure_col}"'
         ).fetchall()
         counts: Counter = Counter()
 

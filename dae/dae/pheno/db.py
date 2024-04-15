@@ -464,18 +464,18 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
             keyword = f"%{keyword}%"
             if not instrument_name:
                 query_params.append(
-                    self.variable_browser.c.instrument_name.like(
+                    self.variable_browser.c.instrument_name.ilike(
                         keyword, escape="/"
                     )
                 )
             query_params.append(
-                self.variable_browser.c.measure_id.like(keyword, escape="/")
+                self.variable_browser.c.measure_id.ilike(keyword, escape="/")
             )
             query_params.append(
-                self.variable_browser.c.measure_name.like(keyword, escape="/")
+                self.variable_browser.c.measure_name.ilike(keyword, escape="/")
             )
             query_params.append(
-                self.variable_browser.c.description.like(keyword, escape="/")
+                self.variable_browser.c.description.ilike(keyword, escape="/")
             )
             query = self.variable_browser.select().where((or_(*query_params)))
         else:
