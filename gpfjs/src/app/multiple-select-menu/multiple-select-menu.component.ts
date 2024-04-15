@@ -32,7 +32,7 @@ export class MultipleSelectMenuComponent implements OnChanges {
 
     // focus search input field
     this.waitForSearchInputToLoad().then(() => {
-      this.searchInput.nativeElement.focus();
+      (this.searchInput.nativeElement as HTMLInputElement).focus();
     });
   }
 

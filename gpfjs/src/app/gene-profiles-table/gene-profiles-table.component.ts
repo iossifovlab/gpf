@@ -13,7 +13,7 @@ import { environment } from 'environments/environment';
 import { Location } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { Store } from '@ngxs/store';
-import { GeneProfilesState, SetGeneProfiles } from './gene-profiles-table.state';
+import { GeneProfilesModel, GeneProfilesState, SetGeneProfiles } from './gene-profiles-table.state';
 import { StatefulComponent } from 'app/common/stateful-component';
 
 @Component({
@@ -32,7 +32,7 @@ export class GeneProfilesTableComponent extends StatefulComponent implements OnI
   @ViewChild(MultipleSelectMenuComponent) public multipleSelectMenuComponent: MultipleSelectMenuComponent;
   @ViewChildren(SortingButtonsComponent) public sortingButtonsComponents: SortingButtonsComponent[];
 
-  private clickedColumnFilteringButton;
+  private clickedColumnFilteringButton: HTMLElement;
   public modalPosition = {top: 0, left: 0};
   public showKeybinds = false;
 
@@ -137,12 +137,12 @@ export class GeneProfilesTableComponent extends StatefulComponent implements OnI
   }
 
   @HostListener('window:scroll', ['$event'])
-  public onWindowScroll($event): void {
-    if (this.prevVerticalScroll !== $event.srcElement.scrollingElement.scrollTop) {
+  public onWindowScroll($event: Event): void {
+    if (this.prevVerticalScroll !== ($event.target['scrollingElement'] as HTMLElement).scrollTop) {
       const tableBodyOffset = document.getElementById('table-body').offsetTop;
       const topRowIdx = Math.floor(Math.max(window.scrollY - tableBodyOffset, 0) / this.baseRowHeight);
       const bottomRowIdx = Math.floor(window.innerHeight / this.baseRowHeight) + topRowIdx;
-      this.prevVerticalScroll = $event.srcElement.scrollingElement.scrollTop;
+      this.prevVerticalScroll = ($event.target['scrollingElement'] as HTMLElement).scrollTop;
       this.updateShownGenes(topRowIdx - 20, bottomRowIdx + 20);
       if (bottomRowIdx + 40 >= this.genes.length && this.loadMoreGenes) {
         this.updateGenes();
@@ -194,14 +194,16 @@ export class GeneProfilesTableComponent extends StatefulComponent implements OnI
   }
 
   private loadState(): void {
-    this.store.selectOnce(state => state.geneProfilesState).subscribe((state: SetGeneProfiles) => {
-      this.tabs = state.openedTabs;
-      this.geneInput = state.searchValue;
-      this.highlightedGenes = state.highlightedRows;
-      this.sortBy = state.sortBy;
-      this.orderBy = state.orderBy;
-      this.config = state.config;
-    });
+    this.store.selectOnce(
+      (state: { geneProfilesState: GeneProfilesModel}) => state.geneProfilesState)
+      .subscribe((state: SetGeneProfiles) => {
+        this.tabs = state.openedTabs;
+        this.geneInput = state.searchValue;
+        this.highlightedGenes = state.highlightedRows;
+        this.sortBy = state.sortBy;
+        this.orderBy = state.orderBy;
+        this.config = state.config;
+      });
     this.search(this.geneInput);
     this.isStateLoaded = true;
   }
@@ -261,15 +263,15 @@ export class GeneProfilesTableComponent extends StatefulComponent implements OnI
       });
   }
 
-  public openDropdown(column: GeneProfilesColumn, $event): void {
+  public openDropdown(column: GeneProfilesColumn, $event: MouseEvent): void {
     $event.stopPropagation(); // stop propagation to avoid triggering sort
 
-    if (this.ngbDropdownMenu.dropdown._open) {
+    if (this.ngbDropdownMenu.dropdown.isOpen()) {
       return;
     }
 
     this.ngbDropdownMenu.dropdown.toggle();
-    this.clickedColumnFilteringButton = $event.target;
+    this.clickedColumnFilteringButton = $event.target as HTMLElement;
     this.updateModalPosition();
 
     let columnDisplayName = column.displayName;
@@ -282,13 +284,13 @@ export class GeneProfilesTableComponent extends StatefulComponent implements OnI
     this.multipleSelectMenuComponent.refresh();
   }
 
-  public openCategoryFilterDropdown($event): void {
-    if (this.ngbDropdownMenu.dropdown._open) {
+  public openCategoryFilterDropdown($event: MouseEvent): void {
+    if (this.ngbDropdownMenu.dropdown.isOpen()) {
       return;
     }
 
     this.ngbDropdownMenu.dropdown.toggle();
-    this.clickedColumnFilteringButton = $event.target;
+    this.clickedColumnFilteringButton = $event.target as HTMLElement;
     this.updateModalPosition(0, -11);
     this.multipleSelectMenuComponent.searchPlaceholder = 'Search categories';
     this.multipleSelectMenuComponent.columns = this.config.columns.filter(col => col.id !== this.geneSymbolColumnId);
@@ -296,19 +298,19 @@ export class GeneProfilesTableComponent extends StatefulComponent implements OnI
   }
 
   public updateModalPosition(leftOffset = 6, topOffset = 0): void {
-    if (!this.ngbDropdownMenu.dropdown._open) {
+    if (!this.ngbDropdownMenu.dropdown.isOpen()) {
       return;
     }
 
     const buttonHeight = 30;
     this.modalPosition.top =
-      (this.clickedColumnFilteringButton.getBoundingClientRect().top as number)
+      this.clickedColumnFilteringButton.getBoundingClientRect().top
       + buttonHeight
       - topOffset;
 
     const modalWidth = 400;
     const leftPosition =
-      (this.clickedColumnFilteringButton.getBoundingClientRect().left as number)
+      this.clickedColumnFilteringButton.getBoundingClientRect().left
       + leftOffset;
 
     const viewWidth = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
@@ -321,7 +323,7 @@ export class GeneProfilesTableComponent extends StatefulComponent implements OnI
     }
   }
 
-  public reorderHeader($event): void {
+  public reorderHeader($event: string[]): void {
     this.config.columns.sort((a, b) => $event.indexOf(a.id) - $event.indexOf(b.id));
     this.calculateHeaderLayout();
   }
@@ -356,8 +358,8 @@ export class GeneProfilesTableComponent extends StatefulComponent implements OnI
     }
   }
 
-  public handleCellClick($event, row: object, column: GeneProfilesColumn): void {
-    const linkClick: boolean = $event.target.classList.contains('clickable');
+  public handleCellClick($event: MouseEvent, row: object, column: GeneProfilesColumn): void {
+    const linkClick: boolean = ($event.target['classList'] as DOMTokenList).contains('clickable');
     const geneSymbol = row[this.geneSymbolColumnId] as string;
 
     const middleClick: boolean = $event.which === 2;
