@@ -166,7 +166,10 @@ export class GeneProfilesTableComponent extends StatefulComponent implements OnI
     this.loadMoreGenes = true;
     this.showNothingFound = false;
     // In case of page zoom out where scroll will disappear, load more pages.
-    const initialPageCount = 4 * this.viewportPageCount;
+    let initialPageCount = 0;
+    if (this.viewportPageCount) {
+      initialPageCount = 4 * this.viewportPageCount;
+    }
 
     for (let i = 1; i <= initialPageCount; i++) {
       geneProfilesRequests.push(

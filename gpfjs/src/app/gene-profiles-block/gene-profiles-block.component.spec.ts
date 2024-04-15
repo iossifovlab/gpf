@@ -17,6 +17,7 @@ import { Observable, of } from 'rxjs';
 import { GeneProfilesSingleViewConfig } from 'app/gene-profiles-single-view/gene-profiles-single-view';
 import { TruncatePipe } from '../utils/truncate.pipe';
 import { GeneProfilesColumn, GeneProfilesTableConfig } from 'app/gene-profiles-table/gene-profiles-table';
+import { GeneProfilesState } from 'app/gene-profiles-table/gene-profiles-table.state';
 
 const config = {
   geneLinkTemplates: [
@@ -136,7 +137,7 @@ describe('GeneProfilesBlockComponent', () => {
       ],
       imports: [
         HttpClientTestingModule, NgbNavModule, RouterTestingModule, FormsModule,
-        NgxsModule.forRoot([], {developmentMode: true})
+        NgxsModule.forRoot([GeneProfilesState], {developmentMode: true})
       ]
     }).compileComponents();
 

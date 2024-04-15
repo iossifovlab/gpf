@@ -6,6 +6,8 @@ import { cloneDeep } from 'lodash';
 import { GeneProfilesTableService } from './gene-profiles-table.service';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute } from '@angular/router';
+import { NgxsModule } from '@ngxs/store';
+import { GeneProfilesState } from './gene-profiles-table.state';
 
 const column1 = {
   clickable: 'createTab',
@@ -257,6 +259,7 @@ describe('GeneProfilesTableComponent', () => {
         {provide: ActivatedRoute, useValue: mockActivatedRoute},
         {provide: GeneProfilesTableService, useValue: geneProfilesTableServiceMock}
       ],
+      imports: [NgxsModule.forRoot([GeneProfilesState], {developmentMode: true})]
     }).compileComponents();
 
     const fixture = TestBed.createComponent(GeneProfilesTableComponent);
@@ -375,9 +378,12 @@ describe('GeneProfilesTableComponent', () => {
     expect(component.currentTabString).toBe('');
 
     component.loadSingleView('POGZ');
-    expect(component.tabs).toStrictEqual(['POGZ']);
+    expect(component.tabs).toStrictEqual(new Set(['POGZ']));
 
     expect(openTabSpy).toHaveBeenCalledWith('POGZ');
+
+    component.closeTab('POGZ');
+    expect(component.tabs).toStrictEqual(new Set([]));
   });
 
   it('should load single view tab when comparing', () => {
@@ -389,7 +395,7 @@ describe('GeneProfilesTableComponent', () => {
     mockActivatedRoute.snapshot = {params: {genes: 'SPAST,DYRK1A,FOXP1'}};
 
     component.loadSingleView(new Set(['SPAST', 'DYRK1A', 'FOXP1']));
-    expect(component.tabs).toStrictEqual(['DYRK1A,FOXP1,SPAST']);
+    expect(component.tabs).toStrictEqual(new Set(['DYRK1A,FOXP1,SPAST']));
 
     expect(openTabSpy).toHaveBeenCalledWith('DYRK1A,FOXP1,SPAST');
   });
@@ -400,11 +406,11 @@ describe('GeneProfilesTableComponent', () => {
     mockActivatedRoute.snapshot = {params: {genes: 'SPAST,FOXP1,DYRK1A'}};
 
     component.loadSingleView(new Set(['SPAST', 'FOXP1', 'DYRK1A']));
-    expect(component.tabs).toStrictEqual(['DYRK1A,FOXP1,SPAST']);
+    expect(component.tabs).toStrictEqual(new Set(['DYRK1A,FOXP1,SPAST']));
     expect(openTabSpy).toHaveBeenCalledWith('DYRK1A,FOXP1,SPAST');
 
     component.loadSingleView(new Set(['SPAST', 'DYRK1A', 'FOXP1']));
-    expect(component.tabs).toStrictEqual(['DYRK1A,FOXP1,SPAST']);
+    expect(component.tabs).toStrictEqual(new Set(['DYRK1A,FOXP1,SPAST']));
     expect(openTabSpy).toHaveBeenCalledWith('DYRK1A,FOXP1,SPAST');
   });
 
@@ -427,9 +433,9 @@ describe('GeneProfilesTableComponent', () => {
   it('should close tab', () => {
     const backToTableSpy = jest.spyOn(component, 'backToTable');
 
-    component.tabs = ['DYRK1A,FOXP1,SPAST', 'POGZ'];
+    component.tabs = new Set(['DYRK1A,FOXP1,SPAST', 'POGZ']);
     component.closeTab('POGZ');
-    expect(component.tabs).toStrictEqual(['DYRK1A,FOXP1,SPAST']);
+    expect(component.tabs).toStrictEqual(new Set(['DYRK1A,FOXP1,SPAST']));
     expect(backToTableSpy).toHaveBeenCalledWith();
   });
 
@@ -447,12 +453,12 @@ describe('GeneProfilesTableComponent', () => {
     const openTabSpy = jest.spyOn(component, 'openTab');
     const windowSpy = jest.spyOn(window, 'open');
 
-    component.loadSingleView('POGZ', true);
-    expect(component.tabs).not.toContain('POGZ');
+    component.loadSingleView('PKD1', true);
+    expect(component.tabs).not.toContain('PKD1');
 
     expect(openTabSpy).not.toHaveBeenCalledWith();
 
-    expect(component.currentTabGeneSet).toStrictEqual(new Set(['POGZ']));
-    expect(windowSpy).toHaveBeenCalledWith(`${window.location.href}/POGZ`, '_blank');
+    expect(component.currentTabGeneSet).toStrictEqual(new Set(['PKD1']));
+    expect(windowSpy).toHaveBeenCalledWith(`${window.location.href}/PKD1`, '_blank');
   });
 });
