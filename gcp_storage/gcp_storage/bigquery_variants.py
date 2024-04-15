@@ -121,7 +121,7 @@ class BigQueryVariants(SqlSchema2Variants):
         ped_df.role = ped_df.role.apply(Role)  # type: ignore
         ped_df.sex = ped_df.sex.apply(Sex)  # type: ignore
         ped_df.status = ped_df.status.apply(Status)  # type: ignore
-
+        ped_df = ped_df.sort_values(by=["family_id", "member_index"])
         return ped_df
 
     def _get_connection_factory(self) -> Any:
