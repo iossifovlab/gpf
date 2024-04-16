@@ -59,23 +59,20 @@ def augment_with_parents(
 def produce_description_hierarchy(
     dataset: GenotypeData,
     selected: list[str],
-    tab: int = 0
+    indent_level: int = 0
 ) -> str:
     """Create dataset description hierarchy from dataset children."""
     if dataset.is_group:
-        pprint([study.study_id for study in dataset.studies])
-        res = ""
-        tab_spacing = "\t" * tab
+        res = []
+        indent = "\t" * indent_level
         for child in dataset.studies:
             if child.study_id in selected:
-                res = res + (
-                    "\n"
-                    f'{tab_spacing}- **<a href="datasets/{child.study_id}">'
-                    f"{child.name}</a>**"
-                    f"{tab_spacing}\t{get_first_paragraph(child.description)}"
-                    f"{produce_description_hierarchy(child, selected, tab+1)}"
+                res.append(
+                    f"{indent}- **[{child.name}]({child.study_id})** "
+                    f"{get_first_paragraph(child.description)}\n"
+                    f"{produce_description_hierarchy(child, selected, indent_level+1)}"
                 )
-        return res
+        return "\n".join(res)
 
     return ""
 
@@ -87,14 +84,14 @@ def get_first_paragraph(
     result = ""
     if text is not None:
         paragraphs = text.split("\n\n")
-        if "#" in paragraphs[0]:
+        if paragraphs[0].startswith("#"):
             title_match = re.match("^##((?:\n|.)*?)$\n", paragraphs[0])
             result = re.sub("^##((?:\n|.)*?)$\n", "", paragraphs[0]) \
                 if title_match else paragraphs[1]
         else:
             result = paragraphs[0]
-    
-    return result.replace("\n", " ")
+
+    return result.replace("\n", " ").strip()
 
 
 class DatasetView(QueryBaseView):
@@ -175,11 +172,17 @@ class DatasetView(QueryBaseView):
             visible_datasets = self.gpf_instance.get_visible_datasets()
             visible_datasets = visible_datasets if visible_datasets else []
             genotype_data_ids = [
-                id for id in self.gpf_instance.get_genotype_data_ids() \
-                if id in visible_datasets
+                id for id in dataset.get_studies_ids()
+                if id in visible_datasets and id != dataset.study_id
             ]
-            res["children_description"] = "\nThis dataset includes:" \
-                + produce_description_hierarchy(raw_study, genotype_data_ids)
+            if genotype_data_ids:
+                descriptions = produce_description_hierarchy(
+                    raw_study, genotype_data_ids
+                )
+                res["children_description"] = (
+                    "\nThis dataset includes:\n"
+                    f"{descriptions}"
+                )
 
         return Response({"data": res})
 
