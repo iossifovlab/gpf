@@ -94,7 +94,7 @@ test.describe('Pheno browser tests', () => {
     for (let i = 0; i < rowValues.length; i++) {
       const row = page.locator('gpf-pheno-browser-table > gpf-table .table-row').nth(i);
       const text = await row.textContent();
-      expect(text).toBe(rowValues[i]);
+      expect(text).toBe(rowValues[i].trim());
     }
   });
   test('should download all instruments and validate whether they are equal to the reference data', async({ page }) => {
