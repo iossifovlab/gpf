@@ -78,9 +78,9 @@ def test_fetch_variants_count_nonpartitioned(
     loader = ParquetLoader(t4c8_study_nonpartitioned)
     vs = list(loader.fetch_variants())
     # summary variants
-    assert len(vs) == 4
+    assert len(vs) == 3
     # family variants
-    assert sum(len(fvs) for _, fvs in vs) == 5
+    assert sum(len(fvs) for _, fvs in vs) == 4
 
 
 def test_fetch_variants_count_partitioned(
@@ -89,9 +89,9 @@ def test_fetch_variants_count_partitioned(
     loader = ParquetLoader(t4c8_study_partitioned)
     vs = list(loader.fetch_variants())
     # summary variants
-    assert len(vs) == 11
+    assert len(vs) == 6
     # family variants
-    assert sum(len(fvs) for _, fvs in vs) == 16
+    assert sum(len(fvs) for _, fvs in vs) == 12
 
 
 def test_fetch_variants_count_nonpartitioned_region(
@@ -100,15 +100,15 @@ def test_fetch_variants_count_nonpartitioned_region(
     loader = ParquetLoader(t4c8_study_nonpartitioned)
     vs = list(loader.fetch_variants(region="chr1:119"))
     # summary variants
-    assert len(vs) == 2
+    assert len(vs) == 1
     # family variants
-    assert sum(len(fvs) for _, fvs in vs) == 3
+    assert sum(len(fvs) for _, fvs in vs) == 2
 
     vs = list(loader.fetch_variants(region="chr1:119-122"))
     # summary variants
-    assert len(vs) == 3
+    assert len(vs) == 2
     # family variants
-    assert sum(len(fvs) for _, fvs in vs) == 4
+    assert sum(len(fvs) for _, fvs in vs) == 3
 
 
 def test_fetch_variants_count_partitioned_region(
@@ -117,15 +117,15 @@ def test_fetch_variants_count_partitioned_region(
     loader = ParquetLoader(t4c8_study_partitioned)
     vs = list(loader.fetch_variants(region="chr1:1-89"))
     # summary variants
-    assert len(vs) == 3
+    assert len(vs) == 2
     # family variants
-    assert sum(len(fvs) for _, fvs in vs) == 5
+    assert sum(len(fvs) for _, fvs in vs) == 4
 
     vs = list(loader.fetch_variants(region="chr1:90-200"))
     # summary variants
-    assert len(vs) == 8
+    assert len(vs) == 4
     # family variants
-    assert sum(len(fvs) for _, fvs in vs) == 11
+    assert sum(len(fvs) for _, fvs in vs) == 8
 
 
 def test_fetch_variants_odd_study(
