@@ -65,8 +65,8 @@ export class GeneProfilesTableComponent extends StatefulComponent implements OnI
   public tabs = new Set<string>();
   public hideTable = false;
   public currentTabGeneSet= new Set<string>();
-  public currentTabString = '';
   public isStateLoaded = false;
+  public currentTabString = 'all genes';
 
   public constructor(
     private geneProfilesService: GeneProfilesTableService,
@@ -409,7 +409,7 @@ export class GeneProfilesTableComponent extends StatefulComponent implements OnI
 
   public backToTable(): void {
     this.hideTable = false;
-    this.currentTabString = 'table';
+    this.currentTabString = 'all genes';
     this.location.replaceState('gene-profiles');
   }
 
