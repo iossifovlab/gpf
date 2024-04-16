@@ -413,27 +413,41 @@ test.describe('Genotype browser download tests', () => {
 });
 
 
-test.describe('Genotype browser UCSC url tests', () => {
+test.describe('Genotype browser table tests', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.instanceUrl, {waitUntil: 'load'});
     await utils.loginAdmin(page);
-    await utils.navigateToDatasetPage(page, datasetIds.compAll, 'Genotype browser');
+    await utils.navigateToDatasetPage(page, datasetIds.iossifov2014, 'Genotype browser');
   });
 
-  test('should compare redirect links', async({ page }) => {
-    await page.locator('gpf-effect-types').getByRole('button', {name: 'All'}).click();
-
+  test('should redirect to UCSC', async({ page }) => {
     await page.getByRole('button', { name: 'Table Preview' }).click();
 
     const baseUrl = 'http://genome.ucsc.edu/cgi-bin/hgTracks?db=hg19&position=chr';
 
+    await page.waitForSelector('span:text("569 variants selected")');
+    await page.locator('#sort-child').getByText('family id').click();
+
     await expect(
-      page.locator('a').filter({ hasText: /^1:865582$/ }).first()
-    ).toHaveAttribute('href', baseUrl + '1:865582');
+      page.locator('a').filter({ hasText: /^4:41748295$/ }).first()
+    ).toHaveAttribute('href', baseUrl + '4:41748295');
 
 
     await expect(
-      page.locator('a').filter({ hasText: /^1:865664$/ }).first()
-    ).toHaveAttribute('href', baseUrl + '1:865664');
+      page.locator('a').filter({ hasText: /^7:87339897$/ }).first()
+    ).toHaveAttribute('href', baseUrl + '7:87339897');
+  });
+
+  test('should show details', async({ page }) => {
+    await page.getByRole('button', { name: 'Table Preview' }).click();
+    await page.waitForSelector('span:text("569 variants selected")');
+    await page.locator('#sort-child').getByText('family id').click();
+
+    await page.getByText('Show details').first().click();
+    await expect(page.locator('.modal-content')).toBeVisible();
+    await expect(page.locator('.modal-content > .details-header')).toHaveCount(2);
+    await expect(page.locator('.modal-content > .details-header').nth(0)).toHaveText('Family id: 14699');
+    await expect(page.locator('.modal-content > .details-header').nth(1)).toHaveText('Location: 4:41748295');
+    await expect(page.locator('.modal-content > .grid-container')).toBeVisible();
   });
 });
