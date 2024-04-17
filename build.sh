@@ -196,37 +196,7 @@ EOT
     build_run_ctx_persist ctx:ctx_gpf_remote
   }
 
-  build_stage "flake8"
-  {
-    build_run_ctx_init "container" "${gpf_dev_image_ref}"
-    defer_ret build_run_ctx_reset
-
-    build_run_container bash -c '
-      cd /wd; 
-      /opt/conda/bin/conda run --no-capture-output -n gpf flake8 \
-        --exit-zero \
-        --format=pylint \
-        --output-file=/wd/results/flake8_report . || true'
-
-    build_run_local cp ./results/flake8_report ./test-results/
-  }
-
-  build_stage "pylint"
-  {
-    build_run_ctx_init "container" "${gpf_dev_image_ref}"
-    defer_ret build_run_ctx_reset
-
-    build_run_container bash -c '
-      cd /wd/; 
-      wdae_files=$(find wdae/wdae -name "*.py");
-      /opt/conda/bin/conda run --no-capture-output -n gpf 
-      pylint dae/dae impala_storage/impala_storage  $wdae_files -f parseable --reports=no -j 4 \
-          --exit-zero > /wd/results/pylint_gpf_report || true'
-
-    build_run_local cp ./results/pylint_gpf_report ./test-results/
-  }
-
-  build_stage "MyPy"
+  build_stage "Diagnostics"
   {
     build_run_ctx_init "container" "${gpf_dev_image_ref}"
     defer_ret build_run_ctx_reset
@@ -236,7 +206,24 @@ EOT
         pip install -e .'
     done
 
-    build_run_container bash -c '
+    # flake8
+    build_run_detached bash -c '
+      cd /wd; 
+      /opt/conda/bin/conda run --no-capture-output -n gpf flake8 \
+        --exit-zero \
+        --format=pylint \
+        --output-file=/wd/results/flake8_report . || true'
+
+    # pylint
+    build_run_detached bash -c '
+      cd /wd/; 
+      wdae_files=$(find wdae/wdae -name "*.py");
+      /opt/conda/bin/conda run --no-capture-output -n gpf 
+      pylint dae/dae impala_storage/impala_storage  $wdae_files -f parseable --reports=no -j 4 \
+          --exit-zero > /wd/results/pylint_gpf_report || true'
+
+    # mypy
+    build_run_detached bash -c '
       cd /wd/dae;
       /opt/conda/bin/conda run --no-capture-output -n gpf mypy dae \
           --exclude dae/docs/ \
@@ -246,7 +233,7 @@ EOT
           --no-incremental \
           > /wd/results/mypy_dae_report || true'
 
-    build_run_container bash -c '
+    build_run_detached bash -c '
       cd /wd/dae;
       /opt/conda/bin/conda run --no-capture-output -n gpf mypy tests \
           --exclude dae/docs/ \
@@ -256,7 +243,7 @@ EOT
           --no-incremental \
           > /wd/results/mypy_dae_tests_report || true'
 
-    build_run_container bash -c '
+    build_run_detached bash -c '
       cd /wd/wdae;
       /opt/conda/bin/conda run --no-capture-output -n gpf mypy wdae \
           --exclude wdae/docs/ \
@@ -267,7 +254,7 @@ EOT
           --no-incremental \
           > /wd/results/mypy_wdae_report || true'
 
-    build_run_container bash -c '
+    build_run_detached bash -c '
       cd /wd/impala_storage;
       /opt/conda/bin/conda run --no-capture-output -n gpf mypy impala_storage \
           --pretty \
@@ -275,7 +262,7 @@ EOT
           --no-incremental \
           > /wd/results/mypy_impala_report || true'
 
-    build_run_container bash -c '
+    build_run_detached bash -c '
       cd /wd/impala2_storage;
       /opt/conda/bin/conda run --no-capture-output -n gpf mypy impala2_storage \
           --pretty \
@@ -283,11 +270,14 @@ EOT
           --no-incremental \
           > /wd/results/mypy_impala2_report || true'
 
-      build_run_local cp ./results/mypy_dae_report ./results/mypy_dae_tests_report ./results/mypy_wdae_report ./results/mypy_impala_report ./results/mypy_impala2_report ./test-results/
+    build_run_container wait
 
+    build_run_local cp ./results/flake8_report ./test-results/
+    build_run_local cp ./results/pylint_gpf_report ./test-results/
+    build_run_local cp ./results/mypy_dae_report ./results/mypy_dae_tests_report ./results/mypy_wdae_report ./results/mypy_impala_report ./results/mypy_impala2_report ./test-results/
   }
 
-  build_stage "Tests - dae, wdae, dae integration, wdae integration"
+  build_stage "Tests"
   {
     # run dae, wdae, dae integration, wdae integration tests asynchronously
     {
