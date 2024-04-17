@@ -451,10 +451,10 @@ EOT
     # create cobertura report for jenkins and coverage html report for dae, wdae, dae_integ, wdae_integ
     {
       # the commands are run in the ctx_wdae_integ context to not rely on host to have the 'coverage' commandline tool
-      build_run_local ctx:ctx_wdae_integ coverage combine dae/.coverage wdae/.coverage dae/tests/.coverage wdae/wdae_tests/.coverage
-      build_run_local ctx:ctx_wdae_integ coverage xml
-      build_run_local ctx:ctx_wdae_integ cp coverage.xml ./test-results/
-      build_run_local ctx:ctx_wdae_integ coverage html --title GPF -d ./test-results/coverage-html
+      build_run_container ctx:ctx_wdae_integ coverage combine dae/.coverage wdae/.coverage dae/tests/.coverage wdae/wdae_tests/.coverage
+      build_run_container ctx:ctx_wdae_integ coverage xml
+      build_run_container ctx:ctx_wdae_integ cp coverage.xml ./test-results/
+      build_run_container ctx:ctx_wdae_integ coverage html --title GPF -d ./test-results/coverage-html
     }
   }
 
