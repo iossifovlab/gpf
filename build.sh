@@ -287,166 +287,174 @@ EOT
 
   }
 
-  # Tests - dae
   build_stage "Tests - dae, wdae, dae integration, wdae integration"
   {
-
-    local -A ctx_dae
-    build_run_ctx_init ctx:ctx_dae "container" "${gpf_dev_image_ref}" \
-      --network "${ctx_network["network_id"]}" \
-      --env DAE_DB_DIR="/wd/data/data-hg19-local/" \
-      --env GRR_DEFINITION_FILE="/wd/cache/grr_definition.yaml" \
-      --env TEST_REMOTE_HOST="gpfremote" \
-      --env LOCALSTACK_HOST="localstack" \
-      --env WDAE_EMAIL_HOST="mailhog"
-
-    defer_ret build_run_ctx_reset ctx:ctx_dae
-
-    for d in /wd/dae /wd/wdae /wd/dae_conftests; do
-      build_run_container ctx:ctx_dae bash -c 'cd "'"${d}"'"; /opt/conda/bin/conda run --no-capture-output -n gpf \
-        pip install -e .'
-    done
-
-    build_run_detached ctx:ctx_dae bash -c '
-        cd /wd/dae;
-        export PYTHONHASHSEED=0;
-        /opt/conda/bin/conda run --no-capture-output -n gpf py.test -v \
-          --s3 --http \
-          -n 5 \
-          --durations 20 \
-          --cov-config /wd/coveragerc \
-          --junitxml=/wd/results/dae-junit.xml \
-          --cov dae \
-          dae/ || true'
-  }
-
-  {
-    local -A ctx_wdae
-    build_run_ctx_init ctx:ctx_wdae "container" "${gpf_dev_image_ref}" \
-      --network "${ctx_network["network_id"]}" \
-      --env DAE_DB_DIR="/wd/data/data-hg19-local/" \
-      --env GRR_DEFINITION_FILE="/wd/cache/grr_definition.yaml" \
-      --env TEST_REMOTE_HOST="gpfremote" \
-      --env LOCALSTACK_HOST="localstack" \
-      --env WDAE_EMAIL_HOST="mailhog"
-
-    defer_ret build_run_ctx_reset ctx:ctx_wdae
-
-    for d in /wd/dae /wd/wdae /wd/dae_conftests; do
-      build_run_container ctx:ctx_wdae bash -c 'cd "'"${d}"'"; /opt/conda/bin/conda run --no-capture-output -n gpf \
-        pip install -e .'
-    done
-
-    build_run_container ctx:ctx_wdae bash -c '
-      /opt/conda/bin/conda run --no-capture-output -n gpf \
-          /wd/scripts/wait-for-it.sh -h gpfremote -p 21010 -t 300    
-    '
-
-    build_run_detached ctx:ctx_wdae bash -c '
-        cd /wd/wdae;
-        export PYTHONHASHSEED=0;
-        /opt/conda/bin/conda run --no-capture-output -n gpf py.test -v \
-          --durations 20 \
-          --cov-config /wd/coveragerc \
-          --junitxml=/wd/results/wdae-junit.xml \
-          --cov wdae \
-          wdae || true'
-  }
-
-  {
-    local -A ctx_dae_integ
-    build_run_ctx_init ctx:ctx_dae_integ "container" "${gpf_dev_image_ref}" \
-      --network "${ctx_network["network_id"]}" \
-      --env DAE_DB_DIR="/wd/data/data-hg19-local/" \
-      --env GRR_DEFINITION_FILE="/wd/cache/grr_definition.yaml" \
-      --env TEST_REMOTE_HOST="gpfremote" \
-      --env LOCALSTACK_HOST="localstack" \
-      --env WDAE_EMAIL_HOST="mailhog"
-
-    defer_ret build_run_ctx_reset ctx:ctx_dae_integ
-
-    for d in /wd/dae /wd/wdae /wd/dae_conftests; do
-      build_run_container ctx:ctx_dae_integ bash -c 'cd "'"${d}"'"; /opt/conda/bin/conda run --no-capture-output -n gpf \
-        pip install -e .'
-    done
-
-    # Run integration tests in gpf/dae/tests
-    build_run_detached ctx:ctx_dae_integ bash -c '
-        cd /wd/dae/tests;
-        export PYTHONHASHSEED=0;
-        /opt/conda/bin/conda run --no-capture-output -n gpf py.test -v \
-          --s3 --http \
-          -n 5 \
-          --durations 20 \
-          --cov-config /wd/coveragerc \
-          --junitxml=/wd/results/dae-tests-junit.xml \
-          --cov .. \
-          . || true'
-
-  }
-
-
-  {
-    # Run integration tests located at gpf/wdae/wdae_tests
-
-    # Setup execution context
-    local -A ctx_wdae_integ
-    build_run_ctx_init ctx:ctx_wdae_integ "container" "${gpf_dev_image_ref}" \
-      --network "${ctx_network["network_id"]}" \
-      --env DAE_DB_DIR="/wd/data/data-hg19-local/" \
-      --env GRR_DEFINITION_FILE="/wd/cache/grr_definition.yaml" \
-      --env TEST_REMOTE_HOST="gpfremote" \
-      --env LOCALSTACK_HOST="localstack" \
-      --env WDAE_EMAIL_HOST="mailhog"
-
-    defer_ret build_run_ctx_reset ctx:ctx_wdae_integ
-
-    for d in /wd/dae /wd/wdae /wd/dae_conftests; do
-      build_run_container ctx:ctx_wdae_integ bash -c 'cd "'"${d}"'"; /opt/conda/bin/conda run --no-capture-output -n gpf \
-        pip install -e .'
-    done
-
-    # Run integration tests in gpf/wdae/wdae_tests
-    build_run_detached ctx:ctx_wdae_integ bash -c '
-        cd /wd/wdae/wdae_tests;
-        export PYTHONHASHSEED=0;
-        /opt/conda/bin/conda run --no-capture-output -n gpf py.test \
-          -p no:django -v \
-          --durations 20 \
-          --cov-config /wd/coveragerc \
-          --junitxml=/wd/results/wdae-tests-junit.xml \
-          --cov .. \
-          . || true'
-
-  }
-
-  {
+    # run dae, wdae, dae integration, wdae integration tests asynchronously
     {
-      build_run_container ctx:ctx_dae wait
-      build_run_container ctx:ctx_dae cp ./results/dae-junit.xml ./test-results/
+      # dae
+      {
+        local -A ctx_dae
+        build_run_ctx_init ctx:ctx_dae "container" "${gpf_dev_image_ref}" \
+          --network "${ctx_network["network_id"]}" \
+          --env DAE_DB_DIR="/wd/data/data-hg19-local/" \
+          --env GRR_DEFINITION_FILE="/wd/cache/grr_definition.yaml" \
+          --env TEST_REMOTE_HOST="gpfremote" \
+          --env LOCALSTACK_HOST="localstack" \
+          --env WDAE_EMAIL_HOST="mailhog"
+
+        defer_ret build_run_ctx_reset ctx:ctx_dae
+
+        for d in /wd/dae /wd/wdae /wd/dae_conftests; do
+          build_run_container ctx:ctx_dae bash -c 'cd "'"${d}"'"; /opt/conda/bin/conda run --no-capture-output -n gpf \
+            pip install -e .'
+        done
+
+        build_run_detached ctx:ctx_dae bash -c '
+            cd /wd/dae;
+            export PYTHONHASHSEED=0;
+            /opt/conda/bin/conda run --no-capture-output -n gpf py.test -v \
+              --s3 --http \
+              -n 5 \
+              --durations 20 \
+              --cov-config /wd/coveragerc \
+              --junitxml=/wd/results/dae-junit.xml \
+              --cov dae \
+              dae/ || true'
+      }
+
+      # dae integration
+      {
+        local -A ctx_dae_integ
+        build_run_ctx_init ctx:ctx_dae_integ "container" "${gpf_dev_image_ref}" \
+          --network "${ctx_network["network_id"]}" \
+          --env DAE_DB_DIR="/wd/data/data-hg19-local/" \
+          --env GRR_DEFINITION_FILE="/wd/cache/grr_definition.yaml" \
+          --env TEST_REMOTE_HOST="gpfremote" \
+          --env LOCALSTACK_HOST="localstack" \
+          --env WDAE_EMAIL_HOST="mailhog"
+
+        defer_ret build_run_ctx_reset ctx:ctx_dae_integ
+
+        for d in /wd/dae /wd/wdae /wd/dae_conftests; do
+          build_run_container ctx:ctx_dae_integ bash -c 'cd "'"${d}"'"; /opt/conda/bin/conda run --no-capture-output -n gpf \
+            pip install -e .'
+        done
+
+        build_run_detached ctx:ctx_dae_integ bash -c '
+            cd /wd/dae/tests;
+            export PYTHONHASHSEED=0;
+            /opt/conda/bin/conda run --no-capture-output -n gpf py.test -v \
+              --s3 --http \
+              -n 5 \
+              --durations 20 \
+              --cov-config /wd/coveragerc \
+              --junitxml=/wd/results/dae-tests-junit.xml \
+              --cov .. \
+              . || true'
+
+      }
+
+      # wdae
+      {
+        local -A ctx_wdae
+        build_run_ctx_init ctx:ctx_wdae "container" "${gpf_dev_image_ref}" \
+          --network "${ctx_network["network_id"]}" \
+          --env DAE_DB_DIR="/wd/data/data-hg19-local/" \
+          --env GRR_DEFINITION_FILE="/wd/cache/grr_definition.yaml" \
+          --env TEST_REMOTE_HOST="gpfremote" \
+          --env LOCALSTACK_HOST="localstack" \
+          --env WDAE_EMAIL_HOST="mailhog"
+
+        defer_ret build_run_ctx_reset ctx:ctx_wdae
+
+        for d in /wd/dae /wd/wdae /wd/dae_conftests; do
+          build_run_container ctx:ctx_wdae bash -c 'cd "'"${d}"'"; /opt/conda/bin/conda run --no-capture-output -n gpf \
+            pip install -e .'
+        done
+
+        build_run_container ctx:ctx_wdae bash -c '
+          /opt/conda/bin/conda run --no-capture-output -n gpf \
+              /wd/scripts/wait-for-it.sh -h gpfremote -p 21010 -t 300
+        '
+
+        build_run_detached ctx:ctx_wdae bash -c '
+            cd /wd/wdae;
+            export PYTHONHASHSEED=0;
+            /opt/conda/bin/conda run --no-capture-output -n gpf py.test -v \
+              --durations 20 \
+              --cov-config /wd/coveragerc \
+              --junitxml=/wd/results/wdae-junit.xml \
+              --cov wdae \
+              wdae || true'
+      }
+
+      # wdae integration
+      {
+        local -A ctx_wdae_integ
+        build_run_ctx_init ctx:ctx_wdae_integ "container" "${gpf_dev_image_ref}" \
+          --network "${ctx_network["network_id"]}" \
+          --env DAE_DB_DIR="/wd/data/data-hg19-local/" \
+          --env GRR_DEFINITION_FILE="/wd/cache/grr_definition.yaml" \
+          --env TEST_REMOTE_HOST="gpfremote" \
+          --env LOCALSTACK_HOST="localstack" \
+          --env WDAE_EMAIL_HOST="mailhog"
+
+        defer_ret build_run_ctx_reset ctx:ctx_wdae_integ
+
+        for d in /wd/dae /wd/wdae /wd/dae_conftests; do
+          build_run_container ctx:ctx_wdae_integ bash -c 'cd "'"${d}"'"; /opt/conda/bin/conda run --no-capture-output -n gpf \
+            pip install -e .'
+        done
+
+        build_run_container ctx:ctx_wdae bash -c '
+          /opt/conda/bin/conda run --no-capture-output -n gpf \
+              /wd/scripts/wait-for-it.sh -h gpfremote -p 21010 -t 300
+        '
+
+        build_run_detached ctx:ctx_wdae_integ bash -c '
+            cd /wd/wdae/wdae_tests;
+            export PYTHONHASHSEED=0;
+            /opt/conda/bin/conda run --no-capture-output -n gpf py.test \
+              -p no:django -v \
+              --durations 20 \
+              --cov-config /wd/coveragerc \
+              --junitxml=/wd/results/wdae-tests-junit.xml \
+              --cov .. \
+              . || true'
+
+      }
     }
 
+    # wait for the asynchronously ran tests to finish and copy their results
     {
-      build_run_container ctx:ctx_wdae wait
-      build_run_container ctx:ctx_wdae cp ./results/wdae-junit.xml ./test-results/
-    }
+      {
+        build_run_container ctx:ctx_dae wait
+        build_run_container ctx:ctx_dae cp ./results/dae-junit.xml ./test-results/
+      }
 
-    {
-      build_run_container ctx:ctx_dae_integ wait
-      build_run_container ctx:ctx_dae_integ cp ./results/dae-tests-junit.xml ./test-results/
-    }
+      {
+        build_run_container ctx:ctx_wdae wait
+        build_run_container ctx:ctx_wdae cp ./results/wdae-junit.xml ./test-results/
+      }
 
-    {
-      build_run_container ctx:ctx_wdae_integ wait
-      build_run_container ctx:ctx_wdae_integ cp ./results/wdae-tests-junit.xml ./test-results/
+      {
+        build_run_container ctx:ctx_dae_integ wait
+        build_run_container ctx:ctx_dae_integ cp ./results/dae-tests-junit.xml ./test-results/
+      }
+
+      {
+        build_run_container ctx:ctx_wdae_integ wait
+        build_run_container ctx:ctx_wdae_integ cp ./results/wdae-tests-junit.xml ./test-results/
+      }
     }
 
     # create cobertura report for jenkins and coverage html report for dae, wdae, dae_integ, wdae_integ
     {
-      build_run_container ctx:ctx_wdae_integ coverage combine dae/.coverage wdae/.coverage dae/tests/.coverage wdae/wdae_tests/.coverage
-      build_run_container ctx:ctx_wdae_integ coverage xml
-      build_run_container ctx:ctx_wdae_integ cp coverage.xml ./test-results/
-      build_run_container ctx:ctx_wdae_integ coverage html --title GPF -d ./test-results/coverage-html
+      # the commands are run in the ctx_wdae_integ context to not rely on host to have the 'coverage' commandline tool
+      build_run_local ctx:ctx_wdae_integ coverage combine dae/.coverage wdae/.coverage dae/tests/.coverage wdae/wdae_tests/.coverage
+      build_run_local ctx:ctx_wdae_integ coverage xml
+      build_run_local ctx:ctx_wdae_integ cp coverage.xml ./test-results/
+      build_run_local ctx:ctx_wdae_integ coverage html --title GPF -d ./test-results/coverage-html
     }
   }
 
