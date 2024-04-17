@@ -40,6 +40,8 @@ class ParquetHelper:
     @property
     def current_idx(self) -> int:
         if not self.batch:
+            self.advance()
+        if self.exhausted:
             return -1
         return int(self.batch[0]["summary_index"])
 
@@ -62,11 +64,8 @@ class ParquetHelper:
         """Fetch all variants matching the given summary index."""
         result: list[dict] = []
 
-        if self.exhausted:
-            return result
-        if not self.batch:
-            self.advance()
-
+        if self.current_idx == -1:
+            return []
         if summary_idx < self.current_idx:
             return []
         while summary_idx > self.current_idx:
@@ -109,8 +108,11 @@ class MultiSummaryReader:
         for reader in self.readers:
             reader.advance()  # init all readers
         self.current_idx = self.readers[0].current_idx
-        for reader in self.readers:
-            self.current_idx = min(self.current_idx, reader.current_idx)
+        self._next_index()
+
+    def _next_index(self) -> None:
+        self.current_idx = min(reader.current_idx for reader in self.readers
+                               if not reader.exhausted)
 
     @property
     def _exhausted(self) -> bool:
@@ -120,14 +122,13 @@ class MultiSummaryReader:
         return self
 
     def __next__(self) -> dict:
-        if self._exhausted:
-            raise StopIteration
         result = []
         for reader in self.readers:
             result.extend(reader.get(self.current_idx))
-        self.current_idx += 1
+        if not self._exhausted:
+            self._next_index()
         if not result:
-            return self.__next__()  # go next if nothing found for this idx
+            raise StopIteration
         return result[0]  # we only need one allele for now
 
     def close(self) -> None:
