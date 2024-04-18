@@ -12,13 +12,16 @@ import { GeneProfilesTableService } from './gene-profiles-table.service';
 import { environment } from 'environments/environment';
 import { Location } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
+import { Store } from '@ngxs/store';
+import { GeneProfilesModel, GeneProfilesState, SetGeneProfiles } from './gene-profiles-table.state';
+import { StatefulComponent } from 'app/common/stateful-component';
 
 @Component({
   selector: 'gpf-gene-profiles-table',
   templateUrl: './gene-profiles-table.component.html',
   styleUrls: ['./gene-profiles-table.component.css']
 })
-export class GeneProfilesTableComponent implements OnInit, OnChanges, OnDestroy {
+export class GeneProfilesTableComponent extends StatefulComponent implements OnInit, OnChanges, OnDestroy {
   @Input() public config: GeneProfilesTableConfig;
   @Input() public sortBy: string;
   public defaultSortBy: string;
@@ -29,7 +32,7 @@ export class GeneProfilesTableComponent implements OnInit, OnChanges, OnDestroy 
   @ViewChild(MultipleSelectMenuComponent) public multipleSelectMenuComponent: MultipleSelectMenuComponent;
   @ViewChildren(SortingButtonsComponent) public sortingButtonsComponents: SortingButtonsComponent[];
 
-  private clickedColumnFilteringButton;
+  private clickedColumnFilteringButton: HTMLElement;
   public modalPosition = {top: 0, left: 0};
   public showKeybinds = false;
 
@@ -59,16 +62,20 @@ export class GeneProfilesTableComponent implements OnInit, OnChanges, OnDestroy 
   private getGenesSubscription: Subscription = new Subscription();
   public imgPathPrefix = environment.imgPathPrefix;
 
-  public tabs: string[] = [];
+  public tabs = new Set<string>();
   public hideTable = false;
   public currentTabGeneSet= new Set<string>();
   public currentTabString = '';
+  public isStateLoaded = false;
 
   public constructor(
     private geneProfilesService: GeneProfilesTableService,
     private location: Location,
-    private route: ActivatedRoute
-  ) { }
+    private route: ActivatedRoute,
+    protected store: Store
+  ) {
+    super(store, GeneProfilesState, 'geneProfiles');
+  }
 
   public ngOnInit(): void {
     this.defaultSortBy = this.sortBy;
@@ -94,6 +101,8 @@ export class GeneProfilesTableComponent implements OnInit, OnChanges, OnDestroy 
       );
       this.loadSingleView(this.currentTabGeneSet);
     }
+
+    this.loadState();
   }
 
   public ngOnChanges(): void {
@@ -101,6 +110,9 @@ export class GeneProfilesTableComponent implements OnInit, OnChanges, OnDestroy 
       this.viewportPageCount = Math.ceil(window.innerHeight / (this.baseRowHeight * this.config.pageSize));
       this.calculateHeaderLayout();
       this.fillTable();
+      if (this.isStateLoaded) {
+        this.saveToState();
+      }
     }
   }
 
@@ -125,12 +137,12 @@ export class GeneProfilesTableComponent implements OnInit, OnChanges, OnDestroy 
   }
 
   @HostListener('window:scroll', ['$event'])
-  public onWindowScroll($event): void {
-    if (this.prevVerticalScroll !== $event.srcElement.scrollingElement.scrollTop) {
+  public onWindowScroll($event: Event): void {
+    if (this.prevVerticalScroll !== ($event.target['scrollingElement'] as HTMLElement).scrollTop) {
       const tableBodyOffset = document.getElementById('table-body').offsetTop;
       const topRowIdx = Math.floor(Math.max(window.scrollY - tableBodyOffset, 0) / this.baseRowHeight);
       const bottomRowIdx = Math.floor(window.innerHeight / this.baseRowHeight) + topRowIdx;
-      this.prevVerticalScroll = $event.srcElement.scrollingElement.scrollTop;
+      this.prevVerticalScroll = ($event.target['scrollingElement'] as HTMLElement).scrollTop;
       this.updateShownGenes(topRowIdx - 20, bottomRowIdx + 20);
       if (bottomRowIdx + 40 >= this.genes.length && this.loadMoreGenes) {
         this.updateGenes();
@@ -154,7 +166,10 @@ export class GeneProfilesTableComponent implements OnInit, OnChanges, OnDestroy 
     this.loadMoreGenes = true;
     this.showNothingFound = false;
     // In case of page zoom out where scroll will disappear, load more pages.
-    const initialPageCount = 4 * this.viewportPageCount;
+    let initialPageCount = 0;
+    if (this.viewportPageCount) {
+      initialPageCount = 4 * this.viewportPageCount;
+    }
 
     for (let i = 1; i <= initialPageCount; i++) {
       geneProfilesRequests.push(
@@ -178,6 +193,34 @@ export class GeneProfilesTableComponent implements OnInit, OnChanges, OnDestroy 
     });
   }
 
+  private loadState(): void {
+    this.store.selectOnce(
+      (state: { geneProfilesState: GeneProfilesModel}) => state.geneProfilesState)
+      .subscribe((state: SetGeneProfiles) => {
+        this.tabs = state.openedTabs;
+        this.geneInput = state.searchValue;
+        this.highlightedGenes = state.highlightedRows;
+        this.sortBy = state.sortBy;
+        this.orderBy = state.orderBy;
+        this.config = state.config;
+      });
+    this.search(this.geneInput);
+    this.isStateLoaded = true;
+  }
+
+  private saveToState(): void {
+    this.store.dispatch(
+      new SetGeneProfiles(
+        this.tabs,
+        this.geneInput,
+        this.highlightedGenes,
+        this.sortBy,
+        this.orderBy,
+        this.config
+      )
+    );
+  }
+
   public calculateHeaderLayout(): void {
     this.leaves = GeneProfilesColumn.leaves(this.config.columns);
     this.nothingFoundWidth = (this.leaves.length * 110) + 40; // must match .table-row values
@@ -197,6 +240,7 @@ export class GeneProfilesTableComponent implements OnInit, OnChanges, OnDestroy 
 
   public search(value: string): void {
     this.geneInput = value;
+    this.saveToState();
     this.fillTable();
   }
 
@@ -219,15 +263,15 @@ export class GeneProfilesTableComponent implements OnInit, OnChanges, OnDestroy 
       });
   }
 
-  public openDropdown(column: GeneProfilesColumn, $event): void {
+  public openDropdown(column: GeneProfilesColumn, $event: MouseEvent): void {
     $event.stopPropagation(); // stop propagation to avoid triggering sort
 
-    if (this.ngbDropdownMenu.dropdown._open) {
+    if (this.ngbDropdownMenu.dropdown.isOpen()) {
       return;
     }
 
     this.ngbDropdownMenu.dropdown.toggle();
-    this.clickedColumnFilteringButton = $event.target;
+    this.clickedColumnFilteringButton = $event.target as HTMLElement;
     this.updateModalPosition();
 
     let columnDisplayName = column.displayName;
@@ -240,13 +284,13 @@ export class GeneProfilesTableComponent implements OnInit, OnChanges, OnDestroy 
     this.multipleSelectMenuComponent.refresh();
   }
 
-  public openCategoryFilterDropdown($event): void {
-    if (this.ngbDropdownMenu.dropdown._open) {
+  public openCategoryFilterDropdown($event: MouseEvent): void {
+    if (this.ngbDropdownMenu.dropdown.isOpen()) {
       return;
     }
 
     this.ngbDropdownMenu.dropdown.toggle();
-    this.clickedColumnFilteringButton = $event.target;
+    this.clickedColumnFilteringButton = $event.target as HTMLElement;
     this.updateModalPosition(0, -11);
     this.multipleSelectMenuComponent.searchPlaceholder = 'Search categories';
     this.multipleSelectMenuComponent.columns = this.config.columns.filter(col => col.id !== this.geneSymbolColumnId);
@@ -254,19 +298,19 @@ export class GeneProfilesTableComponent implements OnInit, OnChanges, OnDestroy 
   }
 
   public updateModalPosition(leftOffset = 6, topOffset = 0): void {
-    if (!this.ngbDropdownMenu.dropdown._open) {
+    if (!this.ngbDropdownMenu.dropdown.isOpen()) {
       return;
     }
 
     const buttonHeight = 30;
     this.modalPosition.top =
-      (this.clickedColumnFilteringButton.getBoundingClientRect().top as number)
+      this.clickedColumnFilteringButton.getBoundingClientRect().top
       + buttonHeight
       - topOffset;
 
     const modalWidth = 400;
     const leftPosition =
-      (this.clickedColumnFilteringButton.getBoundingClientRect().left as number)
+      this.clickedColumnFilteringButton.getBoundingClientRect().left
       + leftOffset;
 
     const viewWidth = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
@@ -279,7 +323,7 @@ export class GeneProfilesTableComponent implements OnInit, OnChanges, OnDestroy 
     }
   }
 
-  public reorderHeader($event): void {
+  public reorderHeader($event: string[]): void {
     this.config.columns.sort((a, b) => $event.indexOf(a.id) - $event.indexOf(b.id));
     this.calculateHeaderLayout();
   }
@@ -300,8 +344,8 @@ export class GeneProfilesTableComponent implements OnInit, OnChanges, OnDestroy 
     if (sortButton) {
       sortButton.emitSort();
     }
-
     this.fillTable();
+    this.saveToState();
   }
 
   private resetSortButtons(): void {
@@ -314,8 +358,8 @@ export class GeneProfilesTableComponent implements OnInit, OnChanges, OnDestroy 
     }
   }
 
-  public handleCellClick($event, row: object, column: GeneProfilesColumn): void {
-    const linkClick: boolean = $event.target.classList.contains('clickable');
+  public handleCellClick($event: MouseEvent, row: object, column: GeneProfilesColumn): void {
+    const linkClick: boolean = ($event.target['classList'] as DOMTokenList).contains('clickable');
     const geneSymbol = row[this.geneSymbolColumnId] as string;
 
     const middleClick: boolean = $event.which === 2;
@@ -333,9 +377,9 @@ export class GeneProfilesTableComponent implements OnInit, OnChanges, OnDestroy 
   public loadSingleView(geneSymbols: string | Set<string>, newTab: boolean = false): void {
     const genes = this.formatGeneSymbols(geneSymbols);
     if (!newTab) {
-      if (this.tabs.indexOf(genes) === -1) {
-        this.tabs.push(genes);
-      }
+      this.loadState();
+      this.tabs.add(genes);
+      this.saveToState();
 
       this.openTab(genes);
     } else {
@@ -358,7 +402,8 @@ export class GeneProfilesTableComponent implements OnInit, OnChanges, OnDestroy 
   }
 
   public closeTab(tab: string): void {
-    this.tabs = this.tabs.filter(t => t !== tab);
+    this.tabs.delete(tab);
+    this.saveToState();
     this.backToTable();
   }
 
@@ -374,6 +419,7 @@ export class GeneProfilesTableComponent implements OnInit, OnChanges, OnDestroy 
     } else {
       this.highlightedGenes.add(geneSymbol);
     }
+    this.saveToState();
   }
 
   private async waitForSearchBoxToLoad(): Promise<void> {
