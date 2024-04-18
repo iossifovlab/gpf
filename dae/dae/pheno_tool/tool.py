@@ -1,18 +1,22 @@
 import logging
+
 from collections import Counter
-from typing import Any, Optional, Union, cast
+from typing import Union, Any, Optional, cast
 
 import numpy as np
 import pandas as pd
+
 from scipy.stats import ttest_ind  # type: ignore
 
-from dae.effect_annotation.effect import EffectTypesMixin, expand_effect_types
-from dae.pheno.common import MeasureType
-from dae.pheno.pheno_data import PhenotypeData
 from dae.pheno.utils.lin_regress import LinearRegression
-from dae.studies.study import GenotypeData
+
+from dae.pheno.common import MeasureType
 from dae.variants.attributes import Role, Sex
 from dae.variants.family_variant import FamilyAllele
+from dae.effect_annotation.effect import EffectTypesMixin, expand_effect_types
+from dae.studies.study import GenotypeData
+from dae.pheno.pheno_data import PhenotypeData
+
 
 logger = logging.getLogger(__name__)
 
@@ -30,14 +34,14 @@ class PhenoResult:
         self.negative_deviation = np.nan
 
     def set_positive_stats(
-        self, p_count: int, p_mean: float, p_std: float,
+        self, p_count: int, p_mean: float, p_std: float
     ) -> None:
         self.positive_count = p_count
         self.positive_mean = p_mean
         self.positive_deviation = p_std
 
     def set_negative_stats(
-        self, n_count: int, n_mean: float, n_std: float,
+        self, n_count: int, n_mean: float, n_std: float
     ) -> None:
         self.negative_count = n_count
         self.negative_mean = n_mean
@@ -60,7 +64,7 @@ class PhenoToolHelper:
     """
 
     def __init__(
-        self, genotype_data: GenotypeData, phenotype_data: PhenotypeData,
+        self, genotype_data: GenotypeData, phenotype_data: PhenotypeData
     ) -> None:
         assert genotype_data
         self.genotype_data = genotype_data
@@ -68,7 +72,7 @@ class PhenoToolHelper:
         self.effect_types_mixin = EffectTypesMixin()
 
     def _package_effect_type_group(
-        self, group: str, variants: Any,
+        self, group: str, variants: Any
     ) -> dict[str, Counter]:
         res: dict[str, Any] = {group: Counter()}
 
@@ -83,7 +87,7 @@ class PhenoToolHelper:
 
     def genotype_data_persons(
         self, family_ids: Optional[list[str]] = None,
-        roles: Optional[list[Role]] = None,
+        roles: Optional[list[Role]] = None
     ) -> set[str]:
         """Collect person ids from genotype data."""
         if family_ids is None:
@@ -106,7 +110,7 @@ class PhenoToolHelper:
         return persons
 
     def genotype_data_variants(
-        self, data: dict, effect_groups: list[str],
+        self, data: dict, effect_groups: list[str]
     ) -> dict[str, Counter]:
         """Collect effect groups variants."""
         assert "effect_types" in data, data
@@ -132,8 +136,8 @@ class PhenoToolHelper:
                 continue
             variants_by_effect.update(
                 self._package_effect_type_group(
-                    effect_type, variants_by_effect,
-                ),
+                    effect_type, variants_by_effect
+                )
             )
         logger.debug("variants_by_effect: %s", list(variants_by_effect.keys()))
 
@@ -190,18 +194,18 @@ class PhenoTool:
             all_measures,
             person_ids=person_ids,
             family_ids=family_ids,
-            roles=["prb"],
+            roles=[Role.prb]
         )
 
         self.pheno_df = pheno_df.dropna()
 
         if not self.pheno_df.empty:
             self.pheno_df = self._normalize_df(
-                self.pheno_df, self.measure_id, self.normalize_by,
+                self.pheno_df, self.measure_id, self.normalize_by
             )
 
     def _init_normalize_measures(
-        self, normalize_by: list[dict[str, str]],
+        self, normalize_by: list[dict[str, str]]
     ) -> list[str]:
         result = list(filter(
             None,
@@ -218,7 +222,7 @@ class PhenoTool:
         return result
 
     def _get_normalize_measure_id(
-        self, normalize_measure: dict[str, str],
+        self, normalize_measure: dict[str, str]
     ) -> Optional[str]:
         assert isinstance(normalize_measure, dict)
         assert "measure_name" in normalize_measure
@@ -232,7 +236,7 @@ class PhenoTool:
             [
                 normalize_measure["instrument_name"],
                 normalize_measure["measure_name"],
-            ],
+            ]
         )
         if self.phenotype_data.has_measure(normalize_id) and \
                 normalize_id != self.measure_id:
@@ -242,19 +246,19 @@ class PhenoTool:
 
     @staticmethod
     def join_pheno_df_with_variants(
-        pheno_df: pd.DataFrame, variants: Counter,
+        pheno_df: pd.DataFrame, variants: Counter
     ) -> pd.DataFrame:
         """Join phenotype dataframe with variants."""
         assert not pheno_df.empty
         assert isinstance(variants, Counter)
 
         persons_variants = pd.DataFrame(
-            data=list(variants.items()), columns=["person_id", "variant_count"],
+            data=list(variants.items()), columns=["person_id", "variant_count"]
         )
         persons_variants = persons_variants.set_index("person_id")
 
         merged_df = pd.merge(
-            pheno_df, persons_variants, how="left", on=["person_id"],
+            pheno_df, persons_variants, how="left", on=["person_id"]
         )
         merged_df = merged_df.fillna(0)
         return merged_df
@@ -262,7 +266,7 @@ class PhenoTool:
     @staticmethod
     def _normalize_df(
         df: pd.DataFrame, measure_id: str,
-        normalize_by: Optional[list[str]] = None,
+        normalize_by: Optional[list[str]] = None
     ) -> pd.DataFrame:
         if normalize_by is None:
             normalize_by = []
@@ -300,7 +304,7 @@ class PhenoTool:
     @staticmethod
     def _calc_pv(
         positive: np.ndarray,
-        negative: np.ndarray,
+        negative: np.ndarray
     ) -> float:
         if len(positive) < 2 or len(negative) < 2:
             return "NA"  # type: ignore
@@ -310,7 +314,7 @@ class PhenoTool:
 
     @classmethod
     def _calc_stats(
-        cls, data: pd.DataFrame, sex: Optional[Sex],
+        cls, data: pd.DataFrame, sex: Optional[Sex]
     ) -> PhenoResult:
         if len(data) == 0:
             result = PhenoResult()
@@ -325,7 +329,7 @@ class PhenoTool:
             return result
 
         positive_index = np.logical_and(
-            data["variant_count"] != 0, ~np.isnan(data["variant_count"]),
+            data["variant_count"] != 0, ~np.isnan(data["variant_count"])
         )
 
         negative_index = np.array(data["variant_count"] == 0)
@@ -340,7 +344,7 @@ class PhenoTool:
             negative_sex_index = np.logical_and(negative_index, sex_index)
 
             assert not np.any(
-                np.logical_and(positive_sex_index, negative_sex_index),
+                np.logical_and(positive_sex_index, negative_sex_index)
             )
 
         positive = np.array(data[positive_sex_index].normalized.values)
@@ -356,7 +360,7 @@ class PhenoTool:
 
     def calc(
         self, variants: Counter,
-        sex_split: bool = False,
+        sex_split: bool = False
     ) -> Union[dict[str, PhenoResult], PhenoResult]:
         """Perform calculation.
 
@@ -369,7 +373,7 @@ class PhenoTool:
         """
         if not self.pheno_df.empty:
             merged_df = PhenoTool.join_pheno_df_with_variants(
-                self.pheno_df, variants,
+                self.pheno_df, variants
             )
         else:
             merged_df = self.pheno_df

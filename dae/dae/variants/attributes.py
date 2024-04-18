@@ -139,6 +139,10 @@ class Role(enum.Enum):
         return role.value
 
     @staticmethod
+    def to_name(value: int) -> str:
+        return Role(value).name
+
+    @staticmethod
     def from_value(val: int) -> Role:
         return Role(int(val))
 
@@ -182,6 +186,10 @@ class Sex(enum.Enum):
     def to_value(name: Optional[Union[int, str]]) -> int:
         sex = Sex.from_name(name)
         return sex.value
+
+    @staticmethod
+    def to_name(value: int) -> str:
+        return Sex(value).name
 
     @staticmethod
     def from_value(val: int) -> Sex:
@@ -239,6 +247,10 @@ class Status(enum.Enum):
     def to_value(name: Optional[Union[int, str]]) -> int:
         status = Status.from_name(name)
         return status.value
+
+    @staticmethod
+    def to_name(value: int) -> str:
+        return Status(value).name
 
     @staticmethod
     def from_value(val: int) -> Status:

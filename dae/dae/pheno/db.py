@@ -507,7 +507,7 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
         )
 
         self.regressions = Table(
-            "regressions",
+            "regression",
             self.pheno_metadata,
             Column(
                 "regression_id",
@@ -645,22 +645,22 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
 
         if keyword:
             keyword = "%{}%".format(
-                keyword.replace("%", r"\%").replace("_", r"\_")
+                keyword.replace("%", r"/%").replace("_", r"/_")
             )
             if not instrument_name:
                 query_params.append(
                     self.variable_browser.c.instrument_name.like(
-                        keyword, escape="\\"
+                        keyword, escape="/"
                     )
                 )
             query_params.append(
-                self.variable_browser.c.measure_id.like(keyword, escape="\\")
+                self.variable_browser.c.measure_id.like(keyword, escape="/")
             )
             query_params.append(
-                self.variable_browser.c.measure_name.like(keyword, escape="\\")
+                self.variable_browser.c.measure_name.like(keyword, escape="/")
             )
             query_params.append(
-                self.variable_browser.c.description.like(keyword, escape="\\")
+                self.variable_browser.c.description.like(keyword, escape="/")
             )
             query = self.variable_browser.select().where((or_(*query_params)))
         else:
@@ -681,7 +681,7 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
                         "measure_id": row[0],
                         "instrument_name": row[1],
                         "measure_name": row[2],
-                        "measure_type": row[3],
+                        "measure_type": MeasureType.from_str(row[3]),
                         "description": row[4],
                         "values_domain": row[5],
                         "figure_distribution_small": row[6],
@@ -698,22 +698,22 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
 
         if keyword:
             keyword = "%{}%".format(
-                keyword.replace("%", r"\%").replace("_", r"\_")
+                keyword.replace("%", r"/%").replace("_", r"/_")
             )
             if not instrument_name:
                 query_params.append(
                     self.variable_browser.c.instrument_name.like(
-                        keyword, escape="\\"
+                        keyword, escape="/"
                     )
                 )
             query_params.append(
-                self.variable_browser.c.measure_id.like(keyword, escape="\\")
+                self.variable_browser.c.measure_id.like(keyword, escape="/")
             )
             query_params.append(
-                self.variable_browser.c.measure_name.like(keyword, escape="\\")
+                self.variable_browser.c.measure_name.like(keyword, escape="/")
             )
             query_params.append(
-                self.variable_browser.c.description.like(keyword, escape="\\")
+                self.variable_browser.c.description.like(keyword, escape="/")
             )
             query = self.variable_browser.select().where(or_(*query_params))
         else:
