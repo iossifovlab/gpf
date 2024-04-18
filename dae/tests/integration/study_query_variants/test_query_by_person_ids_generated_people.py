@@ -43,7 +43,7 @@ chrA   1   .  A   C,G .    .      .    GT     0/1  0/0      0/0  0/0  0/1
 
     study = vcf_study(
         root_path,
-        "tios_vcf", pathlib.Path(ped_path),
+        "vcf_with_generated_people", pathlib.Path(ped_path),
         [pathlib.Path(vcf_path)],
         gpf_instance,
         project_config_update={

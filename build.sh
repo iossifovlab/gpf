@@ -270,7 +270,23 @@ EOT
           --no-incremental \
           > /wd/results/mypy_impala2_report || true'
 
+    build_run_detached bash -c '
+      cd /wd/gcp_storage;
+      /opt/conda/bin/conda run --no-capture-output -n gpf mypy gcp_storage \
+          --pretty \
+          --show-error-context \
+          --no-incremental \
+          > /wd/results/mypy_gcp_report || true'
+
     build_run_container wait
+
+      build_run_local cp ./results/mypy_dae_report \
+        ./results/mypy_dae_tests_report \
+        ./results/mypy_wdae_report \
+        ./results/mypy_impala_report \
+        ./results/mypy_impala2_report \
+        ./results/mypy_gcp_report \
+        ./test-results/
 
     build_run_local cp ./results/flake8_report ./test-results/
     build_run_local cp ./results/pylint_gpf_report ./test-results/

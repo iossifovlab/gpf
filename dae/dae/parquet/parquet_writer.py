@@ -32,6 +32,7 @@ def pedigree_parquet_schema() -> pa.schema:
         pa.field("generated", pa.bool_()),
         pa.field("layout", pa.string()),
         pa.field("not_sequenced", pa.bool_()),
+        pa.field("member_index", pa.int32()),
     ]
 
     return pa.schema(fields)

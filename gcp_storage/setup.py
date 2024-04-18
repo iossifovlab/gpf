@@ -1,30 +1,32 @@
 """Setup for GPF genotype storage on the GCP."""
 
 import setuptools
+import versioneer
 
 setuptools.setup(
-    name="gpf_gcp",
-    version="3.7.dev5",
+    name="gpf_gcp_storage",
+    version=versioneer.get_version(),  # type: ignore
+    cmdclass=versioneer.get_cmdclass(),  # type: ignore
     author="Lubomir Chorbadjiev",
     author_email="lubomir.chorbadjiev@gmail.com",
     description="GPF genotype storage on the GCP",
     url="https://github.com/IossifovLab/gpf",
     packages=setuptools.find_packages(
         where=".", exclude=[
-            "gcp_genotype_storage.docs", "tests.*", "*.tests.*", "*.tests", ],
+            "gcp_storage.docs", "tests.*", "*.tests.*", "*.tests", ],
     ),
     # include_package_data=True,
     package_data={
-        "gcp_genotype_storage": ["py.typed"],
+        "gcp_storage": ["py.typed"],
     },
     scripts=[
     ],
     entry_points="""
     [dae.genotype_storage.factories]
-    gcp=gcp_genotype_storage.gcp_genotype_storage:GcpGenotypeStorage
+    gcp=gcp_storage.gcp_genotype_storage:GcpGenotypeStorage
 
     [dae.import_tools.storages]
-    gcp=gcp_genotype_storage.gcp_import_storage:GcpImportStorage
+    gcp=gcp_storage.gcp_import_storage:GcpImportStorage
 
     [console_scripts]
 

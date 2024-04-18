@@ -11,9 +11,10 @@ from dae.utils import fs_utils
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.schema2_storage.schema2_import_storage import Schema2DatasetLayout
 from dae.parquet.partition_descriptor import PartitionDescriptor
+from dae.genomic_resources.gene_models import GeneModels
+from dae.genomic_resources.reference_genome import ReferenceGenome
 
-from gcp_genotype_storage.bigquery_variants import BigQueryVariants
-
+from gcp_storage.bigquery_variants import BigQueryVariants
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +47,7 @@ class GcpGenotypeStorage(GenotypeStorage):
         },
     }
 
-    def __init__(self, storage_config: Dict[str, Any]):
+    def __init__(self, storage_config: Dict[str, Any]) -> None:
         super().__init__(storage_config)
         self.fs: Optional[gcsfs.GCSFileSystem] = None
 
@@ -67,44 +68,55 @@ class GcpGenotypeStorage(GenotypeStorage):
     def get_storage_types(cls) -> set[str]:
         return {"gcp"}
 
-    def start(self):
+    def start(self) -> "GcpGenotypeStorage":
         project_id = self.storage_config["project_id"]
         self.fs = gcsfs.GCSFileSystem(project=project_id)
         return self
 
-    def shutdown(self):
+    def shutdown(self) -> GenotypeStorage:
         self.fs = None
+        return self
 
-    def get_db(self):
-        return self.storage_config["bigquery"]["db"]
+    def get_db(self) -> str:
+        return cast(str, self.storage_config["bigquery"]["db"])
 
     @staticmethod
-    def _study_tables(study_config) -> Schema2DatasetLayout:
+    def _study_tables(
+        study_config: dict[str, Any]
+    ) -> Schema2DatasetLayout:
         study_id = study_config["id"]
         storage_config = study_config.get("genotype_storage")
         has_tables = storage_config and storage_config.get("tables")
-        tables = storage_config["tables"] if has_tables else None
-
+        tables = None
         family_table = f"{study_id}_family_alleles"
-        if has_tables and tables.get("family"):
-            family_table = tables["family"]
-
         summary_table = f"{study_id}_summary_alleles"
-        if has_tables and tables.get("summary"):
-            summary_table = tables["summary"]
-
         pedigree_table = f"{study_id}_pedigree"
-        if has_tables and tables.pedigree:
-            pedigree_table = tables.pedigree
-
         meta_table = f"{study_id}_meta"
-        if has_tables and tables.get("meta"):
-            meta_table = tables["meta"]
+
+        if has_tables:
+            assert storage_config is not None
+            tables = storage_config["tables"]
+
+            if tables.get("family"):
+                family_table = tables["family"]
+
+            if tables.get("summary"):
+                summary_table = tables["summary"]
+
+            if tables.pedigree:
+                pedigree_table = tables.pedigree
+
+            if tables.get("meta"):
+                meta_table = tables["meta"]
 
         return Schema2DatasetLayout(
             study_id, pedigree_table, summary_table, family_table, meta_table)
 
-    def build_backend(self, study_config, genome, gene_models):
+    def build_backend(
+        self, study_config: dict[str, Any],
+        genome: ReferenceGenome,
+        gene_models: GeneModels
+    ) -> BigQueryVariants:
         assert study_config is not None
         tables_layout = self._study_tables(study_config)
         project_id = self.storage_config["project_id"]
@@ -119,7 +131,7 @@ class GcpGenotypeStorage(GenotypeStorage):
         return backend
 
     def _load_partition_description(
-            self, metadata_path) -> PartitionDescriptor:
+            self, metadata_path: str) -> PartitionDescriptor:
         df = pq.read_table(metadata_path).to_pandas()
         for record in df.to_dict(orient="records"):
             if record["key"] == "partition_description":
@@ -276,7 +288,7 @@ class GcpGenotypeStorage(GenotypeStorage):
 
     def gcp_import_dataset(
             self, study_id: str,
-            study_layout: Schema2DatasetLayout):
+            study_layout: Schema2DatasetLayout) -> Schema2DatasetLayout:
         """Create pedigree and variant tables for a study."""
         partition_description = self._load_partition_description(
             study_layout.meta)
