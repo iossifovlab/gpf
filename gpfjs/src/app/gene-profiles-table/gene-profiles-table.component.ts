@@ -149,10 +149,7 @@ export class GeneProfilesTableComponent extends StatefulComponent implements OnI
       }
     }
 
-    const viewWidth = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
-    if (window.scrollX + viewWidth < document.body.scrollWidth) {
-      this.ngbDropdownMenu.dropdown.close();
-    }
+    this.ngbDropdownMenu.dropdown.close();
   }
 
   @HostListener('window:resize')
