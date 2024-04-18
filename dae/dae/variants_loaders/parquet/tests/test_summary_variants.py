@@ -3,7 +3,7 @@ from dae.variants_loaders.parquet.loader import ParquetLoader
 
 
 def test_fetch_summary_variants_nonpartitioned(
-    t4c8_study_nonpartitioned: str
+    t4c8_study_nonpartitioned: str,
 ) -> None:
     loader = ParquetLoader(t4c8_study_nonpartitioned)
     vs = list(loader.fetch_summary_variants())
@@ -11,7 +11,7 @@ def test_fetch_summary_variants_nonpartitioned(
 
 
 def test_fetch_summary_variants_partitioned(
-    t4c8_study_partitioned: str
+    t4c8_study_partitioned: str,
 ) -> None:
     loader = ParquetLoader(t4c8_study_partitioned)
     vs = list(loader.fetch_summary_variants())
@@ -19,7 +19,7 @@ def test_fetch_summary_variants_partitioned(
 
 
 def test_fetch_summary_variants_nonpartitioned_region(
-    t4c8_study_nonpartitioned: str
+    t4c8_study_nonpartitioned: str,
 ) -> None:
     loader = ParquetLoader(t4c8_study_nonpartitioned)
     vs = list(loader.fetch_summary_variants(region="chr1:119"))
@@ -29,7 +29,7 @@ def test_fetch_summary_variants_nonpartitioned_region(
 
 
 def test_fetch_summary_variants_partitioned_region(
-    t4c8_study_partitioned: str
+    t4c8_study_partitioned: str,
 ) -> None:
     loader = ParquetLoader(t4c8_study_partitioned)
     vs = list(loader.fetch_summary_variants(region="chr1:1-89"))
@@ -39,7 +39,7 @@ def test_fetch_summary_variants_partitioned_region(
 
 
 def test_fetch_summary_variants_count_acgt(
-    acgt_study_partitioned: str
+    acgt_study_partitioned: str,
 ) -> None:
     loader = ParquetLoader(acgt_study_partitioned)
     assert len(list(loader.fetch_summary_variants())) == 9

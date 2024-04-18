@@ -1,9 +1,11 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
+
 import pytest
+
 from dae.gpf_instance import GPFInstance
-from dae.variants_loaders.parquet.loader import ParquetLoader
 from dae.testing import setup_pedigree, setup_vcf, vcf_study
+from dae.variants_loaders.parquet.loader import ParquetLoader
 
 
 @pytest.fixture(scope="module")
@@ -59,7 +61,7 @@ chr1   100  .  T   G    .    .      .    GT     0/1  0/1  0/1 0/0  0/0  0/0 0/1 
             },
             "family_bin": {
                 "family_bin_size": 3,
-            }
+            },
         },
     }
     vcf_study(
@@ -67,13 +69,13 @@ chr1   100  .  T   G    .    .      .    GT     0/1  0/1  0/1 0/0  0/0  0/0 0/1 
         "study_odd", ped_path, [vcf_path1],
         t4c8_instance,
         project_config_update=project_config_update,
-        project_config_overwrite={"destination": {"storage_type": "schema2"}}
+        project_config_overwrite={"destination": {"storage_type": "schema2"}},
     )
     return f"{root_path}/work_dir/study_odd"
 
 
 def test_fetch_variants_count_nonpartitioned(
-    t4c8_study_nonpartitioned: str
+    t4c8_study_nonpartitioned: str,
 ) -> None:
     loader = ParquetLoader(t4c8_study_nonpartitioned)
     vs = list(loader.fetch_variants())
@@ -84,7 +86,7 @@ def test_fetch_variants_count_nonpartitioned(
 
 
 def test_fetch_variants_count_partitioned(
-    t4c8_study_partitioned: str
+    t4c8_study_partitioned: str,
 ) -> None:
     loader = ParquetLoader(t4c8_study_partitioned)
     vs = list(loader.fetch_variants())
@@ -95,7 +97,7 @@ def test_fetch_variants_count_partitioned(
 
 
 def test_fetch_variants_count_nonpartitioned_region(
-    t4c8_study_nonpartitioned: str
+    t4c8_study_nonpartitioned: str,
 ) -> None:
     loader = ParquetLoader(t4c8_study_nonpartitioned)
     vs = list(loader.fetch_variants(region="chr1:119"))
@@ -112,7 +114,7 @@ def test_fetch_variants_count_nonpartitioned_region(
 
 
 def test_fetch_variants_count_partitioned_region(
-    t4c8_study_partitioned: str
+    t4c8_study_partitioned: str,
 ) -> None:
     loader = ParquetLoader(t4c8_study_partitioned)
     vs = list(loader.fetch_variants(region="chr1:1-89"))
@@ -129,7 +131,7 @@ def test_fetch_variants_count_partitioned_region(
 
 
 def test_fetch_variants_odd_study(
-    t4c8_study_odd: str
+    t4c8_study_odd: str,
 ) -> None:
     loader = ParquetLoader(t4c8_study_odd)
     vs = list(loader.fetch_variants())

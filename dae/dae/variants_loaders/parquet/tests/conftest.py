@@ -1,10 +1,12 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
+
 import pytest
+
 from dae.gpf_instance import GPFInstance
 from dae.testing import setup_pedigree, setup_vcf, vcf_study
-from dae.testing.t4c8_import import t4c8_gpf
 from dae.testing.acgt_import import acgt_gpf
+from dae.testing.t4c8_import import t4c8_gpf
 
 
 @pytest.fixture(scope="module")
@@ -47,13 +49,13 @@ f1.3     ch3      dad3  mom3  2   2      prb
 chr1   54   .  T   C   .    .      .    GT     0/1  0/0  0/1 0/0  0/0  0/0
 chr1   119  .  A   G,C .    .      .    GT     0/0  0/2  0/2 0/1  0/2  0/1
 chr1   122  .  A   C   .    .      .    GT     0/0  1/0  0/0 0/0  0/0  0/0
-        """)  # noqa
+        """)
 
     vcf_study(
         root_path,
         "study_1", ped_path, [vcf_path1],
         t4c8_instance,
-        project_config_overwrite={"destination": {"storage_type": "schema2"}}
+        project_config_overwrite={"destination": {"storage_type": "schema2"}},
     )
     return f"{root_path}/work_dir/study_1"
 
@@ -87,7 +89,7 @@ chr1   90   .  G   C,GA .    .      .    GT     0/1  0/2  0/2 0/1  0/2  0/1
 chr1   100  .  T   G,TA .    .      .    GT     0/1  0/1  0/0 0/2  0/2  0/0
 chr1   119  .  A   G,C  .    .      .    GT     0/0  0/2  0/2 0/1  0/2  0/1
 chr1   122  .  A   C,AC .    .      .    GT     0/1  0/1  0/1 0/2  0/2  0/2
-        """)  # noqa
+        """)
 
     project_config_update = {
         "partition_description": {
@@ -104,11 +106,11 @@ chr1   122  .  A   C,AC .    .      .    GT     0/1  0/1  0/1 0/2  0/2  0/2
                     "noStart",
                     "missense",
                     "synonymous",
-                ]
+                ],
             },
             "family_bin": {
                 "family_bin_size": 2,
-            }
+            },
         },
     }
     vcf_study(
@@ -116,7 +118,7 @@ chr1   122  .  A   C,AC .    .      .    GT     0/1  0/1  0/1 0/2  0/2  0/2
         "study_2", ped_path, [vcf_path1],
         t4c8_instance,
         project_config_update=project_config_update,
-        project_config_overwrite={"destination": {"storage_type": "schema2"}}
+        project_config_overwrite={"destination": {"storage_type": "schema2"}},
     )
     return f"{root_path}/work_dir/study_2"
 
@@ -148,7 +150,7 @@ chr2   75   .  G   C,GA .    .      .    GT     0/1  0/2  0/2
 chr3   1    .  A   G,TA .    .      .    GT     0/1  0/1  0/0
 chr3   25   .  C   C    .    .      .    GT     0/1  0/1  0/1
 chr3   75   .  G   C,GA .    .      .    GT     0/1  0/2  0/2
-        """)  # noqa
+        """)
 
     project_config_update = {
         "partition_description": {
@@ -163,6 +165,6 @@ chr3   75   .  G   C,GA .    .      .    GT     0/1  0/2  0/2
         "study_3", ped_path, [vcf_path1],
         acgt_instance,
         project_config_update=project_config_update,
-        project_config_overwrite={"destination": {"storage_type": "schema2"}}
+        project_config_overwrite={"destination": {"storage_type": "schema2"}},
     )
     return f"{root_path}/work_dir/study_3"
