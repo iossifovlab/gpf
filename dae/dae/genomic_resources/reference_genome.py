@@ -155,7 +155,7 @@ class ReferenceGenome(
     def get_chrom_length(self, chrom: str) -> int:
         """Return the length of a specified chromosome."""
         if not self._index:
-            logger.warning("genome index not loaded; loading")
+            logger.info("genome index not loaded; loading")
             self._load_genome_index()
         chrom_data = self._index.get(chrom)
         if chrom_data is None:
@@ -165,7 +165,7 @@ class ReferenceGenome(
     def get_all_chrom_lengths(self) -> list[tuple[str, int]]:
         """Return list of all chromosomes lengths."""
         if not self._index:
-            logger.warning("genome index not loaded; loading")
+            logger.info("genome index not loaded; loading")
             self._load_genome_index()
         return [
             (key, value["length"])

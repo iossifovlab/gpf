@@ -130,8 +130,9 @@ def test_repo_repair_dry_run(
     assert not (path / GR_CONTENTS_FILE_NAME).exists()
 
     # When
-    cli_manage([
-        "repo-repair", "--dry-run", "-R", str(path), "-j", "1"])
+    with pytest.raises(SystemExit):
+        cli_manage([
+            "repo-repair", "--dry-run", "-R", str(path), "-j", "1"])
 
     # Then
     assert not (path / "one/statistics").exists()
