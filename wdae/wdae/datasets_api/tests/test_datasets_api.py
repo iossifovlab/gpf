@@ -62,24 +62,17 @@ def test_datasets_api_get_404(admin_client: Client) -> None:
     assert data["error"] == "Dataset alabala not found"
 
 
-def test_datasets_api_get_dataset_with_hierarchy_description(admin_client: Client) -> None:
+def test_datasets_api_get_dataset_with_hierarchy_description(
+    admin_client: Client
+) -> None:
     response = admin_client.get("/api/v3/datasets/Dataset1")
 
     assert response
     data = response.data  # type: ignore
-    pprint(data["data"]["description"])
-    assert data["data"]["description"] == (
-         '\n- **<a href="datasets/Study1">Study1</a>**'
-         '\n- **<a href="datasets/Study3">Study3</a>**'
-    )
-
-    response = admin_client.get("/api/v3/datasets/Study1")
-
-    assert response
-    data = response.data  # type: ignore
-    pprint(data["data"]["description"])
-    assert data["data"]["description"] == (
-        "some new description"
+    assert data["data"]["children_description"] == (
+        "\nThis dataset includes:\n"
+        "- **[Study1](Study1)** some new description\n\n"
+        "- **[Study3](Study3)** \n"
     )
 
 
@@ -245,6 +238,7 @@ def test_datasets_hierarchy(
 
     data = response.data  # type: ignore
     assert data
+    pprint(data)
     assert len(data["data"]) == 22
     dataset1 = next(filter(
         lambda x: x["dataset"] == "Dataset1", data["data"],

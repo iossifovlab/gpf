@@ -1,8 +1,7 @@
 import logging
 import os
 import re
-from pprint import pprint
-from typing import Any, Optional, cast
+from typing import Any, Optional, Union, cast
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -67,10 +66,15 @@ def produce_description_hierarchy(
         indent = "\t" * indent_level
         for child in dataset.studies:
             if child.study_id in selected:
+                child_descriptions = produce_description_hierarchy(
+                    child,
+                    selected,
+                    indent_level + 1
+                )
                 res.append(
                     f"{indent}- **[{child.name}]({child.study_id})** "
                     f"{get_first_paragraph(child.description)}\n"
-                    f"{produce_description_hierarchy(child, selected, indent_level+1)}"
+                    f"{child_descriptions}"
                 )
         return "\n".join(res)
 
@@ -78,7 +82,7 @@ def produce_description_hierarchy(
 
 
 def get_first_paragraph(
-    text: str | None,
+    text: Union[str, None],
 ) -> str:
     """Get first paragraph of text."""
     result = ""
