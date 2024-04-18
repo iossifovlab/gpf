@@ -542,6 +542,7 @@ def _run_repo_stats_command(
     status = 0
     for res in proto.get_all_resources():
         if updates_needed[res.resource_id]:
+            status += 1
             logger.info(
                 "Manifest of <%s> needs update, cannot check statistics",
                 res.resource_id,
@@ -628,8 +629,8 @@ def _run_resource_stats_command(
 def _run_repo_repair_command(
         repo: GenomicResourceRepo,
         proto: ReadWriteRepositoryProtocol,
-        **kwargs: Union[str, bool, int]) -> None:
-    _run_repo_info_command(repo, proto, **kwargs)
+        **kwargs: Union[str, bool, int]) -> int:
+    return _run_repo_info_command(repo, proto, **kwargs)
 
 
 def _run_resource_repair_command(
@@ -645,8 +646,12 @@ def _run_repo_info_command(
         proto: ReadWriteRepositoryProtocol,
         **kwargs: Union[str, bool, int]) -> int:
     status = _run_repo_stats_command(repo, proto, **kwargs)
-    proto.build_index_info(repository_template)  # type: ignore
 
+    dry_run = cast(bool, kwargs.get("dry_run", False))
+    if dry_run:
+        return status
+
+    proto.build_index_info(repository_template)  # type: ignore
     for res in proto.get_all_resources():
         try:
             _do_resource_info_command(proto, res)
@@ -792,12 +797,16 @@ def cli_manage(cli_args: Optional[list[str]] = None) -> None:
         _run_resource_stats_command(repo, proto, repo_url, **vars(args))
     elif command == "repo-info":
         status = _run_repo_info_command(repo, proto, **vars(args))
+        logger.info("info status %s", status)
         if status != 0:
             sys.exit(status)
     elif command == "resource-info":
         _run_resource_info_command(repo, proto, repo_url, **vars(args))
     elif command == "repo-repair":
-        _run_repo_repair_command(repo, proto, **vars(args))
+        status = _run_repo_repair_command(repo, proto, **vars(args))
+        logger.info("info status %s", status)
+        if status != 0:
+            sys.exit(status)
     elif command == "resource-repair":
         _run_resource_repair_command(repo, proto, repo_url, **vars(args))
     else:
