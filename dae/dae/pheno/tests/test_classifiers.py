@@ -1,9 +1,9 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,too-many-lines
-import pytest
 import duckdb
+import pytest
 
-from dae.pheno.prepare.measure_classifier import MeasureClassifier
 from dae.pheno.common import MeasureType, default_config
+from dae.pheno.prepare.measure_classifier import MeasureClassifier
 
 
 @pytest.mark.parametrize(
@@ -30,13 +30,13 @@ from dae.pheno.common import MeasureType, default_config
 def test_fi1(
     fi1_db: tuple[duckdb.DuckDBPyConnection, str],
     measure: str,
-    expected_type: MeasureType
+    expected_type: MeasureType,
 ) -> None:
     connection, table_name = fi1_db
     classifier = MeasureClassifier(default_config())
     classifier_report = MeasureClassifier.meta_measures(
         connection.cursor(),
-        table_name, measure
+        table_name, measure,
     )
     measure_type = classifier.classify(classifier_report)
 

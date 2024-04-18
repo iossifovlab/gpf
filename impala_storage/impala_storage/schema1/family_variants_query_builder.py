@@ -1,15 +1,14 @@
 import logging
-from typing import Any, Callable, Dict, List, Optional, Union, \
-    Iterable
+from collections.abc import Iterable
+from typing import Any, Callable, Dict, List, Optional, Union
 
-from dae.variants.attributes import Status, Role, Sex
 from dae.annotation.annotation_pipeline import AttributeInfo
 from dae.genomic_resources.gene_models import GeneModels
 from dae.pedigrees.families_data import FamiliesData
 from dae.utils.regions import Region
-
-from impala_storage.schema1.serializers import AlleleParquetSerializer
+from dae.variants.attributes import Role, Sex, Status
 from impala_storage.schema1.base_query_builder import BaseQueryBuilder
+from impala_storage.schema1.serializers import AlleleParquetSerializer
 
 logger = logging.getLogger(__name__)
 RealAttrFilterType = list[tuple[str, tuple[Optional[float], Optional[float]]]]
@@ -25,7 +24,7 @@ class FamilyVariantsQueryBuilder(BaseQueryBuilder):
         pedigree_schema: dict[str, str],
         families: FamiliesData,
         gene_models: Optional[GeneModels] = None,
-        do_join: bool = False
+        do_join: bool = False,
     ) -> None:
         self.do_join = do_join
         super().__init__(
@@ -90,12 +89,12 @@ class FamilyVariantsQueryBuilder(BaseQueryBuilder):
         self._add_to_product(join_clause)
 
     def _build_pedigree_where(
-        self, pedigree_fields: tuple[list[str], list[str]]
+        self, pedigree_fields: tuple[list[str], list[str]],
     ) -> str:
         assert len(pedigree_fields) == 2, pedigree_fields
 
         def pedigree_where_clause(
-            query_fields: list[dict[str, str]], sign: str
+            query_fields: list[dict[str, str]], sign: str,
         ) -> list[list[str]]:
             clause = []
             for person_set_query in query_fields:
@@ -105,7 +104,7 @@ class FamilyVariantsQueryBuilder(BaseQueryBuilder):
                     value = self._get_pedigree_column_value(
                         source, str_value)
                     person_set_clause.append(
-                        f"pedigree.{source} {sign} {value}"
+                        f"pedigree.{source} {sign} {value}",
                     )
                 clause.append(person_set_clause)
             return clause
@@ -155,7 +154,7 @@ class FamilyVariantsQueryBuilder(BaseQueryBuilder):
         return_reference: Optional[bool] = None,
         return_unknown: Optional[bool] = None,
         pedigree_fields: Optional[tuple[list[str], list[str]]] = None,
-        **kwargs: Any
+        **kwargs: Any,
     ) -> None:
         # pylint: disable=unused-argument
         logger.info("pedigree fields: %s", pedigree_fields)
@@ -202,7 +201,7 @@ class FamilyVariantsQueryBuilder(BaseQueryBuilder):
         pass
 
     def create_row_deserializer(
-        self, serializer: AlleleParquetSerializer
+        self, serializer: AlleleParquetSerializer,
     ) -> Callable:
         seen = set()
 
@@ -223,8 +222,7 @@ class FamilyVariantsQueryBuilder(BaseQueryBuilder):
             extra_attributes = None
             extra_attr_sel = self.select_accessors.get("extra_attributes")
             if extra_attr_sel is not None:
-                extra_attributes = cols.get(
-                    extra_attr_sel, None)
+                extra_attributes = cols.get(extra_attr_sel)
 
             fvuid = f"{bucket_index}:{summary_index}:{family_id}"
             if fvuid in seen:
@@ -234,7 +232,7 @@ class FamilyVariantsQueryBuilder(BaseQueryBuilder):
             if isinstance(variant_data, str):
                 logger.debug(
                     "variant_data is string!!!! %s, %s, %s, %s, %s",
-                    family_id, chrom, position, end_position, reference
+                    family_id, chrom, position, end_position, reference,
                 )
                 variant_data = bytes(variant_data, "utf8")
             if isinstance(extra_attributes, str):
@@ -244,7 +242,7 @@ class FamilyVariantsQueryBuilder(BaseQueryBuilder):
             if family is None:
                 return None
             v = serializer.deserialize_family_variant(
-                variant_data, family, extra_attributes
+                variant_data, family, extra_attributes,
             )
             return v
         return deserialize_row

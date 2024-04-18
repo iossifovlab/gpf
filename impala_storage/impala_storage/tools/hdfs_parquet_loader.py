@@ -1,20 +1,18 @@
 #!/usr/bin/env python
-import os
-import sys
 import argparse
 import logging
-
+import os
+import sys
 from typing import Optional
 
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.parquet.partition_descriptor import PartitionDescriptor
 
-
 logger = logging.getLogger("hdfs_parquet_loader")
 
 
 def parse_cli_arguments(
-    argv: list[str], gpf_instance: GPFInstance
+    argv: list[str], gpf_instance: GPFInstance,
 ) -> argparse.Namespace:
     """Configure and create CLI arguments parser."""
     parser = argparse.ArgumentParser(
@@ -66,7 +64,7 @@ def parse_cli_arguments(
 
 def main(
     argv: Optional[list[str]] = None,
-    gpf_instance: Optional[GPFInstance] = None
+    gpf_instance: Optional[GPFInstance] = None,
 ) -> None:
     """Upload parquet dataset into HDFS storage."""
     if gpf_instance is None:
@@ -87,7 +85,7 @@ def main(
 
     genotype_storages = gpf_instance.genotype_storages
     genotype_storage = genotype_storages.get_genotype_storage(
-        args.genotype_storage
+        args.genotype_storage,
     )
     if not genotype_storage or \
             (genotype_storage

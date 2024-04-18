@@ -1,12 +1,11 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,no-member
 import os
-import pytest
 
 import pyarrow.parquet as pq
+import pytest
 
-from dae.pedigrees.families_data import FamiliesData
 from dae.parquet.partition_descriptor import PartitionDescriptor
-
+from dae.pedigrees.families_data import FamiliesData
 from impala_storage.tools.ped2parquet import main
 
 
@@ -29,7 +28,7 @@ def test_partition_descriptor(global_dae_fixtures_dir: str) -> None:
     ],
 )
 def test_ped2parquet(
-    pedigree: str, temp_filename: str, global_dae_fixtures_dir: str
+    pedigree: str, temp_filename: str, global_dae_fixtures_dir: str,
 ) -> None:
     filename = f"{global_dae_fixtures_dir}/pedigrees/{pedigree}"
     assert os.path.exists(filename)
@@ -50,7 +49,7 @@ def test_ped2parquet(
     ],
 )
 def test_ped2parquet_patition(
-    pedigree: str, temp_filename: str, global_dae_fixtures_dir: str
+    pedigree: str, temp_filename: str, global_dae_fixtures_dir: str,
 ) -> None:
     filename = f"{global_dae_fixtures_dir}/pedigrees/{pedigree}"
     assert os.path.exists(filename)

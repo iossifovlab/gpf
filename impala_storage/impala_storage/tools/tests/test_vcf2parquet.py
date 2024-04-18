@@ -1,13 +1,12 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 
-import os
 import glob
+import os
 from typing import Callable
 
 import pyarrow.parquet as pq
 
 from dae.gpf_instance.gpf_instance import GPFInstance
-
 from impala_storage.tools.vcf2parquet import main
 
 
@@ -32,7 +31,7 @@ def test_vcf2parquet_vcf(
 
     main(
         argv,
-        gpf_instance=gpf_instance_2013
+        gpf_instance=gpf_instance_2013,
     )
 
     files_glob = os.path.join(temp_filename, "*variants*.parquet")
@@ -60,7 +59,7 @@ def test_vcf2parquet_vcf_partition(
 ) -> None:
 
     partition_description = fixture_dirname(
-        "backends/example_partition_configuration.conf"
+        "backends/example_partition_configuration.conf",
     )
 
     prefix = fixture_dirname("vcf_import/effects_trio")
@@ -78,7 +77,7 @@ def test_vcf2parquet_vcf_partition(
 
     main(
         argv,
-        gpf_instance=gpf_instance_2013
+        gpf_instance=gpf_instance_2013,
     )
 
     generated_conf = os.path.join(temp_dirname, "_PARTITION_DESCRIPTION")

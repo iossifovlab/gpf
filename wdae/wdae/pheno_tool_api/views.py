@@ -15,8 +15,8 @@ from utils.expand_gene_set import expand_gene_set
 from utils.query_params import parse_query_params
 
 from dae.effect_annotation.effect import EffectTypesMixin
-from dae.pheno.pheno_data import Measure
 from dae.pheno.common import MeasureType
+from dae.pheno.pheno_data import Measure
 from dae.pheno_tool.tool import PhenoResult, PhenoTool, PhenoToolHelper
 
 from .pheno_tool_adapter import PhenoToolAdapter, RemotePhenoToolAdapter

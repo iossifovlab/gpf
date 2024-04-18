@@ -1,14 +1,14 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,too-many-lines
-import pandas as pd
 import duckdb
+import pandas as pd
 
+from dae.pheno.common import MeasureType, default_config
 from dae.pheno.prepare.measure_classifier import MeasureClassifier
-from dae.pheno.common import default_config, MeasureType
 
 
 def test_fake_background_classify(
     fake_background_df: pd.DataFrame,
-    fake_background_db: tuple[duckdb.DuckDBPyConnection, str]
+    fake_background_db: tuple[duckdb.DuckDBPyConnection, str],
 ) -> None:
 
     connection, table_name = fake_background_db
@@ -16,7 +16,7 @@ def test_fake_background_classify(
     for col in columns[1:]:
         classifier = MeasureClassifier(default_config())
         classifier_report = MeasureClassifier.meta_measures(
-            connection, table_name, col
+            connection, table_name, col,
         )
         measure_type = classifier.classify(classifier_report)
 
@@ -24,5 +24,5 @@ def test_fake_background_classify(
             MeasureType.text,
             MeasureType.raw,
             MeasureType.categorical,
-            MeasureType.ordinal
+            MeasureType.ordinal,
         }

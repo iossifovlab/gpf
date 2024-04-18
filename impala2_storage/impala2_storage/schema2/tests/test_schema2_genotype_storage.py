@@ -1,14 +1,16 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+import os
 import pathlib
 from dataclasses import dataclass
-import os
-from box import Box
-import pytest
+
 import pandas as pd
+import pytest
+from box import Box
 from fsspec.core import url_to_fs
 
-from impala2_storage.schema2.impala2_genotype_storage import \
-    Impala2GenotypeStorage
+from impala2_storage.schema2.impala2_genotype_storage import (
+    Impala2GenotypeStorage,
+)
 
 
 @dataclass(frozen=True)
@@ -18,9 +20,9 @@ class LocalLayout:
     meta_file: str
 
 
-@pytest.fixture
+@pytest.fixture()
 def import_layout(
-    resources_dir: pathlib.Path, tmpdir: pathlib.Path
+    resources_dir: pathlib.Path, tmpdir: pathlib.Path,
 ) -> LocalLayout:
     sa_csv = pd.read_csv(resources_dir / "summary_alleles_table.csv")
     fa_csv = pd.read_csv(resources_dir / "family_alleles_table.csv")

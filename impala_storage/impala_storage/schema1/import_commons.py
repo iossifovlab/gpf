@@ -2,39 +2,39 @@
 from __future__ import annotations
 
 import abc
-import os
-import sys
 import argparse
 import logging
+import os
+import sys
+from typing import Any, Dict, List, Optional, Type, cast
 from urllib.parse import urlparse
-from typing import List, Optional, Dict, Any, Type, cast
 
 import fsspec
-
 from jinja2 import Template
 
-from dae.import_tools.import_tools import MakefilePartitionHelper, \
-    construct_import_annotation_pipeline
-
-from dae.pedigrees.loader import FamiliesLoader
-from dae.pedigrees.families_data import FamiliesData
-
-from dae.variants_loaders.raw.loader import AnnotationPipelineDecorator, \
-    VariantsLoader
-from dae.variants_loaders.dae.loader import DenovoLoader, DaeTransmittedLoader
-from dae.variants_loaders.vcf.loader import VcfLoader
-from dae.variants_loaders.cnv.loader import CNVLoader
-from dae.parquet.partition_descriptor import PartitionDescriptor
-
-from dae.configuration.study_config_builder import StudyConfigBuilder
 from dae.configuration.gpf_config_parser import GPFConfigParser
-from dae.utils.dict_utils import recursive_dict_update
+from dae.configuration.study_config_builder import StudyConfigBuilder
 from dae.gpf_instance.gpf_instance import GPFInstance
-
+from dae.import_tools.import_tools import (
+    MakefilePartitionHelper,
+    construct_import_annotation_pipeline,
+)
+from dae.parquet.partition_descriptor import PartitionDescriptor
+from dae.pedigrees.families_data import FamiliesData
+from dae.pedigrees.loader import FamiliesLoader
+from dae.utils.dict_utils import recursive_dict_update
+from dae.variants_loaders.cnv.loader import CNVLoader
+from dae.variants_loaders.dae.loader import DaeTransmittedLoader, DenovoLoader
+from dae.variants_loaders.raw.loader import (
+    AnnotationPipelineDecorator,
+    VariantsLoader,
+)
+from dae.variants_loaders.vcf.loader import VcfLoader
 from impala_storage.helpers.rsync_helpers import RsyncHelpers
-from impala_storage.schema1.parquet_io import VariantsParquetWriter, \
-    ParquetWriter
-
+from impala_storage.schema1.parquet_io import (
+    ParquetWriter,
+    VariantsParquetWriter,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -51,7 +51,7 @@ class SnakefileGenerator(BatchGenerator):
     """Generate a Snakefile which when executed imports a study."""
 
     def generate(
-        self, context: dict[str, Any]
+        self, context: dict[str, Any],
     ) -> str:
         return self.TEMPLATE.render(context)
 
@@ -399,7 +399,7 @@ class BatchImporter:
         families_filename = families_filenames[0]
 
         families_loader = FamiliesLoader(
-            families_filename, **families_params
+            families_filename, **families_params,
         )
         self.families_loader = families_loader
         return self
@@ -486,7 +486,7 @@ class BatchImporter:
         return self
 
     def build_partition_helper(
-        self, argv: argparse.Namespace
+        self, argv: argparse.Namespace,
     ) -> BatchImporter:
         """Load and adjust the parition description."""
         if argv.partition_description is not None:
@@ -503,28 +503,28 @@ class BatchImporter:
         return self
 
     def build_genotype_storage(
-        self, argv: argparse.Namespace
+        self, argv: argparse.Namespace,
     ) -> BatchImporter:
         """Construct a genotype storage."""
         if argv.genotype_storage is None:
             genotype_storage_id = self.gpf_instance.dae_config.get(
-                "genotype_storage", {}
+                "genotype_storage", {},
             ).get("default", None)
         else:
             genotype_storage_id = argv.genotype_storage
 
         genotype_storage = self.gpf_instance.genotype_storages \
             .get_genotype_storage(
-                genotype_storage_id
+                genotype_storage_id,
             )
         if genotype_storage is None:
             raise ValueError(
-                f"genotype storage {genotype_storage_id} not found"
+                f"genotype storage {genotype_storage_id} not found",
             )
         if genotype_storage.storage_type != "impala":
             raise ValueError(
                 f"genotype storage {genotype_storage_id} is not "
-                f"Impala Genotype Storage"
+                f"Impala Genotype Storage",
             )
         self.genotype_storage_id = genotype_storage_id
         return self
@@ -560,14 +560,14 @@ class BatchImporter:
             outfile.write(content)
 
     def build_context(
-        self, argv: argparse.Namespace
+        self, argv: argparse.Namespace,
     ) -> dict[str, Any]:
         if urlparse(argv.output).scheme:
             return self._build_context_remote(argv)
         return self._build_context_local(argv)
 
     def _build_context_remote(
-        self, argv: argparse.Namespace
+        self, argv: argparse.Namespace,
     ) -> dict[str, Any]:
         context = self._build_context_local(argv)
 
@@ -608,7 +608,7 @@ class BatchImporter:
         return context
 
     def _build_context_local(
-        self, argv: argparse.Namespace
+        self, argv: argparse.Namespace,
     ) -> dict[str, Any]:
         outdir = argv.output
         study_id = self.study_id
@@ -621,7 +621,7 @@ class BatchImporter:
 
         verbose = ""
         if argv.verbose > 0:
-            verbose = f"-{'V'*argv.verbose}"
+            verbose = f"-{'V' * argv.verbose}"
 
         if argv.genotype_storage:
             context["genotype_storage"] = argv.genotype_storage
@@ -659,7 +659,7 @@ class BatchImporter:
 
             assert self.partition_helper is not None
             variants_targets = self.partition_helper.generate_variants_targets(
-                target_chromosomes
+                target_chromosomes,
             )
 
             variants_context["bins"] = list(variants_targets.keys())
@@ -714,7 +714,7 @@ class BatchImporter:
 
         if argv.study_config is not None:
             study_config_dict = GPFConfigParser.load_config_raw(
-                argv.study_config
+                argv.study_config,
             )
             config_dict = recursive_dict_update(study_config_dict, config_dict)
 
@@ -726,7 +726,7 @@ class BatchImporter:
 
     @classmethod
     def cli_arguments_parser(
-        cls, gpf_instance: GPFInstance
+        cls, gpf_instance: GPFInstance,
     ) -> argparse.ArgumentParser:
         """Parse CLI arguments."""
         parser = argparse.ArgumentParser(
@@ -803,7 +803,7 @@ class BatchImporter:
             dest="generator_output",
             metavar="<output directory>",
             help="generator output directory. "
-            "If none specified, the output directory is used"
+            "If none specified, the output directory is used",
         )
 
         parser.add_argument(
@@ -872,7 +872,7 @@ class BatchImporter:
     @staticmethod
     def main(
         argv: Optional[list[str]] = None,
-        gpf_instance: Optional[GPFInstance] = None
+        gpf_instance: Optional[GPFInstance] = None,
     ) -> None:
         """Construct and run the importer based on CLI arguments.
 
@@ -916,7 +916,7 @@ class Variants2ParquetTool:
 
     @classmethod
     def cli_arguments_parser(
-        cls, _gpf_instance: GPFInstance
+        cls, _gpf_instance: GPFInstance,
     ) -> argparse.ArgumentParser:
         """Parse CLI arguments."""
         parser = argparse.ArgumentParser(
@@ -1024,7 +1024,7 @@ class Variants2ParquetTool:
     @classmethod
     def main(
         cls, argv: Optional[List[str]] = None,
-        gpf_instance: Optional[GPFInstance] = None
+        gpf_instance: Optional[GPFInstance] = None,
     ) -> None:
         """Construct and run importer to transform variants into parquet.
 
@@ -1052,7 +1052,7 @@ class Variants2ParquetTool:
     @classmethod
     def run(
         cls, argv: argparse.Namespace,
-        gpf_instance: Optional[GPFInstance] = None
+        gpf_instance: Optional[GPFInstance] = None,
     ) -> None:
         """Run actual variants import into parquet dataset."""
         if gpf_instance is None:
@@ -1062,7 +1062,7 @@ class Variants2ParquetTool:
             FamiliesLoader.parse_cli_arguments(argv)
         families_filename = families_filenames[0]
         families_loader = FamiliesLoader(
-            families_filename, **families_params
+            families_filename, **families_params,
         )
         families = families_loader.load()
 
@@ -1070,14 +1070,14 @@ class Variants2ParquetTool:
 
         partition_description = cls._build_partition_description(argv)
         generator = cls._build_partition_helper(
-            gpf_instance, partition_description
+            gpf_instance, partition_description,
         )
 
         target_chromosomes = cls._collect_target_chromosomes(
-            argv, variants_loader
+            argv, variants_loader,
         )
         variants_targets = generator.generate_variants_targets(
-            target_chromosomes
+            target_chromosomes,
         )
 
         # if argv.study_id is not None:
@@ -1111,7 +1111,7 @@ class Variants2ParquetTool:
             variants_loader.reset_regions(regions)
 
         variants_loader = cls._build_variants_loader_pipeline(
-            gpf_instance, argv, variants_loader
+            gpf_instance, argv, variants_loader,
         )
 
         logger.debug("argv.rows: %s", argv.rows)
@@ -1138,7 +1138,7 @@ class Variants2ParquetTool:
     def _build_variants_loader_pipeline(
         cls, gpf_instance: GPFInstance,
         argv: argparse.Namespace,
-        variants_loader: VariantsLoader
+        variants_loader: VariantsLoader,
     ) -> VariantsLoader:
 
         annotation_pipeline = construct_import_annotation_pipeline(
@@ -1147,7 +1147,7 @@ class Variants2ParquetTool:
 
         if annotation_pipeline is not None:
             variants_loader = AnnotationPipelineDecorator(
-                variants_loader, annotation_pipeline
+                variants_loader, annotation_pipeline,
             )
 
         return variants_loader
@@ -1156,7 +1156,7 @@ class Variants2ParquetTool:
     def _load_variants(
         cls, argv: argparse.Namespace,
         families: FamiliesData,
-        gpf_instance: GPFInstance
+        gpf_instance: GPFInstance,
     ) -> VariantsLoader:
         if cls.VARIANTS_LOADER_CLASS is None:
             raise ValueError("VARIANTS_LOADER_CLASS not set")
@@ -1175,7 +1175,7 @@ class Variants2ParquetTool:
 
     @staticmethod
     def _build_partition_description(
-        argv: argparse.Namespace
+        argv: argparse.Namespace,
     ) -> PartitionDescriptor:
         if argv.partition_description is not None:
             partition_description = PartitionDescriptor.parse(
@@ -1187,7 +1187,7 @@ class Variants2ParquetTool:
     @staticmethod
     def _build_partition_helper(
         gpf_instance: GPFInstance,
-        partition_description: PartitionDescriptor
+        partition_description: PartitionDescriptor,
     ) -> MakefilePartitionHelper:
 
         generator = MakefilePartitionHelper(
@@ -1199,7 +1199,7 @@ class Variants2ParquetTool:
     @staticmethod
     def _collect_target_chromosomes(
         argv: argparse.Namespace,
-        variants_loader: VariantsLoader
+        variants_loader: VariantsLoader,
     ) -> List[str]:
         if (
             "target_chromosomes" in argv

@@ -1,10 +1,9 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import json
-from typing import cast, Any
+from typing import Any, cast
 
 import pytest
 import pytest_mock
-
 from django.test import Client
 from rest_framework import status
 from rest_framework.response import Response
@@ -30,15 +29,15 @@ DOWNLOAD_URL = "/api/v3/pheno_browser/download"
     (
         f"{MEASURES_URL}?dataset_id=quads_f1_ds&instrument=instrument1",
         "get",
-        None
+        None,
     ),
     (
         DOWNLOAD_URL,
         "post",
         {
             "dataset_id": "quads_f1",
-            "instrument": "instrument1"
-        }
+            "instrument": "instrument1",
+        },
     ),
     (
         (
@@ -46,20 +45,20 @@ DOWNLOAD_URL = "/api/v3/pheno_browser/download"
             "&measure_id=instrument1.categorical"
         ),
         "get",
-        None
+        None,
     ),
 ])
 def test_pheno_browser_api_permissions(
     anonymous_client: Client,
     url: str,
     method: str,
-    body: dict
+    body: dict,
 ) -> None:
     if method == "get":
         response = anonymous_client.get(url)
     else:
         response = anonymous_client.post(
-            url, json.dumps(body), content_type="application/json"
+            url, json.dumps(body), content_type="application/json",
         )
 
     assert response
@@ -79,7 +78,7 @@ def test_instruments_missing_dataset_id_forbidden(user_client: Client) -> None:
 
 
 def test_instruments(admin_client: Client) -> None:
-    url = "{}?dataset_id=quads_f1_ds".format(URL)
+    url = f"{URL}?dataset_id=quads_f1_ds"
     response = admin_client.get(url)
 
     assert response.status_code == 200
@@ -89,7 +88,7 @@ def test_instruments(admin_client: Client) -> None:
 
 
 def test_instruments_forbidden(user_client: Client) -> None:
-    url = "{}?dataset_id=quads_f1_ds".format(URL)
+    url = f"{URL}?dataset_id=quads_f1_ds"
     response = user_client.get(url)
 
     assert response.status_code == 403
@@ -112,9 +111,7 @@ def test_measures_info(admin_client: Client) -> None:
 
 
 def test_measures(admin_client: Client) -> None:
-    url = "{}?dataset_id=quads_f1_ds&instrument=instrument1".format(
-        MEASURES_URL
-    )
+    url = f"{MEASURES_URL}?dataset_id=quads_f1_ds&instrument=instrument1"
     response = admin_client.get(url)
     assert response.status_code == 200
 
@@ -141,10 +138,10 @@ def test_measures_forbidden(user_client: Client, user: User) -> None:
 def test_download(admin_client: Client) -> None:
     data = {
         "dataset_id": "quads_f1",
-        "instrument": "instrument1"
+        "instrument": "instrument1",
     }
     response = cast(Response, admin_client.get(
-        DOWNLOAD_URL, data
+        DOWNLOAD_URL, data,
     ))
 
     assert response.status_code == 200
@@ -158,10 +155,10 @@ def test_download_specific_measures(admin_client: Client) -> None:
     data = {
         "dataset_id": "quads_f1",
         "instrument": "instrument1",
-        "search_term": "instrument1.continuous"
+        "search_term": "instrument1.continuous",
     }
     response = cast(Response, admin_client.get(
-        DOWNLOAD_URL, data
+        DOWNLOAD_URL, data,
     ))
 
     assert response.status_code == 200
@@ -177,10 +174,10 @@ def test_download_all_instruments(admin_client: Client) -> None:
     data = {
         "dataset_id": "quads_f1",
         "instrument": "",
-        "search_term": ""
+        "search_term": "",
     }
     response = cast(Response, admin_client.get(
-        DOWNLOAD_URL, data
+        DOWNLOAD_URL, data,
     ))
 
     assert response.status_code == 200
@@ -200,14 +197,14 @@ def test_download_all_instruments(admin_client: Client) -> None:
 
 
 def test_download_all_instruments_specific_measures(
-    admin_client: Client
+    admin_client: Client,
 ) -> None:
     data = {
         "dataset_id": "quads_f1",
-        "search_term": "instrument1"
+        "search_term": "instrument1",
     }
     response = cast(Response, admin_client.get(
-        DOWNLOAD_URL, data
+        DOWNLOAD_URL, data,
     ))
 
     assert response.status_code == 200
@@ -222,7 +219,7 @@ def test_download_all_instruments_specific_measures(
         "instrument1.continuous",
         "instrument1.categorical",
         "instrument1.ordinal",
-        "instrument1.raw"
+        "instrument1.raw",
     }
 
 
@@ -246,10 +243,10 @@ def test_get_specific_measure_values(admin_client: Client) -> None:
     data = {
         "dataset_id": "quads_f1",
         "instrument": "instrument1",
-        "measure_ids": ["instrument1.continuous", "instrument1.categorical"]
+        "measure_ids": ["instrument1.continuous", "instrument1.categorical"],
     }
     response = cast(Response, admin_client.post(
-        MEASURE_VALUES_URL, json.dumps(data), "application/json"
+        MEASURE_VALUES_URL, json.dumps(data), "application/json",
     ))
 
     assert response.status_code == 200
@@ -265,7 +262,7 @@ def test_get_specific_measure_values(admin_client: Client) -> None:
         "sex": "M",
         "status": "unaffected",
         "instrument1.continuous": pytest.approx(2.718),
-        "instrument1.categorical": None
+        "instrument1.categorical": None,
     }
     assert content[1] == {
         "family_id": "f1",
@@ -274,7 +271,7 @@ def test_get_specific_measure_values(admin_client: Client) -> None:
         "sex": "F",
         "status": "affected",
         "instrument1.continuous": None,
-        "instrument1.categorical": "option1"
+        "instrument1.categorical": "option1",
     }
 
 
@@ -284,7 +281,7 @@ def test_get_measure_values(admin_client: Client) -> None:
         "instrument": "instrument1",
     }
     response = cast(Response, admin_client.post(
-        MEASURE_VALUES_URL, json.dumps(data), "application/json"
+        MEASURE_VALUES_URL, json.dumps(data), "application/json",
     ))
 
     assert response.status_code == 200
@@ -300,7 +297,7 @@ def test_get_measure_values(admin_client: Client) -> None:
         "instrument1.continuous": pytest.approx(2.718),
         "instrument1.categorical": None,
         "instrument1.ordinal": None,
-        "instrument1.raw": "othervalue"
+        "instrument1.raw": "othervalue",
     }
     assert content[2] == {
         "family_id": "f1",
@@ -311,7 +308,7 @@ def test_get_measure_values(admin_client: Client) -> None:
         "instrument1.continuous": pytest.approx(3.14),
         "instrument1.categorical": "option2",
         "instrument1.ordinal": pytest.approx(5.0),
-        "instrument1.raw": "somevalue"
+        "instrument1.raw": "somevalue",
     }
     assert content[4] == {
         "family_id": "f1",
@@ -322,23 +319,23 @@ def test_get_measure_values(admin_client: Client) -> None:
         "instrument1.continuous": pytest.approx(4.56),
         "instrument1.categorical": None,
         "instrument1.ordinal": None,
-        "instrument1.raw": None
+        "instrument1.raw": None,
     }
 
 
 def test_measure_values_limits_measures(
     admin_client: Client,
-    mocker: pytest_mock.MockerFixture
+    mocker: pytest_mock.MockerFixture,
 ) -> None:
     data: dict[str, Any] = {
-        "dataset_id": "quads_f1"
+        "dataset_id": "quads_f1",
     }
     data["measure_ids"] = [f"measure{i}" for i in range(2000)]
     spy = mocker.spy(PhenotypeStudy, "get_people_measure_values")
 
     admin_client.post(
-        MEASURE_VALUES_URL, json.dumps(data), "application/json"
+        MEASURE_VALUES_URL, json.dumps(data), "application/json",
     )
 
     call_args = spy.call_args_list[-1][0]
-    assert len((call_args[1])) == 1900
+    assert len(call_args[1]) == 1900

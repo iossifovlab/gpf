@@ -1,11 +1,11 @@
-import enum
 import copy
+import enum
 from collections import Counter
-from typing import Optional, Any, Union, cast
-import duckdb
-from box import Box
+from typing import Any, Optional, Union, cast
 
+import duckdb
 import numpy as np
+from box import Box
 
 from dae.pheno.common import MeasureType
 from dae.pheno.utils.commons import remove_annoying_characters
@@ -91,7 +91,7 @@ class ClassifierReport:
 
     def calc_distribution_report(
         self, cursor: Optional[duckdb.DuckDBPyConnection] = None,
-        instrument_table_name: Optional[str] = None
+        instrument_table_name: Optional[str] = None,
     ) -> list[Any]:
         """Construct measure distribution report."""
         if self.distribution:
@@ -105,7 +105,7 @@ class ClassifierReport:
             f"FROM {instrument_table_name} WHERE "
             f'"{measure_col}" IS NOT NULL '
             f'GROUP BY "{measure_col}" '
-            f'ORDER BY count, "{measure_col}"'
+            f'ORDER BY count, "{measure_col}"',
         ).fetchall()
         counts: Counter = Counter()
 
@@ -114,7 +114,7 @@ class ClassifierReport:
 
         distribution = list(counts.items())
         distribution = sorted(
-            distribution, key=lambda _val_count: -_val_count[1]
+            distribution, key=lambda _val_count: -_val_count[1],
         )
         distribution = distribution[: self.DISTRIBUTION_CUTOFF]
         distribution = [
@@ -202,7 +202,7 @@ class MeasureClassifier:
     def _meta_measures_numeric(
         cursor: duckdb.DuckDBPyConnection,
         table_name: str, measure_name: str,
-        column_type: str, report: ClassifierReport
+        column_type: str, report: ClassifierReport,
     ) -> ClassifierReport:
         """Collect measure classification report for numeric values."""
         result = cursor.sql(f"SELECT COUNT(*) FROM {table_name}").fetchone()
@@ -213,14 +213,14 @@ class MeasureClassifier:
             result = cursor.sql(
                 f'SELECT COUNT("{measure_name}") FROM {table_name} WHERE '
                 f'"{measure_name}" != \'NaN\' AND '
-                f'"{measure_name}" IS NOT NULL'
+                f'"{measure_name}" IS NOT NULL',
             ).fetchone()
             assert result is not None
             real_count = result[0]
         else:
             result = cursor.sql(
                 f'SELECT COUNT("{measure_name}") FROM {table_name} WHERE '
-                f'"{measure_name}" IS NOT NULL'
+                f'"{measure_name}" IS NOT NULL',
             ).fetchone()
             assert result is not None
             real_count = result[0]
@@ -235,7 +235,7 @@ class MeasureClassifier:
                 f'SELECT COUNT(DISTINCT "{measure_name}") '
                 f"FROM {table_name} WHERE "
                 f'"{measure_name}" != \'NaN\' AND '
-                f'"{measure_name}" IS NOT NULL'
+                f'"{measure_name}" IS NOT NULL',
             ).fetchone()
             assert result is not None
             unique_count = result[0]
@@ -243,7 +243,7 @@ class MeasureClassifier:
             result = cursor.sql(
                 f'SELECT COUNT(DISTINCT "{measure_name}") '
                 f"FROM {table_name} WHERE "
-                f'"{measure_name}" IS NOT NULL'
+                f'"{measure_name}" IS NOT NULL',
             ).fetchone()
             assert result is not None
             unique_count = result[0]
@@ -253,14 +253,14 @@ class MeasureClassifier:
 
         rows = cursor.sql(
             f'SELECT DISTINCT "{measure_name}" FROM {table_name} WHERE '
-            f'"{measure_name}" IS NOT NULL'
+            f'"{measure_name}" IS NOT NULL',
         ).fetchall()
         unique_values = [row[0] for row in rows]
         report.unique_values = unique_values
 
         rows = cursor.sql(
             f'SELECT "{measure_name}" FROM {table_name} WHERE '
-            f'"{measure_name}" IS NOT NULL'
+            f'"{measure_name}" IS NOT NULL',
         ).fetchall()
         real_values = [row[0] for row in rows]
         report.numeric_values = real_values
@@ -281,7 +281,7 @@ class MeasureClassifier:
     def _meta_measures_text(
         cursor: duckdb.DuckDBPyConnection,
         table_name: str, measure_name: str,
-        report: ClassifierReport
+        report: ClassifierReport,
     ) -> ClassifierReport:
         """Collect measure classification report for text values."""
         report.count_with_values = 0
@@ -292,7 +292,7 @@ class MeasureClassifier:
             f'TRY_CAST("{measure_name}" AS FLOAT) as casted '
             f"from {table_name} "
             f'WHERE "{measure_name}" IS NULL OR casted = \'nan\''
-            ")"
+            ")",
         ).fetchone()
         assert result is not None
         report.count_without_values = result[0]
@@ -301,7 +301,7 @@ class MeasureClassifier:
             "SELECT COUNT(casted) FROM ("
             f'SELECT TRY_CAST("{measure_name}" AS FLOAT) as casted '
             f"from {table_name} WHERE casted IS NOT NULL AND casted != 'nan'"
-            ")"
+            ")",
         ).fetchone()
         assert result is not None
         report.count_with_numeric_values = result[0]
@@ -313,7 +313,7 @@ class MeasureClassifier:
             f'TRY_CAST("{measure_name}" AS FLOAT) as casted '
             f"from {table_name} WHERE casted IS NULL AND "
             f'"{measure_name}" IS NOT NULL'
-            ")"
+            ")",
         ).fetchone()
         assert result is not None
         report.count_with_non_numeric_values = result[0]
@@ -324,7 +324,7 @@ class MeasureClassifier:
             f'SELECT "{measure_name}", '
             f'TRY_CAST("{measure_name}" AS FLOAT) as casted '
             f'from {table_name} WHERE "{measure_name}" IS NOT NULL'
-            ")"
+            ")",
         ).fetchall())
         assert rows is not None
         report.unique_values = [row[0] for row in rows]
@@ -335,11 +335,11 @@ class MeasureClassifier:
             f'SELECT "{measure_name}", '
             f'TRY_CAST("{measure_name}" AS FLOAT) as casted '
             f"from {table_name} WHERE casted IS NOT NULL AND casted != 'nan'"
-            ")"
+            ")",
         ).fetchall()
         report.numeric_values = np.array([row[0] for row in rows])
         report.count_unique_numeric_values = len(
-            np.unique(report.numeric_values)
+            np.unique(report.numeric_values),
         )
 
         assert (
@@ -359,7 +359,7 @@ class MeasureClassifier:
     def meta_measures(
             cursor: duckdb.DuckDBPyConnection,
             table_name: str, measure_name: str,
-            report: Optional[ClassifierReport] = None
+            report: Optional[ClassifierReport] = None,
     ) -> ClassifierReport:
         """Build classifier meta report."""
         if report is None:
@@ -371,7 +371,7 @@ class MeasureClassifier:
         report.count_total = result[0]
 
         result = cursor.sql(
-            f'SELECT COUNT("{measure_name}") FROM {table_name}'
+            f'SELECT COUNT("{measure_name}") FROM {table_name}',
         ).fetchone()
         assert result is not None
 
@@ -386,7 +386,7 @@ class MeasureClassifier:
                 break
         if column_type is None:
             raise ValueError(
-                f"Could not find column {measure_name} in {table_name}"
+                f"Could not find column {measure_name} in {table_name}",
             )
 
         if column_type in set(
@@ -398,16 +398,16 @@ class MeasureClassifier:
                 "HUGEINT",
                 "FLOAT",
                 "DOUBLE",
-                "BOOLEAN"
-            ]
+                "BOOLEAN",
+            ],
         ):
             return MeasureClassifier._meta_measures_numeric(
-                cursor, table_name, measure_name, column_type, report
+                cursor, table_name, measure_name, column_type, report,
             )
 
         if column_type in ["VARCHAR", "DATE"]:
             return MeasureClassifier._meta_measures_text(
-                cursor, table_name, measure_name, report
+                cursor, table_name, measure_name, report,
             )
 
         assert False, f"NOT SUPPORTED VALUES TYPES {column_type}"
@@ -423,7 +423,7 @@ class MeasureClassifier:
                 int,
                 np.dtype("int64"),
                 np.dtype("float64"),
-            ]
+            ],
         ):
             return values
 

@@ -1,28 +1,26 @@
 # pylint: disable=too-many-lines
 from __future__ import annotations
-import os
-import math
-import logging
-from typing import Iterable, Any, cast
-from typing import Optional, Sequence, Union, Generator
-from abc import ABC, abstractmethod
 
+import logging
+import math
+import os
+from abc import ABC, abstractmethod
 from collections import defaultdict
+from collections.abc import Generator, Iterable, Sequence
 from itertools import chain
-from box import Box
+from typing import Any, Optional, Union, cast
 
 import pandas as pd
+from box import Box
+from sqlalchemy import Select, not_
 from sqlalchemy.sql import select, union
-from sqlalchemy import not_, Select
 
-from dae.pedigrees.family import Person
 from dae.pedigrees.families_data import FamiliesData
-from dae.pheno.db import PhenoDb, safe_db_name
+from dae.pedigrees.family import Person
 from dae.pheno.common import MeasureType
-
-from dae.variants.attributes import Sex, Status, Role
+from dae.pheno.db import PhenoDb, safe_db_name
 from dae.utils.helpers import isnan
-
+from dae.variants.attributes import Role, Sex, Status
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +44,7 @@ def get_pheno_db_dir(dae_config: Optional[Box]) -> str:
 def get_pheno_browser_images_dir(dae_config: Optional[Box] = None) -> str:
     pheno_db_dir = os.environ.get(
         "DAE_PHENODB_DIR",
-        get_pheno_db_dir(dae_config)
+        get_pheno_db_dir(dae_config),
     )
     browser_images_path = os.path.join(pheno_db_dir, "images")
     return browser_images_path
@@ -267,7 +265,7 @@ class PhenotypeData(ABC):
 
     @abstractmethod
     def search_measures(
-        self, instrument: Optional[str], search_term: Optional[str]
+        self, instrument: Optional[str], search_term: Optional[str],
     ) -> Generator[dict[str, Any], None, None]:
         pass
 
@@ -283,7 +281,7 @@ class PhenotypeData(ABC):
     def get_measures(
         self,
         instrument_name: Optional[str] = None,
-        measure_type: Optional[MeasureType] = None
+        measure_type: Optional[MeasureType] = None,
     ) -> dict[str, Measure]:
         """
         Return a dictionary of measures objects.
@@ -302,7 +300,7 @@ class PhenotypeData(ABC):
         if instrument_name is not None:
             assert instrument_name in self.instruments
             instruments = {
-                instrument_name: self.instruments[instrument_name]
+                instrument_name: self.instruments[instrument_name],
             }
 
         if measure_type is not None:
@@ -367,7 +365,7 @@ class PhenotypeData(ABC):
         `roles` -- list of roles of individuals to select measure value for.
         If not specified value for individuals in all roles are returned.
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def get_people_measure_values_df(
         self,
@@ -391,7 +389,7 @@ class PhenotypeData(ABC):
         `roles` -- list of roles of individuals to select measure value for.
         If not specified value for individuals in all roles are returned.
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
 
 class PhenotypeStudy(PhenotypeData):
@@ -428,7 +426,7 @@ class PhenotypeStudy(PhenotypeData):
     def _get_measures_df(
         self,
         instrument: Optional[str] = None,
-        measure_type: Optional[MeasureType] = None
+        measure_type: Optional[MeasureType] = None,
     ) -> pd.DataFrame:
         """
         Return data frame containing measures information.
@@ -518,7 +516,7 @@ class PhenotypeStudy(PhenotypeData):
     def get_persons_df(
         self, roles: Optional[Iterable[Role]] = None,
         person_ids: Optional[Iterable[str]] = None,
-        family_ids: Optional[Iterable[str]] = None
+        family_ids: Optional[Iterable[str]] = None,
     ) -> pd.DataFrame:
         """Return a individuals data from phenotype database as a data frame.
 
@@ -557,7 +555,7 @@ class PhenotypeStudy(PhenotypeData):
         return df[["person_id", "family_id", "role", "sex", "status"]]
 
     def _build_default_filter_clause(
-        self, measure: Measure, default_filter: str
+        self, measure: Measure, default_filter: str,
     ) -> Optional[str]:
         if default_filter == "skip" or measure.default_filter is None:
             return None
@@ -567,7 +565,7 @@ class PhenotypeStudy(PhenotypeData):
             return f"NOT (value {measure.default_filter})"
 
         raise ValueError(
-            f"bad default_filter value: {default_filter}"
+            f"bad default_filter value: {default_filter}",
         )
 
     def _get_measure_values_query(
@@ -592,7 +590,7 @@ class PhenotypeStudy(PhenotypeData):
             if instrument_name not in instrument_table_columns:
                 instrument_table_columns[instrument_name] = []
             instrument_table_columns[instrument_name].append(
-                table.c[safe_db_name(measure.measure_name)].label(measure_id)
+                table.c[safe_db_name(measure.measure_name)].label(measure_id),
             )
 
         subquery_selects = []
@@ -600,8 +598,8 @@ class PhenotypeStudy(PhenotypeData):
             subquery_selects.append(
                 select(
                     table.c.person_id, table.c.family_id, table.c.role,
-                    table.c.status, table.c.sex
-                ).select_from(table)
+                    table.c.status, table.c.sex,
+                ).select_from(table),
             )
 
         subquery = union(*subquery_selects).subquery("instruments_people")
@@ -616,7 +614,7 @@ class PhenotypeStudy(PhenotypeData):
             subquery.c.role,
             subquery.c.status,
             subquery.c.sex,
-            *select_cols
+            *select_cols,
         )
         query = query.select_from(subquery)
 
@@ -626,21 +624,21 @@ class PhenotypeStudy(PhenotypeData):
                 table,
                 subquery.c.person_id == table.c.person_id,
                 isouter=True,
-                full=True
+                full=True,
             )
 
         if person_ids is not None:
             query = query.where(
-                subquery.c.person_id.in_(person_ids)
+                subquery.c.person_id.in_(person_ids),
             )
         if family_ids is not None:
             query = query.where(
-                subquery.c.family_id.in_(family_ids)
+                subquery.c.family_id.in_(family_ids),
             )
         if roles is not None:
             query_roles = [role.value for role in roles]
             query = query.where(
-                subquery.c.role.in_(query_roles)
+                subquery.c.role.in_(query_roles),
             )
         query = query.order_by(subquery.c.person_id)
 
@@ -662,7 +660,7 @@ class PhenotypeStudy(PhenotypeData):
             measure_ids,
             person_ids=person_ids,
             family_ids=family_ids,
-            roles=roles
+            roles=roles,
         )
 
         with self.db.engine.connect() as connection:
@@ -691,7 +689,7 @@ class PhenotypeStudy(PhenotypeData):
             measure_ids,
             person_ids=person_ids,
             family_ids=family_ids,
-            roles=roles
+            roles=roles,
         )
 
         with self.db.engine.connect() as connection:
@@ -716,7 +714,7 @@ class PhenotypeStudy(PhenotypeData):
         }
 
     def search_measures(
-        self, instrument: Optional[str], search_term: Optional[str]
+        self, instrument: Optional[str], search_term: Optional[str],
     ) -> Generator[dict[str, Any], None, None]:
         measures = self.db.search_measures(instrument, search_term)
         for measure in measures:
@@ -746,7 +744,7 @@ class PhenotypeGroup(PhenotypeData):
 
     def __init__(
         self, pheno_id: str, phenotype_data: list[PhenotypeData],
-        config: Optional[Box] = None
+        config: Optional[Box] = None,
     ) -> None:
         super().__init__(pheno_id, config)
         self.phenotype_data = phenotype_data
@@ -790,7 +788,7 @@ class PhenotypeGroup(PhenotypeData):
 
     @staticmethod
     def _merge_instruments(
-        phenos_instruments: Iterable[dict[str, Instrument]]
+        phenos_instruments: Iterable[dict[str, Instrument]],
     ) -> tuple[dict[str, Instrument], dict[str, Measure]]:
         group_instruments: dict[str, Instrument] = {}
         group_measures: dict[str, Measure] = {}
@@ -799,7 +797,7 @@ class PhenotypeGroup(PhenotypeData):
             for instrument_name, instrument in pheno_instruments.items():
                 if instrument_name not in group_instruments:
                     group_instrument = Instrument(
-                        instrument_name
+                        instrument_name,
                     )
                 else:
                     group_instrument = group_instruments[instrument_name]
@@ -821,7 +819,7 @@ class PhenotypeGroup(PhenotypeData):
     def get_persons_df(
         self, roles: Optional[Iterable[Role]] = None,
         person_ids: Optional[Iterable[str]] = None,
-        family_ids: Optional[Iterable[str]] = None
+        family_ids: Optional[Iterable[str]] = None,
     ) -> pd.DataFrame:
 
         ped_df: pd.DataFrame = self.families.ped_df[[
@@ -845,19 +843,19 @@ class PhenotypeGroup(PhenotypeData):
         result = {
             "base_image_url": "",
             "has_descriptions": False,
-            "regression_names": {}
+            "regression_names": {},
         }
         for pheno in self.phenotype_data:
             measures_info = pheno.get_measures_info()
             result["has_descriptions"] = \
                 result["has_descriptions"] or measures_info["has_descriptions"]
             cast(dict, result["regression_names"]).update(
-                measures_info["regression_names"]
+                measures_info["regression_names"],
             )
         return result
 
     def search_measures(
-        self, instrument: Optional[str], search_term: Optional[str]
+        self, instrument: Optional[str], search_term: Optional[str],
     ) -> Generator[dict[str, Any], None, None]:
         generators = [
             pheno.search_measures(instrument, search_term)
@@ -873,4 +871,4 @@ class PhenotypeGroup(PhenotypeData):
         family_ids: Optional[list[str]] = None,
         roles: Optional[list[Role]] = None,
     ) -> Generator[dict[str, Any], None, None]:
-        raise NotImplementedError()
+        raise NotImplementedError

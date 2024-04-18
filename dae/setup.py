@@ -3,7 +3,6 @@
 import setuptools
 import versioneer
 
-
 with open("README.md", "r", encoding="utf8") as fh:
     long_description = fh.read()
 
@@ -21,7 +20,7 @@ setuptools.setup(
     packages=setuptools.find_packages(
         where=".", exclude=[
             "tests.*", "tests", "dae.docs", "dae.tests", "*.tests.*",
-            "*.tests"
+            "*.tests",
         ],
     ),
     package_data={

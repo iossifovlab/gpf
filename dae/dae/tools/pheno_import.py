@@ -1,26 +1,23 @@
 #!/usr/bin/env python
-# encoding: utf-8
 
-import sys
-import os
 import argparse
+import os
+import sys
 import traceback
-
 from typing import Any, Optional
 
-from box import Box
-
 import toml
-
-from dae.pheno.common import \
-    default_config, \
-    dump_config, \
-    check_phenotype_data_config
-from dae.pheno.prepare.pheno_prepare import PrepareVariables
-from dae.tools.pheno2browser import build_pheno_browser
+from box import Box
 
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.phenotype_data import regression_conf_schema
+from dae.pheno.common import (
+    check_phenotype_data_config,
+    default_config,
+    dump_config,
+)
+from dae.pheno.prepare.pheno_prepare import PrepareVariables
+from dae.tools.pheno2browser import build_pheno_browser
 
 
 def pheno_cli_parser() -> argparse.ArgumentParser:
@@ -50,7 +47,7 @@ def pheno_cli_parser() -> argparse.ArgumentParser:
         "--tab-separated",
         dest="tab_separated",
         action="store_true",
-        help="Flag for whether the instrument files are tab separated."
+        help="Flag for whether the instrument files are tab separated.",
     )
 
     parser.add_argument(
@@ -71,23 +68,23 @@ def pheno_cli_parser() -> argparse.ArgumentParser:
 
     parser.add_argument(
         "-o", "--output", dest="output",
-        help="The output directory.", default="./output"
+        help="The output directory.", default="./output",
     )
 
     parser.add_argument(
-        "--pheno-id", dest="pheno_name", help="output pheno database name."
+        "--pheno-id", dest="pheno_name", help="output pheno database name.",
     )
 
     parser.add_argument(
         "--regression",
-        help="absolute path to a regression configuration file"
+        help="absolute path to a regression configuration file",
     )
     parser.add_argument(
         "--person-column",
         dest="person_column",
         default="person_id",
         help="The column in instruments files containing the person ID.",
-        metavar="<person column>"
+        metavar="<person column>",
     )
 
     parser.add_argument(
@@ -101,14 +98,14 @@ def pheno_cli_parser() -> argparse.ArgumentParser:
         "--continue",
         dest="browser_only",
         help="Perform the second browser generation step on an existing DB.",
-        action="store_true"
+        action="store_true",
     )
 
     parser.add_argument(
         "--import-only",
         dest="import_only",
         help="Perform the data import step only.",
-        action="store_true"
+        action="store_true",
     )
 
     return parser
@@ -123,7 +120,7 @@ def verify_phenotype_data_name(input_name: str) -> str:
 
 
 def generate_phenotype_data_config(
-    args: argparse.Namespace, regressions: Any
+    args: argparse.Namespace, regressions: Any,
 ) -> dict[str, Any]:
     """Construct phenotype data configuration from command line arguments."""
     dbfile = os.path.join("%(wd)s", os.path.basename(args.pheno_db_filename))
@@ -162,7 +159,7 @@ def parse_phenotype_data_config(args: argparse.Namespace) -> Box:
 
 
 def build_browser(
-    args: argparse.Namespace, regressions: Optional[Box]
+    args: argparse.Namespace, regressions: Optional[Box],
 ) -> None:
     """Perform browser data build step."""
     output_dir = args.output
@@ -177,12 +174,12 @@ def build_browser(
     )
 
     pheno_conf_path = os.path.join(
-        output_dir, f"{args.pheno_name}.conf"
+        output_dir, f"{args.pheno_name}.conf",
     )
 
     with open(pheno_conf_path, "w") as pheno_conf_file:
         pheno_conf_file.write(
-            toml.dumps(generate_phenotype_data_config(args, regressions))
+            toml.dumps(generate_phenotype_data_config(args, regressions)),
         )
 
 
@@ -198,13 +195,13 @@ def main(argv: Optional[list[str]] = None) -> int:
         args = parser.parse_args(argv)
         if args.instruments is None:
             print("missing instruments directory parameter", sys.stderr)
-            raise ValueError()
+            raise ValueError
         if args.pedigree is None:
             print("missing pedigree filename", sys.stderr)
-            raise ValueError()
+            raise ValueError
         if args.pheno_name is None:
             print("missing pheno db name", sys.stderr)
-            raise ValueError()
+            raise ValueError
         if args.import_only and args.browser_only:
             raise ValueError("Both import only and continue used!")
 
@@ -213,12 +210,12 @@ def main(argv: Optional[list[str]] = None) -> int:
         os.makedirs(output_dir, exist_ok=True)
 
         args.pheno_db_filename = os.path.join(
-            output_dir, f"{args.pheno_name}.db"
+            output_dir, f"{args.pheno_name}.db",
         )
         args.browser_dir = os.path.join(output_dir, "browser")
         if args.regression:
             regressions = GPFConfigParser.load_config(
-                args.regression, regression_conf_schema
+                args.regression, regression_conf_schema,
             )
         else:
             regressions = None
@@ -232,9 +229,9 @@ def main(argv: Optional[list[str]] = None) -> int:
         if os.path.exists(args.pheno_db_filename):
             if not args.force:
                 print(
-                    "pheno db filename already exists:", args.pheno_db_filename
+                    "pheno db filename already exists:", args.pheno_db_filename,
                 )
-                raise ValueError()
+                raise ValueError
             os.remove(args.pheno_db_filename)
 
         config = parse_phenotype_data_config(args)

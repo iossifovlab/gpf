@@ -1,19 +1,27 @@
 from __future__ import annotations
 
-from typing import Dict, Iterator, Optional, Any, cast, Union
+from collections.abc import Iterator
 from pathlib import Path
-
-from box import Box
-
-from sqlalchemy import MetaData, create_engine
-from sqlalchemy import Table, Column, Integer, String, Float, or_, func
-from sqlalchemy.sql import select
-from sqlalchemy.sql.schema import UniqueConstraint, PrimaryKeyConstraint
+from typing import Any, Dict, Optional, Union, cast
 
 import pandas as pd
+from box import Box
+from sqlalchemy import (
+    Column,
+    Float,
+    Integer,
+    MetaData,
+    String,
+    Table,
+    create_engine,
+    func,
+    or_,
+)
+from sqlalchemy.sql import select
+from sqlalchemy.sql.schema import PrimaryKeyConstraint, UniqueConstraint
 
-from dae.variants.attributes import Status
 from dae.pheno.common import MeasureType
+from dae.variants.attributes import Status
 
 
 class PhenoDb:  # pylint: disable=too-many-instance-attributes
@@ -22,12 +30,12 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
     STREAMING_CHUNK_SIZE = 25
 
     def __init__(
-            self, dbfile: str, read_only: bool = True
+            self, dbfile: str, read_only: bool = True,
     ) -> None:
         # self.verify_pheno_folder(folder)
         self.dbfile = dbfile
         self.engine = create_engine(
-            f"duckdb:///{dbfile}", connect_args={"read_only": read_only}
+            f"duckdb:///{dbfile}", connect_args={"read_only": read_only},
         )
         self.pheno_metadata = MetaData()
         self.variable_browser: Table
@@ -83,7 +91,7 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
                 "instrument",
                 self.pheno_metadata,
                 Column(
-                    "instrument_name", String(64), nullable=False, index=True
+                    "instrument_name", String(64), nullable=False, index=True,
                 ),
                 Column("table_name", String(64), nullable=False),
             )
@@ -125,7 +133,7 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
         """
         query = select(
             self.instrument.c.instrument_name,
-            self.instrument.c.table_name
+            self.instrument.c.table_name,
         )
         with self.engine.connect() as connection:
             instruments_rows = connection.execute(query)
@@ -139,17 +147,17 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
             self.measure.c.measure_id,
             self.measure.c.measure_type,
             self.measure.c.db_column_name,
-            self.instrument.c.instrument_name
+            self.instrument.c.instrument_name,
         ).join(
             self.instrument,
-            self.measure.c.instrument_name == self.instrument.c.instrument_name
+            self.measure.c.instrument_name == self.instrument.c.instrument_name,
         )
         with self.engine.connect() as connection:
             results = connection.execute(query)
             measure_columns = {}
             for result_row in results:
                 instrument_measures[result_row.instrument_name].append(
-                    result_row.measure_id
+                    result_row.measure_id,
                 )
                 if MeasureType.is_numeric(result_row.measure_type):
                     column_type: Union[Float, String] = Float()
@@ -158,7 +166,7 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
                 measure_columns[result_row.measure_id] = \
                     Column(
                         f"{result_row.db_column_name}",
-                        column_type, nullable=True
+                        column_type, nullable=True,
                 )
 
         for instrument_name, table_name in instrument_table_names.items():
@@ -181,7 +189,7 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
                         primary_key=True,
                     ),
                     Column(
-                        "family_id", String(64), nullable=False, index=True
+                        "family_id", String(64), nullable=False, index=True,
                     ),
                     Column("role", String(64), nullable=False, index=True),
                     Column(
@@ -192,11 +200,11 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
                     ),
                     Column("sex", Integer(), nullable=False),
                     *cols,
-                    extend_existing=True
+                    extend_existing=True,
                 )
 
     def _split_measures_into_groups(
-        self, measure_ids: list[str], group_size: int = 60
+        self, measure_ids: list[str], group_size: int = 60,
     ) -> list[list[str]]:
         groups_count = int(len(measure_ids) / group_size) + 1
         if (groups_count) == 1:
@@ -245,7 +253,7 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
         """Return a map of instruments and their measure column names."""
         query = select(
             self.measure.c.db_column_name,
-            self.instrument.c.instrument_name
+            self.instrument.c.instrument_name,
         ).join(self.instrument)
         with self.engine.connect() as connection:
             results = connection.execute(query)
@@ -254,16 +262,16 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
         for result_row in results:
             if result_row.instrument_name not in instrument_col_names:
                 instrument_col_names[result_row.instrument_name] = [
-                    result_row.db_column_name
+                    result_row.db_column_name,
                 ]
             else:
                 instrument_col_names[result_row.instrument_name].append(
-                    result_row.db_column_name
+                    result_row.db_column_name,
                 )
         return instrument_col_names
 
     def get_measure_column_names(
-        self, measure_ids: Optional[list[str]] = None
+        self, measure_ids: Optional[list[str]] = None,
     ) -> dict[str, str]:
         """Return measure column names mapped to their measure IDs."""
         query = select(
@@ -282,7 +290,7 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
         return measure_column_names
 
     def get_measure_column_names_reverse(
-        self, measure_ids: Optional[list[str]] = None
+        self, measure_ids: Optional[list[str]] = None,
     ) -> dict[str, str]:
         """Return measure column names mapped to their measure IDs."""
         query = select(
@@ -346,7 +354,7 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
             Column("pvalue_regression_male", Float()),
             Column("pvalue_regression_female", Float()),
             PrimaryKeyConstraint(
-                "regression_id", "measure_id", name="regression_pkey"
+                "regression_id", "measure_id", name="regression_pkey",
             ),
         )
 
@@ -435,7 +443,7 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
                 .values(reg)
                 .where(
                     (self.regression_values.c.regression_id == regression_id)
-                    & (self.regression_values.c.measure_id == measure_id)
+                    & (self.regression_values.c.measure_id == measure_id),
                 )
             )
             with self.engine.begin() as connection:
@@ -454,7 +462,7 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
 
     def search_measures(
         self, instrument_name: Optional[str] = None,
-        keyword: Optional[str] = None
+        keyword: Optional[str] = None,
     ) -> Iterator[dict[str, Any]]:
         """Find measert by keyword search."""
         query_params = []
@@ -465,25 +473,25 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
             if not instrument_name:
                 query_params.append(
                     self.variable_browser.c.instrument_name.ilike(
-                        keyword, escape="/"
-                    )
+                        keyword, escape="/",
+                    ),
                 )
             query_params.append(
-                self.variable_browser.c.measure_id.ilike(keyword, escape="/")
+                self.variable_browser.c.measure_id.ilike(keyword, escape="/"),
             )
             query_params.append(
-                self.variable_browser.c.measure_name.ilike(keyword, escape="/")
+                self.variable_browser.c.measure_name.ilike(keyword, escape="/"),
             )
             query_params.append(
-                self.variable_browser.c.description.ilike(keyword, escape="/")
+                self.variable_browser.c.description.ilike(keyword, escape="/"),
             )
-            query = self.variable_browser.select().where((or_(*query_params)))
+            query = self.variable_browser.select().where(or_(*query_params))
         else:
             query = self.variable_browser.select()
 
         if instrument_name:
             query = query.where(
-                self.variable_browser.c.instrument_name == instrument_name
+                self.variable_browser.c.instrument_name == instrument_name,
             )
 
         with self.engine.connect() as connection:
@@ -506,7 +514,7 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
 
     def search_measures_df(
         self, instrument_name: Optional[str] = None,
-        keyword: Optional[str] = None
+        keyword: Optional[str] = None,
     ) -> pd.DataFrame:
         """Find measures and return a dataframe with values."""
         query_params = []
@@ -517,17 +525,17 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
             if not instrument_name:
                 query_params.append(
                     self.variable_browser.c.instrument_name.like(
-                        keyword, escape="/"
-                    )
+                        keyword, escape="/",
+                    ),
                 )
             query_params.append(
-                self.variable_browser.c.measure_id.like(keyword, escape="/")
+                self.variable_browser.c.measure_id.like(keyword, escape="/"),
             )
             query_params.append(
-                self.variable_browser.c.measure_name.like(keyword, escape="/")
+                self.variable_browser.c.measure_name.like(keyword, escape="/"),
             )
             query_params.append(
-                self.variable_browser.c.description.like(keyword, escape="/")
+                self.variable_browser.c.description.like(keyword, escape="/"),
             )
             query = self.variable_browser.select().where(or_(*query_params))
         else:
@@ -535,7 +543,7 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
 
         if instrument_name:
             query = query.where(
-                self.variable_browser.c.instrument_name == instrument_name
+                self.variable_browser.c.instrument_name == instrument_name,
             )
 
         df = pd.read_sql(query, self.engine)
@@ -575,7 +583,7 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
         """Return regressions display name."""
         res = {}
         selector = select(
-            self.regressions.c.regression_id, self.regressions.c.display_name
+            self.regressions.c.regression_id, self.regressions.c.display_name,
         )
         with self.engine.connect() as connection:
             for row in connection.execute(selector):
@@ -609,8 +617,8 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
                 connection.execute(
                     select(func.count())  # pylint: disable=not-callable
                     .select_from(self.variable_browser)
-                    .where(Column("description").isnot(None))
-                ).scalar()
+                    .where(Column("description").isnot(None)),
+                ).scalar(),
             )
 
     def get_families(self) -> dict:

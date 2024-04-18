@@ -5,13 +5,15 @@ import yaml
 
 from dae.configuration.study_config_builder import StudyConfigBuilder
 from dae.import_tools.import_tools import ImportProject, save_study_config
+from dae.schema2_storage.schema2_import_storage import (
+    Schema2ImportStorage,
+    schema2_dataset_layout,
+)
 from dae.task_graph.graph import TaskGraph
-from dae.schema2_storage.schema2_import_storage import Schema2ImportStorage, \
-    schema2_dataset_layout
-
-from impala2_storage.schema2.impala2_genotype_storage import \
-    HdfsStudyLayout, Impala2GenotypeStorage
-
+from impala2_storage.schema2.impala2_genotype_storage import (
+    HdfsStudyLayout,
+    Impala2GenotypeStorage,
+)
 
 logger = logging.getLogger(__file__)
 
@@ -32,7 +34,7 @@ class Impala2ImportStorage(Schema2ImportStorage):
 
     @classmethod
     def _do_load_in_impala(
-        cls, project: ImportProject, hdfs_study_layout: HdfsStudyLayout
+        cls, project: ImportProject, hdfs_study_layout: HdfsStudyLayout,
     ) -> None:
         genotype_storage = project.get_genotype_storage()
         assert isinstance(genotype_storage, Impala2GenotypeStorage)

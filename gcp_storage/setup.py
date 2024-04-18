@@ -13,7 +13,7 @@ setuptools.setup(
     url="https://github.com/IossifovLab/gpf",
     packages=setuptools.find_packages(
         where=".", exclude=[
-            "gcp_storage.docs", "tests.*", "*.tests.*", "*.tests", ],
+            "gcp_storage.docs", "tests.*", "*.tests.*", "*.tests"],
     ),
     # include_package_data=True,
     package_data={

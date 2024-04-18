@@ -52,7 +52,7 @@ def build_pheno_browser(
     dbfile, pheno_name, output_dir, pheno_regressions=None,
 ):
     phenodb = pheno_data.PhenotypeStudy(
-        pheno_name, dbfile=dbfile, read_only=False
+        pheno_name, dbfile=dbfile, read_only=False,
     )
 
     phenodb.db.create_all_tables()

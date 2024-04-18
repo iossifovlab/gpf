@@ -5,7 +5,7 @@ from dae.parquet.partition_descriptor import PartitionDescriptor
 
 
 def generate_file_access_glob(
-    partition_descriptor: PartitionDescriptor
+    partition_descriptor: PartitionDescriptor,
 ) -> str:
     """Return a glob for accessing every parquet file in the partition."""
     partition = partition_descriptor.dataset_family_partition()
@@ -15,14 +15,14 @@ def generate_file_access_glob(
 
 
 def variants_filename_basedir(
-    partition_descriptor: PartitionDescriptor, filename: str
+    partition_descriptor: PartitionDescriptor, filename: str,
 ) -> Optional[str]:
     """Extract the variants basedir from filename."""
     partition = partition_descriptor.dataset_family_partition()
     regex_parts = [
         "^(?P<basedir>.+)",
         *[f"({bname}=.+)" for (bname, _) in partition],
-        "(?P<filename>.+).parquet$"
+        "(?P<filename>.+).parquet$",
     ]
     regexp = re.compile("/".join(regex_parts))
     match = regexp.match(filename)

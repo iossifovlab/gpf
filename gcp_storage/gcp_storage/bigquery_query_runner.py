@@ -1,7 +1,7 @@
-import time
-import queue
 import logging
-from typing import Callable, Optional, Any
+import queue
+import time
+from typing import Any, Callable, Optional
 
 from google.cloud.bigquery.client import Client
 
@@ -15,7 +15,7 @@ class BigQueryQueryRunner(QueryRunner):
 
     def __init__(
         self, connection_factory: Client,
-        query: str, deserializer: Optional[Callable] = None
+        query: str, deserializer: Optional[Callable] = None,
     ) -> None:
         super().__init__(deserializer=deserializer)
 

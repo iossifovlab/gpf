@@ -7,12 +7,12 @@ from dae.pheno.prepare.measure_classifier import MeasureClassifier
 
 def test_fi1(
     fi1_df: pd.DataFrame,
-    fi1_db: tuple[duckdb.DuckDBPyConnection, str]
+    fi1_db: tuple[duckdb.DuckDBPyConnection, str],
 ) -> None:
     connection, table_name = fi1_db
     for col in fi1_df:
         report = MeasureClassifier.meta_measures(
-            connection.cursor(), table_name, col
+            connection.cursor(), table_name, col,
         )
         assert (
             report.count_with_values

@@ -1,24 +1,21 @@
 from __future__ import annotations
 
 import glob
-import os
 import logging
+import os
 import pathlib
-
+from collections.abc import Iterator
 from copy import copy
 from dataclasses import dataclass
-from collections.abc import Iterator
-from typing import Tuple, Union, Dict, Any, Optional, cast
+from typing import Any, Dict, Optional, Tuple, Union, cast
 
 from dae.genomic_resources.gene_models import GeneModels
 from dae.genomic_resources.reference_genome import ReferenceGenome
-from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.genotype_storage.genotype_storage import GenotypeStorage
-
+from dae.parquet.partition_descriptor import PartitionDescriptor
 from impala2_storage.helpers.hdfs_helpers import HdfsHelpers
 from impala2_storage.helpers.impala_helpers import ImpalaHelpers
 from impala2_storage.schema2.impala_variants import ImpalaVariants
-
 
 logger = logging.getLogger(__name__)
 
@@ -58,7 +55,7 @@ class Impala2GenotypeStorage(GenotypeStorage):
     def build_backend(
         self, study_config: dict,
         genome: Optional[ReferenceGenome],
-        gene_models: Optional[GeneModels]
+        gene_models: Optional[GeneModels],
     ) -> ImpalaVariants:
         assert study_config is not None
 
@@ -79,11 +76,11 @@ class Impala2GenotypeStorage(GenotypeStorage):
         self, study_id: str,
         variants_dir: Union[pathlib.Path, str],
         pedigree_file: str,
-        meta_file: str
+        meta_file: str,
     ) -> HdfsStudyLayout:
         """Upload local data to hdfs."""
         if self.read_only:
-            raise IOError(f"impala2 storage <{self.storage_id} is read only")
+            raise OSError(f"impala2 storage <{self.storage_id} is read only")
         # Copy pedigree
         base_dir = self.storage_config["hdfs"]["base_dir"]
         study_path = os.path.join(base_dir, study_id)
@@ -93,13 +90,13 @@ class Impala2GenotypeStorage(GenotypeStorage):
 
         pedigree_hdfs_dir = os.path.join(study_path, "pedigree")
         pedigree_hdfs_path = os.path.join(
-            pedigree_hdfs_dir, "pedigree.parquet"
+            pedigree_hdfs_dir, "pedigree.parquet",
         )
         self.hdfs_helpers.makedirs(pedigree_hdfs_dir)
         self.hdfs_helpers.put(pedigree_file, pedigree_hdfs_path)
 
         meta_hdfs_file = os.path.join(
-            study_path, "meta", "meta.parquet"
+            study_path, "meta", "meta.parquet",
         )
         self.hdfs_helpers.put(meta_file, meta_hdfs_file)
 
@@ -118,7 +115,7 @@ class Impala2GenotypeStorage(GenotypeStorage):
 
     @staticmethod
     def _study_tables(
-        study_config: dict
+        study_config: dict,
     ) -> tuple[str, str, str, str]:
         study_id = study_config["id"]
         storage_config = study_config["genotype_storage"]
@@ -145,7 +142,7 @@ class Impala2GenotypeStorage(GenotypeStorage):
 
     def _copy_variants(
         self, variants_dir: Union[pathlib.Path, str],
-        study_path: str
+        study_path: str,
     ) -> Tuple[str, str]:
         hdfs_summary_dir = os.path.join(study_path, "summary")
         hdfs_family_dir = os.path.join(study_path, "family")
@@ -173,7 +170,7 @@ class Impala2GenotypeStorage(GenotypeStorage):
 
     @staticmethod
     def _enum_parquet_files_to_copy(
-        src_variants_dir: str, dest_dir: str
+        src_variants_dir: str, dest_dir: str,
     ) -> Iterator[tuple[str, str]]:
         parquet_files_glob = glob.iglob(
             os.path.join(src_variants_dir, "**/*.parquet"),
@@ -191,7 +188,7 @@ class Impala2GenotypeStorage(GenotypeStorage):
             self._hdfs_helpers = HdfsHelpers(
                 self.storage_config["hdfs"]["host"],
                 self.storage_config["hdfs"]["port"],
-                replication=self.storage_config["hdfs"]["replication"]
+                replication=self.storage_config["hdfs"]["replication"],
             )
 
         return self._hdfs_helpers
@@ -199,11 +196,11 @@ class Impala2GenotypeStorage(GenotypeStorage):
     def import_dataset(
         self, study_id: str,
         hdfs_study_layout: HdfsStudyLayout,
-        partition_description: PartitionDescriptor
+        partition_description: PartitionDescriptor,
     ) -> dict[str, Any]:
         """Load a dataset from HDFS into impala."""
         if self.read_only:
-            raise IOError(f"impala2 storage <{self.storage_id} is read only")
+            raise OSError(f"impala2 storage <{self.storage_id} is read only")
 
         pedigree_table = self._construct_pedigree_table(study_id)
         summary_variant_table, family_variant_table = \
@@ -285,7 +282,7 @@ class Impala2GenotypeStorage(GenotypeStorage):
 
     def _generate_study_config(
         self, study_id: str, pedigree_table: str,
-        summary_table: str, family_table: str, meta_table: str
+        summary_table: str, family_table: str, meta_table: str,
     ) -> dict[str, Any]:
 
         assert study_id is not None

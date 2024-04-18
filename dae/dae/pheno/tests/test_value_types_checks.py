@@ -1,8 +1,10 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,too-many-lines
-from typing import Generator, Callable
+from collections.abc import Generator
+from typing import Callable
+
+import duckdb
 import numpy as np
 import pandas as pd
-import duckdb
 import pytest
 
 from dae.pheno.common import MeasureType, default_config
@@ -18,7 +20,7 @@ def db_connection() -> duckdb.DuckDBPyConnection:
 def db_builder(db_connection: duckdb.DuckDBPyConnection) -> Generator[
     Callable,
     None,
-    None
+    None,
 ]:
     table_name = "tmp"
 
@@ -32,7 +34,7 @@ def db_builder(db_connection: duckdb.DuckDBPyConnection) -> Generator[
 
 def test_classifier_non_numeric(
     db_connection: duckdb.DuckDBPyConnection,
-    db_builder: Callable
+    db_builder: Callable,
 ) -> None:
     df = pd.DataFrame({"test": ["1", "2", "3", "4.4", "a"]})
     table_name = db_builder(df)
@@ -49,7 +51,7 @@ def test_classifier_non_numeric(
 
 def test_classifier_nan(
     db_connection: duckdb.DuckDBPyConnection,
-    db_builder: Callable
+    db_builder: Callable,
 ) -> None:
     df = pd.DataFrame({"test": [" ", None, np.nan, "1", "2.2"]})
     table_name = db_builder(df)
@@ -66,7 +68,7 @@ def test_classifier_nan(
 
 def test_classifier_float(
     db_connection: duckdb.DuckDBPyConnection,
-    db_builder: Callable
+    db_builder: Callable,
 ) -> None:
     df = pd.DataFrame({"test": [" ", None, np.nan, 1, 2.2]})
     table_name = db_builder(df)
@@ -83,7 +85,7 @@ def test_classifier_float(
 
 def test_classifier_all_float(
     db_connection: duckdb.DuckDBPyConnection,
-    db_builder: Callable
+    db_builder: Callable,
 ) -> None:
     df = pd.DataFrame({"test": [3.3, 1, 2.2]})
     table_name = db_builder(df)
@@ -100,7 +102,7 @@ def test_classifier_all_float(
 
 def test_classifier_all_float_again(
     db_connection: duckdb.DuckDBPyConnection,
-    db_builder: Callable
+    db_builder: Callable,
 ) -> None:
     df = pd.DataFrame({"test": [3.3, 1, 2.2, 3.3, 1, 1]})
     table_name = db_builder(df)
@@ -115,7 +117,7 @@ def test_classifier_all_float_again(
 
 def test_classifier_all_bool(
     db_connection: duckdb.DuckDBPyConnection,
-    db_builder: Callable
+    db_builder: Callable,
 ) -> None:
     df = pd.DataFrame({"test": [True, False, True]})
     table_name = db_builder(df)
@@ -130,7 +132,7 @@ def test_classifier_all_bool(
 
 def test_classifier_bool_and_nan(
     db_connection: duckdb.DuckDBPyConnection,
-    db_builder: Callable
+    db_builder: Callable,
 ) -> None:
     df = pd.DataFrame({"test": [True, False, True, np.nan, None, " "]})
     table_name = db_builder(df)
@@ -146,7 +148,7 @@ def test_classifier_bool_and_nan(
 
 def test_should_convert_to_numeric_cutoff(
     db_connection: duckdb.DuckDBPyConnection,
-    db_builder: Callable
+    db_builder: Callable,
 ) -> None:
     df = pd.DataFrame({"test": ["1", "2", "1", "1", "1", "1", "2", "2", "a"]})
     table_name = db_builder(df)
@@ -170,7 +172,7 @@ def test_should_convert_to_numeric_cutoff(
 
 def test_classify_minus_values(
     db_connection: duckdb.DuckDBPyConnection,
-    db_builder: Callable
+    db_builder: Callable,
 ) -> None:
     df = pd.DataFrame({"test": ["-", "-", "-", np.nan, None, " ", "-"]})
     table_name = db_builder(df)

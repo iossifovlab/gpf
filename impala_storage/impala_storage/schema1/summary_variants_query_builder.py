@@ -1,15 +1,17 @@
 import logging
-from typing import Callable, Dict, List, Optional, Any, Union, Iterable
+from collections.abc import Iterable
+from typing import Any, Callable, Dict, List, Optional, Union
 
-from dae.utils.regions import Region
 from dae.annotation.annotation_pipeline import AttributeInfo
 from dae.genomic_resources.gene_models import GeneModels
 from dae.pedigrees.families_data import FamiliesData
+from dae.utils.regions import Region
 from dae.variants.variant import SummaryVariant
-from impala_storage.schema1.base_query_builder import BaseQueryBuilder, \
-    RealAttrFilterType
+from impala_storage.schema1.base_query_builder import (
+    BaseQueryBuilder,
+    RealAttrFilterType,
+)
 from impala_storage.schema1.serializers import AlleleParquetSerializer
-
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +26,7 @@ class SummaryVariantsQueryBuilder(BaseQueryBuilder):
         pedigree_schema: dict[str, str],
         families: FamiliesData,
         gene_models: Optional[GeneModels] = None,
-        summary_variants_table: Optional[str] = None
+        summary_variants_table: Optional[str] = None,
     ) -> None:
         self.summary_variants_table = summary_variants_table
         super().__init__(
@@ -107,7 +109,7 @@ class SummaryVariantsQueryBuilder(BaseQueryBuilder):
         frequency_filter: Optional[RealAttrFilterType] = None,
         return_reference: Optional[bool] = None,
         return_unknown: Optional[bool] = None,
-        **_kwargs: Any
+        **_kwargs: Any,
     ) -> None:
         # FIXME too many arguments
         # pylint: disable=too-many-arguments
@@ -142,7 +144,7 @@ class SummaryVariantsQueryBuilder(BaseQueryBuilder):
         self._add_to_product(in_members)
 
     def create_row_deserializer(
-        self, serializer: AlleleParquetSerializer
+        self, serializer: AlleleParquetSerializer,
     ) -> Callable:
         def deserialize_row(row: tuple) -> SummaryVariant:
             cols = {}
@@ -165,7 +167,7 @@ class SummaryVariantsQueryBuilder(BaseQueryBuilder):
             if isinstance(variant_data, str):
                 logger.debug(
                     "variant_data is string!!!! %d, %s",
-                    bucket_index, summary_index
+                    bucket_index, summary_index,
                 )
                 variant_data = bytes(variant_data, "utf8")
             if isinstance(extra_attributes, str):
@@ -177,13 +179,13 @@ class SummaryVariantsQueryBuilder(BaseQueryBuilder):
                 extra_attributes = bytes(extra_attributes, "utf8")
 
             v = serializer.deserialize_summary_variant(
-                variant_data, extra_attributes
+                variant_data, extra_attributes,
             )
             if v is not None:
                 v.update_attributes({
                     "family_variants_count": [family_variants_count],
                     "seen_in_status": [seen_in_status],
-                    "seen_as_denovo": [seen_as_denovo]
+                    "seen_as_denovo": [seen_as_denovo],
                 })
 
             return v

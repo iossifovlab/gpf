@@ -3,8 +3,8 @@ from typing import Any
 
 import pytest
 
-from dae.utils.regions import Region
 from dae.studies.study import GenotypeDataStudy
+from dae.utils.regions import Region
 
 
 @pytest.mark.parametrize("index,query,ecount", [
@@ -19,7 +19,7 @@ def test_family_queries(
     imported_study: GenotypeDataStudy,
     index: int,
     query: dict[str, Any],
-    ecount: int
+    ecount: int,
 ) -> None:
     vs = list(imported_study.query_variants(**query))
     assert len(vs) == ecount
@@ -37,7 +37,7 @@ def test_summary_queries(
     imported_study: GenotypeDataStudy,
     index: int,
     query: dict[str, Any],
-    ecount: int
+    ecount: int,
 ) -> None:
 
     vs = list(imported_study.query_summary_variants(**query))

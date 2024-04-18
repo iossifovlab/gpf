@@ -1,19 +1,28 @@
-from typing import Any, Union, Optional, Mapping, cast, Dict, Iterator
+from collections.abc import Iterator, Mapping
+from typing import Any, Dict, Optional, Union, cast
 
 import duckdb
-
-from box import Box
-
-from sqlalchemy import MetaData, create_engine
-from sqlalchemy import Table, Column, Integer, String, Float, \
-    ForeignKey, or_, func, desc, Enum
-from sqlalchemy.sql import select, Select, text
-from sqlalchemy.sql.schema import UniqueConstraint, PrimaryKeyConstraint
-
 import pandas as pd
+from box import Box
+from sqlalchemy import (
+    Column,
+    Enum,
+    Float,
+    ForeignKey,
+    Integer,
+    MetaData,
+    String,
+    Table,
+    create_engine,
+    desc,
+    func,
+    or_,
+)
+from sqlalchemy.sql import Select, select, text
+from sqlalchemy.sql.schema import PrimaryKeyConstraint, UniqueConstraint
 
 from dae.pheno.common import MeasureType
-from dae.variants.attributes import Sex, Status, Role
+from dae.variants.attributes import Role, Sex, Status
 
 
 class LegacyPhenoDb:  # pylint: disable=too-many-instance-attributes
@@ -26,7 +35,7 @@ class LegacyPhenoDb:  # pylint: disable=too-many-instance-attributes
     STREAMING_CHUNK_SIZE = 25
 
     def __init__(
-        self, dbfile: str, browser_dbfile: Optional[str] = None
+        self, dbfile: str, browser_dbfile: Optional[str] = None,
     ) -> None:
         self.pheno_dbfile = dbfile
         self.pheno_metadata = MetaData()
@@ -87,7 +96,7 @@ class LegacyPhenoDb:  # pylint: disable=too-many-instance-attributes
                 self.pheno_metadata,
                 Column("id", Integer(), primary_key=True),
                 Column(
-                    "instrument_name", String(64), nullable=False, index=True
+                    "instrument_name", String(64), nullable=False, index=True,
                 ),
                 Column("table_name", String(64), nullable=False),
             )
@@ -132,7 +141,7 @@ class LegacyPhenoDb:  # pylint: disable=too-many-instance-attributes
         """
         query = select(
             self.instruments.c.instrument_name,
-            self.instruments.c.table_name
+            self.instruments.c.table_name,
         )
         with self.pheno_engine.connect() as connection:
             instruments_rows = connection.execute(query)
@@ -146,14 +155,14 @@ class LegacyPhenoDb:  # pylint: disable=too-many-instance-attributes
             self.measures.c.measure_id,
             self.measures.c.measure_type,
             self.measures.c.db_column_name,
-            self.instruments.c.instrument_name
+            self.instruments.c.instrument_name,
         ).join(self.instruments)
         with self.pheno_engine.connect() as connection:
             results = connection.execute(query)
             measure_columns = {}
             for result_row in results:
                 instrument_measures[result_row.instrument_name].append(
-                    result_row.measure_id
+                    result_row.measure_id,
                 )
                 if MeasureType.is_numeric(result_row.measure_type):
                     column_type: Union[Float, String] = Float()
@@ -162,7 +171,7 @@ class LegacyPhenoDb:  # pylint: disable=too-many-instance-attributes
                 measure_columns[result_row.measure_id] = \
                     Column(
                         f"{result_row.db_column_name}",
-                        column_type, nullable=True
+                        column_type, nullable=True,
                 )
 
         for instrument_name, table_name in instrument_table_names.items():
@@ -185,7 +194,7 @@ class LegacyPhenoDb:  # pylint: disable=too-many-instance-attributes
                         primary_key=True,
                     ),
                     Column(
-                        "family_id", String(64), nullable=False, index=True
+                        "family_id", String(64), nullable=False, index=True,
                     ),
                     Column("role", String(64), nullable=False, index=True),
                     Column(
@@ -196,13 +205,13 @@ class LegacyPhenoDb:  # pylint: disable=too-many-instance-attributes
                     ),
                     Column("sex", Enum(Sex), nullable=False),
                     *cols,
-                    extend_existing=True
+                    extend_existing=True,
                 )
 
         self.pheno_metadata.create_all(self.pheno_engine)
 
     def _split_measures_into_groups(
-        self, measure_ids: list[str], group_size: int = 60
+        self, measure_ids: list[str], group_size: int = 60,
     ) -> list[list[str]]:
         groups_count = int(len(measure_ids) / group_size) + 1
         if (groups_count) == 1:
@@ -221,32 +230,32 @@ class LegacyPhenoDb:  # pylint: disable=too-many-instance-attributes
         measure_id_map: dict[str, str],
         measure_type_map: Mapping[str, Union[str, MeasureType]],
         measure_ids: list[str],
-        measure_column_names: Optional[dict[str, str]] = None
+        measure_column_names: Optional[dict[str, str]] = None,
     ) -> Select:
         select_columns = [
             self.person.c.person_id,
             self.person.c.role,
             self.family.c.family_id,
             self.person.c.status,
-            self.person.c.sex
+            self.person.c.sex,
         ]
         query = select(
-            self.measure.c.measure_id, self.measure.c.measure_type
+            self.measure.c.measure_id, self.measure.c.measure_type,
         )
         for m_id in measure_ids:
             measure_type = measure_type_map[m_id]
             if measure_type is None:
                 raise ValueError(
-                    f"bad measure: {m_id}; unknown value type"
+                    f"bad measure: {m_id}; unknown value type",
                 )
             col_name = m_id
             if measure_column_names is not None:
                 col_name = measure_column_names[m_id]
             select_columns.append(cast(Column[Any], text(
-                f"\"{m_id}_value\".value AS '{col_name}'"
+                f"\"{m_id}_value\".value AS '{col_name}'",
             )))
         query = select(*select_columns).select_from(
-            self.person.join(self.family)
+            self.person.join(self.family),
         )
 
         for m_id in measure_ids:
@@ -258,9 +267,9 @@ class LegacyPhenoDb:  # pylint: disable=too-many-instance-attributes
                 text(f'{measure_table.name} as "{table_alias}"'),
                 text(
                     f'"{table_alias}".person_id = person.id AND '
-                    f'"{table_alias}".measure_id = {db_id}'
+                    f'"{table_alias}".measure_id = {db_id}',
                 ),
-                isouter=True
+                isouter=True,
             )
 
         query = query.order_by(desc(self.person.c.person_id))
@@ -301,7 +310,7 @@ class LegacyPhenoDb:  # pylint: disable=too-many-instance-attributes
         """Return a map of instruments and their measure column names."""
         query = select(
             self.measures.c.db_column_name,
-            self.instruments.c.instrument_name
+            self.instruments.c.instrument_name,
         ).join(self.instruments)
         with self.pheno_engine.connect() as connection:
             results = connection.execute(query)
@@ -310,16 +319,16 @@ class LegacyPhenoDb:  # pylint: disable=too-many-instance-attributes
         for result_row in results:
             if result_row.instrument_name not in instrument_col_names:
                 instrument_col_names[result_row.instrument_name] = [
-                    result_row.db_column_name
+                    result_row.db_column_name,
                 ]
             else:
                 instrument_col_names[result_row.instrument_name].append(
-                    result_row.db_column_name
+                    result_row.db_column_name,
                 )
         return instrument_col_names
 
     def get_measure_column_names(
-        self, measure_ids: Optional[list[str]] = None
+        self, measure_ids: Optional[list[str]] = None,
     ) -> dict[str, str]:
         """Return measure column names mapped to their measure IDs."""
         query = select(
@@ -338,7 +347,7 @@ class LegacyPhenoDb:  # pylint: disable=too-many-instance-attributes
         return measure_column_names
 
     def get_measure_column_names_reverse(
-        self, measure_ids: Optional[list[str]] = None
+        self, measure_ids: Optional[list[str]] = None,
     ) -> dict[str, str]:
         """Return measure column names mapped to their measure IDs."""
         query = select(
@@ -380,13 +389,13 @@ class LegacyPhenoDb:  # pylint: disable=too-many-instance-attributes
                 query = select(
                     self.measure.c.id,
                     self.measure.c.measure_id,
-                    self.measure.c.measure_type
+                    self.measure.c.measure_type,
                 )
             else:
                 query = select(
                     self.measures.c.id,
                     self.measures.c.measure_id,
-                    self.measures.c.measure_type
+                    self.measures.c.measure_type,
                 )
             results = connection.execute(query)
             for result_row in results:
@@ -397,23 +406,23 @@ class LegacyPhenoDb:  # pylint: disable=too-many-instance-attributes
             query = select(
                 self.measures.c.measure_id,
                 self.measures.c.db_column_name,
-                self.instruments.c.instrument_name
+                self.instruments.c.instrument_name,
             ).join(self.instruments)
             results = connection.execute(query)
             for result_row in results:
                 if result_row.instrument_name not in instrument_measures:
                     instrument_measures[result_row.instrument_name] = [
-                        result_row.measure_id
+                        result_row.measure_id,
                     ]
                 else:
                     instrument_measures[result_row.instrument_name].append(
-                        result_row.measure_id
+                        result_row.measure_id,
                     )
                 measure_column_names[result_row.measure_id] = \
                     result_row.db_column_name
 
         measure_groups = self._split_measures_into_groups(
-            cast(list[str], list(measure_id_map.keys()))
+            cast(list[str], list(measure_id_map.keys())),
         )
 
         queries = []
@@ -422,7 +431,7 @@ class LegacyPhenoDb:  # pylint: disable=too-many-instance-attributes
                 cast(dict[str, str], measure_id_map),
                 cast(dict[str, MeasureType], measure_type_map),
                 group,
-                measure_column_names
+                measure_column_names,
             ))
 
         added_instruments = set()
@@ -444,7 +453,7 @@ class LegacyPhenoDb:  # pylint: disable=too-many-instance-attributes
                         "role": str(row["role"]),
                         "family_id": row["family_id"],
                         "status": row["status"],
-                        "sex": row["sex"]
+                        "sex": row["sex"],
                     }
                     for measure in measures:
                         col_name = measure_column_names[measure]
@@ -514,7 +523,7 @@ class LegacyPhenoDb:  # pylint: disable=too-many-instance-attributes
             Column("pvalue_regression_male", Float()),
             Column("pvalue_regression_female", Float()),
             PrimaryKeyConstraint(
-                "regression_id", "measure_id", name="regression_pkey"
+                "regression_id", "measure_id", name="regression_pkey",
             ),
         )
 
@@ -572,7 +581,7 @@ class LegacyPhenoDb:  # pylint: disable=too-many-instance-attributes
             Column("values_domain", String(255), nullable=True),
             Column("rank", Integer(), nullable=True),
             UniqueConstraint(
-                "instrument_name", "measure_name", name="measure_key"
+                "instrument_name", "measure_name", name="measure_key",
             ),
         )
 
@@ -665,7 +674,7 @@ class LegacyPhenoDb:  # pylint: disable=too-many-instance-attributes
                 .values(reg)
                 .where(
                     (self.regression_values.c.regression_id == regression_id)
-                    & (self.regression_values.c.measure_id == measure_id)
+                    & (self.regression_values.c.measure_id == measure_id),
                 )
             )
             with self.browser_engine.begin() as connection:
@@ -684,37 +693,37 @@ class LegacyPhenoDb:  # pylint: disable=too-many-instance-attributes
 
     def search_measures(
         self, instrument_name: Optional[str] = None,
-        keyword: Optional[str] = None
+        keyword: Optional[str] = None,
     ) -> Iterator[dict[str, Any]]:
         """Find measert by keyword search."""
         query_params = []
 
         if keyword:
             keyword = "%{}%".format(
-                keyword.replace("%", r"\%").replace("_", r"\_")
+                keyword.replace("%", r"\%").replace("_", r"\_"),
             )
             if not instrument_name:
                 query_params.append(
                     self.variable_browser.c.instrument_name.like(
-                        keyword, escape="\\"
-                    )
+                        keyword, escape="\\",
+                    ),
                 )
             query_params.append(
-                self.variable_browser.c.measure_id.like(keyword, escape="\\")
+                self.variable_browser.c.measure_id.like(keyword, escape="\\"),
             )
             query_params.append(
-                self.variable_browser.c.measure_name.like(keyword, escape="\\")
+                self.variable_browser.c.measure_name.like(keyword, escape="\\"),
             )
             query_params.append(
-                self.variable_browser.c.description.like(keyword, escape="\\")
+                self.variable_browser.c.description.like(keyword, escape="\\"),
             )
-            query = self.variable_browser.select().where((or_(*query_params)))
+            query = self.variable_browser.select().where(or_(*query_params))
         else:
             query = self.variable_browser.select()
 
         if instrument_name:
             query = query.where(
-                self.variable_browser.c.instrument_name == instrument_name
+                self.variable_browser.c.instrument_name == instrument_name,
             )
 
         with self.browser_engine.connect() as connection:
@@ -737,29 +746,29 @@ class LegacyPhenoDb:  # pylint: disable=too-many-instance-attributes
 
     def search_measures_df(
         self, instrument_name: Optional[str] = None,
-        keyword: Optional[str] = None
+        keyword: Optional[str] = None,
     ) -> pd.DataFrame:
         """Find measures and return a dataframe with values."""
         query_params = []
 
         if keyword:
             keyword = "%{}%".format(
-                keyword.replace("%", r"\%").replace("_", r"\_")
+                keyword.replace("%", r"\%").replace("_", r"\_"),
             )
             if not instrument_name:
                 query_params.append(
                     self.variable_browser.c.instrument_name.like(
-                        keyword, escape="\\"
-                    )
+                        keyword, escape="\\",
+                    ),
                 )
             query_params.append(
-                self.variable_browser.c.measure_id.like(keyword, escape="\\")
+                self.variable_browser.c.measure_id.like(keyword, escape="\\"),
             )
             query_params.append(
-                self.variable_browser.c.measure_name.like(keyword, escape="\\")
+                self.variable_browser.c.measure_name.like(keyword, escape="\\"),
             )
             query_params.append(
-                self.variable_browser.c.description.like(keyword, escape="\\")
+                self.variable_browser.c.description.like(keyword, escape="\\"),
             )
             query = self.variable_browser.select().where(or_(*query_params))
         else:
@@ -767,7 +776,7 @@ class LegacyPhenoDb:  # pylint: disable=too-many-instance-attributes
 
         if instrument_name:
             query = query.where(
-                self.variable_browser.c.instrument_name == instrument_name
+                self.variable_browser.c.instrument_name == instrument_name,
             )
 
         df = pd.read_sql(query, self.browser_engine)
@@ -807,7 +816,7 @@ class LegacyPhenoDb:  # pylint: disable=too-many-instance-attributes
         """Return regressions display name."""
         res = {}
         selector = select(
-            self.regressions.c.regression_id, self.regressions.c.display_name
+            self.regressions.c.regression_id, self.regressions.c.display_name,
         )
         with self.browser_engine.connect() as connection:
             for row in connection.execute(selector):
@@ -841,12 +850,12 @@ class LegacyPhenoDb:  # pylint: disable=too-many-instance-attributes
                 connection.execute(
                     select(func.count())  # pylint: disable=not-callable
                     .select_from(self.variable_browser)
-                    .where(Column("description").isnot(None))
-                ).scalar()
+                    .where(Column("description").isnot(None)),
+                ).scalar(),
             )
 
     def get_value_table(
-        self, value_type: Union[str, MeasureType]
+        self, value_type: Union[str, MeasureType],
     ) -> Table:
         """Return the appropriate table for values based on the value type."""
         if isinstance(value_type, str):
@@ -901,7 +910,7 @@ class LegacyPhenoDb:  # pylint: disable=too-many-instance-attributes
 
 
 def create_sqlite_phenodb(
-    dbfile: str, browser_dbfile: Optional[str] = None
+    dbfile: str, browser_dbfile: Optional[str] = None,
 ) -> LegacyPhenoDb:
     db = LegacyPhenoDb(dbfile, browser_dbfile)
     db.build()
@@ -909,13 +918,13 @@ def create_sqlite_phenodb(
 
 
 def build_instrument_values_tables(
-    metadata: MetaData, sqlite_db: LegacyPhenoDb
+    metadata: MetaData, sqlite_db: LegacyPhenoDb,
 ) -> dict[str, Table]:
     """Create and return instrument values tables."""
     instrument_values_tables: dict[str, Table] = {}
     query = select(
         sqlite_db.instruments.c.instrument_name,
-        sqlite_db.instruments.c.table_name
+        sqlite_db.instruments.c.table_name,
     )
     with sqlite_db.pheno_engine.connect() as connection:
         instruments_rows = connection.execute(query)
@@ -929,14 +938,14 @@ def build_instrument_values_tables(
         sqlite_db.measures.c.measure_id,
         sqlite_db.measures.c.measure_type,
         sqlite_db.measures.c.db_column_name,
-        sqlite_db.instruments.c.instrument_name
+        sqlite_db.instruments.c.instrument_name,
     ).join(sqlite_db.instruments)
     with sqlite_db.pheno_engine.connect() as connection:
         results = connection.execute(query)
         measure_columns: dict[str, Column] = {}
         for result_row in results:
             instrument_measures[result_row.instrument_name].append(
-                result_row.measure_id
+                result_row.measure_id,
             )
             if MeasureType.is_numeric(result_row.measure_type):
                 column_type: Union[Float, String] = Float()
@@ -945,7 +954,7 @@ def build_instrument_values_tables(
             measure_columns[result_row.measure_id] = \
                 Column(
                     f"{result_row.db_column_name}",
-                    column_type, nullable=True
+                    column_type, nullable=True,
             )
 
     for instrument_name, table_name in instrument_table_names.items():
@@ -966,24 +975,24 @@ def build_instrument_values_tables(
                     unique=True,
                 ),
                 Column(
-                    "family_id", String(64), nullable=False
+                    "family_id", String(64), nullable=False,
                 ),
                 Column("role", Integer(), nullable=False),
                 Column(
                     "status",
                     Integer(),
                     nullable=False,
-                    default=1
+                    default=1,
                 ),
                 Column("sex", Integer(), nullable=False),
                 *cols,
-                extend_existing=True
+                extend_existing=True,
             )
     return instrument_values_tables
 
 
 def create_duckdb_dbfile(
-    dbfile: str, sqlite_db: LegacyPhenoDb
+    dbfile: str, sqlite_db: LegacyPhenoDb,
 ) -> dict[str, Any]:
     """Create the base DuckDB dbfile used for migration."""
     duckdb_engine = create_engine(f"duckdb:///{dbfile}")
@@ -1043,7 +1052,7 @@ def create_duckdb_dbfile(
     )
 
     instrument_values_tables = build_instrument_values_tables(
-        metadata, sqlite_db
+        metadata, sqlite_db,
     )
 
     variable_browser_t = Table(
@@ -1096,7 +1105,7 @@ def create_duckdb_dbfile(
         "instrument_values": instrument_values_tables,
         "variable_browser": variable_browser_t,
         "regressions": regressions_t,
-        "regression_values_t": regression_values_t
+        "regression_values_t": regression_values_t,
     }
 
     metadata.create_all(duckdb_engine)
@@ -1115,7 +1124,7 @@ def handle_value(val: Any) -> str:
 def import_sqlite_into_duckdb(
     dbfile: str, sqlite_dbfile: str,
     sqlite_browser_dbfile: str,
-    tables: dict[str, Any]
+    tables: dict[str, Any],
 ) -> None:
     """Import pheno data from legacy dbfile to duckdb dbfile."""
     con = duckdb.connect(dbfile)
@@ -1123,13 +1132,13 @@ def import_sqlite_into_duckdb(
     con.sql("LOAD sqlite")
     con.sql(
         "INSERT INTO family "
-        f"SELECT family_id FROM sqlite_scan('{sqlite_dbfile}', 'family')"
+        f"SELECT family_id FROM sqlite_scan('{sqlite_dbfile}', 'family')",
     )
     result = con.sql(
         "SELECT f.family_id, person_id, role, status, sex, sample_id "
         f"FROM sqlite_scan('{sqlite_dbfile}', 'person') as p "
         f"JOIN sqlite_scan('{sqlite_dbfile}', 'family') as f "
-        "ON f.id = p.family_id"
+        "ON f.id = p.family_id",
     )
     rows = result.fetchall()
     for row in rows:
@@ -1151,7 +1160,7 @@ def import_sqlite_into_duckdb(
         "min_value, max_value, values_domain, rank "
         f"FROM sqlite_scan('{sqlite_dbfile}', 'measures') as m "
         f"JOIN sqlite_scan('{sqlite_dbfile}', 'instruments') as i "
-        "ON m.instrument_id = i.id"
+        "ON m.instrument_id = i.id",
     )
     rows = result.fetchall()
     for row in rows:
@@ -1166,7 +1175,7 @@ def import_sqlite_into_duckdb(
     con.sql(
         "INSERT INTO instrument "
         "SELECT instrument_name, table_name "
-        f"FROM sqlite_scan('{sqlite_dbfile}', 'instruments')"
+        f"FROM sqlite_scan('{sqlite_dbfile}', 'instruments')",
     )
     if sqlite_browser_dbfile is not None:
         result = con.sql(
@@ -1174,7 +1183,7 @@ def import_sqlite_into_duckdb(
             "measure_id, instrument_name, measure_name, measure_type, "
             "description, values_domain, "
             "figure_distribution_small, figure_distribution "
-            f"FROM sqlite_scan('{sqlite_browser_dbfile}', 'variable_browser')"
+            f"FROM sqlite_scan('{sqlite_browser_dbfile}', 'variable_browser')",
         )
         rows = result.fetchall()
         for row in rows:
@@ -1186,11 +1195,11 @@ def import_sqlite_into_duckdb(
             con.sql(f"INSERT INTO variable_browser VALUES({values_str})")
         con.sql(
             "INSERT INTO regression SELECT * FROM "
-            f"sqlite_scan('{sqlite_browser_dbfile}', 'regressions')"
+            f"sqlite_scan('{sqlite_browser_dbfile}', 'regressions')",
         )
         con.sql(
             "INSERT INTO regression_values SELECT * FROM "
-            f"sqlite_scan('{sqlite_browser_dbfile}', 'regression_values')"
+            f"sqlite_scan('{sqlite_browser_dbfile}', 'regression_values')",
         )
     for tbl_name in tables["instrument_values"].keys():
 
@@ -1198,7 +1207,7 @@ def import_sqlite_into_duckdb(
             "DESCRIBE("
             f"SELECT * FROM sqlite_scan('{sqlite_dbfile}', "
             f"'{tbl_name}_measure_values')"
-            ")"
+            ")",
         )
         rows = result.fetchall()
         table_cols = {}
@@ -1207,7 +1216,7 @@ def import_sqlite_into_duckdb(
 
         result = con.sql(
             f"SELECT * FROM sqlite_scan('{sqlite_dbfile}', "
-            f"'{tbl_name}_measure_values')"
+            f"'{tbl_name}_measure_values')",
         )
         rows = result.fetchall()
         for row in rows:
@@ -1223,5 +1232,5 @@ def import_sqlite_into_duckdb(
             ]
             values_str = ", ".join(values)
             con.sql(
-                f"INSERT INTO {tbl_name}_measure_values VALUES({values_str})"
+                f"INSERT INTO {tbl_name}_measure_values VALUES({values_str})",
             )

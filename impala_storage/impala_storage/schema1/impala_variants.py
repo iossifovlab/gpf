@@ -1,41 +1,43 @@
 import logging
-
+from collections.abc import Generator, Iterable
 from contextlib import closing
-from typing import List, Optional, Union, Dict, Any, Tuple, Set, \
-    Generator, Iterable, cast
+from typing import (
+    Any,
+    Dict,
+    List,
+    Optional,
+    Set,
+    Tuple,
+    Union,
+    cast,
+)
 
-import pyarrow as pa
 import pandas as pd
-
+import pyarrow as pa
 from impala.util import as_pandas
-
 from sqlalchemy import pool
 
-from dae.genomic_resources.gene_models import GeneModels
-from dae.utils.regions import Region
-from dae.variants.family_variant import FamilyVariant
 from dae.annotation.annotation_pipeline import AttributeInfo
-
-from dae.person_sets import PersonSetCollection
-
+from dae.genomic_resources.gene_models import GeneModels
 from dae.inmemory_storage.raw_variants import RawFamilyVariants
-
 from dae.pedigrees.families_data import FamiliesData
 from dae.pedigrees.loader import FamiliesLoader
-
-from dae.variants.attributes import Role, Status, Sex
-from dae.variants.variant import SummaryVariant
+from dae.person_sets import PersonSetCollection
 from dae.query_variants.query_runners import QueryResult
-from impala_storage.schema1.schema1_query_director import \
-    ImpalaQueryDirector
-from impala_storage.schema1.family_variants_query_builder import \
-    FamilyVariantsQueryBuilder
-from impala_storage.schema1.summary_variants_query_builder import \
-    SummaryVariantsQueryBuilder
-
-from impala_storage.schema1.serializers import AlleleParquetSerializer
-from impala_storage.helpers.impala_query_runner import ImpalaQueryRunner
+from dae.utils.regions import Region
+from dae.variants.attributes import Role, Sex, Status
+from dae.variants.family_variant import FamilyVariant
+from dae.variants.variant import SummaryVariant
 from impala_storage.helpers.impala_helpers import ImpalaHelpers
+from impala_storage.helpers.impala_query_runner import ImpalaQueryRunner
+from impala_storage.schema1.family_variants_query_builder import (
+    FamilyVariantsQueryBuilder,
+)
+from impala_storage.schema1.schema1_query_director import ImpalaQueryDirector
+from impala_storage.schema1.serializers import AlleleParquetSerializer
+from impala_storage.schema1.summary_variants_query_builder import (
+    SummaryVariantsQueryBuilder,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +55,7 @@ class ImpalaVariants:
         db: str,
         variants_table: str,
         pedigree_table: str,
-        gene_models: Optional[GeneModels] = None
+        gene_models: Optional[GeneModels] = None,
     ) -> None:
         super().__init__()
         assert db, db
@@ -71,7 +73,7 @@ class ImpalaVariants:
         # Temporary workaround for studies that are imported without tags
         # e.g. production data that is too large to reimport
         FamiliesLoader._build_families_tags(
-            self.families, {"ped_tags": True}
+            self.families, {"ped_tags": True},
         )
 
         self.schema = self._fetch_variant_schema()
@@ -90,7 +92,7 @@ class ImpalaVariants:
             "chromosomes": [],
             "family_bin_size": 0,
             "coding_effect_types": [],
-            "rare_boundary": 0
+            "rare_boundary": 0,
         })
         self._fetch_tblproperties()
 
@@ -121,7 +123,7 @@ class ImpalaVariants:
         return_reference: Optional[bool] = None,
         return_unknown: Optional[bool] = None,
         limit: Optional[int] = None,
-        **kwargs: Any
+        **kwargs: Any,
     ) -> Optional[ImpalaQueryRunner]:
         """Build a query selecting the appropriate summary variants."""
         # pylint: disable=too-many-arguments,too-many-locals
@@ -136,11 +138,9 @@ class ImpalaVariants:
             self.db, self.variants_table, self.pedigree_table,
             self.schema, self.table_properties,
             self.pedigree_schema, self.families,
-            self.gene_models, summary_variants_table=sv_table
+            self.gene_models, summary_variants_table=sv_table,
         )
-        if limit is None:
-            request_limit = None
-        elif limit < 0:
+        if limit is None or limit < 0:
             request_limit = None
         else:
             request_limit = limit
@@ -160,7 +160,7 @@ class ImpalaVariants:
         )
 
         deserialize_row = query_builder.create_row_deserializer(
-            self.serializer
+            self.serializer,
         )
 
         query = query_builder.product
@@ -188,7 +188,7 @@ class ImpalaVariants:
     @staticmethod
     def build_person_set_collection_query(
             person_set_collection: PersonSetCollection,
-            person_set_collection_query: Tuple[str, Set[str]]
+            person_set_collection_query: Tuple[str, Set[str]],
     ) -> Optional[Union[tuple, tuple[list[str], list[str]]]]:
         """No idea what it does. If you know please edit."""
         collection_id, selected_person_sets = person_set_collection_query
@@ -223,7 +223,7 @@ class ImpalaVariants:
             return (pedigree_columns(selected_person_sets), [])
         return (
             [],
-            pedigree_columns(available_person_sets - selected_person_sets)
+            pedigree_columns(available_person_sets - selected_person_sets),
         )
 
     def build_family_variants_query_runner(
@@ -243,7 +243,7 @@ class ImpalaVariants:
         return_reference: Optional[bool] = None,
         return_unknown: Optional[bool] = None,
         limit: Optional[int] = None,
-        pedigree_fields: Optional[tuple[list[str], list[str]]] = None
+        pedigree_fields: Optional[tuple[list[str], list[str]]] = None,
     ) -> Optional[ImpalaQueryRunner]:
         """Build a query selecting the appropriate family variants."""
         # pylint: disable=too-many-arguments,too-many-locals
@@ -264,9 +264,7 @@ class ImpalaVariants:
             do_join=do_join,
         )
         director = ImpalaQueryDirector(query_builder)
-        if limit is None:
-            request_limit = None
-        elif limit < 0:
+        if limit is None or limit < 0:
             request_limit = None
         else:
             request_limit = limit * 10
@@ -287,7 +285,7 @@ class ImpalaVariants:
             return_reference=return_reference,
             return_unknown=return_unknown,
             limit=request_limit,
-            pedigree_fields=pedigree_fields
+            pedigree_fields=pedigree_fields,
         )
 
         query = query_builder.product
@@ -334,7 +332,7 @@ class ImpalaVariants:
         return_reference: Optional[bool] = None,
         return_unknown: Optional[bool] = None,
         limit: Optional[int] = None,
-        **kwargs: Any
+        **kwargs: Any,
     ) -> Generator[SummaryVariant, None, None]:
         """Query summary variants."""
         # pylint: disable=too-many-arguments,too-many-locals
@@ -357,7 +355,7 @@ class ImpalaVariants:
             frequency_filter=frequency_filter,
             return_reference=return_reference,
             return_unknown=return_unknown,
-            limit=request_limit
+            limit=request_limit,
         )
         if runner is None:
             return
@@ -400,7 +398,7 @@ class ImpalaVariants:
         return_unknown: Optional[bool] = None,
         limit: Optional[int] = None,
         pedigree_fields: Optional[tuple[list[str], list[str]]] = None,
-        **kwargs: Any
+        **kwargs: Any,
     ) -> Generator[FamilyVariant, None, None]:
         """Query family variants."""
         # pylint: disable=too-many-arguments,too-many-locals
@@ -472,7 +470,7 @@ class ImpalaVariants:
         }
         if "not_sequenced" in self.pedigree_schema:
             columns = {
-                "not_sequenced": "not_sequenced"
+                "not_sequenced": "not_sequenced",
             }
 
         ped_df = ped_df.rename(columns=columns)

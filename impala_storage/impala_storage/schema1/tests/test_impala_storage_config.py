@@ -1,9 +1,9 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import re
+
 import pytest
 
-from impala_storage.schema1.impala_genotype_storage import \
-    ImpalaGenotypeStorage
+from impala_storage.schema1.impala_genotype_storage import ImpalaGenotypeStorage
 
 
 def test_impala_config_validation() -> None:
