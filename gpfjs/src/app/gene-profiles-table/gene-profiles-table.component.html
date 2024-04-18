@@ -105,7 +105,22 @@
 
   <ng-template #aboveTableBar>
     <div id="search-tabs-wrapper">
-      <div id="above-table-bar">
+      <div id="tabs-wrapper">
+        <button (click)="backToTable()" class="tab" [ngClass]="{ 'active-tab': currentTabString === 'all genes' }"
+          >All genes</button
+        >
+        <div class="tab" *ngFor="let tab of tabs">
+          <button class="tab" (click)="openTab(tab)" [ngClass]="{ 'active-tab': currentTabString === tab }"
+            >{{ tab }}
+            <button class="close-tab-button" (click)="closeTab(tab)">
+              <span class="material-symbols-outlined md" title="Close">close</span>
+            </button>
+          </button>
+          <div class="separator" [ngClass]="{ 'active-separator': currentTabString === tab }"></div>
+        </div>
+      </div>
+
+      <div *ngIf="!hideTable" id="above-table-bar">
         <div style="width: 270px">
           <div class="search-input-wrapper">
             <label id="gene-search-label" for="gene-search-input">
@@ -113,8 +128,7 @@
             </label>
             <input
               #searchBox
-              (keyup)="searchKeystrokes$.next(searchBox.value); backToTable()"
-              (click)="backToTable()"
+              (keyup)="searchKeystrokes$.next(searchBox.value)"
               id="gene-search-input"
               class="search-input form-control"
               autocomplete="off"
@@ -143,7 +157,7 @@
           #columnFilteringButton
           id="category-filtering-button"
           class="btn btn-default"
-          (click)="openCategoryFilterDropdown($event); backToTable()"
+          (click)="openCategoryFilterDropdown($event)"
           title="Filter categories"><span id="filter-menu-icon" class="material-symbols-outlined">menu</span>
         </button>
         </div>
@@ -160,18 +174,6 @@
           ><br />
           <span class="keybinds-tooltip-command">Compare highlights</span><span class="keybinds-tooltip-key">C</span
           ><br />
-        </div>
-      </div>
-
-      <div id="tabs-wrapper">
-        <div *ngFor="let tab of tabs">
-          <button class="tab-name" (click)="openTab(tab)" [ngClass]="{ 'active-tab': currentTabString === tab }">{{
-            tab
-          }}</button>
-          <button class="close-tab-button" (click)="closeTab(tab)">
-            <span class="material-symbols-outlined md" title="Close">close</span>
-          </button>
-          <div class="separator" [ngClass]="{ 'active-separator': currentTabString === tab }"></div>
         </div>
       </div>
     </div>

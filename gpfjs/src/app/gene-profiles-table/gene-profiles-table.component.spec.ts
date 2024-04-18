@@ -375,7 +375,7 @@ describe('GeneProfilesTableComponent', () => {
     const openTabSpy = jest.spyOn(component, 'openTab');
 
     expect(component.hideTable).toBe(false);
-    expect(component.currentTabString).toBe('');
+    expect(component.currentTabString).toBe('all genes');
 
     component.loadSingleView('POGZ');
     expect(component.tabs).toStrictEqual(new Set(['POGZ']));
@@ -390,7 +390,7 @@ describe('GeneProfilesTableComponent', () => {
     const openTabSpy = jest.spyOn(component, 'openTab');
 
     expect(component.hideTable).toBe(false);
-    expect(component.currentTabString).toBe('');
+    expect(component.currentTabString).toBe('all genes');
 
     mockActivatedRoute.snapshot = {params: {genes: 'SPAST,DYRK1A,FOXP1'}};
 
@@ -445,7 +445,7 @@ describe('GeneProfilesTableComponent', () => {
 
     component.backToTable();
     expect(component.hideTable).toBe(false);
-    expect(component.currentTabString).toBe('table');
+    expect(component.currentTabString).toBe('all genes');
     expect(window.location.pathname).toBe('/gene-profiles');
   });
 

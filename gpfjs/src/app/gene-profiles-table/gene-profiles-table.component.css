@@ -370,37 +370,30 @@
 #tabs-wrapper {
   display: flex;
   flex-direction: row;
-  gap: 15px;
+  gap: 10px;
+  padding-bottom: 10px;
+  padding-top: 10px;
 }
 
 #search-tabs-wrapper {
-  display: flex;
   align-items: center;
   gap: 15px;
-  padding-bottom: 20px;
   background: #fff;
   flex-wrap: wrap;
 }
 
-.tab-name {
+.tab {
   background-color: transparent;
-  border: none;
   color: #2a6395;
-  font-size: 18px;
-  padding-bottom: 0;
-  padding-right: 0;
+  border-radius: 0.25rem;
+  border-color: transparent;
+  font-size: 16px;
+  height: 40px;
 }
 
 .active-tab {
-  font-weight: bold;
-}
-
-.separator {
-  border-bottom: 2px solid white;
-}
-
-.active-separator {
-  border-bottom: 2px solid #2a6395;
+  background-color: #2a6395;
+  color: #fff;
 }
 
 .close-tab-button {
@@ -412,6 +405,6 @@
   padding-top: 4px;
 }
 
-.close-tab-button:hover {
-  color: rgb(87, 155, 211);
+.active-tab > .close-tab-button {
+  color: white;
 }
