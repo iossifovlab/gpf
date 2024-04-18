@@ -208,17 +208,17 @@ EOT
 
     # ruff
     build_run_detached bash -c '
-      cd /wd; 
+      cd /wd;
       /opt/conda/bin/conda run --no-capture-output -n gpf ruff check \
         --exit-zero \
-        --format=pylint \
+        --output-format=pylint \
         --output-file=/wd/results/ruff_report . || true'
 
     # pylint
     build_run_detached bash -c '
-      cd /wd/; 
+      cd /wd/;
       wdae_files=$(find wdae/wdae -name "*.py");
-      /opt/conda/bin/conda run --no-capture-output -n gpf 
+      /opt/conda/bin/conda run --no-capture-output -n gpf
       pylint dae/dae impala_storage/impala_storage  $wdae_files -f parseable --reports=no -j 4 \
           --exit-zero > /wd/results/pylint_gpf_report || true'
 
