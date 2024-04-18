@@ -16,6 +16,7 @@ from utils.query_params import parse_query_params
 
 from dae.effect_annotation.effect import EffectTypesMixin
 from dae.pheno.pheno_data import Measure
+from dae.pheno.common import MeasureType
 from dae.pheno_tool.tool import PhenoResult, PhenoTool, PhenoToolHelper
 
 from .pheno_tool_adapter import PhenoToolAdapter, RemotePhenoToolAdapter
@@ -306,6 +307,8 @@ class PhenoToolMeasures(QueryDatasetView):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         measure_type = params.get("measureType", None)
+        if measure_type is not None:
+            measure_type = MeasureType.from_str(measure_type)
 
         result = dataset.phenotype_data.get_measures(
             instrument,

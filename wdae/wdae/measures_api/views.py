@@ -1,11 +1,12 @@
 import logging
-from typing import Any, cast
-
+from typing import cast, Any
 import numpy as np
-from query_base.query_base import QueryDatasetView
+
 from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
+
+from query_base.query_base import QueryDatasetView
 
 from dae.pheno.common import MeasureType
 
@@ -29,7 +30,7 @@ class PhenoMeasuresView(QueryDatasetView):
         assert measure_type in {"continuous", "categorical"}
 
         measures = dataset.phenotype_data.get_measures(
-            measure_type=measure_type,
+            measure_type=MeasureType.from_str(measure_type)
         )
         res: list[dict[str, Any]]
         if measure_type == "continuous":
@@ -45,7 +46,7 @@ class PhenoMeasuresView(QueryDatasetView):
             res = [
                 {
                     "measure": m.measure_id,
-                    "domain": cast(str, m.values_domain).split(","),
+                    "domain": cast(str, m.values_domain).split(",")
                 }
                 for m in list(measures.values())
             ]
@@ -75,16 +76,16 @@ class PhenoMeasureHistogramView(QueryDatasetView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
         df = dataset.phenotype_data.get_people_measure_values_df(
-            [pheno_measure],
+            [pheno_measure]
         )
 
         m = df[pheno_measure]
         bars, bins = np.histogram(
-            df[np.logical_not(np.isnan(m.values))][pheno_measure].values, 25,
+            df[np.logical_not(np.isnan(m.values))][pheno_measure].values, 25
         )
 
         m_range = cast(
-            float, measure.max_value,
+            float, measure.max_value
         ) - cast(float, measure.min_value)
 
         result = {
@@ -115,7 +116,7 @@ class PhenoMeasurePartitionsView(QueryDatasetView):
         assert dataset.phenotype_data.has_measure(pheno_measure)
 
         df = dataset.phenotype_data.get_people_measure_values_df(
-            [pheno_measure],
+            [pheno_measure]
         )
 
         try:
@@ -163,5 +164,5 @@ class PhenoMeasureRegressionsView(QueryDatasetView):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         return Response(
-            regressions, status=status.HTTP_200_OK,
+            regressions, status=status.HTTP_200_OK
         )
