@@ -1,14 +1,14 @@
 from collections import defaultdict
 from typing import Any, Optional, cast
 
-from dae.person_sets import PersonSetCollection
-from dae.pedigrees.family import Family
 from dae.pedigrees.families_data import FamiliesData
+from dae.pedigrees.family import Family
+from dae.person_sets import PersonSetCollection
 
 
 def get_family_pedigree(
     family: Family,
-    person_set_collection: PersonSetCollection
+    person_set_collection: PersonSetCollection,
 ) -> list:
     return [
         (
@@ -29,14 +29,14 @@ def get_family_pedigree(
 
 
 def get_family_type(
-    family: Family, person_to_set: dict
+    family: Family, person_to_set: dict,
 ) -> tuple:
     """Transform a family into a tuple of strings describing members."""
     family_type = []
     # get family size
     family_type.append(str(len(family.members_in_order)))
     members_by_role = sorted(
-        family.members_in_order, key=lambda p: str(p.role)
+        family.members_in_order, key=lambda p: str(p.role),
     )
     members_by_role_and_sex = sorted(members_by_role, key=lambda p: str(p.sex))
     for person in members_by_role_and_sex:
@@ -46,7 +46,7 @@ def get_family_type(
 
         set_value = person_to_set[person.fpid]
         family_type.append(
-            f"{set_value}.{person.role}.{person.sex}.{person.status}"
+            f"{set_value}.{person.role}.{person.sex}.{person.status}",
         )
     return tuple(family_type)
 
@@ -72,7 +72,7 @@ class FamilyCounter:
     @staticmethod
     def from_family(
         family: Family,
-        pedigree: list, label: Optional[int] = None
+        pedigree: list, label: Optional[int] = None,
     ) -> "FamilyCounter":
         return FamilyCounter({
             "families": [family.family_id],
@@ -81,7 +81,7 @@ class FamilyCounter:
                 label if label is not None else family.family_id
             ),
             "tags": family.tag_labels,
-            "counter_id": 0
+            "counter_id": 0,
         })
 
     def to_dict(self, full: bool = False) -> dict[str, Any]:
@@ -90,7 +90,7 @@ class FamilyCounter:
             "pedigree": self.pedigree,
             "pedigrees_count": self.pedigrees_count,
             "tags": self.tags,
-            "counter_id": self.counter_id
+            "counter_id": self.counter_id,
         }
 
         if full:
@@ -124,11 +124,11 @@ class FamiliesGroupCounters:
                 family_counter = FamilyCounter({
                     "families": [family.family_id],
                     "pedigree": get_family_pedigree(
-                        family, person_set_collection
+                        family, person_set_collection,
                     ),
                     "pedigrees_count": family.family_id,
                     "tags": family.tag_labels,
-                    "counter_id": idx
+                    "counter_id": idx,
                 })
                 counters[(family.family_id,)] = family_counter
         else:
@@ -147,8 +147,8 @@ class FamiliesGroupCounters:
             families_to_types = dict(
                 sorted(
                     families_to_types.items(),
-                    key=lambda item: len(item[1]), reverse=True
-                )
+                    key=lambda item: len(item[1]), reverse=True,
+                ),
             )
 
             for idx, items in enumerate(families_to_types.items()):
@@ -159,11 +159,11 @@ class FamiliesGroupCounters:
                 counter = FamilyCounter({
                     "families": [f.family_id for f in families_of_type],
                     "pedigree": get_family_pedigree(
-                        family, person_set_collection
+                        family, person_set_collection,
                     ),
                     "tags": family.tag_labels,
                     "pedigrees_count": pedigree_label,
-                    "counter_id": idx
+                    "counter_id": idx,
                 })
                 counters[family_type] = counter
 
@@ -176,7 +176,7 @@ class FamiliesGroupCounters:
             "legend": [
                 {"id": domain.id, "name": domain.name, "color": domain.color}
                 for domain in person_set_collection.person_sets.values()
-            ]
+            ],
         }
 
         return FamiliesGroupCounters(json)
@@ -189,5 +189,5 @@ class FamiliesGroupCounters:
                 counter.to_dict(full=full)
                 for counter in self.counters.values()
             ],
-            "legend": self.legend
+            "legend": self.legend,
         }

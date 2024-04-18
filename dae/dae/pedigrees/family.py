@@ -2,15 +2,13 @@
 
 from __future__ import annotations
 
-import logging
 import enum
-
-from typing import Optional, Any, Iterable, cast, Union
-
+import logging
+from collections.abc import Iterable
+from typing import Any, Optional, Union, cast
 
 from dae.utils.helpers import isnan
 from dae.variants.attributes import Role, Sex, Status
-
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +26,7 @@ PEDIGREE_COLUMN_NAMES = {
     "generated": "generated",
     "proband": "proband",
     "not_sequenced": "not_sequenced",
-    "missing": "missing"
+    "missing": "missing",
 }
 
 
@@ -436,7 +434,7 @@ def get_pedigree_column_names(column_names: set[str]) -> list[str]:
     )
     extention_columns = column_names.difference(set(columns))
     extention_columns = extention_columns.difference(
-        set(["sample_index"])
+        set(["sample_index"]),
     )
     columns.extend(sorted(extention_columns))
     return columns
@@ -522,7 +520,7 @@ class Family:
             "person_ids": self.members_ids,
             "samples_index": self._samples_index,
             "family_type": self.family_type.name,
-            "tags": {tag.label for tag in self.tags}
+            "tags": {tag.label for tag in self.tags},
         }
 
     def get_columns(self) -> list[str]:
@@ -557,7 +555,7 @@ class Family:
             self._members_in_order = list(
                 filter(
                     lambda m: not m.missing,
-                    self.persons.values())
+                    self.persons.values()),
             )
         return self._members_in_order
 
@@ -606,7 +604,7 @@ class Family:
                 Role.maternal_grandfather,
                 Role.maternal_grandmother,
                 Role.paternal_grandfather,
-                Role.paternal_grandmother
+                Role.paternal_grandmother,
             ) for person in self.persons.values())
 
         unaffected_parents = all(
@@ -633,7 +631,7 @@ class Family:
         return FamilyType.OTHER
 
     def members_index(
-        self, person_ids: Iterable[str]
+        self, person_ids: Iterable[str],
     ) -> list[int]:
         index = []
         for pid in person_ids:
@@ -646,7 +644,7 @@ class Family:
         return self.persons.get(person_id, None)
 
     def get_members_with_roles(
-        self, roles: list[Union[str, Role]]
+        self, roles: list[Union[str, Role]],
     ) -> list[Person]:
         if not isinstance(roles[0], Role):
             assert all(isinstance(role, str) for role in roles)
@@ -654,10 +652,10 @@ class Family:
         return list(filter(lambda m: m.role in roles, self.members_in_order))
 
     def get_members_with_statuses(
-        self, statuses: list[Status]
+        self, statuses: list[Status],
     ) -> list[Person]:
         if not isinstance(statuses[0], Status):
             statuses = [Status.from_name(status) for status in statuses]
         return list(
-            filter(lambda m: m.status in statuses, self.members_in_order)
+            filter(lambda m: m.status in statuses, self.members_in_order),
         )

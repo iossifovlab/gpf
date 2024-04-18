@@ -5,15 +5,17 @@ from typing import Any, Optional
 
 from dae.annotation.annotatable import Annotatable
 from dae.annotation.annotation_factory import AnnotationConfigParser
-from dae.annotation.annotation_pipeline import AnnotationPipeline
-from dae.annotation.annotation_pipeline import Annotator
-from dae.annotation.annotation_pipeline import AnnotatorInfo
-
+from dae.annotation.annotation_pipeline import (
+    AnnotationPipeline,
+    Annotator,
+    AnnotatorInfo,
+)
 from dae.gene_scores.gene_scores import build_gene_score_from_resource
 from dae.genomic_resources import GenomicResource
-from dae.genomic_resources.aggregators import build_aggregator
-from dae.genomic_resources.aggregators import validate_aggregator
-
+from dae.genomic_resources.aggregators import (
+    build_aggregator,
+    validate_aggregator,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -60,14 +62,14 @@ class GeneScoreAnnotator(Annotator):
         info.resources += [gene_score_resource]
         if not info.attributes:
             info.attributes = AnnotationConfigParser.parse_raw_attributes(
-                self.gene_score.get_all_scores()
+                self.gene_score.get_all_scores(),
             )
 
         self.aggregators: list[str] = []
 
         for attribute_config in info.attributes:
             score_def = self.gene_score.score_definitions.get(
-                attribute_config.source
+                attribute_config.source,
             )
             if score_def is None:
                 message = f"The gene score {attribute_config.source} is " + \
@@ -104,7 +106,7 @@ class GeneScoreAnnotator(Annotator):
         attributes = {}
         for attr, aggregator_type in zip(self.attributes, self.aggregators):
             attributes[attr.name] = self.aggregate_gene_values(
-                attr.source, genes, aggregator_type
+                attr.source, genes, aggregator_type,
             )
         return attributes
 
@@ -118,7 +120,7 @@ class GeneScoreAnnotator(Annotator):
         for symbol in gene_symbols:
             aggregator.add(
                 self.gene_score.get_gene_value(score_id, symbol),
-                key=symbol
+                key=symbol,
             )
 
         return aggregator.get_final()

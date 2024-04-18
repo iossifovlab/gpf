@@ -1,15 +1,19 @@
 import logging
-from typing import Any, Optional, Tuple, Set
+from typing import Any, Optional, Set, Tuple
 
 from dae.annotation.annotatable import Annotatable
 from dae.annotation.annotation_factory import AnnotationConfigParser
-from dae.annotation.annotation_pipeline import AnnotationPipeline
-from dae.annotation.annotation_pipeline import Annotator
-from dae.annotation.annotation_pipeline import AnnotatorInfo
+from dae.annotation.annotation_pipeline import (
+    AnnotationPipeline,
+    Annotator,
+    AnnotatorInfo,
+)
 from dae.annotation.annotator_base import AnnotatorBase
-from dae.genomic_resources.gene_models import GeneModels, \
-    build_gene_models_from_resource, TranscriptModel
-
+from dae.genomic_resources.gene_models import (
+    GeneModels,
+    TranscriptModel,
+    build_gene_models_from_resource,
+)
 from dae.genomic_resources.genomic_context import get_genomic_context
 from dae.utils.regions import Region
 
@@ -46,7 +50,7 @@ class SimpleEffectAnnotator(AnnotatorBase):
         super().__init__(pipeline, info, {
             "effect": ("str", "The worst effect."),
             "genes": ("str", "The affected genes."),
-            "gene_list": ("objects", "List of all genes.")
+            "gene_list": ("objects", "List of all genes."),
         })
 
         self.gene_models = gene_models
@@ -69,11 +73,11 @@ class SimpleEffectAnnotator(AnnotatorBase):
         return {
             "effect": effect,
             "genes": genes,
-            "gene_list": gene_list
+            "gene_list": gene_list,
         }
 
     def cds_intron_regions(
-        self, transcript: TranscriptModel
+        self, transcript: TranscriptModel,
     ) -> list[Region]:
         """Return whether region is CDS intron."""
         region: list[Region] = []
@@ -129,7 +133,7 @@ class SimpleEffectAnnotator(AnnotatorBase):
     def call_region(
         self, chrom: str, beg: int, end: int,
         transcripts: list[TranscriptModel],
-        func_name: str, classification: str
+        func_name: str, classification: str,
     ) -> Optional[Tuple[str, Set[str]]]:
         """Call a region with a specific classification."""
         genes = set()
@@ -153,7 +157,7 @@ class SimpleEffectAnnotator(AnnotatorBase):
         return None
 
     def run_annotate(
-        self, chrom: str, beg: int, end: int
+        self, chrom: str, beg: int, end: int,
     ) -> Tuple[str, Set[str]]:
         """Return classification with a set of affected genes."""
         assert self.gene_models.utr_models is not None

@@ -1,20 +1,20 @@
 from collections import Counter
 from typing import Any, Dict, List
 
-from studies.study_wrapper import StudyWrapper
 from remote.rest_api_client import RESTClient
+from studies.study_wrapper import StudyWrapper
 
-from dae.variants.attributes import Sex
 from dae.effect_annotation.effect import EffectTypesMixin
 from dae.pheno_tool.tool import PhenoResult, PhenoTool, PhenoToolHelper
+from dae.variants.attributes import Sex
 
 
 class PhenoToolAdapterBase:
 
     def calc_by_effect(
-        self, effect: str, people_variants: Counter
+        self, effect: str, people_variants: Counter,
     ) -> dict[str, Any]:
-        raise NotImplementedError()
+        raise NotImplementedError
 
 
 class PhenoToolAdapter(PhenoToolAdapterBase):
@@ -23,7 +23,7 @@ class PhenoToolAdapter(PhenoToolAdapterBase):
     def __init__(
         self, study_wrapper: StudyWrapper,
         pheno_tool: PhenoTool,
-        pheno_tool_helper: PhenoToolHelper
+        pheno_tool_helper: PhenoToolHelper,
     ) -> None:
         self.study_wrapper = study_wrapper
         self.pheno_tool = pheno_tool
@@ -31,7 +31,7 @@ class PhenoToolAdapter(PhenoToolAdapterBase):
 
     def get_result_by_sex(
         self, result: Dict[str, PhenoResult],
-        sex: str
+        sex: str,
     ) -> dict[str, Any]:
         return {
             "negative": {
@@ -48,7 +48,7 @@ class PhenoToolAdapter(PhenoToolAdapterBase):
         }
 
     def calc_by_effect(
-        self, effect: str, people_variants: Counter
+        self, effect: str, people_variants: Counter,
     ) -> dict[str, Any]:
         result = self.pheno_tool.calc(people_variants, sex_split=True)
         assert isinstance(result, dict)
@@ -61,7 +61,7 @@ class PhenoToolAdapter(PhenoToolAdapterBase):
 
     @staticmethod
     def align_na_results(
-        results: List[Dict[str, Any]]
+        results: List[Dict[str, Any]],
     ) -> None:
         """Align NA results."""
         for result in results:
@@ -87,7 +87,7 @@ class PhenoToolAdapter(PhenoToolAdapterBase):
         return f"{measure_id} ~ {' + '.join(normalize_by)}"
 
     def calc_variants(
-        self, data: Dict[str, Any], effect_groups: list[str]
+        self, data: Dict[str, Any], effect_groups: list[str],
     ) -> dict[str, Any]:
         """Run pheno tool on given data."""
         data = self.study_wrapper.transform_request(data)
@@ -98,7 +98,7 @@ class PhenoToolAdapter(PhenoToolAdapterBase):
 
         results = [
             self.calc_by_effect(
-                effect, people_variants.get(effect, Counter())
+                effect, people_variants.get(effect, Counter()),
             )
             for effect in effect_groups
         ]
@@ -120,13 +120,13 @@ class RemotePhenoToolAdapter(PhenoToolAdapterBase):
         self.dataset_id = dataset_id
 
     def calc_variants(
-        self, data: Dict[str, Any], effect_groups: list[str]
+        self, data: Dict[str, Any], effect_groups: list[str],
     ) -> dict[str, Any]:
         # pylint: disable=W0613
         data["datasetId"] = self.dataset_id
         return self.rest_client.post_pheno_tool(data)  # type: ignore
 
     def calc_by_effect(
-        self, effect: str, people_variants: Counter
+        self, effect: str, people_variants: Counter,
     ) -> dict[str, Any]:
-        raise NotImplementedError()
+        raise NotImplementedError

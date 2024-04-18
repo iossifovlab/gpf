@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from typing import cast, Optional
+from typing import Optional, cast
 
-import yaml
 import numpy as np
+import yaml
 
 from dae.genomic_resources.statistics.base_statistic import Statistic
 
@@ -30,7 +30,7 @@ class MinMaxValue(Statistic):
             raise ValueError("unexpected type of statistics to merge with")
         if self.score_id != other.score_id:
             raise ValueError(
-                "Attempting to merge min max values of different scores!"
+                "Attempting to merge min max values of different scores!",
             )
         if np.isnan(self.min):
             self.min = min(other.min, self.min)
@@ -43,7 +43,7 @@ class MinMaxValue(Statistic):
 
     def serialize(self) -> str:
         return cast(str, yaml.dump(
-            {"score_id": self.score_id, "min": self.min, "max": self.max})
+            {"score_id": self.score_id, "min": self.min, "max": self.max}),
         )
 
     @staticmethod

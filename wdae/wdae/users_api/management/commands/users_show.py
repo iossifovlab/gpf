@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand, CommandError
+
 from .export_base import ExportUsersBase
 
 
@@ -16,12 +17,10 @@ class Command(BaseCommand, ExportUsersBase):
             groups = ",".join(self.get_visible_groups(user))
 
             print(
-                "User email: {}\n"
-                "name: {}\n"
-                "groups: {}\n"
-                "password: {}".format(
-                    user.email, user.name, groups, user.password
-                )
+                f"User email: {user.email}\n"
+                f"name: {user.name}\n"
+                f"groups: {groups}\n"
+                f"password: {user.password}",
             )
         except UserModel.DoesNotExist:
             raise CommandError("User not found")

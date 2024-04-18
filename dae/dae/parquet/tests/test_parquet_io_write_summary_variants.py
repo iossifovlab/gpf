@@ -4,29 +4,27 @@ from typing import Any
 
 import pytest
 
-from dae.utils.regions import Region
 from dae.duckdb_storage.duckdb_genotype_storage import DuckDbGenotypeStorage
-
-from dae.genotype_storage.genotype_storage_registry import \
-    get_genotype_storage_factory
-
+from dae.genotype_storage.genotype_storage_registry import (
+    get_genotype_storage_factory,
+)
 from dae.gpf_instance import GPFInstance
 from dae.studies.study import GenotypeData
-
 from dae.testing import setup_pedigree, setup_vcf, vcf_study
 from dae.testing.t4c8_import import t4c8_gpf
+from dae.utils.regions import Region
 
 
 @pytest.fixture(scope="module")
 def duckdb_storage(
-    tmp_path_factory: pytest.TempPathFactory
+    tmp_path_factory: pytest.TempPathFactory,
 ) -> DuckDbGenotypeStorage:
     storage_path = tmp_path_factory.mktemp("duckdb_storage")
     storage_config = {
         "id": "duckdb_test",
         "storage_type": "duckdb2",
         "db": "duckdb_storage/test.duckdb",
-        "base_dir": str(storage_path)
+        "base_dir": str(storage_path),
     }
     storage_factory = get_genotype_storage_factory("duckdb2")
     assert storage_factory is not None
@@ -48,7 +46,7 @@ def t4c8_instance(
 
 @pytest.fixture(scope="module")
 def t4c8_study_partitioned(
-    t4c8_instance: GPFInstance
+    t4c8_instance: GPFInstance,
 ) -> GenotypeData:
     root_path = pathlib.Path(t4c8_instance.dae_dir)
     ped_path = setup_pedigree(
@@ -77,7 +75,7 @@ chr1   90   .  G   C,GA .    .      .    GT     0/1  0/2  0/2 0/1  0/2  0/1
 chr1   100  .  T   G,TA .    .      .    GT     0/1  0/1  0/0 0/2  0/2  0/0
 chr1   119  .  A   G,C  .    .      .    GT     0/0  0/2  0/2 0/1  0/2  0/1
 chr1   122  .  A   C,AC .    .      .    GT     0/1  0/1  0/1 0/2  0/2  0/2
-        """)  # noqa
+        """)
 
     project_config_update = {
         "partition_description": {
@@ -94,11 +92,11 @@ chr1   122  .  A   C,AC .    .      .    GT     0/1  0/1  0/1 0/2  0/2  0/2
                     "noStart",
                     "missense",
                     "synonymous",
-                ]
+                ],
             },
             "family_bin": {
                 "family_bin_size": 2,
-            }
+            },
         },
     }
 
@@ -112,7 +110,7 @@ chr1   122  .  A   C,AC .    .      .    GT     0/1  0/1  0/1 0/2  0/2  0/2
 
 
 def test_summary_variants_simple(
-    t4c8_study_partitioned: GenotypeData
+    t4c8_study_partitioned: GenotypeData,
 ) -> None:
     svs = list(t4c8_study_partitioned.query_summary_variants())
     assert len(svs) == 6
@@ -121,17 +119,17 @@ def test_summary_variants_simple(
 @pytest.mark.parametrize("region, attrs", [
     (Region("chr1", 4, 4), {
         "summary_index": 0,
-        "bucket_index": 100000
+        "bucket_index": 100000,
     }),
     (Region("chr1", 54, 54), {
         "summary_index": 1,
-        "bucket_index": 100000
+        "bucket_index": 100000,
     }),
 ])
 def test_summary_variants_deserialization(
     t4c8_study_partitioned: GenotypeData,
     region: Region,
-    attrs: dict[str, Any]
+    attrs: dict[str, Any],
 ) -> None:
     svs = list(t4c8_study_partitioned.query_summary_variants(regions=[region]))
     assert len(svs) == 1
@@ -161,7 +159,7 @@ def test_summary_variants_deserialization(
             "bucket_index": 100000,
             "allele_index": 2,
             "sj_index": 1000000000000000002,
-        }
+        },
     ]),
     (Region("chr1", 100, 100), [
         {
@@ -181,7 +179,7 @@ def test_summary_variants_deserialization(
             "bucket_index": 100000,
             "allele_index": 2,
             "sj_index": 1_000_000_000_000_030_002,
-        }
+        },
     ]),
     (Region("chr1", 122, 123), [
         {
@@ -201,13 +199,13 @@ def test_summary_variants_deserialization(
             "bucket_index": 100000,
             "allele_index": 2,
             "sj_index": 1_000_000_000_000_050_002,
-        }
+        },
     ]),
 ])
 def test_summary_alleles_deserialization(
     t4c8_study_partitioned: GenotypeData,
     region: Region,
-    attrs: list[dict[str, Any]]
+    attrs: list[dict[str, Any]],
 ) -> None:
     svs = list(t4c8_study_partitioned.query_summary_variants(regions=[region]))
     assert len(svs) == 1

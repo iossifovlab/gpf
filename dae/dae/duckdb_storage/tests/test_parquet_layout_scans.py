@@ -1,21 +1,20 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
-from typing import cast, Optional
+from typing import Optional, cast
 
 import pytest
 import pytest_mock
 
-from dae.genotype_storage.genotype_storage_registry import \
-    get_genotype_storage_factory
-from dae.duckdb_storage.duckdb_genotype_storage import \
-    DuckDbGenotypeStorage
-
+from dae.duckdb_storage.duckdb_genotype_storage import DuckDbGenotypeStorage
+from dae.genotype_storage.genotype_storage_registry import (
+    get_genotype_storage_factory,
+)
+from dae.studies.study import GenotypeData
 from dae.testing import setup_pedigree, setup_vcf, vcf_study
 from dae.testing.foobar_import import foobar_gpf
-from dae.studies.study import GenotypeData
 
 
-@pytest.fixture
+@pytest.fixture()
 def duckdb_storage_db(
         tmp_path_factory: pytest.TempPathFactory) -> DuckDbGenotypeStorage:
     storage_path = tmp_path_factory.mktemp("duckdb_storage")
@@ -23,7 +22,7 @@ def duckdb_storage_db(
         "id": "dev_duckdb_storage",
         "storage_type": "duckdb",
         "db": "duckdb_genotype_storage/dev_storage.db",
-        "base_dir": storage_path
+        "base_dir": storage_path,
     }
     storage_factory = get_genotype_storage_factory("duckdb")
     genotype_storage = cast(
@@ -32,7 +31,7 @@ def duckdb_storage_db(
     return genotype_storage
 
 
-@pytest.fixture
+@pytest.fixture()
 def duckdb_storage_parquet(
         tmp_path_factory: pytest.TempPathFactory) -> DuckDbGenotypeStorage:
     storage_path = tmp_path_factory.mktemp("duckdb_storage")
@@ -40,7 +39,7 @@ def duckdb_storage_parquet(
         "id": "dev_duckdb_storage",
         "storage_type": "duckdb",
         "studies_dir": "duckdb_genotype_storage",
-        "base_dir": str(storage_path)
+        "base_dir": str(storage_path),
     }
     storage_factory = get_genotype_storage_factory("duckdb")
     genotype_storage = cast(
@@ -104,7 +103,7 @@ def test_base_dir_join_parquet_scan(
     mocker.patch.object(
         duckdb_storage_parquet,
         "get_base_dir",
-        return_value=base_dir
+        return_value=base_dir,
     )
     res = duckdb_storage_parquet\
         ._base_dir_join_parquet_scan_or_table(parquet_scan)

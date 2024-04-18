@@ -1,14 +1,14 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
 from typing import cast
+
 import pytest
 
-from dae.utils.regions import Region
-from dae.testing import setup_pedigree, setup_vcf, \
-    vcf_study
-from dae.testing.alla_import import alla_gpf
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.studies.study import GenotypeData
+from dae.testing import setup_pedigree, setup_vcf, vcf_study
+from dae.testing.alla_import import alla_gpf
+from dae.utils.regions import Region
 from dae.variants.attributes import Inheritance
 from dae.variants.family_variant import FamilyAllele
 
@@ -58,11 +58,11 @@ chrA   6   .  A   G,C .    .      .    GT     0/0  2/2  2/2 0/0  0/0  0/0 0/0
                     "include_unknown_person_genotypes": True,
                     "denovo_mode": "denovo",
                     "omission_mode": "omission",
-                }
+                },
             },
             "processing_config": {
-                "include_reference": True
-            }
+                "include_reference": True,
+            },
         })
     return study
 

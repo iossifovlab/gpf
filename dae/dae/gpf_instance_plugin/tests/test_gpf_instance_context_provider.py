@@ -5,23 +5,26 @@ from typing import Callable
 import pytest
 import pytest_mock
 
-from dae.genomic_resources.genomic_context import GenomicContext, \
-    get_genomic_context
+from dae.genomic_resources.genomic_context import (
+    GenomicContext,
+    get_genomic_context,
+)
 from dae.gpf_instance import GPFInstance
-from dae.gpf_instance_plugin.gpf_instance_context_plugin import \
-    init_gpf_instance_genomic_context_plugin
+from dae.gpf_instance_plugin.gpf_instance_context_plugin import (
+    init_gpf_instance_genomic_context_plugin,
+)
 
 
-@pytest.fixture
+@pytest.fixture()
 def context_fixture(
     fixture_dirname: Callable[[str], str],
-    mocker: pytest_mock.MockerFixture
+    mocker: pytest_mock.MockerFixture,
 ) -> GenomicContext:
     conf_dir = fixture_dirname("")
     home_dir = os.environ["HOME"]
     mocker.patch("os.environ", {
         "DAE_DB_DIR": conf_dir,
-        "HOME": home_dir
+        "HOME": home_dir,
     })
     mocker.patch(
         "dae.genomic_resources.genomic_context._REGISTERED_CONTEXT_PROVIDERS",
@@ -47,7 +50,7 @@ def test_gpf_instance_genomic_context_plugin(
 
 
 def test_gpf_instance_context_reference_genome(
-    context_fixture: GenomicContext
+    context_fixture: GenomicContext,
 ) -> None:
 
     genome = context_fixture.get_reference_genome()
@@ -58,7 +61,7 @@ def test_gpf_instance_context_reference_genome(
 
 
 def test_gpf_instance_context_gene_models(
-    context_fixture: GenomicContext
+    context_fixture: GenomicContext,
 ) -> None:
 
     gene_models = context_fixture.get_gene_models()
@@ -70,20 +73,20 @@ def test_gpf_instance_context_gene_models(
 
 
 def test_gpf_instance_context_keys(
-    context_fixture: GenomicContext
+    context_fixture: GenomicContext,
 ) -> None:
     keys = context_fixture.get_context_keys()
     assert len(keys) == 5
     assert keys == {
         "gene_models", "reference_genome",
-        "genomic_resources_repository", "annotation_pipeline", "gpf_instance"
+        "genomic_resources_repository", "annotation_pipeline", "gpf_instance",
     }
 
 
 def test_genomic_context_fixture(
     gpf_instance_genomic_context_fixture: Callable[
         [GPFInstance], GenomicContext],
-    t4c8_instance: GPFInstance
+    t4c8_instance: GPFInstance,
 ) -> None:
     context = gpf_instance_genomic_context_fixture(t4c8_instance)
     assert context is not None

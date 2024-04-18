@@ -1,9 +1,10 @@
-from typing import Any, Optional, Iterable
+from collections.abc import Iterable
+from typing import Any, Optional
 
-from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.db import transaction
+from rest_framework import serializers
 
 from .models import WdaeUser
 from .validators import SomeSuperuserLeftValidator
@@ -20,7 +21,7 @@ class CreatableSlugRelatedField(serializers.SlugRelatedField):
     def to_internal_value(self, data: dict) -> Any:
         try:
             return self.get_queryset().get_or_create(
-                **{self.slug_field: data}
+                **{self.slug_field: data},
             )[0]
         except serializers.ObjectDoesNotExist:
             self.fail("does_not_exist", slug_name=self.slug_field, value=data)
@@ -56,7 +57,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     groups = serializers.ListSerializer(
         child=CreatableSlugRelatedField(
-            slug_field="name", queryset=Group.objects.all()
+            slug_field="name", queryset=Group.objects.all(),
         ),
         validators=[SomeSuperuserLeftValidator()],
         default=[],
@@ -68,14 +69,14 @@ class UserSerializer(serializers.ModelSerializer):
         required=False,
         read_only=True,
         source="allowed_datasets",
-        child=DatasetSerializer()
+        child=DatasetSerializer(),
     )
 
     class Meta:  # pylint: disable=too-few-public-methods
         model = get_user_model()
         fields = (
             "id", "email", "name",
-            "hasPassword", "groups", "allowedDatasets",)
+            "hasPassword", "groups", "allowedDatasets")
 
     def run_validation(self, data: dict) -> Any:  # type: ignore
         # pylint: disable=signature-differs
@@ -92,7 +93,7 @@ class UserSerializer(serializers.ModelSerializer):
         unknown_keys = set(self.initial_data.keys()) - set(self.fields.keys())
         if unknown_keys:
             raise serializers.ValidationError(
-                f"Got unknown fields: {unknown_keys}"
+                f"Got unknown fields: {unknown_keys}",
             )
 
         return super().validate(attrs)
@@ -107,8 +108,7 @@ class UserSerializer(serializers.ModelSerializer):
     def _update_groups(user: WdaeUser, new_groups: Iterable[Group]) -> None:
         with transaction.atomic():
             to_remove = set()
-            for group in user.groups.all():
-                to_remove.add(group.id)
+            to_remove.update(group.id for group in user.groups.all())
 
             to_add = set()
             for group in new_groups:
@@ -151,7 +151,7 @@ class UserSerializer(serializers.ModelSerializer):
         response = super().to_representation(instance)
         response["groups"] = sorted(
             response["groups"],
-            key=lambda grp: "" if grp in ["admin", "any_user"] else grp
+            key=lambda grp: "" if grp in ["admin", "any_user"] else grp,
         )
         return response
 

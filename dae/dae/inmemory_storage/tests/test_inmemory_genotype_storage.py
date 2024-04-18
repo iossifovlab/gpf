@@ -4,8 +4,9 @@ import re
 import pytest
 
 from dae.import_tools.cli import run_with_project
-from dae.inmemory_storage.inmemory_genotype_storage import \
-    InmemoryGenotypeStorage
+from dae.inmemory_storage.inmemory_genotype_storage import (
+    InmemoryGenotypeStorage,
+)
 
 
 @pytest.fixture(scope="module")
@@ -28,7 +29,7 @@ def test_build_backend(
 
     backend = filesystem_genotype_storage.build_backend(
         study_config, gpf_instance.reference_genome,
-        gpf_instance.gene_models
+        gpf_instance.gene_models,
     )
 
     assert len(backend.families) == 1
@@ -42,7 +43,7 @@ def test_query_summary_variants(
     gpf_instance = simple_project.get_gpf_instance()
     backend = filesystem_genotype_storage.build_backend(
         study_config, gpf_instance.reference_genome,
-        gpf_instance.gene_models
+        gpf_instance.gene_models,
     )
 
     assert len(list(backend.query_summary_variants())) == 2
@@ -60,7 +61,7 @@ def test_storage_type(filesystem_genotype_storage):
     ],
 )
 def test_get_data_dir(
-    fixture_dirname, filesystem_genotype_storage, expected_path, build_path
+    fixture_dirname, filesystem_genotype_storage, expected_path, build_path,
 ):
     assert filesystem_genotype_storage.get_data_dir(
         *build_path).endswith(expected_path)
@@ -70,7 +71,7 @@ def test_create_filesystem_storage(tmp_path):
     config = {
         "storage_type": "inmemory",
         "id": "aaaa",
-        "dir": str(tmp_path)
+        "dir": str(tmp_path),
     }
     storage = InmemoryGenotypeStorage(config)
     assert storage is not None
@@ -80,7 +81,7 @@ def test_create_filesystem_storage_missing_id(tmp_path):
     config = {
         "storage_type": "inmemory",
         # "id": "aaaa",
-        "dir": str(tmp_path)
+        "dir": str(tmp_path),
     }
     with pytest.raises(
             ValueError,
@@ -91,7 +92,7 @@ def test_create_filesystem_storage_missing_id(tmp_path):
 def test_create_missing_storage_type():
     config = {
         "id": "aaaa",
-        "dir": "/tmp/aaaa_filesystem"
+        "dir": "/tmp/aaaa_filesystem",
     }
     with pytest.raises(
             ValueError,
@@ -103,7 +104,7 @@ def test_create_wrong_storage_type():
     config = {
         "id": "aaaa",
         "storage_type": "filesystem2",
-        "dir": "/tmp/aaaa_filesystem"
+        "dir": "/tmp/aaaa_filesystem",
     }
     with pytest.raises(
             ValueError,
@@ -131,7 +132,7 @@ def test_create_bad_dir():
     config = {
         "id": "aaaa",
         "storage_type": "inmemory",
-        "dir": "tmp/aaaa_filesystem"
+        "dir": "tmp/aaaa_filesystem",
     }
     with pytest.raises(
             ValueError,

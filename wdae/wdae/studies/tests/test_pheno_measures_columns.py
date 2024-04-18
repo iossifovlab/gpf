@@ -2,9 +2,8 @@
 import json
 
 from django.test import Client
-from rest_framework import status
-
 from gpf_instance.gpf_instance import WGPFInstance
+from rest_framework import status
 
 
 def test_study_with_phenotype_data(wdae_gpf_instance: WGPFInstance) -> None:
@@ -16,7 +15,7 @@ def test_study_with_phenotype_data(wdae_gpf_instance: WGPFInstance) -> None:
 
 def test_pheno_measure_genotype_browser_columns(
     admin_client: Client,
-    wdae_gpf_instance: WGPFInstance
+    wdae_gpf_instance: WGPFInstance,
 ) -> None:
     data = {
         "datasetId": "comp",
@@ -24,9 +23,9 @@ def test_pheno_measure_genotype_browser_columns(
     }
     response = admin_client.post(
         "/api/v3/genotype_browser/query",
-        json.dumps(data), content_type="application/json"
+        json.dumps(data), content_type="application/json",
     )
-    assert status.HTTP_200_OK == response.status_code
+    assert response.status_code == status.HTTP_200_OK
     lines = json.loads(
         "".join(
             map(lambda x: x.decode("utf-8"),

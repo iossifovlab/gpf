@@ -3,19 +3,18 @@ import pathlib
 import textwrap
 from typing import Callable, cast
 
-import pytest
-import pandas as pd
 import numpy as np
+import pandas as pd
+import pytest
 
+from dae.gpf_instance import GPFInstance
 from dae.pedigrees.families_data import FamiliesData
 from dae.pedigrees.loader import FamiliesLoader
-
-from dae.variants.attributes import Inheritance
-from dae.variants.family_variant import FamilyVariant, FamilyAllele
-from dae.variants_loaders.dae.loader import DenovoLoader
+from dae.testing import alla_gpf, setup_denovo, setup_pedigree
 from dae.utils.variant_utils import GenotypeType, mat2str
-from dae.gpf_instance import GPFInstance
-from dae.testing import setup_denovo, setup_pedigree, alla_gpf
+from dae.variants.attributes import Inheritance
+from dae.variants.family_variant import FamilyAllele, FamilyVariant
+from dae.variants_loaders.dae.loader import DenovoLoader
 
 
 def compare_variant_dfs(
@@ -35,14 +34,14 @@ def compare_variant_dfs(
 
         equal = equal and len(res_genotype) == len(expected_genotype)
         # pylint: disable=consider-using-enumerate
-        for i in range(0, len(res_genotype)):
+        for i in range(len(res_genotype)):
             assert np.array_equal(res_genotype[i], expected_genotype[i]), (
                 expected_df.loc[i, :],
                 res_df.loc[i, :],
             )
 
             equal = equal and np.array_equal(
-                res_genotype[i], expected_genotype[i]
+                res_genotype[i], expected_genotype[i],
             )
     print(res_df)
     print(expected_df)
@@ -57,7 +56,7 @@ def test_produce_genotype(
     expected_output = np.array([[0, 0, 0, 0, 0], [0, 0, 0, 1, 1]])
     output = DenovoLoader.produce_genotype(
         "1", 123123, gpf_instance_2013.reference_genome,
-        fake_families["f1"], ["f1.p1", "f1.s2"]
+        fake_families["f1"], ["f1.p1", "f1.s2"],
     )
     assert np.array_equal(output, expected_output)
     assert output.dtype == GenotypeType
@@ -69,7 +68,7 @@ def test_produce_genotype_no_people_with_variants(
     expected_output = np.array([[0, 0, 0, 0, 0], [0, 0, 0, 0, 0]])
     output = DenovoLoader.produce_genotype(
         "1", 123123, gpf_instance_2013.reference_genome,
-        fake_families["f1"], []
+        fake_families["f1"], [],
     )
     assert np.array_equal(output, expected_output)
     assert output.dtype == GenotypeType
@@ -127,7 +126,7 @@ def test_read_variants_dae_style(
                 np.array([[1], [1]]),
                 np.array([[1, 1], [1, 1]]),
             ],
-        }
+        },
     )
 
     assert compare_variant_dfs(res_df, expected_df)
@@ -175,7 +174,7 @@ def test_read_variants_a_la_vcf_style(
                 np.array([[1], [1]]),
                 np.array([[1, 1], [1, 1]]),
             ],
-        }
+        },
     )
 
     assert compare_variant_dfs(res_df, expected_df)
@@ -221,7 +220,7 @@ def test_read_variants_mixed_a(
                 np.array([[1], [1]]),
                 np.array([[1, 1], [1, 1]]),
             ],
-        }
+        },
     )
 
     assert compare_variant_dfs(res_df, expected_df)
@@ -267,7 +266,7 @@ def test_read_variants_mixed_b(
                 np.array([[1], [1]]),
                 np.array([[1, 1], [1, 1]]),
             ],
-        }
+        },
     )
 
     assert compare_variant_dfs(res_df, expected_df)
@@ -321,7 +320,7 @@ def test_read_variants_person_ids(
                 np.array([[0, 0], [1, 1]]),
             ],
             "best_state": [None, None, None, None, None],
-        }
+        },
     )
 
     print(res_df)
@@ -343,7 +342,7 @@ def test_read_variants_different_separator(
         fake_families: FamiliesData,
         gpf_instance_2013: GPFInstance) -> None:
     filename = fixture_dirname(
-        "denovo_import/variants_different_separator.dsv"
+        "denovo_import/variants_different_separator.dsv",
     )
     loader = DenovoLoader(
         fake_families, filename, gpf_instance_2013.reference_genome,
@@ -384,7 +383,7 @@ def test_read_variants_different_separator(
                 np.array([[1], [1]]),
                 np.array([[1, 1], [1, 1]]),
             ],
-        }
+        },
     )
 
     assert compare_variant_dfs(res_df, expected_df)
@@ -395,7 +394,7 @@ def test_read_variants_with_genotype(
         fake_families: FamiliesData,
         gpf_instance_2013: GPFInstance) -> None:
     filename = fixture_dirname(
-        "denovo_import/variants_VCF_genotype.tsv"
+        "denovo_import/variants_VCF_genotype.tsv",
     )
     loader = DenovoLoader(
         fake_families, filename, gpf_instance_2013.reference_genome,
@@ -440,7 +439,7 @@ def test_read_variants_with_genotype(
                 None,
                 None,
             ],
-        }
+        },
     )
 
     assert compare_variant_dfs(res_df, expected_df)
@@ -554,7 +553,7 @@ def test_denovo_loader(
     variants_loader = DenovoLoader(
         fake_families, denovo_filename,
         genome=gpf_instance_2013.reference_genome, params=params,
-        sort=False
+        sort=False,
     )
 
     variants = list(variants_loader.full_variants_iterator())
@@ -617,7 +616,7 @@ def test_denovo_loader_avoids_duplicates(
         fake_families: FamiliesData,
         gpf_instance_2013: GPFInstance) -> None:
     denovo_filename = fixture_dirname(
-        "denovo_import/variants_VCF_style_dup.tsv"
+        "denovo_import/variants_VCF_style_dup.tsv",
     )
     params = {
         "denovo_chrom": "chrom",
@@ -625,11 +624,11 @@ def test_denovo_loader_avoids_duplicates(
         "denovo_ref": "ref",
         "denovo_alt": "alt",
         "denovo_family_id": "familyId",
-        "denovo_best_state": "bestState"
+        "denovo_best_state": "bestState",
     }
     variants_loader = DenovoLoader(
         fake_families, denovo_filename,
-        genome=gpf_instance_2013.reference_genome, params=params
+        genome=gpf_instance_2013.reference_genome, params=params,
     )
 
     variants_iter = variants_loader.full_variants_iterator()
@@ -646,7 +645,7 @@ def test_denovo_loader_avoids_duplicates(
     assert len(fvs) == 4
 
 
-@pytest.fixture
+@pytest.fixture()
 def families_fixture(tmp_path: pathlib.Path) -> FamiliesData:
     ped_path = setup_pedigree(
         tmp_path / "pedigree.ped",
@@ -662,7 +661,7 @@ def families_fixture(tmp_path: pathlib.Path) -> FamiliesData:
         f2       f2.p1    f2.dad f2.mom 1   2      prb
         f2       f2.s1    f2.dad f2.mom 2   1      sib
         f3       f3.p1    0      0      1   2      prb
-        """)
+        """),
     )
     return FamiliesLoader(str(ped_path)).load()
 
@@ -746,7 +745,7 @@ def families_fixture(tmp_path: pathlib.Path) -> FamiliesData:
 def test_denovo_loader_new(
     tmp_path: pathlib.Path,
     families_fixture: FamiliesData,
-    variants: str, params: dict[str, str]
+    variants: str, params: dict[str, str],
 ) -> None:
     gpf = alla_gpf(tmp_path)
     denovo_path = setup_denovo(tmp_path / "variants.tsv", variants)
@@ -754,7 +753,7 @@ def test_denovo_loader_new(
     variants_loader = DenovoLoader(
         families_fixture, str(denovo_path),
         genome=gpf.reference_genome, params=params,
-        sort=False
+        sort=False,
     )
 
     vs = list(variants_loader.full_variants_iterator())

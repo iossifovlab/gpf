@@ -1,14 +1,14 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,too-many-lines
-from box import Box
 import pandas as pd
+from box import Box
 
+from dae.pheno.common import MeasureType, default_config
 from dae.pheno.prepare.measure_classifier import MeasureClassifier
-from dae.pheno.common import default_config, MeasureType
 from dae.pheno.prepare.pheno_prepare import PrepareVariables
 
 
 def test_fake_background_classify(
-    fake_background_df: pd.DataFrame
+    fake_background_df: pd.DataFrame,
 ) -> None:
 
     columns = list(fake_background_df.columns)
@@ -22,7 +22,7 @@ def test_fake_background_classify(
         assert measure_type in {
             MeasureType.text,
             MeasureType.raw,
-            MeasureType.categorical
+            MeasureType.categorical,
         }
 
         values = [
@@ -35,7 +35,7 @@ def test_fake_background_classify(
 def test_fake_background_build(
     test_config: Box,
     fake_ped_file: str,
-    fake_background_filename: str
+    fake_background_filename: str,
 ) -> None:
     test_config.person.role.mapping = "INTERNAL"
 
@@ -44,7 +44,7 @@ def test_fake_background_build(
 
     prep.build_pedigree(fake_ped_file)
     instrument_df = prep.load_instrument(
-        "background", [fake_background_filename]
+        "background", [fake_background_filename],
     )
 
     df = prep.build_instrument("background", instrument_df)

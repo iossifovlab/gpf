@@ -20,7 +20,7 @@ def _expand_recursive_globs(
                     if fpath.name == "__pycache__":
                         continue
                     subdir_pattern = pat.replace(
-                        "**", str(fpath.relative_to(path_to_glob))
+                        "**", str(fpath.relative_to(path_to_glob)),
                     )
                     new_patterns.append(subdir_pattern)
             else:
@@ -45,7 +45,7 @@ setuptools.setup(
     url="https://github.com/IossifovLab/gpf",
     packages=setuptools.find_namespace_packages(
         where="wdae/", exclude=[
-            "*.tests", "*.tests.*", "docs"]
+            "*.tests", "*.tests.*", "docs"],
     ),
     package_dir={"": "wdae"},
     package_data=_expand_recursive_globs("wdae", {
@@ -56,7 +56,7 @@ setuptools.setup(
         "users_api": [
             "static/**/*",
             "templates/**/*",
-        ]
+        ],
     }),
     scripts=[
         "wdae/wdaemanage.py",
@@ -66,7 +66,7 @@ setuptools.setup(
     entry_points={
         "console_scripts": [
             "wgpf=wdae.wgpf:cli",
-        ]
+        ],
     },
     classifiers=[
         "Development Status :: 4 - Beta",

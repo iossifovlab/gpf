@@ -2,13 +2,17 @@
 import pathlib
 from typing import List
 
-import pytest
 import pysam
-
-from dae.utils.regions import Region, collapse, collapse_no_chrom, \
-    split_into_regions, get_chromosome_length_tabix
+import pytest
 
 from dae.genomic_resources.testing import setup_tabix
+from dae.utils.regions import (
+    Region,
+    collapse,
+    collapse_no_chrom,
+    get_chromosome_length_tabix,
+    split_into_regions,
+)
 
 
 @pytest.mark.parametrize(
@@ -76,13 +80,13 @@ def test_collapse_no_chrom_simple(data: str, expected: List[Region]) -> None:
             Region("1", 1, 1),
             Region("1", 2, 2),
             Region("1", 3, 3),
-            Region("1", 4, 4)
+            Region("1", 4, 4),
         ]),
-    ]
+    ],
 )
 def test_split_into_regions(
     chrom: str, chrom_length: int, region_size: int,
-    expected: List[Region]
+    expected: List[Region],
 ) -> None:
     result = split_into_regions(chrom, chrom_length, region_size)
 
@@ -106,7 +110,7 @@ def sample_tabix(tmp_path: pathlib.Path) -> pysam.TabixFile:
             2     1         2
             2     1         4
             3     500000    500010
-        """, seq_col=0, start_col=1, end_col=2
+        """, seq_col=0, start_col=1, end_col=2,
     )
     return pysam.TabixFile(str(filepath))
 
@@ -118,10 +122,10 @@ def sample_tabix(tmp_path: pathlib.Path) -> pysam.TabixFile:
         1000,
         100,
         1,
-    ]
+    ],
 )
 def test_get_chrom_length(
-    sample_tabix: pysam.TabixFile, precision: int
+    sample_tabix: pysam.TabixFile, precision: int,
 ) -> None:
     one_length = get_chromosome_length_tabix(
         sample_tabix, "1", precision=precision)
@@ -137,7 +141,7 @@ def test_get_chrom_length(
     assert two_length - 14 <= precision
 
     three_length = get_chromosome_length_tabix(
-        sample_tabix, "3", precision=precision
+        sample_tabix, "3", precision=precision,
     )
     assert three_length is not None
     assert three_length > 500_010
@@ -162,7 +166,7 @@ def test_get_chrom_length(
         (Region("1", None, 10), Region("1", None, 10), True),
         (Region("1", None, 10), Region("1"), False),
         (Region("1", None, 10), Region("1", 1), False),
-    ]
+    ],
 )
 def test_region_contains(reg1: Region, reg2: Region, expected: bool) -> None:
     assert reg1.contains(reg2) == expected
@@ -200,10 +204,10 @@ def test_region_contains(reg1: Region, reg2: Region, expected: bool) -> None:
         (Region("1", 1, 5), Region("1", 6, 10), False),
         # No overlap, right side
         (Region("1", 6, 10), Region("1", 1, 5), False),
-    ]
+    ],
 )
 def test_region_intersects(
-    reg1: Region, reg2: Region, expected: Region
+    reg1: Region, reg2: Region, expected: Region,
 ) -> None:
     assert reg1.intersects(reg2) == expected
 
@@ -226,9 +230,9 @@ def test_region_intersects(
         (Region("1", None, 10), Region("1", None, 10), Region("1", None, 10)),
         (Region("1", None, 10), Region("1"), Region("1", None, 10)),
         (Region("1", None, 10), Region("1", 1), Region("1", 1, 10)),
-    ]
+    ],
 )
 def test_region_intersection(
-    reg1: Region, reg2: Region, expected: Region
+    reg1: Region, reg2: Region, expected: Region,
 ) -> None:
     assert reg1.intersection(reg2) == expected

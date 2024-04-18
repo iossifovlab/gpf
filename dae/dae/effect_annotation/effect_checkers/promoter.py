@@ -4,22 +4,21 @@ from dae.genomic_resources.gene_models import TranscriptModel
 
 from ..effect import EffectFactory
 from ..variant import Variant
-
-from .effect_checker import EffectChecker, AnnotationEffect, AnnotationRequest
+from .effect_checker import AnnotationEffect, AnnotationRequest, EffectChecker
 
 
 class PromoterEffectChecker(EffectChecker):
     """Promoter effect checker class."""
 
     def create_effect(
-        self, transcript_model: TranscriptModel
+        self, transcript_model: TranscriptModel,
     ) -> AnnotationEffect:
         return EffectFactory.create_effect_with_tm(
             "promoter", transcript_model)
 
     def create_positive_strand_effect(
         self, transcript_model: TranscriptModel,
-        variant: Variant
+        variant: Variant,
     ) -> AnnotationEffect:
         """Create a positive strand promoter effect."""
         effect = self.create_effect(transcript_model)
@@ -29,7 +28,7 @@ class PromoterEffectChecker(EffectChecker):
         return effect
 
     def create_negative_strand_effect(
-        self, transcript_model: TranscriptModel, variant: Variant
+        self, transcript_model: TranscriptModel, variant: Variant,
     ) -> AnnotationEffect:
         effect = self.create_effect(transcript_model)
         effect.dist_from_5utr = \
@@ -37,7 +36,7 @@ class PromoterEffectChecker(EffectChecker):
         return effect
 
     def get_effect(
-        self, request: AnnotationRequest
+        self, request: AnnotationRequest,
     ) -> Optional[AnnotationEffect]:
         if request.promoter_len == 0:
             return None
@@ -50,7 +49,7 @@ class PromoterEffectChecker(EffectChecker):
             - request.promoter_len
         ):
             return self.create_positive_strand_effect(
-                request.transcript_model, request.variant
+                request.transcript_model, request.variant,
             )
 
         if (
@@ -61,6 +60,6 @@ class PromoterEffectChecker(EffectChecker):
             + request.promoter_len
         ):
             return self.create_negative_strand_effect(
-                request.transcript_model, request.variant
+                request.transcript_model, request.variant,
             )
         return None

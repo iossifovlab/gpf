@@ -3,14 +3,11 @@ import json
 from typing import Optional, cast
 
 import pytest
-
-from django.contrib.auth.models import Group, User
-from django.test.client import Client
-
-from rest_framework import status
-
 from datasets_api.models import Dataset
 from datasets_api.permissions import user_has_permission
+from django.contrib.auth.models import Group, User
+from django.test.client import Client
+from rest_framework import status
 from users_api.models import WdaeUser
 
 
@@ -72,7 +69,7 @@ def test_admin_cant_delete_groups(admin_client: Client) -> None:
     for group in all_groups:
         url = f"/api/v3/groups/{group.pk}"
         del_response = admin_client.delete(
-            url, content_type="application/json", format="json"
+            url, content_type="application/json", format="json",
         )
 
         assert del_response.status_code is status.HTTP_405_METHOD_NOT_ALLOWED
@@ -92,7 +89,7 @@ def test_admin_can_create_groups(admin_client: Client) -> None:
 
     url = "/api/v3/groups"
     response = admin_client.post(
-        url, json.dumps(data), content_type="application/json", format="json"
+        url, json.dumps(data), content_type="application/json", format="json",
     )
 
     assert response.status_code is status.HTTP_201_CREATED
@@ -107,7 +104,7 @@ def test_user_cant_create_groups(user_client: Client) -> None:
 
     url = "/api/v3/groups"
     response = user_client.post(
-        url, json.dumps(data), content_type="application/json", format="json"
+        url, json.dumps(data), content_type="application/json", format="json",
     )
 
     assert response.status_code is status.HTTP_403_FORBIDDEN
@@ -116,7 +113,7 @@ def test_user_cant_create_groups(user_client: Client) -> None:
 
 def test_admin_can_rename_groups(
     admin_client: Client,
-    group_with_user: tuple[Group, WdaeUser]
+    group_with_user: tuple[Group, WdaeUser],
 ) -> None:
     group, _ = group_with_user
     assert group is not None
@@ -129,7 +126,7 @@ def test_admin_can_rename_groups(
     data = {"id": group.id, "name": test_name}
 
     response = admin_client.put(
-        url, json.dumps(data), content_type="application/json", format="json"
+        url, json.dumps(data), content_type="application/json", format="json",
     )
     print(response)
     assert response.status_code is status.HTTP_200_OK
@@ -169,7 +166,7 @@ def test_no_empty_groups_are_accessible(admin_client: Client) -> None:
 
 
 def test_empty_group_with_permissions_is_shown(
-    admin_client: Client, dataset: Dataset
+    admin_client: Client, dataset: Dataset,
 ) -> None:
     group = Group.objects.create(name="New Group")
 
@@ -195,7 +192,7 @@ def test_empty_group_with_permissions_is_shown(
 def test_group_has_all_datasets(
     admin_client: Client,
     group_with_user: tuple[Group, WdaeUser],
-    dataset: Dataset
+    dataset: Dataset,
 ) -> None:
     group, _ = group_with_user
 
@@ -219,7 +216,7 @@ def test_group_has_all_datasets(
 
 def test_grant_permission_for_group(
     admin_client: Client, group_with_user: tuple[Group, WdaeUser],
-    dataset: Dataset
+    dataset: Dataset,
 ) -> None:
     group, wdae_user = group_with_user
     user = cast(User, wdae_user)
@@ -229,7 +226,7 @@ def test_grant_permission_for_group(
 
     url = "/api/v3/groups/grant-permission"
     response = admin_client.post(
-        url, json.dumps(data), content_type="application/json", format="json"
+        url, json.dumps(data), content_type="application/json", format="json",
     )
 
     assert response.status_code == status.HTTP_200_OK
@@ -237,18 +234,18 @@ def test_grant_permission_for_group(
 
 
 def test_grant_permission_creates_new_group(
-    admin_client: Client, user: WdaeUser, dataset: Dataset
+    admin_client: Client, user: WdaeUser, dataset: Dataset,
 ) -> None:
     group_name = "NewGroup"
     data = {"datasetId": dataset.dataset_id, "groupName": group_name}
 
     assert not user_has_permission(
-        "test_data", cast(User, user), dataset.dataset_id
+        "test_data", cast(User, user), dataset.dataset_id,
     )
 
     url = "/api/v3/groups/grant-permission"
     response = admin_client.post(
-        url, json.dumps(data), content_type="application/json", format="json"
+        url, json.dumps(data), content_type="application/json", format="json",
     )
 
     assert response.status_code == status.HTTP_200_OK
@@ -256,19 +253,19 @@ def test_grant_permission_creates_new_group(
 
 
 def test_grant_permission_creates_new_group_case_sensitive(
-    admin_client: Client, user: WdaeUser, dataset: Dataset
+    admin_client: Client, user: WdaeUser, dataset: Dataset,
 ) -> None:
 
     group_name = "group_name_P"
     data = {"datasetId": dataset.dataset_id, "groupName": group_name}
 
     assert not user_has_permission(
-        "test_data", cast(User, user), dataset.dataset_id
+        "test_data", cast(User, user), dataset.dataset_id,
     )
 
     url = "/api/v3/groups/grant-permission"
     response = admin_client.post(
-        url, json.dumps(data), content_type="application/json", format="json"
+        url, json.dumps(data), content_type="application/json", format="json",
     )
 
     assert response.status_code == status.HTTP_200_OK
@@ -278,7 +275,7 @@ def test_grant_permission_creates_new_group_case_sensitive(
 
 def test_not_admin_cant_grant_permissions(
     user_client: Client, group_with_user: tuple[Group, WdaeUser],
-    dataset: Dataset
+    dataset: Dataset,
 ) -> None:
     group, wdae_user = group_with_user
     user = cast(User, wdae_user)
@@ -289,7 +286,7 @@ def test_not_admin_cant_grant_permissions(
 
     url = "/api/v3/groups/grant-permission"
     response = user_client.post(
-        url, json.dumps(data), content_type="application/json", format="json"
+        url, json.dumps(data), content_type="application/json", format="json",
     )
 
     assert response.status_code == status.HTTP_403_FORBIDDEN
@@ -297,14 +294,14 @@ def test_not_admin_cant_grant_permissions(
 
 
 def test_not_admin_grant_permissions_does_not_create_group(
-    user_client: Client, dataset: Dataset
+    user_client: Client, dataset: Dataset,
 ) -> None:
     group_name = "NewGroup"
     data = {"datasetId": dataset.dataset_id, "groupName": group_name}
 
     url = "/api/v3/groups/grant-permission"
     response = user_client.post(
-        url, json.dumps(data), content_type="application/json", format="json"
+        url, json.dumps(data), content_type="application/json", format="json",
     )
 
     assert response.status_code == status.HTTP_403_FORBIDDEN
@@ -313,7 +310,7 @@ def test_not_admin_grant_permissions_does_not_create_group(
 
 def test_revoke_permission_for_group(
     admin_client: Client, group_with_user: tuple[Group, WdaeUser],
-    dataset: Dataset
+    dataset: Dataset,
 ) -> None:
     group, wdae_user = group_with_user
     user = cast(User, wdae_user)
@@ -326,7 +323,7 @@ def test_revoke_permission_for_group(
 
     url = "/api/v3/groups/revoke-permission"
     response = admin_client.post(
-        url, json.dumps(data), content_type="application/json", format="json"
+        url, json.dumps(data), content_type="application/json", format="json",
     )
 
     assert response.status_code == status.HTTP_200_OK
@@ -335,7 +332,7 @@ def test_revoke_permission_for_group(
 
 def test_not_admin_cant_revoke_permissions(
     user_client: Client, group_with_user: tuple[Group, WdaeUser],
-    dataset: Dataset
+    dataset: Dataset,
 ) -> None:
     group, wdae_user = group_with_user
     user = cast(User, wdae_user)
@@ -347,7 +344,7 @@ def test_not_admin_cant_revoke_permissions(
 
     url = "/api/v3/groups/revoke-permission"
     response = user_client.post(
-        url, json.dumps(data), content_type="application/json", format="json"
+        url, json.dumps(data), content_type="application/json", format="json",
     )
 
     assert response.status_code == status.HTTP_403_FORBIDDEN
@@ -355,7 +352,7 @@ def test_not_admin_cant_revoke_permissions(
 
 
 def test_cant_revoke_default_permissions(
-    user_client: Client, dataset: Dataset
+    user_client: Client, dataset: Dataset,
 ) -> None:
     Dataset.recreate_dataset_perm(dataset.dataset_id)
 
@@ -387,12 +384,12 @@ def test_cant_revoke_default_permissions(
         (4, status.HTTP_200_OK, 25, "Group73", "Group95"),
         (5, status.HTTP_200_OK, 25, "Group96", None),
         (7, status.HTTP_204_NO_CONTENT, None, None, None),
-    ]
+    ],
 )
 def test_groups_pagination(
         admin_client: Client, hundred_groups: list[Group], page: int,
         status_code: int, length: Optional[int],
-        first_name: Optional[str], last_name: Optional[str]
+        first_name: Optional[str], last_name: Optional[str],
 ) -> None:
     url = f"/api/v3/groups?page={page}"
     response = admin_client.get(url)
@@ -414,7 +411,7 @@ def test_groups_pagination(
 
 
 def test_groups_search(
-    admin_client: Client, hundred_groups: list[Group]
+    admin_client: Client, hundred_groups: list[Group],
 ) -> None:
     url = "/api/v3/groups?search=Group1"
     response = admin_client.get(url)
@@ -430,12 +427,12 @@ def test_groups_search(
         (4, status.HTTP_200_OK, 25),
         (5, status.HTTP_200_OK, 3),
         (6, status.HTTP_204_NO_CONTENT, None),
-    ]
+    ],
 )
 def test_groups_search_pagination(
     admin_client: Client,
     hundred_groups: list[Group],
-    page: int, status_code: int, length: Optional[int]
+    page: int, status_code: int, length: Optional[int],
 ) -> None:
     url = f"/api/v3/groups?page={page}&search=Group"
     response = admin_client.get(url)
@@ -456,7 +453,7 @@ def test_user_group_routes(admin_client: Client, user: WdaeUser) -> None:
 
     url = "/api/v3/groups/add-user"
     response = admin_client.post(
-        url, json.dumps(data), content_type="application/json", format="json"
+        url, json.dumps(data), content_type="application/json", format="json",
     )
 
     assert response.status_code == status.HTTP_204_NO_CONTENT
@@ -464,7 +461,7 @@ def test_user_group_routes(admin_client: Client, user: WdaeUser) -> None:
 
     url = "/api/v3/groups/remove-user"
     response = admin_client.post(
-        url, json.dumps(data), content_type="application/json", format="json"
+        url, json.dumps(data), content_type="application/json", format="json",
     )
 
     assert response.status_code == status.HTTP_204_NO_CONTENT
@@ -472,7 +469,7 @@ def test_user_group_routes(admin_client: Client, user: WdaeUser) -> None:
 
 
 def test_group_retrieve(
-    admin_client: Client, hundred_groups: list[Group]
+    admin_client: Client, hundred_groups: list[Group],
 ) -> None:
     url = "/api/v3/groups/Group1"
     response = admin_client.get(url)
@@ -489,7 +486,7 @@ def test_group_retrieve(
 
 
 def test_group_retrieve_alphabetical_order(
-    admin_client: Client, hundred_groups: list[Group]
+    admin_client: Client, hundred_groups: list[Group],
 ) -> None:
     url = "/api/v3/groups/any_dataset"
     response = admin_client.get(url)

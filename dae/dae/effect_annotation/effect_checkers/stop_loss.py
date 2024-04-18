@@ -2,7 +2,7 @@ import logging
 from typing import Optional
 
 from ..effect import EffectFactory
-from .effect_checker import EffectChecker, AnnotationEffect, AnnotationRequest
+from .effect_checker import AnnotationEffect, AnnotationRequest, EffectChecker
 
 logger = logging.getLogger(__name__)
 
@@ -11,11 +11,11 @@ class StopLossEffectChecker(EffectChecker):
     """Stop loss effect checker class."""
 
     def get_effect(
-        self, request: AnnotationRequest
+        self, request: AnnotationRequest,
     ) -> Optional[AnnotationEffect]:
         assert request.variant.reference is not None
         last_position = request.variant.position + len(
-            request.variant.reference
+            request.variant.reference,
         )
 
         logger.debug(

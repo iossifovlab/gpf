@@ -4,13 +4,12 @@ from typing import Optional
 
 import pytest
 
-from dae.utils.regions import Region
 from dae.effect_annotation.effect import EffectGene
-from dae.testing import setup_pedigree, setup_vcf, \
-    vcf_study
-from dae.testing.foobar_import import foobar_gpf
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.studies.study import GenotypeData
+from dae.testing import setup_pedigree, setup_vcf, vcf_study
+from dae.testing.foobar_import import foobar_gpf
+from dae.utils.regions import Region
 
 
 @pytest.fixture(scope="module")
@@ -57,11 +56,11 @@ bar    12  .  G   A,C,T .    .      .    GT     0/1 0/2 1/3 1/2
                     "include_unknown_person_genotypes": True,
                     "denovo_mode": "denovo",
                     "omission_mode": "omission",
-                }
+                },
             },
             "processing_config": {
-                "include_reference": True
-            }
+                "include_reference": True,
+            },
         })
     return study
 

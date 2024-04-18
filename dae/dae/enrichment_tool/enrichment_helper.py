@@ -1,25 +1,33 @@
-import os
-import logging
 import json
-
+import logging
+import os
+from collections.abc import Iterable
 from dataclasses import asdict
-from typing import Optional, cast, Iterable, Union
+from typing import Optional, Union, cast
 
 from box import Box
 
-from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.effect_annotation.effect import expand_effect_types
-from dae.studies.study import GenotypeData
-from dae.enrichment_tool.base_enrichment_background import \
-    BaseEnrichmentBackground, EnrichmentResult
-from dae.enrichment_tool.gene_weights_background import \
-    GeneWeightsEnrichmentBackground, GeneScoreEnrichmentBackground
-from dae.enrichment_tool.samocha_background import \
-    SamochaEnrichmentBackground
-from dae.enrichment_tool.event_counters import EVENT_COUNTERS, CounterBase, \
-    overlap_event_counts, EventCountersResult
+from dae.enrichment_tool.base_enrichment_background import (
+    BaseEnrichmentBackground,
+    EnrichmentResult,
+)
+from dae.enrichment_tool.event_counters import (
+    EVENT_COUNTERS,
+    CounterBase,
+    EventCountersResult,
+    overlap_event_counts,
+)
+from dae.enrichment_tool.gene_weights_background import (
+    GeneScoreEnrichmentBackground,
+    GeneWeightsEnrichmentBackground,
+)
+
 # from dae.enrichment_tool.tool import EnrichmentTool
 from dae.enrichment_tool.genotype_helper import GenotypeHelper
+from dae.enrichment_tool.samocha_background import SamochaEnrichmentBackground
+from dae.genomic_resources.repository import GenomicResourceRepo
+from dae.studies.study import GenotypeData
 
 logger = logging.getLogger(__name__)
 
@@ -34,11 +42,11 @@ class EnrichmentHelper:
 
     @staticmethod
     def get_enrichment_config(
-        genotype_data: GenotypeData
+        genotype_data: GenotypeData,
     ) -> Optional[Box]:
         return cast(
             Optional[Box],
-            genotype_data.config.get("enrichment")
+            genotype_data.config.get("enrichment"),
         )
 
     @staticmethod
@@ -61,7 +69,7 @@ class EnrichmentHelper:
         return cast(str, enrichment_config["default_counting_model"])
 
     def collect_genotype_data_backgrounds(
-        self, genotype_data: GenotypeData
+        self, genotype_data: GenotypeData,
     ) -> list[BaseEnrichmentBackground]:
         """Collect enrichment backgrounds configured for a genotype data."""
         if not self.has_enrichment_config(genotype_data):
@@ -75,7 +83,7 @@ class EnrichmentHelper:
         return result
 
     def _build_background_from_resource(
-        self, resource_id: str
+        self, resource_id: str,
     ) -> BaseEnrichmentBackground:
         resource = self.grr.get_resource(resource_id)
         if resource.get_type() == "gene_weights_enrichment_background":
@@ -90,11 +98,11 @@ class EnrichmentHelper:
         raise ValueError(
             f"unexpected resource type <{resource.get_type()}> "
             f"of resource <{resource.resource_id}> "
-            f"for enrichment backgound"
+            f"for enrichment backgound",
         )
 
     def create_background(
-        self, background_id: str
+        self, background_id: str,
     ) -> BaseEnrichmentBackground:
         """Construct and return an enrichment background."""
         if background_id in self._BACKGROUNDS_CACHE:
@@ -117,7 +125,7 @@ class EnrichmentHelper:
         gene_syms: Iterable[str],
         effect_groups: Union[Iterable[str], Iterable[Iterable[str]]],
         background_id: Optional[str] = None,
-        counter_id: Optional[str] = None
+        counter_id: Optional[str] = None,
     ) -> dict[str, dict[str, EnrichmentResult]]:
         """Perform enrichment test for a genotype data."""
         if not self.has_enrichment_config(study):
@@ -198,18 +206,18 @@ class EnrichmentHelper:
         return os.path.exists(cache_path)
 
     def _load_enrichment_event_counts_cache(
-        self, study: GenotypeData
+        self, study: GenotypeData,
     ) -> dict[str, dict[str, dict[str, dict[str, int]]]]:
         cache_path = self._enrichment_cache_path(study)
         with open(cache_path, "r") as cache_file:
             return cast(
                 dict[str, dict[str, dict[str, dict[str, int]]]],
-                json.loads(cache_file.read())
+                json.loads(cache_file.read()),
             )
 
     def build_enrichment_event_counts_cache(
         self, study: GenotypeData,
-        psc_id: str
+        psc_id: str,
     ) -> None:
         """Build enrichment event counts cache for a genotype data."""
         psc = study.get_person_set_collection(psc_id)

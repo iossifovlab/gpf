@@ -1,19 +1,26 @@
 from __future__ import annotations
 
 import logging
-from typing import Optional, Any, Iterable, cast
+from collections.abc import Iterable
 from functools import cached_property
+from typing import Any, Optional, cast
 
 import pandas as pd
 from scipy import stats
 
+from dae.enrichment_tool.base_enrichment_background import (
+    BaseEnrichmentBackground,
+    BaseEnrichmentResourceBackground,
+)
+from dae.enrichment_tool.event_counters import (
+    EnrichmentResult,
+    EnrichmentSingleResult,
+    EventCountersResult,
+)
+from dae.gene_scores.implementations.gene_scores_impl import (
+    build_gene_score_from_resource,
+)
 from dae.genomic_resources.repository import GenomicResource
-from dae.gene_scores.implementations.gene_scores_impl import \
-    build_gene_score_from_resource
-from dae.enrichment_tool.event_counters import EventCountersResult, \
-    EnrichmentResult, EnrichmentSingleResult
-from dae.enrichment_tool.base_enrichment_background import \
-    BaseEnrichmentBackground, BaseEnrichmentResourceBackground
 
 logger = logging.getLogger(__name__)
 
@@ -71,7 +78,7 @@ class GeneWeightsEnrichmentBackground(BaseEnrichmentResourceBackground):
 
     @staticmethod
     def calc_expected_observed_pvalue(
-        events_prob: float, events_count: int, observed: int
+        events_prob: float, events_count: int, observed: int,
     ) -> tuple[float, float]:
         """Calculate expected event count and binomtest p-value."""
         expected = events_count * events_prob
@@ -86,7 +93,7 @@ class GeneWeightsEnrichmentBackground(BaseEnrichmentResourceBackground):
         events_counts: EventCountersResult,
         overlapped_counts: EventCountersResult,
         gene_set: Iterable[str],
-        **kwargs: Any
+        **kwargs: Any,
     ) -> EnrichmentResult:
         """Calculate enrichment statistics."""
         gene_syms = set(gs.upper() for gs in gene_set)
@@ -131,7 +138,7 @@ class GeneWeightsEnrichmentBackground(BaseEnrichmentResourceBackground):
             rec_result,
             male_result,
             female_result,
-            unspecified_result
+            unspecified_result,
         )
 
 
@@ -213,7 +220,7 @@ class GeneScoreEnrichmentBackground(BaseEnrichmentBackground):
 
     @staticmethod
     def calc_expected_observed_pvalue(
-        events_prob: float, events_count: int, observed: int
+        events_prob: float, events_count: int, observed: int,
     ) -> tuple[float, float]:
         """Calculate expected event count and binomtest p-value."""
         expected = events_count * events_prob
@@ -228,7 +235,7 @@ class GeneScoreEnrichmentBackground(BaseEnrichmentBackground):
         events_counts: EventCountersResult,
         overlapped_counts: EventCountersResult,
         gene_set: Iterable[str],
-        **kwargs: Any
+        **kwargs: Any,
     ) -> EnrichmentResult:
         """Calculate enrichment statistics."""
         gene_syms = set(gs.upper() for gs in gene_set)
@@ -273,5 +280,5 @@ class GeneScoreEnrichmentBackground(BaseEnrichmentBackground):
             rec_result,
             male_result,
             female_result,
-            unspecified_result
+            unspecified_result,
         )

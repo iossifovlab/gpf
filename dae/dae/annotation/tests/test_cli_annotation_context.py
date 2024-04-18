@@ -1,17 +1,19 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-import os
 import argparse
+import os
 from typing import Callable
 
 import pytest
 from pytest_mock import MockerFixture
 
 from dae.annotation.context import CLIAnnotationContext
-from dae.genomic_resources.genomic_context import get_genomic_context, \
-    GenomicContext
+from dae.genomic_resources.genomic_context import (
+    GenomicContext,
+    get_genomic_context,
+)
 
 
-@pytest.fixture
+@pytest.fixture()
 def context_fixture(
         fixture_dirname: Callable[[str], str],
         mocker: MockerFixture) -> GenomicContext:
@@ -19,7 +21,7 @@ def context_fixture(
     home_dir = os.environ["HOME"]
     mocker.patch("os.environ", {
         "DAE_DB_DIR": conf_dir,
-        "HOME": home_dir
+        "HOME": home_dir,
     })
     mocker.patch(
         "dae.genomic_resources.genomic_context._REGISTERED_CONTEXT_PROVIDERS",
@@ -39,13 +41,13 @@ def test_cli_genomic_context_reference_genome(
     # Given
     parser = argparse.ArgumentParser(
         description="Test CLI genomic context",
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     CLIAnnotationContext.add_context_arguments(parser)
 
     argv = [
         "--grr-directory", fixture_dirname("genomic_resources"),
-        "--ref", "hg38/GRCh38-hg38/genome"
+        "--ref", "hg38/GRCh38-hg38/genome",
     ]
 
     # When

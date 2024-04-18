@@ -3,13 +3,18 @@ import textwrap
 
 import pytest
 
-from dae.testing import setup_gpf_instance, setup_genome, \
-    setup_empty_gene_models, setup_directories
-from dae.genomic_resources.repository_factory import \
-    build_genomic_resource_repository
+from dae.genomic_resources.repository_factory import (
+    build_genomic_resource_repository,
+)
+from dae.testing import (
+    setup_directories,
+    setup_empty_gene_models,
+    setup_genome,
+    setup_gpf_instance,
+)
 
 
-@pytest.fixture
+@pytest.fixture()
 def gpf_instance(tmp_path_factory):
     root_path = tmp_path_factory.mktemp("default_storage_test")
 
@@ -18,7 +23,7 @@ def gpf_instance(tmp_path_factory):
         f"""
         >chrA
         {100 * "A"}
-        """
+        """,
     )
     setup_empty_gene_models(
         root_path / "alla_gpf" / "empty_gene_models" / "empty_genes.txt")
@@ -32,20 +37,20 @@ def gpf_instance(tmp_path_factory):
             - id: alabala
               storage_type: inmemory
               dir: "%(wd)s/alabala_storage"
-        """)
+        """),
     })
 
     local_repo = build_genomic_resource_repository({
         "id": "alla_local",
         "type": "directory",
-        "directory": str(root_path / "alla_gpf")
+        "directory": str(root_path / "alla_gpf"),
     })
 
     gpf = setup_gpf_instance(
         root_path / "gpf_instance",
         reference_genome_id="genome",
         gene_models_id="empty_gene_models",
-        grr=local_repo
+        grr=local_repo,
     )
     return gpf
 

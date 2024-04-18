@@ -1,18 +1,17 @@
-from pathlib import Path
+from collections.abc import Generator
 from copy import deepcopy
-from typing import Callable, Optional, Any, \
-    Union, Generator, TextIO
+from pathlib import Path
+from typing import Any, Callable, Optional, TextIO, Union
 
 import numpy as np
 
-from dae.utils.variant_utils import get_interval_locus_ploidy
-
-from dae.variants_loaders.raw.flexible_variant_loader import \
-    flexible_variant_loader
-
-from dae.variants.core import Allele
 from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.pedigrees.families_data import FamiliesData
+from dae.utils.variant_utils import get_interval_locus_ploidy
+from dae.variants.core import Allele
+from dae.variants_loaders.raw.flexible_variant_loader import (
+    flexible_variant_loader,
+)
 
 
 def _cnv_location_to_vcf_trasformer() \
@@ -120,7 +119,7 @@ def _cnv_dae_best_state_to_best_state(
 
         expected_ploidy = np.asarray([
             get_interval_locus_ploidy(
-                chrom, pos, pos_end, p.sex, genome
+                chrom, pos, pos_end, p.sex, genome,
             ) for p in family.members_in_order
         ])
         if variant_type == Allele.Type.large_duplication:
@@ -172,7 +171,7 @@ def _cnv_person_id_to_best_state(
 
         expected_ploidy = np.asarray([
             get_interval_locus_ploidy(
-                chrom, pos, pos_end, p.sex, genome
+                chrom, pos, pos_end, p.sex, genome,
             ) for p in family.members_in_order
         ])
         alt_row = np.zeros(len(family.members_in_order), dtype=np.int8)
@@ -210,7 +209,7 @@ def _configure_cnv_best_state(
         header[person_index] = "person_id"
 
         transformers.append(
-            _cnv_person_id_to_best_state(families, genome)
+            _cnv_person_id_to_best_state(families, genome),
         )
     else:
         if cnv_family_id is None:
@@ -230,7 +229,7 @@ def _configure_cnv_best_state(
 
 def _cnv_variant_to_variant_type(
     cnv_plus_values: Optional[list[str]] = None,
-    cnv_minus_values: Optional[list[str]] = None
+    cnv_minus_values: Optional[list[str]] = None,
 ) -> Callable[[dict[str, Any]], dict[str, Any]]:
     """Transform variant type to canonical internal representation.
 
@@ -263,7 +262,7 @@ def _configure_cnv_variant_type(
     transformers: list[Callable[[dict[str, Any]], dict[str, Any]]],
     cnv_variant_type: Optional[str] = None,
     cnv_plus_values: Optional[Union[str, list[str]]] = None,
-    cnv_minus_values: Optional[Union[str, list[str]]] = None
+    cnv_minus_values: Optional[Union[str, list[str]]] = None,
 ) -> None:
     """Configure header and transformer needed to handle CNV variant type."""
     if cnv_plus_values is None:
@@ -283,7 +282,7 @@ def _configure_cnv_variant_type(
     header[variant_type_index] = "variant"
 
     transformers.append(
-        _cnv_variant_to_variant_type(cnv_plus_values, cnv_minus_values)
+        _cnv_variant_to_variant_type(cnv_plus_values, cnv_minus_values),
     )
 
 
@@ -313,7 +312,7 @@ def _configure_loader(
     _configure_cnv_location(
         header, transformers,
         cnv_chrom, cnv_start, cnv_end,
-        cnv_location
+        cnv_location,
     )
 
     _configure_cnv_variant_type(
@@ -344,7 +343,7 @@ def flexible_cnv_loader(
     cnv_plus_values: Optional[list[str]] = None,
     cnv_minus_values: Optional[list[str]] = None,
     cnv_sep: str = "\t",
-    **_kwargs: Any
+    **_kwargs: Any,
 ) -> Generator[dict[str, Any], None, None]:
     """Load variants from CNVs input and transform them into DataFrames.
 
@@ -383,7 +382,7 @@ def flexible_cnv_loader(
 
         variant_generator = flexible_variant_loader(
             infile, header, line_splitter, transformers,
-            filters=[]
+            filters=[],
         )
 
         for record in variant_generator:

@@ -1,19 +1,18 @@
 #!/usr/bin/env python
 """Tool to draw pedigrees defined in a file."""
-import sys
 import argparse
 import logging
+import sys
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
-from dae.pedigrees.families_data import FamiliesData
-from dae.pedigrees.loader import FamiliesLoader
-
-from dae.pedigrees.drawing import OffsetLayoutDrawer, PDFLayoutDrawer
-from dae.pedigrees.layout import Layout
 from dae.common_reports.family_report import FamiliesReport
 from dae.configuration.gpf_config_parser import FrozenBox
+from dae.pedigrees.drawing import OffsetLayoutDrawer, PDFLayoutDrawer
+from dae.pedigrees.families_data import FamiliesData
+from dae.pedigrees.layout import Layout
+from dae.pedigrees.loader import FamiliesLoader
 from dae.person_sets import PersonSetCollection
 
 mpl.use("PS")
@@ -33,27 +32,27 @@ def build_families_report(families: FamiliesData) -> FamiliesReport:
                 "id": "affected",
                 "name": "affected",
                 "values": ["affected"],
-                "color": "#e35252"
+                "color": "#e35252",
             },
             {
                 "id": "unaffected",
                 "name": "unaffected",
                 "values": ["unaffected"],
-                "color": "#ffffff"
-            }
+                "color": "#ffffff",
+            },
         ],
         "default": {
             "id": "unspecified",
             "name": "unspecified",
-            "color": "#aaaaaa"
+            "color": "#aaaaaa",
         },
-        "sources": [{"from": "pedigree", "column": "status"}]
+        "sources": [{"from": "pedigree", "column": "status"}],
     }
     status_collection_config = FrozenBox(
-        status_collection_config
+        status_collection_config,
     )
     status_collection = PersonSetCollection.from_families(
-        status_collection_config, families
+        status_collection_config, families,
     )
     return FamiliesReport.from_families_data(
         families, [status_collection], draw_all_families=False)
@@ -62,7 +61,7 @@ def build_families_report(families: FamiliesData) -> FamiliesReport:
 def draw_pedigree(layout, title, show_family=True, tags=None):
 
     layout_drawer = OffsetLayoutDrawer(
-        layout, show_family=show_family
+        layout, show_family=show_family,
     )
     figure = layout_drawer.draw(title=title, tags=tags)
     return figure

@@ -1,12 +1,10 @@
 import json
 
 from django.shortcuts import get_object_or_404
-
-from rest_framework import views
+from rest_framework import status, views
 from rest_framework.response import Response
-from rest_framework import status
-
 from user_queries.models import UserQuery
+
 from .models import QueryState
 from .serializers import QueryStateSerializer
 
@@ -16,7 +14,7 @@ class QueryStateSaveView(views.APIView):
         serializer = QueryStateSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(
-                serializer.error_messages, status=status.HTTP_400_BAD_REQUEST
+                serializer.error_messages, status=status.HTTP_400_BAD_REQUEST,
             )
 
         query_state = QueryState.objects.create(
@@ -25,7 +23,7 @@ class QueryStateSaveView(views.APIView):
         )
 
         return Response(
-            {"uuid": query_state.uuid}, status=status.HTTP_201_CREATED
+            {"uuid": query_state.uuid}, status=status.HTTP_201_CREATED,
         )
 
 

@@ -1,13 +1,16 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 
-from dae.variants.attributes import Inheritance
-from dae.studies.study import GenotypeData
-
-from dae.enrichment_tool.event_counters import EventsCounter, \
-    EventCountersResult, overlap_event_counts
+from dae.enrichment_tool.event_counters import (
+    EventCountersResult,
+    EventsCounter,
+    overlap_event_counts,
+)
+from dae.enrichment_tool.gene_weights_background import (
+    GeneWeightsEnrichmentBackground,
+)
 from dae.enrichment_tool.genotype_helper import GenotypeHelper
-from dae.enrichment_tool.gene_weights_background import \
-    GeneWeightsEnrichmentBackground
+from dae.studies.study import GenotypeData
+from dae.variants.attributes import Inheritance
 
 
 def test_load(coding_len_background: GeneWeightsEnrichmentBackground) -> None:
@@ -23,7 +26,7 @@ def test_calc_stats(
         coding_len_background: GeneWeightsEnrichmentBackground) -> None:
     # pylint: disable=too-many-statements
     variants = list(
-        f1_trio.query_variants(inheritance=str(Inheritance.denovo.name))
+        f1_trio.query_variants(inheritance=str(Inheritance.denovo.name)),
     )
 
     for fv in variants:
@@ -42,7 +45,7 @@ def test_calc_stats(
     children_by_sex = psc.person_sets["phenotype1"].get_children_by_sex()
     variant_events = GenotypeHelper.collect_denovo_events(variants)
     enrichment_events = event_counter.events(
-        variant_events, children_by_sex, set(["missense", "synonymous"])
+        variant_events, children_by_sex, set(["missense", "synonymous"]),
     )
 
     assert enrichment_events.all is not None

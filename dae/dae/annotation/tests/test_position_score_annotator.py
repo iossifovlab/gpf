@@ -1,20 +1,22 @@
 # pylint: disable=redefined-outer-name,C0114,C0116,protected-access,fixme
 import pathlib
 import textwrap
+
 import pytest
 
 from dae.annotation.annotatable import VCFAllele
-from dae.genomic_resources.testing import build_inmemory_test_repository
-from dae.genomic_resources.genomic_scores import \
-    PositionScore
-from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.annotation.annotation_factory import build_annotation_pipeline
-from dae.genomic_resources.testing import \
-    build_filesystem_test_repository, \
-    setup_directories, setup_tabix
+from dae.genomic_resources.genomic_scores import PositionScore
+from dae.genomic_resources.repository import GenomicResourceRepo
+from dae.genomic_resources.testing import (
+    build_filesystem_test_repository,
+    build_inmemory_test_repository,
+    setup_directories,
+    setup_tabix,
+)
 
 
-@pytest.fixture
+@pytest.fixture()
 def position_score_repo() -> GenomicResourceRepo:
     repo = build_inmemory_test_repository({
         "position_score1": {
@@ -52,8 +54,8 @@ def position_score_repo() -> GenomicResourceRepo:
                 1      14972      14973    0.2      2    20
                 1      14974      14975    0.3      3    30
                 1      14976      14977    0.4      4    40
-            """
-        }
+            """,
+        },
     })
 
     return repo
@@ -380,7 +382,7 @@ def test_position_annotator_add_chrom_prefix_tabix_table(
                       desc: "test values"
                       name: test100way
                     """),
-            }
+            },
         })
 
     setup_tabix(
@@ -442,8 +444,8 @@ def test_position_annotator_add_chrom_prefix_inmemory_table(
                 1      11        20      0.1
                 1      21        30      0.2
                 1      31        40      0.3
-            """
-        }
+            """,
+        },
     })
 
     pipeline_config = textwrap.dedent("""

@@ -1,17 +1,16 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import os
 import pathlib
+from typing import Any, Callable
 
-from typing import Callable, Any
-
-import pytest
 import cloudpickle
+import pytest
 
-from dae.import_tools.import_tools import ImportProject
 from dae.gpf_instance.gpf_instance import GPFInstance
+from dae.import_tools.import_tools import ImportProject
 
 
-@pytest.fixture
+@pytest.fixture()
 def fixture_gpf_instance(fixture_dirname: Callable) -> GPFInstance:
     gpf_instance = GPFInstance.build(
         os.path.join(fixture_dirname(""), "gpf_instance.yaml"))
@@ -19,13 +18,13 @@ def fixture_gpf_instance(fixture_dirname: Callable) -> GPFInstance:
 
 
 def test_import_project_is_cpickle_serializable(
-    fixture_dirname: Callable
+    fixture_dirname: Callable,
 ) -> None:
     import_config = {
         "input": {},
         "gpf_instance": {
-            "path": fixture_dirname("")
-        }
+            "path": fixture_dirname(""),
+        },
     }
     project = ImportProject.build_from_config(import_config)
     _ = cloudpickle.dumps(project)
@@ -36,7 +35,7 @@ def test_import_project_is_cpickle_serializable(
 
 def test_project_is_serializable_after_loader_reference_genome(
     resources_dir: pathlib.Path,
-    fixture_gpf_instance: GPFInstance
+    fixture_gpf_instance: GPFInstance,
 ) -> None:
     config_fn = str(resources_dir / "vcf_import" / "import_config.yaml")
     project = ImportProject.build_from_file(config_fn, fixture_gpf_instance)
@@ -48,7 +47,7 @@ def test_project_is_serializable_after_loader_reference_genome(
 
 def test_project_is_serializable_instance_dir(
     resources_dir: pathlib.Path,
-    fixture_gpf_instance: GPFInstance
+    fixture_gpf_instance: GPFInstance,
 ) -> None:
     config_fn = str(resources_dir / "vcf_import" / "import_config.yaml")
     project = ImportProject.build_from_file(config_fn, fixture_gpf_instance)
@@ -59,7 +58,7 @@ def test_project_is_serializable_instance_dir(
 
 
 def test_config_filenames_just_one_config(
-    resources_dir: pathlib.Path
+    resources_dir: pathlib.Path,
 ) -> None:
     config_fn = str(resources_dir / "vcf_import" / "import_config.yaml")
     project = ImportProject.build_from_file(config_fn)
@@ -67,13 +66,13 @@ def test_config_filenames_just_one_config(
 
 
 def test_config_filenames_one_external(
-    resources_dir: pathlib.Path
+    resources_dir: pathlib.Path,
 ) -> None:
     config_fn = str(resources_dir / "external_input" / "import_config.yaml")
     project = ImportProject.build_from_file(config_fn)
     assert project.config_filenames == [
         config_fn,
-        str(resources_dir / "external_input/files/input.yaml")
+        str(resources_dir / "external_input/files/input.yaml"),
     ]
 
 
@@ -89,8 +88,8 @@ def test_config_filenames_external_input_and_annotation() -> None:
     import_config = {
         "input": {},
         "annotation": {
-            "file": "annotation.yaml"
-        }
+            "file": "annotation.yaml",
+        },
     }
     project = ImportProject.build_from_config(import_config)
     assert project.config_filenames == ["annotation.yaml"]
@@ -108,11 +107,11 @@ def test_tags_on_by_default(resources_dir: pathlib.Path) -> None:
     ({"input": {}}, True),
     ({
         "input": {},
-        "destination": {}
+        "destination": {},
     }, True),
     ({
         "input": {},
-        "destination": {"storage_id": "storage"}
+        "destination": {"storage_id": "storage"},
     }, True),
     ({
         "input": {},
@@ -123,12 +122,12 @@ def test_tags_on_by_default(resources_dir: pathlib.Path) -> None:
     }, True),
     ({
         "input": {},
-        "destination": {"storage_type": "schema2"}
+        "destination": {"storage_type": "schema2"},
     }, False),
 ])
 def test_has_genotype_storage(
     import_config: dict[str, dict[str, Any]],
-    expected: bool
+    expected: bool,
 ) -> None:
     project = ImportProject.build_from_config(import_config)
     assert project.has_genotype_storage() == expected

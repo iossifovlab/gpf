@@ -3,28 +3,32 @@ import os
 import sys
 from abc import abstractmethod
 from typing import Optional
+
 from pysam import TabixFile
+
 from dae.annotation.annotation_factory import build_annotation_pipeline
-from dae.annotation.annotation_pipeline import AnnotationPipeline, \
-    ReannotationPipeline
+from dae.annotation.annotation_pipeline import (
+    AnnotationPipeline,
+    ReannotationPipeline,
+)
 from dae.annotation.context import CLIAnnotationContext
 from dae.genomic_resources.cached_repository import cache_resources
 from dae.genomic_resources.genomic_context import get_genomic_context
 from dae.genomic_resources.repository import GenomicResourceRepo
-from dae.genomic_resources.repository_factory import \
-    build_genomic_resource_repository
+from dae.genomic_resources.repository_factory import (
+    build_genomic_resource_repository,
+)
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.task_graph import TaskGraphCli
 from dae.task_graph.graph import TaskGraph
-from dae.utils.verbosity_configuration import VerbosityConfiguration
 from dae.utils.regions import get_chromosome_length_tabix
-
+from dae.utils.verbosity_configuration import VerbosityConfiguration
 
 PART_FILENAME = "{in_file}_annotation_{chrom}_{pos_beg}_{pos_end}.gz"
 
 
 def produce_regions(
-    pysam_file: TabixFile, region_size: int
+    pysam_file: TabixFile, region_size: int,
 ) -> list[tuple[str, int, int]]:
     """Given a region size, produce contig regions to annotate by."""
     contig_lengths: dict[str, int] = {}
@@ -41,7 +45,7 @@ def produce_regions(
 
 
 def produce_partfile_paths(
-    input_file_path: str, regions: list[tuple[str, int, int]], work_dir: str
+    input_file_path: str, regions: list[tuple[str, int, int]], work_dir: str,
 ) -> list[str]:
     """Produce a list of file paths for output region part files."""
     filenames = []
@@ -50,13 +54,13 @@ def produce_partfile_paths(
         pos_end = region[2] if len(region) > 2 else "_"
         filenames.append(os.path.join(work_dir, PART_FILENAME.format(
             in_file=os.path.basename(input_file_path),
-            chrom=region[0], pos_beg=pos_beg, pos_end=pos_end
+            chrom=region[0], pos_beg=pos_beg, pos_end=pos_end,
         )))
     return filenames
 
 
 def cache_pipeline(
-    grr: GenomicResourceRepo, pipeline: AnnotationPipeline
+    grr: GenomicResourceRepo, pipeline: AnnotationPipeline,
 ) -> None:
     """Cache the resources used by the pipeline."""
     resource_ids: set[str] = set()
@@ -72,7 +76,7 @@ class AnnotationTool:
     def __init__(
         self,
         raw_args: Optional[list[str]] = None,
-        gpf_instance: Optional[GPFInstance] = None
+        gpf_instance: Optional[GPFInstance] = None,
     ) -> None:
         if not raw_args:
             raw_args = sys.argv[1:]
@@ -109,7 +113,7 @@ class AnnotationTool:
         pipeline = build_annotation_pipeline(
             pipeline_config_str=pipeline_config,
             grr_repository=grr,
-            allow_repeated_attributes=allow_repeated_attributes
+            allow_repeated_attributes=allow_repeated_attributes,
         )
         if pipeline_config_old is not None:
             pipeline_old = build_annotation_pipeline(

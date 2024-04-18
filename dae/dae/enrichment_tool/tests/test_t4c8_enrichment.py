@@ -3,17 +3,17 @@ import pathlib
 
 import pytest
 
-from dae.studies.study import GenotypeData
-from dae.gpf_instance import GPFInstance
-from dae.enrichment_tool.gene_weights_background import \
-    GeneScoreEnrichmentBackground
-from dae.enrichment_tool.enrichment_helper import EnrichmentHelper
 from dae.enrichment_tool.enrichment_cache_builder import cli
+from dae.enrichment_tool.enrichment_helper import EnrichmentHelper
+from dae.enrichment_tool.gene_weights_background import (
+    GeneScoreEnrichmentBackground,
+)
+from dae.gpf_instance import GPFInstance
+from dae.studies.study import GenotypeData
+from dae.testing import denovo_study, setup_denovo, setup_pedigree
 
-from dae.testing import setup_pedigree, setup_denovo, denovo_study
 
-
-@pytest.fixture
+@pytest.fixture()
 def ped_1(tmp_path: pathlib.Path) -> pathlib.Path:
     ped_path = setup_pedigree(
         tmp_path / "input" / "ped_1" / "in.ped",
@@ -29,7 +29,7 @@ f1.3     ch3      dad3  mom3  2   2      prb
     return ped_path
 
 
-@pytest.fixture
+@pytest.fixture()
 def denovo_1(tmp_path: pathlib.Path) -> pathlib.Path:
     denovo_path = setup_denovo(
         tmp_path / "input" / "denovo_1" / "denovo.tsv",
@@ -43,12 +43,12 @@ f1.1      chr1:57   sub(A->G)  2||2||1/0||0||1
 f1.3      chr1:114  sub(C->T)  2||2||1/0||0||1
 f1.1      chr1:195  sub(C->T)  2||2||1/0||0||1
 f1.3      chr1:145  sub(C->T)  2||2||1/0||0||1
-        """
+        """,
     )
     return denovo_path
 
 
-@pytest.fixture
+@pytest.fixture()
 def study_1(
     tmp_path: pathlib.Path,
     t4c8_fixture: GPFInstance,
@@ -62,7 +62,7 @@ def study_1(
             "enrichment": {
                 "enabled": True,
                 "selected_person_set_collections": [
-                    "status"
+                    "status",
                 ],
                 "selected_background_models": [
                     "coding_len_background",
@@ -70,25 +70,25 @@ def study_1(
                 "default_background_model": "coding_len_background",
                 "selected_counting_models": [
                     "enrichment_gene_counting",
-                    "enrichment_events_counting"
+                    "enrichment_events_counting",
                 ],
                 "counting": {
                     "enrichment_gene_counting": {
                         "id": "enrichment_gene_counting",
                         "name": "Counting affected genes",
-                        "desc": "Counting affected genes"
+                        "desc": "Counting affected genes",
                     },
                     "enrichment_events_counting": {
                         "id": "enrichment_events_counting",
                         "name": "Counting events",
-                        "desc": "Counting events"
-                    }
+                        "desc": "Counting events",
+                    },
                 },
                 "default_counting_model": "enrichment_gene_counting",
                 "effect_types": [
-                    "LGDs", "missense", "synonymous"
-                ]
-            }
+                    "LGDs", "missense", "synonymous",
+                ],
+            },
         })
     return result
 
@@ -137,7 +137,7 @@ def test_study_1(study_1: GenotypeData) -> None:
 
 def test_study_1_enrichment(
     study_1: GenotypeData,
-    t4c8_fixture: GPFInstance
+    t4c8_fixture: GPFInstance,
 ) -> None:
     enriichment_helper = EnrichmentHelper(t4c8_fixture.grr)
     assert enriichment_helper is not None
@@ -172,14 +172,14 @@ def test_study_1_enrichment(
 
 def test_study_1_enrichment_with_caching(
     study_1: GenotypeData,
-    t4c8_fixture: GPFInstance
+    t4c8_fixture: GPFInstance,
 ) -> None:
 
     enriichment_helper = EnrichmentHelper(t4c8_fixture.grr)
     assert enriichment_helper is not None
 
     enriichment_helper.build_enrichment_event_counts_cache(
-        study_1, "status"
+        study_1, "status",
     )
 
     results = enriichment_helper.calc_enrichment_test(
@@ -212,7 +212,7 @@ def test_study_1_enrichment_with_caching(
 
 def test_build_study_1_enrichment_cache(
     study_1: GenotypeData,
-    t4c8_fixture: GPFInstance
+    t4c8_fixture: GPFInstance,
 ) -> None:
     assert not (
         pathlib.Path(study_1.config_dir) / "enrichment_cache.json").exists()

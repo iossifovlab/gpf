@@ -1,31 +1,36 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,too-many-lines
 
-import textwrap
 import pathlib
-from typing import cast, Iterable, Optional
+import textwrap
+from collections.abc import Iterable
+from typing import Optional, cast
 
-import pytest
 import pysam
+import pytest
 
-from dae.genomic_resources.genomic_position_table.line import \
-    VCFLine, LineBase
-
-from dae.genomic_resources.genomic_position_table import \
-    TabixGenomicPositionTable, \
-    VCFGenomicPositionTable, \
-    build_genomic_position_table
-from dae.genomic_resources.genomic_position_table.table import \
-    GenomicPositionTable
+from dae.genomic_resources.genomic_position_table import (
+    TabixGenomicPositionTable,
+    VCFGenomicPositionTable,
+    build_genomic_position_table,
+)
+from dae.genomic_resources.genomic_position_table.line import LineBase, VCFLine
+from dae.genomic_resources.genomic_position_table.table import (
+    GenomicPositionTable,
+)
 from dae.genomic_resources.repository import GenomicResource
-
-from dae.genomic_resources.testing import \
-    build_inmemory_test_resource, build_filesystem_test_resource, \
-    setup_directories, convert_to_tab_separated, setup_tabix, setup_vcf
+from dae.genomic_resources.testing import (
+    build_filesystem_test_resource,
+    build_inmemory_test_resource,
+    convert_to_tab_separated,
+    setup_directories,
+    setup_tabix,
+    setup_vcf,
+)
 
 
 def compare(
     res: Iterable[Optional[LineBase]],
-    expected: list[tuple]
+    expected: list[tuple],
 ) -> bool:
     for idx, line in enumerate(res):
         assert line is not None
@@ -34,7 +39,7 @@ def compare(
     return True
 
 
-@pytest.fixture
+@pytest.fixture()
 def vcf_res(tmp_path: pathlib.Path) -> GenomicResource:
     setup_directories(
         tmp_path, {
@@ -42,7 +47,7 @@ def vcf_res(tmp_path: pathlib.Path) -> GenomicResource:
                 tabix_table:
                     filename: data.vcf.gz
                     format: vcf_info
-            """)
+            """),
         })
     setup_vcf(
         tmp_path / "data.vcf.gz",
@@ -59,19 +64,19 @@ def vcf_res(tmp_path: pathlib.Path) -> GenomicResource:
 chr1   5   .  A   T   .    .      A=1;C=c11,c12;D=d11
 chr1   15  .  A   T   .    .      A=2;B=21;C=c21;D=d21,d22
 chr1   30  .  A   T   .    .      A=3;B=31;C=c21;D=d31,d32
-    """)
+    """),
     )
     return build_filesystem_test_resource(tmp_path)
 
 
-@pytest.fixture
+@pytest.fixture()
 def vcf_res_autodetect_format(tmp_path: pathlib.Path) -> GenomicResource:
     setup_directories(
         tmp_path, {
             "genomic_resource.yaml": textwrap.dedent("""
                 tabix_table:
                     filename: data.vcf.gz
-            """)
+            """),
         })
     setup_vcf(
         tmp_path / "data.vcf.gz",
@@ -80,12 +85,12 @@ def vcf_res_autodetect_format(tmp_path: pathlib.Path) -> GenomicResource:
 ##INFO=<ID=A,Number=1,Type=Integer,Description="Score A">
 #CHROM POS ID REF ALT QUAL FILTER  INFO
 chr1   5   .  A   T   .    .       A=1
-    """)
+    """),
     )
     return build_filesystem_test_resource(tmp_path)
 
 
-@pytest.fixture
+@pytest.fixture()
 def vcf_res_multiallelic(tmp_path: pathlib.Path) -> GenomicResource:
     setup_directories(
         tmp_path, {
@@ -93,7 +98,7 @@ def vcf_res_multiallelic(tmp_path: pathlib.Path) -> GenomicResource:
                 tabix_table:
                     filename: data.vcf.gz
                     format: vcf_info
-            """)
+            """),
         })
     setup_vcf(
         tmp_path / "data.vcf.gz",
@@ -108,7 +113,7 @@ chr1   2   .  A   .   .    .       A=0;B=01,02,03;C=c01
 chr1   5   .  A   T   .    .       A=1;B=11,12,13;C=c11,c12;D=d11
 chr1   15   .  A   T,G   .    .       A=2;B=21,22;C=c21,c22,c23;D=d21,d22
 chr1   30   .  A   T,G,C   .    .     A=3;B=31;C=c31,c32,c33,c34;D=d31,d32,d33
-    """)
+    """),
     )
     return build_filesystem_test_resource(tmp_path)
 
@@ -134,18 +139,18 @@ def test_regions() -> None:
         assert compare(mem_tab.get_all_records(), [
             ("1", "10", "12", "3.14"),
             ("1", "15", "20", "4.14"),
-            ("1", "21", "30", "5.14")
+            ("1", "21", "30", "5.14"),
         ])
 
         assert compare(mem_tab.get_records_in_region("1", 11, 11), [
-            ("1", "10", "12", "3.14")
+            ("1", "10", "12", "3.14"),
         ])
 
         assert not list(mem_tab.get_records_in_region("1", 13, 14))
 
         assert compare(mem_tab.get_records_in_region("1", 18, 21), [
             ("1", "15", "20", "4.14"),
-            ("1", "21", "30", "5.14")
+            ("1", "21", "30", "5.14"),
         ])
 
 
@@ -166,7 +171,7 @@ def test_regions_in_tabix(
                 scores:
                 - id: c2
                   name: c2
-                  type: float""")
+                  type: float"""),
         })
     setup_tabix(
         tmp_path / "data.txt.gz",
@@ -185,15 +190,15 @@ def test_regions_in_tabix(
         assert compare(tab.get_all_records(), [
             ("1", "10", "12", "3.14"),
             ("1", "15", "20", "4.14"),
-            ("1", "21", "30", "5.14")
+            ("1", "21", "30", "5.14"),
         ])
         assert compare(tab.get_records_in_region("1", 11, 11), [
-            ("1", "10", "12", "3.14")
+            ("1", "10", "12", "3.14"),
         ])
         assert not list(tab.get_records_in_region("1", 13, 14))
         assert compare(tab.get_records_in_region("1", 18, 21), [
             ("1", "15", "20", "4.14"),
-            ("1", "21", "30", "5.14")
+            ("1", "21", "30", "5.14"),
         ])
 
 
@@ -207,7 +212,7 @@ def test_last_call_is_updated(tmp_path: pathlib.Path) -> None:
                 scores:
                 - id: c2
                   name: c2
-                  type: float""")
+                  type: float"""),
         })
     setup_tabix(
         tmp_path / "data.txt.gz",
@@ -225,14 +230,14 @@ def test_last_call_is_updated(tmp_path: pathlib.Path) -> None:
         # pylint: disable=no-member
         assert tab_tab._last_call == ("", -1, -1)
         assert compare(tab_tab.get_records_in_region("1", 11, 11), [
-            ("1", "10", "12", "3.14")
+            ("1", "10", "12", "3.14"),
         ])
         assert tab_tab._last_call == ("1", 11, 11)
         assert not list(tab_tab.get_records_in_region("1", 13, 14))
         assert tab_tab._last_call == ("1", 13, 14)
         assert compare(tab_tab.get_records_in_region("1", 18, 21), [
             ("1", "15", "20", "4.14"),
-            ("1", "21", "30", "5.14")
+            ("1", "21", "30", "5.14"),
         ])
         assert tab_tab._last_call == ("1", 18, 21)
 
@@ -312,7 +317,7 @@ def test_chrom_mapping_file() -> None:
         assert tab.get_chromosomes() == ["gosho", "pesho"]
         assert compare(tab.get_all_records(), [
             ("gosho", "10", "12", "3.14"),
-            ("pesho", "11", "11", "4.14")
+            ("pesho", "11", "11", "4.14"),
         ])
         assert compare(tab.get_records_in_region("pesho"), [
             ("pesho", "11", "11", "4.14"),
@@ -415,7 +420,7 @@ def test_column_with_name() -> None:
             1     10  12   3.14
             1     11  11   4.14
             1     12  14   5.14
-            """)
+            """),
     })
     assert res.config is not None
 
@@ -439,7 +444,7 @@ def test_column_with_index() -> None:
             chrom pos pos2  c2
             1     10  12    3.14
             1     11  11    4.14
-            1     12  14    5.14""")
+            1     12  14    5.14"""),
     })
     assert res.config is not None
 
@@ -466,7 +471,7 @@ def test_no_header() -> None:
             1   10  12  3.14
             1   11  11  4.14
             1   12  14  5.14
-            """)
+            """),
     })
     assert res.config is not None
 
@@ -538,7 +543,7 @@ def test_text_table() -> None:
                 1     5         6.14   dd
                 1     8         7.14   ee
                 2     3         8.14   ff
-                """)
+                """),
         })
     assert res.config is not None
 
@@ -549,27 +554,27 @@ def test_text_table() -> None:
             ("1", "4", "5.14", "cc"),
             ("1", "5", "6.14", "dd"),
             ("1", "8", "7.14", "ee"),
-            ("2", "3", "8.14", "ff")
+            ("2", "3", "8.14", "ff"),
         ])
         assert compare(table.get_records_in_region("1", 4, 5), [
             ("1", "4", "4.14", "bb"),
             ("1", "4", "5.14", "cc"),
-            ("1", "5", "6.14", "dd")
+            ("1", "5", "6.14", "dd"),
         ])
         assert compare(table.get_records_in_region("1", 4, None), [
             ("1", "4", "4.14", "bb"),
             ("1", "4", "5.14", "cc"),
             ("1", "5", "6.14", "dd"),
-            ("1", "8", "7.14", "ee")
+            ("1", "8", "7.14", "ee"),
         ])
         assert compare(table.get_records_in_region("1", None, 4), [
             ("1", "3", "3.14", "aa"),
             ("1", "4", "4.14", "bb"),
-            ("1", "4", "5.14", "cc")
+            ("1", "4", "5.14", "cc"),
         ])
         assert not list(table.get_records_in_region("1", 20, 25))
         assert compare(table.get_records_in_region("2", None, None), [
-            ("2", "3", "8.14", "ff")
+            ("2", "3", "8.14", "ff"),
         ])
         with pytest.raises(Exception):
             list(table.get_records_in_region("3"))
@@ -594,7 +599,7 @@ def test_tabix_table(tmp_path: pathlib.Path, jump_threshold: int) -> None:
                   type: float
                 - id: c2
                   name: c2
-                  type: str""")
+                  type: str"""),
         })
 
     setup_tabix(
@@ -619,33 +624,33 @@ def test_tabix_table(tmp_path: pathlib.Path, jump_threshold: int) -> None:
             ("1", "4", "5.14", "cc"),
             ("1", "5", "6.14", "dd"),
             ("1", "8", "7.14", "ee"),
-            ("2", "3", "8.14", "ff")
+            ("2", "3", "8.14", "ff"),
         ])
         assert compare(table.get_records_in_region("1", 4, 5), [
             ("1", "4", "4.14", "bb"),
             ("1", "4", "5.14", "cc"),
-            ("1", "5", "6.14", "dd")
+            ("1", "5", "6.14", "dd"),
         ])
         assert compare(table.get_records_in_region("1", 4, None), [
             ("1", "4", "4.14", "bb"),
             ("1", "4", "5.14", "cc"),
             ("1", "5", "6.14", "dd"),
-            ("1", "8", "7.14", "ee")
+            ("1", "8", "7.14", "ee"),
         ])
         assert compare(table.get_records_in_region("1", None, 4), [
             ("1", "3", "3.14", "aa"),
             ("1", "4", "4.14", "bb"),
-            ("1", "4", "5.14", "cc")
+            ("1", "4", "5.14", "cc"),
         ])
         assert not list(table.get_records_in_region("1", 20, 25))
         assert compare(table.get_records_in_region("2", None, None), [
-            ("2", "3", "8.14", "ff")
+            ("2", "3", "8.14", "ff"),
         ])
         with pytest.raises(Exception):
             list(table.get_records_in_region("3"))
 
 
-@pytest.fixture
+@pytest.fixture()
 def tabix_table(tmp_path: pathlib.Path) -> GenomicPositionTable:
     setup_directories(
         tmp_path, {
@@ -683,7 +688,7 @@ def tabix_table(tmp_path: pathlib.Path) -> GenomicPositionTable:
     return table
 
 
-@pytest.fixture
+@pytest.fixture()
 def regions_tabix_table(tmp_path: pathlib.Path) -> GenomicPositionTable:
     setup_directories(
         tmp_path, {
@@ -696,7 +701,7 @@ def regions_tabix_table(tmp_path: pathlib.Path) -> GenomicPositionTable:
                   name: c1
                   type: int""",
             "data.mem": """
-            """
+            """,
         })
     setup_tabix(
         tmp_path / "data.txt.gz",
@@ -735,7 +740,7 @@ def test_tabix_table_should_use_sequential_seek_forward(
 
 
 def test_regions_tabix_table_should_use_sequential_seek_forward(
-    regions_tabix_table: TabixGenomicPositionTable
+    regions_tabix_table: TabixGenomicPositionTable,
 ) -> None:
     table = regions_tabix_table
 
@@ -769,7 +774,7 @@ def test_tabix_table_jumper_current_position(
         break
 
 
-@pytest.fixture
+@pytest.fixture()
 def tabix_table_multiline(tmp_path: pathlib.Path) -> GenomicPositionTable:
     setup_directories(
         tmp_path, {
@@ -816,7 +821,7 @@ def test_tabix_table_multi_get_regions(
     table = tabix_table_multiline
     assert not table._should_use_sequential_seek_forward("1", 1)
     assert compare(
-        table.get_records_in_region("1", pos_beg, pos_end), expected
+        table.get_records_in_region("1", pos_beg, pos_end), expected,
     )
 
 
@@ -834,7 +839,7 @@ def test_tabix_table_multi_get_regions_partial(
             break
     assert compare(
         table.get_records_in_region("1", 3, 3),
-        [("1", "3", "4"), ("1", "3", "5")]
+        [("1", "3", "4"), ("1", "3", "5")],
     )
 
 
@@ -850,7 +855,7 @@ def test_tabix_middle_optimization(tmp_path: pathlib.Path) -> None:
                   name: c1
                   type: int""",
             "data.mem": """
-            """
+            """,
         })
     setup_tabix(
         tmp_path / "data.txt.gz",
@@ -972,7 +977,7 @@ def test_tabix_middle_optimization_regions_buggy_1(
     with build_genomic_position_table(res, res.config["tabix_table"]) as table:
         assert compare(
             table.get_records_in_region("chr1", 505637, 505637),
-            [("1", "505637", "505637", "0.009")]
+            [("1", "505637", "505637", "0.009")],
         )
 
         assert compare(
@@ -1013,12 +1018,12 @@ def test_buggy_fitcons_e67(tmp_path: pathlib.Path) -> None:
     with build_genomic_position_table(res, res.config["tabix_table"]) as table:
         assert compare(
             table.get_records_in_region("5", 180740299, 180740300),
-            [("5", "180739426", "180742735", "0.065122")]
+            [("5", "180739426", "180742735", "0.065122")],
         )
 
         assert compare(
             table.get_records_in_region("5", 180740301, 180740301),
-            [("5", "180739426", "180742735", "0.065122")]
+            [("5", "180739426", "180742735", "0.065122")],
         )
 
 
@@ -1058,11 +1063,11 @@ def test_tabix_jump_config(
             expected
         assert compare(
             table.get_records_in_region("5", 180740299, 180740300),
-            [("5", "180739426", "180742735", "0.065122")]
+            [("5", "180739426", "180742735", "0.065122")],
         )
         assert compare(
             table.get_records_in_region("5", 180740301, 180740301),
-            [("5", "180739426", "180742735", "0.065122")]
+            [("5", "180739426", "180742735", "0.065122")],
         )
 
 
@@ -1107,19 +1112,19 @@ def test_tabix_max_buffer(
         assert isinstance(table, TabixGenomicPositionTable)
 
         # pylint: disable=no-member
-        assert table.BUFFER_MAXSIZE == buffer_maxsize
+        assert buffer_maxsize == table.BUFFER_MAXSIZE
         assert table.jump_threshold == jump_threshold
         assert compare(
             table.get_records_in_region("5", 180740299, 180740300),
-            [("5", "180739426", "180742735", "0.065122")]
+            [("5", "180739426", "180742735", "0.065122")],
         )
         assert compare(
             table.get_records_in_region("5", 180740301, 180740301),
-            [("5", "180739426", "180742735", "0.065122")]
+            [("5", "180739426", "180742735", "0.065122")],
         )
         assert compare(
             table.get_records_in_region("5", 180740301, 180742735),
-            [("5", "180739426", "180742735", "0.065122")]
+            [("5", "180739426", "180742735", "0.065122")],
         )
 
 
@@ -1157,7 +1162,7 @@ def test_vcf_autodetect_format(
 
     with build_genomic_position_table(
         vcf_res_autodetect_format,
-        vcf_res_autodetect_format.config["tabix_table"]
+        vcf_res_autodetect_format.config["tabix_table"],
     ) as tab:
         assert isinstance(tab, VCFGenomicPositionTable)
         assert len(tuple(tab.get_all_records())) == 1
@@ -1167,7 +1172,7 @@ def test_vcf_get_all_records(vcf_res: GenomicResource) -> None:
     assert vcf_res.config is not None
 
     with build_genomic_position_table(
-        vcf_res, vcf_res.config["tabix_table"]
+        vcf_res, vcf_res.config["tabix_table"],
     ) as tab:
         assert isinstance(tab, VCFGenomicPositionTable)
 
@@ -1203,7 +1208,7 @@ def test_vcf_get_records_in_region(vcf_res: GenomicResource) -> None:
     assert vcf_res.config is not None
 
     with build_genomic_position_table(
-        vcf_res, vcf_res.config["tabix_table"]
+        vcf_res, vcf_res.config["tabix_table"],
     ) as tab:
         assert not tuple(tab.get_records_in_region("chr1", 1, 4))
         assert not tuple(tab.get_records_in_region("chr1", 6, 14))
@@ -1239,7 +1244,7 @@ def test_vcf_get_info_fields(vcf_res: GenomicResource) -> None:
     assert vcf_res.config is not None
 
     with build_genomic_position_table(
-        vcf_res, vcf_res.config["tabix_table"]
+        vcf_res, vcf_res.config["tabix_table"],
     ) as tab:
         results = tuple(
             cast(VCFLine, line) for line in tab.get_all_records())
@@ -1276,7 +1281,7 @@ def test_vcf_jump_ahead_optimization_use_sequential(
     assert vcf_res.config is not None
 
     with build_genomic_position_table(
-        vcf_res, vcf_res.config["tabix_table"]
+        vcf_res, vcf_res.config["tabix_table"],
     ) as tab:
         cast(TabixGenomicPositionTable, tab).jump_threshold = 6
         assert isinstance(tab, VCFGenomicPositionTable)
@@ -1306,7 +1311,7 @@ def test_vcf_jump_ahead_optimization_use_jump(
     assert vcf_res.config is not None
 
     with build_genomic_position_table(
-        vcf_res, vcf_res.config["tabix_table"]
+        vcf_res, vcf_res.config["tabix_table"],
     ) as tab:
         cast(TabixGenomicPositionTable, tab).jump_threshold = 5
         assert isinstance(tab, VCFGenomicPositionTable)
@@ -1332,14 +1337,14 @@ def test_vcf_multiallelic(vcf_res_multiallelic: GenomicResource) -> None:
 
     with build_genomic_position_table(
         vcf_res_multiallelic,
-        vcf_res_multiallelic.config["tabix_table"]
+        vcf_res_multiallelic.config["tabix_table"],
     ) as tab:
         assert isinstance(tab, VCFGenomicPositionTable)
 
         results = tuple(map(
             lambda r:
             (r.chrom, r.pos_begin, r.pos_end, r.allele_index),  # type:ignore
-            tab.get_all_records()
+            tab.get_all_records(),
         ))
         assert results == (
             ("chr1", 2, 2, None),
@@ -1358,14 +1363,14 @@ def test_vcf_multiallelic_region(
     assert vcf_res_multiallelic.config is not None
     with build_genomic_position_table(
         vcf_res_multiallelic,
-        vcf_res_multiallelic.config["tabix_table"]
+        vcf_res_multiallelic.config["tabix_table"],
     ) as tab:
         assert isinstance(tab, VCFGenomicPositionTable)
 
         results = tuple(map(
             lambda r:
             (r.chrom, r.pos_begin, r.pos_end, r.allele_index),  # type:ignore
-            tab.get_records_in_region("chr1", 14, 15))
+            tab.get_records_in_region("chr1", 14, 15)),
         )
         assert results == (
             ("chr1", 15, 15, 0),
@@ -1382,7 +1387,7 @@ def test_vcf_multiallelic_info_fields(
     assert vcf_res_multiallelic.config is not None
     with build_genomic_position_table(
         vcf_res_multiallelic,
-        vcf_res_multiallelic.config["tabix_table"]
+        vcf_res_multiallelic.config["tabix_table"],
     ) as tab:
         assert isinstance(tab, VCFGenomicPositionTable)
 
@@ -1399,7 +1404,7 @@ def test_vcf_multiallelic_info_fields(
                  line.get("A"),
                  line.get("B"),
                  line.get("C"),
-                 line.get("D"))
+                 line.get("D")),
             )
 
         # chrom start stop allele_index A B C D
@@ -1484,8 +1489,8 @@ def test_get_ref_alt_nonconfigured_existing(tmp_path: pathlib.Path) -> None:
         results = tuple(
             map(
                 lambda l: (l.ref, l.alt),  # type: ignore
-                tab.get_all_records()
-            )
+                tab.get_all_records(),
+            ),
         )
         assert results == (
             (None, None),
@@ -1526,8 +1531,8 @@ def test_get_ref_alt_configured_existing(tmp_path: pathlib.Path) -> None:
         results = tuple(
             map(
                 lambda l: (l.ref, l.alt),  # type: ignore
-                tab.get_all_records()
-            )
+                tab.get_all_records(),
+            ),
         )
         assert results == (
             ("A", "G"),
@@ -1575,8 +1580,8 @@ def test_get_ref_alt_by_index_on_no_header(tmp_path: pathlib.Path) -> None:
         results = tuple(
             map(
                 lambda l: (l.ref, l.alt),  # type: ignore
-                tab.get_all_records()
-            )
+                tab.get_all_records(),
+            ),
         )
         assert results == (
             ("A", "G"),
@@ -1589,7 +1594,7 @@ def test_vcf_get_missing_alt(vcf_res_multiallelic: GenomicResource) -> None:
     assert vcf_res_multiallelic.config is not None
 
     with build_genomic_position_table(
-        vcf_res_multiallelic, vcf_res_multiallelic.config["tabix_table"]
+        vcf_res_multiallelic, vcf_res_multiallelic.config["tabix_table"],
     ) as tab:
         assert isinstance(tab, VCFGenomicPositionTable)
 
@@ -1644,8 +1649,8 @@ def test_overlapping_nonattribute_columns_config(
         results = tuple(
             map(
                 lambda l: (l.get(4), l.get(5)),  # type: ignore
-                tab.get_all_records()
-            )
+                tab.get_all_records(),
+            ),
         )
         assert results == (
             ("0.123", "1"),
@@ -1658,6 +1663,6 @@ def test_vcf_get_chromosomes(vcf_res: GenomicResource) -> None:
     assert vcf_res.config is not None
 
     with build_genomic_position_table(
-        vcf_res, vcf_res.config["tabix_table"]
+        vcf_res, vcf_res.config["tabix_table"],
     ) as tab:
         assert tab.get_chromosomes() == ["chr1"]

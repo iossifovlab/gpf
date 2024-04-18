@@ -3,11 +3,13 @@ from typing import cast
 
 import pytest
 
-from dae.genomic_resources.gene_models import Exon, TranscriptModel
-from dae.effect_annotation.annotator import Variant
+from dae.effect_annotation.annotator import (
+    AnnotationRequestFactory,
+    EffectAnnotator,
+    Variant,
+)
 from dae.effect_annotation.effect_checkers.utr import UTREffectChecker
-from dae.effect_annotation.annotator import AnnotationRequestFactory, \
-    EffectAnnotator
+from dae.genomic_resources.gene_models import Exon, TranscriptModel
 
 from .mocks import TranscriptModelMock
 
@@ -24,7 +26,7 @@ def transcript_model() -> TranscriptModel:
 
     return cast(
         TranscriptModel,
-        TranscriptModelMock("+", 85, 105, exons, coding)
+        TranscriptModelMock("+", 85, 105, exons, coding),
     )
 
 
@@ -36,11 +38,11 @@ def effect_checker() -> UTREffectChecker:
 def test_deletion_before_start(
     annotator: EffectAnnotator,
     transcript_model: TranscriptModel,
-    effect_checker: UTREffectChecker
+    effect_checker: UTREffectChecker,
 ) -> None:
     variant = Variant(loc="1:65", ref="A", alt="")
     request = AnnotationRequestFactory.create_annotation_request(
-        annotator, variant, transcript_model
+        annotator, variant, transcript_model,
     )
     effect = effect_checker.get_effect(request)
     assert effect is not None
@@ -51,11 +53,11 @@ def test_deletion_before_start(
 def test_deletion_after_end_same_exon(
     annotator: EffectAnnotator,
     transcript_model: TranscriptModel,
-    effect_checker: UTREffectChecker
+    effect_checker: UTREffectChecker,
 ) -> None:
     variant = Variant(loc="1:108", ref="A", alt="")
     request = AnnotationRequestFactory.create_annotation_request(
-        annotator, variant, transcript_model
+        annotator, variant, transcript_model,
     )
     effect = effect_checker.get_effect(request)
     assert effect is not None
@@ -66,11 +68,11 @@ def test_deletion_after_end_same_exon(
 def test_deletion_after_end_same_exon_end(
     annotator: EffectAnnotator,
     transcript_model: TranscriptModel,
-    effect_checker: UTREffectChecker
+    effect_checker: UTREffectChecker,
 ) -> None:
     variant = Variant(loc="1:110", ref="A", alt="")
     request = AnnotationRequestFactory.create_annotation_request(
-        annotator, variant, transcript_model
+        annotator, variant, transcript_model,
     )
     effect = effect_checker.get_effect(request)
     assert effect is not None
@@ -81,11 +83,11 @@ def test_deletion_after_end_same_exon_end(
 def test_deletion_after_end_last_exon(
     annotator: EffectAnnotator,
     transcript_model: TranscriptModel,
-    effect_checker: UTREffectChecker
+    effect_checker: UTREffectChecker,
 ) -> None:
     variant = Variant(loc="1:151", ref="A", alt="")
     request = AnnotationRequestFactory.create_annotation_request(
-        annotator, variant, transcript_model
+        annotator, variant, transcript_model,
     )
     effect = effect_checker.get_effect(request)
     assert effect is not None

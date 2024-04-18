@@ -2,33 +2,32 @@
 import pathlib
 
 import pytest
-
-from sqlglot import parse_one, exp
+from sqlglot import exp, parse_one
 from sqlglot.executor import execute
 from sqlglot.schema import ensure_schema
 
-from dae.utils.regions import Region
-from dae.variants.attributes import Role, Sex, Inheritance
-from dae.variants.core import Allele
 from dae.genomic_resources.gene_models import GeneModels
-from dae.query_variants.sql.schema2.sql_query_builder import Db2Layout
-from dae.testing import setup_pedigree
-from dae.testing.t4c8_import import t4c8_genes
 from dae.pedigrees.families_data import FamiliesData
 from dae.pedigrees.loader import FamiliesLoader
+from dae.query_variants.sql.schema2.sql_query_builder import (
+    Db2Layout,
+    RealAttrFilterType,
+    SqlQueryBuilder,
+)
+from dae.testing import setup_pedigree
+from dae.testing.t4c8_import import t4c8_genes
+from dae.utils.regions import Region
+from dae.variants.attributes import Inheritance, Role, Sex
+from dae.variants.core import Allele
 
-from dae.query_variants.sql.schema2.sql_query_builder import \
-    SqlQueryBuilder, \
-    RealAttrFilterType
 
-
-@pytest.fixture
+@pytest.fixture()
 def pedigree_schema_simple() -> dict[str, str]:
     schema: dict[str, str] = {}
     return schema
 
 
-@pytest.fixture
+@pytest.fixture()
 def summary_schema_simple() -> dict[str, str]:
     schema = {
         "bucket_index": "int32",
@@ -56,7 +55,7 @@ def summary_schema_simple() -> dict[str, str]:
     return schema
 
 
-@pytest.fixture
+@pytest.fixture()
 def family_schema_simple() -> dict[str, str]:
     schema = {
         "bucket_index": "int32",
@@ -75,7 +74,7 @@ def family_schema_simple() -> dict[str, str]:
     return schema
 
 
-@pytest.fixture
+@pytest.fixture()
 def db_layout_simple() -> Db2Layout:
     db_layout = Db2Layout(
         db="test_db",
@@ -88,7 +87,7 @@ def db_layout_simple() -> Db2Layout:
     return db_layout
 
 
-@pytest.fixture
+@pytest.fixture()
 def families_simple(tmp_path: pathlib.Path) -> FamiliesData:
     ped_path = setup_pedigree(
         tmp_path / "pedigree" / "in.ped",
@@ -102,12 +101,12 @@ def families_simple(tmp_path: pathlib.Path) -> FamiliesData:
     return families
 
 
-@pytest.fixture
+@pytest.fixture()
 def t4c8_gene_models(tmp_path: pathlib.Path) -> GeneModels:
     return t4c8_genes(tmp_path / "gene_models")
 
 
-@pytest.fixture
+@pytest.fixture()
 def sql_query_builder_simple(
     db_layout_simple: Db2Layout,
     pedigree_schema_simple: dict[str, str],
@@ -129,7 +128,7 @@ def sql_query_builder_simple(
 
 
 def test_summary_query_builder_simple(
-    sql_query_builder_simple: SqlQueryBuilder
+    sql_query_builder_simple: SqlQueryBuilder,
 ) -> None:
     query = sql_query_builder_simple.build_summary_variants_query()
     assert query
@@ -141,7 +140,7 @@ def test_summary_query_builder_simple(
     "gene,expected", [
         ("t4", "chr1:5-85"),
         ("c8", "chr1:100-205"),
-    ]
+    ],
 )
 def test_build_gene_regions_heuristic(
     sql_query_builder_simple: SqlQueryBuilder,
@@ -152,7 +151,7 @@ def test_build_gene_regions_heuristic(
     regions = None
     sql_query_builder_simple.GENE_REGIONS_HEURISTIC_EXTEND = 0
     result = sql_query_builder_simple._build_gene_regions_heuristic(
-        genes, regions
+        genes, regions,
     )
     assert result is not None
     assert len(result) == 1
@@ -171,7 +170,7 @@ def test_build_gene_regions_heuristic(
         ([Region("chr1", 49, 50)], 1),
         ([Region("chr1", 10, 30)], 2),
         ([Region("chr1", 10, 30), Region("chr1", 40, 50)], 3),
-    ]
+    ],
 )
 def test_build_regions_where(
     sql_query_builder_simple: SqlQueryBuilder,
@@ -206,7 +205,7 @@ def test_build_regions_where(
         ([("af_allele_freq", (None, 1.0))], False, 1),
         ([("af_allele_freq", (0.5, None))], False, 2),
         ([("af_allele_freq", (None, None))], False, 2),
-    ]
+    ],
 )
 def test_build_real_attr_where(
     sql_query_builder_simple: SqlQueryBuilder,
@@ -216,14 +215,14 @@ def test_build_real_attr_where(
 ) -> None:
     tables = {
         "summary_allele": [
-            {"af_allele_freq": 0.5, },
-            {"af_allele_freq": None, },
-            {"af_allele_freq": 50.0, },
+            {"af_allele_freq": 0.5},
+            {"af_allele_freq": None},
+            {"af_allele_freq": 50.0},
 
         ],
     }
     where = sql_query_builder_simple._build_real_attr_where(
-        real_attr_filter, is_frequency
+        real_attr_filter, is_frequency,
     )
     if not is_frequency:
         assert where
@@ -241,13 +240,13 @@ def test_build_real_attr_where(
 
 
 def test_build_ultra_rare_where(
-    sql_query_builder_simple: SqlQueryBuilder
+    sql_query_builder_simple: SqlQueryBuilder,
 ) -> None:
     tables = {
         "summary_allele": [
-            {"af_allele_count": 1, },
-            {"af_allele_count": None, },
-            {"af_allele_count": 50, },
+            {"af_allele_count": 1},
+            {"af_allele_count": None},
+            {"af_allele_count": 50},
 
         ],
     }
@@ -262,10 +261,10 @@ def test_build_ultra_rare_where(
 
 
 def test_build_gene_query_where(
-    sql_query_builder_simple: SqlQueryBuilder
+    sql_query_builder_simple: SqlQueryBuilder,
 ) -> None:
     query = sql_query_builder_simple.build_summary_variants_query(
-        genes=["t4"], effect_types=["missense"]
+        genes=["t4"], effect_types=["missense"],
     )
     print(query)
     expr = parse_one(query, read="duckdb")
@@ -278,7 +277,7 @@ def test_sqlglot_nested_schema_experiments() -> None:
             "a": "int64",
             "b": exp.DataType.Type.ARRAY,
             "c": exp.DataType.Type.STRUCT,
-        }
+        },
     }
     schema = ensure_schema(table_schema)
     assert schema
@@ -286,7 +285,7 @@ def test_sqlglot_nested_schema_experiments() -> None:
 
 
 def test_sql_query_builder_effect_types(
-    sql_query_builder_simple: SqlQueryBuilder
+    sql_query_builder_simple: SqlQueryBuilder,
 ) -> None:
     effect_types = ["5'UTR", "3'UTR"]
     result = sql_query_builder_simple._build_effect_type_where(effect_types)
@@ -298,50 +297,50 @@ def test_sql_query_builder_effect_types(
         (
             [("tt", (None, 1.0))],
             True,
-            "( sa.tt <= 1.0 OR sa.tt IS NULL )"
+            "( sa.tt <= 1.0 OR sa.tt IS NULL )",
         ),
         (
             [("tt", (None, 1.0))],
             False,
-            "( sa.tt <= 1.0 )"
+            "( sa.tt <= 1.0 )",
         ),
         (
             [("tt", (0.0, 1.0))],
             True,
-            "( sa.tt >= 0.0 AND sa.tt <= 1.0 )"
+            "( sa.tt >= 0.0 AND sa.tt <= 1.0 )",
         ),
         (
             [("tt", (0.0, 1.0))],
             False,
-            "( sa.tt >= 0.0 AND sa.tt <= 1.0 )"
+            "( sa.tt >= 0.0 AND sa.tt <= 1.0 )",
         ),
         (
             [("tt", (0.0, None))],
             True,
-            "( sa.tt >= 0.0 )"
+            "( sa.tt >= 0.0 )",
         ),
         (
             [("tt", (0.0, None))],
             False,
-            "( sa.tt >= 0.0 )"
+            "( sa.tt >= 0.0 )",
         ),
         (
             [("tt", (None, None))],
             True,
-            ""
+            "",
         ),
         (
             [("tt", (None, None))],
             False,
-            "( sa.tt IS NOT NULL )"
+            "( sa.tt IS NOT NULL )",
         ),
-    ]
+    ],
 )
 def test_sql_query_builder_real_attr_where(
     real_attr_filter: RealAttrFilterType,
     is_frequency: bool,
     expected: str,
-    sql_query_builder_simple: SqlQueryBuilder
+    sql_query_builder_simple: SqlQueryBuilder,
 ) -> None:
     result = sql_query_builder_simple._build_real_attr_where(
         real_attr_filter, is_frequency)  # type: ignore
@@ -357,7 +356,7 @@ def test_sql_query_builder_real_attr_where(
         ("female and not male", Sex.male.value | Sex.female.value, False),
         ("female and not male",
          Sex.unspecified.value | Sex.female.value, True),
-    ]
+    ],
 )
 def test_sex_query_duckdb(
     sex_query: str,
@@ -374,7 +373,7 @@ def test_sex_query_duckdb(
         (["denovo"], Inheritance.denovo.value, True),
         (["denovo", "mendelian"], Inheritance.denovo.value, False),
         (["denovo or mendelian"], Inheritance.denovo.value, True),
-    ]
+    ],
 )
 def test_inheritance_query_duckdb(
     inheritance_query: list[str],
@@ -430,7 +429,7 @@ def test_inheritance_query_duckdb(
         ("prb", Role.not_role(Role.dad.value | Role.mom.value), True),
         ("(prb and not sib) and (mom and not dad)",
          Role.prb.value | Role.mom.value, True),
-    ]
+    ],
 )
 def test_role_query_duckdb(
     role_query: str,
@@ -455,7 +454,7 @@ def test_role_query_duckdb(
         ("((prb and not sib) or (prb and sib)) and (not mom and not dad)",
          True),
         ("( prb and not sib ) or ( prb and sib )", False),
-    ]
+    ],
 )
 def test_role_query_denovo_only(
     roles_query: str,
@@ -478,7 +477,7 @@ def test_role_query_denovo_only(
         (["not possible_denovo and not possible_omission"], False),
         (["any(denovo,mendelian,missing,omission)",
           "not possible_denovo and not possible_omission"], False),
-    ]
+    ],
 )
 def test_inheritance_query_denovo_only(
     inheritance_query: str,
@@ -521,7 +520,7 @@ def test_inheritance_query_denovo_only(
         ("CNV+",
          Allele.Type.small_insertion.value
          | Allele.Type.small_deletion.value, False),
-    ]
+    ],
 )
 def test_variant_types_query_duckdb(
     variant_types_query: str,

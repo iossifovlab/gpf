@@ -2,22 +2,20 @@
 
 import os
 import pathlib
-
-from os.path import join
 from copy import deepcopy
+from os.path import join
 from typing import Optional
 
+import pyarrow.parquet as pq
 import pytest
 
-import pyarrow.parquet as pq
-
 from dae.configuration.gpf_config_parser import GPFConfigParser
-from dae.import_tools import import_tools, cli
 from dae.gpf_instance.gpf_instance import GPFInstance
+from dae.import_tools import cli, import_tools
 from dae.testing.acgt_import import acgt_gpf
 
 
-@pytest.fixture
+@pytest.fixture()
 def gpf_fixture(tmp_path: pathlib.Path) -> GPFInstance:
     return acgt_gpf(tmp_path / "gpf")
 
@@ -25,7 +23,7 @@ def gpf_fixture(tmp_path: pathlib.Path) -> GPFInstance:
 def test_import_task_bin_size(
     gpf_fixture: GPFInstance,
     tmp_path: pathlib.Path,
-    resources_dir: pathlib.Path
+    resources_dir: pathlib.Path,
 ) -> None:
     # Create the import config and set tmpdir as work_dir
     input_dir = resources_dir / "import_task_bin_size"
@@ -69,8 +67,8 @@ def test_import_task_bin_size(
         ],
         positions=[
             1, 2, 10,
-            21, 22, 59
-        ]
+            21, 22, 59,
+        ],
     )
 
     # Same for the second directory
@@ -87,15 +85,15 @@ def test_import_task_bin_size(
             2, 3, 3,
         ],
         positions=[
-            60, 70, 71
-        ]
+            60, 70, 71,
+        ],
     )
 
 
 def _assert_variants(
     parquet_fn: str,
     bucket_index: list[int],
-    positions: list[int]
+    positions: list[int],
 ) -> None:
     variants = pq.read_table(parquet_fn).to_pandas()
 
@@ -120,21 +118,21 @@ def test_bucket_generation(
                 "ref": "ref",
                 "alt": "alt",
                 "genotype": "genotype",
-            }
+            },
         },
         "processing_config": {
             "work_dir": "",
             "denovo": {
                 "chromosomes": ["chr1"],
-                "region_length": 15
-            }
+                "region_length": 15,
+            },
         },
         "partition_description": {
             "region_bin": {
                 "chromosomes": ["chr1"],
-                "region_length": 50
-            }
-        }
+                "region_length": 50,
+            },
+        },
     }
     project = import_tools.ImportProject.build_from_config(
         import_config, gpf_instance=gpf_fixture)
@@ -165,7 +163,7 @@ def test_bucket_generation_no_processing_region_length(
                 "ref": "ref",
                 "alt": "alt",
                 "genotype": "genotype",
-            }
+            },
         },
         "processing_config": {
             "work_dir": "",
@@ -177,9 +175,9 @@ def test_bucket_generation_no_processing_region_length(
         "partition_description": {
             "region_bin": {
                 "chromosomes": ["chr1"],
-                "region_length": 50
-            }
-        }
+                "region_length": 50,
+            },
+        },
     }
     project = import_tools.ImportProject.build_from_config(
         import_config, gpf_instance=gpf_fixture)
@@ -204,21 +202,21 @@ def test_bucket_generation_chrom_mismatch(
                 "ref": "ref",
                 "alt": "alt",
                 "genotype": "genotype",
-            }
+            },
         },
         "processing_config": {
             "work_dir": "",
             "denovo": {
                 "chromosomes": ["chr2"],
-                "region_length": 40
-            }
+                "region_length": 40,
+            },
         },
         "partition_description": {
             "region_bin": {
                 "chromosomes": ["chr1"],
-                "region_length": 60
-            }
-        }
+                "region_length": 60,
+            },
+        },
     }
 
     project = import_tools.ImportProject.build_from_config(
@@ -238,7 +236,7 @@ _input_dir = join(
 _denovo_multi_chrom_config = {
     "input": {
         "pedigree": {
-            "file": join(_input_dir, "pedigree.ped")
+            "file": join(_input_dir, "pedigree.ped"),
         },
         "denovo": {
             "files": [join(_input_dir, "multi_chromosome_variants.tsv")],
@@ -248,7 +246,7 @@ _denovo_multi_chrom_config = {
             "ref": "ref",
             "alt": "alt",
             "genotype": "genotype",
-        }
+        },
     },
     "processing_config": {
         "work_dir": "",
@@ -256,9 +254,9 @@ _denovo_multi_chrom_config = {
     "partition_description": {
         "region_bin": {
             "chromosomes": ["chr1"],
-            "region_length": 40
-        }
-    }
+            "region_length": 40,
+        },
+    },
 }
 
 
@@ -311,7 +309,7 @@ def test_chromosome_list_bucket_generation(
 ) -> None:
     import_config = deepcopy(_denovo_multi_chrom_config)
     import_config["processing_config"]["denovo"] = {  # type: ignore
-        "chromosomes": ["chr1", ]
+        "chromosomes": ["chr1"],
     }
     project = import_tools.ImportProject.build_from_config(
         import_config, gpf_instance=gpf_fixture)

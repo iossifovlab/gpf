@@ -1,7 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,too-many-lines
 import argparse
-
 from typing import Optional
+
 import pytest
 
 from dae.task_graph import TaskGraphCli
@@ -12,7 +12,7 @@ from dae.task_graph import TaskGraphCli
     ([], None),
     (["-j", "100"], 100),
     (["--jobs", "1"], 1),
-    (["--jobs", "100"], 100)
+    (["--jobs", "100"], 100),
 ])
 def test_cli_args_jobs(argv: list[str], jobs: Optional[int]) -> None:
     parser = argparse.ArgumentParser(description="test_basic")
@@ -26,7 +26,7 @@ def test_cli_args_jobs(argv: list[str], jobs: Optional[int]) -> None:
     ([], "run"),
     (["run"], "run"),
     (["list"], "list"),
-    (["status"], "status")
+    (["status"], "status"),
 ])
 def test_cli_args_command(argv: list[str], command: str) -> None:
     parser = argparse.ArgumentParser(description="test_basic")
@@ -40,7 +40,7 @@ def test_cli_args_command(argv: list[str], command: str) -> None:
     ([], None),
     (["-N", "abc"], "abc"),
     (["--dcn", "abc"], "abc"),
-    (["--dask-cluster-name", "abc"], "abc")
+    (["--dask-cluster-name", "abc"], "abc"),
 ])
 def test_cli_args_dask_cluster_name(
         argv: list[str], name: Optional[str]) -> None:
@@ -55,7 +55,7 @@ def test_cli_args_dask_cluster_name(
     ([], None),
     (["-c", "abc.yaml"], "abc.yaml"),
     (["--dccf", "abc.yaml"], "abc.yaml"),
-    (["--dask-cluster-config-file", "abc.yaml"], "abc.yaml")
+    (["--dask-cluster-config-file", "abc.yaml"], "abc.yaml"),
 ])
 def test_cli_args_dask_cluster_config_file(
         argv: list[str], filename: Optional[str]) -> None:

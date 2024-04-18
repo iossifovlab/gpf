@@ -1,6 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
 from scipy import stats
+
 from dae.enrichment_tool.samocha_background import poisson_test
 
 

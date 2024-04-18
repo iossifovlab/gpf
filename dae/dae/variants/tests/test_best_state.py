@@ -1,13 +1,12 @@
-import pytest
+from io import StringIO
 
 import numpy as np
-from io import StringIO
-from dae.variants.variant import SummaryAllele
-from dae.variants.family_variant import FamilyAllele
-from dae.utils.variant_utils import GenotypeType
+import pytest
 
 from dae.pedigrees.loader import FamiliesLoader
-
+from dae.utils.variant_utils import GenotypeType
+from dae.variants.family_variant import FamilyAllele
+from dae.variants.variant import SummaryAllele
 
 PED1 = """
 # SIMPLE TRIO

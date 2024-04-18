@@ -1,30 +1,31 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-from pathlib import Path
 import textwrap
-import pytest
-import numpy as np
+from pathlib import Path
 
-from dae.pedigrees.testing import build_families_data
+import numpy as np
+import pytest
+
 from dae.genomic_resources.testing import setup_dae_transmitted
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.pedigrees.families_data import FamiliesData
+from dae.pedigrees.testing import build_families_data
 from dae.testing import foobar_gpf
 from dae.utils.variant_utils import mat2str, str2mat
 from dae.variants_loaders.dae.loader import DaeTransmittedLoader
 
 
-@pytest.fixture
+@pytest.fixture()
 def root_path(tmp_path_factory: pytest.TempPathFactory) -> Path:
     return tmp_path_factory.mktemp("denovo_foobar_gpf_instance")
 
 
-@pytest.fixture
+@pytest.fixture()
 def gpf_instance(root_path: Path) -> GPFInstance:
     gpf_instance = foobar_gpf(root_path)
     return gpf_instance
 
 
-@pytest.fixture
+@pytest.fixture()
 def families_data() -> FamiliesData:
     return build_families_data("""
         familyId personId dadId	 momId	sex status role
@@ -38,7 +39,7 @@ def families_data() -> FamiliesData:
     """)
 
 
-@pytest.fixture
+@pytest.fixture()
 def summary_data(root_path: Path) -> str:
     summary_data, _toomany_data = setup_dae_transmitted(
         root_path,
@@ -58,9 +59,9 @@ bar 11       sub(A->G) f1:1121/1101:38||4||83||25/16||23||0||16/0||0||0||0;f2:21
     return summary_data
 
 
-@pytest.fixture
+@pytest.fixture()
 def dae_transmitted(
-    gpf_instance: GPFInstance, families_data: FamiliesData, summary_data: str
+    gpf_instance: GPFInstance, families_data: FamiliesData, summary_data: str,
 ) -> DaeTransmittedLoader:
     variants_loader = DaeTransmittedLoader(
         families_data,
@@ -72,7 +73,7 @@ def dae_transmitted(
 
 
 def test_dae_transmitted_loader_simple(
-    dae_transmitted: DaeTransmittedLoader
+    dae_transmitted: DaeTransmittedLoader,
 ) -> None:
     for fv in dae_transmitted.family_variants_iterator():
         assert fv.gt is not None
@@ -86,7 +87,7 @@ def test_dae_transmitted_loader_simple(
 
 
 def test_chromosomes_have_adjusted_chrom(
-    gpf_instance: GPFInstance, families_data: FamiliesData, summary_data: str
+    gpf_instance: GPFInstance, families_data: FamiliesData, summary_data: str,
 ) -> None:
     variants_loader = DaeTransmittedLoader(
         families_data,
@@ -100,7 +101,7 @@ def test_chromosomes_have_adjusted_chrom(
 
 
 def test_variants_have_adjusted_chrom(
-    gpf_instance: GPFInstance, families_data: FamiliesData, summary_data: str
+    gpf_instance: GPFInstance, families_data: FamiliesData, summary_data: str,
 ) -> None:
     variants_loader = DaeTransmittedLoader(
         families_data,
@@ -117,7 +118,7 @@ def test_variants_have_adjusted_chrom(
 
 
 def test_reset_regions_with_adjusted_chrom(
-    gpf_instance: GPFInstance, families_data: FamiliesData, summary_data: str
+    gpf_instance: GPFInstance, families_data: FamiliesData, summary_data: str,
 ) -> None:
     variants_loader = DaeTransmittedLoader(
         families_data,
@@ -139,7 +140,7 @@ def test_reset_regions_with_adjusted_chrom(
 
 
 def test_end_position(
-    gpf_instance: GPFInstance, families_data: FamiliesData, summary_data: str
+    gpf_instance: GPFInstance, families_data: FamiliesData, summary_data: str,
 ) -> None:
     variants_loader = DaeTransmittedLoader(
         families_data,

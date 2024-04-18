@@ -1,12 +1,12 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
 
-from dae.testing import setup_pedigree, setup_denovo, denovo_study
-from dae.testing.foobar_import import foobar_gpf
 from dae.studies.study import GenotypeData
+from dae.testing import denovo_study, setup_denovo, setup_pedigree
+from dae.testing.foobar_import import foobar_gpf
 
 
-@pytest.fixture
+@pytest.fixture()
 def trios2_study(tmp_path_factory: pytest.TempPathFactory) -> GenotypeData:
     root_path = tmp_path_factory.mktemp(
         "common_reports_trios2")
@@ -35,7 +35,7 @@ def trios2_study(tmp_path_factory: pytest.TempPathFactory) -> GenotypeData:
           f2        bar:11    sub(G->A)  2||2||1/0||0||1
           f2        bar:12    sub(G->A)  2||2||1/0||0||1
           f2        bar:14    del(2)     2||2||1/0||0||1
-        """
+        """,
     )
 
     study = denovo_study(
@@ -46,7 +46,7 @@ def trios2_study(tmp_path_factory: pytest.TempPathFactory) -> GenotypeData:
 
 
 def test_trios2_study_common_reports_enabled(
-    trios2_study: GenotypeData
+    trios2_study: GenotypeData,
 ) -> None:
     config = trios2_study.config
 
@@ -57,22 +57,22 @@ def test_trios2_study_common_reports_enabled(
 
 
 def test_trios2_study_denovo_report_effect_groups(
-    trios2_study: GenotypeData
+    trios2_study: GenotypeData,
 ) -> None:
     common_report = trios2_study.config.common_report
     assert common_report.enabled
     assert common_report.effect_groups == [
-        "LGDs", "nonsynonymous", "UTRs"
+        "LGDs", "nonsynonymous", "UTRs",
     ]
 
 
 def test_trios2_study_denovo_report_effect_types(
-    trios2_study: GenotypeData
+    trios2_study: GenotypeData,
 ) -> None:
     common_report = trios2_study.config.common_report
     assert common_report.enabled
     assert common_report.effect_types == [
         "Nonsense", "Frame-shift", "Splice-site", "Missense",
         "No-frame-shift", "noStart", "noEnd", "Synonymous",
-        "Non coding", "Intron", "Intergenic", "3'-UTR", "5'-UTR"
+        "Non coding", "Intron", "Intergenic", "3'-UTR", "5'-UTR",
     ]

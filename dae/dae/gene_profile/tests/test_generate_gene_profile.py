@@ -2,25 +2,29 @@
 import pathlib
 import re
 import textwrap
+
 import pytest
 import yaml
 
-from dae.testing.import_helpers import vcf_study
-from dae.genomic_resources.testing import \
-    setup_directories, setup_pedigree, setup_vcf
-from dae.testing.t4c8_import import t4c8_gpf
-from dae.gene_profile.generate_gene_profile import main
 from dae.gene_profile.db import GeneProfileDB
+from dae.gene_profile.generate_gene_profile import main
+from dae.genomic_resources.testing import (
+    setup_directories,
+    setup_pedigree,
+    setup_vcf,
+)
 from dae.gpf_instance.gpf_instance import GPFInstance
+from dae.testing.import_helpers import vcf_study
+from dae.testing.t4c8_import import t4c8_gpf
 
 
-@pytest.fixture
+@pytest.fixture()
 def gp_config() -> dict:
     return {
         "gene_links": [
             {
                 "name": "Link with prefix",
-                "url": "{gpf_prefix}/datasets/{gene}"
+                "url": "{gpf_prefix}/datasets/{gene}",
             },
             {
                 "name": "Link with gene info",
@@ -28,7 +32,7 @@ def gp_config() -> dict:
                     "https://site.com/{gene}?db={genome}&"
                     "position={chromosome_prefix}{chromosome}"
                     "/{gene_start_position}-{gene_stop_position}"
-                )
+                ),
             },
         ],
         "order": [
@@ -44,17 +48,17 @@ def gp_config() -> dict:
                 "sets": [
                     {
                         "set_id": "test_gene_set_1",
-                        "collection_id": "gene_sets"
+                        "collection_id": "gene_sets",
                     },
                     {
                         "set_id": "test_gene_set_2",
-                        "collection_id": "gene_sets"
+                        "collection_id": "gene_sets",
                     },
                     {
                         "set_id": "test_gene_set_3",
-                        "collection_id": "gene_sets"
+                        "collection_id": "gene_sets",
                     },
-                ]
+                ],
             },
         ],
         "genomic_scores": [
@@ -63,8 +67,8 @@ def gp_config() -> dict:
                 "display_name": "Test gene score",
                 "scores": [
                     {"score_name": "gene_score1", "format": "%%s"},
-                ]
-            }
+                ],
+            },
         ],
         "datasets": {
             "study_1": {
@@ -73,27 +77,27 @@ def gp_config() -> dict:
                         "id": "lgds",
                         "display_name": "LGDs",
                         "effects": ["LGDs"],
-                        "category": "denovo"
+                        "category": "denovo",
                     },
                     {
                         "id": "denovo_missense",
                         "display_name": "missense",
                         "effects": ["missense"],
-                        "category": "denovo"
-                    }
+                        "category": "denovo",
+                    },
                 ],
                 "person_sets": [
                     {
                         "set_name": "autism",
-                        "collection_name": "phenotype"
+                        "collection_name": "phenotype",
                     },
                     {
                         "set_name": "unaffected",
-                        "collection_name": "phenotype"
+                        "collection_name": "phenotype",
                     },
-                ]
-            }
-        }
+                ],
+            },
+        },
     }
 
 
@@ -144,7 +148,7 @@ def gp_gpf_instance(
                         t4
                         c8
                     """),
-                }
+                },
             },
             "gene_score1": {
                 "genomic_resource.yaml": textwrap.dedent("""
@@ -166,7 +170,7 @@ def gp_gpf_instance(
                     c8,20
                 """),
             },
-        }
+        },
     )
 
     ped_path = setup_pedigree(
@@ -197,14 +201,14 @@ chr1   126 .  T   A   .    .      .    GT     0/0  0/0  0/1 0/0  0/0  0/0
 chr1   135 .  T   A   .    .      .    GT     0/0  0/0  0/0 0/0  0/0  0/1
 chr1   165 .  G   T   .    .      .    GT     0/0  0/1  0/1 0/0  0/0  0/0
 chr1   195 .  C   T   .    .      .    GT     0/0  0/0  0/1 0/0  0/0  0/0
-        """)  # noqa
+        """)
 
     project_config_update = {
         "input": {
             "vcf": {
                 "denovo_mode": "denovo",
                 "omission_mode": "omission",
-            }
+            },
         },
     }
 
@@ -224,8 +228,8 @@ chr1   195 .  C   T   .    .      .    GT     0/0  0/0  0/1 0/0  0/0  0/0
                     "sources": [
                         {
                             "from": "pedigree",
-                            "source": "status"
-                        }
+                            "source": "status",
+                        },
                     ],
                     "default": {
                         "color": "#aaaaaa",
@@ -238,23 +242,23 @@ chr1   195 .  C   T   .    .      .    GT     0/0  0/0  0/1 0/0  0/0  0/0
                             "id": "autism",
                             "name": "autism",
                             "values": [
-                                "affected"
-                            ]
+                                "affected",
+                            ],
                         },
                         {
                             "color": "#00ff00",
                             "id": "unaffected",
                             "name": "unaffected",
                             "values": [
-                                "unaffected"
-                            ]
+                                "unaffected",
+                            ],
                         },
-                    ]
+                    ],
                 },
                 "selected_person_set_collections": [
-                    "phenotype"
-                ]
-            }
+                    "phenotype",
+                ],
+            },
         })
 
     return instance
@@ -275,7 +279,7 @@ def test_generate_gene_profile(
     gpdb = GeneProfileDB(
         gpf_instance._gene_profile_config,
         gpdb_filename,
-        clear=False
+        clear=False,
     )
 
     t4 = gpdb.get_gp("t4")
@@ -283,29 +287,29 @@ def test_generate_gene_profile(
 
     assert t4.gene_sets == [
         "gene_sets_test_gene_set_1",
-        "gene_sets_test_gene_set_3"
+        "gene_sets_test_gene_set_3",
     ]
     assert c8.gene_sets == [
         "gene_sets_test_gene_set_2",
-        "gene_sets_test_gene_set_3"
+        "gene_sets_test_gene_set_3",
     ]
 
     assert t4.genomic_scores == {
         "gene_score": {
             "gene_score1": {
                 "format": "%s",
-                "value": 10.0
-            }
-        }
+                "value": 10.0,
+            },
+        },
     }
 
     assert c8.genomic_scores == {
         "gene_score": {
             "gene_score1": {
                 "format": "%s",
-                "value": 20.0
-            }
-        }
+                "value": 20.0,
+            },
+        },
     }
 
     assert t4.variant_counts == {
@@ -313,24 +317,24 @@ def test_generate_gene_profile(
             "autism": {
                 "lgds": {
                     "count": 1.0,
-                    "rate": 1000.0
+                    "rate": 1000.0,
                 },
                 "denovo_missense": {
                     "count": 1.0,
-                    "rate": 1000.0
-                }
+                    "rate": 1000.0,
+                },
             },
             "unaffected": {
                 "lgds": {
                     "count": 0.0,
-                    "rate": 0.0
+                    "rate": 0.0,
                 },
                 "denovo_missense": {
                     "count": 2.0,
-                    "rate": 2000.0
-                }
-            }
-        }
+                    "rate": 2000.0,
+                },
+            },
+        },
     }
 
     assert c8.variant_counts == {
@@ -338,24 +342,24 @@ def test_generate_gene_profile(
             "autism": {
                 "lgds": {
                     "count": 1.0,
-                    "rate": 1000.0
+                    "rate": 1000.0,
                 },
                 "denovo_missense": {
                     "count": 1.0,
-                    "rate": 1000.0
-                }
+                    "rate": 1000.0,
+                },
             },
             "unaffected": {
                 "lgds": {
                     "count": 1.0,
-                    "rate": 1000.0
+                    "rate": 1000.0,
                 },
                 "denovo_missense": {
                     "count": 0.0,
-                    "rate": 0.0
-                }
-            }
-        }
+                    "rate": 0.0,
+                },
+            },
+        },
     }
 
 

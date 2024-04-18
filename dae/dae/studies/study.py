@@ -1,31 +1,28 @@
 """Classes to represent genotype data."""
 from __future__ import annotations
+
+import functools
+import gzip
+import json
+import logging
 import os
 import time
-import logging
-import functools
-import json
-import gzip
-
+from abc import ABC, abstractmethod
+from collections.abc import Generator, Iterable
 from contextlib import closing
 from os.path import basename, exists
-
-from abc import ABC, abstractmethod
-
-from typing import cast, Any, Optional, Generator, Iterable, Union
+from typing import Any, Optional, Union, cast
 
 from box import Box
 
-from dae.utils.regions import Region
-from dae.variants.variant import SummaryVariant
-from dae.variants.family_variant import FamilyVariant
-from dae.query_variants.query_runners import QueryResult
+from dae.effect_annotation.effect import expand_effect_types
 from dae.pedigrees.families_data import FamiliesData
 from dae.pedigrees.loader import FamiliesLoader
-
 from dae.person_sets import PersonSetCollection
-from dae.effect_annotation.effect import expand_effect_types
-
+from dae.query_variants.query_runners import QueryResult
+from dae.utils.regions import Region
+from dae.variants.family_variant import FamilyVariant
+from dae.variants.variant import SummaryVariant
 
 logger = logging.getLogger(__name__)
 
@@ -160,7 +157,7 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
         return result
 
     def _get_query_leaf_studies(
-        self, study_filters: Optional[Iterable[str]]
+        self, study_filters: Optional[Iterable[str]],
     ) -> list[GenotypeDataStudy]:
         leafs = []
         logger.debug("find leaf studies started...")
@@ -200,7 +197,7 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
         limit: Optional[int] = None,
         study_filters: Optional[Iterable[str]] = None,
         pedigree_fields: Optional[list[str]] = None,
-        **_kwargs: Any
+        **_kwargs: Any,
     ) -> Optional[QueryResult]:
         """Build a query result."""
         # flake8: noqa: C901
@@ -217,7 +214,7 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
         def adapt_study_variants(
             study_name: str,
             study_phenotype: str,
-            v: FamilyVariant
+            v: FamilyVariant,
         ) -> FamilyVariant:
             if v is None:
                 return None
@@ -324,7 +321,7 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
         study_filters: Optional[Iterable[str]] = None,
         pedigree_fields: Optional[list[str]] = None,
         unique_family_variants: bool = True,
-        **kwargs: Any
+        **kwargs: Any,
     ) -> Generator[FamilyVariant, None, None]:
         """Query and return generator containing variants."""
         result = self.query_result_variants(
@@ -346,7 +343,7 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
             limit=limit,
             study_filters=study_filters,
             pedigree_fields=pedigree_fields,
-            **kwargs
+            **kwargs,
         )
         if result is None:
             return
@@ -395,7 +392,7 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
         return_unknown: Optional[bool] = None,
         limit: Optional[int] = None,
         study_filters: Optional[list[str]] = None,
-        **kwargs: Any
+        **kwargs: Any,
     ) -> Optional[QueryResult]:
         # pylint: disable=too-many-locals,too-many-arguments,unused-argument
         """Build a query result for summary variants only."""
@@ -448,7 +445,7 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
         return_unknown: Optional[bool] = None,
         limit: Optional[int] = None,
         study_filters: Optional[list[str]] = None,
-        **kwargs: Any
+        **kwargs: Any,
     ) -> Generator[SummaryVariant, None, None]:
         """Query and return generator containing summary variants."""
         # pylint: disable=too-many-locals,too-many-arguments
@@ -499,7 +496,7 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
                         new_attributes = {
                             "family_variants_count": [fv_count],
                             "seen_in_status": [seen_in_status],
-                            "seen_as_denovo": [seen_as_denovo]
+                            "seen_as_denovo": [seen_as_denovo],
                         }
                         v.update_attributes(new_attributes)
 
@@ -525,13 +522,13 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
     @abstractmethod
     def _build_person_set_collection(
         self, psc_config: dict[str, Any],
-        families: FamiliesData
+        families: FamiliesData,
     ) -> PersonSetCollection:
         pass
 
     def _build_person_set_collections(
         self, pscs_config: Optional[dict[str, Any]],
-        families: FamiliesData
+        families: FamiliesData,
     ) -> dict[str, PersonSetCollection]:
         if pscs_config is None:
             return {}
@@ -547,7 +544,7 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
 
     def _transform_person_set_collection_query(
         self, collection_query: tuple[str, list[str]],
-        person_ids: Optional[Iterable[str]]
+        person_ids: Optional[Iterable[str]],
     ) -> Optional[set[str]]:
         assert collection_query is not None
 
@@ -564,7 +561,7 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
 
         for set_id in (set(selected_sets) & person_set_ids):
             selected_fpids.update(
-                collection.person_sets[set_id].persons.keys()
+                collection.person_sets[set_id].persons.keys(),
             )
         selected_person_ids: set[str] = set(
             fpid[1] for fpid in selected_fpids)
@@ -574,7 +571,7 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
         return selected_person_ids
 
     def get_person_set_collection(
-        self, person_set_collection_id: str
+        self, person_set_collection_id: str,
     ) -> Optional[PersonSetCollection]:
         if person_set_collection_id is None:
             return None
@@ -590,10 +587,10 @@ class GenotypeDataGroup(GenotypeData):
 
     def __init__(
         self, config: Box,
-        studies: Iterable[GenotypeData]
+        studies: Iterable[GenotypeData],
     ):
         super().__init__(
-            config, list(studies)
+            config, list(studies),
         )
         self._families: FamiliesData
         if not self.has_families_cache():
@@ -626,7 +623,7 @@ class GenotypeDataGroup(GenotypeData):
         cache_path = None
         if "conf_dir" in self.config:
             cache_path = os.path.join(
-                self.config["conf_dir"], "families_cache.ped.gz"
+                self.config["conf_dir"], "families_cache.ped.gz",
             )
 
         if cache_path is None or not os.path.exists(cache_path):
@@ -634,12 +631,12 @@ class GenotypeDataGroup(GenotypeData):
         return True
 
     def _load_cached_families_data(
-        self, cache_dir: Optional[str] = None
+        self, cache_dir: Optional[str] = None,
     ) -> Optional[FamiliesData]:
         """Load families data cache if exists."""
         cache_dir = self._ensure_cache_dir(cache_dir)
         cache_path = os.path.join(
-            cache_dir, "families_cache.ped.gz"
+            cache_dir, "families_cache.ped.gz",
         )
 
         if cache_path is not None and os.path.exists(cache_path):
@@ -648,7 +645,7 @@ class GenotypeDataGroup(GenotypeData):
                 return result
             except BaseException:  # pylint: disable=broad-except
                 logger.error(
-                    "Couldn't load families cache for %s", self.study_id
+                    "Couldn't load families cache for %s", self.study_id,
                 )
         return None
 
@@ -665,9 +662,8 @@ class GenotypeDataGroup(GenotypeData):
             raise ValueError(f"cache dir {cache_dir} is not a directory")
         return cache_dir
 
-
     def _save_cached_families_data(
-        self, cache_dir: Optional[str] = None
+        self, cache_dir: Optional[str] = None,
     ) -> bool:
         """Store genotype data group families data into cache."""
         cache_dir = self._ensure_cache_dir(cache_dir)
@@ -679,12 +675,12 @@ class GenotypeDataGroup(GenotypeData):
         except BaseException:  # pylint: disable=broad-except
             logger.error(
                 "Failed to cache families for %s", self.study_id,
-                exc_info=True
+                exc_info=True,
             )
             return False
 
     def _save_cached_person_sets(
-        self, cache_dir: Optional[str] = None
+        self, cache_dir: Optional[str] = None,
     ) -> bool:
         """Save cached person set collections defined for a genotype group."""
         cache_dir = self._ensure_cache_dir(cache_dir)
@@ -699,7 +695,7 @@ class GenotypeDataGroup(GenotypeData):
         except BaseException:  # pylint: disable=broad-except
             logger.error(
                 "Failed to cache person sets for study %s", self.study_id,
-                exc_info=True
+                exc_info=True,
             )
             return False
 
@@ -725,7 +721,7 @@ class GenotypeDataGroup(GenotypeData):
         return True
 
     def _load_cached_person_sets(
-        self, cache_dir: Optional[str] = None
+        self, cache_dir: Optional[str] = None,
     ) -> Optional[dict[str, PersonSetCollection]]:
         """Save cached person set collections defined for a genotype group."""
         cache_dir = self._ensure_cache_dir(cache_dir)
@@ -799,7 +795,7 @@ class GenotypeDataGroup(GenotypeData):
             self._families = self.studies[0].families
             self._person_set_collections = self._build_person_set_collections(
                 self.config.get("person_set_collections"),
-                self._families
+                self._families,
             )
             return
 
@@ -829,14 +825,14 @@ class GenotypeDataGroup(GenotypeData):
 
         pscs = self._build_person_set_collections(
             self.config.get("person_set_collections"),
-            result
+            result,
         )
 
         self._person_set_collections = pscs
 
     def _build_person_set_collection(
         self, psc_config: dict[str, Any],
-        families: FamiliesData
+        families: FamiliesData,
     ) -> PersonSetCollection:
 
         psc_id = psc_config["id"]
@@ -867,7 +863,7 @@ class GenotypeDataStudy(GenotypeData):
         self._backend = backend
         self. _person_set_collections = self._build_person_set_collections(
             self.config.get("person_set_collections"),
-            self.families
+            self.families,
         )
 
         self.is_remote = False
@@ -889,7 +885,7 @@ class GenotypeDataStudy(GenotypeData):
 
     def _build_person_set_collection(
         self, psc_config: dict[str, Any],
-        families: FamiliesData
+        families: FamiliesData,
     ) -> PersonSetCollection:
         psc = PersonSetCollection.from_families(psc_config, self.families)
 

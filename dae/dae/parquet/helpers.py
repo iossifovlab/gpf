@@ -1,12 +1,11 @@
 import logging
-
-from typing import cast, Optional, Union
+from typing import Optional, Union, cast
 from urllib.parse import urlparse
-from fsspec.spec import AbstractFileSystem
-from fsspec.core import url_to_fs
+
 import pyarrow as pa
 import pyarrow.parquet as pq
-
+from fsspec.core import url_to_fs
+from fsspec.spec import AbstractFileSystem
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +45,7 @@ def merge_parquets(
     in_files: list[str], out_file: str,
     delete_in_files: bool = True,
     row_group_size: int = 50_000,
-    parquet_version: Optional[str] = None
+    parquet_version: Optional[str] = None,
 ) -> None:
     """Merge `in_files` into one large file called `out_file`."""
     try:
@@ -63,7 +62,7 @@ def merge_parquets(
 
 def _merge_flush_batches(
     batches: list[pa.RecordBatch],
-    out_parquet: pq.ParquetWriter
+    out_parquet: pq.ParquetWriter,
 ) -> None:
     if len(batches) == 0:
         return
@@ -72,7 +71,7 @@ def _merge_flush_batches(
 
 
 def _collect_in_files_compression(
-    in_files: list[str]
+    in_files: list[str],
 ) -> Union[str, dict[str, str]]:
     compression: Union[str, dict[str, str]] = "SNAPPY"
     if len(in_files) > 0:
@@ -104,7 +103,7 @@ def _collect_in_files_compression(
 def _try_merge_parquets(
     in_files: list[str], out_file: str, delete_in_files: bool,
     row_group_size: int = 50_000,
-    parqet_version: Optional[str] = None
+    parqet_version: Optional[str] = None,
 ) -> None:
     assert len(in_files) > 0
     out_parquet = None
@@ -126,7 +125,7 @@ def _try_merge_parquets(
                         out_filename, parq_file.schema_arrow,
                         filesystem=out_filesystem,
                         compression=compression,
-                        version=parqet_version
+                        version=parqet_version,
                     )
                 for batch in parq_file.iter_batches():
                     batches.append(batch)

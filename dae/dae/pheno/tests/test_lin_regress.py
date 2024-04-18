@@ -1,5 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,too-many-lines
 import numpy as np
+
 from dae.pheno.utils.lin_regress import LinearRegression
 
 
@@ -15,7 +16,7 @@ def test_lin_regress() -> None:
         8.82857143,
         11.24285714,
         13.65714286,
-        16.07142857
+        16.07142857,
     ])
     assert all(np.isclose(expected, result.predict(x)))
 

@@ -1,10 +1,10 @@
-from typing import Dict, Callable, Optional
-from importlib_metadata import entry_points, EntryPoint
+from typing import Callable, Dict, Optional
 
-from .repository_factory import build_genomic_resource_repository
+from importlib_metadata import EntryPoint, entry_points
+
 from .repository import GenomicResource
+from .repository_factory import build_genomic_resource_repository
 from .resource_implementation import GenomicResourceImplementation
-
 
 _FOUND_RESOURCE_IMPLEMENTATIONS: Dict[str, EntryPoint] = {}
 
@@ -14,7 +14,8 @@ _REGISTERED_RESOURCE_IMPLEMENTATIONS: Dict[
 
 
 __all__ = [
-    "build_genomic_resource_repository", "GenomicResource",
+    "GenomicResource",
+    "build_genomic_resource_repository",
     "get_resource_implementation_builder",
 ]
 
@@ -24,7 +25,7 @@ _PLUGINS_LOADED = False
 
 
 def get_resource_implementation_builder(
-    resource_type: str
+    resource_type: str,
 ) -> Optional[Callable[[GenomicResource], GenomicResourceImplementation]]:
     """
     Return an implementation builder for a certain resource type.
@@ -45,7 +46,7 @@ def get_resource_implementation_builder(
 
 def register_implementation(
     resource_type: str,
-    builder: Callable[[GenomicResource], GenomicResourceImplementation]
+    builder: Callable[[GenomicResource], GenomicResourceImplementation],
 ) -> None:
     """
     Register a resource type with a given builder function.
@@ -73,7 +74,7 @@ def _find_implementations() -> None:
         return
 
     discovered_implementations = entry_points(
-        group="dae.genomic_resources.implementations"
+        group="dae.genomic_resources.implementations",
     )
 
     for entry_point in discovered_implementations:

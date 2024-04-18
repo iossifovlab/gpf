@@ -1,8 +1,8 @@
 #!/bin/env python
-import sys
 import csv
-from dae.utils.dae_utils import cshl2vcf_variant
+import sys
 
+from dae.utils.dae_utils import cshl2vcf_variant
 
 if __name__ == "__main__":
     from dae.gpf_instance.gpf_instance import GPFInstance
@@ -19,7 +19,7 @@ if __name__ == "__main__":
         writer.writeheader()
         for row in reader:
             chromosome, pos, ref, alt = cshl2vcf_variant(
-                row["location"], row["variant"], GENOME
+                row["location"], row["variant"], GENOME,
             )
             row["chr"] = chromosome
             row["pos"] = pos

@@ -2,9 +2,9 @@
 # type: ignore
 
 import yaml
+
 from dae.genomic_resources import build_genomic_resource_repository
-from dae.genomic_resources.genomic_scores import \
-    PositionScore
+from dae.genomic_resources.genomic_scores import PositionScore
 
 
 def test_build_an_empty_repository():
@@ -18,8 +18,8 @@ def test_build_a_repository_with_one_resource():
         {"id": "oneResrouce",
          "type": "embedded",
          "content": {
-                 "one": {"genomic_resource.yaml": ""}
-         }
+                 "one": {"genomic_resource.yaml": ""},
+         },
          })
     assert len(list(one_resrouce_repo.get_all_resources())) == 1
 
@@ -28,7 +28,7 @@ def test_build_a_group_repository():
     repo = build_genomic_resource_repository(
         {"type": "group", "children": [
             {"id": "a", "type": "embedded", "content": {}},
-            {"id": "b", "type": "embedded", "content": {}}
+            {"id": "b", "type": "embedded", "content": {}},
         ]})
     assert len(repo.children) == 2
 
@@ -40,13 +40,13 @@ def test_build_a_complex_but_realistic_scenario(tmp_path):
                 "type": "group",
                 "cache_dir": tmp_path / "tmp/remotes12Cache", "children": [
                     {"id": "r1", "type": "http", "url": "http://r1.org/repo"},
-                    {"id": "r2", "type": "http", "url": "http://r2.org/repo"}
+                    {"id": "r2", "type": "http", "url": "http://r2.org/repo"},
                 ]},
             {"id": "r3", "type": "http", "url": "http://r3.org/repo",
              "cache_dir": tmp_path / "tmp/remote3Cache"},
             {"id": "my", "type": "directory",
              "directory": tmp_path / "data/my/grRepo"},
-            {"id": "mm", "type": "embedded", "content": {}}
+            {"id": "mm", "type": "embedded", "content": {}},
         ]})
     # The asserts implicitly test the types of the repositories too:
     #   * only group     repository has a 'children'              attribute;
@@ -56,17 +56,17 @@ def test_build_a_complex_but_realistic_scenario(tmp_path):
     #   * only embedded   repository has a 'content'               attribute.
 
     assert str(repo.children[0].cache_url) == \
-        f"file://{str(tmp_path / 'tmp/remotes12Cache')}"
+        f"file://{tmp_path / 'tmp/remotes12Cache'!s}"
     assert repo.children[0].child.children[0].proto.url == \
         "http://r1.org/repo"
     assert repo.children[0].child.children[1].proto.url == \
         "http://r2.org/repo"
     assert str(repo.children[1].cache_url) == \
-        f"file://{str(tmp_path / 'tmp/remote3Cache')}"
+        f"file://{tmp_path / 'tmp/remote3Cache'!s}"
 
     assert repo.children[1].child.proto.url == "http://r3.org/repo"
     assert repo.children[2].proto.url == \
-        f"file://{str(tmp_path / 'data/my/grRepo')}"
+        f"file://{tmp_path / 'data/my/grRepo'!s}"
 
     assert repo.children[3].proto.scheme == "memory"
 
@@ -76,7 +76,7 @@ def test_build_a_complex_but_realistic_scenario_yaml(tmp_path):
         type: group
         children:
         - type: group
-          cache_dir: "{str(tmp_path)}/tmp/remotes12Cache"
+          cache_dir: "{tmp_path!s}/tmp/remotes12Cache"
           children:
           - id: r1
             type: http
@@ -87,10 +87,10 @@ def test_build_a_complex_but_realistic_scenario_yaml(tmp_path):
         - id: r3
           type: http
           url: http://r3.org/repo
-          cache_dir: {str(tmp_path)}/tmp/remote3Cache
+          cache_dir: {tmp_path!s}/tmp/remote3Cache
         - id: my
           type: directory
-          directory: {str(tmp_path)}/data/my/grRepo
+          directory: {tmp_path!s}/data/my/grRepo
         - id: mm
           type: embedded
           content: {{}}

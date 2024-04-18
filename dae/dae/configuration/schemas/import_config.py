@@ -1,11 +1,11 @@
-from typing import Type, Any
+from typing import Any, Type
+
+from dae.configuration.schemas.dae_conf import storage_schema
+from dae.pedigrees.loader import FamiliesLoader
+from dae.variants_loaders.cnv.loader import CNVLoader
+from dae.variants_loaders.dae.loader import DaeTransmittedLoader, DenovoLoader
 from dae.variants_loaders.raw.loader import CLILoader
 from dae.variants_loaders.vcf.loader import VcfLoader
-from dae.variants_loaders.dae.loader import DenovoLoader, DaeTransmittedLoader
-from dae.variants_loaders.cnv.loader import CNVLoader
-from dae.pedigrees.loader import FamiliesLoader
-from dae.configuration.schemas.dae_conf import storage_schema
-
 
 _region_chromosomes_schema: dict[str, Any] = {
     "region_length": {"anyof_type": ["integer", "string"]},
@@ -14,10 +14,10 @@ _region_chromosomes_schema: dict[str, Any] = {
             "type": "list",
             "schema": {"type": "string"},
         }, {
-            "type": "string"
-        }
-        ]
-    }
+            "type": "string",
+        },
+        ],
+    },
 }
 
 _loader_processing_params = {
@@ -29,7 +29,7 @@ _loader_processing_schema = {
     "anyof": [
         {
             "type": "dict",
-            "schema": _loader_processing_params
+            "schema": _loader_processing_params,
         },
         {
             "type": "string",
@@ -61,7 +61,7 @@ embedded_input_schema = {
             "file": {"type": "string", "required": True},
         },
     },
-    "input_dir": {"type": "string"}
+    "input_dir": {"type": "string"},
 }
 
 import_config_schema: dict[str, Any] = {
@@ -70,9 +70,9 @@ import_config_schema: dict[str, Any] = {
         "type": "dict",
         "anyof_schema": [
             {
-                "file": {"type": "string"}
+                "file": {"type": "string"},
             },
-            embedded_input_schema
+            embedded_input_schema,
         ],
     },
     "processing_config": {
@@ -83,7 +83,7 @@ import_config_schema: dict[str, Any] = {
             "include_reference": {"type": "boolean", "default": False},
             "parquet_row_group_size": {
                 "anyof_type": ["integer", "string"],
-                "default": 50_000
+                "default": 50_000,
             },
             "vcf": _loader_processing_schema,
             "denovo": _loader_processing_schema,
@@ -105,27 +105,27 @@ import_config_schema: dict[str, Any] = {
             {
                 "type": "dict",
                 "schema": {
-                    "file": {"type": "string"}
-                }
+                    "file": {"type": "string"},
+                },
             }, {
                 "type": "list",
                 "allow_unknown": True,
-            }
-        ]
+            },
+        ],
     },
     "destination": {
         "type": "dict",
         "anyof_schema": [
             {"storage_id": {"type": "string"}},
-            storage_schema
+            storage_schema,
         ],
         "allow_unknown": True,
     },
     "gpf_instance": {
         "type": "dict",
         "schema": {
-            "path": {"type": "string"}
-        }
+            "path": {"type": "string"},
+        },
     },
     "partition_description": {
         "type": "dict",
@@ -138,13 +138,13 @@ import_config_schema: dict[str, Any] = {
                 "type": "dict",
                 "schema": {
                     "family_bin_size": {"type": "integer"},
-                }
+                },
             },
             "frequency_bin": {
                 "type": "dict",
                 "schema": {
                     "rare_boundary": {"type": "float"},
-                }
+                },
             },
             "coding_bin": {
                 "type": "dict",
@@ -156,13 +156,13 @@ import_config_schema: dict[str, Any] = {
                                 "schema": {"type": "string"},
                             },
                             {
-                                "type": "string"
-                            }
-                        ]
+                                "type": "string",
+                            },
+                        ],
                     },
-                }
+                },
             },
-        }
+        },
     },
 }
 
@@ -193,7 +193,7 @@ def _fill_with_loader_arguments() -> None:
 def _set_loader_args(
     loader_cls: Type[CLILoader],
     schema: dict,
-    prefix: str
+    prefix: str,
 ) -> None:
     schema["files"] = {
         "type": "list",
@@ -206,7 +206,7 @@ def _set_loader_args(
 def _copy_loader_args(
     loader_cls: Type[CLILoader],
     schema: dict,
-    prefix: str
+    prefix: str,
 ) -> None:
     # FIXME: Fix use of private _arguments of loaders
     for arg in loader_cls._arguments():  # pylint: disable=protected-access

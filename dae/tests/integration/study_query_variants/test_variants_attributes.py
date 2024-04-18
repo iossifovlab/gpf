@@ -4,12 +4,11 @@ from typing import Optional
 
 import pytest
 
-from dae.utils.regions import Region
-from dae.testing import setup_pedigree, setup_vcf, \
-    vcf_study
-from dae.testing.foobar_import import foobar_gpf
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.studies.study import GenotypeData
+from dae.testing import setup_pedigree, setup_vcf, vcf_study
+from dae.testing.foobar_import import foobar_gpf
+from dae.utils.regions import Region
 
 
 @pytest.fixture(scope="module")
@@ -53,11 +52,11 @@ chrA   4   .  A   C   .    .      .    GT     0/0 0/1 1/1
                     "include_unknown_person_genotypes": True,
                     "denovo_mode": "denovo",
                     "omission_mode": "omission",
-                }
+                },
             },
             "processing_config": {
-                "include_reference": True
-            }
+                "include_reference": True,
+            },
         })
     return study
 
@@ -75,7 +74,7 @@ chrA   4   .  A   C   .    .      .    GT     0/0 0/1 1/1
 def test_variant_frequencies(
     imported_study: GenotypeData,
     position: int,
-    freqs: list[Optional[float]]
+    freqs: list[Optional[float]],
 ) -> None:
     regions = [Region("chrA", position, position)]
     vs = list(imported_study.query_variants(regions=regions))

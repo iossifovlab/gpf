@@ -1,17 +1,19 @@
 # pylint: disable=redefined-outer-name,C0114,C0116,protected-access,fixme
 
 import textwrap
+
 import pytest
 
-from dae.genomic_resources.testing import \
-    setup_directories, setup_genome, \
-    build_filesystem_test_repository
-
-from dae.annotation.annotatable import Region, Position, CNVAllele
+from dae.annotation.annotatable import CNVAllele, Position, Region
 from dae.annotation.annotation_factory import build_annotation_pipeline
+from dae.genomic_resources.testing import (
+    build_filesystem_test_repository,
+    setup_directories,
+    setup_genome,
+)
 
 
-@pytest.fixture
+@pytest.fixture()
 def fixture_repo(tmp_path_factory):
     root_path = tmp_path_factory.mktemp("regions_effect_annotation")
     setup_directories(root_path, {
@@ -29,7 +31,7 @@ def fixture_repo(tmp_path_factory):
             {25 * 'AGCT'}
             >chr2
             {25 * 'AGCT'}
-            """)
+            """),
     )
     return build_filesystem_test_repository(root_path)
 
@@ -38,7 +40,7 @@ def fixture_repo(tmp_path_factory):
     (Position("chr1", 1), Position("chr1", 1)),
     (Region("chr1", 1, 10), Region("chr1", 1, 10)),
     (CNVAllele("chr1", 1, 10, CNVAllele.Type.LARGE_DELETION),
-     CNVAllele("chr1", 1, 10, CNVAllele.Type.LARGE_DELETION))
+     CNVAllele("chr1", 1, 10, CNVAllele.Type.LARGE_DELETION)),
 ])
 def test_normalize_allele_annotator(
         annotatable, expected, fixture_repo):

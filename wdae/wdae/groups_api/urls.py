@@ -1,8 +1,13 @@
-from rest_framework.routers import SimpleRouter
-from groups_api.views import GroupsViewSet, add_group_to_dataset, \
-    remove_group_from_dataset, add_user_to_group, remove_user_from_group
 from django.urls import re_path
+from rest_framework.routers import SimpleRouter
 
+from groups_api.views import (
+    GroupsViewSet,
+    add_group_to_dataset,
+    add_user_to_group,
+    remove_group_from_dataset,
+    remove_user_from_group,
+)
 
 router = SimpleRouter(trailing_slash=False)
 router.register(r"groups", GroupsViewSet, basename="groups")

@@ -1,5 +1,6 @@
-import os
 import math
+import os
+
 import numpy as np
 from box import Box  # type: ignore
 

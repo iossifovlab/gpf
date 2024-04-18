@@ -3,20 +3,26 @@ import pathlib
 import textwrap
 from glob import glob
 from typing import Callable
+
 import pytest
 import pytest_mock
-from dae.genomic_resources.genomic_context import GenomicContext
-from dae.annotation.annotation_pipeline import ReannotationPipeline
-from dae.gpf_instance import GPFInstance
-from dae.variants_loaders.parquet.loader import ParquetLoader
-from dae.testing import setup_pedigree, setup_vcf, setup_directories, \
-    setup_denovo, vcf_study
-from dae.testing.t4c8_import import t4c8_gpf
 
 from dae.annotation.annotate_schema2_parquet import cli
+from dae.annotation.annotation_pipeline import ReannotationPipeline
+from dae.genomic_resources.genomic_context import GenomicContext
+from dae.gpf_instance import GPFInstance
+from dae.testing import (
+    setup_denovo,
+    setup_directories,
+    setup_pedigree,
+    setup_vcf,
+    vcf_study,
+)
+from dae.testing.t4c8_import import t4c8_gpf
+from dae.variants_loaders.parquet.loader import ParquetLoader
 
 
-@pytest.fixture
+@pytest.fixture()
 def t4c8_instance(tmp_path: pathlib.Path) -> GPFInstance:
     root_path = tmp_path
     setup_directories(
@@ -25,7 +31,7 @@ def t4c8_instance(tmp_path: pathlib.Path) -> GPFInstance:
             "grr.yaml": textwrap.dedent(f"""
                 id: t4c8_local
                 type: directory
-                directory: {str(root_path)}
+                directory: {root_path!s}
             """),
             "new_annotation.yaml": textwrap.dedent("""
                 - position_score:
@@ -46,7 +52,7 @@ def t4c8_instance(tmp_path: pathlib.Path) -> GPFInstance:
                         - id: score_one
                           type: float
                           name: score
-                """)
+                """),
             },
             "two": {
                 "genomic_resource.yaml": textwrap.dedent("""
@@ -57,7 +63,7 @@ def t4c8_instance(tmp_path: pathlib.Path) -> GPFInstance:
                         - id: score_two
                           type: float
                           name: score
-                """)
+                """),
             },
             "three": {
                 "genomic_resource.yaml": textwrap.dedent("""
@@ -68,9 +74,9 @@ def t4c8_instance(tmp_path: pathlib.Path) -> GPFInstance:
                         - id: score_three
                           type: float
                           name: score
-                """)
-            }
-        }
+                """),
+            },
+        },
     )
     one_content = textwrap.dedent("""
         chrom  pos_begin  score
@@ -106,7 +112,7 @@ def t4c8_instance(tmp_path: pathlib.Path) -> GPFInstance:
     return gpf_instance
 
 
-@pytest.fixture
+@pytest.fixture()
 def t4c8_study_pedigree() -> str:
     return textwrap.dedent("""
         familyId personId dadId momId sex status role
@@ -119,7 +125,7 @@ def t4c8_study_pedigree() -> str:
     """)
 
 
-@pytest.fixture
+@pytest.fixture()
 def t4c8_study_variants() -> str:
     return textwrap.dedent("""
     ##fileformat=VCFv4.2
@@ -137,7 +143,7 @@ def t4c8_study_variants() -> str:
     """)
 
 
-@pytest.fixture
+@pytest.fixture()
 def t4c8_project_config() -> dict:
     return {
         "destination": {"storage_type": "schema2"},
@@ -147,14 +153,14 @@ def t4c8_project_config() -> dict:
                 "attributes": [{
                     "source": "score_one",
                     "name": "score_A",
-                }]
+                }],
             }},
-            {"position_score": "two"}
-        ]
+            {"position_score": "two"},
+        ],
     }
 
 
-@pytest.fixture
+@pytest.fixture()
 def t4c8_study_nonpartitioned(
     t4c8_instance: GPFInstance,
     t4c8_study_pedigree: str,
@@ -164,22 +170,22 @@ def t4c8_study_nonpartitioned(
     root_path = pathlib.Path(t4c8_instance.dae_dir)
     ped_path = setup_pedigree(
         root_path / "study_nonpartitioned" / "pedigree" / "in.ped",
-        t4c8_study_pedigree
+        t4c8_study_pedigree,
     )
     vcf_path = setup_vcf(
         root_path / "study_nonpartitioned" / "vcf" / "in.vcf.gz",
-        t4c8_study_variants
+        t4c8_study_variants,
     )
     vcf_study(
         root_path, "study_nonpartitioned",
         ped_path, [vcf_path],
         t4c8_instance,
-        project_config_overwrite=t4c8_project_config
+        project_config_overwrite=t4c8_project_config,
     )
     return f"{root_path}/work_dir/study_nonpartitioned"
 
 
-@pytest.fixture
+@pytest.fixture()
 def t4c8_study_partitioned(
     t4c8_instance: GPFInstance,
     t4c8_study_pedigree: str,
@@ -189,11 +195,11 @@ def t4c8_study_partitioned(
     root_path = pathlib.Path(t4c8_instance.dae_dir)
     ped_path = setup_pedigree(
         root_path / "study_partitioned" / "pedigree" / "in.ped",
-        t4c8_study_pedigree
+        t4c8_study_pedigree,
     )
     vcf_path = setup_vcf(
         root_path / "study_partitioned" / "vcf" / "in.vcf.gz",
-        t4c8_study_variants
+        t4c8_study_variants,
     )
 
     project_config_update = {
@@ -211,11 +217,11 @@ def t4c8_study_partitioned(
                     "noStart",
                     "missense",
                     "synonymous",
-                ]
+                ],
             },
             "family_bin": {
                 "family_bin_size": 2,
-            }
+            },
         },
     }
     vcf_study(
@@ -223,12 +229,12 @@ def t4c8_study_partitioned(
         ped_path, [vcf_path],
         t4c8_instance,
         project_config_update=project_config_update,
-        project_config_overwrite=t4c8_project_config
+        project_config_overwrite=t4c8_project_config,
     )
     return f"{root_path}/work_dir/study_partitioned"
 
 
-@pytest.fixture
+@pytest.fixture()
 def t4c8_annotationless_study(
     t4c8_instance: GPFInstance,
     t4c8_study_pedigree: str,
@@ -237,11 +243,11 @@ def t4c8_annotationless_study(
     root_path = pathlib.Path(t4c8_instance.dae_dir)
     ped_path = setup_pedigree(
         root_path / "annotationless_study" / "pedigree" / "in.ped",
-        t4c8_study_pedigree
+        t4c8_study_pedigree,
     )
     vcf_path = setup_vcf(
         root_path / "annotationless_study" / "vcf" / "in.vcf.gz",
-        t4c8_study_variants
+        t4c8_study_variants,
     )
     vcf_study(
         root_path, "annotationless_study",
@@ -249,8 +255,8 @@ def t4c8_annotationless_study(
         t4c8_instance,
         project_config_overwrite={
             "destination": {"storage_type": "schema2"},
-            "annotation": []
-        }
+            "annotation": [],
+        },
     )
     return f"{root_path}/work_dir/annotationless_study"
 
@@ -263,7 +269,7 @@ def test_reannotate_parquet_metadata(
     study: str,
     t4c8_study_nonpartitioned: str,
     t4c8_study_partitioned: str,
-    gpf_instance_genomic_context_fixture: Callable[[GPFInstance], GenomicContext]  # noqa: E501
+    gpf_instance_genomic_context_fixture: Callable[[GPFInstance], GenomicContext],  # noqa: E501
 ) -> None:
     root_path = pathlib.Path(t4c8_instance.dae_dir) / ".."
     input_dir = t4c8_study_nonpartitioned \
@@ -281,7 +287,7 @@ def test_reannotate_parquet_metadata(
         "-o", output_dir,
         "-w", work_dir,
         "--grr", grr_file,
-        "-j", "1"
+        "-j", "1",
     ])
 
     loader_old = ParquetLoader(input_dir)
@@ -310,7 +316,7 @@ def test_reannotate_parquet_symlinking(
     study: str,
     t4c8_study_nonpartitioned: str,
     t4c8_study_partitioned: str,
-    gpf_instance_genomic_context_fixture: Callable[[GPFInstance], GenomicContext]  # noqa: E501
+    gpf_instance_genomic_context_fixture: Callable[[GPFInstance], GenomicContext],  # noqa: E501
 ) -> None:
     root_path = pathlib.Path(t4c8_instance.dae_dir) / ".."
     input_dir = t4c8_study_nonpartitioned \
@@ -328,7 +334,7 @@ def test_reannotate_parquet_symlinking(
         "-o", output_dir,
         "-w", work_dir,
         "--grr", grr_file,
-        "-j", "1"
+        "-j", "1",
     ])
 
     loader_old = ParquetLoader(input_dir)
@@ -358,7 +364,7 @@ def test_reannotate_parquet_symlinking_relative(
     study: str,
     t4c8_study_nonpartitioned: str,
     t4c8_study_partitioned: str,
-    gpf_instance_genomic_context_fixture: Callable[[GPFInstance], GenomicContext]  # noqa: E501
+    gpf_instance_genomic_context_fixture: Callable[[GPFInstance], GenomicContext],  # noqa: E501
 ) -> None:
     root_path = pathlib.Path(t4c8_instance.dae_dir) / ".."
     input_dir = t4c8_study_nonpartitioned \
@@ -381,7 +387,7 @@ def test_reannotate_parquet_symlinking_relative(
         "-o", output_dir,
         "-w", work_dir,
         "--grr", grr_file,
-        "-j", "1"
+        "-j", "1",
     ])
 
     loader_old = ParquetLoader(input_dir)
@@ -410,7 +416,7 @@ def test_reannotate_parquet_variants(
     study: str,
     t4c8_study_nonpartitioned: str,
     t4c8_study_partitioned: str,
-    gpf_instance_genomic_context_fixture: Callable[[GPFInstance], GenomicContext]  # noqa: E501
+    gpf_instance_genomic_context_fixture: Callable[[GPFInstance], GenomicContext],  # noqa: E501
 ) -> None:
     root_path = pathlib.Path(t4c8_instance.dae_dir) / ".."
     input_dir = t4c8_study_nonpartitioned \
@@ -428,7 +434,7 @@ def test_reannotate_parquet_variants(
         "-o", output_dir,
         "-w", work_dir,
         "--grr", grr_file,
-        "-j", "1"
+        "-j", "1",
     ])
 
     loader_result = ParquetLoader(output_dir)
@@ -450,7 +456,7 @@ def test_reannotate_parquet_merging(
     study: str,
     t4c8_study_nonpartitioned: str,
     t4c8_study_partitioned: str,
-    gpf_instance_genomic_context_fixture: Callable[[GPFInstance], GenomicContext]  # noqa: E501
+    gpf_instance_genomic_context_fixture: Callable[[GPFInstance], GenomicContext],  # noqa: E501
 ) -> None:
     root_path = pathlib.Path(t4c8_instance.dae_dir) / ".."
     input_dir = t4c8_study_nonpartitioned \
@@ -469,7 +475,7 @@ def test_reannotate_parquet_merging(
         "-w", work_dir,
         "--grr", grr_file,
         "-j", "1",
-        "--region-size", "25"
+        "--region-size", "25",
     ])
 
     expected_pq_files = \
@@ -492,7 +498,7 @@ def test_internal_attributes_reannotation(
     study: str,
     t4c8_study_nonpartitioned: str,
     t4c8_study_partitioned: str,
-    gpf_instance_genomic_context_fixture: Callable[[GPFInstance], GenomicContext]  # noqa: E501
+    gpf_instance_genomic_context_fixture: Callable[[GPFInstance], GenomicContext],  # noqa: E501
 ) -> None:
     root_path = pathlib.Path(t4c8_instance.dae_dir) / ".."
     input_dir = t4c8_study_nonpartitioned \
@@ -510,7 +516,7 @@ def test_internal_attributes_reannotation(
         "-o", output_dir,
         "-w", work_dir,
         "--grr", grr_file,
-        "-j", "1"
+        "-j", "1",
     ])
 
     # check internal attributes are not saved
@@ -523,7 +529,7 @@ def test_annotationless_study_autodetection(
     tmp_path: pathlib.Path,
     t4c8_instance: GPFInstance,
     t4c8_annotationless_study: str,
-    gpf_instance_genomic_context_fixture: Callable[[GPFInstance], GenomicContext]  # noqa: E501
+    gpf_instance_genomic_context_fixture: Callable[[GPFInstance], GenomicContext],  # noqa: E501
 ) -> None:
     root_path = pathlib.Path(t4c8_instance.dae_dir) / ".."
     input_dir = t4c8_annotationless_study
@@ -541,7 +547,7 @@ def test_annotationless_study_autodetection(
         "-o", output_dir,
         "-w", work_dir,
         "--grr", grr_file,
-        "-j", "1"
+        "-j", "1",
     ])
 
     # check auto-detection by asserting
@@ -553,7 +559,7 @@ def test_annotationless_study_variants(
     tmp_path: pathlib.Path,
     t4c8_instance: GPFInstance,
     t4c8_annotationless_study: str,
-    gpf_instance_genomic_context_fixture: Callable[[GPFInstance], GenomicContext]  # noqa: E501
+    gpf_instance_genomic_context_fixture: Callable[[GPFInstance], GenomicContext],  # noqa: E501
 ) -> None:
     root_path = pathlib.Path(t4c8_instance.dae_dir) / ".."
     input_dir = t4c8_annotationless_study
@@ -569,7 +575,7 @@ def test_annotationless_study_variants(
         "-o", output_dir,
         "-w", work_dir,
         "--grr", grr_file,
-        "-j", "1"
+        "-j", "1",
     ])
 
     loader_result = ParquetLoader(output_dir)
@@ -586,7 +592,7 @@ def test_internal_attributes_without_reannotation(
     tmp_path: pathlib.Path,
     t4c8_instance: GPFInstance,
     t4c8_annotationless_study: str,
-    gpf_instance_genomic_context_fixture: Callable[[GPFInstance], GenomicContext]  # noqa: E501
+    gpf_instance_genomic_context_fixture: Callable[[GPFInstance], GenomicContext],  # noqa: E501
 ) -> None:
     root_path = pathlib.Path(t4c8_instance.dae_dir) / ".."
     input_dir = t4c8_annotationless_study
@@ -603,7 +609,7 @@ def test_internal_attributes_without_reannotation(
         "-o", output_dir,
         "-w", work_dir,
         "--grr", grr_file,
-        "-j", "1"
+        "-j", "1",
     ])
 
     # check internal attributes are not saved
@@ -616,7 +622,7 @@ def test_autodetection_reannotate(
     tmp_path: pathlib.Path,
     t4c8_instance: GPFInstance,
     t4c8_study_nonpartitioned: str,
-    gpf_instance_genomic_context_fixture: Callable[[GPFInstance], GenomicContext]  # noqa: E501
+    gpf_instance_genomic_context_fixture: Callable[[GPFInstance], GenomicContext],  # noqa: E501
 ) -> None:
     root_path = pathlib.Path(t4c8_instance.dae_dir) / ".."
     input_dir = t4c8_study_nonpartitioned
@@ -634,7 +640,7 @@ def test_autodetection_reannotate(
         "-o", output_dir,
         "-w", work_dir,
         "--grr", grr_file,
-        "-j", "1"
+        "-j", "1",
     ])
 
     # check auto-detection by asserting reannotation pipeline is constructed

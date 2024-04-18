@@ -1,6 +1,8 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 from typing import List
+
 import pytest
+
 from dae.genomic_resources.testing import setup_pedigree, setup_vcf
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.pedigrees.loader import FamiliesLoader
@@ -8,7 +10,7 @@ from dae.testing.acgt_import import acgt_gpf
 from dae.variants_loaders.vcf.loader import VcfLoader
 
 
-@pytest.fixture
+@pytest.fixture()
 def gpf_instance(
         tmp_path_factory: pytest.TempPathFactory) -> GPFInstance:
     root_path = tmp_path_factory.mktemp("instance")
@@ -16,7 +18,7 @@ def gpf_instance(
     return gpf_instance
 
 
-@pytest.fixture
+@pytest.fixture()
 def multivcf_ped(tmp_path_factory: pytest.TempPathFactory) -> str:
     root_path = tmp_path_factory.mktemp("multivcf")
     ped_path = setup_pedigree(root_path / "ped_data" / "in.ped", """
@@ -46,9 +48,9 @@ def multivcf_ped(tmp_path_factory: pytest.TempPathFactory) -> str:
     return str(ped_path)
 
 
-@pytest.fixture
+@pytest.fixture()
 def multivcf_pedigree(
-    tmp_path_factory: pytest.TempPathFactory
+    tmp_path_factory: pytest.TempPathFactory,
 ) -> List[str]:
     path_list = []
 
@@ -79,7 +81,7 @@ def multivcf_pedigree(
     """) # noqa
 
     path_list.append(
-        str(root_path / "vcf_data" / "in_chr[vc].vcf.gz")
+        str(root_path / "vcf_data" / "in_chr[vc].vcf.gz"),
     )
     root_path = tmp_path_factory.mktemp("multivcf_pedigree2_chr2")
     setup_vcf(root_path / "vcf_data" / "in_chr1.vcf.gz", """
@@ -111,7 +113,7 @@ def multivcf_pedigree(
     chr2	95  	.	C	T	.	    .   	EFF=MIS	GT	    1/1 	1/0 	1/0 	1/0 	0/1
     """) # noqa
     path_list.append(
-        str(root_path / "vcf_data" / "in_chr[vc].vcf.gz")
+        str(root_path / "vcf_data" / "in_chr[vc].vcf.gz"),
     )
     return path_list
 
@@ -119,7 +121,7 @@ def multivcf_pedigree(
 def test_wild_vcf_loader_pedigree(
     multivcf_pedigree: List[str],
     multivcf_ped: str,
-    gpf_instance: GPFInstance
+    gpf_instance: GPFInstance,
 ) -> None:
 
     vcf_file1 = multivcf_pedigree[0]
@@ -174,7 +176,7 @@ def test_wild_vcf_loader_pedigree(
 def test_wild_vcf_loader_pedigree_union(
     multivcf_pedigree: List[str],
     multivcf_ped: str,
-    gpf_instance: GPFInstance
+    gpf_instance: GPFInstance,
 ) -> None:
 
     # f1: f1.mom f1.dad f1.p1 f1.s1

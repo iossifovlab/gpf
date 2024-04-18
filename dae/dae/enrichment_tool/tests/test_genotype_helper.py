@@ -4,7 +4,6 @@ import pytest
 # from dae.enrichment_tool.genotype_helper import GenotypeHelper
 from dae.studies.study import GenotypeData
 
-
 # @pytest.mark.parametrize(
 #     "person_set,effect_types,count",
 #     [
@@ -27,13 +26,13 @@ from dae.studies.study import GenotypeData
     "person_set_id,male,female,unspecified,count",
     [
         ("phenotype1", 1, 1, 0, 2),
-        ("unaffected", 0, 1, 0, 1)
-    ]
+        ("unaffected", 0, 1, 0, 1),
+    ],
 )
 def test_get_children_stats(
     f1_trio: GenotypeData,
     person_set_id: str,
-    male: int, female: int, unspecified: int, count: int
+    male: int, female: int, unspecified: int, count: int,
 ) -> None:
     psc = f1_trio.get_person_set_collection("phenotype")
     assert psc is not None

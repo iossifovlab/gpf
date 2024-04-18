@@ -1,12 +1,10 @@
 import argparse
 import logging
-
 from typing import Optional
 
-from dae.utils.verbosity_configuration import VerbosityConfiguration
-from dae.gpf_instance import GPFInstance
 from dae.enrichment_tool.enrichment_helper import EnrichmentHelper
-
+from dae.gpf_instance import GPFInstance
+from dae.utils.verbosity_configuration import VerbosityConfiguration
 
 logger = logging.getLogger("enrichment_cache_builder")
 

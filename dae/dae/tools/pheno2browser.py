@@ -1,16 +1,14 @@
 #!/usr/bin/env python
-# encoding: utf-8
 """pheno2browser -- prepares a DAE pheno browser data."""
-import sys
 import os
-from argparse import ArgumentParser, RawDescriptionHelpFormatter
+import sys
 import traceback
+from argparse import ArgumentParser, RawDescriptionHelpFormatter
 
-from dae.pheno import pheno_data
-from dae.pheno.prepare_data import PreparePhenoBrowserBase
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.phenotype_data import regression_conf_schema
-
+from dae.pheno import pheno_data
+from dae.pheno.prepare_data import PreparePhenoBrowserBase
 from dae.utils.filehash import sha256sum
 
 
@@ -32,7 +30,7 @@ def calc_dbfile_hashsum(dbfilename):
     assert os.path.exists(dbfilename)
 
     base, _ext = os.path.splitext(dbfilename)
-    hashfilename = "{}.hash".format(base)
+    hashfilename = f"{base}.hash"
     if not os.path.exists(hashfilename):
         hash_sum = sha256sum(dbfilename)
         with open(hashfilename, "w") as f:
@@ -51,7 +49,7 @@ def calc_dbfile_hashsum(dbfilename):
 
 
 def build_pheno_browser(
-    dbfile, pheno_name, output_dir, pheno_regressions=None
+    dbfile, pheno_name, output_dir, pheno_regressions=None,
 ):
     phenodb = pheno_data.PhenotypeStudy(pheno_name, dbfile=dbfile)
 
@@ -107,7 +105,7 @@ USAGE
             metavar="path",
         )
         parser.add_argument(
-            "-p", "--pheno", dest="pheno_name", help="pheno name"
+            "-p", "--pheno", dest="pheno_name", help="pheno name",
         )
         parser.add_argument(
             "-o",
@@ -136,14 +134,14 @@ USAGE
 
         regressions = (
             GPFConfigParser.load_config(
-                args.regression, regression_conf_schema
+                args.regression, regression_conf_schema,
             )
             if args.regression
             else None
         )
 
         build_pheno_browser(
-            args.dbfile, args.pheno_name, args.output, regressions
+            args.dbfile, args.pheno_name, args.output, regressions,
         )
 
         return 0

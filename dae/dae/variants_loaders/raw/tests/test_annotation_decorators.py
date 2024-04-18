@@ -1,11 +1,13 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
 
-from dae.variants_loaders.raw.loader import AnnotationPipelineDecorator, \
-    StoredAnnotationDecorator
+from dae.variants_loaders.raw.loader import (
+    AnnotationPipelineDecorator,
+    StoredAnnotationDecorator,
+)
 
 
-@pytest.fixture
+@pytest.fixture()
 def iossifov2014_decorated(iossifov2014_loader, annotation_pipeline_internal):
     variants_loader, families_loader = iossifov2014_loader
     variants_loader = AnnotationPipelineDecorator(
@@ -39,11 +41,11 @@ def test_stored_annotation_iossifov2014(iossifov2014_decorated, temp_filename):
     assert variants_loader.annotation_schema is not None
 
     StoredAnnotationDecorator.save_annotation_file(
-        variants_loader, temp_filename
+        variants_loader, temp_filename,
     )
 
     loader = StoredAnnotationDecorator(
-        variants_loader, temp_filename
+        variants_loader, temp_filename,
     )
 
     for sv, _ in loader.full_variants_iterator():
@@ -64,11 +66,11 @@ def test_stored_annotation_does_not_change_summary_alleles(
     assert variants_loader.annotation_schema is not None
 
     StoredAnnotationDecorator.save_annotation_file(
-        variants_loader, temp_filename
+        variants_loader, temp_filename,
     )
 
     loader = StoredAnnotationDecorator(
-        variants_loader, temp_filename
+        variants_loader, temp_filename,
     )
 
     for _sv, fvs in loader.full_variants_iterator():
@@ -84,11 +86,11 @@ def test_stored_annotation_saves_nonetype_properly(
     assert variants_loader.annotation_schema is not None
 
     StoredAnnotationDecorator.save_annotation_file(
-        variants_loader, temp_filename
+        variants_loader, temp_filename,
     )
 
     loader = StoredAnnotationDecorator(
-        variants_loader, temp_filename
+        variants_loader, temp_filename,
     )
 
     for sv, _ in loader.full_variants_iterator():

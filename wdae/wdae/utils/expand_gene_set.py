@@ -1,8 +1,8 @@
 from typing import cast
-from gpf_instance.gpf_instance import get_wgpf_instance
 
-from django.contrib.auth.models import User
 from datasets_api.permissions import IsDatasetAllowed
+from django.contrib.auth.models import User
+from gpf_instance.gpf_instance import get_wgpf_instance
 
 
 def expand_gene_set(data: dict, user: User) -> dict:
@@ -21,7 +21,7 @@ def expand_gene_set(data: dict, user: User) -> dict:
 
         assert gene_sets_collection_id is not None
         gene_set = expand_gene_syms(
-            data, user
+            data, user,
         )
         data["geneSymbols"] = list(gene_set["syms"])
         data["geneSet"] = gene_set["desc"]
@@ -45,12 +45,12 @@ def expand_gene_syms(data: dict, user: User) -> dict:
             gene_set,
             denovo_gene_set_spec,
             permitted_datasets=IsDatasetAllowed.permitted_datasets(user),
-            collection_id=gene_sets_collection
+            collection_id=gene_sets_collection,
         )
     else:
         gene_sets_db = gpf_instance.gene_sets_db
         gene_set = gene_sets_db.get_gene_set(
-            gene_sets_collection, gene_set
+            gene_sets_collection, gene_set,
         )
 
     return cast(dict, gene_set)

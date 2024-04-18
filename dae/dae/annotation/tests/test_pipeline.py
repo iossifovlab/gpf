@@ -1,20 +1,25 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
 import textwrap
+
 import pytest
 import pytest_mock
+
 import dae.annotation.annotation_factory
 from dae.annotation.annotatable import Position
+from dae.annotation.annotation_factory import (
+    AnnotationConfigurationError,
+    build_annotation_pipeline,
+    copy_annotation_pipeline,
+    copy_reannotation_pipeline,
+)
 from dae.annotation.annotation_pipeline import ReannotationPipeline
-from dae.annotation.annotation_factory import build_annotation_pipeline, \
-    AnnotationConfigurationError, copy_annotation_pipeline, \
-    copy_reannotation_pipeline
 from dae.genomic_resources import build_genomic_resource_repository
 from dae.genomic_resources.repository import GenomicResourceRepo
-from dae.testing import setup_directories, convert_to_tab_separated
+from dae.testing import convert_to_tab_separated, setup_directories
 
 
-@pytest.fixture
+@pytest.fixture()
 def test_grr(tmp_path: pathlib.Path) -> GenomicResourceRepo:
     root_path = tmp_path
     setup_directories(
@@ -38,7 +43,7 @@ def test_grr(tmp_path: pathlib.Path) -> GenomicResourceRepo:
                     "data.txt": convert_to_tab_separated("""
                         chrom  pos_begin  s1
                         foo    1          0.1
-                    """)
+                    """),
                 },
                 "score_two": {
                     "genomic_resource.yaml": textwrap.dedent("""
@@ -53,7 +58,7 @@ def test_grr(tmp_path: pathlib.Path) -> GenomicResourceRepo:
                     "data.txt": convert_to_tab_separated("""
                         chrom  pos_begin  s2
                         foo    1          0.2
-                    """)
+                    """),
                 },
                 "dup_score_one": {
                     "genomic_resource.yaml": textwrap.dedent("""
@@ -68,18 +73,18 @@ def test_grr(tmp_path: pathlib.Path) -> GenomicResourceRepo:
                     "data.txt": convert_to_tab_separated("""
                         chrom  pos_begin  s1
                         foo    1          0.123
-                    """)
+                    """),
                 },
             },
-        }
+        },
     )
     return build_genomic_resource_repository(file_name=str(
-        root_path / "grr.yaml"
+        root_path / "grr.yaml",
     ))
 
 
 def test_build_pipeline(
-    annotation_config: str, grr_fixture: GenomicResourceRepo
+    annotation_config: str, grr_fixture: GenomicResourceRepo,
 ) -> None:
     pipeline = build_annotation_pipeline(
         pipeline_config_file=annotation_config,
@@ -89,7 +94,7 @@ def test_build_pipeline(
 
 
 def test_build_pipeline_schema(
-    annotation_config: str, grr_fixture: GenomicResourceRepo
+    annotation_config: str, grr_fixture: GenomicResourceRepo,
 ) -> None:
     pipeline = build_annotation_pipeline(
         pipeline_config_file=annotation_config,
@@ -117,7 +122,7 @@ def test_pipeline_with_wildcards(test_grr: GenomicResourceRepo) -> None:
 
 
 def test_pipeline_repeated_attributes_forbidden(
-    test_grr: GenomicResourceRepo
+    test_grr: GenomicResourceRepo,
 ) -> None:
     pipeline_config = """
         - position_score: "*score_one"
@@ -125,7 +130,7 @@ def test_pipeline_repeated_attributes_forbidden(
     with pytest.raises(AnnotationConfigurationError) as error:
         build_annotation_pipeline(
             pipeline_config_str=pipeline_config,
-            grr_repository=test_grr
+            grr_repository=test_grr,
         )
     assert str(error.value) == (
         "Repeated attributes in pipeline were found -"
@@ -134,7 +139,7 @@ def test_pipeline_repeated_attributes_forbidden(
 
 
 def test_pipeline_repeated_attributes_allowed(
-    test_grr: GenomicResourceRepo
+    test_grr: GenomicResourceRepo,
 ) -> None:
     pipeline_config = """
         - position_score: "*score_one"
@@ -142,7 +147,7 @@ def test_pipeline_repeated_attributes_allowed(
     pipeline = build_annotation_pipeline(
         pipeline_config_str=pipeline_config,
         grr_repository=test_grr,
-        allow_repeated_attributes=True
+        allow_repeated_attributes=True,
     )
     result = pipeline.annotate(Position("foo", 1))
     assert len(pipeline.annotators) == 2
@@ -163,7 +168,7 @@ def test_copy_pipeline(test_grr: GenomicResourceRepo) -> None:
     assert len(copied_pipeline.annotators) == 2
 
     # pylint: disable=C0200
-    for idx in range(0, len(copied_pipeline.annotators)):
+    for idx in range(len(copied_pipeline.annotators)):
         info_src = pipeline.annotators[idx].get_info()
         info_copy = copied_pipeline.annotators[idx].get_info()
         assert info_copy == info_src
@@ -172,7 +177,7 @@ def test_copy_pipeline(test_grr: GenomicResourceRepo) -> None:
 
 def test_copy_reannotation_pipeline(
     mocker: pytest_mock.MockerFixture,
-    test_grr: GenomicResourceRepo
+    test_grr: GenomicResourceRepo,
 ) -> None:
     pipeline_config_a = """
         - position_score: score_one

@@ -1,24 +1,25 @@
 import logging
 from typing import Any
 
+from dae.annotation.annotatable import Annotatable, CNVAllele, VCFAllele
 from dae.annotation.annotation_factory import AnnotationConfigParser
-from dae.annotation.annotation_pipeline import AnnotationPipeline
-from dae.annotation.annotation_pipeline import Annotator
-from dae.annotation.annotation_pipeline import AnnotatorInfo
-
+from dae.annotation.annotation_pipeline import (
+    AnnotationPipeline,
+    Annotator,
+    AnnotatorInfo,
+)
+from dae.annotation.annotator_base import AnnotatorBase
 from dae.effect_annotation.annotator import EffectAnnotator
 from dae.effect_annotation.effect import AlleleEffects, AnnotationEffect
-from dae.genomic_resources.reference_genome import ReferenceGenome
-from dae.genomic_resources.reference_genome import \
-    build_reference_genome_from_resource
-from dae.genomic_resources.gene_models import GeneModels
-
+from dae.genomic_resources.gene_models import (
+    GeneModels,
+    build_gene_models_from_resource,
+)
 from dae.genomic_resources.genomic_context import get_genomic_context
-from dae.genomic_resources.gene_models import \
-    build_gene_models_from_resource
-
-from dae.annotation.annotatable import Annotatable, CNVAllele, VCFAllele
-from dae.annotation.annotator_base import AnnotatorBase
+from dae.genomic_resources.reference_genome import (
+    ReferenceGenome,
+    build_reference_genome_from_resource,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -64,7 +65,7 @@ class EffectAnnotatorAdapter(AnnotatorBase):
                 "worst_effect",
                 "effect_details",
                 "gene_effects",
-                {"name": "gene_list", "internal": True}
+                {"name": "gene_list", "internal": True},
             ])
         super().__init__(pipeline, info, {
             "worst_effect": ("str", "Worst effect accross all transcripts."),
@@ -78,7 +79,7 @@ class EffectAnnotatorAdapter(AnnotatorBase):
                                          "details of the effects for each "
                                          "affected transcript."),
             "gene_list": ("object", "List of all genes"),
-            "LGD_gene_list": ("object", "List of all LGD genes")
+            "LGD_gene_list": ("object", "List of all LGD genes"),
         })
 
         self.genome = genome
@@ -89,7 +90,7 @@ class EffectAnnotatorAdapter(AnnotatorBase):
         self.effect_annotator = EffectAnnotator(
             self.genome,
             self.gene_models,
-            promoter_len=self._promoter_len
+            promoter_len=self._promoter_len,
         )
 
     def close(self) -> None:
@@ -111,12 +112,12 @@ class EffectAnnotatorAdapter(AnnotatorBase):
             "effect_details": full_desc[2],
             "allele_effects": AlleleEffects.from_effects([effect]),
             "gene_list": [],
-            "lgd_gene_list": []
+            "lgd_gene_list": [],
         })
         return attributes
 
     def _region_length_cutoff_effect(
-        self, attributes: dict[str, Any], annotatable: Annotatable
+        self, attributes: dict[str, Any], annotatable: Annotatable,
     ) -> dict[str, Any]:
         if annotatable.type == Annotatable.Type.LARGE_DELETION:
             effect_type = "CNV-"
@@ -135,12 +136,12 @@ class EffectAnnotatorAdapter(AnnotatorBase):
             "effect_details": full_desc[2],
             "allele_effects": AlleleEffects.from_effects([effect]),
             "gene_list": [],
-            "lgd_gene_list": []
+            "lgd_gene_list": [],
         })
         return attributes
 
     def _do_annotate(
-        self, annotatable: Annotatable, _: dict[str, Any]
+        self, annotatable: Annotatable, _: dict[str, Any],
     ) -> dict[str, Any]:
         result: dict = {}
 
@@ -156,7 +157,7 @@ class EffectAnnotatorAdapter(AnnotatorBase):
                     ref=annotatable.reference,
                     alt=annotatable.alternative,
                     variant_type=annotatable.type.name,
-                    length=length
+                    length=length,
                 )
             except Exception:  # pylint: disable=broad-except
                 logger.error(
@@ -181,10 +182,10 @@ class EffectAnnotatorAdapter(AnnotatorBase):
             raise ValueError(f"unexpected annotatable: {type(annotatable)}")
 
         gene_list = list(set(
-            AnnotationEffect.gene_effects(effects)[0]
+            AnnotationEffect.gene_effects(effects)[0],
         ))
         lgd_gene_list = list(set(
-            AnnotationEffect.lgd_gene_effects(effects)[0]
+            AnnotationEffect.lgd_gene_effects(effects)[0],
         ))
         full_desc = AnnotationEffect.effects_description(effects)
         result = {
@@ -193,7 +194,7 @@ class EffectAnnotatorAdapter(AnnotatorBase):
             "effect_details": full_desc[2],
             "allele_effects": AlleleEffects.from_effects(effects),
             "gene_list": gene_list,
-            "lgd_gene_list": lgd_gene_list
+            "lgd_gene_list": lgd_gene_list,
         }
 
         return result

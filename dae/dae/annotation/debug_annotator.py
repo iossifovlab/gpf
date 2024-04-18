@@ -2,9 +2,12 @@
 from typing import Any, Optional
 
 from .annotatable import Annotatable
-from .annotation_pipeline import AnnotationPipeline, AttributeInfo
-from .annotation_pipeline import Annotator
-from .annotation_pipeline import AnnotatorInfo
+from .annotation_pipeline import (
+    AnnotationPipeline,
+    Annotator,
+    AnnotatorInfo,
+    AttributeInfo,
+)
 
 
 class HelloWorldAnnotator(Annotator):
@@ -14,7 +17,7 @@ class HelloWorldAnnotator(Annotator):
         super().__init__(pipeline, info)
 
     def annotate(
-        self, _annotatable: Optional[Annotatable], _context: dict[str, Any]
+        self, _annotatable: Optional[Annotatable], _context: dict[str, Any],
     ) -> dict[str, Any]:
         result = {}
         for attribute_config in self._info.attributes:

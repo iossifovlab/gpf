@@ -2,14 +2,14 @@
 
 import pytest
 
-from dae.genomic_resources.testing import build_inmemory_test_repository
 from dae.genomic_resources.repository import GenomicResource, Manifest
+from dae.genomic_resources.testing import build_inmemory_test_repository
 
 
 def test_the_basic_resource_finding() -> None:
     repo = build_inmemory_test_repository(
         {
-            "one": {"genomic_resource.yaml": ""}
+            "one": {"genomic_resource.yaml": ""},
         })
     res = repo.get_resource("one")
     assert res
@@ -20,7 +20,7 @@ def test_the_basic_resource_finding() -> None:
 def test_not_finding_resource_with_the_required_version() -> None:
     repo = build_inmemory_test_repository(
         {
-            "one": {"genomic_resource.yaml": ""}
+            "one": {"genomic_resource.yaml": ""},
         })
 
     with pytest.raises(FileNotFoundError):
@@ -30,7 +30,7 @@ def test_not_finding_resource_with_the_required_version() -> None:
 def test_finding_resource_with_version_and_repo_id() -> None:
     repo = build_inmemory_test_repository(
         {
-            "one(1.0)": {"genomic_resource.yaml": ""}
+            "one(1.0)": {"genomic_resource.yaml": ""},
         })
     res = repo.get_resource(
         "one", version_constraint="=1.0")
@@ -46,7 +46,7 @@ def test_md5_checksum() -> None:
                 "genomic_resource.yaml": "type: genome\nseqFile: chrAll.fa",
                 "chrAll.fa": ">chr1\nAACCCCACACACACACACACCAC\n",
                 "chrAll.fa.fai": "chr1\t30\t50\n",
-            }
+            },
         })
 
     res = repo.get_resource("one")
@@ -63,8 +63,8 @@ def test_manifest_file_creation() -> None:
                 "stats": {
                     "hists.txt": "1,3,4",
                     "hists.png": "PNG",
-                }
-            }
+                },
+            },
         })
     res = repo.get_resource("one")
     assert res.get_manifest() == Manifest.from_manifest_entries([
@@ -100,8 +100,8 @@ def test_resources_files() -> None:
                 "stats": {
                     "hists.txt": "1,3,4",
                     "hists.png": "PNG",
-                }
-            }
+                },
+            },
         })
     res = repo.get_resource("one")
     assert res
@@ -109,5 +109,5 @@ def test_resources_files() -> None:
     assert set(res.get_manifest().get_files()) == {
         ("genomic_resource.yaml", 0),
         ("data.txt", 9),
-        ("stats/hists.txt", 5,),
-        ("stats/hists.png", 3,)}
+        ("stats/hists.txt", 5),
+        ("stats/hists.png", 3)}

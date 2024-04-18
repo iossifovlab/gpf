@@ -4,8 +4,8 @@ import logging
 from typing import Dict, Optional
 
 from box import Box
-
 from remote.rest_api_client import RESTClient, RESTClientRequestError
+
 from studies.remote_study import RemoteGenotypeData
 
 logger = logging.getLogger(__name__)
@@ -32,7 +32,7 @@ class RemoteStudyDB:
         studies = rest_client.get_studies()
         if studies is None:
             raise RESTClientRequestError(
-                f"Failed to get studies from {rest_client.remote_id}"
+                f"Failed to get studies from {rest_client.remote_id}",
             )
         for study in studies["data"]:
             logger.info("creating remote genotype data: %s", study["id"])

@@ -4,11 +4,10 @@ from typing import Optional
 
 import pytest
 
-from dae.testing import setup_pedigree, setup_vcf, \
-    vcf_study
-from dae.testing.alla_import import alla_gpf
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.studies.study import GenotypeData
+from dae.testing import setup_pedigree, setup_vcf, vcf_study
+from dae.testing.alla_import import alla_gpf
 
 
 @pytest.fixture(scope="module")
@@ -54,11 +53,11 @@ chrA   3   .  A   C     .    .      .    GT     0/0  0/1  0/0 1/1 0/1  0/0 0/0
                     "include_unknown_person_genotypes": True,
                     "denovo_mode": "denovo",
                     "omission_mode": "omission",
-                }
+                },
             },
             "processing_config": {
-                "include_reference": True
-            }
+                "include_reference": True,
+            },
         },
         study_config_update={
             "conf_dir": str(root_path / "study_1"),
@@ -69,8 +68,8 @@ chrA   3   .  A   C     .    .      .    GT     0/0  0/1  0/0 1/1 0/1  0/0 0/0
                     "sources": [
                         {
                             "from": "pedigree",
-                            "source": "status"
-                        }
+                            "source": "status",
+                        },
                     ],
                     "default": {
                         "color": "#aaaaaa",
@@ -83,23 +82,23 @@ chrA   3   .  A   C     .    .      .    GT     0/0  0/1  0/0 1/1 0/1  0/0 0/0
                             "id": "autism",
                             "name": "autism",
                             "values": [
-                                "affected"
-                            ]
+                                "affected",
+                            ],
                         },
                         {
                             "color": "#ffffff",
                             "id": "unaffected",
                             "name": "unaffected",
                             "values": [
-                                "unaffected"
-                            ]
+                                "unaffected",
+                            ],
                         },
-                    ]
+                    ],
                 },
                 "selected_person_set_collections": [
-                    "phenotype"
-                ]
-            }
+                    "phenotype",
+                ],
+            },
         })
     return study
 
@@ -114,12 +113,12 @@ chrA   3   .  A   C     .    .      .    GT     0/0  0/1  0/0 1/1 0/1  0/0 0/0
         (["ch1"], 1),
         (["mom1"], 0),
         (["mom2"], 0),
-    ]
+    ],
 )
 def test_query_by_person_ids(
     imported_study: GenotypeData,
     person_ids: Optional[list[str]],
-    count: int
+    count: int,
 ) -> None:
     vs = list(imported_study.query_variants(
         person_ids=person_ids,
@@ -157,12 +156,12 @@ def test_study_build_person_set_collection(
         (("phenotype", ["autism"]), 2),
         (("phenotype", ["unaffected"]), 2),
         (("phenotype", ["autism", "unaffected"]), 4),
-    ]
+    ],
 )
 def test_query_by_person_set_coolection(
     imported_study: GenotypeData,
     person_set_collection: Optional[tuple[str, list[str]]],
-    count: int
+    count: int,
 ) -> None:
     vs = list(imported_study.query_variants(
         person_set_collection=person_set_collection,

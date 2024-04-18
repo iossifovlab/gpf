@@ -5,9 +5,9 @@ import time
 import pytest
 
 from dae.studies.study import GenotypeData
-
-from dae.testing import setup_pedigree, setup_vcf, setup_dataset, vcf_study
+from dae.testing import setup_dataset, setup_pedigree, setup_vcf, vcf_study
 from dae.testing.acgt_import import acgt_gpf
+
 # from dae.pedigrees.loader import FamiliesLoader
 
 
@@ -39,7 +39,7 @@ f3       ch3      dad3  mom3  2   2      prb
 chr1   1   .  A   C   .    .      .    GT     0/0  0/0  0/1 0/0  0/0  0/0
 chr1   2   .  C   G   .    .      .    GT     0/0  0/0  0/0 0/0  0/0  0/1
 chr1   3   .  G   T   .    .      .    GT     0/0  1/0  0/1 0/0  0/0  0/0
-        """)  # noqa
+        """)
     vcf_path2 = setup_vcf(
         root_path / "study_2" / "in.vcf.gz",
         """
@@ -52,14 +52,14 @@ chr1   3   .  G   T   .    .      .    GT     0/0  1/0  0/1 0/0  0/0  0/0
 chr1   1   .  A   C   .    .      .    GT     0/0  0/0  0/0 0/0  0/0  0/1
 chr1   2   .  C   G   .    .      .    GT     0/1  0/1  0/1 0/0  0/0  0/0
 chr1   4   .  T   A   .    .      .    GT     0/0  0/0  0/0 0/1  0/0  0/0
-        """)  # noqa
+        """)
 
     project_config_update = {
         "input": {
             "vcf": {
                 "denovo_mode": "denovo",
                 "omission_mode": "omission",
-            }
+            },
         },
     }
     study1 = vcf_study(
@@ -75,7 +75,7 @@ chr1   4   .  T   A   .    .      .    GT     0/0  0/0  0/0 0/1  0/0  0/0
 
     return setup_dataset(
         "ds1", gpf_instance, study1, study2,
-        dataset_config_update=f"conf_dir: {root_path}"
+        dataset_config_update=f"conf_dir: {root_path}",
     )
 
 
@@ -83,7 +83,7 @@ def test_summary_variant_merging(svmergingdataset: GenotypeData) -> None:
     genotype_data_group = svmergingdataset
     assert genotype_data_group is not None
     variants = list(genotype_data_group.query_summary_variants())
-    variants = list(sorted(variants, key=lambda v: v.position))
+    variants = sorted(variants, key=lambda v: v.position)
 
     assert [
         a.get_attribute("family_variants_count")

@@ -2,24 +2,23 @@
 from typing import Any, cast
 
 import pytest
-
-from studies.response_transformer import ResponseTransformer
 from gpf_instance.gpf_instance import WGPFInstance
 
-from dae.utils.regions import Region
-from dae.variants.family_variant import FamilyVariant
 from dae.configuration.gpf_config_parser import FrozenBox
 from dae.person_sets import PersonSetCollection
+from dae.utils.regions import Region
+from dae.variants.family_variant import FamilyVariant
+from studies.response_transformer import ResponseTransformer
 
 
 def test_special_attrs_formatting(
-    fixtures_wgpf_instance: WGPFInstance
+    fixtures_wgpf_instance: WGPFInstance,
 ) -> None:
     genotype_data = fixtures_wgpf_instance.make_wdae_wrapper("f1_study")
     assert genotype_data is not None
 
     download_sources = genotype_data.get_columns_as_sources(
-        genotype_data.config, genotype_data.download_columns  # type: ignore
+        genotype_data.config, genotype_data.download_columns,  # type: ignore
     )
     vs = genotype_data.query_variants_wdae({}, download_sources)
     vs = list(vs)
@@ -41,11 +40,11 @@ def test_special_attrs_formatting(
         ["mendelian", "denovo"],
         "phenotype 1:unaffected:phenotype 1:unaffected",
         "unaffected:phenotype 1,unaffected",
-        "test_phenotype"
+        "test_phenotype",
     ]
 
 
-@pytest.fixture
+@pytest.fixture()
 def v_vcf(variants_impl: Any) -> FamilyVariant:
     vvars = variants_impl("variants_vcf")("backends/a")
     vs = list(vvars.query_variants(regions=[Region("1", 11548, 11548)]))
@@ -55,7 +54,7 @@ def v_vcf(variants_impl: Any) -> FamilyVariant:
     return cast(FamilyVariant, v)
 
 
-@pytest.fixture
+@pytest.fixture()
 def phenotype_person_sets(variants_impl: Any) -> PersonSetCollection:
     vvars = variants_impl("variants_vcf")("backends/a")
     families = vvars.families
@@ -76,15 +75,15 @@ def phenotype_person_sets(variants_impl: Any) -> PersonSetCollection:
                 "id": "autism",
                 "name": "Autism",
                 "values": ["affected"],
-                "color": "#ff0000"
+                "color": "#ff0000",
             },
             {
                 "id": "unaffected",
                 "name": "Unaffected",
                 "values": ["unaffected"],
                 "color": "#0000ff",
-            }
-        ]
+            },
+        ],
     })
     person_sets = PersonSetCollection.from_families(
         person_sets_config, families)
@@ -124,10 +123,10 @@ def phenotype_person_sets(variants_impl: Any) -> PersonSetCollection:
         ("best_st", ["0000000/2212222/0010000"]),
         ("inheritance_type", ["mendelian", "mendelian"]),
         ("is_denovo", [False, False]),
-    ]
+    ],
 )
 def test_special_attr_columns(
-    v_vcf: FamilyVariant, column: str, expected: Any
+    v_vcf: FamilyVariant, column: str, expected: Any,
 ) -> None:
 
     transformer = ResponseTransformer.SPECIAL_ATTRS[column]
@@ -155,12 +154,12 @@ def test_reference_column(v_vcf: FamilyVariant) -> None:
             "Unaffected:Unaffected:Unaffected:Unaffected:Autism:"
             "Unaffected:Unaffected",
             "Unaffected"]),
-    ]
+    ],
 )
 def test_phenotype_attr_columns(
     v_vcf: FamilyVariant,
     phenotype_person_sets: PersonSetCollection,
-    column: str, expected: Any
+    column: str, expected: Any,
 ) -> None:
 
     print(phenotype_person_sets)

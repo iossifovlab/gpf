@@ -2,28 +2,38 @@ from __future__ import annotations
 
 import copy
 import logging
-
-from typing import Iterator, KeysView, ValuesView, ItemsView, \
-    Optional, Any, Iterable
-
 from collections import defaultdict
-from collections.abc import Mapping
+from collections.abc import (
+    ItemsView,
+    Iterable,
+    Iterator,
+    KeysView,
+    Mapping,
+    ValuesView,
+)
+from typing import (
+    Any,
+    Optional,
+)
 
 import pandas as pd
 
-from dae.variants.attributes import Sex, Status, Role
-from dae.pedigrees.family import Family, Person, FamilyType, \
-    get_pedigree_column_names
-from dae.pedigrees.layout import Layout
+from dae.pedigrees.family import (
+    Family,
+    FamilyType,
+    Person,
+    get_pedigree_column_names,
+)
 from dae.pedigrees.family_tag_builder import FamilyTagsBuilder
-
+from dae.pedigrees.layout import Layout
+from dae.variants.attributes import Role, Sex, Status
 
 logger = logging.getLogger(__name__)
 
 
 def merge_families(
     l_fam: Family,
-    r_fam: Family, forced: bool = True
+    r_fam: Family, forced: bool = True,
 ) -> Family:
     """Merge two families into one."""
     assert l_fam.family_id == r_fam.family_id, \
@@ -195,7 +205,7 @@ class FamiliesData(Mapping[str, Family]):
         if not self._families_by_type:
             for family_id, family in self._families.items():
                 self._families_by_type.setdefault(
-                    family.family_type, set()
+                    family.family_type, set(),
                 ).add(family_id)
         return self._families_by_type
 
@@ -228,7 +238,7 @@ class FamiliesData(Mapping[str, Family]):
     def from_families(families: dict[str, Family]) -> FamiliesData:
         """Build families data from dictionary of families."""
         families_data = FamiliesData.from_family_persons(
-            {fam.family_id: fam.full_members for fam in families.values()}
+            {fam.family_id: fam.full_members for fam in families.values()},
         )
 
         return families_data
@@ -296,7 +306,7 @@ class FamiliesData(Mapping[str, Family]):
 
     def get(  # type: ignore
         self, key: str,
-        default: Optional[Family] = None
+        default: Optional[Family] = None,
     ) -> Optional[Family]:
         return self._families.get(key, default)
 
@@ -334,7 +344,7 @@ class FamiliesData(Mapping[str, Family]):
     def persons_with_roles(
         self,
         roles: Optional[list[Role]] = None,
-        family_ids: Optional[Iterable[str]] = None
+        family_ids: Optional[Iterable[str]] = None,
     ) -> list[Person]:
         """Return list of persons matching the specified roles."""
         if family_ids is None:

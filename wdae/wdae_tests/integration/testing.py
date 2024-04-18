@@ -1,15 +1,19 @@
 
 import pathlib
-from typing import Optional, Any
+from typing import Any, Optional
 
 from gpf_instance.gpf_instance import WGPFInstance
 
-from dae.testing import setup_directories
-from dae.genomic_resources.reference_genome import \
-    build_reference_genome_from_resource, ReferenceGenome
-from dae.genomic_resources.gene_models import \
-    build_gene_models_from_resource, GeneModels
+from dae.genomic_resources.gene_models import (
+    GeneModels,
+    build_gene_models_from_resource,
+)
+from dae.genomic_resources.reference_genome import (
+    ReferenceGenome,
+    build_reference_genome_from_resource,
+)
 from dae.genomic_resources.repository import GenomicResourceRepo
+from dae.testing import setup_directories
 
 
 def setup_wgpf_instance(
@@ -18,7 +22,7 @@ def setup_wgpf_instance(
     reference_genome_id: Optional[str] = None,
     gene_models: Optional[GeneModels] = None,
     gene_models_id: Optional[str] = None,
-    grr: Optional[GenomicResourceRepo] = None
+    grr: Optional[GenomicResourceRepo] = None,
 ) -> WGPFInstance:
     """Set up a GPF instance using prebuild genome, gene models, etc."""
     print(out_path)
@@ -101,7 +105,7 @@ class LiveServer:
         self.thread = LiveServerThread(host, **liveserver_kwargs)
 
         self._live_server_modified_settings = modify_settings(
-            ALLOWED_HOSTS={"append": host}
+            ALLOWED_HOSTS={"append": host},
         )
 
         self.thread.daemon = True

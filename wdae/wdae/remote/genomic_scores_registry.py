@@ -1,5 +1,5 @@
-from remote.rest_api_client import RESTClient
 from dae.genomic_scores.scores import GenomicScoresRegistry, ScoreDesc
+from remote.rest_api_client import RESTClient
 
 
 class RemoteGenomicScoresRegistry(GenomicScoresRegistry):
@@ -7,7 +7,7 @@ class RemoteGenomicScoresRegistry(GenomicScoresRegistry):
 
     def __init__(
         self, rest_clients: dict[str, RESTClient],
-        local_scores_db: GenomicScoresRegistry
+        local_scores_db: GenomicScoresRegistry,
     ):
         # pylint: disable=super-init-not-called
         self.remote_scores: dict[str, ScoreDesc] = {}
@@ -20,7 +20,7 @@ class RemoteGenomicScoresRegistry(GenomicScoresRegistry):
                     if desc is None:
                         desc = score["name"]
                     score["description"] = client.prefix_remote_name(
-                        desc
+                        desc,
                     )
 
                     self.remote_scores[score["name"]] = \
@@ -42,7 +42,7 @@ class RemoteGenomicScoresRegistry(GenomicScoresRegistry):
     def __getitem__(self, score_id: str) -> ScoreDesc:
         if score_id not in self.local_db:
             if score_id not in self.remote_scores:
-                raise KeyError()
+                raise KeyError
             return self.remote_scores[score_id]
         return self.local_db[score_id]
 

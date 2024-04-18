@@ -1,13 +1,12 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import json
-import pytest
-from rest_framework import status  # type: ignore
-from gpf_instance.gpf_instance import WGPFInstance
 
+import pytest
 from django.test.client import Client
+from gpf_instance.gpf_instance import WGPFInstance
+from rest_framework import status  # type: ignore
 
 from dae.configuration.gpf_config_parser import FrozenBox
-
 
 pytestmark = pytest.mark.usefixtures(
     "wdae_gpf_instance", "dae_calc_gene_sets")
@@ -74,7 +73,7 @@ def test_datasets_api_get_forbidden(user_client: Client) -> None:
 
 
 def test_user_client_get_dataset_details(
-    user_client: Client, wdae_gpf_instance: WGPFInstance
+    user_client: Client, wdae_gpf_instance: WGPFInstance,
 ) -> None:
     response = user_client.get("/api/v3/datasets/details/inheritance_trio")
 
@@ -86,7 +85,7 @@ def test_user_client_get_dataset_details(
 
 
 def test_user_client_get_nonexistant_dataset_details(
-    user_client: Client, wdae_gpf_instance: WGPFInstance
+    user_client: Client, wdae_gpf_instance: WGPFInstance,
 ) -> None:
     response = user_client.get("/api/v3/datasets/details/asdfghjkl")
 
@@ -95,7 +94,7 @@ def test_user_client_get_nonexistant_dataset_details(
 
 
 def test_datasets_api_parents(
-    admin_client: Client, wdae_gpf_instance: WGPFInstance
+    admin_client: Client, wdae_gpf_instance: WGPFInstance,
 ) -> None:
 
     dataset1_wrapper = wdae_gpf_instance.get_wdae_wrapper("Dataset1")
@@ -115,7 +114,7 @@ def test_datasets_api_parents(
 
 
 def test_datasets_pedigree_no_such_dataset(
-    admin_client: Client, wdae_gpf_instance: WGPFInstance
+    admin_client: Client, wdae_gpf_instance: WGPFInstance,
 ) -> None:
     response = admin_client.get("/api/v3/datasets/pedigree/alabala/col")
     assert response
@@ -127,7 +126,7 @@ def test_datasets_pedigree_no_such_dataset(
 
 
 def test_datasets_pedigree_no_such_column(
-    admin_client: Client, wdae_gpf_instance: WGPFInstance
+    admin_client: Client, wdae_gpf_instance: WGPFInstance,
 ) -> None:
     response = admin_client.get("/api/v3/datasets/pedigree/Study1/alabala")
     assert response
@@ -139,7 +138,7 @@ def test_datasets_pedigree_no_such_column(
 
 
 def test_datasets_pedigree_proper_request(
-    admin_client: Client, wdae_gpf_instance: WGPFInstance
+    admin_client: Client, wdae_gpf_instance: WGPFInstance,
 ) -> None:
     response = admin_client.get("/api/v3/datasets/pedigree/Study1/phenotype")
     assert response
@@ -150,12 +149,12 @@ def test_datasets_pedigree_proper_request(
            "values_domain" in data
     assert data["column_name"] == "phenotype"
     assert set(data["values_domain"]) == {
-        "unaffected", "phenotype1", "phenotype2", "pheno"
+        "unaffected", "phenotype1", "phenotype2", "pheno",
     }
 
 
 def test_datasets_config_no_such_dataset(
-    admin_client: Client, wdae_gpf_instance: WGPFInstance
+    admin_client: Client, wdae_gpf_instance: WGPFInstance,
 ) -> None:
     response = admin_client.get("/api/v3/datasets/config/alabala")
     assert response
@@ -167,7 +166,7 @@ def test_datasets_config_no_such_dataset(
 
 
 def test_datasets_config_proper_request(
-    admin_client: Client, wdae_gpf_instance: WGPFInstance
+    admin_client: Client, wdae_gpf_instance: WGPFInstance,
 ) -> None:
     response = admin_client.get("/api/v3/datasets/config/Study1")
     assert response
@@ -178,7 +177,7 @@ def test_datasets_config_proper_request(
 
 
 def test_datasets_description_not_admin(
-    user_client: Client, wdae_gpf_instance: WGPFInstance
+    user_client: Client, wdae_gpf_instance: WGPFInstance,
 ) -> None:
     response = user_client.post("/api/v3/datasets/description/Study1")
     assert response
@@ -191,7 +190,7 @@ def test_datasets_description_not_admin(
 
 
 def test_datasets_description_get(
-    admin_client: Client, wdae_gpf_instance: WGPFInstance
+    admin_client: Client, wdae_gpf_instance: WGPFInstance,
 ) -> None:
     response = admin_client.get("/api/v3/datasets/description/Study1")
     assert response
@@ -202,21 +201,21 @@ def test_datasets_description_get(
 
 
 def test_datasets_description_post(
-    admin_client: Client, wdae_gpf_instance: WGPFInstance
+    admin_client: Client, wdae_gpf_instance: WGPFInstance,
 ) -> None:
     url = "/api/v3/datasets/description/Study1"
     args = {
-        "description": "some new description"
+        "description": "some new description",
     }
     response = admin_client.post(
-        url, json.dumps(args), content_type="application/json", format="json"
+        url, json.dumps(args), content_type="application/json", format="json",
     )
     assert response
     assert response.status_code == 200
 
 
 def test_datasets_hierarchy(
-    admin_client: Client, wdae_gpf_instance: WGPFInstance
+    admin_client: Client, wdae_gpf_instance: WGPFInstance,
 ) -> None:
     response = admin_client.get("/api/v3/datasets/hierarchy/")
     assert response
@@ -226,7 +225,7 @@ def test_datasets_hierarchy(
     assert data
     assert len(data["data"]) == 22
     dataset1 = next(filter(
-        lambda x: x["dataset"] == "Dataset1", data["data"]
+        lambda x: x["dataset"] == "Dataset1", data["data"],
     ))
     assert dataset1 == {
         "dataset": "Dataset1",
@@ -246,7 +245,7 @@ def test_datasets_hierarchy(
 
 
 def test_datasets_permissions(
-    admin_client: Client, wdae_gpf_instance: WGPFInstance
+    admin_client: Client, wdae_gpf_instance: WGPFInstance,
 ) -> None:
     response = admin_client.get("/api/v3/datasets/permissions")
 
@@ -257,7 +256,7 @@ def test_datasets_permissions(
         "dataset_name",
         "broken",
         "users",
-        "groups"
+        "groups",
     ])
 
     response = admin_client.get("/api/v3/datasets/permissions?page=2")
@@ -270,7 +269,7 @@ def test_datasets_permissions(
 
 
 def test_datasets_permissions_single(
-    admin_client: Client, wdae_gpf_instance: WGPFInstance
+    admin_client: Client, wdae_gpf_instance: WGPFInstance,
 ) -> None:
     response = admin_client.get("/api/v3/datasets/permissions/Dataset1")
     assert response.status_code == status.HTTP_200_OK
@@ -281,19 +280,19 @@ def test_datasets_permissions_single(
         "dataset_name",
         "broken",
         "users",
-        "groups"
+        "groups",
     ])
 
 
 def test_datasets_permissions_single_missing(
-    admin_client: Client, wdae_gpf_instance: WGPFInstance
+    admin_client: Client, wdae_gpf_instance: WGPFInstance,
 ) -> None:
     response = admin_client.get("/api/v3/datasets/permissions/alabala")
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
 def test_datasets_permissions_search(
-    admin_client: Client, wdae_gpf_instance: WGPFInstance
+    admin_client: Client, wdae_gpf_instance: WGPFInstance,
 ) -> None:
     response = admin_client.get("/api/v3/datasets/permissions?search=set1")
 
@@ -303,7 +302,7 @@ def test_datasets_permissions_search(
 
 
 def test_datasets_api_visible_datasets(
-    admin_client: Client, wdae_gpf_instance: WGPFInstance
+    admin_client: Client, wdae_gpf_instance: WGPFInstance,
 ) -> None:
     # FIXME This is a temporary hack to mock the
     # dae_config of wdae_gpf_instance since using the mocker
@@ -311,7 +310,7 @@ def test_datasets_api_visible_datasets(
     old_conf = wdae_gpf_instance.dae_config
     edited_conf = old_conf.to_dict()
     edited_conf["gpfjs"]["visible_datasets"] = [
-        "quads_f1", "quads_f2", "f1_group", "nonexistent"
+        "quads_f1", "quads_f2", "f1_group", "nonexistent",
     ]
     wdae_gpf_instance.dae_config = FrozenBox(edited_conf)
 

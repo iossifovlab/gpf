@@ -1,27 +1,26 @@
-import time
 import itertools
 import logging
-from contextlib import closing
+import time
 from abc import abstractmethod
-from typing import Optional, Any, Iterable, Generator, cast
+from collections.abc import Generator, Iterable
+from contextlib import closing
+from typing import Any, Optional, cast
 
 from box import Box
-
 from remote.remote_phenotype_data import RemotePhenotypeData
-from remote.remote_variant import RemoteFamilyVariant, QUERY_SOURCES
-from studies.query_transformer import QueryTransformer
-from studies.response_transformer import ResponseTransformer
-from studies.remote_study import RemoteGenotypeData
+from remote.remote_variant import QUERY_SOURCES, RemoteFamilyVariant
 
+from dae.gene_scores.gene_scores import GeneScoresDb
 from dae.pedigrees.families_data import FamiliesData
 from dae.person_sets import PersonSetCollection
+from dae.pheno.pheno_data import PhenotypeData
+from dae.pheno.registry import PhenoRegistry
+from dae.studies.study import GenotypeData
 from dae.variants.attributes import Role
 from dae.variants.family_variant import FamilyAllele
-from dae.studies.study import GenotypeData
-from dae.pheno.registry import PhenoRegistry
-from dae.pheno.pheno_data import PhenotypeData
-from dae.gene_scores.gene_scores import GeneScoresDb
-
+from studies.query_transformer import QueryTransformer
+from studies.remote_study import RemoteGenotypeData
+from studies.response_transformer import ResponseTransformer
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +43,7 @@ class StudyWrapperBase:
 
     @staticmethod
     def get_columns_as_sources(
-        config: Box, column_ids: list[str]
+        config: Box, column_ids: list[str],
     ) -> list[dict[str, Any]]:
         """Return the list of column sources."""
         column_groups = config.genotype_browser.column_groups
@@ -77,7 +76,7 @@ class StudyWrapperBase:
             "id",
             "name",
             "phenotype_browser",
-            "phenotype_tool"
+            "phenotype_tool",
         ]
         result = {
             key: config.get(key, None) for key in keys
@@ -95,7 +94,7 @@ class StudyWrapperBase:
         gpf_instance: Any,
         config: Box,
         description: Optional[str],
-        person_set_collection_configs: Optional[dict[str, Any]]
+        person_set_collection_configs: Optional[dict[str, Any]],
     ) -> dict[str, Any]:
         """Build and return genotype data group description."""
         keys = [
@@ -112,7 +111,7 @@ class StudyWrapperBase:
             "genome",
             "chr_prefix",
             "gene_browser",
-            "description_editable"
+            "description_editable",
         ]
         result = {
             key: config.get(key, None) for key in keys
@@ -149,19 +148,19 @@ class StudyWrapperBase:
             if column in config.genotype_browser.column_groups:
                 new_col = dict(config.genotype_browser.column_groups[column])
                 new_col["columns"] = StudyWrapperBase.get_columns_as_sources(
-                    config, [column]  # FIXME Hacky way of using that method
+                    config, [column],  # FIXME Hacky way of using that method
                 )
                 table_columns.append(new_col)
             else:
                 if config.genotype_browser.columns.genotype and \
                         column in config.genotype_browser.columns.genotype:
                     table_columns.append(
-                        dict(config.genotype_browser.columns.genotype[column])
+                        dict(config.genotype_browser.columns.genotype[column]),
                     )
                 elif config.genotype_browser.columns.phenotype and \
                         column in config.genotype_browser.columns.phenotype:
                     table_columns.append(
-                        dict(config.genotype_browser.columns.phenotype[column])
+                        dict(config.genotype_browser.columns.phenotype[column]),
                     )
                 else:
                     raise KeyError(f"No such column {column} configured!")
@@ -209,7 +208,7 @@ class StudyWrapperBase:
         self, kwargs: dict[str, Any],
         sources: list[dict[str, Any]],
         max_variants_count: int = 10000,
-        max_variants_message: bool = False
+        max_variants_message: bool = False,
     ) -> Iterable[list]:
         """Wrap query variants method for WDAE streaming."""
         variants_result = self.query_variants_wdae_streaming(
@@ -222,13 +221,13 @@ class StudyWrapperBase:
         self, kwargs: dict[str, Any],
         sources: list[dict[str, Any]],
         max_variants_count: int = 10000,
-        max_variants_message: bool = False
+        max_variants_message: bool = False,
     ) -> Generator[Optional[list], None, None]:
         """Wrap query variants method for WDAE streaming."""
 
     @abstractmethod
     def has_pheno_data(self) -> bool:
-        raise NotImplementedError()
+        raise NotImplementedError
 
 
 class StudyWrapper(StudyWrapperBase):
@@ -239,7 +238,7 @@ class StudyWrapper(StudyWrapperBase):
         self, genotype_data_study: GenotypeData,
         pheno_db: PhenoRegistry,
         gene_scores_db: GeneScoresDb,
-        gpf_instance
+        gpf_instance,
     ) -> None:
 
         assert genotype_data_study is not None
@@ -323,7 +322,7 @@ class StudyWrapper(StudyWrapperBase):
             return
         if self.config.phenotype_data:
             self.phenotype_data = pheno_db.get_phenotype_data(
-                self.config.phenotype_data
+                self.config.phenotype_data,
             )
 
     def _validate_column_groups(self) -> bool:
@@ -353,11 +352,11 @@ class StudyWrapper(StudyWrapperBase):
     def transform_request(self, kwargs: dict[str, Any]) -> dict[str, Any]:
         return self.query_transformer.transform_kwargs(**kwargs)
 
-    def query_variants_wdae_streaming(  # noqa
+    def query_variants_wdae_streaming(
         self, kwargs: dict[str, Any],
         sources: list[dict[str, Any]],
         max_variants_count: int = 10000,
-        max_variants_message: bool = False
+        max_variants_message: bool = False,
     ) -> Generator[Optional[list], None, None]:
         """Wrap query variants method for WDAE streaming of variants."""
         # pylint: disable=too-many-locals,too-many-branches
@@ -367,7 +366,7 @@ class StudyWrapper(StudyWrapperBase):
 
         if summary_variant_ids is None:
             def filter_allele(
-                allele: FamilyAllele  # pylint: disable=unused-argument
+                allele: FamilyAllele,  # pylint: disable=unused-argument
             ) -> bool:
                 return True
 
@@ -442,13 +441,13 @@ class StudyWrapper(StudyWrapperBase):
                         if max_variants_message:
                             yield [
                                 f"# limit of {max_variants_count} variants "
-                                f"reached"
+                                f"reached",
                             ]
                         break
                     row_variant = self.response_transformer.build_variant_row(
                         v, sources,
                         person_set_collection=kwargs.get(
-                            "person_set_collection", (None, None))[0]
+                            "person_set_collection", (None, None))[0],
                     )
 
                     yield row_variant
@@ -461,7 +460,7 @@ class StudyWrapper(StudyWrapperBase):
                 "closed in %0.3fsec", self.study_id, index, elapsed)
 
     def get_gene_view_summary_variants(
-        self, frequency_column: str, **kwargs: Any
+        self, frequency_column: str, **kwargs: Any,
     ) -> Generator[dict[str, Any], None, None]:
         """Return gene browser summary variants."""
         kwargs = self.query_transformer.transform_kwargs(**kwargs)
@@ -469,7 +468,7 @@ class StudyWrapper(StudyWrapperBase):
         variants_from_studies = itertools.islice(
             self.genotype_data_study.query_summary_variants(
                 **kwargs),
-            cast(Optional[int], limit)
+            cast(Optional[int], limit),
         )
         for v in variants_from_studies:
             for aa in self.response_transformer.\
@@ -478,7 +477,7 @@ class StudyWrapper(StudyWrapperBase):
 
     def get_gene_view_summary_variants_download(
         self, frequency_column: str,
-        **kwargs: Any
+        **kwargs: Any,
     ) -> Iterable:
         """Return gene browser summary variants for downloading."""
         kwargs = self.query_transformer.transform_kwargs(**kwargs)
@@ -486,11 +485,11 @@ class StudyWrapper(StudyWrapperBase):
 
         summary_variant_ids = set(kwargs["summaryVariantIds"])
         variants_from_studies = itertools.islice(
-            self.genotype_data_study.query_summary_variants(**kwargs), limit
+            self.genotype_data_study.query_summary_variants(**kwargs), limit,
         )
         return self.response_transformer.\
             transform_gene_view_summary_variant_download(
-                variants_from_studies, frequency_column, summary_variant_ids
+                variants_from_studies, frequency_column, summary_variant_ids,
             )
 
     @staticmethod
@@ -523,7 +522,7 @@ class RemoteStudyWrapper(StudyWrapperBase):
             self.phenotype_data = RemotePhenotypeData(
                 pheno_id,
                 self._remote_study_id,
-                self.rest_client
+                self.rest_client,
             )
 
         self.is_remote = True
@@ -570,7 +569,7 @@ class RemoteStudyWrapper(StudyWrapperBase):
         self, kwargs: dict[str, Any],
         sources: list[dict[str, Any]],
         max_variants_count: int = 10000,
-        max_variants_message: bool = False
+        max_variants_message: bool = False,
     ) -> Generator[list, None, None]:
         study_filters = kwargs.get("study_filters")
         person_set_collection_id = \
@@ -599,7 +598,7 @@ class RemoteStudyWrapper(StudyWrapperBase):
         assert fam_id_idx >= 0, fam_id_idx
 
         response = self.rest_client.post_query_variants(
-            kwargs, reduce_alleles=False
+            kwargs, reduce_alleles=False,
         )
 
         for source in sources:
@@ -624,8 +623,8 @@ class RemoteStudyWrapper(StudyWrapperBase):
             yield row_variant
 
     def get_person_set_collection(
-        self, person_set_collection_id: str
+        self, person_set_collection_id: str,
     ) -> Optional[PersonSetCollection]:
         return self.remote_genotype_data.get_person_set_collection(
-            person_set_collection_id
+            person_set_collection_id,
         )

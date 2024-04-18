@@ -3,11 +3,10 @@ import json
 from typing import Optional
 
 import pytest
-
-from rest_framework import status
 from django.test.client import Client
+from rest_framework import status
 
-from dae.variants.attributes import Sex, Role, Status
+from dae.variants.attributes import Role, Sex, Status
 
 pytestmark = pytest.mark.usefixtures(
     "wdae_gpf_instance", "dae_calc_gene_sets")
@@ -22,13 +21,13 @@ pytestmark = pytest.mark.usefixtures(
     ("/api/v3/families/Study1/all", "get", None),
 ])
 def test_family_api_permissions(
-    anonymous_client: Client, url: str, method: str, body: Optional[dict]
+    anonymous_client: Client, url: str, method: str, body: Optional[dict],
 ) -> None:
     if method == "get":
         response = anonymous_client.get(url)
     else:
         response = anonymous_client.post(
-            url, json.dumps(body), content_type="application/json"
+            url, json.dumps(body), content_type="application/json",
         )
 
     assert response
@@ -40,7 +39,7 @@ def test_list_families_view(admin_client: Client) -> None:
     response = admin_client.get(url)
     assert response.status_code == status.HTTP_200_OK
     assert list(response.data) == [  # type: ignore
-        "f1", "f3", "f4", "f5", "f6", "f7", "f8", "f9", "f10", "f11"
+        "f1", "f3", "f4", "f5", "f6", "f7", "f8", "f9", "f10", "f11",
     ]
 
 
@@ -49,7 +48,7 @@ def test_list_families_view_tag_filter(admin_client: Client) -> None:
     response = admin_client.get(url)
     assert response.status_code == status.HTTP_200_OK
     assert set(response.data) == set([  # type: ignore
-        "f6", "f9", "f10"
+        "f6", "f9", "f10",
     ])
 
 
@@ -58,7 +57,7 @@ def test_list_families_view_tag_filter_multiple(admin_client: Client) -> None:
     response = admin_client.get(url)
     assert response.status_code == status.HTTP_200_OK
     assert set(response.data) == set([  # type: ignore
-        "f1", "f3", "f5", "f6", "f7", "f8", "f11"
+        "f1", "f3", "f5", "f6", "f7", "f8", "f11",
     ])
 
 
@@ -90,7 +89,7 @@ def test_list_tags_view(admin_client: Client) -> None:
         "tag_male_prb_family",
         "tag_female_prb_family",
         "tag_missing_mom_family",
-        "tag_missing_dad_family"
+        "tag_missing_dad_family",
     ])
 
 
@@ -111,8 +110,8 @@ def test_family_details_view(admin_client: Client) -> None:
             "tag_simplex_family",
             "tag_trio_family",
             "tag_unaffected_dad_family",
-            "tag_unaffected_mom_family"
-        ])
+            "tag_unaffected_mom_family",
+        ]),
     }
 
 

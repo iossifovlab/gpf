@@ -1,15 +1,16 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,C0415,
 
-import os
-import sys
 import contextlib
+import os
 import pathlib
-from typing import Any, Callable, Generator, ContextManager
+import sys
+from collections.abc import Generator
+from typing import Any, Callable, ContextManager
 
 import pytest
 import pytest_mock
-
 from gpf_instance.gpf_instance import WGPFInstance
+
 from wdae_tests.integration.testing import LiveServer
 
 
@@ -33,15 +34,15 @@ def _module_cleaner(root_module: str) -> None:
         del module
 
 
-@pytest.fixture
+@pytest.fixture()
 def wdae_django_setup(
     mocker: pytest_mock.MockerFixture,
-    tmp_path: pathlib.Path
+    tmp_path: pathlib.Path,
 ) -> Callable[[WGPFInstance, str], ContextManager[Any]]:
 
     @contextlib.contextmanager
     def builder(
-        gpf: WGPFInstance, test_settings: str
+        gpf: WGPFInstance, test_settings: str,
     ) -> Generator[None, None, None]:
         from gpf_instance import gpf_instance
 
@@ -85,7 +86,7 @@ def wdae_django_setup(
                 "gpfjs",
                 "query_state_save",
                 "user_queries",
-                "wdae.urls", ]:
+                "wdae.urls"]:
             _module_cleaner(app_name)
 
         _module_cleaner(test_settings)
@@ -98,15 +99,15 @@ def wdae_django_setup(
     return builder
 
 
-@pytest.fixture
+@pytest.fixture()
 def wdae_django_server(
     mocker: pytest_mock.MockerFixture,
-    wdae_django_setup: Callable[[WGPFInstance, str], ContextManager[Any]]
+    wdae_django_setup: Callable[[WGPFInstance, str], ContextManager[Any]],
 ) -> Callable[[WGPFInstance, str], ContextManager[LiveServer]]:
 
     @contextlib.contextmanager
     def builder(
-        gpf: WGPFInstance, test_settings: str
+        gpf: WGPFInstance, test_settings: str,
     ) -> Generator[LiveServer, None, None]:
 
         with wdae_django_setup(gpf, test_settings):

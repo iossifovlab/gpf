@@ -3,9 +3,8 @@ import textwrap
 
 import pytest
 
-from dae.testing import setup_directories, \
-    convert_to_tab_separated
 from dae.import_tools.import_tools import ImportProject
+from dae.testing import convert_to_tab_separated, setup_directories
 
 # this content follows the 'refflat' gene model format
 GMM_CONTENT = """
@@ -39,7 +38,7 @@ def simple_project(tmp_path_factory: pytest.TempPathFactory) -> ImportProject:
                 "genomic_resource.yaml": textwrap.dedent("""
                     type: genome
                     filename: chrAll.fa
-                """)
+                """),
             },
             "foobar_genes": {
                 "genes.txt": convert_to_tab_separated(GMM_CONTENT),
@@ -47,7 +46,7 @@ def simple_project(tmp_path_factory: pytest.TempPathFactory) -> ImportProject:
                     type: gene_models
                     filename: genes.txt
                     format: refflat
-                """)
+                """),
             },
         },
         "gpf_instance": {
@@ -68,7 +67,7 @@ def simple_project(tmp_path_factory: pytest.TempPathFactory) -> ImportProject:
                     read_only: false
                     storage_type: inmemory
                     dir: "{root_path}/storage"
-            """)
+            """),
         },
         "project": {
             "project.yaml": textwrap.dedent(f"""
@@ -108,7 +107,7 @@ def simple_project(tmp_path_factory: pytest.TempPathFactory) -> ImportProject:
                 f1  foo   11  G   C   0/0,0/0,0/1,0/0,0/1  f1.s1
                 f1  bar   11  C   G   0/0,0/0,0/1,0/0,0/1  f1.s1
             """),
-        }
+        },
     })
     project = ImportProject.build_from_file(
         root_path / "project" / "project.yaml")

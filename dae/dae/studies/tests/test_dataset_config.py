@@ -8,7 +8,7 @@ from dae.studies.variants_db import VariantsDb
 
 
 def test_genotype_data_group_configs_simple(
-    genotype_data_group_configs: dict[str, Box]
+    genotype_data_group_configs: dict[str, Box],
 ) -> None:
     assert genotype_data_group_configs is not None
 
@@ -28,7 +28,7 @@ def test_genotype_data_group_configs_simple(
 def test_genotype_data_group_quads_composite_dict(
     quads_composite_genotype_data_group_config: Box,
     option_name: str,
-    expected_value: Optional[Union[list[str], str]]
+    expected_value: Optional[Union[list[str], str]],
 ) -> None:
 
     assert quads_composite_genotype_data_group_config is not None
@@ -52,7 +52,7 @@ def test_genotype_data_group_quads_composite_dict(
 def test_genotype_data_group_quads_composite_attr(
     quads_composite_genotype_data_group_config: Box,
     option_name: str,
-    expected_value: Optional[Union[list[str], str, bool]]
+    expected_value: Optional[Union[list[str], str, bool]],
 ) -> None:
 
     assert quads_composite_genotype_data_group_config is not None
@@ -96,13 +96,13 @@ def test_composite_genotype_data_group_config_people_group_no_overwrite(
 
 def test_composite_genotype_data_group_config_genotype_browser_overwrite(
     quads_composite_genotype_data_group_config: Box,
-    variants_db_fixture: VariantsDb
+    variants_db_fixture: VariantsDb,
 ) -> None:
 
     assert quads_composite_genotype_data_group_config is not None
 
     study_config = variants_db_fixture.get_genotype_study_config(
-        quads_composite_genotype_data_group_config.studies[0]
+        quads_composite_genotype_data_group_config.studies[0],
     )
 
     assert (
@@ -134,7 +134,7 @@ def test_composite_genotype_data_group_config_genotype_browser_overwrite(
 
 def test_genotype_data_group_quads_work_dir(
     quads_composite_genotype_data_group_config: Box,
-    genotype_data_groups_dir: str
+    genotype_data_groups_dir: str,
 ) -> None:
 
     assert quads_composite_genotype_data_group_config is not None

@@ -1,31 +1,31 @@
-import time
 import json
 import logging
+import time
+from collections.abc import Generator
 from contextlib import closing
-from typing import Optional, Any, Generator, Union
+from typing import Any, Optional, Union
 
 import duckdb
 import numpy as np
 import pandas as pd
 
-from dae.utils.regions import Region
 from dae.genomic_resources.gene_models import GeneModels
 from dae.genomic_resources.reference_genome import ReferenceGenome
-from dae.pedigrees.loader import FamiliesLoader
-from dae.pedigrees.families_data import FamiliesData
-from dae.person_sets import PersonSetCollection
-
-from dae.variants.attributes import Role, Status, Sex, Inheritance
-from dae.query_variants.base_query_variants import \
-    QueryVariantsBase
-from dae.variants.variant import SummaryVariantFactory, SummaryVariant
-from dae.variants.family_variant import FamilyVariant
-from dae.parquet.partition_descriptor import PartitionDescriptor
-from dae.query_variants.query_runners import QueryRunner, QueryResult
 from dae.inmemory_storage.raw_variants import RawFamilyVariants
-
-from dae.query_variants.sql.schema2.sql_query_builder import Db2Layout, \
-    SqlQueryBuilder
+from dae.parquet.partition_descriptor import PartitionDescriptor
+from dae.pedigrees.families_data import FamiliesData
+from dae.pedigrees.loader import FamiliesLoader
+from dae.person_sets import PersonSetCollection
+from dae.query_variants.base_query_variants import QueryVariantsBase
+from dae.query_variants.query_runners import QueryResult, QueryRunner
+from dae.query_variants.sql.schema2.sql_query_builder import (
+    Db2Layout,
+    SqlQueryBuilder,
+)
+from dae.utils.regions import Region
+from dae.variants.attributes import Inheritance, Role, Sex, Status
+from dae.variants.family_variant import FamilyVariant
+from dae.variants.variant import SummaryVariant, SummaryVariantFactory
 
 RealAttrFilterType = list[tuple[str, tuple[Optional[float], Optional[float]]]]
 
@@ -121,7 +121,7 @@ class DuckDb2Variants(QueryVariantsBase):
             partition_description,
             self.families,
             self.gene_models,
-            self.reference_genome
+            self.reference_genome,
         )
 
     def _fetch_meta_property(self, key: str) -> str:
@@ -195,7 +195,7 @@ class DuckDb2Variants(QueryVariantsBase):
     def _deserialize_summary_variant(self, record: str) -> SummaryVariant:
         sv_record = json.loads(record[3])
         return SummaryVariantFactory.summary_variant_from_records(
-            sv_record
+            sv_record,
         )
 
     def _deserialize_family_variant(self, record: list[str]) -> FamilyVariant:
@@ -207,12 +207,12 @@ class DuckDb2Variants(QueryVariantsBase):
         }
         return FamilyVariant(
             SummaryVariantFactory.summary_variant_from_records(
-                sv_record
+                sv_record,
             ),
             self.families[fv_record["family_id"]],
             np.array(fv_record["genotype"]),
             np.array(fv_record["best_state"]),
-            inheritance_in_members=inheritance_in_members
+            inheritance_in_members=inheritance_in_members,
         )
 
     def build_summary_variants_query_runner(
@@ -227,7 +227,7 @@ class DuckDb2Variants(QueryVariantsBase):
         return_reference: Optional[bool] = None,
         return_unknown: Optional[bool] = None,
         limit: Optional[int] = None,
-        **kwargs: Any
+        **kwargs: Any,
     ) -> QueryRunner:
         """Create query runner for searching summary variants."""
         if limit is None or limit < 0:
@@ -284,7 +284,7 @@ class DuckDb2Variants(QueryVariantsBase):
         return_reference: Optional[bool] = None,
         return_unknown: Optional[bool] = None,
         limit: Optional[int] = None,
-        **kwargs: Any
+        **kwargs: Any,
     ) -> Generator[SummaryVariant, None, None]:
         """Execute the summary variants query and yields summary variants."""
         if limit is None or limit < 0:
@@ -337,7 +337,7 @@ class DuckDb2Variants(QueryVariantsBase):
         limit: Optional[int] = None,
         study_filters: Optional[list[str]] = None,
         pedigree_fields: Optional[tuple] = None,
-        **kwargs: Any
+        **kwargs: Any,
     ) -> QueryRunner:
         # pylint: disable=too-many-arguments
         """Create a query runner for searching family variants."""
@@ -363,7 +363,7 @@ class DuckDb2Variants(QueryVariantsBase):
             return_reference=return_reference,
             return_unknown=return_unknown,
             limit=query_limit,
-            pedigree_fields=pedigree_fields
+            pedigree_fields=pedigree_fields,
         )
         logger.info("FAMILY VARIANTS QUERY:\n%s", query)
         deserialize_row = self._deserialize_family_variant
@@ -413,7 +413,7 @@ class DuckDb2Variants(QueryVariantsBase):
         return_unknown: Optional[bool] = None,
         limit: Optional[int] = None,
         pedigree_fields: Optional[tuple] = None,
-        **kwargs: Any
+        **kwargs: Any,
     ) -> Generator[FamilyVariant, None, None]:
         # pylint: disable=too-many-arguments
         """Execute the family variants query and yields family variants."""
@@ -439,7 +439,7 @@ class DuckDb2Variants(QueryVariantsBase):
             return_reference=return_reference,
             return_unknown=return_unknown,
             limit=query_limit,
-            pedigree_fields=pedigree_fields
+            pedigree_fields=pedigree_fields,
         )
         result = QueryResult(runners=[runner], limit=limit)
 
@@ -456,7 +456,7 @@ class DuckDb2Variants(QueryVariantsBase):
     @staticmethod
     def build_person_set_collection_query(
             _person_set_collection: PersonSetCollection,
-            _person_set_collection_query: tuple[str, set[str]]
+            _person_set_collection_query: tuple[str, set[str]],
     ) -> Optional[Union[tuple, tuple[list[str], list[str]]]]:
         """No idea what it does. If you know please edit."""
         return None

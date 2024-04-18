@@ -4,10 +4,10 @@ from typing import Callable
 
 import pytest
 
+from dae.genotype_storage import GenotypeStorage
+from dae.gpf_instance import GPFInstance
 from dae.testing.foobar_import import foobar_gpf
 from dae.tools.simple_study_import import main
-from dae.gpf_instance import GPFInstance
-from dae.genotype_storage import GenotypeStorage
 
 
 @pytest.mark.skip(reason="wrong reference genome")
@@ -17,12 +17,12 @@ from dae.genotype_storage import GenotypeStorage
         "genotype_impala",
         "genotype_impala_2",
         "genotype_filesystem",
-    ]
+    ],
 )
 def test_import_iossifov2014_filesystem(
     tmp_path_factory: pytest.TempPathFactory,
     storage_id: str,
-    fixture_dirname: Callable[[str], str]
+    fixture_dirname: Callable[[str], str],
 ) -> None:
     root_path = tmp_path_factory.mktemp(storage_id)
     foobar_gpf(root_path)
@@ -70,7 +70,7 @@ def test_import_iossifov2014_filesystem(
 def test_flexible_denovo_default(
     tmp_path_factory: pytest.TempPathFactory,
     genotype_storage: GenotypeStorage,
-    resources_dir: pathlib.Path
+    resources_dir: pathlib.Path,
 ) -> None:
     root_path = tmp_path_factory.mktemp(genotype_storage.storage_id)
     gpf_instance = foobar_gpf(root_path, genotype_storage)
@@ -107,7 +107,7 @@ def test_flexible_denovo_default(
 def test_flexible_denovo_vcf(
     tmp_path_factory: pytest.TempPathFactory,
     genotype_storage: GenotypeStorage,
-    resources_dir: pathlib.Path
+    resources_dir: pathlib.Path,
 ) -> None:
     root_path = tmp_path_factory.mktemp(genotype_storage.storage_id)
     gpf_instance = foobar_gpf(root_path, genotype_storage)
@@ -136,7 +136,7 @@ def test_flexible_denovo_vcf(
         "--denovo-alt",
         "alternative",
         "--genotype-storage", genotype_storage.storage_id,
-        "-o", str(root_path / "output")
+        "-o", str(root_path / "output"),
     ]
 
     main(argv, gpf_instance)
@@ -152,7 +152,7 @@ def test_flexible_denovo_vcf(
 def test_flexible_denovo_vcf_location(
     tmp_path_factory: pytest.TempPathFactory,
     genotype_storage: GenotypeStorage,
-    resources_dir: pathlib.Path
+    resources_dir: pathlib.Path,
 ) -> None:
     root_path = tmp_path_factory.mktemp(genotype_storage.storage_id)
     gpf_instance = foobar_gpf(root_path, genotype_storage)
@@ -199,7 +199,7 @@ def test_flexible_denovo_vcf_location(
 def test_flexible_denovo_vcf_best_state(
     tmp_path_factory: pytest.TempPathFactory,
     genotype_storage: GenotypeStorage,
-    resources_dir: pathlib.Path
+    resources_dir: pathlib.Path,
 ) -> None:
     root_path = tmp_path_factory.mktemp(genotype_storage.storage_id)
     gpf_instance = foobar_gpf(root_path, genotype_storage)
@@ -248,7 +248,7 @@ def test_flexible_denovo_vcf_best_state(
 def test_flexible_denovo_dae_chrom_pos(
     tmp_path_factory: pytest.TempPathFactory,
     genotype_storage: GenotypeStorage,
-    resources_dir: pathlib.Path
+    resources_dir: pathlib.Path,
 ) -> None:
     root_path = tmp_path_factory.mktemp(genotype_storage.storage_id)
     gpf_instance = foobar_gpf(root_path, genotype_storage)
@@ -297,7 +297,7 @@ def test_flexible_denovo_dae_chrom_pos(
 def test_flexible_denovo_dae_person(
     tmp_path_factory: pytest.TempPathFactory,
     genotype_storage: GenotypeStorage,
-    resources_dir: pathlib.Path
+    resources_dir: pathlib.Path,
 ) -> None:
     root_path = tmp_path_factory.mktemp(genotype_storage.storage_id)
     gpf_instance = foobar_gpf(root_path, genotype_storage)

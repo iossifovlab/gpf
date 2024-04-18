@@ -2,17 +2,18 @@ from __future__ import annotations
 
 import abc
 import argparse
+from typing import Dict, Optional, Type
 
-from typing import Optional, Dict, Type
-
-from dae.annotation.annotatable import Annotatable
-from dae.annotation.annotatable import Position
-from dae.annotation.annotatable import Region
-from dae.annotation.annotatable import VCFAllele, CNVAllele
-
-from dae.utils.dae_utils import cshl2vcf_variant
-from dae.utils.cnv_utils import cshl2cnv_variant, cnv_variant_type
+from dae.annotation.annotatable import (
+    Annotatable,
+    CNVAllele,
+    Position,
+    Region,
+    VCFAllele,
+)
 from dae.genomic_resources.reference_genome import ReferenceGenome
+from dae.utils.cnv_utils import cnv_variant_type, cshl2cnv_variant
+from dae.utils.dae_utils import cshl2vcf_variant
 
 
 class RecordToAnnotable(abc.ABC):
@@ -148,10 +149,10 @@ def build_record_to_annotatable(
             parameters.get(f"col_{col}", col) for col in columns
         ]
         all_available = len(
-            [cn for cn in renamed_columns if cn not in available_columns]
+            [cn for cn in renamed_columns if cn not in available_columns],
         ) == 0
         if all_available:
             return record_to_annotatable_class(
-                tuple(renamed_columns), ref_genome
+                tuple(renamed_columns), ref_genome,
             )
     raise ValueError("no record to annotatable could be found.")

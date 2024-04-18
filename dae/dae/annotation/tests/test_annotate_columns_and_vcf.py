@@ -1,18 +1,18 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-import os
-import textwrap
 import gzip
+import os
 import pathlib
+import textwrap
 
-import pytest
 import pysam
+import pytest
 
+from dae.annotation.annotatable import Annotatable, Position, Region, VCFAllele
 from dae.annotation.annotate_columns import build_record_to_annotatable
-from dae.annotation.annotatable import Position, VCFAllele, Region, \
-    Annotatable
-from dae.testing import setup_directories, setup_vcf, setup_denovo
 from dae.annotation.annotate_columns import cli as cli_columns
-from dae.annotation.annotate_vcf import cli as cli_vcf, produce_partfile_paths
+from dae.annotation.annotate_vcf import cli as cli_vcf
+from dae.annotation.annotate_vcf import produce_partfile_paths
+from dae.testing import setup_denovo, setup_directories, setup_vcf
 
 
 @pytest.mark.parametrize(
@@ -28,7 +28,7 @@ from dae.annotation.annotate_vcf import cli as cli_vcf, produce_partfile_paths
 
         ({"chrom": "chr1", "pos_beg": "4", "pos_end": "30"},
          Region("chr1", 4, 30)),
-    ]
+    ],
 )
 def test_default_columns(
         record: dict[str, str], expected: Annotatable) -> None:
@@ -42,7 +42,7 @@ def test_default_columns(
         ({"col_chrom": "chromosome", "col_pos": "position"},
          {"chromosome": "chr1", "position": "4", "ref": "C", "alt": "CT"},
          VCFAllele("chr1", 4, "C", "CT")),
-    ]
+    ],
 )
 def test_renamed_columns(
         parameters: dict[str, str], record: dict[str, str],
@@ -67,7 +67,7 @@ def get_file_content_as_string(file: str) -> str:
         return "".join(infile.readlines())
 
 
-@pytest.fixture
+@pytest.fixture()
 def annotate_directory_fixture(tmp_path: pathlib.Path) -> pathlib.Path:
     root_path = tmp_path / "annotate_columns_and_vcf"
     setup_directories(
@@ -107,7 +107,7 @@ def annotate_directory_fixture(tmp_path: pathlib.Path) -> pathlib.Path:
                                 The phastCons computed over the tree of 100
                                 verterbrate species
                           name: s1
-                    """
+                    """,
                 },
                 "two": {
                     "genomic_resource.yaml": """
@@ -122,7 +122,7 @@ def annotate_directory_fixture(tmp_path: pathlib.Path) -> pathlib.Path:
                         - id: score
                           type: float
                           name: s1
-                    """
+                    """,
                 },
                 "three": {
                     "genomic_resource.yaml": """
@@ -137,7 +137,7 @@ def annotate_directory_fixture(tmp_path: pathlib.Path) -> pathlib.Path:
                         - id: score
                           type: str
                           name: s1
-                    """
+                    """,
                 },
                 "four": {
                     "genomic_resource.yaml": """
@@ -151,10 +151,10 @@ def annotate_directory_fixture(tmp_path: pathlib.Path) -> pathlib.Path:
                                 The "phastCons" computed over the tree of 100
                                 verterbrate species
                           name: s1
-                    """
+                    """,
                 },
-            }
-        }
+            },
+        },
     )
     one_content = textwrap.dedent("""
         chrom  pos_begin  s1
@@ -220,7 +220,7 @@ def test_annotate_columns_basic_setup(
         str(a) for a in [
             in_file, annotation_file, "--grr", grr_file, "-o", out_file,
             "-w", work_dir,
-            "-j", 1
+            "-j", 1,
         ]
     ])
     out_file_content = get_file_content_as_string(str(out_file))
@@ -228,7 +228,7 @@ def test_annotate_columns_basic_setup(
 
 
 def test_basic_vcf(
-    annotate_directory_fixture: pathlib.Path
+    annotate_directory_fixture: pathlib.Path,
 ) -> None:
     in_content = textwrap.dedent("""
         ##fileformat=VCFv4.2
@@ -253,7 +253,7 @@ def test_basic_vcf(
             "--grr", grr_file,
             "-o", out_file,
             "-w", workdir,
-            "-j", 1
+            "-j", 1,
         ]
     ])
 
@@ -266,7 +266,7 @@ def test_basic_vcf(
 
 
 def test_multiallelic_vcf(
-    annotate_directory_fixture: pathlib.Path
+    annotate_directory_fixture: pathlib.Path,
 ) -> None:
     in_content = textwrap.dedent("""
         ##fileformat=VCFv4.2
@@ -303,7 +303,7 @@ def test_multiallelic_vcf(
 
 
 def test_vcf_multiple_chroms(
-    annotate_directory_fixture: pathlib.Path
+    annotate_directory_fixture: pathlib.Path,
 ) -> None:
     in_content = textwrap.dedent("""
         ##fileformat=VCFv4.2
@@ -335,7 +335,7 @@ def test_vcf_multiple_chroms(
             "--grr", grr_file,
             "-o", out_file,
             "-w", workdir,
-            "-j", 1
+            "-j", 1,
         ]
     ])
 
@@ -364,16 +364,16 @@ def test_produce_partfile_paths() -> None:
     ]
     # relative input file path
     assert produce_partfile_paths(
-        "src/input.vcf", regions, "work_dir/output"
+        "src/input.vcf", regions, "work_dir/output",
     ) == expected_output
     # absolute input file path
     assert produce_partfile_paths(
-        "/home/user/src/input.vcf", regions, "work_dir/output"
+        "/home/user/src/input.vcf", regions, "work_dir/output",
     ) == expected_output
 
 
 def test_annotate_columns_multiple_chrom(
-    annotate_directory_fixture: pathlib.Path
+    annotate_directory_fixture: pathlib.Path,
 ) -> None:
     in_content = textwrap.dedent("""
         chrom   pos
@@ -410,7 +410,7 @@ def test_annotate_columns_multiple_chrom(
     cli_columns([
         str(a) for a in [
             in_file_gz, annotation_file, "-w", workdir, "--grr", grr_file,
-            "-o", out_file, "-j", 1
+            "-o", out_file, "-j", 1,
         ]
     ])
 
@@ -426,7 +426,7 @@ def test_annotate_columns_multiple_chrom(
 
 
 def test_annotate_vcf_forbidden_symbol_replacement(
-    annotate_directory_fixture: pathlib.Path
+    annotate_directory_fixture: pathlib.Path,
 ) -> None:
     in_content = textwrap.dedent("""
         ##fileformat=VCFv4.2
@@ -452,7 +452,7 @@ def test_annotate_vcf_forbidden_symbol_replacement(
             "--grr", grr_file,
             "-o", out_file,
             "-w", workdir,
-            "-j", 1
+            "-j", 1,
         ]
     ])
 
@@ -465,7 +465,7 @@ def test_annotate_vcf_forbidden_symbol_replacement(
 
 
 def test_annotate_vcf_none_values(
-    annotate_directory_fixture: pathlib.Path
+    annotate_directory_fixture: pathlib.Path,
 ) -> None:
     in_content = textwrap.dedent("""
         ##fileformat=VCFv4.2
@@ -491,7 +491,7 @@ def test_annotate_vcf_none_values(
             "--grr", grr_file,
             "-o", out_file,
             "-w", workdir,
-            "-j", 1
+            "-j", 1,
         ]
     ])
 
@@ -505,7 +505,7 @@ def test_annotate_vcf_none_values(
 
 
 def test_vcf_description_with_quotes(
-    annotate_directory_fixture: pathlib.Path
+    annotate_directory_fixture: pathlib.Path,
 ) -> None:
     in_content = textwrap.dedent("""
         ##fileformat=VCFv4.2
@@ -531,7 +531,7 @@ def test_vcf_description_with_quotes(
             "--grr", grr_file,
             "-o", out_file,
             "-w", workdir,
-            "-j", 1
+            "-j", 1,
         ]
     ])
 
@@ -539,11 +539,11 @@ def test_vcf_description_with_quotes(
     with pysam.VariantFile(str(out_file)) as vcf_file:
         info = vcf_file.header.info
     assert info["score"].description == \
-        'The \\"phastCons\\" computed over the tree of 100 verterbrate species'  # noqa
+        'The \\"phastCons\\" computed over the tree of 100 verterbrate species'
 
 
 def test_annotate_columns_repeated_attributes(
-    annotate_directory_fixture: pathlib.Path
+    annotate_directory_fixture: pathlib.Path,
 ) -> None:
     in_content = textwrap.dedent("""
         chrom   pos
@@ -571,7 +571,7 @@ def test_annotate_columns_repeated_attributes(
             "-o", out_file,
             "-w", work_dir,
             "-j", 1,
-            "--allow-repeated-attributes"
+            "--allow-repeated-attributes",
         ]
     ])
     out_file_content = get_file_content_as_string(str(out_file))
@@ -579,7 +579,7 @@ def test_annotate_columns_repeated_attributes(
 
 
 def test_annotate_vcf_repeated_attributes(
-    annotate_directory_fixture: pathlib.Path
+    annotate_directory_fixture: pathlib.Path,
 ) -> None:
     in_content = textwrap.dedent("""
         ##fileformat=VCFv4.2
@@ -605,7 +605,7 @@ def test_annotate_vcf_repeated_attributes(
             "-o", out_file,
             "-w", workdir,
             "-j", 1,
-            "--allow-repeated-attributes"
+            "--allow-repeated-attributes",
         ]
     ])
 

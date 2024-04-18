@@ -3,10 +3,8 @@ import copy
 import json
 
 import pytest
-
-from rest_framework import status  # type: ignore
 from django.test.client import Client
-
+from rest_framework import status  # type: ignore
 
 pytestmark = pytest.mark.usefixtures(
     "wdae_gpf_instance", "dae_calc_gene_sets")
@@ -32,27 +30,27 @@ QUERY = {
         "post",
         {
             "datasetId": "f1_trio",
-        }
+        },
     ),
     (
         "/api/v3/pheno_tool/people_values",
         "post",
         {
             "datasetId": "f1_trio",
-            "measureIds": ["i1.m1"]
-        }
+            "measureIds": ["i1.m1"],
+        },
     ),
     (
         "/api/v3/pheno_tool/measure",
         "post",
         {
             "datasetId": "f1_trio",
-            "measureId": "i1.m1"
-        }
+            "measureId": "i1.m1",
+        },
     ),
     (
         "/api/v3/pheno_tool/measures?datasetId=f1_trio&instrument=i1",
-        "get", None
+        "get", None,
     ),
     ("/api/v3/pheno_tool/instruments?datasetId=f1_trio", "get", None),
 ])
@@ -60,13 +58,13 @@ def test_pheno_tool_api_permissions(
     anonymous_client: Client,
     url: str,
     method: str,
-    body: dict
+    body: dict,
 ) -> None:
     if method == "get":
         response = anonymous_client.get(url)
     else:
         response = anonymous_client.post(
-            url, json.dumps(body), content_type="application/json"
+            url, json.dumps(body), content_type="application/json",
         )
 
     assert response
@@ -172,7 +170,7 @@ def test_pheno_tool_view_normalize(admin_client: Client) -> None:
         pytest.approx(31.3010, abs=1e-3)
 
     assert result["maleResults"]["negative"]["mean"] != pytest.approx(
-        result_normalized["maleResults"]["negative"]["mean"], abs=1e-3
+        result_normalized["maleResults"]["negative"]["mean"], abs=1e-3,
     )
 
     assert result["femaleResults"]["negative"]["count"] == 2
@@ -184,7 +182,7 @@ def test_pheno_tool_view_normalize(admin_client: Client) -> None:
         pytest.approx(12.5952, abs=1e-3)
 
     assert result["femaleResults"]["negative"]["mean"] != pytest.approx(
-        result_normalized["femaleResults"]["negative"]["mean"], abs=1e-3
+        result_normalized["femaleResults"]["negative"]["mean"], abs=1e-3,
     )
 
 
@@ -247,7 +245,7 @@ def test_pheno_tool_view_pheno_filter(admin_client: Client) -> None:
                 "max": 43,
                 "min": 42.9,
             },
-        }
+        },
     ]
 
     response = admin_client.post(

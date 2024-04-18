@@ -1,9 +1,9 @@
-import itertools
-import enum
 import copy
+import enum
+import itertools
 from collections import Counter
-from typing import Optional, List
 from numbers import Number
+from typing import List, Optional
 
 import numpy as np
 import pandas as pd
@@ -101,7 +101,7 @@ class ClassifierReport:
             counts[val] += 1
         distribution = list(counts.items())
         distribution = sorted(
-            distribution, key=lambda _val_count: -_val_count[1]
+            distribution, key=lambda _val_count: -_val_count[1],
         )
         distribution = distribution[: self.DISTRIBUTION_CUTOFF]
         distribution = [
@@ -179,8 +179,7 @@ def convert_to_string(val):
         or isinstance(val, str)
     ):
         return str(remove_annoying_characters(val))
-    else:
-        return str(val)
+    return str(val)
 
 
 class MeasureClassifier:
@@ -249,15 +248,15 @@ class MeasureClassifier:
                 v
                 for v in MeasureClassifier.convert_to_string(values)
                 if v is not None
-            ]
+            ],
         )
         report.unique_values = np.unique(report.string_values)
         report.count_unique_values = len(report.unique_values)
         report.numeric_values = MeasureClassifier.convert_to_numeric(
-            np.array(numeric_values)
+            np.array(numeric_values),
         )
         report.count_unique_numeric_values = len(
-            np.unique(report.numeric_values)
+            np.unique(report.numeric_values),
         )
         if len(report.string_values) == 0:
             report.value_max_len = 0
@@ -294,7 +293,7 @@ class MeasureClassifier:
                 int,
                 np.dtype("int64"),
                 np.dtype("float64"),
-            ]
+            ],
         ):
             return MeasureClassifier.meta_measures_numeric(values, report)
 
@@ -316,7 +315,7 @@ class MeasureClassifier:
                 int,
                 np.dtype("int64"),
                 np.dtype("float64"),
-            ]
+            ],
         ):
             return values
 
@@ -351,12 +350,11 @@ class MeasureClassifier:
                 return MeasureType.ordinal
 
             return MeasureType.raw
-        else:
-            if (
-                rep.count_unique_values >= conf.categorical.min_rank
-                and rep.count_unique_values <= conf.categorical.max_rank
-                # and rep.value_max_len <= conf.value_max_len
-            ):
-                return MeasureType.categorical
+        if (
+            rep.count_unique_values >= conf.categorical.min_rank
+            and rep.count_unique_values <= conf.categorical.max_rank
+            # and rep.value_max_len <= conf.value_max_len
+        ):
+            return MeasureType.categorical
 
-            return MeasureType.raw
+        return MeasureType.raw

@@ -1,8 +1,9 @@
 """Default Django settings for wdae project."""
 # flake8: noqa: F501
 
-import os
 import logging
+import os
+
 from dae.pheno.pheno_data import get_pheno_browser_images_dir
 
 DEBUG = os.environ.get("WDAE_DEBUG", "False") == "True"
@@ -10,7 +11,7 @@ DEBUG = os.environ.get("WDAE_DEBUG", "False") == "True"
 
 # Make this unique, and don't share it with anybody.
 SECRET_KEY = os.environ.get(
-    "WDAE_SECRET_KEY", "#mhbhbjgub==v$cjdu7jay@*$ux$novw#t2tmgjr^5(pr@ycxp"
+    "WDAE_SECRET_KEY", "#mhbhbjgub==v$cjdu7jay@*$ux$novw#t2tmgjr^5(pr@ycxp",
 )
 
 
@@ -67,20 +68,18 @@ EMAIL_VERIFICATION_SET_PATH = "/api/v3/users/set_password?code={}"
 EMAIL_VERIFICATION_RESET_PATH = "/api/v3/users/reset_password?code={}"
 
 
-
-
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
 if os.environ.get("WDAE_DB_HOST"):
     DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.mysql',
-            'NAME': os.environ.get("WDAE_DB_NAME"),
-            'USER': os.environ.get("WDAE_DB_USER"),
-            'PASSWORD': os.environ.get("WDAE_DB_PASSWORD"),
-            'HOST': os.environ.get("WDAE_DB_HOST"),
-            'PORT': os.environ.get("WDAE_DB_PORT"),
-        }
+        "default": {
+            "ENGINE": "django.db.backends.mysql",
+            "NAME": os.environ.get("WDAE_DB_NAME"),
+            "USER": os.environ.get("WDAE_DB_USER"),
+            "PASSWORD": os.environ.get("WDAE_DB_PASSWORD"),
+            "HOST": os.environ.get("WDAE_DB_HOST"),
+            "PORT": os.environ.get("WDAE_DB_PORT"),
+        },
     }
 else:
     DATABASES = {
@@ -91,12 +90,12 @@ else:
             "PASSWORD": "",
             "HOST": "",
             "PORT": "",
-        }
+        },
     }
 
 
 ALLOWED_HOSTS = [
-    os.environ.get("WDAE_ALLOWED_HOST", "*")
+    os.environ.get("WDAE_ALLOWED_HOST", "*"),
 ]
 
 TIME_ZONE = "US/Eastern"
@@ -239,7 +238,7 @@ if os.environ.get("WDAE_SENTRY_DSN", None):
 
         # If you wish to associate users to errors (assuming you are using
         # django.contrib.auth) you may enable sending PII data.
-        send_default_pii=True
+        send_default_pii=True,
     )
 
 AUTH_USER_MODEL = "users_api.WdaeUser"
@@ -253,7 +252,7 @@ REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": (
         "utils.pagination.WdaePageNumberPagination"
     ),
-    "PAGE_SIZE": 25
+    "PAGE_SIZE": 25,
 }
 
 DEFAULT_RENDERER_CLASSES = [
@@ -262,7 +261,7 @@ DEFAULT_RENDERER_CLASSES = [
 
 if DEBUG:
     DEFAULT_RENDERER_CLASSES = DEFAULT_RENDERER_CLASSES + \
-        ["rest_framework.renderers.BrowsableAPIRenderer", ]
+        ["rest_framework.renderers.BrowsableAPIRenderer"]
 
 REST_FRAMEWORK["DEFAULT_RENDERER_CLASSES"] = DEFAULT_RENDERER_CLASSES
 
@@ -316,12 +315,12 @@ LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
     "filters": {
-        "require_debug_false": {"()": "django.utils.log.RequireDebugFalse"}
+        "require_debug_false": {"()": "django.utils.log.RequireDebugFalse"},
     },
     "formatters": {
         "verbose": {
             "format": "%(levelname)s %(asctime)s %(module)s %(process)d "
-            "%(thread)d %(message)s"
+            "%(thread)d %(message)s",
         },
         "verbose_console": {"()": CustomFormatter},
     },

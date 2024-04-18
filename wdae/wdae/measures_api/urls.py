@@ -1,4 +1,5 @@
 from django.urls import re_path
+
 from measures_api import views
 
 urlpatterns = [

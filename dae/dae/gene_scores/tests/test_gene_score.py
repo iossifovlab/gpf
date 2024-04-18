@@ -1,19 +1,23 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
 import textwrap
-import pytest
+
 import numpy as np
+import pytest
 
-from dae.genomic_resources.testing import build_inmemory_test_repository
-from dae.genomic_resources.repository import GR_CONF_FILE_NAME, \
-    GenomicResourceRepo
+from dae.gene_scores.implementations.gene_scores_impl import (
+    GeneScoreImplementation,
+    build_gene_score_from_resource,
+)
 from dae.genomic_resources.histogram import NumberHistogram
-from dae.gene_scores.implementations.gene_scores_impl import \
-    build_gene_score_from_resource, \
-    GeneScoreImplementation
+from dae.genomic_resources.repository import (
+    GR_CONF_FILE_NAME,
+    GenomicResourceRepo,
+)
+from dae.genomic_resources.testing import build_inmemory_test_repository
 
 
-@pytest.fixture
+@pytest.fixture()
 def scores_repo(tmp_path: pathlib.Path) -> GenomicResourceRepo:
     scores_repo = build_inmemory_test_repository({
         "LinearHist": {
@@ -58,8 +62,8 @@ def scores_repo(tmp_path: pathlib.Path) -> GenomicResourceRepo:
                         min: 1.0
                       x_log_scale: false
                       y_log_scale: false
-                """)
-            }
+                """),
+            },
         },
         "LogHist": {
             GR_CONF_FILE_NAME: """
@@ -111,8 +115,8 @@ def scores_repo(tmp_path: pathlib.Path) -> GenomicResourceRepo:
                       x_min_log: 0.001
                       x_log_scale: true
                       y_log_scale: false
-                """)
-            }
+                """),
+            },
         },
         "NaNTest": {
             GR_CONF_FILE_NAME: """
@@ -156,8 +160,8 @@ def scores_repo(tmp_path: pathlib.Path) -> GenomicResourceRepo:
                         min: 1.0
                       x_log_scale: false
                       y_log_scale: false
-                """)
-            }
+                """),
+            },
         },
         "Oops": {
             GR_CONF_FILE_NAME: "",
@@ -175,7 +179,7 @@ def scores_repo(tmp_path: pathlib.Path) -> GenomicResourceRepo:
                 G1,1
                 G2,2
                 G3,3
-            """)
+            """),
         },
         "OopsScores": {
             GR_CONF_FILE_NAME: """
@@ -187,7 +191,7 @@ def scores_repo(tmp_path: pathlib.Path) -> GenomicResourceRepo:
                 G1,1
                 G2,2
                 G3,3
-            """)
+            """),
         },
     })
     return scores_repo
@@ -250,7 +254,7 @@ def test_load_gene_score_without_histogram(
     res = scores_repo.get_resource("OopsHist")
     with pytest.raises(
         ValueError,
-        match="Missing histogram config for linear in OopsHist"
+        match="Missing histogram config for linear in OopsHist",
     ):
         build_gene_score_from_resource(res)
 

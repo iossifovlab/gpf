@@ -5,7 +5,7 @@ def test_family_filter(fixtures_gpf_instance):
     filter_conf = {
         "source": "phenotype",
         "selection": {"selection": ["unaffected"]},
-        "role": "dad"
+        "role": "dad",
     }
     pedigree_filter = pf.make_pedigree_filter(filter_conf)
     genotype_data = fixtures_gpf_instance.get_genotype_data("Study1")
@@ -17,7 +17,7 @@ def test_make_pedigree_filter():
     filter_conf = {
         "source": "pedigree_column",
         "selection": {"selection": ["some_value"]},
-        "role": "prb"
+        "role": "prb",
     }
     pedigree_filter = pf.make_pedigree_filter(filter_conf)
     assert isinstance(pedigree_filter, pf.FamilyFilter)

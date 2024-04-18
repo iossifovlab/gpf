@@ -32,7 +32,7 @@ def test_load_cache(denovo_gene_sets, calc_gene_sets, gene_info_cache_dir):
 
 
 def test_f1_autism_get_gene_sets(
-    denovo_gene_sets, calc_gene_sets, gene_info_cache_dir
+    denovo_gene_sets, calc_gene_sets, gene_info_cache_dir,
 ):
     gene_sets = DenovoGeneSetCollection.get_all_gene_sets(
         denovo_gene_sets,
@@ -45,12 +45,12 @@ def test_f1_autism_get_gene_sets(
 
 
 def test_f1_affected_and_unaffected_get_gene_sets(
-    denovo_gene_sets, calc_gene_sets, gene_info_cache_dir
+    denovo_gene_sets, calc_gene_sets, gene_info_cache_dir,
 ):
     gene_sets = DenovoGeneSetCollection.get_all_gene_sets(
         denovo_gene_sets,
         denovo_gene_set_spec={
-            "f1_group": {"phenotype": ["autism", "unaffected"]}
+            "f1_group": {"phenotype": ["autism", "unaffected"]},
         },
     )
 
@@ -60,7 +60,7 @@ def test_f1_affected_and_unaffected_get_gene_sets(
 
 
 def test_f1_unaffected_get_gene_sets(
-    denovo_gene_sets, calc_gene_sets, gene_info_cache_dir
+    denovo_gene_sets, calc_gene_sets, gene_info_cache_dir,
 ):
     gene_sets = DenovoGeneSetCollection.get_all_gene_sets(
         denovo_gene_sets,
@@ -75,7 +75,7 @@ def test_f1_unaffected_get_gene_sets(
 
 
 def test_f1_single_get_gene_sets(
-    denovo_gene_sets, calc_gene_sets, gene_info_cache_dir
+    denovo_gene_sets, calc_gene_sets, gene_info_cache_dir,
 ):
     gene_sets = DenovoGeneSetCollection.get_all_gene_sets(
         denovo_gene_sets,
@@ -89,7 +89,7 @@ def test_f1_single_get_gene_sets(
 
 
 def test_synonymous_recurrency_get_gene_sets(
-    denovo_gene_sets, calc_gene_sets, gene_info_cache_dir
+    denovo_gene_sets, calc_gene_sets, gene_info_cache_dir,
 ):
     gene_sets = DenovoGeneSetCollection.get_all_gene_sets(
         denovo_gene_sets,
@@ -103,7 +103,7 @@ def test_synonymous_recurrency_get_gene_sets(
 
 
 def test_missense_recurrency_get_gene_sets(
-    denovo_gene_sets, calc_gene_sets, gene_info_cache_dir
+    denovo_gene_sets, calc_gene_sets, gene_info_cache_dir,
 ):
     gene_sets = DenovoGeneSetCollection.get_all_gene_sets(
         denovo_gene_sets,
@@ -117,7 +117,7 @@ def test_missense_recurrency_get_gene_sets(
 
 
 def test_synonymous_triple_get_gene_sets(
-    denovo_gene_sets, calc_gene_sets, gene_info_cache_dir
+    denovo_gene_sets, calc_gene_sets, gene_info_cache_dir,
 ):
     gene_sets = DenovoGeneSetCollection.get_all_gene_sets(
         denovo_gene_sets,
@@ -131,7 +131,7 @@ def test_synonymous_triple_get_gene_sets(
 
 
 def test_missense_triple_get_gene_sets(
-    denovo_gene_sets, calc_gene_sets, gene_info_cache_dir
+    denovo_gene_sets, calc_gene_sets, gene_info_cache_dir,
 ):
     gene_sets = DenovoGeneSetCollection.get_all_gene_sets(
         denovo_gene_sets,
@@ -145,12 +145,12 @@ def test_missense_triple_get_gene_sets(
 
 
 def test_missense_triple_get_gene_sets_affected_and_unaffected(
-    denovo_gene_sets, calc_gene_sets, gene_info_cache_dir
+    denovo_gene_sets, calc_gene_sets, gene_info_cache_dir,
 ):
     gene_sets = DenovoGeneSetCollection.get_all_gene_sets(
         denovo_gene_sets,
         denovo_gene_set_spec={
-            "f3_group": {"phenotype": ["autism", "unaffected"]}
+            "f3_group": {"phenotype": ["autism", "unaffected"]},
         },
     )
 
@@ -161,7 +161,7 @@ def test_missense_triple_get_gene_sets_affected_and_unaffected(
 
 
 def test_autism_trio_get_gene_sets(
-    denovo_gene_set_f4, calc_gene_sets, gene_info_cache_dir
+    denovo_gene_set_f4, calc_gene_sets, gene_info_cache_dir,
 ):
     gene_sets = DenovoGeneSetCollection.get_all_gene_sets(
         [denovo_gene_set_f4],
@@ -177,7 +177,7 @@ def test_autism_trio_get_gene_sets(
 
 
 def test_unaffected_trio_get_gene_sets(
-    denovo_gene_set_f4, calc_gene_sets, gene_info_cache_dir
+    denovo_gene_set_f4, calc_gene_sets, gene_info_cache_dir,
 ):
     gene_sets = DenovoGeneSetCollection.get_all_gene_sets(
         [denovo_gene_set_f4],
@@ -190,12 +190,12 @@ def test_unaffected_trio_get_gene_sets(
 
 
 def test_affected_and_unaffected_trio_get_gene_sets(
-    denovo_gene_set_f4, calc_gene_sets, gene_info_cache_dir
+    denovo_gene_set_f4, calc_gene_sets, gene_info_cache_dir,
 ):
     gene_sets = DenovoGeneSetCollection.get_all_gene_sets(
         [denovo_gene_set_f4],
         denovo_gene_set_spec={
-            "f4_trio": {"phenotype": ["autism", "unaffected"]}
+            "f4_trio": {"phenotype": ["autism", "unaffected"]},
         },
     )
 

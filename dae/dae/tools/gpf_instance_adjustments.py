@@ -1,20 +1,19 @@
 from __future__ import annotations
 
-import os
-import sys
-import logging
+import abc
 import argparse
 import glob
-import abc
-
-from typing import Optional, Any, cast, Iterable
+import logging
+import os
+import sys
+from collections.abc import Iterable
 from types import TracebackType
+from typing import Any, Optional, cast
 
-import yaml
 import toml
+import yaml
 
 from dae.utils.verbosity_configuration import VerbosityConfiguration
-
 
 logger = logging.getLogger("gpf_instance_adjustments")
 
@@ -51,7 +50,7 @@ class AdjustmentsCommand(abc.ABC):
         self,
         exc_type: type[BaseException] | None,
         exc_value: Optional[BaseException],
-        exc_tb: TracebackType | None
+        exc_tb: TracebackType | None,
     ) -> None:
         self.close()
 
@@ -75,7 +74,7 @@ class AdjustImpalaStorageCommand(AdjustmentsCommand):
 
     def __init__(
         self, instance_dir: str, storage_id: str, read_only: bool,
-        hdfs_host: str, impala_hosts: list[str]
+        hdfs_host: str, impala_hosts: list[str],
     ) -> None:
         super().__init__(instance_dir)
         self.storage_id = storage_id
@@ -115,7 +114,7 @@ class AdjustDuckDbStorageCommand(AdjustmentsCommand):
 
     def __init__(
         self, instance_dir: str, storage_id: str,
-        read_only: str
+        read_only: str,
     ) -> None:
         super().__init__(instance_dir)
         self.storage_id = storage_id
@@ -204,12 +203,12 @@ class StudyConfigsAdjustmentCommand(AdjustmentsCommand):
 
     def adjust_study(
         self, _study_id: str,
-        study_config: dict[str, Any]
+        study_config: dict[str, Any],
     ) -> dict[str, Any]:
         return study_config
 
     def adjust_dataset(
-        self, _dataset_id: str, dataset_config: dict[str, Any]
+        self, _dataset_id: str, dataset_config: dict[str, Any],
     ) -> dict[str, Any]:
         return dataset_config
 
@@ -250,7 +249,7 @@ class DefaultGenotypeStorage(StudyConfigsAdjustmentCommand):
 
     def adjust_study(
         self, _study_id: str,
-        study_config: dict[str, Any]
+        study_config: dict[str, Any],
     ) -> dict[str, Any]:
         genotype_storage = study_config.get("genotype_storage")
         if genotype_storage is not None and \
@@ -265,7 +264,7 @@ class EnableDisableStudies(StudyConfigsAdjustmentCommand):
     def __init__(
         self, instance_dir: str,
         study_ids: Iterable[str],
-        enabled: bool = False
+        enabled: bool = False,
     ) -> None:
         super().__init__(instance_dir)
         self.study_ids = study_ids
@@ -305,7 +304,7 @@ class EnableDisableStudies(StudyConfigsAdjustmentCommand):
 
     def adjust_study(
         self, study_id: str,
-        study_config: dict[str, Any]
+        study_config: dict[str, Any],
     ) -> dict[str, Any]:
         if study_id in self.study_ids:
             logger.info("study %s %s", study_id, self._msg())
@@ -314,7 +313,7 @@ class EnableDisableStudies(StudyConfigsAdjustmentCommand):
 
     def adjust_dataset(
         self, dataset_id: str,
-        dataset_config: dict[str, Any]
+        dataset_config: dict[str, Any],
     ) -> dict[str, Any]:
         if dataset_id in self.study_ids:
             logger.info("dataset %s %s", dataset_id, self._msg())

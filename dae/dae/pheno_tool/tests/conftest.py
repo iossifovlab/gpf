@@ -4,12 +4,12 @@ from typing import Callable
 
 import pytest
 
-from dae.pheno.pheno_data import PhenotypeStudy, PhenotypeData
+from dae.pheno.pheno_data import PhenotypeData, PhenotypeStudy
 
 
-@pytest.fixture
+@pytest.fixture()
 def fake_phenotype_data(
-    fixture_dirname: Callable[[str], str]
+    fixture_dirname: Callable[[str], str],
 ) -> PhenotypeData:
     pheno_data = PhenotypeStudy(
         "fake_db", fixture_dirname("fake_pheno_db/fake.db"))

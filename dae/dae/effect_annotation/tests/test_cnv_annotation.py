@@ -3,7 +3,6 @@
 import pytest
 
 from dae.annotation.annotatable import Annotatable
-
 from dae.effect_annotation.annotator import EffectAnnotator
 from dae.effect_annotation.effect import AnnotationEffect
 from dae.gpf_instance import GPFInstance
@@ -14,19 +13,19 @@ from dae.gpf_instance import GPFInstance
     [
         (
             Annotatable.Type.LARGE_DUPLICATION, "1:1590681-1628197",
-            "CNV+", [("SLC35E2B", "CNV+"), ("CDK11B", "CNV+")]
+            "CNV+", [("SLC35E2B", "CNV+"), ("CDK11B", "CNV+")],
         ),
         (
             Annotatable.Type.LARGE_DUPLICATION, "1:28298951-28369279",
-            "CNV+", [("EYA3", "CNV+")]
+            "CNV+", [("EYA3", "CNV+")],
         ),
         (
             Annotatable.Type.LARGE_DELETION, "1:40980559-40998902",
-            "CNV-", [("EXO5", "CNV-"), ("ZNF684", "CNV-")]
+            "CNV-", [("EXO5", "CNV-"), ("ZNF684", "CNV-")],
         ),
         (
             Annotatable.Type.LARGE_DELETION, "1:63119256-63173918",
-            "CNV-", [("DOCK7", "CNV-")]
+            "CNV-", [("DOCK7", "CNV-")],
         ),
     ],
 )
@@ -39,7 +38,7 @@ def test_cnv_simple(
         gpf_instance_2019.gene_models,
         gpf_instance_2019.reference_genome,
         location=location,
-        variant_type=variant_type
+        variant_type=variant_type,
     )
 
     assert effects

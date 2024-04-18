@@ -1,16 +1,15 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-import os
 import json
+import os
 from typing import Any
 
 import pytest
-
-from rest_framework import status
 from django.test.client import Client
 from gpf_instance.gpf_instance import WGPFInstance
+from rest_framework import status
 
 pytestmark = pytest.mark.usefixtures(
-    "wdae_gpf_instance", "dae_calc_gene_sets", "use_common_reports"
+    "wdae_gpf_instance", "dae_calc_gene_sets", "use_common_reports",
 )
 
 
@@ -23,7 +22,7 @@ pytestmark = pytest.mark.usefixtures(
         {
             "study_id": "study4",
             "group_name": "Phenotype",
-            "counter_id": "0"
+            "counter_id": "0",
         }),
     (
         "/api/v3/common_reports/family_counters/download",
@@ -32,21 +31,21 @@ pytestmark = pytest.mark.usefixtures(
             "queryData": json.dumps({
                 "study_id": "study4",
                 "group_name": "Phenotype",
-                "counter_id": "0"
-            })
-        }
+                "counter_id": "0",
+            }),
+        },
     ),
     ("/api/v3/common_reports/families_data/Study1", "get", None),
 ])
 def test_variant_reports_permissions(
     anonymous_client: Client, url: str,
-    method: str, body: dict[str, Any]
+    method: str, body: dict[str, Any],
 ) -> None:
     if method == "get":
         response = anonymous_client.get(url)
     else:
         response = anonymous_client.post(
-            url, json.dumps(body), content_type="application/json"
+            url, json.dumps(body), content_type="application/json",
         )
 
     assert response
@@ -80,11 +79,11 @@ def test_family_counters(admin_client: Client) -> None:
     data = {
         "study_id": "study4",
         "group_name": "Phenotype",
-        "counter_id": "0"
+        "counter_id": "0",
     }
     url = "/api/v3/common_reports/family_counters"
     response = admin_client.post(
-        url, json.dumps(data), content_type="application/json"
+        url, json.dumps(data), content_type="application/json",
     )
 
     assert response
@@ -100,12 +99,12 @@ def test_family_counters_download(admin_client: Client) -> None:
         "queryData": json.dumps({
             "study_id": "study4",
             "group_name": "Phenotype",
-            "counter_id": "0"
-        })
+            "counter_id": "0",
+        }),
     }
     url = "/api/v3/common_reports/family_counters/download"
     response = admin_client.post(
-        url, json.dumps(data), content_type="application/json"
+        url, json.dumps(data), content_type="application/json",
     )
 
     assert response
@@ -125,11 +124,11 @@ def test_families_tags_download(admin_client: Client) -> None:
         "tagsQuery": {
             "orMode": False,
             "includeTags": ["tag_nuclear_family", "tag_trio_family"],
-            "excludeTags": []
-        }
+            "excludeTags": [],
+        },
     }
     response = admin_client.post(
-        url, json.dumps(body), content_type="application/json"
+        url, json.dumps(body), content_type="application/json",
     )
 
     assert response
@@ -147,47 +146,47 @@ def test_families_tags_download(admin_client: Client) -> None:
             "tagsQuery": {
                 "orMode": False,
                 "includeTags": ["tag_nuclear_family", "tag_trio_family"],
-            }
+            },
         },
         {
             "tagsQuery": {
                 "orMode": False,
-                "excludeTags": []
-            }
+                "excludeTags": [],
+            },
         },
         {
             "tagsQuery": {
                 "includeTags": ["tag_nuclear_family", "tag_trio_family"],
-                "excludeTags": []
-            }
+                "excludeTags": [],
+            },
         },
         {
             "tagsQuery": {
                 "orMode": "test",
                 "includeTags": ["tag_nuclear_family", "tag_trio_family"],
-                "excludeTags": []
-            }
+                "excludeTags": [],
+            },
         },
         {
             "tagsQuery": {
                 "orMode": False,
                 "includeTags": "asfag",
-                "excludeTags": []
-            }
+                "excludeTags": [],
+            },
         },
         {
-            "tagsQuery": {}
+            "tagsQuery": {},
         },
-    ]
+    ],
 )
 def test_families_tags_download_errors_on_bad_body(
-    admin_client: Client, body: dict[str, Any]
+    admin_client: Client, body: dict[str, Any],
 ) -> None:
     url = (
         "/api/v3/common_reports/families_data/Study1"
     )
     response = admin_client.post(
-        url, json.dumps(body), content_type="application/json"
+        url, json.dumps(body), content_type="application/json",
     )
 
     assert response
@@ -206,7 +205,7 @@ def test_variant_reports_no_permissions(user_client: Client) -> None:
 
 
 def test_autogenerate_common_report(
-    admin_client: Client, wdae_gpf_instance: WGPFInstance
+    admin_client: Client, wdae_gpf_instance: WGPFInstance,
 ) -> None:
     study = wdae_gpf_instance.get_genotype_data("Study3")
     assert study is not None
@@ -257,7 +256,7 @@ def test_families_data_all_download(admin_client: Client) -> None:
 
 
 def test_families_data_all_download_no_permissions(
-    user_client: Client
+    user_client: Client,
 ) -> None:
     url = "/api/v3/common_reports/families_data/study4"
     response = user_client.get(url)

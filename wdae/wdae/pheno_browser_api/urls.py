@@ -1,6 +1,6 @@
 from django.urls import re_path
-from pheno_browser_api import views
 
+from pheno_browser_api import views
 
 urlpatterns = [
     re_path(
@@ -41,6 +41,6 @@ urlpatterns = [
     re_path(
         r"^/remote_images/(?P<remote_id>[^/]+)/(?P<image_path>.+)?",
         views.PhenoRemoteImages.as_view(),
-        name="pheno_browser_remote_images"
+        name="pheno_browser_remote_images",
     ),
 ]

@@ -1,7 +1,7 @@
 from django.conf import settings
-from django.shortcuts import render
 from django.contrib.staticfiles import finders
 from django.contrib.staticfiles.views import serve
+from django.shortcuts import render
 
 
 def index(request):

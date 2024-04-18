@@ -1,11 +1,15 @@
 import logging
-from typing import Optional, Any, Iterable, Union
+from collections.abc import Iterable
+from typing import Any, Optional, Union
 
-from dae.utils.regions import Region
-from dae.pedigrees.families_data import FamiliesData
 from dae.genomic_resources.gene_models import GeneModels
-from dae.query_variants.sql.schema2.base_query_builder import \
-    BaseQueryBuilder, Dialect, TableSchema
+from dae.pedigrees.families_data import FamiliesData
+from dae.query_variants.sql.schema2.base_query_builder import (
+    BaseQueryBuilder,
+    Dialect,
+    TableSchema,
+)
+from dae.utils.regions import Region
 
 logger = logging.getLogger(__name__)
 RealAttrFilterType = list[tuple[str, tuple[Optional[float], Optional[float]]]]
@@ -58,7 +62,7 @@ class SummaryQueryBuilder(BaseQueryBuilder):
 
     def _build_join(
         self, genes: Optional[list[str]] = None,
-        effect_types: Optional[list[str]] = None
+        effect_types: Optional[list[str]] = None,
     ) -> None:
         if genes is not None or effect_types is not None:
             self._add_to_product(

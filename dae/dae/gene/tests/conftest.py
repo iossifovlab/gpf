@@ -2,24 +2,22 @@
 
 import os
 import shutil
-from typing import Callable, Iterator, List, Any, cast
+from collections.abc import Iterator
+from typing import Any, Callable, List, cast
 
 import pytest
 
-from dae.testing import setup_pedigree, setup_denovo, denovo_study
-from dae.testing.foobar_import import foobar_gpf
-from dae.studies.study import GenotypeData
-
-from dae.utils.fixtures import change_environment
-
+from dae.gene.denovo_gene_set_collection import DenovoGeneSetCollection
 from dae.gene.denovo_gene_set_collection_factory import (
     DenovoGeneSetCollectionFactory,
 )
-
-from dae.utils.fixtures import path_to_fixtures as _path_to_fixtures
-from dae.gene.denovo_gene_set_collection import DenovoGeneSetCollection
 from dae.gene.denovo_gene_sets_db import DenovoGeneSetsDb
 from dae.gpf_instance.gpf_instance import GPFInstance
+from dae.studies.study import GenotypeData
+from dae.testing import denovo_study, setup_denovo, setup_pedigree
+from dae.testing.foobar_import import foobar_gpf
+from dae.utils.fixtures import change_environment
+from dae.utils.fixtures import path_to_fixtures as _path_to_fixtures
 
 
 def fixtures_dir() -> str:
@@ -32,7 +30,7 @@ def path_to_fixtures(*args: Any) -> str:
 
 @pytest.fixture(scope="session")
 def local_gpf_instance(
-    gpf_instance: Callable[[Any], GPFInstance]
+    gpf_instance: Callable[[Any], GPFInstance],
 ) -> GPFInstance:
     return gpf_instance(
         os.path.join(fixtures_dir(), "gpf_instance.yaml"))
@@ -73,7 +71,7 @@ def gene_info_cache_dir() -> Iterator[None]:
 
     new_envs = {
         "DATA_STUDY_GROUPS_DENOVO_GENE_SETS_DIR": path_to_fixtures(
-            "geneInfo", "cache"
+            "geneInfo", "cache",
         ),
         "DAE_DB_DIR": path_to_fixtures(),
     }
@@ -93,7 +91,7 @@ def genotype_data_names() -> List[str]:
 def calc_gene_sets(
     request: pytest.FixtureRequest,
     local_gpf_instance: GPFInstance,
-    genotype_data_names: List[str]
+    genotype_data_names: List[str],
 ) -> None:
     for dgs in genotype_data_names:
         genotype_data = local_gpf_instance.get_genotype_data(dgs)
@@ -106,7 +104,7 @@ def calc_gene_sets(
             genotype_data = local_gpf_instance.get_genotype_data(dgs)
             cache_file = \
                 DenovoGeneSetCollectionFactory.denovo_gene_set_cache_file(
-                    genotype_data.config, "phenotype"
+                    genotype_data.config, "phenotype",
                 )
             if os.path.exists(cache_file):
                 os.remove(cache_file)
@@ -116,24 +114,24 @@ def calc_gene_sets(
 
 @pytest.fixture(scope="session")
 def denovo_gene_sets(
-    local_gpf_instance: GPFInstance
+    local_gpf_instance: GPFInstance,
 ) -> list[DenovoGeneSetCollection]:
     return [
         DenovoGeneSetCollectionFactory.load_collection(
-            local_gpf_instance.get_genotype_data("f1_group")
+            local_gpf_instance.get_genotype_data("f1_group"),
         ),
         DenovoGeneSetCollectionFactory.load_collection(
-            local_gpf_instance.get_genotype_data("f2_group")
+            local_gpf_instance.get_genotype_data("f2_group"),
         ),
         DenovoGeneSetCollectionFactory.load_collection(
-            local_gpf_instance.get_genotype_data("f3_group")
+            local_gpf_instance.get_genotype_data("f3_group"),
         ),
     ]
 
 
 @pytest.fixture(scope="session")
 def denovo_gene_set_f4(
-    local_gpf_instance: GPFInstance
+    local_gpf_instance: GPFInstance,
 ) -> DenovoGeneSetCollection:
     return cast(
         DenovoGeneSetCollection,
@@ -146,9 +144,9 @@ def denovo_gene_set_f4(
 #     return local_gpf_instance.get_genotype_data_config("f4_trio")
 
 
-@pytest.fixture
+@pytest.fixture()
 def trios2_study(
-    tmp_path_factory: pytest.TempPathFactory
+    tmp_path_factory: pytest.TempPathFactory,
 ) -> GenotypeData:
     root_path = tmp_path_factory.mktemp(
         "denovo_gene_sets_tios")
@@ -174,7 +172,7 @@ def trios2_study(
           f2        bar:7     ins(CCCC)  2||2||1/0||0||1
           f2        bar:7     sub(C->A)  2||2||1/0||0||1
           f1        bar:7     sub(C->T)  2||2||1||2/0||0||1||0
-        """
+        """,
     )
 
     study = denovo_study(
@@ -184,7 +182,7 @@ def trios2_study(
         study_config_update={
             "id": "trios2",
             "denovo_gene_sets": {
-                "enabled": True
-            }
+                "enabled": True,
+            },
         })
     return study

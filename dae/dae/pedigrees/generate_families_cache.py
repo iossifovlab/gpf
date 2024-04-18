@@ -1,20 +1,19 @@
-import sys
-import time
 import argparse
 import logging
+import sys
+import time
 from typing import Optional, cast
 
-from dae.utils.verbosity_configuration import VerbosityConfiguration
-from dae.studies.study import GenotypeDataGroup
 from dae.gpf_instance.gpf_instance import GPFInstance
-
+from dae.studies.study import GenotypeDataGroup
+from dae.utils.verbosity_configuration import VerbosityConfiguration
 
 logger = logging.getLogger("generate_families_cache")
 
 
 def main(
     argv: Optional[list[str]] = None,
-    gpf_instance: Optional[GPFInstance] = None
+    gpf_instance: Optional[GPFInstance] = None,
 ) -> None:
     """Command line tool to create genotype groups families cache."""
     description = "Create genotype groups families cache"

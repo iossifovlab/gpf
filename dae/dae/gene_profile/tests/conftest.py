@@ -1,20 +1,19 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import os
 import pathlib
+
 import pytest
+from box import Box
 from pytest_mock import MockerFixture
 
-from box import Box
-
+from dae.gene.gene_sets_db import GeneSet
+from dae.gene_profile.db import GeneProfileDB
+from dae.gene_profile.statistic import GPStatistic
+from dae.gpf_instance import GPFInstance
 from dae.testing.alla_import import alla_gpf
 
-from dae.gpf_instance import GPFInstance
-from dae.gene.gene_sets_db import GeneSet
-from dae.gene_profile.statistic import GPStatistic
-from dae.gene_profile.db import GeneProfileDB
 
-
-@pytest.fixture
+@pytest.fixture()
 def gp_config() -> Box:
     return Box({
         "gene_sets": [
@@ -25,9 +24,9 @@ def gp_config() -> Box:
                     {"set_id": "CHD8 target genes", "collection_id": "main"},
                     {
                         "set_id": "FMRP Darnell",
-                        "collection_id": "main"
-                    }
-                ]
+                        "collection_id": "main",
+                    },
+                ],
             },
         ],
         "genomic_scores": [
@@ -37,8 +36,8 @@ def gp_config() -> Box:
                 "scores": [
                     {"score_name": "SFARI gene score", "format": "%s"},
                     {"score_name": "RVIS_rank", "format": "%s"},
-                    {"score_name": "RVIS", "format": "%s"}
-                ]
+                    {"score_name": "RVIS", "format": "%s"},
+                ],
             },
             {
                 "category": "autism_scores",
@@ -46,8 +45,8 @@ def gp_config() -> Box:
                 "scores": [
                     {"score_name": "SFARI gene score", "format": "%s"},
                     {"score_name": "RVIS_rank", "format": "%s"},
-                    {"score_name": "RVIS", "format": "%s"}
-                ]
+                    {"score_name": "RVIS", "format": "%s"},
+                ],
             },
         ],
         "datasets": Box({
@@ -57,59 +56,59 @@ def gp_config() -> Box:
                         "id": "denovo_noncoding",
                         "display_name": "Noncoding",
                         "effects": ["noncoding"],
-                        "category": "denovo"
+                        "category": "denovo",
                     },
                     {
                         "id": "denovo_missense",
                         "display_name": "Missense",
                         "effects": ["missense"],
-                        "category": "denovo"
-                    }
+                        "category": "denovo",
+                    },
                 ],
                 "person_sets": [
                     {
                         "set_name": "autism",
-                        "collection_name": "phenotype"
+                        "collection_name": "phenotype",
                     },
                     {
                         "set_name": "unaffected",
-                        "collection_name": "phenotype"
+                        "collection_name": "phenotype",
                     },
-                ]
-            })
-        })
+                ],
+            }),
+        }),
     })
 
 
-@pytest.fixture
+@pytest.fixture()
 def sample_gp() -> GPStatistic:
     gene_sets = ["main_CHD8 target genes"]
     genomic_scores = {
         "protection_scores": {
-            "SFARI gene score": 1, "RVIS_rank": 193.0, "RVIS": -2.34
+            "SFARI gene score": 1, "RVIS_rank": 193.0, "RVIS": -2.34,
         },
         "autism_scores": {
-            "SFARI gene score": 1, "RVIS_rank": 193.0, "RVIS": -2.34
+            "SFARI gene score": 1, "RVIS_rank": 193.0, "RVIS": -2.34,
         },
     }
     variant_counts = {
         "iossifov_2014": {
             "autism": {
                 "denovo_noncoding": {"count": 53, "rate": 1},
-                "denovo_missense": {"count": 21, "rate": 2}
+                "denovo_missense": {"count": 21, "rate": 2},
             },
             "unaffected": {
                 "denovo_noncoding": {"count": 43, "rate": 3},
-                "denovo_missense": {"count": 51, "rate": 4}
+                "denovo_missense": {"count": 51, "rate": 4},
             },
-        }
+        },
     }
     return GPStatistic(
-        "CHD8", gene_sets, genomic_scores, variant_counts
+        "CHD8", gene_sets, genomic_scores, variant_counts,
     )
 
 
-@pytest.fixture
+@pytest.fixture()
 def gp_gpf_instance(
         tmp_path: pathlib.Path,
         gp_config: Box,
@@ -123,7 +122,7 @@ def gp_gpf_instance(
         GPFInstance,
         "_gene_profile_config",
         return_value=gp_config,
-        new_callable=mocker.PropertyMock
+        new_callable=mocker.PropertyMock,
     )
     main_gene_sets = {
         "autism candidates",
@@ -131,7 +130,7 @@ def gp_gpf_instance(
     mocker.patch.object(
         gpf_instance.gene_sets_db,
         "get_gene_set_ids",
-        return_value=main_gene_sets
+        return_value=main_gene_sets,
     )
 
     mocker.patch.object(
@@ -146,7 +145,7 @@ def gp_gpf_instance(
         GeneProfileDB(
             gpf_instance._gene_profile_config,
             gpdb_filename,
-            clear=True
+            clear=True,
         )
     print(gpdb_filename)
     gpf_instance._gene_profile_db.insert_gp(sample_gp)
@@ -154,7 +153,7 @@ def gp_gpf_instance(
     return gpf_instance
 
 
-@pytest.fixture
+@pytest.fixture()
 def local_gpf_instance(
         tmp_path: pathlib.Path,
         gp_config: Box,
@@ -171,7 +170,7 @@ def local_gpf_instance(
         GPFInstance,
         "_gene_profile_config",
         return_value=gp_config,
-        new_callable=mocker.PropertyMock
+        new_callable=mocker.PropertyMock,
     )
     main_gene_sets = {
         "CHD8 target genes",
@@ -188,18 +187,18 @@ def local_gpf_instance(
         "postsynaptic inhibition",
         "synaptic clefts excitatory",
         "synaptic clefts inhibitory",
-        "topotecan downreg genes"
+        "topotecan downreg genes",
     }
     mocker.patch.object(
         gpf_instance.gene_sets_db,
         "get_gene_set_ids",
-        return_value=main_gene_sets
+        return_value=main_gene_sets,
     )
     gpf_instance._gene_profile_db = \
         GeneProfileDB(
             gpf_instance._gene_profile_config,
             gpdb_filename,
-            clear=True
+            clear=True,
         )
     print(gpdb_filename)
     gpf_instance._gene_profile_db.insert_gp(sample_gp)

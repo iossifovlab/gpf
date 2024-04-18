@@ -16,6 +16,6 @@ from dae.variants.variant import SummaryAllele
     ],
 )
 def test_summary_allele_end_position(
-    sa: SummaryAllele, end_position: int
+    sa: SummaryAllele, end_position: int,
 ) -> None:
     assert sa.end_position == end_position

@@ -1,14 +1,15 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
 from typing import Any
+
 import pytest
 
-from dae.import_tools.import_tools import ImportProject
 from dae.gpf_instance.gpf_instance import GPFInstance
+from dae.import_tools.import_tools import ImportProject
 from dae.testing.alla_import import alla_gpf
 
 
-@pytest.fixture
+@pytest.fixture()
 def gpf_fixture(tmp_path: pathlib.Path) -> GPFInstance:
     return alla_gpf(tmp_path)
 
@@ -21,8 +22,8 @@ def test_import_project_denovo_loader(
         "input": {
             "denovo": {
                 "files": [
-                    "denovo.tsv"
-                ]
+                    "denovo.tsv",
+                ],
             },
         },
     }
@@ -47,9 +48,9 @@ def test_import_project_vcf_loader_denovo_mode(
         "input": {
             "vcf": {
                 "files": [
-                    "denovo.vcf"
+                    "denovo.vcf",
                 ],
-                "denovo_mode": denovo_mode
+                "denovo_mode": denovo_mode,
             },
         },
     }
@@ -73,14 +74,14 @@ def test_import_project_mixed_denovo_and_vcf_loader_denovo_mode(
         "input": {
             "denovo": {
                 "files": [
-                    "denovo.tsv"
-                ]
+                    "denovo.tsv",
+                ],
             },
             "vcf": {
                 "files": [
-                    "denovo.vcf"
+                    "denovo.vcf",
                 ],
-                "denovo_mode": denovo_mode
+                "denovo_mode": denovo_mode,
             },
         },
     }

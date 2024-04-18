@@ -1,41 +1,38 @@
 #!/usr/bin/env python
 
+import argparse
+import logging
 import os
 import sys
 import time
-import argparse
-import logging
 from typing import Optional
 
 from box import Box
 
-from dae.gpf_instance.gpf_instance import GPFInstance
-from dae.annotation.effect_annotator import EffectAnnotatorAdapter
 from dae.annotation.annotation_pipeline import AnnotationPipeline
-
-from dae.import_tools.import_tools import ImportProject
-from dae.import_tools.cli import run_with_project
-from dae.variants_loaders.raw.loader import VariantsLoader
-from dae.variants_loaders.dae.loader import DenovoLoader, DaeTransmittedLoader
-from dae.variants_loaders.vcf.loader import VcfLoader
-
-from dae.variants_loaders.cnv.loader import CNVLoader
-from dae.variants_loaders.raw.loader import AnnotationPipelineDecorator, \
-    EffectAnnotationDecorator
-
-from dae.pedigrees.loader import FamiliesLoader
-
+from dae.annotation.effect_annotator import EffectAnnotatorAdapter
 from dae.common_reports import generate_common_report
+from dae.gpf_instance.gpf_instance import GPFInstance
+from dae.import_tools.cli import run_with_project
+from dae.import_tools.import_tools import ImportProject
+from dae.pedigrees.loader import FamiliesLoader
 from dae.tools import generate_denovo_gene_sets
-
 from dae.utils.verbosity_configuration import VerbosityConfiguration
+from dae.variants_loaders.cnv.loader import CNVLoader
+from dae.variants_loaders.dae.loader import DaeTransmittedLoader, DenovoLoader
+from dae.variants_loaders.raw.loader import (
+    AnnotationPipelineDecorator,
+    EffectAnnotationDecorator,
+    VariantsLoader,
+)
+from dae.variants_loaders.vcf.loader import VcfLoader
 
 logger = logging.getLogger("simple_study_import")
 
 
 def cli_arguments(
     dae_config: Box,
-    argv: Optional[list[str]] = None
+    argv: Optional[list[str]] = None,
 ) -> argparse.Namespace:
     """Create and return CLI arguments parser."""
     default_genotype_storage_id = None
@@ -160,7 +157,7 @@ def cli_arguments(
 def _decorate_loader(
     variants_loader: VariantsLoader,
     effect_annotator: EffectAnnotatorAdapter,
-    annotation_pipeline: AnnotationPipeline
+    annotation_pipeline: AnnotationPipeline,
 ) -> VariantsLoader:
     variants_loader = EffectAnnotationDecorator(
         variants_loader, effect_annotator)
@@ -174,7 +171,7 @@ def _decorate_loader(
 
 def build_import_project(
     args: argparse.Namespace,
-    gpf_instance: GPFInstance
+    gpf_instance: GPFInstance,
 ) -> ImportProject:
     """Build an import project based on the CLI arguments."""
     project = {
@@ -182,8 +179,8 @@ def build_import_project(
             "path": gpf_instance.dae_config.conf_dir,
         },
         "destination": {
-            "storage_id": args.genotype_storage
-        }
+            "storage_id": args.genotype_storage,
+        },
     }
 
     if args.id is not None:
@@ -235,7 +232,7 @@ def build_import_project(
 
 def main(
     argv: Optional[list[str]] = None,
-    gpf_instance: Optional[GPFInstance] = None
+    gpf_instance: Optional[GPFInstance] = None,
 ) -> None:
     """Run the simple study import procedure."""
     # pylint: disable=too-many-locals,too-many-branches,too-many-statements

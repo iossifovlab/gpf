@@ -1,26 +1,27 @@
 from __future__ import annotations
 
+import json
 import logging
 import textwrap
-import json
-
-from typing import Any
 from dataclasses import asdict
+from typing import Any
 
 from jinja2 import Template
 
-from dae.genomic_resources.resource_implementation import \
-    GenomicResourceImplementation, \
-    InfoImplementationMixin
-
+from dae.gene_scores.gene_scores import (
+    GeneScore,
+    build_gene_score_from_resource,
+)
 from dae.genomic_resources import GenomicResource
-from dae.genomic_resources.histogram import NumberHistogram, \
-    NumberHistogramConfig, \
-    NullHistogramConfig
-
-from dae.gene_scores.gene_scores import \
-    GeneScore, build_gene_score_from_resource
-
+from dae.genomic_resources.histogram import (
+    NullHistogramConfig,
+    NumberHistogram,
+    NumberHistogramConfig,
+)
+from dae.genomic_resources.resource_implementation import (
+    GenomicResourceImplementation,
+    InfoImplementationMixin,
+)
 from dae.task_graph.graph import Task, TaskGraph
 
 logger = logging.getLogger(__name__)
@@ -28,14 +29,14 @@ logger = logging.getLogger(__name__)
 
 class GeneScoreImplementation(
     GenomicResourceImplementation,
-    InfoImplementationMixin
+    InfoImplementationMixin,
 ):
     """Class used to represent gene score resource implementations."""
 
     def __init__(self, resource: GenomicResource) -> None:
         super().__init__(resource)
         self.gene_score: GeneScore = build_gene_score_from_resource(
-            resource
+            resource,
         )
 
     def get_template(self) -> Template:
@@ -89,20 +90,20 @@ class GeneScoreImplementation(
             if hist_conf is None or isinstance(hist_conf, NullHistogramConfig):
                 logger.warning(
                     "Gene score %s in %s has no histogram config!",
-                    score_id, self.resource.resource_id
+                    score_id, self.resource.resource_id,
                 )
                 continue
             create_task = task_graph.create_task(
                 f"{self.resource.resource_id}_{score_id}_calc_histogram",
                 self._calc_histogram,
                 [self.resource, score_id],
-                []
+                [],
             )
             save_task = task_graph.create_task(
                 f"{self.resource.resource_id}_{score_id}_save_histogram",
                 self._save_histogram,
                 [create_task, self.resource, score_id],
-                [create_task]
+                [create_task],
             )
             save_tasks.append(save_task)
         return save_tasks
@@ -129,13 +130,13 @@ class GeneScoreImplementation(
         with proto.open_raw_file(
             resource,
             gene_score.get_histogram_filename(score_id),
-            mode="wt"
+            mode="wt",
         ) as outfile:
             outfile.write(histogram.serialize())
         with proto.open_raw_file(
             resource,
             gene_score.get_histogram_image_filename(score_id),
-            mode="wb"
+            mode="wb",
         ) as outfile:
             histogram.plot(outfile, score_id)
         return histogram
@@ -152,11 +153,11 @@ class GeneScoreImplementation(
                 {
                     "id": score_def.score_id,
                     "hist_conf": asdict(score_def.hist_conf)
-                    if score_def.hist_conf else "null"
+                    if score_def.hist_conf else "null",
                 }
                 for score_def in self.gene_score.score_definitions.values()
             ],
-            "score_file": manifest[score_filename].md5
+            "score_file": manifest[score_filename].md5,
         }, sort_keys=True, indent=2).encode()
 
 

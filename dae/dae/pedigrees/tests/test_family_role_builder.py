@@ -2,7 +2,8 @@
 from typing import Callable, cast
 
 import pytest
-from dae.pedigrees.family_role_builder import FamilyRoleBuilder, Family
+
+from dae.pedigrees.family_role_builder import Family, FamilyRoleBuilder
 from dae.pedigrees.loader import FamiliesLoader
 from dae.variants.attributes import Role
 
@@ -13,7 +14,7 @@ from dae.variants.attributes import Role
     ["pedigrees/pedigree_no_role_A.ped", "pedigrees/pedigree_no_role_B.ped"],
 )
 def test_mom_dad_child_sibling_roles(
-    fixture_dirname: Callable, ped_file: str
+    fixture_dirname: Callable, ped_file: str,
 ) -> None:
     families = FamiliesLoader.load_pedigree_file(fixture_dirname(ped_file))
     family = cast(Family, families.get("f1"))
@@ -28,7 +29,7 @@ def test_mom_dad_child_sibling_roles(
 
 
 def test_paternal_and_maternal_grandparents(
-    fixture_dirname: Callable
+    fixture_dirname: Callable,
 ) -> None:
     ped_file = fixture_dirname("pedigrees/pedigree_no_role_C.ped")
     families = FamiliesLoader.load_pedigree_file(ped_file)
@@ -64,7 +65,7 @@ def test_child_and_spouse(fixture_dirname: Callable) -> None:
 
 
 def test_maternal_and_paternal_aunts_and_uncles(
-    fixture_dirname: Callable
+    fixture_dirname: Callable,
 ) -> None:
     ped_file = fixture_dirname("pedigrees/pedigree_no_role_E.ped")
     families = FamiliesLoader.load_pedigree_file(ped_file)
@@ -132,7 +133,7 @@ def test_stepmom_and_stepdad(fixture_dirname: Callable) -> None:
 
 
 def test_handling_of_family_with_only_prb_role(
-    fixture_dirname: Callable
+    fixture_dirname: Callable,
 ) -> None:
     ped_file = fixture_dirname("pedigrees/pedigree_prb_only.ped")
     families = FamiliesLoader.load_pedigree_file(ped_file)
@@ -148,7 +149,7 @@ def test_handling_of_family_with_only_prb_role(
 
 
 def test_handling_of_large_family_with_only_prb_role(
-    fixture_dirname: Callable
+    fixture_dirname: Callable,
 ) -> None:
     ped_file = fixture_dirname("pedigrees/pedigree_prb_only_large.ped")
     families = FamiliesLoader.load_pedigree_file(ped_file)
@@ -175,14 +176,14 @@ def test_handling_of_large_family_with_only_prb_role(
 
 def test_proband_column(fixture_dirname: Callable) -> None:
     ped_file = fixture_dirname("pedigrees/pedigree_no_role_F.ped")
-    loader = FamiliesLoader(ped_file, **{"ped_no_role": True})
+    loader = FamiliesLoader(ped_file, ped_no_role=True)
     families = loader.load()
 
     for person in families.persons.values():
         assert not person.has_attr("proband")
 
     ped_file = fixture_dirname("pedigrees/pedigree_no_role_H.ped")
-    loader = FamiliesLoader(ped_file, **{"ped_no_role": True})
+    loader = FamiliesLoader(ped_file, ped_no_role=True)
     families = loader.load()
 
     for person in families.persons.values():

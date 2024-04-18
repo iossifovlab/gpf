@@ -1,5 +1,5 @@
-from django.core.management.base import BaseCommand
 from datasets_api.models import Dataset
+from django.core.management.base import BaseCommand
 
 
 class Command(BaseCommand):
@@ -12,6 +12,6 @@ class Command(BaseCommand):
                 "{} Authorized groups: {}".format(
                     ds.dataset_id, ",".join([
                         group.name for group in ds.groups.all()
-                    ])
-                )
+                    ]),
+                ),
             )

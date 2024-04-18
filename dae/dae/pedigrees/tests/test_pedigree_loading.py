@@ -3,14 +3,12 @@
 from io import StringIO
 from typing import Callable
 
+import numpy as np
+import pandas as pd
 import pytest
 
-import pandas as pd
-import numpy as np
-
-from dae.variants.attributes import Sex, Status, Role
 from dae.pedigrees.loader import FamiliesLoader
-
+from dae.variants.attributes import Role, Sex, Status
 
 expected_pedigree_df = pd.DataFrame(
     [
@@ -62,7 +60,7 @@ familyId\tpersonId\tdadId\tmomId\tsex\tstatus\trole\tlayout
 1\t1.x1\t0\t0\t2\t1\tmom\t1:53.5,50.0
 1\t1.x2\t0\t0\t1\t1\tdad\t1:10.0,50.0
 1\t1.x3\t1.x2\t1.x1\t2\t2\tprb\t2:31.75,80.0
-"""
+""",
             ),
             pd.DataFrame(
                 {
@@ -79,7 +77,7 @@ familyId\tpersonId\tdadId\tmomId\tsex\tstatus\trole\tlayout
                     "role": [Role.mom, Role.dad, Role.prb],
                     "layout": ["1:53.5,50.0", "1:10.0,50.0", "2:31.75,80.0"],
                     "sample_id": ["1.x1", "1.x2", "1.x3"],
-                }
+                },
             ),
         ),
         (
@@ -89,7 +87,7 @@ familyId\tpersonId\tdadId\tmomId\tsex\tstatus\trole\tlayout\tsampleId
 1\t1.x1\t0\t0\t2\t1\tmom\t1:53.5,50.0\t
 1\t1.x2\t0\t0\t1\t1\tdad\t1:10.0,50.0\t1.x2
 1\t1.x3\t1.x2\t1.x1\t2\t2\tprb\t2:31.75,80.0\t
-"""
+""",
             ),
             pd.DataFrame(
                 {
@@ -106,13 +104,13 @@ familyId\tpersonId\tdadId\tmomId\tsex\tstatus\trole\tlayout\tsampleId
                     "role": [Role.mom, Role.dad, Role.prb],
                     "layout": ["1:53.5,50.0", "1:10.0,50.0", "2:31.75,80.0"],
                     "sample_id": ["1.x1", "1.x2", "1.x3"],
-                }
+                },
             ),
         ),
     ],
 )
 def test_flexible_pedigree_read(
-    infile: StringIO, pedigree: pd.DataFrame
+    infile: StringIO, pedigree: pd.DataFrame,
 ) -> None:
     loaded_pedigree = FamiliesLoader.flexible_pedigree_read(infile, sep="\t")
     print(loaded_pedigree)
@@ -142,7 +140,7 @@ def test_flexible_pedigree_read(
     ],
 )
 def test_flexible_pedigree_read_from_filesystem(
-    filepath: str, fixture_dirname: Callable
+    filepath: str, fixture_dirname: Callable,
 ) -> None:
     expected_df = expected_pedigree_df.copy()
     expected_df["sample_id"] = expected_df["person_id"]
@@ -153,7 +151,7 @@ def test_flexible_pedigree_read_from_filesystem(
 
 
 def test_flexible_pedigree_read_additional_columns(
-    fixture_dirname: Callable
+    fixture_dirname: Callable,
 ) -> None:
     expected_df = expected_pedigree_df.copy()
     expected_df["phenotype"] = [

@@ -1,22 +1,25 @@
 import logging
 from typing import Type
 
+from datasets_api.models import Dataset
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 from django.db.models import Count, Q
 from django.db.models.query import QuerySet
-from django.contrib.auth.models import Group
-from rest_framework import viewsets, permissions, mixins, status, filters
-from rest_framework.response import Response
-from rest_framework.request import Request
+from rest_framework import filters, mixins, permissions, status, viewsets
 from rest_framework.decorators import api_view, authentication_classes
+from rest_framework.request import Request
+from rest_framework.response import Response
+from utils.authentication import (
+    GPFOAuth2Authentication,
+    SessionAuthenticationWithoutCSRF,
+)
 
-from datasets_api.models import Dataset
-from utils.authentication import GPFOAuth2Authentication, \
-    SessionAuthenticationWithoutCSRF
-
-from .serializers import GroupSerializer, GroupRetrieveSerializer, \
-    GroupCreateSerializer
-
+from .serializers import (
+    GroupCreateSerializer,
+    GroupRetrieveSerializer,
+    GroupSerializer,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +42,7 @@ class GroupsViewSet(
     lookup_field = "name"
 
     def get_serializer_class(
-        self
+        self,
     ) -> Type[GroupSerializer]:
         serializer_class = self.serializer_class
 
@@ -53,15 +56,15 @@ class GroupsViewSet(
     def get_queryset(self) -> QuerySet:
         # Get groups that have users or datasets tagged with it
         return Group.objects.annotate(
-            users_count=Count("user"), datasets_count=Count("dataset")
+            users_count=Count("user"), datasets_count=Count("dataset"),
         ).filter(
-            Q(users_count__gt=0) | Q(datasets_count__gt=0)
+            Q(users_count__gt=0) | Q(datasets_count__gt=0),
         ).order_by("name")
 
 
 @api_view(["POST"])
 @authentication_classes(
-    (GPFOAuth2Authentication, SessionAuthenticationWithoutCSRF,))
+    (GPFOAuth2Authentication, SessionAuthenticationWithoutCSRF))
 def add_group_to_dataset(request: Request) -> Response:
     """Add group to dataset."""
     if not request.user.is_authenticated:
@@ -79,7 +82,7 @@ def add_group_to_dataset(request: Request) -> Response:
 
 @api_view(["POST"])
 @authentication_classes(
-    (GPFOAuth2Authentication, SessionAuthenticationWithoutCSRF,))
+    (GPFOAuth2Authentication, SessionAuthenticationWithoutCSRF))
 def remove_group_from_dataset(request: Request) -> Response:
     """Remove group from dataset."""
     if not request.user.is_authenticated:

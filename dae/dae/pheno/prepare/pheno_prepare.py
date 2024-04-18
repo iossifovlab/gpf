@@ -1,27 +1,30 @@
 from __future__ import annotations
+
+import logging
 import os
 import re
-import logging
 from collections import defaultdict
-from typing import Union, Dict, Any, Tuple, Optional, cast, Callable
-
 from multiprocessing import Pool
 from multiprocessing.pool import AsyncResult
+from typing import Any, Callable, Dict, Optional, Tuple, Union, cast
+
 import numpy as np
 import pandas as pd
+from box import Box
 from sqlalchemy.sql import insert
 
-from box import Box
-
-from dae.pheno.db import PhenoDb, generate_instrument_table_name, safe_db_name
+from dae.pedigrees.loader import (
+    PED_COLUMNS_REQUIRED,
+    FamiliesLoader,
+    PedigreeIO,
+)
 from dae.pheno.common import MeasureType
-from dae.pedigrees.loader import FamiliesLoader, PED_COLUMNS_REQUIRED, \
-    PedigreeIO
+from dae.pheno.db import PhenoDb, generate_instrument_table_name, safe_db_name
 from dae.pheno.prepare.measure_classifier import (
-    MeasureClassifier,
-    convert_to_string,
-    convert_to_numeric,
     ClassifierReport,
+    MeasureClassifier,
+    convert_to_numeric,
+    convert_to_string,
 )
 
 logger = logging.getLogger(__name__)
@@ -107,10 +110,10 @@ class Task(PrepareCommon):
     """Preparation task that can be run in parallel."""
 
     def run(self) -> Task:
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def done(self) -> Any:
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def __call__(self) -> Task:
         return self.run()
@@ -125,20 +128,20 @@ class ClassifyMeasureTask(Task):
         instrument_name: str,
         measure_name: str,
         measure_desc: str,
-        df: pd.DataFrame
+        df: pd.DataFrame,
     ) -> None:
         self.config = config
         self.mdf = df[[self.PERSON_ID, self.PID_COLUMN, measure_name]].copy()
         self.mdf.rename(columns={measure_name: "value"}, inplace=True)
         self.measure = self.create_default_measure(
-            instrument_name, measure_name, measure_desc
+            instrument_name, measure_name, measure_desc,
         )
         self.rank = None
         self.classifier_report = None
 
     @staticmethod
     def create_default_measure(
-        instrument_name: str, measure_name: str, measure_desc: str
+        instrument_name: str, measure_name: str, measure_desc: str,
     ) -> Box:
         """Create empty measrue description."""
         measure = {
@@ -190,7 +193,7 @@ class ClassifyMeasureTask(Task):
 
             self.measure.individuals = self.classifier_report.count_with_values
             self.measure.measure_type = classifier.classify(
-                self.classifier_report
+                self.classifier_report,
             )
             self.build_meta_measure()
         except Exception:  # pylint: disable=broad-except
@@ -236,7 +239,7 @@ class MeasureValuesTask(Task):
             v = {
                 self.PERSON_ID: person_id,
                 "measure_id": measure_id,
-                "value": value
+                "value": value,
             }
 
             if k in values:
@@ -285,7 +288,7 @@ class PrepareVariables(PreparePersons):
         return cast(str, person_id)
 
     def load_instrument(
-        self, instrument_name: str, filenames: list[str]
+        self, instrument_name: str, filenames: list[str],
     ) -> pd.DataFrame:
         """Load all measures in an instrument."""
         assert filenames
@@ -300,7 +303,7 @@ class PrepareVariables(PreparePersons):
         for filename in filenames:
             logger.info("reading instrument: %s", filename)
             df = pd.read_csv(
-                filename, sep=sep, low_memory=False, encoding="ISO-8859-1"
+                filename, sep=sep, low_memory=False, encoding="ISO-8859-1",
             )
             person_id = self._get_person_column_name(df)
             logging.info(
@@ -326,7 +329,7 @@ class PrepareVariables(PreparePersons):
         return df
 
     def _adjust_instrument_measure_names(
-        self, instrument_name: str, df: pd.DataFrame
+        self, instrument_name: str, df: pd.DataFrame,
     ) -> pd.DataFrame:
         if len(df) == 0:
             return df
@@ -360,7 +363,7 @@ class PrepareVariables(PreparePersons):
 
     def log_measure(
         self, measure: Box,
-        classifier_report: ClassifierReport
+        classifier_report: ClassifierReport,
     ) -> None:
         """Log measure classification."""
         classifier_report.set_measure(measure)
@@ -371,7 +374,7 @@ class PrepareVariables(PreparePersons):
             log.write("\n")
 
     def save_measure(
-        self, measure: Box, db_name: str, instrument_id: int
+        self, measure: Box, db_name: str, instrument_id: int,
     ) -> int:
         """Save measure into sqlite database."""
         to_save = measure.to_dict()
@@ -389,12 +392,12 @@ class PrepareVariables(PreparePersons):
 
     def save_measure_values(
         self, measure: Box,
-        values: dict[tuple[int, int], dict[str, Union[int, str]]]
+        values: dict[tuple[int, int], dict[str, Union[int, str]]],
     ) -> None:
         """Save measure values into sqlite database."""
         if len(values) == 0:
             logging.warning(
-                "skiping measure %s without values", measure.measure_id
+                "skiping measure %s without values", measure.measure_id,
             )
             return
         logging.info(
@@ -423,12 +426,12 @@ class PrepareVariables(PreparePersons):
                     "instrument matched: %s; file extension: %s",
                     res.group("instrument"), res.group("ext"))
                 instruments[res.group("instrument")].append(
-                    os.path.abspath(os.path.join(root, filename))
+                    os.path.abspath(os.path.join(root, filename)),
                 )
         return instruments
 
     def build_variables(
-        self, instruments_dirname: str, description_path: str
+        self, instruments_dirname: str, description_path: str,
     ) -> None:
         """Build and store phenotype data into an sqlite database."""
         self.log_header()
@@ -489,7 +492,7 @@ class PrepareVariables(PreparePersons):
 
     def build_instrument(
         self, instrument_name: str, df: pd.DataFrame,
-        descriptions: Optional[Callable] = None
+        descriptions: Optional[Callable] = None,
     ) -> Optional[pd.DataFrame]:
         """Build and store all measures in an instrument."""
         assert df is not None
@@ -510,7 +513,7 @@ class PrepareVariables(PreparePersons):
 
                 classify_task = ClassifyMeasureTask(
                     self.config, instrument_name, measure_name,
-                    measure_desc, df
+                    measure_desc, df,
                 )
                 fut = pool.apply_async(classify_task)
                 classify_queue.put(fut)
@@ -532,11 +535,11 @@ class PrepareVariables(PreparePersons):
                 return None
 
             table_name = generate_instrument_table_name(
-                instrument_name
+                instrument_name,
             )
             query_values = [{
                 "instrument_name": instrument_name,
-                "table_name": safe_db_name(table_name)
+                "table_name": safe_db_name(table_name),
             }]
 
             query = insert(self.db.instruments)
@@ -553,7 +556,7 @@ class PrepareVariables(PreparePersons):
                 measure, classifier_report, mdf = task.done()
 
                 db_name = safe_db_name(
-                    measure.measure_id
+                    measure.measure_id,
                 )
                 if db_name.lower() in seen_measure_names:
                     seen_measure_names[db_name.lower()] += 1
@@ -578,7 +581,7 @@ class PrepareVariables(PreparePersons):
 
     @staticmethod
     def create_default_measure(
-        instrument_name: str, measure_name: str
+        instrument_name: str, measure_name: str,
     ) -> Box:
         """Create default measure description."""
         measure = {
@@ -593,7 +596,7 @@ class PrepareVariables(PreparePersons):
         return measure
 
     def classify_measure(
-        self, instrument_name: str, measure_name: str, df: pd.DataFrame
+        self, instrument_name: str, measure_name: str, df: pd.DataFrame,
     ) -> tuple[ClassifierReport, Box]:
         """Classify a measure into a measure type."""
         measure = self.create_default_measure(instrument_name, measure_name)
@@ -607,13 +610,13 @@ class PrepareVariables(PreparePersons):
 
     @staticmethod
     def load_descriptions(
-        description_path: Optional[str]
+        description_path: Optional[str],
     ) -> Optional[Callable]:
         """Load measure descriptions."""
         if not description_path:
             return None
         assert os.path.exists(
-            os.path.abspath(description_path)
+            os.path.abspath(description_path),
         ), description_path
 
         data = pd.read_csv(description_path, sep="\t")
@@ -640,10 +643,10 @@ class PrepareVariables(PreparePersons):
                 ):
                     return None
                 row = self.desc_df.query(
-                    (
+
                         "(instrumentName == @iname) and "
-                        "(measureName == @mname)"
-                    )
+                        "(measureName == @mname)",
+
                 )
                 return cast(str, row.iloc[0]["description"])
 

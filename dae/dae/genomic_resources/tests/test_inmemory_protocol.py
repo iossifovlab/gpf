@@ -2,11 +2,12 @@
 import pathlib
 from typing import Any
 
+from dae.genomic_resources.fsspec_protocol import (
+    _scan_for_resource_files,
+    _scan_for_resources,
+)
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME
-from dae.genomic_resources.fsspec_protocol import _scan_for_resource_files, \
-    _scan_for_resources
-from dae.genomic_resources.testing import \
-    build_inmemory_test_protocol
+from dae.genomic_resources.testing import build_inmemory_test_protocol
 
 
 def test_scan_content_for_resources(content_fixture: dict[str, Any]) -> None:

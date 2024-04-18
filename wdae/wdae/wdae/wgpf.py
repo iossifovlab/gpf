@@ -1,20 +1,18 @@
-import os
-import sys
 import argparse
-import pathlib
 import logging
 import logging.config
-from typing import Union, Optional, cast
+import os
+import pathlib
+import sys
+from typing import Optional, Union, cast
 
 import django
 from django.conf import settings
 from django.core.management import execute_from_command_line
-
 from gpf_instance.gpf_instance import WGPFInstance
 
 from dae import __version__  # type: ignore
 from dae.utils.verbosity_configuration import VerbosityConfiguration
-
 
 logger = logging.getLogger("wgpf")
 

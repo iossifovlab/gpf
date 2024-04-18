@@ -9,7 +9,7 @@ from dae.genomic_resources.repository import GR_CONF_FILE_NAME
 from dae.genomic_resources.testing import build_inmemory_test_protocol
 
 
-@pytest.fixture
+@pytest.fixture()
 def proto_fixture(tmp_path):
     proto = build_inmemory_test_protocol({
         "one": {
@@ -29,8 +29,8 @@ def proto_fixture(tmp_path):
                     - md5: aaaa
                       path: a.big
                       size: 3000000000
-                """)
-            }
+                """),
+            },
         },
     })
     return proto

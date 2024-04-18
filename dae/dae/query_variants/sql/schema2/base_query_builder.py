@@ -1,25 +1,27 @@
 import logging
 from abc import ABC, abstractmethod
-from typing import Optional, Iterable, Union, Any, cast
+from collections.abc import Iterable
+from typing import Any, Optional, Union, cast
 
-from dae.pedigrees.families_data import FamiliesData
-from dae.genomic_resources.gene_models import GeneModels
-from dae.variants.attributes import Inheritance
-from dae.utils.regions import Region
 import dae.utils.regions
-
-from dae.query_variants.attributes_query import inheritance_query, \
-    QueryTransformerMatcher, TreeNode, LeafNode
-from dae.query_variants.attributes_query import \
-    QueryTreeToSQLBitwiseTransformer, \
-    role_query, \
-    sex_query, \
-    variant_type_query
-
-from dae.query_variants.attributes_query_inheritance import \
-    InheritanceTransformer, \
-    inheritance_parser
-
+from dae.genomic_resources.gene_models import GeneModels
+from dae.pedigrees.families_data import FamiliesData
+from dae.query_variants.attributes_query import (
+    LeafNode,
+    QueryTransformerMatcher,
+    QueryTreeToSQLBitwiseTransformer,
+    TreeNode,
+    inheritance_query,
+    role_query,
+    sex_query,
+    variant_type_query,
+)
+from dae.query_variants.attributes_query_inheritance import (
+    InheritanceTransformer,
+    inheritance_parser,
+)
+from dae.utils.regions import Region
+from dae.variants.attributes import Inheritance
 
 logger = logging.getLogger(__name__)
 RealAttrFilterType = list[tuple[str, tuple[Optional[float], Optional[float]]]]
@@ -189,7 +191,7 @@ class BaseQueryBuilder(ABC):
             frequency_filter=frequency_filter,
             return_reference=return_reference,
             return_unknown=return_unknown,
-            pedigree_fields=pedigree_fields
+            pedigree_fields=pedigree_fields,
         )
 
         self._build_group_by()
@@ -208,13 +210,13 @@ class BaseQueryBuilder(ABC):
 
     def _build_join(
         self, genes: Optional[list[str]],
-        effect_types: Optional[list[str]]
+        effect_types: Optional[list[str]],
     ) -> None:
         pass
 
     def _build_where_pedigree_fields(
         self,
-        pedigree_fields: Optional[tuple]
+        pedigree_fields: Optional[tuple],
     ) -> str:
         # pylint: disable=unused-argument
         return ""
@@ -254,7 +256,7 @@ class BaseQueryBuilder(ABC):
             frequency_filter=frequency_filter,
             return_reference=return_reference,
             return_unknown=return_unknown,
-            pedigree_fields=pedigree_fields
+            pedigree_fields=pedigree_fields,
         )
         self._add_to_product(where_clause)
 
@@ -284,7 +286,7 @@ class BaseQueryBuilder(ABC):
             regions = self._build_gene_regions_heuristic(genes, regions)
             clause = self._build_iterable_struct_string_attr_where(
                 ["eg.effect_gene_symbols", "eg.effect_types"],
-                [genes, effect_types]
+                [genes, effect_types],
             )
             where.append(f"({clause})")
 
@@ -293,49 +295,49 @@ class BaseQueryBuilder(ABC):
             # effect gene is a struct under affect gene in V2 schema
             where.append(
                 self._build_iterable_struct_string_attr_where(
-                    ["eg.effect_gene_symbols"], [genes]
-                )
+                    ["eg.effect_gene_symbols"], [genes],
+                ),
             )
         if effect_types is not None and genes is None:
             # effect gene is a struct under affect gene in V2 schema
             where.append(
                 self._build_iterable_struct_string_attr_where(
-                    ["eg.effect_types"], [effect_types]
-                )
+                    ["eg.effect_types"], [effect_types],
+                ),
             )
         if regions is not None:
             where.append(self._build_regions_where(regions))
         if family_ids is not None:
             where.append(
                 self._build_iterable_string_attr_where(
-                    self.where_accessors["family_id"], family_ids
-                )
+                    self.where_accessors["family_id"], family_ids,
+                ),
             )
         if person_ids is not None:
             person_ids = set(person_ids)
             where.append(
                 self._build_iterable_string_attr_where(
-                    "pi" + self.dialect.array_item_suffix(), person_ids)
+                    "pi" + self.dialect.array_item_suffix(), person_ids),
             )
 
         if inheritance is not None:
             where.extend(
                 self._build_inheritance_where(
                     self.where_accessors["inheritance_in_members"],
-                    inheritance, self.dialect.use_bit_and_function()
-                )
+                    inheritance, self.dialect.use_bit_and_function(),
+                ),
             )
         if roles is not None:
             where.append(
                 self._build_bitwise_attr_where(
-                    self.where_accessors["allele_in_roles"], roles, role_query
-                )
+                    self.where_accessors["allele_in_roles"], roles, role_query,
+                ),
             )
         if sexes is not None:
             where.append(
                 self._build_bitwise_attr_where(
-                    self.where_accessors["allele_in_sexes"], sexes, sex_query
-                )
+                    self.where_accessors["allele_in_sexes"], sexes, sex_query,
+                ),
             )
         if variant_type is not None:
             where.append(
@@ -343,15 +345,15 @@ class BaseQueryBuilder(ABC):
                     self.where_accessors["variant_type"],
                     variant_type,
                     variant_type_query,
-                )
+                ),
             )
         if real_attr_filter is not None:
             where.append(self._build_real_attr_where(real_attr_filter))
         if frequency_filter is not None:
             where.append(
                 self._build_real_attr_where(
-                    frequency_filter, is_frequency=True
-                )
+                    frequency_filter, is_frequency=True,
+                ),
             )
 
         if ultra_rare:
@@ -359,13 +361,13 @@ class BaseQueryBuilder(ABC):
 
         where.append(
             self._build_return_reference_and_return_unknown(
-                return_reference, return_unknown
-            )
+                return_reference, return_unknown,
+            ),
         )
         where.append(
             self._build_frequency_bin_heuristic(
-                inheritance, ultra_rare, frequency_filter
-            )
+                inheritance, ultra_rare, frequency_filter,
+            ),
         )
         where.append(self._build_family_bin_heuristic(family_ids, person_ids))
         where.append(self._build_coding_heuristic(effect_types))
@@ -379,8 +381,8 @@ class BaseQueryBuilder(ABC):
         if where:
             where_clause = self.WHERE.format(
                 where=(" AND \n" + " " * 4).join(
-                    [f"( {w} )" for w in where]
-                )
+                    [f"( {w} )" for w in where],
+                ),
             )
 
         return where_clause
@@ -411,7 +413,7 @@ class BaseQueryBuilder(ABC):
 
     def _build_real_attr_where(
         self, real_attr_filter: RealAttrFilterType,
-        is_frequency: bool = False
+        is_frequency: bool = False,
     ) -> str:
 
         query = []
@@ -436,11 +438,11 @@ class BaseQueryBuilder(ABC):
                 assert right is not None
                 if is_frequency:
                     query.append(
-                        f"({attr_name} <= {right} or {attr_name} is null)"
+                        f"({attr_name} <= {right} or {attr_name} is null)",
                     )
                 else:
                     query.append(
-                        f"({attr_name} <= {right})"
+                        f"({attr_name} <= {right})",
                     )
 
             elif right is None:
@@ -448,9 +450,7 @@ class BaseQueryBuilder(ABC):
                 query.append(f"({attr_name} >= {left})")
             else:
                 query.append(
-                    "({attr} >= {left} AND {attr} <= {right})".format(
-                        attr=attr_name, left=left, right=right
-                    )
+                    f"({attr_name} >= {left} AND {attr_name} <= {right})",
                 )
         return " AND ".join(query)
 
@@ -474,7 +474,7 @@ class BaseQueryBuilder(ABC):
                 query = query.format(
                     q=self.QUOTE,
                     chrom=region.chrom,
-                    esc=esc
+                    esc=esc,
                 )
             else:
                 query += (
@@ -497,7 +497,7 @@ class BaseQueryBuilder(ABC):
                     start=region.start,
                     stop=region.stop,
                     end_position=end_position,
-                    esc=esc
+                    esc=esc,
                 )
             where.append(query)
 
@@ -505,7 +505,7 @@ class BaseQueryBuilder(ABC):
 
     def _build_iterable_struct_string_attr_where(
         self, key_names: Optional[Iterable[str]] = None,
-        query_values: Optional[Iterable[Iterable[str]]] = None
+        query_values: Optional[Iterable[Iterable[str]]] = None,
     ) -> str:
         key_names = key_names if key_names else []
         query_values = query_values if query_values else []
@@ -519,7 +519,7 @@ class BaseQueryBuilder(ABC):
         return where_clause
 
     def _build_iterable_string_attr_where(
-        self, column_name: str, query_values: Iterable[str]
+        self, column_name: str, query_values: Iterable[str],
     ) -> str:
         assert query_values is not None
         assert isinstance(query_values, (list, set)), type(query_values)
@@ -530,7 +530,7 @@ class BaseQueryBuilder(ABC):
         values = [
             " {q}{val}{q} ".format(
                 q=self.QUOTE,
-                val=val.replace("'", self.dialect.escape_quote_char() + "'")
+                val=val.replace("'", self.dialect.escape_quote_char() + "'"),
             )
             for val in query_values
         ]
@@ -546,24 +546,24 @@ class BaseQueryBuilder(ABC):
 
     def _build_bitwise_attr_where(
         self, column_name: str,
-        query_value: str, query_transformer: QueryTransformerMatcher
+        query_value: str, query_transformer: QueryTransformerMatcher,
     ) -> str:
         assert query_value is not None
         parsed: Union[str, LeafNode, TreeNode] = query_value
         if isinstance(query_value, str):
             parsed = query_transformer.transform_query_string_to_tree(
-                query_value
+                query_value,
             )
 
         transformer = QueryTreeToSQLBitwiseTransformer(
-            column_name, self.dialect.use_bit_and_function()
+            column_name, self.dialect.use_bit_and_function(),
         )
         return cast(str, transformer.transform(parsed))
 
     @staticmethod
     def _build_inheritance_where(
         column_name: str, query_value: Union[str, list[str]],
-        use_bit_and_function: bool
+        use_bit_and_function: bool,
     ) -> list[str]:
         trees = []
         if isinstance(query_value, str):
@@ -590,7 +590,7 @@ class BaseQueryBuilder(ABC):
         return result
 
     def _build_gene_regions_heuristic(
-        self, genes: list[str], regions: Optional[list[Region]]
+        self, genes: list[str], regions: Optional[list[Region]],
     ) -> Optional[list[Region]]:
         assert genes is not None
         assert self.gene_models is not None
@@ -610,7 +610,7 @@ class BaseQueryBuilder(ABC):
                         gm.chrom,
                         max(1, gm.tx[0] - self.GENE_REGIONS_HEURISTIC_EXTEND),
                         gm.tx[1] + self.GENE_REGIONS_HEURISTIC_EXTEND,
-                    )
+                    ),
                 )
         gene_regions = dae.utils.regions.collapse(gene_regions)
         if not regions:
@@ -631,7 +631,7 @@ class BaseQueryBuilder(ABC):
     def _build_partition_bin_heuristic_where(
         self, bin_column: str, bins: Union[list[str], set[str]],
         number_of_possible_bins: Optional[int] = None,
-        str_bins: bool = False
+        str_bins: bool = False,
     ) -> str:
         if len(bins) == 0:
             return ""
@@ -654,7 +654,7 @@ class BaseQueryBuilder(ABC):
         self, inheritance: Optional[Union[str, list[str]]],
         ultra_rare: Optional[bool],
         frequency_filter: Optional[RealAttrFilterType],
-        rare_boundary: float
+        rare_boundary: float,
     ) -> set[str]:
         frequency_bins: set[str] = set([])
 
@@ -662,14 +662,14 @@ class BaseQueryBuilder(ABC):
         if inheritance is not None:
             logger.debug(
                 "frequence_bin_heuristic inheritance: %s (%s)",
-                inheritance, type(inheritance)
+                inheritance, type(inheritance),
             )
             if isinstance(inheritance, str):
                 inheritance = [inheritance]
 
             matchers = [
                 inheritance_query.transform_tree_to_matcher(
-                    inheritance_query.transform_query_string_to_tree(inh)
+                    inheritance_query.transform_query_string_to_tree(inh),
                 )
                 for inh in inheritance
             ]
@@ -690,7 +690,7 @@ class BaseQueryBuilder(ABC):
                     Inheritance.mendelian,
                     Inheritance.possible_denovo,
                     Inheritance.possible_omission,
-                ]
+                ],
             )
             for m in matchers
         ):
@@ -714,7 +714,7 @@ class BaseQueryBuilder(ABC):
     def _build_frequency_bin_heuristic(
         self, inheritance: Union[None, str, list[str]],
         ultra_rare: Optional[bool],
-        frequency_filter: Optional[RealAttrFilterType]
+        frequency_filter: Optional[RealAttrFilterType],
     ) -> str:
         # pylint: disable=too-many-branches
         assert self.partition_descriptor is not None
@@ -739,7 +739,7 @@ class BaseQueryBuilder(ABC):
         # return " AND ".join(parts)
 
     def _build_coding_heuristic(
-        self, effect_types: Union[None, set[str], list[str]]
+        self, effect_types: Union[None, set[str], list[str]],
     ) -> str:
         assert self.partition_descriptor is not None
         if effect_types is None:
@@ -748,14 +748,14 @@ class BaseQueryBuilder(ABC):
             return ""
         effect_types = set(effect_types)
         intersection = effect_types & set(
-            self.partition_descriptor["coding_effect_types"]
+            self.partition_descriptor["coding_effect_types"],
         )
 
         logger.debug(
             "coding bin heuristic: query effect types: %s; "
             "coding_effect_types: %s; => %s",
             effect_types, self.partition_descriptor["coding_effect_types"],
-            intersection == effect_types
+            intersection == effect_types,
         )
 
         coding_bins = set([])
@@ -769,7 +769,7 @@ class BaseQueryBuilder(ABC):
             "coding_bin", coding_bins, 2)
 
     def _build_region_bin_heuristic(
-        self, regions: Optional[list[Region]]
+        self, regions: Optional[list[Region]],
     ) -> str:
         assert self.partition_descriptor is not None
         if not regions or self.partition_descriptor["region_length"] == 0:
@@ -807,7 +807,7 @@ class BaseQueryBuilder(ABC):
 
     def _build_family_bin_heuristic(
         self, family_ids: Optional[Iterable[str]],
-        person_ids: Optional[Iterable[str]]
+        person_ids: Optional[Iterable[str]],
     ) -> str:
         assert self.partition_descriptor is not None
         if "family_bin" not in self.combined_columns:
@@ -822,7 +822,7 @@ class BaseQueryBuilder(ABC):
                     p.family_bin  # type: ignore
                     for p in self.families.persons.values()
                     if p.family_id in family_ids
-                )
+                ),
             )
 
         if person_ids:
@@ -832,7 +832,7 @@ class BaseQueryBuilder(ABC):
                     p.family_bin  # type: ignore
                     for p in self.families.persons.values()
                     if p.person_id in person_ids
-                )
+                ),
             )
 
         return self._build_partition_bin_heuristic_where(
@@ -841,7 +841,7 @@ class BaseQueryBuilder(ABC):
 
     def _build_return_reference_and_return_unknown(
         self, return_reference: Optional[bool] = None,
-        return_unknown: Optional[bool] = None
+        return_unknown: Optional[bool] = None,
     ) -> str:
         # pylint: disable=unused-argument
         allele_index_col = self.where_accessors["allele_index"]

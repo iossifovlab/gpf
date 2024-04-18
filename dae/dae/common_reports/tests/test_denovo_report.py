@@ -2,19 +2,20 @@
 
 from typing import List, cast
 
-from dae.common_reports.denovo_report import \
-    DenovoReportTable, \
-    DenovoReport, \
-    EffectRow, \
-    EffectCell
+from dae.common_reports.denovo_report import (
+    DenovoReport,
+    DenovoReportTable,
+    EffectCell,
+    EffectRow,
+)
 from dae.person_sets import PersonSet, PersonSetCollection
 from dae.studies.study import GenotypeDataGroup, GenotypeDataStudy
-from dae.variants.family_variant import FamilyVariant, FamilyAllele
+from dae.variants.family_variant import FamilyAllele, FamilyVariant
 
 
 def test_denovo_report_table(
     denovo_variants_ds1: List[FamilyVariant],
-    phenotype_role_collection: PersonSetCollection
+    phenotype_role_collection: PersonSetCollection,
 ) -> None:
 
     denovo_report_table = DenovoReportTable.from_variants(
@@ -25,7 +26,7 @@ def test_denovo_report_table(
     )
     assert denovo_report_table.group_name == "Diagnosis"
     assert sorted(denovo_report_table.columns) == \
-        ["phenotype 1 (6)", "phenotype 2 (2)", ]
+        ["phenotype 1 (6)", "phenotype 2 (2)"]
 
     assert denovo_report_table.effect_groups == ["Missense"]
     assert denovo_report_table.effect_types == ["Frame-shift"]
@@ -39,7 +40,7 @@ def test_denovo_report_table(
 def test_denovo_report(
     genotype_data_group1: GenotypeDataGroup,
     phenotype_role_collection: PersonSetCollection,
-    denovo_variants_ds1: List[FamilyVariant]
+    denovo_variants_ds1: List[FamilyVariant],
 ) -> None:
 
     denovo_report = DenovoReport.from_genotype_study(
@@ -58,10 +59,10 @@ def test_denovo_report(
 
 def test_denovo_report_empty(
     study2: GenotypeDataStudy,
-    phenotype_role_collection: PersonSetCollection
+    phenotype_role_collection: PersonSetCollection,
 ) -> None:
     denovo_report = DenovoReport.from_genotype_study(
-        study2, [phenotype_role_collection]
+        study2, [phenotype_role_collection],
     )
 
     assert len(denovo_report.tables) == 0
@@ -73,10 +74,10 @@ def test_denovo_report_empty(
 
 def test_effect_row(
     denovo_variants_ds1: List[FamilyVariant],
-    phenotype_role_sets: List[PersonSet]
+    phenotype_role_sets: List[PersonSet],
 ) -> None:
     effect_row = EffectRow(
-        "Missense", phenotype_role_sets
+        "Missense", phenotype_role_sets,
     )
     for fv in denovo_variants_ds1:
         effect_row.count_variant(fv)
@@ -88,37 +89,37 @@ def test_effect_row(
         "number_of_children_with_event": 3,
         "observed_rate_per_child": 0.5,
         "percent_of_children_with_events": 0.5,
-        "column": "phenotype 1 (6)"
+        "column": "phenotype 1 (6)",
     }
     assert out_dict["row"][1] == {
         "number_of_observed_events": 2,
         "number_of_children_with_event": 1,
         "observed_rate_per_child": 1.0,
         "percent_of_children_with_events": 0.5,
-        "column": "phenotype 2 (2)"
+        "column": "phenotype 2 (2)",
     }
     assert out_dict["row"][2] == {
         "number_of_observed_events": 0,
         "number_of_children_with_event": 0,
         "observed_rate_per_child": 0,
         "percent_of_children_with_events": 0,
-        "column": "unaffected (1)"
+        "column": "unaffected (1)",
     }
     assert out_dict["row"][3] == {
         "number_of_observed_events": 0,
         "number_of_children_with_event": 0,
         "observed_rate_per_child": 0,
         "percent_of_children_with_events": 0,
-        "column": "unknown (4)"
+        "column": "unknown (4)",
     }
 
 
 def test_effect_cell(
     denovo_variants_ds1: List[FamilyVariant],
-    phenotype_role_sets: List[PersonSet]
+    phenotype_role_sets: List[PersonSet],
 ) -> None:
     effect_cell1 = EffectCell(
-        phenotype_role_sets[0], "Missense"
+        phenotype_role_sets[0], "Missense",
     )
     for fv in denovo_variants_ds1:
         for aa in fv.alt_alleles:
@@ -129,11 +130,11 @@ def test_effect_cell(
         "number_of_children_with_event": 3,
         "observed_rate_per_child": 0.5,
         "percent_of_children_with_events": 0.5,
-        "column": "phenotype 1 (6)"
+        "column": "phenotype 1 (6)",
     }
 
     effect_cell2 = EffectCell(
-        phenotype_role_sets[1], "Missense"
+        phenotype_role_sets[1], "Missense",
     )
     for fv in denovo_variants_ds1:
         for aa in fv.alt_alleles:
@@ -144,11 +145,11 @@ def test_effect_cell(
         "number_of_children_with_event": 1,
         "observed_rate_per_child": 1.0,
         "percent_of_children_with_events": 0.5,
-        "column": "phenotype 2 (2)"
+        "column": "phenotype 2 (2)",
     }
 
     effect_cell3 = EffectCell(
-        phenotype_role_sets[2], "Missense"
+        phenotype_role_sets[2], "Missense",
     )
     for fv in denovo_variants_ds1:
         for aa in fv.alt_alleles:
@@ -159,11 +160,11 @@ def test_effect_cell(
         "number_of_children_with_event": 0,
         "observed_rate_per_child": 0,
         "percent_of_children_with_events": 0,
-        "column": "unaffected (1)"
+        "column": "unaffected (1)",
     }
 
     effect_cell4 = EffectCell(
-        phenotype_role_sets[3], "Missense"
+        phenotype_role_sets[3], "Missense",
     )
     for fv in denovo_variants_ds1:
         for aa in fv.alt_alleles:
@@ -174,5 +175,5 @@ def test_effect_cell(
         "number_of_children_with_event": 0,
         "observed_rate_per_child": 0,
         "percent_of_children_with_events": 0,
-        "column": "unknown (4)"
+        "column": "unknown (4)",
     }

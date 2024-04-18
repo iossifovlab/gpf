@@ -2,15 +2,14 @@
 from collections import Counter
 from typing import List, Optional
 
+import numpy as np
+import pandas as pd
 import pytest
 import pytest_mock
 
-import pandas as pd
-import numpy as np
-
+from dae.pheno.pheno_data import PhenotypeStudy
 from dae.pheno_tool.tool import PhenoResult, PhenoTool
 from dae.variants.attributes import Sex
-from dae.pheno.pheno_data import PhenotypeStudy
 
 
 def test_init_pheno_df(fake_phenotype_data: PhenotypeStudy) -> None:
@@ -39,7 +38,7 @@ def test_init_empty_person_ids(fake_phenotype_data: PhenotypeStudy) -> None:
 
 
 def test_init_empty_person_ids_normalize(
-    fake_phenotype_data: PhenotypeStudy
+    fake_phenotype_data: PhenotypeStudy,
 ) -> None:
     pheno_tool = PhenoTool(
         fake_phenotype_data,
@@ -56,7 +55,7 @@ def test_init_nonexistent_measure(fake_phenotype_data: PhenotypeStudy) -> None:
 
 
 def test_init_non_continuous_or_ordinal_measure(
-    fake_phenotype_data: PhenotypeStudy
+    fake_phenotype_data: PhenotypeStudy,
 ) -> None:
     with pytest.raises(AssertionError):
         PhenoTool(fake_phenotype_data, "i1.m5")  # categorical
@@ -72,7 +71,7 @@ def test_init_with_person_ids(fake_phenotype_data: PhenotypeStudy) -> None:
     )
 
     assert set(pheno_tool.pheno_df["person_id"]) == set(
-        ["f1.p1", "f3.p1", "f5.p1", "f7.p1"]
+        ["f1.p1", "f3.p1", "f5.p1", "f7.p1"],
     )
 
 
@@ -93,7 +92,7 @@ def test_init_normalize_measures(fake_phenotype_data: PhenotypeStudy) -> None:
 
 @pytest.mark.parametrize("measure_name", [("m4"), ("m5"), ("m6")])
 def test_init_normalize_measures_non_continuous(
-    fake_phenotype_data: PhenotypeStudy, measure_name: str
+    fake_phenotype_data: PhenotypeStudy, measure_name: str,
 ) -> None:
     pheno_tool = PhenoTool(fake_phenotype_data, "i1.m1")
     norm_measures = [
@@ -106,7 +105,7 @@ def test_init_normalize_measures_non_continuous(
 
 
 def test_get_normalize_measure_id_non_dict_measure(
-    fake_phenotype_data: PhenotypeStudy
+    fake_phenotype_data: PhenotypeStudy,
 ) -> None:
     pheno_tool = PhenoTool(fake_phenotype_data, "i1.m1")
     with pytest.raises(AssertionError):
@@ -118,7 +117,7 @@ def test_get_normalize_measure_id_non_dict_measure(
 
 
 def test_get_normalize_measure_id_measure_dict_no_keys(
-    fake_phenotype_data: PhenotypeStudy
+    fake_phenotype_data: PhenotypeStudy,
 ) -> None:
     pheno_tool = PhenoTool(fake_phenotype_data, "i1.m1")
     with pytest.raises(AssertionError):
@@ -128,31 +127,31 @@ def test_get_normalize_measure_id_measure_dict_no_keys(
 
 
 def test_get_normalize_measure_id_no_instrument_name(
-    fake_phenotype_data: PhenotypeStudy
+    fake_phenotype_data: PhenotypeStudy,
 ) -> None:
     pheno_tool = PhenoTool(fake_phenotype_data, "i1.m1")
     measure_id = pheno_tool._get_normalize_measure_id(
-        {"measure_name": "m3", "instrument_name": None}  # type: ignore
+        {"measure_name": "m3", "instrument_name": None},  # type: ignore
     )
     assert measure_id == "i1.m3"
 
 
 def test_get_normalize_measure_id_with_instrument_name(
-    fake_phenotype_data: PhenotypeStudy
+    fake_phenotype_data: PhenotypeStudy,
 ) -> None:
     pheno_tool = PhenoTool(fake_phenotype_data, "i1.m1")
     measure_id = pheno_tool._get_normalize_measure_id(
-        {"measure_name": "m7", "instrument_name": "i1"}
+        {"measure_name": "m7", "instrument_name": "i1"},
     )
     assert measure_id == "i1.m7"
 
 
 def test_get_normalize_measure_id_same_measure(
-    fake_phenotype_data: PhenotypeStudy
+    fake_phenotype_data: PhenotypeStudy,
 ) -> None:
     pheno_tool = PhenoTool(fake_phenotype_data, "i1.m1")
     measure_id = pheno_tool._get_normalize_measure_id(
-        {"measure_name": "m1", "instrument_name": "i1"}
+        {"measure_name": "m1", "instrument_name": "i1"},
     )
     assert measure_id is None
 
@@ -164,12 +163,12 @@ def test_get_normalize_measure_id_same_measure(
 def test_get_normalize_measure_id_non_existent(
     fake_phenotype_data: PhenotypeStudy,
     measure_name: str,
-    instrument_name: Optional[str]
+    instrument_name: Optional[str],
 ) -> None:
     pheno_tool = PhenoTool(fake_phenotype_data, "i1.m1")
     measure_id = pheno_tool._get_normalize_measure_id(
         {"measure_name": measure_name,
-         "instrument_name": instrument_name}  # type: ignore
+         "instrument_name": instrument_name},  # type: ignore
     )
     assert measure_id is None
 
@@ -197,15 +196,15 @@ def test_join_pheno_df_with_variants() -> None:
 def test_join_pheno_df_with_variants_non_counter_variants() -> None:
     with pytest.raises(AssertionError):
         PhenoTool.join_pheno_df_with_variants(
-            pd.DataFrame(columns=["person_id"]), None  # type: ignore
+            pd.DataFrame(columns=["person_id"]), None,  # type: ignore
         )
     with pytest.raises(AssertionError):
         PhenoTool.join_pheno_df_with_variants(
-            pd.DataFrame(columns=["person_id"]), {}  # type: ignore
+            pd.DataFrame(columns=["person_id"]), {},  # type: ignore
         )
     with pytest.raises(AssertionError):
         PhenoTool.join_pheno_df_with_variants(
-            pd.DataFrame(columns=["person_id"]), set()  # type: ignore
+            pd.DataFrame(columns=["person_id"]), set(),  # type: ignore
         )
 
 
@@ -226,7 +225,7 @@ def test_normalize_df() -> None:
     )
 
     normalized = PhenoTool._normalize_df(
-        pheno_df, "i1.m1", normalize_by=["i1.m2"]
+        pheno_df, "i1.m1", normalize_by=["i1.m2"],
     )
 
     assert list(normalized) == ["person_id", "i1.m1", "i1.m2", "normalized"]
@@ -237,10 +236,10 @@ def test_normalize_df() -> None:
     assert normalized["i1.m2"][0] == pytest.approx(1e3)
     assert normalized["i1.m2"][1] == pytest.approx(1e-3)
     assert normalized["normalized"][0] == pytest.approx(
-        0.0004882, abs=1e-4
+        0.0004882, abs=1e-4,
     )  # FIXME:
     assert normalized["normalized"][1] == pytest.approx(
-        0.000488, abs=1e-2
+        0.000488, abs=1e-2,
     )  # FIXME:
 
 
@@ -311,7 +310,7 @@ def test_calc_pv() -> None:
 
 
 @pytest.mark.parametrize(
-    "positive,negative", [([1], [1, 1]), ([1, 1], [1]), ([1], [1])]
+    "positive,negative", [([1], [1, 1]), ([1, 1], [1]), ([1], [1])],
 )
 def test_calc_pv_less_than_2(positive: List[int], negative: List[int]) -> None:
     assert PhenoTool._calc_pv(positive, negative) == "NA"  # type: ignore
@@ -324,7 +323,7 @@ def test_calc_stats(mocker: pytest_mock.MockerFixture) -> None:
             "sex": [Sex.M, Sex.F, Sex.M, Sex.F, Sex.M],
             "normalized": [0.1, 0.2, 0.3, 0.4, 0.5],
             "variant_count": [1, 1, 0, 0, 1],
-        }
+        },
     )
 
     mocker.spy(PhenoTool, "_calc_pv")
@@ -340,7 +339,7 @@ def test_calc_stats(mocker: pytest_mock.MockerFixture) -> None:
 
 
 def test_calc_stats_split_by_sex_male(
-    mocker: pytest_mock.MockerFixture
+    mocker: pytest_mock.MockerFixture,
 ) -> None:
     data = pd.DataFrame(
         {
@@ -348,7 +347,7 @@ def test_calc_stats_split_by_sex_male(
             "sex": [Sex.M, Sex.F, Sex.M, Sex.F, Sex.M],
             "normalized": [0.1, 0.2, 0.3, 0.4, 0.5],
             "variant_count": [1, 1, 0, 0, 1],
-        }
+        },
     )
 
     mocker.spy(PhenoTool, "_calc_pv")
@@ -364,7 +363,7 @@ def test_calc_stats_split_by_sex_male(
 
 
 def test_calc_stats_split_by_sex_female(
-    mocker: pytest_mock.MockerFixture
+    mocker: pytest_mock.MockerFixture,
 ) -> None:
     data = pd.DataFrame(
         {
@@ -372,7 +371,7 @@ def test_calc_stats_split_by_sex_female(
             "sex": [Sex.M, Sex.F, Sex.M, Sex.F, Sex.M],
             "normalized": [0.1, 0.2, 0.3, 0.4, 0.5],
             "variant_count": [1, 1, 0, 0, 1],
-        }
+        },
     )
 
     mocker.spy(PhenoTool, "_calc_pv")
@@ -401,7 +400,7 @@ def test_calc_stats_empty_data() -> None:
 
 def test_calc(
     mocker: pytest_mock.MockerFixture,
-    fake_phenotype_data: PhenotypeStudy
+    fake_phenotype_data: PhenotypeStudy,
 ) -> None:
     pheno_tool = PhenoTool(fake_phenotype_data, "i1.m1")
     variants = Counter(
@@ -416,10 +415,10 @@ def test_calc(
             "f25.p1": 1,
             "f30.p1": 1,
             "f32.p1": 1,
-        }
+        },
     )
     merged_df = PhenoTool.join_pheno_df_with_variants(
-        pheno_tool.pheno_df, variants
+        pheno_tool.pheno_df, variants,
     )
 
     mocker.spy(PhenoTool, "join_pheno_df_with_variants")
@@ -438,7 +437,7 @@ def test_calc(
 
 def test_calc_split_by_sex(
     mocker: pytest_mock.MockerFixture,
-    fake_phenotype_data: PhenotypeStudy
+    fake_phenotype_data: PhenotypeStudy,
 ) -> None:
     pheno_tool = PhenoTool(fake_phenotype_data, "i1.m1")
     variants = Counter(
@@ -453,10 +452,10 @@ def test_calc_split_by_sex(
             "f25.p1": 1,
             "f30.p1": 1,
             "f32.p1": 1,
-        }
+        },
     )
     merged_df = PhenoTool.join_pheno_df_with_variants(
-        pheno_tool.pheno_df, variants
+        pheno_tool.pheno_df, variants,
     )
 
     mocker.spy(PhenoTool, "join_pheno_df_with_variants")
@@ -493,7 +492,7 @@ def test_calc_empty_pheno_df(fake_phenotype_data: PhenotypeStudy) -> None:
             "f25.p1": 1,
             "f30.p1": 1,
             "f32.p1": 1,
-        }
+        },
     )
 
     res = pheno_tool.calc(variants)
@@ -566,7 +565,7 @@ def test_calc_empty_variants(fake_phenotype_data: PhenotypeStudy) -> None:
 
 def test_normalize_df_by_empty_df(fake_phenotype_data: PhenotypeStudy) -> None:
     pheno_df = fake_phenotype_data.get_people_measure_values_df(
-        ["i1.m1", "i1.m2"], person_ids=[]
+        ["i1.m1", "i1.m2"], person_ids=[],
     )
 
     with pytest.raises(AssertionError):

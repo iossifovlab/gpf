@@ -1,13 +1,12 @@
 from itertools import islice
 from typing import Any
 
-from rest_framework.response import Response
-from rest_framework.request import Request
-from rest_framework import status
-
 from query_base.query_base import QueryBaseView
+from rest_framework import status
+from rest_framework.request import Request
+from rest_framework.response import Response
 
-from dae.genomic_resources.gene_models import TranscriptModel, Exon
+from dae.genomic_resources.gene_models import Exon, TranscriptModel
 from dae.utils.regions import Region
 
 
@@ -35,7 +34,7 @@ class GeneModels(QueryBaseView):
         }
         for transcript in transcript_models:
             response_data["transcripts"].append(
-                self.transcript_to_dict(transcript)
+                self.transcript_to_dict(transcript),
             )
 
         if response_data["transcripts"]:
@@ -47,7 +46,7 @@ class GeneModels(QueryBaseView):
         return Response(None, status=status.HTTP_404_NOT_FOUND)
 
     def transcript_to_dict(
-        self, transcript: TranscriptModel
+        self, transcript: TranscriptModel,
     ) -> dict[str, Any]:
         """Serialize a transcript model."""
         output: dict[str, Any] = {}
@@ -68,19 +67,19 @@ class GeneModels(QueryBaseView):
 
     def cds_to_dictlist(self, cds: tuple[int, int]) -> list[dict[str, Any]]:
         return [
-            {"start": cds[0], "stop": cds[1]}
+            {"start": cds[0], "stop": cds[1]},
         ]
 
     def region_to_dict(self, region: Region) -> dict[str, Any]:
         return {
             "start": region.start,
-            "stop": region.stop
+            "stop": region.stop,
         }
 
     def exon_to_dict(self, exon: Exon) -> dict[str, Any]:
         return {
             "start": exon.start,
-            "stop": exon.stop
+            "stop": exon.stop,
         }
 
 
@@ -97,10 +96,10 @@ class GeneSymbolsSearch(QueryBaseView):
         matching_gene_symbols = islice(
             filter(
                 lambda gs: gs.lower().startswith(search_term),
-                gene_models.keys()
+                gene_models.keys(),
             ),
             None,
-            self.RESPONSE_LIMIT
+            self.RESPONSE_LIMIT,
         )
 
         return Response(

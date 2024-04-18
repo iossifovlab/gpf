@@ -1,22 +1,27 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import os
-import textwrap
 import pathlib
+import textwrap
 
 import pytest
 
 from dae.genomic_resources.cli import cli_manage
-from dae.genomic_resources.repository import GR_CONF_FILE_NAME, \
-    GR_CONTENTS_FILE_NAME, \
-    GR_MANIFEST_FILE_NAME
-from dae.genomic_resources.testing import build_filesystem_test_protocol, \
-    setup_directories, setup_tabix
 from dae.genomic_resources.fsspec_protocol import FsspecReadWriteProtocol
+from dae.genomic_resources.repository import (
+    GR_CONF_FILE_NAME,
+    GR_CONTENTS_FILE_NAME,
+    GR_MANIFEST_FILE_NAME,
+)
+from dae.genomic_resources.testing import (
+    build_filesystem_test_protocol,
+    setup_directories,
+    setup_tabix,
+)
 
 
-@pytest.fixture
+@pytest.fixture()
 def proto_fixture(
-    tmp_path_factory: pytest.TempPathFactory
+    tmp_path_factory: pytest.TempPathFactory,
 ) -> tuple[pathlib.Path, FsspecReadWriteProtocol]:
     path = tmp_path_factory.mktemp("cli_repair_proto_fixture")
     setup_directories(path, {
@@ -34,7 +39,7 @@ def proto_fixture(
                     - score: phastCons100way
                       bins: 100
                 """),
-        }
+        },
     })
     setup_tabix(
         path / "one" / "data.txt.gz",
@@ -51,7 +56,7 @@ def proto_fixture(
 
 
 def test_resource_repair_simple(
-    proto_fixture: tuple[pathlib.Path, FsspecReadWriteProtocol]
+    proto_fixture: tuple[pathlib.Path, FsspecReadWriteProtocol],
 ) -> None:
     # Given
     path, proto = proto_fixture
@@ -71,7 +76,7 @@ def test_resource_repair_simple(
 
 
 def test_repo_repair_simple(
-    proto_fixture: tuple[pathlib.Path, FsspecReadWriteProtocol]
+    proto_fixture: tuple[pathlib.Path, FsspecReadWriteProtocol],
 ) -> None:
     # Given
     path, proto = proto_fixture
@@ -91,7 +96,7 @@ def test_repo_repair_simple(
 
 
 def test_resource_repair_dry_run(
-    proto_fixture: tuple[pathlib.Path, FsspecReadWriteProtocol]
+    proto_fixture: tuple[pathlib.Path, FsspecReadWriteProtocol],
 ) -> None:
     # Given
     path, proto = proto_fixture
@@ -115,7 +120,7 @@ def test_resource_repair_dry_run(
 
 
 def test_repo_repair_dry_run(
-    proto_fixture: tuple[pathlib.Path, FsspecReadWriteProtocol]
+    proto_fixture: tuple[pathlib.Path, FsspecReadWriteProtocol],
 ) -> None:
     # Given
     path, proto = proto_fixture

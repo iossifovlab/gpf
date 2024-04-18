@@ -1,28 +1,24 @@
-from io import StringIO
-import math
 import logging
+import math
+from collections.abc import Generator
+from io import StringIO
+from typing import Any, Dict, List, Optional, Union, cast
 
-from typing import Dict, List, Optional, Union, cast, Any, Generator
-
+from datasets_api.permissions import user_has_permission
+from django.http.response import StreamingHttpResponse
+from query_base.query_base import QueryDatasetView
+from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
-from rest_framework import status
-
-from django.http.response import StreamingHttpResponse
 from studies.study_wrapper import StudyWrapper
-
 from utils.expand_gene_set import expand_gene_set
 from utils.query_params import parse_query_params
 
-from query_base.query_base import QueryDatasetView
-from datasets_api.permissions import user_has_permission
-
+from dae.effect_annotation.effect import EffectTypesMixin
 from dae.pheno.pheno_data import Measure
 from dae.pheno_tool.tool import PhenoResult, PhenoTool, PhenoToolHelper
-from dae.effect_annotation.effect import EffectTypesMixin
 
 from .pheno_tool_adapter import PhenoToolAdapter, RemotePhenoToolAdapter
-
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +29,7 @@ class PhenoToolView(QueryDatasetView):
     @staticmethod
     def get_result_by_sex(
         result: dict[str, PhenoResult],
-        sex: str
+        sex: str,
     ) -> Dict[str, Any]:
         return {
             "negative": {
@@ -63,7 +59,7 @@ class PhenoToolView(QueryDatasetView):
     #     }
 
     def prepare_pheno_tool_adapter(
-        self, data: dict[str, Any]
+        self, data: dict[str, Any],
     ) -> Optional[PhenoToolAdapter]:
         """Construct pheno tool adapter."""
         study_wrapper = self.gpf_instance.get_wdae_wrapper(data["datasetId"])
@@ -77,12 +73,12 @@ class PhenoToolView(QueryDatasetView):
         if study_wrapper.is_remote:
             return RemotePhenoToolAdapter(  # type: ignore
                 study_wrapper.rest_client,
-                study_wrapper._remote_study_id  # pylint: disable=W0212
+                study_wrapper._remote_study_id,  # pylint: disable=W0212
             )
         study_wrapper = cast(StudyWrapper, study_wrapper)
 
         helper = PhenoToolHelper(
-            study_wrapper, study_wrapper.phenotype_data  # type: ignore
+            study_wrapper, study_wrapper.phenotype_data,  # type: ignore
         )
 
         family_filters = data.get("familyFilters")
@@ -111,7 +107,7 @@ class PhenoToolView(QueryDatasetView):
     @staticmethod
     def _build_report_description(
         measure_id: str,
-        normalize_by: List[Union[str, Any]]
+        normalize_by: List[Union[str, Any]],
     ) -> str:
         if not normalize_by:
             return measure_id
@@ -139,14 +135,14 @@ class PhenoToolDownload(PhenoToolView):
     def generate_columns(
             self,
             adapter: PhenoToolAdapter,
-            data: dict
+            data: dict,
     ) -> Generator[str, None, None]:
         """Pheno tool download generator function."""
         # Return a response instantly and make download more responsive
         yield ""
 
         data["effectTypes"] = EffectTypesMixin.build_effect_types_list(
-            data["effectTypes"]
+            data["effectTypes"],
         )
         effect_groups = list(data["effectTypes"])
 
@@ -159,13 +155,13 @@ class PhenoToolDownload(PhenoToolView):
 
         for effect in effect_groups:
             result_df = PhenoTool.join_pheno_df_with_variants(
-                result_df, variants[effect]
+                result_df, variants[effect],
             )
             result_df = result_df.rename(columns={"variant_count": effect})
 
         if tool.normalize_by:
             column_name = self._build_report_description(
-                tool.measure_id, tool.normalize_by
+                tool.measure_id, tool.normalize_by,
             )
             result_df = result_df.rename(columns={"normalized": column_name})
             result_df[column_name] = result_df[column_name].round(decimals=5)
@@ -190,7 +186,7 @@ class PhenoToolDownload(PhenoToolView):
         data = expand_gene_set(parse_query_params(request.data), request.user)
 
         if not user_has_permission(
-            self.instance_id, request.user, data["datasetId"]
+            self.instance_id, request.user, data["datasetId"],
         ):
             return Response(status=status.HTTP_403_FORBIDDEN)
 
@@ -335,7 +331,7 @@ class PhenoToolInstruments(QueryDatasetView):
                 else measure.min_value,
             "maxValue":
                 None if math.isnan(measure.max_value)  # type: ignore
-                else measure.max_value
+                else measure.max_value,
         }
 
     def get(self, request: Request) -> Response:
@@ -356,7 +352,7 @@ class PhenoToolInstruments(QueryDatasetView):
                 "name": i.instrument_name,
                 "measures": [
                     self.measure_to_json(m) for m in i.measures.values()
-                ]
+                ],
             }
 
         return Response(result)

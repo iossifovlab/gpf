@@ -2,10 +2,9 @@ import json
 import os
 from itertools import product
 
-from dae.variants.attributes import Inheritance
-from dae.gene.denovo_gene_set_collection import DenovoGeneSetCollection
-from dae.variants.attributes import Sex
 from dae.effect_annotation.effect import expand_effect_types
+from dae.gene.denovo_gene_set_collection import DenovoGeneSetCollection
+from dae.variants.attributes import Inheritance, Sex
 
 
 class DenovoGeneSetCollectionFactory:
@@ -41,12 +40,12 @@ class DenovoGeneSetCollectionFactory:
             person_set_collection_id
         ) in config.denovo_gene_sets.selected_person_set_collections:
             cache_dir = cls.denovo_gene_set_cache_file(
-                config, person_set_collection_id
+                config, person_set_collection_id,
             )
             if not os.path.exists(cache_dir):
-                raise EnvironmentError(
+                raise OSError(
                     f"Denovo gene sets caches dir '{cache_dir}' "
-                    f"does not exists"
+                    f"does not exists",
                 )
 
             with open(cache_dir, "r") as infile:
@@ -71,7 +70,7 @@ class DenovoGeneSetCollectionFactory:
                 person_set_collection_id,
             )
             cache_path = cls.denovo_gene_set_cache_file(
-                config, person_set_collection_id
+                config, person_set_collection_id,
             )
             cls._save_cache(gene_set_cache, cache_path)
 
@@ -90,7 +89,7 @@ class DenovoGeneSetCollectionFactory:
                     "property": "effect_types",
                     "name": name,
                     "value": expand_effect_types(criteria),
-                }
+                },
             )
         sex_criterias = []
         for name, criteria in standard_criterias.sexes.segments.items():
@@ -99,13 +98,13 @@ class DenovoGeneSetCollectionFactory:
                     "property": "sexes",
                     "name": name,
                     "value": [Sex.from_name(criteria)],
-                }
+                },
             )
         return (effect_type_criterias, sex_criterias)
 
     @classmethod
     def _recursive_cache_update(
-        cls, input_cache: dict, updater_cache: dict
+        cls, input_cache: dict, updater_cache: dict,
     ) -> None:
         """Recursively update a dictionary with another dictionary."""
         # FIXME !
@@ -119,7 +118,7 @@ class DenovoGeneSetCollectionFactory:
             if key in input_cache and isinstance(val, dict):
                 assert isinstance(input_cache[key], dict), updater_cache[key]
                 cls._recursive_cache_update(
-                    input_cache[key], updater_cache[key]
+                    input_cache[key], updater_cache[key],
                 )
             elif key in input_cache and isinstance(val, set):
                 input_cache[key] = input_cache[key].union(val)
@@ -136,7 +135,7 @@ class DenovoGeneSetCollectionFactory:
         gene set symbols to lists of family IDs.
         """
         person_set_collection = genotype_data.get_person_set_collection(
-            person_set_collection_id
+            person_set_collection_id,
         )
 
         cache = {
@@ -146,7 +145,7 @@ class DenovoGeneSetCollectionFactory:
         variants = genotype_data.query_variants(inheritance=["denovo"])
 
         criterias = list(product(
-            *cls._format_criterias(config.standard_criterias))
+            *cls._format_criterias(config.standard_criterias)),
         )
 
         for variant in variants:
@@ -159,15 +158,15 @@ class DenovoGeneSetCollectionFactory:
                     innermost_cache = cache[person_set.id]
                     for criteria in criteria_combination:
                         innermost_cache = innermost_cache.setdefault(
-                            criteria["name"], {}
+                            criteria["name"], {},
                         )
 
                     persons_in_set = set(person_set.persons.keys())
                     cls._recursive_cache_update(
                         innermost_cache,
                         cls._add_genes_families(
-                            variant, persons_in_set, search_args
-                        )
+                            variant, persons_in_set, search_args,
+                        ),
                     )
 
         return cache
@@ -177,19 +176,19 @@ class DenovoGeneSetCollectionFactory:
         """Write a denovo gene set cache to the filesystem in JSON format."""
         # change all sets to lists so they can be saved in json
         cache = cls._convert_cache_innermost_types(
-            cache, set, list, sort_values=True
+            cache, set, list, sort_values=True,
         )
 
         if not os.path.exists(os.path.dirname(cache_path)):
             os.makedirs(os.path.dirname(cache_path))
         with open(cache_path, "w") as out:
             json.dump(
-                cache, out, sort_keys=True, indent=4, separators=(",", ": ")
+                cache, out, sort_keys=True, indent=4, separators=(",", ": "),
             )
 
     @classmethod
     def _convert_cache_innermost_types(
-        cls, cache, from_type, to_type, sort_values=False
+        cls, cache, from_type, to_type, sort_values=False,
     ):
         """
         Coerce the types of all values in a dictionary matching a given type.
@@ -202,13 +201,13 @@ class DenovoGeneSetCollectionFactory:
             return to_type(cache)
 
         assert isinstance(
-            cache, dict
+            cache, dict,
         ), f"expected type 'dict', got '{type(cache)}'"
 
         res = {}
         for key, value in cache.items():
             res[key] = cls._convert_cache_innermost_types(
-                value, from_type, to_type, sort_values=sort_values
+                value, from_type, to_type, sort_values=sort_values,
             )
 
         return res

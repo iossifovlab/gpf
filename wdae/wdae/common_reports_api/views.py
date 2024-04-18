@@ -1,14 +1,14 @@
-from typing import Optional, Any
+from typing import Any, Optional
+
 from django.http.response import StreamingHttpResponse
+from query_base.query_base import QueryDatasetView
 from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
-
-from query_base.query_base import QueryDatasetView
-
 from utils.query_params import parse_query_params
-from dae.pedigrees.family import FamilyTag
+
 from dae.pedigrees.families_data import FamiliesData
+from dae.pedigrees.family import FamilyTag
 from dae.pedigrees.family_tag_builder import check_family_tags_query
 from dae.pedigrees.loader import FamiliesLoader
 
@@ -21,7 +21,7 @@ class VariantReportsView(QueryDatasetView):
         assert common_report_id
 
         common_report = self.gpf_instance.get_common_report(
-            common_report_id
+            common_report_id,
         )
 
         if common_report is not None:
@@ -40,7 +40,7 @@ class VariantReportsFullView(QueryDatasetView):
         assert common_report_id
 
         common_report = self.gpf_instance.get_common_report(
-            common_report_id
+            common_report_id,
         )
 
         if common_report is not None:
@@ -65,7 +65,7 @@ class FamilyCounterListView(QueryDatasetView):
         assert common_report_id
 
         common_report = self.gpf_instance.get_common_report(
-            common_report_id
+            common_report_id,
         )
 
         if common_report is None:
@@ -95,7 +95,7 @@ class FamilyCounterDownloadView(QueryDatasetView):
         assert study_id is not None
 
         common_report = self.gpf_instance.get_common_report(
-            study_id
+            study_id,
         )
 
         if common_report is None:
@@ -120,7 +120,7 @@ class FamilyCounterDownloadView(QueryDatasetView):
 
         response = StreamingHttpResponse(
             lines,
-            content_type="text/tab-separated-values"
+            content_type="text/tab-separated-values",
         )
         response["Content-Disposition"] = "attachment; filename=families.ped"
         response["Expires"] = "0"
@@ -135,7 +135,7 @@ class FamiliesDataDownloadView(QueryDatasetView):
     def collect_families(
         cls,
         study_families: FamiliesData,
-        tags_query: Optional[dict[str, Any]]
+        tags_query: Optional[dict[str, Any]],
     ) -> FamiliesData:
         """Collect and filter families by tags."""
         if tags_query is None:
@@ -157,7 +157,7 @@ class FamiliesDataDownloadView(QueryDatasetView):
 
         for family_id, family in study_families.items():
             if check_family_tags_query(
-                family, or_mode, include_tags, exclude_tags
+                family, or_mode, include_tags, exclude_tags,
             ):
                 result[family_id] = family
 
@@ -178,7 +178,7 @@ class FamiliesDataDownloadView(QueryDatasetView):
 
         response = StreamingHttpResponse(
             lines,
-            content_type="text/tab-separated-values"
+            content_type="text/tab-separated-values",
         )
         response["Content-Disposition"] = "attachment; filename=families.ped"
         response["Expires"] = "0"
@@ -214,7 +214,7 @@ class FamiliesDataDownloadView(QueryDatasetView):
 
         response = StreamingHttpResponse(
             lines,
-            content_type="text/tab-separated-values"
+            content_type="text/tab-separated-values",
         )
         response["Content-Disposition"] = "attachment; filename=families.ped"
         response["Expires"] = "0"

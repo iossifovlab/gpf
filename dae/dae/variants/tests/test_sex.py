@@ -1,5 +1,6 @@
-from dae.variants.attributes import Sex
 import pytest
+
+from dae.variants.attributes import Sex
 
 
 def test_sex_attribute():

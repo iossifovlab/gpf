@@ -1,12 +1,11 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
 import pytest_mock
-from dae.genomic_resources.reference_genome import \
-    ReferenceGenome
 
-from dae.parquet.partition_descriptor import PartitionDescriptor
-from dae.import_tools.import_tools import MakefilePartitionHelper
+from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.gpf_instance.gpf_instance import GPFInstance
+from dae.import_tools.import_tools import MakefilePartitionHelper
+from dae.parquet.partition_descriptor import PartitionDescriptor
 
 
 @pytest.mark.parametrize(
@@ -25,15 +24,15 @@ from dae.gpf_instance.gpf_instance import GPFInstance
 )
 def test_target_generator_region_bins_count(
     region_length: int, chrom: str, bins_count: int,
-    gpf_instance_2013: GPFInstance
+    gpf_instance_2013: GPFInstance,
 ) -> None:
 
     partition_descriptor = PartitionDescriptor(
-        ["1", "2"], region_length
+        ["1", "2"], region_length,
     )
 
     generator = MakefilePartitionHelper(
-        partition_descriptor, gpf_instance_2013.reference_genome
+        partition_descriptor, gpf_instance_2013.reference_genome,
     )
     assert generator is not None
     assert generator.region_bins_count(chrom) == bins_count
@@ -59,15 +58,15 @@ def test_target_generator_region_bins_count(
 def test_target_generator_region_bins(
     region_length: int, chrom: str,
     targets: list[tuple[str, str]],
-    gpf_instance_2013: GPFInstance
+    gpf_instance_2013: GPFInstance,
 ) -> None:
 
     partition_descriptor = PartitionDescriptor(
-        ["1", "2"], region_length
+        ["1", "2"], region_length,
     )
 
     generator = MakefilePartitionHelper(
-        partition_descriptor, gpf_instance_2013.reference_genome
+        partition_descriptor, gpf_instance_2013.reference_genome,
     )
 
     assert generator is not None
@@ -89,15 +88,15 @@ def test_target_generator_other_0(
     region_length: int,
     target_chroms: list[str],
     targets: list[str],
-    gpf_instance_2013: GPFInstance
+    gpf_instance_2013: GPFInstance,
 ) -> None:
 
     partition_descriptor = PartitionDescriptor(
-        ["1", "2"], region_length
+        ["1", "2"], region_length,
     )
 
     generator = MakefilePartitionHelper(
-        partition_descriptor, gpf_instance_2013.reference_genome
+        partition_descriptor, gpf_instance_2013.reference_genome,
     )
 
     result = generator.generate_variants_targets(target_chroms)
@@ -117,15 +116,15 @@ def test_target_generator_other_0(
 def test_target_generator_chrom_1(
     region_length: int,
     targets: set[str],
-    gpf_instance_2013: GPFInstance
+    gpf_instance_2013: GPFInstance,
 ) -> None:
 
     partition_descriptor = PartitionDescriptor(
-        ["1", "2"], region_length
+        ["1", "2"], region_length,
     )
 
     generator = MakefilePartitionHelper(
-        partition_descriptor, gpf_instance_2013.reference_genome
+        partition_descriptor, gpf_instance_2013.reference_genome,
     )
 
     result = generator.generate_variants_targets(["1"])
@@ -145,15 +144,15 @@ def test_target_generator_chrom_1(
 def test_target_generator_chrom_other(
         region_length: int,
         targets: set[str],
-        gpf_instance_2013: GPFInstance
+        gpf_instance_2013: GPFInstance,
 ) -> None:
 
     partition_descriptor = PartitionDescriptor(
-        ["1", "2"], region_length
+        ["1", "2"], region_length,
     )
 
     generator = MakefilePartitionHelper(
-        partition_descriptor, gpf_instance_2013.reference_genome
+        partition_descriptor, gpf_instance_2013.reference_genome,
     )
     print(generator.chromosome_lengths)
 
@@ -175,7 +174,7 @@ def test_target_generator_chrom_prefix_target_other(
     region_length: int,
     targets: set[str],
     gpf_instance_2013: GPFInstance,
-    mocker: pytest_mock.MockerFixture
+    mocker: pytest_mock.MockerFixture,
 ) -> None:
 
     mocker.patch.object(
@@ -190,7 +189,7 @@ def test_target_generator_chrom_prefix_target_other(
     )
 
     partition_descriptor = PartitionDescriptor(
-        ["chr1", "chr2"], region_length
+        ["chr1", "chr2"], region_length,
     )
 
     generator = MakefilePartitionHelper(
@@ -221,7 +220,7 @@ def test_target_generator_add_chrom_prefix_target_chrom(
     region_length: int,
     targets: set[str],
     gpf_instance_2013: GPFInstance,
-    mocker: pytest_mock.MockerFixture
+    mocker: pytest_mock.MockerFixture,
 ) -> None:
 
     mocker.patch.object(
@@ -236,7 +235,7 @@ def test_target_generator_add_chrom_prefix_target_chrom(
     )
 
     partition_descriptor = PartitionDescriptor(
-        ["chr1", "chr2"], region_length
+        ["chr1", "chr2"], region_length,
     )
 
     generator = MakefilePartitionHelper(
@@ -267,7 +266,7 @@ def test_target_generator_del_chrom_prefix_target_chrom(
     region_length: int,
     targets: set[str],
     gpf_instance_2013: GPFInstance,
-    mocker: pytest_mock.MockerFixture
+    mocker: pytest_mock.MockerFixture,
 ) -> None:
 
     mocker.patch.object(
@@ -282,7 +281,7 @@ def test_target_generator_del_chrom_prefix_target_chrom(
     )
 
     partition_descriptor = PartitionDescriptor(
-        ["1", "2"], region_length
+        ["1", "2"], region_length,
     )
 
     generator = MakefilePartitionHelper(
@@ -334,7 +333,7 @@ def test_makefile_generator_bucket_numbering(
     region_length: int,
     targets: list[tuple[str, int]],
     gpf_instance_2013: GPFInstance,
-    mocker: pytest_mock.MockerFixture
+    mocker: pytest_mock.MockerFixture,
 ) -> None:
 
     mocker.patch.object(
@@ -349,7 +348,7 @@ def test_makefile_generator_bucket_numbering(
     )
 
     partition_descriptor = PartitionDescriptor(
-        ["chr1", "chr2"], region_length
+        ["chr1", "chr2"], region_length,
     )
 
     generator = MakefilePartitionHelper(
@@ -394,7 +393,7 @@ def test_makefile_generator_regions(
     region_length: int,
     targets: list[tuple[str, list[str]]],
     gpf_instance_2013: GPFInstance,
-    mocker: pytest_mock.MockerFixture
+    mocker: pytest_mock.MockerFixture,
 ) -> None:
 
     mocker.patch.object(
@@ -409,18 +408,18 @@ def test_makefile_generator_regions(
     )
 
     partition_descriptor = PartitionDescriptor(
-        ["chr1", "chr2"], region_length
+        ["chr1", "chr2"], region_length,
     )
 
     generator = MakefilePartitionHelper(
-        partition_descriptor, gpf_instance_2013.reference_genome
+        partition_descriptor, gpf_instance_2013.reference_genome,
     )
 
     print(generator.chromosome_lengths)
     assert len(generator.chromosome_lengths) == 4
 
     variants_targets = generator.generate_variants_targets(
-        ["chr1", "chr2", "chr3", "chr4"]
+        ["chr1", "chr2", "chr3", "chr4"],
     )
 
     for (region_bin, regions) in targets:
@@ -459,7 +458,7 @@ def test_makefile_generator_regions_del_chrom_prefix(
     region_length: int,
     targets: list[tuple[str, list[str]]],
     gpf_instance_2013: GPFInstance,
-    mocker: pytest_mock.MockerFixture
+    mocker: pytest_mock.MockerFixture,
 ) -> None:
 
     mocker.patch.object(
@@ -474,7 +473,7 @@ def test_makefile_generator_regions_del_chrom_prefix(
     )
 
     partition_descriptor = PartitionDescriptor(
-        ["1", "2"], region_length
+        ["1", "2"], region_length,
     )
 
     generator = MakefilePartitionHelper(
@@ -487,7 +486,7 @@ def test_makefile_generator_regions_del_chrom_prefix(
     assert len(generator.chromosome_lengths) == 4
 
     variants_targets = generator.generate_variants_targets(
-        ["1", "2", "3", "4"]
+        ["1", "2", "3", "4"],
     )
 
     for (region_bin, regions) in targets:
@@ -522,7 +521,7 @@ def test_makefile_generator_regions_add_chrom_prefix(
     region_length: int,
     targets: list[tuple[str, list[str]]],
     gpf_instance_2013: GPFInstance,
-    mocker: pytest_mock.MockerFixture
+    mocker: pytest_mock.MockerFixture,
 ) -> None:
 
     mocker.patch.object(
@@ -537,7 +536,7 @@ def test_makefile_generator_regions_add_chrom_prefix(
     )
 
     partition_descriptor = PartitionDescriptor(
-        ["1", "2"], region_length
+        ["1", "2"], region_length,
     )
 
     generator = MakefilePartitionHelper(
@@ -549,7 +548,7 @@ def test_makefile_generator_regions_add_chrom_prefix(
     assert len(generator.chromosome_lengths) == 4
 
     variants_targets = generator.generate_variants_targets(
-        ["1", "2", "3", "4"]
+        ["1", "2", "3", "4"],
     )
 
     for (region_bin, regions) in targets:

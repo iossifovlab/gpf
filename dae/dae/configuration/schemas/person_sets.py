@@ -14,10 +14,10 @@ person_set_collection = {
             "type": "dict",
             "schema": {
                 "from": {
-                    "type": "string", "allowed": ["pedigree", "phenodb"]
+                    "type": "string", "allowed": ["pedigree", "phenodb"],
                 },
-                "source": {"type": "string"}
-            }
+                "source": {"type": "string"},
+            },
         },
     },
     "domain": {
@@ -33,6 +33,6 @@ person_set_collections_schema = {
         "oneof": [
             {"type": "list", "schema": {"type": "string"}},
             {"type": "dict", "schema": person_set_collection},
-        ]
+        ],
     },
 }

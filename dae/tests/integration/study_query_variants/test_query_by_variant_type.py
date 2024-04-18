@@ -4,12 +4,11 @@ from typing import Optional
 
 import pytest
 
-from dae.utils.regions import Region
-from dae.testing import setup_pedigree, setup_vcf, \
-    vcf_study
-from dae.testing.alla_import import alla_gpf
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.studies.study import GenotypeData
+from dae.testing import setup_pedigree, setup_vcf, vcf_study
+from dae.testing.alla_import import alla_gpf
+from dae.utils.regions import Region
 
 
 @pytest.fixture(scope="module")
@@ -54,11 +53,11 @@ chrA   5   .  AAA CCC   .    .      .    GT     0/0 0/1 0/1
                     "include_unknown_person_genotypes": True,
                     "denovo_mode": "denovo",
                     "omission_mode": "omission",
-                }
+                },
             },
             "processing_config": {
-                "include_reference": True
-            }
+                "include_reference": True,
+            },
         })
     return study
 
@@ -81,14 +80,14 @@ chrA   5   .  AAA CCC   .    .      .    GT     0/0 0/1 0/1
         (1, 9, "sub or comp", 3),
         (1, 9, "ins or del or comp", 3),
         (1, 9, "sub or ins or del or comp", 5),
-    ]
+    ],
 )
 def test_query_by_variant_type(
     imported_study: GenotypeData,
     begin: int,
     end: int,
     variant_type: Optional[str],
-    count: int
+    count: int,
 ) -> None:
     region = Region("chrA", begin, end)
     vs = list(imported_study.query_variants(

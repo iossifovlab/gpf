@@ -1,14 +1,14 @@
 from __future__ import annotations
+
 import abc
 import logging
-from typing import Union, Optional
+from typing import Optional, Union
 
-from dae.utils.regions import BedRegion
-from dae.genomic_resources.reference_genome import ReferenceGenome
-from dae.genomic_resources.gene_models import TranscriptModel
-from dae.effect_annotation.variant import Variant
 from dae.effect_annotation.gene_codes import NuclearCode
-
+from dae.effect_annotation.variant import Variant
+from dae.genomic_resources.gene_models import TranscriptModel
+from dae.genomic_resources.reference_genome import ReferenceGenome
+from dae.utils.regions import BedRegion
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +21,7 @@ class BaseAnnotationRequest(abc.ABC):
         code: NuclearCode,
         promoter_len: int,
         variant: Variant,
-        transcript_model: TranscriptModel
+        transcript_model: TranscriptModel,
     ):
         self.reference_genome = reference_genome
         self.code = code
@@ -56,7 +56,7 @@ class BaseAnnotationRequest(abc.ABC):
                     return end - start
                 length = region.stop - start + 1
                 logger.debug(
-                    "start len %d %d-%d", length, start, region.stop
+                    "start len %d %d-%d", length, start, region.stop,
                 )
             else:
                 length += region.stop - region.start + 1
@@ -82,11 +82,11 @@ class BaseAnnotationRequest(abc.ABC):
 
     @abc.abstractmethod
     def _get_coding_nucleotide_position(self, position: int) -> int:
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @abc.abstractmethod
     def get_protein_position(self) -> tuple[int, int]:
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def get_protein_position_for_pos(self, position: int) -> Optional[int]:
         if position < self.transcript_model.cds[0]:
@@ -103,7 +103,7 @@ class BaseAnnotationRequest(abc.ABC):
             return ""
 
         return self.reference_genome.get_sequence(
-            self.transcript_model.chrom, start_position, end_position
+            self.transcript_model.chrom, start_position, end_position,
         )
 
     def cds_regions(self) -> list[BedRegion]:
@@ -124,7 +124,7 @@ class BaseAnnotationRequest(abc.ABC):
     def get_coding_right(self, pos: int, length: int, index: int) -> str:
         """Construct conding sequence to the right of a position."""
         logger.debug(
-            "get_coding_right pos:%d len:%d index:%d", pos, length, index
+            "get_coding_right pos:%d len:%d index:%d", pos, length, index,
         )
         if length <= 0:
             return ""
@@ -155,7 +155,7 @@ class BaseAnnotationRequest(abc.ABC):
     def get_coding_left(self, pos: int, length: int, index: int) -> str:
         """Return coding sequence to the left of a position."""
         logger.debug(
-            "get_coding_left pos:%d len:%d index:%d", pos, length, index
+            "get_coding_left pos:%d len:%d index:%d", pos, length, index,
         )
         if length <= 0:
             return ""
@@ -200,7 +200,7 @@ class BaseAnnotationRequest(abc.ABC):
                 print(
                     "Codon can only contain: A, G, C, T, N letters, \
                       this codon is: "
-                    + codon
+                    + codon,
                 )
                 return "?"
 
@@ -245,7 +245,7 @@ class PositiveStrandAnnotationRequest(BaseAnnotationRequest):
         code: NuclearCode,
         promoter_len: int,
         variant: Variant,
-        transcript_model: TranscriptModel
+        transcript_model: TranscriptModel,
     ):
         super().__init__(
             reference_genome, code, promoter_len,
@@ -262,7 +262,7 @@ class PositiveStrandAnnotationRequest(BaseAnnotationRequest):
             length += region.stop - region.start + 1
 
         logger.debug(
-            "get_coding_nucleotide_position pos=%d len=%d", position, length
+            "get_coding_nucleotide_position pos=%d len=%d", position, length,
         )
         return length
 
@@ -286,7 +286,7 @@ class PositiveStrandAnnotationRequest(BaseAnnotationRequest):
     def in_start_codons(self, codon: str) -> bool:
         """Check if request belongs to the start codon."""
         seq = self._get_sequence(
-            self.transcript_model.cds[0], self.transcript_model.cds[0] + 2
+            self.transcript_model.cds[0], self.transcript_model.cds[0] + 2,
         )
 
         if codon == seq or codon in self.code.startCodons:
@@ -299,7 +299,7 @@ class PositiveStrandAnnotationRequest(BaseAnnotationRequest):
         if reg.stop < self.transcript_model.cds[0]:
             logger.error(
                 "Cannot detect frame. \
-                              Start of coding regions is after current region"
+                              Start of coding regions is after current region",
             )
             return 0
         start_pos = max(self.transcript_model.cds[0], reg.start)
@@ -327,7 +327,7 @@ class PositiveStrandAnnotationRequest(BaseAnnotationRequest):
 
         assert self.variant.alternate is not None
         length_alt = self.get_nucleotides_count_to_full_codon(
-            len(self.variant.alternate) + frame
+            len(self.variant.alternate) + frame,
         )
         alt_codons = coding_before_pos + self.variant.alternate
 
@@ -338,12 +338,12 @@ class PositiveStrandAnnotationRequest(BaseAnnotationRequest):
         )
 
         logger.debug(
-            "ref codons=%s, alt codons=%s", ref_codons, alt_codons
+            "ref codons=%s, alt codons=%s", ref_codons, alt_codons,
         )
         return ref_codons, alt_codons
 
     def get_amino_acids(
-        self
+        self,
     ) -> tuple[list[str], list[str]]:
         """Construct the list of amino acids."""
         if self.__amino_acids is None:
@@ -371,7 +371,7 @@ class NegativeStrandAnnotationRequest(BaseAnnotationRequest):
         code: NuclearCode,
         promoter_len: int,
         variant: Variant,
-        transcript_model: TranscriptModel
+        transcript_model: TranscriptModel,
     ):
         super().__init__(
             reference_genome, code, promoter_len,
@@ -388,7 +388,7 @@ class NegativeStrandAnnotationRequest(BaseAnnotationRequest):
             length += region.stop - region.start + 1
 
         logger.debug(
-            "get_coding_nucleotide_position pos=%d len=%d", position, length
+            "get_coding_nucleotide_position pos=%d len=%d", position, length,
         )
         return length
 
@@ -412,7 +412,7 @@ class NegativeStrandAnnotationRequest(BaseAnnotationRequest):
     def in_start_codons(self, codon: str) -> bool:
         """Check if request belongs to the start codon."""
         seq = self._get_sequence(
-            self.transcript_model.cds[1] - 2, self.transcript_model.cds[1]
+            self.transcript_model.cds[1] - 2, self.transcript_model.cds[1],
         )
 
         complement_codon = self.complement(codon[::-1])
@@ -426,7 +426,7 @@ class NegativeStrandAnnotationRequest(BaseAnnotationRequest):
         if reg.start > self.transcript_model.cds[1]:
             logger.error(
                 "Cannot detect frame. \
-                              Start of coding regions is after current region"
+                              Start of coding regions is after current region",
             )
             return 0
         stop_pos = min(self.transcript_model.cds[1], reg.stop)
@@ -462,7 +462,7 @@ class NegativeStrandAnnotationRequest(BaseAnnotationRequest):
 
         coding_before_pos = self.get_coding_left(last_position, length, index)
         coding_after_pos = self.get_coding_right(
-            last_position + 1, frame, index
+            last_position + 1, frame, index,
         )
 
         logger.debug(
@@ -476,7 +476,7 @@ class NegativeStrandAnnotationRequest(BaseAnnotationRequest):
 
         assert self.variant.alternate is not None
         length_alt = self.get_nucleotides_count_to_full_codon(
-            len(self.variant.alternate) + frame
+            len(self.variant.alternate) + frame,
         )
         alt_codons = self.variant.alternate + coding_after_pos
 
@@ -498,7 +498,7 @@ class NegativeStrandAnnotationRequest(BaseAnnotationRequest):
         )
 
         logger.debug(
-            "ref codons=%s, alt codons=%s", ref_codons, alt_codons
+            "ref codons=%s, alt codons=%s", ref_codons, alt_codons,
         )
         return ref_codons, alt_codons
 
@@ -526,12 +526,12 @@ class NegativeStrandAnnotationRequest(BaseAnnotationRequest):
     def cod2aa(self, codon: str) -> str:
         complement_codon = self.complement(codon[::-1])
         logger.debug(
-            "complement codon %s for codon %s", complement_codon, codon
+            "complement codon %s for codon %s", complement_codon, codon,
         )
         return BaseAnnotationRequest.cod2aa(self, complement_codon)
 
     def get_amino_acids(
-        self
+        self,
     ) -> tuple[list[str], list[str]]:
         """Construct the list of amino acids."""
         if self.__amino_acids is None:

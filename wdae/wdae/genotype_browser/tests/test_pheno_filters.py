@@ -1,6 +1,6 @@
 import json
-import pytest
 
+import pytest
 from rest_framework import status
 
 pytestmark = pytest.mark.usefixtures(
@@ -27,19 +27,19 @@ FILTER_QUERY_CONTINUOUS = {
 }
 
 SOURCE_CONTINUOUS = {
-    "source": "instrument1.continuous", "role": "prb", "format": "%s"
+    "source": "instrument1.continuous", "role": "prb", "format": "%s",
 }
 
 SOURCE_CATEGORICAL = {
-    "source": "instrument1.categorical", "role": "prb", "format": "%s"
+    "source": "instrument1.categorical", "role": "prb", "format": "%s",
 }
 
 SOURCE_ORDINAL = {
-    "source": "instrument1.ordinal", "role": "prb", "format": "%s"
+    "source": "instrument1.ordinal", "role": "prb", "format": "%s",
 }
 
 SOURCE_RAW = {
-    "source": "instrument1.raw", "role": "prb", "format": "%s"
+    "source": "instrument1.raw", "role": "prb", "format": "%s",
 }
 
 
@@ -54,8 +54,8 @@ SOURCE_RAW = {
             [
                 [["option2"]],
                 [["option2"]],
-                [["option2"]]
-            ]
+                [["option2"]],
+            ],
         ),
         (
             [FILTER_QUERY_CONTINUOUS],
@@ -64,8 +64,8 @@ SOURCE_RAW = {
             [
                 [["3.14"]],
                 [["3.14"]],
-                [["3.14"]]
-            ]
+                [["3.14"]],
+            ],
         ),
         (
             [FILTER_QUERY_CATEGORICAL, FILTER_QUERY_CONTINUOUS],
@@ -74,25 +74,25 @@ SOURCE_RAW = {
             [
                 [["option2"], ["3.14"]],
                 [["option2"], ["3.14"]],
-                [["option2"], ["3.14"]]
+                [["option2"], ["3.14"]],
             ],
         ),
     ],
 )
 def test_query_with_pheno_filters(
     db, admin_client, pheno_filters, variants_count,
-    pheno_values, preview_sources
+    pheno_values, preview_sources,
 ):
     data = {
         "datasetId": "quads_f1",
         "familyFilters": pheno_filters,
-        "sources": preview_sources
+        "sources": preview_sources,
     }
 
     response = admin_client.post(
-        QUERY_URL, json.dumps(data), content_type="application/json"
+        QUERY_URL, json.dumps(data), content_type="application/json",
     )
-    assert status.HTTP_200_OK == response.status_code
+    assert response.status_code == status.HTTP_200_OK
     variants = response.streaming_content
     variants = json.loads("".join(map(lambda x: x.decode("utf-8"), variants)))
     assert variants_count == len(variants)

@@ -1,27 +1,27 @@
 from __future__ import annotations
 
-import os
-import logging
 import copy
-import textwrap
 import itertools
 import json
-from typing import Optional, Any, cast
+import logging
+import os
+import textwrap
+from typing import Any, Optional, cast
 
 import yaml
-
 from jinja2 import Template
 
-from dae.genomic_resources.resource_implementation import \
-    GenomicResourceImplementation, \
-    InfoImplementationMixin, ResourceStatistics
-from dae.genomic_resources.statistics.base_statistic import Statistic
-
 from dae.genomic_resources import GenomicResource
-from dae.genomic_resources.reference_genome import \
-    build_reference_genome_from_resource
+from dae.genomic_resources.reference_genome import (
+    build_reference_genome_from_resource,
+)
+from dae.genomic_resources.resource_implementation import (
+    GenomicResourceImplementation,
+    InfoImplementationMixin,
+    ResourceStatistics,
+)
+from dae.genomic_resources.statistics.base_statistic import Statistic
 from dae.task_graph.graph import Task, TaskGraph
-
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +40,7 @@ class GenomeStatisticsMixin:
 
 class ReferenceGenomeStatistics(
     ResourceStatistics,
-    GenomeStatisticsMixin
+    GenomeStatisticsMixin,
 ):
     """Class for accessing reference genome statistics."""
 
@@ -54,14 +54,14 @@ class ReferenceGenomeStatistics(
 
     @staticmethod
     def build_statistics(
-        genomic_resource: GenomicResource
+        genomic_resource: GenomicResource,
     ) -> Optional[ReferenceGenomeStatistics]:
         """Load reference genome statistics."""
         chrom_statistics = {}
         try:
             global_stat_filepath = os.path.join(
                 ReferenceGenomeStatistics.get_statistics_folder(),
-                ReferenceGenomeStatistics.get_global_statistic_file()
+                ReferenceGenomeStatistics.get_global_statistic_file(),
             )
             with genomic_resource.open_raw_file(
                     global_stat_filepath, mode="r") as infile:
@@ -74,17 +74,17 @@ class ReferenceGenomeStatistics(
                 with genomic_resource.open_raw_file(
                         chrom_stat_filepath, mode="r") as infile:
                     chrom_statistics[chrom] = ChromosomeStatistic.deserialize(
-                        infile.read()
+                        infile.read(),
                     )
         except FileNotFoundError:
             logger.exception(
-                "Couldn't load statistics of %s", genomic_resource.resource_id
+                "Couldn't load statistics of %s", genomic_resource.resource_id,
             )
             return None
         return ReferenceGenomeStatistics(
             genomic_resource.resource_id,
             global_statistic,
-            chrom_statistics
+            chrom_statistics,
         )
 
 
@@ -94,7 +94,7 @@ class ChromosomeStatistic(Statistic):
     def __init__(
         self, chromosome: str, length: int = 0,
         nucleotide_counts: Optional[dict[str, int]] = None,
-        nucleotide_pair_counts: Optional[dict[str, int]] = None
+        nucleotide_pair_counts: Optional[dict[str, int]] = None,
     ):
         super().__init__(chromosome, "Reference genome chromosome stats")
         if nucleotide_counts is None:
@@ -103,22 +103,20 @@ class ChromosomeStatistic(Statistic):
                 "G": 0,
                 "C": 0,
                 "T": 0,
-                "N": 0
+                "N": 0,
             }
         else:
             assert set(
-                nucleotide_counts.keys()
+                nucleotide_counts.keys(),
             ) == set(
-                ["A", "G", "C", "T", "N"]
+                ["A", "G", "C", "T", "N"],
             )
             self.nucleotide_counts = nucleotide_counts
 
         nucleotides = ["A", "G", "C", "T", "N"]
         pairs = map("".join, itertools.product(nucleotides, nucleotides))
         if nucleotide_pair_counts is None:
-            self.nucleotide_pair_counts = {
-                k: 0 for k in pairs
-            }
+            self.nucleotide_pair_counts = dict.fromkeys(pairs, 0)
         else:
             assert set(nucleotide_pair_counts.keys()) == set(pairs)
             self.nucleotide_pair_counts = nucleotide_pair_counts
@@ -198,8 +196,8 @@ class ChromosomeStatistic(Statistic):
                 "chrom": self.statistic_id,
                 "length": self.length,
                 "nucleotide_counts": self.nucleotide_counts,
-                "nucleotide_pair_counts": self.nucleotide_pair_counts
-            }
+                "nucleotide_pair_counts": self.nucleotide_pair_counts,
+            },
         ))
 
     @staticmethod
@@ -209,7 +207,7 @@ class ChromosomeStatistic(Statistic):
             res["chrom"],
             length=res.get("length"),
             nucleotide_counts=res.get("nucleotide_counts"),
-            nucleotide_pair_counts=res.get("nucleotide_pair_counts")
+            nucleotide_pair_counts=res.get("nucleotide_pair_counts"),
         )
         stat.finish()
         return stat
@@ -223,7 +221,7 @@ class GenomeStatistic(Statistic):
             nucleotide_distribution: Optional[dict[str, float]] = None,
             bi_nucleotide_distribution: Optional[dict[str, float]] = None,
             chromosome_statistics: Optional[
-                dict[str, ChromosomeStatistic]] = None
+                dict[str, ChromosomeStatistic]] = None,
     ):
         super().__init__("global", "")
         self.chromosomes = chromosomes
@@ -263,13 +261,11 @@ class GenomeStatistic(Statistic):
             "G": 0,
             "C": 0,
             "T": 0,
-            "N": 0
+            "N": 0,
         }
         nucleotides = ["A", "G", "C", "T", "N"]
         pairs = map("".join, itertools.product(nucleotides, nucleotides))
-        total_pair_counts = {
-            k: 0 for k in pairs
-        }
+        total_pair_counts = dict.fromkeys(pairs, 0)
         total_pairs = 0
         for statistic in self.chromosome_statistics.values():
             total_nucs += statistic.length
@@ -295,7 +291,7 @@ class GenomeStatistic(Statistic):
             "chromosomes": self.chromosomes,
             "length": self.length,
             "nucleotide_distribution": self.nucleotide_distribution,
-            "bi_nucleotide_distribution": self.bi_nucleotide_distribution
+            "bi_nucleotide_distribution": self.bi_nucleotide_distribution,
         }))
 
     @staticmethod
@@ -305,14 +301,14 @@ class GenomeStatistic(Statistic):
             res["chromosomes"],
             length=res.get("length"),
             nucleotide_distribution=res.get("nucleotide_distribution"),
-            bi_nucleotide_distribution=res.get("bi_nucleotide_distribution")
+            bi_nucleotide_distribution=res.get("bi_nucleotide_distribution"),
         )
         return stat
 
 
 class ReferenceGenomeImplementation(
     GenomicResourceImplementation,
-    InfoImplementationMixin
+    InfoImplementationMixin,
 ):
     """Resource implementation for reference genome."""
 
@@ -417,7 +413,7 @@ class ReferenceGenomeImplementation(
         config = self.get_config()
         genome_filename = config["filename"]
         return json.dumps({
-            "score_file": manifest[genome_filename].md5
+            "score_file": manifest[genome_filename].md5,
         }, sort_keys=True, indent=2).encode()
 
     def add_statistics_build_tasks(
@@ -430,7 +426,7 @@ class ReferenceGenomeImplementation(
         with self.reference_genome.open():
             for chrom in self.reference_genome.chromosomes:
                 _, _, chrom_save_task = self._add_chrom_stats_tasks(
-                    task_graph, chrom, region_size
+                    task_graph, chrom, region_size,
                 )
                 chrom_save_tasks.append(chrom_save_task)
 
@@ -440,7 +436,7 @@ class ReferenceGenomeImplementation(
         return tasks
 
     def _add_chrom_stats_tasks(
-        self, task_graph: TaskGraph, chrom: str, region_size: int
+        self, task_graph: TaskGraph, chrom: str, region_size: int,
     ) -> tuple[list[Task], Task, Task]:
         chrom_tasks = []
         regions = self.reference_genome.split_into_regions(region_size, chrom)
@@ -450,37 +446,37 @@ class ReferenceGenomeImplementation(
                 f"{reg}",
                 ReferenceGenomeImplementation._do_chrom_statistic,
                 [self.resource, reg.chrom, reg.start, reg.end],
-                []
+                [],
             ))
 
         merge_task = task_graph.create_task(
             f"{self.resource.resource_id}_merge_chrom_statistics_{chrom}",
             ReferenceGenomeImplementation._merge_chrom_statistics,
             [*chrom_tasks],
-            chrom_tasks
+            chrom_tasks,
         )
         save_task = task_graph.create_task(
             f"{self.resource.resource_id}_save_chrom_statistics_{chrom}",
             ReferenceGenomeImplementation._save_chrom_statistic,
             [self.resource, chrom, merge_task],
-            [merge_task]
+            [merge_task],
         )
 
         return chrom_tasks, merge_task, save_task
 
     def _add_global_stat_task(
-        self, task_graph: TaskGraph, chrom_stats_save_tasks: list[Task]
+        self, task_graph: TaskGraph, chrom_stats_save_tasks: list[Task],
     ) -> Task:
         return task_graph.create_task(
             f"{self.resource.resource_id}_save_chrom_statistics",
             ReferenceGenomeImplementation._do_global_statistic,
             [self.resource, *chrom_stats_save_tasks],
-            chrom_stats_save_tasks
+            chrom_stats_save_tasks,
         )
 
     @staticmethod
     def _do_chrom_statistic(
-        resource: GenomicResource, chrom: str, start: int, end: Optional[int]
+        resource: GenomicResource, chrom: str, start: int, end: Optional[int],
     ) -> ChromosomeStatistic:
         impl = build_reference_genome_from_resource(resource)
         statistic = ChromosomeStatistic(chrom)
@@ -498,7 +494,7 @@ class ReferenceGenomeImplementation(
 
     @staticmethod
     def _merge_chrom_statistics(
-        *chrom_tasks: ChromosomeStatistic
+        *chrom_tasks: ChromosomeStatistic,
     ) -> ChromosomeStatistic:
         final_statistic: Optional[ChromosomeStatistic] = None
         for chrom_task_result in chrom_tasks:
@@ -512,7 +508,7 @@ class ReferenceGenomeImplementation(
     @staticmethod
     def _save_chrom_statistic(
         resource: GenomicResource, chrom: str,
-        merged_statistic: ChromosomeStatistic
+        merged_statistic: ChromosomeStatistic,
     ) -> ChromosomeStatistic:
         proto = resource.proto
         if merged_statistic is None:
@@ -522,14 +518,14 @@ class ReferenceGenomeImplementation(
             resource,
             f"{ReferenceGenomeStatistics.get_statistics_folder()}"
             f"/{ReferenceGenomeStatistics.get_chrom_file(chrom)}",
-            mode="wt"
+            mode="wt",
         ) as outfile:
             outfile.write(merged_statistic.serialize())
         return merged_statistic
 
     @staticmethod
     def _do_global_statistic(
-        resource: GenomicResource, *chrom_save_tasks: ChromosomeStatistic
+        resource: GenomicResource, *chrom_save_tasks: ChromosomeStatistic,
     ) -> GenomeStatistic:
         impl = build_reference_genome_from_resource(resource)
         with impl.open():
@@ -544,7 +540,7 @@ class ReferenceGenomeImplementation(
             resource,
             f"{ReferenceGenomeStatistics.get_statistics_folder()}"
             f"/{ReferenceGenomeStatistics.get_global_statistic_file()}",
-            mode="wt"
+            mode="wt",
         ) as outfile:
             outfile.write(statistic.serialize())
         return statistic

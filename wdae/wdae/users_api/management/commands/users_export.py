@@ -1,11 +1,10 @@
 import csv
-import sys
 import io
-
+import sys
 from typing import Any, TextIO, Union
 
-from django.core.management.base import CommandParser, BaseCommand
 from django.contrib.auth import get_user_model
+from django.core.management.base import BaseCommand, CommandParser
 
 from users_api.models import WdaeUser
 
@@ -35,7 +34,7 @@ class Command(BaseCommand, ExportUsersBase):
                 "Name": user.name,
                 "Groups": groups_str,
                 "Password": password,
-            }
+            },
         )
 
     def handle(self, *args: Any, **options: Any) -> None:

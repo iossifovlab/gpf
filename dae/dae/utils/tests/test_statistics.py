@@ -4,7 +4,7 @@ import pytest
 from dae.utils.statistics import StatsCollection
 
 
-@pytest.fixture
+@pytest.fixture()
 def stats_fixture() -> StatsCollection:
     stats = StatsCollection()
     assert stats is not None

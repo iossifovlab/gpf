@@ -28,16 +28,16 @@ def test_get_genes_by_score(gene_scores_db: GeneScoresDb) -> None:
     assert gene_score is not None
 
     genes = gene_score.get_genes(
-        "LGD_rank", 1.5, 5.0
+        "LGD_rank", 1.5, 5.0,
     )
     assert len(genes) == 3
 
     genes = gene_score.get_genes(
-        "LGD_rank", -1, 5.0
+        "LGD_rank", -1, 5.0,
     )
     assert len(genes) == 4
 
     genes = gene_score.get_genes(
-        "LGD_rank", 1.0, 5.0
+        "LGD_rank", 1.0, 5.0,
     )
     assert len(genes) == 4

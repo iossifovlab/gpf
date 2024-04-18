@@ -1,17 +1,16 @@
 #!/usr/bin/env python
 
-import sys
 import argparse
 import logging
+import sys
+from collections import Counter, defaultdict
 from typing import Any
-from collections import defaultdict, Counter
 
 import numpy as np
 import pandas as pd
 
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.utils.verbosity_configuration import VerbosityConfiguration
-
 
 logger = logging.getLogger("stats_liftover")
 
@@ -80,8 +79,8 @@ def save_liftover_stats(target_stats, stats_filename):
         line = list(
             [
                 "source",
-                *[str(target_stats[e]["source"]) for e in effects]
-            ]
+                *[str(target_stats[e]["source"]) for e in effects],
+            ],
         )
         output.write("\t".join(line))
         output.write("\n")

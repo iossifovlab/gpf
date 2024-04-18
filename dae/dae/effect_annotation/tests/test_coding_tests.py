@@ -3,11 +3,13 @@ from typing import cast
 
 import pytest
 
-from dae.genomic_resources.gene_models import TranscriptModel, Exon
-from dae.effect_annotation.annotator import Variant
-from dae.effect_annotation.annotator import AnnotationRequestFactory, \
-    EffectAnnotator
+from dae.effect_annotation.annotator import (
+    AnnotationRequestFactory,
+    EffectAnnotator,
+    Variant,
+)
 from dae.effect_annotation.effect_checkers.coding import CodingEffectChecker
+from dae.genomic_resources.gene_models import Exon, TranscriptModel
 
 from .mocks import TranscriptModelMock
 
@@ -16,7 +18,7 @@ from .mocks import TranscriptModelMock
 def transcript_model(exons: list[Exon], coding: list[Exon]) -> TranscriptModel:
     return cast(
         TranscriptModel,
-        TranscriptModelMock("+", 1, 2000, coding, is_coding=False)
+        TranscriptModelMock("+", 1, 2000, coding, is_coding=False),
     )
 
 
@@ -28,11 +30,11 @@ def effect_checker() -> CodingEffectChecker:
 def test_insertion_3_prime_side(
     annotator: EffectAnnotator,
     transcript_model: TranscriptModel,
-    effect_checker: CodingEffectChecker
+    effect_checker: CodingEffectChecker,
 ) -> None:
     variant = Variant(loc="1:80", ref="", alt="A")
     request = AnnotationRequestFactory.create_annotation_request(
-        annotator, variant, transcript_model
+        annotator, variant, transcript_model,
     )
     effect = effect_checker.get_effect(request)
     assert effect is not None
@@ -40,7 +42,7 @@ def test_insertion_3_prime_side(
 
     variant = Variant(loc="1:79", ref="", alt="A")
     request = AnnotationRequestFactory.create_annotation_request(
-        annotator, variant, transcript_model
+        annotator, variant, transcript_model,
     )
     effect = effect_checker.get_effect(request)
     assert effect is not None
@@ -48,7 +50,7 @@ def test_insertion_3_prime_side(
 
     variant = Variant(loc="1:78", ref="", alt="A")
     request = AnnotationRequestFactory.create_annotation_request(
-        annotator, variant, transcript_model
+        annotator, variant, transcript_model,
     )
     effect = effect_checker.get_effect(request)
     assert effect is not None
@@ -58,11 +60,11 @@ def test_insertion_3_prime_side(
 def test_deletion_3_prime_side(
     annotator: EffectAnnotator,
     transcript_model: TranscriptModel,
-    effect_checker: CodingEffectChecker
+    effect_checker: CodingEffectChecker,
 ) -> None:
     variant = Variant(loc="1:80", ref="0", alt="")
     request = AnnotationRequestFactory.create_annotation_request(
-        annotator, variant, transcript_model
+        annotator, variant, transcript_model,
     )
     effect = effect_checker.get_effect(request)
     assert effect is not None
@@ -70,7 +72,7 @@ def test_deletion_3_prime_side(
 
     variant = Variant(loc="1:79", ref="0", alt="")
     request = AnnotationRequestFactory.create_annotation_request(
-        annotator, variant, transcript_model
+        annotator, variant, transcript_model,
     )
     effect = effect_checker.get_effect(request)
     assert effect is not None
@@ -78,7 +80,7 @@ def test_deletion_3_prime_side(
 
     variant = Variant(loc="1:78", ref="0", alt="")
     request = AnnotationRequestFactory.create_annotation_request(
-        annotator, variant, transcript_model
+        annotator, variant, transcript_model,
     )
     effect = effect_checker.get_effect(request)
     assert effect is not None
@@ -86,7 +88,7 @@ def test_deletion_3_prime_side(
 
     variant = Variant(loc="1:77", ref="0", alt="")
     request = AnnotationRequestFactory.create_annotation_request(
-        annotator, variant, transcript_model
+        annotator, variant, transcript_model,
     )
     effect = effect_checker.get_effect(request)
     assert effect is not None
@@ -96,11 +98,11 @@ def test_deletion_3_prime_side(
 def test_subs_3_prime_side(
     annotator: EffectAnnotator,
     transcript_model: TranscriptModel,
-    effect_checker: CodingEffectChecker
+    effect_checker: CodingEffectChecker,
 ) -> None:
     variant = Variant(loc="1:80", ref="A", alt="G")
     request = AnnotationRequestFactory.create_annotation_request(
-        annotator, variant, transcript_model
+        annotator, variant, transcript_model,
     )
     effect = effect_checker.get_effect(request)
     assert effect is not None
@@ -108,7 +110,7 @@ def test_subs_3_prime_side(
 
     variant = Variant(loc="1:79", ref="A", alt="G")
     request = AnnotationRequestFactory.create_annotation_request(
-        annotator, variant, transcript_model
+        annotator, variant, transcript_model,
     )
     effect = effect_checker.get_effect(request)
     assert effect is not None
@@ -116,7 +118,7 @@ def test_subs_3_prime_side(
 
     variant = Variant(loc="1:78", ref="A", alt="G")
     request = AnnotationRequestFactory.create_annotation_request(
-        annotator, variant, transcript_model
+        annotator, variant, transcript_model,
     )
     effect = effect_checker.get_effect(request)
     assert effect is not None
@@ -124,7 +126,7 @@ def test_subs_3_prime_side(
 
     variant = Variant(loc="1:77", ref="A", alt="G")
     request = AnnotationRequestFactory.create_annotation_request(
-        annotator, variant, transcript_model
+        annotator, variant, transcript_model,
     )
     effect = effect_checker.get_effect(request)
     assert effect is not None
@@ -134,11 +136,11 @@ def test_subs_3_prime_side(
 def test_insertion_5_prime_side(
     annotator: EffectAnnotator,
     transcript_model: TranscriptModel,
-    effect_checker: CodingEffectChecker
+    effect_checker: CodingEffectChecker,
 ) -> None:
     variant = Variant(loc="1:70", ref="", alt="A")
     request = AnnotationRequestFactory.create_annotation_request(
-        annotator, variant, transcript_model
+        annotator, variant, transcript_model,
     )
     effect = effect_checker.get_effect(request)
     assert effect is not None
@@ -146,7 +148,7 @@ def test_insertion_5_prime_side(
 
     variant = Variant(loc="1:71", ref="", alt="A")
     request = AnnotationRequestFactory.create_annotation_request(
-        annotator, variant, transcript_model
+        annotator, variant, transcript_model,
     )
     effect = effect_checker.get_effect(request)
     assert effect is not None
@@ -154,7 +156,7 @@ def test_insertion_5_prime_side(
 
     variant = Variant(loc="1:72", ref="", alt="A")
     request = AnnotationRequestFactory.create_annotation_request(
-        annotator, variant, transcript_model
+        annotator, variant, transcript_model,
     )
     effect = effect_checker.get_effect(request)
     assert effect is not None
@@ -162,7 +164,7 @@ def test_insertion_5_prime_side(
 
     variant = Variant(loc="1:73", ref="", alt="A")
     request = AnnotationRequestFactory.create_annotation_request(
-        annotator, variant, transcript_model
+        annotator, variant, transcript_model,
     )
     effect = effect_checker.get_effect(request)
     assert effect is not None
@@ -172,11 +174,11 @@ def test_insertion_5_prime_side(
 def test_deletion_5_prime_side(
     annotator: EffectAnnotator,
     transcript_model: TranscriptModel,
-    effect_checker: CodingEffectChecker
+    effect_checker: CodingEffectChecker,
 ) -> None:
     variant = Variant(loc="1:70", ref="0", alt="")
     request = AnnotationRequestFactory.create_annotation_request(
-        annotator, variant, transcript_model
+        annotator, variant, transcript_model,
     )
     effect = effect_checker.get_effect(request)
     assert effect is not None
@@ -184,7 +186,7 @@ def test_deletion_5_prime_side(
 
     variant = Variant(loc="1:71", ref="0", alt="")
     request = AnnotationRequestFactory.create_annotation_request(
-        annotator, variant, transcript_model
+        annotator, variant, transcript_model,
     )
     effect = effect_checker.get_effect(request)
     assert effect is not None
@@ -192,7 +194,7 @@ def test_deletion_5_prime_side(
 
     variant = Variant(loc="1:72", ref="0", alt="")
     request = AnnotationRequestFactory.create_annotation_request(
-        annotator, variant, transcript_model
+        annotator, variant, transcript_model,
     )
     effect = effect_checker.get_effect(request)
     assert effect is not None
@@ -200,7 +202,7 @@ def test_deletion_5_prime_side(
 
     variant = Variant(loc="1:73", ref="0", alt="")
     request = AnnotationRequestFactory.create_annotation_request(
-        annotator, variant, transcript_model
+        annotator, variant, transcript_model,
     )
     effect = effect_checker.get_effect(request)
     assert effect is not None
@@ -210,11 +212,11 @@ def test_deletion_5_prime_side(
 def test_subs_5_prime_side(
     annotator: EffectAnnotator,
     transcript_model: TranscriptModel,
-    effect_checker: CodingEffectChecker
+    effect_checker: CodingEffectChecker,
 ) -> None:
     variant = Variant(loc="1:70", ref="A", alt="G")
     request = AnnotationRequestFactory.create_annotation_request(
-        annotator, variant, transcript_model
+        annotator, variant, transcript_model,
     )
     effect = effect_checker.get_effect(request)
     assert effect is not None
@@ -222,7 +224,7 @@ def test_subs_5_prime_side(
 
     variant = Variant(loc="1:71", ref="A", alt="G")
     request = AnnotationRequestFactory.create_annotation_request(
-        annotator, variant, transcript_model
+        annotator, variant, transcript_model,
     )
     effect = effect_checker.get_effect(request)
     assert effect is not None
@@ -230,7 +232,7 @@ def test_subs_5_prime_side(
 
     variant = Variant(loc="1:72", ref="A", alt="G")
     request = AnnotationRequestFactory.create_annotation_request(
-        annotator, variant, transcript_model
+        annotator, variant, transcript_model,
     )
     effect = effect_checker.get_effect(request)
     assert effect is not None
@@ -238,7 +240,7 @@ def test_subs_5_prime_side(
 
     variant = Variant(loc="1:73", ref="A", alt="G")
     request = AnnotationRequestFactory.create_annotation_request(
-        annotator, variant, transcript_model
+        annotator, variant, transcript_model,
     )
     effect = effect_checker.get_effect(request)
     assert effect is not None

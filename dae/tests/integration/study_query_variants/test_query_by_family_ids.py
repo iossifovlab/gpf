@@ -1,12 +1,11 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
 
-from dae.utils.regions import Region
-from dae.testing import setup_pedigree, setup_vcf, \
-    vcf_study
-from dae.testing.alla_import import alla_gpf
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.studies.study import GenotypeData
+from dae.testing import setup_pedigree, setup_vcf, vcf_study
+from dae.testing.alla_import import alla_gpf
+from dae.utils.regions import Region
 
 
 @pytest.fixture(scope="module")
@@ -58,7 +57,7 @@ chrA   2   .  A   G     .    .      .    GT     1/1  1/1  0/0 1/1 0/0  1/1
         (Region("chrA", 1, 2), ["f1", "f2"], 4),
         (Region("chrA", 1, 2), [], 0),
         (Region("chrA", 1, 2), None, 4),
-    ]
+    ],
 )
 def test_query_by_family_ids(
         imported_study: GenotypeData,

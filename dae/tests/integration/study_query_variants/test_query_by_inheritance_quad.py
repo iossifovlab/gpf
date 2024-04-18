@@ -4,12 +4,11 @@ from typing import Union, cast
 
 import pytest
 
-from dae.utils.regions import Region
-from dae.testing import setup_pedigree, setup_vcf, \
-    vcf_study
-from dae.testing.alla_import import alla_gpf
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.studies.study import GenotypeData
+from dae.testing import setup_pedigree, setup_vcf, vcf_study
+from dae.testing.alla_import import alla_gpf
+from dae.utils.regions import Region
 from dae.variants.attributes import Inheritance
 from dae.variants.family_variant import FamilyAllele
 
@@ -63,11 +62,11 @@ chrA   11  .  A   G     .    .      .    GT     1/1  1/1  1/0 1/1
                     "include_unknown_person_genotypes": True,
                     "denovo_mode": "denovo",
                     "omission_mode": "omission",
-                }
+                },
             },
             "processing_config": {
-                "include_reference": True
-            }
+                "include_reference": True,
+            },
         })
     return study
 
@@ -79,7 +78,7 @@ chrA   11  .  A   G     .    .      .    GT     1/1  1/1  1/0 1/1
         (["mendelian", "not possible_denovo"], 7),
         ("omission", 1),
         ("denovo", 1),
-    ]
+    ],
 )
 def test_inheritance_query_quad(
         quad_study: GenotypeData,
@@ -89,7 +88,7 @@ def test_inheritance_query_quad(
     vs = list(
         quad_study.query_variants(
             inheritance=inheritance,
-            return_reference=False)
+            return_reference=False),
     )
     assert len(vs) == count
 
@@ -108,8 +107,8 @@ def test_inheritance_quad_full(
         region: Region, count: int, inheritance: str) -> None:
     vs = list(
         quad_study.query_variants(
-            regions=[region], return_reference=False, return_unknown=False
-        )
+            regions=[region], return_reference=False, return_unknown=False,
+        ),
     )
     expected = Inheritance.from_name(inheritance)
     for v in vs:

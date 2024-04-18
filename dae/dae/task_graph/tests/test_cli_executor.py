@@ -1,16 +1,15 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,too-many-lines,no-member
 import argparse
-import textwrap
 import pathlib
+import textwrap
 
+import dask.distributed
 import pytest
 from pytest_mock import MockerFixture
 
-import dask.distributed
-
 import dae.dask.named_cluster
-from dae.testing import setup_directories
 from dae.task_graph import TaskGraphCli
+from dae.testing import setup_directories
 
 
 @pytest.mark.parametrize("argv", [
@@ -31,7 +30,7 @@ def test_cli_cluster_with_config_file(
             memory: 2GB
             scheduler_options:
                 dashboard_address: :8898
-        """)
+        """),
     )
     parser = argparse.ArgumentParser(description="test_basic")
     TaskGraphCli.add_arguments(parser)

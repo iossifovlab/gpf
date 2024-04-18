@@ -1,24 +1,23 @@
 from __future__ import annotations
 
-import sys
-import math
-import textwrap
-import hashlib
-import pathlib
 import configparser
+import hashlib
+import math
+import pathlib
+import sys
+import textwrap
+from collections.abc import Iterable
+from typing import Any, Optional, Union, cast
 
-from typing import Optional, Iterable, Union, Any, cast
-
-import yaml
-import toml
 import jinja2
+import toml
+import yaml
 
-from dae.variants.variant import SummaryAllele
-from dae.variants.family_variant import FamilyAllele
-from dae.variants.attributes import TransmissionType
 from dae.effect_annotation.effect import expand_effect_types
-
 from dae.utils import fs_utils
+from dae.variants.attributes import TransmissionType
+from dae.variants.family_variant import FamilyAllele
+from dae.variants.variant import SummaryAllele
 
 
 class PartitionDescriptor:
@@ -127,7 +126,7 @@ class PartitionDescriptor:
     def parse_dict(config_dict: dict[str, Any]) -> PartitionDescriptor:
         """Parse configuration dictionary and create a partion descriptor."""
         config: dict[str, Any] = {}
-        if "region_bin" in config_dict.keys():
+        if "region_bin" in config_dict:
             config["region_length"] = int(
                 config_dict["region_bin"].get("region_length", sys.maxsize))
             chromosomes = config_dict["region_bin"]["chromosomes"]
@@ -145,15 +144,15 @@ class PartitionDescriptor:
                     f"unexpected chromosomes types: {type(chromosomes)} "
                     f"{chromosomes}")
 
-        if "family_bin" in config_dict.keys():
+        if "family_bin" in config_dict:
             config["family_bin_size"] = int(
                 config_dict["family_bin"]["family_bin_size"])
 
-        if "frequency_bin" in config_dict.keys():
+        if "frequency_bin" in config_dict:
             config["rare_boundary"] = float(
                 config_dict["frequency_bin"]["rare_boundary"])
 
-        if "coding_bin" in config_dict.keys():
+        if "coding_bin" in config_dict:
             coding_effect_types = \
                 config_dict["coding_bin"]["coding_effect_types"]
             if isinstance(coding_effect_types, str):
@@ -170,7 +169,7 @@ class PartitionDescriptor:
             region_length=config.get("region_length", 0),
             family_bin_size=config.get("family_bin_size", 0),
             rare_boundary=config.get("rare_boundary", 0.0),
-            coding_effect_types=config.get("coding_effect_types")
+            coding_effect_types=config.get("coding_effect_types"),
         )
 
     def has_region_bins(self) -> bool:
@@ -279,7 +278,7 @@ class PartitionDescriptor:
 
     def summary_partition(
         self, allele: SummaryAllele,
-        seen_as_denovo: bool
+        seen_as_denovo: bool,
     ) -> list[tuple[str, str]]:
         """Produce summary partition for an allele.
 
@@ -306,7 +305,7 @@ class PartitionDescriptor:
                 str(self.make_frequency_bin(
                     allele_count=allele_count,
                     allele_freq=allele_freq,
-                    is_denovo=seen_as_denovo))
+                    is_denovo=seen_as_denovo)),
             ))
         if self.has_coding_bins():
             coding_bin = 0
@@ -320,7 +319,7 @@ class PartitionDescriptor:
 
     def family_partition(
         self, allele: FamilyAllele,
-        seen_as_denovo: bool
+        seen_as_denovo: bool,
     ) -> list[tuple[str, str]]:
         """Produce family partition for an allele.
 
@@ -339,12 +338,12 @@ class PartitionDescriptor:
         if self.has_family_bins():
             partition.append((
                 "family_bin",
-                str(self.make_family_bin(allele.family_id))
+                str(self.make_family_bin(allele.family_id)),
             ))
         return partition
 
     def schema1_partition(
-        self, allele: FamilyAllele
+        self, allele: FamilyAllele,
     ) -> list[tuple[str, str]]:
         """Produce Schema1 family partition for an allele.
 
@@ -364,7 +363,7 @@ class PartitionDescriptor:
         if self.has_family_bins():
             partition.append((
                 "family_bin",
-                str(self.make_family_bin(allele.family_id))
+                str(self.make_family_bin(allele.family_id)),
             ))
         return partition
 
@@ -388,17 +387,17 @@ class PartitionDescriptor:
                     summary_parts.append([("region_bin", f"other_{bin_i}")])
         if self.has_frequency_bins():
             summary_parts = self._add_product(
-                summary_parts, [("frequency_bin", str(i)) for i in range(4)]
+                summary_parts, [("frequency_bin", str(i)) for i in range(4)],
             )
         if self.has_coding_bins():
             summary_parts = self._add_product(
-                summary_parts, [("coding_bin", str(i)) for i in range(2)]
+                summary_parts, [("coding_bin", str(i)) for i in range(2)],
             )
 
         if self.has_family_bins():
             family_parts = self._add_product(
                 summary_parts,
-                [("family_bin", str(i)) for i in range(self.family_bin_size)]
+                [("family_bin", str(i)) for i in range(self.family_bin_size)],
             )
         else:
             family_parts = summary_parts

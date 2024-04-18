@@ -1,8 +1,8 @@
 # pylint: disable=C0116
 
 from dae.genomic_resources.cnv_collection import CnvCollection
-from dae.genomic_resources.testing import build_inmemory_test_resource
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME
+from dae.genomic_resources.testing import build_inmemory_test_resource
 
 
 def test_cnv_collection_resource() -> None:
@@ -35,7 +35,7 @@ def test_cnv_collection_resource() -> None:
             2      16         20       0.3        SSC        affected
             2      200        203      0.0002     AGRE       unaffected
             15     16         20       0.2        AGRE       affected
-        """
+        """,
     })
     assert res.get_type() == "cnv_collection"
 

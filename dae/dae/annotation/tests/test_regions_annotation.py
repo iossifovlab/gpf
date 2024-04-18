@@ -1,15 +1,16 @@
 # pylint: disable=redefined-outer-name,C0114,C0116,protected-access,fixme
 
 import textwrap
+
 import pytest
 
-from dae.genomic_resources.repository import GenomicResourceRepo
-from dae.genomic_resources.testing import build_inmemory_test_repository
 from dae.annotation.annotatable import Region
 from dae.annotation.annotation_factory import build_annotation_pipeline
+from dae.genomic_resources.repository import GenomicResourceRepo
+from dae.genomic_resources.testing import build_inmemory_test_repository
 
 
-@pytest.fixture
+@pytest.fixture()
 def fixture_repo() -> GenomicResourceRepo:
     repo = build_inmemory_test_repository({
         "position_score1": {
@@ -32,7 +33,7 @@ def fixture_repo() -> GenomicResourceRepo:
                 chr1   10         19       1.0
                 chr1   20         29       2.0
                 chr1   30         39       3.0
-            """
+            """,
         },
         "np_score1": {
             "genomic_resource.yaml": textwrap.dedent("""
@@ -66,7 +67,7 @@ def fixture_repo() -> GenomicResourceRepo:
                 chr1   14         T          A            0.1
                 chr1   14         T          C            0.2
                 chr1   14         T          G            0.4
-            """
+            """,
         },
         "allele_score1": {
             "genomic_resource.yaml": textwrap.dedent("""
@@ -96,7 +97,7 @@ def fixture_repo() -> GenomicResourceRepo:
                 chr1   13         C          G            0.02
                 chr1   14         T          A            0.1
                 chr1   14         T          C            0.2
-            """
+            """,
         },
     })
 

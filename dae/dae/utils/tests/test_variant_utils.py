@@ -1,14 +1,19 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 from typing import List, Union
 
-import pytest
 import numpy as np
+import pytest
 
-from dae.utils.variant_utils import get_locus_ploidy, reverse_complement, \
-    gt2str, str2gt, trim_str_right, trim_str_left, \
-    trim_parsimonious
+from dae.utils.variant_utils import (
+    get_locus_ploidy,
+    gt2str,
+    reverse_complement,
+    str2gt,
+    trim_parsimonious,
+    trim_str_left,
+    trim_str_right,
+)
 from dae.variants.attributes import Sex
-
 
 chroms: List[Union[int, str]] = list(range(1, 23))
 chroms.append("Y")
@@ -60,15 +65,15 @@ def test_reverse_complement(dna, expected):
 @pytest.mark.parametrize("gt,expected", [
     (
         np.array([[0, 0, 0], [0, 1, 0]], dtype=np.int8),
-        "0/0,0/1,0/0"
+        "0/0,0/1,0/0",
     ),
     (
         np.array([[0, 0, 0], [0, -1, 0]], dtype=np.int8),
-        "0/0,0/.,0/0"
+        "0/0,0/.,0/0",
     ),
     (
         np.array([[0, 1, 0], [0, -1, 0]], dtype=np.int8),
-        "0/0,1/.,0/0"
+        "0/0,1/.,0/0",
     ),
 ])
 def test_gt2str(gt, expected):

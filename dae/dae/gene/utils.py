@@ -2,6 +2,7 @@
 
 import sys
 from copy import deepcopy
+
 from box import Box
 
 from dae.configuration.gpf_config_parser import FrozenBox
@@ -32,7 +33,7 @@ def rename_gene_terms(config, gene_terms, inNS):
         result.renameGenes("sym", rF)
     elif result.geneNS == "sym" and inNS == "id":
         result.renameGenes(
-            "id", lambda x: getCleanGeneId(config, "sym", x)
+            "id", lambda x: getCleanGeneId(config, "sym", x),
         )
     return result
 
@@ -131,12 +132,12 @@ def getCleanGeneId(config, ns, t):
     ns_tokens = getNsTokens(config)
 
     if ns not in ns_tokens:
-        return
+        return None
     allTokens = ns_tokens[ns]
     if t not in allTokens:
-        return
+        return None
     if len(allTokens[t]) != 1:
-        return
+        return None
     return allTokens[t][0].id
 
 

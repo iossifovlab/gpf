@@ -1,6 +1,6 @@
 from django.urls import re_path
-from . import views
 
+from . import views
 
 urlpatterns = [
     re_path(
@@ -11,6 +11,6 @@ urlpatterns = [
     re_path(
         r"^/test/?$",
         views.EnrichmentTestView.as_view(),
-        name="enrichment_test"
+        name="enrichment_test",
     ),
 ]

@@ -4,11 +4,11 @@ from remote.remote_phenotype_data import RemotePhenotypeData
 
 def test_extract_url() -> None:
     extracted = RemotePhenotypeData._extract_pheno_dir(
-        "testing/static/images/pheno_id"
+        "testing/static/images/pheno_id",
     )
     assert extracted == "pheno_id"
 
     extracted = RemotePhenotypeData._extract_pheno_dir(
-        "testing/static/images/pheno_id///"
+        "testing/static/images/pheno_id///",
     )
     assert extracted == "pheno_id"

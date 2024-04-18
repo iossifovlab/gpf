@@ -1,9 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,too-many-lines
 import argparse
 
-
-from dae.task_graph import TaskGraph
-from dae.task_graph import TaskGraphCli
+from dae.task_graph import TaskGraph, TaskGraphCli
 
 
 def test_basic_default_executor() -> None:

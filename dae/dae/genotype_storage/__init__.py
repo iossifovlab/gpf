@@ -1,8 +1,7 @@
 import logging
-from typing import Callable, Dict, Any, List
+from typing import Any, Callable, Dict, List
 
 from .genotype_storage import GenotypeStorage
-
 
 logger = logging.getLogger(__file__)
 

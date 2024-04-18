@@ -18,7 +18,7 @@ from dae.variants.variant import SummaryAllele
 def test_dae2vcf(
     mocker: MockerFixture,
     variant: str, check_pos: int, check_cshl_pos: int,
-    check_ref: str, check_alt: str
+    check_ref: str, check_alt: str,
 ) -> None:
 
     genome = mocker.Mock()

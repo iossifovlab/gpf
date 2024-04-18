@@ -1,34 +1,44 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-import os
 import argparse
+import os
 from typing import Callable, Optional
 
 import pytest
 import pytest_mock
 
-from dae.genomic_resources.genomic_context import \
-    GenomicContext, \
-    PriorityGenomicContext, CLIGenomicContext, \
-    SimpleGenomicContext, \
-    SimpleGenomicContextProvider, \
-    get_genomic_context, register_context, register_context_provider
-from dae.genomic_resources.reference_genome import ReferenceGenome, \
-    build_reference_genome_from_resource
-from dae.genomic_resources.gene_models import GeneModels, \
-    build_gene_models_from_resource
-from dae.genomic_resources.repository import GenomicResourceProtocolRepo, \
-    GenomicResourceRepo
+from dae.genomic_resources.gene_models import (
+    GeneModels,
+    build_gene_models_from_resource,
+)
+from dae.genomic_resources.genomic_context import (
+    CLIGenomicContext,
+    GenomicContext,
+    PriorityGenomicContext,
+    SimpleGenomicContext,
+    SimpleGenomicContextProvider,
+    get_genomic_context,
+    register_context,
+    register_context_provider,
+)
+from dae.genomic_resources.reference_genome import (
+    ReferenceGenome,
+    build_reference_genome_from_resource,
+)
+from dae.genomic_resources.repository import (
+    GenomicResourceProtocolRepo,
+    GenomicResourceRepo,
+)
 
 
-@pytest.fixture
+@pytest.fixture()
 def context_fixture(
-    fixture_dirname: Callable, mocker: pytest_mock.MockerFixture
+    fixture_dirname: Callable, mocker: pytest_mock.MockerFixture,
 ) -> GenomicContext:
     conf_dir = fixture_dirname("")
     home_dir = os.environ["HOME"]
     mocker.patch("os.environ", {
         "DAE_DB_DIR": conf_dir,
-        "HOME": home_dir
+        "HOME": home_dir,
     })
     mocker.patch(
         "dae.genomic_resources.genomic_context._REGISTERED_CONTEXT_PROVIDERS",
@@ -43,7 +53,7 @@ def context_fixture(
 
 
 def test_get_reference_genome_ok(
-    grr_fixture: GenomicResourceProtocolRepo
+    grr_fixture: GenomicResourceProtocolRepo,
 ) -> None:
     # Given
     res = grr_fixture.get_resource("hg38/GRCh38-hg38/genome")
@@ -52,7 +62,7 @@ def test_get_reference_genome_ok(
 
     context = SimpleGenomicContext(
         context_objects={
-            "reference_genome": genome
+            "reference_genome": genome,
         },
         source=("genome_context", ))
 
@@ -82,7 +92,7 @@ def test_get_reference_genome_missing() -> None:
 def test_get_reference_genome_bad() -> None:
     context = SimpleGenomicContext(
         context_objects={
-            "reference_genome": "bla"
+            "reference_genome": "bla",
         },
         source=("bad_genome_context", ))
 
@@ -101,7 +111,7 @@ def test_get_gene_models_ok(grr_fixture: GenomicResourceProtocolRepo) -> None:
 
     context = SimpleGenomicContext(
         context_objects={
-            "gene_models": gene_models
+            "gene_models": gene_models,
         },
         source=("gene_models", ))
 
@@ -124,7 +134,7 @@ def test_get_gene_models_missing() -> None:
 def test_get_gene_models_bad() -> None:
     context = SimpleGenomicContext(
         context_objects={
-            "gene_models": "bla"
+            "gene_models": "bla",
         },
         source=("bad_genes_context", ))
 
@@ -139,7 +149,7 @@ def test_get_grr_ok(grr_fixture: GenomicResourceProtocolRepo) -> None:
     # Given
     context = SimpleGenomicContext(
         context_objects={
-            "genomic_resources_repository": grr_fixture
+            "genomic_resources_repository": grr_fixture,
         },
         source=("grr_context", ))
 
@@ -168,7 +178,7 @@ def test_get_grr_missing() -> None:
 def test_get_grr_bad() -> None:
     context = SimpleGenomicContext(
         context_objects={
-            "genomic_resources_repository": "bla"
+            "genomic_resources_repository": "bla",
         },
         source=("bad_grr_context", ))
 
@@ -180,18 +190,18 @@ def test_get_grr_bad() -> None:
 
 
 def test_cli_genomic_context_reference_genome(
-    fixture_dirname: Callable
+    fixture_dirname: Callable,
 ) -> None:
     # Given
     parser = argparse.ArgumentParser(
         description="Test CLI genomic context",
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     CLIGenomicContext.add_context_arguments(parser)
 
     argv = [
         "--grr-directory", fixture_dirname("genomic_resources"),
-        "--ref", "hg38/GRCh38-hg38/genome"
+        "--ref", "hg38/GRCh38-hg38/genome",
     ]
 
     # When
@@ -212,13 +222,13 @@ def test_cli_genomic_context_gene_models(fixture_dirname: Callable) -> None:
     # Given
     parser = argparse.ArgumentParser(
         description="Test CLI genomic context",
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     CLIGenomicContext.add_context_arguments(parser)
 
     argv = [
         "--grr-directory", fixture_dirname("genomic_resources"),
-        "--genes", "hg38/GRCh38-hg38/gene_models/refSeq_20200330"
+        "--genes", "hg38/GRCh38-hg38/gene_models/refSeq_20200330",
     ]
 
     # When
@@ -236,9 +246,9 @@ def test_cli_genomic_context_gene_models(fixture_dirname: Callable) -> None:
         "hg38/GRCh38-hg38/gene_models/refSeq_20200330"
 
 
-@pytest.fixture
+@pytest.fixture()
 def contexts(
-    grr_fixture: GenomicResourceProtocolRepo
+    grr_fixture: GenomicResourceProtocolRepo,
 ) -> tuple[SimpleGenomicContext, SimpleGenomicContext]:
     gene_models1 = build_gene_models_from_resource(
         grr_fixture.get_resource(
@@ -246,7 +256,7 @@ def contexts(
 
     context1 = SimpleGenomicContext(
         context_objects={
-            "gene_models": gene_models1
+            "gene_models": gene_models1,
         },
         source=("gene_models1", ))
     gene_models2 = build_gene_models_from_resource(
@@ -256,7 +266,7 @@ def contexts(
 
     context2 = SimpleGenomicContext(
         context_objects={
-            "gene_models": gene_models2
+            "gene_models": gene_models2,
         },
         source=("gene_models2", ))
     return context1, context2
@@ -264,7 +274,7 @@ def contexts(
 
 def test_register_context(
     context_fixture: PriorityGenomicContext,
-    contexts: tuple[SimpleGenomicContext, SimpleGenomicContext]
+    contexts: tuple[SimpleGenomicContext, SimpleGenomicContext],
 ) -> None:
     # Given:
     context1, context2 = contexts
@@ -283,7 +293,7 @@ def test_register_context(
 
 def test_register_context_provider(
     context_fixture: PriorityGenomicContext,
-    contexts: tuple[SimpleGenomicContext, SimpleGenomicContext]
+    contexts: tuple[SimpleGenomicContext, SimpleGenomicContext],
 ) -> None:
     # Given:
     context1, context2 = contexts
@@ -292,13 +302,13 @@ def test_register_context_provider(
         SimpleGenomicContextProvider(
             lambda: context2,
             "gene_models2",
-            2)
+            2),
     )
     register_context_provider(
         SimpleGenomicContextProvider(
             lambda: context1,
             "gene_models1",
-            1)
+            1),
     )
 
     # When

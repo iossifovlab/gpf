@@ -1,15 +1,20 @@
+import logging
 import os
 import shutil
-import logging
 from typing import Any, Optional
 
-from dae.variants_loaders.raw.loader import StoredAnnotationDecorator, \
-    VariantsLoader, VariantsGenotypesLoader
 from dae.configuration.study_config_builder import StudyConfigBuilder
-from dae.import_tools.import_tools import ImportProject, ImportStorage, \
-    save_study_config
+from dae.import_tools.import_tools import (
+    ImportProject,
+    ImportStorage,
+    save_study_config,
+)
 from dae.task_graph.graph import TaskGraph
-
+from dae.variants_loaders.raw.loader import (
+    StoredAnnotationDecorator,
+    VariantsGenotypesLoader,
+    VariantsLoader,
+)
 
 logger = logging.getLogger(__file__)
 
@@ -44,7 +49,7 @@ class InmemoryImportStorage(ImportStorage):
             cls, project: ImportProject) -> dict[str, Any]:
         genotype_storage = project.get_genotype_storage()
         if genotype_storage.read_only:
-            raise IOError(
+            raise OSError(
                 f"genotype storage is read-only: "
                 f"{genotype_storage.storage_id}")
 
@@ -59,7 +64,7 @@ class InmemoryImportStorage(ImportStorage):
     @classmethod
     def _decorate_variants_loader(
         cls, project: ImportProject,
-        variants_loader: VariantsGenotypesLoader
+        variants_loader: VariantsGenotypesLoader,
     ) -> VariantsLoader:
         result_loader = project.build_variants_loader_pipeline(
             variants_loader)
@@ -71,7 +76,7 @@ class InmemoryImportStorage(ImportStorage):
             loader_type: Optional[str] = None) -> list[dict[str, Any]]:
         genotype_storage = project.get_genotype_storage()
         if genotype_storage.read_only:
-            raise IOError(
+            raise OSError(
                 f"genotype storage is read-only: "
                 f"{genotype_storage.storage_id}")
 
@@ -113,7 +118,7 @@ class InmemoryImportStorage(ImportStorage):
             variants_config.append({
                 "path": " ".join(config_filenames),  # FIXME: switch to list
                 "params": variants_loader.build_arguments_dict(),
-                "format": variants_type
+                "format": variants_type,
             })
         return variants_config
 
@@ -121,7 +126,7 @@ class InmemoryImportStorage(ImportStorage):
     def _do_study_import(cls, project: ImportProject) -> None:
         genotype_storage = project.get_genotype_storage()
         if genotype_storage.read_only:
-            raise IOError(
+            raise OSError(
                 f"genotype storage is read-only: "
                 f"{genotype_storage.storage_id}")
         pedigree_config = cls._do_copy_pedigree(project)
@@ -137,8 +142,8 @@ class InmemoryImportStorage(ImportStorage):
                 "files": {
                     "pedigree": pedigree_config,
                     "variants": variants_config,
-                }
-            }
+                },
+            },
         }
         config_builder = StudyConfigBuilder(config)
         study_config = config_builder.build_config()

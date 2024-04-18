@@ -1,5 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
+
 from dae.effect_annotation.effect import EffectTypesMixin
 
 
@@ -14,7 +15,7 @@ def test_build_effect_types(query_base):
 
     res = query_base.build_effect_types(effect_types)
     assert res is not None
-    assert ["frame-shift", "nonsense", "splice-site", "non-coding"] == res
+    assert res == ["frame-shift", "nonsense", "splice-site", "non-coding"]
 
 
 def test_build_effect_types_lgds(query_base):
@@ -23,7 +24,7 @@ def test_build_effect_types_lgds(query_base):
     res = query_base.build_effect_types(effect_types)
     assert res is not None
     assert set(
-        ["frame-shift", "nonsense", "splice-site", "no-frame-shift-newStop"]
+        ["frame-shift", "nonsense", "splice-site", "no-frame-shift-newStop"],
     ) == set(res)
 
 
@@ -41,7 +42,7 @@ def test_build_effect_types_mixed(query_base):
             "CNV+",
             "CNV-",
             "noStart",
-        ]
+        ],
     ) == set(res)
 
 
@@ -57,7 +58,7 @@ def test_build_effect_types_bad_not_safe(query_base):
 
     res = query_base.build_effect_types(effect_types, safe=False)
     assert set(
-        ["frame-shift", "nonsense", "splice-site", "no-frame-shift-newStop"]
+        ["frame-shift", "nonsense", "splice-site", "no-frame-shift-newStop"],
     ) == set(res)
 
 

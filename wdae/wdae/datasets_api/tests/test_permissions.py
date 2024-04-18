@@ -3,26 +3,26 @@ from typing import cast
 
 import pytest
 from box import Box
-
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import AnonymousUser
+from django.contrib.auth.models import AnonymousUser, User
 from django.test import override_settings
 from django.test.client import Client
-from django.contrib.auth.models import User
-
+from gpf_instance.gpf_instance import WGPFInstance, reload_datasets
 from studies.study_wrapper import StudyWrapper
-from datasets_api.models import Dataset
-from datasets_api.permissions import user_has_permission, \
-    add_group_perm_to_user, \
-    add_group_perm_to_dataset, \
-    get_allowed_genotype_data, \
-    get_allowed_genotype_studies, \
-    get_user_groups, get_dataset_groups, \
-    get_directly_allowed_genotype_data, \
-    _user_has_permission_strict
-from gpf_instance.gpf_instance import reload_datasets, WGPFInstance
 
 from dae.studies.study import GenotypeDataGroup
+from datasets_api.models import Dataset
+from datasets_api.permissions import (
+    _user_has_permission_strict,
+    add_group_perm_to_dataset,
+    add_group_perm_to_user,
+    get_allowed_genotype_data,
+    get_allowed_genotype_studies,
+    get_dataset_groups,
+    get_directly_allowed_genotype_data,
+    get_user_groups,
+    user_has_permission,
+)
 
 pytestmark = pytest.mark.usefixtures("db")
 
@@ -30,7 +30,7 @@ pytestmark = pytest.mark.usefixtures("db")
 @pytest.fixture()
 def dataset_wrapper(
     request: pytest.FixtureRequest,
-    wdae_gpf_instance: WGPFInstance
+    wdae_gpf_instance: WGPFInstance,
 ) -> StudyWrapper:
     dataset1_wrapper = cast(
         StudyWrapper, wdae_gpf_instance.get_wdae_wrapper("Dataset1"))
@@ -90,7 +90,7 @@ def dataset_wrapper(
 def test_parents(
     admin_client: Client,
     wdae_gpf_instance: WGPFInstance,
-    dataset_wrapper: StudyWrapper
+    dataset_wrapper: StudyWrapper,
 ) -> None:
     assert dataset_wrapper.parents == set()
 
@@ -113,12 +113,12 @@ def test_parents(
 def test_datasets_studies_ids(
     admin_client: Client,
     wdae_gpf_instance: WGPFInstance,
-    dataset_wrapper: StudyWrapper
+    dataset_wrapper: StudyWrapper,
 ) -> None:
 
     study_ids = dataset_wrapper.get_studies_ids()
     assert set(study_ids) == set(
-        ["Dataset", "Dataset1", "Dataset2", "Study1", "Study2", "Study3"]
+        ["Dataset", "Dataset1", "Dataset2", "Study1", "Study2", "Study3"],
     )
 
     study_ids = dataset_wrapper.get_studies_ids(leaves=False)
@@ -126,21 +126,21 @@ def test_datasets_studies_ids(
 
 
 def test_dataset_rights(
-    user: User, dataset_wrapper: StudyWrapper
+    user: User, dataset_wrapper: StudyWrapper,
 ) -> None:
     add_group_perm_to_user(dataset_wrapper.study_id, user)
     assert user_has_permission("test_data", user, dataset_wrapper.study_id)
 
 
 def test_dataset1_rights(
-    user: User, dataset_wrapper: StudyWrapper
+    user: User, dataset_wrapper: StudyWrapper,
 ) -> None:
     add_group_perm_to_user("Dataset1", user)
     assert user_has_permission("test_data", user, dataset_wrapper.study_id)
 
 
 def test_dataset_rights_any_user(
-    dataset_wrapper: StudyWrapper
+    dataset_wrapper: StudyWrapper,
 ) -> None:
     user = cast(User, AnonymousUser())
     assert not user_has_permission("test_data", user, dataset_wrapper.study_id)
@@ -149,7 +149,7 @@ def test_dataset_rights_any_user(
 
 
 def test_dataset1_rights_allowed_datasets(
-    user: User, dataset_wrapper: StudyWrapper
+    user: User, dataset_wrapper: StudyWrapper,
 ) -> None:
     add_group_perm_to_user("Dataset1", user)
     result = get_allowed_genotype_data(
@@ -163,7 +163,7 @@ def test_dataset1_rights_allowed_datasets(
 
 def test_dataset2_rights_allowed_datasets(
     user: User,
-    dataset_wrapper: StudyWrapper
+    dataset_wrapper: StudyWrapper,
 ) -> None:
     add_group_perm_to_user("Dataset2", user)
     result = get_allowed_genotype_data(
@@ -176,7 +176,7 @@ def test_dataset2_rights_allowed_datasets(
 
 
 def test_study1_and_dataset2_rights_allowed_datasets(
-    user: User, dataset_wrapper: StudyWrapper
+    user: User, dataset_wrapper: StudyWrapper,
 ) -> None:
 
     add_group_perm_to_user("Dataset2", user)
@@ -193,7 +193,7 @@ def test_study1_and_dataset2_rights_allowed_datasets(
 
 def test_top_level_study_access(
     user: User,
-    wdae_gpf_instance: WGPFInstance
+    wdae_gpf_instance: WGPFInstance,
 ) -> None:
     assert not user_has_permission("test_data", user, "comp")
     add_group_perm_to_user("comp", user)
@@ -201,7 +201,7 @@ def test_top_level_study_access(
 
 
 def test_dataset_group_rights(
-    user: User, dataset_wrapper: StudyWrapper
+    user: User, dataset_wrapper: StudyWrapper,
 ) -> None:
     add_group_perm_to_user("A", user)
     add_group_perm_to_dataset("A", dataset_wrapper.study_id)
@@ -210,7 +210,7 @@ def test_dataset_group_rights(
 
 
 def test_dataset_group_rights_gives_access_to_all_studies(
-    user: User, dataset_wrapper: StudyWrapper
+    user: User, dataset_wrapper: StudyWrapper,
 ) -> None:
     add_group_perm_to_user("A", user)
     add_group_perm_to_dataset("A", dataset_wrapper.study_id)
@@ -221,7 +221,7 @@ def test_dataset_group_rights_gives_access_to_all_studies(
 
 
 def test_dataset_group_rights_gives_access_to_all_datasets(
-    user: User, dataset_wrapper: StudyWrapper
+    user: User, dataset_wrapper: StudyWrapper,
 ) -> None:
     add_group_perm_to_user("A", user)
     add_group_perm_to_dataset("A", dataset_wrapper.study_id)
@@ -232,7 +232,7 @@ def test_dataset_group_rights_gives_access_to_all_datasets(
 
 
 def test_dataset1_group_rights(
-    user: User, dataset_wrapper: StudyWrapper
+    user: User, dataset_wrapper: StudyWrapper,
 ) -> None:
     add_group_perm_to_user("A", user)
     add_group_perm_to_dataset("A", "Dataset1")
@@ -241,7 +241,7 @@ def test_dataset1_group_rights(
 
 
 def test_dataset1_group_rights_gives_access_to_study1_and_study3(
-    user: User, dataset_wrapper: StudyWrapper
+    user: User, dataset_wrapper: StudyWrapper,
 ) -> None:
     add_group_perm_to_user("A", user)
     add_group_perm_to_dataset("A", "Dataset1")
@@ -253,7 +253,7 @@ def test_dataset1_group_rights_gives_access_to_study1_and_study3(
 
 
 def test_study1_and_dataset2_group_rights_allowed_datasets(
-    user: User, dataset_wrapper: StudyWrapper
+    user: User, dataset_wrapper: StudyWrapper,
 ) -> None:
 
     add_group_perm_to_user("A", user)
@@ -270,7 +270,7 @@ def test_study1_and_dataset2_group_rights_allowed_datasets(
 
 
 def test_dataset_any_dataset_group_rights(
-    user: User, dataset_wrapper: StudyWrapper
+    user: User, dataset_wrapper: StudyWrapper,
 ) -> None:
     add_group_perm_to_user("any_dataset", user)
 
@@ -279,7 +279,7 @@ def test_dataset_any_dataset_group_rights(
     result = get_allowed_genotype_data(
         "test_data", user, dataset_wrapper.study_id)
     assert result == set([
-        "Dataset", "Dataset1", "Dataset2", "Study1", "Study2", "Study3"
+        "Dataset", "Dataset1", "Dataset2", "Study1", "Study2", "Study3",
     ])
 
     result = get_allowed_genotype_studies(
@@ -288,7 +288,7 @@ def test_dataset_any_dataset_group_rights(
 
 
 def test_dataset_admin_group_rights(
-    user: User, dataset_wrapper: StudyWrapper
+    user: User, dataset_wrapper: StudyWrapper,
 ) -> None:
     add_group_perm_to_user("admin", user)
 
@@ -297,7 +297,7 @@ def test_dataset_admin_group_rights(
     result = get_allowed_genotype_data(
         "test_data", user, dataset_wrapper.study_id)
     assert result == set([
-        "Dataset", "Dataset1", "Dataset2", "Study1", "Study2", "Study3"
+        "Dataset", "Dataset1", "Dataset2", "Study1", "Study2", "Study3",
     ])
 
     result = get_allowed_genotype_studies(
@@ -306,7 +306,7 @@ def test_dataset_admin_group_rights(
 
 
 def test_explore_datasets_users_and_groups(
-    user: User, dataset_wrapper: StudyWrapper
+    user: User, dataset_wrapper: StudyWrapper,
 ) -> None:
     add_group_perm_to_user("A", user)
     add_group_perm_to_dataset("A", "Dataset")
@@ -332,7 +332,7 @@ def na_user() -> User:
 
 
 def test_explore_datasets_nauser_and_groups(
-    na_user: User, dataset_wrapper: StudyWrapper
+    na_user: User, dataset_wrapper: StudyWrapper,
 ) -> None:
     add_group_perm_to_user("A", na_user)
     add_group_perm_to_dataset("A", "Dataset")
@@ -344,7 +344,7 @@ def test_explore_datasets_nauser_and_groups(
 
 
 def test_get_allowed_datasets_for_na_user_strict(
-    na_user: User, dataset_wrapper: StudyWrapper
+    na_user: User, dataset_wrapper: StudyWrapper,
 ) -> None:
     add_group_perm_to_user("A", na_user)
     add_group_perm_to_dataset("A", "Dataset")
@@ -356,7 +356,7 @@ def test_get_allowed_datasets_for_na_user_strict(
 
 
 def test_get_directly_allowed_genotype_data(
-    user: User, dataset_wrapper: StudyWrapper
+    user: User, dataset_wrapper: StudyWrapper,
 ) -> None:
     add_group_perm_to_user("A", user)
     add_group_perm_to_dataset("A", "Dataset")
@@ -368,7 +368,7 @@ def test_get_directly_allowed_genotype_data(
 
 
 def test_get_allowed_dataset_from_parent(
-    user: User, dataset_wrapper: StudyWrapper
+    user: User, dataset_wrapper: StudyWrapper,
 ) -> None:
     add_group_perm_to_user("A", user)
     add_group_perm_to_dataset("A", "Dataset")
@@ -379,7 +379,7 @@ def test_get_allowed_dataset_from_parent(
 
 @override_settings(DISABLE_PERMISSIONS=True)
 def test_disable_permissions_flag_allows_all(
-    na_user: User, dataset_wrapper: StudyWrapper
+    na_user: User, dataset_wrapper: StudyWrapper,
 ) -> None:
     data_ids = {*dataset_wrapper.get_studies_ids(),
                 *dataset_wrapper.get_studies_ids(leaves=False)}
@@ -388,7 +388,7 @@ def test_disable_permissions_flag_allows_all(
 
 
 def test_unregistered_dataset_does_not_propagate_permissions(
-    wdae_gpf_instance: WGPFInstance
+    wdae_gpf_instance: WGPFInstance,
 ) -> None:
     """
     Test for faulty permissions propagations.
@@ -443,5 +443,5 @@ def test_unregistered_dataset_does_not_propagate_permissions(
     user = AnonymousUser()
 
     assert user_has_permission(
-        "test_data", cast(User, user), study1.study_id
+        "test_data", cast(User, user), study1.study_id,
     ) is False

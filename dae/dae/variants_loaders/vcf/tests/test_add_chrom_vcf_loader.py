@@ -1,12 +1,12 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
 
-from dae.testing import setup_pedigree, setup_vcf, acgt_gpf
 from dae.pedigrees.loader import FamiliesLoader
+from dae.testing import acgt_gpf, setup_pedigree, setup_vcf
 from dae.variants_loaders.vcf.loader import VcfLoader
 
 
-@pytest.fixture
+@pytest.fixture()
 def trio_families(tmp_path_factory):
     root_path = tmp_path_factory.mktemp(
         "vcf_add_chrom_trio_families")
@@ -22,7 +22,7 @@ def trio_families(tmp_path_factory):
     return loader.load()
 
 
-@pytest.fixture
+@pytest.fixture()
 def trio_gpf(tmp_path_factory):
     root_path = tmp_path_factory.mktemp(
         "vcf_acgt_gpf_instance")
@@ -30,7 +30,7 @@ def trio_gpf(tmp_path_factory):
     return gpf_instance
 
 
-@pytest.fixture
+@pytest.fixture()
 def trio_vcf(tmp_path_factory):
     root_path = tmp_path_factory.mktemp(
         "vcf_add_chrom_trio")
@@ -65,7 +65,7 @@ def trio_vcf(tmp_path_factory):
         ("chr1:5-8", 3),
         ("chr2:1-4", 3),
         ("chr2:5-8", 3),
-    ]
+    ],
 )
 def test_add_chrom_reset_region(
         trio_families, trio_gpf, trio_vcf,

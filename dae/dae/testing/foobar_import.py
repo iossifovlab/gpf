@@ -1,17 +1,15 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
-
 from typing import Optional
 
-from dae.testing import \
-    setup_genome, setup_gene_models, setup_gpf_instance
-from dae.genomic_resources.repository_factory import \
-    build_genomic_resource_repository
 from dae.genomic_resources.gene_models import GeneModels
 from dae.genomic_resources.reference_genome import ReferenceGenome
+from dae.genomic_resources.repository_factory import (
+    build_genomic_resource_repository,
+)
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.gpf_instance.gpf_instance import GPFInstance
-
+from dae.testing import setup_gene_models, setup_genome, setup_gpf_instance
 
 # this content follows the 'refflat' gene model format
 GMM_CONTENT = """
@@ -41,7 +39,7 @@ def foobar_genome(root_path: pathlib.Path) -> ReferenceGenome:
             NNGGGCCTTC
             CACGACCCAA
             NN
-        """
+        """,
     )
     return genome
 
@@ -60,7 +58,7 @@ def foobar_gpf(
             NNGGGCCTTC
             CACGACCCAA
             NN
-        """
+        """,
     )
     setup_gene_models(
         root_path / "foobar_genes" / "genes.txt",
@@ -68,7 +66,7 @@ def foobar_gpf(
     local_repo = build_genomic_resource_repository({
         "id": "foobar_local",
         "type": "directory",
-        "directory": str(root_path)
+        "directory": str(root_path),
     })
 
     gpf_instance = setup_gpf_instance(

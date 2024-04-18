@@ -63,8 +63,7 @@ def phase(inp):
 
     chSts = set()
 
-    for c in range(2, P):
-        chSts.add(str(np.array([st[:, c] for st in inp])))
+    chSts.update(str(np.array([st[:, c] for st in inp])) for c in range(2, P))
 
     # pylint: disable=too-many-nested-blocks
     posFamilyPhs = []

@@ -1,25 +1,23 @@
 """Genotype browser routes for browsing and listing variants in studies."""
-import logging
 import itertools
+import logging
 from typing import Union
 
-from django.http.response import StreamingHttpResponse, FileResponse
-
-from rest_framework import status
-from rest_framework.response import Response
-from rest_framework.request import Request
-
-from utils.logger import request_logging
-from utils.streaming_response_util import iterator_to_json
-from utils.query_params import parse_query_params
-from utils.expand_gene_set import expand_gene_set, expand_gene_syms
-
+from datasets_api.permissions import (
+    handle_partial_permissions,
+    user_has_permission,
+)
+from django.http.response import FileResponse, StreamingHttpResponse
 from query_base.query_base import QueryDatasetView
-
+from rest_framework import status
+from rest_framework.request import Request
+from rest_framework.response import Response
 from studies.study_wrapper import StudyWrapperBase
+from utils.expand_gene_set import expand_gene_set, expand_gene_syms
+from utils.logger import request_logging
+from utils.query_params import parse_query_params
+from utils.streaming_response_util import iterator_to_json
 
-from datasets_api.permissions import handle_partial_permissions, \
-    user_has_permission
 from dae.utils.dae_utils import join_line
 
 logger = logging.getLogger(__name__)
@@ -159,7 +157,7 @@ class GenotypeBrowserQueryView(QueryDatasetView):
             else:
                 cols = dataset.config.genotype_browser.preview_columns
             sources = StudyWrapperBase.get_columns_as_sources(
-                dataset.config, cols
+                dataset.config, cols,
             )
 
         handle_partial_permissions(self.instance_id, user, dataset_id, data)
@@ -169,14 +167,14 @@ class GenotypeBrowserQueryView(QueryDatasetView):
             result = dataset.query_variants_wdae(
                 data, sources,
                 max_variants_count=max_variants,
-                max_variants_message=is_download
+                max_variants_message=is_download,
             )
             columns = [s.get("name", s["source"]) for s in sources]
             result = map(
                 join_line, itertools.chain([columns], result))  # type: ignore
             response = FileResponse(
                 result, filename="variants.tsv",
-                as_attachment=True, content_type="text/tsv"
+                as_attachment=True, content_type="text/tsv",
             )
             response["Content-Disposition"] = \
                 "attachment; filename=variants.tsv"
@@ -185,7 +183,7 @@ class GenotypeBrowserQueryView(QueryDatasetView):
             stream = dataset.query_variants_wdae_streaming(
                 data, sources,
                 max_variants_count=max_variants,
-                max_variants_message=is_download
+                max_variants_message=is_download,
             )
             response = StreamingHttpResponse(
                 iterator_to_json(stream),

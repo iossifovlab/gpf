@@ -2,10 +2,8 @@
 
 import pytest
 
-from enrichment_api.enrichment_serializer import EnrichmentSerializer
-
 from dae.enrichment_tool.event_counters import EnrichmentSingleResult
-
+from enrichment_api.enrichment_serializer import EnrichmentSerializer
 
 pytestmark = pytest.mark.usefixtures(
     "wdae_gpf_instance", "dae_calc_gene_sets")
@@ -39,7 +37,7 @@ def test_serialize(enrichment_serializer: EnrichmentSerializer) -> None:
     ]
     assert all_serialized["countFilter"]["peopleGroup"]["id"] == "phenotype"
     assert all_serialized["countFilter"]["peopleGroup"]["checkedValues"] == [
-        "phenotype1"
+        "phenotype1",
     ]
     assert all_serialized["countFilter"]["peopleGroup"]["id"] == "phenotype"
     assert all_serialized["countFilter"]["studyTypes"] == ["we"]
@@ -58,7 +56,7 @@ def test_serialize(enrichment_serializer: EnrichmentSerializer) -> None:
     ]
     assert all_serialized["overlapFilter"]["peopleGroup"]["id"] == "phenotype"
     assert all_serialized["overlapFilter"]["peopleGroup"]["checkedValues"] == [
-        "phenotype1"
+        "phenotype1",
     ]
     assert all_serialized["overlapFilter"]["peopleGroup"]["id"] == "phenotype"
     assert all_serialized["overlapFilter"]["studyTypes"] == ["we"]
@@ -83,7 +81,7 @@ def test_serialize(enrichment_serializer: EnrichmentSerializer) -> None:
         "male", "female", "unspecified"]
     assert rec_serialized["countFilter"]["peopleGroup"]["id"] == "phenotype"
     assert rec_serialized["countFilter"]["peopleGroup"]["checkedValues"] == [
-        "phenotype1"
+        "phenotype1",
     ]
     assert rec_serialized["countFilter"]["peopleGroup"]["id"] == "phenotype"
     assert rec_serialized["countFilter"]["studyTypes"] == ["we"]
@@ -99,7 +97,7 @@ def test_serialize(enrichment_serializer: EnrichmentSerializer) -> None:
         ["male", "female", "unspecified"]
     assert rec_serialized["overlapFilter"]["peopleGroup"]["id"] == "phenotype"
     assert rec_serialized["overlapFilter"]["peopleGroup"]["checkedValues"] == [
-        "phenotype1"
+        "phenotype1",
     ]
     assert rec_serialized["overlapFilter"]["peopleGroup"]["id"] == "phenotype"
     assert rec_serialized["overlapFilter"]["studyTypes"] == ["we"]
@@ -123,7 +121,7 @@ def test_serialize(enrichment_serializer: EnrichmentSerializer) -> None:
     assert male_serialized["countFilter"]["gender"] == ["male"]
     assert male_serialized["countFilter"]["peopleGroup"]["id"] == "phenotype"
     assert male_serialized["countFilter"]["peopleGroup"]["checkedValues"] == [
-        "phenotype1"
+        "phenotype1",
     ]
     assert male_serialized["countFilter"]["peopleGroup"]["id"] == "phenotype"
     assert male_serialized["countFilter"]["studyTypes"] == ["we"]
@@ -195,14 +193,14 @@ def test_serialize(enrichment_serializer: EnrichmentSerializer) -> None:
 
 
 def test_serialize_enrichment_result(
-    enrichment_serializer: EnrichmentSerializer
+    enrichment_serializer: EnrichmentSerializer,
 ) -> None:
     enrichment_result = EnrichmentSingleResult(
         "all",
         3,
         1,
         3,
-        0.5
+        0.5,
     )
 
     res = enrichment_serializer.serialize_enrichment_result(enrichment_result)

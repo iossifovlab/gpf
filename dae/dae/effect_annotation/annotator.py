@@ -1,30 +1,31 @@
 from __future__ import annotations
 
 import logging
-
 from typing import Optional
 
-from dae.utils.regions import Region
 from dae.annotation.annotatable import Annotatable
 from dae.genomic_resources.gene_models import GeneModels, TranscriptModel
 from dae.genomic_resources.reference_genome import ReferenceGenome
+from dae.utils.regions import Region
 
-from .gene_codes import NuclearCode
-from .effect_checkers.effect_checker import EffectChecker
+from .annotation_request import (
+    AnnotationRequest,
+    NegativeStrandAnnotationRequest,
+    PositiveStrandAnnotationRequest,
+)
+from .effect import AnnotationEffect, EffectFactory
 from .effect_checkers.coding import CodingEffectChecker
-from .effect_checkers.promoter import PromoterEffectChecker
+from .effect_checkers.effect_checker import EffectChecker
 from .effect_checkers.frame_shift import FrameShiftEffectChecker
-from .effect_checkers.utr import UTREffectChecker
+from .effect_checkers.intron import IntronicEffectChecker
+from .effect_checkers.promoter import PromoterEffectChecker
 from .effect_checkers.protein_change import ProteinChangeEffectChecker
+from .effect_checkers.splice_site import SpliceSiteEffectChecker
 from .effect_checkers.start_loss import StartLossEffectChecker
 from .effect_checkers.stop_loss import StopLossEffectChecker
-from .effect_checkers.splice_site import SpliceSiteEffectChecker
-from .effect_checkers.intron import IntronicEffectChecker
-from .effect import EffectFactory, AnnotationEffect
+from .effect_checkers.utr import UTREffectChecker
+from .gene_codes import NuclearCode
 from .variant import Variant
-from .annotation_request import PositiveStrandAnnotationRequest, \
-    NegativeStrandAnnotationRequest, \
-    AnnotationRequest
 
 logger = logging.getLogger(__name__)
 
@@ -42,12 +43,12 @@ class AnnotationRequestFactory:
             return PositiveStrandAnnotationRequest(
                 annotator.reference_genome, annotator.code,
                 annotator.promoter_len,
-                variant, transcript_model
+                variant, transcript_model,
             )
         return NegativeStrandAnnotationRequest(
             annotator.reference_genome, annotator.code,
             annotator.promoter_len,
-            variant, transcript_model
+            variant, transcript_model,
         )
 
 
@@ -76,11 +77,11 @@ class EffectAnnotator:
         ]
 
     def get_effect_for_transcript(
-        self, variant: Variant, transcript_model: TranscriptModel
+        self, variant: Variant, transcript_model: TranscriptModel,
     ) -> Optional[AnnotationEffect]:
         """Calculate effect for a given transcript."""
         request = AnnotationRequestFactory.create_annotation_request(
-            self, variant, transcript_model
+            self, variant, transcript_model,
         )
 
         for effect_checker in self.effects_checkers:
@@ -91,7 +92,7 @@ class EffectAnnotator:
 
     def annotate_cnv(
         self, chrom: str, pos_start: int, pos_end: int,
-        variant_type: Annotatable.Type
+        variant_type: Annotatable.Type,
     ) -> list[AnnotationEffect]:
         """Annotate a CNV variant."""
         if self.gene_models.utr_models is None:
@@ -111,7 +112,7 @@ class EffectAnnotator:
 
     def annotate_region(
         self, chrom: str, pos_start: int, pos_end: int,
-        effect_type: str = "unknown"
+        effect_type: str = "unknown",
     ) -> list[AnnotationEffect]:
         """Annotate a region or position."""
         if self.gene_models.utr_models is None:
@@ -182,7 +183,7 @@ class EffectAnnotator:
         alt: Optional[str] = None,
         length: Optional[int] = None,
         seq: Optional[str] = None,
-        variant_type: Optional[Annotatable.Type] = None
+        variant_type: Optional[Annotatable.Type] = None,
     ) -> list[AnnotationEffect]:
         """Annotate effects for a variant."""
         if variant in {"CNV+", "CNV-"}:
@@ -197,7 +198,7 @@ class EffectAnnotator:
             if chrom is not None and pos is not None and length is not None:
                 return self.annotate_cnv(
                     chrom, pos, pos + length,
-                    cnv_type
+                    cnv_type,
                 )
             if location is not None:
                 chrom, beg_end = location.split(":")
@@ -218,11 +219,11 @@ class EffectAnnotator:
         alt: str,
         length: Optional[int] = None,
         seq: Optional[str] = None,
-        variant_type: Optional[str] = None
+        variant_type: Optional[str] = None,
     ) -> list[AnnotationEffect]:
         """Annotate effects for a variant."""
         variant = Variant(
-            chrom, pos, None, None, ref, alt, length, seq, variant_type
+            chrom, pos, None, None, ref, alt, length, seq, variant_type,
         )
         return self.annotate(variant)
 
@@ -239,7 +240,7 @@ class EffectAnnotator:
         length: Optional[int] = None,
         seq: Optional[str] = None,
         variant_type: Optional[Annotatable.Type] = None,
-        promoter_len: int = 0
+        promoter_len: int = 0,
     ) -> list[AnnotationEffect]:
         """Build effect annotator and annotate a variant."""
         # pylint: disable=too-many-arguments
@@ -247,7 +248,7 @@ class EffectAnnotator:
             reference_genome, gm, promoter_len=promoter_len)
         effects = annotator.do_annotate_variant(
             chrom, position, location, variant, ref, alt, length,
-            seq, variant_type
+            seq, variant_type,
         )
         desc = AnnotationEffect.effects_description(effects)
         logger.debug("effect: %s", desc)

@@ -3,9 +3,12 @@ from typing import Any, Optional
 
 import pytest
 
-from dae.genomic_resources.histogram import \
-    CategoricalHistogram, CategoricalHistogramConfig, \
-    HistogramError, build_histogram_config
+from dae.genomic_resources.histogram import (
+    CategoricalHistogram,
+    CategoricalHistogramConfig,
+    HistogramError,
+    build_histogram_config,
+)
 
 
 def test_categorical_histogram() -> None:
@@ -80,17 +83,17 @@ def test_categorical_histogram_merge_raises() -> None:
         hist1.add_value(f"value{i}")
     hist2 = CategoricalHistogram(config)
     for i in range(51):
-        hist2.add_value(f"value{i+50}")
+        hist2.add_value(f"value{i + 50}")
     with pytest.raises(HistogramError):
         hist1.merge(hist2)
 
 
 @pytest.mark.parametrize("conf", [
     {
-        "categorical_hist": {}
+        "categorical_hist": {},
     },
     {
-        "histogram": {"type": "categorical"}
+        "histogram": {"type": "categorical"},
     },
 ])
 def test_build_categorical_histogram_config(conf: dict[str, Any]) -> None:

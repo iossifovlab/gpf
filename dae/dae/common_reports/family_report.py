@@ -1,12 +1,13 @@
 """Provides family report class."""
 from __future__ import annotations
-from typing import Any, Iterable
 
+from collections.abc import Iterable
+from typing import Any
+
+from dae.common_reports.family_counter import FamiliesGroupCounters
 from dae.pedigrees.families_data import FamiliesData
 from dae.person_sets import PersonSetCollection
 from dae.studies.study import GenotypeData
-
-from dae.common_reports.family_counter import FamiliesGroupCounters
 
 
 class FamiliesReport:
@@ -23,7 +24,7 @@ class FamiliesReport:
     @staticmethod
     def from_genotype_study(
         genotype_data_study: GenotypeData,
-        person_set_collections: Iterable[PersonSetCollection]
+        person_set_collections: Iterable[PersonSetCollection],
     ) -> FamiliesReport:
         """Create a family report from a genotype study."""
         config = genotype_data_study.config.common_report
@@ -35,14 +36,14 @@ class FamiliesReport:
     def from_families_data(
         families: FamiliesData,
         person_set_collections: Iterable[PersonSetCollection],
-        draw_all_families: bool = True
+        draw_all_families: bool = True,
     ) -> FamiliesReport:
         """Create a family report from families data."""
         families_counters = [
             FamiliesGroupCounters.from_families(
                 families,
                 person_set_collection,
-                draw_all_families
+                draw_all_families,
             )
             for person_set_collection in person_set_collections
         ]

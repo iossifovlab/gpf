@@ -1,10 +1,20 @@
 import logging
-from typing import Optional, Dict, Any
 from copy import copy
+from typing import Any, Dict, Optional
 
-from sqlalchemy import create_engine, inspect, nullslast  # type: ignore
-from sqlalchemy import MetaData, Table, Column, Integer, String, Float
-from sqlalchemy.sql import insert, desc, asc
+from sqlalchemy import (  # type: ignore
+    Column,
+    Float,
+    Integer,
+    MetaData,
+    String,
+    Table,
+    create_engine,
+    inspect,
+    nullslast,
+)
+from sqlalchemy.sql import asc, desc, insert
+
 from dae.gene_profile.statistic import GPStatistic
 
 logger = logging.getLogger(__name__)
@@ -146,7 +156,7 @@ class GeneProfileDB:
                 full_score_id = f"{category_name}_{score_name}"
                 genomic_scores[category_name][score_name] = {
                     "value": row[full_score_id],
-                    "format": score["format"]
+                    "format": score["format"],
                 }
 
         gene_sets_categories = config["gene_sets"]
@@ -180,13 +190,13 @@ class GeneProfileDB:
                     ]
                     counts[statistic_id] = {
                         "count": count,
-                        "rate": rate
+                        "rate": rate,
                     }
             variant_counts[dataset_id] = current_counts
 
         return GPStatistic(
             gene_symbol, gene_sets,
-            genomic_scores, variant_counts
+            genomic_scores, variant_counts,
         )
 
     def _transform_sort_by(self, sort_by):
@@ -232,7 +242,7 @@ class GeneProfileDB:
 
         if page is not None:
             query = query.limit(self.PAGE_SIZE).offset(
-                self.PAGE_SIZE * (page - 1)
+                self.PAGE_SIZE * (page - 1),
             )
         with self.engine.begin() as connection:
             return connection.execute(query).fetchall()
@@ -246,7 +256,7 @@ class GeneProfileDB:
         insp = inspect(self.engine)
         with self.engine.begin() as connection:
             has_gp_table = insp.dialect.has_table(
-                connection, "gene_profile"
+                connection, "gene_profile",
             )
             return has_gp_table
 
@@ -314,13 +324,13 @@ class GeneProfileDB:
         insert_map = self._create_insert_map(gp)
         if connection is not None:
             connection.execute(
-                insert(self.gp_table).values(**insert_map)
+                insert(self.gp_table).values(**insert_map),
             )
             return
 
         with self.engine.begin() as conn:
             conn.execute(
-                insert(self.gp_table).values(**insert_map)
+                insert(self.gp_table).values(**insert_map),
             )
             conn.commit()
 
@@ -378,7 +388,7 @@ class GeneProfileDB:
         with self.engine.begin() as connection:
             for gs, values in gs_values.items():
                 update = self.gp_table.update().values(**values).where(
-                    self.gp_table.c.symbol_name == gs
+                    self.gp_table.c.symbol_name == gs,
                 )
                 connection.execute(update)
             connection.commit()

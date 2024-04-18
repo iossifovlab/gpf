@@ -1,11 +1,10 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
 
-from dae.variants.core import Allele
-from dae.variants.variant import vcf2cshl, trim_str_right_left, \
-    tandem_repeat
-from dae.utils.dae_utils import dae2vcf_variant
 from dae.gpf_instance import GPFInstance
+from dae.utils.dae_utils import dae2vcf_variant
+from dae.variants.core import Allele
+from dae.variants.variant import tandem_repeat, trim_str_right_left, vcf2cshl
 
 
 @pytest.mark.parametrize(
@@ -142,7 +141,7 @@ def test_cshl_to_vcf_problem(gpf_instance_2013: GPFInstance) -> None:
     variant = "sub(G->A)"
 
     position1, reference, alternative = dae2vcf_variant(
-        chrom, position, variant, gpf_instance_2013.reference_genome
+        chrom, position, variant, gpf_instance_2013.reference_genome,
     )
     print(chrom, position, reference, alternative)
     assert chrom == "2"
@@ -151,7 +150,7 @@ def test_cshl_to_vcf_problem(gpf_instance_2013: GPFInstance) -> None:
     assert alternative == "A"
 
     variant_desc = vcf2cshl(
-        position, reference, alternative, trimmer=trim_str_right_left
+        position, reference, alternative, trimmer=trim_str_right_left,
     )
 
     assert variant_desc.position == position

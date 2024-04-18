@@ -1,9 +1,9 @@
 """Provides group genomic resources repository."""
 
-from typing import Optional, Generator
+from collections.abc import Generator
+from typing import Optional
 
-from .repository import GenomicResourceRepo
-from .repository import GenomicResource
+from .repository import GenomicResource, GenomicResourceRepo
 
 
 class GenomicResourceGroupRepo(GenomicResourceRepo):

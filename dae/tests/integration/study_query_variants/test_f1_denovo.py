@@ -4,13 +4,12 @@ from typing import Optional, cast
 
 import pytest
 
-from dae.utils.regions import Region
-from dae.testing import setup_pedigree, setup_vcf, \
-    vcf_study
-from dae.testing.foobar_import import foobar_gpf
-from dae.variants.family_variant import FamilyAllele
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.studies.study import GenotypeData
+from dae.testing import setup_pedigree, setup_vcf, vcf_study
+from dae.testing.foobar_import import foobar_gpf
+from dae.utils.regions import Region
+from dae.variants.family_variant import FamilyAllele
 
 
 @pytest.fixture(scope="module")
@@ -54,11 +53,11 @@ bar    9   .  A   T,C,G .    .      .    GT     0/1 0/1 0/1 0/2
                     "include_unknown_person_genotypes": True,
                     "denovo_mode": "denovo",
                     "omission_mode": "omission",
-                }
+                },
             },
             "processing_config": {
-                "include_reference": True
-            }
+                "include_reference": True,
+            },
         })
     return study
 
@@ -86,14 +85,14 @@ bar    9   .  A   T,C,G .    .      .    GT     0/1 0/1 0/1 0/2
         (7, ["synonymous"], "denovo", 0),
         (7, ["missense"], "denovo", 1),
         (7, None, "mendelian", 1),
-    ]
+    ],
 )
 def test_partially_known_denovo(
     imported_study: GenotypeData,
     position: int,
     effects: Optional[list[str]],
     inheritance: str,
-    count: int
+    count: int,
 ) -> None:
     region = Region("bar", position, position)
     vs = list(imported_study.query_variants(
@@ -124,14 +123,14 @@ def test_partially_known_denovo(
         (8, "denovo", ["synonymous"], 1),
         # The ref allele match the query so we return the variant.
         (8, "not denovo ", None, 1),
-    ]
+    ],
 )
 def test_f1_canonical_denovo(
     imported_study: GenotypeData,
     position: int,
     effects: Optional[list[str]],
     inheritance: str,
-    count: int
+    count: int,
 ) -> None:
     region = Region("bar", position, position)
     vs = list(imported_study.query_variants(
@@ -154,14 +153,14 @@ def test_f1_canonical_denovo(
         (9, "denovo", ["missense"], 1),
         (9, "mendelian", ["synonymous"], 1),
         (9, "mendelian", ["missense"], 0),
-    ]
+    ],
 )
 def test_f1_simple(
     imported_study: GenotypeData,
     position: int,
     effects: Optional[list[str]],
     inheritance: str,
-    count: int
+    count: int,
 ) -> None:
     region = Region("bar", position, position)
     vs = list(imported_study.query_variants(
@@ -196,7 +195,7 @@ def test_f1_simple(
          False, False, 0),
         (8, "not denovo and not omission",
          True, True, 1),
-    ]
+    ],
 )
 def test_f1_canonical_denovo_return_reference_or_unknown(
     imported_study: GenotypeData,
@@ -204,7 +203,7 @@ def test_f1_canonical_denovo_return_reference_or_unknown(
     inheritance: str,
     return_reference: bool,
     return_unknown: bool,
-    count: int
+    count: int,
 ) -> None:
     region = Region("bar", position, position)
     vs = list(imported_study.query_variants(
@@ -231,7 +230,7 @@ def test_f1_canonical_denovo_return_reference_or_unknown(
         (7, "mendelian", True, False, 1),
         (7, "mendelian", True, True, 1),
         (7, "not denovo or not omission", False, False, 1),
-    ]
+    ],
 )
 def test_f1_partially_unknown_denovo_return_reference_or_unknown(
     imported_study: GenotypeData,
@@ -239,7 +238,7 @@ def test_f1_partially_unknown_denovo_return_reference_or_unknown(
     inheritance: str,
     return_reference: bool,
     return_unknown: bool,
-    count: int
+    count: int,
 ) -> None:
     region = Region("bar", position, position)
     vs = list(imported_study.query_variants(

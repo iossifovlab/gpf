@@ -1,12 +1,16 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 from pathlib import Path
-from remote.rest_api_client import RESTClient
 
 import pytest
-from studies.study_wrapper import RemoteStudyWrapper, StudyWrapper, \
-    StudyWrapperBase
-from studies.remote_study import RemoteGenotypeData
+from remote.rest_api_client import RESTClient
+
 from dae.gpf_instance.gpf_instance import GPFInstance
+from studies.remote_study import RemoteGenotypeData
+from studies.study_wrapper import (
+    RemoteStudyWrapper,
+    StudyWrapper,
+    StudyWrapperBase,
+)
 
 
 @pytest.fixture(scope="session")
@@ -29,23 +33,23 @@ def iossifov_2014_local(
         data_study,
         local_gpf_instance._pheno_registry,
         local_gpf_instance.gene_scores_db,
-        local_gpf_instance
+        local_gpf_instance,
     )
 
 
 @pytest.fixture(scope="function")
 def iossifov_2014_remote(rest_client: RESTClient) -> StudyWrapperBase:
     return RemoteStudyWrapper(
-        RemoteGenotypeData("iossifov_2014", rest_client)
+        RemoteGenotypeData("iossifov_2014", rest_client),
     )
 
 
 @pytest.fixture(scope="function")
 def iossifov_2014_wrappers(
     iossifov_2014_local: StudyWrapperBase,
-    iossifov_2014_remote: StudyWrapperBase
+    iossifov_2014_remote: StudyWrapperBase,
 ) -> dict[str, StudyWrapperBase]:
     return {
         "local": iossifov_2014_local,
-        "remote": iossifov_2014_remote
+        "remote": iossifov_2014_remote,
     }

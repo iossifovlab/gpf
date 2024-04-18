@@ -5,9 +5,9 @@ from gpf_instance.gpf_instance import WGPFInstance
 pytestmark = pytest.mark.usefixtures("wdae_gpf_instance")
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db()
 def test_get_gene_gene_scores_db(
-    wdae_gpf_instance: WGPFInstance
+    wdae_gpf_instance: WGPFInstance,
 ) -> None:
     gene_scores_db = wdae_gpf_instance.gene_scores_db
 

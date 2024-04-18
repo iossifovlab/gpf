@@ -1,5 +1,5 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,C0115
-from dae.variants_loaders.raw.loader import CLILoader, CLIArgument
+from dae.variants_loaders.raw.loader import CLIArgument, CLILoader
 
 
 def test_cli_defaults_does_not_include_positionals() -> None:

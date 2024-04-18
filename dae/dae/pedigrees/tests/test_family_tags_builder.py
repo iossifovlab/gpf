@@ -1,11 +1,12 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
+
 import pytest
 
-from dae.pedigrees.family import FamilyTag
 from dae.pedigrees.families_data import tag_families_data
-from dae.pedigrees.testing import build_families_data
+from dae.pedigrees.family import FamilyTag
 from dae.pedigrees.loader import FamiliesLoader
+from dae.pedigrees.testing import build_families_data
 
 
 @pytest.mark.parametrize("tag_label,value", [
@@ -97,7 +98,7 @@ def test_family_tags_save_load(tmp_path: pathlib.Path) -> None:
 
     loaded_families = FamiliesLoader.load_pedigree_file(
         str(tmp_path / "families.ped"),
-        pedigree_params={"ped_tags": False}
+        pedigree_params={"ped_tags": False},
     )
     assert "f1" in loaded_families
 

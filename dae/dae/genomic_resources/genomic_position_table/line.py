@@ -1,8 +1,9 @@
 import abc
 import collections
-from typing import Optional, Deque, Union, Generator, Any
-import pysam
+from collections.abc import Generator
+from typing import Any, Deque, Optional, Union
 
+import pysam
 
 Key = Union[str, int]
 
@@ -227,7 +228,7 @@ class LineBuffer:
         return mid_index
 
     def fetch(
-        self, chrom: str, pos_begin: int, pos_end: int
+        self, chrom: str, pos_begin: int, pos_end: int,
     ) -> Generator[LineBase, None, None]:
         """Return a generator of rows matching the region."""
         beg_index = self.find_index(chrom, pos_begin)

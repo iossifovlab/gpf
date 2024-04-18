@@ -2,7 +2,7 @@
 
 import pytest
 
-from dae.variants.attributes import bitmask2inheritance, Inheritance
+from dae.variants.attributes import Inheritance, bitmask2inheritance
 
 
 @pytest.mark.parametrize("bitmask, expected", [
@@ -20,14 +20,14 @@ from dae.variants.attributes import bitmask2inheritance, Inheritance
         Inheritance.possible_omission, Inheritance.mendelian,
         Inheritance.unknown])),
     (8, set([
-        Inheritance.possible_denovo, ])),
+        Inheritance.possible_denovo])),
     (32, set([
-        Inheritance.possible_omission, ])),
+        Inheritance.possible_omission])),
     (150, set([
         Inheritance.omission, Inheritance.denovo,
-        Inheritance.missing, Inheritance.mendelian, ])),
+        Inheritance.missing, Inheritance.mendelian])),
     (290 & 32, set([
-        Inheritance.possible_omission, ])),
+        Inheritance.possible_omission])),
 ])
 def test_bitmask2inheritance(bitmask, expected):
     assert bitmask2inheritance(bitmask) == expected

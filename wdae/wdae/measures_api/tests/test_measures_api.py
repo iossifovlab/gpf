@@ -1,7 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import json
-import pytest
 
+import pytest
 from rest_framework import status  # type: ignore
 
 pytestmark = pytest.mark.usefixtures(
@@ -21,7 +21,7 @@ def test_measures_api_permissions(anonymous_client, url, method, body):
         response = anonymous_client.get(url)
     else:
         response = anonymous_client.post(
-            url, json.dumps(body), content_type="application/json"
+            url, json.dumps(body), content_type="application/json",
         )
 
     assert response
@@ -30,7 +30,7 @@ def test_measures_api_permissions(anonymous_client, url, method, body):
 
 def test_measures_list_categorical(admin_client):
     response = admin_client.get(
-        f"{MEASURES_URL}/categorical?datasetId=quads_f1"
+        f"{MEASURES_URL}/categorical?datasetId=quads_f1",
     )
 
     assert response.status_code == 200
@@ -39,7 +39,7 @@ def test_measures_list_categorical(admin_client):
 
 def test_measures_list_continuous(admin_client):
     response = admin_client.get(
-        f"{MEASURES_URL}/continuous?datasetId=quads_f1"
+        f"{MEASURES_URL}/continuous?datasetId=quads_f1",
     )
 
     assert response.status_code == 200
@@ -55,11 +55,11 @@ def test_regressions(admin_client):
 
 def test_measures_list_wrong_request(admin_client):
     response = admin_client.post("/api/v3/measures/histogram", {
-        "datasetId": "comp", "measure": "i1.age"
+        "datasetId": "comp", "measure": "i1.age",
     })
     assert response.status_code == 200
 
     response = admin_client.post("/api/v3/measures/histogram", {
-        "datasetId": "comp", "measure": "asian"
+        "datasetId": "comp", "measure": "asian",
     })
     assert response.status_code == 400

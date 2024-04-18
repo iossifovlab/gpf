@@ -42,7 +42,7 @@ class Variant:
             self.ref_position_last = self.position + len(self.reference)
 
             self.corrected_ref_position_last = max(
-                self.position, self.ref_position_last - 1
+                self.position, self.ref_position_last - 1,
             )
 
     def set_position(self, chromosome, position, loc):

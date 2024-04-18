@@ -1,19 +1,19 @@
 """Provides annotation pipeline class."""
 
 from __future__ import annotations
+
 import abc
-from collections.abc import Mapping
-from dataclasses import dataclass, field
-
 import logging
-
-from typing import Any, Callable, Optional, Iterator
+from collections.abc import Iterator, Mapping
+from dataclasses import dataclass, field
 from types import TracebackType
-
-from dae.genomic_resources.repository import GenomicResource
-from dae.genomic_resources.repository import GenomicResourceRepo
+from typing import Any, Callable, Optional
 
 from dae.annotation.annotatable import Annotatable
+from dae.genomic_resources.repository import (
+    GenomicResource,
+    GenomicResourceRepo,
+)
 from dae.variants.variant import SummaryAllele
 
 logger = logging.getLogger(__name__)
@@ -103,7 +103,7 @@ class Annotator(abc.ABC):
 
     @abc.abstractmethod
     def annotate(
-        self, annotatable: Optional[Annotatable], context: dict[str, Any]
+        self, annotatable: Optional[Annotatable], context: dict[str, Any],
     ) -> dict[str, Any]:
         """Produce annotation attributes for an annotatable."""
 
@@ -168,7 +168,7 @@ class AnnotationPipeline:
                 for r_id in annotator.resource_ids}
 
     def get_annotator_by_attribute_info(
-        self, attribute_info: AttributeInfo
+        self, attribute_info: AttributeInfo,
     ) -> Optional[Annotator]:
         for annotator in self.annotators:
             if attribute_info in annotator.attributes:
@@ -236,13 +236,13 @@ class ReannotationPipeline(AnnotationPipeline):
     """Special pipeline that handles reannotation of a previous pipeline."""
 
     AnnotationDependencyGraph = dict[
-        AnnotatorInfo, list[tuple[AnnotatorInfo, AttributeInfo]]
+        AnnotatorInfo, list[tuple[AnnotatorInfo, AttributeInfo]],
     ]
 
     def __init__(
         self,
         pipeline_new: AnnotationPipeline,
-        pipeline_old: AnnotationPipeline
+        pipeline_old: AnnotationPipeline,
     ):
         """Produce a reannotation pipeline between two annotation pipelines."""
         super().__init__(pipeline_new.repository)
@@ -253,7 +253,7 @@ class ReannotationPipeline(AnnotationPipeline):
         infos_old = pipeline_old.get_info()
 
         self.dependency_graph = ReannotationPipeline.build_dependency_graph(
-            pipeline_new
+            pipeline_new,
         )
 
         self.attributes_deleted: list[str] = []
@@ -293,7 +293,7 @@ class ReannotationPipeline(AnnotationPipeline):
 
     @staticmethod
     def build_dependency_graph(
-        pipeline: AnnotationPipeline
+        pipeline: AnnotationPipeline,
     ) -> AnnotationDependencyGraph:
         """Make dependency graph for an annotation pipeline."""
         graph: ReannotationPipeline.AnnotationDependencyGraph = {}
@@ -308,7 +308,7 @@ class ReannotationPipeline(AnnotationPipeline):
                     pipeline.get_annotator_by_attribute_info(attr_info)
                 assert upstream_annotator is not None
                 graph[annotator_info].append(
-                    (upstream_annotator.get_info(), attr_info)
+                    (upstream_annotator.get_info(), attr_info),
                 )
         return graph
 
@@ -338,7 +338,7 @@ class ReannotationPipeline(AnnotationPipeline):
                         result.add(*further)
         return result
 
-    def annotate(self, annotatable: Annotatable, record: dict) -> dict:  # type: ignore # noqa # pylint: disable=arguments-renamed
+    def annotate(self, annotatable: Annotatable, record: dict) -> dict:  # type: ignore # pylint: disable=arguments-renamed
         reused_context: dict[str, Any] = {}
         for attr_name, attr in self.attributes_reused.items():
             raw_value = record[attr_name]
@@ -428,7 +428,7 @@ class InputAnnotableAnnotatorDecorator(AnnotatorDecorator):
                 self.input_annotatable_name)
 
     def annotate(
-        self, _: Optional[Annotatable], context: dict[str, Any]
+        self, _: Optional[Annotatable], context: dict[str, Any],
     ) -> dict[str, Any]:
 
         input_annotatable = context[self.input_annotatable_name]
@@ -438,7 +438,7 @@ class InputAnnotableAnnotatorDecorator(AnnotatorDecorator):
             return self.child.annotate(input_annotatable, context)
         raise ValueError(
             f"The object with a key {input_annotatable} in the "
-            f"annotation context {context} is not an Annotabable."
+            f"annotation context {context} is not an Annotabable.",
         )
 
 
@@ -474,7 +474,7 @@ class ValueTransformAnnotatorDecorator(AnnotatorDecorator):
         self.value_transformers = value_transformers
 
     def annotate(
-        self, annotatable: Optional[Annotatable], context: dict[str, Any]
+        self, annotatable: Optional[Annotatable], context: dict[str, Any],
     ) -> dict[str, Any]:
         result = self.child.annotate(annotatable, context)
         return {k: (self.value_transformers[k](v)

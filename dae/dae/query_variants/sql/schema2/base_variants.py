@@ -1,23 +1,24 @@
-import logging
 import abc
+import logging
+from collections.abc import Generator, Iterable
 from contextlib import closing
-from typing import Any, Optional, Generator, Union, Iterable
+from typing import Any, Optional, Union
 
 import pandas as pd
 
-from dae.utils.regions import Region
 from dae.genomic_resources.gene_models import GeneModels
-from dae.person_sets import PersonSetCollection
-from dae.pedigrees.loader import FamiliesLoader
-from dae.variants.variant import SummaryVariant
-from dae.variants.family_variant import FamilyVariant
-from dae.query_variants.query_runners import QueryResult, QueryRunner
 from dae.inmemory_storage.raw_variants import RawFamilyVariants
 from dae.parquet.partition_descriptor import PartitionDescriptor
+from dae.pedigrees.loader import FamiliesLoader
+from dae.person_sets import PersonSetCollection
 from dae.query_variants.base_query_variants import QueryVariantsBase
+from dae.query_variants.query_runners import QueryResult, QueryRunner
 from dae.query_variants.sql.schema2.base_query_builder import Dialect
 from dae.query_variants.sql.schema2.family_builder import FamilyQueryBuilder
 from dae.query_variants.sql.schema2.summary_builder import SummaryQueryBuilder
+from dae.utils.regions import Region
+from dae.variants.family_variant import FamilyVariant
+from dae.variants.variant import SummaryVariant
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +39,7 @@ class SqlSchema2Variants(QueryVariantsBase):
         summary_allele_table: Optional[str],
         pedigree_table: str,
         meta_table: str,
-        gene_models: Optional[GeneModels] = None
+        gene_models: Optional[GeneModels] = None,
     ):
         assert pedigree_table
 
@@ -92,13 +93,13 @@ class SqlSchema2Variants(QueryVariantsBase):
 
     @abc.abstractmethod
     def _deserialize_summary_variant(
-        self, record: Any
+        self, record: Any,
     ) -> SummaryVariant:
         """Deserialize a summary variant from SQL record."""
 
     @abc.abstractmethod
     def _deserialize_family_variant(
-        self, record: Any
+        self, record: Any,
     ) -> FamilyVariant:
         """Deserialize a family variant from SQL record."""
 
@@ -115,7 +116,7 @@ class SqlSchema2Variants(QueryVariantsBase):
         return_reference: Optional[bool] = None,
         return_unknown: Optional[bool] = None,
         limit: Optional[int] = None,
-        **kwargs: Any
+        **kwargs: Any,
     ) -> QueryRunner:
         """Build a query selecting the appropriate summary variants."""
         assert self.summary_allele_table is not None
@@ -130,7 +131,7 @@ class SqlSchema2Variants(QueryVariantsBase):
             self.partition_descriptor.to_dict(),
             self.pedigree_schema,
             self.families,
-            gene_models=self.gene_models
+            gene_models=self.gene_models,
         )
 
         query = query_builder.build_query(
@@ -190,7 +191,7 @@ class SqlSchema2Variants(QueryVariantsBase):
         limit: Optional[int] = None,
         study_filters: Optional[list[str]] = None,
         pedigree_fields: Optional[tuple] = None,
-        **kwargs: Any
+        **kwargs: Any,
     ) -> QueryRunner:
         """Build a query selecting the appropriate family variants."""
         do_join_pedigree = bool(pedigree_fields)
@@ -212,7 +213,7 @@ class SqlSchema2Variants(QueryVariantsBase):
             self.families,
             gene_models=self.gene_models,
             do_join_pedigree=do_join_pedigree,
-            do_join_allele_in_members=do_join_allele_in_members
+            do_join_allele_in_members=do_join_allele_in_members,
         )
 
         query = query_builder.build_query(
@@ -231,7 +232,7 @@ class SqlSchema2Variants(QueryVariantsBase):
             return_reference=return_reference,
             return_unknown=return_unknown,
             limit=limit,
-            pedigree_fields=pedigree_fields
+            pedigree_fields=pedigree_fields,
         )
         logger.info("FAMILY VARIANTS QUERY:\n%s", query)
         deserialize_row = self._deserialize_family_variant
@@ -275,7 +276,7 @@ class SqlSchema2Variants(QueryVariantsBase):
         return_reference: Optional[bool] = None,
         return_unknown: Optional[bool] = None,
         limit: Optional[int] = None,
-        **kwargs: Any
+        **kwargs: Any,
     ) -> Generator[SummaryVariant, None, None]:
         """Query summary variants."""
         # pylint: disable=too-many-arguments,too-many-locals
@@ -331,7 +332,7 @@ class SqlSchema2Variants(QueryVariantsBase):
         return_unknown: Optional[bool] = None,
         limit: Optional[int] = None,
         pedigree_fields: Optional[tuple] = None,
-        **kwargs: Any
+        **kwargs: Any,
     ) -> Generator[FamilyVariant, None, None]:
         """Query family variants."""
         # pylint: disable=too-many-arguments,too-many-locals
@@ -357,7 +358,7 @@ class SqlSchema2Variants(QueryVariantsBase):
             return_reference=return_reference,
             return_unknown=return_unknown,
             limit=request_limit,
-            pedigree_fields=pedigree_fields
+            pedigree_fields=pedigree_fields,
         )
         result = QueryResult(runners=[runner], limit=limit)
 
@@ -375,7 +376,7 @@ class SqlSchema2Variants(QueryVariantsBase):
     @staticmethod
     def build_person_set_collection_query(
             person_set_collection: PersonSetCollection,
-            person_set_collection_query: tuple[str, set[str]]
+            person_set_collection_query: tuple[str, set[str]],
     ) -> Optional[Union[tuple, tuple[list[str], list[str]]]]:
         """No idea what it does. If you know please edit."""
         collection_id, selected_person_sets = person_set_collection_query
@@ -392,7 +393,7 @@ class SqlSchema2Variants(QueryVariantsBase):
             return ()
 
         def pedigree_columns(
-            selected_person_sets: Iterable[str]
+            selected_person_sets: Iterable[str],
         ) -> list[dict[str, str]]:
             result = []
             for person_set_id in sorted(selected_person_sets):
@@ -414,5 +415,5 @@ class SqlSchema2Variants(QueryVariantsBase):
             [],
             list(
                 pedigree_columns(
-                    available_person_sets - selected_person_sets))
+                    available_person_sets - selected_person_sets)),
         )

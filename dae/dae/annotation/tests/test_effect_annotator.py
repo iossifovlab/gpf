@@ -1,7 +1,8 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,too-many-lines
 import textwrap
-from dae.genomic_resources.repository import GenomicResourceRepo
+
 from dae.annotation.annotation_factory import build_annotation_pipeline
+from dae.genomic_resources.repository import GenomicResourceRepo
 
 
 def test_effect_annotator_resources(
@@ -22,7 +23,7 @@ def test_effect_annotator_resources(
         annotator = pipeline.annotators[0]
         assert {res.get_id() for res in annotator.resources} == {
             genome,
-            gene_models
+            gene_models,
         }
 
 

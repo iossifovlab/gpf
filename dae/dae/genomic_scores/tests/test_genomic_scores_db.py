@@ -1,24 +1,30 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 
-import textwrap
 import pathlib
+import textwrap
 
 import pytest
 
-from dae.testing import setup_directories, setup_genome, \
-    setup_empty_gene_models, setup_gpf_instance
-
-from dae.genomic_resources.testing import build_inmemory_test_repository
-from dae.genomic_resources.repository import GenomicResourceProtocolRepo, \
-    GR_CONF_FILE_NAME
-from dae.genomic_resources.repository_factory import \
-    build_genomic_resource_repository, build_genomic_resource_group_repository
 from dae.genomic_resources.histogram import NumberHistogram
-
+from dae.genomic_resources.repository import (
+    GR_CONF_FILE_NAME,
+    GenomicResourceProtocolRepo,
+)
+from dae.genomic_resources.repository_factory import (
+    build_genomic_resource_group_repository,
+    build_genomic_resource_repository,
+)
+from dae.genomic_resources.testing import build_inmemory_test_repository
 from dae.gpf_instance.gpf_instance import GPFInstance
+from dae.testing import (
+    setup_directories,
+    setup_empty_gene_models,
+    setup_genome,
+    setup_gpf_instance,
+)
 
 
-@pytest.fixture
+@pytest.fixture()
 def scores_repo(tmp_path: pathlib.Path) -> GenomicResourceProtocolRepo:
     sets_repo = build_inmemory_test_repository({
         "phastCons": {
@@ -88,17 +94,17 @@ def scores_repo(tmp_path: pathlib.Path) -> GenomicResourceProtocolRepo:
                       x_log_scale: false
                       x_min_log: null
                       y_log_scale: false
-                """)
-            }
-        }
+                """),
+            },
+        },
     })
     return sets_repo
 
 
-@pytest.fixture
+@pytest.fixture()
 def annotation_gpf(
     scores_repo: GenomicResourceProtocolRepo,
-    tmp_path_factory: pytest.TempPathFactory
+    tmp_path_factory: pytest.TempPathFactory,
 ) -> GPFInstance:
     root_path = tmp_path_factory.mktemp("genomic_scores_db_gpf")
 
@@ -110,14 +116,14 @@ def annotation_gpf(
         """),
         "annotation.yaml": textwrap.dedent("""
         - position_score: phastCons
-        """)
+        """),
     })
     setup_genome(
         root_path / "alla_gpf" / "genome" / "allChr.fa",
         f"""
         >chrA
         {100 * "A"}
-        """
+        """,
     )
     setup_empty_gene_models(
         root_path / "alla_gpf" / "empty_gene_models" / "empty_genes.txt")
@@ -125,7 +131,7 @@ def annotation_gpf(
     local_repo = build_genomic_resource_repository({
         "id": "alla_local",
         "type": "directory",
-        "directory": str(root_path / "alla_gpf")
+        "directory": str(root_path / "alla_gpf"),
     })
 
     gpf_instance = setup_gpf_instance(
@@ -133,13 +139,13 @@ def annotation_gpf(
         reference_genome_id="genome",
         gene_models_id="empty_gene_models",
         grr=build_genomic_resource_group_repository(
-            "aaa", [local_repo, scores_repo])
+            "aaa", [local_repo, scores_repo]),
     )
     return gpf_instance
 
 
 def test_genomic_scores_db_with_annotation(
-    annotation_gpf: GPFInstance
+    annotation_gpf: GPFInstance,
 ) -> None:
     assert annotation_gpf is not None
     annotaiton_pipeline = annotation_gpf.get_annotation_pipeline()

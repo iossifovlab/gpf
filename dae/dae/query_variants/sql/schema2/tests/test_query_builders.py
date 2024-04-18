@@ -1,15 +1,18 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
+
 import pandas as pd
 import pytest
-from dae.utils.regions import Region
+
 from dae.pedigrees.families_data import FamiliesData
-from dae.query_variants.sql.schema2.base_query_builder import Dialect, \
-    BaseQueryBuilder
+from dae.query_variants.sql.schema2.base_query_builder import (
+    BaseQueryBuilder,
+    Dialect,
+)
 from dae.query_variants.sql.schema2.family_builder import FamilyQueryBuilder
 from dae.query_variants.sql.schema2.summary_builder import SummaryQueryBuilder
-from dae.variants.attributes import Role, Status, Sex
-
+from dae.utils.regions import Region
+from dae.variants.attributes import Role, Sex, Status
 
 FAMILY_VARIANT_SCHEMA = {
     "bucket_index": "int",
@@ -82,7 +85,7 @@ NO_PARTITIONING_PROPERTIES = {
     "chromosomes": [],
     "family_bin_size": 0,
     "coding_effect_types": [],
-    "rare_boundary": 0
+    "rare_boundary": 0,
 }
 
 
@@ -131,7 +134,7 @@ def summary_query_builder(families: FamiliesData) -> SummaryQueryBuilder:
         table_properties=NO_PARTITIONING_PROPERTIES,
         pedigree_schema=PEDIGREE_SCHEMA,
         families=families,
-        gene_models=None
+        gene_models=None,
     )
 
 
@@ -139,7 +142,7 @@ def summary_query_builder(families: FamiliesData) -> SummaryQueryBuilder:
 def query_builder(
     request: pytest.FixtureRequest,
     family_query_builder: FamilyQueryBuilder,
-    summary_query_builder: SummaryQueryBuilder
+    summary_query_builder: SummaryQueryBuilder,
 ) -> BaseQueryBuilder:
     if request.param == "family":
         return family_query_builder
@@ -163,6 +166,6 @@ def test_regions(query_builder: BaseQueryBuilder) -> None:
     assert "COALESCE(sa.`end_position`, -1) <= 15" in query
 
     query = query_builder._build_regions_where([
-        Region("13")
+        Region("13"),
     ])
     assert "sa.`chromosome` = '13'" in query

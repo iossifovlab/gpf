@@ -1,15 +1,14 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+import time
 from typing import Any
 
-import time
 import pytest
 
-from dae.genomic_resources.testing import \
-    build_inmemory_test_protocol
 from dae.genomic_resources.fsspec_protocol import FsspecReadWriteProtocol
+from dae.genomic_resources.testing import build_inmemory_test_protocol
 
 
-@pytest.mark.grr_rw
+@pytest.mark.grr_rw()
 def test_update_resource_file_when_file_missing(
         content_fixture: dict[str, Any],
         fsspec_proto: FsspecReadWriteProtocol) -> None:
@@ -42,7 +41,7 @@ def test_update_resource_file_when_file_missing(
     assert state.md5 == "d9636a8dca9e5626851471d1c0ea92b1"
 
 
-@pytest.mark.grr_rw
+@pytest.mark.grr_rw()
 def test_update_resource_file_when_state_missing(
         content_fixture: dict[str, Any],
         fsspec_proto: FsspecReadWriteProtocol) -> None:
@@ -74,7 +73,7 @@ def test_update_resource_file_when_state_missing(
     assert proto.filesystem.modified(fileurl) == timestamp
 
 
-@pytest.mark.grr_rw
+@pytest.mark.grr_rw()
 def test_update_resource_file_when_changed(
         content_fixture: dict[str, Any],
         fsspec_proto: FsspecReadWriteProtocol) -> None:
@@ -106,7 +105,7 @@ def test_update_resource_file_when_changed(
     assert state.md5 == "d9636a8dca9e5626851471d1c0ea92b1"
 
 
-@pytest.mark.grr_rw
+@pytest.mark.grr_rw()
 def test_do_not_update_resource_file_when_state_changed_but_file_not(
         content_fixture: dict[str, Any],
         fsspec_proto: FsspecReadWriteProtocol) -> None:

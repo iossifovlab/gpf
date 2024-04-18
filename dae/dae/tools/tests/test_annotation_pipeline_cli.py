@@ -1,7 +1,8 @@
-import pytest
 import os
-import tempfile
 import shutil
+import tempfile
+
+import pytest
 
 # import pandas as pd
 
@@ -10,7 +11,7 @@ def relative_to_this_test_folder(path):
     return os.path.join(os.path.dirname(os.path.realpath(__file__)), path)
 
 
-@pytest.fixture
+@pytest.fixture()
 def temp_filename(request):
     dirname = tempfile.mkdtemp(suffix="_eff", prefix="variants_")
 

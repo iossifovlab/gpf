@@ -2,15 +2,15 @@
 import os
 from typing import Callable, cast
 
+import pytest
 from box import Box
 
-import pytest
-
-from dae.genotype_storage.genotype_storage_registry import \
-    GenotypeStorageRegistry
-from dae.pheno.registry import PhenoRegistry
 from dae.gene_scores.gene_scores import GeneScoresDb
+from dae.genotype_storage.genotype_storage_registry import (
+    GenotypeStorageRegistry,
+)
 from dae.gpf_instance.gpf_instance import GPFInstance
+from dae.pheno.registry import PhenoRegistry
 from dae.studies.study import GenotypeData
 from dae.studies.variants_db import VariantsDb
 
@@ -32,7 +32,7 @@ def genotype_data_groups_dir(fixtures_dir: str) -> str:
 
 @pytest.fixture(scope="session")
 def local_gpf_instance(
-    gpf_instance: Callable[[str], GPFInstance], fixtures_dir: str
+    gpf_instance: Callable[[str], GPFInstance], fixtures_dir: str,
 ) -> GPFInstance:
     return gpf_instance(os.path.join(fixtures_dir, "gpf_instance.yaml"))
 
@@ -59,14 +59,14 @@ def gene_scores_db(local_gpf_instance: GPFInstance) -> GeneScoresDb:
 
 @pytest.fixture(scope="session")
 def genotype_storage_factory(
-    local_gpf_instance: GPFInstance
+    local_gpf_instance: GPFInstance,
 ) -> GenotypeStorageRegistry:
     return cast(GenotypeStorageRegistry, local_gpf_instance.genotype_storages)
 
 
 @pytest.fixture(scope="session")
 def genotype_data_study_configs(
-    variants_db_fixture: VariantsDb
+    variants_db_fixture: VariantsDb,
 ) -> dict[str, Box]:
     return variants_db_fixture._load_study_configs()
 
@@ -80,14 +80,14 @@ def quads_f1_config(variants_db_fixture: VariantsDb) -> GenotypeData:
 
 @pytest.fixture(scope="session")
 def genotype_data_group_configs(
-    variants_db_fixture: VariantsDb
+    variants_db_fixture: VariantsDb,
 ) -> dict[str, Box]:
     return variants_db_fixture._load_group_configs()
 
 
 @pytest.fixture(scope="session")
 def quads_composite_genotype_data_group_config(
-    variants_db_fixture: VariantsDb
+    variants_db_fixture: VariantsDb,
 ) -> Box:
     return cast(
         Box,
@@ -96,7 +96,7 @@ def quads_composite_genotype_data_group_config(
 
 @pytest.fixture(scope="session")
 def composite_dataset_config(
-    variants_db_fixture: VariantsDb
+    variants_db_fixture: VariantsDb,
 ) -> Box:
     return cast(
         Box,

@@ -1,14 +1,12 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
-
 from dask import config
 
 import dae.dask.named_cluster
-from dae.dask.named_cluster import setup_client, \
-    setup_client_from_config
+from dae.dask.named_cluster import setup_client, setup_client_from_config
 
 
-@pytest.fixture
+@pytest.fixture()
 def named_cluster_config():
     return {
         "default": "local",
@@ -18,10 +16,10 @@ def named_cluster_config():
             "params": {
                 "memory_limit": "4GB",
                 "threads_per_worker": 2,
-            }
+            },
         },
 
-        ]
+        ],
     }
 
 
@@ -81,8 +79,8 @@ def test_setup_cluster_from_config_simple(mocker):
         "dae.dask.named_cluster.set_up_local_cluster", autospec=True)
     mocker.patch.dict(
         dae.dask.named_cluster._CLUSTER_TYPES, {
-            "local": mocked_factory
-        }
+            "local": mocked_factory,
+        },
     )
     mocker.patch(
         "dae.dask.named_cluster.Client",
@@ -95,7 +93,7 @@ def test_setup_cluster_from_config_simple(mocker):
     # pylint: disable=no-member
     dae.dask.named_cluster\
         .set_up_local_cluster.assert_called_once_with({  # type: ignore
-            "number_of_workers": 2
+            "number_of_workers": 2,
         })
 
 

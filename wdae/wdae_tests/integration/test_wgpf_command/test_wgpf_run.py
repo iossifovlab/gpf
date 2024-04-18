@@ -3,8 +3,8 @@
 from typing import Callable, ContextManager
 
 import pytest_mock
-
 from gpf_instance.gpf_instance import WGPFInstance
+
 from wdae import wgpf  # type: ignore
 from wdae_tests.integration.testing import LiveServer
 
@@ -13,7 +13,7 @@ def test_wgpf_run_simple(
     wgpf_fixture: WGPFInstance,
     wdae_django_setup: Callable[
         [WGPFInstance, str], ContextManager[LiveServer]],
-    mocker: pytest_mock.MockerFixture
+    mocker: pytest_mock.MockerFixture,
 ) -> None:
     # Given
     with wdae_django_setup(
@@ -39,7 +39,7 @@ def test_wgpf_run_without_init(
     wgpf_fixture: WGPFInstance,
     wdae_django_setup: Callable[
         [WGPFInstance, str], ContextManager[LiveServer]],
-    mocker: pytest_mock.MockerFixture
+    mocker: pytest_mock.MockerFixture,
 ) -> None:
 
     # Given
@@ -72,7 +72,7 @@ def test_wgpf_run_without_init(
             ]),
             mocker.call([
                 "wgpf", "runserver", "0.0.0.0:8000", "--skip-checks",
-            ])
+            ]),
         ])
 
 
@@ -80,7 +80,7 @@ def test_wgpf_run_with_port(
     wgpf_fixture: WGPFInstance,
     wdae_django_setup: Callable[
         [WGPFInstance, str], ContextManager[LiveServer]],
-    mocker: pytest_mock.MockerFixture
+    mocker: pytest_mock.MockerFixture,
 ) -> None:
 
     # Given
@@ -107,7 +107,7 @@ def test_wgpf_run_with_host(
     wgpf_fixture: WGPFInstance,
     wdae_django_setup: Callable[
         [WGPFInstance, str], ContextManager[LiveServer]],
-    mocker: pytest_mock.MockerFixture
+    mocker: pytest_mock.MockerFixture,
 ) -> None:
 
     # Given
@@ -134,7 +134,7 @@ def test_wgpf_run_check_wdae_directory(
     wgpf_fixture: WGPFInstance,
     wdae_django_setup: Callable[
         [WGPFInstance, str], ContextManager[LiveServer]],
-    mocker: pytest_mock.MockerFixture
+    mocker: pytest_mock.MockerFixture,
 ) -> None:
     # Given
     with wdae_django_setup(

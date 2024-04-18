@@ -1,10 +1,9 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 from box import Box
-
-from studies.study_wrapper import StudyWrapper, RemoteStudyWrapper
 from studies.remote_study import RemoteGenotypeData
-from dae.common_reports.common_report import CommonReport
+from studies.study_wrapper import RemoteStudyWrapper, StudyWrapper
 
+from dae.common_reports.common_report import CommonReport
 from dae.studies.study import GenotypeDataStudy
 
 

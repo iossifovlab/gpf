@@ -2,8 +2,8 @@
 import numpy as np
 import pandas as pd
 
+from dae.pheno.common import MeasureType, default_config
 from dae.pheno.prepare.measure_classifier import MeasureClassifier
-from dae.pheno.common import default_config, MeasureType
 
 
 def test_classifier_non_numeric() -> None:

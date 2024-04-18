@@ -1,42 +1,50 @@
 from __future__ import annotations
+
+import logging
 import os
 import sys
-import logging
 import time
-from abc import abstractmethod, ABC
+from abc import ABC, abstractmethod
+from collections import defaultdict
+from collections.abc import Generator
 from copy import deepcopy
 from dataclasses import dataclass
 from functools import cache
-from typing import Callable, Optional, cast, Union, Generator, Any
-from collections import defaultdict
 from math import ceil
+from typing import Any, Callable, Optional, Union, cast
 
 import yaml
 from box import Box
 
-from dae.annotation.annotation_factory import AnnotationConfigParser, \
-    build_annotation_pipeline, AnnotationPipeline
-
-from dae.variants_loaders.cnv.loader import CNVLoader
-from dae.variants_loaders.dae.loader import DaeTransmittedLoader, DenovoLoader
-from dae.variants_loaders.vcf.loader import VcfLoader
-from dae.variants_loaders.raw.loader import AnnotationPipelineDecorator, \
-    VariantsLoader
+from dae.annotation.annotation_factory import (
+    AnnotationConfigParser,
+    AnnotationPipeline,
+    build_annotation_pipeline,
+)
+from dae.configuration.gpf_config_parser import GPFConfigParser
+from dae.configuration.schemas.import_config import (
+    embedded_input_schema,
+    import_config_schema,
+)
 from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.genotype_storage.genotype_storage import GenotypeStorage
-from dae.genotype_storage.genotype_storage_registry import \
-    GenotypeStorageRegistry
-from dae.parquet.partition_descriptor import PartitionDescriptor
-from dae.configuration.gpf_config_parser import GPFConfigParser
-from dae.task_graph.graph import TaskGraph
-from dae.pedigrees.families_data import FamiliesData
-from dae.configuration.schemas.import_config import import_config_schema, \
-    embedded_input_schema
-from dae.pedigrees.loader import FamiliesLoader
+from dae.genotype_storage.genotype_storage_registry import (
+    GenotypeStorageRegistry,
+)
 from dae.gpf_instance import GPFInstance
+from dae.parquet.partition_descriptor import PartitionDescriptor
+from dae.pedigrees.families_data import FamiliesData
+from dae.pedigrees.loader import FamiliesLoader
+from dae.task_graph.graph import TaskGraph
 from dae.utils import fs_utils
 from dae.utils.statistics import StatsCollection
-
+from dae.variants_loaders.cnv.loader import CNVLoader
+from dae.variants_loaders.dae.loader import DaeTransmittedLoader, DenovoLoader
+from dae.variants_loaders.raw.loader import (
+    AnnotationPipelineDecorator,
+    VariantsLoader,
+)
+from dae.variants_loaders.vcf.loader import VcfLoader
 
 logger = logging.getLogger(__file__)
 
@@ -96,7 +104,7 @@ class ImportProject:
     def build_from_config(
         import_config: dict[str, Any],
         base_input_dir: str = "",
-        gpf_instance: Optional[GPFInstance] = None
+        gpf_instance: Optional[GPFInstance] = None,
     ) -> ImportProject:
         """Create a new project from the provided config.
 
@@ -113,7 +121,7 @@ class ImportProject:
             normalizer.normalize(import_config, base_input_dir)
         return ImportProject(
             import_config, base_input_dir, base_config_dir,
-            gpf_instance=gpf_instance, config_filenames=external_files
+            gpf_instance=gpf_instance, config_filenames=external_files,
         )
 
     @staticmethod
@@ -158,7 +166,7 @@ class ImportProject:
     def get_pedigree_loader(self) -> FamiliesLoader:
         families_filename, families_params = self.get_pedigree_params()
         families_loader = FamiliesLoader(
-            families_filename, **families_params
+            families_filename, **families_params,
         )
         return families_loader
 
@@ -219,7 +227,7 @@ class ImportProject:
     def get_variant_loader(
         self,
         bucket: Optional[Bucket] = None, loader_type: Optional[str] = None,
-        reference_genome: Optional[ReferenceGenome] = None
+        reference_genome: Optional[ReferenceGenome] = None,
     ) -> VariantsLoader:
         """Get the appropriate variant loader for the specified bucket."""
         if bucket is None and loader_type is None:
@@ -241,7 +249,7 @@ class ImportProject:
         return self._input_filenames_cache[bucket.type]
 
     def get_variant_params(
-        self, loader_type: str
+        self, loader_type: str,
     ) -> tuple[Union[str, list[str]], dict[str, Any]]:
         """Return variant loader filenames and params."""
         assert loader_type in self.import_config["input"], \
@@ -267,7 +275,7 @@ class ImportProject:
 
     def _get_variant_loader(
         self, loader_type: str,
-        reference_genome: Optional[ReferenceGenome] = None
+        reference_genome: Optional[ReferenceGenome] = None,
     ) -> VariantsLoader:
         assert loader_type in self.import_config["input"], \
             f"No input config for loader {loader_type}"
@@ -328,7 +336,7 @@ class ImportProject:
         """Where to store generated import files (e.g. parquet files)."""
         return cast(
             str,
-            self.import_config.get("processing_config", {}).get("work_dir", "")
+            self.import_config.get("processing_config", {}).get("work_dir", ""),
         )
 
     @property
@@ -345,7 +353,7 @@ class ImportProject:
         assert self._base_input_dir is not None
         return fs_utils.join(
             self._base_input_dir,
-            self.import_config["input"].get("input_dir", "")
+            self.import_config["input"].get("input_dir", ""),
         )
 
     def has_variants(self) -> bool:
@@ -430,7 +438,7 @@ class ImportProject:
             variants_loader = cast(
                 VariantsLoader,
                 AnnotationPipelineDecorator(
-                    variants_loader, annotation_pipeline
+                    variants_loader, annotation_pipeline,
                 ))
         return variants_loader
 
@@ -459,7 +467,7 @@ class ImportProject:
             "denovo": 0,
             "vcf": 100_000,
             "dae": 200_000,
-            "cnv": 300_000
+            "cnv": 300_000,
         }[loader_type]
 
     @staticmethod
@@ -506,7 +514,7 @@ class ImportProject:
             self._get_processing_region_length(loader_type)
         partition_description = PartitionDescriptor(
             chromosomes=target_chromosomes,
-            region_length=processing_region_length  # type: ignore
+            region_length=processing_region_length,  # type: ignore
         )
 
         partition_helper = MakefilePartitionHelper(
@@ -522,7 +530,7 @@ class ImportProject:
             mode = "single_bucket"  # default mode when missing config
         variants_targets = partition_helper.generate_variants_targets(
             loader_chromosomes,
-            mode=mode
+            mode=mode,
         )
 
         default_bucket_index = self._get_default_bucket_index(loader_type)
@@ -570,7 +578,7 @@ class ImportProject:
             if all_already_have_prefix and len(loader.chromosomes):
                 raise ValueError(
                     f"All chromosomes already have the prefix {prefix}. "
-                    "Consider removing add_chrom_prefix."
+                    "Consider removing add_chrom_prefix.",
                 )
 
         prefix = variants_params.get("del_chrom_prefix")
@@ -583,11 +591,11 @@ class ImportProject:
             except AssertionError as exp:
                 raise ValueError(
                     f"Chromosomes already missing the prefix {prefix}. "
-                    "Consider removing del_chrom_prefix."
+                    "Consider removing del_chrom_prefix.",
                 ) from exp
 
     def get_annotation_pipeline_config(
-        self
+        self,
     ) -> list[dict]:
         """Return the annotation pipeline configuration."""
         gpf_instance = self.get_gpf_instance()
@@ -600,10 +608,10 @@ class ImportProject:
             # pipeline in external file
             assert self._base_config_dir is not None
             annotation_config_file = fs_utils.join(
-                self._base_config_dir, annotation_config["file"]
+                self._base_config_dir, annotation_config["file"],
             )
             return construct_import_annotation_pipeline_config(
-                gpf_instance, annotation_configfile=annotation_config_file
+                gpf_instance, annotation_configfile=annotation_config_file,
             )
         return cast(list[dict], annotation_config)
 
@@ -612,7 +620,7 @@ class ImportProject:
         gpf_instance = self.get_gpf_instance()
         annotation_config = AnnotationConfigParser.parse_raw(config)
         return build_annotation_pipeline(
-            pipeline_config=annotation_config, grr_repository=gpf_instance.grr
+            pipeline_config=annotation_config, grr_repository=gpf_instance.grr,
         )
 
     def __str__(self) -> str:
@@ -653,7 +661,7 @@ class ImportConfigNormalizer:
         config = deepcopy(import_config)
 
         base_input_dir, external_files = self._load_external_files(
-            config, base_input_dir
+            config, base_input_dir,
         )
 
         self._map_for_key(config, "region_length", self._int_shorthand)
@@ -675,7 +683,7 @@ class ImportConfigNormalizer:
 
         base_input_dir = cls._load_external_file(
             config, "input", base_input_dir, embedded_input_schema,
-            external_files
+            external_files,
         )
 
         if "file" in config.get("annotation", {}):
@@ -697,10 +705,10 @@ class ImportConfigNormalizer:
             external_fn = fs_utils.join(base_input_dir, sub_config["file"])
             external_files.append(external_fn)
             sub_config = GPFConfigParser.parse_and_interpolate_file(
-                external_fn
+                external_fn,
             )
             sub_config = GPFConfigParser.validate_config(
-                sub_config, schema
+                sub_config, schema,
             )
             base_input_dir = fs_utils.containing_path(external_fn)
         config[section_key] = sub_config
@@ -738,7 +746,7 @@ class ImportConfigNormalizer:
         assert isinstance(obj, str)
 
         chrom_list = list(
-            map(str.strip, obj.split(","))
+            map(str.strip, obj.split(",")),
         )
         return cls._expand_chromosomes(chrom_list)
 
@@ -849,7 +857,7 @@ def save_study_config(
 
 def construct_import_annotation_pipeline_config(
     gpf_instance: GPFInstance,
-    annotation_configfile: Optional[str] = None
+    annotation_configfile: Optional[str] = None,
 ) -> list[dict]:
     """Construct annotation pipeline config for importing data."""
     pipeline_config = []
@@ -884,19 +892,19 @@ class MakefilePartitionHelper:
         self.genome = genome
         self.partition_descriptor = partition_descriptor
         self.chromosome_lengths = dict(
-            self.genome.get_all_chrom_lengths()
+            self.genome.get_all_chrom_lengths(),
         )
 
     def region_bins_count(self, chrom: str) -> int:
         result = ceil(
             self.chromosome_lengths[chrom]
-            / self.partition_descriptor.region_length
+            / self.partition_descriptor.region_length,
         )
         return result
 
     @staticmethod
     def build_target_chromosomes(target_chromosomes: list[str]) -> list[str]:
-        return target_chromosomes[:]
+        return target_chromosomes.copy()
 
     def generate_chrom_targets(
             self, target_chrom: str) -> list[tuple[str, str]]:
@@ -917,7 +925,7 @@ class MakefilePartitionHelper:
             if end > self.chromosome_lengths[target_chrom]:
                 end = self.chromosome_lengths[target_chrom]
             result.append(
-                (f"{target}_{region_index}", f"{chrom}:{start}-{end}")
+                (f"{target}_{region_index}", f"{chrom}:{start}-{end}"),
             )
         return result
 
@@ -941,7 +949,7 @@ class MakefilePartitionHelper:
         if len(self.partition_descriptor.chromosomes) == 0:
             return {"none": [""]}
 
-        generated_target_chromosomes = target_chromosomes[:]
+        generated_target_chromosomes = target_chromosomes.copy()
         targets: dict[str, list]
         if mode == "single_bucket":
             targets = {"all": [None]}

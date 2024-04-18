@@ -7,14 +7,15 @@ from typing import Any
 import pytest
 from pytest_mock import MockerFixture
 
-from dae.genomic_resources.repository import ReadWriteRepositoryProtocol, \
-    GR_CONF_FILE_NAME
 from dae.genomic_resources.fsspec_protocol import FsspecReadWriteProtocol
-from dae.genomic_resources.testing import \
-    build_inmemory_test_protocol
+from dae.genomic_resources.repository import (
+    GR_CONF_FILE_NAME,
+    ReadWriteRepositoryProtocol,
+)
+from dae.genomic_resources.testing import build_inmemory_test_protocol
 
 
-@pytest.mark.grr_rw
+@pytest.mark.grr_rw()
 def test_collect_all_resources(
         fsspec_proto: FsspecReadWriteProtocol) -> None:
     proto = fsspec_proto
@@ -37,7 +38,7 @@ def test_resource_paths(
     assert config_path.endswith("one/genomic_resource.yaml")
 
 
-@pytest.mark.grr_rw
+@pytest.mark.grr_rw()
 def test_build_resource_file_state(
         fsspec_proto: FsspecReadWriteProtocol) -> None:
     proto = fsspec_proto
@@ -60,7 +61,7 @@ def test_build_resource_file_state(
     assert state.md5 == "d9636a8dca9e5626851471d1c0ea92b1"
 
 
-@pytest.mark.grr_rw
+@pytest.mark.grr_rw()
 def test_save_load_resource_file_state(
         fsspec_proto: FsspecReadWriteProtocol) -> None:
     proto = fsspec_proto
@@ -81,7 +82,7 @@ def test_save_load_resource_file_state(
     assert loaded.md5 == "d9636a8dca9e5626851471d1c0ea92b1"
 
 
-@pytest.mark.grr_rw
+@pytest.mark.grr_rw()
 def test_collect_resource_entries(
         fsspec_proto: FsspecReadWriteProtocol) -> None:
     proto = fsspec_proto
@@ -121,7 +122,7 @@ def test_open_raw_file_text_read(
         assert content == "alabala"
 
 
-@pytest.mark.grr_rw
+@pytest.mark.grr_rw()
 def test_open_raw_file_text_write(
         fsspec_proto: FsspecReadWriteProtocol) -> None:
     proto = fsspec_proto
@@ -134,7 +135,7 @@ def test_open_raw_file_text_write(
     assert proto.file_exists(res, "new_data.txt")
 
 
-@pytest.mark.grr_rw
+@pytest.mark.grr_rw()
 def test_open_raw_file_text_write_compression(
         fsspec_proto: FsspecReadWriteProtocol) -> None:
     proto = fsspec_proto
@@ -178,7 +179,7 @@ def test_compute_md5_sum(
         "d41d8cd98f00b204e9800998ecf8427e"
 
 
-@pytest.mark.grr_rw
+@pytest.mark.grr_rw()
 def test_build_manifest(
         fsspec_proto: FsspecReadWriteProtocol) -> None:
     proto = fsspec_proto
@@ -215,7 +216,7 @@ def test_load_manifest(
         "d41d8cd98f00b204e9800998ecf8427e"
 
 
-@pytest.mark.grr_rw
+@pytest.mark.grr_rw()
 def test_load_missing_manifest(
         fsspec_proto: FsspecReadWriteProtocol) -> None:
     proto = fsspec_proto
@@ -251,7 +252,7 @@ def test_get_manifest(
         "d41d8cd98f00b204e9800998ecf8427e"
 
 
-@pytest.mark.grr_rw
+@pytest.mark.grr_rw()
 def test_get_missing_manifest(
         fsspec_proto: FsspecReadWriteProtocol) -> None:
     proto = fsspec_proto
@@ -277,7 +278,7 @@ def test_get_missing_manifest(
         "d41d8cd98f00b204e9800998ecf8427e"
 
 
-@pytest.mark.grr_rw
+@pytest.mark.grr_rw()
 def test_delete_resource_file(
         fsspec_proto: FsspecReadWriteProtocol) -> None:
 
@@ -296,7 +297,7 @@ def test_delete_resource_file(
     assert not proto.filesystem.exists(path)
 
 
-@pytest.mark.grr_rw
+@pytest.mark.grr_rw()
 def test_copy_resource_file(
         content_fixture: dict[str, Any],
         fsspec_proto: FsspecReadWriteProtocol) -> None:
@@ -322,7 +323,7 @@ def test_copy_resource_file(
     assert loaded == state
 
 
-@pytest.mark.grr_rw
+@pytest.mark.grr_rw()
 def test_copy_resource(
         content_fixture: dict[str, Any],
         fsspec_proto: FsspecReadWriteProtocol) -> None:
@@ -348,16 +349,16 @@ def test_copy_resource(
     assert state.md5 == "d9636a8dca9e5626851471d1c0ea92b1"
 
 
-@pytest.mark.grr_rw
+@pytest.mark.grr_rw()
 def test_update_resource_all_files(
-    fsspec_proto: ReadWriteRepositoryProtocol
+    fsspec_proto: ReadWriteRepositoryProtocol,
 ) -> None:
     # Given
     src_proto = build_inmemory_test_protocol({
         "sample": {
             GR_CONF_FILE_NAME: "",
             "prim.txt": "alabala",
-            "second.txt": "labalaa"
+            "second.txt": "labalaa",
         },
     })
     src_res = src_proto.get_resource("sample")
@@ -372,16 +373,16 @@ def test_update_resource_all_files(
     assert proto.file_exists(dst_res, "second.txt")
 
 
-@pytest.mark.grr_rw
+@pytest.mark.grr_rw()
 def test_update_resource_specific_file(
-    fsspec_proto: ReadWriteRepositoryProtocol
+    fsspec_proto: ReadWriteRepositoryProtocol,
 ) -> None:
     # Given
     src_proto = build_inmemory_test_protocol({
         "sample": {
             GR_CONF_FILE_NAME: "",
             "prim.txt": "alabala",
-            "second.txt": "labalaa"
+            "second.txt": "labalaa",
         },
     })
     src_res = src_proto.get_resource("sample")
@@ -396,10 +397,10 @@ def test_update_resource_specific_file(
     assert not proto.file_exists(dst_res, "second.txt")
 
 
-@pytest.mark.grr_rw
+@pytest.mark.grr_rw()
 def test_build_manifest_should_not_update_existing_resource_state(
     fsspec_proto: ReadWriteRepositoryProtocol,
-    mocker: MockerFixture
+    mocker: MockerFixture,
 ) -> None:
     # Given
     proto = fsspec_proto

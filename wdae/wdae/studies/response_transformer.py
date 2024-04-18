@@ -1,23 +1,32 @@
 import itertools
-import traceback
 import logging
 import math
+import traceback
+from collections.abc import Generator, Iterable, Iterator
 from functools import partial
-from typing import Optional, Any, Union, Generator, Iterator, Iterable, \
-    Callable, cast
+from typing import (
+    Any,
+    Callable,
+    Optional,
+    Union,
+    cast,
+)
 
-from dae.utils.dae_utils import join_line, split_iterable
-from dae.utils.variant_utils import mat2str, fgt2str
-from dae.effect_annotation.effect import ge2str, \
-    gd2str, gene_effect_get_genes_worst, \
-    gene_effect_get_worst_effect, \
-    gene_effect_get_genes
-from dae.variants.attributes import Inheritance
-from dae.variants.variant import SummaryVariant, VariantDesc
-from dae.variants.family_variant import FamilyVariant, FamilyAllele
-from dae.pedigrees.family import Person
+from dae.effect_annotation.effect import (
+    gd2str,
+    ge2str,
+    gene_effect_get_genes,
+    gene_effect_get_genes_worst,
+    gene_effect_get_worst_effect,
+)
 from dae.pedigrees.families_data import FamiliesData
+from dae.pedigrees.family import Person
 from dae.person_sets import PersonSetCollection
+from dae.utils.dae_utils import join_line, split_iterable
+from dae.utils.variant_utils import fgt2str, mat2str
+from dae.variants.attributes import Inheritance
+from dae.variants.family_variant import FamilyAllele, FamilyVariant
+from dae.variants.variant import SummaryVariant, VariantDesc
 
 logger = logging.getLogger(__name__)
 
@@ -69,14 +78,14 @@ class ResponseTransformer:
 
         "family_person_ids":
         lambda v: [";".join(list(map(
-            lambda m: m.person_id, v.members_in_order
+            lambda m: m.person_id, v.members_in_order,
         )))],
 
         "carrier_person_ids":
         lambda v: list(
             map(
                 lambda aa: ";".join(list(filter(None, aa.variant_in_members))),
-                v.alt_alleles
+                v.alt_alleles,
             )),
 
         "carrier_person_attributes":
@@ -84,9 +93,9 @@ class ResponseTransformer:
             map(
                 lambda aa:
                 members_in_order_get_family_structure(
-                    list(filter(None, aa.variant_in_members_objects))
+                    list(filter(None, aa.variant_in_members_objects)),
                 ),
-                v.alt_alleles
+                v.alt_alleles,
             )),
 
         "inheritance_type":
@@ -99,7 +108,7 @@ class ResponseTransformer:
                 Inheritance.possible_denovo, Inheritance.possible_omission])
                 & set(aa.inheritance_in_members)
             else "mendelian",
-            v.alt_alleles)
+            v.alt_alleles),
         ),
 
         "is_denovo":
@@ -107,7 +116,7 @@ class ResponseTransformer:
             map(
                 lambda aa:
                 Inheritance.denovo in aa.inheritance_in_members,
-                v.alt_alleles)
+                v.alt_alleles),
         ),
 
         "effects":
@@ -146,7 +155,7 @@ class ResponseTransformer:
         [
             ":".join([
                 phenotype_person_sets.get_person_set_of_person(mid).name
-                for mid in v.members_fpids])
+                for mid in v.members_fpids]),
         ],
 
         "carrier_phenotypes":
@@ -173,12 +182,12 @@ class ResponseTransformer:
             gene_scores_db = self.study_wrapper.gene_scores_db
             for score_id, score_desc in gene_scores_db.score_descs.items():
                 gene_score = gene_scores_db.get_gene_score(
-                    score_desc.resource_id
+                    score_desc.resource_id,
                 )
                 if gene_score is None:
                     continue
                 self.gene_scores_dicts[score_id] = gene_score._to_dict(
-                    score_id
+                    score_id,
                 )
             self._get_all_pheno_values()
 
@@ -187,7 +196,7 @@ class ResponseTransformer:
         return self.study_wrapper.families
 
     def _get_all_pheno_values(
-        self
+        self,
     ) -> Optional[dict]:
         if self._pheno_values is not None:
             return self._pheno_values
@@ -214,7 +223,7 @@ class ResponseTransformer:
     @staticmethod
     def _get_pheno_values_for_variant(
         variant: FamilyVariant,
-        pheno_column_values: Optional[dict]
+        pheno_column_values: Optional[dict],
     ) -> Optional[dict[str, str]]:
         if not pheno_column_values:
             return None
@@ -229,7 +238,7 @@ class ResponseTransformer:
         return pheno_values
 
     def _get_gene_scores_values(
-        self, allele: FamilyAllele, default: Optional[str] = None
+        self, allele: FamilyAllele, default: Optional[str] = None,
     ) -> dict[str, Any]:
         if not self.study_wrapper.gene_score_column_sources:
             return {}
@@ -245,7 +254,7 @@ class ResponseTransformer:
 
             if gene != "":
                 gene_scores_values[gwc] = self.gene_scores_dicts[gwc].get(
-                    gene, default
+                    gene, default,
                 )
             else:
                 gene_scores_values[gwc] = default
@@ -265,7 +274,7 @@ class ResponseTransformer:
             member.sex.short(),
             str(member.role),
             PersonSetCollection.get_person_color(
-                member, person_set_collection
+                member, person_set_collection,
             ),
             member.layout,
             (member.generated or member.not_sequenced),
@@ -274,12 +283,12 @@ class ResponseTransformer:
         ]
 
     def _generate_pedigree(
-        self, variant: FamilyVariant, collection_id: str
+        self, variant: FamilyVariant, collection_id: str,
     ) -> list:
         result = []
         # best_st = np.sum(allele.gt == allele.allele_index, axis=0)
         person_set_collection = self.study_wrapper.get_person_set_collection(
-            collection_id
+            collection_id,
         )
         genotype = variant.family_genotype
 
@@ -291,10 +300,10 @@ class ResponseTransformer:
                         member, person_set_collection,
                         "/".join([
                             str(v) for v in filter(
-                                lambda g: g != 0, genotype[index]
-                            )]
-                        )
-                    )
+                                lambda g: g != 0, genotype[index],
+                            )],
+                        ),
+                    ),
                 )
             except IndexError:
                 missing_members.add(member.person_id)
@@ -306,13 +315,13 @@ class ResponseTransformer:
             if (member.generated or member.not_sequenced) \
                     or (member.person_id in missing_members):
                 result.append(ResponseTransformer._get_wdae_member(
-                    member, person_set_collection, 0)
+                    member, person_set_collection, 0),
                 )
 
         return result
 
     def _add_additional_columns_summary(
-        self, variants_iterable: Generator[SummaryVariant, None, None]
+        self, variants_iterable: Generator[SummaryVariant, None, None],
     ) -> Generator[SummaryVariant, None, None]:
         for variants_chunk in split_iterable(
                 variants_iterable, self.STREAMING_CHUNK_SIZE):
@@ -325,9 +334,9 @@ class ResponseTransformer:
 
                 yield variant
 
-    def build_variant_row(  # noqa
+    def build_variant_row(
         self, v: Union[SummaryVariant, FamilyVariant],
-        column_descs: list[dict], **kwargs: Union[str]
+        column_descs: list[dict], **kwargs: Union[str],
     ) -> list:
         """Construct response row for a variant."""
         # pylint: disable=too-many-branches
@@ -365,12 +374,12 @@ class ResponseTransformer:
                     assert kwargs.get("person_set_collection") is not None
                     assert isinstance(v, FamilyVariant)
                     row_variant.append(self._generate_pedigree(
-                        v, kwargs["person_set_collection"]
+                        v, kwargs["person_set_collection"],
                     ))
                 elif col_source in self.PHENOTYPE_ATTRS:
                     phenotype_person_sets = \
                         self.study_wrapper.person_set_collections.get(
-                            "phenotype"
+                            "phenotype",
                         )
                     if phenotype_person_sets is None:
                         row_variant.append("-")
@@ -380,7 +389,7 @@ class ResponseTransformer:
                             ",".join(fn_format(v, phenotype_person_sets)))
                 elif col_source == "study_phenotype":
                     row_variant.append(
-                        self.study_wrapper.config.study_phenotype
+                        self.study_wrapper.config.study_phenotype,
                     )
                 else:
                     if col_source in self.SPECIAL_ATTRS:
@@ -407,7 +416,7 @@ class ResponseTransformer:
 
     @staticmethod
     def _gene_view_summary_download_variants_iterator(
-        variants: Iterable[SummaryVariant], frequency_column: str
+        variants: Iterable[SummaryVariant], frequency_column: str,
     ) -> Generator[list, None, None]:
         for v in variants:
             for aa in v.alt_alleles:
@@ -427,7 +436,7 @@ class ResponseTransformer:
 
     @staticmethod
     def transform_gene_view_summary_variant(
-        variant: SummaryVariant, frequency_column: str
+        variant: SummaryVariant, frequency_column: str,
     ) -> Generator[dict[str, Any], None, None]:
         """Transform gene view summary response into dicts."""
         out: dict[str, Any] = {
@@ -472,14 +481,14 @@ class ResponseTransformer:
             "family_variants_count",
             "is_denovo",
             "seen_in_affected",
-            "seen_in_unaffected"
+            "seen_in_unaffected",
         ]
 
         rows = filter(
             lambda sa: f"{sa[0]}:{sa[6]}" in summary_variant_ids,
             self._gene_view_summary_download_variants_iterator(
-                variants, frequency_column
-            )
+                variants, frequency_column,
+            ),
         )
         return map(join_line, itertools.chain([columns], rows))
 
@@ -490,13 +499,13 @@ class ResponseTransformer:
 
         def transformer(variant: FamilyVariant) -> FamilyVariant:
             pheno_values = self._get_pheno_values_for_variant(
-                variant, pheno_column_values
+                variant, pheno_column_values,
             )
 
             for allele in variant.alt_alleles:
                 fallele = cast(FamilyAllele, allele)
                 gene_scores_values = self._get_gene_scores_values(
-                    fallele
+                    fallele,
                 )
                 fallele.update_attributes(gene_scores_values)
 
@@ -508,9 +517,9 @@ class ResponseTransformer:
         return transformer
 
     def transform_summary_variants(
-        self, variants_iterable: Generator[SummaryVariant, None, None]
+        self, variants_iterable: Generator[SummaryVariant, None, None],
     ) -> Generator[list, None, None]:
         for v in self._add_additional_columns_summary(variants_iterable):
             yield self.build_variant_row(
-                v, self.study_wrapper.summary_preview_descs
+                v, self.study_wrapper.summary_preview_descs,
             )

@@ -1,28 +1,31 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-import time
 import pathlib
 import textwrap
+import time
 from typing import Callable, ContextManager
 
 import pytest
 import requests
-
 from gpf_instance.gpf_instance import WGPFInstance
-from wdae_tests.integration.testing import setup_wgpf_instance, LiveServer
 
-from dae.genomic_resources.repository_factory import \
-    build_genomic_resource_repository
-
+from dae.genomic_resources.repository_factory import (
+    build_genomic_resource_repository,
+)
 from dae.studies.study import GenotypeData
-
-from dae.testing import setup_pedigree, setup_vcf, setup_dataset, vcf_study, \
-    setup_directories
-from dae.testing.t4c8_import import t4c8_genome, t4c8_genes
+from dae.testing import (
+    setup_dataset,
+    setup_directories,
+    setup_pedigree,
+    setup_vcf,
+    vcf_study,
+)
+from dae.testing.t4c8_import import t4c8_genes, t4c8_genome
+from wdae_tests.integration.testing import LiveServer, setup_wgpf_instance
 
 
 def create_wgpf_fixture(
     root_path: pathlib.Path,
-    visible_datasets: list[str]
+    visible_datasets: list[str],
 ) -> WGPFInstance:
 
     setup_directories(
@@ -31,8 +34,8 @@ def create_wgpf_fixture(
                 instance_id: test
                 gpfjs:
                   visible_datasets: { visible_datasets}
-            """)
-        }
+            """),
+        },
     )
     t4c8_genome(root_path / "grr")
     t4c8_genes(root_path / "grr")
@@ -40,7 +43,7 @@ def create_wgpf_fixture(
     grr = build_genomic_resource_repository({
         "id": "t4c8_local",
         "type": "directory",
-        "directory": str(root_path / "grr")
+        "directory": str(root_path / "grr"),
     })
 
     gpf_instance = setup_wgpf_instance(
@@ -75,14 +78,14 @@ f1.3     ch3      dad3  mom3  2   2      prb
 chr1   1   .  A   C   .    .      .    GT     0/0  0/0  0/1 0/0  0/0  0/0
 chr1   2   .  C   G   .    .      .    GT     0/0  0/0  0/0 0/0  0/0  0/1
 chr1   3   .  G   T   .    .      .    GT     0/0  1/0  0/1 0/0  0/0  0/0
-        """)  # noqa
+        """)
 
     project_config_update = {
         "input": {
             "vcf": {
                 "denovo_mode": "denovo",
                 "omission_mode": "omission",
-            }
+            },
         },
     }
     study = vcf_study(
@@ -99,8 +102,8 @@ chr1   3   .  G   T   .    .      .    GT     0/0  1/0  0/1 0/0  0/0  0/0
                     "sources": [
                         {
                             "from": "pedigree",
-                            "source": "status"
-                        }
+                            "source": "status",
+                        },
                     ],
                     "default": {
                         "color": "#aaaaaa",
@@ -113,23 +116,23 @@ chr1   3   .  G   T   .    .      .    GT     0/0  1/0  0/1 0/0  0/0  0/0
                             "id": "autism",
                             "name": "autism",
                             "values": [
-                                "affected"
-                            ]
+                                "affected",
+                            ],
                         },
                         {
                             "color": "#00ff00",
                             "id": "unaffected",
                             "name": "unaffected",
                             "values": [
-                                "unaffected"
-                            ]
+                                "unaffected",
+                            ],
                         },
-                    ]
+                    ],
                 },
                 "selected_person_set_collections": [
-                    "phenotype"
-                ]
-            }
+                    "phenotype",
+                ],
+            },
         })
     return study
 
@@ -159,14 +162,14 @@ f2.3     ch4      dad3  mom3  2   0      prb
 chr1   5   .  A   C   .    .      .    GT     0/0  0/0  0/1 0/0  0/0  0/0 0/1
 chr1   6   .  C   G   .    .      .    GT     0/0  0/0  0/0 0/0  0/0  0/1 0/0
 chr1   7   .  G   T   .    .      .    GT     0/0  1/0  0/1 0/0  0/0  0/0 0/1
-        """)  # noqa
+        """)
 
     project_config_update = {
         "input": {
             "vcf": {
                 "denovo_mode": "denovo",
                 "omission_mode": "omission",
-            }
+            },
         },
     }
     study = vcf_study(
@@ -183,8 +186,8 @@ chr1   7   .  G   T   .    .      .    GT     0/0  1/0  0/1 0/0  0/0  0/0 0/1
                     "sources": [
                         {
                             "from": "pedigree",
-                            "source": "status"
-                        }
+                            "source": "status",
+                        },
                     ],
                     "default": {
                         "color": "#aaaaaa",
@@ -197,29 +200,29 @@ chr1   7   .  G   T   .    .      .    GT     0/0  1/0  0/1 0/0  0/0  0/0 0/1
                             "id": "epilepsy",
                             "name": "epilepsy",
                             "values": [
-                                "affected"
-                            ]
+                                "affected",
+                            ],
                         },
                         {
                             "color": "#00ff00",
                             "id": "unaffected",
                             "name": "unaffected",
                             "values": [
-                                "unaffected"
-                            ]
+                                "unaffected",
+                            ],
                         },
-                    ]
+                    ],
                 },
                 "selected_person_set_collections": [
-                    "phenotype"
-                ]
-            }
+                    "phenotype",
+                ],
+            },
         })
     return study
 
 
 def create_dataset(
-    root_path: pathlib.Path, gpf: WGPFInstance
+    root_path: pathlib.Path, gpf: WGPFInstance,
 ) -> GenotypeData:
     (root_path / "dataset").mkdir(exist_ok=True)
 
@@ -267,7 +270,7 @@ def test_datasets_order(
     tmp_path: pathlib.Path,
     datasets_order: list[str],
     wdae_django_server: Callable[
-        [WGPFInstance, str], ContextManager[LiveServer]]
+        [WGPFInstance, str], ContextManager[LiveServer]],
 ) -> None:
     wgpf = create_wgpf_fixture(tmp_path, datasets_order)
     assert wgpf is not None

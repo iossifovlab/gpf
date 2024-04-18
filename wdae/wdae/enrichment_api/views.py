@@ -1,23 +1,21 @@
 import logging
-from typing import Any, Optional, Iterable, Union, cast
-
-from rest_framework.response import Response
-from rest_framework.request import Request
-
-from rest_framework import status
+from collections.abc import Iterable
+from typing import Any, Optional, Union, cast
 
 # from silk.profiling.profiler import silk_profile
-
-
 from query_base.query_base import QueryDatasetView
+from rest_framework import status
+from rest_framework.request import Request
+from rest_framework.response import Response
+from studies.study_wrapper import RemoteStudyWrapper, StudyWrapper
 from utils.expand_gene_set import expand_gene_set
-from enrichment_api.enrichment_builder import EnrichmentBuilder, \
-    RemoteEnrichmentBuilder
-
-from studies.study_wrapper import StudyWrapper, RemoteStudyWrapper
 
 from dae.enrichment_tool.enrichment_helper import EnrichmentHelper
 from dae.studies.study import GenotypeData
+from enrichment_api.enrichment_builder import (
+    EnrichmentBuilder,
+    RemoteEnrichmentBuilder,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -44,13 +42,13 @@ class EnrichmentModelsView(QueryDatasetView):
                 result.append({
                     "id": counting_model.id,
                     "name": counting_model.name,
-                    "desc": counting_model.desc
+                    "desc": counting_model.desc,
                 })
         return result
 
     def get(
         self, request: Request,  # pylint: disable=unused-argument
-        dataset_id: str
+        dataset_id: str,
     ) -> Response:
         """Return enrichment configuration prepared for choosing."""
         study = self.gpf_instance.get_genotype_data(dataset_id)
@@ -73,14 +71,14 @@ class EnrichmentModelsView(QueryDatasetView):
                 "name": background.name,
                 "type": background.background_type,
                 "summary": background.resource.get_summary(),
-                "desc": background.resource.get_description()
+                "desc": background.resource.get_description(),
             })
         couting_models = self._collect_counting_models(study)
         result = {
             "background": background_descriptions,
             "counting": couting_models,
             "defaultBackground": default_background_model,
-            "defaultCounting": default_counting_model
+            "defaultCounting": default_counting_model,
         }
         return Response(result)
 
@@ -95,7 +93,7 @@ class EnrichmentTestView(QueryDatasetView):
 
     @staticmethod
     def _parse_gene_syms(query: dict[str, Any]) -> set[str]:
-        gene_syms = query.get("geneSymbols", None)
+        gene_syms = query.get("geneSymbols")
         if gene_syms is None:
             return set()
 
@@ -110,7 +108,7 @@ class EnrichmentTestView(QueryDatasetView):
             desc = f"Gene Set: {gene_set}"
             return desc
 
-        gene_score_request = query.get("geneScores", None)
+        gene_score_request = query.get("geneScores")
         gene_scores_id = None
         if gene_score_request is not None:
             gene_scores_id = gene_score_request.get("score", None)
@@ -165,15 +163,15 @@ class EnrichmentTestView(QueryDatasetView):
 
             if gene_score_id in self.gene_scores_db:
                 score_desc = self.gpf_instance.get_gene_score_desc(
-                    gene_score_id
+                    gene_score_id,
                 )
                 gene_score = self.gene_scores_db.get_gene_score(
-                    score_desc.resource_id
+                    score_desc.resource_id,
                 )
                 gene_syms = gene_score.get_genes(
                     gene_score_id,
                     score_min=range_start,
-                    score_max=range_end
+                    score_max=range_end,
                 )
             else:
                 return Response(status=status.HTTP_404_NOT_FOUND)
@@ -203,7 +201,7 @@ class EnrichmentTestView(QueryDatasetView):
         self, study_wrapper: Union[StudyWrapper, RemoteStudyWrapper],
         background_id: Optional[str],
         counting_id: Optional[str],
-        gene_syms: Iterable[str]
+        gene_syms: Iterable[str],
     ) -> Union[EnrichmentBuilder, RemoteEnrichmentBuilder]:
 
         if not study_wrapper.is_remote:

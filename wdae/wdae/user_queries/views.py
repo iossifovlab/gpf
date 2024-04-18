@@ -1,13 +1,12 @@
 import logging
 
-from utils.logger import request_logging
-from rest_framework import views
+from query_state_save.models import QueryState
+from rest_framework import status, views
 from rest_framework.request import Request
 from rest_framework.response import Response
-from rest_framework import status
+from utils.logger import request_logging
 
 from user_queries.models import UserQuery
-from query_state_save.models import QueryState
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +22,7 @@ class UserQuerySaveView(views.APIView):
 
         try:
             saved_query = QueryState.objects.get(
-                uuid=request.data["query_uuid"]
+                uuid=request.data["query_uuid"],
             )
         except KeyError:
             return Response(status=status.HTTP_400_BAD_REQUEST)
@@ -70,8 +69,8 @@ class UserQueryCollectView(views.APIView):
                             "page": q.query.page,
                         },
                         stored_queries,
-                    )
-                )
+                    ),
+                ),
             },
             status=status.HTTP_200_OK,
         )

@@ -1,7 +1,9 @@
 import os
+
 import pysam
 
 from dae.genomic_resources.repository import GenomicResource
+
 from .table import GenomicPositionTable
 from .table_inmemory import InmemoryGenomicPositionTable
 from .table_tabix import TabixGenomicPositionTable
@@ -9,7 +11,7 @@ from .table_vcf import VCFGenomicPositionTable
 
 
 def build_genomic_position_table(
-    resource: GenomicResource, table_definition: dict
+    resource: GenomicResource, table_definition: dict,
 ) -> GenomicPositionTable:
     """Instantiate a genome position table from a genomic resource."""
     filename = table_definition["filename"]

@@ -4,16 +4,16 @@ from typing import Optional
 
 import pytest
 
-from dae.testing.foobar_import import foobar_gpf
+from dae.genotype_storage import GenotypeStorage
 from dae.studies.study import GenotypeData
 from dae.testing import setup_pedigree, setup_vcf, vcf_study
+from dae.testing.foobar_import import foobar_gpf
 from dae.utils.regions import Region
-from dae.genotype_storage import GenotypeStorage
 
 
 @pytest.fixture(scope="module")
 def freq_vcf(
-    tmp_path_factory: pytest.TempPathFactory
+    tmp_path_factory: pytest.TempPathFactory,
 ) -> tuple[pathlib.Path, pathlib.Path]:
     root_path = tmp_path_factory.mktemp("vcf_path")
     in_vcf = setup_vcf(
@@ -57,7 +57,7 @@ f2       c2       d2    m2    2   2      prb
 def freq_study(
     tmp_path_factory: pytest.TempPathFactory,
     freq_vcf: tuple[pathlib.Path, pathlib.Path],
-    genotype_storage: GenotypeStorage
+    genotype_storage: GenotypeStorage,
 ) -> GenotypeData:
     # pylint: disable=import-outside-toplevel
     root_path = tmp_path_factory.mktemp(genotype_storage.storage_id)
@@ -74,8 +74,8 @@ def freq_study(
                     "include_unknown_person_genotypes": True,
                     "denovo_mode": "denovo",
                     "omission_mode": "omission",
-                }
-            }
+                },
+            },
         })
     return study
 

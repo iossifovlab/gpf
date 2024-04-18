@@ -9,7 +9,7 @@ pytestmark = pytest.mark.usefixtures(
 
 
 def test_datasets_api_get_remote_studies(
-    admin_client: Client
+    admin_client: Client,
 ) -> None:
     response = admin_client.get("/api/v3/datasets")
 
@@ -22,7 +22,7 @@ def test_datasets_api_get_remote_studies(
 
 
 def test_datasets_api_unsupported_features_unaccessible(
-    admin_client: Client
+    admin_client: Client,
 ) -> None:
     response = admin_client.get("/api/v3/datasets/TEST_REMOTE_iossifov_2014")
     assert response
@@ -34,7 +34,7 @@ def test_datasets_api_unsupported_features_unaccessible(
 
 
 def test_user_client_get_dataset_details_remote(
-        user_client: Client, wdae_gpf_instance: WGPFInstance
+        user_client: Client, wdae_gpf_instance: WGPFInstance,
 ) -> None:
 
     response = user_client.get(

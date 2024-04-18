@@ -3,9 +3,9 @@ import sys
 import time
 from typing import Optional
 
-from dae.utils.verbosity_configuration import VerbosityConfiguration
 from dae.task_graph import TaskGraphCli
 from dae.task_graph.graph import TaskGraph
+from dae.utils.verbosity_configuration import VerbosityConfiguration
 
 
 def _build_graph_a(graph_params: Optional[list[str]]) -> TaskGraph:

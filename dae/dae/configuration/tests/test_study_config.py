@@ -4,6 +4,7 @@ from typing import Any
 
 import pytest
 import yaml
+
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.study_config import study_config_schema
 from dae.configuration.study_config_builder import StudyConfigBuilder
@@ -14,12 +15,12 @@ def test_study_with_study_filters_fails() -> None:
         "id": "test",
         "genotype_browser": {
             "enabled": True,
-            "has_study_filters": True
+            "has_study_filters": True,
         },
     }
     with pytest.raises(ValueError) as err:
         GPFConfigParser.validate_config(
-            study_config, study_config_schema, conf_dir=os.path.abspath(".")
+            study_config, study_config_schema, conf_dir=os.path.abspath("."),
         )
     print(err)
 
@@ -30,11 +31,11 @@ def test_dataset_with_study_filters_passes() -> None:
         "studies": ["asdf"],
         "genotype_browser": {
             "enabled": True,
-            "has_study_filters": True
+            "has_study_filters": True,
         },
     }
     GPFConfigParser.validate_config(
-        study_config, study_config_schema, conf_dir=os.path.abspath(".")
+        study_config, study_config_schema, conf_dir=os.path.abspath("."),
     )
 
 
@@ -43,15 +44,15 @@ def test_study_with_study_filters_false_passes() -> None:
         "id": "test",
         "genotype_browser": {
             "enabled": True,
-            "has_study_filters": False
+            "has_study_filters": False,
         },
     }
     GPFConfigParser.validate_config(
-        study_config, study_config_schema, conf_dir=os.path.abspath(".")
+        study_config, study_config_schema, conf_dir=os.path.abspath("."),
     )
 
 
-@pytest.fixture
+@pytest.fixture()
 def full_study_config() -> dict[str, Any]:
     return {
         "id": "test",
@@ -97,7 +98,7 @@ def full_study_config() -> dict[str, Any]:
                         "ped_sep": "test",
                         "ped_tags": True,
                         "ped_no_tags": True,
-                    }
+                    },
                 },
                 "variants": [
                     {
@@ -125,15 +126,15 @@ def full_study_config() -> dict[str, Any]:
                             "vcf_denovo_mode": "test",
                             "vcf_omission_mode": "test",
                             "vcf_chromosomes": "test",
-                            "vcf_pedigree_mode": "test"
+                            "vcf_pedigree_mode": "test",
                         },
-                    }
+                    },
                 ],
             },
             "tables": {
                 "pedigree": "test",
                 "variants": "test",
-            }
+            },
         },
         "studies": ["test"],
         "genotype_browser": {
@@ -156,7 +157,7 @@ def full_study_config() -> dict[str, Any]:
                         "name": "test",
                         "source": "test",
                         "format": "test",
-                    }
+                    },
                 },
                 "phenotype": {
                     "test": {
@@ -164,14 +165,14 @@ def full_study_config() -> dict[str, Any]:
                         "source": "test",
                         "format": "test",
                         "role": "test",
-                    }
+                    },
                 },
             },
             "column_groups": {
                 "test": {
                     "name": "test",
-                    "columns": ["test"]
-                }
+                    "columns": ["test"],
+                },
             },
             "preview_columns": ["test"],
             "download_columns": ["test"],
@@ -186,7 +187,7 @@ def full_study_config() -> dict[str, Any]:
                     "source": "test",
                     "source_type": "test",
                     "filter_type": "test",
-                }
+                },
             },
             "family_filters": {
                 "test": {
@@ -195,12 +196,12 @@ def full_study_config() -> dict[str, Any]:
                     "source": "test",
                     "source_type": "test",
                     "filter_type": "test",
-                    "role": "test"
-                }
+                    "role": "test",
+                },
             },
             "variant_types": ["test"],
             "selected_variant_types": ["test"],
-            "max_variants_count": 1000
+            "max_variants_count": 1000,
         },
         "common_report": {
             "enabled": True,
@@ -211,24 +212,24 @@ def full_study_config() -> dict[str, Any]:
             "effect_groups": ["test"],
             "effect_types": ["test"],
             "draw_all_families": True,
-            "file_path": "test"
+            "file_path": "test",
         },
         "denovo_gene_sets": {
             "enabled": True,
             "selected_person_set_collections": ["test"],
             "selected_standard_criterias_values": ["test"],
             "standard_criterias": {
-                "test": {"segments": {"test": "test"}}
+                "test": {"segments": {"test": "test"}},
             },
             "recurrency_criteria": {
                 "segments": {
                     "test": {
                         "start": 1,
-                        "end": 1
-                    }
-                }
+                        "end": 1,
+                    },
+                },
             },
-            "gene_sets_names": ["test"]
+            "gene_sets_names": ["test"],
         },
         "enrichment": {
             "enabled": True,
@@ -248,11 +249,11 @@ def full_study_config() -> dict[str, Any]:
                 "test": {
                     "id": "test",
                     "name": "test",
-                    "desc": "test"
-                }
+                    "desc": "test",
+                },
             },
             "default_counting_model": "test",
-            "effect_types": ["test"]
+            "effect_types": ["test"],
         },
         "gene_browser": {
             "enabled": True,
@@ -262,7 +263,7 @@ def full_study_config() -> dict[str, Any]:
             "location_column": "test",
             "domain_min": 1.0,
             "domain_max": 1.0,
-            "has_affected_status": True
+            "has_affected_status": True,
         },
         "person_set_collections": {
             "test1": ["test"],
@@ -272,31 +273,31 @@ def full_study_config() -> dict[str, Any]:
                 "sources": [
                     {
                         "from": "test",
-                        "source": "test"
-                    }
+                        "source": "test",
+                    },
                 ],
                 "domain": [
                     {
                         "id": "test",
                         "name": "test",
                         "values": ["test"],
-                        "color": "test"
-                    }
+                        "color": "test",
+                    },
                 ],
                 "default": {
                     "id": "test",
                     "name": "test",
                     "values": ["test"],
-                    "color": "test"
-                }
-            }
-        }
+                    "color": "test",
+                },
+            },
+        },
     }
 
 
 def _build_structural_schema_value(
     output_schema: dict[Any, Any],
-    input_schema: dict[str, Any]
+    input_schema: dict[str, Any],
 ) -> dict[str, Any]:
     for k, v in input_schema.items():
         if k not in ["type", "schema", "valuesrules", "anyof_schema"]:
@@ -307,32 +308,32 @@ def _build_structural_schema_value(
 
         if k == "valuesrules":
             output_schema[k] = _build_structural_schema_value(
-                {}, input_schema[k]
+                {}, input_schema[k],
             )
 
         if k == "anyof_schema":
             output_schema[k] = []
             for schema in input_schema[k]:
                 output_schema[k].append(
-                    _build_structural_schema_keys({}, schema)
+                    _build_structural_schema_keys({}, schema),
                 )
 
         if k == "oneof":
             output_schema[k] = []
             for schema in input_schema[k]:
                 output_schema[k].append(
-                    _build_structural_schema_value({}, schema)
+                    _build_structural_schema_value({}, schema),
                 )
 
     if output_schema.get("type") == "list":
         output_schema["schema"] = _build_structural_schema_value(
-            {}, input_schema["schema"]
+            {}, input_schema["schema"],
         )
     elif output_schema.get("type") == "dict" and \
             "valuesrules" not in output_schema and \
             "anyof_schema" not in output_schema:
         output_schema["schema"] = _build_structural_schema_keys(
-            {}, input_schema["schema"]
+            {}, input_schema["schema"],
         )
     output_schema["required"] = True
     return output_schema
@@ -340,11 +341,11 @@ def _build_structural_schema_value(
 
 def _build_structural_schema_keys(
     output_schema: dict[Any, Any],
-    input_schema: dict[str, Any]
+    input_schema: dict[str, Any],
 ) -> dict[str, Any]:
     for k, v in input_schema.items():
         output_schema[k] = _build_structural_schema_value(
-            {}, v
+            {}, v,
         )
     return output_schema
 
@@ -362,7 +363,7 @@ def test_structural_config_generation() -> None:
     schema = {
         "field1": {"type": "string"},
         "field2": {"type": "string", "dependencies": "field1"},
-        "field3": {"type": "string", "excludes": "field1"}
+        "field3": {"type": "string", "excludes": "field1"},
     }
 
     temp = {"field1": "asdf", "field2": "ghjk"}
@@ -395,14 +396,14 @@ def test_structural_config_generation() -> None:
 
 def test_study_config_structure(
     full_study_config: dict[str, Any],
-    study_config_structural: dict[str, dict[str, Any]]
+    study_config_structural: dict[str, dict[str, Any]],
 ) -> None:
     GPFConfigParser.validate_config(full_study_config, study_config_structural)
 
 
 def test_study_config_builder(
     full_study_config: dict[str, Any],
-    study_config_structural: dict[str, dict[str, Any]]
+    study_config_structural: dict[str, dict[str, Any]],
 ) -> None:
     builder = StudyConfigBuilder(full_study_config)
     config = builder.build_config()

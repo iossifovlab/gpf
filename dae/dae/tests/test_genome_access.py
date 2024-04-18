@@ -1,6 +1,5 @@
 import pytest
 
-
 test_data = [(str(chrom), 123123, False) for chrom in range(1, 23)]
 test_data.append(("X", 1, False))
 test_data.append(("X", 60001, True))

@@ -2,11 +2,12 @@
 import os
 import pathlib
 
-import pytest
+import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
-import pandas as pd
-from dae.parquet.helpers import url_to_pyarrow_fs, merge_parquets
+import pytest
+
+from dae.parquet.helpers import merge_parquets, url_to_pyarrow_fs
 
 
 def test_url_to_pyarrow_fs() -> None:
@@ -32,13 +33,13 @@ def test_url_to_pyarrow_fs_s3_url() -> None:
 ])
 def test_merge_parquets(
     tmp_path: pathlib.Path,
-    row_group_size: int, expected: int
+    row_group_size: int, expected: int,
 ) -> None:
     full_data = pd.DataFrame({
         "n_legs": [2, 2, 4, 4, 5, 100],
         "animal": [
-            "Flamingo", "Parrot", "Dog", "Horse", "Brittle stars", "Centipede"
-        ]
+            "Flamingo", "Parrot", "Dog", "Horse", "Brittle stars", "Centipede",
+        ],
     })
 
     in_files = []
@@ -72,8 +73,8 @@ def test_merge_parquets_single_file(tmp_path: pathlib.Path) -> None:
     table = pa.table({
         "n_legs": [2, 2, 4, 4, 5, 100],
         "animal": [
-            "Flamingo", "Parrot", "Dog", "Horse", "Brittle stars", "Centipede"
-        ]
+            "Flamingo", "Parrot", "Dog", "Horse", "Brittle stars", "Centipede",
+        ],
     })
     in_file = str(tmp_path / "in.parquet")
     writer = pq.ParquetWriter(
@@ -102,8 +103,8 @@ def test_merge_parquets_broken_input_file(tmp_path: pathlib.Path) -> None:
     table = pa.table({
         "n_legs": [2, 2, 4, 4, 5, 100],
         "animal": [
-            "Flamingo", "Parrot", "Dog", "Horse", "Brittle stars", "Centipede"
-        ]
+            "Flamingo", "Parrot", "Dog", "Horse", "Brittle stars", "Centipede",
+        ],
     })
     writer = pq.ParquetWriter(
         str(tmp_path / "p1.parquet"),
@@ -128,8 +129,8 @@ def test_merge_parquets_missing_input_file(tmp_path: pathlib.Path) -> None:
     table = pa.table({
         "n_legs": [2, 2, 4, 4, 5, 100],
         "animal": [
-            "Flamingo", "Parrot", "Dog", "Horse", "Brittle stars", "Centipede"
-        ]
+            "Flamingo", "Parrot", "Dog", "Horse", "Brittle stars", "Centipede",
+        ],
     })
     writer = pq.ParquetWriter(
         str(tmp_path / "p1.parquet"), table.schema, version="1.0")

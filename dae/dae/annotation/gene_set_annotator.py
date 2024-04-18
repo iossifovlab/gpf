@@ -3,20 +3,20 @@ import logging
 from typing import Any, Optional
 
 from dae.annotation.annotatable import Annotatable
-from dae.annotation.annotation_pipeline import AnnotationPipeline
-from dae.annotation.annotation_pipeline import Annotator
-from dae.annotation.annotation_pipeline import AnnotatorInfo
-
+from dae.annotation.annotation_pipeline import (
+    AnnotationPipeline,
+    Annotator,
+    AnnotatorInfo,
+)
 from dae.gene.gene_sets_db import build_gene_set_collection_from_resource
 from dae.genomic_resources import GenomicResource
-
 
 logger = logging.getLogger(__name__)
 
 
 def build_gene_set_annotator(
     pipeline: AnnotationPipeline,
-    info: AnnotatorInfo
+    info: AnnotatorInfo,
 ) -> Annotator:
     """Create a gene set annotator."""
     gene_set_resource_id = info.parameters["resource_id"]
@@ -47,7 +47,7 @@ def build_gene_set_annotator(
         info,
         gene_set_resource,
         gene_set_id,
-        input_gene_list
+        input_gene_list,
     )
 
 
@@ -60,7 +60,7 @@ class GeneSetAnnotator(Annotator):
         info: AnnotatorInfo,
         gene_set_resource: GenomicResource,
         gene_set_id: str,
-        input_gene_list: str
+        input_gene_list: str,
     ):
         self.gene_set_resource = gene_set_resource
         self.gene_set_collection = build_gene_set_collection_from_resource(

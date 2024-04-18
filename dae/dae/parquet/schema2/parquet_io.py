@@ -1,27 +1,27 @@
+import functools
+import json
+import logging
 import os
 import time
-import logging
-import json
-import functools
-from typing import Any, Optional, cast, Union, Iterator
+from collections.abc import Iterator
+from typing import Any, Optional, Union, cast
 
 import fsspec
-
 import pyarrow as pa
 import pyarrow.parquet as pq
 
-from dae.utils import fs_utils
+from dae.annotation.annotation_pipeline import AttributeInfo
 from dae.parquet.helpers import url_to_pyarrow_fs
+from dae.parquet.partition_descriptor import PartitionDescriptor
+from dae.parquet.schema2.serializers import AlleleParquetSerializer
+from dae.utils import fs_utils
+from dae.utils.variant_utils import (
+    is_all_reference_genotype,
+    is_unknown_genotype,
+)
 from dae.variants.attributes import Inheritance
 from dae.variants.family_variant import FamilyAllele, FamilyVariant
-from dae.variants.variant import SummaryVariant
-from dae.utils.variant_utils import is_all_reference_genotype, \
-    is_unknown_genotype
-from dae.annotation.annotation_pipeline import AttributeInfo
-
-from dae.variants.variant import SummaryAllele
-from dae.parquet.schema2.serializers import AlleleParquetSerializer
-from dae.parquet.partition_descriptor import PartitionDescriptor
+from dae.variants.variant import SummaryAllele, SummaryVariant
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +49,7 @@ class ContinuousParquetFileWriter:
         self.filepath = filepath
         self.annotation_schema = annotation_schema
         self.serializer = AlleleParquetSerializer(
-            self.annotation_schema
+            self.annotation_schema,
         )
 
         self.schema = getattr(self.serializer, schema)
@@ -123,7 +123,7 @@ class ContinuousParquetFileWriter:
         assert self._data is not None
 
         data = self.serializer.build_summary_allele_batch_dict(
-            allele, json_data
+            allele, json_data,
         )
 
         for k, v in self._data.items():
@@ -141,7 +141,7 @@ class ContinuousParquetFileWriter:
         assert self._data is not None
 
         data = self.serializer.build_family_allele_batch_dict(
-            allele, json_data
+            allele, json_data,
         )
 
         for k, v in self._data.items():
@@ -194,7 +194,7 @@ class VariantsParquetWriter:
 
     def _build_family_filename(
         self, allele: FamilyAllele,
-        seen_as_denovo: bool
+        seen_as_denovo: bool,
     ) -> str:
         partition = self.partition_descriptor.family_partition(
             allele, seen_as_denovo)
@@ -206,7 +206,7 @@ class VariantsParquetWriter:
 
     def _build_summary_filename(
         self, allele: SummaryAllele,
-        seen_as_denovo: bool
+        seen_as_denovo: bool,
     ) -> str:
         partition = self.partition_descriptor.summary_partition(
             allele, seen_as_denovo)
@@ -218,7 +218,7 @@ class VariantsParquetWriter:
 
     def _get_bin_writer_family(
         self, allele: FamilyAllele,
-        seen_as_denovo: bool
+        seen_as_denovo: bool,
     ) -> ContinuousParquetFileWriter:
         filename = self._build_family_filename(allele, seen_as_denovo)
 
@@ -236,7 +236,7 @@ class VariantsParquetWriter:
 
     def _get_bin_writer_summary(
         self, allele: SummaryAllele,
-        seen_as_denovo: bool
+        seen_as_denovo: bool,
     ) -> ContinuousParquetFileWriter:
         filename = self._build_summary_filename(allele, seen_as_denovo)
 
@@ -268,7 +268,7 @@ class VariantsParquetWriter:
     def write_dataset(
         self,
         full_variants_iterator: Iterator[
-            tuple[SummaryVariant, list[FamilyVariant]]]
+            tuple[SummaryVariant, list[FamilyVariant]]],
     ) -> list[str]:
         """Write variant to partitioned parquet dataset."""
         # pylint: disable=too-many-locals,too-many-branches
@@ -312,11 +312,7 @@ class VariantsParquetWriter:
                 family_variant_data_json = json.dumps(fv.to_record(),
                                                       sort_keys=True)
                 family_alleles = []
-                if is_unknown_genotype(fv.gt):
-                    assert fv.ref_allele.allele_index == 0
-                    family_alleles.append(fv.ref_allele)
-                    num_fam_alleles_written += 1
-                elif is_all_reference_genotype(fv.gt):
+                if is_unknown_genotype(fv.gt) or is_all_reference_genotype(fv.gt):
                     assert fv.ref_allele.allele_index == 0
                     family_alleles.append(fv.ref_allele)
                     num_fam_alleles_written += 1
@@ -347,7 +343,7 @@ class VariantsParquetWriter:
 
                     family_bin_writer = self._get_bin_writer_family(fa, sad)
                     family_bin_writer.append_family_allele(
-                        fa, family_variant_data_json
+                        fa, family_variant_data_json,
                     )
 
                     family_variants_count[fa.allele_index] += 1
@@ -366,7 +362,7 @@ class VariantsParquetWriter:
                     "bucket_index": [self.bucket_index],
                 })
                 self.write_summary_variant(
-                    summary_variant, sj_base_index=sj_base_index
+                    summary_variant, sj_base_index=sj_base_index,
                 )
 
             if summary_variant_index % 1000 == 0 and summary_variant_index > 0:
@@ -398,7 +394,7 @@ class VariantsParquetWriter:
     def write_summary_variant(
         self, summary_variant: SummaryVariant,
         attributes: Optional[dict[str, Any]] = None,
-        sj_base_index: Optional[int] = None
+        sj_base_index: Optional[int] = None,
     ) -> None:
         """Write a single summary variant to the correct parquet file."""
         if attributes is not None:
@@ -411,7 +407,7 @@ class VariantsParquetWriter:
                 }
                 summary_allele.update_attributes(extra_atts)
         summary_blobs_json = json.dumps(
-            summary_variant.to_record(), sort_keys=True
+            summary_variant.to_record(), sort_keys=True,
         )
         if self.include_reference:
             stored_alleles = summary_variant.alleles

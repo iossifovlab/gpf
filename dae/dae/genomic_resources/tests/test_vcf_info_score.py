@@ -1,13 +1,17 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import textwrap
+
 import pytest
 
-from dae.genomic_resources.testing import setup_directories, setup_vcf, \
-    build_filesystem_test_resource
 from dae.genomic_resources.genomic_scores import AlleleScore
+from dae.genomic_resources.testing import (
+    build_filesystem_test_resource,
+    setup_directories,
+    setup_vcf,
+)
 
 
-@pytest.fixture
+@pytest.fixture()
 def vcf_info_clinvar(tmp_path_factory):
     root_path = tmp_path_factory.mktemp("vcf_info_clinvar")
     setup_directories(
@@ -19,7 +23,7 @@ def vcf_info_clinvar(tmp_path_factory):
                     index_filename: clinvar.vcf.gz.tbi
                     desc: |
                         Example testing ClinVar.
-        """)
+        """),
         })
     setup_vcf(
         root_path / "clinvar.vcf.gz",
@@ -85,16 +89,16 @@ def test_clinvar_score_columns(vcf_info_clinvar):
 @pytest.mark.parametrize("chrom,begin,end,scores,expected", [
     (
         "chrA", 1, 1, ["DBVARID"],
-        [{"DBVARID": None}]
+        [{"DBVARID": None}],
     ),
     (
         "chrA", 2, 3, ["DBVARID"],
-        [{"DBVARID": None}, {"DBVARID": None}]
+        [{"DBVARID": None}, {"DBVARID": None}],
     ),
 
 ])
 def test_clinvar_fetch_region(
-    vcf_info_clinvar, chrom, begin, end, scores, expected
+    vcf_info_clinvar, chrom, begin, end, scores, expected,
 ):
     vcf_info_clinvar.open()
     result = vcf_info_clinvar.fetch_region(chrom, begin, end, scores)
@@ -104,21 +108,21 @@ def test_clinvar_fetch_region(
 @pytest.mark.parametrize("chrom,pos,ref,alt,scores,expected", [
     (
         "chrA", 1, "A", "T", ["CLNDN", "ALLELEID"],
-        ["not_provided", 1003021]
+        ["not_provided", 1003021],
     ),
     (
         "chrA", 1, "A", "G", ["CLNDN", "ALLELEID"],
-        None
+        None,
     ),
     (
         "chrA", 2, "A", "T", ["CLNDN", "CLNSIG"],
         ["Combined_immunodeficiency_due_to_OX40_deficiency",
-         "Likely_benign"]
+         "Likely_benign"],
     ),
     (
         "chrA", 3, "A", "T", ["DBVARID"],
-        [None]
-    )
+        [None],
+    ),
 ])
 def test_clinvar_fetch_scores(
         vcf_info_clinvar, chrom, pos, ref, alt, scores, expected):
@@ -128,7 +132,7 @@ def test_clinvar_fetch_scores(
     assert result == expected
 
 
-@pytest.fixture
+@pytest.fixture()
 def vcf_info_gnomad(tmp_path_factory):
     root_path = tmp_path_factory.mktemp("vcf_info_gnomad")
     setup_directories(
@@ -140,7 +144,7 @@ def vcf_info_gnomad(tmp_path_factory):
                     index_filename: gnomad.vcf.gz.tbi
                     desc: |
                         Example testing GnomAD.
-            """)
+            """),
         })
     setup_vcf(
         root_path / "gnomad.vcf.gz",
@@ -340,7 +344,7 @@ def test_gnomad_vcf_resource(vcf_info_gnomad):
         [
             {"AN": 53780, "AC": 0},
             {"AN": 72762, "AC": 2},
-        ]
+        ],
     ),
     (
         "chrA", 1, 3, ["AN", "AC"],
@@ -348,14 +352,14 @@ def test_gnomad_vcf_resource(vcf_info_gnomad):
             {"AN": 53780, "AC": 0},
             {"AN": 72762, "AC": 2},
             {"AN": 81114, "AC": 1},
-        ]
+        ],
     ),
     (
         "chrA", 1, 2, ["lcr", "non_par", "variant_type"],
         [
             {"lcr": True, "non_par": False, "variant_type": "snv"},
             {"lcr": True, "non_par": False, "variant_type": "snv"},
-        ]
+        ],
     ),
     (
         "chrA", 4, 5, ["culprit", "NEGATIVE_TRAIN_SITE", "AN_asj_female"],
@@ -364,14 +368,14 @@ def test_gnomad_vcf_resource(vcf_info_gnomad):
              "AN_asj_female": 1166},
             {"culprit": "AS_FS", "NEGATIVE_TRAIN_SITE": False,
              "AN_asj_female": 1436},
-        ]
+        ],
     ),
     (
         "chrA", 4, 5, ["SB"],
         [
             {"SB": "47,22,6,7"},
             {"SB": "97,29,13,19"},
-        ]
+        ],
     ),
 ])
 def test_gnomad_vcf_fetch_region(

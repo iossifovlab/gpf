@@ -2,7 +2,6 @@
 import json
 
 import pytest
-
 from django.test.client import Client
 
 pytestmark = pytest.mark.usefixtures(
@@ -17,7 +16,7 @@ def test_gene_scores_partitions(user_client: Client) -> None:
         "max": 5.0,
     }
     response = user_client.post(
-        url, json.dumps(data), content_type="application/json", format="json"
+        url, json.dumps(data), content_type="application/json", format="json",
     )
     assert response.status_code == 200
 
@@ -30,7 +29,7 @@ def test_gene_scores_partitions_rvis(user_client: Client) -> None:
         "max": 100,
     }
     response = user_client.post(
-        url, json.dumps(data), content_type="application/json", format="json"
+        url, json.dumps(data), content_type="application/json", format="json",
     )
     assert response.status_code == 200
 
@@ -43,7 +42,7 @@ def test_bad_gene_score_partition(user_client: Client) -> None:
         "max": -3,
     }
     response = user_client.post(
-        url, json.dumps(data), content_type="application/json", format="json"
+        url, json.dumps(data), content_type="application/json", format="json",
     )
     assert response.status_code == 404
 
@@ -56,6 +55,6 @@ def test_full_patition(user_client: Client) -> None:
         "max": 1000,
     }
     response = user_client.post(
-        url, json.dumps(data), content_type="application/json", format="json"
+        url, json.dumps(data), content_type="application/json", format="json",
     )
     assert response.status_code == 200

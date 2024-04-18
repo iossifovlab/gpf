@@ -1,5 +1,6 @@
-from users_api.models import WdaeUser
 from django.contrib.auth.models import BaseUserManager, Group
+
+from users_api.models import WdaeUser
 
 
 class ImportUsersBase:

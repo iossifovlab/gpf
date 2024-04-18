@@ -1,25 +1,28 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 
 import os
-import textwrap
 import pathlib
+import textwrap
 
 import pytest
 
-from dae.genomic_resources.testing import setup_directories, \
-    setup_genome, build_filesystem_test_resource, \
-    build_http_test_protocol
 from dae.genomic_resources.fsspec_protocol import build_local_resource
+from dae.genomic_resources.implementations.reference_genome_impl import (
+    ReferenceGenomeImplementation,
+)
+from dae.genomic_resources.reference_genome import (
+    build_reference_genome_from_file,
+    build_reference_genome_from_resource,
+)
+from dae.genomic_resources.testing import (
+    build_filesystem_test_resource,
+    build_http_test_protocol,
+    setup_directories,
+    setup_genome,
+)
 
-from dae.genomic_resources.reference_genome import \
-    build_reference_genome_from_file, \
-    build_reference_genome_from_resource
 
-from dae.genomic_resources.implementations.reference_genome_impl import \
-    ReferenceGenomeImplementation
-
-
-@pytest.fixture
+@pytest.fixture()
 def genome_fixture(tmp_path: pathlib.Path) -> pathlib.Path:
     root_path = tmp_path / "genome"
     setup_directories(root_path, {
@@ -83,7 +86,7 @@ def test_local_genomic_sequence(genome_fixture: pathlib.Path) -> None:
 
     res = build_local_resource(str(genome_fixture), {
         "type": "genome",
-        "filename": "chr.fa"
+        "filename": "chr.fa",
     })
     assert res is not None
 
@@ -101,7 +104,7 @@ def test_local_genomic_sequence(genome_fixture: pathlib.Path) -> None:
 def test_chromosome_statistic_basic(genome_fixture: pathlib.Path) -> None:
     res = build_filesystem_test_resource(genome_fixture)
     stat = ReferenceGenomeImplementation._do_chrom_statistic(
-        res, "pesho", 1, None
+        res, "pesho", 1, None,
     )
 
     assert stat.length == 24
@@ -150,7 +153,7 @@ def test_chromosome_statistic_basic(genome_fixture: pathlib.Path) -> None:
     assert os.path.exists(os.path.join(
         genome_fixture,
         "statistics",
-        "pesho_statistic.yaml"
+        "pesho_statistic.yaml",
     ))
 
 
@@ -171,7 +174,7 @@ def test_reference_genome_fetch(genome_fixture: pathlib.Path) -> None:
             "A",
             "A",
             "A",
-            "C"
+            "C",
         ]
 
         result = list(impl.reference_genome.fetch("pesho", 18, 36))
@@ -183,7 +186,7 @@ def test_reference_genome_fetch(genome_fixture: pathlib.Path) -> None:
             "N",
             "N",
             "N",
-            "A"
+            "A",
         ]
 
         result = list(impl.reference_genome.fetch("pesho", 1, None))
@@ -212,7 +215,7 @@ def test_reference_genome_fetch(genome_fixture: pathlib.Path) -> None:
             "N",
             "N",
             "N",
-            "A"
+            "A",
         ]
 
 

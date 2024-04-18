@@ -1,30 +1,32 @@
 # pylint: disable=too-many-lines
 # FIXME: too-many-lines
 from __future__ import annotations
-import json
 
-import gzip
-import logging
 import copy
+import gzip
+import json
+import logging
 import textwrap
-
 from collections import defaultdict
+from collections.abc import Generator  # TextIO
 from contextlib import contextmanager
-from typing import Any, Optional, cast, Generator, IO, Protocol  # TextIO
-
 from functools import lru_cache
+from typing import IO, Any, Optional, Protocol, cast
 
-import yaml
 import pandas as pd
+import yaml
 from jinja2 import Template
 
-from dae.utils.regions import BedRegion
 from dae.genomic_resources import GenomicResource
-from dae.genomic_resources.resource_implementation import \
-    GenomicResourceImplementation, get_base_resource_schema, \
-    InfoImplementationMixin, ResourceConfigValidationMixin
 from dae.genomic_resources.fsspec_protocol import build_local_resource
+from dae.genomic_resources.resource_implementation import (
+    GenomicResourceImplementation,
+    InfoImplementationMixin,
+    ResourceConfigValidationMixin,
+    get_base_resource_schema,
+)
 from dae.task_graph.graph import Task, TaskGraph
+from dae.utils.regions import BedRegion
 
 logger = logging.getLogger(__name__)
 
@@ -112,7 +114,7 @@ class TranscriptModel:
         if self.cds[1] <= self.exons[k].stop:
             regions.append(
                 BedRegion(
-                    chrom=self.chrom, start=self.cds[0], stop=self.cds[1])
+                    chrom=self.chrom, start=self.cds[0], stop=self.cds[1]),
             )
             return regions
 
@@ -121,7 +123,7 @@ class TranscriptModel:
                 chrom=self.chrom,
                 start=self.cds[0],
                 stop=self.exons[k].stop + ss_extend,
-            )
+            ),
         )
         k += 1
         while k < len(self.exons) and self.exons[k].stop <= self.cds[1]:
@@ -131,7 +133,7 @@ class TranscriptModel:
                         chrom=self.chrom,
                         start=self.exons[k].start - ss_extend,
                         stop=self.exons[k].stop + ss_extend,
-                    )
+                    ),
                 )
                 k += 1
             else:
@@ -140,7 +142,7 @@ class TranscriptModel:
                         chrom=self.chrom,
                         start=self.exons[k].start - ss_extend,
                         stop=self.exons[k].stop,
-                    )
+                    ),
                 )
                 return regions
 
@@ -150,7 +152,7 @@ class TranscriptModel:
                     chrom=self.chrom,
                     start=self.exons[k].start - ss_extend,
                     stop=self.cds[1],
-                )
+                ),
             )
 
         return regions
@@ -169,7 +171,7 @@ class TranscriptModel:
                         chrom=self.chrom,
                         start=self.exons[k].start,
                         stop=self.exons[k].stop,
-                    )
+                    ),
                 )
                 k += 1
             if self.exons[k].start < self.cds[0]:
@@ -178,7 +180,7 @@ class TranscriptModel:
                         chrom=self.chrom,
                         start=self.exons[k].start,
                         stop=self.cds[0] - 1,
-                    )
+                    ),
                 )
 
         else:
@@ -192,13 +194,13 @@ class TranscriptModel:
                         chrom=self.chrom,
                         start=self.cds[1] + 1,
                         stop=self.exons[k].stop,
-                    )
+                    ),
                 )
                 k += 1
 
             for exon in self.exons[k:]:
                 regions.append(
-                    BedRegion(chrom=self.chrom, start=exon.start, stop=exon.stop)
+                    BedRegion(chrom=self.chrom, start=exon.start, stop=exon.stop),
                 )
 
         return regions
@@ -217,7 +219,7 @@ class TranscriptModel:
                         chrom=self.chrom,
                         start=self.exons[k].start,
                         stop=self.exons[k].stop,
-                    )
+                    ),
                 )
                 k += 1
             if self.exons[k].start < self.cds[0]:
@@ -226,7 +228,7 @@ class TranscriptModel:
                         chrom=self.chrom,
                         start=self.exons[k].start,
                         stop=self.cds[0] - 1,
-                    )
+                    ),
                 )
 
         else:
@@ -240,19 +242,19 @@ class TranscriptModel:
                         chrom=self.chrom,
                         start=self.cds[1] + 1,
                         stop=self.exons[k].stop,
-                    )
+                    ),
                 )
                 k += 1
 
             for exon in self.exons[k:]:
                 regions.append(
-                    BedRegion(chrom=self.chrom, start=exon.start, stop=exon.stop)
+                    BedRegion(chrom=self.chrom, start=exon.start, stop=exon.stop),
                 )
 
         return regions
 
     def all_regions(
-        self, ss_extend: int = 0, prom: int = 0
+        self, ss_extend: int = 0, prom: int = 0,
     ) -> list[BedRegion]:
         """Build and return list of regions."""
         # pylint:disable=too-many-branches
@@ -261,7 +263,7 @@ class TranscriptModel:
         if ss_extend == 0:
             for exon in self.exons:
                 regions.append(
-                    BedRegion(chrom=self.chrom, start=exon.start, stop=exon.stop)
+                    BedRegion(chrom=self.chrom, start=exon.start, stop=exon.stop),
                 )
 
         else:
@@ -270,14 +272,14 @@ class TranscriptModel:
                     regions.append(
                         BedRegion(
                             chrom=self.chrom,
-                            start=exon.start, stop=exon.stop)
+                            start=exon.start, stop=exon.stop),
                     )
                 elif exon.start <= self.cds[0]:
                     if exon.stop >= self.cds[1]:
                         regions.append(
                             BedRegion(
                                 chrom=self.chrom,
-                                start=exon.start, stop=exon.stop)
+                                start=exon.start, stop=exon.stop),
                         )
                     else:
                         regions.append(
@@ -285,12 +287,12 @@ class TranscriptModel:
                                 chrom=self.chrom,
                                 start=exon.start,
                                 stop=exon.stop + ss_extend,
-                            )
+                            ),
                         )
                 elif exon.start > self.cds[1]:
                     regions.append(
                         BedRegion(
-                            chrom=self.chrom, start=exon.start, stop=exon.stop)
+                            chrom=self.chrom, start=exon.start, stop=exon.stop),
                     )
                 else:
                     if exon.stop >= self.cds[1]:
@@ -299,7 +301,7 @@ class TranscriptModel:
                                 chrom=self.chrom,
                                 start=exon.start - ss_extend,
                                 stop=exon.stop,
-                            )
+                            ),
                         )
                     else:
                         regions.append(
@@ -307,7 +309,7 @@ class TranscriptModel:
                                 chrom=self.chrom,
                                 start=exon.start - ss_extend,
                                 stop=exon.stop + ss_extend,
-                            )
+                            ),
                         )
 
         if prom != 0:
@@ -373,7 +375,7 @@ class TranscriptModel:
                 k += 1
             while self.exons[k].stop < self.cds[1] and k < length:
                 fms.append(
-                    (fms[k] + self.exons[k].stop - self.exons[k].start + 1) % 3
+                    (fms[k] + self.exons[k].stop - self.exons[k].start + 1) % 3,
                 )
                 k += 1
             fms += [-1] * (length - len(fms))
@@ -389,7 +391,7 @@ class TranscriptModel:
             while self.cds[0] < self.exons[k].start and k > -1:
                 fms.append(
                     (fms[-1] + self.exons[k].stop - self.exons[k].start + 1)
-                    % 3
+                    % 3,
                 )
                 k -= 1
             fms += [-1] * (length - len(fms))
@@ -430,16 +432,15 @@ class GeneModelsParser(Protocol):
     def __call__(
         self, infile: IO,
         gene_mapping: Optional[dict[str, str]] = None,
-        nrows: Optional[int] = None
+        nrows: Optional[int] = None,
     ) -> bool:
         ...
-
 
 
 class GeneModels(
     GenomicResourceImplementation,
     ResourceConfigValidationMixin,
-    InfoImplementationMixin
+    InfoImplementationMixin,
 ):
     """Provides class for gene models."""
 
@@ -447,7 +448,7 @@ class GeneModels(
         super().__init__(resource)
 
         self.config = self.validate_and_normalize_schema(
-            self.config, resource
+            self.config, resource,
         )
 
         self.gene_models: dict[str, list[TranscriptModel]] = defaultdict(list)
@@ -505,13 +506,13 @@ class GeneModels(
         return list(self.gene_models.keys())
 
     def gene_models_by_gene_name(
-        self, name: str
+        self, name: str,
     ) -> Optional[list[TranscriptModel]]:
         return self.gene_models.get(name, None)
 
     def gene_models_by_location(
         self, chrom: str, pos1: int,
-        pos2: Optional[int] = None
+        pos2: Optional[int] = None,
     ) -> list[TranscriptModel]:
         """Retrieve TranscriptModel objects based on genomic position(s).
 
@@ -545,7 +546,7 @@ class GeneModels(
 
     def relabel_chromosomes(
         self, relabel: Optional[dict[str, str]] = None,
-        map_file: Optional[str] = None
+        map_file: Optional[str] = None,
     ) -> None:
         """Relabel chromosomes in gene model."""
         assert relabel or map_file
@@ -556,7 +557,7 @@ class GeneModels(
                     dict[str, str],
                     {
                         line.strip("\n\r").split()[:2] for line in infile
-                    }
+                    },
                 )
 
         self.utr_models = {
@@ -591,8 +592,8 @@ class GeneModels(
                     "exonEnds",
                     "exonFrames",
                     "atts",
-                ]
-            )
+                ],
+            ),
         )
         outfile.write("\n")
 
@@ -608,7 +609,7 @@ class GeneModels(
                 [
                     k + ":" + str(v).replace(":", "_")
                     for k, v in list(transcript_model.attributes.items())
-                ]
+                ],
             )
 
             columns = [
@@ -644,7 +645,7 @@ class GeneModels(
     def _parse_default_gene_models_format(
         self, infile: IO,
         gene_mapping: Optional[dict[str, str]] = None,
-        nrows: Optional[int] = None
+        nrows: Optional[int] = None,
     ) -> bool:
         # pylint: disable=too-many-locals
         # FIXME: too-many-locals
@@ -729,7 +730,7 @@ class GeneModels(
     def _parse_ref_flat_gene_models_format(
         self, infile: IO,
         gene_mapping: Optional[dict[str, str]] = None,
-        nrows: Optional[int] = None
+        nrows: Optional[int] = None,
     ) -> bool:
         # pylint: disable=too-many-locals
         # FIXME:
@@ -799,7 +800,7 @@ class GeneModels(
     def _parse_ref_seq_gene_models_format(
         self, infile: IO,
         gene_mapping: Optional[dict[str, str]] = None,
-        nrows: Optional[int] = None
+        nrows: Optional[int] = None,
     ) -> bool:
         # FIXME:
         # pylint: disable=too-many-locals
@@ -887,7 +888,7 @@ class GeneModels(
     @classmethod
     def _probe_header(
         cls, infile: IO, expected_columns: list[str],
-        comment: Optional[str] = None
+        comment: Optional[str] = None,
     ) -> bool:
         infile.seek(0)
         df = pd.read_csv(
@@ -902,12 +903,12 @@ class GeneModels(
         df = pd.read_csv(
             infile, sep="\t", nrows=1, header=None, comment=comment)
         return cast(list[int], list(df.columns)) == \
-            list(range(0, len(expected_columns)))
+            list(range(len(expected_columns)))
 
     @classmethod
     def _parse_raw(
         cls, infile: IO, expected_columns: list[str],
-        nrows: Optional[int] = None, comment: Optional[str] = None
+        nrows: Optional[int] = None, comment: Optional[str] = None,
     ) -> Optional[pd.DataFrame]:
         if cls._probe_header(infile, expected_columns, comment=comment):
             infile.seek(0)
@@ -932,7 +933,7 @@ class GeneModels(
     def _parse_ccds_gene_models_format(
         self, infile: IO,
         gene_mapping: Optional[dict[str, str]] = None,
-        nrows: Optional[int] = None
+        nrows: Optional[int] = None,
     ) -> bool:
         # FIXME:
         # pylint: disable=too-many-locals
@@ -1023,7 +1024,7 @@ class GeneModels(
     def _parse_known_gene_models_format(
         self, infile: IO,
         gene_mapping: Optional[dict[str, str]] = None,
-        nrows: Optional[int] = None
+        nrows: Optional[int] = None,
     ) -> bool:
         # FIXME:
         # pylint: disable=too-many-locals
@@ -1099,7 +1100,7 @@ class GeneModels(
     def _parse_ucscgenepred_models_format(
         self, infile: IO,
         gene_mapping: Optional[dict[str, str]] = None,
-        nrows: Optional[int] = None
+        nrows: Optional[int] = None,
     ) -> bool:
         """Parse UCSC gene prediction models file fomrat.
 
@@ -1227,7 +1228,7 @@ class GeneModels(
     def _parse_gtf_gene_models_format(
         self, infile: IO,
         gene_mapping: Optional[dict[str, str]] = None,
-        nrows: Optional[int] = None
+        nrows: Optional[int] = None,
     ) -> bool:
         # FIXME:
         # flake8=noqa
@@ -1247,7 +1248,7 @@ class GeneModels(
 
         infile.seek(0)
         df = self._parse_raw(
-            infile, expected_columns, nrows=nrows, comment="#",)
+            infile, expected_columns, nrows=nrows, comment="#")
 
         if df is None:
             expected_columns.append("comment")
@@ -1259,7 +1260,7 @@ class GeneModels(
 
         def parse_gtf_attributes(data: str) -> dict[str, str]:
             attributes = list(
-                filter(lambda x: x, [a.strip() for a in data.split(";")])
+                filter(lambda x: x, [a.strip() for a in data.split(";")]),
             )
             result = {}
             for attr in attributes:
@@ -1280,7 +1281,7 @@ class GeneModels(
                     continue
                 if tr_id in self.transcript_models:
                     raise ValueError(
-                        f"{tr_id} of {feature} already in transcript models"
+                        f"{tr_id} of {feature} already in transcript models",
                     )
                 gene = attributes["gene_name"]
                 if gene_mapping:
@@ -1302,7 +1303,7 @@ class GeneModels(
                 if tr_id not in self.transcript_models:
                     raise ValueError(
                         f"exon or CDS transcript {tr_id} not found "
-                        f"in transctipt models"
+                        f"in transctipt models",
                     )
                 exon_number = int(attributes["exon_number"])
                 transcript_model = self.transcript_models[tr_id]
@@ -1386,7 +1387,7 @@ class GeneModels(
     }
 
     def _get_parser(
-        self, fileformat: str
+        self, fileformat: str,
     ) -> Optional[GeneModelsParser]:
         # pylint: disable=too-many-return-statements
         if fileformat == "default":
@@ -1407,7 +1408,7 @@ class GeneModels(
 
     def _infer_gene_model_parser(
         self, infile: IO,
-        file_format: Optional[str]=None) -> Optional[str]:
+        file_format: Optional[str] = None) -> Optional[str]:
 
         if file_format is not None:
             parser = self._get_parser(file_format)
@@ -1480,7 +1481,7 @@ class GeneModels(
                     "Unsupported file format %s for "
                     "gene model file %s.", fileformat,
                     self.resource.resource_id)
-                raise ValueError()
+                raise ValueError
 
             gene_mapping = None
             if gene_mapping_filename is not None:
@@ -1530,7 +1531,7 @@ class GeneModels(
             **get_base_resource_schema(),
             "filename": {"type": "string"},
             "format": {"type": "string"},
-            "gene_mapping": {"type": "string"}
+            "gene_mapping": {"type": "string"},
         }
 
     def get_info(self) -> str:
@@ -1543,7 +1544,7 @@ class GeneModels(
         manifest = self.resource.get_manifest()
         return json.dumps({
             "config": {
-                "format": self.config.get('format')
+                "format": self.config.get("format"),
             },
             "files_md5": {
                 file_name: manifest[file_name].md5
@@ -1551,7 +1552,7 @@ class GeneModels(
         }, indent=2).encode()
 
     def add_statistics_build_tasks(
-        self, task_graph: TaskGraph, **kwargs: Any
+        self, task_graph: TaskGraph, **kwargs: Any,
     ) -> list[Task]:
         task = task_graph.create_task(
             f"{self.resource_id}_cals_stats",
@@ -1570,14 +1571,14 @@ class GeneModels(
                  "protein coding transcript number": len(coding_transcripts),
                  "gene number": len(gene_models.gene_names()),
                  "protein coding gene number":
-                 len({tm.gene for tm in coding_transcripts})
+                 len({tm.gene for tm in coding_transcripts}),
                  }
 
         tm_by_chrom: dict[str, list[TranscriptModel]] = defaultdict(list)
         for trm in gene_models.transcript_models.values():
             tm_by_chrom[trm.chrom].append(trm)
 
-        stats['chromosome number'] = len(tm_by_chrom)
+        stats["chromosome number"] = len(tm_by_chrom)
         for chrom, tms in tm_by_chrom.items():
             stats[f"{chrom} transcript numbers"] = len(tms)
 
@@ -1636,7 +1637,7 @@ def join_gene_models(*gene_models: GeneModels) -> GeneModels:
 def build_gene_models_from_file(
     file_name: str,
     file_format: Optional[str] = None,
-    gene_mapping_file_name: Optional[str] = None
+    gene_mapping_file_name: Optional[str] = None,
 ) -> GeneModels:
     """Load gene models from local filesystem."""
     config = {

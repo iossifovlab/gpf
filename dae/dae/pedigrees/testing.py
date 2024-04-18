@@ -3,11 +3,10 @@
 import io
 import textwrap
 
-from dae.testing import convert_to_tab_separated
-
-from dae.pedigrees.family import Family
 from dae.pedigrees.families_data import FamiliesData
+from dae.pedigrees.family import Family
 from dae.pedigrees.loader import FamiliesLoader
+from dae.testing import convert_to_tab_separated
 
 
 def build_families_data(content: str) -> FamiliesData:

@@ -1,23 +1,23 @@
 # pylint: disable=W0621,C0114,C0116,C0415,W0212,W0613
 
-import logging
-from typing import Any, Generator
 import gzip
+import logging
+from collections.abc import Generator
+from typing import Any
 
 import pytest
 
-from dae.genomic_resources.repository import \
-    GR_CONF_FILE_NAME
 from dae.genomic_resources.fsspec_protocol import FsspecRepositoryProtocol
-from dae.genomic_resources.testing import \
-    build_filesystem_test_protocol
-from dae.genomic_resources.testing import convert_to_tab_separated, \
-    setup_directories
-from dae.genomic_resources.testing import \
-    s3_test_protocol, \
-    copy_proto_genomic_resources, \
-    build_inmemory_test_protocol, \
-    build_http_test_protocol
+from dae.genomic_resources.repository import GR_CONF_FILE_NAME
+from dae.genomic_resources.testing import (
+    build_filesystem_test_protocol,
+    build_http_test_protocol,
+    build_inmemory_test_protocol,
+    convert_to_tab_separated,
+    copy_proto_genomic_resources,
+    s3_test_protocol,
+    setup_directories,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +27,7 @@ def alabala_gz() -> bytes:
     return gzip.compress(b"alabala")
 
 
-@pytest.fixture
+@pytest.fixture()
 def content_fixture(alabala_gz: bytes) -> dict[str, Any]:
     demo_gtf_content = "TP53\tchr3\t300\t200"
 
@@ -35,7 +35,7 @@ def content_fixture(alabala_gz: bytes) -> dict[str, Any]:
         "one": {
             GR_CONF_FILE_NAME: "",
             "data.txt": "alabala",
-            "data.txt.gz": alabala_gz
+            "data.txt.gz": alabala_gz,
         },
         "sub": {
             "two": {
@@ -49,11 +49,11 @@ def content_fixture(alabala_gz: bytes) -> dict[str, Any]:
         "three(2.0)": {
             GR_CONF_FILE_NAME: "",
             "sub1": {
-                "a.txt": "a"
+                "a.txt": "a",
             },
             "sub2": {
-                "b.txt": "b"
-            }
+                "b.txt": "b",
+            },
         },
         "xxxxx-genome": {
             "genomic_resource.yaml": "type: genome\nfilename: chr.fa",
@@ -64,12 +64,12 @@ def content_fixture(alabala_gz: bytes) -> dict[str, Any]:
                     GGGCCTTCCN
                     NNNA
                 """),
-            "chr.fa.fai": "xxxxx\t24\t7\t10\t11\n"
-        }
+            "chr.fa.fai": "xxxxx\t24\t7\t10\t11\n",
+        },
     }
 
 
-@pytest.fixture
+@pytest.fixture()
 def fsspec_proto(
     request: pytest.FixtureRequest,
     content_fixture: dict[str, Any],

@@ -1,8 +1,10 @@
 from __future__ import annotations
+
 import logging
+from collections.abc import Iterable
 from copy import copy
 from dataclasses import dataclass
-from typing import Any, Callable, Iterable, Optional
+from typing import Any, Callable, Optional
 
 logger = logging.getLogger(__name__)
 

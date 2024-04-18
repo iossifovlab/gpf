@@ -3,15 +3,18 @@
 import pytest
 import pytest_mock
 
-from dae.utils import fs_utils
-from dae.variants_loaders.vcf.loader import VcfLoader
-from dae.genomic_resources.testing import setup_vcf, \
-    build_s3_test_filesystem, build_s3_test_bucket
+from dae.genomic_resources.testing import (
+    build_s3_test_bucket,
+    build_s3_test_filesystem,
+    setup_vcf,
+)
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.testing.acgt_import import acgt_gpf
+from dae.utils import fs_utils
+from dae.variants_loaders.vcf.loader import VcfLoader
 
 
-@pytest.fixture
+@pytest.fixture()
 def gpf_instance(
         tmp_path_factory: pytest.TempPathFactory) -> GPFInstance:
     root_path = tmp_path_factory.mktemp("instance")
@@ -19,9 +22,9 @@ def gpf_instance(
     return gpf_instance
 
 
-@pytest.fixture
+@pytest.fixture()
 def vcf_vc_file(
-    tmp_path_factory: pytest.TempPathFactory
+    tmp_path_factory: pytest.TempPathFactory,
 ) -> tuple[str, str, str]:
     root_path = tmp_path_factory.mktemp("vcf_vc")
     vcf1 = setup_vcf(root_path / "vcf_data" / "vcf_chr1.vcf.gz", """
@@ -51,7 +54,7 @@ def test_collect_filenames_local(
     vcf_filenames = [fs_utils.join(base_path, "vcf_[vc].vcf.gz")]
 
     params = {
-        "vcf_chromosomes": "chr1;chr2"
+        "vcf_chromosomes": "chr1;chr2",
     }
 
     all_filenames, _ = VcfLoader._collect_filenames(params, vcf_filenames)
@@ -64,7 +67,7 @@ def test_collect_filenames_local(
 def test_collect_filenames_s3(
     request: pytest.FixtureRequest,
     vcf_vc_file: tuple[str, str, str],
-    mocker: pytest_mock.MockerFixture
+    mocker: pytest_mock.MockerFixture,
 ) -> None:
     if not request.config.getoption("enable_s3"):
         pytest.skip("S3 unit testing not enabled.")
@@ -83,7 +86,7 @@ def test_collect_filenames_s3(
 
     vcf_filenames = [fs_utils.join(base_path, "vcf_[vc].vcf.gz")]
     params = {
-        "vcf_chromosomes": "chr1;chr2"
+        "vcf_chromosomes": "chr1;chr2",
     }
     all_filenames, _ = VcfLoader._collect_filenames(params, vcf_filenames)
 

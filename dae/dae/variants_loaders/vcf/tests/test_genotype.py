@@ -1,14 +1,13 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
 
-import pytest
 import numpy as np
+import pytest
 
-from dae.utils.regions import Region
-from dae.testing import setup_pedigree, setup_vcf, \
-    vcf_study
-from dae.testing.alla_import import alla_gpf
 from dae.studies.study import GenotypeData
+from dae.testing import setup_pedigree, setup_vcf, vcf_study
+from dae.testing.alla_import import alla_gpf
+from dae.utils.regions import Region
 
 
 @pytest.fixture(scope="module")
@@ -61,11 +60,11 @@ chrA   10  .  A   GC,CC,CT,CC . .   .     GT     2/3 2/2 2/2 2/2 2/2 2/2 2/2
                     "include_unknown_person_genotypes": True,
                     "denovo_mode": "denovo",
                     "omission_mode": "omission",
-                }
+                },
             },
             "processing_config": {
-                "include_reference": True
-            }
+                "include_reference": True,
+            },
         })
     return study
 
@@ -81,19 +80,19 @@ def test_11540_gt(a_study: GenotypeData) -> None:
     print(v.gt)
     assert np.all(
         np.array([
-            [0, 0, 0, 0, 0, 0, 0, ],
-            [0, 0, 2, 0, 0, 0, 0, ]
+            [0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 2, 0, 0, 0, 0],
         ])
-        == v.gt
+        == v.gt,
     )
 
     print(v.best_state)
     assert np.all(
         np.array([
-            [2, 2, 1, 2, 2, 2, 2, ],
-            [0, 0, 0, 0, 0, 0, 0, ],
-            [0, 0, 1, 0, 0, 0, 0, ]])
-        == v.best_state
+            [2, 2, 1, 2, 2, 2, 2],
+            [0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 1, 0, 0, 0, 0]])
+        == v.best_state,
     )
 
     expected_genotype = [
@@ -131,8 +130,8 @@ def test_11540_family_alleles(a_study: GenotypeData) -> None:
     assert aa.allele_index == 2
     assert aa.cshl_variant == "sub(A->C)"
 
-    assert [0, 2] == v.allele_indexes
-    assert [0, 1] == v.family_allele_indexes
+    assert v.allele_indexes == [0, 2]
+    assert v.family_allele_indexes == [0, 1]
 
 
 def test_11548_gt(a_study: GenotypeData) -> None:
@@ -146,22 +145,22 @@ def test_11548_gt(a_study: GenotypeData) -> None:
     print(v.gt)
     assert np.all(
         np.array([
-            [2, 2, 2, 2, 2, 2, 2, ],
-            [2, 2, 3, 2, 2, 2, 2, ]
+            [2, 2, 2, 2, 2, 2, 2],
+            [2, 2, 3, 2, 2, 2, 2],
         ])
-        == v.gt
+        == v.gt,
     )
 
     print(v.best_state)
     assert np.all(
         np.array([
-            [0, 0, 0, 0, 0, 0, 0, ],
-            [0, 0, 0, 0, 0, 0, 0, ],
-            [2, 2, 1, 2, 2, 2, 2, ],
-            [0, 0, 1, 0, 0, 0, 0, ],
-            [0, 0, 0, 0, 0, 0, 0, ],
+            [0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0],
+            [2, 2, 1, 2, 2, 2, 2],
+            [0, 0, 1, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0],
         ])
-        == v.best_state
+        == v.best_state,
     )
 
     expected_genotype = [

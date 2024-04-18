@@ -1,7 +1,7 @@
 from typing import Optional
 
 from ..effect import EffectFactory
-from .effect_checker import EffectChecker, AnnotationEffect, AnnotationRequest
+from .effect_checker import AnnotationEffect, AnnotationRequest, EffectChecker
 
 
 class ProteinChangeEffectChecker(EffectChecker):
@@ -24,7 +24,7 @@ class ProteinChangeEffectChecker(EffectChecker):
         return "synonymous"
 
     def get_effect(
-        self, request: AnnotationRequest
+        self, request: AnnotationRequest,
     ) -> Optional[AnnotationEffect]:
         coding_regions = request.cds_regions()
         assert request.variant.reference is not None
@@ -41,6 +41,6 @@ class ProteinChangeEffectChecker(EffectChecker):
                 if length == 0:
                     ref_aa, alt_aa = request.get_amino_acids()
                     return EffectFactory.create_effect_with_aa_change(
-                        self.mutation_type(ref_aa, alt_aa), request
+                        self.mutation_type(ref_aa, alt_aa), request,
                     )
         return None

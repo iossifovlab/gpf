@@ -1,8 +1,9 @@
 from __future__ import annotations
+
 from typing import Any, Union
 
-from dae.variants.attributes import Sex
 from dae.person_sets import PersonSet, PersonSetCollection
+from dae.variants.attributes import Sex
 
 
 class PeopleCounter:
@@ -16,18 +17,18 @@ class PeopleCounter:
         self.people_total = json.get("people_total", 0)
 
     @staticmethod
-    def from_person_set(person_set: PersonSet) -> "PeopleCounter":
+    def from_person_set(person_set: PersonSet) -> PeopleCounter:
         """Build people counter JSON from person set."""
         matched_people = list(person_set.persons.values())
 
         people_male = len(
-            list(filter(lambda p: p.sex == Sex.male, matched_people))
+            list(filter(lambda p: p.sex == Sex.male, matched_people)),
         )
         people_female = len(
-            list(filter(lambda p: p.sex == Sex.female, matched_people))
+            list(filter(lambda p: p.sex == Sex.female, matched_people)),
         )
         people_unspecified = len(
-            list(filter(lambda p: p.sex == Sex.unspecified, matched_people))
+            list(filter(lambda p: p.sex == Sex.unspecified, matched_people)),
         )
         people_total = len(matched_people)
 
@@ -40,7 +41,7 @@ class PeopleCounter:
             "people_male": people_male,
             "people_female": people_female,
             "people_unspecified": people_unspecified,
-            "people_total": people_total
+            "people_total": people_total,
         })
 
     def to_dict(self, rows: list) -> dict[str, Union[int, str]]:
@@ -73,7 +74,7 @@ class PeopleCounters:
 
     @staticmethod
     def from_person_set_collection(
-        person_set_collection: PersonSetCollection
+        person_set_collection: PersonSetCollection,
     ) -> PeopleCounters:
         """Create people counters JSON from dict of families."""
         people_counters = [
@@ -85,7 +86,7 @@ class PeopleCounters:
             filter(
                 lambda people_counter: not people_counter.is_empty(),
                 people_counters,
-            )
+            ),
         )
 
         group_name = person_set_collection.name
@@ -112,7 +113,7 @@ class PeopleCounters:
             "group_name": group_name,
             "columns": column_names,
             "rows": rows,
-            "counters": [pc.to_dict(rows) for pc in people_counters]
+            "counters": [pc.to_dict(rows) for pc in people_counters],
         })
 
     def to_dict(self) -> dict[str, Any]:
@@ -128,13 +129,13 @@ class PeopleReport:
     """Class representing people report JSON."""
 
     def __init__(
-        self, json: list[dict[str, Any]]
+        self, json: list[dict[str, Any]],
     ) -> None:
         self.people_counters = [PeopleCounters(d) for d in json]
 
     @staticmethod
     def from_person_set_collections(
-        person_set_collections: list[PersonSetCollection]
+        person_set_collections: list[PersonSetCollection],
     ) -> PeopleReport:
         """Create people report from list of person set collections."""
         people_counters_collection = [
@@ -142,7 +143,7 @@ class PeopleReport:
             for person_set_collection in person_set_collections
         ]
         return PeopleReport(
-            [pc.to_dict() for pc in people_counters_collection]
+            [pc.to_dict() for pc in people_counters_collection],
         )
 
     def to_dict(self) -> list[dict[str, Any]]:

@@ -1,24 +1,24 @@
 from __future__ import annotations
 
-import os
 import logging
-from typing import Optional, Any, cast, IO, Type, Generator
+import os
+from collections.abc import Generator
 from types import TracebackType
+from typing import IO, Any, Optional, Type, cast
 
-
-from dae.genomic_resources.fsspec_protocol import build_local_resource
-from dae.genomic_resources.resource_implementation import \
-    get_base_resource_schema, \
-    ResourceConfigValidationMixin
-
-from dae.utils.regions import Region
 from dae.genomic_resources import GenomicResource
+from dae.genomic_resources.fsspec_protocol import build_local_resource
+from dae.genomic_resources.resource_implementation import (
+    ResourceConfigValidationMixin,
+    get_base_resource_schema,
+)
+from dae.utils.regions import Region
 
 logger = logging.getLogger(__name__)
 
 
 class ReferenceGenome(
-    ResourceConfigValidationMixin
+    ResourceConfigValidationMixin,
 ):
     """Provides an interface for quering a reference genome."""
 
@@ -49,7 +49,7 @@ class ReferenceGenome(
         chrom_x = regions_x[0].chrom
 
         result = {
-            chrom_x: regions_x
+            chrom_x: regions_x,
         }
 
         if config["PARS"]["Y"] is not None:
@@ -140,7 +140,7 @@ class ReferenceGenome(
         self,
         exc_type: Optional[Type[BaseException]],
         exc_value: Optional[BaseException],
-        exc_tb: Optional[TracebackType]
+        exc_tb: Optional[TracebackType],
     ) -> None:
         if exc_type is not None:
             logger.error(
@@ -172,7 +172,7 @@ class ReferenceGenome(
             for key, value in self._index.items()]
 
     def split_into_regions(
-        self, region_size: int, chromosome: Optional[str] = None
+        self, region_size: int, chromosome: Optional[str] = None,
     ) -> Generator[Region, None, None]:
         """
         Split the reference genome into regions and yield them.
@@ -184,7 +184,7 @@ class ReferenceGenome(
             chromosome_lengths = self.get_all_chrom_lengths()
         else:
             chromosome_lengths = [
-                (chromosome, self.get_chrom_length(chromosome))
+                (chromosome, self.get_chrom_length(chromosome)),
             ]
         for chrom, chrom_len in chromosome_lengths:
             logger.debug(
@@ -198,7 +198,7 @@ class ReferenceGenome(
 
     def fetch(
         self, chrom: str, start: int, stop: Optional[int],
-        buffer_size: int = 512
+        buffer_size: int = 512,
     ) -> Generator[str, None, None]:
         """
         Yield the nucleotides in a specific region.
@@ -218,7 +218,7 @@ class ReferenceGenome(
             self._index[chrom]["startBit"]
             + start
             - 1
-            + (start - 1) // self._index[chrom]["seqLineLength"]
+            + (start - 1) // self._index[chrom]["seqLineLength"],
         )
 
         chrom_length = self.get_chrom_length(chrom)
@@ -268,7 +268,7 @@ class ReferenceGenome(
             "PARS": {"type": "dict", "schema": {
                 "X": {"type": "list", "schema": {"type": "string"}},
                 "Y": {"type": "list", "schema": {"type": "string"}},
-            }}
+            }},
         }
 
 

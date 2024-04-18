@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 import abc
-from typing import Optional, Dict, List, Union, cast, Generator
+from collections.abc import Generator
 from types import TracebackType
+from typing import Dict, List, Optional, Union, cast
 
 from box import Box
 
 from dae.genomic_resources.repository import GenomicResource
+
 from .line import LineBase
 
 
@@ -154,7 +156,7 @@ class GenomicPositionTable(abc.ABC):
     def get_records_in_region(
         self, chrom: str,
         pos_begin: Optional[int] = None,
-        pos_end: Optional[int] = None
+        pos_end: Optional[int] = None,
     ) -> Generator[LineBase, None, None]:
         """Return an iterable over the records in the specified range.
 

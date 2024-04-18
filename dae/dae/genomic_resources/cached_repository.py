@@ -1,17 +1,24 @@
 """Provides caching genomic resources."""
 from __future__ import annotations
-import os
-import logging
 
-from typing import Optional, Generator, IO, Union, Iterable
+import logging
+import os
+from collections.abc import Generator, Iterable
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from typing import IO, Optional, Union
 
 import pysam
 
 from dae.genomic_resources.fsspec_protocol import FsspecReadWriteProtocol
-from dae.genomic_resources.repository import GenomicResourceRepo, \
-    GR_CONF_FILE_NAME, Manifest, GenomicResource, \
-    ReadOnlyRepositoryProtocol, is_version_constraint_satisfied
+from dae.genomic_resources.repository import (
+    GR_CONF_FILE_NAME,
+    GenomicResource,
+    GenomicResourceRepo,
+    Manifest,
+    ReadOnlyRepositoryProtocol,
+    is_version_constraint_satisfied,
+)
+
 from .fsspec_protocol import build_fsspec_protocol
 
 logger = logging.getLogger(__name__)
@@ -107,7 +114,7 @@ class CachingProtocol(ReadOnlyRepositoryProtocol):
             self, resource: GenomicResource, filename: str,
             mode: str = "rt", **kwargs: Union[str, bool, None]) -> IO:
         if "w" in mode:
-            raise IOError(
+            raise OSError(
                 f"Read-Only caching protocol {self.get_id()} trying to open "
                 f"{filename} for writing")
 
@@ -208,7 +215,7 @@ class GenomicResourceCachedRepo(GenomicResourceRepo):
     def find_resource(
         self, resource_id: str,
         version_constraint: Optional[str] = None,
-        repository_id: Optional[str] = None
+        repository_id: Optional[str] = None,
     ) -> Optional[GenomicResource]:
         """Return requested resource or None if not found."""
         matching_resources: list[GenomicResource] = []
@@ -289,8 +296,8 @@ def cache_resources(
                 "updating resource", resource.get_type(), resource.resource_id)
             futures.append(
                 executor.submit(
-                    cached_proto.refresh_cached_resource, resource
-                )
+                    cached_proto.refresh_cached_resource, resource,
+                ),
             )
             continue
 
@@ -299,7 +306,7 @@ def cache_resources(
                 cached_proto.refresh_cached_resource_file,  # type: ignore
                 resource,
                 "genomic_resource.yaml",
-            )
+            ),
         )
         impl = impl_builder(resource)
 
@@ -313,7 +320,7 @@ def cache_resources(
                     cached_proto.refresh_cached_resource_file,  # type: ignore
                     resource,
                     res_file,
-                )
+                ),
             )
 
     total_files = len(futures)

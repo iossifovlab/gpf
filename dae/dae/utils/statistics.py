@@ -1,5 +1,5 @@
-from typing import Dict, Any, Tuple, Iterator, Union
-from collections.abc import MutableMapping
+from collections.abc import Iterator, MutableMapping
+from typing import Any, Dict, Tuple, Union
 
 
 class StatsCollection(MutableMapping):
@@ -41,7 +41,7 @@ class StatsCollection(MutableMapping):
 
     def __getitem__(
         self, key: tuple[str, ...],
-        default: int = 0
+        default: int = 0,
     ) -> Union[int, dict[tuple[str, ...], int]]:
         """Get stats value corresponding to key or default if not found."""
         result: dict[tuple[str, ...], int] = {}

@@ -1,18 +1,22 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,W0104
 
-import textwrap
 import pathlib
+import textwrap
 
 import pytest
 
-from dae.gene_scores.gene_scores import GeneScoresDb, \
-    build_gene_score_from_resource
+from dae.gene_scores.gene_scores import (
+    GeneScoresDb,
+    build_gene_score_from_resource,
+)
+from dae.genomic_resources.repository import (
+    GR_CONF_FILE_NAME,
+    GenomicResourceRepo,
+)
 from dae.genomic_resources.testing import build_inmemory_test_repository
-from dae.genomic_resources.repository import GR_CONF_FILE_NAME, \
-    GenomicResourceRepo
 
 
-@pytest.fixture
+@pytest.fixture()
 def scores_repo(tmp_path: pathlib.Path) -> GenomicResourceRepo:
     scores_repo = build_inmemory_test_repository({
         "RVIS_rank": {
@@ -43,7 +47,7 @@ def scores_repo(tmp_path: pathlib.Path) -> GenomicResourceRepo:
                 "UBR4",-7.5,2
                 "EP400",-3.86,36
                 "NOTCH1",-3.51,55
-                """)
+                """),
         },
         "LGD_rank": {
             GR_CONF_FILE_NAME: """
@@ -71,13 +75,13 @@ def scores_repo(tmp_path: pathlib.Path) -> GenomicResourceRepo:
                 "SRRM2",0.004471,35
                 "SPTBN1",0.002715,19.5
                 "UBR4",0.007496,59
-            """)
-        }
+            """),
+        },
     })
     return scores_repo
 
 
-@pytest.fixture
+@pytest.fixture()
 def gene_scores_db(scores_repo: GenomicResourceRepo) -> GeneScoresDb:
     resources = [
         scores_repo.get_resource("LGD_rank"),
@@ -123,7 +127,7 @@ def test_gene_scores(gene_scores_db: GeneScoresDb) -> None:
 
 
 def test_create_score_from_repository(
-    scores_repo: GenomicResourceRepo
+    scores_repo: GenomicResourceRepo,
 ) -> None:
     resource = scores_repo.get_resource("RVIS_rank")
     score = build_gene_score_from_resource(resource)

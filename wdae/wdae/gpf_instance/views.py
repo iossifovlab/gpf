@@ -1,9 +1,11 @@
 from typing import Optional
+
 from query_base.query_base import QueryBaseView
 from rest_framework import status
+from rest_framework.decorators import api_view
 from rest_framework.request import Request
 from rest_framework.response import Response
-from rest_framework.decorators import api_view
+
 from dae import __version__ as VERSION  # type: ignore
 
 
@@ -12,7 +14,7 @@ def version(_request: Request) -> Response:
     """Get GPF version."""
     return Response(
         {"version": VERSION},
-        status=status.HTTP_200_OK
+        status=status.HTTP_200_OK,
     )
 
 
@@ -41,7 +43,7 @@ class MarkdownFileView(QueryBaseView):
             )
         return Response(
             {"content": content},
-            status=status.HTTP_200_OK
+            status=status.HTTP_200_OK,
         )
 
     def post(self, request: Request) -> Response:
@@ -55,7 +57,7 @@ class MarkdownFileView(QueryBaseView):
         if not request.user.is_staff:
             return Response(
                 {"error": "You have no permission to edit the content."},
-                status=status.HTTP_403_FORBIDDEN
+                status=status.HTTP_403_FORBIDDEN,
             )
         try:
             with open(self.filepath, "w") as markdown_file:
@@ -63,7 +65,7 @@ class MarkdownFileView(QueryBaseView):
         except PermissionError:
             return Response(
                 {"error": "Failed to write to file"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
         return Response(status=status.HTTP_200_OK)

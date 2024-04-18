@@ -1,19 +1,21 @@
 #!/usr/bin/env python
-import os
-import time
 import argparse
 import logging
-from typing import Dict, Any, Set, cast, Iterable, Optional
+import os
+import time
+from collections.abc import Iterable
+from typing import Any, Dict, Optional, Set, cast
+
 from box import Box
 
-from dae.utils.verbosity_configuration import VerbosityConfiguration
-from dae.gene.gene_sets_db import GeneSet
-from dae.gpf_instance.gpf_instance import GPFInstance
-from dae.gene_profile.statistic import GPStatistic
-from dae.gene_profile.db import GeneProfileDB
 from dae.effect_annotation.effect import expand_effect_types
+from dae.gene.gene_sets_db import GeneSet
+from dae.gene_profile.db import GeneProfileDB
+from dae.gene_profile.statistic import GPStatistic
+from dae.gpf_instance.gpf_instance import GPFInstance
+from dae.utils.verbosity_configuration import VerbosityConfiguration
 from dae.variants.attributes import Role
-from dae.variants.family_variant import FamilyVariant, FamilyAllele
+from dae.variants.family_variant import FamilyAllele, FamilyVariant
 from dae.variants.variant import allele_type_from_name
 
 logger = logging.getLogger(__file__)
@@ -22,7 +24,7 @@ logger = logging.getLogger(__file__)
 def generate_gp(
     gpf_instance: GPFInstance,
     gene_symbol: str,
-    collections_gene_sets: list[tuple[str, GeneSet]]
+    collections_gene_sets: list[tuple[str, GeneSet]],
 ) -> tuple[str, GPStatistic]:
     """Generate GP."""
     # pylint: disable=protected-access, invalid-name, too-many-locals
@@ -54,7 +56,7 @@ def generate_gp(
 
     return gene_symbol, GPStatistic(
         gene_symbol, sets_in,
-        scores, variant_counts
+        scores, variant_counts,
     )
 
 
@@ -63,7 +65,7 @@ def add_variant_count(
     variant_counts: dict[str, Any],
     person_set: str,
     statistic_id: str,
-    effect_types: Optional[set[str]]
+    effect_types: Optional[set[str]],
 ) -> None:
     """Increment count for specific variant."""
     # pylint: disable=invalid-name
@@ -102,7 +104,7 @@ def calculate_table_values(
     instance: GPFInstance,
     variant_counts: dict[str, Any],
     dataset_id: str,
-    filters: Box
+    filters: Box,
 ) -> dict[str, Any]:
     """Calculate GP variant counts and return a SQLite update mapping."""
     # pylint: disable=invalid-name
@@ -112,7 +114,7 @@ def calculate_table_values(
         genotype_data = instance.get_genotype_data(dataset_id)
         for ps in filters.person_sets:
             psc = genotype_data.get_person_set_collection(
-                ps.collection_name
+                ps.collection_name,
             )
             assert psc is not None
             set_name = ps.set_name
@@ -143,7 +145,7 @@ def count_variant(
     variant_counts: dict[str, Any],
     config: Box,
     person_ids: dict[str, Any],
-    denovo_flag: bool
+    denovo_flag: bool,
 ) -> None:
     """Count variant."""
     # pylint: disable=invalid-name, too-many-locals, too-many-branches
@@ -213,7 +215,7 @@ def count_variant(
                     for r in statistic.roles
                 }
                 v_roles = set(
-                    cast(FamilyAllele, v.alt_alleles[0]).variant_in_roles
+                    cast(FamilyAllele, v.alt_alleles[0]).variant_in_roles,
                 )
                 if not len(v_roles.intersection(roles)) > 0:
                     continue
@@ -223,7 +225,7 @@ def count_variant(
                 ets = set(expand_effect_types(statistic.effects))
 
             add_variant_count(
-                v, variant_counts, ps.set_name, stat_id, ets
+                v, variant_counts, ps.set_name, stat_id, ets,
             )
 
 
@@ -233,22 +235,22 @@ def collect_variant_counts(
     dataset_id: str,
     config: Box,
     person_ids: dict[str, Any],
-    denovo_flag: bool
+    denovo_flag: bool,
 ) -> None:
     """Collect variant gene counts for a given dataset."""
     for idx, v in enumerate(variants, 1):
         if idx % 1000 == 0:
             logger.info(
-                "%s: Counted %s variants from %s", dataset_id, idx, dataset_id
+                "%s: Counted %s variants from %s", dataset_id, idx, dataset_id,
             )
         count_variant(
-            v, dataset_id, variant_counts, config, person_ids, denovo_flag
+            v, dataset_id, variant_counts, config, person_ids, denovo_flag,
         )
 
 
 def main(
     gpf_instance: Optional[GPFInstance] = None,
-    argv: Optional[list[str]] = None
+    argv: Optional[list[str]] = None,
 ) -> None:
     """Entry point for the generate GP script."""
     # flake8: noqa: C901
@@ -261,11 +263,11 @@ def main(
     parser.add_argument(
         "--gene-sets-genes",
         action="store_true",
-        help="Generate GPs only for genes contained in the config's gene sets"
+        help="Generate GPs only for genes contained in the config's gene sets",
     )
     parser.add_argument(
         "--genes",
-        help="Comma separated list of genes to generate statistics for"
+        help="Comma separated list of genes to generate statistics for",
     )
     parser.add_argument("--drop", action="store_true")
 
@@ -286,7 +288,7 @@ def main(
     gpdb = GeneProfileDB(
         config.to_dict(),
         args.dbfile,
-        clear=True
+        clear=True,
     )
 
     for gs_category in config.gene_sets:
@@ -331,11 +333,11 @@ def main(
         for ps in filters.person_sets:
             person_set_query = (
                 ps.collection_name,
-                [ps.set_name]
+                [ps.set_name],
             )
             person_set = \
                 genotype_data._transform_person_set_collection_query(
-                    person_set_query, None
+                    person_set_query, None,
                 )
             assert person_set is not None, person_set_query
             children_person_set = set(person_set) & genotype_data_children
@@ -357,7 +359,7 @@ def main(
     start = time.time()
     for idx, sym in enumerate(gene_symbols, 1):
         gs, gp = generate_gp(
-            gpf_instance, sym, collections_gene_sets
+            gpf_instance, sym, collections_gene_sets,
         )
         gps[gs] = gp
         if idx % 1000 == 0:
@@ -395,7 +397,7 @@ def main(
             denovo_variants = \
                 genotype_data.query_variants(
                     genes=genes, inheritance="denovo",
-                    unique_family_variants=True
+                    unique_family_variants=True,
                 )
 
             logger.info("Done collecting denovo variants for %s", dataset_id)
@@ -407,10 +409,10 @@ def main(
                 dataset_id,
                 config,
                 person_ids[dataset_id],
-                True
+                True,
             )
             logger.info(
-                "Done collecting denovo variant counts for %s", dataset_id
+                "Done collecting denovo variant counts for %s", dataset_id,
             )
 
         if has_rare:
@@ -437,7 +439,7 @@ def main(
                     variant_types = [
                         # pylint: disable=no-member
                         allele_type_from_name(
-                            statistic.variant_types).repr()  # type: ignore
+                            statistic.variant_types).repr(),  # type: ignore
                     ]
                     kwargs["variant_type"] = " or ".join(variant_types)
 
@@ -451,7 +453,7 @@ def main(
 
                 if statistic.roles:
                     roles = [
-                        repr(Role.from_name(statistic.roles))
+                        repr(Role.from_name(statistic.roles)),
                     ]
                     kwargs["roles"] = " or ".join(roles)
 
@@ -461,13 +463,13 @@ def main(
                         inheritance=[
                             "not denovo and "
                             "not possible_denovo and not possible_omission",
-                            "mendelian or missing"
+                            "mendelian or missing",
                         ],
                         frequency_filter=[("af_allele_freq", (None, 1.0))],
                         **kwargs)
 
                 logger.info(
-                    "Counting rare variants for statistic %s", statistic.id
+                    "Counting rare variants for statistic %s", statistic.id,
                 )
                 collect_variant_counts(
                     variant_counts,
@@ -475,7 +477,7 @@ def main(
                     dataset_id,
                     config,
                     person_ids[dataset_id],
-                    False
+                    False,
                 )
 
             logger.info("Done counting rare variants")
@@ -485,7 +487,7 @@ def main(
             gpf_instance,
             variant_counts,
             dataset_id,
-            filters
+            filters,
         )
         logger.info("Done calculating rates for %s", dataset_id)
         logger.info("Updating GPs for %s", dataset_id)

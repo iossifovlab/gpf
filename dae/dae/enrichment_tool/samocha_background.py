@@ -1,18 +1,25 @@
 from __future__ import annotations
+
 import logging
-from typing import Optional, Any, Iterable, cast
+from collections.abc import Iterable
+from typing import Any, Optional, cast
 
 import pandas as pd
 from scipy import stats
 
-from dae.person_sets import ChildrenStats
+from dae.enrichment_tool.base_enrichment_background import (
+    BaseEnrichmentResourceBackground,
+)
+from dae.enrichment_tool.event_counters import (
+    EnrichmentResult,
+    EnrichmentSingleResult,
+    EventCountersResult,
+)
 from dae.genomic_resources.repository import GenomicResource
-from dae.genomic_resources.resource_implementation import \
-    get_base_resource_schema
-from dae.enrichment_tool.event_counters import EventCountersResult, \
-    EnrichmentResult, EnrichmentSingleResult
-from dae.enrichment_tool.base_enrichment_background import \
-    BaseEnrichmentResourceBackground
+from dae.genomic_resources.resource_implementation import (
+    get_base_resource_schema,
+)
+from dae.person_sets import ChildrenStats
 
 logger = logging.getLogger(__name__)
 
@@ -72,8 +79,8 @@ class SamochaEnrichmentBackground(BaseEnrichmentResourceBackground):
             self._df = pd.read_csv(
                 infile,
                 usecols=[
-                    "gene", "F", "M", "P_LGDS", "P_MISSENSE", "P_SYNONYMOUS"
-                ]
+                    "gene", "F", "M", "P_LGDS", "P_MISSENSE", "P_SYNONYMOUS",
+                ],
             )
 
     def calc_enrichment_test(
@@ -81,7 +88,7 @@ class SamochaEnrichmentBackground(BaseEnrichmentResourceBackground):
         events_counts: EventCountersResult,
         overlapped_counts: EventCountersResult,
         gene_set: Iterable[str],
-        **kwargs: Any
+        **kwargs: Any,
     ) -> EnrichmentResult:
         """Calculate enrichment statistics."""
         # pylint: disable=too-many-locals
@@ -113,7 +120,7 @@ class SamochaEnrichmentBackground(BaseEnrichmentResourceBackground):
             overlapped_counts.all,
             expected,
             poisson_test(
-                overlapped_counts.all, expected)
+                overlapped_counts.all, expected),
         )
 
         male_result = EnrichmentSingleResult(
@@ -122,7 +129,7 @@ class SamochaEnrichmentBackground(BaseEnrichmentResourceBackground):
             overlapped_counts.male,
             male_expected,
             poisson_test(
-                overlapped_counts.male, male_expected)
+                overlapped_counts.male, male_expected),
         )
 
         female_result = EnrichmentSingleResult(
@@ -131,7 +138,7 @@ class SamochaEnrichmentBackground(BaseEnrichmentResourceBackground):
             overlapped_counts.female,
             female_expected,
             poisson_test(
-                overlapped_counts.female, female_expected)
+                overlapped_counts.female, female_expected),
         )
 
         if events_counts.rec == 0 or events_counts.all == 0:
@@ -158,7 +165,7 @@ class SamochaEnrichmentBackground(BaseEnrichmentResourceBackground):
             overlapped_counts.rec,
             expected,
             pvalue,
-            overlapped_counts.rec_genes
+            overlapped_counts.rec_genes,
         )
 
         return EnrichmentResult(
@@ -167,8 +174,8 @@ class SamochaEnrichmentBackground(BaseEnrichmentResourceBackground):
             male_result,
             female_result,
             EnrichmentSingleResult(
-                "unspecified", 0, 0, 0.0, 1.0
-            )
+                "unspecified", 0, 0, 0.0, 1.0,
+            ),
         )
 
     @staticmethod

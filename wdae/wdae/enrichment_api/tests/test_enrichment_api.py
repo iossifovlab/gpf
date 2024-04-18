@@ -3,12 +3,9 @@ import json
 from typing import Dict, List, Optional, Union
 
 import pytest
-
-from rest_framework import status
 from django.test.client import Client
-
 from gpf_instance.gpf_instance import WGPFInstance
-
+from rest_framework import status
 
 pytestmark = pytest.mark.usefixtures(
     "wdae_gpf_instance", "dae_calc_gene_sets")
@@ -24,20 +21,20 @@ pytestmark = pytest.mark.usefixtures(
             "enrichmentBackgroundModel": "coding_len_background_model",
             "enrichmentCountingModel": "enrichment_gene_counting",
             "geneSymbols": ["SAMD11", "PLEKHN1", "POGZ"],
-        }
+        },
     ),
 ])
 def test_enrichment_api_permissions(
     anonymous_client: Client,
     url: str,
     method: str,
-    body: Optional[Dict[str, Union[str, List[str]]]]
+    body: Optional[Dict[str, Union[str, List[str]]]],
 ) -> None:
     if method == "get":
         response = anonymous_client.get(url)
     else:
         response = anonymous_client.post(
-            url, json.dumps(body), content_type="application/json"
+            url, json.dumps(body), content_type="application/json",
         )
 
     assert response
@@ -93,7 +90,7 @@ def test_enrichment_test_missing_dataset_id(admin_client: Client) -> None:
         "geneSymbols": ["POGZ"],
     }
     response = admin_client.post(
-        url, json.dumps(query), content_type="application/json", format="json"
+        url, json.dumps(query), content_type="application/json", format="json",
     )
 
     assert response
@@ -109,7 +106,7 @@ def test_enrichment_test_missing_study(admin_client: Client) -> None:
         "geneSymbols": ["POGZ"],
     }
     response = admin_client.post(
-        url, json.dumps(query), content_type="application/json", format="json"
+        url, json.dumps(query), content_type="application/json", format="json",
     )
 
     assert response
@@ -124,7 +121,7 @@ def test_enrichment_test_missing_gene_symbols(admin_client: Client) -> None:
         "enrichmentCountingModel": "enrichment_gene_counting",
     }
     response = admin_client.post(
-        url, json.dumps(query), content_type="application/json", format="json"
+        url, json.dumps(query), content_type="application/json", format="json",
     )
 
     assert response
@@ -141,7 +138,7 @@ def test_enrichment_test_gene_symbols(admin_client: Client) -> None:
         "geneSymbols": ["SAMD11", "PLEKHN1", "POGZ"],
     }
     response = admin_client.post(
-        url, json.dumps(query), content_type="application/json", format="json"
+        url, json.dumps(query), content_type="application/json", format="json",
     )
 
     assert response
@@ -154,7 +151,7 @@ def test_enrichment_test_gene_symbols(admin_client: Client) -> None:
     assert result["desc"][:14] == "Gene Symbols: "
     assert result["desc"][-4:] == " (3)"
     assert sorted(result["desc"][14:-4].split(",")) == sorted(
-        ["SAMD11", "PLEKHN1", "POGZ"]
+        ["SAMD11", "PLEKHN1", "POGZ"],
     )
 
     assert len(result["result"]) == 2
@@ -201,7 +198,7 @@ def test_enrichment_test_gene_symbols(admin_client: Client) -> None:
 
 def test_enrichment_test_gene_scores(
     admin_client: Client,
-    wdae_gpf_instance: WGPFInstance
+    wdae_gpf_instance: WGPFInstance,
 ) -> None:
     url = "/api/v3/enrichment/test"
     query = {
@@ -211,11 +208,11 @@ def test_enrichment_test_gene_scores(
         "geneScores": {
             "score": "LGD_rank",
             "rangeStart": 1,
-            "rangeEnd": 1000
+            "rangeEnd": 1000,
         },
     }
     response = admin_client.post(
-        url, json.dumps(query), content_type="application/json", format="json"
+        url, json.dumps(query), content_type="application/json", format="json",
     )
 
     assert response
@@ -223,7 +220,7 @@ def test_enrichment_test_gene_scores(
 
 
 def test_enrichment_test_gene_scores_with_zero_range(
-        admin_client: Client, wdae_gpf_instance: WGPFInstance
+        admin_client: Client, wdae_gpf_instance: WGPFInstance,
 ) -> None:
     url = "/api/v3/enrichment/test"
     query = {
@@ -233,11 +230,11 @@ def test_enrichment_test_gene_scores_with_zero_range(
         "geneScores": {
             "score": "LGD_rank",
             "rangeStart": 0,
-            "rangeEnd": 1000
+            "rangeEnd": 1000,
         },
     }
     response = admin_client.post(
-        url, json.dumps(query), content_type="application/json", format="json"
+        url, json.dumps(query), content_type="application/json", format="json",
     )
 
     assert response
@@ -249,7 +246,7 @@ def test_enrichment_test_gene_scores_with_zero_range(
 
 def test_enrichment_test_gene_set(
     admin_client: Client,
-    wdae_gpf_instance: WGPFInstance
+    wdae_gpf_instance: WGPFInstance,
 ) -> None:
     url = "/api/v3/enrichment/test"
     query = {
@@ -263,7 +260,7 @@ def test_enrichment_test_gene_set(
         },
     }
     response = admin_client.post(
-        url, json.dumps(query), content_type="application/json", format="json"
+        url, json.dumps(query), content_type="application/json", format="json",
     )
 
     assert response

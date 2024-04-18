@@ -1,12 +1,15 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 
+from dae.enrichment_tool.gene_weights_background import (
+    GeneScoreEnrichmentBackground,
+    GeneWeightsEnrichmentBackground,
+)
 from dae.genomic_resources import GenomicResource
-from dae.genomic_resources.testing import build_inmemory_test_resource, \
-    convert_to_tab_separated
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME
-
-from dae.enrichment_tool.gene_weights_background import \
-    GeneWeightsEnrichmentBackground, GeneScoreEnrichmentBackground
+from dae.genomic_resources.testing import (
+    build_inmemory_test_resource,
+    convert_to_tab_separated,
+)
 
 
 def test_background_resource_simple() -> None:
@@ -24,7 +27,7 @@ def test_background_resource_simple() -> None:
             D      20
             E      20
             F      20
-        """)
+        """),
     })
     assert res.get_type() == "gene_weights_enrichment_background"
 
@@ -65,7 +68,7 @@ def test_background_gene_score_resource_simple() -> None:
             D      20
             E      20
             F      20
-        """)
+        """),
     })
     assert res.get_type() == "gene_score"
 

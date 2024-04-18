@@ -1,8 +1,8 @@
 # pylint: disable=redefined-outer-name,C0114,C0116,protected-access
 
 import pytest
-from rest_framework import status
 from django.test.client import Client
+from rest_framework import status
 
 pytestmark = pytest.mark.usefixtures(
     "wdae_gpf_instance", "dae_calc_gene_sets")
@@ -19,19 +19,19 @@ def test_collection_configs_view(admin_client: Client) -> None:
                     "color": "#e35252",
                     "id": "phenotype1",
                     "name": "phenotype 1",
-                    "values": ["phenotype1", ]
+                    "values": ["phenotype1"],
                 },
                 {
                     "color": "#b8008a",
                     "id": "phenotype2",
                     "name": "phenotype 2",
-                    "values": ["phenotype2", ]
+                    "values": ["phenotype2"],
                 },
                 {
                     "color": "#ffffff",
                     "id": "unaffected",
                     "name": "unaffected",
-                    "values": ["unaffected", ]
+                    "values": ["unaffected"],
                 },
             ],
             "id": "phenotype",
@@ -51,14 +51,14 @@ def test_collection_configs_view(admin_client: Client) -> None:
                     "color": "#e35252",
                     "id": "affected",
                     "name": "affected",
-                    "values": ["affected", ]
+                    "values": ["affected"],
                 },
                 {
                     "color": "#ffffff",
                     "id": "unaffected",
                     "name": "unaffected",
-                    "values": ["unaffected", ]
-                }
+                    "values": ["unaffected"],
+                },
             ],
             "default": {
                 "id": "unspecified",
@@ -68,7 +68,7 @@ def test_collection_configs_view(admin_client: Client) -> None:
             "id": "status",
             "name": "Affected Status",
             "sources": [{"from": "pedigree", "source": "status"}],
-        }
+        },
     }
 
 
@@ -114,11 +114,11 @@ def test_collection_domain_view(admin_client: Client) -> None:
                     "color": "#ffffff",
                     "id": "unaffected",
                     "name": "unaffected",
-                }
+                },
             ],
             "id": "status",
             "name": "Affected Status",
-        }
+        },
     }
 
 
@@ -142,25 +142,25 @@ def test_get_person_sets_collection_stats(admin_client: Client) -> None:
         "unknown": {
             "parents": 3,
             "children": 0,
-        }
+        },
     }
 
 
 def test_get_person_sets_collection_stats_nonexistent(
-    admin_client: Client
+    admin_client: Client,
 ) -> None:
     response = admin_client.get(
-        "/api/v3/person_sets/nonexistentstudy/stats/status"
+        "/api/v3/person_sets/nonexistentstudy/stats/status",
     )
     assert response.status_code == 404
     response = admin_client.get(
-        "/api/v3/person_sets/Study1/stats/nonexistentcollection"
+        "/api/v3/person_sets/Study1/stats/nonexistentcollection",
     )
     assert response.status_code == 404
 
 
 def test_get_person_sets_collection_stats_no_id(admin_client: Client) -> None:
     response = admin_client.get(
-        "/api/v3/person_sets/Study1/stats"
+        "/api/v3/person_sets/Study1/stats",
     )
     assert response.status_code == 404

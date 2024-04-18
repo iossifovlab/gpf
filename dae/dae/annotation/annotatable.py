@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 import enum
 
 
@@ -44,7 +45,7 @@ class Annotatable:
 
     def __init__(
         self, chrom: str, pos: int, pos_end: int,
-        annotatable_type: Annotatable.Type
+        annotatable_type: Annotatable.Type,
     ):
         self._chrom = chrom
         self._pos = pos
@@ -79,7 +80,7 @@ class Annotatable:
         return self._pos_end - self._pos + 1
 
     def __repr__(self) -> str:
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Annotatable):
@@ -125,9 +126,9 @@ class Position(Annotatable):
     def from_string(value: str) -> Position:
         a_type, args = Annotatable.tokenize(value)
         if a_type not in ("Position", "POSITION"):
-            raise ValueError()
+            raise ValueError
         if len(args) != 2:
-            raise ValueError()
+            raise ValueError
         return Position(args[0], int(args[1]))
 
 
@@ -145,9 +146,9 @@ class Region(Annotatable):
     def from_string(value: str) -> Region:
         a_type, args = Annotatable.tokenize(value)
         if a_type not in ("Region", "REGION"):
-            raise ValueError()
+            raise ValueError
         if len(args) != 3:
-            raise ValueError()
+            raise ValueError
         return Region(args[0], int(args[1]), int(args[2]))
 
 
@@ -209,9 +210,9 @@ class VCFAllele(Annotatable):
         a_type, args = Annotatable.tokenize(value)
         if a_type not in ("VCFAllele", "SUBSTITUTION", "COMPLEX",
                           "SMALL_DELETION", "SMALL_INSERTION"):
-            raise ValueError()
+            raise ValueError
         if len(args) != 4:
-            raise ValueError()
+            raise ValueError
         return VCFAllele(args[0], int(args[1]), args[2], args[3])
 
 
@@ -220,7 +221,7 @@ class CNVAllele(Annotatable):
 
     def __init__(
         self, chrom: str, pos_begin: int, pos_end: int,
-        cnv_type: Annotatable.Type
+        cnv_type: Annotatable.Type,
     ):
         assert cnv_type in {
             Annotatable.Type.LARGE_DELETION,
@@ -236,12 +237,12 @@ class CNVAllele(Annotatable):
         a_type, args = Annotatable.tokenize(value)
         if a_type == "CNVAllele":
             if len(args) != 4:
-                raise ValueError()
+                raise ValueError
             cnv_type = Annotatable.Type.from_string(args[3])
         elif a_type in ("LARGE_DUPLICATION", "LARGE_DELETION"):
             if len(args) != 3:
-                raise ValueError()
+                raise ValueError
             cnv_type = Annotatable.Type.from_string(a_type)
         else:
-            raise ValueError()
+            raise ValueError
         return CNVAllele(args[0], int(args[1]), int(args[2]), cnv_type)

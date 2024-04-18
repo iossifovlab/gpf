@@ -1,22 +1,24 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import os
+
 from box import Box
 
-from dae.studies.variants_db import VariantsDb
-from dae.genotype_storage.genotype_storage_registry import \
-    GenotypeStorageRegistry
+from dae.genotype_storage.genotype_storage_registry import (
+    GenotypeStorageRegistry,
+)
 from dae.gpf_instance.gpf_instance import GPFInstance
+from dae.studies.variants_db import VariantsDb
 
 
 def test_fixture_variants_db_can_be_loaded(
-    variants_db_fixture: VariantsDb
+    variants_db_fixture: VariantsDb,
 ) -> None:
     assert variants_db_fixture is not None
 
 
 def test_variants_db_can_create_study_from_config(
     genotype_data_study_configs: dict[str, Box],
-    variants_db_fixture: VariantsDb
+    variants_db_fixture: VariantsDb,
 ) -> None:
     test_config = genotype_data_study_configs.get("quads_f1")
 
@@ -32,13 +34,13 @@ def test_variants_db_studies_simple(
     dae_config_fixture: Box,
     gpf_instance_2013: GPFInstance,
     genotype_storage_factory: GenotypeStorageRegistry,
-    fixtures_dir: str
+    fixtures_dir: str,
 ) -> None:
     assert dae_config_fixture is not None
     assert dae_config_fixture.studies.dir is not None
 
     assert dae_config_fixture.studies.dir == os.path.join(
-        fixtures_dir, "studies"
+        fixtures_dir, "studies",
     )
 
     vdb = VariantsDb(
@@ -54,13 +56,13 @@ def test_variants_db_genotype_data_groups_simple(
     dae_config_fixture: Box,
     gpf_instance_2013: GPFInstance,
     genotype_storage_factory: GenotypeStorageRegistry,
-    fixtures_dir: str
+    fixtures_dir: str,
 ) -> None:
     assert dae_config_fixture is not None
     assert dae_config_fixture.datasets.dir is not None
 
     assert dae_config_fixture.datasets.dir == os.path.join(
-        fixtures_dir, "datasets"
+        fixtures_dir, "datasets",
     )
 
     vdb = VariantsDb(
@@ -78,7 +80,7 @@ def test_get_existing_study_config(variants_db_fixture: VariantsDb) -> None:
 
 
 def test_get_non_existing_study_config(
-    variants_db_fixture: VariantsDb
+    variants_db_fixture: VariantsDb,
 ) -> None:
     assert variants_db_fixture.get_genotype_study_config("ala bala") is None
 
@@ -136,12 +138,12 @@ def test_get_all_genotype_group_ids(variants_db_fixture: VariantsDb) -> None:
             "person_sets_dataset_1",
             "person_sets_dataset_2",
             # "svmergingdataset",
-        ]
+        ],
     )
 
 
 def test_get_existing_genotype_data_group_config(
-    variants_db_fixture: VariantsDb
+    variants_db_fixture: VariantsDb,
 ) -> None:
     vdb = variants_db_fixture
     assert (
@@ -150,7 +152,7 @@ def test_get_existing_genotype_data_group_config(
 
 
 def test_get_non_existing_genotype_data_group_config(
-    variants_db_fixture: VariantsDb
+    variants_db_fixture: VariantsDb,
 ) -> None:
     assert (
         variants_db_fixture.get_genotype_group_config("ala bala") is None
@@ -159,17 +161,17 @@ def test_get_non_existing_genotype_data_group_config(
 
 def test_get_genotype_group(variants_db_fixture: VariantsDb) -> None:
     genotype_data_group = variants_db_fixture.get_genotype_group(
-        "quads_in_parent_ds"
+        "quads_in_parent_ds",
     )
     assert genotype_data_group is not None
     assert genotype_data_group.study_id == "quads_in_parent_ds"
 
 
 def test_get_existing_genotype_data_group(
-    variants_db_fixture: VariantsDb
+    variants_db_fixture: VariantsDb,
 ) -> None:
     genotype_data_group = variants_db_fixture.get_genotype_group(
-        "inheritance_trio_ds"
+        "inheritance_trio_ds",
     )
     assert genotype_data_group is not None
     variants = genotype_data_group.query_variants()
@@ -178,10 +180,10 @@ def test_get_existing_genotype_data_group(
 
 
 def test_get_non_existing_genotype_data_group(
-    variants_db_fixture: VariantsDb
+    variants_db_fixture: VariantsDb,
 ) -> None:
     genotype_data_group = variants_db_fixture.get_genotype_group(
-        "ala bala"
+        "ala bala",
     )
     assert genotype_data_group is None
 
@@ -192,7 +194,7 @@ def test_get_all_genotype_groups(variants_db_fixture: VariantsDb) -> None:
 
 
 def test_get_all_genotype_group_configs(
-    variants_db_fixture: VariantsDb
+    variants_db_fixture: VariantsDb,
 ) -> None:
     configs = variants_db_fixture.get_all_genotype_group_configs()
     assert len(configs) == 18
@@ -231,7 +233,7 @@ def test_get_non_existing(variants_db_fixture: VariantsDb) -> None:
 
 def test_get_all(
     fixtures_gpf_instance: GPFInstance,
-    variants_db_fixture: VariantsDb
+    variants_db_fixture: VariantsDb,
 ) -> None:
     studies = variants_db_fixture.get_all_genotype_data()
     assert len(studies) == 38
@@ -241,7 +243,7 @@ def test_get_all(
 
 
 def test_get_all_studies_ids(
-    fixtures_gpf_instance: GPFInstance, variants_db_fixture: VariantsDb
+    fixtures_gpf_instance: GPFInstance, variants_db_fixture: VariantsDb,
 ) -> None:
     fixtures_gpf_instance.reload()
 

@@ -4,19 +4,18 @@ import pathlib
 
 import pytest
 
-from dae.testing import setup_pedigree, setup_vcf, vcf_import
-from dae.testing import alla_gpf
-from dae.testing.import_helpers import StudyInputLayout
-from dae.import_tools.cli import run_with_project
-from dae.import_tools.import_tools import ImportProject
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.gpf_instance.gpf_instance import GPFInstance
+from dae.import_tools.cli import run_with_project
+from dae.import_tools.import_tools import ImportProject
+from dae.testing import alla_gpf, setup_pedigree, setup_vcf, vcf_import
+from dae.testing.import_helpers import StudyInputLayout
 
 
 @pytest.fixture(scope="module")
 def vcf_import_data(
     tmp_path_factory: pytest.TempPathFactory,
-    genotype_storage: GenotypeStorage
+    genotype_storage: GenotypeStorage,
 ) -> tuple[pathlib.Path, GPFInstance, StudyInputLayout]:
     root_path = tmp_path_factory.mktemp(
         f"parquet_dataset_{genotype_storage.storage_id}")
@@ -55,14 +54,14 @@ def vcf_import_data(
 def vcf_project_to_parquet(
     tmp_path_factory: pytest.TempPathFactory,
     vcf_import_data: tuple[pathlib.Path, GPFInstance, StudyInputLayout],
-    genotype_storage: GenotypeStorage
+    genotype_storage: GenotypeStorage,
 ) -> ImportProject:
     root_path, gpf_instance, layout = vcf_import_data
 
     project_config_overwrite = {
         "destination": {
-            "storage_type": genotype_storage.storage_type
-        }
+            "storage_type": genotype_storage.storage_type,
+        },
     }
     project = vcf_import(
         root_path,
@@ -76,7 +75,7 @@ def vcf_project_to_parquet(
 def vcf_project_from_parquet(
     tmp_path_factory: pytest.TempPathFactory,
     vcf_import_data: tuple[pathlib.Path, GPFInstance, StudyInputLayout],
-    genotype_storage: GenotypeStorage
+    genotype_storage: GenotypeStorage,
 ) -> ImportProject:
     root_path, gpf_instance, layout = vcf_import_data
 
@@ -84,8 +83,8 @@ def vcf_project_from_parquet(
         "id": "from_parquet_dataset",
         "processing_config": {
             "parquet_dataset_dir": str(
-                root_path / "work_dir" / "parquet_dataset")
-        }
+                root_path / "work_dir" / "parquet_dataset"),
+        },
     }
     project = vcf_import(
         root_path,
@@ -101,7 +100,7 @@ def vcf_project_from_parquet(
 def test_with_destination_storage_type(
     vcf_project_to_parquet: ImportProject,
     vcf_project_from_parquet: ImportProject,
-    genotype_storage: GenotypeStorage
+    genotype_storage: GenotypeStorage,
 ) -> None:
 
     run_with_project(vcf_project_to_parquet)

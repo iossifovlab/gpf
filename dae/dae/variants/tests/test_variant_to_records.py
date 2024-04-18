@@ -1,7 +1,10 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
+
 from dae.variants.variant import (
-    SummaryAllele, SummaryVariant, SummaryVariantFactory
+    SummaryAllele,
+    SummaryVariant,
+    SummaryVariantFactory,
 )
 
 
@@ -10,7 +13,7 @@ from dae.variants.variant import (
     ([6, 2], [None, "G"]),
     ([6, 2, 2], [None, "G", "A"]),
     ([0, 2, 2], [None, "G", "A"]),
-    ([1, 2, 3, 4, 0], [None, "G", "GG", "GGG", "AAA"])
+    ([1, 2, 3, 4, 0], [None, "G", "GG", "GGG", "AAA"]),
 ])
 def test_allele_frequencies(allele_counts, alternatives):
     sum_allele_counts = sum(allele_counts)
@@ -24,7 +27,7 @@ def test_allele_frequencies(allele_counts, alternatives):
                 "af_allele_count": cnt, "af_allele_freq": allele_freqs[i],
                 "af_ref_allele_count": allele_counts[0],
                 "af_ref_allele_freq": allele_freqs[0],
-            }
+            },
         ))
     in_sv = SummaryVariant(alleles)
     for i, allele in enumerate(in_sv.alleles):
@@ -45,7 +48,7 @@ def test_multiple_to_records_iterations():
             end_position=0, summary_index=0, allele_index=0,
             attributes={
                 "af_allele_count": 2, "af_allele_freq": 25.0,
-            }
+            },
         ),
         SummaryAllele(
             "chr1", 11539, "T", "G",
@@ -53,7 +56,7 @@ def test_multiple_to_records_iterations():
             attributes={
                 "af_allele_count": 6, "af_allele_freq": 75.0,
                 "af_ref_allele_count": 2, "af_ref_allele_freq": 25.0,
-            }
+            },
         ),
     ])
 

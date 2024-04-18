@@ -1,14 +1,18 @@
 # pylint: disable=W0621,C0114,C0116
 
 import textwrap
+
 import pytest
 
-from dae.annotation.annotatable import Position, Region, Annotatable
+from dae.annotation.annotatable import Annotatable, Position, Region
+
 # VCFAllele
 from dae.annotation.annotation_factory import build_annotation_pipeline
 from dae.genomic_resources.repository import GenomicResourceRepo
-from dae.genomic_resources.testing import build_inmemory_test_repository
-from dae.genomic_resources.testing import convert_to_tab_separated
+from dae.genomic_resources.testing import (
+    build_inmemory_test_repository,
+    convert_to_tab_separated,
+)
 
 
 @pytest.fixture(scope="module")
@@ -44,7 +48,7 @@ def grr() -> GenomicResourceRepo:
                2      16         20       0.3        SSC        affected
                2      200        203      0.0002     AGRE       unaffected
                15     16         20       0.2        AGRE       affected
-            """)}
+            """)},
     })
 
 
@@ -99,7 +103,7 @@ def test_cnv_filter(
 def test_cnv_filter_and_attribute(
     annotatable: Annotatable, cnv_count: int,
     status: str, status2: str, collection: str,
-    grr: GenomicResourceRepo
+    grr: GenomicResourceRepo,
 ) -> None:
     pipeline = build_annotation_pipeline(
         pipeline_config_str=textwrap.dedent("""

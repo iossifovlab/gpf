@@ -3,7 +3,8 @@ from typing import Any
 
 import numpy as np
 import pytest
-from remote.remote_variant import RemoteFamilyVariant, RemoteFamilyAllele
+from remote.remote_variant import RemoteFamilyAllele, RemoteFamilyVariant
+
 from dae.pedigrees.family import Family, Person
 
 
@@ -53,7 +54,7 @@ def sample_family() -> Family:
             role="sib",
             layout="error",
             generated=False,
-        )
+        ),
     ]
     return Family.from_persons(members)
 
@@ -82,7 +83,7 @@ def sample_attributes_columns() -> tuple[list[Any], list[str]]:
             "8906:PCDHA3:3'UTR:1480|NM_018907:PCDHA4:3'UTR:1480|NM_018908:PCD"
             "HA5:3'UTR:1480|NM_018909:PCDHA6:3'UTR:1480|NM_018910:PCDHA7:3'UT"
             "R:1480|NM_018911:PCDHA8:3'UTR:1480|NM_031849:PCDHA6:3'UTR:1480|N"
-            "M_031857:PCDHA9:3'UTR:1480"
+            "M_031857:PCDHA9:3'UTR:1480",
         ],
         ["-"],
         ["-"],
@@ -91,7 +92,7 @@ def sample_attributes_columns() -> tuple[list[Any], list[str]]:
         ["12628"],
         ["0/0;0/0;1/0;0/0"],
         ["2212/0010"],
-        ["-"]
+        ["-"],
     ]
     columns = [
         "location",

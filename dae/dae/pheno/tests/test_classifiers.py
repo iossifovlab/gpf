@@ -1,9 +1,9 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,too-many-lines
-import pytest
 import pandas as pd
+import pytest
 
-from dae.pheno.prepare.measure_classifier import MeasureClassifier
 from dae.pheno.common import MeasureType, default_config
+from dae.pheno.prepare.measure_classifier import MeasureClassifier
 
 
 @pytest.mark.parametrize(
@@ -30,7 +30,7 @@ from dae.pheno.common import MeasureType, default_config
 def test_fi1(
     fi1_df: pd.DataFrame,
     measure: str,
-    expected_type: MeasureType
+    expected_type: MeasureType,
 ) -> None:
     values = fi1_df[measure]
     classifier = MeasureClassifier(default_config())

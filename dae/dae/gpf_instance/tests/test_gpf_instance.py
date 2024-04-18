@@ -22,7 +22,7 @@ def test_init(fixtures_gpf_instance: GPFInstance) -> None:
 
 def test_eager_init(
     gpf_instance: Callable[[str], GPFInstance],
-    global_dae_fixtures_dir: str
+    global_dae_fixtures_dir: str,
 ) -> None:
     instance = gpf_instance(
         os.path.join(global_dae_fixtures_dir, "gpf_instance.yaml"))
@@ -43,7 +43,7 @@ def test_eager_init(
 
 def test_dae_config(
     fixtures_gpf_instance: GPFInstance,
-    global_dae_fixtures_dir: str
+    global_dae_fixtures_dir: str,
 ) -> None:
     dae_config = fixtures_gpf_instance.dae_config
 

@@ -3,7 +3,6 @@ from io import StringIO
 from dae.pedigrees.loader import FamiliesLoader
 from dae.variants.attributes import Role
 
-
 PED_FILE1 = """
 familyId,personId,dadId,momId,sex,status,role
 SF0043014,SP0041907,0,0,2,1,mom

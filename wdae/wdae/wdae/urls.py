@@ -1,10 +1,7 @@
-from django.urls import path, re_path, include
 from django.conf import settings
-
+from django.urls import include, path, re_path
+from gpfjs.views import favicon, index
 from users_api.views import WdaeLoginView
-
-from gpfjs.views import index, favicon
-
 
 urlpatterns = [
     re_path(r"^$", index),
@@ -28,7 +25,7 @@ urlpatterns = [
     re_path(r"^api/v3/gene_view", include("gene_view.urls")),
     re_path(
         r"^api/v3/gene_profiles",
-        include("gene_profiles_api.urls")
+        include("gene_profiles_api.urls"),
     ),
     re_path(r"^api/v3/families", include("family_api.urls")),
     re_path(r"^api/v3/person_sets", include("person_sets_api.urls")),
@@ -40,5 +37,5 @@ urlpatterns = [
 
 if getattr(settings, "SILKY_PYTHON_PROFILER", False):
     urlpatterns.append(
-        path("silk/", include("silk.urls", namespace="silk"))
+        path("silk/", include("silk.urls", namespace="silk")),
     )

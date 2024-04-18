@@ -1,11 +1,10 @@
 import logging
 import os
-from rest_framework import status
-from rest_framework.response import Response
-from rest_framework.request import Request
 
 from query_base.query_base import QueryBaseView
-
+from rest_framework import status
+from rest_framework.request import Request
+from rest_framework.response import Response
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +43,7 @@ class ProfileView(QueryBaseView):
                 gene_stop_position = transcript_models[-1].exons[-1].stop
 
                 data_config = self.gpf_instance.get_genotype_data_config(
-                    gp_config["defaultDataset"]
+                    gp_config["defaultDataset"],
                 )
                 genome = None
                 if data_config is not None:
@@ -64,7 +63,7 @@ class ProfileView(QueryBaseView):
                             chromosome=chromosome,
                             gene_start_position=gene_start_position,
                             gene_stop_position=gene_stop_position,
-                        )
+                        ),
                     })
                 result["geneLinks"] = gene_links
         return Response(result)

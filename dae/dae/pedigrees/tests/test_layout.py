@@ -1,7 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 
-from dae.pedigrees.pedigrees import IntervalForVertex
 from dae.pedigrees.layout import Layout
+from dae.pedigrees.pedigrees import IntervalForVertex
 
 
 def test_layout(layout_from_family2: list[Layout]) -> None:
@@ -10,7 +10,7 @@ def test_layout(layout_from_family2: list[Layout]) -> None:
 
 def test_layout__intervals(
     layout_from_family2: list[Layout],
-    individuals_intervals_from_family2: list[IntervalForVertex]
+    individuals_intervals_from_family2: list[IntervalForVertex],
 ) -> None:
     assert layout_from_family2[0]._intervals == \
         individuals_intervals_from_family2
@@ -77,7 +77,7 @@ def test_layout_positions(layout_from_family2: list[Layout]) -> None:
 
 
 def test_layout__individuals_by_rank(
-    layout_from_family2: list[Layout]
+    layout_from_family2: list[Layout],
 ) -> None:
     layout = layout_from_family2[0]
 

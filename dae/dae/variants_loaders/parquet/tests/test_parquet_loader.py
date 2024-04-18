@@ -1,13 +1,15 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import os
 import pathlib
+
 import pytest
-from dae.utils.regions import Region
+
 from dae.gpf_instance import GPFInstance
-from dae.variants_loaders.parquet.loader import ParquetLoader
 from dae.testing import setup_pedigree, setup_vcf, vcf_study
-from dae.testing.t4c8_import import t4c8_gpf
 from dae.testing.acgt_import import acgt_gpf
+from dae.testing.t4c8_import import t4c8_gpf
+from dae.utils.regions import Region
+from dae.variants_loaders.parquet.loader import ParquetLoader
 
 
 @pytest.fixture(scope="module")
@@ -50,13 +52,13 @@ f1.3     ch3      dad3  mom3  2   2      prb
 chr1   54   .  T   C   .    .      .    GT     0/1  0/0  0/1 0/0  0/0  0/0
 chr1   119  .  A   G,C .    .      .    GT     0/0  0/2  0/2 0/1  0/2  0/1
 chr1   122  .  A   C   .    .      .    GT     0/0  1/0  0/0 0/0  0/0  0/0
-        """)  # noqa
+        """)
 
     vcf_study(
         root_path,
         "study_1", ped_path, [vcf_path1],
         t4c8_instance,
-        project_config_overwrite={"destination": {"storage_type": "schema2"}}
+        project_config_overwrite={"destination": {"storage_type": "schema2"}},
     )
     return f"{root_path}/work_dir/study_1"
 
@@ -90,7 +92,7 @@ chr1   90   .  G   C,GA .    .      .    GT     0/1  0/2  0/2 0/1  0/2  0/1
 chr1   100  .  T   G,TA .    .      .    GT     0/1  0/1  0/0 0/2  0/2  0/0
 chr1   119  .  A   G,C  .    .      .    GT     0/0  0/2  0/2 0/1  0/2  0/1
 chr1   122  .  A   C,AC .    .      .    GT     0/1  0/1  0/1 0/2  0/2  0/2
-        """)  # noqa
+        """)
 
     project_config_update = {
         "partition_description": {
@@ -107,11 +109,11 @@ chr1   122  .  A   C,AC .    .      .    GT     0/1  0/1  0/1 0/2  0/2  0/2
                     "noStart",
                     "missense",
                     "synonymous",
-                ]
+                ],
             },
             "family_bin": {
                 "family_bin_size": 2,
-            }
+            },
         },
     }
     vcf_study(
@@ -119,7 +121,7 @@ chr1   122  .  A   C,AC .    .      .    GT     0/1  0/1  0/1 0/2  0/2  0/2
         "study_2", ped_path, [vcf_path1],
         t4c8_instance,
         project_config_update=project_config_update,
-        project_config_overwrite={"destination": {"storage_type": "schema2"}}
+        project_config_overwrite={"destination": {"storage_type": "schema2"}},
     )
     return f"{root_path}/work_dir/study_2"
 
@@ -151,7 +153,7 @@ chr2   75   .  G   C,GA .    .      .    GT     0/1  0/2  0/2
 chr3   1    .  A   G,TA .    .      .    GT     0/1  0/1  0/0
 chr3   25   .  C   C    .    .      .    GT     0/1  0/1  0/1
 chr3   75   .  G   C,GA .    .      .    GT     0/1  0/2  0/2
-        """)  # noqa
+        """)
 
     project_config_update = {
         "partition_description": {
@@ -166,95 +168,95 @@ chr3   75   .  G   C,GA .    .      .    GT     0/1  0/2  0/2
         "study_3", ped_path, [vcf_path1],
         acgt_instance,
         project_config_update=project_config_update,
-        project_config_overwrite={"destination": {"storage_type": "schema2"}}
+        project_config_overwrite={"destination": {"storage_type": "schema2"}},
     )
     return f"{root_path}/work_dir/study_3"
 
 
 def test_get_pq_filepaths_nonpartitioned(
-    t4c8_study_nonpartitioned: str
+    t4c8_study_nonpartitioned: str,
 ) -> None:
     loader = ParquetLoader(t4c8_study_nonpartitioned)
     summary_filepaths, family_filepaths = loader.get_pq_filepaths()
     assert list(map(os.path.basename, summary_filepaths)) == [
-        "summary_bucket_index_100000.parquet"
+        "summary_bucket_index_100000.parquet",
     ]
     assert list(map(os.path.basename, family_filepaths)) == [
-        "family_bucket_index_100000.parquet"
+        "family_bucket_index_100000.parquet",
     ]
 
 
 def test_get_pq_filepaths_partitioned(
-    t4c8_study_partitioned: str
+    t4c8_study_partitioned: str,
 ) -> None:
     loader = ParquetLoader(t4c8_study_partitioned)
     summary_filepaths, family_filepaths = loader.get_pq_filepaths()
     assert set(map(os.path.basename, summary_filepaths)) == {
-        "summary_region_bin_chr1_0_frequency_bin_1_coding_bin_0_bucket_index_100000.parquet",  # noqa: E501
-        "summary_region_bin_chr1_0_frequency_bin_2_coding_bin_0_bucket_index_100000.parquet",  # noqa: E501
-        "summary_region_bin_chr1_0_frequency_bin_3_coding_bin_1_bucket_index_100000.parquet",  # noqa: E501
-        "summary_region_bin_chr1_0_frequency_bin_3_coding_bin_0_bucket_index_100000.parquet",  # noqa: E501
-        "summary_region_bin_chr1_1_frequency_bin_1_coding_bin_1_bucket_index_100000.parquet",  # noqa: E501
-        "summary_region_bin_chr1_1_frequency_bin_2_coding_bin_0_bucket_index_100000.parquet",  # noqa: E501
-        "summary_region_bin_chr1_1_frequency_bin_2_coding_bin_1_bucket_index_100000.parquet",  # noqa: E501
+        "summary_region_bin_chr1_0_frequency_bin_1_coding_bin_0_bucket_index_100000.parquet",
+        "summary_region_bin_chr1_0_frequency_bin_2_coding_bin_0_bucket_index_100000.parquet",
+        "summary_region_bin_chr1_0_frequency_bin_3_coding_bin_1_bucket_index_100000.parquet",
+        "summary_region_bin_chr1_0_frequency_bin_3_coding_bin_0_bucket_index_100000.parquet",
+        "summary_region_bin_chr1_1_frequency_bin_1_coding_bin_1_bucket_index_100000.parquet",
+        "summary_region_bin_chr1_1_frequency_bin_2_coding_bin_0_bucket_index_100000.parquet",
+        "summary_region_bin_chr1_1_frequency_bin_2_coding_bin_1_bucket_index_100000.parquet",
     }
     assert set(map(os.path.basename, family_filepaths)) == {
-        "family_region_bin_chr1_0_frequency_bin_1_coding_bin_0_family_bin_1_bucket_index_100000.parquet",  # noqa: E501
-        "family_region_bin_chr1_0_frequency_bin_2_coding_bin_0_family_bin_0_bucket_index_100000.parquet",  # noqa: E501
-        "family_region_bin_chr1_0_frequency_bin_2_coding_bin_0_family_bin_1_bucket_index_100000.parquet",  # noqa: E501
-        "family_region_bin_chr1_0_frequency_bin_3_coding_bin_0_family_bin_0_bucket_index_100000.parquet",  # noqa: E501
-        "family_region_bin_chr1_0_frequency_bin_3_coding_bin_0_family_bin_1_bucket_index_100000.parquet",  # noqa: E501
-        "family_region_bin_chr1_0_frequency_bin_3_coding_bin_1_family_bin_0_bucket_index_100000.parquet",  # noqa: E501
-        "family_region_bin_chr1_0_frequency_bin_3_coding_bin_1_family_bin_1_bucket_index_100000.parquet",  # noqa: E501
-        "family_region_bin_chr1_1_frequency_bin_1_coding_bin_1_family_bin_1_bucket_index_100000.parquet",  # noqa: E501
-        "family_region_bin_chr1_1_frequency_bin_2_coding_bin_0_family_bin_0_bucket_index_100000.parquet",  # noqa: E501
-        "family_region_bin_chr1_1_frequency_bin_2_coding_bin_0_family_bin_1_bucket_index_100000.parquet",  # noqa: E501
-        "family_region_bin_chr1_1_frequency_bin_2_coding_bin_1_family_bin_0_bucket_index_100000.parquet",  # noqa: E501
-        "family_region_bin_chr1_1_frequency_bin_2_coding_bin_1_family_bin_1_bucket_index_100000.parquet",  # noqa: E501
+        "family_region_bin_chr1_0_frequency_bin_1_coding_bin_0_family_bin_1_bucket_index_100000.parquet",
+        "family_region_bin_chr1_0_frequency_bin_2_coding_bin_0_family_bin_0_bucket_index_100000.parquet",
+        "family_region_bin_chr1_0_frequency_bin_2_coding_bin_0_family_bin_1_bucket_index_100000.parquet",
+        "family_region_bin_chr1_0_frequency_bin_3_coding_bin_0_family_bin_0_bucket_index_100000.parquet",
+        "family_region_bin_chr1_0_frequency_bin_3_coding_bin_0_family_bin_1_bucket_index_100000.parquet",
+        "family_region_bin_chr1_0_frequency_bin_3_coding_bin_1_family_bin_0_bucket_index_100000.parquet",
+        "family_region_bin_chr1_0_frequency_bin_3_coding_bin_1_family_bin_1_bucket_index_100000.parquet",
+        "family_region_bin_chr1_1_frequency_bin_1_coding_bin_1_family_bin_1_bucket_index_100000.parquet",
+        "family_region_bin_chr1_1_frequency_bin_2_coding_bin_0_family_bin_0_bucket_index_100000.parquet",
+        "family_region_bin_chr1_1_frequency_bin_2_coding_bin_0_family_bin_1_bucket_index_100000.parquet",
+        "family_region_bin_chr1_1_frequency_bin_2_coding_bin_1_family_bin_0_bucket_index_100000.parquet",
+        "family_region_bin_chr1_1_frequency_bin_2_coding_bin_1_family_bin_1_bucket_index_100000.parquet",
     }
 
 
 def test_get_pq_filepaths_partitioned_region(
-    t4c8_study_partitioned: str
+    t4c8_study_partitioned: str,
 ) -> None:
     loader = ParquetLoader(t4c8_study_partitioned)
 
     region = Region("chr1", 1, 100)
     summary_filepaths, family_filepaths = loader.get_pq_filepaths(region)
     assert set(map(os.path.basename, summary_filepaths)) == {
-        "summary_region_bin_chr1_0_frequency_bin_1_coding_bin_0_bucket_index_100000.parquet",  # noqa: E501
-        "summary_region_bin_chr1_0_frequency_bin_2_coding_bin_0_bucket_index_100000.parquet",  # noqa: E501
-        "summary_region_bin_chr1_0_frequency_bin_3_coding_bin_1_bucket_index_100000.parquet",  # noqa: E501
-        "summary_region_bin_chr1_0_frequency_bin_3_coding_bin_0_bucket_index_100000.parquet",  # noqa: E501
+        "summary_region_bin_chr1_0_frequency_bin_1_coding_bin_0_bucket_index_100000.parquet",
+        "summary_region_bin_chr1_0_frequency_bin_2_coding_bin_0_bucket_index_100000.parquet",
+        "summary_region_bin_chr1_0_frequency_bin_3_coding_bin_1_bucket_index_100000.parquet",
+        "summary_region_bin_chr1_0_frequency_bin_3_coding_bin_0_bucket_index_100000.parquet",
     }
     assert set(map(os.path.basename, family_filepaths)) == {
-        "family_region_bin_chr1_0_frequency_bin_1_coding_bin_0_family_bin_1_bucket_index_100000.parquet",  # noqa: E501
-        "family_region_bin_chr1_0_frequency_bin_2_coding_bin_0_family_bin_0_bucket_index_100000.parquet",  # noqa: E501
-        "family_region_bin_chr1_0_frequency_bin_2_coding_bin_0_family_bin_1_bucket_index_100000.parquet",  # noqa: E501
-        "family_region_bin_chr1_0_frequency_bin_3_coding_bin_0_family_bin_0_bucket_index_100000.parquet",  # noqa: E501
-        "family_region_bin_chr1_0_frequency_bin_3_coding_bin_0_family_bin_1_bucket_index_100000.parquet",  # noqa: E501
-        "family_region_bin_chr1_0_frequency_bin_3_coding_bin_1_family_bin_0_bucket_index_100000.parquet",  # noqa: E501
-        "family_region_bin_chr1_0_frequency_bin_3_coding_bin_1_family_bin_1_bucket_index_100000.parquet",  # noqa: E501
+        "family_region_bin_chr1_0_frequency_bin_1_coding_bin_0_family_bin_1_bucket_index_100000.parquet",
+        "family_region_bin_chr1_0_frequency_bin_2_coding_bin_0_family_bin_0_bucket_index_100000.parquet",
+        "family_region_bin_chr1_0_frequency_bin_2_coding_bin_0_family_bin_1_bucket_index_100000.parquet",
+        "family_region_bin_chr1_0_frequency_bin_3_coding_bin_0_family_bin_0_bucket_index_100000.parquet",
+        "family_region_bin_chr1_0_frequency_bin_3_coding_bin_0_family_bin_1_bucket_index_100000.parquet",
+        "family_region_bin_chr1_0_frequency_bin_3_coding_bin_1_family_bin_0_bucket_index_100000.parquet",
+        "family_region_bin_chr1_0_frequency_bin_3_coding_bin_1_family_bin_1_bucket_index_100000.parquet",
     }
 
     region = Region("chr1", 101, 200)
     summary_filepaths, family_filepaths = loader.get_pq_filepaths(region)
     assert set(map(os.path.basename, summary_filepaths)) == {
-        "summary_region_bin_chr1_1_frequency_bin_1_coding_bin_1_bucket_index_100000.parquet",  # noqa: E501
-        "summary_region_bin_chr1_1_frequency_bin_2_coding_bin_0_bucket_index_100000.parquet",  # noqa: E501
-        "summary_region_bin_chr1_1_frequency_bin_2_coding_bin_1_bucket_index_100000.parquet",  # noqa: E501
+        "summary_region_bin_chr1_1_frequency_bin_1_coding_bin_1_bucket_index_100000.parquet",
+        "summary_region_bin_chr1_1_frequency_bin_2_coding_bin_0_bucket_index_100000.parquet",
+        "summary_region_bin_chr1_1_frequency_bin_2_coding_bin_1_bucket_index_100000.parquet",
     }
     assert set(map(os.path.basename, family_filepaths)) == {
-        "family_region_bin_chr1_1_frequency_bin_1_coding_bin_1_family_bin_1_bucket_index_100000.parquet",  # noqa: E501
-        "family_region_bin_chr1_1_frequency_bin_2_coding_bin_0_family_bin_0_bucket_index_100000.parquet",  # noqa: E501
-        "family_region_bin_chr1_1_frequency_bin_2_coding_bin_0_family_bin_1_bucket_index_100000.parquet",  # noqa: E501
-        "family_region_bin_chr1_1_frequency_bin_2_coding_bin_1_family_bin_0_bucket_index_100000.parquet",  # noqa: E501
-        "family_region_bin_chr1_1_frequency_bin_2_coding_bin_1_family_bin_1_bucket_index_100000.parquet",  # noqa: E501
+        "family_region_bin_chr1_1_frequency_bin_1_coding_bin_1_family_bin_1_bucket_index_100000.parquet",
+        "family_region_bin_chr1_1_frequency_bin_2_coding_bin_0_family_bin_0_bucket_index_100000.parquet",
+        "family_region_bin_chr1_1_frequency_bin_2_coding_bin_0_family_bin_1_bucket_index_100000.parquet",
+        "family_region_bin_chr1_1_frequency_bin_2_coding_bin_1_family_bin_0_bucket_index_100000.parquet",
+        "family_region_bin_chr1_1_frequency_bin_2_coding_bin_1_family_bin_1_bucket_index_100000.parquet",
     }
 
 
 def test_fetch_variants_count_nonpartitioned(
-    t4c8_study_nonpartitioned: str
+    t4c8_study_nonpartitioned: str,
 ) -> None:
     loader = ParquetLoader(t4c8_study_nonpartitioned)
     vs = list(loader.fetch_variants())
@@ -265,7 +267,7 @@ def test_fetch_variants_count_nonpartitioned(
 
 
 def test_fetch_variants_count_partitioned(
-    t4c8_study_partitioned: str
+    t4c8_study_partitioned: str,
 ) -> None:
     loader = ParquetLoader(t4c8_study_partitioned)
     vs = list(loader.fetch_variants())
@@ -276,7 +278,7 @@ def test_fetch_variants_count_partitioned(
 
 
 def test_fetch_variants_count_nonpartitioned_region(
-    t4c8_study_nonpartitioned: str
+    t4c8_study_nonpartitioned: str,
 ) -> None:
     loader = ParquetLoader(t4c8_study_nonpartitioned)
     vs = list(loader.fetch_variants(region="chr1:119"))
@@ -293,7 +295,7 @@ def test_fetch_variants_count_nonpartitioned_region(
 
 
 def test_fetch_variants_count_partitioned_region(
-    t4c8_study_partitioned: str
+    t4c8_study_partitioned: str,
 ) -> None:
     loader = ParquetLoader(t4c8_study_partitioned)
     vs = list(loader.fetch_variants(region="chr1:1-89"))
@@ -310,7 +312,7 @@ def test_fetch_variants_count_partitioned_region(
 
 
 def test_fetch_summary_variants_nonpartitioned(
-    t4c8_study_nonpartitioned: str
+    t4c8_study_nonpartitioned: str,
 ) -> None:
     loader = ParquetLoader(t4c8_study_nonpartitioned)
     vs = list(loader.fetch_summary_variants())
@@ -318,7 +320,7 @@ def test_fetch_summary_variants_nonpartitioned(
 
 
 def test_fetch_summary_variants_partitioned(
-    t4c8_study_partitioned: str
+    t4c8_study_partitioned: str,
 ) -> None:
     loader = ParquetLoader(t4c8_study_partitioned)
     vs = list(loader.fetch_summary_variants())
@@ -326,7 +328,7 @@ def test_fetch_summary_variants_partitioned(
 
 
 def test_fetch_summary_variants_nonpartitioned_region(
-    t4c8_study_nonpartitioned: str
+    t4c8_study_nonpartitioned: str,
 ) -> None:
     loader = ParquetLoader(t4c8_study_nonpartitioned)
     vs = list(loader.fetch_summary_variants(region="chr1:119"))
@@ -336,7 +338,7 @@ def test_fetch_summary_variants_nonpartitioned_region(
 
 
 def test_fetch_summary_variants_partitioned_region(
-    t4c8_study_partitioned: str
+    t4c8_study_partitioned: str,
 ) -> None:
     loader = ParquetLoader(t4c8_study_partitioned)
     vs = list(loader.fetch_summary_variants(region="chr1:1-89"))
@@ -346,7 +348,7 @@ def test_fetch_summary_variants_partitioned_region(
 
 
 def test_fetch_variants_count_acgt(
-    acgt_study_partitioned: str
+    acgt_study_partitioned: str,
 ) -> None:
     loader = ParquetLoader(acgt_study_partitioned)
     assert len(list(loader.fetch_summary_variants())) == 9

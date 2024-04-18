@@ -1,22 +1,28 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 
 import textwrap
+
 import pytest
 
-from dae.testing import convert_to_tab_separated
-from dae.genomic_resources.testing import build_inmemory_test_resource
-from dae.genomic_resources.repository import GenomicResourceRepo
-from dae.genomic_resources.reference_genome import \
-    build_reference_genome_from_resource, ReferenceGenome
 from dae.annotation.annotatable import VCFAllele
-from dae.annotation.annotation_factory import AnnotationConfigParser, \
-    build_annotation_pipeline
+from dae.annotation.annotation_factory import (
+    AnnotationConfigParser,
+    build_annotation_pipeline,
+)
+from dae.annotation.normalize_allele_annotator import (
+    NormalizeAlleleAnnotator,
+    normalize_allele,
+)
+from dae.genomic_resources.reference_genome import (
+    ReferenceGenome,
+    build_reference_genome_from_resource,
+)
+from dae.genomic_resources.repository import GenomicResourceRepo
+from dae.genomic_resources.testing import build_inmemory_test_resource
+from dae.testing import convert_to_tab_separated
 
-from dae.annotation.normalize_allele_annotator import normalize_allele, \
-    NormalizeAlleleAnnotator
 
-
-@pytest.fixture
+@pytest.fixture()
 def example_1_genome() -> ReferenceGenome:
     # Example from
     # https://genome.sph.umich.edu/wiki/File:Normalization_mnp.png
@@ -28,7 +34,7 @@ def example_1_genome() -> ReferenceGenome:
                 GGGGCATGGGG
 
         """),
-        "chr.fa.fai": "1\t11\t3\t11\t12\n"
+        "chr.fa.fai": "1\t11\t3\t11\t12\n",
     })
     genome = build_reference_genome_from_resource(res)
     return genome
@@ -50,7 +56,7 @@ def test_example_1_genome_basic(
         assert genome.get_sequence("1", beg, end) == seq
 
 
-@pytest.fixture
+@pytest.fixture()
 def example_2_genome() -> ReferenceGenome:
     # Example from
     # https://genome.sph.umich.edu/wiki/File:Normalization_str.png
@@ -62,7 +68,7 @@ def example_2_genome() -> ReferenceGenome:
                 GGGCACACACAGGG
 
         """),
-        "chr.fa.fai": "1\t14\t3\t14\t15\n"
+        "chr.fa.fai": "1\t14\t3\t14\t15\n",
     })
     genome = build_reference_genome_from_resource(res)
     return genome
@@ -137,7 +143,7 @@ def test_normalize_allele_annotator_config() -> None:
         textwrap.dedent("""
         - normalize_allele_annotator:
             genome: hg19/GATK_ResourceBundle_5777_b37_phiX174_short/genome
-        """)
+        """),
     )
 
     assert pipeline_config[0].type == "normalize_allele_annotator"
@@ -288,5 +294,5 @@ def test_normalize_allele_annotator_resources(
     with annotation_pipeline.open() as pipeline:
         annotator = pipeline.annotators[0]
         assert {res.get_id() for res in annotator.resources} == {
-            "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/genome"
+            "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/genome",
         }

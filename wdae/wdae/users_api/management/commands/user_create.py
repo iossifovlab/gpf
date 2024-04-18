@@ -1,7 +1,8 @@
-from django.core.management.base import BaseCommand, CommandError
-from .import_base import ImportUsersBase
 from django.contrib.auth import get_user_model
 from django.core.management import call_command
+from django.core.management.base import BaseCommand, CommandError
+
+from .import_base import ImportUsersBase
 
 
 class Command(BaseCommand, ImportUsersBase):
@@ -51,7 +52,7 @@ class Command(BaseCommand, ImportUsersBase):
 
         if options["password"] is None:
             call_command(
-                "changepassword", username=options["email"], stdout=self.stdout
+                "changepassword", username=options["email"], stdout=self.stdout,
             )
         else:
             user.set_password(options["password"])

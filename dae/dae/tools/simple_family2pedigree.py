@@ -1,7 +1,7 @@
 #!/usr/bin/env python
+import argparse
 import os
 import sys
-import argparse
 
 from dae.pedigrees.loader import FamiliesLoader
 
@@ -51,7 +51,7 @@ def main(argv):
         study_id, _ = os.path.splitext(os.path.basename(args.family_filename))
 
     if args.output is None:
-        output = "{study_id}.ped".format(study_id=study_id)
+        output = f"{study_id}.ped"
     else:
         output = args.output
 

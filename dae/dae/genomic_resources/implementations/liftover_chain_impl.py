@@ -1,24 +1,24 @@
 """Provides LiftOver chain resource."""
 
 from __future__ import annotations
-from typing import Any, Union
-import copy
-import textwrap
 
+import copy
 import logging
+import textwrap
+from typing import Any, Union
 
 from jinja2 import Template
 from markdown2 import markdown
 
 from dae.genomic_resources import GenomicResource
-
-from dae.genomic_resources.resource_implementation import \
-    GenomicResourceImplementation, \
-    InfoImplementationMixin
-from dae.genomic_resources.liftover_chain import \
-    build_liftover_chain_from_resource
+from dae.genomic_resources.liftover_chain import (
+    build_liftover_chain_from_resource,
+)
+from dae.genomic_resources.resource_implementation import (
+    GenomicResourceImplementation,
+    InfoImplementationMixin,
+)
 from dae.task_graph.graph import Task, TaskGraph
-
 
 logger = logging.getLogger(__name__)
 

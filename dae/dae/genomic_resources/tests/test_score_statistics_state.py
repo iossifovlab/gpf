@@ -1,19 +1,21 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 
-import textwrap
 import pathlib
+import textwrap
 import time
-from typing import Generator
+from collections.abc import Generator
 
-import pytest
 import pysam
-
+import pytest
 from dask.distributed import Client
 
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME
-from dae.genomic_resources.testing import \
-    setup_directories, setup_tabix, build_filesystem_test_protocol, \
-    FsspecReadWriteProtocol
+from dae.genomic_resources.testing import (
+    FsspecReadWriteProtocol,
+    build_filesystem_test_protocol,
+    setup_directories,
+    setup_tabix,
+)
 
 
 @pytest.fixture(scope="module")
@@ -23,7 +25,7 @@ def dask_client() -> Generator[Client, None, None]:
     client.close()
 
 
-@pytest.fixture
+@pytest.fixture()
 def proto_fixture(tmp_path: pathlib.Path) -> FsspecReadWriteProtocol:
     # the following config is missing min/max for phastCons100way
     setup_directories(tmp_path, {
@@ -41,7 +43,7 @@ def proto_fixture(tmp_path: pathlib.Path) -> FsspecReadWriteProtocol:
                     - score: phastCons100way
                       bins: 100
                 """),
-        }
+        },
     })
     setup_tabix(
         tmp_path / "one" / "data.txt.gz",

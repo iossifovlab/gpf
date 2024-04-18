@@ -1,10 +1,10 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
 
-from dae.duckdb_storage.duckdb_genotype_storage import \
-    DuckDbGenotypeStorage
-from dae.inmemory_storage.inmemory_genotype_storage import \
-    InmemoryGenotypeStorage
+from dae.duckdb_storage.duckdb_genotype_storage import DuckDbGenotypeStorage
+from dae.inmemory_storage.inmemory_genotype_storage import (
+    InmemoryGenotypeStorage,
+)
 
 
 @pytest.fixture(scope="session")
@@ -37,7 +37,7 @@ def test_get_genotype_storage_ids(genotype_storage_registry):
 
 def test_get_genotype_storage_duckdb(genotype_storage_registry):
     storage = genotype_storage_registry.get_genotype_storage(
-        "test_duckdb_storage"
+        "test_duckdb_storage",
     )
 
     assert isinstance(storage, DuckDbGenotypeStorage)
@@ -46,7 +46,7 @@ def test_get_genotype_storage_duckdb(genotype_storage_registry):
 
 def test_get_genotype_storage_filesystem(genotype_storage_registry):
     genotype_filesystem = genotype_storage_registry.get_genotype_storage(
-        "genotype_filesystem"
+        "genotype_filesystem",
     )
 
     assert isinstance(genotype_filesystem, InmemoryGenotypeStorage)

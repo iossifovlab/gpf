@@ -4,14 +4,12 @@ from typing import Optional
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-from seaborn import violinplot, stripplot, diverging_palette
-
-import pandas as pd
 import numpy as np
+import pandas as pd
+from seaborn import diverging_palette, stripplot, violinplot
 
-from dae.variants.attributes import Role
-from dae.variants.attributes import Status, Sex
 from dae.pheno.utils.lin_regress import LinearRegression
+from dae.variants.attributes import Role, Sex, Status
 
 mpl.use("PDF")
 plt.ioff()
@@ -42,7 +40,7 @@ ROLES_GRAPHS_DEFINITION = {
 }
 
 
-class GraphColumn(object):
+class GraphColumn:
     """Build a colum to produce a graph from it."""
 
     def __init__(self, name, roles, status, df):
@@ -165,12 +163,12 @@ def draw_linregres(df, col1, col2, jitter: Optional[int] = None, ax=None):
     if res_male:
         ax.plot(
             dmale[col1].values,
-            res_male.predict(male_x), color=color_male
+            res_male.predict(male_x), color=color_male,
         )
     if res_female:
         ax.plot(
             dfemale[col1].values,
-            res_female.predict(female_x), color=color_female
+            res_female.predict(female_x), color=color_female,
         )
     male_female_legend(color_male, color_female, ax)
     plt.tight_layout()
@@ -223,12 +221,12 @@ def role_labels(ordered_columns):
 
 
 def gender_palette_light():
-    palette = diverging_palette(240, 10, s=80, l=77, n=2)  # noqa
+    palette = diverging_palette(240, 10, s=80, l=77, n=2)
     return palette
 
 
 def gender_palette():
-    palette = diverging_palette(240, 10, s=80, l=50, n=2)  # noqa
+    palette = diverging_palette(240, 10, s=80, l=50, n=2)
     return palette
 
 
@@ -324,7 +322,7 @@ def draw_measure_violinplot(
     )
 
     labels = role_labels(columns)
-    plt.xticks(list(range(0, len(labels))), labels)
+    plt.xticks(list(range(len(labels))), labels)
     ax.set_ylabel(measure_id)
     ax.set_xlabel("role")
     plt.tight_layout()
@@ -338,7 +336,7 @@ def get_columns_to_draw(roles, df):
     for role_name, role_subroles in roles.items():
         for status in [Status.affected, Status.unaffected]:
             columns.append(
-                GraphColumn.build(df, role_name, role_subroles, status)
+                GraphColumn.build(df, role_name, role_subroles, status),
             )
 
     dfs = [
@@ -375,7 +373,7 @@ def draw_categorical_violin_distribution(
     numerical_measure_name = measure_id + "_numerical"
     if not numerical_categories:
         df[numerical_measure_name], values_domain = _enumerate_by_count(
-            df, measure_id
+            df, measure_id,
         )
     else:
         (
@@ -410,15 +408,15 @@ def draw_categorical_violin_distribution(
             [
                 np.histogram(d, range=hist_range, bins=len(y_locations))[0]
                 for d in [male_data, female_data]
-            ]
+            ],
         )
 
     binned_maximum = np.max(
-        [np.max([np.max(m), np.max(f)]) for (m, f) in binned_datasets]
+        [np.max([np.max(m), np.max(f)]) for (m, f) in binned_datasets],
     )
 
     x_locations = np.arange(
-        0, len(columns) * 2 * binned_maximum, 2 * binned_maximum
+        0, len(columns) * 2 * binned_maximum, 2 * binned_maximum,
     )
 
     _fig, ax = plt.subplots()
@@ -431,7 +429,7 @@ def draw_categorical_violin_distribution(
         lefts = x_loc - male
         ax.barh(centers, male, height=heights, left=lefts, color=color_male)
         ax.barh(
-            centers, female, height=heights, left=x_loc, color=color_female
+            centers, female, height=heights, left=x_loc, color=color_female,
         )
         # pylint: disable=invalid-name
         for y, (male_count, female_count) in enumerate(zip(male, female)):
@@ -475,5 +473,5 @@ def draw_ordinal_violin_distribution(df, measure_id, ax=None):
     df = df.copy()
     df[measure_id] = df[measure_id].apply(str)
     return draw_categorical_violin_distribution(
-        df, measure_id, numerical_categories=True, ax=ax
+        df, measure_id, numerical_categories=True, ax=ax,
     )

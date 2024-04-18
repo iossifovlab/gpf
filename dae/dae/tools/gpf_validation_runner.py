@@ -1,25 +1,24 @@
 import argparse
-import os
-import io
-import sys
-import glob
-import logging
 import copy
 import enum
-from typing import Any, Iterator, Optional, cast
-
-
+import glob
+import io
+import logging
+import os
+import sys
+from collections.abc import Iterator
+from typing import Any, Optional, cast
 from xml.etree.ElementTree import Element, tostring
 
-import yaml
-import pandas as pd
 import numpy as np
+import pandas as pd
+import yaml
 
-from dae.utils.verbosity_configuration import VerbosityConfiguration
 from dae.gpf_instance.gpf_instance import GPFInstance
-from dae.utils.regions import Region
 from dae.studies.study import GenotypeData
-from dae.variants.family_variant import FamilyVariant, FamilyAllele
+from dae.utils.regions import Region
+from dae.utils.verbosity_configuration import VerbosityConfiguration
+from dae.variants.family_variant import FamilyAllele, FamilyVariant
 
 logger = logging.getLogger("gpf_validation_runner")
 
@@ -40,7 +39,7 @@ class TestResult:
         case: Optional[dict[str, Any]] = None,
         test_for: Optional[str] = None,
         params: Optional[dict[str, Any]] = None,
-        result: Optional[str] = None
+        result: Optional[str] = None,
     ) -> None:
 
         self.expectation = expectation
@@ -93,7 +92,7 @@ class TestResult:
         testcase.set("filename", filename)
         testcase.set(
             "classname",
-            f"{study_id}:{target}:{name}"
+            f"{study_id}:{target}:{name}",
         )
         if self.status == TestStatus.PASSED:
             pass
@@ -143,7 +142,7 @@ class AbstractRunner:
     """The base class for test runners."""
 
     def __init__(
-        self, expectations: dict[str, Any], gpf_instance: GPFInstance
+        self, expectations: dict[str, Any], gpf_instance: GPFInstance,
     ) -> None:
 
         self.expectations = expectations
@@ -184,7 +183,7 @@ class BaseGenotypeBrowserRunner(AbstractRunner):
     """Base class for Genotype Browser Runners."""
 
     def _parse_frequency(
-        self, params: dict[str, Any]
+        self, params: dict[str, Any],
     ) -> dict[str, Any]:
         if params is None:
             return params
@@ -208,7 +207,7 @@ class BaseGenotypeBrowserRunner(AbstractRunner):
         return params
 
     def _parse_genomic_scores(
-        self, params: dict[str, Any]
+        self, params: dict[str, Any],
     ) -> dict[str, Any]:
         if params is None:
             return params
@@ -232,7 +231,7 @@ class BaseGenotypeBrowserRunner(AbstractRunner):
         return params
 
     def _parse_regions(
-        self, params: dict[str, Any]
+        self, params: dict[str, Any],
     ) -> dict[str, Any]:
         if params is None:
             return None
@@ -252,7 +251,7 @@ class GenotypeBrowserRunner(BaseGenotypeBrowserRunner):
     def __init__(
         self, expectations: dict[str, Any],
         gpf_instance: GPFInstance,
-        detailed_reporting: bool, skip_columns: set
+        detailed_reporting: bool, skip_columns: set,
     ) -> None:
         self.detailed_reporting = detailed_reporting
         self.skip_columns = set(skip_columns)
@@ -261,7 +260,7 @@ class GenotypeBrowserRunner(BaseGenotypeBrowserRunner):
 
     def _build_case_expections_filename(
         self, case: dict[str, Any],
-        dirname: Optional[str] = None
+        dirname: Optional[str] = None,
     ) -> str:
         case_dirname, _ = os.path.splitext(self.expectations["file"])
         if dirname is not None:
@@ -371,7 +370,7 @@ class GenotypeBrowserRunner(BaseGenotypeBrowserRunner):
             "reference",
             "ssc_freq",
             "study_name",
-            "study_phenotype"
+            "study_phenotype",
         }
         if self.skip_columns:
             keep = keep.difference(self.skip_columns)
@@ -383,7 +382,7 @@ class GenotypeBrowserRunner(BaseGenotypeBrowserRunner):
         return columns.intersection(keep)
 
     def _cleanup_allele_attributes(
-        self, vprops: dict[str, Any]
+        self, vprops: dict[str, Any],
     ) -> None:
         keep = self._checked_columns()
         keys = list(vprops.keys())
@@ -392,7 +391,7 @@ class GenotypeBrowserRunner(BaseGenotypeBrowserRunner):
                 del vprops[key]
 
     def _build_variants_df(
-        self, variants: list[FamilyVariant]
+        self, variants: list[FamilyVariant],
     ) -> pd.DataFrame:
         records = []
         for v in variants:
@@ -448,7 +447,7 @@ class GenotypeBrowserRunner(BaseGenotypeBrowserRunner):
             df = df.sort_values(
                 by=[
                     "chromosome", "position", "family_id",
-                    "fvuid", "allele_index"
+                    "fvuid", "allele_index",
                 ])
             df = df.reset_index(drop=True)
             with io.StringIO() as inout:
@@ -462,7 +461,7 @@ class GenotypeBrowserRunner(BaseGenotypeBrowserRunner):
     # pylint: disable=too-many-branches
     def _variants_diff(
         self, variants_df: pd.DataFrame,
-        expected_df: pd.DataFrame
+        expected_df: pd.DataFrame,
     ) -> Optional[str]:
         if len(variants_df) == 0 and len(expected_df) == 0:
             return None
@@ -478,7 +477,7 @@ class GenotypeBrowserRunner(BaseGenotypeBrowserRunner):
             expected_df = expected_df.sort_index().sort_index(axis=1)
 
             pd.testing.assert_frame_equal(
-                variants_df.sort_index(axis=1), expected_df.sort_index(axis=1)
+                variants_df.sort_index(axis=1), expected_df.sort_index(axis=1),
             )
         except AssertionError as ex:
             return self._error_reporter(ex, variants_df, expected_df)
@@ -491,7 +490,7 @@ class GenotypeBrowserRunner(BaseGenotypeBrowserRunner):
     def _error_reporter(
         self, ex: AssertionError,
         variants_df: pd.DataFrame,
-        expected_df: pd.DataFrame
+        expected_df: pd.DataFrame,
     ) -> str:
         with io.StringIO() as out:
             if not self.detailed_reporting:
@@ -563,20 +562,20 @@ class GenotypeBrowserRunner(BaseGenotypeBrowserRunner):
                         f"{expected_df['reference'][idx]}->"
                         f"{expected_df['alternative'][idx]} "
                         f"{expected_df['cshl_variant'][idx]} ",
-                        file=out
+                        file=out,
                     )
                 print(
                     f"\t{col_name}:\n"
                     f"\t\tExpected: > {expected_df[col_name][idx]}\n"
                     f"\t\tResult:   > {variants_df[col_name][idx]}",
-                    file=out
+                    file=out,
                 )
             return out.getvalue()
 
     def _execute_variants_test_case(
         self, case: dict[str, Any],
         params: dict[str, Any],
-        variants: list[FamilyVariant]
+        variants: list[FamilyVariant],
     ) -> Optional[TestResult]:
         variants_df = self._build_variants_df(variants)
         variants_filename = self._build_case_expections_filename(case)
@@ -635,7 +634,7 @@ class GenotypeBrowserRunner(BaseGenotypeBrowserRunner):
     def _execute_count_test_case(
         self, case: dict[str, Any],
         params: dict[str, Any],
-        variants: list[FamilyVariant]
+        variants: list[FamilyVariant],
     ) -> TestResult:
         expected = case["expected"]
 
@@ -673,7 +672,7 @@ class GenotypeBrowserRunner(BaseGenotypeBrowserRunner):
 
     def _execute_test_case(
         self, case: dict[str, Any],
-        study: GenotypeData
+        study: GenotypeData,
     ) -> tuple[TestResult, Optional[TestResult]]:
         try:
             study_id = self.expectations["study"]
@@ -779,7 +778,7 @@ class MainRunner:
 
     @staticmethod
     def collect_expectations(
-        expectations: str
+        expectations: str,
     ) -> Iterator[dict[str, Any]]:
         """Collect expectations."""
         for filename in glob.glob(expectations):
@@ -812,14 +811,14 @@ class MainRunner:
                     yield expectation
 
     def make_validation_runner(
-        self, expectations: dict[str, Any]
+        self, expectations: dict[str, Any],
     ) -> GenotypeBrowserRunner:
         """Create a validation runner."""
         target = expectations["target"]
         if target == "genotype_browser":
             return GenotypeBrowserRunner(
                 expectations, self.gpf_instance,
-                self.detailed_reporting, self.skip_columns
+                self.detailed_reporting, self.skip_columns,
             )
         raise NotImplementedError(
             f"not supported expectations target: {target}")
@@ -827,7 +826,7 @@ class MainRunner:
     @staticmethod
     def store_junit_results(
         runners: list[AbstractRunner],
-        outfilename: str
+        outfilename: str,
     ) -> None:
         """Store junit results."""
         root = Element("testsuites")
@@ -850,7 +849,7 @@ class MainRunner:
 
     def store_results(
         self, expectations_iterator: Iterator[dict[str, Any]],
-        dirname: str
+        dirname: str,
     ) -> None:
         for expectations in expectations_iterator:
             runner = self.make_validation_runner(expectations)
@@ -892,7 +891,7 @@ def main(argv: Optional[list[str]] = None) -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "expectations", type=str,
-        help="expectation filename or glob"
+        help="expectation filename or glob",
     )
     parser.add_argument(
         "--output", "-o", type=str, default="validation-result.xml",

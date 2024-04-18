@@ -1,23 +1,26 @@
 from __future__ import annotations
 
+import logging
 import sys
 import time
-import logging
 import traceback
 from abc import abstractmethod
-from copy import copy
 from collections import deque
-from typing import Any, Iterator, Optional, Type, Generator, Callable, cast
+from collections.abc import Generator, Iterator
+from copy import copy
 from types import TracebackType
+from typing import Any, Callable, Optional, Type, cast
 
 from dask.distributed import Client, Future
 
+from dae.task_graph.cache import CacheRecordType, NoTaskCache, TaskCache
+from dae.task_graph.graph import Task, TaskGraph
+from dae.task_graph.logging import (
+    configure_task_logging,
+    ensure_log_dir,
+    safe_task_id,
+)
 from dae.utils.verbosity_configuration import VerbosityConfiguration
-from dae.task_graph.graph import TaskGraph, Task
-from dae.task_graph.cache import TaskCache, NoTaskCache, CacheRecordType
-from dae.task_graph.logging import configure_task_logging, ensure_log_dir, \
-    safe_task_id
-
 
 logger = logging.getLogger(__file__)
 
@@ -46,7 +49,7 @@ class TaskGraphExecutor:
         self,
         exc_type: Optional[Type[BaseException]],
         exc_value: Optional[BaseException],
-        exc_tb: Optional[TracebackType]
+        exc_tb: Optional[TracebackType],
     ) -> None:
         self.close()
 
@@ -65,7 +68,7 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
 
     @staticmethod
     def _exec(
-        task_func: Callable, args: list, _deps: list, params: dict[str, Any]
+        task_func: Callable, args: list, _deps: list, params: dict[str, Any],
     ) -> Any:
         verbose = params.get("verbose", 0)
         VerbosityConfiguration.set_verbosity(verbose)
@@ -108,7 +111,7 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
         return self._yield_task_results(already_computed_tasks)
 
     def _yield_task_results(
-        self, already_computed_tasks: dict[Task, Any]
+        self, already_computed_tasks: dict[Task, Any],
     ) -> Iterator[tuple[Task, Any]]:
         for task_node, result in already_computed_tasks.items():
             yield task_node, result
@@ -132,7 +135,7 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
 
     @staticmethod
     def _in_exec_order(
-        task_graph: TaskGraph
+        task_graph: TaskGraph,
     ) -> Generator[Task, None, None]:
         visited: set[Task] = set()
         for node in task_graph.tasks:
@@ -141,7 +144,7 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
 
     @staticmethod
     def _node_in_exec_order(
-        node: Task, visited: set[Task]
+        node: Task, visited: set[Task],
     ) -> Generator[Task, None, None]:
         if node in visited:
             return
@@ -164,7 +167,7 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
 
     @staticmethod
     def _find_cycle(
-        node: Task, visited: set[Task], stack: list[Task]
+        node: Task, visited: set[Task], stack: list[Task],
     ) -> Optional[list[Task]]:
         visited.add(node)
         stack.append(node)
@@ -249,7 +252,7 @@ class DaskExecutor(AbstractTaskGraphExecutor):
 
     def __init__(
         self, client: Client, task_cache: TaskCache = NoTaskCache(),
-        **kwargs: Any
+        **kwargs: Any,
     ):
         super().__init__(task_cache)
         self._client = client
@@ -385,13 +388,13 @@ def task_graph_status(
             traceback.print_exception(
                 None, value=record.error,
                 tb=record.error.__traceback__,
-                file=sys.stdout
+                file=sys.stdout,
             )
     return True
 
 
 def task_graph_run(
-    task_graph: TaskGraph, executor: TaskGraphExecutor, keep_going: bool
+    task_graph: TaskGraph, executor: TaskGraphExecutor, keep_going: bool,
 ) -> bool:
     """Execute (runs) the task_graph with the given executor."""
     tasks_iter = executor.execute(task_graph)
@@ -404,7 +407,7 @@ def task_graph_run(
                 traceback.print_exception(
                     None, value=result_or_error,
                     tb=result_or_error.__traceback__,
-                    file=sys.stdout
+                    file=sys.stdout,
                 )
                 no_errors = False
             else:

@@ -1,8 +1,8 @@
-from collections import UserDict, UserList
 import typing
-from typing import Dict, Any
-import yaml
+from collections import UserDict, UserList
+from typing import Any, Dict
 
+import yaml
 from jinja2 import Template
 
 
@@ -39,7 +39,7 @@ class StudyConfigBuilder:
             self._config_dict,
             default_flow_style=False,
             sort_keys=False,
-            Dumper=ConfigDumper
+            Dumper=ConfigDumper,
         ))
 
 
@@ -574,5 +574,5 @@ gene_sets_names = "{{ denovo_gene_sets.gene_sets_names }}"
 
 {%- endif %}
 
-"""
+""",
 )

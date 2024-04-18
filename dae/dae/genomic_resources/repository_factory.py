@@ -2,24 +2,25 @@
 
 from __future__ import annotations
 
-import os
 import copy
-import pathlib
 import logging
+import os
+import pathlib
 import tempfile
-
-from typing import Optional, cast, Any
+from typing import Any, Optional, cast
 from urllib.parse import urlparse
 
 import yaml
 
-from .fsspec_protocol import build_fsspec_protocol, build_inmemory_protocol
-from .repository import GenomicResourceRepo, GenomicResourceProtocolRepo, \
-    GenomicResource
 from .cached_repository import GenomicResourceCachedRepo
-from .resource_implementation import GenomicResourceImplementation
-
+from .fsspec_protocol import build_fsspec_protocol, build_inmemory_protocol
 from .group_repository import GenomicResourceGroupRepo
+from .repository import (
+    GenomicResource,
+    GenomicResourceProtocolRepo,
+    GenomicResourceRepo,
+)
+from .resource_implementation import GenomicResourceImplementation
 
 logger = logging.getLogger(__name__)
 
@@ -235,7 +236,7 @@ def build_resource_implementation(
     if builder is None:
         raise ValueError(
             f"unsupported resource implementation type <{res.get_type()}> "
-            f"for resource <{res.resource_id}>"
+            f"for resource <{res.resource_id}>",
         )
 
     return builder(res)

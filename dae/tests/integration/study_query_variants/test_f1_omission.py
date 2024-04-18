@@ -4,12 +4,11 @@ from typing import Optional
 
 import pytest
 
-from dae.utils.regions import Region
-from dae.testing import setup_pedigree, setup_vcf, \
-    vcf_study
-from dae.testing.foobar_import import foobar_gpf
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.studies.study import GenotypeData
+from dae.testing import setup_pedigree, setup_vcf, vcf_study
+from dae.testing.foobar_import import foobar_gpf
+from dae.utils.regions import Region
 
 
 @pytest.fixture(scope="module")
@@ -52,11 +51,11 @@ foo    15   . C   A,T   .    .      .    GT     1/1 0/0 0/1 0/0
                     "include_unknown_person_genotypes": True,
                     "denovo_mode": "denovo",
                     "omission_mode": "omission",
-                }
+                },
             },
             "processing_config": {
-                "include_reference": True
-            }
+                "include_reference": True,
+            },
         })
     return study
 
@@ -73,14 +72,14 @@ foo    15   . C   A,T   .    .      .    GT     1/1 0/0 0/1 0/0
          ["missense"], 0),
         (14, "not omission", None, 1),
         (14, "not mendelian", None, 1),
-    ]
+    ],
 )
 def test_f1_non_cannonical_omission(
     imported_study: GenotypeData,
     position: int,
     inheritance: str,
     effects: Optional[list[str]],
-    count: int
+    count: int,
 ) -> None:
 
     region = Region("foo", position, position)
@@ -106,14 +105,14 @@ def test_f1_non_cannonical_omission(
         (15, None, ["missense"], 0),
         (15, "omission", ["noEnd"], 1),
         (15, "mendelian", None, 1),
-    ]
+    ],
 )
 def test_f1_cannonical_omission(
     imported_study: GenotypeData,
     position: int,
     inheritance: str,
     effects: Optional[list[str]],
-    count: int
+    count: int,
 ) -> None:
 
     region = Region("foo", position, position)
@@ -147,7 +146,7 @@ def test_f1_cannonical_omission(
          False, False, 0),
         (15, "not denovo and not omission",
          True, True, 1),
-    ]
+    ],
 )
 def test_f1_canonical_omission_return_reference_or_unknown(
     imported_study: GenotypeData,
@@ -155,7 +154,7 @@ def test_f1_canonical_omission_return_reference_or_unknown(
     inheritance: str,
     return_reference: bool,
     return_unknown: bool,
-    count: int
+    count: int,
 ) -> None:
     region = Region("foo", position, position)
     vs = list(imported_study.query_variants(
@@ -175,7 +174,7 @@ def test_f1_canonical_omission_return_reference_or_unknown(
         (14, "not denovo and not omission and not unknown and not mendelian",
          False, False, 0),
         (14, "omission", False, False, 1),  # find omission
-    ]
+    ],
 )
 def test_f1_non_canonical_omission_return_reference_or_unknown(
     imported_study: GenotypeData,
@@ -183,7 +182,7 @@ def test_f1_non_canonical_omission_return_reference_or_unknown(
     inheritance: str,
     return_reference: bool,
     return_unknown: bool,
-    count: int
+    count: int,
 ) -> None:
     region = Region("foo", position, position)
     vs = list(imported_study.query_variants(

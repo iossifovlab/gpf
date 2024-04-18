@@ -1,8 +1,8 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 
-from dae.genomic_resources.testing import build_inmemory_test_repository
-from dae.annotation.annotation_factory import build_annotation_pipeline
 from dae.annotation.annotatable import Position
+from dae.annotation.annotation_factory import build_annotation_pipeline
+from dae.genomic_resources.testing import build_inmemory_test_repository
 
 
 def test_default_attributes() -> None:

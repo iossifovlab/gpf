@@ -1,15 +1,16 @@
-from typing import Optional, Generator, Any, cast, Iterable, Union
+from collections.abc import Generator, Iterable
+from typing import Any, Optional, Union, cast
 
 from remote.rest_api_client import RESTClient
 
-from dae.utils.regions import Region
 from dae.configuration.gpf_config_parser import FrozenBox
-from dae.variants.variant import SummaryVariant
-from dae.variants.family_variant import FamilyVariant
-from dae.studies.study import GenotypeData
-from dae.pedigrees.family import Person, Family
 from dae.pedigrees.families_data import FamiliesData, tag_families_data
+from dae.pedigrees.family import Family, Person
 from dae.person_sets import PersonSetCollection
+from dae.studies.study import GenotypeData
+from dae.utils.regions import Region
+from dae.variants.family_variant import FamilyVariant
+from dae.variants.variant import SummaryVariant
 
 
 class RemoteGenotypeData(GenotypeData):
@@ -25,7 +26,7 @@ class RemoteGenotypeData(GenotypeData):
 
         config["id"] = self.rest_client.prefix_remote_identifier(study_id)
         config["name"] = self.rest_client.prefix_remote_name(
-            config.get("name", self._remote_study_id)
+            config.get("name", self._remote_study_id),
         )
         config["phenotype_tool"] = False
         config["description_editable"] = False
@@ -36,8 +37,8 @@ class RemoteGenotypeData(GenotypeData):
             config["parents"] = list(
                 map(
                     self.rest_client.prefix_remote_identifier,
-                    config["parents"]
-                )
+                    config["parents"],
+                ),
             )
             self._parents = set(config["parents"])
 
@@ -56,7 +57,7 @@ class RemoteGenotypeData(GenotypeData):
         """Construct remote genotype data families."""
         families = {}
         families_details = self.rest_client.get_all_family_details(
-            self._remote_study_id
+            self._remote_study_id,
         )
         for family in families_details:
             family_id = family["family_id"]
@@ -73,14 +74,14 @@ class RemoteGenotypeData(GenotypeData):
 
     def _build_person_set_collections(
         self, pscs_config: Optional[dict[str, Any]],
-        families: FamiliesData
+        families: FamiliesData,
     ) -> dict[str, PersonSetCollection]:
 
         if pscs_config is None:
             return {}
         result = {}
         configs = self.rest_client.get_person_set_collection_configs(
-            self._remote_study_id
+            self._remote_study_id,
         )
         for conf in configs.values():
             psc = PersonSetCollection.from_families(conf, self._families)
@@ -89,9 +90,9 @@ class RemoteGenotypeData(GenotypeData):
 
     def _build_person_set_collection(
         self, psc_config: dict[str, Any],
-        families: FamiliesData
+        families: FamiliesData,
     ) -> PersonSetCollection:
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def get_studies_ids(self, leaves: bool = True) -> list[str]:
         return [self.study_id]
@@ -128,7 +129,7 @@ class RemoteGenotypeData(GenotypeData):
         **kwargs: Any,
     ) -> Generator[FamilyVariant, None, None]:
         # pylint: disable=too-many-arguments,too-many-locals
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def query_summary_variants(
         self,
@@ -143,21 +144,21 @@ class RemoteGenotypeData(GenotypeData):
         return_unknown: Optional[bool] = None,
         limit: Optional[int] = None,
         study_filters: Optional[list[str]] = None,
-        **kwargs: Any
+        **kwargs: Any,
     ) -> Generator[SummaryVariant, None, None]:
         # pylint: disable=too-many-arguments
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @property
     def person_set_collection_configs(self) -> Optional[dict[str, Any]]:
         return cast(
             dict[str, Any],
             self.rest_client.get_person_set_collection_configs(
-                self._remote_study_id)
+                self._remote_study_id),
         )
 
     def get_person_set_collection(
-        self, person_set_collection_id: str
+        self, person_set_collection_id: str,
     ) -> PersonSetCollection:
         if person_set_collection_id is None:
             return None

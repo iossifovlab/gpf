@@ -1,10 +1,11 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-import pytest
 import numpy as np
+import pytest
+
 from dae.variants_loaders.dae.loader import DenovoLoader
 
 
-@pytest.fixture
+@pytest.fixture()
 def simple_denovo_loader(gpf_instance_2013, fixture_dirname, fake_families):
     def ctor(input_filename, additional_params):
         params = {

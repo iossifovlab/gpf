@@ -1,9 +1,9 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 
 from dae.common_reports.family_counter import (
-    get_family_pedigree,
-    FamilyCounter,
     FamiliesGroupCounters,
+    FamilyCounter,
+    get_family_pedigree,
 )
 from dae.studies.study import GenotypeDataStudy
 
@@ -91,7 +91,7 @@ def test_family_counter_tags(study1: GenotypeDataStudy) -> None:
         # "tag_family_type:type#3",
         "tag_male_prb_family",
         "tag_unaffected_dad_family",
-        "tag_unaffected_mom_family"
+        "tag_unaffected_mom_family",
     ])
 
 

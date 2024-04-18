@@ -1,12 +1,11 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
 
-from dae.utils.regions import Region
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.studies.study import GenotypeData
-
 from dae.testing import setup_pedigree, setup_vcf, vcf_study
 from dae.testing.alla_import import alla_gpf
+from dae.utils.regions import Region
 
 
 @pytest.fixture(scope="module")
@@ -69,7 +68,7 @@ def test_summary_variants_family_variants_count_single_allele(
     assert aa.get_attribute("family_variants_count") == family_variants_count
 
 
-@pytest.mark.gs_inmemory
+@pytest.mark.gs_inmemory()
 @pytest.mark.gs_impala2(reason="supported for impala schema2")
 @pytest.mark.parametrize("region,family_variants_count", [
     (Region("chrA", 5, 5), [1, 1]),

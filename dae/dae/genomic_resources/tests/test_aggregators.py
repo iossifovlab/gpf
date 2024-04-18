@@ -1,12 +1,17 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 
 import numpy
+
 from dae.genomic_resources.aggregators import (
-    ConcatAggregator, MinAggregator,
-    MaxAggregator, MeanAggregator,
-    ModeAggregator, MedianAggregator,
-    JoinAggregator, ListAggregator,
-    DictAggregator
+    ConcatAggregator,
+    DictAggregator,
+    JoinAggregator,
+    ListAggregator,
+    MaxAggregator,
+    MeanAggregator,
+    MedianAggregator,
+    MinAggregator,
+    ModeAggregator,
 )
 
 

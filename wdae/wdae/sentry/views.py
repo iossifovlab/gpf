@@ -1,19 +1,18 @@
-import os
-import io
 import codecs
+import io
+import os
 import time
 from typing import Optional
 from urllib.parse import urlparse
 
 import requests
-
 from django.conf import settings
 from rest_framework import status
-from rest_framework.response import Response
-from rest_framework.request import Request
 from rest_framework.decorators import api_view, parser_classes
 from rest_framework.exceptions import ParseError
 from rest_framework.parsers import BaseParser
+from rest_framework.request import Request
+from rest_framework.response import Response
 
 
 class PlainTextParser(BaseParser):
@@ -24,7 +23,7 @@ class PlainTextParser(BaseParser):
     def parse(
         self, stream: io.IOBase,
         media_type: Optional[str] = None,
-        parser_context: Optional[dict] = None
+        parser_context: Optional[dict] = None,
     ) -> str:
         parser_context = parser_context or {}
         encoding = parser_context.get("encoding", settings.DEFAULT_CHARSET)
@@ -33,7 +32,7 @@ class PlainTextParser(BaseParser):
             text_content = decoded_stream.read()
             return text_content
         except ValueError as exc:
-            raise ParseError(f"Plain text parse error - {str(exc)}") from exc
+            raise ParseError(f"Plain text parse error - {exc!s}") from exc
 
 
 @api_view(["POST"])
@@ -59,6 +58,6 @@ def sentry(request: Request) -> Response:
     requests.post(
         upstream_sentry_url,
         data=request.data.replace(fake_dsn, dsn).encode(),
-        timeout=30
+        timeout=30,
     )
     return Response({}, status.HTTP_200_OK)

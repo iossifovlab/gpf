@@ -37,7 +37,7 @@ def test_get_common_report_families_data(rest_client: RESTClient) -> None:
 
 
 def test_get_common_report_families_data_columns(
-    rest_client: RESTClient
+    rest_client: RESTClient,
 ) -> None:
     families_response = \
         rest_client.get_common_report_families_data("iossifov_2014")
@@ -72,7 +72,7 @@ def test_get_instruments(rest_client: RESTClient) -> None:
 def test_post_enrichment_test(rest_client: RESTClient) -> None:
     data = {
         "datasetId": "iossifov_2014",
-        "geneSymbols": ["POGZ"]
+        "geneSymbols": ["POGZ"],
     }
     response = rest_client.post_enrichment_test(data)
 
@@ -85,7 +85,7 @@ def test_post_pheno_persons(rest_client: RESTClient) -> None:
         "iossifov_2014",
         None,
         None,
-        None
+        None,
     )
 
     assert pheno_persons is not None
@@ -123,7 +123,7 @@ def test_post_measure_values(rest_client: RESTClient) -> None:
 
 def test_get_measures_download(rest_client: RESTClient) -> None:
     csv = rest_client.get_measures_download(
-        "iossifov_2014", search_term="i1.m1"
+        "iossifov_2014", search_term="i1.m1",
     )
     lines = list(csv)
 
@@ -147,9 +147,9 @@ def test_post_pheno_tool(rest_client: RESTClient) -> None:
                 "ultraRare": True,
                 "minFreq": None,
                 "maxFreq": None,
-            }
+            },
         },
-        "effectTypes": ["LGDs", "Missense", "Synonymous"]
+        "effectTypes": ["LGDs", "Missense", "Synonymous"],
     }
     test_results = rest_client.post_pheno_tool(data)
 

@@ -1,7 +1,7 @@
-from typing import Any, cast, Optional
+from typing import Any, Optional, cast
 
-from dae.enrichment_tool.event_counters import EnrichmentSingleResult
 from dae.effect_annotation.effect import EffectTypesMixin
+from dae.enrichment_tool.event_counters import EnrichmentSingleResult
 
 
 class EnrichmentSerializer(EffectTypesMixin):
@@ -21,7 +21,7 @@ class EnrichmentSerializer(EffectTypesMixin):
         return output
 
     def serialize_people_groups(
-        self, grouping_results: dict[str, Any]
+        self, grouping_results: dict[str, Any],
     ) -> dict[str, Any]:
         """Serialize people group results."""
         output = {}
@@ -35,16 +35,16 @@ class EnrichmentSerializer(EffectTypesMixin):
                 grouping_results[effect_type])
             out = {}
             out["all"] = self.serialize_all(
-                grouping_results, effect_type, result["all"]
+                grouping_results, effect_type, result["all"],
             )
             out["rec"] = self.serialize_rec(
-                grouping_results, effect_type, result["rec"]
+                grouping_results, effect_type, result["rec"],
             )
             out["male"] = self.serialize_male(
-                grouping_results, effect_type, result["male"]
+                grouping_results, effect_type, result["male"],
             )
             out["female"] = self.serialize_female(
-                grouping_results, effect_type, result["female"]
+                grouping_results, effect_type, result["female"],
             )
             output[effect_type] = out
         return output
@@ -54,7 +54,7 @@ class EnrichmentSerializer(EffectTypesMixin):
         grouping_results: dict[str, dict[str, EnrichmentSingleResult]],
         effect_type: str,
         _result: EnrichmentSingleResult,
-        gender: Optional[list[str]] = None
+        gender: Optional[list[str]] = None,
     ) -> dict[str, Any]:
         """Serialize common filter."""
         if gender is None:
@@ -83,14 +83,14 @@ class EnrichmentSerializer(EffectTypesMixin):
         self, grouping_results: dict[str, Any],
         effect_type: str,
         result: EnrichmentSingleResult,
-        gender: Optional[list[str]] = None
+        gender: Optional[list[str]] = None,
     ) -> dict[str, Any]:
         """Serialize recurrent events filter."""
         if gender is None:
             gender = ["male", "female", "unspecified"]
 
         rec_filter = self.serialize_common_filter(
-            grouping_results, effect_type, result, gender
+            grouping_results, effect_type, result, gender,
         )
         return rec_filter
 
@@ -99,14 +99,14 @@ class EnrichmentSerializer(EffectTypesMixin):
         effect_type: str,
         result: EnrichmentSingleResult,
         gender: Optional[list[str]] = None,
-        overlapped_genes: bool = False
+        overlapped_genes: bool = False,
     ) -> dict[str, Any]:
         """Serialize overlapped events filter."""
         if gender is None:
             gender = ["male", "female", "unspecified"]
 
         overlap_filter = self.serialize_common_filter(
-            grouping_results, effect_type, result, gender=gender
+            grouping_results, effect_type, result, gender=gender,
         )
         if overlapped_genes:
             assert result.overlapped_genes is not None
@@ -117,31 +117,31 @@ class EnrichmentSerializer(EffectTypesMixin):
     def serialize_all(
         self, grouping_results: dict[str, Any],
         effect_type: str,
-        result: EnrichmentSingleResult
+        result: EnrichmentSingleResult,
     ) -> dict[str, Any]:
         assert result.name == "all"
         return self._serialize_gender_filter(
-            grouping_results, effect_type, result
+            grouping_results, effect_type, result,
         )
 
     def serialize_male(
         self, grouping_results: dict[str, Any],
         effect_type: str,
-        result: EnrichmentSingleResult
+        result: EnrichmentSingleResult,
     ) -> dict[str, Any]:
         assert result.name == "male"
         return self._serialize_gender_filter(
-            grouping_results, effect_type, result
+            grouping_results, effect_type, result,
         )
 
     def serialize_female(
         self, grouping_results: dict[str, Any],
         effect_type: str,
-        result: EnrichmentSingleResult
+        result: EnrichmentSingleResult,
     ) -> dict[str, Any]:
         assert result.name == "female"
         return self._serialize_gender_filter(
-            grouping_results, effect_type, result
+            grouping_results, effect_type, result,
         )
 
     def _get_child_gender(self, gender: str) -> list[str]:
@@ -153,37 +153,37 @@ class EnrichmentSerializer(EffectTypesMixin):
     def _serialize_gender_filter(
         self, grouping_results: dict[str, Any],
         effect_type: str,
-        result: EnrichmentSingleResult
+        result: EnrichmentSingleResult,
     ) -> dict[str, Any]:
         assert result.name in set(["all", "male", "female"])
         gender = self._get_child_gender(result.name)
         output = self.serialize_enrichment_result(result)
         output["countFilter"] = self.serialize_common_filter(
-            grouping_results, effect_type, result, gender=gender
+            grouping_results, effect_type, result, gender=gender,
         )
         output["overlapFilter"] = self.serialize_overlap_filter(
-            grouping_results, effect_type, result, gender=gender
+            grouping_results, effect_type, result, gender=gender,
         )
         return output
 
     def serialize_rec(
         self, grouping_results: dict[str, Any],
         effect_type: str,
-        result: EnrichmentSingleResult
+        result: EnrichmentSingleResult,
     ) -> dict[str, Any]:
         """Serialize recurrent events."""
         assert result.name == "rec"
         output = self.serialize_enrichment_result(result)
         output["countFilter"] = self.serialize_rec_filter(
-            grouping_results, effect_type, result
+            grouping_results, effect_type, result,
         )
         output["overlapFilter"] = self.serialize_overlap_filter(
-            grouping_results, effect_type, result, overlapped_genes=True
+            grouping_results, effect_type, result, overlapped_genes=True,
         )
         return output
 
     def serialize_enrichment_result(
-            self, result: EnrichmentSingleResult
+            self, result: EnrichmentSingleResult,
     ) -> dict[str, Any]:
         """Serialize enrichment result."""
         assert isinstance(result, EnrichmentSingleResult)

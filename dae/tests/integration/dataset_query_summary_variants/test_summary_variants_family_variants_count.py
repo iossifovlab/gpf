@@ -1,18 +1,17 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
 
-from dae.utils.regions import Region
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.studies.study import GenotypeData
-
-from dae.testing import setup_pedigree, setup_vcf, setup_dataset, vcf_study
+from dae.testing import setup_dataset, setup_pedigree, setup_vcf, vcf_study
 from dae.testing.alla_import import alla_gpf
+from dae.utils.regions import Region
 
 
 @pytest.fixture(scope="module")
 def imported_dataset(
     tmp_path_factory: pytest.TempPathFactory,
-    genotype_storage: GenotypeStorage
+    genotype_storage: GenotypeStorage,
 ) -> GenotypeData:
     root_path = tmp_path_factory.mktemp(
         f"vcf_path_{genotype_storage.storage_id}")
@@ -76,7 +75,7 @@ def imported_dataset(
 
     return setup_dataset(
         "ds1", gpf_instance, study1, study2,
-        dataset_config_update=f"conf_dir: {root_path}"
+        dataset_config_update=f"conf_dir: {root_path}",
     )
 
 
@@ -87,7 +86,7 @@ def imported_dataset(
     (Region("chrA", 4, 4), 4),
 ])
 def test_summary_variants_family_variants_count_single_allele(
-    region: Region, family_variants_count: int, imported_dataset: GenotypeData
+    region: Region, family_variants_count: int, imported_dataset: GenotypeData,
 ) -> None:
 
     assert imported_dataset is not None

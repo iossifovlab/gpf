@@ -1,16 +1,19 @@
 #!/usr/bin/env python
-import sys
-import os
 import argparse
-import logging
 import glob
+import logging
+import os
+import sys
 from pathlib import Path
+
 import yaml
 
-from dae.gene.gene_term import read_ewa_set_file, read_gmt_file, \
-    read_mapping_file
-from dae.gene.gene_sets_db import GeneSet, \
-    build_gene_set_collection_from_file
+from dae.gene.gene_sets_db import GeneSet, build_gene_set_collection_from_file
+from dae.gene.gene_term import (
+    read_ewa_set_file,
+    read_gmt_file,
+    read_mapping_file,
+)
 
 logger = logging.getLogger("create_sqlite_gene_set")
 
@@ -25,31 +28,31 @@ def main(argv):
         "--resource",
         dest="resource",
         help="path to genomic_resource.yaml to use",
-        default=None
+        default=None,
     )
     parser.add_argument(
         "--format",
         dest="format",
         help="format of gene set (map, gmt, directory)",
-        default=None
+        default=None,
     )
     parser.add_argument(
         "--filename",
         dest="filename",
         help="path to gmt or map file",
-        default=None
+        default=None,
     )
     parser.add_argument(
         "--directory",
         dest="directory",
         help="path to directory collection data",
-        default=None
+        default=None,
     )
     parser.add_argument(
         "--output",
         dest="output",
         help="where to write sqlite DB file",
-        default="collection_db"
+        default="collection_db",
     )
 
     argv = parser.parse_args(argv)
@@ -79,7 +82,7 @@ def main(argv):
                     names_file = open(names_filepath)
                 gene_terms = read_mapping_file(
                     open(filepath),
-                    names_file
+                    names_file,
                 )
             elif collection_format == "gmt":
                 filename = resource_config["filename"]
@@ -87,7 +90,7 @@ def main(argv):
                 gene_terms = read_gmt_file(open(filepath))
             elif collection_format == "directory":
                 directory = os.path.join(
-                    base_dir, resource_config["directory"]
+                    base_dir, resource_config["directory"],
                 )
                 filepaths = glob.glob(f"{directory}/*.txt")
                 files = [
@@ -98,14 +101,14 @@ def main(argv):
             else:
                 raise ValueError("Invalid collection format type")
     elif argv.format is not None:
-        raise NotImplementedError()
+        raise NotImplementedError
     else:
         raise ValueError("Invalid arguments")
 
     db = build_gene_set_collection_from_file(
         argv.output,
         collection_id=collection_id,
-        collection_format="sqlite"
+        collection_format="sqlite",
     )
 
     for key, value in gene_terms.tDesc.items():

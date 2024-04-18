@@ -1,44 +1,47 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 
-import os
 import logging
+import os
 import pathlib
+from collections.abc import Iterator
 from datetime import timedelta
-from typing import Callable, Iterator, Optional
+from typing import Callable, Optional
 
 import pytest
-
 from box import Box
-
-from pytest_mock import MockerFixture
-
-
+from datasets_api.models import Dataset
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.test import Client
 from django.utils import timezone
-from oauth2_provider.models import \
-    AccessToken, Application, get_access_token_model, get_application_model
-from datasets_api.models import Dataset
-
+from gpf_instance.gpf_instance import (
+    WGPFInstance,
+    get_wgpf_instance,
+    reload_datasets,
+)
+from oauth2_provider.models import (
+    AccessToken,
+    Application,
+    get_access_token_model,
+    get_application_model,
+)
+from pytest_mock import MockerFixture
 from remote.rest_api_client import RESTClient
-
-from gpf_instance.gpf_instance import WGPFInstance, get_wgpf_instance, \
-    reload_datasets
-
 from users_api.models import WdaeUser
-from dae.gene_profile.db import GeneProfileDB
-from dae.genomic_resources import build_genomic_resource_repository
-from dae.genomic_resources.group_repository import GenomicResourceGroupRepo
-from dae.genomic_resources.testing import \
-    convert_to_tab_separated, build_inmemory_test_repository
-from dae.genomic_resources.repository import GR_CONF_FILE_NAME, \
-    GenomicResourceRepo
 
 from dae.common_reports import generate_common_report
-
+from dae.gene_profile.db import GeneProfileDB
 from dae.gene_profile.statistic import GPStatistic
-
+from dae.genomic_resources import build_genomic_resource_repository
+from dae.genomic_resources.group_repository import GenomicResourceGroupRepo
+from dae.genomic_resources.repository import (
+    GR_CONF_FILE_NAME,
+    GenomicResourceRepo,
+)
+from dae.genomic_resources.testing import (
+    build_inmemory_test_repository,
+    convert_to_tab_separated,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -67,8 +70,8 @@ def hundred_users(db: None, user: WdaeUser) -> list[WdaeUser]:
     users_data = []
     for i in range(100):
         users_data.append(user_model(
-            email=f"user{i+1}@example.com",
-            name=f"User{i+1}",
+            email=f"user{i + 1}@example.com",
+            name=f"User{i + 1}",
             is_staff=False,
             is_active=True,
             is_superuser=False,
@@ -114,22 +117,14 @@ def admin(db: None) -> WdaeUser:
 @pytest.fixture()
 def oauth_app(admin: WdaeUser) -> Application:
     application = get_application_model()
-    new_application = application(**{
-        "name": "testing client app",
-        "user_id": admin.id,
-        "client_type": "confidential",
-        "authorization_grant_type": "authorization-code",
-        "redirect_uris": "http://localhost:4200/datasets",
-        "client_id": "admin",
-        "client_secret": "secret"
-    })
+    new_application = application(name="testing client app", user_id=admin.id, client_type="confidential", authorization_grant_type="authorization-code", redirect_uris="http://localhost:4200/datasets", client_id="admin", client_secret="secret")
     new_application.save()
     return new_application
 
 
 @pytest.fixture()
 def tokens(
-    admin: WdaeUser, user: WdaeUser, oauth_app: Application
+    admin: WdaeUser, user: WdaeUser, oauth_app: Application,
 ) -> tuple[AccessToken, AccessToken]:
     access_token = get_access_token_model()
     user_access_token = access_token(
@@ -137,14 +132,14 @@ def tokens(
         scope="read write",
         expires=timezone.now() + timedelta(seconds=300),
         token="user-token",
-        application=oauth_app
+        application=oauth_app,
     )
     admin_access_token = access_token(
         user=admin,
         scope="read write",
         expires=timezone.now() + timedelta(seconds=300),
         token="admin-token",
-        application=oauth_app
+        application=oauth_app,
     )
     user_access_token.save()
     admin_access_token.save()
@@ -153,7 +148,7 @@ def tokens(
 
 @pytest.fixture()
 def user_client(
-    user: WdaeUser, tokens: tuple[AccessToken, AccessToken]
+    user: WdaeUser, tokens: tuple[AccessToken, AccessToken],
 ) -> Client:
     client = Client(HTTP_AUTHORIZATION="Bearer user-token")
     return client
@@ -161,7 +156,7 @@ def user_client(
 
 @pytest.fixture()
 def anonymous_client(
-    client: Client, db: None
+    client: Client, db: None,
 ) -> Client:
     client.logout()
     return client
@@ -169,13 +164,13 @@ def anonymous_client(
 
 @pytest.fixture()
 def admin_client(
-    admin: WdaeUser, tokens: tuple[AccessToken, AccessToken]
+    admin: WdaeUser, tokens: tuple[AccessToken, AccessToken],
 ) -> Client:
     client = Client(HTTP_AUTHORIZATION="Bearer admin-token")
     return client
 
 
-@pytest.fixture
+@pytest.fixture()
 def datasets(db: None) -> None:
     reload_datasets(get_wgpf_instance())
 
@@ -206,7 +201,7 @@ def enrichment_grr() -> GenomicResourceRepo:
                     SAMD11   3
                     PLEKHN1  7
                     POGZ     13
-                """)
+                """),
             },
             "samocha_testing": {
                 GR_CONF_FILE_NAME: """
@@ -218,9 +213,9 @@ def enrichment_grr() -> GenomicResourceRepo:
 "NM_017582","SAMD11",3,-1,-5,-4,-6,-6,-6,2,2,1.1,1.4,5.7
 "NM_017582","PLEKHN1",7,-2,-5,-4,-6,-6,-6,2,2,1.2,1.5,5.8
 "NM_014372","POGZ",11,-3,-5,-5,-6,-7,-6,2,2,6.3,4.6,2.9
-                """)
-            }
-        }
+                """),
+            },
+        },
     })
 
 
@@ -228,11 +223,11 @@ def enrichment_grr() -> GenomicResourceRepo:
 def wgpf_instance(
     default_dae_config: Box,
     fixture_dirname: Callable,
-    enrichment_grr: GenomicResourceRepo
+    enrichment_grr: GenomicResourceRepo,
 ) -> Callable[[Optional[str]], WGPFInstance]:
 
     def build(
-        config_filename: Optional[str] = None
+        config_filename: Optional[str] = None,
     ) -> WGPFInstance:
         repositories = [
             build_genomic_resource_repository(
@@ -240,13 +235,13 @@ def wgpf_instance(
                     "id": "grr_test_repo",
                     "type": "directory",
                     "directory": fixture_dirname("test_repo"),
-                }
+                },
             ),
             build_genomic_resource_repository(
                 {
                     "id": "fixtures",
                     "type": "directory",
-                    "directory": fixture_dirname("genomic_resources")
+                    "directory": fixture_dirname("genomic_resources"),
                 }),
             enrichment_grr,
             build_genomic_resource_repository(),
@@ -277,7 +272,7 @@ def wgpf_instance(
 @pytest.fixture(scope="session")
 def fixtures_wgpf_instance(
     wgpf_instance: Callable[[Optional[str]], WGPFInstance],
-    global_dae_fixtures_dir: str
+    global_dae_fixtures_dir: str,
 ) -> WGPFInstance:
     return wgpf_instance(
         os.path.join(global_dae_fixtures_dir, "gpf_instance.yaml"))
@@ -288,7 +283,7 @@ def wdae_gpf_instance(
     db: None, mocker: MockerFixture,
     admin_client: Client,
     fixtures_wgpf_instance: WGPFInstance,
-    fixture_dirname: Callable
+    fixture_dirname: Callable,
 ) -> WGPFInstance:
     reload_datasets(fixtures_wgpf_instance)
     mocker.patch(
@@ -320,7 +315,7 @@ def gp_wgpf_instance(  # pylint: disable=too-many-arguments
     wgpf_instance: Callable,
     sample_gp: GPStatistic,
     gp_config: Box,
-    tmp_path: pathlib.Path
+    tmp_path: pathlib.Path,
 ) -> Iterator[WGPFInstance]:
 
     wdae_gpf_instance = wgpf_instance(
@@ -363,18 +358,18 @@ def gp_wgpf_instance(  # pylint: disable=too-many-arguments
         "postsynaptic inhibition",
         "synaptic clefts excitatory",
         "synaptic clefts inhibitory",
-        "topotecan downreg genes"
+        "topotecan downreg genes",
     }
     mocker.patch.object(
         wdae_gpf_instance.gene_sets_db,
         "get_gene_set_ids",
-        return_value=main_gene_sets
+        return_value=main_gene_sets,
     )
     wdae_gpf_instance._gene_profile_db = \
         GeneProfileDB(
             gp_config,
             str(tmp_path / "gpdb"),
-            clear=True
+            clear=True,
         )
     wdae_gpf_instance._gene_profile_db.insert_gp(sample_gp)
     wdae_gpf_instance.prepare_gp_configuration()
@@ -388,14 +383,14 @@ def gp_wgpf_instance(  # pylint: disable=too-many-arguments
     wdae_gpf_instance.__gene_profile_db = None
 
 
-@pytest.fixture
+@pytest.fixture()
 def gp_config() -> Box:
     return Box({
         "default_dataset": "iossifov_2014",
         "gene_links": [
             {
                 "name": "Link with prefix",
-                "url": "{gpf_prefix}/datasets/{gene}"
+                "url": "{gpf_prefix}/datasets/{gene}",
             },
             {
                 "name": "Link with gene info",
@@ -403,7 +398,7 @@ def gp_config() -> Box:
                     "https://site.com/{gene}?db={genome}&"
                     "position={chromosome_prefix}{chromosome}/"
                     "{gene_start_position}-{gene_stop_position}"
-                )
+                ),
             },
         ],
         "gene_sets": [
@@ -414,9 +409,9 @@ def gp_config() -> Box:
                     {"set_id": "CHD8 target genes", "collection_id": "main"},
                     {
                         "set_id": "FMRP Darnell",
-                        "collection_id": "main"
-                    }
-                ]
+                        "collection_id": "main",
+                    },
+                ],
             },
         ],
         "genomic_scores": [
@@ -426,8 +421,8 @@ def gp_config() -> Box:
                 "scores": [
                     {"score_name": "SFARI_gene_score", "format": "%s"},
                     {"score_name": "RVIS_rank", "format": "%s"},
-                    {"score_name": "RVIS", "format": "%s"}
-                ]
+                    {"score_name": "RVIS", "format": "%s"},
+                ],
             },
             {
                 "category": "autism_scores",
@@ -435,8 +430,8 @@ def gp_config() -> Box:
                 "scores": [
                     {"score_name": "SFARI_gene_score", "format": "%s"},
                     {"score_name": "RVIS_rank", "format": "%s"},
-                    {"score_name": "RVIS", "format": "%s"}
-                ]
+                    {"score_name": "RVIS", "format": "%s"},
+                ],
             },
         ],
         "datasets": Box({
@@ -446,55 +441,55 @@ def gp_config() -> Box:
                         "id": "denovo_noncoding",
                         "display_name": "Noncoding",
                         "effects": ["noncoding"],
-                        "category": "denovo"
+                        "category": "denovo",
                     },
                     {
                         "id": "denovo_missense",
                         "display_name": "Missense",
                         "effects": ["missense"],
-                        "category": "denovo"
-                    }
+                        "category": "denovo",
+                    },
                 ],
                 "person_sets": [
                     {
                         "set_name": "autism",
-                        "collection_name": "phenotype"
+                        "collection_name": "phenotype",
                     },
                     {
                         "set_name": "unaffected",
-                        "collection_name": "phenotype"
+                        "collection_name": "phenotype",
                     },
-                ]
-            })
-        })
+                ],
+            }),
+        }),
     })
 
 
-@pytest.fixture
+@pytest.fixture()
 def sample_gp() -> GPStatistic:
     gene_sets = ["main_CHD8 target genes"]
     genomic_scores = {
         "protection_scores": {
-            "SFARI_gene_score": 1, "RVIS_rank": 193.0, "RVIS": -2.34
+            "SFARI_gene_score": 1, "RVIS_rank": 193.0, "RVIS": -2.34,
         },
         "autism_scores": {
-            "SFARI_gene_score": 1, "RVIS_rank": 193.0, "RVIS": -2.34
+            "SFARI_gene_score": 1, "RVIS_rank": 193.0, "RVIS": -2.34,
         },
     }
     variant_counts = {
         "iossifov_2014": {
             "autism": {
                 "denovo_noncoding": {"count": 53, "rate": 1},
-                "denovo_missense": {"count": 21, "rate": 2}
+                "denovo_missense": {"count": 21, "rate": 2},
             },
             "unaffected": {
                 "denovo_noncoding": {"count": 43, "rate": 3},
-                "denovo_missense": {"count": 51, "rate": 4}
+                "denovo_missense": {"count": 51, "rate": 4},
             },
-        }
+        },
     }
     return GPStatistic(
-        "CHD8", gene_sets, genomic_scores, variant_counts
+        "CHD8", gene_sets, genomic_scores, variant_counts,
     )
 
 
@@ -515,14 +510,14 @@ def remote_config(fixtures_wgpf_instance: WGPFInstance) -> dict[str, str]:
 
 @pytest.fixture(scope="function")
 def rest_client(
-    admin_client: Client, remote_config: dict[str, str]
+    admin_client: Client, remote_config: dict[str, str],
 ) -> RESTClient:
     client = RESTClient(
         remote_config["id"],
         remote_config["host"],
         remote_config["credentials"],
         base_url=remote_config["base_url"],
-        port=int(remote_config["port"])
+        port=int(remote_config["port"]),
     )
 
     assert client.token is not None, \
@@ -558,12 +553,12 @@ def sample_dataset(db: None, wdae_gpf_instance: WGPFInstance) -> Dataset:
 
 @pytest.fixture()
 def hundred_groups(
-    db: None, sample_dataset: Dataset, user: WdaeUser
+    db: None, sample_dataset: Dataset, user: WdaeUser,
 ) -> list[Group]:
     groups_data = []
     for i in range(100):
         groups_data.append(Group(
-            name=f"Group{i+1}",
+            name=f"Group{i + 1}",
         ))
     groups = Group.objects.bulk_create(groups_data)
     for group in groups:

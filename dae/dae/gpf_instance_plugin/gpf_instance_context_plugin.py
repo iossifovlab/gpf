@@ -1,12 +1,14 @@
 import logging
-from typing import Optional, Any, Tuple, Set
+from typing import Any, Optional, Set, Tuple
 
-from dae.genomic_resources.genomic_context import GC_GRR_KEY
-from dae.genomic_resources.genomic_context import GC_REFERENCE_GENOME_KEY
-from dae.genomic_resources.genomic_context import GC_GENE_MODELS_KEY
-from dae.genomic_resources.genomic_context import GenomicContext
-from dae.genomic_resources.genomic_context import SimpleGenomicContextProvider
-from dae.genomic_resources.genomic_context import register_context_provider
+from dae.genomic_resources.genomic_context import (
+    GC_GENE_MODELS_KEY,
+    GC_GRR_KEY,
+    GC_REFERENCE_GENOME_KEY,
+    GenomicContext,
+    SimpleGenomicContextProvider,
+    register_context_provider,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +43,7 @@ class GPFInstanceGenomicContext(GenomicContext):
     def get_context_keys(self) -> Set[str]:
         return {
             GC_GENE_MODELS_KEY, GC_REFERENCE_GENOME_KEY,
-            GC_GRR_KEY, "annotation_pipeline", "gpf_instance"
+            GC_GRR_KEY, "annotation_pipeline", "gpf_instance",
         }
 
     def get_source(self) -> Tuple[str, ...]:
@@ -75,7 +77,7 @@ def init_gpf_instance_genomic_context_plugin() -> None:
 
 
 def init_test_gpf_instance_genomic_context_plugin(
-    gpf_instance: Any
+    gpf_instance: Any,
 ) -> None:
     """Init GPF instance genomic context plugin for testing."""
     # pylint: disable=import-outside-toplevel

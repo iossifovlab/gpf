@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 from abc import abstractmethod
 from typing import Any
 
@@ -23,7 +24,7 @@ class Statistic:
     @abstractmethod
     def add_value(self, value: Any) -> None:
         """Add a value to the statistic."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def finish(self) -> None:
         """
@@ -41,15 +42,15 @@ class Statistic:
     @abstractmethod
     def merge(self, other: Statistic) -> None:
         """Merge the values from another statistic in place."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @abstractmethod
     def serialize(self) -> str:
         """Return a serialized version of this statistic."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @staticmethod
     @abstractmethod
     def deserialize(content: str) -> Statistic:
         """Create a statistic from serialized data."""
-        raise NotImplementedError()
+        raise NotImplementedError

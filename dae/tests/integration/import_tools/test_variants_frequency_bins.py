@@ -4,21 +4,26 @@ import pathlib
 
 import pytest
 
-from dae.testing import setup_pedigree, setup_vcf, vcf_study, \
-    setup_denovo, denovo_import
-from dae.testing import alla_gpf
-from dae.testing.import_helpers import StudyInputLayout
-from dae.import_tools.cli import run_with_project
-from dae.import_tools.import_tools import ImportProject
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.gpf_instance.gpf_instance import GPFInstance
+from dae.import_tools.cli import run_with_project
+from dae.import_tools.import_tools import ImportProject
 from dae.studies.study import GenotypeData
+from dae.testing import (
+    alla_gpf,
+    denovo_import,
+    setup_denovo,
+    setup_pedigree,
+    setup_vcf,
+    vcf_study,
+)
+from dae.testing.import_helpers import StudyInputLayout
 
 
-@pytest.fixture
+@pytest.fixture()
 def vcf_import_data(
     tmp_path: pathlib.Path,
-    genotype_storage: GenotypeStorage
+    genotype_storage: GenotypeStorage,
 ) -> tuple[pathlib.Path, GPFInstance, StudyInputLayout]:
     root_path = tmp_path
     gpf_instance = alla_gpf(root_path)
@@ -54,10 +59,10 @@ chrA   2   .  A   G   .    .      .    GT     0/0 0/0 0/1 0/1 0/0 0/1
         "vcf_fixture", ped_path, [vcf_path], [], [], [])
 
 
-@pytest.fixture
+@pytest.fixture()
 def vcf_fixture(
     vcf_import_data: tuple[pathlib.Path, GPFInstance, StudyInputLayout],
-    genotype_storage: GenotypeStorage
+    genotype_storage: GenotypeStorage,
 ) -> tuple[pathlib.Path, GenotypeData]:
     root_path, gpf_instance, layout = vcf_import_data
 
@@ -65,19 +70,19 @@ def vcf_fixture(
         "input": {
             "vcf": {
                 "denovo_mode": "denovo",
-            }
+            },
         },
         "destination": {
-            "storage_id": genotype_storage.storage_id
+            "storage_id": genotype_storage.storage_id,
         },
         "processing_config": {
             "include_reference": True,
         },
         "partition_description": {
             "frequency_bin": {
-                "rare_boundary": 20.0
-            }
-        }
+                "rare_boundary": 20.0,
+            },
+        },
     }
     return root_path, vcf_study(
         root_path,
@@ -97,12 +102,12 @@ def vcf_fixture(
         ("ultra rare", 1, True),
         ("rare <= 50%", 2, False),
         ("common >50", 3, True),
-    ]
+    ],
 )
 def test_family_frequency_bin_for_vcf(
     vcf_fixture: tuple[pathlib.Path, GenotypeData],
     genotype_storage: GenotypeStorage,
-    label: str, frequency_bin: int, exists: bool
+    label: str, frequency_bin: int, exists: bool,
 ) -> None:
 
     root_path, _ = vcf_fixture
@@ -123,12 +128,12 @@ def test_family_frequency_bin_for_vcf(
         ("ultra rare", 1, False),
         ("rare <= 50%", 2, False),
         ("common >50", 3, True),
-    ]
+    ],
 )
 def test_summary_frequency_bin_for_vcf(
     vcf_fixture: tuple[pathlib.Path, GenotypeData],
     genotype_storage: GenotypeStorage,
-    label: str, frequency_bin: int, exists: bool
+    label: str, frequency_bin: int, exists: bool,
 ) -> None:
 
     root_path, _ = vcf_fixture
@@ -148,7 +153,7 @@ def test_summary_frequency_bin_for_vcf(
         (None, 4),
         ([("af_allele_freq", (0.0, 20.0))], 2),
         ([("af_allele_freq", (20.0, 100.0))], 2),
-    ]
+    ],
 )
 def test_frequency_bin_queries(
     frequency_filter: list[tuple], count: int,
@@ -160,10 +165,10 @@ def test_frequency_bin_queries(
     assert len(vs) == count
 
 
-@pytest.fixture
+@pytest.fixture()
 def denovo_import_data(
     tmp_path: pathlib.Path,
-    genotype_storage: GenotypeStorage
+    genotype_storage: GenotypeStorage,
 ) -> tuple[pathlib.Path, GPFInstance, StudyInputLayout]:
     root_path = tmp_path
 
@@ -197,23 +202,23 @@ def denovo_import_data(
         "denovo_fixture", ped_path, [], [denovo_path], [], [])
 
 
-@pytest.fixture
+@pytest.fixture()
 def denovo_project_to_parquet(
     tmp_path: pathlib.Path,
     denovo_import_data: tuple[pathlib.Path, GPFInstance, StudyInputLayout],
-    genotype_storage: GenotypeStorage
+    genotype_storage: GenotypeStorage,
 ) -> ImportProject:
     root_path, gpf_instance, layout = denovo_import_data
 
     project_config_update = {
         "destination": {
-            "storage_type": genotype_storage.storage_type
+            "storage_type": genotype_storage.storage_type,
         },
         "partition_description": {
             "frequency_bin": {
-                "rare_boundary": 50.0
-            }
-        }
+                "rare_boundary": 50.0,
+            },
+        },
     }
     project = denovo_import(
         root_path,
@@ -233,12 +238,12 @@ def denovo_project_to_parquet(
         ("ultra rare", 1, False),
         ("rare <= 50%", 2, False),
         ("common >50", 3, False),
-    ]
+    ],
 )
 def test_denovo_frequency_bin_for_denovo_import(
     denovo_project_to_parquet: ImportProject,
     genotype_storage: GenotypeStorage,
-    label: str, frequency_bin: int, exists: bool
+    label: str, frequency_bin: int, exists: bool,
 ) -> None:
 
     run_with_project(denovo_project_to_parquet)

@@ -11,7 +11,7 @@ from dae.configuration.schemas.study_config import study_config_schema
 
 @pytest.fixture(scope="module")
 def study_config(tmp_path_factory: pytest.TempPathFactory) -> Box:
-    config_contents =  textwrap.dedent("""
+    config_contents = textwrap.dedent("""
         name = "QUADS_F1"
         id = "quads_f1"
         phenotype_data = "quads_f1"
@@ -101,7 +101,7 @@ def test_study_config_genotype_storage(study_config: Box) -> None:
 )
 def test_study_config_attr_access(
     study_config: Box, option_name: str,
-    expected_value: Optional[Union[str, bool]]
+    expected_value: Optional[Union[str, bool]],
 ) -> None:
     assert getattr(study_config, option_name) == expected_value
 
@@ -116,14 +116,14 @@ def test_study_config_attr_access(
     ],
 )
 def test_study_config_genotype_browser(
-    study_config: Box, option_name: str, expected_value: bool
+    study_config: Box, option_name: str, expected_value: bool,
 ) -> None:
     genotype_browser_config = study_config.genotype_browser
     assert getattr(genotype_browser_config, option_name) == expected_value
 
 
 def test_study_config_genotype_browser_pheno_filters(
-    study_config: Box
+    study_config: Box,
 ) -> None:
     genotype_browser_config = study_config.genotype_browser
     assert genotype_browser_config.family_filters == {
@@ -142,7 +142,7 @@ def test_study_config_genotype_browser_pheno_filters(
             "source_type": "continuous",
             "filter_type": "single",
             "role": "prb",
-        }
+        },
     }
 
 
@@ -151,17 +151,17 @@ def test_study_config_genotype_browser_columns(study_config: Box) -> None:
 
 
 def test_study_config_genotype_browser_pheno_columns(
-    study_config: Box
+    study_config: Box,
 ) -> None:
     assert len(study_config.genotype_browser.columns.phenotype) == 2
 
 
 def test_quads_f1_files_and_tables(study_config: Box) -> None:
     assert study_config.genotype_storage.files.variants[0].path.endswith(
-        "data/quads_f1.vcf"
+        "data/quads_f1.vcf",
     )
     assert study_config.genotype_storage.files.pedigree.path.endswith(
-        "data/quads_f1.ped"
+        "data/quads_f1.ped",
     )
 
 
@@ -169,6 +169,6 @@ def test_study_config_files(study_config: Box) -> None:
     assert study_config.genotype_storage.files is not None
     assert study_config.genotype_storage.files.pedigree is not None
     assert study_config.genotype_storage.files.pedigree.path.endswith(
-        "/data/quads_f1.ped"
+        "/data/quads_f1.ped",
     )
     assert len(study_config.genotype_storage.files.pedigree.params) == 3

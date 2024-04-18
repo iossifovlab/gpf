@@ -5,10 +5,10 @@ from typing import Callable
 import pytest
 
 from dae.genomic_resources.fsspec_protocol import build_fsspec_protocol
+from dae.genomic_resources.liftover_chain import (
+    build_liftover_chain_from_resource,
+)
 from dae.genomic_resources.repository import GenomicResourceProtocolRepo
-
-from dae.genomic_resources.liftover_chain import \
-    build_liftover_chain_from_resource
 
 
 @pytest.mark.parametrize("pos,expected_chrom,expected_pos,expected_strand", [

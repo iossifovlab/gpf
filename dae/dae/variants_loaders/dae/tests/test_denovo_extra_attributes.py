@@ -6,7 +6,7 @@ from dae.variants_loaders.dae.loader import DenovoLoader
 from dae.variants_loaders.raw.loader import AnnotationPipelineDecorator
 
 
-@pytest.fixture
+@pytest.fixture()
 def denovo_extra_attr_loader(
         fixture_dirname, gpf_instance_2013, annotation_pipeline_internal):
 
@@ -19,7 +19,7 @@ def denovo_extra_attr_loader(
         families, variants_filename, gpf_instance_2013.reference_genome)
 
     return AnnotationPipelineDecorator(
-        variants_loader, annotation_pipeline_internal
+        variants_loader, annotation_pipeline_internal,
     )
 
 

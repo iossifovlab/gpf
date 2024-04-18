@@ -57,7 +57,7 @@ def test_search_gene_symbols(anonymous_client):
     response = anonymous_client.get("/api/v3/genome/gene_models/search/CHD")
     assert set(response.data["gene_symbols"]) == {
         "CHD3", "CHD2", "CHD8", "CHD1L", "CHD1",
-        "CHD4", "CHD9", "CHD7", "CHD5", "CHDH", "CHD6"
+        "CHD4", "CHD9", "CHD7", "CHD5", "CHDH", "CHD6",
     }
 
     response = anonymous_client.get("/api/v3/genome/gene_models/search/C")

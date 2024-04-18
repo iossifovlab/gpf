@@ -4,17 +4,19 @@ from typing import Any
 
 import pytest
 
-from dae.genomic_resources.fsspec_protocol import FsspecReadWriteProtocol
 from dae.genomic_resources.cli import cli_manage
-from dae.genomic_resources.testing import build_filesystem_test_protocol, \
-    setup_directories
+from dae.genomic_resources.fsspec_protocol import FsspecReadWriteProtocol
 from dae.genomic_resources.repository import GR_CONTENTS_FILE_NAME
+from dae.genomic_resources.testing import (
+    build_filesystem_test_protocol,
+    setup_directories,
+)
 
 
-@pytest.fixture
+@pytest.fixture()
 def proto_fixture(
     content_fixture: dict[str, Any],
-    tmp_path_factory: pytest.TempPathFactory
+    tmp_path_factory: pytest.TempPathFactory,
 ) -> tuple[pathlib.Path, FsspecReadWriteProtocol]:
     path = tmp_path_factory.mktemp("cli_manifest_proto_fixture")
     setup_directories(
@@ -25,7 +27,7 @@ def proto_fixture(
 
 
 def test_resource_manifest_simple(
-    proto_fixture: tuple[pathlib.Path, FsspecReadWriteProtocol]
+    proto_fixture: tuple[pathlib.Path, FsspecReadWriteProtocol],
 ) -> None:
     # Given
     path, proto = proto_fixture
@@ -45,7 +47,7 @@ def test_resource_manifest_simple(
 
 
 def test_resource_manifest_dry_run_simple(
-    proto_fixture: tuple[pathlib.Path, FsspecReadWriteProtocol]
+    proto_fixture: tuple[pathlib.Path, FsspecReadWriteProtocol],
 ) -> None:
     # Given
     path, proto = proto_fixture
@@ -64,7 +66,7 @@ def test_resource_manifest_dry_run_simple(
 
 
 def test_repo_manifest_simple(
-    proto_fixture: tuple[pathlib.Path, FsspecReadWriteProtocol]
+    proto_fixture: tuple[pathlib.Path, FsspecReadWriteProtocol],
 ) -> None:
 
     # Given
@@ -85,7 +87,7 @@ def test_repo_manifest_simple(
 
 
 def test_repo_manifest_dry_run_simple(
-    proto_fixture: tuple[pathlib.Path, FsspecReadWriteProtocol]
+    proto_fixture: tuple[pathlib.Path, FsspecReadWriteProtocol],
 ) -> None:
     # Given
     path, proto = proto_fixture
@@ -104,7 +106,7 @@ def test_repo_manifest_dry_run_simple(
 
 
 def test_check_manifest_update(
-    proto_fixture: tuple[pathlib.Path, FsspecReadWriteProtocol]
+    proto_fixture: tuple[pathlib.Path, FsspecReadWriteProtocol],
 ) -> None:
 
     # Given
@@ -121,7 +123,7 @@ def test_check_manifest_update(
 
 
 def test_resource_run_manifest_update(
-    proto_fixture: tuple[pathlib.Path, FsspecReadWriteProtocol]
+    proto_fixture: tuple[pathlib.Path, FsspecReadWriteProtocol],
 ) -> None:
 
     # Given
@@ -140,7 +142,7 @@ def test_resource_run_manifest_update(
 
 
 def test_repo_run_manifest_update(
-    proto_fixture: tuple[pathlib.Path, FsspecReadWriteProtocol]
+    proto_fixture: tuple[pathlib.Path, FsspecReadWriteProtocol],
 ) -> None:
     # Given
     path, proto = proto_fixture
@@ -158,7 +160,7 @@ def test_repo_run_manifest_update(
 
 
 def test_resource_dry_run_manifest_update(
-    proto_fixture: tuple[pathlib.Path, FsspecReadWriteProtocol]
+    proto_fixture: tuple[pathlib.Path, FsspecReadWriteProtocol],
 ) -> None:
 
     # Given
@@ -177,7 +179,7 @@ def test_resource_dry_run_manifest_update(
 
 
 def test_repo_dry_run_manifest_update(
-    proto_fixture: tuple[pathlib.Path, FsspecReadWriteProtocol]
+    proto_fixture: tuple[pathlib.Path, FsspecReadWriteProtocol],
 ) -> None:
     # Given
     path, proto = proto_fixture
