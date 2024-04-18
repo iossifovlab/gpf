@@ -93,14 +93,6 @@ a:hover {
   margin-top: 40px;
 }
 
-:host ::ng-deep gpf-markdown-editor markdown {
-  width: 955px;
-}
-
-:host ::ng-deep gpf-markdown-editor #edit-wrapper {
-  margin-left: -35px;
-}
-
 gpf-markdown-editor {
   width: 100%;
 }
