@@ -5,7 +5,7 @@ import logging
 import os
 import pathlib
 import sys
-from typing import Any, Dict, Optional, Union, cast
+from typing import Any, Optional, Union, cast
 from urllib.parse import urlparse
 
 import yaml
@@ -294,7 +294,7 @@ def _configure_resource_info_subparser(
 
 def collect_dvc_entries(
         proto: ReadWriteRepositoryProtocol,
-        res: GenomicResource) -> Dict[str, ManifestEntry]:
+        res: GenomicResource) -> dict[str, ManifestEntry]:
     """Collect manifest entries defined by .dvc files."""
     result = {}
     manifest = proto.collect_resource_entries(res)
@@ -824,7 +824,7 @@ def _create_proto(
     if url.scheme in {"file", ""} and not os.path.isabs(repo_url):
         repo_url = os.path.abspath(repo_url)
 
-    kwargs: Dict[str, str] = {}
+    kwargs: dict[str, str] = {}
     if extra_args:
         parsed = [tuple(a.split("=")) for a in extra_args.split(",")]
         kwargs = {p[0]: p[1] for p in parsed}
