@@ -1,7 +1,9 @@
 import pytest
 
-from dae.annotation.annotation_factory import AnnotationConfigurationError
-from dae.annotation.annotation_factory import build_annotation_pipeline
+from dae.annotation.annotation_factory import (
+    AnnotationConfigurationError,
+    build_annotation_pipeline,
+)
 from dae.genomic_resources.testing import build_inmemory_test_repository
 
 

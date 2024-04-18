@@ -1,12 +1,12 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
 
-from dae.testing import setup_pedigree, setup_denovo, acgt_gpf
 from dae.pedigrees.loader import FamiliesLoader
+from dae.testing import acgt_gpf, setup_denovo, setup_pedigree
 from dae.variants_loaders.dae.loader import DenovoLoader
 
 
-@pytest.fixture
+@pytest.fixture()
 def trio_families(tmp_path_factory):
     root_path = tmp_path_factory.mktemp(
         "denovo_add_chrom_trio_families")
@@ -22,7 +22,7 @@ def trio_families(tmp_path_factory):
     return loader.load()
 
 
-@pytest.fixture
+@pytest.fixture()
 def trio_gpf(tmp_path_factory):
     root_path = tmp_path_factory.mktemp(
         "denovo_acgt_gpf_instance")
@@ -30,7 +30,7 @@ def trio_gpf(tmp_path_factory):
     return gpf_instance
 
 
-@pytest.fixture
+@pytest.fixture()
 def trio_denovo(tmp_path_factory):
     root_path = tmp_path_factory.mktemp(
         "denovo_add_chrom_trio")
@@ -40,7 +40,7 @@ def trio_denovo(tmp_path_factory):
           familyId  location  variant    bestState
           f1        1:2       del(2)     2||2||1/0||0||1
           f1        2:2       ins(AA)    2||2||1/0||0||1
-        """
+        """,
     )
     return denovo_path
 
@@ -50,7 +50,7 @@ def trio_denovo(tmp_path_factory):
     [
         (0, "chr1", 1, "ACG", "A"),
         (1, "chr2", 1, "A", "AAA"),
-    ]
+    ],
 )
 def test_add_chrom_denovo_loader(
         trio_gpf, trio_families, trio_denovo,

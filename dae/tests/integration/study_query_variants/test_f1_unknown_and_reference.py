@@ -4,13 +4,12 @@ from typing import Optional, cast
 
 import pytest
 
-from dae.utils.regions import Region
-from dae.testing import setup_pedigree, setup_vcf, \
-    vcf_study
-from dae.variants.family_variant import FamilyAllele
-from dae.testing.foobar_import import foobar_gpf
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.studies.study import GenotypeData
+from dae.testing import setup_pedigree, setup_vcf, vcf_study
+from dae.testing.foobar_import import foobar_gpf
+from dae.utils.regions import Region
+from dae.variants.family_variant import FamilyAllele
 
 
 @pytest.fixture(scope="module")
@@ -53,11 +52,11 @@ bar    8   .  A   T,C,G .    .      .    GT     0/0 0/0 ./. 0/0
                     "include_unknown_person_genotypes": True,
                     "denovo_mode": "denovo",
                     "omission_mode": "omission",
-                }
+                },
             },
             "processing_config": {
-                "include_reference": True
-            }
+                "include_reference": True,
+            },
         })
     return study
 
@@ -77,7 +76,7 @@ def test_all_unknown_variants(
     position: int,
     inheritance: str,
     effects: Optional[list[str]],
-    count: int
+    count: int,
 ) -> None:
     region = Region("bar", position, position)
     vs = list(imported_study.query_variants(
@@ -110,7 +109,7 @@ def test_unknown_and_reference(
     position: int,
     inheritance: str,
     effects: Optional[list[str]],
-    count: int
+    count: int,
 ) -> None:
     region = Region("bar", position, position)
     vs = list(imported_study.query_variants(
@@ -150,7 +149,7 @@ def test_all_unknown_variants_return_reference_or_unknown(
     inheritance: str,
     return_reference: bool,
     return_unknown: bool,
-    count: int
+    count: int,
 ) -> None:
     region = Region("bar", position, position)
     vs = list(imported_study.query_variants(
@@ -183,7 +182,7 @@ def test_reference_and_unknown_return_reference_or_unknown(
     inheritance: str,
     return_reference: bool,
     return_unknown: bool,
-    count: int
+    count: int,
 ) -> None:
     region = Region("bar", position, position)
     vs = list(imported_study.query_variants(

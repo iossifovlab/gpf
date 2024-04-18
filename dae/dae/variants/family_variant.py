@@ -1,29 +1,28 @@
 import copy
 import logging
-
-from typing import Any, Optional, cast, List
+from typing import Any, List, Optional, cast
 
 import numpy as np
-
 from deprecation import deprecated
 
-from dae.pedigrees.family import Family, Person
-from dae.utils.variant_utils import GenotypeType, \
-    is_all_unknown_genotype, \
-    is_reference_genotype, \
-    mat2str
-
-from dae.variants.attributes import GeneticModel, \
-    Inheritance, \
-    TransmissionType, \
-    Role, Sex, Status
-
 from dae.effect_annotation.effect import AlleleEffects
+from dae.pedigrees.family import Family, Person
+from dae.utils.variant_utils import (
+    GenotypeType,
+    is_all_unknown_genotype,
+    is_reference_genotype,
+    mat2str,
+)
+from dae.variants.attributes import (
+    GeneticModel,
+    Inheritance,
+    Role,
+    Sex,
+    Status,
+    TransmissionType,
+)
 from dae.variants.core import Allele
-from dae.variants.variant import \
-    SummaryAllele, \
-    SummaryVariant, \
-    VariantDetails
+from dae.variants.variant import SummaryAllele, SummaryVariant, VariantDetails
 
 logger = logging.getLogger(__name__)
 
@@ -95,7 +94,7 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
         genotype: Optional[np.ndarray],
         best_state: Optional[np.ndarray],
         genetic_model: Optional[GeneticModel] = None,
-        inheritance_in_members: Optional[list[Inheritance]] = None
+        inheritance_in_members: Optional[list[Inheritance]] = None,
     ):
 
         assert isinstance(family, Family)
@@ -239,7 +238,7 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
         if self._best_state is None:
             assert self.gt is not None
             self._best_state = calculate_simple_best_state(
-                self.gt, self.attributes["allele_count"]
+                self.gt, self.attributes["allele_count"],
             )
         return self._best_state
 
@@ -281,10 +280,10 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
                     parent_1 = trio_gt[:, 1]
                     parent_2 = trio_gt[:, 2]
                     inh = self.calc_inheritance_trio(
-                        parent_1, parent_2, child, allele_index
+                        parent_1, parent_2, child, allele_index,
                     )
                     if inh != Inheritance.omission and np.all(
-                        child != allele_index
+                        child != allele_index,
                     ):
                         inh = Inheritance.missing
                 result.append(inh)
@@ -482,7 +481,7 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
         family: Family,
         genotype: Optional[np.ndarray],
         best_state: Optional[np.ndarray],
-        inheritance_in_members: Optional[dict[int, list[Inheritance]]] = None
+        inheritance_in_members: Optional[dict[int, list[Inheritance]]] = None,
     ):
 
         # super(FamilyVariant, self).__init__()
@@ -513,8 +512,8 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
                 self.family,
                 self.gt,
                 self._best_state,
-                inheritance_in_members=self._inheritance_in_members.get(0)
-            )
+                inheritance_in_members=self._inheritance_in_members.get(0),
+            ),
         ]
         # pylint: disable=invalid-name
         assert self.gt is not None
@@ -534,7 +533,7 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
                 self.family,
                 self.gt,
                 self._best_state,
-                inheritance_in_members=inheritance
+                inheritance_in_members=inheritance,
             )
 
             alleles.append(allele)
@@ -669,7 +668,7 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
         if self._best_state is None:
             assert self.gt is not None
             self._best_state = calculate_simple_best_state(
-                self.gt, self.allele_count
+                self.gt, self.allele_count,
             )
         assert self._best_state is not None
         return self._best_state
@@ -715,7 +714,7 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
         return members
 
     def _serialize_inheritance_in_members(
-        self
+        self,
     ) -> dict[int, list[int]]:
         result = {}
         for allele in self.family_alleles:
@@ -731,5 +730,5 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
             "family_index": self.family_index,
             "genotype": self.gt.tolist(),
             "best_state": self.best_state.tolist(),
-            "inheritance_in_members": self._serialize_inheritance_in_members()
+            "inheritance_in_members": self._serialize_inheritance_in_members(),
         }

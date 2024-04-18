@@ -3,15 +3,16 @@ import textwrap
 
 import pytest
 
-from dae.genomic_resources.repository import GenomicResourceProtocolRepo, \
-    GenomicResourceRepo
-from dae.genomic_resources.testing import \
-    build_inmemory_test_repository, convert_to_tab_separated
-from dae.annotation.annotatable import Position
-from dae.annotation.annotatable import Region
-from dae.annotation.annotatable import VCFAllele
-from dae.annotation.annotatable import Annotatable
+from dae.annotation.annotatable import Annotatable, Position, Region, VCFAllele
 from dae.annotation.annotation_factory import build_annotation_pipeline
+from dae.genomic_resources.repository import (
+    GenomicResourceProtocolRepo,
+    GenomicResourceRepo,
+)
+from dae.genomic_resources.testing import (
+    build_inmemory_test_repository,
+    convert_to_tab_separated,
+)
 
 
 @pytest.fixture(scope="module")
@@ -30,7 +31,7 @@ def grr() -> GenomicResourceProtocolRepo:
                 g1        tx2  foo   +      3       9     3        6      1         3          6
                 g2        tx3  bar   -      3       20    3        15     1         3          17
                 """)  # noqa
-        }
+        },
     })
 
 
@@ -47,7 +48,7 @@ def test_basic(
     annotatable: Annotatable,
     effect: str,
     genes: str,
-    grr: GenomicResourceRepo
+    grr: GenomicResourceRepo,
 ) -> None:
     pipeline = build_annotation_pipeline(
         pipeline_config_str=textwrap.dedent("""

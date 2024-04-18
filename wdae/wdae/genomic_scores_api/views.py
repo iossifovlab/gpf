@@ -1,9 +1,10 @@
 from typing import Optional
-from rest_framework import status
-from rest_framework.response import Response
-from rest_framework.request import Request
 
 from query_base.query_base import QueryBaseView
+from rest_framework import status
+from rest_framework.request import Request
+from rest_framework.response import Response
+
 from dae.genomic_resources.histogram import NumberHistogram
 
 
@@ -52,7 +53,7 @@ class GenomicScoreDescsView(QueryBaseView):
     """View for accessing inner genomic scores data from federations."""
 
     def get(
-        self, _request: Request, score_id: Optional[str] = None
+        self, _request: Request, score_id: Optional[str] = None,
     ) -> Response:
         """Convert all genomic score descs into a JSON list."""
         registry = self.gpf_instance.genomic_scores
@@ -62,7 +63,7 @@ class GenomicScoreDescsView(QueryBaseView):
             if score_id not in registry:
                 return Response(status=status.HTTP_404_NOT_FOUND)
             scores = [
-                (score_id, registry[score_id])
+                (score_id, registry[score_id]),
             ]
         else:
             scores = registry.get_scores()

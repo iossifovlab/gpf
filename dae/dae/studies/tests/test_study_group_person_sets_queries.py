@@ -4,15 +4,13 @@ import textwrap
 
 import pytest
 
-from dae.genotype_storage.genotype_storage_registry import \
-    GenotypeStorageRegistry
-
-from dae.studies.study import GenotypeData, GenotypeDataGroup
+from dae.genotype_storage.genotype_storage_registry import (
+    GenotypeStorageRegistry,
+)
 from dae.gpf_instance import GPFInstance
-
-from dae.testing import setup_pedigree, setup_vcf, setup_dataset, vcf_study
+from dae.studies.study import GenotypeData, GenotypeDataGroup
+from dae.testing import setup_dataset, setup_pedigree, setup_vcf, vcf_study
 from dae.testing.acgt_import import acgt_gpf
-
 
 GENOTYPE_STORAGE_REGISTRY = GenotypeStorageRegistry()
 
@@ -20,7 +18,7 @@ GENOTYPE_STORAGE_REGISTRY = GenotypeStorageRegistry()
 @pytest.fixture(scope="module", params=["duckdb", "inmemory"])
 def gpf_fixture(
     request: pytest.FixtureRequest,
-    tmp_path_factory: pytest.TempPathFactory
+    tmp_path_factory: pytest.TempPathFactory,
 ) -> GPFInstance:
     root_path = tmp_path_factory.mktemp(
         "study_group_person_set_queries_genotype_storages")
@@ -31,14 +29,14 @@ def gpf_fixture(
             "id": "duckdb",
             "storage_type": "duckdb",
             "db": "duckdb_storage/dev_storage.db",
-            "base_dir": str(root_path)
+            "base_dir": str(root_path),
         },
 
         # Filesystem InMemory
         "inmemory": {
             "id": "inmemory",
             "storage_type": "inmemory",
-            "dir": f"{root_path}/genotype_filesystem_data"
+            "dir": f"{root_path}/genotype_filesystem_data",
         },
     }
 
@@ -83,14 +81,14 @@ f1.3     ch3      dad3  mom3  2   2      prb
 chr1   1   .  A   C   .    .      .    GT     0/0  0/0  0/1 0/0  0/0  0/0
 chr1   2   .  C   G   .    .      .    GT     0/0  0/0  0/0 0/0  0/0  0/1
 chr1   3   .  G   T   .    .      .    GT     0/0  1/0  0/1 0/0  0/0  0/0
-        """)  # noqa
+        """)
 
     project_config_update = {
         "input": {
             "vcf": {
                 "denovo_mode": "denovo",
                 "omission_mode": "omission",
-            }
+            },
         },
     }
     study = vcf_study(
@@ -107,8 +105,8 @@ chr1   3   .  G   T   .    .      .    GT     0/0  1/0  0/1 0/0  0/0  0/0
                     "sources": [
                         {
                             "from": "pedigree",
-                            "source": "status"
-                        }
+                            "source": "status",
+                        },
                     ],
                     "default": {
                         "color": "#aaaaaa",
@@ -121,23 +119,23 @@ chr1   3   .  G   T   .    .      .    GT     0/0  1/0  0/1 0/0  0/0  0/0
                             "id": "autism",
                             "name": "autism",
                             "values": [
-                                "affected"
-                            ]
+                                "affected",
+                            ],
                         },
                         {
                             "color": "#00ff00",
                             "id": "unaffected",
                             "name": "unaffected",
                             "values": [
-                                "unaffected"
-                            ]
+                                "unaffected",
+                            ],
                         },
-                    ]
+                    ],
                 },
                 "selected_person_set_collections": [
-                    "phenotype"
-                ]
-            }
+                    "phenotype",
+                ],
+            },
         })
     return study
 
@@ -169,14 +167,14 @@ f2.3     ch4      dad3  mom3  2   0      prb
 chr1   5   .  A   C   .    .      .    GT     0/0  0/0  0/1 0/0  0/0  0/0 0/1
 chr1   6   .  C   G   .    .      .    GT     0/0  0/0  0/0 0/0  0/0  0/1 0/0
 chr1   7   .  G   T   .    .      .    GT     0/0  1/0  0/1 0/0  0/0  0/0 0/1
-        """)  # noqa
+        """)
 
     project_config_update = {
         "input": {
             "vcf": {
                 "denovo_mode": "denovo",
                 "omission_mode": "omission",
-            }
+            },
         },
     }
     study = vcf_study(
@@ -193,8 +191,8 @@ chr1   7   .  G   T   .    .      .    GT     0/0  1/0  0/1 0/0  0/0  0/0 0/1
                     "sources": [
                         {
                             "from": "pedigree",
-                            "source": "status"
-                        }
+                            "source": "status",
+                        },
                     ],
                     "default": {
                         "color": "#aaaaaa",
@@ -207,32 +205,32 @@ chr1   7   .  G   T   .    .      .    GT     0/0  1/0  0/1 0/0  0/0  0/0 0/1
                             "id": "epilepsy",
                             "name": "epilepsy",
                             "values": [
-                                "affected"
-                            ]
+                                "affected",
+                            ],
                         },
                         {
                             "color": "#00ff00",
                             "id": "unaffected",
                             "name": "unaffected",
                             "values": [
-                                "unaffected"
-                            ]
+                                "unaffected",
+                            ],
                         },
-                    ]
+                    ],
                 },
                 "selected_person_set_collections": [
-                    "phenotype"
-                ]
-            }
+                    "phenotype",
+                ],
+            },
         })
     return study
 
 
-@pytest.fixture
+@pytest.fixture()
 def dataset(
     gpf_fixture: GPFInstance,
     study_1: GenotypeData,
-    study_2: GenotypeData
+    study_2: GenotypeData,
 ) -> GenotypeDataGroup:
     root_path = pathlib.Path(gpf_fixture.dae_dir)
     (root_path / "dataset").mkdir(exist_ok=True)
@@ -291,12 +289,12 @@ def test_dataset_simple(dataset: GenotypeDataGroup) -> None:
         (("phenotype", ["epilepsy", "autism", "unaffected"]), 6),
         (("phenotype",
           ["epilepsy", "autism", "unaffected", "unspecified"]), 8),
-    ]
+    ],
 )
 def test_dataset_person_sets_queries(
     dataset: GenotypeDataGroup,
     psc_query: tuple[str, list[str]],
-    count: int
+    count: int,
 ) -> None:
     vs = list(dataset.query_variants(person_set_collection=psc_query))
     assert len(vs) == count

@@ -1,23 +1,21 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,C0415,
 
 import textwrap
-import requests
 from typing import Callable, ContextManager
 
 import pytest
 import pytest_mock
-
+import requests
 from gpf_instance.gpf_instance import WGPFInstance
 
-from dae.testing import setup_directories, setup_genome, \
-    setup_empty_gene_models
-from dae.genomic_resources.repository_factory import \
-    build_genomic_resource_repository
-from wdae_tests.integration.testing import setup_wgpf_instance, \
-    LiveServer
+from dae.genomic_resources.repository_factory import (
+    build_genomic_resource_repository,
+)
+from dae.testing import setup_directories, setup_empty_gene_models, setup_genome
+from wdae_tests.integration.testing import LiveServer, setup_wgpf_instance
 
 
-@pytest.fixture
+@pytest.fixture()
 def wgpf_fixture(tmp_path_factory: pytest.TempPathFactory) -> WGPFInstance:
     root_path = tmp_path_factory.mktemp("eager_loading_wgpf_instance")
 
@@ -31,21 +29,21 @@ def wgpf_fixture(tmp_path_factory: pytest.TempPathFactory) -> WGPFInstance:
         f"""
         >chrA
         {100 * "A"}
-        """
+        """,
     )
     setup_empty_gene_models(
         root_path / "alla_gpf" / "empty_gene_models" / "empty_genes.txt")
     local_repo = build_genomic_resource_repository({
         "id": "alla_local",
         "type": "directory",
-        "directory": str(root_path / "alla_gpf")
+        "directory": str(root_path / "alla_gpf"),
     })
 
     gpf = setup_wgpf_instance(
         root_path / "gpf_instance",
         reference_genome_id="genome",
         gene_models_id="empty_gene_models",
-        grr=local_repo
+        grr=local_repo,
     )
     return gpf
 
@@ -54,18 +52,18 @@ def test_eager_loading(
     mocker: pytest_mock.MockerFixture,
     wgpf_fixture: WGPFInstance,
     wdae_django_server: Callable[
-        [WGPFInstance, str], ContextManager[LiveServer]]
+        [WGPFInstance, str], ContextManager[LiveServer]],
 ) -> None:
 
     mocker.patch.object(
         wgpf_fixture,
         "get_all_genotype_data",
-        return_value=[]
+        return_value=[],
     )
     mocker.patch.object(
         wgpf_fixture,
         "load",
-        return_value=wgpf_fixture
+        return_value=wgpf_fixture,
     )
 
     with wdae_django_server(
@@ -82,18 +80,18 @@ def test_no_eager_loading(
     mocker: pytest_mock.MockerFixture,
     wgpf_fixture: WGPFInstance,
     wdae_django_server: Callable[
-        [WGPFInstance, str], ContextManager[LiveServer]]
+        [WGPFInstance, str], ContextManager[LiveServer]],
 ) -> None:
 
     mocker.patch.object(
         wgpf_fixture,
         "get_all_genotype_data",
-        return_value=[]
+        return_value=[],
     )
     mocker.patch.object(
         wgpf_fixture,
         "load",
-        return_value=wgpf_fixture
+        return_value=wgpf_fixture,
     )
 
     with wdae_django_server(
@@ -110,7 +108,7 @@ def test_example_request(
     mocker: pytest_mock.MockerFixture,
     wgpf_fixture: WGPFInstance,
     wdae_django_server: Callable[
-        [WGPFInstance, str], ContextManager[LiveServer]]
+        [WGPFInstance, str], ContextManager[LiveServer]],
 ) -> None:
 
     with wdae_django_server(

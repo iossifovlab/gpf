@@ -1,10 +1,9 @@
 from __future__ import annotations
 
-import re
-import math
 import abc
-
-from typing import cast, Any, Callable, Type
+import math
+import re
+from typing import Any, Callable, Type, cast
 
 
 class Aggregator(abc.ABC):
@@ -23,7 +22,7 @@ class Aggregator(abc.ABC):
 
     @abc.abstractmethod
     def _add_internal(self, value: Any, **kwargs: Any) -> None:
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def clear(self) -> None:
         self.total_count = 0
@@ -32,10 +31,10 @@ class Aggregator(abc.ABC):
 
     @abc.abstractmethod
     def _clear_internal(self) -> None:
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def get_final(self) -> Any:
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def get_total_count(self) -> int:
         return self.total_count
@@ -196,9 +195,7 @@ class ModeAggregator(Aggregator):
 
             count_values[count].append(value)
 
-            if current_max is None:
-                current_max = count
-            elif current_max < count:
+            if current_max is None or current_max < count:
                 current_max = count
         modes = count_values[current_max]
         modes.sort()
@@ -274,7 +271,7 @@ AGGREGATOR_CLASS_DICT: dict[str, Type[Aggregator]] = {
     "mode": ModeAggregator,
     "join": JoinAggregator,
     "list": ListAggregator,
-    "dict": DictAggregator
+    "dict": DictAggregator,
 }
 
 AGGREGATOR_SCHEMA = {
@@ -305,7 +302,7 @@ def create_aggregator_definition(aggregator_type: str) -> dict[str, Any]:
         separator = join_match.groups()[1]
         return {
             "name": "join",
-            "args": [separator]
+            "args": [separator],
         }
     return {
         "name": aggregator_type,

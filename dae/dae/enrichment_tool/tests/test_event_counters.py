@@ -1,31 +1,30 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-from dae.variants.attributes import Inheritance
-from dae.studies.study import GenotypeData
-
-from dae.enrichment_tool.event_counters import \
-    filter_denovo_one_event_per_family, \
-    filter_denovo_one_gene_per_recurrent_events, \
-    filter_denovo_one_gene_per_events, \
-    get_sym_2_fn, \
-    EnrichmentSingleResult, \
-    filter_overlapping_events, \
-    EventsCounter, \
-    GeneEventsCounter, \
-    EVENT_COUNTERS
-
+from dae.enrichment_tool.event_counters import (
+    EVENT_COUNTERS,
+    EnrichmentSingleResult,
+    EventsCounter,
+    GeneEventsCounter,
+    filter_denovo_one_event_per_family,
+    filter_denovo_one_gene_per_events,
+    filter_denovo_one_gene_per_recurrent_events,
+    filter_overlapping_events,
+    get_sym_2_fn,
+)
 from dae.enrichment_tool.genotype_helper import GenotypeHelper
+from dae.studies.study import GenotypeData
+from dae.variants.attributes import Inheritance
 
 
 def test_filter_denovo_one_event_per_family(
         f1_trio: GenotypeData) -> None:
     variants = list(
-        f1_trio.query_variants(inheritance=str(Inheritance.denovo.name))
+        f1_trio.query_variants(inheritance=str(Inheritance.denovo.name)),
     )
     assert len(variants) == 5
     variant_events = GenotypeHelper.collect_denovo_events(variants)
 
     fv = filter_denovo_one_event_per_family(
-        variant_events, set(["missense", "synonymous"])
+        variant_events, set(["missense", "synonymous"]),
     )
 
     assert len(fv) == 3
@@ -35,13 +34,13 @@ def test_filter_denovo_one_event_per_family(
 def test_filter_denovo_one_gene_per_recurrent_events(
         f1_trio: GenotypeData) -> None:
     variants = list(
-        f1_trio.query_variants(inheritance=str(Inheritance.denovo.name))
+        f1_trio.query_variants(inheritance=str(Inheritance.denovo.name)),
     )
     assert len(variants) == 5
     variant_events = GenotypeHelper.collect_denovo_events(variants)
 
     fv = filter_denovo_one_gene_per_recurrent_events(
-        variant_events, set(["missense", "synonymous"])
+        variant_events, set(["missense", "synonymous"]),
     )
 
     assert len(fv) == 1
@@ -50,13 +49,13 @@ def test_filter_denovo_one_gene_per_recurrent_events(
 
 def test_filter_denovo_one_gene_per_events(f1_trio: GenotypeData) -> None:
     variants = list(
-        f1_trio.query_variants(inheritance=str(Inheritance.denovo.name))
+        f1_trio.query_variants(inheritance=str(Inheritance.denovo.name)),
     )
     assert len(variants) == 5
     variant_events = GenotypeHelper.collect_denovo_events(variants)
 
     fv = filter_denovo_one_gene_per_events(
-        variant_events, set(["missense", "synonymous"])
+        variant_events, set(["missense", "synonymous"]),
     )
 
     assert len(fv) == 2
@@ -65,7 +64,7 @@ def test_filter_denovo_one_gene_per_events(f1_trio: GenotypeData) -> None:
 
 def test_get_sym_2_fn(f1_trio: GenotypeData) -> None:
     variants = list(
-        f1_trio.query_variants(inheritance=str(Inheritance.denovo.name))
+        f1_trio.query_variants(inheritance=str(Inheritance.denovo.name)),
     )
     assert len(variants) == 5
     variant_events = GenotypeHelper.collect_denovo_events(variants)
@@ -79,7 +78,7 @@ def test_get_sym_2_fn(f1_trio: GenotypeData) -> None:
 
 def test_filter_overlapping_events(f1_trio: GenotypeData) -> None:
     overlapping_events = filter_overlapping_events(
-        [["SAMD11"], ["SAMD11"], ["PLEKHN1"]], ["SAMD11", "POGZ"]
+        [["SAMD11"], ["SAMD11"], ["PLEKHN1"]], ["SAMD11", "POGZ"],
     )
 
     assert len(overlapping_events) == 2
@@ -98,7 +97,7 @@ def test_overlap_enrichment_result_dict(f1_trio: GenotypeData) -> None:
         len(events),
         len(overlapped),
         0.12345,
-        0.54321
+        0.54321,
     )
 
     assert (
@@ -120,7 +119,7 @@ def test_counter_base_counters() -> None:
 
 def test_events_counter(f1_trio: GenotypeData) -> None:
     variants = list(
-        f1_trio.query_variants(inheritance=str(Inheritance.denovo.name))
+        f1_trio.query_variants(inheritance=str(Inheritance.denovo.name)),
     )
     psc = f1_trio.get_person_set_collection("phenotype")
     assert psc is not None
@@ -158,7 +157,7 @@ def test_events_counter(f1_trio: GenotypeData) -> None:
 
 def test_gene_events_counter(f1_trio: GenotypeData) -> None:
     variants = list(
-        f1_trio.query_variants(inheritance=str(Inheritance.denovo.name))
+        f1_trio.query_variants(inheritance=str(Inheritance.denovo.name)),
     )
     psc = f1_trio.get_person_set_collection("phenotype")
     assert psc is not None

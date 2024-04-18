@@ -2,18 +2,19 @@
 import logging
 from typing import Any
 
-from dae.annotation.annotation_pipeline import AnnotationPipeline
-from dae.annotation.annotation_pipeline import Annotator
-from dae.annotation.annotation_pipeline import AnnotatorInfo
-from dae.annotation.annotation_pipeline import AttributeInfo
-from dae.genomic_resources.genomic_context import get_genomic_context
-
-from dae.genomic_resources.reference_genome import ReferenceGenome
-from dae.genomic_resources.reference_genome import \
-    build_reference_genome_from_resource
-
 from dae.annotation.annotatable import Annotatable, VCFAllele
+from dae.annotation.annotation_pipeline import (
+    AnnotationPipeline,
+    Annotator,
+    AnnotatorInfo,
+    AttributeInfo,
+)
 from dae.annotation.annotator_base import AnnotatorBase
+from dae.genomic_resources.genomic_context import get_genomic_context
+from dae.genomic_resources.reference_genome import (
+    ReferenceGenome,
+    build_reference_genome_from_resource,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +46,7 @@ class NormalizeAlleleAnnotator(AnnotatorBase):
             info.attributes = [AttributeInfo("normalized_allele",
                                              "normalized_allele", True, {})]
         super().__init__(pipeline, info, {
-            "normalized_allele": ("annotatable", "Normalized allele.")
+            "normalized_allele": ("annotatable", "Normalized allele."),
         })
 
         self.genome = genome

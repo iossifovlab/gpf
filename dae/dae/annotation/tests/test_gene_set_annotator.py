@@ -1,16 +1,19 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 
 import textwrap
+
 import pytest
+
 from dae.annotation.annotatable import VCFAllele
 from dae.annotation.annotation_factory import build_annotation_pipeline
 from dae.annotation.annotation_pipeline import AnnotatorInfo
 from dae.annotation.gene_set_annotator import GeneSetAnnotator
-from dae.testing import setup_directories
-from dae.genomic_resources.repository_factory import \
-    build_genomic_resource_repository
 from dae.genomic_resources.repository import GenomicResourceRepo
-from dae.testing.foobar_import import foobar_genome, foobar_genes
+from dae.genomic_resources.repository_factory import (
+    build_genomic_resource_repository,
+)
+from dae.testing import setup_directories
+from dae.testing.foobar_import import foobar_genes, foobar_genome
 
 
 @pytest.fixture(scope="module")
@@ -32,14 +35,14 @@ def test_grr(tmp_path_factory: pytest.TempPathFactory) -> GenomicResourceRepo:
                     "genomic_resource.yaml": textwrap.dedent("""
                         type: genome
                         filename: chrAll.fa
-                    """)
+                    """),
                 },
                 "foobar_genes": {
                     "genomic_resource.yaml": textwrap.dedent("""
                         type: gene_models
                         filename: genes.txt
                         format: refflat
-                    """)
+                    """),
                 },
                 "foobar_gene_set_collection": {
                     "genomic_resource.yaml": textwrap.dedent("""
@@ -61,21 +64,21 @@ def test_grr(tmp_path_factory: pytest.TempPathFactory) -> GenomicResourceRepo:
                         "set_2.txt": textwrap.dedent("""set_2
                             random test gene set description
                             g2
-                        """)
-                    }
-                }
-            }
-        }
+                        """),
+                    },
+                },
+            },
+        },
     )
     return build_genomic_resource_repository(file_name=str(
-        root_path / "grr.yaml"
+        root_path / "grr.yaml",
     ))
 
 
 def test_gene_set_annotator(test_grr: GenomicResourceRepo) -> None:
     resource = test_grr.get_resource("foobar_gene_set_collection")
     annotator = GeneSetAnnotator(
-        None, AnnotatorInfo("gosho", [], {}), resource, "set_0", "gene_list"
+        None, AnnotatorInfo("gosho", [], {}), resource, "set_0", "gene_list",
     )
 
     result = annotator.annotate(None, {"gene_list": ["g1"]})
@@ -89,11 +92,11 @@ def test_gene_set_annotator(test_grr: GenomicResourceRepo) -> None:
 
 
 def test_gene_score_annotator_used_context_attributes(
-    test_grr: GenomicResourceRepo
+    test_grr: GenomicResourceRepo,
 ) -> None:
     resource = test_grr.get_resource("foobar_gene_set_collection")
     annotator = GeneSetAnnotator(
-        None, AnnotatorInfo("gosho", [], {}), resource, "set_0", "gene_list"
+        None, AnnotatorInfo("gosho", [], {}), resource, "set_0", "gene_list",
     )
 
     assert annotator.used_context_attributes == ("gene_list",)
@@ -118,7 +121,7 @@ def test_gene_set_annotator_in_pipeline(
     pos: int,
     ref: str,
     alt: str,
-    expected: bool
+    expected: bool,
 ) -> None:
     pipeline = build_annotation_pipeline(pipeline_config_str=textwrap.dedent(
         f"""
@@ -129,7 +132,7 @@ def test_gene_set_annotator_in_pipeline(
             resource_id: foobar_gene_set_collection
             gene_set_id: {set_id}
             input_gene_list: gene_list
-        """),  # noqa
+        """),
         grr_repository=test_grr)
 
     allele = VCFAllele(chrom, pos, ref, alt)

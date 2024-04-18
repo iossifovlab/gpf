@@ -1,16 +1,20 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import textwrap
 
-import yaml
 import pytest
+import yaml
 
+from dae.testing import (
+    alla_gpf,
+    denovo_study,
+    setup_denovo,
+    setup_pedigree,
+    study_update,
+)
 from studies.study_wrapper import StudyWrapper
 
-from dae.testing import setup_pedigree, setup_denovo, denovo_study, alla_gpf, \
-    study_update
 
-
-@pytest.fixture
+@pytest.fixture()
 def gpf_fixture(tmp_path_factory):
     root_path = tmp_path_factory.mktemp(
         "genotype_browser_columns_config")
@@ -18,7 +22,7 @@ def gpf_fixture(tmp_path_factory):
     return gpf_instance
 
 
-@pytest.fixture
+@pytest.fixture()
 def trio_study(tmp_path_factory, gpf_fixture):
     root_path = tmp_path_factory.mktemp(
         "genotype_browser_columns_config")
@@ -35,7 +39,7 @@ def trio_study(tmp_path_factory, gpf_fixture):
         """
           familyId  location  variant    bestState
           f1        foo:7     sub(A->G)  2||2||1||1/0||0||1||0
-        """
+        """,
     )
 
     study = denovo_study(
@@ -43,7 +47,7 @@ def trio_study(tmp_path_factory, gpf_fixture):
         "trio", ped_path, [vcf_path],
         gpf_fixture,
         study_config_update={
-            "id": "trio"
+            "id": "trio",
         })
     return study
 
@@ -52,7 +56,7 @@ def test_genotype_browser_preview_columns_default(trio_study):
     config = trio_study.config.genotype_browser
 
     assert config.preview_columns == [
-        "family", "variant", "genotype", "effect", "gene_scores", "freq"
+        "family", "variant", "genotype", "effect", "gene_scores", "freq",
     ]
 
 
@@ -65,7 +69,7 @@ def test_genotype_browser_download_columns_default(trio_study):
         "carriers", "inheritance", "phenotypes",
         "par_called", "allele_freq",
         "effect", "geneeffect", "effectdetails",
-        "gene_scores"
+        "gene_scores",
     ]
 
 
@@ -80,11 +84,11 @@ def test_genotype_browser_preview_columns_ext(trio_study, gpf_fixture):
                         source: aaa
             preview_columns_ext:
                 - aaa
-        """))
+        """)),
     )
     config = study.config.genotype_browser
     assert config.preview_columns_ext == [
-        "aaa"
+        "aaa",
     ]
 
 
@@ -99,11 +103,11 @@ def test_genotype_browser_download_columns_ext(trio_study, gpf_fixture):
                         source: aaa
             download_columns_ext:
                 - aaa
-        """))
+        """)),
     )
     config = study.config.genotype_browser
     assert config.download_columns_ext == [
-        "aaa"
+        "aaa",
     ]
 
 
@@ -118,11 +122,11 @@ def test_study_wrapper_preview_columns_ext(trio_study, gpf_fixture):
                         source: aaa
             preview_columns_ext:
                 - aaa
-        """))
+        """)),
     )
     wrapper = StudyWrapper(study, None, None, None)
     assert wrapper.preview_columns == [
-        "family", "variant", "genotype", "effect", "gene_scores", "freq", "aaa"
+        "family", "variant", "genotype", "effect", "gene_scores", "freq", "aaa",
     ]
 
 
@@ -137,7 +141,7 @@ def test_study_wrapper_download_columns_ext(trio_study, gpf_fixture):
                         source: aaa
             download_columns_ext:
                 - aaa
-        """))
+        """)),
     )
     wrapper = StudyWrapper(study, None, None, None)
     assert wrapper.download_columns == [
@@ -147,5 +151,5 @@ def test_study_wrapper_download_columns_ext(trio_study, gpf_fixture):
         "par_called", "allele_freq",
         "effect", "geneeffect", "effectdetails",
         "gene_scores",
-        "aaa"
+        "aaa",
     ]

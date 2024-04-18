@@ -1,15 +1,16 @@
-from typing import cast, Any
+from typing import Any, cast
 
 import yaml
 
 from dae.configuration.study_config_builder import StudyConfigBuilder
-from dae.import_tools.import_tools import save_study_config, ImportProject
-
-from dae.task_graph.graph import TaskGraph
-from dae.schema2_storage.schema2_import_storage import Schema2ImportStorage, \
-    Schema2DatasetLayout, \
-    schema2_dataset_layout
 from dae.duckdb_storage.duckdb_genotype_storage import DuckDbGenotypeStorage
+from dae.import_tools.import_tools import ImportProject, save_study_config
+from dae.schema2_storage.schema2_import_storage import (
+    Schema2DatasetLayout,
+    Schema2ImportStorage,
+    schema2_dataset_layout,
+)
+from dae.task_graph.graph import TaskGraph
 
 
 class DuckDbImportStorage(Schema2ImportStorage):
@@ -26,7 +27,7 @@ class DuckDbImportStorage(Schema2ImportStorage):
 
     @classmethod
     def _do_study_config(
-        cls, project: ImportProject, study_tables: Schema2DatasetLayout
+        cls, project: ImportProject, study_tables: Schema2DatasetLayout,
     ) -> None:
         genotype_storage: DuckDbGenotypeStorage = \
             cast(DuckDbGenotypeStorage, project.get_genotype_storage())

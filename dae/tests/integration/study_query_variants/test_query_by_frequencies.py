@@ -1,11 +1,16 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
 
-from dae.testing import setup_pedigree, setup_vcf, setup_denovo, \
-    vcf_study, denovo_study
-from dae.testing.alla_import import alla_gpf
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.studies.study import GenotypeData
+from dae.testing import (
+    denovo_study,
+    setup_denovo,
+    setup_pedigree,
+    setup_vcf,
+    vcf_study,
+)
+from dae.testing.alla_import import alla_gpf
 
 
 @pytest.fixture(scope="module")

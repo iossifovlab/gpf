@@ -1,32 +1,26 @@
 from __future__ import annotations
 
-import uuid
 import logging
-
+import uuid
 from datetime import timedelta
-from typing import Any, cast, Callable
-from typing import Optional, Type, Union
 from functools import wraps
-
-from django.db import models, transaction
-from django.core.mail import send_mail
-from django.core.exceptions import ObjectDoesNotExist, ValidationError
-
-from django.contrib.auth.models import \
-    User, \
-    AbstractBaseUser, \
-    BaseUserManager, \
-    PermissionsMixin
-
-from django.contrib.sessions.models import Session
-from django.utils import timezone
-from django.contrib.auth.models import Group
-from django.db.models.signals import m2m_changed, post_delete, pre_delete
-
-from oauth2_provider.models import \
-    get_application_model, Application
+from typing import Any, Callable, Optional, Type, Union, cast
 
 from datasets_api.permissions import get_directly_allowed_genotype_data
+from django.contrib.auth.models import (
+    AbstractBaseUser,
+    BaseUserManager,
+    Group,
+    PermissionsMixin,
+    User,
+)
+from django.contrib.sessions.models import Session
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
+from django.core.mail import send_mail
+from django.db import models, transaction
+from django.db.models.signals import m2m_changed, post_delete, pre_delete
+from django.utils import timezone
+from oauth2_provider.models import Application, get_application_model
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +29,7 @@ class WdaeUserManager(BaseUserManager):
     """User manager for wdae users."""
 
     def _create_user(
-        self, email: str, password: Optional[str], **kwargs: Any
+        self, email: str, password: Optional[str], **kwargs: Any,
     ) -> WdaeUser:
         """Create and save a User with the given email and password."""
         if not email:
@@ -52,7 +46,7 @@ class WdaeUserManager(BaseUserManager):
         return user
 
     def get_or_create(  # type: ignore
-        self, **kwargs: Any
+        self, **kwargs: Any,
     ) -> tuple[WdaeUser, bool]:
         try:
             return cast(WdaeUser, self.get(**kwargs)), False
@@ -64,14 +58,14 @@ class WdaeUserManager(BaseUserManager):
 
     def create_user(
         self, email: str, password: Optional[str] = None,
-        **kwargs: Any
+        **kwargs: Any,
     ) -> WdaeUser:
         user = self._create_user(email, password, **kwargs)
         return user
 
     def create_superuser(
         self, email: str, password: str,
-        **kwargs: Any
+        **kwargs: Any,
     ) -> WdaeUser:
         """Create and save a superuser."""
         user = self._create_user(email, password, **kwargs)
@@ -114,7 +108,7 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
 
     def email_user(
         self, subject: str, message: str,
-        from_email: Optional[str] = None
+        from_email: Optional[str] = None,
     ) -> int:
         """Send an email to the user."""
         # pylint: disable=import-outside-toplevel
@@ -183,7 +177,7 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
     @staticmethod
     def change_password(
         verification_path: Union[SetPasswordCode, ResetPasswordCode],
-        new_password: str
+        new_password: str,
     ) -> WdaeUser:
         """Initiate password reset for the user."""
         user = verification_path.user
@@ -194,7 +188,7 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
         AuthenticationLog(
             email=user.email,
             time=timezone.now(),
-            failed_attempt=0
+            failed_attempt=0,
         ).save()
 
         verification_path.delete()
@@ -220,14 +214,14 @@ class BaseVerificationCode(models.Model):
         return str(self.path)
 
     def validate(self) -> bool:
-        raise NotImplementedError()
+        raise NotImplementedError
 
     class Meta:  # pylint: disable=too-few-public-methods
         abstract = True
 
     @classmethod
     def get_code(
-        cls, user: WdaeUser
+        cls, user: WdaeUser,
     ) -> Optional[BaseVerificationCode]:
         """Get a verification code for a user."""
         try:
@@ -303,7 +297,7 @@ class AuthenticationLog(models.Model):
     def get_last_login_for(email: str) -> Optional[AuthenticationLog]:
         """Get the latest authentication attempt for a specified email."""
         query = AuthenticationLog.objects.filter(  # pylint: disable=no-member
-            email__iexact=email
+            email__iexact=email,
         ).order_by("-time", "-failed_attempt")
         try:
             result = query[0]
@@ -370,13 +364,13 @@ class AuthenticationLog(models.Model):
         login_attempt = AuthenticationLog(
             email=email,
             time=timezone.now().replace(microsecond=0),
-            failed_attempt=failed_attempt
+            failed_attempt=failed_attempt,
         )
         login_attempt.save()
 
 
 def staff_update(
-    sender: Any, **kwargs: Any  # pylint: disable=unused-argument
+    sender: Any, **kwargs: Any,  # pylint: disable=unused-argument
 ) -> None:
     """Update if user is part of staff when SUPERUSER_GROUP is added/rmed."""
     for key in ["action", "instance", "reverse"]:
@@ -393,7 +387,7 @@ def staff_update(
     with transaction.atomic():
         for user in users:
             should_be_staff = user.groups.filter(
-                name=WdaeUser.SUPERUSER_GROUP
+                name=WdaeUser.SUPERUSER_GROUP,
             ).exists()
             if user.is_staff != should_be_staff:
                 user.is_staff = should_be_staff
@@ -401,7 +395,7 @@ def staff_update(
 
 
 def group_post_delete(
-    sender: Type[Group], **kwargs: Any  # pylint: disable=unused-argument
+    sender: Type[Group], **kwargs: Any,  # pylint: disable=unused-argument
 ) -> None:
     """Automatically remove staff privileges of SUPERUSER_GROUP users.
 
@@ -425,7 +419,7 @@ def group_post_delete(
 
 # a hack to save the users the group had, used in the post_delete signal
 def group_pre_delete(
-    sender: Type[Group], **kwargs: Any  # pylint: disable=unused-argument
+    sender: Type[Group], **kwargs: Any,  # pylint: disable=unused-argument
 ) -> None:
     """Attach user-ids when a group is being deleted.
 
@@ -512,7 +506,7 @@ def send_reset_inactive_acc_email(user: WdaeUser) -> None:
 
 def send_reset_email(
     user: WdaeUser, verif_path: BaseVerificationCode,
-    by_admin: bool = False
+    by_admin: bool = False,
 ) -> None:
     """Return dict with subject and message of the email."""
     # pylint: disable=import-outside-toplevel
@@ -528,7 +522,7 @@ def send_reset_email(
 
 
 def _create_verif_email(
-    endpoint: str, path: str, verification_path: str
+    endpoint: str, path: str, verification_path: str,
 ) -> dict[str, str]:
     message = (
         "Welcome to GPF: Genotype and Phenotype in Families! "
@@ -548,7 +542,7 @@ def _create_verif_email(
 
 
 def _create_reset_mail(
-    endpoint: str, path: str, verification_path: str, by_admin: bool = False
+    endpoint: str, path: str, verification_path: str, by_admin: bool = False,
 ) -> dict[str, str]:
     message = (
         "Hello. You have requested to reset your password for "

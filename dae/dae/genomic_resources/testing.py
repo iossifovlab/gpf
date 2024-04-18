@@ -1,37 +1,36 @@
 """Provides tools usefult for testing."""
 from __future__ import annotations
 
-import os
 import contextlib
-import pathlib
-import logging
-import threading
-import tempfile
 import gzip
 import importlib
-import textwrap
-
-from typing import Any, Union, cast, Generator, \
-    ContextManager, Optional
-from collections.abc import Callable
+import logging
 import multiprocessing as mp
+import os
+import pathlib
+import tempfile
+import textwrap
+import threading
+from collections.abc import Callable, Generator
 from functools import partial
-
 from http.server import HTTPServer  # ThreadingHTTPServer
-from s3fs.core import S3FileSystem
-
+from typing import Any, ContextManager, Optional, Union, cast
 
 import pysam
+from s3fs.core import S3FileSystem
 
-from dae.genomic_resources.repository import \
-    GenomicResource, \
-    GenomicResourceProtocolRepo
-from dae.genomic_resources.fsspec_protocol import \
-    FsspecReadWriteProtocol, FsspecReadOnlyProtocol, \
-    build_fsspec_protocol, build_inmemory_protocol
-from dae.genomic_resources.reference_genome import ReferenceGenome
+from dae.genomic_resources.fsspec_protocol import (
+    FsspecReadOnlyProtocol,
+    FsspecReadWriteProtocol,
+    build_fsspec_protocol,
+    build_inmemory_protocol,
+)
 from dae.genomic_resources.gene_models import GeneModels
-
+from dae.genomic_resources.reference_genome import ReferenceGenome
+from dae.genomic_resources.repository import (
+    GenomicResource,
+    GenomicResourceProtocolRepo,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -163,8 +162,8 @@ def setup_dae_transmitted(
     setup_directories(root_path, {
         "dae_transmitted_data": {
             "tr.txt": summary,
-            "tr-TOOMANY.txt": toomany
-        }
+            "tr-TOOMANY.txt": toomany,
+        },
     })
 
     # pylint: disable=no-member
@@ -200,11 +199,12 @@ def setup_genome(out_path: pathlib.Path, content: str) -> ReferenceGenome:
             type: genome
 
             filename: {out_path.name}
-        """)
+        """),
     })
     # pylint: disable=import-outside-toplevel
-    from dae.genomic_resources.reference_genome import \
-        build_reference_genome_from_file
+    from dae.genomic_resources.reference_genome import (
+        build_reference_genome_from_file,
+    )
     return build_reference_genome_from_file(str(out_path)).open()
 
 
@@ -220,7 +220,7 @@ def setup_gene_models(
             filename: { out_path.name }
 
             format: "{ fileformat }"
-        """)
+        """),
     })
     # pylint: disable=import-outside-toplevel
     from dae.genomic_resources.gene_models import build_gene_models_from_file
@@ -282,7 +282,7 @@ def build_inmemory_test_resource(
 
 
 def build_filesystem_test_protocol(
-    root_path: pathlib.Path, repair: bool = True
+    root_path: pathlib.Path, repair: bool = True,
 ) -> FsspecReadWriteProtocol:
     """Build and return an filesystem fsspec protocol for testing.
 
@@ -480,7 +480,7 @@ def build_s3_test_bucket(s3filesystem: Optional[S3FileSystem] = None) -> str:
 
 @contextlib.contextmanager
 def build_s3_test_protocol(
-    root_path: pathlib.Path
+    root_path: pathlib.Path,
 ) -> Generator[FsspecReadWriteProtocol, None, None]:
     """Run an S3 moto server and construct fsspec genomic resource protocol.
 
@@ -513,7 +513,7 @@ def copy_proto_genomic_resources(
 
 @contextlib.contextmanager
 def proto_builder(
-    scheme: str, content: dict
+    scheme: str, content: dict,
 ) -> Generator[
         Union[FsspecReadOnlyProtocol, FsspecReadWriteProtocol],
         None, None]:

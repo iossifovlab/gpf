@@ -1,9 +1,9 @@
-from typing import Callable, Generator, Dict, Any, Sequence, TextIO, List, \
-    Optional
+from collections.abc import Generator, Sequence
+from typing import Any, Callable, Dict, List, Optional, TextIO
 
+from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.utils.dae_utils import dae2vcf_variant
 from dae.variants.variant import allele_type_from_cshl_variant
-from dae.genomic_resources.reference_genome import ReferenceGenome
 
 
 def location_variant_to_vcf_transformer(genome: ReferenceGenome) \
@@ -42,7 +42,7 @@ def variant_to_variant_type() -> Callable[[Dict[str, Any]], Dict[str, Any]]:
 
 def adjust_chrom_prefix(
     add_chrom_prefix: Optional[str] = None,
-    del_chrom_prefix: Optional[str] = None
+    del_chrom_prefix: Optional[str] = None,
 ) -> Callable[[Dict[str, Any]], Dict[str, Any]]:
     """Return a function that adds/removes a prefix to/from chrom names."""
     if add_chrom_prefix is not None:

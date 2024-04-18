@@ -6,17 +6,18 @@ individuals from a study or study group into various
 sets based on what value they have in a given mapping.
 """
 from __future__ import annotations
-from dataclasses import dataclass
-import logging
 
-from typing import Optional, Any, FrozenSet, Generator, cast
+import logging
+from collections.abc import Generator
+from dataclasses import dataclass
+from typing import Any, FrozenSet, Optional, cast
+
 from box import Box
 
-from dae.variants.attributes import Sex
-from dae.pedigrees.family import Person
 from dae.pedigrees.families_data import FamiliesData
-from dae.pheno.pheno_data import PhenotypeData, MeasureType
-
+from dae.pedigrees.family import Person
+from dae.pheno.pheno_data import MeasureType, PhenotypeData
+from dae.variants.attributes import Sex
 
 logger = logging.getLogger(__name__)
 
@@ -86,7 +87,7 @@ class PersonSet:
         """Return all children in the person set splitted by sex."""
         if self._children_by_sex is None:
             self._children_by_sex = ChildrenBySex(
-                set(), set(), set()
+                set(), set(), set(),
             )
             for child in self.get_children():
                 if child.sex == Sex.M:
@@ -107,7 +108,7 @@ class PersonSet:
             self._children_stats = ChildrenStats(
                 len(children_by_sex.male),
                 len(children_by_sex.female),
-                len(children_by_sex.unspecified)
+                len(children_by_sex.unspecified),
             )
         assert self._children_stats is not None
         return self._children_stats
@@ -123,7 +124,7 @@ class PersonSet:
             "name": self.name,
             "values": self.values,
             "color": self.color,
-            "person_ids": list(self.persons.keys())
+            "person_ids": list(self.persons.keys()),
         }
 
     @staticmethod
@@ -139,7 +140,7 @@ class PersonSet:
             json["name"],
             json["values"],
             json["color"],
-            persons
+            persons,
         )
 
 
@@ -184,7 +185,7 @@ class PersonSetCollection:
 
     @staticmethod
     def _sources_from_config(
-        person_set_collection: dict[str, Any]
+        person_set_collection: dict[str, Any],
     ) -> list[Source]:
         sources = [
             PersonSetCollection.Source(src["from"], src["source"])
@@ -227,7 +228,7 @@ class PersonSetCollection:
 
     @staticmethod
     def get_person_color(
-        person: Person, person_set_collection: PersonSetCollection
+        person: Person, person_set_collection: PersonSetCollection,
     ) -> str:
         """Get the hex color value for a Person in a PersonSetCollection."""
         if person.generated:
@@ -237,7 +238,7 @@ class PersonSetCollection:
             return "#FFFFFF"
 
         matching_person_set = person_set_collection.get_person_set_of_person(
-            person.fpid
+            person.fpid,
         )
         if matching_person_set is not None:
             return matching_person_set.color
@@ -245,13 +246,13 @@ class PersonSetCollection:
         logger.warning(
             "Person <%s> could not be found in any"
             " domain of <%s>!",
-            person.fpid, person_set_collection.id
+            person.fpid, person_set_collection.id,
         )
         return "#AAAAAA"
 
     @staticmethod
     def remove_empty_person_sets(
-        person_set_collection: PersonSetCollection
+        person_set_collection: PersonSetCollection,
     ) -> PersonSetCollection:
         """Remove all empty person sets in a PersonSetCollection in place."""
         empty_person_sets = set()
@@ -267,7 +268,7 @@ class PersonSetCollection:
         return person_set_collection
 
     def collect_person_collection_attributes(
-        self, person: Person, pheno_db: Optional[PhenotypeData]
+        self, person: Person, pheno_db: Optional[PhenotypeData],
     ) -> FrozenSet[str]:
         """Collect all configured attributes for a Person."""
         values = []
@@ -303,7 +304,7 @@ class PersonSetCollection:
     def from_families(
         psc_config: dict[str, Any],
         families_data: FamiliesData,
-        pheno_db: Optional[PhenotypeData] = None
+        pheno_db: Optional[PhenotypeData] = None,
     ) -> PersonSetCollection:
         """Produce a PersonSetCollection from a config and pedigree."""
         collection = PersonSetCollection(
@@ -334,7 +335,7 @@ class PersonSetCollection:
 
     @staticmethod
     def merge_configs(
-        person_set_collections: list[PersonSetCollection]
+        person_set_collections: list[PersonSetCollection],
     ) -> Box:
         """
         Merge the configurations of a list of PersonSetCollection objects.
@@ -352,7 +353,7 @@ class PersonSetCollection:
 
         sources = [{
             "from": "pedigree",
-            "source": first.id
+            "source": first.id,
         }]
         result["sources"] = sources
 
@@ -368,7 +369,7 @@ class PersonSetCollection:
                 "id": person_set.id,
                 "name": person_set.name,
                 "values": list(person_set.values),
-                "color": person_set.color
+                "color": person_set.color,
             }
             domain[person_set.id] = result_def
 
@@ -389,7 +390,7 @@ class PersonSetCollection:
                         "id": person_set.id,
                         "name": person_set.name,
                         "values": list(person_set.values),
-                        "color": person_set.color
+                        "color": person_set.color,
                     }
                     domain[person_set.id] = result_def
 
@@ -403,7 +404,7 @@ class PersonSetCollection:
         return Box(result)
 
     def get_person_set(
-        self, person_id: tuple[str, str]
+        self, person_id: tuple[str, str],
     ) -> Optional[PersonSet]:
         for person_set in self.person_sets.values():
             if person_id in person_set.persons:
@@ -411,7 +412,7 @@ class PersonSetCollection:
         return None
 
     def get_person_set_of_person(
-        self, fpid: tuple[str, str]
+        self, fpid: tuple[str, str],
     ) -> Optional[PersonSet]:
         """Retrieve the PersonSet associated with the given person identifier.
 
@@ -431,7 +432,7 @@ class PersonSetCollection:
     @staticmethod
     def combine(
         collections: list[PersonSetCollection],
-        families: FamiliesData
+        families: FamiliesData,
     ) -> PersonSetCollection:
         """Combine a list of PersonSetCollection objects into a single one."""
         if len(collections) == 0:
@@ -485,7 +486,7 @@ class PersonSetCollection:
                 "id": self.default.id,
                 "name": self.default.name,
                 "color": self.default.color,
-            }
+            },
         }
 
         return conf
@@ -530,12 +531,12 @@ class PersonSetCollection:
             "config": self.config_json(),
             "person_sets": [
                 ps.to_json() for ps in self.person_sets.values()
-            ]
+            ],
         }
 
     @staticmethod
     def from_json(
-        data: dict[str, Any], families: FamiliesData
+        data: dict[str, Any], families: FamiliesData,
     ) -> PersonSetCollection:
         """Construct person sets collection from json serialization."""
         config = data["config"]

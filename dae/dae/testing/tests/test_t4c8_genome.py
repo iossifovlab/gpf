@@ -3,8 +3,8 @@ import pathlib
 
 import pytest
 
-from dae.testing.t4c8_import import t4c8_genome, t4c8_genes
 from dae.effect_annotation.annotator import EffectAnnotator
+from dae.testing.t4c8_import import t4c8_genes, t4c8_genome
 
 
 def test_t4c8_genome(tmp_path: pathlib.Path) -> None:

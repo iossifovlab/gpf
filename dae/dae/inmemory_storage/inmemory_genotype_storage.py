@@ -1,25 +1,25 @@
+import logging
 import os
 import time
-import logging
-from typing import Dict, Any, cast, Optional
+from typing import Any, Dict, Optional, cast
 
-from cerberus import Validator
 from box import Box
+from cerberus import Validator
 
 from dae.configuration.utils import validate_path
-from dae.pedigrees.loader import FamiliesLoader
-from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.genomic_resources.gene_models import GeneModels
-
+from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.genotype_storage.genotype_storage import GenotypeStorage
-
-from dae.variants_loaders.raw.loader import StoredAnnotationDecorator, \
-    VariantsLoader, VariantsGenotypesLoader
 from dae.inmemory_storage.raw_variants import RawMemoryVariants
-
-from dae.variants_loaders.vcf.loader import VcfLoader
-from dae.variants_loaders.dae.loader import DenovoLoader, DaeTransmittedLoader
+from dae.pedigrees.loader import FamiliesLoader
 from dae.variants_loaders.cnv.loader import CNVLoader
+from dae.variants_loaders.dae.loader import DaeTransmittedLoader, DenovoLoader
+from dae.variants_loaders.raw.loader import (
+    StoredAnnotationDecorator,
+    VariantsGenotypesLoader,
+    VariantsLoader,
+)
+from dae.variants_loaders.vcf.loader import VcfLoader
 
 logger = logging.getLogger(__name__)
 
@@ -140,7 +140,7 @@ class InmemoryGenotypeStorage(GenotypeStorage):
 
             variants_loader = StoredAnnotationDecorator.decorate(
                 cast(VariantsGenotypesLoader, variants_loader),
-                annotation_filename
+                annotation_filename,
             )
             loaders.append(variants_loader)
 

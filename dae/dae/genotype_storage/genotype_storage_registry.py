@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, Optional, Any
+from typing import Any, Dict, Optional
 
 from dae.genotype_storage import get_genotype_storage_factory
 from dae.genotype_storage.genotype_storage import GenotypeStorage

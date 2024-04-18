@@ -1,14 +1,16 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,too-many-lines
 import pytest
+
+from dae.person_filters import (
+    FamilyFilter,
+    PhenoFilterRange,
+    PhenoFilterSet,
+    make_pheno_filter,
+)
 from dae.pheno.pheno_data import PhenotypeStudy
-from dae.person_filters import \
-    FamilyFilter, \
-    PhenoFilterSet, \
-    PhenoFilterRange, \
-    make_pheno_filter
 
 
-@pytest.fixture
+@pytest.fixture()
 def fake_phenotype_data(fixture_dirname):
     pheno_data = PhenotypeStudy(
         "fake_db", fixture_dirname("fake_pheno_db/fake.db"))
@@ -49,7 +51,7 @@ def test_pheno_filter_set_values_set_type(fake_phenotype_data):
 
 
 @pytest.mark.parametrize(
-    "values_range", [((0.1234, 1.5678)), ([0.1234, 1.5678])]
+    "values_range", [((0.1234, 1.5678)), ([0.1234, 1.5678])],
 )
 def test_pheno_filter_min_max_assignment(fake_phenotype_data, values_range):
     measure = fake_phenotype_data.get_measure("i1.m1")
@@ -126,7 +128,7 @@ def test_make_pheno_filter_categorical(fake_phenotype_data):
     pheno_filter = make_pheno_filter({
         "source": "i1.m5",
         "sourceType": "categorical",
-        "selection": {"selection": {"catB", "catF"}}
+        "selection": {"selection": {"catB", "catF"}},
     }, fake_phenotype_data)
     assert isinstance(pheno_filter, PhenoFilterSet)
 
@@ -136,7 +138,7 @@ def test_make_pheno_filter_raw(fake_phenotype_data):
         make_pheno_filter({
             "source": "i1.m9",
             "sourceType": "categorical",
-            "selection": {"selection": [0, 0]}
+            "selection": {"selection": [0, 0]},
         }, fake_phenotype_data)
 
 
@@ -144,7 +146,7 @@ def test_make_pheno_filter_continuous(fake_phenotype_data):
     pheno_filter = make_pheno_filter({
         "source": "i1.m1",
         "sourceType": "continuous",
-        "selection": {"min": 50, "max": 70}
+        "selection": {"min": 50, "max": 70},
     }, fake_phenotype_data)
     assert isinstance(pheno_filter, PhenoFilterRange)
 
@@ -153,7 +155,7 @@ def test_make_pheno_filter_ordinal(fake_phenotype_data):
     pheno_filter = make_pheno_filter({
         "source": "i1.m4",
         "sourceType": "continuous",
-        "selection": {"min": 3, "max": 5}
+        "selection": {"min": 3, "max": 5},
     }, fake_phenotype_data)
     assert isinstance(pheno_filter, PhenoFilterRange)
 
@@ -163,7 +165,7 @@ def test_make_pheno_filter_nonexistent_measure(fake_phenotype_data):
         make_pheno_filter({
             "source": "??.??",
             "sourceType": "continuous",
-            "selection": {"min": 0, "max": 0}
+            "selection": {"min": 0, "max": 0},
         }, fake_phenotype_data)
 
 
@@ -172,7 +174,7 @@ def test_make_pheno_filter_family(fake_phenotype_data):
         "source": "i1.m4",
         "sourceType": "continuous",
         "selection": {"min": 3, "max": 5},
-        "role": "prb"
+        "role": "prb",
     }, fake_phenotype_data)
     assert isinstance(pheno_filter, FamilyFilter)
     assert isinstance(pheno_filter.person_filter, PhenoFilterRange)

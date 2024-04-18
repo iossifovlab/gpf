@@ -1,13 +1,14 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import textwrap
+
 import pytest
 
 from dae.gene.gene_sets_db import GeneSetCollection, GeneSetsDb
-from dae.genomic_resources.testing import build_inmemory_test_repository
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME
+from dae.genomic_resources.testing import build_inmemory_test_repository
 
 
-@pytest.fixture
+@pytest.fixture()
 def gene_sets_repo(tmp_path):
     sets_repo = build_inmemory_test_repository({
         "main": {
@@ -32,8 +33,8 @@ def gene_sets_repo(tmp_path):
                     "USP7\n"
                     "GOLGA5\n"
                     "PCSK2\n"
-                )
-            }
+                ),
+            },
         },
         "test_mapping": {
             GR_CONF_FILE_NAME: textwrap.dedent("""
@@ -53,7 +54,7 @@ def gene_sets_repo(tmp_path):
                 "test:01\ttest_first\n"
                 "test:02\ttest_second\n"
                 "test:03\ttest_third\n"
-            )
+            ),
         },
         "test_gmt": {
             GR_CONF_FILE_NAME: textwrap.dedent("""
@@ -68,13 +69,13 @@ def gene_sets_repo(tmp_path):
                 "TEST_GENE_SET1\tsomedescription\tPOGZ\tCHD8\n"
                 "TEST_GENE_SET2\tsomedescription\tANK2\tFAT4\n"
                 "TEST_GENE_SET3\tsomedescription\tPOGZ\n"
-            )
-        }
+            ),
+        },
     })
     return sets_repo
 
 
-@pytest.fixture
+@pytest.fixture()
 def gene_sets_db(gene_sets_repo):
     resources = [
         gene_sets_repo.get_resource("main"),
@@ -112,7 +113,7 @@ def test_get_gene_set_collection_ids(gene_sets_db):
     assert gene_sets_db.get_gene_set_collection_ids() == {
         "main",
         "test_mapping",
-        "test_gmt"
+        "test_gmt",
     }
 
 

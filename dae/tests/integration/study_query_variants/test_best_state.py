@@ -4,16 +4,16 @@ from typing import Optional
 
 import pytest
 
-from dae.testing import setup_vcf, setup_pedigree, vcf_study
 from dae.genotype_storage import GenotypeStorage
 from dae.studies.study import GenotypeData
-from dae.utils.variant_utils import mat2str
+from dae.testing import setup_pedigree, setup_vcf, vcf_study
 from dae.utils.regions import Region
+from dae.utils.variant_utils import mat2str
 
 
 @pytest.fixture(scope="module")
 def multi_vcf(
-    tmp_path_factory: pytest.TempPathFactory
+    tmp_path_factory: pytest.TempPathFactory,
 ) -> tuple[pathlib.Path, pathlib.Path]:
     root_path = tmp_path_factory.mktemp("vcf_path")
     in_vcf = setup_vcf(
@@ -42,7 +42,7 @@ f1       c1       d1    m1    2    2     prb
 def multi_study(
     tmp_path_factory: pytest.TempPathFactory,
     multi_vcf: tuple[pathlib.Path, pathlib.Path],
-    genotype_storage: GenotypeStorage
+    genotype_storage: GenotypeStorage,
 ) -> GenotypeData:
     # pylint: disable=import-outside-toplevel
     from dae.testing.foobar_import import foobar_gpf
@@ -69,7 +69,7 @@ def test_trios_multi(
             regions=[region],
             return_reference=True,
             return_unknown=True,
-        )
+        ),
     )
     assert len(variants) == count
     if count == 1:

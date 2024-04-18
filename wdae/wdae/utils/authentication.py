@@ -1,14 +1,13 @@
 """Module containing a custom OAuth2 authentication class."""
 
-from typing import Optional, Callable
+from typing import Callable, Optional
+
 from django.http.request import HttpRequest
 from django.http.response import HttpResponse
-
+from oauth2_provider.contrib.rest_framework import OAuth2Authentication
 from rest_framework import exceptions
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.request import Request
-
-from oauth2_provider.contrib.rest_framework import OAuth2Authentication
 
 
 class SessionAuthenticationWithoutCSRF(SessionAuthentication):
@@ -48,7 +47,7 @@ class GPFOAuth2Authentication(OAuth2Authentication):
         retval = super().authenticate(request)
         if retval is None and request.headers.get("Authorization"):
             raise exceptions.AuthenticationFailed(
-                "Invalid or expired OAuth token."
+                "Invalid or expired OAuth token.",
             )
         if retval is not None:
             user, auth = retval
@@ -60,7 +59,7 @@ class GPFOAuth2Authentication(OAuth2Authentication):
 
 
 def oauth_cookie_to_header(
-    get_response: Callable[[HttpRequest], HttpResponse]
+    get_response: Callable[[HttpRequest], HttpResponse],
 ) -> Callable[[HttpRequest], HttpResponse]:
     """Middleware patch to allow storing OAuth tokens as cookies."""
     def middleware(request: HttpRequest) -> HttpResponse:

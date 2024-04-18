@@ -1,14 +1,15 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-import pytest
 import numpy as np
-from dae.variants_loaders.vcf.loader import VcfLoader
+import pytest
+
 from dae.genomic_resources.testing import setup_pedigree, setup_vcf
 from dae.gpf_instance.gpf_instance import GPFInstance
-from dae.testing.acgt_import import acgt_gpf
 from dae.pedigrees.loader import FamiliesLoader
+from dae.testing.acgt_import import acgt_gpf
+from dae.variants_loaders.vcf.loader import VcfLoader
 
 
-@pytest.fixture
+@pytest.fixture()
 def gpf_instance(
         tmp_path_factory: pytest.TempPathFactory) -> GPFInstance:
     root_path = tmp_path_factory.mktemp("instance")
@@ -16,9 +17,9 @@ def gpf_instance(
     return gpf_instance
 
 
-@pytest.fixture
+@pytest.fixture()
 def quad_ped(
-    tmp_path_factory: pytest.TempPathFactory
+    tmp_path_factory: pytest.TempPathFactory,
 ) -> str:
     root_path = tmp_path_factory.mktemp("quad_ped")
     ped_path = setup_pedigree(root_path / "ped_data" / "in.ped", """
@@ -32,9 +33,9 @@ def quad_ped(
     return str(ped_path)
 
 
-@pytest.fixture
+@pytest.fixture()
 def multi_contig_vcf(
-    tmp_path_factory: pytest.TempPathFactory
+    tmp_path_factory: pytest.TempPathFactory,
 ) -> str:
     root_path = tmp_path_factory.mktemp("multi_contig_vcf")
     vcf_path = setup_vcf(root_path / "vcf_data" / "in.vcf", """
@@ -60,9 +61,9 @@ def multi_contig_vcf(
     return str(vcf_path)
 
 
-@pytest.fixture
+@pytest.fixture()
 def multi_contig_vcf_gz(
-    tmp_path_factory: pytest.TempPathFactory
+    tmp_path_factory: pytest.TempPathFactory,
 ) -> str:
     root_path = tmp_path_factory.mktemp("multi_contig_vcf")
     vcf_path = setup_vcf(root_path / "vcf_data" / "in.vcf.gz", """
@@ -88,9 +89,9 @@ def multi_contig_vcf_gz(
     return str(vcf_path)
 
 
-@pytest.fixture
+@pytest.fixture()
 def multi_generational_ped(
-    tmp_path_factory: pytest.TempPathFactory
+    tmp_path_factory: pytest.TempPathFactory,
 ) -> str:
     root_path = tmp_path_factory.mktemp("multi_contig_chr_ped")
     ped_path = setup_pedigree(root_path / "ped_data" / "in.ped", """
@@ -107,9 +108,9 @@ def multi_generational_ped(
     return str(ped_path)
 
 
-@pytest.fixture
+@pytest.fixture()
 def multi_contig_chr_vcf(
-    tmp_path_factory: pytest.TempPathFactory
+    tmp_path_factory: pytest.TempPathFactory,
 ) -> str:
     root_path = tmp_path_factory.mktemp("multi_contig_chr_vcf")
     vcf_path = setup_vcf(root_path / "vcf_data" / "in.vcf", """
@@ -135,9 +136,9 @@ def multi_contig_chr_vcf(
     return str(vcf_path)
 
 
-@pytest.fixture
+@pytest.fixture()
 def multi_contig_chr_vcf_gz(
-    tmp_path_factory: pytest.TempPathFactory
+    tmp_path_factory: pytest.TempPathFactory,
 ) -> str:
     root_path = tmp_path_factory.mktemp("multi_contig_chr_vcf")
     vcf_path = setup_vcf(root_path / "vcf_data" / "in.vcf.gz", """
@@ -166,7 +167,7 @@ def multi_contig_chr_vcf_gz(
 def test_chromosomes_have_adjusted_chrom_add_prefix(
     quad_ped: str,
     multi_contig_vcf: str,
-    gpf_instance: GPFInstance
+    gpf_instance: GPFInstance,
 ) -> None:
     ped_file = quad_ped
 
@@ -183,7 +184,7 @@ def test_chromosomes_have_adjusted_chrom_add_prefix(
 def test_chromosomes_have_adjusted_chrom_del_prefix(
     multi_generational_ped: str,
     multi_contig_chr_vcf: str,
-    gpf_instance: GPFInstance
+    gpf_instance: GPFInstance,
 ) -> None:
     ped_file = multi_generational_ped
 
@@ -192,7 +193,7 @@ def test_chromosomes_have_adjusted_chrom_del_prefix(
         family_loader,
         [multi_contig_chr_vcf],
         gpf_instance.reference_genome,
-        params={"del_chrom_prefix": "chr"}
+        params={"del_chrom_prefix": "chr"},
     )
 
     assert loader.chromosomes == ["1", "2", "3", "4"]
@@ -201,7 +202,7 @@ def test_chromosomes_have_adjusted_chrom_del_prefix(
 def test_variants_have_adjusted_chrom_add_prefix(
     quad_ped: str,
     multi_contig_vcf: str,
-    gpf_instance: GPFInstance
+    gpf_instance: GPFInstance,
 ) -> None:
     ped_file = quad_ped
 
@@ -210,7 +211,7 @@ def test_variants_have_adjusted_chrom_add_prefix(
         family_loader,
         [multi_contig_vcf],
         gpf_instance.reference_genome,
-        params={"add_chrom_prefix": "chr"}
+        params={"add_chrom_prefix": "chr"},
     )
 
     variants = list(loader.full_variants_iterator())
@@ -224,7 +225,7 @@ def test_variants_have_adjusted_chrom_add_prefix(
 def test_variants_have_adjusted_chrom_del_prefix(
     multi_generational_ped: str,
     multi_contig_chr_vcf: str,
-    gpf_instance: GPFInstance
+    gpf_instance: GPFInstance,
 ) -> None:
     ped_file = multi_generational_ped
 
@@ -246,7 +247,7 @@ def test_variants_have_adjusted_chrom_del_prefix(
 def test_reset_regions_with_adjusted_chrom_add_prefix(
     quad_ped: str,
     multi_contig_vcf_gz: str,
-    gpf_instance: GPFInstance
+    gpf_instance: GPFInstance,
 ) -> None:
     ped_file = quad_ped
 
@@ -255,7 +256,7 @@ def test_reset_regions_with_adjusted_chrom_add_prefix(
         family_loader,
         [multi_contig_vcf_gz],
         gpf_instance.reference_genome,
-        params={"add_chrom_prefix": "chr"}
+        params={"add_chrom_prefix": "chr"},
     )
     regions = ["chrchr1", "chrchr2"]
 
@@ -270,7 +271,7 @@ def test_reset_regions_with_adjusted_chrom_add_prefix(
 def test_reset_regions_with_adjusted_chrom_del_prefix(
     quad_ped: str,
     multi_contig_chr_vcf_gz: str,
-    gpf_instance: GPFInstance
+    gpf_instance: GPFInstance,
 ) -> None:
     ped_file = quad_ped
     family_loader = FamiliesLoader(ped_file).load()

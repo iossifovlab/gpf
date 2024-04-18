@@ -1,15 +1,12 @@
 from __future__ import annotations
 
 import abc
-import threading
 import logging
 import queue
+import threading
 import time
-
-from typing import Optional, Any, Callable
-
-from concurrent.futures import ThreadPoolExecutor, Future, Executor
-
+from concurrent.futures import Executor, Future, ThreadPoolExecutor
+from typing import Any, Callable, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -167,7 +164,7 @@ class QueryResult:
             except queue.Empty as exp:
                 if not self.is_done():
                     return None
-                raise StopIteration() from exp
+                raise StopIteration from exp
 
     def get(self, timeout: float = 0.0) -> Any:
         """Pop the next entry from the queue.
@@ -182,7 +179,7 @@ class QueryResult:
             return row
         except queue.Empty as exp:
             if self.is_done():
-                raise StopIteration() from exp
+                raise StopIteration from exp
             return None
 
     def start(self) -> None:
@@ -213,4 +210,4 @@ class QueryResult:
                 logger.error(
                     "unexpected exception in query result: %s", error,
                     exc_info=True, stack_info=True)
-            raise IOError(self._exceptions[0])
+            raise OSError(self._exceptions[0])

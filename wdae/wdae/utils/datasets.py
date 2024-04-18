@@ -30,7 +30,7 @@ def find_dataset_id_in_request(request):
         dataset_id = find_dataset_id_in_dict(request.resolver_match.kwargs)
     if dataset_id is None:
         dataset_id = request.parser_context.get("kwargs", {}).get(
-            "common_report_id", None
+            "common_report_id", None,
         )
 
     return dataset_id

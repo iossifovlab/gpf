@@ -1,11 +1,10 @@
-import os
 import glob
 import logging
+import os
 import shutil
 
 import toml
 from box import Box
-
 
 logger = logging.getLogger(__name__)
 

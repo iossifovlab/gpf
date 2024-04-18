@@ -32,7 +32,7 @@ def test_gene_models_from_gtf(fixture_dirname: Callable) -> None:
     ],
 )
 def test_gene_models_from_gtf_selenon(
-    fixture_dirname: Callable, filename: str
+    fixture_dirname: Callable, filename: str,
 ) -> None:
     gtf_filename = fixture_dirname(filename)
     print(gtf_filename)
@@ -80,7 +80,7 @@ def test_gene_models_from_gencode(fixture_dirname: Callable) -> None:
     ],
 )
 def test_gene_models_from_ref_flat(
-    fixture_dirname: Callable, filename: str
+    fixture_dirname: Callable, filename: str,
 ) -> None:
     filename = fixture_dirname(filename)
     assert os.path.exists(filename)
@@ -124,7 +124,7 @@ def test_gene_models_from_known_gene(fixture_dirname: Callable) -> None:
 
     gene_models = build_gene_models_from_file(
         filename, gene_mapping_file_name=gene_mapping_file,
-        file_format="knowngene"
+        file_format="knowngene",
     )
     gene_models.load()
     assert gene_models is not None
@@ -133,7 +133,7 @@ def test_gene_models_from_known_gene(fixture_dirname: Callable) -> None:
 
 
 def test_gene_models_from_default_ref_gene_2013(
-    fixture_dirname: Callable
+    fixture_dirname: Callable,
 ) -> None:
     filename = fixture_dirname("gene_models/test_default_ref_gene_201309.txt")
     assert os.path.exists(filename)
@@ -146,10 +146,10 @@ def test_gene_models_from_default_ref_gene_2013(
 
 
 def test_gene_models_from_default_with_transcript_orig_id(
-    fixture_dirname: Callable
+    fixture_dirname: Callable,
 ) -> None:
     filename = fixture_dirname(
-        "gene_models/test_default_ref_gene_20190220.txt"
+        "gene_models/test_default_ref_gene_20190220.txt",
     )
     gene_models1 = build_gene_models_from_file(filename, file_format="default")
     gene_models1.load()
@@ -176,7 +176,7 @@ def test_gene_models_from_default_with_transcript_orig_id(
 
 )
 def test_load_gene_models_from_file(
-    fixture_dirname: Callable, filename: str, file_format: str
+    fixture_dirname: Callable, filename: str, file_format: str,
 ) -> None:
 
     filename = fixture_dirname(filename)
@@ -205,7 +205,7 @@ def test_infer_gene_models(
     fixture_dirname: Callable,
     filename: str,
     file_format: Optional[str],
-    expected: str
+    expected: str,
 ) -> None:
 
     filename = fixture_dirname(filename)
@@ -227,7 +227,7 @@ def test_infer_gene_models(
     ],
 )
 def test_infer_gene_models_no_header(
-    fixture_dirname: Callable, filename: str, file_format: str
+    fixture_dirname: Callable, filename: str, file_format: str,
 ) -> None:
 
     filename = fixture_dirname(filename)
@@ -257,7 +257,7 @@ def test_load_ucscgenepred(fixture_dirname: Callable) -> None:
     ],
 )
 def test_load_gene_models_no_header(
-    fixture_dirname: Callable, filename: str, file_format: str
+    fixture_dirname: Callable, filename: str, file_format: str,
 ) -> None:
 
     filename = fixture_dirname(filename)
@@ -286,7 +286,7 @@ def test_save_load_gene_models_from_file(
     fixture_dirname: Callable,
     filename: str,
     file_format: str,
-    temp_filename: str
+    temp_filename: str,
 ) -> None:
 
     filename = fixture_dirname(filename)

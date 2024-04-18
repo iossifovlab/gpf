@@ -1,6 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 
 import json
+
 from rest_framework import status
 
 
@@ -13,7 +14,7 @@ def test_effect_details_download(admin_client, datasets) -> None:
     response = admin_client.post(
         "/api/v3/genotype_browser/query",
         json.dumps(data),
-        content_type="application/json"
+        content_type="application/json",
     )
     assert response.status_code == status.HTTP_200_OK
     res = list(response.streaming_content)
@@ -50,7 +51,7 @@ def test_effect_details_download(admin_client, datasets) -> None:
         "NM_001348760:C2orf42:missense:439/574(Asn->Ser)|"
         "NM_001348761:C2orf42:missense:439/574(Asn->Ser)|"
         "NM_001348762:C2orf42:missense:439/574(Asn->Ser)|"
-        "NR_145970:C2orf42:non-coding:None"
+        "NR_145970:C2orf42:non-coding:None",
     ]
     for index, row in enumerate(res[1:]):
         cols = row.decode("utf-8").strip().split("\t")

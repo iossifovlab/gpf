@@ -3,38 +3,35 @@ import os
 import pathlib
 from typing import Any, Optional
 
+import duckdb
 import pytest
 
-import duckdb
-
-from dae.utils.regions import Region
-from dae.query_variants.sql.schema2.sql_query_builder import Db2Layout
-
-from dae.duckdb_storage.duckdb_genotype_storage import DuckDbGenotypeStorage
 from dae.duckdb_storage.duckdb2_variants import DuckDb2Variants
-
-from dae.genotype_storage.genotype_storage_registry import \
-    get_genotype_storage_factory
-
-from dae.query_variants.sql.schema2.sql_query_builder import SqlQueryBuilder
-
+from dae.duckdb_storage.duckdb_genotype_storage import DuckDbGenotypeStorage
+from dae.genotype_storage.genotype_storage_registry import (
+    get_genotype_storage_factory,
+)
 from dae.gpf_instance import GPFInstance
+from dae.query_variants.sql.schema2.sql_query_builder import (
+    Db2Layout,
+    SqlQueryBuilder,
+)
 from dae.studies.study import GenotypeData
-
 from dae.testing import setup_pedigree, setup_vcf, vcf_study
 from dae.testing.t4c8_import import t4c8_gpf
+from dae.utils.regions import Region
 
 
 @pytest.fixture(scope="module")
 def duckdb_storage(
-    tmp_path_factory: pytest.TempPathFactory
+    tmp_path_factory: pytest.TempPathFactory,
 ) -> DuckDbGenotypeStorage:
     storage_path = tmp_path_factory.mktemp("duckdb_storage")
     storage_config = {
         "id": "duckdb_test",
         "storage_type": "duckdb2",
         "db": "duckdb_storage/test.duckdb",
-        "base_dir": str(storage_path)
+        "base_dir": str(storage_path),
     }
     storage_factory = get_genotype_storage_factory("duckdb2")
     assert storage_factory is not None
@@ -57,7 +54,7 @@ def t4c8_instance(
 @pytest.fixture(scope="module")
 def t4c8_study_1(
     t4c8_instance: GPFInstance,
-    duckdb_storage: DuckDbGenotypeStorage
+    duckdb_storage: DuckDbGenotypeStorage,
 ) -> GenotypeData:
     root_path = pathlib.Path(t4c8_instance.dae_dir)
     ped_path = setup_pedigree(
@@ -86,7 +83,7 @@ chr1   90   .  G   C,GA .    .      .    GT     0/1  0/2  0/2 0/1  0/2  0/1
 chr1   100  .  T   G,TA .    .      .    GT     0/1  0/1  0/0 0/2  0/2  0/0
 chr1   119  .  A   G,C  .    .      .    GT     0/0  0/2  0/2 0/1  0/2  0/1
 chr1   122  .  A   C,AC .    .      .    GT     0/1  0/1  0/1 0/2  0/2  0/2
-        """)  # noqa
+        """)
 
     project_config_update = {
         "partition_description": {
@@ -103,11 +100,11 @@ chr1   122  .  A   C,AC .    .      .    GT     0/1  0/1  0/1 0/2  0/2  0/2
                     "noStart",
                     "missense",
                     "synonymous",
-                ]
+                ],
             },
             "family_bin": {
                 "family_bin_size": 2,
-            }
+            },
         },
     }
 
@@ -134,7 +131,7 @@ def duckdb2_variants(
 
     db_filename = os.path.join(
         base_dir,
-        db_file
+        db_file,
     )
     assert os.path.exists(db_filename)
     study_storage = t4c8_study_1.config.genotype_storage
@@ -165,7 +162,7 @@ def duckdb2_variants(
 
 @pytest.fixture(scope="module")
 def query_builder(
-    duckdb2_variants: DuckDb2Variants
+    duckdb2_variants: DuckDb2Variants,
 ) -> SqlQueryBuilder:
     return duckdb2_variants.query_builder
 
@@ -181,7 +178,7 @@ def test_coding_bin_heuristics_query(
     index: int,
     params: dict[str, Any],
     coding_bin: Optional[int],
-    query_builder: SqlQueryBuilder
+    query_builder: SqlQueryBuilder,
 ) -> None:
     assert query_builder.GENE_REGIONS_HEURISTIC_EXTEND == 0
     query = query_builder.build_summary_variants_query(**params)
@@ -204,7 +201,7 @@ def test_region_bin_heuristics_query(
     index: int,
     params: dict[str, Any],
     region_bins: Optional[list[str]],
-    query_builder: SqlQueryBuilder
+    query_builder: SqlQueryBuilder,
 ) -> None:
     assert query_builder.GENE_REGIONS_HEURISTIC_EXTEND == 0
     query = query_builder.build_summary_variants_query(**params)
@@ -230,7 +227,7 @@ def test_frequency_bin_heuristics_query(
     index: int,
     params: dict[str, Any],
     frequency_bins: Optional[str],
-    query_builder: SqlQueryBuilder
+    query_builder: SqlQueryBuilder,
 ) -> None:
     assert query_builder.GENE_REGIONS_HEURISTIC_EXTEND == 0
     query = query_builder.build_summary_variants_query(**params)
@@ -254,7 +251,7 @@ def test_coding_bin_heuristics_family_query(
     index: int,
     params: dict[str, Any],
     coding_bin: Optional[int],
-    query_builder: SqlQueryBuilder
+    query_builder: SqlQueryBuilder,
 ) -> None:
     assert query_builder.GENE_REGIONS_HEURISTIC_EXTEND == 0
     query = query_builder.build_family_variants_query(**params)
@@ -278,7 +275,7 @@ def test_region_bin_heuristics_family_query(
     index: int,
     params: dict[str, Any],
     region_bins: Optional[list[str]],
-    query_builder: SqlQueryBuilder
+    query_builder: SqlQueryBuilder,
 ) -> None:
     assert query_builder.GENE_REGIONS_HEURISTIC_EXTEND == 0
     query = query_builder.build_family_variants_query(**params)
@@ -305,7 +302,7 @@ def test_frequency_bin_heuristics_family_query(
     index: int,
     params: dict[str, Any],
     frequency_bins: Optional[str],
-    query_builder: SqlQueryBuilder
+    query_builder: SqlQueryBuilder,
 ) -> None:
     assert query_builder.GENE_REGIONS_HEURISTIC_EXTEND == 0
     query = query_builder.build_family_variants_query(**params)
@@ -354,7 +351,7 @@ def test_query_family_variants_counting(
     index: int,
     params: dict[str, Any],
     count: int,
-    duckdb2_variants: DuckDb2Variants
+    duckdb2_variants: DuckDb2Variants,
 ) -> None:
     fvs = list(duckdb2_variants.query_variants(**params))
     assert len(fvs) == count
@@ -385,7 +382,7 @@ def test_query_summary_variants_counting(
     index: int,
     params: dict[str, Any],
     count: int,
-    duckdb2_variants: DuckDb2Variants
+    duckdb2_variants: DuckDb2Variants,
 ) -> None:
     svs = list(duckdb2_variants.query_summary_variants(**params))
     assert len(svs) == count
@@ -403,7 +400,7 @@ def test_query_family_variants_by_role(
     index: int,
     params: dict[str, Any],
     count: int,
-    duckdb2_variants: DuckDb2Variants
+    duckdb2_variants: DuckDb2Variants,
 ) -> None:
     fvs = list(duckdb2_variants.query_variants(**params))
     assert len(fvs) == count
@@ -419,7 +416,7 @@ def test_query_family_variants_by_sex(
     index: int,
     params: dict[str, Any],
     count: int,
-    duckdb2_variants: DuckDb2Variants
+    duckdb2_variants: DuckDb2Variants,
 ) -> None:
     fvs = list(duckdb2_variants.query_variants(**params))
     assert len(fvs) == count
@@ -437,7 +434,7 @@ def test_query_family_variants_by_inheritance(
     index: int,
     params: dict[str, Any],
     count: int,
-    duckdb2_variants: DuckDb2Variants
+    duckdb2_variants: DuckDb2Variants,
 ) -> None:
     fvs = list(duckdb2_variants.query_variants(**params))
     assert len(fvs) == count
@@ -450,25 +447,25 @@ def test_query_family_variants_by_inheritance(
                 "roles": "( prb and not sib ) or ( prb and sib )",
                 "inheritance": [
                     "not possible_denovo and not possible_omission",
-                    "any(denovo,mendelian,missing,omission)"
+                    "any(denovo,mendelian,missing,omission)",
                 ],
                 "ultra_rare": True,
             },
-            ["0", "1"]
+            ["0", "1"],
         ),
         (
             {
                 "roles": "( prb and not sib ) or ( prb and sib )",
                 "inheritance": [
                     "not possible_denovo and not possible_omission",
-                    "any(denovo,mendelian,missing,omission)"
+                    "any(denovo,mendelian,missing,omission)",
                 ],
                 "ultra_rare": False,
                 "frequency_filter": [("af_allele_freq", (None, 1.0))],
             },
-            ["0", "1", "2"]
+            ["0", "1", "2"],
         ),
-    ]
+    ],
 )
 def test_calc_frequency_bin_heuristics(
     params: dict[str, Any],
@@ -489,7 +486,7 @@ def test_query_family_variants_by_variant_type(
     index: int,
     params: dict[str, Any],
     count: int,
-    duckdb2_variants: DuckDb2Variants
+    duckdb2_variants: DuckDb2Variants,
 ) -> None:
     fvs = list(duckdb2_variants.query_variants(**params))
     assert len(fvs) == count
@@ -507,7 +504,7 @@ def test_query_family_variants_by_family_and_person_ids(
     index: int,
     params: dict[str, Any],
     count: int,
-    duckdb2_variants: DuckDb2Variants
+    duckdb2_variants: DuckDb2Variants,
 ) -> None:
     fvs = list(duckdb2_variants.query_variants(**params))
     assert len(fvs) == count
@@ -515,14 +512,14 @@ def test_query_family_variants_by_family_and_person_ids(
 
 @pytest.mark.xfail(reason="impala v3.x does not support int64")
 def test_sj_index(
-    query_builder: SqlQueryBuilder
+    query_builder: SqlQueryBuilder,
 ) -> None:
     assert "sj_index" in query_builder.summary_schema
     assert "sj_index" in query_builder.family_schema
 
 
 def test_pedigree_schema(
-    duckdb2_variants: DuckDb2Variants
+    duckdb2_variants: DuckDb2Variants,
 ) -> None:
     pedigree_schema = duckdb2_variants.query_builder.pedigree_schema
     assert pedigree_schema

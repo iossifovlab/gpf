@@ -6,7 +6,6 @@ from urllib.parse import urlencode
 import pytest
 from rest_framework import status  # type: ignore
 
-
 pytestmark = pytest.mark.usefixtures(
     "wdae_gpf_instance", "dae_calc_gene_sets")
 
@@ -26,23 +25,23 @@ def name_in_gene_sets(gene_sets, name, count=None):
 
 def test_gene_sets_collections(db, admin_client):
     url = "/api/v3/gene_sets/gene_sets_collections"
-    response = admin_client.get(url,)
-    assert status.HTTP_200_OK == response.status_code, repr(response.content)
+    response = admin_client.get(url)
+    assert response.status_code == status.HTTP_200_OK, repr(response.content)
 
     data = response.data
 
     local_main = data[0]
-    assert "main" == local_main["name"]
+    assert local_main["name"] == "main"
     denovo = data[1]
-    assert "denovo" == denovo["name"]
+    assert denovo["name"] == "denovo"
     remote_denovo = data[2]
-    assert "TEST_REMOTE_denovo" == remote_denovo["name"]
+    assert remote_denovo["name"] == "TEST_REMOTE_denovo"
     local_mapping = data[3]
-    assert "test_mapping" == local_mapping["name"]
+    assert local_mapping["name"] == "test_mapping"
     local_gmt = data[4]
-    assert "test_gmt" == local_gmt["name"]
+    assert local_gmt["name"] == "test_gmt"
     remote_main = data[5]
-    assert "TEST_REMOTE_main" == remote_main["name"]
+    assert remote_main["name"] == "TEST_REMOTE_main"
     # self.assertEquals(8, len(denovo['types']))
 
     print(data)
@@ -55,19 +54,19 @@ def test_gene_set_download(db, admin_client):
         "geneSetsCollection": "denovo",
         "geneSet": "Synonymous",
         "geneSetsTypes": {
-            "f1_group": {"phenotype": ["phenotype1", "unaffected"]}
+            "f1_group": {"phenotype": ["phenotype1", "unaffected"]},
         },
     }
     response = admin_client.post(
-        url, json.dumps(query), content_type="application/json", format="json"
+        url, json.dumps(query), content_type="application/json", format="json",
     )
 
-    assert status.HTTP_200_OK == response.status_code, repr(response.content)
+    assert response.status_code == status.HTTP_200_OK, repr(response.content)
 
     result = list(response.streaming_content)
 
     count = len(result)
-    assert 1 + 1 == count
+    assert count == 1 + 1
 
 
 @pytest.mark.xfail(reason="[gene models] wrong annotation")
@@ -79,12 +78,12 @@ def test_gene_set_download_synonymous_recurrent(db, admin_client):
         "geneSetsTypes": {"f2_group": {"phenotype": ["autism"]}},
     }
     response = admin_client.post(
-        url, json.dumps(query), content_type="application/json", format="json"
+        url, json.dumps(query), content_type="application/json", format="json",
     )
-    assert status.HTTP_200_OK == response.status_code, repr(response.content)
+    assert response.status_code == status.HTTP_200_OK, repr(response.content)
     result = list(response.streaming_content)
     count = len(result)
-    assert 1 + 1 == count
+    assert count == 1 + 1
 
 
 def test_denovo_gene_set_not_found(db, admin_client):
@@ -95,9 +94,9 @@ def test_denovo_gene_set_not_found(db, admin_client):
         "geneSetsTypes": {"f1_group": {"phenotype": ["autism"]}},
     }
     response = admin_client.post(
-        url, json.dumps(query), content_type="application/json", format="json"
+        url, json.dumps(query), content_type="application/json", format="json",
     )
-    assert status.HTTP_404_NOT_FOUND == response.status_code, repr(response)
+    assert response.status_code == status.HTTP_404_NOT_FOUND, repr(response)
 
 
 def test_main_gene_set_not_found(db, admin_client):
@@ -107,9 +106,9 @@ def test_main_gene_set_not_found(db, admin_client):
         "geneSet": "BadBadName",
     }
     response = admin_client.post(
-        url, json.dumps(query), content_type="application/json", format="json"
+        url, json.dumps(query), content_type="application/json", format="json",
     )
-    assert status.HTTP_404_NOT_FOUND == response.status_code, repr(response)
+    assert response.status_code == status.HTTP_404_NOT_FOUND, repr(response)
 
 
 def test_bad_gene_set_collection_not_found(db, admin_client):
@@ -119,9 +118,9 @@ def test_bad_gene_set_collection_not_found(db, admin_client):
         "geneSet": "BadBadName",
     }
     response = admin_client.post(
-        url, json.dumps(query), content_type="application/json", format="json"
+        url, json.dumps(query), content_type="application/json", format="json",
     )
-    assert status.HTTP_404_NOT_FOUND == response.status_code, repr(response)
+    assert response.status_code == status.HTTP_404_NOT_FOUND, repr(response)
 
 
 @pytest.mark.xfail(reason="[gene models] wrong annotation")
@@ -134,11 +133,11 @@ def test_get_gene_set_download_synonymous_autism(db, admin_client):
     }
     request = f"{url}?{urlencode(query)}"
     response = admin_client.get(request)
-    assert status.HTTP_200_OK == response.status_code, repr(response.content)
+    assert response.status_code == status.HTTP_200_OK, repr(response.content)
     result = list(response.streaming_content)
     count = len(result)
     # self.assertEqual(546 + 1, count)
-    assert 1 + 1 == count
+    assert count == 1 + 1
 
 
 @pytest.mark.xfail(reason="[gene models] wrong annotation")
@@ -151,10 +150,10 @@ def test_get_gene_set_download_synonymous_recurrent(db, admin_client):
     }
     request = f"{url}?{urlencode(query)}"
     response = admin_client.get(request)
-    assert status.HTTP_200_OK == response.status_code, repr(response.content)
+    assert response.status_code == status.HTTP_200_OK, repr(response.content)
     result = list(response.streaming_content)
     count = len(result)
-    assert 1 + 1 == count
+    assert count == 1 + 1
 
 
 @pytest.mark.xfail(reason="[gene models] wrong annotation")
@@ -167,10 +166,10 @@ def test_get_gene_set_download_synonymous_triple(db, admin_client):
     }
     request = f"{url}?{urlencode(query)}"
     response = admin_client.get(request)
-    assert status.HTTP_200_OK == response.status_code, repr(response.content)
+    assert response.status_code == status.HTTP_200_OK, repr(response.content)
     result = list(response.streaming_content)
     count = len(result)
-    assert 1 + 1 == count
+    assert count == 1 + 1
 
 
 def test_get_denovo_gene_set_not_found(db, admin_client):
@@ -182,7 +181,7 @@ def test_get_denovo_gene_set_not_found(db, admin_client):
     }
     request = f"{url}?{urlencode(query)}"
     response = admin_client.get(request)
-    assert status.HTTP_404_NOT_FOUND == response.status_code, repr(response)
+    assert response.status_code == status.HTTP_404_NOT_FOUND, repr(response)
 
 
 def test_get_main_gene_set_not_found(db, admin_client):
@@ -193,7 +192,7 @@ def test_get_main_gene_set_not_found(db, admin_client):
     }
     request = f"{url}?{urlencode(query)}"
     response = admin_client.get(request)
-    assert status.HTTP_404_NOT_FOUND == response.status_code, repr(response)
+    assert response.status_code == status.HTTP_404_NOT_FOUND, repr(response)
 
 
 def test_get_bad_gene_set_collection_not_found(db, admin_client):
@@ -204,7 +203,7 @@ def test_get_bad_gene_set_collection_not_found(db, admin_client):
     }
     request = f"{url}?{urlencode(query)}"
     response = admin_client.get(request)
-    assert status.HTTP_404_NOT_FOUND == response.status_code, repr(response)
+    assert response.status_code == status.HTTP_404_NOT_FOUND, repr(response)
 
 
 def test_get_gene_set_collection_empty_query(db, admin_client):
@@ -212,7 +211,7 @@ def test_get_gene_set_collection_empty_query(db, admin_client):
     query = {}
     request = f"{url}?{urlencode(query)}"
     response = admin_client.get(request)
-    assert status.HTTP_400_BAD_REQUEST == response.status_code, repr(response)
+    assert response.status_code == status.HTTP_400_BAD_REQUEST, repr(response)
 
 
 @pytest.mark.xfail(reason="[gene models] wrong annotation")
@@ -223,9 +222,9 @@ def test_gene_sets(db, admin_client):
         "geneSetsTypes": {"f1_group": {"phenotype": ["autism"]}},
     }
     response = admin_client.post(
-        url, json.dumps(query), content_type="application/json", format="json"
+        url, json.dumps(query), content_type="application/json", format="json",
     )
-    assert status.HTTP_200_OK == response.status_code, repr(response.content)
+    assert response.status_code == status.HTTP_200_OK, repr(response.content)
     result = response.data
     assert name_in_gene_sets(result, "Synonymous", 1)
 
@@ -234,10 +233,10 @@ def test_gene_sets_empty_query(db, admin_client):
     url = "/api/v3/gene_sets/gene_sets"
     query = {}
     response = admin_client.post(
-        url, json.dumps(query), content_type="application/json", format="json"
+        url, json.dumps(query), content_type="application/json", format="json",
     )
-    assert status.HTTP_400_BAD_REQUEST == response.status_code, repr(
-        response.content
+    assert response.status_code == status.HTTP_400_BAD_REQUEST, repr(
+        response.content,
     )
 
 
@@ -245,10 +244,10 @@ def test_gene_sets_missing(db, admin_client):
     url = "/api/v3/gene_sets/gene_sets"
     query = {"geneSetsCollection": "BadBadName"}
     response = admin_client.post(
-        url, json.dumps(query), content_type="application/json", format="json"
+        url, json.dumps(query), content_type="application/json", format="json",
     )
-    assert status.HTTP_404_NOT_FOUND == response.status_code, repr(
-        response.content
+    assert response.status_code == status.HTTP_404_NOT_FOUND, repr(
+        response.content,
     )
 
 
@@ -261,7 +260,7 @@ def test_gene_sets_remote(db, admin_client, name, count):
     url = "/api/v3/gene_sets/gene_sets"
     query = {"geneSetsCollection": "TEST_REMOTE_main"}
     response = admin_client.post(
-        url, query, content_type="application/json", format="json"
+        url, query, content_type="application/json", format="json",
     )
 
     assert response.status_code == status.HTTP_200_OK
@@ -285,7 +284,7 @@ def test_gene_sets_remote_download(db, admin_client):
         "geneSet": "PSD",
     }
     response = admin_client.get(
-        url, query, content_type="application/json", format="json"
+        url, query, content_type="application/json", format="json",
     )
 
     assert response.status_code == status.HTTP_200_OK
@@ -296,10 +295,10 @@ def test_denovo_gene_sets_remote(db, admin_client):
     url = "/api/v3/gene_sets/gene_sets"
     query = {
         "geneSetsCollection": "TEST_REMOTE_denovo",
-        "geneSetsTypes": {"iossifov_2014": {"status": ["affected"]}}
+        "geneSetsTypes": {"iossifov_2014": {"status": ["affected"]}},
     }
     response = admin_client.post(
-        url, query, content_type="application/json", format="json"
+        url, query, content_type="application/json", format="json",
     )
 
     assert response.status_code == status.HTTP_200_OK
@@ -315,11 +314,11 @@ def test_denovo_gene_sets_remote_download(db, admin_client):
         "geneSetsCollection": "TEST_REMOTE_denovo",
         "geneSet": "LGDs",
         "geneSetsTypes": json.dumps(
-            {"iossifov_2014": {"status": ["affected"]}}
-        )
+            {"iossifov_2014": {"status": ["affected"]}},
+        ),
     }
     response = admin_client.get(
-        url, query, content_type="application/json", format="json"
+        url, query, content_type="application/json", format="json",
     )
 
     assert response.status_code == status.HTTP_200_OK

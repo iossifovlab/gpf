@@ -1,19 +1,18 @@
-import sys
 import argparse
 import logging
+import sys
 from typing import Optional
 
-from dae.utils.verbosity_configuration import VerbosityConfiguration
 from dae import __version__  # type: ignore
 from dae.gpf_instance import GPFInstance
-
+from dae.utils.verbosity_configuration import VerbosityConfiguration
 
 logger = logging.getLogger("gp_exporter")
 
 
 def cli_export(
     argv: Optional[list[str]] = None,
-    gpf_instance: Optional[GPFInstance] = None
+    gpf_instance: Optional[GPFInstance] = None,
 ) -> None:
     """CLI for exporting GP data."""
     if argv is None:

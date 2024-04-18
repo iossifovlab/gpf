@@ -1,17 +1,16 @@
 #!/usr/bin/env python
 
 import argparse
-import sys
 import logging
 import os
-
-import pysam
-
+import sys
 from contextlib import closing
 from functools import partial
 
-from dae.utils.regions import Region
+import pysam
+
 from dae.gpf_instance.gpf_instance import GPFInstance
+from dae.utils.regions import Region
 from dae.variants.attributes import TransmissionType
 from dae.variants.variant import SummaryVariantFactory
 
@@ -47,7 +46,7 @@ def main(argv, gpf_instance=None):
         "vcf_filename",
         type=str,
         metavar="<VCF file>",
-        help="VCF filename. "
+        help="VCF filename. ",
     )
 
     parser.add_argument(
@@ -55,7 +54,7 @@ def main(argv, gpf_instance=None):
         type=str,
         default=None,
         metavar="<C1,C2,C3...>",
-        help="column separated list of INFO field values to be extracted"
+        help="column separated list of INFO field values to be extracted",
     )
 
     parser.add_argument(
@@ -92,7 +91,7 @@ def main(argv, gpf_instance=None):
         "variant",
         "REF",
         "ALT",
-        "ID"
+        "ID",
     ]
     header.extend(info_columns)
 

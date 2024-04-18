@@ -1,4 +1,5 @@
 from django.urls import re_path
+
 from gene_sets import views
 
 urlpatterns = [
@@ -16,6 +17,6 @@ urlpatterns = [
     re_path(
         r"^/has_denovo/?$",
         views.GeneSetsHasDenovoView.as_view(),
-        name="gene_sets"
+        name="gene_sets",
     ),
 ]

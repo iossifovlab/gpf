@@ -3,7 +3,6 @@
 import setuptools
 import versioneer
 
-
 with open("README.md", "r", encoding="utf8") as fh:
     long_description = fh.read()
 
@@ -21,7 +20,7 @@ setuptools.setup(
     packages=setuptools.find_packages(
         where=".", exclude=[
             "tests.*", "tests", "dae.docs", "dae.tests", "*.tests.*",
-            "*.tests"
+            "*.tests",
         ],
     ),
     package_data={
@@ -38,7 +37,7 @@ setuptools.setup(
         "dae/tools/draw_pedigree.py",
         "dae/tools/vcfinfo_extractor.py",
         "dae/tools/to_gpf_gene_models_format.py",
-        "dae/tools/migrate_pheno_measures.py"
+        "dae/tools/migrate_pheno_measures.py",
     ],
     entry_points="""
     [dae.genomic_resources.plugins]

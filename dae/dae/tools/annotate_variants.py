@@ -1,20 +1,23 @@
 #!/usr/bin/env python
 
-import sys
-import os.path
-import time
-
 import argparse
-from typing import Optional, Any
+import os.path
+import sys
+import time
+from typing import Any, Optional
 
 import pysam
 
-from dae.genomic_resources.reference_genome import \
-    build_reference_genome_from_file, ReferenceGenome
-from dae.genomic_resources.gene_models import \
-    build_gene_models_from_file, GeneModels
 from dae.effect_annotation.annotator import EffectAnnotator
 from dae.effect_annotation.effect import AnnotationEffect
+from dae.genomic_resources.gene_models import (
+    GeneModels,
+    build_gene_models_from_file,
+)
+from dae.genomic_resources.reference_genome import (
+    ReferenceGenome,
+    build_reference_genome_from_file,
+)
 
 
 def cli_genome_options(
@@ -71,7 +74,7 @@ def cli_genome_options(
 
 
 def parse_cli_genome_options(
-    args: argparse.Namespace
+    args: argparse.Namespace,
 ) -> tuple[Optional[ReferenceGenome], Optional[GeneModels]]:
     """Parse reference genome and gene models options."""
     genomic_sequence = None
@@ -98,10 +101,10 @@ def cli_variants_options(parser: argparse.ArgumentParser) -> None:
     """Configure parser for variant specifying options."""
     location_group = parser.add_argument_group("variants location")
     location_group.add_argument(
-        "--chrom", "-c", help="chromosome column number/name", action="store"
+        "--chrom", "-c", help="chromosome column number/name", action="store",
     )
     location_group.add_argument(
-        "--pos", "-p", help="position column number/name", action="store"
+        "--pos", "-p", help="position column number/name", action="store",
     )
     location_group.add_argument(
         "--location",
@@ -112,7 +115,7 @@ def cli_variants_options(parser: argparse.ArgumentParser) -> None:
 
     variants_group = parser.add_argument_group("variants specification")
     variants_group.add_argument(
-        "--variant", "-v", help="variant column number/name", action="store"
+        "--variant", "-v", help="variant column number/name", action="store",
     )
     variants_group.add_argument(
         "--ref",
@@ -190,10 +193,10 @@ def cli(argv: Optional[list[str]] = None) -> None:
     cli_variants_options(parser)
 
     parser.add_argument(
-        "input_filename", nargs="?", help="input variants file name"
+        "input_filename", nargs="?", help="input variants file name",
     )
     parser.add_argument(
-        "output_filename", nargs="?", help="output file name (default: stdout)"
+        "output_filename", nargs="?", help="output file name (default: stdout)",
     )
 
     args = parser.parse_args(argv)
@@ -201,7 +204,7 @@ def cli(argv: Optional[list[str]] = None) -> None:
     assert genomic_sequence is not None
     assert gene_models is not None
     annotator = EffectAnnotator(
-        genomic_sequence, gene_models, promoter_len=args.promoter_len
+        genomic_sequence, gene_models, promoter_len=args.promoter_len,
     )
 
     variant_columns = parse_cli_variants_options(args)
@@ -287,7 +290,7 @@ def cli_vcf(argv: Optional[list[str]] = None) -> None:
     cli_genome_options(parser)
     parser.add_argument("input_filename", help="input VCF variants file name")
     parser.add_argument(
-        "output_filename", nargs="?", help="output file name (default: stdout)"
+        "output_filename", nargs="?", help="output file name (default: stdout)",
     )
 
     args = parser.parse_args(argv)
@@ -295,7 +298,7 @@ def cli_vcf(argv: Optional[list[str]] = None) -> None:
     assert genomic_sequence is not None
     assert gene_models is not None
     annotator = EffectAnnotator(
-        genomic_sequence, gene_models, promoter_len=args.promoter_len
+        genomic_sequence, gene_models, promoter_len=args.promoter_len,
     )
 
     assert os.path.exists(args.input_filename), args.input_filename
@@ -312,10 +315,10 @@ def cli_vcf(argv: Optional[list[str]] = None) -> None:
     # Transfer VCF header
     header = infile.header
     header.add_meta(
-        "variant_effect_annotation", "GPF variant effects annotation"
+        "variant_effect_annotation", "GPF variant effects annotation",
     )
     header.add_meta(
-        "variant_effect_annotation_command", f"'{' '.join(sys.argv)}'"
+        "variant_effect_annotation_command", f"'{' '.join(sys.argv)}'",
     )
 
     header.info.add("ET", ".", "String", "effected type")

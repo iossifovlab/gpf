@@ -2,8 +2,8 @@
 from typing import Callable, ContextManager
 
 import pytest
-
 from gpf_instance.gpf_instance import WGPFInstance
+
 from wdae.wgpf import cli  # type: ignore
 from wdae_tests.integration.testing import LiveServer
 
@@ -11,7 +11,7 @@ from wdae_tests.integration.testing import LiveServer
 def test_wgpf_init_simple(
     wgpf_fixture: WGPFInstance,
     wdae_django_setup: Callable[
-        [WGPFInstance, str], ContextManager[LiveServer]]
+        [WGPFInstance, str], ContextManager[LiveServer]],
 ) -> None:
     # Given
     with wdae_django_setup(
@@ -34,7 +34,7 @@ def test_wgpf_reinit(
     wgpf_fixture: WGPFInstance,
     wdae_django_setup: Callable[
         [WGPFInstance, str], ContextManager[LiveServer]],
-    capsys: pytest.CaptureFixture
+    capsys: pytest.CaptureFixture,
 ) -> None:
     # Given
     with wdae_django_setup(
@@ -56,7 +56,7 @@ def test_wgpf_reinit(
 def test_wgpf_force_reinit(
     wgpf_fixture: WGPFInstance,
     wdae_django_setup: Callable[
-        [WGPFInstance, str], ContextManager[LiveServer]]
+        [WGPFInstance, str], ContextManager[LiveServer]],
 ) -> None:
     # Given
     with wdae_django_setup(

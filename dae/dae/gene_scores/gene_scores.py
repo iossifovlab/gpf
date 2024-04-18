@@ -2,27 +2,28 @@ from __future__ import annotations
 
 import itertools
 import logging
-from urllib.parse import quote
-from functools import lru_cache
 from dataclasses import dataclass
-from typing import Optional, Any, cast
+from functools import lru_cache
+from typing import Any, Optional, cast
+from urllib.parse import quote
 
 import numpy as np
 import pandas as pd
-
 from jinja2 import Template
 
-from dae.utils.dae_utils import join_line
-from dae.genomic_resources.resource_implementation import \
-    ResourceConfigValidationMixin, get_base_resource_schema
-
 from dae.genomic_resources import GenomicResource
-from dae.genomic_resources.histogram import \
-    NumberHistogram, \
-    NumberHistogramConfig, \
-    load_histogram, build_histogram_config
-
+from dae.genomic_resources.histogram import (
+    NumberHistogram,
+    NumberHistogramConfig,
+    build_histogram_config,
+    load_histogram,
+)
+from dae.genomic_resources.resource_implementation import (
+    ResourceConfigValidationMixin,
+    get_base_resource_schema,
+)
 from dae.genomic_scores.scores import SCORE_HISTOGRAM
+from dae.utils.dae_utils import join_line
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +42,7 @@ class ScoreDef:
 
 
 class GeneScore(
-    ResourceConfigValidationMixin
+    ResourceConfigValidationMixin,
 ):
     """Class used to represent gene scores."""
 
@@ -244,7 +245,7 @@ class GeneScore(
                         "type": {"type": "string"},
                         "number_of_bins": {
                             "type": "number",
-                            "dependencies": {"type": "number"}
+                            "dependencies": {"type": "number"},
                         },
                         "view_range": {"type": "dict", "schema": {
                             "min": {"type": "number"},
@@ -252,26 +253,26 @@ class GeneScore(
                         }, "dependencies": {"type": "number"}},
                         "x_log_scale": {
                             "type": "boolean",
-                            "dependencies": {"type": "number"}
+                            "dependencies": {"type": "number"},
                         },
                         "y_log_scale": {
                             "type": "boolean",
-                            "dependencies": {"type": ["number", "categorical"]}
+                            "dependencies": {"type": ["number", "categorical"]},
                         },
                         "x_min_log": {
                             "type": "number",
-                            "dependencies": {"type": ["number", "categorical"]}
+                            "dependencies": {"type": ["number", "categorical"]},
                         },
                         "value_order": {
                             "type": "list", "schema": {"type": "string"},
-                            "dependencies": {"type": "categorical"}
+                            "dependencies": {"type": "categorical"},
                         },
                         "reason": {
                             "type": "string",
-                            "dependencies": {"type": "null"}
-                        }
+                            "dependencies": {"type": "null"},
+                        },
                     }},
-                }
+                },
             }},
         }
 
@@ -355,7 +356,7 @@ def _build_gene_score_help(
 
     histogram = Template(SCORE_HISTOGRAM).render(
         hist_url=hist_url,
-        score_def=score_def
+        score_def=score_def,
     )
 
     data = {
@@ -388,7 +389,7 @@ class GeneScoresDb:
 
     @staticmethod
     def _build_descs_from_score(
-        gene_score: GeneScore
+        gene_score: GeneScore,
     ) -> list[ScoreDesc]:
         result = []
         for score_id, score_def in gene_score.score_definitions.items():

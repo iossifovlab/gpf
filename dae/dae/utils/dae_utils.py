@@ -1,8 +1,8 @@
 import re
-from typing import Iterable, Generator, Union
+from collections.abc import Generator, Iterable
+from typing import Union
 
 from dae.genomic_resources.reference_genome import ReferenceGenome
-
 
 SUB_COMPLEX_RE = re.compile(r"^(sub|complex|comp)\(([NACGT]+)->([NACGT]+)\)$")
 INS_RE = re.compile(r"^ins\(([NACGT]+)\)$")
@@ -10,7 +10,7 @@ DEL_RE = re.compile(r"^del\((\d+)\)$")
 
 
 def dae2vcf_variant(
-    chrom: str, position: int, variant: str, genome: ReferenceGenome
+    chrom: str, position: int, variant: str, genome: ReferenceGenome,
 ) -> tuple[int, str, str]:
     """Convert a given CSHL-style variant to the VCF format."""
     match = SUB_COMPLEX_RE.match(variant)
@@ -27,7 +27,7 @@ def dae2vcf_variant(
     if match:
         count = int(match.group(1))
         reference = genome.get_sequence(
-            chrom, position - 1, position + count - 1
+            chrom, position - 1, position + count - 1,
         )
         assert len(reference) == count + 1, reference
         return position - 1, reference, reference[0]
@@ -36,14 +36,14 @@ def dae2vcf_variant(
 
 
 def cshl2vcf_variant(
-    location: str, variant: str, genome: ReferenceGenome
+    location: str, variant: str, genome: ReferenceGenome,
 ) -> tuple[str, int, str, str]:
     chrom, position = location.split(":")
     return chrom, *dae2vcf_variant(chrom, int(position), variant, genome)
 
 
 def split_iterable(
-    iterable: Iterable, max_chunk_length: int = 50
+    iterable: Iterable, max_chunk_length: int = 50,
 ) -> Generator[list, None, None]:
     """Split an iterable into chunks of a list type."""
     i = 0

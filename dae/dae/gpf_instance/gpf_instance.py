@@ -2,43 +2,40 @@
 # pylint: disable=import-outside-toplevel
 from __future__ import annotations
 
-import os
 import logging
+import os
 from functools import cached_property
-from typing import Optional, Union, Any, cast
 from pathlib import Path
+from typing import Any, Optional, Union, cast
 
 import yaml
 from box import Box
 
+from dae.annotation.annotation_factory import build_annotation_pipeline
 from dae.annotation.annotation_pipeline import AnnotationPipeline
-from dae.gene_profile.statistic import GPStatistic
-from dae.genomic_resources.gene_models import GeneModels, TranscriptModel
-from dae.genomic_resources.reference_genome import ReferenceGenome
-
-from dae.genomic_resources.repository import GenomicResourceRepo
-from dae.utils.fs_utils import find_directory_with_a_file
-from dae.studies.study import GenotypeData
-from dae.genomic_scores.scores import GenomicScoresRegistry
-from dae.gene_scores.gene_scores import GeneScore
-from dae.gene_scores.gene_scores import ScoreDesc as GeneScoreDesc
-from dae.gene.gene_sets_db import GeneSet, GeneSetsDb, \
-    build_gene_set_collection_from_resource
-from dae.gene.denovo_gene_sets_db import DenovoGeneSetsDb
 from dae.common_reports.common_report import CommonReport
-
-from dae.studies.variants_db import VariantsDb
-
-from dae.pheno.registry import PhenoRegistry
-from dae.pheno.pheno_data import PhenotypeData, get_pheno_db_dir
-
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.dae_conf import dae_conf_schema
 from dae.configuration.schemas.gene_profile import gene_profiles_config
-
+from dae.gene.denovo_gene_sets_db import DenovoGeneSetsDb
+from dae.gene.gene_sets_db import (
+    GeneSet,
+    GeneSetsDb,
+    build_gene_set_collection_from_resource,
+)
 from dae.gene_profile.db import GeneProfileDB
-from dae.annotation.annotation_factory import build_annotation_pipeline
-
+from dae.gene_profile.statistic import GPStatistic
+from dae.gene_scores.gene_scores import GeneScore
+from dae.gene_scores.gene_scores import ScoreDesc as GeneScoreDesc
+from dae.genomic_resources.gene_models import GeneModels, TranscriptModel
+from dae.genomic_resources.reference_genome import ReferenceGenome
+from dae.genomic_resources.repository import GenomicResourceRepo
+from dae.genomic_scores.scores import GenomicScoresRegistry
+from dae.pheno.pheno_data import PhenotypeData, get_pheno_db_dir
+from dae.pheno.registry import PhenoRegistry
+from dae.studies.study import GenotypeData
+from dae.studies.variants_db import VariantsDb
+from dae.utils.fs_utils import find_directory_with_a_file
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +46,7 @@ class GPFInstance:
     # pylint: disable=too-many-public-methods
     @staticmethod
     def _build_gpf_config(
-        config_filename: Optional[Union[str, Path]] = None
+        config_filename: Optional[Union[str, Path]] = None,
     ) -> tuple[Box, Path]:
         dae_dir: Optional[Path]
         if config_filename is not None:
@@ -104,11 +101,11 @@ class GPFInstance:
 
         self._grr = cast(GenomicResourceRepo, kwargs.get("grr"))
         self._reference_genome = cast(
-            ReferenceGenome, kwargs.get("reference_genome")
+            ReferenceGenome, kwargs.get("reference_genome"),
         )
         self._gene_models = cast(
             GeneModels,
-            kwargs.get("gene_models")
+            kwargs.get("gene_models"),
         )
         self._annotation_pipeline: Optional[AnnotationPipeline] = None
 
@@ -147,8 +144,9 @@ class GPFInstance:
             return self._reference_genome
 
         # pylint: disable=import-outside-toplevel
-        from dae.genomic_resources.reference_genome import \
-            build_reference_genome_from_resource
+        from dae.genomic_resources.reference_genome import (
+            build_reference_genome_from_resource,
+        )
 
         resource = self.grr.get_resource(
             self.dae_config.reference_genome.resource_id)
@@ -163,8 +161,9 @@ class GPFInstance:
             return self._gene_models
 
         # pylint: disable=import-outside-toplevel
-        from dae.genomic_resources.gene_models import \
-            build_gene_models_from_resource
+        from dae.genomic_resources.gene_models import (
+            build_gene_models_from_resource,
+        )
 
         resource = self.grr.get_resource(
             self.dae_config.gene_models.resource_id)
@@ -175,7 +174,7 @@ class GPFInstance:
         return result
 
     def get_transcript_models(
-        self, gene_symbol: str
+        self, gene_symbol: str,
     ) -> tuple[Optional[str], Optional[list[TranscriptModel]]]:
         """Get gene model by gene symbol."""
         gene_symbol = gene_symbol.lower()
@@ -193,7 +192,7 @@ class GPFInstance:
         registry = PhenoRegistry()
         logger.info("pheno registry created: %s", id(registry))
         pheno_configs = GPFConfigParser.collect_directory_configs(
-            pheno_data_dir
+            pheno_data_dir,
         )
 
         with PhenoRegistry.CACHE_LOCK:
@@ -201,15 +200,17 @@ class GPFInstance:
                 logger.info("loading phenotype data from config: %s", config)
                 registry.register_phenotype_data(
                     PhenoRegistry.load_pheno_data(Path(config)),
-                    lock=False
+                    lock=False,
                 )
         return registry
 
     @cached_property
     def gene_scores_db(self) -> Any:
         """Load and return gene scores db."""
-        from dae.gene_scores.gene_scores import GeneScoresDb, \
-            build_gene_score_from_resource
+        from dae.gene_scores.gene_scores import (
+            GeneScoresDb,
+            build_gene_score_from_resource,
+        )
         if self.dae_config.gene_scores_db is None:
             return GeneScoresDb([])
 
@@ -234,8 +235,9 @@ class GPFInstance:
     def genotype_storages(self) -> Any:
         """Construct and return genotype storage registry."""
         # pylint: disable=import-outside-toplevel
-        from dae.genotype_storage.genotype_storage_registry import \
-            GenotypeStorageRegistry
+        from dae.genotype_storage.genotype_storage_registry import (
+            GenotypeStorageRegistry,
+        )
         registry = GenotypeStorageRegistry()
         internal_storage = registry.register_storage_config({
             "id": "internal",
@@ -265,7 +267,7 @@ class GPFInstance:
 
         gpdb = GeneProfileDB(
             config,
-            os.path.join(self.dae_dir, "gpdb")
+            os.path.join(self.dae_dir, "gpdb"),
         )
         return gpdb
 
@@ -292,7 +294,7 @@ class GPFInstance:
         assert config_filename is not None
         return GPFConfigParser.load_config(
             config_filename,
-            gene_profiles_config
+            gene_profiles_config,
         )
 
     @cached_property
@@ -308,7 +310,7 @@ class GPFInstance:
                     logger.error("can't find resource %s", gsc_id)
                     continue
                 gscs.append(
-                    build_gene_set_collection_from_resource(resource)
+                    build_gene_set_collection_from_resource(resource),
                 )
 
             return GeneSetsDb(gscs)
@@ -334,14 +336,14 @@ class GPFInstance:
             return genotype_data_study
         return cast(
             GenotypeData,
-            self._variants_db.get_genotype_group(genotype_data_id)
+            self._variants_db.get_genotype_group(genotype_data_id),
         )
 
     def get_all_genotype_data(self) -> list[GenotypeData]:
         genotype_studies = self._variants_db.get_all_genotype_studies()
         genotype_data_groups = self._variants_db.get_all_genotype_groups()
         return cast(
-            list[GenotypeData], genotype_studies + genotype_data_groups
+            list[GenotypeData], genotype_studies + genotype_data_groups,
         )
 
     def get_genotype_data_config(self, genotype_data_id: str) -> Optional[Box]:
@@ -349,7 +351,7 @@ class GPFInstance:
         if config is not None:
             return config
         return cast(Box, self._variants_db.get_genotype_group_config(
-            genotype_data_id
+            genotype_data_id,
         ))
 
     def register_genotype_data(self, genotype_data: GenotypeData) -> None:
@@ -363,12 +365,12 @@ class GPFInstance:
         return self._pheno_registry.get_phenotype_data_ids()
 
     def has_phenotype_data(
-        self, phenotype_data_id: str
+        self, phenotype_data_id: str,
     ) -> bool:
         return self._pheno_registry.has_phenotype_data(phenotype_data_id)
 
     def get_phenotype_data(
-        self, phenotype_data_id: str
+        self, phenotype_data_id: str,
     ) -> PhenotypeData:
         return self._pheno_registry.get_phenotype_data(phenotype_data_id)
 
@@ -376,7 +378,7 @@ class GPFInstance:
         return self._pheno_registry.get_all_phenotype_data()
 
     def get_phenotype_data_config(
-        self, phenotype_data_id: str
+        self, phenotype_data_id: str,
     ) -> Optional[Box]:
         return self._pheno_registry.get_phenotype_data_config(
             phenotype_data_id)
@@ -387,12 +389,12 @@ class GPFInstance:
 
     def get_gene_score(self, gene_score_id: str) -> GeneScore:
         return cast(
-            GeneScore, self.gene_scores_db.get_gene_score(gene_score_id)
+            GeneScore, self.gene_scores_db.get_gene_score(gene_score_id),
         )
 
     def get_gene_score_desc(self, score_id: str) -> GeneScoreDesc:
         return cast(
-            GeneScoreDesc, self.gene_scores_db.get_score_desc(score_id)
+            GeneScoreDesc, self.gene_scores_db.get_score_desc(score_id),
         )
 
     def get_all_gene_scores(self) -> list[GeneScore]:
@@ -438,15 +440,15 @@ class GPFInstance:
     def get_gene_set(self, collection_id: str, gene_set_id: str) -> GeneSet:
         return cast(
             GeneSet,
-            self.gene_sets_db.get_gene_set(collection_id, gene_set_id)
+            self.gene_sets_db.get_gene_set(collection_id, gene_set_id),
         )
 
     def get_denovo_gene_sets(
-        self, datasets: list[GenotypeData]
+        self, datasets: list[GenotypeData],
     ) -> list[dict[str, Any]]:
         return cast(
             list[dict[str, Any]],
-            self.denovo_gene_sets_db.get_gene_set_descriptions(datasets)
+            self.denovo_gene_sets_db.get_gene_set_descriptions(datasets),
         )
 
     def has_denovo_gene_sets(self) -> bool:
@@ -455,24 +457,24 @@ class GPFInstance:
     def get_all_denovo_gene_sets(
         self, types: dict[str, Any],
         datasets: list[Any],
-        collection_id: str  # pylint: disable=unused-argument
+        collection_id: str,  # pylint: disable=unused-argument
     ) -> list[dict[str, Any]]:
         return cast(
             list[dict[str, Any]],
-            self.denovo_gene_sets_db.get_all_gene_sets(types, datasets)
+            self.denovo_gene_sets_db.get_all_gene_sets(types, datasets),
         )
 
     def get_denovo_gene_set(
         self, gene_set_id: str,
         types: dict[str, Any],
         datasets: list[GenotypeData],
-        collection_id: str  # pylint: disable=unused-argument
+        collection_id: str,  # pylint: disable=unused-argument
     ) -> dict[str, Any]:
         return cast(
             dict[str, Any],
             self.denovo_gene_sets_db.get_gene_set(
-                gene_set_id, types, datasets
-            )
+                gene_set_id, types, datasets,
+            ),
         )
 
     # Variants DB
@@ -485,7 +487,7 @@ class GPFInstance:
 
     def get_gp_statistic(self, gene_symbol: str) -> GPStatistic:
         return cast(
-            GPStatistic, self._gene_profile_db.get_gp(gene_symbol)
+            GPStatistic, self._gene_profile_db.get_gp(gene_symbol),
         )
 
     def query_gp_statistics(
@@ -493,20 +495,20 @@ class GPFInstance:
         page: int,
         symbol_like: Optional[str] = None,
         sort_by: Optional[str] = None,
-        order: Optional[str] = None
+        order: Optional[str] = None,
     ) -> list[GPStatistic]:
         """Query AGR statistics and return results."""
         rows = self._gene_profile_db.query_gps(
-            page, symbol_like, sort_by, order
+            page, symbol_like, sort_by, order,
         )
         statistics = list(map(
             self._gene_profile_db.gp_from_table_row,
-            rows
+            rows,
         ))
         return cast(list[GPStatistic], statistics)
 
     def _construct_import_effect_annotator_config(
-        self
+        self,
     ) -> dict[str, Any]:
         """Construct import effect annotator."""
         genome = self.reference_genome
@@ -520,13 +522,13 @@ class GPFInstance:
                     {
                         "source": "allele_effects",
                         "name": "allele_effects",
-                        "internal": True
+                        "internal": True,
                     },
                     "worst_effect",
                     "gene_effects",
-                    "effect_details"
-                ]
-            }
+                    "effect_details",
+                ],
+            },
         }
         return config
 

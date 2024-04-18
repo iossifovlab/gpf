@@ -1,23 +1,22 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
-from box import Box
 
 import pytest
+from box import Box
 from pytest_mock import MockerFixture
 
-from dae.gene_profile.exporter import cli_export
 from dae.gene_profile.db import GeneProfileDB
+from dae.gene_profile.exporter import cli_export
 from dae.gene_profile.statistic import GPStatistic
-
 from dae.gpf_instance import GPFInstance
 
 
-@pytest.fixture
+@pytest.fixture()
 def two_rows_gp(
     gp_config: Box, sample_gp: GPStatistic,
     gp_gpf_instance: GPFInstance,
     mocker: MockerFixture,
-    tmp_path: pathlib.Path
+    tmp_path: pathlib.Path,
 ) -> GPFInstance:
     root_path = tmp_path
     gpdb_filename = str(root_path / "gpdb")

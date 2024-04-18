@@ -1,9 +1,12 @@
 from typing import Any, Optional
+
 from dae.annotation.annotatable import Annotatable
-from dae.annotation.annotation_pipeline import AnnotationPipeline
-from dae.annotation.annotation_pipeline import AttributeInfo
-from dae.annotation.annotation_pipeline import Annotator
-from dae.annotation.annotation_pipeline import AnnotatorInfo
+from dae.annotation.annotation_pipeline import (
+    AnnotationPipeline,
+    Annotator,
+    AnnotatorInfo,
+    AttributeInfo,
+)
 from dae.genomic_resources.aggregators import build_aggregator
 from dae.genomic_resources.cnv_collection import CnvCollection
 
@@ -42,7 +45,7 @@ class CnvCollectionAnnotator(Annotator):
 
         source_type_desc = {
             "count": ("int", "The number of CNVs overlapping with "
-                      "the annotatable.")
+                      "the annotatable."),
         }
 
         self.cnv_attributes = {}
@@ -91,7 +94,7 @@ class CnvCollectionAnnotator(Annotator):
         super().close()
 
     def annotate(
-        self, annotatable: Optional[Annotatable], _: dict[str, Any]
+        self, annotatable: Optional[Annotatable], _: dict[str, Any],
     ) -> dict[str, Any]:
         if annotatable is None:
             return self._empty_result()

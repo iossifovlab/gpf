@@ -1,10 +1,12 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
+
+from dae.query_variants.attributes_query import (
+    QueryTreeToBitwiseLambdaTransformer,
+    QueryTreeToSQLBitwiseTransformer,
+    variant_type_query,
+)
 from dae.variants.core import Allele
-from dae.query_variants.attributes_query import \
-    QueryTreeToBitwiseLambdaTransformer, \
-    variant_type_query, \
-    QueryTreeToSQLBitwiseTransformer
 
 
 @pytest.mark.parametrize(

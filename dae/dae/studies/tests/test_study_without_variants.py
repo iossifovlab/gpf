@@ -2,12 +2,10 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
 
-
-from dae.studies.study import GenotypeData
 from dae.common_reports.common_report import CommonReport
 from dae.import_tools.cli import run_with_project
-
-from dae.testing import setup_pedigree, setup_import_project, StudyInputLayout
+from dae.studies.study import GenotypeData
+from dae.testing import StudyInputLayout, setup_import_project, setup_pedigree
 from dae.testing.acgt_import import acgt_gpf
 
 

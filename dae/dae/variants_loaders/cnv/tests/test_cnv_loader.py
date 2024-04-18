@@ -1,13 +1,15 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-from typing import Any
 from pathlib import Path
+from typing import Any
+
 import numpy as np
 import pytest
+
 from dae.genomic_resources.testing import setup_denovo, setup_pedigree
 from dae.gpf_instance.gpf_instance import GPFInstance
+from dae.pedigrees.loader import FamiliesLoader
 from dae.testing.acgt_import import acgt_gpf
 from dae.variants_loaders.cnv.loader import CNVLoader
-from dae.pedigrees.loader import FamiliesLoader
 
 
 @pytest.fixture(scope="module")
@@ -38,7 +40,7 @@ def cnv_ped(tmp_path_factory: pytest.TempPathFactory) -> Any:
 
 @pytest.fixture(scope="module")
 def variants_file(
-    tmp_path_factory: pytest.TempPathFactory
+    tmp_path_factory: pytest.TempPathFactory,
 ) -> Path:
     root_path = tmp_path_factory.mktemp("acgt_instance")
     cnv_path = setup_denovo(
@@ -57,7 +59,7 @@ def variants_file(
 def test_cnv_loader(
         variants_file: Path,
         cnv_ped: Any,
-        gpf_instance: GPFInstance
+        gpf_instance: GPFInstance,
 ) -> None:
     families = FamiliesLoader.load_simple_families_file(cnv_ped)
     assert families is not None
@@ -66,7 +68,7 @@ def test_cnv_loader(
         families, [str(variants_file)], gpf_instance.reference_genome,
         params={
             "cnv_family_id": "family_id",
-            "cnv_best_state": "best_state"
+            "cnv_best_state": "best_state",
         })
 
     svs = []
@@ -79,7 +81,7 @@ def test_cnv_loader(
 
 @pytest.fixture(scope="module")
 def summary_variants_duplication(
-    tmp_path_factory: pytest.TempPathFactory
+    tmp_path_factory: pytest.TempPathFactory,
 ) -> Path:
     root_path = tmp_path_factory.mktemp("acgt_instance")
     cnv_path = setup_denovo(
@@ -99,18 +101,18 @@ def summary_variants_duplication(
 def test_cnv_loader_avoids_summary_variants_duplication(
         summary_variants_duplication: Path,
         cnv_ped: Any,
-        gpf_instance: GPFInstance
+        gpf_instance: GPFInstance,
 ) -> None:
     families = FamiliesLoader.load_simple_families_file(cnv_ped)
     assert families is not None
 
     loader = CNVLoader(
         families, [
-            str(summary_variants_duplication)
+            str(summary_variants_duplication),
         ], gpf_instance.reference_genome,
         params={
             "cnv_family_id": "family_id",
-            "cnv_best_state": "best_state"
+            "cnv_best_state": "best_state",
         })
 
     svs = []
@@ -130,7 +132,7 @@ def test_cnv_loader_avoids_summary_variants_duplication(
 # important(see params)
 @pytest.fixture(scope="module")
 def variants_file_alt(
-    tmp_path_factory: pytest.TempPathFactory
+    tmp_path_factory: pytest.TempPathFactory,
 ) -> Path:
     root_path = tmp_path_factory.mktemp("acgt_instance")
     cnv_path = setup_denovo(
@@ -151,7 +153,7 @@ def variants_file_alt(
 def test_cnv_loader_alt(
         variants_file_alt: Path,
         cnv_ped: Path,
-        gpf_instance: GPFInstance
+        gpf_instance: GPFInstance,
 ) -> None:
     families = FamiliesLoader.load_simple_families_file(cnv_ped)
     assert families is not None
@@ -165,8 +167,8 @@ def test_cnv_loader_alt(
             "cnv_variant_type": "variant_type",
             "cnv_plus_values": ["Dup", "Dup_Germline"],
             "cnv_minus_values": ["Del", "Del_Germline"],
-            "cnv_person_id": "person_id"
-        }
+            "cnv_person_id": "person_id",
+        },
     )
 
     svs = []
@@ -179,7 +181,7 @@ def test_cnv_loader_alt(
 
 @pytest.fixture(scope="module")
 def variants_file_best_state(
-    tmp_path_factory: pytest.TempPathFactory
+    tmp_path_factory: pytest.TempPathFactory,
 ) -> Path:
     root_path = tmp_path_factory.mktemp("acgt_instance")
     cnv_path = setup_denovo(
@@ -198,7 +200,7 @@ def variants_file_best_state(
 def test_cnv_loader_alt_best_state(
         variants_file_best_state: Path,
         cnv_ped: Any,
-        gpf_instance: GPFInstance
+        gpf_instance: GPFInstance,
 ) -> None:
     families = FamiliesLoader.load_simple_families_file(cnv_ped)
     assert families is not None
@@ -213,8 +215,8 @@ def test_cnv_loader_alt_best_state(
             "cnv_variant_type": "variant_type",
             "cnv_plus_values": ["Dup", "Dup_Germline"],
             "cnv_minus_values": ["Del", "Del_Germline"],
-            "cnv_person_id": "person_id"
-        }
+            "cnv_person_id": "person_id",
+        },
     )
 
     svs = []
@@ -232,7 +234,7 @@ def test_cnv_loader_alt_best_state(
 
 @pytest.fixture(scope="module")
 def variants_file_alt_2(
-    tmp_path_factory: pytest.TempPathFactory
+    tmp_path_factory: pytest.TempPathFactory,
 ) -> Path:
     root_path = tmp_path_factory.mktemp("acgt_instance")
     cnv_path = setup_denovo(
@@ -251,7 +253,7 @@ def variants_file_alt_2(
 def test_cnv_loader_alt_2(
         variants_file_alt_2: Path,
         cnv_ped: Any,
-        gpf_instance: GPFInstance
+        gpf_instance: GPFInstance,
 ) -> None:
     families = FamiliesLoader.load_simple_families_file(cnv_ped)
     assert families is not None
@@ -263,8 +265,8 @@ def test_cnv_loader_alt_2(
             "cnv_variant_type": "variant",
             "cnv_plus_values": ["duplication"],
             "cnv_minus_values": ["deletion"],
-            "cnv_person_id": "person_id"
-        }
+            "cnv_person_id": "person_id",
+        },
     )
 
     svs = []
@@ -279,12 +281,12 @@ def test_cnv_loader_alt_2(
     assert len(fvs) == 4
 
 
-@pytest.fixture
+@pytest.fixture()
 def simple_cnv_loader(gpf_instance: GPFInstance) -> Any:
     def ctor(
             cnv_ped: Path,
             cnf_filename: Path,
-            additional_params: Any
+            additional_params: Any,
     ) -> Any:
         families = FamiliesLoader.load_simple_families_file(cnv_ped)
         assert families is not None
@@ -299,7 +301,7 @@ def simple_cnv_loader(gpf_instance: GPFInstance) -> Any:
 
 @pytest.fixture(scope="module")
 def variants_file_2(
-    tmp_path_factory: pytest.TempPathFactory
+    tmp_path_factory: pytest.TempPathFactory,
 ) -> Path:
     root_path = tmp_path_factory.mktemp("acgt_instance")
     cnv_path = setup_denovo(
@@ -320,12 +322,12 @@ def variants_file_2(
 def test_chromosomes_have_adjusted_chrom_add(
     simple_cnv_loader: Any,
     cnv_ped: Any,
-    variants_file: Path
+    variants_file: Path,
 ) -> None:
     loader = simple_cnv_loader(cnv_ped, variants_file, {
         "add_chrom_prefix": "chr",
         "cnv_family_id": "family_id",
-        "cnv_best_state": "best_state"
+        "cnv_best_state": "best_state",
     })
     assert loader.chromosomes == ["chrchr1", "chrchr2"]
 
@@ -333,12 +335,12 @@ def test_chromosomes_have_adjusted_chrom_add(
 def test_chromosomes_have_adjusted_chrom_del(
     simple_cnv_loader: Any,
     cnv_ped: Any,
-    variants_file_2: Path
+    variants_file_2: Path,
 ) -> None:
     loader = simple_cnv_loader(cnv_ped, variants_file_2, {
         "del_chrom_prefix": "chr",
         "cnv_family_id": "family_id",
-        "cnv_best_state": "best_state"
+        "cnv_best_state": "best_state",
     })
     assert loader.chromosomes == ["1", "2"]
 
@@ -346,12 +348,12 @@ def test_chromosomes_have_adjusted_chrom_del(
 def test_variants_have_adjusted_chrom_add(
     simple_cnv_loader: Any,
     cnv_ped: Any,
-    variants_file: Path
+    variants_file: Path,
 ) -> None:
     loader = simple_cnv_loader(cnv_ped, variants_file, {
         "add_chrom_prefix": "chr",
         "cnv_family_id": "family_id",
-        "cnv_best_state": "best_state"
+        "cnv_best_state": "best_state",
     })
 
     variants = list(loader.full_variants_iterator())
@@ -363,12 +365,12 @@ def test_variants_have_adjusted_chrom_add(
 def test_variants_have_adjusted_chrom_del(
     simple_cnv_loader: Any,
     cnv_ped: Any,
-    variants_file_2: Path
+    variants_file_2: Path,
 ) -> None:
     loader = simple_cnv_loader(cnv_ped, variants_file_2, {
         "del_chrom_prefix": "chr",
         "cnv_family_id": "family_id",
-        "cnv_best_state": "best_state"
+        "cnv_best_state": "best_state",
     })
 
     variants = list(loader.full_variants_iterator())
@@ -380,12 +382,12 @@ def test_variants_have_adjusted_chrom_del(
 def test_reset_regions_with_adjusted_chrom_add(
     simple_cnv_loader: Any,
     cnv_ped: Any,
-    variants_file: Path
+    variants_file: Path,
 ) -> None:
     loader = simple_cnv_loader(cnv_ped, variants_file, {
         "add_chrom_prefix": "chr",
         "cnv_family_id": "family_id",
-        "cnv_best_state": "best_state"
+        "cnv_best_state": "best_state",
     })
     regions = ["chrchr1"]
     loader.reset_regions(regions)
@@ -399,12 +401,12 @@ def test_reset_regions_with_adjusted_chrom_add(
 def test_reset_regions_with_adjusted_chrom_del(
     simple_cnv_loader: Any,
     cnv_ped: Any,
-    variants_file_2: Path
+    variants_file_2: Path,
 ) -> None:
     loader = simple_cnv_loader(cnv_ped, variants_file_2, {
         "del_chrom_prefix": "chr",
         "cnv_family_id": "family_id",
-        "cnv_best_state": "best_state"
+        "cnv_best_state": "best_state",
     })
     regions = ["1"]
     loader.reset_regions(regions)

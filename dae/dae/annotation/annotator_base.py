@@ -2,11 +2,10 @@
 from __future__ import annotations
 
 import abc
-
 from typing import Any, Optional
 
-from .annotation_pipeline import AnnotationPipeline, Annotator, AnnotatorInfo
 from .annotatable import Annotatable
+from .annotation_pipeline import AnnotationPipeline, Annotator, AnnotatorInfo
 
 
 class AnnotatorBase(Annotator):
@@ -35,7 +34,7 @@ class AnnotatorBase(Annotator):
         """
 
     def annotate(
-        self, annotatable: Optional[Annotatable], context: dict[str, Any]
+        self, annotatable: Optional[Annotatable], context: dict[str, Any],
     ) -> dict[str, Any]:
         if annotatable is None:
             return self._empty_result()

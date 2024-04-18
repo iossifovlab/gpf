@@ -2,8 +2,7 @@ from __future__ import annotations
 
 import enum
 import logging
-
-from typing import Optional, Union, Any
+from typing import Any, Optional, Union
 
 logger = logging.getLogger(__name__)
 

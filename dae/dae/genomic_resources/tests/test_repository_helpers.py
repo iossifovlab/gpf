@@ -1,9 +1,10 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
 
-from dae.genomic_resources.repository import parse_gr_id_version_token
-from dae.genomic_resources.repository import \
-    is_version_constraint_satisfied
+from dae.genomic_resources.repository import (
+    is_version_constraint_satisfied,
+    parse_gr_id_version_token,
+)
 
 
 def test_parse_gr_id_version_token() -> None:

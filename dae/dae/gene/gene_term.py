@@ -64,9 +64,9 @@ class GeneTerms:
         with open(dscFn, "w") as dscFn:
             dscFn.write(
                 "\n".join(
-                    [t + "\t" + dsc for t, dsc in sorted(self.tDesc.items())]
+                    [t + "\t" + dsc for t, dsc in sorted(self.tDesc.items())],
                 )
-                + "\n"
+                + "\n",
             )
 
 
@@ -126,7 +126,7 @@ def read_mapping_file(input_file, names_file):
                 (t, desc) = line.strip().split("\t", 1)
                 if t in r.t2G:
                     r.tDesc[t] = desc
-        except IOError:
+        except OSError:
             pass
         names_file.close()
     for t in set(r.t2G) - set(r.tDesc):

@@ -1,21 +1,21 @@
-import sys
-import time
 import argparse
+import json
 import logging
 import os
-import json
+import sys
+import time
 from typing import Optional
 
-from dae.utils.verbosity_configuration import VerbosityConfiguration
-from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.common_reports.common_report import CommonReport
+from dae.gpf_instance.gpf_instance import GPFInstance
+from dae.utils.verbosity_configuration import VerbosityConfiguration
 
 logger = logging.getLogger("generate_common_reports")
 
 
 def main(
     argv: Optional[list[str]] = None,
-    gpf_instance: Optional[GPFInstance] = None
+    gpf_instance: Optional[GPFInstance] = None,
 ) -> None:
     """Command line tool to generate dataset statistics."""
     description = "Generate common reports tool"

@@ -4,18 +4,20 @@ import textwrap
 
 import pytest
 
-from dae.genomic_resources.testing import \
-    setup_directories, convert_to_tab_separated, setup_genome, \
-    build_filesystem_test_repository
-from dae.annotation.annotatable import \
-    Region, Position, CNVAllele, Annotatable
+from dae.annotation.annotatable import Annotatable, CNVAllele, Position, Region
 from dae.annotation.annotation_factory import build_annotation_pipeline
 from dae.genomic_resources.repository import GenomicResourceProtocolRepo
+from dae.genomic_resources.testing import (
+    build_filesystem_test_repository,
+    convert_to_tab_separated,
+    setup_directories,
+    setup_genome,
+)
 
 
-@pytest.fixture
+@pytest.fixture()
 def fixture_repo(
-    tmp_path_factory: pytest.TempPathFactory
+    tmp_path_factory: pytest.TempPathFactory,
 ) -> GenomicResourceProtocolRepo:
     root_path = tmp_path_factory.mktemp("regions_effect_annotation")
     setup_directories(root_path, {
@@ -39,7 +41,7 @@ def fixture_repo(
                 type: genome
                 filename: genome.fa
             """),
-        }
+        },
     })
     setup_genome(
         root_path / "genome" / "genome.fa",
@@ -48,7 +50,7 @@ def fixture_repo(
             {25 * 'AGCT'}
             >chr2
             {25 * 'AGCT'}
-            """)
+            """),
     )
     return build_filesystem_test_repository(root_path)
 
@@ -67,14 +69,14 @@ def fixture_repo(
         (CNVAllele("chr1", 1, 29, Annotatable.Type.LARGE_DUPLICATION),
          ["g1", "g2"], "CNV+", 29,
          {"g1": ["tx1", "tx2"], "g2": ["tx3"]}),
-    ]
+    ],
 )
 def test_effect_annotator(
         annotatable: Annotatable,
         gene_list: list[str],
         effect_type: str, length: int,
         txs: dict[str, list[str]],
-        fixture_repo: GenomicResourceProtocolRepo
+        fixture_repo: GenomicResourceProtocolRepo,
 ) -> None:
 
     pipeline_config = textwrap.dedent("""
@@ -114,7 +116,7 @@ def test_effect_annotator_region_length_cutoff(
     annotatable: Annotatable,
     effect_type: str,
     length: int,
-    fixture_repo: GenomicResourceProtocolRepo
+    fixture_repo: GenomicResourceProtocolRepo,
 ) -> None:
 
     pipeline_config = textwrap.dedent("""

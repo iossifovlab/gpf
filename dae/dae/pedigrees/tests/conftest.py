@@ -3,20 +3,19 @@ from typing import Callable, cast
 
 import pytest
 
-from dae.pedigrees.family import Family
-from dae.pedigrees.loader import FamiliesLoader
-
-from dae.pedigrees.pedigrees import \
-    Individual, \
-    FamilyConnections, \
-    MatingUnit, \
-    SibshipUnit
-from dae.pedigrees.family import Person
-
-from dae.pedigrees.pedigrees import IntervalForVertex, \
-    SandwichInstance, SandwichSolver
-from dae.pedigrees.layout import IndividualWithCoordinates, Layout
 from dae.pedigrees.families_data import FamiliesData
+from dae.pedigrees.family import Family, Person
+from dae.pedigrees.layout import IndividualWithCoordinates, Layout
+from dae.pedigrees.loader import FamiliesLoader
+from dae.pedigrees.pedigrees import (
+    FamilyConnections,
+    Individual,
+    IntervalForVertex,
+    MatingUnit,
+    SandwichInstance,
+    SandwichSolver,
+    SibshipUnit,
+)
 
 
 @pytest.fixture(scope="function")
@@ -161,7 +160,7 @@ def sibship_unit2(individual4: Individual) -> SibshipUnit:
 def mating_unit2(
     individual5: Individual,
     individual6: Individual,
-    sibship_unit2: SibshipUnit
+    sibship_unit2: SibshipUnit,
 ) -> MatingUnit:
     return MatingUnit(individual5, individual6, sibship_unit2)
 
@@ -180,7 +179,7 @@ def mating_unit2(
 def layout2(
     individual4: Individual,
     individual5: Individual,
-    individual6: Individual
+    individual6: Individual,
 ) -> Layout:
     layout = Layout()
     layout._id_to_position = {
@@ -201,14 +200,14 @@ def family_connections_from_family2(family2: Family) -> FamilyConnections:
 
 @pytest.fixture(scope="function")
 def sandwich_instance_from_family2(
-    family_connections_from_family2: FamilyConnections
+    family_connections_from_family2: FamilyConnections,
 ) -> SandwichInstance:
     return family_connections_from_family2.create_sandwich_instance()
 
 
 @pytest.fixture(scope="function")
 def intervals_from_family2(
-    sandwich_instance_from_family2: SandwichInstance
+    sandwich_instance_from_family2: SandwichInstance,
 ) -> list[IntervalForVertex]:
     return cast(
         list[IntervalForVertex],
@@ -217,7 +216,7 @@ def intervals_from_family2(
 
 @pytest.fixture(scope="function")
 def individuals_intervals_from_family2(
-    intervals_from_family2: list[IntervalForVertex]
+    intervals_from_family2: list[IntervalForVertex],
 ) -> list[IntervalForVertex]:
     return [
         interval
@@ -228,7 +227,7 @@ def individuals_intervals_from_family2(
 
 @pytest.fixture(scope="function")
 def layout_from_family2(
-    individuals_intervals_from_family2: list[IntervalForVertex]
+    individuals_intervals_from_family2: list[IntervalForVertex],
 ) -> list[Layout]:
     return [Layout(individuals_intervals_from_family2)]
 

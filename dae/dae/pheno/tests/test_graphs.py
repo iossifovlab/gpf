@@ -1,6 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,too-many-lines
-import pytest
 import pandas as pd
+import pytest
+
 from dae.pheno.graphs import draw_linregres
 from dae.variants.attributes import Role, Sex
 
@@ -26,7 +27,7 @@ def test_linregres_notcorrelated() -> None:
                 Sex.male,
                 Sex.female,
             ],
-        }
+        },
     )
     res_male, res_female = draw_linregres(df, "age", "i1.m1")
     expected_value = 7.41799e-2
@@ -57,7 +58,7 @@ def test_linregres_positive() -> None:
                 Sex.male,
                 Sex.female,
             ],
-        }
+        },
     )
     res_male, res_female = draw_linregres(df, "age", "i1.m1")
     expected_value = 1.18e-15
@@ -88,7 +89,7 @@ def test_linregres_negative() -> None:
                 Sex.male,
                 Sex.female,
             ],
-        }
+        },
     )
     res_male, res_female = draw_linregres(df, "age", "i1.m1")
     expected_value = 6.92e-16
@@ -135,7 +136,7 @@ def test_linregres_m1_male() -> None:
                 107.01703,
                 110.25811,
                 163.88484,
-                195.29074
+                195.29074,
             ],
             "age": [
                 110.71113119,
@@ -171,7 +172,7 @@ def test_linregres_m1_male() -> None:
                 92.61160024,
                 69.54791318,
                 99.95576118,
-                35.19528659
+                35.19528659,
             ],
             "role": [
                 Role.prb,
@@ -245,7 +246,7 @@ def test_linregres_m1_male() -> None:
                 Sex.male,
                 Sex.male,
             ],
-        }
+        },
     )
 
     res_male, res_female = draw_linregres(df, "age", "i1.m1")
@@ -263,14 +264,14 @@ def test_linregres_m1_female() -> None:
                 106.0046,
                 126.78941,
                 114.90047,
-                121.42031
+                121.42031,
             ],
             "age": [
                 110.4315545,
                 58.88671455,
                 90.00139293,
                 72.69365265,
-                114.74254639
+                114.74254639,
             ],
             "role": [
                 Role.prb,
@@ -286,7 +287,7 @@ def test_linregres_m1_female() -> None:
                 Sex.female,
                 Sex.female,
             ],
-        }
+        },
     )
 
     res_male, res_female = draw_linregres(df, "age", "i1.m1")

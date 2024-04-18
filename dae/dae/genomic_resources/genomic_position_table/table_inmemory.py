@@ -1,9 +1,10 @@
 import collections
-from typing import Optional, List, Any, TextIO
+from typing import Any, List, Optional, TextIO
 
 from dae.genomic_resources.repository import GenomicResource
-from .table import GenomicPositionTable
+
 from .line import Line
+from .table import GenomicPositionTable
 
 
 class InmemoryGenomicPositionTable(GenomicPositionTable):
@@ -13,11 +14,11 @@ class InmemoryGenomicPositionTable(GenomicPositionTable):
         # parameters are <column separator>, <strip_chars>, <space replacement>
         "mem": (None, " \t\n\r", True),
         "tsv": ("\t", "\n\r", False),
-        "csv": (",", "\n\r", False)
+        "csv": (",", "\n\r", False),
     }
 
     def __init__(
-        self, genomic_resource: GenomicResource, table_definition, fileformat
+        self, genomic_resource: GenomicResource, table_definition, fileformat,
     ):
         self.format = fileformat
         self.str_stream: Optional[TextIO] = None
@@ -33,7 +34,7 @@ class InmemoryGenomicPositionTable(GenomicPositionTable):
             self.chrom_key,
             self.pos_begin_key, self.pos_end_key,
             self.ref_key, self.alt_key,
-            self.header
+            self.header,
         )
 
     def open(self):
@@ -114,7 +115,7 @@ class InmemoryGenomicPositionTable(GenomicPositionTable):
     def get_records_in_region(
         self, chrom: str,
         pos_begin: Optional[int] = None,
-        pos_end: Optional[int] = None
+        pos_end: Optional[int] = None,
     ):
         if self.chrom_map:
             fch = self.chrom_map[chrom]

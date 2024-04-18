@@ -1,12 +1,13 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
 
-from studies.query_transformer import QueryTransformer
-
+from dae.query_variants.attributes_query import (
+    OrNode,
+    inheritance_query,
+    role_query,
+)
 from dae.variants.attributes import Inheritance, Role
-from dae.query_variants.attributes_query import inheritance_query, \
-    role_query, \
-    OrNode
+from studies.query_transformer import QueryTransformer
 
 
 @pytest.mark.parametrize(
@@ -59,7 +60,7 @@ from dae.query_variants.attributes_query import inheritance_query, \
             set(["mother only", "neither"]),
             [Inheritance.denovo, Inheritance.mendelian, Inheritance.missing],
             [Role.prb, Role.sib, Role.mom], True),
-    ]
+    ],
 )
 def test_transform_present_in_child_and_present_in_parent(
         present_in_child: set[str], present_in_parent: set[str],

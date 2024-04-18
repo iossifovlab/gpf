@@ -1,12 +1,12 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,too-many-lines
 
-import pytest
 import numpy as np
-from dae.pedigrees.loader import FamiliesLoader
+import pytest
 
-from dae.variants_loaders.raw.loader import VariantsGenotypesLoader
-from dae.variants_loaders.dae.loader import DenovoLoader
+from dae.pedigrees.loader import FamiliesLoader
 from dae.variants.attributes import GeneticModel
+from dae.variants_loaders.dae.loader import DenovoLoader
+from dae.variants_loaders.raw.loader import VariantsGenotypesLoader
 
 
 @pytest.mark.parametrize(
@@ -125,13 +125,13 @@ def test_families_genotypes_decorator_broken_x(
 
     families_loader = FamiliesLoader(
         fixture_dirname("backends/denovo_families.txt"),
-        **{"ped_file_format": "simple"},
+        ped_file_format="simple",
     )
     families = families_loader.load()
 
     variants_loader = DenovoLoader(
         families, fixture_dirname("backends/denovo_X_broken.txt"),
-        gpf_instance_2013.reference_genome
+        gpf_instance_2013.reference_genome,
     )
 
     for _sv, fvs in variants_loader.full_variants_iterator():

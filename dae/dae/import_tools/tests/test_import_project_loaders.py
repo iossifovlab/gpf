@@ -3,12 +3,12 @@
 
 import pytest
 
-from dae.testing import acgt_gpf, setup_pedigree, setup_vcf, setup_denovo
-from dae.testing.import_helpers import StudyInputLayout, setup_import_project
 from dae.import_tools.import_tools import ImportProject
+from dae.testing import acgt_gpf, setup_denovo, setup_pedigree, setup_vcf
+from dae.testing.import_helpers import StudyInputLayout, setup_import_project
 
 
-@pytest.fixture
+@pytest.fixture()
 def project_fixture(tmp_path_factory: pytest.TempPathFactory) -> ImportProject:
     root_path = tmp_path_factory.mktemp("import_project_tests")
     gpf_instance = acgt_gpf(root_path)
@@ -36,7 +36,7 @@ def project_fixture(tmp_path_factory: pytest.TempPathFactory) -> ImportProject:
         """
           familyId  location  variant    bestState
           f1        chr2:11    sub(A->G)  2||2||1/0||0||1
-        """
+        """,
     )
     project = setup_import_project(
         root_path / "project",
@@ -48,12 +48,12 @@ def project_fixture(tmp_path_factory: pytest.TempPathFactory) -> ImportProject:
 
 
 def test_import_project_chromosomes_simple(
-    project_fixture: ImportProject
+    project_fixture: ImportProject,
 ) -> None:
     assert project_fixture.get_variant_loader_chromosomes() == ["chr1", "chr2"]
 
 
 def test_import_project_variant_loader_types(
-    project_fixture: ImportProject
+    project_fixture: ImportProject,
 ) -> None:
     assert project_fixture.get_variant_loader_types() == {"vcf", "denovo"}

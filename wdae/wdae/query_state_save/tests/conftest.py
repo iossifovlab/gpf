@@ -1,8 +1,7 @@
-import pytest
-
-import json
 import functools
+import json
 
+import pytest
 from rest_framework import status
 
 
@@ -10,7 +9,7 @@ def save_object(data, page, client):
     url = "/api/v3/query_state/save"
     query = {"data": data, "page": page}
     response = client.post(
-        url, json.dumps(query), content_type="application/json", format="json"
+        url, json.dumps(query), content_type="application/json", format="json",
     )
 
     assert response.status_code == status.HTTP_201_CREATED

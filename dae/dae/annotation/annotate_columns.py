@@ -1,26 +1,36 @@
 from __future__ import annotations
-import os
-import logging
-import sys
-import gzip
+
 import argparse
+import gzip
+import logging
+import os
+import sys
 from contextlib import closing
-from typing import Optional, Any
+from typing import Any, Optional
 
 from pysam import TabixFile, tabix_index
 
-from dae.annotation.context import CLIAnnotationContext
-from dae.annotation.record_to_annotatable import build_record_to_annotatable, \
-    add_record_to_annotable_arguments, \
-    RecordToRegion, RecordToCNVAllele, \
-    RecordToVcfAllele, RecordToPosition
-from dae.annotation.annotate_utils import AnnotationTool, \
-    produce_regions, produce_partfile_paths
+from dae.annotation.annotate_utils import (
+    AnnotationTool,
+    produce_partfile_paths,
+    produce_regions,
+)
 from dae.annotation.annotation_pipeline import ReannotationPipeline
+from dae.annotation.context import CLIAnnotationContext
+from dae.annotation.record_to_annotatable import (
+    RecordToCNVAllele,
+    RecordToPosition,
+    RecordToRegion,
+    RecordToVcfAllele,
+    add_record_to_annotable_arguments,
+    build_record_to_annotatable,
+)
 from dae.genomic_resources.cli import VerbosityConfiguration
 from dae.genomic_resources.genomic_context import get_genomic_context
-from dae.genomic_resources.reference_genome import ReferenceGenome, \
-    build_reference_genome_from_resource
+from dae.genomic_resources.reference_genome import (
+    ReferenceGenome,
+    build_reference_genome_from_resource,
+)
 from dae.task_graph import TaskGraphCli
 from dae.utils.fs_utils import tabix_index_filename
 
@@ -28,7 +38,7 @@ logger = logging.getLogger("annotate_columns")
 
 
 def read_input(
-    args: Any, region: tuple = tuple()
+    args: Any, region: tuple = tuple(),
 ) -> tuple[Any, Any, list[str]]:
     """Return a file object, line iterator and list of header columns.
 
@@ -49,7 +59,7 @@ def read_input(
 
 def produce_tabix_index(
     filepath: str, args: Any, header: list[str],
-    ref_genome: Optional[ReferenceGenome]
+    ref_genome: Optional[ReferenceGenome],
 ) -> None:
     """Produce a tabix index file for the given variants file."""
     record_to_annotatable = build_record_to_annotatable(
@@ -108,7 +118,7 @@ class AnnotateColumnsTool(AnnotationTool):
         """Configure argument parser."""
         parser = argparse.ArgumentParser(
             description="Annotate columns",
-            formatter_class=argparse.ArgumentDefaultsHelpFormatter
+            formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         )
         parser.add_argument(
             "input", default="-", nargs="?",
@@ -153,7 +163,7 @@ class AnnotateColumnsTool(AnnotationTool):
         ref_genome_id: Optional[str],
         out_file_path: str,
         region: tuple = tuple(),
-        compress_output: bool = False
+        compress_output: bool = False,
     ) -> None:
         """Annotate a variants file with a given pipeline configuration."""
         # pylint: disable=too-many-locals,too-many-branches
@@ -215,11 +225,11 @@ class AnnotateColumnsTool(AnnotationTool):
                         for col in pipeline.attributes_deleted:
                             del record[col]
                         annotation = pipeline.annotate(
-                            record_to_annotatable.build(record), record
+                            record_to_annotatable.build(record), record,
                         )
                     else:
                         annotation = pipeline.annotate(
-                            record_to_annotatable.build(record)
+                            record_to_annotatable.build(record),
                         )
 
                     for col in annotation_columns:

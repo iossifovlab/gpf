@@ -1,25 +1,29 @@
-import sys
-import logging
 import gzip
+import logging
+import sys
 from argparse import ArgumentParser
-from typing import Dict, Iterator, List, Optional, Tuple
-
-from dae.utils.verbosity_configuration import VerbosityConfiguration
-from dae.genomic_resources import build_genomic_resource_repository
-from dae.genomic_resources.genomic_context import GenomicContext
-from dae.genomic_resources.genomic_context import get_genomic_context
-from dae.genomic_resources.repository import GenomicResourceRepo
-from dae.genomic_resources.gene_models import GeneModels, \
-    build_gene_models_from_file, \
-    build_gene_models_from_resource
-from dae.genomic_resources.reference_genome import ReferenceGenome
-from dae.genomic_resources.reference_genome import \
-    build_reference_genome_from_file
-from dae.genomic_resources.reference_genome import \
-    build_reference_genome_from_resource
+from collections.abc import Iterator
+from typing import Dict, List, Optional, Tuple
 
 from dae.effect_annotation.annotator import EffectAnnotator
 from dae.effect_annotation.effect import AnnotationEffect
+from dae.genomic_resources import build_genomic_resource_repository
+from dae.genomic_resources.gene_models import (
+    GeneModels,
+    build_gene_models_from_file,
+    build_gene_models_from_resource,
+)
+from dae.genomic_resources.genomic_context import (
+    GenomicContext,
+    get_genomic_context,
+)
+from dae.genomic_resources.reference_genome import (
+    ReferenceGenome,
+    build_reference_genome_from_file,
+    build_reference_genome_from_resource,
+)
+from dae.genomic_resources.repository import GenomicResourceRepo
+from dae.utils.verbosity_configuration import VerbosityConfiguration
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +36,7 @@ class EffectAnnotatorBuilder:
 
         genomic_repository_group.add_argument(
             "-grr", "--genomic-repository-config-filename",
-            help="Genomic Repository Configuraiton File"
+            help="Genomic Repository Configuraiton File",
         )
 
         gene_model_file_group = parser.add_argument_group(
@@ -40,11 +44,11 @@ class EffectAnnotatorBuilder:
 
         gene_model_file_group.add_argument(
             "-gmfn", "--gene-models-filename",
-            help="Gene models file name."
+            help="Gene models file name.",
         )
         gene_model_file_group.add_argument(
             "-gmff", "--gene-models-fileformat",
-            help="Gene models file format."
+            help="Gene models file format.",
         )
         gene_model_file_group.add_argument(
             "-gmmfn", "--gene-mapping-filename",
@@ -56,21 +60,21 @@ class EffectAnnotatorBuilder:
             "Gene models resource options")
         gene_model_resource_group.add_argument(
             "-gmri", "--gene-models-resource-id",
-            help="Gene models resource id."
+            help="Gene models resource id.",
         )
 
         reference_genome_file_group = parser.add_argument_group(
             "Reference genome file options")
         reference_genome_file_group.add_argument(
             "-rgfn", "--reference-genome-filename",
-            help="Reference genome file name."
+            help="Reference genome file name.",
         )
 
         reference_genome_resource_group = parser.add_argument_group(
             "Reference genome resource options")
         reference_genome_resource_group.add_argument(
             "-rgri", "--reference-genome-resource-id",
-            help="Reference genome resource id."
+            help="Reference genome resource id.",
         )
 
         parser.add_argument(
@@ -317,7 +321,7 @@ def cli_columns():
         logger.debug("vdef: %s AAA", vdef)
         effect = annotator.do_annotate_variant(**vdef)
         output_file.write_columns(
-            columns + annotation_attributes.get_values(effect)
+            columns + annotation_attributes.get_values(effect),
         )
 
 
@@ -337,7 +341,7 @@ def cli_vcf():
 
     parser.add_argument("input_filename", help="input VCF variants file name")
     parser.add_argument(
-        "output_filename", nargs="?", help="output file name (default: stdout)"
+        "output_filename", nargs="?", help="output file name (default: stdout)",
     )
     args = parser.parse_args(sys.argv[1:])
     VerbosityConfiguration.set(args)
@@ -354,15 +358,15 @@ def cli_vcf():
     # handling the header
     header = infile.header
     header.add_meta(
-        "variant_effect_annotation", "GPF variant effects annotation."
+        "variant_effect_annotation", "GPF variant effects annotation.",
     )
     header.add_meta(
-        "variant_effect_annotation_command", f'"{" ".join(sys.argv)}"'
+        "variant_effect_annotation_command", f'"{" ".join(sys.argv)}"',
     )
     source_attribute_description = {
         "worst_effect": "The worst effect.",
         "gene_effects": "Gene effects.",
-        "effect_details": "Detailed effects."
+        "effect_details": "Detailed effects.",
     }
     for out_a, src_a in zip(annotation_attributes.get_out_attributes(),
                             annotation_attributes.get_source_attributes()):
@@ -381,7 +385,7 @@ def cli_vcf():
                 chrom=variant.chrom,
                 pos=variant.pos,
                 ref=variant.ref,
-                alt=alt
+                alt=alt,
             )
             for buff, v in zip(buffers,
                                annotation_attributes.get_values(effect)):

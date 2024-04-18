@@ -1,17 +1,21 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-from typing import Callable
 import pathlib
 import textwrap
+from typing import Callable
+
 import pytest
 
-from dae.testing import setup_pedigree, setup_vcf, \
-    setup_dae_transmitted, setup_denovo, setup_directories
-
-from dae.import_tools.import_tools import ImportProject
-from dae.tools.simple_study_import import main
 from dae.genotype_storage.genotype_storage import GenotypeStorage
-
+from dae.import_tools.import_tools import ImportProject
+from dae.testing import (
+    setup_dae_transmitted,
+    setup_denovo,
+    setup_directories,
+    setup_pedigree,
+    setup_vcf,
+)
 from dae.testing.foobar_import import foobar_gpf
+from dae.tools.simple_study_import import main
 
 
 def test_del_loader_prefix() -> None:
@@ -21,7 +25,7 @@ def test_del_loader_prefix() -> None:
     assert res["portokala"] == "portokala"
 
 
-@pytest.fixture
+@pytest.fixture()
 def pedigree_data(tmp_path_factory: pytest.TempPathFactory) -> pathlib.Path:
     root_path = tmp_path_factory.mktemp("pedigree")
     return setup_pedigree(
@@ -35,11 +39,11 @@ def pedigree_data(tmp_path_factory: pytest.TempPathFactory) -> pathlib.Path:
             f2       m2       0      0      2   1      mom
             f2       d2       0      0      1   1      dad
             f2       p2       d2     m2     2   2      prb
-        """
+        """,
     )
 
 
-@pytest.fixture
+@pytest.fixture()
 def denovo_dae_data(tmp_path_factory: pytest.TempPathFactory) -> pathlib.Path:
     root_path = tmp_path_factory.mktemp("denovo_dae_path")
     return setup_denovo(
@@ -51,7 +55,7 @@ def denovo_dae_data(tmp_path_factory: pytest.TempPathFactory) -> pathlib.Path:
           f1        bar:10    sub(G->A)  2||2||2||1/0||0||0||1
           f2        bar:11    sub(G->A)  2||2||1/0||0||1
           f2        bar:12    sub(G->A)  2||2||1/0||0||1
-        """
+        """,
     )
 
 
@@ -117,7 +121,7 @@ def test_import_denovo_dae_style_sep(
     setup_directories(root_path, {
         "denovo_separator_data": {
             "in.dsv": in_var,
-        }
+        },
     })
 
     denovo_filename = str(root_path / "denovo_separator_data" / "in.dsv")
@@ -163,7 +167,7 @@ def test_import_denovo_dae_style_sep(
     assert len(vs) == 5
 
 
-@pytest.fixture
+@pytest.fixture()
 def vcf_data(tmp_path_factory: pytest.TempPathFactory) -> pathlib.Path:
     root_path = tmp_path_factory.mktemp("vcf_data")
 

@@ -1,8 +1,9 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,missing-class-docstring
 import unittest
+
 import numpy as np
 
-from dae.tools.phase import phase, getDims, checkConsistency
+from dae.tools.phase import checkConsistency, getDims, phase
 
 
 class PhaseTest(unittest.TestCase):

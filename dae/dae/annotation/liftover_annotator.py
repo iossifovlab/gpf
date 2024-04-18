@@ -1,24 +1,26 @@
 """Provides a lift over annotator and helpers."""
 
 import logging
-
 from typing import Any, Optional
-from dae.annotation.annotation_pipeline import AnnotationPipeline
-from dae.annotation.annotation_pipeline import Annotator
-from dae.annotation.annotation_pipeline import AnnotatorInfo
-from dae.annotation.annotation_pipeline import AttributeInfo
 
-from dae.genomic_resources.reference_genome import \
-    ReferenceGenome, build_reference_genome_from_resource
-from dae.genomic_resources.liftover_chain import \
-    LiftoverChain, build_liftover_chain_from_resource
+from dae.annotation.annotation_pipeline import (
+    AnnotationPipeline,
+    Annotator,
+    AnnotatorInfo,
+    AttributeInfo,
+)
+from dae.genomic_resources.liftover_chain import (
+    LiftoverChain,
+    build_liftover_chain_from_resource,
+)
+from dae.genomic_resources.reference_genome import (
+    ReferenceGenome,
+    build_reference_genome_from_resource,
+)
+from dae.utils.variant_utils import reverse_complement, trim_str_left
 
-from dae.utils.variant_utils import trim_str_left
-from dae.utils.variant_utils import reverse_complement
-
-from .annotatable import Annotatable, VCFAllele, Region, Position, CNVAllele
+from .annotatable import Annotatable, CNVAllele, Position, Region, VCFAllele
 from .annotator_base import AnnotatorBase
-
 
 logger = logging.getLogger(__name__)
 
@@ -61,7 +63,7 @@ class LiftOverAnnotator(AnnotatorBase):
             info.attributes = [AttributeInfo("liftover_annotatable",
                                              "liftover_annotatable", True, {})]
         super().__init__(pipeline, info, {
-            "liftover_annotatable": ("annotatable", "Lifted over allele.")
+            "liftover_annotatable": ("annotatable", "Lifted over allele."),
         })
         self.chain = chain
         self.target_genome = target_genome
@@ -152,7 +154,7 @@ class LiftOverAnnotator(AnnotatorBase):
             return None
 
     def liftover_position(
-        self, position: Annotatable
+        self, position: Annotatable,
     ) -> Optional[Annotatable]:
         """Liftover position annotatable."""
         assert isinstance(position, Position)
@@ -164,7 +166,7 @@ class LiftOverAnnotator(AnnotatorBase):
         return Position(lo_coord[0], lo_coord[1])
 
     def _do_liftover_region(
-        self, region: Annotatable
+        self, region: Annotatable,
     ) -> Optional[Annotatable]:
         """Liftover region annotatable."""
         assert isinstance(region, (Region, CNVAllele))

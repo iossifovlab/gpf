@@ -5,7 +5,7 @@ from remote.rest_api_client import RESTClient
 
 def test_get_gene_set(rest_client: RESTClient) -> None:
     rgsc = RemoteGeneSetCollection(
-        "main", rest_client, "", ""
+        "main", rest_client, "", "",
     )
     gene_set = rgsc.get_gene_set("CHD8 target genes")
     assert gene_set is not None

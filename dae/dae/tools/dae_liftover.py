@@ -1,30 +1,25 @@
 #!/usr/bin/env python
 
-import sys
 import argparse
 import logging
+import sys
 import textwrap
-from typing import cast, Any, Optional
-
-from collections import defaultdict, Counter
-
-from dae.utils.verbosity_configuration import VerbosityConfiguration
-from dae.utils.variant_utils import mat2str
-from dae.variants.variant import VariantDetails
-from dae.variants.family_variant import FamilyAllele
-
-from dae.genomic_resources.reference_genome import \
-    build_reference_genome_from_resource
-from dae.annotation.annotation_factory import \
-    build_annotation_pipeline
+from collections import Counter, defaultdict
+from typing import Any, Optional, cast
 
 from dae.annotation.annotatable import VCFAllele
-
+from dae.annotation.annotation_factory import build_annotation_pipeline
+from dae.genomic_resources.reference_genome import (
+    build_reference_genome_from_resource,
+)
 from dae.gpf_instance.gpf_instance import GPFInstance
-from dae.variants_loaders.dae.loader import DaeTransmittedLoader
 from dae.pedigrees.loader import FamiliesLoader
 from dae.tools.stats_liftover import save_liftover_stats
-
+from dae.utils.variant_utils import mat2str
+from dae.utils.verbosity_configuration import VerbosityConfiguration
+from dae.variants.family_variant import FamilyAllele
+from dae.variants.variant import VariantDetails
+from dae.variants_loaders.dae.loader import DaeTransmittedLoader
 
 logger = logging.getLogger("dae_liftover")
 
@@ -57,7 +52,7 @@ def parse_cli_arguments() -> argparse.ArgumentParser:
 
     parser.add_argument(
         "--stats", help="filename to store liftover statistics",
-        default="stats.txt"
+        default="stats.txt",
     )
 
     parser.add_argument(
@@ -71,7 +66,7 @@ def parse_cli_arguments() -> argparse.ArgumentParser:
         metavar="region",
         default=None,
         help="region to convert [default: None] "
-        "ex. chr1:1-10000. "
+        "ex. chr1:1-10000. ",
     )
 
     return parser
@@ -104,7 +99,7 @@ def main(
     families_filename = families_filenames[0]
 
     families_loader = FamiliesLoader(
-        families_filename, **families_params
+        families_filename, **families_params,
     )
     families = families_loader.load()
 
@@ -161,7 +156,7 @@ def main(
             - source: "effect_details"
               name: "target_effect_details"
 
-        """
+        """,
     )
 
     pipeline = build_annotation_pipeline(
@@ -178,7 +173,7 @@ def main(
             "#chr", "position", "variant",
             "familyData",
             "all.nParCalled", "all.prcntParCalled",
-            "all.nAltAlls", "all.altFreq"
+            "all.nAltAlls", "all.altFreq",
         ]
         toomany_header = [
             "#chr", "position", "variant",
@@ -241,7 +236,7 @@ def main(
                     fa.family_id,
                     mat2str(fa.best_state),
                     mat2str(
-                        fa.family_attributes["read_counts"], col_sep=" ")
+                        fa.family_attributes["read_counts"], col_sep=" "),
                 ]
                 families_data.append(":".join(fdata))
 

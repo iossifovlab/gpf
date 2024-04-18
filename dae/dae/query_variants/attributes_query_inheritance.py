@@ -1,12 +1,13 @@
 # pylint: disable=too-few-public-methods
-import operator
 import functools
+import operator
 from typing import Any, Union
 
 from lark import Lark, Transformer
-from dae.variants.attributes import Inheritance
-from .attributes_query import get_bit_and_str
 
+from dae.variants.attributes import Inheritance
+
+from .attributes_query import get_bit_and_str
 
 INHERITANCE_QUERY_GRAMMAR = r"""
 
@@ -85,7 +86,7 @@ class InheritanceTransformer(Transformer):
         self, attr_name: str,
         *args: Any,
         use_bit_and_function: bool = True,
-        **kwargs: Any
+        **kwargs: Any,
     ):
         super().__init__(*args, **kwargs)
         self.attr_name = attr_name
@@ -196,4 +197,4 @@ class InheritanceTransformer(Transformer):
         if len(items) == 1 and isinstance(items[0], Expression):
             return items[0]
 
-        raise NotImplementedError()
+        raise NotImplementedError

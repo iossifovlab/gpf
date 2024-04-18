@@ -5,9 +5,9 @@ from typing import Optional
 
 import yaml
 
-from dae.utils.verbosity_configuration import VerbosityConfiguration
-from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.configuration.gpf_config_parser import GPFConfigParser
+from dae.gpf_instance.gpf_instance import GPFInstance
+from dae.utils.verbosity_configuration import VerbosityConfiguration
 
 logger = logging.getLogger("gpf_convert_study_config")
 
@@ -15,7 +15,7 @@ logger = logging.getLogger("gpf_convert_study_config")
 def load_study_config(study_config_filename: str) -> dict:
     """Load study config."""
     config = GPFConfigParser.load_config_raw(
-        study_config_filename
+        study_config_filename,
     )
 
     return config
@@ -23,7 +23,7 @@ def load_study_config(study_config_filename: str) -> dict:
 
 def main(
     gpf_instance: Optional[GPFInstance] = None,
-    argv: Optional[list[str]] = None
+    argv: Optional[list[str]] = None,
 ) -> None:
     """Convert GPF genotype data configuration to YAML."""
     description = "Tool to convert GPF genotype data configuration to YAML"

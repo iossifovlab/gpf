@@ -1,8 +1,8 @@
 # pylint: disable=redefined-outer-name,C0114,C0115,C0116,protected-access
 
 import os
-import tempfile
 import shutil
+import tempfile
 
 import pytest
 
@@ -19,7 +19,7 @@ def fixture_path():
     return builder
 
 
-@pytest.fixture
+@pytest.fixture()
 def local_fixture():
     def builder(relpath):
         return relative_to_this_test_folder(os.path.join("fixtures", relpath))

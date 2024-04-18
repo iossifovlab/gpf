@@ -4,16 +4,19 @@ from typing import Callable
 import pytest
 import pytest_mock
 
-from dae.genomic_resources.genomic_context import GenomicContext
+from dae.genomic_resources.genomic_context import (
+    GenomicContext,
+    get_genomic_context,
+)
 from dae.gpf_instance.gpf_instance import GPFInstance
-from dae.gpf_instance_plugin.gpf_instance_context_plugin import \
-    init_test_gpf_instance_genomic_context_plugin
-from dae.genomic_resources.genomic_context import get_genomic_context
+from dae.gpf_instance_plugin.gpf_instance_context_plugin import (
+    init_test_gpf_instance_genomic_context_plugin,
+)
 
 
-@pytest.fixture
+@pytest.fixture()
 def gpf_instance_genomic_context_fixture(
-    mocker: pytest_mock.MockerFixture
+    mocker: pytest_mock.MockerFixture,
 ) -> Callable[[GPFInstance], GenomicContext]:
 
     def builder(gpf_instance: GPFInstance) -> GenomicContext:

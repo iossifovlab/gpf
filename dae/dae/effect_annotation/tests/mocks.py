@@ -1,9 +1,9 @@
 # pylint: disable=W0621,C0114,C0115,C0116,W0212,W0613
 from typing import Optional, cast
 
-from dae.utils.regions import Region
 from dae.genomic_resources.gene_models import Exon
 from dae.genomic_resources.reference_genome import ReferenceGenome
+from dae.utils.regions import Region
 
 
 class TranscriptModelMock:
@@ -13,7 +13,7 @@ class TranscriptModelMock:
         cds_start: int, cds_end: int,
         exons: list[Exon],
         coding: Optional[list[Exon]] = None,
-        is_coding: bool = True
+        is_coding: bool = True,
     ):
         self.strand = strand
         self.cds = [cds_start, cds_end]
@@ -42,7 +42,7 @@ class TranscriptModelMock:
 class ReferenceGenomeMock:
 
     def get_sequence(
-        self, chromosome: str, pos: int, pos_last: int
+        self, chromosome: str, pos: int, pos_last: int,
     ) -> str:
         print(("get", chromosome, pos, pos_last))
         return "".join([chr(i) for i in range(pos, pos_last + 1)])

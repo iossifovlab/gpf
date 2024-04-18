@@ -1,48 +1,54 @@
 """Provides GRR protocols based on fsspec library."""
 from __future__ import annotations
 
-import os
+import datetime
 import fcntl
 import hashlib
 import logging
-import datetime
-
-from urllib.parse import urlparse
-from typing import List, Generator, cast, Union, Optional, Dict, Any, IO, \
-    ContextManager
-from types import TracebackType
-
+import os
+from collections.abc import Generator
 from dataclasses import asdict
+from types import TracebackType
+from typing import (
+    IO,
+    Any,
+    ContextManager,
+    Dict,
+    List,
+    Optional,
+    Union,
+    cast,
+)
+from urllib.parse import urlparse
+
+import fsspec
 import jinja2
 import pysam
-import fsspec
-
 import yaml
 
-
-from dae.genomic_resources.repository import GR_CONF_FILE_NAME, \
-    GR_INDEX_FILE_NAME, \
-    Manifest, \
-    ReadWriteRepositoryProtocol, \
-    ReadOnlyRepositoryProtocol, \
-    Mode, \
-    ManifestEntry, \
-    ResourceFileState, \
-    GenomicResource, \
-    parse_resource_id_version, \
-    parse_gr_id_version_token, \
-    is_gr_id_token, \
-    GR_CONTENTS_FILE_NAME, \
-    GR_MANIFEST_FILE_NAME
-
+from dae.genomic_resources.repository import (
+    GR_CONF_FILE_NAME,
+    GR_CONTENTS_FILE_NAME,
+    GR_INDEX_FILE_NAME,
+    GR_MANIFEST_FILE_NAME,
+    GenomicResource,
+    Manifest,
+    ManifestEntry,
+    Mode,
+    ReadOnlyRepositoryProtocol,
+    ReadWriteRepositoryProtocol,
+    ResourceFileState,
+    is_gr_id_token,
+    parse_gr_id_version_token,
+    parse_resource_id_version,
+)
 from dae.utils.helpers import convert_size
-
 
 logger = logging.getLogger(__name__)
 
 
 def _scan_for_resources(
-    content_dict: dict, parent_id: list[str]
+    content_dict: dict, parent_id: list[str],
 ) -> Generator[tuple[str, tuple[int, ...], dict], None, None]:
     name = "/".join(parent_id)
     id_ver = parse_gr_id_version_token(name)
@@ -80,7 +86,7 @@ def _scan_for_resources(
 
 
 def _scan_for_resource_files(
-    content_dict: dict[str, Any], parent_dirs: list[str]
+    content_dict: dict[str, Any], parent_dirs: list[str],
 ) -> Generator[tuple[str, Union[str, bytes]], None, None]:
 
     for path, content in content_dict.items():
@@ -214,7 +220,7 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
         filepath = self.get_resource_file_url(resource, filename)
         if "w" in mode:
             if self.mode() == Mode.READONLY:
-                raise IOError(
+                raise OSError(
                     f"Read-Only protocol {self.get_id()} trying to open "
                     f"{filepath} for writing")
 
@@ -250,7 +256,7 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
             index_filename: Optional[str] = None) -> pysam.TabixFile:
 
         if self.scheme not in {"file", "s3", "http", "https"}:
-            raise IOError(
+            raise OSError(
                 f"tabix files are not supported on schema {self.scheme}")
 
         file_url = self._get_file_url(resource, filename)
@@ -268,7 +274,7 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
             index_filename: Optional[str] = None) -> pysam.VariantFile:
 
         if self.scheme not in {"file", "s3", "http", "https"}:
-            raise IOError(
+            raise OSError(
                 f"vcf files are not supported on schema {self.scheme}")
 
         file_url = self._get_file_url(resource, filename)
@@ -295,17 +301,17 @@ class FsspecReadWriteProtocol(
         self.filesystem.makedirs(self.url, exist_ok=True)
 
     def _get_resource_file_lockfile_path(
-        self, resource: GenomicResource, filename: str
+        self, resource: GenomicResource, filename: str,
     ) -> str:
         """Return path of the resource file's lockfile."""
         if self.scheme != "file":
-            raise NotImplementedError()
+            raise NotImplementedError
         resource_url = self.get_resource_url(resource)
         path = os.path.join(resource_url, ".grr", f"{filename}.lockfile")
         return path.removeprefix(f"{self.scheme}://")
 
     def obtain_resource_file_lock(
-        self, resource: GenomicResource, filename: str
+        self, resource: GenomicResource, filename: str,
     ) -> ContextManager:
         """Lock a resource's file."""
 
@@ -339,7 +345,7 @@ class FsspecReadWriteProtocol(
         return lock
 
     def _scan_path_for_resources(
-        self, path_array: list[str]
+        self, path_array: list[str],
     ) -> Generator[Any, None, None]:
 
         url = os.path.join(self.url, *path_array)
@@ -370,7 +376,7 @@ class FsspecReadWriteProtocol(
                 yield from self._scan_path_for_resources([*path_array, name])
 
     def _scan_resource_for_files(
-        self, resource_path: str, path_array: list[str]
+        self, resource_path: str, path_array: list[str],
     ) -> Generator[Any, None, None]:
 
         url = os.path.join(self.url, resource_path, *path_array)
@@ -494,7 +500,7 @@ class FsspecReadWriteProtocol(
                 content["filename"],
                 content["size"],
                 content["timestamp"],
-                content["md5"]
+                content["md5"],
             )
 
     def delete_resource_file(
@@ -548,10 +554,10 @@ class FsspecReadWriteProtocol(
         md5 = md5_hash.hexdigest()
 
         if not self.filesystem.exists(dest_filepath):
-            raise IOError(f"destination file not created {dest_filepath}")
+            raise OSError(f"destination file not created {dest_filepath}")
 
         if md5 != manifest_entry.md5:
-            raise IOError(
+            raise OSError(
                 f"file copy is broken "
                 f"{dest_resource.resource_id} ({filename}); "
                 f"md5sum are different: "
@@ -610,7 +616,7 @@ class FsspecReadWriteProtocol(
                 "id": res.resource_id,
                 "version": res.get_version_str(),
                 "config": res.get_config(),
-                "manifest": res.get_manifest().to_manifest_entries()
+                "manifest": res.get_manifest().to_manifest_entries(),
             }
             for res in self.get_all_resources()]
         content = sorted(content, key=lambda x: x["id"])  # type: ignore
@@ -628,7 +634,7 @@ class FsspecReadWriteProtocol(
         result = {}
         for res in self.get_all_resources():
             res_size = convert_size(
-                sum(f for _, f in res.get_manifest().get_files())
+                sum(f for _, f in res.get_manifest().get_files()),
             )
             assert res.config is not None
             result[res.resource_id] = {
@@ -636,7 +642,7 @@ class FsspecReadWriteProtocol(
                 "res_version": res.get_version_str(),
                 "res_files": len(list(res.get_manifest().get_files())),
                 "res_size": res_size,
-                "res_summary": res.get_summary()
+                "res_summary": res.get_summary(),
             }
 
         content_filepath = os.path.join(self.url, GR_INDEX_FILE_NAME)
@@ -662,7 +668,7 @@ FsspecRepositoryProtocol = Union[
 
 
 def build_fsspec_protocol(
-    proto_id: str, root_url: str, **kwargs: Union[str, None]
+    proto_id: str, root_url: str, **kwargs: Union[str, None],
 ) -> FsspecRepositoryProtocol:
     """Create fsspec GRR protocol based on the root url."""
     url = urlparse(root_url)
@@ -679,7 +685,7 @@ def build_fsspec_protocol(
         filesystem = HTTPFileSystem(client_kwargs={"base_url": base_url})
         return FsspecReadOnlyProtocol(proto_id, root_url, filesystem)
 
-    if url.scheme in {"s3"}:
+    if url.scheme == "s3":
         filesystem = kwargs.get("filesystem")
         if filesystem is None:
             from s3fs.core import S3FileSystem

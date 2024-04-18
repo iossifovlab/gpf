@@ -1,15 +1,17 @@
 from __future__ import annotations
 
 import logging
-from typing import Optional, Tuple, Union, Generator, Any
 from collections import Counter
+from collections.abc import Generator
+from typing import Any, Optional, Tuple, Union
+
 import pysam
 
 from dae.genomic_resources.repository import GenomicResource
 from dae.utils.regions import get_chromosome_length_tabix
-from .table import GenomicPositionTable
-from .line import Line, LineBuffer, LineBase
 
+from .line import Line, LineBase, LineBuffer
+from .table import GenomicPositionTable
 
 PysamFile = Union[pysam.TabixFile, pysam.VariantFile]
 logger = logging.getLogger(__name__)
@@ -107,7 +109,7 @@ class TabixGenomicPositionTable(GenomicPositionTable):
         if fchrom is None:
             raise ValueError(
                 f"error in mapping chromsome {chrom} to the file contigs: "
-                f"{self.get_file_chromosomes()}"
+                f"{self.get_file_chromosomes()}",
             )
         return get_chromosome_length_tabix(
             self.pysam_file, fchrom, step)
@@ -133,7 +135,7 @@ class TabixGenomicPositionTable(GenomicPositionTable):
             self.chrom_key,
             self.pos_begin_key, self.pos_end_key,
             self.ref_key, self.alt_key,
-            self.header
+            self.header,
         )
         if not self.rev_chrom_map:
             return line
@@ -222,7 +224,7 @@ class TabixGenomicPositionTable(GenomicPositionTable):
             pass
 
     def _gen_from_buffer_and_tabix(
-        self, chrom: str, beg: int, end: int
+        self, chrom: str, beg: int, end: int,
     ) -> Generator[LineBase, None, None]:
         for line in self.buffer.fetch(chrom, beg, end):
             self.stats["yield from buffer"] += 1
@@ -239,7 +241,7 @@ class TabixGenomicPositionTable(GenomicPositionTable):
     def get_records_in_region(
         self, chrom: str,
         pos_begin: Optional[int] = None,
-        pos_end: Optional[int] = None
+        pos_end: Optional[int] = None,
     ) -> Generator[LineBase, None, None]:
         self.stats["calls"] += 1
 
@@ -309,7 +311,7 @@ class TabixGenomicPositionTable(GenomicPositionTable):
         self.buffer.prune(fchrom, pos_begin)
 
     def get_line_iterator(
-        self, chrom: Optional[str] = None, pos_begin: Optional[int] = None
+        self, chrom: Optional[str] = None, pos_begin: Optional[int] = None,
     ) -> Generator[Optional[LineBase], None, None]:
         """Extract raw lines and wrap them in our Line adapter."""
         assert isinstance(self.pysam_file, pysam.TabixFile)
@@ -319,6 +321,6 @@ class TabixGenomicPositionTable(GenomicPositionTable):
 
         # Yes, the argument for the chromosome/contig is called "reference".
         for raw in self.pysam_file.fetch(
-            reference=chrom, start=pos_begin, parser=pysam.asTuple()
+            reference=chrom, start=pos_begin, parser=pysam.asTuple(),
         ):
             yield self._make_line(raw)

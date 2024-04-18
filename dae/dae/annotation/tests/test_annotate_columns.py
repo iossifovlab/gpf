@@ -1,16 +1,23 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-import textwrap
 import pathlib
+import textwrap
+
 import pytest
 
+from dae.annotation.annotatable import (
+    Annotatable,
+    CNVAllele,
+    Position,
+    Region,
+    VCFAllele,
+)
 from dae.annotation.annotate_columns import build_record_to_annotatable
-from dae.annotation.annotatable import Position, VCFAllele, Region, \
-    CNVAllele, Annotatable
-from dae.testing import setup_directories, setup_denovo
 from dae.annotation.annotate_columns import cli as cli_columns
-from dae.genomic_resources.genomic_context import SimpleGenomicContext, \
-    GenomicContext
-from dae.testing import setup_genome
+from dae.genomic_resources.genomic_context import (
+    GenomicContext,
+    SimpleGenomicContext,
+)
+from dae.testing import setup_denovo, setup_directories, setup_genome
 
 
 @pytest.mark.parametrize(
@@ -29,7 +36,7 @@ from dae.testing import setup_genome
 
         ({"chrom": "chr1", "pos_beg": "4", "pos_end": "30"},
          Region("chr1", 4, 30)),
-    ]
+    ],
 )
 def test_default_columns(
         record: dict[str, str], expected: Annotatable) -> None:
@@ -45,7 +52,7 @@ def test_default_columns(
 
         ({"location": "chr1:3-13", "variant": "duplication"},
          CNVAllele("chr1", 3, 13, CNVAllele.Type.LARGE_DUPLICATION)),
-    ]
+    ],
 )
 def test_cshl_variants_without_context(
         record: dict[str, str], expected: Annotatable) -> None:
@@ -54,7 +61,7 @@ def test_cshl_variants_without_context(
             {}, set(record.keys())).build(record)
 
 
-@pytest.fixture
+@pytest.fixture()
 def gc_fixture(tmp_path: pathlib.Path) -> GenomicContext:
     genome = setup_genome(
         tmp_path / "acgt_gpf" / "genome" / "allChr.fa",
@@ -65,7 +72,7 @@ def gc_fixture(tmp_path: pathlib.Path) -> GenomicContext:
         {25 * "ACGT"}
         >chr3
         {25 * "ACGT"}
-        """
+        """,
     )
     return SimpleGenomicContext(
         {"reference_genome": genome}, ("test", "gc_fixture"))
@@ -108,7 +115,7 @@ def gc_fixture(tmp_path: pathlib.Path) -> GenomicContext:
 
         ({"location": "chr1:3-13", "variant": "CNV-"},
          CNVAllele("chr1", 3, 13, CNVAllele.Type.LARGE_DELETION)),
-    ]
+    ],
 )
 def test_build_record(
         record: dict[str, str],
@@ -116,7 +123,7 @@ def test_build_record(
         gc_fixture: GenomicContext) -> None:
     ref_genome = gc_fixture.get_reference_genome()
     annotatable = build_record_to_annotatable(
-        {}, set(record.keys()), ref_genome
+        {}, set(record.keys()), ref_genome,
     ).build(record)
     assert str(annotatable) == str(expected)
 
@@ -127,7 +134,7 @@ def test_build_record(
         ({"col_chrom": "chromosome", "col_pos": "position"},
          {"chromosome": "chr1", "position": "4", "ref": "C", "alt": "CT"},
          VCFAllele("chr1", 4, "C", "CT")),
-    ]
+    ],
 )
 def test_renamed_columns(
         parameters: dict[str, str],
@@ -153,7 +160,7 @@ def get_file_content_as_string(file: str) -> str:
         return "".join(infile.readlines())
 
 
-@pytest.fixture
+@pytest.fixture()
 def annotate_directory_fixture(tmp_path: pathlib.Path) -> pathlib.Path:
     root_path = tmp_path / "annotate_columns"
     setup_directories(
@@ -183,7 +190,7 @@ def annotate_directory_fixture(tmp_path: pathlib.Path) -> pathlib.Path:
                                 The phastCons computed over the tree of 100
                                 verterbarte species
                           name: s1
-                    """
+                    """,
                 },
                 "two": {
                     "genomic_resource.yaml": """
@@ -198,10 +205,10 @@ def annotate_directory_fixture(tmp_path: pathlib.Path) -> pathlib.Path:
                         - id: score
                           type: float
                           name: s1
-                    """
+                    """,
                 },
-            }
-        }
+            },
+        },
     )
     one_content = textwrap.dedent("""
         chrom  pos_begin  s1
@@ -251,7 +258,7 @@ def test_cli_columns_basic_setup(
             in_file, annotation_file, "-o", out_file,
             "-w", work_dir,
             "--grr", grr_file,
-            "-j", 1
+            "-j", 1,
         ]
     ])
     out_file_content = get_file_content_as_string(str(out_file))

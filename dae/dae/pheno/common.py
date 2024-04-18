@@ -3,8 +3,8 @@ from __future__ import annotations
 import enum
 from pprint import pprint
 
-from box import Box
 import box.box
+from box import Box
 
 
 class MeasureType(enum.Enum):
@@ -20,7 +20,7 @@ class MeasureType(enum.Enum):
     skipped = 1000
 
     @staticmethod
-    def from_str(measure_type: str) -> "MeasureType":
+    def from_str(measure_type: str) -> MeasureType:
         if measure_type in MeasureType.__members__:
             return MeasureType[measure_type]
 

@@ -2,12 +2,10 @@
 import pathlib
 
 from dae.genomic_resources import GenomicResource
-from dae.genomic_resources.genomic_scores import \
-    NPScoreQuery, NPScore
-from dae.genomic_resources.testing import \
-    build_inmemory_test_resource
-from dae.testing import convert_to_tab_separated
+from dae.genomic_resources.genomic_scores import NPScore, NPScoreQuery
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME
+from dae.genomic_resources.testing import build_inmemory_test_resource
+from dae.testing import convert_to_tab_separated
 
 
 def test_the_simplest_np_score(tmp_path: pathlib.Path) -> None:
@@ -34,7 +32,7 @@ def test_the_simplest_np_score(tmp_path: pathlib.Path) -> None:
             1      16         19       C          G            0.03
             1      16         19       C          T            0.04
             1      16         19       C          A            0.05
-        """
+        """,
     })
     assert res.get_type() == "np_score"
     score = NPScore(res)
@@ -79,7 +77,7 @@ def test_np_score_aggregation() -> None:
             1      16         19       C          G            0.03  3
             1      16         19       C          T            0.04  EMPTY
             1      16         19       C          A            0.05  0
-        """)
+        """),
     })
 
     assert res.get_type() == "np_score"
@@ -146,7 +144,7 @@ def test_np_score_fetch_region() -> None:
             2      16         19       C          A            0.03  3
             2      16         19       C          T            0.04  3
             2      16         19       C          G            0.05  4
-        """)
+        """),
     })
     score = NPScore(res).open()
 

@@ -4,11 +4,10 @@ from typing import Optional
 
 import pytest
 
-from dae.testing import setup_pedigree, setup_vcf, \
-    vcf_study
-from dae.testing.foobar_import import foobar_gpf
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.studies.study import GenotypeData
+from dae.testing import setup_pedigree, setup_vcf, vcf_study
+from dae.testing.foobar_import import foobar_gpf
 
 
 @pytest.fixture(scope="module")
@@ -55,11 +54,11 @@ bar    12  .  G   A,C,T .    .      .    GT     0/1 0/2 1/3 1/2
                     "include_unknown_person_genotypes": True,
                     "denovo_mode": "denovo",
                     "omission_mode": "omission",
-                }
+                },
             },
             "processing_config": {
-                "include_reference": True
-            }
+                "include_reference": True,
+            },
         })
     return study
 
@@ -104,13 +103,13 @@ bar    12  .  G   A,C,T .    .      .    GT     0/1 0/2 1/3 1/2
         (["synonymous"], None, 5),
         (["missense"], None, 6),
         (["nonsense"], None, 2),
-    ]
+    ],
 )
 def test_query_varaints_gene_effects(
     effects: Optional[list[str]],
     genes: Optional[list[str]],
     count: int,
-    imported_study: GenotypeData
+    imported_study: GenotypeData,
 ) -> None:
 
     vs = list(imported_study.query_variants(
@@ -136,13 +135,13 @@ def test_query_varaints_gene_effects(
         (["synonymous"], None, 5),
         (["missense"], None, 6),
         (["nonsense"], None, 2),
-    ]
+    ],
 )
 def test_query_summary_varaints_gene_effects(
     effects: Optional[list[str]],
     genes: Optional[list[str]],
     count: int,
-    imported_study: GenotypeData
+    imported_study: GenotypeData,
 ) -> None:
 
     vs = list(imported_study.query_summary_variants(

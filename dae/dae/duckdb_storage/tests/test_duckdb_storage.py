@@ -1,15 +1,12 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 
-from dae.genotype_storage.genotype_storage_registry import \
-    get_genotype_storage_factory
+from dae.duckdb_storage.duckdb_genotype_storage import DuckDbGenotypeStorage
+from dae.duckdb_storage.duckdb_import_storage import DuckDbImportStorage
+from dae.genotype_storage.genotype_storage_registry import (
+    get_genotype_storage_factory,
+)
 from dae.import_tools.import_tools import get_import_storage_factory
 from dae.studies.study import GenotypeData
-
-
-from dae.duckdb_storage.duckdb_genotype_storage import \
-    DuckDbGenotypeStorage
-from dae.duckdb_storage.duckdb_import_storage import \
-    DuckDbImportStorage
 
 
 def test_genotype_storage_config(duckdb_storage_config: dict) -> None:

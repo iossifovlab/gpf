@@ -2,7 +2,7 @@ import logging
 from typing import Optional
 
 from ..effect import EffectFactory
-from .effect_checker import EffectChecker, AnnotationEffect, AnnotationRequest
+from .effect_checker import AnnotationEffect, AnnotationRequest, EffectChecker
 
 
 class UTREffectChecker(EffectChecker):
@@ -12,7 +12,7 @@ class UTREffectChecker(EffectChecker):
         self.logger = logging.getLogger(__name__)
 
     def create_utr_effect(
-        self, request: AnnotationRequest, strand: str
+        self, request: AnnotationRequest, strand: str,
     ) -> AnnotationEffect:
         """Create an UTR annotation effect."""
         if request.transcript_model.strand == strand:
@@ -21,7 +21,7 @@ class UTREffectChecker(EffectChecker):
             effect_name = "3'UTR"
 
         effect = EffectFactory.create_effect_with_prot_length(
-            effect_name, request
+            effect_name, request,
         )
         self.logger.debug(
             "pos=%d cds end=%d",
@@ -36,12 +36,12 @@ class UTREffectChecker(EffectChecker):
             )
         else:
             effect.dist_from_coding = request.get_exonic_distance(
-                request.transcript_model.cds[1], request.variant.position
+                request.transcript_model.cds[1], request.variant.position,
             )
         return effect
 
     def create_effect(
-        self, request: AnnotationRequest, strand: str
+        self, request: AnnotationRequest, strand: str,
     ) -> Optional[AnnotationEffect]:
         """Create UTR effect."""
         coding_regions = request.transcript_model.exons
@@ -61,13 +61,13 @@ class UTREffectChecker(EffectChecker):
                 else:
                     effect_name = "3'UTR-intron"
                 return EffectFactory.create_intronic_non_coding_effect(
-                    effect_name, request, prev, j.start, i
+                    effect_name, request, prev, j.start, i,
                 )
             prev = j.stop
         return None
 
     def check_stop_codon(
-        self, request: AnnotationRequest
+        self, request: AnnotationRequest,
     ) -> Optional[AnnotationEffect]:
         """Check for stop codon."""
         if not request.has_utr3_region():
@@ -83,7 +83,7 @@ class UTREffectChecker(EffectChecker):
 
             if ref_index == alt_index:
                 effect = EffectFactory.create_effect_with_prot_length(
-                    "3'UTR", request
+                    "3'UTR", request,
                 )
                 effect.dist_from_coding = 0
                 return effect
@@ -94,7 +94,7 @@ class UTREffectChecker(EffectChecker):
         return None
 
     def get_effect(
-        self, request: AnnotationRequest
+        self, request: AnnotationRequest,
     ) -> Optional[AnnotationEffect]:
         if request.is_stop_codon_affected():
             return self.check_stop_codon(request)

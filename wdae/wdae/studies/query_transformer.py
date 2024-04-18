@@ -1,19 +1,15 @@
-import time
 import logging
-
-from typing import Optional, cast, Any
-
+import time
 from functools import reduce
+from typing import Any, Optional, cast
 
 from dae.effect_annotation.effect import EffectTypesMixin
-from dae.variants.attributes import Inheritance
-from dae.utils.regions import Region
 from dae.pedigrees.family import ALL_FAMILY_TYPES, FamilyTag, FamilyType
-from dae.query_variants.attributes_query import \
-    role_query
-from dae.person_filters import make_pedigree_filter, make_pheno_filter
 from dae.pedigrees.family_tag_builder import check_family_tags_query
-
+from dae.person_filters import make_pedigree_filter, make_pheno_filter
+from dae.query_variants.attributes_query import role_query
+from dae.utils.regions import Region
+from dae.variants.attributes import Inheritance
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +33,7 @@ class QueryTransformer:
         self.gpf_instance = study_wrapper.gpf_instance
 
     def _transform_genomic_scores(
-        self, genomic_scores: list[dict]
+        self, genomic_scores: list[dict],
     ) -> list[tuple[str, tuple[Optional[int], Optional[int]]]]:
         genomic_scores_filter = [
             (score["metric"], (score["rangeStart"], score["rangeEnd"]))
@@ -51,16 +47,16 @@ class QueryTransformer:
         if not self.study_wrapper.gene_scores_db:
             return None
 
-        scores_name = gene_scores.get("score", None)
-        range_start = gene_scores.get("rangeStart", None)
-        range_end = gene_scores.get("rangeEnd", None)
+        scores_name = gene_scores.get("score")
+        range_start = gene_scores.get("rangeStart")
+        range_end = gene_scores.get("rangeEnd")
 
         if scores_name and scores_name in self.study_wrapper.gene_scores_db:
             score_desc = self.study_wrapper.gene_scores_db[
                 scores_name
             ]
             score = self.study_wrapper.gene_scores_db.get_gene_score(
-                score_desc.resource_id
+                score_desc.resource_id,
             )
 
             genes = score.get_genes(scores_name, range_start, range_end)
@@ -70,7 +66,7 @@ class QueryTransformer:
         return None
 
     def _transform_min_max_alt_frequency(
-        self, min_value: Optional[float], max_value: Optional[float]
+        self, min_value: Optional[float], max_value: Optional[float],
     ) -> Optional[tuple[str, tuple[float, float]]]:
         value_range = (min_value, max_value)
 
@@ -96,7 +92,7 @@ class QueryTransformer:
 
     @staticmethod
     def _transform_present_in_child_and_parent_roles(
-        present_in_child: set[str], present_in_parent: set[str]
+        present_in_child: set[str], present_in_parent: set[str],
     ) -> Optional[str]:
         roles_query = []
         roles_query.append(
@@ -130,7 +126,7 @@ class QueryTransformer:
                 Inheritance.denovo,
                 Inheritance.mendelian,
                 Inheritance.missing,
-                Inheritance.omission
+                Inheritance.omission,
             ]
             if show_all_unknown:
                 inheritance.append(Inheritance.unknown)
@@ -143,19 +139,19 @@ class QueryTransformer:
         _present_in_child: set[str], _present_in_parent: set[str],
         rarity: dict,
         frequency_filter: list[
-            tuple[str, tuple[Optional[float], Optional[float]]]]
+            tuple[str, tuple[Optional[float], Optional[float]]]],
     ) -> tuple[Optional[str], Any]:
 
-        ultra_rare = rarity.get("ultraRare", None)
+        ultra_rare = rarity.get("ultraRare")
         ultra_rare = bool(ultra_rare)
         if ultra_rare:
             return ("ultra_rare", True)
 
-        max_alt_freq = rarity.get("maxFreq", None)
-        min_alt_freq = rarity.get("minFreq", None)
+        max_alt_freq = rarity.get("maxFreq")
+        min_alt_freq = rarity.get("minFreq")
         if min_alt_freq is not None or max_alt_freq is not None:
             frequency_filter.append(
-                ("af_allele_freq", (min_alt_freq, max_alt_freq))
+                ("af_allele_freq", (min_alt_freq, max_alt_freq)),
             )
             return ("frequency_filter", frequency_filter)
 
@@ -163,7 +159,7 @@ class QueryTransformer:
 
     @staticmethod
     def _present_in_child_to_roles(
-        present_in_child: set[str]
+        present_in_child: set[str],
     ) -> Optional[str]:
         roles_query = []
 
@@ -186,7 +182,7 @@ class QueryTransformer:
 
     @staticmethod
     def _present_in_parent_to_roles(
-        present_in_parent: set[str]
+        present_in_parent: set[str],
     ) -> Optional[str]:
         roles_query = []
 
@@ -213,11 +209,11 @@ class QueryTransformer:
             roles = filter_conf.get("role") if "role" in filter_conf else None
             if filter_conf["from"] == "phenodb":
                 ids = make_pheno_filter(
-                    filter_conf, self.study_wrapper.phenotype_data
+                    filter_conf, self.study_wrapper.phenotype_data,
                 ).apply(self.study_wrapper.families, roles)
             else:
                 ids = make_pedigree_filter(filter_conf).apply(
-                    self.study_wrapper.families, roles
+                    self.study_wrapper.families, roles,
                 )
             result.append(ids)
         return reduce(set.intersection, result)
@@ -238,23 +234,23 @@ class QueryTransformer:
 
     @staticmethod
     def _add_roles_to_query(
-        query: Optional[str], kwargs: dict[str, Any]
+        query: Optional[str], kwargs: dict[str, Any],
     ) -> None:
         if not query:
             return
 
-        original_roles = kwargs.get("roles", None)
+        original_roles = kwargs.get("roles")
         if original_roles is not None:
             if isinstance(original_roles, str):
                 original_roles = role_query.transform_query_string_to_tree(
-                    original_roles
+                    original_roles,
                 )
             kwargs["roles"] = f"{original_roles} and {query}"
         else:
             kwargs["roles"] = query
 
     def _handle_person_set_collection(
-        self, kwargs: dict[str, Any]
+        self, kwargs: dict[str, Any],
     ) -> dict[str, Any]:
         people_group = kwargs.pop("personSetCollection", {})
         logger.debug("person set collection requested: %s", people_group)
@@ -301,13 +297,13 @@ class QueryTransformer:
         logger.debug("kwargs in study wrapper: %s", kwargs)
         self._add_inheritance_to_query(
             "not possible_denovo and not possible_omission",
-            kwargs
+            kwargs,
         )
 
         kwargs = self._handle_person_set_collection(kwargs)
 
         if "selectedFamilyTags" in kwargs or "deselectedFamilyTags" in kwargs:
-            or_mode = not (bool(kwargs.get("tagIntersection")) is True \
+            or_mode = not (bool(kwargs.get("tagIntersection")) is True
                 or kwargs.get("tagIntersection") is None)
             include_tags = kwargs.get("selectedFamilyTags")
             if isinstance(include_tags, list):
@@ -331,11 +327,11 @@ class QueryTransformer:
             family_ids: set[str] = set()
             for family_id, family in self.study_wrapper.families.items():
                 if check_family_tags_query(
-                    family, or_mode, include_tags, exclude_tags
+                    family, or_mode, include_tags, exclude_tags,
                 ):
                     family_ids.add(family_id)
 
-            kwargs['familyIds'] = family_ids
+            kwargs["familyIds"] = family_ids
 
         if "querySummary" in kwargs:
             kwargs["query_summary"] = kwargs["querySummary"]
@@ -363,7 +359,7 @@ class QueryTransformer:
                 kwargs.pop("presentInParent")
 
             roles_query = self._transform_present_in_child_and_parent_roles(
-                present_in_child, present_in_parent
+                present_in_child, present_in_parent,
             )
             self._add_roles_to_query(roles_query, kwargs)
 
@@ -372,7 +368,7 @@ class QueryTransformer:
                 arg, val = \
                     self._transform_present_in_child_and_parent_frequency(
                         present_in_child, present_in_parent,
-                        rarity, frequency_filter
+                        rarity, frequency_filter,
                     )
                 if arg is not None:
                     kwargs[arg] = val
@@ -442,7 +438,7 @@ class QueryTransformer:
 
         if "effectTypes" in kwargs:
             kwargs["effectTypes"] = self.effect_types_mixin.build_effect_types(
-                kwargs["effectTypes"]
+                kwargs["effectTypes"],
             )
 
         if kwargs.get("studyFilters"):
@@ -459,11 +455,11 @@ class QueryTransformer:
             person_filters = kwargs.pop("personFilters")
             if person_filters:
                 matching_person_ids = self._transform_filters_to_ids(
-                    person_filters
+                    person_filters,
                 )
                 if matching_person_ids is not None and kwargs.get("personIds"):
                     kwargs["personIds"] = set.intersection(
-                        matching_person_ids, set(kwargs.pop("personIds"))
+                        matching_person_ids, set(kwargs.pop("personIds")),
                     )
                 else:
                     kwargs["personIds"] = matching_person_ids
@@ -472,11 +468,11 @@ class QueryTransformer:
             family_filters = kwargs.pop("familyFilters")
             if family_filters:
                 matching_family_ids = self._transform_filters_to_ids(
-                    family_filters
+                    family_filters,
                 )
                 if matching_family_ids is not None and kwargs.get("familyIds"):
                     kwargs["familyIds"] = set.intersection(
-                        matching_family_ids, set(kwargs.pop("familyIds"))
+                        matching_family_ids, set(kwargs.pop("familyIds")),
                     )
                 else:
                     kwargs["familyIds"] = matching_family_ids
@@ -494,12 +490,12 @@ class QueryTransformer:
                     family_ids_with_types = set.union(
                         family_ids_with_types,
                         self.study_wrapper.families.families_by_type.get(
-                            family_type, set()
-                        )
+                            family_type, set(),
+                        ),
                     )
                 if "familyIds" in kwargs:
                     family_ids_with_types = set.intersection(
-                        family_ids_with_types, set(kwargs.pop("familyIds"))
+                        family_ids_with_types, set(kwargs.pop("familyIds")),
                     )
                 kwargs["familyIds"] = family_ids_with_types
 

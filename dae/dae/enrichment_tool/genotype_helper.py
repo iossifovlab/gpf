@@ -1,10 +1,11 @@
-from typing import Optional, cast, Iterable
+from collections.abc import Iterable
 from dataclasses import dataclass
+from typing import Optional, cast
 
-from dae.variants.attributes import Inheritance
-from dae.variants.family_variant import FamilyVariant, FamilyAllele
-from dae.studies.study import GenotypeData
 from dae.person_sets import PersonSetCollection
+from dae.studies.study import GenotypeData
+from dae.variants.attributes import Inheritance
+from dae.variants.family_variant import FamilyAllele, FamilyVariant
 
 
 @dataclass(frozen=True)
@@ -34,7 +35,7 @@ class GenotypeHelper:
         self, genotype_data: GenotypeData,
         person_set_collection: PersonSetCollection,
         effect_types: Optional[list[str]] = None,
-        genes: Optional[list[str]] = None
+        genes: Optional[list[str]] = None,
     ):
 
         self.genotype_data = genotype_data
@@ -49,7 +50,7 @@ class GenotypeHelper:
 
     @staticmethod
     def collect_denovo_events(
-        denovo_variants: Iterable[FamilyVariant]
+        denovo_variants: Iterable[FamilyVariant],
     ) -> list[VariantEvent]:
         """Collect denovo events."""
         result = []
@@ -68,14 +69,14 @@ class GenotypeHelper:
                 allele_events.append(
                     AlleleEvent(
                         persons,
-                        gene_effects
+                        gene_effects,
                     ))
             result.append(
                 VariantEvent(
                     fv.family_id,
                     fv.fvuid,
-                    allele_events
-                )
+                    allele_events,
+                ),
             )
 
         return result

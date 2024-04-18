@@ -1,26 +1,30 @@
 from __future__ import annotations
+
 import abc
 import logging
-from typing import Any, Iterable, cast
+from collections.abc import Iterable
+from typing import Any, cast
 
+from dae.enrichment_tool.event_counters import (
+    EnrichmentResult,
+    EventCountersResult,
+)
 from dae.genomic_resources.repository import GenomicResource
-from dae.genomic_resources.resource_implementation import \
-    get_base_resource_schema, \
-    ResourceConfigValidationMixin
-from dae.enrichment_tool.event_counters import EventCountersResult, \
-    EnrichmentResult
-
+from dae.genomic_resources.resource_implementation import (
+    ResourceConfigValidationMixin,
+    get_base_resource_schema,
+)
 
 logger = logging.getLogger(__name__)
 
 
 class BaseEnrichmentBackground(
-    abc.ABC
+    abc.ABC,
 ):
     """Provides class for enrichment background models."""
 
     def __init__(
-        self, resource: GenomicResource
+        self, resource: GenomicResource,
     ):
         self.resource = resource
 
@@ -55,7 +59,7 @@ class BaseEnrichmentBackground(
         events_counts: EventCountersResult,
         overlapped_counts: EventCountersResult,
         gene_set: Iterable[str],
-        **kwargs: Any
+        **kwargs: Any,
     ) -> EnrichmentResult:
         """Calculate the enrichment test."""
 
@@ -67,12 +71,12 @@ class BaseEnrichmentResourceBackground(
     """Provides class for enrichment resource background models."""
 
     def __init__(
-        self, resource: GenomicResource
+        self, resource: GenomicResource,
     ):
         super().__init__(resource)
 
         self.config = self.validate_and_normalize_schema(
-            resource.get_config(), resource
+            resource.get_config(), resource,
         )
 
     @property

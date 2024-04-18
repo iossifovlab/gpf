@@ -1,16 +1,18 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-from typing import Any, Generator
+from collections.abc import Generator
+from typing import Any
 
 import pytest
 
-from dae.genomic_resources.cached_repository import \
-    CachingProtocol
-from dae.genomic_resources.testing import \
-    FsspecReadWriteProtocol, \
-    build_inmemory_test_protocol, \
-    build_filesystem_test_protocol, \
-    build_s3_test_protocol, \
-    setup_directories, setup_tabix
+from dae.genomic_resources.cached_repository import CachingProtocol
+from dae.genomic_resources.testing import (
+    FsspecReadWriteProtocol,
+    build_filesystem_test_protocol,
+    build_inmemory_test_protocol,
+    build_s3_test_protocol,
+    setup_directories,
+    setup_tabix,
+)
 
 
 def test_caching_repo_simple(
@@ -32,10 +34,10 @@ def test_caching_repo_simple(
     assert len(list(caching_proto.get_all_resources())) == 5
 
 
-@pytest.fixture
+@pytest.fixture()
 def remote_proto_fixture(
     content_fixture: dict[str, Any],
-    tmp_path_factory: pytest.TempPathFactory
+    tmp_path_factory: pytest.TempPathFactory,
 ) -> FsspecReadWriteProtocol:
     root_path = tmp_path_factory.mktemp("source_proto_fixture")
     setup_directories(root_path, content_fixture)
@@ -55,11 +57,11 @@ def remote_proto_fixture(
 
 
 # @pytest.fixture(params=["file", "s3"])
-@pytest.fixture
+@pytest.fixture()
 def caching_proto(
     tmp_path_factory: pytest.TempPathFactory,
     remote_proto_fixture: FsspecReadWriteProtocol,
-    grr_scheme: str
+    grr_scheme: str,
 ) -> Generator[CachingProtocol, None, None]:
 
     remote_proto = remote_proto_fixture
@@ -79,7 +81,7 @@ def caching_proto(
         raise ValueError(f"Unsupported caching scheme: {caching_scheme}")
 
 
-@pytest.mark.grr_full
+@pytest.mark.grr_full()
 def test_get_resource_three(
         caching_proto: CachingProtocol) -> None:
     proto = caching_proto
@@ -89,7 +91,7 @@ def test_get_resource_three(
     assert res.version == (2, 0)
 
 
-@pytest.mark.grr_full
+@pytest.mark.grr_full()
 def test_get_resource_two(
         caching_proto: CachingProtocol) -> None:
     res = caching_proto.get_resource("sub/two")
@@ -98,7 +100,7 @@ def test_get_resource_two(
     assert res.version == (1, 0)
 
 
-@pytest.mark.grr_full
+@pytest.mark.grr_full()
 def test_get_resource_copies_nothing_three(
         caching_proto: CachingProtocol) -> None:
     res = caching_proto.get_resource("three")
@@ -109,7 +111,7 @@ def test_get_resource_copies_nothing_three(
     assert not local_proto.file_exists(res, "sub2/b.txt")
 
 
-@pytest.mark.grr_full
+@pytest.mark.grr_full()
 def test_get_resource_copies_nothing_two(
         caching_proto: CachingProtocol) -> None:
     res = caching_proto.get_resource("sub/two")
@@ -119,7 +121,7 @@ def test_get_resource_copies_nothing_two(
     assert not local_proto.file_exists(res, "genes.gtf")
 
 
-@pytest.mark.grr_full
+@pytest.mark.grr_full()
 def test_open_raw_file_copies_the_file_three_a(
         caching_proto: CachingProtocol) -> None:
 
@@ -134,7 +136,7 @@ def test_open_raw_file_copies_the_file_three_a(
     assert not local_proto.file_exists(res, "sub2/b.txt")
 
 
-@pytest.mark.grr_full
+@pytest.mark.grr_full()
 def test_open_raw_file_copies_the_file_three_b(
         caching_proto: CachingProtocol) -> None:
     res = caching_proto.get_resource("three")
@@ -148,7 +150,7 @@ def test_open_raw_file_copies_the_file_three_b(
     assert not local_proto.file_exists(res, "sub1/a.txt")
 
 
-@pytest.mark.grr_full
+@pytest.mark.grr_full()
 def test_open_tabix_file_simple(
         caching_proto: CachingProtocol) -> None:
     res = caching_proto.get_resource("one")

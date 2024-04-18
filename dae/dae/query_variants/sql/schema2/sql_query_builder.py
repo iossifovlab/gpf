@@ -1,24 +1,31 @@
 import logging
 import textwrap
-from typing import Optional, Any, Sequence, cast, Union, Iterable
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
+from typing import Any, Optional, Union, cast
 
-import sqlglot
 import duckdb
+import sqlglot
 
-from dae.utils.regions import Region, collapse
+from dae.effect_annotation.effect import EffectTypesMixin
 from dae.genomic_resources.gene_models import GeneModels
 from dae.genomic_resources.reference_genome import ReferenceGenome
-from dae.effect_annotation.effect import EffectTypesMixin
 from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.pedigrees.families_data import FamiliesData
-from dae.variants.attributes import Role, Inheritance
-from dae.query_variants.attributes_query import role_query, sex_query, \
-    variant_type_query as VARIANT_TYPE_PARSER, \
-    QueryTreeToSQLBitwiseTransformer
-from dae.query_variants.attributes_query_inheritance import \
-    InheritanceTransformer, \
-    inheritance_parser
+from dae.query_variants.attributes_query import (
+    QueryTreeToSQLBitwiseTransformer,
+    role_query,
+    sex_query,
+)
+from dae.query_variants.attributes_query import (
+    variant_type_query as VARIANT_TYPE_PARSER,
+)
+from dae.query_variants.attributes_query_inheritance import (
+    InheritanceTransformer,
+    inheritance_parser,
+)
+from dae.utils.regions import Region, collapse
+from dae.variants.attributes import Inheritance, Role
 
 logger = logging.getLogger(__name__)
 
@@ -171,7 +178,7 @@ class SqlQueryBuilder:
         return_reference: Optional[bool] = None,
         return_unknown: Optional[bool] = None,
         heuristics: Optional[dict[str, list[str]]] = None,
-        **_kwargs: Any
+        **_kwargs: Any,
     ) -> str:
         """Build a subclause for the summary table.
 
@@ -185,18 +192,18 @@ class SqlQueryBuilder:
         if frequency_filter is not None:
             where_parts.append(
                 self._build_real_attr_where(
-                    frequency_filter, is_frequency=True)
+                    frequency_filter, is_frequency=True),
             )
         if real_attr_filter is not None:
             where_parts.append(
                 self._build_real_attr_where(
-                    real_attr_filter, is_frequency=False)
+                    real_attr_filter, is_frequency=False),
             )
         if ultra_rare is not None and ultra_rare:
             where_parts.append(self._build_ultra_rare_where())
         if variant_type is not None:
             where_parts.append(
-                self._build_variant_types_where(variant_type)
+                self._build_variant_types_where(variant_type),
             )
         if heuristics is not None:
             for heuristic, bins in heuristics.items():
@@ -206,7 +213,7 @@ class SqlQueryBuilder:
                     where_parts.append(f"sa.{heuristic} = {bins[0]}")
                 else:
                     where_parts.append(
-                        f"sa.{heuristic} IN ({', '.join(bins)})"
+                        f"sa.{heuristic} IN ({', '.join(bins)})",
                     )
 
         if not return_reference and not return_unknown:
@@ -230,7 +237,7 @@ class SqlQueryBuilder:
         return query
 
     def _build_gene_regions_heuristic(
-        self, genes: list[str], regions: Optional[list[Region]]
+        self, genes: list[str], regions: Optional[list[Region]],
     ) -> Optional[list[Region]]:
         assert genes is not None
         assert self.gene_models is not None
@@ -251,7 +258,7 @@ class SqlQueryBuilder:
                         max(1,
                             gm.tx[0] - 1 - self.GENE_REGIONS_HEURISTIC_EXTEND),
                         gm.tx[1] + 1 + self.GENE_REGIONS_HEURISTIC_EXTEND,
-                    )
+                    ),
                 )
         gene_regions = collapse(gene_regions)
         if not regions:
@@ -270,7 +277,7 @@ class SqlQueryBuilder:
         return regions
 
     def _build_regions_where(
-        self, regions: list[Region]
+        self, regions: list[Region],
     ) -> str:
 
         where: list[str] = []
@@ -306,7 +313,7 @@ class SqlQueryBuilder:
 
     def _build_real_attr_where(
         self, real_attr_filter: RealAttrFilterType,
-        is_frequency: bool = False
+        is_frequency: bool = False,
     ) -> str:
 
         where = []
@@ -327,18 +334,18 @@ class SqlQueryBuilder:
                 assert right is not None
                 if is_frequency:
                     where.append(
-                        f"sa.{attr_name} <= {right} OR sa.{attr_name} IS NULL"
+                        f"sa.{attr_name} <= {right} OR sa.{attr_name} IS NULL",
                     )
                 else:
                     where.append(
-                        f"sa.{attr_name} <= {right}"
+                        f"sa.{attr_name} <= {right}",
                     )
             elif right is None:
                 assert left is not None
                 where.append(f"sa.{attr_name} >= {left}")
             else:
                 where.append(
-                    f"sa.{attr_name} >= {left} AND sa.{attr_name} <= {right}"
+                    f"sa.{attr_name} >= {left} AND sa.{attr_name} <= {right}",
                 )
         return " AND ".join(f"( {w} )" for w in where)
 
@@ -371,7 +378,7 @@ class SqlQueryBuilder:
 
     def _calc_coding_bins(
         self,
-        effect_types: Optional[Sequence[str]]
+        effect_types: Optional[Sequence[str]],
     ) -> list[str]:
         if self.partition_descriptor is None:
             return []
@@ -385,7 +392,7 @@ class SqlQueryBuilder:
         assert effect_types is not None
         query_effect_types = set(effect_types)
         intersection = query_effect_types & set(
-            self.partition_descriptor.coding_effect_types
+            self.partition_descriptor.coding_effect_types,
         )
 
         coding_bins = []
@@ -394,7 +401,7 @@ class SqlQueryBuilder:
         return coding_bins
 
     def _calc_region_bins(
-        self, regions: Optional[list[Region]]
+        self, regions: Optional[list[Region]],
     ) -> list[str]:
         if self.partition_descriptor is None:
             return []
@@ -421,8 +428,7 @@ class SqlQueryBuilder:
 
             start = start // region_length
             stop = stop // region_length
-            for position_bin in range(start, stop + 1):
-                region_bins.add(f"'{chrom_bin}_{position_bin}'")
+            region_bins.update(f"'{chrom_bin}_{position_bin}'" for position_bin in range(start, stop + 1))
         if len(region_bins) == 0:
             return []
         if len(region_bins) > self.REGION_BINS_HEURISTIC_CUTOFF:
@@ -432,7 +438,7 @@ class SqlQueryBuilder:
 
     def _adapt_family_and_person_ids(
         self, family_ids: Optional[Sequence[str]],
-        person_ids: Optional[Sequence[str]]
+        person_ids: Optional[Sequence[str]],
     ) -> tuple[Optional[Sequence[str]], Optional[Sequence[str]]]:
         if family_ids is None:
             return None, person_ids
@@ -454,7 +460,7 @@ class SqlQueryBuilder:
         return family_ids, list(person_ids_set)
 
     def _build_person_subclause(
-        self, person_ids: Optional[Sequence[str]]
+        self, person_ids: Optional[Sequence[str]],
     ) -> str:
         if person_ids is None:
             return ""
@@ -499,7 +505,7 @@ class SqlQueryBuilder:
         return_reference: Optional[bool] = None,
         return_unknown: Optional[bool] = None,
         limit: Optional[int] = None,
-        **_kwargs: Any
+        **_kwargs: Any,
     ) -> str:
         """Build a query for family variants."""
         # pylint: disable=too-many-arguments
@@ -526,7 +532,7 @@ class SqlQueryBuilder:
             heuristics=heuristics,
         )
         family_ids, person_ids = self._adapt_family_and_person_ids(
-            family_ids, person_ids
+            family_ids, person_ids,
         )
         family_subclause = self._build_family_subclause(
             regions=regions,
@@ -609,7 +615,7 @@ class SqlQueryBuilder:
         return_reference: Optional[bool] = None,
         return_unknown: Optional[bool] = None,
         heuristics: Optional[dict[str, list[str]]] = None,
-        **_kwargs: Any
+        **_kwargs: Any,
     ) -> str:
         """Build a subclause for the family table.
 
@@ -626,7 +632,7 @@ class SqlQueryBuilder:
                     where_parts.append(f"fa.{heuristic} = {bins[0]}")
                 else:
                     where_parts.append(
-                        f"fa.{heuristic} IN ({', '.join(bins)})"
+                        f"fa.{heuristic} IN ({', '.join(bins)})",
                     )
             assert where_parts
             where = " AND ".join([wp for wp in where_parts if wp])
@@ -655,7 +661,7 @@ class SqlQueryBuilder:
             if isinstance(inheritance, str):
                 inheritance = [inheritance]
             where_parts.append(
-                self._build_inheritance_query_where(inheritance)
+                self._build_inheritance_query_where(inheritance),
             )
         if family_ids is not None:
             where_parts.append(self._build_family_ids_query_where(family_ids))
@@ -679,7 +685,7 @@ class SqlQueryBuilder:
                         {from_clause}
                     {family_where}
                 )
-            """)
+            """),
         )
         return ",".join(query)
 
@@ -728,7 +734,7 @@ class SqlQueryBuilder:
         return f"({subquery})"
 
     def _build_variant_types_query(
-        self, variant_types_query: str, attr: str
+        self, variant_types_query: str, attr: str,
     ) -> str:
         parsed = VARIANT_TYPE_PARSER.transform_query_string_to_tree(
             variant_types_query)
@@ -736,7 +742,7 @@ class SqlQueryBuilder:
         return cast(str, transformer.transform(parsed))
 
     def _check_variant_types_value(
-        self, variant_types_query: str, value: int
+        self, variant_types_query: str, value: int,
     ) -> bool:
         with duckdb.connect(":memory:") as con:
             query = self._build_variant_types_query(
@@ -748,14 +754,14 @@ class SqlQueryBuilder:
             return cast(bool, res[0][0])
 
     def _build_variant_types_where(
-        self, variant_types_query: str
+        self, variant_types_query: str,
     ) -> str:
         subquery = self._build_variant_types_query(
             variant_types_query, "sa.variant_type")
         return f"({subquery})"
 
     def _build_inheritance_query(
-        self, inheritance_query: Sequence[str], attr: str
+        self, inheritance_query: Sequence[str], attr: str,
     ) -> str:
         result = []
         transformer = InheritanceTransformer(attr, use_bit_and_function=False)
@@ -767,7 +773,7 @@ class SqlQueryBuilder:
         return " AND ".join(result)
 
     def _check_inheritance_query_value(
-        self, inheritance_query: Sequence[str], value: int
+        self, inheritance_query: Sequence[str], value: int,
     ) -> bool:
         with duckdb.connect(":memory:") as con:
             query = self._build_inheritance_query(
@@ -779,7 +785,7 @@ class SqlQueryBuilder:
             return cast(bool, res[0][0])
 
     def _build_inheritance_query_where(
-        self, inheritance_query: Sequence[str]
+        self, inheritance_query: Sequence[str],
     ) -> str:
         subquery = self._build_inheritance_query(
             inheritance_query, "fa.inheritance_in_members")
@@ -795,7 +801,7 @@ class SqlQueryBuilder:
                 | Role.dad.value | Role.mom.value)
 
     def _check_inheritance_denovo_only(
-        self, inheritance_query: Sequence[str]
+        self, inheritance_query: Sequence[str],
     ) -> bool:
         return not self._check_inheritance_query_value(
             inheritance_query,
@@ -849,7 +855,7 @@ class SqlQueryBuilder:
         result: list[str] = []
         if frequency_bins and len(frequency_bins) < 4:
             result = [
-                str(fb) for fb in range(0, max(frequency_bins) + 1)
+                str(fb) for fb in range(max(frequency_bins) + 1)
             ]
 
         return result
@@ -893,7 +899,7 @@ class SqlQueryBuilder:
 
     def _calc_family_bins(
         self,
-        family_ids: Optional[Iterable[str]]
+        family_ids: Optional[Iterable[str]],
     ) -> list[str]:
         if self.partition_descriptor is None:
             return []
@@ -908,10 +914,7 @@ class SqlQueryBuilder:
         family_ids = set(family_ids)
 
         family_bins = set()
-        for family_id in family_ids:
-            family_bins.add(
-                str(self.partition_descriptor.make_family_bin(family_id))
-            )
+        family_bins.update(str(self.partition_descriptor.make_family_bin(family_id)) for family_id in family_ids)
         if len(family_bins) >= self.partition_descriptor.family_bin_size // 2:
             return []
         return list(family_bins)

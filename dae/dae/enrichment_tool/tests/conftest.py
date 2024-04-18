@@ -1,30 +1,34 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-import textwrap
 import pathlib
-from typing import cast, Generator
+import textwrap
+from collections.abc import Generator
+from typing import cast
 
 import pytest
-
 from box import Box
 
+from dae.enrichment_tool.build_coding_length_enrichment_background import (
+    cli as build_coding_len_background_cli,
+)
+from dae.enrichment_tool.gene_weights_background import (
+    GeneScoreEnrichmentBackground,
+)
+from dae.enrichment_tool.samocha_background import SamochaEnrichmentBackground
+from dae.genomic_resources.group_repository import GenomicResourceGroupRepo
+from dae.genomic_resources.repository import (
+    GR_CONF_FILE_NAME,
+    GenomicResourceRepo,
+)
+from dae.genomic_resources.testing import (
+    build_filesystem_test_repository,
+    build_inmemory_test_repository,
+    convert_to_tab_separated,
+    setup_directories,
+)
 from dae.gpf_instance import GPFInstance
 from dae.studies.study import GenotypeData
-from dae.genomic_resources.testing import \
-    convert_to_tab_separated, build_inmemory_test_repository, \
-    setup_directories, build_filesystem_test_repository
-from dae.testing.t4c8_import import t4c8_genes, t4c8_genome
 from dae.testing import setup_gpf_instance
-from dae.genomic_resources.repository import GR_CONF_FILE_NAME, \
-    GenomicResourceRepo
-from dae.genomic_resources.group_repository import GenomicResourceGroupRepo
-from dae.enrichment_tool.build_coding_length_enrichment_background import \
-    cli as build_coding_len_background_cli
-
-
-from dae.enrichment_tool.gene_weights_background import \
-    GeneScoreEnrichmentBackground
-from dae.enrichment_tool.samocha_background import \
-    SamochaEnrichmentBackground
+from dae.testing.t4c8_import import t4c8_genes, t4c8_genome
 
 
 @pytest.fixture(scope="session")
@@ -34,7 +38,7 @@ def gpf_fixture(
 ) -> Generator[GPFInstance, None, None]:
     original_grr = fixtures_gpf_instance.grr
     fixtures_gpf_instance.grr = GenomicResourceGroupRepo(
-        [grr, original_grr], "enrichment_testing_repo"
+        [grr, original_grr], "enrichment_testing_repo",
     )
 
     yield fixtures_gpf_instance
@@ -58,7 +62,7 @@ def f1_trio(gpf_fixture: GPFInstance) -> GenotypeData:
 
 @pytest.fixture(scope="session")
 def coding_len_background(
-    grr: GenomicResourceRepo
+    grr: GenomicResourceRepo,
 ) -> GeneScoreEnrichmentBackground:
     res = grr.get_resource("enrichment/coding_len_testing")
     assert res.get_type() == "gene_score"
@@ -73,7 +77,7 @@ def coding_len_background(
 
 @pytest.fixture(scope="session")
 def samocha_background(
-    grr: GenomicResourceRepo
+    grr: GenomicResourceRepo,
 ) -> SamochaEnrichmentBackground:
     res = grr.get_resource("enrichment/samocha_testing")
     assert res.get_type() == "samocha_enrichment_background"
@@ -102,7 +106,7 @@ def grr() -> GenomicResourceRepo:
                     SAMD11   3
                     PLEKHN1  7
                     POGZ     13
-                """)
+                """),
             },
             "coding_len_testing": {
                 GR_CONF_FILE_NAME: """
@@ -126,7 +130,7 @@ def grr() -> GenomicResourceRepo:
                     SAMD11   3
                     PLEKHN1  7
                     POGZ     13
-                """)
+                """),
             },
             "samocha_testing": {
                 GR_CONF_FILE_NAME: """
@@ -138,13 +142,13 @@ def grr() -> GenomicResourceRepo:
 "NM_017582","SAMD11",3,-1,-5,-4,-6,-6,-6,2,2,1.1,1.4,5.7
 "NM_017582","PLEKHN1",7,-2,-5,-4,-6,-6,-6,2,2,1.2,1.5,5.8
 "NM_014372","POGZ",11,-3,-5,-5,-6,-7,-6,2,2,6.3,4.6,2.9
-                """)
-            }
-        }
+                """),
+            },
+        },
     })
 
 
-@pytest.fixture
+@pytest.fixture()
 def t4c8_fixture(tmp_path: pathlib.Path) -> GPFInstance:
     root_path = tmp_path
 
@@ -155,7 +159,7 @@ def t4c8_fixture(tmp_path: pathlib.Path) -> GPFInstance:
         id: t4c8_genes_testing
         type: dir
         directory: {root_path / "grr"}
-        """)
+        """),
     })
 
     coding_len_background_path = root_path / "grr" / "coding_len_background"
@@ -181,7 +185,7 @@ def t4c8_fixture(tmp_path: pathlib.Path) -> GPFInstance:
             view_range:
               min: 0
               max: 20
-        """)
+        """),
     })
 
     grr = build_filesystem_test_repository(root_path / "grr")

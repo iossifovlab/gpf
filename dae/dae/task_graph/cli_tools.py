@@ -1,19 +1,22 @@
 import argparse
+import logging
 import textwrap
 from typing import Any, Optional
-import logging
 
 import yaml
-
 from box import Box
+
+from dae.dask.named_cluster import setup_client, setup_client_from_config
 from dae.task_graph.cache import NoTaskCache, TaskCache
-from dae.task_graph.executor import DaskExecutor, TaskGraphExecutor, \
-    SequentialExecutor, task_graph_run, task_graph_status, task_graph_all_done
-
+from dae.task_graph.executor import (
+    DaskExecutor,
+    SequentialExecutor,
+    TaskGraphExecutor,
+    task_graph_all_done,
+    task_graph_run,
+    task_graph_status,
+)
 from dae.task_graph.graph import TaskGraph
-from dae.dask.named_cluster import setup_client
-from dae.dask.named_cluster import setup_client_from_config
-
 
 logger = logging.getLogger(__name__)
 
@@ -39,18 +42,18 @@ class TaskGraphCli:
             "-N", "--dask-cluster-name", "--dcn",
             dest="dask_cluster_name",
             type=str, default=None,
-            help="The named of the named dask cluster"
+            help="The named of the named dask cluster",
         )
         executor_group.add_argument(
             "-c", "--dccf", "--dask-cluster-config-file",
             dest="dask_cluster_config_file",
             type=str, default=None,
-            help="dask cluster config file"
+            help="dask cluster config file",
         )
         executor_group.add_argument(
             "--tasks-log-dir", dest="log_dir", type=str,
             default="./.task-log",
-            help="Path to directory where to store tasks' logs"
+            help="Path to directory where to store tasks' logs",
         )
         # task_cache
         execution_mode_group = parser.add_argument_group(
@@ -71,17 +74,17 @@ class TaskGraphCli:
             "-t", "--task-ids", dest="task_ids", type=str, nargs="+")
         execution_mode_group.add_argument(
             "--keep-going", default=False, action="store_true",
-            help="Whether or not to keep executing in case of an error"
+            help="Whether or not to keep executing in case of an error",
         )
         if force_mode == "optional":
             execution_mode_group.add_argument(
                 "--force", "-f", default=False, action="store_true",
-                help="Ignore precomputed state and always rerun all tasks."
+                help="Ignore precomputed state and always rerun all tasks.",
             )
             execution_mode_group.add_argument(
                 "-d", "--task-status-dir", "--tsd",
                 default=default_task_status_dir,
-                type=str, help="Directory to store the task progress."
+                type=str, help="Directory to store the task progress.",
             )
         else:
             assert force_mode == "always"
@@ -112,7 +115,7 @@ class TaskGraphCli:
                   "loaded from", args.dask_cluster_config_file)
             client, _ = setup_client_from_config(
                 dask_cluster_config,
-                number_of_threads_param=args.jobs
+                number_of_threads_param=args.jobs,
             )
         else:
             client, _ = setup_client(args.dask_cluster_name,

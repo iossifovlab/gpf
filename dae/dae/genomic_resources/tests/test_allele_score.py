@@ -4,10 +4,9 @@ from typing import Optional
 import pytest
 
 from dae.genomic_resources import GenomicResource
-from dae.genomic_resources.genomic_scores import \
-    AlleleScoreQuery, AlleleScore
-from dae.genomic_resources.testing import build_inmemory_test_resource
+from dae.genomic_resources.genomic_scores import AlleleScore, AlleleScoreQuery
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME
+from dae.genomic_resources.testing import build_inmemory_test_resource
 
 
 def test_the_simplest_allele_score() -> None:
@@ -34,7 +33,7 @@ def test_the_simplest_allele_score() -> None:
             1      16         CA         G            0.03
             1      16         C          T            0.04
             1      16         C          A            0.05
-        """
+        """,
     })
     assert res.get_type() == "allele_score"
 
@@ -72,7 +71,7 @@ def test_allele_score_fetch_region() -> None:
             2      16         CA         G            0.03
             2      16         C          T            EMPTY
             2      16         C          A            0.05
-        """
+        """,
     })
     score = AlleleScore(res)
     score.open()
@@ -118,7 +117,7 @@ def test_allele_score_missing_alt() -> None:
         "data.mem": """
             chrom  pos_begin  reference  alternative  freq
             1      10         A          .            0.03
-        """
+        """,
     })
     score = AlleleScore(res)
     score.open()
@@ -132,7 +131,7 @@ def test_allele_score_missing_alt() -> None:
     (("1", 10, 13), "max", "max", 0.4),
     (("1", 10, 13), "min", "min", 0.2),
     (("1", 10, 16), "min", "min", 0.03),
-    (("1", 10, 16), None, None, (0.4 + 0.05) / 2.0)
+    (("1", 10, 16), None, None, (0.4 + 0.05) / 2.0),
 ])
 def test_allele_score_fetch_agg(
         region: tuple[str, int, int],
@@ -164,7 +163,7 @@ def test_allele_score_fetch_agg(
             2      16         C          GA           0.06
             2      16         C          T            0.07
             2      16         C          TA           0.08
-        """
+        """,
     })
     score = AlleleScore(res)
     score.open()

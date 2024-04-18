@@ -1,17 +1,17 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import textwrap
-from typing import cast, Callable
+from typing import Callable, cast
 
 import pytest
 from pytest_mock import MockerFixture
 
-from dae.genomic_resources.repository import GenomicResourceRepo
-from dae.annotation.annotation_pipeline import AnnotatorInfo
 from dae.annotation.annotatable import VCFAllele
 from dae.annotation.annotation_factory import build_annotation_pipeline
-from dae.variants.core import Allele
+from dae.annotation.annotation_pipeline import AnnotatorInfo
 from dae.annotation.liftover_annotator import LiftOverAnnotator
+from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.gpf_instance import GPFInstance
+from dae.variants.core import Allele
 
 
 def mock_get_sequence(_: str, start: int, stop: int) -> str:
@@ -25,7 +25,7 @@ def mock_get_sequence(_: str, start: int, stop: int) -> str:
             "chr1",
             10000,
             lambda c, p: (c, p + 1000, "+", ""),
-            "chr1", 11001
+            "chr1", 11001,
         ),
         (
             "chr1",
@@ -37,7 +37,7 @@ def mock_get_sequence(_: str, start: int, stop: int) -> str:
             "chr1",
             10000,
             lambda c, p: None,
-            None, None
+            None, None,
         ),
     ],
 )
@@ -127,5 +127,5 @@ def test_liftover_annotator_resources(
 
     assert pipeline.get_resource_ids() == {
         "hg38/hg38tohg19",
-        "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/genome"
+        "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/genome",
     }

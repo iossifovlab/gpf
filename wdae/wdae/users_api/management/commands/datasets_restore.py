@@ -1,8 +1,9 @@
 import csv
 import os
+
+from datasets_api.models import Dataset
 from datasets_api.permissions import add_group_perm_to_dataset
 from django.core.management.base import BaseCommand, CommandError
-from datasets_api.models import Dataset
 
 
 class Command(BaseCommand):
@@ -30,12 +31,12 @@ class Command(BaseCommand):
             print(
                 "\033[92m"
                 + f"Successfully restored datasets from file {csvfilename}!"
-                + "\033[0m"
+                + "\033[0m",
             )
 
         except csv.Error:
             raise CommandError(
-                'There was a problem while reading "%s"' % args[0]
+                'There was a problem while reading "%s"' % args[0],
             )
-        except IOError:
+        except OSError:
             raise CommandError('File "%s" not found' % args[0])

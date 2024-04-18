@@ -1,19 +1,19 @@
-import time
 import json
 import logging
-from typing import Optional, Any, cast
+import time
+from typing import Any, Optional, cast
 
 import duckdb
 import numpy as np
 import pandas as pd
 
 from dae.genomic_resources.gene_models import GeneModels
-from dae.variants.attributes import Role, Status, Sex, Inheritance
-from dae.query_variants.sql.schema2.base_variants import SqlSchema2Variants
-from dae.query_variants.sql.schema2.base_query_builder import Dialect
-from dae.variants.variant import SummaryVariantFactory, SummaryVariant
-from dae.variants.family_variant import FamilyVariant
 from dae.query_variants.query_runners import QueryRunner
+from dae.query_variants.sql.schema2.base_query_builder import Dialect
+from dae.query_variants.sql.schema2.base_variants import SqlSchema2Variants
+from dae.variants.attributes import Inheritance, Role, Sex, Status
+from dae.variants.family_variant import FamilyVariant
+from dae.variants.variant import SummaryVariant, SummaryVariantFactory
 
 logger = logging.getLogger(__name__)
 
@@ -221,7 +221,7 @@ class DuckDbVariants(SqlSchema2Variants):
     def _deserialize_summary_variant(self, record: str) -> SummaryVariant:
         sv_record = json.loads(record[2])
         return SummaryVariantFactory.summary_variant_from_records(
-            sv_record
+            sv_record,
         )
 
     def _deserialize_family_variant(self, record: list[str]) -> FamilyVariant:
@@ -233,10 +233,10 @@ class DuckDbVariants(SqlSchema2Variants):
         }
         return FamilyVariant(
             SummaryVariantFactory.summary_variant_from_records(
-                sv_record
+                sv_record,
             ),
             self.families[fv_record["family_id"]],
             np.array(fv_record["genotype"]),
             np.array(fv_record["best_state"]),
-            inheritance_in_members=inheritance_in_members
+            inheritance_in_members=inheritance_in_members,
         )

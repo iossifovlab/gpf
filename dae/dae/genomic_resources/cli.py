@@ -1,59 +1,56 @@
 """Provides CLI for management of genomic resources repositories."""
-import os
-import sys
-import logging
 import argparse
-import pathlib
 import copy
-
-from typing import Dict, Union, Optional, Any, cast
+import logging
+import os
+import pathlib
+import sys
+from typing import Any, Dict, Optional, Union, cast
 from urllib.parse import urlparse
 
 import yaml
-
 from cerberus.schema import SchemaError
-
 from jinja2 import Template
 
-from dae.utils import fs_utils
-from dae.utils.helpers import convert_size
-
-from dae.task_graph.cli_tools import TaskGraphCli
-from dae.utils.fs_utils import find_directory_with_a_file
-from dae.task_graph.graph import TaskGraph
 from dae import __version__  # type: ignore
-from dae.genomic_resources.repository import \
-    GR_CONF_FILE_NAME, \
-    GR_CONTENTS_FILE_NAME, \
-    GenomicResource, \
-    GenomicResourceRepo, \
-    ReadOnlyRepositoryProtocol, \
-    ReadWriteRepositoryProtocol, \
-    ManifestEntry, \
-    parse_resource_id_version, \
-    version_tuple_to_string
-from dae.genomic_resources.cached_repository import \
-    GenomicResourceCachedRepo
-from dae.genomic_resources.group_repository import \
-    GenomicResourceGroupRepo
-from dae.genomic_resources.resource_implementation import \
-    GenomicResourceImplementation
-from dae.utils.verbosity_configuration import VerbosityConfiguration
-
+from dae.genomic_resources.cached_repository import GenomicResourceCachedRepo
 from dae.genomic_resources.fsspec_protocol import build_fsspec_protocol
-from dae.genomic_resources.repository_factory import \
-    build_genomic_resource_repository, get_default_grr_definition, \
-    load_definition_file, get_default_grr_definition_path, \
-    DEFAULT_DEFINITION, \
-    build_resource_implementation
-
-from dae.genomic_resources.resource_implementation import ResourceStatistics
+from dae.genomic_resources.group_repository import GenomicResourceGroupRepo
+from dae.genomic_resources.repository import (
+    GR_CONF_FILE_NAME,
+    GR_CONTENTS_FILE_NAME,
+    GenomicResource,
+    GenomicResourceRepo,
+    ManifestEntry,
+    ReadOnlyRepositoryProtocol,
+    ReadWriteRepositoryProtocol,
+    parse_resource_id_version,
+    version_tuple_to_string,
+)
+from dae.genomic_resources.repository_factory import (
+    DEFAULT_DEFINITION,
+    build_genomic_resource_repository,
+    build_resource_implementation,
+    get_default_grr_definition,
+    get_default_grr_definition_path,
+    load_definition_file,
+)
+from dae.genomic_resources.resource_implementation import (
+    GenomicResourceImplementation,
+    ResourceStatistics,
+)
+from dae.task_graph.cli_tools import TaskGraphCli
+from dae.task_graph.graph import TaskGraph
+from dae.utils import fs_utils
+from dae.utils.fs_utils import find_directory_with_a_file
+from dae.utils.helpers import convert_size
+from dae.utils.verbosity_configuration import VerbosityConfiguration
 
 logger = logging.getLogger("grr_manage")
 
 
 def _add_repository_resource_parameters_group(
-    parser: argparse.ArgumentParser, use_resource: bool = True
+    parser: argparse.ArgumentParser, use_resource: bool = True,
 ) -> None:
 
     group = parser.add_argument_group(title="Repository/Resource")
@@ -76,7 +73,7 @@ def _add_repository_resource_parameters_group(
         help="comma separated list of `key=value` pairs arguments needed for "
         "connection to the specific repository protocol. "
         "Ex: if you want to connect to an S3 repository it is often "
-        "neccessary to pass additional `endpoint-url` argument."
+        "neccessary to pass additional `endpoint-url` argument.",
     )
     if use_resource:
         group.add_argument(
@@ -149,7 +146,7 @@ def _run_list_command(
                 files_msg = f"{len(cached_files):2d}/{files_msg}"
 
             res_size_msg = res_size \
-                if hasattr(args, 'bytes') and args.bytes is True \
+                if hasattr(args, "bytes") and args.bytes is True \
                 else convert_size(res_size)
             repo_id = repo.repo_id if isinstance(repo, GenomicResourceRepo) \
                 else repo.get_id()
@@ -276,7 +273,7 @@ def _configure_resource_repair_subparser(
 def _configure_repo_info_subparser(
         subparsers: argparse._SubParsersAction) -> None:
     parser = subparsers.add_parser(
-        "repo-info", help="Build the index.html for the whole GRR"
+        "repo-info", help="Build the index.html for the whole GRR",
     )
     _add_repository_resource_parameters_group(parser)
     VerbosityConfiguration.set_arguments(parser)
@@ -287,7 +284,7 @@ def _configure_repo_info_subparser(
 def _configure_resource_info_subparser(
         subparsers: argparse._SubParsersAction) -> None:
     parser = subparsers.add_parser(
-        "resource-info", help="Build the index.html for the specific resource"
+        "resource-info", help="Build the index.html for the specific resource",
     )
     _add_repository_resource_parameters_group(parser)
     VerbosityConfiguration.set_arguments(parser)
@@ -385,7 +382,7 @@ def _run_repo_manifest_command(
     updates_needed = {}
     for res in proto.get_all_resources():
         updates_needed[res.resource_id] = _do_resource_manifest_command(
-            proto, res, dry_run, force, use_dvc
+            proto, res, dry_run, force, use_dvc,
         )
 
     if not dry_run:
@@ -448,7 +445,7 @@ def _read_stats_hash(
     if not proto.file_exists(res, f"{stats_dir}/stats_hash"):
         return None
     with proto.open_raw_file(
-        res, f"{stats_dir}/stats_hash", mode="rb"
+        res, f"{stats_dir}/stats_hash", mode="rb",
     ) as infile:
         return cast(bytes, infile.read())
 
@@ -465,7 +462,7 @@ def _store_stats_hash(
             resource.resource_id)
         return False
     with proto.open_raw_file(
-        resource, f"{stats_dir}/stats_hash", mode="wb"
+        resource, f"{stats_dir}/stats_hash", mode="wb",
     ) as outfile:
         stats_hash = impl.calc_statistics_hash()
         outfile.write(stats_hash)
@@ -488,14 +485,14 @@ def _collect_impl_stats_tasks(  # pylint: disable=too-many-arguments
         f"{impl.resource.resource_id}_store_stats_hash",
         _store_stats_hash,
         [proto, impl.resource],
-        tasks
+        tasks,
     )
 
     graph.create_task(
         f"{impl.resource.resource_id}_manifest_rebuild",
         _do_resource_manifest_command,
         [proto, impl.resource, dry_run, force, use_dvc],
-        tasks
+        tasks,
     )
 
 
@@ -509,19 +506,19 @@ def _stats_need_rebuild(
     if stored_hash is None:
         logger.info(
             "No hash stored for <%s>, need update",
-            impl.resource.resource_id
+            impl.resource.resource_id,
         )
         return True
 
     if stored_hash != current_hash:
         logger.info(
             "Stored hash for <%s> is outdated, need update",
-            impl.resource.resource_id
+            impl.resource.resource_id,
         )
         return True
 
     logger.info(
-        "<%s> statistics hash is up to date", impl.resource.resource_id
+        "<%s> statistics hash is up to date", impl.resource.resource_id,
     )
     return False
 
@@ -547,7 +544,7 @@ def _run_repo_stats_command(
         if updates_needed[res.resource_id]:
             logger.info(
                 "Manifest of <%s> needs update, cannot check statistics",
-                res.resource_id
+                res.resource_id,
             )
             continue
         impl = build_resource_implementation(res)
@@ -574,6 +571,7 @@ def _run_repo_stats_command(
         proto.build_content_file()
     return status
 
+
 def _run_resource_stats_command(
         repo: GenomicResourceRepo,
         proto: ReadWriteRepositoryProtocol,
@@ -590,7 +588,7 @@ def _run_resource_stats_command(
     if needs_update:
         logger.info(
             "Manifest of <%s> needs update, cannot check statistics",
-            res.resource_id
+            res.resource_id,
         )
         return
     if dry_run and force:
@@ -623,7 +621,7 @@ def _run_resource_stats_command(
                 fs_utils.join(repo_url, ".task-log")
 
         TaskGraphCli.process_graph(
-            graph, force_mode="always", **modified_kwargs
+            graph, force_mode="always", **modified_kwargs,
         )
 
 
@@ -656,19 +654,19 @@ def _run_repo_info_command(
             logger.error(
                 "Failed to generate repo index for %s\n%s",
                 res.resource_id,
-                err
+                err,
             )
         except SchemaError as err:
             logger.error(
                 "Resource %s has an invalid configuration\n%s",
                 res.resource_id,
-                err
+                err,
             )
         except BaseException as err:  # pylint: disable=broad-except
             logger.error(
                 "Failed to load %s\n%s",
                 res.resource_id,
-                err
+                err,
             )
     return status
 
@@ -754,7 +752,7 @@ def cli_manage(cli_args: Optional[list[str]] = None) -> None:
     if extra_definition_path:
         if not os.path.exists(extra_definition_path):
             raise FileNotFoundError(
-                f"Definition {extra_definition_path} not found!"
+                f"Definition {extra_definition_path} not found!",
             )
         extra_definition = load_definition_file(extra_definition_path)
     else:
@@ -766,10 +764,10 @@ def cli_manage(cli_args: Optional[list[str]] = None) -> None:
             {
                 "id": "local",
                 "type": "dir",
-                "directory": repo_url
+                "directory": repo_url,
             },
-            extra_definition
-        ]
+            extra_definition,
+        ],
     }
 
     repo = build_genomic_resource_repository(definition=grr_definition)
@@ -810,7 +808,7 @@ def cli_manage(cli_args: Optional[list[str]] = None) -> None:
 
 
 def _create_proto(
-    repo_url: str, extra_args: str = ""
+    repo_url: str, extra_args: str = "",
 ) -> ReadWriteRepositoryProtocol:
     url = urlparse(repo_url)
 
@@ -848,7 +846,7 @@ def cli_browse(cli_args: Optional[list[str]] = None) -> None:
         "--bytes",
         default=False,
         action="store_true",
-        help="Print the resource size in bytes"
+        help="Print the resource size in bytes",
     )
 
     if cli_args is None:

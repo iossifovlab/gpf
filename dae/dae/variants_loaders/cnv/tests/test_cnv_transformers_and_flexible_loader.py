@@ -1,27 +1,28 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import io
 import textwrap
+
 import pytest
 
-from dae.utils.variant_utils import mat2str
-from dae.variants.core import Allele
-
-from dae.testing import convert_to_tab_separated
-from dae.variants_loaders.raw.flexible_variant_loader import \
-    flexible_variant_loader
-
-from dae.variants_loaders.cnv.flexible_cnv_loader import \
-    _cnv_location_to_vcf_trasformer, \
-    _cnv_variant_to_variant_type, \
-    _cnv_dae_best_state_to_best_state, \
-    _cnv_person_id_to_best_state, \
-    _cnv_vcf_to_vcf_trasformer, \
-    flexible_cnv_loader
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.pedigrees.families_data import FamiliesData
+from dae.testing import convert_to_tab_separated
+from dae.utils.variant_utils import mat2str
+from dae.variants.core import Allele
+from dae.variants_loaders.cnv.flexible_cnv_loader import (
+    _cnv_dae_best_state_to_best_state,
+    _cnv_location_to_vcf_trasformer,
+    _cnv_person_id_to_best_state,
+    _cnv_variant_to_variant_type,
+    _cnv_vcf_to_vcf_trasformer,
+    flexible_cnv_loader,
+)
+from dae.variants_loaders.raw.flexible_variant_loader import (
+    flexible_variant_loader,
+)
 
 
-@pytest.fixture
+@pytest.fixture()
 def cnv_dae() -> io.StringIO:
     content = io.StringIO(convert_to_tab_separated(textwrap.dedent(
         """
@@ -30,7 +31,7 @@ def cnv_dae() -> io.StringIO:
         f2         1:28298951-28369279    CNV-     2||2||1
         f1         X:22944530-23302214    CNV-     2||1||1||1
         f1         X:153576690-153779907  CNV+     2||1||2||2
-        """
+        """,
     )))
     return content
 
@@ -39,7 +40,7 @@ def test_cnv_dae_location(cnv_dae: io.StringIO) -> None:
     next(cnv_dae)  # skip the header
 
     transformers = [
-        _cnv_location_to_vcf_trasformer()
+        _cnv_location_to_vcf_trasformer(),
     ]
 
     generator = flexible_variant_loader(
@@ -67,7 +68,7 @@ def test_cnv_dae_variant_type(cnv_dae: io.StringIO) -> None:
     next(cnv_dae)  # skip header
 
     transformers = [
-        _cnv_variant_to_variant_type()
+        _cnv_variant_to_variant_type(),
     ]
 
     generator = flexible_variant_loader(
@@ -101,13 +102,13 @@ def test_cnv_dae_variant_type(cnv_dae: io.StringIO) -> None:
          "Del", Allele.Type.large_deletion),
         (["Dup", "Dup_Germline"], ["Del", "Del_Germline"],
          "Del_Germline", Allele.Type.large_deletion),
-    ]
+    ],
 )
 def test_cnv_variant_to_variant_type(
     cnv_plus_values: list[str],
     cnv_minus_values: list[str],
     variant: str,
-    expected: Allele.Type
+    expected: Allele.Type,
 ) -> None:
 
     transformer = _cnv_variant_to_variant_type(
@@ -121,12 +122,12 @@ def test_cnv_variant_to_variant_type(
 @pytest.mark.parametrize(
     "cnv_plus_values,cnv_minus_values,variant", [
         (["CNV+"], ["CNV-"], "CNV"),
-    ]
+    ],
 )
 def test_cnv_unexpeced_variant_to_variant_type(
     cnv_plus_values: list[str],
     cnv_minus_values: list[str],
-    variant: str
+    variant: str,
 ) -> None:
 
     transformer = _cnv_variant_to_variant_type(
@@ -141,14 +142,14 @@ def test_cnv_unexpeced_variant_to_variant_type(
         (1, "221/001"),
         (2, "2111/0001"),
         (3, "2102/0010"),
-    ]
+    ],
 )
 def test_cnv_dae_best_state(
     families: FamiliesData,
     cnv_dae: io.StringIO,
     gpf_instance_2013: GPFInstance,
     index: int,
-    expected: str
+    expected: str,
 ) -> None:
 
     genome = gpf_instance_2013.reference_genome
@@ -157,7 +158,7 @@ def test_cnv_dae_best_state(
     transformers = [
         _cnv_location_to_vcf_trasformer(),
         _cnv_variant_to_variant_type(),
-        _cnv_dae_best_state_to_best_state(families, genome)
+        _cnv_dae_best_state_to_best_state(families, genome),
     ]
 
     generator = flexible_variant_loader(
@@ -175,7 +176,7 @@ def test_cnv_dae_best_state(
     assert mat2str(result["best_state"]) == expected
 
 
-@pytest.fixture
+@pytest.fixture()
 def cnv_person_id() -> io.StringIO:
     content = io.StringIO(convert_to_tab_separated(textwrap.dedent(
         """
@@ -185,7 +186,7 @@ def cnv_person_id() -> io.StringIO:
         f2.p1        1:28298951-28369279    CNV-
         f1.s2        X:22944530-23302214    CNV-
         f1.p1        X:153576690-153779907  CNV+
-        """
+        """,
     )))
     return content
 
@@ -197,14 +198,14 @@ def cnv_person_id() -> io.StringIO:
         (2, "221/001"),
         (3, "2111/0001"),
         (4, "2102/0010"),
-    ]
+    ],
 )
 def test_cnv_person_id_best_state(
     families: FamiliesData,
     cnv_person_id: io.StringIO,
     gpf_instance_2013: GPFInstance,
     index: int,
-    expected: str
+    expected: str,
 ) -> None:
 
     genome = gpf_instance_2013.reference_genome
@@ -213,7 +214,7 @@ def test_cnv_person_id_best_state(
     transformers = [
         _cnv_location_to_vcf_trasformer(),
         _cnv_variant_to_variant_type(),
-        _cnv_person_id_to_best_state(families, genome)
+        _cnv_person_id_to_best_state(families, genome),
     ]
 
     generator = flexible_variant_loader(
@@ -231,7 +232,7 @@ def test_cnv_person_id_best_state(
     assert mat2str(result["best_state"]) == expected
 
 
-@pytest.fixture
+@pytest.fixture()
 def cnv_vcf() -> io.StringIO:
     content = io.StringIO(convert_to_tab_separated(textwrap.dedent(
         """
@@ -240,7 +241,7 @@ def cnv_vcf() -> io.StringIO:
         f2.p1      1    28298951    28369279     CNV-
         f1.s2      X    22944530    23302214     CNV-
         f1.p1      X    153576690   153779907    CNV+
-        """
+        """,
     )))
     return content
 
@@ -251,14 +252,14 @@ def cnv_vcf() -> io.StringIO:
         (1, "221/001"),
         (2, "2111/0001"),
         (3, "2102/0010"),
-    ]
+    ],
 )
 def test_cnv_vcf_position(
     families: FamiliesData,
     cnv_vcf: io.StringIO,
     gpf_instance_2013: GPFInstance,
     index: int,
-    expected: str
+    expected: str,
 ) -> None:
 
     genome = gpf_instance_2013.reference_genome
@@ -267,7 +268,7 @@ def test_cnv_vcf_position(
     transformers = [
         _cnv_vcf_to_vcf_trasformer(),
         _cnv_variant_to_variant_type(),
-        _cnv_person_id_to_best_state(families, genome)
+        _cnv_person_id_to_best_state(families, genome),
     ]
 
     generator = flexible_variant_loader(
@@ -288,7 +289,7 @@ def test_cnv_vcf_position(
 def test_cnv_loader_simple(
     families: FamiliesData,
     cnv_dae: io.StringIO,
-    gpf_instance_2013: GPFInstance
+    gpf_instance_2013: GPFInstance,
 ) -> None:
 
     generator = flexible_cnv_loader(

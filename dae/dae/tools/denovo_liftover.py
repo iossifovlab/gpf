@@ -1,29 +1,27 @@
 #!/usr/bin/env python
 
-import sys
 import argparse
 import logging
+import sys
 import textwrap
-from typing import cast, Any, Optional
-
-from collections import defaultdict, Counter
-
-from dae.utils.variant_utils import mat2str
-from dae.utils.verbosity_configuration import VerbosityConfiguration
-from dae.genomic_resources.repository_factory import \
-    build_genomic_resource_repository
-from dae.genomic_resources.reference_genome import \
-    build_reference_genome_from_resource
-from dae.annotation.annotation_factory import \
-    build_annotation_pipeline
+from collections import Counter, defaultdict
+from typing import Any, Optional, cast
 
 from dae.annotation.annotatable import VCFAllele
-from dae.variants.family_variant import FamilyAllele
-
+from dae.annotation.annotation_factory import build_annotation_pipeline
+from dae.genomic_resources.reference_genome import (
+    build_reference_genome_from_resource,
+)
+from dae.genomic_resources.repository_factory import (
+    build_genomic_resource_repository,
+)
 from dae.gpf_instance.gpf_instance import GPFInstance
-from dae.variants_loaders.dae.loader import DenovoLoader
 from dae.pedigrees.loader import FamiliesLoader
 from dae.tools.stats_liftover import save_liftover_stats
+from dae.utils.variant_utils import mat2str
+from dae.utils.verbosity_configuration import VerbosityConfiguration
+from dae.variants.family_variant import FamilyAllele
+from dae.variants_loaders.dae.loader import DenovoLoader
 
 logger = logging.getLogger("denovo_liftover")
 
@@ -56,7 +54,7 @@ def parse_cli_arguments(argv: list[str]) -> argparse.Namespace:
 
     parser.add_argument(
         "--stats", help="filename to store liftover statistics",
-        default="stats.txt"
+        default="stats.txt",
     )
 
     parser.add_argument(
@@ -90,7 +88,7 @@ def main(
     families_filename = families_filenames[0]
 
     families_loader = FamiliesLoader(
-        families_filename, **families_params
+        families_filename, **families_params,
     )
     families = families_loader.load()
 
@@ -136,7 +134,7 @@ def main(
             - source: "effect_details"
               name: "target_effect_details"
 
-        """
+        """,
     )
 
     pipeline = build_annotation_pipeline(

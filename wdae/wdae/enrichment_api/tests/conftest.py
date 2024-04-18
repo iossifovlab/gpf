@@ -2,12 +2,11 @@
 
 import pytest
 
-from enrichment_api.enrichment_builder import EnrichmentBuilder
-from enrichment_api.enrichment_serializer import EnrichmentSerializer
-
 from dae.enrichment_tool.enrichment_helper import EnrichmentHelper
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.studies.study import GenotypeData
+from enrichment_api.enrichment_builder import EnrichmentBuilder
+from enrichment_api.enrichment_serializer import EnrichmentSerializer
 
 
 @pytest.fixture(scope="session")
@@ -23,7 +22,7 @@ def f1_trio(fixtures_wgpf_instance: GPFInstance) -> GenotypeData:
 @pytest.fixture(scope="session")
 def enrichment_builder(
     f1_trio: GenotypeData,
-    enrichment_helper: EnrichmentHelper
+    enrichment_helper: EnrichmentHelper,
 ) -> EnrichmentBuilder:
 
     builder = EnrichmentBuilder(
@@ -31,7 +30,7 @@ def enrichment_builder(
         f1_trio,
         ["SAMD11", "PLEKHN1", "POGZ"],
         "enrichment/coding_len_testing",
-        "enrichment_events_counting"
+        "enrichment_events_counting",
     )
 
     return builder
@@ -41,7 +40,7 @@ def enrichment_builder(
 def enrichment_serializer(
     enrichment_helper: EnrichmentHelper,
     enrichment_builder: EnrichmentBuilder,
-    f1_trio: GenotypeData
+    f1_trio: GenotypeData,
 ) -> EnrichmentSerializer:
     enrichment_config = enrichment_helper.get_enrichment_config(f1_trio)
     assert enrichment_config is not None

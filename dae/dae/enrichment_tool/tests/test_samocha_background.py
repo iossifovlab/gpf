@@ -2,12 +2,15 @@
 
 import pytest
 
-from dae.variants.attributes import Inheritance
-from dae.studies.study import GenotypeData
-from dae.enrichment_tool.event_counters import EventsCounter, \
-    EventCountersResult, overlap_event_counts
+from dae.enrichment_tool.event_counters import (
+    EventCountersResult,
+    EventsCounter,
+    overlap_event_counts,
+)
 from dae.enrichment_tool.genotype_helper import GenotypeHelper
 from dae.enrichment_tool.samocha_background import SamochaEnrichmentBackground
+from dae.studies.study import GenotypeData
+from dae.variants.attributes import Inheritance
 
 
 def test_load(samocha_background: SamochaEnrichmentBackground) -> None:
@@ -39,11 +42,11 @@ def test_load(samocha_background: SamochaEnrichmentBackground) -> None:
 
 
 def test_calc_stats(
-    f1_trio: GenotypeData, samocha_background: SamochaEnrichmentBackground
+    f1_trio: GenotypeData, samocha_background: SamochaEnrichmentBackground,
 ) -> None:
     # pylint: disable=too-many-statements
     variants = list(
-        f1_trio.query_variants(inheritance=str(Inheritance.denovo.name))
+        f1_trio.query_variants(inheritance=str(Inheritance.denovo.name)),
     )
     event_counter = EventsCounter()
 
@@ -55,7 +58,7 @@ def test_calc_stats(
 
     variant_events = GenotypeHelper.collect_denovo_events(variants)
     enrichment_events = event_counter.events(
-        variant_events, children_by_sex, set(["missense", "synonymous"])
+        variant_events, children_by_sex, set(["missense", "synonymous"]),
     )
 
     assert enrichment_events.all is not None

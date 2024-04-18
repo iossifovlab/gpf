@@ -3,37 +3,35 @@ import os
 import pathlib
 from typing import Any
 
+import duckdb
 import pytest
 
-import duckdb
-
-from dae.utils.regions import Region
-
-from dae.query_variants.sql.schema2.sql_query_builder import Db2Layout
-from dae.query_variants.sql.schema2.sql_query_builder import SqlQueryBuilder
-
-from dae.duckdb_storage.duckdb_genotype_storage import DuckDbGenotypeStorage
-from dae.genotype_storage.genotype_storage_registry import \
-    get_genotype_storage_factory
 from dae.duckdb_storage.duckdb2_variants import DuckDb2Variants
-
+from dae.duckdb_storage.duckdb_genotype_storage import DuckDbGenotypeStorage
+from dae.genotype_storage.genotype_storage_registry import (
+    get_genotype_storage_factory,
+)
 from dae.gpf_instance import GPFInstance
+from dae.query_variants.sql.schema2.sql_query_builder import (
+    Db2Layout,
+    SqlQueryBuilder,
+)
 from dae.studies.study import GenotypeData
-
 from dae.testing import setup_pedigree, setup_vcf, vcf_study
 from dae.testing.t4c8_import import t4c8_gpf
+from dae.utils.regions import Region
 
 
 @pytest.fixture(scope="module")
 def duckdb_storage(
-    tmp_path_factory: pytest.TempPathFactory
+    tmp_path_factory: pytest.TempPathFactory,
 ) -> DuckDbGenotypeStorage:
     storage_path = tmp_path_factory.mktemp("duckdb_storage")
     storage_config = {
         "id": "duckdb_test",
         "storage_type": "duckdb",
         "db": "duckdb_storage/test.duckdb",
-        "base_dir": str(storage_path)
+        "base_dir": str(storage_path),
     }
     storage_factory = get_genotype_storage_factory("duckdb")
     assert storage_factory is not None
@@ -56,7 +54,7 @@ def t4c8_instance(
 @pytest.fixture(scope="module")
 def t4c8_study_1(
     t4c8_instance: GPFInstance,
-    duckdb_storage: DuckDbGenotypeStorage
+    duckdb_storage: DuckDbGenotypeStorage,
 ) -> GenotypeData:
     root_path = pathlib.Path(t4c8_instance.dae_dir)
     ped_path = setup_pedigree(
@@ -82,7 +80,7 @@ f1.3     ch3      dad3  mom3  2   2      prb
 chr1   54   .  T   C   .    .      .    GT     0/1  0/0  0/1 0/0  0/0  0/0
 chr1   119  .  A   G,C .    .      .    GT     0/0  0/2  0/2 0/1  0/2  0/1
 chr1   122  .  A   C   .    .      .    GT     0/0  1/0  0/0 0/0  0/0  0/0
-        """)  # noqa
+        """)
 
     study = vcf_study(
         root_path,
@@ -107,7 +105,7 @@ def duckdb2_variants(
 
     db_filename = os.path.join(
         base_dir,
-        db_file
+        db_file,
     )
     assert os.path.exists(db_filename)
     study_storage = t4c8_study_1.config.genotype_storage

@@ -2,24 +2,23 @@
 
 import math
 from copy import deepcopy
-from typing import Optional, Tuple, List, Any
+from typing import Any, List, Optional, Tuple
 
 import matplotlib as mpl
-import matplotlib.pyplot as plt
-
-import matplotlib.patches as mpatches
 import matplotlib.lines as mlines
-from matplotlib.figure import Figure
+import matplotlib.patches as mpatches
+import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
-from matplotlib.path import Path
 from matplotlib.backends.backend_pdf import PdfPages
+from matplotlib.figure import Figure
+from matplotlib.path import Path
 
-from dae.variants.attributes import Sex, Role, Status
-from dae.pedigrees.layout import IndividualWithCoordinates, Layout, Point
 from dae.pedigrees.family import Person
+from dae.pedigrees.layout import IndividualWithCoordinates, Layout, Point
+from dae.variants.attributes import Role, Sex, Status
 
-mpl.use("PS")  # noqa
-plt.ioff()  # noqa
+mpl.use("PS")
+plt.ioff()
 
 
 class PDFLayoutDrawer:
@@ -34,7 +33,7 @@ class PDFLayoutDrawer:
         return self.pdf
 
     def add_page(
-        self, figure: Figure, title: Optional[str] = None
+        self, figure: Figure, title: Optional[str] = None,
     ) -> None:
         """Add a new page to the PDF file."""
         assert self.pdf is not None
@@ -44,7 +43,7 @@ class PDFLayoutDrawer:
         plt.close(figure)
 
     def __exit__(
-        self, exc_type: None, exc_value: None, exc_traceback: None
+        self, exc_type: None, exc_value: None, exc_traceback: None,
     ) -> None:
         if self.pdf is not None:
             self.pdf.close()
@@ -62,7 +61,7 @@ class OffsetLayoutDrawer:
         layouts: List[Layout],
         x_offset: int = 0,
         y_offset: int = 0,
-        show_family: bool = False
+        show_family: bool = False,
     ) -> None:
 
         assert layouts is not None
@@ -96,7 +95,7 @@ class OffsetLayoutDrawer:
     def draw(
         self, figure: Optional[Figure] = None,
         title: Optional[str] = None,
-        tags: Optional[set[str]] = None
+        tags: Optional[set[str]] = None,
     ) -> Figure:
         """Draw family pedigree."""
         if figure is None:
@@ -109,7 +108,7 @@ class OffsetLayoutDrawer:
         ax_pedigree = figure.add_axes(pedigree_axes_rect)
         ax_pedigree.axis("off")
         ax_pedigree.set_aspect(
-            aspect="equal", adjustable="datalim", anchor="C"
+            aspect="equal", adjustable="datalim", anchor="C",
         )
         ax_pedigree.autoscale_view()
 
@@ -135,7 +134,7 @@ class OffsetLayoutDrawer:
             ax_family = figure.add_axes((0.1, 0.1, 0.8, 0.3))
             ax_family.axis("off")
             ax_family.set_aspect(
-                aspect="equal", adjustable="datalim", anchor="C"
+                aspect="equal", adjustable="datalim", anchor="C",
             )
             ax_family.autoscale_view()
 
@@ -164,12 +163,12 @@ class OffsetLayoutDrawer:
                         [line.x1 + self._x_offset, line.x2 + self._x_offset],
                         [line.y1 + self._y_offset, line.y2 + self._y_offset],
                         color="black",
-                    )
+                    ),
                 )
 
     def _draw_rounded_lines(self, axes: Axes, layout: Layout) -> None:
         def elementwise_sum(
-            x_pos: tuple[float, float], y_pos: tuple[float, float]
+            x_pos: tuple[float, float], y_pos: tuple[float, float],
         ) -> tuple[float, float]:
             return (x_pos[0] + y_pos[0], x_pos[1] + y_pos[1])
         for line in layout.lines:
@@ -203,7 +202,7 @@ class OffsetLayoutDrawer:
     def _draw_male_individual(
         self, axes: Axes,
         individual: IndividualWithCoordinates,
-        color: str
+        color: str,
     ) -> Tuple[Point, Point]:
         coords = [
             individual.x + self._x_offset,
@@ -216,7 +215,7 @@ class OffsetLayoutDrawer:
                 individual.size,
                 facecolor=color,
                 edgecolor="black",
-            )
+            ),
         )
 
         center_x = coords[0] + individual.size / 2.0
@@ -230,7 +229,7 @@ class OffsetLayoutDrawer:
     def _draw_female_individual(
         self, axes: Axes,
         individual: IndividualWithCoordinates,
-        color: str
+        color: str,
     ) -> tuple[Point, Point]:
         coords = [
             individual.x_center + self._x_offset,
@@ -242,24 +241,24 @@ class OffsetLayoutDrawer:
                 individual.size / 2,
                 facecolor=color,
                 edgecolor="black",
-            )
+            ),
         )
 
         center_x = coords[0]
         center_y = coords[1]
 
         dlx = coords[0] + (individual.size / 2.0) * math.cos(
-            math.radians(225)
+            math.radians(225),
         )
         dly = coords[1] + (individual.size / 2.0) * math.sin(
-            math.radians(225)
+            math.radians(225),
         )
         return Point(center_x, center_y), Point(dlx, dly)
 
     def _draw_unspecified_sex_individual(
         self, axes: Axes,
         individual: IndividualWithCoordinates,
-        color: str
+        color: str,
     ) -> tuple[Point, Point]:
         size = math.sqrt((individual.size ** 2) / 2)
         coords = [
@@ -274,7 +273,7 @@ class OffsetLayoutDrawer:
                 facecolor=color,
                 edgecolor="black",
                 angle=45.0,
-            )
+            ),
         )
 
         center_x = coords[0]
@@ -287,7 +286,7 @@ class OffsetLayoutDrawer:
 
     def _draw_individual(
         self, axes: Axes,
-        individual: IndividualWithCoordinates
+        individual: IndividualWithCoordinates,
     ) -> None:
         individual_color = self._infer_individual_color(individual)
         member = individual.individual.member
@@ -317,7 +316,7 @@ class OffsetLayoutDrawer:
                     color="black",
                     head_width=1.0,
                     linewidth=0.1,
-                )
+                ),
             )
 
         axes.annotate(
@@ -331,7 +330,7 @@ class OffsetLayoutDrawer:
         )
 
     def _draw_members(
-        self, axes: Axes, layout: Layout
+        self, axes: Axes, layout: Layout,
     ) -> None:
         for level in layout.positions:
             for individual in level:
@@ -339,7 +338,7 @@ class OffsetLayoutDrawer:
 
     @staticmethod
     def _draw_family_table(
-        axes: Axes, family: list[Person]
+        axes: Axes, family: list[Person],
     ) -> None:
         col_labels = [
             "familyId",
@@ -368,11 +367,11 @@ class OffsetLayoutDrawer:
                     member.layout,
                     "G" if member.generated else "",
                     "N" if member.not_sequenced else "",
-                ]
+                ],
             )
 
         axes.table = plt.table(
-            cellText=table_vals, colLabels=col_labels, loc="center"
+            cellText=table_vals, colLabels=col_labels, loc="center",
         )
 
     @staticmethod
@@ -381,7 +380,7 @@ class OffsetLayoutDrawer:
         title: str,
         x_pos: float = 0.5,
         y_pos: float = 0.9,
-        **kwargs: Any
+        **kwargs: Any,
     ) -> None:
         figure.text(
             x_pos, y_pos, title, horizontalalignment="center", **kwargs)

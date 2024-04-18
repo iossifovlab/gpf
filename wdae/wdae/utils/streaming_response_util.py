@@ -1,7 +1,7 @@
 import json
 import logging
-import numpy as np
 
+import numpy as np
 
 logger = logging.getLogger(__name__)
 
@@ -9,12 +9,11 @@ logger = logging.getLogger(__name__)
 def convert(obj):
     if isinstance(obj, np.int64):
         return int(obj)
-    elif isinstance(obj, np.float32):
+    if isinstance(obj, np.float32):
         return float(obj)
-    else:
-        raise TypeError(
-            "Unserializable object {} of type {}".format(obj, type(obj))
-        )
+    raise TypeError(
+        f"Unserializable object {obj} of type {type(obj)}",
+    )
 
 
 def iterator_to_json(variants):

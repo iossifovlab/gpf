@@ -4,13 +4,17 @@ import re
 from datetime import timedelta
 from typing import Tuple
 
-from rest_framework import status
-from django.utils import timezone
 from django.test.client import Client
+from django.utils import timezone
 from oauth2_provider.models import AccessToken
+from rest_framework import status
 
-from users_api.models import WdaeUser, LOCKOUT_THRESHOLD
-from users_api.models import AuthenticationLog, ResetPasswordCode
+from users_api.models import (
+    LOCKOUT_THRESHOLD,
+    AuthenticationLog,
+    ResetPasswordCode,
+    WdaeUser,
+)
 
 
 def lockout_email(client: Client, email: str) -> None:
@@ -18,24 +22,24 @@ def lockout_email(client: Client, email: str) -> None:
         "username": email,
         "password": "invalidpasswordinvalidpassword",
     }
-    for _ in range(0, LOCKOUT_THRESHOLD + 1):
+    for _ in range(LOCKOUT_THRESHOLD + 1):
         client.post(
             "/accounts/login",
             json.dumps(data),
-            content_type="application/json", format="json"
+            content_type="application/json", format="json",
         )
 
 
 def expire_email_lockout(email: str) -> None:
     """Wind back times of all logins so that the lockout expires."""
     query = AuthenticationLog.objects.filter(
-        email__iexact=email
+        email__iexact=email,
     ).order_by("-time", "-failed_attempt")
     last_login = AuthenticationLog.get_last_login_for(email)
     assert last_login is not None
 
     subtract_time = timedelta(
-        seconds=pow(2, last_login.failed_attempt + 1 - LOCKOUT_THRESHOLD) * 60
+        seconds=pow(2, last_login.failed_attempt + 1 - LOCKOUT_THRESHOLD) * 60,
     )
     for login in query:
         login.time = login.time - subtract_time
@@ -44,7 +48,7 @@ def expire_email_lockout(email: str) -> None:
 
 def test_successful_auth(
     db: None, user: WdaeUser, client: Client,
-    tokens: tuple[AccessToken, AccessToken]
+    tokens: tuple[AccessToken, AccessToken],
 ) -> None:
     url = "/accounts/login"
     data = {
@@ -53,7 +57,7 @@ def test_successful_auth(
     }
 
     response = client.post(
-        url, json.dumps(data), content_type="application/json", format="json"
+        url, json.dumps(data), content_type="application/json", format="json",
     )
 
     assert response.status_code == status.HTTP_302_FOUND
@@ -62,17 +66,17 @@ def test_successful_auth(
 
 def test_successful_auth_with_next(
     db: None, user: WdaeUser, client: Client,
-    tokens: tuple[AccessToken, AccessToken]
+    tokens: tuple[AccessToken, AccessToken],
 ) -> None:
     url = "/accounts/login"
     data = {
         "username": "user@example.com",
         "password": "secret",
-        "next": "somewhere.com"
+        "next": "somewhere.com",
     }
 
     response = client.post(
-        url, json.dumps(data), content_type="application/json", format="json"
+        url, json.dumps(data), content_type="application/json", format="json",
     )
 
     assert response.status_code == status.HTTP_302_FOUND
@@ -81,7 +85,7 @@ def test_successful_auth_with_next(
 
 def test_successful_auth_case_insensitive(
     db: None, user: WdaeUser, client: Client,
-    tokens: tuple[AccessToken, AccessToken]
+    tokens: tuple[AccessToken, AccessToken],
 ) -> None:
     url = "/accounts/login"
     data = {
@@ -90,7 +94,7 @@ def test_successful_auth_case_insensitive(
     }
 
     response = client.post(
-        url, json.dumps(data), content_type="application/json", format="json"
+        url, json.dumps(data), content_type="application/json", format="json",
     )
 
     assert response.status_code == status.HTTP_302_FOUND
@@ -99,26 +103,26 @@ def test_successful_auth_case_insensitive(
 
 def test_failed_auth(
     db: None, user: WdaeUser, client: Client,
-    tokens: tuple[AccessToken, AccessToken]
+    tokens: tuple[AccessToken, AccessToken],
 ) -> None:
     url = "/accounts/login"
     data = {"username": "bad@example.com", "password": "secret"}
 
     response = client.post(
-        url, json.dumps(data), content_type="application/json", format="json"
+        url, json.dumps(data), content_type="application/json", format="json",
     )
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
 def test_no_username_auth(
     db: None, user: WdaeUser, client: Client,
-    tokens: tuple[AccessToken, AccessToken]
+    tokens: tuple[AccessToken, AccessToken],
 ) -> None:
     url = "/accounts/login"
     data = {"username": "", "password": "secret"}
 
     response = client.post(
-        url, json.dumps(data), content_type="application/json", format="json"
+        url, json.dumps(data), content_type="application/json", format="json",
     )
     assert response.status_code == status.HTTP_400_BAD_REQUEST
 
@@ -132,14 +136,14 @@ def test_get_user_info_after_auth(user_client: Client) -> None:
 
 def test_no_password_auth(
     db: None, user: WdaeUser, client: Client,
-    tokens: tuple[AccessToken, AccessToken]
+    tokens: tuple[AccessToken, AccessToken],
 ) -> None:
     url = "/accounts/login"
     data = {
         "username": "user@example.com",
     }
     response = client.post(
-        url, json.dumps(data), content_type="application/json", format="json"
+        url, json.dumps(data), content_type="application/json", format="json",
     )
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert response.content.find(b"Password not provided") != -1
@@ -147,7 +151,7 @@ def test_no_password_auth(
 
 def test_email_auth_unsuccessful(
     db: None, user: WdaeUser, client: Client,
-    tokens: tuple[AccessToken, AccessToken]
+    tokens: tuple[AccessToken, AccessToken],
 ) -> None:
     """Try to login with a non-existing email."""
     url = "/accounts/login"
@@ -155,14 +159,14 @@ def test_email_auth_unsuccessful(
         "username": "nonexistntuser@example.com",
     }
     response = client.post(
-        url, json.dumps(data), content_type="application/json", format="json"
+        url, json.dumps(data), content_type="application/json", format="json",
     )
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
 def test_failed_auth_attempts(
     db: None, user: WdaeUser, client: Client,
-    tokens: Tuple[AccessToken, AccessToken]
+    tokens: Tuple[AccessToken, AccessToken],
 ) -> None:
     # Check if the user is allowed four failed
     # login attempts before being locked out.
@@ -172,10 +176,10 @@ def test_failed_auth_attempts(
         "password": "wrongpassword",
     }
 
-    for i in range(0, LOCKOUT_THRESHOLD):
+    for i in range(LOCKOUT_THRESHOLD):
         response = client.post(
             url, json.dumps(data),
-            content_type="application/json", format="json"
+            content_type="application/json", format="json",
         )
         last_login = AuthenticationLog.get_last_login_for(data["username"])
         assert last_login is not None
@@ -186,7 +190,7 @@ def test_failed_auth_attempts(
 
     response = client.post(
         url, json.dumps(data),
-        content_type="application/json", format="json"
+        content_type="application/json", format="json",
     )
     last_login = AuthenticationLog.get_last_login_for(data["username"])
     assert last_login is not None
@@ -198,7 +202,7 @@ def test_failed_auth_attempts(
 
 def test_failed_auth_lockouts(
     db: None, user: WdaeUser, client: Client,
-    tokens: tuple[AccessToken, AccessToken]
+    tokens: tuple[AccessToken, AccessToken],
 ) -> None:
     # Check if progressive lockouts are working.
     url = "/accounts/login"
@@ -212,7 +216,7 @@ def test_failed_auth_lockouts(
     for i in range(1, 5):
         response = client.post(
             url, json.dumps(data),
-            content_type="application/json", format="json"
+            content_type="application/json", format="json",
         )
         assert response.content.find(b"This account is locked out for") != -1
         regex = r"locked out for (\d+) hours and (\d+) minutes"
@@ -222,7 +226,7 @@ def test_failed_auth_lockouts(
         response_hours, response_minutes = \
             map(int, match.groups())
         response_td = timedelta(
-            hours=response_hours, minutes=response_minutes
+            hours=response_hours, minutes=response_minutes,
         )
         expected_td = timedelta(minutes=pow(2, i))
         # Give a tolerance of 60 seconds to prevent test from becoming flaky
@@ -234,7 +238,7 @@ def test_failed_auth_lockouts(
 
 def test_lockout_prevents_login(
     db: None, user: WdaeUser, client: Client,
-    tokens: tuple[AccessToken, AccessToken]
+    tokens: tuple[AccessToken, AccessToken],
 ) -> None:
     # Check if lockouts prevent even valid logins.
     url = "/accounts/login"
@@ -247,14 +251,14 @@ def test_lockout_prevents_login(
 
     response = client.post(
         url, json.dumps(data),
-        content_type="application/json", format="json"
+        content_type="application/json", format="json",
     )
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
 def test_successful_auth_resets_lockouts(
     db: None, user: WdaeUser, client: Client,
-    tokens: tuple[AccessToken, AccessToken]
+    tokens: tuple[AccessToken, AccessToken],
 ) -> None:
     # Check if a successful login will reset the email's
     # lockouts and allow another five failed attempts.
@@ -270,14 +274,14 @@ def test_successful_auth_resets_lockouts(
 
     response = client.post(
         url, json.dumps(data),
-        content_type="application/json", format="json"
+        content_type="application/json", format="json",
     )
     assert response.status_code == status.HTTP_302_FOUND
 
     data["password"] = "wrongpasswordagain"
     response = client.post(
         url, json.dumps(data),
-        content_type="application/json", format="json"
+        content_type="application/json", format="json",
     )
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
     assert response.content.find(b"Invalid login credentials") != -1
@@ -285,7 +289,7 @@ def test_successful_auth_resets_lockouts(
 
 def test_password_reset_resets_lockouts(
     user: WdaeUser, client: Client,
-    tokens: tuple[AccessToken, AccessToken]
+    tokens: tuple[AccessToken, AccessToken],
 ) -> None:
     # Check if a password reset will reset the email's
     # lockouts and allow another five failed attempts.
@@ -299,7 +303,7 @@ def test_password_reset_resets_lockouts(
 
     response = client.post(
         url, json.dumps(data),
-        content_type="application/json", format="json"
+        content_type="application/json", format="json",
     )
     assert response.content.find(b"This account is locked out for") != -1
     assert response.status_code == status.HTTP_403_FORBIDDEN
@@ -309,7 +313,7 @@ def test_password_reset_resets_lockouts(
         "/api/v3/users/forgotten_password",
         json.dumps({"email": user.email}),
         content_type="application/json",
-        format="json"
+        format="json",
     ).status_code == status.HTTP_200_OK
     code = ResetPasswordCode.get_code(user)
     assert code is not None
@@ -324,7 +328,7 @@ def test_password_reset_resets_lockouts(
             "new_password2": "samplenewpassword",
         }),
         content_type="application/json",
-        format="json"
+        format="json",
     )
     assert response.status_code == status.HTTP_302_FOUND
 
@@ -332,7 +336,7 @@ def test_password_reset_resets_lockouts(
     data["password"] = "wrongpasswordagain"
     response = client.post(
         url, json.dumps(data),
-        content_type="application/json", format="json"
+        content_type="application/json", format="json",
     )
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
     assert response.content.find(b"Invalid login credentials") != -1
@@ -341,14 +345,14 @@ def test_password_reset_resets_lockouts(
     data["password"] = "samplenewpassword"
     response = client.post(
         url, json.dumps(data),
-        content_type="application/json", format="json"
+        content_type="application/json", format="json",
     )
     assert response.status_code == status.HTTP_302_FOUND
 
 
 def test_authentication_logging(
     user: WdaeUser, client: Client,
-    tokens: tuple[AccessToken, AccessToken]
+    tokens: tuple[AccessToken, AccessToken],
 ) -> None:
     # Check if both successful and unsuccessful
     # authentication attempts are logged.
@@ -360,7 +364,7 @@ def test_authentication_logging(
 
     response = client.post(
         url, json.dumps(data),
-        content_type="application/json", format="json"
+        content_type="application/json", format="json",
     )
     last_login = AuthenticationLog.get_last_login_for(data["username"])
     assert last_login is not None
@@ -376,7 +380,7 @@ def test_authentication_logging(
 
     response = client.post(
         url, json.dumps(data),
-        content_type="application/json", format="json"
+        content_type="application/json", format="json",
     )
     last_login = AuthenticationLog.get_last_login_for(data["username"])
     assert last_login is not None

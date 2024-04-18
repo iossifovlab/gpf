@@ -1,17 +1,19 @@
 # pylint: disable=W0621,C0114,C0115,C0116,W0212,W0613
 import os
-import time
 import pathlib
-from typing import Generator
+import time
+from collections.abc import Generator
 
 import pytest
-
 from dask.distributed import Client
 
 from dae.task_graph.cache import FileTaskCache
+from dae.task_graph.executor import (
+    AbstractTaskGraphExecutor,
+    DaskExecutor,
+    SequentialExecutor,
+)
 from dae.task_graph.graph import TaskGraph
-from dae.task_graph.executor import \
-    DaskExecutor, SequentialExecutor, AbstractTaskGraphExecutor
 
 
 @pytest.fixture(scope="module")
@@ -142,7 +144,7 @@ def _create_graph_with_result_passing() -> TaskGraph:
     add_tasks = []
     for i in range(1, 8):
         add_tasks.append(
-            graph.create_task(f"{i}", add_to_list, [i, first_task], [])
+            graph.create_task(f"{i}", add_to_list, [i, first_task], []),
         )
     graph.create_task("final", concat_lists, add_tasks, [])
     return graph

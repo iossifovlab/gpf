@@ -1,5 +1,5 @@
 from sqlalchemy.ext.compiler import compiles
-from sqlalchemy.sql.expression import Executable, ClauseElement
+from sqlalchemy.sql.expression import ClauseElement, Executable
 
 
 class CreateView(Executable, ClauseElement):
@@ -10,8 +10,5 @@ class CreateView(Executable, ClauseElement):
 
 @compiles(CreateView)
 def visit_create_view(element, compiler, **kw):
-    create = "CREATE VIEW {name} AS {sql}".format(
-        name=element.name,
-        sql=compiler.process(element.select, literal_binds=True)
-    )
+    create = f"CREATE VIEW {element.name} AS {compiler.process(element.select, literal_binds=True)}"
     return create

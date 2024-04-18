@@ -1,10 +1,12 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 
 from dae.genomic_resources import GenomicResource
-from dae.genomic_resources.genomic_scores import \
-    PositionScore, PositionScoreQuery
-from dae.genomic_resources.testing import build_inmemory_test_resource
+from dae.genomic_resources.genomic_scores import (
+    PositionScore,
+    PositionScoreQuery,
+)
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME
+from dae.genomic_resources.testing import build_inmemory_test_resource
 
 
 def test_the_simplest_position_score():
@@ -25,23 +27,23 @@ def test_the_simplest_position_score():
             1      11         0.03
             1      15         0.46
             2      8          0.01
-            """
+            """,
     })
     assert res.get_type() == "position_score"
     score: PositionScore = PositionScore(res)
     score.open()
 
     assert score.get_all_scores() == ["phastCons100way"]
-    assert score.fetch_scores("1", 11) == [0.03, ]
-    assert score.fetch_scores("1", 15) == [0.46, ]
-    assert score.fetch_scores("2", 8) == [0.01, ]
-    assert score.fetch_scores("1", 10) == [0.02, ]
+    assert score.fetch_scores("1", 11) == [0.03]
+    assert score.fetch_scores("1", 15) == [0.46]
+    assert score.fetch_scores("2", 8) == [0.01]
+    assert score.fetch_scores("1", 10) == [0.02]
     assert score.fetch_scores("1", 12) is None
 
-    assert score.fetch_scores_agg("1", 10, 11) == [0.025, ]
+    assert score.fetch_scores_agg("1", 10, 11) == [0.025]
     assert score.fetch_scores_agg(
         "1", 10, 11, [PositionScoreQuery("phastCons100way", "max")]) \
-        == [0.03, ]
+        == [0.03]
 
 
 def test_region_score():
@@ -69,7 +71,7 @@ def test_region_score():
             1      17         19       0.03  0
             1      22         25       0.46  EMPTY
             2      5          80       0.01  3
-            """
+            """,
     })
     assert res
     assert res.get_type() == "position_score"
@@ -118,7 +120,7 @@ def test_phastcons100way():
             1      54775      54776    0
             1      54777      54780    0.001
             1      54781      54789    0
-        """
+        """,
     })
     assert res
     assert res.get_type() == "position_score"
@@ -165,7 +167,7 @@ def test_position_score_fetch_region():
             1      17         19       0.03  0
             1      22         25       0.46  EMPTY
             2      5          80       0.01  3
-            """
+            """,
     })
     score = PositionScore(res).open()
 
@@ -213,7 +215,7 @@ def test_position_score_chrom_prefix():
             1      11         0.03
             1      15         0.46
             2      8          0.01
-            """
+            """,
     })
     score: PositionScore = PositionScore(res)
     score.open()

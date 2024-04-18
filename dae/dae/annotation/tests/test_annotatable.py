@@ -1,8 +1,13 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
 
-from dae.annotation.annotatable import Annotatable, Position, Region, \
-    VCFAllele, CNVAllele
+from dae.annotation.annotatable import (
+    Annotatable,
+    CNVAllele,
+    Position,
+    Region,
+    VCFAllele,
+)
 from dae.utils.variant_utils import trim_parsimonious
 
 
@@ -22,9 +27,9 @@ from dae.utils.variant_utils import trim_parsimonious
             Annotatable.Type.COMPLEX),
         (
             ("1", 1, "GAA", "AAA"),
-            Annotatable.Type.COMPLEX
+            Annotatable.Type.COMPLEX,
         ),
-    ]
+    ],
 )
 def test_vcf_allele(allele, allele_type):  # type: ignore
     annotatable = VCFAllele(*allele)
@@ -43,12 +48,12 @@ def test_vcf_allele(allele, allele_type):  # type: ignore
     (
         (100, "TGGTGCAGGC", "T"),
         (100, "TGGTGCAGGC", "T"),
-        11, 110, VCFAllele.Type.SMALL_DELETION
+        11, 110, VCFAllele.Type.SMALL_DELETION,
     ),
     (
         (100, "TGGTGCAGGC", "CGGTGCAGGC"),
         (100, "T", "C"),
-        1, 109, VCFAllele.Type.SUBSTITUTION
+        1, 109, VCFAllele.Type.SUBSTITUTION,
     ),
     (
         (100, "TGGTGCAGGC", "TGGTGCAGGCGGTGCAGGC"),
@@ -57,7 +62,7 @@ def test_vcf_allele(allele, allele_type):  # type: ignore
     (
         (100, "TGGTGCAGGC", "TGGTGCAGGT"),
         (109, "C", "T"),
-        1, 109, VCFAllele.Type.SUBSTITUTION
+        1, 109, VCFAllele.Type.SUBSTITUTION,
     ),
 ])
 def test_parsimonious_vcf_allele(  # type: ignore
@@ -77,7 +82,7 @@ def test_parsimonious_vcf_allele(  # type: ignore
     "value,expected", [
         ("Position(chr1, 123)", Position("chr1", 123)),
         ("POSITION(chr1, 123)", Position("chr1", 123)),
-    ]
+    ],
 )
 def test_annotatable_from_string_position(value, expected):  # type: ignore
     assert Annotatable.from_string(value) == expected
@@ -87,7 +92,7 @@ def test_annotatable_from_string_position(value, expected):  # type: ignore
     "value,expected", [
         ("Region(chr1, 123, 456)", Region("chr1", 123, 456)),
         ("REGION(chr1, 123, 456)", Region("chr1", 123, 456)),
-    ]
+    ],
 )
 def test_annotatable_from_string_region(value, expected):  # type: ignore
     assert Annotatable.from_string(value) == expected
@@ -100,7 +105,7 @@ def test_annotatable_from_string_region(value, expected):  # type: ignore
         ("COMPLEX(chr1, 123, AC, GT)", VCFAllele("chr1", 123, "AC", "GT")),
         ("SMALL_DELETION(X, 1, AAA, A)", VCFAllele("X", 1, "AAA", "A")),
         ("SMALL_INSERTION(X, 1, A, AAA)", VCFAllele("X", 1, "A", "AAA")),
-    ]
+    ],
 )
 def test_annotatable_from_string_vcf(value, expected):  # type: ignore
     assert Annotatable.from_string(value) == expected
@@ -116,7 +121,7 @@ def test_annotatable_from_string_vcf(value, expected):  # type: ignore
          CNVAllele("X", 123, 345, Annotatable.Type.LARGE_DUPLICATION)),
         ("LARGE_DELETION(X, 123, 345)",
          CNVAllele("X", 123, 345, Annotatable.Type.LARGE_DELETION)),
-    ]
+    ],
 )
 def test_annotatable_from_string_cnv(value, expected):  # type: ignore
     assert Annotatable.from_string(value) == expected

@@ -72,29 +72,28 @@ are:
 
 
 """
-import logging
 import argparse
-from pathlib import Path
+import logging
+from collections.abc import Generator
 from copy import copy
-
-from typing import List, Optional, Dict, Any, Tuple, Generator, \
-    Union, TextIO
+from pathlib import Path
+from typing import Any, Dict, List, Optional, TextIO, Tuple, Union
 
 import pandas as pd
 
-from dae.variants_loaders.cnv.flexible_cnv_loader import flexible_cnv_loader
 from dae.genomic_resources.reference_genome import ReferenceGenome
-from dae.variants_loaders.raw.loader import VariantsGenotypesLoader, \
-    TransmissionType, FullVariantsIterator
-
 from dae.pedigrees.families_data import FamiliesData
-from dae.variants.attributes import Inheritance
-from dae.variants.variant import SummaryVariantFactory, SummaryVariant
-from dae.variants.family_variant import FamilyVariant
-from dae.variants_loaders.raw.loader import CLIArgument
-
 from dae.utils.regions import Region
-
+from dae.variants.attributes import Inheritance
+from dae.variants.family_variant import FamilyVariant
+from dae.variants.variant import SummaryVariant, SummaryVariantFactory
+from dae.variants_loaders.cnv.flexible_cnv_loader import flexible_cnv_loader
+from dae.variants_loaders.raw.loader import (
+    CLIArgument,
+    FullVariantsIterator,
+    TransmissionType,
+    VariantsGenotypesLoader,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -149,7 +148,7 @@ def _cnv_loader(
         data, columns=[
             "chrom", "pos", "pos_end",
             "variant_type",
-            "family_id", "best_state"
+            "family_id", "best_state",
         ])
 
     df = df.sort_values(
@@ -158,7 +157,7 @@ def _cnv_loader(
     df = df.rename(
         columns={
             "pos": "position",
-            "pos_end": "end_position"
+            "pos_end": "end_position",
         })
     return df
 
@@ -343,7 +342,7 @@ class CNVLoader(VariantsGenotypesLoader):
         isin = [
             r.isin(  # type: ignore
                 self._adjust_chrom_prefix(summary_variant.chrom),
-                summary_variant.position
+                summary_variant.position,
             )
             for r in self.regions if r is not None
         ]
@@ -353,7 +352,7 @@ class CNVLoader(VariantsGenotypesLoader):
         pass
 
     def _full_variants_iterator_impl(
-        self
+        self,
     ) -> Generator[Tuple[SummaryVariant, List[FamilyVariant]], None, None]:
         # pylint: disable=too-many-locals
         group = self.cnv_df.groupby(
@@ -373,7 +372,7 @@ class CNVLoader(VariantsGenotypesLoader):
                 "end_position": end_position,
                 "summary_variant_index": num_idx,
                 "variant_type": variant_type,
-                "allele_index": 0
+                "allele_index": 0,
             }
             alt_rec = copy(summary_rec)
             del summary_rec["end_position"]
@@ -382,7 +381,7 @@ class CNVLoader(VariantsGenotypesLoader):
             alt_rec["allele_index"] = 1
 
             svar = SummaryVariantFactory.summary_variant_from_records(
-                [summary_rec, alt_rec], self.transmission_type
+                [summary_rec, alt_rec], self.transmission_type,
             )
 
             if not self._is_in_regions(svar):
@@ -391,7 +390,7 @@ class CNVLoader(VariantsGenotypesLoader):
             fvs = []
             extra_attributes_keys = filter(
                 lambda x: x not in ["best_state", "family_id"],
-                values.keys()
+                values.keys(),
             )
             for f_idx, family_id in enumerate(
                     values.get("family_id")):  # type: ignore
@@ -422,7 +421,7 @@ class CNVLoader(VariantsGenotypesLoader):
                             Inheritance.denovo if mem is not None else inh
                             for inh, mem in zip(
                                 fallele.inheritance_in_members,
-                                fallele.variant_in_members
+                                fallele.variant_in_members,
                             )
                         ]
                         # pylint: disable=protected-access
@@ -432,7 +431,7 @@ class CNVLoader(VariantsGenotypesLoader):
 
     @classmethod
     def parse_cli_arguments(
-        cls, argv: argparse.Namespace, use_defaults: bool = False
+        cls, argv: argparse.Namespace, use_defaults: bool = False,
     ) -> Tuple[List[str], Dict[str, Any]]:
         if argv.cnv_file is None:
             return [], {}

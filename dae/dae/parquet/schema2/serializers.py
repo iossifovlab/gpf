@@ -1,18 +1,20 @@
 import functools
-import operator
 import logging
-from typing import List, Optional, Union, Any
+import operator
+from itertools import starmap
+from typing import Any, List, Optional, Union
 
 import pyarrow as pa
-from dae.variants.core import Allele
+
+from dae.annotation.annotation_pipeline import AttributeInfo
 from dae.variants.attributes import (
     Inheritance,
-    TransmissionType,
-    Sex,
     Role,
+    Sex,
     Status,
+    TransmissionType,
 )
-from dae.annotation.annotation_pipeline import AttributeInfo
+from dae.variants.core import Allele
 from dae.variants.family_variant import FamilyAllele
 from dae.variants.variant import SummaryAllele
 
@@ -34,7 +36,7 @@ class AlleleParquetSerializer:
             pa.struct([
                 pa.field("effect_gene_symbols", pa.string()),
                 pa.field("effect_types", pa.string()),
-            ])
+            ]),
         ),
         "variant_type": pa.int8(),
         "transmission_type": pa.int8(),
@@ -75,7 +77,7 @@ class AlleleParquetSerializer:
 
     def __init__(
         self, annotation_schema: List[AttributeInfo],
-        extra_attributes: Optional[List[str]] = None
+        extra_attributes: Optional[List[str]] = None,
     ) -> None:
         self.annotation_schema = annotation_schema
         self._schema_summary = None
@@ -91,21 +93,16 @@ class AlleleParquetSerializer:
         """Lazy construct and return the schema for the summary alleles."""
         if self._schema_summary is None:
             self._schema_summary = self.build_summary_schema(
-                self.annotation_schema
+                self.annotation_schema,
             )
         return self._schema_summary
 
     @classmethod
     def build_summary_schema(
-        cls, annotation_schema: list[AttributeInfo]
+        cls, annotation_schema: list[AttributeInfo],
     ) -> pa.Schema:
         """Build the schema for the summary alleles."""
-        fields = [
-            pa.field(spr, pat)
-            for spr, pat in (
-                cls.SUMMARY_ALLELE_BASE_SCHEMA.items()
-            )
-        ]
+        fields = list(starmap(pa.field, cls.SUMMARY_ALLELE_BASE_SCHEMA.items()))
         fields.append(pa.field("summary_variant_data", pa.string()))
 
         annotation_type_to_pa_type = {
@@ -122,7 +119,7 @@ class AlleleParquetSerializer:
                         pa.field(
                             attr.name,
                             annotation_type_to_pa_type[attr.type],
-                        )
+                        ),
                     )
 
         return pa.schema(fields)
@@ -137,16 +134,13 @@ class AlleleParquetSerializer:
     @classmethod
     def build_family_schema(cls) -> pa.Schema:
         """Build the schema for the family alleles."""
-        fields = [
-            pa.field(spr, pat)
-            for spr, pat in cls.FAMILY_ALLELE_BASE_SCHEMA.items()
-        ]
+        fields = list(starmap(pa.field, cls.FAMILY_ALLELE_BASE_SCHEMA.items()))
         fields.append(pa.field("family_variant_data", pa.string()))
         return pa.schema(fields)
 
     def _get_searchable_prop_value(
         self, allele: Union[SummaryAllele, FamilyAllele],
-        spr: str
+        spr: str,
     ) -> Any:
         prop_value = getattr(allele, spr, None)
 
@@ -165,7 +159,7 @@ class AlleleParquetSerializer:
 
     def build_family_allele_batch_dict(
         self, allele: FamilyAllele,
-        family_variant_data: str
+        family_variant_data: str,
     ) -> dict[str, list[Any]]:
         """Build a batch of family allele data in the form of a dict."""
         family_header = []
@@ -192,7 +186,7 @@ class AlleleParquetSerializer:
 
     def build_summary_allele_batch_dict(
         self, allele: SummaryAllele,
-        summary_variant_data: str
+        summary_variant_data: str,
     ) -> dict[str, Any]:
         """Build a batch of summary allele data in the form of a dict."""
         allele_data = {"summary_variant_data": summary_variant_data}
@@ -203,13 +197,13 @@ class AlleleParquetSerializer:
                 if allele.effect_types is None:
                     assert allele.effect_gene_symbols is None
                     prop_value = [
-                        {"effect_types": None, "effect_gene_symbols": None}
+                        {"effect_types": None, "effect_gene_symbols": None},
                     ]
                 else:
                     prop_value = [
                         {"effect_types": e[0], "effect_gene_symbols": e[1]}
                         for e in zip(
-                            allele.effect_types, allele.effect_gene_symbols
+                            allele.effect_types, allele.effect_gene_symbols,
                         )
                     ]
             else:

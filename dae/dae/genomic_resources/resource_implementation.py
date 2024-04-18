@@ -1,12 +1,13 @@
 from __future__ import annotations
+
 import logging
 import textwrap
-from typing import Optional, cast, Any
-from abc import abstractmethod, ABC
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from typing import Any, Optional, cast
 
-from jinja2 import Template
 from cerberus import Validator
+from jinja2 import Template
 from markdown2 import markdown
 
 from dae.task_graph.graph import Task, TaskGraph
@@ -25,9 +26,9 @@ def get_base_resource_schema() -> dict[str, Any]:
             "allow_unknown": True,
             "schema": {
                 "description": {"type": "string"},
-                "labels": {"type": "dict", "nullable": True}
-            }
-        }
+                "labels": {"type": "dict", "nullable": True},
+            },
+        },
     }
 
 
@@ -80,23 +81,23 @@ class GenomicResourceImplementation(ABC):
         This hash is used to decide whether the resource statistics should be
         recomputed.
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @abstractmethod
     def add_statistics_build_tasks(self, task_graph: TaskGraph,
                                    **kwargs: Any) -> list[Task]:
         """Add tasks for calculating resource statistics to a task graph."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @abstractmethod
     def calc_info_hash(self) -> bytes:
         """Compute and return the info hash."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @abstractmethod
     def get_info(self) -> str:
         """Construct the contents of the implementation's HTML info page."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def get_statistics(self) -> Optional[ResourceStatistics]:
         """Try and load resource statistics."""
@@ -155,7 +156,7 @@ class InfoImplementationMixin:
             resource=self.resource,
             markdown=markdown,
             data=template_data,
-            base=RESOURCE_TEMPLATE
+            base=RESOURCE_TEMPLATE,
         )
 
 
@@ -166,7 +167,7 @@ class ResourceConfigValidationMixin:
     @abstractmethod
     def get_schema() -> dict:
         """Return schema to be used for config validation."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @classmethod
     def validate_and_normalize_schema(

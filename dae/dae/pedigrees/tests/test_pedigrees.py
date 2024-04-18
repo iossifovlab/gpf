@@ -1,13 +1,13 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-from dae.pedigrees.pedigrees import (
-    FamilyConnections,
-    MatingUnit,
-    SibshipUnit,
-    Individual,
-)
-from dae.variants.attributes import Role, Sex
 from dae.pedigrees.families_data import FamiliesData
 from dae.pedigrees.family import Family, Person
+from dae.pedigrees.pedigrees import (
+    FamilyConnections,
+    Individual,
+    MatingUnit,
+    SibshipUnit,
+)
+from dae.variants.attributes import Role, Sex
 
 NO_RANK = -3673473456
 
@@ -40,7 +40,7 @@ def test_pedigree(family2: Family, member1: Person, member2: Person) -> None:
 
 
 def test_sibship_unit(
-    sibship_unit2: SibshipUnit, individual4: Individual
+    sibship_unit2: SibshipUnit, individual4: Individual,
 ) -> None:
     assert len(sibship_unit2.individual_set()) == 1
     assert individual4 in sibship_unit2.individual_set()
@@ -52,7 +52,7 @@ def test_mating_unit(
     mating_unit2: MatingUnit,
     individual4: Individual,
     individual5: Individual,
-    individual6: Individual
+    individual6: Individual,
 ) -> None:
     assert len(mating_unit2.individual_set()) == 2
     assert individual5 in mating_unit2.individual_set()
@@ -68,7 +68,7 @@ def test_individual(
     individual4: Individual,
     individual5: Individual,
     individual6: Individual,
-    mating_unit2: MatingUnit
+    mating_unit2: MatingUnit,
 ) -> None:
     individual5.mating_units.append(mating_unit2)
     individual6.mating_units.append(mating_unit2)
@@ -106,23 +106,23 @@ def test_family_connections_valid(mating_unit2: MatingUnit) -> None:
 def test_family_connections_invalid(
     individual4: Individual,
     individual5: Individual,
-    individual6: Individual
+    individual6: Individual,
 ) -> None:
     id_to_mating_unit = [
         {
             "mom2,dad2": MatingUnit(
-                Individual(), individual6, SibshipUnit([individual4])
-            )
+                Individual(), individual6, SibshipUnit([individual4]),
+            ),
         },
         {
             "mom2,dad2": MatingUnit(
-                individual5, Individual(), SibshipUnit([individual4])
-            )
+                individual5, Individual(), SibshipUnit([individual4]),
+            ),
         },
         {
             "mom2,dad2": MatingUnit(
-                individual5, individual6, SibshipUnit([Individual()])
-            )
+                individual5, individual6, SibshipUnit([Individual()]),
+            ),
         },
     ]
 
@@ -195,10 +195,10 @@ def test_family_connections_from_family_simple(family2: Family) -> None:
 
 
 def test_family_connections_from_family_add_members_one_member(
-    family3: Family
+    family3: Family,
 ) -> None:
     family_connections = FamilyConnections.from_family(
-        family3, add_missing_members=True
+        family3, add_missing_members=True,
     )
     assert family_connections is not None
 
@@ -232,7 +232,7 @@ def test_family_connections_from_family_add_members(family2: Family) -> None:
     family2.redefine()
 
     family_connections = FamilyConnections.from_family(
-        family2, add_missing_members=True
+        family2, add_missing_members=True,
     )
     assert family_connections is not None
 
@@ -253,7 +253,7 @@ def test_family_connections_from_family_add_members(family2: Family) -> None:
 
 
 def test_family_connections_from_family_do_not_add_members(
-    family3: Family
+    family3: Family,
 ) -> None:
     assert (
         FamilyConnections.from_family(family3, add_missing_members=False)
@@ -278,13 +278,13 @@ def test_reading_pedigree_file(pedigree_test: FamiliesData) -> None:
 
 
 def test_family_connections_can_be_created(
-    fam1_family_connections: FamilyConnections
+    fam1_family_connections: FamilyConnections,
 ) -> None:
     assert fam1_family_connections is not None
 
 
 def test_sandwich_instance_can_be_created_for_fam1(
-    fam1_family_connections: FamilyConnections
+    fam1_family_connections: FamilyConnections,
 ) -> None:
     sandwich = fam1_family_connections.create_sandwich_instance()
 

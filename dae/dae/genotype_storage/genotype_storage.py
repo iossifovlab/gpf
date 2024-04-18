@@ -4,9 +4,8 @@ import abc
 import logging
 from typing import Any, cast
 
-from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.genomic_resources.gene_models import GeneModels
-
+from dae.genomic_resources.reference_genome import ReferenceGenome
 
 logger = logging.getLogger(__file__)
 

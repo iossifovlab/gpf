@@ -2,7 +2,7 @@ import logging
 from typing import Optional
 
 from ..effect import EffectFactory
-from .effect_checker import EffectChecker, AnnotationEffect, AnnotationRequest
+from .effect_checker import AnnotationEffect, AnnotationRequest, EffectChecker
 
 logger = logging.getLogger(__name__)
 
@@ -14,12 +14,12 @@ class SpliceSiteEffectChecker(EffectChecker):
         self.splice_site_length = splice_site_length
 
     def get_effect(
-        self, request: AnnotationRequest
+        self, request: AnnotationRequest,
     ) -> Optional[AnnotationEffect]:
         coding_regions = request.transcript_model.exons
         assert request.variant.reference is not None
         last_position = request.variant.position + len(
-            request.variant.reference
+            request.variant.reference,
         )
         prev = None
 
@@ -42,7 +42,7 @@ class SpliceSiteEffectChecker(EffectChecker):
                 and prev + 1 < last_position
             ):
                 return EffectFactory.create_intronic_effect(
-                    "splice-site", request, prev, j.start, i
+                    "splice-site", request, prev, j.start, i,
                 )
 
             if (
@@ -50,7 +50,7 @@ class SpliceSiteEffectChecker(EffectChecker):
                 and j.start - self.splice_site_length < last_position
             ):
                 return EffectFactory.create_intronic_effect(
-                    "splice-site", request, prev, j.start, i
+                    "splice-site", request, prev, j.start, i,
                 )
             prev = j.stop
 

@@ -1,14 +1,12 @@
 from __future__ import annotations
 
-from typing import Optional, Union, Any
+from typing import Any, Optional, Union
 
 import numpy as np
-import scipy as sp
 import pandas as pd
-
-from sklearn.linear_model import \
-    LinearRegression as LinearRegressionSK
+import scipy as sp
 from scipy.stats import t
+from sklearn.linear_model import LinearRegression as LinearRegressionSK
 
 
 class LinearRegression(LinearRegressionSK):
@@ -22,7 +20,7 @@ class LinearRegression(LinearRegressionSK):
 
     def fit(
         self, X: np.ndarray, y: Union[pd.Series, np.ndarray],
-        sample_weight: Optional[float] = None
+        sample_weight: Optional[float] = None,
     ) -> LinearRegression:
         super().fit(X, y, sample_weight)
         n = len(y)  # pylint: disable=invalid-name

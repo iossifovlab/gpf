@@ -1,0 +1,67 @@
+exclude = [
+    # Default values
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".git-rewrite",
+    ".hg",
+    ".ipynb_checkpoints",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".pyenv",
+    ".pytest_cache",
+    ".pytype",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    ".vscode",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "site-packages",
+    "venv",
+    # Custom values
+    "old",
+    "*tmp*",
+    "*temp*",
+    "data-hg19*",
+    "docs",
+    "migrations"
+]
+
+line-length = 80
+indent-width = 4
+
+target-version = "py39"
+
+[lint]
+select = ["E", "F", "W", "C90", "I", "UP", "ASYNC", "S", "BLE", "FBT", "B", "A", "COM", "C4", "T10", "EXE", "ISC", "LOG", "G", "INP", "PIE", "T20", "PT", "Q", "RSE", "RET", "SLF", "SIM", "ARG", "PTH", "FIX", "ERA", "PD", "TRY", "PERF", "FURB", "RUF"]
+ignore = [
+    "D105", "D107", "D417", "UP015", "UP038", "FURB152", "PD901",
+    "UP007",  # for Python 3.9 support, remove when we drop it
+    "T201", "S101", "PTH",  # for separate tasks, fix issues and then enable these rules
+    "PT006",  # for separate task - currently we use 'csv', but maybe change to 'tuple' or 'list'?
+]
+fixable = ["ALL"]
+preview = true
+
+[lint.per-file-ignores]
+"test*.py" = ["S101", "SLF"]
+"conftest.py" = ["D"]
+
+[lint.mccabe]
+max-complexity = 20
+
+[lint.flake8-quotes]
+inline-quotes = "double"
+docstring-quotes = "double"
+multiline-quotes = "double"
+
+[lint.pydocstyle]
+convention = "pep257"

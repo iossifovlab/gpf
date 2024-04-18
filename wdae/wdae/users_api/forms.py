@@ -1,15 +1,20 @@
 from typing import Any
 
 from django import forms
+from django.contrib.auth import (
+    authenticate,
+    get_user_model,
+    login,
+    password_validation,
+)
 from django.contrib.auth.forms import SetPasswordForm, UsernameField
-from django.contrib.auth import password_validation, get_user_model, \
-    authenticate, login
-from django.core.exceptions import ValidationError, ObjectDoesNotExist
-from django.utils.translation import gettext_lazy
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.utils.text import capfirst
-from utils.password_requirements import is_password_valid
-from users_api.models import AuthenticationLog
+from django.utils.translation import gettext_lazy
 from rest_framework import status
+from utils.password_requirements import is_password_valid
+
+from users_api.models import AuthenticationLog
 
 from .models import WdaeUser
 
@@ -20,10 +25,10 @@ class WdaeResetPasswordForm(SetPasswordForm):
     error_messages = {
         "password_invalid": gettext_lazy(
             "Your password is either too short "
-            "(less than 10 symbols) or too weak."
+            "(less than 10 symbols) or too weak.",
         ),
         "password_mismatch": gettext_lazy(
-            "The two passwords do not match."
+            "The two passwords do not match.",
         ),
     }
 
@@ -32,7 +37,7 @@ class WdaeResetPasswordForm(SetPasswordForm):
         if not is_password_valid(password2):
             raise ValidationError(
                 self.error_messages["password_invalid"],
-                code="password_invalid"
+                code="password_invalid",
             )
         return password2
 
@@ -58,33 +63,33 @@ class WdaeLoginForm(forms.Form):
 
     username = UsernameField(
         widget=forms.TextInput(
-            attrs={"autofocus": True, "tabindex": 1}
-        )
+            attrs={"autofocus": True, "tabindex": 1},
+        ),
     )
     password = forms.CharField(
         label=gettext_lazy("Password"),
         strip=False,
         widget=forms.PasswordInput(
-            attrs={"autocomplete": "current-password", "tabindex": 2}
+            attrs={"autocomplete": "current-password", "tabindex": 2},
         ),
     )
 
     error_messages = {
         "invalid_credentials": gettext_lazy(
-            "Invalid login credentials."
+            "Invalid login credentials.",
         ),
         "no_password": gettext_lazy(
-            "Password not provided."
+            "Password not provided.",
         ),
         "inactive": gettext_lazy(
-            "User is inactive."
+            "User is inactive.",
         ),
         "no_user": gettext_lazy(
-            "User not found."
+            "User not found.",
         ),
         "no_username": gettext_lazy(
-            "Username not provided."
-        )
+            "Username not provided.",
+        ),
     }
 
     def __init__(self, request: Any = None, **kwargs: Any):
@@ -126,17 +131,17 @@ class WdaeLoginForm(forms.Form):
             self.status_code = status.HTTP_400_BAD_REQUEST
             raise ValidationError(
                 self.error_messages["no_username"],
-                code="no_username"
+                code="no_username",
             )
         try:
             self.user_cache = user_model.objects.get(  # type: ignore
-                email__iexact=username
+                email__iexact=username,
             )
         except ObjectDoesNotExist:
             self.status_code = status.HTTP_404_NOT_FOUND
             raise ValidationError(
                 self.error_messages["no_user"],
-                code="no_user"
+                code="no_user",
             ) from None
         assert self.user_cache is not None
         self.confirm_login_allowed(self.user_cache)
@@ -147,18 +152,18 @@ class WdaeLoginForm(forms.Form):
             self.status_code = status.HTTP_400_BAD_REQUEST
             raise ValidationError(
                 self.error_messages["no_password"],
-                code="no_password"
+                code="no_password",
             )
 
         username = self.user_cache.email
 
         self.user_cache = authenticate(
-            self.request, username=username, password=password
+            self.request, username=username, password=password,
         )
 
         if self.user_cache is None:
             AuthenticationLog.log_authentication_attempt(
-                username, failed=True
+                username, failed=True,
             )
             if AuthenticationLog.is_user_locked_out(username):
                 self.status_code = status.HTTP_403_FORBIDDEN
@@ -166,7 +171,7 @@ class WdaeLoginForm(forms.Form):
             self.status_code = status.HTTP_401_UNAUTHORIZED
             raise ValidationError(
                 self.error_messages["invalid_credentials"],
-                code="invalid_credentials"
+                code="invalid_credentials",
             )
 
         login(self.request, self.user_cache)

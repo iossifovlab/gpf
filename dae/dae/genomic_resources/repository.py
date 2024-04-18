@@ -19,18 +19,18 @@ Provides basic classes for genomic resources and repositories.
 """
 from __future__ import annotations
 
-import re
-import logging
+import abc
+import copy
 import enum
 import hashlib
-import copy
+import logging
+import re
+from collections.abc import Generator, Iterator
+from dataclasses import asdict, dataclass
+from typing import IO, Any, Optional, Union, cast
 
-from typing import IO, Optional, Any, Generator, Union, Iterator, cast
-from dataclasses import dataclass, asdict
-
-import abc
-import yaml
 import pysam
+import yaml
 
 logger = logging.getLogger(__name__)
 
@@ -433,7 +433,7 @@ class ReadOnlyRepositoryProtocol(abc.ABC):
 
     def find_resource(
         self, resource_id: str,
-        version_constraint: Optional[str] = None
+        version_constraint: Optional[str] = None,
     ) -> Optional[GenomicResource]:
         """Return requested resource or None if not found."""
         matching_resources: list[GenomicResource] = []
@@ -598,7 +598,7 @@ class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
 
     def build_manifest(
         self, resource: GenomicResource,
-        prebuild_entries: Optional[dict[str, ManifestEntry]] = None
+        prebuild_entries: Optional[dict[str, ManifestEntry]] = None,
     ) -> Manifest:
         """Build full manifest for the resource."""
         if prebuild_entries is None:
@@ -613,7 +613,7 @@ class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
 
     def check_update_manifest(
         self, resource: GenomicResource,
-        prebuild_entries: Optional[dict[str, ManifestEntry]] = None
+        prebuild_entries: Optional[dict[str, ManifestEntry]] = None,
     ) -> ManifestUpdate:
         """Check if the resource manifest needs update."""
         try:
@@ -664,7 +664,7 @@ class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
 
     def update_manifest(
         self, resource: GenomicResource,
-        prebuild_entries: Optional[dict[str, ManifestEntry]] = None
+        prebuild_entries: Optional[dict[str, ManifestEntry]] = None,
     ) -> Manifest:
         """Update or create full manifest for the resource."""
         manifest_update = self.check_update_manifest(
@@ -835,7 +835,7 @@ class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
     def update_resource(
         self,
         remote_resource: GenomicResource,
-        files_to_copy: Optional[set[str]] = None
+        files_to_copy: Optional[set[str]] = None,
     ) -> GenomicResource:
         """Copy a remote resource into repository.
 

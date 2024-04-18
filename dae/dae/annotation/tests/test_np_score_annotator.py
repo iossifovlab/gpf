@@ -4,10 +4,9 @@ import textwrap
 
 import pytest
 
-from dae.genomic_resources.testing import build_inmemory_test_repository
-
 from dae.annotation.annotatable import VCFAllele
 from dae.annotation.annotation_factory import build_annotation_pipeline
+from dae.genomic_resources.testing import build_inmemory_test_repository
 
 
 #  hg19
@@ -67,8 +66,8 @@ def test_np_score_annotator(
                 1      14972      T         A           0.1
                 1      14972      T         C           0.2
                 1      14972      T         G           0.4
-            """
-        }
+            """,
+        },
     })
 
     pipeline_config = textwrap.dedent(f"""

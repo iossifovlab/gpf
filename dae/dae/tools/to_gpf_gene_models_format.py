@@ -7,7 +7,7 @@ DESC = """Program to annotate variants (substitutions & indels & cnvs)"""
 
 
 parser = optparse.OptionParser(
-    version="%prog version 1.0 11/October/2013", description=DESC
+    version="%prog version 1.0 11/October/2013", description=DESC,
 )
 parser.add_option(
     "--gm_format",
@@ -36,7 +36,7 @@ if len(args) < 2:
     print(
         "The script requires 2 mandatory arguments:\n\t"
         "1. gene models input file\n\t"
-        "2. output file [no extension]"
+        "2. output file [no extension]",
     )
     # sys.exit(-1)
     args = ["gencode.v43.annotation.gtf.gz", "cc"]
@@ -47,7 +47,7 @@ to_filename = args[1]
 
 gene_models = build_gene_models_from_file(
     from_filename, file_format=opts.gm_format,
-    gene_mapping_file_name=opts.gm_names
+    gene_mapping_file_name=opts.gm_names,
 )
 gene_models.load()
 if opts.chr_names is not None:

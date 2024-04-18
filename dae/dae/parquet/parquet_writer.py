@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-import os
 import logging
+import os
 from typing import Optional
 
 import fsspec
@@ -9,11 +9,11 @@ import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
 
-from dae.utils import fs_utils
 from dae.parquet import helpers as parquet_helpers
-from dae.pedigrees.families_data import FamiliesData
-from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.parquet.helpers import url_to_pyarrow_fs
+from dae.parquet.partition_descriptor import PartitionDescriptor
+from dae.pedigrees.families_data import FamiliesData
+from dae.utils import fs_utils
 
 logger = logging.getLogger(__file__)
 
@@ -39,7 +39,7 @@ def pedigree_parquet_schema() -> pa.schema:
 
 
 def add_missing_parquet_fields(
-    pps: pa.schema, ped_df: pd.DataFrame
+    pps: pa.schema, ped_df: pd.DataFrame,
 ) -> tuple[pd.DataFrame, pa.schema]:
     """Add missing parquet fields."""
     missing_fields = set(ped_df.columns.values) - set(pps.names)
@@ -72,7 +72,7 @@ def collect_pedigree_parquet_schema(ped_df: pd.DataFrame) -> pa.Schema:
 
 def fill_family_bins(
     families: FamiliesData,
-    partition_descriptor: Optional[PartitionDescriptor] = None
+    partition_descriptor: Optional[PartitionDescriptor] = None,
 ) -> None:
     """Save families data into a parquet file."""
     if partition_descriptor is not None \
@@ -111,7 +111,7 @@ def save_ped_df_to_parquet(
     pq.write_table(
         table, filename,
         filesystem=filesystem,
-        version=parquet_version
+        version=parquet_version,
     )
 
 
@@ -120,17 +120,17 @@ def merge_variants_parquets(
     variants_dir: str,
     partitions: list[tuple[str, str]],
     row_group_size: int = 50_000,
-    parquet_version: Optional[str] = None
+    parquet_version: Optional[str] = None,
 ) -> None:
     """Merge parquet files in variants_dir."""
     output_parquet_file = fs_utils.join(
         variants_dir,
         partition_descriptor.partition_filename(
-            "merged", partitions, bucket_index=None
-        )
+            "merged", partitions, bucket_index=None,
+        ),
     )
     parquet_files = fs_utils.glob(
-        fs_utils.join(variants_dir, "*.parquet")
+        fs_utils.join(variants_dir, "*.parquet"),
     )
 
     is_output_in_input = \
@@ -145,7 +145,7 @@ def merge_variants_parquets(
 
     if len(parquet_files) > 1:
         logger.info(
-            "Merging %d files in %s", len(parquet_files), variants_dir
+            "Merging %d files in %s", len(parquet_files), variants_dir,
         )
         parquet_helpers.merge_parquets(
             parquet_files, output_parquet_file,
@@ -155,7 +155,7 @@ def merge_variants_parquets(
 
 def append_meta_to_parquet(
     meta_filename: str,
-    key: list[str], value: list[str]
+    key: list[str], value: list[str],
 ) -> None:
     """Append key-value pair to meta data parquet file."""
     dirname = os.path.dirname(meta_filename)
@@ -165,9 +165,9 @@ def append_meta_to_parquet(
     append_table = pa.table(
         {
             "key": key,
-            "value": value
+            "value": value,
         },
-        schema=pa.schema({"key": pa.string(), "value": pa.string()})
+        schema=pa.schema({"key": pa.string(), "value": pa.string()}),
     )
     if not os.path.isfile(meta_filename):
         pq.write_table(append_table, meta_filename)

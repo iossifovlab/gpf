@@ -1,10 +1,10 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+import pathlib
 import sys
 import textwrap
-import pathlib
 
-from dae.testing import setup_directories
 from dae.parquet.partition_descriptor import PartitionDescriptor
+from dae.testing import setup_directories
 
 
 def test_parse_toml_partition_description(tmp_path: pathlib.Path) -> None:
@@ -23,7 +23,7 @@ def test_parse_toml_partition_description(tmp_path: pathlib.Path) -> None:
 
           [coding_bin]
           coding_effect_types = splice-site,missense,frame-shift
-        """)
+        """),
     )
     pd_filename = tmp_path / "partition_description.conf"
     pdesc = PartitionDescriptor.parse(pd_filename)
@@ -35,7 +35,7 @@ def test_parse_toml_partition_description(tmp_path: pathlib.Path) -> None:
 
 
 def test_parse_toml_partition_description_chrom_list(
-    tmp_path: pathlib.Path
+    tmp_path: pathlib.Path,
 ) -> None:
     setup_directories(
         tmp_path / "partition_description.conf",
@@ -45,7 +45,7 @@ def test_parse_toml_partition_description_chrom_list(
           chromosomes = [
             "foo", "bar"
           ]
-        """)
+        """),
     )
     pd_filename = tmp_path / "partition_description.conf"
     pdesc = PartitionDescriptor.parse(pd_filename)
@@ -67,7 +67,7 @@ def test_parse_yaml_partition_description(tmp_path: pathlib.Path) -> None:
               rare_boundary: 50
             coding_bin:
               coding_effect_types: splice-site,missense,frame-shift
-        """)
+        """),
     )
     pd_filename = tmp_path / "partition_description.yaml"
     pdesc = PartitionDescriptor.parse(pd_filename)
@@ -79,7 +79,7 @@ def test_parse_yaml_partition_description(tmp_path: pathlib.Path) -> None:
 
 
 def test_parse_yaml_partition_description_chrom_list(
-    tmp_path: pathlib.Path
+    tmp_path: pathlib.Path,
 ) -> None:
     setup_directories(
         tmp_path / "partition_description.yaml",
@@ -89,7 +89,7 @@ def test_parse_yaml_partition_description_chrom_list(
               - foo
               - bar
               region_length: 8
-        """)
+        """),
     )
     pd_filename = tmp_path / "partition_description.yaml"
     pdesc = PartitionDescriptor.parse(pd_filename)
@@ -99,7 +99,7 @@ def test_parse_yaml_partition_description_chrom_list(
 
 
 def test_parse_yaml_partition_description_effect_types_list(
-    tmp_path: pathlib.Path
+    tmp_path: pathlib.Path,
 ) -> None:
     setup_directories(
         tmp_path / "partition_description.yaml",
@@ -109,18 +109,18 @@ def test_parse_yaml_partition_description_effect_types_list(
               - splice-site
               - missense
               - frame-shift
-        """)
+        """),
     )
     pd_filename = tmp_path / "partition_description.yaml"
     pdesc = PartitionDescriptor.parse(pd_filename)
 
     assert pdesc.coding_effect_types == {
-        "splice-site", "missense", "frame-shift"
+        "splice-site", "missense", "frame-shift",
     }
 
 
 def test_parse_yaml_partition_description_effect_groups(
-    tmp_path: pathlib.Path
+    tmp_path: pathlib.Path,
 ) -> None:
     setup_directories(
         tmp_path / "partition_description.yaml",
@@ -128,13 +128,13 @@ def test_parse_yaml_partition_description_effect_groups(
             coding_bin:
               coding_effect_types:
               - LGDs
-        """)
+        """),
     )
     pd_filename = tmp_path / "partition_description.yaml"
     pdesc = PartitionDescriptor.parse(pd_filename)
 
     assert pdesc.coding_effect_types == {
-        "frame-shift", "splice-site", "no-frame-shift-newStop", "nonsense"
+        "frame-shift", "splice-site", "no-frame-shift-newStop", "nonsense",
     }
 
 
@@ -144,7 +144,7 @@ def test_parse_region_bin_no_region_length(tmp_path: pathlib.Path) -> None:
         textwrap.dedent("""
             region_bin:
               chromosomes: foo,bar
-        """)
+        """),
     )
     pd_filename = tmp_path / "partition_description.yaml"
     pdesc = PartitionDescriptor.parse(pd_filename)
@@ -155,7 +155,7 @@ def test_parse_region_bin_no_region_length(tmp_path: pathlib.Path) -> None:
 
 
 def test_parse_partition_description_no_region_bin(
-    tmp_path: pathlib.Path
+    tmp_path: pathlib.Path,
 ) -> None:
     setup_directories(
         tmp_path / "partition_description.yaml",
@@ -166,7 +166,7 @@ def test_parse_partition_description_no_region_bin(
               rare_boundary: 50
             coding_bin:
               coding_effect_types: splice-site,missense,frame-shift
-        """)
+        """),
     )
     pd_filename = tmp_path / "partition_description.yaml"
     pdesc = PartitionDescriptor.parse(pd_filename)
@@ -180,7 +180,7 @@ def test_parse_partition_description_no_region_bin(
 
 
 def test_parse_partition_description_no_region_and_family_bin(
-    tmp_path: pathlib.Path
+    tmp_path: pathlib.Path,
 ) -> None:
     setup_directories(
         tmp_path / "partition_description.yaml",
@@ -189,7 +189,7 @@ def test_parse_partition_description_no_region_and_family_bin(
               rare_boundary: 50
             coding_bin:
               coding_effect_types: splice-site,missense,frame-shift
-        """)
+        """),
     )
     pd_filename = tmp_path / "partition_description.yaml"
     pdesc = PartitionDescriptor.parse(pd_filename)
@@ -309,7 +309,7 @@ def test_partition_descriptor_varint_dirs_simple() -> None:
 
     part_desc = PartitionDescriptor.parse_string(pd_content, "yaml")
     sum_parts, fam_parts = part_desc.get_variant_partitions(
-        {"foo": 16, "bar": 4}
+        {"foo": 16, "bar": 4},
     )
     assert len(sum_parts) == 3
     assert len(fam_parts) == 3
@@ -335,23 +335,23 @@ def test_partition_descriptor_varint_dirs_full() -> None:
 
     part_desc = PartitionDescriptor.parse_string(pd_content, "yaml")
     sum_parts, fam_parts = part_desc.get_variant_partitions(
-        {"foo": 16, "bar": 4, "barz": 10}
+        {"foo": 16, "bar": 4, "barz": 10},
     )
     # num region bins * num freq_bins * num coding_bins
     assert len(sum_parts) == 5 * 4 * 2
     assert len(fam_parts) == 2 * len(sum_parts)
 
     assert sum_parts[0] == [
-        ("region_bin", "foo_0"), ("frequency_bin", "0"), ("coding_bin", "0")
+        ("region_bin", "foo_0"), ("frequency_bin", "0"), ("coding_bin", "0"),
     ]
     assert sum_parts[1] == [
-        ("region_bin", "foo_0"), ("frequency_bin", "0"), ("coding_bin", "1")
+        ("region_bin", "foo_0"), ("frequency_bin", "0"), ("coding_bin", "1"),
     ]
     assert sum_parts[2] == [
-        ("region_bin", "foo_0"), ("frequency_bin", "1"), ("coding_bin", "0")
+        ("region_bin", "foo_0"), ("frequency_bin", "1"), ("coding_bin", "0"),
     ]
     assert sum_parts[-1] == [
-        ("region_bin", "other_1"), ("frequency_bin", "3"), ("coding_bin", "1")
+        ("region_bin", "other_1"), ("frequency_bin", "3"), ("coding_bin", "1"),
     ]
 
     for i, fam_part in enumerate(fam_parts):

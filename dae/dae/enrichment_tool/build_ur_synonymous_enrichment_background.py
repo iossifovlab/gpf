@@ -1,20 +1,20 @@
-import sys
-import logging
 import argparse
-from typing import Optional
+import logging
+import sys
 from collections import Counter
+from typing import Optional
 
 import pandas as pd
 
-from dae.utils.verbosity_configuration import VerbosityConfiguration
 from dae.gpf_instance import GPFInstance
+from dae.utils.verbosity_configuration import VerbosityConfiguration
 
 logger = logging.getLogger("build_ur_synonymous_enrichment_background")
 
 
 def cli(
     argv: Optional[list[str]] = None,
-    gpf_instance: Optional[GPFInstance] = None
+    gpf_instance: Optional[GPFInstance] = None,
 ) -> None:
     """Command line tool to create UR synonymous enrichment background."""
     if argv is None:
@@ -54,7 +54,7 @@ def cli(
         inheritance="mendelian or missing",
         ultra_rare=True,
         frequency_filter=[
-            ("af_parents_called_count", (args.parents_called, None))]
+            ("af_parents_called_count", (args.parents_called, None))],
     )
 
     affected_genes = []

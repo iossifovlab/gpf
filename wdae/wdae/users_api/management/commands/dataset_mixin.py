@@ -1,12 +1,11 @@
-from typing import Optional
 import logging
+from typing import Optional
 
-from django.db.models import Q
-from django.contrib.auth.models import Group
 from datasets_api.models import Dataset
+from django.contrib.auth.models import Group
+from django.db.models import Q
 
 from dae.studies.dataset_helpers import DatasetHelpers
-
 
 logger = logging.getLogger(__name__)
 

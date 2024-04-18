@@ -29,7 +29,7 @@ def test_to_records():
     effect = "synonymous!SAMD11:synonymous!NM_152486_1:SAMD11:synonymous:40/68"
     in_allele = SummaryAllele(
         "1", 11539, "T", "G", 0, 1,
-        effect=effect
+        effect=effect,
     )
     records = in_allele.to_record()
     out_allele = SummaryVariantFactory.summary_allele_from_record(records)

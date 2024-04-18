@@ -4,22 +4,22 @@ import pytest
 download_columns = [
     "family", "phenotype", "variant", "best", "fromparent", "inchild",
     "effect", "count", "geneeffect", "effectdetails", "weights", "freq",
-    "continuous", "categorical", "ordinal", "raw"
+    "continuous", "categorical", "ordinal", "raw",
 ]
 
 summary_preview_columns = [
     "variant", "effect", "weights", "freq", "effect",
-    "continuous", "categorical", "ordinal", "raw"
+    "continuous", "categorical", "ordinal", "raw",
 ]
 
 summary_download_columns = [
     "variant", "effect", "weights", "freq", "effect",
     "geneeffect", "effectdetails", "continuous",
-    "categorical", "ordinal", "raw"
+    "categorical", "ordinal", "raw",
 ]
 
 
-@pytest.fixture
+@pytest.fixture()
 def preview_sources():
     return [
         {"source": "family", "format": "%s"},
@@ -40,11 +40,11 @@ def preview_sources():
         {"source": "instrument1.continuous", "role": "prb", "format": "%s"},
         {"source": "instrument1.categorical", "role": "prb", "format": "%s"},
         {"source": "instrument1.ordinal", "role": "prb", "format": "%s"},
-        {"source": "instrument1.raw", "role": "prb", "format": "%s"}
+        {"source": "instrument1.raw", "role": "prb", "format": "%s"},
     ]
 
 
-@pytest.fixture
+@pytest.fixture()
 def download_sources():
     return [
         {"name": "family id", "source": "family", "format": "%s"},
@@ -69,11 +69,11 @@ def download_sources():
         {"source": "instrument1.continuous", "role": "prb", "format": "%s"},
         {"source": "instrument1.categorical", "role": "prb", "format": "%s"},
         {"source": "instrument1.ordinal", "role": "prb", "format": "%s"},
-        {"source": "instrument1.raw", "role": "prb", "format": "%s"}
+        {"source": "instrument1.raw", "role": "prb", "format": "%s"},
     ]
 
 
-@pytest.fixture
+@pytest.fixture()
 def summary_preview_sources():
     return [
         {"source": "location", "format": "%s"},
@@ -91,11 +91,11 @@ def summary_preview_sources():
         {"source": "instrument1.continuous", "role": "prb", "format": "%s"},
         {"source": "instrument1.categorical", "role": "prb", "format": "%s"},
         {"source": "instrument1.ordinal", "role": "prb", "format": "%s"},
-        {"source": "instrument1.raw", "role": "prb", "format": "%s"}
+        {"source": "instrument1.raw", "role": "prb", "format": "%s"},
     ]
 
 
-@pytest.fixture
+@pytest.fixture()
 def summary_download_sources():
     return [
         {"source": "location", "format": "%s"},
@@ -115,5 +115,5 @@ def summary_download_sources():
         {"source": "instrument1.continuous", "role": "prb", "format": "%s"},
         {"source": "instrument1.categorical", "role": "prb", "format": "%s"},
         {"source": "instrument1.ordinal", "role": "prb", "format": "%s"},
-        {"source": "instrument1.raw", "role": "prb", "format": "%s"}
+        {"source": "instrument1.raw", "role": "prb", "format": "%s"},
     ]

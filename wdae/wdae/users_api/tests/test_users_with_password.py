@@ -12,7 +12,7 @@ def test_user_is_inactive_when_password_is_set_to_none(user: WdaeUser) -> None:
 
 
 def test_user_is_active_not_changed_when_password_is_reset(
-    user: WdaeUser
+    user: WdaeUser,
 ) -> None:
     state_active = user.is_active
     user.reset_password()

@@ -41,7 +41,7 @@ pipeline {
           recordIssues(
             enabledForFailure: true, aggregatingResults: false,
             tools: [
-              flake8(pattern: 'test-results/flake8_report', reportEncoding: 'UTF-8'),
+              flake8(pattern: 'test-results/ruff_report', reportEncoding: 'UTF-8', id: 'ruff', name: 'Ruff'),
               myPy(pattern: 'test-results/mypy_dae_report', reportEncoding: 'UTF-8', id: 'mypy-dae', name: 'MyPy - dae'),
               myPy(pattern: 'test-results/mypy_dae_tests_report', reportEncoding: 'UTF-8', id: 'mypy-dae-tests', name: 'MyPy - dae integration'),
               myPy(pattern: 'test-results/mypy_wdae_report', reportEncoding: 'UTF-8', id: 'mypy-wdae', name: 'MyPy - wdae'),

@@ -1,15 +1,15 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 
-import shutil
 import pathlib
-import yaml
+import shutil
 
 import pytest
 import pytest_mock
+import yaml
 
-from dae.import_tools import import_tools, cli
-from dae.testing.alla_import import alla_gpf
 from dae.gpf_instance.gpf_instance import GPFInstance
+from dae.import_tools import cli, import_tools
+from dae.testing.alla_import import alla_gpf
 
 
 @pytest.fixture()
@@ -22,10 +22,10 @@ def gpf_instance(tmp_path_factory: pytest.TempPathFactory) -> GPFInstance:
 def simple_study_dir(
     tmp_path: pathlib.Path, gpf_instance: GPFInstance,
     mocker: pytest_mock.MockerFixture,
-    resources_dir: pathlib.Path
+    resources_dir: pathlib.Path,
 ) -> pathlib.Path:
     shutil.copytree(
-        resources_dir / "vcf_import", tmp_path, dirs_exist_ok=True
+        resources_dir / "vcf_import", tmp_path, dirs_exist_ok=True,
     )
 
     # copyint to hdfs and impala is too slow so we remove that step

@@ -5,17 +5,17 @@ from typing import Callable
 
 import pytest
 
-from dae.testing import convert_to_tab_separated
-from dae.pedigrees.loader import FamiliesLoader
-
-from dae.variants_loaders.cnv.flexible_cnv_loader import \
-    _configure_cnv_location, \
-    _configure_cnv_best_state
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.pedigrees.families_data import FamiliesData
+from dae.pedigrees.loader import FamiliesLoader
+from dae.testing import convert_to_tab_separated
+from dae.variants_loaders.cnv.flexible_cnv_loader import (
+    _configure_cnv_best_state,
+    _configure_cnv_location,
+)
 
 
-@pytest.fixture
+@pytest.fixture()
 def families() -> FamiliesData:
     ped_content = io.StringIO(convert_to_tab_separated(textwrap.dedent(
         """
@@ -41,7 +41,7 @@ def test_configure_cnv_loader_vcf_like_pos() -> None:
         header, transformers,
         cnv_chrom="Chr",
         cnv_start="Start",
-        cnv_end="End"
+        cnv_end="End",
     )
 
     assert header == [
@@ -58,7 +58,7 @@ def test_configure_cnv_loader_vcf_like_pos_missmatch() -> None:
             header, transformers,
             cnv_chrom="Chrom",
             cnv_start="Start",
-            cnv_end="End"
+            cnv_end="End",
         )
 
 

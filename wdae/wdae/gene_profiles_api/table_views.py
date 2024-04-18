@@ -1,9 +1,8 @@
 import logging
-from rest_framework import status
-from rest_framework.response import Response
 
 from query_base.query_base import QueryBaseView
-
+from rest_framework import status
+from rest_framework.response import Response
 
 LOGGER = logging.getLogger(__name__)
 

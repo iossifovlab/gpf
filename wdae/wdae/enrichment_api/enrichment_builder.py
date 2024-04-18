@@ -1,14 +1,14 @@
 import abc
-from typing import Any, Optional, Iterable, cast, Union
+from collections.abc import Iterable
+from typing import Any, Optional, Union, cast
 
 from remote.rest_api_client import RESTClient
 from studies.remote_study import RemoteGenotypeData
 from studies.study_wrapper import RemoteStudyWrapper
 
-from dae.studies.study import GenotypeData
 from dae.enrichment_tool.enrichment_helper import EnrichmentHelper
-
 from dae.person_sets import PersonSetCollection
+from dae.studies.study import GenotypeData
 
 from .enrichment_serializer import EnrichmentSerializer
 
@@ -17,7 +17,7 @@ class BaseEnrichmentBuilder:
 
     @abc.abstractmethod
     def build(self) -> list[dict[str, Any]]:
-        raise NotImplementedError()
+        raise NotImplementedError
 
 
 class EnrichmentBuilder(BaseEnrichmentBuilder):
@@ -28,7 +28,7 @@ class EnrichmentBuilder(BaseEnrichmentBuilder):
         dataset: GenotypeData,
         gene_syms: Iterable[str],
         background_id: Optional[str],
-        counting_id: Optional[str]
+        counting_id: Optional[str],
     ):
         self.enrichment_helper = enrichment_helper
         self.dataset = dataset
@@ -44,8 +44,8 @@ class EnrichmentBuilder(BaseEnrichmentBuilder):
         self.person_set_collection = cast(
             PersonSetCollection,
             self.dataset.get_person_set_collection(
-                self.enrichment_config["selected_person_set_collections"][0]
-            )
+                self.enrichment_config["selected_person_set_collections"][0],
+            ),
         )
 
     def build_results(self) -> list[dict[str, Any]]:
@@ -63,7 +63,7 @@ class EnrichmentBuilder(BaseEnrichmentBuilder):
             self.gene_syms,
             effect_types,
             self.background_id,
-            self.counting_id
+            self.counting_id,
         )
         for ps_id, effect_res in enrichment_result.items():
             res: dict[str, Any] = {}
@@ -72,7 +72,7 @@ class EnrichmentBuilder(BaseEnrichmentBuilder):
             res["childrenStats"] = {
                 "M": children_stats.male,
                 "F": children_stats.female,
-                "U": children_stats.unspecified
+                "U": children_stats.unspecified,
             }
             res["selector"] = person_set.name
             res["geneSymbols"] = list(self.gene_syms)
@@ -108,7 +108,7 @@ class RemoteEnrichmentBuilder(BaseEnrichmentBuilder):
         client: RESTClient,
         background_name: Optional[str],
         counting_name: Optional[str],
-        gene_syms: Iterable[str]
+        gene_syms: Iterable[str],
     ):
         self.dataset = dataset
         self.client = client
@@ -122,5 +122,5 @@ class RemoteEnrichmentBuilder(BaseEnrichmentBuilder):
     def build(self) -> list[dict[str, Any]]:
         return cast(
             list[dict[str, Any]],
-            self.client.post_enrichment_test(self.query)["result"]
+            self.client.post_enrichment_test(self.query)["result"],
         )

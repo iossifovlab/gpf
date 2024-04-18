@@ -1,29 +1,31 @@
 #!/usr/bin/env python
 """Tool to convert pedigree file into cannonical GPF pedigree file."""
 
-import os
-import sys
 import argparse
 import logging
+import os
+import sys
 from typing import Optional
 
-from dae.utils.verbosity_configuration import VerbosityConfiguration
+from dae.genomic_resources.genomic_context import (
+    CLIGenomicContext,
+    get_genomic_context,
+)
 from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.pedigrees.families_data import FamiliesData
 from dae.pedigrees.loader import FamiliesLoader, PedigreeIO
+from dae.utils.verbosity_configuration import VerbosityConfiguration
 from dae.variants_loaders.vcf.loader import VcfLoader
-from dae.genomic_resources.genomic_context import CLIGenomicContext, \
-    get_genomic_context
 
 logger = logging.getLogger("ped2ped")
 
 
 def _handle_partition_description(
-    families: FamiliesData, args: argparse.Namespace
+    families: FamiliesData, args: argparse.Namespace,
 ) -> FamiliesData:
     if args.partition_description:
         partition_descriptor = PartitionDescriptor.parse(
-            args.partition_description
+            args.partition_description,
         )
         for family in families.values():
             family_bin = partition_descriptor.make_family_bin(
@@ -36,7 +38,7 @@ def _handle_partition_description(
 
 
 def _handle_vcf_files(
-    families: FamiliesData, args: argparse.Namespace
+    families: FamiliesData, args: argparse.Namespace,
 ) -> FamiliesData:
     variants_filenames, variants_params = \
         VcfLoader.parse_cli_arguments(args)

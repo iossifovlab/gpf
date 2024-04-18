@@ -1,7 +1,6 @@
-import pytest
-
 import json
 
+import pytest
 from rest_framework import status
 
 from query_state_save.models import PAGE_TYPE_OPTIONS
@@ -28,7 +27,7 @@ def test_invalid_page_fails(db, user_client, simple_query_data):
     query = {"data": simple_query_data, "page": "alabala"}
 
     response = user_client.post(
-        url, json.dumps(query), content_type="application/json", format="json"
+        url, json.dumps(query), content_type="application/json", format="json",
     )
 
     assert response.status_code == status.HTTP_400_BAD_REQUEST

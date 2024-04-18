@@ -1,37 +1,37 @@
 """Defines variant loader classed for VCF variants."""
 from __future__ import annotations
 
+import argparse
 import itertools
 import logging
 from collections import Counter
-from collections.abc import Callable
-from typing import Optional, Any, Generator, Iterator, cast, Union
-
-import argparse
+from collections.abc import Callable, Generator, Iterator
+from typing import Any, Optional, Union, cast
 from urllib.parse import urlparse
-from fsspec.core import url_to_fs
 
 import numpy as np
-
 import pysam
+from fsspec.core import url_to_fs
 
-from dae.utils.helpers import str2bool
 from dae.genomic_resources.reference_genome import ReferenceGenome
-from dae.utils import fs_utils
-
-from dae.utils.variant_utils import is_all_reference_genotype, \
-    is_all_unknown_genotype, \
-    is_unknown_genotype
-from dae.pedigrees.family import Family
 from dae.pedigrees.families_data import FamiliesData
+from dae.pedigrees.family import Family
+from dae.utils import fs_utils
+from dae.utils.helpers import str2bool
+from dae.utils.variant_utils import (
+    is_all_reference_genotype,
+    is_all_unknown_genotype,
+    is_unknown_genotype,
+)
 from dae.variants.attributes import Inheritance
-from dae.variants.variant import SummaryVariantFactory, SummaryVariant
-from dae.variants.family_variant import FamilyVariant, FamilyAllele
-from dae.variants_loaders.raw.loader import VariantsGenotypesLoader, \
-    TransmissionType, \
-    FamiliesGenotypes, \
-    CLIArgument
-
+from dae.variants.family_variant import FamilyAllele, FamilyVariant
+from dae.variants.variant import SummaryVariant, SummaryVariantFactory
+from dae.variants_loaders.raw.loader import (
+    CLIArgument,
+    FamiliesGenotypes,
+    TransmissionType,
+    VariantsGenotypesLoader,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +41,7 @@ class VcfFamiliesGenotypes(FamiliesGenotypes):
 
     def __init__(
         self, loader: SingleVcfLoader,
-        vcf_variants: list[Optional[pysam.VariantRecord]]
+        vcf_variants: list[Optional[pysam.VariantRecord]],
     ):
         super().__init__()
         self.loader = loader
@@ -51,7 +51,7 @@ class VcfFamiliesGenotypes(FamiliesGenotypes):
     def _collect_family_genotype(
         self, family: Family,
         samples_index: dict[str, int],
-        fill_value: int
+        fill_value: int,
     ) -> list[tuple[int, ...]]:
         genotypes: list[tuple[int, ...]] = []
         for person in family.members_in_order:
@@ -77,17 +77,17 @@ class VcfFamiliesGenotypes(FamiliesGenotypes):
         return genotypes
 
     def _collect_known_independent_genotypes(
-        self, family: Family, genotype: np.ndarray
+        self, family: Family, genotype: np.ndarray,
     ) -> None:
         for index, person in enumerate(family.members_in_order):
             if person.person_id not in self.loader.independent_persons:
                 continue
             self.known_independent_genotypes.append(
-                genotype[:, index]
+                genotype[:, index],
             )
 
     def family_genotype_iterator(
-        self
+        self,
     ) -> Generator[
             tuple[Family, np.ndarray, Optional[np.ndarray]], None, None]:
         self.known_independent_genotypes = []
@@ -228,7 +228,7 @@ class SingleVcfLoader(VariantsGenotypesLoader):
 
     def _init_omission_mode(self) -> None:
         omission_mode = self.params.get(
-            "vcf_omission_mode", "possible_omission"
+            "vcf_omission_mode", "possible_omission",
         )
         self._omission_handler: Callable[[FamilyVariant], bool]
         if omission_mode == "possible_omission":
@@ -282,16 +282,16 @@ class SingleVcfLoader(VariantsGenotypesLoader):
             # pylint: disable=no-member
             index_filename = fs_utils.tabix_index_filename(file)
             if index_filename is not None:
-                index_filename = fs_utils.sign(index_filename
+                index_filename = fs_utils.sign(index_filename,
                                                )
             self.vcfs.append(
                 pysam.VariantFile(
                     fs_utils.sign(file),
-                    index_filename=index_filename)
+                    index_filename=index_filename),
             )
 
     def _build_vcf_iterators(
-        self, region: Optional[str]
+        self, region: Optional[str],
     ) -> list[Iterator[pysam.VariantRecord]]:
         if region is None:
             return [
@@ -335,7 +335,7 @@ class SingleVcfLoader(VariantsGenotypesLoader):
                 index_filename = fs_utils.sign(index_filename)
             with pysam.Tabixfile(
                 fs_utils.sign(filename),
-                index=index_filename
+                index=index_filename,
             ) as tbx:
                 res = list(tbx.contigs)
         except Exception:  # pylint: disable=broad-except
@@ -390,8 +390,8 @@ class SingleVcfLoader(VariantsGenotypesLoader):
                             "sample_index",
                             (
                                 vcf_index,
-                                samples_order.index(person.sample_id)
-                            )
+                                samples_order.index(person.sample_id),
+                            ),
                         )
                         seen.add(person.sample_id)
                         counters["found"] += 1
@@ -413,8 +413,8 @@ class SingleVcfLoader(VariantsGenotypesLoader):
                         "sample_index",
                         (
                             None,
-                            None
-                        )
+                            None,
+                        ),
                     )
                     person.set_attr("missing", True)
                     counters["missing"] += 1
@@ -446,7 +446,7 @@ class SingleVcfLoader(VariantsGenotypesLoader):
 
     def _compare_vcf_variants_gt(
         self, lhs: Optional[pysam.VariantRecord],
-        rhs: Optional[pysam.VariantRecord]
+        rhs: Optional[pysam.VariantRecord],
     ) -> bool:
         """Compare two VCF variant positions.
 
@@ -472,7 +472,7 @@ class SingleVcfLoader(VariantsGenotypesLoader):
     @staticmethod
     def _compare_vcf_variants_eq(
         lhs: pysam.VariantRecord,
-        rhs: Optional[pysam.VariantRecord]
+        rhs: Optional[pysam.VariantRecord],
     ) -> bool:
         """Compare two VCF variant positions.
 
@@ -485,7 +485,7 @@ class SingleVcfLoader(VariantsGenotypesLoader):
         return lhs.chrom == rhs.chrom and lhs.pos == rhs.pos
 
     def _find_current_vcf_variant(
-        self, vcf_variants: list[Optional[pysam.VariantRecord]]
+        self, vcf_variants: list[Optional[pysam.VariantRecord]],
     ) -> Optional[pysam.VariantRecord]:
         assert len(vcf_variants)
         min_index = 0
@@ -499,7 +499,7 @@ class SingleVcfLoader(VariantsGenotypesLoader):
 
     def _calc_allele_frequencies(
             self, summary_variant: SummaryVariant,
-            known_independent_genotypes: np.ndarray
+            known_independent_genotypes: np.ndarray,
     ) -> None:
         n_independent_parents = len(self.independent_persons)
         n_parents_called = 0
@@ -538,7 +538,7 @@ class SingleVcfLoader(VariantsGenotypesLoader):
             allele.update_attributes(freq)
 
     def _full_variants_iterator_impl(
-        self, initial_summary_variant_index: int = 0
+        self, initial_summary_variant_index: int = 0,
     ) -> Generator[tuple[SummaryVariant, list[FamilyVariant]], None, None]:
 
         summary_variant_index = initial_summary_variant_index
@@ -551,7 +551,7 @@ class SingleVcfLoader(VariantsGenotypesLoader):
                     break
 
                 current_vcf_variant = self._find_current_vcf_variant(
-                    vcf_variants
+                    vcf_variants,
                 )
                 assert current_vcf_variant is not None
                 current_summary_variant = \
@@ -563,7 +563,7 @@ class SingleVcfLoader(VariantsGenotypesLoader):
                 vcf_gt_variants = []
                 for idx, vcf_variant in enumerate(vcf_variants):
                     if self._compare_vcf_variants_eq(
-                        current_vcf_variant, vcf_variant
+                        current_vcf_variant, vcf_variant,
                     ):
                         vcf_gt_variants.append(vcf_variant)
                         vcf_iterator_idexes_to_advance.append(idx)
@@ -811,9 +811,9 @@ class VcfLoader(VariantsGenotypesLoader):
 
     @staticmethod
     def _collect_filenames(
-        params: dict[str, Any], vcf_files: list[str]
+        params: dict[str, Any], vcf_files: list[str],
     ) -> tuple[list[str], list[list[str]]]:
-        if params.get("vcf_chromosomes", None):
+        if params.get("vcf_chromosomes"):
             vcf_chromosomes = [
                 wc.strip() for wc in params["vcf_chromosomes"].split(";")
             ]
@@ -872,7 +872,7 @@ class VcfLoader(VariantsGenotypesLoader):
             single_loader.reset_regions(regions)
 
     def _full_variants_iterator_impl(
-        self
+        self,
     ) -> Generator[tuple[SummaryVariant, list[FamilyVariant]], None, None]:
         summary_index = 0
         for vcf_loader in self.vcf_loaders:
@@ -887,33 +887,33 @@ class VcfLoader(VariantsGenotypesLoader):
 
     @classmethod
     def parse_cli_arguments(
-        cls, argv: argparse.Namespace, use_defaults: bool = False
+        cls, argv: argparse.Namespace, use_defaults: bool = False,
     ) -> tuple[list[str], dict[str, Any]]:
         super().parse_cli_arguments(argv, use_defaults=use_defaults)
         filenames = argv.vcf_files
 
         assert argv.vcf_multi_loader_fill_in_mode in set(
-            ["reference", "unknown"]
+            ["reference", "unknown"],
         )
         assert argv.vcf_denovo_mode in set(
-            ["denovo", "possible_denovo", "ignore"]
+            ["denovo", "possible_denovo", "ignore"],
         ), argv.vcf_denovo_mode
         assert argv.vcf_omission_mode in set(
-            ["omission", "possible_omission", "ignore"]
+            ["omission", "possible_omission", "ignore"],
         ), argv.vcf_omission_mode
         assert argv.vcf_pedigree_mode in set(
-            ["intersection", "union", "fixed"]
+            ["intersection", "union", "fixed"],
         ), argv.vcf_pedigree_mode
 
         params = {
             "vcf_include_reference_genotypes": str2bool(
-                argv.vcf_include_reference_genotypes
+                argv.vcf_include_reference_genotypes,
             ),
             "vcf_include_unknown_family_genotypes": str2bool(
-                argv.vcf_include_unknown_family_genotypes
+                argv.vcf_include_unknown_family_genotypes,
             ),
             "vcf_include_unknown_person_genotypes": str2bool(
-                argv.vcf_include_unknown_person_genotypes
+                argv.vcf_include_unknown_person_genotypes,
             ),
             "vcf_multi_loader_fill_in_mode":
             argv.vcf_multi_loader_fill_in_mode,

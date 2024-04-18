@@ -1,17 +1,17 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import tempfile
 
-from django.core.management import call_command
-from django.contrib.auth.models import Group
-
 from datasets_api.models import Dataset
-from users_api.management.commands.datasets_export import Command
+from django.contrib.auth.models import Group
+from django.core.management import call_command
 from gpf_instance.gpf_instance import WGPFInstance
+
+from users_api.management.commands.datasets_export import Command
 
 
 def test_datasets_export(
     wdae_gpf_instance: WGPFInstance,
-    fixtures_wgpf_instance: WGPFInstance
+    fixtures_wgpf_instance: WGPFInstance,
 ) -> None:
     expected_output = """dataset,groups
 person_sets_study_1,any_dataset;person_sets_study_1
@@ -78,5 +78,5 @@ comp,any_dataset;comp;new_test_group
         assert {group.name for group in comp.groups.all()} == {
             "any_dataset",
             "comp",
-            "new_test_group"
+            "new_test_group",
         }

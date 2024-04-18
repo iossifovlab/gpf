@@ -5,19 +5,22 @@ import pathlib
 import pytest
 import pytest_mock
 
+from dae.genomic_resources.cli import _find_resource, cli_manage
+from dae.genomic_resources.repository import (
+    GR_CONF_FILE_NAME,
+    GR_CONTENTS_FILE_NAME,
+    GenomicResourceProtocolRepo,
+)
+from dae.genomic_resources.testing import (
+    build_filesystem_test_repository,
+    setup_directories,
+)
 from dae.utils.fs_utils import find_directory_with_a_file
-from dae.genomic_resources.repository import GenomicResourceProtocolRepo, \
-    GR_CONF_FILE_NAME
-from dae.genomic_resources.repository import GR_CONTENTS_FILE_NAME
-from dae.genomic_resources.cli import cli_manage, \
-    _find_resource
-from dae.genomic_resources.testing import \
-    setup_directories, build_filesystem_test_repository
 
 
-@pytest.fixture
+@pytest.fixture()
 def repo_fixture(
-    tmp_path_factory: pytest.TempPathFactory
+    tmp_path_factory: pytest.TempPathFactory,
 ) -> tuple[pathlib.Path, GenomicResourceProtocolRepo]:
     path = tmp_path_factory.mktemp("cli_hist_repo_fixture")
     demo_gtf_content = "TP53\tchr3\t300\t200"
@@ -26,23 +29,23 @@ def repo_fixture(
         {
             "one": {
                 GR_CONF_FILE_NAME: "",
-                "data.txt": "alabala"
+                "data.txt": "alabala",
             },
             "sub": {
                 "two(1.0)": {
                     GR_CONF_FILE_NAME: "type: gene_models\nfile: genes.gtf",
                     "gene_models": {
-                        "genes.txt": demo_gtf_content
-                    }
-                }
-            }
+                        "genes.txt": demo_gtf_content,
+                    },
+                },
+            },
         })
     repo = build_filesystem_test_repository(path)
     return path, repo
 
 
 def test_cli_manifest(
-    repo_fixture: tuple[pathlib.Path, GenomicResourceProtocolRepo]
+    repo_fixture: tuple[pathlib.Path, GenomicResourceProtocolRepo],
 ) -> None:
     # Given
     path, _repo = repo_fixture
@@ -61,7 +64,7 @@ def test_cli_manifest(
 def test_cli_without_arguments(
     repo_fixture: tuple[pathlib.Path, GenomicResourceProtocolRepo],
     mocker: pytest_mock.MockerFixture,
-    capsys: pytest.CaptureFixture
+    capsys: pytest.CaptureFixture,
 ) -> None:
     # Given
     path, _repo = repo_fixture
@@ -82,7 +85,7 @@ def test_cli_without_arguments(
 
 def test_cli_list(
     repo_fixture: tuple[pathlib.Path, GenomicResourceProtocolRepo],
-    capsys: pytest.CaptureFixture
+    capsys: pytest.CaptureFixture,
 ) -> None:
     path, _repo = repo_fixture
 
@@ -98,7 +101,7 @@ def test_cli_list(
 def test_cli_list_without_repo_argument(
     repo_fixture: tuple[pathlib.Path, GenomicResourceProtocolRepo],
     capsys: pytest.CaptureFixture,
-    mocker: pytest_mock.MockerFixture
+    mocker: pytest_mock.MockerFixture,
 ) -> None:
     # Given
     path, _repo = repo_fixture
@@ -113,13 +116,13 @@ def test_cli_list_without_repo_argument(
     out, err = capsys.readouterr()
     assert err == ""
     assert out == \
-        f"working with repository: {str(path)}\n" \
+        f"working with repository: {path!s}\n" \
         "Basic                0        2 7.0 B        manage one\n" \
         "gene_models          1.0      2 50.0 B       manage sub/two\n"
 
 
 def test_find_repo_dir_simple(
-    repo_fixture: tuple[pathlib.Path, GenomicResourceProtocolRepo]
+    repo_fixture: tuple[pathlib.Path, GenomicResourceProtocolRepo],
 ) -> None:
     # Given
     path, _repo = repo_fixture
@@ -138,7 +141,7 @@ def test_find_repo_dir_simple(
 
 
 def test_find_resource_dir_simple(
-    repo_fixture: tuple[pathlib.Path, GenomicResourceProtocolRepo]
+    repo_fixture: tuple[pathlib.Path, GenomicResourceProtocolRepo],
 ) -> None:
     path, _repo = repo_fixture
 
@@ -156,7 +159,7 @@ def test_find_resource_dir_simple(
 
 
 def test_find_resource_with_version(
-    repo_fixture: tuple[pathlib.Path, GenomicResourceProtocolRepo]
+    repo_fixture: tuple[pathlib.Path, GenomicResourceProtocolRepo],
 ) -> None:
     path, repo = repo_fixture
 
@@ -170,7 +173,7 @@ def test_find_resource_with_version(
 
 
 def test_find_resource_without_version(
-    repo_fixture: tuple[pathlib.Path, GenomicResourceProtocolRepo]
+    repo_fixture: tuple[pathlib.Path, GenomicResourceProtocolRepo],
 ) -> None:
     path, repo = repo_fixture
 
@@ -184,7 +187,7 @@ def test_find_resource_without_version(
 
 
 def test_find_resource_with_resource_id(
-    repo_fixture: tuple[pathlib.Path, GenomicResourceProtocolRepo]
+    repo_fixture: tuple[pathlib.Path, GenomicResourceProtocolRepo],
 ) -> None:
     path, repo = repo_fixture
 
@@ -196,7 +199,7 @@ def test_find_resource_with_resource_id(
 
 
 def test_repo_init(
-    repo_fixture: tuple[pathlib.Path, GenomicResourceProtocolRepo]
+    repo_fixture: tuple[pathlib.Path, GenomicResourceProtocolRepo],
 ) -> None:
     # Given
     path, _repo = repo_fixture
@@ -210,7 +213,7 @@ def test_repo_init(
 
 
 def test_repo_init_inside_repo(
-    repo_fixture: tuple[pathlib.Path, GenomicResourceProtocolRepo]
+    repo_fixture: tuple[pathlib.Path, GenomicResourceProtocolRepo],
 ) -> None:
     # Given
     path, _repo = repo_fixture

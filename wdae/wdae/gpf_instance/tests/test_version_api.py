@@ -1,16 +1,18 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import os
-from typing import Generator
+from collections.abc import Generator
+
 import pytest
-from rest_framework import status
 from django.test import Client
+from rest_framework import status
+
 from gpf_instance.gpf_instance import WGPFInstance
 
 
 @pytest.fixture()
 def reset_main_description(
     wdae_gpf_instance: WGPFInstance,
-    global_dae_fixtures_dir: str
+    global_dae_fixtures_dir: str,
 ) -> Generator[None, None, None]:
     file_path = os.path.join(global_dae_fixtures_dir, "main_description.md")
     with open(file_path, "r") as infile:
@@ -23,7 +25,7 @@ def reset_main_description(
 @pytest.fixture()
 def reset_about_description(
     wdae_gpf_instance: WGPFInstance,
-    global_dae_fixtures_dir: str
+    global_dae_fixtures_dir: str,
 ) -> Generator[None, None, None]:
     file_path = os.path.join(global_dae_fixtures_dir, "about_description.md")
     with open(file_path, "r") as infile:
@@ -34,7 +36,7 @@ def reset_about_description(
 
 
 def test_get_gpf_version(
-    anonymous_client: Client
+    anonymous_client: Client,
 ) -> None:
     """Try to get gpf version."""
     url = "/api/v3/instance/version"
@@ -47,7 +49,7 @@ def test_get_gpf_version(
 
 def test_update_gpf_main_description_anonymous(
     anonymous_client: Client,
-    reset_main_description: Generator[None, None, None]
+    reset_main_description: Generator[None, None, None],
 ) -> None:
     """Try to get gpf version."""
     url = "/api/v3/instance/description"
@@ -58,7 +60,7 @@ def test_update_gpf_main_description_anonymous(
 
 def test_gpf_main_description(
     admin_client: Client,
-    reset_main_description: Generator[None, None, None]
+    reset_main_description: Generator[None, None, None],
 ) -> None:
     """Try to get gpf version."""
     url = "/api/v3/instance/description"
@@ -77,7 +79,7 @@ def test_gpf_main_description(
 
 def test_update_gpf_about_description_anonymous(
     anonymous_client: Client,
-    reset_about_description: Generator[None, None, None]
+    reset_about_description: Generator[None, None, None],
 ) -> None:
     """Try to get gpf version."""
     url = "/api/v3/instance/about"
@@ -88,7 +90,7 @@ def test_update_gpf_about_description_anonymous(
 
 def test_gpf_about_description(
     admin_client: Client,
-    reset_about_description: Generator[None, None, None]
+    reset_about_description: Generator[None, None, None],
 ) -> None:
     """Try to get gpf version."""
     url = "/api/v3/instance/about"

@@ -4,20 +4,26 @@ from typing import Optional, Set
 
 import pytest
 
-from dae.testing import setup_pedigree, setup_vcf, vcf_study
-from dae.testing import \
-    setup_genome, setup_gene_models, setup_gpf_instance
-from dae.utils.regions import Region
-from dae.genomic_resources.repository_factory import \
-    build_genomic_resource_repository
-from dae.studies.study import GenotypeData
+from dae.genomic_resources.repository_factory import (
+    build_genomic_resource_repository,
+)
 from dae.genotype_storage import GenotypeStorage
+from dae.studies.study import GenotypeData
+from dae.testing import (
+    setup_gene_models,
+    setup_genome,
+    setup_gpf_instance,
+    setup_pedigree,
+    setup_vcf,
+    vcf_study,
+)
+from dae.utils.regions import Region
 
 
 @pytest.fixture(scope="module")
 def imported_study(
     tmp_path_factory: pytest.TempPathFactory,
-    genotype_storage: GenotypeStorage
+    genotype_storage: GenotypeStorage,
 ) -> GenotypeData:
     root_path = tmp_path_factory.mktemp(
         f"vcf_path_{genotype_storage.storage_id}")
@@ -32,7 +38,7 @@ def imported_study(
             NNGGGCCTTC
             CACGACCCAA
             NN
-        """
+        """,
     )
 
     setup_gene_models(
@@ -46,7 +52,7 @@ def imported_study(
     local_repo = build_genomic_resource_repository({
         "id": "foobar_local",
         "type": "directory",
-        "directory": str(root_path)
+        "directory": str(root_path),
     })
     gpf_instance = setup_gpf_instance(
         root_path / "gpf_instance",
@@ -88,24 +94,24 @@ def imported_study(
         "partition_description": {
             "region_bin": {
                 "chromosomes": ["foo", "bar"],
-                "region_length": 100
+                "region_length": 100,
             },
             "family_bin": {
-                "family_bin_size": 2
+                "family_bin_size": 2,
             },
             "frequency_bin": {
                 "rare_boundary": 30,
             },
             "coding_bin": {
-                "coding_effect_types": "splice-site,missense,synonymous"
+                "coding_effect_types": "splice-site,missense,synonymous",
             },
         },
         "processing_config": {
             "vcf": {
                 "chromosomes": ["foo", "bar"],
-                "region_length": 8
-            }
-        }
+                "region_length": 8,
+            },
+        },
     }
 
     study = vcf_study(
@@ -126,7 +132,7 @@ def imported_study(
 )
 def test_query_family_id(
     family_ids: Optional[Set[str]], count: int,
-    imported_study: GenotypeData
+    imported_study: GenotypeData,
 ) -> None:
     vs = list(imported_study.query_variants(family_ids=family_ids))
     assert len(vs) == count
@@ -146,7 +152,7 @@ def test_query_family_id(
     ],
 )
 def test_query_person_id(
-    person_ids: Optional[Set[str]], count: int, imported_study: GenotypeData
+    person_ids: Optional[Set[str]], count: int, imported_study: GenotypeData,
 ) -> None:
     vs = list(imported_study.query_variants(person_ids=person_ids))
     assert len(vs) == count
@@ -156,12 +162,12 @@ def test_query_person_id(
     "region,family_count,summary_count",
     [
         (Region("foo", 1, 20), 2, 2),
-        (Region("bar", 1, 20), 6, 3)
+        (Region("bar", 1, 20), 6, 3),
     ],
 )
 def test_query_region(
     region: Region, family_count: int, summary_count: int,
-    imported_study: GenotypeData
+    imported_study: GenotypeData,
 ) -> None:
     assert len(list(imported_study.
                     query_variants(regions=[region]))) == family_count
@@ -182,13 +188,13 @@ def test_query_ultra_rare(imported_study: GenotypeData) -> None:
         (None, 8, 5),
         (["missense"], 4, 2),
         (["intron"], 1, 1),
-        (["missense", "intron"], 5, 3)
-    ]
+        (["missense", "intron"], 5, 3),
+    ],
 )
 def test_query_effect(
     effect: Optional[list[str]],
     family_count: int, summary_count: int,
-    imported_study: GenotypeData
+    imported_study: GenotypeData,
 ) -> None:
     assert len(list(imported_study.
                     query_variants(effect_types=effect))) == family_count
@@ -206,8 +212,8 @@ def test_query_complex(imported_study: GenotypeData) -> None:
                         frequency_filter=[("af_allele_freq", (10, 27))],
                         regions=[Region("bar", 3, 17)],
                         # genes=set(["g2"])
-                    )
-                    )
+                    ),
+                    ),
                ) == 1
 
 
@@ -229,7 +235,7 @@ def test_query_denovo(imported_study: GenotypeData) -> None:
 
 
 def test_wdae_get_all_from_genotype_browser(
-    imported_study: GenotypeData
+    imported_study: GenotypeData,
 ) -> None:
     res = list(imported_study.query_variants(
         effect_types=["3'UTR", "3'UTR-intron", "5'UTR", "5'UTR-intron",

@@ -1,6 +1,5 @@
 import re
 
-
 # remove annoying characters
 # https://stackoverflow.com/questions/6609895/efficiently-replace-bad-characters
 ANNOYING_CHARACTERS = {

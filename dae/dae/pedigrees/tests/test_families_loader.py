@@ -4,13 +4,11 @@ import os
 from typing import Callable
 
 import pytest
-
 from pandas.api.types import is_string_dtype
-
-from dae.variants.attributes import Role
 
 from dae.pedigrees.families_data import FamiliesData
 from dae.pedigrees.loader import FamiliesLoader
+from dae.variants.attributes import Role
 
 
 @pytest.mark.parametrize(
@@ -23,7 +21,7 @@ from dae.pedigrees.loader import FamiliesLoader
     ],
 )
 def test_famlies_loader_simple(
-    pedigree: str, fixture_dirname: Callable
+    pedigree: str, fixture_dirname: Callable,
 ) -> None:
     filename = fixture_dirname(f"pedigrees/{pedigree}")
     assert os.path.exists(filename)
@@ -83,7 +81,7 @@ def test_families_loader_phenos(fixture_dirname: Callable) -> None:
     ],
 )
 def test_families_loader_no_role(
-    pedigree: str, fixture_dirname: Callable
+    pedigree: str, fixture_dirname: Callable,
 ) -> None:
     filename = fixture_dirname(f"pedigrees/{pedigree}")
     assert os.path.exists(filename)
@@ -143,7 +141,7 @@ def test_families_loader_roles_testing(fixture_dirname: Callable) -> None:
     ],
 )
 def test_families_ped_df(
-    pedigree: str, temp_filename: str, fixture_dirname: Callable
+    pedigree: str, temp_filename: str, fixture_dirname: Callable,
 ) -> None:
     filename = fixture_dirname(f"pedigrees/{pedigree}")
     assert os.path.exists(filename)

@@ -1,12 +1,11 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-from typing import Type, cast
 import json
-
-from rest_framework import status
-from rest_framework.test import APIClient
+from typing import Type, cast
 
 from django.contrib.auth.models import Group
 from django.test.client import Client
+from rest_framework import status
+from rest_framework.test import APIClient
 
 from users_api.models import WdaeUser
 
@@ -58,14 +57,14 @@ def test_unauthenticated_cant_get_all_users(db: None, client: Client) -> None:
 
 
 def test_admin_can_create_new_users(
-    admin_client: Client, user_model: Type[WdaeUser]
+    admin_client: Client, user_model: Type[WdaeUser],
 ) -> None:
     url = "/api/v3/users"
     data = {
         "email": "new@new.com",
     }
     response = admin_client.post(
-        url, json.dumps(data), content_type="application/json", format="json"
+        url, json.dumps(data), content_type="application/json", format="json",
     )
 
     print(response)
@@ -74,12 +73,12 @@ def test_admin_can_create_new_users(
 
 
 def test_new_user_name_can_be_blank(
-    admin_client: Client, user_model: Type[WdaeUser]
+    admin_client: Client, user_model: Type[WdaeUser],
 ) -> None:
     url = "/api/v3/users"
     data = {"email": "new@new.com", "name": ""}
     response = admin_client.post(
-        url, json.dumps(data), content_type="application/json", format="json"
+        url, json.dumps(data), content_type="application/json", format="json",
     )
 
     print(response)
@@ -88,12 +87,12 @@ def test_new_user_name_can_be_blank(
 
 
 def test_admin_can_create_new_user_with_groups(
-    admin_client: Client, user_model: Type[WdaeUser], empty_group: Group
+    admin_client: Client, user_model: Type[WdaeUser], empty_group: Group,
 ) -> None:
     url = "/api/v3/users"
     data = {"email": "new@new.com", "groups": [empty_group.name]}
     response = admin_client.post(
-        url, json.dumps(data), content_type="application/json", format="json"
+        url, json.dumps(data), content_type="application/json", format="json",
     )
 
     print(response)
@@ -113,7 +112,7 @@ def test_admin_can_see_newly_created_user(admin_client: Client) -> None:
         "email": "new@new.com",
     }
     admin_client.post(
-        url, json.dumps(data), content_type="application/json", format="json"
+        url, json.dumps(data), content_type="application/json", format="json",
     )
 
     new_users = admin_client.get(url).json()
@@ -129,27 +128,27 @@ def test_new_user_is_not_active(admin_client: Client) -> None:
         "email": "new@new.com",
     }
     admin_client.post(
-        url, json.dumps(data), content_type="application/json", format="json"
+        url, json.dumps(data), content_type="application/json", format="json",
     )
 
     new_users = admin_client.get(url).json()
     assert len(new_users) == len(old_users) + 1
 
     new_user = next(
-        filter(lambda u: u["email"] == data["email"], new_users), None
+        filter(lambda u: u["email"] == data["email"], new_users), None,
     )
     assert new_user is not None
     assert not new_user["hasPassword"]
 
 
 def test_admin_can_partial_update_user(
-    admin_client: Client, active_user: WdaeUser
+    admin_client: Client, active_user: WdaeUser,
 ) -> None:
     url = f"/api/v3/users/{active_user.pk}"
     data = {"name": "Ivan"}
 
     response = admin_client.patch(
-        url, json.dumps(data), content_type="application/json", format="json"
+        url, json.dumps(data), content_type="application/json", format="json",
     )
     print(response)
     assert response.status_code is status.HTTP_200_OK
@@ -159,7 +158,7 @@ def test_admin_can_partial_update_user(
 
 
 def test_admin_cant_partial_update_user_email(
-    admin_client: Client, active_user: WdaeUser
+    admin_client: Client, active_user: WdaeUser,
 ) -> None:
     url = f"/api/v3/users/{active_user.pk}"
     data = {"email": "test@test.com"}
@@ -168,7 +167,7 @@ def test_admin_cant_partial_update_user_email(
     old_email = active_user.email
 
     response = admin_client.patch(
-        url, json.dumps(data), content_type="application/json", format="json"
+        url, json.dumps(data), content_type="application/json", format="json",
     )
     assert response.status_code is status.HTTP_400_BAD_REQUEST
 
@@ -177,7 +176,7 @@ def test_admin_cant_partial_update_user_email(
 
 
 def test_user_name_can_be_updated_to_blank(
-    admin_client: Client, active_user: WdaeUser
+    admin_client: Client, active_user: WdaeUser,
 ) -> None:
     url = f"/api/v3/users/{active_user.id}"
     data = {
@@ -188,7 +187,7 @@ def test_user_name_can_be_updated_to_blank(
     print(data["groups"])
 
     response = admin_client.put(
-        url, json.dumps(data), content_type="application/json", format="json"
+        url, json.dumps(data), content_type="application/json", format="json",
     )
     print(response)
     assert response.status_code is status.HTTP_200_OK
@@ -199,7 +198,7 @@ def test_user_name_can_be_updated_to_blank(
 
 def test_admin_can_add_user_group(
     admin_client: Client, active_user: WdaeUser,
-    empty_group: Group
+    empty_group: Group,
 ) -> None:
     user = active_user
 
@@ -208,7 +207,7 @@ def test_admin_can_add_user_group(
 
     assert not user.groups.filter(name=empty_group.name).exists()
     response = admin_client.put(
-        url, json.dumps(data), content_type="application/json", format="json"
+        url, json.dumps(data), content_type="application/json", format="json",
     )
     print(response)
     assert response.status_code is status.HTTP_200_OK
@@ -218,7 +217,7 @@ def test_admin_can_add_user_group(
 
 
 def test_admin_can_update_with_new_group(
-    admin_client: Client, active_user: WdaeUser
+    admin_client: Client, active_user: WdaeUser,
 ) -> None:
     group_name = "new group"
     user = active_user
@@ -228,7 +227,7 @@ def test_admin_can_update_with_new_group(
 
     assert not Group.objects.filter(name=group_name).exists()
     response = admin_client.put(
-        url, json.dumps(data), content_type="application/json", format="json"
+        url, json.dumps(data), content_type="application/json", format="json",
     )
     print(response)
     assert response.status_code is status.HTTP_200_OK
@@ -239,7 +238,7 @@ def test_admin_can_update_with_new_group(
 
 
 def test_admin_can_remove_user_group(
-    admin_client: Client, empty_group: Group, active_user: WdaeUser
+    admin_client: Client, empty_group: Group, active_user: WdaeUser,
 ) -> None:
     active_user.groups.add(empty_group)
 
@@ -248,10 +247,10 @@ def test_admin_can_remove_user_group(
         "groups": [
             group.name
             for group in active_user.groups.exclude(id=empty_group.id).all()
-        ]
+        ],
     }
     response = admin_client.put(
-        url, json.dumps(data), content_type="application/json", format="json"
+        url, json.dumps(data), content_type="application/json", format="json",
     )
 
     assert response.status_code is status.HTTP_200_OK
@@ -261,7 +260,7 @@ def test_admin_can_remove_user_group(
 
 
 def test_single_admin_cant_remove_superuser_group_from_self(
-    admin: WdaeUser, admin_client: Client
+    admin: WdaeUser, admin_client: Client,
 ) -> None:
     admin_group, _ = Group.objects.get_or_create(name=WdaeUser.SUPERUSER_GROUP)
     admin.groups.add(admin_group)
@@ -271,12 +270,12 @@ def test_single_admin_cant_remove_superuser_group_from_self(
         "groups": [
             group.name
             for group in admin.groups.exclude(
-                name=WdaeUser.SUPERUSER_GROUP
+                name=WdaeUser.SUPERUSER_GROUP,
             ).all()
-        ]
+        ],
     }
     response = admin_client.put(
-        url, json.dumps(data), content_type="application/json", format="json"
+        url, json.dumps(data), content_type="application/json", format="json",
     )
 
     assert response.status_code is not status.HTTP_200_OK
@@ -286,13 +285,13 @@ def test_single_admin_cant_remove_superuser_group_from_self(
 
 
 def test_two_admins_can_not_remove_superuser_group_from_self(
-    admin: WdaeUser, admin_client: Client, user_model: Type[WdaeUser]
+    admin: WdaeUser, admin_client: Client, user_model: Type[WdaeUser],
 ) -> None:
     other_superuser = user_model.objects.create_superuser(
-        "other_admin@test.com", "supersecret"
+        "other_admin@test.com", "supersecret",
     )
     other_superuser.groups.add(
-        Group.objects.get(name=WdaeUser.SUPERUSER_GROUP)
+        Group.objects.get(name=WdaeUser.SUPERUSER_GROUP),
     )
 
     url = f"/api/v3/users/{admin.pk}"
@@ -300,13 +299,13 @@ def test_two_admins_can_not_remove_superuser_group_from_self(
         "groups": [
             group.name
             for group in admin.groups.exclude(
-                name=WdaeUser.SUPERUSER_GROUP
+                name=WdaeUser.SUPERUSER_GROUP,
             ).all()
-        ]
+        ],
     }
 
     response = admin_client.put(
-        url, json.dumps(data), content_type="application/json", format="json"
+        url, json.dumps(data), content_type="application/json", format="json",
     )
 
     assert response.status_code is status.HTTP_400_BAD_REQUEST
@@ -315,10 +314,10 @@ def test_two_admins_can_not_remove_superuser_group_from_self(
 
 
 def test_two_admins_can_remove_superuser_group_from_other(
-    admin: WdaeUser, admin_client: Client, user_model: Type[WdaeUser]
+    admin: WdaeUser, admin_client: Client, user_model: Type[WdaeUser],
 ) -> None:
     other_superuser = user_model.objects.create_superuser(
-        "other_admin@test.com", "supersecret"
+        "other_admin@test.com", "supersecret",
     )
 
     url = f"/api/v3/users/{other_superuser.pk}"
@@ -326,24 +325,24 @@ def test_two_admins_can_remove_superuser_group_from_other(
         "groups": [
             group.name
             for group in other_superuser.groups.exclude(
-                name=WdaeUser.SUPERUSER_GROUP
+                name=WdaeUser.SUPERUSER_GROUP,
             ).all()
-        ]
+        ],
     }
     response = admin_client.put(
-        url, json.dumps(data), content_type="application/json", format="json"
+        url, json.dumps(data), content_type="application/json", format="json",
     )
 
     assert response.status_code is status.HTTP_200_OK
 
     other_superuser.refresh_from_db()
     assert not other_superuser.groups.filter(
-        name=WdaeUser.SUPERUSER_GROUP
+        name=WdaeUser.SUPERUSER_GROUP,
     ).exists()
 
 
 def test_admin_can_delete_user(
-    admin_client: Client, user_model: Type[WdaeUser]
+    admin_client: Client, user_model: Type[WdaeUser],
 ) -> None:
     user = user_model.objects.create(email="test@test.com")
     user_id = user.pk
@@ -357,14 +356,14 @@ def test_admin_can_delete_user(
 
 
 def test_admin_can_reset_user_password(
-    admin_client: Client, active_user: WdaeUser
+    admin_client: Client, active_user: WdaeUser,
 ) -> None:
     assert active_user.is_active
 
     url = "/api/v3/users/forgotten_password"
     data = {"email": active_user.email}
     response = admin_client.post(
-        url, json.dumps(data), content_type="application/json", format="json"
+        url, json.dumps(data), content_type="application/json", format="json",
     )
     assert response.status_code is status.HTTP_200_OK
 
@@ -374,7 +373,7 @@ def test_admin_can_reset_user_password(
 
 
 def test_resetting_user_password_does_not_deauthenticates_them(
-    admin_client: Client, logged_in_user: tuple[WdaeUser, APIClient]
+    admin_client: Client, logged_in_user: tuple[WdaeUser, APIClient],
 ) -> None:
 
     user, user_client = logged_in_user
@@ -387,7 +386,7 @@ def test_resetting_user_password_does_not_deauthenticates_them(
     data = {"email": user.email}
     response = admin_client.post(
         reset_password_url, json.dumps(data),
-        content_type="application/json", format="json"
+        content_type="application/json", format="json",
     )
     assert response.status_code == status.HTTP_200_OK
 
@@ -397,7 +396,7 @@ def test_resetting_user_password_does_not_deauthenticates_them(
 
 
 def test_searching_by_email_finds_only_single_user(
-    admin_client: Client, active_user: WdaeUser, user_model: Type[WdaeUser]
+    admin_client: Client, active_user: WdaeUser, user_model: Type[WdaeUser],
 ) -> None:
     assert user_model.objects.count() > 1
 
@@ -410,7 +409,7 @@ def test_searching_by_email_finds_only_single_user(
 
 
 def test_searching_by_username(
-    admin_client: Client, active_user: WdaeUser
+    admin_client: Client, active_user: WdaeUser,
 ) -> None:
     active_user.name = "Testy Mc Testington"
     active_user.save()
@@ -425,7 +424,7 @@ def test_searching_by_username(
 
 
 def test_searching_by_email(
-    admin_client: Client, active_user: WdaeUser
+    admin_client: Client, active_user: WdaeUser,
 ) -> None:
     url = "/api/v3/users"
     params = {"search": active_user.email[:8]}
@@ -439,7 +438,7 @@ def test_searching_by_email(
 
 
 def test_user_create_email_case_insensitive(
-    admin_client: Client, user_model: Type[WdaeUser]
+    admin_client: Client, user_model: Type[WdaeUser],
 ) -> None:
     url = "/api/v3/users"
     data = {
@@ -447,10 +446,10 @@ def test_user_create_email_case_insensitive(
         "email": "ExAmPlE1@iossifovlab.com",
         "name": "Example User",
         "hasPassword": False,
-        "groups": ["test_group", "SSC_TEST_GROUP"]
+        "groups": ["test_group", "SSC_TEST_GROUP"],
     }
     response = admin_client.post(
-        url, json.dumps(data), content_type="application/json", format="json"
+        url, json.dumps(data), content_type="application/json", format="json",
     )
     assert response.status_code is status.HTTP_201_CREATED
     user = user_model.objects.get(email="example1@iossifovlab.com")
@@ -458,7 +457,7 @@ def test_user_create_email_case_insensitive(
 
 
 def test_user_create_email_case_insensitive_with_groups(
-    admin_client: Client, user_model: Type[WdaeUser]
+    admin_client: Client, user_model: Type[WdaeUser],
 ) -> None:
     url = "/api/v3/users"
     data = {
@@ -466,10 +465,10 @@ def test_user_create_email_case_insensitive_with_groups(
         "email": "ExAmPlE1@iossifovlab.com",
         "name": "Example User",
         "hasPassword": False,
-        "groups": ["test_group", "SSC_TEST_GROUP"]
+        "groups": ["test_group", "SSC_TEST_GROUP"],
     }
     response = admin_client.post(
-        url, json.dumps(data), content_type="application/json", format="json"
+        url, json.dumps(data), content_type="application/json", format="json",
     )
     assert response.status_code is status.HTTP_201_CREATED
     user = user_model.objects.get(email="example1@iossifovlab.com")
@@ -486,10 +485,10 @@ def test_user_create_update_case_sensitive_groups(
         "email": "user1@iossifovlab.com",
         "name": "Example User1",
         "hasPassword": False,
-        "groups": ["test_group", "Test_GrouP", "tEsT_gRoUp"]
+        "groups": ["test_group", "Test_GrouP", "tEsT_gRoUp"],
     }
     response = admin_client.post(
-        url, json.dumps(data), content_type="application/json", format="json"
+        url, json.dumps(data), content_type="application/json", format="json",
     )
 
     assert response.status_code is status.HTTP_201_CREATED
@@ -508,11 +507,11 @@ def test_user_create_update_case_sensitive_groups(
     url = f"/api/v3/users/{user.pk}"
     data = {"groups": [
         "test_group", "Test_GrouP",
-        "any_user", "user1@iossifovlab.com"
+        "any_user", "user1@iossifovlab.com",
     ]}
 
     response = admin_client.patch(
-        url, json.dumps(data), content_type="application/json", format="json"
+        url, json.dumps(data), content_type="application/json", format="json",
     )
     assert response.status_code is status.HTTP_200_OK
 
@@ -526,7 +525,7 @@ def test_user_create_update_case_sensitive_groups(
 
 
 def test_admin_cannot_delete_own_user(
-    admin_client: Client, admin: WdaeUser, user_model: Type[WdaeUser]
+    admin_client: Client, admin: WdaeUser, user_model: Type[WdaeUser],
 ) -> None:
     url = f"/api/v3/users/{admin.id}"
     response = admin_client.delete(url)
@@ -535,33 +534,33 @@ def test_admin_cannot_delete_own_user(
 
 
 def test_admin_can_password_reset(
-    admin_client: Client, active_user: WdaeUser, user_model: Type[WdaeUser]
+    admin_client: Client, active_user: WdaeUser, user_model: Type[WdaeUser],
 ) -> None:
 
     url = f"/api/v3/users/{active_user.id}/password_reset"
     response = admin_client.post(
-        url, content_type="application/json", format="json"
+        url, content_type="application/json", format="json",
     )
     assert response.status_code is status.HTTP_204_NO_CONTENT
 
 
 def test_non_admin_can_not_password_reset(
-    user_client: Client, active_user: WdaeUser, user_model: Type[WdaeUser]
+    user_client: Client, active_user: WdaeUser, user_model: Type[WdaeUser],
 ) -> None:
 
     url = f"/api/v3/users/{active_user.id}/password_reset"
     response = user_client.post(
-        url, content_type="application/json", format="json"
+        url, content_type="application/json", format="json",
     )
     assert response.status_code is status.HTTP_403_FORBIDDEN
 
 
 def test_admin_password_reset_of_nonexiting_user_fails(
-    admin_client: Client, active_user: WdaeUser, user_model: Type[WdaeUser]
+    admin_client: Client, active_user: WdaeUser, user_model: Type[WdaeUser],
 ) -> None:
 
     url = "/api/v3/users/0/password_reset"
     response = admin_client.post(
-        url, content_type="application/json", format="json"
+        url, content_type="application/json", format="json",
     )
     assert response.status_code is status.HTTP_404_NOT_FOUND

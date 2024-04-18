@@ -1,21 +1,24 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-import textwrap
 import pathlib
+import textwrap
 
 import pytest
 
 from dae.annotation.annotatable import VCFAllele
-from dae.annotation.score_annotator import AlleleScoreAnnotator
-from dae.annotation.annotation_pipeline import AnnotatorInfo, \
-    AnnotationPipeline
 from dae.annotation.annotation_factory import build_annotation_pipeline
-from dae.genomic_resources.testing import \
-    setup_directories, convert_to_tab_separated, \
-    setup_vcf, build_filesystem_test_repository
-
-from dae.genomic_resources.repository import GR_CONF_FILE_NAME, \
-    GenomicResourceRepo
+from dae.annotation.annotation_pipeline import AnnotationPipeline, AnnotatorInfo
+from dae.annotation.score_annotator import AlleleScoreAnnotator
 from dae.genomic_resources import build_genomic_resource_repository
+from dae.genomic_resources.repository import (
+    GR_CONF_FILE_NAME,
+    GenomicResourceRepo,
+)
+from dae.genomic_resources.testing import (
+    build_filesystem_test_repository,
+    convert_to_tab_separated,
+    setup_directories,
+    setup_vcf,
+)
 
 
 def test_allele_score_annotator_attributes(
@@ -86,13 +89,13 @@ def test_allele_score_with_default_score_annotation(
                     1      16         CA         G           .   0.03
                     1      16         C          T           ct  0.04
                     1      16         C          A           ca  0.05
-                """)
-            }
+                """),
+            },
         })
     local_repo = build_genomic_resource_repository({
         "id": "allele_score_local",
         "type": "directory",
-        "directory": str(root_path / "grr")
+        "directory": str(root_path / "grr"),
     })
     annotation_configuration = textwrap.dedent("""
         - allele_score:
@@ -132,7 +135,7 @@ def test_allele_annotator_add_chrom_prefix_vcf_table(
                       desc: "test values"
                       name: test100way
                     """),
-            }
+            },
         })
 
     setup_vcf(

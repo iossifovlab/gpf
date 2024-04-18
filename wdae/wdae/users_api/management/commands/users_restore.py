@@ -2,9 +2,10 @@ import csv
 import os
 from typing import Any
 
+from django.core.management.base import BaseCommand, CommandError, CommandParser
+
 from users_api.models import WdaeUser
-from django.core.management.base import CommandParser, BaseCommand, \
-    CommandError
+
 from .import_base import ImportUsersBase
 
 
@@ -33,12 +34,12 @@ class Command(ImportUsersBase, BaseCommand):
             print(
                 "\033[92m"
                 + "Successfully restored users from file!"
-                + "\033[0m"
+                + "\033[0m",
             )
 
         except csv.Error as ex:
             raise CommandError(
-                f"There was a problem while reading {args[0]}"
+                f"There was a problem while reading {args[0]}",
             ) from ex
-        except IOError as ex:
+        except OSError as ex:
             raise CommandError(f"File {args[0]} not found") from ex

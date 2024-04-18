@@ -1,9 +1,8 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
 
-from enrichment_api.enrichment_builder import EnrichmentBuilder
 from dae.studies.study import GenotypeData
-
+from enrichment_api.enrichment_builder import EnrichmentBuilder
 
 pytestmark = pytest.mark.usefixtures(
     "wdae_gpf_instance", "dae_calc_gene_sets")
@@ -18,7 +17,7 @@ def test_build_results(enrichment_builder: EnrichmentBuilder) -> None:
     assert len(build) == 2
 
     assert sorted([b["peopleGroupValue"] for b in build]) == sorted(
-        ["phenotype1", "unaffected"]
+        ["phenotype1", "unaffected"],
     )
 
 
@@ -31,13 +30,13 @@ def test_build(enrichment_builder: EnrichmentBuilder) -> None:
     assert len(build) == 2
 
     assert sorted([b["selector"] for b in build]) == sorted(
-        ["phenotype 1", "unaffected"]
+        ["phenotype 1", "unaffected"],
     )
 
 
 def test_build_people_group_selector(
     enrichment_builder: EnrichmentBuilder,
-    f1_trio: GenotypeData
+    f1_trio: GenotypeData,
 ) -> None:
     assert enrichment_builder
     person_set_collection = f1_trio.get_person_set_collection("phenotype")

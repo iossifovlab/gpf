@@ -1,16 +1,18 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import re
+
 import pytest
 
-from dae.inmemory_storage.inmemory_genotype_storage import \
-    InmemoryGenotypeStorage
+from dae.inmemory_storage.inmemory_genotype_storage import (
+    InmemoryGenotypeStorage,
+)
 
 
 def test_validate_config():
     config = {
         "storage_type": "inmemory",
         "id": "aaaa",
-        "dir": "/tmp/aaaa_filesystem"
+        "dir": "/tmp/aaaa_filesystem",
     }
     res = InmemoryGenotypeStorage.validate_and_normalize_config(config)
     assert res is not None
@@ -19,7 +21,7 @@ def test_validate_config():
 def test_validate_config_missing_id():
     config = {
         "storage_type": "inmemory",
-        "dir": "/tmp/aaaa_filesystem"
+        "dir": "/tmp/aaaa_filesystem",
     }
     with pytest.raises(
             ValueError,
@@ -30,7 +32,7 @@ def test_validate_config_missing_id():
 def test_validate_config_missing_storage_type():
     config = {
         "id": "aaaa",
-        "dir": "/tmp/aaaa_filesystem"
+        "dir": "/tmp/aaaa_filesystem",
     }
     with pytest.raises(
             ValueError,
@@ -42,7 +44,7 @@ def test_validate_config_wrong_storage_type():
     config = {
         "id": "aaaa",
         "storage_type": "filesystem2",
-        "dir": "/tmp/aaaa_filesystem"
+        "dir": "/tmp/aaaa_filesystem",
     }
     with pytest.raises(
             ValueError,
@@ -70,7 +72,7 @@ def test_validate_config_bad_dir():
     config = {
         "id": "aaaa",
         "storage_type": "inmemory",
-        "dir": "tmp/aaaa_filesystem"
+        "dir": "tmp/aaaa_filesystem",
     }
     with pytest.raises(
             ValueError,

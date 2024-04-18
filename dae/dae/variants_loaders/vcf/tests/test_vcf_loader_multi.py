@@ -1,16 +1,18 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import os
 from typing import Union
-import pytest
+
 import numpy as np
-from dae.variants_loaders.vcf.loader import VcfLoader
+import pytest
+
 from dae.genomic_resources.testing import setup_pedigree, setup_vcf
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.pedigrees.loader import FamiliesLoader
 from dae.testing.acgt_import import acgt_gpf
+from dae.variants_loaders.vcf.loader import VcfLoader
 
 
-@pytest.fixture
+@pytest.fixture()
 def gpf_instance(
         tmp_path_factory: pytest.TempPathFactory) -> GPFInstance:
     root_path = tmp_path_factory.mktemp("instance")
@@ -18,7 +20,7 @@ def gpf_instance(
     return gpf_instance
 
 
-@pytest.fixture
+@pytest.fixture()
 def multivcf_split1_vcf(tmp_path_factory: pytest.TempPathFactory) -> str:
     root_path = tmp_path_factory.mktemp("mutlivcf_split1")
     vcf_path = setup_vcf(root_path / "vcf_data" / "in.vcf", """
@@ -38,7 +40,7 @@ def multivcf_split1_vcf(tmp_path_factory: pytest.TempPathFactory) -> str:
     return str(vcf_path)
 
 
-@pytest.fixture
+@pytest.fixture()
 def multivcf_split2_vcf(tmp_path_factory: pytest.TempPathFactory) -> str:
     root_path = tmp_path_factory.mktemp("mutlivcf_split1")
     vcf_path = setup_vcf(root_path / "vcf_data" / "in.vcf", """
@@ -58,7 +60,7 @@ def multivcf_split2_vcf(tmp_path_factory: pytest.TempPathFactory) -> str:
     return str(vcf_path)
 
 
-@pytest.fixture
+@pytest.fixture()
 def multivcf_ped(tmp_path_factory: pytest.TempPathFactory) -> str:
     root_path = tmp_path_factory.mktemp("multivcf")
     ped_path = setup_pedigree(root_path / "ped_data" / "in.ped", """
@@ -92,7 +94,7 @@ def test_simple_vcf_loader_multi(
     gpf_instance: GPFInstance,
     multivcf_split1_vcf: str,
     multivcf_split2_vcf: str,
-    multivcf_ped: str
+    multivcf_ped: str,
 ) -> None:
     vcf_filenames = [multivcf_split1_vcf, multivcf_split2_vcf]
     assert all(os.path.exists(fn) for fn in vcf_filenames)
@@ -111,7 +113,7 @@ def test_simple_vcf_loader_multi(
     assert len(variants) == 6
 
 
-@pytest.fixture
+@pytest.fixture()
 def multivcf_original_vcf(tmp_path_factory: pytest.TempPathFactory) -> str:
     root_path = tmp_path_factory.mktemp("multivcf_original")
     vcf_path = setup_vcf(root_path / "vcf_path" / "in.vcf", """
@@ -136,7 +138,7 @@ def test_vcf_loader_multi(
     multivcf_split2_vcf: str,
     multivcf_original_vcf: str,
     multivcf_ped: str,
-    gpf_instance: GPFInstance
+    gpf_instance: GPFInstance,
 ) -> None:
     # pylint: disable=too-many-locals,invalid-name
 
@@ -146,14 +148,14 @@ def test_vcf_loader_multi(
     multi_vcf_loader = VcfLoader(
         families_multi, [multivcf_split1_vcf, multivcf_split2_vcf],
         gpf_instance.reference_genome,
-        fill_missing_ref=False
+        fill_missing_ref=False,
     )
     assert multi_vcf_loader is not None
     # for sv, fvs in multi_vcf_loader.full_variants_iterator():
     #     print(sv, fvs)
 
     single_loader = VcfLoader(
-        families, [multivcf_original_vcf], gpf_instance.reference_genome
+        families, [multivcf_original_vcf], gpf_instance.reference_genome,
     )
     assert single_loader is not None
 
@@ -186,7 +188,7 @@ def test_vcf_loader_multi(
         assert np.all(s_gt_f5 == m_gt_f5)
 
 
-@pytest.fixture
+@pytest.fixture()
 def multivcf_missing1(tmp_path_factory: pytest.TempPathFactory) -> str:
     root_path = tmp_path_factory.mktemp("multivcf_missing1")
     vcf_path = setup_vcf(root_path / "vcf_data" / "in.vcf", """
@@ -203,7 +205,7 @@ def multivcf_missing1(tmp_path_factory: pytest.TempPathFactory) -> str:
     return str(vcf_path)
 
 
-@pytest.fixture
+@pytest.fixture()
 def multivcf_missing2(tmp_path_factory: pytest.TempPathFactory) -> str:
     root_path = tmp_path_factory.mktemp("multivcf_missing2")
     vcf_path = setup_vcf(root_path / "vcf_data" / "in.vcf", """
@@ -223,7 +225,7 @@ def multivcf_missing2(tmp_path_factory: pytest.TempPathFactory) -> str:
 
 
 @pytest.mark.parametrize(
-    "fill_mode, fill_value", [["reference", 0], ["unknown", -1]]
+    "fill_mode, fill_value", [["reference", 0], ["unknown", -1]],
 )
 def test_multivcf_loader_fill_missing(
     fill_mode: list[Union[str, int]],
@@ -231,7 +233,7 @@ def test_multivcf_loader_fill_missing(
     multivcf_ped: str,
     multivcf_missing1: str,
     multivcf_missing2: str,
-    gpf_instance: GPFInstance
+    gpf_instance: GPFInstance,
 ) -> None:
     # pylint: disable=too-many-locals
 
@@ -245,7 +247,7 @@ def test_multivcf_loader_fill_missing(
     }
     multi_vcf_loader = VcfLoader(
         families, multivcf_files, gpf_instance.reference_genome,
-        params=params
+        params=params,
     )
 
     assert multi_vcf_loader is not None

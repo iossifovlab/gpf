@@ -4,13 +4,11 @@ from datetime import timedelta
 from typing import Type
 
 import pytest
-
-from django.contrib.auth.models import Group
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 from django.utils import timezone
-
-from rest_framework.test import APIClient
 from oauth2_provider.models import Application, get_access_token_model
+from rest_framework.test import APIClient
 
 from users_api.models import WdaeUser
 
@@ -33,7 +31,7 @@ def empty_group_2(db: None) -> Group:
 @pytest.fixture()
 def active_user(db: None, user_model: Type[WdaeUser]) -> WdaeUser:
     user = user_model.objects.create_user(
-        email="new@new.com", password="secret"
+        email="new@new.com", password="secret",
     )
 
     assert user.is_active
@@ -50,7 +48,7 @@ def inactive_user(db: None, user_model: Type[WdaeUser]) -> WdaeUser:
 
 @pytest.fixture()
 def logged_in_user(
-    active_user: WdaeUser, oauth_app: Application
+    active_user: WdaeUser, oauth_app: Application,
 ) -> tuple[WdaeUser, APIClient]:
     access_token = get_access_token_model()
     user_access_token = access_token(
@@ -58,7 +56,7 @@ def logged_in_user(
         scope="read write",
         expires=timezone.now() + timedelta(seconds=300),
         token="active-user-token",
-        application=oauth_app
+        application=oauth_app,
     )
     user_access_token.save()
     client = APIClient(HTTP_AUTHORIZATION="Bearer active-user-token")

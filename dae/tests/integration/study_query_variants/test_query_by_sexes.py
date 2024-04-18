@@ -3,17 +3,16 @@ from typing import Optional
 
 import pytest
 
-from dae.testing import setup_pedigree, setup_vcf, vcf_study
-
-from dae.testing.foobar_import import foobar_gpf
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.studies.study import GenotypeData
+from dae.testing import setup_pedigree, setup_vcf, vcf_study
+from dae.testing.foobar_import import foobar_gpf
 
 
 @pytest.fixture(scope="module")
 def imported_study(
     tmp_path_factory: pytest.TempPathFactory,
-    genotype_storage: GenotypeStorage
+    genotype_storage: GenotypeStorage,
 ) -> GenotypeData:
     root_path = tmp_path_factory.mktemp(
         f"vcf_path_{genotype_storage.storage_id}")
@@ -61,7 +60,7 @@ def imported_study(
 )
 def test_query_by_sexes(
     sexes: Optional[str], count: int,
-    imported_study: GenotypeData
+    imported_study: GenotypeData,
 ) -> None:
     vs = list(imported_study.query_variants(sexes=sexes))
     assert len(vs) == count

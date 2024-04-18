@@ -1,31 +1,29 @@
 from __future__ import annotations
 
 import abc
-
-import itertools
 import copy
+import itertools
 import logging
-from collections import deque
-
-from collections import defaultdict
+from collections import defaultdict, deque
+from collections.abc import Iterable, Iterator
 from functools import reduce
-from typing import Iterator, Optional, Union, Any, \
-    cast, Iterable
+from typing import Any, Optional, Union, cast
+
 import networkx as nx
 
+from dae.pedigrees.family import Family, Person
 from dae.variants.attributes import Role, Sex, Status
-from dae.pedigrees.family import Person, Family
 
 logger = logging.getLogger(__name__)
 
 
-class FamilyConnections():
+class FamilyConnections:
     """Representation of connections between family members."""
 
     def __init__(
         self, family: Family,
         id_to_individual: dict[str, Individual],
-        id_to_mating_unit: dict[str, MatingUnit]
+        id_to_mating_unit: dict[str, MatingUnit],
     ) -> None:
         assert family is not None
         assert "0" not in id_to_individual
@@ -40,7 +38,7 @@ class FamilyConnections():
         """Check if a family is valid."""
         if not family:
             return False
-        for parents in family.keys():
+        for parents in family:
             if family[parents].mother.member is None:
                 return False
             if family[parents].father.member is None:
@@ -64,10 +62,10 @@ class FamilyConnections():
             for child in mating_unit.children_set():
                 assert child.member is not None
                 graph.add_edge(
-                    mating_unit.mother.member.person_id, child.member.person_id
+                    mating_unit.mother.member.person_id, child.member.person_id,
                 )
                 graph.add_edge(
-                    mating_unit.father.member.person_id, child.member.person_id
+                    mating_unit.father.member.person_id, child.member.person_id,
                 )
         return graph
 
@@ -168,7 +166,7 @@ class FamilyConnections():
     @classmethod
     def from_family(
         cls, family: Family,
-        add_missing_members: bool = True
+        add_missing_members: bool = True,
     ) -> Optional[FamilyConnections]:
         """Build family connections object from a family."""
         assert isinstance(family, Family)
@@ -341,7 +339,7 @@ class FamilyConnections():
     def max_rank(self) -> int:
         return reduce(
             lambda acc, i: max(acc, i.rank),
-            self.id_to_individual.values(), 0
+            self.id_to_individual.values(), 0,
         )
 
     def get_individual(self, person_id: str) -> Optional[Individual]:
@@ -360,7 +358,7 @@ class FamilyConnections():
         return {mu.children for mu in self.id_to_mating_unit.values()}
 
 
-class IndividualGroup(metaclass=abc.ABCMeta):
+class IndividualGroup(abc.ABC):
     """Group of individuals connected to an individual."""
 
     @abc.abstractmethod
@@ -383,7 +381,7 @@ class IndividualGroup(metaclass=abc.ABCMeta):
         )
 
     def __lt__(
-        self, other: Union[Individual, SibshipUnit, MatingUnit]
+        self, other: Union[Individual, SibshipUnit, MatingUnit],
     ) -> bool:
         return repr(self) < repr(other)
 
@@ -400,7 +398,7 @@ class Individual(IndividualGroup):
         self, mating_units: Optional[list[MatingUnit]] = None,
         member: Optional[Person] = None,
         parents: Optional[MatingUnit] = None,
-        rank: int = NO_RANK
+        rank: int = NO_RANK,
     ) -> None:
 
         if mating_units is None:
@@ -461,7 +459,7 @@ class SibshipUnit(IndividualGroup):
     """Group of individuals connected as siblings."""
 
     def __init__(
-        self, individuals: Optional[Iterable[Individual]] = None
+        self, individuals: Optional[Iterable[Individual]] = None,
     ) -> None:
         if individuals is None:
             individuals = set()
@@ -481,7 +479,7 @@ class MatingUnit(IndividualGroup):
     def __init__(
         self, mother: Individual,
         father: Individual,
-        children: Optional[SibshipUnit] = None
+        children: Optional[SibshipUnit] = None,
     ) -> None:
         if children is None:
             children = SibshipUnit()
@@ -533,7 +531,7 @@ class Interval:
         if self.left < other.right:
             return None
         return Interval(
-            max(self.left, other.left), min(self.right, other.right)
+            max(self.left, other.left), min(self.right, other.right),
         )
 
 
@@ -543,7 +541,7 @@ class IntervalForVertex(Interval):
     def __init__(
         self, vertex: IndividualGroup,
         left: float = 0.0,
-        right: float = 1.0
+        right: float = 1.0,
     ) -> None:
         super().__init__(left, right)
         self.vertex = vertex
@@ -674,7 +672,7 @@ class Realization:
         self._cached_vertex_degree = {}
 
     def can_extend(
-            self, new_vertex: IndividualGroup
+            self, new_vertex: IndividualGroup,
     ) -> bool:
         """Determine whether a new vertex can be added to the pedigree.
 
@@ -722,14 +720,14 @@ class Realization:
 
     def _is_active_bounded(
         self, new_realization: Realization,
-        new_vertex: IndividualGroup
+        new_vertex: IndividualGroup,
     ) -> bool:
         if len(self.get_active_vertices()) == self.max_width - 1:
             if new_vertex not in self.dangling_set():
                 return True
 
         active_vertices = self.get_active_vertices().intersection(
-            new_realization.get_active_vertices()
+            new_realization.get_active_vertices(),
         )
         for active in active_vertices:
             if new_realization.degree(active) != self.degree(active) + 1:
@@ -748,7 +746,7 @@ class Realization:
 
     def _new_active_valid(
         self, new_vertex: IndividualGroup,
-        new_realization: Realization
+        new_realization: Realization,
     ) -> bool:
         new_active = new_realization.get_active_vertices()
         old_active_and_new_vertex = self.get_active_vertices() | {new_vertex}
@@ -762,7 +760,7 @@ class Realization:
 
     def _new_dangling_valid(
         self, new_vertex: IndividualGroup,
-        new_realization: Realization
+        new_realization: Realization,
     ) -> bool:
         new_dangling = new_realization.dangling(new_vertex)
         new_edges = (
@@ -772,7 +770,7 @@ class Realization:
 
     def _old_dangling_same(
         self, new_vertex: IndividualGroup,
-        new_realization: Realization
+        new_realization: Realization,
     ) -> bool:
         for active_vertex in self.get_active_vertices():
             dangling = self.dangling(active_vertex)
@@ -785,7 +783,7 @@ class Realization:
         return True
 
     def get_interval(
-        self, vertex: IndividualGroup
+        self, vertex: IndividualGroup,
     ) -> IntervalForVertex:
         index = self.domain.index(vertex)
 
@@ -825,7 +823,7 @@ class Realization:
         return self._cached_maximal_set
 
     def get_active_vertex_edges(
-        self, vertex: IndividualGroup
+        self, vertex: IndividualGroup,
     ) -> set[IndividualGroup]:
         return self._graph_neighbors_cache[vertex].difference(self._domain_set)
 
@@ -851,7 +849,7 @@ class Realization:
         return self._cached_active_vertices
 
     def dangling(
-        self, vertex: IndividualGroup
+        self, vertex: IndividualGroup,
     ) -> set[IndividualGroup]:
         return self.get_active_vertex_edges(vertex)
 
@@ -895,7 +893,7 @@ class Realization:
                     1
                     for i in self.intervals
                     if v_interval.intersection(i) is not None
-                ]
+                ],
             )
             - 1
         )
@@ -920,7 +918,7 @@ class SandwichInstance:
     def __init__(
         self, vertices: set[IndividualGroup],
         required_graph: nx.Graph,
-        forbidden_graph: nx.Graph
+        forbidden_graph: nx.Graph,
     ) -> None:
         self.vertices = vertices
         self.required_graph = required_graph
@@ -930,7 +928,7 @@ class SandwichInstance:
     def from_sets(
         all_vertices: set[IndividualGroup],
         required_set: set[tuple[IndividualGroup, IndividualGroup]],
-        forbidden_set: set[tuple[IndividualGroup, IndividualGroup]]
+        forbidden_set: set[tuple[IndividualGroup, IndividualGroup]],
     ) -> SandwichInstance:
         """Create a SandwichInstance object.
 
@@ -977,7 +975,7 @@ class SandwichSolver:
 
     @staticmethod
     def solve(
-        sandwich_instance: SandwichInstance
+        sandwich_instance: SandwichInstance,
     ) -> Optional[list[IntervalForVertex]]:
         """Solve the sandwich instance.
 
@@ -999,7 +997,7 @@ class SandwichSolver:
             forbidden_graph.edges(),
         )
 
-        for count in range(0, len(forbidden_graph.edges())):
+        for count in range(len(forbidden_graph.edges())):
             for edges_to_remove in itertools.combinations(
                     sorted(forbidden_graph.edges()), count):
 
@@ -1027,7 +1025,7 @@ class SandwichSolver:
 
     @staticmethod
     def try_solve(
-        sandwich_instance: SandwichInstance
+        sandwich_instance: SandwichInstance,
     ) -> Optional[list[IntervalForVertex]]:
         """Try to solve the sandwich instance by finding a realization.
 
@@ -1057,7 +1055,7 @@ class SandwichSolver:
                     ]._graph_neighbors_cache
                     if i > 0
                     else None,
-                )
+                ),
             )
 
         realizations_queue = deque(sorted(initial_realization, key=str))
@@ -1076,12 +1074,12 @@ class SandwichSolver:
 
             if current_iteration == 100000:
                 logger.warning(
-                    "bailing at %s iterations...", current_iteration
+                    "bailing at %s iterations...", current_iteration,
                 )
                 return None
 
             other_vertices = sandwich_instance.vertices.difference(
-                realization.domain
+                realization.domain,
             )
 
             # other_vertices = sorted(other_vertices, key=str)
@@ -1099,7 +1097,7 @@ class SandwichSolver:
 
                 if len(cloned_realization.domain) == vertices_length:
                     logger.debug(
-                        "sandwitch iterations count: %s", current_iteration
+                        "sandwitch iterations count: %s", current_iteration,
                     )
                     return cloned_realization.intervals
                 domain_string = repr(cloned_realization)

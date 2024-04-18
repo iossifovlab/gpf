@@ -1,12 +1,14 @@
 import logging
-from typing import Optional, Any
+from typing import Any, Optional
 
-from dae.pedigrees.families_data import FamiliesData
 from dae.genomic_resources.gene_models import GeneModels
-from dae.variants.attributes import Sex, Role, Status
-from dae.query_variants.sql.schema2.base_query_builder import \
-    BaseQueryBuilder, Dialect, \
-    TableSchema
+from dae.pedigrees.families_data import FamiliesData
+from dae.query_variants.sql.schema2.base_query_builder import (
+    BaseQueryBuilder,
+    Dialect,
+    TableSchema,
+)
+from dae.variants.attributes import Role, Sex, Status
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +30,7 @@ class FamilyQueryBuilder(BaseQueryBuilder):
         families: FamiliesData,
         gene_models: Optional[GeneModels] = None,
         do_join_pedigree: bool = False,
-        do_join_allele_in_members: bool = False
+        do_join_allele_in_members: bool = False,
     ):
         # pylint: disable=too-many-arguments
         self.family_variant_table = family_variant_table
@@ -66,7 +68,7 @@ class FamilyQueryBuilder(BaseQueryBuilder):
 
     def _build_join(
         self, genes: Optional[list[str]] = None,
-        effect_types: Optional[list[str]] = None
+        effect_types: Optional[list[str]] = None,
     ) -> None:
 
         if self.do_join_allele_in_members or self.do_join_pedigree:
@@ -83,7 +85,7 @@ class FamilyQueryBuilder(BaseQueryBuilder):
 
         if genes is not None or effect_types is not None:
             self._add_to_product(
-                self.dialect.build_array_join("sa.effect_gene", "eg")
+                self.dialect.build_array_join("sa.effect_gene", "eg"),
             )
 
     @staticmethod
@@ -100,7 +102,7 @@ class FamilyQueryBuilder(BaseQueryBuilder):
     def _build_where_pedigree_fields(
         self,
         pedigree_fields: Optional[  # type: ignore
-            tuple[list[dict[str, str]], list[dict[str, str]]]]
+            tuple[list[dict[str, str]], list[dict[str, str]]]],
     ) -> str:
         if not pedigree_fields:
             return ""
@@ -111,7 +113,7 @@ class FamilyQueryBuilder(BaseQueryBuilder):
             for key, value in positive_fields.items():
                 str_value = self._pedigree_column_value(key, value)
                 query.append(
-                    f"pedigree.{key} = {str_value}"
+                    f"pedigree.{key} = {str_value}",
                 )
         if query:
             result.append(" OR ".join(query))
@@ -121,7 +123,7 @@ class FamilyQueryBuilder(BaseQueryBuilder):
             for key, value in negative_fields.items():
                 str_value = self._pedigree_column_value(key, value)
                 query.append(
-                    f"pedigree.{key} != {str_value}"
+                    f"pedigree.{key} != {str_value}",
                 )
         if query:
             result.append(" AND ".join(query))

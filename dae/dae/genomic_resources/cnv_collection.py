@@ -1,19 +1,25 @@
 from __future__ import annotations
+
 import logging
 from dataclasses import dataclass
 from typing import Any
-from dae.genomic_resources.genomic_position_table.table_tabix import \
-    TabixGenomicPositionTable
-from dae.genomic_resources.genomic_position_table.table_vcf import \
-    VCFGenomicPositionTable
-from dae.genomic_resources.genomic_position_table.utils import \
-    build_genomic_position_table
+
+from dae.genomic_resources.genomic_position_table.table_tabix import (
+    TabixGenomicPositionTable,
+)
+from dae.genomic_resources.genomic_position_table.table_vcf import (
+    VCFGenomicPositionTable,
+)
+from dae.genomic_resources.genomic_position_table.utils import (
+    build_genomic_position_table,
+)
 from dae.genomic_resources.genomic_scores import GenomicScore
 from dae.genomic_resources.repository import GenomicResource
-from dae.genomic_resources.resource_implementation import \
-    GenomicResourceImplementation, InfoImplementationMixin
-from dae.task_graph.graph import Task
-from dae.task_graph.graph import TaskGraph
+from dae.genomic_resources.resource_implementation import (
+    GenomicResourceImplementation,
+    InfoImplementationMixin,
+)
+from dae.task_graph.graph import Task, TaskGraph
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +47,7 @@ class CnvCollection:
 
         assert self.resource.config is not None
         self.table = build_genomic_position_table(
-            self.resource, self.resource.config["table"]
+            self.resource, self.resource.config["table"],
         )
         self.score_defs = GenomicScore._parse_scoredef_config(
             self.resource.config)

@@ -4,11 +4,10 @@ from typing import Optional
 
 import pytest
 
-from dae.testing import setup_pedigree, setup_vcf, \
-    vcf_study
-from dae.testing.foobar_import import foobar_gpf
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.studies.study import GenotypeData
+from dae.testing import setup_pedigree, setup_vcf, vcf_study
+from dae.testing.foobar_import import foobar_gpf
 
 
 @pytest.fixture(scope="module")
@@ -97,11 +96,11 @@ bar    16  .  C   A     .    .      .    GT     1/1  1/1  0/0
         (["5'UTR"], ["g1", "g2"], 1),
         (["missense", "5'UTR"], ["g1", "g2"], 2),
         (["noEnd", "splice-site", "5'UTR"], ["g1"], 4),
-    ]
+    ],
 )
 def test_single_alt_allele_effects(
     imported_study: GenotypeData,
-    effects: Optional[list[str]], genes: Optional[list[str]], count: int
+    effects: Optional[list[str]], genes: Optional[list[str]], count: int,
 ) -> None:
 
     vs = list(imported_study.query_variants(genes=genes, effect_types=effects))

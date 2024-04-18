@@ -3,17 +3,22 @@ from __future__ import annotations
 import argparse
 import logging
 from abc import ABC, abstractmethod
-from typing import Optional, Any, Callable, Dict, \
-    Iterable
+from collections.abc import Iterable
 from functools import lru_cache
+from typing import Any, Callable, Dict, Optional
 
-from dae.genomic_resources.repository_factory import \
-    build_genomic_resource_repository
-from dae.genomic_resources.reference_genome import ReferenceGenome, \
-    build_reference_genome_from_resource
-from dae.genomic_resources.gene_models import GeneModels, \
-    build_gene_models_from_resource
+from dae.genomic_resources.gene_models import (
+    GeneModels,
+    build_gene_models_from_resource,
+)
+from dae.genomic_resources.reference_genome import (
+    ReferenceGenome,
+    build_reference_genome_from_resource,
+)
 from dae.genomic_resources.repository import GenomicResourceRepo
+from dae.genomic_resources.repository_factory import (
+    build_genomic_resource_repository,
+)
 
 _REGISTERED_CONTEXT_PROVIDERS: list[GenomicContextProvider] = []
 _REGISTERED_CONTEXTS: list[GenomicContext] = []
@@ -273,7 +278,7 @@ class CLIGenomicContext(SimpleGenomicContext):
             grr = build_genomic_resource_repository({
                 "id": "local",
                 "type": "directory",
-                "directory": args.grr_directory
+                "directory": args.grr_directory,
             })
 
         if grr is None:
@@ -313,9 +318,9 @@ class DefaultRepositoryContextProvider(SimpleGenomicContextProvider):
         grr = build_genomic_resource_repository()
         return SimpleGenomicContext(
             {
-                GC_GRR_KEY: grr
+                GC_GRR_KEY: grr,
             },
-            ("default_genomic_resources_repository", grr.repo_id)
+            ("default_genomic_resources_repository", grr.repo_id),
         )
 
     def __init__(self) -> None:

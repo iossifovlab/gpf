@@ -1,23 +1,22 @@
 from __future__ import annotations
 
+import logging
 import os
 import re
-import logging
-from typing import Any, cast, Optional, Union
 from contextlib import closing
+from typing import Any, Optional, Union, cast
 
 import duckdb
 from cerberus import Validator
 
-from dae.utils import fs_utils
-from dae.genomic_resources.reference_genome import ReferenceGenome
-from dae.genomic_resources.gene_models import GeneModels
-
-from dae.parquet.partition_descriptor import PartitionDescriptor
-from dae.genotype_storage.genotype_storage import GenotypeStorage
-from dae.schema2_storage.schema2_import_storage import Schema2DatasetLayout
+from dae.duckdb_storage.duckdb2_variants import Db2Layout, DuckDb2Variants
 from dae.duckdb_storage.duckdb_variants import DuckDbVariants
-from dae.duckdb_storage.duckdb2_variants import DuckDb2Variants, Db2Layout
+from dae.genomic_resources.gene_models import GeneModels
+from dae.genomic_resources.reference_genome import ReferenceGenome
+from dae.genotype_storage.genotype_storage import GenotypeStorage
+from dae.parquet.partition_descriptor import PartitionDescriptor
+from dae.schema2_storage.schema2_import_storage import Schema2DatasetLayout
+from dae.utils import fs_utils
 
 logger = logging.getLogger(__name__)
 
@@ -28,14 +27,14 @@ def _duckdb_global_connect() -> duckdb.DuckDBPyConnection:
 
 
 def _duckdb_db_connect(
-    db_name: str, read_only: bool = True
+    db_name: str, read_only: bool = True,
 ) -> duckdb.DuckDBPyConnection:
     logger.debug("duckdb internal connection to %s", db_name)
     return duckdb.connect(db_name, read_only=read_only)
 
 
 def duckdb_connect(
-    db_name: Optional[str] = None, read_only: bool = True
+    db_name: Optional[str] = None, read_only: bool = True,
 ) -> duckdb.DuckDBPyConnection:
     if db_name is not None:
         return _duckdb_db_connect(db_name=db_name, read_only=read_only)
@@ -48,7 +47,7 @@ class DuckDbGenotypeStorage(GenotypeStorage):
     VALIDATION_SCHEMA = {
         "storage_type": {"type": "string", "allowed": ["duckdb", "duckdb2"]},
         "id": {
-            "type": "string", "required": True
+            "type": "string", "required": True,
         },
         "db": {
             "type": "string",
@@ -66,7 +65,7 @@ class DuckDbGenotypeStorage(GenotypeStorage):
         },
         "base_dir": {
             "type": "string",
-        }
+        },
     }
 
     def __init__(self, storage_config: dict[str, Any]):

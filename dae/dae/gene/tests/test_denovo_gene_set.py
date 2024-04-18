@@ -3,10 +3,10 @@ from typing import cast
 
 import pytest
 
-from dae.gene.denovo_gene_set_collection_factory import \
-    DenovoGeneSetCollectionFactory
-from dae.gene.denovo_gene_set_collection import \
-    DenovoGeneSetCollection
+from dae.gene.denovo_gene_set_collection import DenovoGeneSetCollection
+from dae.gene.denovo_gene_set_collection_factory import (
+    DenovoGeneSetCollectionFactory,
+)
 from dae.studies.study import GenotypeData
 
 pytestmark = pytest.mark.usefixtures("gene_info_cache_dir", "calc_gene_sets")
@@ -38,7 +38,7 @@ def test_get_gene_sets_types_legend(
     assert len(dgstl[0]["personSetCollectionLegend"]) == 2
 
 
-@pytest.fixture
+@pytest.fixture()
 def trios2_dgsc(trios2_study: GenotypeData) -> DenovoGeneSetCollection:
     DenovoGeneSetCollectionFactory.build_collection(trios2_study)
     dgsc = DenovoGeneSetCollectionFactory.load_collection(trios2_study)
@@ -57,7 +57,7 @@ def test_denovo_gene_sets_legend(trios2_dgsc: DenovoGeneSetCollection) -> None:
         {"id": "affected", "name": "affected",
          "values": ["affected"], "color": "#e35252"},
         {"id": "unaffected", "name": "unaffected",
-         "values": ["unaffected"], "color": "#ffffff"}
+         "values": ["unaffected"], "color": "#ffffff"},
     ]
 
 
@@ -80,7 +80,7 @@ def test_get_denovo_gene_set(
         denovo_gene_set: str, people_groups: list[str], count: int) -> None:
 
     dgs = DenovoGeneSetCollection.get_gene_set(
-        denovo_gene_set, [trios2_dgsc], {"trios2": {"status": people_groups}}
+        denovo_gene_set, [trios2_dgsc], {"trios2": {"status": people_groups}},
     )
 
     assert dgs is not None

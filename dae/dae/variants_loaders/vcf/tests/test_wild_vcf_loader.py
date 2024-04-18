@@ -1,6 +1,8 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 from typing import List
+
 import pytest
+
 from dae.genomic_resources.testing import setup_pedigree, setup_vcf
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.pedigrees.loader import FamiliesLoader
@@ -8,7 +10,7 @@ from dae.testing.acgt_import import acgt_gpf
 from dae.variants_loaders.vcf.loader import VcfLoader
 
 
-@pytest.fixture
+@pytest.fixture()
 def gpf_instance(
         tmp_path_factory: pytest.TempPathFactory) -> GPFInstance:
     root_path = tmp_path_factory.mktemp("instance")
@@ -16,7 +18,7 @@ def gpf_instance(
     return gpf_instance
 
 
-@pytest.fixture
+@pytest.fixture()
 def multivcf_ped(tmp_path_factory: pytest.TempPathFactory) -> str:
     root_path = tmp_path_factory.mktemp("multivcf")
     ped_path = setup_pedigree(root_path / "ped_data" / "in.ped", """
@@ -46,9 +48,9 @@ def multivcf_ped(tmp_path_factory: pytest.TempPathFactory) -> str:
     return str(ped_path)
 
 
-@pytest.fixture
+@pytest.fixture()
 def multivcf_missing(
-    tmp_path_factory: pytest.TempPathFactory
+    tmp_path_factory: pytest.TempPathFactory,
 ) -> List[str]:
     path_list = []
 
@@ -80,7 +82,7 @@ def multivcf_missing(
     """)  # noqa
 
     path_list.append(
-        str(root_path / "vcf_data" / "in_chr[vc].vcf.gz")
+        str(root_path / "vcf_data" / "in_chr[vc].vcf.gz"),
     )
 
     root_path = tmp_path_factory.mktemp("multivcf_missing2_chr1")
@@ -111,7 +113,7 @@ def multivcf_missing(
     """)  # noqa
 
     path_list.append(
-        str(root_path / "vcf_data" / "in_chr[vc].vcf.gz")
+        str(root_path / "vcf_data" / "in_chr[vc].vcf.gz"),
     )
 
     return path_list
@@ -120,7 +122,7 @@ def multivcf_missing(
 def test_wild_vcf_loader_simple(
     multivcf_ped: str,
     multivcf_missing: List[str],
-    gpf_instance: GPFInstance
+    gpf_instance: GPFInstance,
 ) -> None:
     ped_file = multivcf_ped
 
@@ -131,7 +133,7 @@ def test_wild_vcf_loader_simple(
         families,
         [multivcf_missing[0], multivcf_missing[1]],
         gpf_instance.reference_genome,
-        params={"vcf_chromosomes": "1;2", },
+        params={"vcf_chromosomes": "1;2"},
     )
     assert variants_loader is not None
 

@@ -1,6 +1,6 @@
 from django.contrib.auth import get_user_model
-from django.core.management.base import BaseCommand, CommandError
 from django.core.management import call_command
+from django.core.management.base import BaseCommand, CommandError
 
 
 class Command(BaseCommand):
@@ -13,7 +13,7 @@ class Command(BaseCommand):
         UserModel = get_user_model()
         try:
             call_command(
-                "changepassword", username=options["email"], stdout=self.stdout
+                "changepassword", username=options["email"], stdout=self.stdout,
             )
             user = UserModel.objects.get(email=options["email"])
             user.is_active = True
@@ -21,7 +21,7 @@ class Command(BaseCommand):
             print(
                 "\033[92m"
                 + "Successfully changed the user's password."
-                + "\033[0m"
+                + "\033[0m",
             )
         except UserModel.DoesNotExist:
             raise CommandError("User not found")

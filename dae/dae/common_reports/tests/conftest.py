@@ -1,6 +1,5 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import os
-
 from typing import Callable, List
 
 import pytest
@@ -17,7 +16,7 @@ def fixtures_dir() -> str:
 
 @pytest.fixture(scope="session")
 def local_gpf_instance(
-    gpf_instance: Callable[[str], GPFInstance]
+    gpf_instance: Callable[[str], GPFInstance],
 ) -> GPFInstance:
     return gpf_instance(
         os.path.join(fixtures_dir(), "gpf_instance.yaml"))
@@ -47,7 +46,7 @@ def genotype_data_group1(local_gpf_instance: GPFInstance) -> GenotypeData:
 
 @pytest.fixture(scope="session")
 def denovo_variants_ds1(
-    genotype_data_group1: GenotypeData
+    genotype_data_group1: GenotypeData,
 ) -> List[FamilyVariant]:
     denovo_variants = list(
         genotype_data_group1.query_variants(
@@ -58,18 +57,18 @@ def denovo_variants_ds1(
     return denovo_variants
 
 
-@pytest.fixture
+@pytest.fixture()
 def phenotype_role_collection(
-    study1: GenotypeData
+    study1: GenotypeData,
 ) -> PersonSetCollection:
     collection = study1.get_person_set_collection("phenotype")
     assert collection is not None
     return collection
 
 
-@pytest.fixture
+@pytest.fixture()
 def phenotype_role_sets(
-    phenotype_role_collection: PersonSetCollection
+    phenotype_role_collection: PersonSetCollection,
 ) -> List[PersonSet]:
     person_sets = []
     for person_set in phenotype_role_collection.person_sets.values():

@@ -2,18 +2,15 @@
 import pathlib
 import textwrap
 
+import polars as pl
 import pytest
 
-import polars as pl
-
+from dae.enrichment_tool.build_coding_length_enrichment_background import cli
 from dae.genomic_resources.testing import setup_directories
-
 from dae.testing.t4c8_import import t4c8_genes
 
-from dae.enrichment_tool.build_coding_length_enrichment_background import cli
 
-
-@pytest.fixture
+@pytest.fixture()
 def grr_fixture(tmp_path: pathlib.Path) -> pathlib.Path:
     t4c8_genes(tmp_path / "grr")
     setup_directories(tmp_path, {
@@ -21,7 +18,7 @@ def grr_fixture(tmp_path: pathlib.Path) -> pathlib.Path:
         id: t4c8_genes_testing
         type: dir
         directory: {tmp_path / "grr"}
-        """)
+        """),
     })
 
     return tmp_path / "grr_definition.yaml"

@@ -1,8 +1,10 @@
 from __future__ import annotations
-import time
+
 import logging
+import time
+from collections.abc import Iterable
 from copy import deepcopy
-from typing import Any, Dict, List, Union, cast, Iterable
+from typing import Any, Dict, List, Union, cast
 
 import numpy as np
 
@@ -10,7 +12,6 @@ from dae.effect_annotation.effect import EffectTypesMixin
 from dae.person_sets import PersonSet, PersonSetCollection
 from dae.studies.study import GenotypeData
 from dae.variants.family_variant import FamilyAllele, FamilyVariant
-
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +43,7 @@ class EffectCell:  # pylint: disable=too-many-instance-attributes
         logger.info(
             "DENOVO REPORTS: persons set %s children %s",
             self.person_set,
-            len(self.person_set_children)
+            len(self.person_set_children),
         )
 
     @property
@@ -64,7 +65,7 @@ class EffectCell:  # pylint: disable=too-many-instance-attributes
         if self.number_of_children_with_event == 0:
             return 0
         return self.number_of_children_with_event / len(
-            self.person_set_children
+            self.person_set_children,
         )
 
     @property
@@ -87,7 +88,7 @@ class EffectCell:  # pylint: disable=too-many-instance-attributes
 
     def count_variant(
         self, family_variant: FamilyVariant,
-        family_allele: FamilyAllele
+        family_allele: FamilyAllele,
     ) -> None:
         """Count given variant in the cell data."""
         if not set(family_allele.variant_in_members) & \
@@ -102,7 +103,7 @@ class EffectCell:  # pylint: disable=too-many-instance-attributes
                     family_allele,
                     family_allele.variant_in_members,
                     self.person_set.id,
-                    variant_in_members
+                    variant_in_members,
                 )
             return
         if not family_allele.effects:
@@ -171,7 +172,7 @@ class DenovoReportTable:
     """Class representing a denovo report table JSON."""
 
     def __init__(
-        self, json: dict[str, Any]
+        self, json: dict[str, Any],
     ) -> None:
         self.rows = json["rows"]
         self.group_name = json["group_name"]
@@ -185,7 +186,7 @@ class DenovoReportTable:
         denovo_variants: Iterable[FamilyVariant],
         effect_groups: list[str],
         effect_types: list[str],
-        person_set_collection: PersonSetCollection
+        person_set_collection: PersonSetCollection,
     ) -> DenovoReportTable:
         """Construct a denovo report table from variants."""
         person_sets = []
@@ -213,13 +214,13 @@ class DenovoReportTable:
             map(
                 all,
                 np.array(
-                    [effect_row.get_empty() for effect_row in effect_rows]
+                    [effect_row.get_empty() for effect_row in effect_rows],
                 ).T,
-            )
+            ),
         )
 
         effect_rows_empty_columns_index = list(
-            np.where(effect_rows_empty_columns)[0]
+            np.where(effect_rows_empty_columns)[0],
         )
 
         for index in sorted(effect_rows_empty_columns_index, reverse=True):
@@ -237,7 +238,7 @@ class DenovoReportTable:
                 except ValueError:
                     pass
         effect_rows = list(filter(
-            lambda effect_row: not effect_row.is_row_empty(), effect_rows
+            lambda effect_row: not effect_row.is_row_empty(), effect_rows,
         ))
 
         rows = effect_rows
@@ -263,7 +264,7 @@ class DenovoReportTable:
             "group_name": person_set_collection.name,
             "columns": columns,
             "effect_groups": effect_groups,
-            "effect_types": effect_types
+            "effect_types": effect_types,
         })
 
     def to_dict(self) -> dict[str, Any]:
@@ -299,7 +300,7 @@ class DenovoReport:
     @staticmethod
     def from_genotype_study(
         genotype_data: GenotypeData,
-        person_set_collections: List[PersonSetCollection]
+        person_set_collections: List[PersonSetCollection],
     ) -> DenovoReport:
         """Create a denovo report JSON from a genotype data study."""
         config = genotype_data.config.common_report
@@ -320,18 +321,18 @@ class DenovoReport:
                     denovo_variants,
                     deepcopy(effect_groups),
                     deepcopy(effect_types),
-                    psc
+                    psc,
                 )
                 if not denovo_report_table.is_empty():
                     denovo_report_tables.append(denovo_report_table)
 
         elapsed = time.time() - start
         logger.info(
-            "DENOVO REPORTS build in %.2f sec", elapsed
+            "DENOVO REPORTS build in %.2f sec", elapsed,
         )
 
         return DenovoReport({
-            "tables": [t.to_dict() for t in denovo_report_tables]
+            "tables": [t.to_dict() for t in denovo_report_tables],
         })
 
     def to_dict(self) -> dict[str, Any]:

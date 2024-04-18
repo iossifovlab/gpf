@@ -6,7 +6,6 @@ import numpy.typing as npt
 from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.variants.attributes import Sex
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -19,7 +18,7 @@ def mat2str(mat: np.ndarray, col_sep: str = "", row_sep: str = "/") -> str:
         [
             col_sep.join([str(n) if n >= 0 else "?" for n in mat[i, :]])
             for i in range(mat.shape[0])
-        ]
+        ],
     )
 
 

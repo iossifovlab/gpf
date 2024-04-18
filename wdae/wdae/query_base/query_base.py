@@ -1,11 +1,8 @@
 """Module containing the base view for data-related views."""
-from rest_framework import views  # type: ignore
-
-from django.contrib.auth.models import User
-
-from gpf_instance.gpf_instance import get_wgpf_instance, recreated_dataset_perm
 from datasets_api.permissions import IsDatasetAllowed
-
+from django.contrib.auth.models import User
+from gpf_instance.gpf_instance import get_wgpf_instance, recreated_dataset_perm
+from rest_framework import views  # type: ignore
 from utils.authentication import GPFOAuth2Authentication
 
 

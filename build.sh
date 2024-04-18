@@ -206,19 +206,19 @@ EOT
         pip install -e .'
     done
 
-    # flake8
+    # ruff
     build_run_detached bash -c '
-      cd /wd; 
-      /opt/conda/bin/conda run --no-capture-output -n gpf flake8 \
+      cd /wd;
+      /opt/conda/bin/conda run --no-capture-output -n gpf ruff check \
         --exit-zero \
-        --format=pylint \
-        --output-file=/wd/results/flake8_report . || true'
+        --output-format=pylint \
+        --output-file=/wd/results/ruff_report . || true'
 
     # pylint
     build_run_detached bash -c '
-      cd /wd/; 
+      cd /wd/;
       wdae_files=$(find wdae/wdae -name "*.py");
-      /opt/conda/bin/conda run --no-capture-output -n gpf 
+      /opt/conda/bin/conda run --no-capture-output -n gpf
       pylint dae/dae impala_storage/impala_storage  $wdae_files -f parseable --reports=no -j 4 \
           --exit-zero > /wd/results/pylint_gpf_report || true'
 
@@ -280,17 +280,15 @@ EOT
 
     build_run_container wait
 
-      build_run_local cp ./results/mypy_dae_report \
-        ./results/mypy_dae_tests_report \
-        ./results/mypy_wdae_report \
-        ./results/mypy_impala_report \
-        ./results/mypy_impala2_report \
-        ./results/mypy_gcp_report \
-        ./test-results/
-
-    build_run_local cp ./results/flake8_report ./test-results/
-    build_run_local cp ./results/pylint_gpf_report ./test-results/
-    build_run_local cp ./results/mypy_dae_report ./results/mypy_dae_tests_report ./results/mypy_wdae_report ./results/mypy_impala_report ./results/mypy_impala2_report ./test-results/
+    build_run_local cp ./results/mypy_dae_report \
+      ./results/mypy_dae_tests_report \
+      ./results/mypy_wdae_report \
+      ./results/mypy_impala_report \
+      ./results/mypy_impala2_report \
+      ./results/mypy_gcp_report \
+      ./results/ruff_report \
+      ./results/pylint_gpf_report \
+      ./test-results/
   }
 
   build_stage "Tests"
@@ -489,7 +487,7 @@ EOT
     build_run bash -c '
       echo "# pylint: skip-file" > BUILD
       echo "# type: ignore" >> BUILD
-      echo "# flake8: noqa" >> BUILD
+      echo "# ruff: noqa" >> BUILD
       echo "VERSION = \"'"${gpf_version}"'\"" >> BUILD
       echo "GIT_DESCRIBE = \"'"${gpf_git_describe}"'\"" >> BUILD
       echo "GIT_BRANCH = \"'"${gpf_git_branch}"'\"" >> BUILD

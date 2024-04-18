@@ -1,5 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 from inspect import isgenerator
+
 import pytest
 
 from dae.utils.dae_utils import split_iterable

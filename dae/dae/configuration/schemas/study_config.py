@@ -1,8 +1,5 @@
-from dae.configuration.utils import \
-    validate_existing_path, \
-    validate_path
-
 from dae.configuration.schemas.person_sets import person_set_collections_schema
+from dae.configuration.utils import validate_existing_path, validate_path
 
 phenotype_schema = {
     "type": "dict",
@@ -19,7 +16,7 @@ genotype_column_schema = {
         "name": {"type": "string"},
         "source": {"type": "string"},
         "format": {"type": "string", "default": "%s"},
-    }
+    },
 }
 
 phenotype_column_schema = {
@@ -29,7 +26,7 @@ phenotype_column_schema = {
         "source": {"type": "string"},
         "format": {"type": "string", "default": "%s"},
         "role": {"type": "string"},
-    }
+    },
 }
 
 column_group_schema = {
@@ -37,7 +34,7 @@ column_group_schema = {
     "schema": {
         "name": {"type": "string"},
         "columns": {"type": "list", "schema": {"type": "string"}},
-    }
+    },
 }
 
 background_model_schema = {
@@ -66,7 +63,7 @@ person_filters_schema = {
     "source": {"type": "string"},
     "source_type": {
         "type": "string",
-        "allowed": ["continuous", "categorical"]
+        "allowed": ["continuous", "categorical"],
     },
     "filter_type": {"type": "string"},
 }
@@ -84,13 +81,13 @@ genotype_browser_schema = {
         "has_family_structure_filter": {
             "type": "boolean",
             "dependencies": {
-                "has_family_filters": [True]
-            }
+                "has_family_filters": [True],
+            },
         },
         "has_person_filters": {"type": "boolean"},
         "has_study_filters": {
             "type": "boolean",
-            "depends_global": "studies"
+            "depends_global": "studies",
         },
         "has_present_in_child": {"type": "boolean"},
         "has_present_in_parent": {"type": "boolean"},
@@ -119,29 +116,29 @@ genotype_browser_schema = {
                     "type": "dict",
                     "valuesrules": phenotype_column_schema,
                 },
-            }
+            },
         },
         "column_groups": {
             "type": "dict",
             "valuesrules": column_group_schema,
         },
         "preview_columns": {
-            "type": "list", "schema": {"type": "string"}
+            "type": "list", "schema": {"type": "string"},
         },
         "preview_columns_ext": {
-            "type": "list", "schema": {"type": "string"}
+            "type": "list", "schema": {"type": "string"},
         },
         "download_columns": {
-            "type": "list", "schema": {"type": "string"}
+            "type": "list", "schema": {"type": "string"},
         },
         "download_columns_ext": {
-            "type": "list", "schema": {"type": "string"}
+            "type": "list", "schema": {"type": "string"},
         },
         "summary_preview_columns": {
-            "type": "list", "schema": {"type": "string"}
+            "type": "list", "schema": {"type": "string"},
         },
         "summary_download_columns": {
-            "type": "list", "schema": {"type": "string"}
+            "type": "list", "schema": {"type": "string"},
         },
         "person_filters": {
             "type": "dict",
@@ -169,8 +166,8 @@ genotype_browser_schema = {
         },
         "max_variants_count": {
             "type": "integer",
-            "default": 1000
-        }
+            "default": 1000,
+        },
     },
 }
 
@@ -300,7 +297,7 @@ study_config_schema = {
     "description_file": {
         "type": "string",
         "coerce": "abspath",
-        "default": "description.md"
+        "default": "description.md",
     },
     "description_editable": {"type": "boolean", "default": True},
     "study_type": {"type": "list", "schema": {"type": "string"}},
@@ -326,7 +323,7 @@ study_config_schema = {
     "studies": {
         "type": "list",
         "schema": {"type": "string"},
-        "excludes": "genotype_storage"
+        "excludes": "genotype_storage",
     },
     "genotype_browser": genotype_browser_schema,
     "common_report": {
@@ -337,11 +334,11 @@ study_config_schema = {
                 "type": "dict",
                 "schema": {
                     "denovo_report": {
-                        "type": "list", "schema": {"type": "string"}
+                        "type": "list", "schema": {"type": "string"},
                     },
                     "family_report": {
-                        "type": "list", "schema": {"type": "string"}
-                    }
+                        "type": "list", "schema": {"type": "string"},
+                    },
                 },
                 "default": {},
             },
@@ -390,8 +387,8 @@ study_config_schema = {
                     "schema": {
                         "segments": {
                             "type": "dict",
-                            "valuesrules": {"type": "string"}
-                        }
+                            "valuesrules": {"type": "string"},
+                        },
                     },
                 },
                 "default": {
@@ -400,16 +397,16 @@ study_config_schema = {
                             "LGDs": "LGDs",
                             "Missense": "missense",
                             "Synonymous": "synonymous",
-                        }
+                        },
                     },
                     "sexes": {
                         "segments": {
                             "Female": "F",
                             "Male": "M",
                             "Unspecified": "U",
-                        }
-                    }
-                }
+                        },
+                    },
+                },
             },
             "recurrency_criteria": {
                 "type": "dict",
@@ -420,10 +417,10 @@ study_config_schema = {
                             "type": "dict",
                             "schema": {
                                 "start": {"type": "integer"},
-                                "end": {"type": "integer"}
+                                "end": {"type": "integer"},
                             },
                         },
-                    }
+                    },
                 },
                 "default": {
                     "segments": {
@@ -438,9 +435,9 @@ study_config_schema = {
                         "Recurrent": {
                             "start": 2,
                             "end": -1,
-                        }
-                    }
-                }
+                        },
+                    },
+                },
             },
             "gene_sets_names": {"type": "list", "schema": {"type": "string"}},
         },

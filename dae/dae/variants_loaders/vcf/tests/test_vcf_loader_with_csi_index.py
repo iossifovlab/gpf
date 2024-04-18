@@ -1,12 +1,18 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
 
-from dae.testing import setup_pedigree, setup_vcf, \
-    setup_genome, setup_empty_gene_models, setup_gpf_instance
-from dae.variants_loaders.vcf.loader import VcfLoader
+from dae.genomic_resources.repository_factory import (
+    build_genomic_resource_repository,
+)
 from dae.pedigrees.loader import FamiliesLoader
-from dae.genomic_resources.repository_factory import \
-    build_genomic_resource_repository
+from dae.testing import (
+    setup_empty_gene_models,
+    setup_genome,
+    setup_gpf_instance,
+    setup_pedigree,
+    setup_vcf,
+)
+from dae.variants_loaders.vcf.loader import VcfLoader
 
 
 @pytest.fixture(scope="module")
@@ -22,14 +28,14 @@ def import_vcf_data(tmp_path_factory):
         {25 * "ACGT"}
         >HLA-B*27:05:18
         {25 * "ACGT"}
-        """
+        """,
     )
     setup_empty_gene_models(
         root_path / "acgt_gpf" / "empty_gene_models" / "empty_genes.txt")
     local_repo = build_genomic_resource_repository({
         "id": "acgt_local",
         "type": "directory",
-        "directory": str(root_path / "acgt_gpf")
+        "directory": str(root_path / "acgt_gpf"),
     })
 
     gpf_instance = setup_gpf_instance(

@@ -48,5 +48,5 @@ class GPStatistic:
             "geneSymbol": self.gene_symbol,
             "geneSets": self.gene_sets,
             "genomicScores": self._scores_to_json(),
-            "studies": self._variant_counts_to_json()
+            "studies": self._variant_counts_to_json(),
         }

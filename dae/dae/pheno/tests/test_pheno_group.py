@@ -1,11 +1,11 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,too-many-lines
 from typing import Optional
 
-import pytest
 import pandas as pd
+import pytest
 
-from dae.pheno.registry import PhenoRegistry
 from dae.pheno.pheno_data import PhenotypeGroup
+from dae.pheno.registry import PhenoRegistry
 from dae.variants.attributes import Role
 
 
@@ -43,7 +43,7 @@ def test_pheno_group_get_persons_df(
     fake_group: PhenotypeGroup,
     roles: Optional[set[Role]],
     family_ids: Optional[set[str]],
-    person_ids: Optional[set[str]]
+    person_ids: Optional[set[str]],
 ) -> None:
     fake = fake_group.phenotype_data[0]
     ped_df = fake.get_persons_df(
@@ -75,7 +75,7 @@ def test_pheno_group_get_persons(
     fake_group: PhenotypeGroup,
     roles: Optional[set[Role]],
     family_ids: Optional[set[str]],
-    person_ids: Optional[set[str]]
+    person_ids: Optional[set[str]],
 ) -> None:
 
     persons = fake_group.get_persons(
@@ -92,7 +92,7 @@ def test_pheno_group_get_persons(
 
 @pytest.mark.skip(reason="Groups are unused")
 def test_pheno_group_instruments_and_measures(
-    fake_group: PhenotypeGroup
+    fake_group: PhenotypeGroup,
 ) -> None:
     assert "i1" in fake_group.instruments, fake_group.instruments
     assert "i2" in fake_group.instruments, fake_group.instruments
@@ -123,7 +123,7 @@ def test_pheno_group_instruments_and_measures(
 def test_pheno_group_get_people_measure_values_df(
     fake_group: PhenotypeGroup, roles: Optional[list[str]],
     family_ids: Optional[list[str]],
-    person_ids: Optional[list[str]]
+    person_ids: Optional[list[str]],
 ) -> None:
     df = fake_group.get_people_measure_values_df(
         ["i1.iq"], person_ids=person_ids,
@@ -132,7 +132,7 @@ def test_pheno_group_get_people_measure_values_df(
 
     expected = pd.DataFrame({
         "person_id": ["f1.p1"],
-        "i1.iq": [86.41]
+        "i1.iq": [86.41],
     })
     pd.testing.assert_frame_equal(df, expected, atol=1e-2)
 
@@ -152,7 +152,7 @@ def test_pheno_group_get_people_measure_values(
     fake_group: PhenotypeGroup,
     roles: Optional[list[str]],
     family_ids: Optional[list[str]],
-    person_ids: Optional[list[str]]
+    person_ids: Optional[list[str]],
 ) -> None:
     res = fake_group.get_people_measure_values(
         ["i1.iq"], person_ids=person_ids,
@@ -208,7 +208,7 @@ def test_pheno_group_i1_get_values_df(
     fake_group: PhenotypeGroup,
     roles: Optional[set[Role]],
     family_ids: Optional[set[str]],
-    person_ids: Optional[set[str]]
+    person_ids: Optional[set[str]],
 ) -> None:
 
     df = fake_group.get_values_df(  # type: ignore
@@ -218,7 +218,7 @@ def test_pheno_group_i1_get_values_df(
 
     expected = pd.DataFrame({
         "person_id": ["f1.p1"],
-        "i1.iq": [86.41]
+        "i1.iq": [86.41],
     })
     pd.testing.assert_frame_equal(df, expected, atol=1e-2)
 
@@ -237,7 +237,7 @@ def test_pheno_group_i2_get_values_df(
     fake_group: PhenotypeGroup,
     roles: Optional[set[Role]],
     family_ids: Optional[set[str]],
-    person_ids: Optional[set[str]]
+    person_ids: Optional[set[str]],
 ) -> None:
 
     df = fake_group.get_values_df(  # type: ignore
@@ -247,7 +247,7 @@ def test_pheno_group_i2_get_values_df(
 
     expected = pd.DataFrame({
         "person_id": ["f1.p1"],
-        "i2.iq": [86.41]
+        "i2.iq": [86.41],
     })
     pd.testing.assert_frame_equal(df, expected, atol=1e-2)
 
@@ -266,7 +266,7 @@ def test_pheno_group_i1_i2_get_values_df(
     fake_group: PhenotypeGroup,
     roles: Optional[set[Role]],
     family_ids: Optional[set[str]],
-    person_ids: Optional[set[str]]
+    person_ids: Optional[set[str]],
 ) -> None:
 
     df = fake_group.get_values_df(  # type: ignore
@@ -277,7 +277,7 @@ def test_pheno_group_i1_i2_get_values_df(
     expected = pd.DataFrame({
         "person_id": ["f1.p1"],
         "i1.iq": [86.41],
-        "i2.iq": [86.41]
+        "i2.iq": [86.41],
     })
     pd.testing.assert_frame_equal(df, expected, atol=1e-2)
 
@@ -296,7 +296,7 @@ def test_pheno_group_i1_i2_get_values(
     fake_group: PhenotypeGroup,
     roles: Optional[set[Role]],
     family_ids: Optional[set[str]],
-    person_ids: Optional[set[str]]
+    person_ids: Optional[set[str]],
 ) -> None:
 
     res = fake_group.get_values(  # type: ignore

@@ -5,19 +5,22 @@ from typing import Optional
 
 import pytest
 
-from dae.genomic_resources.testing import \
-    setup_directories, convert_to_tab_separated, setup_genome, \
-    build_filesystem_test_repository, setup_gzip
-
-from dae.genomic_resources.liftover_chain import \
-    build_liftover_chain_from_resource
-from dae.genomic_resources.repository import GenomicResourceRepo
-
-from dae.annotation.annotatable import Region, Position, CNVAllele, Annotatable
+from dae.annotation.annotatable import Annotatable, CNVAllele, Position, Region
 from dae.annotation.annotation_factory import build_annotation_pipeline
+from dae.genomic_resources.liftover_chain import (
+    build_liftover_chain_from_resource,
+)
+from dae.genomic_resources.repository import GenomicResourceRepo
+from dae.genomic_resources.testing import (
+    build_filesystem_test_repository,
+    convert_to_tab_separated,
+    setup_directories,
+    setup_genome,
+    setup_gzip,
+)
 
 
-@pytest.fixture
+@pytest.fixture()
 def fixture_repo(
         tmp_path_factory: pytest.TempPathFactory) -> GenomicResourceRepo:
     root_path = tmp_path_factory.mktemp("regions_effect_annotation")
@@ -40,7 +43,7 @@ def fixture_repo(
 
                 filename: liftover.chain.gz
             """),
-        }
+        },
     })
     setup_genome(
         root_path / "target_genome" / "genome.fa",
@@ -49,7 +52,7 @@ def fixture_repo(
             {25 * 'AGCT'}
             >chr2
             {25 * 'AGCT'}
-            """)
+            """),
     )
     setup_genome(
         root_path / "source_genome" / "genome.fa",
@@ -58,7 +61,7 @@ def fixture_repo(
             NNNN{12 * 'AGCT'}NNNN{12 * 'AGCT'}
             >2
             NNNN{12 * 'AGCT'}NNNN{12 * 'AGCT'}
-            """)
+            """),
     )
     setup_gzip(
         root_path / "liftover_chain" / "liftover.chain.gz",
@@ -69,7 +72,7 @@ def fixture_repo(
         chain||4900||1||48||+||55||103||chr1||48||+||48||96||2
         48 0 0
         0
-        """)
+        """),
     )
     return build_filesystem_test_repository(root_path)
 
@@ -102,7 +105,7 @@ def test_liftover_chain_fixture(
     (Region("1", 5, 53), None),
     (Region("1", 5, 56), Region("chr1", 1, 48)),
     (CNVAllele("1", 5, 56, CNVAllele.Type.LARGE_DELETION),
-     CNVAllele("chr1", 1, 48, CNVAllele.Type.LARGE_DELETION))
+     CNVAllele("chr1", 1, 48, CNVAllele.Type.LARGE_DELETION)),
 ])
 def test_liftover_annotator(
         annotatable: Annotatable,

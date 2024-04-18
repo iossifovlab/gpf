@@ -2,12 +2,12 @@
 
 import pytest
 
+from dae.annotation.annotation_factory import build_annotation_pipeline
 from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.genomic_resources.testing import build_inmemory_test_repository
-from dae.annotation.annotation_factory import build_annotation_pipeline
 
 
-@pytest.fixture
+@pytest.fixture()
 def genomic_resources_repo() -> GenomicResourceRepo:
     repo = build_inmemory_test_repository({
         "position_score1": {
@@ -45,7 +45,7 @@ def genomic_resources_repo() -> GenomicResourceRepo:
                 1      14972      14973    0.2      2    20
                 1      14974      14975    0.3      3    30
                 1      14976      14977    0.4      4    40
-            """
+            """,
         },
         "np_score1": {
             "genomic_resource.yaml":
@@ -76,8 +76,8 @@ def genomic_resources_repo() -> GenomicResourceRepo:
                 1      14972      T         A           0.1
                 1      14972      T         C           0.2
                 1      14972      T         G           0.4
-            """
-        }
+            """,
+        },
     })
 
     return repo

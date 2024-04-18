@@ -1,17 +1,18 @@
 from __future__ import annotations
+
 import abc
 import itertools
-
-from typing import Iterable, Union, Optional
+from collections.abc import Iterable
 from dataclasses import dataclass
+from typing import Optional, Union
 
-from dae.person_sets import ChildrenBySex
 from dae.enrichment_tool.genotype_helper import VariantEvent
+from dae.person_sets import ChildrenBySex
 
 
 def filter_denovo_one_event_per_family(
     variant_events: list[VariantEvent],
-    requested_effect_types: Iterable[str]
+    requested_effect_types: Iterable[str],
 ) -> list[list[str]]:
     """
     For each variant returns list of affected gene syms.
@@ -35,15 +36,14 @@ def filter_denovo_one_event_per_family(
         not_seen_genes = [gs for gs in syms if (ve.family_id + gs) not in seen]
         if not not_seen_genes:
             continue
-        for gene_sym in not_seen_genes:
-            seen.add(ve.family_id + gene_sym)
+        seen.update(ve.family_id + gene_sym for gene_sym in not_seen_genes)
         res.append(not_seen_genes)
     return res
 
 
 def get_sym_2_fn(
     variant_events: list[VariantEvent],
-    requested_effect_types: Iterable[str]
+    requested_effect_types: Iterable[str],
 ) -> dict[str, int]:
     """Count the number of requested effect types events in genes."""
     gn_sorted = sorted(
@@ -69,7 +69,7 @@ def get_sym_2_fn(
 
 def filter_denovo_one_gene_per_recurrent_events(
     variant_events: list[VariantEvent],
-    requsted_effect_types: Iterable[str]
+    requsted_effect_types: Iterable[str],
 ) -> list[list[str]]:
     """Collect only events that occur in more than one family."""
     sym_2_fn = get_sym_2_fn(variant_events, requsted_effect_types)
@@ -78,7 +78,7 @@ def filter_denovo_one_gene_per_recurrent_events(
 
 
 def filter_denovo_one_gene_per_events(
-    variant_events: list[VariantEvent], requested_effect_types: Iterable[str]
+    variant_events: list[VariantEvent], requested_effect_types: Iterable[str],
 ) -> list[list[str]]:
     sym_2_fn = get_sym_2_fn(variant_events, requested_effect_types)
     res = [[gs] for gs, _fn in list(sym_2_fn.items())]
@@ -121,7 +121,7 @@ class EventCountersResult:
             len(events.rec),
             len(events.male),
             len(events.female),
-            len(events.unspecified)
+            len(events.unspecified),
         )
 
 
@@ -182,7 +182,7 @@ def filter_overlapping_events(
 
 
 def overlap_enrichment_result_dict(
-    events_counts: EventsResult, gene_syms: Iterable[str]
+    events_counts: EventsResult, gene_syms: Iterable[str],
 ) -> EventsResult:
     """Calculate the overlap between all events and requested gene syms."""
     gene_syms_upper = [gs.upper() for gs in gene_syms]
@@ -198,7 +198,7 @@ def overlap_enrichment_result_dict(
 
 def overlap_event_counts(
     events_counts: EventsResult,
-    gene_syms: Iterable[str]
+    gene_syms: Iterable[str],
 ) -> EventCountersResult:
     overlapped_events = overlap_enrichment_result_dict(
         events_counts, gene_syms)
@@ -222,14 +222,14 @@ class CounterBase(abc.ABC):
     def events(
         self, variant_events: list[VariantEvent],
         children_by_sex: ChildrenBySex,
-        effect_types: Iterable[str]
+        effect_types: Iterable[str],
     ) -> EventsResult:
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def event_counts(
         self, variant_events: list[VariantEvent],
         children_by_sex: ChildrenBySex,
-        effect_types: Iterable[str]
+        effect_types: Iterable[str],
     ) -> EventCountersResult:
         """Calculate the event counts from the given variant events.
 
@@ -252,12 +252,12 @@ class CounterBase(abc.ABC):
             len(events_result.rec),
             len(events_result.male),
             len(events_result.female),
-            len(events_result.unspecified)
+            len(events_result.unspecified),
         )
 
     def select_events_in_person_set(
         self, variant_events: list[VariantEvent],
-        persons: set[tuple[str, str]]
+        persons: set[tuple[str, str]],
     ) -> list[VariantEvent]:
         """Select variant events that occur in the passed persons."""
         return [
@@ -293,7 +293,7 @@ class CounterBase(abc.ABC):
             [],
             self.select_events_in_person_set(variant_events, male),
             self.select_events_in_person_set(variant_events, female),
-            self.select_events_in_person_set(variant_events, unspecified)
+            self.select_events_in_person_set(variant_events, unspecified),
         )
 
 
@@ -306,23 +306,23 @@ class EventsCounter(CounterBase):
     def events(
         self, variant_events: list[VariantEvent],
         children_by_sex: ChildrenBySex,
-        effect_types: Iterable[str]
+        effect_types: Iterable[str],
     ) -> EventsResult:
         events_result = self.split_events(variant_events, children_by_sex)
         all_events = filter_denovo_one_event_per_family(
-            events_result.all, effect_types
+            events_result.all, effect_types,
         )
         rec_events = filter_denovo_one_gene_per_recurrent_events(
-            events_result.all, effect_types
+            events_result.all, effect_types,
         )
         male_events = filter_denovo_one_event_per_family(
-            events_result.male, effect_types
+            events_result.male, effect_types,
         )
         female_events = filter_denovo_one_event_per_family(
-            events_result.female, effect_types
+            events_result.female, effect_types,
         )
         unspecified_events = filter_denovo_one_event_per_family(
-            events_result.unspecified, effect_types
+            events_result.unspecified, effect_types,
         )
 
         return EventsResult(
@@ -343,25 +343,25 @@ class GeneEventsCounter(CounterBase):
     def events(
         self, variant_events: list[VariantEvent],
         children_by_sex: ChildrenBySex,
-        effect_types: Iterable[str]
+        effect_types: Iterable[str],
     ) -> EventsResult:
         """Count the events by sex and effect type."""
         events_result = self.split_events(variant_events, children_by_sex)
 
         all_events = filter_denovo_one_gene_per_events(
-            events_result.all, effect_types
+            events_result.all, effect_types,
         )
         rec_events = filter_denovo_one_gene_per_recurrent_events(
-            events_result.all, effect_types
+            events_result.all, effect_types,
         )
         male_events = filter_denovo_one_gene_per_events(
-            events_result.male, effect_types
+            events_result.male, effect_types,
         )
         female_events = filter_denovo_one_gene_per_events(
-            events_result.female, effect_types
+            events_result.female, effect_types,
         )
         unspecified_events = filter_denovo_one_gene_per_events(
-            events_result.unspecified, effect_types
+            events_result.unspecified, effect_types,
         )
 
         result = EventsResult(

@@ -2,14 +2,13 @@
 
 import pytest
 
-from dae.genotype_storage.genotype_storage_registry import \
-    get_genotype_storage_factory
-from dae.duckdb_storage.duckdb_genotype_storage import \
-    DuckDbGenotypeStorage
-
+from dae.duckdb_storage.duckdb_genotype_storage import DuckDbGenotypeStorage
+from dae.genotype_storage.genotype_storage_registry import (
+    get_genotype_storage_factory,
+)
+from dae.studies.study import GenotypeData
 from dae.testing import setup_pedigree, setup_vcf, vcf_study
 from dae.testing.foobar_import import foobar_gpf
-from dae.studies.study import GenotypeData
 
 
 @pytest.fixture(scope="session")
@@ -20,7 +19,7 @@ def duckdb_storage_config(
         "id": "dev_duckdb_storage",
         "storage_type": "duckdb",
         "db": "duckdb_storage/dev_storage.db",
-        "base_dir": str(storage_path)
+        "base_dir": str(storage_path),
     }
 
 

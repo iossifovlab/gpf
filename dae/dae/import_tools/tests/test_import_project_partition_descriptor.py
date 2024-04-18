@@ -1,9 +1,9 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-import textwrap
 import pathlib
+import textwrap
 
-from dae.testing import setup_directories, foobar_gpf
 from dae.import_tools.import_tools import ImportProject
+from dae.testing import foobar_gpf, setup_directories
 
 
 def test_import_project_parse_no_region_bins(tmp_path: pathlib.Path) -> None:
@@ -25,7 +25,7 @@ def test_import_project_parse_no_region_bins(tmp_path: pathlib.Path) -> None:
 
             destination:
               storage_type: schema2
-        """)
+        """),
     )
 
     config_fn = tmp_path / "import_project.yaml"
@@ -42,7 +42,7 @@ def test_import_project_parse_no_region_bins(tmp_path: pathlib.Path) -> None:
 
 
 def test_parse_region_bins_without_len(
-    tmp_path: pathlib.Path
+    tmp_path: pathlib.Path,
 ) -> None:
     setup_directories(
         tmp_path / "import_project.yaml", textwrap.dedent("""
@@ -62,7 +62,7 @@ def test_parse_region_bins_without_len(
 
             destination:
               storage_type: schema2
-        """)
+        """),
     )
 
     gpf = foobar_gpf(tmp_path / "foobar")

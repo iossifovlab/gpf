@@ -1,25 +1,29 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import os
-import textwrap
 import pathlib
+import textwrap
 from typing import Any
 
 import pytest
 import pytest_mock
 
-from dae.genomic_resources.repository import GenomicResource, GR_CONF_FILE_NAME
-from dae.genomic_resources.histogram import NumberHistogram, \
-    CategoricalHistogram
-from dae.genomic_resources.testing import \
-    setup_directories, build_filesystem_test_repository, \
-    setup_tabix
-from dae.genomic_resources.resource_implementation import \
-    GenomicResourceImplementation, ResourceStatistics
-
-from dae.genomic_resources.cli import cli_manage
 from dae.genomic_resources import register_implementation
-
-from dae.task_graph.graph import TaskGraph, Task
+from dae.genomic_resources.cli import cli_manage
+from dae.genomic_resources.histogram import (
+    CategoricalHistogram,
+    NumberHistogram,
+)
+from dae.genomic_resources.repository import GR_CONF_FILE_NAME, GenomicResource
+from dae.genomic_resources.resource_implementation import (
+    GenomicResourceImplementation,
+    ResourceStatistics,
+)
+from dae.genomic_resources.testing import (
+    build_filesystem_test_repository,
+    setup_directories,
+    setup_tabix,
+)
+from dae.task_graph.graph import Task, TaskGraph
 
 
 class SomeTestImplementation(GenomicResourceImplementation):
@@ -37,21 +41,21 @@ class SomeTestImplementation(GenomicResourceImplementation):
         return b"somehash"
 
     def add_statistics_build_tasks(
-        self, task_graph: TaskGraph, **kwargs: Any
+        self, task_graph: TaskGraph, **kwargs: Any,
     ) -> list[Task]:
         """Add tasks for calculating resource statistics to a task graph."""
         task = task_graph.create_task(
             "test_resource_sample_statistic",
             self._do_sample_statistic,
             [],
-            []
+            [],
         )
         return [task]
 
     def _do_sample_statistic(self) -> bool:
         proto = self.resource.proto
         with proto.open_raw_file(
-            self.resource, f"{self.STATISTICS_FOLDER}/somestat", mode="wt"
+            self.resource, f"{self.STATISTICS_FOLDER}/somestat", mode="wt",
         ) as outfile:
             outfile.write("test")
         return True
@@ -68,20 +72,20 @@ class SomeTestImplementation(GenomicResourceImplementation):
         return textwrap.dedent(
             """
             <h1>Test page</h1>
-            """
+            """,
         )
 
 
 class MockStatistics(ResourceStatistics):
     @staticmethod
     def build_statistics(
-        genomic_resource: GenomicResourceImplementation
+        genomic_resource: GenomicResourceImplementation,
     ) -> ResourceStatistics:
         return MockStatistics(genomic_resource.resource_id)
 
 
 def build_test_implementation(
-    resource: GenomicResource
+    resource: GenomicResource,
 ) -> SomeTestImplementation:
     return SomeTestImplementation(resource)
 
@@ -92,7 +96,7 @@ def register_test_implementation() -> None:
 
 
 def test_cli_stats(
-    tmp_path: pathlib.Path, register_test_implementation: None
+    tmp_path: pathlib.Path, register_test_implementation: None,
 ) -> None:
     setup_directories(tmp_path, {
         "one": {
@@ -100,7 +104,7 @@ def test_cli_stats(
                 type: test_resource
                 some_random_value: test
                 """,
-        }
+        },
     })
 
     repo = build_filesystem_test_repository(tmp_path)
@@ -114,7 +118,7 @@ def test_cli_stats(
     with open(statistic_path) as infile:
         assert infile.read() == "test"
     statistic_hash_path = os.path.join(
-        tmp_path, "one", "statistics", "stats_hash"
+        tmp_path, "one", "statistics", "stats_hash",
     )
     assert os.path.exists(statistic_hash_path)
     with open(statistic_hash_path) as infile:
@@ -141,8 +145,8 @@ def test_stats_allele_score(tmp_path: pathlib.Path) -> None:
                           min: 0.0
                           max: 1.0
                         y_log_scale: true
-                """
-        }
+                """,
+        },
     })
     setup_tabix(
         tmp_path / "one" / "data.txt.gz",
@@ -165,13 +169,13 @@ def test_stats_allele_score(tmp_path: pathlib.Path) -> None:
 
     cli_manage(["repo-stats", "-R", str(tmp_path), "-j", "1"])
     minmax_statistic_path = os.path.join(
-        tmp_path, "one", "statistics", "min_max_freq.yaml"
+        tmp_path, "one", "statistics", "min_max_freq.yaml",
     )
     histogram_statistic_path = os.path.join(
-        tmp_path, "one", "statistics", "histogram_freq.yaml"
+        tmp_path, "one", "statistics", "histogram_freq.yaml",
     )
     histogram_image_path = os.path.join(
-        tmp_path, "one", "statistics", "histogram_freq.yaml"
+        tmp_path, "one", "statistics", "histogram_freq.yaml",
     )
     assert not os.path.exists(minmax_statistic_path)
     assert os.path.exists(histogram_statistic_path)
@@ -222,8 +226,8 @@ def test_stats_position_score(tmp_path: pathlib.Path) -> None:
                         view_range:
                           min: 0.0
                           max: 4.0
-                """
-        }
+                """,
+        },
     })
     setup_tabix(
         tmp_path / "one" / "data.txt.gz",
@@ -242,22 +246,22 @@ def test_stats_position_score(tmp_path: pathlib.Path) -> None:
 
     cli_manage(["repo-stats", "-R", str(tmp_path), "-j", "1"])
     minmax_100way_path = os.path.join(
-        tmp_path, "one", "statistics", "min_max_phastCons100way.yaml"
+        tmp_path, "one", "statistics", "min_max_phastCons100way.yaml",
     )
     histogram_100way_path = os.path.join(
-        tmp_path, "one", "statistics", "histogram_phastCons100way.yaml"
+        tmp_path, "one", "statistics", "histogram_phastCons100way.yaml",
     )
     histogram_image_100way_path = os.path.join(
-        tmp_path, "one", "statistics", "histogram_phastCons100way.png"
+        tmp_path, "one", "statistics", "histogram_phastCons100way.png",
     )
     minmax_5way_path = os.path.join(
-        tmp_path, "one", "statistics", "min_max_phastCons5way.yaml"
+        tmp_path, "one", "statistics", "min_max_phastCons5way.yaml",
     )
     histogram_5way_path = os.path.join(
-        tmp_path, "one", "statistics", "histogram_phastCons5way.yaml"
+        tmp_path, "one", "statistics", "histogram_phastCons5way.yaml",
     )
     histogram_image_5way_path = os.path.join(
-        tmp_path, "one", "statistics", "histogram_phastCons5way.png"
+        tmp_path, "one", "statistics", "histogram_phastCons5way.png",
     )
     assert not os.path.exists(minmax_100way_path)
     assert os.path.exists(histogram_100way_path)
@@ -319,8 +323,8 @@ def test_stats_np_score(tmp_path: pathlib.Path) -> None:
                         view_range:
                           min: 0.0
                           max: 4.0
-            """
-        }
+            """,
+        },
     })
     setup_tabix(
         tmp_path / "one" / "data.txt.gz",
@@ -343,22 +347,22 @@ def test_stats_np_score(tmp_path: pathlib.Path) -> None:
 
     cli_manage(["repo-stats", "-R", str(tmp_path), "-j", "1"])
     minmax_cadd_raw_path = os.path.join(
-        tmp_path, "one", "statistics", "min_max_cadd_raw.yaml"
+        tmp_path, "one", "statistics", "min_max_cadd_raw.yaml",
     )
     histogram_cadd_raw_path = os.path.join(
-        tmp_path, "one", "statistics", "histogram_cadd_raw.yaml"
+        tmp_path, "one", "statistics", "histogram_cadd_raw.yaml",
     )
     histogram_image_cadd_raw_path = os.path.join(
-        tmp_path, "one", "statistics", "histogram_cadd_raw.png"
+        tmp_path, "one", "statistics", "histogram_cadd_raw.png",
     )
     minmax_cadd_test_path = os.path.join(
-        tmp_path, "one", "statistics", "min_max_cadd_test.yaml"
+        tmp_path, "one", "statistics", "min_max_cadd_test.yaml",
     )
     histogram_cadd_test_path = os.path.join(
-        tmp_path, "one", "statistics", "histogram_cadd_test.yaml"
+        tmp_path, "one", "statistics", "histogram_cadd_test.yaml",
     )
     histogram_image_cadd_test_path = os.path.join(
-        tmp_path, "one", "statistics", "histogram_cadd_test.png"
+        tmp_path, "one", "statistics", "histogram_cadd_test.png",
     )
     assert not os.path.exists(minmax_cadd_raw_path)
     assert os.path.exists(histogram_cadd_raw_path)
@@ -387,7 +391,7 @@ def test_stats_np_score(tmp_path: pathlib.Path) -> None:
 
 
 def test_reference_genome_usage(
-    tmp_path: pathlib.Path, mocker: pytest_mock.MockerFixture
+    tmp_path: pathlib.Path, mocker: pytest_mock.MockerFixture,
 ) -> None:
     setup_directories(tmp_path, {
         "one": {
@@ -410,7 +414,7 @@ def test_reference_genome_usage(
                 meta:
                     labels:
                         reference_genome: genome
-            """
+            """,
         },
         "genome": {
             GR_CONF_FILE_NAME: """
@@ -435,9 +439,9 @@ def test_reference_genome_usage(
                 1	30	3	10	11
                 2	30	39	10	11
                 3	30	75	10	11
-            """)
+            """),
 
-        }
+        },
     })
     setup_tabix(
         tmp_path / "one" / "data.txt.gz",
@@ -460,11 +464,11 @@ def test_reference_genome_usage(
     mocker.patch(
         "dae.genomic_resources.reference_genome"
         ".ReferenceGenome.get_chrom_length",
-        new=ref_genome_length_mock
+        new=ref_genome_length_mock,
     )
     assert ref_genome_length_mock.call_count == 0
     cli_manage([
-        "resource-stats", "-r", "one", "-R", str(tmp_path), "-j", "1"
+        "resource-stats", "-r", "one", "-R", str(tmp_path), "-j", "1",
     ])
     assert ref_genome_length_mock.call_count == 6
 
@@ -472,14 +476,14 @@ def test_reference_genome_usage(
     mocker.patch(
         "dae.genomic_resources.repository."
         "GenomicResource.get_labels",
-        new=labels_mock
+        new=labels_mock,
     )
 
     genomic_table_length_mock = mocker.Mock(return_value=30)
     mocker.patch(
         "dae.genomic_resources.implementations."
         "genomic_scores_impl.get_chromosome_length_tabix",
-        new=genomic_table_length_mock
+        new=genomic_table_length_mock,
     )
 
     os.remove(os.path.join(tmp_path, "one", "statistics", "stats_hash"))
@@ -487,7 +491,7 @@ def test_reference_genome_usage(
     assert genomic_table_length_mock.call_count == 0
 
     cli_manage([
-        "resource-stats", "-r", "one", "-R", str(tmp_path), "-j", "1"
+        "resource-stats", "-r", "one", "-R", str(tmp_path), "-j", "1",
     ])
 
     assert genomic_table_length_mock.call_count == 6
@@ -510,8 +514,8 @@ def test_stats_categorical(tmp_path: pathlib.Path) -> None:
                       histogram:
                         type: categorical
                         value_order: []
-                """
-        }
+                """,
+        },
     })
     setup_tabix(
         tmp_path / "one" / "data.txt.gz",
@@ -531,7 +535,7 @@ def test_stats_categorical(tmp_path: pathlib.Path) -> None:
     cli_manage(["repo-stats", "-R", str(tmp_path), "-j", "1"])
 
     histogram_statistic_path = os.path.join(
-        tmp_path, "one", "statistics", "histogram_some_stat.yaml"
+        tmp_path, "one", "statistics", "histogram_some_stat.yaml",
     )
 
     with open(histogram_statistic_path, "r") as infile:

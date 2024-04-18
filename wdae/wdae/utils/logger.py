@@ -1,9 +1,8 @@
 import logging
 from functools import wraps
-from typing import Callable, Union, Any
+from typing import Any, Callable, Union
 
 from django.core.handlers.wsgi import WSGIRequest
-
 from rest_framework.request import Request
 
 # LOGGER = logging.getLogger("wdae.api")
@@ -11,7 +10,7 @@ from rest_framework.request import Request
 
 def log_filter(
     request: Union[Request, WSGIRequest],
-    message: str, *args: Any
+    message: str, *args: Any,
 ) -> str:
     """Filter request info for logging."""
     if len(args) > 0:

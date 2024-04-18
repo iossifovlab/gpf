@@ -1,46 +1,59 @@
 from __future__ import annotations
 
-from typing import Iterator, Generator, Any
-from typing import Tuple, Type, Union, Optional, cast
-
-import json
 import base64
+import json
 import logging
+from collections.abc import Generator, Iterator
+from typing import Any, Optional, Tuple, Type, Union, cast
 
 import django.contrib.auth
 from django import forms
-from django.db import IntegrityError, models
-from django.contrib.auth import get_user_model, authenticate, login
-from django.contrib.auth.models import BaseUserManager
-from django.views.decorators.csrf import ensure_csrf_cookie
 from django.conf import settings
-from django.http.response import HttpResponse, StreamingHttpResponse, \
-    HttpResponseRedirect
-from django.db.models import Q
-from django.shortcuts import redirect, render
+from django.contrib.auth import authenticate, get_user_model, login
+from django.contrib.auth.models import BaseUserManager
 from django.core.exceptions import ObjectDoesNotExist
-
-from rest_framework.decorators import action, api_view, authentication_classes
-from rest_framework import status, viewsets, permissions, filters, views
-from rest_framework.response import Response
-from rest_framework.request import Request
-
+from django.db import IntegrityError, models
+from django.db.models import Q
+from django.http.response import (
+    HttpResponse,
+    HttpResponseRedirect,
+    StreamingHttpResponse,
+)
+from django.shortcuts import redirect, render
+from django.views.decorators.csrf import ensure_csrf_cookie
 from oauth2_provider.models import get_application_model
-
-from utils.logger import log_filter, request_logging, \
-    request_logging_function_view
+from rest_framework import filters, permissions, status, views, viewsets
+from rest_framework.decorators import action, api_view, authentication_classes
+from rest_framework.request import Request
+from rest_framework.response import Response
+from utils.authentication import (
+    GPFOAuth2Authentication,
+    SessionAuthenticationWithoutCSRF,
+)
 from utils.email_regex import is_email_valid
+from utils.logger import (
+    log_filter,
+    request_logging,
+    request_logging_function_view,
+)
 from utils.password_requirements import is_password_valid
 from utils.streaming_response_util import convert
-from utils.authentication import GPFOAuth2Authentication, \
-    SessionAuthenticationWithoutCSRF
 
-from .models import ResetPasswordCode, SetPasswordCode, WdaeUser, \
-    csrf_clear, get_default_application
-from .models import AuthenticationLog
+from .forms import (
+    WdaeLoginForm,
+    WdaePasswordForgottenForm,
+    WdaeRegisterPasswordForm,
+    WdaeResetPasswordForm,
+)
+from .models import (
+    AuthenticationLog,
+    ResetPasswordCode,
+    SetPasswordCode,
+    WdaeUser,
+    csrf_clear,
+    get_default_application,
+)
 from .serializers import UserSerializer, UserWithoutEmailSerializer
-from .forms import WdaePasswordForgottenForm, WdaeResetPasswordForm, \
-    WdaeRegisterPasswordForm, WdaeLoginForm
 
 logger = logging.getLogger(__name__)
 
@@ -81,14 +94,14 @@ class UserViewSet(viewsets.ModelViewSet):  # pylint: disable=too-many-ancestors
     @request_logging(logger)
     def list(
         self, request: Request,
-        *args: Any, **kwargs: Any
+        *args: Any, **kwargs: Any,
     ) -> Response:
         return super().list(request)
 
     @request_logging(logger)
     def create(
         self, request: Request,
-        *args: Any, **kwargs: Any
+        *args: Any, **kwargs: Any,
     ) -> Response:
         response = super().create(request)
         return response
@@ -96,7 +109,7 @@ class UserViewSet(viewsets.ModelViewSet):  # pylint: disable=too-many-ancestors
     @request_logging(logger)
     def retrieve(
         self, request: Request,
-        *args: Any, pk: Optional[int] = None, **kwargs: Any
+        *args: Any, pk: Optional[int] = None, **kwargs: Any,
     ) -> Response:
         if pk is not None:
             pk = int(pk)
@@ -105,7 +118,7 @@ class UserViewSet(viewsets.ModelViewSet):  # pylint: disable=too-many-ancestors
     @request_logging(logger)
     def update(
         self, request: Request,
-        *args: Any, pk: Optional[int] = None, **kwargs: Any
+        *args: Any, pk: Optional[int] = None, **kwargs: Any,
     ) -> Response:
         if pk is not None:
             pk = int(pk)
@@ -120,7 +133,7 @@ class UserViewSet(viewsets.ModelViewSet):  # pylint: disable=too-many-ancestors
     @request_logging(logger)
     def partial_update(
         self, request: Request,
-        *args: Any, pk: Optional[int] = None, **kwargs: Any
+        *args: Any, pk: Optional[int] = None, **kwargs: Any,
     ) -> Response:
         if pk is not None:
             pk = int(pk)
@@ -135,7 +148,7 @@ class UserViewSet(viewsets.ModelViewSet):  # pylint: disable=too-many-ancestors
     @request_logging(logger)
     def destroy(
         self, request: Request,
-        *args: Any, pk: Optional[int] = None, **kwargs: Any
+        *args: Any, pk: Optional[int] = None, **kwargs: Any,
     ) -> Response:
         if pk is not None:
             pk = int(pk)
@@ -144,7 +157,7 @@ class UserViewSet(viewsets.ModelViewSet):  # pylint: disable=too-many-ancestors
         return super().destroy(request, pk=pk)
 
     def get_serializer_class(
-        self
+        self,
     ) -> Union[Type[UserWithoutEmailSerializer], Type[UserSerializer]]:
         serializer_class = self.serializer_class
 
@@ -163,7 +176,7 @@ class UserViewSet(viewsets.ModelViewSet):  # pylint: disable=too-many-ancestors
         if search_param:
             queryset = queryset.filter(
                 Q(name__icontains=search_param)
-                | Q(email__icontains=search_param)
+                | Q(email__icontains=search_param),
             )
         return StreamingHttpResponse(
             iterator_to_json(queryset.iterator()),
@@ -195,7 +208,7 @@ class ForgotPassword(views.APIView):
         return render(
             request,
             "users_api/registration/forgotten-password.html",
-            {"form": form, "show_form": True}
+            {"form": form, "show_form": True},
         )
 
     @request_logging(logger)
@@ -211,9 +224,9 @@ class ForgotPassword(views.APIView):
                     "form": form,
                     "message": "Invalid email",
                     "message_type": "warn",
-                    "show_form": True
+                    "show_form": True,
                 },
-                status=status.HTTP_400_BAD_REQUEST
+                status=status.HTTP_400_BAD_REQUEST,
             )
         email = form.data["email"]
         user_model = get_user_model()
@@ -233,8 +246,8 @@ class ForgotPassword(views.APIView):
                     "form": form,
                     "message": message,
                     "message_type": "success",
-                    "show_form": False
-                }
+                    "show_form": False,
+                },
             )
         except user_model.DoesNotExist:
             return render(
@@ -244,8 +257,8 @@ class ForgotPassword(views.APIView):
                     "form": form,
                     "message": message,
                     "message_type": "success",
-                    "show_form": False
-                }
+                    "show_form": False,
+                },
             )
 
 
@@ -258,7 +271,7 @@ class BasePasswordView(views.APIView):
     code_type: Optional[str] = None
 
     def _check_request_verification_path(
-        self, request: Request
+        self, request: Request,
     ) -> Tuple[Union[ResetPasswordCode, None, SetPasswordCode], Optional[str]]:
         """
         Check, validate and return a verification path from a request.
@@ -301,7 +314,7 @@ class BasePasswordView(views.APIView):
                 request,
                 self.template,
                 {"message": msg},
-                status=status.HTTP_400_BAD_REQUEST
+                status=status.HTTP_400_BAD_REQUEST,
             )
         assert verif_code is not None
         user = verif_code.user
@@ -315,7 +328,7 @@ class BasePasswordView(views.APIView):
         return render(
             request,
             self.template,
-            {"form": form}
+            {"form": form},
         )
 
     @request_logging(logger)
@@ -331,7 +344,7 @@ class BasePasswordView(views.APIView):
                 request,
                 self.template,
                 {"message": msg},
-                status=status.HTTP_400_BAD_REQUEST
+                status=status.HTTP_400_BAD_REQUEST,
             )
         assert verif_code is not None
         user = verif_code.user
@@ -343,9 +356,9 @@ class BasePasswordView(views.APIView):
                 request,
                 self.template,
                 {
-                    "form": form
+                    "form": form,
                 },
-                status=status.HTTP_400_BAD_REQUEST
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         new_password = form.cleaned_data["new_password1"]
@@ -383,16 +396,16 @@ class RESTLoginView(views.APIView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
         user = authenticate(
-            username=username, password=password
+            username=username, password=password,
         )
         if user is None:
             AuthenticationLog.log_authentication_attempt(
-                username, failed=True
+                username, failed=True,
             )
             if AuthenticationLog.is_user_locked_out(username):
                 return Response(
                     AuthenticationLog.get_locked_out_error(username),
-                    status=status.HTTP_403_FORBIDDEN
+                    status=status.HTTP_403_FORBIDDEN,
                 )
             return Response(status=status.HTTP_401_UNAUTHORIZED)
 
@@ -418,8 +431,8 @@ class WdaeLoginView(views.APIView):
             "users_api/registration/login.html",
             {
                 "form": form,
-                "next": next_uri
-            }
+                "next": next_uri,
+            },
         )
 
     @request_logging(logger)
@@ -443,9 +456,9 @@ class WdaeLoginView(views.APIView):
             {
                 "form": form,
                 "next": next_uri,
-                "show_errors": True
+                "show_errors": True,
             },
-            status=response_status
+            status=response_status,
         )
 
 
@@ -460,12 +473,12 @@ def change_password(request: Request) -> Response:
         logger.error(log_filter(
             request,
             "Password change failed: Invalid password: '%s'",
-            str(password)
+            str(password),
         ))
         return Response(
             {"error_msg": ("Invalid password entered. Password is either too"
                            " short (<10 symbols) or too weak.")},
-            status=status.HTTP_400_BAD_REQUEST
+            status=status.HTTP_400_BAD_REQUEST,
         )
 
     get_user_model().change_password(verif_code, password)
@@ -487,7 +500,7 @@ def register(request: Request) -> Response:
             preexisting_user, _ = user_model.objects.get_or_create(email=email)
         else:
             preexisting_user = user_model.objects.get(
-                email__iexact=email
+                email__iexact=email,
             )
 
         preexisting_user.register_preexisting_user(request.data.get("name"))
@@ -495,8 +508,8 @@ def register(request: Request) -> Response:
             log_filter(
                 request,
                 "registration succeeded; email: '%s'",
-                str(email)
-            )
+                str(email),
+            ),
         )
         return Response({}, status=status.HTTP_201_CREATED)
     except IntegrityError:
@@ -504,8 +517,8 @@ def register(request: Request) -> Response:
             log_filter(
                 request,
                 "Registration failed: IntegrityError; email: '%s'",
-                str(email)
-            )
+                str(email),
+            ),
         )
         return Response({}, status=status.HTTP_201_CREATED)
     except user_model.DoesNotExist:
@@ -514,21 +527,21 @@ def register(request: Request) -> Response:
                 request,
                 "Registration failed: Email or Researcher Id not found; "
                 "email: '%s'",
-                str(email)
-            )
+                str(email),
+            ),
         )
         return Response(
             {"error_msg": ("Registration is closed."
                            " Please contact an administrator.")},
-            status=status.HTTP_403_FORBIDDEN
+            status=status.HTTP_403_FORBIDDEN,
         )
     except KeyError:
         logger.error(
             log_filter(
                 request,
                 "Registration failed: KeyError; %s",
-                str(request.data)
-            )
+                str(request.data),
+            ),
         )
         return Response({}, status=status.HTTP_201_CREATED)
     except ValueError:
@@ -536,13 +549,13 @@ def register(request: Request) -> Response:
             log_filter(
                 request,
                 "Registration failed: Invalid email; email: '%s'",
-                str(email)
-            )
+                str(email),
+            ),
         )
         return Response(
             {"error_msg": ("Invalid email address entered."
                            " Please use a valid email address.")},
-            status=status.HTTP_400_BAD_REQUEST
+            status=status.HTTP_400_BAD_REQUEST,
         )
 
 
@@ -550,7 +563,7 @@ def register(request: Request) -> Response:
 @csrf_clear
 @api_view(["POST"])
 @authentication_classes(
-    (GPFOAuth2Authentication, SessionAuthenticationWithoutCSRF,))
+    (GPFOAuth2Authentication, SessionAuthenticationWithoutCSRF))
 def logout(request: Request) -> Response:
     """Log out the currently logged-in user."""
     django.contrib.auth.logout(request)
@@ -606,7 +619,7 @@ class FederationCredentials(views.APIView):
         apps = get_application_model().objects.filter(
             user_id=user.id,
             authorization_grant_type="client-credentials",
-            client_type="confidential"
+            client_type="confidential",
         )
         res = []
         for app in apps:
@@ -627,22 +640,17 @@ class FederationCredentials(views.APIView):
         if application.objects.filter(name=request.data["name"]).exists():
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        new_application = application(**{
-            "name": request.data["name"],
-            "user_id": user.id,
-            "client_type": "confidential",
-            "authorization_grant_type": "client-credentials"
-        })
+        new_application = application(name=request.data["name"], user_id=user.id, client_type="confidential", authorization_grant_type="client-credentials")
 
         new_application.full_clean()
         cleartext_secret = new_application.client_secret
         new_application.save()
 
         credentials = base64.b64encode(
-            f"{new_application.client_id}:{cleartext_secret}".encode("utf-8")
+            f"{new_application.client_id}:{cleartext_secret}".encode(),
         )
         return Response(
-            {"credentials": credentials}, status=status.HTTP_200_OK
+            {"credentials": credentials}, status=status.HTTP_200_OK,
         )
 
     @request_logging(logger)
@@ -657,9 +665,9 @@ class FederationCredentials(views.APIView):
                 .exists():
             return Response(status=status.HTTP_400_BAD_REQUEST)
         app = get_application_model().objects.get(
-            name=request.data["name"]
+            name=request.data["name"],
         )
-        if not user.id == app.user_id:
+        if user.id != app.user_id:
             return Response(status=status.HTTP_401_UNAUTHORIZED)
         app.delete()
         return Response(status=status.HTTP_200_OK)
@@ -686,13 +694,13 @@ class FederationCredentials(views.APIView):
                 .exists():
             return Response(status=status.HTTP_400_BAD_REQUEST)
         app = get_application_model().objects.get(
-            name=request.data["name"]
+            name=request.data["name"],
         )
-        if not user.id == app.user_id:
+        if user.id != app.user_id:
             return Response(status=status.HTTP_401_UNAUTHORIZED)
         app.name = request.data["new_name"]
         app.save()
         return Response(
             {"new_name": app.name},
-            status=status.HTTP_200_OK
+            status=status.HTTP_200_OK,
         )

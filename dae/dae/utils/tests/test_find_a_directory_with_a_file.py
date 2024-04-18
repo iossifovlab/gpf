@@ -12,10 +12,10 @@ def test_one_parent(tmp_path):
                 "file.test": "",
                 "dir2": {
                     "dir3": {
-                    }
-                }
-            }
-        }
+                    },
+                },
+            },
+        },
     )
     dirname = find_directory_with_a_file(
         "file.test", str(tmp_path / "dir1" / "dir2"))
@@ -30,10 +30,10 @@ def test_two_parents(tmp_path):
                 "file.test": "",
                 "dir2": {
                     "dir3": {
-                    }
-                }
-            }
-        }
+                    },
+                },
+            },
+        },
     )
 
     dirname = find_directory_with_a_file(
@@ -50,10 +50,10 @@ def test_first_parent(tmp_path):
                 "dir2": {
                     "file.test": "",
                     "dir3": {
-                    }
-                }
-            }
-        }
+                    },
+                },
+            },
+        },
     )
 
     dirname = find_directory_with_a_file(
@@ -69,10 +69,10 @@ def test_one_parent_getcwd(tmp_path, mocker):
                 "file.test": "",
                 "dir2": {
                     "dir3": {
-                    }
-                }
-            }
-        }
+                    },
+                },
+            },
+        },
     )
     mocker.patch("os.getcwd", lambda: str(tmp_path / "dir1" / "dir2"))
 
@@ -88,10 +88,10 @@ def test_two_parents_getcwd(tmp_path, mocker):
                 "file.test": "",
                 "dir2": {
                     "dir3": {
-                    }
-                }
-            }
-        }
+                    },
+                },
+            },
+        },
     )
     mocker.patch("os.getcwd", lambda: str(tmp_path / "dir1" / "dir2" / "dir3"))
 
@@ -108,10 +108,10 @@ def test_first_parent_getcwd(tmp_path, mocker):
                 "dir2": {
                     "file.test": "",
                     "dir3": {
-                    }
-                }
-            }
-        }
+                    },
+                },
+            },
+        },
     )
 
     mocker.patch("os.getcwd", lambda: str(tmp_path / "dir1" / "dir2" / "dir3"))

@@ -1,11 +1,12 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
+
 from dae.query_variants.attributes_query import (
-    QueryTreeToSQLBitwiseTransformer,
-    inheritance_query,
     PARSER,
-    inheritance_converter,
     BitwiseTreeTransformer,
+    QueryTreeToSQLBitwiseTransformer,
+    inheritance_converter,
+    inheritance_query,
 )
 
 
@@ -45,9 +46,9 @@ def test_bitwise_query(query, expected):
 )
 def test_experiments_with_bitwise_grammar(query):
     tree = PARSER.parse(query)
-    print("")
+    print()
     print(tree.pretty())
-    print("")
+    print()
 
     transformer = BitwiseTreeTransformer(inheritance_converter)
     res = transformer.transform(tree)

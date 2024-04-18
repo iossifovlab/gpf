@@ -1,8 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-from dae.gpf_instance import GPFInstance
 from dae.enrichment_tool.enrichment_helper import EnrichmentHelper
-
-
+from dae.gpf_instance import GPFInstance
 from dae.studies.study import GenotypeData
 
 

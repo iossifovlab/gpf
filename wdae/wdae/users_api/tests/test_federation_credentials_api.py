@@ -2,40 +2,40 @@
 import json
 
 import pytest
-from rest_framework import status
-from oauth2_provider.models import get_application_model
 from django.test import Client
+from oauth2_provider.models import get_application_model
+from rest_framework import status
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db()
 def test_create_federation_credentials_with_unauthorized_user(
-    anonymous_client: Client
+    anonymous_client: Client,
 ) -> None:
     url = "/api/v3/users/federation_credentials"
     body = {
-        "name": "name1"
+        "name": "name1",
     }
     create_res = anonymous_client.post(
-        url, json.dumps(body), content_type="application/json", format="json"
+        url, json.dumps(body), content_type="application/json", format="json",
     )
     assert create_res.status_code is status.HTTP_401_UNAUTHORIZED
     assert (get_application_model().objects
             .filter(name="name1").exists()) is False
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db()
 def test_create_duplicate_name_federation_credentials(
         user_client: Client) -> None:
     url = "/api/v3/users/federation_credentials"
 
     body = {"name": "name1"}
     create_res = user_client.post(
-        url, json.dumps(body), content_type="application/json", format="json"
+        url, json.dumps(body), content_type="application/json", format="json",
     )
     assert create_res.status_code is status.HTTP_200_OK
 
     create_duplicate_res = user_client.post(
-        url, json.dumps(body), content_type="application/json", format="json"
+        url, json.dumps(body), content_type="application/json", format="json",
     )
     assert create_duplicate_res.status_code is status.HTTP_400_BAD_REQUEST
 
@@ -46,16 +46,16 @@ def test_create_duplicate_name_federation_credentials(
     assert len(get_application_model().objects.filter(name="name1")) == 1
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db()
 def test_create_federation_credentials_with_authorized_user(
-    user_client: Client
+    user_client: Client,
 ) -> None:
     url = "/api/v3/users/federation_credentials"
     body = {
-        "name": "name1"
+        "name": "name1",
     }
     credentials_res = user_client.post(
-        url, json.dumps(body), content_type="application/json", format="json"
+        url, json.dumps(body), content_type="application/json", format="json",
     )
 
     assert credentials_res.status_code is status.HTTP_200_OK
@@ -69,16 +69,16 @@ def test_create_federation_credentials_with_authorized_user(
         headers={
             "Authorization":
             f"Basic "
-            f"{credentials_res.data['credentials'].decode()}"  # type: ignore
+            f"{credentials_res.data['credentials'].decode()}",  # type: ignore
         },
         data={"grant_type": "client_credentials"},
-        content_type="application/json", format="json"
+        content_type="application/json", format="json",
     )
     assert token_res.status_code is status.HTTP_200_OK
     assert token_res.json().get("access_token") is not None
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db()
 def test_get_federation_credentials_with_unauthorized_user(
         anonymous_client: Client) -> None:
     url = "/api/v3/users/federation_credentials"
@@ -88,45 +88,45 @@ def test_get_federation_credentials_with_unauthorized_user(
     assert response.status_code is status.HTTP_401_UNAUTHORIZED
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db()
 def test_get_federation_credentials_with_authorized_user(
         user_client: Client) -> None:
     url = "/api/v3/users/federation_credentials"
 
     body = {"name": "name1"}
     user_client.post(
-        url, json.dumps(body), content_type="application/json", format="json"
+        url, json.dumps(body), content_type="application/json", format="json",
     )
 
     body = {"name": "name2"}
     user_client.post(
-        url, json.dumps(body), content_type="application/json", format="json"
+        url, json.dumps(body), content_type="application/json", format="json",
     )
 
     response = user_client.get(url)
     assert response.status_code is status.HTTP_200_OK
     assert str(
-        response.data  # type: ignore
+        response.data,  # type: ignore
     ) == "[{'name': 'name1'}, {'name': 'name2'}]"
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db()
 def test_update_federation_credentials_with_unauthorized_user(
-    user_client: Client, anonymous_client: Client
+    user_client: Client, anonymous_client: Client,
 ) -> None:
     url = "/api/v3/users/federation_credentials"
 
     body = {"name": "name1"}
     user_client.post(
-        url, json.dumps(body), content_type="application/json", format="json"
+        url, json.dumps(body), content_type="application/json", format="json",
     )
 
     body = {
         "name": "name1",
-        "new_name": "name2"
+        "new_name": "name2",
     }
     response = anonymous_client.put(
-        url, json.dumps(body), content_type="application/json", format="json"
+        url, json.dumps(body), content_type="application/json", format="json",
     )
 
     assert response.data is None  # type: ignore
@@ -137,22 +137,22 @@ def test_update_federation_credentials_with_unauthorized_user(
         .exists() is True
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db()
 def test_update_federation_credentials_with_incorrect_request_data(
-    user_client: Client
+    user_client: Client,
 ) -> None:
     url = "/api/v3/users/federation_credentials"
 
     body = {"name": "name1"}
     user_client.post(
-        url, json.dumps(body), content_type="application/json", format="json"
+        url, json.dumps(body), content_type="application/json", format="json",
     )
 
     body = {
-        "new_name": "name3"
+        "new_name": "name3",
     }
     response_without_name_res = user_client.put(
-        url, json.dumps(body), content_type="application/json", format="json"
+        url, json.dumps(body), content_type="application/json", format="json",
     )
 
     assert response_without_name_res.data is None  # type: ignore
@@ -166,7 +166,7 @@ def test_update_federation_credentials_with_incorrect_request_data(
         "name": "name1",
     }
     response_without_name_res = user_client.put(
-        url, json.dumps(body), content_type="application/json", format="json"
+        url, json.dumps(body), content_type="application/json", format="json",
     )
 
     assert response_without_name_res.data is None  # type: ignore
@@ -177,23 +177,23 @@ def test_update_federation_credentials_with_incorrect_request_data(
         .exists() is True
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db()
 def test_update_federation_credentials_with_false_name(
-    user_client: Client
+    user_client: Client,
 ) -> None:
     url = "/api/v3/users/federation_credentials"
 
     body = {"name": "name1"}
     user_client.post(
-        url, json.dumps(body), content_type="application/json", format="json"
+        url, json.dumps(body), content_type="application/json", format="json",
     )
 
     body = {
         "name": "name2",
-        "new_name": "name3"
+        "new_name": "name3",
     }
     response_with_bad_name_res = user_client.put(
-        url, json.dumps(body), content_type="application/json", format="json"
+        url, json.dumps(body), content_type="application/json", format="json",
     )
 
     assert response_with_bad_name_res.data is None  # type: ignore
@@ -205,19 +205,19 @@ def test_update_federation_credentials_with_false_name(
         .exists() is True
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db()
 def test_update_federation_credentials_with_duplicate_name(
-    user_client: Client
+    user_client: Client,
 ) -> None:
     url = "/api/v3/users/federation_credentials"
 
     body = {"name": "name1"}
     user_client.post(
-        url, json.dumps(body), content_type="application/json", format="json"
+        url, json.dumps(body), content_type="application/json", format="json",
     )
     body = {"name": "name2"}
     user_client.post(
-        url, json.dumps(body), content_type="application/json", format="json"
+        url, json.dumps(body), content_type="application/json", format="json",
     )
 
     body = {
@@ -225,7 +225,7 @@ def test_update_federation_credentials_with_duplicate_name(
         "new_name": "name2",
     }
     response_without_new_name_res = user_client.put(
-        url, json.dumps(body), content_type="application/json", format="json"
+        url, json.dumps(body), content_type="application/json", format="json",
     )
 
     assert response_without_new_name_res.data is None  # type: ignore
@@ -241,19 +241,19 @@ def test_update_federation_credentials_with_duplicate_name(
         .exists() is True
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db()
 def test_update_federation_credentials_with_authorized_user(
-    user_client: Client
+    user_client: Client,
 ) -> None:
     url = "/api/v3/users/federation_credentials"
 
     body = {"name": "name1"}
     user_client.post(
-        url, json.dumps(body), content_type="application/json", format="json"
+        url, json.dumps(body), content_type="application/json", format="json",
     )
     body = {"name": "name2"}
     user_client.post(
-        url, json.dumps(body), content_type="application/json", format="json"
+        url, json.dumps(body), content_type="application/json", format="json",
     )
 
     body = {
@@ -261,7 +261,7 @@ def test_update_federation_credentials_with_authorized_user(
         "new_name": "name3",
     }
     response = user_client.put(
-        url, json.dumps(body), content_type="application/json", format="json"
+        url, json.dumps(body), content_type="application/json", format="json",
     )
 
     assert response.status_code is status.HTTP_200_OK
@@ -277,20 +277,20 @@ def test_update_federation_credentials_with_authorized_user(
 
 
 def test_delete_federation_credentials_with_unauthorized_user(
-    user_client: Client, anonymous_client: Client
+    user_client: Client, anonymous_client: Client,
 ) -> None:
     url = "/api/v3/users/federation_credentials"
 
     body = {"name": "name1"}
     user_client.post(
-        url, json.dumps(body), content_type="application/json", format="json"
+        url, json.dumps(body), content_type="application/json", format="json",
     )
 
     body = {
         "name": "name1",
     }
     response = anonymous_client.delete(
-        url, json.dumps(body), content_type="application/json", format="json"
+        url, json.dumps(body), content_type="application/json", format="json",
     )
 
     assert response.data is None  # type: ignore
@@ -301,7 +301,7 @@ def test_delete_federation_credentials_with_unauthorized_user(
         .exists() is True
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db()
 def test_delete_absent_federation_credentials(user_client: Client) -> None:
     url = "/api/v3/users/federation_credentials"
 
@@ -309,28 +309,28 @@ def test_delete_absent_federation_credentials(user_client: Client) -> None:
         "name": "name1",
     }
     response = user_client.delete(
-        url, json.dumps(body), content_type="application/json", format="json"
+        url, json.dumps(body), content_type="application/json", format="json",
     )
 
     assert response.data is None  # type: ignore
     assert response.status_code is status.HTTP_400_BAD_REQUEST
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db()
 def test_delete_federation_credentials_with_authorized_user(
         user_client: Client) -> None:
     url = "/api/v3/users/federation_credentials"
 
     body = {"name": "name1"}
     user_client.post(
-        url, json.dumps(body), content_type="application/json", format="json"
+        url, json.dumps(body), content_type="application/json", format="json",
     )
 
     body = {
         "name": "name1",
     }
     response = user_client.delete(
-        url, json.dumps(body), content_type="application/json", format="json"
+        url, json.dumps(body), content_type="application/json", format="json",
     )
 
     assert response.status_code is status.HTTP_200_OK

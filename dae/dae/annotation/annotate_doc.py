@@ -1,16 +1,16 @@
 from __future__ import annotations
 
-import sys
 import argparse
 import logging
+import sys
 from typing import Optional
+
 from jinja2 import Environment, PackageLoader
 from markdown2 import markdown
 
 from dae.annotation.context import CLIAnnotationContext
-
-from dae.utils.verbosity_configuration import VerbosityConfiguration
 from dae.genomic_resources.genomic_context import get_genomic_context
+from dae.utils.verbosity_configuration import VerbosityConfiguration
 
 logger = logging.getLogger("annotate_doc")
 
@@ -19,7 +19,7 @@ def configure_argument_parser() -> argparse.ArgumentParser:
     """Construct and configure argument parser."""
     parser = argparse.ArgumentParser(
         description="Annotate columns",
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument("pipeline", default="context", nargs="?",
                         help="The pipeline definition file. By default, or if "

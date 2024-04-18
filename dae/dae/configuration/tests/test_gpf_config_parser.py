@@ -1,10 +1,14 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import os
-import pytest
 
+import pytest
 from box import BoxError  # type: ignore
-from dae.configuration.gpf_config_parser import GPFConfigParser, \
-    DefaultBox, FrozenBox
+
+from dae.configuration.gpf_config_parser import (
+    DefaultBox,
+    FrozenBox,
+    GPFConfigParser,
+)
 
 
 def test_default_box():
@@ -22,7 +26,7 @@ def test_frozen_box():
 
 def test_config_parser_load_single(conf_schema_basic, fixtures_dir):
     config = GPFConfigParser.load_config(
-        os.path.join(fixtures_dir, "basic_conf.toml"), conf_schema_basic
+        os.path.join(fixtures_dir, "basic_conf.toml"), conf_schema_basic,
     )
     print(config)
     assert config.id == "152135"
@@ -34,7 +38,7 @@ def test_config_parser_load_single(conf_schema_basic, fixtures_dir):
 
 def test_config_parser_load_directory(conf_schema_basic, fixtures_dir):
     configs = GPFConfigParser.load_directory_configs(
-        os.path.join(fixtures_dir, "sample_conf_directory"), conf_schema_basic
+        os.path.join(fixtures_dir, "sample_conf_directory"), conf_schema_basic,
     )
     print(configs)
 
@@ -52,7 +56,7 @@ def test_config_parser_load_directory(conf_schema_basic, fixtures_dir):
 
 def test_config_parser_string_interpolation(conf_schema_strings, fixtures_dir):
     config = GPFConfigParser.load_config(
-        os.path.join(fixtures_dir, "vars_conf.toml"), conf_schema_strings
+        os.path.join(fixtures_dir, "vars_conf.toml"), conf_schema_strings,
     )
     print(config)
     assert config.id == "152135"
@@ -65,7 +69,7 @@ def test_config_parser_string_interpolation(conf_schema_strings, fixtures_dir):
 
 def test_config_parser_set_config(conf_schema_set, fixtures_dir):
     config = GPFConfigParser.load_config(
-        os.path.join(fixtures_dir, "set_conf.toml"), conf_schema_set
+        os.path.join(fixtures_dir, "set_conf.toml"), conf_schema_set,
     )
     print(config)
     assert config.id == "152135"
@@ -80,14 +84,14 @@ def test_config_parser_load_paths(conf_schema_path, fixtures_dir, mocker):
     patch = mocker.patch("os.path.exists")
     patch.return_value = True
     config = GPFConfigParser.load_config(
-        os.path.join(fixtures_dir, "path_conf.toml"), conf_schema_path
+        os.path.join(fixtures_dir, "path_conf.toml"), conf_schema_path,
     )
     print(config)
     assert config.id == "152135"
     assert config.name == "Path test config"
     assert config.some_abs_path == "/tmp/maybesomeconf.toml"
     assert config.some_rel_path == os.path.join(
-        fixtures_dir, "environ_conf.toml"
+        fixtures_dir, "environ_conf.toml",
     )
 
 
@@ -95,12 +99,12 @@ def test_config_parser_load_incorrect_paths(conf_schema_path, fixtures_dir):
     with pytest.raises(ValueError):
         GPFConfigParser.load_config(
             os.path.join(fixtures_dir, "wrong_path_conf.toml"),
-            conf_schema_path
+            conf_schema_path,
         )
 
 
 def test_config_parser_env_interpolation(
-    conf_schema_basic, fixtures_dir, mocker
+    conf_schema_basic, fixtures_dir, mocker,
 ):
     mocker.patch.dict(os.environ, {"test_env_var": "bop"})
     config = GPFConfigParser.load_config(
@@ -117,7 +121,7 @@ def test_config_parser_env_interpolation(
 
 
 def test_config_parser_env_interpolation_missing(
-    conf_schema_basic, fixtures_dir
+    conf_schema_basic, fixtures_dir,
 ):
 
     with pytest.raises(ValueError):

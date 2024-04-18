@@ -1,12 +1,12 @@
-import logging
 import abc
-from typing import Any, Generator, Optional
-
-from dae.utils.regions import Region
-from dae.variants.variant import SummaryVariant
-from dae.variants.family_variant import FamilyVariant
+import logging
+from collections.abc import Generator
+from typing import Any, Optional
 
 from dae.query_variants.query_runners import QueryRunner
+from dae.utils.regions import Region
+from dae.variants.family_variant import FamilyVariant
+from dae.variants.variant import SummaryVariant
 
 RealAttrFilterType = list[tuple[str, tuple[Optional[float], Optional[float]]]]
 
@@ -31,7 +31,7 @@ class QueryVariantsBase(abc.ABC):
         return_reference: Optional[bool] = None,
         return_unknown: Optional[bool] = None,
         limit: Optional[int] = None,
-        **kwargs: Any
+        **kwargs: Any,
     ) -> QueryRunner:
         """Create query runner for searching summary variants."""
 
@@ -48,7 +48,7 @@ class QueryVariantsBase(abc.ABC):
         return_reference: Optional[bool] = None,
         return_unknown: Optional[bool] = None,
         limit: Optional[int] = None,
-        **kwargs: Any
+        **kwargs: Any,
     ) -> Generator[SummaryVariant, None, None]:
         """Execute the summary variants query and yields summary variants."""
 
@@ -72,7 +72,7 @@ class QueryVariantsBase(abc.ABC):
         limit: Optional[int] = None,
         study_filters: Optional[list[str]] = None,
         pedigree_fields: Optional[tuple] = None,
-        **kwargs: Any
+        **kwargs: Any,
     ) -> QueryRunner:
         # pylint: disable=too-many-arguments
         """Create a query runner for searching family variants."""
@@ -96,7 +96,7 @@ class QueryVariantsBase(abc.ABC):
         return_unknown: Optional[bool] = None,
         limit: Optional[int] = None,
         pedigree_fields: Optional[tuple] = None,
-        **kwargs: Any
+        **kwargs: Any,
     ) -> Generator[FamilyVariant, None, None]:
         # pylint: disable=too-many-arguments
         """Execute the family variants query and yields family variants."""

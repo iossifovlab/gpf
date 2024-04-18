@@ -3,27 +3,29 @@ from typing import Callable
 
 import pytest
 
-from dae.pedigrees.family import FamilyTag, Family
-from dae.pedigrees.family_tag_builder import check_tag, \
-    tag_nuclear_family, \
-    tag_quad_family, \
-    tag_trio_family, \
-    tag_simplex_family, \
-    tag_multiplex_family, \
-    tag_control_family, \
-    tag_affected_dad_family, \
-    tag_affected_mom_family, \
-    tag_affected_prb_family, \
-    tag_affected_sib_family, \
-    tag_unaffected_dad_family, \
-    tag_unaffected_mom_family, \
-    tag_unaffected_prb_family, \
-    tag_unaffected_sib_family, \
-    tag_male_prb_family, \
-    tag_female_prb_family, \
-    tag_missing_mom_family, \
-    tag_missing_dad_family, \
-    check_family_tags_query
+from dae.pedigrees.family import Family, FamilyTag
+from dae.pedigrees.family_tag_builder import (
+    check_family_tags_query,
+    check_tag,
+    tag_affected_dad_family,
+    tag_affected_mom_family,
+    tag_affected_prb_family,
+    tag_affected_sib_family,
+    tag_control_family,
+    tag_female_prb_family,
+    tag_male_prb_family,
+    tag_missing_dad_family,
+    tag_missing_mom_family,
+    tag_multiplex_family,
+    tag_nuclear_family,
+    tag_quad_family,
+    tag_simplex_family,
+    tag_trio_family,
+    tag_unaffected_dad_family,
+    tag_unaffected_mom_family,
+    tag_unaffected_prb_family,
+    tag_unaffected_sib_family,
+)
 from dae.pedigrees.testing import build_family
 
 
@@ -49,13 +51,13 @@ from dae.pedigrees.testing import build_family
         (FamilyTag.FEMALE_PRB, "tag_female_prb_family"),
         (FamilyTag.MISSING_MOM, "tag_missing_mom_family"),
         (FamilyTag.MISSING_DAD, "tag_missing_dad_family"),
-    ]
+    ],
 )
 def test_family_tag(tag: FamilyTag, name: str) -> None:
     assert tag.label == name
 
 
-@pytest.fixture
+@pytest.fixture()
 def fam1_fixture() -> Family:
     fam = build_family(
         """
@@ -139,12 +141,12 @@ def test_tag_control_family() -> None:
     "tagger,tag,value",
     [
         (tag_affected_dad_family, FamilyTag.AFFECTED_DAD, False),
-        (tag_unaffected_dad_family, FamilyTag.UNAFFECTED_DAD, True)
-    ]
+        (tag_unaffected_dad_family, FamilyTag.UNAFFECTED_DAD, True),
+    ],
 )
 def test_tag_affected_dad_family_simple(
     fam1_fixture: Family,
-    tagger: Callable[[Family], bool], tag: FamilyTag, value: bool
+    tagger: Callable[[Family], bool], tag: FamilyTag, value: bool,
 ) -> None:
 
     assert tagger(fam1_fixture) == value
@@ -155,11 +157,11 @@ def test_tag_affected_dad_family_simple(
     "tagger,tag,value",
     [
         (tag_affected_dad_family, FamilyTag.AFFECTED_DAD, True),
-        (tag_unaffected_dad_family, FamilyTag.UNAFFECTED_DAD, False)
-    ]
+        (tag_unaffected_dad_family, FamilyTag.UNAFFECTED_DAD, False),
+    ],
 )
 def test_tag_affected_dad_family(
-    tagger: Callable[[Family], bool], tag: FamilyTag, value: bool
+    tagger: Callable[[Family], bool], tag: FamilyTag, value: bool,
 ) -> None:
 
     fam = build_family(
@@ -179,12 +181,12 @@ def test_tag_affected_dad_family(
     "tagger,tag,value",
     [
         (tag_affected_mom_family, FamilyTag.AFFECTED_MOM, False),
-        (tag_unaffected_mom_family, FamilyTag.UNAFFECTED_MOM, True)
-    ]
+        (tag_unaffected_mom_family, FamilyTag.UNAFFECTED_MOM, True),
+    ],
 )
 def test_tag_affected_mom_family_simple(
     fam1_fixture: Family,
-    tagger: Callable[[Family], bool], tag: FamilyTag, value: bool
+    tagger: Callable[[Family], bool], tag: FamilyTag, value: bool,
 ) -> None:
 
     assert tagger(fam1_fixture) == value
@@ -195,11 +197,11 @@ def test_tag_affected_mom_family_simple(
     "tagger,tag,value",
     [
         (tag_affected_mom_family, FamilyTag.AFFECTED_MOM, True),
-        (tag_unaffected_mom_family, FamilyTag.UNAFFECTED_MOM, False)
-    ]
+        (tag_unaffected_mom_family, FamilyTag.UNAFFECTED_MOM, False),
+    ],
 )
 def test_tag_affected_mom_family(
-    tagger: Callable[[Family], bool], tag: FamilyTag, value: bool
+    tagger: Callable[[Family], bool], tag: FamilyTag, value: bool,
 ) -> None:
 
     fam = build_family(
@@ -219,12 +221,12 @@ def test_tag_affected_mom_family(
     "tagger,tag,value",
     [
         (tag_affected_prb_family, FamilyTag.AFFECTED_PRB, True),
-        (tag_unaffected_prb_family, FamilyTag.UNAFFECTED_PRB, False)
-    ]
+        (tag_unaffected_prb_family, FamilyTag.UNAFFECTED_PRB, False),
+    ],
 )
 def test_tag_affected_prb_family_simple(
     fam1_fixture: Family,
-    tagger: Callable[[Family], bool], tag: FamilyTag, value: bool
+    tagger: Callable[[Family], bool], tag: FamilyTag, value: bool,
 ) -> None:
 
     assert tagger(fam1_fixture) == value
@@ -235,11 +237,11 @@ def test_tag_affected_prb_family_simple(
     "tagger,tag,value",
     [
         (tag_affected_prb_family, FamilyTag.AFFECTED_PRB, False),
-        (tag_unaffected_prb_family, FamilyTag.UNAFFECTED_PRB, True)
-    ]
+        (tag_unaffected_prb_family, FamilyTag.UNAFFECTED_PRB, True),
+    ],
 )
 def test_tag_affected_prb_family(
-    tagger: Callable[[Family], bool], tag: FamilyTag, value: bool
+    tagger: Callable[[Family], bool], tag: FamilyTag, value: bool,
 ) -> None:
 
     fam = build_family(
@@ -259,12 +261,12 @@ def test_tag_affected_prb_family(
     "tagger,tag,value",
     [
         (tag_affected_sib_family, FamilyTag.AFFECTED_SIB, False),
-        (tag_unaffected_sib_family, FamilyTag.UNAFFECTED_SIB, True)
-    ]
+        (tag_unaffected_sib_family, FamilyTag.UNAFFECTED_SIB, True),
+    ],
 )
 def test_tag_affected_sib_family_simple(
     fam1_fixture: Family,
-    tagger: Callable[[Family], bool], tag: FamilyTag, value: bool
+    tagger: Callable[[Family], bool], tag: FamilyTag, value: bool,
 ) -> None:
 
     assert tagger(fam1_fixture) == value
@@ -275,11 +277,11 @@ def test_tag_affected_sib_family_simple(
     "tagger,tag,value",
     [
         (tag_affected_sib_family, FamilyTag.AFFECTED_SIB, True),
-        (tag_unaffected_sib_family, FamilyTag.UNAFFECTED_SIB, False)
-    ]
+        (tag_unaffected_sib_family, FamilyTag.UNAFFECTED_SIB, False),
+    ],
 )
 def test_tag_affected_sib_family(
-    tagger: Callable[[Family], bool], tag: FamilyTag, value: bool
+    tagger: Callable[[Family], bool], tag: FamilyTag, value: bool,
 ) -> None:
 
     fam = build_family(
@@ -299,11 +301,11 @@ def test_tag_affected_sib_family(
     "tagger,tag,value",
     [
         (tag_affected_sib_family, FamilyTag.AFFECTED_SIB, True),
-        (tag_unaffected_sib_family, FamilyTag.UNAFFECTED_SIB, True)
-    ]
+        (tag_unaffected_sib_family, FamilyTag.UNAFFECTED_SIB, True),
+    ],
 )
 def test_tag_affected_sibs_family(
-    tagger: Callable[[Family], bool], tag: FamilyTag, value: bool
+    tagger: Callable[[Family], bool], tag: FamilyTag, value: bool,
 ) -> None:
 
     fam = build_family(
@@ -440,7 +442,7 @@ def test_tag_missing_dad_family_again() -> None:
             False,
             {FamilyTag.NUCLEAR, FamilyTag.QUAD, FamilyTag.MALE_PRB},
             {},
-            False
+            False,
         ),
         (False, {FamilyTag.NUCLEAR}, {FamilyTag.QUAD}, False),
         (False, {}, {FamilyTag.MISSING_DAD}, True),
@@ -456,16 +458,16 @@ def test_tag_missing_dad_family_again() -> None:
             True,
             {FamilyTag.NUCLEAR, FamilyTag.QUAD, FamilyTag.MALE_PRB},
             {},
-            True
+            True,
         ),
-    ]
+    ],
 )
 def test_tag_query(
     fam1_fixture: Family,
     or_mode: bool,
     included_tags: set[FamilyTag],
     excluded_tags: set[FamilyTag],
-    expected: bool
+    expected: bool,
 ) -> None:
 
     assert tag_nuclear_family(fam1_fixture)
@@ -475,5 +477,5 @@ def test_tag_query(
         fam1_fixture,
         or_mode,
         included_tags,
-        excluded_tags
+        excluded_tags,
     ) == expected

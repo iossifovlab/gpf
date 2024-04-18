@@ -1,18 +1,16 @@
 from __future__ import annotations
 
+import json
+import logging
 import os
 import time
-import logging
-import json
 from typing import Any, Optional, cast
 
-from dae.variants.attributes import Role
-
+from dae.common_reports.denovo_report import DenovoReport
 from dae.common_reports.family_report import FamiliesReport
 from dae.common_reports.people_counter import PeopleReport
-from dae.common_reports.denovo_report import DenovoReport
 from dae.studies.study import GenotypeData
-
+from dae.variants.attributes import Role
 
 logger = logging.getLogger(__name__)
 
@@ -63,12 +61,12 @@ class CommonReport:
         )
 
         people_report = PeopleReport.from_person_set_collections(
-            families_report_collections
+            families_report_collections,
         )
 
         elapsed = time.time() - start
         logger.info(
-            "COMMON REPORTS family report build in %.2f sec", elapsed
+            "COMMON REPORTS family report build in %.2f sec", elapsed,
         )
 
         start = time.time()
@@ -85,11 +83,11 @@ class CommonReport:
 
         denovo_report = DenovoReport.from_genotype_study(
             genotype_data_study,
-            denovo_report_collections
+            denovo_report_collections,
         )
         elapsed = time.time() - start
         logger.info(
-            "COMMON REPORTS denovo report build in %.2f sec", elapsed
+            "COMMON REPORTS denovo report build in %.2f sec", elapsed,
         )
 
         person_sets_config = \
@@ -99,7 +97,7 @@ class CommonReport:
             is not None, config
 
         collection = genotype_data_study.get_person_set_collection(
-            person_sets_config.selected_person_set_collections[0]
+            person_sets_config.selected_person_set_collections[0],
         )
         phenotype: list[str] = []
         assert collection is not None
@@ -188,7 +186,7 @@ class CommonReport:
     @staticmethod
     def build_and_save(
         study: GenotypeData,
-        force: bool = False
+        force: bool = False,
     ) -> Optional[CommonReport]:
         """Build a common report for a study, saves it and returns the report.
 

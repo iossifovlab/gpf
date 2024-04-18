@@ -6,10 +6,10 @@ from dae.studies.study import GenotypeDataStudy
 
 def test_people_counter(
     study1: GenotypeDataStudy,
-    phenotype_role_collection: PersonSetCollection
+    phenotype_role_collection: PersonSetCollection,
 ) -> None:
     people_counter = PeopleCounter.from_person_set(
-        phenotype_role_collection.person_sets["phenotype1"]
+        phenotype_role_collection.person_sets["phenotype1"],
     )
 
     assert people_counter.people_male == 7
@@ -23,14 +23,14 @@ def test_people_counter(
 
     assert (
         len(people_counter.to_dict([
-            "people_male", "people_female", "people_total"
+            "people_male", "people_female", "people_total",
         ]).keys()) == 4
     )
 
 
 def test_people_counter_empty(
     study1: GenotypeDataStudy,
-    phenotype_role_collection: PersonSetCollection
+    phenotype_role_collection: PersonSetCollection,
 ) -> None:
     people_counter = PeopleCounter.from_person_set(
         phenotype_role_collection.person_sets["unknown"],
@@ -49,10 +49,10 @@ def test_people_counter_empty(
 
 def test_people_report(
     study1: GenotypeDataStudy,
-    phenotype_role_collection: PersonSetCollection
+    phenotype_role_collection: PersonSetCollection,
 ) -> None:
     people_report = PeopleReport.from_person_set_collections(
-        [phenotype_role_collection]
+        [phenotype_role_collection],
     )
 
     assert len(people_report.people_counters) == 1
@@ -70,7 +70,7 @@ def test_people_report(
             "phenotype 2",
             "unaffected",
             "unknown",
-        ]
+        ],
     )
 
     assert len(people_counters.to_dict().keys()) == 4

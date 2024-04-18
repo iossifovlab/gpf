@@ -1,19 +1,15 @@
 from __future__ import annotations
 
-import os
 import glob
 import logging
+import os
 from copy import deepcopy
-
-from typing import List, Any, Dict, Optional, cast, Union, Callable
+from typing import Any, Callable, Dict, List, Optional, Union, cast
 
 import fsspec
-
-import yaml
 import toml
-
+import yaml
 from box import Box
-
 from cerberus import Validator
 
 from dae.utils.dict_utils import recursive_dict_update
@@ -106,7 +102,7 @@ class GPFConfigParser:
         config_files: List[str] = []
         for filetype in cls.filetype_parsers:
             config_files += glob.glob(
-                os.path.join(dirname, f"**/*{filetype}"), recursive=True
+                os.path.join(dirname, f"**/*{filetype}"), recursive=True,
             )
         return config_files
 
@@ -147,7 +143,7 @@ class GPFConfigParser:
     @classmethod
     def parse_and_interpolate_file(
         cls, filename: Union[str, os.PathLike],
-        conf_dir: Optional[str] = None
+        conf_dir: Optional[str] = None,
     ) -> dict:
         """Open a file and interpolate it's contents."""
         try:
@@ -179,7 +175,7 @@ class GPFConfigParser:
     def validate_config(
         config: Dict[str, Any],
         schema: dict,
-        conf_dir: Optional[str] = None
+        conf_dir: Optional[str] = None,
     ) -> dict:
         """Perform validation on a parsed config."""
         if conf_dir is not None and "conf_dir" in schema:
@@ -191,7 +187,7 @@ class GPFConfigParser:
         schema_copy = deepcopy(schema)
 
         validator = GPFConfigValidator(
-            schema_copy, conf_dir=conf_dir
+            schema_copy, conf_dir=conf_dir,
         )
         if not validator.validate(config):
             if conf_dir:
@@ -268,7 +264,7 @@ class GPFConfigParser:
             if config_path.endswith(".conf") or config_path.endswith(".toml"):
                 logger.warning(
                     "TOML configurations have been deprecated - %s",
-                    config_path
+                    config_path,
                 )
             try:
                 config = cls.load_config(

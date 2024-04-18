@@ -2,7 +2,6 @@
 
 from dae.effect_annotation.effect import AlleleEffects, EffectTranscript
 
-
 EFFECT_DATA_1 = "splice-site!" \
     "NUDT4:splice-site|" \
     "NUDT4B:splice-site|" \

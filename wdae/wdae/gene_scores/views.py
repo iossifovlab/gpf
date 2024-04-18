@@ -1,12 +1,10 @@
 
-from rest_framework import status
-from rest_framework.response import Response
-from rest_framework.request import Request
-from django.http.response import StreamingHttpResponse
-
 import numpy as np
-
+from django.http.response import StreamingHttpResponse
 from query_base.query_base import QueryBaseView
+from rest_framework import status
+from rest_framework.request import Request
+from rest_framework.response import Response
 
 
 class GeneScoresListView(QueryBaseView):
@@ -41,7 +39,7 @@ class GeneScoresListView(QueryBaseView):
                     "large_values_desc": score.large_values_desc,
                 }
                 for score in gene_scores
-            ]
+            ],
         )
 
 
@@ -84,7 +82,7 @@ class GeneScoresGetGenesView(QueryBaseView):
         gene_score_id = score_desc.resource_id
 
         return self.gpf_instance.get_gene_score(gene_score_id).get_genes(
-            score_name, score_min=score_min, score_max=score_max
+            score_name, score_min=score_min, score_max=score_max,
         )
 
     def post(self, request: Request) -> Response:

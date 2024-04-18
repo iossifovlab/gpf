@@ -1,5 +1,6 @@
 from django.urls import re_path
-from gene_profiles_api import views, table_views
+
+from gene_profiles_api import table_views, views
 
 urlpatterns = [
     re_path(
@@ -20,6 +21,6 @@ urlpatterns = [
     re_path(
         r"^/single-view/gene/(?P<gene_symbol>.+)/?$",
         views.ProfileView.as_view(),
-        name="agp_single_view_profile"
-    )
+        name="agp_single_view_profile",
+    ),
 ]

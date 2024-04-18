@@ -1,22 +1,29 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,C0415,
 
-import textwrap
 import contextlib
+import textwrap
 import time
-from typing import Callable, ContextManager, Generator
+from collections.abc import Generator
+from typing import Callable, ContextManager
 
 import pytest
-
 from gpf_instance.gpf_instance import WGPFInstance
 
-from dae.testing import setup_directories, setup_genome, \
-    setup_empty_gene_models, setup_pedigree, setup_vcf, vcf_study
-from dae.genomic_resources.repository_factory import \
-    build_genomic_resource_repository
-from wdae_tests.integration.testing import setup_wgpf_instance, LiveServer
+from dae.genomic_resources.repository_factory import (
+    build_genomic_resource_repository,
+)
+from dae.testing import (
+    setup_directories,
+    setup_empty_gene_models,
+    setup_genome,
+    setup_pedigree,
+    setup_vcf,
+    vcf_study,
+)
+from wdae_tests.integration.testing import LiveServer, setup_wgpf_instance
 
 
-@pytest.fixture
+@pytest.fixture()
 def alla_wgpf(tmp_path_factory: pytest.TempPathFactory) -> WGPFInstance:
     root_path = tmp_path_factory.mktemp("alla_wgpf_instance")
 
@@ -29,21 +36,21 @@ def alla_wgpf(tmp_path_factory: pytest.TempPathFactory) -> WGPFInstance:
         f"""
         >chrA
         {100 * "A"}
-        """
+        """,
     )
     setup_empty_gene_models(
         root_path / "alla_gpf" / "empty_gene_models" / "empty_genes.txt")
     local_repo = build_genomic_resource_repository({
         "id": "alla_local",
         "type": "directory",
-        "directory": str(root_path / "alla_gpf")
+        "directory": str(root_path / "alla_gpf"),
     })
 
     gpf = setup_wgpf_instance(
         root_path / "gpf_instance",
         reference_genome_id="genome",
         gene_models_id="empty_gene_models",
-        grr=local_repo
+        grr=local_repo,
     )
     ped_path = setup_pedigree(
         root_path / "vcf_data" / "in.ped",
@@ -71,11 +78,11 @@ def alla_wgpf(tmp_path_factory: pytest.TempPathFactory) -> WGPFInstance:
     return gpf
 
 
-@pytest.fixture
+@pytest.fixture()
 def remote_wgpf_instance(
     alla_wgpf: WGPFInstance,
     wdae_django_server: Callable[
-        [WGPFInstance, str], ContextManager[LiveServer]]
+        [WGPFInstance, str], ContextManager[LiveServer]],
 ) -> Callable[[], ContextManager[LiveServer]]:
 
     @contextlib.contextmanager

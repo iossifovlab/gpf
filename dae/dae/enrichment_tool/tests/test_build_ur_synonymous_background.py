@@ -3,16 +3,14 @@ import pathlib
 
 import pytest
 
+from dae.enrichment_tool.build_ur_synonymous_enrichment_background import cli
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.studies.study import GenotypeData
-
-from dae.enrichment_tool.build_ur_synonymous_enrichment_background import \
-    cli
 from dae.testing import setup_pedigree, setup_vcf, vcf_study
 from dae.testing.t4c8_import import t4c8_gpf
 
 
-@pytest.fixture
+@pytest.fixture()
 def t4c8_instance(
     tmp_path: pathlib.Path,
 ) -> GPFInstance:
@@ -21,7 +19,7 @@ def t4c8_instance(
     return gpf_instance
 
 
-@pytest.fixture
+@pytest.fixture()
 def t4c8_study_1(t4c8_instance: GPFInstance) -> GenotypeData:
     root_path = pathlib.Path(t4c8_instance.dae_dir)
     ped_path = setup_pedigree(
@@ -47,7 +45,7 @@ f1.3     ch3      dad3  mom3  2   2      prb
 chr1   54   .  T   C   .    .      .    GT     0/1  0/0  0/1 0/0  0/0  0/0
 chr1   119  .  A   G   .    .      .    GT     0/0  0/0  0/0 0/1  0/0  0/1
 chr1   122  .  A   C   .    .      .    GT     0/0  1/0  0/0 0/0  0/0  0/0
-        """)  # noqa
+        """)
 
     study = vcf_study(
         root_path,
@@ -69,9 +67,9 @@ def test_build_ur_synonymous_background(
         [
             "study_1",
             "-o", str(output),
-            "--parents-called", "2"
+            "--parents-called", "2",
         ],
-        t4c8_instance
+        t4c8_instance,
     )
 
     assert output.exists()

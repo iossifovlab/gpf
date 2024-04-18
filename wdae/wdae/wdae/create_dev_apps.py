@@ -2,8 +2,9 @@
 # wdaemanage.py shell < create_dev_apps.py
 
 import os
-from oauth2_provider.models import get_application_model  # type: ignore
+
 from django.contrib.auth import get_user_model
+from oauth2_provider.models import get_application_model  # type: ignore
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "wdae.settings")
 
@@ -14,15 +15,7 @@ Application = get_application_model()
 
 user = User.objects.get(id=1)  # Get admin user, should be the first one
 
-new_application = Application(**{
-    "name": "gpfjs dev app",
-    "user_id": user.id,  # type: ignore
-    "client_type": "public",
-    "authorization_grant_type": "authorization-code",
-    "redirect_uris": f"{gpfjs_url}/datasets",
-    "client_id": "gpfjs",
-    "skip_authorization": True,
-})
+new_application = Application(name="gpfjs dev app", user_id=user.id, client_type="public", authorization_grant_type="authorization-code", redirect_uris=f"{gpfjs_url}/datasets", client_id="gpfjs", skip_authorization=True)
 new_application.full_clean()
 new_application.save()
 

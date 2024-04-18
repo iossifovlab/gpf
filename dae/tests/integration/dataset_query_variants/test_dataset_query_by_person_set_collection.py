@@ -1,23 +1,22 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-import textwrap
 import pathlib
+import textwrap
 from typing import Optional
 
 import pytest
 
-from dae.studies.study import GenotypeDataGroup
 from dae.genotype_storage.genotype_storage import GenotypeStorage
-
-from dae.testing import setup_pedigree, setup_dataset, \
-    setup_vcf, vcf_study
+from dae.studies.study import GenotypeDataGroup
+from dae.testing import setup_dataset, setup_pedigree, setup_vcf, vcf_study
 from dae.testing.alla_import import alla_gpf
+
 # from dae.pedigrees.loader import FamiliesLoader
 
 
-@pytest.fixture
+@pytest.fixture()
 def dataset(
     tmp_path: pathlib.Path,
-    genotype_storage: GenotypeStorage
+    genotype_storage: GenotypeStorage,
 ) -> GenotypeDataGroup:
     root_path = tmp_path
     gpf_instance = alla_gpf(root_path, genotype_storage)
@@ -75,8 +74,8 @@ chrA   6   .  A   C     .    .      .    GT     0/0  0/1  0/0
                     "sources": [
                         {
                             "from": "pedigree",
-                            "source": "status"
-                        }
+                            "source": "status",
+                        },
                     ],
                     "default": {
                         "color": "#aaaaaa",
@@ -89,23 +88,23 @@ chrA   6   .  A   C     .    .      .    GT     0/0  0/1  0/0
                             "id": "developmental_disorder",
                             "name": "developmental disorder",
                             "values": [
-                                "affected"
-                            ]
+                                "affected",
+                            ],
                         },
                         {
                             "color": "#00ff00",
                             "id": "unaffected",
                             "name": "unaffected",
                             "values": [
-                                "unaffected"
-                            ]
+                                "unaffected",
+                            ],
                         },
-                    ]
+                    ],
                 },
                 "selected_person_set_collections": [
-                    "phenotype"
-                ]
-            }
+                    "phenotype",
+                ],
+            },
         })
     study2 = vcf_study(
         root_path,
@@ -120,8 +119,8 @@ chrA   6   .  A   C     .    .      .    GT     0/0  0/1  0/0
                     "sources": [
                         {
                             "from": "pedigree",
-                            "source": "status"
-                        }
+                            "source": "status",
+                        },
                     ],
                     "default": {
                         "color": "#aaaaaa",
@@ -134,23 +133,23 @@ chrA   6   .  A   C     .    .      .    GT     0/0  0/1  0/0
                             "id": "autism",
                             "name": "autism",
                             "values": [
-                                "affected"
-                            ]
+                                "affected",
+                            ],
                         },
                         {
                             "color": "#ffffff",
                             "id": "unaffected",
                             "name": "unaffected",
                             "values": [
-                                "unaffected"
-                            ]
+                                "unaffected",
+                            ],
                         },
-                    ]
+                    ],
                 },
                 "selected_person_set_collections": [
-                    "phenotype"
-                ]
-            }
+                    "phenotype",
+                ],
+            },
         })
 
     (root_path / "dataset").mkdir(exist_ok=True)
@@ -186,7 +185,7 @@ chrA   6   .  A   C     .    .      .    GT     0/0  0/1  0/0
 
 
 def test_dataset_build_person_set_collection(
-    dataset: GenotypeDataGroup
+    dataset: GenotypeDataGroup,
 ) -> None:
 
     assert dataset is not None
@@ -217,12 +216,12 @@ def test_dataset_build_person_set_collection(
         (["ch2"], 1),
         (["mom1"], 0),
         (["mom2"], 0),
-    ]
+    ],
 )
 def test_query_by_person_ids(
     dataset: GenotypeDataGroup,
     person_ids: Optional[list[str]],
-    count: int
+    count: int,
 ) -> None:
     vs = list(dataset.query_variants(
         person_ids=person_ids,
@@ -243,12 +242,12 @@ def test_query_by_person_ids(
         (("phenotype", ["developmental_disorder", "unaffected"]), 3),
         (("phenotype", ["autism", "developmental_disorder"]), 2),
         (("phenotype", ["autism", "developmental_disorder", "unaffected"]), 4),
-    ]
+    ],
 )
 def test_query_by_person_set_coolection(
     dataset: GenotypeDataGroup,
     person_set_collection: Optional[tuple[str, list[str]]],
-    count: int
+    count: int,
 ) -> None:
     vs = list(dataset.query_variants(
         person_set_collection=person_set_collection,

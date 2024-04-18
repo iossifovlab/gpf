@@ -1,8 +1,8 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import os
-from dae.inmemory_storage.inmemory_import_storage import \
-    InmemoryImportStorage
+
 from dae.import_tools.import_tools import ImportProject
+from dae.inmemory_storage.inmemory_import_storage import InmemoryImportStorage
 
 
 def test_simple_project_storage_type(simple_project: ImportProject) -> None:
@@ -27,7 +27,7 @@ def test_simple_project_pedigree_size(simple_project: ImportProject) -> None:
 
 
 def test_simple_project_destination_study_dir(
-    simple_project: ImportProject
+    simple_project: ImportProject,
 ) -> None:
     dest = InmemoryImportStorage._get_destination_study_dir(simple_project)
     assert dest.endswith("storage/test_import")
@@ -35,7 +35,7 @@ def test_simple_project_destination_study_dir(
 
 
 def test_simple_project_get_loader_types(
-    simple_project: ImportProject
+    simple_project: ImportProject,
 ) -> None:
     loader_types = simple_project.get_variant_loader_types()
     assert loader_types == {"denovo"}

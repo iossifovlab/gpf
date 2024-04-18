@@ -1,33 +1,41 @@
 from __future__ import annotations
 
-import os
-import sys
 import argparse
 import logging
+import os
+import sys
 from contextlib import closing
 from typing import List, Optional, Union
-from pysam import VariantFile, TabixFile, \
-    tabix_index  # pylint: disable=no-name-in-module
 
-from dae.annotation.annotate_utils import AnnotationTool, \
-    produce_partfile_paths, produce_regions
-from dae.annotation.context import CLIAnnotationContext
+from pysam import (
+    TabixFile,
+    VariantFile,
+    tabix_index,  # pylint: disable=no-name-in-module
+)
+
 from dae.annotation.annotatable import VCFAllele
+from dae.annotation.annotate_utils import (
+    AnnotationTool,
+    produce_partfile_paths,
+    produce_regions,
+)
 from dae.annotation.annotation_factory import build_annotation_pipeline
-from dae.annotation.annotation_pipeline import AnnotationPipeline, \
-    ReannotationPipeline, AnnotatorInfo
-
-from dae.utils.verbosity_configuration import VerbosityConfiguration
-from dae.utils.fs_utils import tabix_index_filename
-
+from dae.annotation.annotation_pipeline import (
+    AnnotationPipeline,
+    AnnotatorInfo,
+    ReannotationPipeline,
+)
+from dae.annotation.context import CLIAnnotationContext
 from dae.task_graph import TaskGraphCli
+from dae.utils.fs_utils import tabix_index_filename
+from dae.utils.verbosity_configuration import VerbosityConfiguration
 
 logger = logging.getLogger("annotate_vcf")
 
 
 def update_header(
     variant_file: VariantFile,
-    pipeline: Union[AnnotationPipeline, ReannotationPipeline]
+    pipeline: Union[AnnotationPipeline, ReannotationPipeline],
 ) -> None:
     """Update a variant file's header with annotation pipeline scores."""
     header = variant_file.header
@@ -71,7 +79,7 @@ def combine(
     pipeline_config: Optional[list[AnnotatorInfo]],
     grr_definition: Optional[dict],
     partfile_paths: List[str],
-    output_file_path: str
+    output_file_path: str,
 ) -> None:
     """Combine annotated region parts into a single VCF file."""
     pipeline = build_annotation_pipeline(
@@ -81,7 +89,7 @@ def combine(
     with closing(VariantFile(input_file_path)) as input_file:
         update_header(input_file, pipeline)
         with closing(
-            VariantFile(output_file_path, "w", header=input_file.header)
+            VariantFile(output_file_path, "w", header=input_file.header),
         ) as output_file:
             for partfile_path in partfile_paths:
                 partfile = VariantFile(partfile_path)
@@ -100,7 +108,7 @@ class AnnotateVCFTool(AnnotationTool):
         """Construct and configure argument parser."""
         parser = argparse.ArgumentParser(
             description="Annotate VCF",
-            formatter_class=argparse.ArgumentDefaultsHelpFormatter
+            formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         )
         parser.add_argument("input", default="-", nargs="?",
                             help="the input vcf file")
@@ -143,7 +151,7 @@ class AnnotateVCFTool(AnnotationTool):
         with closing(VariantFile(input_file)) as in_file:
             update_header(in_file, pipeline)
             with pipeline.open(), closing(VariantFile(
-                out_file_path, "w", header=in_file.header
+                out_file_path, "w", header=in_file.header,
             )) as out_file:
                 annotation_attributes = pipeline.get_attributes()
 
@@ -159,14 +167,14 @@ class AnnotateVCFTool(AnnotationTool):
                     if vcf_var.ref is None:
                         logger.warning(
                             "vcf variant without reference: %s %s",
-                            vcf_var.chrom, vcf_var.pos
+                            vcf_var.chrom, vcf_var.pos,
                         )
                         continue
 
                     if vcf_var.alts is None:
                         logger.info(
                             "vcf variant without alternatives: %s %s",
-                            vcf_var.chrom, vcf_var.pos
+                            vcf_var.chrom, vcf_var.pos,
                         )
                         continue
 
@@ -180,14 +188,14 @@ class AnnotateVCFTool(AnnotationTool):
                         if isinstance(pipeline, ReannotationPipeline):
                             annotation = pipeline.annotate(
                                 VCFAllele(
-                                    vcf_var.chrom, vcf_var.pos, vcf_var.ref, alt
-                                ), dict(vcf_var.info)
+                                    vcf_var.chrom, vcf_var.pos, vcf_var.ref, alt,
+                                ), dict(vcf_var.info),
                             )
                         else:
                             annotation = pipeline.annotate(
                                 VCFAllele(
-                                    vcf_var.chrom, vcf_var.pos, vcf_var.ref, alt
-                                )
+                                    vcf_var.chrom, vcf_var.pos, vcf_var.ref, alt,
+                                ),
                             )
 
                         for buff, attribute in zip(buffers, annotation_attributes):
@@ -234,7 +242,7 @@ class AnnotateVCFTool(AnnotationTool):
                 self.grr.definition, output,
                 self.args.allow_repeated_attributes,
                 pipeline_config_old],
-                []
+                [],
             )
         else:
             with closing(TabixFile(self.args.input)) as pysam_file:
@@ -251,7 +259,7 @@ class AnnotateVCFTool(AnnotationTool):
                     raw_pipeline_config, self.grr.definition,
                     file_path, self.args.allow_repeated_attributes,
                     pipeline_config_old],
-                    []
+                    [],
                 ))
 
             assert self.grr is not None
@@ -260,7 +268,7 @@ class AnnotateVCFTool(AnnotationTool):
                 combine,
                 [self.args.input, self.pipeline.get_info(),
                 self.grr.definition, file_paths, output],
-                region_tasks
+                region_tasks,
             )
 
 

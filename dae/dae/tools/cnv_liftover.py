@@ -1,26 +1,25 @@
 #!/usr/bin/env python
 
-import sys
 import argparse
 import logging
+import sys
 import textwrap
-from typing import cast, Optional
-
-from dae.utils.verbosity_configuration import VerbosityConfiguration
-from dae.genomic_resources.repository_factory import \
-    build_genomic_resource_repository
-from dae.genomic_resources.reference_genome import \
-    build_reference_genome_from_resource
-from dae.annotation.annotation_factory import \
-    build_annotation_pipeline
+from typing import Optional, cast
 
 from dae.annotation.annotatable import CNVAllele
-from dae.variants.family_variant import FamilyAllele
-
+from dae.annotation.annotation_factory import build_annotation_pipeline
+from dae.genomic_resources.reference_genome import (
+    build_reference_genome_from_resource,
+)
+from dae.genomic_resources.repository_factory import (
+    build_genomic_resource_repository,
+)
 from dae.gpf_instance.gpf_instance import GPFInstance
-from dae.variants_loaders.cnv.loader import CNVLoader
 from dae.pedigrees.loader import FamiliesLoader
 from dae.utils.statistics import StatsCollection
+from dae.utils.verbosity_configuration import VerbosityConfiguration
+from dae.variants.family_variant import FamilyAllele
+from dae.variants_loaders.cnv.loader import CNVLoader
 
 logger = logging.getLogger("denovo_liftover")
 
@@ -47,7 +46,7 @@ def parse_cli_arguments(argv: list[str]) -> argparse.Namespace:
 
     parser.add_argument(
         "--stats", help="filename to store liftover statistics",
-        default="stats.txt"
+        default="stats.txt",
     )
 
     parser.add_argument(
@@ -81,7 +80,7 @@ def main(
     families_filename = families_filenames[0]
 
     families_loader = FamiliesLoader(
-        families_filename, **families_params
+        families_filename, **families_params,
     )
     families = families_loader.load()
 
@@ -103,7 +102,7 @@ def main(
             attributes:
             - source: liftover_annotatable
               name: target_annotatable
-        """
+        """,
     )
 
     pipeline = build_annotation_pipeline(

@@ -1,13 +1,13 @@
-import pathlib
 import logging
+import pathlib
 from threading import Lock
 from typing import Optional
 
 from box import Box
 
-from dae.pheno.pheno_data import PhenotypeData, PhenotypeStudy
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.phenotype_data import pheno_conf_schema
+from dae.pheno.pheno_data import PhenotypeData, PhenotypeStudy
 
 logger = logging.getLogger(__name__)
 
@@ -23,13 +23,13 @@ class PhenoRegistry:
     def _register_study(self, study: PhenotypeData) -> None:
         if study.pheno_id in self._cache:
             raise ValueError(
-                f"Pheno ID {study.pheno_id} already loaded."
+                f"Pheno ID {study.pheno_id} already loaded.",
             )
 
         self._cache[study.pheno_id] = study
 
     def register_phenotype_data(
-        self, phenotype_data: PhenotypeData, lock: bool = True
+        self, phenotype_data: PhenotypeData, lock: bool = True,
     ) -> None:
         """Register a phenotype data study."""
         if lock:
@@ -53,7 +53,7 @@ class PhenoRegistry:
             pheno_id,
             dbfile=config["phenotype_data"]["dbfile"],
             browser_dbfile=config["phenotype_data"]["browser_dbfile"],
-            config=config["phenotype_data"]
+            config=config["phenotype_data"],
         )
         return phenotype_data
 

@@ -1,13 +1,11 @@
 """Family members' roles with respect to the proband."""
 
 import logging
+from collections import defaultdict
 from typing import Optional
 
-from collections import defaultdict
-
-from dae.variants.attributes import Role, Status, Sex
 from dae.pedigrees.family import Family, Person
-
+from dae.variants.attributes import Role, Sex, Status
 
 logger = logging.getLogger(__name__)
 
@@ -222,7 +220,7 @@ class FamilyRoleBuilder:  # pylint: disable=too-few-public-methods
         return matings
 
     def _assign_roles_step_parents_and_half_siblings(
-        self, proband: Person
+        self, proband: Person,
     ) -> None:
         if proband.mom is None or proband.dad is None:
             return
@@ -240,7 +238,7 @@ class FamilyRoleBuilder:  # pylint: disable=too-few-public-methods
                 for halfsibling_id in maternal_halfsiblings_ids:
                     halfsibling = self.family.persons[halfsibling_id]
                     self._set_person_role(
-                        halfsibling, Role.maternal_half_sibling
+                        halfsibling, Role.maternal_half_sibling,
                     )
         if proband.dad is not None:
             dad_mates = filter(
@@ -256,7 +254,7 @@ class FamilyRoleBuilder:  # pylint: disable=too-few-public-methods
                 for halfsibling_id in paternal_halfsiblings_ids:
                     halfsibling = self.family.persons[halfsibling_id]
                     self._set_person_role(
-                        halfsibling, Role.paternal_half_sibling
+                        halfsibling, Role.paternal_half_sibling,
                     )
 
     def _assign_unknown_roles(self) -> None:

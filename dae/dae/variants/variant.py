@@ -4,17 +4,14 @@ from __future__ import annotations
 import enum
 import itertools
 import logging
-
-from typing import List, Dict, Set, Any, Optional, cast, Callable
+from typing import Any, Callable, Dict, List, Optional, Set, cast
 
 import pysam
 
-from dae.utils.variant_utils import trim_str_left_right, trim_str_right_left
 from dae.effect_annotation.effect import AlleleEffects, EffectGene
-
+from dae.utils.variant_utils import trim_str_left_right, trim_str_right_left
 from dae.variants import core
 from dae.variants.attributes import TransmissionType
-
 
 logger = logging.getLogger(__name__)
 
@@ -161,7 +158,7 @@ class VariantDesc:
 def cshl_format(
     pos: int, ref: str, alt: str,
     trimmer: Callable[
-        [int, str, str], tuple[int, str, str]] = trim_str_left_right
+        [int, str, str], tuple[int, str, str]] = trim_str_left_right,
 ) -> VariantDesc:
     """Build a description for an CSHL allele."""
     # pylint: disable=invalid-name
@@ -176,7 +173,7 @@ def cshl_format(
 
     if len(r) > len(a) and len(a) == 0:
         return VariantDesc(
-            core.Allele.Type.small_deletion, p, length=len(r)
+            core.Allele.Type.small_deletion, p, length=len(r),
         )
 
     # len(ref) < len(alt):
@@ -185,12 +182,12 @@ def cshl_format(
             core.Allele.Type.small_insertion, p, alt=a, length=len(a))
 
     return VariantDesc(
-        core.Allele.Type.complex, p, ref=r, alt=a, length=max(len(r), len(a))
+        core.Allele.Type.complex, p, ref=r, alt=a, length=max(len(r), len(a)),
     )
 
 
 def tandem_repeat(
-    ref: str, alt: str, min_mono_reference: int = 8
+    ref: str, alt: str, min_mono_reference: int = 8,
 ) -> tuple[Optional[str], Optional[int], Optional[int]]:
     """Check if an allele is a tandem repeat and builds it."""
     for period in range(1, len(ref) // 2 + 1):
@@ -218,7 +215,7 @@ def tandem_repeat(
 def vcf2cshl(
     pos: int, ref: str, alt: str,
     trimmer: Callable[
-        [int, str, str], tuple[int, str, str]] = trim_str_right_left
+        [int, str, str], tuple[int, str, str]] = trim_str_right_left,
 ) -> VariantDesc:
     """Build a description for an VCF allele."""
     tr_vd = None
@@ -270,7 +267,7 @@ class VariantDetails:
             reference: str, alternative: str) -> VariantDetails:
         """Build variant details from a VCF variant."""
         return VariantDetails(
-            chrom, vcf2cshl(position, reference, alternative)
+            chrom, vcf2cshl(position, reference, alternative),
         )
 
     @staticmethod
@@ -320,7 +317,7 @@ class SummaryAllele(core.Allele):
         self.matched_gene_effects: list[EffectGene] = []
         self._attributes: Dict[str, Any] = {
             "allele_index": allele_index,
-            "transmission_type": transmission_type
+            "transmission_type": transmission_type,
         }
         if attributes is not None:
             self.update_attributes(attributes)
@@ -356,7 +353,7 @@ class SummaryAllele(core.Allele):
 
         attributes = encode_attributes(self._attributes)
 
-        return {**attributes, **{
+        return {**attributes,
             "chrom": self.chromosome,
             "position": self.position,
             "reference": self.reference,
@@ -368,7 +365,7 @@ class SummaryAllele(core.Allele):
             "variant_type":
             self.variant_type.value if self.variant_type is not None else None,
             "effects": str(self.effects) if self.effects is not None else None,
-        }}
+        }
 
     @property
     def variant_type(self) -> core.Allele.Type:
@@ -418,13 +415,13 @@ class SummaryAllele(core.Allele):
                         zip(
                             record["effect_gene_genes"],
                             record["effect_gene_types"],
-                        )
+                        ),
                     ),
                     list(
                         zip(
                             record["effect_details_transcript_ids"],
                             record["effect_details_details"],
-                        )
+                        ),
                     ),
                 )
                 self._effects = effects
@@ -568,7 +565,7 @@ class SummaryAllele(core.Allele):
             "allele_index": 0,
             "summary_index": allele.attributes.get("summary_index"),
             "bucket_index": allele.attributes.get("bucket_index"),
-            "sj_index": sj_index
+            "sj_index": sj_index,
 
             # FIXME uncomment when ref allele count/freq computation is fixed
             # for schema1. At the moment all ref allles will have a freq of
@@ -672,7 +669,7 @@ class SummaryVariant:
             [
                 aa.alternative if aa.alternative else ""
                 for aa in self.alt_alleles
-            ]
+            ],
         )
 
     @property
@@ -878,9 +875,9 @@ class SummaryVariantFactory:
         end_position = record.get("end_position")
         reference = record["reference"]
         alternative = record.get("alternative")
-        allele_type = record.get("variant_type", None)
+        allele_type = record.get("variant_type")
         transmission_type = TransmissionType(
-            record.get("transmission_type", TransmissionType.transmitted)
+            record.get("transmission_type", TransmissionType.transmitted),
         )
 
         if position is not None and end_position is not None and \
@@ -897,7 +894,7 @@ class SummaryVariantFactory:
             reference,
             alternative=alternative,
             summary_index=summary_index,
-            end_position=record.get("end_position", None),
+            end_position=record.get("end_position"),
             allele_type=allele_type,
             allele_index=allele_index,
             transmission_type=transmission_type,
@@ -915,7 +912,7 @@ class SummaryVariantFactory:
         for record in records:
             allele = SummaryVariantFactory.summary_allele_from_record(
                 record, transmission_type=transmission_type,
-                attr_filter=attr_filter
+                attr_filter=attr_filter,
             )
             alleles.append(allele)
         if not alleles[0].is_reference_allele:
@@ -948,7 +945,7 @@ class SummaryVariantFactory:
                 "summary_variant_index": summary_variant_index,
                 "allele_index": 0,
                 "allele_count": allele_count,
-            }
+            },
         )
 
         for allele_index, alt in enumerate(alts):
@@ -961,7 +958,7 @@ class SummaryVariantFactory:
                     "summary_variant_index": summary_variant_index,
                     "allele_index": allele_index + 1,
                     "allele_count": allele_count,
-                }
+                },
             )
         return SummaryVariantFactory.summary_variant_from_records(
             records, transmission_type=transmission_type)

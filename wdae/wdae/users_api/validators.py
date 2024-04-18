@@ -1,8 +1,8 @@
 from typing import Any, List, Union
 
 from django.contrib.auth.models import Group
-
 from rest_framework import serializers
+
 from .models import WdaeUser
 
 
@@ -34,7 +34,7 @@ class SomeSuperuserLeftValidator:
         ):
             raise serializers.ValidationError(
                 f"The group {WdaeUser.SUPERUSER_GROUP} cannot be removed. "
-                f"No superuser will be left if that is done."
+                f"No superuser will be left if that is done.",
             )
 
     def set_context(self, serializer_field: Any) -> None:

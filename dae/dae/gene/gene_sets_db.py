@@ -1,24 +1,29 @@
 """Classes for handling of gene sets."""
 
 import abc
+import copy
 import logging
 import os
-import copy
 import textwrap
-
-from typing import Optional, Any
 from functools import cached_property
+from typing import Any, Optional
 
 from jinja2 import Template
 from markdown2 import markdown
 
-from dae.gene.gene_term import read_ewa_set_file, read_gmt_file, \
-    read_mapping_file
-from dae.genomic_resources.repository import GenomicResource
-from dae.genomic_resources.resource_implementation import \
-    GenomicResourceImplementation, get_base_resource_schema, \
-    InfoImplementationMixin, ResourceConfigValidationMixin
+from dae.gene.gene_term import (
+    read_ewa_set_file,
+    read_gmt_file,
+    read_mapping_file,
+)
 from dae.genomic_resources.fsspec_protocol import build_local_resource
+from dae.genomic_resources.repository import GenomicResource
+from dae.genomic_resources.resource_implementation import (
+    GenomicResourceImplementation,
+    InfoImplementationMixin,
+    ResourceConfigValidationMixin,
+    get_base_resource_schema,
+)
 from dae.task_graph.graph import Task, TaskGraph
 
 logger = logging.getLogger(__name__)
@@ -52,7 +57,7 @@ class GeneSet:
         if name == "syms":
             return self.syms
 
-        raise KeyError()
+        raise KeyError
 
 
 class BaseGeneSetCollection(abc.ABC):
@@ -61,19 +66,19 @@ class BaseGeneSetCollection(abc.ABC):
     @abc.abstractmethod
     def get_gene_set(self, gene_set_id: str) -> Optional[GeneSet]:
         """Return the gene set if found; returns None if not found."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @abc.abstractmethod
     def get_all_gene_sets(self) -> list[GeneSet]:
         """Return list of all gene sets in the collection."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
 
 class GeneSetCollection(
     GenomicResourceImplementation,
     ResourceConfigValidationMixin,
     InfoImplementationMixin,
-    BaseGeneSetCollection
+    BaseGeneSetCollection,
 ):
     """Class representing a collection of gene sets in a resource."""
 
@@ -81,7 +86,7 @@ class GeneSetCollection(
         super().__init__(resource)
 
         self.config = self.validate_and_normalize_schema(
-            self.config, resource
+            self.config, resource,
         )
         config = resource.get_config()
         self.collection_id = self.config["id"]
@@ -114,7 +119,7 @@ class GeneSetCollection(
                 names_file = self.resource.open_raw_file(names_filename)
             gene_terms = read_mapping_file(
                 self.resource.open_raw_file(filename),
-                names_file
+                names_file,
             )
         elif collection_format == "gmt":
             filename = config["filename"]
@@ -146,7 +151,7 @@ class GeneSetCollection(
         gene_set = self.gene_sets.get(gene_set_id)
         if gene_set is None:
             logger.warning(
-                "%s not found in %s", gene_set_id, self.gene_sets.keys()
+                "%s not found in %s", gene_set_id, self.gene_sets.keys(),
             )
         return gene_set
 
@@ -195,7 +200,7 @@ class GeneSetCollection(
             "directory": {"type": "string"},
             "format": {"type": "string"},
             "web_label": {"type": "string"},
-            "web_format_str": {"type": "string"}
+            "web_format_str": {"type": "string"},
 
         }
 
@@ -209,7 +214,7 @@ class GeneSetCollection(
         return b"placeholder"
 
     def add_statistics_build_tasks(
-        self, task_graph: TaskGraph, **kwargs: Any
+        self, task_graph: TaskGraph, **kwargs: Any,
     ) -> list[Task]:
         return []
 
@@ -368,7 +373,7 @@ class GeneSetsDb:
                     "name": gsc_id,
                     "format": format_str.split("|"),
                     "types": [],
-                }
+                },
             )
         return gene_sets_collections_desc
 
@@ -397,7 +402,7 @@ class GeneSetsDb:
 
     def get_gene_set(
         self, collection_id: str,
-        gene_set_id: str
+        gene_set_id: str,
     ) -> Optional[GeneSet]:
         """Find and return a gene set in a gene set collection."""
         gsc = self.gene_set_collections[collection_id]
@@ -412,7 +417,7 @@ def build_gene_set_collection_from_file(
         collection_id: Optional[str] = None,
         collection_format: Optional[str] = None,
         web_label: Optional[str] = None,
-        web_format_str: Optional[str] = None
+        web_format_str: Optional[str] = None,
 ) -> GeneSetCollection:
     """Return a Gene Set Collection by adapting a file to a local resource."""
     dirname = os.path.dirname(filename)
@@ -440,7 +445,7 @@ def build_gene_set_collection_from_file(
         "id": collection_id,
         "format": collection_format,
         "web_label": web_label,
-        "web_format_str": web_format_str
+        "web_format_str": web_format_str,
     }
     if collection_format == "directory":
         config["directory"] = basename
@@ -453,7 +458,7 @@ def build_gene_set_collection_from_file(
 
 
 def build_gene_set_collection_from_resource(
-    resource: GenomicResource
+    resource: GenomicResource,
 ) -> GeneSetCollection:
     """Return a Gene Set Collection built from a resource."""
     if resource is None:

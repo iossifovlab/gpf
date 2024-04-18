@@ -1,31 +1,43 @@
 # pylint: disable=too-many-lines
 from __future__ import annotations
 
-import logging
 import copy
-from urllib.parse import quote
-from types import TracebackType
-
-from typing import Iterator, Optional, cast, Any, Union, Callable, Type, \
-    Iterable
-
+import logging
+from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
 from functools import lru_cache
+from types import TracebackType
+from typing import (
+    Any,
+    Callable,
+    Optional,
+    Type,
+    Union,
+    cast,
+)
+from urllib.parse import quote
 
-from dae.genomic_resources.repository import GenomicResource
-from dae.genomic_resources.resource_implementation import \
-    ResourceConfigValidationMixin, get_base_resource_schema
-from dae.genomic_resources.genomic_position_table import \
-    build_genomic_position_table, Line, \
-    VCFGenomicPositionTable, VCFLine
+from dae.genomic_resources.genomic_position_table import (
+    Line,
+    VCFGenomicPositionTable,
+    VCFLine,
+    build_genomic_position_table,
+)
 from dae.genomic_resources.genomic_position_table.line import LineBase
-from dae.genomic_resources.histogram import \
-    HistogramConfig, Histogram, \
-    build_histogram_config, load_histogram, \
-    NumberHistogram
+from dae.genomic_resources.histogram import (
+    Histogram,
+    HistogramConfig,
+    NumberHistogram,
+    build_histogram_config,
+    load_histogram,
+)
+from dae.genomic_resources.repository import GenomicResource
+from dae.genomic_resources.resource_implementation import (
+    ResourceConfigValidationMixin,
+    get_base_resource_schema,
+)
 
-from .aggregators import build_aggregator, AGGREGATOR_SCHEMA, Aggregator
-
+from .aggregators import AGGREGATOR_SCHEMA, Aggregator, build_aggregator
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +53,7 @@ VCF_TYPE_CONVERSION_MAP = {
 SCORE_TYPE_PARSERS = {
     "str": str,
     "float": float,
-    "int": int
+    "int": int,
 }
 
 
@@ -97,7 +109,7 @@ class _ScoreDef:
             self.allele_aggregator,
             self.small_values_desc,
             self.large_values_desc,
-            self.hist_conf
+            self.hist_conf,
         )
 
     def __post_init__(self) -> None:
@@ -107,25 +119,25 @@ class _ScoreDef:
             "str": {},
             "float": {"", "nan", ".", "NA"},
             "int": {"", "nan", ".", "NA"},
-            "bool": {}
+            "bool": {},
         }
         default_pos_aggregators = {
             "float": "mean",
             "int": "mean",
             "str": "concatenate",
-            "bool": None
+            "bool": None,
         }
         default_nuc_aggregators = {
             "float": "max",
             "int": "max",
             "str": "concatenate",
-            "bool": None
+            "bool": None,
         }
         default_allele_aggregators = {
             "float": "max",
             "int": "max",
             "str": "concatenate",
-            "bool": None
+            "bool": None,
         }
         if self.pos_aggregator is None:
             self.pos_aggregator = default_pos_aggregators[self.value_type]
@@ -244,12 +256,12 @@ class GenomicScore(ResourceConfigValidationMixin):
         assert self.resource.config is not None
         self.config: dict = self.resource.config
         self.config = self.validate_and_normalize_schema(
-            self.config, resource
+            self.config, resource,
         )
         self.config["id"] = resource.resource_id
         self.table_loaded = False
         self.table = build_genomic_position_table(
-            self.resource, self.config["table"]
+            self.resource, self.config["table"],
         )
         self.score_definitions = self._build_scoredefs()
 
@@ -296,13 +308,13 @@ class GenomicScore(ResourceConfigValidationMixin):
                     "null_hist": {"type": "dict", "schema": {
                         "reason": {
                             "type": "string",
-                        }
+                        },
                     }},
                     "histogram": {"type": "dict", "schema": {
                         "type": {"type": "string"},
                         "number_of_bins": {
                             "type": "number",
-                            "dependencies": {"type": "number"}
+                            "dependencies": {"type": "number"},
                         },
                         "view_range": {"type": "dict", "schema": {
                             "min": {"type": "number"},
@@ -310,27 +322,27 @@ class GenomicScore(ResourceConfigValidationMixin):
                         }, "dependencies": {"type": "number"}},
                         "x_log_scale": {
                             "type": "boolean",
-                            "dependencies": {"type": "number"}
+                            "dependencies": {"type": "number"},
                         },
                         "y_log_scale": {
                             "type": "boolean",
-                            "dependencies": {"type": ["number", "categorical"]}
+                            "dependencies": {"type": ["number", "categorical"]},
                         },
                         "x_min_log": {
                             "type": "number",
-                            "dependencies": {"type": ["number", "categorical"]}
+                            "dependencies": {"type": ["number", "categorical"]},
                         },
                         "value_order": {
                             "type": "list", "schema": {"type": "string"},
-                            "dependencies": {"type": "categorical"}
+                            "dependencies": {"type": "categorical"},
                         },
                         "reason": {
                             "type": "string",
-                            "dependencies": {"type": "null"}
-                        }
+                            "dependencies": {"type": "null"},
+                        },
                     }},
-                }
-            }
+                },
+            },
         }
         return {
             **get_base_resource_schema(),
@@ -343,24 +355,24 @@ class GenomicScore(ResourceConfigValidationMixin):
                 "header": {"type": ["string", "list"]},
                 "chrom": {"type": "dict", "schema": {
                     "index": {"type": "integer"},
-                    "name": {"type": "string", "excludes": "index"}
+                    "name": {"type": "string", "excludes": "index"},
                 }},
                 "pos_begin": {"type": "dict", "schema": {
                     "index": {"type": "integer"},
-                    "name": {"type": "string", "excludes": "index"}
+                    "name": {"type": "string", "excludes": "index"},
                 }},
                 "pos_end": {"type": "dict", "schema": {
                     "index": {"type": "integer"},
-                    "name": {"type": "string", "excludes": "index"}
+                    "name": {"type": "string", "excludes": "index"},
                 }},
                 "chrom_mapping": {"type": "dict", "schema": {
                     "filename": {
                         "type": "string",
-                        "excludes": ["add_prefix", "del_prefix"]
+                        "excludes": ["add_prefix", "del_prefix"],
                     },
                     "add_prefix": {"type": "string"},
-                    "del_prefix": {"type": "string", "excludes": "add_prefix"}
-                }}
+                    "del_prefix": {"type": "string", "excludes": "add_prefix"},
+                }},
             }},
             "scores": scores_schema,
             "histograms": {"type": "list", "schema": {
@@ -373,11 +385,11 @@ class GenomicScore(ResourceConfigValidationMixin):
                     "x_min_log": {"type": "number"},
                     "x_scale": {"type": "string"},
                     "y_scale": {"type": "string"},
-                }
+                },
             }},
             "default_annotation": {
-                "type": ["dict", "list"], "allow_unknown": True
-            }
+                "type": ["dict", "list"], "allow_unknown": True,
+            },
         }
 
     @staticmethod
@@ -407,7 +419,7 @@ class GenomicScore(ResourceConfigValidationMixin):
                 col_index=col_index,
                 hist_conf=hist_conf,
                 value_parser=value_parser,
-                na_values=score_conf.get("na_values")
+                na_values=score_conf.get("na_values"),
             )
 
             scores[score_conf["id"]] = score_def
@@ -416,7 +428,7 @@ class GenomicScore(ResourceConfigValidationMixin):
     @staticmethod
     def _parse_vcf_scoredefs(
         vcf_header_info: Optional[dict[str, Any]],
-        config_scoredefs: Optional[dict[str, _ScoreDef]]
+        config_scoredefs: Optional[dict[str, _ScoreDef]],
     ) -> dict[str, _ScoreDef]:
         def converter(val: Any) -> Any:
             try:
@@ -446,7 +458,7 @@ class GenomicScore(ResourceConfigValidationMixin):
                 allele_aggregator=None,
                 small_values_desc=None,
                 large_values_desc=None,
-                hist_conf=None
+                hist_conf=None,
             )
         if config_scoredefs is None:
             return vcf_scoredefs
@@ -578,7 +590,7 @@ class GenomicScore(ResourceConfigValidationMixin):
         self,
         exc_type: Optional[Type[BaseException]],
         exc_value: Optional[BaseException],
-        exc_tb: Optional[TracebackType]
+        exc_tb: Optional[TracebackType],
     ) -> None:
         if exc_type is not None:
             logger.error(
@@ -589,7 +601,7 @@ class GenomicScore(ResourceConfigValidationMixin):
     @staticmethod
     def _line_to_begin_end(line: ScoreLine) -> tuple[int, int]:
         if line.pos_end < line.pos_begin:
-            raise IOError(
+            raise OSError(
                 f"The resource line {line} has a regions "
                 f" with end {line.pos_end} smaller that the "
                 f"begining {line.pos_end}.")
@@ -601,10 +613,10 @@ class GenomicScore(ResourceConfigValidationMixin):
 
     def _fetch_lines(
         self, chrom: str,
-        pos_begin: Optional[int], pos_end: Optional[int]
+        pos_begin: Optional[int], pos_end: Optional[int],
     ) -> Iterator[ScoreLine]:
         for line in self.table.get_records_in_region(
-            chrom, pos_begin, pos_end
+            chrom, pos_begin, pos_end,
         ):
             yield ScoreLine(line, self.score_definitions)
 
@@ -619,7 +631,7 @@ class GenomicScore(ResourceConfigValidationMixin):
 
     def fetch_region(
         self, chrom: str,
-        pos_begin: Optional[int], pos_end: Optional[int], scores: Iterable[str]
+        pos_begin: Optional[int], pos_end: Optional[int], scores: Iterable[str],
     ) -> Iterator[dict[str, ScoreValue]]:
         """Return score values in a region."""
         if not self.is_open():
@@ -642,7 +654,7 @@ class GenomicScore(ResourceConfigValidationMixin):
                         scr_id,
                         chrom,
                         line_pos_begin,
-                        line_pos_end
+                        line_pos_end,
                     )
                     val[scr_id] = None
 
@@ -730,7 +742,7 @@ class PositionScore(GenomicScore):
         return [line.get_score(scr) for scr in requested_scores]
 
     def _build_scores_agg(
-        self, scores: list[PositionScoreQuery]
+        self, scores: list[PositionScoreQuery],
     ) -> list[PositionScoreAggr]:
         score_aggs = []
         aggregator_type: Optional[str]
@@ -744,13 +756,13 @@ class PositionScore(GenomicScore):
             score_aggs.append(
                 PositionScoreAggr(
                     score.score,
-                    build_aggregator(aggregator_type))
+                    build_aggregator(aggregator_type)),
             )
         return score_aggs
 
     def fetch_scores_agg(  # pylint: disable=too-many-arguments,too-many-locals
             self, chrom: str, pos_begin: int, pos_end: int,
-            scores: Optional[list[PositionScoreQuery]] = None
+            scores: Optional[list[PositionScoreQuery]] = None,
     ) -> list[Aggregator]:
         """Fetch score values in a region and aggregates them.
 
@@ -778,14 +790,10 @@ class PositionScore(GenomicScore):
                 val = line.get_score(sagg.score)
 
                 left = (
-                    pos_begin
-                    if pos_begin >= line_pos_begin
-                    else line_pos_begin
+                    max(pos_begin, line_pos_begin)
                 )
                 right = (
-                    pos_end
-                    if pos_end <= line_pos_end
-                    else line_pos_end
+                    min(pos_end, line_pos_end)
                 )
                 for _ in range(left, right + 1):
                     sagg.position_aggregator.add(val)
@@ -808,14 +816,14 @@ class NPScore(GenomicScore):
         schema["table"]["schema"]["reference"] = {
             "type": "dict", "schema": {
                 "index": {"type": "integer"},
-                "name": {"type": "string", "excludes": "index"}
-            }
+                "name": {"type": "string", "excludes": "index"},
+            },
         }
         schema["table"]["schema"]["alternative"] = {
             "type": "dict", "schema": {
                 "index": {"type": "integer"},
-                "name": {"type": "string", "excludes": "index"}
-            }
+                "name": {"type": "string", "excludes": "index"},
+            },
         }
 
         scores_schema = schema["scores"]["schema"]["schema"]
@@ -875,7 +883,7 @@ class NPScore(GenomicScore):
 
     def fetch_scores_agg(
             self, chrom: str, pos_begin: int, pos_end: int,
-            scores: Optional[list[NPScoreQuery]] = None
+            scores: Optional[list[NPScoreQuery]] = None,
     ) -> list[Aggregator]:
         """Fetch score values in a region and aggregates them."""
         # pylint: disable=too-many-locals
@@ -910,14 +918,10 @@ class NPScore(GenomicScore):
             for sagg in score_aggs:
                 val = line.get_score(sagg.score)
                 left = (
-                    pos_begin
-                    if pos_begin >= line.pos_begin
-                    else line.pos_begin
+                    max(pos_begin, line.pos_begin)
                 )
                 right = (
-                    pos_end
-                    if pos_end <= line.pos_end
-                    else line.pos_end
+                    min(pos_end, line.pos_end)
                 )
                 for _ in range(left, right + 1):
                     sagg.nucleotide_aggregator.add(val)
@@ -936,20 +940,20 @@ class AlleleScore(GenomicScore):
         schema["table"]["schema"]["reference"] = {
             "type": "dict", "schema": {
                 "index": {"type": "integer"},
-                "name": {"type": "string", "excludes": "index"}
-            }
+                "name": {"type": "string", "excludes": "index"},
+            },
         }
         schema["table"]["schema"]["alternative"] = {
             "type": "dict", "schema": {
                 "index": {"type": "integer"},
-                "name": {"type": "string", "excludes": "index"}
-            }
+                "name": {"type": "string", "excludes": "index"},
+            },
         }
         schema["table"]["schema"]["variant"] = {
             "type": "dict", "schema": {
                 "index": {"type": "integer"},
-                "name": {"type": "string", "excludes": "index"}
-            }
+                "name": {"type": "string", "excludes": "index"},
+            },
         }
         return schema
 
@@ -984,7 +988,7 @@ class AlleleScore(GenomicScore):
             for sc in requested_scores]
 
     def _build_scores_agg(
-        self, score_queries: list[AlleleScoreQuery]
+        self, score_queries: list[AlleleScoreQuery],
     ) -> list[AlleleScoreAggr]:
         score_aggs = []
         for squery in score_queries:
@@ -1009,7 +1013,7 @@ class AlleleScore(GenomicScore):
 
     def fetch_scores_agg(
             self, chrom: str, pos_begin: int, pos_end: int,
-            scores: Optional[list[AlleleScoreQuery]] = None
+            scores: Optional[list[AlleleScoreQuery]] = None,
     ) -> list[Aggregator]:
         """Fetch score values in a region and aggregates them."""
         # pylint: disable=too-many-locals
@@ -1044,14 +1048,10 @@ class AlleleScore(GenomicScore):
             for sagg in score_aggs:
                 val = line.get_score(sagg.score)
                 left = (
-                    pos_begin
-                    if pos_begin >= line.pos_begin
-                    else line.pos_begin
+                    max(pos_begin, line.pos_begin)
                 )
                 right = (
-                    pos_end
-                    if pos_end <= line.pos_end
-                    else line.pos_end
+                    min(pos_end, line.pos_end)
                 )
                 for _ in range(left, right + 1):
                     sagg.allele_aggregator.add(val)
@@ -1062,7 +1062,7 @@ class AlleleScore(GenomicScore):
 
 
 def build_score_from_resource(
-    resource: GenomicResource
+    resource: GenomicResource,
 ) -> GenomicScore:
     """Build a genomic score resource and return the coresponding score."""
     type_to_ctor = {

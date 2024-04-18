@@ -1,8 +1,9 @@
 """Helper class for tagging families."""
-from typing import Callable, Iterable, Optional, Any
+from collections.abc import Iterable
+from typing import Any, Callable, Optional
 
-from dae.variants.attributes import Role, Status, Sex
-from dae.pedigrees.family import Person, Family, FamilyTag
+from dae.pedigrees.family import Family, FamilyTag, Person
+from dae.variants.attributes import Role, Sex, Status
 
 
 def _get_mom(family: Family) -> Optional[Person]:
@@ -61,7 +62,7 @@ def check_tag(family: Family, tag: FamilyTag) -> bool:
 def check_family_tags_query(
     family: Family, or_mode: bool,
     include_tags: set[FamilyTag],
-    exclude_tags: set[FamilyTag]
+    exclude_tags: set[FamilyTag],
 ) -> bool:
     """Check if a family passes specified filters."""
     if or_mode:
@@ -401,7 +402,7 @@ def _build_family_type_full(family: Family) -> str:
         family.members_in_order, key=lambda p: f"{p.role}.{p.sex}")
     for person in members_by_role_and_sex:
         family_type.append(
-            f"{person.role}.{person.sex}.{person.status}"
+            f"{person.role}.{person.sex}.{person.status}",
         )
     return ":".join(family_type)
 

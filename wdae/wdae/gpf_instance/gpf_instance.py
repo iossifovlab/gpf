@@ -2,28 +2,26 @@
 from __future__ import annotations
 
 import logging
-import pathlib
 import os
-from typing import Optional, Dict, Any, Union, cast
-from threading import Lock
+import pathlib
 from functools import cached_property
+from threading import Lock
+from typing import Any, Dict, Optional, Union, cast
+
 from box import Box
-
-from studies.study_wrapper import StudyWrapper, RemoteStudyWrapper
-from studies.remote_study_db import RemoteStudyDB
-from studies.remote_study import RemoteGenotypeData
-
-from remote.gene_sets_db import RemoteGeneSetsDb
 from remote.denovo_gene_sets_db import RemoteDenovoGeneSetsDb
-from remote.rest_api_client import RESTClient
+from remote.gene_sets_db import RemoteGeneSetsDb
 from remote.genomic_scores_registry import RemoteGenomicScoresRegistry
+from remote.rest_api_client import RESTClient
+from studies.remote_study import RemoteGenotypeData
+from studies.remote_study_db import RemoteStudyDB
+from studies.study_wrapper import RemoteStudyWrapper, StudyWrapper
 
+from dae.common_reports.common_report import CommonReport
+from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.studies.study import GenotypeData
 from dae.utils.fs_utils import find_directory_with_a_file
 from dae.utils.helpers import to_response_json
-from dae.gpf_instance.gpf_instance import GPFInstance
-from dae.common_reports.common_report import CommonReport
-
 
 logger = logging.getLogger(__name__)
 __all__ = ["get_wgpf_instance"]
@@ -40,12 +38,12 @@ class WGPFInstance(GPFInstance):
     def __init__(
         self, dae_config: dict[str, Any],
         dae_dir: Union[str, pathlib.Path],
-        **kwargs: dict[str, Any]
+        **kwargs: dict[str, Any],
     ) -> None:
         self._remote_study_db: Optional[RemoteStudyDB] = None
         self._clients: Dict[str, RESTClient] = {}
         self._study_wrappers: Dict[
-            str, Union[StudyWrapper, RemoteStudyWrapper]
+            str, Union[StudyWrapper, RemoteStudyWrapper],
         ] = {}
         self._gp_configuration: Optional[dict[str, Any]] = None
         self._gp_table_configuration: Optional[dict[str, Any]] = None
@@ -62,7 +60,7 @@ class WGPFInstance(GPFInstance):
     @staticmethod
     def build(
         config_filename: Optional[Union[str, pathlib.Path]] = None,
-        **kwargs: Any
+        **kwargs: Any,
     ) -> WGPFInstance:
         dae_config, dae_dir = GPFInstance._build_gpf_config(config_filename)
         return WGPFInstance(dae_config, dae_dir, **kwargs)
@@ -85,7 +83,7 @@ class WGPFInstance(GPFInstance):
                         base_url=remote["base_url"],
                         port=remote.get("port", None),
                         protocol=remote.get("protocol", None),
-                        gpf_prefix=remote.get("gpf_prefix", None)
+                        gpf_prefix=remote.get("gpf_prefix", None),
                     )
                     self._clients[client.remote_id] = client
 
@@ -142,7 +140,7 @@ class WGPFInstance(GPFInstance):
         return registry
 
     def register_genotype_data(
-        self, genotype_data: GenotypeData
+        self, genotype_data: GenotypeData,
     ) -> None:
         super().register_genotype_data(genotype_data)
 
@@ -152,12 +150,12 @@ class WGPFInstance(GPFInstance):
             genotype_data,
             self._pheno_registry,
             self.gene_scores_db,
-            self
+            self,
         )
         self._study_wrappers[genotype_data.study_id] = study_wrapper
 
     def make_wdae_wrapper(
-        self, dataset_id: str
+        self, dataset_id: str,
     ) -> Optional[Union[StudyWrapper, RemoteStudyWrapper]]:
         """Create and return wdae study wrapper."""
         genotype_data = self.get_genotype_data(dataset_id)
@@ -167,11 +165,11 @@ class WGPFInstance(GPFInstance):
         if genotype_data.is_remote:
             return RemoteStudyWrapper(cast(RemoteGenotypeData, genotype_data))
         return StudyWrapper(
-            genotype_data, self._pheno_registry, self.gene_scores_db, self
+            genotype_data, self._pheno_registry, self.gene_scores_db, self,
         )
 
     def get_wdae_wrapper(
-        self, dataset_id: str
+        self, dataset_id: str,
     ) -> Optional[Union[StudyWrapper, RemoteStudyWrapper]]:
         """Return wdae study wrapper."""
         wrapper: Optional[Union[StudyWrapper, RemoteStudyWrapper]] = None
@@ -204,7 +202,7 @@ class WGPFInstance(GPFInstance):
         return sorted(result, key=_ordering)
 
     def get_genotype_data(
-        self, genotype_data_id: str
+        self, genotype_data_id: str,
     ) -> Union[GenotypeData, RemoteGenotypeData]:
         genotype_data = super().get_genotype_data(genotype_data_id)
         if genotype_data is not None:
@@ -222,7 +220,7 @@ class WGPFInstance(GPFInstance):
         assert self._remote_study_db is not None
         return cast(
             Box,
-            self._remote_study_db.get_genotype_data_config(genotype_data_id)
+            self._remote_study_db.get_genotype_data_config(genotype_data_id),
         )
 
     def get_common_report(self, study_id: str) -> Optional[CommonReport]:
@@ -249,28 +247,28 @@ class WGPFInstance(GPFInstance):
 
     def get_all_denovo_gene_sets(
         self, types: dict[str, Any],
-        datasets: list[Any], collection_id: str
+        datasets: list[Any], collection_id: str,
     ) -> list[dict[str, Any]]:
         # pylint: disable=arguments-differ
         return cast(
             list[dict[str, Any]],
             self.denovo_gene_sets_db.get_all_gene_sets(
-                types, datasets, collection_id
-            )
+                types, datasets, collection_id,
+            ),
         )
 
     def get_denovo_gene_set(
         self, gene_set_id: str,
         types: dict[str, Any],
         datasets: list[Any],
-        collection_id: str
+        collection_id: str,
     ) -> dict[str, Any]:
         # pylint: disable=arguments-differ
         return cast(
             dict[str, Any],
             self.denovo_gene_sets_db.get_gene_set(
-                gene_set_id, types, datasets, collection_id
-            )
+                gene_set_id, types, datasets, collection_id,
+            ),
         )
 
     def get_visible_datasets(self) -> Optional[list[str]]:
@@ -286,7 +284,7 @@ class WGPFInstance(GPFInstance):
         ]
 
     def _gp_find_category_section(
-        self, configuration: dict[str, Any], category: str
+        self, configuration: dict[str, Any], category: str,
     ) -> Optional[str]:
         for gene_set in configuration["geneSets"]:
             if gene_set["category"] == category:
@@ -384,7 +382,7 @@ class WGPFInstance(GPFInstance):
             json_config["order"] = [
                 {
                     "section": self._gp_find_category_section(json_config, o),
-                    "id": o
+                    "id": o,
                 }
                 for o in order
             ]
@@ -402,7 +400,7 @@ class WGPFInstance(GPFInstance):
             }
 
             table_config["columns"].append(
-                column("geneSymbol", "Gene", clickable="createTab")
+                column("geneSymbol", "Gene", clickable="createTab"),
             )
 
             for category in configuration["gene_sets"]:
@@ -419,7 +417,7 @@ class WGPFInstance(GPFInstance):
                         meta=gene_set.get("meta"),
                         display_vertical=True,
                         sortable=True) for gene_set in category["sets"]
-                    ]
+                    ],
                 ))
 
             for category in configuration["genomic_scores"]:
@@ -436,7 +434,7 @@ class WGPFInstance(GPFInstance):
                         meta=genomic_score.get("meta"),
                         display_vertical=True,
                         sortable=True) for genomic_score in category["scores"]
-                    ]
+                    ],
                 ))
 
             if "datasets" in configuration:
@@ -477,14 +475,14 @@ class WGPFInstance(GPFInstance):
                                 sortable=True)
 
                                 for statistic in dataset["statistics"]
-                            ]
+                            ],
                         ))
                     table_config["columns"].append(dataset_col)
 
             if configuration.get("order"):
                 category_order = ["geneSymbol", *configuration["order"]]
                 table_config["columns"].sort(
-                    key=lambda col: category_order.index(col["id"])
+                    key=lambda col: category_order.index(col["id"]),
                 )
 
             self._gp_table_configuration = table_config
@@ -498,7 +496,7 @@ def column(
     display_vertical: bool = False,
     sortable: bool = False,
     columns: Optional[list[dict[str, Any]]] = None,
-    meta: Optional[str] = None
+    meta: Optional[str] = None,
 ) -> dict[str, Any]:
     """Build columns descriptions."""
     if columns is None:
@@ -511,12 +509,12 @@ def column(
         "sortable": sortable,
         "clickable": clickable,
         "columns": columns,
-        "meta": meta
+        "meta": meta,
     }
 
 
 def get_wgpf_instance_path(
-    config_filename: Union[str, pathlib.Path, None] = None
+    config_filename: Union[str, pathlib.Path, None] = None,
 ) -> pathlib.Path:
     """Return the path to the GPF instance in use."""
     if _GPF_INSTANCE is not None:
@@ -547,7 +545,7 @@ def get_wgpf_instance_path(
 
 def get_wgpf_instance(
     config_filename: Union[str, pathlib.Path, None] = None,
-    **kwargs: dict[str, Any]
+    **kwargs: dict[str, Any],
 ) -> WGPFInstance:
     """Load and return a WGPFInstance."""
     # pylint: disable=global-statement
@@ -597,7 +595,7 @@ def reload_datasets(gpf_instance: WGPFInstance) -> None:
                 "unable to find study %s; skipping...", genotype_data_id)
             continue
         DatasetHierarchy.add_relation(
-            gpf_instance.instance_id, genotype_data_id, genotype_data_id
+            gpf_instance.instance_id, genotype_data_id, genotype_data_id,
         )
         direct_descendants = genotype_data.get_studies_ids(leaves=False)
         for study_id in genotype_data.get_studies_ids():
@@ -605,7 +603,7 @@ def reload_datasets(gpf_instance: WGPFInstance) -> None:
                 continue
             is_direct = study_id in direct_descendants
             DatasetHierarchy.add_relation(
-                gpf_instance.instance_id, genotype_data_id, study_id, is_direct
+                gpf_instance.instance_id, genotype_data_id, study_id, is_direct,
             )
 
 

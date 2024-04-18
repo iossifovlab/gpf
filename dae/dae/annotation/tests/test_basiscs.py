@@ -1,8 +1,8 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-from dae.genomic_resources.testing import build_inmemory_test_repository
-from dae.genomic_resources.repository import GR_CONF_FILE_NAME
-from dae.annotation.annotation_factory import build_annotation_pipeline
 from dae.annotation.annotatable import Position
+from dae.annotation.annotation_factory import build_annotation_pipeline
+from dae.genomic_resources.repository import GR_CONF_FILE_NAME
+from dae.genomic_resources.testing import build_inmemory_test_repository
 
 
 def test_recreate_pipeline() -> None:
@@ -17,7 +17,7 @@ def test_recreate_pipeline() -> None:
 
     copy_pipeline = build_annotation_pipeline(
         pipeline_config=pipeline.get_info(),
-        grr_repository=grr_repo
+        grr_repository=grr_repo,
     )
 
     ann = Position("chrBla", 1002)
@@ -42,8 +42,8 @@ def test_basic() -> None:
                 1      11         0.03
                 1      15         0.46
                 2      8          0.01
-                """
-        }
+                """,
+        },
     })
     annotation_cofiguration = """
     - position_score:

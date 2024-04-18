@@ -4,13 +4,11 @@ from typing import Optional
 
 import pytest
 
-from dae.utils.regions import Region
-from dae.testing import setup_pedigree, setup_denovo, \
-    cnv_study
-
-from dae.testing.alla_import import alla_gpf
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.studies.study import GenotypeData
+from dae.testing import cnv_study, setup_denovo, setup_pedigree
+from dae.testing.alla_import import alla_gpf
+from dae.utils.regions import Region
 
 
 @pytest.fixture(scope="module")
@@ -70,7 +68,7 @@ f2        chrA:81-100 CNV-     2||2||1
         (40, 60, None, 2),
         (40, 90, None, 3),
         (40, 81, None, 3),
-    ]
+    ],
 )
 def test_query_cnv_variants(
         imported_study: GenotypeData,

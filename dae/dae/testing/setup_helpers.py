@@ -1,11 +1,12 @@
 import pathlib
 from typing import Optional
 
-from dae.genomic_resources.testing import setup_directories
-from dae.genomic_resources.reference_genome import \
-    build_reference_genome_from_resource
 from dae.genomic_resources.gene_models import build_gene_models_from_resource
+from dae.genomic_resources.reference_genome import (
+    build_reference_genome_from_resource,
+)
 from dae.genomic_resources.repository import GenomicResourceRepo
+from dae.genomic_resources.testing import setup_directories
 from dae.gpf_instance import GPFInstance
 
 
@@ -19,7 +20,7 @@ def setup_gpf_instance(
 
     if not (out_path / "gpf_instance.yaml").exists():
         setup_directories(
-            out_path, {"gpf_instance.yaml": 'instance_id: "test_instance"'}
+            out_path, {"gpf_instance.yaml": 'instance_id: "test_instance"'},
         )
     # pylint: disable=import-outside-toplevel
     reference_genome = None

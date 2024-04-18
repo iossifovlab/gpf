@@ -1,13 +1,15 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 from typing import Any
 
-import yaml
 import numpy as np
 import pytest
+import yaml
 
-from dae.genomic_resources.histogram import NumberHistogram, \
-    NumberHistogramConfig, \
-    build_histogram_config
+from dae.genomic_resources.histogram import (
+    NumberHistogram,
+    NumberHistogramConfig,
+    build_histogram_config,
+)
 
 
 def test_histogram_simple_input() -> None:
@@ -16,7 +18,7 @@ def test_histogram_simple_input() -> None:
         "view_range": {"min": 0, "max": 10},
         "number_of_bins": 10,
         "x_log_scale": False,
-        "y_log_scale": True
+        "y_log_scale": True,
     })
     assert config.y_log_scale
 
@@ -43,7 +45,7 @@ def test_histogram_simple_input2() -> None:
         "view_range": {"min": 1, "max": 11},
         "number_of_bins": 10,
         "x_log_scale": False,
-        "y_log_scale": True
+        "y_log_scale": True,
     })
     assert config.y_log_scale
 
@@ -70,7 +72,7 @@ def test_histogram_choose_bin_lin() -> None:
         "view_range": {"min": 1, "max": 11},
         "number_of_bins": 10,
         "x_log_scale": False,
-        "y_log_scale": True
+        "y_log_scale": True,
     })
     assert config.y_log_scale
 
@@ -93,7 +95,7 @@ def test_histogram_log_scale() -> None:
         "number_of_bins": 4,
         "x_log_scale": True,
         "y_log_scale": False,
-        "x_min_log": 1
+        "x_min_log": 1,
     })
     hist = NumberHistogram(config)
     assert (hist.bins == np.array([0, 1, 10, 100, 1000])).all()
@@ -119,7 +121,7 @@ def test_histogram_choose_bin_log() -> None:
         "number_of_bins": 4,
         "x_log_scale": True,
         "y_log_scale": False,
-        "x_min_log": 1
+        "x_min_log": 1,
     })
     hist = NumberHistogram(config)
     assert (hist.bins == np.array([0, 1, 10, 100, 1000])).all()
@@ -151,7 +153,7 @@ def test_histogram_choose_bin_log2() -> None:
         "number_of_bins": 5,
         "x_log_scale": True,
         "y_log_scale": False,
-        "x_min_log": 0.1
+        "x_min_log": 0.1,
     })
     hist = NumberHistogram(config)
     assert (hist.bins == np.array([0, 0.1, 1, 10, 100, 1000])).all()
@@ -187,17 +189,17 @@ def test_histogram_merge() -> None:
         "view_range": {"min": 0, "max": 10},
         "number_of_bins": 10,
         "x_log_scale": False,
-        "y_log_scale": False
+        "y_log_scale": False,
     })
     hist1 = NumberHistogram(
         config,
         bins=np.arange(0, 11),
-        bars=np.array([0, 0, 0, 1, 0, 0, 0, 1, 0, 2])
+        bars=np.array([0, 0, 0, 1, 0, 0, 0, 1, 0, 2]),
     )
     hist2 = NumberHistogram(
         config,
         bins=np.arange(0, 11),
-        bars=np.array([0, 0, 0, 0, 0, 1, 0, 1, 0, 0])
+        bars=np.array([0, 0, 0, 0, 0, 1, 0, 1, 0, 0]),
     )
 
     hist1.merge(hist2)
@@ -210,12 +212,12 @@ def test_histogram_serialize_deserialize() -> None:
         "view_range": {"min": 0, "max": 10},
         "number_of_bins": 10,
         "x_log_scale": False,
-        "y_log_scale": False
+        "y_log_scale": False,
     })
     hist1 = NumberHistogram(
         config,
         bins=np.arange(0, 11),
-        bars=np.array([0, 0, 0, 1, 0, 0, 0, 1, 0, 2])
+        bars=np.array([0, 0, 0, 1, 0, 0, 0, 1, 0, 2]),
     )
 
     serialized = hist1.serialize()
@@ -236,10 +238,10 @@ def test_histogram_serialize_deserialize() -> None:
 
 @pytest.mark.parametrize("conf", [
     {
-        "number_hist": {}
+        "number_hist": {},
     },
     {
-        "histogram": {"type": "number"}
+        "histogram": {"type": "number"},
     },
 ])
 def test_build_number_histogram_config(conf: dict[str, Any]) -> None:

@@ -4,28 +4,27 @@ from typing import cast
 import pytest
 
 from dae.effect_annotation.annotator import EffectAnnotator
-from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.genomic_resources.gene_models import GeneModels
-
+from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.gpf_instance import GPFInstance
 
 
-@pytest.fixture
+@pytest.fixture()
 def genomic_sequence_2013(gpf_instance_2013: GPFInstance) -> ReferenceGenome:
     return cast(ReferenceGenome, gpf_instance_2013.reference_genome)
 
 
-@pytest.fixture
+@pytest.fixture()
 def gene_models_2013(gpf_instance_2013: GPFInstance) -> GeneModels:
     return cast(GeneModels, gpf_instance_2013.gene_models)
 
 
 def test_chr1_120387132_del_var(
-    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels,
 ) -> None:
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013, genomic_sequence_2013,
-        location="1:120387132", variant="del(71)"
+        location="1:120387132", variant="del(71)",
     )
     assert len(effects) == 1
     effect = effects[0]
@@ -40,11 +39,11 @@ def test_chr1_120387132_del_var(
 
 
 def test_chr2_237172988_ins_var(
-    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels,
 ) -> None:
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013, genomic_sequence_2013,
-        location="2:237172988", variant="ins(TTGTTACG)"
+        location="2:237172988", variant="ins(TTGTTACG)",
     )
     effect = effects[0]
 
@@ -58,11 +57,11 @@ def test_chr2_237172988_ins_var(
 
 
 def test_chr1_802610_867930_cnv_var(
-    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels
+    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels,
 ) -> None:
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013, genomic_sequence_2013,
-        location="1:802610-867930", variant="CNV+"
+        location="1:802610-867930", variant="CNV+",
     )
     assert len(effects) == 3
     effects_sorted = sorted(

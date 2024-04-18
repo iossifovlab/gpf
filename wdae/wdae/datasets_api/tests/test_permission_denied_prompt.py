@@ -1,11 +1,12 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,C0415,
 from django.test import Client
+
 from dae.gpf_instance.gpf_instance import GPFInstance
 
 
 def test_permission_denied_prompt_through_user_client(
     user_client: Client,
-    wdae_gpf_instance: GPFInstance
+    wdae_gpf_instance: GPFInstance,
 ) -> None:
     response = user_client.get("/api/v3/datasets/denied_prompt")
 

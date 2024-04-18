@@ -1,7 +1,4 @@
-from dae.configuration.utils import \
-    validate_existing_path, \
-    validate_path
-
+from dae.configuration.utils import validate_existing_path, validate_path
 
 config_reference_schema = {
     "conf_file": {
@@ -30,7 +27,7 @@ impala_schema = {
     },
     "port": {"type": "integer"},
     "db": {"type": "string"},
-    "pool_size": {"type": "integer", "default": 1}
+    "pool_size": {"type": "integer", "default": 1},
 }
 
 
@@ -56,9 +53,9 @@ remote_schema = {
 }
 
 repository_schema = {
-    "id": {"type": "string", },
-    "type": {"type": "string", },
-    "url": {"type": "string", },
+    "id": {"type": "string"},
+    "type": {"type": "string"},
+    "url": {"type": "string"},
     "directory": {
         "type": "string",
         "required": False,
@@ -73,9 +70,9 @@ repository_schema = {
 }
 
 grr_schema = {
-    "id": {"type": "string", },
-    "type": {"type": "string", },
-    "url": {"type": "string", },
+    "id": {"type": "string"},
+    "type": {"type": "string"},
+    "url": {"type": "string"},
     "endpoint_url": {"type": "string"},
     "directory": {
         "type": "string",
@@ -89,8 +86,8 @@ grr_schema = {
     },
     "children": {"type": "list", "schema": {
         "type": "dict",
-        "schema": repository_schema
-    }}
+        "schema": repository_schema,
+    }},
 }
 
 storage_schema = {
@@ -99,22 +96,22 @@ storage_schema = {
 }
 
 gene_scores_db_schema = {
-    "gene_scores": {"type": "list", "schema": {"type": "string"}}
+    "gene_scores": {"type": "list", "schema": {"type": "string"}},
 }
 
 gene_sets_db_schema = {
-    "gene_set_collections": {"type": "list", "schema": {"type": "string"}}
+    "gene_set_collections": {"type": "list", "schema": {"type": "string"}},
 }
 
 genomic_score_schema = {
     "resource": {"type": "string"},
-    "score": {"type": "string"}
+    "score": {"type": "string"},
 }
 
 dae_conf_schema = {
     "instance_id": {
         "type": "string",
-        "required": True
+        "required": True,
     },
 
     "dae_data_dir": {
@@ -150,7 +147,7 @@ dae_conf_schema = {
                     "schema": storage_schema,
                     "allow_unknown": True,
                 },
-            }
+            },
         },
     },
     "studies": {
@@ -161,14 +158,14 @@ dae_conf_schema = {
     "datasets": {
         "type": "dict",
         "schema": config_reference_schema,
-        "default": {"dir": "datasets"}
+        "default": {"dir": "datasets"},
     },
     "genomic_scores_db": {
         "type": "list",
-        "valuesrules": {"type": "dict", "schema": genomic_score_schema}
+        "valuesrules": {"type": "dict", "schema": genomic_score_schema},
     },
     "gene_profiles_config": {
-        "type": "dict", "schema": config_reference_schema
+        "type": "dict", "schema": config_reference_schema,
     },
     "annotation": {"type": "dict", "schema": config_reference_schema},
     "phenotype_data": {
@@ -178,12 +175,12 @@ dae_conf_schema = {
                 "type": "string",
                 # "check_with": validate_existing_path,
                 "coerce": "abspath",
-            }
+            },
         },
     },
     "remotes": {
         "type": "list",
-        "valuesrules": {"type": "dict", "schema": remote_schema}
+        "valuesrules": {"type": "dict", "schema": remote_schema},
     },
 
     "grr": {
@@ -207,7 +204,7 @@ dae_conf_schema = {
         "schema": {
             "visible_datasets": {
                 "type": "list",
-                "schema": {"type": "string"}
+                "schema": {"type": "string"},
             },
             "permission_denied_prompt_file": {
                 "type": "string",
@@ -217,13 +214,13 @@ dae_conf_schema = {
             "main_description_file": {
                 "type": "string",
                 "coerce": "abspath",
-                "default": "main_description.md"
+                "default": "main_description.md",
             },
             "about_description_file": {
                 "type": "string",
                 "coerce": "abspath",
-                "default": "about_description.md"
-            }
+                "default": "about_description.md",
+            },
         },
     },
     "enrichment": {"type": "dict", "schema": config_reference_schema},

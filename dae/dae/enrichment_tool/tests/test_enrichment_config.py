@@ -52,8 +52,8 @@ def test_enrichment_config_counting(
                     lambda x: x.id
                     in enrichment_config.selected_counting_models,
                     enrichment_config.counting.values(),
-                )
-            )
+                ),
+            ),
         )
         == 2
     )

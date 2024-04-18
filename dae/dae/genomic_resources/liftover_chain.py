@@ -1,18 +1,17 @@
 """Provides LiftOver chain resource."""
 
 from __future__ import annotations
-from typing import Optional, cast, Any
 
 import logging
+from typing import Any, Optional, cast
 
 from pyliftover import LiftOver  # type: ignore
 
 from dae.genomic_resources import GenomicResource
-
-from dae.genomic_resources.resource_implementation import \
-    get_base_resource_schema, \
-    ResourceConfigValidationMixin
-
+from dae.genomic_resources.resource_implementation import (
+    ResourceConfigValidationMixin,
+    get_base_resource_schema,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -59,7 +58,7 @@ class LiftoverChain(ResourceConfigValidationMixin):
 
     @property
     def files(self) -> set[str]:
-        return {self.resource.get_config()["filename"], }
+        return {self.resource.get_config()["filename"]}
 
     @staticmethod
     def map_chromosome(chrom: str, mapping: Optional[dict[str, str]]) -> str:
@@ -103,13 +102,13 @@ class LiftoverChain(ResourceConfigValidationMixin):
             "chrom_prefix": {"type": "dict", "schema": {
                 "variant_coordinates": {"type": "dict", "schema": {
                     "del_prefix": {"type": "string"},
-                    "add_prefix": {"type": "string"}
+                    "add_prefix": {"type": "string"},
                 }},
                 "target_coordinates": {"type": "dict", "schema": {
                     "del_prefix": {"type": "string"},
-                    "add_prefix": {"type": "string"}
-                }}
-            }}
+                    "add_prefix": {"type": "string"},
+                }},
+            }},
         }
 
 

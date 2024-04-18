@@ -1,14 +1,15 @@
 # pylint: disable=W0621,C0114,C0115,C0116,W0212,W0613
 import os
 import time
+from collections.abc import Generator
 from pathlib import Path
-from typing import Any, Optional, Generator
+from typing import Any, Optional
 
 import pytest
 
-from dae.task_graph.executor import SequentialExecutor
-from dae.task_graph.graph import TaskGraph, Task
 from dae.task_graph.cache import CacheRecordType, FileTaskCache
+from dae.task_graph.executor import SequentialExecutor
+from dae.task_graph.graph import Task, TaskGraph
 
 
 def noop(*args: Any, **kwargs: Any) -> None:
@@ -24,10 +25,10 @@ def graph() -> TaskGraph:
         for i in range(10)
     ]
     intermediate_task = graph.create_task(
-        "Intermediate", noop, [], second_layer_tasks[-1:]  # just the last one
+        "Intermediate", noop, [], second_layer_tasks[-1:],  # just the last one
     )
     third_task = graph.create_task(
-        "Third", noop, [], second_layer_tasks + [intermediate_task]
+        "Third", noop, [], second_layer_tasks + [intermediate_task],
     )
     graph.create_task("Fourth", noop, [], [third_task])
     return graph
@@ -76,7 +77,7 @@ def test_file_cache_touch_input_file(graph: TaskGraph, tmp_path: Path) -> None:
 
 @pytest.mark.parametrize("operation", ["touch", "remove"])
 def test_file_cache_mod_input_file_of_intermediate_node(
-    graph: TaskGraph, tmp_path: Path, operation: str
+    graph: TaskGraph, tmp_path: Path, operation: str,
 ) -> None:
     dep_fn = str(tmp_path / "file-used-by-intermediate-node")
     touch(dep_fn)
@@ -101,7 +102,7 @@ def test_file_cache_mod_input_file_of_intermediate_node(
 
 @pytest.mark.parametrize("operation", ["touch", "remove"])
 def test_file_cache_mod_flag_file_of_intermediate_node(
-    graph: TaskGraph, tmp_path: Path, operation: str
+    graph: TaskGraph, tmp_path: Path, operation: str,
 ) -> None:
     execute_with_file_cache(graph, str(tmp_path))
 
@@ -152,7 +153,7 @@ def get_task_by_id(graph: TaskGraph, task_id: str) -> Optional[Task]:
 
 
 def get_task_descendants(
-    graph: TaskGraph, parent_task: Task
+    graph: TaskGraph, parent_task: Task,
 ) -> Generator[Task, None, None]:
     for task in graph.tasks:
         if is_task_descendant(task, parent_task):

@@ -3,16 +3,16 @@ from typing import Optional
 
 import pytest
 
-from dae.testing import setup_pedigree, setup_vcf, vcf_study
-from dae.testing.foobar_import import foobar_gpf
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.studies.study import GenotypeData
+from dae.testing import setup_pedigree, setup_vcf, vcf_study
+from dae.testing.foobar_import import foobar_gpf
 
 
 @pytest.fixture(scope="module")
 def imported_study(
     tmp_path_factory: pytest.TempPathFactory,
-    genotype_storage: GenotypeStorage
+    genotype_storage: GenotypeStorage,
 ) -> GenotypeData:
     root_path = tmp_path_factory.mktemp(
         f"vcf_path_{genotype_storage.storage_id}")
@@ -62,7 +62,7 @@ def imported_study(
     ],
 )
 def test_query_by_roles(
-    roles: Optional[str], count: int, imported_study: GenotypeData
+    roles: Optional[str], count: int, imported_study: GenotypeData,
 ) -> None:
     vs = list(imported_study.query_variants(roles=roles))
     assert len(vs) == count
@@ -80,7 +80,7 @@ def test_query_by_roles(
 )
 def test_query_person_id(
     person_ids: Optional[set[str]], count: int,
-    imported_study: GenotypeData
+    imported_study: GenotypeData,
 ) -> None:
     vs = list(imported_study.query_variants(person_ids=person_ids))
     assert len(vs) == count
@@ -90,12 +90,12 @@ def test_query_person_id(
     "family_ids,count",
     [
         (None, 5),
-        ({"f1"}, 5)
+        ({"f1"}, 5),
     ],
 )
 def test_query_family_id(
     family_ids: Optional[set[str]], count: int,
-    imported_study: GenotypeData
+    imported_study: GenotypeData,
 ) -> None:
     vs = list(imported_study.query_variants(family_ids=family_ids))
     assert len(vs) == count

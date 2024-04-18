@@ -1,15 +1,17 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 from typing import Literal
+
 import pytest
-from dae.variants.attributes import Inheritance
-from dae.variants_loaders.vcf.loader import VcfLoader
+
 from dae.genomic_resources.testing import setup_pedigree, setup_vcf
 from dae.gpf_instance.gpf_instance import GPFInstance
-from dae.testing.acgt_import import acgt_gpf
 from dae.pedigrees.loader import FamiliesLoader
+from dae.testing.acgt_import import acgt_gpf
+from dae.variants.attributes import Inheritance
+from dae.variants_loaders.vcf.loader import VcfLoader
 
 
-@pytest.fixture
+@pytest.fixture()
 def gpf_instance(
         tmp_path_factory: pytest.TempPathFactory) -> GPFInstance:
     root_path = tmp_path_factory.mktemp("instance")
@@ -37,9 +39,9 @@ def gpf_instance(
 #     )
 
 
-@pytest.fixture
+@pytest.fixture()
 def inheritance_trio_denovo_omission(
-    tmp_path_factory: pytest.TempPathFactory
+    tmp_path_factory: pytest.TempPathFactory,
 ) -> tuple[str, str]:
     root_path = tmp_path_factory.mktemp("inheritance_trio_denovo_omission")
     ped_path = setup_pedigree(root_path / "ped_data" / "in.ped", """
@@ -101,7 +103,7 @@ def test_vcf_denovo_mode(
         for fa in fv.alleles:
             print(fa, fa.inheritance_in_members)
             assert set(
-                fa.inheritance_in_members
+                fa.inheritance_in_members,
             ) & unexpected_inheritance == set([])
 
 
@@ -116,7 +118,7 @@ def test_vcf_denovo_mode(
 )
 def test_vcf_omission_mode(
     omission_mode: Literal[
-        "omission", "possible_omission", "ignore", "ala_bala"
+        "omission", "possible_omission", "ignore", "ala_bala",
     ],
     total: Literal[3, 2],
     unexpected_inheritance: set[Inheritance],
@@ -146,13 +148,13 @@ def test_vcf_omission_mode(
             print(20 * "-")
             print(fa, fa.inheritance_in_members)
             assert set(
-                fa.inheritance_in_members
+                fa.inheritance_in_members,
             ) & unexpected_inheritance == set([])
 
 
-@pytest.fixture
+@pytest.fixture()
 def f1_test(
-    tmp_path_factory: pytest.TempPathFactory
+    tmp_path_factory: pytest.TempPathFactory,
 ) -> tuple[str, str]:
     root_path = tmp_path_factory.mktemp("inheritance_trio_denovo_omission")
 
@@ -202,7 +204,7 @@ def test_vcf_loader_params(
     vcf_include_unknown_family_genotypes: bool,
     vcf_include_unknown_person_genotypes: bool,
     count: bool,
-    gpf_instance: GPFInstance
+    gpf_instance: GPFInstance,
 ) -> None:
     params = {
         "vcf_include_reference_genotypes":
@@ -223,7 +225,7 @@ def test_vcf_loader_params(
     assert len(variants) == count
 
 
-@pytest.fixture
+@pytest.fixture()
 def simple_family(tmp_path_factory: pytest.TempPathFactory) -> tuple[str, str]:
     root_path = tmp_path_factory.mktemp("simple_family")
     ped_path = setup_pedigree(root_path / "ped_data" / "in.ped", """
@@ -259,7 +261,7 @@ def simple_family(tmp_path_factory: pytest.TempPathFactory) -> tuple[str, str]:
 
 def test_family_variants(
     simple_family: tuple[str, str],
-    gpf_instance: GPFInstance
+    gpf_instance: GPFInstance,
 ) -> None:
     ped_filename, vcf_filename = simple_family
     families = FamiliesLoader(ped_filename).load()

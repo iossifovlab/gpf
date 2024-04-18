@@ -1,24 +1,24 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 
-import textwrap
 import io
+import textwrap
 
 import pytest
 
-from dae.testing import convert_to_tab_separated
-from dae.pedigrees.loader import FamiliesLoader
-from dae.variants.attributes import Sex, Role
-from dae.variants.core import Allele
-
-from dae.variants_loaders.raw.flexible_variant_loader import \
-    flexible_variant_loader, \
-    location_variant_to_vcf_transformer, \
-    variant_to_variant_type
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.pedigrees.families_data import FamiliesData
+from dae.pedigrees.loader import FamiliesLoader
+from dae.testing import convert_to_tab_separated
+from dae.variants.attributes import Role, Sex
+from dae.variants.core import Allele
+from dae.variants_loaders.raw.flexible_variant_loader import (
+    flexible_variant_loader,
+    location_variant_to_vcf_transformer,
+    variant_to_variant_type,
+)
 
 
-@pytest.fixture
+@pytest.fixture()
 def families() -> FamiliesData:
     ped_content = io.StringIO(convert_to_tab_separated(textwrap.dedent(
         """
@@ -36,7 +36,7 @@ def families() -> FamiliesData:
     return families
 
 
-@pytest.fixture
+@pytest.fixture()
 def denovo_short() -> io.StringIO:
     content = io.StringIO(convert_to_tab_separated(textwrap.dedent(
         """
@@ -44,7 +44,7 @@ def denovo_short() -> io.StringIO:
         f1         15:80137554   ins(A)     2||2||1||2/0||0||1||0
         f2         3:56627768    del(4)     2||2||1/0||0||1
         f1         4:83276456    sub(C->T)  2||2||1||2/0||0||1||0
-        """
+        """,
     )))
     return content
 
@@ -78,7 +78,7 @@ def test_denovo_short_location_variant_transformation(
     next(denovo_short)
 
     transformers = [
-        location_variant_to_vcf_transformer(gpf_instance_2013.reference_genome)
+        location_variant_to_vcf_transformer(gpf_instance_2013.reference_genome),
     ]
 
     generator = flexible_variant_loader(
@@ -111,13 +111,13 @@ def test_denovo_short_location_variant_transformation(
 
 
 def test_denovo_short_variant_type_transformation(
-    denovo_short: io.StringIO
+    denovo_short: io.StringIO,
 ) -> None:
 
     next(denovo_short)
 
     transformers = [
-        variant_to_variant_type()
+        variant_to_variant_type(),
     ]
 
     generator = flexible_variant_loader(

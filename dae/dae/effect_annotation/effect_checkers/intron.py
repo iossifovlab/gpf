@@ -2,7 +2,7 @@ import logging
 from typing import Optional
 
 from ..effect import EffectFactory
-from .effect_checker import EffectChecker, AnnotationEffect, AnnotationRequest
+from .effect_checker import AnnotationEffect, AnnotationRequest, EffectChecker
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +14,7 @@ class IntronicEffectChecker(EffectChecker):
         self.splice_site_length = splice_site_length
 
     def get_effect(
-        self, request: AnnotationRequest
+        self, request: AnnotationRequest,
     ) -> Optional[AnnotationEffect]:
 
         coding_regions = request.cds_regions()

@@ -1,16 +1,16 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import os
+
 from dae.common_reports.common_report import CommonReport
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.studies.study import GenotypeData
 from dae.tools.generate_denovo_gene_sets import main
 
-
 # pytestmark = pytest.mark.usefixtures("gene_info_cache_dir")
 
 
 def test_generate_denovo_gene_sets_script_passes(
-    gpf_instance_2013: GPFInstance
+    gpf_instance_2013: GPFInstance,
 ) -> None:
     gpf_instance_2013.reload()
     main(gpf_instance=gpf_instance_2013, argv=[])
@@ -19,14 +19,14 @@ def test_generate_denovo_gene_sets_script_passes(
 
 def test_generate_denovo_gene_sets_study_1(
     t4c8_instance: GPFInstance,
-    t4c8_study_1: GenotypeData
+    t4c8_study_1: GenotypeData,
 ) -> None:
     main(gpf_instance=t4c8_instance, argv=[])
     report_path = os.path.join(
         t4c8_instance.dae_dir,
         "studies",
         "study_1",
-        "common_report.json"
+        "common_report.json",
     )
     print(t4c8_instance.dae_dir)
     assert os.path.exists(report_path)
@@ -54,14 +54,14 @@ def test_generate_denovo_gene_sets_study_1(
 
 def test_generate_denovo_gene_sets_study_2(
     t4c8_instance: GPFInstance,
-    t4c8_study_2: GenotypeData
+    t4c8_study_2: GenotypeData,
 ) -> None:
     main(gpf_instance=t4c8_instance, argv=[])
     report_path = os.path.join(
         t4c8_instance.dae_dir,
         "studies",
         "study_2",
-        "common_report.json"
+        "common_report.json",
     )
     print(t4c8_instance.dae_dir)
     assert os.path.exists(report_path)

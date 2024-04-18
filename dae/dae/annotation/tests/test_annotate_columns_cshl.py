@@ -1,12 +1,16 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-import textwrap
 import pathlib
+import textwrap
 
 import pytest
 
-from dae.testing import convert_to_tab_separated, setup_directories, \
-    setup_genome, setup_denovo
 from dae.annotation.annotate_columns import cli as cli_columns
+from dae.testing import (
+    convert_to_tab_separated,
+    setup_denovo,
+    setup_directories,
+    setup_genome,
+)
 
 
 def get_file_content_as_string(file: str) -> str:
@@ -14,7 +18,7 @@ def get_file_content_as_string(file: str) -> str:
         return "".join(infile.readlines())
 
 
-@pytest.fixture
+@pytest.fixture()
 def annotate_directory_fixture(tmp_path: pathlib.Path) -> pathlib.Path:
     root_path = tmp_path / "annotate_columns_cshl"
     setup_directories(
@@ -38,17 +42,17 @@ def annotate_directory_fixture(tmp_path: pathlib.Path) -> pathlib.Path:
                         - id: score
                           type: float
                           name: s1
-                    """
+                    """,
                 },
                 "foobar_genome": {
                     "genomic_resource.yaml": """
                         type: genome
                         filename: chrAll.fa
                         chrom_prefix: "chr"
-                    """
-                }
-            }
-        }
+                    """,
+                },
+            },
+        },
     )
     one_content = textwrap.dedent("""
         chrom  pos_begin  s1
@@ -61,7 +65,7 @@ def annotate_directory_fixture(tmp_path: pathlib.Path) -> pathlib.Path:
         f"""
         >chrA
         {100 * "A"}
-        """
+        """,
     )
     return root_path
 

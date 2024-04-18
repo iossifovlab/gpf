@@ -1,7 +1,8 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 
-from users_api.models import WdaeUser
 from django.contrib.auth.models import Group
+
+from users_api.models import WdaeUser
 
 
 def test_without_admin_group_does_not_have_is_staff(user: WdaeUser) -> None:
@@ -9,7 +10,7 @@ def test_without_admin_group_does_not_have_is_staff(user: WdaeUser) -> None:
 
 
 def test_adding_admin_group_sets_is_staff(
-    user: WdaeUser, admin_group: Group
+    user: WdaeUser, admin_group: Group,
 ) -> None:
     user.groups.add(admin_group)
 
@@ -17,7 +18,7 @@ def test_adding_admin_group_sets_is_staff(
 
 
 def test_removing_admin_group_unsets_is_staff(
-    user: WdaeUser, admin_group: Group
+    user: WdaeUser, admin_group: Group,
 ) -> None:
     user.groups.add(admin_group)
 
@@ -26,7 +27,7 @@ def test_removing_admin_group_unsets_is_staff(
 
 
 def test_deleting_some_group_does_not_break_is_staff(
-    user: WdaeUser, admin_group: Group
+    user: WdaeUser, admin_group: Group,
 ) -> None:
     group = Group.objects.create(name="Some Other Group1")
 
@@ -39,7 +40,7 @@ def test_deleting_some_group_does_not_break_is_staff(
 
 
 def test_deleting_admin_group_unsets_is_staff(
-    user: WdaeUser, admin_group: Group
+    user: WdaeUser, admin_group: Group,
 ) -> None:
     user.groups.add(admin_group)
     admin_group.delete()
@@ -50,7 +51,7 @@ def test_deleting_admin_group_unsets_is_staff(
 
 
 def test_adding_through_admin_group_sets_is_staff(
-    user: WdaeUser, admin_group: Group
+    user: WdaeUser, admin_group: Group,
 ) -> None:
     admin_group.user_set.add(user)
 
@@ -60,7 +61,7 @@ def test_adding_through_admin_group_sets_is_staff(
 
 
 def test_adding_multiple_users_through_admin_group_sets_is_staff(
-    user: WdaeUser, admin_group: Group
+    user: WdaeUser, admin_group: Group,
 ) -> None:
     other_user = WdaeUser.objects.create(email="email@test.com")
     admin_group.user_set.add(user, other_user)

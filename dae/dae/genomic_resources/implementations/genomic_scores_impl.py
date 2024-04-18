@@ -1,48 +1,62 @@
 from __future__ import annotations
 
+import json
 import logging
 import textwrap
-import json
-from typing import Any, Optional, cast, Iterable
+from collections.abc import Iterable
 from dataclasses import asdict
+from typing import Any, Optional, cast
 
-from jinja2 import Template
 import numpy as np
+from jinja2 import Template
 
-from dae.genomic_resources.repository import GenomicResourceRepo
-
-from dae.task_graph.graph import Task, TaskGraph
-from dae.utils.regions import Region, split_into_regions, \
-    get_chromosome_length_tabix
-from dae.genomic_resources.repository import GenomicResource
-from dae.genomic_resources.reference_genome import ReferenceGenome, \
-    build_reference_genome_from_resource
-from dae.genomic_resources.resource_implementation import \
-    GenomicResourceImplementation, \
-    InfoImplementationMixin
-from dae.genomic_resources.genomic_position_table.table_inmemory import \
-    InmemoryGenomicPositionTable
-from dae.genomic_resources.genomic_position_table import \
-    TabixGenomicPositionTable
-
-from dae.genomic_resources.histogram import \
-    NumberHistogramConfig, CategoricalHistogramConfig, \
-    NullHistogramConfig, HistogramConfig, \
-    NullHistogram, Histogram, \
-    HistogramError, \
-    build_empty_histogram, \
-    build_default_histogram_conf
+from dae.genomic_resources.genomic_position_table import (
+    TabixGenomicPositionTable,
+)
+from dae.genomic_resources.genomic_position_table.table_inmemory import (
+    InmemoryGenomicPositionTable,
+)
+from dae.genomic_resources.genomic_scores import (
+    GenomicScore,
+    build_score_from_resource,
+)
+from dae.genomic_resources.histogram import (
+    CategoricalHistogramConfig,
+    Histogram,
+    HistogramConfig,
+    HistogramError,
+    NullHistogram,
+    NullHistogramConfig,
+    NumberHistogramConfig,
+    build_default_histogram_conf,
+    build_empty_histogram,
+)
+from dae.genomic_resources.reference_genome import (
+    ReferenceGenome,
+    build_reference_genome_from_resource,
+)
+from dae.genomic_resources.repository import (
+    GenomicResource,
+    GenomicResourceRepo,
+)
+from dae.genomic_resources.resource_implementation import (
+    GenomicResourceImplementation,
+    InfoImplementationMixin,
+)
 from dae.genomic_resources.statistics.min_max import MinMaxValue
-from dae.genomic_resources.genomic_scores import GenomicScore, \
-    build_score_from_resource
-
+from dae.task_graph.graph import Task, TaskGraph
+from dae.utils.regions import (
+    Region,
+    get_chromosome_length_tabix,
+    split_into_regions,
+)
 
 logger = logging.getLogger(__name__)
 
 
 class GenomicScoreImplementation(
     GenomicResourceImplementation,
-    InfoImplementationMixin
+    InfoImplementationMixin,
 ):
     # pylint: disable=too-many-public-methods
     """Genomic scores base class."""
@@ -135,7 +149,7 @@ class GenomicScoreImplementation(
     def add_statistics_build_tasks(
         self,
         task_graph: TaskGraph,
-        **kwargs: Any
+        **kwargs: Any,
     ) -> list[Task]:
         with self.score.open():
             region_size = kwargs.get("region_size", 1_000_000)
@@ -186,18 +200,18 @@ class GenomicScoreImplementation(
 
     @staticmethod
     def _get_reference_genome_cached(
-        grr: Optional[GenomicResourceRepo], genome_id: Optional[str]
+        grr: Optional[GenomicResourceRepo], genome_id: Optional[str],
     ) -> Optional[ReferenceGenome]:
         if genome_id is None or grr is None:
             return None
         if genome_id in GenomicScoreImplementation._REF_GENOME_CACHE:
             return cast(
                 ReferenceGenome,
-                GenomicScoreImplementation._REF_GENOME_CACHE[genome_id]
+                GenomicScoreImplementation._REF_GENOME_CACHE[genome_id],
             )
         try:
             ref_genome = build_reference_genome_from_resource(
-                grr.get_resource(genome_id)
+                grr.get_resource(genome_id),
             )
             logger.info(
                 "Using reference genome label <%s> ",
@@ -214,12 +228,12 @@ class GenomicScoreImplementation(
         return ref_genome
 
     def _get_chrom_regions(
-        self, region_size: int, grr: Optional[GenomicResourceRepo] = None
+        self, region_size: int, grr: Optional[GenomicResourceRepo] = None,
     ) -> list[Region]:
         regions = []
         ref_genome_id = cast(
             str,
-            self.resource.get_labels().get("reference_genome")
+            self.resource.get_labels().get("reference_genome"),
         )
         ref_genome = self._get_reference_genome_cached(grr, ref_genome_id)
         chrom_length: Optional[int]
@@ -249,8 +263,8 @@ class GenomicScoreImplementation(
                 split_into_regions(
                     chrom,
                     chrom_length,
-                    region_size
-                )
+                    region_size,
+                ),
             )
         return regions
 
@@ -263,7 +277,7 @@ class GenomicScoreImplementation(
         graph: TaskGraph,
         score_ids: Iterable[str],
         region_size: int,
-        grr: Optional[GenomicResourceRepo] = None
+        grr: Optional[GenomicResourceRepo] = None,
     ) -> tuple[list[Task], Task]:
         """
         Add and return calculation, merging and saving tasks for min max.
@@ -281,13 +295,13 @@ class GenomicScoreImplementation(
                 f"{self.resource_id}_calculate_min_max_{chrom}_{start}_{end}",
                 GenomicScoreImplementation._do_min_max,
                 [self.resource, score_ids, chrom, start, end],
-                []
+                [],
             ))
         merge_task = graph.create_task(
             f"{self.resource_id}_merge_min_max",
             GenomicScoreImplementation._merge_min_max,
             [score_ids, *min_max_tasks],
-            min_max_tasks
+            min_max_tasks,
         )
         return min_max_tasks, merge_task
 
@@ -295,7 +309,7 @@ class GenomicScoreImplementation(
     def _do_min_max(
         resource: GenomicResource,
         score_ids: Iterable[str],
-        chrom: str, start: int, end: int
+        chrom: str, start: int, end: int,
     ) -> dict[str, MinMaxValue]:
         impl = build_score_implementation_from_resource(resource)
         result = {
@@ -311,10 +325,9 @@ class GenomicScoreImplementation(
     @staticmethod
     def _merge_min_max(
         score_ids: Iterable[str],
-        *calculate_tasks: dict[str, MinMaxValue]
+        *calculate_tasks: dict[str, MinMaxValue],
     ) -> dict[str, Any]:
-        res: dict[str, Optional[MinMaxValue]] = {
-            score_id: None for score_id in score_ids}
+        res: dict[str, Optional[MinMaxValue]] = dict.fromkeys(score_ids)
         for score_id in score_ids:
             for min_max_region in calculate_tasks:
                 if res[score_id] is None:
@@ -328,7 +341,7 @@ class GenomicScoreImplementation(
     @staticmethod
     def _update_hist_confs(
         all_hist_confs: dict[str, HistogramConfig],
-        minmax_task: Optional[dict[str, MinMaxValue]]
+        minmax_task: Optional[dict[str, MinMaxValue]],
     ) -> dict[str, HistogramConfig]:
 
         if minmax_task is None:
@@ -352,7 +365,7 @@ class GenomicScoreImplementation(
     def _add_histogram_tasks(
         self, graph: TaskGraph, all_hist_confs: dict[str, HistogramConfig],
         minmax_task: Optional[Task],
-        region_size: int, grr: Optional[GenomicResourceRepo] = None
+        region_size: int, grr: Optional[GenomicResourceRepo] = None,
     ) -> tuple[list[Task], Task, Task]:
         """
         Add histogram tasks for specific score id.
@@ -368,7 +381,7 @@ class GenomicScoreImplementation(
             f"{self.resource_id}_update_hist_confs",
             GenomicScoreImplementation._update_hist_confs,
             [all_hist_confs, minmax_task],
-            update_hist_confs_deps
+            update_hist_confs_deps,
         )
 
         histogram_tasks = []
@@ -381,19 +394,19 @@ class GenomicScoreImplementation(
                 f"{chrom}_{start}_{end}",
                 GenomicScoreImplementation._do_histogram,
                 [self.resource, update_hist_confs, chrom, start, end],
-                [update_hist_confs]
+                [update_hist_confs],
             ))
         merge_task = graph.create_task(
             f"{self.resource_id}_merge_histograms",
             GenomicScoreImplementation._merge_histograms,
             [self.resource, update_hist_confs, *histogram_tasks],
-            histogram_tasks
+            histogram_tasks,
         )
         save_task = graph.create_task(
             f"{self.resource_id}_save_histograms",
             GenomicScoreImplementation._save_histograms,
             [self.resource, merge_task],
-            [merge_task]
+            [merge_task],
         )
         return histogram_tasks, merge_task, save_task
 
@@ -401,7 +414,7 @@ class GenomicScoreImplementation(
     def _do_histogram(
         resource: GenomicResource,
         all_hist_confs: dict[str, HistogramConfig],
-        chrom: str, start: int, end: int
+        chrom: str, start: int, end: int,
     ) -> dict[str, Histogram]:
         impl = build_score_implementation_from_resource(resource)
         result: dict[str, Histogram] = {}
@@ -425,22 +438,22 @@ class GenomicScoreImplementation(
                             "%s:%s-%s", rec[scr_id], resource.resource_id,
                             chrom, start, end)
                         result[scr_id] = NullHistogram(
-                            NullHistogramConfig(str(err))
+                            NullHistogramConfig(str(err)),
                         )
                     except HistogramError as err:
                         logger.warning(
                             "Histogram for %s nullified",
-                            scr_id
+                            scr_id,
                         )
                         result[scr_id] = NullHistogram(
-                            NullHistogramConfig(str(err))
+                            NullHistogramConfig(str(err)),
                         )
         return result
 
     @staticmethod
     def _merge_histograms(
         resource: GenomicResource, all_hist_confs: dict[str, HistogramConfig],
-        *calculated_histograms: dict[str, Any]
+        *calculated_histograms: dict[str, Any],
     ) -> dict[str, Histogram]:
         result: dict[str, Histogram] = {}
         for score_id, hist_conf in all_hist_confs.items():
@@ -469,7 +482,7 @@ class GenomicScoreImplementation(
             except HistogramError as err:
                 logger.error(
                     "Histogram for %s nullified",
-                    score_id
+                    score_id,
                 )
                 result[score_id] = NullHistogram(
                     NullHistogramConfig(str(err)))
@@ -477,7 +490,7 @@ class GenomicScoreImplementation(
 
     @staticmethod
     def _save_histograms(
-        resource: GenomicResource, merged_histograms: dict[str, Histogram]
+        resource: GenomicResource, merged_histograms: dict[str, Histogram],
     ) -> dict[str, Histogram]:
         impl = build_score_implementation_from_resource(resource)
         proto = resource.proto
@@ -485,7 +498,7 @@ class GenomicScoreImplementation(
             with proto.open_raw_file(
                 resource,
                 impl.score.get_histogram_filename(score_id),
-                mode="wt"
+                mode="wt",
             ) as outfile:
                 outfile.write(score_histogram.serialize())
 
@@ -493,7 +506,7 @@ class GenomicScoreImplementation(
                 with proto.open_raw_file(
                     resource,
                     impl.score.get_histogram_image_filename(score_id),
-                    mode="wb"
+                    mode="wb",
                 ) as outfile:
                     score_histogram.plot(outfile, score_id)
         return merged_histograms
@@ -520,8 +533,8 @@ class GenomicScoreImplementation(
                 "table": {
                     "config": self.score.table.definition,
                     "files_md5": {file_name: manifest[file_name].md5
-                                  for file_name in sorted(self.files)}
-                }
+                                  for file_name in sorted(self.files)},
+                },
             },
             "score_config": [
                 {
@@ -529,13 +542,13 @@ class GenomicScoreImplementation(
                     "type": score_def.value_type,
                     "name": score_def.col_name,
                     "index": score_def.col_index,
-                    "na_values": str(sorted(score_def.na_values))
+                    "na_values": str(sorted(score_def.na_values)),
                 }
-                for score_def in self.score.score_definitions.values()]
+                for score_def in self.score.score_definitions.values()],
         }, indent=2).encode()
 
 
 def build_score_implementation_from_resource(
-    resource: GenomicResource
+    resource: GenomicResource,
 ) -> GenomicScoreImplementation:
     return GenomicScoreImplementation(resource)

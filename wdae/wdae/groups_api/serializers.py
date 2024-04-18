@@ -1,8 +1,8 @@
 from typing import cast
 
-from rest_framework import serializers
-from django.contrib.auth.models import Group
 from datasets_api.permissions import get_dataset_info
+from django.contrib.auth.models import Group
+from rest_framework import serializers
 
 
 class GroupCreateSerializer(serializers.ModelSerializer):
@@ -32,7 +32,7 @@ class GroupRetrieveSerializer(GroupSerializer):
     """Serializer used for group listing."""
 
     users = serializers.SlugRelatedField(
-        many=True, read_only=True, slug_field="email", source="user_set"
+        many=True, read_only=True, slug_field="email", source="user_set",
     )
 
     datasets = serializers.SerializerMethodField()

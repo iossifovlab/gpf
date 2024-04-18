@@ -5,19 +5,24 @@ from typing import Optional
 
 import pytest
 
-from dae.testing import setup_pedigree, setup_vcf, vcf_study, \
-    setup_denovo, denovo_study
-from dae.testing import t4c8_gpf
-from dae.testing.import_helpers import StudyInputLayout
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.studies.study import GenotypeData
+from dae.testing import (
+    denovo_study,
+    setup_denovo,
+    setup_pedigree,
+    setup_vcf,
+    t4c8_gpf,
+    vcf_study,
+)
+from dae.testing.import_helpers import StudyInputLayout
 
 
-@pytest.fixture
+@pytest.fixture()
 def vcf_import_data(
     tmp_path: pathlib.Path,
-    genotype_storage: GenotypeStorage
+    genotype_storage: GenotypeStorage,
 ) -> tuple[pathlib.Path, GPFInstance, StudyInputLayout]:
     root_path = tmp_path
     gpf_instance = t4c8_gpf(root_path)
@@ -55,37 +60,37 @@ chr1   143 .  C   A   .    .      .    GT     0/0 0/0 0/1 0/1 0/0 0/1
         "vcf_fixture", ped_path, [vcf_path], [], [], [])
 
 
-@pytest.fixture
+@pytest.fixture()
 def vcf_fixture(
     vcf_import_data: tuple[pathlib.Path, GPFInstance, StudyInputLayout],
-    genotype_storage: GenotypeStorage
+    genotype_storage: GenotypeStorage,
 ) -> tuple[pathlib.Path, GenotypeData]:
     root_path, gpf_instance, layout = vcf_import_data
 
     project_config_update = {
         "input": {
             "vcf": {
-                "denovo_mode": "denovo"
-            }
+                "denovo_mode": "denovo",
+            },
         },
         "destination": {
-            "storage_id": genotype_storage.storage_id
+            "storage_id": genotype_storage.storage_id,
         },
         "partition_description": {
             "coding_bin": {
-                "coding_effect_types": "noStart,missense,synonymous"
-            }
+                "coding_effect_types": "noStart,missense,synonymous",
+            },
         },
         "processing_config": {
             "denovo": {
                 "chromosomes": ["chr1"],
-                "region_length": 100
+                "region_length": 100,
             },
             "vcf": {
                 "chromosomes": ["chr1"],
-                "region_length": 100
-            }
-        }
+                "region_length": 100,
+            },
+        },
     }
     return root_path, vcf_study(
         root_path,
@@ -132,7 +137,7 @@ def test_coding_bin_for_vcf(
         (None, 8),
         (["missense", "noStart"], 4),
         (["intron"], 4),
-    ]
+    ],
 )
 def test_vcf_import_coding_bin_queries(
     effect_types: Optional[list[str]], count: int,
@@ -144,10 +149,10 @@ def test_vcf_import_coding_bin_queries(
     assert len(vs) == count
 
 
-@pytest.fixture
+@pytest.fixture()
 def denovo_import_data(
     tmp_path: pathlib.Path,
-    genotype_storage: GenotypeStorage
+    genotype_storage: GenotypeStorage,
 ) -> tuple[pathlib.Path, GPFInstance, StudyInputLayout]:
     root_path = tmp_path
 
@@ -183,33 +188,33 @@ def denovo_import_data(
         "denovo_fixture", ped_path, [], [denovo_path], [], [])
 
 
-@pytest.fixture
+@pytest.fixture()
 def denovo_fixture(
     tmp_path: pathlib.Path,
     denovo_import_data: tuple[pathlib.Path, GPFInstance, StudyInputLayout],
-    genotype_storage: GenotypeStorage
+    genotype_storage: GenotypeStorage,
 ) -> tuple[pathlib.Path, GenotypeData]:
     root_path, gpf_instance, layout = denovo_import_data
 
     project_config_update = {
         "destination": {
-            "storage_type": genotype_storage.storage_type
+            "storage_type": genotype_storage.storage_type,
         },
         "partition_description": {
             "coding_bin": {
-                "coding_effect_types": "noStart,missense,synonymous"
-            }
+                "coding_effect_types": "noStart,missense,synonymous",
+            },
         },
         "processing_config": {
             "denovo": {
                 "chromosomes": ["chr1"],
-                "region_length": 100
+                "region_length": 100,
             },
             "vcf": {
                 "chromosomes": ["chr1"],
-                "region_length": 100
-            }
-        }
+                "region_length": 100,
+            },
+        },
     }
     study = denovo_study(
         root_path,
@@ -255,7 +260,7 @@ def test_denovo_coding_bin_for_denovo_import(
         (None, 4),
         (["missense", "noStart"], 2),
         (["intron"], 2),
-    ]
+    ],
 )
 def test_denovo_import_coding_bin_queries(
     effect_types: Optional[list[str]], count: int,

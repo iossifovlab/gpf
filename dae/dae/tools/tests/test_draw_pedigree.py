@@ -7,7 +7,7 @@ from dae.tools.draw_pedigree import main
 
 
 def test_draw_pedigree_simple(
-    tmp_path: pathlib.Path, fixture_dirname: Callable
+    tmp_path: pathlib.Path, fixture_dirname: Callable,
 ) -> None:
     input_file = os.path.join(fixture_dirname("backends"), "trios2.ped")
     output_file = str(tmp_path / "output.pdf")
@@ -15,7 +15,7 @@ def test_draw_pedigree_simple(
 
     argv = [
         input_file,
-        "-o", output_file
+        "-o", output_file,
     ]
 
     main(argv)

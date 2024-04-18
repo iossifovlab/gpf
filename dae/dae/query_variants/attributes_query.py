@@ -2,17 +2,17 @@
 from __future__ import annotations
 
 import enum
+from collections.abc import Iterable
 from functools import reduce
-from typing import Union, Any, Iterable, Callable, Optional, cast
+from typing import Any, Callable, Optional, Union, cast
 
-from lark import Lark, InlineTransformer
-from lark.visitors import Interpreter
+from lark import InlineTransformer, Lark
 from lark.reconstruct import Reconstructor
+from lark.visitors import Interpreter
 
+from dae.variants.attributes import Inheritance, Role, Sex
 from dae.variants.core import Allele
-from dae.variants.attributes import Role, Inheritance, Sex
 from dae.variants.variant import allele_type_from_name
-
 
 QUERY_GRAMMAR = """
     ?start: expression
@@ -76,7 +76,7 @@ class Matcher:
 
     def __init__(
         self, tree: QNode, parser: Lark,
-        matcher: Callable[[Any], bool]
+        matcher: Callable[[Any], bool],
     ):
         assert matcher is not None
         assert tree is not None
@@ -104,11 +104,11 @@ class BaseQueryTransformerMatcher:
 
     def __init__(
         self, parser: Lark = PARSER,
-        token_converter: Optional[Callable[[Any], Any]] = None
+        token_converter: Optional[Callable[[Any], Any]] = None,
     ):
         self.parser = parser
         self.transformer = StringQueryToTreeTransformer(
-            parser, token_converter
+            parser, token_converter,
         )
         self.transformer2: BaseTreeTransformer
 
@@ -135,7 +135,7 @@ class StringQueryToTreeTransformer(InlineTransformer):
 
     def __init__(
         self, _parser: Lark = PARSER,
-        token_converter: Optional[Callable[[Any], Any]] = None
+        token_converter: Optional[Callable[[Any], Any]] = None,
     ):
         super().__init__()
 
@@ -281,19 +281,19 @@ class QueryTreeToLambdaTransformer(BaseTreeTransformer):
         return lambda x: x == set(arg)
 
     def NotNode(
-        self, children: list[Callable[[Any], bool]]
+        self, children: list[Callable[[Any], bool]],
     ) -> Callable[[Any], bool]:
         assert len(children) == 1
         child = children[0]
         return lambda x: not child(x)
 
     def AndNode(
-        self, children: list[Callable[[Any], bool]]
+        self, children: list[Callable[[Any], bool]],
     ) -> Callable[[Any], bool]:
         return lambda x: all(f(x) for f in children)
 
     def OrNode(
-        self, children: list[Callable[[Any], bool]]
+        self, children: list[Callable[[Any], bool]],
     ) -> Callable[[Any], bool]:
         return lambda x: any(f(x) for f in children)
 
@@ -329,12 +329,12 @@ class QueryTreeToBitwiseLambdaTransformer(BaseTreeTransformer):
     #     return lambda x: not child(x)
 
     def AndNode(
-        self, children: list[Callable[[Any], bool]]
+        self, children: list[Callable[[Any], bool]],
     ) -> Callable[[Any], bool]:
         return lambda x: all(child(x) for child in children)
 
     def OrNode(
-        self, children: list[Callable[[Any], bool]]
+        self, children: list[Callable[[Any], bool]],
     ) -> Callable[[Any], bool]:
         return lambda x: any(child(x) for child in children)
 
@@ -352,7 +352,7 @@ def sex_converter(arg: Union[str, Sex]) -> Optional[Sex]:
 
 
 def inheritance_converter(
-    arg: Union[str, Inheritance]
+    arg: Union[str, Inheritance],
 ) -> Optional[Inheritance]:
     if not isinstance(arg, Inheritance):
         return Inheritance.from_name(arg)
@@ -588,7 +588,7 @@ class QueryTransformerMatcher(BaseQueryTransformerMatcher):
     def __init__(
         self, parser: Lark = PARSER,
         token_converter: Optional[Callable[[Any], Any]] = None,
-        transformer2: BaseTreeTransformer = QueryTreeToLambdaTransformer()
+        transformer2: BaseTreeTransformer = QueryTreeToLambdaTransformer(),
     ):
         super().__init__(parser, token_converter)
         self.transformer2 = transformer2
@@ -603,10 +603,10 @@ role_query = QueryTransformerMatcher(token_converter=roles_converter)
 sex_query = QueryTransformerMatcher(token_converter=sex_converter)
 
 inheritance_query = QueryTransformerMatcher(
-    token_converter=inheritance_converter
+    token_converter=inheritance_converter,
 )
 
 variant_type_query = QueryTransformerMatcher(
     token_converter=variant_type_converter,
-    transformer2=QueryTreeToBitwiseLambdaTransformer()
+    transformer2=QueryTreeToBitwiseLambdaTransformer(),
 )

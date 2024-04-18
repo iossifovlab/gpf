@@ -1,13 +1,13 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import os
 import pathlib
-
 import textwrap
+
 import pyarrow as pa
 import pyarrow.parquet as pq
 
-from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.parquet.parquet_writer import merge_variants_parquets
+from dae.parquet.partition_descriptor import PartitionDescriptor
 
 
 def test_merge_parquets(tmp_path: pathlib.Path) -> None:
@@ -24,25 +24,25 @@ def test_merge_parquets(tmp_path: pathlib.Path) -> None:
         pq.write_table(
             pa.table({
                 "index": [1, 2, 3],
-                "prop": ["a", "b", "c"]
+                "prop": ["a", "b", "c"],
             }),
             str(tmp_path / "p1.parquet"),
-            compression={"index": "snappy", "prop": "zstd"}
+            compression={"index": "snappy", "prop": "zstd"},
         )
         pq.write_table(
             pa.table({
                 "index": [4, 5, 6],
-                "prop": ["d", "e", "f"]
+                "prop": ["d", "e", "f"],
             }),
             str(tmp_path / "p2.parquet"),
-            compression={"index": "snappy", "prop": "zstd"}
+            compression={"index": "snappy", "prop": "zstd"},
         )
 
     # run and assert files are merged
     write_parquets()
     merge_variants_parquets(
         part_desc, str(tmp_path),
-        [("region_bin", "foo_0"), ("family_bin", "1")]
+        [("region_bin", "foo_0"), ("family_bin", "1")],
     )
     out_files = os.listdir(str(tmp_path))
     assert len(out_files) == 1
@@ -50,7 +50,7 @@ def test_merge_parquets(tmp_path: pathlib.Path) -> None:
     # run again and assert dir is unchanged
     merge_variants_parquets(
         part_desc, str(tmp_path),
-        [("region_bin", "foo_0"), ("family_bin", "1")]
+        [("region_bin", "foo_0"), ("family_bin", "1")],
     )
     out_files = os.listdir(str(tmp_path))
     assert len(out_files) == 1
@@ -59,7 +59,7 @@ def test_merge_parquets(tmp_path: pathlib.Path) -> None:
     write_parquets()
     merge_variants_parquets(
         part_desc, str(tmp_path),
-        [("region_bin", "foo_0"), ("family_bin", "1")]
+        [("region_bin", "foo_0"), ("family_bin", "1")],
     )
     out_files = os.listdir(str(tmp_path))
     assert len(out_files) == 1

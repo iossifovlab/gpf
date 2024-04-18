@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 import copy
-from collections import defaultdict
-from typing import Any, Optional, Union, Iterator, Sequence
 import logging
+from collections import defaultdict
+from collections.abc import Iterator, Sequence
+from typing import Any, Optional, Union
 
-import pysam
 import networkx as nx
+import pysam
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +41,7 @@ def regions2bedfile(regions: list[BedRegion], bed_filename: str) -> None:
     with open(bed_filename, "w") as outfile:
         for reg in regions:
             outfile.write(
-                f"{reg.chrom}\t{reg.start-1}\t{reg.stop}\n")
+                f"{reg.chrom}\t{reg.start - 1}\t{reg.stop}\n")
 
 
 def split_into_regions(
@@ -60,7 +61,7 @@ def split_into_regions(
 
 def get_chromosome_length_tabix(
     tabix_file: Union[pysam.TabixFile, pysam.VariantFile], chrom: str,
-    step: int = 100_000_000, precision: int = 5_000_000
+    step: int = 100_000_000, precision: int = 5_000_000,
 ) -> Optional[int]:
     """
     Return the length of a chromosome (or contig).
@@ -111,7 +112,7 @@ class Region:
 
     def __init__(
         self, chrom: str,
-        start: Optional[int] = None, stop: Optional[int] = None
+        start: Optional[int] = None, stop: Optional[int] = None,
     ):
         if start is not None and not isinstance(start, int):
             raise TypeError(f"Invalid type for start position - {type(start)}")
@@ -156,7 +157,7 @@ class Region:
         return bool(
             self.chrom == other.chrom
             and self.start == other.start
-            and self.stop == other.stop
+            and self.stop == other.stop,
         )
 
     def __ne__(self, other: Any) -> bool:
@@ -191,7 +192,7 @@ class Region:
 
     @staticmethod
     def _make_region(
-        chrom: str, start: Optional[int], stop: Optional[int]
+        chrom: str, start: Optional[int], stop: Optional[int],
     ) -> Optional[Region]:
         if chrom is None:
             return None
@@ -221,7 +222,7 @@ class Region:
         return self._make_region(
             self.chrom,
             self._max(self.start, other.start),
-            self._min(self.stop, other.stop)
+            self._min(self.stop, other.stop),
         )
 
     def contains(self, other: Region) -> bool:
@@ -288,7 +289,7 @@ class BedRegion(Region):
 
     def __init__(
         self, chrom: str,
-        start: int, stop: int
+        start: int, stop: int,
     ):
         assert start is not None
         assert stop is not None
@@ -353,7 +354,7 @@ def connected_component(regions: list[BedRegion]) -> Any:
 
 def collapse(
     source: Sequence[Region],
-    is_sorted: bool = False
+    is_sorted: bool = False,
 ) -> list[Region]:
     """Collapse list of regions."""
     if not source:
@@ -392,7 +393,7 @@ def collapse(
 
 def collapse_no_chrom(
     source: list[BedRegion],
-    is_sorted: bool = False
+    is_sorted: bool = False,
 ) -> list[BedRegion]:
     """Collapse by ignoring the chromosome.
 
@@ -427,7 +428,7 @@ def total_length(regions: list[BedRegion]) -> int:
 
 
 def intersection(
-    regions1: list[Region], regions2: list[Region]
+    regions1: list[Region], regions2: list[Region],
 ) -> list[Region]:
     """Compute intersection of two list of regions.
 
@@ -484,7 +485,7 @@ def union(*r: list[Region]) -> list[Region]:
 
 
 def _diff(
-    regions_a: list[Region], regions_b: list[Region]
+    regions_a: list[Region], regions_b: list[Region],
 ) -> list[Region]:
     result = []
     k = 0
@@ -522,7 +523,7 @@ def _diff(
 
 def difference(
     regions1: list[Region], regions2: list[Region],
-    symmetric: bool = False
+    symmetric: bool = False,
 ) -> list[Region]:
     """Compute difference between two list of regions."""
     if not symmetric:

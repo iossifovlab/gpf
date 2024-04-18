@@ -27,7 +27,7 @@ def test_default_dgs_config_standard_criterias_effect_types(trios2_study):
             "LGDs": "LGDs",
             "Missense": "missense",
             "Synonymous": "synonymous",
-        }
+        },
     }
 
 
@@ -42,7 +42,7 @@ def test_default_dgs_config_standard_criterias_sexes(trios2_study):
             "Female": "F",
             "Male": "M",
             "Unspecified": "U",
-        }
+        },
     }
 
 

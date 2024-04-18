@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import logging
-
 from enum import Enum
 from typing import Optional
 
@@ -102,10 +101,7 @@ class Allele:
         if allele_type is not None:
             self._allele_type = allele_type
         else:
-            if not self._pos_end and not self._ref and not self._alt:
-                self._allele_type = Allele.Type.position
-                self._pos_end = self._pos
-            elif self._ref and not self._alt:
+            if (not self._pos_end and not self._ref and not self._alt) or (self._ref and not self._alt):
                 self._allele_type = Allele.Type.position
                 self._pos_end = self._pos
             elif self._ref and self._alt:

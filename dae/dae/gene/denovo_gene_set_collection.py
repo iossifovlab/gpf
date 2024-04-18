@@ -1,7 +1,6 @@
 import logging
 from itertools import chain
 
-
 LOGGER = logging.getLogger(__name__)
 
 
@@ -49,7 +48,7 @@ class DenovoGeneSetCollection:
         # TODO This could probably be removed, it just takes each domain
         # and returns a dict with a subset of the original keys
         person_set_collection = self.person_set_collections.get(
-            person_set_collection_id
+            person_set_collection_id,
         )
         if person_set_collection:
             return person_set_collection["domain"]
@@ -78,7 +77,7 @@ class DenovoGeneSetCollection:
             "count": len(syms),
             "syms": syms,
             "desc": f"{gene_set_id} "
-            f"({cls._format_description(denovo_gene_set_spec)})"
+            f"({cls._format_description(denovo_gene_set_spec)})",
         }
 
     @classmethod
@@ -94,7 +93,7 @@ class DenovoGeneSetCollection:
         """
         criteria = set(gene_set_id.split("."))
         recurrency_criteria = cls._get_recurrency_criteria(
-            denovo_gene_set_collections
+            denovo_gene_set_collections,
         )
         recurrency_criteria_names = criteria & set(recurrency_criteria.keys())
         standard_criteria = criteria - recurrency_criteria_names
@@ -107,7 +106,7 @@ class DenovoGeneSetCollection:
             ) in person_set_collection.items():
                 for value in person_set_collection_values:
                     all_criteria = standard_criteria.union(
-                        (dataset_id, person_set_collection_id, value)
+                        (dataset_id, person_set_collection_id, value),
                     )
 
                     genes_to_families = cls._get_genes_to_families(
@@ -126,7 +125,7 @@ class DenovoGeneSetCollection:
                 recurrency_criteria_names.pop()
             ]
             matching_genes = cls._apply_recurrency_criterion(
-                matching_genes, recurrency_criterion
+                matching_genes, recurrency_criterion,
             )
 
         return set(matching_genes.keys())
@@ -153,7 +152,7 @@ class DenovoGeneSetCollection:
                 # still not the end of the tree
                 for key in gs_cache_keys:
                     for gene, families in cls._get_genes_to_families(
-                        gs_cache[key], criteria
+                        gs_cache[key], criteria,
                     ).items():
                         result.setdefault(gene, set()).update(families)
             elif len(criteria) == 0:
@@ -163,7 +162,7 @@ class DenovoGeneSetCollection:
 
         next_key = next_keys.pop()
         return cls._get_genes_to_families(
-            gs_cache[next_key], criteria - {next_key}
+            gs_cache[next_key], criteria - {next_key},
         )
 
     @staticmethod
@@ -183,7 +182,7 @@ class DenovoGeneSetCollection:
 
         for collection in denovo_gene_set_collections:
             common_elements = frozenset(
-                recurrency_criteria.keys()
+                recurrency_criteria.keys(),
             ).intersection(collection.recurrency_criteria.segments.keys())
 
             new_recurrency_criteria = {}
@@ -249,7 +248,7 @@ class DenovoGeneSetCollection:
                     for genotype_data, person_set_collection
                     in denovo_gene_set_spec.items()
                     for group_id, values in person_set_collection.items()
-                ]
+                ],
             )
 
         all_person_set_collection_values = ", ".join(
@@ -259,9 +258,9 @@ class DenovoGeneSetCollection:
                         person_set_collection.values()
                         for person_set_collection
                         in denovo_gene_set_spec.values()
-                    ]
-                )
-            )
+                    ],
+                ),
+            ),
         )
 
         if include_datasets_desc:
@@ -272,7 +271,7 @@ class DenovoGeneSetCollection:
                     in denovo_gene_set_spec.items()
                     for person_set_collection_id
                     in person_set_collection
-                }
+                },
             )
             return f"{datasets_desc}::{all_person_set_collection_values}"
 
@@ -284,12 +283,12 @@ class DenovoGeneSetCollection:
             return []
 
         gene_sets_names = frozenset(
-            denovo_gene_set_collections[0].gene_sets_names
+            denovo_gene_set_collections[0].gene_sets_names,
         )
 
         for collection in denovo_gene_set_collections:
             gene_sets_names = gene_sets_names.intersection(
-                collection.gene_sets_names
+                collection.gene_sets_names,
             )
 
         return list(gene_sets_names)

@@ -1,6 +1,6 @@
 from django.urls import re_path
-from . import views
 
+from . import views
 
 urlpatterns = [
     re_path(
@@ -31,32 +31,32 @@ urlpatterns = [
     re_path(
         r"^/description/(?P<dataset_id>.+)$",
         views.DatasetDescriptionView.as_view(),
-        name="dataset_description"
+        name="dataset_description",
     ),
     re_path(
         r"^/hierarchy/?$",
         views.DatasetHierarchyView.as_view(),
-        name="dataset_hierarchy"
+        name="dataset_hierarchy",
     ),
     re_path(
         r"^/permissions/?$",
         views.DatasetPermissionsView.as_view(),
-        name="management_details"
+        name="management_details",
     ),
     re_path(
         r"^/permissions/(?P<dataset_id>.+)/?$",
         views.DatasetPermissionsSingleView.as_view(),
-        name="management_details"
+        name="management_details",
     ),
     re_path(
         r"^/studies/?$",
         views.StudiesView.as_view(),
-        name="list_studies"
+        name="list_studies",
     ),
     re_path(
         r"^/(?P<dataset_id>.+)$",
         views.DatasetView.as_view(),
-        name="dataset"
+        name="dataset",
     ),
     re_path(r"^/?$", views.DatasetView.as_view(), name="dataset_all"),
 ]

@@ -1,19 +1,18 @@
-from typing import Generator, cast
 import logging
-from rest_framework import status
-from rest_framework.response import Response
-from rest_framework.request import Request
-from django.http.response import FileResponse
+from collections.abc import Generator
+from typing import cast
+
+from datasets_api.permissions import handle_partial_permissions
 from django.contrib.auth.models import User
+from django.http.response import FileResponse
 from query_base.query_base import QueryDatasetView
+from rest_framework import status
+from rest_framework.request import Request
+from rest_framework.response import Response
 from studies.study_wrapper import StudyWrapper
+from utils.expand_gene_set import expand_gene_set
 from utils.logger import request_logging
 from utils.query_params import parse_query_params
-from utils.expand_gene_set import expand_gene_set
-
-from datasets_api.permissions import \
-    handle_partial_permissions
-
 
 LOGGER = logging.getLogger(__name__)
 
@@ -62,7 +61,7 @@ class QueryVariantsView(QueryDatasetView):
         freq_col = config.frequency_column
 
         return Response(
-            list(dataset.get_gene_view_summary_variants(freq_col, **data))
+            list(dataset.get_gene_view_summary_variants(freq_col, **data)),
         )
 
 
@@ -76,7 +75,7 @@ class DownloadSummaryVariantsView(QueryDatasetView):
             data: dict,
             user: User,
             dataset: StudyWrapper,
-            dataset_id: str
+            dataset_id: str,
     ) -> Generator[str, None, None]:
         """Summary variants generator."""
         # Return a response instantly and make download more responsive
@@ -117,7 +116,7 @@ class DownloadSummaryVariantsView(QueryDatasetView):
 
         response = FileResponse(
             self.generate_variants(data, request.user, dataset, dataset_id),
-            content_type="text/tsv"
+            content_type="text/tsv",
         )
         response["Content-Disposition"] = \
             "attachment; filename=summary_variants.tsv"

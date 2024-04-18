@@ -1,14 +1,13 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import os
-
 from typing import Callable
 
 import pytest
 
-from dae.variants.attributes import Role
 from dae.pedigrees.families_data import FamiliesData
 from dae.pedigrees.loader import FamiliesLoader
 from dae.pedigrees.pedigrees import FamilyConnections
+from dae.variants.attributes import Role
 
 
 @pytest.fixture(scope="session")
@@ -17,7 +16,7 @@ def families_loader(request: pytest.FixtureRequest) -> Callable:
     def builder(relpath: str) -> FamiliesData:
         filename = os.path.join(
             os.path.dirname(os.path.realpath(__file__)),
-            "fixtures", relpath
+            "fixtures", relpath,
         )
         loader = FamiliesLoader(filename, ped_sep=",")
         families = loader.load()

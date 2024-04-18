@@ -1,9 +1,10 @@
-import os
 import copy
 import logging
+import os
 from typing import Any, Dict, Optional, Tuple
-from distributed.client import Client
+
 import dask
+from distributed.client import Client
 
 _CLUSTER_TYPES = {}
 logger = logging.getLogger(__name__)
@@ -39,9 +40,10 @@ def set_up_slurm_cluster(cluster_conf):
 def set_up_kubernetes_cluster(cluster_conf):
     """Create a kubernetes cluster."""
     # pylint: disable=import-outside-toplevel
-    from dask_kubernetes.operator.kubecluster import \
-        KubeCluster, \
-        make_cluster_spec
+    from dask_kubernetes.operator.kubecluster import (
+        KubeCluster,
+        make_cluster_spec,
+    )
 
     cluster_conf.pop("number_of_workers", None)
     env = {}

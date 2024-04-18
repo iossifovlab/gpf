@@ -1,10 +1,9 @@
-from rest_framework.response import Response
-from rest_framework.request import Request
-from rest_framework import status
 from query_base.query_base import QueryDatasetView
+from rest_framework import status
+from rest_framework.request import Request
+from rest_framework.response import Response
 
-from dae.pedigrees.family_tag_builder import check_tag, \
-    FamilyTag
+from dae.pedigrees.family_tag_builder import FamilyTag, check_tag
 
 
 class ListFamiliesView(QueryDatasetView):
@@ -25,7 +24,7 @@ class ListFamiliesView(QueryDatasetView):
         if tags_query is None:
             return Response(
                 families.keys(),
-                status.HTTP_200_OK
+                status.HTTP_200_OK,
             )
 
         result = set()
@@ -43,7 +42,7 @@ class ListFamiliesView(QueryDatasetView):
 
         return Response(
             result,
-            status.HTTP_200_OK
+            status.HTTP_200_OK,
         )
 
 
@@ -51,7 +50,7 @@ class FamilyDetailsView(QueryDatasetView):
     """Get a family details view."""
 
     def get(
-        self, request: Request, dataset_id: str, family_id: str
+        self, request: Request, dataset_id: str, family_id: str,
     ) -> Response:
         # pylint: disable=unused-argument
         """Response to a get request for the details of a specific family."""
@@ -75,7 +74,7 @@ class FamilyDetailsView(QueryDatasetView):
 
         return Response(
             family.to_json(),
-            status=status.HTTP_200_OK
+            status=status.HTTP_200_OK,
         )
 
 
@@ -85,7 +84,7 @@ class TagsView(QueryDatasetView):
         # pylint: disable=unused-argument
         return Response(
             list(FamilyTag.all_labels()),
-            status=status.HTTP_200_OK
+            status=status.HTTP_200_OK,
         )
 
 
@@ -93,7 +92,7 @@ class ListMembersView(QueryDatasetView):
     """List family members view."""
 
     def get(
-        self, request: Request, dataset_id: str, family_id: str
+        self, request: Request, dataset_id: str, family_id: str,
     ) -> Response:
         # pylint: disable=unused-argument
         """Response to get family members."""
@@ -117,7 +116,7 @@ class ListMembersView(QueryDatasetView):
 
         return Response(
             family.members_ids,
-            status=status.HTTP_200_OK
+            status=status.HTTP_200_OK,
         )
 
 
@@ -126,7 +125,7 @@ class MemberDetailsView(QueryDatasetView):
 
     def get(
         self, request: Request, dataset_id: str,
-        family_id: str, member_id: str
+        family_id: str, member_id: str,
     ) -> Response:
         # pylint: disable=unused-argument
         """Response to get request for a person details."""
@@ -158,7 +157,7 @@ class MemberDetailsView(QueryDatasetView):
 
         return Response(
             member.to_json(),
-            status=status.HTTP_200_OK
+            status=status.HTTP_200_OK,
         )
 
 
@@ -166,7 +165,7 @@ class AllMemberDetailsView(QueryDatasetView):
     """Details of all members of a family."""
 
     def get(
-        self, request: Request, dataset_id: str, family_id: str
+        self, request: Request, dataset_id: str, family_id: str,
     ) -> Response:
         # pylint: disable=unused-argument
         """Response to get request for details of all members of a family."""
@@ -195,7 +194,7 @@ class AllMemberDetailsView(QueryDatasetView):
 
         return Response(
             [m.to_json() for m in members],
-            status=status.HTTP_200_OK
+            status=status.HTTP_200_OK,
         )
 
 
@@ -225,5 +224,5 @@ class ListAllDetailsView(QueryDatasetView):
 
         return Response(
             out,
-            status=status.HTTP_200_OK
+            status=status.HTTP_200_OK,
         )

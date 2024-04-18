@@ -1,25 +1,26 @@
 """Factory for creation of annotation pipeline."""
 
 # import collections
-from collections import Counter
-import logging
 import copy
 import fnmatch
+import logging
+from collections import Counter
 from textwrap import dedent
-from typing import List, Dict, Optional, Callable, Any
+from typing import Any, Callable, Dict, List, Optional
 
 import yaml
 
+from dae.annotation.annotation_pipeline import (
+    AnnotationPipeline,
+    Annotator,
+    AnnotatorInfo,
+    AttributeInfo,
+    InputAnnotableAnnotatorDecorator,
+    ReannotationPipeline,
+    ValueTransformAnnotatorDecorator,
+)
 from dae.genomic_resources import build_genomic_resource_repository
 from dae.genomic_resources.repository import GenomicResourceRepo
-
-from dae.annotation.annotation_pipeline import AnnotationPipeline, \
-    ReannotationPipeline
-from dae.annotation.annotation_pipeline import AnnotatorInfo, AttributeInfo
-from dae.annotation.annotation_pipeline import Annotator
-from dae.annotation.annotation_pipeline import ValueTransformAnnotatorDecorator
-from dae.annotation.annotation_pipeline import \
-    InputAnnotableAnnotatorDecorator
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +49,7 @@ def _load_annotator_factory_plugins() -> None:
 
 
 def get_annotator_factory(
-    annotator_type: str
+    annotator_type: str,
 ) -> Callable[[AnnotationPipeline, AnnotatorInfo], Annotator]:
     """Find and return a factory function for creation of an annotator type.
 
@@ -73,7 +74,7 @@ def get_available_annotator_types() -> List[str]:
 
 def register_annotator_factory(
     annotator_type: str,
-    factory: Callable[[AnnotationPipeline, AnnotatorInfo], Annotator]
+    factory: Callable[[AnnotationPipeline, AnnotatorInfo], Annotator],
 ) -> None:
     """Register additional annotator factory.
 
@@ -100,7 +101,7 @@ class AnnotationConfigParser:
         for config in pipeline_config:
             if isinstance(config, str):
                 config = {
-                    config: {}
+                    config: {},
                 }
 
             assert isinstance(config, dict)
@@ -120,7 +121,7 @@ class AnnotationConfigParser:
 
     @staticmethod
     def match_labels_query(
-        query: dict[str, str], resource_labels: dict[str, str]
+        query: dict[str, str], resource_labels: dict[str, str],
     ) -> bool:
         """Check if the labels query for a wildcard matches."""
         for k, v in query.items():
@@ -131,7 +132,7 @@ class AnnotationConfigParser:
 
     @staticmethod
     def query_resources(
-        annotator_type: str, wildcard: str, grr: GenomicResourceRepo
+        annotator_type: str, wildcard: str, grr: GenomicResourceRepo,
     ) -> list[str]:
         """Collect resources matching a given query."""
         result = []
@@ -181,20 +182,20 @@ class AnnotationConfigParser:
         if AnnotationConfigParser.has_wildcard(ann_details):
             assert grr is not None
             matching_resources = AnnotationConfigParser.query_resources(
-                ann_type, ann_details, grr
+                ann_type, ann_details, grr,
             )
             return [
                 AnnotatorInfo(
                     ann_type, [], {"resource_id": resource},
-                    annotator_id=f"A{idx}_{resource}"
+                    annotator_id=f"A{idx}_{resource}",
                 )
                 for resource in matching_resources
             ]
         return [
             AnnotatorInfo(
                 ann_type, [], {"resource_id": ann_details},
-                annotator_id=f"A{idx}"
-            )
+                annotator_id=f"A{idx}",
+            ),
         ]
 
     @staticmethod
@@ -204,18 +205,18 @@ class AnnotationConfigParser:
         attributes = []
         if "attributes" in ann_details:
             attributes = AnnotationConfigParser.parse_raw_attributes(
-                ann_details["attributes"]
+                ann_details["attributes"],
             )
         parameters = {k: v for k, v in ann_details.items()
                       if k != "attributes"}
         return AnnotatorInfo(
-            ann_type, attributes, parameters, annotator_id=f"A{idx}"
+            ann_type, attributes, parameters, annotator_id=f"A{idx}",
         )
 
     @staticmethod
     def parse_raw(
         pipeline_raw_config: Optional[list[dict[str, Any]]],
-        grr: Optional[GenomicResourceRepo] = None
+        grr: Optional[GenomicResourceRepo] = None,
     ) -> list[AnnotatorInfo]:
         """Parse raw dictionary annotation pipeline configuration."""
         if pipeline_raw_config is None:
@@ -231,7 +232,7 @@ class AnnotationConfigParser:
             if isinstance(raw_cfg, str):
                 # the minimal annotator configuration form
                 result.append(
-                    AnnotationConfigParser.parse_minimal(raw_cfg, idx)
+                    AnnotationConfigParser.parse_minimal(raw_cfg, idx),
                 )
                 continue
             if isinstance(raw_cfg, dict):
@@ -239,13 +240,13 @@ class AnnotationConfigParser:
                 if isinstance(ann_details, str):
                     # the short annotator configuation form
                     result.extend(AnnotationConfigParser.parse_short(
-                        raw_cfg, idx, grr
+                        raw_cfg, idx, grr,
                     ))
                     continue
                 if isinstance(ann_details, dict):
                     # the complete annotator configuration form
                     result.append(
-                        AnnotationConfigParser.parse_complete(raw_cfg, idx)
+                        AnnotationConfigParser.parse_complete(raw_cfg, idx),
                     )
                     continue
             raise AnnotationConfigurationError(dedent(f"""
@@ -272,7 +273,7 @@ class AnnotationConfigParser:
     @staticmethod
     def parse_str(
         content: str, source_file_name: Optional[str] = None,
-        grr: Optional[GenomicResourceRepo] = None
+        grr: Optional[GenomicResourceRepo] = None,
     ) -> list[AnnotatorInfo]:
         """Parse annotation pipeline configuration string."""
         try:
@@ -290,7 +291,7 @@ class AnnotationConfigParser:
 
     @staticmethod
     def parse_config_file(
-        filename: str, grr: Optional[GenomicResourceRepo]
+        filename: str, grr: Optional[GenomicResourceRepo],
     ) -> List[AnnotatorInfo]:
         """Parse annotation pipeline configuration file."""
         logger.info("loading annotation pipeline configuration: %s", filename)
@@ -415,14 +416,14 @@ def build_annotation_pipeline(
                 value_error) from value_error
 
     check_for_repeated_attributes_in_pipeline(
-        pipeline, allow_repeated_attributes
+        pipeline, allow_repeated_attributes,
     )
 
     return pipeline
 
 
 def copy_annotation_pipeline(
-    pipeline: AnnotationPipeline
+    pipeline: AnnotationPipeline,
 ) -> AnnotationPipeline:
     """Copy an annotation pipeline instance."""
     infos = []
@@ -437,7 +438,7 @@ def copy_annotation_pipeline(
                 src_attr.parameters._data,  # pylint: disable=W0212
                 src_attr.type,
                 src_attr.description,
-                src_attr.documentation
+                src_attr.documentation,
             ))
         infos.append(AnnotatorInfo(
             src.type,
@@ -445,26 +446,26 @@ def copy_annotation_pipeline(
             src.parameters._data,  # pylint: disable=W0212
             "",
             None,
-            src.annotator_id
+            src.annotator_id,
         ))
     return build_annotation_pipeline(
         pipeline_config=infos,
-        grr_repository=pipeline.repository
+        grr_repository=pipeline.repository,
     )
 
 
 def copy_reannotation_pipeline(
-    pipeline: ReannotationPipeline
+    pipeline: ReannotationPipeline,
 ) -> ReannotationPipeline:
     """Copy a reannotation pipeline instance."""
     return ReannotationPipeline(
         copy_annotation_pipeline(pipeline.pipeline_new),
-        copy_annotation_pipeline(pipeline.pipeline_old)
+        copy_annotation_pipeline(pipeline.pipeline_old),
     )
 
 
 def check_for_repeated_attributes_in_annotator(
-    annotator_config: AnnotatorInfo
+    annotator_config: AnnotatorInfo,
 ) -> None:
     """Check for repeated attributes in annotator configuration."""
     annotator_names_list = [att.name for att in annotator_config.attributes]
@@ -478,7 +479,7 @@ def check_for_repeated_attributes_in_annotator(
 
 
 def check_for_repeated_attributes_in_pipeline(
-    pipeline: AnnotationPipeline, allow_repeated_attributes: bool = False
+    pipeline: AnnotationPipeline, allow_repeated_attributes: bool = False,
 ) -> None:
     """Check for repeated attributes in pipeline configuration."""
     pipeline_names_set = Counter(att.name for att in pipeline.get_attributes())
@@ -501,12 +502,12 @@ def check_for_repeated_attributes_in_pipeline(
             if attr.name in repeated_attributes:
                 overlaps.setdefault(attr.name, []).append(annotator_id)
     raise AnnotationConfigurationError(
-        f"Repeated attributes in pipeline were found - {overlaps}"
+        f"Repeated attributes in pipeline were found - {overlaps}",
     )
 
 
 def resolve_repeated_attributes(
-    pipeline: AnnotationPipeline, repeated_attributes: set[str]
+    pipeline: AnnotationPipeline, repeated_attributes: set[str],
 ) -> None:
     """Resolve repeated attributes in pipeline configuration via renaming."""
     for rep in repeated_attributes:

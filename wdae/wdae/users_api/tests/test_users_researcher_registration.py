@@ -3,12 +3,11 @@ import json
 from pprint import pprint
 
 import pytest
-from rest_framework import status
-
-from users_api.models import WdaeUser, SetPasswordCode
 from django.test.client import Client
 from oauth2_provider.models import AccessToken
+from rest_framework import status
 
+from users_api.models import SetPasswordCode, WdaeUser
 
 # @pytest.mark.skip
 # def test_fail_register(client):
@@ -40,7 +39,7 @@ from oauth2_provider.models import AccessToken
 
 def test_fail_register_wrong_id(
     client: Client,
-    researcher_without_password: WdaeUser
+    researcher_without_password: WdaeUser,
 ) -> None:
     url = "/api/v3/users/register"
     data = {
@@ -49,7 +48,7 @@ def test_fail_register_wrong_id(
     }
 
     response = client.post(
-        url, json.dumps(data), content_type="application/json", format="json"
+        url, json.dumps(data), content_type="application/json", format="json",
     )
     assert response.status_code == status.HTTP_201_CREATED
 
@@ -69,46 +68,46 @@ def test_fail_register_wrong_id(
 
 
 def test_reset_pass_without_registration(
-    client: Client, researcher_without_password: WdaeUser
+    client: Client, researcher_without_password: WdaeUser,
 ) -> None:
     url = "/api/v3/users/forgotten_password"
     data = {"email": researcher_without_password.email}
     pprint(data)
 
     response = client.post(
-        url, json.dumps(data), content_type="application/json", format="json"
+        url, json.dumps(data), content_type="application/json", format="json",
     )
     assert response.status_code == status.HTTP_200_OK
 
 
 @pytest.mark.django_db()
 def test_reset_pass_without_registration_wrong_email(
-    client: Client
+    client: Client,
 ) -> None:
     url = "/api/v3/users/forgotten_password"
     data = {"email": "wrong@email.com"}
     pprint(data)
 
     response = client.post(
-        url, json.dumps(data), content_type="application/json", format="json"
+        url, json.dumps(data), content_type="application/json", format="json",
     )
     assert response.status_code == status.HTTP_200_OK
 
 
 def test_successful_register(
     client: Client,
-    researcher_without_password: WdaeUser
+    researcher_without_password: WdaeUser,
 ) -> None:
     name = "NEW_NAME"
     url = "/api/v3/users/register"
     data = {
         "name": name,
-        "email": researcher_without_password.email
+        "email": researcher_without_password.email,
     }
     pprint(data)
 
     response = client.post(
-        url, json.dumps(data), content_type="application/json", format="json"
+        url, json.dumps(data), content_type="application/json", format="json",
     )
     assert response.status_code == status.HTTP_201_CREATED
     user = WdaeUser.objects.get(email=researcher_without_password.email)
@@ -116,7 +115,7 @@ def test_successful_register(
 
 
 def test_successful_register_empty_name(
-    client: Client, researcher_without_password: WdaeUser
+    client: Client, researcher_without_password: WdaeUser,
 ) -> None:
     old_name = researcher_without_password.name
     url = "/api/v3/users/register"
@@ -124,7 +123,7 @@ def test_successful_register_empty_name(
     pprint(data)
 
     response = client.post(
-        url, json.dumps(data), content_type="application/json", format="json"
+        url, json.dumps(data), content_type="application/json", format="json",
     )
     assert response.status_code == status.HTTP_201_CREATED
     user = WdaeUser.objects.get(email=researcher_without_password.email)
@@ -132,17 +131,17 @@ def test_successful_register_empty_name(
 
 
 def test_successful_register_missing_name(
-    client: Client, researcher_without_password: WdaeUser
+    client: Client, researcher_without_password: WdaeUser,
 ) -> None:
     old_name = researcher_without_password.name
     url = "/api/v3/users/register"
     data = {
-        "email": researcher_without_password.email
+        "email": researcher_without_password.email,
     }
     pprint(data)
 
     response = client.post(
-        url, json.dumps(data), content_type="application/json", format="json"
+        url, json.dumps(data), content_type="application/json", format="json",
     )
     assert response.status_code == status.HTTP_201_CREATED
     user = WdaeUser.objects.get(email=researcher_without_password.email)
@@ -150,7 +149,7 @@ def test_successful_register_missing_name(
 
 
 def test_register_twice(
-    client: Client, researcher_without_password: WdaeUser
+    client: Client, researcher_without_password: WdaeUser,
 ) -> None:
     url = "/api/v3/users/register"
     data = {
@@ -160,19 +159,19 @@ def test_register_twice(
     pprint(data)
 
     response = client.post(
-        url, json.dumps(data), content_type="application/json", format="json"
+        url, json.dumps(data), content_type="application/json", format="json",
     )
     assert response.status_code == status.HTTP_201_CREATED
 
     response = client.post(
-        url, json.dumps(data), content_type="application/json", format="json"
+        url, json.dumps(data), content_type="application/json", format="json",
     )
     assert response.status_code == status.HTTP_201_CREATED
 
 
 def test_registration_all_steps(
     client: Client, researcher_without_password: WdaeUser,
-    tokens: tuple[AccessToken, AccessToken]
+    tokens: tuple[AccessToken, AccessToken],
 ) -> None:
     url = "/api/v3/users/register"
     data = {
@@ -182,7 +181,7 @@ def test_registration_all_steps(
     pprint(data)
 
     response = client.post(
-        url, json.dumps(data), content_type="application/json", format="json"
+        url, json.dumps(data), content_type="application/json", format="json",
     )
     assert response.status_code == status.HTTP_201_CREATED
 
@@ -196,10 +195,10 @@ def test_registration_all_steps(
     session.save()
     data = {
         "new_password1": "samplenewpassword",
-        "new_password2": "samplenewpassword"
+        "new_password2": "samplenewpassword",
     }
     response = client.post(
-        url, json.dumps(data), content_type="application/json", format="json"
+        url, json.dumps(data), content_type="application/json", format="json",
     )
     assert response.status_code == status.HTTP_302_FOUND
 
@@ -210,6 +209,6 @@ def test_registration_all_steps(
     }
 
     response = client.post(
-        url, json.dumps(data), content_type="application/json", format="json"
+        url, json.dumps(data), content_type="application/json", format="json",
     )
     assert response.status_code == status.HTTP_302_FOUND

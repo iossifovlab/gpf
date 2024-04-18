@@ -1,11 +1,10 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
 
+from dae.testing import setup_dataset, setup_pedigree, setup_vcf, vcf_study
+from dae.testing.alla_import import alla_gpf
 from dae.utils.regions import Region
 from dae.variants.attributes import Status
-from dae.testing import setup_pedigree, setup_vcf, setup_dataset, vcf_study
-
-from dae.testing.alla_import import alla_gpf
 
 
 @pytest.fixture(scope="module")
@@ -72,7 +71,7 @@ def imported_dataset(tmp_path_factory, genotype_storage):
 
     return setup_dataset(
         "ds1", gpf_instance, study1, study2,
-        dataset_config_update=f"conf_dir: {root_path}"
+        dataset_config_update=f"conf_dir: {root_path}",
     )
 
 

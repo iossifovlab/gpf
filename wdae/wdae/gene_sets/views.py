@@ -1,24 +1,21 @@
 """Classes to handle gene set views."""
 
 import ast
-import json
 import itertools
+import json
 import logging
-from typing import Union, Sequence, Any
-
+from collections.abc import Sequence
 from copy import deepcopy
+from typing import Any, Union
 
+from django.http.response import StreamingHttpResponse
+from django.utils.http import urlencode
+from query_base.query_base import QueryBaseView
 from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
 
-from django.http.response import StreamingHttpResponse
-from django.utils.http import urlencode
-
-from query_base.query_base import QueryBaseView
-
 from dae.gene.gene_sets_db import GeneSet
-
 
 logger = logging.getLogger(__name__)
 
@@ -30,12 +27,12 @@ class GeneSetsCollectionsView(QueryBaseView):
         """Build response to a get request."""
         permitted_datasets = self.get_permitted_datasets(request.user)
         gene_sets_collections = deepcopy(
-            self.gpf_instance.get_gene_sets_collections()
+            self.gpf_instance.get_gene_sets_collections(),
         )
         denovo_gene_sets = deepcopy(
             self.gpf_instance.get_denovo_gene_sets(
-                permitted_datasets
-            )
+                permitted_datasets,
+            ),
         )
 
         gene_sets_collections[1:1] = denovo_gene_sets
@@ -80,16 +77,16 @@ class GeneSetsView(QueryBaseView):
             gene_sets = self.gpf_instance.get_all_denovo_gene_sets(
                 gene_sets_types,
                 self.get_permitted_datasets(request.user),
-                gene_sets_collection_id
+                gene_sets_collection_id,
             )
         else:
             if not self.gpf_instance.has_gene_set_collection(
-                gene_sets_collection_id
+                gene_sets_collection_id,
             ):
                 return Response(status=status.HTTP_404_NOT_FOUND)
 
             gene_sets = self.gpf_instance.get_all_gene_sets(
-                gene_sets_collection_id
+                gene_sets_collection_id,
             )
         logger.debug("gene set collection: %s", gene_sets_collection_id)
         logger.debug("gene sets: %s", len(gene_sets))
@@ -117,7 +114,7 @@ class GeneSetsView(QueryBaseView):
                         "geneSetsCollection": gene_sets_collection_id,
                         "geneSet": gs["name"],
                         "geneSetsTypes": gene_sets_types,
-                    }
+                    },
                 ),
             }
             for gs in response
@@ -158,11 +155,11 @@ class GeneSetDownloadView(QueryBaseView):
                 return Response(status=status.HTTP_404_NOT_FOUND)
             gene_set = self.gpf_instance.get_denovo_gene_set(
                 gene_set_id, gene_sets_types, permitted_datasets,
-                gene_sets_collection_id
+                gene_sets_collection_id,
             )
         else:
             if not self.gpf_instance.has_gene_set_collection(
-                gene_sets_collection_id
+                gene_sets_collection_id,
             ):
                 return Response(
                     {"unknown gene set collection": gene_sets_collection_id},

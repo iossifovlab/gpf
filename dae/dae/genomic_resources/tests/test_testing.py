@@ -1,18 +1,23 @@
 # pylint: disable=W0621,C0114,C0116,C0415,W0212,W0613,C0302,C0115,W0102,W0603
-import multiprocessing as mp
-import textwrap
 import contextlib
+import multiprocessing as mp
 import pathlib
-from typing import Generator
+import textwrap
+from collections.abc import Generator
 
 # import requests
 import pytest
 
-from dae.genomic_resources.testing import setup_tabix, \
-    build_inmemory_test_protocol, build_inmemory_test_resource, \
-    setup_directories, build_filesystem_test_resource, \
-    build_http_test_protocol, \
-    _process_server_manager, _internal_process_runner
+from dae.genomic_resources.testing import (
+    _internal_process_runner,
+    _process_server_manager,
+    build_filesystem_test_resource,
+    build_http_test_protocol,
+    build_inmemory_test_protocol,
+    build_inmemory_test_resource,
+    setup_directories,
+    setup_tabix,
+)
 
 
 def test_setup_tabix(tmp_path: pathlib.Path) -> None:
@@ -27,7 +32,7 @@ def test_setup_tabix(tmp_path: pathlib.Path) -> None:
         2      16         19       C          G            0.032
         2      16         19       C          A            0.052
         """,
-        seq_col=0, start_col=1, end_col=2
+        seq_col=0, start_col=1, end_col=2,
     )
     assert tabix_filename.endswith(".gz")
     assert index_filename.endswith(".gz.tbi")
@@ -50,8 +55,8 @@ def test_build_inmemory_test_protocol() -> None:
             #chrom start end sc
             1      10    12  1.1
             2      13    14  1.2
-            """
-        }
+            """,
+        },
     })
     res = proto.get_resource("res1")
     assert res.get_type() == "position_score"
@@ -73,12 +78,12 @@ def test_build_inmemory_test_resource() -> None:
         #chrom start end sc
         1      10    12  1.1
         2      13    14  1.2
-        """
+        """,
     })
     assert res.get_type() == "position_score"
 
 
-@pytest.fixture
+@pytest.fixture()
 def np_score_directory(tmp_path: pathlib.Path) -> pathlib.Path:
     root_path = tmp_path
     tabix_filename, _ = setup_tabix(
@@ -92,7 +97,7 @@ def np_score_directory(tmp_path: pathlib.Path) -> pathlib.Path:
         2      16         19       C          G            0.032
         2      16         19       C          A            0.052
         """,
-        seq_col=0, start_col=1, end_col=2
+        seq_col=0, start_col=1, end_col=2,
     )
     setup_directories(root_path, {
         "genomic_resource.yaml": f"""

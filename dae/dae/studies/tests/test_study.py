@@ -32,13 +32,13 @@ f1       sib1     dad1  mom1  2   2      sib
 chr1   1   .  A   C   .    .      .    GT     0/1  0/0  0/1  0/0
 chr2   1   .  A   C   .    .      .    GT     0/0  0/1  0/1  0/0
 chr3   1   .  A   C   .    .      .    GT     0/0  0/1  0/0  0/1
-        """)  # noqa
+        """)
     project_config_update = {
         "input": {
             "vcf": {
                 "denovo_mode": "denovo",
                 "omission_mode": "omission",
-            }
+            },
         },
     }
     return vcf_study(
@@ -106,13 +106,13 @@ f3       ch3      dad3  mom3  2   2      prb
 chr1   1   .  A   C   .    .      .    GT     0/0  0/0  0/1 0/0  0/0  0/0
 chr1   2   .  C   G   .    .      .    GT     0/0  0/0  0/0 0/0  0/1  0/1
 chr1   3   .  G   T   .    .      .    GT     0/0  1/0  0/0 0/0  0/0  0/0
-        """)  # noqa
+        """)
     project_config_update = {
         "input": {
             "vcf": {
                 "denovo_mode": "denovo",
                 "omission_mode": "omission",
-            }
+            },
         },
     }
     return vcf_study(

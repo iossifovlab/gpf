@@ -1,18 +1,22 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-import textwrap
 import pathlib
+import textwrap
 
 import pytest
 
 from dae.studies.study import GenotypeDataGroup
-
-from dae.testing import setup_pedigree, setup_denovo, setup_dataset, \
-    denovo_study
+from dae.testing import (
+    denovo_study,
+    setup_dataset,
+    setup_denovo,
+    setup_pedigree,
+)
 from dae.testing.acgt_import import acgt_gpf
+
 # from dae.pedigrees.loader import FamiliesLoader
 
 
-@pytest.fixture
+@pytest.fixture()
 def dataset(
     tmp_path: pathlib.Path,
 ) -> GenotypeDataGroup:
@@ -23,14 +27,14 @@ def dataset(
         """
 familyId  location  variant    bestState
 f1         chr1:1    sub(A->C) 2||2||1/0||0||1
-        """)  # noqa
+        """)
 
     var_path2 = setup_denovo(
         root_path / "study_2" / "in.tsv",
         """
 familyId  location  variant    bestState
 f2        chr1:2    sub(A->C)  2||2||1/0||0||1
-        """)  # noqa
+        """)
 
     ped_path1 = setup_pedigree(
         root_path / "study_1" / "in.ped", textwrap.dedent("""
@@ -60,8 +64,8 @@ f2       ch2      dad2  mom2  2   2      prb
                     "sources": [
                         {
                             "from": "pedigree",
-                            "source": "status"
-                        }
+                            "source": "status",
+                        },
                     ],
                     "default": {
                         "color": "#aaaaaa",
@@ -74,23 +78,23 @@ f2       ch2      dad2  mom2  2   2      prb
                             "id": "developmental_disorder",
                             "name": "developmental disorder",
                             "values": [
-                                "affected"
-                            ]
+                                "affected",
+                            ],
                         },
                         {
                             "color": "#00ff00",
                             "id": "unaffected",
                             "name": "unaffected",
                             "values": [
-                                "unaffected"
-                            ]
+                                "unaffected",
+                            ],
                         },
-                    ]
+                    ],
                 },
                 "selected_person_set_collections": [
-                    "phenotype"
-                ]
-            }
+                    "phenotype",
+                ],
+            },
         })
     study2 = denovo_study(
         root_path,
@@ -105,8 +109,8 @@ f2       ch2      dad2  mom2  2   2      prb
                     "sources": [
                         {
                             "from": "pedigree",
-                            "source": "status"
-                        }
+                            "source": "status",
+                        },
                     ],
                     "default": {
                         "color": "#aaaaaa",
@@ -119,23 +123,23 @@ f2       ch2      dad2  mom2  2   2      prb
                             "id": "autism",
                             "name": "autism",
                             "values": [
-                                "affected"
-                            ]
+                                "affected",
+                            ],
                         },
                         {
                             "color": "#ffffff",
                             "id": "unaffected",
                             "name": "unaffected",
                             "values": [
-                                "unaffected"
-                            ]
+                                "unaffected",
+                            ],
                         },
-                    ]
+                    ],
                 },
                 "selected_person_set_collections": [
-                    "phenotype"
-                ]
-            }
+                    "phenotype",
+                ],
+            },
         })
 
     (root_path / "dataset").mkdir(exist_ok=True)
@@ -171,7 +175,7 @@ f2       ch2      dad2  mom2  2   2      prb
 
 
 def test_dataset_build_person_set_collection(
-    tmp_path: pathlib.Path, dataset: GenotypeDataGroup
+    tmp_path: pathlib.Path, dataset: GenotypeDataGroup,
 ) -> None:
 
     assert dataset is not None
@@ -194,7 +198,7 @@ def test_dataset_build_person_set_collection(
 
 def test_dataset_save_cached_families(
     tmp_path: pathlib.Path,
-    dataset: GenotypeDataGroup
+    dataset: GenotypeDataGroup,
 ) -> None:
     assert dataset._save_cached_families_data()
     assert (tmp_path / "dataset" / "families_cache.ped.gz").exists()
@@ -202,7 +206,7 @@ def test_dataset_save_cached_families(
 
 def test_dataset_load_cached_families(
     tmp_path: pathlib.Path,
-    dataset: GenotypeDataGroup
+    dataset: GenotypeDataGroup,
 ) -> None:
     assert dataset._save_cached_families_data()
     assert (tmp_path / "dataset" / "families_cache.ped.gz").exists()
@@ -223,7 +227,7 @@ def test_dataset_load_cached_families(
 
 def test_dataset_save_cached_person_sets(
     tmp_path: pathlib.Path,
-    dataset: GenotypeDataGroup
+    dataset: GenotypeDataGroup,
 ) -> None:
     assert dataset._save_cached_person_sets()
     assert (
@@ -232,7 +236,7 @@ def test_dataset_save_cached_person_sets(
 
 def test_dataset_load_cached_person_sets(
     tmp_path: pathlib.Path,
-    dataset: GenotypeDataGroup
+    dataset: GenotypeDataGroup,
 ) -> None:
     assert dataset._save_cached_person_sets()
     assert (

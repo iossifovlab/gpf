@@ -1,20 +1,19 @@
 #!/usr/bin/env python
-# encoding: utf-8
 
-import sys
-import pathlib
-from typing import Optional, cast
 import logging
+import pathlib
+import sys
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
-from sqlalchemy.sql import select, insert, not_
+from typing import Optional, cast
+
 import pandas as pd
+from sqlalchemy.sql import insert, not_, select
 
 from dae.configuration.gpf_config_parser import GPFConfigParser
-from dae.utils.verbosity_configuration import VerbosityConfiguration
+from dae.pheno.db import generate_instrument_table_name, safe_db_name
 from dae.pheno.pheno_data import PhenotypeStudy
 from dae.pheno.registry import PhenoRegistry
-from dae.pheno.db import safe_db_name, generate_instrument_table_name
-
+from dae.utils.verbosity_configuration import VerbosityConfiguration
 
 logger = logging.getLogger("generate_common_reports")
 
@@ -51,7 +50,7 @@ def measures_cli_parser() -> ArgumentParser:
 
 
 def main(  # pylint: disable=too-many-locals
-    argv: Optional[list[str]] = None
+    argv: Optional[list[str]] = None,
 ) -> None:
     """Run the pheno measure tables creation procedure."""
     if argv is None:
@@ -66,7 +65,7 @@ def main(  # pylint: disable=too-many-locals
     pheno_registry = PhenoRegistry()
 
     pheno_configs = GPFConfigParser.collect_directory_configs(
-        args.pheno_data_dir
+        args.pheno_data_dir,
     )
 
     with PhenoRegistry.CACHE_LOCK:
@@ -74,7 +73,7 @@ def main(  # pylint: disable=too-many-locals
             path = pathlib.Path(config)
             pheno_registry.register_phenotype_data(
                 PhenoRegistry.load_pheno_data(path),
-                lock=False
+                lock=False,
             )
 
     available_dbs = pheno_registry.get_phenotype_data_ids()
@@ -90,7 +89,7 @@ def main(  # pylint: disable=too-many-locals
 
         for db_name in available_dbs:
             pheno_data = cast(
-                PhenotypeStudy, pheno_registry.get_phenotype_data(db_name)
+                PhenotypeStudy, pheno_registry.get_phenotype_data(db_name),
             )
 
             measure_table = pheno_data.db.measure
@@ -108,7 +107,7 @@ def main(  # pylint: disable=too-many-locals
             ]
             select_query = select(*columns)
             select_query = select_query.where(
-                not_(measure_table.c.measure_type.is_(None))
+                not_(measure_table.c.measure_type.is_(None)),
             )
 
             df = pd.read_sql(select_query, pheno_data.db.pheno_engine)
@@ -126,11 +125,11 @@ def main(  # pylint: disable=too-many-locals
             query_values = []
             for instrument in instruments:
                 table_name = generate_instrument_table_name(
-                    instrument.instrument_name
+                    instrument.instrument_name,
                 )
                 query_values.append({
                     "instrument_name": instrument.instrument_name,
-                    "table_name": safe_db_name(table_name)
+                    "table_name": safe_db_name(table_name),
                 })
 
             with pheno_data.db.pheno_engine.begin() as connection:
@@ -161,7 +160,7 @@ def main(  # pylint: disable=too-many-locals
 
             selector = select(
                 db.instruments.c.id,
-                db.instruments.c.instrument_name
+                db.instruments.c.instrument_name,
             )
             selector = selector.select_from(db.instruments)
             with db.pheno_engine.begin() as connection:
@@ -184,7 +183,7 @@ def main(  # pylint: disable=too-many-locals
                     ]
                     del measure_mapping["instrument_name"]
                     db_name = safe_db_name(
-                        measure.measure_id
+                        measure.measure_id,
                     )
                     if db_name.lower() in seen_measure_names:
                         seen_measure_names[db_name.lower()] += 1

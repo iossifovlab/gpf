@@ -1,21 +1,23 @@
 """Provides CLI tools for caching genomic resources."""
 
-import sys
-import os
 import argparse
-import time
 import logging
+import os
+import sys
+import time
 from typing import Optional
 
-from dae.utils.verbosity_configuration import VerbosityConfiguration
-from dae.genomic_resources.repository_factory import load_definition_file, \
-    get_default_grr_definition, \
-    build_genomic_resource_repository, GenomicResourceRepo
-from dae.genomic_resources.cached_repository import cache_resources
+from dae.annotation.annotation_factory import build_annotation_pipeline
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.dae_conf import dae_conf_schema
-from dae.annotation.annotation_factory import build_annotation_pipeline
-
+from dae.genomic_resources.cached_repository import cache_resources
+from dae.genomic_resources.repository_factory import (
+    GenomicResourceRepo,
+    build_genomic_resource_repository,
+    get_default_grr_definition,
+    load_definition_file,
+)
+from dae.utils.verbosity_configuration import VerbosityConfiguration
 
 logger = logging.getLogger("grr_cache_repo")
 
@@ -30,7 +32,7 @@ def cli_cache_repo(argv: Optional[list[str]] = None) -> None:
 
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument(
-        "--grr", "-g", default=None, help="Repository definition file"
+        "--grr", "-g", default=None, help="Repository definition file",
     )
     parser.add_argument(
         "--jobs", "-j", help="Number of jobs running in parallel",
@@ -38,11 +40,11 @@ def cli_cache_repo(argv: Optional[list[str]] = None) -> None:
     )
     parser.add_argument(
         "--instance", "-i", default=None,
-        help="gpf_instance.yaml to use for selective cache"
+        help="gpf_instance.yaml to use for selective cache",
     )
     parser.add_argument(
         "--annotation", "-a", default=None,
-        help="annotation.yaml to use for selective cache"
+        help="annotation.yaml to use for selective cache",
     )
     VerbosityConfiguration.set_arguments(parser)
 
@@ -62,7 +64,7 @@ def cli_cache_repo(argv: Optional[list[str]] = None) -> None:
 
     if args.instance is not None and args.annotation is not None:
         raise ValueError(
-            "This tool cannot handle both annotation and instance flags"
+            "This tool cannot handle both annotation and instance flags",
         )
 
     if args.instance is not None:
@@ -81,7 +83,7 @@ def cli_cache_repo(argv: Optional[list[str]] = None) -> None:
 
     if annotation is not None:
         annotation_resources = extract_resource_ids_from_annotation(
-            annotation, repository
+            annotation, repository,
         )
         resources |= annotation_resources
 

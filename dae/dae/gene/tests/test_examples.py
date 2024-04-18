@@ -41,12 +41,12 @@ geneSetsNames=LGDs,LGDs.Male,LGDs.Female,LGDs.Recurrent,LGDs.Single,LGDs.Triple,
 
 def test_example2_denovo_gene_set(denovo_gene_sets_db):
     denovo_sets = denovo_gene_sets_db.get_all_gene_sets(
-        {"f1_group": {"phenotype": ["autism"]}}
+        {"f1_group": {"phenotype": ["autism"]}},
     )
     assert denovo_sets
     print(denovo_sets)
 
     denovo_sets2 = denovo_gene_sets_db.get_all_gene_sets(
-        {"f1_group": {"phenotype": ["autism", "unaffected"]}}
+        {"f1_group": {"phenotype": ["autism", "unaffected"]}},
     )
     assert len(denovo_sets) <= len(denovo_sets2)

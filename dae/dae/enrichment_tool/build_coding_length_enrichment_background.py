@@ -1,19 +1,21 @@
-import sys
-import logging
 import argparse
+import logging
+import sys
 from collections import defaultdict
 from typing import Optional
 
 import pandas as pd
 
-from dae.utils.regions import collapse
-
-from dae.utils.verbosity_configuration import VerbosityConfiguration
-from dae.genomic_resources.gene_models import GeneModels, \
-    build_gene_models_from_resource
-from dae.genomic_resources.repository_factory import \
-    build_genomic_resource_repository
+from dae.genomic_resources.gene_models import (
+    GeneModels,
+    build_gene_models_from_resource,
+)
 from dae.genomic_resources.repository import GenomicResourceRepo
+from dae.genomic_resources.repository_factory import (
+    build_genomic_resource_repository,
+)
+from dae.utils.regions import collapse
+from dae.utils.verbosity_configuration import VerbosityConfiguration
 
 logger = logging.getLogger(__name__)
 

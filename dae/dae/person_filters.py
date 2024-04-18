@@ -1,23 +1,24 @@
-from typing import Set, List, Optional
 from collections.abc import Collection
+from typing import List, Optional, Set
 
 import numpy as np
 import pandas as pd
+
 from dae.pedigrees.families_data import FamiliesData
 from dae.pheno.common import MeasureType
 from dae.pheno.pheno_data import Measure, PhenotypeData
 
 
-class PersonFilter():
+class PersonFilter:
     """Generic interface for a filter working on FamiliesData objects."""
 
     def apply_to_df(self, df: pd.DataFrame) -> pd.DataFrame:
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def apply(
-        self, families: FamiliesData, roles: Optional[List[str]] = None
+        self, families: FamiliesData, roles: Optional[List[str]] = None,
     ) -> Set[str]:
-        raise NotImplementedError()
+        raise NotImplementedError
 
 
 class CriteriaFilter(PersonFilter):  # pylint: disable=abstract-method
@@ -28,7 +29,7 @@ class CriteriaFilter(PersonFilter):  # pylint: disable=abstract-method
         self.values: Collection = values
 
     def apply(
-        self, families: FamiliesData, roles: Optional[List[str]] = None
+        self, families: FamiliesData, roles: Optional[List[str]] = None,
     ) -> Set[str]:
         """Return a set of person ids for individuals matching the filter."""
         ped_df = families.ped_df.copy()
@@ -79,15 +80,15 @@ class PhenoFilter(CriteriaFilter):  # pylint: disable=abstract-method
     """Filter using a phenotype measure as criteria."""
 
     def __init__(
-        self, criteria: str, values: Collection, phenotype_data: PhenotypeData
+        self, criteria: str, values: Collection, phenotype_data: PhenotypeData,
     ):
         super().__init__(criteria, values)
         self.measure_df = self.apply_to_df(
-            phenotype_data.get_people_measure_values_df([self.criteria])
+            phenotype_data.get_people_measure_values_df([self.criteria]),
         )
 
     def apply(
-        self, families: FamiliesData, roles: Optional[List[str]] = None
+        self, families: FamiliesData, roles: Optional[List[str]] = None,
     ) -> Set[str]:
         ids = set()
         for person_id in self.measure_df["person_id"]:
@@ -108,10 +109,10 @@ class PhenoFilterSet(PhenoFilter, PersonFilterSet):
         self,
         measure: Measure,
         values: Collection,
-        phenotype_data: PhenotypeData
+        phenotype_data: PhenotypeData,
     ):
         assert measure.measure_type in (
-            MeasureType.categorical, MeasureType.ordinal
+            MeasureType.categorical, MeasureType.ordinal,
         )
         self.measure: Measure = measure
         super().__init__(self.measure.measure_id, values, phenotype_data)
@@ -124,10 +125,10 @@ class PhenoFilterRange(PhenoFilter, PersonFilterRange):
         self,
         measure: Measure,
         values: Collection,
-        phenotype_data: PhenotypeData
+        phenotype_data: PhenotypeData,
     ):
         assert measure.measure_type in (
-            MeasureType.continuous, MeasureType.ordinal
+            MeasureType.continuous, MeasureType.ordinal,
         )
         self.measure: Measure = measure
         super().__init__(self.measure.measure_id, values, phenotype_data)
@@ -145,7 +146,7 @@ class FamilyFilter(PersonFilter):
     def apply(self, *args, **kwargs) -> Set[str]:
         families: FamiliesData = args[0]
         return families.families_of_persons(
-            self.person_filter.apply(*args, **kwargs)
+            self.person_filter.apply(*args, **kwargs),
         )
 
 
@@ -153,7 +154,7 @@ def make_pedigree_filter(pedigree_filter: dict) -> PersonFilter:
     """Create a PersonFilter based on a dict config."""
     result_filter = PersonFilterSet(
         pedigree_filter["source"],
-        set(pedigree_filter["selection"]["selection"])
+        set(pedigree_filter["selection"]["selection"]),
     )
     if pedigree_filter.get("role"):
         return FamilyFilter(result_filter)
@@ -161,7 +162,7 @@ def make_pedigree_filter(pedigree_filter: dict) -> PersonFilter:
 
 
 def make_pheno_filter(
-    pheno_filter: dict, phenotype_data: PhenotypeData
+    pheno_filter: dict, phenotype_data: PhenotypeData,
 ) -> PersonFilter:
     """Create a PhenoFilter based on a dict config."""
     measure = phenotype_data.get_measure(pheno_filter["source"])
@@ -171,11 +172,11 @@ def make_pheno_filter(
     result_filter: PhenoFilter
     if pheno_filter_type == MeasureType.categorical:
         result_filter = PhenoFilterSet(
-            measure, set(selection["selection"]), phenotype_data
+            measure, set(selection["selection"]), phenotype_data,
         )
     else:
         result_filter = PhenoFilterRange(
-            measure, (selection["min"], selection["max"]), phenotype_data
+            measure, (selection["min"], selection["max"]), phenotype_data,
         )
 
     if pheno_filter.get("role"):

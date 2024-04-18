@@ -1,17 +1,23 @@
 from __future__ import annotations
+
 import logging
 from dataclasses import dataclass
 from typing import Any, Optional, cast
 
 from jinja2 import Template
 
-from dae.genomic_resources.genomic_scores import build_score_from_resource, \
-    GenomicScore
-from dae.genomic_resources.histogram import NumberHistogram, \
-    CategoricalHistogram, NullHistogram, Histogram
-from dae.annotation.annotation_pipeline import AttributeInfo, \
-    AnnotationPipeline
+from dae.annotation.annotation_pipeline import AnnotationPipeline, AttributeInfo
 from dae.annotation.score_annotator import GenomicScoreAnnotatorBase
+from dae.genomic_resources.genomic_scores import (
+    GenomicScore,
+    build_score_from_resource,
+)
+from dae.genomic_resources.histogram import (
+    CategoricalHistogram,
+    Histogram,
+    NullHistogram,
+    NumberHistogram,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +45,7 @@ class ScoreDesc:
             "description": self.description,
             "help": self.help,
             "small_values_desc": self.small_values_desc,
-            "large_values_desc": self.large_values_desc
+            "large_values_desc": self.large_values_desc,
         }
 
     @staticmethod
@@ -63,7 +69,7 @@ class ScoreDesc:
             data["description"],
             data["help"],
             data.get("small_values_desc"),
-            data.get("large_values_desc")
+            data.get("large_values_desc"),
         )
 
 
@@ -166,7 +172,7 @@ def _build_score_help(
 
     histogram = Template(SCORE_HISTOGRAM).render(
         hist_url=hist_url,
-        score_def=score_def
+        score_def=score_def,
     )
 
     data = {
@@ -179,7 +185,7 @@ def _build_score_help(
         "histogram": histogram,
         "source": attr_info.source,
         "aggregators": score_annotator.build_score_aggregator_documentation(
-            attr_info
+            attr_info,
         ),
         "annotator_type": score_annotator.get_info().type,
         "annotator_doc": score_annotator.get_info().documentation,
@@ -199,7 +205,7 @@ class GenomicScoresRegistry:
 
     @staticmethod
     def build_genomic_scores_registry(
-        pipeline: AnnotationPipeline
+        pipeline: AnnotationPipeline,
     ) -> GenomicScoresRegistry:
         """Build a genomic scores registry from an annotation pipeline."""
         score_annotators: list[GenomicScoreAnnotatorBase] = []
@@ -222,7 +228,7 @@ class GenomicScoresRegistry:
 
     @staticmethod
     def _build_annotator_scores_desc(
-        annotator: GenomicScoreAnnotatorBase
+        annotator: GenomicScoreAnnotatorBase,
     ) -> dict[str, ScoreDesc]:
         annotator_info = annotator.get_info()
         resource = annotator_info.resources[0]
@@ -241,7 +247,7 @@ class GenomicScoresRegistry:
                 f"{attr.name} - {attr.description}",
                 help_doc,
                 score_def.small_values_desc,
-                score_def.large_values_desc
+                score_def.large_values_desc,
             )
             if score_desc.hist is None:
                 logger.warning(
@@ -262,7 +268,7 @@ class GenomicScoresRegistry:
 
     def __getitem__(self, score_id: str) -> ScoreDesc:
         if score_id not in self.scores:
-            raise KeyError()
+            raise KeyError
 
         res = self.scores[score_id]
         return res

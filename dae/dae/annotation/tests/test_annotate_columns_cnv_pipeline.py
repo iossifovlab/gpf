@@ -2,20 +2,19 @@
 import textwrap
 from pathlib import Path
 
-import pytest
-import pandas as pd
 import numpy as np
+import pandas as pd
+import pytest
 
 from dae.annotation.annotate_columns import cli as cli_columns
+from dae.genomic_resources.repository_factory import (
+    build_genomic_resource_repository,
+)
+from dae.testing import convert_to_tab_separated, setup_directories
+from dae.testing.foobar_import import foobar_genes, foobar_genome
 
-from dae.genomic_resources.repository_factory import \
-    build_genomic_resource_repository
-from dae.testing import setup_directories, \
-    convert_to_tab_separated
-from dae.testing.foobar_import import foobar_genome, foobar_genes
 
-
-@pytest.fixture
+@pytest.fixture()
 def annotate_cnv_fixture(tmp_path: Path) -> Path:
     root_path = tmp_path / "annotate_columns_cnv_pipeline"
 
@@ -55,7 +54,7 @@ def annotate_cnv_fixture(tmp_path: Path) -> Path:
                         "genomic_resource.yaml": textwrap.dedent("""
                             type: genome
                             filename: chrAll.fa
-                        """)
+                        """),
                     },
                 },
                 "gene_models": {
@@ -64,8 +63,8 @@ def annotate_cnv_fixture(tmp_path: Path) -> Path:
                             type: gene_models
                             filename: genes.txt
                             format: refflat
-                        """)
-                    }
+                        """),
+                    },
                 },
                 "one": {
                     "genomic_resource.yaml": textwrap.dedent("""
@@ -83,7 +82,7 @@ def annotate_cnv_fixture(tmp_path: Path) -> Path:
                         foo    18         0.2
                         bar    4          1.1
                         bar    18         1.2
-                    """)
+                    """),
                 },
                 "gene_score1": {
                     "genomic_resource.yaml": textwrap.dedent("""
@@ -104,15 +103,15 @@ def annotate_cnv_fixture(tmp_path: Path) -> Path:
                         g1,10.1
                         g2,20.2
                     """),
-                }
-            }
-        }
+                },
+            },
+        },
     )
     return root_path
 
 
 def test_cnv_cli_columns_basic_setup(
-    annotate_cnv_fixture: Path
+    annotate_cnv_fixture: Path,
 ) -> None:
     root_path = annotate_cnv_fixture
     grr_path = root_path / "grr.yaml"
@@ -134,11 +133,11 @@ def test_cnv_cli_columns_basic_setup(
     "infile", [
         "cnv_cshl.tsv",
         "cnv.tsv",
-    ]
+    ],
 )
 def test_cnv_effect_annotation(
     infile: str,
-    annotate_cnv_fixture: Path
+    annotate_cnv_fixture: Path,
 ) -> None:
     root_path = annotate_cnv_fixture
     setup_directories(root_path, {
@@ -159,7 +158,7 @@ def test_cnv_effect_annotation(
         "-w", str(root_path / "work"),
         "--grr", str(root_path / "grr.yaml"),
         "-R", "genome/foobar_genome",
-        "-j", "1"
+        "-j", "1",
     ])
 
     df = pd.read_csv(root_path / "result.tsv", sep="\t")
@@ -172,11 +171,11 @@ def test_cnv_effect_annotation(
     "infile", [
         "cnv_cshl.tsv",
         "cnv.tsv",
-    ]
+    ],
 )
 def test_cnv_gene_score_annotation(
     infile: str,
-    annotate_cnv_fixture: Path
+    annotate_cnv_fixture: Path,
 ) -> None:
     root_path = annotate_cnv_fixture
     setup_directories(root_path, {
@@ -199,7 +198,7 @@ def test_cnv_gene_score_annotation(
         "-w", str(root_path / "work"),
         "--grr", str(root_path / "grr.yaml"),
         "-R", "genome/foobar_genome",
-        "-j", "1"
+        "-j", "1",
     ])
 
     df = pd.read_csv(root_path / "result.tsv", sep="\t")
@@ -210,11 +209,11 @@ def test_cnv_gene_score_annotation(
 @pytest.mark.parametrize(
     "infile", [
         "bad_cnv.tsv",
-    ]
+    ],
 )
 def test_bad_cnv_effect_annotation(
     infile: str,
-    annotate_cnv_fixture: Path
+    annotate_cnv_fixture: Path,
 ) -> None:
     root_path = annotate_cnv_fixture
     setup_directories(root_path, {
@@ -234,7 +233,7 @@ def test_bad_cnv_effect_annotation(
         "-o", str(root_path / "result.tsv"),
         "-w", str(root_path / "work"),
         "--grr", str(root_path / "grr.yaml"),
-        "-j", "1"
+        "-j", "1",
     ])
 
     df = pd.read_csv(root_path / "result.tsv", sep="\t")
@@ -246,11 +245,11 @@ def test_bad_cnv_effect_annotation(
 @pytest.mark.parametrize(
     "infile", [
         "bad_cnv.tsv",
-    ]
+    ],
 )
 def test_bad_cnv_gene_score_annotation(
     infile: str,
-    annotate_cnv_fixture: Path
+    annotate_cnv_fixture: Path,
 ) -> None:
     root_path = annotate_cnv_fixture
     setup_directories(root_path, {
@@ -272,7 +271,7 @@ def test_bad_cnv_gene_score_annotation(
         "-o", str(root_path / "result.tsv"),
         "-w", str(root_path / "work"),
         "--grr", str(root_path / "grr.yaml"),
-        "-j", "1"
+        "-j", "1",
     ])
 
     df = pd.read_csv(root_path / "result.tsv", sep="\t")

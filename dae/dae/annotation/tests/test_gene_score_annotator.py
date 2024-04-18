@@ -1,18 +1,20 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 
-import textwrap
 import pathlib
+import textwrap
 
 import pytest
 
 from dae.annotation.annotation_pipeline import AnnotatorInfo, AttributeInfo
-from dae.genomic_resources.testing import build_inmemory_test_repository
-from dae.genomic_resources.repository import GR_CONF_FILE_NAME, \
-    GenomicResourceRepo
 from dae.annotation.gene_score_annotator import GeneScoreAnnotator
+from dae.genomic_resources.repository import (
+    GR_CONF_FILE_NAME,
+    GenomicResourceRepo,
+)
+from dae.genomic_resources.testing import build_inmemory_test_repository
 
 
-@pytest.fixture
+@pytest.fixture()
 def scores_repo(tmp_path: pathlib.Path) -> GenomicResourceRepo:
     scores_repo = build_inmemory_test_repository({
         "LGD_rank": {
@@ -41,8 +43,8 @@ def scores_repo(tmp_path: pathlib.Path) -> GenomicResourceRepo:
                 "SRRM2",0.004471,35
                 "SPTBN1",0.002715,19.5
                 "UBR4",0.007496,59
-            """)
-        }
+            """),
+        },
     })
     return scores_repo
 

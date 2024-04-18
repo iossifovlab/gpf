@@ -2,8 +2,8 @@ import datetime
 import os
 import shutil
 from pathlib import Path
+from typing import Any, Optional, Union, cast
 from urllib.parse import urlparse
-from typing import Optional, Union, cast, Any
 
 from fsspec.core import url_to_fs
 
@@ -93,7 +93,7 @@ def copy(dest: str, src: str) -> None:
 def tabix_index_filename(tabix_filename: str) -> Optional[str]:
     """Given a Tabix/VCF filename returns a tabix index filename if exists."""
     if not exists(tabix_filename):
-        raise IOError(f"tabix file '{tabix_filename}' not found")
+        raise OSError(f"tabix file '{tabix_filename}' not found")
 
     tbi_index_filename = f"{tabix_filename}.tbi"
     if exists(tbi_index_filename):

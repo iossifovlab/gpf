@@ -1,10 +1,10 @@
 import logging
-
 from functools import cache
 
 from dae.gene.denovo_gene_set_collection import DenovoGeneSetCollection
-from dae.gene.denovo_gene_set_collection_factory import \
-    DenovoGeneSetCollectionFactory
+from dae.gene.denovo_gene_set_collection_factory import (
+    DenovoGeneSetCollectionFactory,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -97,7 +97,7 @@ class DenovoGeneSetsDb:
         gene_set_id,
         gene_set_spec,
         permitted_datasets=None,
-        collection_id="denovo"  # pylint: disable=unused-argument
+        collection_id="denovo",  # pylint: disable=unused-argument
     ):
         """Return de Novo gene set matching the spec for permitted datasets."""
         gene_set_spec = self._filter_spec(gene_set_spec, permitted_datasets)
@@ -112,11 +112,11 @@ class DenovoGeneSetsDb:
         self,
         denovo_gene_set_spec,
         permitted_datasets=None,
-        collection_id="denovo"  # pylint: disable=unused-argument
+        collection_id="denovo",  # pylint: disable=unused-argument
     ):
         """Return all de Novo gene sets matching the spec for permitted DS."""
         denovo_gene_set_spec = self._filter_spec(
-            denovo_gene_set_spec, permitted_datasets
+            denovo_gene_set_spec, permitted_datasets,
         )
 
         return DenovoGeneSetCollection.get_all_gene_sets(
