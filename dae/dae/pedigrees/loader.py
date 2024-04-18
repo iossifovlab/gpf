@@ -381,6 +381,12 @@ class FamiliesLoader(CLILoader):
                 ped_sex: Sex.to_value,
                 ped_status: Status.to_value,
             })
+        else:
+            converters.update({
+                ped_role: Role.from_name,
+                ped_sex: Sex.from_name,
+                ped_status: Status.from_name,
+            })
         converters.update({
             tag_label: str2bool for tag_label in ALL_FAMILY_TAG_LABELS
         })

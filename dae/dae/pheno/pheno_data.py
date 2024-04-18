@@ -135,7 +135,7 @@ class Measure:
         mes = Measure(row["measure_id"], row["measure_name"])
         mes.instrument_name = row["instrument_name"]
         mes.measure_name = row["measure_name"]
-        mes.measure_type = row["measure_type"]
+        mes.measure_type = MeasureType(row["measure_type"])
 
         mes.description = row["description"]
         mes.default_filter = row["default_filter"]
@@ -674,7 +674,7 @@ class PhenotypeStudy(PhenotypeData):
             roles=roles,
         )
 
-        with self.db.pheno_engine.connect() as connection:
+        with self.db.engine.connect() as connection:
             result = connection.execute(query)
 
             for row in result:
@@ -702,9 +702,11 @@ class PhenotypeStudy(PhenotypeData):
             roles=roles,
         )
 
-        with self.db.pheno_engine.connect() as connection:
+        with self.db.engine.connect() as connection:
             df = pd.read_sql(query, connection)
-            df["role"] = df["role"].transform(Role.from_name)
+            df["sex"] = df["sex"].transform(Sex.from_value)
+            df["status"] = df["status"].transform(Status.from_value)
+            df["role"] = df["role"].transform(Role.from_value)
             return df
 
     def get_regressions(self) -> dict[str, Any]:

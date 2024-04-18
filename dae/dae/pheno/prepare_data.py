@@ -101,7 +101,7 @@ class PreparePhenoBrowserBase:
             "measure_id": measure.measure_id,
             "instrument_name": measure.instrument_name,
             "measure_name": measure.measure_name,
-            "measure_type": measure.measure_type,
+            "measure_type": measure.measure_type.value,
             "description": measure.description,
             "values_domain": measure.values_domain,
         }
@@ -336,8 +336,10 @@ class PreparePhenoBrowserBase:
             MeasureType.ordinal,
         ]:
             return
+        print(measure.measure_type)
         if self.pheno_regressions is None or \
                 self.pheno_regressions.regression is None:
+            print("skip??")
             return
         for reg_id, reg in self.pheno_regressions.regression.items():
             res = {"measure_id": measure.measure_id}
@@ -346,10 +348,12 @@ class PreparePhenoBrowserBase:
                 reg.instrument_name or measure.instrument_name,  # type: ignore
             )
             if not reg_measure:
+                print("skip")
                 continue
             if self._has_regression_measure(
                 measure.measure_name, measure.instrument_name,
             ):
+                print("skip2")
                 continue
 
             res["regression_id"] = reg_id
@@ -361,13 +365,12 @@ class PreparePhenoBrowserBase:
                 res.get("pvalue_regression_male") is not None
                 or res.get("pvalue_regression_female") is not None
             ):
+                print("out")
                 yield res
 
     def run(self) -> None:
         """Run browser preparations for all measures in a phenotype data."""
-        pheno_dbfile = self.phenotype_data.db.pheno_dbfile
-        db = PhenoDb(pheno_dbfile, browser_dbfile=self.browser_db)
-        db.build()
+        db = self.phenotype_data.db
 
         if self.pheno_regressions:
             for reg_id, reg_data in self.pheno_regressions.regression.items():

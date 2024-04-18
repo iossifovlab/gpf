@@ -236,7 +236,7 @@ def set_figure_size(figure, x_count):
 
 
 def _enumerate_by_count(df, column_name):
-    occurrence_counts = df[column_name].value_counts()
+    occurrence_counts = df[column_name].value_counts(dropna=False)
     occurrence_ordered = occurrence_counts.index.values.tolist()
     occurrences_map = {
         value: number for (number, value) in enumerate(occurrence_ordered)
@@ -453,7 +453,12 @@ def draw_categorical_violin_distribution(
             )
 
     ax.set_yticks(y_locations)
-    ax.set_yticklabels([textwrap.fill(x, 20) for x in values_domain])
+    print(values_domain)
+    ax.set_yticklabels([
+        textwrap.fill(x, 20) if x is not None else
+        textwrap.fill("None", 20)
+        for x in values_domain
+    ])
     ax.set_xlim(2 * -binned_maximum, len(columns) * 2 * binned_maximum)
     ax.set_ylim(-1, np.max(y_locations) + 1)
 
