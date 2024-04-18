@@ -22,6 +22,7 @@ import { SetPresentInParentValues } from 'app/present-in-parent/present-in-paren
 import { SetStudyTypes } from 'app/study-types/study-types.state';
 import { SetVariantTypes } from 'app/variant-types/variant-types.state';
 import { EffectTypes } from 'app/effect-types/effect-types';
+import { GeneProfilesModel, SetGeneProfilesTabs } from 'app/gene-profiles-table/gene-profiles-table.state';
 
 @Component({
   selector: 'gpf-gene-profiles-single-view',
@@ -120,12 +121,17 @@ export class GeneProfileSingleViewComponent implements OnInit {
         }
         return zip(...genomicScoresObservables);
       }),
-    ).subscribe(genomicScores => {
-      for (const genomicScore of genomicScores) {
-        this.genomicScoresGeneScores.push({
-          category: genomicScore[0],
-          scores: genomicScore[1]
-        });
+    ).subscribe({
+      next: (genomicScores) => {
+        for (const genomicScore of genomicScores) {
+          this.genomicScoresGeneScores.push({
+            category: genomicScore[0],
+            scores: genomicScore[1]
+          });
+        }
+      },
+      error: () => {
+        this.errorModal = true;
       }
     });
   }
@@ -222,6 +228,18 @@ export class GeneProfileSingleViewComponent implements OnInit {
 
   public errorModalBack(): void {
     this.errorModal = false;
+
+    let tabs = null as Set<string>;
+
+    this.store.selectOnce(
+      (state: { geneProfilesState: GeneProfilesModel}) => state.geneProfilesState)
+      .subscribe((state: SetGeneProfilesTabs) => {
+        tabs = state.openedTabs;
+      });
+
+    tabs.delete(this.geneSymbol);
+
+    this.store.dispatch(new SetGeneProfilesTabs(tabs));
     this.router.navigate(['/gene-profiles']);
   }
 }

@@ -12,7 +12,7 @@ import { GeneProfilesColumn, GeneProfilesTableConfig } from 'app/gene-profiles-t
 import {
   GeneProfileSingleViewComponent
 } from 'app/gene-profiles-single-view/gene-profiles-single-view.component';
-import { GeneProfilesModel, SetGeneProfiles } from 'app/gene-profiles-table/gene-profiles-table.state';
+import { GeneProfilesModel, SetGeneProfilesConfig } from 'app/gene-profiles-table/gene-profiles-table.state';
 import { of } from 'rxjs';
 
 @Component({
@@ -32,7 +32,7 @@ export class GeneProfilesBlockComponent implements OnInit {
 
   public ngOnInit(): void {
     this.store.selectOnce((state: { geneProfilesState: GeneProfilesModel}) => state.geneProfilesState).pipe(
-      switchMap((state: SetGeneProfiles) => {
+      switchMap((state: SetGeneProfilesConfig) => {
         if (state.config) {
           return of(state.config);
         } else {
