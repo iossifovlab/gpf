@@ -129,9 +129,9 @@ def merge_variants_parquets(
             "merged", partitions, bucket_index=None,
         ),
     )
-    parquet_files = fs_utils.glob(
+    parquet_files = sorted(fs_utils.glob(
         fs_utils.join(variants_dir, "*.parquet"),
-    )
+    ))
 
     is_output_in_input = \
         any(fn.endswith(output_parquet_file) for fn in parquet_files)

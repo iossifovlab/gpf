@@ -68,3 +68,42 @@ def test_merge_parquets(tmp_path: pathlib.Path) -> None:
     row_group = out_parquet.metadata.row_group(0)
     assert row_group.column(0).compression == "SNAPPY"
     assert row_group.column(1).compression == "ZSTD"
+
+
+def test_merge_parquets_sorts_lexicographically(
+    tmp_path: pathlib.Path,
+) -> None:
+    pd_content = textwrap.dedent("""
+        region_bin:
+            chromosomes: foo,bar
+            region_length: 8
+        family_bin:
+            family_bin_size: 2
+    """)
+    part_desc = PartitionDescriptor.parse_string(pd_content, "yaml")
+
+    pq.write_table(
+        pa.table({"index": [1], "prop": ["a"]}),
+        str(tmp_path / "bucket_index_000001.parquet"),
+    )
+    pq.write_table(
+        pa.table({"index": [2], "prop": ["b"]}),
+        str(tmp_path / "bucket_index_000010.parquet"),
+    )
+    pq.write_table(
+        pa.table({"index": [3], "prop": ["c"]}),
+        str(tmp_path / "bucket_index_000100.parquet"),
+    )
+
+    merge_variants_parquets(
+        part_desc, str(tmp_path),
+        [("region_bin", "foo_0"), ("family_bin", "1")],
+    )
+    out_files = os.listdir(str(tmp_path))
+    assert len(out_files) == 1
+    content = pq.ParquetFile(tmp_path / out_files[0]).read().to_pylist()
+    assert content == [
+        {"index": 1, "prop": "a"},
+        {"index": 2, "prop": "b"},
+        {"index": 3, "prop": "c"},
+    ]
