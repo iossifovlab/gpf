@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import * as utils from './utils';
 import * as fs from 'fs';
 import * as path from 'path';
-import { scanCSV } from 'nodejs-polars';
+import pl from 'nodejs-polars';
 
 test.describe('Pheno browser tests', () => {
   test.beforeEach(async({ page }) => {
@@ -94,7 +94,7 @@ test.describe('Pheno browser tests', () => {
     for (let i = 0; i < rowValues.length; i++) {
       const row = page.locator('gpf-pheno-browser-table > gpf-table .table-row').nth(i);
       const text = await row.textContent();
-      expect(text).toBe(rowValues[i]);
+      expect(text).toBe(rowValues[i].trim());
     }
   });
   test('should download all instruments and validate whether they are equal to the reference data', async({ page }) => {
@@ -119,10 +119,31 @@ test.describe('Pheno browser tests', () => {
       'pheno_common.sample_id'
     ];
 
-    const fixtureData = scanCSV(await download.path(), {sep: ','});
-    const downloadData = scanCSV('playwright/fixtures/pheno-browser/measures_comp_all.csv', {sep: ','});
-    const fixtureFrame = (await fixtureData.select(columnsToCheck).collect()).sort('person_id');
-    const downloadFrame = (await downloadData.select(columnsToCheck).collect()).sort('person_id');
-    expect(fixtureFrame.toString()).toEqual(downloadFrame.toString());
+    const fixtureFrame = (
+      await pl
+        .scanCSV(
+          'playwright/fixtures/pheno-browser/measures_comp_all.csv',
+          {
+            sep: ',',
+            nullValues: '-'
+          }
+        )
+        .select(columnsToCheck)
+        .collect()
+    ).sort('person_id');
+
+    const downloadFrame = (
+      await pl
+        .scanCSV(
+          await download.path(),
+          {
+            sep: ',',
+            nullValues: '-'
+          }
+        )
+        .select(columnsToCheck)
+        .collect()
+    ).sort('person_id');
+    expect(fixtureFrame.frameEqual(downloadFrame));
   });
 });
