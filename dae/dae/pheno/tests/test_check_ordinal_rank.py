@@ -14,7 +14,7 @@ from dae.pheno.prepare.measure_classifier import MeasureClassifier
 
 @pytest.fixture(scope="function")
 def db_connection() -> duckdb.DuckDBPyConnection:
-    return duckdb.connect("memory")
+    return duckdb.connect(":memory:")
 
 
 @pytest.fixture(scope="function")
