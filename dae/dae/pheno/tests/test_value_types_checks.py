@@ -11,12 +11,12 @@ from dae.pheno.common import MeasureType, default_config
 from dae.pheno.prepare.measure_classifier import MeasureClassifier
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture()
 def db_connection() -> duckdb.DuckDBPyConnection:
-    return duckdb.connect("memory")
+    return duckdb.connect(":memory:")
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture()
 def db_builder(db_connection: duckdb.DuckDBPyConnection) -> Generator[
     Callable,
     None,
