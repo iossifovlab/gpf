@@ -265,7 +265,7 @@ describe('FamilyFiltersBlockComponent', () => {
     // eslint-disable-next-line max-len
     const genotypeBrowserMock = new GenotypeBrowser(true, true, true, true, true, true, true, true, true, [], [], [], null, null, null, null, 0);
     // eslint-disable-next-line max-len
-    const datasetMock = new Dataset('datasetId', '', 'dataset', [], true, [], [], [], '', true, true, true, true, {enabled: true}, genotypeBrowserMock, null, null, null, true, null, false);
+    const datasetMock = new Dataset('datasetId', '', '', 'dataset', [], true, [], [], [], '', true, true, true, true, {enabled: true}, genotypeBrowserMock, null, null, null, true, null, false);
     component.dataset = datasetMock;
 
     component['store'] = {
