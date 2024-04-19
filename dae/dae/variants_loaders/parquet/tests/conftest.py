@@ -12,15 +12,13 @@ from dae.testing.t4c8_import import t4c8_gpf
 @pytest.fixture(scope="module")
 def t4c8_instance(tmp_path_factory: pytest.TempPathFactory) -> GPFInstance:
     root_path = tmp_path_factory.mktemp("t4c8_instance")
-    gpf_instance = t4c8_gpf(root_path)
-    return gpf_instance
+    return t4c8_gpf(root_path)
 
 
 @pytest.fixture(scope="module")
 def acgt_instance(tmp_path_factory: pytest.TempPathFactory) -> GPFInstance:
     root_path = tmp_path_factory.mktemp("acgt_instance")
-    gpf_instance = acgt_gpf(root_path)
-    return gpf_instance
+    return acgt_gpf(root_path)
 
 
 @pytest.fixture(scope="module")

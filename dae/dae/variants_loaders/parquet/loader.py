@@ -27,29 +27,40 @@ class ParquetLoaderException(Exception):
     pass
 
 
-class ParquetHelper:
+class Reader:
     """
     Helper class to incrementally fetch variants.
 
-    Important - this class assumes variants are ordered by their summary index.
+    This class assumes variants are ordered by their summary index!
     """
 
     def __init__(self, path: str, columns: Iterable[str]):
         self.pq_file = pq.ParquetFile(path)
-        self.columns = columns
-        self.iterator = self.pq_file.iter_batches(columns=self.columns)
+        self.iterator = self.pq_file.iter_batches(columns=columns)
         self.batch: list[dict] = []
         self.exhausted = False
 
-    @property
-    def current_idx(self) -> int:
-        if not self.batch:
-            self.advance()
-        if self.exhausted:
-            return -1
-        return int(self.batch[0]["summary_index"])
+    def __iter__(self) -> "Reader":
+        return self
 
-    def advance(self) -> None:
+    def __next__(self) -> list[dict]:
+        """Return next batch of variants with matching indices."""
+        if self.exhausted:
+            raise StopIteration
+        result: list[dict] = []
+        initial_idx = self.current_idx
+        while self.current_idx == initial_idx:
+            result.append(self._pop())
+        return result
+
+    @property
+    def current_idx(self) -> tuple[int, int]:
+        top = self._peek()
+        if top is None:
+            return (-1, -1)
+        return int(top["bucket_index"]), int(top["summary_index"])
+
+    def _advance(self) -> None:
         if self.exhausted:
             return
         try:
@@ -57,83 +68,55 @@ class ParquetHelper:
         except StopIteration:
             self.exhausted = True
 
-    def _pop(self) -> Optional[dict]:
+    def _peek(self) -> Optional[dict]:
         if not self.batch:
-            self.advance()
+            self._advance()
         if self.exhausted:
             return None
+        return self.batch[0]
+
+    def _pop(self) -> dict:
+        if self._peek() is None:
+            raise IndexError
         return self.batch.pop(0)
-
-    def get(self, summary_idx: int) -> list[dict]:
-        """Fetch all variants matching the given summary index."""
-        result: list[dict] = []
-
-        if self.current_idx == -1:
-            return []
-        if summary_idx < self.current_idx:
-            return []
-        while summary_idx > self.current_idx:
-            rec = self._pop()  # seek forward
-            if rec is None:
-                return result
-        while self.current_idx == summary_idx:
-            rec = self._pop()
-            if rec is None:
-                return result
-            result.append(rec)
-        return result
 
     def close(self) -> None:
         self.pq_file.close()
 
 
-class MultiFamilyReader:
-    """Read family variants from all parquet files in a given directory."""
+class MultiReader:
+    """
+    Incrementally fetch variants from multiple files.
 
+    This class assumes variants are ordered by their summary index!
+    """
     def __init__(self, dirs: Iterable[str], columns: Iterable[str]):
-        self.readers = [ParquetHelper(path, columns) for path in dirs]
+        self.readers = tuple(Reader(path, columns) for path in dirs)
 
-    def get(self, summary_idx: int) -> list[dict]:
+    def __iter__(self) -> "MultiReader":
+        return self
+
+    def __next__(self) -> list[dict]:
+        if self._exhausted:
+            raise StopIteration
         result = []
+        iteration_idx = self.current_idx
         for reader in self.readers:
-            result.extend(reader.get(summary_idx))
+            if not reader.exhausted:
+                while reader.current_idx == iteration_idx:
+                    result.extend(next(reader))
         return result
-
-    def close(self) -> None:
-        for reader in self.readers:
-            reader.close()
-
-
-class MultiSummaryReader:
-    """Read summary variants from all parquet files in a given directory."""
-
-    def __init__(self, dirs: Iterable[str], columns: Iterable[str]):
-        self.readers = [ParquetHelper(path, columns) for path in dirs]
-        for reader in self.readers:
-            reader.advance()  # init all readers
-        self.current_idx = self.readers[0].current_idx
-        self._next_index()
-
-    def _next_index(self) -> None:
-        self.current_idx = min(reader.current_idx for reader in self.readers
-                               if not reader.exhausted)
 
     @property
     def _exhausted(self) -> bool:
         return all(reader.exhausted for reader in self.readers)
 
-    def __iter__(self) -> "MultiSummaryReader":
-        return self
-
-    def __next__(self) -> dict:
-        result = []
-        for reader in self.readers:
-            result.extend(reader.get(self.current_idx))
-        if not self._exhausted:
-            self._next_index()
-        if not result:
-            raise StopIteration
-        return result[0]  # we only need one allele for now
+    @property
+    def current_idx(self) -> tuple[int, int]:
+        if self._exhausted:
+            return (-1, -1)
+        return min(reader.current_idx for reader in self.readers
+                   if not reader.exhausted)
 
     def close(self) -> None:
         for reader in self.readers:
@@ -143,13 +126,13 @@ class MultiSummaryReader:
 class ParquetLoader:
     """Variants loader implementation for the Parquet format."""
 
-    SUMMARY_COLUMNS = [
+    SUMMARY_COLUMNS = [  # noqa: RUF012
         "bucket_index", "summary_index", "allele_index",
         "summary_variant_data", "chromosome", "position",
     ]
 
-    FAMILY_COLUMNS = [
-        "summary_index", "family_id", "family_variant_data",
+    FAMILY_COLUMNS = [  # noqa: RUF012
+        "bucket_index", "summary_index", "family_id", "family_variant_data",
     ]
 
     def __init__(self, data_dir: str):
@@ -316,23 +299,28 @@ class ParquetLoader:
         for path in summary_paths:
             family_paths.extend(self.get_family_pq_filepaths(path))
 
-        summary_reader = MultiSummaryReader(summary_paths,
-                                            self.SUMMARY_COLUMNS)
-        family_reader = MultiFamilyReader(family_paths,
-                                          self.FAMILY_COLUMNS)
+        summary_reader = MultiReader(summary_paths, self.SUMMARY_COLUMNS)
+        family_reader = MultiReader(family_paths, self.FAMILY_COLUMNS)
 
-        for rec in summary_reader:
+        for alleles in summary_reader:
+            rec = alleles[0]
             if region_obj is not None \
                 and not region_obj.contains(Region(rec["chromosome"],
                                                    rec["position"],
                                                    rec["position"])):
                 continue
 
-            sv_idx = rec["summary_index"]
+            sv_idx = (rec["bucket_index"], rec["summary_index"])
             sv = self._deserialize_summary_variant(
                 rec["summary_variant_data"])
 
-            fvs = family_reader.get(sv_idx)
+            fvs: list[dict] = []
+            try:
+                while sv_idx > family_reader.current_idx:
+                    next(family_reader)
+                fvs = next(family_reader)
+            except StopIteration:
+                pass
 
             seen = set()
             to_yield = []
