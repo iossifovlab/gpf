@@ -1,0 +1,8 @@
+:host::ng-deep markdown ul {
+  list-style-type: none;
+}
+
+:host::ng-deep markdown li {
+  margin-bottom: 20px;
+  margin-top: 20px;
+}

@@ -247,6 +247,7 @@ export class Dataset extends IdName {
     return new Dataset(
       json['id'] as string,
       json['description'] as string,
+      json['children_description'] as string,
       json['name'] as string,
       json['parents'] as string[],
       json['access_rights'] as boolean,
@@ -276,6 +277,7 @@ export class Dataset extends IdName {
     return new Dataset(
       datasetJson['id'] as string,
       datasetJson['description'] as string,
+      datasetJson['children_description'] as string,
       datasetJson['name'] as string,
       datasetJson['parents'] as string[],
       datasetJson['access_rights'] as boolean,
@@ -318,6 +320,7 @@ export class Dataset extends IdName {
   public constructor(
     public readonly id: string,
     public readonly description: string,
+    public readonly childrenDescription: string,
     public readonly name: string,
     public readonly parents: string[],
     public readonly accessRights: boolean,
