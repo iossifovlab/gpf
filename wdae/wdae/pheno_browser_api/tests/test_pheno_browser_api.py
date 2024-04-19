@@ -251,24 +251,27 @@ def test_get_specific_measure_values(admin_client: Client) -> None:
 
     assert response.status_code == 200
     content = json.loads(b"".join(list(response.streaming_content)))
+    print(content)
+
+    assert len(content) == 5
 
     assert content[0] == {
         "family_id": "f1",
-        "person_id": "sib2",
-        "role": "sib",
-        "sex": "F",
+        "person_id": "dad1",
+        "role": "dad",
+        "sex": "M",
         "status": "unaffected",
-        "instrument1.continuous": 4.56,
+        "instrument1.continuous": pytest.approx(2.718),
         "instrument1.categorical": None,
     }
     assert content[1] == {
         "family_id": "f1",
-        "person_id": "sib1",
-        "role": "sib",
+        "person_id": "mom1",
+        "role": "mom",
         "sex": "F",
-        "status": "unaffected",
-        "instrument1.continuous": 1.23,
-        "instrument1.categorical": None,
+        "status": "affected",
+        "instrument1.continuous": None,
+        "instrument1.categorical": "option1",
     }
 
 
@@ -287,14 +290,14 @@ def test_get_measure_values(admin_client: Client) -> None:
     assert len(content) == 5
     assert content[0] == {
         "family_id": "f1",
-        "person_id": "sib2",
-        "role": "sib",
-        "sex": "F",
+        "person_id": "dad1",
+        "role": "dad",
+        "sex": "M",
         "status": "unaffected",
-        "instrument1.continuous": 4.56,
+        "instrument1.continuous": pytest.approx(2.718),
         "instrument1.categorical": None,
         "instrument1.ordinal": None,
-        "instrument1.raw": None,
+        "instrument1.raw": "othervalue",
     }
     assert content[2] == {
         "family_id": "f1",
@@ -302,21 +305,21 @@ def test_get_measure_values(admin_client: Client) -> None:
         "role": "prb",
         "sex": "M",
         "status": "affected",
-        "instrument1.continuous": 3.14,
+        "instrument1.continuous": pytest.approx(3.14),
         "instrument1.categorical": "option2",
-        "instrument1.ordinal": 5.0,
+        "instrument1.ordinal": pytest.approx(5.0),
         "instrument1.raw": "somevalue",
     }
     assert content[4] == {
         "family_id": "f1",
-        "person_id": "dad1",
-        "role": "dad",
-        "sex": "M",
+        "person_id": "sib2",
+        "role": "sib",
+        "sex": "F",
         "status": "unaffected",
-        "instrument1.continuous": 2.718,
+        "instrument1.continuous": pytest.approx(4.56),
         "instrument1.categorical": None,
         "instrument1.ordinal": None,
-        "instrument1.raw": "othervalue",
+        "instrument1.raw": None,
     }
 
 

@@ -1,8 +1,8 @@
 #!/usr/bin/env python
-import os
-import sys
 import argparse
 import logging
+import os
+import sys
 from typing import Optional
 
 import toml
@@ -10,12 +10,11 @@ import toml
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.parquet.partition_descriptor import PartitionDescriptor
 
-
 logger = logging.getLogger(__name__)
 
 
 def parse_cli_arguments(
-    argv: list[str], gpf_instance: GPFInstance
+    argv: list[str], gpf_instance: GPFInstance,
 ) -> argparse.Namespace:
     """Configure and create a CLI arguments parser."""
     parser = argparse.ArgumentParser(
@@ -94,7 +93,7 @@ def parse_cli_arguments(
 
 def main(
     argv: Optional[list[str]] = None,
-    gpf_instance: Optional[GPFInstance] = None
+    gpf_instance: Optional[GPFInstance] = None,
 ) -> None:
     """Import parquet dataset into Impala genotype storage."""
     if gpf_instance is None:

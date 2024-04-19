@@ -1,10 +1,14 @@
-from typing import List, Optional, Union, Iterable
+from collections.abc import Iterable
+from typing import List, Optional, Union
 
 from dae.utils.regions import Region
-from impala_storage.schema1.family_variants_query_builder import \
-    FamilyVariantsQueryBuilder
-from impala_storage.schema1.summary_variants_query_builder import \
-    SummaryVariantsQueryBuilder, RealAttrFilterType
+from impala_storage.schema1.family_variants_query_builder import (
+    FamilyVariantsQueryBuilder,
+)
+from impala_storage.schema1.summary_variants_query_builder import (
+    RealAttrFilterType,
+    SummaryVariantsQueryBuilder,
+)
 
 
 class ImpalaQueryDirector:
@@ -13,7 +17,7 @@ class ImpalaQueryDirector:
     def __init__(
         self,
         query_builder: Union[
-            FamilyVariantsQueryBuilder, SummaryVariantsQueryBuilder]
+            FamilyVariantsQueryBuilder, SummaryVariantsQueryBuilder],
     ) -> None:
         self.query_builder = query_builder
 
@@ -34,7 +38,7 @@ class ImpalaQueryDirector:
             return_reference: Optional[bool] = None,
             return_unknown: Optional[bool] = None,
             limit: Optional[int] = None,
-            pedigree_fields: Optional[tuple[list[str], list[str]]] = None
+            pedigree_fields: Optional[tuple[list[str], list[str]]] = None,
     ) -> None:
         # pylint: disable=too-many-arguments
         """Build a query in the right order."""

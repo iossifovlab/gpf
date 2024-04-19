@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
-import sys
 import argparse
 import logging
+import sys
 from typing import Optional
 
 from dae.gpf_instance.gpf_instance import GPFInstance
@@ -11,7 +11,7 @@ from impala_storage.schema1.impala_dataset_helpers import ImpalaDatasetHelpers
 
 def main(
     argv: list[str],
-    gpf_instance: Optional[GPFInstance] = None
+    gpf_instance: Optional[GPFInstance] = None,
 ) -> None:
     """Entry point for the genotype data tool."""
     parser = argparse.ArgumentParser()
@@ -28,7 +28,7 @@ def main(
         default=None,
         dest="source_id",
         metavar="<source study id>",
-        help="Source study ID. "
+        help="Source study ID. ",
     )
 
     parser.add_argument(
@@ -37,7 +37,7 @@ def main(
         default=None,
         dest="dest_id",
         metavar="<dest study id>",
-        help="Destination study ID. "
+        help="Destination study ID. ",
     )
 
     args = parser.parse_args(argv)

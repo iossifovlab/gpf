@@ -4,21 +4,19 @@ from typing import Callable, cast
 import pytest
 import pytest_mock
 
+from dae.annotation.annotation_pipeline import AttributeInfo
+from dae.configuration.gpf_config_parser import FrozenBox
+from dae.gpf_instance.gpf_instance import GPFInstance
+from dae.import_tools.cli import run_with_project
+from dae.import_tools.import_tools import ImportProject
+from dae.pedigrees.loader import FamiliesLoader
+
 # from dae.annotation.schema import Schema
 from dae.variants.family_variant import FamilyAllele
 from dae.variants_loaders.dae.loader import DenovoLoader
-from dae.pedigrees.loader import FamiliesLoader
-from dae.annotation.annotation_pipeline import AttributeInfo
-
-from dae.import_tools.import_tools import ImportProject
-from dae.import_tools.cli import run_with_project
-from dae.configuration.gpf_config_parser import FrozenBox
-from dae.gpf_instance.gpf_instance import GPFInstance
-
-from impala_storage.schema1.serializers import AlleleParquetSerializer
-from impala_storage.schema1.impala_genotype_storage import \
-    ImpalaGenotypeStorage
+from impala_storage.schema1.impala_genotype_storage import ImpalaGenotypeStorage
 from impala_storage.schema1.impala_variants import ImpalaVariants
+from impala_storage.schema1.serializers import AlleleParquetSerializer
 
 
 @pytest.fixture(scope="session")
@@ -43,8 +41,8 @@ def extra_attrs_impala(
             },
             "denovo": {
                 "files": [
-                    variants_filename
-                ]
+                    variants_filename,
+                ],
             },
         },
         "processing_config": {
@@ -52,7 +50,7 @@ def extra_attrs_impala(
         },
         "destination": {
             "storage_id": impala_genotype_storage.storage_id,
-        }
+        },
     }
     import_project = ImportProject.build_from_config(
         project, gpf_instance=gpf_instance_2013)
@@ -60,7 +58,7 @@ def extra_attrs_impala(
 
     fvars = impala_genotype_storage.build_backend(
         FrozenBox({"id": study_id}), gpf_instance_2013.reference_genome,
-        gpf_instance_2013.gene_models
+        gpf_instance_2013.gene_models,
     )
 
     return fvars
@@ -68,7 +66,7 @@ def extra_attrs_impala(
 
 def test_all_properties_in_blob(
     vcf_variants_loaders: Callable,
-    impala_genotype_storage: ImpalaGenotypeStorage
+    impala_genotype_storage: ImpalaGenotypeStorage,
 ) -> None:
     loader = vcf_variants_loaders("backends/quads_f1")[0]
 
@@ -116,7 +114,7 @@ def test_extra_attributes_serialization_deserialization(
 
     loader = DenovoLoader(
         families_data, fixture_dirname("backends/iossifov_extra_attrs.tsv"),
-        fixtures_gpf_instance.reference_genome
+        fixtures_gpf_instance.reference_genome,
     )
 
     main_schema = loader.get_attribute("annotation_schema")
@@ -130,7 +128,7 @@ def test_extra_attributes_serialization_deserialization(
     scores_blob = serializer.serialize_scores_data(variant.alleles)
     variant_blob = serializer.serialize_family_variant(
         cast(list[FamilyAllele], variant.alleles),
-        summary_blobs, scores_blob
+        summary_blobs, scores_blob,
     )
     extra_blob = serializer.serialize_extra_attributes(variant)
     family = variant.family
@@ -152,13 +150,13 @@ def test_extra_attributes_loading_with_person_id(
         "denovo_pos": "Position",
         "denovo_ref": "Ref",
         "denovo_alt": "Alt",
-        "denovo_person_id": "SampleID"
+        "denovo_person_id": "SampleID",
     }
 
     loader = DenovoLoader(
         families_data, fixture_dirname("backends/denovo-db-person-id.tsv"),
         fixtures_gpf_instance.reference_genome,
-        params=params
+        params=params,
     )
 
     full_variants_iterator = loader.full_variants_iterator()
@@ -182,7 +180,7 @@ def test_extra_attributes_impala(extra_attrs_impala: ImpalaVariants) -> None:
 def test_build_allele_batch_dict(
     vcf_variants_loaders: Callable,
     impala_genotype_storage: ImpalaGenotypeStorage,
-    mocker: pytest_mock.MockerFixture
+    mocker: pytest_mock.MockerFixture,
 ) -> None:
     loader = vcf_variants_loaders("backends/effects_trio")[-1]
 

@@ -1,17 +1,14 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
 
+import numpy as np
 import pytest
 
-import numpy as np
-
-from dae.variants.attributes import GeneticModel
-
-from dae.testing import setup_pedigree, setup_vcf, \
-    vcf_study
-from dae.testing.acgt_import import acgt_gpf
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.studies.study import GenotypeData
+from dae.testing import setup_pedigree, setup_vcf, vcf_study
+from dae.testing.acgt_import import acgt_gpf
+from dae.variants.attributes import GeneticModel
 
 
 @pytest.fixture(scope="module")
@@ -55,11 +52,11 @@ chr1   2   .  C   G   .    .      .    GT     0/0 0/1 0/1 0/0
                     "include_unknown_person_genotypes": True,
                     "denovo_mode": "denovo",
                     "omission_mode": "omission",
-                }
+                },
             },
             "processing_config": {
-                "include_reference": True
-            }
+                "include_reference": True,
+            },
         })
     return study
 

@@ -190,7 +190,7 @@ class PhenoTool:
             all_measures,
             person_ids=person_ids,
             family_ids=family_ids,
-            roles=["prb"],
+            roles=[Role.prb],
         )
 
         self.pheno_df = pheno_df.dropna()

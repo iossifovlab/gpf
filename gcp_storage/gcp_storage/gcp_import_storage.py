@@ -1,15 +1,16 @@
 import logging
-from typing import cast, Any
+from typing import Any, cast
 
 import yaml
 
 from dae.configuration.study_config_builder import StudyConfigBuilder
 from dae.import_tools.import_tools import ImportProject, save_study_config
+from dae.schema2_storage.schema2_import_storage import (
+    Schema2ImportStorage,
+    schema2_dataset_layout,
+)
 from dae.task_graph.graph import TaskGraph
-from dae.schema2_storage.schema2_import_storage import Schema2ImportStorage, \
-    schema2_dataset_layout
 from gcp_storage.gcp_genotype_storage import GcpGenotypeStorage
-
 
 logger = logging.getLogger(__file__)
 

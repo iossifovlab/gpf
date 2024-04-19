@@ -2,13 +2,12 @@
 from typing import Callable
 
 from dae.gpf_instance.gpf_instance import GPFInstance
-
 from impala_storage.tools.impala_parquet_loader import main
 
 
 def test_impala_parquet_loader_partitioned(
     fixture_dirname: Callable,
-    gpf_instance_2013: GPFInstance
+    gpf_instance_2013: GPFInstance,
 ) -> None:
 
     pedigree_path = fixture_dirname(
@@ -34,7 +33,7 @@ def test_impala_parquet_loader_partitioned(
 
 def test_impala_parquet_loader_no_partition(
     fixture_dirname: Callable,
-    gpf_instance_2013: GPFInstance
+    gpf_instance_2013: GPFInstance,
 ) -> None:
 
     pedigree_path = fixture_dirname(

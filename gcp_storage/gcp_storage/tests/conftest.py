@@ -2,15 +2,15 @@
 import textwrap
 from typing import Any
 
-import yaml
 import pytest
+import yaml
 
+from dae.genotype_storage.genotype_storage_registry import (
+    get_genotype_storage_factory,
+)
+from dae.studies.study import GenotypeData
 from dae.testing import setup_pedigree, setup_vcf, vcf_study
 from dae.testing.foobar_import import foobar_gpf
-from dae.genotype_storage.genotype_storage_registry import \
-    get_genotype_storage_factory
-from dae.studies.study import GenotypeData
-
 from gcp_storage.gcp_genotype_storage import GcpGenotypeStorage
 
 
@@ -24,13 +24,13 @@ def gcp_storage_config() -> dict[str, Any]:
         "gs://seqpipe-gcp-storage-testing-bucket",
         "bigquery": {
             "db": "seqpipe_gcp_storage_testing_db",
-        }
+        },
     }
 
 
 @pytest.fixture(scope="session")
 def gcp_storage_fixture(
-    gcp_storage_config: dict[str, Any]
+    gcp_storage_config: dict[str, Any],
 ) -> GcpGenotypeStorage:
     storage_factory = get_genotype_storage_factory("gcp")
     assert storage_factory is not None
@@ -43,7 +43,7 @@ def gcp_storage_fixture(
 @pytest.fixture(scope="session")
 def imported_study(
     tmp_path_factory: pytest.TempPathFactory,
-    gcp_storage_fixture: GcpGenotypeStorage
+    gcp_storage_fixture: GcpGenotypeStorage,
 ) -> GenotypeData:
     root_path = tmp_path_factory.mktemp(
         f"vcf_path_{gcp_storage_fixture.storage_id}")
@@ -77,7 +77,7 @@ def imported_study(
 @pytest.fixture(scope="session")
 def partition_study(
     tmp_path_factory: pytest.TempPathFactory,
-    gcp_storage_fixture: GcpGenotypeStorage
+    gcp_storage_fixture: GcpGenotypeStorage,
 ) -> GenotypeData:
     root_path = tmp_path_factory.mktemp(
         f"vcf_path_partition_{gcp_storage_fixture.storage_id}")

@@ -1,19 +1,17 @@
 import logging
-from typing import Dict, Any, cast, Optional
-
-import pyarrow.parquet as pq
-from cerberus import Validator
+from typing import Any, Dict, Optional, cast
 
 import gcsfs
+import pyarrow.parquet as pq
+from cerberus import Validator
 from google.cloud import bigquery
 
-from dae.utils import fs_utils
-from dae.genotype_storage.genotype_storage import GenotypeStorage
-from dae.schema2_storage.schema2_import_storage import Schema2DatasetLayout
-from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.genomic_resources.gene_models import GeneModels
 from dae.genomic_resources.reference_genome import ReferenceGenome
-
+from dae.genotype_storage.genotype_storage import GenotypeStorage
+from dae.parquet.partition_descriptor import PartitionDescriptor
+from dae.schema2_storage.schema2_import_storage import Schema2DatasetLayout
+from dae.utils import fs_utils
 from gcp_storage.bigquery_variants import BigQueryVariants
 
 logger = logging.getLogger(__name__)
@@ -25,22 +23,22 @@ class GcpGenotypeStorage(GenotypeStorage):
     VALIDATION_SCHEMA = {
         "storage_type": {"type": "string", "allowed": ["gcp"]},
         "id": {
-            "type": "string", "required": True
+            "type": "string", "required": True,
         },
         "project_id": {
-            "type": "string", "required": True
+            "type": "string", "required": True,
         },
         "import_bucket": {
-            "type": "string", "required": True
+            "type": "string", "required": True,
         },
         "bigquery": {
             "type": "dict",
             "schema": {
                 "db": {
-                    "type": "string", "required": True
+                    "type": "string", "required": True,
                 },
                 "pool_size": {
-                    "type": "integer", "default": 1
+                    "type": "integer", "default": 1,
                 },
             },
             "required": True,
@@ -82,7 +80,7 @@ class GcpGenotypeStorage(GenotypeStorage):
 
     @staticmethod
     def _study_tables(
-        study_config: dict[str, Any]
+        study_config: dict[str, Any],
     ) -> Schema2DatasetLayout:
         study_id = study_config["id"]
         storage_config = study_config.get("genotype_storage")
@@ -115,7 +113,7 @@ class GcpGenotypeStorage(GenotypeStorage):
     def build_backend(
         self, study_config: dict[str, Any],
         genome: ReferenceGenome,
-        gene_models: GeneModels
+        gene_models: GeneModels,
     ) -> BigQueryVariants:
         assert study_config is not None
         tables_layout = self._study_tables(study_config)

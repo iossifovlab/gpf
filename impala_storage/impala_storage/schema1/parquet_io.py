@@ -1,45 +1,41 @@
 """Provides Apache Parquet storage of genotype data."""
 from __future__ import annotations
 
+import abc
+import functools
+import logging
 import os
 import sys
-import abc
 import time
-import logging
-import functools
 from copy import copy
+from typing import Any, Callable, Dict, List, Optional, Union
 from urllib.parse import urlparse
 
-from typing import List, Union, Dict, Any, Optional, Callable
-from typing_extensions import Protocol
-
-import toml
-
+import fsspec
 import numpy as np
 import pandas as pd
 import pyarrow as pa
-from pyarrow import fs as pa_fs
 import pyarrow.parquet as pq
+import toml
+from pyarrow import fs as pa_fs
+from typing_extensions import Protocol
 
-import fsspec
-
+from dae.import_tools.import_tools import Bucket, ImportProject
 from dae.parquet.helpers import url_to_pyarrow_fs
+from dae.parquet.parquet_writer import fill_family_bins, save_ped_df_to_parquet
+from dae.parquet.partition_descriptor import PartitionDescriptor
+from dae.pedigrees.families_data import FamiliesData
+from dae.pedigrees.family import Family
 from dae.utils import fs_utils
 from dae.utils.variant_utils import GenotypeType
-from dae.pedigrees.families_data import FamiliesData
-
-from dae.variants.family_variant import FamilyAllele, FamilyVariant, \
-    calculate_simple_best_state
-from dae.variants.variant import SummaryVariant, SummaryAllele
-from dae.parquet.partition_descriptor import PartitionDescriptor
-from dae.parquet.parquet_writer import \
-    save_ped_df_to_parquet, fill_family_bins
+from dae.variants.family_variant import (
+    FamilyAllele,
+    FamilyVariant,
+    calculate_simple_best_state,
+)
+from dae.variants.variant import SummaryAllele, SummaryVariant
 from dae.variants_loaders.raw.loader import VariantsLoader
-from dae.pedigrees.family import Family
-from dae.import_tools.import_tools import ImportProject, Bucket
-
 from impala_storage.schema1.serializers import AlleleParquetSerializer
-
 
 logger = logging.getLogger(__name__)
 
@@ -156,7 +152,7 @@ class ParquetWriter:
         partition_description: PartitionDescriptor,
         bucket: Bucket,
         project: ImportProject,
-        parquet_writer_builder: ParquetWriterBuilder
+        parquet_writer_builder: ParquetWriterBuilder,
     ) -> None:
         """Write variants to the corresponding parquet files."""
         if bucket.region_bin is not None and bucket.region_bin != "none":
@@ -182,7 +178,7 @@ class ParquetWriter:
         out_dir: str,
         variants_loader: VariantsLoader,
         partition_description: PartitionDescriptor,
-        parquet_writer_builder: ParquetWriterBuilder
+        parquet_writer_builder: ParquetWriterBuilder,
     ) -> None:
         """Write dataset metadata."""
         variants_writer = parquet_writer_builder.build_variants_writer(
@@ -197,13 +193,13 @@ class ParquetWriter:
         output_filename: str,
         families: FamiliesData,
         partition_descriptor: PartitionDescriptor,
-        parquet_writer_builder: ParquetWriterBuilder
+        parquet_writer_builder: ParquetWriterBuilder,
     ) -> None:
         """Write FamiliesData to a pedigree parquet file."""
         ParquetWriter.families_to_parquet(
             families, output_filename,
             parquet_writer_builder,
-            partition_descriptor,)
+            partition_descriptor)
 
 
 class ContinuousParquetFileWriter:
@@ -217,7 +213,7 @@ class ContinuousParquetFileWriter:
         self, filepath: str,
         variant_loader: VariantsLoader,
         filesystem: Optional[fsspec.AbstractFileSystem] = None,
-        rows: int = 100_000
+        rows: int = 100_000,
     ) -> None:
 
         self.filepath = filepath
@@ -228,7 +224,7 @@ class ContinuousParquetFileWriter:
             variant_loader.annotation_schema)
 
         self.serializer = AlleleParquetSerializer(
-            variant_loader.annotation_schema, extra_attributes
+            variant_loader.annotation_schema, extra_attributes,
         )
         self.schema = self.serializer.schema
 
@@ -244,7 +240,7 @@ class ContinuousParquetFileWriter:
         filesystem, filepath = url_to_pyarrow_fs(filepath, filesystem)
         self._writer = pq.ParquetWriter(
             filepath, self.schema, compression="snappy", filesystem=filesystem,
-            version="1.0"
+            version="1.0",
         )
         self.rows = rows
         self._data: Optional[dict[str, list]] = None
@@ -268,7 +264,7 @@ class ContinuousParquetFileWriter:
     def append_allele(
         self, allele: FamilyAllele, variant_data: bytes,
         extra_attributes_data: bytes,
-        summary_vectors: dict[int, list]
+        summary_vectors: dict[int, list],
     ) -> None:
         """Append the data for an entire variant to the buffer.
 
@@ -306,7 +302,7 @@ class VariantsParquetWriter(AbstractVariantsParquetWriter):
         partition_descriptor: PartitionDescriptor,
         bucket_index: Optional[int] = None,
         rows: int = 100_000,
-        include_reference: bool = True
+        include_reference: bool = True,
     ) -> None:
         self.out_dir = out_dir
         self.variants_loader = variants_loader
@@ -357,11 +353,11 @@ class VariantsParquetWriter(AbstractVariantsParquetWriter):
     @staticmethod
     def _setup_reference_allele(
         summary_variant: SummaryVariant,
-        family: Family
+        family: Family,
     ) -> FamilyAllele:
         genotype = -1 * np.ones(shape=(2, len(family)), dtype=GenotypeType)
         best_state = calculate_simple_best_state(
-            genotype, summary_variant.allele_count
+            genotype, summary_variant.allele_count,
         )
 
         ref_summary_allele = summary_variant.ref_allele
@@ -372,11 +368,11 @@ class VariantsParquetWriter(AbstractVariantsParquetWriter):
     @staticmethod
     def _setup_all_unknown_allele(
         summary_variant: SummaryVariant,
-        family: Family
+        family: Family,
     ) -> FamilyAllele:
         genotype = -1 * np.ones(shape=(2, len(family)), dtype=GenotypeType)
         best_state = calculate_simple_best_state(
-            genotype, summary_variant.allele_count
+            genotype, summary_variant.allele_count,
         )
 
         ref_allele = summary_variant.ref_allele
@@ -399,7 +395,7 @@ class VariantsParquetWriter(AbstractVariantsParquetWriter):
 
     def _setup_all_unknown_variant(
         self, summary_variant: SummaryVariant,
-        family_id: str
+        family_id: str,
     ) -> FamilyVariant:
         family = self.families[family_id]
         genotype = -1 * np.ones(shape=(2, len(family)), dtype=GenotypeType)
@@ -408,11 +404,11 @@ class VariantsParquetWriter(AbstractVariantsParquetWriter):
             self._setup_all_unknown_allele(summary_variant, family),
         ]
         best_state = -1 * np.ones(
-            shape=(len(alleles), len(family)), dtype=GenotypeType
+            shape=(len(alleles), len(family)), dtype=GenotypeType,
         )
         return FamilyVariant(
             SummaryVariant(alleles),  # type: ignore
-            family, genotype, best_state
+            family, genotype, best_state,
         )
 
     def _build_family_filename(self, allele: FamilyAllele) -> str:
@@ -424,7 +420,7 @@ class VariantsParquetWriter(AbstractVariantsParquetWriter):
         return fs_utils.join(partition_directory, partition_filename)
 
     def _get_bin_writer(
-        self, family_allele: FamilyAllele
+        self, family_allele: FamilyAllele,
     ) -> ContinuousParquetFileWriter:
         filename = self._build_family_filename(family_allele)
 
@@ -458,7 +454,7 @@ class VariantsParquetWriter(AbstractVariantsParquetWriter):
                 continue
 
             summary_blobs = self.serializer.serialize_summary_data(
-                summary_alleles
+                summary_alleles,
             )
 
             scores_blob = self.serializer.serialize_scores_data(
@@ -480,7 +476,7 @@ class VariantsParquetWriter(AbstractVariantsParquetWriter):
                 if family_variant.is_unknown():
                     # handle all unknown variants
                     unknown_variant = self._setup_all_unknown_variant(
-                        summary_variant, family_variant.family_id
+                        summary_variant, family_variant.family_id,
                     )
                     fv = unknown_variant
                     if -1 not in summary_vectors:
@@ -497,7 +493,7 @@ class VariantsParquetWriter(AbstractVariantsParquetWriter):
                 for family_allele in fv.alleles:
                     extra_atts = {
                         "bucket_index": self.bucket_index,
-                        "family_index": family_variant_index
+                        "family_index": family_variant_index,
                     }
                     family_allele.update_attributes(extra_atts)
 

@@ -1,14 +1,11 @@
-import os
 import logging
+import os
 from typing import Optional
 
-from dae.studies.dataset_helpers import DatasetHelpers
-from dae.gpf_instance.gpf_instance import GPFInstance
-
 from dae.genotype_storage.genotype_storage import GenotypeStorage
-
-from impala_storage.schema1.impala_genotype_storage import \
-    ImpalaGenotypeStorage
+from dae.gpf_instance.gpf_instance import GPFInstance
+from dae.studies.dataset_helpers import DatasetHelpers
+from impala_storage.schema1.impala_genotype_storage import ImpalaGenotypeStorage
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +14,7 @@ class ImpalaDatasetHelpers(DatasetHelpers):
     """Helper class for work with studies in impala genotype storage."""
 
     def __init__(
-        self, gpf_instance: Optional[GPFInstance] = None
+        self, gpf_instance: Optional[GPFInstance] = None,
     ) -> None:
         super().__init__(gpf_instance=gpf_instance)
 
@@ -27,7 +24,7 @@ class ImpalaDatasetHelpers(DatasetHelpers):
         return "impala" in genotype_storage.get_storage_types()
 
     def check_dataset_hdfs_directories(
-        self, genotype_storage: GenotypeStorage, dataset_id: str
+        self, genotype_storage: GenotypeStorage, dataset_id: str,
     ) -> bool:
         """Check if a dataset HDFS directories are OK.
 
@@ -104,7 +101,7 @@ class ImpalaDatasetHelpers(DatasetHelpers):
         return True
 
     def check_dataset_rename_hdfs_directory(
-        self, old_id: str, new_id: str
+        self, old_id: str, new_id: str,
     ) -> tuple[Optional[str], Optional[str]]:
         """Check if it is OK to rename an HDFS directory for a dataset.
 
@@ -134,14 +131,14 @@ class ImpalaDatasetHelpers(DatasetHelpers):
             dest_dir, not hdfs_helpers.exists(dest_dir))
 
         if hdfs_helpers.exists(source_dir) and \
-                hdfs_helpers.isdir(source_dir) and  \
+                hdfs_helpers.isdir(source_dir) and \
                 not hdfs_helpers.exists(dest_dir):
             return (source_dir, dest_dir)
 
         return (None, None)
 
     def dataset_rename_hdfs_directory(
-        self, old_id: str, new_id: str, dry_run: bool = False
+        self, old_id: str, new_id: str, dry_run: bool = False,
     ) -> None:
         """Rename dataset HDFS directory."""
         source_dir, dest_dir = \
@@ -158,7 +155,7 @@ class ImpalaDatasetHelpers(DatasetHelpers):
             hdfs_helpers.rename(source_dir, dest_dir)
 
     def dataset_remove_hdfs_directory(
-        self, dataset_id: str, dry_run: bool = False
+        self, dataset_id: str, dry_run: bool = False,
     ) -> None:
         """Remove dataset HDFS directory."""
         genotype_storage = self.get_genotype_storage(dataset_id)
@@ -174,7 +171,7 @@ class ImpalaDatasetHelpers(DatasetHelpers):
             hdfs_helpers.delete(study_dir, recursive=True)
 
     def dataset_recreate_impala_tables(
-        self, old_id: str, new_id: str, dry_run: bool = False
+        self, old_id: str, new_id: str, dry_run: bool = False,
     ) -> tuple[str, Optional[str]]:
         """Recreate impala tables for a dataset."""
         genotype_storage = self.get_genotype_storage(old_id)
@@ -228,7 +225,7 @@ class ImpalaDatasetHelpers(DatasetHelpers):
         return new_pedigree_table, new_variants_table
 
     def dataset_drop_impala_tables(
-        self, dataset_id: str, dry_run: bool = False
+        self, dataset_id: str, dry_run: bool = False,
     ) -> None:
         """Drop impala tables for a dataset."""
         assert self.check_dataset_impala_tables(dataset_id)
@@ -295,7 +292,7 @@ class ImpalaDatasetHelpers(DatasetHelpers):
             logger.info(
                 "impala variants table %s.%s should exists: %s",
                 impala_db, variants_table,
-                impala_helpers.check_table(impala_db, variants_table)
+                impala_helpers.check_table(impala_db, variants_table),
             )
             if not impala_helpers.check_table(impala_db, variants_table):
                 return False
@@ -306,7 +303,7 @@ class ImpalaDatasetHelpers(DatasetHelpers):
             logger.info(
                 "variants table %s.%s should be external table: "
                 "'CREATE EXTERNAL TABLE' in %s",
-                impala_db, variants_table, create_statement
+                impala_db, variants_table, create_statement,
             )
             if "CREATE EXTERNAL TABLE" not in create_statement:
                 return False

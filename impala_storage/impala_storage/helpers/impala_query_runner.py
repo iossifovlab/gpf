@@ -1,11 +1,10 @@
-import time
 import logging
+import time
 from contextlib import closing
-from typing import Callable, Optional, Any
+from typing import Any, Callable, Optional
 
 import impala
 from impala.hiveserver2 import HiveServer2Connection
-
 from sqlalchemy import exc
 from sqlalchemy.pool import QueuePool
 
@@ -21,7 +20,7 @@ class ImpalaQueryRunner(QueryRunner):
     def __init__(
         self, connection_factory: QueuePool,
         query: str,
-        deserializer: Optional[Callable[[Any], Any]] = None
+        deserializer: Optional[Callable[[Any], Any]] = None,
     ):
         super().__init__(deserializer=deserializer)
 
@@ -131,12 +130,12 @@ class ImpalaQueryRunner(QueryRunner):
         self.close()
         logger.debug(
             "(%s) connection pool status %s", self.study_id,
-            self.connection_pool.status()
+            self.connection_pool.status(),
         )
         self._finalize(started)
 
     def _wait_cursor_executing(
-        self, cursor: impala.hiveserver2.HiveServer2Cursor
+        self, cursor: impala.hiveserver2.HiveServer2Cursor,
     ) -> None:
         while True:
             if self.is_closed():

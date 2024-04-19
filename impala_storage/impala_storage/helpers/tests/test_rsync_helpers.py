@@ -21,7 +21,7 @@ def test_rsync_helpers_local() -> None:
 
 def test_copy_to_remote_ssh_file(
     temp_filename: str,
-    mocker: pytest_mock.MockerFixture
+    mocker: pytest_mock.MockerFixture,
 ) -> None:
     helpers = RsyncHelpers("ssh://root@seqclust0.seqpipe.org:/mnt/hdfs2nfs")
     mocker.patch("os.path.isfile", return_value=True)
@@ -33,7 +33,7 @@ def test_copy_to_remote_ssh_file(
 
 
 def test_copy_to_remote_ssh_dir(
-    temp_dirname: str, mocker: pytest_mock.MockerFixture
+    temp_dirname: str, mocker: pytest_mock.MockerFixture,
 ) -> None:
     helpers = RsyncHelpers("ssh://root@seqclust0.seqpipe.org:/mnt/hdfs2nfs")
     mocker.patch("os.path.isdir", return_value=True)
@@ -46,7 +46,7 @@ def test_copy_to_remote_ssh_dir(
 
 
 def test_rsync_helpers_ssh_port2022(
-    temp_dirname: str, mocker: pytest_mock.MockerFixture
+    temp_dirname: str, mocker: pytest_mock.MockerFixture,
 ) -> None:
     mocker.patch("os.path.isdir", return_value=True)
 

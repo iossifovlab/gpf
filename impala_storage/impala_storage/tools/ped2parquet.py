@@ -1,14 +1,16 @@
 #!/usr/bin/env python
 
+import argparse
 import os
 import sys
-import argparse
 
-from dae.utils.verbosity_configuration import VerbosityConfiguration
-from dae.pedigrees.loader import FamiliesLoader
 from dae.parquet.partition_descriptor import PartitionDescriptor
-from impala_storage.schema1.parquet_io import VariantsParquetWriter, \
-    ParquetWriter
+from dae.pedigrees.loader import FamiliesLoader
+from dae.utils.verbosity_configuration import VerbosityConfiguration
+from impala_storage.schema1.parquet_io import (
+    ParquetWriter,
+    VariantsParquetWriter,
+)
 
 
 def main(argv: list[str]) -> None:

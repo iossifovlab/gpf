@@ -1,12 +1,11 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 
-import os
 import glob
+import os
 from typing import Callable
 
-from box import Box
-
 import pyarrow.parquet as pq
+from box import Box
 
 from dae.gpf_instance.gpf_instance import GPFInstance
 from impala_storage.tools.dae2parquet import main
@@ -15,7 +14,7 @@ from impala_storage.tools.dae2parquet import main
 def test_dae2parquet_transmitted(
     dae_transmitted_config: Box,
     temp_filename: str,
-    gpf_instance_2019: GPFInstance
+    gpf_instance_2019: GPFInstance,
 ) -> None:
 
     argv = [
@@ -48,11 +47,11 @@ def test_dae2parquet_dae_partition(
     fixture_dirname: Callable,
     dae_transmitted_config: Box,
     temp_dirname: str,
-    gpf_instance_2019: GPFInstance
+    gpf_instance_2019: GPFInstance,
 ) -> None:
 
     partition_description = fixture_dirname(
-        "backends/example_partition_configuration.conf"
+        "backends/example_partition_configuration.conf",
     )
 
     argv = [

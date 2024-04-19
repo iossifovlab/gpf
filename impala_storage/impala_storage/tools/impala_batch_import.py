@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
-import sys
 import logging
+import sys
 from typing import Optional
 
 from impala_storage.schema1.import_commons import BatchImporter

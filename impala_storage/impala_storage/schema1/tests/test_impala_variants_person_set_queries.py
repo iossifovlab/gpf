@@ -1,23 +1,22 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import io
 import textwrap
-from typing import cast, Any, Dict
+from typing import Any, Dict, cast
 
-from box import Box
-import toml
 import pytest
+import toml
+from box import Box
 
-from dae.testing import convert_to_tab_separated
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.person_sets import person_set_collections_schema
-from dae.pedigrees.loader import FamiliesLoader
 from dae.pedigrees.families_data import FamiliesData
+from dae.pedigrees.loader import FamiliesLoader
 from dae.person_sets import PersonSetCollection
-
+from dae.testing import convert_to_tab_separated
 from impala_storage.schema1.impala_variants import ImpalaVariants
 
 
-@pytest.fixture
+@pytest.fixture()
 def families_fixture() -> FamiliesData:
     ped_content = io.StringIO(convert_to_tab_separated(
         """
@@ -48,7 +47,7 @@ def get_person_set_collections_config(content: str) -> Box:
         ).person_set_collections)
 
 
-@pytest.fixture
+@pytest.fixture()
 def status_collection(families_fixture: FamiliesData) -> PersonSetCollection:
     content = textwrap.dedent(
         """
@@ -83,7 +82,7 @@ def status_collection(families_fixture: FamiliesData) -> PersonSetCollection:
 
 
 def test_status_person_set_collection(
-    status_collection: PersonSetCollection
+    status_collection: PersonSetCollection,
 ) -> None:
     assert status_collection is not None
     psc = status_collection
@@ -95,12 +94,12 @@ def test_status_person_set_collection(
 
 
 def test_status_person_set_collection_all_selected(
-    status_collection: PersonSetCollection
+    status_collection: PersonSetCollection,
 ) -> None:
 
     query = ImpalaVariants.build_person_set_collection_query(
         status_collection,
-        ("status", {"affected", "unaffected", "unknown"})
+        ("status", {"affected", "unaffected", "unknown"}),
     )
 
     assert query == ()
@@ -111,7 +110,7 @@ def test_status_person_set_collection_some_selected_no_default(
 
     query = ImpalaVariants.build_person_set_collection_query(
         status_collection,
-        ("status", {"affected"})
+        ("status", {"affected"}),
     )
 
     assert query == ([{"status": "affected"}], [])
@@ -122,15 +121,15 @@ def test_status_person_set_collection_some_selected_and_default(
 
     query = ImpalaVariants.build_person_set_collection_query(
         status_collection,
-        ("status", {"affected", "unknown"})
+        ("status", {"affected", "unknown"}),
     )
 
     assert query == ([], [{"status": "unaffected"}])
 
 
-@pytest.fixture
+@pytest.fixture()
 def status_sex_collection(
-    families_fixture: FamiliesData
+    families_fixture: FamiliesData,
 ) -> PersonSetCollection:
     config = get_person_set_collections_config(textwrap.dedent("""
         [person_set_collections]
@@ -156,7 +155,7 @@ def status_sex_collection(
     """))
 
     return PersonSetCollection.from_families(
-        config.status_sex, families_fixture
+        config.status_sex, families_fixture,
     )
 
 
@@ -168,7 +167,7 @@ def test_status_sex_person_set_collection_all_selected(
         ("status_sex", {
             "affected_male", "affected_female",
             "unaffected_male", "unaffected_female",
-            "other"})
+            "other"}),
     )
 
     assert query == ()
@@ -180,7 +179,7 @@ def test_status_sex_person_set_collection_some_selected_no_default(
     query = ImpalaVariants.build_person_set_collection_query(
         status_sex_collection,
         ("status_sex", {
-            "affected_male", "affected_female"})
+            "affected_male", "affected_female"}),
     )
 
     assert query == (
@@ -192,19 +191,19 @@ def test_status_sex_person_set_collection_some_selected_no_default(
     query = ImpalaVariants.build_person_set_collection_query(
         status_sex_collection,
         ("status_sex", {
-            "unaffected_male", "unaffected_female"})
+            "unaffected_male", "unaffected_female"}),
     )
 
     assert query == (
         [
             {"sex": "F", "status": "unaffected"},
-            {"sex": "M", "status": "unaffected"}
+            {"sex": "M", "status": "unaffected"},
         ], [])
 
     query = ImpalaVariants.build_person_set_collection_query(
         status_sex_collection,
         ("status_sex", {
-            "affected_male", "unaffected_female"})
+            "affected_male", "unaffected_female"}),
     )
 
     assert query == ([
@@ -219,7 +218,7 @@ def test_status_sex_person_set_collection_some_selected_with_default(
     query = ImpalaVariants.build_person_set_collection_query(
         status_sex_collection,
         ("status_sex", {
-            "affected_male", "affected_female", "other"})
+            "affected_male", "affected_female", "other"}),
     )
 
     assert query == ([], [
@@ -240,7 +239,7 @@ def test_status_sex_person_set_collection_some_selected_with_default(
     query = ImpalaVariants.build_person_set_collection_query(
         status_sex_collection,
         ("status_sex", {
-            "affected_male", "unaffected_female", "other"})
+            "affected_male", "unaffected_female", "other"}),
     )
 
     assert query == ([], [

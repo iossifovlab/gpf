@@ -134,6 +134,15 @@ class Role(enum.Enum):
         return Role.unknown
 
     @staticmethod
+    def to_value(name: Optional[Union[str, int]]) -> int:
+        role = Role.from_name(name)
+        return role.value
+
+    @staticmethod
+    def to_name(value: int) -> str:
+        return Role(value).name
+
+    @staticmethod
     def from_value(val: int) -> Role:
         return Role(int(val))
 
@@ -172,6 +181,15 @@ class Sex(enum.Enum):
         if name in set(["unspecified", "u", "0", "unknown"]):
             return Sex.unspecified
         raise ValueError(f"unexpected sex name: {name}")
+
+    @staticmethod
+    def to_value(name: Optional[Union[int, str]]) -> int:
+        sex = Sex.from_name(name)
+        return sex.value
+
+    @staticmethod
+    def to_name(value: int) -> str:
+        return Sex(value).name
 
     @staticmethod
     def from_value(val: int) -> Sex:
@@ -224,6 +242,15 @@ class Status(enum.Enum):
         if name in set(["unspecified", "-", "0", "unknown"]):
             return Status.unspecified
         raise ValueError("unexpected status type: " + name)
+
+    @staticmethod
+    def to_value(name: Optional[Union[int, str]]) -> int:
+        status = Status.from_name(name)
+        return status.value
+
+    @staticmethod
+    def to_name(value: int) -> str:
+        return Status(value).name
 
     @staticmethod
     def from_value(val: int) -> Status:

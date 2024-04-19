@@ -24,7 +24,7 @@ from dae.pedigrees.family import Person
 from dae.person_sets import PersonSetCollection
 from dae.utils.dae_utils import join_line, split_iterable
 from dae.utils.variant_utils import fgt2str, mat2str
-from dae.variants.attributes import Inheritance
+from dae.variants.attributes import Inheritance, Role
 from dae.variants.family_variant import FamilyAllele, FamilyVariant
 from dae.variants.variant import SummaryVariant, VariantDesc
 
@@ -211,7 +211,7 @@ class ResponseTransformer:
             result = {}
             column_values_iter = self.study_wrapper\
                 .phenotype_data.get_people_measure_values(
-                    [column.source], roles=[column.role])
+                    [column.source], roles=[Role.from_name(column.role)])
             for column_value in column_values_iter:
                 result[column_value["family_id"]] = column_value[column.source]
 

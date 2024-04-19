@@ -1,17 +1,18 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-import os
 import argparse
-
+import os
 from typing import Callable
 
 import pytest
 
-from impala_storage.schema1.import_commons import BatchImporter, \
-    SnakefileGenerator
 from dae.gpf_instance.gpf_instance import GPFInstance
+from impala_storage.schema1.import_commons import (
+    BatchImporter,
+    SnakefileGenerator,
+)
 
 
-@pytest.fixture
+@pytest.fixture()
 def cli_parse(gpf_instance_2013: GPFInstance) -> Callable:
     def parser(argv: list[str]) -> argparse.Namespace:
         parser = BatchImporter.cli_arguments_parser(gpf_instance_2013)
@@ -20,10 +21,10 @@ def cli_parse(gpf_instance_2013: GPFInstance) -> Callable:
     return parser
 
 
-@pytest.fixture
+@pytest.fixture()
 def importer(
     gpf_instance_2013: GPFInstance,
-    hdfs_host: str, impala_host: str
+    hdfs_host: str, impala_host: str,
 ) -> BatchImporter:
 
     storage_config = {
@@ -41,7 +42,7 @@ def importer(
             "base_dir": "/tmp/test_genotype_impala"},
     }
     gpf_instance_2013.genotype_storages.register_storage_config(
-        storage_config
+        storage_config,
     )
 
     result = BatchImporter(gpf_instance_2013)
@@ -51,7 +52,7 @@ def importer(
 
 def test_makefile_generator_simple(
     fixture_dirname: Callable, cli_parse: Callable,
-    importer: BatchImporter, temp_dirname: str
+    importer: BatchImporter, temp_dirname: str,
 ) -> None:
     prefix = fixture_dirname("vcf_import/effects_trio")
     argv = cli_parse(
@@ -63,7 +64,7 @@ def test_makefile_generator_simple(
             f"{prefix}.vcf.gz",
             "--gs",
             "genotype_impala",
-        ]
+        ],
     )
 
     importer.build(argv)
@@ -76,7 +77,7 @@ def test_makefile_generator_simple(
 
 def test_makefile_generator_multivcf_simple(
     fixture_dirname: Callable, cli_parse: Callable,
-    importer: BatchImporter, temp_dirname: str
+    importer: BatchImporter, temp_dirname: str,
 ) -> None:
 
     vcf_file1 = fixture_dirname("multi_vcf/multivcf_missing1.vcf.gz")
@@ -84,7 +85,7 @@ def test_makefile_generator_multivcf_simple(
     ped_file = fixture_dirname("multi_vcf/multivcf.ped")
 
     partition_description = fixture_dirname(
-        "backends/example_partition_configuration.conf"
+        "backends/example_partition_configuration.conf",
     )
 
     argv = cli_parse(
@@ -99,7 +100,7 @@ def test_makefile_generator_multivcf_simple(
             partition_description,
             "--gs",
             "genotype_impala",
-        ]
+        ],
     )
 
     importer.build(argv)
@@ -113,7 +114,7 @@ def test_makefile_generator_multivcf_simple(
 
 def test_snakefile_generator_denovo_and_dae(
     fixture_dirname: Callable, cli_parse: Callable,
-    importer: BatchImporter, temp_dirname: str
+    importer: BatchImporter, temp_dirname: str,
 ) -> None:
 
     denovo_file = fixture_dirname("dae_denovo/denovo.txt")
@@ -121,7 +122,7 @@ def test_snakefile_generator_denovo_and_dae(
     ped_file = fixture_dirname("dae_denovo/denovo_families.ped")
 
     partition_description = fixture_dirname(
-        "backends/example_partition_configuration.conf"
+        "backends/example_partition_configuration.conf",
     )
 
     argv = cli_parse(
@@ -140,7 +141,7 @@ def test_snakefile_generator_denovo_and_dae(
             partition_description,
             "--gs",
             "genotype_impala",
-        ]
+        ],
     )
 
     importer.build(argv)
@@ -185,7 +186,7 @@ CONTEXT = {
             "data/1394probands_denovoSNVindels_annotated5_pf_ia.csv",
             "params": "--denovo-chrom CHROM --denovo-pos POS --denovo-ref REF "
             "--denovo-alt ALT --denovo-person-id SPID ",
-        }
+        },
     },
     "mirror_of": {
         "location":
@@ -209,7 +210,7 @@ def test_snakefile_generator(temp_dirname: str) -> None:
 
 def test_generator_context_denovo_and_dae(
     fixture_dirname: Callable, cli_parse: Callable,
-    importer: BatchImporter, temp_dirname: str
+    importer: BatchImporter, temp_dirname: str,
 ) -> None:
 
     denovo_file = fixture_dirname("dae_denovo/denovo.txt")
@@ -217,7 +218,7 @@ def test_generator_context_denovo_and_dae(
     ped_file = fixture_dirname("dae_denovo/denovo_families.ped")
 
     partition_description = fixture_dirname(
-        "backends/example_partition_configuration.conf"
+        "backends/example_partition_configuration.conf",
     )
 
     argv = cli_parse(
@@ -236,7 +237,7 @@ def test_generator_context_denovo_and_dae(
             partition_description,
             "--gs",
             "genotype_impala",
-        ]
+        ],
     )
 
     importer.build(argv)
@@ -244,7 +245,7 @@ def test_generator_context_denovo_and_dae(
 
     assert context is not None
 
-    assert "dae_denovo_and_transmitted" == context["study_id"]
+    assert context["study_id"] == "dae_denovo_and_transmitted"
 
     assert "partition_description" in context
     assert partition_description == context["partition_description"]
@@ -261,7 +262,7 @@ def test_generator_context_denovo_and_dae(
 
 def test_generator_context_multivcf(
     fixture_dirname: Callable, cli_parse: Callable,
-    importer: BatchImporter, temp_dirname: str
+    importer: BatchImporter, temp_dirname: str,
 ) -> None:
 
     vcf_file1 = fixture_dirname("multi_vcf/multivcf_missing1.vcf.gz")
@@ -269,7 +270,7 @@ def test_generator_context_multivcf(
     ped_file = fixture_dirname("multi_vcf/multivcf.ped")
 
     partition_description = fixture_dirname(
-        "backends/example_partition_configuration.conf"
+        "backends/example_partition_configuration.conf",
     )
 
     argv = cli_parse(
@@ -284,7 +285,7 @@ def test_generator_context_multivcf(
             partition_description,
             "--gs",
             "genotype_impala",
-        ]
+        ],
     )
 
     importer.build(argv)
@@ -292,7 +293,7 @@ def test_generator_context_multivcf(
 
     assert context is not None
 
-    assert "multivcf" == context["study_id"]
+    assert context["study_id"] == "multivcf"
 
     assert "partition_description" in context
     assert partition_description == context["partition_description"]

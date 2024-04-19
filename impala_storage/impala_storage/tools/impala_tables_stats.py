@@ -1,18 +1,15 @@
 #!/usr/bin/env python
-import sys
 import argparse
 import logging
+import sys
 import time
+from contextlib import closing
 from typing import Optional
 
-from contextlib import closing
-
-from dae.utils.verbosity_configuration import VerbosityConfiguration
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.studies.study import GenotypeDataStudy
-
+from dae.utils.verbosity_configuration import VerbosityConfiguration
 from impala_storage.schema1.impala_variants import ImpalaVariants
-
 
 logger = logging.getLogger("impala_tables_stats")
 
@@ -55,7 +52,7 @@ def variants_region_bins(study_backend: ImpalaVariants) -> list[str]:
 
 def variants_compute_stats(
     study_backend: ImpalaVariants,
-    region_bin: Optional[str] = None
+    region_bin: Optional[str] = None,
 ) -> None:
     """Compute family variants tables statisticsfor specified region."""
     impala = study_backend._impala_helpers  # pylint: disable=protected-access
@@ -74,7 +71,7 @@ def variants_compute_stats(
 
 def summary_variants_compute_stats(
     study_backend: ImpalaVariants,
-    region_bin: Optional[str] = None
+    region_bin: Optional[str] = None,
 ) -> None:
     """Compute summary variants table statistics."""
     impala = study_backend._impala_helpers  # pylint: disable=protected-access
@@ -106,7 +103,7 @@ def pedigree_compute_stats(study_backend: ImpalaVariants) -> None:
 
 def main(
     argv: Optional[list[str]] = None,
-    gpf_instance: Optional[GPFInstance] = None
+    gpf_instance: Optional[GPFInstance] = None,
 ) -> None:
     """Run CLI for impala_table_stats.py tool."""
     if argv is None:

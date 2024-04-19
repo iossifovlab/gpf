@@ -1,10 +1,8 @@
+import logging
 import os
 import subprocess
-import logging
-
-from urllib.parse import urlparse, urlunparse
 from typing import List, Optional, Union
-
+from urllib.parse import urlparse, urlunparse
 
 logger = logging.getLogger(__name__)
 
@@ -51,7 +49,7 @@ class RsyncHelpers:
 
     @staticmethod
     def _exclude_options(
-        exclude: Optional[Union[str, List[str]]] = None
+        exclude: Optional[Union[str, List[str]]] = None,
     ) -> List[str]:
         if exclude is None:
             return []
@@ -67,7 +65,7 @@ class RsyncHelpers:
         self, local_path: str, remote_subdir: Optional[str] = None,
         exclude: Optional[List[str]] = None,
         ignore_existing: bool = False,
-        clear_remote: bool = True
+        clear_remote: bool = True,
     ) -> List[List[str]]:
         # pylint: disable=too-many-branches
         exclude = exclude if exclude is not None else []
@@ -101,7 +99,7 @@ class RsyncHelpers:
                     cmds.append(
                         [
                             "ssh", f"{self.parsed_remote.netloc}",
-                            f"rm -rf {rsync_path}"
+                            f"rm -rf {rsync_path}",
                         ])
                 else:
                     cmds.append(["rm", "-rf", "{rsync_path}"])
@@ -110,7 +108,7 @@ class RsyncHelpers:
                 cmds.append(
                     [
                         "ssh", f"{self.parsed_remote.netloc}",
-                        f"mkdir -p {rsync_path}"
+                        f"mkdir -p {rsync_path}",
                     ])
             else:
                 cmds.append(["mkdir", "-p", f"{rsync_path}"])
@@ -132,7 +130,7 @@ class RsyncHelpers:
     def _copy_to_local_cmd(
         self, local_path: str,
         remote_subdir: Optional[str] = None,
-        exclude: Optional[list[str]] = None
+        exclude: Optional[list[str]] = None,
     ) -> list[list[str]]:
         exclude = exclude if exclude is not None else []
         os.makedirs(local_path, exist_ok=True)
@@ -197,12 +195,12 @@ class RsyncHelpers:
             cmds.append(
                 [
                     "ssh", f"{self.parsed_remote.netloc}",
-                    f"rm -rf {rsync_path}"
+                    f"rm -rf {rsync_path}",
                 ])
             cmds.append(
                 [
                     "ssh", f"{self.parsed_remote.netloc}",
-                    f"mkdir -p {rsync_path}"
+                    f"mkdir -p {rsync_path}",
                 ])
         else:
             cmds.append(["rm", "-rf", f"{rsync_path}"])
@@ -213,7 +211,7 @@ class RsyncHelpers:
         self, local_path: str,
         remote_subdir: Optional[str] = None,
         exclude: Optional[list[str]] = None,
-        clear_remote: bool = True
+        clear_remote: bool = True,
     ) -> None:
         """Copy from a local dir to a remote one."""
         logger.debug("copying %s to %s", local_path, remote_subdir)
@@ -227,7 +225,7 @@ class RsyncHelpers:
     def copy_to_local(
         self, local_path: str,
         remote_subdir: Optional[str] = None,
-        exclude: Optional[list[str]] = None
+        exclude: Optional[list[str]] = None,
     ) -> None:
         """Copy files from remote server to local machine.
 

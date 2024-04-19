@@ -1,26 +1,25 @@
 #!/usr/bin/env python
-import sys
 import argparse
-import logging
-import time
 import itertools
+import logging
 import math
-from typing import Any, Optional
+import sys
+import time
 from contextlib import closing
+from typing import Any, Optional
 
-from dae.utils.regions import Region
-from dae.utils.verbosity_configuration import VerbosityConfiguration
 from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.studies.study import GenotypeDataStudy
+from dae.utils.regions import Region
+from dae.utils.verbosity_configuration import VerbosityConfiguration
 from impala_storage.schema1.impala_variants import ImpalaVariants
-
 
 logger = logging.getLogger("impala_tables_summary_variants")
 
 
 def parse_cli_arguments(
-    argv: list[str], _gpf_instance: GPFInstance
+    argv: list[str], _gpf_instance: GPFInstance,
 ) -> argparse.Namespace:
     """Parse CLI arguments."""
     parser = argparse.ArgumentParser(
@@ -48,7 +47,7 @@ def parse_cli_arguments(
 
 def variants_parition_bins(
     study_backend: ImpalaVariants,
-    partition: str
+    partition: str,
 ) -> list[str]:
     """Return partition bins."""
     # pylint: disable=protected-access
@@ -103,14 +102,14 @@ def collect_summary_schema(impala_variants: ImpalaVariants) -> dict[str, str]:
 
 def summary_table_name(
     study_id: str,
-    impala_variants: ImpalaVariants
+    impala_variants: ImpalaVariants,
 ) -> str:
     return f"{impala_variants.db}.{study_id.lower()}_summary_variants"
 
 
 def summary_table_name_temp(
     study_id: str,
-    impala_variants: ImpalaVariants
+    impala_variants: ImpalaVariants,
 ) -> str:
     return f"{impala_variants.db}.{study_id.lower()}_temp_summary_variants"
 
@@ -125,7 +124,7 @@ PARTITIONS = set([
 
 def drop_summary_table(
     study_id: str,
-    impala_variants: ImpalaVariants
+    impala_variants: ImpalaVariants,
 ) -> None:
     """Drop summary table."""
     # pylint: disable=protected-access
@@ -145,7 +144,7 @@ def drop_summary_table(
 
 def rename_summary_table(
     study_id: str,
-    impala_variants: ImpalaVariants
+    impala_variants: ImpalaVariants,
 ) -> None:
     """Rename summary table."""
     # pylint: disable=protected-access
@@ -159,7 +158,7 @@ def rename_summary_table(
 
 
 def create_summary_table(
-    study_id: str, impala_variants: ImpalaVariants
+    study_id: str, impala_variants: ImpalaVariants,
 ) -> list[str]:
     """Create summary table."""
     schema = collect_summary_schema(impala_variants)
@@ -220,7 +219,7 @@ class RegionBinsHelper:
                 target_chrom = "other"
             region_bins_count = math.ceil(
                 self.chromosome_lengths[chrom]
-                / self.region_length
+                / self.region_length,
             )
             for region_index in range(region_bins_count):
                 region_bin = f"{target_chrom}_{region_index}"
@@ -249,7 +248,7 @@ def insert_into_summary_table(
     summary_schema: dict,
     partition: dict,
     region_bins: dict[str, Region],
-    region_split: int = 0
+    region_split: int = 0,
 ) -> list[str]:
     """Insert into a summary table."""
     # pylint: disable=too-many-locals
@@ -267,7 +266,7 @@ def insert_into_summary_table(
     family_summary_fields = [
         "family_variants_count",
         "seen_in_status",
-        "seen_as_denovo"
+        "seen_as_denovo",
     ]
 
     other_fields = []
@@ -356,7 +355,7 @@ def insert_into_summary_table(
 
 def main(
     argv: Optional[list[str]] = None,
-    gpf_instance: Optional[GPFInstance] = None
+    gpf_instance: Optional[GPFInstance] = None,
 ) -> None:
     """Entry point for the script."""
     # flake8: noqa: C901
@@ -421,7 +420,7 @@ def main(
 
         region_bin_helpers = RegionBinsHelper(
             study_backend.table_properties,
-            gpf_instance.reference_genome
+            gpf_instance.reference_genome,
         )
         region_bin_helpers._build_region_bins()
 
@@ -444,7 +443,7 @@ def main(
                 pedigree_table, variants_table, summary_table,
                 summary_schema, partition,
                 region_bin_helpers.region_bins,
-                args.split_size
+                args.split_size,
             )):
                 repeat = 10
                 while repeat > 0:
@@ -473,7 +472,7 @@ def main(
                 "%d/%d of %s "
                 "took %.2f secs; "
                 "%s ",
-                index, len(all_partitions), study_id, part_elapsed, partition
+                index, len(all_partitions), study_id, part_elapsed, partition,
 
             )
             elapsed = time.time() - started
@@ -481,7 +480,7 @@ def main(
                 "processing partition "
                 "%d/%d of %s; "
                 "total time %.2f secs",
-                index, len(all_partitions), study_id, elapsed
+                index, len(all_partitions), study_id, elapsed,
             )
 
         rename_summary_table(study_id, study_backend)

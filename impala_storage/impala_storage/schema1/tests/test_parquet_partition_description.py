@@ -2,15 +2,15 @@
 from io import StringIO
 from typing import cast
 
-import pytest
 import numpy as np
+import pytest
 
-from dae.variants.attributes import TransmissionType
-from dae.pedigrees.loader import FamiliesLoader
 from dae.parquet.partition_descriptor import PartitionDescriptor
-from dae.variants.family_variant import FamilyVariant, FamilyAllele
-from dae.variants.variant import SummaryAllele, SummaryVariant
 from dae.pedigrees.family import Family
+from dae.pedigrees.loader import FamiliesLoader
+from dae.variants.attributes import TransmissionType
+from dae.variants.family_variant import FamilyAllele, FamilyVariant
+from dae.variants.variant import SummaryAllele, SummaryVariant
 
 
 @pytest.fixture(scope="module")
@@ -83,7 +83,7 @@ def test_parquet_region_bin(
     chromosomes: list[str],
     region_length: int,
     summary_alleles: list[SummaryAllele],
-    expected: str
+    expected: str,
 ) -> None:
     sv = SummaryVariant(summary_alleles)
     fv = FamilyVariant(sv, fam1, genotype, None)
@@ -98,7 +98,7 @@ def test_parquet_region_bin(
 
 def test_parquet_family_bin(
     fam1: Family, fam2: Family,
-    genotype: np.ndarray
+    genotype: np.ndarray,
 ) -> None:
     sv = SummaryVariant(summary_alleles_chr1)
     fv1 = FamilyVariant(sv, fam1, genotype, None)
@@ -131,10 +131,10 @@ def test_parquet_frequency_bin(
     fam1: Family, genotype: np.ndarray,
     attributes: dict[str, int],
     rare_boundary: int,
-    expected: str
+    expected: str,
 ) -> None:
     summary_alleles = [
-        SummaryAllele("1", 11539, "T", None, 0, 0, attributes=attributes)
+        SummaryAllele("1", 11539, "T", None, 0, 0, attributes=attributes),
     ] * 3
     sv = SummaryVariant(summary_alleles)
     fv = FamilyVariant(sv, fam1, genotype, None)

@@ -2,20 +2,17 @@
 import pathlib
 
 import pytest
-
 from box import Box
 
 from dae.gpf_instance import GPFInstance
-from dae.studies.study import GenotypeDataStudy, GenotypeData
-
+from dae.studies.study import GenotypeData, GenotypeDataStudy
 from dae.testing import setup_pedigree, setup_vcf, vcf_study
 from dae.testing.t4c8_import import t4c8_gpf
-
-from impala_storage.schema1.impala_genotype_storage import \
-    ImpalaGenotypeStorage
+from impala_storage.schema1.family_variants_query_builder import (
+    FamilyVariantsQueryBuilder,
+)
+from impala_storage.schema1.impala_genotype_storage import ImpalaGenotypeStorage
 from impala_storage.schema1.impala_variants import ImpalaVariants
-from impala_storage.schema1.family_variants_query_builder import \
-    FamilyVariantsQueryBuilder
 
 
 @pytest.fixture(scope="module")
@@ -44,7 +41,7 @@ def impala_storage() -> ImpalaGenotypeStorage:
 @pytest.fixture(scope="module")
 def t4c8_instance(
     tmp_path_factory: pytest.TempPathFactory,
-    impala_storage: ImpalaGenotypeStorage
+    impala_storage: ImpalaGenotypeStorage,
 ) -> GPFInstance:
     root_path = tmp_path_factory.mktemp("t4c8_instance")
     gpf_instance = t4c8_gpf(root_path, impala_storage)
@@ -82,7 +79,7 @@ chr1   90   .  G   C,GA .    .      .    GT     0/1  0/2  0/2 0/1  0/2  0/1
 chr1   100  .  T   G,TA .    .      .    GT     0/1  0/1  0/0 0/2  0/2  0/0
 chr1   119  .  A   G,C  .    .      .    GT     0/0  0/2  0/2 0/1  0/2  0/1
 chr1   122  .  A   C,AC .    .      .    GT     0/1  0/1  0/1 0/2  0/2  0/2
-        """)  # noqa
+        """)
 
     project_config_update = {
         "partition_description": {
@@ -99,11 +96,11 @@ chr1   122  .  A   C,AC .    .      .    GT     0/1  0/1  0/1 0/2  0/2  0/2
                     "noStart",
                     "missense",
                     "synonymous",
-                ]
+                ],
             },
             "family_bin": {
                 "family_bin_size": 2,
-            }
+            },
         },
     }
 
@@ -151,11 +148,11 @@ def test_build_frequency_bin_heuristic(
     result = impala_query_builder._build_frequency_bin_heuristic(
         inheritance=[
             "not possible_denovo and not possible_omission",
-            "any(missing,omission,mendelian,denovo)"
+            "any(missing,omission,mendelian,denovo)",
         ],
         ultra_rare=None,
         real_attr_filter=[
-            ("genome_genomad_v3_af_percent", (None, 100.0))
-        ]
+            ("genome_genomad_v3_af_percent", (None, 100.0)),
+        ],
     )
     assert result == ""

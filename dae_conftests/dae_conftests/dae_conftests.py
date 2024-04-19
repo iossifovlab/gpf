@@ -1,52 +1,50 @@
 # pylint: disable=W0621,C0114,C0116,C0415,W0212,W0613,C0302,C0115,W0102,W0603
 
-import os
-import sys
 import glob
-import shutil
-import tempfile
 import logging
-from pathlib import Path
-
+import os
+import shutil
+import sys
+import tempfile
 from io import StringIO
+from pathlib import Path
 
 import pandas as pd
 import pytest
 
-from dae.configuration.gpf_config_parser import GPFConfigParser, FrozenBox, \
-    DefaultBox
-
-from dae.configuration.schemas.dae_conf import dae_conf_schema
-
 from dae.annotation.annotation_factory import build_annotation_pipeline
-
-from dae.variants_loaders.raw.loader import AnnotationPipelineDecorator
+from dae.configuration.gpf_config_parser import (
+    DefaultBox,
+    FrozenBox,
+    GPFConfigParser,
+)
+from dae.configuration.schemas.dae_conf import dae_conf_schema
+from dae.gene.denovo_gene_set_collection_factory import (
+    DenovoGeneSetCollectionFactory,
+)
+from dae.genomic_resources import build_genomic_resource_repository
+from dae.genomic_resources.gene_models import build_gene_models_from_resource
+from dae.genomic_resources.group_repository import GenomicResourceGroupRepo
+from dae.genomic_resources.reference_genome import (
+    build_reference_genome_from_resource,
+)
+from dae.import_tools.import_tools import (
+    ImportProject,
+    construct_import_annotation_pipeline,
+)
 from dae.inmemory_storage.raw_variants import RawMemoryVariants
-
-from dae.variants_loaders.dae.loader import DaeTransmittedLoader, DenovoLoader
-from dae.variants_loaders.vcf.loader import VcfLoader
-from dae.import_tools.import_tools import ImportProject, \
-    construct_import_annotation_pipeline
-
 from dae.pedigrees.loader import FamiliesLoader
 from dae.utils.helpers import study_id_from_path
-
-from dae.gene.denovo_gene_set_collection_factory import \
-    DenovoGeneSetCollectionFactory
-from dae.genomic_resources import build_genomic_resource_repository
-from dae.genomic_resources.group_repository import GenomicResourceGroupRepo
-from dae.genomic_resources.gene_models import \
-    build_gene_models_from_resource
-from dae.genomic_resources.reference_genome import \
-    build_reference_genome_from_resource
-
+from dae.variants_loaders.dae.loader import DaeTransmittedLoader, DenovoLoader
+from dae.variants_loaders.raw.loader import AnnotationPipelineDecorator
+from dae.variants_loaders.vcf.loader import VcfLoader
 
 logger = logging.getLogger(__name__)
 
 
 def relative_to_this_test_folder(path):
     return os.path.join(
-        os.path.dirname(os.path.realpath(__file__)), "tests", path
+        os.path.dirname(os.path.realpath(__file__)), "tests", path,
     )
 
 
@@ -99,7 +97,7 @@ def default_dae_config(request, fixture_dirname):
     dae_config = GPFConfigParser.process_config(
         dae_config,
         dae_conf_schema,
-        conf_dir=conf_dir
+        conf_dir=conf_dir,
     )
     return dae_config
 
@@ -111,7 +109,7 @@ def grr_test_repo(fixture_dirname):
             "id": "grr_test_repo",
             "type": "directory",
             "directory": fixture_dirname("test_repo"),
-        }
+        },
     )
 
 
@@ -126,7 +124,7 @@ def gpf_instance(default_dae_config, fixture_dirname, grr_test_repo):
                 {
                     "id": "fixtures",
                     "type": "directory",
-                    "directory": fixture_dirname("genomic_resources")
+                    "directory": fixture_dirname("genomic_resources"),
                 }),
             build_genomic_resource_repository(),
         ]
@@ -150,7 +148,7 @@ def gpf_instance_2013(
         build_genomic_resource_repository({
             "id": "fixtures",
             "type": "directory",
-            "directory": fixture_dirname("genomic_resources")
+            "directory": fixture_dirname("genomic_resources"),
         }),
         build_genomic_resource_repository(),
     ]
@@ -191,7 +189,7 @@ def gpf_instance_2019(
         build_genomic_resource_repository({
             "id": "fixtures",
             "type": "directory",
-            "directory": fixture_dirname("genomic_resources")
+            "directory": fixture_dirname("genomic_resources"),
         }),
         build_genomic_resource_repository(),
     ]
@@ -228,7 +226,7 @@ def _create_gpf_instance(
         build_genomic_resource_repository({
             "id": "fixtures",
             "type": "directory",
-            "directory": fixture_dirname("genomic_resources")
+            "directory": fixture_dirname("genomic_resources"),
         }),
         build_genomic_resource_repository(),
     ]
@@ -247,7 +245,7 @@ def _create_gpf_instance(
 
     instance = GPFInstance(
         dae_config=default_dae_config, dae_dir=global_dae_fixtures_dir,
-        grr=grr, gene_models=gene_models, reference_genome=genome
+        grr=grr, gene_models=gene_models, reference_genome=genome,
     )
 
     return instance
@@ -260,7 +258,7 @@ def gpf_instance_short(
         "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/"
         "gene_models/refGene_201309",
         "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/genome",
-        default_dae_config, global_dae_fixtures_dir, fixture_dirname
+        default_dae_config, global_dae_fixtures_dir, fixture_dirname,
     )
 
 
@@ -270,11 +268,11 @@ def gpf_instance_grch38(
     return _create_gpf_instance(
         "hg38/GRCh38-hg38/gene_models/refSeq_20200330",
         "hg38/GRCh38-hg38/genome",
-        default_dae_config, global_dae_fixtures_dir, fixture_dirname
+        default_dae_config, global_dae_fixtures_dir, fixture_dirname,
     )
 
 
-@pytest.fixture
+@pytest.fixture()
 def result_df():
     def build(data):
         infile = StringIO(str(data))
@@ -284,7 +282,7 @@ def result_df():
     return build
 
 
-@pytest.fixture
+@pytest.fixture()
 def temp_dirname(request):
     dirname = tempfile.mkdtemp(suffix="_data", prefix="variants_")
 
@@ -295,7 +293,7 @@ def temp_dirname(request):
     return dirname
 
 
-@pytest.fixture
+@pytest.fixture()
 def temp_dirname_grdb(request):
     dirname = tempfile.mkdtemp(suffix="_data", prefix="grdb_")
 
@@ -306,7 +304,7 @@ def temp_dirname_grdb(request):
     return dirname
 
 
-@pytest.fixture
+@pytest.fixture()
 def temp_filename(request):
     dirname = tempfile.mkdtemp(suffix="_eff", prefix="variants_")
 
@@ -347,7 +345,7 @@ def annotation_scores_dirname():
     return filename
 
 
-@pytest.fixture
+@pytest.fixture()
 def annotation_pipeline_vcf(gpf_instance_2013):
     filename = relative_to_this_test_folder(IMPORT_ANNOTATION_CONFIG)
     pipeline = build_annotation_pipeline(
@@ -355,7 +353,7 @@ def annotation_pipeline_vcf(gpf_instance_2013):
     return pipeline
 
 
-@pytest.fixture
+@pytest.fixture()
 def annotation_pipeline_internal(gpf_instance_2013):
     filename = relative_to_this_test_folder(IMPORT_ANNOTATION_CONFIG)
     pipeline = build_annotation_pipeline(
@@ -396,7 +394,7 @@ def from_prefix_vcf(prefix):
     return DefaultBox(conf)
 
 
-@pytest.fixture
+@pytest.fixture()
 def dae_denovo_config():
     fullpath = relative_to_this_test_folder("fixtures/dae_denovo/denovo")
     config = from_prefix_denovo(fullpath)
@@ -413,27 +411,27 @@ def from_prefix_dae(prefix):
             "summary_filename": summary_filename,
             "toomany_filename": toomany_filename,
             "family_filename": family_filename,
-        }
+        },
     }
     return FrozenBox(conf)
 
 
-@pytest.fixture
+@pytest.fixture()
 def dae_transmitted_config():
     fullpath = relative_to_this_test_folder(
-        "fixtures/dae_transmitted/transmission"
+        "fixtures/dae_transmitted/transmission",
     )
     config = from_prefix_dae(fullpath)
     return config.dae
 
 
-@pytest.fixture
+@pytest.fixture()
 def dae_transmitted(
-    dae_transmitted_config, gpf_instance_2013, annotation_pipeline_internal
+    dae_transmitted_config, gpf_instance_2013, annotation_pipeline_internal,
 ):
 
     families = FamiliesLoader.load_simple_families_file(
-        dae_transmitted_config.family_filename
+        dae_transmitted_config.family_filename,
     )
 
     variants_loader = DaeTransmittedLoader(
@@ -443,11 +441,11 @@ def dae_transmitted(
         regions=None,
     )
     return AnnotationPipelineDecorator(
-        variants_loader, annotation_pipeline_internal
+        variants_loader, annotation_pipeline_internal,
     )
 
 
-@pytest.fixture
+@pytest.fixture()
 def iossifov2014_loader(
         fixture_dirname,
         gpf_instance_2013, annotation_pipeline_internal):
@@ -462,11 +460,11 @@ def iossifov2014_loader(
 
     variants_loader = DenovoLoader(
         families, denovo_filename,
-        gpf_instance_2013.reference_genome
+        gpf_instance_2013.reference_genome,
     )
 
     return AnnotationPipelineDecorator(
-        variants_loader, annotation_pipeline_internal
+        variants_loader, annotation_pipeline_internal,
     ), families_loader
 
 
@@ -477,7 +475,7 @@ def vcf_loader_data():
             prefix = path
         else:
             prefix = os.path.join(
-                relative_to_this_test_folder("fixtures"), path
+                relative_to_this_test_folder("fixtures"), path,
             )
         conf = from_prefix_vcf(prefix)
         return conf
@@ -490,7 +488,7 @@ def vcf_variants_loaders(
         vcf_loader_data, gpf_instance_2019):
 
     annotation_pipeline = construct_import_annotation_pipeline(
-        gpf_instance_2019
+        gpf_instance_2019,
     )
 
     def builder(
@@ -522,7 +520,7 @@ def vcf_variants_loaders(
                     "denovo_pos": "pos",
                     "denovo_ref": "ref",
                     "denovo_alt": "alt",
-                }
+                },
             )
             loaders.append(AnnotationPipelineDecorator(
                 denovo_loader, annotation_pipeline))
@@ -531,11 +529,11 @@ def vcf_variants_loaders(
             families,
             [config.vcf],
             gpf_instance_2019.reference_genome,
-            params=params
+            params=params,
         )
 
         loaders.append(AnnotationPipelineDecorator(
-            vcf_loader, annotation_pipeline
+            vcf_loader, annotation_pipeline,
         ))
 
         return loaders
@@ -573,13 +571,13 @@ def variants_mem():
     return builder
 
 
-@pytest.fixture
+@pytest.fixture()
 def variants_implementations(variants_vcf):
     impls = {"variants_vcf": variants_vcf}
     return impls
 
 
-@pytest.fixture
+@pytest.fixture()
 def variants_impl(variants_implementations):
     return lambda impl_name: variants_implementations[impl_name]
 
@@ -597,32 +595,32 @@ def config_dae():
 def pytest_addoption(parser):
     parser.addoption(
         "--reimport", action="store_true",
-        default=False, help="force reimport"
+        default=False, help="force reimport",
     )
     parser.addoption(
         "--logger-default", default="ERROR",
-        help="default logging level"
+        help="default logging level",
     )
     parser.addoption(
         "--logger-debug",
         default=[],
         type=str,
         nargs="+",
-        help="list of loggers with logging level DEBUG"
+        help="list of loggers with logging level DEBUG",
     )
     parser.addoption(
         "--logger-info",
         default=[],
         type=str,
         nargs="+",
-        help="list of loggers with logging level INFO"
+        help="list of loggers with logging level INFO",
     )
     parser.addoption(
         "--logger-warning",
         default=[],
         type=str,
         nargs="+",
-        help="list of loggers with logging level WARNING"
+        help="list of loggers with logging level WARNING",
     )
 
     parser.addoption(
@@ -630,7 +628,7 @@ def pytest_addoption(parser):
         default=[],
         type=str,
         nargs="+",
-        help="list of loggers with logging level ERROR"
+        help="list of loggers with logging level ERROR",
     )
 
 
@@ -714,7 +712,7 @@ def _import_project_from_prefix_config(
         "input": {
             "pedigree": {
                 "file": config.pedigree,
-            }
+            },
         },
         "destination": {
             "storage_id": "impala_test_storage",
@@ -805,7 +803,7 @@ def dae_calc_gene_sets(request, fixtures_gpf_instance):
             # fmt:off
             cache_file = \
                 DenovoGeneSetCollectionFactory.denovo_gene_set_cache_file(
-                    genotype_data.config, "phenotype"
+                    genotype_data.config, "phenotype",
                 )
             # fmt:on
             if os.path.exists(cache_file):
@@ -832,13 +830,13 @@ def fam1():
     return family
 
 
-@pytest.fixture
+@pytest.fixture()
 def grr_fixture(fixture_dirname):
     test_grr_location = fixture_dirname("genomic_resources")
     repositories = {
         "id": "test_grr",
         "type": "directory",
-        "directory": f"{test_grr_location}"
+        "directory": f"{test_grr_location}",
     }
 
     return build_genomic_resource_repository(repositories)

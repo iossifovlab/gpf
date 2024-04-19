@@ -1,24 +1,22 @@
 import json
 import logging
 from contextlib import closing
-from typing import Optional, Any, cast
-
+from typing import Any, Optional, cast
 
 import numpy as np
 import pandas as pd
+from impala.util import as_pandas
 from sqlalchemy import pool
 
-from impala.util import as_pandas
-from dae.query_variants.query_runners import QueryRunner
-from dae.variants.attributes import Role, Status, Sex, Inheritance
-from dae.query_variants.sql.schema2.base_variants import SqlSchema2Variants
-from dae.query_variants.sql.schema2.base_query_builder import Dialect
-from dae.variants.variant import SummaryVariantFactory, SummaryVariant
-from dae.variants.family_variant import FamilyVariant
 from dae.genomic_resources.gene_models import GeneModels
-
-from impala2_storage.helpers.impala_query_runner import ImpalaQueryRunner
+from dae.query_variants.query_runners import QueryRunner
+from dae.query_variants.sql.schema2.base_query_builder import Dialect
+from dae.query_variants.sql.schema2.base_variants import SqlSchema2Variants
+from dae.variants.attributes import Inheritance, Role, Sex, Status
+from dae.variants.family_variant import FamilyVariant
+from dae.variants.variant import SummaryVariant, SummaryVariantFactory
 from impala2_storage.helpers.impala_helpers import ImpalaHelpers
+from impala2_storage.helpers.impala_query_runner import ImpalaQueryRunner
 
 logger = logging.getLogger(__name__)
 
@@ -61,7 +59,7 @@ class ImpalaVariants(SqlSchema2Variants):
         conn = self._impala_helpers.connection()
         logger.debug(
             "getting connection to host %s from impala helpers %s",
-            conn.host, id(self._impala_helpers)  # type: ignore
+            conn.host, id(self._impala_helpers),  # type: ignore
         )
         return conn
 
@@ -122,10 +120,10 @@ class ImpalaVariants(SqlSchema2Variants):
 
         return FamilyVariant(
             SummaryVariantFactory.summary_variant_from_records(
-                sv_record
+                sv_record,
             ),
             self.families[fv_record["family_id"]],
             np.array(fv_record["genotype"]),
             np.array(fv_record["best_state"]),
-            inheritance_in_members=inheritance_in_members
+            inheritance_in_members=inheritance_in_members,
         )

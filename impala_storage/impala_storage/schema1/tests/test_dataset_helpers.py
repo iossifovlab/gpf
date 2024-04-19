@@ -1,13 +1,14 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import os
+
 from pytest_mock.plugin import MockerFixture
 
-from impala_storage.schema1.impala_dataset_helpers import ImpalaDatasetHelpers
 from dae.gpf_instance.gpf_instance import GPFInstance
+from impala_storage.schema1.impala_dataset_helpers import ImpalaDatasetHelpers
 
 
 def test_find_genotype_data_config_file(
-    fixtures_gpf_instance: GPFInstance
+    fixtures_gpf_instance: GPFInstance,
 ) -> None:
     helpers = ImpalaDatasetHelpers(fixtures_gpf_instance)
     fname = helpers.find_genotype_data_config_file("Study1")
@@ -24,7 +25,7 @@ def test_find_genotype_data_config(fixtures_gpf_instance: GPFInstance) -> None:
 
 
 def test_is_impala_genotype_data_config(
-    fixtures_gpf_instance: GPFInstance
+    fixtures_gpf_instance: GPFInstance,
 ) -> None:
     print(fixtures_gpf_instance.get_genotype_data_ids())
     helpers = ImpalaDatasetHelpers(fixtures_gpf_instance)
@@ -32,7 +33,7 @@ def test_is_impala_genotype_data_config(
 
 
 def test_rename_study_config(
-    fixtures_gpf_instance: GPFInstance, mocker: MockerFixture
+    fixtures_gpf_instance: GPFInstance, mocker: MockerFixture,
 ) -> None:
     def mock_rename(name1: str, name2: str) -> None:
         print(name1)
@@ -58,7 +59,7 @@ def test_rename_study_config(
 
 def test_remove_study_config(
     fixtures_gpf_instance: GPFInstance,
-    mocker: MockerFixture
+    mocker: MockerFixture,
 ) -> None:
     def mock_remove(fname: str) -> None:
         assert fname.endswith("Study1")

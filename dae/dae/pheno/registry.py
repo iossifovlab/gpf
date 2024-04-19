@@ -51,8 +51,7 @@ class PhenoRegistry:
         logger.info("creating phenotype data <%s>", pheno_id)
         phenotype_data = PhenotypeStudy(
             pheno_id,
-            dbfile=config["phenotype_data"]["dbfile"],
-            browser_dbfile=config["phenotype_data"]["browser_dbfile"],
+            config["phenotype_data"]["dbfile"],
             config=config["phenotype_data"],
         )
         return phenotype_data

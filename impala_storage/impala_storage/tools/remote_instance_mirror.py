@@ -1,19 +1,19 @@
 #!/usr/bin/env python
 """Tool to mirror remote GPF instances."""
+import argparse
+import copy
+import logging
 import os
 import re
-import sys
-import argparse
 import subprocess
-import logging
-import copy
-from typing import Any, cast, Optional
+import sys
+from typing import Any, Optional, cast
 
 import yaml
 
-from dae.genotype_storage.genotype_storage_registry import \
-    GenotypeStorageRegistry
-
+from dae.genotype_storage.genotype_storage_registry import (
+    GenotypeStorageRegistry,
+)
 from impala_storage.helpers.rsync_helpers import RsyncHelpers
 
 logger = logging.getLogger("remote_instance_mirror")
@@ -51,7 +51,7 @@ def parse_cli_arguments(argv: list[str]) -> argparse.Namespace:
         metavar="<exclude pattern>",
         dest="exclude",
         help="comma-separated list of exclude patterns",
-        default=""
+        default="",
     )
 
     parser.add_argument(
@@ -60,7 +60,7 @@ def parse_cli_arguments(argv: list[str]) -> argparse.Namespace:
         metavar="<output directory>",
         dest="output",
         help="output directory where to store the instance mirror",
-        default="."
+        default=".",
     )
 
     parser.add_argument(
@@ -82,7 +82,7 @@ def load_mirror_config(filename: str) -> dict[str, Any]:
 def update_genotype_storage_config(
     config_dict: dict[str, Any],
     rsync_helpers: RsyncHelpers,
-    **kwargs: Any
+    **kwargs: Any,
 ) -> str:
     """Update default genotype storage config."""
     storage_registry = GenotypeStorageRegistry()
@@ -121,7 +121,7 @@ def update_genotype_storage_config(
 def update_mirror_config(
     rsync_helpers: RsyncHelpers,
     work_dir: str,
-    argv: argparse.Namespace
+    argv: argparse.Namespace,
 ) -> dict[str, Any]:
     """Update mirrored GPF instance configuration."""
     config_filename = os.path.join(work_dir, "gpf_instance.yaml")
@@ -211,16 +211,16 @@ def run_wdae_bootstrap(work_dir: str) -> None:
     os.environ["DAE_DB_DIR"] = work_dir
     commands = [
         [
-            "wdaemanage.py", "migrate"  # NOSONAR
+            "wdaemanage.py", "migrate",  # NOSONAR
         ],
         [
             "wdaemanage.py", "user_create", "admin@iossifovlab.com",
-            "-p", "secret", "-g", "any_dataset:admin"
+            "-p", "secret", "-g", "any_dataset:admin",
         ],
         [
             "wdaemanage.py", "user_create", "research@iossifovlab.com",
-            "-p", "secret"
-        ]
+            "-p", "secret",
+        ],
     ]
     for command in commands:
         result = subprocess.run(

@@ -29,7 +29,7 @@ class PhenoMeasuresView(QueryDatasetView):
         assert measure_type in {"continuous", "categorical"}
 
         measures = dataset.phenotype_data.get_measures(
-            measure_type=measure_type,
+            measure_type=MeasureType.from_str(measure_type),
         )
         res: list[dict[str, Any]]
         if measure_type == "continuous":

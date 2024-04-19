@@ -8,6 +8,7 @@ import pytest
 
 from dae.pheno.common import MeasureType
 from dae.pheno.pheno_data import Measure, PhenotypeStudy
+from dae.variants.attributes import Role
 
 
 def df_check(
@@ -90,7 +91,7 @@ def test_get_people_measure_values(
     result_it = fake_phenotype_data.get_people_measure_values(query_cols)
     result = list(result_it)
     base_cols = ["person_id", "family_id", "role", "sex", "status"]
-    db_query_cols = [query_col for query_col in query_cols]
+    db_query_cols = list(query_cols)
     dict_list_check(result, 195, base_cols + db_query_cols)
 
     result_it = fake_phenotype_data.get_people_measure_values(
@@ -104,7 +105,7 @@ def test_get_people_measure_values(
     dict_list_check(result, 2, base_cols + db_query_cols)
 
     result_it = fake_phenotype_data.get_people_measure_values(
-        query_cols, roles=["prb"])
+        query_cols, roles=[Role.prb])
     result = list(result_it)
     dict_list_check(result, 39, base_cols + db_query_cols)
 
@@ -159,15 +160,15 @@ def test_get_people_measure_values_correct_values(
     fake_phenotype_data: PhenotypeStudy,
 ) -> None:
     result_list = list(fake_phenotype_data.get_people_measure_values(
-        ["i1.m1", "i1.m2"], roles=["prb"]))
-    assert result_list[-1] == {
+        ["i1.m1", "i1.m2"], roles=[Role.prb]))
+    assert result_list[0] == {
         "person_id": "f1.p1",
         "family_id": "f1",
         "role": "prb",
         "sex": "M",
         "status": "affected",
-        "i1.m1": 34.76285793898369,
-        "i1.m2": 48.44644402952317,
+        "i1.m1": pytest.approx(34.76286),
+        "i1.m2": pytest.approx(48.44644),
     }
 
 
@@ -211,7 +212,7 @@ def test_get_measures(
         "values_domain",
     ]
 
-    measures = get(fake_phenotype_data, measure_type="continuous")
+    measures = get(fake_phenotype_data, measure_type=MeasureType.continuous)
     check(measures, 9, expected_cols)
 
 
@@ -222,7 +223,7 @@ def test_default_get_measure_df(fake_phenotype_data: PhenotypeStudy) -> None:
 
 
 def test_get_persons_df(fake_phenotype_data: PhenotypeStudy) -> None:
-    prbs = fake_phenotype_data.get_persons_df(roles=["prb"])
+    prbs = fake_phenotype_data.get_persons_df(roles=[Role.prb])
     assert len(prbs.columns) == 5
     df_check(prbs, 39, ["person_id", "family_id", "role", "sex", "status"])
 
@@ -273,7 +274,7 @@ def test_get_persons_df_person_ids(
     fake_phenotype_data: PhenotypeStudy,
 ) -> None:
     res = fake_phenotype_data.get_persons_df(
-        person_ids=[], family_ids=["f1", "f2", "f3"], roles=["prb"],
+        person_ids=[], family_ids=["f1", "f2", "f3"], roles=[Role.prb],
     )
     assert res.empty
 
@@ -282,7 +283,7 @@ def test_get_persons_df_family_ids(
     fake_phenotype_data: PhenotypeStudy,
 ) -> None:
     res = fake_phenotype_data.get_persons_df(
-        person_ids=["f1.p1", "f2.p1", "f3.p1"], family_ids=[], roles=["prb"],
+        person_ids=["f1.p1", "f2.p1", "f3.p1"], family_ids=[], roles=[Role.prb],
     )
     assert res.empty
 

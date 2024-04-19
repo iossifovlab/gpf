@@ -360,6 +360,7 @@ class FamiliesLoader(CLILoader):
         ped_generated: Union[str, int] = "generated",
         ped_not_sequenced: Union[str, int] = "not_sequenced",
         ped_sample_id: Union[str, int] = "sample_id",
+        enums_as_values: bool = False,
         **kwargs: Any,
     ) -> pd.DataFrame:
         """Read a pedigree from file."""
@@ -370,13 +371,22 @@ class FamiliesLoader(CLILoader):
             ped_no_header = str2bool(ped_no_header)
 
         converters = {
-            ped_role: Role.from_name,
-            ped_sex: Sex.from_name,
-            ped_status: Status.from_name,
             ped_generated: str2bool,
             ped_not_sequenced: str2bool,
             ped_proband: str2bool,
         }
+        if enums_as_values:
+            converters.update({
+                ped_role: Role.to_value,
+                ped_sex: Sex.to_value,
+                ped_status: Status.to_value,
+            })
+        else:
+            converters.update({
+                ped_role: Role.from_name,
+                ped_sex: Sex.from_name,
+                ped_status: Status.from_name,
+            })
         converters.update(dict.fromkeys(ALL_FAMILY_TAG_LABELS, str2bool))
 
         read_csv_func = partial(

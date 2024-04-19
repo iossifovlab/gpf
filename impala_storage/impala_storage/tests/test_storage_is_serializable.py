@@ -3,8 +3,8 @@ from typing import Type
 
 import cloudpickle
 import pytest
-from impala_storage.schema1.impala_genotype_storage import \
-    ImpalaGenotypeStorage
+
+from impala_storage.schema1.impala_genotype_storage import ImpalaGenotypeStorage
 
 
 @pytest.mark.parametrize("storage_cls, storage_type", [
@@ -12,7 +12,7 @@ from impala_storage.schema1.impala_genotype_storage import \
 ])
 def test_genotype_storage_is_cpickle_serializable(
     storage_cls: Type[ImpalaGenotypeStorage],
-    storage_type: str
+    storage_type: str,
 ) -> None:
     storage = storage_cls({
         "id": "storage",
@@ -28,6 +28,6 @@ def test_genotype_storage_is_cpickle_serializable(
             "host": "localhost",
             "port": 8020,
             "replication": 1,
-        }
+        },
     })
     _ = cloudpickle.dumps(storage)

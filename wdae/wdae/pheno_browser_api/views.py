@@ -227,11 +227,14 @@ class PhenoMeasuresDownload(QueryDatasetView):
                 "attachment; filename=measures.csv"
             response["Expires"] = "0"
             return response
-        except ValueError:
+        except ValueError as err:
+            logger.exception(err)
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        except KeyError:
+        except KeyError as err:
+            logger.exception(err)
             return Response(status=status.HTTP_404_NOT_FOUND)
-        except CountError:
+        except CountError as err:
+            logger.exception(err)
             return Response(status=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE)
 
     #  pylint:disable=method-hidden
@@ -240,11 +243,14 @@ class PhenoMeasuresDownload(QueryDatasetView):
         try:
             self.get_measure_ids(request)
             return Response(status=status.HTTP_200_OK)
-        except ValueError:
+        except ValueError as err:
+            logger.exception(err)
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        except KeyError:
+        except KeyError as err:
+            logger.exception(err)
             return Response(status=status.HTTP_404_NOT_FOUND)
-        except CountError:
+        except CountError as err:
+            logger.exception(err)
             return Response(status=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE)
 
 

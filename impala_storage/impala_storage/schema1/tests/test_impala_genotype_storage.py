@@ -1,6 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-import re
 import os
+import re
 from contextlib import closing
 from typing import Callable
 
@@ -8,8 +8,7 @@ import pytest
 import pytest_mock
 from box import Box
 
-from impala_storage.schema1.impala_genotype_storage import \
-    ImpalaGenotypeStorage
+from impala_storage.schema1.impala_genotype_storage import ImpalaGenotypeStorage
 
 
 @pytest.fixture(scope="session")
@@ -40,7 +39,7 @@ def test_storage_type(impala_genotype_storage: ImpalaGenotypeStorage) -> None:
 
 
 def test_impala_helpers(
-    impala_genotype_storage: ImpalaGenotypeStorage
+    impala_genotype_storage: ImpalaGenotypeStorage,
 ) -> None:
     impala_helpers = impala_genotype_storage.impala_helpers
 
@@ -50,7 +49,7 @@ def test_impala_helpers(
 
 def test_impala_partition_import(
     impala_genotype_storage: ImpalaGenotypeStorage,
-    fixture_dirname: Callable
+    fixture_dirname: Callable,
 ) -> None:
 
     ped_file = fixture_dirname(
@@ -69,7 +68,7 @@ def test_impala_partition_import(
             root,
             "test_study/variants/region_bin=1_8/frequency_bin=3/"
             "coding_bin=0/family_bin=6/",
-        )
+        ),
     )
     assert hdfs.exists(
         os.path.join(
@@ -78,14 +77,14 @@ def test_impala_partition_import(
             "/family_bin=6/"
             "variants_region_bin_1_8_frequency_bin_3_"
             "coding_bin_0_family_bin_6.parquet",
-        )
+        ),
     )
     assert hdfs.exists(
         os.path.join(
             root,
             "test_study/variants/region_bin=1_8/frequency_bin=3"
             "/coding_bin=0/family_bin=69",
-        )
+        ),
     )
     assert hdfs.exists(
         os.path.join(
@@ -94,7 +93,7 @@ def test_impala_partition_import(
             "/family_bin=69/"
             "variants_region_bin_1_8_frequency_bin_3_"
             "coding_bin_0_family_bin_69.parquet",
-        )
+        ),
     )
     # assert hdfs.exists(
     #     os.path.join(
@@ -168,7 +167,7 @@ def test_impala_partition_import(
 
 
 def test_impala_genotype_storate_has_rsync_helpers(
-    mocker: pytest_mock.MockerFixture
+    mocker: pytest_mock.MockerFixture,
 ) -> None:
     config = {
         "id": "genotype_impala",
@@ -195,7 +194,7 @@ def test_impala_genotype_storate_has_rsync_helpers(
 
 
 def test_impala_genotype_storate_no_rsync_helpers(
-    mocker: pytest_mock.MockerFixture
+    mocker: pytest_mock.MockerFixture,
 ) -> None:
     config = {
         "id": "genotype_impala",

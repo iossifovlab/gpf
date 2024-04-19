@@ -1,11 +1,10 @@
+import logging
 import os
 import tempfile
-import logging
 from typing import Optional, cast
 
-from pyarrow import fs
 from fsspec.implementations.arrow import ArrowFSWrapper
-
+from pyarrow import fs
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +15,7 @@ class HdfsHelpers:
     def __init__(
         self, hdfs_host: str,
         hdfs_port: int,
-        replication: Optional[int] = None
+        replication: Optional[int] = None,
     ) -> None:
         assert hdfs_host
         assert hdfs_port
@@ -38,7 +37,7 @@ class HdfsHelpers:
             if self.replication and self.replication > 0:
                 assert self.replication > 0, self.replication
                 extra_conf = {
-                    "dfs.replication": str(self.replication)
+                    "dfs.replication": str(self.replication),
                 }
             logger.info("hdfs connecting to: %s:%s; extra: %s",
                         self.host, self.port, extra_conf)
@@ -93,7 +92,7 @@ class HdfsHelpers:
     def put(
         self, local_filename: str,
         hdfs_filename: str,
-        recursive: bool = False
+        recursive: bool = False,
     ) -> None:
         """Copy a file or directory from the local filesystem to HDFS.
 
@@ -124,7 +123,7 @@ class HdfsHelpers:
         if os.path.isdir(local_path):
             for local_file in os.listdir(local_path):
                 self.put_in_directory(
-                    os.path.join(local_path, local_file), hdfs_dirname
+                    os.path.join(local_path, local_file), hdfs_dirname,
                 )
         else:
             self.put_in_directory(local_path, hdfs_dirname)

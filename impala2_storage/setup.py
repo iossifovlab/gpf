@@ -3,7 +3,6 @@
 import setuptools
 import versioneer
 
-
 setuptools.setup(
     name="gpf_impala2_storage",
     version=versioneer.get_version(),  # type: ignore
@@ -14,7 +13,7 @@ setuptools.setup(
     url="https://github.com/IossifovLab/gpf",
     packages=setuptools.find_packages(
         where=".", exclude=[
-            "impala2_storage.docs", "tests.*", "*.tests.*", "*.tests", ],
+            "impala2_storage.docs", "tests.*", "*.tests.*", "*.tests"],
     ),
     # include_package_data=True,
     package_data={

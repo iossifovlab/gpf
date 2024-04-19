@@ -129,7 +129,7 @@ def test_get_measures_download(rest_client: RESTClient) -> None:
 
     assert lines is not None
     print(b"".join(lines).decode())
-    assert len(lines) == 5021
+    assert len(lines) == 5035
 
 
 def test_post_pheno_tool(rest_client: RESTClient) -> None:

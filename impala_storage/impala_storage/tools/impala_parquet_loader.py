@@ -1,20 +1,19 @@
 #!/usr/bin/env python
+import argparse
 import os
 import sys
-import argparse
 from typing import Optional
 
-from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.study_config_builder import StudyConfigBuilder
-from dae.utils.dict_utils import recursive_dict_update
-
+from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.import_tools.import_tools import save_study_config
+from dae.utils.dict_utils import recursive_dict_update
 
 
 def parse_cli_arguments(
     argv: list[str],
-    gpf_instance: GPFInstance
+    gpf_instance: GPFInstance,
 ) -> argparse.Namespace:
     """Configure and create an CLI argument parser."""
     parser = argparse.ArgumentParser(
@@ -64,7 +63,7 @@ def parse_cli_arguments(
         type=str,
         metavar="<study config>",
         dest="study_config",
-        help="Optional study configuration to use instead of default"
+        help="Optional study configuration to use instead of default",
     )
 
     parser.add_argument(
@@ -73,7 +72,7 @@ def parse_cli_arguments(
         action="store_true",
         help="allows overwriting configuration file in case "
         "target directory already contains such file",
-        default=False
+        default=False,
     )
 
     return parser.parse_args(argv)
@@ -81,7 +80,7 @@ def parse_cli_arguments(
 
 def main(
     argv: Optional[list[str]] = None,
-    gpf_instance: Optional[GPFInstance] = None
+    gpf_instance: Optional[GPFInstance] = None,
 ) -> None:
     """Upload parquet dataset into Impala."""
     if gpf_instance is None:
@@ -91,7 +90,7 @@ def main(
 
     genotype_storages = gpf_instance.genotype_storages
     genotype_storage = genotype_storages.get_genotype_storage(
-        args.genotype_storage
+        args.genotype_storage,
     )
     if not genotype_storage or \
             (genotype_storage

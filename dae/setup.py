@@ -30,14 +30,12 @@ setuptools.setup(
     scripts=[
         "dae/tools/generate_denovo_gene_sets.py",
         "dae/tools/pheno2browser.py",
-        "dae/tools/simple_pheno_import.py",
         "dae/tools/simple_study_import.py",
         "dae/tools/simple_family2pedigree.py",
         "dae/tools/ped2ped.py",
         "dae/tools/draw_pedigree.py",
         "dae/tools/vcfinfo_extractor.py",
         "dae/tools/to_gpf_gene_models_format.py",
-        "dae/tools/migrate_pheno_measures.py",
     ],
     entry_points="""
     [dae.genomic_resources.plugins]
@@ -96,6 +94,7 @@ setuptools.setup(
     annotate_vcf=dae.annotation.annotate_vcf:cli
     annotate_doc=dae.annotation.annotate_doc:cli
     annotate_schema2_parquet=dae.annotation.annotate_schema2_parquet:cli
+    pheno_import=dae.tools.pheno_import:main
 
 
     agp_exporter=dae.gene_profile.exporter:cli_export

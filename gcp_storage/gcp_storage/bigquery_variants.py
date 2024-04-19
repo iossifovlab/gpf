@@ -1,20 +1,18 @@
-import time
 import json
 import logging
-from typing import Dict, Optional, Any, cast
+import time
+from typing import Any, Dict, Optional, cast
 
 import numpy as np
 import pandas as pd
-
 from google.cloud import bigquery
 
-from dae.variants.attributes import Role, Status, Sex, Inheritance
-from dae.query_variants.sql.schema2.base_variants import SqlSchema2Variants
-from dae.query_variants.sql.schema2.base_query_builder import Dialect
-from dae.variants.variant import SummaryVariantFactory, SummaryVariant
-from dae.variants.family_variant import FamilyVariant
 from dae.genomic_resources.gene_models import GeneModels
-
+from dae.query_variants.sql.schema2.base_query_builder import Dialect
+from dae.query_variants.sql.schema2.base_variants import SqlSchema2Variants
+from dae.variants.attributes import Inheritance, Role, Sex, Status
+from dae.variants.family_variant import FamilyVariant
+from dae.variants.variant import SummaryVariant, SummaryVariantFactory
 from gcp_storage.bigquery_query_runner import BigQueryQueryRunner
 
 logger = logging.getLogger(__name__)
@@ -129,15 +127,15 @@ class BigQueryVariants(SqlSchema2Variants):
         return self.client
 
     def _deserialize_summary_variant(
-        self, record: Any
+        self, record: Any,
     ) -> SummaryVariant:
         sv_record = json.loads(record.summary_variant_data)
         return SummaryVariantFactory.summary_variant_from_records(
-            sv_record
+            sv_record,
         )
 
     def _deserialize_family_variant(
-        self, record: Any
+        self, record: Any,
     ) -> FamilyVariant:
         sv_record = json.loads(record.summary_variant_data)
         fv_record = json.loads(record.family_variant_data)
@@ -148,7 +146,7 @@ class BigQueryVariants(SqlSchema2Variants):
 
         return FamilyVariant(
             SummaryVariantFactory.summary_variant_from_records(
-                sv_record
+                sv_record,
             ),
             self.families[fv_record["family_id"]],
             np.array(fv_record["genotype"]),

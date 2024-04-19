@@ -9,7 +9,6 @@ import pandas as pd
 from box import Box
 
 from dae.pheno.common import MeasureType
-from dae.pheno.db import PhenoDb
 from dae.pheno.graphs import (
     draw_categorical_violin_distribution,
     draw_linregres,
@@ -25,7 +24,7 @@ from dae.utils.progress import progress, progress_nl
 from dae.variants.attributes import Role
 
 mpl.use("PS")
-plt.ioff()  # type: ignore
+plt.ioff()
 
 
 class PreparePhenoBrowserBase:
@@ -51,14 +50,12 @@ class PreparePhenoBrowserBase:
 
         assert os.path.exists(images_dir)
 
+        self.pheno_id = pheno_name
+
         self.images_dir = images_dir
 
         self.phenotype_data = phenotype_data
         self.pheno_regressions = pheno_regressions
-
-        self.browser_db = os.path.join(
-            output_dir, f"{pheno_name}_browser.db",
-        )
 
     def load_measure(self, measure: Measure) -> pd.DataFrame:
         df = self.phenotype_data.get_people_measure_values_df(
@@ -101,7 +98,7 @@ class PreparePhenoBrowserBase:
             "measure_id": measure.measure_id,
             "instrument_name": measure.instrument_name,
             "measure_name": measure.measure_name,
-            "measure_type": measure.measure_type,
+            "measure_type": measure.measure_type.value,
             "description": measure.description,
             "values_domain": measure.values_domain,
         }
@@ -214,7 +211,7 @@ class PreparePhenoBrowserBase:
     def build_values_violinplot(self, measure: Measure) -> dict[str, Any]:
         """Build a violin plot figure for the measure."""
         df = self.load_measure(measure)
-        drawn = draw_measure_violinplot(df, measure.measure_id)
+        drawn = draw_measure_violinplot(df.dropna(), measure.measure_id)
 
         res = {}
 
@@ -231,7 +228,9 @@ class PreparePhenoBrowserBase:
     ) -> dict[str, Any]:
         """Build a categorical value distribution fiugre."""
         df = self.load_measure(measure)
-        drawn = draw_categorical_violin_distribution(df, measure.measure_id)
+        drawn = draw_categorical_violin_distribution(
+            df.dropna(), measure.measure_id,
+        )
 
         res = {}
         if drawn:
@@ -247,7 +246,9 @@ class PreparePhenoBrowserBase:
     ) -> dict[str, Any]:
         """Build an other value distribution figure."""
         df = self.load_measure(measure)
-        drawn = draw_categorical_violin_distribution(df, measure.measure_id)
+        drawn = draw_categorical_violin_distribution(
+            df.dropna(), measure.measure_id,
+        )
 
         res = {}
         if drawn:
@@ -263,7 +264,9 @@ class PreparePhenoBrowserBase:
     ) -> dict[str, Any]:
         """Build an ordinal value distribution figure."""
         df = self.load_measure(measure)
-        drawn = draw_ordinal_violin_distribution(df, measure.measure_id)
+        drawn = draw_ordinal_violin_distribution(
+            df.dropna(), measure.measure_id,
+        )
 
         res = {}
         if drawn:
@@ -365,9 +368,7 @@ class PreparePhenoBrowserBase:
 
     def run(self) -> None:
         """Run browser preparations for all measures in a phenotype data."""
-        pheno_dbfile = self.phenotype_data.db.pheno_dbfile
-        db = PhenoDb(pheno_dbfile, browser_dbfile=self.browser_db)
-        db.build()
+        db = self.phenotype_data.db
 
         if self.pheno_regressions:
             for reg_id, reg_data in self.pheno_regressions.regression.items():
