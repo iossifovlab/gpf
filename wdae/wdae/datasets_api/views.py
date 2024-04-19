@@ -1,40 +1,38 @@
-import os
 import logging
-from typing import Any, cast, Optional
+import os
+from typing import Any, Optional, cast
 
-from django.contrib.auth import get_user_model
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import User
-
+from groups_api.serializers import GroupSerializer
+from query_base.query_base import QueryBaseView
+from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
-from rest_framework import status
-
-from query_base.query_base import QueryBaseView
 from studies.study_wrapper import StudyWrapperBase
 
-from groups_api.serializers import GroupSerializer
-from datasets_api.permissions import get_wdae_parents, user_has_permission
 from dae.studies.study import GenotypeData
-from .models import Dataset, DatasetHierarchy
+from datasets_api.permissions import get_wdae_parents, user_has_permission
 
+from .models import Dataset, DatasetHierarchy
 
 logger = logging.getLogger(__name__)
 
 
 def augment_accessibility(
-    instance_id: str, dataset: dict[str, Any], user: User
+    instance_id: str, dataset: dict[str, Any], user: User,
 ) -> dict[str, Any]:
     """Augment a dataset response JSON with access_rights section."""
     # pylint: disable=no-member
     dataset["access_rights"] = user_has_permission(
-        instance_id, user, dataset["id"]
+        instance_id, user, dataset["id"],
     )
     return dataset
 
 
 def augment_with_groups(
-    dataset: dict[str, Any], db_dataset: Optional[Dataset] = None
+    dataset: dict[str, Any], db_dataset: Optional[Dataset] = None,
 ) -> dict[str, Any]:
     """Add groups to response object."""
     # pylint: disable=no-member
@@ -46,12 +44,12 @@ def augment_with_groups(
 
 
 def augment_with_parents(
-    instance_id: str, dataset: dict[str, Any]
+    instance_id: str, dataset: dict[str, Any],
 ) -> dict[str, Any]:
     """Augment a dataset response JSON with parents section."""
     dataset["parents"] = [
         ds.dataset_id for ds in get_wdae_parents(
-            instance_id, dataset["id"], direct=True
+            instance_id, dataset["id"], direct=True,
         )
     ]
     return dataset
@@ -67,7 +65,7 @@ class DatasetView(QueryBaseView):
     """
 
     def _collect_datasets_summary(
-        self, user: User
+        self, user: User,
     ) -> list[dict[str, Any]]:
         genotype_data = self.gpf_instance.get_genotype_data_ids()
 
@@ -76,7 +74,7 @@ class DatasetView(QueryBaseView):
             filter(None, [
                 self.gpf_instance.get_wdae_wrapper(genotype_data_id)
                 for genotype_data_id in genotype_data
-            ])
+            ]),
         )
 
         res = [
@@ -91,7 +89,7 @@ class DatasetView(QueryBaseView):
 
         parents = DatasetHierarchy.get_direct_datasets_parents(
             self.instance_id,
-            db_datasets.values()
+            db_datasets.values(),
         )
 
         res = [augment_accessibility(self.instance_id, ds, user) for ds in res]
@@ -105,7 +103,7 @@ class DatasetView(QueryBaseView):
         return res
 
     def get(
-        self, request: Request, dataset_id: Optional[str] = None
+        self, request: Request, dataset_id: Optional[str] = None,
     ) -> Response:
         """Return response to a get request for a dataset or all datasets."""
         user = request.user
@@ -122,7 +120,7 @@ class DatasetView(QueryBaseView):
         dataset_object = Dataset.objects.get(dataset_id=dataset_id)
 
         if user_has_permission(
-            self.instance_id, user, dataset_object.dataset_id
+            self.instance_id, user, dataset_object.dataset_id,
         ):
             person_set_collection_configs = {
                 psc.id: psc.domain_json()
@@ -132,11 +130,11 @@ class DatasetView(QueryBaseView):
                 self.gpf_instance,
                 dataset.config,
                 dataset.description,
-                person_set_collection_configs
+                person_set_collection_configs,
             )
         else:
             res = StudyWrapperBase.build_genotype_data_all_datasets(
-                dataset.config
+                dataset.config,
             )
 
         res = augment_accessibility(self.instance_id, res, user)
@@ -150,7 +148,7 @@ class StudiesView(QueryBaseView):
     """View class for genotype data stuides and datasets."""
 
     def _collect_datasets_summary(
-        self, user: User
+        self, user: User,
     ) -> list[dict[str, Any]]:
         genotype_data_ids = self.gpf_instance.get_genotype_data_ids()
 
@@ -256,11 +254,11 @@ class DatasetPedigreeView(QueryBaseView):
             )
 
         values_domain = list(
-            map(str, genotype_data.families.ped_df[column].unique())
+            map(str, genotype_data.families.ped_df[column].unique()),
         )
 
         return Response(
-            {"column_name": column, "values_domain": values_domain}
+            {"column_name": column, "values_domain": values_domain},
         )
 
 
@@ -268,7 +266,7 @@ class DatasetConfigView(DatasetView):
     """Provide a dataset's configuration. Used for remote instances."""
 
     def get(
-        self, request: Request, dataset_id: Optional[str] = None
+        self, request: Request, dataset_id: Optional[str] = None,
     ) -> Response:
         if dataset_id is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
@@ -280,7 +278,7 @@ class DatasetConfigView(DatasetView):
                 status=status.HTTP_404_NOT_FOUND,
             )
         return Response(augment_with_parents(
-            self.instance_id, genotype_data.config.to_dict()
+            self.instance_id, genotype_data.config.to_dict(),
         ))
 
 
@@ -288,7 +286,7 @@ class DatasetDescriptionView(QueryBaseView):
     """Provide fetching and editing a dataset's description."""
 
     def get(
-        self, request: Request, dataset_id: str
+        self, request: Request, dataset_id: str,
     ) -> Response:
         # pylint: disable=unused-argument
         """Collect a dataset's description."""
@@ -305,7 +303,7 @@ class DatasetDescriptionView(QueryBaseView):
             )
         return Response(
             {"description": genotype_data.description},
-            status=status.HTTP_200_OK
+            status=status.HTTP_200_OK,
         )
 
     def post(self, request: Request, dataset_id: str) -> Response:
@@ -313,7 +311,7 @@ class DatasetDescriptionView(QueryBaseView):
         if not request.user.is_staff:
             return Response(
                 {"error": "You have no permission to edit the description."},
-                status=status.HTTP_403_FORBIDDEN
+                status=status.HTTP_403_FORBIDDEN,
             )
 
         description = request.data.get("description")
@@ -335,24 +333,24 @@ class BaseDatasetPermissionsView(QueryBaseView):
         users_found = set()
         for group in groups:
             users = user_model.objects.filter(
-                groups__name=group.name
+                groups__name=group.name,
             ).all()
             for user in users:
                 if user.email not in users_found:
                     users_list += [
-                        {"name": user.name, "email": user.email}
+                        {"name": user.name, "email": user.email},
                     ]
                     users_found.add(user.email)
         users_list = sorted(users_list, key=lambda d: d["email"])
 
         dataset_gd = self.gpf_instance.get_genotype_data(
-            dataset.dataset_id
+            dataset.dataset_id,
         )
 
         if dataset_gd is None:
             logger.error(
                 "Dataset %s missing in GPF instance!",
-                dataset.dataset_id
+                dataset.dataset_id,
             )
             return None
 
@@ -365,7 +363,7 @@ class BaseDatasetPermissionsView(QueryBaseView):
             "dataset_name": name,
             "broken": dataset.broken,
             "users": users_list,
-            "groups": group_names
+            "groups": group_names,
 
         }
 
@@ -435,14 +433,14 @@ class DatasetHierarchyView(QueryBaseView):
     @staticmethod
     def produce_tree(
         instance_id: str, dataset: GenotypeData,
-        user: User, selected: list[str]
+        user: User, selected: list[str],
     ) -> dict[str, Any]:
         """Recursively collect a dataset's id, children and access rights."""
         children = None
         if dataset.is_group:
             children = [
                 DatasetHierarchyView.produce_tree(
-                    instance_id, child, user, selected
+                    instance_id, child, user, selected,
                 )
                 for child in dataset.studies
                 if child.study_id in selected
@@ -452,8 +450,8 @@ class DatasetHierarchyView(QueryBaseView):
             "name": dataset.name,
             "children": children,
             "access_rights": user_has_permission(
-                instance_id, user, dataset.study_id
-            )
+                instance_id, user, dataset.study_id,
+            ),
         }
 
     def get(self, request: Request) -> Response:
@@ -466,7 +464,7 @@ class DatasetHierarchyView(QueryBaseView):
         ])
         return Response({"data": [
             DatasetHierarchyView.produce_tree(
-                self.instance_id, gd, user, genotype_data_ids
+                self.instance_id, gd, user, genotype_data_ids,
             )
             for gd in genotype_data
         ]}, status=status.HTTP_200_OK)
