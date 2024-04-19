@@ -75,9 +75,9 @@ test.describe('Gene profiles navigation to single view tests', () => {
     await page.locator('div').filter({ hasText: /^GRIN2B$/}).click();
 
     expect(page.url()).toEqual(`${utils.instanceUrl}/gene-profiles/GRIN2B`);
-    await expect(page.locator('#above-table-bar')).toBeVisible();
+    await expect(page.locator('#tabs-wrapper')).toBeVisible();
     await expect(page.getByRole('button', {name: 'GRIN2B'})).toBeVisible();
-    await expect(page.getByRole('button', {name: 'GRIN2B'})).toHaveClass('tab-name active-tab');
+    await expect(page.getByRole('button', {name: 'GRIN2B'})).toHaveClass('tab active-tab');
     await expect(page.locator('gpf-gene-profiles-single-view').locator('h2:text("GRIN2B")')).toBeVisible();
   });
 
@@ -85,7 +85,7 @@ test.describe('Gene profiles navigation to single view tests', () => {
     await page.locator('input#gene-search-input').fill('GRIN2B');
     await page.locator('div').filter({ hasText: /^GRIN2B$/}).click();
 
-    await page.locator('#gene-search-input').click();
+    await page.getByRole('button', {name: 'All genes'}).click();
     await expect(page.locator('gpf-gene-profiles-single-view')).not.toBeVisible();
     await expect(page.locator('#table-header')).toBeVisible();
     expect(page.url()).toEqual(`${utils.instanceUrl}/gene-profiles`);
@@ -95,24 +95,24 @@ test.describe('Gene profiles navigation to single view tests', () => {
     await expect(page.locator('gpf-gene-profiles-single-view')).toBeVisible();
     await expect(page.locator('#table-header')).not.toBeVisible();
 
-    await page.locator('#category-filtering-button').click();
+    await page.getByRole('button', {name: 'All genes'}).click();
     await expect(page.locator('gpf-gene-profiles-single-view')).not.toBeVisible();
     await expect(page.locator('#table-header')).toBeVisible();
     expect(page.url()).toEqual(`${utils.instanceUrl}/gene-profiles`);
 
     await expect(page.locator('#tabs-wrapper')).toContainText('GRIN2B');
     await expect(page.locator('#tabs-wrapper')).toContainText('CHD8');
-    await expect(page.getByRole('button', {name: 'GRIN2B'})).toHaveClass('tab-name');
-    await expect(page.getByRole('button', {name: 'CHD8'})).toHaveClass('tab-name');
+    await expect(page.getByRole('button', {name: 'GRIN2B'})).toHaveClass('tab');
+    await expect(page.getByRole('button', {name: 'CHD8'})).toHaveClass('tab');
 
     await page.locator('#tabs-wrapper').getByText('GRIN2B').click();
-    await expect(page.getByRole('button', {name: 'GRIN2B'})).toHaveClass('tab-name active-tab');
+    await expect(page.getByRole('button', {name: 'GRIN2B'})).toHaveClass('tab active-tab');
     await expect(page.locator('gpf-gene-profiles-single-view')).toBeVisible();
     expect(page.url()).toEqual(`${utils.instanceUrl}/gene-profiles/GRIN2B`);
 
     await page.locator('#tabs-wrapper').getByText('CHD8').click();
-    await expect(page.getByRole('button', {name: 'CHD8'})).toHaveClass('tab-name active-tab');
-    await expect(page.getByRole('button', {name: 'GRIN2B'})).toHaveClass('tab-name');
+    await expect(page.getByRole('button', {name: 'CHD8'})).toHaveClass('tab active-tab');
+    await expect(page.getByRole('button', {name: 'GRIN2B'})).toHaveClass('tab');
     await expect(page.locator('gpf-gene-profiles-single-view')).toBeVisible();
     expect(page.url()).toEqual(`${utils.instanceUrl}/gene-profiles/CHD8`);
 
@@ -127,7 +127,7 @@ test.describe('Gene profiles navigation to single view tests', () => {
 
   test('should open single view of a gene multiple times', async({ page }) => {
     await page.locator('div').filter({ hasText: /^GRIN2B$/}).click();
-    await page.locator('#gene-search-input').click();
+    await page.getByRole('button', {name: 'All genes'}).click();
 
     await page.locator('div').filter({ hasText: /^GRIN2B$/}).click();
     await expect(page.locator('#tabs-wrapper').getByText('GRIN2B')).toHaveCount(1);
@@ -137,14 +137,14 @@ test.describe('Gene profiles navigation to single view tests', () => {
 
   test('should open single view on new browser tab', async({ page }) => {
     await page.locator('div').filter({ hasText: /^CHD8$/}).click();
-    await page.locator('#gene-search-input').click();
+    await page.getByRole('button', {name: 'All genes'}).click();
 
     await page.locator('div').filter({ hasText: /^GRIN2B$/}).click({button: 'middle'});
 
     const newPage = page.context().pages()[1];
     expect(newPage.url()).toEqual(`${utils.instanceUrl}/gene-profiles/GRIN2B`);
     await expect(newPage.locator('#tabs-wrapper').getByText('CHD8')).not.toBeVisible();
-    await expect(newPage.getByRole('button', {name: 'GRIN2B'})).toHaveClass('tab-name active-tab');
+    await expect(newPage.getByRole('button', {name: 'GRIN2B'})).toHaveClass('tab active-tab');
     await expect(newPage.locator('gpf-gene-profiles-single-view').locator('h2:text("GRIN2B")')).toBeVisible();
 
     await expect(page.locator('#tabs-wrapper').getByText('GRIN2B')).not.toBeVisible();
@@ -163,22 +163,25 @@ test.describe('Gene profiles navigation to single view tests', () => {
     await expect(page.locator('gpf-gene-profiles-single-view')).toHaveCount(2);
 
     await expect(page.locator('#tabs-wrapper').getByText('CHD8,SHANK2')).toBeVisible();
-    await expect(page.getByRole('button', {name: 'CHD8,SHANK2'})).toHaveClass('tab-name active-tab');
+    await expect(page.getByRole('button', {name: 'CHD8,SHANK2'})).toHaveClass('tab active-tab');
   });
 
   test('should open single view and check table\'s state', async({ page }) => {
-    await page.locator('input#gene-search-input').fill('GRIN2B');
+    await page.locator('input#gene-search-input').focus();
+    await page.keyboard.type('GRIN2B');
     await page.locator('div').filter({ hasText: /^GRIN2B$/}).click();
-    await expect(page.locator('input#gene-search-input')).toHaveValue('GRIN2B');
 
+    await page.getByRole('button', {name: 'All genes'}).click();
+    await expect(page.locator('input#gene-search-input')).toHaveValue('GRIN2B');
     await page.locator('.search-clear-icon').click();
+
     await page.locator('#category-filtering-button').click();
     await page.getByLabel('Relevant Gene Sets').click();
     await page.locator('.table-body-row').filter({ hasText: 'SHANK2' }).click({button: 'middle'});
     await page.locator('.table-body-row').filter({ hasText: 'CHD8' }).click({button: 'middle'});
 
     await page.locator('#tabs-wrapper').getByText('GRIN2B').click();
-    await page.locator('input#gene-search-input').click();
+    await page.getByRole('button', {name: 'All genes'}).click();
 
     await expect(page.getByTitle('Relevant Gene Sets')).not.toBeVisible();
     await expect(page.locator('.table-body-row').filter({ hasText: 'SHANK2' }))
@@ -193,13 +196,13 @@ test.describe('Gene profiles navigation to single view tests', () => {
 
     await page.locator('#compare-genes-compare-button').click();
 
-    await page.locator('input#gene-search-input').click();
+    await page.getByRole('button', {name: 'All genes'}).click();
 
     await page.locator('#compare-genes-compare-button').click();
     expect(page.url()).toEqual(`${utils.instanceUrl}/gene-profiles/CHD8,SHANK2`);
 
     await expect(page.locator('#tabs-wrapper').getByText('CHD8,SHANK2')).toHaveCount(1);
-    await expect(page.getByRole('button', {name: 'CHD8,SHANK2'})).toHaveClass('tab-name active-tab');
+    await expect(page.getByRole('button', {name: 'CHD8,SHANK2'})).toHaveClass('tab active-tab');
   });
 
 

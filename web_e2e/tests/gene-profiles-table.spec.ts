@@ -155,7 +155,7 @@ test.describe('Gene profiles table column filtering tests', () => {
 
     await page.locator('gpf-multiple-select-menu label').nth(0).hover();
     await page.mouse.down();
-    await page.mouse.move(430, 230, {steps: 2});
+    await page.mouse.move(530, 300, {steps: 2});
     await page.mouse.up();
 
     await expect(page.locator('gpf-multiple-select-menu label').nth(0)).toHaveText('Relevant Gene Sets');
