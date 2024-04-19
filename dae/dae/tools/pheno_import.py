@@ -6,7 +6,7 @@ import sys
 import traceback
 from typing import Any, Optional
 
-import toml
+import yaml
 from box import Box
 
 from dae.configuration.gpf_config_parser import GPFConfigParser
@@ -130,7 +130,7 @@ def generate_phenotype_data_config(
         "phenotype_data": {
             "name": args.pheno_name,
             "dbfile": dbfile,
-            "browser_images_url": f"/static/images/{args.pheno_name}/",
+            "browser_images_url": "static/images/",
         },
     }
     if regressions:
@@ -163,24 +163,24 @@ def build_browser(
 ) -> None:
     """Perform browser data build step."""
     output_dir = args.output
-    if not os.path.exists(args.browser_dir):
-        os.makedirs(args.browser_dir)
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
 
     build_pheno_browser(
         args.pheno_db_filename,
         args.pheno_name,
-        args.browser_dir,
+        output_dir,
         regressions,
     )
 
     pheno_conf_path = os.path.join(
-        output_dir, f"{args.pheno_name}.conf",
+        output_dir, f"{args.pheno_name}.yaml",
     )
 
     with open(pheno_conf_path, "w") as pheno_conf_file:
-        pheno_conf_file.write(
-            toml.dumps(generate_phenotype_data_config(args, regressions)),
-        )
+        pheno_conf_file.write(yaml.dump(
+            generate_phenotype_data_config(args, regressions),
+        ))
 
 
 def main(argv: Optional[list[str]] = None) -> int:
@@ -212,7 +212,6 @@ def main(argv: Optional[list[str]] = None) -> int:
         args.pheno_db_filename = os.path.join(
             output_dir, f"{args.pheno_name}.db",
         )
-        args.browser_dir = os.path.join(output_dir, "browser")
         if args.regression:
             regressions = GPFConfigParser.load_config(
                 args.regression, regression_conf_schema,
