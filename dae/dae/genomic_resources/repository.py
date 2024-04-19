@@ -647,7 +647,15 @@ class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
                 resource, entry.name)
             if state.timestamp != file_timestamp or \
                     state.size != file_size:
-                entries_to_update.add(entry.name)
+                md5 = None
+                if prebuild_entries and entry.name in prebuild_entries:
+                    md5 = prebuild_entries[entry.name].md5
+                state = self.build_resource_file_state(
+                    resource, entry.name, md5=md5)
+                if state.md5 == current_manifest[entry.name].md5:
+                    self.save_resource_file_state(resource, state)
+                else:
+                    entries_to_update.add(entry.name)
                 continue
             if state.md5 != current_manifest[entry.name].md5:
                 entries_to_update.add(entry.name)
