@@ -268,10 +268,9 @@ class DenovoLoader(VariantsGenotypesLoader):
 
         genotype = np.zeros(shape=(2, len(family)), dtype=GenotypeType)
 
-        for person_id, person in family.persons.items():
-
-            index = family.members_index([person_id])
-            has_variant = int(person_id in members_with_variant)
+        for person in family.members_in_order:
+            index = family.members_index([person.person_id])
+            has_variant = int(person.person_id in members_with_variant)
 
             ploidy = get_locus_ploidy(chrom, pos, person.sex, genome)
 
