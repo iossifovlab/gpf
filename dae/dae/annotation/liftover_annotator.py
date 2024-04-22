@@ -60,8 +60,12 @@ class LiftOverAnnotator(AnnotatorBase):
 
         info.resources += [chain.resource, target_genome.resource]
         if not info.attributes:
-            info.attributes = [AttributeInfo("liftover_annotatable",
-                                             "liftover_annotatable", True, {})]
+            info.attributes = [AttributeInfo(
+                "liftover_annotatable",
+                "liftover_annotatable",
+                True,  # noqa FTB003
+                {},
+            )]
         super().__init__(pipeline, info, {
             "liftover_annotatable": ("annotatable", "Lifted over allele."),
         })
@@ -121,7 +125,7 @@ class LiftOverAnnotator(AnnotatorBase):
                 lo_pos -= len(allele.reference)
                 lo_pos -= 1
 
-            _, tr_ref, tr_alt = trim_str_left(
+            _tr_pos, tr_ref, tr_alt = trim_str_left(
                 allele.position, allele.reference, allele.alternative)
 
             lo_ref = self.target_genome.get_sequence(
@@ -143,15 +147,17 @@ class LiftOverAnnotator(AnnotatorBase):
             result = VCFAllele(lo_chrom, lo_pos, lo_ref, lo_alt)
             if lo_ref == lo_alt:
                 logger.warning(
-                    "allele %s mapped to no variant: %s", allele, result)
+                    "allele %s mapped to no variant: %s; liftover strand: %s;",
+                    allele, result, lo_strand)
                 return None
 
-            return result
-        except Exception as ex:  # pylint: disable=broad-except
+        except BaseException as ex:  # noqa BLE001 pylint: disable=broad-except
             logger.warning(
                 "problem in variant %s liftover: %s",
                 allele, ex, exc_info=True)
             return None
+
+        return result
 
     def liftover_position(
         self, position: Annotatable,
@@ -188,11 +194,10 @@ class LiftOverAnnotator(AnnotatorBase):
                 region, lo_start[0], lo_end[0])
             return None
 
-        result = Region(
+        return Region(
             lo_start[0],
             min(lo_start[1], lo_end[1]),
             max(lo_start[1], lo_end[1]))
-        return result
 
     def liftover_region(self, region: Annotatable) -> Optional[Annotatable]:
         """Liftover region annotatable."""

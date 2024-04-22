@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 import argparse
 import logging
 import sys
@@ -105,8 +103,6 @@ def main(
 
     variants_filenames, variants_params = \
         DaeTransmittedLoader.parse_cli_arguments(args)
-
-    # assert len(variants_filenames) == 1
 
     variants_loader = DaeTransmittedLoader(
         families,

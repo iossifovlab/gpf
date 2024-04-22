@@ -52,7 +52,7 @@ class CLIAnnotationContext(CLIGenomicContext):
             raise ValueError(
                 "Unable to find annotation pipeline in genomic context")
         if not isinstance(pipeline, AnnotationPipeline):
-            raise ValueError(
+            raise TypeError(
                 "The annotation pipeline from the genomic "
                 " context is not an AnnotationPipeline")
         return pipeline
