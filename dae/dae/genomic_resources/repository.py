@@ -143,7 +143,7 @@ def is_version_constraint_satisfied(
     if not match:
         raise ValueError(
             f"Bad syntax of version constraint {version_constraint}")
-    operator = match[1] if match[1] else ">="
+    operator = match[1] or ">="
     constraint_version = tuple(map(int, match[2].split(".")))
     if operator == "=":
         return version == constraint_version

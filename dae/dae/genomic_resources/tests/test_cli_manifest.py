@@ -58,8 +58,9 @@ def test_resource_manifest_dry_run_simple(
     assert not (path / "one/.MANIFEST").exists()
 
     # When
-    cli_manage([
-        "resource-manifest", "-R", str(path), "-r", "one", "--dry-run"])
+    with pytest.raises(SystemExit):
+        cli_manage([
+            "resource-manifest", "-R", str(path), "-r", "one", "--dry-run"])
 
     # Then
     assert not (path / "one/.MANIFEST").exists()
@@ -172,8 +173,9 @@ def test_resource_dry_run_manifest_update(
     assert bool(proto.check_update_manifest(res))
 
     # When
-    cli_manage([
-        "resource-manifest", "--dry-run", "-R", str(path), "-r", "one"])
+    with pytest.raises(SystemExit):
+        cli_manage([
+            "resource-manifest", "--dry-run", "-R", str(path), "-r", "one"])
 
     # Then
     assert bool(proto.check_update_manifest(res))
