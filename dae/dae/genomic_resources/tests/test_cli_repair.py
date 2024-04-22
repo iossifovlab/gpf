@@ -109,10 +109,11 @@ def test_resource_repair_dry_run(
     assert not (path / GR_CONTENTS_FILE_NAME).exists()
 
     # When
-    cli_manage([
-        "resource-repair", "--dry-run",
-        "-R", str(path), "-r", "one",
-        "-j", "1"])
+    with pytest.raises(SystemExit):
+        cli_manage([
+            "resource-repair", "--dry-run",
+            "-R", str(path), "-r", "one",
+            "-j", "1"])
 
     # Then
     assert not (path / "one/statistics").exists()

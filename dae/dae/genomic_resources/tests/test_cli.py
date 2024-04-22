@@ -73,14 +73,19 @@ def test_cli_without_arguments(
     capsys.readouterr()
 
     # When
-    with pytest.raises(SystemExit, match="1"):
+    with pytest.raises(SystemExit):
         cli_manage([])
 
-        # Then
-        out, err = capsys.readouterr()
+    # Then
+    out, err = capsys.readouterr()
 
-        assert err == ""
-        assert out.startswith("usage: py.test [-h] [--version] [--verbose]")
+    assert err == ""
+    assert "list" in out
+    assert "repo-init" in out
+    assert "repo-manifest,resource-manifest" in out
+    assert "repo-stats,resource-stats" in out
+    assert "repo-info,resource-info" in out
+    assert "repo-repair,resource-repair" in out
 
 
 def test_cli_list(
@@ -93,9 +98,10 @@ def test_cli_list(
     out, err = capsys.readouterr()
 
     assert err == ""
-    assert out == \
-        "Basic                0        2 7.0 B        manage one\n" \
+    assert out == (
+        "Basic                0        2 7.0 B        manage one\n"
         "gene_models          1.0      2 50.0 B       manage sub/two\n"
+    )
 
 
 def test_cli_list_without_repo_argument(
@@ -115,10 +121,11 @@ def test_cli_list_without_repo_argument(
     # Then
     out, err = capsys.readouterr()
     assert err == ""
-    assert out == \
-        f"working with repository: {path!s}\n" \
-        "Basic                0        2 7.0 B        manage one\n" \
+    assert out == (
+        f"working with repository: {path!s}\n"
+        "Basic                0        2 7.0 B        manage one\n"
         "gene_models          1.0      2 50.0 B       manage sub/two\n"
+    )
 
 
 def test_find_repo_dir_simple(

@@ -97,8 +97,7 @@ def test_resource_info(
     assert (path / "two/index.html").exists()
     assert not (path / "index.html").exists()
 
-    with open(path / "one/index.html") as infile:
-        result = infile.read()
+    result = (path / "one/index.html").read_text()
 
     assert result.find("<h1>one</h1>")
     assert result.find("<h3>Score file:</h3>")
