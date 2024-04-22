@@ -370,8 +370,11 @@ class GenomicResource:
         return self._manifest
 
     def get_file_content(
-            self, filename: str,
-            uncompress: bool = True, mode: str = "t") -> Any:
+        self, filename: str,
+        *,
+        uncompress: bool = True,
+        mode: str = "t",
+    ) -> Any:
         """Return the content of file in a resource."""
         return self.proto.get_file_content(
             self, filename, uncompress=uncompress, mode=mode)
@@ -477,8 +480,12 @@ class ReadOnlyRepositoryProtocol(abc.ABC):
         return result
 
     def get_file_content(
-            self, resource: GenomicResource,
-            filename: str, uncompress: bool = True, mode: str = "t") -> Any:
+        self, resource: GenomicResource,
+        filename: str,
+        *,
+        uncompress: bool = True,
+        mode: str = "t",
+    ) -> Any:
         """Return content of a file in given resource."""
         with self.open_raw_file(
                 resource, filename, mode=f"r{mode}",
@@ -525,15 +532,14 @@ class ReadOnlyRepositoryProtocol(abc.ABC):
             "compute md5sum for %s in %s", filename, resource.resource_id)
 
         with self.open_raw_file(resource, filename, "rb") as infile:
-            md5_hash = hashlib.md5()
+            md5_hash = hashlib.md5()  # noqa S324
             while chunk := infile.read(self.CHUNK_SIZE):
                 md5_hash.update(chunk)
         return md5_hash.hexdigest()
 
     def get_manifest(self, resource: GenomicResource) -> Manifest:
         """Load and returns a resource manifest."""
-        manifest = self.load_manifest(resource)
-        return manifest
+        return self.load_manifest(resource)
 
     def build_genomic_resource(
             self, resource_id: str, version: tuple[int, ...],
@@ -544,9 +550,8 @@ class ReadOnlyRepositoryProtocol(abc.ABC):
             res = GenomicResource(resource_id, version, self)
             config = self.load_yaml(res, GR_CONF_FILE_NAME)
 
-        resource = GenomicResource(
+        return GenomicResource(
             resource_id, version, self, config, manifest)
-        return resource
 
 
 class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
@@ -713,10 +718,9 @@ class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
         """Load or build a resource manifest."""
         try:
             manifest = self.load_manifest(resource)
-            return manifest
         except FileNotFoundError:
             manifest = self.build_manifest(resource)
-            return manifest
+        return manifest
 
     @abc.abstractmethod
     def get_resource_file_timestamp(
@@ -857,8 +861,7 @@ class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
         filenames_to_delete = local_manifest.names() - remote_manifest.names()
 
         if files_to_copy is None:
-            files_to_copy = set(map(
-                lambda entry: entry.name, remote_manifest))
+            files_to_copy = {entry.name for entry in remote_manifest}
         else:
             files_to_copy.add(GR_CONF_FILE_NAME)  # config is always required
 
