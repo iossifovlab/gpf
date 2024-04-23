@@ -31,10 +31,12 @@ class Reader:
     """
     Helper class to incrementally fetch variants.
 
-    This class assumes variants are ordered by their summary index!
+    This class assumes variants are ordered by their bucket and summary index!
     """
 
     def __init__(self, path: str, columns: Iterable[str]):
+        if "summary_index" not in columns or "bucket_index" not in columns:
+            raise ValueError
         self.pq_file = pq.ParquetFile(path)
         self.iterator = self.pq_file.iter_batches(columns=columns)
         self.batch: list[dict] = []
@@ -88,7 +90,7 @@ class MultiReader:
     """
     Incrementally fetch variants from multiple files.
 
-    This class assumes variants are ordered by their summary index!
+    This class assumes variants are ordered by their bucket and summary index!
     """
     def __init__(self, dirs: Iterable[str], columns: Iterable[str]):
         self.readers = tuple(Reader(path, columns) for path in dirs)
