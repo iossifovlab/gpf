@@ -22,7 +22,6 @@ export class DatasetsComponent implements OnInit, OnDestroy {
   public permissionDeniedPrompt: string;
   public toolPageLinks = toolPageLinks;
   public visibleDatasets: string[];
-
   private subscriptions: Subscription[] = [];
 
   public selectedTool: string;
@@ -87,7 +86,6 @@ export class DatasetsComponent implements OnInit, OnDestroy {
 
   private setupSelectedDataset(): void {
     this.selectedDataset = this.datasetsService.getSelectedDataset();
-
     if (!this.selectedDataset) {
       return;
     }

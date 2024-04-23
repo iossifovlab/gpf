@@ -77,3 +77,11 @@
     (activate)="routeChange()"
     class="content"></router-outlet>
 </div>
+
+<div
+  *ngIf="selectedDataset === undefined"
+  class="alert alert-danger"
+  role="alert"
+  style="display: inline-block; margin: 14px; margin-top: 0px; width: 400px">
+  <span>No such dataset found!</span>
+</div>

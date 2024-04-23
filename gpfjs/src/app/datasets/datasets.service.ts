@@ -5,7 +5,7 @@ import { Observable, ReplaySubject, BehaviorSubject, zip, Subject, of, Subscript
 import { Dataset } from '../datasets/datasets';
 import { UsersService } from '../users/users.service';
 import { ConfigService } from '../config/config.service';
-import { distinctUntilChanged, map, share, take, tap } from 'rxjs/operators';
+import { catchError, distinctUntilChanged, map, share, take, tap } from 'rxjs/operators';
 import { DatasetPermissions } from 'app/datasets-table/datasets-table';
 
 @Injectable()
@@ -102,8 +102,9 @@ export class DatasetsService {
       take(1),
       tap(dataset => {
         DatasetsService.genomeVersion = dataset.genome;
-      })
-    ).subscribe(dataset => {
+      }),
+      catchError(() => of(undefined)) //marks dataset as invalid
+    ).subscribe((dataset) => {
       this.selectedDataset$.next(dataset);
       this.datasetLoaded$.next();
     });
@@ -171,7 +172,9 @@ export class DatasetsService {
     }
 
     const options = { headers: this.headers, withCredentials: true };
-    const description$ = this.http.get(`${this.config.baseUrl}${this.descriptionUrl}/${datasetId}`, options).pipe(take(1), share());
+    const description$ = this.http.get(
+      `${this.config.baseUrl}${this.descriptionUrl}/${datasetId}`, options
+    ).pipe(take(1), share());
     description$.subscribe(description => {
       DatasetsService.descriptionCache.push({datasetId: datasetId, description: description['description'] as string});
     });
