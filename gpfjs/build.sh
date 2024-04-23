@@ -106,7 +106,12 @@ function main() {
     build_run_container bash -c '
       echo "'"${gpfjs_tag}"'-'"${__gpfjs_build_no}"'" >> dist/gpfjs/BUILD.txt
     '
-  
+
+    local -A ctx_sentry_cli
+    build_run_ctx_init ctx:ctx_sentry_cli "local"
+    build_run ctx:ctx_sentry_cli cp -r dist dist.orig
+    build_run ctx:ctx_sentry_cli docker run --rm -v "$PWD":/work getsentry/sentry-cli sourcemaps inject ./dist
+
     local image_name="gpfjs-production-package"
     build_docker_data_image_create_from_tarball "${image_name}" <(
         build_run_local tar cvf - \
