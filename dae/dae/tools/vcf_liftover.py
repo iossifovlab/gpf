@@ -103,6 +103,7 @@ def _construct_liftover_pipeline(
 
 def main(
         argv: Optional[list[str]] = None,
+        grr: Optional[GenomicResourceRepo] = None,
 ) -> None:
     """Liftover dae variants tool main function."""
     # pylint: disable=too-many-locals,too-many-statements
@@ -114,8 +115,9 @@ def main(
 
     VerbosityConfiguration.set(args)
 
-    context = get_genomic_context()
-    grr = context.get_genomic_resources_repository()
+    if grr is None:
+        context = get_genomic_context()
+        grr = context.get_genomic_resources_repository()
     if grr is None:
         raise ValueError("genomic resources repository not found")
 

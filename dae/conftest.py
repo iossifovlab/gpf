@@ -109,8 +109,7 @@ def t4c8_instance(
 
     root_path = tmp_path_factory.mktemp(
         "study_group_person_set_queries")
-    gpf_instance = t4c8_gpf(root_path, storage=genotype_storage)
-    return gpf_instance
+    return t4c8_gpf(root_path, storage=genotype_storage)
 
 
 @pytest.fixture(scope="module")
@@ -149,7 +148,7 @@ chr1   3   .  G   T   .    .      .    GT     0/0  1/0  0/1 0/0  0/0  0/0
             },
         },
     }
-    study = vcf_study(
+    return vcf_study(
         root_path,
         "study_1", ped_path, [vcf_path1],
         t4c8_instance,
@@ -195,7 +194,6 @@ chr1   3   .  G   T   .    .      .    GT     0/0  1/0  0/1 0/0  0/0  0/0
                 ],
             },
         })
-    return study
 
 
 @pytest.fixture(scope="module")
@@ -235,7 +233,7 @@ chr1   7   .  G   T   .    .      .    GT     0/0  1/0  0/1 0/0  0/0  0/0 0/1
             },
         },
     }
-    study = vcf_study(
+    return vcf_study(
         root_path,
         "study_2", ped_path, [vcf_path1],
         t4c8_instance,
@@ -281,7 +279,6 @@ chr1   7   .  G   T   .    .      .    GT     0/0  1/0  0/1 0/0  0/0  0/0 0/1
                 ],
             },
         })
-    return study
 
 
 @pytest.fixture()
@@ -399,6 +396,7 @@ def pytest_addoption(parser: pytest.Parser) -> None:
 def pytest_sessionstart(session: pytest.Session) -> None:
     global GENOTYPE_STORAGES  # pylint: disable=global-statement
     if not GENOTYPE_STORAGES:
+        #
         # pylint: disable=protected-access
         root_path = session\
             .config\
