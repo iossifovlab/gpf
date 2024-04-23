@@ -201,37 +201,12 @@ export class GeneProfilesTableComponent extends StatefulComponent implements OnI
   private loadState(): void {
     this.store.selectOnce(
       (state: { geneProfilesState: GeneProfilesModel}) => state.geneProfilesState)
-      .subscribe((state: SetGeneProfilesTabs) => {
+      .subscribe(state => {
         this.tabs = state.openedTabs;
-      });
-
-    this.store.selectOnce(
-      (state: { geneProfilesState: GeneProfilesModel}) => state.geneProfilesState)
-      .subscribe((state: SetGeneProfilesSearchValue) => {
         this.geneInput = state.searchValue;
-      });
-
-    this.store.selectOnce(
-      (state: { geneProfilesState: GeneProfilesModel}) => state.geneProfilesState)
-      .subscribe((state: SetGeneProfilesHighlightedRows) => {
         this.highlightedGenes = state.highlightedRows;
-      });
-
-    this.store.selectOnce(
-      (state: { geneProfilesState: GeneProfilesModel}) => state.geneProfilesState)
-      .subscribe((state: SetGeneProfilesSortBy) => {
         this.sortBy = state.sortBy;
-      });
-
-    this.store.selectOnce(
-      (state: { geneProfilesState: GeneProfilesModel}) => state.geneProfilesState)
-      .subscribe((state: SetGeneProfilesOrderBy) => {
         this.orderBy = state.orderBy;
-      });
-
-    this.store.selectOnce(
-      (state: { geneProfilesState: GeneProfilesModel}) => state.geneProfilesState)
-      .subscribe((state: SetGeneProfilesConfig) => {
         this.config = state.config;
       });
 

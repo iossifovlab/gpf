@@ -215,7 +215,6 @@ export class GeneProfileSingleViewComponent implements OnInit {
         .pipe(take(1))
         .subscribe(urlObject => {
           const url = queryService.getLoadUrlFromResponse(urlObject);
-
           if (newTab) {
             const newWindow = window.open('', '_blank');
             newWindow.location.assign(url);
@@ -233,7 +232,7 @@ export class GeneProfileSingleViewComponent implements OnInit {
 
     this.store.selectOnce(
       (state: { geneProfilesState: GeneProfilesModel}) => state.geneProfilesState)
-      .subscribe((state: SetGeneProfilesTabs) => {
+      .subscribe(state => {
         tabs = state.openedTabs;
       });
 
