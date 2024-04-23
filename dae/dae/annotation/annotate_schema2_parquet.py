@@ -234,7 +234,7 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
             self.task_graph.create_task(
                 "merge", merge,
                 [os.path.join(output_dir, "summary"),
-                 os.path.basename(loader.get_pq_filepaths()[0][0])],
+                 os.path.basename(loader.get_summary_pq_filepaths()[0])],
                 annotation_tasks,
             )
 
