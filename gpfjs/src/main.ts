@@ -11,6 +11,7 @@ if (environment.production) {
     dsn: 'https://0@0.ingest.sentry.io/0', // wdae/sentry/views.py
     tunnel: environment.apiPath + environment.sentryTunnel,
     tracesSampleRate: 1.0,
+    release: environment.version
   });
 }
 
