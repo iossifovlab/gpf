@@ -405,7 +405,7 @@ class MeasureClassifier:
                 cursor, table_name, measure_name, column_type, report,
             )
 
-        if column_type in ["VARCHAR", "DATE"]:
+        if column_type in ["VARCHAR", "DATE", "TIMESTAMP"]:
             return MeasureClassifier._meta_measures_text(
                 cursor, table_name, measure_name, report,
             )
