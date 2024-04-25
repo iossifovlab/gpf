@@ -47,53 +47,100 @@ def grr_fixture(
             """),
         },
     })
+    #
+    # The initial header line starts with the keyword chain, followed
+    # by 11 required attribute values, and ends with a blank line.
+    #
+    # The attributes include:
+    #
+    # score -- chain score
+    # tName -- chromosome (reference/target sequence); source contig;
+    # tSize -- chromosome size (reference/target sequence); full length of the
+    #          source chromosome;
+    # tStrand -- strand (reference/target sequence); must be +
+    # tStart -- alignment start position (reference/target sequence);
+    #           Start of source region
+    # tEnd -- alignment end position (reference/target sequence);
+    #         End of source region
+    # qName -- chromosome (query sequence); target chromosome name;
+    # qSize -- chromosome size (query sequence); Full length of the chromosome
+    # qStrand -- strand (query sequence); + or -
+    # qStart -- alignment start position (query sequence); target start;
+    # qEnd -- alignment end position (query sequence); target end;
+    # id -- chain ID
+    #
+    # Block format:
+    # Alignment data lines contain three required attribute values:
+
+    # size dt dq
+    # size -- the size of the ungapped alignment
+    # dt -- the difference between the end of this block and the beginning
+    #       of the next block (reference/target sequence)
+    # dq -- the difference between the end of this block and the beginning
+    #       of the next block (query sequence)
+    #
+    # The last line of the alignment section contains only one number: the
+    # ungapped alignment size of the last block.
+    #
+    setup_gzip(
+        root_path / "liftover_chain" / "liftover.chain.gz",
+        convert_to_tab_separated("""
+        chain 4900 foo 104 + 4 104 chrFoo 100 + 0 96 1
+        48 4 0
+        48 0 0
+        0
+        """),
+    )
     setup_genome(
         root_path / "target_genome" / "genome.fa",
         textwrap.dedent(f"""
-            >chr1
-            {25 * 'AGCT'}
-            >chr2
-            {25 * 'AGCT'}
+            >chrFoo
+            {25 * 'ACGT'}
+            >chrBar
+            {25 * 'ACGT'}
+            >chrBaz
+            {25 * 'ACGT'}
             """),
     )
     setup_genome(
         root_path / "source_genome" / "genome.fa",
         textwrap.dedent(f"""
-            >1
-            NNNN{12 * 'AGCT'}NNNN{12 * 'AGCT'}
-            >2
-            NNNN{12 * 'AGCT'}NNNN{12 * 'AGCT'}
+            >foo
+            NNNN{12 * 'ACGT'}NNNN{12 * 'ACGT'}
+            >bar
+            NNNN{12 * 'ACGT'}NNNNNN{12 * 'ACGT'}
+            >baz
+            NNNN{12 * 'TGCA'}NNNNNNNN{12 * 'TGCA'}
             """),
     )
-    setup_gzip(
-        root_path / "liftover_chain" / "liftover.chain.gz",
-        convert_to_tab_separated("""
-        chain||4900||1||48||+||4||52||chr1||48||+||1||49||1
-        48 0 0
-        0
-        chain||4900||1||48||+||55||103||chr1||48||+||48||96||2
-        48 0 0
-        0
-        """),
-    )
+
     return build_filesystem_test_repository(root_path)
 
 
-@pytest.mark.parametrize("spos, expected", [
-    (("1", 4), None),
-    (("1", 5), ("chr1", 1, "+", 4900)),
-    (("1", 6), ("chr1", 2, "+", 4900)),
-    (("1", 7), ("chr1", 3, "+", 4900)),
-    (("1", 14), ("chr1", 10, "+", 4900)),
-    (("1", 52), ("chr1", 48, "+", 4900)),  # Chain file is kind of broken
-    (("1", 53), None),
-    (("1", 55), None),
-    (("1", 56), ("chr1", 48, "+", 4900)),
-    (("1", 80), ("chr1", 72, "+", 4900)),
-    (("2", 56), None),
+@pytest.mark.parametrize("schrom, spos, expected", [
+    ("foo", 3, None),
+    ("foo", 4, None),
+    ("foo", 5, ("chrFoo", 1, "+", 4900)),
+    ("foo", 6, ("chrFoo", 2, "+", 4900)),
+    ("foo", 7, ("chrFoo", 3, "+", 4900)),
+    ("foo", 14, ("chrFoo", 10, "+", 4900)),
+    ("foo", 51, ("chrFoo", 47, "+", 4900)),
+    ("foo", 52, ("chrFoo", 48, "+", 4900)),
+    ("foo", 53, None),
+    ("foo", 54, None),
+    ("foo", 55, None),
+    ("foo", 56, None),
+    ("foo", 57, ("chrFoo", 49, "+", 4900)),
+    ("foo", 58, ("chrFoo", 50, "+", 4900)),
+    ("foo", 80, ("chrFoo", 72, "+", 4900)),
+    ("foo", 103, ("chrFoo", 95, "+", 4900)),
+    ("foo", 104, ("chrFoo", 96, "+", 4900)),
+    ("foo", 105, None),
+    ("bar", 5, None),
 ])
 def test_liftover_chain_fixture(
-        spos: tuple[str, int],
+        schrom: str,
+        spos: int,
         expected: Optional[tuple[str, int, str, int]],
         grr_fixture: GenomicResourceRepo) -> None:
     res = grr_fixture.get_resource("liftover_chain")
@@ -101,8 +148,7 @@ def test_liftover_chain_fixture(
 
     assert liftover_chain is not None
     liftover_chain.open()
-    chrom, pos = spos
-    lo_coordinates = liftover_chain.convert_coordinate(chrom, pos)
+    lo_coordinates = liftover_chain.convert_coordinate(schrom, spos)
     assert lo_coordinates == expected
 
 
@@ -114,12 +160,12 @@ def test_vcf_liftover_simple(
         tmp_path / "in.vcf.gz", textwrap.dedent("""
 ##fileformat=VCFv4.2
 ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
-##contig=<ID=1>
-##contig=<ID=2>
+##contig=<ID=foo>
+##contig=<ID=bar>
 #CHROM POS ID REF ALT QUAL FILTER INFO FORMAT mom1 dad1 ch1
-1      5   .  A   C   .    .      .    GT     0/0  0/0  0/1
-1      6   .  G   T   .    .      .    GT     0/1  0/0  0/0
-1      7   .  C   A   .    .      .    GT     0/0  1/0  0/1
+foo    5   .  A   C   .    .      .    GT     0/0  0/0  0/1
+foo    6   .  C   T   .    .      .    GT     0/1  0/0  0/0
+foo    7   .  G   A   .    .      .    GT     0/0  1/0  0/1
         """))
 
     out_vcf = tmp_path / "liftover"

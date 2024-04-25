@@ -25,13 +25,13 @@ def mock_get_sequence(_: str, start: int, stop: int) -> str:
             "chr1",
             10000,
             lambda c, p: (c, p + 1000, "+", ""),
-            "chr1", 11001,
+            "chr1", 11000,
         ),
         (
             "chr1",
             10000,
             lambda c, p: (c, p + 2000, "+", ""),
-            "chr1", 12001,
+            "chr1", 12000,
         ),
         (
             "chr1",

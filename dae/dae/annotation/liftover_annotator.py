@@ -120,10 +120,9 @@ class LiftOverAnnotator(AnnotatorBase):
 
             if lo_strand == "+" or \
                     len(allele.reference) == len(allele.alternative):
-                lo_pos += 1
+                pass
             elif lo_strand == "-":
                 lo_pos -= len(allele.reference)
-                lo_pos -= 1
 
             _tr_pos, tr_ref, tr_alt = trim_str_left(
                 allele.position, allele.reference, allele.alternative)
