@@ -543,6 +543,7 @@ class PrepareVariables(PreparePersons):
         tmp_table_name = self._instrument_tmp_table_name("pheno_common")
         cursor = self.connection.cursor()
 
+        cursor.sql("SET GLOBAL pandas_analyze_sample=100000")
         cursor.sql(
             f"CREATE TABLE {tmp_table_name} AS "
             "SELECT * FROM pheno_common_df",
