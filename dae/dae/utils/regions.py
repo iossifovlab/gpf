@@ -268,7 +268,7 @@ class Region:
     @staticmethod
     def from_str(region: str) -> Region:
         """Parse string representation of a region."""
-        parts = [p.strip() for p in region.split(":")]
+        parts = [p.strip() for p in region.rsplit(":", maxsplit=1)]
         if len(parts) == 1:
             return Region(parts[0], None, None)
         if len(parts) == 2:
