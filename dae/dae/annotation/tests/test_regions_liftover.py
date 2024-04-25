@@ -63,17 +63,6 @@ def fixture_repo(
             NNNN{12 * 'ACGT'}NNNN{12 * 'ACGT'}
             """),
     )
-    # setup_gzip(
-    #     root_path / "liftover_chain" / "liftover.chain.gz",
-    #     convert_to_tab_separated("""
-    #     chain||4900||1||48||+||4||52||chr1||48||+||1||49||1
-    #     48 0 0
-    #     0
-    #     chain||4900||1||48||+||55||103||chr1||48||+||48||96||2
-    #     48 0 0
-    #     0
-    #     """),
-    # )
     setup_gzip(
         root_path / "liftover_chain" / "liftover.chain.gz",
         convert_to_tab_separated("""

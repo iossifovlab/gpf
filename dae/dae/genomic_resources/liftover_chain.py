@@ -126,5 +126,4 @@ def build_liftover_chain_from_resource(
             resource.resource_id, resource.get_type(), config)
         raise ValueError(f"wrong resource type: {config}")
 
-    result = LiftoverChain(resource)
-    return result
+    return LiftoverChain(resource)

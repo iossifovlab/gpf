@@ -1,4 +1,4 @@
-from typing import Callable, Dict, Optional
+from typing import Callable, Optional
 
 from importlib_metadata import EntryPoint, entry_points
 
@@ -6,10 +6,10 @@ from .repository import GenomicResource
 from .repository_factory import build_genomic_resource_repository
 from .resource_implementation import GenomicResourceImplementation
 
-_FOUND_RESOURCE_IMPLEMENTATIONS: Dict[str, EntryPoint] = {}
+_FOUND_RESOURCE_IMPLEMENTATIONS: dict[str, EntryPoint] = {}
 
 
-_REGISTERED_RESOURCE_IMPLEMENTATIONS: Dict[
+_REGISTERED_RESOURCE_IMPLEMENTATIONS: dict[
     str, Callable[[GenomicResource], GenomicResourceImplementation]] = {}
 
 
