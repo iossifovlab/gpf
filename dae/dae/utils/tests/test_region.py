@@ -26,6 +26,7 @@ from dae.utils.regions import (
         ("chr1:1", Region("chr1", 1, 1)),
         ("chr1:1,000,000-2,000,000", Region("chr1", 1_000_000, 2_000_000)),
         ("chr1_KI270706v1_random", Region("chr1_KI270706v1_random")),
+        ("HLA-A*01:01:01:01:1-2", Region("HLA-A*01:01:01:01", 1, 2)),
     ],
 )
 def test_parse_regions(region: str, expected: Region) -> None:
