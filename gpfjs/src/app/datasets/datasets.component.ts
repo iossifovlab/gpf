@@ -109,9 +109,11 @@ export class DatasetsComponent implements OnInit, OnDestroy {
 
       if (!this.isToolEnabled(this.selectedDataset, toolName)) {
         this.router.navigate(['/', 'datasets', this.selectedDataset.id, firstTool]);
+        this.selectedTool = firstTool;
+      } else {
+        this.selectedTool = toolName;
       }
     }
-    this.selectedTool = firstTool;
   }
 
   private isToolEnabled(dataset: Dataset, toolName: string): boolean {
