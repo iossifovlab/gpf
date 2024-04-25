@@ -6,7 +6,6 @@ from collections import defaultdict
 from collections.abc import Iterator, Sequence
 from typing import Any, Optional, Union
 
-import networkx as nx
 import pysam
 
 logger = logging.getLogger(__name__)
@@ -20,28 +19,6 @@ def coalesce(v1: Optional[int], v2: int) -> int:
     if v1 is not None:
         return v1
     return v2
-
-
-def bedfile2regions(bed_filename: str) -> list[BedRegion]:
-    """Transform BED file into list of regions."""
-    with open(bed_filename) as infile:
-        regions = []
-        for line in infile:
-            if line[0] == "#":
-                continue
-            chrom, sbeg, send = line.strip().split("\t")
-            beg = int(sbeg)
-            end = int(send)
-            regions.append(BedRegion(chrom, beg + 1, end))
-        return regions
-
-
-def regions2bedfile(regions: list[BedRegion], bed_filename: str) -> None:
-    """Save list of regions into a BED file."""
-    with open(bed_filename, "w") as outfile:
-        for reg in regions:
-            outfile.write(
-                f"{reg.chrom}\t{reg.start - 1}\t{reg.stop}\n")
 
 
 def split_into_regions(
@@ -99,12 +76,12 @@ def get_chromosome_length_tabix(
                 left = pos
             else:
                 right = pos
-        return right
-
     except ValueError as ex:
         logger.warning(
             "unable to find length of contig %s: %s", chrom, ex)
         return None
+    else:
+        return right
 
 
 class Region:
@@ -170,9 +147,7 @@ class Region:
 
         if self.start and pos < self.start:
             return False
-        if self.stop and pos > self.stop:
-            return False
-        return True
+        return not self.stop or pos <= self.stop
 
     @staticmethod
     def _min(a: Optional[int], b: Optional[int]) -> Optional[int]:
@@ -196,9 +171,8 @@ class Region:
     ) -> Optional[Region]:
         if chrom is None:
             return None
-        if start is not None and stop is not None:
-            if start > stop:
-                return None
+        if start is not None and stop is not None and start > stop:
+            return None
         return Region(chrom, start, stop)
 
     def intersection(self, other: Region) -> Optional[Region]:
@@ -218,7 +192,8 @@ class Region:
             return self._make_region(
                 self.chrom, self._max(self.start, other.start), other.stop)
 
-        assert self.start is not None and self.stop is not None
+        assert self.start is not None
+        assert self.stop is not None
         return self._make_region(
             self.chrom,
             self._max(self.start, other.start),
@@ -243,7 +218,8 @@ class Region:
                 return other.start >= self.start
             return False
 
-        assert self.start is not None and self.stop is not None
+        assert self.start is not None
+        assert self.stop is not None
         if other.stop is None or other.start is None:
             return False
         return self.start <= other.start \
@@ -319,41 +295,8 @@ class BedRegion(Region):
         return self.stop - self.start
 
 
-def all_regions_from_chrom(regions: list[Region], chrom: str) -> list[Region]:
-    """Subset of regions in R that are from chr."""
-    return [r for r in regions if r.chrom == chrom]
-
-
-def unique_regions(regions: list[Region]) -> list[Region]:
-    """Remove duplicated regions."""
-    return list(set(regions))
-
-
-def connected_component(regions: list[BedRegion]) -> Any:
-    """Return connected component of regions.
-
-    This might be the same as collapse.
-    """
-    graph = nx.Graph()
-
-    graph.add_nodes_from(regions)
-    regions_by_chrom = defaultdict(list)
-    for reg in regions:
-        regions_by_chrom[reg.chrom].append(reg)
-
-    for _chrom, nds in regions_by_chrom.items():
-        nds.sort(key=lambda x: x.stop)
-        for k in range(1, len(nds)):
-            for j in range(k - 1, -1, -1):
-                if nds[k].start <= nds[j].stop:
-                    graph.add_edge(nds[k], nds[j])
-                else:
-                    break
-    return nx.connected_components(graph)
-
-
 def collapse(
-    source: Sequence[Region],
+    source: Sequence[Region], *,
     is_sorted: bool = False,
 ) -> list[Region]:
     """Collapse list of regions."""
@@ -389,150 +332,3 @@ def collapse(
     for v in list(collapsed.values()):
         result.extend(v)
     return result
-
-
-def collapse_no_chrom(
-    source: list[BedRegion],
-    is_sorted: bool = False,
-) -> list[BedRegion]:
-    """Collapse by ignoring the chromosome.
-
-    Useful when the caller knows
-    that all the regions are from the same chromosome.
-    """
-    if not source:
-        return source
-    regions = copy.copy(source)
-    if len(regions) == 1:
-        return regions
-
-    if not is_sorted:
-        regions.sort(key=lambda x: x.start)
-
-    collapsed = [regions[0]]
-    for reg in regions[1:]:
-        prev_reg = collapsed[-1]
-        if reg.start <= prev_reg.stop:
-            if reg.stop > prev_reg.stop:
-                prev_reg = BedRegion(prev_reg.chrom, prev_reg.start, reg.stop)
-                collapsed[-1] = prev_reg
-            continue
-
-        collapsed.append(reg)
-
-    return collapsed
-
-
-def total_length(regions: list[BedRegion]) -> int:
-    return sum(len(regions) for x in regions)
-
-
-def intersection(
-    regions1: list[Region], regions2: list[Region],
-) -> list[Region]:
-    """Compute intersection of two list of regions.
-
-    First collapses each for lists of regions s1 and s2 and then find
-    the intersection.
-    """
-    s1_c = collapse(regions1)
-    s2_c = collapse(regions2)
-    s1_c.sort(key=lambda x: (x.chrom, x.start))
-    s2_c.sort(key=lambda x: (x.chrom, x.start))
-
-    intersect = []
-
-    k = 0
-
-    for i in s2_c:
-        while k < len(s1_c):
-            if i.chrom != s1_c[k].chrom:
-                if i.chrom > s1_c[k].chrom:
-                    k += 1
-                    continue
-                break
-            if coalesce(i.stop, 1) < coalesce(s1_c[k].start, 1):
-                break
-            if coalesce(i.start, 1) > coalesce(s1_c[k].stop, MAX_POSITION):
-                k += 1
-                continue
-            if coalesce(i.start, 1) <= coalesce(s1_c[k].start, 1):
-                if coalesce(i.stop, MAX_POSITION) >= \
-                        coalesce(s1_c[k].stop, MAX_POSITION):
-                    intersect.append(s1_c[k])
-                    k += 1
-                    continue
-                new_i = Region(i.chrom, s1_c[k].start, i.stop)
-                intersect.append(new_i)
-                break
-            if coalesce(i.start, 1) > coalesce(s1_c[k].start, 1):
-                if coalesce(i.stop, MAX_POSITION) <= \
-                        coalesce(s1_c[k].stop, MAX_POSITION):
-                    intersect.append(i)
-                    break
-                new_i = Region(i.chrom, i.start, s1_c[k].stop)
-                intersect.append(new_i)
-                k += 1
-                continue
-
-    return intersect
-
-
-def union(*r: list[Region]) -> list[Region]:
-    """Collapse many lists of regions."""
-    r_sum = [el for list in r for el in list]
-    return collapse(r_sum)
-
-
-def _diff(
-    regions_a: list[Region], regions_b: list[Region],
-) -> list[Region]:
-    result = []
-    k = 0
-
-    for reg_a in regions_a:
-        if k >= len(regions_b):
-            result.append(reg_a)
-            continue
-        if reg_a.chrom < regions_b[k].chrom:
-            result.append(reg_a)
-            continue
-        if coalesce(reg_a.stop, MAX_POSITION) < \
-                coalesce(regions_b[k].start, 1):
-            result.append(reg_a)
-            continue
-        prev = coalesce(reg_a.start, 1)
-        while k < len(regions_b) \
-                and coalesce(regions_b[k].stop, MAX_POSITION) <= \
-                coalesce(reg_a.stop, MAX_POSITION) \
-                and regions_b[k].chrom == reg_a.chrom:
-            if prev < coalesce(regions_b[k].start, 1):
-                new_a = Region(
-                    reg_a.chrom, prev,
-                    coalesce(regions_b[k].start, 1) - 1)
-                result.append(new_a)
-            prev = coalesce(regions_b[k].stop, 1) + 1
-            k += 1
-        if k < len(regions_b) and regions_b[k].chrom != reg_a.chrom:
-            continue
-        if prev <= coalesce(reg_a.stop, MAX_POSITION):
-            result.append(Region(reg_a.chrom, prev, reg_a.stop))
-
-    return result
-
-
-def difference(
-    regions1: list[Region], regions2: list[Region],
-    symmetric: bool = False,
-) -> list[Region]:
-    """Compute difference between two list of regions."""
-    if not symmetric:
-        left = collapse(regions1)
-        left.sort(key=lambda x: (x.chrom, x.start))
-    else:
-        left = union(regions1, regions2)
-        left.sort(key=lambda x: (x.chrom, x.start))
-
-    right = intersection(regions1, regions2)
-
-    return _diff(left, right)
