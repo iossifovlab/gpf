@@ -63,6 +63,22 @@ and install the `gpf_impala_storage` package using:
 pip install -e impala_storage
 ```
 
+#### Apache Impala2 genotype storage
+
+To use ore develop features for GPF impala genotype storage you need some
+additional dependencies installed. From `gpf` root directory update your `gpf`
+conda environment using:
+
+```bash
+mamba env update --name gpf --file ./impala2_storage/impala2-environment.yml
+```
+
+and install the `gpf_impala2_storage` package using:
+
+```bash
+pip install -e impala2_storage
+
+
 #### GCP genotype storage
 
 If you want support for genotype storage on Google Cloud Platform (GCP) using
