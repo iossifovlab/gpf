@@ -654,13 +654,10 @@ class FsspecReadWriteProtocol(
 
 
 def build_local_resource(
-        dirname: str, config: Dict[str, Any]) -> GenomicResource:
+        dirname: str, config: dict[str, Any]) -> GenomicResource:
     """Build a resource from a local filesystem directory."""
     proto = build_fsspec_protocol("d", dirname)
-    resource = GenomicResource(
-        dirname, (0, ), proto,
-        config)
-    return resource
+    return GenomicResource(".", (0, ), proto, config)
 
 
 FsspecRepositoryProtocol = Union[
