@@ -1,6 +1,5 @@
 import { Injectable } from '@angular/core';
 import { State, Action, StateContext } from '@ngxs/store';
-import { GeneProfilesTableConfig } from './gene-profiles-table';
 
 export class SetGeneProfilesTabs {
   public static readonly type = '[Genotype] Set gene profiles tabs';
@@ -35,10 +34,10 @@ export class SetGeneProfilesOrderBy {
   ) {}
 }
 
-export class SetGeneProfilesConfig {
+export class SetGeneProfilesHeader {
   public static readonly type = '[Genotype] Set gene profiles config';
   public constructor(
-    public config: GeneProfilesTableConfig
+    public headerLeaves: string[]
   ) {}
 }
 
@@ -48,7 +47,7 @@ export interface GeneProfilesModel {
     highlightedRows: Set<string>;
     sortBy: string;
     orderBy: string;
-    config: GeneProfilesTableConfig;
+    headerLeaves: string[];
 }
 
 @State<GeneProfilesModel>({
@@ -59,7 +58,7 @@ export interface GeneProfilesModel {
     highlightedRows: new Set<string>(),
     sortBy: '',
     orderBy: 'desc',
-    config: null
+    headerLeaves: []
   },
 })
 @Injectable()
@@ -114,13 +113,13 @@ export class GeneProfilesState {
     });
   }
 
-  @Action(SetGeneProfilesConfig)
+  @Action(SetGeneProfilesHeader)
   public setGeneProfilesConfig(
     ctx: StateContext<GeneProfilesModel>,
-    action: SetGeneProfilesConfig
+    action: SetGeneProfilesHeader
   ): void {
     ctx.patchState({
-      config: action.config
+      headerLeaves: action.headerLeaves
     });
   }
 }

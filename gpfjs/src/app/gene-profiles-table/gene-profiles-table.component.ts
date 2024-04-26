@@ -16,7 +16,7 @@ import { Store } from '@ngxs/store';
 import {
   GeneProfilesModel,
   GeneProfilesState,
-  SetGeneProfilesConfig,
+  SetGeneProfilesHeader,
   SetGeneProfilesHighlightedRows,
   SetGeneProfilesOrderBy,
   SetGeneProfilesSearchValue,
@@ -45,6 +45,7 @@ export class GeneProfilesTableComponent extends StatefulComponent implements OnI
   public showKeybinds = false;
 
   public leaves: GeneProfilesColumn[];
+  public leavesIds: string[] = [];
   public genes = [];
   public shownRows: number[] = []; // indexes
   public highlightedGenes: Set<string> = new Set();
@@ -73,7 +74,6 @@ export class GeneProfilesTableComponent extends StatefulComponent implements OnI
   public tabs = new Set<string>();
   public hideTable = false;
   public currentTabGeneSet= new Set<string>();
-  public isStateLoaded = false;
   public currentTabString = 'all genes';
 
   public constructor(
@@ -116,11 +116,9 @@ export class GeneProfilesTableComponent extends StatefulComponent implements OnI
   public ngOnChanges(): void {
     if (this.config) {
       this.viewportPageCount = Math.ceil(window.innerHeight / (this.baseRowHeight * this.config.pageSize));
+      this.setLeavesVisibility();
       this.calculateHeaderLayout();
       this.fillTable();
-      if (this.isStateLoaded) {
-        this.store.dispatch(new SetGeneProfilesConfig(this.config));
-      }
     }
   }
 
@@ -205,7 +203,6 @@ export class GeneProfilesTableComponent extends StatefulComponent implements OnI
         this.tabs = state.openedTabs;
         this.geneInput = state.searchValue;
         this.highlightedGenes = state.highlightedRows;
-        this.config = state.config;
         this.orderBy = state.orderBy;
         if (state.sortBy) {
           this.sortBy = state.sortBy;
@@ -213,14 +210,35 @@ export class GeneProfilesTableComponent extends StatefulComponent implements OnI
           this.sortBy = this.defaultSortBy;
           this.store.dispatch(new SetGeneProfilesSortBy(this.sortBy));
         }
+        this.leavesIds = state.headerLeaves;
       });
 
     this.search(this.geneInput);
-    this.isStateLoaded = true;
+  }
+
+  public setLeavesVisibility(): void {
+    if (this.leavesIds.length) {
+      this.leaves = GeneProfilesColumn.allLeaves(this.config.columns);
+      this.leaves.map(leaf => {
+        if (this.leavesIds.includes(leaf.id)) {
+          leaf.visibility = true;
+        } else {
+          leaf.visibility = false;
+        }
+      });
+    }
   }
 
   public calculateHeaderLayout(): void {
     this.leaves = GeneProfilesColumn.leaves(this.config.columns);
+
+    this.leavesIds = [];
+    this.leaves.map(leaf => {
+      if (leaf.visibility) {
+        this.leavesIds.push(leaf.id);
+      }
+    });
+
     this.nothingFoundWidth = (this.leaves.length * 110) + 40; // must match .table-row values
     let columnIdx = 0;
     const maxDepth: number = Math.max(...this.leaves.map(leaf => leaf.depth));
@@ -234,6 +252,8 @@ export class GeneProfilesTableComponent extends StatefulComponent implements OnI
     for (const column of this.config.columns) {
       GeneProfilesColumn.calculateGridColumn(column);
     }
+
+    this.store.dispatch(new SetGeneProfilesHeader(this.leavesIds));
   }
 
   public search(value: string): void {
