@@ -1,12 +1,11 @@
 """Factory for creation of annotation pipeline."""
 
-# import collections
 import copy
 import fnmatch
 import logging
 from collections import Counter
 from textwrap import dedent
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Optional
 
 import yaml
 
@@ -66,7 +65,7 @@ def get_annotator_factory(
     return _ANNOTATOR_FACTORY_REGISTRY[annotator_type]
 
 
-def get_available_annotator_types() -> List[str]:
+def get_available_annotator_types() -> list[str]:
     """Return the list of all registered annotator factory types."""
     _load_annotator_factory_plugins()
     return list(_ANNOTATOR_FACTORY_REGISTRY.keys())
@@ -94,7 +93,7 @@ class AnnotationConfigParser:
     """Parser for annotation configuration."""
 
     @staticmethod
-    def normalize(pipeline_config: List[Any]) -> List[Dict]:
+    def normalize(pipeline_config: list[Any]) -> list[dict]:
         """Return a normalized annotation pipeline configuration."""
         result = []
 
@@ -159,13 +158,11 @@ class AnnotationConfigParser:
     @staticmethod
     def has_wildcard(string: str) -> bool:
         """Ascertain whether a string contains a valid wildcard."""
-        if "*" in string:
-            if "[" not in string or string.index("*") < string.index("["):
-                # We assert that at least one wildcard symbol is present
-                # in the resource id itself, since '*' can also be used
-                # in the label query as well.
-                return True
-        return False
+        # Check if at least one wildcard symbol is present
+        # in the resource id itself, since '*' can also be used
+        # in the label query as well (within square bracket)
+        return "*" in string \
+            and ("[" not in string or string.index("*") < string.index("["))
 
     @staticmethod
     def parse_minimal(raw: str, idx: int) -> AnnotatorInfo:
@@ -278,7 +275,7 @@ class AnnotationConfigParser:
         """Parse annotation pipeline configuration string."""
         try:
             pipeline_raw_config = yaml.safe_load(content)
-        except Exception as error:  # pylint: disable=broad-except
+        except yaml.YAMLError as error:
             if source_file_name is None:
                 raise AnnotationConfigurationError(
                     f"The pipeline configuration {content} is an invalid yaml "
@@ -292,13 +289,13 @@ class AnnotationConfigParser:
     @staticmethod
     def parse_config_file(
         filename: str, grr: Optional[GenomicResourceRepo],
-    ) -> List[AnnotatorInfo]:
+    ) -> list[AnnotatorInfo]:
         """Parse annotation pipeline configuration file."""
         logger.info("loading annotation pipeline configuration: %s", filename)
         try:
             with open(filename, "rt", encoding="utf8") as infile:
                 content = infile.read()
-        except Exception as error:
+        except OSError as error:
             raise AnnotationConfigurationError(
                 f"Problem reading the contents of the {filename} file.",
                 error) from error
@@ -332,9 +329,9 @@ class AnnotationConfigParser:
 
         assert source is not None
         if not isinstance(name, str):
-            message = "The name for in an attribute " + \
-                      f"config {attribute_config} should be a string"
-            raise ValueError(message)
+            message = ("The name for in an attribute "
+                       f"config {attribute_config} should be a string")
+            raise TypeError(message)
 
         parameters = {k: v for k, v in attribute_config.items()
                       if k not in ["name", "source", "internal"]}
@@ -346,7 +343,7 @@ class AnnotationConfigParser:
         """Parse annotator pipeline attribute configuration."""
         if not isinstance(raw_attributes_config, list):
             message = "The attributes parameters should be a list."
-            raise ValueError(message)
+            raise TypeError(message)
 
         attribute_config = []
         for raw_attribute_config in raw_attributes_config:
@@ -370,6 +367,7 @@ def build_annotation_pipeline(
         grr_repository: Optional[GenomicResourceRepo] = None,
         grr_repository_file: Optional[str] = None,
         grr_repository_definition: Optional[dict] = None,
+        *,
         allow_repeated_attributes: bool = False,
 ) -> AnnotationPipeline:
     """Build an annotation pipeline."""
@@ -400,8 +398,8 @@ def build_annotation_pipeline(
 
     pipeline = AnnotationPipeline(grr_repository)
 
-    for annotator_config in pipeline_config:
-        try:
+    try:
+        for annotator_config in pipeline_config:
             builder = get_annotator_factory(annotator_config.type)
             annotator = builder(pipeline, annotator_config)
             annotator = InputAnnotableAnnotatorDecorator.decorate(annotator)
@@ -409,14 +407,14 @@ def build_annotation_pipeline(
             check_for_unused_parameters(annotator_config)
             check_for_repeated_attributes_in_annotator(annotator_config)
             pipeline.add_annotator(annotator)
-        except ValueError as value_error:
-            raise AnnotationConfigurationError(
-                f"The {annotator_config.annotator_id} annotator"
-                f" configuration is incorrect: ",
-                value_error) from value_error
+    except ValueError as value_error:
+        raise AnnotationConfigurationError(
+            f"The {annotator_config.annotator_id} annotator"
+            f" configuration is incorrect: ",
+            value_error) from value_error
 
     check_for_repeated_attributes_in_pipeline(
-        pipeline, allow_repeated_attributes,
+        pipeline, allow_repeated_attributes=allow_repeated_attributes,
     )
 
     return pipeline
@@ -429,9 +427,8 @@ def copy_annotation_pipeline(
     infos = []
     for annotator in pipeline.annotators:
         src = annotator.get_info()
-        attributes = []
-        for src_attr in src.attributes:
-            attributes.append(AttributeInfo(
+        attributes = [
+            AttributeInfo(
                 src_attr.name,
                 src_attr.source,
                 src_attr.internal,
@@ -439,7 +436,8 @@ def copy_annotation_pipeline(
                 src_attr.type,
                 src_attr.description,
                 src_attr.documentation,
-            ))
+            ) for src_attr in src.attributes
+        ]
         infos.append(AnnotatorInfo(
             src.type,
             attributes,
@@ -479,7 +477,7 @@ def check_for_repeated_attributes_in_annotator(
 
 
 def check_for_repeated_attributes_in_pipeline(
-    pipeline: AnnotationPipeline, allow_repeated_attributes: bool = False,
+    pipeline: AnnotationPipeline, *, allow_repeated_attributes: bool = False,
 ) -> None:
     """Check for repeated attributes in pipeline configuration."""
     pipeline_names_set = Counter(att.name for att in pipeline.get_attributes())
