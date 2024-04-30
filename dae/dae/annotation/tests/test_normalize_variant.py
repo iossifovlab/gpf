@@ -12,6 +12,7 @@ from dae.annotation.annotation_factory import (
 from dae.annotation.normalize_allele_annotator import (
     NormalizeAlleleAnnotator,
     normalize_allele,
+    normalize_variant,
 )
 from dae.genomic_resources.reference_genome import (
     ReferenceGenome,
@@ -36,8 +37,7 @@ def example_1_genome() -> ReferenceGenome:
         """),
         "chr.fa.fai": "1\t11\t3\t11\t12\n",
     })
-    genome = build_reference_genome_from_resource(res)
-    return genome
+    return build_reference_genome_from_resource(res)
 
 
 @pytest.mark.parametrize("beg,end,seq", [
@@ -70,8 +70,7 @@ def example_2_genome() -> ReferenceGenome:
         """),
         "chr.fa.fai": "1\t14\t3\t14\t15\n",
     })
-    genome = build_reference_genome_from_resource(res)
-    return genome
+    return build_reference_genome_from_resource(res)
 
 
 @pytest.mark.parametrize("beg,end,seq", [
@@ -136,6 +135,30 @@ def test_example_2_normalize(
         assert normalized.pos == 3, (allele, normalized)
         assert normalized.ref == "GCA", (allele, normalized)
         assert normalized.alt == "G", (allele, normalized)
+
+
+@pytest.mark.parametrize("pos,ref,alts", [
+    (1, "GGGCA", ["GGG", "GGCCA"]),
+    (2, "GGCA", ["GG", "GCCA"]),
+    (3, "GCA", ["G", "CCA"]),
+])
+def test_example_2_normalize_variant(
+        example_2_genome: ReferenceGenome,
+        pos: int, ref: str, alts: list[str]) -> None:
+
+    with example_2_genome.open() as genome:
+        check_ref = genome.get_sequence("1", pos, pos + len(ref) - 1)
+        assert ref == check_ref
+
+        nchrom, npos, nref, nalts = normalize_variant(
+            "1", pos, ref, alts, genome)
+
+        assert nchrom == "1"
+        assert len(nalts) == 2
+        assert nref == "GCA"
+        assert npos == 3
+
+        assert nalts == ["G", "CCA"]
 
 
 def test_normalize_allele_annotator_config() -> None:
@@ -255,7 +278,6 @@ def test_normalize_allele_annotator_pipeline_schema(
 
 @pytest.mark.parametrize("pos,ref,alt,npos, nref, nalt", [
     (8, "C", "C", 8, "C", "C"),
-    (1, "G", "G", 1, "G", "G"),
     (1, "G", "G", 1, "G", "G"),
     (1, "GGGCA", "GGGCA", 1, "G", "G"),
     (4, "CA", "CA", 4, "C", "C"),

@@ -33,9 +33,10 @@ class NormalizeAlleleAnnotator(AnnotatorBase):
         if genome_resrouce_id is None:
             genome = get_genomic_context().get_reference_genome()
             if genome is None:
-                raise ValueError("The {info}  has no reference genome "
-                                 "specified and a genome is missing in "
-                                 "the context.")
+                raise ValueError(
+                    f"The {info}  has no reference genome "
+                    f"specified and a genome is missing in "
+                    f"the context.")
         else:
             resource = pipeline.repository.get_resource(genome_resrouce_id)
             genome = build_reference_genome_from_resource(resource)
@@ -43,8 +44,12 @@ class NormalizeAlleleAnnotator(AnnotatorBase):
 
         info.resources += [genome.resource]
         if not info.attributes:
-            info.attributes = [AttributeInfo("normalized_allele",
-                                             "normalized_allele", True, {})]
+            info.attributes = [
+                AttributeInfo(
+                    "normalized_allele",
+                    "normalized_allele",
+                    True,  # noqa FBT003
+                    {})]
         super().__init__(pipeline, info, {
             "normalized_allele": ("annotatable", "Normalized allele."),
         })
@@ -76,35 +81,59 @@ def normalize_allele(allele: VCFAllele, genome: ReferenceGenome) -> VCFAllele:
     Using algorithm defined in
     following https://genome.sph.umich.edu/wiki/Variant_Normalization
     """
+    chrom, pos, ref, alts = normalize_variant(
+        allele.chrom, allele.pos, allele.ref, [allele.alt], genome)
+    return VCFAllele(chrom, pos, ref, alts[0])
+
+
+def normalize_variant(
+    chrom: str,
+    pos: int,
+    ref: str,
+    alts: list[str],
+    genome: ReferenceGenome,
+) -> tuple[str, int, str, list[str]]:
+    """Normalize a variant.
+
+    Using algorithm defined in
+    the https://genome.sph.umich.edu/wiki/Variant_Normalization
+    """
+
     while True:
         changed = False
-        logger.debug("normalizing allele: %s", allele)
+        logger.debug("normalizing variant: %s:%d %s>%s", chrom, pos, ref, alts)
 
-        if len(allele.ref) > 0 and len(allele.alt) > 0 \
-                and allele.ref[-1] == allele.alt[-1]:
-            logger.debug("shrink from right: %s", allele)
-            if allele.ref == allele.alt and len(allele.ref) == 1:
-                logger.warning("no variant: %s", allele)
+        if len(ref) > 0 and all(len(alt) > 0
+                and ref[-1] == alt[-1] for alt in alts):
+            logger.debug(
+                "shrink from right: %s:%d %s>%s", chrom, pos, ref, alts)
+            if all(ref == alt for alt in alts) and len(ref) == 1:
+                logger.info(
+                    "no variant: %s:%d %s>%s", chrom, pos, ref, alts)
             else:
-                allele = VCFAllele(
-                    allele.chrom, allele.pos, allele.ref[:-1], allele.alt[:-1])
+                ref = ref[:-1]
+                alts = [alt[:-1] for alt in alts]
                 changed = True
 
-        if len(allele.ref) == 0 or len(allele.alt) == 0:
-            logger.debug("moving left allele: %s", allele)
+        if pos > 1 and (
+                len(ref) == 0 or
+                any(len(alt) == 0 for alt in alts)):
+            logger.debug(
+                "moving left variant: %s:%d %s>%s", chrom, pos, ref, alts)
             left = genome.get_sequence(
-                allele.chrom, allele.pos - 1, allele.pos - 1)
-            allele = VCFAllele(
-                allele.chrom, allele.pos - 1,
-                f"{left}{allele.ref}", f"{left}{allele.alt}")
+                chrom, pos - 1, pos - 1)
+            pos -= 1
+            ref = f"{left}{ref}"
+            alts = [f"{left}{alt}" for alt in alts]
             changed = True
 
         if not changed:
             break
 
-    while len(allele.ref) >= 2 and len(allele.alt) >= 2 \
-            and allele.ref[0] == allele.alt[0]:
-        allele = VCFAllele(
-            allele.chrom, allele.pos + 1, allele.ref[1:], allele.alt[1:])
+    while len(ref) >= 2 and all(len(alt) >= 2
+            and ref[0] == alt[0] for alt in alts):
+        pos += 1
+        ref = ref[1:]
+        alts = [alt[1:] for alt in alts]
 
-    return allele
+    return chrom, pos, ref, alts

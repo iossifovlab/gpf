@@ -90,15 +90,8 @@ def str2fgt(fgt: str) -> np.ndarray:
     for idx, col in enumerate(cols):
         tokens = col.split("/")
 
-        if tokens[0] == ".":
-            v_0 = -1
-        else:
-            v_0 = int(tokens[0])
-
-        if tokens[1] == ".":
-            v_1 = -1
-        else:
-            v_1 = int(tokens[1])
+        v_0 = -1 if tokens[0] == "." else int(tokens[0])
+        v_1 = -1 if tokens[1] == "." else int(tokens[1])
 
         result[0][idx] = v_0
         result[1][idx] = v_1
@@ -160,9 +153,9 @@ def is_all_unknown_genotype(gt: np.ndarray) -> bool:
 
 def trim_str_left(pos: int, ref: str, alt: str) -> tuple[int, str, str]:
     """Trim identical nucleotides prefixes and adjust position accordingly."""
-    assert alt and ref, (pos, ref, alt)
+    assert alt and ref, (pos, ref, alt)  # noqa PT018
     idx = 0
-    for idx, sequence in enumerate(zip(ref, alt)):
+    for idx, sequence in enumerate(zip(ref, alt)):  # noqa B007
         if sequence[0] != sequence[1]:
             break
 
@@ -184,7 +177,7 @@ def trim_str_right(pos: int, ref: str, alt: str) -> tuple[int, str, str]:
     assert ref, (pos, ref, alt)
 
     idx = 0
-    for idx, sequence in enumerate(zip(ref[::-1], alt[::-1])):
+    for idx, sequence in enumerate(zip(ref[::-1], alt[::-1])):  # noqa B007
         if sequence[0] != sequence[1]:
             break
     # not made simple
@@ -253,9 +246,9 @@ def trim_parsimonious(pos: int, ref: str, alt: str) -> tuple[int, str, str]:
 def get_locus_ploidy(
         chrom: str, pos: int, sex: Sex, genome: ReferenceGenome) -> int:
 
-    if chrom in ("chrX", "X") and sex == Sex.M:
-        if not genome.is_pseudoautosomal(chrom, pos):
-            return 1
+    if chrom in ("chrX", "X") and sex == Sex.M and \
+            not genome.is_pseudoautosomal(chrom, pos):
+        return 1
     return 2
 
 
