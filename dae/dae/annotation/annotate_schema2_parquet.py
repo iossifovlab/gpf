@@ -1,5 +1,6 @@
 import argparse
 import os
+import pathlib
 import sys
 from glob import glob
 from typing import Optional
@@ -59,23 +60,6 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
         TaskGraphCli.add_arguments(parser)
         VerbosityConfiguration.set_arguments(parser)
         return parser
-
-    @staticmethod
-    def get_contig_lengths(ref_genome: ReferenceGenome) -> dict[str, int]:
-        """Collect all contigs and their lengths from the ref genome."""
-        result = {}
-        prefix = ref_genome.chrom_prefix
-        contigs = {f"{prefix}{i}" for i in (*range(1, 23), "X")}
-        other_contigs = set(ref_genome.chromosomes) - contigs
-        max_len = 0
-        for contig in contigs:
-            if contig in ref_genome.chromosomes:
-                result[contig] = ref_genome.get_chrom_length(contig)
-        if other_contigs:
-            for contig in other_contigs:
-                max_len = max(max_len, ref_genome.get_chrom_length(contig))
-            result["other"] = max_len
-        return result
 
     @staticmethod
     def annotate(
@@ -151,8 +135,7 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
             raise ValueError("Invalid family dir in output layout!")
 
         # Write metadata
-        with open(self.args.pipeline, "r") as infile:
-            raw_annotation = infile.read()
+        raw_annotation = pathlib.Path(self.args.pipeline).read_text()
         meta_keys = ["annotation_pipeline"]
         meta_values = [raw_annotation]
         for k, v in loader.meta.items():
@@ -174,14 +157,16 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
             target_is_directory=True,
         )
 
-        if self.gpf_instance is None:
-            genome = self.context.get_reference_genome()
-            if genome is None:
-                raise ValueError("Could not get a valid reference genome!")
-        else:
-            genome = self.gpf_instance.reference_genome
+        if "reference_genome" not in loader.meta:
+            raise ValueError("No reference genome found in study metadata!")
+        genome = ReferenceGenome(
+            self.grr.get_resource(loader.meta["reference_genome"]))
 
-        contig_lens = AnnotateSchema2ParquetTool.get_contig_lengths(genome)
+        contig_lens = {}
+        contigs = loader.contigs if loader.contigs else genome.chromosomes
+        for contig in contigs:
+            contig_lens[contig] = genome.get_chrom_length(contig)
+
         regions = [
             f"{contig}:{start}-{start + self.args.region_size}"
             for contig, length in contig_lens.items()
