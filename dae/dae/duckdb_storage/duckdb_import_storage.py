@@ -47,7 +47,10 @@ class DuckDbImportStorage(Schema2ImportStorage):
         study_config.update({
             "genotype_storage": {
                 "id": genotype_storage.storage_id,
-                "tables": {"pedigree": study_tables.pedigree},
+                "tables": {
+                    "pedigree": study_tables.pedigree,
+                    "meta": study_tables.meta
+                },
             },
             "genotype_browser": {"enabled": False},
         })

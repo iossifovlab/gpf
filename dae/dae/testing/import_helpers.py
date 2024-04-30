@@ -128,6 +128,24 @@ def setup_import_project(
     return project
 
 
+def pedigree_import(
+    root_path: pathlib.Path,
+    study_id: str,
+    ped_path: pathlib.Path,
+    gpf_instance: GPFInstance,
+    project_config_update: Optional[dict[str, Any]] = None,
+    project_config_overwrite: Optional[dict[str, Any]] = None,
+    project_config_replace: Optional[dict[str, Any]] = None,
+) -> ImportProject:
+    """Import a VCF study and return the import project."""
+    study = StudyInputLayout(study_id, ped_path, [], [], [], [])
+    return setup_import_project(
+        root_path, study, gpf_instance,
+        project_config_update=project_config_update,
+        project_config_overwrite=project_config_overwrite,
+        project_config_replace=project_config_replace)
+
+
 def vcf_import(
     root_path: pathlib.Path,
     study_id: str,

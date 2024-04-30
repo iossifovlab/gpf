@@ -35,11 +35,13 @@ class Schema2DatasetLayout:
 
 
 def schema2_dataset_layout(study_dir: str) -> Schema2DatasetLayout:
+    summary = fs_utils.join(study_dir, "summary")
+    family = fs_utils.join(study_dir, "family")
     return Schema2DatasetLayout(
         study_dir,
         fs_utils.join(study_dir, "pedigree", "pedigree.parquet"),
-        fs_utils.join(study_dir, "summary"),
-        fs_utils.join(study_dir, "family"),
+        summary if fs_utils.exists(summary) else None,
+        family if fs_utils.exists(family) else None,
         fs_utils.join(study_dir, "meta", "meta.parquet"))
 
 
