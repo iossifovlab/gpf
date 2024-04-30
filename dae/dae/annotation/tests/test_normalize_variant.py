@@ -11,6 +11,7 @@ from dae.annotation.annotation_factory import (
 )
 from dae.annotation.normalize_allele_annotator import (
     NormalizeAlleleAnnotator,
+    maximally_extend_variant,
     normalize_allele,
     normalize_variant,
 )
@@ -318,3 +319,27 @@ def test_normalize_allele_annotator_resources(
         assert {res.get_id() for res in annotator.resources} == {
             "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/genome",
         }
+
+
+@pytest.mark.parametrize("pos,ref,alt", [
+    (8, "CA", ""),
+    (6, "CAC", "C"),
+    (3, "GCACA", "GCA"),
+    (2, "GGCA", "GG"),
+    (3, "GCA", "G"),
+])
+def test_example_2_maximally_extend_variant(
+        example_2_genome: ReferenceGenome,
+        pos: int, ref: str, alt: str) -> None:
+
+    with example_2_genome.open() as genome:
+        check_ref = genome.get_sequence("1", pos, pos + len(ref) - 1)
+        assert ref == check_ref
+
+        mchrom, mpos, mref, malts = maximally_extend_variant(
+            "1", pos, ref, [alt], genome)
+
+        assert mchrom
+        assert mpos == 3
+        assert mref == "GCACACACAG"
+        assert malts[0] == "GCACACAG"

@@ -1,4 +1,5 @@
 """Provides normalize allele annotator and helpers."""
+import itertools
 import logging
 from typing import Any
 
@@ -136,4 +137,39 @@ def normalize_variant(
         ref = ref[1:]
         alts = [alt[1:] for alt in alts]
 
+    return chrom, pos, ref, alts
+
+
+def maximally_extend_variant(
+    chrom: str,
+    pos: int,
+    ref: str,
+    alts: list[str],
+    genome: ReferenceGenome,
+) -> tuple[str, int, str, list[str]]:
+    """Maximally extend a variant."""
+    chrom, pos, ref, alts = normalize_variant(chrom, pos, ref, alts, genome)
+    if not all(alt[0] == ref[0] for alt in alts):
+        left = genome.get_sequence(chrom, pos - 1, pos - 1)
+        pos -= 1
+        ref = f"{left}{ref}"
+        alts = [f"{left}{alt}" for alt in alts]
+    if not all(alt[-1] == ref[-1] for alt in alts):
+        right = genome.get_sequence(chrom, pos + len(ref), pos + len(ref))
+        ref = f"{ref}{right}"
+        alts = [f"{alt}{right}" for alt in alts]
+    while True:
+        changed = False
+        for (s1, s2) in itertools.pairwise([ref, *alts]):
+            if len(s1) > len(s2):
+                s1, s2 = s2, s1
+            if s2.startswith(s1) or s2.endswith(s1):
+                right = genome.get_sequence(
+                    chrom, pos + len(ref), pos + len(ref))
+                ref = f"{ref}{right}"
+                alts = [f"{alt}{right}" for alt in alts]
+                changed = True
+                break
+        if not changed:
+            break
     return chrom, pos, ref, alts
