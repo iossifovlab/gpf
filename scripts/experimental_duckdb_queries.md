@@ -2588,3 +2588,149 @@ FROM family_variants
 LIMIT 10;
 
 ```
+
+## Experiment with DuckDb storage without summary and family data
+
+```sql
+EXPLAIN ANALYZE WITH summary AS (
+  SELECT
+    *
+  FROM AGRE_WG38_CSHL_859_SCHEMA2_summary AS sa
+), family AS (
+  SELECT
+    *
+  FROM AGRE_WG38_CSHL_859_SCHEMA2_family AS fa
+)
+SELECT
+  fa.bucket_index,
+  fa.summary_index,
+  fa.family_index,
+  sa.allele_index,
+  sa.effect_gene,
+FROM summary AS sa
+JOIN family AS fa
+USING (sj_index)
+LIMIT 10;
+```
+
+
+```sql
+WITH summary AS (
+  SELECT
+    *
+  FROM AGRE_WG38_CSHL_859_SCHEMA2_summary AS sa
+), family AS (
+  SELECT
+    *
+  FROM AGRE_WG38_CSHL_859_SCHEMA2_family AS fa
+)
+SELECT
+  MAX(length(sa.summary_variant_data))
+FROM summary AS sa
+JOIN family AS fa
+USING (sj_index)
+WHERE sa.region_bin = 'chr1_0' AND fa.region_bin = 'chr1_0';
+```
+
+
+```
+┌─────────────────────────────────────────┐
+│ median(length(sa.summary_variant_data)) │
+│                 double                  │
+├─────────────────────────────────────────┤
+│                                  2401.0 │
+└─────────────────────────────────────────┘
+```
+
+```
+┌──────────────────────────────────────┐
+│ max(length(sa.summary_variant_data)) │
+│                int64                 │
+├──────────────────────────────────────┤
+│                                 5616 │
+└──────────────────────────────────────┘
+```
+
+```sql
+WITH summary AS (
+  SELECT
+    *
+  FROM AGRE_WG38_CSHL_859_SCHEMA2_summary AS sa
+), family AS (
+  SELECT
+    *
+  FROM AGRE_WG38_CSHL_859_SCHEMA2_family AS fa
+)
+SELECT
+  MEDIAN(length(fa.family_variant_data))
+FROM summary AS sa
+JOIN family AS fa
+USING (sj_index)
+WHERE sa.region_bin = 'chr1_0' AND fa.region_bin = 'chr1_0';
+```
+```
+┌─────────────────────────────────────┐
+│ max(length(fa.family_variant_data)) │
+│                int64                │
+├─────────────────────────────────────┤
+│                                 370 │
+└─────────────────────────────────────┘
+```
+```
+┌────────────────────────────────────────┐
+│ median(length(fa.family_variant_data)) │
+│                 double                 │
+├────────────────────────────────────────┤
+│                                  250.0 │
+└────────────────────────────────────────┘
+```
+
+Impala schema1 maximal variant length is:
+
+```sql
+select max(length(variant_data)) from agre_wg38_859_variants where region_bin = "chr1_0";
+```
+```
++---------------------------+
+| max(length(variant_data)) |
++---------------------------+
+| 2180                      |
++---------------------------+
+```
+
+```sql
+select appx_median(length(variant_data)) from agre_wg38_859_variants where region_bin = "chr1_0";
+```
+
+```
++-----------------------------------+
+| appx_median(length(variant_data)) |
++-----------------------------------+
+| 832                               |
++-----------------------------------+
+```
+
+
+## Try with variants data
+
+```sql
+EXPLAIN ANALYZE WITH summary AS (
+  SELECT
+    *
+  FROM AGRE_WG38_CSHL_859_SCHEMA2_summary AS sa
+), family AS (
+  SELECT
+    *
+  FROM AGRE_WG38_CSHL_859_SCHEMA2_family AS fa
+)
+SELECT
+  fa.bucket_index,
+  fa.summary_index,
+  fa.family_index,
+  sa.allele_index,
+  fa.family_variant_data,
+  sa.summary_variant_data,
+FROM summary AS sa
+JOIN family AS fa
+USING (sj_index);
+```
