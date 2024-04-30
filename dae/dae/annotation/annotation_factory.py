@@ -3,7 +3,9 @@
 import copy
 import fnmatch
 import logging
+import pathlib
 from collections import Counter
+from dataclasses import dataclass
 from textwrap import dedent
 from typing import Any, Callable, Optional
 
@@ -87,6 +89,13 @@ def register_annotator_factory(
     if annotator_type in _ANNOTATOR_FACTORY_REGISTRY:
         logger.warning("overwriting annotator type: %s", annotator_type)
     _ANNOTATOR_FACTORY_REGISTRY[annotator_type] = factory
+
+
+@dataclass
+class AnnotationConfigPreambule:
+    reference_genome: str
+    description: str
+    metadata: dict[str, Any]
 
 
 class AnnotationConfigParser:
@@ -211,6 +220,31 @@ class AnnotationConfigParser:
         )
 
     @staticmethod
+    def parse_preambule(
+        pipeline_filename: Optional[str] = None,
+        pipeline_str: Optional[str] = None,
+        pipeline_raw: Optional[list[dict[str, Any]]] = None,
+    ) -> Optional[AnnotationConfigPreambule]:
+        """Extract the preambule section of a pipeline config, if present."""
+        if pipeline_filename is not None:
+            pipeline_str = pathlib.Path(pipeline_filename).read_text()
+        if pipeline_str is not None:
+            pipeline_raw = yaml.safe_load(pipeline_str)
+        if pipeline_raw is None:
+            return None
+
+        if len(pipeline_raw) == 0:
+            return None
+        if "preambule" not in pipeline_raw[0]:
+            return None
+        raw = pipeline_raw[0]["preambule"]
+        return AnnotationConfigPreambule(
+            raw["reference_genome"],
+            raw["description"],
+            raw["metadata"],
+        )
+
+    @staticmethod
     def parse_raw(
         pipeline_raw_config: Optional[list[dict[str, Any]]],
         grr: Optional[GenomicResourceRepo] = None,
@@ -223,6 +257,12 @@ class AnnotationConfigParser:
         if not isinstance(pipeline_raw_config, list):
             raise AnnotationConfigurationError(
                 "The annotation is not a list of annotator configurations.")
+
+        # check for preambule and skip if present
+        if len(pipeline_raw_config) > 0:
+            first = pipeline_raw_config[0]
+            if isinstance(first, dict) and "preambule" in first:
+                pipeline_raw_config.pop(0)
 
         result = []
         for idx, raw_cfg in enumerate(pipeline_raw_config):

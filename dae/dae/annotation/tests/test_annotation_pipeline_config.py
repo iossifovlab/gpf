@@ -5,7 +5,10 @@ import textwrap
 
 import pytest
 
-from dae.annotation.annotation_factory import AnnotationConfigParser
+from dae.annotation.annotation_factory import (
+    AnnotationConfigParser,
+    AnnotationConfigPreambule,
+)
 from dae.annotation.annotation_pipeline import AnnotatorInfo, AttributeInfo
 from dae.genomic_resources import build_genomic_resource_repository
 from dae.genomic_resources.repository import GenomicResourceRepo
@@ -377,3 +380,38 @@ def test_wildcard_label_substring(test_grr: GenomicResourceRepo) -> None:
             annotator_id="A0_score_two",
         ),
     ]
+
+
+def test_parse_preambule() -> None:
+    preambule = AnnotationConfigParser.parse_preambule(pipeline_str="""
+        - preambule:
+            reference_genome: acgt_genome
+            description: lorem ipsum
+            metadata:
+                foo: bar
+                authors:
+                    - pesho
+                    - gosho
+                subdata:
+                    a: b
+    """)
+
+    assert preambule == AnnotationConfigPreambule(
+        "acgt_genome", "lorem ipsum", {
+            "foo": "bar",
+            "authors": ["pesho", "gosho"],
+            "subdata": {"a": "b"},
+        },
+    )
+
+
+def test_parse_preambule_empty_config() -> None:
+    assert AnnotationConfigParser.parse_preambule(pipeline_str="") is None
+
+
+def test_parse_preambule_no_preambule() -> None:
+    assert AnnotationConfigParser.parse_preambule(pipeline_str="""
+        - annotator:
+            attributes:
+            - att1
+    """) is None
