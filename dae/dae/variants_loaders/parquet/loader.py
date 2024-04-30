@@ -163,7 +163,10 @@ class ParquetLoader:
         self.partition_descriptor = PartitionDescriptor.parse_string(
             self.meta.get("partition_description", "").strip(),
         )
-        self.contigs = self.meta.get("contigs", "").split(",")
+
+        self.contigs = []
+        if "contigs" in self.meta:
+            self.contigs = self.meta["contigs"].split(",")
 
     @staticmethod
     def _extract_region_bin(path: str) -> tuple[str, int]:
