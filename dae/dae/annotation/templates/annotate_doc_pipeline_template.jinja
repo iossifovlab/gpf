@@ -24,7 +24,6 @@
 
         .resource {
             background-color: rgb(233, 151, 151);
-
         }
     </style>
 </head>
@@ -49,7 +48,7 @@
                     <tr>
                         {%- for genomic_resource in annotator_info.resources %}
                         <td class="resource">
-                            <p><b>Ressource</b></p>
+                            <p><b>Resource</b></p>
                             <p>id: <a href="{{genomic_resource.get_url()}}/index.html">
                                     {{genomic_resource.get_id()}}</a></p>                            
                             <p>type: {{genomic_resource.get_type()}}</p>
