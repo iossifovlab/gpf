@@ -1,6 +1,5 @@
 import logging
 import os
-import re
 from typing import Any, Optional, Union, cast
 
 from django.conf import settings
@@ -11,15 +10,12 @@ from query_base.query_base import QueryBaseView
 from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
-from studies.study_wrapper import (
-    StudyWrapper,
-    StudyWrapperBase,
-)
+from studies.study_wrapper import StudyWrapper, StudyWrapperBase
 
 from dae.studies.study import GenotypeData
 from datasets_api.permissions import get_wdae_parents, user_has_permission
 
-from .models import Dataset
+from .models import Dataset, DatasetHierarchy
 
 logger = logging.getLogger(__name__)
 
@@ -35,10 +31,14 @@ def augment_accessibility(
     return dataset
 
 
-def augment_with_groups(dataset: dict[str, Any]) -> dict[str, Any]:
+def augment_with_groups(
+    dataset: dict[str, Any], db_dataset: Optional[Dataset] = None,
+) -> dict[str, Any]:
+    """Add groups to response object."""
     # pylint: disable=no-member
-    dataset_object = Dataset.objects.get(dataset_id=dataset["id"])
-    serializer = GroupSerializer(dataset_object.groups.all(), many=True)
+    if db_dataset is None:
+        db_dataset = Dataset.objects.get(dataset_id=dataset["id"])
+    serializer = GroupSerializer(db_dataset.groups.all(), many=True)
     dataset["groups"] = serializer.data
     return dataset
 
@@ -53,7 +53,6 @@ def augment_with_parents(
         )
     ]
     return dataset
-
 
 def produce_description_hierarchy(
     dataset: GenotypeData,
@@ -125,9 +124,24 @@ class DatasetView(QueryBaseView):
             for dataset in datasets
         ]
 
+        db_datasets = {
+            ds.dataset_id: ds
+            for ds in Dataset.objects.prefetch_related("groups")
+        }
+
+        parents = DatasetHierarchy.get_direct_datasets_parents(
+            self.instance_id,
+            db_datasets.values(),
+        )
+
         res = [augment_accessibility(self.instance_id, ds, user) for ds in res]
-        res = [augment_with_groups(ds) for ds in res]
-        res = [augment_with_parents(self.instance_id, ds) for ds in res]
+        res = [augment_with_groups(ds, db_datasets[ds["id"]]) for ds in res]
+
+        for result in res:
+            result["parents"] = []
+            if result["id"] in parents:
+                result["parents"] = [parents[result["id"]].dataset_id]
+
         return res
 
     def get(
@@ -176,12 +190,12 @@ class DatasetView(QueryBaseView):
             visible_datasets = self.gpf_instance.get_visible_datasets()
             visible_datasets = visible_datasets if visible_datasets else []
             genotype_data_ids = [
-                id for id in dataset.get_studies_ids()
-                if id in visible_datasets and id != dataset.study_id
+                gd_id for gd_id in dataset.get_studies_ids()
+                if gd_id in visible_datasets and gd_id != dataset.study_id
             ]
             if genotype_data_ids:
                 descriptions = produce_description_hierarchy(
-                    raw_study, genotype_data_ids
+                    raw_study, genotype_data_ids,
                 )
                 res["children_description"] = (
                     "\nThis dataset includes:\n"
