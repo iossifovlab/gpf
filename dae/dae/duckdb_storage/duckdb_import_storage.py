@@ -21,7 +21,9 @@ class DuckDbImportStorage(Schema2ImportStorage):
             cls, project: ImportProject) -> Schema2DatasetLayout:
         genotype_storage = project.get_genotype_storage()
         assert isinstance(genotype_storage, DuckDbGenotypeStorage)
-        layout = schema2_dataset_layout(project.get_parquet_dataset_dir())
+        layout = schema2_dataset_layout(
+            project.get_parquet_dataset_dir(), existing=True
+        )
         return genotype_storage.import_dataset(
             project.study_id, layout, project.get_partition_descriptor())
 
