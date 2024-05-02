@@ -17,6 +17,10 @@ from dae.genomic_resources.reference_genome import (
     ReferenceGenome,
     build_reference_genome_from_resource,
 )
+from dae.genomic_resources.variant_utils import (
+    maximally_extend_variant,
+    normalize_variant,
+)
 from dae.utils.variant_utils import reverse_complement, trim_str_left
 
 from .annotatable import Annotatable, CNVAllele, Position, Region, VCFAllele
@@ -211,3 +215,46 @@ class LiftOverAnnotator(AnnotatorBase):
             return None
         return CNVAllele(
             region.chrom, region.pos, region.pos_end, cnv_allele.type)
+
+
+def liftover_allele(
+    chrom: str,
+    pos: int,
+    ref: str,
+    alt: str,
+    liftover_chain: LiftoverChain,
+    source_genome: ReferenceGenome,
+    target_genome: ReferenceGenome,
+) -> Optional[tuple[str, int, str, list[str]]]:
+    """Liftover a variant."""
+    mchrom, mpos, mref, malts = maximally_extend_variant(
+        chrom, pos, ref, [alt], source_genome)
+
+    malt = malts[0]
+
+    anchor_5prime = mpos
+    anchor_3prime = mpos + max(len(mref), len(malts[0])) - 1
+    lo_anchor_5prime = liftover_chain.convert_coordinate(mchrom, anchor_5prime)
+    lo_anchor_3prime = liftover_chain.convert_coordinate(mchrom, anchor_3prime)
+    if lo_anchor_5prime is None or lo_anchor_3prime is None:
+        return None
+    if lo_anchor_5prime[0] != lo_anchor_3prime[0]:
+        return None
+    tchrom = lo_anchor_5prime[0]
+    tpos = min(lo_anchor_5prime[1], lo_anchor_3prime[1])
+    tend = max(lo_anchor_5prime[1], lo_anchor_3prime[1])
+
+    if lo_anchor_5prime[2] == "-":
+        assert lo_anchor_3prime[2] == "-"
+        mref = reverse_complement(mref)
+        malt = reverse_complement(malt)
+
+    tref = target_genome.get_sequence(tchrom, tpos, tend)
+    if tref == mref:
+        talt = malt
+    elif tref == malt:
+        talt = mref
+    else:
+        return None
+
+    return normalize_variant(tchrom, tpos, tref, [talt], target_genome)
