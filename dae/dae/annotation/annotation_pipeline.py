@@ -138,6 +138,13 @@ class Annotator(abc.ABC):
                 for attribute_info in self._info.attributes}
 
 
+@dataclass
+class AnnotationPreambule:
+    reference_genome: str
+    description: str
+    metadata: dict[str, Any]
+
+
 class AnnotationPipeline:
     """Provides annotation pipeline abstraction."""
 
@@ -146,6 +153,7 @@ class AnnotationPipeline:
 
         self.repository: GenomicResourceRepo = repository
         self.annotators: list[Annotator] = []
+        self.preambule: Optional[AnnotationPreambule] = None
         self._is_open = False
 
     def get_info(self) -> list[AnnotatorInfo]:

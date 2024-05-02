@@ -7,9 +7,12 @@ import pytest
 
 from dae.annotation.annotation_factory import (
     AnnotationConfigParser,
-    AnnotationConfigPreambule,
 )
-from dae.annotation.annotation_pipeline import AnnotatorInfo, AttributeInfo
+from dae.annotation.annotation_pipeline import (
+    AnnotationPreambule,
+    AnnotatorInfo,
+    AttributeInfo,
+)
 from dae.genomic_resources import build_genomic_resource_repository
 from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.testing import convert_to_tab_separated, setup_directories
@@ -396,7 +399,7 @@ def test_parse_preambule() -> None:
                     a: b
     """)
 
-    assert preambule == AnnotationConfigPreambule(
+    assert preambule == AnnotationPreambule(
         "acgt_genome", "lorem ipsum", {
             "foo": "bar",
             "authors": ["pesho", "gosho"],

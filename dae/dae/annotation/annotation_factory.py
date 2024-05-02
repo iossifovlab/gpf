@@ -13,6 +13,7 @@ import yaml
 
 from dae.annotation.annotation_pipeline import (
     AnnotationPipeline,
+    AnnotationPreambule,
     Annotator,
     AnnotatorInfo,
     AttributeInfo,
@@ -89,13 +90,6 @@ def register_annotator_factory(
     if annotator_type in _ANNOTATOR_FACTORY_REGISTRY:
         logger.warning("overwriting annotator type: %s", annotator_type)
     _ANNOTATOR_FACTORY_REGISTRY[annotator_type] = factory
-
-
-@dataclass
-class AnnotationConfigPreambule:
-    reference_genome: str
-    description: str
-    metadata: dict[str, Any]
 
 
 class AnnotationConfigParser:
@@ -224,7 +218,7 @@ class AnnotationConfigParser:
         pipeline_filename: Optional[str] = None,
         pipeline_str: Optional[str] = None,
         pipeline_raw: Optional[list[dict[str, Any]]] = None,
-    ) -> Optional[AnnotationConfigPreambule]:
+    ) -> Optional[AnnotationPreambule]:
         """Extract the preambule section of a pipeline config, if present."""
         if pipeline_filename is not None:
             pipeline_str = pathlib.Path(pipeline_filename).read_text()
@@ -238,7 +232,7 @@ class AnnotationConfigParser:
         if "preambule" not in pipeline_raw[0]:
             return None
         raw = pipeline_raw[0]["preambule"]
-        return AnnotationConfigPreambule(
+        return AnnotationPreambule(
             raw["reference_genome"],
             raw["description"],
             raw["metadata"],
@@ -419,24 +413,35 @@ def build_annotation_pipeline(
         assert grr_repository_file is None
         assert grr_repository_definition is None
 
+    preambule = None
     if pipeline_config_file is not None:
         assert pipeline_config is None
         assert pipeline_config_raw is None
         assert pipeline_config_str is None
         pipeline_config = AnnotationConfigParser.parse_config_file(
             pipeline_config_file, grr=grr_repository)
+        preambule = AnnotationConfigParser.parse_preambule(
+            pipeline_filename=pipeline_config_file,
+        )
     elif pipeline_config_str is not None:
         assert pipeline_config_raw is None
         assert pipeline_config is None
         pipeline_config = AnnotationConfigParser.parse_str(
             pipeline_config_str, grr=grr_repository)
+        preambule = AnnotationConfigParser.parse_preambule(
+            pipeline_str=pipeline_config_str,
+        )
     elif pipeline_config_raw is not None:
         assert pipeline_config is None
         pipeline_config = AnnotationConfigParser.parse_raw(
             pipeline_config_raw, grr=grr_repository)
+        preambule = AnnotationConfigParser.parse_preambule(
+            pipeline_raw=pipeline_config_raw,
+        )
     assert pipeline_config is not None
 
     pipeline = AnnotationPipeline(grr_repository)
+    pipeline.preambule = preambule
 
     try:
         for annotator_config in pipeline_config:
