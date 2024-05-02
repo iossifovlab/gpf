@@ -6,6 +6,7 @@ from dae.genomic_resources.reference_genome import (
     ReferenceGenome,
     build_reference_genome_from_resource,
 )
+from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.genomic_resources.testing import build_inmemory_test_resource
 from dae.genomic_resources.variant_utils import (
     maximally_extend_variant,
@@ -198,3 +199,33 @@ def test_normalize_novariant_allele(
         assert npos == epos
         assert nref == eref
         assert nalts == [ealt]
+
+
+@pytest.mark.parametrize("chrom,pos,ref,alts,epos,eref,ealts", [
+    ("foo", 6, "C", ["G"], 5, "ACG", ["AGG"]),
+    ("foo", 7, "G", ["T", "A"], 6, "CGT", ["CTT", "CAT"]),
+    ("foo", 9, "A", ["T", "AA"], 8, "TAC", ["TTC", "TAAC"]),
+])
+def test_maximally_extend_variant(
+    chrom: str,
+    pos: int,
+    ref: str,
+    alts: list[str],
+    epos: int,
+    eref: str,
+    ealts: list[str],
+    liftover_grr_fixture: GenomicResourceRepo,
+) -> None:
+    res = liftover_grr_fixture.get_resource("source_genome")
+    source_genome = build_reference_genome_from_resource(res).open()
+    assert source_genome is not None
+
+    chec_ref = source_genome.get_sequence(chrom, pos, pos)
+    assert chec_ref == ref
+
+    mchrom, mpos, mref, malts = maximally_extend_variant(
+        chrom, pos, ref, alts, source_genome)
+    assert mchrom == chrom
+    assert mpos == epos
+    assert mref == eref
+    assert malts == ealts
