@@ -232,6 +232,14 @@ class AnnotationConfigParser:
         if "preambule" not in pipeline_raw[0]:
             return None
         raw = pipeline_raw[0]["preambule"]
+
+        if not isinstance(raw["reference_genome"], str):
+            raise TypeError
+        if not isinstance(raw["description"], str):
+            raise TypeError
+        if not isinstance(raw["metadata"], dict):
+            raise TypeError
+
         return AnnotationPreambule(
             raw["reference_genome"],
             raw["description"],

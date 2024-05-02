@@ -30,6 +30,21 @@
 
 <body>
     <h1>Pipeline Documentation</h1>
+    {% if preambule is not none %}
+    <h3>Preambule</h3>
+    <ul>
+        <li>Reference genome: {{preambule.reference_genome}}</li>
+        <li>Description: {{preambule.description}}</li>
+        <li>
+            Metadata:
+            <ul>
+                {%- for k, v in preambule.metadata.items() %}
+                <li>{{k}} = {{v}}</li>
+                {%- endfor %}
+            </ul>
+        </li>
+    </ul>
+    {% endif %}
     <table border="1">
         <tr>
             <th>Attribute</th>
