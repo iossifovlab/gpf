@@ -1,6 +1,6 @@
 import logging
 import os
-from typing import Any, Optional, cast
+from typing import Any, Optional, Union, cast
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -10,7 +10,7 @@ from query_base.query_base import QueryBaseView
 from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
-from studies.study_wrapper import StudyWrapperBase
+from studies.study_wrapper import StudyWrapper, StudyWrapperBase
 
 from dae.studies.study import GenotypeData
 from datasets_api.permissions import get_wdae_parents, user_has_permission
@@ -53,6 +53,48 @@ def augment_with_parents(
         )
     ]
     return dataset
+
+def produce_description_hierarchy(
+    dataset: GenotypeData,
+    selected: list[str],
+    indent_level: int = 0
+) -> str:
+    """Create dataset description hierarchy from dataset children."""
+    if dataset.is_group:
+        res = []
+        indent = "\t" * indent_level
+        for child in dataset.studies:
+            if child.study_id in selected:
+                child_descriptions = produce_description_hierarchy(
+                    child,
+                    selected,
+                    indent_level + 1
+                )
+                res.append(
+                    f"{indent}- **[{child.name}]({child.study_id})** "
+                    f"{get_first_paragraph(child.description)}\n"
+                    f"{child_descriptions}"
+                )
+        return "\n".join(res)
+
+    return ""
+
+
+def get_first_paragraph(
+    text: Union[str, None],
+) -> str:
+    """Get first paragraph of text."""
+    result = ""
+    if text is not None:
+        paragraphs = text.split("\n\n")
+        if paragraphs[0].startswith("#"):
+            title_match = re.match("^##((?:\n|.)*?)$\n", paragraphs[0])
+            result = re.sub("^##((?:\n|.)*?)$\n", "", paragraphs[0]) \
+                if title_match else paragraphs[1]
+        else:
+            result = paragraphs[0]
+
+    return result.replace("\n", " ").strip()
 
 
 class DatasetView(QueryBaseView):
@@ -140,6 +182,25 @@ class DatasetView(QueryBaseView):
         res = augment_accessibility(self.instance_id, res, user)
         res = augment_with_groups(res)
         res = augment_with_parents(self.instance_id, res)
+
+        raw_study = dataset.genotype_data_study \
+            if isinstance(dataset, StudyWrapper) \
+            else dataset.remote_genotype_data
+        if dataset.is_group:
+            visible_datasets = self.gpf_instance.get_visible_datasets()
+            visible_datasets = visible_datasets if visible_datasets else []
+            genotype_data_ids = [
+                gd_id for gd_id in dataset.get_studies_ids()
+                if gd_id in visible_datasets and gd_id != dataset.study_id
+            ]
+            if genotype_data_ids:
+                descriptions = produce_description_hierarchy(
+                    raw_study, genotype_data_ids,
+                )
+                res["children_description"] = (
+                    "\nThis dataset includes:\n"
+                    f"{descriptions}"
+                )
 
         return Response({"data": res})
 
