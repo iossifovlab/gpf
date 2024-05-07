@@ -102,6 +102,24 @@ export class GeneProfilesColumn {
     return result;
   }
 
+  public static allLeaves(
+    columns: GeneProfilesColumn[],
+    parent?: GeneProfilesColumn,
+    depth: number = 1
+  ): GeneProfilesColumn[] {
+    const result: GeneProfilesColumn[] = [];
+    for (const column of columns) {
+      column.parent = parent === null || parent === undefined ? null : parent;
+      column.depth = depth;
+      if (column.columns.length > 0) {
+        result.push(...GeneProfilesColumn.allLeaves(column.columns, column, depth + 1));
+      } else {
+        result.push(column);
+      }
+    }
+    return result;
+  }
+
   public static calculateGridRow(column: GeneProfilesColumn, depth: number): void {
     if (column.gridRow !== null) {
       return;
