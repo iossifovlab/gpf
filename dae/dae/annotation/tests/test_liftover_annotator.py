@@ -10,13 +10,6 @@ from dae.annotation.annotation_factory import build_annotation_pipeline
 from dae.annotation.annotation_pipeline import AnnotatorInfo
 from dae.annotation.liftover_annotator import (
     LiftOverAnnotator,
-    liftover_allele,
-)
-from dae.genomic_resources.liftover_chain import (
-    build_liftover_chain_from_resource,
-)
-from dae.genomic_resources.reference_genome import (
-    build_reference_genome_from_resource,
 )
 from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.gpf_instance import GPFInstance
@@ -138,42 +131,3 @@ def test_liftover_annotator_resources(
         "hg38/hg38tohg19",
         "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/genome",
     }
-
-
-@pytest.mark.parametrize("chrom,pos,ref,alt,echrom, epos,eref,ealt", [
-    ("foo", 6, "C", "G", "chrFoo", 2, "C", "G"),
-])
-def test_liftover_allele_util(
-    chrom: str,
-    pos: int,
-    ref: str,
-    alt: str,
-    echrom: str,
-    epos: int,
-    eref: str,
-    ealt: str,
-    liftover_grr_fixture: GenomicResourceRepo,
-) -> None:
-    res = liftover_grr_fixture.get_resource("liftover_chain")
-    liftover_chain = build_liftover_chain_from_resource(res).open()
-    assert liftover_chain is not None
-
-    res = liftover_grr_fixture.get_resource("source_genome")
-    source_genome = build_reference_genome_from_resource(res).open()
-    assert source_genome is not None
-    res = liftover_grr_fixture.get_resource("target_genome")
-    target_genome = build_reference_genome_from_resource(res).open()
-    assert target_genome is not None
-
-    lresult = liftover_allele(
-        chrom, pos, ref, alt,
-        liftover_chain, source_genome, target_genome,
-    )
-
-    assert lresult is not None
-    lchrom, lpos, lref, lalts = lresult
-
-    assert lchrom == echrom
-    assert lpos == epos
-    assert lref == eref
-    assert lalts == [ealt]

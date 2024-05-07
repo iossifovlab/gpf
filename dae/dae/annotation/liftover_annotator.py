@@ -227,9 +227,27 @@ def liftover_allele(
     target_genome: ReferenceGenome,
 ) -> Optional[tuple[str, int, str, list[str]]]:
     """Liftover a variant."""
-    mchrom, mpos, mref, malts = maximally_extend_variant(
+    nchrom, npos, nref, nalts = normalize_variant(
         chrom, pos, ref, [alt], source_genome)
+    assert len(nalts) == 1
 
+    if len(nref) == 1 and len(nalts[0]) == 1:
+        # liftover substitution
+        lo_coordinates = liftover_chain.convert_coordinate(nchrom, npos)
+        if lo_coordinates is None:
+            return None
+        tchrom, tpos, tstrand, _ = lo_coordinates
+        tref = target_genome.get_sequence(tchrom, tpos, tpos)
+        if tstrand == "-":
+            tref = reverse_complement(tref)
+        if tref == nref:
+            talt = nalts[0]
+        elif tref == nalts[0]:
+            talt = nref
+        return normalize_variant(tchrom, tpos, tref, [talt], target_genome)
+
+    mchrom, mpos, mref, malts = maximally_extend_variant(
+        nchrom, npos, nref, nalts, source_genome)
     malt = malts[0]
 
     anchor_5prime = mpos
