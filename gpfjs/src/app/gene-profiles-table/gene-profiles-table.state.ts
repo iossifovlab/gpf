@@ -58,7 +58,7 @@ export interface GeneProfilesModel {
     searchValue: '',
     highlightedRows: new Set<string>(),
     sortBy: '',
-    orderBy: '',
+    orderBy: 'desc',
     config: null
   },
 })
