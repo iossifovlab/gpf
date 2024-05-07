@@ -51,6 +51,7 @@ def cli(raw_args: Optional[list[str]] = None) -> None:
     env = Environment(loader=PackageLoader("dae.annotation", "templates"))
     template = env.get_template("annotate_doc_pipeline_template.jinja")
     html_doc = template.render(annotation_pipeline_info=annotation_info,
+                               preambule=pipeline.preambule,
                                markdown=markdown)
     if args.output:
         with open(args.output, "w") as outfile:

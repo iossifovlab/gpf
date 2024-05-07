@@ -26,6 +26,7 @@ setuptools.setup(
     package_data={
         "dae": ["py.typed"],
         "dae.dask": ["named_cluster.yaml"],
+        "dae.annotation": ["templates/annotate_doc_pipeline_template.jinja"],
     },
     scripts=[
         "dae/tools/generate_denovo_gene_sets.py",

@@ -24,13 +24,27 @@
 
         .resource {
             background-color: rgb(233, 151, 151);
-
         }
     </style>
 </head>
 
 <body>
     <h1>Pipeline Documentation</h1>
+    {%- if preambule is not none %}
+    <h3>Preambule</h3>
+    <ul>
+        <li>Reference genome: {{preambule.reference_genome}}</li>
+        <li>Description: {{preambule.description}}</li>
+        <li>
+            Metadata:
+            <ul>
+                {%- for k, v in preambule.metadata.items() %}
+                <li>{{k}} = {{v}}</li>
+                {%- endfor %}
+            </ul>
+        </li>
+    </ul>
+    {%- endif %}
     <table border="1">
         <tr>
             <th>Attribute</th>
@@ -49,7 +63,7 @@
                     <tr>
                         {%- for genomic_resource in annotator_info.resources %}
                         <td class="resource">
-                            <p><b>Ressource</b></p>
+                            <p><b>Resource</b></p>
                             <p>id: <a href="{{genomic_resource.get_url()}}/index.html">
                                     {{genomic_resource.get_id()}}</a></p>                            
                             <p>type: {{genomic_resource.get_type()}}</p>
