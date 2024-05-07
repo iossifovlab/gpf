@@ -27,6 +27,11 @@ def t4c8_instance(tmp_path: pathlib.Path) -> GPFInstance:
                 directory: {root_path!s}
             """),
             "pipeline_config.yaml": textwrap.dedent("""
+                - preambule:
+                    reference_genome: acgt
+                    description: sample description
+                    metadata:
+                        a: b
                 - position_score: one
             """),
             "one": {
@@ -97,6 +102,17 @@ def test_annotate_doc(
 
 <body>
     <h1>Pipeline Documentation</h1>
+    <h3>Preambule</h3>
+    <ul>
+        <li>Reference genome: acgt</li>
+        <li>Description: sample description</li>
+        <li>
+            Metadata:
+            <ul>
+                <li>a = b</li>
+            </ul>
+        </li>
+    </ul>
     <table border="1">
         <tr>
             <th>Attribute</th>

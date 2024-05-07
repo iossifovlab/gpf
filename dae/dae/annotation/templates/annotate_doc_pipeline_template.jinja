@@ -30,7 +30,7 @@
 
 <body>
     <h1>Pipeline Documentation</h1>
-    {% if preambule is not none %}
+    {%- if preambule is not none %}
     <h3>Preambule</h3>
     <ul>
         <li>Reference genome: {{preambule.reference_genome}}</li>
@@ -44,7 +44,7 @@
             </ul>
         </li>
     </ul>
-    {% endif %}
+    {%- endif %}
     <table border="1">
         <tr>
             <th>Attribute</th>
