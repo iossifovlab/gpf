@@ -125,8 +125,21 @@ def liftover_ex4_grr(
     setup_gzip(
         root_path / "liftover_chain" / "liftover.chain.gz",
         convert_to_tab_separated("""
-        chain 4900 22 40 + 20 40 chr22 20 + 0 20 4a
+        chain 2200 22 40 + 20 40 chr22 20 + 0 20 4a
         20 0 0
+        0
+
+        chain 1800 18 40 + 20 40 chr18 20 + 0 20 4b
+        20 0 0
+        0
+
+        chain 2300 X 40 + 20 40 chrX 20 + 0 20 4c
+        20 0 0
+        0
+
+        chain 2100 21 40 + 20 39 chr21 20 + 0 20 4d
+        9 1 2
+        9 0 0
         0
 
         """),
@@ -137,6 +150,15 @@ def liftover_ex4_grr(
             >22
             NNNNNNNNNNNNNNNNNNNN
             NNNATAAAGACATAAANNNN
+            >18
+            NNNNNNNNNNNNNNNNNNNN
+            NNAATTGGCGATGTTTCTTG
+            >X
+            NNNNNNNNNNNNNNNNNNNN
+            NNNGTGAGACTTATCTANNN
+            >21
+            NNNNNNNNNNNNNNNNNNNN
+            NNNTTCTTTCTTTTTTNNNN
             """),
     )
     setup_genome(
@@ -144,6 +166,12 @@ def liftover_ex4_grr(
         textwrap.dedent("""
             >chr22
             NNNATAAAGGCATAAANNNN
+            >chr18
+            NNAATTGGTGATGCTTCTTG
+            >chrX
+            NNNGTGAGATTTATCTANNN
+            >chr21
+            NNNNTTCTTTTTTTTTTTNN
             """),
     )
 
@@ -151,7 +179,9 @@ def liftover_ex4_grr(
 
 
 @pytest.mark.parametrize("schrom,spos,sref,tchrom,tpos,tref,strand,qual", [
-    ("22", 30, "A", "chr22", 10, "G", "+", 4900),
+    ("22", 30, "A", "chr22", 10, "G", "+", 2200),
+    ("18", 29, "C", "chr18", 9, "T", "+", 1800),
+    ("X", 30, "C", "chrX", 10, "T", "+", 2300),
 ])
 def test_ex4_fixture(
     liftover_ex4_grr: GenomicResourceRepo,
@@ -184,3 +214,51 @@ def test_ex4_fixture(
     lo_coordinates = liftover_chain.convert_coordinate(schrom, spos)
     assert lo_coordinates is not None
     assert lo_coordinates == (tchrom, tpos, strand, qual)
+
+
+def test_ex4d_fixture(
+    liftover_ex4_grr: GenomicResourceRepo,
+) -> None:
+
+    res = liftover_ex4_grr.get_resource("liftover_chain")
+    liftover_chain = build_liftover_chain_from_resource(res)
+
+    res = liftover_ex4_grr.get_resource("target_genome")
+    target_genome = build_reference_genome_from_resource(res)
+    res = liftover_ex4_grr.get_resource("source_genome")
+    source_genome = build_reference_genome_from_resource(res)
+
+    assert target_genome is not None
+    assert source_genome is not None
+    assert liftover_chain is not None
+
+    liftover_chain.open()
+    source_genome.open()
+    target_genome.open()
+
+    s_ref = source_genome.get_sequence("21", 30, 30)
+    assert s_ref == "C"
+    t_ref = target_genome.get_sequence("chr21", 10, 10)
+    assert t_ref == "T"
+
+    lo_coordinates = liftover_chain.convert_coordinate("21", 30)
+    assert lo_coordinates is None
+    lo_start = liftover_chain.convert_coordinate("21", 30 - 1)
+    assert lo_start is not None
+    lo_end = liftover_chain.convert_coordinate("21", 30 + 1)
+    assert lo_end is not None
+
+    chrom, start_pos, strand, qual = lo_start
+    assert chrom == "chr21"
+    assert start_pos == 9
+    assert strand == "+"
+    assert qual == 2100
+
+    chrom, end_pos, strand, qual = lo_end
+    assert chrom == "chr21"
+    assert end_pos == 12
+    assert strand == "+"
+    assert qual == 2100
+
+    t_ref = target_genome.get_sequence("chr21", start_pos, end_pos)
+    assert t_ref == "TTTT"
