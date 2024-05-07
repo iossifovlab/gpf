@@ -205,9 +205,14 @@ export class GeneProfilesTableComponent extends StatefulComponent implements OnI
         this.tabs = state.openedTabs;
         this.geneInput = state.searchValue;
         this.highlightedGenes = state.highlightedRows;
-        this.sortBy = state.sortBy;
-        this.orderBy = state.orderBy;
         this.config = state.config;
+        this.orderBy = state.orderBy;
+        if (state.sortBy) {
+          this.sortBy = state.sortBy;
+        } else {
+          this.sortBy = this.defaultSortBy;
+          this.store.dispatch(new SetGeneProfilesSortBy(this.sortBy));
+        }
       });
 
     this.search(this.geneInput);
