@@ -8,6 +8,7 @@ import { isEmpty } from 'lodash';
 import { DatasetNode } from 'app/dataset-node/dataset-node';
 import { Store } from '@ngxs/store';
 import { StateResetAll } from 'ngxs-reset-plugin';
+import { GeneProfilesState } from 'app/gene-profiles-table/gene-profiles-table.state';
 
 @Component({
   selector: 'gpf-datasets',
@@ -179,7 +180,7 @@ export class DatasetsComponent implements OnInit, OnDestroy {
     /* In order to have state separation between the dataset tools,
     we clear the state if the previous url is from a different dataset tool */
     if (DatasetsComponent.previousUrl !== url && DatasetsComponent.previousUrl.startsWith('/datasets')) {
-      this.store.dispatch(new StateResetAll());
+      this.store.dispatch(new StateResetAll(GeneProfilesState));
     }
 
     this.selectedTool = url.split('/').pop();
