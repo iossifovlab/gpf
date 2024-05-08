@@ -143,8 +143,8 @@ class AnnotationPreambule:
     input_reference_genome: str
     title: str
     summary: str
-    authors: str
     description: str
+    authors: str
     metadata: dict[str, Any]
 
 

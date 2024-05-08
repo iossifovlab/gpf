@@ -387,24 +387,24 @@ def test_wildcard_label_substring(test_grr: GenomicResourceRepo) -> None:
 
 def test_parse_preambule() -> None:
     preambule = AnnotationConfigParser.parse_preambule(pipeline_str="""
-        - preambule:
-            reference_genome: acgt_genome
-            description: lorem ipsum
-            metadata:
-                foo: bar
-                authors:
-                    - pesho
-                    - gosho
-                subdata:
-                    a: b
+        preambule:
+          input_reference_genome: acgt_genome
+          title: test
+          summary: asdf
+          description: lorem ipsum
+          authors: pesho, gosho
+          metadata:
+              foo: bar
+              subdata:
+                  a: b
+        annotators:
+          - sample_annotator
     """)
 
     assert preambule == AnnotationPreambule(
-        "acgt_genome", "lorem ipsum", {
-            "foo": "bar",
-            "authors": ["pesho", "gosho"],
-            "subdata": {"a": "b"},
-        },
+        "acgt_genome", "test", "asdf", "lorem ipsum",
+        "pesho, gosho",
+        {"foo": "bar", "subdata": {"a": "b"}},
     )
 
 

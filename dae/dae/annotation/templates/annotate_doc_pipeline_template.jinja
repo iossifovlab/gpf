@@ -33,8 +33,27 @@
     {%- if preambule is not none %}
     <h3>Preambule</h3>
     <ul>
-        <li>Reference genome: {{preambule.reference_genome}}</li>
+        {%- if preambule.input_reference_genome %}
+        <li>Input reference genome: {{preambule.input_reference_genome}}</li>
+        {%- endif %}
+
+        {%- if preambule.title %}
+        <li>Title: {{preambule.title}}</li>
+        {%- endif %}
+
+        {%- if preambule.summary %}
+        <li>Summary: {{preambule.summary}}</li>
+        {%- endif %}
+
+        {%- if preambule.description %}
         <li>Description: {{preambule.description}}</li>
+        {%- endif %}
+
+        {%- if preambule.authors %}
+        <li>Authors: {{preambule.authors}}</li>
+        {%- endif %}
+
+        {%- if preambule.metadata %}
         <li>
             Metadata:
             <ul>
@@ -43,6 +62,7 @@
                 {%- endfor %}
             </ul>
         </li>
+        {%- endif %}
     </ul>
     {%- endif %}
     <table border="1">
