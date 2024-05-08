@@ -234,17 +234,16 @@ def liftover_allele(
     if len(nref) == 1 and len(nalts[0]) == 1:
         # liftover substitution
         lo_coordinates = liftover_chain.convert_coordinate(nchrom, npos)
-        if lo_coordinates is None:
-            return None
-        tchrom, tpos, tstrand, _ = lo_coordinates
-        tref = target_genome.get_sequence(tchrom, tpos, tpos)
-        if tstrand == "-":
-            tref = reverse_complement(tref)
-        if tref == nref:
-            talt = nalts[0]
-        elif tref == nalts[0]:
-            talt = nref
-        return normalize_variant(tchrom, tpos, tref, [talt], target_genome)
+        if lo_coordinates is not None:
+            tchrom, tpos, tstrand, _ = lo_coordinates
+            tref = target_genome.get_sequence(tchrom, tpos, tpos)
+            if tstrand == "-":
+                tref = reverse_complement(tref)
+            if tref == nref:
+                talt = nalts[0]
+            elif tref == nalts[0]:
+                talt = nref
+            return normalize_variant(tchrom, tpos, tref, [talt], target_genome)
 
     mchrom, mpos, mref, malts = maximally_extend_variant(
         nchrom, npos, nref, nalts, source_genome)
@@ -262,16 +261,32 @@ def liftover_allele(
     tpos = min(lo_anchor_5prime[1], lo_anchor_3prime[1])
     tend = max(lo_anchor_5prime[1], lo_anchor_3prime[1])
 
+    tstrand = "+"
     if lo_anchor_5prime[2] == "-":
         assert lo_anchor_3prime[2] == "-"
+        tstrand = "-"
         mref = reverse_complement(mref)
         malt = reverse_complement(malt)
 
-    tref = target_genome.get_sequence(tchrom, tpos, tend)
-    if tref == mref:
+    tseq = target_genome.get_sequence(tchrom, tpos, tend)
+
+    mlength = min(len(mref), len(malt))
+    mdiff = max(len(mref), len(malt)) - mlength
+
+    if mref in tseq:
         talt = malt
-    elif tref == malt:
+        if tstrand == "+":
+            tref = tseq[:mlength]
+        else:
+            tref = tseq[mdiff:]
+            tpos += mdiff
+    elif malt in tseq:
         talt = mref
+        if tstrand == "+":
+            tref = tseq[:mlength]
+        else:
+            tref = tseq[mdiff:]
+            tpos += mdiff
     else:
         return None
 

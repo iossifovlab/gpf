@@ -20,6 +20,10 @@ from dae.genomic_resources.testing import (
     setup_genome,
     setup_gzip,
 )
+from dae.genomic_resources.variant_utils import (
+    maximally_extend_variant,
+)
+from dae.utils.variant_utils import reverse_complement
 
 
 @pytest.mark.parametrize("chrom,pos,ref,alt,echrom, epos,eref,ealt", [
@@ -262,3 +266,176 @@ def test_ex4d_fixture(
 
     t_ref = target_genome.get_sequence("chr21", start_pos, end_pos)
     assert t_ref == "TTTT"
+
+
+@pytest.fixture()
+def liftover_ex3_grr(
+        tmp_path_factory: pytest.TempPathFactory) -> GenomicResourceRepo:
+    root_path = tmp_path_factory.mktemp("liftover_ex4_grr")
+    setup_directories(root_path, {
+        "target_genome": {
+            "genomic_resource.yaml": textwrap.dedent("""
+                type: genome
+                filename: genome.fa
+            """),
+        },
+        "source_genome": {
+            "genomic_resource.yaml": textwrap.dedent("""
+                type: genome
+                filename: genome.fa
+            """),
+        },
+        "liftover_chain": {
+            "genomic_resource.yaml": textwrap.dedent("""
+                type: liftover_chain
+
+                filename: liftover.chain.gz
+            """),
+        },
+    })
+    #
+    # The initial header line starts with the keyword chain, followed
+    # by 11 required attribute values, and ends with a blank line.
+    #
+    # The attributes include:
+    #
+    # score -- chain score
+    # tName -- chromosome (reference/target sequence); source contig;
+    # tSize -- chromosome size (reference/target sequence); full length of the
+    #          source chromosome;
+    # tStrand -- strand (reference/target sequence); must be +
+    # tStart -- alignment start position (reference/target sequence);
+    #           Start of source region
+    # tEnd -- alignment end position (reference/target sequence);
+    #         End of source region
+    # qName -- chromosome (query sequence); target chromosome name;
+    # qSize -- chromosome size (query sequence); Full length of the chromosome
+    # qStrand -- strand (query sequence); + or -
+    # qStart -- alignment start position (query sequence); target start;
+    # qEnd -- alignment end position (query sequence); target end;
+    # id -- chain ID
+    #
+    # Block format:
+    # Alignment data lines contain three required attribute values:
+
+    # size dt dq
+    # size -- the size of the ungapped alignment
+    # dt -- the difference between the end of this block and the beginning
+    #       of the next block (reference/target sequence)
+    # dq -- the difference between the end of this block and the beginning
+    #       of the next block (query sequence)
+    #
+    # The last line of the alignment section contains only one number: the
+    # ungapped alignment size of the last block.
+    #
+    setup_gzip(
+        root_path / "liftover_chain" / "liftover.chain.gz",
+        convert_to_tab_separated("""
+        chain 1000 10 60 + 30 55 chr10 30 - 5 30 3a
+        25 0 0
+        0
+
+        """),
+    )
+    setup_genome(
+        root_path / "source_genome" / "genome.fa",
+        textwrap.dedent("""
+            >10
+            NNNNNNNNNNNNNNNNNNNNNNNNNNNNNN
+            NNNGCCTAAGATAATAATTGCTGGNNNNNN
+            """),
+    )
+    setup_genome(
+        root_path / "target_genome" / "genome.fa",
+        textwrap.dedent("""
+            >chr10
+            NNNNCCAGCAATTATCTTAGGNNNNNNNNN
+            """),
+    )
+
+    return build_filesystem_test_repository(root_path)
+
+
+def test_ex3a_fixture(
+    liftover_ex3_grr: GenomicResourceRepo,
+) -> None:
+
+    res = liftover_ex3_grr.get_resource("liftover_chain")
+    liftover_chain = build_liftover_chain_from_resource(res)
+
+    res = liftover_ex3_grr.get_resource("target_genome")
+    target_genome = build_reference_genome_from_resource(res)
+    res = liftover_ex3_grr.get_resource("source_genome")
+    source_genome = build_reference_genome_from_resource(res)
+
+    assert target_genome is not None
+    assert source_genome is not None
+    assert liftover_chain is not None
+
+    liftover_chain.open()
+    source_genome.open()
+    target_genome.open()
+
+    assert source_genome.get_sequence("10", 40, 40) == "G"
+    assert target_genome.get_sequence("chr10", 19, 19) == "A"
+
+    t_seq = target_genome.get_sequence("chr10", 10, 10 + 6)
+    assert t_seq == "AATTATC"
+    assert reverse_complement(t_seq) == "GATAATT"
+
+    lo_coordinates = liftover_chain.convert_coordinate("10", 40)
+    assert lo_coordinates is not None
+    chrom, pos, strand, qual = lo_coordinates
+    assert strand == "-"
+    assert qual == 1000
+    assert chrom == "chr10"
+    assert pos == 16
+
+    assert source_genome.get_sequence("10", 40 + 8, 40 + 8) == "T"
+    assert target_genome.get_sequence("chr10", 10 + 6, 10 + 6) == "C"
+
+    lo_coordinates = liftover_chain.convert_coordinate("10", 40 + 6)
+    assert lo_coordinates is not None
+    chrom, pos, strand, qual = lo_coordinates
+    assert strand == "-"
+    assert qual == 1000
+    assert chrom == "chr10"
+    assert pos == 10
+
+    t_seq = target_genome.get_sequence("chr10", 10, 16)
+    assert t_seq == "AATTATC"
+    assert reverse_complement(t_seq) == "GATAATT"
+
+
+def test_ex3a_liftover_parts(
+    liftover_ex3_grr: GenomicResourceRepo,
+) -> None:
+    res = liftover_ex3_grr.get_resource("source_genome")
+    source_genome = build_reference_genome_from_resource(res)
+    source_genome.open()
+
+    mchrom, mpos, mref, malts = maximally_extend_variant(
+        "10", 40, "GATA", ["G"], source_genome,
+    )
+    assert mchrom == "10"
+    assert mpos == 40
+    assert mref == "GATAATAATT"
+    assert malts == ["GATAATT"]
+
+    res = liftover_ex3_grr.get_resource("target_genome")
+    target_genome = build_reference_genome_from_resource(res)
+    target_genome.open()
+
+    res = liftover_ex3_grr.get_resource("liftover_chain")
+    liftover_chain = build_liftover_chain_from_resource(res)
+    liftover_chain.open()
+
+    result = liftover_allele(
+        "10", 40, "GATA", "G",
+        liftover_chain, source_genome, target_genome)
+    assert result is not None
+    chrom, pos, ref, alts = result
+    assert chrom == "chr10"
+    assert pos == 10
+    assert ref == "A"
+    assert alts == ["AATT"]

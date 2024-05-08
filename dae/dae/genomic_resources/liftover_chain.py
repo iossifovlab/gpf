@@ -94,6 +94,7 @@ class LiftoverChain(ResourceConfigValidationMixin):
         coordinates[0] = self.map_chromosome(
             coordinates[0], self.chrom_target_coordinates)
         coordinates[1] += 1
+        assert coordinates[2] in {"+", "-"}
         return cast(tuple[str, int, str, int], tuple(coordinates))
 
     @staticmethod
