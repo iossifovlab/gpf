@@ -5,7 +5,6 @@ import fnmatch
 import logging
 import pathlib
 from collections import Counter
-from dataclasses import dataclass
 from textwrap import dedent
 from typing import Any, Callable, Optional
 
@@ -22,7 +21,10 @@ from dae.annotation.annotation_pipeline import (
     ValueTransformAnnotatorDecorator,
 )
 from dae.genomic_resources import build_genomic_resource_repository
-from dae.genomic_resources.repository import GenomicResourceRepo
+from dae.genomic_resources.repository import (
+    GenomicResource,
+    GenomicResourceRepo,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -137,10 +139,7 @@ class AnnotationConfigParser:
         annotator_type: str, wildcard: str, grr: GenomicResourceRepo,
     ) -> list[str]:
         """Collect resources matching a given query."""
-        result = []
         labels_query: dict[str, str] = {}
-
-        # Handle querying by labels
         if wildcard.endswith("]"):
             assert "[" in wildcard
             wildcard, raw_labels = wildcard.split("[")
@@ -149,14 +148,15 @@ class AnnotationConfigParser:
                 k, v = label.split("=")
                 labels_query[k] = v
 
-        for resource in grr.get_all_resources():
-            if (resource.get_type() == annotator_type
+        def match(resource: GenomicResource) -> bool:
+            return (resource.get_type() == annotator_type
                and fnmatch.fnmatch(resource.get_id(), wildcard)
-               and AnnotationConfigParser.match_labels_query(
-                    labels_query, resource.get_labels())):
-                result.append(resource.get_id())
+               and AnnotationConfigParser.match_labels_query(labels_query,
+                                                             resource.get_labels()))
 
-        return result
+        return [resource.get_id()
+                for resource in grr.get_all_resources()
+                if match(resource)]
 
     @staticmethod
     def has_wildcard(string: str) -> bool:
