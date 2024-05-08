@@ -58,12 +58,12 @@ def test_liftover_allele_util(
     )
 
     assert lresult is not None
-    lchrom, lpos, lref, lalts = lresult
+    lchrom, lpos, lref, lalt = lresult
 
     assert lchrom == echrom
     assert lpos == epos
     assert lref == eref
-    assert lalts == [ealt]
+    assert lalt == ealt
 
 
 @pytest.fixture()
@@ -414,14 +414,6 @@ def test_ex3a_liftover_parts(
     source_genome = build_reference_genome_from_resource(res)
     source_genome.open()
 
-    mchrom, mpos, mref, malts = maximally_extend_variant(
-        "10", 40, "GATA", ["G"], source_genome,
-    )
-    assert mchrom == "10"
-    assert mpos == 40
-    assert mref == "GATAATAATT"
-    assert malts == ["GATAATT"]
-
     res = liftover_ex3_grr.get_resource("target_genome")
     target_genome = build_reference_genome_from_resource(res)
     target_genome.open()
@@ -430,12 +422,161 @@ def test_ex3a_liftover_parts(
     liftover_chain = build_liftover_chain_from_resource(res)
     liftover_chain.open()
 
+    mchrom, mpos, mref, malts = maximally_extend_variant(
+        "10", 40, "GATA", ["G"], source_genome,
+    )
+    assert mchrom == "10"
+    assert mpos == 40
+    assert mref == "GATAATAATT"
+    assert malts == ["GATAATT"]
+
     result = liftover_allele(
         "10", 40, "GATA", "G",
         liftover_chain, source_genome, target_genome)
     assert result is not None
-    chrom, pos, ref, alts = result
-    assert chrom == "chr10"
-    assert pos == 10
-    assert ref == "A"
-    assert alts == ["AATT"]
+
+    lchrom, lpos, lref, lalt = result
+    assert lchrom == "chr10"
+    assert lpos == 10
+    assert lref == "A"
+    assert lalt == "AATT"
+
+
+def test_ex4a_liftover_parts(
+    liftover_ex4_grr: GenomicResourceRepo,
+) -> None:
+    res = liftover_ex4_grr.get_resource("source_genome")
+    source_genome = build_reference_genome_from_resource(res)
+    source_genome.open()
+
+    res = liftover_ex4_grr.get_resource("target_genome")
+    target_genome = build_reference_genome_from_resource(res)
+    target_genome.open()
+
+    res = liftover_ex4_grr.get_resource("liftover_chain")
+    liftover_chain = build_liftover_chain_from_resource(res)
+    liftover_chain.open()
+
+    mchrom, mpos, mref, malts = maximally_extend_variant(
+        "22", 30, "A", ["G"], source_genome,
+    )
+    assert mchrom == "22"
+    assert mpos == 29
+    assert mref == "GAC"
+    assert malts == ["GGC"]
+
+    result = liftover_allele(
+        "22", 30, "A", "G",
+        liftover_chain, source_genome, target_genome)
+    assert result is not None
+
+    lchrom, lpos, lref, lalt = result
+    assert lchrom == "chr22"
+    assert lpos == 10
+    assert lref == "G"
+    assert lalt == "A"
+
+
+def test_ex4b_liftover_parts(
+    liftover_ex4_grr: GenomicResourceRepo,
+) -> None:
+    res = liftover_ex4_grr.get_resource("source_genome")
+    source_genome = build_reference_genome_from_resource(res)
+    source_genome.open()
+
+    res = liftover_ex4_grr.get_resource("target_genome")
+    target_genome = build_reference_genome_from_resource(res)
+    target_genome.open()
+
+    res = liftover_ex4_grr.get_resource("liftover_chain")
+    liftover_chain = build_liftover_chain_from_resource(res)
+    liftover_chain.open()
+
+    mchrom, mpos, mref, malts = maximally_extend_variant(
+        "18", 29, "C", ["T"], source_genome,
+    )
+    assert mchrom == "18"
+    assert mpos == 28
+    assert mref == "GCG"
+    assert malts == ["GTG"]
+
+    result = liftover_allele(
+        "18", 29, "C", "T",
+        liftover_chain, source_genome, target_genome)
+    assert result is not None
+
+    lchrom, lpos, lref, lalt = result
+    assert lchrom == "chr18"
+    assert lpos == 9
+    assert lref == "T"
+    assert lalt == "C"
+
+
+def test_ex4c_liftover_parts(
+    liftover_ex4_grr: GenomicResourceRepo,
+) -> None:
+    res = liftover_ex4_grr.get_resource("source_genome")
+    source_genome = build_reference_genome_from_resource(res)
+    source_genome.open()
+
+    res = liftover_ex4_grr.get_resource("target_genome")
+    target_genome = build_reference_genome_from_resource(res)
+    target_genome.open()
+
+    res = liftover_ex4_grr.get_resource("liftover_chain")
+    liftover_chain = build_liftover_chain_from_resource(res)
+    liftover_chain.open()
+
+    mchrom, mpos, mref, malts = maximally_extend_variant(
+        "X", 30, "C", ["T"], source_genome,
+    )
+    assert mchrom == "X"
+    assert mpos == 29
+    assert mref == "ACT"
+    assert malts == ["ATT"]
+
+    result = liftover_allele(
+        "X", 30, "C", "T",
+        liftover_chain, source_genome, target_genome)
+    assert result is not None
+
+    lchrom, lpos, lref, lalt = result
+    assert lchrom == "chrX"
+    assert lpos == 10
+    assert lref == "T"
+    assert lalt == "C"
+
+
+def test_ex4d_liftover_parts(
+    liftover_ex4_grr: GenomicResourceRepo,
+) -> None:
+    res = liftover_ex4_grr.get_resource("source_genome")
+    source_genome = build_reference_genome_from_resource(res)
+    source_genome.open()
+
+    res = liftover_ex4_grr.get_resource("target_genome")
+    target_genome = build_reference_genome_from_resource(res)
+    target_genome.open()
+
+    res = liftover_ex4_grr.get_resource("liftover_chain")
+    liftover_chain = build_liftover_chain_from_resource(res)
+    liftover_chain.open()
+
+    mchrom, mpos, mref, malts = maximally_extend_variant(
+        "21", 30, "C", ["T"], source_genome,
+    )
+    assert mchrom == "21"
+    assert mpos == 29
+    assert mref == "TCT"
+    assert malts == ["TTT"]
+
+    result = liftover_allele(
+        "21", 30, "C", "T",
+        liftover_chain, source_genome, target_genome)
+    assert result is not None
+
+    lchrom, lpos, lref, lalt = result
+    assert lchrom == "chr21"
+    assert lpos == 10
+    assert lref == "T"
+    assert lalt == "C"

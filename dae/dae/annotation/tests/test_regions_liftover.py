@@ -113,6 +113,7 @@ def test_liftover_annotator(
 
     pipeline_config = textwrap.dedent("""
         - liftover_annotator:
+            source_genome: source_genome
             target_genome: target_genome
             chain: liftover_chain
             attributes:

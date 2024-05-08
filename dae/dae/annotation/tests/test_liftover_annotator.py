@@ -53,12 +53,17 @@ def test_liftover(
     chain.convert_coordinate = lift_over
     chain.open = lambda: chain
 
+    source_genome = mocker.Mock()
+    source_genome.get_sequence = mock_get_sequence
+    source_genome.open = lambda: source_genome
+
     target_genome = mocker.Mock()
     target_genome.get_sequence = mock_get_sequence
     target_genome.open = lambda: target_genome
 
-    annotator = LiftOverAnnotator(None, AnnotatorInfo("gosho", [], {}),
-                                  chain, target_genome)
+    annotator = LiftOverAnnotator(
+        None, AnnotatorInfo("gosho", [], {}),
+        chain, source_genome, target_genome)
     assert annotator is not None
 
     allele = Allele.build_vcf_allele(chrom, pos, "A", "T")
@@ -99,6 +104,7 @@ def test_liftover_annotator_denovo_db_examples(
     pipeline_config = textwrap.dedent("""
         - liftover_annotator:
             chain: liftover/hg19ToHg38
+            source_genome: hg19/genomes/GATK_ResourceBundle_5777_b37_phiX174
             target_genome: hg38/genomes/GRCh38-hg38
         """)
 
@@ -120,6 +126,7 @@ def test_liftover_annotator_resources(
     pipeline_config = textwrap.dedent("""
       - liftover_annotator:
           chain: hg38/hg38tohg19
+          source_genome: hg38/GRCh38-hg38/genome
           target_genome: hg19/GATK_ResourceBundle_5777_b37_phiX174_short/genome
       """)
 
@@ -129,5 +136,6 @@ def test_liftover_annotator_resources(
 
     assert pipeline.get_resource_ids() == {
         "hg38/hg38tohg19",
+        "hg38/GRCh38-hg38/genome",
         "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/genome",
     }

@@ -34,35 +34,52 @@ def build_liftover_annotator(pipeline: AnnotationPipeline,
     """Create a liftover annotator."""
     chain_resource_id = info.parameters.get("chain")
     if chain_resource_id is None:
-        raise ValueError("The {into} requires a 'chain' parameter.")
+        raise ValueError(f"The {info} requires a 'chain' parameter.")
     chain_resource = pipeline.repository.get_resource(chain_resource_id)
     if chain_resource is None:
         raise ValueError(f"The {info} points to a resource "
                          f"{chain_resource_id} that is unavailable.")
     chain = build_liftover_chain_from_resource(chain_resource)
 
-    target_genome_resrouce_id = info.parameters.get("target_genome")
-    if target_genome_resrouce_id is None:
+    resource_id = info.parameters.get("target_genome")
+    if resource_id is None:
         raise ValueError(
-            "The {into} requires a 'target_genome' parameter.")
-    resource = pipeline.repository.get_resource(target_genome_resrouce_id)
+            f"The {info} requires a 'target_genome' parameter.")
+    resource = pipeline.repository.get_resource(resource_id)
     if resource is None:
         raise ValueError(f"The {info} points to a resource "
-                         f"{target_genome_resrouce_id} that is "
+                         f"{resource_id} that is "
                          "unavailable.")
     target_genome = build_reference_genome_from_resource(resource)
 
-    return LiftOverAnnotator(pipeline, info, chain, target_genome)
+    resource_id = info.parameters.get("source_genome")
+    if resource_id is None:
+        raise ValueError(
+            f"The {info} requires a 'source_genome' parameter.")
+    resource = pipeline.repository.get_resource(resource_id)
+    if resource is None:
+        raise ValueError(f"The {info} points to a resource "
+                         f"{resource_id} that is "
+                         "unavailable.")
+    source_genome = build_reference_genome_from_resource(resource)
+
+    return LiftOverAnnotator(
+        pipeline, info,
+        chain, source_genome, target_genome)
 
 
 class LiftOverAnnotator(AnnotatorBase):
     """Liftovver annotator class."""
 
-    def __init__(self, pipeline: Optional[AnnotationPipeline],
-                 info: AnnotatorInfo,
-                 chain: LiftoverChain, target_genome: ReferenceGenome):
+    def __init__(
+        self, pipeline: Optional[AnnotationPipeline],
+        info: AnnotatorInfo,
+        chain: LiftoverChain,
+        source_genome: ReferenceGenome, target_genome: ReferenceGenome,
+    ):
 
-        info.resources += [chain.resource, target_genome.resource]
+        info.resources += [
+            chain.resource, source_genome.resource, target_genome.resource]
         if not info.attributes:
             info.attributes = [AttributeInfo(
                 "liftover_annotatable",
@@ -74,6 +91,7 @@ class LiftOverAnnotator(AnnotatorBase):
             "liftover_annotatable": ("annotatable", "Lifted over allele."),
         })
         self.chain = chain
+        self.source_genome = source_genome
         self.target_genome = target_genome
 
     def close(self) -> None:
@@ -82,6 +100,7 @@ class LiftOverAnnotator(AnnotatorBase):
         super().close()
 
     def open(self) -> Annotator:
+        self.source_genome.open()
         self.target_genome.open()
         self.chain.open()
         return super().open()
@@ -225,7 +244,7 @@ def liftover_allele(
     liftover_chain: LiftoverChain,
     source_genome: ReferenceGenome,
     target_genome: ReferenceGenome,
-) -> Optional[tuple[str, int, str, list[str]]]:
+) -> Optional[tuple[str, int, str, str]]:
     """Liftover a variant."""
     nchrom, npos, nref, nalts = normalize_variant(
         chrom, pos, ref, [alt], source_genome)
@@ -243,7 +262,9 @@ def liftover_allele(
                 talt = nalts[0]
             elif tref == nalts[0]:
                 talt = nref
-            return normalize_variant(tchrom, tpos, tref, [talt], target_genome)
+            nchrom, npos, nref, nalts = normalize_variant(
+                tchrom, tpos, tref, [talt], target_genome)
+            return nchrom, npos, nref, nalts[0]
 
     mchrom, mpos, mref, malts = maximally_extend_variant(
         nchrom, npos, nref, nalts, source_genome)
@@ -290,4 +311,6 @@ def liftover_allele(
     else:
         return None
 
-    return normalize_variant(tchrom, tpos, tref, [talt], target_genome)
+    nchrom, npos, nref, nalts = normalize_variant(
+        tchrom, tpos, tref, [talt], target_genome)
+    return nchrom, npos, nref, nalts[0]

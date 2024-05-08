@@ -2,6 +2,7 @@
 
 - liftover_annotator:
     chain: liftover/mock
+    source_genome: genomes/mock0
     target_genome: genomes/mock
 
 - position_score:

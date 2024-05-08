@@ -87,6 +87,7 @@ def _construct_liftover_pipeline(
         f"""
         - liftover_annotator:
             chain: {kwargs.get('chain')}
+            source_genome: {kwargs.get('source_genome')}
             target_genome: {kwargs.get('target_genome')}
             attributes:
             - source: liftover_annotatable
