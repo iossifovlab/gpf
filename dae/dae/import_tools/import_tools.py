@@ -357,8 +357,10 @@ class ImportProject:
         )
 
     def has_variants(self) -> bool:
-        # FIXME: this method should check if the input has variants
-        return True
+        for key in ["vcf", "denovo", "cnv", "dae"]:
+            if key in self.import_config["input"]:
+                return True
+        return False
 
     @property
     def study_id(self) -> str:

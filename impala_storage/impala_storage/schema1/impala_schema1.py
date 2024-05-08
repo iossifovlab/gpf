@@ -60,6 +60,8 @@ class ImpalaSchema1ImportStorage(ImportStorage):
 
     @classmethod
     def _do_write_meta(cls, project: ImportProject) -> None:
+        if not project.has_variants():
+            return
         out_dir = cls._variants_dir(project)
         gpf_instance = project.get_gpf_instance()
         loader_type = next(iter(project.get_variant_loader_types()))
@@ -143,9 +145,10 @@ class ImpalaSchema1ImportStorage(ImportStorage):
         partition_description = cls._get_partition_description(project)
 
         pedigree_file = cls._pedigree_filename(project)
+        variants_dir = cls._variants_dir if project.has_variants() else None
         cast(ImpalaGenotypeStorage, genotype_storage).hdfs_upload_dataset(
             project.study_id,
-            cls._variants_dir(project),
+            variants_dir,
             pedigree_file,
             partition_description)
         elapsed = time.time() - start
@@ -174,12 +177,16 @@ class ImpalaSchema1ImportStorage(ImportStorage):
 
         partition_description = cls._get_partition_description(project)
 
-        variants_schema_fn = fs_utils.join(
-            cls._variants_dir(project), "_VARIANTS_SCHEMA")
-        with open(variants_schema_fn) as infile:
-            content = infile.read()
-            schema = toml.loads(content)
-            variants_schema = schema["variants_schema"]
+        if project.has_variants():
+            variants_schema_fn = fs_utils.join(
+                cls._variants_dir(project), "_VARIANTS_SCHEMA")
+            with open(variants_schema_fn) as infile:
+                content = infile.read()
+                schema = toml.loads(content)
+                variants_schema = schema["variants_schema"]
+        else:
+            hdfs_variants_dir = None
+            variants_schema = None
 
         cast(ImpalaGenotypeStorage, genotype_storage).impala_import_dataset(
             project.study_id,
