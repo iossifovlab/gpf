@@ -153,7 +153,6 @@ describe('GeneProfilesBlockComponent', () => {
   it('should create gene profiles table configuration', () => {
     component.ngOnInit();
     expect(component.geneProfilesTableConfig).toStrictEqual(geneProfilesTableConfigMock);
-    expect(component.geneProfilesTableSortBy).toBe('autism_gene_sets_rank');
     expect(component.geneProfilesSingleViewConfig).toStrictEqual(config);
   });
 });

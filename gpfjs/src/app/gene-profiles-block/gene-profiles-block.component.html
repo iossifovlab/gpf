@@ -1,5 +1,5 @@
 <gpf-gene-profiles-table
+  *ngIf="geneProfilesTableConfig"
   (goToQueryEvent)="goToQueryEventHandler($event)"
-  [config]="geneProfilesTableConfig"
-  [sortBy]="geneProfilesTableSortBy">
+  [config]="geneProfilesTableConfig">
 </gpf-gene-profiles-table>

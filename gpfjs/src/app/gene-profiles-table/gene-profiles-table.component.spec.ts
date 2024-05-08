@@ -8,6 +8,7 @@ import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute } from '@angular/router';
 import { NgxsModule } from '@ngxs/store';
 import { GeneProfilesState } from './gene-profiles-table.state';
+import { TruncatePipe } from 'app/utils/truncate.pipe';
 
 const column1 = {
   clickable: 'createTab',
@@ -254,7 +255,7 @@ describe('GeneProfilesTableComponent', () => {
   const mockActivatedRoute = new MockActivatedRoute();
   beforeEach(() => {
     TestBed.configureTestingModule({
-      declarations: [GeneProfilesTableComponent],
+      declarations: [GeneProfilesTableComponent, TruncatePipe],
       providers: [
         {provide: ActivatedRoute, useValue: mockActivatedRoute},
         {provide: GeneProfilesTableService, useValue: geneProfilesTableServiceMock}
@@ -266,6 +267,7 @@ describe('GeneProfilesTableComponent', () => {
     component = fixture.componentInstance;
 
     component.sortingButtonsComponents = [];
+    component.config = configMock;
     fixture.detectChanges();
   });
 
@@ -278,16 +280,10 @@ describe('GeneProfilesTableComponent', () => {
 
     component.ngOnInit();
 
-    expect(component.defaultSortBy).toBe('mockSort');
+    expect(component.config).toBeDefined();
   });
 
   it('should update when change happens', () => {
-    component.ngOnChanges();
-    expect(component.leaves).toBeUndefined();
-    expect(component.pageIndex).toBe(0);
-    expect(component.genes).toStrictEqual([]);
-
-    component.config = cloneDeep(configMock);
     component.ngOnChanges();
 
     component.leaves.forEach((leaf, index) => {
