@@ -21,7 +21,7 @@ from dae.genomic_resources.variant_utils import (
     maximally_extend_variant,
     normalize_variant,
 )
-from dae.utils.variant_utils import reverse_complement, trim_str_left
+from dae.utils.variant_utils import reverse_complement
 
 from .annotatable import Annotatable, CNVAllele, Position, Region, VCFAllele
 from .annotator_base import AnnotatorBase
@@ -132,46 +132,17 @@ class LiftOverAnnotator(AnnotatorBase):
             return None
 
         try:
-            lo_coordinates = self.chain.convert_coordinate(
+            lo_variant = liftover_allele(
                 allele.chrom, allele.position,
+                allele.reference, allele.alternative,
+                self.chain, self.source_genome, self.target_genome,
             )
 
-            if lo_coordinates is None:
+            if lo_variant is None:
                 return None
 
-            lo_chrom, lo_pos, lo_strand, _ = lo_coordinates
-
-            if lo_strand == "+" or \
-                    len(allele.reference) == len(allele.alternative):
-                pass
-            elif lo_strand == "-":
-                lo_pos -= len(allele.reference)
-
-            _tr_pos, tr_ref, tr_alt = trim_str_left(
-                allele.position, allele.reference, allele.alternative)
-
-            lo_ref = self.target_genome.get_sequence(
-                lo_chrom, lo_pos, lo_pos + len(allele.reference) - 1)
-            if lo_ref is None:
-                logger.warning(
-                    "can't find genomic sequence for %s:%s", lo_chrom, lo_pos)
-                return None
-
-            lo_alt = allele.alternative
-            if lo_strand == "-":
-                if not tr_alt:
-                    lo_alt = f"{lo_ref[0]}"
-                else:
-                    lo_alt = reverse_complement(tr_alt)
-                    if not tr_ref:
-                        lo_alt = f"{lo_ref[0]}{lo_alt}"
-
+            lo_chrom, lo_pos, lo_ref, lo_alt = lo_variant
             result = VCFAllele(lo_chrom, lo_pos, lo_ref, lo_alt)
-            if lo_ref == lo_alt:
-                logger.warning(
-                    "allele %s mapped to no variant: %s; liftover strand: %s;",
-                    allele, result, lo_strand)
-                return None
 
         except BaseException as ex:  # noqa BLE001 pylint: disable=broad-except
             logger.warning(
