@@ -233,17 +233,32 @@ class AnnotationConfigParser:
             return None
         raw = pipeline_raw[0]["preambule"]
 
-        if not isinstance(raw["reference_genome"], str):
+        assert set(raw.keys()) < {
+            "input_reference_genome",
+            "title", "summary", "authors",
+            "description", "metadata",
+        }
+
+        if not isinstance(raw.get("input_reference_genome", ""), str):
             raise TypeError
-        if not isinstance(raw["description"], str):
+        if not isinstance(raw.get("title", ""), str):
             raise TypeError
-        if not isinstance(raw["metadata"], dict):
+        if not isinstance(raw.get("summary", ""), str):
+            raise TypeError
+        if not isinstance(raw.get("authors", ""), str):
+            raise TypeError
+        if not isinstance(raw.get("description", ""), str):
+            raise TypeError
+        if not isinstance(raw.get("metadata", ""), dict):
             raise TypeError
 
         return AnnotationPreambule(
-            raw["reference_genome"],
-            raw["description"],
-            raw["metadata"],
+            raw.get("input_reference_genome", ""),
+            raw.get("title", ""),
+            raw.get("summary", ""),
+            raw.get("authors", ""),
+            raw.get("description", ""),
+            raw.get("metadata", ""),
         )
 
     @staticmethod
