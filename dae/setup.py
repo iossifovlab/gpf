@@ -56,6 +56,7 @@ setuptools.setup(
     cnv_collection=dae.genomic_resources.cnv_collection:CnvCollectionImplementation
     gene_weights_enrichment_background=dae.enrichment_tool.resource_implementations.enrichment_resource_impl:build_gene_weights_enrichment_background
     samocha_enrichment_background=dae.enrichment_tool.resource_implementations.enrichment_resource_impl:build_samocha_enrichment_background
+    annotation_pipeline=dae.genomic_resources.implementations.annotation_pipeline_impl:AnnotationPipelineImplementation
 
     [dae.annotation.annotators]
     allele_score=dae.annotation.score_annotator:build_allele_score_annotator
