@@ -207,6 +207,29 @@ class LiftOverAnnotator(AnnotatorBase):
             region.chrom, region.pos, region.pos_end, cnv_allele.type)
 
 
+def _liftover_snp_simple(
+    lo_coordinates: tuple[str, int, str, int],
+    nref: str,
+    nalt: str,
+    target_genome: ReferenceGenome,
+) -> Optional[tuple[str, int, str, str]]:
+    tchrom, tpos, tstrand, _ = lo_coordinates
+    tseq = target_genome.get_sequence(tchrom, tpos, tpos)
+    if tstrand == "-":
+        tseq = reverse_complement(tseq)
+    if tseq == nref:
+        tref = tseq
+        talt = nalt
+    elif tseq == nalt:
+        tref = tseq
+        talt = nref
+    else:
+        return None
+    nchrom, npos, nref, nalts = normalize_variant(
+        tchrom, tpos, tref, [talt], target_genome)
+    return nchrom, npos, nref, nalts[0]
+
+
 def liftover_allele(
     chrom: str,
     pos: int,
@@ -225,17 +248,8 @@ def liftover_allele(
         # liftover substitution
         lo_coordinates = liftover_chain.convert_coordinate(nchrom, npos)
         if lo_coordinates is not None:
-            tchrom, tpos, tstrand, _ = lo_coordinates
-            tref = target_genome.get_sequence(tchrom, tpos, tpos)
-            if tstrand == "-":
-                tref = reverse_complement(tref)
-            if tref == nref:
-                talt = nalts[0]
-            elif tref == nalts[0]:
-                talt = nref
-            nchrom, npos, nref, nalts = normalize_variant(
-                tchrom, tpos, tref, [talt], target_genome)
-            return nchrom, npos, nref, nalts[0]
+            return _liftover_snp_simple(
+                lo_coordinates, nref, nalts[0], target_genome)
 
     mchrom, mpos, mref, malts = maximally_extend_variant(
         nchrom, npos, nref, nalts, source_genome)
@@ -247,7 +261,10 @@ def liftover_allele(
     lo_anchor_3prime = liftover_chain.convert_coordinate(mchrom, anchor_3prime)
     if lo_anchor_5prime is None or lo_anchor_3prime is None:
         return None
-    if lo_anchor_5prime[0] != lo_anchor_3prime[0]:
+
+    # check if the anchors are on the same chromosome and strand
+    if lo_anchor_5prime[0] != lo_anchor_3prime[0] or \
+            lo_anchor_5prime[2] != lo_anchor_3prime[2]:
         return None
     tchrom = lo_anchor_5prime[0]
     tpos = min(lo_anchor_5prime[1], lo_anchor_3prime[1])

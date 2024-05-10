@@ -2,17 +2,18 @@ import argparse
 import logging
 import sys
 import tempfile
-import textwrap
 from contextlib import closing
 from typing import Optional
 
 import pysam
 
-from dae.annotation.annotatable import VCFAllele
-from dae.annotation.annotation_factory import build_annotation_pipeline
-from dae.annotation.annotation_pipeline import AnnotationPipeline
 from dae.annotation.context import CLIAnnotationContext
+from dae.annotation.liftover_annotator import liftover_allele
 from dae.genomic_resources.genomic_context import get_genomic_context
+from dae.genomic_resources.liftover_chain import (
+    LiftoverChain,
+    build_liftover_chain_from_resource,
+)
 from dae.genomic_resources.reference_genome import (
     ReferenceGenome,
     build_reference_genome_from_resource,
@@ -79,27 +80,17 @@ def _construct_reference_genome(
     return genome.open()
 
 
-def _construct_liftover_pipeline(
+def _construct_liftover_chain(
     grr: GenomicResourceRepo,
-    **kwargs: dict[str, str],
-) -> AnnotationPipeline:
-    pipeline_config = textwrap.dedent(
-        f"""
-        - liftover_annotator:
-            chain: {kwargs.get('chain')}
-            source_genome: {kwargs.get('source_genome')}
-            target_genome: {kwargs.get('target_genome')}
-            attributes:
-            - source: liftover_annotatable
-              name: target_annotatable
-        """,
-    )
-
-    pipeline = build_annotation_pipeline(
-        pipeline_config_str=pipeline_config,
-        grr_repository=grr)
-    pipeline.open()
-    return pipeline
+    resource_id: str,
+) -> LiftoverChain:
+    res = grr.get_resource(resource_id)
+    if res is None:
+        raise ValueError(f"liftover chain {resource_id} not found")
+    chain = build_liftover_chain_from_resource(res)
+    if chain is None:
+        raise ValueError(f"liftover chain {resource_id} not found")
+    return chain.open()
 
 
 def main(
@@ -124,14 +115,13 @@ def main(
 
     source_genome = _construct_reference_genome(grr, args.source_genome)
     target_genome = _construct_reference_genome(grr, args.target_genome)
+    chain = _construct_liftover_chain(grr, args.chain)
 
     output_filename = f"{args.output_prefix}.vcf"
     region = None
     if args.region is not None:
         region = str(Region.from_str(args.region))
         output_filename = f"{args.output_prefix}-{region}.vcf"
-
-    pipeline = _construct_liftover_pipeline(grr, **vars(args))
 
     with closing(pysam.VariantFile(args.vcffile)) as infile:
         output_header = liftover_header(
@@ -151,42 +141,53 @@ def main(
                 continue
             alleles = []
             for alt in vcf_variant.alts:
-                annotatable = VCFAllele(
+                lo_allele = liftover_allele(
                     vcf_variant.chrom, vcf_variant.pos,
-                    vcf_variant.ref, alt)
-                result = pipeline.annotate(annotatable)
-                target_annotatable = result["target_annotatable"]
-                if target_annotatable is None:
-                    continue
-                alleles.append(target_annotatable)
+                    vcf_variant.ref, alt,
+                    chain, source_genome, target_genome,
+                )
+                if lo_allele is None:
+                    logger.warning(
+                        "skipping allele without liftover: %s %s",
+                        report_vcf_variant(vcf_variant), alt)
+                    break
+                alleles.append(lo_allele)
 
             if len(alleles) < len(vcf_variant.alts):
                 logger.warning(
                     "skipping variant without liftover: %s liftover to %s",
                     report_vcf_variant(vcf_variant), report_alleles(alleles))
                 continue
-            if not all(a.chrom == alleles[0].chrom for a in alleles):
+            if not all(
+                    chrom == alleles[0][0]
+                    for chrom, pos, ref, alt in alleles):
                 logger.warning(
                     "liftover alleles on different contigs: %s liftover to %s",
                     report_vcf_variant(vcf_variant), report_alleles(alleles))
                 continue
-            if not all(a.pos == alleles[0].pos for a in alleles):
+            if not all(pos == alleles[0][1]
+                       for chrom, pos, ref, alt in alleles):
+
                 logger.warning(
                     "liftover alleles on different positions: %s "
                     "liftover to %s",
                     report_vcf_variant(vcf_variant), report_alleles(alleles))
                 continue
-            if not all(a.ref == alleles[0].ref for a in alleles):
+            if not all(ref == alleles[0][2]
+                       for chrom, pos, ref, alt in alleles):
+
                 logger.warning(
                     "liftover alleles with different ref: %s liftover to %s",
                     report_vcf_variant(vcf_variant), report_alleles(alleles))
                 continue
             vcf_variant.translate(output_header)
+            chrom, pos, ref, alt = alleles[0]
+
             try:
-                vcf_variant.contig = alleles[0].chrom
-                vcf_variant.pos = alleles[0].pos
-                vcf_variant.ref = alleles[0].ref
-                vcf_variant.alts = tuple(a.alt for a in alleles)
+                vcf_variant.contig = chrom
+                vcf_variant.pos = pos
+                vcf_variant.ref = ref
+                vcf_variant.alts = tuple(a[3] for a in alleles)
 
                 outfile.write(vcf_variant)
             except ValueError:
@@ -205,12 +206,13 @@ def report_vcf_variant(vcf_variant: pysam.VariantRecord) -> str:
     )
 
 
-def report_alleles(alleles: list[VCFAllele]) -> str:
+def report_alleles(alleles: list[tuple[str, int, str, str]]) -> str:
     """Report alleles."""
     if not alleles:
         return "(none)"
     return ";".join([
-        f"({a.chrom}:{a.pos} {a.ref} > {a.alt})" for a in alleles
+        f"({chrom}:{pos} {ref} > {alt})"
+        for chrom, pos, ref, alt in alleles
     ])
 
 
