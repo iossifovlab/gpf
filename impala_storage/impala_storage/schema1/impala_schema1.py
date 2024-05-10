@@ -145,7 +145,8 @@ class ImpalaSchema1ImportStorage(ImportStorage):
         partition_description = cls._get_partition_description(project)
 
         pedigree_file = cls._pedigree_filename(project)
-        variants_dir = cls._variants_dir if project.has_variants() else None
+        variants_dir = cls._variants_dir(project) \
+            if project.has_variants() else None
         cast(ImpalaGenotypeStorage, genotype_storage).hdfs_upload_dataset(
             project.study_id,
             variants_dir,
