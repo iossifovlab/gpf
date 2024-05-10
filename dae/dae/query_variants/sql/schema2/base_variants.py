@@ -47,25 +47,27 @@ class SqlSchema2Variants(QueryVariantsBase):
         self.db = db
         self.family_variant_table = family_variant_table
         self.summary_allele_table = summary_allele_table
+        self.has_variants = self.summary_allele_table is not None
         self.pedigree_table = pedigree_table
         self.meta_table = meta_table
         self.gene_models = gene_models
-
-        self.summary_allele_schema = self._fetch_summary_schema()
-        self.family_variant_schema = self._fetch_family_schema()
-
-        self.combined_columns = {
-            **self.family_variant_schema,
-            **self.summary_allele_schema,
-        }
 
         self.pedigree_schema = self._fetch_schema(self.pedigree_table)
         ped_df = self._fetch_pedigree()
         self.families = FamiliesLoader\
             .build_families_data_from_pedigree(ped_df)
 
-        self.partition_descriptor = PartitionDescriptor.parse_string(
-            self._fetch_tblproperties())
+        if self.has_variants:
+            self.summary_allele_schema = self._fetch_summary_schema()
+            self.family_variant_schema = self._fetch_family_schema()
+
+            self.combined_columns = {
+                **self.family_variant_schema,
+                **self.summary_allele_schema,
+            }
+
+            self.partition_descriptor = PartitionDescriptor.parse_string(
+                self._fetch_tblproperties())
 
     def _fetch_summary_schema(self) -> dict[str, str]:
         assert self.summary_allele_table is not None

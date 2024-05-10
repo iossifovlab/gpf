@@ -281,7 +281,7 @@ class ImpalaGenotypeStorage(GenotypeStorage):
         return local_variants_files, hdfs_variants_dir, hdfs_variants_files
 
     def _native_hdfs_upload_dataset(
-        self, study_id: str, variants_dir: str,
+        self, study_id: str, variants_dir: Optional[str],
         pedigree_file: str, partition_description: PartitionDescriptor,
     ) -> tuple[str, str, str]:
 
@@ -389,7 +389,7 @@ class ImpalaGenotypeStorage(GenotypeStorage):
             self._build_hdfs_pedigree(study_id, pedigree_file))
 
     def hdfs_upload_dataset(
-        self, study_id: str, variants_dir: str,
+        self, study_id: str, variants_dir: Optional[str],
         pedigree_file: str,
         partition_description: PartitionDescriptor,
     ) -> tuple[str, str, str]:

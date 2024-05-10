@@ -77,6 +77,7 @@ class Impala2GenotypeStorage(GenotypeStorage):
         variants_dir: Union[pathlib.Path, str],
         pedigree_file: str,
         meta_file: str,
+        has_variants: bool = True
     ) -> HdfsStudyLayout:
         """Upload local data to hdfs."""
         if self.read_only:
@@ -101,8 +102,11 @@ class Impala2GenotypeStorage(GenotypeStorage):
         self.hdfs_helpers.put(meta_file, meta_hdfs_file)
 
         # Copy variants if any
-        summary_sample_hdfs_file, family_sample_hdfs_file = \
-            self._copy_variants(variants_dir, study_path)
+        if has_variants:
+            summary_sample_hdfs_file, family_sample_hdfs_file = \
+                self._copy_variants(variants_dir, study_path)
+        else:
+            summary_sample_hdfs_file, family_sample_hdfs_file = None, None
 
         return HdfsStudyLayout(
             pedigree_file=pedigree_hdfs_path,
@@ -126,15 +130,15 @@ class Impala2GenotypeStorage(GenotypeStorage):
         if has_tables and tables.get("family"):
             family_table = tables["family"]
 
-        summary_table = f"{study_id}_summary"
+        summary_table = None
         if has_tables and tables.get("summary"):
             summary_table = tables["summary"]
 
-        pedigree_table = f"{study_id}_pedigree"
+        pedigree_table = None
         if has_tables and tables.pedigree:
             pedigree_table = tables.pedigree
 
-        meta_table = f"{study_id}_meta"
+        meta_table = None
         if has_tables and tables.get("meta"):
             meta_table = tables["meta"]
 
@@ -220,7 +224,10 @@ class Impala2GenotypeStorage(GenotypeStorage):
         self.impala_helpers.import_pedigree_into_db(
             db, meta_table, hdfs_study_layout.meta_file)
 
-        assert hdfs_study_layout.summary_sample is not None
+        if hdfs_study_layout.summary_sample is None:
+            return self._generate_study_config(
+                study_id, pedigree_table,
+                None, None, meta_table)
         summary_pd = copy(partition_description)
         # XXX summary_alleles has no family_bin
         summary_pd.family_bin_size = 0  # pylint: disable=protected-access
