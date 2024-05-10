@@ -109,6 +109,7 @@ function main() {
 
     local -A ctx_sentry_cli
     build_run_ctx_init ctx:ctx_sentry_cli "local"
+    defer_ret build_run_ctx_reset ctx:ctx_sentry_cli
     build_run ctx:ctx_sentry_cli docker run --rm -v "$PWD":/work getsentry/sentry-cli sourcemaps inject ./dist
 
     local image_name="gpfjs-production-package"
