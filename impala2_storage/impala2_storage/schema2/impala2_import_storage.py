@@ -30,7 +30,8 @@ class Impala2ImportStorage(Schema2ImportStorage):
             project.study_id,
             layout.study,
             layout.pedigree,
-            layout.meta)
+            layout.meta,
+            has_variants=project.has_variants())
 
     @classmethod
     def _do_load_in_impala(

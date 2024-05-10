@@ -77,6 +77,7 @@ class Impala2GenotypeStorage(GenotypeStorage):
         variants_dir: Union[pathlib.Path, str],
         pedigree_file: str,
         meta_file: str,
+        has_variants: bool = True
     ) -> HdfsStudyLayout:
         """Upload local data to hdfs."""
         if self.read_only:
@@ -101,8 +102,11 @@ class Impala2GenotypeStorage(GenotypeStorage):
         self.hdfs_helpers.put(meta_file, meta_hdfs_file)
 
         # Copy variants if any
-        summary_sample_hdfs_file, family_sample_hdfs_file = \
-            self._copy_variants(variants_dir, study_path)
+        if has_variants:
+            summary_sample_hdfs_file, family_sample_hdfs_file = \
+                self._copy_variants(variants_dir, study_path)
+        else:
+            summary_sample_hdfs_file, family_sample_hdfs_file = None, None
 
         return HdfsStudyLayout(
             pedigree_file=pedigree_hdfs_path,
@@ -152,8 +156,6 @@ class Impala2GenotypeStorage(GenotypeStorage):
         src_summary_dir = os.path.join(variants_dir, "summary")
         src_family_dir = os.path.join(variants_dir, "family")
 
-        if len(glob.glob(os.path.join(src_summary_dir, "**/*.parquet"))) == 0:
-            return None, None
         sample_summary_file = next(self._enum_parquet_files_to_copy(
             src_summary_dir, hdfs_summary_dir))
         sample_family_file = next(self._enum_parquet_files_to_copy(
@@ -226,7 +228,6 @@ class Impala2GenotypeStorage(GenotypeStorage):
             return self._generate_study_config(
                 study_id, pedigree_table,
                 None, None, meta_table)
-            return
         summary_pd = copy(partition_description)
         # XXX summary_alleles has no family_bin
         summary_pd.family_bin_size = 0  # pylint: disable=protected-access
