@@ -126,15 +126,15 @@ class Impala2GenotypeStorage(GenotypeStorage):
         if has_tables and tables.get("family"):
             family_table = tables["family"]
 
-        summary_table = f"{study_id}_summary"
+        summary_table = None
         if has_tables and tables.get("summary"):
             summary_table = tables["summary"]
 
-        pedigree_table = f"{study_id}_pedigree"
+        pedigree_table = None
         if has_tables and tables.pedigree:
             pedigree_table = tables.pedigree
 
-        meta_table = f"{study_id}_meta"
+        meta_table = None
         if has_tables and tables.get("meta"):
             meta_table = tables["meta"]
 
@@ -152,6 +152,8 @@ class Impala2GenotypeStorage(GenotypeStorage):
         src_summary_dir = os.path.join(variants_dir, "summary")
         src_family_dir = os.path.join(variants_dir, "family")
 
+        if len(glob.glob(os.path.join(src_summary_dir, "**/*.parquet"))) == 0:
+            return None, None
         sample_summary_file = next(self._enum_parquet_files_to_copy(
             src_summary_dir, hdfs_summary_dir))
         sample_family_file = next(self._enum_parquet_files_to_copy(
@@ -220,7 +222,11 @@ class Impala2GenotypeStorage(GenotypeStorage):
         self.impala_helpers.import_pedigree_into_db(
             db, meta_table, hdfs_study_layout.meta_file)
 
-        assert hdfs_study_layout.summary_sample is not None
+        if hdfs_study_layout.summary_sample is None:
+            return self._generate_study_config(
+                study_id, pedigree_table,
+                None, None, meta_table)
+            return
         summary_pd = copy(partition_description)
         # XXX summary_alleles has no family_bin
         summary_pd.family_bin_size = 0  # pylint: disable=protected-access

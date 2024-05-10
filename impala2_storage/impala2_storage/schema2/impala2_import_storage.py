@@ -55,10 +55,14 @@ class Impala2ImportStorage(Schema2ImportStorage):
         # pylint: disable=protected-access
         pedigree_table = genotype_storage\
             ._construct_pedigree_table(project.study_id)
-        summary_table, family_table = genotype_storage\
-            ._construct_variant_tables(project.study_id)
-        meta_table = genotype_storage\
-            ._construct_metadata_table(project.study_id)
+        if project.has_variants():
+            summary_table, family_table = genotype_storage\
+                ._construct_variant_tables(project.study_id)
+            meta_table = genotype_storage\
+                ._construct_metadata_table(project.study_id)
+        else:
+            summary_table, family_table = (None, None)
+            meta_table = None
 
         if project.get_processing_parquet_dataset_dir() is not None:
             meta = cls.load_meta(project)
