@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import logging
+import pathlib
 
 from dae.annotation.annotation_factory import build_annotation_pipeline
 from dae.annotation.annotation_pipeline import AnnotationPipeline
@@ -9,6 +10,9 @@ from dae.genomic_resources.genomic_context import (
     CLIGenomicContext,
     GenomicContext,
     register_context,
+)
+from dae.genomic_resources.implementations.annotation_pipeline_impl import (
+    AnnotationPipelineImplementation,
 )
 
 logger = logging.getLogger(__name__)
@@ -30,8 +34,17 @@ class CLIAnnotationContext(CLIGenomicContext):
                 "Using the annotation pipeline from the file %s.",
                 args.pipeline)
             grr = context.get_genomic_resources_repository()
+
+            if (pipeline_path := pathlib.Path(args.pipeline)).exists():
+                raw_pipeline = pipeline_path.read_text()
+            else:
+                if grr is None:
+                    raise ValueError
+                raw_pipeline = AnnotationPipelineImplementation(
+                    grr.get_resource(args.pipeline)).raw
+
             pipeline = build_annotation_pipeline(
-                pipeline_config_file=args.pipeline,
+                pipeline_config_str=raw_pipeline,
                 grr_repository=grr,
                 allow_repeated_attributes=args.allow_repeated_attributes)
             context_objects["annotation_pipeline"] = pipeline

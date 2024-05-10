@@ -146,7 +146,7 @@ class AnnotateVCFTool(AnnotationTool):
         """Annotate a region from a given input VCF file using a pipeline."""
         pipeline = AnnotateVCFTool._produce_annotation_pipeline(
             pipeline_config, pipeline_config_old,
-            grr_definition, allow_repeated_attributes,
+            grr_definition, allow_repeated_attributes=allow_repeated_attributes,
         )
         with closing(VariantFile(input_file)) as in_file:
             update_header(in_file, pipeline)
@@ -226,8 +226,8 @@ class AnnotateVCFTool(AnnotationTool):
         else:
             output = os.path.basename(self.args.input).split(".")[0] + "_annotated.vcf"
 
-        with open(self.args.pipeline, "r") as infile:
-            raw_pipeline_config = infile.read()
+        raw_pipeline_config = self._get_pipeline_config()
+
         pipeline_config_old = None
         if self.args.reannotate:
             with open(self.args.reannotate, "r") as infile:

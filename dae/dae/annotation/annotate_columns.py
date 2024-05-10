@@ -176,8 +176,8 @@ class AnnotateColumnsTool(AnnotationTool):
                 pipeline_config_old = infile.read()
 
         pipeline = AnnotateColumnsTool._produce_annotation_pipeline(
-            pipeline_config, pipeline_config_old,
-            grr_definition, args.allow_repeated_attributes,
+            pipeline_config, pipeline_config_old, grr_definition,
+            allow_repeated_attributes=args.allow_repeated_attributes,
         )
         grr = pipeline.repository
         ref_genome = None
@@ -263,8 +263,7 @@ class AnnotateColumnsTool(AnnotationTool):
         ref_genome_id = ref_genome.resource_id \
             if ref_genome is not None else None
 
-        with open(self.args.pipeline, "r") as infile:
-            raw_pipeline_config = infile.read()
+        raw_pipeline_config = self._get_pipeline_config()
 
         if tabix_index_filename(self.args.input):
             with closing(TabixFile(self.args.input)) as pysam_file:

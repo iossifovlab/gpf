@@ -5,7 +5,7 @@ from typing import Any
 from jinja2 import Environment, PackageLoader, Template
 from markdown2 import markdown
 
-from dae.annotation.annotation_factory import build_annotation_pipeline
+from dae.annotation.annotation_factory import AnnotationConfigParser
 from dae.genomic_resources.repository import GenomicResource
 from dae.genomic_resources.resource_implementation import (
     GenomicResourceImplementation,
@@ -32,11 +32,8 @@ class AnnotationPipelineImplementation(
 
         super().__init__(resource)
 
-        self.pipeline = build_annotation_pipeline(
-            pipeline_config_str=self.resource.get_file_content(
-                self.resource.get_config()["filename"],
-            ),
-        )
+        self.raw: str = self.resource.get_file_content(
+            self.resource.get_config()["filename"])
 
     def get_info(self) -> str:
         return InfoImplementationMixin.get_info(self)
@@ -52,10 +49,13 @@ class AnnotationPipelineImplementation(
     def _get_template_data(self) -> dict[str, Any]:
         env = Environment(loader=PackageLoader("dae.annotation", "templates"))  # noqa
         doc_template = env.get_template("annotate_doc_pipeline_template.jinja")
+        pipeline = AnnotationConfigParser.parse_str(self.raw)
+        preambule = AnnotationConfigParser.parse_preambule(
+            pipeline_str=self.raw)
         return {
             "content": doc_template.render(
-                annotation_pipeline_info=self.pipeline.get_info(),
-                preambule=self.pipeline.preambule,
+                annotation_pipeline_info=pipeline,
+                preambule=preambule,
                 markdown=markdown,
             ),
         }

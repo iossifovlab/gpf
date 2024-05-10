@@ -1,5 +1,6 @@
 import argparse
 import os
+import pathlib
 import sys
 from abc import abstractmethod
 from typing import Optional
@@ -14,6 +15,9 @@ from dae.annotation.annotation_pipeline import (
 from dae.annotation.context import CLIAnnotationContext
 from dae.genomic_resources.cached_repository import cache_resources
 from dae.genomic_resources.genomic_context import get_genomic_context
+from dae.genomic_resources.implementations.annotation_pipeline_impl import (
+    AnnotationPipelineImplementation,
+)
 from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.genomic_resources.repository_factory import (
     build_genomic_resource_repository,
@@ -63,10 +67,11 @@ def cache_pipeline(
     grr: GenomicResourceRepo, pipeline: AnnotationPipeline,
 ) -> None:
     """Cache the resources used by the pipeline."""
-    resource_ids: set[str] = set()
-    for annotator in pipeline.annotators:
-        resource_ids = resource_ids | \
-            set(res.resource_id for res in annotator.resources)
+    resource_ids: set[str] = {
+        res.resource_id
+        for annotator in pipeline.annotators
+        for res in annotator.resources
+    }
     cache_resources(grr, resource_ids)
 
 
@@ -107,6 +112,7 @@ class AnnotationTool:
         pipeline_config: str,
         pipeline_config_old: Optional[str],
         grr_definition: Optional[dict],
+        *,
         allow_repeated_attributes: bool,
     ) -> AnnotationPipeline:
         grr = build_genomic_resource_repository(definition=grr_definition)
@@ -122,6 +128,13 @@ class AnnotationTool:
             )
             pipeline = ReannotationPipeline(pipeline, pipeline_old)
         return pipeline
+
+    def _get_pipeline_config(self) -> str:
+        if (pipeline_path := pathlib.Path(self.args.pipeline)).exists():
+            return pipeline_path.read_text()
+        if (pipeline_res := self.grr.find_resource(self.args.pipeline)):
+            return AnnotationPipelineImplementation(pipeline_res).raw
+        raise ValueError
 
     @abstractmethod
     def get_argument_parser(self) -> argparse.ArgumentParser:

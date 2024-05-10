@@ -78,7 +78,7 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
             (loader.meta["annotation_pipeline"]
              if loader.has_annotation else None),
             grr_definition,
-            allow_repeated_attributes,
+            allow_repeated_attributes=allow_repeated_attributes,
         )
         writer = VariantsParquetWriter(
             output_dir, pipeline.get_attributes(),
@@ -134,8 +134,9 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
         if layout.family is None:
             raise ValueError("Invalid family dir in output layout!")
 
+        raw_annotation = self._get_pipeline_config()
+
         # Write metadata
-        raw_annotation = pathlib.Path(self.args.pipeline).read_text()
         meta_keys = ["annotation_pipeline"]
         meta_values = [raw_annotation]
         for k, v in loader.meta.items():
