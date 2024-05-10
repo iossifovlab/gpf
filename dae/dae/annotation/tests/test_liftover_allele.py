@@ -5,6 +5,7 @@ import pytest
 
 from dae.annotation.liftover_annotator import (
     liftover_allele,
+    liftover_variant,
 )
 from dae.genomic_resources.liftover_chain import (
     build_liftover_chain_from_resource,
@@ -154,6 +155,7 @@ def liftover_ex4_grr(
             >22
             NNNNNNNNNNNNNNNNNNNN
             NNNATAAAGACATAAANNNN
+            #  ATAAAGGCATAAA
             >18
             NNNNNNNNNNNNNNNNNNNN
             NNAATTGGCGATGTTTCTTG
@@ -475,6 +477,79 @@ def test_ex4a_liftover_parts(
     assert lpos == 10
     assert lref == "G"
     assert lalt == "A"
+
+
+def test_ex4a_liftover_variant(
+    liftover_ex4_grr: GenomicResourceRepo,
+) -> None:
+    res = liftover_ex4_grr.get_resource("source_genome")
+    source_genome = build_reference_genome_from_resource(res)
+    source_genome.open()
+
+    res = liftover_ex4_grr.get_resource("target_genome")
+    target_genome = build_reference_genome_from_resource(res)
+    target_genome.open()
+
+    res = liftover_ex4_grr.get_resource("liftover_chain")
+    liftover_chain = build_liftover_chain_from_resource(res)
+    liftover_chain.open()
+
+    result = liftover_allele(
+        "22", 25, "TAA", "T",
+        liftover_chain, source_genome, target_genome)
+    assert result is not None
+
+    lchrom, lpos, lref, lalt = result
+    assert lchrom == "chr22"
+    assert lpos == 5
+    assert lref == "TAA"
+    assert lalt == "T"
+
+    result = liftover_allele(
+        "22", 25, "T", "G",
+        liftover_chain, source_genome, target_genome)
+    assert result is not None
+
+    lchrom, lpos, lref, lalt = result
+    assert lchrom == "chr22"
+    assert lpos == 5
+    assert lref == "T"
+    assert lalt == "G"
+
+    # 1:47173530 CCAAA > TCAAA,C
+    # 22:25 TAA > CAA,T
+    result = liftover_allele(
+        "22", 25, "TAA", "CAA",
+        liftover_chain, source_genome, target_genome)
+    assert result is not None
+
+    lchrom, lpos, lref, lalt = result
+    assert lchrom == "chr22"
+    assert lpos == 5
+    assert lref == "T"
+    assert lalt == "C"
+
+    result = liftover_allele(
+        "22", 25, "TAA", "C",
+        liftover_chain, source_genome, target_genome)
+    assert result is not None
+
+    lchrom, lpos, lref, lalt = result
+    assert lchrom == "chr22"
+    assert lpos == 5
+    assert lref == "TAA"
+    assert lalt == "C"
+
+    r_variant = liftover_variant(
+        "22", 25, "TAA", ["CAA", "C"],
+        liftover_chain, source_genome, target_genome)
+    assert r_variant is not None
+
+    lchrom, lpos, lref, lalts = r_variant
+    assert lchrom == "chr22"
+    assert lpos == 5
+    assert lref == "TAA"
+    assert lalts == ["CAA", "C"]
 
 
 def test_ex4b_liftover_parts(

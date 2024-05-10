@@ -279,26 +279,78 @@ def liftover_allele(
 
     tseq = target_genome.get_sequence(tchrom, tpos, tend)
 
-    mlength = min(len(mref), len(malt))
-    mdiff = max(len(mref), len(malt)) - mlength
-
-    if mref in tseq:
+    if tseq == mref:
+        tref = mref
         talt = malt
-        if tstrand == "+":
-            tref = tseq[:mlength]
-        else:
-            tref = tseq[mdiff:]
-            tpos += mdiff
-    elif malt in tseq:
+    elif tseq == malt:
+        tref = tseq
         talt = mref
-        if tstrand == "+":
-            tref = tseq[:mlength]
-        else:
-            tref = tseq[mdiff:]
-            tpos += mdiff
     else:
-        return None
+        mlength = min(len(mref), len(malt))
+        mdiff = max(len(mref), len(malt)) - mlength
+
+        if mref in tseq:
+            talt = malt
+            if tstrand == "+":
+                tref = tseq[:mlength]
+            else:
+                tref = tseq[mdiff:]
+                tpos += mdiff
+        elif malt in tseq:
+            talt = mref
+            if tstrand == "+":
+                tref = tseq[:mlength]
+            else:
+                tref = tseq[mdiff:]
+                tpos += mdiff
+        else:
+            return None
 
     nchrom, npos, nref, nalts = normalize_variant(
         tchrom, tpos, tref, [talt], target_genome)
     return nchrom, npos, nref, nalts[0]
+
+
+def liftover_variant(
+    chrom: str,
+    pos: int,
+    ref: str,
+    alts: list[str],
+    liftover_chain: LiftoverChain,
+    source_genome: ReferenceGenome,
+    target_genome: ReferenceGenome,
+) -> Optional[tuple[str, int, str, list[str]]]:
+    lo_alleles: list[tuple[str, int, str, str]] = []
+    for alt in alts:
+        lo_allele = liftover_allele(
+            chrom, pos, ref, alt,
+            liftover_chain, source_genome, target_genome,
+        )
+        if lo_allele is None:
+            return None
+        lo_alleles.append(lo_allele)
+    if not all(
+            chrom == lo_alleles[0][0] for chrom, _, _, _ in lo_alleles):
+        return None
+
+    if not all(
+            pos == lo_alleles[0][1] for _, pos, _, _ in lo_alleles):
+        return None
+
+    max_ref = max(len(ref) for _, _, ref, _ in lo_alleles)
+    r_alleles: list[tuple[str, int, str, str]] = []
+    for allele in lo_alleles:
+        if len(allele[2]) == max_ref:
+            r_alleles.append(allele)
+            continue
+        chrom, pos, ref, alt = allele
+        fill_start = pos + len(ref)
+        fill_end = pos + max_ref - 1
+        fill_seq = target_genome.get_sequence(chrom, fill_start, fill_end)
+        fill_ref = f"{ref}{fill_seq}"
+        fill_alt = f"{alt}{fill_seq}"
+        assert len(fill_ref) == max_ref
+        r_alleles.append((chrom, pos, fill_ref, fill_alt))
+    assert all(ref == r_alleles[0][2] for _, _, ref, _ in r_alleles)
+    chrom, pos, ref, _ = r_alleles[0]
+    return chrom, pos, ref, [alt for _, _, _, alt in r_alleles]
