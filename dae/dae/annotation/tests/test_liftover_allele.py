@@ -648,10 +648,4 @@ def test_ex4d_liftover_parts(
     result = liftover_allele(
         "21", 30, "C", "T",
         liftover_chain, source_genome, target_genome)
-    assert result is not None
-
-    lchrom, lpos, lref, lalt = result
-    assert lchrom == "chr21"
-    assert lpos == 10
-    assert lref == "T"
-    assert lalt == "C"
+    assert result is None

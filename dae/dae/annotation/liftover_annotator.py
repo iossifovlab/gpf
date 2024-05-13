@@ -232,6 +232,66 @@ def _liftover_snp_simple(
 _LO_LENGTH_CHANGE_CUTOFF = 10
 
 
+def _liftover_sequence(
+    chrom: str,
+    pos: int,
+    ref: str,
+    alt: str,
+    liftover_chain: LiftoverChain,
+    target_genome: ReferenceGenome,
+) -> Optional[tuple[str, int, str, str]]:
+    slen = len(ref)
+    anchor_5prime = pos
+    anchor_3prime = pos + slen - 1
+    lo_anchor_5prime = liftover_chain.convert_coordinate(chrom, anchor_5prime)
+    lo_anchor_3prime = liftover_chain.convert_coordinate(chrom, anchor_3prime)
+    if lo_anchor_5prime is None or lo_anchor_3prime is None:
+        logger.debug(
+            "liftover anchors not found: %s:%d-%d",
+            chrom, anchor_5prime, anchor_3prime,
+        )
+        return None
+
+    # check if the anchors are on the same chromosome and strand
+    if lo_anchor_5prime[0] != lo_anchor_3prime[0] or \
+            lo_anchor_5prime[2] != lo_anchor_3prime[2]:
+        logger.debug(
+            "liftover anchors are on different chromosomes or strands: "
+            "%s:%d-%d %s:%d %s:%d", chrom, anchor_5prime, anchor_3prime,
+            lo_anchor_5prime[0], lo_anchor_5prime[1],
+            lo_anchor_3prime[0], lo_anchor_3prime[1],
+        )
+        return None
+    tchrom = lo_anchor_5prime[0]
+    tpos = min(lo_anchor_5prime[1], lo_anchor_3prime[1])
+    tend = max(lo_anchor_5prime[1], lo_anchor_3prime[1])
+
+    if lo_anchor_5prime[2] == "-":
+        assert lo_anchor_3prime[2] == "-"
+        ref = reverse_complement(ref)
+        alt = reverse_complement(alt)
+    tlen = tend - tpos + 1
+    if tlen > _LO_LENGTH_CHANGE_CUTOFF * slen:
+        logger.debug(
+            "liftover allele length changed too much: %s:%d %s>%s; "
+            "source length: %d, target length: %d",
+            chrom, pos, ref, alt, slen, tlen)
+        return None
+
+    tseq = target_genome.get_sequence(tchrom, tpos, tend)
+
+    if tseq == ref:
+        tref = ref
+        talt = alt
+        return tchrom, tpos, tref, talt
+    if tseq == alt:
+        tref = tseq
+        talt = ref
+        return tchrom, tpos, tref, talt
+
+    return None
+
+
 def liftover_allele(
     chrom: str,
     pos: int,
@@ -257,65 +317,14 @@ def liftover_allele(
         nchrom, npos, nref, nalts, source_genome)
     malt = malts[0]
 
-    slen = max(len(mref), len(malt))
-    anchor_5prime = mpos
-    anchor_3prime = mpos + slen - 1
-    lo_anchor_5prime = liftover_chain.convert_coordinate(mchrom, anchor_5prime)
-    lo_anchor_3prime = liftover_chain.convert_coordinate(mchrom, anchor_3prime)
-    if lo_anchor_5prime is None or lo_anchor_3prime is None:
-        return None
-
-    # check if the anchors are on the same chromosome and strand
-    if lo_anchor_5prime[0] != lo_anchor_3prime[0] or \
-            lo_anchor_5prime[2] != lo_anchor_3prime[2]:
-        return None
-    tchrom = lo_anchor_5prime[0]
-    tpos = min(lo_anchor_5prime[1], lo_anchor_3prime[1])
-    tend = max(lo_anchor_5prime[1], lo_anchor_3prime[1])
-
-    tstrand = "+"
-    if lo_anchor_5prime[2] == "-":
-        assert lo_anchor_3prime[2] == "-"
-        tstrand = "-"
-        mref = reverse_complement(mref)
-        malt = reverse_complement(malt)
-    tlen = tend - tpos + 1
-    if tlen > _LO_LENGTH_CHANGE_CUTOFF * slen:
-        logger.info(
-            "liftover allele length changed too much: %s:%d %s>%s; "
-            "source length: %d, target length: %d",
-            chrom, pos, ref, alt, slen, tlen)
-        return None
-
-    tseq = target_genome.get_sequence(tchrom, tpos, tend)
-
-    if tseq == mref:
-        tref = mref
-        talt = malt
-    elif tseq == malt:
-        tref = tseq
-        talt = mref
-    else:
-        mlength = min(len(mref), len(malt))
-        mdiff = max(len(mref), len(malt)) - mlength
-
-        if mref in tseq:
-            talt = malt
-            if tstrand == "+":
-                tref = tseq[:mlength]
-            else:
-                tref = tseq[mdiff:]
-                tpos += mdiff
-        elif malt in tseq:
-            talt = mref
-            if tstrand == "+":
-                tref = tseq[:mlength]
-            else:
-                tref = tseq[mdiff:]
-                tpos += mdiff
-        else:
+    lo_variant = _liftover_sequence(
+        mchrom, mpos, mref, malt, liftover_chain, target_genome)
+    if lo_variant is None:
+        lo_variant = _liftover_sequence(
+            mchrom, mpos, malt, mref, liftover_chain, target_genome)
+        if lo_variant is None:
             return None
-
+    tchrom, tpos, tref, talt = lo_variant
     nchrom, npos, nref, nalts = normalize_variant(
         tchrom, tpos, tref, [talt], target_genome)
     return nchrom, npos, nref, nalts[0]
