@@ -1,5 +1,4 @@
 """Provides a lift over annotator and helpers."""
-
 import logging
 from typing import Any, Optional
 
@@ -230,6 +229,9 @@ def _liftover_snp_simple(
     return nchrom, npos, nref, nalts[0]
 
 
+_LO_LENGTH_CHANGE_CUTOFF = 10
+
+
 def liftover_allele(
     chrom: str,
     pos: int,
@@ -255,8 +257,9 @@ def liftover_allele(
         nchrom, npos, nref, nalts, source_genome)
     malt = malts[0]
 
+    slen = max(len(mref), len(malt))
     anchor_5prime = mpos
-    anchor_3prime = mpos + max(len(mref), len(malts[0])) - 1
+    anchor_3prime = mpos + slen - 1
     lo_anchor_5prime = liftover_chain.convert_coordinate(mchrom, anchor_5prime)
     lo_anchor_3prime = liftover_chain.convert_coordinate(mchrom, anchor_3prime)
     if lo_anchor_5prime is None or lo_anchor_3prime is None:
@@ -276,6 +279,13 @@ def liftover_allele(
         tstrand = "-"
         mref = reverse_complement(mref)
         malt = reverse_complement(malt)
+    tlen = tend - tpos + 1
+    if tlen > _LO_LENGTH_CHANGE_CUTOFF * slen:
+        logger.info(
+            "liftover allele length changed too much: %s:%d %s>%s; "
+            "source length: %d, target length: %d",
+            chrom, pos, ref, alt, slen, tlen)
+        return None
 
     tseq = target_genome.get_sequence(tchrom, tpos, tend)
 
@@ -320,6 +330,7 @@ def liftover_variant(
     source_genome: ReferenceGenome,
     target_genome: ReferenceGenome,
 ) -> Optional[tuple[str, int, str, list[str]]]:
+    """Liftover a variant."""
     lo_alleles: list[tuple[str, int, str, str]] = []
     for alt in alts:
         lo_allele = liftover_allele(

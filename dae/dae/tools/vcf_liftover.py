@@ -149,33 +149,6 @@ def main(
                     "skipping variant without liftover: %s",
                     report_vcf_variant(vcf_variant))
                 continue
-            # if len(alleles) < len(vcf_variant.alts):
-            #     logger.warning(
-            #         "skipping variant without liftover: %s liftover to %s",
-            #         report_vcf_variant(vcf_variant), report_alleles(alleles))
-            #     continue
-            # if not all(
-            #         chrom == alleles[0][0]
-            #         for chrom, pos, ref, alt in alleles):
-            #     logger.warning(
-            #         "liftover alleles on different contigs: %s liftover to %s",
-            #         report_vcf_variant(vcf_variant), report_alleles(alleles))
-            #     continue
-            # if not all(pos == alleles[0][1]
-            #            for chrom, pos, ref, alt in alleles):
-
-            #     logger.warning(
-            #         "liftover alleles on different positions: %s "
-            #         "liftover to %s",
-            #         report_vcf_variant(vcf_variant), report_alleles(alleles))
-            #     continue
-            # if not all(ref == alleles[0][2]
-            #            for chrom, pos, ref, alt in alleles):
-
-            #     logger.warning(
-            #         "liftover alleles with different ref: %s liftover to %s",
-            #         report_vcf_variant(vcf_variant), report_alleles(alleles))
-            #     continue
 
             vcf_variant.translate(output_header)
             chrom, pos, ref, alts = lo_variant
