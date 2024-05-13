@@ -49,9 +49,7 @@ class AnnotationPipelineImplementation(
     def _get_template_data(self) -> dict[str, Any]:
         env = Environment(loader=PackageLoader("dae.annotation", "templates"))  # noqa
         doc_template = env.get_template("annotate_doc_pipeline_template.jinja")
-        pipeline = AnnotationConfigParser.parse_str(self.raw)
-        preambule = AnnotationConfigParser.parse_preambule(
-            pipeline_str=self.raw)
+        preambule, pipeline = AnnotationConfigParser.parse_str(self.raw)
         return {
             "content": doc_template.render(
                 annotation_pipeline_info=pipeline,

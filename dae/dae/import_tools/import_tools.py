@@ -620,7 +620,7 @@ class ImportProject:
     def build_annotation_pipeline(self) -> AnnotationPipeline:
         config = self.get_annotation_pipeline_config()
         gpf_instance = self.get_gpf_instance()
-        annotation_config = AnnotationConfigParser.parse_raw(config)
+        _, annotation_config = AnnotationConfigParser.parse_raw(config)
         return build_annotation_pipeline(
             pipeline_config=annotation_config, grr_repository=gpf_instance.grr,
         )
