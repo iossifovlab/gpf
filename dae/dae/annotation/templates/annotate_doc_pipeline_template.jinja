@@ -1,34 +1,99 @@
 <html>
+  <head>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap" rel="stylesheet">
 
-<head>
     <style>
-        h3,
-        h4 {
-            margin-top: 0.5em;
-            margin-bottom: 0.5em;
-        }
+      * {
+        font-family: Roboto, FontAwesome;
+      }
 
-        .annotator_line {
-            font-size: 14px;
-            background-color: aquamarine;
-            vertical-align: top;
-        }
+      p {
+        margin: 8px;
+      }
 
-        .attribute_description {
-            font-size: 14px;
-        }
+      body {
+        width: 60%;
+        margin: auto;
+      }
 
-        .attribute_name {
-            font-size: 20px;
-        }
+      h1,
+      h2,
+      h3,
+      h4 {
+        margin-top: 0.5em;
+        margin-bottom: 0.5em;
+      }
 
-        .resource {
-            background-color: rgb(233, 151, 151);
-        }
+      .annotator-line {
+        font-size: 18px;
+        margin-top: 60px;
+        vertical-align: top;
+        border: 1px solid rgb(218,218,218);
+      }
+
+      .annotator-title {
+        font-size: 24px;
+        font-weight: 500;
+        background-color: #eee;
+        padding: 10px 8px;
+      }
+
+      .resource {
+        border-top: 1px solid rgb(218,218,218);
+      }
+      
+      .attribute {
+        border-bottom: 1px solid rgb(218,218,218);
+        padding: 20px 0 20px;
+        display: flex;
+        flex-direction: row;
+        column-gap: 10%;
+      }
+
+      .attribute-name {
+        font-size: 22px;
+        font-weight: 500;
+        margin: 8px;
+      }
+
+      .attribute-type {
+        font-size: 18px;
+        margin: 8px;
+      }
+
+      .attribute-description {
+        font-size: 18px;
+        width: 40%;
+      }
+
+      .attribute-info {
+        font-size: 22px;
+        align-self: center;
+        width: 40%;
+      }
+
+      details, .resource {
+        padding: 10px 8px;
+      }
+
+      img {
+        height: auto; 
+        width: auto; 
+        max-width: 55%; 
+        max-height: 55%;
+        transition:transform 0.25s ease;
+      }
+
+      img:hover {
+          -webkit-transform:scale(2); /* or some other value */
+          transform:scale(2);
+      }
     </style>
-</head>
+  </head>
 
-<body>
+  <body>
     <h1>Pipeline Documentation</h1>
     {%- if preambule is not none %}
     <h3>Preambule</h3>
@@ -65,59 +130,52 @@
         {%- endif %}
     </ul>
     {%- endif %}
-    <table border="1">
-        <tr>
-            <th>Attribute</th>
-            <th>Type</th>
-            <th>Description</th>
-        </tr>
-        {%- for annotator_info in annotation_pipeline_info %}
-        <tr class="annotator_line">
-            <td>
-                <p><b>Annotator</b></p>
-                <p>type: {{annotator_info.type}}</p>
-                <p>description: {{ markdown(annotator_info.documentation) }}</p>
-            </td>
-            <td colspan="2">
-                <table border="3">
-                    <tr>
-                        {%- for genomic_resource in annotator_info.resources %}
-                        <td class="resource">
-                            <p><b>Resource</b></p>
-                            <p>id: <a href="{{genomic_resource.get_url()}}/index.html">
-                                    {{genomic_resource.get_id()}}</a></p>                            
-                            <p>type: {{genomic_resource.get_type()}}</p>
-                            <p>description: {{ markdown(genomic_resource.get_summary()) }}</p>
-                        </td>
-                        {%- endfor %}
-                    </tr>
-                </table>
-            </td>
-        </tr>
-
-        {%- for attribute_info in annotator_info.attributes %}
-        <tr class="attribute">
-            <td>
-                <div>
-                    <p class="attribute_name">{{attribute_info.name}}</p>
-                </div>
-            </td>
-            <td>
-                <div class="attribute">
-                    <p>{{attribute_info.type}}</p>
-                </div>
-            </td>
-            <td>
-                <div class="attribute_description">
-                    <p>source: {{attribute_info.source}}</p>
-                    {{markdown(attribute_info.documentation)}}
-                </div>
-            </td>
-        </tr>
-        {%- endfor %}
 
 
-        {%- endfor %}
-    </table>
-    <html>
-</body>
+    {%- for annotator_info in annotation_pipeline_info %}
+    <div class="annotator-line">
+      <div class="annotator-title">Annotator type: {{annotator_info.type}}</div>
+      {%- if annotator_info.documentation %}
+      <details>
+        <summary>Description</summary>
+        <div>
+          {{ markdown(annotator_info.documentation) }}
+        </div>
+      </details>
+      {%- endif %}
+
+      {%- for genomic_resource in annotator_info.resources %}
+      <div class="resource">
+        <div><b>Resource</b></div>
+        <div>id: <a href="{{genomic_resource.get_url()}}/index.html">
+                {{genomic_resource.get_id()}}</a></div>                            
+        <div>type: {{genomic_resource.get_type()}}</div>
+        {%- if genomic_resource.get_summary() %}
+        <details>
+          <summary>Description</summary>
+          <div>
+            {{ markdown(genomic_resource.get_summary()) }}
+          </div>
+        </details>
+        {%- endif %}
+      </div>
+      {%- endfor %}
+    </div>
+
+    {%- for attribute_info in annotator_info.attributes %}
+    <div class="attribute">
+      <div class="attribute-info">
+        <div class="attribute-name">{{attribute_info.name}}</div>
+        <div class="attribute-type">Type: {{attribute_info.type}}</div>
+      </div>
+      <div class="attribute-description">
+        <div>source: {{attribute_info.source}}</div>
+        {{markdown(attribute_info.documentation)}}
+      </div>
+    </div>
+    {%- endfor %}
+
+
+    {%- endfor %}
+  </body>
+<html>
