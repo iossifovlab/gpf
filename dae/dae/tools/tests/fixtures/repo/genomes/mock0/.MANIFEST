@@ -1,0 +1,15 @@
+- md5: 02da5b5e851f2e4073da2cbdc897e397
+  name: allChr.fa
+  size: 107
+- md5: c44c2b62a7ff9cc728b1b821f5d5e3e4
+  name: allChr.fa.fai
+  size: 19
+- md5: 53520646d9aa2a74e38d280b46474eb7
+  name: genomic_resource.yaml
+  size: 35
+- md5: 954a31c40bef2bdca5ec28b06626ae4c
+  name: statistics/chrA_statistic.yaml
+  size: 233
+- md5: 3d323fd0c7f7abcb5e9c6b3eb26eeea7
+  name: statistics/reference_genome_statistic.yaml
+  size: 294

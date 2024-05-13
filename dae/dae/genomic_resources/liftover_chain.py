@@ -75,7 +75,9 @@ class LiftoverChain(ResourceConfigValidationMixin):
         return chrom
 
     def convert_coordinate(
-            self, chrom: str, pos: int) -> Optional[tuple[str, int, str, int]]:
+        self, chrom: str,
+        pos: int,
+    ) -> Optional[tuple[str, int, str, int]]:
         """Lift over a genomic coordinate."""
         chrom = self.map_chromosome(chrom, self.chrom_variant_coordinates)
         assert self.liftover is not None
@@ -91,7 +93,8 @@ class LiftoverChain(ResourceConfigValidationMixin):
         coordinates = list(lo_coordinates[0])
         coordinates[0] = self.map_chromosome(
             coordinates[0], self.chrom_target_coordinates)
-
+        coordinates[1] += 1
+        assert coordinates[2] in {"+", "-"}
         return cast(tuple[str, int, str, int], tuple(coordinates))
 
     @staticmethod
@@ -124,5 +127,4 @@ def build_liftover_chain_from_resource(
             resource.resource_id, resource.get_type(), config)
         raise ValueError(f"wrong resource type: {config}")
 
-    result = LiftoverChain(resource)
-    return result
+    return LiftoverChain(resource)

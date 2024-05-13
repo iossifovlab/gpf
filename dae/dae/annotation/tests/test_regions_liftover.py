@@ -49,38 +49,37 @@ def fixture_repo(
         root_path / "target_genome" / "genome.fa",
         textwrap.dedent(f"""
             >chr1
-            {25 * 'AGCT'}
+            {25 * 'ACGT'}
             >chr2
-            {25 * 'AGCT'}
+            {25 * 'ACGT'}
             """),
     )
     setup_genome(
         root_path / "source_genome" / "genome.fa",
         textwrap.dedent(f"""
             >1
-            NNNN{12 * 'AGCT'}NNNN{12 * 'AGCT'}
+            NNNN{12 * 'ACGT'}NNNN{12 * 'ACGT'}
             >2
-            NNNN{12 * 'AGCT'}NNNN{12 * 'AGCT'}
+            NNNN{12 * 'ACGT'}NNNN{12 * 'ACGT'}
             """),
     )
     setup_gzip(
         root_path / "liftover_chain" / "liftover.chain.gz",
         convert_to_tab_separated("""
-        chain||4900||1||48||+||4||52||chr1||48||+||1||49||1
-        48 0 0
-        0
-        chain||4900||1||48||+||55||103||chr1||48||+||48||96||2
+        chain 4900 1 104 + 4 104 chr1 100 + 0 96 1
+        48 4 0
         48 0 0
         0
         """),
     )
+
     return build_filesystem_test_repository(root_path)
 
 
 @pytest.mark.parametrize("spos, expected", [
     (("1", 5), ("chr1", 1, "+", 4900)),
     (("1", 14), ("chr1", 10, "+", 4900)),
-    (("1", 56), ("chr1", 48, "+", 4900)),
+    (("1", 52), ("chr1", 48, "+", 4900)),
     (("1", 80), ("chr1", 72, "+", 4900)),
     (("1", 53), None),
     (("2", 56), None),
@@ -102,9 +101,9 @@ def test_liftover_chain_fixture(
 @pytest.mark.parametrize("annotatable, expected", [
     (Position("1", 10), Position("chr1", 6)),
     (Region("1", 5, 19), Region("chr1", 1, 15)),
+    (Region("1", 5, 52), Region("chr1", 1, 48)),
     (Region("1", 5, 53), None),
-    (Region("1", 5, 56), Region("chr1", 1, 48)),
-    (CNVAllele("1", 5, 56, CNVAllele.Type.LARGE_DELETION),
+    (CNVAllele("1", 5, 52, CNVAllele.Type.LARGE_DELETION),
      CNVAllele("chr1", 1, 48, CNVAllele.Type.LARGE_DELETION)),
 ])
 def test_liftover_annotator(
@@ -114,6 +113,7 @@ def test_liftover_annotator(
 
     pipeline_config = textwrap.dedent("""
         - liftover_annotator:
+            source_genome: source_genome
             target_genome: target_genome
             chain: liftover_chain
             attributes:

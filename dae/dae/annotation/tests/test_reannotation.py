@@ -183,6 +183,7 @@ def simple_pipeline_config() -> str:
     return """
     - liftover_annotator:
         chain: foobar_chain
+        source_genome: foobar_genome_2
         target_genome: foobar_genome
         attributes:
         - name: hgX_annotatable
@@ -207,12 +208,16 @@ def test_annotators_used_context_attributes(
         pipeline_config_str=simple_pipeline_config,
         grr_repository=reannotation_grr,
     )
-    assert pipeline.annotators[0].used_context_attributes == \
-        tuple()               # default behaviour
+    # default behaviour
+    assert pipeline.annotators[0].used_context_attributes == ()
+
+    # input annotatable, any annotator
     assert pipeline.annotators[1].used_context_attributes == \
-        ("hgX_annotatable",)  # input annotatable, any annotator
+        ("hgX_annotatable",)
+
+    # gene score annotator's input_gene_list
     assert pipeline.annotators[2].used_context_attributes == \
-        ("my_genes",)         # gene score annotator's input_gene_list
+        ("my_genes",)
 
 
 def test_dependency_graph_correctness(
@@ -254,6 +259,7 @@ def test_new_annotators_detection(
     - position_score: one
     - liftover_annotator:
         chain: foobar_chain
+        source_genome: foobar_genome_2
         target_genome: foobar_genome
         attributes:
         - name: hgX_annotatable
@@ -279,6 +285,7 @@ def test_deleted_attributes(reannotation_grr: GenomicResourceRepo) -> None:
     old_pipeline_config = """
     - liftover_annotator:
         chain: foobar_chain
+        source_genome: foobar_genome_2
         target_genome: foobar_genome
     - effect_annotator:
         genome: foobar_genome
@@ -289,6 +296,7 @@ def test_deleted_attributes(reannotation_grr: GenomicResourceRepo) -> None:
     new_pipeline_config = """
     - liftover_annotator:
         chain: foobar_chain
+        source_genome: foobar_genome_2
         target_genome: foobar_genome
     - position_score: one
     """
@@ -315,6 +323,7 @@ def test_reused_attributes(
     old_pipeline_config = """
     - liftover_annotator:
         chain: foobar_chain
+        source_genome: foobar_genome_2
         target_genome: foobar_genome
         attributes:
         - name: hgX_annotatable
@@ -323,6 +332,7 @@ def test_reused_attributes(
     new_pipeline_config = """
     - liftover_annotator:
         chain: foobar_chain
+        source_genome: foobar_genome_2
         target_genome: foobar_genome
         attributes:
         - name: hgX_annotatable
@@ -354,6 +364,7 @@ def test_reused_attributes_indirect(
     old_pipeline_config = """
     - liftover_annotator:
         chain: foobar_chain
+        source_genome: foobar_genome_2
         target_genome: foobar_genome
         attributes:
         - name: hgX_annotatable
@@ -373,6 +384,7 @@ def test_reused_attributes_indirect(
     new_pipeline_config = """
     - liftover_annotator:
         chain: foobar_chain
+        source_genome: foobar_genome_2
         target_genome: foobar_genome
         attributes:
         - name: hgX_annotatable
@@ -414,6 +426,7 @@ def test_annotators_rerun_detection_upstream(
     old_pipeline_config = """
     - liftover_annotator:
         chain: foobar_chain
+        source_genome: foobar_genome_2
         target_genome: foobar_genome
         attributes:
         - name: hgX_annotatable
@@ -434,6 +447,7 @@ def test_annotators_rerun_detection_upstream(
     new_pipeline_config = """
     - liftover_annotator:
         chain: foobar_chain
+        source_genome: foobar_genome_2
         target_genome: foobar_genome
         attributes:
         - name: hgX_annotatable
@@ -472,6 +486,7 @@ def test_annotators_rerun_detection_downstream(
     old_pipeline_config = """
     - liftover_annotator:
         chain: foobar_chain
+        source_genome: foobar_genome_2
         target_genome: foobar_genome
         attributes:
         - name: hgX_annotatable
@@ -490,6 +505,7 @@ def test_annotators_rerun_detection_downstream(
     new_pipeline_config = """
     - liftover_annotator:
         chain: foobar_chain
+        source_genome: foobar_genome_2
         target_genome: foobar_genome_2
         attributes:
         - name: hgX_annotatable
@@ -637,9 +653,6 @@ gene_list=g1;gene_score1=10.1;gene_score2=20.2 GT     0/1 0/0 0/0
         ]
     ])
     out_vcf = pysam.VariantFile(str(out_file))
-
-    with open(out_file, "r") as output_txt:
-        print(output_txt.read())
 
     assert set(out_vcf.header.info.keys()) == {  # pylint: disable=no-member
         "score", "worst_effect", "gene_list", "gene_score1",

@@ -5,7 +5,7 @@ import logging
 import os
 import sys
 from contextlib import closing
-from typing import List, Optional, Union
+from typing import Optional, Union
 
 from pysam import (
     TabixFile,
@@ -78,7 +78,7 @@ def combine(
     input_file_path: str,
     pipeline_config: Optional[list[AnnotatorInfo]],
     grr_definition: Optional[dict],
-    partfile_paths: List[str],
+    partfile_paths: list[str],
     output_file_path: str,
 ) -> None:
     """Combine annotated region parts into a single VCF file."""
@@ -139,7 +139,7 @@ class AnnotateVCFTool(AnnotationTool):
         pipeline_config: str,
         grr_definition: Optional[dict],
         out_file_path: str,
-        allow_repeated_attributes: bool,
+        allow_repeated_attributes: bool = False,
         pipeline_config_old: Optional[str] = None,
     ) -> None:
         # flake8: noqa: C901
@@ -162,7 +162,7 @@ class AnnotateVCFTool(AnnotationTool):
 
                 for vcf_var in in_file_iter:
                     # pylint: disable=use-list-literal
-                    buffers: List[List] = [list() for _ in annotation_attributes]
+                    buffers: list[list] = [[] for _ in annotation_attributes]
 
                     if vcf_var.ref is None:
                         logger.warning(

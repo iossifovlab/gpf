@@ -5,7 +5,7 @@ import logging
 from abc import ABC, abstractmethod
 from collections.abc import Iterable
 from functools import lru_cache
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Optional
 
 from dae.genomic_resources.gene_models import (
     GeneModels,
@@ -103,8 +103,8 @@ class SimpleGenomicContext(GenomicContext):
     """Simple implementation of genomic context."""
 
     def __init__(
-            self, context_objects: Dict[str, Any], source: tuple[str, ...]):
-        self._context: Dict[str, Any] = context_objects
+            self, context_objects: dict[str, Any], source: tuple[str, ...]):
+        self._context: dict[str, Any] = context_objects
         self._source = source
 
     def get_context_object(self, key: str) -> Optional[Any]:
@@ -116,7 +116,7 @@ class SimpleGenomicContext(GenomicContext):
     def get_source(self) -> tuple[str, ...]:
         return self._source
 
-    def get_all_context_objects(self) -> Dict[str, Any]:
+    def get_all_context_objects(self) -> dict[str, Any]:
         return self._context
 
 
@@ -148,9 +148,8 @@ class SimpleGenomicContextProvider(GenomicContextProvider):
                 else:
                     self._contexts = [context]
             except Exception:  # pylint: disable=broad-except
-                logger.error(
-                    "problem while building genomic context",
-                    exc_info=True)
+                logger.exception(
+                    "problem while building genomic context")
                 self._contexts = []
 
         return self._contexts
@@ -259,7 +258,7 @@ class CLIGenomicContext(SimpleGenomicContext):
     @staticmethod
     def context_builder(args: argparse.Namespace) -> CLIGenomicContext:
         """Build a CLI genomic context."""
-        context_objects: Dict[str, Any] = {}
+        context_objects: dict[str, Any] = {}
         grr = None
         if args.grr_filename is None and args.grr_directory is None:
             grr = get_genomic_context().get_context_object(GC_GRR_KEY)

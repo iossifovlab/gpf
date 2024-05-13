@@ -55,7 +55,7 @@ class VCFGenomicPositionTable(TabixGenomicPositionTable):
         self._build_chrom_mapping()
         return self
 
-    @cache  # pylint: disable=method-cache-max-size-none
+    @cache  # noqa B019 pylint: disable=method-cache-max-size-none
     def get_file_chromosomes(self) -> list[str]:
         with self.genomic_resource.open_tabix_file(
                 self.definition.filename) as pysam_file_tabix:

@@ -111,6 +111,7 @@ setuptools.setup(
     dae_liftover=dae.tools.dae_liftover:main
     cnv_liftover=dae.tools.cnv_liftover:main
     stats_liftover=dae.tools.stats_liftover:main
+    vcf_liftover=dae.tools.vcf_liftover:main
 
     import_tools=dae.import_tools.cli:main
     generate_gene_profile=dae.gene_profile.generate_gene_profile:main

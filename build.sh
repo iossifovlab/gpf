@@ -358,40 +358,6 @@ EOT
 
       }
 
-      # wdae
-      {
-        local -A ctx_wdae
-        build_run_ctx_init ctx:ctx_wdae "container" "${gpf_dev_image_ref}" \
-          --network "${ctx_network["network_id"]}" \
-          --env DAE_DB_DIR="/wd/data/data-hg19-local/" \
-          --env GRR_DEFINITION_FILE="/wd/cache/grr_definition.yaml" \
-          --env TEST_REMOTE_HOST="gpfremote" \
-          --env LOCALSTACK_HOST="localstack" \
-          --env WDAE_EMAIL_HOST="mailhog"
-
-        defer_ret build_run_ctx_reset ctx:ctx_wdae
-
-        for d in /wd/dae /wd/wdae /wd/dae_conftests; do
-          build_run_container ctx:ctx_wdae bash -c 'cd "'"${d}"'"; /opt/conda/bin/conda run --no-capture-output -n gpf \
-            pip install -e .'
-        done
-
-        build_run_container ctx:ctx_wdae bash -c '
-          /opt/conda/bin/conda run --no-capture-output -n gpf \
-              /wd/scripts/wait-for-it.sh -h gpfremote -p 21010 -t 300
-        '
-
-        build_run_detached ctx:ctx_wdae bash -c '
-            cd /wd/wdae;
-            export PYTHONHASHSEED=0;
-            /opt/conda/bin/conda run --no-capture-output -n gpf py.test -v \
-              --durations 20 \
-              --cov-config /wd/coveragerc \
-              --junitxml=/wd/results/wdae-junit.xml \
-              --cov wdae \
-              wdae || true'
-      }
-
       # wdae integration
       {
         local -A ctx_wdae_integ
@@ -409,11 +375,6 @@ EOT
           build_run_container ctx:ctx_wdae_integ bash -c 'cd "'"${d}"'"; /opt/conda/bin/conda run --no-capture-output -n gpf \
             pip install -e .'
         done
-
-        build_run_container ctx:ctx_wdae bash -c '
-          /opt/conda/bin/conda run --no-capture-output -n gpf \
-              /wd/scripts/wait-for-it.sh -h gpfremote -p 21010 -t 300
-        '
 
         build_run_detached ctx:ctx_wdae_integ bash -c '
             cd /wd/wdae/wdae_tests;
@@ -437,11 +398,6 @@ EOT
       }
 
       {
-        build_run_container ctx:ctx_wdae wait
-        build_run_container ctx:ctx_wdae cp ./results/wdae-junit.xml ./test-results/
-      }
-
-      {
         build_run_container ctx:ctx_dae_integ wait
         build_run_container ctx:ctx_dae_integ cp ./results/dae-tests-junit.xml ./test-results/
       }
@@ -450,6 +406,43 @@ EOT
         build_run_container ctx:ctx_wdae_integ wait
         build_run_container ctx:ctx_wdae_integ cp ./results/wdae-tests-junit.xml ./test-results/
       }
+
+      # wdae
+      {
+        local -A ctx_wdae
+        build_run_ctx_init ctx:ctx_wdae "container" "${gpf_dev_image_ref}" \
+          --network "${ctx_network["network_id"]}" \
+          --env DAE_DB_DIR="/wd/data/data-hg19-local/" \
+          --env GRR_DEFINITION_FILE="/wd/cache/grr_definition.yaml" \
+          --env TEST_REMOTE_HOST="gpfremote" \
+          --env LOCALSTACK_HOST="localstack" \
+          --env WDAE_EMAIL_HOST="mailhog"
+
+        defer_ret build_run_ctx_reset ctx:ctx_wdae
+
+        for d in /wd/dae /wd/wdae /wd/dae_conftests; do
+          build_run_container ctx:ctx_wdae bash -c 'cd "'"${d}"'"; /opt/conda/bin/conda run --no-capture-output -n gpf \
+            pip install -e .'
+        done
+
+        build_run_container ctx:ctx_wdae bash -c '
+          /opt/conda/bin/conda run --no-capture-output -n gpf \
+              /wd/scripts/wait-for-it.sh -h gpfremote -p 21010 -t 300
+        '
+
+        build_run_container ctx:ctx_wdae bash -c '
+            cd /wd/wdae;
+            export PYTHONHASHSEED=0;
+            /opt/conda/bin/conda run --no-capture-output -n gpf py.test -v \
+              --durations 20 \
+              --cov-config /wd/coveragerc \
+              --junitxml=/wd/results/wdae-junit.xml \
+              --cov wdae \
+              wdae || true'
+
+        build_run_container ctx:ctx_wdae cp ./results/wdae-junit.xml ./test-results/
+      }
+
     }
 
     # create cobertura report for jenkins and coverage html report for dae, wdae, dae_integ, wdae_integ

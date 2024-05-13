@@ -12,10 +12,10 @@ from dae.genomic_resources.repository import GenomicResourceProtocolRepo
 
 
 @pytest.mark.parametrize("pos,expected_chrom,expected_pos,expected_strand", [
-    (100_000, "1", 99_999, "+"),
-    (180_000, "16", 90_188_902, "-"),
-    (190_000, "2", 114_351_526, "-"),
-    (260_000, "1", 229_750, "+"),
+    (100_000, "1", 100_000, "+"),
+    (180_000, "16", 90_188_903, "-"),
+    (190_000, "2", 114_351_527, "-"),
+    (260_000, "1", 229_751, "+"),
 ])
 def test_liftover_chain_resource(
         fixture_dirname: Callable[[str], str],

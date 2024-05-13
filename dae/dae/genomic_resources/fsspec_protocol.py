@@ -5,16 +5,15 @@ import datetime
 import fcntl
 import hashlib
 import logging
+import operator
 import os
 from collections.abc import Generator
+from contextlib import AbstractContextManager
 from dataclasses import asdict
 from types import TracebackType
 from typing import (
     IO,
     Any,
-    ContextManager,
-    Dict,
-    List,
     Optional,
     Union,
     cast,
@@ -69,7 +68,7 @@ def _scan_for_resources(
             resource_id, version = id_ver
             yield "/".join([*parent_id, resource_id]), version, content
         else:
-            curr_id = parent_id + [name]
+            curr_id = [*parent_id, name]
             curr_id_path = "/".join(curr_id)
             if not isinstance(content, dict):
                 logger.warning("file <%s> is not used.", curr_id_path)
@@ -81,8 +80,7 @@ def _scan_for_resources(
                 continue
 
             # scan children
-            for rid, rver, rcontent in _scan_for_resources(content, curr_id):
-                yield rid, rver, rcontent
+            yield from _scan_for_resources(content, curr_id)
 
 
 def _scan_for_resource_files(
@@ -103,13 +101,13 @@ def _scan_for_resource_files(
             else:
                 logger.error(
                     "unexpected content at %s: %s", fname, content)
-                raise ValueError(f"unexpected content at {fname}: {content}")
+                raise TypeError(f"unexpected content at {fname}: {content}")
 
 
 def build_inmemory_protocol(
         proto_id: str,
         root_path: str,
-        content: Dict[str, Any]) -> FsspecReadWriteProtocol:
+        content: dict[str, Any]) -> FsspecReadWriteProtocol:
     """Build and return an embedded fsspec protocol for testing."""
     if not os.path.isabs(root_path):
         logger.error(
@@ -152,13 +150,11 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
             self.scheme = "file"
         self.netloc = parsed.netloc
         self.root_path = parsed.path
-        # if not self.root_path.startswith("/"): ### WHY???
-        #     self.root_path = f"/{self.root_path}"
 
         self.url = f"{self.scheme}://{self.netloc}{self.root_path}"
         self.filesystem = filesystem
 
-        self._all_resources: Optional[List[GenomicResource]] = None
+        self._all_resources: Optional[list[GenomicResource]] = None
 
     def get_url(self) -> str:
         return self.url
@@ -191,17 +187,15 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
 
     def get_resource_url(self, resource: GenomicResource) -> str:
         """Return url of the specified resources."""
-        resource_url = os.path.join(
+        return os.path.join(
             self.url,
             resource.get_genomic_resource_id_version())
-        return resource_url
 
     def get_resource_file_url(
             self, resource: GenomicResource, filename: str) -> str:
         """Return url of a file in the resource."""
-        url = os.path.join(
+        return os.path.join(
             self.get_resource_url(resource), filename)
-        return url
 
     def file_exists(
             self, resource: GenomicResource, filename: str) -> bool:
@@ -312,7 +306,7 @@ class FsspecReadWriteProtocol(
 
     def obtain_resource_file_lock(
         self, resource: GenomicResource, filename: str,
-    ) -> ContextManager:
+    ) -> AbstractContextManager:
         """Lock a resource's file."""
 
         class Lock:
@@ -336,7 +330,7 @@ class FsspecReadWriteProtocol(
                 self.filesystem.makedirs(
                     os.path.dirname(path), exist_ok=True)
             # pylint: disable=consider-using-with
-            lockfile = open(path, "wt", encoding="utf8")
+            lockfile = open(path, "wt", encoding="utf8")  # noqa
             lockfile.write(str(datetime.datetime.now()) + "\n")
             fcntl.flock(lockfile, fcntl.LOCK_EX)
             lock.__enter__ = lockfile.__enter__  # type: ignore
@@ -446,7 +440,7 @@ class FsspecReadWriteProtocol(
         """Return generator over all resources in the repository."""
         if self._all_resources is None:
             self._all_resources = sorted(
-                list(self.collect_all_resources()),
+                self.collect_all_resources(),
                 key=lambda r: r.get_genomic_resource_id_version())
 
         yield from self._all_resources
@@ -546,7 +540,7 @@ class FsspecReadWriteProtocol(
                     filename, "wb",
                     uncompress=False) as outfile:
 
-            md5_hash = hashlib.md5()
+            md5_hash = hashlib.md5()  # noqa
             while chunk := infile.read(self.CHUNK_SIZE):
                 outfile.write(chunk)
                 md5_hash.update(chunk)
@@ -619,7 +613,7 @@ class FsspecReadWriteProtocol(
                 "manifest": res.get_manifest().to_manifest_entries(),
             }
             for res in self.get_all_resources()]
-        content = sorted(content, key=lambda x: x["id"])  # type: ignore
+        content = sorted(content, key=operator.itemgetter("id"))  # type: ignore
 
         content_filepath = os.path.join(
             self.url, GR_CONTENTS_FILE_NAME)
@@ -654,13 +648,10 @@ class FsspecReadWriteProtocol(
 
 
 def build_local_resource(
-        dirname: str, config: Dict[str, Any]) -> GenomicResource:
+        dirname: str, config: dict[str, Any]) -> GenomicResource:
     """Build a resource from a local filesystem directory."""
     proto = build_fsspec_protocol("d", dirname)
-    resource = GenomicResource(
-        dirname, (0, ), proto,
-        config)
-    return resource
+    return GenomicResource(".", (0, ), proto, config)
 
 
 FsspecRepositoryProtocol = Union[

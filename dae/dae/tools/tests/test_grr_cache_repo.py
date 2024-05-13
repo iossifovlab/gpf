@@ -25,6 +25,7 @@ def test_cli_cache_instance(mocker, fixture_path, temp_cache_dir):
 
     paths = [
         ("genomes", "mock"),
+        ("genomes", "mock0"),
         ("gene_models", "mock"),
         ("liftover", "mock"),
         ("scores", "mock1"),

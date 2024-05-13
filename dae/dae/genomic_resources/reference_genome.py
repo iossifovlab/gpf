@@ -4,7 +4,7 @@ import logging
 import os
 from collections.abc import Generator
 from types import TracebackType
-from typing import IO, Any, Optional, Type, cast
+from typing import IO, Any, Optional, cast
 
 from dae.genomic_resources import GenomicResource
 from dae.genomic_resources.fsspec_protocol import build_local_resource
@@ -106,12 +106,6 @@ class ReferenceGenome(
 
     def close(self) -> None:
         """Close reference genome sequence file-like objects."""
-        # FIXME: consider using weakref to work around this problem
-        # self._sequence.close()
-        # self._sequence = None
-
-        # self._index = {}
-        # self._chromosomes = []
 
     def open(self) -> ReferenceGenome:
         """Open reference genome resources."""
@@ -138,7 +132,7 @@ class ReferenceGenome(
 
     def __exit__(
         self,
-        exc_type: Optional[Type[BaseException]],
+        exc_type: Optional[type[BaseException]],
         exc_value: Optional[BaseException],
         exc_tb: Optional[TracebackType],
     ) -> None:
@@ -149,8 +143,8 @@ class ReferenceGenome(
         try:
             self.close()
         except Exception:  # pylint: disable=broad-except
-            logger.error(
-                "exception during closing reference genome", exc_info=True)
+            logger.exception(
+                "exception during closing reference genome")
 
     def get_chrom_length(self, chrom: str) -> int:
         """Return the length of a specified chromosome."""
@@ -238,8 +232,7 @@ class ReferenceGenome(
             sequence = sequence.replace("\n", "").upper()
             end = min(read_progress + read_length, length - read_progress)
             sequence = sequence[:end]
-            for nuc in sequence:
-                yield nuc
+            yield from sequence
             read_progress += len(sequence)
         return None
 
@@ -251,7 +244,7 @@ class ReferenceGenome(
         """Return true if specified position is pseudoautosomal."""
         def in_any_region(
                 chrom: str, pos: int, regions: list[Region]) -> bool:
-            return any(map(lambda reg: reg.isin(chrom, pos), regions))
+            return any(reg for reg in regions if reg.isin(chrom, pos))
 
         pars_regions = self.pars.get(chrom, None)
         if pars_regions:
@@ -293,5 +286,4 @@ def build_reference_genome_from_resource(
             resource.resource_id, resource.get_type())
         raise ValueError(f"wrong resource type: {resource.resource_id}")
 
-    ref = ReferenceGenome(resource)
-    return ref
+    return ReferenceGenome(resource)
