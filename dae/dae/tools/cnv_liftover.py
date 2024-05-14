@@ -98,6 +98,7 @@ def main(
         f"""
         - liftover_annotator:
             chain: {args.chain}
+            source_genome: {args.source_genome}
             target_genome: {args.target_genome}
             attributes:
             - source: liftover_annotatable
