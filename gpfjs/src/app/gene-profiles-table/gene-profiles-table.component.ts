@@ -31,8 +31,7 @@ import { StatefulComponent } from 'app/common/stateful-component';
 })
 export class GeneProfilesTableComponent extends StatefulComponent implements OnInit, OnChanges, OnDestroy {
   @Input() public config: GeneProfilesTableConfig;
-  @Input() public sortBy: string;
-  public defaultSortBy: string;
+  public sortBy: string;
   @Output() public goToQueryEvent = new EventEmitter();
 
   @ViewChild(NgbDropdownMenu) public ngbDropdownMenu: NgbDropdownMenu;
@@ -86,8 +85,6 @@ export class GeneProfilesTableComponent extends StatefulComponent implements OnI
   }
 
   public ngOnInit(): void {
-    this.defaultSortBy = this.sortBy;
-
     this.keystrokeSubscription = this.searchKeystrokes$.pipe(
       distinctUntilChanged(),
       tap(() => {
@@ -114,12 +111,10 @@ export class GeneProfilesTableComponent extends StatefulComponent implements OnI
   }
 
   public ngOnChanges(): void {
-    if (this.config) {
-      this.viewportPageCount = Math.ceil(window.innerHeight / (this.baseRowHeight * this.config.pageSize));
-      this.setLeavesVisibility();
-      this.calculateHeaderLayout();
-      this.fillTable();
-    }
+    this.viewportPageCount = Math.ceil(window.innerHeight / (this.baseRowHeight * this.config.pageSize));
+    this.setLeavesVisibility();
+    this.calculateHeaderLayout();
+    this.fillTable();
   }
 
   public ngOnDestroy(): void {
@@ -163,6 +158,10 @@ export class GeneProfilesTableComponent extends StatefulComponent implements OnI
     this.ngbDropdownMenu.dropdown.close();
   }
 
+  private setDefaultSortableCategory(): void {
+    this.sortBy = this.config.columns.filter(column => column.sortable)[0].id;
+  }
+
   private fillTable(): void {
     const geneProfilesRequests = [];
     this.pageIndex = 1;
@@ -204,13 +203,13 @@ export class GeneProfilesTableComponent extends StatefulComponent implements OnI
         this.geneInput = state.searchValue;
         this.highlightedGenes = state.highlightedRows;
         this.orderBy = state.orderBy;
+        this.leavesIds = state.headerLeaves;
         if (state.sortBy) {
           this.sortBy = state.sortBy;
         } else {
-          this.sortBy = this.defaultSortBy;
+          this.setDefaultSortableCategory();
           this.store.dispatch(new SetGeneProfilesSortBy(this.sortBy));
         }
-        this.leavesIds = state.headerLeaves;
       });
 
     this.search(this.geneInput);
@@ -346,7 +345,7 @@ export class GeneProfilesTableComponent extends StatefulComponent implements OnI
     this.calculateHeaderLayout();
   }
 
-  public sort(sortBy: string, orderBy?: string): void {
+  public sort(sortBy: string, orderBy: string): void {
     if (this.sortBy !== sortBy) {
       this.resetSortButtons();
     }

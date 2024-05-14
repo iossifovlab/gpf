@@ -19,7 +19,6 @@ import {
 })
 export class GeneProfilesBlockComponent implements OnInit {
   public geneProfilesTableConfig: GeneProfilesTableConfig;
-  public geneProfilesTableSortBy: string;
   public geneProfilesSingleViewConfig: GeneProfilesSingleViewConfig;
 
   public constructor(
@@ -33,7 +32,6 @@ export class GeneProfilesBlockComponent implements OnInit {
       map(config => this.createTableConfig(config))
     ).subscribe((config: GeneProfilesTableConfig) => {
       this.geneProfilesTableConfig = config;
-      this.geneProfilesTableSortBy = this.findFirstSortableCategory(config);
     });
 
     this.geneProfilesService.getConfig().pipe(take(1)).subscribe(config => {
@@ -166,10 +164,6 @@ export class GeneProfilesBlockComponent implements OnInit {
     return new GeneProfilesColumn(
       null, personSetsColumns, dataset.displayName, false, dataset.id, dataset.meta, false, dataset.defaultVisible
     );
-  }
-
-  private findFirstSortableCategory(geneProfilesTableConfig: GeneProfilesTableConfig): string {
-    return geneProfilesTableConfig.columns.filter(column => column.sortable)[0].id;
   }
 
   public goToQueryEventHandler($event: { geneSymbol: string; statisticId: string; newTab: boolean }): void {
