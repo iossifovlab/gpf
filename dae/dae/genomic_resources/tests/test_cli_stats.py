@@ -67,7 +67,7 @@ class SomeTestImplementation(GenomicResourceImplementation):
         """Compute and return the info hash."""
         return b"infohash"
 
-    def get_info(self) -> str:
+    def get_info(self, **kwargs: Any) -> str:  # noqa: ARG002
         """Construct the contents of the implementation's HTML info page."""
         return textwrap.dedent(
             """

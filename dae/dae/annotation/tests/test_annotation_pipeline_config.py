@@ -164,7 +164,7 @@ def test_grr(tmp_path: pathlib.Path) -> GenomicResourceRepo:
 
 
 def test_simple_annotator_simple() -> None:
-    pipeline_config = AnnotationConfigParser.parse_str("""
+    _, pipeline_config = AnnotationConfigParser.parse_str("""
         - annotator:
             resource_id: resource
     """)
@@ -176,7 +176,7 @@ def test_simple_annotator_simple() -> None:
 
 
 def test_short_annotator_config() -> None:
-    pipeline_config = AnnotationConfigParser.parse_str("""
+    _, pipeline_config = AnnotationConfigParser.parse_str("""
         - annotator: resource
     """)
 
@@ -188,7 +188,7 @@ def test_short_annotator_config() -> None:
 
 
 def test_minimal_annotator_config() -> None:
-    pipeline_config = AnnotationConfigParser.parse_str("""
+    _, pipeline_config = AnnotationConfigParser.parse_str("""
         - annotator
     """)
     assert pipeline_config == [
@@ -197,7 +197,7 @@ def test_minimal_annotator_config() -> None:
 
 
 def test_annotator_config_with_more_parameters() -> None:
-    pipeline_config = AnnotationConfigParser.parse_str("""
+    _, pipeline_config = AnnotationConfigParser.parse_str("""
         - annotator:
                 resource_id: resource
                 key: value
@@ -212,7 +212,7 @@ def test_annotator_config_with_more_parameters() -> None:
 
 
 def test_annotator_config_with_attributes() -> None:
-    pipeline_config = AnnotationConfigParser.parse_str("""
+    _, pipeline_config = AnnotationConfigParser.parse_str("""
             - annotator:
                 attributes:
                 - att1
@@ -240,7 +240,7 @@ def test_annotator_config_with_attributes() -> None:
 
 
 def test_annotator_config_with_params_and_attributes() -> None:
-    pipeline_config = AnnotationConfigParser.parse_str("""
+    _, pipeline_config = AnnotationConfigParser.parse_str("""
         - annotator:
             resource_id: resource
             attributes:
@@ -258,14 +258,14 @@ def test_annotator_config_with_params_and_attributes() -> None:
 
 
 def test_empty_config() -> None:
-    pipeline_config = AnnotationConfigParser.parse_str("")
+    _, pipeline_config = AnnotationConfigParser.parse_str("")
 
     # pylint: disable=use-implicit-booleaness-not-comparison
     assert pipeline_config == []
 
 
 def test_effect_annotator_extra_attributes() -> None:
-    pipeline_config = AnnotationConfigParser.parse_str("""
+    _, pipeline_config = AnnotationConfigParser.parse_str("""
         - effect_annotator:
             gene_models: hg38/gene_models/refSeq_20200330
             genome: hg38/genomes/GRCh38-hg38
@@ -295,7 +295,7 @@ def test_effect_annotator_extra_attributes() -> None:
 
 
 def test_wildcard_basic(test_grr: GenomicResourceRepo) -> None:
-    pipeline_config = AnnotationConfigParser.parse_str("""
+    _, pipeline_config = AnnotationConfigParser.parse_str("""
         - position_score: score_*
     """, grr=test_grr)
     assert pipeline_config == [
@@ -311,7 +311,7 @@ def test_wildcard_basic(test_grr: GenomicResourceRepo) -> None:
 
 
 def test_wildcard_directory(test_grr: GenomicResourceRepo) -> None:
-    pipeline_config = AnnotationConfigParser.parse_str("""
+    _, pipeline_config = AnnotationConfigParser.parse_str("""
         - position_score: "scores/**/subscore"
     """, grr=test_grr)
     assert pipeline_config == [
@@ -329,7 +329,7 @@ def test_wildcard_directory(test_grr: GenomicResourceRepo) -> None:
 
 
 def test_wildcard_label_single(test_grr: GenomicResourceRepo) -> None:
-    pipeline_config = AnnotationConfigParser.parse_str("""
+    _, pipeline_config = AnnotationConfigParser.parse_str("""
         - position_score: score_*[foo=ALPHA]
     """, grr=test_grr)
     assert pipeline_config == [
@@ -341,7 +341,7 @@ def test_wildcard_label_single(test_grr: GenomicResourceRepo) -> None:
 
 
 def test_wildcard_label_and_dir(test_grr: GenomicResourceRepo) -> None:
-    pipeline_config = AnnotationConfigParser.parse_str("""
+    _, pipeline_config = AnnotationConfigParser.parse_str("""
         - position_score: "*[foo=ALPHA]"
     """, grr=test_grr)
     assert pipeline_config == [
@@ -358,7 +358,7 @@ def test_wildcard_label_and_dir(test_grr: GenomicResourceRepo) -> None:
 
 
 def test_wildcard_label_multiple(test_grr: GenomicResourceRepo) -> None:
-    pipeline_config = AnnotationConfigParser.parse_str("""
+    _, pipeline_config = AnnotationConfigParser.parse_str("""
         - position_score: "*[foo=ALPHA and bar=GAMMA]"
     """, grr=test_grr)
     assert pipeline_config == [
@@ -370,7 +370,7 @@ def test_wildcard_label_multiple(test_grr: GenomicResourceRepo) -> None:
 
 
 def test_wildcard_label_substring(test_grr: GenomicResourceRepo) -> None:
-    pipeline_config = AnnotationConfigParser.parse_str("""
+    _, pipeline_config = AnnotationConfigParser.parse_str("""
         - position_score: "*[baz=sub_*]"
     """, grr=test_grr)
     assert pipeline_config == [
@@ -386,35 +386,32 @@ def test_wildcard_label_substring(test_grr: GenomicResourceRepo) -> None:
 
 
 def test_parse_preambule() -> None:
-    preambule = AnnotationConfigParser.parse_preambule(pipeline_str="""
-        - preambule:
-            reference_genome: acgt_genome
-            description: lorem ipsum
-            metadata:
-                foo: bar
-                authors:
-                    - pesho
-                    - gosho
-                subdata:
-                    a: b
+    preambule, _ = AnnotationConfigParser.parse_str("""
+        preambule:
+          input_reference_genome: acgt_genome
+          title: test
+          summary: asdf
+          description: lorem ipsum
+          authors: pesho, gosho
+          metadata:
+              foo: bar
+              subdata:
+                  a: b
+        annotators:
+          - sample_annotator
     """)
 
     assert preambule == AnnotationPreambule(
-        "acgt_genome", "lorem ipsum", {
-            "foo": "bar",
-            "authors": ["pesho", "gosho"],
-            "subdata": {"a": "b"},
-        },
+        "acgt_genome", "test", "asdf", "lorem ipsum",
+        "pesho, gosho",
+        {"foo": "bar", "subdata": {"a": "b"}},
     )
 
 
-def test_parse_preambule_empty_config() -> None:
-    assert AnnotationConfigParser.parse_preambule(pipeline_str="") is None
-
-
 def test_parse_preambule_no_preambule() -> None:
-    assert AnnotationConfigParser.parse_preambule(pipeline_str="""
+    preambule, _ = AnnotationConfigParser.parse_str("""
         - annotator:
             attributes:
             - att1
-    """) is None
+    """)
+    assert preambule is None

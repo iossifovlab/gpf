@@ -8,7 +8,7 @@ from dae.genomic_resources.testing import build_inmemory_test_repository
 
 
 def test_pipeline_not_a_list() -> None:
-    with pytest.raises(AnnotationConfigurationError, match="not a list"):
+    with pytest.raises(AnnotationConfigurationError):
         build_annotation_pipeline(pipeline_config_str="""
             debug_annotator
             """, grr_repository=build_inmemory_test_repository({}))

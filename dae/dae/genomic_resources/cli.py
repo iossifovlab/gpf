@@ -716,7 +716,7 @@ def _run_repo_info_command(
     proto.build_index_info(repository_template)  # type: ignore
     for res in proto.get_all_resources():
         try:
-            _do_resource_info_command(proto, res)
+            _do_resource_info_command(repo, proto, res)
         except ValueError:  # noqa PERF203
             logger.exception(
                 "Failed to generate repo index for %s",
@@ -736,11 +736,13 @@ def _run_repo_info_command(
 
 
 def _do_resource_info_command(
-        proto: ReadWriteRepositoryProtocol, res: GenomicResource) -> None:
+        repo: GenomicResourceRepo,
+        proto: ReadWriteRepositoryProtocol,
+        res: GenomicResource) -> None:
     implementation = build_resource_implementation(res)
 
     with proto.open_raw_file(res, "index.html", mode="wt") as outfile:
-        content = implementation.get_info()
+        content = implementation.get_info(repo=repo)
         outfile.write(content)
 
 
@@ -761,7 +763,7 @@ def _run_resource_info_command(
         logger.error("resource not found...")
         return 1
 
-    _do_resource_info_command(proto, res)
+    _do_resource_info_command(repo, proto, res)
     return 0
 
 

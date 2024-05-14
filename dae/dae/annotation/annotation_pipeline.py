@@ -131,7 +131,7 @@ class Annotator(abc.ABC):
 
     @property
     def used_context_attributes(self) -> tuple[str, ...]:
-        return tuple()
+        return ()
 
     def _empty_result(self) -> dict[str, Any]:
         return {attribute_info.name: None
@@ -140,8 +140,11 @@ class Annotator(abc.ABC):
 
 @dataclass
 class AnnotationPreambule:
-    reference_genome: str
+    input_reference_genome: str
+    title: str
+    summary: str
     description: str
+    authors: str
     metadata: dict[str, Any]
 
 
@@ -366,7 +369,7 @@ class ReannotationPipeline(AnnotationPipeline):
     def annotate_summary_allele(self, allele: SummaryAllele) -> dict:
         annotatable = allele.get_annotatable()
         reused_context: dict[str, Any] = {}
-        for attr_name, _ in self.attributes_reused.items():
+        for attr_name in self.attributes_reused:
             reused_context[attr_name] = allele.get_attribute(attr_name)
         return super().annotate(annotatable, reused_context)
 
@@ -495,7 +498,7 @@ class ParamsUsageMonitor(Mapping):
 
     def __init__(self, data: dict[str, Any]):
         self._data = dict(data)
-        self._used_keys: set[str] = set([])
+        self._used_keys: set[str] = set()
 
     def __hash__(self) -> int:
         return hash(tuple(sorted(self._data.items())))

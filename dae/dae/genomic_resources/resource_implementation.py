@@ -95,7 +95,7 @@ class GenomicResourceImplementation(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def get_info(self) -> str:
+    def get_info(self, **kwargs: Any) -> str:
         """Construct the contents of the implementation's HTML info page."""
         raise NotImplementedError
 

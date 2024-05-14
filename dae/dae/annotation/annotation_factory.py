@@ -3,11 +3,9 @@
 import copy
 import fnmatch
 import logging
-import pathlib
 from collections import Counter
-from dataclasses import dataclass
 from textwrap import dedent
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Optional, TypedDict, Union
 
 import yaml
 
@@ -22,7 +20,10 @@ from dae.annotation.annotation_pipeline import (
     ValueTransformAnnotatorDecorator,
 )
 from dae.genomic_resources import build_genomic_resource_repository
-from dae.genomic_resources.repository import GenomicResourceRepo
+from dae.genomic_resources.repository import (
+    GenomicResource,
+    GenomicResourceRepo,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -30,6 +31,26 @@ logger = logging.getLogger(__name__)
 _ANNOTATOR_FACTORY_REGISTRY: dict[
     str, Callable[[AnnotationPipeline, AnnotatorInfo], Annotator]] = {}
 _EXTENTIONS_LOADED = False
+
+
+class RawPreambule(TypedDict):
+    input_reference_genome: str
+    title: str
+    summary: str
+    authors: str
+    description: str
+    metadata: dict[str, Any]
+
+
+RawAnnotatorsConfig = list[dict[str, Any]]
+
+
+class RawFullConfig(TypedDict):
+    preambule: RawPreambule
+    annotators: RawAnnotatorsConfig
+
+
+RawPipelineConfig = Union[RawAnnotatorsConfig, RawFullConfig]
 
 
 def _load_annotator_factory_plugins() -> None:
@@ -137,10 +158,7 @@ class AnnotationConfigParser:
         annotator_type: str, wildcard: str, grr: GenomicResourceRepo,
     ) -> list[str]:
         """Collect resources matching a given query."""
-        result = []
         labels_query: dict[str, str] = {}
-
-        # Handle querying by labels
         if wildcard.endswith("]"):
             assert "[" in wildcard
             wildcard, raw_labels = wildcard.split("[")
@@ -149,14 +167,15 @@ class AnnotationConfigParser:
                 k, v = label.split("=")
                 labels_query[k] = v
 
-        for resource in grr.get_all_resources():
-            if (resource.get_type() == annotator_type
+        def match(resource: GenomicResource) -> bool:
+            return (resource.get_type() == annotator_type
                and fnmatch.fnmatch(resource.get_id(), wildcard)
-               and AnnotationConfigParser.match_labels_query(
-                    labels_query, resource.get_labels())):
-                result.append(resource.get_id())
+               and AnnotationConfigParser.match_labels_query(labels_query,
+                                                             resource.get_labels()))
 
-        return result
+        return [resource.get_id()
+                for resource in grr.get_all_resources()
+                if match(resource)]
 
     @staticmethod
     def has_wildcard(string: str) -> bool:
@@ -214,60 +233,59 @@ class AnnotationConfigParser:
         )
 
     @staticmethod
-    def parse_preambule(
-        pipeline_filename: Optional[str] = None,
-        pipeline_str: Optional[str] = None,
-        pipeline_raw: Optional[list[dict[str, Any]]] = None,
-    ) -> Optional[AnnotationPreambule]:
-        """Extract the preambule section of a pipeline config, if present."""
-        if pipeline_filename is not None:
-            pipeline_str = pathlib.Path(pipeline_filename).read_text()
-        if pipeline_str is not None:
-            pipeline_raw = yaml.safe_load(pipeline_str)
-        if pipeline_raw is None:
-            return None
+    def _parse_preambule(raw: RawPreambule) -> Optional[AnnotationPreambule]:
+        """Parse the preambule section of a pipeline config, if present."""
+        if not set(raw.keys()) <= {
+            "input_reference_genome", "title", "summary",
+            "authors", "description", "metadata",
+        }:
+            raise AnnotationConfigurationError
 
-        if len(pipeline_raw) == 0:
-            return None
-        if "preambule" not in pipeline_raw[0]:
-            return None
-        raw = pipeline_raw[0]["preambule"]
-
-        if not isinstance(raw["reference_genome"], str):
+        if not isinstance(raw.get("input_reference_genome", ""), str):
             raise TypeError
-        if not isinstance(raw["description"], str):
+        if not isinstance(raw.get("title", ""), str):
             raise TypeError
-        if not isinstance(raw["metadata"], dict):
+        if not isinstance(raw.get("summary", ""), str):
+            raise TypeError
+        if not isinstance(raw.get("authors", ""), str):
+            raise TypeError
+        if not isinstance(raw.get("description", ""), str):
+            raise TypeError
+        if not isinstance(raw.get("metadata", ""), dict):
             raise TypeError
 
         return AnnotationPreambule(
-            raw["reference_genome"],
-            raw["description"],
-            raw["metadata"],
+            raw.get("input_reference_genome", ""),
+            raw.get("title", ""),
+            raw.get("summary", ""),
+            raw.get("description", ""),
+            raw.get("authors", ""),
+            raw.get("metadata", {}),
         )
 
     @staticmethod
     def parse_raw(
-        pipeline_raw_config: Optional[list[dict[str, Any]]],
+        pipeline_raw_config: Optional[RawPipelineConfig],
         grr: Optional[GenomicResourceRepo] = None,
-    ) -> list[AnnotatorInfo]:
+    ) -> tuple[Optional[AnnotationPreambule], list[AnnotatorInfo]]:
         """Parse raw dictionary annotation pipeline configuration."""
         if pipeline_raw_config is None:
             logger.warning("empty annotation pipeline configuration")
-            return []
+            return None, []
 
-        if not isinstance(pipeline_raw_config, list):
-            raise AnnotationConfigurationError(
-                "The annotation is not a list of annotator configurations.")
-
-        # check for preambule and skip if present
-        if len(pipeline_raw_config) > 0:
-            first = pipeline_raw_config[0]
-            if isinstance(first, dict) and "preambule" in first:
-                pipeline_raw_config.pop(0)
+        if isinstance(pipeline_raw_config, dict):
+            annotators = pipeline_raw_config["annotators"]
+            preambule = AnnotationConfigParser._parse_preambule(
+                pipeline_raw_config["preambule"],
+            )
+        elif isinstance(pipeline_raw_config, list):
+            annotators = pipeline_raw_config
+            preambule = None
+        else:
+            raise AnnotationConfigurationError
 
         result = []
-        for idx, raw_cfg in enumerate(pipeline_raw_config):
+        for idx, raw_cfg in enumerate(annotators):
             if isinstance(raw_cfg, str):
                 # the minimal annotator configuration form
                 result.append(
@@ -307,13 +325,13 @@ class AnnotationConfigParser:
                             - <att1 config>
                             ....
             """))
-        return result
+        return preambule, result
 
     @staticmethod
     def parse_str(
         content: str, source_file_name: Optional[str] = None,
         grr: Optional[GenomicResourceRepo] = None,
-    ) -> list[AnnotatorInfo]:
+    ) -> tuple[Optional[AnnotationPreambule], list[AnnotatorInfo]]:
         """Parse annotation pipeline configuration string."""
         try:
             pipeline_raw_config = yaml.safe_load(content)
@@ -331,7 +349,7 @@ class AnnotationConfigParser:
     @staticmethod
     def parse_config_file(
         filename: str, grr: Optional[GenomicResourceRepo],
-    ) -> list[AnnotatorInfo]:
+    ) -> tuple[Optional[AnnotationPreambule], list[AnnotatorInfo]]:
         """Parse annotation pipeline configuration file."""
         logger.info("loading annotation pipeline configuration: %s", filename)
         try:
@@ -403,7 +421,7 @@ class AnnotationConfigurationError(ValueError):
 
 def build_annotation_pipeline(
         pipeline_config: Optional[list[AnnotatorInfo]] = None,
-        pipeline_config_raw: Optional[list[dict]] = None,
+        pipeline_config_raw: Optional[RawPipelineConfig] = None,
         pipeline_config_file: Optional[str] = None,
         pipeline_config_str: Optional[str] = None,
         grr_repository: Optional[GenomicResourceRepo] = None,
@@ -426,26 +444,17 @@ def build_annotation_pipeline(
         assert pipeline_config is None
         assert pipeline_config_raw is None
         assert pipeline_config_str is None
-        pipeline_config = AnnotationConfigParser.parse_config_file(
+        preambule, pipeline_config = AnnotationConfigParser.parse_config_file(
             pipeline_config_file, grr=grr_repository)
-        preambule = AnnotationConfigParser.parse_preambule(
-            pipeline_filename=pipeline_config_file,
-        )
     elif pipeline_config_str is not None:
         assert pipeline_config_raw is None
         assert pipeline_config is None
-        pipeline_config = AnnotationConfigParser.parse_str(
+        preambule, pipeline_config = AnnotationConfigParser.parse_str(
             pipeline_config_str, grr=grr_repository)
-        preambule = AnnotationConfigParser.parse_preambule(
-            pipeline_str=pipeline_config_str,
-        )
     elif pipeline_config_raw is not None:
         assert pipeline_config is None
-        pipeline_config = AnnotationConfigParser.parse_raw(
+        preambule, pipeline_config = AnnotationConfigParser.parse_raw(
             pipeline_config_raw, grr=grr_repository)
-        preambule = AnnotationConfigParser.parse_preambule(
-            pipeline_raw=pipeline_config_raw,
-        )
     assert pipeline_config is not None
 
     pipeline = AnnotationPipeline(grr_repository)

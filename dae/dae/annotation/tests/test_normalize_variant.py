@@ -16,7 +16,7 @@ from dae.genomic_resources.repository import GenomicResourceRepo
 
 
 def test_normalize_allele_annotator_config() -> None:
-    pipeline_config = AnnotationConfigParser.parse_str(
+    _, pipeline_config = AnnotationConfigParser.parse_str(
         textwrap.dedent("""
         - normalize_allele_annotator:
             genome: hg19/GATK_ResourceBundle_5777_b37_phiX174_short/genome

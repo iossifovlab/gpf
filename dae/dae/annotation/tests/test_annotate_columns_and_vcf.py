@@ -153,6 +153,15 @@ def annotate_directory_fixture(tmp_path: pathlib.Path) -> pathlib.Path:
                           name: s1
                     """,
                 },
+                "res_pipeline": {
+                    "annotation.yaml": """
+                        - position_score: one
+                    """,
+                    "genomic_resource.yaml": """
+                        type: annotation_pipeline
+                        filename: annotation.yaml
+                    """,
+                },
             },
         },
     )
@@ -616,3 +625,35 @@ def test_annotate_vcf_repeated_attributes(
             result.append(vcf.info["score_A0"][0])
             result.append(vcf.info["score_A1"][0])
     assert result == ["0.1", "0.101", "0.2", "0.201"]
+
+
+def test_annotate_with_pipeline_from_grr(
+        annotate_directory_fixture: pathlib.Path) -> None:
+    in_content = textwrap.dedent("""
+        chrom   pos
+        chr1    23
+        chr1    24
+    """)
+    out_expected_content = (
+        "chrom\tpos\tscore\n"
+        "chr1\t23\t0.1\n"
+        "chr1\t24\t0.2\n"
+    )
+    root_path = annotate_directory_fixture
+    in_file = root_path / "in.txt"
+    out_file = root_path / "out.txt"
+    pipeline = "res_pipeline"
+    grr_file = root_path / "grr.yaml"
+    work_dir = root_path / "work"
+
+    setup_denovo(in_file, in_content)
+
+    cli_columns([
+        str(a) for a in [
+            in_file, pipeline, "--grr", grr_file, "-o", out_file,
+            "-w", work_dir,
+            "-j", 1,
+        ]
+    ])
+    out_file_content = get_file_content_as_string(str(out_file))
+    assert out_file_content == out_expected_content
