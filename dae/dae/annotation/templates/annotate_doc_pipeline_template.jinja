@@ -33,11 +33,14 @@
         border: 1px solid rgb(218,218,218);
       }
 
+      .annotator {
+        background-color: #eee;
+        padding: 10px 8px;
+      }
+
       .annotator-title {
         font-size: 24px;
         font-weight: 500;
-        background-color: #eee;
-        padding: 10px 8px;
       }
 
       .resource {
@@ -58,9 +61,13 @@
         margin: 8px;
       }
 
-      .attribute-type {
+      .attribute-type, .attribute-internal, .resource-id {
         font-size: 18px;
         margin: 8px;
+      }
+
+      .attribute-internal {
+        font-style: italic;
       }
 
       .attribute-description {
@@ -74,28 +81,32 @@
         width: 40%;
       }
 
-      details, .resource {
+      .no-description {
+        font-style: italic;
+        color: #9c9c9c;
+        padding: 10px 8px;
+      }
+
+      .markdown {
+        padding: 8px;
+      }
+
+      details, .resource, .annotator-description {
         padding: 10px 8px;
       }
 
       img {
         height: auto; 
         width: auto; 
-        max-width: 55%; 
-        max-height: 55%;
-        transition:transform 0.25s ease;
-      }
-
-      img:hover {
-          -webkit-transform:scale(2); /* or some other value */
-          transform:scale(2);
+        max-width: 95%; 
+        max-height: 95%;
       }
     </style>
   </head>
 
   <body>
     <h1>Pipeline Documentation</h1>
-    {%- if preambule is not none %}
+    {% if preambule is not none %}
     <h3>Preambule</h3>
     <ul>
         {%- if preambule.input_reference_genome %}
@@ -129,53 +140,65 @@
         </li>
         {%- endif %}
     </ul>
-    {%- endif %}
+    {% endif %}
 
 
-    {%- for annotator_info in annotation_pipeline_info %}
+    {% for annotator_info in annotation_pipeline_info %}
     <div class="annotator-line">
-      <div class="annotator-title">Annotator type: {{annotator_info.type}}</div>
-      {%- if annotator_info.documentation %}
+      <div class="annotator">
+        <div class="annotator-title">Annotator type: {{annotator_info.type}}</div>
+        {% for genomic_resource in annotator_info.resources %}
+        <div class="resource-id">Resource id: <a href="{{genomic_resource.get_url()}}/index.html">
+                {{genomic_resource.get_id()}}</a></div>                            
+        {% endfor %}
+      </div>
+
       <details>
-        <summary>Description</summary>
-        <div>
+        <summary>Details</summary>
+        {% if annotator_info.documentation %}
+        <div class="annotator-description">
           {{ markdown(annotator_info.documentation) }}
         </div>
-      </details>
-      {%- endif %}
+        {% else %}
+        <div class="no-description">
+          No description
+        </div>
+        {% endif %}
 
-      {%- for genomic_resource in annotator_info.resources %}
-      <div class="resource">
-        <div><b>Resource</b></div>
-        <div>id: <a href="{{genomic_resource.get_url()}}/index.html">
-                {{genomic_resource.get_id()}}</a></div>                            
-        <div>type: {{genomic_resource.get_type()}}</div>
-        {%- if genomic_resource.get_summary() %}
-        <details>
-          <summary>Description</summary>
-          <div>
-            {{ markdown(genomic_resource.get_summary()) }}
-          </div>
-        </details>
-        {%- endif %}
-      </div>
-      {%- endfor %}
+        {% for genomic_resource in annotator_info.resources %}
+        <div class="resource">
+          <div><b>Resource</b></div>
+          <div>id: <a href="{{genomic_resource.get_url()}}/index.html">
+                  {{genomic_resource.get_id()}}</a></div>                            
+          <div>type: {{genomic_resource.get_type()}}</div>
+          {% if genomic_resource.get_summary() %}
+            <div>Description:</div>
+            <div class="markdown">
+              {{ markdown(genomic_resource.get_summary()) }}
+            </div>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </details>
     </div>
 
-    {%- for attribute_info in annotator_info.attributes %}
+    {% for attribute_info in annotator_info.attributes %}
     <div class="attribute">
       <div class="attribute-info">
         <div class="attribute-name">{{attribute_info.name}}</div>
         <div class="attribute-type">Type: {{attribute_info.type}}</div>
+        {% if attribute_info.internal %}
+        <div class="attribute-internal">Internal</div>
+        {% endif %}
       </div>
       <div class="attribute-description">
         <div>source: {{attribute_info.source}}</div>
         {{markdown(attribute_info.documentation)}}
       </div>
     </div>
-    {%- endfor %}
+    {% endfor %}
 
 
-    {%- endfor %}
+    {% endfor %}
   </body>
 <html>
