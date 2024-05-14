@@ -26,6 +26,9 @@ export class PhenoBrowserTableComponent implements OnInit, OnChanges {
   ) { }
 
   public ngOnInit(): void {
+    if (this.measures.hasDescriptions) {
+      this.columnsCount = 9;
+    }
     this.onResize();
   }
 
