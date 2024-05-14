@@ -374,3 +374,16 @@ def liftover_variant(
     assert all(ref == r_alleles[0][2] for _, _, ref, _ in r_alleles)
     chrom, pos, ref, _ = r_alleles[0]
     return chrom, pos, ref, [alt for _, _, _, alt in r_alleles]
+
+
+def basic_liftover_allele(
+    chrom: str,
+    pos: int,
+    ref: str,
+    alt: str,
+    liftover_chain: LiftoverChain,
+    source_genome: ReferenceGenome,
+    target_genome: ReferenceGenome,
+) -> Optional[tuple[str, int, str, str]]:
+    """Liftover a variant."""
+    

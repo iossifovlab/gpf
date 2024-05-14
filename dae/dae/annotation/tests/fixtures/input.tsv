@@ -1,5 +1,0 @@
-#id	location	variant
-1	4:4372372973	sub(A->C)
-5	10:4372372973	sub(G->A)
-3	X:4372	ins(AAA)
-6	Y:4372	del(2)
