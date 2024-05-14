@@ -47,7 +47,7 @@ class EnrichmentBackgroundResourceImplementation(
     ) -> list[Task]:
         return []
 
-    def get_info(self) -> str:
+    def get_info(self, **kwargs: Any) -> str:  # noqa: ARG002
         return InfoImplementationMixin.get_info(self)
 
     def calc_info_hash(self) -> bytes:

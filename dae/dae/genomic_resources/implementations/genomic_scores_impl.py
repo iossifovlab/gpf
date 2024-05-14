@@ -143,7 +143,7 @@ class GenomicScoreImplementation(
     def _get_template_data(self) -> dict[str, Any]:
         return {"genomic_scores": self}
 
-    def get_info(self) -> str:
+    def get_info(self, **kwargs: Any) -> str:  # noqa: ARG002
         return InfoImplementationMixin.get_info(self)
 
     def add_statistics_build_tasks(

@@ -118,7 +118,7 @@ class CnvCollectionImplementation(GenomicResourceImplementation,
     def calc_statistics_hash(self) -> bytes:
         return b""
 
-    def get_info(self) -> str:
+    def get_info(self, **kwargs: Any) -> str:  # noqa: ARG002
         return InfoImplementationMixin.get_info(self)
 
     @property

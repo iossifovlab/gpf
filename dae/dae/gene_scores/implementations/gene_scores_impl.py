@@ -79,7 +79,7 @@ class GeneScoreImplementation(
         data["gene_score"] = self.gene_score
         return data
 
-    def get_info(self) -> str:
+    def get_info(self, **kwargs: Any) -> str:  # noqa: ARG002
         return InfoImplementationMixin.get_info(self)
 
     def add_statistics_build_tasks(
