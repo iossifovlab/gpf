@@ -20,7 +20,7 @@ from dae.genomic_resources.variant_utils import (
     maximally_extend_variant,
     normalize_variant,
 )
-from dae.utils.variant_utils import reverse_complement
+from dae.utils.variant_utils import reverse_complement, trim_str_left
 
 from .annotatable import Annotatable, CNVAllele, Position, Region, VCFAllele
 from .annotator_base import AnnotatorBase
@@ -61,10 +61,12 @@ def build_liftover_annotator(pipeline: AnnotationPipeline,
                          f"{resource_id} that is "
                          "unavailable.")
     source_genome = build_reference_genome_from_resource(resource)
-
+    basic_liftover = info.parameters.get("basic_liftover", False)
     return LiftOverAnnotator(
         pipeline, info,
-        chain, source_genome, target_genome)
+        chain, source_genome, target_genome,
+        basic_liftover=basic_liftover,
+    )
 
 
 class LiftOverAnnotator(AnnotatorBase):
@@ -74,7 +76,10 @@ class LiftOverAnnotator(AnnotatorBase):
         self, pipeline: Optional[AnnotationPipeline],
         info: AnnotatorInfo,
         chain: LiftoverChain,
-        source_genome: ReferenceGenome, target_genome: ReferenceGenome,
+        source_genome: ReferenceGenome,
+        target_genome: ReferenceGenome,
+        *,
+        basic_liftover: bool = False,
     ):
 
         info.resources += [
@@ -92,6 +97,7 @@ class LiftOverAnnotator(AnnotatorBase):
         self.chain = chain
         self.source_genome = source_genome
         self.target_genome = target_genome
+        self.basic_liftover = basic_liftover
 
     def close(self) -> None:
         self.target_genome.close()
@@ -131,16 +137,23 @@ class LiftOverAnnotator(AnnotatorBase):
             return None
 
         try:
-            lo_variant = liftover_allele(
-                allele.chrom, allele.position,
-                allele.reference, allele.alternative,
-                self.chain, self.source_genome, self.target_genome,
-            )
+            if self.basic_liftover:
+                lo_allele = basic_liftover_allele(
+                    allele.chrom, allele.position,
+                    allele.reference, allele.alternative,
+                    self.chain, self.target_genome,
+                )
+            else:
+                lo_allele = liftover_allele(
+                    allele.chrom, allele.position,
+                    allele.reference, allele.alternative,
+                    self.chain, self.source_genome, self.target_genome,
+                )
 
-            if lo_variant is None:
+            if lo_allele is None:
                 return None
 
-            lo_chrom, lo_pos, lo_ref, lo_alt = lo_variant
+            lo_chrom, lo_pos, lo_ref, lo_alt = lo_allele
             result = VCFAllele(lo_chrom, lo_pos, lo_ref, lo_alt)
 
         except BaseException as ex:  # noqa BLE001 pylint: disable=broad-except
@@ -382,8 +395,49 @@ def basic_liftover_allele(
     ref: str,
     alt: str,
     liftover_chain: LiftoverChain,
-    source_genome: ReferenceGenome,
     target_genome: ReferenceGenome,
 ) -> Optional[tuple[str, int, str, str]]:
-    """Liftover a variant."""
-    
+    """Basic liftover an allele."""
+
+    lo_coordinates = liftover_chain.convert_coordinate(
+        chrom, pos,
+    )
+
+    if lo_coordinates is None:
+        return None
+
+    lo_chrom, lo_pos, lo_strand, _ = lo_coordinates
+
+    if lo_strand == "+" or \
+            len(ref) == len(alt):
+        lo_pos += 1
+    elif lo_strand == "-":
+        lo_pos -= len(ref)
+        lo_pos -= 1
+
+    _, tr_ref, tr_alt = trim_str_left(pos, ref, alt)
+
+    lo_ref = target_genome.get_sequence(
+        lo_chrom, lo_pos, lo_pos + len(ref) - 1)
+    if lo_ref is None:
+        logger.warning(
+            "can't find genomic sequence for %s:%s", lo_chrom, lo_pos)
+        return None
+
+    lo_alt = alt
+    if lo_strand == "-":
+        if not tr_alt:
+            lo_alt = f"{lo_ref[0]}"
+        else:
+            lo_alt = reverse_complement(tr_alt)
+            if not tr_ref:
+                lo_alt = f"{lo_ref[0]}{lo_alt}"
+
+    if lo_ref == lo_alt:
+        logger.warning(
+            "allele %s:%d %s>%s mapped to no variant: %s:%d %s>%s",
+            chrom, pos, ref, alt,
+            lo_chrom, lo_pos, lo_ref, lo_alt)
+        return None
+
+    return lo_chrom, lo_pos, lo_ref, lo_alt
