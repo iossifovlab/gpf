@@ -22,15 +22,14 @@ class PlainTextParser(BaseParser):
 
     def parse(
         self, stream: io.IOBase,
-        media_type: Optional[str] = None,
+        _media_type: Optional[str] = None,
         parser_context: Optional[dict] = None,
     ) -> str:
         parser_context = parser_context or {}
         encoding = parser_context.get("encoding", settings.DEFAULT_CHARSET)
         try:
             decoded_stream = codecs.getreader(encoding)(stream)
-            text_content = decoded_stream.read()
-            return text_content
+            return decoded_stream.read()
         except ValueError as exc:
             raise ParseError(f"Plain text parse error - {exc!s}") from exc
 
@@ -43,7 +42,13 @@ def sentry(request: Request) -> Response:
     sentry_token = request.COOKIES.get("sentry_token")
     if not sentry_token:
         return Response({}, status.HTTP_200_OK)
-    time_issued = float(sentry_token.split("&")[0].split("=")[1]) / pow(10, 6)
+    sentry_token = sentry_token.encode().decode("utf-8")
+    try:
+        time_issued = float(
+            sentry_token.split("&")[0].split("=")[1]) / pow(10, 6)
+    except ValueError:
+        return Response({}, status.HTTP_200_OK)
+
     curr_time = time.time()
     if time_issued + expiration_time <= curr_time:
         return Response({}, status.HTTP_401_UNAUTHORIZED)
