@@ -75,6 +75,8 @@ export class GeneProfilesTableComponent extends StatefulComponent implements OnI
   public currentTabGeneSet= new Set<string>();
   public currentTabString = 'all genes';
 
+  private stateFinishedLoading = false;
+
   public constructor(
     private geneProfilesService: GeneProfilesTableService,
     private location: Location,
@@ -111,10 +113,9 @@ export class GeneProfilesTableComponent extends StatefulComponent implements OnI
   }
 
   public ngOnChanges(): void {
-    this.viewportPageCount = Math.ceil(window.innerHeight / (this.baseRowHeight * this.config.pageSize));
-    this.setLeavesVisibility();
-    this.calculateHeaderLayout();
-    this.fillTable();
+    if (this.stateFinishedLoading) {
+      this.prepareTable();
+    }
   }
 
   public ngOnDestroy(): void {
@@ -162,6 +163,13 @@ export class GeneProfilesTableComponent extends StatefulComponent implements OnI
     this.sortBy = this.config.columns.filter(column => column.sortable)[0].id;
   }
 
+  private prepareTable(): void {
+    this.viewportPageCount = Math.ceil(window.innerHeight / (this.baseRowHeight * this.config.pageSize));
+    this.setLeavesVisibility();
+    this.calculateHeaderLayout();
+    this.fillTable();
+  }
+
   private fillTable(): void {
     const geneProfilesRequests = [];
     this.pageIndex = 1;
@@ -204,15 +212,30 @@ export class GeneProfilesTableComponent extends StatefulComponent implements OnI
         this.highlightedGenes = state.highlightedRows;
         this.orderBy = state.orderBy;
         this.leavesIds = state.headerLeaves;
+        this.reorderHeaderByLeaves(this.config.columns);
         if (state.sortBy) {
           this.sortBy = state.sortBy;
         } else {
           this.setDefaultSortableCategory();
           this.store.dispatch(new SetGeneProfilesSortBy(this.sortBy));
         }
+        this.stateFinishedLoading = true;
+        this.prepareTable();
       });
 
     this.search(this.geneInput);
+  }
+
+  private reorderHeaderByLeaves(
+    columns: GeneProfilesColumn[],
+  ): void {
+    columns.sort((a, b) => {
+      const aPosition = this.leavesIds.findIndex(l => l.startsWith(a.id));
+      const bPosition = this.leavesIds.findIndex(l => l.startsWith(b.id));
+      return aPosition - bPosition;
+    });
+
+    columns.forEach(column => this.reorderHeaderByLeaves(column.columns));
   }
 
   public setLeavesVisibility(): void {
@@ -230,7 +253,6 @@ export class GeneProfilesTableComponent extends StatefulComponent implements OnI
 
   public calculateHeaderLayout(): void {
     this.leaves = GeneProfilesColumn.leaves(this.config.columns);
-
     this.leavesIds = [];
     this.leaves.map(leaf => {
       if (leaf.visibility) {
@@ -251,7 +273,6 @@ export class GeneProfilesTableComponent extends StatefulComponent implements OnI
     for (const column of this.config.columns) {
       GeneProfilesColumn.calculateGridColumn(column);
     }
-
     this.store.dispatch(new SetGeneProfilesHeader(this.leavesIds));
   }
 
