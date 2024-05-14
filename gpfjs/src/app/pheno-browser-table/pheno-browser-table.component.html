@@ -17,7 +17,7 @@
         </span>
       </gpf-table-content>
     </gpf-table-column>
-    <gpf-table-column *ngIf="measures.hasDescriptions">
+    <gpf-table-column [columnWidth]="singleColumnWidth" *ngIf="measures.hasDescriptions">
       <gpf-table-header caption="Measure Description" field="description"></gpf-table-header>
       <gpf-table-content>
         <span *gpfTableCellContent="let data">
