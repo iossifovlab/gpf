@@ -2,14 +2,12 @@ import argparse
 import logging
 import logging.config
 import os
-import pathlib
 import sys
-from typing import Optional, Union, cast
+from typing import Optional
 
 import django
 from django.conf import settings
-from django.core.management import execute_from_command_line
-from gpf_instance.gpf_instance import WGPFInstance
+from django.core import management
 
 from dae import __version__  # type: ignore
 from dae.utils.verbosity_configuration import VerbosityConfiguration
@@ -67,74 +65,26 @@ def _configure_run_subparser(subparsers: argparse._SubParsersAction) -> None:
     _add_gpf_instance_path(parser)
 
 
-def _init_flag(wgpf_instance: WGPFInstance) -> pathlib.Path:
-    return pathlib.Path(wgpf_instance.dae_dir) / ".wgpf_init.flag"
-
-
-def _check_is_initialized(wgpf_instance: WGPFInstance) -> bool:
-    if not os.path.exists(wgpf_instance.dae_dir):
-        return False
-    if _init_flag(wgpf_instance).exists():
-        return True
-    return False
-
-
-def _run_init_command(
-        wgpf_instance: WGPFInstance, **kwargs: Union[str, bool]) -> None:
-    force = cast(bool, kwargs.pop("force", False))
-    if _check_is_initialized(wgpf_instance) and not force:
-        logger.error(
-            "GPF instance %s already initialized. If you need to re-init "
-            "please use '--force' flag.", wgpf_instance.dae_dir)
-        sys.exit(0)
-
-    try:
-        try:
-            execute_from_command_line([
-                "wgpf", "migrate",
-                "--skip-checks",
-            ])
-        except SystemExit:
-            if not force:
-                raise
-
-        try:
-            execute_from_command_line([
-                "wgpf", "createapplication",
-                "public", "authorization-code",
-                "--client-id", "gpfjs",
-                "--name", "GPF development server",
-                "--redirect-uris", "http://localhost:8000/datasets",
-                "--skip-checks",
-            ])
-        except SystemExit:
-            if not force:
-                raise
-
-    finally:
-        _init_flag(wgpf_instance).touch()
-
-
-def _run_run_command(
-        wgpf_instance: WGPFInstance, **kwargs: Union[bool, str]) -> None:
-    if not _check_is_initialized(wgpf_instance):
-        logger.error(
-            "GPF instance %s should be initialized first. "
-            "Running `wgpf init`...",
-            wgpf_instance.dae_dir)
-        _run_init_command(wgpf_instance, **kwargs)
-
-    host = kwargs.get("host")
-    port = kwargs.get("port")
-
-    try:
-        execute_from_command_line([
-            "wgpf", "runserver", f"{host}:{port}",
+def _run_init_command() -> None:
+    management.call_command("migrate", "--skip-checks")
+    from oauth2_provider.models import get_application_model  # pylint: disable=C0415  # noqa: I001  # noqa: I001
+    app_exists = get_application_model().objects.filter(client_id="gpfjs")
+    if not app_exists:
+        management.call_command(
+            "createapplication",
+            "public", "authorization-code",
+            "--client-id", "gpfjs",
+            "--name", "GPF development server",
+            "--redirect-uris", "http://localhost:8000/datasets",
             "--skip-checks",
-        ])
+        )
 
-    finally:
-        pass
+
+def _run_run_command(host: Optional[str], port: Optional[str]) -> None:
+    _run_init_command()
+    management.call_command(
+        "runserver", f"{host}:{port}", "--skip-checks",
+    )
 
 
 def cli(argv: Optional[list[str]] = None) -> None:
@@ -171,10 +121,6 @@ def cli(argv: Optional[list[str]] = None) -> None:
     wgpf_instance = gpf_instance.get_wgpf_instance(args.gpf_instance)
     logger.info("using GPF instance at %s", wgpf_instance.dae_dir)
 
-    if command not in {"init", "run"}:
-        logger.error("unknown subcommand %s used in `wgpf`", command)
-        sys.exit(1)
-
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "wdae.gpfjs_settings")
 
     django.setup()
@@ -192,6 +138,6 @@ def cli(argv: Optional[list[str]] = None) -> None:
     logger.info("using wdae directory: %s", settings.DEFAULT_WDAE_DIR)
 
     if command == "init":
-        _run_init_command(wgpf_instance, **vars(args))
+        _run_init_command()
     elif command == "run":
-        _run_run_command(wgpf_instance, **vars(args))
+        _run_run_command(args.host, args.port)
