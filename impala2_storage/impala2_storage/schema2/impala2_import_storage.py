@@ -7,7 +7,7 @@ from dae.configuration.study_config_builder import StudyConfigBuilder
 from dae.import_tools.import_tools import ImportProject, save_study_config
 from dae.schema2_storage.schema2_import_storage import (
     Schema2ImportStorage,
-    schema2_dataset_layout,
+    load_schema2_dataset_layout,
 )
 from dae.task_graph.graph import TaskGraph
 from impala2_storage.schema2.impala2_genotype_storage import (
@@ -25,13 +25,13 @@ class Impala2ImportStorage(Schema2ImportStorage):
     def _do_load_in_hdfs(cls, project: ImportProject) -> HdfsStudyLayout:
         genotype_storage = project.get_genotype_storage()
         assert isinstance(genotype_storage, Impala2GenotypeStorage)
-        layout = schema2_dataset_layout(project.get_parquet_dataset_dir())
+        layout = load_schema2_dataset_layout(project.get_parquet_dataset_dir())
         return genotype_storage.hdfs_upload_dataset(
             project.study_id,
             layout.study,
             layout.pedigree,
             layout.meta,
-            has_variants=project.has_variants())
+            has_variants=layout.summary is not None)
 
     @classmethod
     def _do_load_in_impala(
@@ -54,9 +54,10 @@ class Impala2ImportStorage(Schema2ImportStorage):
         genotype_storage: Impala2GenotypeStorage = \
             cast(Impala2GenotypeStorage, project.get_genotype_storage())
         # pylint: disable=protected-access
+        layout = load_schema2_dataset_layout(project.get_parquet_dataset_dir())
         pedigree_table = genotype_storage\
             ._construct_pedigree_table(project.study_id)
-        if project.has_variants():
+        if layout.summary is not None:
             summary_table, family_table = genotype_storage\
                 ._construct_variant_tables(project.study_id)
             meta_table = genotype_storage\

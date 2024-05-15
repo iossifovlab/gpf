@@ -34,8 +34,28 @@ class Schema2DatasetLayout:
     base_dir: Optional[str] = None
 
 
+def load_schema2_dataset_layout(study_dir: str) -> Schema2DatasetLayout:
+    """
+    Create dataset layout for a given directory.
+
+    Assumes that the dataset already exists, therefore it should check whether
+    summary and family tables exist.
+    """
+    summary = fs_utils.join(study_dir, "summary")
+    summary = summary if fs_utils.exists(summary) else None
+
+    family = fs_utils.join(study_dir, "family")
+    family = family if fs_utils.exists(family) else None
+
+    return Schema2DatasetLayout(
+        study_dir,
+        fs_utils.join(study_dir, "pedigree", "pedigree.parquet"),
+        summary,
+        family,
+        fs_utils.join(study_dir, "meta", "meta.parquet"))
+
 def schema2_dataset_layout(
-    study_dir: str, existing: bool = False
+    study_dir: str
 ) -> Schema2DatasetLayout:
     """
     Create dataset layout for a given directory.
@@ -45,9 +65,6 @@ def schema2_dataset_layout(
     """
     summary = fs_utils.join(study_dir, "summary")
     family = fs_utils.join(study_dir, "family")
-    if existing:
-        summary = summary if fs_utils.exists(summary) else None
-        family = family if fs_utils.exists(family) else None
     return Schema2DatasetLayout(
         study_dir,
         fs_utils.join(study_dir, "pedigree", "pedigree.parquet"),
