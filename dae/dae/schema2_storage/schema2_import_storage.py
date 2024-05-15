@@ -21,7 +21,7 @@ from dae.parquet.schema2.serializers import AlleleParquetSerializer
 from dae.task_graph.graph import Task, TaskGraph
 from dae.utils import fs_utils
 
-logger = logging.getLogger(__file__)
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -41,11 +41,11 @@ def load_schema2_dataset_layout(study_dir: str) -> Schema2DatasetLayout:
     Assumes that the dataset already exists, therefore it should check whether
     summary and family tables exist.
     """
-    summary = fs_utils.join(study_dir, "summary")
-    summary = summary if fs_utils.exists(summary) else None
+    summary_path = fs_utils.join(study_dir, "summary")
+    summary = summary_path if fs_utils.exists(summary_path) else None
 
-    family = fs_utils.join(study_dir, "family")
-    family = family if fs_utils.exists(family) else None
+    family_path = fs_utils.join(study_dir, "family")
+    family = family_path if fs_utils.exists(family_path) else None
 
     return Schema2DatasetLayout(
         study_dir,
@@ -54,9 +54,8 @@ def load_schema2_dataset_layout(study_dir: str) -> Schema2DatasetLayout:
         family,
         fs_utils.join(study_dir, "meta", "meta.parquet"))
 
-def schema2_dataset_layout(
-    study_dir: str
-) -> Schema2DatasetLayout:
+
+def schema2_dataset_layout(study_dir: str) -> Schema2DatasetLayout:
     """
     Create dataset layout for a given directory.
 
