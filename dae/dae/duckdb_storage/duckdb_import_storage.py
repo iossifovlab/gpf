@@ -8,7 +8,7 @@ from dae.import_tools.import_tools import ImportProject, save_study_config
 from dae.schema2_storage.schema2_import_storage import (
     Schema2DatasetLayout,
     Schema2ImportStorage,
-    schema2_dataset_layout,
+    load_schema2_dataset_layout,
 )
 from dae.task_graph.graph import TaskGraph
 
@@ -21,8 +21,8 @@ class DuckDbImportStorage(Schema2ImportStorage):
             cls, project: ImportProject) -> Schema2DatasetLayout:
         genotype_storage = project.get_genotype_storage()
         assert isinstance(genotype_storage, DuckDbGenotypeStorage)
-        layout = schema2_dataset_layout(
-            project.get_parquet_dataset_dir(), existing=True
+        layout = load_schema2_dataset_layout(
+            project.get_parquet_dataset_dir()
         )
         return genotype_storage.import_dataset(
             project.study_id, layout, project.get_partition_descriptor())
