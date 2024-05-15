@@ -33,22 +33,6 @@ class RemotePhenotypeData(PhenotypeData):
             self._measures = self.get_measures()
         return self._measures
 
-    def get_persons_df(
-        self,
-        roles: Union[Iterable[Role], Iterable[str], None] = None,
-        person_ids: Optional[Iterable[str]] = None,
-        family_ids: Optional[Iterable[str]] = None,
-    ) -> pd.DataFrame:
-
-        persons = self.rest_client.post_pheno_persons(
-            self.remote_dataset_id,
-            cast(Iterable[str], roles),
-            person_ids,
-            family_ids,
-        )
-
-        return pd.DataFrame.from_records(persons.values())
-
     def get_persons_values_df(
         self,
         measure_ids: Iterable[str],
@@ -69,23 +53,6 @@ class RemotePhenotypeData(PhenotypeData):
             roles=roles_los,
         )
         return pd.DataFrame.from_records(persons.values())
-
-    def get_persons(
-        self,
-        roles: Union[Iterable[Role], Iterable[str], None] = None,
-        person_ids: Optional[Iterable[str]] = None,
-        family_ids: Optional[Iterable[str]] = None,
-    ) -> dict[str, Person]:
-        persons = self.rest_client.post_pheno_persons(
-            self.remote_dataset_id,
-            cast(Optional[Iterable[str]], roles),
-            person_ids,
-            family_ids,
-        )
-        for k, v in persons.items():
-            persons[k] = Person(**v)
-
-        return cast(dict[str, Person], persons)
 
     def has_measure(self, measure_id: str) -> bool:
         measure = self.rest_client.get_measure(

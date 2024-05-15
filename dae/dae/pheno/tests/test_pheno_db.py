@@ -222,12 +222,6 @@ def test_default_get_measure_df(fake_phenotype_data: PhenotypeStudy) -> None:
     assert len(df) == 17
 
 
-def test_get_persons_df(fake_phenotype_data: PhenotypeStudy) -> None:
-    prbs = fake_phenotype_data.get_persons_df(roles=[Role.prb])
-    assert len(prbs.columns) == 5
-    df_check(prbs, 39, ["person_id", "family_id", "role", "sex", "status"])
-
-
 @pytest.mark.parametrize(
     "families,expected_count", [(["f20"], 5), (["f20", "f21"], 10)],
 )
@@ -268,32 +262,3 @@ def test_min_max_measure_values(fake_phenotype_data: PhenotypeStudy) -> None:
 
         error = np.abs(mmax - df[measure.measure_id].max())
         assert error < 1e-5, measure.measure_id
-
-
-def test_get_persons_df_person_ids(
-    fake_phenotype_data: PhenotypeStudy,
-) -> None:
-    res = fake_phenotype_data.get_persons_df(
-        person_ids=[], family_ids=["f1", "f2", "f3"], roles=[Role.prb],
-    )
-    assert res.empty
-
-
-def test_get_persons_df_family_ids(
-    fake_phenotype_data: PhenotypeStudy,
-) -> None:
-    res = fake_phenotype_data.get_persons_df(
-        person_ids=["f1.p1", "f2.p1", "f3.p1"], family_ids=[], roles=[Role.prb],
-    )
-    assert res.empty
-
-
-def test_get_persons_df_roles(
-    fake_phenotype_data: PhenotypeStudy,
-) -> None:
-    res = fake_phenotype_data.get_persons_df(
-        person_ids=["f1.p1", "f2.p1", "f3.p1"],
-        family_ids=["f1", "f2", "f3"],
-        roles=[],
-    )
-    assert res.empty

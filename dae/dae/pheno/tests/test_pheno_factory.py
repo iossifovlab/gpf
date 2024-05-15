@@ -9,7 +9,6 @@ def test_check_pheno_db(fake_pheno_db: PhenoRegistry) -> None:
 def test_get_pheno_db(fake_pheno_db: PhenoRegistry) -> None:
     pheno_data = fake_pheno_db.get_phenotype_data("fake")
     assert pheno_data is not None
-    assert pheno_data.families is not None
     assert pheno_data.instruments is not None
 
 

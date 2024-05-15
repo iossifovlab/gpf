@@ -26,13 +26,6 @@ QUERY = {
     (TOOL_URL, "post", QUERY),
     (TOOL_DOWNLOAD_URL, "post", QUERY),
     (
-        "/api/v3/pheno_tool/persons",
-        "post",
-        {
-            "datasetId": "f1_trio",
-        },
-    ),
-    (
         "/api/v3/pheno_tool/people_values",
         "post",
         {

@@ -191,7 +191,6 @@ class PhenotypeData(ABC):
         self.config = config
         self._measures: dict[str, Measure] = {}
         self._instruments: dict[str, Instrument] = {}
-        self.families: FamiliesData
 
     @property
     def pheno_id(self) -> str:
@@ -215,53 +214,6 @@ class PhenotypeData(ABC):
     @abstractmethod
     def get_measures_info(self) -> dict[str, Any]:
         pass
-
-    @abstractmethod
-    def get_persons_df(
-            self, roles: Optional[Iterable[Role]] = None,
-            person_ids: Optional[Iterable[str]] = None,
-            family_ids: Optional[Iterable[str]] = None) -> pd.DataFrame:
-        pass
-
-    def get_persons(
-            self,
-            roles: Optional[Iterable[Role]] = None,
-            person_ids: Optional[Iterable[str]] = None,
-            family_ids: Optional[Iterable[str]] = None) -> dict[str, Person]:
-        """
-        Return individuals data from phenotype database.
-
-        `roles` -- specifies persons of which role should be returned. If not
-        specified returns all individuals from phenotype database.
-
-        `person_ids` -- list of person IDs to filter result. Only data for
-        individuals with person_id in the list `person_ids` are returned.
-
-        `family_ids` -- list of family IDs to filter result. Only data for
-        individuals that are members of any of the specified `family_ids`
-        are returned.
-
-        Returns a dictionary of (`personId`, `Person()`) where
-        the `Person` object is the same object used into `VariantDB` families.
-        """
-        persons = {}
-        df = self.get_persons_df(
-            roles=roles, person_ids=person_ids, family_ids=family_ids)
-
-        for row in df.to_dict("records"):
-            person_id = row["person_id"]
-            row["role"] = Role.from_value(row["role"])
-            row["sex"] = Sex.from_value(row["sex"])
-            row["status"] = Status.from_value(row["status"])
-
-            person = Person(**row)  # type: ignore
-            assert row["role"] in Role, f"{row['role']} not a valid role"
-            assert row["sex"] in Sex, f"{row['sex']} not a valid sex"
-            assert row["status"] in Status, \
-                f"{row['status']} not a valid status"
-
-            persons[person_id] = person
-        return persons
 
     @abstractmethod
     def search_measures(
@@ -418,7 +370,6 @@ class PhenotypeStudy(PhenotypeData):
         self.db = PhenoDb(dbfile, read_only=read_only)
         self.config = config
         self.db.build()
-        self.families = self._load_families()
         df = self._get_measures_df()
         self._instruments = self._load_instruments(df)
         logger.warning("phenotype study %s fully loaded", pheno_id)
@@ -505,54 +456,6 @@ class PhenotypeStudy(PhenotypeData):
             instruments[instrument.instrument_name] = instrument
 
         return instruments
-
-    def _load_families(self) -> FamiliesData:
-        families = defaultdict(list)
-        persons = self.get_persons()
-        for person in list(persons.values()):
-            families[person.family_id].append(person)
-        return FamiliesData.from_family_persons(families)
-
-    def get_persons_df(
-        self, roles: Optional[Iterable[Role]] = None,
-        person_ids: Optional[Iterable[str]] = None,
-        family_ids: Optional[Iterable[str]] = None,
-    ) -> pd.DataFrame:
-        """Return a individuals data from phenotype database as a data frame.
-
-        :param roles: -- specifies persons of which role should be returned. If
-        not specified returns all individuals from phenotype database.
-
-        :param person_ids: -- list of person IDs to filter result. Only data
-        for individuals with person_id in the list `person_ids` are returned.
-
-        :param family_ids: -- list of family IDs to filter result. Only data
-        for individuals that are members of any of the specified `family_ids`
-        are returned.
-
-        Each row of the returned data frame represnts a person from phenotype
-        database.
-
-        Columns returned are: `person_id`, `family_id`, `role`, `sex`.
-        """
-        columns = [
-            self.db.person.c.family_id,
-            self.db.person.c.person_id,
-            self.db.person.c.role,
-            self.db.person.c.status,
-            self.db.person.c.sex,
-        ]
-        query = select(*columns)
-        if roles is not None:
-            query_roles = [role.value for role in roles]
-            query = query.where(self.db.person.c.role.in_(query_roles))
-        if person_ids is not None:
-            query = query.where(self.db.person.c.person_id.in_(person_ids))
-        if family_ids is not None:
-            query = query.where(self.db.person.c.family_id.in_(family_ids))
-        df = pd.read_sql(query, self.db.engine)
-        # df.rename(columns={'sex': 'sex'}, inplace=True)
-        return df[["person_id", "family_id", "role", "sex", "status"]]
 
     def _build_default_filter_clause(
         self, measure: Measure, default_filter: str,
@@ -815,23 +718,6 @@ class PhenotypeGroup(PhenotypeData):
                 group_instruments[instrument_name] = group_instrument
 
         return group_instruments, group_measures
-
-    def get_persons_df(
-        self, roles: Optional[Iterable[Role]] = None,
-        person_ids: Optional[Iterable[str]] = None,
-        family_ids: Optional[Iterable[str]] = None,
-    ) -> pd.DataFrame:
-
-        ped_df: pd.DataFrame = self.families.ped_df[[
-            "person_id", "family_id", "role", "sex", "status"]]
-
-        if roles is not None:
-            ped_df = ped_df[ped_df.role.isin(roles)]
-        if person_ids is not None:
-            ped_df = ped_df[ped_df.person_id.isin(person_ids)]
-        if family_ids is not None:
-            ped_df = ped_df[ped_df.family_id.isin(family_ids)]
-        return ped_df
 
     def get_regressions(self) -> dict[str, Any]:
         res = {}
