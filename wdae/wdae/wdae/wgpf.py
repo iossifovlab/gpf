@@ -118,7 +118,7 @@ def _run_init_command(
 def _run_run_command(
         wgpf_instance: WGPFInstance, **kwargs: Union[bool, str]) -> None:
     if not _check_is_initialized(wgpf_instance):
-        logger.error(
+        logger.info(
             "GPF instance %s should be initialized first. "
             "Running `wgpf init`...",
             wgpf_instance.dae_dir)
