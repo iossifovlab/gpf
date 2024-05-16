@@ -74,108 +74,25 @@ def test_annotate_doc(
         pipeline_config,
         "-o", str(output_file),
     ])
-    assert pathlib.Path(output_file).read_text() == f"""<html>
 
-<head>
-    <style>
-        h3,
-        h4 {{
-            margin-top: 0.5em;
-            margin-bottom: 0.5em;
-        }}
+    output_template = pathlib.Path(output_file).read_text()
 
-        .annotator_line {{
-            font-size: 14px;
-            background-color: aquamarine;
-            vertical-align: top;
-        }}
+    assert output_template.find(
+        f"""src=\"file://{tmp_path}/one/statistics/histogram_score_one.png\"""",
+    ) != -1
 
-        .attribute_description {{
-            font-size: 14px;
-        }}
+    assert output_template.find(
+        "<strong>position_aggregator</strong>",
+    ) != -1
 
-        .attribute_name {{
-            font-size: 20px;
-        }}
+    assert output_template.find(
+        f"""href=\"file://{tmp_path}/one/index.html\"""",
+    ) != -1
 
-        .resource {{
-            background-color: rgb(233, 151, 151);
-        }}
-    </style>
-</head>
+    assert output_template.find(
+        'href="https://www.iossifovlab.com/gpfuserdocs/administration/annotation_tools.html#position-score"',
+    ) != -1
 
-<body>
-    <h1>Pipeline Documentation</h1>
-    <h3>Preambule</h3>
-    <ul>
-        <li>Input reference genome: acgt</li>
-        <li>Title: pipeline title</li>
-        <li>Summary: asdf</li>
-        <li>Description: sample description</li>
-        <li>Authors: pesho, gosho</li>
-        <li>
-            Metadata:
-            <ul>
-                <li>a = b</li>
-            </ul>
-        </li>
-    </ul>
-    <table border="1">
-        <tr>
-            <th>Attribute</th>
-            <th>Type</th>
-            <th>Description</th>
-        </tr>
-        <tr class="annotator_line">
-            <td>
-                <p><b>Annotator</b></p>
-                <p>type: position_score</p>
-                <p>description: <ul>
-<li><p>Annotator to use with genomic scores depending on genomic position like
-phastCons, phyloP, FitCons2, etc.</p></li>
-<li><p><a href="https://www.iossifovlab.com/gpfuserdocs/administration/annotation_tools.html#position-score" target="_blank">More info</a></p></li>
-</ul>
-</p>
-            </td>
-            <td colspan="2">
-                <table border="3">
-                    <tr>
-                        <td class="resource">
-                            <p><b>Resource</b></p>
-                            <p>id: <a href="file://{tmp_path}/one/index.html">
-                                    one</a></p>                            
-                            <p>type: position_score</p>
-                            <p>description: <p></p>
-</p>
-                        </td>
-                    </tr>
-                </table>
-            </td>
-        </tr>
-        <tr class="attribute">
-            <td>
-                <div>
-                    <p class="attribute_name">score_one</p>
-                </div>
-            </td>
-            <td>
-                <div class="attribute">
-                    <p>float</p>
-                </div>
-            </td>
-            <td>
-                <div class="attribute_description">
-                    <p>source: score_one</p>
-                    <p><img src="file://{tmp_path}/one/statistics/histogram_score_one.png" alt="HISTOGRAM" /></p>
-
-<p>small values: None,
-large_values None</p>
-
-<p><strong>position_aggregator</strong>: <code>mean</code> [default]</p>
-
-                </div>
-            </td>
-        </tr>
-    </table>
-    <html>
-</body>"""
+    assert output_template.find(
+        "Annotator to use with genomic scores depending on genomic position",
+    ) != -1

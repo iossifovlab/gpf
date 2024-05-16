@@ -1,36 +1,133 @@
 <html>
+  <head>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap" rel="stylesheet">
 
-<head>
     <style>
-        h3,
-        h4 {
-            margin-top: 0.5em;
-            margin-bottom: 0.5em;
-        }
+      * {
+        font-family: Roboto, FontAwesome;
+      }
 
-        .annotator_line {
-            font-size: 14px;
-            background-color: aquamarine;
-            vertical-align: top;
-        }
+      p {
+        margin: 8px;
+      }
 
-        .attribute_description {
-            font-size: 14px;
-        }
+      body {
+        width: 70%;
+        margin: auto;
+      }
 
-        .attribute_name {
-            font-size: 20px;
-        }
+      h1,
+      h2,
+      h3,
+      h4 {
+        margin-top: 0.5em;
+        margin-bottom: 0.5em;
+      }
 
-        .resource {
-            background-color: rgb(233, 151, 151);
-        }
+      .annotator-doc {
+        display: flex;
+        margin-top: 60px;
+        flex-direction: row;
+        border: 1px solid rgb(218,218,218);
+      }
+
+      .annotator-line {
+        font-size: 18px;
+        vertical-align: top;
+        width: 40%;
+        position: -webkit-sticky;
+        align-self: flex-start;
+        word-break: break-word;
+      }
+
+      .sticky-line {
+        position: sticky;
+        top: 0px;
+      }
+
+      .annotator {
+        background-color: #eee;
+        padding: 10px 8px;
+      }
+
+      .annotator-title {
+        font-size: 24px;
+        font-weight: 500;
+      }
+
+      .attribute-list {
+        width: 60%;
+        border-right: 1px solid rgb(218,218,218);
+      }
+      
+      .attribute {
+        padding: 20px 0 20px;
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        border-bottom: 1px solid rgb(218,218,218);
+      }
+
+      .attribute:last-child {
+        border-bottom: none;
+      }
+
+      .attribute-name {
+        font-size: 22px;
+        font-weight: 500;
+        margin: 8px;
+        word-break: break-word;
+      }
+
+      .attribute-type, .attribute-internal, .resource-id {
+        font-size: 18px;
+        margin: 8px;
+      }
+
+      .attribute-internal {
+        font-style: italic;
+      }
+
+      .attribute-description {
+        font-size: 18px;
+        width: 55%;
+        margin-right: 20px;
+      }
+
+      .attribute-info {
+        font-size: 22px;
+        align-self: center;
+        width: 35%;
+      }
+
+      .no-description {
+        font-style: italic;
+        color: #9c9c9c;
+        padding: 10px 8px;
+      }
+
+      .markdown {
+        padding: 8px;
+      }
+
+      details, .resource, .annotator-description {
+        padding: 10px 8px;
+      }
+
+      img {
+        height: auto; 
+        width: auto; 
+        max-width: 95%; 
+        max-height: 95%;
+      }
     </style>
-</head>
+  </head>
 
-<body>
+  <body>
     <h1>Pipeline Documentation</h1>
-    {%- if preambule is not none %}
+    {% if preambule is not none %}
     <h3>Preambule</h3>
     <ul>
         {%- if preambule.input_reference_genome %}
@@ -64,60 +161,65 @@
         </li>
         {%- endif %}
     </ul>
-    {%- endif %}
-    <table border="1">
-        <tr>
-            <th>Attribute</th>
-            <th>Type</th>
-            <th>Description</th>
-        </tr>
-        {%- for annotator_info in annotation_pipeline_info %}
-        <tr class="annotator_line">
-            <td>
-                <p><b>Annotator</b></p>
-                <p>type: {{annotator_info.type}}</p>
-                <p>description: {{ markdown(annotator_info.documentation) }}</p>
-            </td>
-            <td colspan="2">
-                <table border="3">
-                    <tr>
-                        {%- for genomic_resource in annotator_info.resources %}
-                        <td class="resource">
-                            <p><b>Resource</b></p>
-                            <p>id: <a href="{{genomic_resource.get_url()}}/index.html">
-                                    {{genomic_resource.get_id()}}</a></p>                            
-                            <p>type: {{genomic_resource.get_type()}}</p>
-                            <p>description: {{ markdown(genomic_resource.get_summary()) }}</p>
-                        </td>
-                        {%- endfor %}
-                    </tr>
-                </table>
-            </td>
-        </tr>
-
-        {%- for attribute_info in annotator_info.attributes %}
-        <tr class="attribute">
-            <td>
-                <div>
-                    <p class="attribute_name">{{attribute_info.name}}</p>
-                </div>
-            </td>
-            <td>
-                <div class="attribute">
-                    <p>{{attribute_info.type}}</p>
-                </div>
-            </td>
-            <td>
-                <div class="attribute_description">
-                    <p>source: {{attribute_info.source}}</p>
-                    {{markdown(attribute_info.documentation)}}
-                </div>
-            </td>
-        </tr>
-        {%- endfor %}
+    {% endif %}
 
 
-        {%- endfor %}
-    </table>
-    <html>
-</body>
+    {% for annotator_info in annotation_pipeline_info %}
+    <div class="annotator-doc">
+      <div class="attribute-list">
+        {% for attribute_info in annotator_info.attributes %}
+        <div class="attribute">
+          <div class="attribute-info">
+            <div class="attribute-name">{{attribute_info.name}}</div>
+            <div class="attribute-type">Type: {{attribute_info.type}}</div>
+            {% if attribute_info.internal %}
+            <div class="attribute-internal">Internal</div>
+            {% endif %}
+          </div>
+          <div class="attribute-description">
+            <div>source: {{attribute_info.source}}</div>
+            {{markdown(attribute_info.documentation)}}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+      <div class="annotator-line {{'sticky-line' if annotator_info.attributes|length > 1 }}">
+        <div class="annotator">
+          <div class="annotator-title">Annotator type: {{annotator_info.type}}</div>
+          {% for genomic_resource in annotator_info.resources %}
+          <div class="resource-id">Resource id: <a href="{{genomic_resource.get_url()}}/index.html">
+                  {{genomic_resource.get_id()}}</a></div>                            
+          {% endfor %}
+        </div>
+  
+        {% if annotator_info.documentation %}
+        <div class="annotator-description">
+          {{ markdown(annotator_info.documentation) }}
+        </div>
+        {% else %}
+        <div class="no-description">
+          No description
+        </div>
+        {% endif %}
+
+        {% for genomic_resource in annotator_info.resources %}
+        <div class="resource">
+          <div><b>Resource</b></div>
+          <div>id: <a href="{{genomic_resource.get_url()}}/index.html">
+                  {{genomic_resource.get_id()}}</a></div>                            
+          <div>type: {{genomic_resource.get_type()}}</div>
+          {% if genomic_resource.get_summary() %}
+            <div>Description:</div>
+            <div class="markdown">
+              {{ markdown(genomic_resource.get_summary()) }}
+            </div>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+  
+    </div>
+    {% endfor %}
+  </body>
+<html>
