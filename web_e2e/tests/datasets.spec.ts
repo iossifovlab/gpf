@@ -62,4 +62,15 @@ test.describe('Dataset description tests', () => {
       expect(page.url()).toContain(utils.instanceUrl + '/datasets/' + dataset.url);
     }
   });
+
+  test('navigation to invalid dataset', async({ page }) => {
+    await page.goto(`${utils.instanceUrl}/datasets/iossifov_2014/gene-browser`);
+    await expect(page.locator('gpf-gene-browser')).toBeVisible();
+    await expect(page.locator('.alert-danger')).not.toBeVisible();
+
+    await page.goto(`${utils.instanceUrl}/datasets/SFARI_SSC_WGS_CSHL/gene-browser`);
+    await page.waitForSelector('.alert-danger');
+    await expect(page.locator('.alert-danger')).toContainText('No such dataset found!');
+    await expect(page.locator('gpf-gene-browser')).not.toBeVisible();
+  });
 });

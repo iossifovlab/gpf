@@ -433,4 +433,70 @@ test.describe('Gene profiles table functionality tests', () => {
     await expect(page.locator('gpf-effect-types').getByLabel('noEnd')).not.toBeChecked();
     await expect(page.locator('gpf-effect-types').getByLabel('synonymous')).not.toBeChecked();
   });
+
+  test('should check state of the table when navigating to Datasets', async({ page }) => {
+    // open tab
+    await page.locator('div').filter({ hasText: /^GRIN2B$/}).click();
+    await page.getByRole('button', {name: 'All genes'}).click();
+
+    // search
+    await page.locator('input#gene-search-input').focus();
+    await page.keyboard.type('RAPGEF');
+
+    // highlight rows and open tab
+    await page.keyboard.down('Control');
+    await page.locator('.table-body-row').filter({hasText: 'RAPGEF4'}).click();
+    await page.locator('.table-body-row').filter({hasText: 'RAPGEF2'}).click();
+    await page.keyboard.up('Control');
+    await page.locator('#compare-genes-compare-button').click();
+
+    await page.getByRole('button', {name: 'All genes'}).click();
+
+    // change table header columns visibility
+    await page.locator('#protection_scores-column-filtering-button').click({force: true});
+    await page.waitForSelector('gpf-multiple-select-menu');
+    await page.locator('gpf-multiple-select-menu').getByLabel('LGD_rank').click();
+    await page.locator('gpf-multiple-select-menu').getByLabel('pLI_rank').click();
+
+    // change table header columns sorting - asc
+    await page.getByTitle('Relevant Gene Sets', { exact: true }).click();
+    await page.waitForTimeout(200);
+    await page.getByTitle('Relevant Gene Sets', { exact: true }).click();
+    await page.waitForTimeout(200);
+
+
+    // change table header columns order
+    // TODO
+
+    // go to Genotype browser and return to Gene Profiles
+    await utils.navigateToDatasetPage(page, utils.datasetIds.iossifov2014, 'Genotype browser');
+    await page.locator('#header a:text("Gene Profiles")').click();
+
+    // check search and search result
+    await expect(page.locator('input#gene-search-input')).toHaveValue('RAPGEF');
+    await expect(page.locator('.table-body-row:not(#nothing-found)')).toHaveCount(4);
+
+    // check highlighted rows
+    await expect(page.locator('.table-body-row').filter({hasText: 'RAPGEF4'}))
+      .toHaveClass('table-row table-body-row row-highlight');
+    await expect(page.locator('.table-body-row').filter({hasText: 'RAPGEF2'}))
+      .toHaveClass('table-row table-body-row row-highlight');
+
+    // check column visibility - TODO
+    // await expect(page.locator('.header-cell')).toHaveCount(20);
+    // await expect(page.locator('.header-cell').filter({ hasText: 'LGD_rank'})).not.toBeVisible();
+    // await expect(page.locator('.header-cell').filter({ hasText: 'pLI_rank'})).not.toBeVisible();
+
+    // check opened tabs
+    await expect(page.locator('div.tab')).toHaveCount(2);
+    await expect(page.locator('div.tab').nth(0)).toContainText('GRIN2B');
+    await expect(page.locator('div.tab').nth(1)).toContainText('RAPGEF2,RAPGEF4');
+
+    // check sorting
+    await expect(page.locator('div.active-sort-header')).toContainText('Relevant Gene Sets');
+    await expect(page.locator('div.active-sort-header').locator('gpf-sorting-buttons span')).toHaveId('asc');
+
+    // check column reorder
+    // TODO
+  });
 });

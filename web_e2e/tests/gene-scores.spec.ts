@@ -5,7 +5,7 @@ import * as path from 'path';
 
 const geneScoresData = [
   {
-    desc: 'SFARI gene score - SFARI gene score',
+    desc: 'SFARI gene score - 1-high confidence, 2-strong candidate, 3-suggestive evidence',
     inputField: false,
     allVariants: '30'
   },

@@ -214,6 +214,20 @@ test.describe('Gene profiles navigation to single view tests', () => {
     await expect(page.locator('gpf-gene-profiles-single-view')).toBeVisible();
     await expect(page.locator('gpf-gene-profiles-single-view').locator('h2:text("CHD8")')).toBeVisible();
   });
+
+  test('should navigate to single view with invalid gene', async({ page }) => {
+    await page.goto(`${utils.instanceUrl}/gene-profiles/CHD8`);
+    await expect(page.getByRole('heading', {name: 'CHD8'})).toBeVisible();
+
+    await page.goto(`${utils.instanceUrl}/gene-profiles/CHD888`);
+    await expect(page.locator('gpf-gene-profiles-single-view')).not.toBeVisible();
+    await page.waitForSelector('.error-modal');
+    await expect(page.locator('.error-modal')).toContainText('CHD888" is not found in the gene profiles database!');
+
+    await page.locator('.error-modal').getByText('Back').click();
+    await expect(page.locator('.error-modal')).not.toBeVisible();
+    await expect(page.locator('gpf-gene-profiles-table')).toBeVisible();
+  });
 });
 
 export const geneData =

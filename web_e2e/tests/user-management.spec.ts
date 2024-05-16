@@ -494,6 +494,7 @@ test.describe('Groups management', () => {
     await searchInTable(page, email);
     await page.locator(`[id="${email}-groups-cell"] [id="${groupName}-list-item"] gpf-confirm-button`).click();
     await page.getByRole('button', { name: 'Remove', exact: true }).click();
+    await expect(page.locator(`[id="${email}-groups-cell"] [id="${groupName}-list-item"]`)).not.toBeVisible();
 
     await page.locator('a:text("Groups")').click();
     await page.waitForSelector('gpf-groups-table');
@@ -611,6 +612,7 @@ test.describe('Datasets management', () => {
     await searchInTable(page, groupName);
     await page.locator(`[id="${groupName}-datasets-cell"] [id="${datasetName}-list-item"] gpf-confirm-button`).click();
     await page.getByRole('button', { name: 'Remove', exact: true }).click();
+    await expect(page.locator(`[id="${groupName}-datasets-cell"] [id="${datasetName}-list-item"]`)).not.toBeVisible();
 
     await page.getByRole('tab', { name: 'Datasets' }).click();
     await expect(page.locator(`[id="${datasetName}-groups-cell"]`)).not.toContainText(groupName);
@@ -652,6 +654,7 @@ test.describe('Datasets management', () => {
     await page.getByRole('tab', { name: 'Datasets' }).click();
     await page.locator(`[id="${datasetName}-groups-cell"] [id="${groupName}-list-item"] gpf-confirm-button`).click();
     await page.getByRole('button', { name: 'Remove', exact: true }).click();
+    await expect(page.locator(`[id="${groupName}-datasets-cell"] [id="${datasetName}-list-item"]`)).not.toBeVisible();
 
     await expect(page.locator(`[id="${datasetName}-groups-cell"]`)).not.toContainText(groupName);
     await expect(page.locator(`[id="${datasetName}-users-cell"]`)).not.toContainText(email);
@@ -711,7 +714,7 @@ async function createGroup(page: Page, name: string): Promise<void> {
   await page.locator('#create-group-form-button').click();
   await page.locator('#group-name-box').fill(name);
   await page.locator('#create-group-button').click();
-  await expect(page.getByText('Empty groups with no users or datasets will be deleted!')).toBeVisible();
+  await expect(page.getByText(`${name}Empty groups with no users or datasets will be deleted!`)).toBeVisible();
 }
 
 async function deleteGroup(page: Page, name: string): Promise<void> {
