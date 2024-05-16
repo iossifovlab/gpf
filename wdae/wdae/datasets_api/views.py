@@ -495,24 +495,30 @@ class DatasetHierarchyView(QueryBaseView):
     def produce_tree(
         instance_id: str, dataset: GenotypeData,
         user: User, selected: list[str],
-    ) -> dict[str, Any]:
+    ) -> Optional[dict[str, Any]]:
         """Recursively collect a dataset's id, children and access rights."""
+        has_rights = user_has_permission(instance_id, user, dataset.study_id)
+        dataset_obj = Dataset.objects.get(dataset_id=dataset.study_id)
+        groups = dataset_obj.groups.all()
+        if "hidden" in [group.name for group in groups] and not has_rights:
+            return None
+
         children = None
         if dataset.is_group:
-            children = [
-                DatasetHierarchyView.produce_tree(
-                    instance_id, child, user, selected,
-                )
-                for child in dataset.studies
-                if child.study_id in selected
-            ]
+            children = []
+            for child in dataset.studies:
+                if child.study_id in selected:
+                    tree = DatasetHierarchyView.produce_tree(
+                        instance_id, child, user, selected,
+                    )
+                    if tree is not None:
+                        children.append(tree)
+
         return {
             "dataset": dataset.study_id,
             "name": dataset.name,
             "children": children,
-            "access_rights": user_has_permission(
-                instance_id, user, dataset.study_id,
-            ),
+            "access_rights": has_rights,
         }
 
     def get(self, request: Request) -> Response:
@@ -523,12 +529,17 @@ class DatasetHierarchyView(QueryBaseView):
             self.gpf_instance.get_wdae_wrapper(genotype_data_id)
             for genotype_data_id in genotype_data_ids
         ])
-        return Response({"data": [
-            DatasetHierarchyView.produce_tree(
+
+        trees = []
+
+        for gd in genotype_data:
+            tree = DatasetHierarchyView.produce_tree(
                 self.instance_id, gd, user, genotype_data_ids,
             )
-            for gd in genotype_data
-        ]}, status=status.HTTP_200_OK)
+            if tree is not None:
+                trees.append(tree)
+
+        return Response({"data": trees}, status=status.HTTP_200_OK)
 
 
 class VisibleDatasetsView(QueryBaseView):
