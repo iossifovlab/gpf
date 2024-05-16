@@ -14,7 +14,7 @@
       }
 
       body {
-        width: 60%;
+        width: 70%;
         margin: auto;
       }
 
@@ -26,11 +26,22 @@
         margin-bottom: 0.5em;
       }
 
+      .annotator-doc {
+        display: flex;
+        margin-top: 60px;
+        flex-direction: row;
+        border: 1px solid rgb(218,218,218);
+      }
+
       .annotator-line {
         font-size: 18px;
-        margin-top: 60px;
         vertical-align: top;
-        border: 1px solid rgb(218,218,218);
+        width: 40%;
+        position: sticky;
+        position: -webkit-sticky;
+        align-self: flex-start;
+        top: 0px;
+        word-break: break-word;
       }
 
       .annotator {
@@ -43,22 +54,28 @@
         font-weight: 500;
       }
 
-      .resource {
-        border-top: 1px solid rgb(218,218,218);
+      .attribute-list {
+        width: 60%;
+        border-right: 1px solid rgb(218,218,218);
       }
       
       .attribute {
-        border-bottom: 1px solid rgb(218,218,218);
         padding: 20px 0 20px;
         display: flex;
         flex-direction: row;
-        column-gap: 10%;
+        justify-content: space-between;
+        border-bottom: 1px solid rgb(218,218,218);
+      }
+
+      .attribute:last-child {
+        border-bottom: none;
       }
 
       .attribute-name {
         font-size: 22px;
         font-weight: 500;
         margin: 8px;
+        word-break: break-word;
       }
 
       .attribute-type, .attribute-internal, .resource-id {
@@ -72,13 +89,14 @@
 
       .attribute-description {
         font-size: 18px;
-        width: 40%;
+        width: 55%;
+        margin-right: 20px;
       }
 
       .attribute-info {
         font-size: 22px;
         align-self: center;
-        width: 40%;
+        width: 35%;
       }
 
       .no-description {
@@ -144,17 +162,34 @@
 
 
     {% for annotator_info in annotation_pipeline_info %}
-    <div class="annotator-line">
-      <div class="annotator">
-        <div class="annotator-title">Annotator type: {{annotator_info.type}}</div>
-        {% for genomic_resource in annotator_info.resources %}
-        <div class="resource-id">Resource id: <a href="{{genomic_resource.get_url()}}/index.html">
-                {{genomic_resource.get_id()}}</a></div>                            
+    <div class="annotator-doc">
+      <div class="attribute-list">
+        {% for attribute_info in annotator_info.attributes %}
+        <div class="attribute">
+          <div class="attribute-info">
+            <div class="attribute-name">{{attribute_info.name}}</div>
+            <div class="attribute-type">Type: {{attribute_info.type}}</div>
+            {% if attribute_info.internal %}
+            <div class="attribute-internal">Internal</div>
+            {% endif %}
+          </div>
+          <div class="attribute-description">
+            <div>source: {{attribute_info.source}}</div>
+            {{markdown(attribute_info.documentation)}}
+          </div>
+        </div>
         {% endfor %}
       </div>
 
-      <details>
-        <summary>Details</summary>
+      <div class="annotator-line">
+        <div class="annotator">
+          <div class="annotator-title">Annotator type: {{annotator_info.type}}</div>
+          {% for genomic_resource in annotator_info.resources %}
+          <div class="resource-id">Resource id: <a href="{{genomic_resource.get_url()}}/index.html">
+                  {{genomic_resource.get_id()}}</a></div>                            
+          {% endfor %}
+        </div>
+  
         {% if annotator_info.documentation %}
         <div class="annotator-description">
           {{ markdown(annotator_info.documentation) }}
@@ -179,26 +214,9 @@
           {% endif %}
         </div>
         {% endfor %}
-      </details>
-    </div>
-
-    {% for attribute_info in annotator_info.attributes %}
-    <div class="attribute">
-      <div class="attribute-info">
-        <div class="attribute-name">{{attribute_info.name}}</div>
-        <div class="attribute-type">Type: {{attribute_info.type}}</div>
-        {% if attribute_info.internal %}
-        <div class="attribute-internal">Internal</div>
-        {% endif %}
       </div>
-      <div class="attribute-description">
-        <div>source: {{attribute_info.source}}</div>
-        {{markdown(attribute_info.documentation)}}
-      </div>
+  
     </div>
-    {% endfor %}
-
-
     {% endfor %}
   </body>
 <html>
