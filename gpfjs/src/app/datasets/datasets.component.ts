@@ -19,7 +19,7 @@ export class DatasetsComponent implements OnInit, OnDestroy {
   private static previousUrl = '';
   public registerAlertVisible = false;
   public datasetTrees: DatasetNode[];
-  public selectedDataset: Dataset;
+  public selectedDataset: Dataset = null;
   public permissionDeniedPrompt: string;
   public toolPageLinks = toolPageLinks;
   public visibleDatasets: string[];
