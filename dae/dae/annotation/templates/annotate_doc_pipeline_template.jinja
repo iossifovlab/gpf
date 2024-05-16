@@ -37,11 +37,14 @@
         font-size: 18px;
         vertical-align: top;
         width: 40%;
-        position: sticky;
         position: -webkit-sticky;
         align-self: flex-start;
-        top: 0px;
         word-break: break-word;
+      }
+
+      .sticky-line {
+        position: sticky;
+        top: 0px;
       }
 
       .annotator {
@@ -181,7 +184,7 @@
         {% endfor %}
       </div>
 
-      <div class="annotator-line">
+      <div class="annotator-line {{'sticky-line' if annotator_info.attributes|length > 1 }}">
         <div class="annotator">
           <div class="annotator-title">Annotator type: {{annotator_info.type}}</div>
           {% for genomic_resource in annotator_info.resources %}
