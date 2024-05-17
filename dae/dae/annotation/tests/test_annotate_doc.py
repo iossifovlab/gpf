@@ -30,7 +30,7 @@ def t4c8_instance(tmp_path: pathlib.Path) -> GPFInstance:
                 preambule:
                     input_reference_genome: acgt
                     title: pipeline title
-                    summary: asdf
+                    summary: asdf summary
                     description: sample description
                     authors: pesho, gosho
                     metadata:
@@ -77,22 +77,14 @@ def test_annotate_doc(
 
     output_template = pathlib.Path(output_file).read_text()
 
-    assert output_template.find(
-        f"""src=\"file://{tmp_path}/one/statistics/histogram_score_one.png\"""",
-    ) != -1
+    assert f"""src=\"file://{tmp_path}/one/statistics/histogram_score_one.png\"""" in output_template  # noqa: E501
+    assert "<strong>position_aggregator</strong>" in output_template
+    assert f"""href=\"file://{tmp_path}/one/index.html\"""" in output_template
+    assert 'href="https://www.iossifovlab.com/gpfuserdocs/administration/annotation_tools.html#position-score"' in output_template  # noqa: E501
+    assert "Annotator to use with genomic scores depending on genomic position" in output_template  # noqa: E501
 
-    assert output_template.find(
-        "<strong>position_aggregator</strong>",
-    ) != -1
-
-    assert output_template.find(
-        f"""href=\"file://{tmp_path}/one/index.html\"""",
-    ) != -1
-
-    assert output_template.find(
-        'href="https://www.iossifovlab.com/gpfuserdocs/administration/annotation_tools.html#position-score"',
-    ) != -1
-
-    assert output_template.find(
-        "Annotator to use with genomic scores depending on genomic position",
-    ) != -1
+    assert "Preambule" in output_template
+    assert "acgt" in output_template
+    assert "asdf summary" in output_template
+    assert "sample description" in output_template
+    assert "pesho, gosho" in output_template

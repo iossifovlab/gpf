@@ -28,7 +28,7 @@
 
       .annotator-doc {
         display: flex;
-        margin-top: 60px;
+        margin-bottom: 60px;
         flex-direction: row;
         border: 1px solid rgb(218,218,218);
       }
@@ -122,48 +122,56 @@
         max-width: 95%; 
         max-height: 95%;
       }
+
+      table, th, td {
+        border:1px solid rgb(218,218,218);
+      }
+
+      th {
+        background-color: #eee;
+      }
     </style>
   </head>
 
   <body>
     <h1>Pipeline Documentation</h1>
     {% if preambule is not none %}
-    <h3>Preambule</h3>
-    <ul>
-        {%- if preambule.input_reference_genome %}
-        <li>Input reference genome: {{preambule.input_reference_genome}}</li>
-        {%- endif %}
-
-        {%- if preambule.title %}
-        <li>Title: {{preambule.title}}</li>
-        {%- endif %}
-
-        {%- if preambule.summary %}
-        <li>Summary: {{preambule.summary}}</li>
-        {%- endif %}
-
-        {%- if preambule.description %}
-        <li>Description: {{preambule.description}}</li>
-        {%- endif %}
-
-        {%- if preambule.authors %}
-        <li>Authors: {{preambule.authors}}</li>
-        {%- endif %}
-
-        {%- if preambule.metadata %}
-        <li>
-            Metadata:
-            <ul>
-                {%- for k, v in preambule.metadata.items() %}
-                <li>{{k}} = {{v}}</li>
-                {%- endfor %}
-            </ul>
-        </li>
-        {%- endif %}
-    </ul>
+    <h2>Preambule</h2>
+    <table style="width: 100%">
+    <tr>
+      <th>Input reference genome</th>
+      <td>{{preambule.input_reference_genome}}</td>
+    </tr>
+    <tr>
+      <th>Title</th>
+      <td>{{preambule.title}}</td>
+    </tr>
+    <tr>
+      <th>Summary</th>
+      <td>{{preambule.summary}}</td>
+    </tr>
+    <tr>
+      <th>Description</th>
+      <td>{{preambule.description}}</td>
+    </tr>
+    <tr>
+      <th>Authors</th>
+      <td>{{preambule.authors}}</td>
+    </tr>
+    <tr>
+      <th>Metadata</th>
+      <td>
+        <ul>
+            {%- for k, v in preambule.metadata.items() %}
+            <li>{{k}} = {{v}}</li>
+            {%- endfor %}
+        </ul>
+      </td>
+    </tr>
+    </table>
     {% endif %}
 
-
+    <h2>Annotators</h2>
     {% for annotator_info in annotation_pipeline_info %}
     <div class="annotator-doc">
       <div class="attribute-list">
