@@ -6,8 +6,8 @@ import { cloneDeep } from 'lodash';
 import { GeneProfilesTableService } from './gene-profiles-table.service';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute } from '@angular/router';
-import { NgxsModule } from '@ngxs/store';
-import { GeneProfilesState } from './gene-profiles-table.state';
+import { NgxsModule, Store } from '@ngxs/store';
+import { GeneProfilesModel } from './gene-profiles-table.state';
 import { TruncatePipe } from 'app/utils/truncate.pipe';
 
 const column1 = {
@@ -253,6 +253,7 @@ describe('GeneProfilesTableComponent', () => {
   let component: GeneProfilesTableComponent;
   const geneProfilesTableServiceMock = new GeneProfilesTableServiceMock();
   const mockActivatedRoute = new MockActivatedRoute();
+  let store: Store;
   beforeEach(() => {
     TestBed.configureTestingModule({
       declarations: [GeneProfilesTableComponent, TruncatePipe],
@@ -260,7 +261,7 @@ describe('GeneProfilesTableComponent', () => {
         {provide: ActivatedRoute, useValue: mockActivatedRoute},
         {provide: GeneProfilesTableService, useValue: geneProfilesTableServiceMock}
       ],
-      imports: [NgxsModule.forRoot([GeneProfilesState], {developmentMode: true})]
+      imports: [NgxsModule.forRoot([], {developmentMode: true})]
     }).compileComponents();
 
     const fixture = TestBed.createComponent(GeneProfilesTableComponent);
@@ -268,6 +269,15 @@ describe('GeneProfilesTableComponent', () => {
 
     component.sortingButtonsComponents = [];
     component.config = configMock;
+    store = TestBed.inject(Store);
+    jest.spyOn(store, 'selectOnce').mockReturnValue(of({
+      openedTabs: new Set<string>(),
+      searchValue: '',
+      highlightedRows: new Set<string>(),
+      sortBy: 'column1',
+      orderBy: 'desc',
+      headerLeaves: []
+    } as GeneProfilesModel));
     fixture.detectChanges();
   });
 
@@ -285,7 +295,6 @@ describe('GeneProfilesTableComponent', () => {
 
   it('should update when change happens', () => {
     component.ngOnChanges();
-
     component.leaves.forEach((leaf, index) => {
       expect(leaf.id).toStrictEqual(gridData[index].id);
       expect(leaf.gridColumn).toStrictEqual(gridData[index].gridColumn);
@@ -311,11 +320,13 @@ describe('GeneProfilesTableComponent', () => {
   });
 
   it('should update genes', () => {
-    expect(component.genes).toStrictEqual([]);
+    component.pageIndex = 0;
+    component.genes = [];
     expect(component.pageIndex).toBe(0);
+    expect(component.genes).toStrictEqual([]);
     component.updateGenes();
-    expect(component.genes).toStrictEqual(genesMock);
     expect(component.pageIndex).toBe(1);
+    expect(component.genes).toStrictEqual(genesMock);
   });
 
   it('should reorder header', () => {
