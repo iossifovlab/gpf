@@ -81,7 +81,7 @@
           <div
             [ngStyle]="{ 'padding-left': (nesting * 80 || 36) + 'px' }"
             style="position: relative; margin-bottom: 15px">
-            <div style="display: inline-block; margin-right: 7px">
+            <div style="position: relative; display: inline-block; margin-right: 7px">
               <span
                 #collapseIcon
                 *ngIf="entry.children && datasetHasVisibleChildren(entry.children)"

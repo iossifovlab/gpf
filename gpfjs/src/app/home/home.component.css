@@ -20,7 +20,9 @@ h4 {
 }
 
 .collapse-dataset-icon {
-  right: 3px;
+  position: absolute;
+  right: 100%;
+  top: 50%;
   padding: 3px;
   user-select: none;
   transform: translateY(-50%) rotate(270deg);
