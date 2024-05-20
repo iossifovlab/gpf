@@ -1,4 +1,5 @@
 """Provides a lift over annotator and helpers."""
+import abc
 import logging
 from typing import Any, Optional
 
@@ -61,15 +62,19 @@ def build_liftover_annotator(pipeline: AnnotationPipeline,
                          f"{resource_id} that is "
                          "unavailable.")
     source_genome = build_reference_genome_from_resource(resource)
-    basic_liftover = info.parameters.get("basic_liftover", False)
-    return LiftOverAnnotator(
-        pipeline, info,
-        chain, source_genome, target_genome,
-        basic_liftover=basic_liftover,
-    )
+    if info.type in {"liftover_annotator", "bcf_liftover_annotator"}:
+        return BcfLiftoverAnnotator(
+            pipeline, info, chain, source_genome, target_genome,
+        )
+    if info.type == "basic_liftover_annotator":
+        return BasicLiftoverAnnotator(
+            pipeline, info, chain, source_genome, target_genome,
+        )
+
+    raise ValueError(f"Unsupported liftover annotator type: {info.type}")
 
 
-class LiftOverAnnotator(AnnotatorBase):
+class AbstractLiftoverAnnotator(AnnotatorBase):
     """Liftovver annotator class."""
 
     def __init__(
@@ -137,19 +142,7 @@ class LiftOverAnnotator(AnnotatorBase):
             return None
 
         try:
-            if self.basic_liftover:
-                lo_allele = basic_liftover_allele(
-                    allele.chrom, allele.position,
-                    allele.reference, allele.alternative,
-                    self.chain, self.source_genome, self.target_genome,
-                )
-            else:
-                lo_allele = bcf_liftover_allele(
-                    allele.chrom, allele.position,
-                    allele.reference, allele.alternative,
-                    self.chain, self.source_genome, self.target_genome,
-                )
-
+            lo_allele = self._internal_liftover_allele(allele)
             if lo_allele is None:
                 return None
 
@@ -163,6 +156,13 @@ class LiftOverAnnotator(AnnotatorBase):
             return None
 
         return result
+
+    @abc.abstractmethod
+    def _internal_liftover_allele(
+        self, allele: VCFAllele,
+    ) -> Optional[tuple[str, int, str, str]]:
+        """Liftover an allele."""
+        raise NotImplementedError
 
     def liftover_position(
         self, position: Annotatable,
@@ -437,3 +437,47 @@ def basic_liftover_allele(
         return None
 
     return lo_chrom, lo_pos, lo_ref, lo_alt
+
+
+class BasicLiftoverAnnotator(AbstractLiftoverAnnotator):
+    """Basic liftover annotator class."""
+
+    def __init__(
+        self, pipeline: Optional[AnnotationPipeline],
+        info: AnnotatorInfo,
+        chain: LiftoverChain,
+        source_genome: ReferenceGenome,
+        target_genome: ReferenceGenome,
+    ):
+        super().__init__(pipeline, info, chain, source_genome, target_genome)
+
+    def _internal_liftover_allele(
+        self, allele: VCFAllele,
+    ) -> Optional[tuple[str, int, str, str]]:
+        """Liftover an allele."""
+        return basic_liftover_allele(
+            allele.chrom, allele.position, allele.ref, allele.alt,
+            self.chain, self.source_genome, self.target_genome,
+        )
+
+
+class BcfLiftoverAnnotator(AbstractLiftoverAnnotator):
+    """BCF tools liftover re-implementation annotator class."""
+
+    def __init__(
+        self, pipeline: Optional[AnnotationPipeline],
+        info: AnnotatorInfo,
+        chain: LiftoverChain,
+        source_genome: ReferenceGenome,
+        target_genome: ReferenceGenome,
+    ):
+        super().__init__(pipeline, info, chain, source_genome, target_genome)
+
+    def _internal_liftover_allele(
+        self, allele: VCFAllele,
+    ) -> Optional[tuple[str, int, str, str]]:
+        """Liftover an allele."""
+        return bcf_liftover_allele(
+            allele.chrom, allele.position, allele.ref, allele.alt,
+            self.chain, self.source_genome, self.target_genome,
+        )

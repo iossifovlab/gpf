@@ -65,6 +65,8 @@ setuptools.setup(
     effect_annotator=dae.annotation.effect_annotator:build_effect_annotator
     gene_set_annotator=dae.annotation.gene_set_annotator:build_gene_set_annotator
     liftover_annotator=dae.annotation.liftover_annotator:build_liftover_annotator
+    basic_liftover_annotator=dae.annotation.liftover_annotator:build_liftover_annotator
+    bcf_liftover_annotator=dae.annotation.liftover_annotator:build_liftover_annotator
     normalize_allele_annotator=dae.annotation.normalize_allele_annotator:build_normalize_allele_annotator
     gene_score_annotator=dae.annotation.gene_score_annotator:build_gene_score_annotator
     simple_effect_annotator=dae.annotation.simple_effect_annotator:build_simple_effect_annotator
