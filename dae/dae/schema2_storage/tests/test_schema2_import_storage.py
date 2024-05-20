@@ -4,7 +4,7 @@ import pytest
 
 from dae.schema2_storage.schema2_import_storage import (
     Schema2DatasetLayout,
-    schema2_dataset_layout,
+    create_schema2_dataset_layout,
 )
 from dae.testing import acgt_gpf, setup_pedigree, setup_vcf
 from dae.testing.import_helpers import vcf_study
@@ -12,7 +12,7 @@ from dae.testing.import_helpers import vcf_study
 
 @pytest.fixture(scope="module")
 def import_data(
-    tmp_path_factory: pytest.TempPathFactory
+    tmp_path_factory: pytest.TempPathFactory,
 ) -> Schema2DatasetLayout:
     root_path = tmp_path_factory.mktemp("import_data")
     gpf_instance = acgt_gpf(root_path)
@@ -43,7 +43,7 @@ chr3   1    .  A   G,TA .    .      .    GT     0/1  0/1  0/0
         gpf_instance,
         project_config_overwrite={"destination": {"storage_type": "schema2"}},
     )
-    return schema2_dataset_layout(f"{root_path}/work_dir/study")
+    return create_schema2_dataset_layout(f"{root_path}/work_dir/study")
 
 
 def test_schema2_import_metadata(import_data: Schema2DatasetLayout) -> None:

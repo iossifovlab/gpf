@@ -21,7 +21,7 @@ from dae.parquet.schema2.serializers import AlleleParquetSerializer
 from dae.task_graph.graph import Task, TaskGraph
 from dae.utils import fs_utils
 
-logger = logging.getLogger(__file__)
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -34,20 +34,35 @@ class Schema2DatasetLayout:
     base_dir: Optional[str] = None
 
 
-def schema2_dataset_layout(
-    study_dir: str, existing: bool = False
-) -> Schema2DatasetLayout:
+def load_schema2_dataset_layout(study_dir: str) -> Schema2DatasetLayout:
     """
     Create dataset layout for a given directory.
 
-    Existing flag should be used depending on whether this directory is
-    already created and being read or being created at the moment.
+    Assumes that the dataset already exists, therefore it should check whether
+    summary and family tables exist.
+    """
+    summary_path = fs_utils.join(study_dir, "summary")
+    summary = summary_path if fs_utils.exists(summary_path) else None
+
+    family_path = fs_utils.join(study_dir, "family")
+    family = family_path if fs_utils.exists(family_path) else None
+
+    return Schema2DatasetLayout(
+        study_dir,
+        fs_utils.join(study_dir, "pedigree", "pedigree.parquet"),
+        summary,
+        family,
+        fs_utils.join(study_dir, "meta", "meta.parquet"))
+
+
+def create_schema2_dataset_layout(study_dir: str) -> Schema2DatasetLayout:
+    """
+    Create dataset layout for a given directory.
+
+    Used for creating new datasets, where all tables should exist.
     """
     summary = fs_utils.join(study_dir, "summary")
     family = fs_utils.join(study_dir, "family")
-    if existing:
-        summary = summary if fs_utils.exists(summary) else None
-        family = family if fs_utils.exists(family) else None
     return Schema2DatasetLayout(
         study_dir,
         fs_utils.join(study_dir, "pedigree", "pedigree.parquet"),
@@ -59,7 +74,7 @@ def schema2_dataset_layout(
 def schema2_project_dataset_layout(
         project: ImportProject) -> Schema2DatasetLayout:
     study_dir = fs_utils.join(project.work_dir, project.study_id)
-    return schema2_dataset_layout(study_dir)
+    return create_schema2_dataset_layout(study_dir)
 
 
 class Schema2ImportStorage(ImportStorage):
@@ -294,7 +309,7 @@ class Schema2ImportStorage(ImportStorage):
         parquet_dir = project.get_parquet_dataset_dir()
         if parquet_dir is None:
             raise ValueError("parquet dataset not stored: {project.study_id}")
-        layout = schema2_dataset_layout(parquet_dir)
+        layout = create_schema2_dataset_layout(parquet_dir)
 
         table = pq.read_table(layout.meta)
         result = {}
