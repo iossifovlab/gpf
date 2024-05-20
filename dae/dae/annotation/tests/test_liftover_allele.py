@@ -5,8 +5,8 @@ import pytest
 
 from dae.annotation.liftover_annotator import (
     basic_liftover_allele,
-    liftover_allele,
-    liftover_variant,
+    bcf_liftover_allele,
+    bcf_liftover_variant,
 )
 from dae.genomic_resources.liftover_chain import (
     build_liftover_chain_from_resource,
@@ -54,7 +54,7 @@ def test_liftover_allele_util(
     target_genome = build_reference_genome_from_resource(res).open()
     assert target_genome is not None
 
-    lresult = liftover_allele(
+    lresult = bcf_liftover_allele(
         chrom, pos, ref, alt,
         liftover_chain, source_genome, target_genome,
     )
@@ -433,7 +433,7 @@ def test_ex3a_liftover_parts(
     assert mref == "GATAATAATT"
     assert malts == ["GATAATT"]
 
-    result = liftover_allele(
+    result = bcf_liftover_allele(
         "10", 40, "GATA", "G",
         liftover_chain, source_genome, target_genome)
     assert result is not None
@@ -468,7 +468,7 @@ def test_ex4a_liftover_parts(
     assert mref == "GAC"
     assert malts == ["GGC"]
 
-    result = liftover_allele(
+    result = bcf_liftover_allele(
         "22", 30, "A", "G",
         liftover_chain, source_genome, target_genome)
     assert result is not None
@@ -495,7 +495,7 @@ def test_ex4a_liftover_variant(
     liftover_chain = build_liftover_chain_from_resource(res)
     liftover_chain.open()
 
-    result = liftover_allele(
+    result = bcf_liftover_allele(
         "22", 25, "TAA", "T",
         liftover_chain, source_genome, target_genome)
     assert result is not None
@@ -506,7 +506,7 @@ def test_ex4a_liftover_variant(
     assert lref == "TAA"
     assert lalt == "T"
 
-    result = liftover_allele(
+    result = bcf_liftover_allele(
         "22", 25, "T", "G",
         liftover_chain, source_genome, target_genome)
     assert result is not None
@@ -519,7 +519,7 @@ def test_ex4a_liftover_variant(
 
     # 1:47173530 CCAAA > TCAAA,C
     # 22:25 TAA > CAA,T
-    result = liftover_allele(
+    result = bcf_liftover_allele(
         "22", 25, "TAA", "CAA",
         liftover_chain, source_genome, target_genome)
     assert result is not None
@@ -530,7 +530,7 @@ def test_ex4a_liftover_variant(
     assert lref == "T"
     assert lalt == "C"
 
-    result = liftover_allele(
+    result = bcf_liftover_allele(
         "22", 25, "TAA", "C",
         liftover_chain, source_genome, target_genome)
     assert result is not None
@@ -541,7 +541,7 @@ def test_ex4a_liftover_variant(
     assert lref == "TAA"
     assert lalt == "C"
 
-    r_variant = liftover_variant(
+    r_variant = bcf_liftover_variant(
         "22", 25, "TAA", ["CAA", "C"],
         liftover_chain, source_genome, target_genome)
     assert r_variant is not None
@@ -576,7 +576,7 @@ def test_ex4b_liftover_parts(
     assert mref == "GCG"
     assert malts == ["GTG"]
 
-    result = liftover_allele(
+    result = bcf_liftover_allele(
         "18", 29, "C", "T",
         liftover_chain, source_genome, target_genome)
     assert result is not None
@@ -611,7 +611,7 @@ def test_ex4c_liftover_parts(
     assert mref == "ACT"
     assert malts == ["ATT"]
 
-    result = liftover_allele(
+    result = bcf_liftover_allele(
         "X", 30, "C", "T",
         liftover_chain, source_genome, target_genome)
     assert result is not None
@@ -646,7 +646,7 @@ def test_ex4d_liftover_parts(
     assert mref == "TCT"
     assert malts == ["TTT"]
 
-    result = liftover_allele(
+    result = bcf_liftover_allele(
         "21", 30, "C", "T",
         liftover_chain, source_genome, target_genome)
     assert result is None

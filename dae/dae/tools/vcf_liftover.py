@@ -8,7 +8,7 @@ from typing import Optional
 import pysam
 
 from dae.annotation.context import CLIAnnotationContext
-from dae.annotation.liftover_annotator import liftover_variant
+from dae.annotation.liftover_annotator import bcf_liftover_variant
 from dae.genomic_resources.genomic_context import get_genomic_context
 from dae.genomic_resources.liftover_chain import (
     LiftoverChain,
@@ -139,7 +139,7 @@ def main(
             if vcf_variant.ref is None:
                 logger.warning("skipping variant without ref: %s", vcf_variant)
                 continue
-            lo_variant = liftover_variant(
+            lo_variant = bcf_liftover_variant(
                     vcf_variant.chrom, vcf_variant.pos,
                     vcf_variant.ref, list(vcf_variant.alts),
                     chain, source_genome, target_genome,

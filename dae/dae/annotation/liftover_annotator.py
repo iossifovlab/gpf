@@ -144,7 +144,7 @@ class LiftOverAnnotator(AnnotatorBase):
                     self.chain, self.source_genome, self.target_genome,
                 )
             else:
-                lo_allele = liftover_allele(
+                lo_allele = bcf_liftover_allele(
                     allele.chrom, allele.position,
                     allele.reference, allele.alternative,
                     self.chain, self.source_genome, self.target_genome,
@@ -305,7 +305,7 @@ def _liftover_sequence(
     return None
 
 
-def liftover_allele(
+def bcf_liftover_allele(
     chrom: str,
     pos: int,
     ref: str,
@@ -343,7 +343,7 @@ def liftover_allele(
     return nchrom, npos, nref, nalts[0]
 
 
-def liftover_variant(
+def bcf_liftover_variant(
     chrom: str,
     pos: int,
     ref: str,
@@ -355,7 +355,7 @@ def liftover_variant(
     """Liftover a variant."""
     lo_alleles: list[tuple[str, int, str, str]] = []
     for alt in alts:
-        lo_allele = liftover_allele(
+        lo_allele = bcf_liftover_allele(
             chrom, pos, ref, alt,
             liftover_chain, source_genome, target_genome,
         )
