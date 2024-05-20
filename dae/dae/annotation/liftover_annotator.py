@@ -1,7 +1,7 @@
 """Provides a lift over annotator and helpers."""
 import abc
 import logging
-from typing import Any, Optional
+from typing import Any, Callable, Optional
 
 from dae.annotation.annotation_pipeline import (
     AnnotationPipeline,
@@ -343,65 +343,19 @@ def bcf_liftover_allele(
     return nchrom, npos, nref, nalts[0]
 
 
-def bcf_liftover_variant(
-    chrom: str,
-    pos: int,
-    ref: str,
-    alts: list[str],
-    liftover_chain: LiftoverChain,
-    source_genome: ReferenceGenome,
-    target_genome: ReferenceGenome,
-) -> Optional[tuple[str, int, str, list[str]]]:
-    """Liftover a variant."""
-    lo_alleles: list[tuple[str, int, str, str]] = []
-    for alt in alts:
-        lo_allele = bcf_liftover_allele(
-            chrom, pos, ref, alt,
-            liftover_chain, source_genome, target_genome,
-        )
-        if lo_allele is None:
-            return None
-        lo_alleles.append(lo_allele)
-    if not all(
-            chrom == lo_alleles[0][0] for chrom, _, _, _ in lo_alleles):
-        return None
-
-    if not all(
-            pos == lo_alleles[0][1] for _, pos, _, _ in lo_alleles):
-        return None
-
-    max_ref = max(len(ref) for _, _, ref, _ in lo_alleles)
-    r_alleles: list[tuple[str, int, str, str]] = []
-    for allele in lo_alleles:
-        if len(allele[2]) == max_ref:
-            r_alleles.append(allele)
-            continue
-        chrom, pos, ref, alt = allele
-        fill_start = pos + len(ref)
-        fill_end = pos + max_ref - 1
-        fill_seq = target_genome.get_sequence(chrom, fill_start, fill_end)
-        fill_ref = f"{ref}{fill_seq}"
-        fill_alt = f"{alt}{fill_seq}"
-        assert len(fill_ref) == max_ref
-        r_alleles.append((chrom, pos, fill_ref, fill_alt))
-    assert all(ref == r_alleles[0][2] for _, _, ref, _ in r_alleles)
-    chrom, pos, ref, _ = r_alleles[0]
-    return chrom, pos, ref, [alt for _, _, _, alt in r_alleles]
-
-
 def basic_liftover_allele(
     chrom: str,
     pos: int,
     ref: str,
     alt: str,
     liftover_chain: LiftoverChain,
-    source_genome: ReferenceGenome,  # noqa pylint: disable=unused-argument
+    source_genome: ReferenceGenome,
     target_genome: ReferenceGenome,
 ) -> Optional[tuple[str, int, str, str]]:
     """Basic liftover an allele."""
 
     nchrom, npos, nref, nalts = normalize_variant(
-        chrom, pos, ref, [alt], target_genome)
+        chrom, pos, ref, [alt], source_genome)
     nalt = nalts[0]
 
     lo_coordinates = liftover_chain.convert_coordinate(
@@ -437,6 +391,88 @@ def basic_liftover_allele(
         return None
 
     return lo_chrom, lo_pos, lo_ref, lo_alt
+
+
+def _liftover_variant(
+    chrom: str,
+    pos: int,
+    ref: str,
+    alts: list[str],
+    liftover_chain: LiftoverChain,
+    source_genome: ReferenceGenome,
+    target_genome: ReferenceGenome,
+    liftover_allele_func: Callable[
+        [str, int, str, str, LiftoverChain, ReferenceGenome, ReferenceGenome],
+        Optional[tuple[str, int, str, str]],
+    ],
+) -> Optional[tuple[str, int, str, list[str]]]:
+    """Liftover a variant."""
+    lo_alleles: list[tuple[str, int, str, str]] = []
+    for alt in alts:
+        lo_allele = liftover_allele_func(
+            chrom, pos, ref, alt,
+            liftover_chain, source_genome, target_genome,
+        )
+        if lo_allele is None:
+            return None
+        lo_alleles.append(lo_allele)
+    if not all(
+            chrom == lo_alleles[0][0] for chrom, _, _, _ in lo_alleles):
+        return None
+
+    if not all(
+            pos == lo_alleles[0][1] for _, pos, _, _ in lo_alleles):
+        return None
+
+    max_ref = max(len(ref) for _, _, ref, _ in lo_alleles)
+    r_alleles: list[tuple[str, int, str, str]] = []
+    for allele in lo_alleles:
+        if len(allele[2]) == max_ref:
+            r_alleles.append(allele)
+            continue
+        chrom, pos, ref, alt = allele
+        fill_start = pos + len(ref)
+        fill_end = pos + max_ref - 1
+        fill_seq = target_genome.get_sequence(chrom, fill_start, fill_end)
+        fill_ref = f"{ref}{fill_seq}"
+        fill_alt = f"{alt}{fill_seq}"
+        assert len(fill_ref) == max_ref
+        r_alleles.append((chrom, pos, fill_ref, fill_alt))
+    assert all(ref == r_alleles[0][2] for _, _, ref, _ in r_alleles)
+    chrom, pos, ref, _ = r_alleles[0]
+    return chrom, pos, ref, [alt for _, _, _, alt in r_alleles]
+
+
+def bcf_liftover_variant(
+    chrom: str,
+    pos: int,
+    ref: str,
+    alts: list[str],
+    liftover_chain: LiftoverChain,
+    source_genome: ReferenceGenome,
+    target_genome: ReferenceGenome,
+) -> Optional[tuple[str, int, str, list[str]]]:
+    """BCF liftover variant utility function."""
+    return _liftover_variant(
+        chrom, pos, ref, alts, liftover_chain, source_genome, target_genome,
+        bcf_liftover_allele,
+    )
+
+
+def basic_liftover_variant(
+    chrom: str,
+    pos: int,
+    ref: str,
+    alts: list[str],
+    liftover_chain: LiftoverChain,
+    source_genome: ReferenceGenome,
+    target_genome: ReferenceGenome,
+) -> Optional[tuple[str, int, str, list[str]]]:
+    """Basic liftover variant utility function."""
+    return _liftover_variant(
+        chrom, pos, ref, alts, liftover_chain, source_genome, target_genome,
+        basic_liftover_allele,
+    )
 
 
 class BasicLiftoverAnnotator(AbstractLiftoverAnnotator):
