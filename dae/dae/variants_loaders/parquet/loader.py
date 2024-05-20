@@ -15,7 +15,7 @@ from dae.pedigrees.families_data import FamiliesData
 from dae.pedigrees.loader import FamiliesLoader
 from dae.schema2_storage.schema2_import_storage import (
     Schema2DatasetLayout,
-    schema2_dataset_layout,
+    create_schema2_dataset_layout,
 )
 from dae.utils.regions import Region
 from dae.variants.attributes import Inheritance, Role, Sex, Status
@@ -139,7 +139,8 @@ class ParquetLoader:
 
     def __init__(self, data_dir: str):
         self.data_dir: str = data_dir
-        self.layout: Schema2DatasetLayout = schema2_dataset_layout(data_dir)
+        self.layout: Schema2DatasetLayout = \
+            create_schema2_dataset_layout(data_dir)
 
         if not os.path.exists(self.layout.pedigree):
             raise ParquetLoaderException(

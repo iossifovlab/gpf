@@ -55,12 +55,11 @@ def load_schema2_dataset_layout(study_dir: str) -> Schema2DatasetLayout:
         fs_utils.join(study_dir, "meta", "meta.parquet"))
 
 
-def schema2_dataset_layout(study_dir: str) -> Schema2DatasetLayout:
+def create_schema2_dataset_layout(study_dir: str) -> Schema2DatasetLayout:
     """
     Create dataset layout for a given directory.
 
-    Existing flag should be used depending on whether this directory is
-    already created and being read or being created at the moment.
+    Used for creating new datasets, where all tables should exist.
     """
     summary = fs_utils.join(study_dir, "summary")
     family = fs_utils.join(study_dir, "family")
@@ -75,7 +74,7 @@ def schema2_dataset_layout(study_dir: str) -> Schema2DatasetLayout:
 def schema2_project_dataset_layout(
         project: ImportProject) -> Schema2DatasetLayout:
     study_dir = fs_utils.join(project.work_dir, project.study_id)
-    return schema2_dataset_layout(study_dir)
+    return create_schema2_dataset_layout(study_dir)
 
 
 class Schema2ImportStorage(ImportStorage):
@@ -310,7 +309,7 @@ class Schema2ImportStorage(ImportStorage):
         parquet_dir = project.get_parquet_dataset_dir()
         if parquet_dir is None:
             raise ValueError("parquet dataset not stored: {project.study_id}")
-        layout = schema2_dataset_layout(parquet_dir)
+        layout = create_schema2_dataset_layout(parquet_dir)
 
         table = pq.read_table(layout.meta)
         result = {}

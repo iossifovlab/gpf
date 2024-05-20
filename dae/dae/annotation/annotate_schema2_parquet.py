@@ -1,6 +1,5 @@
 import argparse
 import os
-import pathlib
 import sys
 from glob import glob
 from typing import Optional
@@ -18,7 +17,9 @@ from dae.parquet.parquet_writer import (
 )
 from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.parquet.schema2.parquet_io import VariantsParquetWriter
-from dae.schema2_storage.schema2_import_storage import schema2_dataset_layout
+from dae.schema2_storage.schema2_import_storage import (
+    create_schema2_dataset_layout,
+)
 from dae.task_graph.cli_tools import TaskGraphCli
 from dae.variants_loaders.parquet.loader import ParquetLoader
 
@@ -123,7 +124,7 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
 
         if not os.path.exists(output_dir):
             os.mkdir(output_dir)
-        layout = schema2_dataset_layout(output_dir)
+        layout = create_schema2_dataset_layout(output_dir)
 
         if loader.layout.summary is None:
             raise ValueError("Invalid summary dir in input layout!")
