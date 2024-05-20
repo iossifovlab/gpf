@@ -195,8 +195,10 @@ class VCFAllele(Annotatable):
         return self._alt
 
     def __repr__(self) -> str:
-        return f"VCFAllele({self.chrom},{self.pos},{self.pos_end}" \
-               f",{self.ref},{self.alt})"
+        return (
+            f"VCFAllele({self.chrom},{self.pos},{self.pos_end}"
+            f",{self.ref},{self.alt})"
+        )
 
     def __eq__(self, other: object) -> bool:
         if not super().__eq__(other):

@@ -4,6 +4,7 @@ import textwrap
 import pytest
 
 from dae.annotation.liftover_annotator import (
+    basic_liftover_allele,
     liftover_allele,
     liftover_variant,
 )
@@ -649,3 +650,44 @@ def test_ex4d_liftover_parts(
         "21", 30, "C", "T",
         liftover_chain, source_genome, target_genome)
     assert result is None
+
+
+@pytest.mark.parametrize("chrom,pos,ref,alt,echrom, epos,eref,ealt", [
+    ("foo", 6, "C", "G", "chrFoo", 2, "C", "G"),
+    ("foo", 5, "A", "C", "chrFoo", 1, "A", "C"),
+    ("baz", 6, "G", "C", "chrBaz", 94, "C", "G"),
+])
+def test_basic_liftover_allele(
+    chrom: str,
+    pos: int,
+    ref: str,
+    alt: str,
+    echrom: str,
+    epos: int,
+    eref: str,
+    ealt: str,
+    liftover_grr_fixture: GenomicResourceRepo,
+) -> None:
+    res = liftover_grr_fixture.get_resource("liftover_chain")
+    liftover_chain = build_liftover_chain_from_resource(res).open()
+    assert liftover_chain is not None
+
+    res = liftover_grr_fixture.get_resource("source_genome")
+    source_genome = build_reference_genome_from_resource(res).open()
+    assert source_genome is not None
+    res = liftover_grr_fixture.get_resource("target_genome")
+    target_genome = build_reference_genome_from_resource(res).open()
+    assert target_genome is not None
+
+    lresult = basic_liftover_allele(
+        chrom, pos, ref, alt,
+        liftover_chain, source_genome, target_genome,
+    )
+
+    assert lresult is not None
+    lchrom, lpos, lref, lalt = lresult
+
+    assert lchrom == echrom
+    assert lpos == epos
+    assert lref == eref
+    assert lalt == ealt

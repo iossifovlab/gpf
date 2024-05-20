@@ -20,7 +20,7 @@ from dae.genomic_resources.variant_utils import (
     maximally_extend_variant,
     normalize_variant,
 )
-from dae.utils.variant_utils import reverse_complement, trim_str_left
+from dae.utils.variant_utils import reverse_complement
 
 from .annotatable import Annotatable, CNVAllele, Position, Region, VCFAllele
 from .annotator_base import AnnotatorBase
@@ -141,7 +141,7 @@ class LiftOverAnnotator(AnnotatorBase):
                 lo_allele = basic_liftover_allele(
                     allele.chrom, allele.position,
                     allele.reference, allele.alternative,
-                    self.chain, self.target_genome,
+                    self.chain, self.source_genome, self.target_genome,
                 )
             else:
                 lo_allele = liftover_allele(
@@ -395,12 +395,17 @@ def basic_liftover_allele(
     ref: str,
     alt: str,
     liftover_chain: LiftoverChain,
+    source_genome: ReferenceGenome,  # noqa pylint: disable=unused-argument
     target_genome: ReferenceGenome,
 ) -> Optional[tuple[str, int, str, str]]:
     """Basic liftover an allele."""
 
+    nchrom, npos, nref, nalts = normalize_variant(
+        chrom, pos, ref, [alt], target_genome)
+    nalt = nalts[0]
+
     lo_coordinates = liftover_chain.convert_coordinate(
-        chrom, pos,
+        nchrom, npos,
     )
 
     if lo_coordinates is None:
@@ -408,14 +413,10 @@ def basic_liftover_allele(
 
     lo_chrom, lo_pos, lo_strand, _ = lo_coordinates
 
-    if lo_strand == "+" or \
-            len(ref) == len(alt):
-        lo_pos += 1
+    if lo_strand == "+":
+        pass
     elif lo_strand == "-":
-        lo_pos -= len(ref)
-        lo_pos -= 1
-
-    _, tr_ref, tr_alt = trim_str_left(pos, ref, alt)
+        lo_pos -= len(nref)
 
     lo_ref = target_genome.get_sequence(
         lo_chrom, lo_pos, lo_pos + len(ref) - 1)
@@ -424,14 +425,9 @@ def basic_liftover_allele(
             "can't find genomic sequence for %s:%s", lo_chrom, lo_pos)
         return None
 
-    lo_alt = alt
+    lo_alt = nalt
     if lo_strand == "-":
-        if not tr_alt:
-            lo_alt = f"{lo_ref[0]}"
-        else:
-            lo_alt = reverse_complement(tr_alt)
-            if not tr_ref:
-                lo_alt = f"{lo_ref[0]}{lo_alt}"
+        lo_alt = reverse_complement(nalt)
 
     if lo_ref == lo_alt:
         logger.warning(
