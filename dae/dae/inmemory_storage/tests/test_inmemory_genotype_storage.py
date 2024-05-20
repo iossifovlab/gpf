@@ -24,7 +24,7 @@ def study_config(simple_project):
 
 
 def test_build_backend(
-        filesystem_genotype_storage, simple_project, study_config):
+        filesystem_genotype_storage, simple_project, study_config) -> None:
     gpf_instance = simple_project.get_gpf_instance()
 
     backend = filesystem_genotype_storage.build_backend(
@@ -38,7 +38,7 @@ def test_build_backend(
 
 
 def test_query_summary_variants(
-        filesystem_genotype_storage, simple_project, study_config):
+        filesystem_genotype_storage, simple_project, study_config) -> None:
 
     gpf_instance = simple_project.get_gpf_instance()
     backend = filesystem_genotype_storage.build_backend(
@@ -62,12 +62,12 @@ def test_storage_type(filesystem_genotype_storage):
 )
 def test_get_data_dir(
     fixture_dirname, filesystem_genotype_storage, expected_path, build_path,
-):
+) -> None:
     assert filesystem_genotype_storage.get_data_dir(
         *build_path).endswith(expected_path)
 
 
-def test_create_filesystem_storage(tmp_path):
+def test_create_filesystem_storage(tmp_path) -> None:
     config = {
         "storage_type": "inmemory",
         "id": "aaaa",
@@ -77,7 +77,7 @@ def test_create_filesystem_storage(tmp_path):
     assert storage is not None
 
 
-def test_create_filesystem_storage_missing_id(tmp_path):
+def test_create_filesystem_storage_missing_id(tmp_path) -> None:
     config = {
         "storage_type": "inmemory",
         # "id": "aaaa",
@@ -89,7 +89,7 @@ def test_create_filesystem_storage_missing_id(tmp_path):
         InmemoryGenotypeStorage(config)
 
 
-def test_create_missing_storage_type():
+def test_create_missing_storage_type() -> None:
     config = {
         "id": "aaaa",
         "dir": "/tmp/aaaa_filesystem",
@@ -100,7 +100,7 @@ def test_create_missing_storage_type():
         InmemoryGenotypeStorage(config)
 
 
-def test_create_wrong_storage_type():
+def test_create_wrong_storage_type() -> None:
     config = {
         "id": "aaaa",
         "storage_type": "filesystem2",
@@ -114,7 +114,7 @@ def test_create_wrong_storage_type():
         InmemoryGenotypeStorage(config)
 
 
-def test_create_missing_dir():
+def test_create_missing_dir() -> None:
     config = {
         "id": "aaaa",
         "storage_type": "inmemory",
@@ -128,7 +128,7 @@ def test_create_missing_dir():
         InmemoryGenotypeStorage(config)
 
 
-def test_create_bad_dir():
+def test_create_bad_dir() -> None:
     config = {
         "id": "aaaa",
         "storage_type": "inmemory",

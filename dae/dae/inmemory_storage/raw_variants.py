@@ -5,14 +5,7 @@ import time
 from collections.abc import Iterator, Sequence
 from contextlib import closing
 from functools import reduce
-from typing import (
-    Any,
-    Callable,
-    List,
-    Optional,
-    Tuple,
-    cast,
-)
+from typing import Any, Callable, Optional, cast
 
 from dae.pedigrees.families_data import FamiliesData
 from dae.person_sets import PersonSetCollection
@@ -74,8 +67,7 @@ class RawVariantsQueryRunner(QueryRunner):
             logger.debug("variants iterator done")
 
         except BaseException as ex:  # pylint: disable=broad-except
-            logger.error(
-                "exception in runner run: %s", type(ex), exc_info=True)
+            logger.exception("exception in runner run")
             self._put_value_in_result_queue(ex)
 
         finally:
@@ -94,18 +86,19 @@ class RawFamilyVariants(abc.ABC):
 
     @abc.abstractmethod
     def full_variants_iterator(
-        self,
-    ) -> Iterator[Tuple[SummaryVariant, List[FamilyVariant]]]:
+        self, **kwargs: Any,
+    ) -> Iterator[tuple[SummaryVariant, list[FamilyVariant]]]:
         pass
 
-    def family_variants_iterator(self) -> Iterator[FamilyVariant]:
-        for _, variants in self.full_variants_iterator():
-            for v in variants:
-                yield v
+    def family_variants_iterator(
+            self, **kwargs: Any) -> Iterator[FamilyVariant]:
+        for _, variants in self.full_variants_iterator(**kwargs):
+            yield from variants
 
-    def summary_variants_iterator(self) -> Iterator[SummaryVariant]:
+    def summary_variants_iterator(
+            self, **kwargs: Any) -> Iterator[SummaryVariant]:
         """Create a generator to iterate over summary variants."""
-        for sv, fvs in self.full_variants_iterator():
+        for sv, fvs in self.full_variants_iterator(**kwargs):
             seen_in_status = sv.allele_count * [0]
             seen_as_denovo = sv.allele_count * [False]
             family_variants_count = sv.allele_count * [0]
@@ -137,10 +130,8 @@ class RawFamilyVariants(abc.ABC):
         """Return True if v is in regions."""
         pos = v.position
         assert pos is not None
-        if v.end_position is None:
-            end_pos = v.position
-        else:
-            end_pos = v.end_position
+
+        end_pos = v.end_position if v.end_position is not None else v.position
 
         for reg in regions:
             if reg.chrom != v.chromosome:
@@ -191,10 +182,7 @@ class RawFamilyVariants(abc.ABC):
             else:
                 result.append(
                     val is not None and (rmin <= val <= rmax))
-        if all(result):
-            return True
-
-        return False
+        return all(result)
 
     @staticmethod
     def filter_gene_effects(
@@ -425,11 +413,9 @@ class RawFamilyVariants(abc.ABC):
         """Return a query runner for the summary variants."""
         filter_func = RawFamilyVariants\
             .summary_variant_filter_function(**kwargs)
-        runner = RawVariantsQueryRunner(
+        return RawVariantsQueryRunner(
             variants_iterator=self.summary_variants_iterator(),
             deserializer=filter_func)
-
-        return runner
 
     def query_summary_variants(
         self, **kwargs: Any,
@@ -553,17 +539,17 @@ class RawFamilyVariants(abc.ABC):
                     v.set_matched_alleles(alleles_matched)
                     return v
                 logger.warning("no matched alleles for family variant: %s", v)
-                return None
             except Exception as ex:  # pylint: disable=broad-except
                 logger.warning("unexpected error: %s", ex, exc_info=True)
                 return None
+            return None
 
         return filter_func
 
     @staticmethod
     def build_person_set_collection_query(
             person_set_collection: PersonSetCollection,
-            person_set_collection_query: Tuple[str, List[str]]) -> None:
+            person_set_collection_query: tuple[str, list[str]]) -> None:
         # pylint: disable=unused-argument
         return None
 
@@ -603,11 +589,9 @@ class RawFamilyVariants(abc.ABC):
             return_reference=return_reference,
             return_unknown=return_unknown)
 
-        runner = RawVariantsQueryRunner(
+        return RawVariantsQueryRunner(
             variants_iterator=self.family_variants_iterator(),
             deserializer=filter_func)
-
-        return runner
 
     def query_variants(self, **kwargs: Any) -> Iterator[FamilyVariant]:
         """Query family variants and yield the results."""
@@ -638,7 +622,7 @@ class RawMemoryVariants(RawFamilyVariants):
     """Store variants in memory."""
 
     def __init__(
-        self, loaders: List[VariantsLoader],
+        self, loaders: list[VariantsLoader],
         families: FamiliesData,
     ) -> None:
         super().__init__(families)
@@ -653,7 +637,7 @@ class RawMemoryVariants(RawFamilyVariants):
     @property
     def full_variants(
         self,
-    ) -> List[Tuple[SummaryVariant, List[FamilyVariant]]]:
+    ) -> list[tuple[SummaryVariant, list[FamilyVariant]]]:
         """Return the full list of variants."""
         if self._full_variants is None:
             start = time.time()
@@ -667,7 +651,6 @@ class RawMemoryVariants(RawFamilyVariants):
         return self._full_variants
 
     def full_variants_iterator(
-        self,
-    ) -> Iterator[Tuple[SummaryVariant, List[FamilyVariant]]]:
-        for sv, fvs in self.full_variants:
-            yield sv, fvs
+        self, **_kwargs: Any,
+    ) -> Iterator[tuple[SummaryVariant, list[FamilyVariant]]]:
+        yield from self.full_variants

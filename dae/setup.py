@@ -77,6 +77,7 @@ setuptools.setup(
     inmemory=dae.inmemory_storage.inmemory_genotype_storage:InmemoryGenotypeStorage
     duckdb=dae.duckdb_storage.duckdb_genotype_storage:DuckDbGenotypeStorage
     duckdb2=dae.duckdb_storage.duckdb_genotype_storage:DuckDbGenotypeStorage
+    parquet=dae.parquet_variants:ParquetGenotypeStorage
 
     [dae.import_tools.storages]
     schema2=dae.schema2_storage.schema2_import_storage:Schema2ImportStorage

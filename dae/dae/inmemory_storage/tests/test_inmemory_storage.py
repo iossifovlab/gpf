@@ -8,7 +8,7 @@ from dae.inmemory_storage.inmemory_genotype_storage import (
 )
 
 
-def test_validate_config():
+def test_validate_config() -> None:
     config = {
         "storage_type": "inmemory",
         "id": "aaaa",
@@ -18,7 +18,7 @@ def test_validate_config():
     assert res is not None
 
 
-def test_validate_config_missing_id():
+def test_validate_config_missing_id() -> None:
     config = {
         "storage_type": "inmemory",
         "dir": "/tmp/aaaa_filesystem",
@@ -29,7 +29,7 @@ def test_validate_config_missing_id():
         InmemoryGenotypeStorage.validate_and_normalize_config(config)
 
 
-def test_validate_config_missing_storage_type():
+def test_validate_config_missing_storage_type() -> None:
     config = {
         "id": "aaaa",
         "dir": "/tmp/aaaa_filesystem",
@@ -40,7 +40,7 @@ def test_validate_config_missing_storage_type():
         InmemoryGenotypeStorage.validate_and_normalize_config(config)
 
 
-def test_validate_config_wrong_storage_type():
+def test_validate_config_wrong_storage_type() -> None:
     config = {
         "id": "aaaa",
         "storage_type": "filesystem2",
@@ -54,7 +54,7 @@ def test_validate_config_wrong_storage_type():
         InmemoryGenotypeStorage.validate_and_normalize_config(config)
 
 
-def test_validate_config_missing_dir():
+def test_validate_config_missing_dir() -> None:
     config = {
         "id": "aaaa",
         "storage_type": "inmemory",
@@ -68,7 +68,7 @@ def test_validate_config_missing_dir():
         InmemoryGenotypeStorage.validate_and_normalize_config(config)
 
 
-def test_validate_config_bad_dir():
+def test_validate_config_bad_dir() -> None:
     config = {
         "id": "aaaa",
         "storage_type": "inmemory",

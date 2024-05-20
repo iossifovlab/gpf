@@ -137,7 +137,7 @@ class ParquetLoader:
         "bucket_index", "summary_index", "family_id", "family_variant_data",
     ]
 
-    def __init__(self, data_dir: str):
+    def __init__(self, data_dir: str, ped_params: Optional[dict] = None):
         self.data_dir: str = data_dir
         self.layout: Schema2DatasetLayout = \
             create_schema2_dataset_layout(data_dir)
@@ -149,7 +149,8 @@ class ParquetLoader:
             raise ParquetLoaderException(
                 f"No summary variants exists in {self.data_dir}!")
 
-        self.families: FamiliesData = self._load_families(self.layout.pedigree)
+        self.families: FamiliesData = self._load_families(self.layout.pedigree,
+                                                          ped_params)
 
         meta_file = pq.ParquetFile(self.layout.meta)
         self.meta = {row["key"]: row["value"]
@@ -179,7 +180,7 @@ class ParquetLoader:
         return rbin[0], int(rbin[1])
 
     @staticmethod
-    def _load_families(path: str) -> FamiliesData:
+    def _load_families(path: str, ped_params: Optional[dict]) -> FamiliesData:
         parquet_file = pq.ParquetFile(path)
         ped_df = parquet_file.read().to_pandas()
         parquet_file.close()
@@ -187,7 +188,8 @@ class ParquetLoader:
         ped_df.sex = ped_df.sex.apply(Sex.from_value)
         ped_df.status = ped_df.status.apply(Status.from_value)
         ped_df.loc[ped_df.layout.isna(), "layout"] = None
-        return FamiliesLoader.build_families_data_from_pedigree(ped_df)
+        return FamiliesLoader.build_families_data_from_pedigree(ped_df,
+                                                                ped_params)
 
     def _pq_file_in_region(self, path: str, region: Region) -> bool:
         if not self.partition_descriptor.has_region_bins():
