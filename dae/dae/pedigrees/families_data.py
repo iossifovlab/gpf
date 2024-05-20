@@ -227,8 +227,11 @@ class FamiliesData(Mapping[str, Family]):
     def from_pedigree_df(ped_df: pd.DataFrame) -> FamiliesData:
         """Build a families data object from a pedigree data frame."""
         persons = defaultdict(list)
-        for rec in ped_df.to_dict(orient="records"):
-            person = Person(**rec)  # type: ignore
+        columns = ped_df.columns.tolist()
+        for rec in [
+            dict(zip(columns, data)) for data in ped_df.to_numpy()
+        ]:
+            person = Person(**rec)
             persons[person.family_id].append(person)
 
         fams = FamiliesData.from_family_persons(persons)
