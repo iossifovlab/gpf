@@ -83,8 +83,6 @@ class AbstractLiftoverAnnotator(AnnotatorBase):
         chain: LiftoverChain,
         source_genome: ReferenceGenome,
         target_genome: ReferenceGenome,
-        *,
-        basic_liftover: bool = False,
     ):
 
         info.resources += [
@@ -102,7 +100,6 @@ class AbstractLiftoverAnnotator(AnnotatorBase):
         self.chain = chain
         self.source_genome = source_genome
         self.target_genome = target_genome
-        self.basic_liftover = basic_liftover
 
     def close(self) -> None:
         self.target_genome.close()
@@ -478,15 +475,6 @@ def basic_liftover_variant(
 class BasicLiftoverAnnotator(AbstractLiftoverAnnotator):
     """Basic liftover annotator class."""
 
-    def __init__(
-        self, pipeline: Optional[AnnotationPipeline],
-        info: AnnotatorInfo,
-        chain: LiftoverChain,
-        source_genome: ReferenceGenome,
-        target_genome: ReferenceGenome,
-    ):
-        super().__init__(pipeline, info, chain, source_genome, target_genome)
-
     def _internal_liftover_allele(
         self, allele: VCFAllele,
     ) -> Optional[tuple[str, int, str, str]]:
@@ -499,15 +487,6 @@ class BasicLiftoverAnnotator(AbstractLiftoverAnnotator):
 
 class BcfLiftoverAnnotator(AbstractLiftoverAnnotator):
     """BCF tools liftover re-implementation annotator class."""
-
-    def __init__(
-        self, pipeline: Optional[AnnotationPipeline],
-        info: AnnotatorInfo,
-        chain: LiftoverChain,
-        source_genome: ReferenceGenome,
-        target_genome: ReferenceGenome,
-    ):
-        super().__init__(pipeline, info, chain, source_genome, target_genome)
 
     def _internal_liftover_allele(
         self, allele: VCFAllele,
