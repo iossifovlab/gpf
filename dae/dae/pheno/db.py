@@ -451,7 +451,7 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
                 connection.commit()
 
     def get_browser_measure(self, measure_id: str) -> Optional[dict]:
-        """Get measrue description from phenotype browser database."""
+        """Get measure description from phenotype browser database."""
         sel = select(self.variable_browser)
         sel = sel.where(self.variable_browser.c.measure_id == measure_id)
         with self.engine.connect() as connection:
@@ -464,7 +464,7 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
         self, instrument_name: Optional[str] = None,
         keyword: Optional[str] = None,
     ) -> Iterator[dict[str, Any]]:
-        """Find measert by keyword search."""
+        """Find measures by keyword search."""
         query_params = []
 
         if keyword:

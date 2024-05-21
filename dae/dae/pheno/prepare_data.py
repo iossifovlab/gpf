@@ -56,6 +56,9 @@ class PreparePhenoBrowserBase:
 
         self.phenotype_data = phenotype_data
         self.pheno_regressions = pheno_regressions
+        for reg_data in self.pheno_regressions.regression.values():
+            if "measure_names" in reg_data:
+                reg_data["measure_name"] = reg_data["measure_names"][0]
 
     def load_measure(self, measure: Measure) -> pd.DataFrame:
         df = self.phenotype_data.get_people_measure_values_df(
@@ -344,10 +347,16 @@ class PreparePhenoBrowserBase:
             return
         for reg_id, reg in self.pheno_regressions.regression.items():
             res = {"measure_id": measure.measure_id}
-            reg_measure = self._get_measure_by_name(
-                reg.measure_name,
-                reg.instrument_name or measure.instrument_name,  # type: ignore
-            )
+            for measure_name in reg.measure_names:
+                reg_measure = self._get_measure_by_name(
+                    measure_name,
+                    reg.instrument_name
+                    or measure.instrument_name,  # type: ignore
+                )
+                if not reg_measure:
+                    continue
+                else:
+                    break
             if not reg_measure:
                 continue
             if self._has_regression_measure(
