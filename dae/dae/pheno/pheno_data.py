@@ -47,6 +47,10 @@ def get_pheno_browser_images_dir(dae_config: Optional[Box] = None) -> str:
         get_pheno_db_dir(dae_config),
     )
     browser_images_path = os.path.join(pheno_db_dir, "images")
+    if not os.path.exists(browser_images_path):
+        logger.error(
+            "Pheno images path %s does not exist!", browser_images_path
+        )
     return browser_images_path
 
 
