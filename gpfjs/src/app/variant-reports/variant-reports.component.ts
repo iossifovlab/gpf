@@ -13,6 +13,7 @@ import { ConfigService } from 'app/config/config.service';
 import { Store } from '@ngxs/store';
 import { SetFamilyTags } from 'app/family-tags/family-tags.state';
 import { Router } from '@angular/router';
+import { couldStartTrivia } from 'typescript';
 
 @Pipe({ name: 'getPeopleCounterRow' })
 export class PeopleCounterRowPipe implements PipeTransform {
@@ -34,7 +35,8 @@ export class VariantReportsComponent implements OnInit {
   public currentPedigreeTable: PedigreeTable;
   public currentDenovoReport: EffectTypeTable;
   public tagsHeader = '';
-  public familiesCount = 0;
+  public filteredFamiliesCount = 0;
+  public totalFamiliesCount = 0;
   public isAddClicked = false;
   public isRemoveClicked = false;
 
@@ -94,7 +96,9 @@ export class VariantReportsComponent implements OnInit {
         this.currentDenovoReport = this.variantReport.denovoReport.tables[0];
         this.calculateDenovoVariantsTableWidth();
       }
-      this.updateFamiliesCount();
+
+      this.totalFamiliesCount = this.calculateFamilies();
+      this.filteredFamiliesCount = this.totalFamiliesCount;
     });
     if (this.variantReportsService.getTags() !== undefined) {
       this.variantReportsService.getTags().subscribe(data => {
@@ -150,14 +154,20 @@ export class VariantReportsComponent implements OnInit {
 
 
   public updateFamiliesCount(): void {
-    this.familiesCount = 0;
+    this.filteredFamiliesCount = 0;
+    this.filteredFamiliesCount = this.calculateFamilies();
+  }
+
+  private calculateFamilies(): number {
+    let count = 0;
     this.currentPedigreeTable.pedigrees.forEach(pedigrees => {
       pedigrees.forEach(pedigree => {
         if (pedigree) {
-          this.familiesCount += Number(pedigree.count);
+          count += Number(pedigree.count);
         }
       });
     });
+    return count;
   }
 
   public openModal(): void {

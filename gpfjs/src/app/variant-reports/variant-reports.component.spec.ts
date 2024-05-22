@@ -495,7 +495,7 @@ describe('VariantReportsComponent', () => {
     });
   });
 
-  it('should test count of families in families by pedigree', () => {
+  it('should test updating the count of filtered families in families by pedigree', () => {
     component.ngOnInit();
     const pedigresMock = [
       [new PedigreeCounter(1, 'mock1', [], 12, [])],
@@ -506,6 +506,6 @@ describe('VariantReportsComponent', () => {
 
     component.currentPedigreeTable = currentTableMock;
     component.updateFamiliesCount();
-    expect(component.familiesCount).toBe(20);
+    expect(component.filteredFamiliesCount).toBe(20);
   });
 });
