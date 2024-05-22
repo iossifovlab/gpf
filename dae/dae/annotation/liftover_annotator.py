@@ -1,6 +1,7 @@
 """Provides a lift over annotator and helpers."""
 import abc
 import logging
+import textwrap
 from typing import Any, Callable, Optional
 
 from dae.annotation.annotation_pipeline import (
@@ -85,6 +86,13 @@ class AbstractLiftoverAnnotator(AnnotatorBase):
         target_genome: ReferenceGenome,
     ):
 
+        info.documentation += textwrap.dedent("""
+
+* Annotator to lift over a variant from one reference genome to another.
+
+* <a href="https://iossifovlab.com/gpfuserdocs/administration/annotation_tools.html#lift-over-annotator" target="_blank">More info</a>
+
+""")  # noqa
         info.resources += [
             chain.resource, source_genome.resource, target_genome.resource]
         if not info.attributes:

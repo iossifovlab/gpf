@@ -1,4 +1,5 @@
 import logging
+import textwrap
 from typing import Any
 
 from dae.annotation.annotatable import Annotatable, CNVAllele, VCFAllele
@@ -59,6 +60,14 @@ class EffectAnnotatorAdapter(AnnotatorBase):
             gene_models = build_gene_models_from_resource(resource)
         assert isinstance(gene_models, GeneModels)
 
+
+        info.documentation += textwrap.dedent("""
+
+* Annotator to identify the effect of the variant on protein coding.
+
+* <a href="https://iossifovlab.com/gpfuserdocs/administration/annotation_tools.html#effect-annotator" target="_blank">More info</a>
+
+""")  # noqa
         info.resources += [genome.resource, gene_models.resource]
         if not info.attributes:
             info.attributes = AnnotationConfigParser.parse_raw_attributes([
