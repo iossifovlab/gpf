@@ -2,6 +2,7 @@ from dae.configuration.utils import validate_existing_path
 
 regression_schema = {
     "instrument_name": {"type": "string"},
+    "measure_names": {"type": "list", "schema": {"type": "string"}},
     "measure_name": {"type": "string"},
     "jitter": {"type": "float", "default": 0.1},
     "display_name": {"type": "string"},

@@ -1,6 +1,6 @@
 import os
 from collections.abc import Iterator
-from typing import Any, Dict, Optional, Union
+from typing import Any, Optional, Union
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -56,6 +56,10 @@ class PreparePhenoBrowserBase:
 
         self.phenotype_data = phenotype_data
         self.pheno_regressions = pheno_regressions
+        if self.pheno_regressions is not None:
+            for reg_data in self.pheno_regressions.regression.values():
+                if "measure_names" in reg_data:
+                    reg_data["measure_name"] = reg_data["measure_names"][0]
 
     def load_measure(self, measure: Measure) -> pd.DataFrame:
         df = self.phenotype_data.get_people_measure_values_df(
@@ -159,7 +163,7 @@ class PreparePhenoBrowserBase:
         min_number_of_values = 5
         min_number_of_unique_values = 2
 
-        res: Dict[str, Any] = {}
+        res: dict[str, Any] = {}
 
         if dependent_measure.measure_id == independent_measure.measure_id:
             return res
@@ -344,10 +348,19 @@ class PreparePhenoBrowserBase:
             return
         for reg_id, reg in self.pheno_regressions.regression.items():
             res = {"measure_id": measure.measure_id}
-            reg_measure = self._get_measure_by_name(
-                reg.measure_name,
-                reg.instrument_name or measure.instrument_name,  # type: ignore
-            )
+            measure_names = reg.measure_names
+            if measure_names is None:
+                measure_names = [reg.measure_name]
+            for measure_name in measure_names:
+                reg_measure = self._get_measure_by_name(
+                    measure_name,
+                    reg.instrument_name
+                    or measure.instrument_name,  # type: ignore
+                )
+                if not reg_measure:
+                    continue
+                else:
+                    break
             if not reg_measure:
                 continue
             if self._has_regression_measure(

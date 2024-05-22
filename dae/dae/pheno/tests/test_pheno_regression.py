@@ -30,6 +30,11 @@ def test_pheno_regressions_from_conf_path(regressions_conf: str) -> None:
             "measure_name": "regressor1",
             "jitter": 0.4,
         },
+        "reg5": {
+            "instrument_name": "",
+            "measure_names": ["regressor2", "common_regressor"],
+            "jitter": 0.1,
+        },
     }
 
     assert len(regs.regression) == len(expected_regs)
@@ -52,6 +57,7 @@ def test_has_regression_measure(
         ("common_regressor", "i1"),
         ("common_regressor", "i2"),
         ("regressor1", "i2"),
+        ("common_regressor", "i3"),
     ]
 
     for expected in expected_reg_measures:

@@ -135,6 +135,11 @@ def generate_phenotype_data_config(
     }
     if regressions:
         regressions_dict = regressions.to_dict()
+        for reg in regressions_dict["regression"].values():
+            if reg["measure_name"] is None:
+                del reg["measure_name"]
+            if reg["measure_names"] is None:
+                del reg["measure_names"]
         config["regression"] = regressions_dict["regression"]
     return config
 

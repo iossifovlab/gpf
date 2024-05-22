@@ -9,6 +9,7 @@ from box import Box
 from sqlalchemy import (
     Column,
     Float,
+    Double,
     Integer,
     MetaData,
     String,
@@ -351,8 +352,8 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
             Column("measure_id", String(128), nullable=False, index=True),
             Column("figure_regression", String(256)),
             Column("figure_regression_small", String(256)),
-            Column("pvalue_regression_male", Float()),
-            Column("pvalue_regression_female", Float()),
+            Column("pvalue_regression_male", Double()),
+            Column("pvalue_regression_female", Double()),
             PrimaryKeyConstraint(
                 "regression_id", "measure_id", name="regression_pkey",
             ),
@@ -451,7 +452,7 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
                 connection.commit()
 
     def get_browser_measure(self, measure_id: str) -> Optional[dict]:
-        """Get measrue description from phenotype browser database."""
+        """Get measure description from phenotype browser database."""
         sel = select(self.variable_browser)
         sel = sel.where(self.variable_browser.c.measure_id == measure_id)
         with self.engine.connect() as connection:
@@ -464,7 +465,7 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
         self, instrument_name: Optional[str] = None,
         keyword: Optional[str] = None,
     ) -> Iterator[dict[str, Any]]:
-        """Find measert by keyword search."""
+        """Find measures by keyword search."""
         query_params = []
 
         if keyword:

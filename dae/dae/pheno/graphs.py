@@ -96,7 +96,7 @@ def male_female_legend(color_male, color_female, ax=None):
 
     male_patch = mpatches.Patch(color=color_male, label="M")
     female_patch = mpatches.Patch(color=color_female, label="F")
-    ax.legend(handles=[male_patch, female_patch], title="Sex")
+    ax.legend(handles=[male_patch, female_patch], title="Sex", loc="upper right")
 
 
 def draw_linregres(df, col1, col2, jitter: Optional[int] = None, ax=None):
@@ -298,8 +298,8 @@ def draw_measure_violinplot(
         hue_order=[Sex.male, Sex.female],
         linewidth=1,
         split=True,
-        scale="count",
-        scale_hue=False,
+        density_norm="count",
+        common_norm=True,
         palette=palette,
         saturation=1,
     )
