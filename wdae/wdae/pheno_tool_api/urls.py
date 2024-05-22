@@ -10,11 +10,6 @@ urlpatterns = [
         name="pheno_tool_download",
     ),
     re_path(
-        r"^/persons/?$",
-        views.PhenoToolPersons.as_view(),
-        name="pheno_tool_persons",
-    ),
-    re_path(
         r"^/people_values/?$",
         views.PhenoToolPeopleValues.as_view(),
         name="pheno_tool_people_values",

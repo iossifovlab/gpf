@@ -208,35 +208,6 @@ class PhenoToolDownload(PhenoToolView):
         return response
 
 
-class PhenoToolPersons(QueryDatasetView):
-
-    def post(self, request: Request) -> Response:
-        data = request.data
-        dataset_id = data["datasetId"]
-        dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
-        if not dataset or dataset.phenotype_data is None:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-
-        result = dataset.phenotype_data.get_persons(
-            data.get("roles", None),
-            data.get("personIds", None),
-            data.get("familyIds", None),
-        )
-
-        response: dict[str, Any] = {}
-        for key in result.keys():
-            person = result[key]
-            response[key] = {
-                "person_id": person.person_id,
-                "family_id": person.family_id,
-                "role": str(person.role),
-                "sex": str(person.sex),
-                "status": str(person.status),
-            }
-
-        return Response(response)
-
-
 class PhenoToolPeopleValues(QueryDatasetView):
     """View for returning person phenotype data."""
 

@@ -80,18 +80,6 @@ def test_post_enrichment_test(rest_client: RESTClient) -> None:
     assert isinstance(response, dict)
 
 
-def test_post_pheno_persons(rest_client: RESTClient) -> None:
-    pheno_persons = rest_client.post_pheno_persons(
-        "iossifov_2014",
-        None,
-        None,
-        None,
-    )
-
-    assert pheno_persons is not None
-    assert isinstance(pheno_persons, dict)
-
-
 def test_get_instruments_details(rest_client: RESTClient) -> None:
     instrument_details = rest_client.get_instruments_details("iossifov_2014")
 

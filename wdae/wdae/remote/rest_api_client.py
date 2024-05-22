@@ -374,46 +374,10 @@ class RESTClient:
         )
         return response.iter_content()
 
-    # def post_measures_values(
-    #         self, dataset_id: str,
-    #         measure_ids: Optional[Iterable[str]] = None,
-    #         instrument: Optional[str] = None
-    # ) -> Any:
-    #     """Post download request for pheno measures."""
-    #     response = self._post(
-    #         "pheno_browser/measure_values",
-    #         data={
-    #             "dataset_id": dataset_id,
-    #             "measure_ids": measure_ids,
-    #             "instrument": instrument,
-    #         },
-    #         stream=True
-    #     )
-    #     return self._read_json_list_stream(response)
-
     def post_enrichment_test(self, query: dict) -> Any:
         response = self._post(
             "enrichment/test",
             data=query,
-        )
-        return response.json()
-
-    def post_pheno_persons(
-        self, dataset_id: str,
-        roles: Optional[Iterable[str]],
-        person_ids: Optional[Iterable[str]],
-        family_ids: Optional[Iterable[str]],
-    ) -> Any:
-        """Post a pheno measures person query request."""
-        data = {
-            "datasetId": dataset_id,
-            "roles": roles,
-            "personIds": person_ids,
-            "familyIds": family_ids,
-        }
-        response = self._post(
-            "pheno_tool/persons",
-            data=data,
         )
         return response.json()
 
