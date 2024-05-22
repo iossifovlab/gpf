@@ -1,5 +1,0 @@
-#id	location	variant	location	variant	test1	test2
-1	4:4372372973	sub(A->C)	4:4372372973	sub(A->C)	t1	t2
-5	10:4372372973	sub(G->A)	10:4372372973	sub(G->A)	t1	t2
-3	X:4372	ins(AAA)	X:4372	ins(AAA)	t1	t2
-6	Y:4372	del(2)	Y:4372	del(2)	t1	t2

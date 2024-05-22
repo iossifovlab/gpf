@@ -383,8 +383,8 @@ class AnnotationConfigParser:
                              f"{attribute_config} has neigther "
                              "name nor source.")
 
-        name = name if name else source
-        source = source if source else name
+        name = name or source
+        source = source or name
         internal = bool(attribute_config.get("internal", False))
 
         assert source is not None
@@ -494,7 +494,7 @@ def copy_annotation_pipeline(
                 src_attr.name,
                 src_attr.source,
                 src_attr.internal,
-                src_attr.parameters._data,  # pylint: disable=W0212
+                src_attr.parameters._data,  # noqa pylint: disable=W0212
                 src_attr.type,
                 src_attr.description,
                 src_attr.documentation,
@@ -503,7 +503,7 @@ def copy_annotation_pipeline(
         infos.append(AnnotatorInfo(
             src.type,
             attributes,
-            src.parameters._data,  # pylint: disable=W0212
+            src.parameters._data,  # noqa pylint: disable=W0212
             "",
             None,
             src.annotator_id,

@@ -8,7 +8,10 @@ from typing import Optional
 import pysam
 
 from dae.annotation.context import CLIAnnotationContext
-from dae.annotation.liftover_annotator import liftover_variant
+from dae.annotation.liftover_annotator import (
+    basic_liftover_variant,
+    bcf_liftover_variant,
+)
 from dae.genomic_resources.genomic_context import get_genomic_context
 from dae.genomic_resources.liftover_chain import (
     LiftoverChain,
@@ -62,7 +65,14 @@ def parse_cli_arguments() -> argparse.ArgumentParser:
         help="region to convert [default: None] "
         "ex. chr1:1-10000. ",
     )
-
+    parser.add_argument(
+        "--mode",
+        type=str,
+        dest="mode",
+        metavar="mode",
+        default="bcf_liftover",
+        help="mode to use for liftover: 'bcf_liftover' or 'basic_liftover'",
+    )
     return parser
 
 
@@ -129,6 +139,13 @@ def main(
             source_genome,
             target_genome)
 
+    if args.mode == "bcf_liftover":
+        _liftover_variant_func = bcf_liftover_variant
+    elif args.mode == "basic_liftover":
+        _liftover_variant_func = basic_liftover_variant
+    else:
+        raise ValueError(f"Invalid mode: {args.mode}")
+
     with closing(pysam.VariantFile(args.vcffile)) as infile, \
             closing(pysam.VariantFile(
                 output_filename, "w", header=output_header)) as outfile:
@@ -139,7 +156,7 @@ def main(
             if vcf_variant.ref is None:
                 logger.warning("skipping variant without ref: %s", vcf_variant)
                 continue
-            lo_variant = liftover_variant(
+            lo_variant = _liftover_variant_func(
                     vcf_variant.chrom, vcf_variant.pos,
                     vcf_variant.ref, list(vcf_variant.alts),
                     chain, source_genome, target_genome,
