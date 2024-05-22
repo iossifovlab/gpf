@@ -24,7 +24,7 @@ cd /wd/integration/fixtures/pheno/comp-data
     --person-column personId
 
 mkdir -p $DAE_DB_DIR/pheno/images
-cp -r $DAE_DB_DIR/pheno/comp_pheno/browser/images/comp_pheno \
+cp -r $DAE_DB_DIR/pheno/comp_pheno/images/comp_pheno \
     $DAE_DB_DIR/pheno/
 
 
