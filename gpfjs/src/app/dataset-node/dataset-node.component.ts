@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { AfterContentChecked, ChangeDetectorRef, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { Router } from '@angular/router';
 import { Dataset } from 'app/datasets/datasets';
 import { DatasetsService } from 'app/datasets/datasets.service';
@@ -10,17 +10,35 @@ import { DatasetNode } from './dataset-node';
   templateUrl: './dataset-node.component.html',
   styleUrls: ['./dataset-node.component.css']
 })
-export class DatasetNodeComponent implements OnInit {
+export class DatasetNodeComponent implements OnInit, AfterContentChecked {
   @Input() public datasetNode: DatasetNode;
+  @Output() public setExpandabilityEvent = new EventEmitter<boolean>();
   public selectedDataset$: Observable<Dataset>;
+  public isExpanded = false;
 
   public constructor(
     private router: Router,
     private datasetsService: DatasetsService,
+    private changeDetector: ChangeDetectorRef,
   ) { }
 
   public ngOnInit(): void {
     this.selectedDataset$ = this.datasetsService.getSelectedDatasetObservable();
+    this.selectedDataset$.subscribe(dataset => {
+      if (dataset.id === 'ALL_genotypes' && this.datasetNode.dataset.id === 'ALL_genotypes') {
+        this.isExpanded = true;
+      } else if (this.datasetNode.dataset.id === dataset.id) {
+        this.setExpandability();
+      }
+    });
+  }
+
+  public ngAfterContentChecked(): void {
+    this.changeDetector.detectChanges();
+  }
+
+  public setExpandability(): void {
+    this.setExpandabilityEvent.emit(true);
   }
 
   public select(openInNewTab = false): void {
@@ -36,5 +54,14 @@ export class DatasetNodeComponent implements OnInit {
         }
       }
     }
+  }
+
+  public setIsExpanded(): void {
+    this.isExpanded = true;
+    this.setExpandability();
+  }
+
+  public toggleDatasetCollapse(): void {
+    this.isExpanded = !this.isExpanded;
   }
 }
