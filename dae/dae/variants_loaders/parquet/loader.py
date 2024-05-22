@@ -343,3 +343,10 @@ class ParquetLoader:
 
         summary_reader.close()
         family_reader.close()
+
+    def fetch_family_variants(
+        self, region: Optional[str] = None,
+    ) -> Generator[list[FamilyVariant], None, None]:
+        """Iterate over family variants."""
+        for _, fvs in self.fetch_variants(region):
+            yield fvs

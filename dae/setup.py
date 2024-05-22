@@ -84,6 +84,7 @@ setuptools.setup(
     inmemory=dae.inmemory_storage.inmemory_import_storage:InmemoryImportStorage
     duckdb=dae.duckdb_storage.duckdb_import_storage:DuckDbImportStorage
     duckdb2=dae.duckdb_storage.duckdb_import_storage:DuckDbImportStorage
+    parquet=dae.parquet_variants:ParquetImportStorage
 
     [console_scripts]
     demo_graphs_cli=dae.task_graph.demo_graphs_cli:main

@@ -22,17 +22,17 @@ class DuckDbImportStorage(Schema2ImportStorage):
         genotype_storage = project.get_genotype_storage()
         assert isinstance(genotype_storage, DuckDbGenotypeStorage)
         layout = load_schema2_dataset_layout(
-            project.get_parquet_dataset_dir()
+            project.get_parquet_dataset_dir(),
         )
         return genotype_storage.import_dataset(
             project.study_id, layout, project.get_partition_descriptor())
 
     @classmethod
-    def _do_study_config(
+    def do_study_config(
         cls, project: ImportProject, study_tables: Schema2DatasetLayout,
     ) -> None:
-        genotype_storage: DuckDbGenotypeStorage = \
-            cast(DuckDbGenotypeStorage, project.get_genotype_storage())
+        """Produce a study config for the given project."""
+        genotype_storage = project.get_genotype_storage()
         if project.get_processing_parquet_dataset_dir() is not None:
             meta = cls.load_meta(project)
             study_config = yaml.load(meta["study"], yaml.Loader)
@@ -51,7 +51,7 @@ class DuckDbImportStorage(Schema2ImportStorage):
                 "id": genotype_storage.storage_id,
                 "tables": {
                     "pedigree": study_tables.pedigree,
-                    "meta": study_tables.meta
+                    "meta": study_tables.meta,
                 },
             },
             "genotype_browser": {"enabled": False},
@@ -88,7 +88,7 @@ class DuckDbImportStorage(Schema2ImportStorage):
                 [project], all_parquet_tasks)
 
             graph.create_task(
-                "Creating a study config", self._do_study_config,
+                "Creating a study config", self.do_study_config,
                 [project, tables_task], [tables_task])
 
         return graph
