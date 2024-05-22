@@ -9,6 +9,7 @@ from box import Box
 from sqlalchemy import (
     Column,
     Float,
+    Double,
     Integer,
     MetaData,
     String,
@@ -351,8 +352,8 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
             Column("measure_id", String(128), nullable=False, index=True),
             Column("figure_regression", String(256)),
             Column("figure_regression_small", String(256)),
-            Column("pvalue_regression_male", Float()),
-            Column("pvalue_regression_female", Float()),
+            Column("pvalue_regression_male", Double()),
+            Column("pvalue_regression_female", Double()),
             PrimaryKeyConstraint(
                 "regression_id", "measure_id", name="regression_pkey",
             ),
