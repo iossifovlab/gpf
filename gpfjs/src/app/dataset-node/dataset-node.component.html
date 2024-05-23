@@ -11,7 +11,7 @@
     *ngIf="selectedDataset$ | async as selectedDataset"
     [class.active]="selectedDataset.id === datasetNode.dataset.id"
     [style.opacity]="datasetNode.dataset.accessRights ? 1.0 : 0.3"
-    [style.padding-left]="datasetNode.children.length ? 0 : 25"
+    [ngStyle]="{ 'padding-left': datasetNode.children.length ? 0 : 24 }"
     (click)="select()"
     (middleclick)="select(true)">
     <!-- eslint-disable-next-line prettier/prettier -->
