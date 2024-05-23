@@ -484,8 +484,13 @@ summary.details {
   width: 100%;
   max-width: 560px;
   margin: auto;
-  margin-top: -40px;
+  margin-top: -23px;
   margin-bottom: 10px;
+}
+
+.small-values,
+.large-values {
+  max-width: 170px;
 }
 
 /* stylelint-disable-next-line no-descending-specificity */
