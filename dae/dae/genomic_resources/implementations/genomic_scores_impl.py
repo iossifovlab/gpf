@@ -292,13 +292,13 @@ class GenomicScoreImplementation(
             start = region.start
             end = region.stop
             min_max_tasks.append(graph.create_task(
-                f"{self.resource_id}_calculate_min_max_{chrom}_{start}_{end}",
+                f"{self.resource.get_full_id()}_calculate_min_max_{chrom}_{start}_{end}",
                 GenomicScoreImplementation._do_min_max,
                 [self.resource, score_ids, chrom, start, end],
                 [],
             ))
         merge_task = graph.create_task(
-            f"{self.resource_id}_merge_min_max",
+            f"{self.resource.get_full_id()}_merge_min_max",
             GenomicScoreImplementation._merge_min_max,
             [score_ids, *min_max_tasks],
             min_max_tasks,
@@ -378,7 +378,7 @@ class GenomicScoreImplementation(
         else:
             update_hist_confs_deps = [minmax_task]
         update_hist_confs = graph.create_task(
-            f"{self.resource_id}_update_hist_confs",
+            f"{self.resource.get_full_id()}_update_hist_confs",
             GenomicScoreImplementation._update_hist_confs,
             [all_hist_confs, minmax_task],
             update_hist_confs_deps,
@@ -390,20 +390,20 @@ class GenomicScoreImplementation(
             start = region.start
             end = region.stop
             histogram_tasks.append(graph.create_task(
-                f"{self.resource_id}_calculate_histogram_"
+                f"{self.resource.get_full_id()}_calculate_histogram_"
                 f"{chrom}_{start}_{end}",
                 GenomicScoreImplementation._do_histogram,
                 [self.resource, update_hist_confs, chrom, start, end],
                 [update_hist_confs],
             ))
         merge_task = graph.create_task(
-            f"{self.resource_id}_merge_histograms",
+            f"{self.resource.get_full_id()}_merge_histograms",
             GenomicScoreImplementation._merge_histograms,
             [self.resource, update_hist_confs, *histogram_tasks],
             histogram_tasks,
         )
         save_task = graph.create_task(
-            f"{self.resource_id}_save_histograms",
+            f"{self.resource.get_full_id()}_save_histograms",
             GenomicScoreImplementation._save_histograms,
             [self.resource, merge_task],
             [merge_task],

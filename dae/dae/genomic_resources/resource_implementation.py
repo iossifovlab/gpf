@@ -193,7 +193,18 @@ h3,h4 {
     margin-top:0.5em;
     margin-bottom:0.5em;
 }
-
+table {
+    border-collapse: collapse;
+}
+th, td {
+    padding: 10px;
+}
+th {
+    font-size: 20px;
+}
+td {
+    font-size: 18px;
+}
 {% block extra_styles %}{% endblock %}
 
 </style>
@@ -205,12 +216,13 @@ h3,h4 {
 <table border="1">
 <tr><td><b>Id:</b></td><td>{{ resource.resource_id }}</td></tr>
 <tr><td><b>Type:</b></td><td>{{ resource.get_type() }}</td></tr>
+<tr><td><b>Version:</b></td><td>{{ resource.get_version_str() }}</td></tr>
 <tr>
 <td><b>Summary:</b></td>
 <td>
 {%- set summary = resource.get_summary() -%}
 {{
-    summary if summary else "N/A"
+    markdown(summary, extras=["tables"]) if summary else "N/A"
 }}</td>
 </tr>
 <tr>
@@ -218,7 +230,7 @@ h3,h4 {
 <td>
 {%- set description = resource.get_description() -%}
 {{
-    markdown(description) if description else "N/A"
+    markdown(description, extras=["tables"]) if description else "N/A"
 }}</td>
 </tr>
 <tr>
