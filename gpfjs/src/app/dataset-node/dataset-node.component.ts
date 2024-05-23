@@ -2,7 +2,7 @@ import { AfterContentChecked, ChangeDetectorRef, Component, EventEmitter, Input,
 import { Router } from '@angular/router';
 import { Dataset } from 'app/datasets/datasets';
 import { DatasetsService } from 'app/datasets/datasets.service';
-import { Observable } from 'rxjs';
+import { Observable, Subject, Subscription } from 'rxjs';
 import { DatasetNode } from './dataset-node';
 
 @Component({
@@ -15,6 +15,9 @@ export class DatasetNodeComponent implements OnInit, AfterContentChecked {
   @Output() public setExpandabilityEvent = new EventEmitter<boolean>();
   public selectedDataset$: Observable<Dataset>;
   public isExpanded = false;
+  public closeChildrenSubject: Subject<void> = new Subject<void>();
+  @Input() public closeObservable: Observable<void> = new Observable<void>();
+  public closeChildrenSubscription: Subscription;
 
   public constructor(
     private router: Router,
@@ -31,6 +34,11 @@ export class DatasetNodeComponent implements OnInit, AfterContentChecked {
         this.setExpandability();
       }
     });
+
+    this.closeChildrenSubscription = this.closeObservable.subscribe(() => {
+      this.isExpanded = false;
+      this.emitEventToChild();
+    });
   }
 
   public ngAfterContentChecked(): void {
@@ -39,6 +47,10 @@ export class DatasetNodeComponent implements OnInit, AfterContentChecked {
 
   public setExpandability(): void {
     this.setExpandabilityEvent.emit(true);
+  }
+
+  public emitEventToChild(): void {
+    this.closeChildrenSubject.next();
   }
 
   public select(openInNewTab = false): void {
@@ -63,5 +75,8 @@ export class DatasetNodeComponent implements OnInit, AfterContentChecked {
 
   public toggleDatasetCollapse(): void {
     this.isExpanded = !this.isExpanded;
+    if (!this.isExpanded) {
+      this.emitEventToChild();
+    }
   }
 }

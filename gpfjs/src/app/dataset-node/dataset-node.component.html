@@ -23,5 +23,6 @@
   <gpf-dataset-node
     *ngFor="let child of datasetNode.children"
     [datasetNode]="child"
-    (setExpandabilityEvent)="setIsExpanded()"></gpf-dataset-node>
+    (setExpandabilityEvent)="setIsExpanded()"
+    [closeObservable]="closeChildrenSubject.asObservable()"></gpf-dataset-node>
 </div>
