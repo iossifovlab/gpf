@@ -1,4 +1,5 @@
 import itertools
+import pathlib
 from collections.abc import Iterable
 from typing import Any, ClassVar, Optional, cast
 
@@ -15,11 +16,17 @@ from dae.inmemory_storage.raw_variants import (
     RawVariantsQueryRunner,
     RealAttrFilterType,
 )
+from dae.parquet.partition_descriptor import PartitionDescriptor
+from dae.pedigrees.families_data import FamiliesData
 from dae.schema2_storage.schema2_import_storage import (
+    Schema2DatasetLayout,
     Schema2ImportStorage,
+    create_schema2_dataset_layout,
+    load_schema2_dataset_layout,
     schema2_project_dataset_layout,
 )
 from dae.task_graph.graph import TaskGraph
+from dae.utils import fs_utils
 from dae.utils.regions import Region
 from dae.variants_loaders.parquet.loader import ParquetLoader
 
@@ -27,10 +34,12 @@ from dae.variants_loaders.parquet.loader import ParquetLoader
 class ParquetLoaderVariants:
     """Variants class that utilizes ParquetLoader to fetch variants."""
 
-    def __init__(
-        self, data_dir: str, ped_params: Optional[dict] = None,
-    ) -> None:
-        self.loader = ParquetLoader(data_dir, ped_params)
+    def __init__(self, data_dir: str) -> None:
+        self.loader = ParquetLoader(data_dir)
+
+    @property
+    def families(self) -> FamiliesData:
+        return self.loader.families
 
     def build_summary_variants_query_runner(
         self,
@@ -141,24 +150,22 @@ class ParquetGenotypeStorage(GenotypeStorage):
     """Genotype storage for raw parquet files."""
 
     VALIDATION_SCHEMA: ClassVar[dict] = {
-        "storage_type": {"type": "string", "allowed": ["parquet"]},
+        "storage_type": {
+            "type": "string",
+            "allowed": ["parquet"],
+        },
         "id": {
             "type": "string",
-        },
-        "read_only": {
-            "type": "boolean",
-            "default": False,
         },
         "dir": {
             "type": "string",
             "check_with": validate_path,
-            "required": True,
         },
     }
 
     def __init__(self, storage_config: dict[str, Any]):
         super().__init__(storage_config)
-        self.data_dir = self.storage_config["dir"]
+        self.data_dir: Optional[str] = self.storage_config.get("dir")
 
     @classmethod
     def get_storage_types(cls) -> set[str]:
@@ -182,28 +189,50 @@ class ParquetGenotypeStorage(GenotypeStorage):
         return self
 
     def build_backend(
-        self, study_config: dict[str, Any],
+        self,
+        study_config: dict[str, Any],
         _genome: ReferenceGenome,
         _gene_models: Optional[GeneModels],
     ) -> ParquetLoaderVariants:
-        # FIXME Ask Lubo about these params I used to pass... are they never present in parquet files configs?
-        # pedigree_conf = study_config["genotype_storage"]["files"]["pedigree"]
-        # return ParquetLoaderVariants(self.data_dir, pedigree_conf["params"])
-        return ParquetLoaderVariants(self.data_dir)
+        study_id = study_config["id"]
+        if self.data_dir is not None:
+            study_path = pathlib.Path(self.data_dir, study_id)
+            if study_path.exists():
+                return ParquetLoaderVariants(str(study_path))
+        table_path = study_config["genotype_storage"]["tables"]["summary"]
+        return ParquetLoaderVariants(str(pathlib.Path(table_path).parent))
+
+    def import_dataset(
+        self, study_id: str, layout: Schema2DatasetLayout,
+    ) -> Schema2DatasetLayout:
+        """Copy study parquet dataset into Schema2 genotype storage."""
+        if self.data_dir is None:
+            raise ValueError("Cannot import with no data dir configured!")
+        import_layout = create_schema2_dataset_layout(
+            str(pathlib.Path(self.data_dir, study_id)))
+        fs_utils.copy(import_layout.study, layout.study)
+        return import_layout
 
 
 class ParquetImportStorage(Schema2ImportStorage):
     """Import storage for Parquet files."""
+
+    @classmethod
+    def _do_import_dataset(cls, project: ImportProject) -> Schema2DatasetLayout:
+        genotype_storage = project.get_genotype_storage()
+        assert isinstance(genotype_storage, ParquetGenotypeStorage)
+        layout = load_schema2_dataset_layout(project.get_parquet_dataset_dir())
+        return genotype_storage.import_dataset(project.study_id, layout)
+
     def generate_import_task_graph(self, project: ImportProject) -> TaskGraph:
         graph = super().generate_import_task_graph(project)
-        # FIXME In duckdb there is first an if check if the instance for this project
-        # has a genotype storage, before making the config. should I do this here too?
-        layout_task = graph.create_task(
-            "Calc layout", schema2_project_dataset_layout,
-            [project], graph.tasks,
-        )
-        graph.create_task(
-            "Creating a study config", DuckDbImportStorage.do_study_config,
-            [project, layout_task], [layout_task],
-        )
+        if project.has_genotype_storage():
+            import_task = graph.create_task(
+                "Import dataset", self._do_import_dataset,
+                [project], graph.tasks,
+            )
+            graph.create_task(
+                "Creating a study config", DuckDbImportStorage.do_study_config,
+                [project, import_task], [import_task],
+            )
         return graph

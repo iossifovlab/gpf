@@ -4,7 +4,6 @@ import pathlib
 import pytest
 
 from dae.genotype_storage import get_genotype_storage_factory
-from dae.gpf_instance import GPFInstance
 from dae.parquet_variants import ParquetGenotypeStorage
 from dae.studies.study import GenotypeData
 from dae.testing import setup_pedigree, setup_vcf, vcf_study
@@ -13,9 +12,9 @@ from dae.utils.regions import Region
 
 
 @pytest.fixture(scope="module")
-def t4c8_instance(
+def parquet_storage_fixture(
     tmp_path_factory: pytest.TempPathFactory,
-) -> GPFInstance:
+) -> ParquetGenotypeStorage:
     root_path = tmp_path_factory.mktemp("parquet_storage")
     conf = {
         "id": "test_parquet_storage",
@@ -25,14 +24,18 @@ def t4c8_instance(
     storage_factory = get_genotype_storage_factory("parquet")
     storage = storage_factory(conf)
     assert isinstance(storage, ParquetGenotypeStorage)
-    return t4c8_gpf(root_path, storage)
+    return storage
 
 
 @pytest.fixture(scope="module")
-def imported_study(t4c8_instance: GPFInstance) -> GenotypeData:
-    root_path = pathlib.Path(t4c8_instance.dae_dir)
+def imported_study(
+    tmp_path_factory: pytest.TempPathFactory,
+    parquet_storage_fixture: ParquetGenotypeStorage,
+) -> GenotypeData:
+    root_path = tmp_path_factory.mktemp("test_gpf_instance")
+    gpf_instance = t4c8_gpf(root_path, storage=parquet_storage_fixture)
     ped_path = setup_pedigree(
-        root_path / "study" / "pedigree" / "in.ped",
+        root_path / "study_data" / "pedigree" / "in.ped",
         """
 familyId personId dadId momId sex status role
 f1.1     mom1     0     0     2   1      mom
@@ -43,7 +46,7 @@ f1.3     dad3     0     0     1   1      dad
 f1.3     ch3      dad3  mom3  2   2      prb
         """)
     vcf_path = setup_vcf(
-        root_path / "study" / "vcf" / "in.vcf.gz",
+        root_path / "study_data" / "vcf" / "in.vcf.gz",
         """
 ##fileformat=VCFv4.2
 ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
@@ -81,11 +84,15 @@ chr1   122  .  A   C,AC .    .      .    GT     0/1  0/1  0/1 0/2  0/2  0/2
             },
         },
     }
-    return vcf_study(
+    study = vcf_study(
         root_path, "study", ped_path, [vcf_path],
-        t4c8_instance,
+        gpf_instance,
         project_config_update=project_config_update,
     )
+    assert parquet_storage_fixture.data_dir is not None
+    assert pathlib.Path(parquet_storage_fixture.data_dir).exists()
+    assert pathlib.Path(parquet_storage_fixture.data_dir, "study").exists()
+    return study
 
 
 def test_query_all_variants(imported_study: GenotypeData) -> None:
