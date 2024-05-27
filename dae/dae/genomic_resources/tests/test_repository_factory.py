@@ -76,7 +76,7 @@ def test_build_a_complex_but_realistic_scenario_yaml(tmp_path):
         type: group
         children:
         - type: group
-          cache_dir: "{tmp_path!s}/tmp/remotes12Cache"
+          cache_dir: "{tmp_path!s}/tmp/remotes12Cache(1.3)"
           children:
           - id: r1
             type: http
@@ -105,7 +105,7 @@ def test_build_a_complex_but_realistic_scenario_yaml(tmp_path):
     #   * only directory repository has a 'directory'             attribute;
     #   * only embedded   repository has a 'content'               attribute.
     assert str(repo.children[0].cache_url) == \
-        f"file://{tmp_path}/tmp/remotes12Cache"
+        f"file://{tmp_path}/tmp/remotes12Cache(1.3)"
     assert repo.children[0].child.children[0].proto.url == \
         "http://r1.org/repo"
     assert repo.children[0].child.children[1].proto.url == \
