@@ -3,6 +3,7 @@
     #collapseIcon
     *ngIf="datasetNode.children.length"
     class="collapse-dataset-icon material-icons material-symbols-outlined"
+    [style.opacity]="datasetNode.dataset.accessRights ? 1.0 : 0.3"
     [ngClass]="{ rotate: isExpanded }"
     (click)="toggleDatasetCollapse()"
     >expand_more</span
