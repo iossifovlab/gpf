@@ -29,10 +29,8 @@ def t4c8_instance(tmp_path: pathlib.Path) -> GPFInstance:
             "pipeline_config.yaml": textwrap.dedent("""
                 preambule:
                     input_reference_genome: acgt
-                    title: pipeline title
                     summary: asdf summary
                     description: sample description
-                    authors: pesho, gosho
                     metadata:
                         a: b
                 annotators:
@@ -48,6 +46,13 @@ def t4c8_instance(tmp_path: pathlib.Path) -> GPFInstance:
                           type: float
                           name: score
                 """),
+            },
+            "acgt": {
+                "genomic_resource.yaml": textwrap.dedent("""
+                    type: reference_genome
+                    filename: genome.fa
+                """),
+                "genome.fa": """blabla""",
             },
         },
     )
@@ -87,4 +92,4 @@ def test_annotate_doc(
     assert "acgt" in output_template
     assert "asdf summary" in output_template
     assert "sample description" in output_template
-    assert "pesho, gosho" in output_template
+    assert f'<a href="file://{tmp_path}/acgt">' in output_template
