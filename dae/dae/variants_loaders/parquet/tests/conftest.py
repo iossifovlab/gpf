@@ -22,6 +22,29 @@ def acgt_instance(tmp_path_factory: pytest.TempPathFactory) -> GPFInstance:
 
 
 @pytest.fixture(scope="module")
+def t4c8_study_pedigree_only(t4c8_instance: GPFInstance) -> str:
+    root_path = pathlib.Path(t4c8_instance.dae_dir)
+    ped_path = setup_pedigree(
+        root_path / "study_no_vs" / "pedigree" / "in.ped",
+        """
+familyId personId dadId momId sex status role
+f1.1     mom1     0     0     2   1      mom
+f1.1     dad1     0     0     1   1      dad
+f1.1     ch1      dad1  mom1  2   2      prb
+f1.3     mom3     0     0     2   1      mom
+f1.3     dad3     0     0     1   1      dad
+f1.3     ch3      dad3  mom3  2   2      prb
+        """)
+    vcf_study(
+        root_path,
+        "study_no_vs", ped_path, [],
+        t4c8_instance,
+        project_config_overwrite={"destination": {"storage_type": "schema2"}},
+    )
+    return f"{root_path}/work_dir/study_no_vs"
+
+
+@pytest.fixture(scope="module")
 def t4c8_study_nonpartitioned(t4c8_instance: GPFInstance) -> str:
     root_path = pathlib.Path(t4c8_instance.dae_dir)
     ped_path = setup_pedigree(

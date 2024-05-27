@@ -46,3 +46,10 @@ def test_fetch_summary_variants_count_acgt(
     assert len(list(loader.fetch_summary_variants(region="chr1:1-100"))) == 3
     assert len(list(loader.fetch_summary_variants(region="chr2:1-100"))) == 3
     assert len(list(loader.fetch_summary_variants(region="chr3:1-100"))) == 3
+
+
+def test_fetch_summary_variants_pedigree_only(
+    t4c8_study_pedigree_only: str,
+) -> None:
+    loader = ParquetLoader(t4c8_study_pedigree_only)
+    assert len(list(loader.fetch_summary_variants())) == 0

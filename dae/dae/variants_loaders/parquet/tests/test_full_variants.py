@@ -139,3 +139,14 @@ def test_fetch_variants_odd_study(
     assert len(vs) == 4
     # family variants
     assert sum(len(fvs) for _, fvs in vs) == 9
+
+
+def test_fetch_variants_pedigree_only(
+    t4c8_study_pedigree_only: str,
+) -> None:
+    loader = ParquetLoader(t4c8_study_pedigree_only)
+    vs = list(loader.fetch_variants())
+    # summary variants
+    assert len(vs) == 0
+    # family variants
+    assert sum(len(fvs) for _, fvs in vs) == 0

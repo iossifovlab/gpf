@@ -15,7 +15,7 @@ from dae.pedigrees.families_data import FamiliesData
 from dae.pedigrees.loader import FamiliesLoader
 from dae.schema2_storage.schema2_import_storage import (
     Schema2DatasetLayout,
-    create_schema2_dataset_layout,
+    load_schema2_dataset_layout,
 )
 from dae.utils.regions import Region
 from dae.variants.attributes import Inheritance, Role, Sex, Status
@@ -140,14 +140,11 @@ class ParquetLoader:
     def __init__(self, data_dir: str):
         self.data_dir: str = data_dir
         self.layout: Schema2DatasetLayout = \
-            create_schema2_dataset_layout(data_dir)
+            load_schema2_dataset_layout(data_dir)
 
         if not os.path.exists(self.layout.pedigree):
             raise ParquetLoaderException(
                 f"No pedigree file exists in {self.data_dir}!")
-        if len(ds.dataset(f"{self.layout.summary}").files) <= 0:
-            raise ParquetLoaderException(
-                f"No summary variants exists in {self.data_dir}!")
 
         self.families: FamiliesData = self._load_families(self.layout.pedigree)
         meta_file = pq.ParquetFile(self.layout.meta)
@@ -214,6 +211,9 @@ class ParquetLoader:
 
         May filter by region (if region bins are configured).
         """
+        if not self.layout.summary:
+            return ()
+
         summary_files = ds.dataset(f"{self.layout.summary}").files
         if region is not None \
            and self.partitioned \
@@ -224,10 +224,9 @@ class ParquetLoader:
 
     def get_family_pq_filepaths(self, summary_path: str) -> tuple[str, ...]:
         """Get all family parquet files for given summary parquet file."""
-        if not self.layout.summary:
-            raise ParquetLoaderException("No summary layout configured!")
-        if not self.layout.family:
-            raise ParquetLoaderException("No family layout configured!")
+        if not self.layout.summary or not self.layout.family:
+            return ()
+
         if not os.path.exists(summary_path):
             raise ParquetLoaderException(
                 f"Non-existent summary path given - {summary_path}")
@@ -278,6 +277,8 @@ class ParquetLoader:
             )
 
         summary_paths = self.get_summary_pq_filepaths(region_obj)
+        if not summary_paths:
+            return
 
         seen = set()
 
@@ -301,6 +302,9 @@ class ParquetLoader:
             region_obj = Region.from_str(region)
 
         summary_paths = self.get_summary_pq_filepaths(region_obj)
+        if not summary_paths:
+            return
+
         family_paths: list[str] = []
         for path in summary_paths:
             family_paths.extend(self.get_family_pq_filepaths(path))
