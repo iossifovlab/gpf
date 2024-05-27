@@ -4,13 +4,16 @@ import { Dataset } from 'app/datasets/datasets';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { Observable, Subject, Subscription } from 'rxjs';
 import { DatasetNode } from './dataset-node';
+import { Store } from '@ngxs/store';
+import { StatefulComponent } from 'app/common/stateful-component';
+import { DatasetNodeModel, DatasetNodeState, SetExpandedDatasets } from './dataset-node.state';
 
 @Component({
   selector: 'gpf-dataset-node',
   templateUrl: './dataset-node.component.html',
   styleUrls: ['./dataset-node.component.css']
 })
-export class DatasetNodeComponent implements OnInit, AfterContentChecked {
+export class DatasetNodeComponent extends StatefulComponent implements OnInit, AfterContentChecked {
   @Input() public datasetNode: DatasetNode;
   @Output() public setExpandabilityEvent = new EventEmitter<boolean>();
   public selectedDataset$: Observable<Dataset>;
@@ -23,20 +26,33 @@ export class DatasetNodeComponent implements OnInit, AfterContentChecked {
     private router: Router,
     private datasetsService: DatasetsService,
     private changeDetector: ChangeDetectorRef,
-  ) { }
+    protected store: Store
+  ) {
+    super(store, DatasetNodeState, 'datasetNode');
+  }
 
   public ngOnInit(): void {
     this.selectedDataset$ = this.datasetsService.getSelectedDatasetObservable();
     this.selectedDataset$.subscribe(dataset => {
       if (dataset.id === 'ALL_genotypes' && this.datasetNode.dataset.id === 'ALL_genotypes') {
         this.isExpanded = true;
+        this.addToState('ALL_genotypes');
       } else if (this.datasetNode.dataset.id === dataset.id) {
         this.setExpandability();
       }
     });
 
+    this.store.selectOnce(
+      (state: { datasetNodeState: DatasetNodeModel}) => state.datasetNodeState)
+      .subscribe(state => {
+        if (state.expandedDatasets.has(this.datasetNode.dataset.id)) {
+          this.isExpanded = true;
+        }
+      });
+
     this.closeChildrenSubscription = this.closeObservable.subscribe(() => {
       this.isExpanded = false;
+      this.removeFromState(this.datasetNode.dataset.id);
       this.emitEventToChild();
     });
   }
@@ -68,12 +84,45 @@ export class DatasetNodeComponent implements OnInit, AfterContentChecked {
     }
   }
 
+  private addToState(nodeId: string): void {
+    this.store.selectOnce(
+      (state: { datasetNodeState: DatasetNodeModel}) => state.datasetNodeState)
+      .subscribe(state => {
+        state.expandedDatasets.add(nodeId);
+        this.store.dispatch(new SetExpandedDatasets(state.expandedDatasets));
+      });
+  }
+
+  private removeFromState(nodeId: string): void {
+    this.store.selectOnce(
+      (state: { datasetNodeState: DatasetNodeModel}) => state.datasetNodeState)
+      .subscribe(state => {
+        state.expandedDatasets.delete(nodeId);
+        this.store.dispatch(new SetExpandedDatasets(state.expandedDatasets));
+      });
+  }
+
+  private updateState(nodeId: string): void {
+    this.store.selectOnce(
+      (state: { datasetNodeState: DatasetNodeModel}) => state.datasetNodeState)
+      .subscribe(state => {
+        if (state.expandedDatasets.has(nodeId)) {
+          state.expandedDatasets.delete(nodeId);
+        } else {
+          state.expandedDatasets.add(nodeId);
+        }
+        this.store.dispatch(new SetExpandedDatasets(state.expandedDatasets));
+      });
+  }
+
   public setIsExpanded(): void {
     this.isExpanded = true;
+    this.addToState(this.datasetNode.dataset.id);
     this.setExpandability();
   }
 
-  public toggleDatasetCollapse(): void {
+  public toggleDatasetCollapse(selectedNodeId: string): void {
+    this.updateState(selectedNodeId);
     this.isExpanded = !this.isExpanded;
     if (!this.isExpanded) {
       this.emitEventToChild();

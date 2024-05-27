@@ -5,7 +5,7 @@
     class="collapse-dataset-icon material-icons material-symbols-outlined"
     [style.opacity]="datasetNode.dataset.accessRights ? 1.0 : 0.3"
     [ngClass]="{ rotate: isExpanded }"
-    (click)="toggleDatasetCollapse()"
+    (click)="toggleDatasetCollapse(datasetNode.dataset.id)"
     >expand_more</span
   ><a
     class="dataset-dropdown-item dropdown-item"
