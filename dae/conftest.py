@@ -66,6 +66,12 @@ def default_genotype_storage_configs(root_path: pathlib.Path) -> list[dict]:
             "dir": f"{root_path}/genotype_filesystem_data",
         },
 
+        # Schema2 Parquet
+        {
+            "id": "schema2_parquet",
+            "storage_type": "parquet",
+            "dir": str(root_path),
+        },
     ]
 
 

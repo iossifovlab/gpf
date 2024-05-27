@@ -1,7 +1,7 @@
 import itertools
 import pathlib
 from collections.abc import Iterable
-from typing import Any, ClassVar, Optional, cast
+from typing import Any, ClassVar, Optional, Union, cast
 
 from cerberus import Validator
 
@@ -17,6 +17,7 @@ from dae.inmemory_storage.raw_variants import (
     RealAttrFilterType,
 )
 from dae.pedigrees.families_data import FamiliesData
+from dae.person_sets import PersonSetCollection
 from dae.schema2_storage.schema2_import_storage import (
     Schema2DatasetLayout,
     Schema2ImportStorage,
@@ -142,6 +143,13 @@ class ParquetLoaderVariants:
         return RawVariantsQueryRunner(
             variants_iterator=family_variants_iterator,
             deserializer=filter_func)
+
+    @staticmethod
+    def build_person_set_collection_query(
+        _person_set_collection: PersonSetCollection,
+        _person_set_collection_query: tuple[str, set[str]],
+    ) -> Optional[Union[tuple, tuple[list[str], list[str]]]]:
+        return None
 
 
 class ParquetGenotypeStorage(GenotypeStorage):
