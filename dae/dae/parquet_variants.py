@@ -16,14 +16,12 @@ from dae.inmemory_storage.raw_variants import (
     RawVariantsQueryRunner,
     RealAttrFilterType,
 )
-from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.pedigrees.families_data import FamiliesData
 from dae.schema2_storage.schema2_import_storage import (
     Schema2DatasetLayout,
     Schema2ImportStorage,
     create_schema2_dataset_layout,
     load_schema2_dataset_layout,
-    schema2_project_dataset_layout,
 )
 from dae.task_graph.graph import TaskGraph
 from dae.utils import fs_utils
@@ -222,7 +220,9 @@ class ParquetImportStorage(Schema2ImportStorage):
         genotype_storage = project.get_genotype_storage()
         assert isinstance(genotype_storage, ParquetGenotypeStorage)
         layout = load_schema2_dataset_layout(project.get_parquet_dataset_dir())
-        return genotype_storage.import_dataset(project.study_id, layout)
+        if genotype_storage.data_dir is not None:
+            layout = genotype_storage.import_dataset(project.study_id, layout)
+        return layout
 
     def generate_import_task_graph(self, project: ImportProject) -> TaskGraph:
         graph = super().generate_import_task_graph(project)
