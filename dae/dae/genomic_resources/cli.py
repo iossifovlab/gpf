@@ -529,14 +529,14 @@ def _collect_impl_stats_tasks(  # pylint: disable=too-many-arguments
 
     # This is the hack to update stats_hash without recreaing the histograms.
     graph.create_task(
-        f"{impl.resource.resource_id}_store_stats_hash",
+        f"{impl.resource.get_full_id()}_store_stats_hash",
         _store_stats_hash,
         [proto, impl.resource],
         tasks,
     )
 
     graph.create_task(
-        f"{impl.resource.resource_id}_manifest_rebuild",
+        f"{impl.resource.get_full_id()}_manifest_rebuild",
         _do_resource_manifest_command,
         [proto, impl.resource, dry_run, force, use_dvc],
         tasks,
@@ -553,19 +553,19 @@ def _stats_need_rebuild(
     if stored_hash is None:
         logger.info(
             "No hash stored for <%s>, need update",
-            impl.resource.resource_id,
+            impl.resource.get_full_id(),
         )
         return True
 
     if stored_hash != current_hash:
         logger.info(
             "Stored hash for <%s> is outdated, need update",
-            impl.resource.resource_id,
+            impl.resource.get_full_id(),
         )
         return True
 
     logger.info(
-        "<%s> statistics hash is up to date", impl.resource.resource_id,
+        "<%s> statistics hash is up to date", impl.resource.get_full_id(),
     )
     return False
 

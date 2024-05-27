@@ -293,6 +293,13 @@ class GenomicResource:
         """Return genomic resource ID."""
         return self.resource_id
 
+    def get_full_id(self) -> str:
+        """Return genomic resource ID with version."""
+        version = ""
+        if self.get_version_str() != "0":
+            version = f"({self.get_version_str()})"
+        return f"{self.resource_id}{version}"
+
     def get_config(self) -> dict[str, Any]:
         """Return the resouce configuration."""
         if self.config is None:
@@ -323,7 +330,7 @@ class GenomicResource:
         return self.get_description()
 
     def get_url(self) -> str:
-        return f"{self.proto.get_url()}/{self.get_id()}"
+        return f"{self.proto.get_url()}/{self.get_full_id()}"
 
     def get_labels(self) -> dict[str, Any]:
         """Return resource labels."""
