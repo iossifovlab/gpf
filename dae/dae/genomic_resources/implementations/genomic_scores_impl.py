@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import json
 import logging
-import textwrap
 from collections.abc import Iterable
 from dataclasses import asdict
 from typing import Any, Optional, cast
@@ -74,71 +73,7 @@ class GenomicScoreImplementation(
         return result
 
     def get_template(self) -> Template:
-        return Template(textwrap.dedent("""
-        {% extends base %}
-        {% block content %}
-
-        {% set impl = data.genomic_scores %}
-        {% set scores = impl.score %}
-
-        <h1>Scores</h1>
-
-        <table border="1">
-        <tr>
-        <th>id</th>
-        <th>type</th>
-        <th>default annotation</th>
-        <th>description</th>
-        <th>histogram</th>
-        <th>range</th>
-        </tr>
-
-        {%- for score_id, score in scores.score_definitions.items() -%}
-
-        <tr class="score-definition">
-
-        <td>{{ score_id }}</td>
-
-        <td>{{ score.value_type }}</td>
-
-        {% set d_atts = scores.get_default_annotation_attribute(score_id) %}
-        <td>
-            <p>{{ d_atts }}</p>
-        </td>
-
-        <td>{{ score.desc }}</td>
-
-        <td>
-        {% set hist = impl.score.get_score_histogram(score_id) %}
-        {%- if hist.type != 'null_histogram' %}
-        {% set hist_image_file =
-            impl.score.get_histogram_image_filename(score_id) %}
-        <img src="{{ hist_image_file }}"
-            alt="{{ "HISTOGRAM FOR " + score_id }}"
-            title={{ score_id }}
-            width="200">
-        {%- else -%}
-        NO HISTOGRAM
-        {%- endif -%}
-        </td>
-
-        <td>
-
-        {%- if hist.type != 'null_histogram' %}
-        {{ hist.values_domain() }}
-        {%- else -%}
-        NO DOMAIN
-        {%- endif -%}
-
-        </td>
-
-        </tr>
-        {%- endfor %}
-
-        </table>
-
-        {% endblock %}
-        """))
+        return Template(GENOMIC_SCORES_TEMPLATE)
 
     def _get_template_data(self) -> dict[str, Any]:
         return {"genomic_scores": self}
@@ -552,3 +487,66 @@ def build_score_implementation_from_resource(
     resource: GenomicResource,
 ) -> GenomicScoreImplementation:
     return GenomicScoreImplementation(resource)
+
+
+GENOMIC_SCORES_TEMPLATE = """
+{% extends base %}
+{% block content %}
+
+{% set impl = data.genomic_scores %}
+{% set scores = impl.score %}
+
+<h1>Scores</h1>
+
+<table border="1">
+    <tr>
+        <th>id</th>
+        <th>type</th>
+        <th>default annotation</th>
+        <th>description</th>
+        <th>histogram</th>
+        <th>range</th>
+    </tr>
+
+    {%- for score_id, score in scores.score_definitions.items() -%}
+        <tr class="score-definition">
+
+            <td>{{ score_id }}</td>
+
+            <td>{{ score.value_type }}</td>
+
+            {% set d_atts = scores.get_default_annotation_attribute(score_id) %}
+            <td>
+                <p>{{ d_atts }}</p>
+            </td>
+
+            <td>{{ score.desc }}</td>
+
+            <td>
+                {% set hist = impl.score.get_score_histogram(score_id) %}
+                {%- if hist.type != 'null_histogram' %}
+                {% set hist_image_file =
+                    impl.score.get_histogram_image_filename(score_id) %}
+                <img src="{{ hist_image_file }}"
+                    alt="{{ "HISTOGRAM FOR " + score_id }}"
+                    title={{ score_id }}
+                    width="200">
+                {%- else -%}
+                NO HISTOGRAM
+                {%- endif -%}
+            </td>
+
+            <td>
+            {%- if hist.type != 'null_histogram' %}
+                {{ hist.values_domain() }}
+            {%- else -%}
+                NO DOMAIN
+            {%- endif -%}
+            </td>
+
+        </tr>
+    {%- endfor %}
+</table>
+
+{% endblock %}
+"""

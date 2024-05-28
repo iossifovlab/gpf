@@ -40,39 +40,7 @@ class GeneScoreImplementation(
         )
 
     def get_template(self) -> Template:
-        return Template(textwrap.dedent("""
-            {% extends base %}
-            {% block content %}
-            {% set score = data.gene_score %}
-            <hr>
-            <h3>Gene scores file:</h3>
-            <a href="{{ score.filename }}">
-            {{ score.filename }}
-            </a>
-
-            <h3>Gene score definitions:</h2>
-            {% for score_def in score.score_definitions.values() %}
-            <div class="score-definition">
-            <p>Gene score ID: {{ score_def.score_id }}</p>
-            <p>Description: {{ score_def.description }}
-            </div>
-            {% endfor %}
-            <h3>Histograms:</h2>
-            {% for score_id in score.score_definitions.keys() %}
-            {% set hist = score.get_score_histogram(score_id) %}
-
-            {% if hist %}
-            <div class="histogram">
-            <h4>{{ score_id }}</h1>
-            <img src="{{score.get_histogram_image_filename(score_id) }}"
-            width="200px"
-            alt={{ score_id }}
-            title={{ score_id }}>
-            </div>
-            {% endif %}
-            {% endfor %}
-            {% endblock %}
-        """))
+        return Template(GENE_SCORES_TEMPLATE)
 
     def _get_template_data(self) -> dict[str, Any]:
         data = {}
@@ -166,3 +134,38 @@ def build_gene_score_implementation_from_resource(
     if resource is None:
         raise ValueError(f"missing resource {resource}")
     return GeneScoreImplementation(resource)
+
+
+GENE_SCORES_TEMPLATE = """
+{% extends base %}
+{% block content %}
+{% set score = data.gene_score %}
+<hr>
+    <h3>Gene scores file:</h3>
+    <a href="{{ score.filename }}">
+        {{ score.filename }}
+    </a>
+
+    <h3>Gene score definitions:</h3>
+    {% for score_def in score.score_definitions.values() %}
+        <div class="score-definition">
+            <p>Gene score ID: {{ score_def.score_id }}</p>
+            <p>Description: {{ score_def.description }}
+        </div>
+    {% endfor %}
+    <h3>Histograms:</h3>
+    {% for score_id in score.score_definitions.keys() %}
+    {% set hist = score.get_score_histogram(score_id) %}
+
+    {% if hist %}
+        <div class="histogram">
+            <h4>{{ score_id }}</h4>
+            <img src="{{score.get_histogram_image_filename(score_id) }}"
+            width="200px"
+            alt={{ score_id }}
+            title={{ score_id }}>
+        </div>
+    {% endif %}
+{% endfor %}
+{% endblock %}
+"""
