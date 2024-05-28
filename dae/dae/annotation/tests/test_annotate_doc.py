@@ -92,4 +92,4 @@ def test_annotate_doc(
     assert "acgt" in output_template
     assert "asdf summary" in output_template
     assert "sample description" in output_template
-    assert f'<a href="file://{tmp_path}/acgt">' in output_template
+    assert f'<a href="file://{tmp_path}/acgt/index.html">' in output_template
