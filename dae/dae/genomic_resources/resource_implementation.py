@@ -209,74 +209,88 @@ td {
 
 </style>
 </head>
-<body>
+    <body>
 
-<h1>Resource</h1>
-<div>
-<table border="1">
-<tr><td><b>Id:</b></td><td>{{ resource.resource_id }}</td></tr>
-<tr><td><b>Type:</b></td><td>{{ resource.get_type() }}</td></tr>
-<tr><td><b>Version:</b></td><td>{{ resource.get_version_str() }}</td></tr>
-<tr>
-<td><b>Summary:</b></td>
-<td>
-{%- set summary = resource.get_summary() -%}
-{{
-    markdown(summary, extras=["tables"]) if summary else "N/A"
-}}</td>
-</tr>
-<tr>
-<td><b>Description:</b></td>
-<td>
-{%- set description = resource.get_description() -%}
-{{
-    markdown(description, extras=["tables"]) if description else "N/A"
-}}</td>
-</tr>
-<tr>
-<td><b>Labels:</b></td>
-<td>
-{% if resource.get_labels() %}
-    <ul>
-    {% for label, value in resource.get_labels().items() %}
-        <li>{{ label }}: {{ value }}</li>
-    {% endfor %}
-    </ul>
-{% endif %}
-</td>
-</tr>
-</table>
-</div>
+    <h1>Resource</h1>
+    <div>
+        <table border="1">
+            <tr>
+                <td>
+                    <b>Id:</b>
+                </td>
+                <td>{{ resource.resource_id }}</td>
+            </tr>
+            <tr>
+                <td>
+                    <b>Type:</b>
+                </td>
+                <td>{{ resource.get_type() }}</td>
+            </tr>
+            <tr>
+                <td>
+                    <b>Version:</b>
+                </td>
+                <td>{{ resource.get_version_str() }}</td>
+            </tr>
+            <tr>
+                <td><b>Summary:</b></td>
+                <td>{%- set summary = resource.get_summary() -%}{{
+                    markdown(summary, extras=["tables"]) if summary else "N/A"
+                }}</td>
+            </tr>
+            <tr>
+                <td>
+                    <b>Description:</b>
+                </td>
+                <td>
+                {%- set description = resource.get_description() -%}
+                {{
+                    markdown(description, extras=["tables"]) if description else "N/A"
+                }}</td>
+            </tr>
+            <tr>
+                <td>
+                    <b>Labels:</b>
+                </td>
+                <td>
+                {% if resource.get_labels() %}
+                    <ul>
+                    {% for label, value in resource.get_labels().items() %}
+                        <li>{{ label }}: {{ value }}</li>
+                    {% endfor %}
+                    </ul>
+                {% endif %}
+                </td>
+            </tr>
+        </table>
+    </div>
 
+    {% block content %}
+    N/A
+    {% endblock %}
 
-{% block content %}
-N/A
-{% endblock %}
+    <h1>Files</h1>
+    <table>
+    <thead>
+        <tr>
+            <th>Filename</th>
+            <th>Size</th>
+            <th>md5</th>
+        </tr>
+    </thead>
+    <tbody>
+        {%- for entry in data["resource_files"] %}
+        <tr>
+            <td class="nowrap">
+                <a href='{{entry.name}}'>{{entry.name}}</a>
+            </td>
+            <td class="nowrap">{{entry.size}}</td>
+            <td class="nowrap">{{entry.md5}}</td>
+        </tr>
+        {%- endfor %}
+    </tbody>
+    </table>
 
-
-<h1>Files</h1>
-<table>
-<thead>
-    <tr>
-        <th>Filename</th>
-        <th>Size</th>
-        <th>md5</th>
-    </tr>
-</thead>
-<tbody>
-    {%- for entry in data["resource_files"] %}
-    <tr>
-        <td class="nowrap">
-            <a href='{{entry.name}}'>{{entry.name}}</a>
-        </td>
-        <td class="nowrap">{{entry.size}}</td>
-        <td class="nowrap">{{entry.md5}}</td>
-    </tr>
-    {%- endfor %}
-</tbody>
-</table>
-
-
-</body>
+    </body>
 </html>
 """)
