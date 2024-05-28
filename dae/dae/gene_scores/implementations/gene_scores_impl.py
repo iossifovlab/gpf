@@ -139,33 +139,56 @@ def build_gene_score_implementation_from_resource(
 GENE_SCORES_TEMPLATE = """
 {% extends base %}
 {% block content %}
+
 {% set score = data.gene_score %}
-<hr>
-    <h3>Gene scores file:</h3>
-    <a href="{{ score.filename }}">
-        {{ score.filename }}
-    </a>
 
-    <h3>Gene score definitions:</h3>
-    {% for score_def in score.score_definitions.values() %}
-        <div class="score-definition">
-            <p>Gene score ID: {{ score_def.score_id }}</p>
-            <p>Description: {{ score_def.description }}
-        </div>
-    {% endfor %}
-    <h3>Histograms:</h3>
-    {% for score_id in score.score_definitions.keys() %}
-    {% set hist = score.get_score_histogram(score_id) %}
+<h1>Scores</h1>
+    <table border="1">
+        <tr>
+            <th>ID</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Histograms</th>
+            <th>Range</th>
+        </tr>
 
-    {% if hist %}
-        <div class="histogram">
-            <h4>{{ score_id }}</h4>
-            <img src="{{score.get_histogram_image_filename(score_id) }}"
-            width="200px"
-            alt={{ score_id }}
-            title={{ score_id }}>
-        </div>
-    {% endif %}
-{% endfor %}
+        {% for score_id, score_def in score.score_definitions.items() %}
+            <tr>
+                <td>{{ score_id }}</td>
+
+                <td>{{ score.value_type }}</td>
+
+                <td>
+                    <div>{{ score_def.description }}</div>
+                    {% if score_def.small_values_desc %}
+                        <div>{{ score_def.small_values_desc }}</div>
+                    {% endif %}
+                    {% if score_def.large_values_desc %}
+                        <div>{{ score_def.large_values_desc }}</div>
+                    {% endif %}
+                </td>
+
+                {% set hist = score.get_score_histogram(score_id) %}
+                <td>
+                {% if hist %}
+                    <div class="histogram">
+                        <img src="{{score.get_histogram_image_filename(score_id)}}"
+                        width="200px"
+                        alt={{ score_id }}
+                        title={{ score_id }}>
+                    </div>
+                {% endif %}
+                </td>
+
+                <td>
+                {%- if hist.type != 'null_histogram' %}
+                    {{ hist.values_domain() }}
+                {%- else -%}
+                    NO DOMAIN
+                {%- endif -%}
+                </td>
+            </tr>
+        {% endfor %}
+    </table>
 {% endblock %}
 """

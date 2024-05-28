@@ -500,12 +500,12 @@ GENOMIC_SCORES_TEMPLATE = """
 
 <table border="1">
     <tr>
-        <th>id</th>
-        <th>type</th>
-        <th>default annotation</th>
-        <th>description</th>
-        <th>histogram</th>
-        <th>range</th>
+        <th>ID</th>
+        <th>Type</th>
+        <th>Default annotation</th>
+        <th>Description</th>
+        <th>Histogram</th>
+        <th>Range</th>
     </tr>
 
     {%- for score_id, score in scores.score_definitions.items() -%}
