@@ -136,7 +136,7 @@
               placeholder="Search gene"
               type="text"
               spellcheck="false"
-              [value]="geneInput" />
+              [value]="loadedSearchValue" />
             <span
               *ngIf="searchBox.value !== '' && !showSearchLoading"
               class="material-symbols-outlined search-clear-icon"

@@ -54,6 +54,7 @@ export class GeneProfilesTableComponent extends StatefulComponent implements OnI
   public orderBy = 'desc';
 
   public geneInput: string = null;
+  public loadedSearchValue: string = null;
   public searchKeystrokes$: Subject<string> = new Subject();
   @ViewChild('searchBox') public searchBox: ElementRef;
   public pageIndex = 0;
@@ -208,7 +209,7 @@ export class GeneProfilesTableComponent extends StatefulComponent implements OnI
       (state: { geneProfilesState: GeneProfilesModel}) => state.geneProfilesState)
       .subscribe(state => {
         this.tabs = state.openedTabs;
-        this.geneInput = state.searchValue;
+        this.loadedSearchValue = state.searchValue;
         this.highlightedGenes = state.highlightedRows;
         this.orderBy = state.orderBy;
         this.leavesIds = state.headerLeaves;
@@ -223,7 +224,7 @@ export class GeneProfilesTableComponent extends StatefulComponent implements OnI
         this.prepareTable();
       });
 
-    this.search(this.geneInput);
+    this.search(this.loadedSearchValue);
   }
 
   private reorderHeaderByLeaves(
