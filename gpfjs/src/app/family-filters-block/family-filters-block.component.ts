@@ -115,6 +115,11 @@ export class FamilyFiltersBlockComponent implements OnInit, AfterViewInit {
     this.setFamiliesCount();
   }
 
+  public updateMode(isIntersected: boolean): void {
+    this.tagIntersection = isIntersected;
+    this.setFamiliesCount();
+  }
+
   public setFamiliesCount(): void {
     const pedigrees = this.familiesCounters?.map(f => f.pedigreeCounters);
     if (pedigrees) {

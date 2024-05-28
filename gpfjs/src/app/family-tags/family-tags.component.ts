@@ -1,6 +1,6 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { StatefulComponent } from 'app/common/stateful-component';
-import { FamilyTagsState, SetFamilyTags } from './family-tags.state';
+import { FamilyTagsModel, FamilyTagsState, SetFamilyTags } from './family-tags.state';
 import { Store } from '@ngxs/store';
 import { FamilyTags } from './family-tags';
 
@@ -30,9 +30,11 @@ export class FamilyTagsComponent extends StatefulComponent implements OnInit {
       this.filtersButtonsState[tag] = 0;
     });
 
-    this.store.selectOnce(state => state.familyTagsState).subscribe((state: SetFamilyTags) => {
-      this.restoreFamilyTags(state.selectedFamilyTags, state.deselectedFamilyTags, state.tagIntersection);
-    });
+    this.store.selectOnce(
+      (state: { familyTagsState: FamilyTagsModel}) => state.familyTagsState)
+      .subscribe((state: SetFamilyTags) => {
+        this.restoreFamilyTags(state.selectedFamilyTags, state.deselectedFamilyTags, state.tagIntersection);
+      });
   }
 
   public restoreFamilyTags(selectedTags: string[], deselectedTags: string[], intersection: boolean): void {
