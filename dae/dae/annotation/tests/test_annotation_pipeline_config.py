@@ -29,6 +29,13 @@ def test_grr(tmp_path: pathlib.Path) -> GenomicResourceRepo:
                 directory: "{root_path}/grr"
             """),
             "grr": {
+                "dummy_genome": {
+                    "genomic_resource.yaml": textwrap.dedent("""
+                        type: reference_genome
+                        filename: genome.fa
+                    """),
+                    "genome.fa": """blabla""",
+                },
                 "score_one": {
                     "genomic_resource.yaml": textwrap.dedent("""
                         type: position_score
@@ -388,11 +395,9 @@ def test_wildcard_label_substring(test_grr: GenomicResourceRepo) -> None:
 def test_parse_preambule() -> None:
     preambule, _ = AnnotationConfigParser.parse_str("""
         preambule:
-          input_reference_genome: acgt_genome
-          title: test
           summary: asdf
           description: lorem ipsum
-          authors: pesho, gosho
+          input_reference_genome: acgt_genome
           metadata:
               foo: bar
               subdata:
@@ -402,10 +407,23 @@ def test_parse_preambule() -> None:
     """)
 
     assert preambule == AnnotationPreambule(
-        "acgt_genome", "test", "asdf", "lorem ipsum",
-        "pesho, gosho",
+        "asdf", "lorem ipsum", "acgt_genome", None,
         {"foo": "bar", "subdata": {"a": "b"}},
     )
+
+
+def test_parse_preambule_with_valid_genome(
+    test_grr: GenomicResourceRepo,
+) -> None:
+    preambule, _ = AnnotationConfigParser.parse_str("""
+        preambule:
+          input_reference_genome: dummy_genome
+        annotators:
+          - sample_annotator
+    """, grr=test_grr)
+    assert preambule is not None
+    assert preambule.input_reference_genome == "dummy_genome"
+    assert preambule.input_reference_genome_res is not None
 
 
 def test_parse_preambule_no_preambule() -> None:

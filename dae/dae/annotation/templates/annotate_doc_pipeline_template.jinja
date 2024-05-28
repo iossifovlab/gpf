@@ -24,11 +24,43 @@
       h4 {
         margin-top: 0.5em;
         margin-bottom: 0.5em;
+        font-size: 24px;
+      }
+
+      .preambule-header,
+      .annotator-list-header,
+      .pipeline-header {
+        margin-top: 40px;
+        margin-bottom: 20px;
+      }
+
+      .preambule-header,
+      .annotator-list-header {
+        font-size: 30px;
+      }
+
+      .pipeline-header {
+        font-size: 36px;
+      }
+
+      table {
+        border-collapse: collapse;
+      }
+
+      th, td {
+        padding: 10px;
+      }
+
+      th {
+        font-size: 20px;
+      }
+
+      td {
+        font-size: 18px;
       }
 
       .annotator-doc {
         display: flex;
-        margin-bottom: 60px;
         flex-direction: row;
         border: 1px solid rgb(218,218,218);
       }
@@ -63,10 +95,7 @@
       }
       
       .attribute {
-        padding: 20px 0 20px;
-        display: flex;
-        flex-direction: row;
-        justify-content: space-between;
+        padding: 0 0 20px;
         border-bottom: 1px solid rgb(218,218,218);
       }
 
@@ -77,29 +106,47 @@
       .attribute-name {
         font-size: 22px;
         font-weight: 500;
-        margin: 8px;
+        padding: 10px 8px;
         word-break: break-word;
       }
 
-      .attribute-type, .attribute-internal, .resource-id {
+      .resource-id {
         font-size: 18px;
         margin: 8px;
       }
 
-      .attribute-internal {
-        font-style: italic;
+      .attribute-type {
+        font-size: 18px;
+        padding: 10px 8px;
       }
 
       .attribute-description {
         font-size: 18px;
-        width: 55%;
         margin-right: 20px;
       }
 
       .attribute-info {
-        font-size: 22px;
+        font-size: 24px;
         align-self: center;
-        width: 35%;
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        background-color: #f7f7f7;
+        margin-bottom: 12px;
+      }
+
+      .attribute-internal {
+        background-color: #f7efe4;
+      }
+
+      .attribute-source, .pipeline_path {
+        color: rgb(145,145,145);
+        margin: 8px;
+      }
+
+      .pipeline_path {
+        float: right;
+        font-size: 18px;
       }
 
       .no-description {
@@ -112,8 +159,12 @@
         padding: 8px;
       }
 
-      details, .resource, .annotator-description {
+      .resource, .annotator-description {
         padding: 10px 8px;
+      }
+
+      summary {
+        padding-top: 10px; 
       }
 
       img {
@@ -134,100 +185,105 @@
   </head>
 
   <body>
-    <h1>Pipeline Documentation</h1>
+    <h1 class="pipeline-header">Pipeline Documentation</h1>
     {% if preambule is not none %}
-    <h2>Preambule</h2>
-    <table style="width: 100%">
-    <tr>
-      <th>Input reference genome</th>
-      <td>{{preambule.input_reference_genome}}</td>
-    </tr>
-    <tr>
-      <th>Title</th>
-      <td>{{preambule.title}}</td>
-    </tr>
-    <tr>
-      <th>Summary</th>
-      <td>{{preambule.summary}}</td>
-    </tr>
-    <tr>
-      <th>Description</th>
-      <td>{{preambule.description}}</td>
-    </tr>
-    <tr>
-      <th>Authors</th>
-      <td>{{preambule.authors}}</td>
-    </tr>
-    <tr>
-      <th>Metadata</th>
-      <td>
-        <ul>
-            {%- for k, v in preambule.metadata.items() %}
-            <li>{{k}} = {{v}}</li>
-            {%- endfor %}
-        </ul>
-      </td>
-    </tr>
-    </table>
+      <h2 class="preambule-header">Preambule</h2>
+      <table style="width: 100%">
+      {% if preambule.summary %}
+        <tr>
+          <th>Summary</th>
+          <td>{{preambule.summary}}</td>
+        </tr>
+      {% endif %}
+      {% if preambule.description %}
+        <tr>
+          <th>Description</th>
+          <td>{{preambule.description}}</td>
+        </tr>
+      {% endif %}
+      {% if preambule.input_reference_genome_res.get_url() %}
+        <tr>
+          <th>Input reference genome</th>
+          <td>
+            <a href="{{preambule.input_reference_genome_res.get_url() + "/index.html"}}">
+              {{preambule.input_reference_genome}}
+            </a>
+          </td>
+        </tr>
+      {% endif %}
+      {% if preambule.metadata.items()|length > 1 %}
+        <tr>
+          <th>Metadata</th>
+          <td>
+            <ul>
+                {%- for k, v in preambule.metadata.items() %}
+                <li>{{k}} = {{v}}</li>
+                {%- endfor %}
+            </ul>
+          </td>
+        </tr>
+      {% endif %}
+      </table>
     {% endif %}
 
-    <h2>Annotators</h2>
-    {% for annotator_info in annotation_pipeline_info %}
-    <div class="annotator-doc">
-      <div class="attribute-list">
-        {% for attribute_info in annotator_info.attributes %}
-        <div class="attribute">
-          <div class="attribute-info">
-            <div class="attribute-name">{{attribute_info.name}}</div>
-            <div class="attribute-type">Type: {{attribute_info.type}}</div>
-            {% if attribute_info.internal %}
-            <div class="attribute-internal">Internal</div>
-            {% endif %}
-          </div>
-          <div class="attribute-description">
-            <div>source: {{attribute_info.source}}</div>
-            {{markdown(attribute_info.documentation)}}
-          </div>
-        </div>
-        {% endfor %}
-      </div>
+    {% if pipeline_path is not none %}
+    <div class="pipeline_path">
+      Pipeline path: {{pipeline_path}}
+    </div>
+    {% endif %}
 
-      <div class="annotator-line {{'sticky-line' if annotator_info.attributes|length > 1 }}">
-        <div class="annotator">
-          <div class="annotator-title">Annotator type: {{annotator_info.type}}</div>
-          {% for genomic_resource in annotator_info.resources %}
-          <div class="resource-id">Resource id: <a href="{{genomic_resource.get_url()}}/index.html">
-                  {{genomic_resource.get_id()}}</a></div>                            
+    <h2 class="annotator-list-header">Annotators</h2>
+    {% for annotator_info in annotation_pipeline_info %}
+      <div class="annotator-doc">
+        <div class="attribute-list">
+          {% for attribute_info in annotator_info.attributes %}
+            <div class="attribute">
+              <div class="attribute-info {{'attribute-internal' if attribute_info.internal }}">
+                <div class="attribute-name">
+                  {{attribute_info.name + ' (Internal)' if attribute_info.internal else attribute_info.name}}
+                </div>
+                <div class="attribute-type">Type: {{attribute_info.type}}</div>
+              </div>
+              <div class="attribute-description">
+                {{markdown(attribute_info.documentation)}}
+                <div class="attribute-source">source: {{attribute_info.source}}</div>
+              </div>
+            </div>
           {% endfor %}
         </div>
-  
-        {% if annotator_info.documentation %}
-        <div class="annotator-description">
-          {{ markdown(annotator_info.documentation) }}
-        </div>
-        {% else %}
-        <div class="no-description">
-          No description
-        </div>
-        {% endif %}
 
-        {% for genomic_resource in annotator_info.resources %}
-        <div class="resource">
-          <div><b>Resource</b></div>
-          <div>id: <a href="{{genomic_resource.get_url()}}/index.html">
-                  {{genomic_resource.get_id()}}</a></div>                            
-          <div>type: {{genomic_resource.get_type()}}</div>
-          {% if genomic_resource.get_summary() %}
-            <div>Description:</div>
-            <div class="markdown">
-              {{ markdown(genomic_resource.get_summary()) }}
+        <div class="annotator-line {{'sticky-line' if annotator_info.attributes|length > 1 }}">
+          <div class="annotator">
+            <div class="annotator-title">Annotator type: {{annotator_info.type}}</div>
+          </div>
+    
+          {% if annotator_info.documentation %}
+            <summary>Summary:</summary>
+            <div class="annotator-description">
+              {{ markdown(annotator_info.documentation) }}
+            </div>
+          {% else %}
+            <div class="no-description">
+              No description
             </div>
           {% endif %}
+
+          {% for genomic_resource in annotator_info.resources %}
+            <div class="resource">
+              <div><b>Resource</b></div>
+              <div>id: <a href="{{genomic_resource.get_url()}}/index.html">
+                      {{genomic_resource.get_id()}}</a></div>                            
+              <div>type: {{genomic_resource.get_type()}}</div>
+              {% if genomic_resource.get_summary() %}
+                <summary>Summary:</summary>
+                <div class="markdown">
+                  {{ markdown(genomic_resource.get_summary()) }}
+                </div>
+              {% endif %}
+            </div>
+          {% endfor %}
         </div>
-        {% endfor %}
       </div>
-  
-    </div>
     {% endfor %}
   </body>
 <html>

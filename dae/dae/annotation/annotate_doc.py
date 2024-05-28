@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import logging
+import os
 import sys
 from typing import Optional
 
@@ -48,10 +49,15 @@ def cli(raw_args: Optional[list[str]] = None) -> None:
 
     annotation_info = pipeline.get_info()
 
+    pipeline_path = None
+    if os.path.exists(args.pipeline):
+        pipeline_path = args.pipeline
+
     env = Environment(loader=PackageLoader("dae.annotation", "templates"))
     template = env.get_template("annotate_doc_pipeline_template.jinja")
     html_doc = template.render(annotation_pipeline_info=annotation_info,
                                preambule=pipeline.preambule,
+                               pipeline_path=pipeline_path,
                                markdown=markdown)
     if args.output:
         with open(args.output, "w") as outfile:

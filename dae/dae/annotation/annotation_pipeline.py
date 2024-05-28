@@ -140,11 +140,10 @@ class Annotator(abc.ABC):
 
 @dataclass
 class AnnotationPreambule:
-    input_reference_genome: str
-    title: str
     summary: str
     description: str
-    authors: str
+    input_reference_genome: str
+    input_reference_genome_res: Optional[GenomicResource]
     metadata: dict[str, Any]
 
 

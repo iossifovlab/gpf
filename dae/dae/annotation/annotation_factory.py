@@ -34,11 +34,9 @@ _EXTENTIONS_LOADED = False
 
 
 class RawPreambule(TypedDict):
-    input_reference_genome: str
-    title: str
     summary: str
-    authors: str
     description: str
+    input_reference_genome: str
     metadata: dict[str, Any]
 
 
@@ -233,33 +231,35 @@ class AnnotationConfigParser:
         )
 
     @staticmethod
-    def _parse_preambule(raw: RawPreambule) -> Optional[AnnotationPreambule]:
+    def _parse_preambule(
+        raw: RawPreambule,
+        grr: Optional[GenomicResourceRepo] = None,
+    ) -> Optional[AnnotationPreambule]:
         """Parse the preambule section of a pipeline config, if present."""
         if not set(raw.keys()) <= {
-            "input_reference_genome", "title", "summary",
-            "authors", "description", "metadata",
+            "summary", "description", "input_reference_genome", "metadata",
         }:
             raise AnnotationConfigurationError
 
-        if not isinstance(raw.get("input_reference_genome", ""), str):
-            raise TypeError
-        if not isinstance(raw.get("title", ""), str):
-            raise TypeError
         if not isinstance(raw.get("summary", ""), str):
-            raise TypeError
-        if not isinstance(raw.get("authors", ""), str):
             raise TypeError
         if not isinstance(raw.get("description", ""), str):
             raise TypeError
-        if not isinstance(raw.get("metadata", ""), dict):
+        if not isinstance(raw.get("input_reference_genome", ""), str):
+            raise TypeError
+        if not isinstance(raw.get("metadata", {}), dict):
             raise TypeError
 
+        genome_id = raw.get("input_reference_genome", "")
+        genome = None
+        if genome_id != "" and grr is not None:
+            genome = grr.get_resource(genome_id)
+
         return AnnotationPreambule(
-            raw.get("input_reference_genome", ""),
-            raw.get("title", ""),
             raw.get("summary", ""),
             raw.get("description", ""),
-            raw.get("authors", ""),
+            genome_id,
+            genome,
             raw.get("metadata", {}),
         )
 
@@ -276,7 +276,7 @@ class AnnotationConfigParser:
         if isinstance(pipeline_raw_config, dict):
             annotators = pipeline_raw_config["annotators"]
             preambule = AnnotationConfigParser._parse_preambule(
-                pipeline_raw_config["preambule"],
+                pipeline_raw_config["preambule"], grr,
             )
         elif isinstance(pipeline_raw_config, list):
             annotators = pipeline_raw_config
