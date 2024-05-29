@@ -50,3 +50,4 @@ dependencies:
   - sqlglot=20.4
   - polars=0.20.18
   - sentry-sdk=1.18.0
+  - pybigwig=0.3.22
