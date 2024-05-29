@@ -1,7 +1,7 @@
 import abc
-import collections
+from collections import deque
 from collections.abc import Generator
-from typing import Any, Deque, Optional, Union
+from typing import Any, Optional, Union
 
 import pysam
 
@@ -118,14 +118,14 @@ class VCFLine(LineBase):
         return value
 
     def row(self) -> tuple:
-        return tuple()
+        return ()
 
 
 class LineBuffer:
     """Represent a line buffer for Tabix genome position table."""
 
     def __init__(self) -> None:
-        self.deque: Deque[LineBase] = collections.deque()
+        self.deque: deque[LineBase] = deque()
 
     def __len__(self) -> int:
         return len(self.deque)
@@ -182,9 +182,7 @@ class LineBuffer:
         bchrom, bbeg, bend = self.region()
         if bchrom is None or bbeg is None or bend is None:
             return False
-        if chrom == bchrom and bend >= pos >= bbeg:
-            return True
-        return False
+        return chrom == bchrom and bend >= pos >= bbeg
 
     def find_index(self, chrom: str, pos: int) -> int:
         """Find index in line buffer that contains the passed position."""
