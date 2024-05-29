@@ -135,13 +135,14 @@ test.describe('Gene profiles navigation to single view tests', () => {
     await expect(page.locator('gpf-gene-profiles-single-view')).toBeVisible();
   });
 
-  test('should open single view on new browser tab', async({ page }) => {
+  test('should open single view on new browser tab', async({ page, context }) => {
     await page.locator('div').filter({ hasText: /^CHD8$/}).click();
     await page.getByRole('button', {name: 'All genes'}).click();
 
+    const pagePromise = context.waitForEvent('page');
     await page.locator('div').filter({ hasText: /^GRIN2B$/}).click({button: 'middle'});
 
-    const newPage = page.context().pages()[1];
+    const newPage = await pagePromise;
     expect(newPage.url()).toEqual(`${utils.instanceUrl}/gene-profiles/GRIN2B`);
     await expect(newPage.locator('#tabs-wrapper').getByText('CHD8')).not.toBeVisible();
     await expect(newPage.getByRole('button', {name: 'GRIN2B'})).toHaveClass('tab active-tab');
