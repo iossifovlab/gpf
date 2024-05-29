@@ -24,7 +24,8 @@
           <gpf-family-tags
             [numOfCols]="numOfCols"
             [tags]="orderedTagList"
-            (updateTagsLists)="updateTags($event)"></gpf-family-tags>
+            (updateTagsLists)="updateTags($event)"
+            (chooseMode)="updateMode($event)"></gpf-family-tags>
         </ng-template>
       </li>
       <li [ngbNavItem]="'advanced'" *ngIf="showAdvancedButton" id="advanced">
