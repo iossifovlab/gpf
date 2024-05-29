@@ -9,7 +9,7 @@ from collections import deque
 from collections.abc import Generator, Iterator
 from copy import copy
 from types import TracebackType
-from typing import Any, Callable, Optional, Type, cast
+from typing import Any, Callable, Optional, Type, cast, Generator
 
 from dask.distributed import Client, Future
 
@@ -70,7 +70,9 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
     def _exec(
         task_func: Callable, args: list, _deps: list, params: dict[str, Any],
     ) -> Any:
-        verbose = params.get("verbose", 0)
+        verbose = params.get("verbose")
+        if verbose is None:  # Dont use .get default in case of a Box
+            verbose = 0
         VerbosityConfiguration.set_verbosity(verbose)
 
         task_id = params["task_id"]
@@ -413,6 +415,16 @@ def task_graph_run(
             else:
                 raise result_or_error
     return no_errors
+
+
+def task_graph_run_with_results(
+    task_graph: TaskGraph, executor: TaskGraphExecutor
+) -> Generator[Any, None, None]:
+    tasks_iter = executor.execute(task_graph)
+    for task, result_or_error in tasks_iter:
+        if isinstance(result_or_error, Exception):
+            raise result_or_error
+        yield result_or_error
 
 
 def task_graph_all_done(task_graph: TaskGraph, task_cache: TaskCache) -> bool:

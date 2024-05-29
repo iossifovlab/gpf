@@ -10,6 +10,7 @@ from dae.configuration.schemas.phenotype_data import regression_conf_schema
 from dae.pheno import pheno_data
 from dae.pheno.prepare_data import PreparePhenoBrowserBase
 from dae.utils.filehash import sha256sum
+from dae.task_graph.cli_tools import TaskGraphCli
 
 
 class CLIError(Exception):
@@ -49,8 +50,9 @@ def calc_dbfile_hashsum(dbfilename):
 
 
 def build_pheno_browser(
-    dbfile, pheno_name, output_dir, pheno_regressions=None,
+    dbfile, pheno_name, output_dir, pheno_regressions=None, **kwargs
 ):
+
     phenodb = pheno_data.PhenotypeStudy(
         pheno_name, dbfile=dbfile, read_only=False,
     )
@@ -62,17 +64,10 @@ def build_pheno_browser(
 
     prep = PreparePhenoBrowserBase(
         pheno_name, phenodb, output_dir, pheno_regressions, images_dir)
-    prep.run()
-
-    # hash_sum = calc_dbfile_hashsum(dbfile)
-    # hashfile = os.path.join(
-    #     output_dir,
-    #     '{}.hash'.format(pheno_name))
-    # with open(hashfile, 'w') as f:
-    #     f.write(hash_sum)
+    prep.run(**kwargs)
 
 
-def main(argv=None):  # IGNORE:C0111
+def main(argv=None):
     """Command line options."""
     if argv is None:
         argv = sys.argv
@@ -125,6 +120,10 @@ USAGE
             type=str,
         )
 
+        TaskGraphCli.add_arguments(
+            parser, use_commands=False
+        )
+
         # Process arguments
         args = parser.parse_args()
 
@@ -146,6 +145,7 @@ USAGE
 
         build_pheno_browser(
             args.dbfile, args.pheno_name, args.output, regressions,
+            **vars(args)
         )
 
         return 0
