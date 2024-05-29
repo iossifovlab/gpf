@@ -1,6 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,too-many-lines
 
-from dae.genomic_resources.genomic_position_table import (
+from dae.genomic_position_table import (
     build_genomic_position_table,
 )
 from dae.genomic_resources.testing import (

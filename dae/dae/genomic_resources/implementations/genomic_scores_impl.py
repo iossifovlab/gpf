@@ -9,10 +9,10 @@ from typing import Any, Optional, cast
 import numpy as np
 from jinja2 import Template
 
-from dae.genomic_resources.genomic_position_table import (
+from dae.genomic_position_table import (
     TabixGenomicPositionTable,
 )
-from dae.genomic_resources.genomic_position_table.table_inmemory import (
+from dae.genomic_position_table.table_inmemory import (
     InmemoryGenomicPositionTable,
 )
 from dae.genomic_resources.genomic_scores import (

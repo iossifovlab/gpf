@@ -8,13 +8,13 @@ from typing import Optional, cast
 import pysam
 import pytest
 
-from dae.genomic_resources.genomic_position_table import (
+from dae.genomic_position_table import (
     TabixGenomicPositionTable,
     VCFGenomicPositionTable,
     build_genomic_position_table,
 )
-from dae.genomic_resources.genomic_position_table.line import LineBase, VCFLine
-from dae.genomic_resources.genomic_position_table.table import (
+from dae.genomic_position_table.line import LineBase, VCFLine
+from dae.genomic_position_table.table import (
     GenomicPositionTable,
 )
 from dae.genomic_resources.repository import GenomicResource

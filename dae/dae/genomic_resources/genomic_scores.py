@@ -17,13 +17,13 @@ from typing import (
 )
 from urllib.parse import quote
 
-from dae.genomic_resources.genomic_position_table import (
+from dae.genomic_position_table import (
     Line,
     VCFGenomicPositionTable,
     VCFLine,
     build_genomic_position_table,
 )
-from dae.genomic_resources.genomic_position_table.line import LineBase
+from dae.genomic_position_table.line import LineBase
 from dae.genomic_resources.histogram import (
     Histogram,
     HistogramConfig,
