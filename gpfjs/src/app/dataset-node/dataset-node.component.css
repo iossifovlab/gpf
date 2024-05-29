@@ -1,11 +1,33 @@
 .children-container {
-  padding-left: 25px;
+  padding-left: 8px;
+  margin-left: 9px;
+  border-left: 1px solid #e4e4e4;
 }
 
 .dataset-dropdown-item {
-  padding-left: 15px;
+  padding-left: 24px;
   padding-right: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.collapse-dataset-icon {
+  position: relative;
+  left: 0;
+  top: 7px;
+  width: 20px;
+  height: 20px;
+  user-select: none;
+  transform: rotate(270deg);
+}
+
+.rotate {
+  right: 10px;
+  transform: translate(-3px, 5px) rotate(0);
+  top: 0;
+}
+
+.dataset-container {
+  display: flex;
 }

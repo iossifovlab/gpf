@@ -1,13 +1,29 @@
-<a
-  class="dataset-dropdown-item dropdown-item"
-  *ngIf="selectedDataset$ | async as selectedDataset"
-  [class.active]="selectedDataset.id === datasetNode.dataset.id"
-  (click)="select()"
-  (middleclick)="select(true)"
-  [style.opacity]="datasetNode.dataset.accessRights ? 1.0 : 0.3">
-  <span style="user-select: none">{{ datasetNode.dataset.name }}</span>
-</a>
+<div class="dataset-container">
+  <span
+    #collapseIcon
+    *ngIf="datasetNode.children.length"
+    class="collapse-dataset-icon material-icons material-symbols-outlined"
+    [style.opacity]="datasetNode.dataset.accessRights ? 1.0 : 0.3"
+    [ngClass]="{ rotate: isExpanded }"
+    (click)="toggleDatasetCollapse(datasetNode.dataset.id)"
+    >expand_more</span
+  ><a
+    class="dataset-dropdown-item dropdown-item"
+    *ngIf="selectedDataset$ | async as selectedDataset"
+    [class.active]="selectedDataset.id === datasetNode.dataset.id"
+    [style.opacity]="datasetNode.dataset.accessRights ? 1.0 : 0.3"
+    [ngStyle]="{ 'padding-left': datasetNode.children.length ? 0 : 24 }"
+    (click)="select()"
+    (middleclick)="select(true)">
+    <!-- eslint-disable-next-line prettier/prettier -->
+    <span style="user-select: none">{{datasetNode.dataset.name}}</span>
+  </a>
+</div>
 
-<div class="children-container">
-  <gpf-dataset-node *ngFor="let child of datasetNode.children" [datasetNode]="child"></gpf-dataset-node>
+<div [hidden]="!isExpanded" class="children-container">
+  <gpf-dataset-node
+    *ngFor="let child of datasetNode.children"
+    [datasetNode]="child"
+    (setExpandabilityEvent)="setIsExpanded()"
+    [closeObservable]="closeChildrenSubject.asObservable()"></gpf-dataset-node>
 </div>
