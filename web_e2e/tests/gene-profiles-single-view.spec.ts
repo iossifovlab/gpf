@@ -170,6 +170,9 @@ test.describe('Gene profiles navigation to single view tests', () => {
   test('should open single view and check table\'s state', async({ page }) => {
     await page.locator('input#gene-search-input').focus();
     await page.keyboard.type('GRIN2B');
+    await page.waitForTimeout(500);
+
+    await expect(page.locator('.table-body-row').filter({hasNotText: 'Nothing found'})).toContainText('GRIN2B');
     await page.locator('div').filter({ hasText: /^GRIN2B$/}).click();
 
     await page.getByRole('button', {name: 'All genes'}).click();
