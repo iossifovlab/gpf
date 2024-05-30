@@ -5,7 +5,6 @@ import copy
 import gzip
 import json
 import logging
-import operator
 import textwrap
 from collections import defaultdict
 from collections.abc import Generator  # TextIO
@@ -85,11 +84,6 @@ class TranscriptModel:
         self.tx = tx  # pylint: disable=invalid-name
         self.cds = cds
         self.exons: list[Exon] = exons if exons is not None else []
-
-        # for GTF
-        self.utrs: list[tuple[int, int, int]] = []
-        self.start_codon: tuple[int, int, int]
-        self.stop_codon: tuple[int, int, int]
 
         self.attributes = attributes if attributes is not None else {}
 
@@ -1311,20 +1305,10 @@ class GeneModels(
                     exon.cds_stop = rec["end"]
                     exon.frame = rec["phase"]
                     continue
-            if feature in {"UTR", "5UTR", "3UTR", "start_codon", "stop_codon"}:
-                exon_number = int(attributes["exon_number"])
+            if feature in {"UTR", "5UTR", "3UTR"}:
+                continue
+            if feature in {"start_codon", "stop_codon"}:
                 transcript_model = self.transcript_models[tr_id]
-
-                if feature in {"UTR", "5UTR", "3UTR"}:
-                    transcript_model.utrs.append(
-                        (rec["start"], rec["end"], exon_number))
-                    continue
-                if feature == "start_codon":
-                    transcript_model.start_codon = \
-                        (rec["start"], rec["end"], exon_number)
-                if feature == "stop_codon":
-                    transcript_model.stop_codon = \
-                        (rec["start"], rec["end"], exon_number)
                 cds = transcript_model.cds
                 transcript_model.cds = \
                     (min(cds[0], rec["start"]), max(cds[1], rec["end"]))
@@ -1336,8 +1320,6 @@ class GeneModels(
         for transcript_model in self.transcript_models.values():
             transcript_model.exons = sorted(
                 transcript_model.exons, key=lambda x: x.start)
-            transcript_model.utrs = sorted(
-                transcript_model.utrs, key=operator.itemgetter(0))
             transcript_model.update_frames()
 
         return True

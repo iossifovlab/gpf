@@ -7,7 +7,16 @@ import pytest
 
 from dae.genomic_resources.gene_models import build_gene_models_from_file
 
-# from dae.genomic_resources.gene_models import _open_file
+
+@pytest.fixture()
+def fixture_dirname() -> Callable:
+    def _fixture_dirname(filename: str) -> str:
+        return os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            "fixtures",
+            filename)
+
+    return _fixture_dirname
 
 
 def test_gene_models_from_gtf(fixture_dirname: Callable) -> None:
@@ -105,15 +114,6 @@ def test_gene_models_from_ccds(fixture_dirname: Callable) -> None:
     assert gene_models is not None
     assert len(gene_models.transcript_models) == 20
     assert len(gene_models.gene_models) == 15
-
-
-# def test_gene_models_probe_header(fixture_dirname):
-#     filename = fixture_dirname("gene_models/test_ccds.txt")
-#     assert not probe_header(filename, GENE_MODELS_FORMAT_COLUMNS["ccds"])
-#     assert probe_columns(filename, GENE_MODELS_FORMAT_COLUMNS["ccds"])
-
-#     filename = fixture_dirname("gene_models/test_ref_flat.txt")
-#     assert probe_header(filename, GENE_MODELS_FORMAT_COLUMNS["refflat"])
 
 
 def test_gene_models_from_known_gene(fixture_dirname: Callable) -> None:
@@ -251,13 +251,13 @@ def test_load_ucscgenepred(fixture_dirname: Callable) -> None:
 
 
 @pytest.mark.parametrize(
-    "filename,file_format",
+    "filename",
     [
-        ("gene_models/genePred_100.txt.gz", "default"),
+        "gene_models/genePred_100.txt.gz",
     ],
 )
 def test_load_gene_models_no_header(
-    fixture_dirname: Callable, filename: str, file_format: str,
+    fixture_dirname: Callable, filename: str,
 ) -> None:
 
     filename = fixture_dirname(filename)
@@ -314,12 +314,6 @@ def test_save_load_gene_models_from_file(
         assert transcript_model.strand == transcript_model1.strand
         assert transcript_model.tx == transcript_model1.tx
 
-        # TODO: THESE DON'T WORK (WITH GTF??)! WHY???
-        # assert len(transcript_model.utrs) == len(transcript_model1.utrs)
-        # assert transcript_model.utrs == transcript_model1.utrs
-        # assert transcript_model.start_codon == transcript_model1.start_codon
-        # assert transcript_model.stop_codon == transcript_model1.stop_codon
-
         assert len(transcript_model.exons) == len(transcript_model1.exons)
         for index, (exon, exon1) in enumerate(zip(
                 transcript_model.exons, transcript_model1.exons)):
@@ -329,3 +323,12 @@ def test_save_load_gene_models_from_file(
             )
             assert exon.stop == exon1.stop
             assert exon.frame == exon1.frame
+
+
+def test_gencode_broken_utrs(
+    fixture_dirname: Callable,
+) -> None:
+    filename = fixture_dirname("gene_models/test_gencode_utr.gtf")
+    gene_models = build_gene_models_from_file(filename, "gtf")
+    gene_models.load()
+    assert gene_models is not None
