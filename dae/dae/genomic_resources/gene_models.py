@@ -1,17 +1,17 @@
 # pylint: disable=too-many-lines
-# FIXME: too-many-lines
 from __future__ import annotations
 
 import copy
 import gzip
 import json
 import logging
+import operator
 import textwrap
 from collections import defaultdict
 from collections.abc import Generator  # TextIO
 from contextlib import contextmanager
 from functools import lru_cache
-from typing import IO, Any, Optional, Protocol, cast
+from typing import IO, Any, ClassVar, Optional, Protocol, cast
 
 import pandas as pd
 import yaml
@@ -91,15 +91,10 @@ class TranscriptModel:
         self.start_codon: tuple[int, int, int]
         self.stop_codon: tuple[int, int, int]
 
-        # # it can be derivable from cds' start and end
-        # self._is_coding = is_coding
-
         self.attributes = attributes if attributes is not None else {}
 
     def is_coding(self) -> bool:
-        if self.cds[0] >= self.cds[1]:
-            return False
-        return True
+        return self.cds[0] < self.cds[1]
 
     def cds_regions(self, ss_extend: int = 0) -> list[BedRegion]:
         """Compute CDS regions."""
@@ -198,10 +193,10 @@ class TranscriptModel:
                 )
                 k += 1
 
-            for exon in self.exons[k:]:
-                regions.append(
-                    BedRegion(chrom=self.chrom, start=exon.start, stop=exon.stop),
-                )
+            regions.extend([
+                BedRegion(chrom=self.chrom, start=exon.start, stop=exon.stop)
+                for exon in self.exons[k:]
+            ])
 
         return regions
 
@@ -246,10 +241,10 @@ class TranscriptModel:
                 )
                 k += 1
 
-            for exon in self.exons[k:]:
-                regions.append(
-                    BedRegion(chrom=self.chrom, start=exon.start, stop=exon.stop),
-                )
+            regions.extend([
+                BedRegion(chrom=self.chrom, start=exon.start, stop=exon.stop)
+                for exon in self.exons[k:]
+            ])
 
         return regions
 
@@ -261,10 +256,10 @@ class TranscriptModel:
         regions = []
 
         if ss_extend == 0:
-            for exon in self.exons:
-                regions.append(
-                    BedRegion(chrom=self.chrom, start=exon.start, stop=exon.stop),
-                )
+            regions.extend([
+                BedRegion(chrom=self.chrom, start=exon.start, stop=exon.stop)
+                for exon in self.exons
+            ])
 
         else:
             for exon in self.exons:
@@ -416,10 +411,10 @@ class TranscriptModel:
 
 @contextmanager
 def _open_file(filename: str) -> Generator[IO, None, None]:
-    if filename.endswith(".gz") or filename.endswith(".bgz"):
+    if filename.endswith((".gz", ".bgz")):
         infile = gzip.open(filename, "rt")
     else:
-        infile = open(filename)
+        infile = open(filename)  # noqa: SIM115
     try:
         yield infile
     finally:
@@ -630,7 +625,7 @@ class GeneModels(
             outfile.write("\t".join([str(x) if x else "" for x in columns]))
             outfile.write("\n")
 
-    def save(self, output_filename: str, gzipped: bool = True) -> None:
+    def save(self, output_filename: str, *, gzipped: bool = True) -> None:
         """Save gene models in a file in default file format."""
         if gzipped:
             if not output_filename.endswith(".gz"):
@@ -648,7 +643,6 @@ class GeneModels(
         nrows: Optional[int] = None,
     ) -> bool:
         # pylint: disable=too-many-locals
-        # FIXME: too-many-locals
         infile.seek(0)
         df = pd.read_csv(
             infile,
@@ -733,7 +727,6 @@ class GeneModels(
         nrows: Optional[int] = None,
     ) -> bool:
         # pylint: disable=too-many-locals
-        # FIXME:
         expected_columns = [
             "#geneName",
             "name",
@@ -802,7 +795,6 @@ class GeneModels(
         gene_mapping: Optional[dict[str, str]] = None,
         nrows: Optional[int] = None,
     ) -> bool:
-        # FIXME:
         # pylint: disable=too-many-locals
         expected_columns = [
             "#bin",
@@ -935,7 +927,6 @@ class GeneModels(
         gene_mapping: Optional[dict[str, str]] = None,
         nrows: Optional[int] = None,
     ) -> bool:
-        # FIXME:
         # pylint: disable=too-many-locals
         expected_columns = [
             # CCDS is identical with RefSeq
@@ -1026,7 +1017,6 @@ class GeneModels(
         gene_mapping: Optional[dict[str, str]] = None,
         nrows: Optional[int] = None,
     ) -> bool:
-        # FIXME:
         # pylint: disable=too-many-locals
         expected_columns = [
             "name",
@@ -1143,7 +1133,6 @@ class GeneModels(
             lstring exonFrames; 	"Exon frame offsets {0,1,2}"
             )
         """
-        # FIXME:
         # pylint: disable=too-many-locals
         expected_columns = [
             "name",
@@ -1225,13 +1214,22 @@ class GeneModels(
 
         return True
 
+    @staticmethod
+    def _parse_gtf_attributes(data: str) -> dict[str, str]:
+        attributes = list(
+            filter(lambda x: x, [a.strip() for a in data.split(";")]),
+        )
+        result = {}
+        for attr in attributes:
+            key, value = attr.split(" ")
+            result[key.strip()] = value.strip('"').strip()
+        return result
+
     def _parse_gtf_gene_models_format(
         self, infile: IO,
         gene_mapping: Optional[dict[str, str]] = None,
         nrows: Optional[int] = None,
     ) -> bool:
-        # FIXME:
-        # flake8=noqa
         # pylint: disable=too-many-locals,too-many-branches,too-many-statements
         expected_columns = [
             "seqname",
@@ -1258,24 +1256,14 @@ class GeneModels(
             if df is None:
                 return False
 
-        def parse_gtf_attributes(data: str) -> dict[str, str]:
-            attributes = list(
-                filter(lambda x: x, [a.strip() for a in data.split(";")]),
-            )
-            result = {}
-            for attr in attributes:
-                key, value = attr.split(" ")
-                result[key.strip()] = value.strip('"').strip()
-            return result
-
         records = df.to_dict(orient="records")
         for rec in records:
             feature = rec["feature"]
             if feature == "gene":
                 continue
-            attributes = parse_gtf_attributes(rec["attributes"])
+            attributes = self._parse_gtf_attributes(rec["attributes"])
             tr_id = attributes["transcript_id"]
-            if feature in set(["transcript", "Selenocysteine"]):
+            if feature in {"transcript", "Selenocysteine"}:
                 if feature == "Selenocysteine" and \
                         tr_id in self.transcript_models:
                     continue
@@ -1322,8 +1310,6 @@ class GeneModels(
                     exon.cds_start = rec["start"]
                     exon.cds_stop = rec["end"]
                     exon.frame = rec["phase"]
-                    # pylint: disable=protected-access
-                    # transcript_model._is_coding = True
                     continue
             if feature in {"UTR", "5UTR", "3UTR", "start_codon", "stop_codon"}:
                 exon_number = int(attributes["exon_number"])
@@ -1351,7 +1337,7 @@ class GeneModels(
             transcript_model.exons = sorted(
                 transcript_model.exons, key=lambda x: x.start)
             transcript_model.utrs = sorted(
-                transcript_model.utrs, key=lambda x: x[0])
+                transcript_model.utrs, key=operator.itemgetter(0))
             transcript_model.update_frames()
 
         return True
@@ -1376,7 +1362,7 @@ class GeneModels(
 
         return alt_names
 
-    SUPPORTED_GENE_MODELS_FILE_FORMATS = {
+    SUPPORTED_GENE_MODELS_FILE_FORMATS: ClassVar[set[str]] = {
         "default",
         "refflat",
         "refseq",
@@ -1430,7 +1416,7 @@ class GeneModels(
                     inferred_formats.append(inferred_format)
                     logger.debug(
                         "gene models format %s matches input", inferred_format)
-            except Exception as ex:  # pylint: disable=broad-except
+            except Exception as ex:  # noqa: BLE001 pylint: disable=broad-except
                 logger.debug(
                     "file format %s does not match; %s",
                     inferred_format, ex, exc_info=True)
@@ -1552,7 +1538,7 @@ class GeneModels(
         }, indent=2).encode()
 
     def add_statistics_build_tasks(
-        self, task_graph: TaskGraph, **kwargs: Any,
+        self, task_graph: TaskGraph, **kwargs: Any,  # noqa: ARG002
     ) -> list[Task]:
         task = task_graph.create_task(
             f"{self.resource_id}_cals_stats",
@@ -1587,7 +1573,7 @@ class GeneModels(
             yaml.dump(stats, stats_file, sort_keys=False)
         return stats
 
-    @lru_cache(maxsize=64)
+    @lru_cache(maxsize=64)  # noqa: B019
     def get_statistics(self) -> Optional[dict[str, int]]:  # type: ignore
         try:
             with self.resource.proto.open_raw_file(
@@ -1602,7 +1588,7 @@ class GeneModels(
                     if not isinstance(stat, str):
                         logger.error(
                             "The stats.yaml file for the "
-                            "%s is invalid (2.{stat}).", self.resource)
+                            "%s is invalid (2. %s).", self.resource, stat)
                         return None
                     if not isinstance(value, int):
                         logger.error(
@@ -1665,7 +1651,4 @@ def build_gene_models_from_resource(
             "%s as gene models", resource.resource_id, resource.get_type())
         raise ValueError(f"wrong resource type: {resource.resource_id}")
 
-    gene_models = GeneModels(resource)
-    # gene_models.load()
-
-    return gene_models
+    return GeneModels(resource)
