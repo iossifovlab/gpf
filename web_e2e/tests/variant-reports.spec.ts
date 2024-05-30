@@ -226,7 +226,7 @@ test.describe('Variant reports tests', () => {
       and deselected ${data.deselectedTag}`, async({ page }) => {
       await page.getByText('Families by pedigree').click();
       await page.getByText('Select tags').click();
-      await page.getByText('Or').click();
+      await page.getByRole('button', { name: 'Or' }).click();
 
 
       await page.locator(`#${data.selectedTag}-tag-add`).click();
@@ -259,7 +259,7 @@ test.describe('Variant reports tests', () => {
       await page.locator(`#${data.deselectedTag}-tag-remove`).click();
       await expect(page.locator('#selected-tags-list')).toContainText('not ' + data.deselectedTag);
 
-      await page.getByText('Or').click();
+      await page.getByRole('button', { name: 'Or' }).click();
 
       await page.mouse.click(0, 0); // close modal
 
