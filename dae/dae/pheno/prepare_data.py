@@ -356,8 +356,6 @@ class PreparePhenoBrowserBase:
     def run(self, **kwargs) -> None:
         """Run browser preparations for all measures in a phenotype data."""
         db = self.phenotype_data.db
-        with db.engine.connect() as conn:
-            conn.execute(text("SET wal_autocheckpoint = '50 KiB'"))
 
         if self.pheno_regressions:
             for reg_id, reg_data in self.pheno_regressions.regression.items():
@@ -369,12 +367,13 @@ class PreparePhenoBrowserBase:
                         "display_name": reg_data.display_name,
                     },
                 )
+        with db.engine.begin() as conn:
+            conn.execute(text("CHECKPOINT"))
 
         graph = TaskGraph()
 
         with tempfile.NamedTemporaryFile() as temp_dbfile:
             shutil.copyfile(db.dbfile, temp_dbfile.name)
-            import pdb; pdb.set_trace()
             for instrument in list(self.phenotype_data.instruments.values()):
                 for measure in list(instrument.measures.values()):
                     self.add_measure_task(graph, measure, temp_dbfile.name)
