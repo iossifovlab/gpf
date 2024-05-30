@@ -1415,6 +1415,18 @@ class GeneModels(
     def is_loaded(self) -> bool:
         return len(self.transcript_models) > 0
 
+    def probe_file_format(self) -> Optional[str]:
+        """Probe gene models file format."""
+        filename = self.resource.get_config()["filename"]
+        logger.debug("checing gene models %s file format", filename)
+        compression = False
+        if filename.endswith(".gz"):
+            compression = True
+        with self.resource.open_raw_file(
+                filename, mode="rt", compression=compression) as infile:
+
+            return self._infer_gene_model_parser(infile)
+
     def load(self) -> GeneModels:
         """Load gene models."""
         if self.is_loaded():
