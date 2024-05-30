@@ -1478,7 +1478,10 @@ class GeneModels(
             infile.seek(0)
             self._reset()
 
-            parser(infile, gene_mapping=gene_mapping)
+            if not parser(infile, gene_mapping=gene_mapping):
+                raise ValueError(
+                    f"Failed to parse gene models file {filename} "
+                    f"with format {fileformat}")
         return self
 
     def get_template(self) -> Template:
