@@ -161,10 +161,14 @@ GENE_SCORES_TEMPLATE = """
                 <td>
                     <div>{{ score_def.description }}</div>
                     {% if score_def.small_values_desc %}
-                        <div>{{ score_def.small_values_desc }}</div>
+                        <div style="color: rgb(145,145,145)">
+                            {{ "Small values desc: " + score_def.small_values_desc }}
+                        </div>
                     {% endif %}
                     {% if score_def.large_values_desc %}
-                        <div>{{ score_def.large_values_desc }}</div>
+                        <div style="color: rgb(145,145,145)">
+                            {{ "Large values desc: " + score_def.large_values_desc }}
+                        </div>
                     {% endif %}
                 </td>
 

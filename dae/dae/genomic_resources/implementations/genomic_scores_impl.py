@@ -520,7 +520,19 @@ GENOMIC_SCORES_TEMPLATE = """
                 <p>{{ d_atts }}</p>
             </td>
 
-            <td>{{ score.desc }}</td>
+            <td>
+                <div>{{ score.desc }}</div>
+                {% if score.small_values_desc %}
+                    <div style="color: rgb(145,145,145)">
+                        {{ "Small values desc: " + score.small_values_desc }}
+                    </div>
+                {% endif %}
+                {% if score.large_values_desc %}
+                    <div style="color: rgb(145,145,145)">
+                        {{ "Large values desc: " + score.large_values_desc }}
+                    </div>
+                {% endif %}
+            </td>
 
             <td>
                 {% set hist = impl.score.get_score_histogram(score_id) %}
