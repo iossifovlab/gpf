@@ -11,7 +11,7 @@ from typing import Any, Optional
 from jinja2 import Template
 from markdown2 import markdown
 
-from dae.gene.gene_term import (
+from dae.gene_sets.gene_term import (
     read_ewa_set_file,
     read_gmt_file,
     read_mapping_file,

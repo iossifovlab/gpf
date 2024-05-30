@@ -8,8 +8,8 @@ from pathlib import Path
 
 import yaml
 
-from dae.gene.gene_sets_db import GeneSet, build_gene_set_collection_from_file
-from dae.gene.gene_term import (
+from dae.gene_set.gene_sets_db import GeneSet, build_gene_set_collection_from_file
+from dae.gene_set.gene_term import (
     read_ewa_set_file,
     read_gmt_file,
     read_mapping_file,

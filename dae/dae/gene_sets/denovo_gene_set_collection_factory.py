@@ -3,7 +3,7 @@ import os
 from itertools import product
 
 from dae.effect_annotation.effect import expand_effect_types
-from dae.gene.denovo_gene_set_collection import DenovoGeneSetCollection
+from dae.gene_sets.denovo_gene_set_collection import DenovoGeneSetCollection
 from dae.variants.attributes import Inheritance, Sex
 
 

@@ -3,7 +3,7 @@
 import logging
 from typing import Any, Dict, List, Optional, Set
 
-from dae.gene.gene_sets_db import (
+from dae.gene_sets.gene_sets_db import (
     BaseGeneSetCollection,
     GeneSet,
     GeneSetCollection,

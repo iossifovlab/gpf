@@ -19,7 +19,7 @@ from dae.configuration.gpf_config_parser import (
     GPFConfigParser,
 )
 from dae.configuration.schemas.dae_conf import dae_conf_schema
-from dae.gene.denovo_gene_set_collection_factory import (
+from dae.gene_sets.denovo_gene_set_collection_factory import (
     DenovoGeneSetCollectionFactory,
 )
 from dae.genomic_resources import build_genomic_resource_repository
