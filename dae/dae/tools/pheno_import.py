@@ -4,15 +4,15 @@ import argparse
 import os
 import sys
 import traceback
-from typing import Any, Optional
 from copy import copy
+from pathlib import Path
+from typing import Any, Optional
 
 import yaml
 from box import Box
 
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.phenotype_data import regression_conf_schema
-from dae.task_graph.graph import TaskGraph
 from dae.pheno.common import (
     check_phenotype_data_config,
     default_config,
@@ -46,7 +46,7 @@ def pheno_cli_parser() -> argparse.ArgumentParser:
         metavar="<instruments dir>",
     )
 
-    parser.add_argument( "--tab-separated",
+    parser.add_argument("--tab-separated",
         dest="tab_separated",
         action="store_true",
         help="Flag for whether the instrument files are tab separated.",
@@ -172,24 +172,21 @@ def build_browser(
     del kwargs["pheno_db_filename"]
     pheno_name = args.pheno_name
     del kwargs["pheno_name"]
-    
 
     build_pheno_browser(
         pheno_db_filename,
         pheno_name,
         output_dir,
         regressions,
-        **kwargs
+        **kwargs,
     )
 
     pheno_conf_path = os.path.join(
         output_dir, f"{pheno_name}.yaml",
     )
 
-    with open(pheno_conf_path, "w") as pheno_conf_file:
-        pheno_conf_file.write(yaml.dump(
-            generate_phenotype_data_config(args, regressions),
-        ))
+    config = yaml.dump(generate_phenotype_data_config(args, regressions))
+    Path(pheno_conf_path).write_text(config)
 
 
 def main(argv: Optional[list[str]] = None) -> int:
@@ -251,8 +248,6 @@ def main(argv: Optional[list[str]] = None) -> int:
 
         if not args.import_only:
             build_browser(args, regressions)
-
-        return 0
     except KeyboardInterrupt:
         return 0
     except Exception as e:
@@ -263,6 +258,8 @@ def main(argv: Optional[list[str]] = None) -> int:
         sys.stderr.write(program_name + ": " + repr(e) + "\n")
         sys.stderr.write(indent + "  for help use --help")
         return 2
+
+    return 0
 
 
 if __name__ == "__main__":

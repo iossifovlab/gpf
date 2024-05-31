@@ -1,15 +1,15 @@
-import os
-from collections.abc import Iterator
-from typing import Any, Optional, Union
 import logging
+import os
 import shutil
 import tempfile
+from typing import Any, Optional, Union
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from box import Box
+from sqlalchemy import text
 
 from dae.pheno.common import MeasureType
 from dae.pheno.graphs import (
@@ -23,15 +23,10 @@ from dae.pheno.pheno_data import (
     PhenotypeStudy,
     get_pheno_browser_images_dir,
 )
-from dae.pheno.db import PhenoDb
-
-from dae.task_graph.graph import Task, TaskGraph
+from dae.task_graph.cli_tools import TaskCache, TaskGraphCli
 from dae.task_graph.executor import task_graph_run_with_results
-from dae.task_graph.cli_tools import TaskGraphCli, TaskCache
-
-from dae.utils.progress import progress, progress_nl
+from dae.task_graph.graph import TaskGraph
 from dae.variants.attributes import Role
-from sqlalchemy import text
 
 mpl.use("PS")
 plt.ioff()
@@ -74,10 +69,9 @@ class PreparePhenoBrowserBase:
                     reg_data["measure_name"] = reg_data["measure_names"][0]
 
     def load_measure(self, measure: Measure) -> pd.DataFrame:
-        df = self.phenotype_data.get_people_measure_values_df(
+        return self.phenotype_data.get_people_measure_values_df(
             [measure.measure_id],
         )
-        return df
 
     @staticmethod
     def _augment_measure_values_df(
@@ -123,7 +117,7 @@ class PreparePhenoBrowserBase:
 
     @classmethod
     def figure_filepath(
-        cls, pheno_id: str, images_dir: str, measure: Measure, suffix: str
+        cls, pheno_id: str, images_dir: str, measure: Measure, suffix: str,
     ) -> str:
         """Construct file path for storing a measure figures."""
         filename = f"{measure.measure_id}.{suffix}.png"
@@ -137,22 +131,20 @@ class PreparePhenoBrowserBase:
         if not os.path.exists(outdir):
             os.makedirs(outdir, exist_ok=True)
 
-        filepath = os.path.join(outdir, filename)
-        return filepath
+        return os.path.join(outdir, filename)
 
     @classmethod
     def browsable_figure_path(
-        cls, pheno_id: str, measure: Measure, suffix: str
+        cls, pheno_id: str, measure: Measure, suffix: str,
     ) -> str:
         """Construct file path for storing a measure figures."""
         filename = f"{measure.measure_id}.{suffix}.png"
         assert measure.instrument_name is not None
-        filepath = os.path.join(
+        return os.path.join(
             pheno_id,
             measure.instrument_name,
             filename,
         )
-        return filepath
 
     @classmethod
     def save_fig(
@@ -235,7 +227,7 @@ class PreparePhenoBrowserBase:
                 res["figure_regression"],
             ) = cls.save_fig(
                 phenotype_data.pheno_id, images_dir,
-                dependent_measure, f"prb_regression_by_{aug_col_name}"
+                dependent_measure, f"prb_regression_by_{aug_col_name}",
             )
         return res
 
@@ -408,8 +400,7 @@ class PreparePhenoBrowserBase:
                 )
                 if not reg_measure:
                     continue
-                else:
-                    break
+                break
             if not reg_measure:
                 continue
             if self._has_regression_measure(
@@ -420,7 +411,7 @@ class PreparePhenoBrowserBase:
         return regression_measures
 
     def add_measure_task(
-            self, graph: TaskGraph, measure: Measure, dbfile: str
+            self, graph: TaskGraph, measure: Measure, dbfile: str,
     ) -> None:
 
         regression_measures = self.get_regression_measures(measure)
@@ -433,9 +424,9 @@ class PreparePhenoBrowserBase:
                 self.phenotype_data.config,
                 measure,
                 self.images_dir,
-                regression_measures
+                regression_measures,
             ],
-            []
+            [],
         )
 
     @classmethod
@@ -446,10 +437,10 @@ class PreparePhenoBrowserBase:
         db_config: Optional[Box],
         measure: Measure,
         images_dir: str,
-        regression_measures: dict[str, tuple[Box, Measure]]
+        regression_measures: dict[str, tuple[Box, Measure]],
     ) -> tuple[dict[str, Any], list[dict[str, Any]]]:
         pheno_data = PhenotypeStudy(
-            pheno_id, dbfile, db_config, read_only=True
+            pheno_id, dbfile, db_config, read_only=True,
         )
         df = pheno_data.get_people_measure_values_df(
             [measure.measure_id],
@@ -457,15 +448,15 @@ class PreparePhenoBrowserBase:
         measure_dict = PreparePhenoBrowserBase._measure_to_dict(measure)
         if measure.measure_type == MeasureType.continuous:
             measure_dict.update(cls.build_values_violinplot(
-                pheno_id, images_dir, df, measure
+                pheno_id, images_dir, df, measure,
             ))
         elif measure.measure_type == MeasureType.ordinal:
             measure_dict.update(cls.build_values_ordinal_distribution(
-                pheno_id, images_dir, df, measure
+                pheno_id, images_dir, df, measure,
             ))
         elif measure.measure_type == MeasureType.categorical:
             measure_dict.update(cls.build_values_categorical_distribution(
-                pheno_id, images_dir, df, measure
+                pheno_id, images_dir, df, measure,
             ))
 
         if len(regression_measures) == 0:
@@ -482,7 +473,7 @@ class PreparePhenoBrowserBase:
             reg_conf, reg_measure = reg_conf_and_measure
             res = {
                 "measure_id": measure.measure_id,
-                "regression_id": reg_id
+                "regression_id": reg_id,
             }
             regression = cls.build_regression(
                 pheno_data, images_dir, measure, reg_measure, reg_conf.jitter,

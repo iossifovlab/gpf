@@ -1,10 +1,9 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,too-many-lines
 import os
-from typing import Any, Optional
+from typing import Any, ClassVar, Optional
 
 import matplotlib.pyplot as plt
 import pandas as pd
-import pytest
 import pytest_mock
 
 from dae.configuration.gpf_config_parser import GPFConfigParser
@@ -128,20 +127,20 @@ def test_build_regression(
         },
     )
 
-    def fake_augment_df(*args: Any) -> pd.DataFrame:
+    def fake_augment_df(*_args: Any) -> pd.DataFrame:
         return fake_df
 
-    def fake_linregres(*args: Any) -> Any:
+    def fake_linregres(*_args: Any) -> Any:
 
         class Result:  # pylint: disable=too-few-public-methods
-            pvalues = [0.123456, 0.123456]
+            pvalues: ClassVar = [0.123456, 0.123456]
 
         res_male = Result()
         res_female = Result()
         res_female.pvalues[1] = 0.654321
         return (res_male, res_female)
 
-    def fake_savefig(*args: Any) -> tuple[str, str]:
+    def fake_savefig(*_args: Any) -> tuple[str, str]:
         return ("figsmall", "fig")
 
     mocked_linregres = mocker.patch(
@@ -164,7 +163,7 @@ def test_build_regression(
     jitter = 0.32403423849
 
     res = prep.build_regression(
-        fake_phenotype_data, output_dir, regressand, regressor, jitter
+        fake_phenotype_data, output_dir, regressand, regressor, jitter,
     )
     assert res is not None
     assert isinstance(res, dict)
@@ -190,7 +189,7 @@ def test_build_regression_min_vals(
         },
     )
 
-    def fake_augment_df(*args: Any) -> pd.DataFrame:
+    def fake_augment_df(*_args: Any) -> pd.DataFrame:
         return fake_df
 
     mocker.patch(
@@ -238,7 +237,7 @@ def test_build_regression_min_unique_vals(
         },
     )
 
-    def fake_augment_df(*args: Any) -> pd.DataFrame:
+    def fake_augment_df(*_args: Any) -> pd.DataFrame:
         return fake_df
 
     mocker.patch(
@@ -258,7 +257,6 @@ def test_build_regression_min_unique_vals(
 
 
 def test_build_regression_identical_measures(
-    mocker: pytest_mock.MockerFixture,
     fake_phenotype_data: PhenotypeStudy,
     output_dir: str,
 ) -> None:
@@ -268,7 +266,7 @@ def test_build_regression_identical_measures(
     jitter = 0.32403423849
 
     assert not prep.build_regression(
-        fake_phenotype_data, output_dir, regressand, regressor, jitter
+        fake_phenotype_data, output_dir, regressand, regressor, jitter,
     )
 
 
@@ -277,7 +275,7 @@ def test_build_regression_aug_df_is_none(
     fake_phenotype_data: PhenotypeStudy,
     output_dir: str,
 ) -> None:
-    def fake_augment_df(*args: Any) -> Optional[pd.DataFrame]:
+    def fake_augment_df(*_args: Any) -> Optional[pd.DataFrame]:
         return None
 
     mocker.patch(
@@ -304,13 +302,11 @@ def test_handle_regressions(
     fake_phenotype_data_config: str,
 ) -> None:
     def fake_build_regression(
-        phenotype_data: PhenotypeStudy, images_dir: str,
+        _phenotype_data: PhenotypeStudy, _images_dir: str,
         dependent_measure: str, independent_measure: str,
         jitter: float,
     ) -> dict:
         return {  # This return value is not important to the test
-            "pheno_db": phenotype_data,
-            "images_dir": images_dir,
             "regressand": dependent_measure,
             "regressor": independent_measure,
             "jitter": jitter,
@@ -342,7 +338,7 @@ def test_handle_regressions(
     assert len(res) == 2
     print(res)
     assert sorted(
-        [r["regression_id"] for r in res[1]]) == sorted(["age", "nviq"]
+        [r["regression_id"] for r in res[1]]) == sorted(["age", "nviq"],
     )
 
     mocked.assert_called()
@@ -424,7 +420,7 @@ def test_handle_regressions_default_jitter(
     output_dir: str,
     fake_phenotype_data_config: str,
 ) -> None:
-    def fake_build_regression(*args: Any) -> dict:
+    def fake_build_regression(*_args: Any) -> dict:
         return {"pvalue_regression_male": 0, "pvalue_regression_female": 0}
 
     mocked = mocker.patch(

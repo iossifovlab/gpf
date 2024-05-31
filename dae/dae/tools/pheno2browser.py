@@ -4,13 +4,14 @@ import os
 import sys
 import traceback
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
+from pathlib import Path
 
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.phenotype_data import regression_conf_schema
 from dae.pheno import pheno_data
 from dae.pheno.prepare_data import PreparePhenoBrowserBase
-from dae.utils.filehash import sha256sum
 from dae.task_graph.cli_tools import TaskGraphCli
+from dae.utils.filehash import sha256sum
 
 
 class CLIError(Exception):
@@ -34,24 +35,22 @@ def calc_dbfile_hashsum(dbfilename):
     hashfilename = f"{base}.hash"
     if not os.path.exists(hashfilename):
         hash_sum = sha256sum(dbfilename)
-        with open(hashfilename, "w") as f:
-            f.write(hash_sum)
+        Path(hashfilename).write_text(hash_sum)
     else:
         dbtime = os.path.getmtime(dbfilename)
         hashtime = os.path.getmtime(hashfilename)
         if hashtime >= dbtime:
-            with open(hashfilename, "r") as f:
-                hash_sum = f.read().strip()
+            hash_sum = Path(hashfilename).read_text().strip()
         else:
             hash_sum = sha256sum(dbfilename)
-            with open(hashfilename, "w") as f:
-                f.write(hash_sum)
+            Path(hashfilename).write_text(hash_sum)
     return hash_sum
 
 
 def build_pheno_browser(
-    dbfile, pheno_name, output_dir, pheno_regressions=None, **kwargs
+    dbfile, pheno_name, output_dir, pheno_regressions=None, **kwargs,
 ):
+    """Calculate and save pheno browser values to db."""
 
     phenodb = pheno_data.PhenotypeStudy(
         pheno_name, dbfile=dbfile, read_only=False,
@@ -121,7 +120,7 @@ USAGE
         )
 
         TaskGraphCli.add_arguments(
-            parser, use_commands=False
+            parser, use_commands=False,
         )
 
         # Process arguments
@@ -145,10 +144,8 @@ USAGE
 
         build_pheno_browser(
             args.dbfile, args.pheno_name, args.output, regressions,
-            **vars(args)
+            **vars(args),
         )
-
-        return 0
     except KeyboardInterrupt:
         return 1
     except Exception as e:
@@ -158,6 +155,8 @@ USAGE
         sys.stderr.write(program_name + ": " + repr(e) + "\n")
         sys.stderr.write(indent + "  for help use --help")
         return 2
+
+    return 0
 
 
 if __name__ == "__main__":
