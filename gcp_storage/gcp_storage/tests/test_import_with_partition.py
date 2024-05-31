@@ -23,7 +23,7 @@ def bq_backend(partition_study: GenotypeDataStudy) -> BigQueryVariants:
 ])
 def test_family_queries(
     bq_backend: BigQueryVariants,
-    index: int,
+    index: int,  # noqa: ARG001
     query: dict[str, Any],
     ecount: int,
 ) -> None:
@@ -41,7 +41,7 @@ def test_family_queries(
 ])
 def test_summary_queries(
     bq_backend: BigQueryVariants,
-    index: int,
+    index: int,  # noqa: ARG001
     query: dict[str, Any],
     ecount: int,
 ) -> None:

@@ -13,7 +13,7 @@ from pyarrow import parquet as pq
 from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.pedigrees.families_data import FamiliesData
 from dae.pedigrees.loader import FamiliesLoader
-from dae.schema2_storage.schema2_import_storage import (
+from dae.schema2_storage.schema2_layout import (
     Schema2DatasetLayout,
     load_schema2_dataset_layout,
 )

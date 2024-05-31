@@ -7,7 +7,7 @@ import pathlib
 from collections.abc import Iterator
 from copy import copy
 from dataclasses import dataclass
-from typing import Any, Dict, Optional, Tuple, Union, cast
+from typing import Any, Optional, Union, cast
 
 from dae.genomic_resources.gene_models import GeneModels
 from dae.genomic_resources.reference_genome import ReferenceGenome
@@ -25,15 +25,15 @@ class HdfsStudyLayout:
     pedigree_file: str
     summary_variant_dir: str
     family_variant_dir: str
-    summary_sample: str
-    family_sample: str
+    summary_sample: Optional[str]
+    family_sample: Optional[str]
     meta_file: str
 
 
 class Impala2GenotypeStorage(GenotypeStorage):
     """A genotype storing implementing the new schema2."""
 
-    def __init__(self, storage_config: Dict[str, Any]) -> None:
+    def __init__(self, storage_config: dict[str, Any]) -> None:
         super().__init__(storage_config)
         self._hdfs_helpers: Optional[HdfsHelpers] = None
         self._impala_helpers: Optional[ImpalaHelpers] = None
@@ -54,14 +54,15 @@ class Impala2GenotypeStorage(GenotypeStorage):
 
     def build_backend(
         self, study_config: dict,
-        genome: Optional[ReferenceGenome],
+        genome: Optional[ReferenceGenome],  # noqa: ARG002
         gene_models: Optional[GeneModels],
     ) -> ImpalaVariants:
         assert study_config is not None
 
         family_table, summary_table, pedigree_table, meta_table \
             = self._study_tables(study_config)
-        variants = ImpalaVariants(
+
+        return ImpalaVariants(
             self.impala_helpers,
             self.storage_config["impala"]["db"],
             family_table,
@@ -70,14 +71,13 @@ class Impala2GenotypeStorage(GenotypeStorage):
             meta_table,
             gene_models,
         )
-        return variants
 
     def hdfs_upload_dataset(
         self, study_id: str,
         variants_dir: Union[pathlib.Path, str],
         pedigree_file: str,
-        meta_file: str,
-        has_variants: bool = True
+        meta_file: str, *,
+        has_variants: bool = True,
     ) -> HdfsStudyLayout:
         """Upload local data to hdfs."""
         if self.read_only:
@@ -105,6 +105,8 @@ class Impala2GenotypeStorage(GenotypeStorage):
         if has_variants:
             summary_sample_hdfs_file, family_sample_hdfs_file = \
                 self._copy_variants(variants_dir, study_path)
+            assert summary_sample_hdfs_file is not None
+            assert family_sample_hdfs_file is not None
         else:
             summary_sample_hdfs_file, family_sample_hdfs_file = None, None
 
@@ -120,25 +122,25 @@ class Impala2GenotypeStorage(GenotypeStorage):
     @staticmethod
     def _study_tables(
         study_config: dict,
-    ) -> tuple[str, str, str, str]:
+    ) -> tuple[Optional[str], Optional[str], str, str]:
         study_id = study_config["id"]
         storage_config = study_config["genotype_storage"]
         has_tables = storage_config and storage_config.get("tables")
         tables = storage_config["tables"] if has_tables else None
 
-        family_table = f"{study_id}_family"
+        family_table: Optional[str] = None
         if has_tables and tables.get("family"):
             family_table = tables["family"]
 
-        summary_table = None
+        summary_table: Optional[str] = None
         if has_tables and tables.get("summary"):
             summary_table = tables["summary"]
 
-        pedigree_table = None
-        if has_tables and tables.pedigree:
+        pedigree_table = f"{study_id}_pedigree"
+        if has_tables and tables.get("pedigree"):
             pedigree_table = tables.pedigree
 
-        meta_table = None
+        meta_table = f"{study_id}_meta"
         if has_tables and tables.get("meta"):
             meta_table = tables["meta"]
 
@@ -147,11 +149,9 @@ class Impala2GenotypeStorage(GenotypeStorage):
     def _copy_variants(
         self, variants_dir: Union[pathlib.Path, str],
         study_path: str,
-    ) -> Tuple[str, str]:
+    ) -> tuple[str, str]:
         hdfs_summary_dir = os.path.join(study_path, "summary")
         hdfs_family_dir = os.path.join(study_path, "family")
-
-        # TODO why pass variants_dir as a independant input parameter ?
 
         src_summary_dir = os.path.join(variants_dir, "summary")
         src_family_dir = os.path.join(variants_dir, "family")
@@ -206,10 +206,10 @@ class Impala2GenotypeStorage(GenotypeStorage):
         if self.read_only:
             raise OSError(f"impala2 storage <{self.storage_id} is read only")
 
-        pedigree_table = self._construct_pedigree_table(study_id)
+        pedigree_table = self.construct_pedigree_table(study_id)
         summary_variant_table, family_variant_table = \
-            self._construct_variant_tables(study_id)
-        meta_table = self._construct_metadata_table(study_id)
+            self.construct_variant_tables(study_id)
+        meta_table = self.construct_metadata_table(study_id)
 
         db = self.storage_config["impala"]["db"]
 
@@ -229,7 +229,7 @@ class Impala2GenotypeStorage(GenotypeStorage):
                 study_id, pedigree_table,
                 None, None, meta_table)
         summary_pd = copy(partition_description)
-        # XXX summary_alleles has no family_bin
+        # summary_alleles has no family_bin
         summary_pd.family_bin_size = 0  # pylint: disable=protected-access
         self.impala_helpers.import_variants_into_db(
             db, summary_variant_table, hdfs_study_layout.summary_variant_dir,
@@ -276,20 +276,22 @@ class Impala2GenotypeStorage(GenotypeStorage):
         return self._impala_helpers
 
     @staticmethod
-    def _construct_variant_tables(study_id: str) -> Tuple[str, str]:
+    def construct_variant_tables(study_id: str) -> tuple[str, str]:
         return f"{study_id}_summary", f"{study_id}_family"
 
     @staticmethod
-    def _construct_pedigree_table(study_id: str) -> str:
+    def construct_pedigree_table(study_id: str) -> str:
         return f"{study_id}_pedigree"
 
     @staticmethod
-    def _construct_metadata_table(study_id: str) -> str:
+    def construct_metadata_table(study_id: str) -> str:
         return f"{study_id}_meta"
 
     def _generate_study_config(
         self, study_id: str, pedigree_table: str,
-        summary_table: str, family_table: str, meta_table: str,
+        summary_table: Optional[str],
+        family_table: Optional[str],
+        meta_table: str,
     ) -> dict[str, Any]:
 
         assert study_id is not None

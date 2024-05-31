@@ -1,7 +1,9 @@
 import logging
+import os
+import pathlib
 import time
 from collections.abc import Iterator
-from typing import List, Optional, Tuple, cast
+from typing import Optional, cast
 
 import toml
 
@@ -22,7 +24,7 @@ from impala_storage.schema1.parquet_io import (
     VariantsParquetWriter as S1VariantsWriter,
 )
 
-logger = logging.getLogger(__file__)
+logger = logging.getLogger(__name__)
 
 
 class ImpalaSchema1ImportStorage(ImportStorage):
@@ -39,11 +41,19 @@ class ImpalaSchema1ImportStorage(ImportStorage):
         return fs_utils.join(project.work_dir, f"{project.study_id}_variants")
 
     @staticmethod
+    def _parquet_dataset(project: ImportProject) -> tuple[str, Optional[str]]:
+        pedigree_path = ImpalaSchema1ImportStorage._pedigree_filename(project)
+        variants_path = ImpalaSchema1ImportStorage._variants_dir(project)
+        if os.path.exists(variants_path):
+            return pedigree_path, variants_path
+        return pedigree_path, None
+
+    @staticmethod
     def _get_partition_description(
         project: ImportProject,
         out_dir: Optional[str] = None,
     ) -> PartitionDescriptor:
-        out_dir = out_dir if out_dir else project.work_dir
+        out_dir = out_dir or project.work_dir
         return project.get_partition_descriptor()
 
     @classmethod
@@ -60,7 +70,7 @@ class ImpalaSchema1ImportStorage(ImportStorage):
 
     @classmethod
     def _do_write_meta(cls, project: ImportProject) -> None:
-        if not project.has_variants():
+        if not project.get_variant_loader_types():
             return
         out_dir = cls._variants_dir(project)
         gpf_instance = project.get_gpf_instance()
@@ -86,7 +96,10 @@ class ImpalaSchema1ImportStorage(ImportStorage):
         start = time.time()
         out_dir = cls._variants_dir(project)
         gpf_instance = project.get_gpf_instance()
-        loader_type = next(iter(project.get_variant_loader_types()))
+        loader_types = project.get_variant_loader_types()
+        if not loader_types:
+            return
+        loader_type = next(iter(loader_types))
         variants_loader = project.get_variant_loader(
             bucket, loader_type, gpf_instance.reference_genome)
         variants_loader = project.build_variants_loader_pipeline(
@@ -108,7 +121,7 @@ class ImpalaSchema1ImportStorage(ImportStorage):
     @classmethod
     def _variant_partitions(
         cls, project: ImportProject,
-    ) -> Iterator[Tuple[str, List[Tuple[str, str]]]]:
+    ) -> Iterator[tuple[str, list[tuple[str, str]]]]:
         part_desc = cls._get_partition_description(project)
         chromosomes = project.get_variant_loader_chromosomes()
         chromosome_lengths = dict(filter(
@@ -124,7 +137,7 @@ class ImpalaSchema1ImportStorage(ImportStorage):
     @classmethod
     def _merge_parquets(
         cls, project: ImportProject, out_dir: str,
-        partitions: List[Tuple[str, str]],
+        partitions: list[tuple[str, str]],
     ) -> None:
         full_out_dir = fs_utils.join(cls._variants_dir(project), out_dir)
         merge_variants_parquets(
@@ -141,13 +154,12 @@ class ImpalaSchema1ImportStorage(ImportStorage):
                 or genotype_storage.storage_type != "impala":
             logger.error("missing or non-impala genotype storage")
             return
+        impala_storage = cast(ImpalaGenotypeStorage, genotype_storage)
 
         partition_description = cls._get_partition_description(project)
 
-        pedigree_file = cls._pedigree_filename(project)
-        variants_dir = cls._variants_dir(project) \
-            if project.has_variants() else None
-        cast(ImpalaGenotypeStorage, genotype_storage).hdfs_upload_dataset(
+        pedigree_file, variants_dir = cls._parquet_dataset(project)
+        impala_storage.hdfs_upload_dataset(
             project.study_id,
             variants_dir,
             pedigree_file,
@@ -164,13 +176,11 @@ class ImpalaSchema1ImportStorage(ImportStorage):
                 or genotype_storage.storage_type != "impala":
             logger.error("missing or non-impala genotype storage")
             return
-
-        hdfs_variants_dir = \
-            cast(ImpalaGenotypeStorage, genotype_storage) \
+        impala_storage = cast(ImpalaGenotypeStorage, genotype_storage)
+        hdfs_variants_dir: Optional[str] = impala_storage \
             .default_variants_hdfs_dirname(project.study_id)
 
-        hdfs_pedigree_file = \
-            cast(ImpalaGenotypeStorage, genotype_storage) \
+        hdfs_pedigree_file = impala_storage \
             .default_pedigree_hdfs_filename(project.study_id)
 
         logger.info("HDFS variants dir: %s", hdfs_variants_dir)
@@ -178,18 +188,18 @@ class ImpalaSchema1ImportStorage(ImportStorage):
 
         partition_description = cls._get_partition_description(project)
 
-        if project.has_variants():
+        if project.get_variant_loader_types():
             variants_schema_fn = fs_utils.join(
                 cls._variants_dir(project), "_VARIANTS_SCHEMA")
-            with open(variants_schema_fn) as infile:
-                content = infile.read()
-                schema = toml.loads(content)
-                variants_schema = schema["variants_schema"]
+            content = pathlib.Path(variants_schema_fn).read_text()
+            schema = toml.loads(content)
+            variants_schema = schema["variants_schema"]
         else:
             hdfs_variants_dir = None
             variants_schema = None
 
-        cast(ImpalaGenotypeStorage, genotype_storage).impala_import_dataset(
+        assert hdfs_pedigree_file is not None
+        impala_storage.impala_import_dataset(
             project.study_id,
             hdfs_pedigree_file,
             hdfs_variants_dir,
@@ -225,7 +235,7 @@ class ImpalaSchema1ImportStorage(ImportStorage):
             "genotype_browser": {"enabled": False},
         }
 
-        if project.has_variants():
+        if project.get_variant_loader_types():
             variants_table = cls._construct_variants_table(project.study_id)
             storage_config = study_config["genotype_storage"]
             storage_config["tables"][  # type: ignore
@@ -274,7 +284,8 @@ class ImpalaSchema1ImportStorage(ImportStorage):
 
         # dummy task used for running the parquet generation w/o impala import
         all_parquet_task = graph.create_task(
-            "Parquet Tasks", lambda: None, [], output_dir_tasks + [bucket_sync],
+            "Parquet Tasks", lambda: None, [],
+            [*output_dir_tasks, bucket_sync],
         )
 
         if project.has_genotype_storage():

@@ -48,9 +48,9 @@ class BigQueryQueryRunner(QueryRunner):
                     break
 
         except Exception as ex:  # pylint: disable=broad-except
-            logger.error(
-                "exception in runner (%s) run: %s",
-                self.study_id, type(ex), exc_info=True)
+            logger.exception(
+                "exception in runner (%s) run",
+                self.study_id)
             self._put_value_in_result_queue(ex)
 
         logger.debug(

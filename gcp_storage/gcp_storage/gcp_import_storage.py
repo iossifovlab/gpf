@@ -7,12 +7,14 @@ from dae.configuration.study_config_builder import StudyConfigBuilder
 from dae.import_tools.import_tools import ImportProject, save_study_config
 from dae.schema2_storage.schema2_import_storage import (
     Schema2ImportStorage,
-    create_schema2_dataset_layout,
+)
+from dae.schema2_storage.schema2_layout import (
+    load_schema2_dataset_layout,
 )
 from dae.task_graph.graph import TaskGraph
 from gcp_storage.gcp_genotype_storage import GcpGenotypeStorage
 
-logger = logging.getLogger(__file__)
+logger = logging.getLogger(__name__)
 
 
 class GcpImportStorage(Schema2ImportStorage):
@@ -20,7 +22,7 @@ class GcpImportStorage(Schema2ImportStorage):
 
     @classmethod
     def _do_import_dataset(cls, project: ImportProject) -> None:
-        layout = create_schema2_dataset_layout(
+        layout = load_schema2_dataset_layout(
             project.get_parquet_dataset_dir(),
         )
         genotype_storage = cast(
@@ -34,11 +36,11 @@ class GcpImportStorage(Schema2ImportStorage):
         genotype_storage: GcpGenotypeStorage = \
             cast(GcpGenotypeStorage, project.get_genotype_storage())
         # pylint: disable=protected-access
-        study_tables = genotype_storage._study_tables({"id": project.study_id})
+        study_tables = genotype_storage.study_tables({"id": project.study_id})
 
         if project.get_processing_parquet_dataset_dir() is not None:
             meta = cls.load_meta(project)
-            study_config = yaml.load(meta["study"], yaml.Loader)
+            study_config = yaml.safe_load(meta["study"])
             study_config["id"] = project.study_id
         else:
             variants_types = project.get_variant_loader_types()

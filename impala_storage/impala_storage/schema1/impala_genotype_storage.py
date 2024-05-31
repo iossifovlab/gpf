@@ -3,7 +3,7 @@ from __future__ import annotations
 import glob
 import logging
 import os
-from typing import Any, Optional, cast
+from typing import Any, ClassVar, Optional, cast
 
 import toml
 from box import Box
@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 class ImpalaGenotypeStorage(GenotypeStorage):
     """Defines Apache Impala genotype storage."""
 
-    VALIDATION_SCHEMA = {
+    VALIDATION_SCHEMA: ClassVar[dict[str, Any]] = {
         "storage_type": {"type": "string", "allowed": ["impala"]},
         "id": {
             "type": "string",
@@ -186,21 +186,19 @@ class ImpalaGenotypeStorage(GenotypeStorage):
 
     def build_backend(
         self, study_config: dict[str, Any],
-        genome: ReferenceGenome,
+        genome: ReferenceGenome,  # noqa: ARG002
         gene_models: GeneModels,
     ) -> ImpalaVariants:
         assert study_config is not None
 
         variants_table, pedigree_table = self.study_tables(study_config)
-        family_variants = ImpalaVariants(
+        return ImpalaVariants(
             self.impala_helpers,
             self.storage_config["impala"]["db"],
             variants_table,
             pedigree_table,
             gene_models,
         )
-
-        return family_variants
 
     def _generate_study_config(
         self, study_id: str,
@@ -231,9 +229,8 @@ class ImpalaGenotypeStorage(GenotypeStorage):
         return study_config
 
     def default_hdfs_study_path(self, study_id: str) -> str:
-        study_path = os.path.join(
+        return os.path.join(
             self.storage_config["hdfs"]["base_dir"], study_id)
-        return study_path
 
     def default_pedigree_hdfs_filename(self, study_id: str) -> str:
         study_path = self.default_hdfs_study_path(study_id)
@@ -263,7 +260,6 @@ class ImpalaGenotypeStorage(GenotypeStorage):
         files_glob = generate_file_access_glob(partition_description)
         files_glob = os.path.join(variants_dir, files_glob)
         local_variants_files = glob.glob(files_glob)
-        # logger.debug(f"{variants_dir}, {files_glob}, {local_variants_files}")
 
         local_basedir = variants_filename_basedir(
             partition_description,
@@ -276,14 +272,13 @@ class ImpalaGenotypeStorage(GenotypeStorage):
             assert lvf.startswith(local_basedir)
             hdfs_variants_files.append(
                 os.path.join(hdfs_variants_dir, lvf[len(local_basedir):]))
-        # logger.debug(f"{local_variants_files}, {hdfs_variants_files}")
 
         return local_variants_files, hdfs_variants_dir, hdfs_variants_files
 
     def _native_hdfs_upload_dataset(
         self, study_id: str, variants_dir: Optional[str],
         pedigree_file: str, partition_description: PartitionDescriptor,
-    ) -> tuple[str, str, str]:
+    ) -> tuple[Optional[str], Optional[str], str]:
 
         study_path = os.path.join(
             self.storage_config["hdfs"]["base_dir"], study_id)
@@ -332,10 +327,10 @@ class ImpalaGenotypeStorage(GenotypeStorage):
         return (hdfs_variants_dir, hdfs_variants_files[0], pedigree_hdfs_path)
 
     def _rsync_hdfs_upload_dataset(
-        self, study_id: str, variants_dir: str,
+        self, study_id: str, variants_dir: Optional[str],
         pedigree_file: str,
         partition_description: PartitionDescriptor,
-    ) -> tuple[str, str, str]:
+    ) -> tuple[Optional[str], Optional[str], str]:
 
         assert self.rsync_helpers is not None
 
@@ -344,6 +339,18 @@ class ImpalaGenotypeStorage(GenotypeStorage):
         if not study_path.endswith("/"):
             study_path += "/"
         self.rsync_helpers.clear_remote(study_path)
+
+        pedigree_rsync_path = os.path.join(
+            study_path, "pedigree")
+        self.rsync_helpers.copy_to_remote(
+            pedigree_file, remote_subdir=pedigree_rsync_path)
+
+        if variants_dir is None:
+            return (
+                None, None,
+                self._build_hdfs_pedigree(study_id, pedigree_file))
+
+        assert variants_dir is not None
 
         partition_filename = os.path.join(
             variants_dir, "_PARTITION_DESCRIPTION")
@@ -359,16 +366,6 @@ class ImpalaGenotypeStorage(GenotypeStorage):
                 schema_filename, remote_subdir=study_path,
                 clear_remote=False)
 
-        pedigree_rsync_path = os.path.join(
-            study_path, "pedigree")
-        self.rsync_helpers.copy_to_remote(
-            pedigree_file, remote_subdir=pedigree_rsync_path)
-
-        if variants_dir is None:
-            return (
-                None, None,
-                self._build_hdfs_pedigree(study_id, pedigree_file))
-
         variants_rsync_path = os.path.join(
             study_path, "variants/")
         if not variants_dir.endswith("/"):
@@ -380,9 +377,6 @@ class ImpalaGenotypeStorage(GenotypeStorage):
 
         _, hdfs_variants_dir, hdfs_variants_files = self._build_hdfs_variants(
             study_id, variants_dir, partition_description)
-        # logger.debug(
-        #     f"HDFS_VARIANTS_FILES: {hdfs_variants_dir}, "
-        #     f"{hdfs_variants_files}")
 
         return (
             hdfs_variants_dir, hdfs_variants_files[0],
@@ -392,7 +386,7 @@ class ImpalaGenotypeStorage(GenotypeStorage):
         self, study_id: str, variants_dir: Optional[str],
         pedigree_file: str,
         partition_description: PartitionDescriptor,
-    ) -> tuple[str, str, str]:
+    ) -> tuple[Optional[str], Optional[str], str]:
         """Upload a variants dir and pedigree file to hdfs."""
         if self.read_only:
             raise OSError(f"impala storage <{self.storage_id}> is read only")
@@ -408,7 +402,7 @@ class ImpalaGenotypeStorage(GenotypeStorage):
     def impala_import_dataset(
         self, study_id: str,
         pedigree_hdfs_file: str,
-        variants_hdfs_dir: str,
+        variants_hdfs_dir: Optional[str],
         partition_description: PartitionDescriptor,
         variants_sample: Optional[str] = None,
         variants_schema: Optional[dict[str, str]] = None,

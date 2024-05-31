@@ -17,7 +17,7 @@ from dae.utils.regions import Region
 ])
 def test_family_queries(
     imported_study: GenotypeDataStudy,
-    index: int,
+    index: int,  # noqa: ARG001
     query: dict[str, Any],
     ecount: int,
 ) -> None:
@@ -35,7 +35,7 @@ def test_family_queries(
 ])
 def test_summary_queries(
     imported_study: GenotypeDataStudy,
-    index: int,
+    index: int,  # noqa: ARG001
     query: dict[str, Any],
     ecount: int,
 ) -> None:

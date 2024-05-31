@@ -19,8 +19,10 @@ from dae.inmemory_storage.raw_variants import (
 from dae.pedigrees.families_data import FamiliesData
 from dae.person_sets import PersonSetCollection
 from dae.schema2_storage.schema2_import_storage import (
-    Schema2DatasetLayout,
     Schema2ImportStorage,
+)
+from dae.schema2_storage.schema2_layout import (
+    Schema2DatasetLayout,
     create_schema2_dataset_layout,
     load_schema2_dataset_layout,
 )

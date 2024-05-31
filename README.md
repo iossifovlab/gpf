@@ -77,7 +77,7 @@ and install the `gpf_impala2_storage` package using:
 
 ```bash
 pip install -e impala2_storage
-
+```
 
 #### GCP genotype storage
 
@@ -125,5 +125,5 @@ py.test -v gcp_storage/tests/
 To run the intergration tests use:
 
 ```bash
-py.test -v ../dae/tests/ gcp_storage/tests/gpf_storage.yaml
+py.test -v ../dae/tests/ --gsf gcp_storage/tests/gcp_storage.yaml
 ```
