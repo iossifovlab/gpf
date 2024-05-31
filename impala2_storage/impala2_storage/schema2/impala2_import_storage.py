@@ -7,6 +7,8 @@ from dae.configuration.study_config_builder import StudyConfigBuilder
 from dae.import_tools.import_tools import ImportProject, save_study_config
 from dae.schema2_storage.schema2_import_storage import (
     Schema2ImportStorage,
+)
+from dae.schema2_storage.schema2_layout import (
     load_schema2_dataset_layout,
 )
 from dae.task_graph.graph import TaskGraph
@@ -15,7 +17,7 @@ from impala2_storage.schema2.impala2_genotype_storage import (
     Impala2GenotypeStorage,
 )
 
-logger = logging.getLogger(__file__)
+logger = logging.getLogger(__name__)
 
 
 class Impala2ImportStorage(Schema2ImportStorage):
@@ -56,19 +58,19 @@ class Impala2ImportStorage(Schema2ImportStorage):
         # pylint: disable=protected-access
         layout = load_schema2_dataset_layout(project.get_parquet_dataset_dir())
         pedigree_table = genotype_storage\
-            ._construct_pedigree_table(project.study_id)
+            .construct_pedigree_table(project.study_id)
         if layout.summary is not None:
             summary_table, family_table = genotype_storage\
-                ._construct_variant_tables(project.study_id)
+                .construct_variant_tables(project.study_id)
             meta_table = genotype_storage\
-                ._construct_metadata_table(project.study_id)
+                .construct_metadata_table(project.study_id)
         else:
             summary_table, family_table = (None, None)
             meta_table = None
 
         if project.get_processing_parquet_dataset_dir() is not None:
             meta = cls.load_meta(project)
-            study_config = yaml.load(meta["study"], yaml.Loader)
+            study_config = yaml.safe_load(meta["study"])
             study_config["id"] = project.study_id
         else:
             variants_types = project.get_variant_loader_types()

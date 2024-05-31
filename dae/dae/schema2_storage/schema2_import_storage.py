@@ -1,7 +1,6 @@
 import logging
 import os
 from collections.abc import Generator
-from dataclasses import dataclass
 from typing import Optional
 
 import yaml
@@ -18,62 +17,14 @@ from dae.parquet.parquet_writer import (
 from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.parquet.schema2.parquet_io import VariantsParquetWriter
 from dae.parquet.schema2.serializers import AlleleParquetSerializer
+from dae.schema2_storage.schema2_layout import (
+    Schema2DatasetLayout,
+    create_schema2_dataset_layout,
+)
 from dae.task_graph.graph import Task, TaskGraph
 from dae.utils import fs_utils
 
 logger = logging.getLogger(__name__)
-
-
-@dataclass(frozen=True)
-class Schema2DatasetLayout:
-    """Schema2 dataset layout data class."""
-
-    study: str
-    pedigree: str
-    summary: Optional[str]
-    family: Optional[str]
-    meta: str
-    base_dir: Optional[str] = None
-
-    def has_variants(self) -> bool:
-        return self.summary is not None and self.family is not None
-
-
-def load_schema2_dataset_layout(study_dir: str) -> Schema2DatasetLayout:
-    """
-    Create dataset layout for a given directory.
-
-    Assumes that the dataset already exists, therefore it should check whether
-    summary and family tables exist.
-    """
-    summary_path = fs_utils.join(study_dir, "summary")
-    summary = summary_path if fs_utils.exists(summary_path) else None
-
-    family_path = fs_utils.join(study_dir, "family")
-    family = family_path if fs_utils.exists(family_path) else None
-
-    return Schema2DatasetLayout(
-        study_dir,
-        fs_utils.join(study_dir, "pedigree", "pedigree.parquet"),
-        summary,
-        family,
-        fs_utils.join(study_dir, "meta", "meta.parquet"))
-
-
-def create_schema2_dataset_layout(study_dir: str) -> Schema2DatasetLayout:
-    """
-    Create dataset layout for a given directory.
-
-    Used for creating new datasets, where all tables should exist.
-    """
-    summary = fs_utils.join(study_dir, "summary")
-    family = fs_utils.join(study_dir, "family")
-    return Schema2DatasetLayout(
-        study_dir,
-        fs_utils.join(study_dir, "pedigree", "pedigree.parquet"),
-        summary,
-        family,
-        fs_utils.join(study_dir, "meta", "meta.parquet"))
 
 
 def schema2_project_dataset_layout(

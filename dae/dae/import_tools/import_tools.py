@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import os
+import pathlib
 import sys
 import time
 from abc import ABC, abstractmethod
@@ -46,7 +47,7 @@ from dae.variants_loaders.raw.loader import (
 )
 from dae.variants_loaders.vcf.loader import VcfLoader
 
-logger = logging.getLogger(__file__)
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -59,7 +60,7 @@ class Bucket:
     index: int
 
     def __str__(self) -> str:
-        regions = ";".join(r if r else "all" for r in self.regions)
+        regions = ";".join(r or "all" for r in self.regions)
         if not regions:
             regions = "all"
         return f"Bucket({self.type},{self.region_bin},{regions},{self.index})"
@@ -165,10 +166,9 @@ class ImportProject:
 
     def get_pedigree_loader(self) -> FamiliesLoader:
         families_filename, families_params = self.get_pedigree_params()
-        families_loader = FamiliesLoader(
+        return FamiliesLoader(
             families_filename, **families_params,
         )
-        return families_loader
 
     def get_pedigree(self) -> FamiliesData:
         """Load, parse and return the pedigree data."""
@@ -208,20 +208,19 @@ class ImportProject:
         for ltype in loader_types:
             loader = self.get_variant_loader(loader_type=ltype)
             chromosomes.update(loader.chromosomes)
-        result = []
-        for chrom in self.get_gpf_instance().reference_genome.chromosomes:
-            if chrom in chromosomes:
-                result.append(chrom)
-        return result
+        return [
+            chrom
+            for chrom in self.get_gpf_instance().reference_genome.chromosomes
+            if chrom in chromosomes
+        ]
 
     def get_import_variants_buckets(self) -> list[Bucket]:
         """Split variant files into buckets enabling parallel processing."""
-        buckets = []
+        buckets: list[Bucket] = []
         for loader_type in ["denovo", "vcf", "cnv", "dae"]:
             config = self.import_config["input"].get(loader_type, None)
             if config is not None:
-                for bucket in self._loader_region_bins(loader_type):
-                    buckets.append(bucket)
+                buckets.extend(self._loader_region_bins(loader_type))
         return buckets
 
     def get_variant_loader(
@@ -356,12 +355,6 @@ class ImportProject:
             self.import_config["input"].get("input_dir", ""),
         )
 
-    def has_variants(self) -> bool:
-        for key in ["vcf", "denovo", "cnv", "dae"]:
-            if key in self.import_config["input"]:
-                return True
-        return False
-
     @property
     def study_id(self) -> str:
         return cast(str, self.import_config["id"])
@@ -394,11 +387,10 @@ class ImportProject:
             return True  # Use default genotype storage
         if "storage_type" not in self.import_config["destination"]:
             return True  # External genotype storage
-        if len(self.import_config["destination"]) > 1:
-            return True  # Embedded configuration
+        # Embedded configuration
         # storage_type is the only property in destination
         # this is a special case and we assume there is no genotype storage
-        return False
+        return len(self.import_config["destination"]) > 1
 
     def get_genotype_storage(self) -> GenotypeStorage:
         """Find, create and return the correct genotype storage."""
@@ -417,7 +409,6 @@ class ImportProject:
             return genotype_storages.get_default_genotype_storage()
         # explicit storage config
         registry = GenotypeStorageRegistry()
-        # FIXME: switch to using new storage configuration
         return registry.register_storage_config(
             self.import_config["destination"])
 
@@ -536,12 +527,10 @@ class ImportProject:
         )
 
         default_bucket_index = self._get_default_bucket_index(loader_type)
-        index = 0
-        for region_bin, regions in variants_targets.items():
+        for index, (region_bin, regions) in enumerate(variants_targets.items()):
             assert index <= 100_000, f"Too many buckets {loader_type}"
             bucket_index = default_bucket_index + index
             yield Bucket(loader_type, region_bin, regions, bucket_index)
-            index += 1
 
     def _get_processing_region_length(self, loader_type: str) -> Optional[int]:
         processing_config = self._get_loader_processing_config(loader_type)
@@ -589,7 +578,7 @@ class ImportProject:
                 # the chromosomes getter will assert for us if the prefix
                 # can be removed or not. If there is no prefix to begin with
                 # we will get an assertion error
-                loader.chromosomes
+                loader.chromosomes  # noqa: B018
             except AssertionError as exp:
                 raise ValueError(
                     f"Chromosomes already missing the prefix {prefix}. "
@@ -756,16 +745,14 @@ class ImportConfigNormalizer:
     def _expand_chromosomes(chromosomes: list[str]) -> list[str]:
         if chromosomes is None:
             return None
-        res = []
+        res: list[str] = []
         for chrom in chromosomes:
             if chrom in {"autosomes", "autosomesXY"}:
                 for i in range(1, 23):
-                    res.append(f"{i}")
-                    res.append(f"chr{i}")
+                    res.extend((f"{i}", f"chr{i}"))
                 if chrom == "autosomesXY":
                     for j in ["X", "Y"]:
-                        res.append(f"{j}")
-                        res.append(f"chr{j}")
+                        res.extend((f"{j}", f"chr{j}"))
             else:
                 res.append(chrom)
         return res
@@ -773,9 +760,6 @@ class ImportConfigNormalizer:
 
 class ImportStorage(ABC):
     """Defines abstract base class for import storages."""
-
-    def __init__(self) -> None:
-        pass
 
     @abstractmethod
     def generate_import_task_graph(self, project: ImportProject) -> TaskGraph:
@@ -829,7 +813,8 @@ def register_import_storage_factory(
 
 def save_study_config(
         dae_config: Box, study_id: str,
-        study_config: str, force: bool = False) -> None:
+        study_config: str, *,
+        force: bool = False) -> None:
     """Save the study config to a file."""
     dirname = os.path.join(dae_config.studies.dir, study_id)
     filename = os.path.join(dirname, f"{study_id}.yaml")
@@ -844,8 +829,7 @@ def save_study_config(
             logger.info(
                 "skipping overwring the old config file... "
                 "storing new config in %s", bak_path)
-            with open(bak_path, "w") as outfile:
-                outfile.write(study_config)
+            pathlib.Path(bak_path).write_text(study_config)
             return
 
         logger.info(
@@ -853,8 +837,7 @@ def save_study_config(
         os.rename(filename, bak_path)
 
     os.makedirs(dirname, exist_ok=True)
-    with open(filename, "w") as outfile:
-        outfile.write(study_config)
+    pathlib.Path(filename).write_text(study_config)
 
 
 def construct_import_annotation_pipeline_config(
@@ -862,12 +845,10 @@ def construct_import_annotation_pipeline_config(
     annotation_configfile: Optional[str] = None,
 ) -> list[dict]:
     """Construct annotation pipeline config for importing data."""
-    pipeline_config = []
     if annotation_configfile is not None:
         assert os.path.exists(annotation_configfile), annotation_configfile
         with open(annotation_configfile, "rt", encoding="utf8") as infile:
-            pipeline_config = yaml.safe_load(infile.read())
-            return pipeline_config
+            return cast(list[dict], yaml.safe_load(infile.read()))
     return gpf_instance.get_annotation_pipeline_config()
 
 
@@ -878,9 +859,8 @@ def construct_import_annotation_pipeline(
     pipeline_config = construct_import_annotation_pipeline_config(
         gpf_instance, annotation_configfile)
     grr = gpf_instance.grr
-    pipeline = build_annotation_pipeline(
+    return build_annotation_pipeline(
         pipeline_config_raw=pipeline_config, grr_repository=grr)
-    return pipeline
 
 
 class MakefilePartitionHelper:
@@ -898,11 +878,10 @@ class MakefilePartitionHelper:
         )
 
     def region_bins_count(self, chrom: str) -> int:
-        result = ceil(
+        return ceil(
             self.chromosome_lengths[chrom]
             / self.partition_descriptor.region_length,
         )
-        return result
 
     @staticmethod
     def build_target_chromosomes(target_chromosomes: list[str]) -> list[str]:
@@ -972,6 +951,5 @@ class MakefilePartitionHelper:
             region_targets = self.generate_chrom_targets(target_chrom)
 
             for target, region in region_targets:
-                # target = self.reset_target(target)
                 targets[target].append(region)
         return targets
