@@ -391,9 +391,9 @@ class PreparePhenoBrowserBase:
                 except Exception:
                     logger.exception("Failed to create images")
 
-    def add_measure_task(
-            self, graph: TaskGraph, measure: Measure, dbfile: str
-    ) -> None:
+    def get_regression_measures(
+        self, measure: Measure,
+    ) -> dict[str, tuple[Box, Measure]]:
         regression_measures: dict[str, tuple[Box, pd.DataFrame]] = {}
         for reg_id, reg in self.pheno_regressions.regression.items():
             measure_names = reg.measure_names
@@ -417,7 +417,13 @@ class PreparePhenoBrowserBase:
             ):
                 continue
             regression_measures[reg_id] = (reg, reg_measure)
+        return regression_measures
 
+    def add_measure_task(
+            self, graph: TaskGraph, measure: Measure, dbfile: str
+    ) -> None:
+
+        regression_measures = self.get_regression_measures(measure)
         graph.create_task(
             f"build_{measure.measure_id}",
             PreparePhenoBrowserBase.do_measure_build,

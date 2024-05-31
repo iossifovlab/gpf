@@ -297,7 +297,6 @@ def test_build_regression_aug_df_is_none(
     )
 
 
-@pytest.mark.xfail(reason="Deprecated API")
 def test_handle_regressions(
     mocker: pytest_mock.MockerFixture,
     fake_phenotype_data: PhenotypeStudy,
@@ -305,9 +304,13 @@ def test_handle_regressions(
     fake_phenotype_data_config: str,
 ) -> None:
     def fake_build_regression(
-        dependent_measure: str, independent_measure: str, jitter: float,
+        phenotype_data: PhenotypeStudy, images_dir: str,
+        dependent_measure: str, independent_measure: str,
+        jitter: float,
     ) -> dict:
-        return {
+        return {  # This return value is not important to the test
+            "pheno_db": phenotype_data,
+            "images_dir": images_dir,
             "regressand": dependent_measure,
             "regressor": independent_measure,
             "jitter": jitter,
@@ -329,22 +332,36 @@ def test_handle_regressions(
     )
     regressand = fake_phenotype_data.get_measure("i1.m1")
 
-    res = [r for r in prep.handle_regressions(regressand) if r is not None]
+    regression_measures = prep.get_regression_measures(regressand)
+
+    res = prep.do_measure_build(
+        fake_phenotype_data.pheno_id, fake_phenotype_data.db.dbfile,
+        fake_phenotype_data.config, regressand,
+        "test_dir", regression_measures,
+    )
     assert len(res) == 2
-    assert sorted([r["regression_id"] for r in res]) == sorted(["age", "nviq"])
+    print(res)
+    assert sorted(
+        [r["regression_id"] for r in res[1]]) == sorted(["age", "nviq"]
+    )
 
     mocked.assert_called()
-    measure, reg_measure, jitter = mocked.call_args_list[0][0]
+    phenotype_data, images_dir, measure, reg_measure, jitter = \
+        mocked.call_args_list[0][0]
+    assert phenotype_data.pheno_id == fake_phenotype_data.pheno_id
+    assert images_dir == "test_dir"
     assert measure.measure_id == "i1.m1"
     assert reg_measure.measure_id == "i1.age"
     assert jitter == 0.12
-    measure, reg_measure, jitter = mocked.call_args_list[1][0]
+    phenotype_data, images_dir, measure, reg_measure, jitter = \
+        mocked.call_args_list[1][0]
+    assert phenotype_data.pheno_id == fake_phenotype_data.pheno_id
+    assert images_dir == "test_dir"
     assert measure.measure_id == "i1.m1"
     assert reg_measure.measure_id == "i1.iq"
     assert jitter == 0.13
 
 
-@pytest.mark.xfail(reason="Deprecated API")
 def test_handle_regressions_non_continuous_or_ordinal_measure(
     fake_phenotype_data: PhenotypeStudy,
     output_dir: str,
@@ -357,16 +374,28 @@ def test_handle_regressions_non_continuous_or_ordinal_measure(
         "fake", fake_phenotype_data, output_dir, reg,
     )
     regressand_categorical = fake_phenotype_data.get_measure("i1.m5")
+    regression_measures_categorical = prep.get_regression_measures(
+        regressand_categorical,
+    )
     regressand_raw = fake_phenotype_data.get_measure("i1.m6")
+    regression_measures_raw = prep.get_regression_measures(
+        regressand_raw,
+    )
 
-    with pytest.raises(StopIteration):
-        next(prep.handle_regressions(regressand_categorical))
+    res = prep.do_measure_build(
+        fake_phenotype_data.pheno_id, fake_phenotype_data.db.dbfile,
+        fake_phenotype_data.config, regressand_categorical,
+        "test_dir", regression_measures_categorical,
+    )
+    assert res[1] is None
+    res = prep.do_measure_build(
+        fake_phenotype_data.pheno_id, fake_phenotype_data.db.dbfile,
+        fake_phenotype_data.config, regressand_raw,
+        "test_dir", regression_measures_raw,
+    )
+    assert res[1] is None
 
-    with pytest.raises(StopIteration):
-        next(prep.handle_regressions(regressand_raw))
 
-
-@pytest.mark.xfail(reason="Deprecated API")
 def test_handle_regressions_regressand_is_regressor(
     fake_phenotype_data: PhenotypeStudy,
     output_dir: str,
@@ -379,12 +408,16 @@ def test_handle_regressions_regressand_is_regressor(
         "fake", fake_phenotype_data, output_dir, reg,
     )
     regressand = fake_phenotype_data.get_measure("i1.age")
+    regression_measures = prep.get_regression_measures(regressand)
 
-    with pytest.raises(StopIteration):
-        next(prep.handle_regressions(regressand))
+    res = prep.do_measure_build(
+        fake_phenotype_data.pheno_id, fake_phenotype_data.db.dbfile,
+        fake_phenotype_data.config, regressand,
+        "test_dir", regression_measures,
+    )
+    assert res[1] is None
 
 
-@pytest.mark.xfail(reason="Deprecated API")
 def test_handle_regressions_default_jitter(
     mocker: pytest_mock.MockerFixture,
     fake_phenotype_data: PhenotypeStudy,
@@ -407,13 +440,21 @@ def test_handle_regressions_default_jitter(
         "fake", fake_phenotype_data, output_dir, reg,
     )
     regressand = fake_phenotype_data.get_measure("i1.m1")
-    for _i in prep.handle_regressions(regressand):
-        pass
+
+    regression_measures = prep.get_regression_measures(regressand)
+
+    prep.do_measure_build(
+        fake_phenotype_data.pheno_id, fake_phenotype_data.db.dbfile,
+        fake_phenotype_data.config, regressand,
+        "test_dir", regression_measures,
+    )
 
     mocked.assert_called()
-    _measure, _reg_measure, jitter = mocked.call_args_list[0][0]
+    _phenotype_data, _images_dir, _measure, _reg_measure, jitter = \
+        mocked.call_args_list[0][0]
     assert jitter == 0.12
-    _measure, _reg_measure, jitter = mocked.call_args_list[1][0]
+    _phenotype_data, _images_dir, _measure, _reg_measure, jitter = \
+        mocked.call_args_list[1][0]
     assert jitter == 0.13
 
 
