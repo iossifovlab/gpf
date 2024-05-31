@@ -63,9 +63,9 @@ class EffectAnnotatorAdapter(AnnotatorBase):
 
         info.documentation += textwrap.dedent("""
 
-* Annotator to identify the effect of the variant on protein coding.
+Annotator to identify the effect of the variant on protein coding.
 
-* <a href="https://iossifovlab.com/gpfuserdocs/administration/annotation_tools.html#effect-annotator" target="_blank">More info</a>
+<a href="https://iossifovlab.com/gpfuserdocs/administration/annotation_tools.html#effect-annotator" target="_blank">More info</a>
 
 """)  # noqa
         info.resources += [genome.resource, gene_models.resource]
