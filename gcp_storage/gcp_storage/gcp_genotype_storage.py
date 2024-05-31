@@ -88,8 +88,8 @@ class GcpGenotypeStorage(GenotypeStorage):
         storage_config = study_config.get("genotype_storage")
         has_tables = storage_config and storage_config.get("tables")
         tables = None
-        family_table = f"{study_id}_family_alleles"
-        summary_table = f"{study_id}_summary_alleles"
+        family_table = f"{study_id}_family"
+        summary_table = f"{study_id}_summary"
         pedigree_table = f"{study_id}_pedigree"
         meta_table = f"{study_id}_meta"
 
@@ -152,17 +152,17 @@ class GcpGenotypeStorage(GenotypeStorage):
         if not study_dataset.has_variants():
             bucket_layout = Schema2DatasetLayout(
                 study_id,
-                fs_utils.join(upload_path, "pedigree.parquet"),
+                fs_utils.join(upload_path, "pedigree/pedigree.parquet"),
                 None,
                 None,
-                fs_utils.join(upload_path, "meta.parquet"))
+                fs_utils.join(upload_path, "meta/meta.parquet"))
         else:
             bucket_layout = Schema2DatasetLayout(
                 study_id,
-                fs_utils.join(upload_path, "pedigree.parquet"),
+                fs_utils.join(upload_path, "pedigree/pedigree.parquet"),
                 fs_utils.join(upload_path, "summary_variants"),
                 fs_utils.join(upload_path, "family_variants"),
-                fs_utils.join(upload_path, "meta.parquet"))
+                fs_utils.join(upload_path, "meta/meta.parquet"))
 
             self.fs.put(
                 study_dataset.summary,
