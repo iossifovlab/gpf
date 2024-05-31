@@ -7,7 +7,7 @@ from dae.configuration.study_config_builder import StudyConfigBuilder
 from dae.import_tools.import_tools import ImportProject, save_study_config
 from dae.schema2_storage.schema2_import_storage import (
     Schema2ImportStorage,
-    create_schema2_dataset_layout,
+    load_schema2_dataset_layout,
 )
 from dae.task_graph.graph import TaskGraph
 from gcp_storage.gcp_genotype_storage import GcpGenotypeStorage
@@ -20,7 +20,7 @@ class GcpImportStorage(Schema2ImportStorage):
 
     @classmethod
     def _do_import_dataset(cls, project: ImportProject) -> None:
-        layout = create_schema2_dataset_layout(
+        layout = load_schema2_dataset_layout(
             project.get_parquet_dataset_dir(),
         )
         genotype_storage = cast(

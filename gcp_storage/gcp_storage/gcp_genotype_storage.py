@@ -80,7 +80,8 @@ class GcpGenotypeStorage(GenotypeStorage):
 
     @staticmethod
     def study_tables(
-        study_config: dict[str, Any],
+        study_config: dict[str, Any], *,
+        has_variants: bool = True,
     ) -> Schema2DatasetLayout:
         """Construct a Schema2 study layout from a study config."""
         study_id = study_config["id"]
@@ -96,17 +97,14 @@ class GcpGenotypeStorage(GenotypeStorage):
             assert storage_config is not None
             tables = storage_config["tables"]
 
-            if tables.get("family"):
-                family_table = tables["family"]
+            family_table = tables["family"]
+            summary_table = tables["summary"]
+            pedigree_table = tables.pedigree
+            meta_table = tables["meta"]
 
-            if tables.get("summary"):
-                summary_table = tables["summary"]
-
-            if tables.pedigree:
-                pedigree_table = tables.pedigree
-
-            if tables.get("meta"):
-                meta_table = tables["meta"]
+        if not has_variants:
+            return Schema2DatasetLayout(
+                study_id, pedigree_table, None, None, meta_table)
 
         return Schema2DatasetLayout(
             study_id, pedigree_table, summary_table, family_table, meta_table)
@@ -147,30 +145,41 @@ class GcpGenotypeStorage(GenotypeStorage):
             self.storage_config["bigquery"]["db"],
             study_id)
 
-        bucket_layout = Schema2DatasetLayout(
-            study_id,
-            fs_utils.join(upload_path, "pedigree.parquet"),
-            fs_utils.join(upload_path, "summary_variants"),
-            fs_utils.join(upload_path, "family_variants"),
-            fs_utils.join(upload_path, "meta.parquet"))
-
         if self.fs.exists(upload_path):
             self.fs.rm(upload_path, recursive=True)
         self.fs.mkdir(upload_path, create_parents=True)
+
+        if not study_dataset.has_variants():
+            bucket_layout = Schema2DatasetLayout(
+                study_id,
+                fs_utils.join(upload_path, "pedigree.parquet"),
+                None,
+                None,
+                fs_utils.join(upload_path, "meta.parquet"))
+        else:
+            bucket_layout = Schema2DatasetLayout(
+                study_id,
+                fs_utils.join(upload_path, "pedigree.parquet"),
+                fs_utils.join(upload_path, "summary_variants"),
+                fs_utils.join(upload_path, "family_variants"),
+                fs_utils.join(upload_path, "meta.parquet"))
+
+            self.fs.put(
+                study_dataset.summary,
+                bucket_layout.summary,
+                recursive=True)
+            self.fs.put(
+                study_dataset.family,
+                bucket_layout.family,
+                recursive=True)
+
         self.fs.put(
             study_dataset.pedigree,
             bucket_layout.pedigree)
         self.fs.put(
             study_dataset.meta,
             bucket_layout.meta)
-        self.fs.put(
-            study_dataset.summary,
-            bucket_layout.summary,
-            recursive=True)
-        self.fs.put(
-            study_dataset.family,
-            bucket_layout.family,
-            recursive=True)
+
         return bucket_layout
 
     def _load_dataset_into_bigquery(
@@ -181,11 +190,15 @@ class GcpGenotypeStorage(GenotypeStorage):
         client = bigquery.Client()
         dbname = self.storage_config["bigquery"]["db"]
         dataset = client.create_dataset(dbname, exists_ok=True)
-        tables_layout = self.study_tables({"id": study_id})
+        tables_layout = self.study_tables(
+            {"id": study_id},
+            has_variants=bucket_layout.has_variants())
         for table_name in [
                 tables_layout.pedigree, tables_layout.meta,
                 tables_layout.summary,
                 tables_layout.family]:
+            if table_name is None:
+                continue
             sql = f"DROP TABLE IF EXISTS {dbname}.{table_name}"
             client.query(sql).result()
 

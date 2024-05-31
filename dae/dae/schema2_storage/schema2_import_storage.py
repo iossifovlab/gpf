@@ -26,12 +26,17 @@ logger = logging.getLogger(__name__)
 
 @dataclass(frozen=True)
 class Schema2DatasetLayout:
+    """Schema2 dataset layout data class."""
+
     study: str
     pedigree: str
     summary: Optional[str]
     family: Optional[str]
     meta: str
     base_dir: Optional[str] = None
+
+    def has_variants(self) -> bool:
+        return self.summary is not None and self.family is not None
 
 
 def load_schema2_dataset_layout(study_dir: str) -> Schema2DatasetLayout:
