@@ -320,6 +320,14 @@ def test_handle_regressions(
         side_effect=fake_build_regression,
     )
 
+    def fake_save_fig(*_args: Any) -> tuple[Optional[str], Optional[str]]:
+        return ("test1", "test2")
+    mocker.patch(
+        "dae.pheno.prepare_data."
+        "PreparePhenoBrowserBase.save_fig",
+        side_effect=fake_save_fig,
+    )
+
     reg = GPFConfigParser.load_config(
         fake_phenotype_data_config, pheno_conf_schema,
     )
@@ -359,10 +367,18 @@ def test_handle_regressions(
 
 
 def test_handle_regressions_non_continuous_or_ordinal_measure(
+    mocker: pytest_mock.MockerFixture,
     fake_phenotype_data: PhenotypeStudy,
     output_dir: str,
     fake_phenotype_data_config: str,
 ) -> None:
+    def fake_save_fig(*_args: Any) -> tuple[Optional[str], Optional[str]]:
+        return ("test1", "test2")
+    mocker.patch(
+        "dae.pheno.prepare_data."
+        "PreparePhenoBrowserBase.save_fig",
+        side_effect=fake_save_fig,
+    )
     reg = GPFConfigParser.load_config(
         fake_phenotype_data_config, pheno_conf_schema,
     )
@@ -393,10 +409,18 @@ def test_handle_regressions_non_continuous_or_ordinal_measure(
 
 
 def test_handle_regressions_regressand_is_regressor(
+    mocker: pytest_mock.MockerFixture,
     fake_phenotype_data: PhenotypeStudy,
     output_dir: str,
     fake_phenotype_data_config: str,
 ) -> None:
+    def fake_save_fig(*_args: Any) -> tuple[Optional[str], Optional[str]]:
+        return ("test1", "test2")
+    mocker.patch(
+        "dae.pheno.prepare_data."
+        "PreparePhenoBrowserBase.save_fig",
+        side_effect=fake_save_fig,
+    )
     reg = GPFConfigParser.load_config(
         fake_phenotype_data_config, pheno_conf_schema,
     )
@@ -427,6 +451,14 @@ def test_handle_regressions_default_jitter(
         "dae.pheno.prepare_data."
         "PreparePhenoBrowserBase.build_regression",
         side_effect=fake_build_regression,
+    )
+
+    def fake_save_fig(*_args: Any) -> tuple[Optional[str], Optional[str]]:
+        return ("test1", "test2")
+    mocker.patch(
+        "dae.pheno.prepare_data."
+        "PreparePhenoBrowserBase.save_fig",
+        side_effect=fake_save_fig,
     )
 
     reg = GPFConfigParser.load_config(
