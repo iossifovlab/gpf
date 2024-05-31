@@ -88,9 +88,9 @@ class AbstractLiftoverAnnotator(AnnotatorBase):
 
         info.documentation += textwrap.dedent("""
 
-* Annotator to lift over a variant from one reference genome to another.
+Annotator to lift over a variant from one reference genome to another.
 
-* <a href="https://iossifovlab.com/gpfuserdocs/administration/annotation_tools.html#lift-over-annotator" target="_blank">More info</a>
+<a href="https://iossifovlab.com/gpfuserdocs/administration/annotation_tools.html#lift-over-annotator" target="_blank">More info</a>
 
 """)  # noqa
         info.resources += [

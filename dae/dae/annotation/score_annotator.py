@@ -104,7 +104,7 @@ class GenomicScoreAnnotatorBase(Annotator):
 
 ![HISTOGRAM]({hist_url})
 
-small values: {score_def.small_values_desc},
+small values: {score_def.small_values_desc}\n
 large_values {score_def.large_values_desc}
         """
 
@@ -241,10 +241,10 @@ class PositionScoreAnnotator(PositionScoreAnnotatorBase):
         self.position_score_queries = []
         info.documentation += textwrap.dedent("""
 
-* Annotator to use with genomic scores depending on genomic position like
-  phastCons, phyloP, FitCons2, etc.
+Annotator to use with genomic scores depending on genomic position like
+phastCons, phyloP, FitCons2, etc.
 
-* <a href="https://www.iossifovlab.com/gpfuserdocs/administration/annotation_tools.html#position-score" target="_blank">More info</a>
+<a href="https://www.iossifovlab.com/gpfuserdocs/administration/annotation_tools.html#position-score" target="_blank">More info</a>
 
 """)  # noqa
 
@@ -298,10 +298,10 @@ class NPScoreAnnotator(PositionScoreAnnotatorBase):
         self.np_score_queries = []
         info.documentation += textwrap.dedent("""
 
-* Annotator to use with genomic scores depending on genomic position and
-  nucleotide change like CADD, MPC, etc.
+Annotator to use with genomic scores depending on genomic position and
+nucleotide change like CADD, MPC, etc.
 
-* <a href="https://www.iossifovlab.com/gpfuserdocs/administration/annotation_tools.html#np-score" target="_blank">More info</a>
+<a href="https://www.iossifovlab.com/gpfuserdocs/administration/annotation_tools.html#np-score" target="_blank">More info</a>
 
 """)  # noqa
 
@@ -362,10 +362,10 @@ class AlleleScoreAnnotator(GenomicScoreAnnotatorBase):
         self.allele_score_queries = []
         info.documentation += textwrap.dedent("""
 
-* Annotator to use with scores that depend on allele like
-  variant frequencies, etc.
+Annotator to use with scores that depend on allele like
+variant frequencies, etc.
 
-* <a href="https://www.iossifovlab.com/gpfuserdocs/administration/annotation_tools.html#allele-score" target="_blank">More info</a>
+<a href="https://www.iossifovlab.com/gpfuserdocs/administration/annotation_tools.html#allele-score" target="_blank">More info</a>
 
 """)  # noqa
 

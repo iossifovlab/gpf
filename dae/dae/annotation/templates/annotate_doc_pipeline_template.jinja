@@ -155,11 +155,12 @@
         padding: 10px 8px;
       }
 
-      .markdown {
-        padding: 8px;
+      .resource-info {
+        font-style: italic;
+        padding: 10px 0 0 0;
       }
 
-      .resource, .annotator-description {
+      .resource {
         padding: 10px 8px;
       }
 
@@ -240,9 +241,9 @@
             <div class="attribute">
               <div class="attribute-info {{'attribute-internal' if attribute_info.internal }}">
                 <div class="attribute-name">
-                  {{attribute_info.name + ' (Internal)' if attribute_info.internal else attribute_info.name}}
+                  {{ attribute_info.name }}
                 </div>
-                <div class="attribute-type">Type: {{attribute_info.type}}</div>
+                <div class="attribute-type">Type: {{attribute_info.type + ' (Internal)' if attribute_info.internal else attribute_info.name}}</div>
               </div>
               <div class="attribute-description">
                 {{markdown(attribute_info.documentation)}}
@@ -258,7 +259,6 @@
           </div>
     
           {% if annotator_info.documentation %}
-            <summary>Summary:</summary>
             <div class="annotator-description">
               {{ markdown(annotator_info.documentation) }}
             </div>
@@ -271,13 +271,13 @@
           {% for genomic_resource in annotator_info.resources %}
             <div class="resource">
               <div><b>Resource</b></div>
-              <div>id: <a href="{{genomic_resource.get_url()}}/index.html">
+              <div class="resource-info">Id: <a href="{{genomic_resource.get_url()}}/index.html">
                       {{genomic_resource.get_id()}}</a></div>                            
-              <div>type: {{genomic_resource.get_type()}}</div>
+              <div class="resource-info">Type: {{genomic_resource.get_type()}}</div>
               {% if genomic_resource.get_summary() %}
-                <summary>Summary:</summary>
-                <div class="markdown">
-                  {{ markdown(genomic_resource.get_summary()) }}
+                <div class="resource-info">Summary:</div>
+                <div>
+                  {{ genomic_resource.get_summary() }}
                 </div>
               {% endif %}
             </div>
