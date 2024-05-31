@@ -16,6 +16,7 @@ from functools import partial
 from http.server import HTTPServer  # ThreadingHTTPServer
 from typing import Any, ContextManager, Optional, Union, cast
 
+import pyBigWig  # type: ignore
 import pysam
 from s3fs.core import S3FileSystem
 
@@ -183,6 +184,50 @@ def setup_dae_transmitted(
 
     return (str(root_path / "dae_transmitted_data" / "tr.txt.gz"),
             str(root_path / "dae_transmitted_data" / "tr-TOOMANY.txt.gz"))
+
+
+def setup_bigwig(
+    out_path: pathlib.Path,
+    content: str,
+    chrom_lens: dict[str, int],
+) -> pathlib.Path:
+    """
+    Setup a bigwig format variants file using bedGraph-style content.
+
+    Example:
+    chr1	0	100	0.0
+    chr1	100	120	1.0
+    chr1	125	126	200.0
+    """
+    bw_file = pyBigWig.open(str(out_path), "w")  # pylint: disable=I1101
+    bw_file.add_header(list(chrom_lens.items()), maxZooms=0)
+
+    chrom_col: list[str] = []
+    start_col: list[int] = []
+    end_col: list[int] = []
+    val_col: list[float] = []
+    prev_end: int = -1
+    for line in convert_to_tab_separated(content).split("\n"):
+        tokens = line.strip().split("\t")
+        assert len(tokens) == 4
+        chrom = tokens[0]
+        start = int(tokens[1])
+        end = int(tokens[2])
+        val = float(tokens[3])
+
+        assert chrom in chrom_lens
+        assert start < end
+        assert start >= prev_end
+        prev_end = end
+
+        chrom_col.append(chrom)
+        start_col.append(start)
+        end_col.append(end)
+        val_col.append(val)
+
+    bw_file.addEntries(chrom_col, start_col, ends=end_col, values=val_col)
+    bw_file.close()
+    return out_path
 
 
 def setup_genome(out_path: pathlib.Path, content: str) -> ReferenceGenome:
