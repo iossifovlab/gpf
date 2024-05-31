@@ -67,11 +67,10 @@ def imported_study(
         foo    10  .  C   G   .    .      .    GT     0/0 0/1 0/1
         """)
 
-    study = vcf_study(
+    return vcf_study(
         root_path,
         "bq_test_minimal_vcf", ped_path, [vcf_path],
         gpf_instance)
-    return study
 
 
 @pytest.fixture(scope="session")
@@ -106,7 +105,7 @@ def partition_study(
         bar    10  .  C   G   .    .      .    GT     0/0 0/0 0/1 0/0 0/1 0/1
         """)
 
-    study = vcf_study(
+    return vcf_study(
         root_path,
         "bq_partition_vcf", ped_path, [vcf_path],
         gpf_instance, project_config_update=yaml.safe_load(textwrap.dedent("""
@@ -119,4 +118,3 @@ def partition_study(
             frequency_bin:
               rare_boundary: 5
         """)))
-    return study

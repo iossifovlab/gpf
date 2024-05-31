@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Dict, Optional, cast
+from typing import Any, ClassVar, Optional, cast
 
 import gcsfs
 import pyarrow.parquet as pq
@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 class GcpGenotypeStorage(GenotypeStorage):
     """Defines Google Cloud Platform (GCP) genotype storage."""
 
-    VALIDATION_SCHEMA = {
+    VALIDATION_SCHEMA: ClassVar[dict[str, Any]] = {
         "storage_type": {"type": "string", "allowed": ["gcp"]},
         "id": {
             "type": "string", "required": True,
@@ -45,12 +45,12 @@ class GcpGenotypeStorage(GenotypeStorage):
         },
     }
 
-    def __init__(self, storage_config: Dict[str, Any]) -> None:
+    def __init__(self, storage_config: dict[str, Any]) -> None:
         super().__init__(storage_config)
         self.fs: Optional[gcsfs.GCSFileSystem] = None
 
     @classmethod
-    def validate_and_normalize_config(cls, config: Dict) -> Dict:
+    def validate_and_normalize_config(cls, config: dict) -> dict:
         config = super().validate_and_normalize_config(config)
         validator = Validator(cls.VALIDATION_SCHEMA)
         if not validator.validate(config):
@@ -60,7 +60,7 @@ class GcpGenotypeStorage(GenotypeStorage):
             raise ValueError(
                 f"wrong config format for impala storage: "
                 f"{validator.errors}")
-        return cast(Dict, validator.document)
+        return cast(dict, validator.document)
 
     @classmethod
     def get_storage_types(cls) -> set[str]:
@@ -79,9 +79,10 @@ class GcpGenotypeStorage(GenotypeStorage):
         return cast(str, self.storage_config["bigquery"]["db"])
 
     @staticmethod
-    def _study_tables(
+    def study_tables(
         study_config: dict[str, Any],
     ) -> Schema2DatasetLayout:
+        """Construct a Schema2 study layout from a study config."""
         study_id = study_config["id"]
         storage_config = study_config.get("genotype_storage")
         has_tables = storage_config and storage_config.get("tables")
@@ -112,21 +113,20 @@ class GcpGenotypeStorage(GenotypeStorage):
 
     def build_backend(
         self, study_config: dict[str, Any],
-        genome: ReferenceGenome,
+        genome: ReferenceGenome,  # noqa: ARG002
         gene_models: GeneModels,
     ) -> BigQueryVariants:
         assert study_config is not None
-        tables_layout = self._study_tables(study_config)
+        tables_layout = self.study_tables(study_config)
         project_id = self.storage_config["project_id"]
         db = self.storage_config["bigquery"]["db"]
-        backend = BigQueryVariants(
+        return BigQueryVariants(
             project_id, db,
             tables_layout.summary,
             tables_layout.family,
             tables_layout.pedigree,
             tables_layout.meta,
             gene_models=gene_models)
-        return backend
 
     def _load_partition_description(
             self, metadata_path: str) -> PartitionDescriptor:
@@ -181,7 +181,7 @@ class GcpGenotypeStorage(GenotypeStorage):
         client = bigquery.Client()
         dbname = self.storage_config["bigquery"]["db"]
         dataset = client.create_dataset(dbname, exists_ok=True)
-        tables_layout = self._study_tables({"id": study_id})
+        tables_layout = self.study_tables({"id": study_id})
         for table_name in [
                 tables_layout.pedigree, tables_layout.meta,
                 tables_layout.summary,

@@ -84,7 +84,7 @@ class Schema2ImportStorage(ImportStorage):
     def _get_partition_description(
             project: ImportProject,
             out_dir: Optional[str] = None) -> PartitionDescriptor:
-        out_dir = out_dir if out_dir else project.work_dir
+        out_dir = out_dir or project.work_dir
         return project.get_partition_descriptor()
 
     @classmethod
@@ -291,7 +291,7 @@ class Schema2ImportStorage(ImportStorage):
         # dummy task used for running the parquet generation
         all_parquet_task = graph.create_task(
             "all_parquet_tasks", lambda: None, [],
-            output_dir_tasks + [bucket_sync],
+            [*output_dir_tasks, bucket_sync],
         )
         return [pedigree_task, meta_task, all_parquet_task]
 

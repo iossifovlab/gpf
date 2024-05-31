@@ -1,7 +1,7 @@
 import json
 import logging
 import time
-from typing import Any, Dict, Optional, cast
+from typing import Any, Optional, cast
 
 import numpy as np
 import pandas as pd
@@ -54,8 +54,8 @@ class BigQueryVariants(SqlSchema2Variants):
         self,
         gcp_project_id: str,
         db: str,
-        summary_allele_table: str,
-        family_variant_table: str,
+        summary_allele_table: Optional[str],
+        family_variant_table: Optional[str],
         pedigree_table: str,
         meta_table: str,
         gene_models: Optional[GeneModels] = None,
@@ -79,26 +79,25 @@ class BigQueryVariants(SqlSchema2Variants):
         query = f"""SELECT value FROM {self.db}.{self.meta_table}
                WHERE key = 'partition_description'
                LIMIT 1
-            """
+            """  # noqa: S608
 
         result = self.client.query(query).result()
         for row in result:
             return cast(str, row[0])
         return ""
 
-    def _fetch_schema(self, table: str) -> Dict[str, str]:
+    def _fetch_schema(self, table: str) -> dict[str, str]:
         query = f"""
             SELECT * FROM {self.db}.INFORMATION_SCHEMA.COLUMNS
             WHERE table_name = '{table}'
-        """
+        """  # noqa: S608
         df = self.client.query(query).result().to_dataframe()
 
         records = df[["column_name", "data_type"]].to_records()
-        schema = {col_name: col_type for (_, col_name, col_type) in records}
-        return schema
+        return {col_name: col_type for (_, col_name, col_type) in records}
 
     def _fetch_pedigree(self) -> pd.DataFrame:
-        query = f"SELECT * FROM {self.db}.{self.pedigree_table}"
+        query = f"SELECT * FROM {self.db}.{self.pedigree_table}"  # noqa: S608
         ped_df = self.client.query(query).result().to_dataframe()
 
         columns = {
@@ -119,8 +118,7 @@ class BigQueryVariants(SqlSchema2Variants):
         ped_df.role = ped_df.role.apply(Role)  # type: ignore
         ped_df.sex = ped_df.sex.apply(Sex)  # type: ignore
         ped_df.status = ped_df.status.apply(Status)  # type: ignore
-        ped_df = ped_df.sort_values(by=["family_id", "member_index"])
-        return ped_df
+        return ped_df.sort_values(by=["family_id", "member_index"])
 
     def _get_connection_factory(self) -> Any:
         # pylint: disable=protected-access
