@@ -9,7 +9,7 @@ from collections import deque
 from collections.abc import Generator, Iterator
 from copy import copy
 from types import TracebackType
-from typing import Any, Callable, Optional, Type, cast
+from typing import Any, Callable, Optional, cast
 
 from dask.distributed import Client, Future
 
@@ -22,7 +22,7 @@ from dae.task_graph.logging import (
 )
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 
-logger = logging.getLogger(__file__)
+logger = logging.getLogger(__name__)
 
 
 class TaskGraphExecutor:
@@ -47,7 +47,7 @@ class TaskGraphExecutor:
 
     def __exit__(
         self,
-        exc_type: Optional[Type[BaseException]],
+        exc_type: Optional[type[BaseException]],
         exc_value: Optional[BaseException],
         exc_tb: Optional[TracebackType],
     ) -> None:
@@ -70,7 +70,9 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
     def _exec(
         task_func: Callable, args: list, _deps: list, params: dict[str, Any],
     ) -> Any:
-        verbose = params.get("verbose", 0)
+        verbose = params.get("verbose")
+        if verbose is None:  # Dont use .get default in case of a Box
+            verbose = 0
         VerbosityConfiguration.set_verbosity(verbose)
 
         task_id = params["task_id"]
@@ -299,7 +301,7 @@ class DaskExecutor(AbstractTaskGraphExecutor):
 
     def _get_future_or_result(self, task: Task) -> Any:
         future = self._task2future.get(task)
-        return future if future else self._task2result[task]
+        return future or self._task2result[task]
 
     MIN_QUEUE_SIZE = 700
 
@@ -413,6 +415,17 @@ def task_graph_run(
             else:
                 raise result_or_error
     return no_errors
+
+
+def task_graph_run_with_results(
+    task_graph: TaskGraph, executor: TaskGraphExecutor,
+) -> Generator[Any, None, None]:
+    """Run a task graph, yielding the results from each task."""
+    tasks_iter = executor.execute(task_graph)
+    for _, result_or_error in tasks_iter:
+        if isinstance(result_or_error, Exception):
+            raise result_or_error
+        yield result_or_error
 
 
 def task_graph_all_done(task_graph: TaskGraph, task_cache: TaskCache) -> bool:

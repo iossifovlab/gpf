@@ -18,8 +18,9 @@ cd /wd/integration/fixtures/pheno/comp-data
 
 /opt/conda/bin/conda run --no-capture-output -n gpf \
     pheno_import --force -p comp_pheno.ped \
-    -o $DAE_DB_DIR/pheno/comp_pheno
-    -i instruments/ -d comp_pheno_data_dictionary.tsv --pheno-id comp_pheno \
+    -o $DAE_DB_DIR/pheno/comp_pheno \
+    --force \
+    -i instruments/ --data-dictionary comp_pheno_data_dictionary.tsv --pheno-id comp_pheno \
     --regression comp_pheno_regressions.conf \
     --person-column personId
 

@@ -4,6 +4,8 @@ import argparse
 import os
 import sys
 import traceback
+from copy import copy
+from pathlib import Path
 from typing import Any, Optional
 
 import yaml
@@ -17,6 +19,7 @@ from dae.pheno.common import (
     dump_config,
 )
 from dae.pheno.prepare.pheno_prepare import PrepareVariables
+from dae.task_graph.cli_tools import TaskGraphCli
 from dae.tools.pheno2browser import build_pheno_browser
 
 
@@ -43,8 +46,7 @@ def pheno_cli_parser() -> argparse.ArgumentParser:
         metavar="<instruments dir>",
     )
 
-    parser.add_argument(
-        "--tab-separated",
+    parser.add_argument("--tab-separated",
         dest="tab_separated",
         action="store_true",
         help="Flag for whether the instrument files are tab separated.",
@@ -59,7 +61,6 @@ def pheno_cli_parser() -> argparse.ArgumentParser:
     )
 
     parser.add_argument(
-        "-d",
         "--data-dictionary",
         dest="data_dictionary",
         help="The tab separated file that contains descriptions of measures.",
@@ -88,13 +89,6 @@ def pheno_cli_parser() -> argparse.ArgumentParser:
     )
 
     parser.add_argument(
-        "--force",
-        dest="force",
-        help="overwrites already existing pheno db file.",
-        action="store_true",
-    )
-
-    parser.add_argument(
         "--continue",
         dest="browser_only",
         help="Perform the second browser generation step on an existing DB.",
@@ -107,6 +101,8 @@ def pheno_cli_parser() -> argparse.ArgumentParser:
         help="Perform the data import step only.",
         action="store_true",
     )
+
+    TaskGraphCli.add_arguments(parser, use_commands=False)
 
     return parser
 
@@ -171,21 +167,26 @@ def build_browser(
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
+    kwargs = copy(vars(args))
+    pheno_db_filename = args.pheno_db_filename
+    del kwargs["pheno_db_filename"]
+    pheno_name = args.pheno_name
+    del kwargs["pheno_name"]
+
     build_pheno_browser(
-        args.pheno_db_filename,
-        args.pheno_name,
+        pheno_db_filename,
+        pheno_name,
         output_dir,
         regressions,
+        **kwargs,
     )
 
     pheno_conf_path = os.path.join(
-        output_dir, f"{args.pheno_name}.yaml",
+        output_dir, f"{pheno_name}.yaml",
     )
 
-    with open(pheno_conf_path, "w") as pheno_conf_file:
-        pheno_conf_file.write(yaml.dump(
-            generate_phenotype_data_config(args, regressions),
-        ))
+    config = yaml.dump(generate_phenotype_data_config(args, regressions))
+    Path(pheno_conf_path).write_text(config)
 
 
 def main(argv: Optional[list[str]] = None) -> int:
@@ -247,8 +248,6 @@ def main(argv: Optional[list[str]] = None) -> int:
 
         if not args.import_only:
             build_browser(args, regressions)
-
-        return 0
     except KeyboardInterrupt:
         return 0
     except Exception as e:
@@ -259,6 +258,8 @@ def main(argv: Optional[list[str]] = None) -> int:
         sys.stderr.write(program_name + ": " + repr(e) + "\n")
         sys.stderr.write(indent + "  for help use --help")
         return 2
+
+    return 0
 
 
 if __name__ == "__main__":
