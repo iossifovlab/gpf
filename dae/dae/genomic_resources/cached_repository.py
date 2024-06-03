@@ -5,7 +5,7 @@ import logging
 import os
 from collections.abc import Generator, Iterable
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import IO, Optional, Union
+from typing import IO, Any, Optional, Union
 
 import pysam
 
@@ -143,6 +143,11 @@ class CachingProtocol(ReadOnlyRepositoryProtocol):
 
         return self.local_protocol.open_vcf_file(
             resource, filename, index_filename)
+
+    def open_bigwig_file(
+            self, resource: GenomicResource, filename: str) -> Any:
+        self.refresh_cached_resource_file(resource, filename)
+        return self.local_protocol.open_bigwig_file(resource, filename)
 
     def file_exists(self, resource: GenomicResource, filename: str) -> bool:
         self.refresh_cached_resource_file(resource, filename)

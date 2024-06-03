@@ -200,7 +200,7 @@ def setup_bigwig(
     chr1	125	126	200.0
     """
     bw_file = pyBigWig.open(str(out_path), "w")  # pylint: disable=I1101
-    bw_file.add_header(list(chrom_lens.items()), maxZooms=0)
+    bw_file.addHeader(list(chrom_lens.items()), maxZooms=0)
 
     chrom_col: list[str] = []
     start_col: list[int] = []

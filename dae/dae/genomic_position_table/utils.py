@@ -9,6 +9,7 @@ from .table import GenomicPositionTable
 from .table_inmemory import InmemoryGenomicPositionTable
 from .table_tabix import TabixGenomicPositionTable
 from .table_vcf import VCFGenomicPositionTable
+from .table_bigwig import BigWigTable
 
 
 def build_genomic_position_table(
@@ -25,6 +26,8 @@ def build_genomic_position_table(
         default_format = "tsv"
     elif filename.endswith((".csv", ".csv.gz")):
         default_format = "csv"
+    elif filename.endswith(".bw"):
+        default_format = "bw"
     else:
         default_format = "mem"
 
@@ -37,6 +40,8 @@ def build_genomic_position_table(
         return TabixGenomicPositionTable(resource, table_definition)
     if table_fmt == "vcf_info":
         return VCFGenomicPositionTable(resource, table_definition)
+    if table_fmt.lower() in ("bw", "bigwig"):
+        return BigWigTable(resource, table_definition)
 
     raise ValueError(f"unknown table format {table_fmt}")
 

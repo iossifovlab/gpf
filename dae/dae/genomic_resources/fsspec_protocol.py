@@ -22,6 +22,7 @@ from urllib.parse import urlparse
 
 import fsspec
 import jinja2
+import pyBigWig  # type: ignore
 import pysam
 import yaml
 
@@ -279,6 +280,14 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
 
         return pysam.VariantFile(  # pylint: disable=no-member
             file_url, index_filename=index_url)
+
+    def open_bigwig_file(
+        self, resource: GenomicResource, filename: str) -> Any:
+        if self.scheme not in {"file", "s3", "http", "https"}:
+            raise OSError(
+                f"bigwig files are not supported on schema {self.scheme}")
+        file_url = self._get_file_url(resource, filename)
+        return pyBigWig.open(file_url)  # pylint: disable=I1101
 
 
 class FsspecReadWriteProtocol(

@@ -205,5 +205,5 @@ class GenomicPositionTable(abc.ABC):
         """Return chromosomes in a genomic table file.
 
         This is to be overwritten by the subclass. It should return a list of
-        the chromomes in the file in the order determinted by the file.
+        the chromosomes in the file in the order determinted by the file.
         """
