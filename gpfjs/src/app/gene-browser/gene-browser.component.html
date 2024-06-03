@@ -4,30 +4,34 @@
       >Gene Symbol</div
     >
     <div class="card-block">
-      <div ngbDropdown class="input-group panel" style="padding: 15px; align-items: baseline">
+      <div class="input-group panel" style="padding: 15px; align-items: baseline">
         <input
-          ngbDropdownAnchor
+          matAutocompleteOrigin
+          #origin="matAutocompleteOrigin"
+          matInput
+          [matAutocomplete]="auto"
+          [matAutocompleteConnectedTo]="origin"
           #searchBox
           id="search-box"
           placeholder="Search gene"
           autocomplete="off"
           spellcheck="false"
           [(ngModel)]="geneSymbol"
-          (keyup)="openDropdown(); searchBoxInput$.next(geneSymbol)"
+          (keyup)="searchBoxInput$.next(geneSymbol)"
           (focus)="reset(); geneSymbol = ''; showError = false"
-          (keydown.enter)="submitGeneRequest()"
-          (keydown.escape)="closeDropdown()" />
+          (keydown.enter)="submitGeneRequest()" />
 
-        <div ngbDropdownMenu id="genes-dropdown">
-          <button
+        <mat-autocomplete #auto="matAutocomplete">
+          <mat-option
             *ngFor="let suggestion of geneSymbolSuggestions"
             class="dropdown-item"
             type="button"
             (click)="selectGeneSymbol(suggestion)"
-            (keydown.enter)="selectGeneSymbol(suggestion); submitGeneRequest()">
+            (onSelectionChange)="selectGeneSymbol(suggestion); submitGeneRequest()"
+            [value]="suggestion">
             <span>{{ suggestion }}</span>
-          </button>
-        </div>
+          </mat-option>
+        </mat-autocomplete>
 
         <div style="padding-left: 16px">
           <label>

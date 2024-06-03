@@ -37,16 +37,8 @@ mat-option[aria-selected="true"]:hover {
   border: 1px solid rgba(0, 0, 0, 17%);
   border-top: none;
   padding: 0;
-  transition: none;
-  transform: none;
 }
 
 .mat-mdc-option {
   min-height: 35px;
-}
-
-mat-option {
-  text-overflow: ellipsis;
-  overflow: hidden;
-  white-space: nowrap;
 }
