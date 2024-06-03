@@ -332,3 +332,24 @@ def test_gencode_broken_utrs(
     gene_models = build_gene_models_from_file(filename, "gtf")
     gene_models.load()
     assert gene_models is not None
+
+
+def test_gencode_example(
+    fixture_dirname: Callable,
+) -> None:
+    filename = fixture_dirname("gene_models/example_gencode.txt")
+    gene_models = build_gene_models_from_file(filename, "gtf")
+    gene_models.load()
+    assert gene_models is not None
+    assert len(gene_models.gene_models) == 1
+    assert len(gene_models.transcript_models) == 1
+    assert "C2CD4C" in gene_models.gene_models
+
+    assert "ENST00000332235.7" in gene_models.transcript_models
+    tm = gene_models.transcript_models["ENST00000332235.7"]
+
+    assert tm.tr_id == "ENST00000332235.7"
+    assert tm.cds == (407096, 408361)
+    assert tm.tx == (405438, 409170)
+    assert len(tm.exons) == 2
+    assert tm.strand == "-"
