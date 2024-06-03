@@ -1240,7 +1240,6 @@ class GeneModels(
         infile.seek(0)
         df = self._parse_raw(
             infile, expected_columns, nrows=nrows, comment="#")
-
         if df is None:
             expected_columns.append("comment")
             infile.seek(0)
