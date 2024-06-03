@@ -1,8 +1,8 @@
 import logging
 from typing import Dict, List
 
-from dae.gene.denovo_gene_sets_db import DenovoGeneSetsDb
-from dae.gene.gene_sets_db import GeneSet
+from dae.gene_sets.denovo_gene_sets_db import DenovoGeneSetsDb
+from dae.gene_sets.gene_sets_db import GeneSet
 from remote.rest_api_client import RESTClient
 
 logger = logging.getLogger(__name__)

@@ -9,7 +9,7 @@ from typing import Any, Dict, Optional, Set, cast
 from box import Box
 
 from dae.effect_annotation.effect import expand_effect_types
-from dae.gene.gene_sets_db import GeneSet
+from dae.gene_sets.gene_sets_db import GeneSet
 from dae.gene_profile.db import GeneProfileDB
 from dae.gene_profile.statistic import GPStatistic
 from dae.gpf_instance.gpf_instance import GPFInstance

@@ -1,7 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
 
-from dae.gene.denovo_gene_set_collection import DenovoGeneSetCollection
+from dae.gene_sets.denovo_gene_set_collection import DenovoGeneSetCollection
 
 # pytestmark = pytest.mark.usefixtures("gene_info_cache_dir", "calc_gene_sets")
 pytestmark = pytest.mark.xfail

@@ -7,11 +7,11 @@ from typing import Any, Callable, List, cast
 
 import pytest
 
-from dae.gene.denovo_gene_set_collection import DenovoGeneSetCollection
-from dae.gene.denovo_gene_set_collection_factory import (
+from dae.gene_sets.denovo_gene_set_collection import DenovoGeneSetCollection
+from dae.gene_sets.denovo_gene_set_collection_factory import (
     DenovoGeneSetCollectionFactory,
 )
-from dae.gene.denovo_gene_sets_db import DenovoGeneSetsDb
+from dae.gene_sets.denovo_gene_sets_db import DenovoGeneSetsDb
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.studies.study import GenotypeData
 from dae.testing import denovo_study, setup_denovo, setup_pedigree

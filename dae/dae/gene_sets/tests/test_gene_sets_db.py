@@ -3,7 +3,7 @@ import textwrap
 
 import pytest
 
-from dae.gene.gene_sets_db import GeneSetCollection, GeneSetsDb
+from dae.gene_sets.gene_sets_db import GeneSetCollection, GeneSetsDb
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME
 from dae.genomic_resources.testing import build_inmemory_test_repository
 

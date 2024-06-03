@@ -1,5 +1,4 @@
 # pylint: disable=too-many-lines
-# FIXME: too-many-lines
 from __future__ import annotations
 
 import copy
@@ -8,10 +7,8 @@ import json
 import logging
 import textwrap
 from collections import defaultdict
-from collections.abc import Generator  # TextIO
-from contextlib import contextmanager
 from functools import lru_cache
-from typing import IO, Any, Optional, Protocol, cast
+from typing import IO, Any, ClassVar, Optional, Protocol, cast
 
 import pandas as pd
 import yaml
@@ -30,8 +27,6 @@ from dae.utils.regions import BedRegion
 
 logger = logging.getLogger(__name__)
 
-# TODO IVAN: not all parsers handle the gene_mapping properly!
-
 
 class Exon:
     """Provides exon model."""
@@ -41,30 +36,26 @@ class Exon:
         start: int,
         stop: int,
         frame: Optional[int] = None,
-        number: Optional[int] = None,
-        cds_start: Optional[int] = None,
-        cds_stop: Optional[int] = None,
     ):
+        """Initialize exon model.
+
+        Args:
+            start: The genomic start position of the exon (1-based).
+            stop (int): The genomic stop position of the exon (1-based, closed).
+            frame (Optional[int]): The frame of the exon.
+        """
+
         self.start = start
         self.stop = stop
         self.frame = frame  # related to cds
 
-        # for GTF
-        self.number = number  # exon number
-        self.cds_start = cds_start  #
-        self.cds_stop = cds_stop
-
     def __repr__(self) -> str:
-        return (
-            f"Exon(start={self.start}; stop={self.stop}; "
-            f"number={self.number})"
-        )
+        return f"Exon(start={self.start}; stop={self.stop})"
 
 
 class TranscriptModel:
     """Provides transcript model."""
 
-    # pylint: disable=too-many-instance-attributes,too-many-arguments
     def __init__(
         self,
         gene: str,
@@ -77,6 +68,24 @@ class TranscriptModel:
         exons: Optional[list[Exon]] = None,
         attributes: Optional[dict[str, Any]] = None,
     ):
+        """Initialize transcript model.
+
+        Args:
+            gene (str): The gene name.
+            tr_id (str): The transcript ID.
+            tr_name (str): The transcript name.
+            chrom (str): The chromosome name.
+            strand (str): The strand of the transcript.
+            tx (tuple[int, int]): The transcript start and end positions.
+                (1-based, closed interval)
+            cds (tuple[int, int]): The coding region start and end positions.
+                The CDS region includes the start and stop codons.
+                (1-based, closed interval)
+            exons (Optional[list[Exon]]): The list of exons. Defaults to
+                empty list.
+            attributes (Optional[dict[str, Any]]): The additional attributes.
+                Defaults to empty dictionary.
+        """
         self.gene = gene
         self.tr_id = tr_id
         self.tr_name = tr_name
@@ -85,21 +94,10 @@ class TranscriptModel:
         self.tx = tx  # pylint: disable=invalid-name
         self.cds = cds
         self.exons: list[Exon] = exons if exons is not None else []
-
-        # for GTF
-        self.utrs: list[tuple[int, int, int]] = []
-        self.start_codon: tuple[int, int, int]
-        self.stop_codon: tuple[int, int, int]
-
-        # # it can be derivable from cds' start and end
-        # self._is_coding = is_coding
-
         self.attributes = attributes if attributes is not None else {}
 
     def is_coding(self) -> bool:
-        if self.cds[0] >= self.cds[1]:
-            return False
-        return True
+        return self.cds[0] < self.cds[1]
 
     def cds_regions(self, ss_extend: int = 0) -> list[BedRegion]:
         """Compute CDS regions."""
@@ -198,10 +196,10 @@ class TranscriptModel:
                 )
                 k += 1
 
-            for exon in self.exons[k:]:
-                regions.append(
-                    BedRegion(chrom=self.chrom, start=exon.start, stop=exon.stop),
-                )
+            regions.extend([
+                BedRegion(chrom=self.chrom, start=exon.start, stop=exon.stop)
+                for exon in self.exons[k:]
+            ])
 
         return regions
 
@@ -246,10 +244,10 @@ class TranscriptModel:
                 )
                 k += 1
 
-            for exon in self.exons[k:]:
-                regions.append(
-                    BedRegion(chrom=self.chrom, start=exon.start, stop=exon.stop),
-                )
+            regions.extend([
+                BedRegion(chrom=self.chrom, start=exon.start, stop=exon.stop)
+                for exon in self.exons[k:]
+            ])
 
         return regions
 
@@ -261,10 +259,10 @@ class TranscriptModel:
         regions = []
 
         if ss_extend == 0:
-            for exon in self.exons:
-                regions.append(
-                    BedRegion(chrom=self.chrom, start=exon.start, stop=exon.stop),
-                )
+            regions.extend([
+                BedRegion(chrom=self.chrom, start=exon.start, stop=exon.stop)
+                for exon in self.exons
+            ])
 
         else:
             for exon in self.exons:
@@ -412,18 +410,6 @@ class TranscriptModel:
             if exon.frame != frame:
                 return False
         return True
-
-
-@contextmanager
-def _open_file(filename: str) -> Generator[IO, None, None]:
-    if filename.endswith(".gz") or filename.endswith(".bgz"):
-        infile = gzip.open(filename, "rt")
-    else:
-        infile = open(filename)
-    try:
-        yield infile
-    finally:
-        infile.close()
 
 
 class GeneModelsParser(Protocol):
@@ -630,7 +616,7 @@ class GeneModels(
             outfile.write("\t".join([str(x) if x else "" for x in columns]))
             outfile.write("\n")
 
-    def save(self, output_filename: str, gzipped: bool = True) -> None:
+    def save(self, output_filename: str, *, gzipped: bool = True) -> None:
         """Save gene models in a file in default file format."""
         if gzipped:
             if not output_filename.endswith(".gz"):
@@ -648,7 +634,6 @@ class GeneModels(
         nrows: Optional[int] = None,
     ) -> bool:
         # pylint: disable=too-many-locals
-        # FIXME: too-many-locals
         infile.seek(0)
         df = pd.read_csv(
             infile,
@@ -687,6 +672,9 @@ class GeneModels(
             tr_names = pd.Series(data=df["trID"].values)
             df["trOrigId"] = tr_names
 
+        if gene_mapping:
+            self.alternative_names = copy.deepcopy(gene_mapping)
+
         records = df.to_dict(orient="records")
         for line in records:
             line = cast(dict, line)
@@ -706,8 +694,7 @@ class GeneModels(
                     a[0]: a[1] for a in astep
                 }
             gene = line["gene"]
-            if gene_mapping is not None:
-                gene = gene_mapping.get(gene, gene)
+            gene = self.alternative_names.get(gene, gene)
             transcript_model = TranscriptModel(
                 gene=gene,
                 tr_id=line["trID"],
@@ -733,7 +720,6 @@ class GeneModels(
         nrows: Optional[int] = None,
     ) -> bool:
         # pylint: disable=too-many-locals
-        # FIXME:
         expected_columns = [
             "#geneName",
             "name",
@@ -756,11 +742,12 @@ class GeneModels(
         records = df.to_dict(orient="records")
 
         transcript_ids_counter: dict[str, int] = defaultdict(int)
+        if gene_mapping:
+            self.alternative_names = copy.deepcopy(gene_mapping)
 
         for rec in records:
             gene = rec["#geneName"]
-            if gene_mapping:
-                gene = gene_mapping.get(gene, gene)
+            gene = self.alternative_names.get(gene, gene)
             tr_name = rec["name"]
             chrom = rec["chrom"]
             strand = rec["strand"]
@@ -802,7 +789,6 @@ class GeneModels(
         gene_mapping: Optional[dict[str, str]] = None,
         nrows: Optional[int] = None,
     ) -> bool:
-        # FIXME:
         # pylint: disable=too-many-locals
         expected_columns = [
             "#bin",
@@ -831,11 +817,12 @@ class GeneModels(
         records = df.to_dict(orient="records")
 
         transcript_ids_counter: dict[str, int] = defaultdict(int)
+        if gene_mapping:
+            self.alternative_names = copy.deepcopy(gene_mapping)
 
         for rec in records:
             gene = rec["name2"]
-            if gene_mapping:
-                gene = gene_mapping.get(gene, gene)
+            gene = self.alternative_names.get(gene, gene)
 
             tr_name = rec["name"]
             chrom = rec["chrom"]
@@ -935,7 +922,6 @@ class GeneModels(
         gene_mapping: Optional[dict[str, str]] = None,
         nrows: Optional[int] = None,
     ) -> bool:
-        # FIXME:
         # pylint: disable=too-many-locals
         expected_columns = [
             # CCDS is identical with RefSeq
@@ -965,8 +951,7 @@ class GeneModels(
         records = df.to_dict(orient="records")
 
         transcript_ids_counter: dict[str, int] = defaultdict(int)
-        self.alternative_names = {}
-        if gene_mapping is not None:
+        if gene_mapping:
             self.alternative_names = copy.deepcopy(gene_mapping)
 
         for rec in records:
@@ -1026,7 +1011,6 @@ class GeneModels(
         gene_mapping: Optional[dict[str, str]] = None,
         nrows: Optional[int] = None,
     ) -> bool:
-        # FIXME:
         # pylint: disable=too-many-locals
         expected_columns = [
             "name",
@@ -1051,8 +1035,8 @@ class GeneModels(
         records = df.to_dict(orient="records")
 
         transcript_ids_counter: dict[str, int] = defaultdict(int)
-        self.alternative_names = {}
-        if gene_mapping is not None:
+
+        if gene_mapping:
             self.alternative_names = copy.deepcopy(gene_mapping)
 
         for rec in records:
@@ -1143,7 +1127,6 @@ class GeneModels(
             lstring exonFrames; 	"Exon frame offsets {0,1,2}"
             )
         """
-        # FIXME:
         # pylint: disable=too-many-locals
         expected_columns = [
             "name",
@@ -1174,8 +1157,7 @@ class GeneModels(
         records = df.to_dict(orient="records")
 
         transcript_ids_counter: dict[str, int] = defaultdict(int)
-        self.alternative_names = {}
-        if gene_mapping is not None:
+        if gene_mapping:
             self.alternative_names = copy.deepcopy(gene_mapping)
 
         for rec in records:
@@ -1225,13 +1207,22 @@ class GeneModels(
 
         return True
 
+    @staticmethod
+    def _parse_gtf_attributes(data: str) -> dict[str, str]:
+        attributes = list(
+            filter(lambda x: x, [a.strip() for a in data.split(";")]),
+        )
+        result = {}
+        for attr in attributes:
+            key, value = attr.split(" ")
+            result[key.strip()] = value.strip('"').strip()
+        return result
+
     def _parse_gtf_gene_models_format(
         self, infile: IO,
         gene_mapping: Optional[dict[str, str]] = None,
         nrows: Optional[int] = None,
     ) -> bool:
-        # FIXME:
-        # flake8=noqa
         # pylint: disable=too-many-locals,too-many-branches,too-many-statements
         expected_columns = [
             "seqname",
@@ -1258,24 +1249,17 @@ class GeneModels(
             if df is None:
                 return False
 
-        def parse_gtf_attributes(data: str) -> dict[str, str]:
-            attributes = list(
-                filter(lambda x: x, [a.strip() for a in data.split(";")]),
-            )
-            result = {}
-            for attr in attributes:
-                key, value = attr.split(" ")
-                result[key.strip()] = value.strip('"').strip()
-            return result
+        if gene_mapping:
+            self.alternative_names = copy.deepcopy(gene_mapping)
 
         records = df.to_dict(orient="records")
         for rec in records:
             feature = rec["feature"]
             if feature == "gene":
                 continue
-            attributes = parse_gtf_attributes(rec["attributes"])
+            attributes = self._parse_gtf_attributes(rec["attributes"])
             tr_id = attributes["transcript_id"]
-            if feature in set(["transcript", "Selenocysteine"]):
+            if feature in {"transcript", "Selenocysteine"}:
                 if feature == "Selenocysteine" and \
                         tr_id in self.transcript_models:
                     continue
@@ -1284,8 +1268,7 @@ class GeneModels(
                         f"{tr_id} of {feature} already in transcript models",
                     )
                 gene = attributes["gene_name"]
-                if gene_mapping:
-                    gene = gene_mapping.get(gene, gene)
+                gene = self.alternative_names.get(gene, gene)
 
                 transcript_model = TranscriptModel(
                     gene=gene,
@@ -1299,46 +1282,23 @@ class GeneModels(
                 )
                 self._add_transcript_model(transcript_model)
                 continue
-            if feature in {"CDS", "exon"}:
+            if feature == "exon":
                 if tr_id not in self.transcript_models:
                     raise ValueError(
                         f"exon or CDS transcript {tr_id} not found "
                         f"in transctipt models",
                     )
-                exon_number = int(attributes["exon_number"])
                 transcript_model = self.transcript_models[tr_id]
-                if len(transcript_model.exons) < exon_number:
-                    transcript_model.exons.append(Exon(-1, -1))
-                assert len(transcript_model.exons) >= exon_number
-
-                exon = transcript_model.exons[exon_number - 1]
                 if feature == "exon":
-                    exon.start = rec["start"]
-                    exon.stop = rec["end"]
-                    exon.frame = -1
-                    exon.number = exon_number
+                    exon = Exon(
+                        rec["start"], rec["end"], frame=-1,
+                    )
+                    transcript_model.exons.append(exon)
                     continue
-                if feature == "CDS":
-                    exon.cds_start = rec["start"]
-                    exon.cds_stop = rec["end"]
-                    exon.frame = rec["phase"]
-                    # pylint: disable=protected-access
-                    # transcript_model._is_coding = True
-                    continue
-            if feature in {"UTR", "5UTR", "3UTR", "start_codon", "stop_codon"}:
-                exon_number = int(attributes["exon_number"])
+            if feature in {"UTR", "5UTR", "3UTR", "CDS"}:
+                continue
+            if feature in {"start_codon", "stop_codon"}:
                 transcript_model = self.transcript_models[tr_id]
-
-                if feature in {"UTR", "5UTR", "3UTR"}:
-                    transcript_model.utrs.append(
-                        (rec["start"], rec["end"], exon_number))
-                    continue
-                if feature == "start_codon":
-                    transcript_model.start_codon = \
-                        (rec["start"], rec["end"], exon_number)
-                if feature == "stop_codon":
-                    transcript_model.stop_codon = \
-                        (rec["start"], rec["end"], exon_number)
                 cds = transcript_model.cds
                 transcript_model.cds = \
                     (min(cds[0], rec["start"]), max(cds[1], rec["end"]))
@@ -1350,14 +1310,12 @@ class GeneModels(
         for transcript_model in self.transcript_models.values():
             transcript_model.exons = sorted(
                 transcript_model.exons, key=lambda x: x.start)
-            transcript_model.utrs = sorted(
-                transcript_model.utrs, key=lambda x: x[0])
             transcript_model.update_frames()
 
         return True
 
     @classmethod
-    def _gene_mapping(cls, infile: IO) -> dict[str, str]:
+    def _load_gene_mapping(cls, infile: IO) -> dict[str, str]:
         """Load alternative names for genes.
 
         Assume that its first line has two column names
@@ -1376,7 +1334,7 @@ class GeneModels(
 
         return alt_names
 
-    SUPPORTED_GENE_MODELS_FILE_FORMATS = {
+    SUPPORTED_GENE_MODELS_FILE_FORMATS: ClassVar[set[str]] = {
         "default",
         "refflat",
         "refseq",
@@ -1430,7 +1388,7 @@ class GeneModels(
                     inferred_formats.append(inferred_format)
                     logger.debug(
                         "gene models format %s matches input", inferred_format)
-            except Exception as ex:  # pylint: disable=broad-except
+            except Exception as ex:  # noqa: BLE001 pylint: disable=broad-except
                 logger.debug(
                     "file format %s does not match; %s",
                     inferred_format, ex, exc_info=True)
@@ -1446,6 +1404,18 @@ class GeneModels(
 
     def is_loaded(self) -> bool:
         return len(self.transcript_models) > 0
+
+    def probe_file_format(self) -> Optional[str]:
+        """Probe gene models file format."""
+        filename = self.resource.get_config()["filename"]
+        logger.debug("checing gene models %s file format", filename)
+        compression = False
+        if filename.endswith(".gz"):
+            compression = True
+        with self.resource.open_raw_file(
+                filename, mode="rt", compression=compression) as infile:
+
+            return self._infer_gene_model_parser(infile)
 
     def load(self) -> GeneModels:
         """Load gene models."""
@@ -1493,12 +1463,15 @@ class GeneModels(
                         compression=compression) as gene_mapping_file:
                     logger.debug(
                         "loading gene mapping from %s", gene_mapping_filename)
-                    gene_mapping = self._gene_mapping(gene_mapping_file)
+                    gene_mapping = self._load_gene_mapping(gene_mapping_file)
 
             infile.seek(0)
             self._reset()
 
-            parser(infile, gene_mapping=gene_mapping)
+            if not parser(infile, gene_mapping=gene_mapping):
+                raise ValueError(
+                    f"Failed to parse gene models file {filename} "
+                    f"with format {fileformat}")
         return self
 
     def get_template(self) -> Template:
@@ -1552,7 +1525,7 @@ class GeneModels(
         }, indent=2).encode()
 
     def add_statistics_build_tasks(
-        self, task_graph: TaskGraph, **kwargs: Any,
+        self, task_graph: TaskGraph, **kwargs: Any,  # noqa: ARG002
     ) -> list[Task]:
         task = task_graph.create_task(
             f"{self.resource_id}_cals_stats",
@@ -1587,7 +1560,7 @@ class GeneModels(
             yaml.dump(stats, stats_file, sort_keys=False)
         return stats
 
-    @lru_cache(maxsize=64)
+    @lru_cache(maxsize=64)  # noqa: B019
     def get_statistics(self) -> Optional[dict[str, int]]:  # type: ignore
         try:
             with self.resource.proto.open_raw_file(
@@ -1602,7 +1575,7 @@ class GeneModels(
                     if not isinstance(stat, str):
                         logger.error(
                             "The stats.yaml file for the "
-                            "%s is invalid (2.{stat}).", self.resource)
+                            "%s is invalid (2. %s).", self.resource, stat)
                         return None
                     if not isinstance(value, int):
                         logger.error(
@@ -1665,7 +1638,4 @@ def build_gene_models_from_resource(
             "%s as gene models", resource.resource_id, resource.get_type())
         raise ValueError(f"wrong resource type: {resource.resource_id}")
 
-    gene_models = GeneModels(resource)
-    # gene_models.load()
-
-    return gene_models
+    return GeneModels(resource)

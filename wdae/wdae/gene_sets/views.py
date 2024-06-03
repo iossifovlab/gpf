@@ -15,7 +15,7 @@ from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
 
-from dae.gene.gene_sets_db import GeneSet
+from dae.gene_sets.gene_sets_db import GeneSet
 
 logger = logging.getLogger(__name__)
 

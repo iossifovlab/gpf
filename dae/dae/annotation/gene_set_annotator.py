@@ -8,7 +8,7 @@ from dae.annotation.annotation_pipeline import (
     Annotator,
     AnnotatorInfo,
 )
-from dae.gene.gene_sets_db import build_gene_set_collection_from_resource
+from dae.gene_sets.gene_sets_db import build_gene_set_collection_from_resource
 from dae.genomic_resources import GenomicResource
 
 logger = logging.getLogger(__name__)

@@ -17,8 +17,8 @@ from dae.common_reports.common_report import CommonReport
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.dae_conf import dae_conf_schema
 from dae.configuration.schemas.gene_profile import gene_profiles_config
-from dae.gene.denovo_gene_sets_db import DenovoGeneSetsDb
-from dae.gene.gene_sets_db import (
+from dae.gene_sets.denovo_gene_sets_db import DenovoGeneSetsDb
+from dae.gene_sets.gene_sets_db import (
     GeneSet,
     GeneSetsDb,
     build_gene_set_collection_from_resource,

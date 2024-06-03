@@ -1,4 +1,3 @@
-#!/bin/env python
 # pylint: disable=invalid-name
 
 from collections import defaultdict

@@ -1,8 +1,8 @@
 import logging
 from functools import cache
 
-from dae.gene.denovo_gene_set_collection import DenovoGeneSetCollection
-from dae.gene.denovo_gene_set_collection_factory import (
+from dae.gene_sets.denovo_gene_set_collection import DenovoGeneSetCollection
+from dae.gene_sets.denovo_gene_set_collection_factory import (
     DenovoGeneSetCollectionFactory,
 )
 

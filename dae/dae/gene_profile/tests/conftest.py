@@ -6,7 +6,7 @@ import pytest
 from box import Box
 from pytest_mock import MockerFixture
 
-from dae.gene.gene_sets_db import GeneSet
+from dae.gene_sets.gene_sets_db import GeneSet
 from dae.gene_profile.db import GeneProfileDB
 from dae.gene_profile.statistic import GPStatistic
 from dae.gpf_instance import GPFInstance
