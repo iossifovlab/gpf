@@ -82,7 +82,7 @@ describe('pheno measure', () => {
 });
 
 describe('pheno measures', () => {
-  const basePath = '/test_base_url/';
+  const basePath = 'test_base_url/';
   let phenoMeasure = PhenoMeasure.fromJson(fakeJsonMeasure);
 
   phenoMeasure = PhenoMeasure.addBasePath(phenoMeasure, basePath);
@@ -97,7 +97,7 @@ describe('pheno measures', () => {
   });
 
   it('should be creatable from a given json', () => {
-    expect(phenoMeasures.baseImageUrl).toBe('/test_base_url/');
+    expect(phenoMeasures.baseImageUrl).toBe('test_base_url/');
     expect(phenoMeasures.measures[0]).toStrictEqual(phenoMeasure);
     expect(phenoMeasures.hasDescriptions).toBe(true);
   });
