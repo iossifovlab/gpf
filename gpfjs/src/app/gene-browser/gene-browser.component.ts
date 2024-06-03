@@ -16,6 +16,7 @@ import * as d3 from 'd3';
 import * as draw from 'app/utils/svg-drawing';
 import { LGDS, CNV, OTHER, CODING } from 'app/effect-types/effect-types';
 import { DatasetsTreeService } from 'app/datasets/datasets-tree.service';
+import { MatAutocompleteTrigger } from '@angular/material/autocomplete';
 
 @Component({
   selector: 'gpf-gene-browser',
@@ -24,6 +25,7 @@ import { DatasetsTreeService } from 'app/datasets/datasets-tree.service';
 })
 export class GeneBrowserComponent implements OnInit, OnDestroy {
   @ViewChild('searchBox') private searchBox: ElementRef;
+  @ViewChild('geneBrowserSearchTrigger') private geneBrowserSearchTrigger: MatAutocompleteTrigger;
   @ViewChild('filters', { static: false }) public set filters(element: HTMLElement) {
     this.drawDenovoIcons();
     this.drawTransmittedIcons();
@@ -173,6 +175,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
     } catch (error) {
       console.error(error);
       this.showError = true;
+      this.geneBrowserSearchTrigger.closePanel();
       return;
     }
 

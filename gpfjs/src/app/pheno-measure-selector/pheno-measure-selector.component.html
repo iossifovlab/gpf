@@ -1,12 +1,12 @@
 <div
   matAutocompleteOrigin
-  #origin="matAutocompleteOrigin"
+  #phenoMeasureSearch="matAutocompleteOrigin"
   class="input-group"
   style="display: inline-flex; flex-wrap: nowrap">
   <input
     matInput
-    [matAutocomplete]="auto"
-    [matAutocompleteConnectedTo]="origin"
+    [matAutocomplete]="measuresDropdown"
+    [matAutocompleteConnectedTo]="phenoMeasureSearch"
     #searchBox
     id="search-box"
     placeholder="Select or start typing to search"
@@ -17,7 +17,7 @@
     (click)="clear()"
     style="width: 100%" />
 
-  <mat-autocomplete #auto="matAutocomplete">
+  <mat-autocomplete #measuresDropdown="matAutocomplete" class="measures-dropdown">
     <ng-container *ngIf="filteredMeasures.length === 0">
       <mat-option [disabled]="true" id="loading-dropdown-text" *ngIf="loadingMeasures || loadingDropdown"
         >Loading...</mat-option

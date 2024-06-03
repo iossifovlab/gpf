@@ -7,10 +7,11 @@
       <div class="input-group panel" style="padding: 15px; align-items: baseline">
         <input
           matAutocompleteOrigin
-          #origin="matAutocompleteOrigin"
+          #geneBrowserSearch="matAutocompleteOrigin"
+          #geneBrowserSearchTrigger="matAutocompleteTrigger"
           matInput
-          [matAutocomplete]="auto"
-          [matAutocompleteConnectedTo]="origin"
+          [matAutocomplete]="geneDropdown"
+          [matAutocompleteConnectedTo]="geneBrowserSearch"
           #searchBox
           id="search-box"
           placeholder="Search gene"
@@ -21,7 +22,7 @@
           (focus)="reset(); geneSymbol = ''; showError = false"
           (keydown.enter)="submitGeneRequest()" />
 
-        <mat-autocomplete #auto="matAutocomplete">
+        <mat-autocomplete #geneDropdown="matAutocomplete" class="gene-suggestions-dropdown">
           <mat-option
             *ngFor="let suggestion of geneSymbolSuggestions"
             class="dropdown-item"

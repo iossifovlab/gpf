@@ -1,6 +1,6 @@
 import { APP_BASE_HREF } from '@angular/common';
 import { Component, ElementRef, Inject, OnDestroy, OnInit, ViewChild } from '@angular/core';
-import { NgbDropdown } from '@ng-bootstrap/ng-bootstrap';
+import { MatAutocompleteTrigger } from '@angular/material/autocomplete';
 import { DatasetsTreeService } from 'app/datasets/datasets-tree.service';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { Gene } from 'app/gene-browser/gene';
@@ -32,8 +32,8 @@ export class HomeComponent implements OnInit, OnDestroy {
   public geneProfilesConfig: GeneProfilesSingleViewConfig;
   public homeDescription: string;
 
-  @ViewChild(NgbDropdown) private dropdown: NgbDropdown;
   @ViewChild('searchBox') private searchBox: ElementRef;
+  @ViewChild('trigger') private dropdownTrigger: MatAutocompleteTrigger;
   public selectedGene: Gene;
   public geneSymbol = '';
   public geneSymbolSuggestions: string[] = [];
@@ -113,6 +113,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   public openSingleView(searchTerm: string): void {
+    (this.searchBox.nativeElement as HTMLElement).blur();
     if (this.showError) {
       return;
     }
@@ -125,8 +126,6 @@ export class HomeComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.closeDropdown();
-
     this.geneService.getGene(this.geneSymbol.trim())
       .subscribe({
         next: gene => {
@@ -137,21 +136,15 @@ export class HomeComponent implements OnInit, OnDestroy {
         error: error => {
           console.error(error);
           this.showError = true;
+          this.dropdownTrigger.closePanel();
         }
       });
   }
 
-  public openDropdown(): void {
-    if (this.dropdown && !this.dropdown.isOpen()) {
-      this.dropdown.open();
-    }
-  }
-
-  public closeDropdown(): void {
-    if (this.dropdown && this.dropdown.isOpen()) {
-      this.dropdown.close();
-      (this.searchBox.nativeElement as HTMLElement).blur();
-    }
+  public reset(): void {
+    this.geneSymbol = '';
+    this.showError = false;
+    this.geneSymbolSuggestions = [];
   }
 
   public attachDatasetDescription(entry: object): void {
