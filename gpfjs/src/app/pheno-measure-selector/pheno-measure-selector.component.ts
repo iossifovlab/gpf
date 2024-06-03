@@ -4,7 +4,6 @@ import { Component, OnChanges, Input, ViewChild, Output, EventEmitter,
 import { MeasuresService } from '../measures/measures.service';
 import { ContinuousMeasure } from '../measures/measures';
 import { first } from 'rxjs/operators';
-import { NgbDropdown } from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
   selector: 'gpf-pheno-measure-selector',
@@ -17,7 +16,6 @@ export class PhenoMeasureSelectorComponent implements OnChanges {
   @Output() public measuresChange = new EventEmitter(true);
 
   @ViewChild('searchBox') private searchBox: ElementRef;
-  @ViewChild(NgbDropdown) private dropdown: NgbDropdown;
 
   public measures: Array<ContinuousMeasure> = [];
   public filteredMeasures: Array<ContinuousMeasure> = [];
@@ -35,6 +33,7 @@ export class PhenoMeasureSelectorComponent implements OnChanges {
       this.loadingMeasures = true;
       this.measuresService.getContinuousMeasures(this.datasetId).pipe(first()).subscribe(measures => {
         this.measures = measures;
+        this.filterData();
         this.measuresChange.emit(this.measures);
         this.loadingMeasures = false;
       });
@@ -46,19 +45,6 @@ export class PhenoMeasureSelectorComponent implements OnChanges {
     this.searchString = measure ? measure.name : '';
     if (sendEvent) {
       this.selectedMeasureChange.emit(measure);
-    }
-  }
-
-  public openDropdown(): void {
-    if (this.dropdown && !this.dropdown.isOpen()) {
-      this.dropdown.open();
-    }
-  }
-
-  public closeDropdown(): void {
-    if (this.dropdown && this.dropdown.isOpen()) {
-      this.dropdown.close();
-      (this.searchBox.nativeElement as HTMLInputElement).blur();
     }
   }
 
@@ -85,7 +71,6 @@ export class PhenoMeasureSelectorComponent implements OnChanges {
 
   private filterData(): void {
     this.filteredMeasures = this.measures;
-
     if (this.searchString.length) {
       this.filteredMeasures = this.filteredMeasures.filter(measure =>
         measure.name.toLowerCase().indexOf(this.searchString.toLowerCase()) !== -1

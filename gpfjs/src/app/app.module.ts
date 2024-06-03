@@ -188,6 +188,8 @@ import { FamilyTagsComponent } from './family-tags/family-tags.component';
 import { FamilyTagsState } from './family-tags/family-tags.state';
 import { GeneProfilesState } from './gene-profiles-table/gene-profiles-table.state';
 import { DatasetNodeState } from './dataset-node/dataset-node.state';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import { MatInputModule } from '@angular/material/input';
 
 const appRoutes: Routes = [
   {
@@ -439,7 +441,9 @@ const appRoutes: Routes = [
     NgxsResetPluginModule.forRoot(),
     DragDropModule,
     ClipboardModule,
-    AngularMarkdownEditorModule.forRoot()
+    AngularMarkdownEditorModule.forRoot(),
+    MatAutocompleteModule,
+    MatInputModule
   ],
   providers: [
     CookieService,

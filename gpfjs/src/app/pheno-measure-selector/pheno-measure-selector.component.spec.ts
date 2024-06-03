@@ -10,6 +10,7 @@ import { UsersService } from 'app/users/users.service';
 
 import { PhenoMeasureSelectorComponent } from './pheno-measure-selector.component';
 import { SearchableSelectComponent } from 'app/searchable-select/searchable-select.component';
+import { MatAutocomplete, MatAutocompleteOrigin } from '@angular/material/autocomplete';
 
 class MockDatasetsService {
   public getSelectedDataset(): object {
@@ -24,7 +25,7 @@ describe('PhenoMeasureSelectorComponent', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      declarations: [PhenoMeasureSelectorComponent],
+      declarations: [PhenoMeasureSelectorComponent, MatAutocompleteOrigin, MatAutocomplete],
       providers: [
         MeasuresService,
         ConfigService,
