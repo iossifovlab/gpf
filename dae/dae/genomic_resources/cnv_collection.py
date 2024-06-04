@@ -4,13 +4,13 @@ import logging
 from dataclasses import dataclass
 from typing import Any
 
-from dae.genomic_position_table.table_tabix import (
+from dae.genomic_resources.genomic_position_table.table_tabix import (
     TabixGenomicPositionTable,
 )
-from dae.genomic_position_table.table_vcf import (
+from dae.genomic_resources.genomic_position_table.table_vcf import (
     VCFGenomicPositionTable,
 )
-from dae.genomic_position_table.utils import (
+from dae.genomic_resources.genomic_position_table.utils import (
     build_genomic_position_table,
 )
 from dae.genomic_resources.genomic_scores import GenomicScore

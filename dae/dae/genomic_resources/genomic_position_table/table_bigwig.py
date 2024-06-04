@@ -2,8 +2,8 @@
 from collections.abc import Generator
 from typing import Optional
 
-from dae.genomic_position_table.line import Line, LineBase
-from dae.genomic_position_table.table import GenomicPositionTable
+from dae.genomic_resources.genomic_position_table.line import Line, LineBase
+from dae.genomic_resources.genomic_position_table.table import GenomicPositionTable
 from dae.genomic_resources.repository import GenomicResource
 
 

@@ -2,7 +2,7 @@
 
 import pathlib
 
-from dae.genomic_position_table import (
+from dae.genomic_resources.genomic_position_table import (
     build_genomic_position_table,
 )
 from dae.genomic_resources.testing import (

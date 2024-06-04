@@ -5,7 +5,7 @@ from typing import cast
 
 import pytest
 
-from dae.genomic_position_table import VCFGenomicPositionTable
+from dae.genomic_resources.genomic_position_table import VCFGenomicPositionTable
 from dae.genomic_resources.fsspec_protocol import build_fsspec_protocol
 from dae.genomic_resources.genomic_scores import (
     AlleleScore,

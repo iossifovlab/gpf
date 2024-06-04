@@ -3,8 +3,8 @@ import textwrap
 
 import pytest
 
-from dae.genomic_position_table.table_bigwig import BigWigTable
-from dae.genomic_position_table.utils import build_genomic_position_table
+from dae.genomic_resources.genomic_position_table.table_bigwig import BigWigTable
+from dae.genomic_resources.genomic_position_table.utils import build_genomic_position_table
 from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.genomic_resources.testing import (
     build_filesystem_test_repository,
