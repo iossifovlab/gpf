@@ -19,7 +19,7 @@
           spellcheck="false"
           [(ngModel)]="geneSymbol"
           (keyup)="searchBoxInput$.next(geneSymbol)"
-          (focus)="reset(); geneSymbol = ''; showError = false"
+          (focus)="reset()"
           (keydown.enter)="submitGeneRequest()" />
 
         <mat-autocomplete #geneDropdown="matAutocomplete" class="gene-suggestions-dropdown">

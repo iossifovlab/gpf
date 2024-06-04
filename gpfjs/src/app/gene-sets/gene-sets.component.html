@@ -49,30 +49,70 @@
 
     <div class="col-sm-9">
       <fieldset
+        style="display: inline-flex; flex-wrap: nowrap; width: 100%"
+        matAutocompleteOrigin
+        #geneSetsSearch="matAutocompleteOrigin"
         [disabled]="
           selectedGeneSetsCollection?.types?.length > 0 && object.keys(geneSetsLocalState.geneSetsTypes).length === 0
         ">
-        <gpf-searchable-select
-          [showLoadingSpinner]="isLoading"
-          (search)="onSearch($event)"
-          (selectItem)="onSelect($event)"
-          [data]="geneSets"
-          caption="{{
-            selectedGeneSet ? selectedGeneSet.name + ' (' + selectedGeneSet.count + '): ' + selectedGeneSet.desc : ''
-          }}">
-          <div *gpf-searchable-select-template="let element">
-            <span
-              data-toggle="tooltip"
-              data-placement="bottom"
-              title="{{ element.name }} ({{ element.count }}): {{ element.desc }}"
-              innerHtml="{{ element.name | boldMatching : searchQuery }} ({{ element.count }}): {{
-                element.desc | boldMatching : searchQuery
-              }}">
-            </span>
-          </div>
-        </gpf-searchable-select>
+        <span
+          style="width: 100%"
+          [hidden]="!selectedGeneSet"
+          id="selected-value"
+          class="clickable"
+          (click)="reset(); openCloseDropdown()">
+          <span>{{
+            selectedGeneSet ? selectedGeneSet?.name + ' (' + selectedGeneSet?.count + '): ' + selectedGeneSet?.desc : ''
+          }}</span>
+        </span>
+        <div [hidden]="selectedGeneSet" style="display: inline-flex; flex-wrap: nowrap; width: 100%">
+          <input
+            matInput
+            [matAutocomplete]="geneSetsDropdown"
+            [matAutocompleteConnectedTo]="geneSetsSearch"
+            #dropdownTrigger="matAutocompleteTrigger"
+            #searchSetsBox
+            id="search-box"
+            style="width: 100%"
+            autocomplete="off"
+            [(ngModel)]="searchQuery"
+            (keyup)="onKeyboardEvent($event)"
+            placeholder="Select or start typing to search"
+            (click)="reset()"
+            spellcheck="false" />
+          <mat-autocomplete #geneSetsDropdown="matAutocomplete" class="sets-dropdown">
+            <mat-option [disabled]="true" class="status-info" *ngIf="isLoading && geneSets.length === 0"
+              >Loading...</mat-option
+            >
+            <mat-option
+              [disabled]="true"
+              class="status-info"
+              *ngIf="!isLoading && geneSets.length === 0 && searchSetsBox.value !== ''"
+              >Nothing found
+            </mat-option>
+            <mat-option
+              *ngFor="let element of geneSets"
+              class="dropdown-item"
+              type="button"
+              (click)="onSelect(element)"
+              (onSelectionChange)="onSelect(element)"
+              value="{{ element.name }} ({{ element.count }}): {{ element.desc }}"
+              title="{{ element.name }} ({{ element.count }}): {{ element.desc }}">
+              <span
+                innerHtml="{{ element.name | boldMatching : searchQuery }} ({{ element.count }}): {{
+                  element.desc | boldMatching : searchQuery
+                }}">
+              </span>
+            </mat-option>
+          </mat-autocomplete>
+        </div>
+        <button
+          style="border-top-left-radius: 0; border-bottom-left-radius: 0"
+          type="button"
+          class="dropdown-toggle btn btn-secondary dropdown-toggle-split"
+          (click)="openCloseDropdown()">
+        </button>
       </fieldset>
-
       <div *ngIf="selectedGeneSet">
         <span style="margin-right: 5px">Count: {{ selectedGeneSet.count }}</span>
         <span>(<a class="download-link" [href]="getDownloadLink()">Download</a>)</span>

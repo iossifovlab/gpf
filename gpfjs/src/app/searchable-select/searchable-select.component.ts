@@ -21,7 +21,7 @@ export class SearchableSelectComponent implements AfterViewInit, OnChanges {
   @Output() private search = new EventEmitter();
   @Output() private selectItem = new EventEmitter();
   @Output() public focusEvent = new EventEmitter();
-  @ViewChild(NgbDropdown) private dropdown: NgbDropdown;
+  // @ViewChild(NgbDropdown) private dropdown: NgbDropdown;
   @ViewChild('searchBox') private searchBox: ElementRef;
   @ContentChild(SearchableSelectTemplateDirective) public template: SearchableSelectTemplateDirective;
 
@@ -29,14 +29,14 @@ export class SearchableSelectComponent implements AfterViewInit, OnChanges {
   public clickout(event): void {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument
     if (!(this.eRef.nativeElement as HTMLElement).contains(event.target)) {
-      this.dropdown.close();
+      // this.dropdown.close();
     }
   }
 
   public onEnterPress(): void {
     if (this.isInGeneBrowser) {
       this.onSelect((this.searchBox.nativeElement as HTMLInputElement).value);
-      this.dropdown.close();
+      // this.dropdown.close();
     }
   }
 
@@ -48,12 +48,12 @@ export class SearchableSelectComponent implements AfterViewInit, OnChanges {
 
   public ngOnChanges(): void {
     if (this.hideDropdown) {
-      this.dropdown.close();
+      // this.dropdown.close();
     }
   }
 
   public ngAfterViewInit(): void {
-    this.dropdown.autoClose = 'inside';
+    // this.dropdown.autoClose = 'inside';
   }
 
   public searchBoxChange(searchFieldValue): void {
@@ -64,11 +64,11 @@ export class SearchableSelectComponent implements AfterViewInit, OnChanges {
     this.searchBoxChange('');
     event.stopPropagation();
 
-    this.ngZone.run(() => {
-      if (!this.dropdown.isOpen()) {
-        this.dropdown.open();
-      }
-    });
+    // this.ngZone.run(() => {
+    //   if (!this.dropdown.isOpen()) {
+    //     this.dropdown.open();
+    //   }
+    // });
     setTimeout(() => {
       (this.searchBox.nativeElement as HTMLInputElement).focus();
     });

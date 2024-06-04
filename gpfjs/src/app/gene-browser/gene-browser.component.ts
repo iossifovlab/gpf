@@ -150,6 +150,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
   }
 
   public reset(): void {
+    this.geneSymbol = '';
     this.showResults = false;
     this.geneSymbolSuggestions = [];
     this.location.replaceState(`datasets/${this.selectedDatasetId}/gene-browser`);

@@ -167,8 +167,15 @@ mat-option[aria-selected="true"]:hover {
   background: rgba(0, 0, 0, 4%) !important;
 }
 
+mat-option.mat-mdc-option-active {
+  background: rgba(0, 0, 0, 4%) !important;
+}
+
 ::ng-deep .mdc-list-item__primary-text {
   color: black !important;
+  white-space: nowrap !important;
+  text-overflow: ellipsis !important;
+  overflow: hidden !important;
 }
 
 ::ng-deep .genes-dropdown {
@@ -181,4 +188,6 @@ mat-option[aria-selected="true"]:hover {
 
 .mat-mdc-option {
   min-height: 35px;
+  padding-left: 10px !important;
+  padding-right: 5px !important;
 }

@@ -1,5 +1,5 @@
 import { GeneSetsLocalState } from './gene-sets-state';
-import { Component, OnInit } from '@angular/core';
+import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { GeneSetsService } from './gene-sets.service';
 import { GeneSetsCollection, GeneSet, GeneSetType } from './gene-sets';
 import { Subject, Observable, combineLatest, of } from 'rxjs';
@@ -11,6 +11,7 @@ import { catchError, debounceTime, distinctUntilChanged, switchMap } from 'rxjs/
 import { StatefulComponent } from 'app/common/stateful-component';
 import { environment } from 'environments/environment';
 import { PersonSet } from 'app/datasets/datasets';
+import { MatAutocompleteTrigger } from '@angular/material/autocomplete';
 
 @Component({
   selector: 'gpf-gene-sets',
@@ -22,9 +23,12 @@ export class GeneSetsComponent extends StatefulComponent implements OnInit {
   public geneSets: Array<GeneSet>;
   public searchQuery: string;
   public defaultSelectedDenovoGeneSetId: string[] = [];
-  public isLoading = false;
+  public isLoading = true;
+  public isDropdownOpen = false;
+  @ViewChild('dropdownTrigger') private dropdownTrigger: MatAutocompleteTrigger;
+  @ViewChild('searchSetsBox') private searchBox: ElementRef;
 
-  private geneSetsQueryChange = new Subject<[string, string, object]>();
+  public geneSetsQueryChange$ = new Subject<[string, string, object]>();
   private geneSetsResult: Observable<GeneSet[]>;
 
   private selectedDatasetId: string;
@@ -85,7 +89,7 @@ export class GeneSetsComponent extends StatefulComponent implements OnInit {
       this.geneSetsLoaded = geneSetsCollections.length;
     });
 
-    this.geneSetsResult = this.geneSetsQueryChange.pipe(
+    this.geneSetsResult = this.geneSetsQueryChange$.pipe(
       distinctUntilChanged(),
       debounceTime(300),
       switchMap(term => this.geneSetsService.getGeneSets(term[0], term[1], term[2])),
@@ -99,11 +103,13 @@ export class GeneSetsComponent extends StatefulComponent implements OnInit {
       this.geneSets = geneSets.sort((a, b) => a.name.localeCompare(b.name));
       this.store.selectOnce(state => state.geneSetsState).subscribe((state) => {
         if (!state.geneSet || !state.geneSet.geneSet) {
+          this.isLoading = false;
           return;
         }
         for (const geneSet of this.geneSets) {
           if (geneSet.name === state.geneSet.geneSet) {
             this.geneSetsLocalState.geneSet = geneSet;
+            this.isLoading = false;
           }
         }
       });
@@ -151,25 +157,51 @@ export class GeneSetsComponent extends StatefulComponent implements OnInit {
     }
   }
 
-  public onSearch(searchTerm = ''): number {
+  public reset(): void {
+    this.searchQuery = '';
+    this.selectedGeneSet = null;
+    this.isDropdownOpen = true;
+    this.onSearch();
+  }
+
+  public openCloseDropdown(): void {
+    this.isDropdownOpen = !this.dropdownTrigger.panelOpen;
+    if (!this.isDropdownOpen) {
+      this.dropdownTrigger.closePanel();
+    } else {
+      this.dropdownTrigger.openPanel();
+    }
+  }
+
+  public onKeyboardEvent(event: KeyboardEvent): void {
+    if (!(event.key === 'ArrowDown' ||
+      event.key === 'ArrowUp' ||
+      event.key === 'ArrowLeft' ||
+      event.key === 'ArrowRight')) {
+      this.onSearch();
+    }
+  }
+
+  public onSearch(): number {
     if (!this.selectedGeneSetsCollection) {
       return;
     }
 
-    this.searchQuery = searchTerm;
-
     if (this.geneSets) {
       this.geneSets = this.geneSets.filter(
-        (value) => value.name.indexOf(searchTerm) >= 0 || value.desc.indexOf(searchTerm) >= 0
+        (value) => value.name.indexOf(this.searchQuery) >= 0 || value.desc.indexOf(this.searchQuery) >= 0
       );
     }
 
-    this.geneSetsQueryChange.next(
-      [this.selectedGeneSetsCollection.name, searchTerm, this.geneSetsLocalState.geneSetsTypes as GeneSetType[]]
+    this.isLoading = true;
+    this.geneSetsQueryChange$.next(
+      [this.selectedGeneSetsCollection.name, this.searchQuery, this.geneSetsLocalState.geneSetsTypes as GeneSetType[]]
     );
   }
 
   public onSelect(event: GeneSet): void {
+    this.isDropdownOpen = false;
+    (this.searchBox.nativeElement as HTMLElement).blur();
     this.selectedGeneSet = event;
     if (event === null) {
       this.onSearch();
@@ -182,14 +214,12 @@ export class GeneSetsComponent extends StatefulComponent implements OnInit {
 
   public setSelectedGeneType(datasetId: string, personSetCollectionId: string, geneType: string, value: boolean): void {
     this.selectedGeneSet = null;
-    this.isLoading = true;
     const intervalId = setInterval(() => {
       if (value) {
         this.geneSetsLocalState.select(datasetId, personSetCollectionId, geneType);
       } else {
         this.geneSetsLocalState.deselect(datasetId, personSetCollectionId, geneType);
       }
-      this.isLoading = false;
       clearInterval(intervalId);
     }, 50);
   }
@@ -203,6 +233,7 @@ export class GeneSetsComponent extends StatefulComponent implements OnInit {
     this.geneSetsLocalState.geneSet = null;
     this.geneSetsLocalState.geneSetsTypes = Object.create(null);
     this.geneSets = [];
+    this.searchQuery = '';
 
     if (selectedGeneSetsCollection?.types.length > 0) {
       const geneSetType = selectedGeneSetsCollection.types.find(

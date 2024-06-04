@@ -34,7 +34,7 @@
             [(ngModel)]="geneSymbol"
             (keyup)="searchBoxInput$.next(geneSymbol)"
             (focus)="reset()"
-            (keydown.enter)="openSingleView(geneSymbol)" />
+            (onSelectionChange)="openSingleView(geneSymbol)" />
 
           <mat-autocomplete #geneDropdownHome="matAutocomplete" class="genes-dropdown">
             <mat-option

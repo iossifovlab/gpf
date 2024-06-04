@@ -19,10 +19,10 @@
 
   <mat-autocomplete #measuresDropdown="matAutocomplete" class="measures-dropdown">
     <ng-container *ngIf="filteredMeasures.length === 0">
-      <mat-option [disabled]="true" id="loading-dropdown-text" *ngIf="loadingMeasures || loadingDropdown"
+      <mat-option [disabled]="true" class="status-info" *ngIf="loadingMeasures || loadingDropdown"
         >Loading...</mat-option
       >
-      <mat-option [disabled]="true" id="loading-dropdown-text" *ngIf="!(loadingMeasures || loadingDropdown)"
+      <mat-option [disabled]="true" class="status-info" *ngIf="!(loadingMeasures || loadingDropdown)"
         >Nothing found</mat-option
       >
     </ng-container>
