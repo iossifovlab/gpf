@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from collections import Counter
 from collections.abc import Generator
-from typing import Any, Optional, Tuple, Union
+from typing import Any, Optional, Union
 
 import pysam
 
@@ -36,7 +36,7 @@ class TabixGenomicPositionTable(GenomicPositionTable):
         self.jump_threshold = min(
             self.jump_threshold, self.BUFFER_MAXSIZE // 2)
 
-        self._last_call: Tuple[str, int, Optional[int]] = "", -1, -1
+        self._last_call: tuple[str, int, Optional[int]] = "", -1, -1
         self.buffer = LineBuffer()
         self.stats: Counter = Counter()
         # pylint: disable=no-member
@@ -111,8 +111,10 @@ class TabixGenomicPositionTable(GenomicPositionTable):
                 f"error in mapping chromsome {chrom} to the file contigs: "
                 f"{self.get_file_chromosomes()}",
             )
-        return get_chromosome_length_tabix(
-            self.pysam_file, fchrom, step)
+        length = get_chromosome_length_tabix(self.pysam_file, fchrom, step)
+        if length is None:
+            raise ValueError(f"Could not find contig '{fchrom}'")
+        return length
 
     def _map_file_chrom(self, chrom: str) -> str:
         """Transfrom chromosome name to the chromosomes from score file."""
@@ -152,7 +154,7 @@ class TabixGenomicPositionTable(GenomicPositionTable):
         line.chrom = rchrom
         return line
 
-    def get_all_records(self) -> Generator[Optional[LineBase], None, None]:
+    def get_all_records(self) -> Generator[LineBase, None, None]:
         # pylint: disable=no-member
         for line in self.get_line_iterator():
             if line is None:
@@ -181,9 +183,7 @@ class TabixGenomicPositionTable(GenomicPositionTable):
         if pos < last.pos_end:
             return False
 
-        if pos - last.pos_end >= self.jump_threshold:
-            return False
-        return True
+        return (pos - last.pos_end) < self.jump_threshold
 
     def _sequential_seek_forward(self, chrom: str, pos: int) -> bool:
         """Advance the buffer forward to the given position."""
@@ -201,7 +201,7 @@ class TabixGenomicPositionTable(GenomicPositionTable):
         return bool(pos >= last.pos_end)
 
     def _gen_from_tabix(
-            self, chrom: str, pos: Optional[int],
+            self, chrom: str, pos: Optional[int], *_args: Any,
             buffering: bool = True) -> Generator[LineBase, None, None]:
         try:
             assert self.line_iterator is not None
@@ -228,9 +228,6 @@ class TabixGenomicPositionTable(GenomicPositionTable):
     ) -> Generator[LineBase, None, None]:
         for line in self.buffer.fetch(chrom, beg, end):
             self.stats["yield from buffer"] += 1
-            # result = self._transform_result(line)
-            # if result:
-            #     yield result
             yield line
         last = self.buffer.peek_last()
         if end < last.pos_end:

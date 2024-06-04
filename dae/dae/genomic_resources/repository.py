@@ -405,6 +405,10 @@ class GenomicResource:
         """Open a vcf file and returns a pysam.VariantFile."""
         return self.proto.open_vcf_file(self, filename, index_filename)
 
+    def open_bigwig_file(self, filename: str) -> Any:
+        """Open a bigwig file and return it."""
+        return self.proto.open_bigwig_file(self, filename)
+
 
 class Mode(enum.Enum):
     """Protocol mode."""
@@ -528,6 +532,16 @@ class ReadOnlyRepositoryProtocol(abc.ABC):
             self, resource: GenomicResource, filename: str,
             index_filename: Optional[str] = None) -> pysam.VariantFile:
         """Open a vcf file in a resource and return a pysam VariantFile.
+
+        Not all repositories support this method. Repositories that do
+        no support this method raise and exception.
+        """
+
+    @abc.abstractmethod
+    def open_bigwig_file(
+        self, resource: GenomicResource, filename: str
+    ) -> Any:
+        """Open a bigwig file in a resource and return it.
 
         Not all repositories support this method. Repositories that do
         no support this method raise and exception.

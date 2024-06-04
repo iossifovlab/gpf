@@ -3,7 +3,7 @@ from __future__ import annotations
 import abc
 from collections.abc import Generator
 from types import TracebackType
-from typing import Dict, List, Optional, Union, cast
+from typing import Optional, Union, cast
 
 from box import Box
 
@@ -26,9 +26,9 @@ class GenomicPositionTable(abc.ABC):
         self.genomic_resource = genomic_resource
 
         self.definition = Box(table_definition)
-        self.chrom_map: Optional[Dict[str, str]] = None
-        self.chrom_order: Optional[List[str]] = None
-        self.rev_chrom_map: Optional[Dict[str, str]] = None
+        self.chrom_map: Optional[dict[str, str]] = None
+        self.chrom_order: Optional[list[str]] = None
+        self.rev_chrom_map: Optional[dict[str, str]] = None
 
         self.chrom_key: Optional[Union[int, str]] = None
         self.pos_begin_key: Optional[Union[int, str]] = None
@@ -43,7 +43,7 @@ class GenomicPositionTable(abc.ABC):
             self.header = tuple(self.definition.header)
             for hindex, hcolumn in enumerate(self.header):
                 if not isinstance(hcolumn, str):
-                    raise ValueError(
+                    raise TypeError(
                         f"The {hindex}-th header {hcolumn} in the table "
                         f"definition is not a string.")
         elif self.header_mode in {"file", "none"}:
@@ -149,7 +149,7 @@ class GenomicPositionTable(abc.ABC):
         """Close the resource."""
 
     @abc.abstractmethod
-    def get_all_records(self) -> Generator[Optional[LineBase], None, None]:
+    def get_all_records(self) -> Generator[LineBase, None, None]:
         """Return generator of all records in the table."""
 
     @abc.abstractmethod
@@ -201,9 +201,9 @@ class GenomicPositionTable(abc.ABC):
         """
 
     @abc.abstractmethod
-    def get_file_chromosomes(self) -> List[str]:
+    def get_file_chromosomes(self) -> list[str]:
         """Return chromosomes in a genomic table file.
 
         This is to be overwritten by the subclass. It should return a list of
-        the chromomes in the file in the order determinted by the file.
+        the chromosomes in the file in the order determinted by the file.
         """
