@@ -541,3 +541,41 @@ markdown a:hover {
   color: #0645ad;
   text-decoration: underline;
 }
+
+.status-info {
+  font-style: italic;
+  text-align: center;
+  opacity: 75%;
+  height: 32px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background-color: white;
+}
+
+mat-option[aria-selected="true"] {
+  background: white !important;
+}
+
+mat-option[aria-selected="true"]:hover {
+  background: rgba(0, 0, 0, 4%) !important;
+}
+
+mat-option.mat-mdc-option-active {
+  background: rgba(0, 0, 0, 4%) !important;
+}
+
+/* stylelint-disable-next-line selector-class-pattern */
+.mdc-list-item__primary-text {
+  color: black !important;
+  white-space: nowrap !important;
+  text-overflow: ellipsis !important;
+  overflow: hidden !important;
+  padding-right: 10px !important;
+}
+
+.mat-mdc-option {
+  min-height: 35px !important;
+  padding-left: 10px !important;
+  padding-right: 5px !important;
+}
