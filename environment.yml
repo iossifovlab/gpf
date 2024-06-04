@@ -27,9 +27,9 @@ dependencies:
   - pandas=2.1
   - pyarrow=16.1
   - snappy=1.1.10
-  - fsspec=2024.3
-  - s3fs=2024.3
-  - dask=2024.4
+  - fsspec=2024.5
+  - s3fs=2024.5
+  - dask=2024.5
   - python-box=7.1
   - setuptools=67
   - sqlalchemy=2.0.21
