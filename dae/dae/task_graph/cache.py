@@ -3,7 +3,7 @@ from __future__ import annotations
 import datetime
 import logging
 import os
-import pickle
+import pickle  # noqa: S403
 from abc import abstractmethod
 from collections.abc import Generator, Iterator
 from copy import copy
@@ -51,13 +51,18 @@ class TaskCache:
         """For task in the `graph` load and yield the cache record."""
 
     @abstractmethod
-    def cache(self, task_node: Task, is_error: bool, result: Any) -> None:
+    def cache(
+        self, task_node: Task, *,
+        is_error: bool, result: Any,
+    ) -> None:
         """Cache the result or exception of a task."""
 
     @staticmethod
     def create(
-            force: Optional[bool] = None,
-            cache_dir: Optional[str] = None) -> TaskCache:
+        *,
+        force: Optional[bool] = None,
+        cache_dir: Optional[str] = None,
+    ) -> TaskCache:
         """Create the appropriate task cache."""
         if force is None:
             # the force_mode is set to 'always'
@@ -77,14 +82,17 @@ class NoTaskCache(dict, TaskCache):
         for task in graph.tasks:
             yield task, CacheRecord(CacheRecordType.NEEDS_COMPUTE)
 
-    def cache(self, task_node: Task, is_error: bool, result: Any) -> None:
+    def cache(
+        self, task_node: Task, *,
+        is_error: bool, result: Any,
+    ) -> None:
         pass
 
 
 class FileTaskCache(TaskCache):
     """Use file modification timestamps to determine if a task needs to run."""
 
-    def __init__(self, cache_dir: str, force: bool = False):
+    def __init__(self, cache_dir: str, *, force: bool = False):
         self.force = force
         self.cache_dir = cache_dir
         self._global_dependancies: Optional[list[str]] = None
@@ -125,7 +133,7 @@ class FileTaskCache(TaskCache):
 
         output_fn = self._get_flag_filename(task_node)
         with fsspec.open(output_fn, "rb") as cache_file:
-            res_record = cast(CacheRecord, pickle.load(cache_file))
+            res_record = cast(CacheRecord, pickle.load(cache_file))  # noqa: S301
             task2record[task_node] = res_record
             return res_record
 
@@ -143,7 +151,7 @@ class FileTaskCache(TaskCache):
         output_fn = self._get_flag_filename(task)
         return self._should_recompute_output(in_files, [output_fn])
 
-    def cache(self, task_node: Task, is_error: bool, result: Any) -> None:
+    def cache(self, task_node: Task, *, is_error: bool, result: Any) -> None:
         record_type = (
             CacheRecordType.ERROR if is_error else CacheRecordType.COMPUTED
         )
@@ -156,9 +164,9 @@ class FileTaskCache(TaskCache):
             with fsspec.open(cache_fn, "wb") as cache_file:
                 pickle.dump(record, cache_file)
         except Exception:  # pylint: disable=broad-except
-            logger.error(
+            logger.exception(
                 "Cannot write cache for task %s. Ignoring and continuing.",
-                task_node, exc_info=True,
+                task_node,
             )
 
     def _get_flag_filename(self, task_node: Task) -> str:
