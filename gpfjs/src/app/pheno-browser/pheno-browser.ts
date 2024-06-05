@@ -2,7 +2,7 @@ import { environment } from '../../environments/environment';
 
 function addBaseUrlIfNotNull(currentPath: string, bp: string): string {
   if (currentPath) {
-    return `${bp}${currentPath}`;
+    return bp + currentPath;
   }
   return null;
 }
@@ -139,9 +139,9 @@ export class PhenoMeasures {
   public addMeasure(measure: PhenoMeasure): void {
     let basePath: string;
     if (measure.baseUrl) {
-      basePath = `${measure.baseUrl}${this.baseImageUrl}`;
+      basePath = measure.baseUrl + this.baseImageUrl;
     } else {
-      basePath = `${environment.basePath}/${this.baseImageUrl}`;
+      basePath = environment.basePath + '/' + this.baseImageUrl;
     }
 
     measure.regressions.addBasePath(basePath);
