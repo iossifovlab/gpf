@@ -539,7 +539,7 @@ class ReadOnlyRepositoryProtocol(abc.ABC):
 
     @abc.abstractmethod
     def open_bigwig_file(
-        self, resource: GenomicResource, filename: str
+        self, resource: GenomicResource, filename: str,
     ) -> Any:
         """Open a bigwig file in a resource and return it.
 

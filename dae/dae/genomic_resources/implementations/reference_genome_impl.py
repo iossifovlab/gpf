@@ -243,7 +243,7 @@ class GenomeStatistic(Statistic):
             else:
                 self.bi_nucleotide_distribution = bi_nucleotide_distribution
 
-            self.length = length
+        self.length = length
 
     @property
     def chrom_count(self) -> int:
@@ -408,7 +408,7 @@ class ReferenceGenomeImplementation(
                 </table>
             </div>
             {% endblock %}
-        """))
+        """))  # noqa: E501
 
     def _get_template_data(self) -> dict[str, Any]:
         info = copy.deepcopy(self.config)

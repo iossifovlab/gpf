@@ -85,7 +85,7 @@ class TaskGraph:
         res = TaskGraph()
         res.tasks = new_tasks
         res.input_files = self.input_files
-        res._task_ids |= tasks_to_keep
+        res._task_ids |= tasks_to_keep  # noqa: SLF001
         return res
 
     @staticmethod

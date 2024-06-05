@@ -257,7 +257,6 @@ class ReferenceGenome(
         return {
             **get_base_resource_schema(),
             "filename": {"type": "string"},
-            "chrom_prefix": {"type": "string"},
             "PARS": {"type": "dict", "schema": {
                 "X": {"type": "list", "schema": {"type": "string"}},
                 "Y": {"type": "list", "schema": {"type": "string"}},

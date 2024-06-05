@@ -58,10 +58,13 @@ class TaskGraphExecutor:
         """Clean-up any resources used by the executor."""
 
 
+NO_TASK_CACHE = NoTaskCache()
+
+
 class AbstractTaskGraphExecutor(TaskGraphExecutor):
     """Executor that walks the graph in order that satisfies dependancies."""
 
-    def __init__(self, task_cache: TaskCache = NoTaskCache()):
+    def __init__(self, task_cache: TaskCache = NO_TASK_CACHE):
         super().__init__()
         self._task_cache = task_cache
         self._executing = False
@@ -119,7 +122,11 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
             yield task_node, result
         for task_node, result in self._await_tasks():
             is_error = isinstance(result, BaseException)
-            self._task_cache.cache(task_node, is_error, result)
+            self._task_cache.cache(
+                task_node,
+                is_error=is_error,
+                result=result,
+            )
             yield task_node, result
         self._executing = False
 
@@ -191,7 +198,7 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
 class SequentialExecutor(AbstractTaskGraphExecutor):
     """A Task Graph Executor that executes task in sequential order."""
 
-    def __init__(self, task_cache: TaskCache = NoTaskCache(), **kwargs: Any):
+    def __init__(self, task_cache: TaskCache = NO_TASK_CACHE, **kwargs: Any):
         super().__init__(task_cache)
         self._task_queue: list[Task] = []
         self._task2result: dict[Task, Any] = {}
@@ -229,7 +236,7 @@ class SequentialExecutor(AbstractTaskGraphExecutor):
 
             try:
                 result = self._exec(task_node.func, args, [], params)
-            except Exception as exp:  # pylint: disable=broad-except
+            except Exception as exp:  # noqa: BLE001 pylint: disable=broad-except
                 result = exp
                 is_error = True
             finished_tasks += 1
@@ -253,7 +260,7 @@ class DaskExecutor(AbstractTaskGraphExecutor):
     """Execute tasks in parallel using Dask to do the heavy lifting."""
 
     def __init__(
-        self, client: Client, task_cache: TaskCache = NoTaskCache(),
+        self, client: Client, task_cache: TaskCache = NO_TASK_CACHE,
         **kwargs: Any,
     ):
         super().__init__(task_cache)
@@ -332,7 +339,7 @@ class DaskExecutor(AbstractTaskGraphExecutor):
             for future in completed:
                 try:
                     result = future.result()
-                except Exception as exp:  # pylint: disable=broad-except
+                except Exception as exp:  # noqa: BLE001 pylint: disable=broad-except
                     result = exp
                 task = self._future_key2task[future.key]
                 self._task2result[task] = result
@@ -440,14 +447,14 @@ def task_graph_all_done(task_graph: TaskGraph, task_cache: TaskCache) -> bool:
     If there are tasks, that need to run, the function returns False.
     """
     # pylint: disable=protected-access
-    AbstractTaskGraphExecutor._check_for_cyclic_deps(task_graph)
+    AbstractTaskGraphExecutor._check_for_cyclic_deps(task_graph)  # noqa: SLF001
 
     already_computed_tasks = {}
     for task_node, record in task_cache.load(task_graph):
         if record.type == CacheRecordType.COMPUTED:
             already_computed_tasks[task_node] = record.result
 
-    for task_node in AbstractTaskGraphExecutor._in_exec_order(task_graph):
+    for task_node in AbstractTaskGraphExecutor._in_exec_order(task_graph):  # noqa: SLF001
         if task_node not in already_computed_tasks:
             return False
 
