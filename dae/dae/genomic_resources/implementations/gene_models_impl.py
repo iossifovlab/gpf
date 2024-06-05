@@ -4,6 +4,7 @@ import json
 import logging
 import textwrap
 from collections import defaultdict
+from dataclasses import asdict, dataclass
 from functools import lru_cache
 from typing import Any, Optional
 
@@ -18,10 +19,61 @@ from dae.genomic_resources.gene_models import (
 from dae.genomic_resources.resource_implementation import (
     GenomicResourceImplementation,
     InfoImplementationMixin,
+    ResourceStatistics,
 )
 from dae.task_graph.graph import Task, TaskGraph
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass
+class StatisticsData:
+    """Class for storing gene models statistics."""
+
+    transcript_number: int
+    protein_coding_transcript_number: int
+    gene_number: int
+    protein_coding_gene_number: int
+
+
+class GeneModelsStatistics(ResourceStatistics):
+    """Class for accessing reference genome statistics."""
+
+    def __init__(
+            self, resource_id: str,
+            chromosome_count: int,
+            global_statistic: StatisticsData,
+            chrom_statistics: dict[str, StatisticsData]):
+        super().__init__(resource_id)
+        self.chromosome_count = chromosome_count
+        self.global_statistic = global_statistic
+        self.chrom_statistics = chrom_statistics
+
+    def serialize(self) -> str:
+        """Serialize gene models statistics."""
+        result: dict[str, Any] = {}
+        result["resource_id"] = self.resource_id
+        result["chromosome_count"] = self.chromosome_count
+        result["global"] = asdict(self.global_statistic)
+        result["chromosomes"] = {
+            chrom: asdict(stat)
+            for chrom, stat in self.chrom_statistics.items()
+        }
+        return yaml.dump(result, sort_keys=False)
+
+    @staticmethod
+    def deserialize(data: str) -> GeneModelsStatistics:
+        """Deserialize gene models statistics."""
+        result = yaml.safe_load(data)
+        return GeneModelsStatistics(
+            result["resource_id"],
+            result["chromosome_count"],
+            StatisticsData(**result["global"]),
+            {
+                chrom: StatisticsData(**stat)
+                for chrom, stat in result["chromosomes"].items()
+            },
+        )
 
 
 class GeneModelsImpl(
@@ -56,9 +108,6 @@ class GeneModelsImpl(
                 <p>Format: {{ data.config.format }}</p>
             <h1>Statistics</h1>
                 <table>
-                {% for stat, value in data.stats.items() %}
-                    <tr><td> {{ stat }} </td><td> {{ value }} </td></tr>
-                {% endfor %}
                 </table>
             {% endblock %}
         """))
@@ -94,55 +143,54 @@ class GeneModelsImpl(
         return [task]
 
     @staticmethod
-    def _do_statistics(resource: GenomicResource) -> dict[str, int]:
+    def _do_statistics(resource: GenomicResource) -> GeneModelsStatistics:
         gene_models = build_gene_models_from_resource(resource).load()
 
-        coding_transcripts = [tm
-                              for tm in gene_models.transcript_models.values()
-                              if tm.is_coding()]
-        stats = {"transcript number": len(gene_models.transcript_models),
-                 "protein coding transcript number": len(coding_transcripts),
-                 "gene number": len(gene_models.gene_names()),
-                 "protein coding gene number":
-                 len({tm.gene for tm in coding_transcripts}),
-                 }
+        coding_transcripts = [
+            tm
+            for tm in gene_models.transcript_models.values()
+            if tm.is_coding()
+        ]
+        global_stats = StatisticsData(
+            len(gene_models.transcript_models),
+            len(coding_transcripts),
+            len(gene_models.gene_names()),
+            len({tm.gene for tm in coding_transcripts}),
+        )
 
         tm_by_chrom: dict[str, list[TranscriptModel]] = defaultdict(list)
         for trm in gene_models.transcript_models.values():
             tm_by_chrom[trm.chrom].append(trm)
-
-        stats["chromosome number"] = len(tm_by_chrom)
+        chromosome_stats: dict[str, StatisticsData] = {}
         for chrom, tms in tm_by_chrom.items():
-            stats[f"{chrom} transcript numbers"] = len(tms)
-
+            chrom_coding_transcripts = [
+                tm
+                for tm in tms
+                if tm.is_coding()
+            ]
+            chromosome_stats[chrom] = StatisticsData(
+                len(tms),
+                len(chrom_coding_transcripts),
+                len({tm.gene for tm in tms}),
+                len({tm.gene for tm in chrom_coding_transcripts}),
+            )
+        gene_models_stats = GeneModelsStatistics(
+            resource.resource_id,
+            len(tm_by_chrom),
+            global_stats,
+            chromosome_stats,
+        )
         with resource.proto.open_raw_file(
                 resource, "statistics/stats.yaml", "wt") as stats_file:
-            yaml.dump(stats, stats_file, sort_keys=False)
-        return stats
+            stats_file.write(gene_models_stats.serialize())
+        return gene_models_stats
 
     @lru_cache(maxsize=64)  # noqa: B019
-    def get_statistics(self) -> Optional[dict[str, int]]:  # type: ignore
+    def get_statistics(self) -> Optional[GeneModelsStatistics]:  # type: ignore
         try:
             with self.resource.proto.open_raw_file(
                     self.resource, "statistics/stats.yaml", "rt") as stats_file:
-                stats = yaml.safe_load(stats_file)
-                if not isinstance(stats, dict):
-                    logger.error(
-                        "The stats.yaml file for the "
-                        "%s is invalid (1).", self.resource)
-                    return None
-                for stat, value in stats.items():
-                    if not isinstance(stat, str):
-                        logger.error(
-                            "The stats.yaml file for the "
-                            "%s is invalid (2. %s).", self.resource, stat)
-                        return None
-                    if not isinstance(value, int):
-                        logger.error(
-                            "The stats.yaml file for the "
-                            "%s is invalid (3. %s).", self.resource,
-                            value)
-                        return None
-                return stats
+                return GeneModelsStatistics.deserialize(
+                    stats_file.read())
         except FileExistsError:
             return None

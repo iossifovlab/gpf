@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import json
 import logging
-import textwrap
 from dataclasses import asdict
 from typing import Any
 
@@ -51,7 +50,9 @@ class GeneScoreImplementation(
         return InfoImplementationMixin.get_info(self)
 
     def add_statistics_build_tasks(
-            self, task_graph: TaskGraph, **kwargs: str) -> list[Task]:
+        self, task_graph: TaskGraph,
+        **kwargs: str,  # noqa: ARG002
+    ) -> list[Task]:
         save_tasks = []
         for score_id, score_def in self.gene_score.score_definitions.items():
             hist_conf = score_def.hist_conf
@@ -195,4 +196,4 @@ GENE_SCORES_TEMPLATE = """
         {% endfor %}
     </table>
 {% endblock %}
-"""
+"""  # noqa: E501
