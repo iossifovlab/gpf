@@ -1,10 +1,11 @@
 """Setup for GPF data access environment (DAE)."""
 
+import pathlib
+
 import setuptools
 import versioneer
 
-with open("README.md", "r", encoding="utf8") as fh:
-    long_description = fh.read()
+long_description = pathlib.Path("README.md").read_text(encoding="utf8")
 
 
 setuptools.setup(
@@ -52,7 +53,7 @@ setuptools.setup(
     liftover_chain=dae.genomic_resources.implementations.liftover_chain_impl:LiftoverChainImplementation
     genome=dae.genomic_resources.implementations.reference_genome_impl:ReferenceGenomeImplementation
     vcf_info=dae.genomic_resources.vcf_info_score:build_vcf_info_from_resource
-    gene_models=dae.genomic_resources.gene_models:build_gene_models_from_resource
+    gene_models=dae.genomic_resources.implementations.gene_models_impl:GeneModelsImpl
     cnv_collection=dae.genomic_resources.cnv_collection:CnvCollectionImplementation
     gene_weights_enrichment_background=dae.enrichment_tool.resource_implementations.enrichment_resource_impl:build_gene_weights_enrichment_background
     samocha_enrichment_background=dae.enrichment_tool.resource_implementations.enrichment_resource_impl:build_samocha_enrichment_background

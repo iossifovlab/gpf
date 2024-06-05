@@ -25,10 +25,13 @@ class TaskGraphCli:
     """Takes care of creating a task graph executor and executing a graph."""
 
     @staticmethod
-    def add_arguments(parser: argparse.ArgumentParser,
-                      force_mode: str = "optional",
-                      default_task_status_dir: Optional[str] = ".",
-                      use_commands: bool = True) -> None:
+    def add_arguments(
+        parser: argparse.ArgumentParser,
+        force_mode: str = "optional",
+        default_task_status_dir: Optional[str] = ".",
+        *,
+        use_commands: bool = True,
+    ) -> None:
         """Add arguments needed to execute a task graph."""
         executor_group = parser.add_argument_group(title="Task Graph Executor")
         # cluster_name
@@ -137,10 +140,7 @@ class TaskGraphCli:
         if args.task_ids:
             task_graph = task_graph.prune(ids_to_keep=args.task_ids)
 
-        if force_mode == "always":
-            force = None
-        else:
-            force = args.get("force")
+        force = None if force_mode == "always" else args.get("force")
         task_cache = TaskCache.create(
             force=force, cache_dir=args.get("task_status_dir"))
 
@@ -150,10 +150,10 @@ class TaskGraphCli:
                     "All tasks are already COMPUTED; nothing to compute")
                 return True
             with TaskGraphCli.create_executor(task_cache, **kwargs) as xtor:
-                return task_graph_run(task_graph, xtor, args.keep_going)
+                return task_graph_run(
+                    task_graph, xtor, keep_going=args.keep_going)
 
         if args.command in {"list", "status"}:
-            res = task_graph_status(task_graph, task_cache, args.verbose)
-            return res
+            return task_graph_status(task_graph, task_cache, args.verbose)
 
         raise ValueError(f"Unknown command {args.command}")

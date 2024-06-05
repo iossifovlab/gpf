@@ -396,9 +396,14 @@ def task_graph_status(
 
 
 def task_graph_run(
-    task_graph: TaskGraph, executor: TaskGraphExecutor, keep_going: bool,
+    task_graph: TaskGraph,
+    executor: Optional[TaskGraphExecutor] = None,
+    *,
+    keep_going: bool = False,
 ) -> bool:
     """Execute (runs) the task_graph with the given executor."""
+    if executor is None:
+        executor = SequentialExecutor()
     tasks_iter = executor.execute(task_graph)
     no_errors = True
     for task, result_or_error in tasks_iter:

@@ -6,7 +6,7 @@ import json
 import logging
 import os
 import textwrap
-from typing import Any, Optional, cast
+from typing import Any, Optional
 
 import yaml
 from jinja2 import Template
@@ -108,9 +108,7 @@ class ChromosomeStatistic(Statistic):
         else:
             assert set(
                 nucleotide_counts.keys(),
-            ) == set(
-                ["A", "G", "C", "T", "N"],
-            )
+            ) == {"A", "G", "C", "T", "N"}
             self.nucleotide_counts = nucleotide_counts
 
         nucleotides = ["A", "G", "C", "T", "N"]
@@ -142,7 +140,8 @@ class ChromosomeStatistic(Statistic):
         if nuc1 is None:
             return
 
-        assert nuc1 is not None and nuc2 is not None
+        assert nuc1 is not None
+        assert nuc2 is not None
 
         pair = f"{nuc1}{nuc2}"
         if pair not in self.nucleotide_pair_counts:
@@ -191,18 +190,18 @@ class ChromosomeStatistic(Statistic):
                     count * 100.0 / total_pairs
 
     def serialize(self) -> str:
-        return cast(str, yaml.dump(
+        return yaml.dump(
             {
                 "chrom": self.statistic_id,
                 "length": self.length,
                 "nucleotide_counts": self.nucleotide_counts,
                 "nucleotide_pair_counts": self.nucleotide_pair_counts,
             },
-        ))
+        )
 
     @staticmethod
     def deserialize(content: str) -> ChromosomeStatistic:
-        res = yaml.load(content, yaml.Loader)
+        res = yaml.safe_load(content)
         stat = ChromosomeStatistic(
             res["chrom"],
             length=res.get("length"),
@@ -283,27 +282,26 @@ class GenomeStatistic(Statistic):
         for pair, count in total_pair_counts.items():
             self.bi_nucleotide_distribution[pair] = count / total_pairs * 100
 
-    def merge(self, other: Statistic) -> None:
+    def merge(self, other: Statistic) -> None:  # noqa: ARG002
         return
 
     def serialize(self) -> str:
-        return cast(str, yaml.dump({
+        return yaml.dump({
             "chromosomes": self.chromosomes,
             "length": self.length,
             "nucleotide_distribution": self.nucleotide_distribution,
             "bi_nucleotide_distribution": self.bi_nucleotide_distribution,
-        }))
+        })
 
     @staticmethod
     def deserialize(content: str) -> GenomeStatistic:
-        res = yaml.load(content, yaml.Loader)
-        stat = GenomeStatistic(
+        res = yaml.safe_load(content)
+        return GenomeStatistic(
             res["chromosomes"],
             length=res.get("length"),
             nucleotide_distribution=res.get("nucleotide_distribution"),
             bi_nucleotide_distribution=res.get("bi_nucleotide_distribution"),
         )
-        return stat
 
 
 class ReferenceGenomeImplementation(
@@ -440,14 +438,16 @@ class ReferenceGenomeImplementation(
     ) -> tuple[list[Task], Task, Task]:
         chrom_tasks = []
         regions = self.reference_genome.split_into_regions(region_size, chrom)
-        for reg in regions:
-            chrom_tasks.append(task_graph.create_task(
+        chrom_tasks = [
+            task_graph.create_task(
                 f"{self.resource.resource_id}_count_nucleotides_"
                 f"{reg}",
                 ReferenceGenomeImplementation._do_chrom_statistic,
                 [self.resource, reg.chrom, reg.start, reg.end],
                 [],
-            ))
+            )
+            for reg in regions
+        ]
 
         merge_task = task_graph.create_task(
             f"{self.resource.resource_id}_merge_chrom_statistics_{chrom}",
