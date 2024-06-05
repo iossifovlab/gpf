@@ -4,8 +4,6 @@
 import logging
 import os
 
-from dae.pheno.pheno_data import get_pheno_browser_images_dir
-
 DEBUG = os.environ.get("WDAE_DEBUG", "False") == "True"
 
 
@@ -135,18 +133,6 @@ STATIC_ROOT = ""
 STATIC_URL = "static/"
 
 APPEND_SLASH = False
-
-
-PHENO_BROWSER_CACHE = get_pheno_browser_images_dir()
-
-# Additional locations of static files
-STATICFILES_DIRS = (
-    # Put strings here, like "/home/html/static" or "C:/www/django/static".
-    # Always use forward slashes, even on Windows.
-    # Don't forget to use absolute paths, not relative paths.
-    ("images", PHENO_BROWSER_CACHE),
-)
-
 
 # List of finder classes that know how to find static files in
 # various locations.
