@@ -107,7 +107,30 @@ class GeneModelsImpl(
 
                 <p>Format: {{ data.config.format }}</p>
             <h1>Statistics</h1>
-                <table>
+                <table border="1">
+                    <tr>
+                        <th></th>
+                        <th>Transcript number</th>
+                        <th>Protein coding transcript number</th>
+                        <th>Gene number</th>
+                        <th>Protein coding gene number</th>
+                    </tr>
+                    <tr>
+                        <th>Global</th>
+                        <td>{{ '{:,}'.format(data.stats.global_statistic.transcript_number)}}</td>
+                        <td>{{ '{:,}'.format(data.stats.global_statistic.protein_coding_transcript_number)}}</td>
+                        <td>{{ '{:,}'.format(data.stats.global_statistic.gene_number)}}</td>
+                        <td>{{ '{:,}'.format(data.stats.global_statistic.protein_coding_gene_number)}}</td>
+                    </tr>
+                    {% for chrom, stat in data.stats.chrom_statistics.items() %}
+                        <tr>
+                            <th>{{"Chromosome number: " + chrom}}</th>
+                            <td>{{ '{:,}'.format(stat.transcript_number)}}</td>
+                            <td>{{ '{:,}'.format(stat.protein_coding_transcript_number)}}</td>
+                            <td>{{ '{:,}'.format(stat.gene_number)}}</td>
+                            <td>{{ '{:,}'.format(stat.protein_coding_gene_number)}}</td>
+                        </tr>
+                    {% endfor %}
                 </table>
             {% endblock %}
         """))
